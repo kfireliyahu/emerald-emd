@@ -49,6 +49,15 @@ session's, and this session runs on Opus.
 
 - **One after another → `use_worktree:false`.** It shares this checkout, commits on `main` and lands
   its own unit, exactly as a subagent did. The next starts only after this one has landed.
+
+**One writer per checkout** (M51 F5). While a child works in this checkout, **this session writes no
+row in `docs/memory.emd` and commits nothing here** — not a brief, not a verdict, not a pin. A change
+you need either goes into the child's prompt, for its own landing to carry, or waits until the child
+has landed. On 2026-10-18 the driver committed `docs/memory.emd` while a child had uncommitted work in
+the same folder; it was safe only because the child had not written its rows yet. A commit that must
+not wait touches only files the child's `paths` do not name, stages them by name and never
+`docs/memory.emd`, and the child's prompt says so (*"the driver may push one commit touching only
+X; pull before you push and never stage it"*).
 - **At once → `use_worktree:true`, one worktree each**, only for units `dispatch_plan` put under
   *At once*. **A worktree on Windows costs its own `npm install`** (minutes and disk), and
   `node_modules` is **never** junctioned into one — `git worktree remove` deletes through the
@@ -72,9 +81,11 @@ Self-contained, whichever tool carries it:
 > <brief, verbatim>
 >
 > Start from the files the brief names. Build it, test it, verify it in the browser where it renders,
-> then run the closing pass (the `closing-pass` skill — its rows are one `land_units` call), commit
-> and push to origin main. **Do not start another unit.** You are run by a driver: end with a
-> report, not the host's next-step box.
+> then run the closing pass (the `closing-pass` skill) in its order: commit the work, then
+> `land_units` with that commit's hash and your `report`, then commit the landing; push to origin
+> main. Stage only your own files, never `git add -A`. **Do not start another unit.** You are run by
+> a driver: end with a report, not the host's next-step box. Your full report goes in the unit's
+> `report` column.
 > Report back in under 15 lines, **the commit hash and whether docs:check is green first**: what
 > landed; the decision number, if any; what the maintainer should look at to judge it (the route, and
 > what would be wrong), or "nothing to look at"; and anything left undone or found along the way.
@@ -95,11 +106,18 @@ Give each worktree child its own decision numbers, from the next free one in the
 1. **Check it landed, whatever the report says.** A session's note back is only its first 400
    characters, and a subagent's report is its own account, so read the facts: `git log --oneline -3`,
    `git status --short` and `npm run docs:check`, in one call, and the unit's row
-   (`format_rows unit match:{ref:"<ref>"} columns:[ref, state, commit]`). No commit, or a red check,
-   means **stop and say so**. Do not repair it yourself. One still `in_progress` after its child
+   (`format_rows unit match:{ref:"<ref>"} columns:[ref, state, commit, report]`). **The full report
+   is the row's `report` column** (M51 F4), never the child's transcript paged through. No commit, or
+   a red check, means **stop and say so**. Do not repair it yourself. One still `in_progress` after its child
    ended is a unit that did not land, and it stays `in_progress` with its `started` date for the
-   maintainer to see. A session that ended its turn on a question, or waiting on a permission, is waiting in its
+   maintainer to see — `start_here` lists it under *Stalled*. A session that ended its turn on a question, or waiting on a permission, is waiting in its
    own row: say so, and that it is the maintainer's to answer there.
+   **Taking a stalled unit over** is for when the maintainer says so, or the child is gone (stopped,
+   failed, out of usage): first `git status --short` and `git log --oneline -3` to see what it left —
+   uncommitted work is the child's and goes into the next prompt as *"<these files> are a stopped
+   session's; keep or finish them"*, never discarded — then `claim_units units:["<ref>"]
+   take_over:"<its taken_by>" taken_by:"…" branch:"…" commit:true`, which is refused unless that
+   taker still holds it, and hand it to a fresh child as in step 2.
 2. **A worktree child's work reaches `main` through you.** When every unit started together has
    reported: `git merge --no-edit <its branch>` for each, in `ref` order — a merge keeps the child's
    commit hash, which its proposal names; a rebase would not. A conflict that is only both sides

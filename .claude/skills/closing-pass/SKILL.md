@@ -52,9 +52,22 @@ land_units units:[{unit:"M47 U3", files:"…", decisions:[{ref:"D-461", title, q
 - **`review_entries`** only when there is something the maintainer should drive; `close_milestone`
   only when the maintainer closed it.
 - **`branch`** is the branch you land from, and a unit claimed on another is refused unless
-  `other_branch: true` (M51 U2). **`commit`** is the git commit that carries the work, when it is
-  committed before the landing (a worktree's child, landed by its manager); a landing committed
-  with its own work leaves it empty, since a commit cannot name itself.
+  `other_branch: true` (M51 U2). **`commit`** is the git commit that carries the work, and
+  **`report`** your closing report as plain text (up to 4,000 characters), which stays on the unit
+  for the driver and the maintainer to read with one `format_rows` call (M51 F4, D-501).
+
+**The order is always the same three steps** (M51 F5), because a commit cannot name itself and a
+landing without its commit leaves the row pointing nowhere — M42 U2 and U4 did, M42 F2 did not:
+
+1. **Commit the work** — code, notes, the decision-log entry — staging only your own files.
+2. **`land_units` with `commit:` that commit's short hash** (`git rev-parse --short HEAD`) and your
+   `report`: dry run, then `commit: true`.
+3. **Commit the landing**: `docs/memory.emd` alone, in a commit of its own (*"<unit> landed: built at
+   <hash>"*), then push both.
+
+A landing without `commit` is refused unless it says `same_commit: true` (M51 F4), which puts the
+landing in its work's own commit and leaves `commit` empty for good. The tool allows it for a
+project that wants it; this one does not — the three steps above, always.
 - **Run for a manager, in a worktree? Propose, do not land** (M51 U3, D-485). Commit your work, then
   write one `inbox` row with `record_format_rows` to **the document path your hooks printed** (the
   main checkout's copy, never one under the worktree's folder), `from` that same path, with `subject`,
@@ -71,8 +84,8 @@ land_units units:[{unit:"M47 U3", files:"…", decisions:[{ref:"D-461", title, q
 
 Anything else — a planned unit, an open question — is `record_format_rows` or `update_format_rows`,
 one call per format. The columns are the last section of `start_here` (M47 U2), so no `formats` call
-first. Dry-run, read the diff, then `commit: true`. **Commit `docs/memory.emd` with the code**: a diff on it is
-somebody's write, never debris, and a hook refuses discarding it.
+first. Dry-run, read the diff, then `commit: true`. **Commit `docs/memory.emd`** — with the landing,
+in the order above: a diff on it is somebody's write, never debris, and a hook refuses discarding it.
 
 ## 3. Run the mechanical half
 
@@ -144,7 +157,8 @@ gets chosen.
 
 ## 5. End the session
 
-Commit **and push to `origin main`** (every commit is pushed to main, 2026-10-03), then stop. Don't start the
+The work's commit, then the landing's (step 2a's order), **and push to `origin main`** (every commit is
+pushed to main, 2026-10-03); pull first when another session may have pushed, then stop. Don't start the
 next unit in the same session. A push that fails is reported, never forced.
 
 A session's cost is turns × context, so it grows **quadratically** with length: a 700-turn

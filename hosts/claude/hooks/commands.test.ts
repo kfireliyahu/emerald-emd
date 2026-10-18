@@ -264,31 +264,37 @@ describe('the status line (M51 U6)', () => {
   it('prints the count in under 200 ms on docs/memory.emd, as a process of its own', async () => {
     await refreshStatus(join(process.cwd(), 'docs', 'memory.emd'))
     // Node runs the entry from source as it runs the build: it bundles Node's modules and three small files.
-    const timed = async (args: readonly string[]): Promise<{ took: number; out: string }> => {
+    // Each process says, as it exits, the CPU it spent (user and system, in ms) — preloaded, so the
+    // line's own code is untouched.
+    const SAY_CPU = `data:text/javascript,process.on('exit',()=>{const u=process.cpuUsage();process.stderr.write('cpu '+((u.user+u.system)/1000)+'\\n')})`
+    const timed = async (args: readonly string[]): Promise<{ wall: number; cpu: number; out: string }> => {
       const started = performance.now()
-      const child = spawn(process.execPath, args, { cwd: process.cwd(), stdio: ['ignore', 'pipe', 'pipe'] })
+      const child = spawn(process.execPath, ['--import', SAY_CPU, ...args], { cwd: process.cwd(), stdio: ['ignore', 'pipe', 'pipe'] })
       let out = ''
+      let err = ''
       child.stdout.on('data', (chunk: Buffer) => (out += chunk.toString('utf8')))
+      child.stderr.on('data', (chunk: Buffer) => (err += chunk.toString('utf8')))
       await new Promise((settle) => child.on('close', settle))
-      return { took: performance.now() - started, out }
+      return { wall: performance.now() - started, cpu: Number(/cpu ([\d.]+)/.exec(err)?.[1] ?? NaN), out }
     }
-    // The best of up to ten, beside a Node that loads nothing timed in the same moments: alone it
-    // is ~100 ms against ~60, and a suite busy in other workers slows both (a test's budget holds
-    // under load, M29 F6). Loading the server's bundle instead would add ~290 ms to it alone, so
-    // the line passes under 200 ms, or within 150 ms (or three times) of a bare Node — the full
-    // suite once took it to 206 ms with Node alone near 60 (M51 F3).
-    const line: number[] = []
-    const bare: number[] = []
-    for (let run = 0; run < 10 && !(Math.min(...line) < 200); run += 1) {
-      const { took, out } = await timed([join('hosts', 'claude', 'hooks', 'statusLineMain.ts'), process.cwd()])
-      expect(out).toMatch(/^inbox \d+ new/)
-      line.push(took)
-      bare.push((await timed(['-e', '0'])).took)
+    // Wall time under the full suite measured the other workers as much as the line: best-of-ten
+    // against a bare Node still failed twice on 2026-10-18 and passed alone (M51 F5). So the gate is
+    // the CPU the line's own process spends, which a busy machine delays but barely inflates, judged
+    // pair by pair against a Node that loads nothing, run in the same moment. Alone it is ~100 ms
+    // against ~60; loading the server's bundle instead would add ~290 ms of parsing to it, so a pair
+    // passes under 200 ms, or within 150 ms of its bare Node. Wall time keeps a ceiling of its own, a
+    // second, for a line that waits rather than works.
+    const pairs: { line: { wall: number; cpu: number }; bare: number }[] = []
+    const holds = ({ line, bare }: (typeof pairs)[number]): boolean => line.cpu < 200 || line.cpu < bare + 150
+    for (let run = 0; run < 10 && !pairs.some(holds); run += 1) {
+      const line = await timed([join('hosts', 'claude', 'hooks', 'statusLineMain.ts'), process.cwd()])
+      expect(line.out).toMatch(/^inbox \d+ new/)
+      pairs.push({ line, bare: (await timed(['-e', '0'])).cpu })
     }
-    const best = Math.min(...line)
-    const node = Math.min(...bare)
-    expect(best < 200 || best < Math.max(node + 150, 3 * node), `best ${best.toFixed(0)} ms; Node alone ${node.toFixed(0)} ms`).toBe(true)
-  }, 30_000)
+    const said = pairs.map(({ line, bare }) => `${line.cpu.toFixed(0)}/${bare.toFixed(0)}`).join(', ')
+    expect(pairs.some(holds), `CPU ms, line/bare Node: ${said}`).toBe(true)
+    expect(Math.min(...pairs.map(({ line }) => line.wall)), `wall ms: ${pairs.map(({ line }) => line.wall.toFixed(0)).join(', ')}`).toBeLessThan(1000)
+  }, 60_000)
 
   it('never opens the document: what it prints comes from beside it', async () => {
     const { folder, path } = await aProject()
