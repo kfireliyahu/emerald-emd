@@ -1,7 +1,7 @@
 {
   "name": "emerald",
   "displayName": "Emerald",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "The database under the chat. Declare a table for anything you keep, with real types and real checks, in a .emd file on your machine, read your CSV and Excel files onto it, and see its rows, board or roadmap in the conversation. No account and no network call.",
   "author": { "name": "Kfir Raphael Eliyahu", "url": "https://getemerald.dev" },
   "homepage": "https://getemerald.dev",
@@ -14,7 +14,7 @@
   "mcpServers": {
     "emerald": {
       "command": "npx",
-      "args": ["-y", "--prefer-offline", "emerald-mcp@0.1.1", "--engine-only"]
+      "args": ["-y", "--prefer-offline", "emerald-mcp@0.1.2", "--engine-only"]
     }
   }
 }
