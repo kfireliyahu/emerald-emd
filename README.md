@@ -57,7 +57,8 @@ Free software, AGPL-3.0. Desktop only, no server, no account. [getemerald.dev](h
 
 ## Installing it
 
-Nothing is downloadable yet. With the public release, three ways in:
+Three ways in. The server and the Claude Code plugin install today; the desktop app comes with the
+public release:
 
 - **The desktop app**, for Windows and macOS, from [getemerald.dev](https://getemerald.dev).
   `.emd` documents get their own icon and open on a double-click. It is not code-signed: Windows
@@ -73,10 +74,16 @@ Nothing is downloadable yet. With the public release, three ways in:
   ```bash
   claude mcp add emerald -- npx emerald-mcp
   ```
-- **The Claude Code plugin**, with the server and the skills that go with it: declaring a format
-  with a person, running a project's milestones from its rows.
+- **The Claude Code plugin**, with the server, its views drawn in the conversation, the skill for
+  declaring a format with a person, and the hooks that bring a project's `start_here` and inbox
+  into a session ([what it runs](./hosts/claude/README.md)):
 
-Until then, everything runs from the repository below.
+  ```
+  /plugin marketplace add kfireliyahu/emerald-emd
+  /plugin install emerald@emerald-emd
+  ```
+
+Until the desktop app is out, it runs from the repository below.
 
 ## The repository
 

@@ -1,0 +1,16 @@
+{
+  "name": "emerald-emd",
+  "owner": { "name": "Kfir Raphael Eliyahu", "url": "https://getemerald.dev" },
+  "metadata": {
+    "description": "Emerald's plugin for Claude, served from its own repository."
+  },
+  "plugins": [
+    {
+      "name": "emerald",
+      "source": "./hosts/claude",
+      "description": "A typed, local .emd document for what you and Claude work out: the MCP server, its views drawn in the conversation, the hooks that bring a project's start_here and inbox into a session, and the skill for declaring a format.",
+      "homepage": "https://getemerald.dev",
+      "category": "productivity"
+    }
+  ]
+}

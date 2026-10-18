@@ -416,6 +416,7 @@ written out here.
 | D-495 | 2026-10-18 | The repository goes public before the showcase, as one fresh commit with its history kept privately; what a visitor or a new session reads first says what holds, not who decided it; `docs/archive/` leaves the repository; and M33 U4 then deploys with GitHub Pages and a getemerald.dev record at Cloudflare | [below](#d-495) |
 | D-496 | 2026-10-18 | A tour plays only while its frame is seen, and the frame decides it: the player holds the first step and pauses every hold while an `IntersectionObserver` on the frame's own document says less than a third of it is in view or the tab is hidden, so `?autoplay=1` means play when seen on any page that embeds it | [below](#d-496) |
 | D-497 | 2026-10-18 | The MCP server is published as one npm package, `emerald-mcp`, that is `dist-plugin/` as built: every package bundled and no dependencies, a manifest generated from the root one, and a bin each for the server (`emerald-mcp`, full or `--engine-only` by flag), the hooks (`emerald-hooks`) and the status line (`emerald-status-line`) | [below](#d-497) |
+| D-498 | 2026-10-18 | The Claude plugin is `hosts/claude/`, listed by a marketplace at the public repository's root and built by nothing: it pins the published `emerald-mcp` at the manifest's `version`, runs the server through `npx --prefer-offline`, and runs the hooks through `emerald.mjs`, a hand-written launcher that keeps a copy of the package in `${CLAUDE_PLUGIN_DATA}` and starts it with plain `node`; no `.mcpb`, because the directory no longer takes one | [below](#d-498) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -841,3 +842,51 @@ a pinned version makes safe. How the plugin's hooks pay that is M42 U4's. This c
 subcommands (the cost above, paid at the front of every hook). Dependencies resolved at install
 (an `npx` that installs the MCP SDK's tree on first run, for files that bundle in seconds). A
 manifest kept by hand beside the root one.
+
+## D-498 · 2026-10-18 · The Claude plugin is `hosts/claude/`, listed by a marketplace at the public repository's root and built by nothing: it pins the published `emerald-mcp` at the manifest's `version`, runs the server through `npx --prefer-offline`, and runs the hooks through `emerald.mjs`, a hand-written launcher that keeps a copy of the package in `${CLAUDE_PLUGIN_DATA}` and starts it with plain `node`; no `.mcpb`, because the directory no longer takes one <a id="d-498"></a>
+
+**Context.** M42 U4 packages Emerald for one-click install in Claude. Its first attempt committed a
+bundle of the server and hooks into the plugin (parked on the unpushed `m42-u4-wip`); the
+maintainer ordered npm first, and `emerald-mcp@0.1.0` is published (D-497). An `npx` call costs
+~2 s on the maintainer's Windows machine against ~0.35 s for `node`, and the inbox hook runs before
+every prompt. Anthropic's publish page, read on the day, says the directory no longer accepts local
+servers packaged as desktop extensions (MCPB): a local server goes inside a plugin.
+
+**Decision.**
+- **The plugin folder is `hosts/claude/`** (D-494's home for what only Claude reads), and
+  `.claude-plugin/marketplace.json` at the repository's root lists it, so `/plugin marketplace add
+  kfireliyahu/emerald-emd` then `/plugin install emerald@emerald-emd` installs it with no review.
+  Nothing builds it: no committed bundle, no build script, no release asset.
+- **The server is `npx -y --prefer-offline emerald-mcp@<version> --engine-only`.** Once per
+  session, so npx's two seconds are paid once; `--prefer-offline` keeps a pinned version off the
+  network after the first fetch. Measured on Windows: Claude Code starts it as written and it
+  connects.
+- **The hooks run through `emerald.mjs`**, ~85 lines of plain JavaScript with no imports but
+  Node's. It reads the version from `.claude-plugin/plugin.json`, keeps `emerald-mcp` at that
+  version in `${CLAUDE_PLUGIN_DATA}/node_modules/` (installed with npm, `--prefer-offline`, at the
+  first `start-here` after an install or update — ~10 s once), and imports the bin there in its own
+  process. The per-prompt `rows` never installs: until the copy is there it is silent. Measured:
+  `rows` through the launcher ~0.35 s, the same as `node` on the file.
+- **The version is written once**, as `plugin.json`'s `version`; the server's pin must equal it and
+  it must equal the root `package.json`'s, which `npm run build:plugin` stamps on the package
+  (`hosts/claude/plugin.test.ts`). So a release is: bump, build, publish, then push — the
+  marketplace serves `main`, and a pin pushed before its publish installs nothing. A change to the
+  plugin alone ships with the next package version.
+- **No `.mcpb`.** The directory has deprecated desktop-extension listings, and a plugin answers
+  M41 U4's *does a person need Node* no better: Claude Code's plugin runs on the person's `node`.
+- **The status line stays the person's setting** (a plugin's `settings` take only `agent` and
+  `subagentStatusLine`); since the data folder does not move between versions, it can name
+  `.../plugins/data/emerald-emerald-emd/node_modules/emerald-mcp/status-line.mjs`.
+
+**Consequences.** The plugin needs Node on the `PATH` and the network once per version. The
+directory, if Emerald is submitted to it later, would hold this version for a reviewer (a pinned
+npx package and a launcher that installs are always held) and would block the hooks' `"$CLAUDE_PROJECT_DIR"`
+argument in a plugin that is a subfolder of its repository; the launcher could take the folder from
+the environment instead. A person who also wired the hooks by hand (`.claude/settings.json`) gets
+them twice and should drop their own.
+
+**Rejected.** `npx` in `hooks.json` (two seconds before every prompt). The committed bundle (the
+maintainer's *why a workaround*: the package is the build). Finding the npx cache's copy (its folder
+is a hash of npm's choosing, and moves with npm). Running the server through the launcher too (two seconds saved once
+a session, for a plugin that no longer runs the command every other client runs).
+A `.mcpb` beside the plugin (the directory no longer takes one).

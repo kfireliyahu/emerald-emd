@@ -402,10 +402,10 @@ describe('in a git worktree (M51 U1)', () => {
 
 describe('the hook set', () => {
   /** Every hook command, by event, with where the hooks' bundle is left out. */
-  function commandsOf(settings: { hooks: Record<string, { hooks: { command: string }[] }[]> }, server: string): Record<string, string[]> {
+  function commandsOf(settings: { hooks: Record<string, { hooks: { command: string }[] }[]> }, server: string, as = '<server>'): Record<string, string[]> {
     const out: Record<string, string[]> = {}
     for (const event of ['SessionStart', 'UserPromptSubmit']) {
-      out[event] = (settings.hooks[event] ?? []).flatMap((group) => group.hooks.map((hook) => hook.command.replace(server, '<server>')))
+      out[event] = (settings.hooks[event] ?? []).flatMap((group) => group.hooks.map((hook) => hook.command.replace(server, as)))
     }
     return out
   }
@@ -414,7 +414,8 @@ describe('the hook set', () => {
     const repo = JSON.parse(await readFile(join('.claude', 'settings.json'), 'utf8'))
     const shipped = JSON.parse(await readFile(join('hosts', 'claude', 'hooks', 'hooks.json'), 'utf8'))
     const here = commandsOf(repo, '$CLAUDE_PROJECT_DIR/dist-plugin/hooks.mjs')
-    expect(here).toEqual(commandsOf(shipped, '${CLAUDE_PLUGIN_ROOT}/hooks.mjs'))
+    // The plugin reaches the same bundle through its launcher, from the published package (M42 U4).
+    expect(here).toEqual(commandsOf(shipped, '${CLAUDE_PLUGIN_ROOT}/emerald.mjs" emerald-hooks', '<server>"'))
     expect(here['SessionStart']).toEqual(['node "<server>" start-here "$CLAUDE_PROJECT_DIR"'])
     expect(here['UserPromptSubmit']).toEqual(['node "<server>" rows "$CLAUDE_PROJECT_DIR" inbox --match state=new --once-per-session'])
   })
