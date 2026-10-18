@@ -601,7 +601,7 @@ the frame included, since MCP Apps is an open extension. Until M42 U6 these were
 tools it answers with rather than starting the server. `hosts/claude/` is the one home for what only
 Claude reads: the hooks and the status line, the skills a stranger gets (`skills/declare-a-format`, the
 same file as this repo's `.claude/skills/` copy, which `skills.test.ts` holds), and the plugin's
-manifest and launcher (M42 U4, below). A second host later is `hosts/<name>/`. A host reaches the server only through
+manifest (M42 U4, below). A second host later is `hosts/<name>/`. A host reaches the server only through
 `src/plugin/host.ts` (and the shell's constants through `electron/bridge.ts`); nothing in `src/` or
 `electron/` imports from `hosts/`; `src/plugin/hostBoundary.test.ts` fails on either. This repo's own
 `.claude/` stays the configuration for developing Emerald.
@@ -627,8 +627,8 @@ the tools take the path a session gives them, and that path is the one to give. 
 is never committed**: `scripts/guard-memory-emd.mjs` refuses a `git commit` in a linked worktree
 while the copy is staged, or while it has changed and `-a` or a pathspec would take it.
 
-The hook set is `hosts/claude/hooks/hooks.json`, the plugin's (`node "${CLAUDE_PLUGIN_ROOT}/emerald.mjs"
-emerald-hooks …`, M42 U4); this repo runs the same two from `.claude/settings.json`
+The hook set is `hosts/claude/hooks/hooks.json`, the plugin's (`npx -y --prefer-offline -p
+emerald-mcp@<version> emerald-hooks …`, M42 U4); this repo runs the same two from `.claude/settings.json`
 against `dist-plugin/`, and `hosts/claude/hooks/commands.test.ts` fails when the two differ. `SessionStart`
 matches `startup|clear|compact` (a resumed session has the answer already); `UserPromptSubmit`
 runs before every prompt with `--once-per-session`, below.
@@ -1337,8 +1337,8 @@ the npx cache with nothing installed. npm's own start-up is the difference, and 
 prompt. And for a registry spec npx asks the registry about it each time — `libnpmexec` fetches the
 manifest with `preferOnline` — unless `--prefer-offline` is passed, which wins in
 `npm-registry-fetch`'s cache mode; a pinned version never changes, so the plugin can pass it safely:
-`npx -y --prefer-offline emerald-mcp@<version> --engine-only`. The plugin's per-prompt hook does not
-pay it: it runs a copy of the package with plain `node` (below).
+`npx -y --prefer-offline emerald-mcp@<version> --engine-only`. The plugin pays it on every hook, by
+the maintainer's choice (D-499, below).
 
 **Publishing is the maintainer's act** on the project's npm account: `npm run build:plugin`, then
 `npm publish --access public` from `dist-plugin/` (`npm pack` there makes the tarball to try first).
@@ -1356,37 +1356,39 @@ printed `start_here` and the inbox row, and `npx emerald-status-line` printed `i
 
 **The plugin is `hosts/claude/`, and nothing builds it.** `.claude-plugin/marketplace.json` at the
 repository's root lists it, so it installs from the public repository with no review; what it ships
-is the manifest (`.claude-plugin/plugin.json`), the hook set, the `declare-a-format` skill, a README
-for a stranger and `emerald.mjs`. Everything it runs is the published package, pinned:
+is the manifest (`.claude-plugin/plugin.json`), the hook set, the `declare-a-format` skill and a
+README for a stranger. **Everything it runs is the published package, through `npx`, pinned** — the
+maintainer's *use npm for it* (D-499, amending D-498's launcher):
 
 - **The server**: `npx -y --prefer-offline emerald-mcp@<version> --engine-only`, once a session.
   Claude Code on Windows starts it as written. The views draw from it with nothing else to set up —
   they ride inside the server (M41).
-- **The hooks**: `node "${CLAUDE_PLUGIN_ROOT}/emerald.mjs" emerald-hooks …`. The launcher keeps the
-  package at the pinned version in `${CLAUDE_PLUGIN_DATA}/node_modules/emerald-mcp` — Claude Code's
-  per-plugin folder, `~/.claude/plugins/data/emerald-emerald-emd/`, kept across updates — installs it
-  there with npm at the first `start-here` after an install or update (~10 s, once; `--prefer-offline`
-  reuses the tarball the server's npx fetched), and imports the bin in its own process. The
-  per-prompt `rows` never waits on npm: until the copy is there it prints nothing. Measured on
-  Windows: `rows` ~0.35 s through the launcher, as through `node` on the file; npx would be ~2 s.
-- **The status line** is a person's setting, not a plugin's; it names
-  `~/.claude/plugins/data/emerald-emerald-emd/node_modules/emerald-mcp/status-line.mjs`, which does
-  not move between versions.
+- **The hooks**: `npx -y --prefer-offline -p emerald-mcp@<version> emerald-hooks …`, the same
+  arguments as this repo's. npm's `npm notice run …` lines go to stderr, which a hook that exits 0
+  keeps out of context.
+- **The status line** is a person's setting, not a plugin's:
+  `npx -y --prefer-offline -p emerald-mcp@<version> emerald-status-line`.
 
-**The version is written once**, as the manifest's `version`: the server's pin equals it, the
-launcher reads it, and it equals the root `package.json`'s, which `build:plugin` stamps on the
+**What npx costs, accepted** (measured 2026-10-18 on the maintainer's Windows machine, cache warm):
+the inbox hook **~1.95 s before every prompt** (against ~0.35 s for `node` on the file), `start-here`
+~2 s once a session, the server's start ~2.2–2.6 s once a session, and the status line ~1.7 s — over
+its 200 ms, so it shows the line late rather than not at all. The first run of a version also
+downloads the 2.9 MB tarball.
+
+**The version is written once**, as the manifest's `version`: every pin — the server's and each
+hook's — equals it, and it equals the root `package.json`'s, which `build:plugin` stamps on the
 package (`hosts/claude/plugin.test.ts`). The marketplace serves `main`, so a release is bump, build,
 publish, then push — a pin pushed before its publish installs nothing, and a change to the plugin
 alone ships with the next package version.
 
 **Proved on 2026-10-18**, in a throwaway `CLAUDE_CONFIG_DIR`: `claude plugin validate` passes (the
 directory's link fields warn on this CLI, 2.1.177, and are accepted from 2.1.281); the plugin
-installs from the marketplace; `claude mcp list` shows `plugin:emerald:emerald` connected; the
-manifest's own command created a document with the development pack and answered `start_here` with
-its ready unit; the hooks through the installed launcher installed the package, printed
-`start_here` and the inbox row; and a headless session with the plugin loaded called
-`mcp__plugin_emerald_emerald__start_here`. **The directory**, if it is ever submitted to, would hold
-it for a reviewer (a pinned npx package; a launcher that installs) and would block the hooks'
+installs from the marketplace on GitHub; `claude mcp list` shows `plugin:emerald:emerald`
+connected; the manifest's own command created a document with the development pack and answered
+`start_here` with its ready unit; a headless session with the plugin loaded called
+`mcp__plugin_emerald_emerald__start_here`; and in a session's hook events, both npx hooks exited 0
+with `start_here` and the inbox row on stdout. **The directory**, if it is ever submitted to, would
+hold it for a reviewer (a pinned npx package) and would block the hooks'
 `"$CLAUDE_PROJECT_DIR"` argument in a plugin that is a subfolder of its repository.
 
 ## Sequencing

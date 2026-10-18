@@ -29,28 +29,29 @@ Then restart the session. It needs Node 24 or later on your `PATH`.
 
 ## What it runs, and what it fetches
 
-Everything here runs the published npm package `emerald-mcp`, pinned to this plugin's version:
+Everything here runs the published npm package `emerald-mcp` through `npx`, pinned to this
+plugin's version:
 
-- the server as `npx -y --prefer-offline emerald-mcp@<version> --engine-only`;
-- the hooks through `emerald.mjs`, a short script in this folder that keeps a copy of the same
-  package in the plugin's data folder (`~/.claude/plugins/data/emerald-emerald-emd/`), installs it
-  there with npm at the first session start after an install or update, and then runs it with
-  plain `node`, so the hook before each prompt costs a third of a second rather than npx's two.
+- the server as `npx -y --prefer-offline emerald-mcp@<version> --engine-only`, once a session;
+- the hooks as `npx -y --prefer-offline -p emerald-mcp@<version> emerald-hooks …`. npm's own
+  start-up makes each one about two seconds on Windows, and the inbox hook runs before every
+  prompt.
 
-npm downloads the package from the npm registry; nothing else is fetched, and nothing is sent
-anywhere. The [privacy policy](https://github.com/kfireliyahu/emerald-emd/blob/main/PRIVACY.md) has
+npm downloads the package from the npm registry the first time and keeps it in its cache;
+`--prefer-offline` keeps a pinned version off the network after that. Nothing else is fetched, and
+nothing is sent anywhere. The [privacy policy](https://github.com/kfireliyahu/emerald-emd/blob/main/PRIVACY.md) has
 the whole of it. The source is this repository, under AGPL-3.0-only.
 
 ## A status line, if you want one
 
-The status line is your setting, not the plugin's. Once a session has started with the plugin, add
-to `~/.claude/settings.json`:
+The status line is your setting, not the plugin's. Add to `~/.claude/settings.json`, with the
+version this plugin pins:
 
 ```json
-"statusLine": { "type": "command", "command": "node \"~/.claude/plugins/data/emerald-emerald-emd/node_modules/emerald-mcp/status-line.mjs\"" }
+"statusLine": { "type": "command", "command": "npx -y --prefer-offline -p emerald-mcp@0.1.0 emerald-status-line" }
 ```
 
-with `~` written out as your home folder. It prints the inbox's new rows and the units in progress,
-for the project's document.
+It prints the inbox's new rows and the units in progress, for the project's document; through npx it
+takes about two seconds to refresh.
 
 More: [getemerald.dev](https://getemerald.dev) · [the plugin's notes](https://github.com/kfireliyahu/emerald-emd/blob/main/docs/plugin.md) · [issues](https://github.com/kfireliyahu/emerald-emd/issues)

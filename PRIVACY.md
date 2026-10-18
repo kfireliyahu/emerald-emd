@@ -19,10 +19,10 @@ analytics, no telemetry, no crash reports, no update check.
   it writes, and makes no network call; a test proves it. **What leaves your machine is what you,
   or the model, put into the conversation** — and that conversation is with the host and the model
   provider you chose, under their privacy policy, not this one.
-- **The Claude plugin** runs that same server, published on npm as `emerald-mcp`. To install it
-  and each new version, npm downloads the package from the npm registry — npm's request, under
-  npm's privacy statement — and the plugin keeps a copy in the folder Claude Code gives it; after
-  that it runs from the copy and makes no network call. Its hooks read the project's `.emd` and
+- **The Claude plugin** runs that same server, published on npm as `emerald-mcp`, through `npx`.
+  The first time, and for each new version, npm downloads the package from the npm registry —
+  npm's request, under npm's privacy statement — and keeps it in its own cache; after that it runs
+  from the cache and makes no network call. Its hooks read the project's `.emd` and
   print to the session, and what they print stays on this machine until the conversation sends it.
 - **Emerald's page and the demo** on this repository's Pages site — getemerald.dev, once it points
   there — load only their own files, set no cookies, and send nothing: the page carries no visit

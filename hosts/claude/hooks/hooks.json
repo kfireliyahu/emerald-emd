@@ -1,5 +1,5 @@
 {
-  "description": "Emerald: start_here at session start, and the inbox's new rows before a prompt, each in full once per session and then a count (M47 U1, M51 U6). Silent in a folder that names no document. Run from the pinned emerald-mcp through emerald.mjs, which installs it at session start (M42 U4).",
+  "description": "Emerald: start_here at session start, and the inbox's new rows before a prompt, each in full once per session and then a count (M47 U1, M51 U6). Silent in a folder that names no document. Run from the published emerald-mcp, pinned, through npx (M42 U4).",
   "hooks": {
     "SessionStart": [
       {
@@ -7,8 +7,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/emerald.mjs\" emerald-hooks start-here \"$CLAUDE_PROJECT_DIR\"",
-            "timeout": 120
+            "command": "npx -y --prefer-offline -p emerald-mcp@0.1.0 emerald-hooks start-here \"$CLAUDE_PROJECT_DIR\"",
+            "timeout": 60
           }
         ]
       }
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/emerald.mjs\" emerald-hooks rows \"$CLAUDE_PROJECT_DIR\" inbox --match state=new --once-per-session",
+            "command": "npx -y --prefer-offline -p emerald-mcp@0.1.0 emerald-hooks rows \"$CLAUDE_PROJECT_DIR\" inbox --match state=new --once-per-session",
             "timeout": 15
           }
         ]

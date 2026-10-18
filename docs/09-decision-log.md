@@ -417,6 +417,7 @@ written out here.
 | D-496 | 2026-10-18 | A tour plays only while its frame is seen, and the frame decides it: the player holds the first step and pauses every hold while an `IntersectionObserver` on the frame's own document says less than a third of it is in view or the tab is hidden, so `?autoplay=1` means play when seen on any page that embeds it | [below](#d-496) |
 | D-497 | 2026-10-18 | The MCP server is published as one npm package, `emerald-mcp`, that is `dist-plugin/` as built: every package bundled and no dependencies, a manifest generated from the root one, and a bin each for the server (`emerald-mcp`, full or `--engine-only` by flag), the hooks (`emerald-hooks`) and the status line (`emerald-status-line`) | [below](#d-497) |
 | D-498 | 2026-10-18 | The Claude plugin is `hosts/claude/`, listed by a marketplace at the public repository's root and built by nothing: it pins the published `emerald-mcp` at the manifest's `version`, runs the server through `npx --prefer-offline`, and runs the hooks through `emerald.mjs`, a hand-written launcher that keeps a copy of the package in `${CLAUDE_PLUGIN_DATA}` and starts it with plain `node`; no `.mcpb`, because the directory no longer takes one | [below](#d-498) |
+| D-499 | 2026-10-18 | The Claude plugin runs everything through npm: the hooks are `npx -y --prefer-offline -p emerald-mcp@<version> emerald-hooks …` and the status line `npx … emerald-status-line`, like the server, and `emerald.mjs` is gone; the cost is accepted — ~1.95 s before every prompt for the inbox hook on Windows, against ~0.35 s for `node` | [below](#d-499) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -890,3 +891,34 @@ maintainer's *why a workaround*: the package is the build). Finding the npx cach
 is a hash of npm's choosing, and moves with npm). Running the server through the launcher too (two seconds saved once
 a session, for a plugin that no longer runs the command every other client runs).
 A `.mcpb` beside the plugin (the directory no longer takes one).
+
+## D-499 · 2026-10-18 · The Claude plugin runs everything through npm: the hooks are `npx -y --prefer-offline -p emerald-mcp@<version> emerald-hooks …` and the status line `npx … emerald-status-line`, like the server, and `emerald.mjs` is gone; the cost is accepted — ~1.95 s before every prompt for the inbox hook on Windows, against ~0.35 s for `node` <a id="d-499"></a>
+
+**Amends [D-498](#d-498)**: its launcher and the status-line path, nothing else — the marketplace,
+the server's command, the single version and no `.mcpb` stand.
+
+**Context.** D-498 ran the hooks through `emerald.mjs`, which kept a copy of the package in
+`${CLAUDE_PLUGIN_DATA}` and started it with plain `node`, to keep npx's start-up off every prompt.
+The maintainer, the same day: *use npm for it* — the server, the hooks and the status line all
+through the published package, nothing on a cached path and nothing bundled, and the cost accepted.
+
+**Decision.**
+- **Hooks**: `npx -y --prefer-offline -p emerald-mcp@<version> emerald-hooks start-here
+  "$CLAUDE_PROJECT_DIR"` at `SessionStart` (timeout 60 s, for a first download), and `… rows
+  "$CLAUDE_PROJECT_DIR" inbox --match state=new --once-per-session` at `UserPromptSubmit` — the
+  arguments this repo's own hooks pass. **Status line**: `npx -y --prefer-offline -p
+  emerald-mcp@<version> emerald-status-line`, still the person's setting.
+- **`emerald.mjs` is removed**, and with it the data-folder copy and its install.
+- **Every pin equals the manifest's `version`**, the server's and each hook's
+  (`hosts/claude/plugin.test.ts`).
+
+**Consequences — the cost, measured** on the maintainer's Windows machine with npm's cache warm:
+the inbox hook **~1.95 s before every prompt** (five runs, 1.93–1.97 s; ~0.35 s as `node` on the file),
+`start-here` ~2 s once a session, the server ~2.2–2.6 s once a session, the status line ~1.7 s
+against its 200 ms. The first run of a version downloads the 2.9 MB tarball; `--prefer-offline`
+keeps every later one off the network. npm's `npm notice` lines go to stderr, which a hook exiting 0
+keeps out of context. The upside: one way to run Emerald everywhere — the command another client
+runs — with no file of the plugin's own between Claude Code and the package.
+
+**Rejected.** Keeping the launcher (the maintainer's call). `npm i -g emerald-mcp` and bare bins (a
+global install the plugin cannot make, and one more step for a person).

@@ -4200,6 +4200,16 @@ scope: plugin
 title: The Claude plugin is `hosts/claude/`, listed by a marketplace at the public repository's root and built by nothing: it pins the published `emerald-mcp` at the manifest's `version`, runs the server through `npx --prefer-offline`, and runs the hooks through `emerald.mjs`, a hand-written launcher that keeps a copy of the package in `${CLAUDE_PLUGIN_DATA}` and starts it with plain `node`; no `.mcpb`, because the directory no longer takes one
 question: How does Emerald install in Claude in one step, how do its hooks avoid npx's two seconds before every prompt, and is a desktop extension built too?
 answer: A plugin at hosts/claude/, listed by .claude-plugin/marketplace.json at the repo root: `/plugin marketplace add kfireliyahu/emerald-emd`, `/plugin install emerald@emerald-emd`. Server: `npx -y --prefer-offline emerald-mcp@<version> --engine-only` (once a session; connects on Windows as written). Hooks: `node "${CLAUDE_PLUGIN_ROOT}/emerald.mjs" emerald-hooks …`; the launcher reads the version from plugin.json, keeps emerald-mcp at it in ${CLAUDE_PLUGIN_DATA}/node_modules (installed by npm --prefer-offline at the first start-here after install/update, ~10 s once), and imports the bin in-process: ~0.35 s per prompt. The per-prompt rows never installs; it is silent until the copy exists. Version written once: plugin.json version = the server pin = root package.json version (hosts/claude/plugin.test.ts); release is bump, build, publish, then push, since the marketplace serves main. Status line stays the person's setting, at ~/.claude/plugins/data/emerald-emerald-emd/node_modules/emerald-mcp/status-line.mjs. No .mcpb: Anthropic's publish page (2026-10-18) says the directory no longer accepts desktop extensions.
+state: amended
+
+### D-499
+date: 2026-10-18
+milestone: M42
+scope: plugin
+title: The Claude plugin runs everything through npm: the hooks are `npx -y --prefer-offline -p emerald-mcp@<version> emerald-hooks …` and the status line `npx … emerald-status-line`, like the server, and `emerald.mjs` is gone; the cost is accepted — ~1.95 s before every prompt for the inbox hook on Windows, against ~0.35 s for `node`
+question: Do the plugin's hooks and status line run the published package through npx, or a cached copy with plain node?
+answer: Through npx, by the maintainer's 'use npm for it' (2026-10-18). Hooks: `npx -y --prefer-offline -p emerald-mcp@<version> emerald-hooks start-here "$CLAUDE_PROJECT_DIR"` (SessionStart, timeout 60) and `… rows "$CLAUDE_PROJECT_DIR" inbox --match state=new --once-per-session` (UserPromptSubmit). Status line (the person's setting): `npx -y --prefer-offline -p emerald-mcp@<version> emerald-status-line`. emerald.mjs and the data-folder copy are removed. Every pin equals plugin.json's version (hosts/claude/plugin.test.ts). Cost, Windows, cache warm: inbox hook ~1.95 s per prompt, start-here ~2 s and the server ~2.2–2.6 s once a session, status line ~1.7 s (over its 200 ms). Amends D-498's launcher only: marketplace, server command, single version and no .mcpb stand.
+supersedes: D-498
 state: live
 
 <!-- emerald: finding.format.md -->
@@ -5950,8 +5960,8 @@ state: accepted
 
 ### On a clean profile in the Claude desktop app's Code tab: `/plugin marketplace add kfireliyahu/emerald-emd`, `/plugin install emerald@emerald-emd`, restart the session in a folder holding a synthetic .emd with the development pack (or ask Claude to create one), then ask to see what is ready, and the board.
 unit: M42 U4
-should: The first session start installs emerald-mcp into ~/.claude/plugins/data/emerald-emerald-emd (about ten seconds, once), start_here's text is in context, and start_here / show_format from plugin:emerald:emerald draw the view in the conversation rather than a markdown table; later prompts carry no visible delay.
-breaks: Nothing drawn (the desktop app may not draw a plugin's server either, D-489), a hook error at session start, or a noticeable pause before each prompt.
+should: The first session start fetches emerald-mcp through npx (once per version), start_here's text is in context, and start_here / show_format from plugin:emerald:emerald draw the view in the conversation rather than a markdown table. Each prompt carries the accepted npx cost, about two seconds (D-499).
+breaks: Nothing drawn (the desktop app may not draw a plugin's server either, D-489), a hook error at session start, or a pause before each prompt longer than the accepted ~2 s.
 not_tried: The desktop Code tab with the plugin installed; a session on a clean profile with a model (the headless run used this machine's profile and --plugin-dir).
 state: open
 
@@ -11768,7 +11778,7 @@ landed: 2026-10-18
 decision: D-498
 state: built
 brief: Package Emerald for one-click install in Claude: a plugin bundling the MCP server with the skills a stranger needs (declare-a-format; not this project's own closing-pass or run-milestone), in a marketplace the public repository serves, so it installs without waiting on any review. Check Anthropic's live submission pages on the day: reports conflict (2026-09) on whether the directory still takes MCPB desktop extensions or only plugins; build what it takes, and a .mcpb as well only if it is still accepted, since a bundle running on Claude's own Node also answers 'does a person need Node installed' (M41 U4). The privacy policy goes in the manifest's privacy field as an HTTPS link (M42 U1). M41's views must draw from the installed plugin with no extra setup. Done-test: on a clean profile the plugin installs from the marketplace, start_here answers on a synthetic document, and show draws a view in the desktop Code tab. || Maintainer, 2026-10-18: npm goes first ('why a workaround'), so this unit now waits on M42 U2. The first attempt is parked on the local, unpushed branch m42-u4-wip (275e545): the marketplace (.claude-plugin/marketplace.json), hosts/claude/.claude-plugin/plugin.json, and a committed bundle (server.mjs, hooks.mjs, status-line.mjs from scripts/build-claude-plugin.mjs). Resume from it after emerald-mcp is published: drop the committed bundle and its build script; the plugin's MCP server entry becomes `npx -y emerald-mcp@<published version> --engine-only`, and hooks.json and the status line reach the package's own entry points as M42 U2 provides them; no release asset.
-files: .claude-plugin/marketplace.json, hosts/claude/.claude-plugin/plugin.json, hosts/claude/emerald.mjs (the launcher), hosts/claude/README.md, hosts/claude/plugin.test.ts, hosts/claude/hooks/hooks.json, hosts/claude/hooks/commands.test.ts, PRIVACY.md, README.md, docs/plugin.md (The Claude plugin), docs/09-decision-log.md (D-498)
+files: .claude-plugin/marketplace.json, hosts/claude/.claude-plugin/plugin.json, hosts/claude/README.md, hosts/claude/plugin.test.ts, hosts/claude/hooks/hooks.json, hosts/claude/hooks/commands.test.ts, PRIVACY.md, README.md, docs/plugin.md (The Claude plugin), docs/09-decision-log.md (D-498, D-499)
 blocks: ["M42 U1","M41 U4","M42 U6","M42 U2"]
 taken_by: run-milestone driver
 started: 2026-10-18
