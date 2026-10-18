@@ -11879,10 +11879,13 @@ commit: d14cfe42
 milestone: M42
 scope: plugin
 title: The development pack's workflows ship with the plugin, with a parallel driver
-state: planned
+state: in_progress
 brief: "Moved from M51 (as M51 U5) on 2026-10-17, because it waits on M42 U4's plugin. The review checklist a manager wished for already exists as this repo's review-phase skill, and run-milestone and closing-pass beside it, but all three live in this repository's .claude/skills with its own paths, so a project that keeps only the development pack has none of them. Write generic versions for any project keeping the pack (no paths of this repo, the document found as M51 U1 finds it) and ship them in hosts/claude (M42 U6) inside the Claude plugin M42 U4 builds; M42 U4's brief keeps this repo's own copies out, and that stays true. run-milestone gains a parallel mode: it asks M51 U4's overlap answer which ready units can run at once, starts one session per independent unit, and lands their M51 U3 proposals together; sequential stays the default. review-phase walks a milestone's open review_entry rows one at a time. Done-test: on a clean profile the installed plugin lists the three skills; a synthetic project keeping the pack runs a two-unit parallel milestone end to end with one landing dry run.\n\nM51 U8, 2026-10-18 (D-490): this repo's run-milestone already has the parallel mode (host sessions when offered, Agent otherwise; dispatch_plan; worktree children merged with git merge and landed by one land_units inbox; driver-assigned decision numbers), and closing-pass ends with the host's next-step box when there is one. The generic copies start from those two and keep both 'if the host offers' clauses; what is left here is stripping this repo's paths and the decision-log specifics."
 files: the plugin folder M42 U4 makes (skills/), .claude/skills/run-milestone, .claude/skills/review-phase, .claude/skills/closing-pass (left as this repo's), docs/plugin.md
 blocks: ["M42 U4","M51 U3","M51 U4"]
+taken_by: run-milestone driver
+started: 2026-10-18
+branch: main
 
 ### M42 U8
 milestone: M42
