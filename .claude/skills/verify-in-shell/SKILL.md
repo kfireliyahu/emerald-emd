@@ -31,7 +31,7 @@ Use PowerShell `Start-Process`, which returns immediately. Do **not** background
 Bash job — it holds the call open until the two-minute timeout.
 
 ```powershell
-Start-Process -FilePath node_modules\electron\dist\electron.exe -ArgumentList ".","--remote-debugging-port=9222","--user-data-dir=<scratchpad>\ud" -WorkingDirectory F:\projects\financial-companion
+Start-Process -FilePath node_modules\electron\dist\electron.exe -ArgumentList ".","--remote-debugging-port=9222","--user-data-dir=<scratchpad>\ud" -WorkingDirectory $PWD
 ```
 
 **Launch in one call, probe in the next.** Never both in one Bash call.
