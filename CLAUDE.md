@@ -174,7 +174,7 @@ marked `always`. The rest are a query, and it is cheaper than a read:
 - **Another product is described by its category, never named — except a host Emerald runs inside, a runtime it speaks to, and the maintainer's own story.** (D-450)
 - **Hebrew strings need bidi isolation: use the `Bidi` component, and never render a raw string that came out of a document.**
 - **Money is never a `number`.** (D-003, D-204)
-- **Offline is not optional and is not on trust: the page makes no request it did not serve itself.** (D-124, D-133, D-134, D-136, D-308) — `electron/network.test.ts, electron/runtimes.test.ts, electron/generate.test.ts`
+- **Offline is not optional and is not on trust: the page makes no request it did not serve itself.** (D-124, D-133, D-134, D-136, D-308, D-502) — `electron/network.test.ts, electron/runtimes.test.ts, electron/generate.test.ts, electron/updates.test.ts`
 - **Real documents never enter the repo, and nor do their names and figures.** (D-390) — `src/privacy.test.ts`
 - **`src/domain/` imports nothing from React, sql.js, or the DOM.**
 - **The engine touches none of the pack, and it is checked: `src/domain/format/` imports nothing from the ledger, and nothing in the ledger imports it.** (D-216, D-221) — `src/domain/format/boundary.test.ts`
