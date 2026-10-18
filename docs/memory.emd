@@ -6042,7 +6042,7 @@ state: open
 ### Publish it: `npm run build:plugin`, then in dist-plugin/ `npm login` if needed and `npm publish --access public`; then in an empty folder run `npx -y emerald-mcp --engine-only` from a Claude Code config (`claude mcp add emerald -- npx -y emerald-mcp --engine-only`) and call start_here on a document.
 unit: M42 U2
 should: The package page shows emerald-mcp 0.1.0 under AGPL-3.0-only with no dependencies, and the server starts with nothing installed and answers start_here.
-state: open
+state: accepted
 
 ### Read a folder of notes holding [[name]] links in the body
 unit: M34 T1
