@@ -198,7 +198,7 @@ export const en: Copy = {
     local: {
       heading: 'No internet, no login',
       body: [
-        'Runs on your machine and sends nothing anywhere itself.',
+        'Runs on your machine and sends nothing anywhere itself. It asks GitHub for a newer version only if you turn updates on.',
         'The file is yours: ordinary tools read it, back it up where you like, take it anywhere.',
       ],
     },

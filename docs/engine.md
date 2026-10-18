@@ -509,7 +509,8 @@ three separate grounds:
 
 - **D-124.** The community browser and auto-update are outbound calls that fetch **executable code**,
   in the renderer, from a host nobody allowlisted. That is the opposite of the one socket that was
-  allowed (one host, off by default, on a press somebody made).
+  allowed (one host, off by default, on a press somebody made). The update check D-502 allows since
+  is that shape too: one address, off by default, and it fetches a version number, not code.
 - **The disanalogy that matters.** A notes-app plugin uninstalls and the notes are unchanged, because
   markdown does not care. **An Emerald pack has run migrations against the user's money file**,
   so uninstall is not symmetric — which is precisely this question, and a plugin ecosystem turns it

@@ -19,6 +19,7 @@ import {
   type EmeraldDocuments,
   type EmeraldApp,
   type EmeraldFiles,
+  type EmeraldUpdates,
   type EmeraldWindow,
 } from '../../../electron/bridge.ts'
 import { DOCUMENT_EXTENSION, type OpenedDocument, type StorageAdapter } from './adapter.ts'
@@ -80,6 +81,11 @@ export function shellApp(): EmeraldApp | undefined {
 /** A `file` cell's opener (M37 U6). `undefined` outside the shell, and in a shell older than it. */
 export function shellFiles(): EmeraldFiles | undefined {
   return shellBridge()?.files
+}
+
+/** Updates, if you turn them on (M42 U8). `undefined` outside the shell, and in a shell older than it. */
+export function shellUpdates(): EmeraldUpdates | undefined {
+  return shellBridge()?.updates
 }
 
 export function createDesktopAdapter(

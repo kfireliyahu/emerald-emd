@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { ORPHANED_COPIES_DAYS, type AboutFacts } from '../../electron/bridge.ts'
-import { shellApp, shellBridge } from '@/data/storage/desktop.ts'
+import { shellApp, shellBridge, shellUpdates } from '@/data/storage/desktop.ts'
 import { formatBytes } from '@/domain/provider.ts'
 import { createStore } from '@/state/store.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { answer, useUpdateState } from '@/ui/useUpdates.ts'
 
 /**
  * **Help › About Emerald** (M45 F3, D-457) — the page's, no longer the native
@@ -18,6 +19,10 @@ import { Button } from '@/ui/components/Button.tsx'
  * What the panel said — the version, the licence, that Emerald computes rather
  * than advises, where the source is — comes from `electron/about.ts` through the
  * bridge, so the two never say different things.
+ *
+ * **It holds the one setting the app has** (M42 U8, D-502): updates, off by
+ * default, beside the version they are about, with Check now — and the rule
+ * they change, said where the person switches it.
  *
  * **The shell only.** The static site has no folder of copies and no Help menu;
  * nothing reaches this there, and the palette offers it only when the bridge
@@ -132,6 +137,8 @@ function AboutDialog() {
                 )}
               </div>
 
+              <UpdatesSection />
+
               <section aria-label="Earlier copies" className="mt-4 border-t border-hairline pt-3">
                 <p className="fc-label m-0">Earlier copies</p>
                 <p className="m-0 pt-1.5 text-[13px] text-ink-secondary">
@@ -164,5 +171,40 @@ function AboutDialog() {
         </div>
       </div>
     </div>
+  )
+}
+
+/**
+ * **Updates, if you turn them on** (M42 U8, D-502). The words say exactly what the switch does on
+ * this platform; when M42 U9 gives Windows its download and Install and restart, they say that there.
+ */
+function UpdatesSection() {
+  const state = useUpdateState()
+  const updates = shellUpdates()
+  if (state === undefined || updates === undefined) return null
+  const checking = state.notice?.kind === 'checking'
+
+  return (
+    <section aria-label="Updates" className="mt-4 border-t border-hairline pt-3">
+      <p className="fc-label m-0">Updates</p>
+      <p className="m-0 pt-1.5 text-[13px] text-ink-secondary">
+        Emerald reaches the internet for one thing only, and only if you ask: GitHub’s answer for its newest version,
+        which sees your IP address and this version number. Nothing is downloaded or installed — a newer version is a
+        note at the top of the window, and Download opens its page in your browser.
+      </p>
+      <div className="flex items-center gap-3 pt-2">
+        <label className="flex flex-1 items-center gap-2 text-[13px] text-ink select-none">
+          <input
+            type="checkbox"
+            checked={state.automatic}
+            onChange={(event) => void answer(updates.setAutomatic(event.target.checked))}
+          />
+          Check at start and once a day
+        </label>
+        <Button size="sm" onClick={() => void answer(updates.checkNow())} disabled={checking}>
+          {checking ? 'Checking…' : 'Check now'}
+        </Button>
+      </div>
+    </section>
   )
 }

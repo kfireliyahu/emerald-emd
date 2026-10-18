@@ -419,6 +419,41 @@ export interface EmeraldApp {
 }
 
 /**
+ * **Updates, if you turn them on** (M42 U8, D-502). The main process asks and decides; the page
+ * shows the one notice and holds the setting's switch. The page names no address and reaches
+ * nothing: the check runs in a session of its own (`electron/updates.ts`, `network.ts`).
+ */
+export type UpdateNotice =
+  /** Check for Updates Now, while it asks. */
+  | { readonly kind: 'checking' }
+  /** A newer release: `<version> is out`, with Download and Later. */
+  | { readonly kind: 'available'; readonly version: string }
+  /** Only after a press: this is the newest. */
+  | { readonly kind: 'latest'; readonly version: string }
+  /** Only after a press: why it could not tell. A scheduled check fails silently. */
+  | { readonly kind: 'failed'; readonly reason: string }
+
+export interface UpdateState {
+  /** The setting, off by default. */
+  readonly automatic: boolean
+  /** This app's version. */
+  readonly version: string
+  /** What the window says, until Later or Dismiss; `undefined` is nothing. */
+  readonly notice: UpdateNotice | undefined
+}
+
+export interface EmeraldUpdates {
+  state(): Promise<UpdateState>
+  setAutomatic(on: boolean): Promise<UpdateState>
+  checkNow(): Promise<UpdateState>
+  /** Later, or Dismiss: the notice goes until the next start or the next day's check. */
+  later(): Promise<UpdateState>
+  /** Download: the newest release's page in the person's own browser. The page names no address. */
+  openReleasePage(): Promise<void>
+  onChange(listener: (state: UpdateState) => void): () => void
+}
+
+/**
  * **A file a cell points at** (M37 U6) — the `file` column, opened from the page.
  *
  * The one place the page names a path the person did not pick in a dialog of
@@ -473,7 +508,8 @@ export interface EmeraldBridge {
   /** Missing from a shell older than M45 F3, which the page treats as no About of its own. */
   readonly app?: EmeraldApp
   /** Missing from a shell older than M37 U6, where a `file` cell shows its path and copies it. */
-  readonly files?: EmeraldFiles
+  readonly files?: EmeraldFiles  /** Missing from a shell older than M42 U8, which the page treats as no updates at all. */
+  readonly updates?: EmeraldUpdates
 }
 
 /** One channel per capability; `changed` and `command` run main → page. */
@@ -513,6 +549,16 @@ export const APP_CHANNELS = {
   openBackupsFolder: 'emerald:app/open-backups-folder',
   openText: 'emerald:app/open-text',
   openSource: 'emerald:app/open-source',
+} as const
+
+/** Updates (M42 U8): five questions, and `changed` runs main → page. */
+export const UPDATE_CHANNELS = {
+  state: 'emerald:updates/state',
+  setAutomatic: 'emerald:updates/set-automatic',
+  checkNow: 'emerald:updates/check-now',
+  later: 'emerald:updates/later',
+  openReleasePage: 'emerald:updates/open-release-page',
+  changed: 'emerald:updates/changed',
 } as const
 
 /** A `file` cell's channels (M37 U6): every one a question, and `open` the only one that acts. */

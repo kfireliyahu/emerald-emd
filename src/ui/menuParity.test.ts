@@ -22,6 +22,7 @@ const platform = vi.hoisted(() => ({ name: 'win32' }))
 vi.mock('@/data/storage/desktop.ts', () => ({
   shellBridge: () => ({ platform: platform.name }),
   shellApp: () => ({ openText: () => Promise.resolve(), openSource: () => Promise.resolve() }),
+  shellUpdates: () => ({ checkNow: () => Promise.resolve() }),
   shellDocuments: () => ({ clearRecents: () => Promise.resolve() }),
 }))
 vi.mock('@/state/documentStore.ts', () => ({
@@ -58,6 +59,7 @@ const IN_THE_PALETTE: Readonly<Record<string, string>> = {
   License: 'help:license',
   'Third-Party Notices': 'help:notices',
   'Source Code': 'help:source',
+  'Check for Updates Now': 'help:check-updates',
   'About Emerald': 'help:about',
 }
 
@@ -98,6 +100,7 @@ const noActions = {
   showAbout: () => undefined,
   openText: () => undefined,
   openSource: () => undefined,
+  checkForUpdates: () => undefined,
 }
 
 describe('every item in the shell menu is a palette command', () => {
@@ -143,6 +146,7 @@ describe('every item in the shell menu is a palette command', () => {
       'License',
       'Third-party notices',
       'Source code',
+      'Check for updates now',
     ])
   })
 })

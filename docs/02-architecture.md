@@ -244,8 +244,10 @@ discipline when the shell started blocking every request that is not `app://`, `
 (D-124, `electron/network.ts`): **the app works with the network off, and now fails visibly if
 someone breaks that** rather than degrading for whoever is offline. M16's opt-in price fetch was
 the one request that ever left the machine, and it went with investments (D-308): **the app makes
-no network call at all**. The only sockets are the shell's two to a local model runtime on loopback
-(`electron/runtimes.ts`, `electron/generate.ts`, D-134, D-136).
+no network call unless the person turns updates on** (M42 U8, D-502) — then one, to GitHub's
+answer for the newest release, from a session of its own that the page never runs in
+(`electron/updates.ts`, `isAllowedUpdateRequest`). The only other sockets are the shell's two to a
+local model runtime on loopback (`electron/runtimes.ts`, `electron/generate.ts`, D-134, D-136).
 
 **Three of the four `file://` constraints are gone with the single file** — IndexedDB blocked,
 inlining, the enforced size budget. **Hash routing stays** and so does **document-based**, both

@@ -1,4 +1,4 @@
-import { shellApp, shellBridge, shellDocuments } from '@/data/storage/desktop.ts'
+import { shellApp, shellBridge, shellDocuments, shellUpdates } from '@/data/storage/desktop.ts'
 import { canShowAbout, openAbout } from '@/ui/About.tsx'
 import { canListEarlierCopies, openEarlierCopies } from '@/ui/EarlierCopies.tsx'
 import { useDocumentStore } from '@/state/documentStore.ts'
@@ -332,6 +332,17 @@ function helpCommands(guide: boolean): Command[] {
       keywords: 'help repository github agpl',
       detail: 'Opens in your browser',
       run: () => void openSource(),
+    })
+  }
+  // Help › Check for Updates Now (M42 U8, D-502): one check, setting on or off, answered in the notice.
+  const updates = shellUpdates()
+  if (updates !== undefined) {
+    help.push({
+      id: 'help:check-updates',
+      label: 'Check for updates now',
+      group: 'Help',
+      keywords: 'help update upgrade new version release download',
+      run: () => void updates.checkNow(),
     })
   }
   return help

@@ -16,6 +16,7 @@ import {
   DOCUMENT_CHANNELS,
   FILE_CHANNELS,
   RUNTIME_CHANNELS,
+  UPDATE_CHANNELS,
   WINDOW_CHANNELS,
   versionFromArguments,
   type AboutFacts,
@@ -26,12 +27,14 @@ import {
   type EmeraldBridge,
   type EmeraldFiles,
   type EmeraldRuntimes,
+  type EmeraldUpdates,
   type EmeraldWindow,
   type GenerateRequest,
   type GenerateResult,
   type RecentDocument,
   type RuntimeProbe,
   type ShellCommand,
+  type UpdateState,
 } from './bridge.ts'
 import { windowChrome } from './windowChrome.ts'
 
@@ -171,6 +174,22 @@ const files: EmeraldFiles = Object.freeze({
   show: (path: string): Promise<string | undefined> => ipcRenderer.invoke(FILE_CHANNELS.show, path),
 })
 
+// Updates (M42 U8, D-502): the main process asks and decides; the page holds the switch and the notice.
+const updates: EmeraldUpdates = Object.freeze({
+  state: (): Promise<UpdateState> => ipcRenderer.invoke(UPDATE_CHANNELS.state),
+  setAutomatic: (on: boolean): Promise<UpdateState> => ipcRenderer.invoke(UPDATE_CHANNELS.setAutomatic, on),
+  checkNow: (): Promise<UpdateState> => ipcRenderer.invoke(UPDATE_CHANNELS.checkNow),
+  later: (): Promise<UpdateState> => ipcRenderer.invoke(UPDATE_CHANNELS.later),
+  openReleasePage: (): Promise<void> => ipcRenderer.invoke(UPDATE_CHANNELS.openReleasePage),
+  onChange: (listener: (state: UpdateState) => void): (() => void) => {
+    const forward = (_event: unknown, state: UpdateState): void => listener(state)
+    ipcRenderer.on(UPDATE_CHANNELS.changed, forward)
+    return () => {
+      ipcRenderer.off(UPDATE_CHANNELS.changed, forward)
+    }
+  },
+})
+
 const bridge: EmeraldBridge = Object.freeze({
   version: versionFromArguments(process.argv),
   platform: process.platform,
@@ -179,6 +198,7 @@ const bridge: EmeraldBridge = Object.freeze({
   runtimes,
   app: emeraldApp,
   files,
+  updates,
 })
 
 contextBridge.exposeInMainWorld(BRIDGE_KEY, bridge)

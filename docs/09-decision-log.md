@@ -420,6 +420,7 @@ written out here.
 | D-499 | 2026-10-18 | The Claude plugin runs everything through npm: the hooks are `npx -y --prefer-offline -p emerald-mcp@<version> emerald-hooks …` and the status line `npx … emerald-status-line`, like the server, and `emerald.mjs` is gone; the cost is accepted — ~1.95 s before every prompt for the inbox hook on Windows, against ~0.35 s for `node` | [below](#d-499) |
 | D-500 | 2026-10-18 | The server is listed in the official MCP Registry as `io.github.kfireliyahu/emerald`, from a `server.json` at the repository's root that a workflow publishes, signed in with GitHub OIDC, whenever npm has a version the registry lacks; a version is cut in `package.json`, `server.json` and `PLUGIN_VERSION` and pushed first, and the plugin's pins follow once npm has it, so they may trail the package and never lead it | [below](#d-500) |
 | D-501 | 2026-10-18 | A unit left `in_progress` by a session that stopped is taken over with `claim_units take_over:<its taker>`, refused unless that taker holds it, with `started` reset and the taker replaced kept on `taken_over_from`; `start_here` lists a unit `in_progress` for more than a day as stalled; `land_units` refuses a landing with no `commit` unless it says `same_commit: true`, and keeps the builder's `report` on the unit | M51 |
+| D-502 | 2026-10-18 | The desktop app makes no network call unless the person turned updates on, or pressed Check for Updates Now — then one request, to `api.github.com/repos/kfireliyahu/emerald-emd/releases/latest`, from a session of its own that the page never runs in, open only while that check asks; the setting is off by default and the app's, a newer version is a quiet notice in the window whose Download opens the release page, and M42 U9's download will reach `github.com/kfireliyahu/emerald-emd/releases/download/` and the asset hosts it redirects to (`release-assets.githubusercontent.com`, `objects.githubusercontent.com`) only on the same terms; amends D-124 and D-452 | [below](#d-502) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -974,6 +975,65 @@ thing). A domain namespace (`dev.getemerald/…`: a DNS key to keep, for a listi
 already proves). Keeping the pins equal to the package (every cut would break the plugin until the
 publish, or wait unpushed on `main`). A personal access token for the registry (a secret to rotate,
 where OIDC needs none).
+
+## D-502 · 2026-10-18 · The desktop app makes no network call unless the person turned updates on, or pressed Check for Updates Now — then one request, to `api.github.com/repos/kfireliyahu/emerald-emd/releases/latest`, from a session of its own that the page never runs in, open only while that check asks; the setting is off by default and the app's, a newer version is a quiet notice in the window whose Download opens the release page, and M42 U9's download will reach `github.com/kfireliyahu/emerald-emd/releases/download/` and the asset hosts it redirects to (`release-assets.githubusercontent.com`, `objects.githubusercontent.com`) only on the same terms; amends D-124 and D-452 <a id="d-502"></a>
+
+**Context.** M42 U8. D-124 said nothing inside the app reaches the network, and `electron/network.ts`
+enforced it: the README's "Updates are download the new one; there is no update check". Once the
+app is public, a person who installed v0.1.0 has no way to learn there is a v0.1.1 short of
+revisiting the page. The maintainer decided on 2026-10-18 that the desktop app gets updates as an
+opt-in, off by default and never intrusive — no modal, no dialog that takes focus, nothing installed
+unasked — the way the Claude desktop app shows one.
+
+**Decision.**
+
+- **The rule, amended.** The desktop app makes no network call unless the person turned updates on
+  — and then only to GitHub's release addresses for this repository. A press of Help → Check for
+  Updates Now is consent for that one check, with the setting off. The check asks exactly
+  `https://api.github.com/repos/kfireliyahu/emerald-emd/releases/latest`; M42 U9's download will
+  reach `https://github.com/kfireliyahu/emerald-emd/releases/download/…` and the asset hosts GitHub
+  redirects a release download to (`release-assets.githubusercontent.com`,
+  `objects.githubusercontent.com`), on the same terms, and widens the predicate then — not before.
+- **A session of its own, not a loosening of the page's.** The check runs in
+  `session.fromPartition('emerald-updates')`, held in memory, which nothing the page loads runs in.
+  `isAllowedRequest` — the page's — is unchanged and refuses the address with the setting on or off;
+  `isAllowedUpdateRequest` allows that one URL, exactly, and only while `Updates.gateOpen()` — which
+  is narrower than the brief asked: open while a check is in flight, not for as long as the setting
+  is on. A redirect is an error. It sends `User-Agent: Emerald/<version>` and `Accept-Language: en`,
+  so GitHub sees the IP address, the version and the time, and not the system's language or OS.
+- **The release API, not `latest.yml`.** One request answers both platforms, from the host that
+  answers it (no redirect to an asset host), it exists today, and `releases/latest` skips drafts and
+  pre-releases itself. `latest.yml` is published only once U9's build ships it, and macOS would read a
+  second file. Only `tag_name` is read from the answer; nothing else in it reaches the window or the
+  browser.
+- **One setting, the app's.** `settings.json` beside `recents.json` in the app's own folder,
+  `{"automaticUpdates": true}` or off — anything else is off. It is switched in About (the page's,
+  M45 F3), where the version is, under words that say what it does on this platform; until U9 that is
+  the same on both: check at start and once a day, and say so.
+- **The schedule.** At start, then a tick every hour that checks only when on and a day has passed
+  since the last check — so a laptop that slept still checks. A scheduled check that finds nothing,
+  or fails, says nothing; the next day's tries again.
+- **The notice.** The lowest row of the notice region (it is about the app, not anything open in
+  it): *Emerald <version> is out. You have <version>.* with **Download** — `shell.openExternal` of
+  `<repository>/releases/latest`, a constant, never an address from the answer — and **Later**, which
+  hides it until the next start or the next day's check. Check for Updates Now answers in the same
+  row: *Checking…*, *You have the latest — Emerald <version>.*, or *Could not check for updates.* with
+  the reason. No dialog, and nothing takes focus. It is in Help on both platforms and in the palette.
+
+**Consequences.** `electron/network.test.ts` proves the update predicate closed with no check
+asking, open for that URL alone while one does, and the page's predicate refusing it either way;
+`electron/updates.test.ts` proves the schedule asks nothing while off over ten days, and every answer
+against a stubbed release. A verify-in-shell run with Chromium's net log showed no HTTP request at
+all with the setting off. The rule rows for the offline law and for `openExternal` say the same. An
+unpackaged shell reads a release answer from the file `EMERALD_UPDATE_ANSWER` names instead of
+asking, for verifying the notice; a packaged app ignores it.
+
+**Rejected.** Widening the page's session for the address (a renderer that ever loaded something
+foreign could then ask it). `electron-updater` for the check (U9's to choose for the download; for a
+version number it is a dependency and a second file). Opening the `html_url` from the answer (an
+address the network chose, handed to the browser). A dialog for Check for Updates Now (the maintainer
+ruled out anything that takes focus). The gate open for as long as the setting is on (the narrower
+gate costs nothing).
 
 ## Related
 

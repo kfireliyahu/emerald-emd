@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 
 import { waitingItems } from '@/data/repositories/homeRepository.ts'
 import { documentCurrency } from '@/data/repositories/statisticsRepository.ts'
+import { shellUpdates } from '@/data/storage/desktop.ts'
 import { waitingCounts } from '@/domain/home.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
@@ -10,6 +11,7 @@ import { openEarlierCopies } from '@/ui/EarlierCopies.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { useKeepsLedger } from '@/ui/packs.ts'
 import { today } from '@/ui/today.ts'
+import { answer, useUpdateState } from '@/ui/useUpdates.ts'
 
 /**
  * Everything the app has to say, in one place and in one order (D-130).
@@ -40,6 +42,9 @@ import { today } from '@/ui/today.ts'
  *    count the month twice (D-160), the transfers, and everything else Home's
  *    list holds, as one count. Below the three above because they are about the
  *    document as a file and this is about what is in it.
+ * 5. **A newer Emerald** (M42 U8, D-502), last, because it is about the app
+ *    and not about anything open in it — and quiet: no dialog, nothing that
+ *    takes focus, gone on Later until the next start or the next day's check.
  *
  * **One primary action across the region, and it belongs to the notice at the
  * top** — docs/11's rule about a screen's single primary action, applied to a
@@ -84,10 +89,11 @@ export function Notices({
   // got (M25 U2).
   const keepsLedger = useKeepsLedger()
   const waiting = useWaitingNotice(offerResume && keepsLedger)
+  const update = useUpdateNotice()
 
   // The array order *is* the ranking. Written out rather than sorted by a
   // number, because four fixed things in a fixed order is what this is.
-  const notices = [conflict, pending, replacing, failure, kept, waiting].filter(
+  const notices = [conflict, pending, replacing, failure, kept, waiting, update].filter(
     (notice): notice is Notice => notice !== undefined,
   )
 
@@ -352,6 +358,58 @@ function usePendingReplaceNotice(): Notice | undefined {
       { label: `Discard mine, ${word}`, onClick: () => void replace(), disabled: busy },
       { label: 'Stay here', onClick: dismiss, disabled: busy, quiet: true },
     ],
+  }
+}
+
+/**
+ * **A newer Emerald, or the answer to Check for Updates Now** (M42 U8, D-502). The shell asks and
+ * decides; this only says it. Download opens the release page in the browser — nothing is
+ * downloaded or installed from inside the app — and Later hides it until the next start or the
+ * next day's check. A scheduled check that finds nothing says nothing.
+ */
+function useUpdateNotice(): Notice | undefined {
+  const state = useUpdateState()
+  const updates = shellUpdates()
+  const notice = state?.notice
+  if (notice === undefined || updates === undefined) return undefined
+
+  const later = (): void => void answer(updates.later())
+
+  switch (notice.kind) {
+    case 'checking':
+      return { id: 'update', body: <>Checking for a newer version of Emerald…</>, actions: [] }
+    case 'available':
+      return {
+        id: 'update',
+        body: (
+          <>
+            <strong className="font-medium">Emerald {notice.version}</strong> is out. You have {state?.version}.
+          </>
+        ),
+        actions: [
+          {
+            label: 'Download',
+            onClick: () => {
+              void updates.openReleasePage()
+              later()
+            },
+            lead: true,
+          },
+          { label: 'Later', onClick: later, quiet: true },
+        ],
+      }
+    case 'latest':
+      return {
+        id: 'update',
+        body: <>You have the latest — Emerald {notice.version}.</>,
+        actions: [{ label: 'Dismiss', onClick: later, quiet: true }],
+      }
+    case 'failed':
+      return {
+        id: 'update',
+        body: <>Could not check for updates. {notice.reason}</>,
+        actions: [{ label: 'Dismiss', onClick: later, quiet: true }],
+      }
   }
 }
 

@@ -21,7 +21,8 @@
  * `windowChrome.ts`, which the renderer lays its own bar out against.
  */
 
-import { mkdir, readFile, stat } from 'node:fs/promises'
+import { readFileSync } from 'node:fs'
+import { mkdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 
@@ -46,6 +47,7 @@ import {
   DOCUMENT_EXTENSION,
   FILE_CHANNELS,
   RUNTIME_CHANNELS,
+  UPDATE_CHANNELS,
   VERSION_ARGUMENT,
   WINDOW_CHANNELS,
   backupsRoot,
@@ -70,10 +72,19 @@ import {
 } from './documents.ts'
 import { openLinked, presentLinked, showLinked, type LinkedFileSystem } from './linkedFiles.ts'
 import { buildMenuTemplate } from './menu.ts'
-import { isAllowedRequest } from './network.ts'
+import { isAllowedRequest, isAllowedUpdateRequest } from './network.ts'
 import { cancelGeneration, generate } from './generate.ts'
 import { loadRecents, saveRecents, withRecent, withoutRecent } from './recents.ts'
 import { detectRuntimes } from './runtimes.ts'
+import {
+  automaticFrom,
+  createUpdates,
+  RELEASES_LATEST,
+  RELEASES_PAGE,
+  settingsText,
+  TICK_MS,
+  type Updates,
+} from './updates.ts'
 import { titleBarOverlay, trafficLightPosition, usesControlsOverlay } from './windowChrome.ts'
 
 /**
@@ -82,6 +93,12 @@ import { titleBarOverlay, trafficLightPosition, usesControlsOverlay } from './wi
  * over `app://`, which is what a packaged app does.
  */
 const DEV_SERVER_URL = process.env['EMERALD_DEV_SERVER_URL']
+
+/**
+ * A file holding a release answer, read instead of asking GitHub — for verifying the notice in an
+ * unpackaged shell, and honoured only there: a packaged app ignores it. Reading it makes no request.
+ */
+const UPDATE_ANSWER_FILE = process.env['EMERALD_UPDATE_ANSWER']
 
 /**
  * `dist/` sits beside `dist-electron/`, in the repo and inside a packaged app
@@ -232,6 +249,83 @@ function openSource(): void {
 }
 
 /**
+ * **Updates, if you turn them on** (M42 U8, D-502) — the one request this app makes, and only on
+ * the person's say: the setting, or a press of Help › Check for Updates Now.
+ *
+ * It asks from **a session of its own**, held in memory, which nothing the page loads runs in: the
+ * page's session above refuses the address with the setting on or off, and this one allows that
+ * address alone, only while a check is asking (`isAllowedUpdateRequest`). It tells GitHub the app's
+ * name and version and a fixed language (`setUserAgent`), and a redirect is an error, not a second host.
+ *
+ * The setting is the app's, in `settings.json` beside `recents.json`, never the document's.
+ */
+function serveUpdates(): Updates {
+  const settingsFile = join(app.getPath('userData'), 'settings.json')
+  let saved: string | undefined
+  try {
+    saved = readFileSync(settingsFile, 'utf8')
+  } catch {
+    saved = undefined
+  }
+
+  const stub = app.isPackaged || UPDATE_ANSWER_FILE === undefined || UPDATE_ANSWER_FILE === '' ? undefined : UPDATE_ANSWER_FILE
+  const asking = session.fromPartition('emerald-updates')
+  // The language too: Chromium would otherwise send the system's, which says where somebody is.
+  asking.setUserAgent(`Emerald/${app.getVersion()}`, 'en')
+  asking.setPermissionRequestHandler((_contents, _permission, callback) => callback(false))
+  asking.setPermissionCheckHandler(() => false)
+
+  const updates = createUpdates({
+    version: app.getVersion(),
+    automatic: automaticFrom(saved),
+    fetchLatest: async () => {
+      if (stub !== undefined) return JSON.parse(await readFile(stub, 'utf8')) as unknown
+      const response = await asking.fetch(RELEASES_LATEST, {
+        headers: { accept: 'application/vnd.github+json' },
+        redirect: 'error',
+      })
+      if (!response.ok) throw new Error(`GitHub answered ${String(response.status)}.`)
+      return (await response.json()) as unknown
+    },
+    saveAutomatic: async (on) => {
+      try {
+        await mkdir(app.getPath('userData'), { recursive: true })
+        await writeFile(settingsFile, settingsText(on))
+      } catch (error) {
+        // The switch still holds for this run; the next start reads off, which is the safe side.
+        console.warn(`[emerald] could not write ${settingsFile}: ${String(error)}`)
+      }
+    },
+    publish: (state) => {
+      for (const window of documentWindows()) window.webContents.send(UPDATE_CHANNELS.changed, state)
+    },
+    now: () => Date.now(),
+  })
+
+  asking.webRequest.onBeforeRequest((details, callback) => {
+    const allowed = isAllowedUpdateRequest(details.url, updates.gateOpen())
+    if (!allowed) console.warn(`[emerald] blocked update request to ${details.url}`)
+    callback({ cancel: !allowed })
+  })
+
+  ipcMain.handle(UPDATE_CHANNELS.state, () => updates.state())
+  ipcMain.handle(UPDATE_CHANNELS.setAutomatic, (_event, on: unknown) => {
+    if (typeof on !== 'boolean') throw new Error('The setting is on or off.')
+    return updates.setAutomatic(on)
+  })
+  ipcMain.handle(UPDATE_CHANNELS.checkNow, () => updates.checkNow())
+  ipcMain.handle(UPDATE_CHANNELS.later, () => updates.later())
+  // Download: the newest release's page, a constant — never an address the answer named.
+  ipcMain.handle(UPDATE_CHANNELS.openReleasePage, () => shell.openExternal(RELEASES_PAGE))
+
+  // At start, then every hour asking whether a day has passed: nothing at all while it is off.
+  void updates.tick()
+  const timer = setInterval(() => void updates.tick(), TICK_MS)
+  app.on('will-quit', () => clearInterval(timer))
+  return updates
+}
+
+/**
  * The document side of the shell: the dialogs, the file operations, the
  * recents list, the File menu, and the documents the operating system hands us.
  *
@@ -243,7 +337,7 @@ function openSource(): void {
  * rather than traded away, so that a mistake in the renderer stays a mistake
  * about the user's document and not about the user's disk.
  */
-function serveDocuments(): void {
+function serveDocuments(updates: Updates): void {
   const grants = createPathGrants()
   const recentsFile = join(app.getPath('userData'), 'recents.json')
   let recents: readonly RecentDocument[] = []
@@ -292,6 +386,7 @@ function serveDocuments(): void {
           showAbout: () => send({ kind: 'about' }),
           openText,
           openSource,
+          checkForUpdates: () => void updates.checkNow(),
         }),
       ),
     )
@@ -734,7 +829,7 @@ if (!app.requestSingleInstanceLock()) {
     // Builds the menu as well: File is where Open Recent lives, and D-126's
     // `setApplicationMenu(null)` was about the *default* menu, not about
     // having one.
-    serveDocuments()
+    serveDocuments(serveUpdates())
     serveWindow()
     serveRuntimes()
     serveFiles()

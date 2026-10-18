@@ -5,16 +5,22 @@
 # Privacy Policy
 
 Emerald collects nothing, because there is nowhere for it to go: no server, no account, no
-analytics, no telemetry, no crash reports, no update check.
+analytics, no telemetry, no crash reports, and no update check unless you turn one on.
 
 - **The desktop app** opens the document you choose and writes that file, and the copies it keeps
   beside it before a change. On this machine it also keeps a list of the documents you opened
   recently, a copy of the open document to recover from a crash, and display preferences. None of
   it is sent anywhere.
 - **It cannot make a request.** The desktop shell blocks every request that is not to the app's own
-  files, `localhost` included ([`electron/network.ts`](./electron/network.ts)). The one exception
-  is a model runtime on your own machine, reached on loopback from the main process, and only when
-  you use one.
+  files, `localhost` included ([`electron/network.ts`](./electron/network.ts)). The exceptions
+  are a model runtime on your own machine, reached on loopback from the main process, and only when
+  you use one — and the update check below, only when you ask for it.
+- **Updates, if you turn them on.** Off by default. With the setting on (in About), the desktop app
+  asks GitHub (`api.github.com`) for Emerald's newest release when it starts and once a day after;
+  Help → Check for Updates Now asks once, with the setting off too. GitHub sees your IP address,
+  that the request comes from Emerald and which version, and when — under GitHub's privacy
+  statement. Nothing else is sent, and nothing is downloaded: a newer version is a note in the
+  window, and Download opens the release page in your browser.
 - **The MCP server** opens the `.emd` file a tool call names, keeps a backup copy beside it before
   it writes, and makes no network call; a test proves it. **What leaves your machine is what you,
   or the model, put into the conversation** — and that conversation is with the host and the model

@@ -22,7 +22,9 @@
  * and the third-party notices, each opened in a window of its own from the
  * app's own files, and the About. One item leaves the app — *Source Code*, which
  * hands the repository's address, and only that one, to the system browser. It
- * is the source the AGPL promises, and a person asked for it by clicking.
+ * is the source the AGPL promises, and a person asked for it by clicking. **Check for Updates
+ * Now** (M42 U8, D-502) asks GitHub for the newest version once, with the setting on or off, and
+ * answers in the window's notice.
  *
  * **Nothing here is reachable only behind Alt** (M46 U1, D-458): every item is
  * also a command in the palette, which has a button on every screen, and
@@ -44,6 +46,8 @@ interface MenuActions {
   openText(text: BundledText): void
   /** The repository, in the system browser. Takes no address: there is only one. */
   openSource(): void
+  /** Help › Check for Updates Now (M42 U8): one check, with the setting on or off, answered in the window. */
+  checkForUpdates(): void
 }
 
 export function buildMenuTemplate(
@@ -159,13 +163,12 @@ export function buildMenuTemplate(
       { label: 'License', click: () => actions.openText('license') },
       { label: 'Third-Party Notices', click: () => actions.openText('notices') },
       { label: 'Source Code', toolTip: 'Opens in your browser', click: () => actions.openSource() },
+      { type: 'separator' },
+      // M42 U8 (D-502): with the setting off too — pressing it is consent for that one check, and
+      // the answer is the window's quiet notice, never a dialog.
+      { label: 'Check for Updates Now', click: () => actions.checkForUpdates() },
       // On macOS the About is the app menu's first item, as every Mac app has it.
-      ...(mac
-        ? []
-        : ([
-            { type: 'separator' },
-            { label: 'About Emerald', click: () => actions.showAbout() },
-          ] as MenuItemConstructorOptions[])),
+      ...(mac ? [] : ([{ label: 'About Emerald', click: () => actions.showAbout() }] as MenuItemConstructorOptions[])),
     ],
   }
 

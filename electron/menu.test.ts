@@ -29,6 +29,7 @@ function collect(recents: readonly RecentDocument[] = RECENTS, platform = 'win32
     showAbout: () => shell.push('about'),
     openText: (text) => shell.push(`text:${text}`),
     openSource: () => shell.push('source'),
+    checkForUpdates: () => shell.push('updates'),
   })
   return { template, sent, shell, cleared: () => cleared }
 }
@@ -106,11 +107,12 @@ describe('the application menu', () => {
       'License',
       'Third-Party Notices',
       'Source Code',
+      'Check for Updates Now',
       'About Emerald',
     ])
     for (const entry of help) click(entry)
     expect(sent).toEqual([{ kind: 'guide' }])
-    expect(shell).toEqual(['text:license', 'text:notices', 'source', 'about'])
+    expect(shell).toEqual(['text:license', 'text:notices', 'source', 'updates', 'about'])
   })
 
   it('names no address in the menu: Source Code asks main for the one it has (D-124, D-452)', () => {
@@ -124,6 +126,14 @@ describe('the application menu', () => {
     const help = menu(collect(RECENTS, 'darwin').template, 'Help')
     expect(help.map((entry) => entry.label)).not.toContain('About Emerald')
     expect(help.map((entry) => entry.label)).toContain('Source Code')
+  })
+
+  it('checks for updates from Help on every platform, with no setting in the way (M42 U8)', () => {
+    for (const platform of ['win32', 'darwin', 'linux']) {
+      const { template, shell } = collect(RECENTS, platform)
+      click(item(menu(template, 'Help'), 'Check for Updates Now'))
+      expect(shell).toEqual(['updates'])
+    }
   })
 
   it('keeps copy and paste, which every text field needs', () => {

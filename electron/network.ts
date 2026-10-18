@@ -1,6 +1,8 @@
 /**
  * "No network calls. None, and there is no longer an exception" (D-124),
- * enforced in code rather than by review.
+ * enforced in code rather than by review — **with one exception since M42 U8
+ * (D-502): the update check, in a session of its own, to one address, while a
+ * check is asking.** The page's session below is unchanged and never reaches it.
  *
  * The rule has held so far because a browser tab full of code that never wrote
  * a `fetch` cannot make a request by accident. A shell is a new place for one
@@ -15,6 +17,7 @@
  */
 
 import { APP_ORIGIN } from './appProtocol.ts'
+import { RELEASES_LATEST } from './updates.ts'
 
 /**
  * `devOrigin` is the Vite dev server, and only in the dev loop: the shell is
@@ -41,4 +44,18 @@ export function isAllowedRequest(url: string, devOrigin?: string | undefined): b
   }
 
   return false
+}
+
+/**
+ * **The update session's whole list** (M42 U8, D-502): `RELEASES_LATEST`, exactly — no other
+ * path on that host, no query, no redirect to another — and only while `open`, which `main.ts`
+ * takes from `Updates.gateOpen()`: true while a check is asking, and a check asks only when the
+ * setting is on or somebody pressed Check for Updates Now.
+ *
+ * It is a different session from the page's, not a loosening of `isAllowedRequest`: the page
+ * cannot reach this address with the setting on or off, because nothing the page loads runs in the
+ * session this guards.
+ */
+export function isAllowedUpdateRequest(url: string, open: boolean): boolean {
+  return open && url === RELEASES_LATEST
 }
