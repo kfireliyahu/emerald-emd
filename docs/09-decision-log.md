@@ -414,6 +414,7 @@ written out here.
 | D-493 | 2026-10-18 | A drawing tool's first line and the hook's are the model's, never the person's: each opens by saying so, and is an instruction — where the client draws, the view is the answer: say nothing about drawing, views, servers or tools, never retype its rows, and add at most a line it does not show; where it does not, answer with the rows as text and no word about why | M51 |
 | D-494 | 2026-10-18 | What only Claude reads lives in `hosts/claude/` — the hooks and the status line, the skills a stranger gets, and the plugin's manifest — built beside the server as `hooks.mjs` and `status-line.mjs`; nothing in `src/` or `electron/` imports from `hosts/`, and a host reaches the server only through `src/plugin/host.ts` | [M42](#d-494) |
 | D-495 | 2026-10-18 | The repository goes public before the showcase, as one fresh commit with its history kept privately; what a visitor or a new session reads first says what holds, not who decided it; `docs/archive/` leaves the repository; and M33 U4 then deploys with GitHub Pages and a getemerald.dev record at Cloudflare | [below](#d-495) |
+| D-496 | 2026-10-18 | A tour plays only while its frame is seen, and the frame decides it: the player holds the first step and pauses every hold while an `IntersectionObserver` on the frame's own document says less than a third of it is in view or the tab is hidden, so `?autoplay=1` means play when seen on any page that embeds it | [below](#d-496) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -769,6 +770,34 @@ employment, personal finances, and "the author" narrating 307 of 1,335 rows and 
   745 commits would stay, and every hash would change again anyway.
 - Rejected: flipping the existing private repository public. A known hash can still reach a commit
   that a force-push left behind.
+
+## D-496 · 2026-10-18 · A tour plays only while its frame is seen, and the frame decides it: the player holds the first step and pauses every hold while an `IntersectionObserver` on the frame's own document says less than a third of it is in view or the tab is hidden, so `?autoplay=1` means play when seen on any page that embeds it <a id="d-496"></a>
+
+**Context.** Emerald's page embeds the four tours and loads each within half a window of the view
+with `?autoplay=1`, and a loaded frame played at once, so a visitor scrolling down found a tour at
+a late step. A site that embeds a frame below its fold had the same problem and no way to fix it
+from outside. The rule could live in the page, which would hold `autoplay` back or post the frame a
+start, or in the frame.
+
+**Decision.**
+- **The frame decides, not the page.** `src/demo/tour/seen.ts` watches the frame's own root with an
+  `IntersectionObserver` and no root, which measures against the top page's viewport even from a
+  frame on another origin, and counts it seen at a third in view (the page's recording plays at the
+  same share) with its tab showing. Every embedding site gets it without a line of its own, and the
+  embed contract (D-418) is unchanged in shape: `?autoplay=1` still means play, now *play when
+  seen*, and a frame without it still holds the poster under *Watch the tour*.
+- **The player pauses rather than restarts.** `TourPlayer.setSeen` gates every row before it moves
+  and counts every hold only while seen, keeping what was left of it; the caption's reading starts
+  again from when it was seen. A seen frame therefore starts from step one, a frame that leaves
+  stops where it is, and one that comes back goes on.
+- **It starts nothing.** A frame waiting for Watch, or one the visitor took over, stays as it was
+  left; the check (`?check`) plays unwatched, as before.
+- **The page keeps loading and letting go of frames by distance**, for memory: a frame scrolled
+  more than half a window away is unloaded and starts again at its first step when it returns.
+
+**Consequences.** Where there is no `IntersectionObserver` the frame counts as seen and plays as it
+did. A frame posts its first `step` message when it is loaded, before it is seen, since that step
+is the one on screen.
 
 ## Related
 

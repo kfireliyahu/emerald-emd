@@ -5,6 +5,7 @@ import { messageBetween, resetMessage, tell } from './embed.ts'
 import { CROP_SCALE, cropAt, layoutOf } from './layout.ts'
 import { anchorPoint, lookBox, onViewport, samePlace, travelled, type Point } from './place.ts'
 import { SPEEDS, speedOf, startingSpeed, travelAt, TourPlayer, type TourCheck } from './player.ts'
+import { watchSeen } from './seen.ts'
 import { chatUpTo, type Tour } from './steps.ts'
 import './frame.css'
 
@@ -27,6 +28,11 @@ import './frame.css'
  * tour's first frame, with one control over the app to start it (the poster
  * is later: the end of the first scene, D-419); and it tells the page around
  * it which step is up, a take-over and a Reset (`embed.ts`), and nothing else.
+ *
+ * **It plays while it is seen** (M42 F1, D-496): `?autoplay=1` holds the first
+ * step until a third of the frame is in view, stops where it is when it leaves,
+ * and goes on when it comes back (`seen.ts`) — on Emerald's page and on any
+ * page that embeds it.
  */
 
 const TRY_CAPTION = 'It is yours now. Nothing you do leaves this page, and Reset puts it back.'
@@ -58,7 +64,7 @@ export function Frame({
 }: {
   tour: Tour
   appUrl: string
-  /** `?autoplay=1`: play at once. Otherwise the first frame waits for the visitor. */
+  /** `?autoplay=1`: play while the frame is seen (D-496). Otherwise the first frame waits for the visitor. */
   autoplay: boolean
   /** The check's run (`scripts/check-tours.mjs`): every row at fast-forward, once, then this. */
   check?: (result: TourCheck) => void
@@ -95,6 +101,15 @@ export function Frame({
   const lines = talks ? chatUpTo(steps, state.step) : []
   const layout = layoutOf(size.width, size.height, beside !== undefined || talks)
   const { movie, scale } = layout
+
+  // Seen or not (M42 F1), before anything plays. The check plays unwatched, as it always has.
+  useEffect(() => {
+    const element = root.current
+    if (check !== undefined || element === null) return
+    return watchSeen(element, (seen) => {
+      player.setSeen(seen)
+    })
+  }, [player, check])
 
   useEffect(() => {
     // A run this effect's cleanup stopped (React's strict double mount) reports nothing.

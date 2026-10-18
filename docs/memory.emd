@@ -4175,6 +4175,15 @@ question: The release sequence of 2026-10-15 put the showcase first, deployed an
 answer: "- **The repository goes public first, and the showcase deploys after it.** M33 U4 deploys with the GitHub Pages workflow the repository already holds, free once it is public, and getemerald.dev answers through one DNS record at Cloudflare, where the domain lives. No Cloudflare Pages, no direct upload. The frame's contract (D-418), the no-request rule and the poster hand-off are unchanged. Nothing in the project competes with the publisher's employer or relies on its code or material, and nothing new may.\n- **Published as one commit.** A single orphan commit of the cleaned tree goes to a fresh, empty repository, with a message saying it is the first public release and that the history is kept privately. The full history stays in a private bare mirror. A unit's `commit` names a commit of that private history, and the format's notes say so.\n- **Personal content goes everywhere.** No employer, no real document or project names of the publisher's own (the stand-ins of M47: notes.emd, planner.emd, homepage/site.emd), no personal finances or figures, no machine paths but this repository's own.\n- **What a visitor or a new session reads first says what holds.** CLAUDE.md, the skills, README, PRIVACY and SECURITY, `docs/*.md`, code comments, and the rows still acted on (planned units, open milestones, live rules and terms, open questions and review entries): a statement with its D-ref or date, \"the maintainer\" where a role is needed, a quote turned into the decision it carried.\n- **`docs/archive/` leaves the repository.** It is ignored and kept in the maintainer's checkout; `scripts/archive-decisions.mjs` still moves a closed milestone's entries there, and the index and every link name the plain D-ref. `npm run docs:check` fails on a link into it.\n- **The inbox is emptied.** Its rows were hand-offs from the publisher's own projects; what each carried already landed as a unit or a decision. The two of 2026-10-15 and 2026-10-18 became this.\n- **Past rows and entries were reworded for voice only, on 2026-10-18.** Decision rows, built units, closed milestones, findings and the log's open entries say who said, felt or approved something differently, and nothing about what was decided, built, rejected or measured; refs, dates and figures are as they were. This is the one exception to \"a past entry is never edited\", and the wording before it is in the private history.\n- **Amends D-450**, whose consequence kept `docs/archive/` and the rows \"dated record, never edited\", and **supersedes the order** of the 2026-10-15 release sequence. A private copy of the document before this was made outside the repository.\n\n- Rejected: leaving the history. Scrubbing the current files leaves every earlier version readable in history, including the commits that carried the employment rows.\n- Rejected: a second `filter-repo` rewrite. It swaps tokens, so the names would go and the voice in 745 commits would stay, and every hash would change again anyway.\n- Rejected: flipping the existing private repository public. A known hash can still reach a commit that a force-push left behind."
 state: live
 
+### D-496
+date: 2026-10-18
+milestone: M42
+scope: engine
+title: A tour plays only while its frame is seen, and the frame decides it: the player holds the first step and pauses every hold while an `IntersectionObserver` on the frame's own document says less than a third of it is in view or the tab is hidden, so `?autoplay=1` means play when seen on any page that embeds it
+question: Emerald's page loaded each tour within half a window of the view with `?autoplay=1`, and a loaded frame played at once, so a visitor scrolling down found a tour at a late step; a site embedding a frame below its fold had the same problem. Should the page hold `autoplay` back or post the frame a start, or should the frame itself know whether it is seen?
+answer: The frame decides. `src/demo/tour/seen.ts` watches the frame's root with a rootless `IntersectionObserver` (it measures against the top page's viewport even across origins) and counts it seen at 35% in view with its tab showing. `TourPlayer.setSeen` gates every row before it moves and counts every hold only while seen, keeping what was left, and restarts the caption's reading from when it was seen: a seen frame starts at step one, a frame that leaves stops where it is, one that comes back goes on. It starts nothing — a frame waiting for Watch or taken over stays as left — and `?check` plays unwatched. D-418's contract keeps its shape: `?autoplay=1` now means play when seen, and no `autoplay` still holds the poster. The page still loads and lets go of frames by distance, so a frame scrolled more than half a window away starts again at step one. No `IntersectionObserver`: the frame counts as seen.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -11661,6 +11670,18 @@ files: src/plugin/instructions.ts (when to draw, when to read), src/plugin/serve
 blocks: ["M41 U2"]
 taken_by: run-milestone driver
 started: 2026-10-08
+
+### M42 F1
+milestone: M42
+scope: app
+title: A tour on Emerald's page starts when it is seen, not when the page loads
+state: in_progress
+brief: Found on the live page 2026-10-18: Emerald's page at getemerald.dev embeds the four tours, and each plays from page load, so a visitor who scrolls down to one finds it already at a late step. A tour must start (from its first step) when its frame comes into view, pause when it leaves, and resume where it was when it comes back; one below the fold has not moved until it is seen. Keep the frame's contract (D-418): ?autoplay=1 still means play, and a frame embedded without it still holds the poster under Watch the tour; whether the visibility rule lives in the page (src/demo/page/main.ts sets autoplay or tells the frame to start) or in the frame itself (src/demo/tour/player.ts pausing while document.visibilityState or an IntersectionObserver says unseen — an embedding site gets it too) is the session's call, said in a decision. A frame the visitor took over or paused stays as the visitor left it. check:tours stays green, and a test covers: unseen frame does not advance; seen frame starts at step one; leaving pauses. Done when, on the built demo served locally, scrolling to the third tour finds it at its first step. Then push, confirm the Demo workflow deploys, and tell the site that embeds a tour, by an inbox row, that the fix is live (it was promised one).
+files: src/demo/page/main.ts, src/demo/tour/player.ts, src/demo/tour/Frame.tsx, src/demo/tour/main.tsx, docs/ (the demo note that holds D-418)
+taken_by: Claude Code (desktop)
+started: 2026-10-18
+branch: main
+paths: "src/demo/page/main.ts\nsrc/demo/tour/player.ts\nsrc/demo/tour/Frame.tsx\nsrc/demo/tour/main.tsx"
 
 ### M42 U1
 milestone: M42

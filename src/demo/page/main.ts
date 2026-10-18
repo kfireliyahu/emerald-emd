@@ -169,8 +169,10 @@ if (recording && DEVELOPMENT_RECORDING !== '') {
 // The frames: the tour page beside this one, one per tour. A frame is the whole
 // app with a tour running in it, and four of them share this page's process,
 // so a frame is loaded when it comes within half a window of the view and let
-// go when it leaves it: what plays is what is about to be read, and a frame
-// scrolled back to starts its tour again, as it would at the loop.
+// go when it leaves it. Loaded is not playing: the frame holds its first step
+// until it is seen and pauses while it is not (M42 F1, D-496, `seen.ts`), so a
+// tour scrolled down to starts at its beginning, one scrolled past a little
+// goes on where it stopped, and one let go starts again, as it would at the loop.
 const frames = [...document.querySelectorAll<HTMLIFrameElement>('iframe[data-tour]')]
 const loaded = new Set<HTMLIFrameElement>()
 const stepped = new Set<MessageEventSource>()

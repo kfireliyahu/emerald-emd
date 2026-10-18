@@ -193,6 +193,16 @@ export class TourPlayer {
   private ringCheck: RingCheck | undefined
   /** Which caption is on screen, and since when: its reading counts from there. */
   private shown: { key: string; at: number } = { key: 'scene 0', at: performance.now() }
+  /**
+   * **Seen** (M42 F1): the frame is where a visitor can see it. Until the frame
+   * says otherwise it is, so a player nobody watches over — the check, a test —
+   * plays as it always did.
+   */
+  private seen = true
+  /** When it was last unseen, while it is: the caption's reading starts again from there. */
+  private unseenAt = 0
+  /** Holds and rows waiting on `seen`, woken when it changes or a new generation starts. */
+  private readonly waiting = new Set<() => void>()
 
   constructor(
     readonly steps: readonly TourStep[],
@@ -201,6 +211,22 @@ export class TourPlayer {
   ) {
     this.scenes = scenesOf(steps)
     this.state = { ...this.state, speed: speedOf(motion.speed ?? 1) }
+  }
+
+  /**
+   * **A tour plays only while it is seen** (M42 F1, D-496): unseen, it stops
+   * where it is — before a row's first motion, or mid-hold with what is left
+   * of the hold kept — and goes on from there when it is seen again. It never
+   * starts anything: a frame waiting for Watch, or taken over, stays as it is.
+   */
+  setSeen(seen: boolean): void {
+    if (seen === this.seen) return
+    this.seen = seen
+    const now = performance.now()
+    if (!seen) this.unseenAt = now
+    // Nobody read the caption while nobody saw it.
+    else this.shown = { ...this.shown, at: this.shown.at + (now - this.unseenAt) }
+    this.wake()
   }
 
   /** The speed control: takes effect from the next hold. */
@@ -220,7 +246,7 @@ export class TourPlayer {
    * on the app, Reset or a dot starts it from here.
    */
   wait(): void {
-    this.generation += 1
+    this.next()
     this.set({ mode: 'ready', step: 0, scene: 0, target: undefined, highlight: undefined, lost: undefined })
   }
 
@@ -238,7 +264,7 @@ export class TourPlayer {
   /** Try it, or a click in the app while it plays (P4). */
   takeOver(): void {
     if (this.state.mode === 'try') return
-    this.generation += 1
+    this.next()
     this.fresh = false
     this.set({ mode: 'try', changed: false, target: undefined, highlight: undefined, lost: undefined })
   }
@@ -255,9 +281,39 @@ export class TourPlayer {
 
   /** Stops it. The view's own subscription is the view's to drop, so a remount can start it again. */
   dispose(): void {
-    this.generation += 1
+    this.next()
     this.unsubscribe?.()
     this.unsubscribe = undefined
+  }
+
+  /** A new generation: whatever the old one was waiting on throws when it wakes. */
+  private next(): number {
+    this.generation += 1
+    this.wake()
+    return this.generation
+  }
+
+  private wake(): void {
+    for (const each of [...this.waiting]) each()
+  }
+
+  /** Resolves on the next change of `seen` or generation. */
+  private change(): Promise<void> {
+    return new Promise((resolve) => {
+      const woken = (): void => {
+        this.waiting.delete(woken)
+        resolve()
+      }
+      this.waiting.add(woken)
+    })
+  }
+
+  /** Until the frame is seen; throws if the generation moves on first. */
+  private async untilSeen(generation: number): Promise<void> {
+    while (!this.seen) {
+      await this.change()
+      if (generation !== this.generation) throw new TourCancelled()
+    }
   }
 
   private set(next: Partial<TourSnapshot>): void {
@@ -291,7 +347,7 @@ export class TourPlayer {
    * are set as they are when the tour plays.
    */
   async check(ringCheck?: RingCheck): Promise<TourCheck> {
-    const generation = ++this.generation
+    const generation = this.next()
     const started = performance.now()
     const ms = (): number => Math.round(performance.now() - started)
     this.checking = true
@@ -315,7 +371,7 @@ export class TourPlayer {
   }
 
   private async replay(from: number): Promise<void> {
-    const generation = ++this.generation
+    const generation = this.next()
     const live = (): void => {
       if (generation !== this.generation) throw new TourCancelled()
     }
@@ -382,6 +438,8 @@ export class TourPlayer {
     // At the row's start, fast or not, so the frame lays the app out for its
     // scene (the paper beside it) before the row acts.
     this.set(fast ? { step: index, scene } : { mode: 'watch', step: index, scene })
+    // Nothing of the row moves while the frame is unseen (M42 F1).
+    if (!fast) await this.untilSeen(generation)
     // A row that starts a scene and acts: the ring sets off under the caption
     // at once, and the caption is read before the first click or keystroke (M33
     // F1). A row that outlines what its caption is about acts first: the action
@@ -504,10 +562,30 @@ export class TourPlayer {
     if (said !== undefined) throw new RingOutside(index, said)
   }
 
-  /** A hold for the eye, at the visitor's speed. */
-  private hold(ms: number, generation: number): Promise<void> {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => (generation === this.generation ? resolve() : reject(new TourCancelled())), ms / this.state.speed)
-    })
+  /**
+   * A hold for the eye, at the visitor's speed, **counted only while the frame
+   * is seen** (M42 F1): unseen part-way, what is left is held once it is seen again.
+   */
+  private async hold(ms: number, generation: number): Promise<void> {
+    let left = ms / this.state.speed
+    for (;;) {
+      await this.untilSeen(generation)
+      const from = performance.now()
+      const elapsed = await new Promise<boolean>((resolve) => {
+        const woken = (): void => {
+          clearTimeout(timer)
+          this.waiting.delete(woken)
+          resolve(false)
+        }
+        const timer = setTimeout(() => {
+          this.waiting.delete(woken)
+          resolve(true)
+        }, left)
+        this.waiting.add(woken)
+      })
+      if (generation !== this.generation) throw new TourCancelled()
+      if (elapsed) return
+      left = Math.max(0, left - (performance.now() - from))
+    }
   }
 }

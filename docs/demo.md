@@ -23,7 +23,11 @@ Any page can embed a tour:
 
 - **`?tour=<name>`** picks the tour (`custom`, `ledger`, `development` or `timesheet`; the first if
   it is left out or unknown).
-- **`?autoplay=1`** plays it at once. Without it the frame holds the tour's first frame with a
+- **`?autoplay=1`** plays it **while it is seen** (D-496): the first step is held until a third of
+  the frame is in the visitor's view and its tab is showing, the tour stops where it is when it
+  leaves, and goes on from there when it comes back. The frame works this out itself, so a frame
+  below the fold of any page starts at its beginning when it is scrolled to. A tour the visitor took
+  over stays as they left it. Without `autoplay` the frame holds the tour's first frame with a
   *Watch the tour* control over it.
 - **Size.** It lays out at any width from **375 px**, and needs at least **440 px** of height. From
   690 px up the app is drawn whole, scaled to fit, and a visitor can take it over (*Try it*); below

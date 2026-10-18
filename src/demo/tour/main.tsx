@@ -16,7 +16,7 @@ import { loadTours } from './rows.ts'
  * **The tours are rows** (M33 U3): this page reads `tours.emd` beside it
  * through the engine before anything else, so the title and the first caption
  * are up while the app page is still opening its document. `?tour=` names one
- * (the first otherwise), and `?autoplay=1` plays it at once; without it the
+ * (the first otherwise), and `?autoplay=1` plays it while it is seen (D-496); without it the
  * frame holds the first frame until the visitor asks (M33 U4, D-418 — the page
  * an embed points at, and the contract in README.md). **Each tour opens its own
  * document** (2026-10-07), passed to the app page as `?document=`.
