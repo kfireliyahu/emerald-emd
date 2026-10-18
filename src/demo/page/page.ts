@@ -59,7 +59,7 @@ export const LATEST_RELEASE = `${SOURCE_URL}/releases/latest`
  * is whatever is newest. Set it to `true` once a release made by M42 U9's build is
  * out; the review entry for that release says so.
  */
-export const NAMED_INSTALLERS_RELEASED = false
+export const NAMED_INSTALLERS_RELEASED = true
 
 /** Every release, newest first: where the caption under the installers points. */
 export const RELEASES_URL = `${SOURCE_URL}/releases`
