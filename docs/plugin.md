@@ -1376,10 +1376,30 @@ its 200 ms, so it shows the line late rather than not at all. The first run of a
 downloads the 2.9 MB tarball.
 
 **The version is written once**, as the manifest's `version`: every pin — the server's and each
-hook's — equals it, and it equals the root `package.json`'s, which `build:plugin` stamps on the
-package (`hosts/claude/plugin.test.ts`). The marketplace serves `main`, so a release is bump, build,
-publish, then push — a pin pushed before its publish installs nothing, and a change to the plugin
-alone ships with the next package version.
+hook's — equals it, and it never leads the root `package.json`'s, which `build:plugin` stamps on the
+package (`hosts/claude/plugin.test.ts`). The marketplace serves `main`, and a pin pushed before its
+publish installs nothing, so **the pins follow the publish** (D-500): the version is cut and pushed,
+the maintainer publishes it, and `node scripts/pin-plugin.mjs` — which refuses until npm has the
+version — moves the pins, in a commit of their own. A change to the plugin alone ships with the
+next package version.
+
+### The MCP Registry (M42 U3, D-500)
+
+**Listed as `io.github.kfireliyahu/emerald`** in the official registry, from `server.json` at the
+repository's root: the npm package `emerald-mcp` at one version, run by `npx`, over stdio. The
+registry keeps only that metadata, and takes a version only once npm has it and the published
+manifest's `mcpName` is the listing's `name` — which `scripts/npm-package.mjs` stamps from
+`server.json`, so 0.1.0, published before it, can never be listed. A version is cut in the root
+`package.json`, `server.json` and `PLUGIN_VERSION` together (`src/plugin/registry.test.ts`).
+
+**`.github/workflows/registry.yml` keeps it in step with npm**, with no secret and no tag: on a push
+to `main` that changes `server.json` or the plugin's manifest, daily, or `gh workflow run
+registry.yml`, it asks npm and the registry, and only when npm has a version the registry lacks
+does it run `mcp-publisher` (pinned, checksum-checked) to `validate` against the live schema, `login
+github-oidc` and `publish`. A release, then: cut the version and push; `npm run build:plugin` and
+`npm publish --access public` from `dist-plugin/` (the maintainer's); `node scripts/pin-plugin.mjs`,
+commit and push — and that push lists it. The check: `curl
+"https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.kfireliyahu/emerald"`.
 
 **Proved on 2026-10-18**, in a throwaway `CLAUDE_CONFIG_DIR`: `claude plugin validate` passes (the
 directory's link fields warn on this CLI, 2.1.177, and are accepted from 2.1.281); the plugin

@@ -4212,6 +4212,15 @@ answer: Through npx, by the maintainer's 'use npm for it' (2026-10-18). Hooks: `
 supersedes: D-498
 state: live
 
+### D-500
+date: 2026-10-18
+milestone: M42
+scope: engine
+title: The server is listed in the official MCP Registry as `io.github.kfireliyahu/emerald`, from a `server.json` at the repository's root that a workflow publishes, signed in with GitHub OIDC, whenever npm has a version the registry lacks; a version is cut in `package.json`, `server.json` and `PLUGIN_VERSION` and pushed first, and the plugin's pins follow once npm has it, so they may trail the package and never lead it
+question: How is Emerald listed in the MCP Registry, and how is a version cut now that the registry needs mcpName in the published package?
+answer: server.json at the root names io.github.kfireliyahu/emerald and points at emerald-mcp on npm; npm-package.mjs stamps its name as mcpName. A version is cut in package.json, server.json and PLUGIN_VERSION (registry.test.ts) and pushed; the maintainer publishes npm; node scripts/pin-plugin.mjs moves the plugin's pins once npm has it (pins may trail, never lead). .github/workflows/registry.yml (push on server.json or plugin.json, daily, dispatch) publishes with mcp-publisher 1.8.1 and GitHub OIDC only when npm has a version the registry lacks. No tag; the desktop release does not move (page RELEASE stays 0.1.0). 0.1.1 is the first listable version.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -6068,6 +6077,11 @@ state: accepted
 ### Play the demo's ledger tour (or open demo.emd in the demo and read card-statement-2026-09.xlsx), then look at Home's Waiting for an answer.
 unit: M37 F2
 should: Offer '6 charges look like bills' (City Transit Card, Clearwater Utility, Fastline Internet, Parrot Mobile, StreamBox, Tuneful Music) and none of the shops. The tour's step 5 Home was 'nothing waiting' before; if the bills card is unwanted in the tour, the lived-in document could track those six bills instead of hiding them.
+state: open
+
+### Publish emerald-mcp 0.1.1 and let the registry list it: `npm run build:plugin`, then `cd dist-plugin && npm publish --access public` (browser 2FA). Then, from the repo root, `node scripts/pin-plugin.mjs`, commit the three hosts/claude files and push to main (a session can do this step). That push runs .github/workflows/registry.yml; or `gh workflow run registry.yml`. Check: `curl "https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.kfireliyahu/emerald"`.
+unit: M42 U3
+should: npm shows emerald-mcp 0.1.1 with mcpName io.github.kfireliyahu/emerald; the workflow's run goes green through validate, login github-oidc and publish; the search returns Emerald at version 0.1.1; the plugin, after /plugin update, starts emerald-mcp@0.1.1. Wrong would be: the OIDC login refused for the io.github.kfireliyahu namespace, or validate rejecting server.json.
 state: open
 
 ### Publish it: `npm run build:plugin`, then in dist-plugin/ `npm login` if needed and `npm publish --access public`; then in an empty folder run `npx -y emerald-mcp --engine-only` from a Claude Code config (`claude mcp add emerald -- npx -y emerald-mcp --engine-only`) and call start_here on a document.
@@ -11775,9 +11789,11 @@ branch: main
 milestone: M42
 scope: engine
 title: Listed in the official MCP Registry
-state: in_progress
+landed: 2026-10-18
+decision: D-500
+state: built
 brief: The MCP Registry (registry.modelcontextprotocol.io, in preview) lists servers by metadata pointing at an npm package. Add mcpName to the server package's manifest (io.github.<the maintainer's GitHub user>/<name> when signing in with GitHub), a server.json matching it (name, description, the npm package and version, transport stdio), and a GitHub Actions step that publishes the metadata after an npm release, authenticated with GitHub OIDC rather than a stored token. Check the live schema and mcp-publisher's current flags on the day; the registry is in preview and has changed. The first publish is the maintainer's act if it needs a sign-in. Done-test: the registry's API returns Emerald by search; the version it lists is the npm one; the workflow keeps them in step.
-files: server.json, the server package manifest, .github/workflows/
+files: "server.json\n.github/workflows/registry.yml\nscripts/npm-package.mjs\nscripts/pin-plugin.mjs\nsrc/plugin/registry.test.ts\nsrc/plugin/document.ts\nhosts/claude/plugin.test.ts\npackage.json\npackage-lock.json\ndocs/plugin.md\ndocs/09-decision-log.md"
 blocks: ["M42 U2"]
 taken_by: run-milestone driver
 started: 2026-10-18

@@ -9,8 +9,11 @@ import { describe, expect, it } from 'vitest'
  * (M42 U4, D-498, D-499). Nothing builds it: it pins the published
  * `emerald-mcp` and runs it through `npx` — the server and the hooks alike. So
  * the one thing that can drift is the version, and it is written once, as the
- * manifest's `version`, which every pin must equal and which must be the version `npm run build:plugin` stamps
- * on the package (the repository's own) — publish, then push.
+ * manifest's `version`, which every pin must equal. It may trail the version
+ * `npm run build:plugin` stamps on the package (the repository's own), never
+ * lead it: the version is cut and pushed first, and `scripts/pin-plugin.mjs`
+ * moves the pins once npm has it, because a pin pushed before its publish
+ * starts nothing (M42 U3, D-500).
  */
 const ROOT = fileURLToPath(new URL('../..', import.meta.url))
 const HERE = fileURLToPath(new URL('.', import.meta.url))
@@ -21,9 +24,12 @@ const marketplace = json(join(ROOT, '.claude-plugin', 'marketplace.json'))
 const hooks = json(join(HERE, 'hooks', 'hooks.json'))
 
 describe('the plugin', () => {
-  it("pins the package at the manifest's version, which is the package's", () => {
+  it("pins the package at the manifest's version, never ahead of the package's", () => {
     expect(plugin.version).toMatch(/^\d+\.\d+\.\d+$/)
-    expect(plugin.version).toBe(json(join(ROOT, 'package.json')).version)
+    const parts = (version: string) => version.split('.').map(Number)
+    const [pinned, cut] = [parts(plugin.version), parts(json(join(ROOT, 'package.json')).version)]
+    const order = pinned.map((part, at) => part - (cut[at] ?? 0)).find((difference) => difference !== 0) ?? 0
+    expect(order, `${plugin.version} is ahead of the package`).toBeLessThanOrEqual(0)
     expect(plugin.mcpServers.emerald).toEqual({
       command: 'npx',
       args: ['-y', '--prefer-offline', `emerald-mcp@${plugin.version}`, '--engine-only'],

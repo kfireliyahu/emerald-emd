@@ -19,6 +19,9 @@
  *
  * The version, licence, author and repository are the repository's own `package.json`'s, read here
  * rather than kept twice. The root manifest stays private: it is the app's.
+ *
+ * **`mcpName` is `server.json`'s `name`** (M42 U3, D-500): the MCP Registry lists the server from
+ * that file and accepts it only when the package it points at, as published, carries the same name.
  */
 import { readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
@@ -32,10 +35,11 @@ const BINS = {
   'emerald-status-line': 'status-line.mjs',
 }
 
-function manifest(app) {
+function manifest(app, listing) {
   return {
     name: 'emerald-mcp',
     version: app.version,
+    mcpName: listing.name,
     description:
       "Emerald's MCP server: declared formats in a .emd file — a real SQLite database on your disk — that a model reads, writes and checks. Local-first: no account, no network call.",
     keywords: ['mcp', 'model-context-protocol', 'sqlite', 'local-first', 'emerald', 'emd'],
@@ -109,5 +113,6 @@ Licensed AGPL-3.0-only; \`THIRD_PARTY_NOTICES.txt\` carries the licences of what
 `
 
 const app = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8'))
-writeFileSync(join(out, 'package.json'), `${JSON.stringify(manifest(app), null, 2)}\n`)
+const listing = JSON.parse(readFileSync(join(root, 'server.json'), 'utf8'))
+writeFileSync(join(out, 'package.json'), `${JSON.stringify(manifest(app, listing), null, 2)}\n`)
 writeFileSync(join(out, 'README.md'), README)

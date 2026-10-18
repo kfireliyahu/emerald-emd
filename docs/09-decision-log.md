@@ -418,6 +418,7 @@ written out here.
 | D-497 | 2026-10-18 | The MCP server is published as one npm package, `emerald-mcp`, that is `dist-plugin/` as built: every package bundled and no dependencies, a manifest generated from the root one, and a bin each for the server (`emerald-mcp`, full or `--engine-only` by flag), the hooks (`emerald-hooks`) and the status line (`emerald-status-line`) | [below](#d-497) |
 | D-498 | 2026-10-18 | The Claude plugin is `hosts/claude/`, listed by a marketplace at the public repository's root and built by nothing: it pins the published `emerald-mcp` at the manifest's `version`, runs the server through `npx --prefer-offline`, and runs the hooks through `emerald.mjs`, a hand-written launcher that keeps a copy of the package in `${CLAUDE_PLUGIN_DATA}` and starts it with plain `node`; no `.mcpb`, because the directory no longer takes one | [below](#d-498) |
 | D-499 | 2026-10-18 | The Claude plugin runs everything through npm: the hooks are `npx -y --prefer-offline -p emerald-mcp@<version> emerald-hooks …` and the status line `npx … emerald-status-line`, like the server, and `emerald.mjs` is gone; the cost is accepted — ~1.95 s before every prompt for the inbox hook on Windows, against ~0.35 s for `node` | [below](#d-499) |
+| D-500 | 2026-10-18 | The server is listed in the official MCP Registry as `io.github.kfireliyahu/emerald`, from a `server.json` at the repository's root that a workflow publishes, signed in with GitHub OIDC, whenever npm has a version the registry lacks; a version is cut in `package.json`, `server.json` and `PLUGIN_VERSION` and pushed first, and the plugin's pins follow once npm has it, so they may trail the package and never lead it | [below](#d-500) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -922,3 +923,57 @@ runs — with no file of the plugin's own between Claude Code and the package.
 
 **Rejected.** Keeping the launcher (the maintainer's call). `npm i -g emerald-mcp` and bare bins (a
 global install the plugin cannot make, and one more step for a person).
+
+## D-500 · 2026-10-18 · The server is listed in the official MCP Registry as `io.github.kfireliyahu/emerald`, from a `server.json` at the repository's root that a workflow publishes, signed in with GitHub OIDC, whenever npm has a version the registry lacks; a version is cut in `package.json`, `server.json` and `PLUGIN_VERSION` and pushed first, and the plugin's pins follow once npm has it, so they may trail the package and never lead it <a id="d-500"></a>
+
+**Amends [D-498](#d-498) and [D-499](#d-499)** on one point: the pins equal the manifest's `version`
+still, but that version may trail the root `package.json`'s instead of equalling it.
+
+**Context.** M42 U3: be found where MCP clients look. The registry
+(`registry.modelcontextprotocol.io`, in preview) keeps metadata only — a `server.json` naming the
+server and the npm package and version it runs — and accepts a version only when npm already has
+it and the *published* `package.json` carries the server's name as `mcpName`. `emerald-mcp@0.1.0`
+carries none, so it cannot be listed: a new version has to be published, and publishing to npm is
+the maintainer's, with a browser sign-in (D-497). And the old order — bump, build, publish, *then*
+push — cannot hold when every session pushes to `main`: a pin pushed before its publish starts
+nothing for anyone whose plugin updates in between.
+
+**Decision.**
+- **The name is `io.github.kfireliyahu/emerald`**: the GitHub namespace, which needs no domain, and
+  `emerald` after the server (`SERVER_NAME`) and the plugin's server, not the npm package, whose
+  `-mcp` was only because `emerald` was taken there. `title` Emerald, `websiteUrl` getemerald.dev.
+- **`server.json` at the root is the listing**, written by hand against the
+  `2025-12-11` schema: one npm package, `emerald-mcp`, `registryBaseUrl` npm's, `runtimeHint` npx,
+  transport stdio, no arguments — the full server, as the README's `npx -y emerald-mcp` runs it.
+  `scripts/npm-package.mjs` stamps its `name` on the package as `mcpName`, so it is written once.
+- **A version is cut in three places and pushed first**: the root `package.json` (and its lock),
+  `server.json` (its `version` and the package's) and `PLUGIN_VERSION`, the version the server
+  reports; `src/plugin/registry.test.ts` fails when they differ. **The plugin's pins follow once npm
+  has it**: `node scripts/pin-plugin.mjs` asks npm, refuses while the version is not there, and
+  moves every `emerald-mcp@<version>` and the manifest's `version`. `hosts/claude/plugin.test.ts`
+  now requires the pins never to lead the package, rather than to equal it.
+- **`.github/workflows/registry.yml` lists whatever npm has**: on a push to `main` that touches
+  `server.json` or the plugin's manifest, once a day, and by hand (`gh workflow run registry.yml`). It
+  asks npm (no such version → a notice, green; a different `mcpName` → red) and the registry (listed
+  already → nothing), then runs `mcp-publisher` — pinned at 1.8.1 and checked against its release's
+  sha256 — to `validate`, `login github-oidc` and `publish`, and asks the search API for the name
+  at that version. **No stored secret**: the job's OIDC token proves the repository is
+  `kfireliyahu`'s, which is the namespace. **No tag**: the registry follows npm, and npm is
+  published by hand, so a tag would be one more thing to push in the right order.
+- **0.1.1 is the first listed version**, and it carries the npm README rewritten after 0.1.0. The
+  app's version moves with it, because it is the one version; **the desktop release does not**:
+  installers are cut only by a `v<version>` tag (release.yml), none is pushed for this, and the
+  page's `RELEASE` stays 0.1.0, the installers that exist.
+
+**Consequences.** Between the cut and the publish, `main` says 0.1.1 while the plugin still runs
+0.1.0, which is the point; the workflow's notice says so. The registry's schema is checked where it
+lives, by `mcp-publisher validate` before every publish; the tests check only what must agree here.
+A desktop release now takes whatever version the package is at, not a version of its own.
+
+**Rejected.** Publishing npm and the registry from one workflow on a tag (the npm publish would need
+a stored token or trusted publishing set up on the account, and the publish is the maintainer's by
+D-497). A name after the npm package (`io.github.kfireliyahu/emerald-mcp`: one more name for one
+thing). A domain namespace (`dev.getemerald/…`: a DNS key to keep, for a listing the GitHub one
+already proves). Keeping the pins equal to the package (every cut would break the plugin until the
+publish, or wait unpushed on `main`). A personal access token for the registry (a secret to rotate,
+where OIDC needs none).

@@ -1,0 +1,110 @@
+# The listing in the official MCP Registry (M42 U3, D-500).
+#
+# The registry holds metadata, not the package: `server.json` at the repository's root names the
+# server (`io.github.kfireliyahu/emerald`) and points at `emerald-mcp` on npm at one version. It
+# accepts a version only when npm already has it and the published `package.json` carries the same
+# name as `mcpName` (scripts/npm-package.mjs stamps it). Publishing to npm stays the maintainer's,
+# by hand with a browser sign-in (D-497); this lists what npm has, and nothing else.
+#
+# So it runs whenever the listing or the plugin's pins change on main, once a day, and by hand, and
+# each run asks the two registries first: npm has no such version yet → it says so and stops, green;
+# the MCP Registry lists it already → nothing to do; otherwise it validates, signs in with this
+# workflow's GitHub OIDC token — no stored secret; the token proves the repository is
+# kfireliyahu's, which is what the `io.github.kfireliyahu/` namespace needs — and publishes.
+#
+#   gh workflow run registry.yml          # list it now rather than at the next push or the cron
+
+name: MCP Registry
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - server.json
+      - hosts/claude/.claude-plugin/plugin.json
+      - .github/workflows/registry.yml
+  schedule:
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mcp-registry
+  cancel-in-progress: false
+
+env:
+  # Pinned, and checked against the release's own checksum, because it runs with an id-token.
+  # Moving it: the version, and the sha256 of mcp-publisher_linux_amd64.tar.gz from that
+  # release's registry_<version>_checksums.txt.
+  PUBLISHER_VERSION: 1.8.1
+  PUBLISHER_SHA256: a06c9096dcb9727c13555b6be26c7effa707b01f06a4c561ba7a3635443cf2cc
+  REGISTRY: https://registry.modelcontextprotocol.io
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: What is listed, and what npm has
+        id: state
+        run: |
+          name="$(jq -r .name server.json)"
+          version="$(jq -r .version server.json)"
+          package="$(jq -r '.packages[0].identifier' server.json)"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+
+          if ! published="$(npm view "$package@$version" mcpName 2>/dev/null)" || \
+             [ -z "$(npm view "$package@$version" version 2>/dev/null)" ]; then
+            echo "::notice::npm has no $package@$version yet; it is listed on the first run after it is published."
+            echo "go=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$published" != "$name" ]; then
+            echo "::error::$package@$version on npm has mcpName '$published', and server.json is named '$name'. The registry refuses it; publish a version built by npm run build:plugin."
+            exit 1
+          fi
+
+          encoded="$(jq -rn --arg n "$name" '$n | @uri')"
+          status="$(curl -s -o /dev/null -w '%{http_code}' "$REGISTRY/v0.1/servers/$encoded/versions/$version")"
+          if [ "$status" = 200 ]; then
+            echo "::notice::$name $version is listed already."
+            echo "go=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "go=true" >> "$GITHUB_OUTPUT"
+
+      - name: Install mcp-publisher
+        if: steps.state.outputs.go == 'true'
+        run: |
+          curl -sSfL -o publisher.tar.gz \
+            "https://github.com/modelcontextprotocol/registry/releases/download/v${PUBLISHER_VERSION}/mcp-publisher_linux_amd64.tar.gz"
+          echo "${PUBLISHER_SHA256}  publisher.tar.gz" | sha256sum --check
+          tar xzf publisher.tar.gz mcp-publisher
+          ./mcp-publisher --version
+
+      - name: Validate against the live schema
+        if: steps.state.outputs.go == 'true'
+        run: ./mcp-publisher validate server.json
+
+      - name: Sign in with GitHub OIDC
+        if: steps.state.outputs.go == 'true'
+        run: ./mcp-publisher login github-oidc
+
+      - name: Publish
+        if: steps.state.outputs.go == 'true'
+        run: ./mcp-publisher publish server.json
+
+      - name: The registry answers with it
+        if: steps.state.outputs.go == 'true'
+        env:
+          NAME: ${{ steps.state.outputs.name }}
+        run: |
+          curl -sSf "$REGISTRY/v0.1/servers?search=$(jq -rn --arg n "$NAME" '$n | @uri')" \
+            | jq -e --arg n "$NAME" --arg v "$(jq -r .version server.json)" \
+                '[.servers[].server | select(.name == $n and .version == $v)] | length > 0'
