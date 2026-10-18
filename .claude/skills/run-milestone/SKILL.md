@@ -47,6 +47,12 @@ milestone was asked to be run), `context:"fresh"`, a `title` of `<ref> — <titl
 that a driver is running it, that the unit is already claimed). Leave `model` out: it inherits this
 session's, and this session runs on Opus.
 
+**Effort follows the unit** (2026-10-18). Leave `effort` out, so the child inherits this session's,
+for a unit that designs, decides or touches the engine. Pass `effort:"medium"` for a mechanical one,
+where the brief already says every change and there is nothing to choose: a version cut, a rename
+already ruled, copy already written, files moved, a dependency bump. A unit measured that day took
+13 to 40 minutes, and most of it was the model thinking through work that was already decided.
+
 - **One after another → `use_worktree:false`.** It shares this checkout, commits on `main` and lands
   its own unit, exactly as a subagent did. The next starts only after this one has landed.
 
@@ -80,7 +86,9 @@ Self-contained, whichever tool carries it:
 >
 > <brief, verbatim>
 >
-> Start from the files the brief names. Build it, test it, verify it in the browser where it renders,
+> Start from the files the brief names. Build it, test it — only the tests near the change while you
+> build; the full suite, typecheck and docs:check once, before the commit; `check:tours` only if the
+> unit touches what a tour drives (`docs/conventions.md`) — verify it in the browser where it renders,
 > then run the closing pass (the `closing-pass` skill) in its order: commit the work, then
 > `land_units` with that commit's hash and your `report`, then commit the landing; push to origin
 > main. Stage only your own files, never `git add -A`. **Do not start another unit.** You are run by

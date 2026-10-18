@@ -117,8 +117,13 @@ superseded decision, and fails when CLAUDE.md's block differs from the `always` 
   listed in its closing message, one line each with the question it is least sure of: **the maintainer
   sees a unit before any session builds it.**
 - **Testing during a unit → only the tests near the change** (`npx vitest run <paths>`); the full
-  suite, `npm run typecheck` and `npm run docs:check` run **once, before the commit** (2026-10-04). A unit costs its tool calls × its context, and the ~3,800-test suite run several
+  suite, `npm run typecheck` and `npm run docs:check` run **once, before the commit** (2026-10-04). A unit costs its tool calls × its context, and the ~4,700-test suite run several
   times a unit was a large share of the calls.
+- **`npm run check:tours` → only when the unit touches what a tour drives or shows**: `src/ui/`,
+  `src/demo/`, the tours' data, or the words on a screen a tour passes through. A unit in
+  `electron/`, `src/plugin/`, `hosts/`, `scripts/` or the docs alone skips it and says so; it rebuilds
+  the demo and plays nine runs, about four minutes, and no CI job runs it (it needs a display), so
+  skipping it where nothing it watches changed costs nothing (2026-10-18).
 - Finished every unit of a milestone → say so, and **stop**. Closing it is the review phase, and
   the review phase is the maintainer's.
 - Handing a finding to another project → a row in **its** inbox, written once with `state: new`,
