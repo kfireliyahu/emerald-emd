@@ -50,6 +50,17 @@ fileAssociations:
     icon: build/document
     mimeType: application/x-emerald
 
+# Where an installed app updates from (M42 U9, D-503). Present so the build writes `latest.yml`
+# (the version, the installer's name and its sha512) and the installer's `.blockmap` beside it, and
+# `app-update.yml` into the app, which names the updater's cache and no publisher (the installers are
+# unsigned). The build never publishes: the release workflow passes `--publish never` and its release
+# job uploads them. The app reads the release its check found — `electron/windowsUpdater.ts` sets the
+# feed to `releases/download/v<version>/` itself — so this entry is for the build, not the app.
+publish:
+  provider: github
+  owner: kfireliyahu
+  repo: emerald-emd
+
 win:
   target: nsis
   icon: build/icon.ico
@@ -62,7 +73,9 @@ nsis:
   # Per-user, so no administrator prompt is needed on top of the SmartScreen
   # warning. The file association lands under HKCU and applies to this user.
   perMachine: false
-  artifactName: Emerald-Setup-${version}.${ext}
+  # No version in the name (M42 U9): getemerald.dev links releases/latest/download/<name>, which
+  # is always the newest, and `latest.yml` names whatever the file is called.
+  artifactName: Emerald-Setup.${ext}
   shortcutName: Emerald
 
 mac:
@@ -79,4 +92,5 @@ mac:
   notarize: false
 
 dmg:
-  artifactName: Emerald-${version}-${arch}.${ext}
+  # No version in the name, as the Windows installer (M42 U9).
+  artifactName: Emerald-${arch}.${ext}

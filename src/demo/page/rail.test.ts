@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { rowAt, tones } from './rail.ts'
-import { installers, RELEASE, SOURCE_URL } from './page.ts'
+import { installerLink, INSTALLERS, LATEST_RELEASE, SOURCE_URL } from './page.ts'
 
 describe('the page as a roadmap (M33 U8)', () => {
   it('the row under the eye is the last whose top has passed the mark', () => {
@@ -32,14 +32,21 @@ describe('the page as a roadmap (M33 U8)', () => {
     expect(named.replace(/^git\+/, '').replace(/\.git$/, '')).toBe(SOURCE_URL)
   })
 
-  it('the installers it links are the files the build names (M42 F2)', () => {
+  it('the installers it links are the files the build names, with no version in them (M42 F2, U9)', () => {
     const yml = readFileSync(new URL('../../../electron-builder.yml', import.meta.url), 'utf8')
     const patterns = [...yml.matchAll(/artifactName: (\S+)/g)].map((match) => match[1] ?? '')
-    const named = (arch: string): string[] =>
-      patterns.map((pattern) => pattern.replace('${version}', RELEASE).replace('${arch}', arch))
-    const files = installers(RELEASE)
-    expect(named('x64')).toContain(files.windows.replace(/\.exe$/, '.${ext}'))
-    expect(named('arm64')).toContain(files.arm64.replace(/\.dmg$/, '.${ext}'))
-    expect(named('x64')).toContain(files.x64.replace(/\.dmg$/, '.${ext}'))
+    expect(patterns.length).toBeGreaterThan(0)
+    for (const pattern of patterns) expect(pattern).not.toContain('${version}')
+    const named = (arch: string): string[] => patterns.map((pattern) => pattern.replace('${arch}', arch))
+    expect(named('x64')).toContain(INSTALLERS.windows.replace(/\.exe$/, '.${ext}'))
+    expect(named('arm64')).toContain(INSTALLERS.arm64.replace(/\.dmg$/, '.${ext}'))
+    expect(named('x64')).toContain(INSTALLERS.x64.replace(/\.dmg$/, '.${ext}'))
+  })
+
+  it('links the newest release’s file once the names are out, and its page until then (M42 U9)', () => {
+    expect(installerLink(INSTALLERS.windows, true)).toBe(`${SOURCE_URL}/releases/latest/download/Emerald-Setup.exe`)
+    expect(installerLink(INSTALLERS.sums, true)).toBe(`${SOURCE_URL}/releases/latest/download/SHA256SUMS`)
+    expect(installerLink(INSTALLERS.arm64, false)).toBe(`${SOURCE_URL}/releases/latest`)
+    expect(LATEST_RELEASE).toBe('https://github.com/kfireliyahu/emerald-emd/releases/latest')
   })
 })

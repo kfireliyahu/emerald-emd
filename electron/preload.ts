@@ -181,6 +181,7 @@ const updates: EmeraldUpdates = Object.freeze({
   checkNow: (): Promise<UpdateState> => ipcRenderer.invoke(UPDATE_CHANNELS.checkNow),
   later: (): Promise<UpdateState> => ipcRenderer.invoke(UPDATE_CHANNELS.later),
   openReleasePage: (): Promise<void> => ipcRenderer.invoke(UPDATE_CHANNELS.openReleasePage),
+  install: (reopen: string | undefined): Promise<void> => ipcRenderer.invoke(UPDATE_CHANNELS.install, reopen),
   onChange: (listener: (state: UpdateState) => void): (() => void) => {
     const forward = (_event: unknown, state: UpdateState): void => listener(state)
     ipcRenderer.on(UPDATE_CHANNELS.changed, forward)

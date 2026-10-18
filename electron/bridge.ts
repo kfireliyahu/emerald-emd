@@ -426,8 +426,15 @@ export interface EmeraldApp {
 export type UpdateNotice =
   /** Check for Updates Now, while it asks. */
   | { readonly kind: 'checking' }
-  /** A newer release: `<version> is out`, with Download and Later. */
-  | { readonly kind: 'available'; readonly version: string }
+  /**
+   * A newer release: `<version> is out`, with Download and Later. On Windows with the setting on it
+   * is said only when the download could not be made, and `unfetched` says why (M42 U9).
+   */
+  | { readonly kind: 'available'; readonly version: string; readonly unfetched?: string }
+  /** Windows, after a press with the setting on (M42 U9): the newer installer is on its way. */
+  | { readonly kind: 'downloading'; readonly version: string }
+  /** Windows (M42 U9): downloaded and checked, `<version> is ready`, with Install and restart and Later. */
+  | { readonly kind: 'ready'; readonly version: string }
   /** Only after a press: this is the newest. */
   | { readonly kind: 'latest'; readonly version: string }
   /** Only after a press: why it could not tell. A scheduled check fails silently. */
@@ -438,6 +445,11 @@ export interface UpdateState {
   readonly automatic: boolean
   /** This app's version. */
   readonly version: string
+  /**
+   * Whether this app downloads a newer version itself with the setting on (Windows, M42 U9) or only
+   * says so (macOS until its installers are signed). About's words follow it.
+   */
+  readonly downloads: boolean
   /** What the window says, until Later or Dismiss; `undefined` is nothing. */
   readonly notice: UpdateNotice | undefined
 }
@@ -450,6 +462,13 @@ export interface EmeraldUpdates {
   later(): Promise<UpdateState>
   /** Download: the newest release's page in the person's own browser. The page names no address. */
   openReleasePage(): Promise<void>
+  /**
+   * Install and restart (M42 U9): close the window the ordinary way — the unsaved-work question
+   * included, and Cancel cancels the install — then run the downloaded installer and open Emerald
+   * again on `reopen`, the document open now, which the shell takes only if it handed it out.
+   * Optional because a shell older than M42 U9 has no such thing.
+   */
+  install?(reopen: string | undefined): Promise<void>
   onChange(listener: (state: UpdateState) => void): () => void
 }
 
@@ -551,13 +570,14 @@ export const APP_CHANNELS = {
   openSource: 'emerald:app/open-source',
 } as const
 
-/** Updates (M42 U8): five questions, and `changed` runs main → page. */
+/** Updates (M42 U8, U9): six questions, and `changed` runs main → page. */
 export const UPDATE_CHANNELS = {
   state: 'emerald:updates/state',
   setAutomatic: 'emerald:updates/set-automatic',
   checkNow: 'emerald:updates/check-now',
   later: 'emerald:updates/later',
   openReleasePage: 'emerald:updates/open-release-page',
+  install: 'emerald:updates/install',
   changed: 'emerald:updates/changed',
 } as const
 

@@ -11,11 +11,11 @@ import {
   COUNT_SCRIPT,
   DEVELOPMENT_RECORDING,
   FORM_ACTION,
-  installers,
+  installerLink,
+  INSTALLERS,
   NPM_URL,
   PLUGIN_URL,
   README_INSTALL_URL,
-  RELEASE,
   RELEASES_URL,
   SOURCE_URL,
 } from './page.ts'
@@ -342,12 +342,11 @@ for (const link of document.querySelectorAll<HTMLAnchorElement>('a[data-plugin]'
 for (const link of document.querySelectorAll<HTMLAnchorElement>('a[data-npm]')) link.href = NPM_URL
 for (const link of document.querySelectorAll<HTMLAnchorElement>('a[data-readme]')) link.href = README_INSTALL_URL
 for (const link of document.querySelectorAll<HTMLAnchorElement>('a[data-releases]')) link.href = RELEASES_URL
-// The installers: each card links its file on the release `page.ts` names, and shows the file's name.
-const files = installers(RELEASE)
+// The installers: each card links the newest release's file (`page.ts`), and shows the file's name.
 for (const link of document.querySelectorAll<HTMLAnchorElement>('a[data-installer]')) {
-  const file = files[link.dataset.installer as keyof typeof files]
+  const file = INSTALLERS[link.dataset.installer as keyof typeof INSTALLERS]
   if (!file) continue
-  link.href = `${SOURCE_URL}/releases/download/v${RELEASE}/${file}`
+  link.href = installerLink(file)
   const shown = link.querySelector<HTMLElement>('.file')
   if (shown) shown.textContent = file
 }

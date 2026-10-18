@@ -421,6 +421,7 @@ written out here.
 | D-500 | 2026-10-18 | The server is listed in the official MCP Registry as `io.github.kfireliyahu/emerald`, from a `server.json` at the repository's root that a workflow publishes, signed in with GitHub OIDC, whenever npm has a version the registry lacks; a version is cut in `package.json`, `server.json` and `PLUGIN_VERSION` and pushed first, and the plugin's pins follow once npm has it, so they may trail the package and never lead it | [below](#d-500) |
 | D-501 | 2026-10-18 | A unit left `in_progress` by a session that stopped is taken over with `claim_units take_over:<its taker>`, refused unless that taker holds it, with `started` reset and the taker replaced kept on `taken_over_from`; `start_here` lists a unit `in_progress` for more than a day as stalled; `land_units` refuses a landing with no `commit` unless it says `same_commit: true`, and keeps the builder's `report` on the unit | M51 |
 | D-502 | 2026-10-18 | The desktop app makes no network call unless the person turned updates on, or pressed Check for Updates Now — then one request, to `api.github.com/repos/kfireliyahu/emerald-emd/releases/latest`, from a session of its own that the page never runs in, open only while that check asks; the setting is off by default and the app's, a newer version is a quiet notice in the window whose Download opens the release page, and M42 U9's download will reach `github.com/kfireliyahu/emerald-emd/releases/download/` and the asset hosts it redirects to (`release-assets.githubusercontent.com`, `objects.githubusercontent.com`) only on the same terms; amends D-124 and D-452 | [below](#d-502) |
+| D-503 | 2026-10-18 | On Windows, with updates on, the app downloads the release its check found — `releases/download/v<version>/latest.yml` and `Emerald-Setup.exe` through electron-updater, in its own session, gated to that release while it downloads — checks the installer against the release's sha512, and installs only on Install and restart, after the window closes the ordinary way, reopening the document; macOS stays a notice; the installers lose the version from their names and the page links `releases/latest/download/` | [below](#d-503) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1034,6 +1035,68 @@ version number it is a dependency and a second file). Opening the `html_url` fro
 address the network chose, handed to the browser). A dialog for Check for Updates Now (the maintainer
 ruled out anything that takes focus). The gate open for as long as the setting is on (the narrower
 gate costs nothing).
+
+## D-503 · 2026-10-18 · On Windows, with updates on, the app downloads the release its check found — `releases/download/v<version>/latest.yml` and `Emerald-Setup.exe` through electron-updater, in its own session, gated to that release while it downloads — checks the installer against the release's sha512, and installs only on Install and restart, after the window closes the ordinary way, reopening the document; macOS stays a notice; the installers lose the version from their names and the page links `releases/latest/download/` <a id="d-503"></a>
+
+**Context.** M42 U9. D-502 gave the desktop app an opt-in update check and a quiet notice, and named
+the addresses a Windows download would reach. The maintainer's brief: Windows downloads by itself with
+the setting on and installs only on a press; macOS stays a notice until the installers are signed
+(electron-updater needs a signed app there); never intrusive; and getemerald.dev must always link the
+newest installers, which their versioned names stopped it doing.
+
+**Decision.**
+
+- **One check, then the release it found.** M42 U8's check (the release API) still decides. A newer
+  version is handed to `electron/windowsUpdater.ts`, which points electron-updater's *generic* feed at
+  `github.com/kfireliyahu/emerald-emd/releases/download/v<that version>/` and reads that release's
+  `latest.yml` — not `releases/latest/download/`, which could be a newer release a second later, and not
+  the GitHub provider, which reads the releases feed and a second endpoint to find what the check
+  already found. `latest.yml` naming another version, or one not newer, is a refusal.
+- **Its own session, gated.** electron-updater asks from its partition (`electron-updater`), which
+  nothing the page loads runs in. `isAllowedDownloadRequest` allows exactly that release's `latest.yml`
+  (with electron-updater's `noCache` query) and `Emerald-Setup.exe`, and the two file-store hosts D-502
+  named, over https on the default port — only while `Updates.downloading()` names that version, which
+  happens only with the setting on. With the setting off nothing is downloaded, a press of Check for
+  Updates Now included: it says so, as on macOS. The headers are D-502's (`Emerald/<version>`, `en`);
+  electron-updater's staging id is never made (`QuietNsisUpdater`) and its header is dropped at the session.
+- **The checksum is the guarantee.** electron-updater checks the file against `latest.yml`'s sha512 and
+  deletes it on a mismatch. `verifyUpdateCodeSignature` would compare the installer's signature with a
+  publisher name; the installers are unsigned (D-124) and `app-update.yml` names none, so it is skipped:
+  what stands behind the file is that both came from this repository's release, built and attested by its
+  workflow (D-452). The GitHub account is the real guard, as it is for a download from the page.
+- **Installed only on a press.** `autoDownload` and `autoInstallOnAppQuit` are off. The notice says
+  *Emerald <version> is ready. Installing it restarts Emerald; your documents are not touched.* with
+  **Install and restart** and **Later**. The press closes the window the ordinary way — the unsaved-work
+  question included, and Cancel cancels the install — and the installer runs (`/S`, per-user,
+  `--force-run`) only once the app is quitting because of it. The document open then is written to
+  `reopen.json` in the app's folder, and opened again at the next start if the recents still grant it.
+- **Quiet otherwise.** A scheduled download says nothing until it is ready. A pressed one says
+  *Downloading Emerald <version>…*. A failed one is never silent, because there is a newer version: it
+  falls back to the macOS notice (Download opens the release page) with the reason, a checksum
+  mismatch said in words. Turning the setting off stops a download in flight. Differential download is
+  off — one request to one file; the blockmap is published so turning it on is a later decision.
+- **Version-free installer names.** `Emerald-Setup.exe`, `Emerald-arm64.dmg`, `Emerald-x64.dmg`. The
+  release workflow uploads, sums and attests `latest.yml` and the blockmap with them. The page links
+  `releases/latest/download/<name>` — but only once a release carries those names
+  (`NAMED_INSTALLERS_RELEASED` in `src/demo/page/page.ts`); until then the cards link the newest release's
+  page, which is never broken and never stale. `RELEASE` is gone.
+- **From which version.** The first release built from this is 0.1.2; a copy older than that downloads
+  the new one once by hand, as the README says.
+
+**Consequences.** electron-updater is a dependency of the shell, bundled into `main.cjs` (the
+packaged app ships no `node_modules`). `electron/windowsUpdater.test.ts` drives the real
+electron-updater against a local feed laid out as a release: newer downloaded and checked, the same and
+an older version refused, a wrong sha512 refused with nothing kept, a `latest.yml` naming another
+version refused, no staging id. `updates.test.ts` covers the schedule with a stubbed downloader;
+`network.test.ts` the gate. An unpackaged shell downloads from the feed `EMERALD_UPDATE_FEED` names, for
+verifying itself; a packaged one ignores it. The real update — a tagged release installed, then a second
+tag — is the maintainer's, in a review entry.
+
+**Rejected.** The GitHub provider (more requests and endpoints than the check it would repeat). Reading
+`releases/latest/download/latest.yml` (a race between the check and the download). Installing on quit
+(the brief: nothing installed unasked). Running the installer straight from the press (the
+unsaved-work question would come after the installer had started). Keeping v0.1.0's files on the page
+until the next release (stale the moment a newer one is out).
 
 ## Related
 

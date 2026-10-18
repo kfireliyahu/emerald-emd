@@ -363,9 +363,12 @@ function usePendingReplaceNotice(): Notice | undefined {
 
 /**
  * **A newer Emerald, or the answer to Check for Updates Now** (M42 U8, D-502). The shell asks and
- * decides; this only says it. Download opens the release page in the browser — nothing is
- * downloaded or installed from inside the app — and Later hides it until the next start or the
- * next day's check. A scheduled check that finds nothing says nothing.
+ * decides; this only says it. Download opens the release page in the browser, and Later hides it
+ * until the next start or the next day's check. A scheduled check that finds nothing says nothing.
+ *
+ * **On Windows with the setting on** (M42 U9, D-503) the shell downloads it first, and this says
+ * `<version> is ready` with **Install and restart**, which closes the window the ordinary way —
+ * the unsaved-work question included — and opens Emerald again on the document open now.
  */
 function useUpdateNotice(): Notice | undefined {
   const state = useUpdateState()
@@ -374,6 +377,7 @@ function useUpdateNotice(): Notice | undefined {
   if (notice === undefined || updates === undefined) return undefined
 
   const later = (): void => void answer(updates.later())
+  const install = updates.install
 
   switch (notice.kind) {
     case 'checking':
@@ -384,6 +388,7 @@ function useUpdateNotice(): Notice | undefined {
         body: (
           <>
             <strong className="font-medium">Emerald {notice.version}</strong> is out. You have {state?.version}.
+            {notice.unfetched !== undefined && <> It could not be downloaded here: {notice.unfetched}</>}
           </>
         ),
         actions: [
@@ -395,6 +400,38 @@ function useUpdateNotice(): Notice | undefined {
             },
             lead: true,
           },
+          { label: 'Later', onClick: later, quiet: true },
+        ],
+      }
+    case 'downloading':
+      return {
+        id: 'update',
+        body: <>Downloading Emerald {notice.version}…</>,
+        actions: [{ label: 'Later', onClick: later, quiet: true }],
+      }
+    case 'ready':
+      return {
+        id: 'update',
+        body: (
+          <>
+            <strong className="font-medium">Emerald {notice.version}</strong> is ready. Installing it restarts Emerald;
+            your documents are not touched.
+          </>
+        ),
+        actions: [
+          ...(install === undefined
+            ? []
+            : [
+                {
+                  label: 'Install and restart',
+                  onClick: () => {
+                    // The document open now, to open again after; the shell takes only a path it handed out.
+                    const { db, adapter } = useDocumentStore.getState()
+                    void install(db === undefined ? undefined : adapter.location?.()).catch(() => undefined)
+                  },
+                  lead: true,
+                },
+              ]),
           { label: 'Later', onClick: later, quiet: true },
         ],
       }

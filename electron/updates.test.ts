@@ -5,10 +5,15 @@ import {
   automaticFrom,
   createUpdates,
   DAY_MS,
+  downloadFailure,
   isNewer,
   latestVersionFrom,
+  releaseFeed,
   RELEASES_PAGE,
+  reopenFrom,
+  reopenText,
   settingsText,
+  type Downloader,
   type UpdatesDeps,
 } from './updates.ts'
 
@@ -17,7 +22,47 @@ import {
  * nothing while the setting is off, a press asks once with it off, and every answer is the notice.
  */
 
-function harness(options: { automatic?: boolean; latest?: unknown; fail?: string; version?: string } = {}) {
+/**
+ * Windows' downloader, stubbed (M42 U9): records what it was asked, and each download waits for the
+ * test to finish it — `finish()` as electron-updater would after a matching sha512, `refuse(error)`
+ * as it does on a mismatch.
+ */
+function stubDownloader() {
+  const downloads: string[] = []
+  const pending: { resolve: () => void; reject: (error: unknown) => void }[] = []
+  let cancelled = 0
+  let installed = 0
+  const downloader: Downloader = {
+    download: (version) => {
+      downloads.push(version)
+      return new Promise<void>((resolve, reject) => pending.push({ resolve, reject }))
+    },
+    cancel: () => {
+      cancelled += 1
+    },
+    install: () => {
+      installed += 1
+    },
+  }
+  return {
+    downloader,
+    downloads,
+    finish: async () => {
+      pending.shift()?.resolve()
+      await settle()
+    },
+    refuse: async (error: unknown) => {
+      pending.shift()?.reject(error)
+      await settle()
+    },
+    cancelled: () => cancelled,
+    installed: () => installed,
+  }
+}
+
+function harness(
+  options: { automatic?: boolean; latest?: unknown; fail?: string; version?: string; downloader?: Downloader } = {},
+) {
   let clock = 1_000_000
   const asked: number[] = []
   const saved: boolean[] = []
@@ -38,6 +83,7 @@ function harness(options: { automatic?: boolean; latest?: unknown; fail?: string
     },
     publish: (state) => published.push(state),
     now: () => clock,
+    downloader: options.downloader,
   }
   const updates = createUpdates(deps)
   return {
@@ -204,5 +250,130 @@ describe('Check for Updates Now', () => {
     const run = harness()
     await Promise.all([run.updates.checkNow(), run.updates.checkNow()])
     expect(run.asked).toHaveLength(1)
+  })
+})
+
+describe('Windows: downloads quietly, installs on a press (M42 U9)', () => {
+  /** A real `ERR_CHECKSUM_MISMATCH`, as builder-util-runtime throws it. */
+  const mismatch = Object.assign(new Error('sha512 checksum mismatch, expected abc, got def'), { code: 'ERR_CHECKSUM_MISMATCH' })
+
+  it('downloads a newer version on a schedule, says nothing until it is ready, then says it is ready', async () => {
+    const stub = stubDownloader()
+    const run = harness({ automatic: true, downloader: stub.downloader })
+    await run.updates.tick()
+    expect(stub.downloads).toEqual(['0.2.0'])
+    expect(run.updates.downloading()).toBe('0.2.0')
+    expect(run.updates.state().notice).toBeUndefined()
+    expect(run.published).toEqual([])
+
+    await stub.finish()
+    expect(run.updates.downloading()).toBeUndefined()
+    expect(run.updates.ready()).toBe('0.2.0')
+    expect(run.updates.state()).toMatchObject({ downloads: true, notice: { kind: 'ready', version: '0.2.0' } })
+    // Nothing is installed by being ready.
+    expect(stub.installed()).toBe(0)
+  })
+
+  it('downloads nothing for the same version or an older one', async () => {
+    for (const tag of ['v0.1.2', 'v0.1.0']) {
+      const stub = stubDownloader()
+      const run = harness({ automatic: true, downloader: stub.downloader, latest: { tag_name: tag } })
+      await run.updates.tick()
+      expect((await run.updates.checkNow()).notice).toEqual({ kind: 'latest', version: '0.1.2' })
+      expect(stub.downloads).toEqual([])
+      expect(run.updates.downloading()).toBeUndefined()
+    }
+  })
+
+  it('refuses a download whose checksum does not match, keeps nothing installable, and says so', async () => {
+    const stub = stubDownloader()
+    const run = harness({ automatic: true, downloader: stub.downloader })
+    await run.updates.tick()
+    await stub.refuse(mismatch)
+    expect(run.updates.ready()).toBeUndefined()
+    expect(run.updates.install()).toBe(false)
+    expect(stub.installed()).toBe(0)
+    // Never silent, because there is a newer version: the notice macOS shows, with the reason.
+    expect(run.updates.state().notice).toEqual({
+      kind: 'available',
+      version: '0.2.0',
+      unfetched: 'The download did not match the checksum published with it, so it was not kept.',
+    })
+  })
+
+  it('only says so with the setting off, even on a press', async () => {
+    const stub = stubDownloader()
+    const run = harness({ automatic: false, downloader: stub.downloader })
+    expect((await run.updates.checkNow()).notice).toEqual({ kind: 'available', version: '0.2.0' })
+    expect(stub.downloads).toEqual([])
+  })
+
+  it('says a pressed download is on its way, and downloads once however often it is asked', async () => {
+    const stub = stubDownloader()
+    const run = harness({ automatic: true, downloader: stub.downloader })
+    expect((await run.updates.checkNow()).notice).toEqual({ kind: 'downloading', version: '0.2.0' })
+    run.advance(DAY_MS)
+    await run.updates.tick()
+    expect(stub.downloads).toEqual(['0.2.0'])
+    await stub.finish()
+    expect(run.updates.state().notice).toEqual({ kind: 'ready', version: '0.2.0' })
+  })
+
+  it('hides on Later, and says ready again at the next day’s check without downloading again', async () => {
+    const stub = stubDownloader()
+    const run = harness({ automatic: true, downloader: stub.downloader })
+    await run.updates.tick()
+    await stub.finish()
+    run.updates.later()
+    expect(run.updates.state().notice).toBeUndefined()
+    run.advance(DAY_MS)
+    await run.updates.tick()
+    expect(run.updates.state().notice).toEqual({ kind: 'ready', version: '0.2.0' })
+    expect(stub.downloads).toEqual(['0.2.0'])
+  })
+
+  it('stops a download when the setting is turned off', async () => {
+    const stub = stubDownloader()
+    const run = harness({ automatic: true, downloader: stub.downloader })
+    await run.updates.checkNow()
+    const off = await run.updates.setAutomatic(false)
+    expect(stub.cancelled()).toBe(1)
+    expect(run.updates.downloading()).toBeUndefined()
+    expect(off.notice).toEqual({ kind: 'available', version: '0.2.0' })
+    // The cancelled download's rejection says nothing more.
+    await stub.refuse(new Error('cancelled'))
+    expect(run.updates.state().notice).toEqual({ kind: 'available', version: '0.2.0' })
+  })
+
+  it('installs only when one is ready and somebody pressed Install and restart', async () => {
+    const stub = stubDownloader()
+    const run = harness({ automatic: true, downloader: stub.downloader })
+    expect(run.updates.install()).toBe(false)
+    await run.updates.tick()
+    expect(run.updates.install()).toBe(false)
+    await stub.finish()
+    expect(stub.installed()).toBe(0)
+    expect(run.updates.install()).toBe(true)
+    expect(stub.installed()).toBe(1)
+  })
+
+  it('says where nothing downloads, so About can say so too', () => {
+    expect(harness().updates.state().downloads).toBe(false)
+  })
+
+  it('reads the release the check found, at its own address', () => {
+    expect(releaseFeed('0.2.0')).toBe('https://github.com/kfireliyahu/emerald-emd/releases/download/v0.2.0/')
+  })
+
+  it('keeps the document to reopen, and nothing unreadable', () => {
+    expect(reopenFrom(reopenText('C:\\Users\\me\\books.emd'))).toBe('C:\\Users\\me\\books.emd')
+    expect(reopenFrom(undefined)).toBeUndefined()
+    expect(reopenFrom('{"reopen":3}')).toBeUndefined()
+    expect(reopenFrom('nonsense')).toBeUndefined()
+  })
+
+  it('says a mismatch plainly, and anything else as it came', () => {
+    expect(downloadFailure(mismatch)).toMatch(/did not match the checksum/)
+    expect(downloadFailure(new Error('net::ERR_INTERNET_DISCONNECTED'))).toBe('net::ERR_INTERNET_DISCONNECTED')
   })
 })

@@ -176,7 +176,8 @@ function AboutDialog() {
 
 /**
  * **Updates, if you turn them on** (M42 U8, D-502). The words say exactly what the switch does on
- * this platform; when M42 U9 gives Windows its download and Install and restart, they say that there.
+ * this platform: on Windows it downloads too, and installs on Install and restart (M42 U9, D-503);
+ * on macOS it only says so, until the installers are signed.
  */
 function UpdatesSection() {
   const state = useUpdateState()
@@ -187,11 +188,21 @@ function UpdatesSection() {
   return (
     <section aria-label="Updates" className="mt-4 border-t border-hairline pt-3">
       <p className="fc-label m-0">Updates</p>
-      <p className="m-0 pt-1.5 text-[13px] text-ink-secondary">
-        Emerald reaches the internet for one thing only, and only if you ask: GitHub’s answer for its newest version,
-        which sees your IP address and this version number. Nothing is downloaded or installed — a newer version is a
-        note at the top of the window, and Download opens its page in your browser.
-      </p>
+      {state.downloads ? (
+        <p className="m-0 pt-1.5 text-[13px] text-ink-secondary">
+          Emerald reaches the internet for one thing only, and only if you ask: GitHub’s answer for its newest version,
+          which sees your IP address and this version number. With the box ticked, a newer version also downloads in the
+          background from that release on GitHub, is checked against the checksum published with it, and installs only
+          when you press Install and restart. Your documents are never touched. Check now with the box clear only tells
+          you.
+        </p>
+      ) : (
+        <p className="m-0 pt-1.5 text-[13px] text-ink-secondary">
+          Emerald reaches the internet for one thing only, and only if you ask: GitHub’s answer for its newest version,
+          which sees your IP address and this version number. Nothing is downloaded or installed — a newer version is a
+          note at the top of the window, and Download opens its page in your browser.
+        </p>
+      )}
       <div className="flex items-center gap-3 pt-2">
         <label className="flex flex-1 items-center gap-2 text-[13px] text-ink select-none">
           <input
@@ -199,7 +210,7 @@ function UpdatesSection() {
             checked={state.automatic}
             onChange={(event) => void answer(updates.setAutomatic(event.target.checked))}
           />
-          Check at start and once a day
+          {state.downloads ? 'Check at start and once a day, and download' : 'Check at start and once a day'}
         </label>
         <Button size="sm" onClick={() => void answer(updates.checkNow())} disabled={checking}>
           {checking ? 'Checking…' : 'Check now'}

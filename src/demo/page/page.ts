@@ -42,13 +42,24 @@ export const PLUGIN_URL = `${SOURCE_URL}/blob/main/hosts/claude/README.md`
 export const NPM_URL = 'https://www.npmjs.com/package/emerald-mcp'
 
 /**
- * **The release the installers link to** (M42 F2). Its files carry the version
- * (`electron-builder.yml`'s `artifactName`), so `releases/latest/download/` cannot
- * name them: the page links this release's files, and moving it is one line here
- * once a newer release is out. `rail.test.ts` fails when the names below stop
- * being the ones the build writes.
+ * **The installers have no version in their names** (M42 U9, D-503), so the page
+ * links `releases/latest/download/<name>`, which GitHub answers with the newest
+ * release's file — the page never names a version and never goes stale.
+ * `rail.test.ts` fails when the names below stop being the ones the build writes.
  */
-export const RELEASE = '0.1.0'
+export const LATEST_DOWNLOAD = `${SOURCE_URL}/releases/latest/download/`
+
+/** The newest release's own page: every file, and the notes. */
+export const LATEST_RELEASE = `${SOURCE_URL}/releases/latest`
+
+/**
+ * **Until a release carries those names** (v0.1.0 is `Emerald-Setup-0.1.0.exe`), a
+ * `releases/latest/download/` link would be a 404, so the installers link the newest
+ * release's page instead — one click more, never broken, and never stale, because it
+ * is whatever is newest. Set it to `true` once a release made by M42 U9's build is
+ * out; the review entry for that release says so.
+ */
+export const NAMED_INSTALLERS_RELEASED = false
 
 /** Every release, newest first: where the caption under the installers points. */
 export const RELEASES_URL = `${SOURCE_URL}/releases`
@@ -57,11 +68,14 @@ export const RELEASES_URL = `${SOURCE_URL}/releases`
 export const README_INSTALL_URL = `${SOURCE_URL}#installing-it`
 
 /** The installers and the checksums beside them, by the name each is linked under. */
-export function installers(version: string): Record<'windows' | 'arm64' | 'x64' | 'sums', string> {
-  return {
-    windows: `Emerald-Setup-${version}.exe`,
-    arm64: `Emerald-${version}-arm64.dmg`,
-    x64: `Emerald-${version}-x64.dmg`,
-    sums: 'SHA256SUMS',
-  }
+export const INSTALLERS: Readonly<Record<'windows' | 'arm64' | 'x64' | 'sums', string>> = {
+  windows: 'Emerald-Setup.exe',
+  arm64: 'Emerald-arm64.dmg',
+  x64: 'Emerald-x64.dmg',
+  sums: 'SHA256SUMS',
+}
+
+/** Where an installer card links: the newest release's file, or its page until the names are out. */
+export function installerLink(file: string, released: boolean = NAMED_INSTALLERS_RELEASED): string {
+  return released ? `${LATEST_DOWNLOAD}${file}` : LATEST_RELEASE
 }

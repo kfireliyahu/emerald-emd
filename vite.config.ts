@@ -263,7 +263,9 @@ export default defineConfig(({ mode }) => {
       ],
     },
 
-    ...(published ? { ssr: { noExternal: true, target: 'node' as const } } : {}),
+    // The shell's main process too, since M42 U9 gave it a dependency (electron-updater): the
+    // packaged app ships no node_modules (electron-builder.yml), so what it imports is inside main.cjs.
+    ...(published || electronMain ? { ssr: { noExternal: true, target: 'node' as const } } : {}),
 
     // Relative base, so the built HTML works both from the root of the shell's `app://`
     // origin and from a subpath on a static host.

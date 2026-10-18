@@ -2,7 +2,9 @@
  * "No network calls. None, and there is no longer an exception" (D-124),
  * enforced in code rather than by review — **with one exception since M42 U8
  * (D-502): the update check, in a session of its own, to one address, while a
- * check is asking.** The page's session below is unchanged and never reaches it.
+ * check is asking — and since M42 U9 (D-503) Windows' download, in
+ * electron-updater's session, to one release's two files, while it downloads.**
+ * The page's session below is unchanged and never reaches either.
  *
  * The rule has held so far because a browser tab full of code that never wrote
  * a `fetch` cannot make a request by accident. A shell is a new place for one
@@ -17,7 +19,7 @@
  */
 
 import { APP_ORIGIN } from './appProtocol.ts'
-import { RELEASES_LATEST } from './updates.ts'
+import { RELEASE_DOWNLOADS, RELEASES_LATEST, releaseFeed, WINDOWS_INSTALLER } from './updates.ts'
 
 /**
  * `devOrigin` is the Vite dev server, and only in the dev loop: the shell is
@@ -58,4 +60,35 @@ export function isAllowedRequest(url: string, devOrigin?: string | undefined): b
  */
 export function isAllowedUpdateRequest(url: string, open: boolean): boolean {
   return open && url === RELEASES_LATEST
+}
+
+/** Where GitHub redirects a release download (D-502): its file store, by a signed one-off address. */
+export const RELEASE_ASSET_HOSTS: readonly string[] = ['release-assets.githubusercontent.com', 'objects.githubusercontent.com']
+
+/** `latest.yml`, with electron-updater's cache-busting query if it adds one, or the installer. */
+const RELEASE_FILE = new RegExp(`^(latest\\.yml(\\?noCache=[0-9a-v]+)?|${WINDOWS_INSTALLER.replace(/[.]/g, '\\.')})$`)
+
+/**
+ * **The download's whole list** (M42 U9, D-502), for electron-updater's own session
+ * (`electron-updater`, which nothing the page loads runs in either): while `downloading` names a
+ * version — the setting is on and that version's download is in flight — exactly
+ * `<releases>/download/v<that version>/latest.yml` and `…/Emerald-Setup.exe`, and the hosts GitHub
+ * redirects those two to. Any other file, release, repository or host is refused, and with nothing
+ * downloading everything is.
+ *
+ * `base` is `RELEASE_DOWNLOADS`; an unpackaged shell verifying itself against a local feed passes
+ * that feed instead (`EMERALD_UPDATE_FEED`), and then no GitHub host is allowed at all.
+ */
+export function isAllowedDownloadRequest(url: string, downloading: string | undefined, base: string = RELEASE_DOWNLOADS): boolean {
+  if (downloading === undefined) return false
+  const feed = releaseFeed(downloading, base)
+  if (url.startsWith(feed)) return RELEASE_FILE.test(url.slice(feed.length))
+  if (base !== RELEASE_DOWNLOADS) return false
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    return false
+  }
+  return parsed.protocol === 'https:' && parsed.port === '' && RELEASE_ASSET_HOSTS.includes(parsed.hostname)
 }

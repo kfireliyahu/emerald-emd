@@ -32,8 +32,8 @@ Free software, AGPL-3.0. Desktop only, no server, no account. [getemerald.dev](h
   the ledger and the development pack. Making and sharing your own is next.
 - **No internet, no login.** The app makes no network call of its own — not for AI, not for
   telemetry — and a test fails if it ever does, with one exception you choose: updates, off by
-  default. Turned on, it asks GitHub for the newest version number once a day; Help → Check for
-  Updates Now asks once. A local model runtime on this machine can be used, and looking for one
+  default. Turned on, it asks GitHub for the newest version number once a day, and on Windows
+  downloads a newer one from its GitHub release; Help → Check for Updates Now asks once. A local model runtime on this machine can be used, and looking for one
   happens only on your click, over loopback.
 
 ### The ledger
@@ -69,9 +69,15 @@ Three ways in, all available today:
   Settings → Privacy & Security**, **Open Anyway**). Every release is built by this repository's
   [release workflow](./.github/workflows/release.yml) from a tag and attested, with a `SHA256SUMS`
   file beside it: `gh attestation verify <file> --repo kfireliyahu/emerald-emd` asks GitHub whether
-  the file is one the workflow built. Updates are off by default: turn them on in **About** and the
-  app asks GitHub once a day whether a newer version is out and says so quietly at the top of the
-  window, where **Download** opens the release page; nothing is downloaded or installed for you.
+  the file is one the workflow built. The installers' names carry no version (`Emerald-Setup.exe`,
+  `Emerald-arm64.dmg`, `Emerald-x64.dmg`), so `releases/latest/download/<name>` is always the newest.
+  Updates are off by default: turn them on in **About** and the app asks GitHub once a day whether
+  a newer version is out. On Windows it then downloads it in the background, checks it against the
+  checksum the release published, and says *ready* quietly at the top of the window; it installs
+  only when you press **Install and restart**, and opens again on the document you had open. On a
+  Mac it says so, and **Download** opens the release page (the Mac updater needs a signed app).
+  Updating yourself is automatic from **0.1.2** on; a copy older than that, download the new one
+  once by hand.
 - **The MCP server**, as the npm package `emerald-mcp`: one line in your assistant's MCP
   configuration, for any document, and `--engine-only` for the engine's tools without the ledger's:
 

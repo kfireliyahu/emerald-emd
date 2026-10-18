@@ -6,7 +6,13 @@
 # a release with a SHA256SUMS file and a link to the tagged source. They stay unsigned (D-124):
 # what this adds is that where a download came from can be checked without a certificate —
 #
-#   gh attestation verify Emerald-Setup-0.1.0.exe --repo kfireliyahu/emerald-emd
+#   gh attestation verify Emerald-Setup.exe --repo kfireliyahu/emerald-emd
+#
+# The Windows build also writes `latest.yml` (the version, the installer's name and its sha512) and
+# the installer's `.blockmap` (M42 U9, D-503): an installed app with updates turned on reads that
+# release's `latest.yml` and checks the installer it downloads against it. Both are uploaded, summed
+# and attested with the installers. The names carry no version, so getemerald.dev links
+# `releases/latest/download/<name>`.
 #
 # Run by hand (workflow_dispatch), it is a rehearsal: the same builds, kept as the run's
 # artifacts for a few days, attested, and no release.
@@ -36,7 +42,10 @@ jobs:
         include:
           - os: windows-latest
             script: dist:win
-            files: release/*.exe
+            files: |
+              release/*.exe
+              release/*.exe.blockmap
+              release/latest.yml
           - os: macos-latest
             script: dist:mac
             files: release/*.dmg
@@ -135,6 +144,11 @@ jobs:
           - \`gh attestation verify <file> --repo ${REPO}\`.
 
           On a Mac, take the \`arm64\` image for Apple silicon and \`x64\` for an Intel Mac.
+
+          **Updates** are off until you turn them on in About. Then, on Windows, a newer version downloads
+          in the background, is checked against the \`latest.yml\` published here, and installs when you
+          press Install and restart; on a Mac a newer version is a note with a link to this page. A copy
+          older than 0.1.2 does not update itself: download this one once by hand.
 
           Emerald computes; it does not advise. Check every figure it read from a paycheck, a pension
           report or a statement against the document it came from.

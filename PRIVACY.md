@@ -19,8 +19,13 @@ analytics, no telemetry, no crash reports, and no update check unless you turn o
   asks GitHub (`api.github.com`) for Emerald's newest release when it starts and once a day after;
   Help → Check for Updates Now asks once, with the setting off too. GitHub sees your IP address,
   that the request comes from Emerald and which version, and when — under GitHub's privacy
-  statement. Nothing else is sent, and nothing is downloaded: a newer version is a note in the
-  window, and Download opens the release page in your browser.
+  statement. Nothing else is sent. On a Mac nothing is downloaded: a newer version is a note in the
+  window, and Download opens the release page in your browser. **On Windows, with the setting on**,
+  a newer version is also downloaded from that release (`github.com/kfireliyahu/emerald-emd/releases/download/…`
+  and the GitHub file store it redirects to, `release-assets.githubusercontent.com` or
+  `objects.githubusercontent.com`), which see the same three things; it is installed only when you
+  press Install and restart. With the setting off, nothing is ever downloaded. Your documents are
+  never sent and never touched by an update.
 - **The MCP server** opens the `.emd` file a tool call names, keeps a backup copy beside it before
   it writes, and makes no network call; a test proves it. **What leaves your machine is what you,
   or the model, put into the conversation** — and that conversation is with the host and the model

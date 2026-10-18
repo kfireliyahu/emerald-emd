@@ -21,10 +21,10 @@
  * `windowChrome.ts`, which the renderer lays its own bar out against.
  */
 
-import { readFileSync } from 'node:fs'
-import { mkdir, readFile, stat, writeFile } from 'node:fs/promises'
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 
 import {
   app,
@@ -72,19 +72,24 @@ import {
 } from './documents.ts'
 import { openLinked, presentLinked, showLinked, type LinkedFileSystem } from './linkedFiles.ts'
 import { buildMenuTemplate } from './menu.ts'
-import { isAllowedRequest, isAllowedUpdateRequest } from './network.ts'
+import { isAllowedDownloadRequest, isAllowedRequest, isAllowedUpdateRequest } from './network.ts'
 import { cancelGeneration, generate } from './generate.ts'
 import { loadRecents, saveRecents, withRecent, withoutRecent } from './recents.ts'
 import { detectRuntimes } from './runtimes.ts'
 import {
   automaticFrom,
   createUpdates,
+  RELEASE_DOWNLOADS,
   RELEASES_LATEST,
   RELEASES_PAGE,
+  reopenFrom,
+  reopenText,
   settingsText,
   TICK_MS,
+  type Downloader,
   type Updates,
 } from './updates.ts'
+import { createWindowsDownloader, QuietNsisUpdater, UPDATER_PARTITION } from './windowsUpdater.ts'
 import { titleBarOverlay, trafficLightPosition, usesControlsOverlay } from './windowChrome.ts'
 
 /**
@@ -99,6 +104,13 @@ const DEV_SERVER_URL = process.env['EMERALD_DEV_SERVER_URL']
  * unpackaged shell, and honoured only there: a packaged app ignores it. Reading it makes no request.
  */
 const UPDATE_ANSWER_FILE = process.env['EMERALD_UPDATE_ANSWER']
+
+/**
+ * A local feed laid out as a GitHub release is (`<feed>v<version>/latest.yml` and the installer),
+ * downloaded from instead of GitHub — for verifying Windows' download in an unpackaged shell, and
+ * honoured only there (M42 U9). With it set, the download's gate allows that feed and no GitHub host.
+ */
+const UPDATE_FEED = process.env['EMERALD_UPDATE_FEED']
 
 /**
  * `dist/` sits beside `dist-electron/`, in the repo and inside a packaged app
@@ -275,9 +287,11 @@ function serveUpdates(): Updates {
   asking.setPermissionRequestHandler((_contents, _permission, callback) => callback(false))
   asking.setPermissionCheckHandler(() => false)
 
+  const downloads = serveDownloads(() => updates)
   const updates = createUpdates({
     version: app.getVersion(),
     automatic: automaticFrom(saved),
+    downloader: downloads,
     fetchLatest: async () => {
       if (stub !== undefined) return JSON.parse(await readFile(stub, 'utf8')) as unknown
       const response = await asking.fetch(RELEASES_LATEST, {
@@ -323,6 +337,58 @@ function serveUpdates(): Updates {
   const timer = setInterval(() => void updates.tick(), TICK_MS)
   app.on('will-quit', () => clearInterval(timer))
   return updates
+}
+
+/**
+ * **Windows' download** (M42 U9, D-503): electron-updater (`windowsUpdater.ts`) in the session it
+ * names, held to `isAllowedDownloadRequest` — that one release's `latest.yml` and installer, only
+ * while `Updates` says that version is downloading, which it does only with the setting on. The same
+ * fixed language and user agent as the check, and electron-updater's staging-id header dropped.
+ *
+ * `undefined` — nothing downloads, a newer version is only said — on macOS (its updater needs a signed
+ * app) and in an unpackaged shell, unless that shell was pointed at a local feed to verify itself.
+ */
+function serveDownloads(updates: () => Updates): Downloader | undefined {
+  if (process.platform !== 'win32') return undefined
+  const feed = app.isPackaged || UPDATE_FEED === undefined || UPDATE_FEED === '' ? undefined : UPDATE_FEED
+  if (!app.isPackaged && feed === undefined) return undefined
+  const base = feed ?? RELEASE_DOWNLOADS
+
+  // Created here first, with the options electron-updater asks for, so the guard is on the session it uses.
+  const fetching = session.fromPartition(UPDATER_PARTITION, { cache: false })
+  fetching.setUserAgent(`Emerald/${app.getVersion()}`, 'en')
+  fetching.setPermissionRequestHandler((_contents, _permission, callback) => callback(false))
+  fetching.setPermissionCheckHandler(() => false)
+  fetching.webRequest.onBeforeRequest((details, callback) => {
+    const allowed = isAllowedDownloadRequest(details.url, updates().downloading(), base)
+    if (!allowed) console.warn(`[emerald] blocked update download request to ${details.url}`)
+    callback({ cancel: !allowed })
+  })
+  fetching.webRequest.onBeforeSendHeaders((details, callback) => {
+    const headers = { ...details.requestHeaders }
+    for (const name of Object.keys(headers)) if (name.toLowerCase() === 'x-user-staging-id') delete headers[name]
+    callback({ requestHeaders: headers })
+  })
+
+  const updater = new QuietNsisUpdater()
+  if (feed !== undefined) {
+    // An unpackaged shell has no app-update.yml; this names the cache, as the installed one does.
+    const config = join(app.getPath('userData'), 'dev-app-update.yml')
+    try {
+      writeFileSyncSafe(config, 'updaterCacheDirName: emerald-updater-dev\n')
+    } catch (error) {
+      console.warn(`[emerald] could not write ${config}: ${String(error)}`)
+    }
+    updater.forceDevUpdateConfig = true
+    updater.updateConfigPath = config
+  }
+  return createWindowsDownloader(updater, { version: app.getVersion(), base })
+}
+
+/** `writeFileSync`, making the folder first: the app's folder does not exist on a first run. */
+function writeFileSyncSafe(file: string, text: string): void {
+  mkdirSync(dirname(file), { recursive: true })
+  writeFileSync(file, text)
 }
 
 /**
@@ -597,7 +663,54 @@ function serveDocuments(updates: Updates): void {
       // because the file changed underneath us (D-092) — leaves the window open
       // with the conflict on screen, which is the only safe answer.
       else if (choice === 0) send({ kind: 'save-and-close' })
+      // Cancel keeps the window, and an Install and restart that asked for the close is off.
+      else stopInstalling()
     })
+  }
+
+  /**
+   * **Install and restart** (M42 U9): the window closes the ordinary way — the unsaved-work question
+   * included — and the installer runs only once the app is quitting because of it. Cancel cancels
+   * it. The document open now is written down first, if it is one this run handed out, and opened
+   * again when the installer starts Emerald after itself. The document itself is never touched.
+   */
+  const reopenFile = join(app.getPath('userData'), 'reopen.json')
+  let installing = false
+
+  function stopInstalling(): void {
+    if (!installing) return
+    installing = false
+    void rm(reopenFile, { force: true })
+  }
+
+  ipcMain.handle(UPDATE_CHANNELS.install, async (_event, reopen: unknown) => {
+    if (updates.ready() === undefined) throw new Error('No update is ready to install.')
+    const path = typeof reopen === 'string' && grants.isGranted(reopen) ? reopen : undefined
+    await mkdir(app.getPath('userData'), { recursive: true })
+    if (path === undefined) await rm(reopenFile, { force: true })
+    else await writeFile(reopenFile, reopenText(path))
+    installing = true
+    closeTextWindows()
+    for (const window of documentWindows()) window.close()
+  })
+
+  app.on('will-quit', () => {
+    if (!installing) return
+    installing = false
+    if (!updates.install()) rmSync(reopenFile, { force: true })
+  })
+
+  /** The document Install and restart wrote down, once, and only if the recents still grant it. */
+  function takeReopen(): string | undefined {
+    let text: string | undefined
+    try {
+      text = readFileSync(reopenFile, 'utf8')
+      rmSync(reopenFile, { force: true })
+    } catch {
+      return undefined
+    }
+    const path = reopenFrom(text)
+    return path !== undefined && grants.isGranted(path) ? path : undefined
   }
 
   /** A document the OS handed us, from any of the three ways it can arrive. */
@@ -627,7 +740,7 @@ function serveDocuments(updates: Updates): void {
     })
   })
 
-  void restoreRecents().then(() => openFromSystem(documentFromArguments(process.argv)))
+  void restoreRecents().then(() => openFromSystem(documentFromArguments(process.argv) ?? takeReopen()))
 }
 
 /**
