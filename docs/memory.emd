@@ -11814,6 +11814,18 @@ branch: main
 commit: 9d81f89
 paths: "src/demo/page/\nREADME.md"
 
+### M42 F3
+milestone: M42
+scope: engine
+title: Vitest 4, so the last test-runner advisory closes
+state: in_progress
+brief: Maintainer, 2026-10-18: after M51 F5 bumped vite and vitest (vitest ^3.2.7), Dependabot still shows #6 and #7, one advisory: @vitest/mocker path traversal / arbitrary file read via a redirect mock (GHSA-82fw-gwwq-j7x9), moderate, development-only, fixed only in vitest 4.1.11. Upgrade vitest and every @vitest/* package together to the current 4.x, with whatever the major changes need: the config (vite.config.ts / vitest config, pools and workers, environment options, coverage if configured), deprecated APIs in tests, snapshot or mocking behaviour changes; follow Vitest's own migration guide for 3 to 4 on the day. tinypool's override from M51 F5 is dropped if vitest 4 no longer needs it. No test is weakened or skipped to make it pass; a test that changes meaning says why in the commit. #10 (sprintf-js, no fix, via electron-builder) is the maintainer's to dismiss and is not this unit's. Done-test: npm ls shows vitest 4.x and @vitest/mocker at or above 4.1.11; npm audit lists no vitest advisory; the full suite passes (4,767 tests on 2026-10-18) in two full runs, typecheck, build, build:plugin and docs:check are green; after the push, Dependabot's #6 and #7 show as fixed (gh api repos/kfireliyahu/emerald-emd/dependabot/alerts?state=open). No check:tours unless a tour's test harness changed.
+files: package.json and package-lock.json, vite.config.ts (the test section) or vitest.config.*, tests that use APIs Vitest 4 changed
+taken_by: run-milestone driver
+started: 2026-10-18
+branch: main
+paths: "package.json\npackage-lock.json\nvite.config.ts"
+
 ### M42 U1
 milestone: M42
 scope: engine
