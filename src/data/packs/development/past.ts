@@ -15,7 +15,7 @@ export const DEVELOPMENT_PAST: PackPast = {
     milestone: ['42ff3e1e', 'f66c5f53'],
     open_question: ['1cc7a401', 'e278a436'],
     review_entry: ['4aa0d215', 'e6ea9366', '87c09df5'],
-    unit: ['a3d6b8e0', 'c4a14a03', '8f5fc053', '28788480', '501d4ecf', 'e36594c4', 'cc0031e6'],
+    unit: ['a3d6b8e0', 'c4a14a03', '8f5fc053', '28788480', '501d4ecf', 'e36594c4', 'cc0031e6', '09afa0c9'],
   },
   views: {
     'decision entry answer': ['markdown', null],
@@ -75,6 +75,7 @@ export const DEVELOPMENT_PAST: PackPast = {
     'unit page title': ['line', null],
     'unit ready blocks': ['waits', null],
     'unit ready milestone': ['line', null],
+    'unit ready started': [null, 'stalls 1'],
     'unit ready state': ['ready planned done built dropped', null],
     'unit ready title': ['line', null],
     'unit roadmap branch': ['line', null],

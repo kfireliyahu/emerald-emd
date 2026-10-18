@@ -1,12 +1,12 @@
 import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { column, DECLARATION_LANGUAGE, type FormatDeclaration } from '@/domain/format/declaration.ts'
 import { readViews } from '@/domain/format/document.ts'
 import { selfLinks } from '@/domain/format/row.ts'
-import { readReadyState, readStartSetting, readyOf, startOf, startQuestions } from '@/domain/format/view.ts'
+import { readReadyState, readStalls, readStartSetting, readyOf, startOf, startQuestions } from '@/domain/format/view.ts'
 import { recordFormatRowsTool, updateFormatRowsTool } from '@/plugin/tools/formats.ts'
 import { startHereTool } from '@/plugin/tools/startHere.ts'
 import { NO_CLIENT } from '@/plugin/tools/tool.ts'
@@ -258,5 +258,80 @@ describe('a row may not name itself (M27 U5)', () => {
     expect(answer).toContain('- U6 — waits on U3 · in_progress')
     expect(answer).toContain('### note — the 2 latest by date')
     expect(answer).toContain('Whole list: `format_rows note order:date descending:true limit:2`.')
+  })
+})
+
+describe('a claim that stalled shows itself (M51 F4)', () => {
+  const TAKEN = format('job', [
+    column('ref', 'text', { required: true, unique: true }),
+    column('state', 'enum', { values: ['planned', 'in_progress', 'built', 'dropped'], required: true }),
+    column('blocks', 'links', { target: 'job' }),
+    column('started', 'date'),
+    column('taken_by', 'text'),
+  ])
+  const STALLS = `---
+emerald: views
+---
+
+### job ready
+blocks: waits
+started: stalls 1
+state: ready planned done built dropped
+taken_by: line
+`
+
+  async function withJobs() {
+    const db = await createDatabase()
+    expect(adoptFormat(db, TAKEN, NOW).refusals).toEqual([])
+    const views = readViews(STALLS)
+    if (!views.ok) throw new Error(views.error)
+    restoreViewSettings(db, views.value.views)
+    insertRows(db, TAKEN, [
+      { ref: 'J1', state: 'in_progress', started: '2026-10-16', taken_by: 'session A' },
+      { ref: 'J2', state: 'in_progress', started: '2026-10-17', taken_by: 'session B' },
+      { ref: 'J3', state: 'in_progress', taken_by: 'by hand' },
+      { ref: 'J4', state: 'built', started: '2026-09-01' },
+      { ref: 'J5', state: 'planned', started: '2026-09-01' },
+    ])
+    return db
+  }
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('reads `stalls <days>` on a ready view, and nothing else as one', () => {
+    expect(readStalls('stalls 1')).toBe(1)
+    expect(readStalls('stalls 0')).toBeUndefined()
+    expect(readStalls('stalls')).toBeUndefined()
+    expect(readStalls('stalls 1 day')).toBeUndefined()
+    expect(readStalls('stalls 366')).toBeUndefined()
+  })
+
+  it('lists the rows being worked taken more than the days ago, and the undated, never planned or built', async () => {
+    const db = await withJobs()
+    const ref = (line: { row: { cells: Readonly<Record<string, unknown>> } }) => line.row.cells['ref']
+    // Taken two days ago is stalled, yesterday is not yet, and a row with no date nobody can vouch for.
+    expect(readyData(db, TAKEN, [TAKEN], {}, '2026-10-18')?.stalled.map(ref)).toEqual(['J1', 'J3'])
+    // Without a day to count from, nothing is called stalled.
+    expect(readyData(db, TAKEN, [TAKEN])?.stalled).toEqual([])
+    db.close()
+  })
+
+  it('is a list of its own in start_here, under Ready to start, with the day each was taken', async () => {
+    const db = await withJobs()
+    const path = join(tempDirSync('emerald-stalled-'), 'jobs.emd')
+    writeFileSync(path, exportDatabase(db))
+    db.close()
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date(2026, 9, 18, 12))
+
+    const answer = await startHereTool.run({ path }, NO_CLIENT)
+    expect(answer).toContain(
+      'Stalled — in_progress, taken more than 1 day ago:\n' +
+        '- J1 · session A · started 2026-10-16\n' +
+        '- J3 · by hand · no started',
+    )
+    expect(answer).not.toContain('- J2 · session B · started')
   })
 })

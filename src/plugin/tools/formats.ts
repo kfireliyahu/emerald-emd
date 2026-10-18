@@ -521,10 +521,39 @@ export function compactDeclarations(declarations: readonly FormatDeclaration[]):
       : 'Every write — `record_format_rows`, `update_format_rows`, `delete_format_rows` — is a dry run ' +
           'until `commit: true`. A link takes the row’s id, or its name when one row has it. ' +
           '`formats` with a `format` is the whole declaration: its notes, units and what must hold.',
+    writeShapeText(open),
     ...[...packs].map(
       ([pack, names]) =>
         `Written only through the ${pack} pack: ${names.join(', ')}. \`formats\` reads any of them.`,
     ),
+  )
+}
+
+/** The one array a write tool's schema takes — `rows`, `edits` — and what each entry of it may hold. */
+function batchKeyOf(tool: PluginTool): { readonly key: string; readonly entry: readonly string[] } {
+  const properties = (tool.definition.inputSchema.properties ?? {}) as Record<string, { type?: string; items?: { properties?: object } }>
+  const found = Object.entries(properties).find(([, each]) => each.type === 'array')
+  if (found === undefined) throw new Error(`${tool.definition.name} takes no list.`)
+  return { key: found[0], entry: Object.keys(found[1].items?.properties ?? {}) }
+}
+
+/**
+ * **What a write looks like, in one line** (M51 F4) — read off the two tools'
+ * own schemas, so it cannot name a key they have not got: a driver took three
+ * tries at an edit's shape, guessing `rows`, `match` and `set` before `edits`,
+ * `where` and `values`. The row named is a declared format's own unique column.
+ */
+function writeShapeText(open: readonly FormatDeclaration[]): string | undefined {
+  const keyed = open.find((each) => each.columns.some((column) => column.unique && column.type === 'text'))
+  if (keyed === undefined) return undefined
+  const unique = keyed.columns.find((column) => column.unique && column.type === 'text')?.name ?? 'id'
+  const record = batchKeyOf(recordFormatRowsTool)
+  const update = batchKeyOf(updateFormatRowsTool)
+  const where = update.entry.includes('where') ? 'where' : 'id'
+  const values = update.entry.includes('values') ? 'values' : (update.entry[0] ?? 'values')
+  return (
+    `A write’s shape: \`record_format_rows format:${keyed.name} ${record.key}:[{…}]\` · ` +
+    `\`update_format_rows format:${keyed.name} ${update.key}:[{${where}:{${unique}:…}, ${values}:{…}}]\`.`
   )
 }
 

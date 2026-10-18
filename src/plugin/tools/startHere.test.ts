@@ -71,6 +71,11 @@ describe('compactDeclarations', () => {
         'per_serving = `price / serves`',
     )
     expect(text).toContain('is a dry run until `commit: true`')
+    // A write's shape, read off the two tools' schemas and named by the format's own unique column (M51 F4).
+    expect(text).toContain(
+      'A write’s shape: `record_format_rows format:dish rows:[{…}]` · ' +
+        '`update_format_rows format:dish edits:[{where:{name:…}, values:{…}}]`.',
+    )
     // The prose stays in `formats`, which is the whole declaration.
     expect(text).not.toContain('Prose a writer does not need here.')
     expect(text).not.toContain('Notes stay in formats.')

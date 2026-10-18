@@ -32,6 +32,7 @@ import {
   linksNaming,
   readyOf,
   readyRows,
+  stalledRows,
   roadmapOf,
   startOf,
   startQuestions,
@@ -291,6 +292,8 @@ export interface ReadyData {
   readonly ready: readonly ViewLine[]
   /** In a ready member, held up by rows still open. */
   readonly held: readonly HeldLines[]
+  /** Being worked and taken longer ago than the view's `stalls` (M51 F4); empty without one, or without a day to count from. */
+  readonly stalled: readonly ViewLine[]
   readonly labels: ReadonlyMap<string, string>
 }
 
@@ -305,6 +308,7 @@ export function readyData(
   declaration: FormatDeclaration,
   declarations: readonly FormatDeclaration[],
   filter: RowQuery = {},
+  asOf?: string,
 ): ReadyData | undefined {
   const shape = readyOf<ColumnDeclaration>(declaration, viewSettings(db, declaration.name, 'ready'))
   if (shape === undefined) return undefined
@@ -324,6 +328,19 @@ export function readyData(
     (row) => nameOf(shape, row),
   )
   const lineOf = (row: StoredRow): ViewLine => ({ format: declaration, row, shape })
+  const stalls = shape.stalls
+  const stalled =
+    stalls === undefined || asOf === undefined
+      ? []
+      : stalledRows(
+          rows,
+          shape.members,
+          stalls.days,
+          asOf,
+          (row) => textIn(shape.state, row) || undefined,
+          (row) => textIn(stalls.column, row) || undefined,
+          (row) => nameOf(shape, row),
+        )
   return {
     shape,
     ready: split.ready.filter(shown).map(lineOf),
@@ -333,6 +350,7 @@ export function readyData(
       // all the same (`readyRows`).
       by: each.by.map((id) => lineOf(byId.get(id) ?? { id, cells: {} })),
     })),
+    stalled: stalled.filter(shown).map(lineOf),
     labels,
   }
 }
@@ -395,6 +413,9 @@ export interface StartAnswer {
   readonly total: number
   /** A ready view's held rows; empty for a start view. */
   readonly held: readonly HeldLines[]
+  /** A ready view's stalled rows (M51 F4), and the date they are counted from; empty for a start view. */
+  readonly stalled: readonly ViewLine[]
+  readonly stalls: { readonly column: ColumnDeclaration; readonly days: number } | undefined
   /** The columns the question already says the value of — not printed again on every line. */
   readonly asked: readonly ColumnDeclaration[]
   readonly labels: ReadonlyMap<string, string>
@@ -412,7 +433,7 @@ export const START_CAP = 25
  * view, then each start view, in `startQuestions`'s order. Empty when the
  * document declares neither — the caller says so, and how to.
  */
-export function startHere(db: Database, declarations: readonly FormatDeclaration[]): readonly StartAnswer[] {
+export function startHere(db: Database, declarations: readonly FormatDeclaration[], asOf?: string): readonly StartAnswer[] {
   const questions = startQuestions<ColumnDeclaration, FormatDeclaration>(
     declarations,
     (format) => viewSettings(db, format, 'ready'),
@@ -422,7 +443,7 @@ export function startHere(db: Database, declarations: readonly FormatDeclaration
     const declaration = declarations.find((each) => each.name === question.format)
     if (declaration === undefined) return []
     if (question.kind === 'ready') {
-      const ready = readyData(db, declaration, declarations)
+      const ready = readyData(db, declaration, declarations, {}, asOf)
       if (ready === undefined) return []
       return [
         {
@@ -431,6 +452,8 @@ export function startHere(db: Database, declarations: readonly FormatDeclaration
           lines: ready.ready,
           total: ready.ready.length,
           held: ready.held,
+          stalled: ready.stalled,
+          stalls: ready.shape.stalls,
           asked: [ready.shape.state],
           labels: ready.labels,
         },
@@ -463,6 +486,8 @@ export function startHere(db: Database, declarations: readonly FormatDeclaration
         lines: shown.map((row) => ({ format: declaration, row, shape })),
         total: found.length,
         held: [],
+        stalled: [],
+        stalls: undefined,
         asked: shape.is.map((each) => each.column),
         labels,
       },

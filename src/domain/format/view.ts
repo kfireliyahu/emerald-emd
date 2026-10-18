@@ -320,7 +320,7 @@ export function isViewSetting(view: ViewKind, setting: string): boolean {
     case 'page':
       return isPagePart(setting)
     case 'ready':
-      return setting === 'waits' || setting === 'line' || readReadyState(setting) !== undefined
+      return setting === 'waits' || setting === 'line' || readReadyState(setting) !== undefined || readStalls(setting) !== undefined
     case 'start':
       return setting === 'line' || readStartSetting(setting) !== undefined
     case 'agenda':
@@ -342,7 +342,7 @@ export function soleWordOf(view: ViewKind, setting: string): string | undefined 
     case 'roadmap':
       return word === 'order' ? word : undefined
     case 'ready':
-      return word === 'waits' || word === 'ready' ? word : undefined
+      return word === 'waits' || word === 'ready' || word === 'stalls' ? word : undefined
     case 'start':
       return word === 'latest' ? word : undefined
     case 'agenda':
@@ -360,7 +360,7 @@ export const VIEW_PARTS: Readonly<Record<Exclude<ViewKind, 'entry'>, readonly st
   board: ['lanes', 'card'],
   roadmap: ['order', 'line', 'under'],
   page: ['body', 'line'],
-  ready: ['waits', 'line', 'ready <member> done <members>'],
+  ready: ['waits', 'line', 'ready <member> done <members>', 'stalls <days>'],
   start: ['is <member>', 'latest <count>', 'line'],
   agenda: ['date', 'done <members>', 'line'],
 }
@@ -865,6 +865,10 @@ export function foldUnder<R>(
  *   says that `dropped` is finished — and a member added later (`in_progress`)
  *   holds a row up until somebody says it does not, which is the safe way round.
  * - `line` — a column shown on a row's line, as a roadmap's are.
+ * - `stalls <days>` — on a date (M51 F4): when a row was taken. A row in a
+ *   member that is neither ready nor done — being worked — whose date is more
+ *   than that many days ago, or that has none, is listed as stalled: a session
+ *   that died leaves its unit `in_progress` for ever, and nothing else says so.
  *
  * **A row named that is not there holds a row up**: a link to a missing row is
  * refused at the write, so one found here is a document somebody edited by hand,
@@ -887,11 +891,24 @@ export function readReadyState(setting: string): ReadyState | undefined {
   return { ready, done }
 }
 
+/** The most days a `stalls` waits — a year; a claim older than that is stalled by any measure. */
+export const STALLS_MAX = 365
+
+/** `stalls 1` into its days — or nothing, when it is not one. */
+export function readStalls(setting: string): number | undefined {
+  const [word, value, ...rest] = setting.trim().split(/\s+/)
+  if (word !== 'stalls' || value === undefined || rest.length > 0 || !/^\d+$/.test(value)) return undefined
+  const days = Number(value)
+  return days >= 1 && days <= STALLS_MAX ? days : undefined
+}
+
 /** What a ready view draws. */
 export interface ReadyShape<C> extends LineShape<C> {
   readonly state: C
   readonly waits: C
   readonly members: ReadyState
+  /** The date a row was taken on, and how many days past it a row being worked is stalled. */
+  readonly stalls: { readonly column: C; readonly days: number } | undefined
 }
 
 /**
@@ -922,7 +939,43 @@ export function readyOf<C extends LinkViewColumn>(
   const waits = own.find((column) => settings.get(column.name) === 'waits') ?? own[0]
   if (waits === undefined) return undefined
   const line = lineShapeOf(format.columns, settings, [found.state, waits])
-  return { ...line, state: found.state, waits, members: found.members }
+  const dated = format.columns.find((column) => column.type === 'date' && readStalls(settings.get(column.name) ?? '') !== undefined)
+  const days = dated === undefined ? undefined : readStalls(settings.get(dated.name) ?? '')
+  const stalls = dated === undefined || days === undefined ? undefined : { column: dated, days }
+  return { ...line, state: found.state, waits, members: found.members, stalls }
+}
+
+/** Whole days from one ISO date to another, or nothing when either is not one. */
+function daysBetween(from: string, to: string): number | undefined {
+  const a = Date.parse(`${from.slice(0, 10)}T00:00:00Z`)
+  const b = Date.parse(`${to.slice(0, 10)}T00:00:00Z`)
+  return Number.isNaN(a) || Number.isNaN(b) ? undefined : Math.round((b - a) / 86_400_000)
+}
+
+/**
+ * The rows being worked — in a member neither ready nor done — whose date is
+ * more than `days` before `today`, or missing, in name order (M51 F4). A row
+ * with no date is stalled: nobody can say it is not, and the date is the only
+ * thing that would.
+ */
+export function stalledRows<R>(
+  rows: readonly R[],
+  members: ReadyState,
+  days: number,
+  today: string,
+  stateOf: (row: R) => string | undefined,
+  dateOf: (row: R) => string | undefined,
+  nameOf: (row: R) => string,
+): readonly R[] {
+  return rows
+    .filter((row) => {
+      const state = stateOf(row)
+      if (state === undefined || members.ready.includes(state) || members.done.includes(state)) return false
+      const date = dateOf(row)
+      const since = date === undefined ? undefined : daysBetween(date, today)
+      return since === undefined || since > days
+    })
+    .sort((a, b) => byName(nameOf(a), nameOf(b)))
 }
 
 /** A row that would be ready but for the rows it waits on that are still open. */

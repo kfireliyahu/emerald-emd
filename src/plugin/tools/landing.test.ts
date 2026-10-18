@@ -11,7 +11,7 @@ import { listRows } from '@/data/repositories/formatRowRepository.ts'
 import { exportEncoded, openEncoded, type DocumentEncoding } from '@/data/storage/encoding.ts'
 
 import { recordFormatRowsTool } from './formats.ts'
-import { claimUnitsTool, landUnitsTool } from './landing.ts'
+import { claimUnitsTool, landUnitsTool, REPORT_MAX } from './landing.ts'
 import { NO_CLIENT } from './tool.ts'
 import { tempDir } from '../../testing/tempDir'
 
@@ -85,6 +85,7 @@ function landing(extra: Record<string, unknown> = {}): Record<string, unknown> {
     files: 'src/plugin/tools/landing.ts',
     decisions: [DECISION],
     review_entries: [{ do: 'Call land_units', should: 'One call' }],
+    commit: '1a2b3c4',
     ...extra,
   }
 }
@@ -128,7 +129,7 @@ describe('land_units (M47 U3)', () => {
     const path = await memoryOnDisk('text')
     await landUnitsTool.run({ path, units: [landing()], commit: true }, NO_CLIENT)
     const answer = await landUnitsTool.run(
-      { path, units: [{ unit: 'M47 U4', decision: 'D-461' }, { unit: 'M47 U5' }], commit: true },
+      { path, units: [{ unit: 'M47 U4', decision: 'D-461', commit: 'abc1234' }, { unit: 'M47 U5', same_commit: true }], commit: true },
       NO_CLIENT,
     )
     expect(answer).toContain('2 rows of Unit changed')
@@ -352,5 +353,76 @@ describe('a child proposes its landing as an inbox row, and the manager lands th
     expect(missing).toContain('No `inbox` row has this id')
     await expect(landUnitsTool.run({ path }, NO_CLIENT)).rejects.toThrow('Name what to land')
     await expect(landUnitsTool.run({ path, inbox: [{ id, files: 'x' }] }, NO_CLIENT)).rejects.toThrow('lands as its child wrote it')
+  })
+})
+
+describe('a stalled claim is taken over, and a landing names its commit and keeps its report (M51 F4)', () => {
+  it('takes over only a unit in progress under the taker named, keeping the one it replaced', async () => {
+    const path = await memoryOnDisk('text')
+    await claimUnitsTool.run({ path, units: ['M47 U4'], taken_by: 'session A', started: '2026-10-16', commit: true }, NO_CLIENT)
+    const before = readFileSync(path)
+
+    const wrong = await claimUnitsTool.run({ path, units: ['M47 U4'], taken_by: 'driver', take_over: 'session B', commit: true }, NO_CLIENT)
+    expect(wrong).toContain('It is held by `session A`, not `session B`')
+    const planned = await claimUnitsTool.run({ path, units: ['M47 U5'], taken_by: 'driver', take_over: 'session A', commit: true }, NO_CLIENT)
+    expect(planned).toContain('claim it without `take_over`')
+    // A plain claim of a unit in progress is still refused: taking it over is said, never done by accident.
+    const plain = await claimUnitsTool.run({ path, units: ['M47 U4'], taken_by: 'driver', commit: true }, NO_CLIENT)
+    expect(plain).toContain('not as this edit expected')
+    expect(readFileSync(path).equals(before)).toBe(true)
+
+    const took = await claimUnitsTool.run(
+      { path, units: ['M47 U4'], taken_by: 'driver', take_over: 'session a', branch: 'main', started: '2026-10-18', commit: true },
+      NO_CLIENT,
+    )
+    expect(took).toContain('1 row of Unit changed')
+    expect(await unit(path, 'M47 U4')).toMatchObject({
+      state: 'in_progress',
+      taken_by: 'driver',
+      started: '2026-10-18',
+      branch: 'main',
+      taken_over_from: 'session A (2026-10-16)',
+    })
+
+    await claimUnitsTool.run({ path, units: ['M47 U4'], taken_by: 'driver 2', take_over: 'driver', started: '2026-10-19', commit: true }, NO_CLIENT)
+    expect((await unit(path, 'M47 U4'))['taken_over_from']).toBe('session A (2026-10-16); driver (2026-10-18)')
+  })
+
+  it('refuses a landing that names no commit unless it says the work is in the same commit', async () => {
+    const path = await memoryOnDisk('text')
+    const before = readFileSync(path)
+    const bare = await landUnitsTool.run({ path, units: [{ unit: 'M47 U3' }], commit: true }, NO_CLIENT)
+    expect(bare).toContain('It names no `commit`')
+    expect(bare).toContain('same_commit: true')
+    expect(readFileSync(path).equals(before)).toBe(true)
+    await expect(
+      landUnitsTool.run({ path, units: [{ unit: 'M47 U3', commit: 'abc1234', same_commit: true }] }, NO_CLIENT),
+    ).rejects.toThrow('one or the other')
+
+    await landUnitsTool.run({ path, units: [{ unit: 'M47 U3', same_commit: true }], commit: true }, NO_CLIENT)
+    const landed = await unit(path, 'M47 U3')
+    expect(landed).toMatchObject({ state: 'built' })
+    expect(landed['commit'] ?? null).toBeNull()
+  })
+
+  it('keeps the builder’s report on the unit, written out or proposed, and refuses a transcript', async () => {
+    const path = await memoryOnDisk('text')
+    const report = 'Landed 1a2b3c4; docs:check green.\nLeft: the skill’s order.'
+    await landUnitsTool.run({ path, units: [landing({ report })], commit: true }, NO_CLIENT)
+    expect(await unit(path, 'M47 U3')).toMatchObject({ state: 'built', report })
+
+    await claimUnitsTool.run({ path, units: ['M47 U4'], taken_by: 'driver', commit: true }, NO_CLIENT)
+    const body = `Built M47 U4.\n\n\`\`\`json\n${JSON.stringify({ unit: 'M47 U4', commit: 'bbbb222', report: 'All of it, here.' })}\n\`\`\`\n`
+    await recordFormatRowsTool.run(
+      { path, format: 'inbox', rows: [{ subject: 'Landing M47 U4', from: 'child', sent_on: '2026-10-18', refs: 'M47 U4', state: 'new', body }], commit: true },
+      NO_CLIENT,
+    )
+    const [proposed] = await rowsOf(path, 'inbox')
+    await landUnitsTool.run({ path, inbox: [proposed?.id], commit: true }, NO_CLIENT)
+    expect(await unit(path, 'M47 U4')).toMatchObject({ state: 'built', commit: 'bbbb222', report: 'All of it, here.' })
+
+    await expect(
+      landUnitsTool.run({ path, units: [{ unit: 'M47 U5', same_commit: true, report: 'x'.repeat(REPORT_MAX + 1) }] }, NO_CLIENT),
+    ).rejects.toThrow('not the transcript')
   })
 })

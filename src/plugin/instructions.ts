@@ -143,7 +143,8 @@ section below is the whole of that half.
 milestones, units, decisions, open questions, and an inbox another project's session writes to. \`create_document\` takes the \`packs\` a new document
 starts with, and \`keep_packs\` keeps one in a document that exists; offer one before declaring
 its formats by hand. In one, a unit is taken with \`claim_units\` (on a git \`branch\`) and landed with
-\`land_units\` (with its \`commit\`) — its decisions, review entries and the unit itself in one write.
+\`land_units\` (with its \`commit\` and the builder's \`report\`) — its decisions, review entries and the unit itself in one write;
+a claim a stopped session left in progress is taken over with \`claim_units take_over\`.
 A session run for a manager lands nothing: it proposes its landing as one \`inbox\` row, to the
 document path its hooks printed, and the manager lands them all with \`land_units inbox:[ids]\`.`.trim()
 

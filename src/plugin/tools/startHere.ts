@@ -16,7 +16,14 @@
  */
 
 import { documentHasLedger } from '@/data/packs/ledger/pack.ts'
-import { agendaData, START_CAP, startHere, startPicture, type ViewLine } from '@/data/repositories/formatLinkViewRepository.ts'
+import {
+  agendaData,
+  START_CAP,
+  startHere,
+  startPicture,
+  type StartAnswer,
+  type ViewLine,
+} from '@/data/repositories/formatLinkViewRepository.ts'
 import { PACKS, packsKeptBy } from '@/data/packs/packs.ts'
 import { changeMarks, listFormats, rowCountOf } from '@/data/repositories/formatRepository.ts'
 import type { ColumnDeclaration, FormatDeclaration } from '@/domain/format/declaration.ts'
@@ -92,6 +99,32 @@ function lineText(line: ViewLine, labels: ReadonlyMap<string, string>, said: rea
       return [column === name || text.length <= LINE_MAX ? text : `${text.slice(0, LINE_MAX - 1).trimEnd()}…`]
     })
     .join(' · ')
+}
+
+/**
+ * **What was taken and never landed** (M51 F4): a ready view's rows being
+ * worked — neither ready nor done — taken longer ago than its `stalls` says,
+ * each with the day it was taken. A session interrupted mid-unit left one
+ * `in_progress` with nothing to say so; this list is what says so.
+ */
+function stalledText(
+  answer: Pick<StartAnswer, 'declaration' | 'question'>,
+  labels: ReadonlyMap<string, string>,
+  stalled: StartAnswer['stalled'],
+  stalls: StartAnswer['stalls'],
+): string | undefined {
+  if (stalls === undefined || stalled.length === 0 || answer.question.kind !== 'ready') return undefined
+  const state = stalled[0]?.shape.state
+  const working = [...new Set(stalled.map((line) => (state === undefined ? '' : cellText(state, line.row, labels))))]
+    .filter((each) => each !== '' && each !== '-')
+    .join(' or ')
+  return [
+    `Stalled — ${working === '' ? 'being worked' : working}, taken more than ${plural(stalls.days, 'day')} ago:`,
+    ...stalled.map((line) => {
+      const taken = cellText(stalls.column, line.row, labels)
+      return `- ${lineText(line, labels, state === undefined ? [] : [state])} · ${taken === '-' ? `no ${stalls.column.name}` : `${stalls.column.name} ${taken}`}`
+    }),
+  ].join('\n')
 }
 
 /** How far ahead `start_here` asks the agenda: a week, today and the seven days after it (D-472's `within 7 days`). */
@@ -189,12 +222,13 @@ ${text}`, path, '', 'start') : { text, meta: {} }
     const path = requireString(args, 'path')
     return readDocument(path, async (document) => {
       const declared = listFormats(document.db)
-      const answers = startHere(document.db, declared)
+      const answers = startHere(document.db, declared, askedOn())
       // **What a row elsewhere holds now** (M47 U4, D-461): an inbox row about
       // a unit in the sender's document is listed with that unit's state.
       const shown = answers.flatMap((answer) => [
         ...answer.lines,
         ...answer.held.flatMap((each) => [each.line, ...each.by]),
+        ...answer.stalled,
       ])
       const elsewhere = await elsewhereLabels(
         shown.flatMap((line) => elsewhereValues(line.format, [line.row])),
@@ -217,7 +251,7 @@ ${text}`, path, '', 'start') : { text, meta: {} }
       }
       const answered = answers
         .map((answer) => {
-          const { question, declaration, lines, total, held, asked } = answer
+          const { question, declaration, lines, total, held, stalled, stalls, asked } = answer
           const labels = elsewhere.size === 0 ? answer.labels : new Map([...answer.labels, ...elsewhere])
           const heading =
             question.kind === 'ready' ? `### Ready to start — ${declaration.name}` : `### ${declaration.name} — ${question.what}`
@@ -239,6 +273,7 @@ ${text}`, path, '', 'start') : { text, meta: {} }
                         .join(', ')}`,
                   ),
                 ].join('\n')
+          const stuck = stalledText(answer, labels, stalled, stalls)
           const whole =
             question.call === undefined
               ? undefined
@@ -248,6 +283,7 @@ ${text}`, path, '', 'start') : { text, meta: {} }
             question.kind === 'ready' ? `_${question.what}._` : undefined,
             body,
             waiting,
+            stuck,
             whole,
           )
         })

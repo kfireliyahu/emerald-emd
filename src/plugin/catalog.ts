@@ -68,7 +68,7 @@ export const TOOL_GROUPS: readonly ToolGroup[] = [
       writes('record_format_rows', 'Adds rows, many at once.'),
       writes('update_format_rows', 'Corrects rows already there.'),
       removes('delete_format_rows', 'Removes rows nothing else links to.'),
-      writes('claim_units', 'Takes planned units of a project’s memory, on a branch, so no one else does.'),
+      writes('claim_units', 'Takes planned units of a project’s memory, on a branch, or a stalled claim over.'),
       writes('land_units', 'Lands units or a child’s inbox proposals: built, with decisions, in one write.'),
       reads('dispatch_plan', 'Says which ready units can run at once, and which share a file and must wait.'),
       writes('apply_rules', 'Runs a format’s rules over its rows.'),

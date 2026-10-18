@@ -17,6 +17,8 @@ A unit is where the project's own cadence lives: one unit per session, then comm
 
 `branch` and `commit` are where a unit was worked and what it became, in plain git (M51 U2): `claim_units` writes the branch a session took it on, and `land_units` the commit that carries its work, refusing a landing from another branch unless told. `taken_by` stays whatever the host calls its session; the pack depends on no host's session API, which is why these two are git's words rather than a session's. So `match:{state:in_progress}` is a live list of who is where.
 
+A claim can be taken over, and an old one shows itself (M51 F4). `claim_units` with `take_over` names whose claim it replaces and is refused unless the unit is `in_progress` under that taker; the new taker gets the unit with `started` reset, and the one it replaced goes onto `taken_over_from`. The ready view lists a unit `in_progress` taken more than a day ago as stalled, so a session that died mid-unit is seen at the next `start_here` rather than found by somebody hand-editing `taken_by`. `report` is the closing report of the session that built it, as `land_units` was given it, so a driver reads a child's report with one `format_rows` call rather than paging its transcript.
+
 A unit makes no claim.
 
 | column | type | points at | unit | per | required | unique | values | min | max | note |
@@ -37,5 +39,7 @@ A unit makes no claim.
 | branch | text |  |  |  | no | no |  |  |  | The git branch a session took the unit on — `main`, or a worktree's own (M51 U2). Written by `claim_units` and kept after it lands; a landing from another branch is refused unless it says so. Empty for a unit claimed without one. |
 | commit | text |  |  |  | no | no |  |  |  | The git commit that carries the unit's work, as `land_units` was given it (M51 U2) — a hash, short or full. Empty when the landing went in the same commit as the work, since a commit cannot name itself; `git log --grep` on the ref finds that one. A unit built before the first public commit names a commit of the history kept privately (D-495). |
 | paths | text |  |  |  | no | no |  |  |  | The files and folders it touches, one repository path per line — `src/plugin/catalog.ts`, or `src/plugin/tools/` for a whole folder (M51 U4). Written when it is planned, beside `files`, which keeps the prose; what every unit appends to — the decision log, `docs/memory.emd` — is left out, or every pair shares it. What `dispatch_plan` compares: a unit with none is unknown, never safe. |
+| taken_over_from | text |  |  |  | no | no |  |  |  | Who held the claim before a take-over, oldest first, each with the day they took it — `session A (2026-10-16)` (M51 F4). Written by `claim_units` with `take_over`; empty for a unit nobody took over. |
+| report | text |  |  |  | no | no |  |  |  | The closing report of the session that built it — what landed, what is left, what it found — as `land_units` was given it, plain text (M51 F4). The host cuts a child's note to its driver short; this is the whole of it, one `format_rows` call away. |
 
 ## rows

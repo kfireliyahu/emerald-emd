@@ -688,14 +688,28 @@ takes an optional `branch`, written on every unit it takes, and `land_units` tak
 names its branch is refused before anything is judged when the unit was claimed on another, unless
 it says `other_branch: true`; one that names none is not checked. `taken_by` stays whatever the host
 calls its session, so `format_rows unit match:{state:in_progress}` is who is where, and the roadmap
-and board show the branch beside it. A landing committed with the work it lands leaves `commit`
-empty, since a commit cannot name itself.
+and board show the branch beside it.
+
+**A stalled claim is taken over, and a landing names its commit and keeps its report** (M51 F4,
+D-501). `claim_units` with `take_over: "<taker>"` takes units already `in_progress` — a session that
+stopped mid-unit — refused, by unit, unless each is held by exactly that taker (a plain claim of
+one is still refused, so a take-over is always said); `started` is reset, and the taker it replaced
+goes onto `taken_over_from` with the day they took it, oldest first. The pack's ready view says
+`started: stalls 1`, so `start_here` lists, under **Stalled**, every unit `in_progress` taken more
+than a day ago — or with no `started` at all — and a dead session is seen at the next session's
+first call. `land_units` refuses a landing with no `commit` unless it says `same_commit: true`:
+commit the work, land with its hash, then commit the landing; `same_commit` is for the landing
+that goes in with its work, and leaves `commit` empty, since a commit cannot name itself. And a
+landing takes the builder's `report`, plain text up to 4,000 characters, kept on the unit's
+`report` column — the host cuts a child's note to its driver at a few hundred characters, and
+`format_rows unit match:{ref:"<ref>"} columns:[report]` is the whole of it. A child's proposal
+carries its `report` like any other key.
 
 **A child proposes, its manager lands** (M51 U3, D-485). A session run
 for a manager — a worktree's child — does not call `land_units`: it writes **one `inbox` row**,
 `state: new`, whose `refs` is its unit's ref and whose `body` is a line for a person and then one
-fenced `json` block holding one of `land_units`' `units` — `unit`, `files`, `commit`, `branch`,
-`decisions`, `review_entries`, `landed`, `decision`; never `close_milestone` (the maintainer's) or
+fenced `json` block holding one of `land_units`' `units` — `unit`, `files`, `commit` (or `same_commit`), `branch`,
+`decisions`, `review_entries`, `landed`, `decision`, `report`; never `close_milestone` (the maintainer's) or
 `other_branch` (the manager's). It writes it **to the document path its hooks printed** — in a
 worktree that is the main checkout's copy (D-483), never a path built from the worktree's own folder,
 since the tools write whatever path they are handed. `land_units inbox:[ids]` (beside `units`, or

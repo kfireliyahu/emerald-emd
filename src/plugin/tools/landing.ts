@@ -32,6 +32,17 @@
  * By id is safe here, though a text document derives ids from a row's
  * content (D-247): a proposal is never edited after it is written.
  *
+ * **A stalled claim is taken over, and a landing names its commit and
+ * carries its report** — M51 F4. A session interrupted mid-unit left its unit
+ * `in_progress`, and `claim_units` could not take it, so a driver hand-edited
+ * `taken_by`: `take_over` names whose claim this replaces, is refused unless
+ * the unit is `in_progress` under that taker, resets `started` and keeps the
+ * one it replaced on `taken_over_from`. Two units landed with no `commit`,
+ * because a landing in the same commit as the work cannot name itself: a
+ * landing without one is refused unless it says `same_commit: true`. And the
+ * host cuts a child's note to its driver short, so a landing takes the child's
+ * `report` and keeps it on the unit, one `format_rows` call away.
+ *
  * **Shaped, never a general batch** (D-095). What it writes is four named
  * formats in a fixed order with the columns it names; a batch of mixed writes
  * to any format was the rejected alternative, because it is a general query by
@@ -69,6 +80,9 @@ import {
 /** At most this many units in one landing or one claim. */
 const UNITS_MAX = 50
 
+/** The longest closing report a landing keeps — a report, not a transcript. */
+export const REPORT_MAX = 4000
+
 /** Where a document without the development pack is sent. */
 const NO_PACK =
   'These tools write the development pack’s formats — `unit`, `decision`, `review_entry`, ' +
@@ -90,6 +104,10 @@ interface Landing {
   readonly commit: string | undefined
   /** Land it although it was claimed on another branch. */
   readonly otherBranch: boolean
+  /** The work goes in the same commit as this landing, so it names none. */
+  readonly sameCommit: boolean
+  /** The closing report of the session that built it. */
+  readonly report: string | undefined
 }
 
 /** A git commit as a person or a tool prints it: 7 to 40 hex digits. */
@@ -134,11 +152,26 @@ function commitOf(entry: Record<string, unknown>, field: string): string | undef
   return commit
 }
 
-function otherBranchOf(entry: Record<string, unknown>, field: string): boolean {
-  const value = entry['other_branch']
+function flagOf(entry: Record<string, unknown>, key: string, field: string): boolean {
+  const value = entry[key]
   if (value === undefined || value === null) return false
-  if (typeof value !== 'boolean') throw new ToolInputError(`\`${field}.other_branch\` must be true or false.`)
+  if (typeof value !== 'boolean') throw new ToolInputError(`\`${field}.${key}\` must be true or false.`)
   return value
+}
+
+function otherBranchOf(entry: Record<string, unknown>, field: string): boolean {
+  return flagOf(entry, 'other_branch', field)
+}
+
+function reportOf(entry: Record<string, unknown>, field: string): string | undefined {
+  const report = textOf(entry, 'report', field)
+  if (report !== undefined && report.length > REPORT_MAX) {
+    throw new ToolInputError(
+      `\`${field}.report\` is ${String(report.length)} characters, and a report is at most ${String(REPORT_MAX)}: ` +
+        'what landed, what is left, what was found — not the transcript.',
+    )
+  }
+  return report
 }
 
 const LANDING_KEYS = new Set([
@@ -151,7 +184,9 @@ const LANDING_KEYS = new Set([
   'close_milestone',
   'branch',
   'commit',
+  'same_commit',
   'other_branch',
+  'report',
 ])
 
 /**
@@ -179,6 +214,11 @@ function landingOf(raw: unknown, field: string, keys: ReadonlySet<string>): Land
   }
   const unit = textOf(entry, 'unit', field)
   if (unit === undefined) throw new ToolInputError(`\`${field}.unit\` is the unit's ref — \`M47 U3\`.`)
+  const commit = commitOf(entry, field)
+  const sameCommit = flagOf(entry, 'same_commit', field)
+  if (commit !== undefined && sameCommit) {
+    throw new ToolInputError(`\`${field}\` names a \`commit\` and says \`same_commit: true\`; it is one or the other.`)
+  }
   return {
     unit,
     landed: textOf(entry, 'landed', field),
@@ -188,8 +228,10 @@ function landingOf(raw: unknown, field: string, keys: ReadonlySet<string>): Land
     reviewEntries: objectsOf(entry['review_entries'], `${field}.review_entries`),
     closeMilestone: textOf(entry, 'close_milestone', field),
     branch: textOf(entry, 'branch', field),
-    commit: commitOf(entry, field),
+    commit,
     otherBranch: otherBranchOf(entry, field),
+    sameCommit,
+    report: reportOf(entry, field),
   }
 }
 
@@ -484,6 +526,14 @@ function landingSteps(
       ])
       continue
     }
+    if (landing.commit === undefined && !landing.sameCommit) {
+      refusals.push([
+        landing.unit,
+        'It names no `commit`. Commit the work first and land with its hash — then commit the landing — ' +
+          'or say `same_commit: true` when the work goes in the same commit as this landing.',
+      ])
+      continue
+    }
     const ref = textCell(row, 'ref') ?? landing.unit
     const landed = landing.landed ?? toISODate(today())
     // A decision row's milestone and scope are its unit's, unless it says otherwise.
@@ -506,6 +556,7 @@ function landingSteps(
         ...(named === undefined ? {} : { decision: named }),
         ...(landing.branch === undefined ? {} : { branch: landing.branch }),
         ...(landing.commit === undefined ? {} : { commit: landing.commit }),
+        ...(landing.report === undefined ? {} : { report: landing.report }),
       },
     })
     for (const entry of landing.reviewEntries) entries.push({ unit: ref, state: 'open', ...entry })
@@ -561,8 +612,9 @@ export const landUnitsTool: PluginTool = {
       'A unit’s closing pass in one call, for a list of units by `ref`: their new `decisions` ' +
       '(date, milestone, scope and `state: live` default to the unit’s), the unit to `built` with ' +
       '`landed` (default today), `files` and `decision` (default its first new one), its ' +
-      '`review_entries` (`state: open` default), `close_milestone`, its git `commit` and `branch` ' +
-      '(another than the claim’s refused unless `other_branch`). Or `inbox`: ids of a child’s ' +
+      '`review_entries` (`state: open` default), `close_milestone`, its git `commit` (refused without ' +
+      'one unless `same_commit: true`) and `branch` (another than the claim’s refused unless ' +
+      '`other_branch`), and the `report` of the session that built it. Or `inbox`: ids of a child’s ' +
       'proposals — an inbox row, `state: new`, `refs` its unit, its `body` one ```json block of ' +
       'one unit’s landing (no `close_milestone`), written to the document path the hooks printed ' +
       '— each landed as written and moved to `applied`. Each step is `record_format_rows` or ' +
@@ -594,8 +646,10 @@ export const landUnitsTool: PluginTool = {
               },
               close_milestone: stringProp('A milestone’s ref, `open` to `closed`.'),
               commit: stringProp('The git commit carrying its work.'),
+              same_commit: booleanProp('The work is in the same commit as this landing.'),
               branch: stringProp('The git branch it lands from.'),
               other_branch: booleanProp('Land it although claimed on another branch.'),
+              report: stringProp(`Its builder’s closing report, plain text, up to ${String(REPORT_MAX)} characters.`),
             },
             required: ['unit'],
             additionalProperties: false,
@@ -634,6 +688,65 @@ export const landUnitsTool: PluginTool = {
 
 // --- claim_units ------------------------------------------------------------------
 
+/**
+ * **A take-over** (M51 F4): each unit `in_progress` under the taker named, to
+ * the new one with `started` reset, the one it replaced added to
+ * `taken_over_from` with the day they took it. Refused whole, by unit, when one
+ * is not there, not `in_progress`, or held by someone else — and each edit
+ * still `expect`s what was read, so two drivers taking over one unit cannot
+ * both get it.
+ */
+function takeOverSteps(
+  document: OpenDocument,
+  refs: readonly string[],
+  from: string,
+  values: Readonly<Record<string, unknown>>,
+): { blocked?: string; steps: readonly Step[] } {
+  const unitFormat = resolveWritable(document, 'unit')
+  if ('refusal' in unitFormat) return { blocked: paragraphs(unitFormat.refusal, NO_PACK), steps: [] }
+  const refusals: string[][] = []
+  const edits: Record<string, unknown>[] = []
+  for (const ref of refs) {
+    const row = byRef(document, unitFormat.declaration, ref)
+    if (row === undefined) {
+      refusals.push([ref, 'No `unit` row has this ref.'])
+      continue
+    }
+    const state = textCell(row, 'state')
+    if (state !== 'in_progress') {
+      refusals.push([
+        ref,
+        `It is ${state ?? 'without a state'}, and a take-over is of a unit in_progress` +
+          (state === 'planned' ? ' — claim it without `take_over`.' : '.'),
+      ])
+      continue
+    }
+    const holder = textCell(row, 'taken_by')
+    if (holder?.toLowerCase() !== from.toLowerCase()) {
+      refusals.push([ref, `It is held by \`${holder ?? 'nobody'}\`, not \`${from}\`; name whose claim this replaces.`])
+      continue
+    }
+    const since = textCell(row, 'started')
+    const before = textCell(row, 'taken_over_from')
+    const replaced = since === undefined ? holder : `${holder} (${since})`
+    edits.push({
+      where: { ref: textCell(row, 'ref') ?? ref },
+      expect: { state: 'in_progress', taken_by: holder },
+      values: { ...values, taken_over_from: before === undefined ? replaced : `${before}; ${replaced}` },
+    })
+  }
+  if (refusals.length > 0) {
+    return {
+      blocked: paragraphs(
+        `**Nothing was written.** ${plural(refusals.length, 'unit was', 'units were')} refused, and a take-over applies whole or not at all.`,
+        table(['Unit', 'Why'], refusals),
+      ),
+      steps: [],
+    }
+  }
+  return { steps: [stepOf('unit', edits.length, updateMutation('unit', edits))] }
+}
+
 export const claimUnitsTool: PluginTool = {
   definition: {
     name: 'claim_units',
@@ -641,7 +754,9 @@ export const claimUnitsTool: PluginTool = {
     description:
       'Take units by `ref`: `planned` to `in_progress` with `taken_by`, the git `branch` they are ' +
       'taken on and `started` (default today), the batch refused unless every one is still planned. ' +
-      'Writes nothing until `commit: true`.',
+      'With `take_over`, take units already `in_progress` from that taker — a session that stopped ' +
+      'mid-unit — refused unless each is held by exactly that taker; `started` is reset and the taker ' +
+      'replaced is kept on `taken_over_from`. Writes nothing until `commit: true`.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -654,6 +769,7 @@ export const claimUnitsTool: PluginTool = {
         taken_by: stringProp('Who takes them: the host’s name for its session.'),
         branch: stringProp('The git branch they are taken on.'),
         started: stringProp('`YYYY-MM-DD`; today if left out.'),
+        take_over: stringProp('The `taken_by` whose claim this replaces, for units already in progress.'),
         commit: booleanProp('Write it. Omit or false for the dry run.'),
       },
       required: ['path', 'units', 'taken_by'],
@@ -666,15 +782,20 @@ export const claimUnitsTool: PluginTool = {
     const takenBy = requireString(args, 'taken_by')
     const started = args['started'] === undefined ? toISODate(today()) : requireString(args, 'started')
     const branch = args['branch'] === undefined ? undefined : requireString(args, 'branch').trim()
+    const takeOver = args['take_over'] === undefined ? undefined : requireString(args, 'take_over').trim()
     const refs = listOf(args, 'units').map((ref, index) => {
       if (typeof ref !== 'string' || ref.trim() === '') throw new ToolInputError(`\`units[${String(index)}]\` must be a unit's ref.`)
       return ref.trim()
     })
-    const edits = refs.map((ref) => ({
-      where: { ref },
-      expect: { state: 'planned' },
-      values: { state: 'in_progress', taken_by: takenBy, started, ...(branch === undefined ? {} : { branch }) },
-    }))
+    const values = { state: 'in_progress', taken_by: takenBy, started, ...(branch === undefined ? {} : { branch }) }
+    if (takeOver !== undefined) {
+      return mutatingCall(
+        path,
+        args['commit'] === true,
+        stepsMutation(`taking over ${refs.join(', ')}`, (document) => takeOverSteps(document, refs, takeOver, values)),
+      )
+    }
+    const edits = refs.map((ref) => ({ where: { ref }, expect: { state: 'planned' }, values }))
     // One format, one step: `update_format_rows`'s own mutation, as it is.
     return mutatingCall(path, args['commit'] === true, updateMutation('unit', edits))
   },

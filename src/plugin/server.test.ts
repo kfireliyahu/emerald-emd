@@ -1069,8 +1069,10 @@ describe('the server makes zero network calls', () => {
       // 52.5k since M51 U3 (D-485): `inbox` on `land_units`, a child's landing
       // proposals by id, and the line that says how a child writes one — a
       // parameter, ~550 chars, and growth. 53.5k since M51 U4 (D-486):
-      // `dispatch_plan`, a new read-only tool — growth, ~800 chars.
-      expect(engineSize).toBeLessThan(53_500)
+      // `dispatch_plan`, a new read-only tool — growth, ~800 chars. 54k
+      // since M51 F4 (D-501): `take_over` on `claim_units`, `same_commit` and
+      // `report` on each of `land_units`' units — three parameters, ~400 chars.
+      expect(engineSize).toBeLessThan(54_000)
     })
   })
 })
