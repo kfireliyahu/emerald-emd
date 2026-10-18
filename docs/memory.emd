@@ -6195,7 +6195,7 @@ state: open
 unit: M42 U9
 should: (5) shows 'Downloading Emerald 0.1.3…' and then 'Emerald 0.1.3 is ready. Installing it restarts Emerald; your documents are not touched.' with Install and restart and Later, no dialog, focus not taken (without the press, the next start shows the same within a minute). (6) Cancel keeps the window and installs nothing; Save saves, Emerald closes, the installer runs with no window and no prompt, and Emerald opens again on the same document; About says 0.1.3. Turning the setting off and pressing Check now only says 0.1.3 is out.
 breaks: No notice, or 'It could not be downloaded here: …' (read the reason); an installer window or administrator prompt; Emerald not reopening, or opening on no document; the document changed by the update.
-not_tried: A real installer run by electron-updater: in the shell the 'installer' was a copy of whoami.exe from a local feed, so the silent NSIS update, --force-run and whether SmartScreen intervenes are unproven until this test. macOS was not run (it stays a notice).
+not_tried: Steps (1) and (2) are done (v0.1.2 released with the new names, run 39153025034; the page links releases/latest/download, 02a63ed). Maintainer, 2026-10-18: steps (3) to (6) are skipped on purpose; the next real release proves the update, from an installed 0.1.2 with updates on.
 state: open
 
 ### This one closes D-208 and needs your broker statement. Go to `#/investments` and read your דוח תקופתי. In the holdings column list, open the select for עלות הרכישה, choose — add a role —, type `cost`, press add, and accept the reading. Also add a nonsense role on `#/import`'s column headers.
