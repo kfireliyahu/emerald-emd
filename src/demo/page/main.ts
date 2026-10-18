@@ -6,7 +6,19 @@ import { mountClaim } from './claim.ts'
 import { mountInbox } from './inbox.ts'
 import { mountReel } from './reel.ts'
 import { fill, LANGUAGES, pickLanguage, rememberLanguage, type Copy } from './copy.ts'
-import { COUNT_SCRIPT, CONTACT, DEVELOPMENT_RECORDING, FORM_ACTION, SOURCE_URL } from './page.ts'
+import {
+  CONTACT,
+  COUNT_SCRIPT,
+  DEVELOPMENT_RECORDING,
+  FORM_ACTION,
+  installers,
+  NPM_URL,
+  PLUGIN_URL,
+  README_INSTALL_URL,
+  RELEASE,
+  RELEASES_URL,
+  SOURCE_URL,
+} from './page.ts'
 import { rowAt, tones } from './rail.ts'
 
 /**
@@ -298,13 +310,16 @@ window.addEventListener('resize', onScroll)
 place()
 reveal()
 
-// The foot: the form only when there is somewhere for it to go; the contact address otherwise.
+// The foot: the form only when there is somewhere for it to go; the contact address otherwise,
+// without the line about what a given address is used for, which is the form's.
 const form = document.querySelector<HTMLFormElement>('.foot form')
 const instead = document.querySelector<HTMLElement>('.foot .instead')
 if (form && instead) {
   if (FORM_ACTION === '') {
     form.hidden = true
     instead.hidden = false
+    const address = document.querySelector<HTMLElement>('.foot .address')
+    if (address) address.hidden = true
     const link = instead.querySelector<HTMLAnchorElement>('a')
     if (link) {
       link.href = `mailto:${CONTACT}`
@@ -323,3 +338,16 @@ if (COUNT_SCRIPT !== '') {
 }
 for (const link of document.querySelectorAll<HTMLAnchorElement>('a[data-source]')) link.href = SOURCE_URL
 for (const link of document.querySelectorAll<HTMLAnchorElement>('a[data-privacy]')) link.href = `${SOURCE_URL}/blob/main/PRIVACY.md`
+for (const link of document.querySelectorAll<HTMLAnchorElement>('a[data-plugin]')) link.href = PLUGIN_URL
+for (const link of document.querySelectorAll<HTMLAnchorElement>('a[data-npm]')) link.href = NPM_URL
+for (const link of document.querySelectorAll<HTMLAnchorElement>('a[data-readme]')) link.href = README_INSTALL_URL
+for (const link of document.querySelectorAll<HTMLAnchorElement>('a[data-releases]')) link.href = RELEASES_URL
+// The installers: each card links its file on the release `page.ts` names, and shows the file's name.
+const files = installers(RELEASE)
+for (const link of document.querySelectorAll<HTMLAnchorElement>('a[data-installer]')) {
+  const file = files[link.dataset.installer as keyof typeof files]
+  if (!file) continue
+  link.href = `${SOURCE_URL}/releases/download/v${RELEASE}/${file}`
+  const shown = link.querySelector<HTMLElement>('.file')
+  if (shown) shown.textContent = file
+}

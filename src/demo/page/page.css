@@ -796,7 +796,119 @@ html.js .row.seen ul.points li {
   min-height: 2.8em;
 }
 
-/* The foot: the form when it has somewhere to go, the address otherwise. */
+/* The foot: where to get Emerald (M42 F2). Each way in is the app's card
+   (`.fc-card`, one stretched link, the accent edge on hover) with its mark in a
+   leading tile a shade deeper that turns emerald on hover, as a button with an
+   icon does; the marks are filled in the ink, so the five read as one set. The
+   command sits above the stretched link, so it selects rather than opens. */
+.foot .ways,
+.foot .downloads {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.foot .ways {
+  margin: 24px 0 32px;
+}
+.foot .downloads {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-bottom: 16px;
+}
+.foot .way {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) minmax(0, 28rem);
+  gap: 16px;
+  align-items: center;
+}
+.foot .download {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.foot .tile {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  color: var(--color-ink);
+  background: var(--color-hairline);
+  border-radius: var(--radius-control);
+  transition:
+    background-color var(--duration-base) var(--ease-out),
+    color var(--duration-base) var(--ease-out);
+}
+.foot .fc-card:hover .tile,
+.foot .fc-card:focus-within .tile {
+  color: var(--color-action-ink);
+  background: var(--color-action);
+}
+.foot .mark-icon {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+}
+.foot .fc-card-link {
+  color: var(--color-ink);
+  text-decoration: none;
+}
+.foot .name {
+  display: block;
+  font-weight: 500;
+}
+.foot .way p {
+  margin: 2px 0 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  color: var(--color-ink-secondary);
+}
+.foot .run {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  padding: 8px 12px;
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--color-ink);
+  background: var(--color-background);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-control);
+  cursor: text;
+}
+.foot .download .fc-card-link {
+  display: grid;
+  min-width: 0;
+}
+.foot .file {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--color-ink-secondary);
+  overflow-wrap: anywhere;
+}
+.foot .address {
+  margin-top: 12px;
+}
+@media (max-width: 52rem) {
+  .foot .way {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+  /* A phone wraps a long command rather than hiding its end: a soft wrap still copies as one line. */
+  .foot .run {
+    grid-column: 1 / -1;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+  .foot .downloads {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The form when it has somewhere to go, the address otherwise. */
 .foot form {
   display: grid;
   gap: 16px;

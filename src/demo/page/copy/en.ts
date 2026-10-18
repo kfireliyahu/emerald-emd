@@ -39,7 +39,7 @@ export const en: Copy = {
     ledger: 'The ledger',
     development: 'The development pack',
     local: 'No internet, no login',
-    download: 'Something to download',
+    download: 'Get Emerald',
   },
 
   hero: {
@@ -205,8 +205,29 @@ export const en: Copy = {
   },
 
   foot: {
-    heading: 'Two ways in',
-    ways: 'For your assistant, the npm package and one line in its MCP config, or the Claude plugin. For your money, the desktop app for Windows and macOS, from the latest release on GitHub.',
+    heading: 'Get Emerald',
+    lead: 'Four ways in, all free: the source, the Claude plugin, the npm package and the desktop app.',
+    source: {
+      name: 'The source, on GitHub',
+      line: 'Read it, build it, run it from the repository.',
+    },
+    plugin: {
+      name: 'The Claude plugin',
+      line: 'For Claude Code: the server, its views in the conversation, and the hooks that start a session from your project.',
+    },
+    npm: {
+      name: 'The npm package',
+      line: 'For any other MCP client: the server, as one line in its config.',
+    },
+    desktop: 'The desktop app',
+    windows: 'Windows',
+    appleSilicon: 'macOS, Apple silicon',
+    intel: 'macOS, Intel',
+    unsigned:
+      'The installers are not code-signed, so Windows and macOS warn on first open, and {readme} says how past each. Where a file came from is checkable without a signature: compare its SHA-256 with {sums}. Newer versions: {releases}.',
+    readme: 'the README',
+    sums: 'SHA256SUMS',
+    releases: 'every release',
     email: 'Email',
     use: 'What would you use it for?',
     send: 'Send',

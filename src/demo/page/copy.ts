@@ -95,9 +95,23 @@ export interface Copy {
     readonly local: Section
   }
   readonly foot: {
+    /** Where to get Emerald (M42 F2): the section's heading, and `rows.download` names it in the rail. */
     readonly heading: string
-    /** The two doors in, under the heading: the package for an assistant, the app for money. */
-    readonly ways: string
+    readonly lead: string
+    /** The ways in, each a card: its name is the link, its line says what it is for. */
+    readonly source: Way
+    readonly plugin: Way
+    readonly npm: Way
+    /** The label over the installers, and each installer's name; the file name beside it is the page's. */
+    readonly desktop: string
+    readonly windows: string
+    readonly appleSilicon: string
+    readonly intel: string
+    /** `{readme}`, `{sums}` and `{releases}` are links; the three words after it are what they show. */
+    readonly unsigned: string
+    readonly readme: string
+    readonly sums: string
+    readonly releases: string
     readonly email: string
     readonly use: string
     readonly send: string
@@ -110,6 +124,12 @@ export interface Copy {
     readonly line: string
     readonly source: string
   }
+}
+
+/** A way in, in the page's last section: its name, which is the link, and one line. */
+export interface Way {
+  readonly name: string
+  readonly line: string
 }
 
 export interface Tour {

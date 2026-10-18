@@ -83,8 +83,6 @@ Three ways in, all available today:
   /plugin install emerald@emerald-emd
   ```
 
-Until the desktop app is out, it runs from the repository below.
-
 ## The repository
 
 **Build and run**

@@ -31,6 +31,37 @@ export const CONTACT = 'me@kfireliyahu.com'
 
 /**
  * The repository, the one address `package.json` names (D-452); `rail.test.ts`
- * fails when the two differ. Not public yet, so the page says so beside it.
+ * fails when the two differ.
  */
 export const SOURCE_URL = 'https://github.com/kfireliyahu/emerald-emd'
+
+/** The Claude plugin's own page in the repository: what it runs (M42 U4). */
+export const PLUGIN_URL = `${SOURCE_URL}/blob/main/hosts/claude/README.md`
+
+/** The MCP server's package (M42 U2). */
+export const NPM_URL = 'https://www.npmjs.com/package/emerald-mcp'
+
+/**
+ * **The release the installers link to** (M42 F2). Its files carry the version
+ * (`electron-builder.yml`'s `artifactName`), so `releases/latest/download/` cannot
+ * name them: the page links this release's files, and moving it is one line here
+ * once a newer release is out. `rail.test.ts` fails when the names below stop
+ * being the ones the build writes.
+ */
+export const RELEASE = '0.1.0'
+
+/** Every release, newest first: where the caption under the installers points. */
+export const RELEASES_URL = `${SOURCE_URL}/releases`
+
+/** The README's own install section, which says how past each platform's warning. */
+export const README_INSTALL_URL = `${SOURCE_URL}#installing-it`
+
+/** The installers and the checksums beside them, by the name each is linked under. */
+export function installers(version: string): Record<'windows' | 'arm64' | 'x64' | 'sums', string> {
+  return {
+    windows: `Emerald-Setup-${version}.exe`,
+    arm64: `Emerald-${version}-arm64.dmg`,
+    x64: `Emerald-${version}-x64.dmg`,
+    sums: 'SHA256SUMS',
+  }
+}
