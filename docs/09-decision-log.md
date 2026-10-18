@@ -415,6 +415,7 @@ written out here.
 | D-494 | 2026-10-18 | What only Claude reads lives in `hosts/claude/` — the hooks and the status line, the skills a stranger gets, and the plugin's manifest — built beside the server as `hooks.mjs` and `status-line.mjs`; nothing in `src/` or `electron/` imports from `hosts/`, and a host reaches the server only through `src/plugin/host.ts` | [M42](#d-494) |
 | D-495 | 2026-10-18 | The repository goes public before the showcase, as one fresh commit with its history kept privately; what a visitor or a new session reads first says what holds, not who decided it; `docs/archive/` leaves the repository; and M33 U4 then deploys with GitHub Pages and a getemerald.dev record at Cloudflare | [below](#d-495) |
 | D-496 | 2026-10-18 | A tour plays only while its frame is seen, and the frame decides it: the player holds the first step and pauses every hold while an `IntersectionObserver` on the frame's own document says less than a third of it is in view or the tab is hidden, so `?autoplay=1` means play when seen on any page that embeds it | [below](#d-496) |
+| D-497 | 2026-10-18 | The MCP server is published as one npm package, `emerald-mcp`, that is `dist-plugin/` as built: every package bundled and no dependencies, a manifest generated from the root one, and a bin each for the server (`emerald-mcp`, full or `--engine-only` by flag), the hooks (`emerald-hooks`) and the status line (`emerald-status-line`) | [below](#d-497) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -802,3 +803,41 @@ is the one on screen.
 ## Related
 
 07 Roadmap · [conventions](./conventions.md) · review · `docs/memory.emd` (the `decision` rows)
+
+## D-497 · 2026-10-18 · The MCP server is published as one npm package, `emerald-mcp`, that is `dist-plugin/` as built: every package bundled and no dependencies, a manifest generated from the root one, and a bin each for the server (`emerald-mcp`, full or `--engine-only` by flag), the hooks (`emerald-hooks`) and the status line (`emerald-status-line`) <a id="d-497"></a>
+
+**Context.** The README's install line has said `npx emerald-mcp` since D-481, and the maintainer
+decided on 2026-10-18 that the Claude plugin (M42 U4) runs everything from this package rather than a
+committed build or a release asset. Until now `dist-plugin/server.mjs` kept `sql.js`, `xlsx` and the
+MCP SDK external, so it ran only beside a checkout's `node_modules`; the root `package.json` is the
+app's and private.
+
+**Decision.**
+- **One package, and it is `dist-plugin/`.** `npm run build:plugin` ends with
+  `scripts/npm-package.mjs`, which writes `package.json` and `README.md` into the folder: name
+  `emerald-mcp`, the root's version, licence (AGPL-3.0-only, D-430), author, homepage and
+  repository, `files` naming the three bins with `LICENSE.txt` and `THIRD_PARTY_NOTICES.txt`, and
+  `engines.node >=24`, what CI runs. Generated, not kept, so the two manifests cannot drift.
+- **No dependencies.** The three passes bundle every package (`ssr.noExternal`), `sql.js` as its
+  browser build since its Node build's export is lost to the CommonJS transform; the wasm is the
+  same bytes, handed over as before. The server's public folder (the OCR's language data, which no
+  tool reads) is no longer copied in. An `npx` downloads a 2.9 MB tarball and installs nothing else.
+- **Both servers in the one package, chosen by `--engine-only`.** Two packages would ship the same
+  7.5 MB twice for a choice `tools/list` makes at run time.
+- **A bin each for the hooks and the status line**, rather than subcommands of one bin: each is
+  already its own entry (D-494), the inbox hook runs on every prompt and the status line has 200 ms,
+  and a dispatcher would load the server's bundle to reach them or be a fourth file. A plugin calls
+  them with `npx -y -p emerald-mcp@<version> emerald-hooks …`.
+- **Publishing is the maintainer's** (`npm publish --access public` from `dist-plugin/`); a session
+  prepares and proves the tarball.
+
+**Consequences.** Measured once cached, the inbox hook costs ~0.35 s run by `node`, ~2.1 s through
+`npx` with the package installed, ~2.7 s from the npx cache — npm's start-up, on every prompt — and
+for a registry spec npx revalidates the manifest each call unless `--prefer-offline` is passed, which
+a pinned version makes safe. How the plugin's hooks pay that is M42 U4's. This checkout's
+`.mcp.json` and hooks run the same self-contained files.
+
+**Rejected.** Two packages, full and engine-only (twice the bytes for one flag). One bin with
+subcommands (the cost above, paid at the front of every hook). Dependencies resolved at install
+(an `npx` that installs the MCP SDK's tree on first run, for files that bundle in seconds). A
+manifest kept by hand beside the root one.

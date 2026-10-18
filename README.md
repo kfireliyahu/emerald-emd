@@ -68,7 +68,7 @@ Nothing is downloadable yet. With the public release, three ways in:
   file beside it: `gh attestation verify <file> --repo kfireliyahu/emerald-emd` asks GitHub whether
   the file is one the workflow built. Updates are "download the new one"; there is no update check.
 - **The MCP server**, as the npm package `emerald-mcp`: one line in your assistant's MCP
-  configuration, for any document, and the ledger's tools a flag away:
+  configuration, for any document, and `--engine-only` for the engine's tools without the ledger's:
 
   ```bash
   claude mcp add emerald -- npx emerald-mcp
@@ -113,9 +113,9 @@ started in this directory picks it up and asks you to approve it once. From anyw
 claude mcp add emerald -- node /absolute/path/to/dist-plugin/server.mjs --engine-only
 ```
 
-Leave `--engine-only` off for the ledger's tools as well. The server is not self-contained
-(`sql.js`, SheetJS and the MCP SDK stay external), so it runs with this checkout's `node_modules`
-present. [docs/plugin.md](./docs/plugin.md) has the tool surface, the hosts tried, and the rules.
+Leave `--engine-only` off for the ledger's tools as well. The built folder is self-contained —
+every package is bundled into it, and it is the npm package as it stands — so it runs from anywhere
+Node does. [docs/plugin.md](./docs/plugin.md) has the tool surface, the hosts tried, and the rules.
 
 **Where things are**
 

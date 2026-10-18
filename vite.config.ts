@@ -219,12 +219,16 @@ export default defineConfig(({ mode }) => {
   // **Claude Code's hooks are a pass of their own too** (M42 U6): what a hook
   // runs is Claude's alone, so it lives in `hosts/claude/` and the server's
   // entry does not reach it. It bundles the tools it answers with, as the
-  // server does, and leaves the same packages external.
+  // server does.
   const hooks = mode === 'claude-hooks'
   const electronMain = mode === 'electron'
   const electronPreload = mode === 'electron-preload'
   const electron = electronMain || electronPreload
-  const node = plugin || hooks || statusLine || electron
+  // **The three are the npm package, `emerald-mcp`** (M42 U2, D-497): dist-plugin/
+  // is published as it is built, so each pass bundles every package it reaches
+  // and the package has no dependency to install. Node's own modules stay imports.
+  const published = plugin || hooks || statusLine
+  const node = published || electron
   const demo = mode === 'demo'
   const frame = mode === 'frame'
 
@@ -241,7 +245,7 @@ export default defineConfig(({ mode }) => {
     // `scripts/make-demo-document.mjs` writes `.demo/demo.emd` with this build's
     // own plugin, and the build copies `.demo/` into `dist-demo/` (M33 U1). The
     // other outputs have no public folder.
-    publicDir: demo ? '.demo' : frame || statusLine ? false : 'public',
+    publicDir: demo ? '.demo' : frame || published ? false : 'public',
 
     resolve: {
       alias: [
@@ -250,8 +254,16 @@ export default defineConfig(({ mode }) => {
         // an MCP App's default CSP has no 'wasm-unsafe-eval', and a page cannot
         // ask for one, so wasm cannot compile there and plain JavaScript can.
         ...(frame ? [{ find: /^sql\.js$/, replacement: 'sql.js/dist/sql-asm.js' }] : []),
+        // **The package's sql.js is its browser build** (M42 U2), the same wasm byte
+        // for byte. Its Node build sets `module = undefined` and then exports on a
+        // `typeof module` check, which the bundler's CommonJS transform reads as
+        // always true; the browser build has no Node branch and needs none, because
+        // the wasm is handed to it as bytes (`wasmAsBytes`) and never fetched or read.
+        ...(published ? [{ find: /^sql\.js$/, replacement: 'sql.js/dist/sql-wasm-browser.js' }] : []),
       ],
     },
+
+    ...(published ? { ssr: { noExternal: true, target: 'node' as const } } : {}),
 
     // Relative base, so the built HTML works both from the root of the shell's `app://`
     // origin and from a subpath on a static host.
@@ -270,10 +282,10 @@ export default defineConfig(({ mode }) => {
           emptyOutDir: true,
           target: 'node20',
           // An SSR build, which is how Vitest already runs this same code in
-          // Node: our own `src/` is bundled, and `sql.js` and the MCP SDK stay
-          // external and are resolved from node_modules at runtime. Following
-          // the path the test suite has been proving since M0 is cheaper than
-          // inventing a second one.
+          // Node. Until M42 U2 `sql.js`, `xlsx` and the MCP SDK stayed external
+          // and were resolved from node_modules at runtime; now `ssr.noExternal`
+          // above bundles them, because the file is published and runs where
+          // there is no node_modules (D-497).
           ssr: 'src/plugin/main.ts',
           // Not minified. This output is read by whoever is debugging a server
           // that speaks over a pipe.
@@ -294,7 +306,9 @@ export default defineConfig(({ mode }) => {
           ssr: 'hosts/claude/hooks/main.ts',
           minify: false,
           rollupOptions: {
-            output: { format: 'esm', entryFileNames: 'hooks.mjs', inlineDynamicImports: true },
+            // The banner because each of the three is a bin of the package, and npm's
+            // shim reads it to know what runs the file.
+            output: { format: 'esm', entryFileNames: 'hooks.mjs', inlineDynamicImports: true, banner: '#!/usr/bin/env node' },
           },
         }
       : statusLine
@@ -305,7 +319,7 @@ export default defineConfig(({ mode }) => {
           ssr: 'hosts/claude/hooks/statusLineMain.ts',
           minify: false,
           rollupOptions: {
-            output: { format: 'esm', entryFileNames: 'status-line.mjs', inlineDynamicImports: true },
+            output: { format: 'esm', entryFileNames: 'status-line.mjs', inlineDynamicImports: true, banner: '#!/usr/bin/env node' },
           },
         }
       : electron

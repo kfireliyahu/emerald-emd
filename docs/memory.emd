@@ -4184,6 +4184,15 @@ question: Emerald's page loaded each tour within half a window of the view with 
 answer: The frame decides. `src/demo/tour/seen.ts` watches the frame's root with a rootless `IntersectionObserver` (it measures against the top page's viewport even across origins) and counts it seen at 35% in view with its tab showing. `TourPlayer.setSeen` gates every row before it moves and counts every hold only while seen, keeping what was left, and restarts the caption's reading from when it was seen: a seen frame starts at step one, a frame that leaves stops where it is, one that comes back goes on. It starts nothing — a frame waiting for Watch or taken over stays as left — and `?check` plays unwatched. D-418's contract keeps its shape: `?autoplay=1` now means play when seen, and no `autoplay` still holds the poster. The page still loads and lets go of frames by distance, so a frame scrolled more than half a window away starts again at step one. No `IntersectionObserver`: the frame counts as seen.
 state: live
 
+### D-497
+date: 2026-10-18
+milestone: M42
+scope: engine
+title: The MCP server is published as one npm package, `emerald-mcp`, that is `dist-plugin/` as built: every package bundled and no dependencies, a manifest generated from the root one, and a bin each for the server (full or `--engine-only`), the hooks (`emerald-hooks`) and the status line (`emerald-status-line`)
+question: How is the MCP server shipped on npm, and how does the Claude plugin reach its hooks and status line?
+answer: One package, emerald-mcp, which is dist-plugin/ as `npm run build:plugin` leaves it: scripts/npm-package.mjs writes its package.json (version, licence, author, repository from the root manifest; engines node >=24; no dependencies, since every package is bundled, sql.js as its browser build) and README. Bins: emerald-mcp (server.mjs; --engine-only by flag, watch as a subcommand), emerald-hooks (hooks.mjs: start-here, rows, status), emerald-status-line (status-line.mjs). A plugin calls `npx -y --prefer-offline emerald-mcp@<v> --engine-only` and `npx -y --prefer-offline -p emerald-mcp@<v> emerald-hooks …`. An npx call costs ~2–2.7 s of npm start-up on Windows against ~0.35 s for node, on every prompt for the inbox hook — M42 U4 decides how its hooks pay it. Publishing is the maintainer's: `npm publish --access public` in dist-plugin/.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -6028,6 +6037,11 @@ state: accepted
 ### Play the demo's ledger tour (or open demo.emd in the demo and read card-statement-2026-09.xlsx), then look at Home's Waiting for an answer.
 unit: M37 F2
 should: Offer '6 charges look like bills' (City Transit Card, Clearwater Utility, Fastline Internet, Parrot Mobile, StreamBox, Tuneful Music) and none of the shops. The tour's step 5 Home was 'nothing waiting' before; if the bills card is unwanted in the tour, the lived-in document could track those six bills instead of hiding them.
+state: open
+
+### Publish it: `npm run build:plugin`, then in dist-plugin/ `npm login` if needed and `npm publish --access public`; then in an empty folder run `npx -y emerald-mcp --engine-only` from a Claude Code config (`claude mcp add emerald -- npx -y emerald-mcp --engine-only`) and call start_here on a document.
+unit: M42 U2
+should: The package page shows emerald-mcp 0.1.0 under AGPL-3.0-only with no dependencies, and the server starts with nothing installed and answers start_here.
 state: open
 
 ### Read a folder of notes holding [[name]] links in the body
@@ -11701,9 +11715,11 @@ started: 2026-10-08
 milestone: M42
 scope: engine
 title: The server as a public npm package
-state: in_progress
+landed: 2026-10-18
+decision: D-497
+state: built
 brief: The repository's package.json is the app's and is private; the MCP server needs a package of its own: a manifest generated or kept for dist-plugin/ (name, version, bin so `npx <name>` starts it, files, licence AGPL-3.0-only per D-430, repository pointing at the public repo, engines), carrying the wasm it needs, with no dependency it does not use at runtime. Decide and say: one package with both servers (full and engine-only, chosen by a flag) or two. STOP for the maintainer: publishing itself is the maintainer's act on the project's npm account; the session prepares `npm pack` output and a dry run, and the maintainer runs `npm publish --access public`. Waits on the public repository (M33 U4's deploy), since AGPL source should be public before the package is. Done-test: `npm pack` produces a package that, installed in an empty folder, starts the server with npx and answers start_here on a synthetic document; the maintainer has published it. || 2026-10-16 (D-481): the npm name is decided, `emerald-mcp`; the README's install line already says `claude mcp add emerald -- npx emerald-mcp`. The repository stays `emerald-emd`. || Maintainer, 2026-10-18: npm goes first, and the Claude plugin (M42 U4) runs everything from this package, never a committed build or a release asset. So the package also serves the plugin: (1) its MCP server entry will be `npx -y emerald-mcp@<version> --engine-only`, pinned; (2) the hooks the plugin ships (hosts/claude/hooks/hooks.json today calls `node ${CLAUDE_PLUGIN_ROOT}/hooks.mjs start-here "$CLAUDE_PROJECT_DIR"` and `... hooks.mjs rows "$CLAUDE_PROJECT_DIR" inbox --match state=new --once-per-session`) and the status line (status-line.mjs, from the claude-status-line build mode) must be reachable from the package too: a bin each, or one bin with subcommands, so a plugin's hooks.json can call them through npx; mind that the inbox hook runs on every prompt, so say what an npx call costs there once cached; (3) engines: Node 24 is what CI uses. Say the choice in docs/plugin.md; hooks.json itself changes in M42 U4, not here. A bundled-for-the-plugin attempt (scripts/build-claude-plugin.mjs, and why sql.js needed its browser build when everything was bundled) is on the local branch m42-u4-wip for reference; it is not to be merged.
-files: dist-plugin/ manifest (or packages/server/package.json), scripts/build-plugin*, README.md
+files: "vite.config.ts\nscripts/npm-package.mjs\npackage.json\ndocs/plugin.md\nREADME.md\ndocs/09-decision-log.md"
 blocks: ["M42 U1","M33 U4","M43 U1","M43 U3"]
 taken_by: run-milestone driver
 started: 2026-10-18

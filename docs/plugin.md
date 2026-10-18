@@ -389,8 +389,8 @@ every row the view shows and nothing longer, which is what a client that draws n
   serves it on `127.0.0.1:4183`.
   It found one thing: the frame refused MCP's `ping`, which now gets an empty answer.
   `--server=<path>` starts a copy installed elsewhere instead of this checkout's: a clean copy of
-  `dist-plugin/` in a scratch folder, beside only the packages below, answered `show_format`,
-  served its page, and drew `start_here` here (M41 U4).
+  `dist-plugin/` in a scratch folder, beside only the packages it then kept external, answered
+  `show_format`, served its page, and drew `start_here` here (M41 U4); since M42 U2 it needs none.
 
 ## A drawn view updates in place (M44 U4)
 
@@ -1289,20 +1289,64 @@ a client reaches it, which made a complete feature unreachable by anyone who had
 `build:plugin`'s output path. Verified end to end rather than asserted: a headless session against
 this `.mcp.json` created a document and read it back at schema 20.
 
-What a user needs, in order: `npm run build:plugin` once; `node_modules` present, because unlike
-the other two outputs this one is **not self-contained**; a `.emd` at the app's current schema, or
+What a user needs, in order: Node, and `npx emerald-mcp` (below) or `npm run build:plugin` once in a
+checkout — `dist-plugin/` is **self-contained** since M42 U2; a `.emd` at the app's current schema, or
 `create_document` to make one — with the `packs` it should keep, the ledger only by default on the
 full server and nothing engine-only (D-405), and `keep_packs` for one later, which also brings a
 kept pack up to date: its new columns and renames, and its formats' notes and views' settings
 wherever the document still holds an earlier build's, keeping and naming what a person changed
 (D-491); and an absolute path to it, since every tool takes one.
 
-**How it runs today** (M41 U4): `node dist-plugin/server.mjs`, with three packages resolvable
-from where it sits — `@modelcontextprotocol/sdk`, `sql.js` and `xlsx`, the only imports it keeps
-external — and their dependencies; nothing else from `node_modules`. The conversation views ride
-inside it. **One-click install, and whether a person needs Node installed at all, belong to M42**
-(Listed): its own package, the registry, a Claude plugin and a desktop extension if the directory
-still takes one.
+**How it ran until M42 U2** (M41 U4): `node dist-plugin/server.mjs`, with three packages resolvable
+from where it sat — `@modelcontextprotocol/sdk`, `sql.js` and `xlsx`, the imports it kept external.
+Now every package is bundled and the folder is the npm package, below. The conversation views ride
+inside it. **A Claude plugin and a desktop extension belong to M42** (Public), and both run this
+package.
+
+### The npm package, `emerald-mcp` (M42 U2, D-497)
+
+**`dist-plugin/` is the package, as it is built.** The repository's `package.json` is the app's and
+stays private; `npm run build:plugin` ends with `scripts/npm-package.mjs`, which writes a manifest and
+a README beside the three files — the version, licence (AGPL-3.0-only, D-430), author and repository
+read from the root manifest rather than kept twice. **No dependencies**: each pass bundles every
+package it reaches (`published` in `vite.config.ts`, with `sql.js` as its browser build — the same
+wasm, handed over as bytes), so an `npx` downloads one 2.9 MB tarball and installs nothing else, and
+`THIRD_PARTY_NOTICES.txt` travels with it. Node's own modules are the only imports left. Engines:
+`>=24`, what CI runs; the files target Node 20 and npm only warns below the range.
+
+**One package, a bin each** — not one bin with subcommands, and not two packages:
+
+| Bin | File | What runs it |
+| --- | --- | --- |
+| `emerald-mcp` | `server.mjs` | `npx -y emerald-mcp` — every tool; `--engine-only` for the engine's alone; `watch` as above |
+| `emerald-hooks` | `hooks.mjs` | `npx -y -p emerald-mcp emerald-hooks start-here <folder>`, `… rows <folder> inbox --match state=new --once-per-session` |
+| `emerald-status-line` | `status-line.mjs` | `npx -y -p emerald-mcp emerald-status-line [<folder>]` |
+
+The full and engine-only servers are one file and a flag, as they always were: two packages would be
+the same 7.5 MB twice for a difference `tools/list` makes at run time. The hooks and the status line
+are bins of their own because each is already its own entry (D-494) and both are on a clock — the
+inbox hook runs on every prompt and the status line has 200 ms — so a dispatcher in front would
+either load the server's bundle to reach them or be a fourth file. The status line spawns
+`hooks.mjs` beside itself to refresh its cache, which holds inside the package as it did in
+`dist-plugin/`.
+
+**What an npx call costs, once cached** — measured 2026-10-18 on the maintainer's Windows machine,
+Node 24, npm 12, the inbox hook against a synthetic document: **~0.35 s** as `node hooks.mjs`, **~2.1 s**
+through `npx` with the package installed in the folder, **~2.7 s** through `npx -y -p <tarball>` from
+the npx cache with nothing installed. npm's own start-up is the difference, and it is paid on every
+prompt. And for a registry spec npx asks the registry about it each time — `libnpmexec` fetches the
+manifest with `preferOnline` — unless `--prefer-offline` is passed, which wins in
+`npm-registry-fetch`'s cache mode; a pinned version never changes, so the plugin can pass it safely:
+`npx -y --prefer-offline emerald-mcp@<version> --engine-only`. Whether the plugin's per-prompt hook
+pays two seconds through npx or finds the cached file once is M42 U4's call; `hooks.json` changes
+there.
+
+**Publishing is the maintainer's act** on the project's npm account: `npm run build:plugin`, then
+`npm publish --access public` from `dist-plugin/` (`npm pack` there makes the tarball to try first).
+The done-test, run from the tarball: installed in an empty folder, `npx emerald-mcp --engine-only`
+answered `initialize`, listed 28 tools (85 without the flag), created a document with the
+development pack and answered `start_here` on it with the unit recorded there; `npx emerald-hooks`
+printed `start_here` and the inbox row, and `npx emerald-status-line` printed `inbox 1 new`.
 
 ## Sequencing
 
