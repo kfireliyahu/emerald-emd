@@ -419,7 +419,7 @@ written out here.
 | D-498 | 2026-10-18 | The Claude plugin is `hosts/claude/`, listed by a marketplace at the public repository's root and built by nothing: it pins the published `emerald-mcp` at the manifest's `version`, runs the server through `npx --prefer-offline`, and runs the hooks through `emerald.mjs`, a hand-written launcher that keeps a copy of the package in `${CLAUDE_PLUGIN_DATA}` and starts it with plain `node`; no `.mcpb`, because the directory no longer takes one | [below](#d-498) |
 | D-499 | 2026-10-18 | The Claude plugin runs everything through npm: the hooks are `npx -y --prefer-offline -p emerald-mcp@<version> emerald-hooks …` and the status line `npx … emerald-status-line`, like the server, and `emerald.mjs` is gone; the cost is accepted — ~1.95 s before every prompt for the inbox hook on Windows, against ~0.35 s for `node` | [below](#d-499) |
 | D-500 | 2026-10-18 | The server is listed in the official MCP Registry as `io.github.kfireliyahu/emerald`, from a `server.json` at the repository's root that a workflow publishes, signed in with GitHub OIDC, whenever npm has a version the registry lacks; a version is cut in `package.json`, `server.json` and `PLUGIN_VERSION` and pushed first, and the plugin's pins follow once npm has it, so they may trail the package and never lead it | [below](#d-500) |
-| D-501 | 2026-10-18 | A unit left `in_progress` by a session that stopped is taken over with `claim_units take_over:<its taker>`, refused unless that taker holds it, with `started` reset and the taker replaced kept on `taken_over_from`; `start_here` lists a unit `in_progress` for more than a day as stalled; `land_units` refuses a landing with no `commit` unless it says `same_commit: true`, and keeps the builder's `report` on the unit | [below](#d-501) |
+| D-501 | 2026-10-18 | A unit left `in_progress` by a session that stopped is taken over with `claim_units take_over:<its taker>`, refused unless that taker holds it, with `started` reset and the taker replaced kept on `taken_over_from`; `start_here` lists a unit `in_progress` for more than a day as stalled; `land_units` refuses a landing with no `commit` unless it says `same_commit: true`, and keeps the builder's `report` on the unit | M51 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -804,10 +804,6 @@ start, or in the frame.
 did. A frame posts its first `step` message when it is loaded, before it is seen, since that step
 is the one on screen.
 
-## Related
-
-07 Roadmap · [conventions](./conventions.md) · review · `docs/memory.emd` (the `decision` rows)
-
 ## D-497 · 2026-10-18 · The MCP server is published as one npm package, `emerald-mcp`, that is `dist-plugin/` as built: every package bundled and no dependencies, a manifest generated from the root one, and a bin each for the server (`emerald-mcp`, full or `--engine-only` by flag), the hooks (`emerald-hooks`) and the status line (`emerald-status-line`) <a id="d-497"></a>
 
 **Context.** The README's install line has said `npx emerald-mcp` since D-481, and the maintainer
@@ -979,44 +975,6 @@ already proves). Keeping the pins equal to the package (every cut would break th
 publish, or wait unpushed on `main`). A personal access token for the registry (a secret to rotate,
 where OIDC needs none).
 
-## D-501 · 2026-10-18 · A unit left `in_progress` by a session that stopped is taken over with `claim_units take_over:<its taker>`, refused unless that taker holds it, with `started` reset and the taker replaced kept on `taken_over_from`; `start_here` lists a unit `in_progress` for more than a day as stalled; `land_units` refuses a landing with no `commit` unless it says `same_commit: true`, and keeps the builder's `report` on the unit <a id="d-501"></a>
+## Related
 
-**Context.** M51 F4, from driving M42 on 2026-10-18 with M51's machinery. A session interrupted
-mid-unit left M42 U4 `in_progress` with its work uncommitted in the tree; nothing said so, and
-`claim_units` could only take a `planned` unit, so the driver hand-edited `taken_by`. M42 U2 and U4
-landed with an empty `commit`, because a landing in the same commit as its work cannot name itself.
-The host cuts a child session's note to its driver at 400 characters, so the driver paged the
-child's transcript for its report. And the driver took three tries at `update_format_rows`' shape.
-
-**Decision.**
-- **`claim_units take_over:"<taker>"`** takes units already `in_progress`, refused by unit unless
-  each is held by exactly that taker (case aside) — a plain claim of one is still refused, so a
-  take-over is always said. `started` is reset (today, or `started`), `branch` moves when given, and
-  the taker replaced goes onto **`taken_over_from`**, a new text column of the unit format: oldest
-  first, each with the day they took it — `session A (2026-10-16); driver (2026-10-18)`. A column
-  of its own rather than a history inside `taken_by`, which stays one name a board can show. Each
-  edit still `expect`s the state and taker it read, so of two drivers taking one unit over, one gets it.
-- **A ready view may say `stalls <days>` on a date** (the views language's fourth ready word): a row
-  in a member neither ready nor done — being worked — whose date is more than that many days ago, or
-  that has none, is listed under **Stalled**, after Held, in `start_here`, with the day it was taken.
-  The development pack's `unit ready` says `started: stalls 1`. No "and no commit" condition: a
-  landing writes `commit` and `built` in one step, so a unit `in_progress` has none to test.
-- **`land_units` refuses a landing without `commit` unless it says `same_commit: true`** (named so,
-  and refused beside a `commit`). The order is the work's commit, then the landing with its hash,
-  then the landing's commit; the closing pass's skill says so in M51 F5.
-- **`land_units` takes `report`**, the builder's closing report, plain text up to 4,000 characters,
-  kept on the unit's new **`report`** column; a child's proposal carries it like any key. A driver
-  reads it with `format_rows unit match:{ref:"<ref>"} columns:[report]`.
-- **`start_here`'s column list ends with a write's shape** — `record_format_rows format:<f> rows:[{…}]`
-  · `update_format_rows format:<f> edits:[{where:{<unique column>:…}, values:{…}}]` — read off the two
-  tools' own schemas and a declared format's unique text column, so it cannot name a key they lack.
-
-**Consequences.** `docs/memory.emd` was kept again with the pack (M51 U9), which added both columns,
-the notes and the `stalls` setting. Keeping it again does **not** carry a changed note on a column the
-document already has, so this unit changed none. The tools ship in the next `emerald-mcp`.
-
-**Rejected.** A history of takers inside `taken_by` (a board card would show a list). Taking over
-without naming the taker (the refusal is what stops one driver taking another live session's unit).
-A `start` view for stalls (one filter of one member cannot say "older than"; the ready view already
-knows which members are being worked). Inferring the commit from git (the pack depends on no host
-and runs no git). Keeping a report longer than a few thousand characters (a transcript is a file).
+07 Roadmap · [conventions](./conventions.md) · review · `docs/memory.emd` (the `decision` rows)

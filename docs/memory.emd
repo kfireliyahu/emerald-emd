@@ -4221,6 +4221,15 @@ question: How is Emerald listed in the MCP Registry, and how is a version cut no
 answer: server.json at the root names io.github.kfireliyahu/emerald and points at emerald-mcp on npm; npm-package.mjs stamps its name as mcpName. A version is cut in package.json, server.json and PLUGIN_VERSION (registry.test.ts) and pushed; the maintainer publishes npm; node scripts/pin-plugin.mjs moves the plugin's pins once npm has it (pins may trail, never lead). .github/workflows/registry.yml (push on server.json or plugin.json, daily, dispatch) publishes with mcp-publisher 1.8.1 and GitHub OIDC only when npm has a version the registry lacks. No tag; the desktop release does not move (page RELEASE stays 0.1.0). 0.1.1 is the first listable version.
 state: live
 
+### D-501
+date: 2026-10-18
+milestone: M51
+scope: engine
+title: A unit left `in_progress` by a session that stopped is taken over with `claim_units take_over:<its taker>`, refused unless that taker holds it, with `started` reset and the taker replaced kept on `taken_over_from`; `start_here` lists a unit `in_progress` for more than a day as stalled; `land_units` refuses a landing with no `commit` unless it says `same_commit: true`, and keeps the builder's `report` on the unit
+question: How does a driver take over a unit a stopped session left in_progress, see such units at all, make every landing name its commit, and read a child's whole report?
+answer: claim_units take_over:<taker> (refused unless that taker holds each unit; started reset; the replaced taker appended to taken_over_from). A ready view's `stalls <days>` on a date lists rows being worked and taken longer ago, or undated, under Stalled in start_here; the unit pack says `started: stalls 1`. land_units refuses a landing without `commit` unless `same_commit: true`. land_units takes `report` (≤ 4,000 chars) onto the unit's `report` column; read it with format_rows unit match:{ref} columns:[report]. start_here's column list ends with a write's shape read off the tools' schemas.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -12417,13 +12426,17 @@ paths: "src/plugin/tools/sheet.ts\nsrc/plugin/\nsrc/plugin/hooks/\nCLAUDE.md\ndo
 milestone: M51
 scope: engine
 title: A stalled unit can be taken over and shows itself; a landing names its commit and carries the child's report
-state: in_progress
+landed: 2026-10-18
+decision: D-501
+state: built
 brief: Found driving M42 on 2026-10-18 (the maintainer asked for all of these fixed). (1) TAKE OVER: a session interrupted mid-unit left M42 U4 in_progress with uncommitted work in the tree, nothing flagged it, and claim_units could not take it over, so the driver hand-edited taken_by. Give claim_units a take-over mode that names whose claim it replaces (refused unless the unit is in_progress and the named taker matches), keeps the previous taker on the row (in taken_by's history or a column of its own, the session's call), and resets started. And make a stalled claim visible: start_here (the development pack's views, src/data/packs/development/views.md) lists units in_progress for more than a day with no commit under a 'Stalled' heading. (2) COMMIT: M42 U2 and U4 landed with an empty commit column, because a landing in the same commit as the work cannot name itself; land_units refuses a landing with no `commit` unless told explicitly that the work is in the same commit (say the flag's name in the decision), and the closing pass's order (work commit, then land with that hash, then the landing commit) is M51 F5's. (3) REPORT: the host cuts a child session's note to the driver at 400 characters, so the driver pages the child's transcript to read its report. land_units takes a `report` (the child's closing report, plain text, bounded), stored on the unit row as a new `report` column of the development pack's unit format, so a driver reads it with one format_rows call; extend this repository's docs/memory.emd with it the way packs are kept again (M51 U9). (4) EDIT SHAPE: the driver took three tries at update_format_rows' shape (rows/match/set before edits/where/values); start_here's closing column list ends with one line showing a write's shape, e.g. `edits:[{where:{ref:…}, values:{…}}]`, generated, not hand-written. Tool descriptions read by a stranger stay free of D-/M-numbers (M42 U1). Done-test: tests for take-over (refused when the taker does not match, accepted when it does, previous taker kept), the Stalled list, the commit refusal, the report round trip; start_here's footer shows the edit line; parity (src/parity.test.ts) holds; build:plugin, the suite and docs:check are green. These tools ship in emerald-mcp, so the next npm version (0.1.2) carries them; publishing it is the maintainer's.
-files: src/plugin/tools/landing.ts (claim_units, land_units), src/data/packs/development/ (the unit format and views.md), src/plugin/catalog.ts and instructions.ts if a description changes, docs/plugin.md
+files: src/plugin/tools/landing.ts (claim_units take_over, land_units same_commit and report), src/domain/format/view.ts (the ready view's `stalls <days>`), src/data/repositories/formatLinkViewRepository.ts and src/plugin/tools/startHere.ts (the Stalled list), src/plugin/tools/formats.ts (a write's shape at the end of start_here), src/data/packs/development/ (unit's taken_over_from and report, views.md, past.ts), src/plugin/catalog.ts, src/plugin/instructions.ts, src/plugin/server.test.ts (budget), docs/plugin.md, docs/04-data-model.md, docs/memory.emd (kept again)
 taken_by: run-milestone driver
 started: 2026-10-18
 branch: main
+commit: 2d2e561
 paths: "src/plugin/tools/landing.ts\nsrc/data/packs/development/\nsrc/plugin/catalog.ts\nsrc/plugin/instructions.ts\ndocs/plugin.md"
+report: "Commit 2d2e561 (work); docs:check green after this landing. D-501.\nTake-over: claim_units units:[ref] taken_by:<new> take_over:<old taker> - refused unless the unit is in_progress under exactly that taker; started reset, the old taker kept on taken_over_from as \"<taker> (<started>)\", oldest first.\nStalled: the unit ready view says `started: stalls 1`; start_here lists units in_progress taken more than a day ago (or with no started) under \"Stalled\", after Held.\nCommit: land_units refuses a landing with no commit unless same_commit: true. Report: land_units units:[{..., report}] (up to 4000 chars), read with format_rows unit match:{ref:\"<ref>\"} columns:[report]; a child's proposal carries it too.\nstart_here's column list ends with a write's shape, read off the write tools' schemas.\nFound: keep_packs does not carry a changed note on a column the document already has (M51 U9's gap), so this unit changed none. Tool surface budget raised 53.5k -> 54k. Left: the closing-pass skill's order (M51 F5); publishing emerald-mcp 0.1.2 is the maintainer's."
 
 ### M51 F5
 milestone: M51
