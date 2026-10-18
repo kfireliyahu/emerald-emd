@@ -190,10 +190,10 @@ describe('the watch command', () => {
 
   it('over a real process: a line for a new inbox row, none for a unit row, and a clean exit when the document goes', async () => {
     const path = await aTextDocument()
-    // The command from source, under vite-node, as the stdio test runs the server.
+    // The command from source, through scripts/run-source.mjs, as the stdio test runs the server.
     const child = spawn(
       process.execPath,
-      [join('node_modules', 'vite-node', 'vite-node.mjs'), join('src', 'plugin', 'main.ts'), '--', 'watch', path, '--format', 'inbox', '--match', 'state=new'],
+      [join('scripts', 'run-source.mjs'), join('src', 'plugin', 'main.ts'), '--', 'watch', path, '--format', 'inbox', '--match', 'state=new'],
       { cwd: process.cwd(), stdio: ['ignore', 'pipe', 'pipe'] },
     )
     const lines: string[] = []

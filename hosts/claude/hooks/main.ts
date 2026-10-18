@@ -20,7 +20,7 @@ import { isHookCommand, parseHookArgs, runHook, sessionOf } from './commands.ts'
 /**
  * All of stdin, as a hook's input arrives: the host writes it and closes the
  * pipe. Read from the descriptor rather than the stream, which a runner that
- * loads this module (vite-node, in the tests) may already hold.
+ * loads this module (scripts/run-source.mjs, in the tests) may already hold.
  */
 function readStdin(): string {
   try {

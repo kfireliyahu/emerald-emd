@@ -405,6 +405,12 @@ export default defineConfig(({ mode }) => {
       // it within one stall of failing. Fifteen is five times the slowest
       // such test; a test that needs more says so itself, as categorize does.
       testTimeout: 15_000,
+      // **The wasm is run through `wasmAsBytes` in tests too** (M42 F3).
+      // Vitest 4's module runner hands anything under node_modules to Node
+      // itself, and Node now imports a `.wasm` as a WebAssembly module — so
+      // `sql-wasm.wasm?bytes` reached Node rather than the plugin, and failed
+      // on emscripten's import namespace. Inlining it keeps it Vite's.
+      server: { deps: { inline: [/\.wasm\?bytes$/] } },
     },
   }
 })

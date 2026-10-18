@@ -753,9 +753,25 @@ function reaches(sources: readonly Source[], write: string): boolean {
   )
 }
 
+const NAMES = new WeakMap<Source, readonly string[]>()
+
+/**
+ * Each name a file mentions, once. Every write asks of every file, and splitting
+ * the text again each time was most of this file's sixteen seconds — enough to
+ * cross the test budget under a full run's load (M42 F3).
+ */
+function namesIn(source: Source): readonly string[] {
+  let names = NAMES.get(source)
+  if (names === undefined) {
+    names = [...new Set(source.text.match(/\b[A-Za-z_]\w*\b/g) ?? [])]
+    NAMES.set(source, names)
+  }
+  return names
+}
+
 function reachesDirectly(sources: readonly Source[], write: string): boolean {
   return sources.some((source) =>
-    (source.text.match(/\b[A-Za-z_]\w*\b/g) ?? []).some(
+    namesIn(source).some(
       (each) =>
         each === write || (!ALL_WRITES.has(each) && REACH.get(each)?.has(write) === true),
     ),

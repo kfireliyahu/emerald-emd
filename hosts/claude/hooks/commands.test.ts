@@ -431,7 +431,7 @@ describe('the hook set', () => {
     await sendInbox(path, 'Through the entry point')
     const child = spawn(
       process.execPath,
-      [join('node_modules', 'vite-node', 'vite-node.mjs'), join('hosts', 'claude', 'hooks', 'main.ts'), '--', 'rows', folder, 'inbox', '--match', 'state=new', '--once-per-session'],
+      [join('scripts', 'run-source.mjs'), join('hosts', 'claude', 'hooks', 'main.ts'), '--', 'rows', folder, 'inbox', '--match', 'state=new', '--once-per-session'],
       { cwd: process.cwd(), stdio: ['pipe', 'pipe', 'pipe'] },
     )
     let out = ''

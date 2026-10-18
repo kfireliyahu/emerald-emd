@@ -182,11 +182,11 @@ describe('over stdio, the way a client runs it', () => {
   it('subscribes, hears a rename-save from another process within a second, and nothing after', async () => {
     const path = await aDocument()
     const uri = documentUri(path)
-    // The server from source, under vite-node, so no build is needed: the same
+    // The server from source, through scripts/run-source.mjs, so no build is needed: the same
     // `main.ts` that `build:plugin` bundles.
     const transport = new StdioClientTransport({
       command: process.execPath,
-      args: [join('node_modules', 'vite-node', 'vite-node.mjs'), join('src', 'plugin', 'main.ts'), '--', '--engine-only'],
+      args: [join('scripts', 'run-source.mjs'), join('src', 'plugin', 'main.ts'), '--', '--engine-only'],
       cwd: process.cwd(),
       stderr: 'ignore',
     })
