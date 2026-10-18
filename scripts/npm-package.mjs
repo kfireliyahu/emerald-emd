@@ -54,17 +54,49 @@ function manifest(app) {
 
 const README = `# emerald-mcp
 
-The MCP server of [Emerald](https://github.com/kfireliyahu/emerald-emd): **Excel that reads your
-documents and won't let you be wrong quietly.** A \`.emd\` file is a real SQLite database on your
-disk; a *format* declared in it is a real table with real types and real checks, and these tools
-are how a model reads, writes and checks it. No account, no service behind it, no network call.
+The MCP server of [Emerald](https://getemerald.dev): **the database under the chat.** A \`.emd\`
+file is a real SQLite database on your disk. Declare a table for anything you keep — a charge, a
+paycheck, a book, a milestone — and it gets real types and real checks. These tools are how your
+assistant reads, writes and checks it.
 
 \`\`\`
-claude mcp add emerald -- npx emerald-mcp
+claude mcp add emerald -- npx -y emerald-mcp
 \`\`\`
 
 Any MCP client that starts a stdio server runs it the same way: the command \`npx\`, the arguments
-\`["-y", "emerald-mcp"]\`. Every tool takes the absolute path of the \`.emd\` it works on.
+\`["-y", "emerald-mcp"]\`. Every tool takes the absolute path of the \`.emd\` it works on. In Claude
+Code, the plugin brings it with its hooks and a skill: \`/plugin marketplace add
+kfireliyahu/emerald-emd\`, then \`/plugin install emerald@emerald-emd\`.
+
+## A model works in it
+
+- Your assistant reads and writes the file directly, and where the app draws MCP Apps, shows a
+  table, board or roadmap in the chat.
+- Every write is shown first as a dry run. Nothing changes until you say commit.
+- Shaped tools, never a general query: 28 for any document, 85 with the ledger.
+- A document answers in rows, so the model asks for what it needs instead of reading notes end to
+  end.
+- One project's session leaves a note in another's inbox, and the next session there starts with it.
+
+## Packs
+
+A pack is formats somebody already worked out, with their views, ready to keep in a document. Two
+come with Emerald:
+
+- **The development pack**: a project's memory as rows — milestones, units, decisions, open
+  questions, an inbox. A session starts from the rows, not from a summary of a chat.
+- **The ledger**: personal finance from the files you already get — card statements, bank exports,
+  payslips, fund reports. Every total opens to the rows it was summed from. Nothing connects to
+  your bank.
+
+## No internet, no login
+
+- The server opens the file it is given, does one job, closes it, and makes no network call of its
+  own.
+- The file is yours: \`sqlite3\` and ordinary tools read it; back it up where you like, take it
+  anywhere.
+
+## Running it
 
 - \`emerald-mcp\` — the server, with the engine's tools and the ledger's (a personal-finance pack).
 - \`emerald-mcp --engine-only\` — the engine's tools alone, a fifth of the definitions to carry.

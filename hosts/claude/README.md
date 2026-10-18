@@ -1,8 +1,7 @@
 # Emerald for Claude
 
-**Excel that reads your documents and won't let you be wrong quietly.** Emerald keeps what you and
-Claude work out — what a kind of thing is, which fields it has, what has to add up — as a typed
-table in a `.emd` file on your own disk: a real SQLite database, with no account, no server and no
+**The database under the chat.** Emerald keeps what you and Claude work out — which tables you
+keep, which fields they have, what has to add up — as a typed table in a `.emd` file on your own disk: a real SQLite database, with no account, no server and no
 network call. This plugin gives Claude Code the engine's tools, draws a format's table, board or
 roadmap in the conversation, and teaches Claude to declare a format with you.
 

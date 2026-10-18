@@ -2,7 +2,7 @@
   "name": "emerald",
   "displayName": "Emerald",
   "version": "0.1.0",
-  "description": "Excel that reads your documents and won't let you be wrong quietly. Declare a kind of thing you keep track of as a typed table in a .emd file on your machine, read your CSV and Excel files onto it, and see its rows, board or roadmap in the conversation. No account and no network call.",
+  "description": "The database under the chat. Declare a table for anything you keep, with real types and real checks, in a .emd file on your machine, read your CSV and Excel files onto it, and see its rows, board or roadmap in the conversation. No account and no network call.",
   "author": { "name": "Kfir Raphael Eliyahu", "url": "https://getemerald.dev" },
   "homepage": "https://getemerald.dev",
   "repository": "https://github.com/kfireliyahu/emerald-emd",

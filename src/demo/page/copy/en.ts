@@ -160,11 +160,11 @@ export const en: Copy = {
       body: [
         'Your assistant reads and writes the file directly, and where the app allows, draws the sheet in the chat.',
         'Every write is shown first as a dry run. Nothing changes until you say commit.',
-        'Shaped tools, never a general query: 27 for any document, 84 with the ledger.',
+        'Shaped tools, never a general query: 28 for any document, 85 with the ledger.',
         'A document answers in rows, so the model asks for what it needs instead of reading notes end to end.',
         'One project’s session leaves a note in another’s inbox, and the next session there starts with it.',
         'The server opens the file it is given, does one job, closes it, and makes no network call of its own.',
-        'One line in your MCP config, with the public release.',
+        'One line in your MCP config runs it: npx -y emerald-mcp.',
       ],
     },
     packs: {
@@ -206,16 +206,16 @@ export const en: Copy = {
 
   foot: {
     heading: 'Two ways in',
-    ways: 'For your assistant, the npm package and one line in its MCP config. For your money, the desktop app for Windows and macOS. Both arrive with the public release.',
+    ways: 'For your assistant, the npm package and one line in its MCP config, or the Claude plugin. For your money, the desktop app for Windows and macOS, from the latest release on GitHub.',
     email: 'Email',
     use: 'What would you use it for?',
     send: 'Send',
     instead: 'Write to {address}, and say what you would use it for.',
-    address: 'The address is for one thing: a note when there is a build to download. Nothing else is sent to it.',
+    address: 'The address is for one thing: a note when there is a new build to download. Nothing else is sent to it.',
   },
 
   footer: {
-    line: 'Emerald is free software under the AGPL-3.0, by {author}. The {source} is on GitHub once the repository is public.',
+    line: 'Emerald is free software under the AGPL-3.0, by {author}. The {source} is on GitHub.',
     source: 'source',
   },
 }

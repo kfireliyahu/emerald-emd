@@ -11,8 +11,8 @@ Free software, AGPL-3.0. Desktop only, no server, no account. [getemerald.dev](h
 - **A document is a file.** `.emd`, a real SQLite database on your disk, stored as SQLite bytes or
   as text and chosen per file. `sqlite3` opens it, the schema is documented, and ordinary tools
   read every table, including the ones you declared.
-- **A format is a kind of thing you keep**: a charge, a paycheck, a book, a milestone. Declare it
-  and it becomes a real table with real types and a `CHECK` for every rule you state. A value that
+- **Declare a table for anything you keep**: a charge, a paycheck, a book, a milestone. It is a
+  *format*: a real table with real types and a `CHECK` for every rule you state, not a template. A value that
   does not fit is refused when it is written, not found later.
 - **Formats link**, and figures are worked out across them: hours from a start and an end, a total
   over the rows that point here. A total never quietly skips a row it cannot read.
@@ -22,7 +22,7 @@ Free software, AGPL-3.0. Desktop only, no server, no account. [getemerald.dev](h
   folder of them. The columns are placed once, kept as a *reader*, and checked every time. A model
   may give a mapping or a position, never a value.
 - **A model works in it through MCP.** The server reads and writes the document directly, with
-  shaped tools, never a general query: 27 for any document, 84 with the ledger. Every write is a
+  shaped tools, never a general query: 28 for any document, 85 with the ledger. Every write is a
   dry run until you say commit; a copy is kept beside the document before any write; a document
   older than the server's schema is never migrated, only reported.
 - **It draws in the conversation.** Ask to see a sheet, a board or a roadmap and the server draws
@@ -57,10 +57,10 @@ Free software, AGPL-3.0. Desktop only, no server, no account. [getemerald.dev](h
 
 ## Installing it
 
-Three ways in. The server and the Claude Code plugin install today; the desktop app comes with the
-public release:
+Three ways in, all available today:
 
-- **The desktop app**, for Windows and macOS, from [getemerald.dev](https://getemerald.dev).
+- **The desktop app**, for Windows and macOS, from the
+  [latest release](https://github.com/kfireliyahu/emerald-emd/releases/latest).
   `.emd` documents get their own icon and open on a double-click. It is not code-signed: Windows
   shows *"Windows protected your PC"* (click **More info**, then **Run anyway**; the installer is
   per-user and asks for no administrator password), and macOS refuses the first open (**System
@@ -72,7 +72,7 @@ public release:
   configuration, for any document, and `--engine-only` for the engine's tools without the ledger's:
 
   ```bash
-  claude mcp add emerald -- npx emerald-mcp
+  claude mcp add emerald -- npx -y emerald-mcp
   ```
 - **The Claude Code plugin**, with the server, its views drawn in the conversation, the skill for
   declaring a format with a person, and the hooks that bring a project's `start_here` and inbox
