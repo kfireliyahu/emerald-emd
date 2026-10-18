@@ -11775,10 +11775,13 @@ branch: main
 milestone: M42
 scope: engine
 title: Listed in the official MCP Registry
-state: planned
+state: in_progress
 brief: The MCP Registry (registry.modelcontextprotocol.io, in preview) lists servers by metadata pointing at an npm package. Add mcpName to the server package's manifest (io.github.<the maintainer's GitHub user>/<name> when signing in with GitHub), a server.json matching it (name, description, the npm package and version, transport stdio), and a GitHub Actions step that publishes the metadata after an npm release, authenticated with GitHub OIDC rather than a stored token. Check the live schema and mcp-publisher's current flags on the day; the registry is in preview and has changed. The first publish is the maintainer's act if it needs a sign-in. Done-test: the registry's API returns Emerald by search; the version it lists is the npm one; the workflow keeps them in step.
 files: server.json, the server package manifest, .github/workflows/
 blocks: ["M42 U2"]
+taken_by: run-milestone driver
+started: 2026-10-18
+branch: main
 
 ### M42 U4
 milestone: M42
