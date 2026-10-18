@@ -422,6 +422,7 @@ written out here.
 | D-501 | 2026-10-18 | A unit left `in_progress` by a session that stopped is taken over with `claim_units take_over:<its taker>`, refused unless that taker holds it, with `started` reset and the taker replaced kept on `taken_over_from`; `start_here` lists a unit `in_progress` for more than a day as stalled; `land_units` refuses a landing with no `commit` unless it says `same_commit: true`, and keeps the builder's `report` on the unit | M51 |
 | D-502 | 2026-10-18 | The desktop app makes no network call unless the person turned updates on, or pressed Check for Updates Now — then one request, to `api.github.com/repos/kfireliyahu/emerald-emd/releases/latest`, from a session of its own that the page never runs in, open only while that check asks; the setting is off by default and the app's, a newer version is a quiet notice in the window whose Download opens the release page, and M42 U9's download will reach `github.com/kfireliyahu/emerald-emd/releases/download/` and the asset hosts it redirects to (`release-assets.githubusercontent.com`, `objects.githubusercontent.com`) only on the same terms; amends D-124 and D-452 | [below](#d-502) |
 | D-503 | 2026-10-18 | On Windows, with updates on, the app downloads the release its check found — `releases/download/v<version>/latest.yml` and `Emerald-Setup.exe` through electron-updater, in its own session, gated to that release while it downloads — checks the installer against the release's sha512, and installs only on Install and restart, after the window closes the ordinary way, reopening the document; macOS stays a notice; the installers lose the version from their names and the page links `releases/latest/download/` | [below](#d-503) |
+| D-504 | 2026-10-18 | The Claude plugin ships the development pack's run-milestone, closing-pass and review-phase as generic skills beside this repo's own; its `version` is how an installed copy learns of an update, so a change to what it ships cuts one — `<pin>+<n>` for a plugin release with no package behind it, by `node scripts/pin-plugin.mjs --plugin`, the bare package version when the pins move — and `plugin.test.ts` fails when the shipped files' digest moves under an unchanged version; amends D-500 | [below](#d-504) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1097,6 +1098,62 @@ tag — is the maintainer's, in a review entry.
 (the brief: nothing installed unasked). Running the installer straight from the press (the
 unsaved-work question would come after the installer had started). Keeping v0.1.0's files on the page
 until the next release (stale the moment a newer one is out).
+
+## D-504 · 2026-10-18 · The Claude plugin ships the development pack's run-milestone, closing-pass and review-phase as generic skills beside this repo's own; its `version` is how an installed copy learns of an update, so a change to what it ships cuts one — `<pin>+<n>` for a plugin release with no package behind it, by `node scripts/pin-plugin.mjs --plugin`, the bare package version when the pins move — and `plugin.test.ts` fails when the shipped files' digest moves under an unchanged version; amends D-500 <a id="d-504"></a>
+
+**Context.** M42 U7. A project that keeps only the development pack had none of the workflows this
+repo drives its milestones with: `run-milestone`, `closing-pass` and `review-phase` live in
+`.claude/skills/` and name this repo's paths, its decision log and its npm scripts. And the
+maintainer asked whether shipping them reaches people who already installed the plugin. Claude Code's
+plugin docs (*Plugin loading reference*, *Versions and updates*, read 2026-10-18) answer it: it
+computes a version for an installed plugin — the manifest's `version` first, then the marketplace
+entry's, else the source's commit — and `claude plugin update` and auto-update **replace the cached
+copy only when that differs** from the one it installed; auto-update is **off by default for every
+marketplace but Anthropic's own**; an update loads in the next session or after `/reload-plugins`.
+Since D-500 the manifest's `version` equalled the npm pin, so a skills-only change under 0.1.2 would
+have reached a new install and no existing one, until the next npm publish.
+
+**Decision.**
+
+- **Three generic skills in `hosts/claude/skills/`**, written from this repo's (as they are after M51
+  F4 and F5): take-over of a stalled unit, the `report` column, one closing order (checks, commit the
+  work, `land_units` with its hash and report, commit the landing), one writer per checkout, nearby
+  tests while building and the full suite once, effort by the unit, the parallel mode with worktree
+  children proposing through the inbox, the host's sessions and next-step box *if the host offers
+  them*. They find the document as the hooks do: the path the session-start hook printed, else
+  `.claude/emerald.json`, else the one `.emd` in the folder, and the main checkout's copy in a
+  worktree. They name the project's checks as its `CLAUDE.md` or README says, never an npm script.
+  This repo's copies stay in `.claude/skills/`; `skills.test.ts` holds `declare-a-format` byte for
+  byte and fails when a generic one cites a decision or unit, a `docs/` note, a script, `npm run`,
+  the memory document or a decision log.
+- **The manifest's `version` is the plugin's release, its part before `+` the pin.** A pin move
+  (`node scripts/pin-plugin.mjs`, after a publish) makes it the bare package version; a change to the
+  plugin's own files makes it `<pin>+<n>`, the n-th plugin release on that pin
+  (`node scripts/pin-plugin.mjs --plugin`, which asks npm nothing). `claude plugin validate` accepts
+  it; Claude Code compares versions as strings, so `+1` is an update to anyone at the bare version, and
+  the next pin move is one to anyone at `+n`. The pins stay where D-500 put them: never ahead of the
+  package, moved only once npm has the version.
+- **A digest makes it mechanical.** `hosts/claude/release.ts` hashes what a person's Claude reads
+  from the plugin — the manifest without its version, the hook set, the skills, the README; not the
+  TypeScript, which runs from the package — with line endings as LF; both modes of the script record it
+  with the version in `hosts/claude-plugin-release.json`, and `plugin.test.ts` fails when the folder's
+  digest differs from the record's, saying to run `--plugin`.
+- **The README says how to update**: turn on auto-update for `emerald-emd` under `/plugin` →
+  Marketplaces, or `claude plugin marketplace update emerald-emd` then `claude plugin update
+  emerald@emerald-emd`.
+
+**Consequences.** This unit cuts 0.1.2+1 with the three skills. Everyone at 0.1.2 gets it on their next
+manual update, or within ten minutes of a session's first message with auto-update on. Proved on a clean
+`CLAUDE_CONFIG_DIR`: 0.1.2 installed from the GitHub marketplace before the push, then updated after it
+(the unit's report). A synthetic project keeping the pack ran two units at once through
+`dispatch_plan`, two worktrees, a merge and one `land_units inbox` dry run — which found that a
+proposal names its worktree's branch while the claim names the driver's, so the driver lands them with
+`{id, other_branch: true}`; both `run-milestone` skills say so now.
+
+**Rejected.** Leaving `version` out of the manifest so the commit is the version: every push to `main`
+would be an update, and a notice in every session with auto-update on. A prerelease (`0.1.2-1`), which
+semver orders below 0.1.2. A plugin version unrelated to the package's, which would hide which server a
+plugin runs. Shipping this repo's own copies, which name paths a stranger has none of (M42 U4's brief).
 
 ## Related
 

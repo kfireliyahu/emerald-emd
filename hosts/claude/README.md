@@ -16,12 +16,32 @@ In Claude Code:
 
 Then restart the session. It needs Node 24 or later on your `PATH`.
 
+## Updating
+
+Claude Code updates a plugin from a marketplace like this one only when you ask, unless you turn
+auto-update on for it: `/plugin`, the **Marketplaces** tab, `emerald-emd`, **Enable auto-update**.
+Then a new version arrives in the background and loads in your next session, or after
+`/reload-plugins`. To update by hand:
+
+```
+claude plugin marketplace update emerald-emd
+claude plugin update emerald@emerald-emd
+```
+
+The plugin's version is `<package>` when it moves to a new `emerald-mcp`, and `<package>+<n>` for a
+release of its own skills, hooks or README on the same package.
+
 ## What it adds
 
 - **The MCP server** `emerald`, engine-only: declare a format, read a `.csv` or `.xlsx` onto it,
   record and update rows (every write is a dry run until you say yes), and `start_here` /
   `show_format` to see a document's rows, board or roadmap.
 - **The `declare-a-format` skill**: work out a format with you and declare it into your document.
+- **Three skills for a project that keeps the `development` pack** — milestones, units, decisions,
+  review entries and an inbox in the project's `.emd`: `run-milestone` drives a milestone's planned
+  units, each built by a fresh session (several at once where `dispatch_plan` says they share no
+  path), `closing-pass` lands a finished unit with its commit and report, and `review-phase` walks a
+  built milestone's open review entries with you, one at a time.
 - **Two hooks.** At session start, `start_here` on the project's document; before each prompt, the
   inbox's new rows, each printed once per session. Both are silent in a folder with no `.emd` in
   it, or none named by `.claude/emerald.json` (`{ "document": "docs/project.emd" }`).

@@ -131,8 +131,9 @@ Give each worktree child its own decision numbers, from the next free one in the
    commit hash, which its proposal names; a rebase would not. A conflict that is only both sides
    appending (decision-log entries and their index rows) is resolved by keeping both, in number
    order; any other conflict is a stop. Then `npm run docs:check`, then **one `land_units
-   inbox:[ids]`** for every proposal (M51 U3, D-485) — dry run, then `commit: true` — never a
-   landing rebuilt from a report's prose. Commit `docs/memory.emd`, push to origin main, and remove
+   inbox:[{id, other_branch:true}, …]`** for every proposal (M51 U3, D-485) — dry run, then `commit:
+   true` — never a landing rebuilt from a report's prose. A proposal names its worktree's branch and
+   the claim names `main`, so without `other_branch` each is refused (found in M42 U7's dry run). Commit `docs/memory.emd`, push to origin main, and remove
    each worktree once its branch is merged (`git worktree remove`, with no junction inside it).
 3. Relay the report, shorter: what landed, and what to look at.
 4. **Stop and wait for the maintainer's verdict when the unit is the maintainer's to judge.** That is every unit of a milestone

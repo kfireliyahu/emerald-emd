@@ -600,7 +600,10 @@ the frame included, since MCP Apps is an open extension. Until M42 U6 these were
 `vite build --mode claude-hooks` into `dist-plugin/hooks.mjs` beside the server, and it bundles the
 tools it answers with rather than starting the server. `hosts/claude/` is the one home for what only
 Claude reads: the hooks and the status line, the skills a stranger gets (`skills/declare-a-format`, the
-same file as this repo's `.claude/skills/` copy, which `skills.test.ts` holds), and the plugin's
+same file as this repo's `.claude/skills/` copy, which `skills.test.ts` holds; and since M42 U7 the
+development pack's `run-milestone`, `closing-pass` and `review-phase`, generic copies of this repo's
+own, which stay in `.claude/skills/` — `skills.test.ts` fails when a generic one names a decision,
+unit, note, script or npm script of this repo's), and the plugin's
 manifest (M42 U4, below). A second host later is `hosts/<name>/`. A host reaches the server only through
 `src/plugin/host.ts` (and the shell's constants through `electron/bridge.ts`); nothing in `src/` or
 `electron/` imports from `hosts/`; `src/plugin/hostBoundary.test.ts` fails on either. This repo's own
@@ -1370,8 +1373,8 @@ printed `start_here` and the inbox row, and `npx emerald-status-line` printed `i
 
 **The plugin is `hosts/claude/`, and nothing builds it.** `.claude-plugin/marketplace.json` at the
 repository's root lists it, so it installs from the public repository with no review; what it ships
-is the manifest (`.claude-plugin/plugin.json`), the hook set, the `declare-a-format` skill and a
-README for a stranger. **Everything it runs is the published package, through `npx`, pinned** — the
+is the manifest (`.claude-plugin/plugin.json`), the hook set, the `declare-a-format` skill, the
+development pack's three workflows (M42 U7) and a README for a stranger. **Everything it runs is the published package, through `npx`, pinned** — the
 maintainer's *use npm for it* (D-499, amending D-498's launcher):
 
 - **The server**: `npx -y --prefer-offline emerald-mcp@<version> --engine-only`, once a session.
@@ -1389,13 +1392,25 @@ the inbox hook **~1.95 s before every prompt** (against ~0.35 s for `node` on th
 its 200 ms, so it shows the line late rather than not at all. The first run of a version also
 downloads the 2.9 MB tarball.
 
-**The version is written once**, as the manifest's `version`: every pin — the server's and each
-hook's — equals it, and it never leads the root `package.json`'s, which `build:plugin` stamps on the
-package (`hosts/claude/plugin.test.ts`). The marketplace serves `main`, and a pin pushed before its
-publish installs nothing, so **the pins follow the publish** (D-500): the version is cut and pushed,
-the maintainer publishes it, and `node scripts/pin-plugin.mjs` — which refuses until npm has the
-version — moves the pins, in a commit of their own. A change to the plugin alone ships with the
-next package version.
+**The pin is written once**, as the manifest's `version` before any `+`: every pin — the server's
+and each hook's — equals it, and it never leads the root `package.json`'s, which `build:plugin`
+stamps on the package (`hosts/claude/plugin.test.ts`). The marketplace serves `main`, and a pin
+pushed before its publish installs nothing, so **the pins follow the publish** (D-500): the version
+is cut and pushed, the maintainer publishes it, and `node scripts/pin-plugin.mjs` — which refuses
+until npm has the version — moves the pins, in a commit of their own.
+
+**The manifest's `version` is how an installed plugin learns of an update** (M42 U7, D-504). Claude
+Code computes a version for an installed plugin — the manifest's `version` first — and replaces its
+cached copy only when that differs from the one it installed; auto-update is off by default for any
+marketplace but Anthropic's own, so a person turns it on (`/plugin` → Marketplaces) or runs `claude
+plugin update emerald@emerald-emd`, and the new version loads in the next session or after
+`/reload-plugins`. So a change to what the plugin ships cuts a new version even with no package
+behind it: **`<pin>+<n>`**, the n-th plugin release on that pin, by `node scripts/pin-plugin.mjs
+--plugin`, which asks npm nothing; a pin move makes it the bare package version again. Both record
+`hosts/claude/release.ts`'s digest of the shipped files — the manifest without its version, the hook
+set, the skills, the README — in `hosts/claude-plugin-release.json`, and `plugin.test.ts` fails when
+the digest has moved under an unchanged version. Leaving `version` out (so the commit is the version)
+was rejected: every push to `main` would be an update.
 
 ### The MCP Registry (M42 U3, D-500)
 
