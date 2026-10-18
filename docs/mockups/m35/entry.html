@@ -1,0 +1,916 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>One Entry View</title>
+<style>
+/* M35 U1. One entry view: the row's page, editable where it stands, replacing both the entry page
+   (EntryView, D-294/D-296) and the page (PageView, D-302). Tokens copied from src/ui/theme/tokens.css
+   (light, and :root[data-theme="dark"]); the frame is D-312's (tree rail, split-tile buttons); chips
+   and dots are .fc-state/.fc-dot with tone.ts's tones; menus are ChoiceField's (D-290). Fonts are the
+   app's own bundled woff2, read from node_modules, so this opens from the checkout with the network
+   off. Every name and figure is made up. The build ports this file's markup and words. */
+@font-face{font-family:"IBM Plex Sans";font-weight:400;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:500;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-500-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:600;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-600-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans Hebrew";font-weight:400;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans-hebrew/files/ibm-plex-sans-hebrew-hebrew-400-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-weight:400;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2") format("woff2")}
+
+:root{
+  --color-background:#ffffff;--color-surface:#f7f7f6;--color-elevated:#ffffff;
+  --color-ink:#111111;--color-ink-secondary:#6b6b6b;--color-ink-tertiary:#a0a09c;
+  --color-hairline:#ececea;--color-hairline-strong:#d9d9d6;
+  --color-accent:#07805f;--color-accent-ink:#ffffff;--color-accent-hover:#05664b;--color-accent-soft:#e8f6f1;
+  --color-action:#07805f;--color-action-ink:#ffffff;--color-action-hover:#05664b;--color-action-deep:#055a43;
+  --color-negative:#c4342b;--color-positive:#1f7a4d;
+  --shadow-pop:0 1px 2px rgba(17,17,17,.04),0 8px 24px rgba(17,17,17,.08);
+  --font-sans:"IBM Plex Sans","IBM Plex Sans Hebrew",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,monospace;
+  --micro:120ms;--base:180ms;--ease:cubic-bezier(.22,1,.36,1);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --color-background:#0b0b0c;--color-surface:#151517;--color-elevated:#1b1b1e;
+  --color-ink:#f2f2f0;--color-ink-secondary:#a1a1a0;--color-ink-tertiary:#6a6a6c;
+  --color-hairline:#262629;--color-hairline-strong:#34343a;
+  --color-accent:#34d399;--color-accent-ink:#06231a;--color-accent-hover:#5ee0b0;--color-accent-soft:#10312a;
+  --color-action:#34d399;--color-action-ink:#06231a;--color-action-hover:#5ee0b0;--color-action-deep:#1fae7d;
+  --color-negative:#e5675e;--color-positive:#4caf7d;
+  --shadow-pop:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.55);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --color-background:#0b0b0c;--color-surface:#151517;--color-elevated:#1b1b1e;
+  --color-ink:#f2f2f0;--color-ink-secondary:#a1a1a0;--color-ink-tertiary:#6a6a6c;
+  --color-hairline:#262629;--color-hairline-strong:#34343a;
+  --color-accent:#34d399;--color-accent-ink:#06231a;--color-accent-hover:#5ee0b0;--color-accent-soft:#10312a;
+  --color-action:#34d399;--color-action-ink:#06231a;--color-action-hover:#5ee0b0;--color-action-deep:#1fae7d;
+  --color-negative:#e5675e;--color-positive:#4caf7d;
+  --shadow-pop:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.55);color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{background:var(--color-background)}
+body{margin:0;color:var(--color-ink);font-family:var(--font-sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
+code,.mono{font-family:var(--font-mono);font-size:12px}
+.label{font-size:11px;line-height:1.3;letter-spacing:.08em;font-weight:500;text-transform:uppercase;color:var(--color-ink-secondary)}
+.caption{font-size:12px;line-height:1.4;color:var(--color-ink-secondary)}
+.t3{color:var(--color-ink-tertiary)}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.neg{color:var(--color-negative)}
+bdi{unicode-bidi:isolate}
+
+/* ------------------------------------------------------------ the mockup's own page */
+.page{max-width:1320px;margin:0 auto;padding:32px 16px 96px;display:flex;flex-direction:column;gap:40px}
+.intro{display:flex;flex-direction:column;gap:8px;max-width:84ch}
+.intro h1{margin:0;font-size:24px;line-height:1.15;font-weight:600;letter-spacing:-.01em}
+.intro p{margin:0;color:var(--color-ink-secondary)}
+.intro b{color:var(--color-ink);font-weight:500}
+.controls{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:flex-end;padding:16px;background:var(--color-surface)}
+.ctl{display:flex;flex-direction:column;gap:6px}
+.seg{display:inline-flex;flex-wrap:wrap}
+.seg button{height:30px;padding:0 12px;border:1px solid var(--color-hairline-strong);margin-left:-1px;font-size:13px;color:var(--color-ink-secondary);background:var(--color-background)}
+.seg button:first-child{margin-left:0}
+.seg button.on{background:var(--color-accent-soft);color:var(--color-ink);border-color:var(--color-accent);position:relative;z-index:1}
+.choice-tag{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;margin-right:6px;font-size:10px;font-weight:500;border:1px solid currentColor}
+.stage{overflow-x:auto;border:1px solid var(--color-hairline-strong)}
+section.doc > h2{margin:0 0 10px;font-size:16px;font-weight:600}
+section.doc > p.note{margin:0 0 12px;color:var(--color-ink-secondary);max-width:90ch}
+.notes{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:10px;max-width:92ch;color:var(--color-ink-secondary)}
+.notes b{color:var(--color-ink);font-weight:500}
+table.words{width:100%;border-collapse:collapse;font-size:13px}
+table.words th,table.words td{border-top:1px solid var(--color-hairline);padding:8px 12px 8px 0;vertical-align:top;text-align:left}
+table.words th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;color:var(--color-ink-secondary)}
+table.words td:first-child{white-space:nowrap}
+table.words .gone{color:var(--color-negative)}
+table.words .stays{color:var(--color-ink)}
+.sn{font-family:var(--font-mono);font-size:11px;color:var(--color-ink-tertiary);margin-right:6px}
+
+/* ------------------------------------------------------------ the window (D-312) */
+.win{min-width:1120px;height:860px;display:grid;grid-template-rows:40px 1fr;background:var(--color-background)}
+.titlebar{display:flex;align-items:center;gap:16px;padding:0 12px 0 16px;background:var(--color-surface);border-bottom:1px solid var(--color-hairline)}
+.docname{display:flex;align-items:center;gap:8px;font-size:13px}
+.dirty{width:7px;height:7px;border-radius:50%;border:1.5px solid var(--color-ink-secondary)}
+.dirty.on{background:var(--color-ink);border-color:var(--color-ink)}
+.caps{margin-left:auto;display:flex;gap:2px;color:var(--color-ink-tertiary)}
+.caps span{width:36px;height:28px;display:flex;align-items:center;justify-content:center}
+.body{display:grid;grid-template-columns:216px minmax(0,1fr);min-height:0}
+.side{background:var(--color-surface);border-right:1px solid var(--color-hairline);display:flex;flex-direction:column;padding:8px 0;overflow:auto}
+.nitem{height:32px;display:flex;align-items:center;gap:10px;padding:0 14px;color:var(--color-ink-secondary);font-size:13px;position:relative;width:100%;text-align:left}
+.nitem:hover{color:var(--color-ink)}
+.nitem.open{color:var(--color-ink)}
+.nchild{height:24px;padding-left:40px}
+.nchild.on{color:var(--color-ink);background:var(--color-accent-soft)}
+.nchild.on::before{content:"";position:absolute;inset:0 auto 0 0;width:2px;background:var(--color-accent)}
+.nsep{height:1px;background:var(--color-hairline);margin:8px 14px}
+.main{min-width:0;min-height:0;display:flex;flex-direction:column;position:relative}
+
+/* .fc-btn, the split tile */
+.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;height:30px;padding:0 12px;font-size:13px;font-weight:500;white-space:nowrap}
+.btn.tiled{padding-inline-start:0;padding-inline-end:10px}
+.btn .tile{align-self:stretch;width:30px;display:inline-flex;align-items:center;justify-content:center;transition:background-color var(--micro)}
+.btn.primary{background:var(--color-action);color:var(--color-action-ink)}
+.btn.primary .tile{background:var(--color-action-deep)}
+.btn.primary:hover .tile{background:var(--color-accent-hover)}
+.btn.secondary{background:var(--color-surface);box-shadow:inset 0 0 0 1px var(--color-hairline-strong)}
+.btn.secondary .tile{background:var(--color-hairline);color:var(--color-ink-secondary)}
+.btn.ghost{padding:0 4px;color:var(--color-accent)}
+.btn.ghost:hover{text-decoration:underline;text-underline-offset:5px}
+.btn[disabled]{opacity:.4;cursor:default}
+/* IconAction: 28px square, ink-secondary at rest, never accent */
+.icon{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;color:var(--color-ink-secondary)}
+.icon:hover{color:var(--color-ink);background:var(--color-surface)}
+.icon.danger:hover{color:var(--color-negative)}
+.icon.on{color:var(--color-ink);background:var(--color-surface);box-shadow:inset 0 0 0 1px var(--color-hairline-strong)}
+
+/* ------------------------------------------------------------ the entry view */
+.ebar{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;border-bottom:1px solid var(--color-hairline);padding:6px 24px;min-height:41px}
+.back{font-size:12px;color:var(--color-ink-secondary)}
+.back:hover{color:var(--color-ink)}
+.pager{display:inline-flex;align-items:center;gap:2px;font-size:12px;color:var(--color-ink-secondary)}
+.pager .pg{width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;color:var(--color-ink-secondary)}
+.pager .pg:hover{color:var(--color-ink);background:var(--color-surface)}
+.ebar .end{margin-left:auto;display:flex;align-items:center;gap:6px}
+.saved{font-size:12px;color:var(--color-ink-tertiary)}
+.scroll{flex:1 1 auto;min-height:0;overflow:auto}
+.sheet{max-width:1120px;margin:0 auto;padding:28px 24px 64px;display:flex;flex-direction:column;gap:28px}
+.ehead{display:flex;flex-direction:column;gap:10px;padding-bottom:20px;border-bottom:1px solid var(--color-hairline)}
+.ehead h1{margin:0;font-size:24px;line-height:1.2;font-weight:600;letter-spacing:-.01em;max-width:820px}
+.lineup{display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px}
+.lineup .fld{flex-direction:row;align-items:center;gap:8px}
+.lineup .fld .fhead .label{color:var(--color-ink-tertiary)}
+.two{display:grid;grid-template-columns:minmax(0,1fr) 280px;gap:44px;align-items:start}
+.left{display:flex;flex-direction:column;gap:28px;min-width:0;max-width:700px}
+.aside{display:flex;flex-direction:column;gap:22px}
+.one{max-width:760px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:24px}
+
+/* a field: its name over its value; no box until pointed at (D-294) */
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0;position:relative}
+.fhead{display:flex;align-items:center;gap:6px;min-height:18px}
+.fhead .how{opacity:0;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;color:var(--color-ink-tertiary)}
+.fld:hover .how,.how.open{opacity:1}
+.how:hover{color:var(--color-ink)}
+.grip{color:var(--color-ink-tertiary);cursor:grab;display:inline-flex}
+.mini{height:22px;border:1px solid var(--color-hairline-strong);background:var(--color-elevated);font-size:11px;padding:0 6px 0 8px;display:inline-flex;align-items:center;gap:6px;color:var(--color-ink-secondary)}
+.val{border:1px solid transparent;padding:2px 6px;margin:0 -7px;min-height:30px;display:flex;align-items:center;cursor:text;min-width:0}
+.val:hover{border-color:var(--color-hairline)}
+.val.block{display:block}
+.val.ro{cursor:default}
+.val.ro:hover{border-color:transparent}
+.empty{color:var(--color-ink-tertiary)}
+.editing{border:1px solid var(--color-accent);background:var(--color-elevated);padding:4px 8px;margin:0 -7px;display:flex;flex-direction:column;gap:4px}
+.editing input,.editing textarea{border:0;outline:0;background:transparent;width:100%;padding:0}
+.editing textarea{font-family:var(--font-mono);font-size:12px;line-height:1.6;resize:none;min-height:180px}
+.ehint{font-size:11px;color:var(--color-ink-tertiary)}
+.refused{font-size:12px;color:var(--color-negative)}
+.req{color:var(--color-ink-tertiary);font-size:11px;margin-left:2px}
+
+/* figures */
+.figs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px 22px}
+.figs.wide{grid-template-columns:repeat(2,minmax(0,1fr))}
+.fig{font-size:20px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-.005em}
+.fig small{font-size:13px;font-weight:400;color:var(--color-ink-secondary);margin-left:3px}
+.fig.large{font-size:28px}
+.fig.mark{box-shadow:inset 0 -2px 0 var(--color-negative)}
+.worked{font-size:11px;color:var(--color-ink-tertiary);margin-left:4px;font-weight:400;letter-spacing:0}
+.bar{display:flex;align-items:center;gap:10px;width:100%}
+.bar .track{flex:1 1 auto;height:6px;background:var(--color-hairline);position:relative;min-width:60px}
+.bar .fill{position:absolute;inset:0 auto 0 0;background:var(--color-ink)}
+.bar .n{font-variant-numeric:tabular-nums;font-size:13px;font-weight:500;min-width:44px;text-align:right}
+.ring{display:inline-flex;align-items:center;gap:10px}
+.ring .n{font-variant-numeric:tabular-nums;font-weight:500}
+.slider{display:flex;align-items:center;gap:10px;width:100%}
+.slider input{flex:1 1 auto;accent-color:var(--color-accent)}
+.slider .n{font-variant-numeric:tabular-nums;font-weight:500;min-width:44px;text-align:right}
+
+/* enum, boolean, link */
+.fc-state{display:inline-flex;align-items:center;padding:3px 8px;border:1px solid var(--color-hairline-strong);color:var(--color-ink-secondary);font-size:11px;line-height:1.3;letter-spacing:.06em;font-weight:500;text-transform:uppercase;white-space:nowrap}
+.fc-state[data-tone="done"]{color:var(--color-ink);background:var(--color-surface);border-color:var(--color-hairline)}
+.fc-state[data-tone="live"]{color:var(--color-accent);border-color:var(--color-accent);background:var(--color-accent-soft)}
+.fc-state[data-tone="struck"]{text-decoration:line-through}
+.fc-dot{display:inline-block;width:8px;height:8px;flex:none;border-radius:9999px;border:1.5px solid var(--color-hairline-strong)}
+.fc-dot[data-tone="done"]{background:var(--color-ink);border-color:var(--color-ink)}
+.fc-dot[data-tone="live"]{background:var(--color-accent);border-color:var(--color-accent)}
+.fc-dot[data-tone="struck"]{border-style:dashed}
+.choice{height:28px;border:1px solid var(--color-hairline-strong);background:var(--color-elevated);padding:0 8px 0 10px;display:inline-flex;align-items:center;gap:8px;min-width:150px;font-size:13px}
+.choice .v{flex:1 1 auto}
+.choice svg{color:var(--color-ink-tertiary)}
+.opts{display:inline-flex;flex-wrap:wrap;gap:4px}
+.opts span{border:1px solid var(--color-hairline);padding:2px 9px;font-size:12px;color:var(--color-ink-secondary)}
+.opts span.on{border-color:var(--color-ink);background:var(--color-surface);color:var(--color-ink)}
+.steps{display:flex;align-items:center;gap:0;min-width:260px}
+.steps .st{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:var(--color-ink-tertiary);text-transform:uppercase;letter-spacing:.06em;flex:none}
+.steps .st.on{color:var(--color-accent)}
+.steps .st.past{color:var(--color-ink-secondary)}
+.steps .ln{height:2px;flex:1 1 auto;background:var(--color-hairline-strong);min-width:18px;margin-bottom:18px}
+.steps .ln.past{background:var(--color-ink-tertiary)}
+.tick{width:16px;height:16px;border:1.5px solid var(--color-ink-secondary);display:inline-flex;align-items:center;justify-content:center}
+.lk{color:var(--color-accent)}
+.lk:hover{text-decoration:underline;text-underline-offset:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 4px 0 8px;border:1px solid var(--color-hairline-strong);font-size:13px}
+.chip .x{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;color:var(--color-ink-tertiary)}
+.chip .x:hover{color:var(--color-negative)}
+.add{font-size:12px;color:var(--color-accent);display:inline-flex;align-items:center;gap:4px}
+.lcard{border:1px solid var(--color-hairline-strong);background:var(--color-elevated);padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.lcard .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.lcards{display:flex;flex-direction:column;gap:6px;width:100%}
+.llist{display:flex;flex-direction:column;width:100%}
+.llist > div{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--color-hairline)}
+.llist > div:first-child{border-top:0}
+
+/* the body: markdown, ours, no HTML (D-294) */
+.md{line-height:1.65;max-width:68ch}
+.md h3{font-size:16px;font-weight:600;margin:18px 0 6px}
+.md h3:first-child{margin-top:0}
+.md p{margin:0 0 10px}
+.md ul,.md ol{margin:0 0 10px;padding-left:22px}
+.md li{margin:2px 0}
+.md blockquote{margin:0 0 10px;padding:2px 0 2px 14px;border-left:2px solid var(--color-hairline-strong);color:var(--color-ink-secondary)}
+.md code{background:var(--color-surface);padding:1px 4px}
+.md .mdl{color:var(--color-ink);text-decoration:underline;text-decoration-color:var(--color-hairline-strong);text-underline-offset:3px}
+.md.lead{font-size:16px}
+.mono-val{font-family:var(--font-mono);font-size:13px}
+
+/* verdicts (Balance, read only) */
+.verdicts{display:flex;flex-direction:column;gap:10px}
+.vd{display:grid;grid-template-columns:14px minmax(0,1fr);gap:4px 8px;align-items:baseline}
+.vd .dot{width:8px;height:8px;border-radius:9999px;background:var(--color-positive);margin-top:5px}
+.vd.bad .dot{background:var(--color-negative)}
+.vd .what{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.vd .what b{font-weight:500}
+.tag{display:inline-flex;align-items:center;height:20px;padding:0 7px;font-size:11px;font-weight:500;letter-spacing:.02em;border:1px solid var(--color-hairline-strong);color:var(--color-ink-secondary);white-space:nowrap}
+.tag.good{border-color:var(--color-positive);color:var(--color-positive)}
+.tag.bad{border-color:var(--color-negative);color:var(--color-negative)}
+.eq{grid-column:2;display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:12px}
+.eq .pan{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--color-hairline);padding:1px 6px}
+.eq .pan b{font-weight:500;font-variant-numeric:tabular-nums}
+.vd .sent{grid-column:2;font-size:12px;color:var(--color-ink-secondary);margin:0}
+.vd.bad .sent{color:var(--color-negative)}
+.band{border-top:1px solid var(--color-hairline);border-bottom:1px solid var(--color-hairline);padding:10px 0;display:flex;flex-direction:column;gap:8px}
+.band .bh{display:flex;align-items:center;gap:10px}
+
+/* properties (direction B) */
+.props{display:grid;grid-template-columns:150px minmax(0,1fr);border-top:1px solid var(--color-hairline)}
+.props > .k{min-height:36px;padding:7px 0;border-bottom:1px solid var(--color-hairline);color:var(--color-ink-secondary);font-size:13px;display:flex;align-items:center;gap:6px}
+.props > .v{min-height:36px;padding:2px 0 2px 8px;border-bottom:1px solid var(--color-hairline);display:flex;align-items:center;min-width:0}
+.props > .v .val{margin:0;flex:1 1 auto}
+.props .how{opacity:0}
+.props .k:hover .how,.props .how.open{opacity:1}
+
+/* links here */
+.lsec{display:flex;flex-direction:column}
+.lsec h3{margin:0;padding-bottom:8px}
+.lrow{display:grid;grid-template-columns:14px minmax(0,1fr);column-gap:10px;padding:9px 0;border-top:1px solid var(--color-hairline)}
+.lrow .fc-dot{margin-top:6px}
+.lrow .r1{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.lrow .sub{font-size:12px;color:var(--color-ink-secondary)}
+.nothing{border-top:1px solid var(--color-hairline);padding:9px 0;font-size:12px;color:var(--color-ink-secondary)}
+.hopnote{border-top:1px solid var(--color-hairline);padding-top:10px;font-size:12px;color:var(--color-ink-secondary);margin:0}
+
+/* the draft bar */
+.foot{flex:none;border-top:1px solid var(--color-hairline);background:var(--color-elevated);padding:10px 24px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+
+/* show as: the popover (ChoiceField's list) */
+.pop{position:absolute;z-index:5;top:22px;left:0;min-width:220px;border:1px solid var(--color-hairline-strong);background:var(--color-elevated);box-shadow:var(--shadow-pop);padding:4px 0}
+.pop .ph{padding:6px 12px 4px;font-size:11px;letter-spacing:.08em;font-weight:500;text-transform:uppercase;color:var(--color-ink-tertiary)}
+.pop button{display:flex;width:100%;align-items:center;gap:10px;padding:6px 12px;font-size:13px;text-align:left}
+.pop button:hover{background:var(--color-accent-soft)}
+.pop button .ck{width:14px;color:var(--color-accent)}
+.pop button .eg{margin-left:auto;font-size:12px;color:var(--color-ink-tertiary)}
+.pop .pf{border-top:1px solid var(--color-hairline);margin-top:4px;padding:8px 12px 4px;font-size:11px;color:var(--color-ink-tertiary);max-width:260px}
+
+/* direction C: the list with the entry beside it */
+.split{display:grid;grid-template-columns:minmax(0,1fr) 30rem;min-height:0;flex:1 1 auto}
+.split .list{min-width:0;overflow:auto;border-right:1px solid var(--color-hairline)}
+.split .pane{min-width:0;display:flex;flex-direction:column;min-height:0}
+.ltool{display:flex;align-items:center;gap:12px;padding:8px 16px;border-bottom:1px solid var(--color-hairline)}
+.ltool h2{margin:0;font-size:16px;font-weight:600}
+table.rs{width:100%;border-collapse:collapse;font-size:13px}
+table.rs th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;color:var(--color-ink-secondary);text-align:left;padding:6px 8px;border-bottom:1px solid var(--color-hairline-strong);white-space:nowrap}
+table.rs td{padding:0 8px;height:40px;border-bottom:1px solid var(--color-hairline);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
+table.rs td.n{color:var(--color-ink-tertiary);font-size:12px;width:34px;text-align:right;border-right:1px solid var(--color-hairline)}
+table.rs td.r,table.rs th.r{text-align:right;font-variant-numeric:tabular-nums}
+table.rs tr{cursor:pointer}
+table.rs tr:hover td{background:var(--color-surface)}
+table.rs tr.open td{background:var(--color-accent-soft)}
+table.rs tr.open td:first-child{box-shadow:inset 2px 0 0 var(--color-accent)}
+.pane .sheet{padding:20px 20px 40px;gap:22px}
+.pane .ehead h1{font-size:20px}
+
+/* the catalog */
+.cat{width:100%;border-collapse:collapse;font-size:13px}
+.cat th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;color:var(--color-ink-secondary);text-align:left;padding:0 14px 8px 0;border-bottom:1px solid var(--color-hairline-strong)}
+.cat td{border-top:1px solid var(--color-hairline);padding:12px 14px 12px 0;vertical-align:top}
+.cat td.ty{white-space:nowrap;width:110px}
+.cat .ways{display:flex;flex-wrap:wrap;gap:12px 24px}
+.cat .way{display:flex;flex-direction:column;gap:6px;min-width:150px;max-width:300px}
+.cat .way .wl{font-size:11px;color:var(--color-ink-tertiary)}
+.cat .way .wl b{font-weight:500;color:var(--color-ink-secondary)}
+
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<main class="page">
+
+<header class="intro">
+  <span class="label">M35 U1 · mockup · for the author's judgement</span>
+  <h1>One entry view: the page, editable where it stands</h1>
+  <p>Today a row has <b>two views</b>. Clicking it on the sheet or a board opens the <b>entry</b>: every column a heading over a field, with Save at the foot, no links in and none of the page's look. Its <b>page</b>, one button away, has the look you liked, with links out and links in, but it is read only, shows only the text columns, and prints Markdown as raw text. Here they are <b>one view</b>. It starts from the page and you edit any value where it is. Each column type also has <b>more ways to show a value</b>. The three directions differ on layout, on where verdicts and links sit, and on whether the view opens beside the list or in its place. The switches below the directions, <b>Writing</b> and <b>Show as is chosen</b>, are separate choices and work with any direction. Every name and figure is made up.</p>
+</header>
+
+<div class="controls" role="group" aria-label="Mockup controls">
+  <div class="ctl"><span class="label">Entry</span>
+    <div class="seg" data-ctl="entry"><button data-v="task" class="on">A task, links in and out</button><button data-v="thought">A thought record, many figures</button><button data-v="note">A long note</button><button data-v="new">A new task</button></div></div>
+  <div class="ctl"><span class="label">Direction</span>
+    <div class="seg" data-ctl="dir"><button data-v="A" class="on"><span class="choice-tag">A</span>The page, with a links column</button><button data-v="B"><span class="choice-tag">B</span>A note with its properties</button><button data-v="C"><span class="choice-tag">C</span>Beside the list</button></div></div>
+  <div class="ctl"><span class="label">Writing</span>
+    <div class="seg" data-ctl="write"><button data-v="leave" class="on">A field writes when you leave it</button><button data-v="draft">A draft, then Save</button></div></div>
+  <div class="ctl"><span class="label">Show as is chosen</span>
+    <div class="seg" data-ctl="where"><button data-v="field" class="on">On each field</button><button data-v="arrange">Arrange the page</button></div></div>
+  <div class="ctl"><span class="label">Theme</span>
+    <div class="seg" data-ctl="theme"><button data-v="system" class="on">System</button><button data-v="light">Light</button><button data-v="dark">Dark</button></div></div>
+</div>
+
+<p class="caption" style="margin:-24px 0 0">Click a value to edit it there. Hover a field's name for its <b style="font-weight:500;color:var(--color-ink)">Show as</b> glyph (or switch to <i>Arrange the page</i> and press the sliders in the bar). A name in accent opens that row in this same view.</p>
+
+<div class="stage"><div class="win" id="win">
+  <div class="titlebar">
+    <div class="docname"><span class="dirty" id="dirty" title="Saved"></span><span>notebook.emd</span><span class="mono t3" id="savedat">saved 09:14</span></div>
+    <div class="caps" aria-hidden="true"><span>&#8211;</span><span>&#9633;</span><span>&#10005;</span></div>
+  </div>
+  <div class="body">
+    <nav class="side" id="side" aria-label="Sections"></nav>
+    <div class="main" id="main"></div>
+  </div>
+</div></div>
+
+<section class="doc">
+  <h2>Show as, per column type</h2>
+  <p class="note">The set proposed for each type, drawn with the same code as the window above. The first way is the default, which is what the sheet's cell already shows. Editing follows from the way: a figure, bar or ring opens a field when pressed; a slider drags; a chip or menu opens the menu; buttons and steps are pressed; a link's name opens its row and the small pencil beside it changes which row. A choice is kept per format, beside the declaration, as today's input is (<code>format_view_column</code>, view <code>entry</code>), so it holds for every entry of that format.</p>
+  <table class="cat" id="catalog"></table>
+</section>
+
+<section class="doc">
+  <h2>Every place an entry opens today, and what becomes of it</h2>
+  <table class="words">
+    <tr><th>Where</th><th>Today it opens</th><th>With one view</th></tr>
+    <tr><td>Sheet: a row pressed, Enter on the row cursor, or the row's <i>Open as a page</i> icon</td><td><code>#/formats/:name/entry/:id</code>: EntryView, every column a heading over a field, Save at the foot</td><td class="stays">The one view. The icon's label becomes <i>Open</i>.</td></tr>
+    <tr><td>Sheet: <i>Add</i></td><td><code>entry/new</code>: EntryView, empty, Add at the foot</td><td class="stays">The one view, empty. A new row is always a draft until Add, in both writing modes, since a row with a required column empty cannot be written.</td></tr>
+    <tr><td>Board: a card pressed</td><td><code>entry/:id</code>: EntryView</td><td class="stays">The one view</td></tr>
+    <tr><td>Roadmap: a row's name</td><td><code>#/formats/:name/page/:id</code>: PageView, read only</td><td class="stays">The one view</td></tr>
+    <tr><td>Ready: a row's name</td><td><code>page/:id</code>: PageView</td><td class="stays">The one view</td></tr>
+    <tr><td>Page: a name under <i>It names</i>, <i>Named by</i>, or in the header line</td><td><code>page/:id</code> of that row</td><td class="stays">The one view of that row. Links in and out are part of every entry now.</td></tr>
+    <tr><td>EntryView's <i>Its page</i> button</td><td><code>page/:id</code></td><td class="gone">Goes. There is nothing left to switch to.</td></tr>
+    <tr><td>PageView's <i>Edit</i> button</td><td><code>entry/:id</code></td><td class="gone">Goes. Every value is edited where it stands.</td></tr>
+    <tr><td>The route <code>page/:id</code> itself (<code>FormatPage</code>, <code>PageView</code>)</td><td>The page</td><td class="gone">Goes. The route redirects to <code>entry/:id</code>, so a link kept anywhere still lands. <code>pageData</code> stays as the reader of links in and out, now for the entry.</td></tr>
+    <tr><td>A pack's entry (D-269), e.g. the development pack's rows</td><td>EntryView with every field as text and the sentence saying where it is written</td><td class="stays">The one view, read only, the same sentence in the bar. No pencil, no Show as, no Save.</td></tr>
+  </table>
+</section>
+
+<section class="doc">
+  <h2>What needs your pick</h2>
+  <table class="words" id="picks"></table>
+</section>
+
+<section class="doc">
+  <h2>Suggestions, yours to take or leave</h2>
+  <p class="note">Each says what it changes and why. Those marked <i>in every direction</i> are already drawn above in all three.</p>
+  <table class="words" id="suggestions"></table>
+</section>
+
+<section class="doc">
+  <h2>Notes for the build (M35 U2)</h2>
+  <ul class="notes">
+    <li><b>The page's two settings fold into the entry's.</b> The view <code>page</code> keeps <code>body</code> and <code>line</code> per column, and the development pack declares them in <code>src/data/packs/development/views.md</code> (decision, milestone, open_question and unit). <code>body</code> means Show as <i>Markdown</i> and <code>line</code> means <i>in the header line</i>. U2 maps both onto the <code>entry</code> setting and changes <code>views.md</code> with them. <code>pack.test.ts</code> will notice.</li>
+    <li><b>Show as replaces the input.</b> Today's ten inputs (<code>inputsFor</code>) are the editing half of the proposed ways. Line, Markdown, Slider, Menu, Buttons and Chips keep their words. Field becomes Figure, Search becomes Name, and Date and Month are the defaults of their types. A stored input word that is no longer offered draws as the default, as it already does.</li>
+    <li><b>Writing per field</b>, if chosen, is <code>updateRow</code> with the one column changed, through the same <code>coerceRow</code>. A refusal stays in the field with its sentence and writes nothing. Undo is the document's. Parity is unchanged: the writes are the sheet's and the tools'.</li>
+    <li><b>Verdicts and folds are the row's as stored</b> when writing per field, and the draft's as typed when writing on Save. That second one is today's behaviour (D-140, D-222).</li>
+    <li><b>Worked-out columns</b> (<code>derivedOf</code>) are on the sheet today and on neither entry view. They are drawn as figures that cannot be edited, marked <i>worked out</i>, with the expression on hover.</li>
+    <li>The header keeps D-296's rule: the title is the first text column shown as a <i>Line</i>, in the view's order.</li>
+  </ul>
+</section>
+
+</main>
+
+<script>
+(() => {
+/* ------------------------------------------------------------ state */
+const S = { entry:'task', dir:'A', write:'leave', where:'field', theme:'system',
+  editing:null, menu:null, arranging:false, changed:0, show:{} };
+const TODAY = new Date(2026, 9, 6);
+
+/* ------------------------------------------------------------ icons (16px, 1.75 stroke) */
+const P = {
+  left:'<path d="m15 18-6-6 6-6"/>', right:'<path d="m9 18 6-6-6-6"/>', down:'<path d="m6 9 6 6 6-6"/>',
+  sliders:'<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>',
+  trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
+  check:'<path d="m5 12 5 5L20 7"/>', x:'<path d="M18 6 6 18M6 6l12 12"/>', plus:'<path d="M12 5v14M5 12h14"/>',
+  pencil:'<path d="M4 20h4L19 9l-4-4L4 16v4Z"/>', grip:'<circle cx="9" cy="6" r="1"/><circle cx="15" cy="6" r="1"/><circle cx="9" cy="12" r="1"/><circle cx="15" cy="12" r="1"/><circle cx="9" cy="18" r="1"/><circle cx="15" cy="18" r="1"/>',
+  expand:'<path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/>', undo:'<path d="M9 14 4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>',
+  grid:'<rect x="4" y="4" width="16" height="16"/><path d="M4 10h16M10 4v16"/>', link:'<circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="m8.2 11 7.6-4M8.2 13l7.6 4"/>',
+  plug:'<path d="M9 3v5M15 3v5M6 8h12v3a6 6 0 0 1-12 0V8ZM12 17v4"/>', gear:'<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>',
+};
+const ic = (k, s=16) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[k]}</svg>`;
+const btn = (kind, label, icon, attrs='') => `<button type="button" class="btn ${kind}${icon?' tiled':''}" ${attrs}>${icon?`<span class="tile">${ic(icon)}</span>`:''}${label}</button>`;
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* ------------------------------------------------------------ tones (tone.ts) */
+const LIVE = ['in_progress','open','active','doing'], DONE = ['built','closed','done','live','answered','accepted','finished'], STRUCK = ['dropped','superseded','cancelled'];
+const toneOf = m => !m ? 'waiting' : LIVE.includes(m) ? 'live' : DONE.includes(m) ? 'done' : STRUCK.includes(m) ? 'struck' : 'waiting';
+const chip = m => `<span class="fc-state" data-tone="${toneOf(m)}">${esc(m.replace(/_/g,' '))}</span>`;
+const dot = m => `<span class="fc-dot" data-tone="${toneOf(m)}" aria-hidden="true"></span>`;
+
+/* ------------------------------------------------------------ show as: the set per type */
+const WAYS = {
+  text:     [['line','Line','one line'],['markdown','Markdown','read as a note'],['mono','Mono','a code or a reference']],
+  integer:  [['figure','Figure'],['bar','Bar','against the largest'],['slider','Slider','when both bounds are declared']],
+  real:     [['figure','Figure'],['bar','Bar','against the largest'],['slider','Slider','when both bounds are declared']],
+  decimal:  [['figure','Figure'],['bar','Bar','against the largest'],['slider','Slider','when both bounds are declared']],
+  percent:  [['figure','Figure'],['bar','Bar'],['ring','Ring'],['slider','Slider','when both bounds are declared']],
+  money:    [['figure','Figure'],['large','Large figure']],
+  quantity: [['written','As written','7.5 h'],['unit','In one unit','converted'],['bar','Bar','against the largest']],
+  date:     [['date','Date','Fri 9 Oct 2026'],['relative','Relative','in 3 days'],['both','Both']],
+  month:    [['month','Month','Oct 2026'],['relative','Relative','this month']],
+  instant:  [['datetime','Date and time'],['relative','Relative']],
+  time:     [['clock','Clock','09:30']],
+  enum:     [['chip','Chip'],['menu','Menu'],['buttons','Buttons'],['steps','Steps','the members as a path']],
+  boolean:  [['tick','Tick'],['word','Yes or No'],['buttons','Buttons']],
+  link:     [['name','Name'],['card','Card','its state and line']],
+  links:    [['chips','Chips'],['list','List'],['cards','Cards']],
+};
+const waysFor = c => (WAYS[c.type] || WAYS.text).filter(([w]) => w !== 'slider' || (c.min !== undefined && c.max !== undefined));
+const howOf = (f, c) => S.show[f.key+'.'+c.key] || c.show || waysFor(c)[0][0];
+
+/* ------------------------------------------------------------ the formats and their rows (synthetic) */
+const ROWS = {
+  t1:{f:'task', title:'Collect the reader questions', state:'done', due:'2026-10-02'},
+  t2:{f:'task', title:'Pick the cover photo', state:'planned', due:'2026-10-08'},
+  t3:{f:'task', title:'Draft the quarterly letter', state:'doing', due:'2026-10-09'},
+  t4:{f:'task', title:'Send the letter to print', state:'planned', due:'2026-10-14'},
+  t5:{f:'task', title:'Post the letter online', state:'planned', due:'2026-10-15'},
+  p1:{f:'project', title:'Newsletter', state:'active', sub:'4 of 9 tasks done'},
+  g1:{f:'topic', title:'Writing'}, g2:{f:'topic', title:'Running'}, g3:{f:'topic', title:'תכנון'},
+  n1:{f:'note', title:'Week 40 review', sub:'Written 4 Oct'}, n2:{f:'note', title:'Letter outline', sub:'Written 2 Oct'}, n3:{f:'note', title:'Week 39 review', sub:'Written 27 Sep'},
+  r1:{f:'thought', title:'Letter deadline moved up a week', sub:'5 Oct · anxiety'},
+  r2:{f:'thought', title:'Missed the long run', sub:'28 Sep · sadness'},
+  r3:{f:'thought', title:'Call about the lease', sub:'21 Sep · anger'},
+};
+
+const NOTE_BODY = `### What went well
+- Finished the **outline** for the quarterly letter, two days early.
+- Three runs, 21 km in all. The long one felt *easy* for the first time.
+
+### What did not
+The reader questions are still not in, and they are what [holds up the draft](letter-plan.md). I keep starting the draft before they are in.
+
+> Write the thing you would want to read, then cut a third.
+
+### Next week
+1. Collect the questions by Wednesday.
+2. Draft on Thursday morning, phone in another room.
+3. Book the cover shoot.
+
+The working file is \`letter-2026-q4.md\`.`;
+
+const F = {
+  task:{ key:'task', title:'Tasks', one:'Task', order:['t1','t2','t3','t4','t5'], cur:'t3',
+    cols:[
+      {key:'title', name:'Task', type:'text', req:true},
+      {key:'state', name:'State', type:'enum', values:['planned','doing','done','dropped'], req:true, line:true},
+      {key:'due', name:'Due', type:'date', line:true, show:'both'},
+      {key:'project', name:'Project', type:'link', target:'Projects', line:true},
+      {key:'estimate', name:'Estimate', type:'quantity', unit:'h'},
+      {key:'spent', name:'Spent', type:'quantity', unit:'h'},
+      {key:'left', name:'Left', type:'quantity', unit:'h'},
+      {key:'progress', name:'Progress', type:'percent', min:0, max:100, show:'bar'},
+      {key:'blocked', name:'Blocked by', type:'links', target:'Tasks'},
+      {key:'notes', name:'Notes', type:'text', show:'markdown'},
+    ],
+    row:{ title:'Draft the quarterly letter', state:'doing', due:'2026-10-09', project:'p1', estimate:6, spent:2.5, left:3.5, progress:40,
+      blocked:['t1','t2'], notes:'Keep it under **900 words**. Lead with the reader question about the move, and end with the dates for the first quarter.' },
+    identities:[ {name:'Hours add up', left:[['Spent',2.5],['Left',3.5]], right:[['Estimate',6]], unit:' h', proved:true, sentence:'Hours add up: proved — 6 against 6.', cols:['spent','left','estimate']} ],
+    folds:[],
+    namedBy:[
+      {title:'Tasks · Blocked by', rows:['t4','t5']},
+      {title:'Notes · Task', rows:['n1','n2']},
+      {title:'Thought records · Task', rows:['r1']},
+    ],
+    sheet:{ cols:['Task','State','Due','Progress'], rows:[['t1','done','2 Oct','100%'],['t2','planned','8 Oct','0%'],['t3','doing','9 Oct','40%'],['t4','planned','14 Oct','0%'],['t5','planned','15 Oct','0%']] },
+  },
+  thought:{ key:'thought', title:'Thought records', one:'Thought record', order:['r1','r2','r3'], cur:'r1',
+    cols:[
+      {key:'title', name:'Situation', type:'text', req:true},
+      {key:'when', name:'When', type:'date', line:true},
+      {key:'emotion', name:'Emotion', type:'enum', values:['anxiety','sadness','anger','shame','other'], line:true},
+      {key:'task', name:'Task', type:'link', target:'Tasks', line:true},
+      {key:'thought', name:'Automatic thought', type:'text', show:'line'},
+      {key:'ib', name:'Intensity before', type:'percent', min:0, max:100},
+      {key:'ia', name:'Intensity after', type:'percent', min:0, max:100},
+      {key:'drop', name:'Drop', type:'percent', min:0, max:100},
+      {key:'bb', name:'Belief before', type:'percent', min:0, max:100},
+      {key:'ba', name:'Belief after', type:'percent', min:0, max:100},
+      {key:'shift', name:'Belief shift', type:'percent', worked:'Belief before − Belief after'},
+      {key:'slept', name:'Slept', type:'quantity', unit:'h'},
+      {key:'awake', name:'Awake', type:'quantity', unit:'h'},
+      {key:'minutes', name:'Minutes on it', type:'integer', largest:60},
+      {key:'for', name:'Evidence for', type:'text', show:'markdown'},
+      {key:'against', name:'Evidence against', type:'text', show:'markdown'},
+      {key:'balanced', name:'Balanced thought', type:'text', show:'markdown'},
+    ],
+    row:{ title:'Letter deadline moved up a week', when:'2026-10-05', emotion:'anxiety', task:'t3', thought:'I will not have anything worth sending.',
+      ib:80, ia:45, drop:30, bb:90, ba:35, shift:55, slept:6.5, awake:17.5, minutes:25,
+      for:'- The questions are not in yet.\n- Last quarter\'s letter went out **two days late**.',
+      against:'- The outline is done, and the cover is the only other open piece.\n- Two of the last three letters went out on time.\n- The late one got *more* replies, not fewer.',
+      balanced:'The draft is the only hard part, and it is half written. **A day late is not a failed letter.**' },
+    identities:[
+      {name:'Intensity adds up', left:[['Intensity after',45],['Drop',30]], right:[['Intensity before',80]], unit:'', proved:false, sentence:'Intensity adds up: failed — 75 against 80, off by 5 where 0 is allowed.', cols:['ia','drop','ib']},
+      {name:'A day is 24 hours', left:[['Slept',6.5],['Awake',17.5]], right:[['24 h',24]], unit:' h', proved:true, sentence:'A day is 24 hours: proved — 24 against 24.', cols:['slept','awake']},
+    ],
+    folds:[],
+    namedBy:[],
+    sheet:{ cols:['Situation','When','Emotion','Intensity before'], rows:[['r1','anxiety','5 Oct','80%'],['r2','sadness','28 Sep','65%'],['r3','anger','21 Sep','70%']] },
+  },
+  note:{ key:'note', title:'Notes', one:'Note', order:['n1','n2','n3'], cur:'n1',
+    cols:[
+      {key:'title', name:'Title', type:'text', req:true},
+      {key:'written', name:'Written', type:'date', line:true, show:'relative'},
+      {key:'energy', name:'Energy', type:'integer', min:1, max:5, line:true},
+      {key:'task', name:'Task', type:'link', target:'Tasks', line:true},
+      {key:'topics', name:'Topics', type:'links', target:'Topics'},
+      {key:'body', name:'Body', type:'text', show:'markdown', body:true},
+    ],
+    row:{ title:'Week 40 review', written:'2026-10-04', energy:4, task:'t3', topics:['g1','g2','g3'], body:NOTE_BODY },
+    identities:[], folds:[],
+    namedBy:[],
+    sheet:{ cols:['Title','Written','Energy'], rows:[['n1','','4 Oct','4'],['n2','','2 Oct','3'],['n3','','27 Sep','3']] },
+  },
+};
+
+/* ------------------------------------------------------------ dates */
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'], DAY = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const asDate = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const dateText = s => { const d = asDate(s); return `${DAY[d.getDay()]} ${d.getDate()} ${MON[d.getMonth()]} ${d.getFullYear()}`; };
+const relText = s => { const n = Math.round((asDate(s) - TODAY) / 864e5);
+  return n === 0 ? 'today' : n === 1 ? 'tomorrow' : n === -1 ? 'yesterday' : n > 0 ? (n < 14 ? `in ${n} days` : `in ${Math.round(n/7)} weeks`) : (-n < 14 ? `${-n} days ago` : `${Math.round(-n/7)} weeks ago`); };
+
+/* ------------------------------------------------------------ markdown (ours; draws no HTML, D-294) */
+function inline(s){
+  return esc(s)
+    .replace(/`([^`]+)`/g,'<code>$1</code>')
+    .replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*([^*]+)\*/g,'<em>$1</em>')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<span class="mdl" title="$2">$1</span>');
+}
+function md(text){
+  const out = []; let list = null, para = [];
+  const flushP = () => { if (para.length) { out.push(`<p>${inline(para.join(' '))}</p>`); para = []; } };
+  const flushL = () => { if (list) { out.push(`<${list.t}>${list.items.map(i=>`<li>${inline(i)}</li>`).join('')}</${list.t}>`); list = null; } };
+  for (const raw of text.split('\n')) {
+    const l = raw.trimEnd();
+    let m;
+    if (!l.trim()) { flushP(); flushL(); continue; }
+    if ((m = l.match(/^#{1,6}\s+(.*)$/))) { flushP(); flushL(); out.push(`<h3>${inline(m[1])}</h3>`); continue; }
+    if ((m = l.match(/^>\s?(.*)$/))) { flushP(); flushL(); out.push(`<blockquote>${inline(m[1])}</blockquote>`); continue; }
+    if ((m = l.match(/^[-*]\s+(.*)$/))) { flushP(); if (!list || list.t!=='ul') { flushL(); list = {t:'ul', items:[]}; } list.items.push(m[1]); continue; }
+    if ((m = l.match(/^\d+\.\s+(.*)$/))) { flushP(); if (!list || list.t!=='ol') { flushL(); list = {t:'ol', items:[]}; } list.items.push(m[1]); continue; }
+    flushL(); para.push(l);
+  }
+  flushP(); flushL();
+  return out.join('');
+}
+
+/* ------------------------------------------------------------ a value, shown one way */
+function nameLink(id){ const r = ROWS[id]; return `<button type="button" class="lk" data-go="${id}"><bdi>${esc(r.title)}</bdi></button>`; }
+function ringSvg(p){ const r = 9, c = 2*Math.PI*r; return `<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="${r}" fill="none" stroke="var(--color-hairline)" stroke-width="3"/><circle cx="12" cy="12" r="${r}" fill="none" stroke="var(--color-ink)" stroke-width="3" stroke-dasharray="${(c*p/100).toFixed(1)} ${c.toFixed(1)}" transform="rotate(-90 12 12)"/></svg>`; }
+function figure(c, v){
+  if (c.type === 'percent') return `${v}<small>%</small>`;
+  if (c.type === 'quantity') return `${v}<small>${c.unit}</small>`;
+  if (c.type === 'money') return `<small style="margin:0 2px 0 0">€</small>${v}`;
+  return `${v}`;
+}
+function shown(c, v, how, ro){
+  if (v === undefined || v === '' || (Array.isArray(v) && v.length === 0)) return `<span class="empty">${c.req ? 'Needed' : 'Empty'}</span>`;
+  const mark = c.marked ? ' mark' : '';
+  switch (c.type) {
+    case 'text':
+      if (how === 'markdown') return `<div class="md${c.body ? ' lead' : ''}">${md(v)}</div>`;
+      if (how === 'mono') return `<span class="mono-val">${esc(v)}</span>`;
+      return `<span><bdi>${esc(v)}</bdi></span>`;
+    case 'integer': case 'real': case 'decimal': case 'percent': case 'quantity': case 'money': {
+      const top = c.max !== undefined ? c.max : (c.largest || (c.unit === 'h' ? 8 : 100));
+      const n = c.type === 'percent' ? `${v}%` : c.type === 'quantity' ? `${v} ${c.unit}` : `${v}`;
+      if (how === 'bar') return `<span class="bar"><span class="track"><span class="fill" style="width:${Math.min(100, 100*v/top)}%"></span></span><span class="n">${n}</span></span>`;
+      if (how === 'ring') return `<span class="ring">${ringSvg(v)}<span class="n">${n}</span></span>`;
+      if (how === 'slider') return `<span class="slider"><input type="range" min="${c.min}" max="${c.max}" value="${v}" aria-label="${esc(c.name)}" ${ro?'disabled':''}><span class="n">${n}</span></span>`;
+      if (how === 'unit') return `<span class="fig${mark}">${v*60}<small>min</small></span>`;
+      if (how === 'large') return `<span class="fig large${mark}">${figure(c, v)}</span>`;
+      return `<span class="fig${mark}">${figure(c, v)}${c.worked ? '<span class="worked" title="'+esc(c.worked)+'">worked out</span>' : ''}</span>`;
+    }
+    case 'date':
+      if (how === 'relative') return `<span title="${dateText(v)}">${relText(v)}</span>`;
+      if (how === 'both') return `<span class="num">${dateText(v)}</span><span class="caption" style="margin-left:8px">${relText(v)}</span>`;
+      return `<span class="num">${dateText(v)}</span>`;
+    case 'enum':
+      if (how === 'menu') return `<span class="choice"><span class="v">${esc(v)}</span>${ic('down',14)}</span>`;
+      if (how === 'buttons') return `<span class="opts">${c.values.map(m=>`<span class="${m===v?'on':''}">${esc(m)}</span>`).join('')}</span>`;
+      if (how === 'steps') { const at = c.values.indexOf(v); return `<span class="steps">${c.values.map((m,i)=>`${i?`<span class="ln${i<=at?' past':''}"></span>`:''}<span class="st${i===at?' on':i<at?' past':''}">${dot(i===at?'doing':i<at?'done':'planned')}${esc(m)}</span>`).join('')}</span>`; }
+      return chip(v);
+    case 'boolean':
+      if (how === 'word') return `<span>${v ? 'Yes' : 'No'}</span>`;
+      if (how === 'buttons') return `<span class="opts"><span class="${v?'on':''}">Yes</span><span class="${v?'':'on'}">No</span></span>`;
+      return `<span class="tick">${v ? ic('check',12) : ''}</span>`;
+    case 'link': {
+      const r = ROWS[v];
+      const edit = ro ? '' : `<button type="button" class="icon" style="width:22px;height:22px" title="Change ${esc(c.name)}" aria-label="Change ${esc(c.name)}" data-edit="${c.key}">${ic('pencil',13)}</button>`;
+      if (how === 'card') return `<span class="lcard" style="flex:1 1 auto"><span class="top">${r.state?dot(r.state):''}${nameLink(v)}${r.state?chip(r.state):''}${edit}</span>${r.sub?`<span class="caption">${esc(r.sub)}</span>`:''}</span>`;
+      return `<span style="display:inline-flex;align-items:center;gap:4px">${nameLink(v)}${edit}</span>`;
+    }
+    case 'links': {
+      const add = ro ? '' : `<button type="button" class="add" data-edit="${c.key}">${ic('plus',12)}Add</button>`;
+      if (how === 'list') return `<div class="llist">${v.map(id=>`<div>${dot(ROWS[id].state)}${nameLink(id)}${ROWS[id].state?chip(ROWS[id].state):''}</div>`).join('')}<div>${add}</div></div>`;
+      if (how === 'cards') return `<div class="lcards">${v.map(id=>`<span class="lcard"><span class="top">${dot(ROWS[id].state)}${nameLink(id)}${ROWS[id].state?chip(ROWS[id].state):''}</span>${ROWS[id].sub?`<span class="caption">${esc(ROWS[id].sub)}</span>`:''}</span>`).join('')}${add}</div>`;
+      return `<span class="chips">${v.map(id=>`<span class="chip">${nameLink(id)}${ro?'':`<button type="button" class="x" aria-label="Take ${esc(ROWS[id].title)} out">${ic('x',12)}</button>`}</span>`).join('')}${add}</span>`;
+    }
+  }
+  return esc(v);
+}
+
+/* the value being edited: a box in place, the field it already was */
+function editor(c, v){
+  const hint = S.write === 'leave' || S.entry === 'new'
+    ? (S.entry === 'new' ? 'Kept as typed until Add' : 'Enter or leaving the field writes it · Esc puts it back')
+    : 'Kept as typed until Save';
+  let box;
+  if (c.type === 'text' && howOf(cur(), c) === 'markdown') box = `<textarea aria-label="${esc(c.name)}" rows="10">${esc(v || '')}</textarea>`;
+  else if (c.type === 'link') box = `<input value="${esc(v ? ROWS[v].title : '')}" placeholder="Type to find one" aria-label="${esc(c.name)}">`;
+  else if (c.type === 'links') box = `<input value="" placeholder="Type to find one to add" aria-label="${esc(c.name)}">`;
+  else if (c.type === 'enum') box = `<span class="choice" style="border:0;padding:0;height:22px"><span class="v">${esc(v||'')}</span>${ic('down',14)}</span>`;
+  else if (c.type === 'date') box = `<input value="${v ? dateText(v) : ''}" aria-label="${esc(c.name)}" class="num">`;
+  else box = `<input value="${v === undefined ? '' : v}${c.type==='percent'&&v!==undefined?'%':''}${c.type==='quantity'&&v!==undefined?' '+c.unit:''}" aria-label="${esc(c.name)}" class="num">`;
+  return `<div class="editing">${box}<span class="ehint">${hint}</span></div>`;
+}
+
+/* ------------------------------------------------------------ one field */
+const cur = () => S.entry === 'new' ? F.task : F[S.entry];
+const valueOf = (f, c) => S.entry === 'new' ? undefined : f.row[c.key];
+function popover(f, c){
+  const now = howOf(f, c);
+  return `<div class="pop" role="menu"><div class="ph">Show ${esc(c.name)} as</div>${waysFor(c).map(([w,l,eg])=>`<button type="button" data-way="${c.key}:${w}"><span class="ck">${w===now?ic('check',14):''}</span>${l}${eg?`<span class="eg">${eg}</span>`:''}</button>`).join('')}<div class="pf">For every ${esc(f.one.toLowerCase())}, in this view. Kept beside the declaration.</div></div>`;
+}
+function head(f, c, plain){
+  const ro = c.worked !== undefined;
+  const ways = waysFor(c);
+  const label = `<span class="label"${plain?' style="color:var(--color-ink-tertiary)"':''}>${esc(c.name)}${c.req && S.entry==='new' ? '<span class="req">needed</span>' : ''}</span>`;
+  let tools = '';
+  if (S.where === 'field' && ways.length > 1) tools = `<button type="button" class="how${S.menu===c.key?' open':''}" data-menu="${c.key}" title="Show ${esc(c.name)} as" aria-label="Show ${esc(c.name)} as">${ic('sliders',13)}</button>`;
+  if (S.where === 'arrange' && S.arranging) {
+    tools = `<span class="grip" title="Drag to move ${esc(c.name)}">${ic('grip',14)}</span>` +
+      (ways.length > 1 ? `<button type="button" class="mini" data-menu="${c.key}">${(ways.find(w=>w[0]===howOf(f,c))||ways[0])[1]}${ic('down',12)}</button>` : '');
+    return `<div class="fhead">${tools}${label}</div>`;
+  }
+  return `<div class="fhead">${label}${tools}</div>`;
+}
+function field(f, c, opts={}){
+  const v = valueOf(f, c), how = howOf(f, c);
+  const ro = c.worked !== undefined || S.dir === 'locked';
+  const editing = S.editing === c.key && !ro;
+  const body = editing ? editor(c, v) : `<div class="val${how==='markdown'||c.type==='links'?' block':''}${ro?' ro':''}" ${ro||c.type==='link'||c.type==='links'?'':`data-edit="${c.key}"`} tabindex="${ro?-1:0}">${shown(c, v, how, ro)}</div>`;
+  const pop = S.menu === c.key ? popover(f, c) : '';
+  return `<div class="fld" data-col="${c.key}">${opts.nohead ? '' : head(f, c)}${body}${pop}</div>`;
+}
+
+/* ------------------------------------------------------------ the parts of an entry */
+function parts(f){
+  const title = f.cols[0];
+  const cols = f.cols.slice(1).map(c => Object.assign({}, c, {marked: f.identities.some(i => !i.proved && i.cols.includes(c.key))}));
+  const isFig = c => ['integer','real','decimal','percent','quantity','money'].includes(c.type) && !c.line;
+  return {
+    title,
+    line: cols.filter(c => c.line),
+    figs: cols.filter(isFig),
+    texts: cols.filter(c => c.type === 'text'),
+    links: cols.filter(c => (c.type === 'link' || c.type === 'links') && !c.line),
+    all: cols,
+  };
+}
+function titleField(f, small){
+  const c = f.cols[0], v = valueOf(f, c);
+  if (S.editing === 'title') return `<div class="fld">${editor(c, v)}</div>`;
+  return `<h1 class="val block" data-edit="title" tabindex="0" style="margin:0 -7px${small?';font-size:20px':''}">${v ? `<bdi>${esc(v)}</bdi>` : `<span class="empty">${esc(f.one)}</span>`}</h1>`;
+}
+function verdicts(f, compact){
+  if (S.entry === 'new' || f.identities.length === 0) return '';
+  return `<div class="verdicts">${f.identities.map(i => `<div class="vd${i.proved?'':' bad'}"><span class="dot" aria-hidden="true"></span>
+    <div class="what"><b>${esc(i.name)}</b><span class="tag ${i.proved?'good':'bad'}">${i.proved?'proved':'failed'}</span></div>
+    ${compact ? '' : `<div class="eq"><span class="pan">${i.left.map(([n,x])=>`${esc(n)} <b>${x}${i.unit}</b>`).join(' + ')}</span><span>${i.proved?'=':'≠'}</span><span class="pan">${i.right.map(([n,x])=>`${esc(n)} <b>${x}${i.unit}</b>`).join(' + ')}</span></div>`}
+    <p class="sent">${esc(i.sentence)}</p></div>`).join('')}</div>`;
+}
+function namedBy(f, heading){
+  const h = heading ? `<h3 class="label">${heading}</h3>` : '';
+  if (S.entry === 'new') return `<div class="lsec">${h}<div class="nothing">Nothing yet. A row has to be added before anything can name it.</div></div>`;
+  if (f.namedBy.length === 0) return `<div class="lsec">${h}<div class="nothing">No format links to ${esc(f.title.toLowerCase())}.</div></div>`;
+  return f.namedBy.map(g => `<div class="lsec"><h3 class="label">${esc(g.title)}</h3>${g.rows.length === 0 ? '<div class="nothing">Nothing</div>' :
+    g.rows.map(id => { const r = ROWS[id]; return `<div class="lrow">${dot(r.state)}<div><div class="r1">${nameLink(id)}${r.state?chip(r.state):''}</div>${r.sub?`<div class="sub">${esc(r.sub)}</div>`:r.due?`<div class="sub">Due ${relText(r.due)}</div>`:''}</div></div>`; }).join('')}</div>`).join('');
+}
+
+/* ------------------------------------------------------------ the bar above the entry */
+function ebar(f, pane){
+  const order = f.order, at = order.indexOf(f.cur);
+  const left = pane
+    ? `<span class="label">${esc(f.one)}</span>`
+    : `<button type="button" class="back">← <bdi>${esc(f.title)}</bdi></button>` +
+      (S.entry === 'new' ? `<span style="font-weight:500">A new ${esc(f.one.toLowerCase())}</span>` :
+      `<span class="pager"><button type="button" class="pg" aria-label="Previous">${ic('left',14)}</button><span class="num">${at+1} of ${order.length}</span><button type="button" class="pg" aria-label="Next">${ic('right',14)}</button></span>`);
+  const undo = S.write === 'leave' && S.changed > 0 && S.entry !== 'new' ? `<span class="saved">Written 09:41</span>${btn('ghost','Undo','')}` : '';
+  const arrange = S.where === 'arrange' ? `<button type="button" class="icon${S.arranging?' on':''}" data-arrange title="${S.arranging?'Done arranging':'Arrange this view: each column’s way and place'}" aria-label="Arrange">${ic('sliders')}</button>` : '';
+  const order0 = S.where === 'arrange' && S.arranging ? btn('ghost','The declaration’s order','') : '';
+  const del = S.entry === 'new' ? '' : `<button type="button" class="icon danger" title="Delete" aria-label="Delete">${ic('trash')}</button>`;
+  const paneTools = pane ? `<button type="button" class="icon" title="Open full" aria-label="Open full">${ic('expand')}</button>${btn('ghost','Close','')}` : '';
+  return `<div class="ebar">${left}<span class="end">${undo}${order0}${arrange}${del}${paneTools}</span></div>`;
+}
+function foot(f){
+  const isNew = S.entry === 'new';
+  if (!isNew && !(S.write === 'draft' && S.changed > 0)) return '';
+  if (isNew) return `<div class="foot">${btn('primary','Add','plus','disabled')}${btn('ghost','Cancel','')}<span class="caption neg">Task and State are needed before it can be added.</span></div>`;
+  return `<div class="foot">${btn('primary','Save','check')}${btn('ghost','Cancel','')}<span class="caption">${S.changed} change${S.changed===1?'':'s'} not written. What it would prove is shown as typed.</span></div>`;
+}
+
+/* ------------------------------------------------------------ direction A: the page, with a links column */
+function dirA(f, pane){
+  const p = parts(f);
+  const lineup = `<div class="lineup">${p.line.map(c => field(f, c, {bare:true})).join('')}</div>`;
+  const figs = p.figs.length ? `<section style="display:flex;flex-direction:column;gap:14px"><div class="figs${pane?' wide':''}">${p.figs.map(c => field(f, c)).join('')}</div>${verdicts(f)}</section>` : '';
+  const texts = p.texts.map(c => field(f, c)).join('');
+  const links = p.links.map(c => `<div class="lsec"><h3 class="label">${esc(c.name)}</h3>${field(f, c, {bare:true, nohead:true})}</div>`).join('');
+  const aside = `<aside class="aside" aria-label="Links">${links}${namedBy(f, 'Links here')}<p class="hopnote">One hop each way. A name opens that row here.</p></aside>`;
+  const header = `<header class="ehead"><div class="label">${esc(f.title)}</div>${titleField(f, pane)}${lineup}</header>`;
+  if (pane) return `${header}${figs}${texts}${aside}`;
+  return `${header}<div class="two"><div class="left">${figs}${texts}</div>${aside}</div>`;
+}
+
+/* ------------------------------------------------------------ direction B: a note with its properties */
+function dirB(f){
+  const p = parts(f);
+  const props = p.all.filter(c => !(c.type === 'text' && howOf(f, c) === 'markdown'));
+  const rows = props.map(c => {
+    const v = valueOf(f, c), how = howOf(f, c), ro = c.worked !== undefined;
+    const editing = S.editing === c.key && !ro;
+    const tools = S.where === 'field' && waysFor(c).length > 1 ? `<button type="button" class="how${S.menu===c.key?' open':''}" data-menu="${c.key}" aria-label="Show ${esc(c.name)} as" title="Show ${esc(c.name)} as">${ic('sliders',13)}</button>` : '';
+    const grip = S.where === 'arrange' && S.arranging ? `<span class="grip">${ic('grip',14)}</span>` : '';
+    const mini = S.where === 'arrange' && S.arranging && waysFor(c).length > 1 ? `<button type="button" class="mini" data-menu="${c.key}">${(waysFor(c).find(w=>w[0]===how)||waysFor(c)[0])[1]}${ic('down',12)}</button>` : '';
+    return `<div class="k" style="position:relative">${grip}<span>${esc(c.name)}${c.req&&S.entry==='new'?'<span class="req">needed</span>':''}</span>${tools}${S.menu===c.key?popover(f,c):''}</div>
+      <div class="v">${mini}${editing ? `<div style="flex:1 1 auto">${editor(c, v)}</div>` : `<div class="val${ro?' ro':''}${c.type==='links'?' block':''}" ${ro||c.type==='link'||c.type==='links'?'':`data-edit="${c.key}"`} tabindex="0">${shown(c, v, how, ro)}</div>`}</div>`;
+  }).join('');
+  const bodies = p.texts.filter(c => howOf(f, c) === 'markdown');
+  const first = bodies[0];
+  const band = S.entry === 'new' || f.identities.length === 0 ? '' :
+    `<div class="band"><div class="bh"><span class="label">What has to add up</span><span class="caption">${f.identities.filter(i=>i.proved).length} of ${f.identities.length} proved</span></div>${verdicts(f, true)}</div>`;
+  const body = bodies.map((c, i) => {
+    const v = valueOf(f, c);
+    const content = S.editing === c.key ? editor(c, v) : `<div class="val block" data-edit="${c.key}" tabindex="0">${shown(c, v, 'markdown')}</div>`;
+    // The first long text is the page itself: no heading of its own.
+    return i === 0 && bodies.length === 1 && c.body
+      ? `<div class="fld" data-col="${c.key}">${content}</div>`
+      : `<div class="fld" data-col="${c.key}">${head(f, c)}${content}${S.menu===c.key?popover(f,c):''}</div>`;
+  }).join('');
+  return `<div class="one">
+    <header style="display:flex;flex-direction:column;gap:8px"><div class="label">${esc(f.title)}</div>${titleField(f)}</header>
+    <div class="props">${rows}</div>
+    ${band}
+    <div style="display:flex;flex-direction:column;gap:22px">${body}</div>
+    <section style="display:flex;flex-direction:column;gap:14px;border-top:1px solid var(--color-hairline-strong);padding-top:16px"><h2 style="margin:0;font-size:16px;font-weight:600">Links here</h2>${namedBy(f, null)}</section>
+  </div>`;
+}
+
+/* ------------------------------------------------------------ direction C: beside the list */
+function dirC(f){
+  const sh = f.sheet;
+  const rows = sh.rows.map(([id, a, b, c], i) => {
+    const r = ROWS[id];
+    const open = S.entry !== 'new' && id === f.cur;
+    const cells = f.key === 'task' ? `<td><bdi>${esc(r.title)}</bdi></td><td>${chip(a)}</td><td class="num">${b}</td><td class="r">${c}</td>`
+      : f.key === 'thought' ? `<td><bdi>${esc(r.title)}</bdi></td><td class="num">${b}</td><td>${chip(a)}</td><td class="r">${c}</td>`
+      : `<td><bdi>${esc(r.title)}</bdi></td><td class="num">${b}</td><td class="r">${c}</td>`;
+    return `<tr class="${open?'open':''}" data-go="${id}"><td class="n">${i+1}</td>${cells}</tr>`;
+  }).join('');
+  const list = `<div class="list"><div class="ltool"><h2>${esc(f.title)}</h2><span class="caption">${sh.rows.length} entries</span><span style="margin-left:auto">${btn('primary','Add','plus','data-new')}</span></div>
+    <table class="rs"><thead><tr><th></th>${sh.cols.map((c,i)=>`<th class="${i===sh.cols.length-1&&f.key!=='note'?'r':i===sh.cols.length-1?'r':''}">${esc(c)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
+  const pane = `<div class="pane">${ebar(f, true)}<div class="scroll"><div class="sheet">${dirA(f, true)}</div></div>${foot(f)}</div>`;
+  return `<div class="split">${list}${pane}</div>`;
+}
+
+/* ------------------------------------------------------------ the window */
+function renderNav(){
+  const f = cur();
+  const kids = [['note','Notes'],['thought','Thought records'],['task','Tasks'],['project','Projects'],['topic','Topics']];
+  document.getElementById('side').innerHTML =
+    `<button class="nitem open">${ic('grid')}Formats</button>` +
+    kids.map(([k,l]) => `<button class="nitem nchild${f.key===k?' on':''}" data-format="${k}">${l}</button>`).join('') +
+    `<div class="nsep"></div><button class="nitem">${ic('link')}Connections</button><button class="nitem">${ic('plug')}MCP</button>` +
+    `<div style="margin-top:auto"></div><button class="nitem">${ic('gear')}Settings</button>`;
+}
+function renderMain(){
+  const f = cur();
+  let html;
+  if (S.dir === 'C') html = dirC(f);
+  else html = `${ebar(f)}<div class="scroll"><div class="sheet">${S.dir === 'A' ? dirA(f) : dirB(f)}</div></div>${foot(f)}`;
+  document.getElementById('main').innerHTML = html;
+  document.getElementById('dirty').classList.toggle('on', S.write === 'draft' && S.changed > 0);
+  document.getElementById('savedat').textContent = S.write === 'leave' && S.changed > 0 ? 'saved 09:41' : S.write === 'draft' && S.changed > 0 ? 'unsaved' : 'saved 09:14';
+}
+function render(){ renderNav(); renderMain(); }
+
+/* ------------------------------------------------------------ the catalog */
+function renderCatalog(){
+  const EX = [
+    ['text', 'Text', {key:'x', name:'Automatic thought', type:'text'}, 'I will not have anything worth sending.', 'A one-line text', {key:'x2', name:'Evidence', type:'text'}, '- The outline is **done**.\n- Two of three went out on time.'],
+    ['integer', 'Integer, real, decimal', {key:'x', name:'Energy', type:'integer', min:1, max:5}, 4],
+    ['percent', 'Percent', {key:'x', name:'Progress', type:'percent', min:0, max:100}, 40],
+    ['money', 'Money', {key:'x', name:'Cost', type:'money'}, '1,240'],
+    ['quantity', 'Quantity', {key:'x', name:'Slept', type:'quantity', unit:'h'}, 6.5],
+    ['date', 'Date', {key:'x', name:'Due', type:'date'}, '2026-10-09'],
+    ['enum', 'Enum', {key:'x', name:'State', type:'enum', values:['planned','doing','done','dropped']}, 'doing'],
+    ['boolean', 'Yes or no', {key:'x', name:'Shared', type:'boolean'}, true],
+    ['link', 'Link', {key:'x', name:'Task', type:'link'}, 't3'],
+    ['links', 'Links', {key:'x', name:'Blocked by', type:'links'}, ['t1','t2']],
+  ];
+  const rows = EX.map(([t, label, c, v, , c2, v2]) => {
+    const ways = waysFor(c).map(([w, l, eg]) => {
+      const val = t === 'text' && w === 'markdown' ? v2 : t === 'text' && w === 'mono' ? 'letter-2026-q4.md' : v;
+      return `<div class="way"><span class="wl"><b>${l}</b>${eg?` · ${eg}`:''}</span><div>${shown(t==='money'?{...c}:c, val, w, true)}</div></div>`;
+    }).join('');
+    return `<tr><td class="ty"><b style="font-weight:500">${label}</b></td><td><div class="ways">${ways}</div></td></tr>`;
+  }).join('');
+  const more = `<tr><td class="ty"><b style="font-weight:500">Month · Instant · Time</b></td><td class="caption">Month: <b>Month</b> (Oct 2026) or <b>Relative</b> (this month). Instant: <b>Date and time</b> or <b>Relative</b>. Time: <b>Clock</b> only (09:30, typed either way, D-344).</td></tr>
+    <tr><td class="ty"><b style="font-weight:500">Worked out</b></td><td class="caption">The ways of the type it works out to, never editable, marked <i>worked out</i> with its expression on hover. Today it shows on the sheet and on neither entry view.</td></tr>`;
+  document.getElementById('catalog').innerHTML = `<thead><tr><th>Type</th><th>Ways to show a value · the first is the default</th></tr></thead><tbody>${rows}${more}</tbody>`;
+}
+
+/* ------------------------------------------------------------ picks and suggestions */
+const PICKS = [
+  ['1', 'Which direction?', '<b>A</b> keeps the page you liked: the title, a header line, figures together with their verdicts, the long texts, and links in a column on the right. <b>B</b> reads like a note: a list of properties under the title, the verdicts in one band, the body as the page, and <i>Links here</i> at the foot. <b>C</b> is A in a pane beside the sheet or board, so the list stays in view, with <i>Open full</i> to widen it. A and B open in place of the list.'],
+  ['2', 'Does a field write when you leave it, or does the view keep a draft until Save?', 'Leaving it is the sheet\'s way and needs no Save bar; a value the format refuses stays in the field with its sentence and is not written. A draft is today\'s entry: nothing is written until Save, and the verdicts are shown as typed. A new entry is a draft until Add either way.'],
+  ['3', 'Is Show as chosen on each field, or in Arrange for the whole view?', 'On the field is a glyph beside the name, on hover. Arrange is today\'s sliders button: every field shows its grip and its way at once. Moving a field stays in Arrange either way.'],
+  ['4', 'Does a Show as choice reach the sheet\'s cells and the board\'s cards too, or this view only?', 'Proposed: this view only. The sheet keeps one figure per cell so a column reads down evenly, and a card keeps its line.'],
+  ['5', 'In B, is the one long text the page itself, with no heading?', 'Drawn so for the note (its Body has no label). A format with several long texts, like the thought record, keeps a label on each.'],
+];
+const SUGG = [
+  ['S1', 'One view for a row', 'Every place a row opens goes to <code>entry/:id</code>. <i>Its page</i>, <i>Edit</i> and the <code>page/:id</code> route go, and the route redirects so old links still land.', 'Two views of one row each had half of it: the entry could edit and showed no links; the page showed links in and out but no figures, and could not edit.', 'In every direction'],
+  ['S2', 'Links here, on every entry', 'What names this row, one hop, grouped by format and column, each a name that opens that row in the same view.', 'The trial asked whether backlinks show. On the entry they do not, and the page that has them is a button away.', 'In every direction'],
+  ['S3', 'Markdown wherever a long text is shown', 'A text column with a line break or more than a line in any row starts as <i>Markdown</i>, not <i>Line</i>. Anything shown as Markdown also reads as Markdown on a board card and a roadmap line, as plain inline text there.', 'Raw <code>###</code>, <code>-</code> and <code>**</code> show on the page today (its body is <code>whitespace-pre-wrap</code> text), and on the entry when nobody arranged the column, where a long note is a one-line field.', 'In every direction'],
+  ['S4', 'Figures together, verdicts beside them', 'The number columns sit as a grid of figures, not one heading each down the page. A failed identity underlines in red the figures it names, and the verdict sits under that grid (A, C) or in one band under the properties (B).', 'A thought record with ten figures was ten stacked headings, and its verdict was at the foot, under every text.', 'A and C; B has the band'],
+  ['S5', 'Worked-out columns on the entry', 'Drawn as figures that cannot be edited, marked <i>worked out</i>.', 'They are on the sheet and on neither view today, so a row\'s own worked-out figure is not on its own page.', 'In every direction'],
+  ['S6', 'Previous and next', '‹ 3 of 5 › in the bar, in the list\'s order and search.', 'Going through a run of entries means going back to the sheet each time. Paychecks pages its months the same way (D-312).', 'A and B; C has the list'],
+  ['S7', 'Say less in the bar', 'The row\'s id (a uuid printed beside <i>An entry</i>) goes. Delete comes onto the entry as an icon, red on hover, with the sheet\'s confirm.', 'The id says nothing to a person (T9). Delete is only on the sheet today.', 'In every direction'],
+];
+function renderDocs(){
+  document.getElementById('picks').innerHTML = `<tr><th>#</th><th>The question</th><th>What each answer means</th></tr>` +
+    PICKS.map(([n,q,a]) => `<tr><td><span class="sn">${n}</span></td><td style="white-space:normal;max-width:300px"><b style="font-weight:500;color:var(--color-ink)">${q}</b></td><td>${a}</td></tr>`).join('');
+  document.getElementById('suggestions').innerHTML = `<tr><th></th><th>What it changes</th><th>Why</th><th>Drawn</th></tr>` +
+    SUGG.map(([n,t,what,why,where]) => `<tr><td><span class="sn">${n}</span></td><td style="white-space:normal"><b style="font-weight:500">${t}.</b> ${what}</td><td>${why}</td><td class="caption" style="white-space:nowrap">${where}</td></tr>`).join('');
+}
+
+/* ------------------------------------------------------------ events */
+document.querySelector('.controls').addEventListener('click', e => {
+  const b = e.target.closest('button[data-v]'); if (!b) return;
+  const ctl = b.parentElement.dataset.ctl, v = b.dataset.v;
+  b.parentElement.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b));
+  S[ctl] = v;
+  if (ctl === 'theme') { if (v === 'system') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme', v); return; }
+  S.editing = null; S.menu = null;
+  if (ctl === 'entry' || ctl === 'write') S.changed = 0;
+  if (ctl === 'where') S.arranging = v === 'arrange';
+  render();
+});
+document.getElementById('win').addEventListener('click', e => {
+  const t = e.target;
+  const way = t.closest('[data-way]');
+  if (way) { const [k, w] = way.dataset.way.split(':'); S.show[cur().key+'.'+k] = w; S.menu = null; render(); return; }
+  const menu = t.closest('[data-menu]');
+  if (menu) { S.menu = S.menu === menu.dataset.menu ? null : menu.dataset.menu; S.editing = null; render(); return; }
+  if (t.closest('[data-arrange]')) { S.arranging = !S.arranging; S.menu = null; render(); return; }
+  const go = t.closest('[data-go]');
+  if (go) { const r = ROWS[go.dataset.go]; if (r && F[r.f] && F[r.f].cur === go.dataset.go) { S.entry = r.f; S.editing = null; S.menu = null; S.changed = 0; syncSeg(); render(); } return; }
+  if (t.closest('[data-format]')) { const k = t.closest('[data-format]').dataset.format; if (F[k]) { S.entry = k; S.editing = null; S.menu = null; S.changed = 0; syncSeg(); render(); } return; }
+  if (t.closest('[data-new]')) { S.entry = 'new'; S.editing = null; S.changed = 0; syncSeg(); render(); return; }
+  if (t.closest('.editing')) return;
+  const ed = t.closest('[data-edit]');
+  if (ed) { if (S.editing && S.editing !== ed.dataset.edit) S.changed++; S.editing = ed.dataset.edit; S.menu = null; render();
+    const box = document.querySelector('#main .editing input, #main .editing textarea'); if (box) box.focus(); return; }
+  if (S.editing || S.menu) { if (S.editing) S.changed++; S.editing = null; S.menu = null; render(); }
+});
+document.getElementById('win').addEventListener('keydown', e => {
+  if (e.key === 'Escape' && (S.editing || S.menu)) { S.editing = null; S.menu = null; render(); }
+  if (e.key === 'Enter' && S.editing && e.target.tagName === 'INPUT') { S.changed++; S.editing = null; render(); }
+  if (e.key === 'Enter' && !S.editing && e.target.dataset && e.target.dataset.edit) { S.editing = e.target.dataset.edit; render(); }
+});
+function syncSeg(){ document.querySelectorAll('[data-ctl="entry"] button').forEach(x => x.classList.toggle('on', x.dataset.v === S.entry)); }
+
+render(); renderCatalog(); renderDocs();
+})();
+</script>
+</body>
+</html>

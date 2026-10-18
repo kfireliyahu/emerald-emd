@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- The frame (M41 U1): the app's own format page, drawn in a conversation by a client
+         that draws MCP Apps. `vite build --mode frame` writes it, script and style inline,
+         to .frame/frame.html; `build:plugin` embeds that in the server. -->
+    <!-- Both schemes, so the browser lays no opaque backdrop under a frame whose scheme
+         differs from its host's page, and `light-dark()` in a host's variables resolves
+         (M41 F1). The theme on :root then picks one. -->
+    <meta name="color-scheme" content="light dark" />
+    <title>Emerald</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/frame/main.tsx"></script>
+  </body>
+</html>

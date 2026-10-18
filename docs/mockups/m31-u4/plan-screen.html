@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plan Screen</title>
+<style>
+/* M31 U4. The Plan screen with its months and the comparison on it. Tokens copied from
+   src/ui/theme/tokens.css (light, and :root[data-theme="dark"]); the buttons are .fc-btn's, the menus
+   ChoiceField's (D-290: never the platform's select), the bar PlanBar's and the table BucketTable's.
+   Fonts are the app's own bundled woff2, read from node_modules, so this opens from the checkout with
+   the network off. Every name and figure is made up. The build ports this file's markup and words. */
+@font-face{font-family:"IBM Plex Sans";font-weight:400;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:500;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-500-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:600;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-600-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-weight:400;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2") format("woff2")}
+
+:root{
+  --color-background:#ffffff;--color-surface:#f7f7f6;--color-elevated:#ffffff;
+  --color-ink:#111111;--color-ink-secondary:#6b6b6b;--color-ink-tertiary:#a0a09c;
+  --color-hairline:#ececea;--color-hairline-strong:#d9d9d6;
+  --color-accent:#07805f;--color-accent-ink:#ffffff;--color-accent-hover:#05664b;--color-accent-soft:#e8f6f1;
+  --color-action:#07805f;--color-action-ink:#ffffff;--color-action-hover:#05664b;--color-action-deep:#055a43;
+  --color-negative:#c4342b;--color-positive:#1f7a4d;--color-flow-in:#1f7a4d;--color-flow-out:#c4342b;
+  --color-flow-saved:#0b4f35;--color-flow-tax:#b45309;
+  --shadow-pop:0 1px 2px rgba(17,17,17,.04),0 8px 24px rgba(17,17,17,.08);
+  --font-sans:"IBM Plex Sans","IBM Plex Sans Hebrew",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --color-background:#0b0b0c;--color-surface:#151517;--color-elevated:#1b1b1e;
+  --color-ink:#f2f2f0;--color-ink-secondary:#a1a1a0;--color-ink-tertiary:#6a6a6c;
+  --color-hairline:#262629;--color-hairline-strong:#34343a;
+  --color-accent:#34d399;--color-accent-ink:#06231a;--color-accent-hover:#5ee0b0;--color-accent-soft:#10312a;
+  --color-action:#34d399;--color-action-ink:#06231a;--color-action-hover:#5ee0b0;--color-action-deep:#1fae7d;
+  --color-negative:#e5675e;--color-positive:#4caf7d;--color-flow-in:#5cc98c;--color-flow-out:#e5675e;
+  --color-flow-saved:#2f9e6a;--color-flow-tax:#f59e0b;
+  --shadow-pop:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.55);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --color-background:#0b0b0c;--color-surface:#151517;--color-elevated:#1b1b1e;
+  --color-ink:#f2f2f0;--color-ink-secondary:#a1a1a0;--color-ink-tertiary:#6a6a6c;
+  --color-hairline:#262629;--color-hairline-strong:#34343a;
+  --color-accent:#34d399;--color-accent-ink:#06231a;--color-accent-hover:#5ee0b0;--color-accent-soft:#10312a;
+  --color-action:#34d399;--color-action-ink:#06231a;--color-action-hover:#5ee0b0;--color-action-deep:#1fae7d;
+  --color-negative:#e5675e;--color-positive:#4caf7d;--color-flow-in:#5cc98c;--color-flow-out:#e5675e;
+  --color-flow-saved:#2f9e6a;--color-flow-tax:#f59e0b;
+  --shadow-pop:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.55);color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{background:var(--color-background)}
+body{margin:0;color:var(--color-ink);font-family:var(--font-sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:disabled{cursor:default;opacity:.45}
+:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
+code{font-family:var(--font-mono);font-size:12px}
+.label{font-size:11px;line-height:1.3;letter-spacing:.08em;font-weight:500;text-transform:uppercase;color:var(--color-ink-secondary)}
+.label.t3{color:var(--color-ink-tertiary)}
+.caption{font-size:12px;line-height:1.4;color:var(--color-ink-secondary)}
+.t3{color:var(--color-ink-tertiary)}
+.num{font-variant-numeric:tabular-nums}
+
+/* ------------------------------------------------------------ the mockup's own page */
+.page{max-width:1180px;margin:0 auto;padding:32px 16px 96px;display:flex;flex-direction:column;gap:44px}
+.intro{display:flex;flex-direction:column;gap:8px;max-width:78ch}
+.intro h1{margin:0;font-size:24px;line-height:1.15;font-weight:600;letter-spacing:-.01em}
+.intro p{margin:0;color:var(--color-ink-secondary)}
+.intro b{color:var(--color-ink);font-weight:500}
+.bar-row{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center}
+.seg{display:inline-flex}
+.seg button{height:30px;padding:0 12px;border:1px solid var(--color-hairline-strong);margin-left:-1px;font-size:13px;color:var(--color-ink-secondary)}
+.seg button:first-child{margin-left:0}
+.seg button.on{background:var(--color-accent-soft);color:var(--color-ink);border-color:var(--color-accent);position:relative;z-index:1}
+.seg.sm button{height:28px;font-size:12px;padding:0 10px}
+.state-head{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:6px}
+.state-head h2{margin:0;font-size:16px;font-weight:600}
+.state-head .caption{flex:1 1 300px}
+.no{font-family:var(--font-mono);font-size:11px;color:var(--color-ink-tertiary)}
+.frame{border:1px solid var(--color-hairline);overflow:hidden}
+.reset{margin-left:auto}
+
+/* ------------------------------------------------------------ the Plan screen */
+.screen{padding:24px 32px 32px;display:flex;flex-direction:column;gap:26px;min-width:0}
+@media (max-width:620px){.screen{padding:16px}}
+.phead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;border-bottom:1px solid var(--color-hairline);padding-bottom:16px}
+.phead h3{margin:6px 0 0;font-size:24px;line-height:1.15;font-weight:500;letter-spacing:-.01em}
+.phead h3 small{font-size:14px;font-weight:400;color:var(--color-ink-secondary);margin-left:8px}
+.pager{display:flex;align-items:center;gap:12px;color:var(--color-ink-secondary);font-size:13px}
+.pager b{color:var(--color-ink);font-weight:500}
+.tools{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px 24px}
+.tools .fld{display:flex;flex-direction:column;gap:4px}
+.tools .right{margin-left:auto;display:flex;gap:8px;align-items:center}
+.choice{height:30px;border:1px solid var(--color-hairline-strong);background:var(--color-elevated);padding:0 8px 0 10px;display:inline-flex;align-items:center;gap:8px;min-width:150px;text-align:left;font-size:13px}
+.choice .v{flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.choice svg{flex:none;color:var(--color-ink-tertiary)}
+.choice.sm{height:28px;min-width:0}
+select.choice{appearance:none;-webkit-appearance:none;padding-right:28px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%23a0a09c' stroke-width='1.5'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;color:var(--color-ink)}
+
+/* the months */
+.months{display:flex;flex-direction:column;gap:8px}
+.months-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px}
+.strip{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));border-top:1px solid var(--color-hairline-strong);border-bottom:1px solid var(--color-hairline)}
+@media (max-width:760px){.strip{grid-template-columns:repeat(6,minmax(0,1fr))}}
+.mo{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:8px 8px 9px;border-left:1px solid var(--color-hairline);min-width:0;cursor:pointer;position:relative}
+.mo:first-child{border-left:0}
+.mo .m{display:flex;align-items:center;gap:6px;font-size:13px;white-space:nowrap}
+.mo .m input{margin:0;accent-color:var(--color-ink);width:14px;height:14px;cursor:pointer}
+.mo .m input:disabled{cursor:default}
+.mo .y{font-size:10px;letter-spacing:.06em;color:var(--color-ink-tertiary);position:absolute;top:-17px;left:8px}
+.mo .who{font-size:11px;line-height:1.3;color:var(--color-ink-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;min-height:14px}
+.mo.on .who{color:var(--color-ink-secondary)}
+.mo.here{box-shadow:inset 0 -2px 0 var(--color-ink)}
+.mo.here .m span{font-weight:500}
+.years{position:relative;height:14px}
+
+.record{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;background:var(--color-surface);padding:10px 14px}
+.record.done{background:var(--color-accent-soft)}
+.record .t{flex:1 1 420px;min-width:0}
+.record .t small{display:block;font-size:12px;color:var(--color-ink-secondary)}
+.cushion{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;color:var(--color-ink-tertiary);font-size:13px;border:1px dashed var(--color-hairline);padding:8px 12px}
+
+.figs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--color-hairline);border-bottom:1px solid var(--color-hairline)}
+@media (max-width:760px){.figs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.fig{padding:12px 16px;border-left:1px solid var(--color-hairline);display:flex;flex-direction:column;gap:2px;min-width:0}
+.fig:first-child{border-left:0;padding-left:0}
+.fig .v{font-size:20px;font-weight:500;font-variant-numeric:tabular-nums}
+
+.sec{display:flex;flex-direction:column;gap:10px}
+.sec-head{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:10px 16px}
+.sec-head h4{margin:0;font-size:16px;font-weight:500}
+.sec-head p{margin:2px 0 0}
+.sec-head .ctl{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.against{display:flex;align-items:center;gap:8px;font-size:13px}
+.against .label{color:var(--color-ink-tertiary)}
+.summary{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 24px;padding:10px 0 2px;border-top:1px solid var(--color-hairline)}
+.summary .f{display:flex;flex-direction:column}
+.summary .f .v{font-size:17px;font-weight:500;font-variant-numeric:tabular-nums}
+.summary p{margin:0;flex:1 1 280px;align-self:center}
+
+/* bills table */
+.tbl-wrap{overflow-x:auto}
+table.grid{width:100%;border-collapse:collapse;min-width:720px;font-size:13px}
+table.grid th{font-size:11px;letter-spacing:.08em;font-weight:500;text-transform:uppercase;color:var(--color-ink-tertiary);text-align:left;padding:6px 12px 6px 0;border-bottom:1px solid var(--color-hairline)}
+table.grid td{padding:8px 12px 8px 0;border-bottom:1px solid var(--color-hairline);vertical-align:middle}
+table.grid .r{text-align:right}
+.roles{display:inline-flex}
+.roles span{height:26px;display:inline-flex;align-items:center;padding:0 8px;font-size:11px;border:1px solid var(--color-hairline-strong);margin-left:-1px;color:var(--color-ink-secondary);white-space:nowrap}
+.roles span:first-child{margin-left:0}
+.roles span.on{border-color:var(--color-accent);background:var(--color-accent-soft);color:var(--color-ink);position:relative;z-index:1}
+
+/* the bar */
+.groups{position:relative;height:30px}
+.grp-mark{position:absolute;bottom:4px;display:flex;flex-direction:column;gap:2px;font-size:12px;white-space:nowrap;overflow:hidden}
+.grp-mark .lb{display:flex;gap:8px;align-items:baseline;padding:0 2px;overflow:hidden;text-overflow:ellipsis}
+.grp-mark .lb b{font-weight:500;letter-spacing:.06em;text-transform:uppercase;font-size:11px}
+.grp-mark .br{height:5px;border:1px solid var(--color-ink-tertiary);border-bottom:0}
+.track{display:flex;height:64px;position:relative}
+.piece{position:relative;min-width:0;overflow:hidden;border-top:3px solid;display:flex;flex-direction:column;justify-content:center;padding:0 9px;font-size:12px}
+.piece .fill{position:absolute;left:0;top:0;bottom:0;pointer-events:none}
+.piece .txt{position:relative;display:flex;flex-direction:column;min-width:0}
+.piece .txt b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.piece .txt span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--color-ink-secondary);font-variant-numeric:tabular-nums}
+.piece .over{position:absolute;right:0;top:0;bottom:0;width:3px;background:var(--color-ink)}
+.piece + .piece{box-shadow:inset 1px 0 0 var(--color-background)}
+.divider{position:absolute;top:-6px;height:76px;width:14px;transform:translateX(-50%);cursor:ew-resize}
+.divider::after{content:"";position:absolute;left:6px;top:0;bottom:0;width:2px;background:var(--color-background);box-shadow:0 0 0 1px var(--color-hairline-strong)}
+.axis{display:flex;justify-content:space-between;font-size:11px;color:var(--color-ink-tertiary);padding-top:4px;font-variant-numeric:tabular-nums}
+.legend{display:flex;align-items:center;gap:8px;margin:0}
+.legend i{display:inline-block;width:28px;height:12px;border-top:2px solid var(--color-ink-secondary);background:linear-gradient(90deg,color-mix(in srgb,var(--color-ink-secondary) 45%,var(--color-background)) 0 60%,color-mix(in srgb,var(--color-ink-secondary) 12%,var(--color-background)) 60%)}
+.balance{display:flex;flex-wrap:wrap;gap:4px 16px;border:1px solid var(--color-hairline);background:var(--color-surface);padding:9px 14px}
+.balance b{font-weight:500;color:var(--color-positive)}
+
+/* bucket table */
+.btab{min-width:900px}
+.brow,.bhead,.bgroup{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1.2fr) minmax(0,1.35fr) 110px 170px 30px;gap:0 14px;align-items:center}
+.bhead{padding:6px 0}
+.bhead span{font-size:11px;letter-spacing:.08em;font-weight:500;text-transform:uppercase;color:var(--color-ink-tertiary)}
+.bhead .r,.brow .r,.bgroup .r{text-align:right}
+.bgroup{min-height:38px;align-items:end;padding-bottom:6px;border-bottom:1px solid var(--color-hairline-strong)}
+.bgroup .nm{display:flex;gap:10px;align-items:baseline;grid-column:1 / 4}
+.bgroup .nm b{font-size:11px;letter-spacing:.08em;font-weight:500;text-transform:uppercase}
+.bgroup .r{font-size:13px;color:var(--color-ink-secondary);font-variant-numeric:tabular-nums}
+.brow{padding:10px 0;border-bottom:1px solid var(--color-hairline)}
+.brow .nm{display:flex;align-items:center;gap:10px;min-width:0}
+.brow .sw{width:8px;height:30px;flex:none}
+.brow .nm b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pt{display:inline-flex;align-items:center;gap:8px;height:30px;border:1px solid var(--color-hairline-strong);padding:0 10px;max-width:100%;background:var(--color-background)}
+.pt .k{font-size:11px;letter-spacing:.08em;font-weight:500;text-transform:uppercase;color:var(--color-ink-secondary)}
+.pt b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.modes{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.modes .seg button{height:26px;font-size:11px;padding:0 8px}
+.pct{height:26px;width:62px;border:1px solid var(--color-hairline-strong);display:inline-flex;align-items:center;justify-content:flex-end;padding:0 8px;font-size:12px;font-variant-numeric:tabular-nums}
+.got{display:flex;flex-direction:column;align-items:flex-end;font-variant-numeric:tabular-nums}
+.got small{font-size:12px;color:var(--color-ink-secondary)}
+.dots{color:var(--color-ink-secondary);text-align:center}
+.addrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding-top:8px}
+.field{height:30px;border:1px solid var(--color-hairline-strong);background:var(--color-elevated);padding:0 10px;display:inline-flex;align-items:center;color:var(--color-ink-tertiary);width:170px}
+.menu{border:1px solid var(--color-hairline);background:var(--color-elevated);box-shadow:var(--shadow-pop);width:250px;padding:4px 0;font-size:13px}
+.menu .h{padding:6px 12px;border-bottom:1px solid var(--color-hairline);font-weight:500}
+.menu .i{display:flex;justify-content:space-between;gap:10px;padding:6px 12px}
+.menu .i.sub{padding-left:24px}
+.menu .i.on::before{content:"✓";margin-left:-14px;width:14px}
+.menu .sep{border-top:1px solid var(--color-hairline);margin:4px 0}
+
+/* .fc-btn, small */
+.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:30px;padding:0 12px;font-size:13px;font-weight:500;white-space:nowrap}
+.btn.primary{background:var(--color-action);color:var(--color-action-ink)}
+.btn.primary:hover{background:var(--color-action-hover)}
+.btn.secondary{background:var(--color-surface);box-shadow:inset 0 0 0 1px var(--color-hairline-strong)}
+.btn.secondary:hover{box-shadow:inset 0 0 0 1px var(--color-ink-tertiary)}
+.btn.ghost{padding:0 4px;color:var(--color-accent)}
+.btn.ghost:hover{color:var(--color-accent-hover);text-decoration:underline;text-underline-offset:5px}
+.tag{display:inline-flex;align-items:center;border:1px dashed var(--color-hairline-strong);padding:1px 6px;font-size:10px;letter-spacing:.06em;font-weight:500;text-transform:uppercase;color:var(--color-ink-secondary);white-space:nowrap}
+.gone{text-decoration:line-through;color:var(--color-ink-tertiary)}
+
+/* ------------------------------------------------------------ before, beside after */
+.pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.pair{grid-template-columns:minmax(0,1fr)}}
+.pair > div{display:flex;flex-direction:column;gap:6px;min-width:0}
+.mini{border:1px solid var(--color-hairline);padding:14px 16px;display:flex;flex-direction:column;gap:10px;font-size:13px}
+.mini .tools{gap:8px}
+
+/* ------------------------------------------------------------ notes and tables */
+section > h2{margin:0 0 8px;font-size:16px;font-weight:600}
+.notes{max-width:84ch;display:flex;flex-direction:column;gap:6px;margin:0;padding-left:18px;color:var(--color-ink-secondary)}
+.notes b{color:var(--color-ink);font-weight:500}
+.table-wrap{overflow-x:auto}
+.words{width:100%;border-collapse:collapse;font-size:12px;min-width:680px}
+.words th{text-align:left;font-weight:500;color:var(--color-ink-secondary);padding:6px 12px 6px 0;border-bottom:1px solid var(--color-hairline-strong)}
+.words td{padding:7px 12px 7px 0;border-bottom:1px solid var(--color-hairline);vertical-align:top}
+.words td:first-child{color:var(--color-ink-secondary);width:16%}
+.words td:nth-child(2){color:var(--color-ink-tertiary);width:40%}
+.steps{width:100%;border-collapse:collapse;font-size:12px;min-width:640px}
+.steps th{text-align:left;font-weight:500;color:var(--color-ink-secondary);padding:6px 12px 6px 0;border-bottom:1px solid var(--color-hairline-strong);width:50%}
+.steps td{padding:7px 12px 7px 0;border-bottom:1px solid var(--color-hairline);vertical-align:top}
+.steps td:first-child{color:var(--color-ink-tertiary)}
+.steps ol{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+.steps .dead{color:var(--color-negative)}
+.steps .count{display:block;margin-top:6px;font-weight:500;color:var(--color-ink)}
+.steps tr.q td{padding-top:14px;font-weight:500;color:var(--color-ink)}
+</style>
+</head>
+<body>
+<main class="page">
+
+<header class="intro">
+  <span class="label">M31 U4 · mockup</span>
+  <h1>The Plan screen shows its months and how they went</h1>
+  <p>Three changes. <b>Months on this plan</b> is a row of checkboxes, one for each month, so a month gets a plan in one click and you can see which plan each month has. <b>Use for October…</b> goes: the checkbox does its job, and a line about deposits and payments only appears when there is something to record. <b>The comparison is always on the screen</b>, and it is the bar itself: each bucket fills from the left in its own colour up to what it got in the month you pick. The plan from the 50/30/20 start still reads as 50 / 30 / 20, with its buckets grouped under Needs, Wants and Saving. Every name and figure here is made up.</p>
+  <div class="bar-row">
+    <span class="caption">Theme</span>
+    <div class="seg" data-theme-seg>
+      <button data-t="system" class="on">System</button><button data-t="light">Light</button><button data-t="dark">Dark</button>
+    </div>
+  </div>
+</header>
+
+<!-- =============================================================== a -->
+<section>
+  <div class="state-head">
+    <span class="no">a</span><h2>A plan with history: Everyday, the default, compared with September</h2>
+    <span class="caption">Choose another month under <i>Against</i> and the fills and the <i>Got in</i> column change. Ticking a month in the row moves it back onto Everyday. The bucket menu (⋯) is shown open on Hobbies, below the table.</span>
+    <button class="btn ghost reset" type="button" data-reset="a">Start again</button>
+  </div>
+  <div class="frame"><div class="screen" id="screen-a"></div></div>
+</section>
+
+<!-- =============================================================== b -->
+<section>
+  <div class="state-head">
+    <span class="no">b</span><h2>A new plan no month uses yet: Moving year</h2>
+    <span class="caption">Copied from Everyday, with a bucket for a saving goal. No box is ticked. Tick October, the month on screen, and the line about the deposit appears; record it and it says what it wrote. Untick a month and it goes back to Everyday.</span>
+    <button class="btn ghost reset" type="button" data-reset="b">Start again</button>
+  </div>
+  <div class="frame"><div class="screen" id="screen-b"></div></div>
+</section>
+
+<!-- =============================================================== c -->
+<section>
+  <div class="state-head">
+    <span class="no">c</span><h2>A month no plan was given: January 2027, seen from Holiday season</h2>
+    <span class="caption">January was never ticked for a plan, so it is on the default, and the row says so. Here <i>Against</i> is set to October, which has no statement yet, so the buckets have no fill and the sentence says why.</span>
+    <button class="btn ghost reset" type="button" data-reset="c">Start again</button>
+  </div>
+  <div class="frame"><div class="screen" id="screen-c"></div></div>
+</section>
+
+<!-- =============================================================== d: before beside after -->
+<section>
+  <div class="state-head">
+    <span class="no">d</span><h2>The top of the screen, before and after</h2>
+    <span class="caption">What goes from the toolbar, and the two panels it opened.</span>
+  </div>
+  <div class="pair">
+    <div>
+      <span class="label t3">Today</span>
+      <div class="mini">
+        <div class="tools">
+          <span class="choice sm"><span class="v">Everyday · default</span></span>
+          <span class="choice sm"><span class="v">Average of recent payslips</span></span>
+          <span class="btn primary">Use for October 2026…</span>
+          <span class="btn secondary">Copy this plan</span>
+          <span class="btn ghost">Compare with what happened in Oct</span>
+          <span class="dots">⋯</span>
+        </div>
+        <div class="record" style="background:var(--color-elevated);box-shadow:var(--shadow-pop);border:1px solid var(--color-hairline)">
+          <div class="t">Apply Everyday to October 2026 <small>Nothing below has happened yet. Each one is a suggestion until you accept it.</small>
+            <small style="margin-top:6px;color:var(--color-ink-secondary)">This plan has nothing to apply. A bucket only does something outside the splitter when it points at a category, a saving goal or a debt…</small></div>
+          <span class="btn primary" style="opacity:.45">Nothing to record</span>
+        </div>
+        <p class="caption" style="margin:0">With buckets that only point at categories, which is every plan from the 50/30/20 start, the only button that gives the month this plan is disabled. The month cannot be given the plan from this screen at all.</p>
+      </div>
+    </div>
+    <div>
+      <span class="label t3">After</span>
+      <div class="mini">
+        <div class="tools">
+          <span class="choice sm"><span class="v">Everyday · default</span></span>
+          <span class="choice sm"><span class="v">Average of recent payslips</span></span>
+          <span class="btn secondary">Copy this plan</span>
+          <span class="dots">⋯</span>
+        </div>
+        <div id="mini-strip"></div>
+        <p class="caption" style="margin:0">The checkbox gives a month its plan. A deposit or a payment gets a line of its own, only when the plan has one (section b). The comparison is in the split, further down, and is always there.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =============================================================== click path -->
+<section>
+  <h2>The click path, before and after</h2>
+  <p class="caption" style="margin:0 0 10px;max-width:84ch">Plan is open on Everyday, and the month on screen is October 2026. Last month is September.</p>
+  <div class="table-wrap">
+    <table class="steps">
+      <thead><tr><th>Today</th><th>After</th></tr></thead>
+      <tbody>
+        <tr class="q"><td colspan="2">Compare this plan with last month</td></tr>
+        <tr><td>
+          <ol>
+            <li>Compare with what happened in Oct: a panel opens above the figures, about October, which has barely started</li>
+            <li>Open the month menu in the panel</li>
+            <li>September</li>
+            <li>Read the panel, then scroll down to the bar, where the dashed ticks show the average of the last three months. <span class="dead">That is not September, so the panel and the bar show different things.</span></li>
+          </ol>
+          <span class="count">3 clicks and a scroll; two different answers on one screen</span>
+        </td><td>
+          <ol>
+            <li>Nothing to click. <i>Against</i> starts on the last month with a statement, September; the bar is filled with September and the table has a <i>Got in September</i> column.</li>
+            <li>For August instead: open <i>Against</i>, choose August</li>
+          </ol>
+          <span class="count">0 clicks (2 for any other month); one answer</span>
+        </td></tr>
+        <tr class="q"><td colspan="2">Give November this plan (Holiday season, a plan whose buckets point only at categories)</td></tr>
+        <tr><td>
+          <ol>
+            <li>Choose Holiday season in the Plan menu (2 clicks)</li>
+            <li>Page the month to November</li>
+            <li>Use for November 2026…</li>
+            <li><span class="dead">The panel says there is nothing to apply, and its only button, Nothing to record, is disabled. The month cannot be given the plan.</span></li>
+            <li>With a goal or a debt bucket, Apply instead; <span class="dead">and November and December cannot both have it: a plan holds one month, and editing the plan afterwards clears it without saying so.</span></li>
+          </ol>
+          <span class="count">4 clicks to a dead end; November and December together cannot be done at all</span>
+        </td><td>
+          <ol>
+            <li>Choose Holiday season in the Plan menu (2 clicks)</li>
+            <li>Tick November in <i>Months on this plan</i></li>
+          </ol>
+          <span class="count">3 clicks; 4 for November and December; it stays when the plan is edited</span>
+        </td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- =============================================================== words -->
+<section>
+  <h2>Every sentence, before and after</h2>
+  <div class="table-wrap">
+    <table class="words">
+      <thead><tr><th>Where</th><th>Today</th><th>After</th></tr></thead>
+      <tbody>
+        <tr><td>Toolbar</td><td>Use for {October 2026}…</td><td>(gone; the month row and the record line do its two jobs)</td></tr>
+        <tr><td>Toolbar</td><td>Compare with what happened in {Oct} · Hide the comparison</td><td>(gone; the comparison is part of The split)</td></tr>
+        <tr><td>Months <span class="tag">new</span></td><td>(none)</td><td>Months on this plan · on the default: A month you have not given another plan is on Everyday, the default. · on another: Tick the months this plan is for. A month you leave is on Everyday, the default.</td></tr>
+        <tr><td>Months, none yet <span class="tag">new</span></td><td>(none)</td><td>No month is on Moving year yet. Tick the months it is for.</td></tr>
+        <tr><td>Months, a box <span class="tag">new</span></td><td>(none)</td><td>{Nov} · under it, the plan the month is on when it is not this one: {Holiday season} / {Everyday · default}</td></tr>
+        <tr><td>Months, the default's box <span class="tag">new</span></td><td>(none)</td><td>(ticked, and cannot be unticked here) title: To take {November} off the default, tick it on another plan.</td></tr>
+        <tr><td>The month on screen, on no plan of its own <span class="tag">new</span></td><td>(none)</td><td>{January 2027} has no plan of its own, so Everyday, the default, is its budget.</td></tr>
+        <tr><td>Apply panel, head</td><td>Apply {plan} to {month} · Nothing below has happened yet. Each one is a suggestion until you accept it.</td><td>(the panel goes) The record line: {October} is on {Moving year}, which puts {₪1,100.00} into {Moving fund} this month. A deposit is a record: it moves the goal's balance.</td></tr>
+        <tr><td>Apply panel, buttons</td><td>Record it · Nothing to do · Apply {2 targets and 1 deposit} · Nothing to record · Everything already matches</td><td>Record it · with two or more: Record both / Record all {n}. No line, and no button, when there is nothing to record.</td></tr>
+        <tr><td>Apply panel, nothing</td><td>This plan has nothing to apply. A bucket only does something outside the splitter when it points at a category, a saving goal or a debt…</td><td>(gone: a plan with nothing to record shows no line)</td></tr>
+        <tr><td>Record line, done <span class="tag">new</span></td><td>(none)</td><td>Recorded for {October}: {₪1,100.00} into {Moving fund}. · Undo</td></tr>
+        <tr><td>Record line, plan changed since</td><td>(the stamp was cleared without a word)</td><td>{₪1,100.00} was recorded into {Moving fund} for {October}; the plan now says {₪1,300.00}. · Record {₪1,300.00} instead</td></tr>
+        <tr><td>A goal real money feeds</td><td>fed by {category}: its deposits come from the bank · Nothing to do</td><td>(no line for it; the bucket's row says fed by {category} as today)</td></tr>
+        <tr><td>Figures</td><td>Fixed, out of net · {n} expenses</td><td>Bills, out of net · {n} bills</td></tr>
+        <tr><td>Figures</td><td>To split · {₪400.00} of it is fixed expenses</td><td>To split · {₪400.00} of it is bills</td></tr>
+        <tr><td>Bills, head</td><td>Fixed expenses · Add fixed expense</td><td>Bills · Add a bill</td></tr>
+        <tr><td>Bills, the month column</td><td>{Sep}, always the last whole month</td><td>{Sep}, the month under <i>Against</i></td></tr>
+        <tr><td>Split, sentence</td><td>{₪14,000.00} net pay, less {₪2,600.00} of fixed expenses, leaves {₪11,400.00} to give a job. Drag a divider to resize.</td><td>{₪14,000.00} net pay, less {₪2,600.00} of bills, leaves {₪11,400.00} to give a job. Drag a divider to resize.</td></tr>
+        <tr><td>Split, against <span class="tag">new</span></td><td>(in the panel) How {plan} went in [{month}] · Planned · Actually · Over the plan / Under the plan · Over {n} buckets the plan can be checked against.</td><td>Against [{September 2026}] · Planned · Got · Under the plan / Over the plan · In {September} {₪10,502.00} of the {₪11,400.00} planned went out. {n} buckets are not measured: nothing records what a fund or an account got.</td></tr>
+        <tr><td>Split, no statement</td><td>No statement has been imported for {2026-10}, so spending in that month is unknown rather than zero. Buckets that read the ledger — categories, and your fixed expenses — are left out of the comparison. Deposits and debt payments are recorded by hand and still count.</td><td>No statement has been read for {October 2026} yet, so what the buckets got is unknown, not nothing, and they have no fill. Deposits and debt payments are entered by hand and still count.</td></tr>
+        <tr><td>Bar, the bills piece</td><td>Fixed expenses · title: Fixed expenses in the split · {₪400.00}</td><td>Bills · title: Bills in the split · {₪400.00}, charged {₪395.00} in {September}</td></tr>
+        <tr><td>Bar, a bucket</td><td>{Living} · {₪2,640.00} · title: {Living} got {₪2,812.00} a month lately (the dashed tick)</td><td>{Living} · {₪2,640.00} · got {₪2,812.00}</td></tr>
+        <tr><td>Bar, legend</td><td>The dashed tick is what the bucket actually got, on average, over the last three months.</td><td>The fill is what each one got in {September}. A bar at a bucket's right end means it went over.</td></tr>
+        <tr><td>Bar, groups <span class="tag">new</span></td><td>(none)</td><td>Needs {50%} · {₪5,500.00} · Wants {30%} · {₪3,300.00} · Saving {20%} · {₪2,200.00}</td></tr>
+        <tr><td>Table, columns</td><td>Bucket · Points at · How much · This month</td><td>Bucket · Points at · How much · Planned · Got in {September}</td></tr>
+        <tr><td>Table, a row</td><td>{₪2,640.00} · lately {₪2,812.00} a month</td><td>{₪2,640.00} · {₪2,812.00} · {₪172.00} over / {₪215.00} under / on plan / not measured / no deposit recorded</td></tr>
+        <tr><td>Table, headings</td><td>One per top-level category: LIVING {₪2,640.00} · TRANSPORT … (after M31 U3, one heading per bucket)</td><td>NEEDS · {50%} of the split · {₪5,500.00} · {₪5,067.00} · then WANTS, SAVING, and OTHER for a bucket that is none of them. A plan made by hand, with no shares, has no headings.</td></tr>
+        <tr><td>Bucket menu <span class="tag">new</span></td><td>(none)</td><td>Counts as › Needs · Wants · Saving · None of them</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>For the author to judge</h2>
+  <ul class="notes">
+    <li><b>1. Checkboxes in a row of twelve months, not a menu for each month.</b> One click per month, the state can be seen at a glance, and under each box is the name of the plan the month is on, so the row also answers which month has which plan. A menu per month would show every plan at once but costs two clicks and hides the answer behind a closed menu. The row runs six months back and five ahead of the month on screen, and the month pager in the header moves it.</li>
+    <li><b>2. The default still covers every month you have not given another plan.</b> So a month is never without a budget, and on the default plan its boxes are ticked and cannot be unticked (you take a month off the default by ticking it on another plan). The other way: a month has a plan only when you tick it, and an unticked month shows no budget on Home. That adds a step every new month, so it is not drawn.</li>
+    <li><b>3. A month keeps its plan when the plan is edited.</b> Today any edit to a plan silently clears the month it was given, and a plan can hold only one month. Both go: a month's plan is a plain choice, kept until you change it. That needs a small table of month to plan, which replaces the one month a plan holds now (a schema change).</li>
+    <li><b>4. The fill is the month under Against, not the average of the last three months.</b> The dashed ticks go. Against starts on the last month with a statement read, so the screen opens already compared. Over the plan is drawn as a bar at the bucket's right end and said in words, never in red or green: spending over is bad news and saving over is good news, and the screen cannot tell which is which (that is why the comparison panel had no colour either). The bills piece fills the same way, in its grey top line.</li>
+    <li><b>5. 50 / 30 / 20 comes back as headings, and that means remembering it.</b> Since M31 U3 the starter makes one bucket per top-level category, so the three buckets are gone. Here the buckets sit under Needs, Wants and Saving, each with its share and its total, on the table and as a bracket above the bar. For that, each bucket remembers which share it was made for (one new column). The starter and <i>Which are these?</i> fill it in; a bucket added later is under Other until you pick <i>Counts as</i> in its menu. A plan made by hand has no shares and no headings. The other way: no headings, and the shares are only the start. Then nothing needs remembering, but the plan no longer reads as 50 / 30 / 20 after the first day.</li>
+    <li><b>6. One order for the bar and the table.</b> Needs, then Wants, then Saving, then Other; inside each, the biggest first. The starter puts them in that order once, when it makes them. After that it is the plan's order and it does not move as you drag (re-sorting under your hand would move the divider you are holding). The table follows the bar instead of re-sorting by the category tree, which is what put Savings before Hobbies.</li>
+    <li><b>7. Fixed expenses are called bills on Plan too.</b> M31 U1 named them bills on Home and in Plan's suggestions, but the section, the bar and the figures still say fixed expenses. This changes those three. M31 U8 (one name for one thing) can sweep the rest.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Notes for the build</h2>
+  <ul class="notes">
+    <li><b>Months:</b> a table of month to plan (<code>plan_month</code>: period, plan id), filled from today's <code>applied_to_period</code> by the migration, then that column is no longer read. <code>planInUse</code> reads the table, else the default. <code>editInvalidatesApply</code> goes. Deleting a plan puts its months back on the default. The tool half (D-227) is <code>plan_month</code> taking a list of months to give the plan.</li>
+    <li><b>The record line</b> is <code>applySuggestions</code> for the month on screen, shown only when the month is on this plan and <code>applied.changes</code> is not empty. Upserting on plan, month and bucket stays, so recording again moves the figure.</li>
+    <li><b>The fill</b> comes from <code>planAgainstActual</code> (what the comparison panel already reads), passed to <code>PlanBar</code> instead of <code>ticks</code>; the ring fills along its arc by the same rule. <code>VersusPanel</code> and <code>ApplyPanel</code> leave Plan. <i>Draw another plan beside this one</i> stays as it is.</li>
+    <li><b>Shares:</b> a nullable <code>share</code> on the bucket (needs, wants, saving), written by the starter; <code>sectionBuckets</code> groups by it when any bucket in the plan has one, and otherwise draws no headings.</li>
+  </ul>
+</section>
+
+</main>
+
+<script>
+(function(){
+  var seg=document.querySelector('[data-theme-seg]');
+  seg.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
+    seg.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b)});
+    var t=b.dataset.t;if(t==='system')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',t);});
+
+  var chev='<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4.5l3 3 3-3"/></svg>';
+  function m(n){var s=Math.abs(n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');return (n<0?'−':'')+'₪'+s;}
+  function esc(s){return String(s);}
+
+  var MONTHS=['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
+  var LONG={Apr:'April',May:'May',Jun:'June',Jul:'July',Aug:'August',Sep:'September',Oct:'October',Nov:'November',Dec:'December',Jan:'January',Feb:'February',Mar:'March'};
+  function yearOf(i){return i>=9?2027:2026;}
+
+  var COL={Living:'#2f74b5',Transport:'#3a9aa0',Family:'#a8506e',Health:'#3f8f5a',Lifestyle:'#c27a1a',Hobbies:'#7a5bb5',Savings:'#5b6573','Moving fund':'#8a6d3b'};
+
+  /* What each bucket got, by month. Savings is the category of that name (deposits filed to it). */
+  var GOT={
+    Sep:{Living:2812,Transport:1105,Family:940,Health:210,Lifestyle:2460,Hobbies:380,Savings:2200,'Moving fund':0,bills:395},
+    Aug:{Living:2530,Transport:1410,Family:700,Health:905,Lifestyle:1980,Hobbies:1240,Savings:1500,'Moving fund':0,bills:400},
+    Jul:{Living:2701,Transport:1290,Family:880,Health:120,Lifestyle:3105,Hobbies:610,Savings:2200,'Moving fund':0,bills:400},
+    Oct:null
+  };
+  var BILLS=[
+    {n:'Rent',often:'Monthly',each:2600,role:'Out of net',got:{Sep:2600,Aug:2600,Jul:2600}},
+    {n:'Home insurance',often:'Monthly',each:190,role:'Part of the split',got:{Sep:185,Aug:190,Jul:190}},
+    {n:'Internet',often:'Monthly',each:115,role:'Part of the split',got:{Sep:115,Aug:115,Jul:115}},
+    {n:'Phone',often:'Monthly',each:95,role:'Part of the split',got:{Sep:95,Aug:95,Jul:95}}
+  ];
+
+  function everyday(){return [
+    {g:'Needs',n:'Living',k:'Category',t:'Living',a:2640},
+    {g:'Needs',n:'Transport',k:'Category',t:'Transport',a:1320},
+    {g:'Needs',n:'Family',k:'Category',t:'Family',a:880},
+    {g:'Needs',n:'Health',k:'Category',t:'Health',a:660},
+    {g:'Wants',n:'Lifestyle',k:'Category',t:'Lifestyle',a:2200},
+    {g:'Wants',n:'Hobbies',k:'Category',t:'Hobbies',a:1100},
+    {g:'Saving',n:'Savings',k:'Category',t:'Savings',a:2200}
+  ];}
+  function moving(){return [
+    {g:'Needs',n:'Living',k:'Category',t:'Living',a:2640},
+    {g:'Needs',n:'Transport',k:'Category',t:'Transport',a:1320},
+    {g:'Needs',n:'Family',k:'Category',t:'Family',a:880},
+    {g:'Needs',n:'Health',k:'Category',t:'Health',a:660},
+    {g:'Wants',n:'Lifestyle',k:'Category',t:'Lifestyle',a:1100},
+    {g:'Wants',n:'Hobbies',k:'Category',t:'Hobbies',a:1100},
+    {g:'Saving',n:'Savings',k:'Category',t:'Savings',a:2200},
+    {g:'Saving',n:'Moving fund',k:'Saving goal',t:'Moving fund',a:1100,goal:true}
+  ];}
+
+  var SPLIT=11400, BILLS_IN=400;
+
+  function initial(which){
+    if(which==='a') return {plan:'Everyday',isDefault:true,here:6,against:'Sep',owner:[null,null,null,null,null,null,null,'Holiday season','Holiday season',null,null,null],buckets:everyday(),menu:true,recorded:false};
+    if(which==='b') return {plan:'Moving year',isDefault:false,here:6,against:'Sep',owner:[null,null,null,null,null,null,null,'Holiday season','Holiday season',null,null,null],buckets:moving(),recorded:false};
+    return {plan:'Holiday season',isDefault:false,here:9,against:'Oct',owner:[null,null,null,null,null,null,null,'Holiday season','Holiday season',null,null,null],buckets:everyday().map(function(b){
+      if(b.n==='Lifestyle')return Object.assign({},b,{a:2900});if(b.n==='Savings')return Object.assign({},b,{a:1500});return b;}),recorded:false};
+  }
+  var S={a:initial('a'),b:initial('b'),c:initial('c')};
+
+  /* ------------------------------------------------ the month row */
+  function strip(st,key){
+    var h='<div class="years">';
+    h+='</div><div class="strip">';
+    MONTHS.forEach(function(mo,i){
+      var on=st.isDefault ? st.owner[i]===null : st.owner[i]===st.plan;
+      var who=on?(st.isDefault?'':'') : (st.owner[i]===null?'Everyday · default':st.owner[i]);
+      var dis=st.isDefault&&on;
+      var title=dis?' title="To take '+LONG[mo]+' off the default, tick it on another plan."':'';
+      h+='<label class="mo'+(on?' on':'')+(i===st.here?' here':'')+'"'+title+'>';
+      if(i===0||i===9)h+='<span class="y">'+yearOf(i)+'</span>';
+      h+='<span class="m"><input type="checkbox" data-k="'+key+'" data-i="'+i+'"'+(on?' checked':'')+(dis?' disabled':'')+'><span>'+mo+'</span></span>';
+      h+='<span class="who">'+(on?(st.isDefault&&!dis?'':'') :who)+'</span></label>';
+    });
+    h+='</div>';
+    return h;
+  }
+  function monthsBlock(st,key){
+    var any=st.owner.some(function(o){return o===st.plan;});
+    var cap;
+    if(st.isDefault) cap='A month you have not given another plan is on Everyday, the default.';
+    else if(!any) cap='No month is on '+st.plan+' yet. Tick the months it is for.';
+    else cap='Tick the months this plan is for. A month you leave is on Everyday, the default.';
+    var h='<div class="months"><div class="months-head"><span class="label">Months on this plan</span><span class="caption">'+cap+'</span></div>';
+    h+=strip(st,key);
+    var hereOwner=st.owner[st.here];
+    if(!st.isDefault && hereOwner===null){
+      h+='<p class="caption" style="margin:0">'+LONG[MONTHS[st.here]]+' '+yearOf(st.here)+' has no plan of its own, so Everyday, the default, is its budget.</p>';
+    }
+    h+='</div>';
+    return h;
+  }
+
+  /* ------------------------------------------------ the record line */
+  function recordLine(st,key){
+    var goals=st.buckets.filter(function(b){return b.goal;});
+    if(!goals.length) return '';
+    if(st.owner[st.here]!==st.plan) return '';
+    var mo=LONG[MONTHS[st.here]], g=goals[0];
+    if(st.recorded) return '<div class="record done"><div class="t">Recorded for '+mo+': '+m(g.a)+' into '+g.t+'.</div><button class="btn ghost" data-undo="'+key+'">Undo</button></div>';
+    return '<div class="record"><div class="t">'+mo+' is on '+st.plan+', which puts <b class="num" style="font-weight:500">'+m(g.a)+'</b> into '+g.t+' this month.<small>A deposit is a record: it moves the goal’s balance.</small></div><button class="btn secondary" data-record="'+key+'">Record it</button></div>';
+  }
+
+  /* ------------------------------------------------ the figures and the bills */
+  function figures(){
+    return '<div class="cushion"><span class="label t3">Cushion</span><span>₪18,000.00 stays in the bank; ₪6,400.00 of it is left once the goals saved there take their parts. (Unchanged, M31 U5’s.)</span></div>'+
+      '<div class="figs">'+
+      '<div class="fig"><span class="label">Net pay</span><span class="v">'+m(14000)+'</span><span class="caption">Average of your last 3 payslips</span></div>'+
+      '<div class="fig"><span class="label">Bills, out of net</span><span class="v">'+m(2600)+'</span><span class="caption">1 bill</span></div>'+
+      '<div class="fig"><span class="label">To split</span><span class="v">'+m(SPLIT)+'</span><span class="caption">'+m(BILLS_IN)+' of it is bills</span></div>'+
+      '<div class="fig"><span class="label">Not given a job</span><span class="v">'+m(0)+'</span><span class="caption">Nothing left over</span></div></div>';
+  }
+  function bills(st){
+    var mo=st.against;
+    var h='<div class="sec"><div class="sec-head"><div><h4>Bills</h4><p class="caption">What leaves every month. Pick what each one does to '+st.plan+'.</p></div><button class="btn primary">+ Add a bill</button></div>';
+    h+='<div class="tbl-wrap"><table class="grid"><thead><tr><th>Name</th><th>How often</th><th class="r">Each charge</th><th class="r">A month</th><th class="r">'+mo+'</th><th>What it does to the plan</th></tr></thead><tbody>';
+    BILLS.forEach(function(b){
+      var got=GOT[mo]===null?'<span class="t3">no statement</span>':m(b.got[mo]);
+      h+='<tr><td>'+b.n+'</td><td class="caption">'+b.often+'</td><td class="r num">'+m(b.each)+'</td><td class="r num">'+m(b.each)+'</td><td class="r num">'+got+'</td><td><span class="roles">'+
+        ['Out of net','Part of the split','Ignore'].map(function(r){return '<span'+(r===b.role?' class="on"':'')+'>'+r+'</span>';}).join('')+'</span></td></tr>';
+    });
+    h+='</tbody></table></div><div class="caption">Out of net <b class="num" style="color:var(--color-ink);font-weight:500">'+m(2600)+'</b> &nbsp;·&nbsp; Part of the split <b class="num" style="color:var(--color-ink);font-weight:500">'+m(400)+'</b></div></div>';
+    return h;
+  }
+
+  /* ------------------------------------------------ the split */
+  function groupsOf(bs){
+    var out=[];bs.forEach(function(b){var g=out[out.length-1];if(!g||g.g!==b.g){g={g:b.g,rows:[]};out.push(g);}g.rows.push(b);});
+    return out;
+  }
+  function gotOf(st,b){var mo=GOT[st.against];if(mo===null)return null;return mo[b.n];}
+
+  function bar(st){
+    var total=SPLIT, has=GOT[st.against]!==null;
+    var bucketsTotal=st.buckets.reduce(function(s,b){return s+b.a;},0);
+    var x=BILLS_IN/total*100;
+    var h='<div class="groups">';
+    groupsOf(st.buckets).forEach(function(g){
+      var sum=g.rows.reduce(function(s,b){return s+b.a;},0);
+      var w=sum/total*100;
+      var pct=Math.round(sum/bucketsTotal*100);
+      h+='<div class="grp-mark" style="left:calc('+x+'% + 2px);width:calc('+w+'% - 4px)"><span class="lb"><b>'+g.g+' '+pct+'%</b><span class="num t3">'+m(sum)+'</span></span><span class="br"></span></div>';
+      x+=w;
+    });
+    h+='</div><div class="track" role="img">';
+    /* the bills piece: grey top line, hatched, filled in its grey */
+    var bg=has?GOT[st.against].bills:null;
+    h+=piece('Bills',BILLS_IN,bg,'var(--color-ink-tertiary)',total,true);
+    st.buckets.forEach(function(b){h+=piece(b.n,b.a,gotOf(st,b),COL[b.n],total,false);});
+    var at=BILLS_IN;
+    st.buckets.forEach(function(b){at+=b.a;if(at<total-1)h+='<span class="divider" style="left:'+(at/total*100)+'%"></span>';});
+    h+='</div><div class="axis"><span>₪0</span><span>'+m(total)+'</span></div>';
+    return h;
+  }
+  function piece(name,amount,got,col,total,isBills){
+    var w=amount/total*100;
+    var fillPct=got===null?0:Math.min(1,got/amount)*100;
+    var over=got!==null&&got>amount;
+    var base=isBills?'repeating-linear-gradient(135deg, var(--color-surface) 0 6px, var(--color-hairline) 6px 7px)':'color-mix(in srgb,'+col+' 12%, var(--color-background))';
+    var fill='color-mix(in srgb,'+col+(isBills?' 40%':' 45%')+', var(--color-background))';
+    var line2=got===null?m(amount):(m(amount)+' · got '+m(got));
+    var title=(isBills?'Bills in the split · ':name+' · ')+m(amount)+(got===null?'':', '+(isBills?'charged ':'got ')+m(got));
+    return '<div class="piece" style="width:'+w+'%;border-top-color:'+col+';background:'+base+'" title="'+title+'">'+
+      '<span class="fill" style="width:'+fillPct+'%;background:'+fill+'"></span>'+(over?'<span class="over"></span>':'')+
+      '<span class="txt">'+(w>6?'<b>'+name+'</b>':'')+(w>4?'<span>'+line2+'</span>':'')+'</span></div>';
+  }
+
+  function summary(st){
+    var mo=st.against, data=GOT[mo];
+    if(data===null){
+      return '<div class="summary"><p class="caption">No statement has been read for '+LONG[mo]+' 2026 yet, so what the buckets got is unknown, not nothing, and they have no fill. Deposits and debt payments are entered by hand and still count.</p></div>';
+    }
+    var planned=SPLIT, got=data.bills;
+    st.buckets.forEach(function(b){got+=data[b.n];});
+    var d=got-planned;
+    return '<div class="summary">'+
+      '<div class="f"><span class="label">Planned</span><span class="v">'+m(planned)+'</span></div>'+
+      '<div class="f"><span class="label">Got</span><span class="v">'+m(got)+'</span></div>'+
+      '<div class="f"><span class="label">'+(d>0?'Over the plan':'Under the plan')+'</span><span class="v">'+m(Math.abs(d))+'</span></div>'+
+      '<p class="caption">In '+LONG[mo]+' '+m(got)+' of the '+m(planned)+' planned went out.</p></div>';
+  }
+
+  function table(st){
+    var mo=st.against, has=GOT[mo]!==null;
+    var bucketsTotal=st.buckets.reduce(function(s,b){return s+b.a;},0);
+    var h='<div class="tbl-wrap"><div class="btab"><div class="bhead"><span>Bucket</span><span>Points at</span><span>How much</span><span class="r">Planned</span><span class="r">Got in '+LONG[mo]+'</span><span></span></div>';
+    groupsOf(st.buckets).forEach(function(g){
+      var sum=g.rows.reduce(function(s,b){return s+b.a;},0);
+      var got=has?g.rows.reduce(function(s,b){return s+gotOf(st,b);},0):null;
+      h+='<div class="bgroup"><span class="nm"><b>'+g.g+'</b><span class="caption">'+Math.round(sum/bucketsTotal*100)+'% of the split</span></span><span class="r">'+m(sum)+'</span><span class="r">'+(got===null?'':m(got))+'</span><span></span></div>';
+      g.rows.forEach(function(b){
+        var gt=gotOf(st,b), pct=(b.a/bucketsTotal*100);
+        var verdict='';
+        if(gt===null) verdict='<small>unknown</small>';
+        else if(b.goal&&gt===0) verdict='<small>no deposit recorded</small>';
+        else if(gt===b.a) verdict='<small>on plan</small>';
+        else verdict='<small>'+m(Math.abs(gt-b.a))+(gt>b.a?' over':' under')+'</small>';
+        h+='<div class="brow"><span class="nm"><span class="sw" style="background:'+COL[b.n]+'"></span><b>'+b.n+'</b></span>'+
+          '<span><span class="pt"><span class="k">'+b.k+'</span><b>'+b.t+'</b></span></span>'+
+          '<span class="modes"><span class="seg sm"><button class="'+(b.goal?'':'on')+'">Percent</button><button class="'+(b.goal?'on':'')+'">Fixed amount</button><button>What’s left</button></span>'+
+          (b.goal?'<span class="pct">'+m(b.a).replace('.00','')+'</span>':'<span class="pct">'+pct.toFixed(1).replace('.0','')+'%</span>')+'</span>'+
+          '<span class="r num">'+m(b.a)+'</span>'+
+          '<span class="got">'+(gt===null?'<span class="t3">—</span>':'<span>'+m(gt)+'</span>')+verdict+'</span>'+
+          '<span class="dots">⋯</span></div>';
+      });
+    });
+    h+='</div></div>';
+    return h;
+  }
+
+  function split(st,key){
+    var opts=['Sep','Aug','Jul'];if(key==='c')opts=['Oct','Sep','Aug','Jul'];
+    var sel='<select class="choice sm" data-against="'+key+'" aria-label="Against which month">'+opts.map(function(o){
+      return '<option value="'+o+'"'+(o===st.against?' selected':'')+'>'+LONG[o]+' 2026'+(GOT[o]===null?' (no statement yet)':'')+'</option>';}).join('')+'</select>';
+    var h='<div class="sec"><div class="sec-head"><div><h4>The split</h4><p class="caption">'+m(14000)+' net pay, less '+m(2600)+' of bills, leaves '+m(SPLIT)+' to give a job. Drag a divider to resize.</p></div>'+
+      '<div class="ctl"><span class="against"><span class="label">Against</span>'+sel+'</span>'+
+      '<span class="caption">Draw another plan beside this one <span class="choice sm" style="min-width:110px"><span class="v">No other plan</span>'+chev+'</span></span>'+
+      '<span class="seg sm"><button class="on">Bar</button><button>Ring</button></span><span class="caption">Snaps to ₪50.00</span></div></div>';
+    h+=summary(st);
+    h+=bar(st);
+    if(GOT[st.against]!==null) h+='<p class="legend caption"><i aria-hidden="true"></i>The fill is what each one got in '+LONG[st.against]+'. A bar at a bucket’s right end means it went over.</p>';
+    h+='<div class="balance"><b>Every shekel has a job</b><span class="caption">The split adds up to '+m(SPLIT)+'.</span></div>';
+    h+=table(st);
+    h+='<div class="addrow"><span class="field">New bucket</span><span class="btn secondary">+ Add a bucket</span>'+(st.buckets.some(function(b){return b.goal;})?'<span class="btn ghost">Suggest goal amounts</span>':'')+'</div>';
+    if(st.menu){
+      h+='<div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;padding-top:6px"><div class="menu"><div class="h">Hobbies</div>'+
+        '<div class="i">Rename</div><div class="i">Keep this size</div><div class="i"><span>Counts as</span><span class="t3">Wants ›</span></div>'+
+        '<div class="i sub">Needs</div><div class="i sub on">Wants</div><div class="i sub">Saving</div><div class="i sub">None of them</div>'+
+        '<div class="sep"></div><div class="i">Remove this bucket</div></div>'+
+        '<p class="caption" style="max-width:52ch;margin:0">The bucket menu gains <b style="font-weight:500;color:var(--color-ink)">Counts as</b>, for a bucket added after the start or one the starter guessed wrong. <i>None of them</i> puts it under Other, last. Its other items are today’s, shortened here.</p></div>';
+    }
+    h+='</div>';
+    return h;
+  }
+
+  function render(key){
+    var st=S[key], el=document.getElementById('screen-'+key);
+    var mo=MONTHS[st.here], yr=yearOf(st.here);
+    var prev=MONTHS[(st.here+11)%12], next=MONTHS[(st.here+1)%12];
+    var h='<div class="phead"><div><span class="label">Plan</span><h3>'+st.plan+(st.isDefault?'<small>· default</small>':'')+'</h3></div>'+
+      '<div class="pager"><b class="num">'+LONG[mo]+' '+yr+'</b><span>‹ '+prev+'</span><span>'+next+' ›</span></div></div>';
+    h+='<div class="tools"><span class="fld"><span class="label t3">Plan</span><span class="choice"><span class="v">'+st.plan+(st.isDefault?' · default':'')+'</span>'+chev+'</span></span>'+
+      '<span class="fld"><span class="label t3">Net pay is</span><span class="choice" style="min-width:230px"><span class="v">Average of recent payslips</span>'+chev+'</span></span>'+
+      '<span class="right"><span class="btn secondary">Copy this plan</span><span class="dots" style="width:30px">⋯</span></span></div>';
+    h+=monthsBlock(st,key);
+    h+=recordLine(st,key);
+    h+=figures();
+    h+=bills(st);
+    h+=split(st,key);
+    el.innerHTML=h;
+  }
+
+  document.addEventListener('change',function(e){
+    var t=e.target;
+    if(t.matches('input[type=checkbox][data-k]')){
+      var st=S[t.dataset.k], i=+t.dataset.i;
+      if(st.isDefault){ if(t.checked) st.owner[i]=null; }
+      else { st.owner[i]=t.checked?st.plan:null; if(i===st.here&&!t.checked) st.recorded=false; }
+      render(t.dataset.k); if(t.dataset.k==='a') mini();
+    }
+    if(t.matches('select[data-against]')){S[t.dataset.against].against=t.value;render(t.dataset.against);}
+  });
+  document.addEventListener('click',function(e){
+    var r=e.target.closest('[data-record]'); if(r){S[r.dataset.record].recorded=true;render(r.dataset.record);return;}
+    var u=e.target.closest('[data-undo]'); if(u){S[u.dataset.undo].recorded=false;render(u.dataset.undo);return;}
+    var z=e.target.closest('[data-reset]'); if(z){S[z.dataset.reset]=initial(z.dataset.reset);render(z.dataset.reset);if(z.dataset.reset==='a')mini();}
+  });
+
+  function mini(){document.getElementById('mini-strip').innerHTML=monthsBlock(S.a,'a');}
+  ['a','b','c'].forEach(render); mini();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,448 @@
+{
+  "about": "The document the ledger's pictures on Emerald's page are taken from (M33 F12). Made up from end to end and kept apart from the tours' documents, which must not change under their tours: December 2024 to September 2026 of one person's paychecks (raises in July 2025 and April 2026) and card statements at the tours' made-up shops, so calendar 2025 is whole on the Year screen; rent and the bills, three goals, a car loan, a pension and a study fund, and one plan, Everyday, used every month. The statements are not files here: scripts/demo-showcase.mjs writes one per month from `shops`, with a seeded generator, so every build draws the same figures. scripts/make-demo-document.mjs writes this into .demo/showcase.emd.",
+  "currency": "ILS",
+  "seed": 20261013,
+  "card": {
+    "name": "Everyday Card 1234",
+    "kind": "CREDIT_CARD",
+    "last4": "1234",
+    "reader": "Everyday Card",
+    "holder": "Alex Sample"
+  },
+  "pay": {
+    "gross": {
+      "2024-12": 23500,
+      "2025-07": 24500,
+      "2026-04": 26000
+    },
+    "income_tax": 0.1625,
+    "national_insurance": 0.0433,
+    "health_tax": 0.0316,
+    "pension": {
+      "employee": 0.06,
+      "employer": 0.065
+    },
+    "study_fund": {
+      "employee": 0.025,
+      "employer": 0.075
+    },
+    "severance": 0.0833,
+    "union_dues": 45
+  },
+  "shops": [
+    {
+      "name": "Greenleaf Market",
+      "category": "cat:groceries",
+      "visits": [
+        3,
+        5
+      ],
+      "amount": [
+        180,
+        520
+      ]
+    },
+    {
+      "name": "Harbor Foods",
+      "category": "cat:groceries",
+      "visits": [
+        1,
+        2
+      ],
+      "amount": [
+        780,
+        1250
+      ]
+    },
+    {
+      "name": "Daily Basket",
+      "category": "cat:groceries",
+      "visits": [
+        2,
+        3
+      ],
+      "amount": [
+        120,
+        290
+      ]
+    },
+    {
+      "name": "Olive & Wheat Deli",
+      "category": "cat:groceries",
+      "visits": [
+        0,
+        2
+      ],
+      "amount": [
+        90,
+        210
+      ]
+    },
+    {
+      "name": "Little Bean Cafe",
+      "category": "cat:restaurants",
+      "visits": [
+        2,
+        5
+      ],
+      "amount": [
+        24,
+        48
+      ]
+    },
+    {
+      "name": "Copper Kettle",
+      "category": "cat:restaurants",
+      "visits": [
+        1,
+        2
+      ],
+      "amount": [
+        55,
+        180
+      ]
+    },
+    {
+      "name": "Burger Yard",
+      "category": "cat:restaurants",
+      "visits": [
+        0,
+        2
+      ],
+      "amount": [
+        70,
+        120
+      ]
+    },
+    {
+      "name": "Northway Fuel",
+      "category": "cat:fuel",
+      "visits": [
+        2,
+        3
+      ],
+      "amount": [
+        230,
+        310
+      ]
+    },
+    {
+      "name": "Willow Pharmacy",
+      "category": "cat:pharmacy",
+      "visits": [
+        0,
+        2
+      ],
+      "amount": [
+        40,
+        140
+      ]
+    },
+    {
+      "name": "Maple Outfitters",
+      "category": "cat:shopping",
+      "visits": [
+        0,
+        1
+      ],
+      "amount": [
+        150,
+        420
+      ],
+      "december": 3
+    },
+    {
+      "name": "Thread & Needle",
+      "category": "cat:shopping",
+      "visits": [
+        0,
+        1
+      ],
+      "amount": [
+        80,
+        220
+      ]
+    },
+    {
+      "name": "ParcelPoint Online",
+      "category": "cat:shopping",
+      "visits": [
+        0,
+        2
+      ],
+      "amount": [
+        60,
+        260
+      ],
+      "december": 3
+    },
+    {
+      "name": "Hilltop Hardware",
+      "category": "cat:shopping",
+      "visits": [
+        0,
+        1
+      ],
+      "amount": [
+        60,
+        300
+      ]
+    },
+    {
+      "name": "City Transit Card",
+      "category": "cat:transit",
+      "fixed": 220
+    }
+  ],
+  "bills": [
+    {
+      "name": "Bright Power Co.",
+      "day": 28,
+      "category": "cat:electricity",
+      "every": 2,
+      "amount": [
+        420,
+        720
+      ],
+      "cadence": "BIMONTHLY"
+    },
+    {
+      "name": "Clearwater Utility",
+      "day": 1,
+      "category": "cat:water",
+      "every": 2,
+      "amount": [
+        160,
+        230
+      ],
+      "cadence": "BIMONTHLY"
+    },
+    {
+      "name": "Fastline Internet",
+      "day": 2,
+      "category": "cat:connectivity",
+      "fixed": 129.9,
+      "cadence": "MONTHLY"
+    },
+    {
+      "name": "Parrot Mobile",
+      "day": 4,
+      "category": "cat:connectivity",
+      "fixed": 89.9,
+      "cadence": "MONTHLY"
+    },
+    {
+      "name": "StreamBox",
+      "day": 6,
+      "category": "cat:subscriptions",
+      "fixed": 54.9,
+      "cadence": "MONTHLY",
+      "discretionary": true
+    },
+    {
+      "name": "Tuneful Music",
+      "day": 7,
+      "category": "cat:subscriptions",
+      "fixed": 19.9,
+      "cadence": "MONTHLY",
+      "discretionary": true
+    }
+  ],
+  "rent": {
+    "name": "Rent",
+    "expected_amount": 5400
+  },
+  "goals": [
+    {
+      "name": "Emergency fund",
+      "kind": "EMERGENCY",
+      "target_amount": 70000,
+      "target_date": "2027-12-31",
+      "already_there": 12000,
+      "already_there_on": "2024-12-01",
+      "default_holding": {
+        "name": "Everyday Bank savings",
+        "kind": "DEPOSIT",
+        "is_liquid": true,
+        "provenance": "RECORDED",
+        "place": {
+          "name": "Everyday Bank",
+          "kind": "CHECKING"
+        }
+      }
+    },
+    {
+      "name": "Holiday in Crete",
+      "kind": "SHORT_TERM",
+      "target_amount": 30000,
+      "target_date": "2027-06-30",
+      "already_there": 1500,
+      "already_there_on": "2024-12-01",
+      "default_holding": {
+        "name": "Holiday savings",
+        "kind": "DEPOSIT",
+        "is_liquid": true,
+        "provenance": "RECORDED",
+        "place": {
+          "name": "Everyday Bank",
+          "kind": "CHECKING"
+        }
+      }
+    },
+    {
+      "name": "New laptop",
+      "kind": "SHORT_TERM",
+      "target_amount": 9000,
+      "target_date": "2027-03-31",
+      "already_there": 500,
+      "already_there_on": "2024-12-01",
+      "default_holding": {
+        "name": "Laptop jar",
+        "kind": "CASH",
+        "is_liquid": true,
+        "provenance": "RECORDED",
+        "place": {
+          "name": "At home",
+          "kind": "CASH"
+        }
+      }
+    }
+  ],
+  "debts": [
+    {
+      "name": "Car loan",
+      "kind": "BANK_LOAN",
+      "principal_amount": 40000,
+      "opened_date": "2024-06-01",
+      "expected_end_date": "2028-06-30",
+      "monthly_payment": 1000,
+      "tracking_kind": "NONE"
+    }
+  ],
+  "funds": [
+    {
+      "name": "Pension fund",
+      "fund_type": "PENSION",
+      "opened_date": "2019-03-01",
+      "fee_on_accumulation_basis_points": 22,
+      "fee_on_deposit_basis_points": 150,
+      "readings": [
+        [
+          "2024-12-31",
+          168300
+        ],
+        [
+          "2025-03-31",
+          173900
+        ],
+        [
+          "2025-06-30",
+          180100
+        ],
+        [
+          "2025-09-30",
+          186500
+        ],
+        [
+          "2025-12-31",
+          193950
+        ],
+        [
+          "2026-03-31",
+          200400
+        ],
+        [
+          "2026-06-30",
+          208800
+        ]
+      ]
+    },
+    {
+      "name": "Study fund",
+      "fund_type": "STUDY_FUND",
+      "opened_date": "2021-01-01",
+      "first_deposit_date": "2021-01-31",
+      "fee_on_accumulation_basis_points": 50,
+      "readings": [
+        [
+          "2024-12-31",
+          52100
+        ],
+        [
+          "2025-03-31",
+          55300
+        ],
+        [
+          "2025-06-30",
+          58700
+        ],
+        [
+          "2025-09-30",
+          62200
+        ],
+        [
+          "2025-12-31",
+          65950
+        ],
+        [
+          "2026-03-31",
+          69500
+        ],
+        [
+          "2026-06-30",
+          73800
+        ]
+      ]
+    }
+  ],
+  "plan": {
+    "name": "Everyday",
+    "buckets": [
+      {
+        "name": "Emergency fund",
+        "mode": "amount",
+        "amount": 2000,
+        "points_at": {
+          "kind": "goal",
+          "id": "Emergency fund"
+        }
+      },
+      {
+        "name": "Holiday in Crete",
+        "mode": "amount",
+        "amount": 1000,
+        "points_at": {
+          "kind": "goal",
+          "id": "Holiday in Crete"
+        }
+      },
+      {
+        "name": "Car loan",
+        "mode": "amount",
+        "amount": 1000,
+        "points_at": {
+          "kind": "debt",
+          "id": "Car loan"
+        }
+      },
+      {
+        "name": "Groceries",
+        "mode": "amount",
+        "amount": 3400,
+        "points_at": {
+          "kind": "category",
+          "id": "cat:groceries"
+        }
+      },
+      {
+        "name": "Spending",
+        "mode": "rest",
+        "points_at": {
+          "kind": "none"
+        }
+      }
+    ]
+  },
+  "first": "2024-12",
+  "last": "2026-09"
+}

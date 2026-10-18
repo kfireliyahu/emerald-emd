@@ -1,0 +1,22 @@
+-- 023_fixed_in_split — the fixed-expense total as a share of the split rather
+-- than as a subtraction from it. See docs/f05-paycheck-splitter.md,
+-- docs/f09-fixed-monthly-expenses.md and D-174.
+--
+-- Numbered and immutable after release (D-020).
+--
+-- **One column, added rather than a table rebuilt.** SQLite cannot alter a
+-- `CHECK`, so widening `fixed_expense_mode` to a fourth value would mean
+-- recreating `split_plan` — a table two others hold ids into — for what is a
+-- second question rather than a fourth answer to the first one.
+--
+-- The two do not overlap and cannot disagree, which is the test migration 014's
+-- own note applies: `fixed_expense_mode` says **which** fixed expenses count
+-- (none, the detected ones too, the confirmed only), and this says **where the
+-- total goes** — off the top before the percentages, or into the split as a
+-- share of the whole net. The same money either way; a different meaning for
+-- every percentage in the plan.
+--
+-- Inert while the mode is `NONE`, because there is no total to place. That is a
+-- legible dependency rather than a contradiction: 014's note 1 is about two
+-- fields that could each claim the *same* fact, and these claim different ones.
+ALTER TABLE split_plan ADD COLUMN fixed_in_split INTEGER NOT NULL DEFAULT 0;

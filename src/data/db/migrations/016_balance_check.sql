@@ -1,0 +1,31 @@
+-- 016_balance_check — what the running balance said about the parse.
+--
+-- Numbered and immutable after release (D-020).
+--
+-- docs/f06 requires a failed balance check to **block the commit** with the
+-- first diverging row named. That means the review screen has to know the
+-- result — and by the time the review screen exists the sheet is gone: a
+-- resumed import has staged rows in the document and no file in memory. This is
+-- migration 004's problem exactly, and it gets 004's answer: the check is run
+-- once at stage time and recorded on the session.
+--
+-- **One JSON column rather than eight, which is the opposite of what 003 chose
+-- for the staged draft, and the reasons do not transfer.** 003 spread the draft
+-- into columns because the review screen counts and filters by status *in SQL*
+-- over thousands of rows. Nothing queries a balance check: there is one per
+-- session, it is read whole by one strip, and its shape is a discriminated
+-- union — a `VERIFIED` result and a `DIVERGED` one share no fields. As columns
+-- it would be eight, seven of them null in whichever case obtains, with no
+-- CHECK able to say which seven. This is the shape `column_roles` and
+-- `date_orders` already have (001): a value whose meaning is owned by the
+-- importer rather than by SQL.
+--
+-- Decoded defensively, like every JSON column in this document (D-031). The
+-- file is a real SQLite database the user can open in any tool, and a mangled
+-- value must read as "no check was recorded" rather than take the review screen
+-- down — the same fallback as a check that never ran, which is a state the
+-- schema has to allow anyway for every card import ever made.
+--
+-- Money inside it stays minor units and a currency code, as everywhere (D-003).
+-- JSON is not permission to write a float.
+ALTER TABLE import_session ADD COLUMN balance_check TEXT;

@@ -1,0 +1,876 @@
+<meta charset="utf-8">
+<title>Emerald Home Screen</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Hebrew:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap">
+<style>
+/* M28 U5 reuses U4's tokens, rail, split-tile buttons and indicator verbatim, then adds Home below.
+   Layout: a mockup bar of choices on top, the app window below it, then a specimen sheet
+   (indicator, buttons A and B side by side) and the open choices. Tokens are the app's own
+   (docs/11-ui-design-language.md, D-306): near-monochrome, square, one emerald accent. */
+:root{
+  --bg:#ffffff;--surface:#f7f7f6;--elevated:#ffffff;--ink:#0a0a0a;--ink2:#6b6b6b;--ink3:#a3a3a3;
+  --hair:#e8e8e8;--hair2:#d6d6d3;--accent:#07805f;--accent-ink:#ffffff;--accent-hover:#05664b;
+  --accent-soft:#e8f6f1;--accent-deep:#055a43;--positive:#1f7a4d;--negative:#c4342b;
+  --pop:0 1px 2px rgba(10,10,10,.05),0 8px 24px rgba(10,10,10,.08);
+  --sans:'IBM Plex Sans','IBM Plex Sans Hebrew',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --micro:120ms;--base:180ms;--enter:260ms;--ease:cubic-bezier(.22,1,.36,1);--inout:cubic-bezier(.65,0,.35,1);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0a0a0a;--surface:#141414;--elevated:#1a1a1b;--ink:#f5f5f5;--ink2:#9a9a9a;--ink3:#6b6b6b;
+  --hair:#262626;--hair2:#34343a;--accent:#34d399;--accent-ink:#06231a;--accent-hover:#5ee0b0;
+  --accent-soft:#10312a;--accent-deep:#1fae7d;--positive:#4caf7d;--negative:#e5675e;
+  --pop:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.55);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a0a0a;--surface:#141414;--elevated:#1a1a1b;--ink:#f5f5f5;--ink2:#9a9a9a;--ink3:#6b6b6b;
+  --hair:#262626;--hair2:#34343a;--accent:#34d399;--accent-ink:#06231a;--accent-hover:#5ee0b0;
+  --accent-soft:#10312a;--accent-deep:#1fae7d;--positive:#4caf7d;--negative:#e5675e;
+  --pop:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.55);color-scheme:dark}
+html{background:var(--bg)}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;transition:background-color var(--base),color var(--base)}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--mono);font-size:12px}
+.num{font-variant-numeric:tabular-nums}
+.label{font-size:11px;line-height:1.3;letter-spacing:.08em;font-weight:500;text-transform:uppercase;color:var(--ink2)}
+.he{font-family:'IBM Plex Sans Hebrew',var(--sans);unicode-bidi:isolate}
+
+/* ---------- the mockup's own page ---------- */
+.page{max-width:1320px;margin:0 auto;padding-block:32px 96px;padding-inline:16px;display:flex;flex-direction:column;gap:32px}
+.intro{display:flex;flex-direction:column;gap:8px;max-width:72ch}
+.intro h1{margin:0;font-size:24px;font-weight:500;letter-spacing:-.01em;text-wrap:balance}
+.intro p{margin:0;color:var(--ink2)}
+.controls{display:flex;flex-wrap:wrap;gap:16px 32px;align-items:flex-end;padding:16px;background:var(--surface)}
+.ctl{display:flex;flex-direction:column;gap:6px}
+.seg{display:flex}
+.seg button{height:30px;padding:0 12px;border:1px solid var(--hair2);margin-left:-1px;font-size:13px;color:var(--ink2);transition:background-color var(--micro),color var(--micro)}
+.seg button:first-child{margin-left:0}
+.seg button.on{background:var(--ink);color:var(--bg);border-color:var(--ink);position:relative;z-index:1}
+.choice-tag{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;margin-right:6px;font-size:10px;font-weight:500;border:1px solid currentColor}
+.stage{overflow-x:auto;border:1px solid var(--hair2)}
+.h2{margin:0;font-size:18px;font-weight:500;letter-spacing:-.005em}
+.note{color:var(--ink2);max-width:72ch;margin:0}
+
+/* ---------- the app window ---------- */
+.win{min-width:1100px;height:820px;display:grid;grid-template-rows:40px 1fr;background:var(--bg)}
+.titlebar{display:flex;align-items:center;gap:16px;padding:0 12px 0 16px;background:var(--surface);border-bottom:1px solid var(--hair)}
+.doc{display:flex;align-items:center;gap:8px;font-size:13px}
+.dirty{width:7px;height:7px;border-radius:50%;border:1.5px solid var(--ink2)}
+.caps{margin-left:auto;display:flex;gap:2px;color:var(--ink3)}
+.caps span{width:36px;height:28px;display:flex;align-items:center;justify-content:center}
+.body{display:grid;min-height:0}
+.navA .body{grid-template-columns:216px 1fr}
+.navB .body{grid-template-columns:1fr}
+
+/* nav A: a tree sidebar, one level, the open section's pages inline */
+.side{background:var(--surface);border-right:1px solid var(--hair);display:flex;flex-direction:column;padding:8px 0;overflow:auto}
+.navB .side{display:none}
+.nitem{height:32px;display:flex;align-items:center;gap:10px;padding:0 14px;color:var(--ink2);font-size:13px;position:relative;width:100%;text-align:left;transition:color var(--micro),background-color var(--micro)}
+.nitem:hover{color:var(--ink)}
+.nitem svg{flex:none}
+.nitem.open{color:var(--ink)}
+.nchild{height:28px;padding-left:40px;font-size:13px}
+.nchild.on{color:var(--ink);background:var(--accent-soft)}
+.nchild.on::before{content:"";position:absolute;inset:0 auto 0 0;width:2px;background:var(--accent)}
+.nsep{height:1px;background:var(--hair);margin:8px 14px}
+.nbusy{margin-left:auto;display:inline-flex}
+.side .foot{margin-top:auto;padding:12px 14px;display:flex;align-items:center;gap:8px;color:var(--ink3);font-size:12px}
+
+/* nav B: sections across the title bar, a section's pages in the page header */
+.topnav{display:none;align-items:stretch;height:40px;margin-left:24px}
+.navB .topnav{display:flex}
+.navB .doc{min-width:180px}
+.tn{display:flex;align-items:center;gap:8px;padding:0 12px;font-size:13px;color:var(--ink2);position:relative;transition:color var(--micro)}
+.tn:hover{color:var(--ink)}
+.tn.on{color:var(--ink)}
+.tn.on::after{content:"";position:absolute;left:12px;right:12px;bottom:0;height:2px;background:var(--accent)}
+.subnav{display:none;gap:0}
+.navB .subnav{display:flex}
+
+.main{min-width:0;min-height:0;overflow:auto;position:relative}
+.screen{padding:24px 32px 48px;display:flex;flex-direction:column;gap:24px;max-width:1180px}
+.screen.enter{animation:fadein 150ms var(--ease)}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+
+/* page header */
+.ph{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid var(--hair)}
+.ph h1{margin:0;font-size:24px;font-weight:500;line-height:1.15;letter-spacing:-.01em}
+.ph .sub{color:var(--ink2)}
+.pager{display:flex;align-items:center;gap:4px}
+.pg{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink2);border:1px solid transparent;transition:border-color var(--micro),color var(--micro)}
+.pg:hover:not(:disabled){border-color:var(--hair2);color:var(--ink)}
+.pg:disabled{opacity:.3;cursor:default}
+.pgl{font-size:12px;color:var(--ink2);padding:0 4px;min-width:72px}
+.pgl.r{text-align:right}
+
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;line-height:1.3;letter-spacing:.06em;font-weight:500;text-transform:uppercase;padding:3px 8px;border:1px solid var(--hair2);color:var(--ink2);white-space:nowrap}
+.chip .d{width:6px;height:6px;border-radius:50%;background:currentColor}
+.chip.ok{color:var(--positive);border-color:color-mix(in srgb,var(--positive) 40%,transparent)}
+.chip.bad{color:var(--negative);border-color:color-mix(in srgb,var(--negative) 40%,transparent)}
+.chip.live{color:var(--accent);border-color:var(--accent)}
+.chip.wait{border-style:dashed}
+
+/* trend */
+.trend{position:relative;padding:8px 0 0}
+.trend svg{display:block;width:100%;height:auto;overflow:visible}
+.pt{cursor:pointer}
+.pt .hit{fill:transparent}
+.pt .dot{fill:var(--bg);stroke:var(--ink);stroke-width:1.5;transition:r var(--micro) var(--ease)}
+.pt:hover .dot{r:4.5}
+.pt.on .dot{fill:var(--accent);stroke:var(--accent);r:5}
+.pt.on .ring{opacity:1}
+.ring{fill:none;stroke:var(--accent);stroke-width:1;opacity:0;transition:opacity var(--base)}
+.pt.gap .dot{stroke:var(--ink3);stroke-dasharray:2 2}
+.pt:focus-visible{outline:none}
+.pt:focus-visible .ring{opacity:1}
+.trend .tick{fill:var(--ink3);font-size:11px;font-family:var(--sans)}
+.trend .tick.on{fill:var(--ink)}
+.trend .val{fill:var(--ink);font-size:12px;font-family:var(--mono)}
+.draw{stroke-dasharray:2000;stroke-dashoffset:2000;animation:draw 300ms var(--ease) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+/* the month */
+.month{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px}
+.month.swap-l{animation:swapl 200ms var(--ease)}
+.month.swap-r{animation:swapr 200ms var(--ease)}
+@keyframes swapl{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+@keyframes swapr{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+.block{display:flex;flex-direction:column;gap:12px}
+.bh{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.lines{display:flex;flex-direction:column}
+.ln{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;height:32px;align-items:center;border-bottom:1px solid var(--hair)}
+.ln .amt{font-variant-numeric:tabular-nums;text-align:right}
+.ln.total{height:40px;font-weight:500;border-bottom:0;border-top:1px solid var(--ink)}
+.ln .lbl{display:flex;align-items:center;gap:8px;min-width:0}
+.ln .lbl .he{color:var(--ink3);font-size:12px}
+.ln.ded .amt{color:var(--ink2)}
+.bar{display:flex;height:8px;gap:2px}
+.bar span{display:block;height:100%}
+.flow{display:flex;flex-direction:column}
+.fl{display:grid;grid-template-columns:16px minmax(0,1fr) auto;gap:10px;align-items:center;min-height:36px;border-bottom:1px solid var(--hair)}
+.fl .arrow{color:var(--ink3)}
+.fl .what{min-width:0}
+.fl .what small{display:block;color:var(--ink2);font-size:12px}
+.fl .amt{font-variant-numeric:tabular-nums}
+.fl.brk .what{color:var(--negative)}
+.big{font-size:32px;font-weight:500;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.facts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* all paychecks */
+.sh{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.sh .acts{display:flex;gap:8px;align-items:center}
+table{width:100%;border-collapse:collapse}
+th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;color:var(--ink3);text-align:left;padding:8px 12px;border-bottom:1px solid var(--hair)}
+td{padding:0 12px;height:40px;border-bottom:1px solid var(--hair)}
+th.r,td.r{text-align:right}
+td.r{font-variant-numeric:tabular-nums}
+tbody tr{cursor:pointer;transition:background-color var(--micro);position:relative}
+tbody tr:hover{background:var(--surface)}
+tbody tr.on{background:var(--accent-soft)}
+tbody tr.on td:first-child{box-shadow:inset 2px 0 0 var(--accent)}
+tbody tr.missing td{color:var(--ink3)}
+tbody tr.missing{cursor:default}
+tr.arrived{animation:arrive 900ms var(--ease) 1}
+@keyframes arrive{0%{background:var(--accent-soft)}100%{background:transparent}}
+.drop{border:1px dashed var(--hair2);padding:16px;display:flex;align-items:center;gap:16px;color:var(--ink2);transition:border-color var(--micro),background-color var(--micro)}
+.drop:hover{border-color:var(--accent);background:var(--accent-soft)}
+
+/* reading screen */
+.readhead{display:flex;align-items:center;gap:20px;padding:20px;background:var(--surface)}
+.readhead .what{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.readhead .big2{font-size:18px;font-weight:500}
+.prog{height:2px;background:var(--hair);position:relative;overflow:hidden}
+.prog i{position:absolute;inset:0 auto 0 0;background:var(--accent);transition:width var(--base) var(--ease)}
+.slips{display:flex;flex-direction:column}
+.slip{display:grid;grid-template-columns:20px minmax(0,1.4fr) minmax(0,1fr) minmax(0,1.2fr) auto;gap:16px;align-items:center;min-height:48px;border-bottom:1px solid var(--hair);padding:0 4px}
+.slip.landed{animation:arrive 900ms var(--ease) 1}
+.slip .file{display:flex;flex-direction:column;min-width:0}
+.slip .file small{color:var(--ink2);font-size:12px}
+.slip .fig{font-variant-numeric:tabular-nums;color:var(--ink2);font-size:13px}
+.tick{width:16px;height:16px;border:1.5px solid var(--hair2);display:inline-flex;align-items:center;justify-content:center}
+.tick.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tick.off{opacity:.4}
+.writebar{display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap;padding-top:16px;border-top:1px solid var(--hair)}
+
+/* ---------- buttons, style A: faceted ---------- */
+.btn{position:relative;display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 16px;font-size:13px;font-weight:500;letter-spacing:.01em;white-space:nowrap;isolation:isolate;transition:color var(--micro),background-color var(--micro),transform var(--micro)}
+.btn.sm{height:30px;padding:0 12px;font-size:12px}
+.btn svg{flex:none}
+.btn:disabled{opacity:.4;cursor:default}
+.btn .count{font-family:var(--mono);font-size:11px;padding:1px 6px;margin-left:2px}
+.bA .btn{--cut:8px;clip-path:polygon(var(--cut) 0,100% 0,100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,0 100%,0 var(--cut))}
+.bA .btn.sm{--cut:6px}
+.bA .btn.primary{background:var(--accent);color:var(--accent-ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.22)}
+.bA .btn.primary:hover:not(:disabled){background:var(--accent-hover)}
+.bA .btn.primary:active:not(:disabled){transform:translateY(1px)}
+.bA .btn.primary .count{background:rgba(0,0,0,.16)}
+.bA .btn.secondary{background:var(--hair2);color:var(--ink)}
+.bA .btn.secondary::before{content:"";position:absolute;inset:1px;z-index:-1;background:var(--bg);clip-path:inherit;transition:background-color var(--micro)}
+.bA .btn.secondary:hover:not(:disabled){background:var(--accent)}
+.bA .btn.secondary:hover:not(:disabled)::before{background:var(--accent-soft)}
+.bA .btn.secondary .count{background:var(--surface)}
+.btn.ghost{clip-path:none!important;padding:0 4px;color:var(--accent);background:none!important}
+.btn.ghost::after{content:"";position:absolute;left:4px;right:4px;bottom:6px;height:1px;background:currentColor;transform:scaleX(0);transform-origin:left;transition:transform var(--base) var(--ease)}
+.btn.ghost:hover::after{transform:scaleX(1)}
+.btn.icon{width:30px;padding:0;justify-content:center;color:var(--ink2);background:none;clip-path:none!important}
+.btn.icon:hover{color:var(--ink)}
+.btn.icon.danger:hover{color:var(--negative)}
+
+/* ---------- buttons, style B: split tile ---------- */
+.bB .btn{padding:0 14px 0 0;gap:12px}
+.bB .btn.sm{padding:0 10px 0 0;gap:10px}
+.bB .btn .tile{width:36px;align-self:stretch;display:inline-flex;align-items:center;justify-content:center;transition:background-color var(--micro)}
+.bB .btn.sm .tile{width:30px}
+.bB .btn.primary{background:var(--accent);color:var(--accent-ink)}
+.bB .btn.primary .tile{background:var(--accent-deep)}
+.bB .btn.primary:hover:not(:disabled){background:var(--accent-hover)}
+.bB .btn.primary:hover:not(:disabled) .tile{background:var(--accent)}
+.bB .btn.primary .count{background:rgba(0,0,0,.16)}
+.bB .btn.secondary{background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1px var(--hair)}
+.bB .btn.secondary .tile{background:var(--hair);color:var(--ink2)}
+.bB .btn.secondary:hover:not(:disabled) .tile{background:var(--accent);color:var(--accent-ink)}
+.bB .btn.secondary .count{background:var(--bg)}
+.bB .btn.ghost .tile,.bB .btn.icon .tile{display:contents}
+.bA .btn .tile{display:contents}
+
+/* ---------- the emerald indicator ---------- */
+.gem{display:inline-block;vertical-align:middle;overflow:visible}
+.gem .f{transform-box:view-box;transform-origin:32px 32px}
+.gem.spin .f{animation:gemcycle 2.6s var(--inout) infinite;animation-delay:calc(var(--i) * 55ms)}
+@keyframes gemcycle{
+  0%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.7)}
+  26%{opacity:1;transform:none}
+  68%{opacity:1;transform:none}
+  94%,100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.7)}}
+.gem.det .f{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.7);transition:opacity var(--enter) var(--ease),transform var(--enter) var(--ease)}
+.gem.det .f.in{opacity:1;transform:none}
+.gem.done .core{animation:glint 600ms var(--ease) 1}
+@keyframes glint{0%{filter:brightness(1)}40%{filter:brightness(1.45)}100%{filter:brightness(1)}}
+.gem.still .f{opacity:1;transform:none;animation:none}
+/* reduced motion: nothing moves; the facets only light in turn */
+@keyframes gemfade{0%,100%{opacity:.18}30%,70%{opacity:1}}
+.rm .gem.spin .f{animation:gemfade 2.6s linear infinite;animation-delay:calc(var(--i) * 55ms);transform:none}
+.rm .gem.det .f{transform:none;transition:opacity var(--base) linear}
+.rm .gem.det .f:not(.in){opacity:.18}
+.rm .month,.rm tr.arrived,.rm .slip.landed,.rm .screen.enter,.rm .draw{animation:none!important;stroke-dashoffset:0}
+@media (prefers-reduced-motion: reduce){
+  .gem.spin .f{animation:gemfade 2.6s linear infinite;animation-delay:calc(var(--i) * 55ms);transform:none}
+  .gem.det .f{transform:none}
+  .gem.det .f:not(.in){opacity:.18}
+  .month,tr.arrived,.slip.landed,.screen.enter{animation:none!important}
+  .draw{animation:none;stroke-dashoffset:0}
+}
+
+/* ---------- specimen sheet ---------- */
+.spec{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:900px){.spec{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.row{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.sw{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:72px}
+.sw small{color:var(--ink2);font-size:12px}
+.hover-demo .btn.primary{background:var(--accent-hover)}
+.opens{display:flex;flex-direction:column;gap:0}
+.oq{display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;padding:12px 0;border-bottom:1px solid var(--hair)}
+.oq b{font-weight:500}
+.oq p{margin:2px 0 0;color:var(--ink2)}
+
+/* ---------- M28 U5: Home. The four flow colours (proposed amendment to D-125) ---------- */
+:root{--in:#1f7a4d;--out:#c4342b;--saved:#0b4f35;--tax:#b45309;--warnbg:#fdf3e7}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--in:#5cc98c;--out:#e5675e;--saved:#2f9e6a;--tax:#f59e0b;--warnbg:#2a1d0b}}
+:root[data-theme="dark"]{--in:#5cc98c;--out:#e5675e;--saved:#2f9e6a;--tax:#f59e0b;--warnbg:#2a1d0b}
+.c-in{color:var(--in)}.c-out{color:var(--out)}.c-saved{color:var(--saved)}.c-tax{color:var(--tax)}
+.reachA .rb{color:inherit!important}
+.sg{display:none}
+.sugg .sg{display:inline-flex}
+.stag{align-items:center;justify-content:center;height:18px;padding:0 6px;font-size:10px;font-weight:500;letter-spacing:.06em;border:1px dashed var(--tax);color:var(--tax);white-space:nowrap;vertical-align:middle}
+.sugg .s-hide{display:none!important}
+.s-only{display:none!important}
+.sugg .s-only{display:block!important}
+.sugg .s-only.row,.sugg .s-only.fx{display:flex!important}
+.sugg tr.s-only{display:table-row!important}
+
+
+/* the intake band */
+.intake{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;padding:16px 20px;border:1px dashed var(--hair2);transition:border-color var(--micro),background-color var(--micro)}
+.intake:hover,.intake.over{border-color:var(--accent);background:var(--accent-soft)}
+.intake .t{display:flex;gap:14px;align-items:center;min-width:0;color:var(--ink2)}
+.intake .t b{color:var(--ink);font-weight:500;display:block}
+.intake .acts{display:flex;gap:8px;flex-wrap:wrap}
+.introw{display:flex;gap:12px;align-items:center;color:var(--ink2);font-size:13px;flex-wrap:wrap}
+.intakeB .intake{display:none}
+.intakeA .hdrin{display:none}
+.hdrin{display:flex;gap:8px;align-items:center}
+
+/* figures */
+.figs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:0;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
+.fig{padding:14px 16px 14px 0;display:flex;flex-direction:column;gap:4px;min-width:0}
+.fig + .fig{padding-left:16px;border-left:1px solid var(--hair)}
+.fig .v{font-size:24px;font-weight:500;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1.15}
+.fig small{color:var(--ink2);font-size:12px}
+.fig .key{display:inline-block;width:8px;height:8px;margin-right:6px;vertical-align:1px}
+
+/* two columns */
+.cols{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:32px}
+.cat{display:grid;grid-template-columns:minmax(0,1fr) 120px 92px;gap:12px;align-items:center;height:34px;border-bottom:1px solid var(--hair)}
+.cat .bar1{height:6px;background:color-mix(in srgb,var(--ink) 70%,transparent)}
+.cat .bar1.unc{background:repeating-linear-gradient(90deg,var(--ink3) 0 3px,transparent 3px 6px)}
+.cat .amt{text-align:right;font-variant-numeric:tabular-nums}
+.cat .spark{display:block}
+.ycat{grid-template-columns:minmax(0,1fr) 140px 64px 100px}
+.side-list .ln{height:34px}
+.want{display:flex;align-items:center;gap:10px;min-height:40px;border-bottom:1px solid var(--hair)}
+.want .w{flex:1;min-width:0}
+.want small{display:block;color:var(--ink2);font-size:12px}
+.gs{display:flex;flex-direction:column;gap:0}
+.gs .gi{display:flex;gap:10px;align-items:center;min-height:34px;border-bottom:1px solid var(--hair);color:var(--ink2)}
+.gs .gi .box{width:14px;height:14px;border:1.5px solid var(--hair2);flex:none}
+.gs .gi.done{color:var(--ink3);text-decoration:line-through}
+.gs .gi.done .box{background:var(--ink3);border-color:var(--ink3)}
+.gsline{display:flex;align-items:center;gap:12px;color:var(--ink2);font-size:13px}
+.gsline .meter{display:flex;gap:3px}
+.gsline .meter i{width:16px;height:4px;background:var(--hair2)}
+.gsline .meter i.on{background:var(--ink)}
+
+/* the month chart: two lines and a saved line, points open a month */
+.mchart svg{display:block;width:100%;height:auto;overflow:visible}
+.mchart .col{cursor:pointer}
+.mchart .col .hit{fill:transparent}
+.mchart .col:hover .hit{fill:color-mix(in srgb,var(--ink) 4%,transparent)}
+.mchart .col.on .hit{fill:var(--accent-soft)}
+.mchart .col.on .sel{opacity:1}
+.mchart .sel{fill:none;stroke:var(--accent);stroke-width:1;opacity:0}
+.mchart .tick{fill:var(--ink3);font-size:11px;font-family:var(--sans)}
+.mchart .col.on .tick{fill:var(--ink)}
+.mchart .col:focus-visible{outline:none}
+.mchart .col:focus-visible .sel{opacity:1}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.legend i{display:inline-block;width:14px;height:2px;margin-right:6px;vertical-align:3px}
+.reachA .legend i.lo,.reachB .legend i.lo{}
+
+/* tables */
+td.c-in,td.c-out,td.c-saved,td.c-tax{font-variant-numeric:tabular-nums}
+.reachA td.rb{color:var(--ink)!important}
+tbody tr.missing2 td{color:var(--ink3)}
+.yoy td{height:34px}
+
+/* reading files */
+.file5{display:grid;grid-template-columns:20px minmax(0,1.5fr) minmax(0,.9fr) minmax(0,1.5fr) auto;gap:16px;align-items:center;min-height:52px;border-bottom:1px solid var(--hair);padding:0 4px}
+.file5 .file{display:flex;flex-direction:column;min-width:0}
+.file5 .file small{color:var(--ink2);font-size:12px}
+.file5 .kind{color:var(--ink2);font-size:13px}
+.file5 .fig{padding:0;font-size:13px;color:var(--ink2)}
+.file5.landed{animation:arrive 900ms var(--ease) 1}
+.chip.warn{color:var(--tax);border-color:color-mix(in srgb,var(--tax) 45%,transparent)}
+
+/* the one screen a file can still need */
+.gap{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border:1px solid var(--hair)}
+.gap > div{padding:14px 16px;display:flex;flex-direction:column;gap:4px}
+.gap > div + div{border-left:1px solid var(--hair)}
+.raw{font-family:var(--mono);font-size:12px;display:flex;gap:0;flex-wrap:wrap;border:1px solid var(--hair)}
+.raw span{padding:6px 10px;border-right:1px solid var(--hair)}
+.raw span.bad{background:var(--warnbg);color:var(--tax)}
+.fixrow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.fld{display:flex;flex-direction:column;gap:4px}
+.fld input{height:32px;border:1px solid var(--hair2);background:var(--bg);color:var(--ink);padding:0 10px;font:inherit;font-variant-numeric:tabular-nums}
+.fld input:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.fld input.need{border-color:var(--tax)}
+.collapsed{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair);color:var(--ink2)}
+
+/* settings */
+.exp{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:center;padding:16px 0;border-bottom:1px solid var(--hair)}
+.exp b{font-weight:500}
+.exp p{margin:2px 0 0;color:var(--ink2);max-width:60ch}
+
+.suggest{display:flex;flex-direction:column}
+.suggest .oq .stag{display:inline-flex}
+.colors{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:900px){.colors{grid-template-columns:minmax(0,1fr)}}
+.sample{padding:20px;display:flex;flex-direction:column;gap:12px;background:var(--bg);color:var(--ink);border:1px solid var(--hair)}
+.sample .figs{grid-template-columns:repeat(2,minmax(0,1fr))}
+.sample .fig:nth-child(3){border-left:0;padding-left:0}
+.th-light{--bg:#ffffff;--surface:#f7f7f6;--ink:#0a0a0a;--ink2:#6b6b6b;--ink3:#a3a3a3;--hair:#e8e8e8;--hair2:#d6d6d3;--accent:#07805f;--accent-soft:#e8f6f1;--in:#1f7a4d;--out:#c4342b;--saved:#0b4f35;--tax:#b45309;--negative:#c4342b;color-scheme:light}
+.th-dark{--bg:#0a0a0a;--surface:#141414;--ink:#f5f5f5;--ink2:#9a9a9a;--ink3:#6b6b6b;--hair:#262626;--hair2:#34343a;--accent:#34d399;--accent-soft:#10312a;--in:#5cc98c;--out:#e5675e;--saved:#2f9e6a;--tax:#f59e0b;--negative:#e5675e;color-scheme:dark}
+</style>
+
+<div class="page" id="root">
+  <header class="intro">
+    <div class="label">M28 U5 · mockup · for the author's judgement</div>
+    <h1>Home, in the frame Paychecks set</h1>
+    <p>A place to drop statements and payslips, any number at once. The month, paged the way Paychecks is. The year, with Trends folded into it. The figure colours you asked for. Where a choice is open, the switches above the window flip between the answers. Every figure is synthetic.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="Mockup controls">
+    <div class="ctl"><span class="label">Screen</span>
+      <div class="seg" data-ctl="screen"><button data-v="month" class="on">Month</button><button data-v="year">Year</button><button data-v="read">Reading files</button><button data-v="fix">A file that doesn't add up</button><button data-v="export">Settings · Export</button></div></div>
+    <div class="ctl"><span class="label">Choice 1 · Names</span>
+      <div class="seg" data-ctl="names"><button data-v="A" class="on"><span class="choice-tag">A</span>Month · Year</button><button data-v="B"><span class="choice-tag">B</span>Monthly · Yearly</button><button data-v="C"><span class="choice-tag">C</span>By month · By year</button></div></div>
+    <div class="ctl"><span class="label">Choice 2 · Colour reaches</span>
+      <div class="seg" data-ctl="reach"><button data-v="A" class="on"><span class="choice-tag">A</span>Headlines, charts, totals</button><button data-v="B"><span class="choice-tag">B</span>Every figure</button></div></div>
+    <div class="ctl"><span class="label">Choice 3 · Drop zone</span>
+      <div class="seg" data-ctl="intake"><button data-v="A" class="on"><span class="choice-tag">A</span>A band on top</button><button data-v="B"><span class="choice-tag">B</span>Buttons in the header</button></div></div>
+    <div class="ctl"><span class="label">Choice 4 · The year is</span>
+      <div class="seg" data-ctl="window"><button data-v="A" class="on"><span class="choice-tag">A</span>Jan to Dec</button><button data-v="B"><span class="choice-tag">B</span>The last 12 months</button></div></div>
+    <div class="ctl"><span class="label">Suggestions</span>
+      <div class="seg" data-ctl="sugg"><button data-v="off" class="on">Hidden</button><button data-v="on">Shown</button></div></div>
+    <div class="ctl"><span class="label">Theme</span>
+      <div class="seg" data-ctl="theme"><button data-v="system" class="on">System</button><button data-v="light">Light</button><button data-v="dark">Dark</button></div></div>
+    <div class="ctl"><span class="label">Motion</span>
+      <div class="seg" data-ctl="motion"><button data-v="full" class="on">Full</button><button data-v="reduced">Reduced</button></div></div>
+  </div>
+
+  <div class="stage"><div class="win navA bB" id="win">
+    <div class="titlebar">
+      <div class="doc"><span class="dirty" title="Saved"></span><span>household-2026.emd</span><span class="mono" style="color:var(--ink3)">saved 09:14</span></div>
+      <div class="caps" aria-hidden="true"><span>&#8211;</span><span>&#9633;</span><span>&#10005;</span></div>
+    </div>
+    <div class="body">
+      <nav class="side" id="side" aria-label="Sections"></nav>
+      <main class="main" id="main"></main>
+    </div>
+  </div></div>
+
+  <section style="display:flex;flex-direction:column;gap:16px">
+    <h2 class="h2">The figure colours, in both themes</h2>
+    <p class="note">Came in is green, went out is red, saved is a darker green, taxes are orange. Left over stays ink: it is the difference, not a flow. The swatches below are the same figures in light and dark, whatever theme the page is in.</p>
+    <div class="colors" id="colors"></div>
+    <p class="note"><b style="color:var(--ink);font-weight:500">How this squares with D-125.</b> D-125 says <i>accent marks what you can act on, positive reports what the app found, and accent never colours a figure</i>. The last part stays exactly as it is. What changes is docs/11's line that <i>outflows are plain ink, not red</i>: on the figures that are one of these four flows, the flow's colour is the figure's colour, and always beside the word that names it (Came in, Went out, Saved, Taxes), so colour is never the only carrier. Red stops meaning only "a problem" on these screens, so a problem keeps the form it already has: a chip with a dot and a word. Saved's green is set apart from the emerald accent by lightness (light 1.95:1 between them, dark 1.76:1) and by role, since a figure is never a fill, a border or an underline. All four pass AA as text: light 5.3, 5.4, 9.6 and 5.0 to 1; dark 9.6, 6.1, 5.9 and 9.2 to 1. When this is built, the amendment is recorded as its own decision.</p>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:8px">
+    <h2 class="h2">What the review step after a sheet does today, and what this proposes</h2>
+    <div class="opens" id="review"></div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:8px">
+    <h2 class="h2">What needs your pick</h2>
+    <div class="opens" id="open"></div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:8px">
+    <h2 class="h2">Suggestions, yours to take or leave</h2>
+    <p class="note">Not part of the design until you say so, and nothing here is built without asking. Switch <b style="font-weight:500;color:var(--ink)">Suggestions · Shown</b> above to see the visual ones in place, each marked with its number in orange.</p>
+    <div class="opens" id="sugglist"></div>
+  </section>
+</div>
+
+<script>
+(() => {
+const S = { screen:'month', names:'A', reach:'A', intake:'A', window:'A', sugg:'off', theme:'system', motion:'full', month:'2026-08', year:'2026', reading:null, arrived:[], fixed:false, wrote:null };
+
+const FACETS = [
+ ['M12.3441 14.9647L21.5169 5.79187L25.0113 11.9071L18.4593 18.4591L12.3441 14.9647Z','#6EE7B7'],
+ ['M21.5168 5.79187H42.4832L38.9888 11.9071H25.0112L21.5168 5.79187Z','#34D399'],
+ ['M42.4832 5.79187L51.656 14.9647L45.5408 18.4591L38.9888 11.9071L42.4832 5.79187Z','#12BC86'],
+ ['M51.656 14.9647V49.0351L45.5408 45.5407V18.4591L51.656 14.9647Z','#068C66'],
+ ['M51.656 49.0353L42.4832 58.2081L38.9888 52.0929L45.5408 45.5409L51.656 49.0353Z','#033A2B'],
+ ['M42.4832 58.208H21.5168L25.0112 52.0928H38.9888L42.4832 58.208Z','#05604A'],
+ ['M21.5169 58.2081L12.3441 49.0353L18.4593 45.5409L25.0113 52.0929L21.5169 58.2081Z','#0BA277'],
+ ['M12.3441 49.0351V14.9647L18.4593 18.4591V45.5407L12.3441 49.0351Z','#28CE95'],
+ ['M18.4592 18.4591L25.0112 11.9071L28.5056 17.5855L24.1376 21.9535L18.4592 18.4591Z','#A7F3D0'],
+ ['M25.0112 11.9071H38.9888L35.4944 17.5855H28.5056L25.0112 11.9071Z','#6EE7B7'],
+ ['M38.9888 11.9071L45.5408 18.4591L39.8624 21.9535L35.4944 17.5855L38.9888 11.9071Z','#34D399'],
+ ['M45.5408 18.4591V45.5407L39.8624 42.0463V21.9535L45.5408 18.4591Z','#0BA277'],
+ ['M45.5408 45.5407L38.9888 52.0927L35.4944 46.4143L39.8624 42.0463L45.5408 45.5407Z','#04503C'],
+ ['M38.9888 52.0927H25.0112L28.5056 46.4143H35.4944L38.9888 52.0927Z','#077A5B'],
+ ['M25.0112 52.0927L18.4592 45.5407L24.1376 42.0463L28.5056 46.4143L25.0112 52.0927Z','#12BC86'],
+ ['M18.4592 45.5407V18.4591L24.1376 21.9535V42.0463L18.4592 45.5407Z','#4ADEB0'],
+];
+const CORE = 'M24.1376 21.9536L28.5056 17.5856H35.4944L39.8624 21.9536V42.0464L35.4944 46.4144H28.5056L24.1376 42.0464V21.9536Z';
+function centroid(d){ const n=d.match(/-?\d+(\.\d+)?/g).map(Number); let x=0,y=0,c=0; // pairs only where both coords present
+  const pts=[]; const re=/([MLHVZ])([^MLHVZ]*)/g; let m, cx=0, cy=0;
+  while((m=re.exec(d))){ const a=m[2].trim().split(/[\s,]+/).filter(Boolean).map(Number);
+    if(m[1]==='M'||m[1]==='L'){cx=a[0];cy=a[1];pts.push([cx,cy]);} else if(m[1]==='H'){cx=a[0];pts.push([cx,cy]);} else if(m[1]==='V'){cy=a[0];pts.push([cx,cy]);} }
+  pts.forEach(p=>{x+=p[0];y+=p[1];c++}); return [x/c,y/c]; }
+let gemSeq = 0;
+function gem(size, mode, pieces){ // mode: spin | det | still ; pieces: how many of 17 are in (det)
+  const id = 'g' + (++gemSeq);
+  const parts = FACETS.map(([d,fill],i)=>{ const [x,y]=centroid(d); const k=.55;
+    return `<path class="f${mode==='det'&&i<pieces?' in':''}" style="--i:${i};--dx:${((x-32)*k).toFixed(1)}px;--dy:${((y-32)*k).toFixed(1)}px" d="${d}" fill="${fill}"/>`; }).join('');
+  const coreIn = mode==='det' && pieces>16 ? ' in' : '';
+  return `<svg class="gem ${mode}" width="${size}" height="${size}" viewBox="0 0 64 64" role="img" aria-label="${mode==='spin'?'Working':'Emerald'}">
+    <defs><linearGradient id="${id}" x1="25.448" y1="18.4592" x2="38.9888" y2="45.5408" gradientUnits="userSpaceOnUse"><stop stop-color="#E8FCF2"/><stop offset="1" stop-color="#34D399"/></linearGradient></defs>
+    ${parts}<g class="f core${coreIn}" style="--i:16;--dx:0px;--dy:0px"><path d="${CORE}" fill="url(#${id})"/>
+    <path d="M27.1952 20.2062H35.9312L35.0576 21.735H26.3216L27.1952 20.2062Z" fill="white" fill-opacity=".5"/>
+    <path d="M36.8048 20.6431H38.552L37.6784 21.9535H35.9312L36.8048 20.6431Z" fill="white" fill-opacity=".3"/></g></svg>`; }
+const piecesFor = (done,total) => total===0?0:Math.round(17*done/total);
+
+/* ---------- icons ---------- */
+const I = {
+ home:'<path d="M3 8l5-4.5L13 8v5H3z"/>', list:'<path d="M3 4h10M3 8h10M3 12h10"/>',
+ pay:'<path d="M4 2.5h6l2.5 2.5v8.5H4z"/><path d="M6.5 8h4M6.5 10.5h4"/>', plan:'<circle cx="8" cy="8" r="5"/><circle cx="8" cy="8" r="2"/>',
+ wealth:'<path d="M2.5 6l5.5-3 5.5 3-5.5 3z"/><path d="M2.5 9.5l5.5 3 5.5-3"/>', tag:'<path d="M2.5 2.5h5l6 6-5 5-6-6z"/><circle cx="5.5" cy="5.5" r=".8"/>',
+ grid:'<path d="M2.5 2.5h11v11h-11zM2.5 7h11M7 2.5v11"/>', link:'<path d="M6.5 9.5l3-3M5 7.5L3.5 9a2.1 2.1 0 003 3L8 10.5M8 5.5L9.5 4a2.1 2.1 0 013 3L11 8.5"/>',
+ gear:'<circle cx="8" cy="8" r="2.2"/><path d="M8 1.8v2M8 12.2v2M1.8 8h2M12.2 8h2M3.6 3.6L5 5M11 11l1.4 1.4M3.6 12.4L5 11M11 5l1.4-1.4"/>',
+ read:'<path d="M4 2.5h5.5L12 5v8.5H4z"/><path d="M8 6.5v4.5M6 9l2 2 2-2"/>', plus:'<path d="M8 3v10M3 8h10"/>',
+ left:'<path d="M10 3.5L5.5 8l4.5 4.5"/>', right:'<path d="M6 3.5l4.5 4.5L6 12.5"/>', stop:'<rect x="4" y="4" width="8" height="8"/>',
+ edit:'<path d="M3 13l1-3.5 6.5-6.5 2.5 2.5L6.5 12z"/>', trash:'<path d="M3 4.5h10M6 4.5V3h4v1.5M4.5 4.5l.7 9h5.6l.7-9"/>',
+ check:'<path d="M3.5 8.5l3 3 6-7"/>', arrow:'<path d="M3 8h9M9 5l3 3-3 3"/>', write:'<path d="M3 8.5l3 3 7-7"/>',
+};
+const ic = (n,s=16) => `<svg width="${s}" height="${s}" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" aria-hidden="true">${I[n]}</svg>`;
+function btn(kind, label, icon, extra={}){ const sm = extra.sm?' sm':''; const cnt = extra.count!=null?`<span class="count">${extra.count}</span>`:'';
+  const inner = extra.busy ? `<span class="tile">${gem(extra.sm?14:16,'spin')}</span>${extra.busy}` : `<span class="tile">${icon?ic(icon):''}</span>${label}${cnt}`;
+  return `<button class="btn ${kind}${sm}" ${extra.attrs||''} ${extra.disabled?'disabled':''}>${inner}</button>`; }
+
+
+I.download='<path d="M8 2.5v8M5 7.5l3 3 3-3M3 13.5h10"/>';
+I.files='<path d="M5 2.5h5.5L13 5v8.5H5z"/><path d="M3 5v10h7"/>';
+I.home='<path d="M3 8l5-4.5L13 8v5H3z"/>';
+
+/* ---------- synthetic data, minor units (agorot) ---------- */
+const MONTHS = ['2025-07','2025-08','2025-09','2025-10','2025-11','2025-12','2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08'];
+const OUT  = [1482000,1396000,1521000,1448000,1377000,1794000,1411000,1352000,1046500,1506000,1433000,1589000,1624000,1467240];
+const NET  = [1812000,1812000,1812000,1812000,1812000,2348000,1894000,1894000,1894000,1894000,1894000,1894000,1894000,1894000];
+const OTHER= [21240,0,34990,18800,0,22710,0,12000,21240,0,48000,21240,0,56230];
+const SAVED= [250000,250000,250000,300000,300000,500000,300000,300000,300000,300000,300000,300000,250000,320000];
+const TAX  = [512050,512050,512050,512050,512050,705000,537130,537130,537130,537130,537130,537130,537130,537130];
+const MISSING = {'2026-03':'Card ···7781'};
+const D = Object.fromEntries(MONTHS.map((m,i)=>[m,{m,in:NET[i]+OTHER[i],net:NET[i],other:OTHER[i],out:OUT[i],saved:SAVED[i],tax:TAX[i],left:NET[i]+OTHER[i]-OUT[i]-SAVED[i],missing:MISSING[m]}]));
+const CATS = [['Housing & rent',520000,0],['Groceries',318460,0],['Shopping & clothing',137600,0],['Restaurants & cafes',84230,0],['Fuel',61290,0],['Utilities',48715,0],['Health',42180,0],['Subscriptions',21460,0]];
+function catsFor(m){ const d=D[m]; const f=d.out/1467240; let sum=0;
+  const rows=CATS.map(([n,v],i)=>{ const x = i===0?520000:Math.round(v*f*(1+((i*7+MONTHS.indexOf(m)*3)%9-4)/40)); sum+=x; return [n,x]; });
+  rows.push(['Uncategorized',d.out-sum,true]); return rows.sort((a,b)=>b[1]-a[1]); }
+const BIG = [['2026-08-03','Rent, Herzl 14','Housing & rent',520000],['2026-08-21','IKEA Netanya','Shopping & clothing',89900],['2026-08-12','Shufersal Deal','Groceries',61245],['2026-08-02','Israel Electric','Utilities',48715],['2026-08-27','Rami Levy','Groceries',43910]];
+const MERCH = [['Shufersal Deal','Groceries',14,1987400],['Rami Levy','Groceries',13,1142080],['Paz Yellow','Fuel',14,782300],['Aroma','Restaurants & cafes',12,311460],['Super-Pharm','Health',11,402950],['Spotify','Subscriptions',14,27860]];
+
+const MNAME=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const fullM = m => MNAME[+m.slice(5)-1]+' '+m.slice(0,4);
+const shortM = m => MNAME[+m.slice(5)-1].slice(0,3);
+const ils = minor => { const neg=minor<0; const a=Math.abs(minor); return (neg?'−':'')+'₪'+Math.floor(a/100).toLocaleString('en-US')+'.'+String(a%100).padStart(2,'0'); };
+const ilsR = minor => (minor<0?'−':'')+'₪'+Math.round(Math.abs(minor)/100).toLocaleString('en-US');
+const avg3 = (m,k) => { const i=MONTHS.indexOf(m); const p=MONTHS.slice(Math.max(0,i-3),i).map(x=>D[x][k]); return p.length?Math.round(p.reduce((a,b)=>a+b,0)/p.length):null; };
+
+const NAMES = {A:['Month','Year'],B:['Monthly','Yearly'],C:['By month','By year']};
+
+/* ---------- rail ---------- */
+const SECTIONS = [['home','Home'],['list','Transactions'],['pay','Paychecks'],['plan','Plan'],['wealth','Wealth'],['tag','Categories']];
+const ENGINE = [['grid','Formats'],['link','Connections']];
+const SETTINGS = ['Packs','Accounts','Rules','Local model','Export'];
+function renderNav(){
+  const busy = S.reading && S.reading.done < S.reading.total;
+  const [mn,yn] = NAMES[S.names]; const inSettings = S.screen==='export';
+  const homeOpen = !inSettings;
+  document.getElementById('side').innerHTML = SECTIONS.map(([g,l])=> l==='Home'
+    ? `<button class="nitem${homeOpen?' open':''}" data-nav="month">${ic(g)}${l}${busy?`<span class="nbusy" title="Reading files">${gem(14,'spin')}</span>`:''}</button>`
+      + (homeOpen?[['month',mn],['year',yn]].map(([k,t])=>`<button class="nitem nchild${(S.screen===k||(k==='month'&&['read','fix'].includes(S.screen)))?' on':''}" data-nav="${k}">${t}</button>`).join(''):'')
+    : `<button class="nitem">${ic(g)}${l}</button>`).join('')
+    + '<div class="nsep"></div>' + ENGINE.map(([g,l])=>`<button class="nitem">${ic(g)}${l}</button>`).join('')
+    + '<div style="margin-top:auto"></div>'
+    + `<button class="nitem${inSettings?' open':''}" data-nav="export">${ic('gear')}Settings</button>`
+    + (inSettings?SETTINGS.map(t=>`<button class="nitem nchild${t==='Export'?' on':''}">${t}${t==='Export'?' <span class="mono" style="color:var(--ink3);margin-left:6px">new</span>':''}</button>`).join(''):'');
+}
+
+/* ---------- shared pieces ---------- */
+const stag = n => `<span class="sg stag" title="Suggestion ${n}">S${n}</span>`;
+function intakeBand(){
+  return `<div class="intake" data-act="read">
+    <div class="t">${ic('files',24)}<span><b>Drop statements and payslips here, any number</b>Card and bank exports, payslip PDFs or photos. Each goes to the reader that knows its layout, and nothing is written until you press Write.</span></div>
+    <div class="acts">${btn('secondary','Add by hand','plus')}${btn('primary','Read files','read',{attrs:'data-act="read"'})}</div>
+  </div>`; }
+function headerIntake(){ return `<span class="hdrin">${btn('secondary sm','Add by hand','plus',{sm:true})}${btn('primary sm','Read files','read',{sm:true,attrs:'data-act="read"'})}</span>`; }
+function pager(prev,next,fmt,attr){ return `<div class="pager" aria-label="Period">
+  <span class="pgl r">${prev?fmt(prev):''}</span>
+  <button class="pg" ${attr}="${prev||''}" ${prev?'':'disabled'} aria-label="Previous">${ic('left')}</button>
+  <button class="pg" ${attr}="${next||''}" ${next?'':'disabled'} aria-label="Next">${ic('right')}</button>
+  <span class="pgl">${next?fmt(next):'newest'}</span></div>`; }
+function figs(d, cap){
+  const f=(cls,label,v,sub,key)=>`<div class="fig"><span class="label"><span class="key" style="background:${key}"></span>${label}</span><span class="v ${cls}">${ils(v)}</span><small>${sub}</small></div>`;
+  const vs=(k,v)=>{ if(!cap) return ''; const a=avg3(S.month,k); if(a==null) return ''; const p=Math.round(100*(v-a)/a); return `<span class="sg" style="font-size:12px;color:var(--ink2);gap:6px">${p>=0?'+':''}${p}% vs 3-month avg ${stag(4)}</span>`; };
+  return `<div class="figs">
+    ${f('c-in','Came in',d.in,(cap?`net pay ${ils(d.net)}${d.other?' and '+ils(d.other)+' more':''}`:'net pay and other money in')+vs('in',d.in),'var(--in)')}
+    ${f('c-out','Went out',d.out,(d.missing?`<span class="chip bad" style="font-size:10px;padding:1px 6px"><span class="d"></span>${d.missing} missing</span>`:'card ···7781 and checking ···4410')+vs('out',d.out),'var(--out)')}
+    ${f('c-saved','Saved',d.saved,'moved to savings and goals'+vs('saved',d.saved),'var(--saved)')}
+    ${f('c-tax','Taxes',d.tax,'income tax, national insurance, health, off the slip'+vs('tax',d.tax),'var(--tax)')}
+    <div class="fig"><span class="label">Left over</span><span class="v">${ils(d.left)}</span><small>came in, less went out and saved</small></div>
+  </div>`; }
+
+/* the month chart: came in, went out, saved; a column per month opens it */
+function monthChart(){
+  const W=1080,H=170,pl=10,pr=10,pt=26,pb=26; const n=MONTHS.length;
+  const hi=Math.max(...MONTHS.map(m=>Math.max(D[m].in,D[m].out)))*1.04, lo=Math.min(...MONTHS.map(m=>Math.min(D[m].in,D[m].out)))*0.9;
+  const x=i=>pl+i*(W-pl-pr)/(n-1), y=v=>pt+(H-pt-pb)*(1-(v-lo)/(hi-lo));
+  const line=(k,c,w,dash)=>`<path d="${MONTHS.map((m,i)=>(i?'L':'M')+x(i).toFixed(1)+','+y(D[m][k]).toFixed(1)).join('')}" fill="none" stroke="${c}" stroke-width="${w}" ${dash?'stroke-dasharray="4 3"':''} stroke-linejoin="round" class="${S.drawn?'':'draw'}"/>`;
+  const cw=(W-pl-pr)/(n-1);
+  const cols=MONTHS.map((m,i)=>{ const on=m===S.month; const d=D[m];
+    return `<g class="col${on?' on':''}" data-m="${m}" tabindex="0" role="button" aria-label="${fullM(m)}: came in ${ils(d.in)}, went out ${ils(d.out)}">
+      <rect class="hit" x="${x(i)-cw/2}" y="0" width="${cw}" height="${H-pb+4}"/>
+      <rect class="sel" x="${x(i)-cw/2+.5}" y=".5" width="${cw-1}" height="${H-pb+3}"/>
+      ${['in','out'].map(k=>`<circle cx="${x(i)}" cy="${y(d[k])}" r="${on?4:2.5}" fill="${on?`var(--${k})`:'var(--bg)'}" stroke="var(--${k})" stroke-width="1.5"/>`).join('')}
+      ${on?`<text x="${x(i)}" y="${Math.min(y(d.in),y(d.out))-10}" text-anchor="${i===n-1?'end':'middle'}" style="fill:var(--in);font:12px var(--mono)">${ilsR(d.in)}</text><text x="${x(i)}" y="${Math.max(y(d.out),y(d.in))+20}" text-anchor="${i===n-1?'end':'middle'}" style="fill:var(--out);font:12px var(--mono)">${ilsR(d.out)}</text>`:''}
+      ${d.missing?`<text x="${x(i)}" y="${y(d.out)+16}" text-anchor="middle" style="fill:var(--negative);font:11px var(--sans)">part</text>`:''}
+      <text class="tick" x="${x(i)}" y="${H-6}" text-anchor="${i===0?'start':i===n-1?'end':'middle'}">${shortM(m)}${m.endsWith('-01')||i===0?' '+m.slice(2,4):''}</text></g>`; }).join('');
+  return `<div class="mchart"><svg viewBox="0 0 ${W} ${H}" aria-label="Came in and went out by month. Choose a month to open it.">${line('out','var(--out)',1.5)}${line('in','var(--in)',1.5)}${cols}</svg></div>
+    <div class="legend"><span><i style="background:var(--in)"></i>Came in</span><span><i style="background:var(--out)"></i>Went out</span><span>Saved and taxes are in the figures above and the table below</span><span style="margin-left:auto">A column opens its month · ← → page</span></div>`; }
+
+/* ---------- Month ---------- */
+function monthScreen(dir){
+  const d=D[S.month]; const i=MONTHS.indexOf(S.month); const prev=MONTHS[i-1], next=MONTHS[i+1];
+  const [mn]=NAMES[S.names]; const cats=catsFor(S.month); const top=cats[0][1];
+  const rb = 'rb';
+  const banner = S.wrote ? `<div class="introw" style="padding:10px 14px;background:var(--accent-soft)">${ic('check')}<span style="color:var(--ink)">Written: ${S.wrote}.</span><span>The new rows are flashing below. Nothing else asks you anything.</span><span style="flex:1"></span>${btn('ghost sm','Undo',null,{sm:true})}</div>` : '';
+  return `<div class="screen enter">
+    <div class="ph">
+      <div style="display:flex;flex-direction:column;gap:6px"><div class="label">Home · ${mn} · 3 accounts and the payslips</div><h1>${fullM(S.month)}</h1></div>
+      <div class="row" style="gap:16px">${headerIntake()}${pager(prev,next,m=>shortM(m)+' '+m.slice(0,4),'data-go')}</div>
+    </div>
+    ${banner}
+    ${intakeBand()}
+    <div class="gsline s-only fx">${stag(3)}<span class="meter"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><span>Getting started, 3 of 5 done. Next: enter your pension balances.</span>${btn('ghost sm','Show all',null,{sm:true})}</div>
+    ${figs(d,true)}
+    ${monthChart()}
+    <div class="month cols ${dir?'swap-'+dir:''}" style="display:grid">
+      <div class="block">
+        <div class="bh"><span class="label">Where it went</span><span class="mono" style="color:var(--ink3)">${cats.length} categories</span></div>
+        <div>${cats.map(([n,v,unc])=>`<div class="cat"><span class="lbl">${n}${unc?' <span style="color:var(--ink2);font-size:12px">· 14 rows, on Transactions</span>':''}</span><span class="bar1${unc?' unc':''}" style="width:${Math.max(4,Math.round(120*v/top))}px"></span><span class="amt c-out ${rb}">${ils(v)}</span></div>`).join('')}
+          <div class="ln total"><span class="lbl">Went out</span><span class="amt c-out">${ils(d.out)}</span></div></div>
+      </div>
+      <div class="block">
+        <div class="bh"><span class="label">What came in</span></div>
+        <div class="side-list lines">
+          <div class="ln"><span class="lbl">Software Labs Ltd <span style="color:var(--ink2);font-size:12px">net pay, the 1st</span></span><span class="amt c-in ${rb}">${ils(d.net)}</span></div>
+          ${d.other?`<div class="ln"><span class="lbl">Refunds and interest</span><span class="amt c-in ${rb}">${ils(d.other)}</span></div>`:''}
+          <div class="ln total"><span class="lbl">Came in</span><span class="amt c-in">${ils(d.in)}</span></div>
+        </div>
+        <div class="bh" style="margin-top:12px"><span class="label">What wants you</span></div>
+        <div>
+          <div class="want"><span class="w">14 transactions need a category<small>every category total depends on it</small></span>${btn('ghost sm','Open',null,{sm:true})}</div>
+          ${d.missing?`<div class="want"><span class="w" style="color:var(--negative)">No ${d.missing} statement for ${MNAME[+S.month.slice(5)-1]}<small style="color:var(--ink2)">so Went out is short</small></span>${btn('ghost sm','Read',null,{sm:true,attrs:'data-act="read"'})}</div>`:''}
+        </div>
+        <div class="s-hide" style="display:flex;flex-direction:column;gap:8px;margin-top:12px">
+          <div class="bh"><span class="label">Getting started</span>${btn('ghost sm','Put this away',null,{sm:true})}</div>
+          <div class="gs">${[['Import a card statement',1],['Import a bank statement',1],['Read a payslip',1],['Add your savings goals',0],['Enter your pension balances',0]].map(([t,dn])=>`<div class="gi${dn?' done':''}"><span class="box"></span>${t}</div>`).join('')}</div>
+        </div>
+      </div>
+    </div>
+    <div class="block">
+      <div class="bh"><span class="label">Biggest single charges</span></div>
+      <table><tbody>${BIG.map(([dt,mer,cat,v])=>`<tr style="cursor:default"><td class="mono" style="color:var(--ink2);width:110px">${dt}</td><td>${mer}</td><td style="color:var(--ink2)">${cat}</td><td class="r c-out ${rb}">−${ils(v)}</td></tr>`).join('')}</tbody></table>
+    </div>
+    ${allMonths()}
+  </div>`; }
+function allMonths(){
+  const rows = MONTHS.slice().reverse().map(m=>{ const d=D[m];
+    const miss = d.missing?`<tr class="missing2 s-only"><td style="padding-left:28px">${stag(2)} ${d.missing} · ${fullM(m)}</td><td colspan="5" style="color:var(--ink3)">No statement read for this month</td><td class="r">${btn('ghost sm','Read',null,{sm:true,attrs:'data-act="read"'})}</td></tr>`:'';
+    return `<tr class="${m===S.month?'on':''}${S.arrived.includes(m)?' arrived':''}" data-m="${m}" tabindex="0"><td>${fullM(m)}${d.missing?' <span class="chip bad" style="margin-left:6px"><span class="d"></span>part</span>':''}</td>
+      <td class="r c-in">${ils(d.in)}</td><td class="r c-out">${ils(d.out)}</td><td class="r c-saved">${ils(d.saved)}</td><td class="r c-tax">${ils(d.tax)}</td><td class="r">${ils(d.left)}</td><td></td></tr>${miss}`; }).join('');
+  return `<div style="display:flex;flex-direction:column;gap:12px;margin-top:8px">
+    <div class="sh"><div style="display:flex;flex-direction:column;gap:2px"><span class="h2" style="font-size:16px">All months</span><span style="color:var(--ink2);font-size:13px">A row opens its month above.</span></div></div>
+    <table><thead><tr><th>Month</th><th class="r">Came in</th><th class="r">Went out</th><th class="r">Saved</th><th class="r">Taxes</th><th class="r">Left over</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`; }
+
+/* ---------- Year ---------- */
+function yearMonths(){ if(S.window==='B') return MONTHS.slice(-12).map(m=>m);
+  return Array.from({length:12},(_,i)=>`${S.year}-${String(i+1).padStart(2,'0')}`); }
+function yearScreen(){
+  const [,yn]=NAMES[S.names]; const ms=yearMonths(); const have=ms.filter(m=>D[m]);
+  const sum=k=>have.reduce((a,m)=>a+D[m][k],0);
+  const tot={in:sum('in'),out:sum('out'),saved:sum('saved'),tax:sum('tax'),net:sum('net'),other:sum('other')}; tot.left=tot.in-tot.out-tot.saved;
+  const title = S.window==='B' ? `${shortM(ms[0])} ${ms[0].slice(0,4)} – ${shortM(ms[11])} ${ms[11].slice(0,4)}` : S.year;
+  const years=['2025','2026']; const yi=years.indexOf(S.year);
+  const pg = S.window==='B' ? `<span class="pgl" style="color:var(--ink3)">ends at the newest month</span>` : pager(years[yi-1],years[yi+1],y=>y,'data-year');
+  // bars
+  const W=1080,H=190,pl=10,pr=10,pt=24,pb=26; const hi=Math.max(...have.map(m=>Math.max(D[m].in,D[m].out)))*1.08; const cw=(W-pl-pr)/12; const bw=Math.min(18,cw/4);
+  const y=v=>pt+(H-pt-pb)*(1-v/hi), bh=v=>(H-pt-pb)*v/hi;
+  const bars=ms.map((m,i)=>{ const d=D[m]; const cx=pl+cw*i+cw/2;
+    if(!d) return `<g><rect x="${cx-cw/2+6}" y="${pt}" width="${cw-12}" height="${H-pt-pb}" fill="none" stroke="var(--hair2)" stroke-dasharray="3 3"/><text class="tick" x="${cx}" y="${H-6}" text-anchor="middle">${shortM(m)}</text></g>`;
+    return `<g class="col" data-m="${m}" data-to="month" tabindex="0" role="button" aria-label="${fullM(m)}, open it">
+      <rect class="hit" x="${cx-cw/2}" y="0" width="${cw}" height="${H-pb+4}"/>
+      <rect x="${cx-bw*1.5-2}" y="${y(d.in)}" width="${bw}" height="${bh(d.in)}" fill="var(--in)"/>
+      <rect x="${cx-bw/2}" y="${y(d.out)}" width="${bw}" height="${bh(d.out)}" fill="var(--out)"/>
+      <rect x="${cx+bw/2+2}" y="${y(d.saved)}" width="${bw}" height="${bh(d.saved)}" fill="var(--saved)"/>
+      ${d.missing?`<text x="${cx}" y="${y(d.out)-6}" text-anchor="middle" style="fill:var(--negative);font:11px var(--sans)">part</text>`:''}
+      <text class="tick" x="${cx}" y="${H-6}" text-anchor="middle">${shortM(m)}${S.window==='B'&&m.endsWith('-01')?' '+m.slice(2,4):''}</text></g>`; }).join('');
+  const cats=CATS.map(([n])=>n).concat(['Uncategorized']);
+  const catRows=cats.map(n=>{ const series=ms.map(m=>D[m]?catsFor(m).find(c=>c[0]===n)[1]:null); const tot=series.reduce((a,v)=>a+(v||0),0); const months=series.filter(v=>v!=null).length; return [n,series,tot,months]; }).sort((a,b)=>b[2]-a[2]);
+  const spark=s=>{ const vals=s.filter(v=>v!=null); const mx=Math.max(...vals)||1, mn=Math.min(...vals); const w=140,h=22;
+    let p=''; s.forEach((v,i)=>{ if(v==null) return; const X=(i*(w-4)/11+2).toFixed(1), Y=(h-3-(h-6)*(v-mn)/((mx-mn)||1)).toFixed(1); p+=(p?'L':'M')+X+','+Y; });
+    return `<svg class="spark" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><path d="${p}" fill="none" stroke="var(--ink2)" stroke-width="1.25"/></svg>`; };
+  const prevY = ms.filter(m=>D[m]).slice(-1)[0]; const ly = (+prevY.slice(0,4)-1)+prevY.slice(4);
+  const yoy = D[ly] ? `<div class="block"><div class="bh"><span class="label">The same month, a year apart</span><span class="mono" style="color:var(--ink3)">was on Trends</span></div>
+    <table class="yoy"><thead><tr><th></th><th class="r">${fullM(ly)}</th><th class="r">${fullM(prevY)}</th><th class="r">Change</th></tr></thead><tbody>
+    ${[['Came in','in'],['Went out','out'],['Saved','saved'],['Taxes','tax']].map(([l,k])=>{ const a=D[ly][k], b=D[prevY][k]; const p=Math.round(100*(b-a)/a); return `<tr style="cursor:default"><td>${l}</td><td class="r c-${k}">${ils(a)}</td><td class="r c-${k}">${ils(b)}</td><td class="r" style="color:var(--ink2)">${p>=0?'+':''}${p}%</td></tr>`; }).join('')}
+    </tbody></table></div>` : '';
+  return `<div class="screen enter">
+    <div class="ph">
+      <div style="display:flex;flex-direction:column;gap:6px"><div class="label">Home · ${yn} · ${have.length} of 12 months in this document</div><h1>${title}</h1></div>
+      <div class="row" style="gap:16px">${headerIntake()}${pg}</div>
+    </div>
+    ${figs(tot,false)}
+    <div class="facts" style="color:var(--ink2)">Off the payslips: gross ${ils(Math.round(tot.net*1.357))}, of which taxes <span class="c-tax">${ils(tot.tax)}</span>. A month typically: went out <span class="c-out">${ils(Math.round(tot.out/have.length))}</span>.</div>
+    <div class="mchart"><svg viewBox="0 0 ${W} ${H}" aria-label="Came in, went out and saved by month. Choose a month to open it.">${bars}</svg></div>
+    <div class="legend"><span><i style="background:var(--in);height:8px;width:8px"></i>Came in</span><span><i style="background:var(--out);height:8px;width:8px"></i>Went out</span><span><i style="background:var(--saved);height:8px;width:8px"></i>Saved</span><span>A dashed box is a month not in this document</span><span style="margin-left:auto">A month opens it in ${NAMES[S.names][0]}</span></div>
+    <div class="block">
+      <div class="bh"><span class="label">Where it went, and how it moved</span><span class="mono" style="color:var(--ink3)">the line was Trends' one category over time</span></div>
+      <div>${catRows.map(([n,s,t,k])=>`<div class="cat ycat"><span>${n}</span>${spark(s)}<span class="mono" style="color:var(--ink2);text-align:right">${k} mo</span><span class="amt c-out rb">${ils(t)}</span></div>`).join('')}</div>
+    </div>
+    <div class="cols">
+      <div class="block"><div class="bh"><span class="label">Where it actually goes, by shop</span><span class="mono" style="color:var(--ink3)">was on Trends</span></div>
+        <table><thead><tr><th>Merchant</th><th>Usually</th><th class="r">Months</th><th class="r">All of it</th></tr></thead><tbody>${MERCH.map(([m,c,k,v])=>`<tr style="cursor:default"><td>${m}</td><td style="color:var(--ink2)">${c}</td><td class="r">${k}</td><td class="r c-out rb">${ils(v)}</td></tr>`).join('')}</tbody></table></div>
+      ${yoy}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <span class="h2" style="font-size:16px">The months</span>
+      <table><thead><tr><th>Month</th><th class="r">Came in</th><th class="r">Went out</th><th class="r">Saved</th><th class="r">Taxes</th><th class="r">Left over</th></tr></thead><tbody>
+      ${ms.map(m=>{ const d=D[m]; if(!d) return `<tr class="missing"><td>${fullM(m)}</td><td colspan="5" style="color:var(--ink3)">${m>'2026-08'?'Not yet':'Not in this document'}</td></tr>`;
+        return `<tr data-m="${m}" data-to="month" tabindex="0"><td>${fullM(m)}</td><td class="r c-in">${ils(d.in)}</td><td class="r c-out">${ils(d.out)}</td><td class="r c-saved">${ils(d.saved)}</td><td class="r c-tax">${ils(d.tax)}</td><td class="r">${ils(d.left)}</td></tr>`; }).join('')}
+      </tbody></table>
+    </div>
+  </div>`; }
+
+/* ---------- Reading files: the payslip batch's pattern, for every kind ---------- */
+const BATCH = [
+ {f:'card-7781-2026-08.xlsx',kind:'Card statement',st:'ok',fig:'41 new · adds up to the printed ₪9,804.20'},
+ {f:'checking-4410-2026-08.csv',kind:'Bank statement',st:'ok',fig:'23 new, 9 already here · running balance agrees'},
+ {f:'payslip-2026-08.pdf',kind:'Payslip',st:'ok',fig:'gross ₪25,700.00 · net ₪18,940.00'},
+ {f:'card-7781-2026-07.xlsx',kind:'Card statement',st:'same',fig:'all 37 rows already here'},
+ {f:'card-2290-2026-08.xlsx',kind:'Card statement',st:'gap',fig:'rows ₪4,210.40, the file prints ₪4,390.40'},
+ {f:'savings-export.csv',kind:'Unknown layout',st:'new',fig:'no reader knows these columns yet'},
+];
+function startReading(){ S.reading={done:0,total:BATCH.length,writing:false}; S.screen='read'; S.fixed=false; syncSeg('screen'); render();
+  clearInterval(S.timer); S.timer=setInterval(()=>{ if(!S.reading){clearInterval(S.timer);return;} S.reading.done++; S.reading.last=S.reading.done-1; if(S.reading.done>=S.reading.total) clearInterval(S.timer); render(); }, 900); }
+function fileRow(b,i){ const r=S.reading; const done=i<r.done, now=i===r.done&&r.done<r.total;
+  let chip, tick='<span class="tick off"></span>', act='';
+  if(!done&&!now) chip='<span class="chip wait">Waiting</span>';
+  else if(now) chip=`<span class="chip live">${gem(12,'spin')}Reading</span>`;
+  else { const st = b.st==='gap'&&S.fixed?'ok':b.st;
+    if(st==='ok'){ chip='<span class="chip ok"><span class="d"></span>Adds up</span>'; tick=`<span class="tick on">${ic('check',12)}</span>`; }
+    if(st==='same') chip='<span class="chip">Already written</span>';
+    if(st==='gap'){ chip='<span class="chip warn"><span class="d"></span>Doesn\'t add up</span>'; act=btn('secondary sm','Look','arrow',{sm:true,attrs:'data-act="fix"'}); }
+    if(st==='new'){ chip='<span class="chip bad"><span class="d"></span>New layout</span>'; act=btn('secondary sm','Map its columns','grid',{sm:true}); } }
+  const fig = done ? (b.st==='gap'&&S.fixed?'41 new · adds up to the printed ₪4,390.40':b.fig) : '';
+  return `<div class="file5${done&&i===r.last?' landed':''}">${tick}<span class="file"><span>${b.f}</span><small>${done||now?b.kind:'&nbsp;'}</small></span>${chip}<span class="fig">${fig}</span><span>${act}</span></div>`; }
+function readScreen(){ const r=S.reading||(S.reading={done:BATCH.length,total:BATCH.length});
+  const finished=r.done>=r.total; const ok=BATCH.slice(0,r.done).filter(b=>b.st==='ok'||(b.st==='gap'&&S.fixed)).length; const cur=BATCH[r.done];
+  return `<div class="screen enter">
+    <div class="ph"><div style="display:flex;flex-direction:column;gap:6px"><div class="label">Home · read files</div><h1>Read files</h1>
+      <span class="sub">Statements and payslips together · new layouts go to qwen3:30b-a3b, on this machine</span></div></div>
+    <div class="readhead">
+      ${gem(56,'det',piecesFor(r.done,r.total)).replace('gem det',finished?'gem det done':'gem det')}
+      <div class="what"><span class="big2 num">${finished?`${r.total} of ${r.total} read`:`Reading ${r.done+1} of ${r.total}`}</span>
+        <span style="color:var(--ink2)">${finished?`${ok} add up and are ticked. A file that doesn't, or is new, waits for you and is left out until it does.`:`<span class="mono">${cur.f}</span> · a file that adds up is ticked as it lands`}</span>
+        <div class="prog" style="margin-top:8px"><i style="width:${100*r.done/r.total}%"></i></div></div>
+      ${finished?btn('secondary','Add more','plus',{attrs:'data-act="read"'}):btn('secondary','Stop','stop',{attrs:'data-act="stop"'})}
+    </div>
+    <div class="slips">${BATCH.map(fileRow).join('')}</div>
+    <div class="writebar"><span style="color:var(--ink2);max-width:62ch">Written in one go, as transactions and paychecks. Rows a file shares with what is already here are left out on their own, so there is nothing to accept. Your rules fill the categories; whatever is left waits on Transactions.</span>
+      ${r.writing?btn('primary','',null,{busy:'Writing',disabled:true}):btn('primary','Write','write',{count:ok,disabled:!finished||ok===0,attrs:'data-act="write"'})}</div>
+  </div>`; }
+
+/* ---------- the one screen a file can still need ---------- */
+function fixScreen(){
+  const fixed=S.fixed;
+  return `<div class="screen enter">
+    <div class="ph"><div style="display:flex;flex-direction:column;gap:6px"><div class="label">Read files · card-2290-2026-08.xlsx</div><h1>${fixed?'It adds up now':'This file doesn\'t add up'}</h1>
+      <span class="sub">Only a file whose own total disagrees, or whose running balance does, comes here. Everything else is written straight from Read files.</span></div></div>
+    <div class="gap">
+      <div><span class="label">The file prints</span><span class="big num" style="font-size:24px">₪4,390.40</span><small style="color:var(--ink2)">cell B5, סה"כ לחיוב</small></div>
+      <div><span class="label">Its rows come to</span><span class="big num" style="font-size:24px">${fixed?'₪4,390.40':'₪4,210.40'}</span><small style="color:var(--ink2)">40 of 41 rows read</small></div>
+      <div><span class="label">Apart by</span><span class="big num" style="font-size:24px${fixed?'':';color:var(--negative)'}">${fixed?'₪0.00':'₪180.00'}</span>${fixed?'<span class="chip ok" style="align-self:flex-start"><span class="d"></span>Adds up</span>':'<span class="chip bad" style="align-self:flex-start"><span class="d"></span>Does not add up</span>'}</div>
+    </div>
+    <div class="block">
+      <div class="bh"><span class="label">Row 34 was not read</span><span class="mono" style="color:var(--ink3)">the file's own cells</span></div>
+      <div class="raw"><span>14/8/26</span><span class="he" dir="rtl">ביטוח רכב</span><span class="bad">180.00 ₪-</span><span>14/8/26</span><span></span></div>
+      <div class="fixrow">
+        <div class="fld"><span class="label">Date</span><input id="f-date" value="2026-08-14"></div>
+        <div class="fld"><span class="label">Merchant</span><input id="f-mer" value="ביטוח רכב" dir="rtl"></div>
+        <div class="fld"><span class="label">Amount</span><input id="f-amt" class="${fixed?'':'need'}" value="${fixed?'180.00':''}" placeholder="type what the cell says"></div>
+        <div class="fld"><span class="label">Charged</span><input id="f-chg" value="2026-08-14"></div>
+      </div>
+    </div>
+    <div class="collapsed"><span>40 rows read and nothing to decide on them</span>${btn('ghost sm','Show them',null,{sm:true})}</div>
+    <div class="writebar"><span style="color:var(--ink2)">Leave it out and the other files are still written. Write anyway and the month says it is ${fixed?'':'₪180.00 '}short.</span>
+      <span class="row" style="gap:8px">${btn('ghost','Leave it out')}${fixed?'':btn('secondary','Write anyway')}${btn('primary','Back to Read files','check',{attrs:'data-act="back"',disabled:!fixed})}</span></div>
+  </div>`; }
+
+/* ---------- Settings · Export ---------- */
+function exportScreen(){ return `<div class="screen enter">
+  <div class="ph"><div style="display:flex;flex-direction:column;gap:6px"><div class="label">Settings · Export</div><h1>Export</h1><span class="sub">A spreadsheet of what this document holds. It leaves Home, where it was a button above the month.</span></div></div>
+  <div>
+    <div class="exp"><div><b>Months</b><p>One row a month: came in, went out, saved, taxes, left over, and how many rows each came from. What the CSV button on Home wrote.</p></div>${btn('secondary','Export 14 months','download')}</div>
+    <div class="exp"><div><b>Transactions</b><p>Every transaction in every account, with its category. Transactions keeps its own export too, of whatever it is showing.</p></div>${btn('secondary','Export 1,284 transactions','download')}</div>
+    <div class="exp"><div><b>The whole document</b><p>Not a spreadsheet: File, Save a copy keeps everything, and it opens anywhere Emerald does.</p></div><span class="mono" style="color:var(--ink3)">Ctrl+Shift+S</span></div>
+  </div></div>`; }
+
+/* ---------- render ---------- */
+function render(dir){
+  document.getElementById('win').className=`win navA bB intake${S.intake} reach${S.reach}${S.sugg==='on'?' sugg':''}`;
+  document.getElementById('root').classList.toggle('rm',S.motion==='reduced');
+  renderNav();
+  const main=document.getElementById('main'); const keep=main.scrollTop;
+  main.innerHTML = S.screen==='month'?monthScreen(dir):S.screen==='year'?yearScreen():S.screen==='read'?readScreen():S.screen==='fix'?fixScreen():exportScreen();
+  if(S.screen==='month') S.drawn=true;
+  if(dir!==undefined||S.screen==='read'||S.keep) main.scrollTop=keep;
+  if(S.noEnter) document.querySelectorAll('.screen.enter').forEach(e=>e.classList.remove('enter'));
+  S.noEnter=false; S.keep=false;
+  // colour reach B: every figure carries its flow's colour; A: only headlines, the chart and totals
+  document.querySelectorAll('.rb').forEach(e=>{ e.style.color = S.reach==='A' ? 'var(--ink)' : ''; });
+}
+function go(m){ if(!m||!D[m]) return; if(S.screen!=='month'){ S.month=m; S.screen='month'; syncSeg('screen'); render(); document.getElementById('main').scrollTop=0; return; }
+  if(m===S.month) return; const dir=MONTHS.indexOf(m)>MONTHS.indexOf(S.month)?'r':'l'; S.month=m; S.wrote=null; S.noEnter=true; render(dir); }
+function syncSeg(k){ document.querySelectorAll(`[data-ctl="${k}"] button`).forEach(b=>b.classList.toggle('on',b.dataset.v===S[k])); }
+
+document.querySelectorAll('[data-ctl]').forEach(g=>g.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const k=g.dataset.ctl; S[k]=b.dataset.v; syncSeg(k);
+  if(k==='theme'){ if(S.theme==='system') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme',S.theme); }
+  if(k==='screen'){ S.wrote=null; if(S.screen==='read') return startReading(); if(S.screen==='fix'){ S.reading=S.reading||{done:BATCH.length,total:BATCH.length}; } }
+  S.noEnter = k!=='screen'; S.keep = k!=='screen'; render(); }));
+
+document.getElementById('side').addEventListener('click',e=>{ const n=e.target.closest('[data-nav]'); if(!n) return; S.screen=n.dataset.nav; S.wrote=null; syncSeg('screen'); render(); });
+
+document.getElementById('main').addEventListener('click',e=>{
+  const yr=e.target.closest('[data-year]'); if(yr&&yr.dataset.year){ S.year=yr.dataset.year; S.noEnter=true; return render(); }
+  const col=e.target.closest('.col[data-m]'); if(col) return go(col.dataset.m);
+  const pg=e.target.closest('[data-go]'); if(pg) return go(pg.dataset.go);
+  const act=e.target.closest('[data-act]');
+  if(act){ const a=act.dataset.act;
+    if(a==='read') return startReading();
+    if(a==='fix'){ S.screen='fix'; syncSeg('screen'); return render(); }
+    if(a==='back'){ S.screen='read'; syncSeg('screen'); return render(); }
+    if(a==='stop'){ clearInterval(S.timer); S.reading.total=Math.max(S.reading.done,1); S.reading.done=S.reading.total; return render(); }
+    if(a==='write'){ S.reading.writing=true; S.noEnter=true; render();
+      setTimeout(()=>{ S.arrived=['2026-08']; S.reading=null; S.screen='month'; S.month='2026-08'; S.wrote=`64 transactions${S.fixed?' and 41 more':''}, and the August paycheck`; syncSeg('screen'); render(); document.getElementById('main').scrollTop=0; setTimeout(()=>{S.arrived=[];},1000); }, 900); return; }
+  }
+  const tr=e.target.closest('tbody tr[data-m]'); if(tr&&!e.target.closest('.btn')){ go(tr.dataset.m); document.getElementById('main').scrollTo({top:0,behavior:S.motion==='reduced'?'auto':'smooth'}); }
+});
+document.getElementById('main').addEventListener('input',e=>{ if(e.target.id==='f-amt'){ const v=e.target.value.replace(/[^\d.]/g,''); if(Math.round(parseFloat(v)*100)===18000&&!S.fixed){ S.fixed=true; S.keep=true; S.noEnter=true; render(); const i=document.getElementById('f-amt'); i.focus(); i.setSelectionRange(i.value.length,i.value.length); } } });
+document.getElementById('main').addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT') return;
+  if(S.screen==='month'){ const i=MONTHS.indexOf(S.month); if(e.key==='ArrowLeft') go(MONTHS[i-1]); if(e.key==='ArrowRight') go(MONTHS[i+1]); }
+  if(e.key==='Enter'){ const t=e.target.closest('.col[data-m],tbody tr[data-m]'); if(t) go(t.dataset.m); }
+});
+document.getElementById('main').tabIndex=-1;
+
+/* ---------- the sheets below the window ---------- */
+const sample = th => `<div class="sample th-${th}"><span class="label">${th==='light'?'Light':'Dark'}</span><div class="figs">
+  <div class="fig"><span class="label">Came in</span><span class="v c-in">₪19,502.30</span></div>
+  <div class="fig"><span class="label">Went out</span><span class="v c-out">₪14,672.40</span></div>
+  <div class="fig"><span class="label">Saved</span><span class="v c-saved">₪3,200.00</span></div>
+  <div class="fig"><span class="label">Taxes</span><span class="v c-tax">₪5,371.30</span></div></div>
+  <div class="row" style="gap:12px">${btn('primary sm','Read files','read',{sm:true})}<span class="chip bad"><span class="d"></span>Doesn't add up</span><span class="chip ok"><span class="d"></span>Adds up</span></div>
+  <small style="color:var(--ink2)">The emerald button beside the figures: one is a thing you press, the others are facts, and none of them shares a form.</small></div>`;
+document.getElementById('colors').innerHTML = `<div class="bB">${sample('light')}</div><div class="bB">${sample('dark')}</div>`;
+
+const oq = (n,t,p,tag) => `<div class="oq"><span class="${tag||'choice-tag'}" style="width:22px;height:22px;font-size:11px;display:inline-flex">${n}</span><div><b>${t}</b><p>${p}</p></div></div>`;
+document.getElementById('review').innerHTML = [
+ ['?','What it does today','Every row of the sheet, with what the app made of it: new, duplicate, failed or skipped. Nothing is accepted until you press Accept all new, then Import. Beside that it checks the sheet against the total it prints (only once the rows are accepted, so before that it always reads as a mismatch), checks a bank file\'s running balance (the one thing that blocks Import), lets you pick a category per row with an offer to make a rule, and lets you correct a misread figure.'],
+ ['?','What it is for, honestly','Duplicates need no decision: a row already in the document is recognised by its key and can never be imported, accepted or not, and the similar-duplicate status the screen can show is never produced. So the screen\'s real jobs are the two checks and a row that failed to read. Categorising is Transactions\' job.'],
+ ['→','Proposed','Remove the screen and the "38 transactions imported" notice after it. A file is read and checked on Read files; one that adds up is ticked and written with the rest, already-present rows left out without asking. Only a file whose printed total or running balance disagrees comes to a screen, and that screen shows the gap and the rows that cause it, nothing else. A new layout still goes to the column mapper, since that is a real question about the file. After Write you land on the month, with what was written in one line.'],
+].map(x=>oq(...x)).join('');
+
+document.getElementById('open').innerHTML = [
+ ['1','What the two views are called','Month · Year (proposed: short, and they read as the rail\'s children under Home). Or Monthly · Yearly, or By month · By year. You said "this year, this month" was wrong; all three drop "this".'],
+ ['2','How far the colours reach','A: the headline figures, the charts and the totals (Went out under Where it went, the All months columns). Single rows stay ink, so a list of forty charges is not forty red numbers. B: every figure that is one of the four flows, rows included. A is proposed.'],
+ ['3','Where the drop zone sits','A: a band at the top of Month, always there, with Read files and Add by hand in it. B: the two buttons in the page header and the whole window as the drop target, so the month starts higher. Year gets the buttons in its header either way.'],
+ ['4','What a year is','A: January to December, paged by year, with the months not in the document drawn as dashed boxes. B: the last twelve months ending at the newest, which is what Trends showed. Its 24-month option goes either way.'],
+ ['5','Trends as a page','Proposed: gone, with its three parts in the year: each category\'s line beside its total, the same month a year apart, and the merchants. Say if any of them should stay out.'],
+].map(x=>oq(...x)).join('');
+
+document.getElementById('sugglist').innerHTML = [
+ ['S1','Open on the newest month that has data','Today Home opens on the calendar month, so on 2 October it shows an empty October.'],
+ ['S2','A missing statement is a row in All months, with Read','The way a missing payslip is a row on Paychecks. Shown in March 2026.'],
+ ['S3','Getting started shrinks to one line','Under the drop zone, "3 of 5 done", instead of a block beside the month.'],
+ ['S4','Each headline figure says how it compares','"+4% vs 3-month average" under the figure, in ink.'],
+ ['S5','Keys for the frame','← → page months (already in the mockup), M and Y switch views, and Ctrl+O is Read files.'],
+].map(([n,t,p])=>`<div class="oq"><span class="stag" style="display:inline-flex;height:22px">${n}</span><div><b>${t}</b><p>${p}</p></div></div>`).join('');
+
+render();
+})();
+</script>

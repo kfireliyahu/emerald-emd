@@ -1,0 +1,283 @@
+{
+  "about": "What scripts/make-demo-document.mjs writes into the ledger tour's document (M33 U1, U5). Synthetic: both card statements are made up and in English, and every shop on them is a made-up name, so a visitor who reads no Hebrew can follow the tour; the paychecks are fixtures/synthetic/payslip-2026-07.txt's figures, month after month; the goal and the debt are made up and round. The document has lived a little: last month's card statement is in, read by a reader it keeps, and since no built-in pattern knows a made-up shop, every shop on it is filed by a rule, and the savings were counted this month. Nothing marks the shops as not bills: the same shops on two statements are not evidence of a bill (M37 F2). The statement the tour reads is `next`, bundled beside the page and not in the document.",
+  "statement": {
+    "file": "demo/card-statement-2026-08.xlsx",
+    "account": {
+      "name": "Everyday Card 1234",
+      "kind": "CREDIT_CARD",
+      "last4": "1234"
+    },
+    "reader": "Everyday Card",
+    "note": "Last month: charged 2/8/26, made up and in English, every shop on it a made-up name. Read at build, and its columns kept as a reader."
+  },
+  "rules": [
+    {
+      "pattern": "Greenleaf Market",
+      "category_id": "cat:groceries"
+    },
+    {
+      "pattern": "Harbor Foods",
+      "category_id": "cat:groceries"
+    },
+    {
+      "pattern": "Daily Basket",
+      "category_id": "cat:groceries"
+    },
+    {
+      "pattern": "Olive & Wheat Deli",
+      "category_id": "cat:groceries"
+    },
+    {
+      "pattern": "Little Bean Cafe",
+      "category_id": "cat:restaurants"
+    },
+    {
+      "pattern": "Copper Kettle",
+      "category_id": "cat:restaurants"
+    },
+    {
+      "pattern": "Burger Yard",
+      "category_id": "cat:restaurants"
+    },
+    {
+      "pattern": "Northway Fuel",
+      "category_id": "cat:fuel"
+    },
+    {
+      "pattern": "Willow Pharmacy",
+      "category_id": "cat:pharmacy"
+    },
+    {
+      "pattern": "Maple Outfitters",
+      "category_id": "cat:shopping"
+    },
+    {
+      "pattern": "Thread & Needle",
+      "category_id": "cat:shopping"
+    },
+    {
+      "pattern": "ParcelPoint Online",
+      "category_id": "cat:shopping"
+    },
+    {
+      "pattern": "Hilltop Hardware",
+      "category_id": "cat:shopping"
+    },
+    {
+      "pattern": "City Transit Card",
+      "category_id": "cat:transit"
+    },
+    {
+      "pattern": "Bright Power Co.",
+      "category_id": "cat:electricity"
+    },
+    {
+      "pattern": "Clearwater Utility",
+      "category_id": "cat:water"
+    },
+    {
+      "pattern": "Fastline Internet",
+      "category_id": "cat:connectivity"
+    },
+    {
+      "pattern": "Parrot Mobile",
+      "category_id": "cat:connectivity"
+    },
+    {
+      "pattern": "StreamBox",
+      "category_id": "cat:subscriptions"
+    },
+    {
+      "pattern": "Tuneful Music",
+      "category_id": "cat:subscriptions"
+    }
+  ],
+  "paychecks": [
+    {
+      "period": "2026-07",
+      "payment_date": "2026-08-01",
+      "gross": 24500,
+      "net": 16205,
+      "lines": [
+        {
+          "deduction_type_id": "ded:income-tax",
+          "employee_amount": 3980.5
+        },
+        {
+          "deduction_type_id": "ded:national-insurance",
+          "employee_amount": 1062,
+          "employer_amount": 1470
+        },
+        {
+          "deduction_type_id": "ded:health-tax",
+          "employee_amount": 775
+        },
+        {
+          "deduction_type_id": "ded:pension",
+          "employee_amount": 1470,
+          "employer_amount": 1592.5,
+          "basis_amount": 24500
+        },
+        {
+          "deduction_type_id": "ded:study-fund",
+          "employee_amount": 612.5,
+          "employer_amount": 1837.5,
+          "basis_amount": 24500
+        },
+        {
+          "deduction_type_id": "ded:severance",
+          "employee_amount": 0,
+          "employer_amount": 2040.85,
+          "basis_amount": 24500
+        },
+        {
+          "deduction_type_id": "ded:union-dues",
+          "employee_amount": 45
+        },
+        {
+          "deduction_type_id": "ded:other",
+          "employee_amount": 350,
+          "note": "Loan repayment"
+        }
+      ]
+    },
+    {
+      "period": "2026-08",
+      "payment_date": "2026-09-01",
+      "gross": 24500,
+      "net": 16205,
+      "lines": [
+        {
+          "deduction_type_id": "ded:income-tax",
+          "employee_amount": 3980.5
+        },
+        {
+          "deduction_type_id": "ded:national-insurance",
+          "employee_amount": 1062,
+          "employer_amount": 1470
+        },
+        {
+          "deduction_type_id": "ded:health-tax",
+          "employee_amount": 775
+        },
+        {
+          "deduction_type_id": "ded:pension",
+          "employee_amount": 1470,
+          "employer_amount": 1592.5,
+          "basis_amount": 24500
+        },
+        {
+          "deduction_type_id": "ded:study-fund",
+          "employee_amount": 612.5,
+          "employer_amount": 1837.5,
+          "basis_amount": 24500
+        },
+        {
+          "deduction_type_id": "ded:severance",
+          "employee_amount": 0,
+          "employer_amount": 2040.85,
+          "basis_amount": 24500
+        },
+        {
+          "deduction_type_id": "ded:union-dues",
+          "employee_amount": 45
+        },
+        {
+          "deduction_type_id": "ded:other",
+          "employee_amount": 350,
+          "note": "Loan repayment"
+        }
+      ]
+    },
+    {
+      "period": "2026-09",
+      "payment_date": "2026-10-01",
+      "gross": 24500,
+      "net": 16205,
+      "lines": [
+        {
+          "deduction_type_id": "ded:income-tax",
+          "employee_amount": 3980.5
+        },
+        {
+          "deduction_type_id": "ded:national-insurance",
+          "employee_amount": 1062,
+          "employer_amount": 1470
+        },
+        {
+          "deduction_type_id": "ded:health-tax",
+          "employee_amount": 775
+        },
+        {
+          "deduction_type_id": "ded:pension",
+          "employee_amount": 1470,
+          "employer_amount": 1592.5,
+          "basis_amount": 24500
+        },
+        {
+          "deduction_type_id": "ded:study-fund",
+          "employee_amount": 612.5,
+          "employer_amount": 1837.5,
+          "basis_amount": 24500
+        },
+        {
+          "deduction_type_id": "ded:severance",
+          "employee_amount": 0,
+          "employer_amount": 2040.85,
+          "basis_amount": 24500
+        },
+        {
+          "deduction_type_id": "ded:union-dues",
+          "employee_amount": 45
+        },
+        {
+          "deduction_type_id": "ded:other",
+          "employee_amount": 350,
+          "note": "Loan repayment"
+        }
+      ]
+    }
+  ],
+  "goals": [
+    {
+      "name": "Emergency fund",
+      "kind": "EMERGENCY",
+      "target_amount": 30000,
+      "target_date": "2027-06-30",
+      "already_there": 12000,
+      "already_there_on": "2026-07-01",
+      "default_holding": {
+        "name": "Everyday Bank savings",
+        "kind": "DEPOSIT",
+        "is_liquid": true,
+        "provenance": "RECORDED",
+        "place": {
+          "name": "Everyday Bank",
+          "kind": "DEPOSIT"
+        }
+      }
+    }
+  ],
+  "readings": [
+    {
+      "holding": "Everyday Bank savings",
+      "as_of": "2026-09-01",
+      "value": 12000
+    }
+  ],
+  "debts": [
+    {
+      "name": "Car loan",
+      "kind": "BANK_LOAN",
+      "principal_amount": 40000,
+      "opened_date": "2025-01-01",
+      "expected_end_date": "2028-12-31",
+      "monthly_payment": 1000,
+      "tracking_kind": "NONE"
+    }
+  ],
+  "next": {
+    "file": "card-statement-2026-09.xlsx",
+    "note": "This month: charged 2/9/26, the same made-up shops with different figures and one it has never seen (Juniper Pilates Studio). Bundled beside the page for the tour to read."
+  }
+}

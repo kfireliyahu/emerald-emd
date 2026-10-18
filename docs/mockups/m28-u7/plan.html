@@ -1,0 +1,640 @@
+<meta charset="utf-8">
+<title>Emerald Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Hebrew:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap">
+<style>
+/* M28 U7 reuses U4-U6's tokens, rail, split-tile buttons and row menu verbatim (D-312, D-313, D-315). Plan is one
+   screen: fixed expenses on top, the split under them on one draggable bar. Layout: mockup controls, the app window,
+   then the sheets (what moves, what a conversation can do, the picks, the suggestions). */
+/* M28 U6 reuses U4/U5's tokens, rail and split-tile buttons verbatim (D-312, D-313), then adds
+   Transactions (By merchant, All rows), the row menu and Categories below. Layout: the mockup's
+   choice bar, the app window, then the sheets: the row menu's actions and who can do them,
+   Home against these screens, the picks, and the suggestions. */
+:root{
+  --bg:#ffffff;--surface:#f7f7f6;--elevated:#ffffff;--ink:#0a0a0a;--ink2:#6b6b6b;--ink3:#a3a3a3;
+  --hair:#e8e8e8;--hair2:#d6d6d3;--accent:#07805f;--accent-ink:#ffffff;--accent-hover:#05664b;
+  --accent-soft:#e8f6f1;--accent-deep:#055a43;--positive:#1f7a4d;--negative:#c4342b;
+  --pop:0 1px 2px rgba(10,10,10,.05),0 8px 24px rgba(10,10,10,.08);
+  --sans:'IBM Plex Sans','IBM Plex Sans Hebrew',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --micro:120ms;--base:180ms;--enter:260ms;--ease:cubic-bezier(.22,1,.36,1);
+  --in:#1f7a4d;--out:#c4342b;--saved:#0b4f35;--tax:#b45309;--warnbg:#fdf3e7;
+  /* category hues, choice 2 A: eleven, richer than today's greys, none of them a flow colour */
+  --k1:#3f74c9;--k2:#cf7f22;--k3:#21918c;--k4:#c4497e;--k5:#7b5cc9;--k6:#7f8f26;--k7:#2b97cc;--k8:#d4664a;--k9:#9a52a0;--k10:#5f7590;--k11:#a88a3e;--k0:#b5b5b0;
+  /* choice 2 B: one hue per group, children are steps of it */
+  --fa:#3f74c9;--fb:#cf7f22;--fc:#7b5cc9;--fd:#c4497e;--fe:#21918c;--ff:#5f7590;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0a0a0a;--surface:#141414;--elevated:#1a1a1b;--ink:#f5f5f5;--ink2:#9a9a9a;--ink3:#6b6b6b;
+  --hair:#262626;--hair2:#34343a;--accent:#34d399;--accent-ink:#06231a;--accent-hover:#5ee0b0;
+  --accent-soft:#10312a;--accent-deep:#1fae7d;--positive:#4caf7d;--negative:#e5675e;
+  --pop:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.55);
+  --in:#5cc98c;--out:#e5675e;--saved:#2f9e6a;--tax:#f59e0b;--warnbg:#2a1d0b;
+  --k1:#7aa5ee;--k2:#f0a554;--k3:#4cc2bb;--k4:#ec7fae;--k5:#a78bf0;--k6:#b2c25a;--k7:#62bfee;--k8:#f08f74;--k9:#c98bd0;--k10:#9aaec8;--k11:#d4b46a;--k0:#55555a;
+  --fa:#7aa5ee;--fb:#f0a554;--fc:#a78bf0;--fd:#ec7fae;--fe:#4cc2bb;--ff:#9aaec8;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a0a0a;--surface:#141414;--elevated:#1a1a1b;--ink:#f5f5f5;--ink2:#9a9a9a;--ink3:#6b6b6b;
+  --hair:#262626;--hair2:#34343a;--accent:#34d399;--accent-ink:#06231a;--accent-hover:#5ee0b0;
+  --accent-soft:#10312a;--accent-deep:#1fae7d;--positive:#4caf7d;--negative:#e5675e;
+  --pop:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.55);
+  --in:#5cc98c;--out:#e5675e;--saved:#2f9e6a;--tax:#f59e0b;--warnbg:#2a1d0b;
+  --k1:#7aa5ee;--k2:#f0a554;--k3:#4cc2bb;--k4:#ec7fae;--k5:#a78bf0;--k6:#b2c25a;--k7:#62bfee;--k8:#f08f74;--k9:#c98bd0;--k10:#9aaec8;--k11:#d4b46a;--k0:#55555a;
+  --fa:#7aa5ee;--fb:#f0a554;--fc:#a78bf0;--fd:#ec7fae;--fe:#4cc2bb;--ff:#9aaec8;color-scheme:dark}
+html{background:var(--bg)}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input,select{font:inherit;color:inherit}
+.mono{font-family:var(--mono);font-size:12px}
+.label{font-size:11px;line-height:1.3;letter-spacing:.08em;font-weight:500;text-transform:uppercase;color:var(--ink2)}
+.he{font-family:'IBM Plex Sans Hebrew',var(--sans);unicode-bidi:isolate}
+.c-in{color:var(--in)}.c-out{color:var(--out)}
+
+/* the mockup's page */
+.page{max-width:1320px;margin:0 auto;padding-block:32px 96px;padding-inline:16px;display:flex;flex-direction:column;gap:32px}
+.intro{display:flex;flex-direction:column;gap:8px;max-width:76ch}
+.intro h1{margin:0;font-size:24px;font-weight:500;letter-spacing:-.01em;text-wrap:balance}
+.intro p{margin:0;color:var(--ink2)}
+.controls{display:flex;flex-wrap:wrap;gap:16px 28px;align-items:flex-end;padding:16px;background:var(--surface)}
+.ctl{display:flex;flex-direction:column;gap:6px}
+.seg{display:flex;flex-wrap:wrap}
+.seg button{height:30px;padding:0 12px;border:1px solid var(--hair2);margin-left:-1px;font-size:13px;color:var(--ink2);transition:background-color var(--micro),color var(--micro)}
+.seg button:first-child{margin-left:0}
+.seg button.on{background:var(--ink);color:var(--bg);border-color:var(--ink);position:relative;z-index:1}
+.choice-tag{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;margin-right:6px;font-size:10px;font-weight:500;border:1px solid currentColor}
+.stage{overflow-x:auto;border:1px solid var(--hair2)}
+.h2{margin:0;font-size:18px;font-weight:500;letter-spacing:-.005em}
+.note{color:var(--ink2);max-width:76ch;margin:0}
+
+/* the app window */
+.win{min-width:1100px;height:840px;display:grid;grid-template-rows:40px 1fr;background:var(--bg);position:relative}
+.titlebar{display:flex;align-items:center;gap:16px;padding:0 12px 0 16px;background:var(--surface);border-bottom:1px solid var(--hair)}
+.doc{display:flex;align-items:center;gap:8px;font-size:13px}
+.dirty{width:7px;height:7px;border-radius:50%;border:1.5px solid var(--ink2)}
+.dirty.on{background:var(--ink2)}
+.caps{margin-left:auto;display:flex;gap:2px;color:var(--ink3)}
+.caps span{width:36px;height:28px;display:flex;align-items:center;justify-content:center}
+.body{display:grid;grid-template-columns:216px 1fr;min-height:0}
+.side{background:var(--surface);border-right:1px solid var(--hair);display:flex;flex-direction:column;padding:8px 0;overflow:auto}
+.nitem{height:32px;display:flex;align-items:center;gap:10px;padding:0 14px;color:var(--ink2);font-size:13px;position:relative;width:100%;text-align:left;transition:color var(--micro),background-color var(--micro)}
+.nitem:hover{color:var(--ink)}
+.nitem svg{flex:none}
+.nitem.open{color:var(--ink)}
+.nitem.on{color:var(--ink);background:var(--accent-soft)}
+.nitem.on::before{content:"";position:absolute;inset:0 auto 0 0;width:2px;background:var(--accent)}
+.nchild{height:28px;padding-left:40px}
+.nchild.on{color:var(--ink);background:var(--accent-soft)}
+.nchild.on::before{content:"";position:absolute;inset:0 auto 0 0;width:2px;background:var(--accent)}
+.ncount{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ink2);padding:0 6px;border:1px solid var(--hair2)}
+.nsep{height:1px;background:var(--hair);margin:8px 14px}
+.main{min-width:0;min-height:0;overflow:auto;position:relative}
+.screen{padding:24px 32px 48px;display:flex;flex-direction:column;gap:20px;max-width:1180px}
+.screen.enter{animation:fadein 150ms var(--ease)}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.ph{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid var(--hair)}
+.ph h1{margin:0;font-size:24px;font-weight:500;line-height:1.15;letter-spacing:-.01em}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.pager{display:flex;align-items:center;gap:4px}
+.pg{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink2);border:1px solid transparent}
+.pg:hover:not(:disabled){border-color:var(--hair2);color:var(--ink)}
+.pg:disabled{opacity:.3;cursor:default}
+.pgl{font-size:12px;color:var(--ink2);padding:0 4px;min-width:64px}
+.pgl.r{text-align:right}
+.vseg{display:flex}
+.vseg button{height:32px;padding:0 14px;border:1px solid var(--hair2);margin-left:-1px;font-size:13px;color:var(--ink2);display:inline-flex;gap:8px;align-items:center}
+.vseg button:first-child{margin-left:0}
+.vseg button.on{color:var(--ink);border-color:var(--accent);background:var(--accent-soft);position:relative;z-index:1}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;line-height:1.3;letter-spacing:.06em;font-weight:500;text-transform:uppercase;padding:2px 7px;border:1px solid var(--hair2);color:var(--ink2);white-space:nowrap}
+.chip.warn{color:var(--tax);border-color:color-mix(in srgb,var(--tax) 45%,transparent)}
+.chip.dash{border-style:dashed}
+
+/* buttons, the approved split tile */
+.btn{position:relative;display:inline-flex;align-items:center;gap:12px;height:36px;padding:0 14px 0 0;font-size:13px;font-weight:500;letter-spacing:.01em;white-space:nowrap;transition:color var(--micro),background-color var(--micro)}
+.btn.sm{height:30px;padding:0 10px 0 0;gap:10px;font-size:12px}
+.btn .tile{width:36px;align-self:stretch;display:inline-flex;align-items:center;justify-content:center;transition:background-color var(--micro)}
+.btn.sm .tile{width:30px}
+.btn .count{font-family:var(--mono);font-size:11px;padding:1px 6px;margin-left:2px}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.primary .tile{background:var(--accent-deep)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.primary:hover .tile{background:var(--accent)}
+.btn.primary .count{background:rgba(0,0,0,.16)}
+.btn.secondary{background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1px var(--hair)}
+.btn.secondary .tile{background:var(--hair);color:var(--ink2)}
+.btn.secondary:hover .tile{background:var(--accent);color:var(--accent-ink)}
+.btn.notile{padding:0 14px}
+.btn.ghost{padding:0 4px;color:var(--accent);background:none}
+.btn.ghost .tile{display:contents}
+.btn.ghost::after{content:"";position:absolute;left:4px;right:4px;bottom:6px;height:1px;background:currentColor;transform:scaleX(0);transform-origin:left;transition:transform var(--base) var(--ease)}
+.btn.ghost:hover::after{transform:scaleX(1)}
+.ibtn{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink3);border:1px solid transparent}
+.ibtn:hover{color:var(--ink);border-color:var(--hair2)}
+.kbd{font-family:var(--mono);font-size:10px;padding:0 5px;border:1px solid var(--hair2);color:var(--ink2);line-height:16px;display:inline-block}
+
+/* category marks, by choice 2 */
+.cm{display:inline-flex;align-items:center;gap:7px;min-width:0;white-space:nowrap}
+.cm .dot{width:9px;height:9px;flex:none;border-radius:50%;background:var(--c)}
+.colC .cm.tint{padding:2px 8px 2px 6px;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--ink)}
+.cm.none .dot{background:none;border:1.5px dashed var(--ink3)}
+.cm.none{color:var(--ink2)}
+
+/* hero line */
+.hero{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
+.hero > div{padding:12px 16px 12px 0;display:flex;flex-direction:column;gap:2px;min-width:0}
+.hero > div + div{padding-left:16px;border-left:1px solid var(--hair)}
+.hero .v{font-size:22px;font-weight:500;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1.2}
+.hero small{color:var(--ink2);font-size:12px}
+table{width:100%;border-collapse:collapse}
+th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;color:var(--ink3);text-align:left;padding:8px 10px;border-bottom:1px solid var(--hair);white-space:nowrap}
+td{padding:0 10px;height:38px;border-bottom:1px solid var(--hair);white-space:nowrap}
+th.r,td.r{text-align:right}
+td.r{font-variant-numeric:tabular-nums}
+td.mer{max-width:280px;overflow:hidden;text-overflow:ellipsis}
+td.acc{color:var(--ink2);font-size:12px}
+td.dt{color:var(--ink2);font-variant-numeric:tabular-nums;font-size:13px}
+.menu{position:absolute;z-index:20;min-width:268px;background:var(--elevated);border:1px solid var(--hair2);box-shadow:var(--pop);padding:4px 0;font-size:13px;animation:menuin 120ms var(--ease)}
+@keyframes menuin{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+.menu .mh{padding:6px 12px 6px;color:var(--ink2);font-size:12px;border-bottom:1px solid var(--hair);margin-bottom:4px;display:flex;flex-direction:column;gap:1px;max-width:320px}
+.menu .mh b{color:var(--ink);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mi{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;min-height:30px;padding:0 12px;text-align:left;color:var(--ink);position:relative}
+.mi svg{color:var(--ink2)}
+.mi:hover,.mi.hot{background:var(--accent-soft)}
+.mi:hover svg{color:var(--accent)}
+.mi small{display:block;color:var(--ink2);font-size:11px;line-height:1.3;padding-bottom:4px}
+.mi[disabled]{color:var(--ink3);cursor:default}
+/* suggestions layer */
+.sg{display:none}
+.sugg .sg{display:inline-flex}
+.stag{align-items:center;justify-content:center;height:18px;padding:0 6px;font-size:10px;font-weight:500;letter-spacing:.06em;border:1px dashed var(--tax);color:var(--tax);white-space:nowrap;vertical-align:middle}
+.s-only{display:none!important}
+.sugg .s-only{display:flex!important}
+.sugg tr.s-only{display:table-row!important}
+
+.opens{display:flex;flex-direction:column}
+.oq{display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;padding:12px 0;border-bottom:1px solid var(--hair)}
+.oq b{font-weight:500}
+.oq p{margin:2px 0 0;color:var(--ink2)}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:900px){.two{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);padding:20px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card ul{margin:0;padding-left:18px;color:var(--ink2);display:flex;flex-direction:column;gap:4px}
+.card h3{margin:0;font-size:15px;font-weight:500}
+.ptable{overflow-x:auto}
+.ptable td{white-space:normal;height:auto;padding:8px 10px;vertical-align:top}
+.yes{color:var(--positive)}.no{color:var(--ink3)}
+.rm *{animation:none!important;transition:none!important}
+
+/* ---- Plan ---- */
+.sect{display:flex;flex-direction:column;gap:12px}
+.sh{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.sh h2{margin:0;font-size:16px;font-weight:500}
+.sh p{margin:2px 0 0;color:var(--ink2);font-size:12px}
+.sel{height:32px;border:1px solid var(--hair2);background:var(--bg);padding:0 8px;min-width:150px}
+.fld{height:30px;border:1px solid var(--hair2);background:var(--bg);padding:0 8px;font-variant-numeric:tabular-nums;width:96px;text-align:right}
+.role{display:inline-flex}
+.role button{height:28px;padding:0 10px;border:1px solid var(--hair2);margin-left:-1px;font-size:12px;color:var(--ink2);white-space:nowrap}
+.role button:first-child{margin-left:0}
+.role button.on{position:relative;z-index:1;color:var(--ink);border-color:var(--accent);background:var(--accent-soft)}
+.role button.on.ign{border-color:var(--ink3);background:var(--surface);color:var(--ink2)}
+.role button:disabled{cursor:default}
+.src{color:var(--ink2);font-size:12px}
+td.nm{font-weight:500}
+tr.ign td:not(.keep){color:var(--ink3)}
+tr.grp td{background:var(--surface);height:30px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);font-weight:500}
+.tot{display:flex;gap:28px;flex-wrap:wrap;font-size:12px;color:var(--ink2);padding-top:2px}
+.tot b{color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums}
+.found{background:var(--surface);border:1px solid var(--hair)}
+.found .fh{padding:10px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid var(--hair)}
+.found td{height:44px}
+.flow{position:relative;display:flex;flex-direction:column}
+.t1{display:flex;height:34px;font-size:12px}
+.t1>div{display:flex;align-items:center;padding:0 10px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.t1 .out{background:repeating-linear-gradient(135deg,var(--surface) 0 6px,var(--hair) 6px 7px);color:var(--ink2);border:1px solid var(--hair2);border-right:0}
+.t1 .keep{background:var(--surface);border:1px solid var(--hair2);color:var(--ink)}
+.conn{height:30px;display:block;width:100%}
+.conn polygon{fill:var(--surface);stroke:var(--hair2);stroke-width:1;vector-effect:non-scaling-stroke}
+.barwrap{position:relative}
+.bar{position:relative;display:flex;height:64px;user-select:none;touch-action:none}
+.seg1{position:relative;min-width:0;display:flex;flex-direction:column;justify-content:center;padding:0 10px;font-size:12px;overflow:hidden;background:color-mix(in srgb,var(--c) 22%,var(--bg));border-top:3px solid var(--c)}
+.seg1 b{font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seg1 span{color:var(--ink2);font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.seg1.hot{background:color-mix(in srgb,var(--c) 38%,var(--bg))}
+.seg1.fx{--c:var(--ink3);background:repeating-linear-gradient(135deg,var(--surface) 0 6px,var(--hair) 6px 7px)}
+.seg1.gap{--c:transparent;background:none;border:1px dashed var(--ink3);color:var(--ink2)}
+.bar.over{outline:2px solid var(--negative);outline-offset:2px}
+.div{position:absolute;top:-6px;height:76px;width:16px;margin-left:-8px;cursor:ew-resize;display:flex;align-items:center;justify-content:center;z-index:3}
+.div i{display:block;width:3px;height:100%;background:var(--ink);opacity:.75}
+.div::after{content:"";position:absolute;width:12px;height:22px;background:var(--bg);border:1.5px solid var(--ink);top:50%;margin-top:-11px}
+.div:hover i,.div.drag i,.div:focus-visible i{background:var(--accent);opacity:1}
+.div:hover::after,.div.drag::after,.div:focus-visible::after{border-color:var(--accent);background:var(--accent-soft)}
+.div.dis{cursor:not-allowed}.div.dis::after{opacity:.35}.div.dis i{opacity:.2}
+.drag-tip{position:absolute;z-index:4;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;padding:3px 8px;transform:translate(-50%,-100%);white-space:nowrap;font-variant-numeric:tabular-nums;top:-12px}
+.ghostmark{position:absolute;top:-4px;height:72px;width:0;border-left:2px dashed var(--tax);z-index:2;pointer-events:none}
+.ruler{display:flex;justify-content:space-between;font-size:11px;color:var(--ink3);margin-top:8px;font-variant-numeric:tabular-nums}
+.bal{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:10px 14px;background:var(--surface);border:1px solid var(--hair)}
+.bal.bad{border-color:var(--negative)}
+.bal b{font-weight:500;font-variant-numeric:tabular-nums}
+.brow{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1.3fr) minmax(0,1.5fr) 110px 36px;gap:14px;align-items:center;padding:12px 0;border-bottom:1px solid var(--hair)}
+.brow.hot{background:var(--accent-soft)}
+.brow.head{padding:6px 0;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);font-weight:500}
+.bn{display:flex;align-items:center;gap:10px;min-width:0}
+.bn .sw{width:8px;height:30px;flex:none;background:var(--c)}
+.bn b{font-weight:500;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bn small{color:var(--ink2);font-size:11px}
+.pt{display:inline-flex;align-items:center;gap:8px;max-width:100%;height:32px;padding:0 10px 0 8px;border:1px solid var(--hair2);background:var(--bg);text-align:left}
+.pt:hover{border-color:var(--accent)}
+.pt svg{color:var(--ink2);flex:none}
+.pt .k{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink2);flex:none}
+.pt .n{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pt.none{border-style:dashed;color:var(--ink2)}
+.how{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.how .fl{display:flex;align-items:center;gap:6px;min-height:30px}
+.how .role button{height:26px;padding:0 8px;font-size:11px}
+.amt{text-align:right;font-variant-numeric:tabular-nums}
+.amt b{font-weight:500;font-size:15px;display:block}
+.amt small{color:var(--ink2);font-size:11px}
+.tabs2{display:flex;border-bottom:1px solid var(--hair)}
+.tabs2 button{height:34px;padding:0 14px;color:var(--ink2);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs2 button.on{color:var(--ink);border-color:var(--accent)}
+.panel{background:var(--surface);border:1px solid var(--hair);padding:14px;display:flex;flex-direction:column;gap:10px}
+.panel td{height:34px}
+.mbar{display:block;height:6px;background:var(--hair);position:relative;width:120px}
+.mbar i{position:absolute;left:0;top:0;bottom:0;background:var(--ink2)}
+.mbar b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink)}
+.hint{color:var(--ink2);font-size:12px;margin:0}
+.diffn{color:var(--ink2)}.diffn.bad{color:var(--negative)}.diffn.good{color:var(--positive)}
+@media (max-width:900px){.brow{grid-template-columns:1fr}}
+</style>
+
+<div class="page" id="root">
+  <header class="intro">
+    <div class="label">M28 U7 · mockup · for the author's judgement</div>
+    <h1>Plan: fixed expenses and the split, on one screen</h1>
+    <p>Fixed expenses are the top part. Each one comes out of your net, is a share of the split, or is ignored. Under them, one bar is the split: drag a divider and the buckets either side change. Each bucket keeps its fixed amount, percentage or what's left, and says plainly what it points at. In the window below, drag the dividers (or focus one and press the arrows, Shift for bigger steps), click a bucket's "points at" to change it, and click a choice on a fixed expense.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="Mockup controls">
+    <div class="ctl"><span class="label">Choice 1 · Fixed expenses' three-way choice</span>
+      <div class="seg" data-ctl="rolelay"><button data-v="A" class="on"><span class="choice-tag">A</span>A switch on every row</button><button data-v="B"><span class="choice-tag">B</span>Rows grouped by choice</button></div></div>
+    <div class="ctl"><span class="label">Choice 2 · What a divider does</span>
+      <div class="seg" data-ctl="drag"><button data-v="A" class="on"><span class="choice-tag">A</span>Two neighbours trade</button><button data-v="B"><span class="choice-tag">B</span>Only the left one changes</button></div></div>
+    <div class="ctl"><span class="label">Choice 3 · What a bucket can point at</span>
+      <div class="seg" data-ctl="tk"><button data-v="A" class="on"><span class="choice-tag">A</span>Goal, debt, category</button><button data-v="B"><span class="choice-tag">B</span>Also a fund or an account</button></div></div>
+    <div class="ctl"><span class="label">Choice 4 · One scroll or two views</span>
+      <div class="seg" data-ctl="lay"><button data-v="A" class="on"><span class="choice-tag">A</span>One page, scrolls</button><button data-v="B"><span class="choice-tag">B</span>Two views, shared header</button></div></div>
+    <div class="ctl"><span class="label">Suggestions</span>
+      <div class="seg" data-ctl="sugg"><button data-v="off" class="on">Hidden</button><button data-v="on">Shown</button></div></div>
+    <div class="ctl"><span class="label">Theme</span>
+      <div class="seg" data-ctl="theme"><button data-v="system" class="on">System</button><button data-v="light">Light</button><button data-v="dark">Dark</button></div></div>
+    <div class="ctl"><span class="label">Motion</span>
+      <div class="seg" data-ctl="motion"><button data-v="full" class="on">Full</button><button data-v="reduced">Reduced</button></div></div>
+  </div>
+
+  <div class="stage"><div class="win" id="win" style="height:1000px">
+    <div class="titlebar">
+      <div class="doc"><span class="dirty" id="dirty" title="Saved"></span><span>household-2026.emd</span><span class="mono" id="saved" style="color:var(--ink3)">saved 09:14</span></div>
+      <div class="caps" aria-hidden="true"><span>&#8211;</span><span>&#9633;</span><span>&#10005;</span></div>
+    </div>
+    <div class="body">
+      <nav class="side" id="side" aria-label="Sections"></nav>
+      <main class="main" id="main" tabindex="-1"></main>
+    </div>
+    <div id="layer"></div>
+  </div></div>
+
+  <section class="sect"><div><h2 class="h2">What moves when the two screens become one</h2></div>
+    <div class="two" id="moves"></div></section>
+
+  <section class="sect"><div><h2 class="h2">What a conversation can do</h2><p class="note">D-227 and D-234: whatever this screen does, a conversation does too. Today the fixed-expense list has three tools and the splitter has none; the ledger's ratchet carries it.</p></div>
+    <div class="ptable"><table id="parity"></table></div></section>
+
+  <section class="sect"><h2 class="h2">Open choices</h2><div class="opens" id="open"></div></section>
+  <section class="sect"><h2 class="h2">Suggestions</h2><p class="note">Marked S1 to S6 in the window when Suggestions is shown (S1 draws the dashed ticks on the bar). None is part of the proposal until you pick it.</p><div class="opens" id="sugglist"></div></section>
+</div>
+
+<script>
+(() => {
+const S = { rolelay:'A', drag:'A', tk:'A', lay:'A', sugg:'off', theme:'system', motion:'full', view:'fixed', panel:null, dirty:false, hot:null, tip:null };
+
+const I = {
+ home:'<path d="M3 8l5-4.5L13 8v5H3z"/>', list:'<path d="M3 4h10M3 8h10M3 12h10"/>',
+ pay:'<path d="M4 2.5h6l2.5 2.5v8.5H4z"/><path d="M6.5 8h4M6.5 10.5h4"/>', plan:'<circle cx="8" cy="8" r="5"/><circle cx="8" cy="8" r="2"/>',
+ wealth:'<path d="M2.5 6l5.5-3 5.5 3-5.5 3z"/><path d="M2.5 9.5l5.5 3 5.5-3"/>', tag:'<path d="M2.5 2.5h5l6 6-5 5-6-6z"/><circle cx="5.5" cy="5.5" r=".8"/>',
+ grid:'<path d="M2.5 2.5h11v11h-11zM2.5 7h11M7 2.5v11"/>', link:'<path d="M6.5 9.5l3-3M5 7.5L3.5 9a2.1 2.1 0 003 3L8 10.5M8 5.5L9.5 4a2.1 2.1 0 013 3L11 8.5"/>',
+ gear:'<circle cx="8" cy="8" r="2.2"/><path d="M8 1.8v2M8 12.2v2M1.8 8h2M12.2 8h2M3.6 3.6L5 5M11 11l1.4 1.4M3.6 12.4L5 11M11 5l1.4-1.4"/>',
+ left:'<path d="M10 3.5L5.5 8l4.5 4.5"/>', right:'<path d="M6 3.5l4.5 4.5L6 12.5"/>',
+ check:'<path d="M3.5 8.5l3 3 6-7"/>', more:'<circle cx="4" cy="8" r=".9"/><circle cx="8" cy="8" r=".9"/><circle cx="12" cy="8" r=".9"/>',
+ copy:'<rect x="5" y="5" width="8" height="8"/><path d="M3 11V3h8"/>', plus:'<path d="M8 3v10M3 8h10"/>',
+ debt:'<path d="M3 12.5h10M4.5 12.5V7M8 12.5V7M11.5 12.5V7M2.5 6L8 3l5.5 3z"/>', goal:'<path d="M3.5 13.5V2.5M3.5 3h8l-2 2.5 2 2.5h-8"/>',
+ fund:'<path d="M2.5 13V9M6 13V6M9.5 13V8M13 13V3.5"/>', acct:'<rect x="2" y="4" width="12" height="8.5"/><path d="M2 7h12"/>',
+ none:'<circle cx="8" cy="8" r="5" stroke-dasharray="2 2"/>', lock:'<rect x="3.5" y="7.5" width="9" height="6"/><path d="M5.5 7.5V5a2.5 2.5 0 015 0v2.5"/>',
+ edit:'<path d="M3 13l1-3.5 6.5-6.5 2.5 2.5L6.5 12z"/>', trash:'<path d="M3 4.5h10M6 4.5V3h4v1.5M4.5 4.5l.7 9h5.6l.7-9"/>',
+ up:'<path d="M3.5 10L8 5.5l4.5 4.5"/>', down:'<path d="M3.5 6L8 10.5 12.5 6"/>', flag:'<path d="M3.5 13.5V2.5M3.5 3h8l-2 2.5 2 2.5h-8"/>', end:'<path d="M3 8h8M9 5l3 3-3 3M13.5 3v10"/>',
+ round:'<circle cx="8" cy="8" r="5.5"/><path d="M5.5 8.5l2 2 3-4"/>',
+};
+const ic = (n,s=16) => `<svg width="${s}" height="${s}" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" aria-hidden="true">${I[n]}</svg>`;
+const btn = (kind,label,icon,attrs='') => `<button class="btn ${kind}${icon?'':' notile'}" ${attrs}>${icon?`<span class="tile">${ic(icon)}</span>`:''}${label}</button>`;
+const stag = n => `<span class="sg stag">S${n}</span>`;
+const he = t => `<bdi class="he" dir="auto">${t}</bdi>`;
+const ils = m => (m<0?'−':'')+'₪'+Math.round(Math.abs(m)/100).toLocaleString('en-US');
+const ilsx = m => '₪'+(Math.abs(m)/100).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+/* ---------- synthetic data, minor units (agorot) ---------- */
+const NET = 1894000;
+const FIX = [
+ {id:'rent',n:'Rent',src:'Standing order to the landlord',every:'Monthly',per:520000,act:520000,role:'net'},
+ {id:'arnona',n:'Municipal tax',src:'Category: Municipal tax',every:'Every 2 months',per:123600,mo:61800,act:61800,role:'net'},
+ {id:'gan',n:'Childcare',src:'Merchant: '+he('גן הילד הקטן'),every:'Monthly',per:185000,act:185000,role:'net'},
+ {id:'elec',n:'Electricity',src:'Merchant: '+he('חברת החשמל'),every:'Monthly, varies',per:48700,act:48715,role:'net'},
+ {id:'net',n:'Internet and mobile',src:'Merchant: '+he('הוט מובייל'),every:'Monthly',per:12900,act:9990,role:'net'},
+ {id:'car',n:'Car insurance',src:'Merchant: '+he('הפניקס ביטוח'),every:'Yearly',per:372000,act:0,role:'split',due:'Nov 14'},
+ {id:'gym',n:'Gym',src:'Merchant: '+he('הולמס פלייס'),every:'Monthly',per:28900,act:28900,role:'split'},
+ {id:'pens',n:'Pension, your share',src:'Taken from your payslip',every:'Monthly',per:112000,act:112000,role:'slip'},
+ {id:'stream',n:'Streaming',src:'Merchant: SPOTIFY, NETFLIX',every:'Monthly',per:7900,act:7900,role:'ign'},
+];
+const FOUND = [
+ {id:'f1',n:'Pharmacy club',src:he('סופר-פארם')+', 4 charges',every:'Monthly',per:6200},
+ {id:'f2',n:'Music lessons',src:he('מרכז המוזיקה')+', 3 charges',every:'Monthly',per:42000},
+ {id:'f3',n:'Cloud storage',src:'GOOGLE *STORAGE, 6 charges',every:'Monthly',per:1190},
+];
+FIX.forEach(f=>{ if(f.mo==null) f.mo = f.every==='Yearly'?Math.round(f.per/12):f.per; });
+const TGT = { goal:['Emergency fund','Holiday 2027','New laptop'], debt:['Car loan','Student loan'], cat:['Groceries','Restaurants and cafes','Entertainment','Fuel','Pharmacy'],
+  fund:['Hishtalmut fund','Child savings'], acct:['Savings ···2290','Joint savings ···8815'] };
+const KIND = {goal:'Saving goal',debt:'Debt',cat:'Category',fund:'Fund',acct:'Account',none:'Nothing in particular'};
+const BK = [
+ {id:'b1',n:'Emergency fund',c:'var(--k3)',t:{k:'goal',n:'Emergency fund'},mode:'pct',bp:2000,amt:0,avg:1900,note:'₪46,200 of ₪60,000'},
+ {id:'b2',n:'Hishtalmut top-up',c:'var(--k1)',t:{k:'fund',n:'Hishtalmut fund'},mode:'fixed',bp:0,amt:100000,avg:940,note:'Deposited on the 10th'},
+ {id:'b3',n:'Extra on the car loan',c:'var(--k8)',t:{k:'debt',n:'Car loan'},mode:'fixed',bp:0,amt:80000,avg:750,note:'₪18,400 left'},
+ {id:'b4',n:'Groceries and household',c:'var(--k2)',t:{k:'cat',n:'Groceries'},mode:'pct',bp:2500,amt:0,avg:2850,note:'Becomes its monthly target'},
+ {id:'b5',n:'Fun money',c:'var(--k4)',t:{k:'cat',n:'Entertainment'},mode:'pct',bp:1000,amt:0,avg:1420,note:'Becomes its monthly target'},
+ {id:'b6',n:'Holiday',c:'var(--k5)',t:{k:'goal',n:'Holiday 2027'},mode:'pct',bp:800,amt:0,avg:800,note:'₪7,900 of ₪18,000'},
+ {id:'b7',n:'Everything else',c:'var(--k0)',t:{k:'none',n:''},mode:'rest',bp:0,amt:0,avg:1100,note:'Takes the rounding'},
+];
+let nextId=8;
+
+/* ---------- arithmetic: integers; percentages are basis points ---------- */
+function calc(){
+  const sum = r => FIX.filter(f=>f.role===r).reduce((a,f)=>a+f.mo,0);
+  const outNet=sum('net'), inSplit=sum('split'), ign=sum('ign'), slip=sum('slip');
+  const toSplit = NET-outNet; const amt={}; let used=inSplit;
+  BK.forEach(b=>{ if(b.mode==='pct') amt[b.id]=Math.round(toSplit*b.bp/10000); else if(b.mode==='fixed') amt[b.id]=b.amt; if(b.mode!=='rest') used+=amt[b.id]; });
+  const rest=BK.find(b=>b.mode==='rest'); let free=toSplit-used;
+  if(rest){ amt[rest.id]=free; free = free<0?free:0; }
+  return {outNet,inSplit,ign,slip,toSplit,amt,free,over:free<0};
+}
+
+function renderNav(){
+  let h = [['home','Home'],['list','Transactions'],['pay','Paychecks']].map(([g,l])=>`<button class="nitem">${ic(g)}${l}</button>`).join('');
+  h += `<button class="nitem on">${ic('plan')}Plan</button><button class="nitem">${ic('wealth')}Wealth</button><button class="nitem">${ic('tag')}Categories</button>`;
+  h += '<div class="nsep"></div>'+[['grid','Formats'],['link','Connections']].map(([g,l])=>`<button class="nitem">${ic(g)}${l}</button>`).join('');
+  h += `<div style="margin-top:auto"></div><button class="nitem">${ic('gear')}Settings</button>`;
+  document.getElementById('side').innerHTML=h;
+}
+
+/* ---------- fixed expenses ---------- */
+const ROLES=[['net','Out of net'],['split','Part of the split'],['ign','Ignore']];
+function roleSw(f){
+  if(f.role==='slip') return `<span class="chip dash" title="Already out of your net, so it cannot come out twice">Already out of your net</span>`;
+  return `<span class="role" role="group" aria-label="${f.n}">${ROLES.map(([v,l])=>`<button data-act="role" data-f="${f.id}" data-v="${v}" class="${f.role===v?'on':''}${v==='ign'?' ign':''}">${l}</button>`).join('')}</span>`;
+}
+function fixedRows(list){
+  return list.map(f=>`<tr class="${f.role==='ign'?'ign':''}">
+   <td class="nm keep">${f.n}<div class="src">${f.src}</div></td>
+   <td>${f.every}${f.due?` ${stag(3)} <span class="sg src">next ${f.due}</span>`:''}</td>
+   <td class="r">${ilsx(f.per)}</td><td class="r">${ils(f.mo)}</td>
+   <td class="r">${f.act?ils(f.act):'<span style="color:var(--ink3)">none yet</span>'}</td>
+   <td class="keep">${roleSw(f)}</td>
+   <td><button class="ibtn" style="opacity:1" data-act="fmenu" data-f="${f.id}" aria-label="More for ${f.n}">${ic('more')}</button></td></tr>`).join('');
+}
+function fixedSection(){
+  const c=calc();
+  const head=`<thead><tr><th>Name</th><th>How often</th><th class="r">Each charge</th><th class="r">A month</th><th class="r">August</th><th>What it does to the plan</th><th></th></tr></thead>`;
+  let body;
+  if(S.rolelay==='A') body=`<tbody>${fixedRows(FIX)}</tbody>`;
+  else { const g=(r,t,sub)=>{ const l=FIX.filter(f=>f.role===r); return l.length?`<tr class="grp"><td colspan="7">${t} · ${ils(l.reduce((a,f)=>a+f.mo,0))} a month<span style="text-transform:none;letter-spacing:0;margin-left:10px;font-weight:400">${sub}</span></td></tr>${fixedRows(l)}`:''; };
+    body=`<tbody>${g('net','Comes out of net','taken before the split')}${g('split','Part of the split','one of the shares')}${g('slip','Already out of your net','from your payslip')}${g('ign','Ignored','left out of this plan')}</tbody>`; }
+  const found=FOUND.length?`<div class="found"><div class="fh"><b style="font-weight:500">${FOUND.length} charges look like bills</b><span class="hint">Looking at the last</span>
+     <select class="sel" style="min-width:110px;height:28px" aria-label="Look back"><option>6 months</option><option>12 months</option><option>3 months</option></select><span class="hint" style="margin-left:auto">A bill you track starts as Ignore here, until you pick.</span></div>
+     <table><tbody>${FOUND.map(f=>`<tr><td class="nm">${f.n}<div class="src">${f.src}</div></td><td>${f.every}</td><td class="r">${ilsx(f.per)}</td>
+      <td style="text-align:right;white-space:nowrap">${btn('secondary sm','Track it','plus',`data-act="track" data-f="${f.id}"`)} ${btn('ghost sm','Not a bill',null,`data-act="nobill" data-f="${f.id}"`)}</td></tr>`).join('')}</tbody></table></div>`:'';
+  return `<section class="sect"><div class="sh"><div><h2>Fixed expenses</h2><p>What leaves every month. Pick what each one does to this plan.</p></div>
+     <div class="row">${btn('primary sm','Add fixed expense','plus','data-act="addfx"')}</div></div>
+   <div style="overflow-x:auto"><table>${head}${body}</table></div>
+   <div class="tot"><span>Out of net <b>${ils(c.outNet)}</b></span><span>Part of the split <b>${ils(c.inSplit)}</b></span><span>Already out of your net <b>${ils(c.slip)}</b></span><span>Ignored <b>${ils(c.ign)}</b></span></div>${found}</section>`;
+}
+
+/* ---------- the split ---------- */
+function pointer(b){
+  const t=b.t;
+  if(t.k==='none') return `<button class="pt none" data-act="pick" data-b="${b.id}">${ic('none')}<span class="n">Nothing in particular</span></button>`;
+  return `<button class="pt" data-act="pick" data-b="${b.id}" title="Change what ${b.n} points at">${ic(t.k==='cat'?'tag':t.k)}<span class="k">${KIND[t.k]}</span><span class="n">${t.n}</span></button>`;
+}
+function howCell(b,c){
+  const a=c.amt[b.id];
+  const f = b.mode==='pct'?`<input class="fld" data-b="${b.id}" value="${(b.bp/100).toFixed(b.bp%100?1:0)}" aria-label="${b.n} percent"><span class="src">% of the split</span>`
+   : b.mode==='fixed'?`<input class="fld" data-b="${b.id}" value="${Math.round(b.amt/100).toLocaleString('en-US')}" aria-label="${b.n} amount"><span class="src">₪ a month</span>`
+   : `<span class="src">${a<0?'<span style="color:var(--negative)">Nothing is left for it</span>':'Whatever is left over'}</span>`;
+  return `<div class="how"><span class="role">${[['pct','Percent'],['fixed','Fixed amount'],['rest','What\'s left']].map(([v,l])=>`<button data-act="mode" data-b="${b.id}" data-v="${v}" class="${b.mode===v?'on':''}">${l}</button>`).join('')}</span><div class="fl">${f}</div></div>`;
+}
+function bucketRows(c){
+  return `<div class="brow head"><span>Bucket</span><span>Points at</span><span>How much</span><span class="amt">This month</span><span></span></div>`+
+  BK.map(b=>`<div class="brow" data-brow="${b.id}"><div class="bn"><span class="sw" style="--c:${b.c}"></span><div style="min-width:0"><b>${b.n}${b.locked?` <span style="color:var(--ink3)">${ic('lock',12)}</span>`:''}</b><small>${b.note}</small></div></div>
+    <div style="min-width:0">${pointer(b)}${b.t.k==='goal'?`<div class="sg src" style="margin-top:4px">${stag(4)} reached Mar 2028 at this rate</div>`:''}${b.t.k==='none'&&b.mode!=='rest'?`<div class="sg src" style="margin-top:4px">${stag(5)} money with no job to do</div>`:''}</div>
+    ${howCell(b,c)}
+    <div class="amt"><b>${ils(c.amt[b.id])}</b><small>${c.toSplit?((c.amt[b.id]/c.toSplit)*100).toFixed(1):'0'}% of the split</small></div>
+    <button class="ibtn" style="opacity:1" data-act="bmenu" data-b="${b.id}" aria-label="More for ${b.n}">${ic('more')}</button></div>`).join('');
+}
+function barHTML(c){
+  const total=Math.max(c.toSplit,c.toSplit-c.free)||1; const pc=v=>(v/total*100).toFixed(3)+'%';
+  let x=0,html='',divs='',ghost='';
+  if(c.inSplit>0){ html+=`<div class="seg1 fx" style="width:${pc(c.inSplit)}" title="Part of the split, from the list above"><b>Fixed expenses</b><span>${ils(c.inSplit)}</span></div>`; x+=c.inSplit; }
+  BK.forEach((b,i)=>{ const a=Math.max(c.amt[b.id],0); const start=x;
+    html+=`<div class="seg1" style="width:${pc(a)};--c:${b.c}" data-seg="${b.id}" title="${b.n} · ${ils(a)}"><b>${a/total>.07?b.n:''}</b><span>${a/total>.05?ils(a):''}</span></div>`;
+    x+=a;
+    if(S.sugg==='on') ghost+=`<div class="ghostmark" style="left:${pc(start+Math.round(c.toSplit*b.avg/10000))}" title="${b.n}: the last 3 months averaged ${ils(Math.round(c.toSplit*b.avg/10000))}"></div>`;
+    const next=BK[i+1];
+    if(b.mode!=='rest' && (next || c.free>0)){
+      const ok = !b.locked && !(S.drag==='A' && next && next.locked);
+      divs+=`<div class="div${ok?'':' dis'}" role="slider" tabindex="${ok?0:-1}" aria-label="Edge between ${b.n} and ${next?next.n:'what is not given a job'}" aria-valuenow="${Math.round(x/100)}" aria-valuemin="0" aria-valuemax="${Math.round(c.toSplit/100)}" style="left:${pc(x)}" data-dv="${i}" title="${ok?'Drag to resize. Arrow keys move it by ₪50.':(b.locked?b.n+' is kept at this size':'The next bucket is kept at its size')}"><i></i></div>`; }
+  });
+  if(c.free>0) html+=`<div class="seg1 gap" style="width:${pc(c.free)}"><b>${c.free/total>.08?'Not given a job':''}</b><span>${c.free/total>.05?ils(c.free):''}</span></div>`;
+  return {html,divs,ghost};
+}
+function splitSection(){
+  const c=calc(), bar=barHTML(c);
+  const outPct=(c.outNet/NET*100).toFixed(2), keepPct=(100-outPct).toFixed(2);
+  const flow=`<div class="flow"><div class="t1"><div class="out" style="width:${outPct}%" title="Fixed expenses that come out of net">Fixed, out of net · ${ils(c.outNet)}</div><div class="keep" style="width:${keepPct}%">To split · ${ils(c.toSplit)}</div></div>
+    <svg class="conn" viewBox="0 0 100 30" preserveAspectRatio="none" aria-hidden="true"><polygon points="${outPct},0 100,0 100,30 0,30"/></svg>
+    <div class="barwrap"><div class="bar${c.over?' over':''}" id="bar">${bar.html}</div>${bar.divs}${bar.ghost}${S.tip?`<div class="drag-tip" style="left:${S.tip.x}px">${S.tip.t}</div>`:''}</div>
+    <div class="ruler"><span>₪0</span><span>${ils(Math.round(c.toSplit/2))}</span><span>${ils(c.toSplit)}</span></div></div>`;
+  const hasRest=BK.some(b=>b.mode==='rest');
+  const bal=c.free===0?`<div class="bal"><span class="chip">Every shekel has a job</span><span class="hint">The split adds up to ${ils(c.toSplit)}.</span></div>`
+    :c.free>0?`<div class="bal"><b>${ils(c.free)}</b><span>is not given a job yet.</span>${btn('secondary sm','Add it to '+BK[BK.length-1].n,'plus','data-act="giverest"')}<span class="hint">or drag the last divider to the right edge</span></div>`
+    :`<div class="bal bad"><b class="c-out">${ils(-c.free)}</b><span>too much is given out. Shrink a bucket or take one out.</span></div>`;
+  return `<section class="sect"><div class="sh"><div><h2>The split</h2><p>${ils(NET)} net pay, less ${ils(c.outNet)} of fixed expenses, leaves ${ils(c.toSplit)} to give a job. Drag a divider on the bar to resize.</p></div>
+     <div class="row"><span class="hint">Snaps to ₪50</span>${btn('secondary sm','Add a bucket','plus','data-act="addb"')}</div></div>
+   ${flow}${bal}<div>${bucketRows(c)}</div></section>`;
+}
+
+/* ---------- panels ---------- */
+function usePanel(){
+  const c=calc(); const ch=BK.filter(b=>b.t.k!=='none').map(b=>[({cat:'Set the monthly target of ',goal:'Plan a deposit into ',debt:'Plan a payment on ',fund:'Plan a deposit into ',acct:'Plan a transfer to '})[b.t.k]+b.t.n, ils(c.amt[b.id])]);
+  return `<div class="panel"><div class="row"><b style="font-weight:500">Using this plan for September 2026 writes ${ch.length} things</b><span class="hint">Nothing else changes.</span><span style="margin-left:auto">${btn('ghost sm','Close',null,'data-act="closep"')}</span></div>
+   <table><tbody>${ch.map(([a,v])=>`<tr><td style="width:30px"><input type="checkbox" checked aria-label="${a}"></td><td>${a}</td><td class="r">${v}</td></tr>`).join('')}</tbody></table>
+   <div class="row">${btn('primary sm','Write '+ch.length+' changes','check','data-act="closep"')}${btn('ghost sm','Cancel',null,'data-act="closep"')}</div></div>`;
+}
+function cmpPanel(){
+  const c=calc(); const act={b1:210000,b2:100000,b3:80000,b4:301200,b5:151800,b6:85000,b7:122000};
+  return `<div class="panel"><div class="row"><b style="font-weight:500">August: what the plan said and what happened</b><span class="hint">Categories read their spending; goals, debts and funds read their deposits and payments.</span><span style="margin-left:auto">${btn('ghost sm','Close',null,'data-act="closep"')}</span></div>
+   <table><thead><tr><th>Bucket</th><th>Points at</th><th class="r">Planned</th><th class="r">Happened</th><th class="r">Difference</th><th></th></tr></thead><tbody>${BK.map(b=>{ const p=c.amt[b.id],a=act[b.id],d=a-p,spend=b.t.k==='cat'||b.t.k==='none',bad=spend?d>0:d<0;
+   return `<tr><td>${b.n}</td><td class="src">${KIND[b.t.k]}${b.t.n?' · '+b.t.n:''}</td><td class="r">${ils(p)}</td><td class="r">${ils(a)}</td><td class="r diffn ${Math.abs(d)<2000?'':bad?'bad':'good'}">${d>0?'+':''}${ils(d)}</td>
+   <td><span class="mbar"><i style="width:${Math.min(100,a/Math.max(p,a)*100)}%"></i><b style="left:${Math.min(100,p/Math.max(p,a)*100)}%"></b></span></td></tr>`}).join('')}</tbody></table></div>`;
+}
+
+function screen(){
+  const c=calc();
+  const pager=`<div class="pager"><button class="pg" aria-label="Earlier month">${ic('left')}</button><span class="pgl" style="min-width:110px;text-align:center;color:var(--ink)">September 2026</span><button class="pg" aria-label="Later month" disabled>${ic('right')}</button></div>`;
+  const hero=`<div class="hero"><div><span class="label">Net pay</span><span class="v">${ils(NET)}</span><small>Average of your last 3 payslips</small></div>
+    <div><span class="label">Fixed, out of net</span><span class="v">${ils(c.outNet)}</span><small>${FIX.filter(f=>f.role==='net').length} expenses</small></div>
+    <div><span class="label">To split</span><span class="v">${ils(c.toSplit)}</span><small>${ils(c.inSplit)} of it is fixed expenses</small></div>
+    <div><span class="label">Not given a job</span><span class="v ${c.over?'c-out':''}">${ils(Math.max(c.free,0))}</span><small>${c.over?ils(-c.free)+' too much is given out':c.free===0?'Nothing left over':'Left on the bar'}</small></div></div>`;
+  const views=S.lay==='B'?`<div class="tabs2"><button data-view="fixed" class="${S.view==='fixed'?'on':''}">Fixed expenses</button><button data-view="split" class="${S.view==='split'?'on':''}">The split</button></div>`:'';
+  const showF=S.lay==='A'||S.view==='fixed', showS=S.lay==='A'||S.view==='split';
+  return `<div class="screen">
+   <div class="ph"><div style="display:flex;flex-direction:column;gap:10px"><h1>Plan</h1>
+     <div class="row"><select class="sel" aria-label="Plan"><option>Everyday plan · default</option><option>Lean months</option><option>With the bonus</option></select>${pager}
+       <span class="row" style="gap:8px"><span class="src">Net pay is</span><select class="sel" style="min-width:220px" aria-label="Net pay is based on"><option>Average of the last 3 payslips</option><option>My last payslip</option><option>One particular payslip</option><option>An amount I type</option></select></span></div></div>
+     <div class="row">${btn('primary','Use for September…','check','data-act="usep"')}${btn('secondary','Copy this plan','copy','data-act="copyp"')}${btn('ghost','Compare with what happened',null,'data-act="cmpp"')}<button class="ibtn" style="opacity:1" data-act="planmenu" aria-label="More for this plan">${ic('more')}</button></div></div>
+   ${S.panel==='use'?usePanel():S.panel==='cmp'?cmpPanel():''}${hero}${views}${showF?fixedSection():''}${showS?splitSection():''}
+   <p class="hint sg">${stag(2)} What-if: copy this plan with a different net pay and see both bars one above the other.</p></div>`;
+}
+
+/* ---------- menus ---------- */
+function showMenu(html,x,y){ const win=document.getElementById('win').getBoundingClientRect(); document.getElementById('layer').innerHTML=`<div class="menu" id="menu" role="menu" style="left:${Math.max(8,Math.min(x-win.left,win.width-290))}px;top:${y-win.top}px">${html}</div>`; }
+const closeMenu=()=>{ document.getElementById('layer').innerHTML=''; };
+const mi=(i,l,a,s='',d='')=>`<button class="mi" role="menuitem" data-act="${a}" ${d}>${ic(i)}<span>${l}${s?`<small>${s}</small>`:''}</span><span></span></button>`;
+function pickMenu(b){
+  const kinds=S.tk==='A'?['goal','debt','cat']:['goal','debt','cat','fund','acct'];
+  let h=`<div class="mh"><b>What does ${b.n} point at?</b><span>It decides where the money is counted and what it is compared with.</span></div>`;
+  kinds.forEach(k=>TGT[k].forEach(n=>{ h+=`<button class="mi" data-act="setpt" data-b="${b.id}" data-k="${k}" data-n="${n}">${ic(k==='cat'?'tag':k)}<span>${n}<small>${KIND[k]}</small></span><span>${b.t.n===n?ic('check'):''}</span></button>`; }));
+  return h+`<button class="mi" data-act="setpt" data-b="${b.id}" data-k="none">${ic('none')}<span>Nothing in particular</span><span></span></button>`;
+}
+
+function render(focusDv){
+  const w=document.getElementById('win'); w.className='win'+(S.sugg==='on'?' sugg':'');
+  const root=document.getElementById('root'); root.classList.toggle('sugg',S.sugg==='on'); root.classList.toggle('rm',S.motion==='reduced');
+  renderNav(); const main=document.getElementById('main'); const keep=main.scrollTop;
+  main.innerHTML=screen(); main.scrollTop=keep;
+  document.getElementById('dirty').classList.toggle('on',S.dirty); document.getElementById('saved').textContent=S.dirty?'unsaved':'saved 09:14';
+  if(focusDv!=null){ const d=main.querySelector(`[data-dv="${focusDv}"]`); if(d){ d.focus({preventScroll:true}); if(DR) d.classList.add('drag'); } }
+}
+const changed=()=>{ S.dirty=true; };
+function syncSeg(k){ document.querySelectorAll(`[data-ctl="${k}"] button`).forEach(b=>b.classList.toggle('on',b.dataset.v===S[k])); }
+document.querySelectorAll('[data-ctl]').forEach(g=>g.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const k=g.dataset.ctl; S[k]=b.dataset.v; syncSeg(k);
+  if(k==='theme'){ if(S.theme==='system') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme',S.theme); }
+  closeMenu(); render(); }));
+
+/* ---------- dragging a divider ---------- */
+function setAmt(b,amount,c){ if(b.mode==='pct') b.bp=Math.max(0,Math.round(amount/c.toSplit*10000)); else if(b.mode==='fixed') b.amt=Math.max(0,amount); }
+function moveDivider(i,edge,c){
+  const b=BK[i], next=BK[i+1]; let start=c.inSplit; for(let j=0;j<i;j++) start+=Math.max(c.amt[BK[j].id],0);
+  let left=Math.max(0,Math.round((edge-start)/5000)*5000); const old=c.amt[b.id]; let delta=left-old;
+  if(S.drag==='A'){
+    const room = next ? Math.max(c.amt[next.id],0) : Math.max(c.free,0);
+    if(delta>room){ delta=room; left=old+delta; }
+  }
+  setAmt(b,left,c);
+  if(S.drag==='A' && next && next.mode!=='rest') setAmt(next,c.amt[next.id]-delta,c);
+  return left;
+}
+let DR=null;
+const main=document.getElementById('main');
+main.addEventListener('pointerdown',e=>{ const d=e.target.closest('.div'); if(!d||d.classList.contains('dis')) return; DR={i:+d.dataset.dv}; d.classList.add('drag'); e.preventDefault(); });
+window.addEventListener('pointermove',e=>{ if(!DR) return; const c=calc(); const total=Math.max(c.toSplit,c.toSplit-c.free);
+  const bar=document.getElementById('bar').getBoundingClientRect(); const rel=Math.min(Math.max((e.clientX-bar.left)/bar.width,0),1);
+  const left=moveDivider(DR.i,Math.round(rel*total),c);
+  S.tip={x:Math.min(Math.max(e.clientX-bar.left,60),bar.width-60),t:`${BK[DR.i].n} ${ils(left)}`}; changed(); render(DR.i); });
+window.addEventListener('pointerup',()=>{ if(!DR) return; const i=DR.i; DR=null; S.tip=null; render(i); });
+main.addEventListener('keydown',e=>{ const d=e.target.closest&&e.target.closest('.div'); if(!d||d.classList.contains('dis')) return;
+  const step=e.shiftKey?50000:5000; let s=0; if(e.key==='ArrowRight'||e.key==='ArrowUp') s=step; if(e.key==='ArrowLeft'||e.key==='ArrowDown') s=-step; if(!s) return; e.preventDefault();
+  const i=+d.dataset.dv, c=calc(); let edge=c.inSplit; for(let j=0;j<=i;j++) edge+=Math.max(c.amt[BK[j].id],0);
+  moveDivider(i,edge+s,c); changed(); render(i); });
+
+main.addEventListener('mouseover',e=>{ const s=e.target.closest('[data-seg],[data-brow]'); const id=s?(s.dataset.seg||s.dataset.brow):null; if(id===S.hot) return; S.hot=id;
+  document.querySelectorAll('[data-seg],[data-brow]').forEach(n=>n.classList.toggle('hot',(n.dataset.seg||n.dataset.brow)===id)); });
+main.addEventListener('change',e=>{ const f=e.target.closest('.fld'); if(!f) return; const b=BK.find(x=>x.id===f.dataset.b); const v=Number(f.value.replace(/[^\d.]/g,''));
+  if(!isFinite(v)) return render(); if(b.mode==='pct') b.bp=Math.round(v*100); else b.amt=Math.round(v*100); changed(); render(); });
+
+document.addEventListener('click',e=>{
+  if(document.getElementById('menu')&&!e.target.closest('#menu')&&!e.target.closest('[data-act]')) closeMenu();
+  const v=e.target.closest('[data-view]'); if(v){ S.view=v.dataset.view; return render(); }
+  const a=e.target.closest('[data-act]'); if(!a||!document.getElementById('win').contains(a)) return; const act=a.dataset.act;
+  const f=FIX.find(x=>x.id===a.dataset.f), b=BK.find(x=>x.id===a.dataset.b);
+  if(act==='role'){ f.role=a.dataset.v; changed(); return render(); }
+  if(act==='mode'){ const c=calc(); const had=c.amt[b.id]; b.mode=a.dataset.v;
+    if(b.mode==='rest'){ BK.forEach(o=>{ if(o!==b&&o.mode==='rest') o.mode='pct'; }); BK.splice(BK.indexOf(b),1); BK.push(b); }
+    else if(b.mode==='pct') b.bp=Math.round(Math.max(had,0)/c.toSplit*10000); else b.amt=Math.max(0,Math.round(had/5000)*5000);
+    changed(); return render(); }
+  if(act==='giverest'){ const c=calc(); const last=BK[BK.length-1]; setAmt(last,c.amt[last.id]+c.free,c); changed(); return render(); }
+  if(act==='track'){ const x=FOUND.splice(FOUND.findIndex(q=>q.id===a.dataset.f),1)[0]; FIX.push({...x,act:x.per,mo:x.per,role:'ign'}); changed(); return render(); }
+  if(act==='nobill'){ FOUND.splice(FOUND.findIndex(q=>q.id===a.dataset.f),1); return render(); }
+  if(act==='pick'){ const r=a.getBoundingClientRect(); return showMenu(pickMenu(b),r.left,r.bottom+2); }
+  if(act==='setpt'){ b.t={k:a.dataset.k,n:a.dataset.n||''}; changed(); closeMenu(); return render(); }
+  if(act==='fmenu'){ const r=a.getBoundingClientRect(); return showMenu(`<div class="mh"><b>${f.n}</b><span>${f.every} · ${ils(f.mo)} a month</span></div>${mi('edit','Edit, and how it is recognised','x')}${mi('end','It ended','x','Keeps its history, drops out of the plan')}${mi('trash','Stop tracking','x','Its charges stay on Transactions')}`,r.right-280,r.bottom+2); }
+  if(act==='bmenu'){ const r=a.getBoundingClientRect(); const i=BK.indexOf(b);
+    return showMenu(`<div class="mh"><b>${b.n}</b><span>${b.t.k==='none'?'Not pointed at anything':KIND[b.t.k]+' · '+b.t.n}</span></div>${mi('edit','Rename','x')}${mi('lock',b.locked?'Let it change size':'Keep this size','lock','Dividers will not move it',`data-b="${b.id}"`)}${mi('up','Move up','x','',i===0?'disabled':'')}${mi('down','Move down','x','',i>=BK.length-2?'disabled':'')}${mi('trash','Take out of this plan','rm','The bucket stays for other plans',`data-b="${b.id}"`)}`,r.right-280,r.bottom+2); }
+  if(act==='lock'){ b.locked=!b.locked; closeMenu(); return render(); }
+  if(act==='rm'){ BK.splice(BK.indexOf(b),1); closeMenu(); changed(); return render(); }
+  if(act==='addb'){ const id='b'+(nextId++); BK.splice(Math.max(0,BK.length-1),0,{id,n:'New bucket',c:'var(--k6)',t:{k:'none',n:''},mode:'pct',bp:0,amt:0,avg:0,note:'Not pointed anywhere yet'}); changed(); return render(); }
+  if(act==='addfx'){ FIX.push({id:'n'+(nextId++),n:'New fixed expense',src:'Nothing, I track it myself',every:'Monthly',per:0,act:0,mo:0,role:'net'}); changed(); return render(); }
+  if(act==='usep'){ S.panel=S.panel==='use'?null:'use'; return render(); }
+  if(act==='cmpp'){ S.panel=S.panel==='cmp'?null:'cmp'; return render(); }
+  if(act==='closep'){ S.panel=null; return render(); }
+  if(act==='copyp'||act==='x'){ closeMenu(); if(act==='copyp'){ changed(); render(); } return; }
+  if(act==='planmenu'){ const r=a.getBoundingClientRect(); return showMenu(`${mi('flag','Use this plan by default','x')}${mi('edit','Rename this plan','x')}${mi('trash','Delete this plan','x','Buckets and fixed expenses stay')}`,r.right-280,r.bottom+2); }
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeMenu(); });
+
+/* ---------- the sheets ---------- */
+document.getElementById('moves').innerHTML=`
+ <div class="card"><span class="label">Today</span><h3>Two pages and two plan-wide settings</h3><ul>
+  <li>Plan has two pages in the rail: Fixed expenses (a list, a detector, an editor) and Splitter (a plan, a slider per bucket, a bar with handles).</li>
+  <li>The splitter holds two settings for all fixed expenses at once: Nothing, Confirmed only, Confirmed and detected; and "Shown as" off the top or a share of the split.</li>
+  <li>Goals, debts and purchase plans are not under Plan. They live in Wealth, Savings and debts; a bucket only points at them.</li></ul></div>
+ <div class="card"><span class="label">Proposed</span><h3>One page, one choice per expense</h3><ul>
+  <li>Plan stops having children in the rail. #/plan/fixed and #/plan/splitter go to #/plan.</li>
+  <li>The two settings go. Each expense is Out of net, Part of the split or Ignore, so "confirmed only" is just the ones you did not ignore. A bill taken from the payslip stays outside the choice (D-053).</li>
+  <li>The "my fixed expenses" bucket kind goes; Part of the split replaces it and is drawn on the bar.</li>
+  <li>The slider per bucket goes; the bar's handles (D-174) become the dividers. The expense editor, the detector and the look-back stay.</li>
+  <li>Needs a schema change: a choice on each fixed expense, kept per plan. A migration; no old-file conversion.</li></ul></div>`;
+const P=[
+ ['See the fixed expenses and what was detected','Plan, top part','yes','fixed_expenses, fixed_expense_candidates'],
+ ['Track a detected charge, or say it is not a bill','Found list','yes','track_fixed_expenses, dismiss_fixed_expense_candidates'],
+ ['Edit, end or stop tracking a fixed expense','Row menu','no','No tool; the ledger ratchet carries it'],
+ ['Choose Out of net, Part of the split or Ignore','The row (new)','no','A new write, so D-234 makes the missing tool a failing test: set_fixed_expense_roles'],
+ ['Read a plan, its buckets and what they point at','The split','no','No tool today: plans'],
+ ['Change a bucket: size, mode, what it points at, order','Dividers, row, menu','no','set_plan, taking the whole plan as one batch'],
+ ['Copy, rename, make default, delete a plan','Header and its menu','no','Inside set_plan'],
+ ['Use the plan for a month; compare with what happened','Header','no','plan_month, which dry-runs like every write'],
+];
+document.getElementById('parity').innerHTML=`<thead><tr><th>Action</th><th>On a screen, in this design</th><th>By conversation</th><th>Through</th></tr></thead><tbody>${P.map(([a,s,y,t])=>`<tr><td>${a}</td><td style="color:var(--ink2)">${s}</td><td class="${y}">${y==='yes'?'Yes':'Not yet'}</td><td style="color:var(--ink2)">${t}</td></tr>`).join('')}</tbody>`;
+const oq=(n,t,p)=>`<div class="oq"><span class="choice-tag" style="width:22px;height:22px;font-size:11px;display:inline-flex">${n}</span><div><b>${t}</b><p>${p}</p></div></div>`;
+document.getElementById('open').innerHTML=[
+ ['1','The three-way choice','A: a switch on every row, so the list reads at a glance and each change is one click (proposed). B: rows grouped under Comes out of net, Part of the split and Ignored, so each group has a total but a row jumps when you change it.'],
+ ['2','What a divider does','A: the two buckets either side trade, so the total never changes and the bar stays full (proposed). B: only the bucket on its left changes and the difference goes to Not given a job, which is how today\'s handles work and lets you over-give on purpose while you think. With an "Everything else" bucket at the end the two feel alike; switch it to a percent to see the difference.'],
+ ['3','What a bucket can point at','A: a saving goal, a debt, a category, or nothing, which is the list today. B: also a fund (the pension and hishtalmut deposits) and an account (a transfer to a savings account). B means those two become targets with a deposit to plan.'],
+ ['4','One scroll or two views','A: fixed expenses, then the split, on one page; the four figures at the top stay true to both (proposed, and what you asked for). B: two views under a shared header, the way Home has Month and Year, in case the page feels long.'],
+].map(x=>oq(...x)).join('');
+document.getElementById('sugglist').innerHTML=[
+ ['S1','See what each bucket really got','A dashed tick on the bar where the last 3 months landed for each bucket, so you see your own habit while you drag.'],
+ ['S2','What-if plans','Copy a plan with a different net pay (a raise, a bonus, a month of leave) and see both bars one above the other.'],
+ ['S3','Yearly bills spread over the year','A yearly expense shows its monthly share and the date it falls due, so the plan sets the money aside before the bill arrives.'],
+ ['S4','Say when a goal arrives','Under a goal bucket, "at this rate, reached in March 2028", changing as you drag.'],
+ ['S5','Flag a bucket that points nowhere','A bucket with money and no target, or whose category was archived, is flagged on its row before you use the plan.'],
+ ['S6','A plan for the bonus month','Pick a different plan for a month with a bonus slip, so the bonus is not split like an ordinary salary.'],
+].map(([n,t,p])=>`<div class="oq"><span class="stag" style="display:inline-flex;height:22px">${n}</span><div><b>${t}</b><p>${p}</p></div></div>`).join('');
+
+render();
+})();
+</script>

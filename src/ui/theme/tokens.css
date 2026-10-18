@@ -1,0 +1,1493 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Fonts, self-hosted. D-022.
+
+   Not a Google Fonts link, and not because linking is hard: it would mean a
+   request to Google every time someone opens their own financial records,
+   which this app does not do (docs/conventions.md: no network calls, none).
+   The shell now enforces that rather than trusting it — `electron/network.ts`
+   blocks anything that is not `app://` — so a CDN link here would not degrade
+   to system faces, it would simply never load. Self-hosting is what makes
+   "works with the network off" true, and that rule outlived `dist-single/`
+   (D-133) while the inlining it was paired with did not.
+
+   Imported per script and per weight. Fontsource already ships the subsets
+   D-022 asked for — `latin-400` is a Latin-only file, `hebrew-400` a
+   Hebrew-only one — so the split costs nothing and no subsetting tool is
+   involved. 69 KB of woff2 in total, emitted into `dist/assets/` and served
+   from beside the page.
+
+   Two weights, not the three D-022 guessed at before the UI existed: the app
+   uses 400 and 500 and nothing else. A third is one face away.
+
+   The faces are declared here rather than by importing Fontsource's own CSS,
+   which offers a legacy `.woff` beside every `.woff2`. This app already
+   requires WebAssembly; a browser that cannot read woff2 cannot run it at all,
+   so that fallback is 65 KB nobody will ever fetch.
+   --------------------------------------------------------------------------- */
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-500-normal.woff2") format("woff2");
+}
+
+/* The Hebrew companion. `--font-sans` lists it after IBM Plex Sans, which has
+   no Hebrew glyphs, so Hebrew falls through to it character by character. */
+@font-face {
+  font-family: "IBM Plex Sans Hebrew";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("@fontsource/ibm-plex-sans-hebrew/files/ibm-plex-sans-hebrew-hebrew-400-normal.woff2")
+    format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Sans Hebrew";
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url("@fontsource/ibm-plex-sans-hebrew/files/ibm-plex-sans-hebrew-hebrew-500-normal.woff2")
+    format("woff2");
+}
+
+/* The mapper's raw grid is mono so stray spaces and directional marks stay
+   visible, which makes this face load-bearing rather than decorative. */
+@font-face {
+  font-family: "IBM Plex Mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2") format("woff2");
+}
+
+/* ---------------------------------------------------------------------------
+   Design tokens. The single source of truth for the visual system.
+   Spec: docs/11-ui-design-language.md
+   Nothing in a component should hardcode a color, size, or duration.
+   --------------------------------------------------------------------------- */
+
+@theme {
+  /* Type ------------------------------------------------------------------ */
+  --font-sans: "IBM Plex Sans", "IBM Plex Sans Hebrew", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+
+  /* The type ramp of docs/11, as real tokens so nothing hardcodes a size.
+     `text-title`, `text-hero` etc. become Tailwind utilities. Line-heights and
+     tracking travel with the size, since they are part of the same decision. */
+  --text-hero: 40px;
+  --text-hero--line-height: 1.05;
+  --text-hero--letter-spacing: -0.02em;
+  --text-hero--font-weight: 500;
+
+  --text-title: 24px;
+  --text-title--line-height: 1.15;
+  --text-title--letter-spacing: -0.01em;
+  --text-title--font-weight: 600;
+
+  --text-heading: 16px;
+  --text-heading--line-height: 1.3;
+  --text-heading--font-weight: 600;
+
+  --text-secondary-number: 20px;
+  --text-secondary-number--line-height: 1.2;
+  --text-secondary-number--font-weight: 500;
+
+  --text-body: 14px;
+  --text-body--line-height: 1.5;
+
+  --text-caption: 12px;
+  --text-caption--line-height: 1.4;
+
+  --text-label: 11px;
+  --text-label--line-height: 1.3;
+  --text-label--letter-spacing: 0.08em;
+  --text-label--font-weight: 500;
+
+  /* Color — near-monochrome. Color carries meaning, never decoration. ------
+     `background` and `surface` are the two planes; `elevated` is a third for
+     the things that float over the page (menus, the theme toggle's popover).
+     A hair of warmth keeps the light theme from feeling clinical. */
+  --color-background: #ffffff;
+  --color-surface: #f7f7f6;
+  --color-elevated: #ffffff;
+  --color-ink: #111111;
+  --color-ink-secondary: #6b6b6b;
+  --color-ink-tertiary: #a0a09c;
+  --color-hairline: #ececea;
+  --color-hairline-strong: #d9d9d6;
+
+  /* Emerald — the identity colour, and since D-125 the interactive one too.
+     It marks what you can *act on*: the filled button, a prose link, the focus
+     ring, the active nav underline, a chosen option. It is never used to report
+     anything, which is the whole of what keeps it clear of `positive` below.
+     `accent-soft` is the tinted plane behind a selected row. */
+  --color-accent: #07805f;
+  --color-accent-ink: #ffffff;
+  --color-accent-hover: #05664b;
+  --color-accent-soft: #e8f6f1;
+
+  /* The one filled surface in the app: an emerald button, white text. Its own
+     token so dark mode can flip it to dark-on-mint without every button
+     knowing. Was black-on-white until D-125. */
+  --color-action: #07805f;
+  --color-action-ink: #ffffff;
+  --color-action-hover: #05664b;
+
+  /* The split tile behind a primary button's icon (M28 U4): the action, a
+     shade deeper. */
+  --color-action-deep: #055a43;
+
+  /* Reserved for genuine signal only: a reconciliation gap, an over-allocated
+     split, a missing deposit. Outflows are plain ink, not red.
+
+     `positive` is green and so is `accent`, and D-117 was right that two greens
+     are a risk. What separates them is **role**, not hue, and the rule is
+     absolute: **`accent` marks what you can act on; `positive` reports what the
+     app found.** A green button, link or focus ring is a thing you operate; a
+     green number is a fact about your money. The two never swap form.
+
+     The guard that makes it safe in practice: **`accent` never colours a
+     number.** Every figure in this app is `ink`, `positive` or `negative`, and
+     that stays true even when the figure is a link — see the amount links on
+     Debts and the fund screens, which are underlined but never emerald. A green
+     digit means exactly one thing here, and it is not "clickable". */
+  --color-negative: #c4342b;
+  --color-positive: #1f7a4d;
+
+  /* **The four flows, and they are figures** (M28 U5, D-313, amending D-125's
+     "outflows are plain ink"). Came in, went out, saved and taxes each carry a
+     colour on the headline figures, the charts and the totals of Home — never on
+     a single row, and always beside the word that names the flow, so colour is
+     never the only carrier. `accent` still never colours a number: saved's
+     green is set apart from it by lightness and by role, since a flow colour is
+     ink on a figure and never a fill, a border or an underline. Red stops
+     meaning only "a problem" on these screens, so a problem keeps its own form:
+     a chip with a dot and a word. Left over is the difference, not a flow, and
+     stays ink. */
+  --color-flow-in: #1f7a4d;
+  --color-flow-out: #c4342b;
+  --color-flow-saved: #0b4f35;
+  --color-flow-tax: #b45309;
+
+
+  /* Spacing — 8px scale. The odd steps exist because Tailwind's `p-3`/`gap-3`
+     otherwise fall through to its own 4px multiplier and land off-grid. */
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+  --spacing-10: 40px;
+  --spacing-12: 48px;
+  --spacing-16: 64px;
+
+  /* Corners — soft, not round. A financial document, not a toy. */
+  --radius-sm: 5px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-full: 9999px;
+
+  /* **Square, on trial** (M26 U1, D-288). Square corners were asked for
+     instead of rounded; they are worn by the formats list alone until the
+     maintainer has judged it, and they spread by changing which radius a component spends —
+     never by redefining the three above, which would restyle every screen at
+     once. `control` is a button or an icon action; `card` is anything you can
+     press as a whole. */
+  --radius-card: 0px;
+  --radius-control: 0px;
+
+  /* Elevation — one soft shadow for the things that float, and nothing else.
+     Rooms, not layers. Tuned per theme below. */
+  --shadow-pop: 0 1px 2px rgba(17, 17, 17, 0.04), 0 8px 24px rgba(17, 17, 17, 0.08);
+
+  /* Motion — smooth and quiet. The user asked for fades; they are meant to be
+     felt, not watched (D-030). */
+  --duration-micro: 120ms;
+  --duration-base: 180ms;
+  --duration-enter: 260ms;
+  /* Navigating and closing (M39): shorter, because nothing is being explained. */
+  --duration-fade: 150ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* Category colours — docs/11's one exception to the monochrome rule, because a
+   donut has to be readable and grey segments are not.
+
+   **Eleven hues, richer than the eight greyed ones they replace** (M28 U6,
+   D-314, amending docs/11's "muted and desaturated"). They are drawn as dots, so
+   a category is a hue and a name and never a coloured background, and none of
+   them is one of the four flow colours (D-313): the flows are figures, these are
+   marks beside a name, and the two are kept apart by form as well as by hue.
+   Nothing relies on colour alone (docs/11): every one is named beside what it
+   marks.
+
+   `category-none` is uncategorized, and is deliberately the only one that is not
+   a hue. It has to be visible — docs/f10 is emphatic that hiding it is how these
+   apps lie — but it is an absence rather than a category.
+
+   **Plain `:root`, not `@theme`, and that is load-bearing.** Tailwind v4 emits
+   only the theme variables it can see used in a class name, and these are chosen
+   per category at runtime and applied through `var(--color-category-N)` in an
+   SVG attribute — so inside `@theme` they were tree-shaken out of the light
+   stylesheet entirely while the dark overrides, being an ordinary rule,
+   survived. The donut came out uncoloured in the light theme and correct in the
+   dark one, which is a failure mode no unit test would have caught (D-088). */
+:root {
+  --color-category-1: #3f74c9;
+  --color-category-2: #cf7f22;
+  --color-category-3: #21918c;
+  --color-category-4: #c4497e;
+  --color-category-5: #7b5cc9;
+  --color-category-6: #7f8f26;
+  --color-category-7: #2b97cc;
+  --color-category-8: #d4664a;
+  --color-category-9: #9a52a0;
+  --color-category-10: #5f7590;
+  --color-category-11: #a88a3e;
+  --color-category-none: #b5b5b0;
+}
+
+/* Lifted, not the light values on a dark page. Same order, so a category keeps
+   its identity across a theme switch. */
+:root[data-theme="dark"] {
+  --color-category-1: #7aa5ee;
+  --color-category-2: #f0a554;
+  --color-category-3: #4cc2bb;
+  --color-category-4: #ec7fae;
+  --color-category-5: #a78bf0;
+  --color-category-6: #b2c25a;
+  --color-category-7: #62bfee;
+  --color-category-8: #f08f74;
+  --color-category-9: #c98bd0;
+  --color-category-10: #9aaec8;
+  --color-category-11: #d4b46a;
+  --color-category-none: #55555a;
+}
+
+:root[data-theme="dark"] {
+  --color-background: #0b0b0c;
+  --color-surface: #151517;
+  --color-elevated: #1b1b1e;
+  --color-ink: #f2f2f0;
+  --color-ink-secondary: #a1a1a0;
+  --color-ink-tertiary: #6a6a6c;
+  --color-hairline: #262629;
+  --color-hairline-strong: #34343a;
+
+  /* On a near-black page the mark's own bright face carries the accent, with
+     dark ink on top. `accent-soft` is a low-lit emerald plane, not the light
+     tint darkened — that one turns to mud on #0b0b0c. */
+  --color-accent: #34d399;
+  --color-accent-ink: #06231a;
+  --color-accent-hover: #5ee0b0;
+  --color-accent-soft: #10312a;
+
+  /* The filled action follows the accent: dark ink on mint. */
+  --color-action: #34d399;
+  --color-action-ink: #06231a;
+  --color-action-hover: #5ee0b0;
+  --color-action-deep: #1fae7d;
+
+  --color-negative: #e5675e;
+  --color-positive: #4caf7d;
+
+  --color-flow-in: #5cc98c;
+  --color-flow-out: #e5675e;
+  --color-flow-saved: #2f9e6a;
+  --color-flow-tax: #f59e0b;
+
+
+  --shadow-pop: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 28px rgba(0, 0, 0, 0.55);
+}
+
+/* --------------------------------------------------------------------------- */
+
+html {
+  background: var(--color-background);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  /* Native form controls (checkboxes, the scrollbar) pick up the theme. */
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] html,
+html:has(:root[data-theme="dark"]),
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/* The theme fade. Only these properties, only once the page has painted — the
+   `.theme-ready` class is added after mount so the first paint does not
+   animate from a default palette into the real one. Kept off structural
+   properties, so nothing reflows; just colour crossfading. */
+.theme-ready,
+.theme-ready *,
+.theme-ready *::before,
+.theme-ready *::after {
+  transition:
+    background-color var(--duration-base) var(--ease-in-out),
+    border-color var(--duration-base) var(--ease-in-out),
+    color var(--duration-base) var(--ease-in-out),
+    fill var(--duration-base) var(--ease-in-out),
+    box-shadow var(--duration-base) var(--ease-in-out);
+}
+
+/* The window's own chrome, in the shell (D-130). ------------------------------
+   The window is frameless and the app draws the title bar, which means one
+   region of the page is a handle for dragging the window rather than a surface
+   for clicking. Chromium takes that literally: inside `-webkit-app-region:
+   drag`, a button is not a button — the press is a window drag and the click
+   never arrives.
+
+   So the exemption is declared here rather than remembered at each call site.
+   Anything you can operate opts back out of the drag by being what it is, and
+   `.app-no-drag` is the escape hatch for the rest (a scroller, a chart, a row
+   you can select). The failure this prevents is silent and it is the specific
+   one D-130 named: a title bar that swallows the click meant for Save. */
+.app-drag {
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.app-drag button,
+.app-drag a,
+.app-drag input,
+.app-drag select,
+.app-drag textarea,
+.app-drag label,
+.app-drag [role='button'],
+.app-drag [role='listbox'],
+.app-drag [role='option'],
+.app-drag [tabindex]:not([tabindex='-1']),
+.app-no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* The scrollbar, which a window owns and a page never did (D-130). ------------
+   In a browser tab the scrollbar belongs to the browser; in a window it is a
+   piece of the app's chrome, and the platform default — a wide grey trough
+   with arrows on Windows — is the loudest thing on a screen made of hairlines.
+
+   Both syntaxes on purpose, and they do not fight: an engine that understands
+   `scrollbar-width` uses it and ignores the `::-webkit-` pseudo-elements, and
+   an engine that does not falls through to them. The standard pair covers
+   Chromium and Firefox; the pseudo-elements are what Safari reads, which
+   matters for the hosted build and not for the shell.
+
+   A hairline thumb on no track: the scrollbar says how far down you are and
+   nothing else. */
+html {
+  /* `scrollbar-color` inherits; `scrollbar-width` does not, which is why the
+     one below is on `*`. Setting only `html` looks right on the page and
+     leaves every inner scroller — which in this app is every table — with the
+     platform's full-width bar. Measured in the shell: 15px of gutter instead
+     of 10. */
+  scrollbar-color: var(--color-hairline-strong) transparent;
+}
+
+* {
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  /* Drawn inside a transparent border, so the thumb is 4px of ink in a 10px
+     lane rather than a bar wedged against the content. */
+  background: var(--color-hairline-strong);
+  background-clip: content-box;
+  border: 3px solid transparent;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ink-tertiary);
+  background-clip: content-box;
+}
+
+/* Where the keyboard is, in a table (D-130). ---------------------------------
+   The cursor is application state rather than DOM focus — see
+   `src/ui/useRowCursor.ts` — so it has to draw its own marker, and it survives
+   the window losing focus for exactly that reason.
+
+   The same 2px `accent` rule the sidebar's active item wears, which is the
+   app's one way of saying "here". `inset` on the first cell rather than a
+   border, because a border on a table row shifts every column by two pixels
+   the moment you press a key; this is a rule drawn inside the cell, not
+   elevation, so it is not the shadow docs/11 rules out. A *selected* row keeps
+   its `surface` plane and is a different thing: selection is what an action
+   will apply to, the cursor is where you are. */
+[data-cursor='true'] > td:first-child,
+[data-cursor='true'] > th:first-child,
+/* A row that is a grid of divs rather than a table row (By merchant, M28 U6). */
+.fc-cursor-row[data-cursor='true'] {
+  box-shadow: inset 2px 0 0 var(--color-accent);
+}
+
+/* An inactive window. A page never had this state and a window always does:
+   the OS dims its own chrome when the window loses focus, and chrome the app
+   draws has to do the same or the window looks focused when it is not. Content
+   is untouched — only the frame answers to focus. */
+.app-drag[data-inactive='true'] {
+  opacity: 0.6;
+}
+
+/* The button: a split tile (M28 U4, option B). ------------------
+   Square. The icon sits in a tile at the leading edge, a shade deeper than the
+   button on `primary` and `hairline` on `secondary`, and the tile is what
+   answers a hover: it turns emerald. No shadow and no inset highlight — this
+   retires D-154's amendment, because the tile carries the depth now. A button
+   without an icon has no tile and centres its label.
+
+   Here rather than as utilities because the tile's hover is the button's, and
+   because this file is unlayered: a call site's `ml-auto` still lands, since
+   nothing here sets a margin. */
+.fc-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: var(--radius-control);
+  font-size: var(--text-body);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  user-select: none;
+  cursor: pointer;
+  transition:
+    background-color var(--duration-micro) var(--ease-out),
+    color var(--duration-micro) var(--ease-out),
+    box-shadow var(--duration-micro) var(--ease-out);
+}
+.fc-btn-sm {
+  height: 30px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+.fc-btn-tiled {
+  padding-inline-start: 0;
+  padding-inline-end: 14px;
+  gap: 12px;
+}
+.fc-btn-sm.fc-btn-tiled {
+  padding-inline-end: 10px;
+  gap: 10px;
+}
+.fc-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+  pointer-events: none;
+}
+.fc-btn[aria-busy="true"] {
+  opacity: 1;
+}
+.fc-btn:active:not(:disabled) {
+  transform: translateY(1px);
+}
+.fc-btn:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.fc-btn-tile {
+  align-self: stretch;
+  width: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  transition:
+    background-color var(--duration-micro) var(--ease-out),
+    color var(--duration-micro) var(--ease-out);
+}
+.fc-btn-sm .fc-btn-tile {
+  width: 30px;
+}
+.fc-btn-count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 1px 6px;
+  margin-inline-start: -4px;
+}
+
+.fc-btn-primary {
+  background: var(--color-action);
+  color: var(--color-action-ink);
+}
+.fc-btn-primary .fc-btn-tile {
+  background: var(--color-action-deep);
+}
+.fc-btn-primary:hover:not(:disabled) {
+  background: var(--color-action-hover);
+}
+.fc-btn-primary:hover:not(:disabled) .fc-btn-tile {
+  background: var(--color-action);
+}
+.fc-btn-primary .fc-btn-count {
+  background: rgba(0, 0, 0, 0.16);
+}
+
+.fc-btn-secondary {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: inset 0 0 0 1px var(--color-hairline-strong);
+}
+.fc-btn-secondary:hover:not(:disabled) {
+  box-shadow: inset 0 0 0 1px var(--color-ink-tertiary);
+}
+.fc-btn-secondary .fc-btn-tile {
+  background: var(--color-hairline);
+  color: var(--color-ink-secondary);
+}
+.fc-btn-secondary:hover:not(:disabled) .fc-btn-tile {
+  background: var(--color-accent);
+  color: var(--color-accent-ink);
+}
+.fc-btn-secondary .fc-btn-count {
+  background: var(--color-background);
+}
+
+/* A word, in the colour of what you can act on, whose underline draws in. */
+.fc-btn-ghost {
+  padding: 0 4px;
+  color: var(--color-accent);
+  background: none;
+}
+.fc-btn-ghost::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  bottom: 6px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform var(--duration-base) var(--ease-out);
+}
+.fc-btn-ghost:hover:not(:disabled) {
+  color: var(--color-accent-hover);
+}
+.fc-btn-ghost:hover:not(:disabled)::after {
+  transform: scaleX(1);
+}
+
+/* The progress indicator (M28 U4): the mark's facets fly in, hold, and come
+   apart, for as long as the work runs. The one loading state allowed to last
+   longer than one cycle (docs/11). Each facet is offset by its index, so the
+   gem assembles in the order the mark is cut. */
+.fc-gem {
+  display: inline-block;
+  flex: none;
+  overflow: visible;
+  vertical-align: middle;
+}
+.fc-gem .fc-facet {
+  transform-box: view-box;
+  transform-origin: 32px 32px;
+}
+.fc-gem-spin .fc-facet {
+  animation: fc-gem-cycle 2.6s var(--ease-in-out) infinite;
+  animation-delay: calc(var(--i) * 55ms);
+}
+@keyframes fc-gem-cycle {
+  0% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) scale(0.7);
+  }
+  26%,
+  68% {
+    opacity: 1;
+    transform: none;
+  }
+  94%,
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) scale(0.7);
+  }
+}
+/* Reduced motion: nothing moves, and the facets only light in turn. Stated
+   with `!important` because the global rule further down stops every other
+   animation in the app after one frame, and this one is how a person who asked
+   for less motion still learns that something is happening. */
+@keyframes fc-gem-fade {
+  0%,
+  100% {
+    opacity: 0.18;
+  }
+  30%,
+  70% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fc-gem-spin .fc-facet {
+    animation-name: fc-gem-fade !important;
+    animation-duration: 2.6s !important;
+    animation-timing-function: linear !important;
+    animation-iteration-count: infinite !important;
+    transform: none !important;
+  }
+}
+
+/* A card you can press, and an action drawn as an icon (M26 U1, D-288). ------
+   On the formats list only, until the maintainer has judged it.
+
+   **The hover says "this opens" without moving anything.** A 2px `accent` rule
+   grows down the leading edge — the sidebar's and the row cursor's one way of
+   saying "here", and `accent` because the card is a thing you act on (D-125);
+   there is no figure on it to colour — while the plane tints to `surface` and
+   the border firms. No lift and no shadow: docs/11 keeps elevation for buttons
+   and floating rooms (D-154), and a transform on a list item is the hover that
+   moves layout it rules out. `inset-inline-start` so it sits on the right in a
+   right-to-left window.
+
+   **The card is one link, stretched.** `.fc-card-link::after` covers the card,
+   so a click anywhere opens the table and the icons — raised above it with
+   `z-10` — stay buttons rather than buttons nested inside a link, which is not
+   valid HTML and reads twice to a screen reader. */
+.fc-card {
+  position: relative;
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: var(--radius-card);
+  background: var(--color-elevated);
+  padding: var(--spacing-3) var(--spacing-4);
+  transition:
+    background-color var(--duration-base) var(--ease-out),
+    border-color var(--duration-base) var(--ease-out);
+}
+
+.fc-card::before {
+  content: '';
+  position: absolute;
+  inset-block: -1px;
+  inset-inline-start: -1px;
+  width: 2px;
+  background: var(--color-accent);
+  transform: scaleY(0);
+  transform-origin: top;
+  transition: transform var(--duration-base) var(--ease-out);
+  pointer-events: none;
+}
+
+.fc-card:hover,
+.fc-card:focus-within {
+  background: var(--color-surface);
+  border-color: var(--color-ink-tertiary);
+}
+
+.fc-card:hover::before,
+.fc-card:focus-within::before {
+  transform: scaleY(1);
+}
+
+.fc-card-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.fc-card-link:focus-visible {
+  outline: none;
+}
+
+.fc-card:has(.fc-card-link:focus-visible) {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.fc-icon-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-control);
+  color: var(--color-ink-secondary);
+  transition:
+    background-color var(--duration-micro) var(--ease-out),
+    color var(--duration-micro) var(--ease-out);
+}
+
+/* The hover colours live here rather than as `hover:text-*` utilities on the
+   component, because this file is unlayered and would win over them. */
+.fc-icon-action:hover {
+  background: var(--color-hairline);
+  color: var(--color-ink);
+}
+
+.fc-icon-action[data-tone='negative']:hover {
+  color: var(--color-negative);
+}
+
+/* Back with nowhere to go back to (M31 U9): there, and quiet. */
+.fc-icon-action:disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
+
+.fc-icon-action:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+
+/* A view arriving — navigating, M39's motion (4): the content fades in over
+   150 ms and nothing else. No rise: a screen that slid 4 px as it came in had
+   every box somewhere it would not stay, which a pointer (or the demo's tour)
+   measuring it then got wrong. The old screen goes at once, so nothing on it
+   can be clicked. Applied by the router shell to the screen, and by a screen
+   to what arrives inside it; collapsed under reduced motion by the rule at the
+   foot of this file, like every other. Closing is `src/ui/motion/closing.ts`. */
+@keyframes fc-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fc-view-enter {
+  animation: fc-fade var(--duration-fade) var(--ease-out);
+}
+
+/* A popover or panel arriving over the page. */
+@keyframes fc-pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.fc-pop-enter {
+  animation: fc-pop-in var(--duration-base) var(--ease-out);
+  transform-origin: top;
+}
+
+/* What a search matched, inside the text around it (M37 U2c, the palette's
+   entries; the mockup's `mark.hit`): the selected row's plane under it and an
+   accent rule beneath, so it reads on a selected row as well as off one. */
+.fc-hit {
+  background: var(--color-accent-soft);
+  color: inherit;
+  box-shadow: inset 0 -1px 0 var(--color-accent);
+}
+
+/* A row arriving in a list that is already on screen (docs/11): a fade and a
+   4px rise — the one a view had before M39 made navigating a plain fade — at
+   the shorter duration, because a row is a smaller event than a screen. Played once, as a row mounts — an element already on screen
+   does not replay it, and `useChanges` says which of a list's rows changed.
+   docs/11 caps a stagger at 3 items and there is no stagger here: the lists
+   that use this gain one row at a time, and a delay per row would be an
+   animation about the list rather than about the row you just made. */
+@keyframes fc-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.fc-row-enter {
+  animation: fc-row-in var(--duration-base) var(--ease-out);
+}
+
+/* The three doors a format begins at (M20 U2). The same fade and 4px rise a row
+   gets, at the entrance duration because a door is a screen-sized event, and
+   staggered by `--fc-door-at` — 0, 1, 2. docs/11 caps a stagger at 3 items and
+   there are exactly three, which is the only reason one is allowed here at all;
+   half of `--duration-micro` apiece puts the last card down at ~380ms, short
+   enough that it reads as the set arriving rather than as three arrivals.
+
+   `backwards` is the part that is easy to leave out: a delayed animation paints
+   its element at full opacity until its turn comes, so without it the third
+   card would appear first and then fade in. */
+.fc-door-enter {
+  animation: fc-row-in var(--duration-enter) var(--ease-out) backwards;
+  animation-delay: calc(var(--fc-door-at, 0) * var(--duration-micro) / 2);
+}
+
+/* A chart line drawing itself, once, on first appearance (docs/11). The dash
+   pattern is set to the path's own length by the component that draws it, so
+   this animation only has to unwind the offset. Never re-runs: a chart that
+   redraws on every render is a chart nobody can read. */
+@keyframes fc-draw-line {
+  from {
+    stroke-dashoffset: var(--fc-draw-length);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.fc-draw {
+  stroke-dasharray: var(--fc-draw-length);
+  animation: fc-draw-line var(--duration-enter) var(--ease-out);
+}
+
+/* Every number in this app is tabular. Proportional digits make columns of
+   money visibly ragged — the highest-leverage typographic rule here. */
+.tabular,
+table,
+input[type="number"] {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Hebrew merchant names inside an English LTR layout. Without isolation, a name
+   containing digits or punctuation visibly scrambles. Use the Bidi component. */
+.bidi {
+  unicode-bidi: isolate;
+}
+
+/* The focus ring is emerald: focus is the most interactive state there is, and
+   D-125 gave every interactive affordance the same colour. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* The theme toggle's knob and the fades are the only motion the app initiates.
+   Someone who has asked their OS for less gets none of it — the colour still
+   changes, it just does not animate. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   The views' one theme — M27 U8, D-306, from the approved mockup in
+   docs/mockups/m27-u8/. A state is drawn in one of four tones (`tone.ts`):
+   `live` wears accent (D-306's amendment to D-125), `done` is filled ink,
+   `struck` is dashed, `waiting` is hollow. Square throughout (`--radius-card`).
+   ------------------------------------------------------------------------- */
+
+/* An uppercase label, the heading every section of a view wears. */
+.fc-label {
+  font-size: var(--text-label);
+  line-height: var(--text-label--line-height);
+  letter-spacing: var(--text-label--letter-spacing);
+  font-weight: 500;
+  text-transform: uppercase;
+  color: var(--color-ink-secondary);
+}
+
+/* A state as a chip: uppercase, square, a hairline, and accent only when live. */
+.fc-state {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 8px;
+  border: 1px solid var(--color-hairline-strong);
+  color: var(--color-ink-secondary);
+  font-size: var(--text-label);
+  line-height: 1.3;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition:
+    color var(--duration-base) var(--ease-out),
+    border-color var(--duration-base) var(--ease-out),
+    background-color var(--duration-base) var(--ease-out);
+}
+.fc-state[data-tone="done"] {
+  color: var(--color-ink);
+  background: var(--color-surface);
+  border-color: var(--color-hairline);
+}
+.fc-state[data-tone="live"] {
+  color: var(--color-accent);
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+.fc-state[data-tone="struck"] {
+  text-decoration: line-through;
+}
+
+/* The timeline: one vertical line through a dot per row. The line is drawn in
+   two halves per row, above the dot and below it, so it turns from solid (what
+   happened) to dashed (what is ahead) exactly at the live row's dot. */
+.fc-tl {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  column-gap: 16px;
+}
+.fc-tl-rail {
+  position: relative;
+}
+.fc-tl-rail::before,
+.fc-tl-rail::after {
+  content: "";
+  position: absolute;
+  left: 19px;
+  border-left: 2px solid var(--color-ink-tertiary);
+}
+.fc-tl-rail::before {
+  top: 0;
+  height: 23px;
+}
+.fc-tl-rail::after {
+  top: 23px;
+  bottom: 0;
+}
+.fc-tl-rail[data-above="dashed"]::before,
+.fc-tl-rail[data-below="dashed"]::after {
+  border-left-style: dashed;
+  border-left-color: var(--color-hairline-strong);
+}
+.fc-tl-rail[data-above="none"]::before,
+.fc-tl-rail[data-below="none"]::after {
+  display: none;
+}
+.fc-tl-dot {
+  position: absolute;
+  z-index: 1;
+  left: 11px;
+  top: 14px;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border-radius: var(--radius-full);
+  box-sizing: border-box;
+  background: var(--color-background);
+  border: 2px solid var(--color-hairline-strong);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-enter) var(--ease-out),
+    border-color var(--duration-enter) var(--ease-out);
+}
+.fc-tl-dot[data-tone="done"] {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+}
+.fc-tl-dot[data-tone="live"] {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+.fc-tl-dot[data-tone="live"]::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+}
+.fc-tl-dot[data-tone="live"]::before {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-accent);
+  opacity: 0.35;
+}
+.fc-tl-dot[data-tone="struck"] {
+  border-style: dashed;
+}
+
+/* A row folds with a grid-rows transition: the height animates without
+   measuring anything, and a row drawn open on first paint does not animate. */
+.fc-fold {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--duration-enter) var(--ease-out);
+}
+.fc-fold[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+.fc-fold > div {
+  overflow: hidden;
+  min-height: 0;
+}
+.fc-chev {
+  display: inline-block;
+  color: var(--color-ink-secondary);
+  transition: transform var(--duration-base) var(--ease-out);
+}
+.fc-chev[data-open="true"] {
+  transform: rotate(90deg);
+}
+
+/* A segment per folded row, coloured by its tone. Many rows drop the gaps, so a
+   milestone with sixty units is still a bar and not a row of hairlines. */
+.fc-bar {
+  display: flex;
+  gap: 2px;
+  height: 6px;
+  width: 220px;
+  max-width: 100%;
+}
+.fc-bar[data-dense="true"] {
+  gap: 0;
+}
+.fc-seg {
+  flex: 1;
+  min-width: 0;
+  box-sizing: border-box;
+  background: var(--color-hairline);
+  transition: background-color var(--duration-enter) var(--ease-out);
+}
+.fc-seg[data-tone="done"] {
+  background: var(--color-ink);
+}
+.fc-seg[data-tone="live"] {
+  background: var(--color-accent);
+}
+.fc-seg[data-tone="struck"] {
+  background: transparent;
+  border: 1px dashed var(--color-hairline-strong);
+}
+
+/* A small dot, for a folded row, a lane and a link. */
+.fc-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: var(--radius-full);
+  box-sizing: border-box;
+  border: 1.5px solid var(--color-hairline-strong);
+  transition:
+    background-color var(--duration-enter) var(--ease-out),
+    border-color var(--duration-enter) var(--ease-out);
+}
+.fc-dot[data-tone="done"] {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+}
+.fc-dot[data-tone="live"] {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+.fc-dot[data-tone="struck"] {
+  border-style: dashed;
+}
+
+/* A card on a board: square, elevated, lifted on hover; a live one wears the
+   accent rule down its left edge, the one the sidebar's active item wears. */
+.fc-board-card {
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-card);
+  background: var(--color-elevated);
+  transition:
+    border-color var(--duration-micro) var(--ease-out),
+    box-shadow var(--duration-base) var(--ease-out);
+}
+.fc-board-card:hover {
+  border-color: var(--color-hairline-strong);
+  box-shadow: var(--shadow-pop);
+}
+.fc-board-card[data-tone="live"] {
+  box-shadow: inset 2px 0 0 var(--color-accent);
+}
+.fc-board-card[data-tone="live"]:hover {
+  box-shadow: inset 2px 0 0 var(--color-accent), var(--shadow-pop);
+}
+.fc-board-card[data-tone="struck"] .fc-card-title {
+  text-decoration: line-through;
+  color: var(--color-ink-secondary);
+}
+
+/* Motion that explains a change, and only a change (D-306). Each comes as an
+   `-a` and a `-b` with the same frames, so a second change to the same row
+   swaps the name and replays (`useChanges`). Nothing here runs on first paint,
+   and the reduced-motion rule below turns every one of them off. */
+@keyframes fc-pulse-a {
+  from {
+    box-shadow: 0 0 0 0 var(--color-accent);
+  }
+  to {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+@keyframes fc-pulse-b {
+  from {
+    box-shadow: 0 0 0 0 var(--color-accent);
+  }
+  to {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+@keyframes fc-flash-a {
+  from {
+    background-color: var(--color-accent-soft);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+@keyframes fc-flash-b {
+  from {
+    background-color: var(--color-accent-soft);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+/* A row a write from anywhere changed: its dot pulses once, the row flashes. */
+.fc-changed-a {
+  animation: fc-flash-a 1600ms var(--ease-out) 1;
+}
+.fc-changed-b {
+  animation: fc-flash-b 1600ms var(--ease-out) 1;
+}
+.fc-changed-a .fc-pulse,
+.fc-pulse.fc-pulse-a {
+  animation: fc-pulse-a 900ms var(--ease-out) 1;
+}
+.fc-changed-b .fc-pulse,
+.fc-pulse.fc-pulse-b {
+  animation: fc-pulse-b 900ms var(--ease-out) 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fc-changed-a,
+  .fc-changed-b,
+  .fc-changed-a .fc-pulse,
+  .fc-changed-b .fc-pulse,
+  .fc-pulse-a,
+  .fc-pulse-b {
+    animation: none !important;
+  }
+  .fc-fold,
+  .fc-chev,
+  .fc-seg,
+  .fc-dot,
+  .fc-tl-dot,
+  .fc-state {
+    transition: none !important;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Paychecks, the first screen in the new frame (M28 U4), from the approved
+   mockup in docs/mockups/m28-u4/.
+   ------------------------------------------------------------------------- */
+
+/* A chip that reports what the app found: `positive` and `negative` (a fact,
+   never accent), with a dot. Beside D-306's tones on `.fc-state`. */
+.fc-state[data-tone="positive"] {
+  color: var(--color-positive);
+  border-color: color-mix(in srgb, var(--color-positive) 40%, transparent);
+}
+.fc-state[data-tone="negative"] {
+  color: var(--color-negative);
+  border-color: color-mix(in srgb, var(--color-negative) 40%, transparent);
+}
+/* A file that does not add up (M28 U5): the tax orange, which is a figure's
+   colour elsewhere and here a chip with a dot and a word, never alone. */
+.fc-state[data-tone="warn"] {
+  color: var(--color-flow-tax);
+  border-color: color-mix(in srgb, var(--color-flow-tax) 45%, transparent);
+}
+.fc-state[data-tone="wait"] {
+  border-style: dashed;
+}
+/* Uncategorized on Home's Where it went: an absence, so a dashed bar. */
+.fc-bar-unknown {
+  background: repeating-linear-gradient(90deg, var(--color-ink-tertiary) 0 3px, transparent 3px 6px);
+}
+.fc-state-dot {
+  width: 6px;
+  height: 6px;
+  margin-inline-end: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* The net line's points: each a button that opens its month. */
+.fc-pt {
+  cursor: pointer;
+}
+.fc-pt:focus-visible {
+  outline: none;
+}
+.fc-pt-dot {
+  fill: var(--color-background);
+  stroke: var(--color-ink);
+  stroke-width: 1.5;
+}
+.fc-pt:hover .fc-pt-dot {
+  r: 4.5;
+}
+.fc-pt-ring {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 1;
+  opacity: 0;
+  transition: opacity var(--duration-base) var(--ease-out);
+}
+.fc-pt-on .fc-pt-dot {
+  fill: var(--color-accent);
+  stroke: var(--color-accent);
+}
+.fc-pt-on .fc-pt-ring,
+.fc-pt:focus-visible .fc-pt-ring {
+  opacity: 1;
+}
+.fc-pt-gap {
+  cursor: default;
+}
+.fc-pt-gap .fc-pt-dot {
+  stroke: var(--color-ink-tertiary);
+  stroke-dasharray: 2 2;
+}
+.fc-pt-tick {
+  fill: var(--color-ink-tertiary);
+  font-size: 11px;
+  font-family: var(--font-sans);
+}
+.fc-pt-on .fc-pt-tick {
+  fill: var(--color-ink);
+}
+.fc-pt-val {
+  fill: var(--color-ink);
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+
+/* A month arriving from the side it was paged from. */
+@keyframes fc-swap-from-left {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes fc-swap-from-right {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.fc-swap-l {
+  animation: fc-swap-from-left var(--duration-base) var(--ease-out);
+}
+.fc-swap-r {
+  animation: fc-swap-from-right var(--duration-base) var(--ease-out);
+}
+
+/* The month open, in the table: the row cursor's marker on the selection. */
+.fc-row-on {
+  background: var(--color-accent-soft);
+}
+.fc-row-on > td:first-child {
+  box-shadow: inset 2px 0 0 var(--color-accent);
+}
+
+/* Home's month chart (M28 U5): every month a column you press to open it. */
+.fc-col {
+  cursor: pointer;
+}
+.fc-col[aria-hidden='true'] {
+  cursor: default;
+}
+.fc-col-hit {
+  fill: transparent;
+  transition: fill var(--duration-micro);
+}
+.fc-col:hover .fc-col-hit {
+  fill: color-mix(in srgb, var(--color-ink) 4%, transparent);
+}
+.fc-col-on .fc-col-hit,
+.fc-col-on:hover .fc-col-hit {
+  fill: var(--color-accent-soft);
+}
+.fc-col-sel {
+  fill: none;
+  stroke: var(--color-accent);
+  stroke-width: 1;
+  opacity: 0;
+}
+.fc-col-on .fc-col-sel,
+.fc-col:focus-visible .fc-col-sel {
+  opacity: 1;
+}
+.fc-col:focus-visible {
+  outline: none;
+}
+.fc-col-tick {
+  fill: var(--color-ink-tertiary);
+  font-size: 11px;
+  font-family: var(--font-sans);
+}
+.fc-col-on .fc-col-tick {
+  fill: var(--color-ink);
+}
+.fc-col-val {
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+.fc-col-part {
+  fill: var(--color-negative);
+  font-size: 11px;
+  font-family: var(--font-sans);
+}
+
+/* A slip just written, once. */
+@keyframes fc-arrive {
+  from {
+    background: var(--color-accent-soft);
+  }
+  to {
+    background: transparent;
+  }
+}
+.fc-arrived {
+  animation: fc-arrive 900ms var(--ease-out) 1;
+}
+
+/* ---------------------------------------------------------------------------
+   Guide me — M28 U9, D-330, ported from docs/mockups/m28-u9/guide.html. A small
+   dialog beside the place it explains and an outline round the place; no scrim,
+   so the screen stays usable underneath (S6). Fixed to the viewport because the
+   dialog follows a place on whichever screen is showing. */
+.fc-guide-ring {
+  position: fixed;
+  z-index: 38;
+  pointer-events: none;
+  outline: 2px solid var(--color-accent);
+  outline-offset: 0;
+  transition:
+    left var(--duration-enter) var(--ease-out),
+    top var(--duration-enter) var(--ease-out),
+    width var(--duration-enter) var(--ease-out),
+    height var(--duration-enter) var(--ease-out);
+}
+.fc-guide-ring.fc-pulse {
+  animation: fc-ring-in 700ms var(--ease-out);
+}
+@keyframes fc-ring-in {
+  0% {
+    outline-offset: 10px;
+    opacity: 0;
+  }
+  60% {
+    opacity: 1;
+  }
+  100% {
+    outline-offset: 0;
+  }
+}
+.fc-guide {
+  position: fixed;
+  z-index: 40;
+  width: 344px;
+  max-width: calc(100vw - 16px);
+  background: var(--color-elevated);
+  border: 1px solid var(--color-hairline-strong);
+  box-shadow: var(--shadow-pop);
+  display: flex;
+  flex-direction: column;
+  transition:
+    left var(--duration-enter) var(--ease-out),
+    top var(--duration-enter) var(--ease-out);
+}
+.fc-guide-arrow {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: var(--color-elevated);
+  border: 1px solid var(--color-hairline-strong);
+  transform: rotate(45deg);
+}
+.fc-guide-arrow[data-side='right'] {
+  left: -7px;
+  border-top: 0;
+  border-right: 0;
+}
+.fc-guide-arrow[data-side='left'] {
+  right: -7px;
+  border-bottom: 0;
+  border-left: 0;
+}
+.fc-guide-arrow[data-side='below'] {
+  top: -7px;
+  border-bottom: 0;
+  border-right: 0;
+}
+.fc-guide-arrow[data-side='above'] {
+  bottom: -7px;
+  border-top: 0;
+  border-left: 0;
+}
+.fc-guide-dots button {
+  width: 18px;
+  height: 6px;
+  background: var(--color-hairline-strong);
+}
+.fc-guide-dots button[data-state='done'] {
+  background: var(--color-ink);
+}
+.fc-guide-dots button[data-state='now'] {
+  background: var(--color-accent);
+}
+.fc-guide-dots button:hover {
+  outline: 1px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.fc-guide-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  z-index: 45;
+  background: var(--color-ink);
+  color: var(--color-background);
+  padding: 8px 14px;
+  font-size: 13px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fc-guide-ring,
+  .fc-guide {
+    transition: none;
+  }
+  .fc-guide-ring.fc-pulse {
+    animation: none;
+  }
+}

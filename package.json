@@ -1,0 +1,73 @@
+{
+  "name": "emerald",
+  "version": "0.1.0",
+  "private": true,
+  "author": "Kfir Raphael Eliyahu <me@kfireliyahu.com>",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "main": "dist-electron/main.cjs",
+  "description": "Excel that reads your documents and won't let you be wrong quietly. Local-first and document-based: what you and an AI worked out, kept true in a file you own.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build && node scripts/third-party-notices.mjs dist",
+    "build:plugin": "tsc --noEmit && vite build --mode frame && vite build --mode plugin && vite build --mode claude-hooks && vite build --mode claude-status-line && node scripts/third-party-notices.mjs dist-plugin",
+    "build:demo": "npm run build:plugin && node scripts/make-demo-document.mjs && vite build --mode demo && node scripts/third-party-notices.mjs dist-demo",
+    "dev:demo": "node scripts/make-demo-document.mjs && vite --mode demo",
+    "check:tours": "npm run build:demo && node scripts/check-tours.mjs",
+    "build:electron": "tsc --noEmit && vite build --mode electron && vite build --mode electron-preload",
+    "dev:desktop": "node scripts/dev-desktop.mjs",
+    "desktop": "npm run build && npm run build:electron && electron .",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "docs:check": "node scripts/docs-check.mjs",
+    "frame:try": "node scripts/try-frame.mjs",
+    "fixtures": "node scripts/make-synthetic-fixtures.mjs && node scripts/make-payslip-pdf.mjs",
+    "icons": "electron scripts/make-icons.cjs",
+    "demo:receipt": "electron scripts/make-demo-receipt.cjs",
+    "demo:poster": "electron scripts/make-demo-poster.cjs",
+    "demo:shots": "electron scripts/make-demo-shots.cjs",
+    "pack": "npm run build && npm run build:electron && electron-builder --dir",
+    "dist:win": "npm run build && npm run build:electron && electron-builder --win",
+    "dist:mac": "npm run build && npm run build:electron && electron-builder --mac"
+  },
+  "dependencies": {
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "@fontsource/ibm-plex-sans": "^5.3.0",
+    "@fontsource/ibm-plex-sans-hebrew": "^5.3.0",
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "pdfjs-dist": "^6.2.108",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.18.4",
+    "sql.js": "^1.11.0",
+    "tesseract.js": "^7.0.0",
+    "xlsx": "file:vendor/xlsx-0.20.3.tgz",
+    "zustand": "^4.5.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.0.0",
+    "@types/node": "^24.13.3",
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
+    "@types/sql.js": "^1.4.9",
+    "@vitejs/plugin-react": "^4.3.1",
+    "electron": "^44.0.0",
+    "electron-builder": "^26.15.3",
+    "tailwindcss": "^4.0.0",
+    "typescript": "^5.5.3",
+    "vite": "^5.4.0",
+    "vitest": "^2.0.5"
+  },
+  "allowScripts": {
+    "electron-winstaller": false,
+    "esbuild": false,
+    "tesseract.js": false
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kfireliyahu/emerald-emd.git"
+  },
+  "homepage": "https://kfireliyahu.github.io/emerald-emd/"
+}

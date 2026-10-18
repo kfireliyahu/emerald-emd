@@ -1,0 +1,82 @@
+# What the two installers contain, and what installing one tells the operating
+# system (D-129).
+#
+# This file is the *only* place `.emd` is registered: `fileAssociations`
+# below becomes `CFBundleDocumentTypes` in the macOS `Info.plist` and a set of
+# registry entries in the Windows installer. Everything behind it — a document
+# handed over at launch, a second launch reaching the open window, macOS's
+# `open-file` — was built in D-128 and does nothing until this runs.
+#
+# Unsigned, on purpose and on the record (D-124): no Apple Developer account, no
+# notarization, no certificate. Gatekeeper and SmartScreen both warn on first
+# open, and the README says so plainly, because an unexplained warning is what
+# makes a person delete the file.
+
+# A domain the author controls, reversed (D-449): macOS decides two builds are
+# the same app by it, and the Windows installer derives its uninstall key from
+# it, so it does not change again once a release ships.
+appId: com.kfireliyahu.emerald
+productName: Emerald
+copyright: Copyright (C) 2026 Kfir Raphael Eliyahu. Free software under the GNU AGPL-3.0-only, with no warranty.
+
+directories:
+  output: release
+  buildResources: build
+
+# The renderer, the shell, and the manifest that names the entry point. Nothing
+# else: `dist/` and `dist-electron/` are bundles, so every dependency the app
+# has is already inside them and `node_modules` would be a second copy of the
+# same code. Excluded explicitly, because electron-builder ships it otherwise.
+files:
+  - dist/**
+  - dist-electron/**
+  - package.json
+  - '!node_modules/**'
+
+asar: true
+
+# Nothing here is native — SQLite is WebAssembly (D-021) and the spreadsheet
+# reader is plain JavaScript — so there is nothing to rebuild, and no compiler
+# is needed to make a release.
+npmRebuild: false
+
+fileAssociations:
+  - ext: emd
+    name: Emerald document
+    description: Emerald document
+    # `Editor`, not `Viewer`: opening one is how you work on it.
+    role: Editor
+    # electron-builder picks `build/document.ico` or `.icns` per platform.
+    icon: build/document
+    mimeType: application/x-emerald
+
+win:
+  target: nsis
+  icon: build/icon.ico
+
+nsis:
+  # Not one-click: an unsigned installer that runs the moment it is opened is
+  # exactly the shape of the thing people are told not to trust.
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  # Per-user, so no administrator prompt is needed on top of the SmartScreen
+  # warning. The file association lands under HKCU and applies to this user.
+  perMachine: false
+  artifactName: Emerald-Setup-${version}.${ext}
+  shortcutName: Emerald
+
+mac:
+  # Both kinds of Mac, as two disk images rather than one universal one twice the size
+  # (M43 U7): the release workflow builds them on one Apple-silicon runner.
+  target:
+    - target: dmg
+      arch: [arm64, x64]
+  category: public.app-category.finance
+  icon: build/icon.icns
+  # Explicitly nobody. Left unset, electron-builder would look for a signing
+  # identity in the keychain and silently use whatever it found.
+  identity: null
+  notarize: false
+
+dmg:
+  artifactName: Emerald-${version}-${arch}.${ext}

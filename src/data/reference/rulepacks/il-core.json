@@ -1,0 +1,1094 @@
+{
+  "id": "il-core",
+  "name": "Israel — everyday merchants",
+  "market": "IL",
+  "version": 2,
+  "rules": [
+    {
+      "id": "il.fuel.delek",
+      "kind": "CONTAINS",
+      "pattern": "דלק",
+      "category": "cat:fuel"
+    },
+    {
+      "id": "il.fuel.sonol",
+      "kind": "CONTAINS",
+      "pattern": "סונול",
+      "category": "cat:fuel"
+    },
+    {
+      "id": "il.fuel.dor-alon",
+      "kind": "CONTAINS",
+      "pattern": "דור אלון",
+      "category": "cat:fuel"
+    },
+    {
+      "id": "il.fuel.paz-yellow",
+      "kind": "CONTAINS",
+      "pattern": "פז ילו",
+      "category": "cat:fuel"
+    },
+    {
+      "id": "il.fuel.pazomat",
+      "kind": "CONTAINS",
+      "pattern": "פזומט",
+      "category": "cat:fuel"
+    },
+    {
+      "id": "il.grocery.shufersal",
+      "kind": "CONTAINS",
+      "pattern": "שופרסל",
+      "category": "cat:groceries"
+    },
+    {
+      "id": "il.grocery.rami-levy",
+      "kind": "CONTAINS",
+      "pattern": "רמי לוי",
+      "category": "cat:groceries"
+    },
+    {
+      "id": "il.grocery.yeinot-bitan",
+      "kind": "CONTAINS",
+      "pattern": "יינות ביתן",
+      "category": "cat:groceries"
+    },
+    {
+      "id": "il.grocery.victory",
+      "kind": "CONTAINS",
+      "pattern": "ויקטורי",
+      "category": "cat:groceries"
+    },
+    {
+      "id": "il.grocery.osher-ad",
+      "kind": "CONTAINS",
+      "pattern": "אושר עד",
+      "category": "cat:groceries"
+    },
+    {
+      "id": "il.grocery.yochananof",
+      "kind": "CONTAINS",
+      "pattern": "יוחננוף",
+      "category": "cat:groceries"
+    },
+    {
+      "id": "il.grocery.tiv-taam",
+      "kind": "CONTAINS",
+      "pattern": "טיב טעם",
+      "category": "cat:groceries"
+    },
+    {
+      "id": "il.grocery.hatzi-hinam",
+      "kind": "CONTAINS",
+      "pattern": "חצי חינם",
+      "category": "cat:groceries"
+    },
+    {
+      "id": "il.grocery.machsanei-hashuk",
+      "kind": "CONTAINS",
+      "pattern": "מחסני השוק",
+      "category": "cat:groceries"
+    },
+    {
+      "id": "il.grocery.mega-bair",
+      "kind": "CONTAINS",
+      "pattern": "מגה בעיר",
+      "category": "cat:groceries"
+    },
+    {
+      "id": "il.grocery.carrefour",
+      "kind": "CONTAINS",
+      "pattern": "קרפור",
+      "category": "cat:groceries"
+    },
+    {
+      "id": "il.grocery.alonit",
+      "kind": "CONTAINS",
+      "pattern": "אלונית",
+      "category": "cat:groceries"
+    },
+    {
+      "id": "il.pharmacy.super-pharm",
+      "kind": "CONTAINS",
+      "pattern": "סופר פארם",
+      "category": "cat:pharmacy"
+    },
+    {
+      "id": "il.pharmacy.new-pharm",
+      "kind": "CONTAINS",
+      "pattern": "ניו פארם",
+      "category": "cat:pharmacy"
+    },
+    {
+      "id": "il.pharmacy.good-pharm",
+      "kind": "CONTAINS",
+      "pattern": "גוד פארם",
+      "category": "cat:pharmacy"
+    },
+    {
+      "id": "il.pharmacy.beit-mirkachat",
+      "kind": "CONTAINS",
+      "pattern": "בית מרקחת",
+      "category": "cat:pharmacy"
+    },
+    {
+      "id": "il.municipal.iriyat",
+      "kind": "CONTAINS",
+      "pattern": "עיריית",
+      "category": "cat:municipal"
+    },
+    {
+      "id": "il.municipal.iriyat-alt",
+      "kind": "CONTAINS",
+      "pattern": "עירית",
+      "category": "cat:municipal"
+    },
+    {
+      "id": "il.municipal.arnona",
+      "kind": "CONTAINS",
+      "pattern": "ארנונה",
+      "category": "cat:municipal"
+    },
+    {
+      "id": "il.municipal.moatza-mekomit",
+      "kind": "CONTAINS",
+      "pattern": "מועצה מקומית",
+      "category": "cat:municipal"
+    },
+    {
+      "id": "il.municipal.moatza-ezorit",
+      "kind": "CONTAINS",
+      "pattern": "מועצה אזורית",
+      "category": "cat:municipal"
+    },
+    {
+      "id": "il.electricity.iec",
+      "kind": "CONTAINS",
+      "pattern": "חברת החשמל",
+      "category": "cat:electricity"
+    },
+    {
+      "id": "il.electricity.iec-alt",
+      "kind": "CONTAINS",
+      "pattern": "חשמל לישראל",
+      "category": "cat:electricity"
+    },
+    {
+      "id": "il.water.mei-avivim",
+      "kind": "CONTAINS",
+      "pattern": "מי אביבים",
+      "category": "cat:water"
+    },
+    {
+      "id": "il.water.taagid",
+      "kind": "CONTAINS",
+      "pattern": "תאגיד המים",
+      "category": "cat:water"
+    },
+    {
+      "id": "il.gas.pazgas",
+      "kind": "CONTAINS",
+      "pattern": "פזגז",
+      "category": "cat:gas"
+    },
+    {
+      "id": "il.gas.amisragas",
+      "kind": "CONTAINS",
+      "pattern": "אמישראגז",
+      "category": "cat:gas"
+    },
+    {
+      "id": "il.gas.supergas",
+      "kind": "CONTAINS",
+      "pattern": "סופרגז",
+      "category": "cat:gas"
+    },
+    {
+      "id": "il.gas.dorgas",
+      "kind": "CONTAINS",
+      "pattern": "דורגז",
+      "category": "cat:gas"
+    },
+    {
+      "id": "il.telecom.cellcom",
+      "kind": "CONTAINS",
+      "pattern": "סלקום",
+      "category": "cat:connectivity"
+    },
+    {
+      "id": "il.telecom.partner",
+      "kind": "CONTAINS",
+      "pattern": "פרטנר",
+      "category": "cat:connectivity"
+    },
+    {
+      "id": "il.telecom.pelephone",
+      "kind": "CONTAINS",
+      "pattern": "פלאפון",
+      "category": "cat:connectivity"
+    },
+    {
+      "id": "il.telecom.bezeq",
+      "kind": "CONTAINS",
+      "pattern": "בזק",
+      "category": "cat:connectivity"
+    },
+    {
+      "id": "il.telecom.hot-telecom",
+      "kind": "CONTAINS",
+      "pattern": "הוט טלקום",
+      "category": "cat:connectivity"
+    },
+    {
+      "id": "il.telecom.hot-mobile",
+      "kind": "CONTAINS",
+      "pattern": "הוט מובייל",
+      "category": "cat:connectivity"
+    },
+    {
+      "id": "il.telecom.golan",
+      "kind": "CONTAINS",
+      "pattern": "גולן טלקום",
+      "category": "cat:connectivity"
+    },
+    {
+      "id": "il.telecom.rami-levy",
+      "kind": "CONTAINS",
+      "pattern": "רמי לוי תקשורת",
+      "category": "cat:connectivity",
+      "priority": -10
+    },
+    {
+      "id": "il.insurance.any",
+      "kind": "CONTAINS",
+      "pattern": "ביטוח",
+      "category": "cat:insurance"
+    },
+    {
+      "id": "il.insurance.phoenix",
+      "kind": "CONTAINS",
+      "pattern": "הפניקס",
+      "category": "cat:insurance"
+    },
+    {
+      "id": "il.insurance.menora",
+      "kind": "CONTAINS",
+      "pattern": "מנורה מבטחים",
+      "category": "cat:insurance"
+    },
+    {
+      "id": "il.insurance.harel",
+      "kind": "CONTAINS",
+      "pattern": "הראל",
+      "category": "cat:insurance"
+    },
+    {
+      "id": "il.insurance.passportcard",
+      "kind": "CONTAINS",
+      "pattern": "פספורטכארד",
+      "category": "cat:insurance"
+    },
+    {
+      "id": "il.tax.bituach-leumi",
+      "kind": "CONTAINS",
+      "pattern": "ביטוח לאומי",
+      "category": "cat:taxes",
+      "priority": -10
+    },
+    {
+      "id": "il.tax.mas-hachnasa",
+      "kind": "CONTAINS",
+      "pattern": "מס הכנסה",
+      "category": "cat:taxes"
+    },
+    {
+      "id": "il.tax.rashut-hamisim",
+      "kind": "CONTAINS",
+      "pattern": "רשות המסים",
+      "category": "cat:taxes"
+    },
+    {
+      "id": "il.transit.rav-kav",
+      "kind": "REGEX",
+      "pattern": "רב[ -]?קו",
+      "name": "רב קו",
+      "category": "cat:transit"
+    },
+    {
+      "id": "il.transit.egged",
+      "kind": "CONTAINS",
+      "pattern": "אגד",
+      "category": "cat:transit"
+    },
+    {
+      "id": "il.transit.metropoline",
+      "kind": "CONTAINS",
+      "pattern": "מטרופולין",
+      "category": "cat:transit"
+    },
+    {
+      "id": "il.transit.kavim",
+      "kind": "CONTAINS",
+      "pattern": "קווים",
+      "category": "cat:transit"
+    },
+    {
+      "id": "il.transit.superbus",
+      "kind": "CONTAINS",
+      "pattern": "סופרבוס",
+      "category": "cat:transit"
+    },
+    {
+      "id": "il.transit.rakevet",
+      "kind": "CONTAINS",
+      "pattern": "רכבת ישראל",
+      "category": "cat:transit"
+    },
+    {
+      "id": "il.transit.moovit",
+      "kind": "CONTAINS",
+      "pattern": "MOOVIT",
+      "category": "cat:transit"
+    },
+    {
+      "id": "il.parking.pango",
+      "kind": "CONTAINS",
+      "pattern": "פנגו",
+      "category": "cat:parking"
+    },
+    {
+      "id": "il.parking.pango-latin",
+      "kind": "CONTAINS",
+      "pattern": "PANGO",
+      "category": "cat:parking"
+    },
+    {
+      "id": "il.parking.cellopark",
+      "kind": "CONTAINS",
+      "pattern": "סלופארק",
+      "category": "cat:parking"
+    },
+    {
+      "id": "il.parking.cellopark-latin",
+      "kind": "CONTAINS",
+      "pattern": "CELLOPARK",
+      "category": "cat:parking"
+    },
+    {
+      "id": "il.parking.hanyon",
+      "kind": "CONTAINS",
+      "pattern": "חניון",
+      "category": "cat:parking"
+    },
+    {
+      "id": "il.parking.ahuzot-hahof",
+      "kind": "CONTAINS",
+      "pattern": "אחוזות החוף",
+      "category": "cat:parking"
+    },
+    {
+      "id": "il.tolls.hotze-israel",
+      "kind": "CONTAINS",
+      "pattern": "חוצה ישראל",
+      "category": "cat:tolls"
+    },
+    {
+      "id": "il.tolls.derech-eretz",
+      "kind": "CONTAINS",
+      "pattern": "דרך ארץ",
+      "category": "cat:tolls"
+    },
+    {
+      "id": "il.tolls.carmel-tunnels",
+      "kind": "CONTAINS",
+      "pattern": "מנהרות הכרמל",
+      "category": "cat:tolls"
+    },
+    {
+      "id": "il.cardfee.dmei-kartis",
+      "kind": "CONTAINS",
+      "pattern": "דמי כרטיס",
+      "category": "cat:cardfees"
+    },
+    {
+      "id": "il.cardfee.ribit-chova",
+      "kind": "CONTAINS",
+      "pattern": "ריבית חובה",
+      "category": "cat:cardfees"
+    },
+    {
+      "id": "il.bankfee.amla",
+      "kind": "REGEX",
+      "pattern": "עמל[הת]",
+      "name": "עמלה",
+      "category": "cat:bankfees"
+    },
+    {
+      "id": "il.bankfee.dmei-nihul",
+      "kind": "CONTAINS",
+      "pattern": "דמי ניהול",
+      "category": "cat:bankfees"
+    },
+    {
+      "id": "il.food.cafe",
+      "kind": "CONTAINS",
+      "pattern": "קפה",
+      "category": "cat:restaurants"
+    },
+    {
+      "id": "il.food.aroma",
+      "kind": "CONTAINS",
+      "pattern": "ארומה",
+      "category": "cat:restaurants"
+    },
+    {
+      "id": "il.food.landwer",
+      "kind": "CONTAINS",
+      "pattern": "לנדוור",
+      "category": "cat:restaurants"
+    },
+    {
+      "id": "il.food.roladin",
+      "kind": "CONTAINS",
+      "pattern": "רולדין",
+      "category": "cat:restaurants"
+    },
+    {
+      "id": "il.food.cofix",
+      "kind": "CONTAINS",
+      "pattern": "קופיקס",
+      "category": "cat:restaurants"
+    },
+    {
+      "id": "il.food.pizza",
+      "kind": "CONTAINS",
+      "pattern": "פיצה",
+      "category": "cat:restaurants"
+    },
+    {
+      "id": "il.food.mcdonalds",
+      "kind": "CONTAINS",
+      "pattern": "מקדונלד",
+      "category": "cat:restaurants"
+    },
+    {
+      "id": "il.food.burger-ranch",
+      "kind": "CONTAINS",
+      "pattern": "בורגר ראנץ",
+      "category": "cat:restaurants"
+    },
+    {
+      "id": "il.food.wolt",
+      "kind": "CONTAINS",
+      "pattern": "WOLT",
+      "category": "cat:restaurants"
+    },
+    {
+      "id": "il.food.wolt-he",
+      "kind": "CONTAINS",
+      "pattern": "וולט",
+      "category": "cat:restaurants"
+    },
+    {
+      "id": "il.food.tenbis",
+      "kind": "CONTAINS",
+      "pattern": "תן ביס",
+      "category": "cat:restaurants"
+    },
+    {
+      "id": "il.food.tenbis-latin",
+      "kind": "CONTAINS",
+      "pattern": "10BIS",
+      "category": "cat:restaurants"
+    },
+    {
+      "id": "il.fun.cinema-city",
+      "kind": "CONTAINS",
+      "pattern": "סינמה סיטי",
+      "category": "cat:entertainment"
+    },
+    {
+      "id": "il.fun.yes-planet",
+      "kind": "CONTAINS",
+      "pattern": "יס פלאנט",
+      "category": "cat:entertainment"
+    },
+    {
+      "id": "il.fun.rav-hen",
+      "kind": "CONTAINS",
+      "pattern": "רב חן",
+      "category": "cat:entertainment"
+    },
+    {
+      "id": "il.sub.netflix",
+      "kind": "CONTAINS",
+      "pattern": "NETFLIX",
+      "category": "cat:subscriptions"
+    },
+    {
+      "id": "il.sub.spotify",
+      "kind": "CONTAINS",
+      "pattern": "SPOTIFY",
+      "category": "cat:subscriptions"
+    },
+    {
+      "id": "il.sub.disney",
+      "kind": "CONTAINS",
+      "pattern": "DISNEY",
+      "category": "cat:subscriptions"
+    },
+    {
+      "id": "il.sub.youtube",
+      "kind": "CONTAINS",
+      "pattern": "YOUTUBE",
+      "category": "cat:subscriptions"
+    },
+    {
+      "id": "il.shop.ikea-he",
+      "kind": "CONTAINS",
+      "pattern": "איקאה",
+      "category": "cat:shopping"
+    },
+    {
+      "id": "il.shop.ikea",
+      "kind": "CONTAINS",
+      "pattern": "IKEA",
+      "category": "cat:shopping"
+    },
+    {
+      "id": "il.shop.zara",
+      "kind": "CONTAINS",
+      "pattern": "ZARA",
+      "category": "cat:shopping"
+    },
+    {
+      "id": "il.shop.castro",
+      "kind": "CONTAINS",
+      "pattern": "קסטרו",
+      "category": "cat:shopping"
+    },
+    {
+      "id": "il.shop.fox",
+      "kind": "CONTAINS",
+      "pattern": "פוקס",
+      "category": "cat:shopping"
+    },
+    {
+      "id": "il.shop.renuar",
+      "kind": "CONTAINS",
+      "pattern": "רנואר",
+      "category": "cat:shopping"
+    },
+    {
+      "id": "il.shop.terminal-x",
+      "kind": "CONTAINS",
+      "pattern": "טרמינל איקס",
+      "category": "cat:shopping"
+    },
+    {
+      "id": "il.shop.amazon",
+      "kind": "CONTAINS",
+      "pattern": "AMAZON",
+      "category": "cat:shopping"
+    },
+    {
+      "id": "il.shop.aliexpress",
+      "kind": "CONTAINS",
+      "pattern": "ALIEXPRESS",
+      "category": "cat:shopping"
+    },
+    {
+      "id": "il.shop.shein",
+      "kind": "CONTAINS",
+      "pattern": "SHEIN",
+      "category": "cat:shopping"
+    },
+    {
+      "id": "il.shop.home-center",
+      "kind": "CONTAINS",
+      "pattern": "הום סנטר",
+      "category": "cat:shopping"
+    },
+    {
+      "id": "il.shop.max-stock",
+      "kind": "CONTAINS",
+      "pattern": "מקס סטוק",
+      "category": "cat:shopping"
+    },
+    {
+      "id": "il.travel.elal",
+      "kind": "CONTAINS",
+      "pattern": "אל על",
+      "category": "cat:travel"
+    },
+    {
+      "id": "il.travel.booking",
+      "kind": "CONTAINS",
+      "pattern": "BOOKING.COM",
+      "category": "cat:travel"
+    },
+    {
+      "id": "il.travel.airbnb",
+      "kind": "CONTAINS",
+      "pattern": "AIRBNB",
+      "category": "cat:travel"
+    },
+    {
+      "id": "il.travel.issta",
+      "kind": "CONTAINS",
+      "pattern": "ISSTA",
+      "category": "cat:travel"
+    },
+    {
+      "id": "il.travel.issta-he",
+      "kind": "CONTAINS",
+      "pattern": "איסתא",
+      "category": "cat:travel"
+    },
+    {
+      "id": "il.health.maccabi",
+      "kind": "CONTAINS",
+      "pattern": "מכבי שירותי בריאות",
+      "category": "cat:doctors"
+    },
+    {
+      "id": "il.health.clalit",
+      "kind": "CONTAINS",
+      "pattern": "שירותי בריאות כללית",
+      "category": "cat:doctors"
+    },
+    {
+      "id": "il.health.kupat-holim",
+      "kind": "CONTAINS",
+      "pattern": "קופת חולים",
+      "category": "cat:doctors"
+    },
+    {
+      "id": "il.fitness.holmes-place",
+      "kind": "CONTAINS",
+      "pattern": "הולמס פלייס",
+      "category": "cat:fitness"
+    },
+    {
+      "id": "il.fitness.go-active",
+      "kind": "CONTAINS",
+      "pattern": "גו אקטיב",
+      "category": "cat:fitness"
+    },
+    {
+      "id": "il.pc.delek",
+      "kind": "PROVIDER_CATEGORY",
+      "pattern": "דלק",
+      "category": "cat:fuel"
+    },
+    {
+      "id": "il.pc.supermarket",
+      "kind": "PROVIDER_CATEGORY",
+      "pattern": "סופרמרקט",
+      "category": "cat:groceries"
+    },
+    {
+      "id": "il.pc.supermarkets",
+      "kind": "PROVIDER_CATEGORY",
+      "pattern": "סופרמרקטים",
+      "category": "cat:groceries"
+    },
+    {
+      "id": "il.pc.mazon",
+      "kind": "PROVIDER_CATEGORY",
+      "pattern": "מזון",
+      "category": "cat:groceries"
+    },
+    {
+      "id": "il.pc.restaurants",
+      "kind": "PROVIDER_CATEGORY",
+      "pattern": "מסעדות",
+      "category": "cat:restaurants"
+    },
+    {
+      "id": "il.pc.restaurants-cafes",
+      "kind": "PROVIDER_CATEGORY",
+      "pattern": "מסעדות ובתי קפה",
+      "category": "cat:restaurants"
+    },
+    {
+      "id": "il.pc.pharma",
+      "kind": "PROVIDER_CATEGORY",
+      "pattern": "פארמה",
+      "category": "cat:pharmacy"
+    },
+    {
+      "id": "il.pc.pharmacies",
+      "kind": "PROVIDER_CATEGORY",
+      "pattern": "בתי מרקחת",
+      "category": "cat:pharmacy"
+    },
+    {
+      "id": "il.pc.clothing",
+      "kind": "PROVIDER_CATEGORY",
+      "pattern": "ביגוד והנעלה",
+      "category": "cat:shopping"
+    },
+    {
+      "id": "il.pc.fashion",
+      "kind": "PROVIDER_CATEGORY",
+      "pattern": "אופנה",
+      "category": "cat:shopping"
+    },
+    {
+      "id": "il.pc.electronics",
+      "kind": "PROVIDER_CATEGORY",
+      "pattern": "חשמל ואלקטרוניקה",
+      "category": "cat:shopping"
+    },
+    {
+      "id": "il.pc.insurance",
+      "kind": "PROVIDER_CATEGORY",
+      "pattern": "ביטוח",
+      "category": "cat:insurance"
+    },
+    {
+      "id": "il.pc.travel",
+      "kind": "PROVIDER_CATEGORY",
+      "pattern": "תיירות ונופש",
+      "category": "cat:travel"
+    },
+    {
+      "id": "il.pc.leisure",
+      "kind": "PROVIDER_CATEGORY",
+      "pattern": "בילויים ופנאי",
+      "category": "cat:entertainment"
+    },
+    {
+      "id": "il.connectivity.hot",
+      "kind": "CONTAINS",
+      "pattern": "הוט",
+      "category": "cat:connectivity"
+    },
+    {
+      "id": "il.shopping.ace",
+      "kind": "REGEX",
+      "pattern": "\\bACE\\b",
+      "name": "ACE",
+      "category": "cat:shopping"
+    },
+    {
+      "id": "il.shopping.golf",
+      "kind": "CONTAINS",
+      "pattern": "גולף אנד קו",
+      "category": "cat:shopping"
+    },
+    {
+      "id": "il.car.garage",
+      "kind": "CONTAINS",
+      "pattern": "מוסך",
+      "category": "cat:car"
+    },
+    {
+      "id": "il.car.tyres",
+      "kind": "CONTAINS",
+      "pattern": "צמיגי",
+      "category": "cat:car"
+    },
+    {
+      "id": "il.car.licensing",
+      "kind": "CONTAINS",
+      "pattern": "משרד הרישוי",
+      "category": "cat:car"
+    },
+    {
+      "id": "il.car.test",
+      "kind": "CONTAINS",
+      "pattern": "מכון רישוי",
+      "category": "cat:car"
+    },
+    {
+      "id": "il.dental.teeth",
+      "kind": "CONTAINS",
+      "pattern": "שיניים",
+      "category": "cat:dental"
+    },
+    {
+      "id": "il.dental.hygienist",
+      "kind": "CONTAINS",
+      "pattern": "שיננית",
+      "category": "cat:dental"
+    },
+    {
+      "id": "il.pets.vet",
+      "kind": "CONTAINS",
+      "pattern": "וטרינר",
+      "category": "cat:pets"
+    },
+    {
+      "id": "il.pets.petshop",
+      "kind": "CONTAINS",
+      "pattern": "פטשופ",
+      "category": "cat:pets"
+    },
+    {
+      "id": "il.pets.animals",
+      "kind": "CONTAINS",
+      "pattern": "חיות מחמד",
+      "category": "cat:pets"
+    },
+    {
+      "id": "il.education.university",
+      "kind": "CONTAINS",
+      "pattern": "אוניברסיט",
+      "category": "cat:education"
+    },
+    {
+      "id": "il.education.college",
+      "kind": "CONTAINS",
+      "pattern": "מכללה",
+      "category": "cat:education"
+    },
+    {
+      "id": "il.education.school",
+      "kind": "CONTAINS",
+      "pattern": "בית ספר",
+      "category": "cat:education"
+    },
+    {
+      "id": "il.childcare.nursery",
+      "kind": "CONTAINS",
+      "pattern": "גן ילדים",
+      "category": "cat:childcare"
+    },
+    {
+      "id": "il.childcare.daycare",
+      "kind": "CONTAINS",
+      "pattern": "מעון יום",
+      "category": "cat:childcare"
+    },
+    {
+      "id": "il.childcare.afternoon",
+      "kind": "CONTAINS",
+      "pattern": "צהרון",
+      "category": "cat:childcare"
+    },
+    {
+      "id": "il.transit.gett",
+      "kind": "CONTAINS",
+      "pattern": "GETT",
+      "category": "cat:transit"
+    },
+    {
+      "id": "il.transit.yango-latin",
+      "kind": "CONTAINS",
+      "pattern": "YANGO",
+      "category": "cat:transit"
+    },
+    {
+      "id": "il.transit.yango",
+      "kind": "CONTAINS",
+      "pattern": "יאנגו",
+      "category": "cat:transit"
+    },
+    {
+      "id": "il.transit.taxis",
+      "kind": "CONTAINS",
+      "pattern": "מוניות",
+      "category": "cat:transit"
+    },
+    {
+      "id": "il.doctors.meuhedet",
+      "kind": "CONTAINS",
+      "pattern": "שירותי בריאות מאוחדת",
+      "category": "cat:doctors"
+    },
+    {
+      "id": "il.doctors.leumit",
+      "kind": "CONTAINS",
+      "pattern": "לאומית שירותי בריאות",
+      "category": "cat:doctors"
+    },
+    {
+      "id": "il.doctors.assuta",
+      "kind": "CONTAINS",
+      "pattern": "אסותא",
+      "category": "cat:doctors"
+    },
+    {
+      "id": "il.insurance.clal",
+      "kind": "CONTAINS",
+      "pattern": "כלל ביטוח",
+      "category": "cat:insurance"
+    },
+    {
+      "id": "il.insurance.direct",
+      "kind": "CONTAINS",
+      "pattern": "ביטוח ישיר",
+      "category": "cat:insurance"
+    },
+    {
+      "id": "il.insurance.shlomo",
+      "kind": "CONTAINS",
+      "pattern": "שלמה ביטוח",
+      "category": "cat:insurance"
+    },
+    {
+      "id": "il.insurance.ayalon",
+      "kind": "CONTAINS",
+      "pattern": "איילון ביטוח",
+      "category": "cat:insurance"
+    },
+    {
+      "id": "il.insurance.aig",
+      "kind": "REGEX",
+      "pattern": "\\bAIG\\b",
+      "name": "AIG",
+      "category": "cat:insurance"
+    },
+    {
+      "id": "il.subscriptions.openai",
+      "kind": "CONTAINS",
+      "pattern": "OPENAI",
+      "category": "cat:subscriptions"
+    },
+    {
+      "id": "il.subscriptions.anthropic",
+      "kind": "CONTAINS",
+      "pattern": "ANTHROPIC",
+      "category": "cat:subscriptions"
+    },
+    {
+      "id": "il.subscriptions.github",
+      "kind": "CONTAINS",
+      "pattern": "GITHUB",
+      "category": "cat:subscriptions"
+    },
+    {
+      "id": "il.subscriptions.dropbox",
+      "kind": "CONTAINS",
+      "pattern": "DROPBOX",
+      "category": "cat:subscriptions"
+    },
+    {
+      "id": "il.subscriptions.icloud",
+      "kind": "CONTAINS",
+      "pattern": "ICLOUD",
+      "category": "cat:subscriptions"
+    },
+    {
+      "id": "il.subscriptions.audible",
+      "kind": "CONTAINS",
+      "pattern": "AUDIBLE",
+      "category": "cat:subscriptions"
+    },
+    {
+      "id": "il.subscriptions.patreon",
+      "kind": "CONTAINS",
+      "pattern": "PATREON",
+      "category": "cat:subscriptions"
+    },
+    {
+      "id": "il.travel.arkia",
+      "kind": "CONTAINS",
+      "pattern": "ארקיע",
+      "category": "cat:travel"
+    },
+    {
+      "id": "il.travel.israir",
+      "kind": "CONTAINS",
+      "pattern": "ישראייר",
+      "category": "cat:travel"
+    },
+    {
+      "id": "il.travel.wizz",
+      "kind": "CONTAINS",
+      "pattern": "WIZZ",
+      "category": "cat:travel"
+    },
+    {
+      "id": "il.travel.expedia",
+      "kind": "CONTAINS",
+      "pattern": "EXPEDIA",
+      "category": "cat:travel"
+    },
+    {
+      "id": "il.travel.hotels",
+      "kind": "CONTAINS",
+      "pattern": "בתי מלון",
+      "category": "cat:travel"
+    },
+    {
+      "id": "il.travel.hotels-plural",
+      "kind": "CONTAINS",
+      "pattern": "מלונות",
+      "category": "cat:travel"
+    },
+    {
+      "id": "il.restaurants.kfc",
+      "kind": "CONTAINS",
+      "pattern": "KFC",
+      "category": "cat:restaurants"
+    },
+    {
+      "id": "il.restaurants.sushi",
+      "kind": "CONTAINS",
+      "pattern": "סושי",
+      "category": "cat:restaurants"
+    },
+    {
+      "id": "il.restaurants.falafel",
+      "kind": "CONTAINS",
+      "pattern": "פלאפל",
+      "category": "cat:restaurants"
+    },
+    {
+      "id": "il.restaurants.shawarma",
+      "kind": "CONTAINS",
+      "pattern": "שווארמה",
+      "category": "cat:restaurants"
+    },
+    {
+      "id": "il.restaurants.hummus",
+      "kind": "CONTAINS",
+      "pattern": "חומוס",
+      "category": "cat:restaurants"
+    },
+    {
+      "id": "il.entertainment.cinema",
+      "kind": "CONTAINS",
+      "pattern": "קולנוע",
+      "category": "cat:entertainment"
+    },
+    {
+      "id": "il.entertainment.theatre",
+      "kind": "CONTAINS",
+      "pattern": "תיאטרון",
+      "category": "cat:entertainment"
+    },
+    {
+      "id": "il.fitness.gym",
+      "kind": "CONTAINS",
+      "pattern": "חדר כושר",
+      "category": "cat:fitness"
+    },
+    {
+      "id": "il.fitness.country",
+      "kind": "CONTAINS",
+      "pattern": "קאנטרי קלאב",
+      "category": "cat:fitness"
+    },
+    {
+      "id": "il.shopping.temu",
+      "kind": "CONTAINS",
+      "pattern": "TEMU",
+      "category": "cat:shopping"
+    },
+    {
+      "id": "il.shopping.ebay",
+      "kind": "CONTAINS",
+      "pattern": "EBAY",
+      "category": "cat:shopping"
+    },
+    {
+      "id": "il.shopping.asos",
+      "kind": "CONTAINS",
+      "pattern": "ASOS",
+      "category": "cat:shopping"
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+# The demo, on GitHub Pages (M33 U4, D-418): every push to main builds
+# dist-demo/ — Emerald's page at index.html (M33 U8, D-459), the tour frame at
+# tour.html, the app at app.html, the documents beside them, all with relative
+# paths — and publishes it at the repository's Pages address,
+# https://<owner>.github.io/<repository>/, which getemerald.dev will point at.
+# Pages sends no X-Frame-Options and no frame-ancestors, so any page can embed
+# the frame.
+#
+# Pages on the free plan serves public repositories only, so the job runs only
+# in a public one: in a private repository it is skipped, and nothing is built
+# or published. Before the first run, the repository's Settings > Pages >
+# Source is set to "GitHub Actions".
+#
+# The tours are not replayed here (`npm run check:tours` needs a display for
+# Electron); run it before pushing.
+
+name: Demo
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      # The demo needs no Electron binary; the build is Vite and Node alone.
+      - run: npm ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+      - run: npm run build:demo
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist-demo
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

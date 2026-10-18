@@ -1,0 +1,158 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "port": 5173,
+      "autoPort": true
+    },
+    {
+      "name": "demo-tour",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:demo",
+        "--",
+        "--port",
+        "4181",
+        "--strictPort"
+      ],
+      "port": 4181
+    },
+    {
+      "name": "demo-static",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "4180",
+        "--bind",
+        "127.0.0.1",
+        "--directory",
+        "dist-demo"
+      ],
+      "port": 4180
+    },
+    {
+      "name": "demo-embed",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "4182",
+        "--bind",
+        "localhost",
+        "--directory",
+        "docs/mockups/m33-u4"
+      ],
+      "port": 4182
+    },
+    {
+      "name": "frame-try",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "4183",
+        "--bind",
+        "127.0.0.1",
+        "--directory",
+        ".frame-try"
+      ],
+      "port": 4183
+    },
+    {
+      "name": "frame-live",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/try-frame.mjs",
+        "docs/memory.emd",
+        "open_question",
+        "--live",
+        "--no-open",
+        "--port=4184"
+      ],
+      "port": 4184
+    },
+    {
+      "name": "frame-live-roadmap",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/try-frame.mjs",
+        "docs/memory.emd",
+        "milestone",
+        "--view=roadmap",
+        "--live",
+        "--no-open",
+        "--port=4186"
+      ],
+      "port": 4186
+    },
+    {
+      "name": "frame-live-check",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/try-frame.mjs",
+        "docs/memory.emd",
+        "open_question",
+        "--live",
+        "--no-push",
+        "--no-open",
+        "--port=4185"
+      ],
+      "port": 4185
+    },
+    {
+      "name": "frame-live-vscode",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/try-frame.mjs",
+        "docs/memory.emd",
+        "milestone",
+        "--view=roadmap",
+        "--live",
+        "--no-open",
+        "--port=4187",
+        "--host-theme=vscode-dark"
+      ],
+      "port": 4187
+    },
+    {
+      "name": "frame-live-noui",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/try-frame.mjs",
+        "docs/memory.emd",
+        "milestone",
+        "--view=roadmap",
+        "--live",
+        "--no-push",
+        "--no-ui",
+        "--strip-meta",
+        "--no-open",
+        "--port=4188",
+        "--host-theme=vscode-dark"
+      ],
+      "port": 4188
+    },
+    {
+      "name": "page-mockup",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "4189",
+        "--bind",
+        "localhost",
+        "--directory",
+        "docs/mockups/m33-u8"
+      ],
+      "port": 4189
+    }
+  ]
+}

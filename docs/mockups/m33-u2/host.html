@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Host page mockup</title>
+    <!--
+      M33 U2, for the author to judge the frame as a visitor meets it: inside a
+      page, in an iframe, at the size the site's brief expects (16:10, the
+      poster's ratio, in the chapter's wide figure), and again at phone width.
+      A stand-in for a personal site, plain on purpose; not U4's cross-origin
+      test page. Served by the demo-tour dev server at
+      http://localhost:4181/docs/mockups/m33-u2/host.html — the frames it holds
+      are that server's own `/`. `?tour=ledger` (U5) or `?tour=development` (U6) plays that tour instead.
+    -->
+    <style>
+      :root {
+        --ink: #1d1d1b;
+        --ink-2: #5b5b57;
+        --rule: #e4e2dc;
+        --page: #fbfaf7;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --ink: #ecebe6;
+          --ink-2: #a3a29c;
+          --rule: #34342f;
+          --page: #161614;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--page);
+        color: var(--ink);
+        font: 17px/1.6 Georgia, 'Times New Roman', serif;
+      }
+      header,
+      main > section > .text,
+      footer {
+        max-width: 680px;
+        margin: 0 auto;
+        padding: 0 16px;
+      }
+      header {
+        padding-top: 40px;
+        padding-bottom: 24px;
+        border-bottom: 1px solid var(--rule);
+        font: 15px/1.4 system-ui, sans-serif;
+        color: var(--ink-2);
+      }
+      h1,
+      h2 {
+        font-weight: 600;
+        line-height: 1.2;
+      }
+      h2 {
+        margin: 56px 0 12px;
+        font-size: 28px;
+      }
+      p {
+        margin: 0 0 16px;
+      }
+      .note {
+        font: 13px/1.5 system-ui, sans-serif;
+        color: var(--ink-2);
+      }
+      figure {
+        margin: 32px auto;
+        padding: 0 16px;
+      }
+      figcaption {
+        margin-top: 8px;
+        font: 13px/1.5 system-ui, sans-serif;
+        color: var(--ink-2);
+      }
+      /* The chapter's wide figure: wider than the text, 16:10 like the poster. */
+      .wide {
+        max-width: 1040px;
+      }
+      .wide iframe {
+        display: block;
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        /* M33 U3: never shorter than the phone's 440. A narrow 16:10 is a strip
+           and no app: at 341 wide it left the app 19 px under the strip. */
+        min-height: 440px;
+        border: 1px solid var(--rule);
+        border-radius: 8px;
+        background: var(--page);
+      }
+      /* The same chapter on a phone: the column is the screen, 375 wide. */
+      .phone {
+        width: 375px;
+        max-width: 100%;
+        padding: 0;
+        border: 1px solid var(--rule);
+        border-radius: 24px;
+        overflow: hidden;
+      }
+      .phone .screen {
+        padding: 20px 16px 24px;
+      }
+      .phone .screen p {
+        font-size: 16px;
+      }
+      .phone iframe {
+        display: block;
+        width: calc(100% + 32px);
+        margin: 16px -16px 0;
+        height: 440px;
+        border: 0;
+        border-top: 1px solid var(--rule);
+        border-bottom: 1px solid var(--rule);
+      }
+      footer {
+        padding-top: 32px;
+        padding-bottom: 64px;
+      }
+    </style>
+  </head>
+  <body>
+    <header>A personal site — a stand-in, for judging the frame where visitors will see it</header>
+    <main>
+      <section>
+        <div class="text">
+          <h2>Emerald</h2>
+          <p>
+            Excel that reads your documents and won't let you be wrong quietly. Describe something you
+            keep, and it becomes a table with real types and real checks, kept in one file on your own
+            machine.
+          </p>
+          <p>Below is the app itself, running in this page on a document full of made-up figures.</p>
+        </div>
+        <figure class="wide">
+          <iframe
+            src="/?tour=custom&amp;autoplay=1"
+            title="Emerald, a guided tour"
+            referrerpolicy="no-referrer"
+          ></iframe>
+          <figcaption>
+            The chapter's wide figure, 16:10 like the poster, up to 1040 px. The frame plays as a
+            movie below 690 px; widen or narrow the window to see where it changes.
+          </figcaption>
+        </figure>
+        <div class="text">
+          <p>
+            Nothing you type in it leaves this page. Reset puts the document back as it was.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <div class="text">
+          <h2>On a phone</h2>
+          <p class="note">
+            The same chapter at 375 px, the frame the full width of the screen and 440 px tall: the
+            frame plays as a movie there, with no Try it, showing a readable crop of the app that
+            follows the action.
+          </p>
+        </div>
+        <figure class="phone">
+          <div class="screen">
+            <h2 style="margin-top: 0">Emerald</h2>
+            <p>Excel that reads your documents and won't let you be wrong quietly.</p>
+            <iframe
+              src="/?tour=custom&amp;autoplay=1"
+              title="Emerald, a guided tour, at phone width"
+              referrerpolicy="no-referrer"
+            ></iframe>
+          </div>
+        </figure>
+      </section>
+    </main>
+    <script>
+      // ?tour=ledger on this page plays that tour in both frames (M33 U5); the custom tour otherwise.
+      const tour = new URLSearchParams(location.search).get('tour')
+      if (tour !== null && /^[a-z0-9-]+$/.test(tour)) {
+        for (const frame of document.querySelectorAll('iframe')) frame.src = `/?tour=${tour}&autoplay=1`
+      }
+    </script>
+    <footer class="note">
+      A mockup for judging (M33 U2), on the frame's own origin. The cross-origin test page, as the
+      site embeds it, is U4's <code>docs/mockups/m33-u4/embed.html</code>.
+    </footer>
+  </body>
+</html>

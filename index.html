@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- The same src/ui/emerald.svg the sidebar's mark imports, so the tab icon and the
+         mark cannot drift apart. It was attached from src/main.tsx until D-133, because
+         an icon linked here is emitted as a second asset and dist-single/ had to stay
+         one file; there is no single file now, and this is where an icon belongs. -->
+    <link rel="icon" type="image/svg+xml" href="/src/ui/emerald.svg" />
+    <title>Emerald</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

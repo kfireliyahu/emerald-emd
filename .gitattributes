@@ -1,0 +1,12 @@
+# Every text file checks out with LF, on every machine and whatever core.autocrlf says (M43 U9).
+# This repository's text is read byte for byte: tests take fixtures and `.format.md` files apart
+# by `\n`, and the builds embed migrations and pack notes as raw strings, so a Windows checkout
+# with git's default autocrlf=true failed tests and would have shipped other bytes. Nothing here
+# needs CRLF, and git still decides what is binary (text=auto).
+* text=auto eol=lf
+
+# A .emd is text or SQLite bytes, chosen per file (D-246). Neither may have its line
+# endings rewritten: the text is byte-identical by design (D-245) and the reader already
+# normalizes CRLF, and SQLite bytes are not text at all. -text leaves both untouched;
+# git still shows the text form as a readable diff because it contains no NUL bytes.
+*.emd -text

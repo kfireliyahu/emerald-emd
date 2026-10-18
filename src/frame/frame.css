@@ -1,0 +1,57 @@
+/*
+ * **The frame's type, inside a CSP that drops fonts** (M41 U2). A host's default
+ * policy for an MCP App has no `font-src`, so it falls back to `default-src
+ * 'none'`: IBM Plex is refused whether it is named by URL or inlined as a
+ * `data:` URI, and `_meta.ui.csp` declares domains, never `data:`. So the frame
+ * names the closest system faces rather than leaving the browser's default —
+ * a neo-grotesque of the same build as Plex Sans on each system (Segoe UI on
+ * Windows, San Francisco on a Mac), whose Hebrew comes from the same system
+ * fallback, and the system's own monospace for Plex Mono. Unlayered, so it wins
+ * over the theme's `@theme` values without touching them in the app.
+ */
+:root {
+  --font-sans: system-ui, -apple-system, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, Menlo, monospace;
+}
+
+/*
+ * **The page is the conversation's, in every host** (M41 F4). The frame paints
+ * no page of its own: the host's surface is what it sits on, whether or not
+ * the host names it — a named `--color-background-primary` is not the chat's
+ * surface either (VS Code names its editor's). Emerald's surfaces stay where
+ * they mean something inside the view: a card, a popover, a footer row, a
+ * chip, a sticky header over its rows.
+ */
+html:root,
+body {
+  background: transparent;
+}
+
+/*
+ * **And the browser lays no backdrop of its own.** A frame whose root's colour
+ * scheme differs from its iframe element's is painted on an opaque `Canvas` —
+ * near-black in a dark theme, a panel of its own. The root takes the theme the
+ * host named (`tokens.css`), which matches a host that schemes its frame by its
+ * theme, as the MCP Apps SDK expects. **VS Code's webview schemes nothing**:
+ * the iframe it writes this page into has no `color-scheme`, so a dark root
+ * there is the panel. It marks the page it writes (`data-vscode-theme-kind` on
+ * `body`, before any script runs), so there the root declares none either and
+ * the content takes the theme on `body` — where the text, the native controls
+ * and any `light-dark()` in the host's variables resolve.
+ */
+html:root:has(> body[data-vscode-theme-kind]) {
+  color-scheme: normal;
+}
+html:root[data-theme="dark"]:has(> body[data-vscode-theme-kind]) body {
+  color-scheme: dark;
+}
+
+/*
+ * The one exception is the guard (D-445): a host surface Emerald's accent,
+ * verdicts or text cannot read on at 4.5:1 sets `data-own-surface`, and the
+ * page paints Emerald's own, whole.
+ */
+html:root[data-own-surface],
+html:root[data-own-surface] body {
+  background: var(--color-background);
+}

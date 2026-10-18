@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- The demo's frame (M33 U2): the real app in an iframe, walked by a ring, with a strip
+         under it. `vite build --mode demo` writes this page to dist-demo/ as tour.html — the
+         page an embed points at — the app it plays (demo.html) as app.html, and Emerald's page
+         (demo-page.html, M33 U8), which embeds this one four times, as index.html. -->
+    <link rel="icon" type="image/svg+xml" href="/src/ui/emerald.svg" />
+    <title>Emerald</title>
+  </head>
+  <body>
+    <div id="frame"></div>
+    <script type="module" src="/src/demo/tour/main.tsx"></script>
+  </body>
+</html>

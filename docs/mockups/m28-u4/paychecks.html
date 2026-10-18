@@ -1,0 +1,624 @@
+<meta charset="utf-8">
+<title>Emerald Paychecks Frame</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Hebrew:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap">
+<style>
+/* Layout: a mockup bar of choices on top, the app window below it, then a specimen sheet
+   (indicator, buttons A and B side by side) and the open choices. Tokens are the app's own
+   (docs/11-ui-design-language.md, D-306): near-monochrome, square, one emerald accent. */
+:root{
+  --bg:#ffffff;--surface:#f7f7f6;--elevated:#ffffff;--ink:#0a0a0a;--ink2:#6b6b6b;--ink3:#a3a3a3;
+  --hair:#e8e8e8;--hair2:#d6d6d3;--accent:#07805f;--accent-ink:#ffffff;--accent-hover:#05664b;
+  --accent-soft:#e8f6f1;--accent-deep:#055a43;--positive:#1f7a4d;--negative:#c4342b;
+  --pop:0 1px 2px rgba(10,10,10,.05),0 8px 24px rgba(10,10,10,.08);
+  --sans:'IBM Plex Sans','IBM Plex Sans Hebrew',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --micro:120ms;--base:180ms;--enter:260ms;--ease:cubic-bezier(.22,1,.36,1);--inout:cubic-bezier(.65,0,.35,1);
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0a0a0a;--surface:#141414;--elevated:#1a1a1b;--ink:#f5f5f5;--ink2:#9a9a9a;--ink3:#6b6b6b;
+  --hair:#262626;--hair2:#34343a;--accent:#34d399;--accent-ink:#06231a;--accent-hover:#5ee0b0;
+  --accent-soft:#10312a;--accent-deep:#1fae7d;--positive:#4caf7d;--negative:#e5675e;
+  --pop:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.55);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a0a0a;--surface:#141414;--elevated:#1a1a1b;--ink:#f5f5f5;--ink2:#9a9a9a;--ink3:#6b6b6b;
+  --hair:#262626;--hair2:#34343a;--accent:#34d399;--accent-ink:#06231a;--accent-hover:#5ee0b0;
+  --accent-soft:#10312a;--accent-deep:#1fae7d;--positive:#4caf7d;--negative:#e5675e;
+  --pop:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.55);color-scheme:dark}
+html{background:var(--bg)}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;transition:background-color var(--base),color var(--base)}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono{font-family:var(--mono);font-size:12px}
+.num{font-variant-numeric:tabular-nums}
+.label{font-size:11px;line-height:1.3;letter-spacing:.08em;font-weight:500;text-transform:uppercase;color:var(--ink2)}
+.he{font-family:'IBM Plex Sans Hebrew',var(--sans);unicode-bidi:isolate}
+
+/* ---------- the mockup's own page ---------- */
+.page{max-width:1320px;margin:0 auto;padding-block:32px 96px;padding-inline:16px;display:flex;flex-direction:column;gap:32px}
+.intro{display:flex;flex-direction:column;gap:8px;max-width:72ch}
+.intro h1{margin:0;font-size:24px;font-weight:500;letter-spacing:-.01em;text-wrap:balance}
+.intro p{margin:0;color:var(--ink2)}
+.controls{display:flex;flex-wrap:wrap;gap:16px 32px;align-items:flex-end;padding:16px;background:var(--surface)}
+.ctl{display:flex;flex-direction:column;gap:6px}
+.seg{display:flex}
+.seg button{height:30px;padding:0 12px;border:1px solid var(--hair2);margin-left:-1px;font-size:13px;color:var(--ink2);transition:background-color var(--micro),color var(--micro)}
+.seg button:first-child{margin-left:0}
+.seg button.on{background:var(--ink);color:var(--bg);border-color:var(--ink);position:relative;z-index:1}
+.choice-tag{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;margin-right:6px;font-size:10px;font-weight:500;border:1px solid currentColor}
+.stage{overflow-x:auto;border:1px solid var(--hair2)}
+.h2{margin:0;font-size:18px;font-weight:500;letter-spacing:-.005em}
+.note{color:var(--ink2);max-width:72ch;margin:0}
+
+/* ---------- the app window ---------- */
+.win{min-width:1100px;height:820px;display:grid;grid-template-rows:40px 1fr;background:var(--bg)}
+.titlebar{display:flex;align-items:center;gap:16px;padding:0 12px 0 16px;background:var(--surface);border-bottom:1px solid var(--hair)}
+.doc{display:flex;align-items:center;gap:8px;font-size:13px}
+.dirty{width:7px;height:7px;border-radius:50%;border:1.5px solid var(--ink2)}
+.caps{margin-left:auto;display:flex;gap:2px;color:var(--ink3)}
+.caps span{width:36px;height:28px;display:flex;align-items:center;justify-content:center}
+.body{display:grid;min-height:0}
+.navA .body{grid-template-columns:216px 1fr}
+.navB .body{grid-template-columns:1fr}
+
+/* nav A: a tree sidebar, one level, the open section's pages inline */
+.side{background:var(--surface);border-right:1px solid var(--hair);display:flex;flex-direction:column;padding:8px 0;overflow:auto}
+.navB .side{display:none}
+.nitem{height:32px;display:flex;align-items:center;gap:10px;padding:0 14px;color:var(--ink2);font-size:13px;position:relative;width:100%;text-align:left;transition:color var(--micro),background-color var(--micro)}
+.nitem:hover{color:var(--ink)}
+.nitem svg{flex:none}
+.nitem.open{color:var(--ink)}
+.nchild{height:28px;padding-left:40px;font-size:13px}
+.nchild.on{color:var(--ink);background:var(--accent-soft)}
+.nchild.on::before{content:"";position:absolute;inset:0 auto 0 0;width:2px;background:var(--accent)}
+.nsep{height:1px;background:var(--hair);margin:8px 14px}
+.nbusy{margin-left:auto;display:inline-flex}
+.side .foot{margin-top:auto;padding:12px 14px;display:flex;align-items:center;gap:8px;color:var(--ink3);font-size:12px}
+
+/* nav B: sections across the title bar, a section's pages in the page header */
+.topnav{display:none;align-items:stretch;height:40px;margin-left:24px}
+.navB .topnav{display:flex}
+.navB .doc{min-width:180px}
+.tn{display:flex;align-items:center;gap:8px;padding:0 12px;font-size:13px;color:var(--ink2);position:relative;transition:color var(--micro)}
+.tn:hover{color:var(--ink)}
+.tn.on{color:var(--ink)}
+.tn.on::after{content:"";position:absolute;left:12px;right:12px;bottom:0;height:2px;background:var(--accent)}
+.subnav{display:none;gap:0}
+.navB .subnav{display:flex}
+
+.main{min-width:0;min-height:0;overflow:auto;position:relative}
+.screen{padding:24px 32px 48px;display:flex;flex-direction:column;gap:24px;max-width:1180px}
+.screen.enter{animation:fadein 150ms var(--ease)}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+
+/* page header */
+.ph{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid var(--hair)}
+.ph h1{margin:0;font-size:24px;font-weight:500;line-height:1.15;letter-spacing:-.01em}
+.ph .sub{color:var(--ink2)}
+.pager{display:flex;align-items:center;gap:4px}
+.pg{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink2);border:1px solid transparent;transition:border-color var(--micro),color var(--micro)}
+.pg:hover:not(:disabled){border-color:var(--hair2);color:var(--ink)}
+.pg:disabled{opacity:.3;cursor:default}
+.pgl{font-size:12px;color:var(--ink2);padding:0 4px;min-width:72px}
+.pgl.r{text-align:right}
+
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;line-height:1.3;letter-spacing:.06em;font-weight:500;text-transform:uppercase;padding:3px 8px;border:1px solid var(--hair2);color:var(--ink2);white-space:nowrap}
+.chip .d{width:6px;height:6px;border-radius:50%;background:currentColor}
+.chip.ok{color:var(--positive);border-color:color-mix(in srgb,var(--positive) 40%,transparent)}
+.chip.bad{color:var(--negative);border-color:color-mix(in srgb,var(--negative) 40%,transparent)}
+.chip.live{color:var(--accent);border-color:var(--accent)}
+.chip.wait{border-style:dashed}
+
+/* trend */
+.trend{position:relative;padding:8px 0 0}
+.trend svg{display:block;width:100%;height:auto;overflow:visible}
+.pt{cursor:pointer}
+.pt .hit{fill:transparent}
+.pt .dot{fill:var(--bg);stroke:var(--ink);stroke-width:1.5;transition:r var(--micro) var(--ease)}
+.pt:hover .dot{r:4.5}
+.pt.on .dot{fill:var(--accent);stroke:var(--accent);r:5}
+.pt.on .ring{opacity:1}
+.ring{fill:none;stroke:var(--accent);stroke-width:1;opacity:0;transition:opacity var(--base)}
+.pt.gap .dot{stroke:var(--ink3);stroke-dasharray:2 2}
+.pt:focus-visible{outline:none}
+.pt:focus-visible .ring{opacity:1}
+.trend .tick{fill:var(--ink3);font-size:11px;font-family:var(--sans)}
+.trend .tick.on{fill:var(--ink)}
+.trend .val{fill:var(--ink);font-size:12px;font-family:var(--mono)}
+.draw{stroke-dasharray:2000;stroke-dashoffset:2000;animation:draw 300ms var(--ease) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+/* the month */
+.month{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:32px}
+.month.swap-l{animation:swapl 200ms var(--ease)}
+.month.swap-r{animation:swapr 200ms var(--ease)}
+@keyframes swapl{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:none}}
+@keyframes swapr{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:none}}
+.block{display:flex;flex-direction:column;gap:12px}
+.bh{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.lines{display:flex;flex-direction:column}
+.ln{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;height:32px;align-items:center;border-bottom:1px solid var(--hair)}
+.ln .amt{font-variant-numeric:tabular-nums;text-align:right}
+.ln.total{height:40px;font-weight:500;border-bottom:0;border-top:1px solid var(--ink)}
+.ln .lbl{display:flex;align-items:center;gap:8px;min-width:0}
+.ln .lbl .he{color:var(--ink3);font-size:12px}
+.ln.ded .amt{color:var(--ink2)}
+.bar{display:flex;height:8px;gap:2px}
+.bar span{display:block;height:100%}
+.flow{display:flex;flex-direction:column}
+.fl{display:grid;grid-template-columns:16px minmax(0,1fr) auto;gap:10px;align-items:center;min-height:36px;border-bottom:1px solid var(--hair)}
+.fl .arrow{color:var(--ink3)}
+.fl .what{min-width:0}
+.fl .what small{display:block;color:var(--ink2);font-size:12px}
+.fl .amt{font-variant-numeric:tabular-nums}
+.fl.brk .what{color:var(--negative)}
+.big{font-size:32px;font-weight:500;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.facts{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* all paychecks */
+.sh{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.sh .acts{display:flex;gap:8px;align-items:center}
+table{width:100%;border-collapse:collapse}
+th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;color:var(--ink3);text-align:left;padding:8px 12px;border-bottom:1px solid var(--hair)}
+td{padding:0 12px;height:40px;border-bottom:1px solid var(--hair)}
+th.r,td.r{text-align:right}
+td.r{font-variant-numeric:tabular-nums}
+tbody tr{cursor:pointer;transition:background-color var(--micro);position:relative}
+tbody tr:hover{background:var(--surface)}
+tbody tr.on{background:var(--accent-soft)}
+tbody tr.on td:first-child{box-shadow:inset 2px 0 0 var(--accent)}
+tbody tr.missing td{color:var(--ink3)}
+tbody tr.missing{cursor:default}
+tr.arrived{animation:arrive 900ms var(--ease) 1}
+@keyframes arrive{0%{background:var(--accent-soft)}100%{background:transparent}}
+.drop{border:1px dashed var(--hair2);padding:16px;display:flex;align-items:center;gap:16px;color:var(--ink2);transition:border-color var(--micro),background-color var(--micro)}
+.drop:hover{border-color:var(--accent);background:var(--accent-soft)}
+
+/* reading screen */
+.readhead{display:flex;align-items:center;gap:20px;padding:20px;background:var(--surface)}
+.readhead .what{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.readhead .big2{font-size:18px;font-weight:500}
+.prog{height:2px;background:var(--hair);position:relative;overflow:hidden}
+.prog i{position:absolute;inset:0 auto 0 0;background:var(--accent);transition:width var(--base) var(--ease)}
+.slips{display:flex;flex-direction:column}
+.slip{display:grid;grid-template-columns:20px minmax(0,1.4fr) minmax(0,1fr) minmax(0,1.2fr) auto;gap:16px;align-items:center;min-height:48px;border-bottom:1px solid var(--hair);padding:0 4px}
+.slip.landed{animation:arrive 900ms var(--ease) 1}
+.slip .file{display:flex;flex-direction:column;min-width:0}
+.slip .file small{color:var(--ink2);font-size:12px}
+.slip .fig{font-variant-numeric:tabular-nums;color:var(--ink2);font-size:13px}
+.tick{width:16px;height:16px;border:1.5px solid var(--hair2);display:inline-flex;align-items:center;justify-content:center}
+.tick.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.tick.off{opacity:.4}
+.writebar{display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap;padding-top:16px;border-top:1px solid var(--hair)}
+
+/* ---------- buttons, style A: faceted ---------- */
+.btn{position:relative;display:inline-flex;align-items:center;gap:8px;height:36px;padding:0 16px;font-size:13px;font-weight:500;letter-spacing:.01em;white-space:nowrap;isolation:isolate;transition:color var(--micro),background-color var(--micro),transform var(--micro)}
+.btn.sm{height:30px;padding:0 12px;font-size:12px}
+.btn svg{flex:none}
+.btn:disabled{opacity:.4;cursor:default}
+.btn .count{font-family:var(--mono);font-size:11px;padding:1px 6px;margin-left:2px}
+.bA .btn{--cut:8px;clip-path:polygon(var(--cut) 0,100% 0,100% calc(100% - var(--cut)),calc(100% - var(--cut)) 100%,0 100%,0 var(--cut))}
+.bA .btn.sm{--cut:6px}
+.bA .btn.primary{background:var(--accent);color:var(--accent-ink);box-shadow:inset 0 1px 0 rgba(255,255,255,.22)}
+.bA .btn.primary:hover:not(:disabled){background:var(--accent-hover)}
+.bA .btn.primary:active:not(:disabled){transform:translateY(1px)}
+.bA .btn.primary .count{background:rgba(0,0,0,.16)}
+.bA .btn.secondary{background:var(--hair2);color:var(--ink)}
+.bA .btn.secondary::before{content:"";position:absolute;inset:1px;z-index:-1;background:var(--bg);clip-path:inherit;transition:background-color var(--micro)}
+.bA .btn.secondary:hover:not(:disabled){background:var(--accent)}
+.bA .btn.secondary:hover:not(:disabled)::before{background:var(--accent-soft)}
+.bA .btn.secondary .count{background:var(--surface)}
+.btn.ghost{clip-path:none!important;padding:0 4px;color:var(--accent);background:none!important}
+.btn.ghost::after{content:"";position:absolute;left:4px;right:4px;bottom:6px;height:1px;background:currentColor;transform:scaleX(0);transform-origin:left;transition:transform var(--base) var(--ease)}
+.btn.ghost:hover::after{transform:scaleX(1)}
+.btn.icon{width:30px;padding:0;justify-content:center;color:var(--ink2);background:none;clip-path:none!important}
+.btn.icon:hover{color:var(--ink)}
+.btn.icon.danger:hover{color:var(--negative)}
+
+/* ---------- buttons, style B: split tile ---------- */
+.bB .btn{padding:0 14px 0 0;gap:12px}
+.bB .btn.sm{padding:0 10px 0 0;gap:10px}
+.bB .btn .tile{width:36px;align-self:stretch;display:inline-flex;align-items:center;justify-content:center;transition:background-color var(--micro)}
+.bB .btn.sm .tile{width:30px}
+.bB .btn.primary{background:var(--accent);color:var(--accent-ink)}
+.bB .btn.primary .tile{background:var(--accent-deep)}
+.bB .btn.primary:hover:not(:disabled){background:var(--accent-hover)}
+.bB .btn.primary:hover:not(:disabled) .tile{background:var(--accent)}
+.bB .btn.primary .count{background:rgba(0,0,0,.16)}
+.bB .btn.secondary{background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1px var(--hair)}
+.bB .btn.secondary .tile{background:var(--hair);color:var(--ink2)}
+.bB .btn.secondary:hover:not(:disabled) .tile{background:var(--accent);color:var(--accent-ink)}
+.bB .btn.secondary .count{background:var(--bg)}
+.bB .btn.ghost .tile,.bB .btn.icon .tile{display:contents}
+.bA .btn .tile{display:contents}
+
+/* ---------- the emerald indicator ---------- */
+.gem{display:inline-block;vertical-align:middle;overflow:visible}
+.gem .f{transform-box:view-box;transform-origin:32px 32px}
+.gem.spin .f{animation:gemcycle 2.6s var(--inout) infinite;animation-delay:calc(var(--i) * 55ms)}
+@keyframes gemcycle{
+  0%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.7)}
+  26%{opacity:1;transform:none}
+  68%{opacity:1;transform:none}
+  94%,100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.7)}}
+.gem.det .f{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.7);transition:opacity var(--enter) var(--ease),transform var(--enter) var(--ease)}
+.gem.det .f.in{opacity:1;transform:none}
+.gem.done .core{animation:glint 600ms var(--ease) 1}
+@keyframes glint{0%{filter:brightness(1)}40%{filter:brightness(1.45)}100%{filter:brightness(1)}}
+.gem.still .f{opacity:1;transform:none;animation:none}
+/* reduced motion: nothing moves; the facets only light in turn */
+@keyframes gemfade{0%,100%{opacity:.18}30%,70%{opacity:1}}
+.rm .gem.spin .f{animation:gemfade 2.6s linear infinite;animation-delay:calc(var(--i) * 55ms);transform:none}
+.rm .gem.det .f{transform:none;transition:opacity var(--base) linear}
+.rm .gem.det .f:not(.in){opacity:.18}
+.rm .month,.rm tr.arrived,.rm .slip.landed,.rm .screen.enter,.rm .draw{animation:none!important;stroke-dashoffset:0}
+@media (prefers-reduced-motion: reduce){
+  .gem.spin .f{animation:gemfade 2.6s linear infinite;animation-delay:calc(var(--i) * 55ms);transform:none}
+  .gem.det .f{transform:none}
+  .gem.det .f:not(.in){opacity:.18}
+  .month,tr.arrived,.slip.landed,.screen.enter{animation:none!important}
+  .draw{animation:none;stroke-dashoffset:0}
+}
+
+/* ---------- specimen sheet ---------- */
+.spec{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:900px){.spec{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.row{display:flex;gap:16px;align-items:center;flex-wrap:wrap}
+.sw{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:72px}
+.sw small{color:var(--ink2);font-size:12px}
+.hover-demo .btn.primary{background:var(--accent-hover)}
+.opens{display:flex;flex-direction:column;gap:0}
+.oq{display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;padding:12px 0;border-bottom:1px solid var(--hair)}
+.oq b{font-weight:500}
+.oq p{margin:2px 0 0;color:var(--ink2)}
+</style>
+
+<div class="page" id="root">
+  <header class="intro">
+    <div class="label">M28 U4 · mockup · for the author's judgement</div>
+    <h1>The frame every screen shares, applied to Paychecks</h1>
+    <p>Navigation, a new button, and the emerald progress indicator, all live. Where a choice is open, both answers are here and the switch flips between them. Every figure is synthetic.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="Mockup controls">
+    <div class="ctl"><span class="label">Choice 1 · Navigation</span>
+      <div class="seg" data-ctl="nav"><button data-v="A" class="on"><span class="choice-tag">A</span>Tree sidebar</button><button data-v="B"><span class="choice-tag">B</span>Top bar</button></div></div>
+    <div class="ctl"><span class="label">Choice 2 · Buttons</span>
+      <div class="seg" data-ctl="btn"><button data-v="A" class="on"><span class="choice-tag">A</span>Faceted</button><button data-v="B"><span class="choice-tag">B</span>Split tile</button></div></div>
+    <div class="ctl"><span class="label">Screen</span>
+      <div class="seg" data-ctl="screen"><button data-v="pay" class="on">Paychecks</button><button data-v="read">Reading payslips</button></div></div>
+    <div class="ctl"><span class="label">Theme</span>
+      <div class="seg" data-ctl="theme"><button data-v="system" class="on">System</button><button data-v="light">Light</button><button data-v="dark">Dark</button></div></div>
+    <div class="ctl"><span class="label">Motion</span>
+      <div class="seg" data-ctl="motion"><button data-v="full" class="on">Full</button><button data-v="reduced">Reduced</button></div></div>
+  </div>
+
+  <div class="stage"><div class="win navA bA" id="win">
+    <div class="titlebar">
+      <div class="doc"><span class="dirty" title="Saved"></span><span>household-2026.emd</span><span class="mono" style="color:var(--ink3)">saved 11:42</span></div>
+      <nav class="topnav" id="topnav" aria-label="Sections"></nav>
+      <div class="caps" aria-hidden="true"><span>&#8211;</span><span>&#9633;</span><span>&#10005;</span></div>
+    </div>
+    <div class="body">
+      <nav class="side" id="side" aria-label="Sections"></nav>
+      <main class="main" id="main"></main>
+    </div>
+  </div></div>
+
+  <section style="display:flex;flex-direction:column;gap:16px">
+    <h2 class="h2">The indicator</h2>
+    <p class="note">The mark, cut into its eighteen facets, flies in from outside and assembles, holds, and comes apart again, for as long as something is in progress. When the app knows how far along it is (slips read out of slips chosen), the facets that are in say so, and the last one in makes the gem glint once. Under reduced motion nothing moves: the facets only light in turn. One component, in code, at three sizes.</p>
+    <div class="spec">
+      <div class="card"><span class="label">Working, no end known</span>
+        <div class="row" id="specSpin"></div></div>
+      <div class="card"><span class="label">Working, with a count · drag to try</span>
+        <div class="row"><span id="specDet"></span>
+          <div style="display:flex;flex-direction:column;gap:8px;flex:1;min-width:160px">
+            <input id="detRange" type="range" min="0" max="8" value="3" aria-label="Slips read">
+            <span class="num" id="detLabel" style="color:var(--ink2)"></span></div></div></div>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:16px">
+    <h2 class="h2">The buttons, side by side</h2>
+    <p class="note">Both stay square and keep the accent for the one thing to do on a screen (D-125). A is cut like the mark, with a chamfer on two corners. B carries its icon in a darker tile at the leading edge. Both put a count inside the button rather than in the sentence beside it, and both show work in progress with the indicator.</p>
+    <div class="spec" id="btnSpec"></div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:8px">
+    <h2 class="h2">What needs your pick</h2>
+    <div class="opens" id="open"></div>
+  </section>
+</div>
+
+<script>
+(() => {
+const NS = 'http://www.w3.org/2000/svg';
+const S = { nav:'A', btn:'A', screen:'pay', theme:'system', motion:'full', month:'2026-08', reading:null, arrived:[] };
+
+/* ---------- the mark, as facets ---------- */
+const FACETS = [
+ ['M12.3441 14.9647L21.5169 5.79187L25.0113 11.9071L18.4593 18.4591L12.3441 14.9647Z','#6EE7B7'],
+ ['M21.5168 5.79187H42.4832L38.9888 11.9071H25.0112L21.5168 5.79187Z','#34D399'],
+ ['M42.4832 5.79187L51.656 14.9647L45.5408 18.4591L38.9888 11.9071L42.4832 5.79187Z','#12BC86'],
+ ['M51.656 14.9647V49.0351L45.5408 45.5407V18.4591L51.656 14.9647Z','#068C66'],
+ ['M51.656 49.0353L42.4832 58.2081L38.9888 52.0929L45.5408 45.5409L51.656 49.0353Z','#033A2B'],
+ ['M42.4832 58.208H21.5168L25.0112 52.0928H38.9888L42.4832 58.208Z','#05604A'],
+ ['M21.5169 58.2081L12.3441 49.0353L18.4593 45.5409L25.0113 52.0929L21.5169 58.2081Z','#0BA277'],
+ ['M12.3441 49.0351V14.9647L18.4593 18.4591V45.5407L12.3441 49.0351Z','#28CE95'],
+ ['M18.4592 18.4591L25.0112 11.9071L28.5056 17.5855L24.1376 21.9535L18.4592 18.4591Z','#A7F3D0'],
+ ['M25.0112 11.9071H38.9888L35.4944 17.5855H28.5056L25.0112 11.9071Z','#6EE7B7'],
+ ['M38.9888 11.9071L45.5408 18.4591L39.8624 21.9535L35.4944 17.5855L38.9888 11.9071Z','#34D399'],
+ ['M45.5408 18.4591V45.5407L39.8624 42.0463V21.9535L45.5408 18.4591Z','#0BA277'],
+ ['M45.5408 45.5407L38.9888 52.0927L35.4944 46.4143L39.8624 42.0463L45.5408 45.5407Z','#04503C'],
+ ['M38.9888 52.0927H25.0112L28.5056 46.4143H35.4944L38.9888 52.0927Z','#077A5B'],
+ ['M25.0112 52.0927L18.4592 45.5407L24.1376 42.0463L28.5056 46.4143L25.0112 52.0927Z','#12BC86'],
+ ['M18.4592 45.5407V18.4591L24.1376 21.9535V42.0463L18.4592 45.5407Z','#4ADEB0'],
+];
+const CORE = 'M24.1376 21.9536L28.5056 17.5856H35.4944L39.8624 21.9536V42.0464L35.4944 46.4144H28.5056L24.1376 42.0464V21.9536Z';
+function centroid(d){ const n=d.match(/-?\d+(\.\d+)?/g).map(Number); let x=0,y=0,c=0; // pairs only where both coords present
+  const pts=[]; const re=/([MLHVZ])([^MLHVZ]*)/g; let m, cx=0, cy=0;
+  while((m=re.exec(d))){ const a=m[2].trim().split(/[\s,]+/).filter(Boolean).map(Number);
+    if(m[1]==='M'||m[1]==='L'){cx=a[0];cy=a[1];pts.push([cx,cy]);} else if(m[1]==='H'){cx=a[0];pts.push([cx,cy]);} else if(m[1]==='V'){cy=a[0];pts.push([cx,cy]);} }
+  pts.forEach(p=>{x+=p[0];y+=p[1];c++}); return [x/c,y/c]; }
+let gemSeq = 0;
+function gem(size, mode, pieces){ // mode: spin | det | still ; pieces: how many of 17 are in (det)
+  const id = 'g' + (++gemSeq);
+  const parts = FACETS.map(([d,fill],i)=>{ const [x,y]=centroid(d); const k=.55;
+    return `<path class="f${mode==='det'&&i<pieces?' in':''}" style="--i:${i};--dx:${((x-32)*k).toFixed(1)}px;--dy:${((y-32)*k).toFixed(1)}px" d="${d}" fill="${fill}"/>`; }).join('');
+  const coreIn = mode==='det' && pieces>16 ? ' in' : '';
+  return `<svg class="gem ${mode}" width="${size}" height="${size}" viewBox="0 0 64 64" role="img" aria-label="${mode==='spin'?'Working':'Emerald'}">
+    <defs><linearGradient id="${id}" x1="25.448" y1="18.4592" x2="38.9888" y2="45.5408" gradientUnits="userSpaceOnUse"><stop stop-color="#E8FCF2"/><stop offset="1" stop-color="#34D399"/></linearGradient></defs>
+    ${parts}<g class="f core${coreIn}" style="--i:16;--dx:0px;--dy:0px"><path d="${CORE}" fill="url(#${id})"/>
+    <path d="M27.1952 20.2062H35.9312L35.0576 21.735H26.3216L27.1952 20.2062Z" fill="white" fill-opacity=".5"/>
+    <path d="M36.8048 20.6431H38.552L37.6784 21.9535H35.9312L36.8048 20.6431Z" fill="white" fill-opacity=".3"/></g></svg>`; }
+const piecesFor = (done,total) => total===0?0:Math.round(17*done/total);
+
+/* ---------- icons ---------- */
+const I = {
+ home:'<path d="M3 8l5-4.5L13 8v5H3z"/>', list:'<path d="M3 4h10M3 8h10M3 12h10"/>',
+ pay:'<path d="M4 2.5h6l2.5 2.5v8.5H4z"/><path d="M6.5 8h4M6.5 10.5h4"/>', plan:'<circle cx="8" cy="8" r="5"/><circle cx="8" cy="8" r="2"/>',
+ wealth:'<path d="M2.5 6l5.5-3 5.5 3-5.5 3z"/><path d="M2.5 9.5l5.5 3 5.5-3"/>', tag:'<path d="M2.5 2.5h5l6 6-5 5-6-6z"/><circle cx="5.5" cy="5.5" r=".8"/>',
+ grid:'<path d="M2.5 2.5h11v11h-11zM2.5 7h11M7 2.5v11"/>', link:'<path d="M6.5 9.5l3-3M5 7.5L3.5 9a2.1 2.1 0 003 3L8 10.5M8 5.5L9.5 4a2.1 2.1 0 013 3L11 8.5"/>',
+ gear:'<circle cx="8" cy="8" r="2.2"/><path d="M8 1.8v2M8 12.2v2M1.8 8h2M12.2 8h2M3.6 3.6L5 5M11 11l1.4 1.4M3.6 12.4L5 11M11 5l1.4-1.4"/>',
+ read:'<path d="M4 2.5h5.5L12 5v8.5H4z"/><path d="M8 6.5v4.5M6 9l2 2 2-2"/>', plus:'<path d="M8 3v10M3 8h10"/>',
+ left:'<path d="M10 3.5L5.5 8l4.5 4.5"/>', right:'<path d="M6 3.5l4.5 4.5L6 12.5"/>', stop:'<rect x="4" y="4" width="8" height="8"/>',
+ edit:'<path d="M3 13l1-3.5 6.5-6.5 2.5 2.5L6.5 12z"/>', trash:'<path d="M3 4.5h10M6 4.5V3h4v1.5M4.5 4.5l.7 9h5.6l.7-9"/>',
+ check:'<path d="M3.5 8.5l3 3 6-7"/>', arrow:'<path d="M3 8h9M9 5l3 3-3 3"/>', write:'<path d="M3 8.5l3 3 7-7"/>',
+};
+const ic = (n,s=16) => `<svg width="${s}" height="${s}" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" aria-hidden="true">${I[n]}</svg>`;
+function btn(kind, label, icon, extra={}){ const sm = extra.sm?' sm':''; const cnt = extra.count!=null?`<span class="count">${extra.count}</span>`:'';
+  const inner = extra.busy ? `<span class="tile">${gem(extra.sm?14:16,'spin')}</span>${extra.busy}` : `<span class="tile">${icon?ic(icon):''}</span>${label}${cnt}`;
+  return `<button class="btn ${kind}${sm}" ${extra.attrs||''} ${extra.disabled?'disabled':''}>${inner}</button>`; }
+
+/* ---------- synthetic paychecks (minor units, agorot) ---------- */
+const MONTHS = ['2025-07','2025-08','2025-09','2025-10','2025-11','2025-12','2026-01','2026-02','2026-03','2026-04','2026-05','2026-06','2026-07','2026-08'];
+const GROSS = {'2025-07':2310000,'2025-08':2310000,'2025-09':2310000,'2025-10':2310000,'2025-11':2310000,'2025-12':3050000,'2026-01':2450000,'2026-02':2450000,'2026-04':2450000,'2026-05':2450000,'2026-06':2450000,'2026-07':2450000,'2026-08':2570000};
+const MNAME = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const fullM = m => MNAME[+m.slice(5)-1] + ' ' + m.slice(0,4);
+const shortM = m => MNAME[+m.slice(5)-1].slice(0,3);
+const ils = minor => { const neg=minor<0; const a=Math.abs(minor); const s=Math.floor(a/100).toLocaleString('en-US')+'.'+String(a%100).padStart(2,'0'); return (neg?'−':'')+'₪'+s; };
+const ilsR = minor => '₪'+Math.round(minor/100).toLocaleString('en-US');
+const pct = (g,p) => Math.round(g*p/1000);
+function slip(m){ const g=GROSS[m]; if(!g) return null;
+  const d=[['Income tax','מס הכנסה',pct(g,118)],['National insurance','ביטוח לאומי',pct(g,52)],['Health tax','מס בריאות',pct(g,39)],['Pension','פנסיה',pct(g,60)],['Study fund','קרן השתלמות',pct(g,25)],['Union dues','דמי ועד',4500]];
+  if(m==='2025-12') d.push(['Bonus tax adjustment','תיאום מס',pct(g,40)]);
+  const ded=d.reduce((s,x)=>s+x[2],0); const net=g-ded;
+  const emp=[['Pension','פנסיה',pct(g,65),'Pension fund · ···2210'],['Severance','פיצויים',pct(g,60),'Pension fund · ···2210'],['Study fund','קרן השתלמות',pct(g,75),null]];
+  const paid = (()=>{ const [y,mm]=m.split('-').map(Number); const n=mm===12?[y+1,1]:[y,mm+1]; return `${n[0]}-${String(n[1]).padStart(2,'0')}-01`; })();
+  return {m,g,d,ded,net,emp,paid,bonus:m==='2025-12'}; }
+let SLIPS = Object.fromEntries(MONTHS.map(m=>[m,slip(m)]));
+
+/* ---------- navigation ---------- */
+const SECTIONS = [['home','Home'],['list','Transactions'],['pay','Paychecks'],['plan','Plan'],['wealth','Wealth'],['tag','Categories']];
+const ENGINE = [['grid','Formats'],['link','Connections']];
+const SUB = [['pay','Paychecks'],['ded','Deduction types'],['readers','Readers']];
+function renderNav(){
+  const busy = S.reading && S.reading.done < S.reading.total;
+  const side = document.getElementById('side');
+  side.innerHTML = SECTIONS.map(([g,l])=> l==='Paychecks'
+    ? `<button class="nitem open">${ic(g)}${l}${busy?`<span class="nbusy" title="Reading payslips">${gem(14,'spin')}</span>`:''}</button>`
+      + SUB.map(([k,t])=>`<button class="nitem nchild${k==='pay'?' on':''}" data-sub="${k}">${t}</button>`).join('')
+    : `<button class="nitem">${ic(g)}${l}</button>`).join('')
+    + '<div class="nsep"></div>' + ENGINE.map(([g,l])=>`<button class="nitem">${ic(g)}${l}</button>`).join('')
+    + `<div class="foot">${ic('gear',14)}Settings</div>`;
+  document.getElementById('topnav').innerHTML = SECTIONS.concat(ENGINE).map(([g,l])=>`<button class="tn${l==='Paychecks'?' on':''}">${l}${l==='Paychecks'&&busy?gem(14,'spin'):''}</button>`).join('');
+}
+const subnav = () => `<div class="seg subnav" role="tablist" aria-label="Paychecks pages">${SUB.map(([k,t])=>`<button class="${k==='pay'?'on':''}">${t}</button>`).join('')}</div>`;
+
+/* ---------- the Paychecks screen ---------- */
+function trendSVG(){
+  const W=1080,H=150,pl=8,pr=8,pt=24,pb=26; const vals=MONTHS.map(m=>SLIPS[m]&&!SLIPS[m].bonus?SLIPS[m].net:SLIPS[m]?SLIPS[m].net:null);
+  const have=vals.filter(v=>v!=null); const lo=Math.min(...have)*0.96, hi=Math.max(...have)*1.02;
+  const x=i=>pl+i*(W-pl-pr)/(MONTHS.length-1), y=v=>pt+(H-pt-pb)*(1-(v-lo)/(hi-lo));
+  let seg=[],path=''; MONTHS.forEach((m,i)=>{ const v=vals[i]; if(v==null){ if(seg.length) path+='M'+seg.join('L'); seg=[]; } else seg.push(`${x(i).toFixed(1)},${y(v).toFixed(1)}`); }); if(seg.length) path+='M'+seg.join('L');
+  // the dashed bridge over a missing month
+  const gaps = MONTHS.map((m,i)=>vals[i]==null&&i>0&&i<MONTHS.length-1?`<path d="M${x(i-1)},${y(vals[i-1])}L${x(i+1)},${y(vals[i+1])}" stroke="var(--ink3)" stroke-width="1" stroke-dasharray="3 3" fill="none"/>`:'').join('');
+  const pts = MONTHS.map((m,i)=>{ const v=vals[i]; const on=m===S.month; const gy = v==null? (y(vals[i-1])+y(vals[i+1]))/2 : y(v);
+    return `<g class="pt${on?' on':''}${v==null?' gap':''}" data-m="${m}" tabindex="${v==null?-1:0}" role="button" aria-label="${fullM(m)}${v==null?', no slip':', net '+ils(v)}">
+      <rect class="hit" x="${x(i)-18}" y="0" width="36" height="${H}"/>
+      <circle class="ring" cx="${x(i)}" cy="${gy}" r="9"/><circle class="dot" cx="${x(i)}" cy="${gy}" r="3"/>
+      ${on&&v!=null?`<text class="val" x="${x(i)}" y="${gy-14}" text-anchor="${i===MONTHS.length-1?'end':'middle'}">${ilsR(v)}</text>`:''}
+      <text class="tick${on?' on':''}" x="${x(i)}" y="${H-6}" text-anchor="${i===0?'start':i===MONTHS.length-1?'end':'middle'}">${shortM(m)}${m.endsWith('-01')||i===0?' '+m.slice(2,4):''}</text></g>`; }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" aria-label="Net pay by month. Choose a point to open that month.">${gaps}<path class="${S.drawn?'':'draw'}" d="${path}" fill="none" stroke="var(--ink)" stroke-width="1.5" stroke-linejoin="round"/>${pts}</svg>`;
+}
+function monthHTML(s){
+  const dedTot = s.ded;
+  const segs = [['var(--ink)',s.net]].concat(s.d.map((x,i)=>[`color-mix(in srgb,var(--ink2) ${70-i*8}%,transparent)`,x[2]]));
+  const toChecking = s.net, rent=520000, card=Math.min(612000, s.net-260000), goal=200000, left=s.net-rent-card-goal;
+  return `
+  <div class="block">
+    <div class="bh"><span class="label">The slip</span><span class="chip ok"><span class="d"></span>Adds up</span></div>
+    <div class="big">${ils(s.net)}</div>
+    <div class="facts"><span style="color:var(--ink2)">net, paid <span class="mono">${s.paid}</span> by Software Labs Ltd</span>${s.bonus?'<span class="chip">Bonus</span>':''}</div>
+    <div class="bar" aria-hidden="true">${segs.map(([c,v])=>`<span style="flex:${v};background:${c}"></span>`).join('')}</div>
+    <div class="lines">
+      <div class="ln"><span class="lbl">Gross</span><span class="amt">${ils(s.g)}</span></div>
+      ${s.d.map(([en,he,v])=>`<div class="ln ded"><span class="lbl">${en} <span class="he" dir="rtl">${he}</span></span><span class="amt">−${ils(v).slice(0)}</span></div>`).join('')}
+      <div class="ln total"><span class="lbl">Net</span><span class="amt">${ils(s.net)}</span></div>
+    </div>
+    <div class="row" style="gap:8px">${btn('secondary sm','Edit','edit',{sm:true})}${btn('ghost sm','Open the slip',null,{sm:true})}<span style="flex:1"></span><button class="btn icon" aria-label="Delete ${fullM(s.m)}" title="Delete">${ic('trash')}</button></div>
+  </div>
+  <div class="block">
+    <div class="bh"><span class="label">Where it went</span><span class="mono" style="color:var(--ink3)">was its own tab</span></div>
+    <div class="flow">
+      <div class="fl"><span class="arrow">${ic('arrow',14)}</span><span class="what">Checking ···4410<small>net, as deposited</small></span><span class="amt">${ils(toChecking)}</span></div>
+      <div class="fl" style="padding-left:20px"><span class="arrow">${ic('arrow',14)}</span><span class="what">Rent<small>fixed expense, the 3rd</small></span><span class="amt">${ils(rent)}</span></div>
+      <div class="fl" style="padding-left:20px"><span class="arrow">${ic('arrow',14)}</span><span class="what">Card ···7781<small>spent</small></span><span class="amt">${ils(card)}</span></div>
+      <div class="fl" style="padding-left:20px"><span class="arrow">${ic('arrow',14)}</span><span class="what">Emergency fund<small>goal, not spent</small></span><span class="amt">${ils(goal)}</span></div>
+      <div class="fl" style="padding-left:20px"><span class="arrow">${ic('arrow',14)}</span><span class="what">Still in checking</span><span class="amt">${ils(left)}</span></div>
+    </div>
+    <span class="label" style="margin-top:8px">Beside it, from the employer</span>
+    <div class="flow">
+      ${s.emp.map(([en,he,v,dest])=> dest
+        ? `<div class="fl"><span class="arrow">${ic('arrow',14)}</span><span class="what">${dest}<small>${en} <span class="he" dir="rtl">${he}</span>, employer's part</small></span><span class="amt">${ils(v)}</span></div>`
+        : `<div class="fl brk"><span class="arrow">${ic('arrow',14)}</span><span class="what">${en} names no fund<small style="color:var(--ink2)">so ${ils(v)} stops here</small></span>${btn('ghost sm','Say which',null,{sm:true})}</div>`).join('')}
+    </div>
+  </div>`;
+}
+function tableHTML(){
+  const rows = MONTHS.slice().reverse().map(m=>{ const s=SLIPS[m];
+    if(!s) return `<tr class="missing"><td>${fullM(m)}</td><td colspan="4" style="color:var(--ink3)">No slip for this month</td><td class="r">${btn('ghost sm','Read',null,{sm:true})}</td></tr>`;
+    return `<tr class="${m===S.month?'on':''}${S.arrived.includes(m)?' arrived':''}" data-m="${m}" tabindex="0"><td>${fullM(m)}${s.bonus?' <span class="chip" style="margin-left:6px">Bonus</span>':''}</td><td class="mono" style="color:var(--ink2)">${s.paid}</td><td class="r" style="color:var(--ink2)">${ils(s.g)}</td><td class="r">${ils(s.net)}</td><td><span class="chip ok"><span class="d"></span>Adds up</span></td><td class="r"><button class="btn icon" aria-label="Edit" title="Edit">${ic('edit')}</button></td></tr>`; }).join('');
+  return `<table><thead><tr><th>Month</th><th>Paid</th><th class="r">Gross</th><th class="r">Net</th><th>Itemization</th><th></th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+function payScreen(dir){
+  const s = SLIPS[S.month]; const i = MONTHS.indexOf(S.month);
+  const prev = MONTHS.slice(0,i).reverse().find(m=>SLIPS[m]); const next = MONTHS.slice(i+1).find(m=>SLIPS[m]);
+  const count = MONTHS.filter(m=>SLIPS[m]).length; const missing = MONTHS.length-count;
+  return `<div class="screen enter">
+    <div class="ph">
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div class="label">Paychecks · ${count} slips${missing?` · ${missing} month missing`:''}</div>
+        <h1>${fullM(S.month)}</h1>
+      </div>
+      <div class="row" style="gap:16px">
+        ${subnav()}
+        <div class="pager" aria-label="Month">
+          <span class="pgl r">${prev?shortM(prev)+' '+prev.slice(0,4):''}</span>
+          <button class="pg" data-go="${prev||''}" ${prev?'':'disabled'} aria-label="Previous month">${ic('left')}</button>
+          <button class="pg" data-go="${next||''}" ${next?'':'disabled'} aria-label="Next month">${ic('right')}</button>
+          <span class="pgl">${next?shortM(next)+' '+next.slice(0,4):'newest'}</span>
+        </div>
+      </div>
+    </div>
+    <div class="trend">${trendSVG()}</div>
+    <div class="month ${dir?'swap-'+dir:''}">${monthHTML(s)}</div>
+    <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px">
+      <div class="sh"><div style="display:flex;flex-direction:column;gap:2px"><span class="h2" style="font-size:16px">All paychecks</span><span style="color:var(--ink2);font-size:13px">A row opens its month above.</span></div>
+        <div class="acts">${btn('secondary','Add by hand','plus')}${btn('primary','Read payslips','read',{attrs:'data-act="read"'})}</div></div>
+      ${tableHTML()}
+      <div class="drop" data-act="read">${ic('read',20)}<span>Drop payslips here, any number. Each is read by the reader whose labels it carries, and nothing is written until you press Write.</span></div>
+    </div>
+  </div>`;
+}
+
+/* ---------- reading payslips ---------- */
+const BATCH = [
+  {f:'payslip-2026-01.pdf',m:'2026-01',st:'ok'},{f:'payslip-2026-02.pdf',m:'2026-02',st:'ok'},{f:'payslip-2026-03.pdf',m:'2026-03',st:'ok'},
+  {f:'payslip-2026-04.pdf',m:'2026-04',st:'type'},{f:'payslip-2026-05.pdf',m:'2026-05',st:'ok'},{f:'payslip-2026-06.pdf',m:'2026-06',st:'ok'},
+  {f:'scan-0412.pdf',m:null,st:'unread'},{f:'payslip-2026-07.pdf',m:'2026-07',st:'same'}];
+function startReading(){ S.reading={done:0,total:BATCH.length,writing:false}; S.screen='read'; syncSeg('screen'); render();
+  clearInterval(S.timer); S.timer=setInterval(()=>{ if(!S.reading){clearInterval(S.timer);return;} S.reading.done++; S.reading.last=S.reading.done-1; if(S.reading.done>=S.reading.total){clearInterval(S.timer);} render(); }, 1100); }
+function slipRow(b,i){ const r=S.reading; const done=i<r.done, now=i===r.done&&r.done<r.total;
+  let chip, fig='', tick='<span class="tick off"></span>', note='';
+  if(!done && !now){ chip='<span class="chip wait">Waiting</span>'; }
+  else if(now){ chip=`<span class="chip live">${gem(12,'spin')}Reading</span>`; }
+  else { const s=b.m&&(SLIPS[b.m]||slip('2026-02'));
+    if(b.st==='ok'){ chip='<span class="chip ok"><span class="d"></span>Reconciled</span>'; tick=`<span class="tick on">${ic('check',12)}</span>`; }
+    if(b.st==='type'){ chip='<span class="chip bad"><span class="d"></span>A row needs a type</span>'; note='<span class="he" dir="rtl" style="color:var(--ink2)">ניכוי הלוואה</span> ₪350.00'; }
+    if(b.st==='unread'){ chip='<span class="chip bad"><span class="d"></span>Not read</span>'; note='No reader knows this layout.'; }
+    if(b.st==='same'){ chip='<span class="chip">Already written</span>'; note='Same as July 2026.'; }
+    if(s && b.st!=='unread') fig=`gross ${ils(s.g)} · net ${ils(s.net)}`; }
+  return `<div class="slip${done&&i===r.last?' landed':''}">${tick}<span class="file"><span>${b.m?fullM(b.m):'Unknown month'}</span><small class="mono">${b.f}</small></span>${chip}<span class="fig">${fig||note}</span>
+    <span>${done&&b.st!=='same'?btn('ghost sm','Open alone',null,{sm:true}):''}</span></div>`; }
+function readScreen(){ const r=S.reading||{done:0,total:BATCH.length};
+  if(!S.reading) S.reading=r;
+  const finished = r.done>=r.total; const ok = BATCH.slice(0,r.done).filter(b=>b.st==='ok').length;
+  const cur = BATCH[r.done];
+  return `<div class="screen enter">
+    <div class="ph"><div style="display:flex;flex-direction:column;gap:6px"><div class="label">Paychecks · read payslips</div><h1>Read payslips</h1>
+      <span class="sub">2 readers · new layouts go to qwen3:30b-a3b, on this machine</span></div>
+      <div class="row">${subnav()}</div></div>
+    <div class="readhead">
+      ${gem(56, 'det', piecesFor(r.done,r.total)).replace('gem det', finished?'gem det done':'gem det')}
+      <div class="what"><span class="big2 num">${finished?`${r.total} of ${r.total} read`:`Reading ${r.done+1} of ${r.total}`}</span>
+        <span style="color:var(--ink2)">${finished?`${ok} reconciled and ticked. The rest need you, or are left out.`:`<span class="mono">${cur.f}</span> · a slip that adds up is ticked as it lands`}</span>
+        <div class="prog" style="margin-top:8px"><i style="width:${100*r.done/r.total}%"></i></div></div>
+      ${finished?btn('secondary','Again','read',{attrs:'data-act="replay"'}):btn('secondary','Stop','stop',{attrs:'data-act="stop"'})}
+    </div>
+    <div class="slips">${BATCH.map(slipRow).join('')}</div>
+    <div class="writebar"><span style="color:var(--ink2)">As paychecks, in one go or not at all. Then you land on Paychecks, on the newest one written.</span>
+      ${r.writing?btn('primary','',null,{busy:'Writing…',disabled:true}):btn('primary','Write','write',{count:ok,disabled:!finished||ok===0,attrs:'data-act="write"'})}</div>
+  </div>`; }
+
+/* ---------- render ---------- */
+function render(dir){
+  const win=document.getElementById('win');
+  win.className = `win nav${S.nav} b${S.btn}`;
+  document.getElementById('root').classList.toggle('rm', S.motion==='reduced');
+  renderNav();
+  const main=document.getElementById('main'); const keep=main.scrollTop;
+  main.innerHTML = S.screen==='pay' ? payScreen(dir) : readScreen();
+  if(S.screen==='pay') S.drawn=true;
+  if(dir!==undefined || S.screen==='read') main.scrollTop=keep;
+  document.querySelectorAll('.screen.enter').forEach(e=>{ if(S.noEnter) e.classList.remove('enter'); });
+  S.noEnter=false;
+}
+function go(m){ if(!m||!SLIPS[m]||m===S.month) return; const dir = MONTHS.indexOf(m)>MONTHS.indexOf(S.month)?'r':'l'; S.month=m; S.noEnter=true; render(dir); }
+function syncSeg(k){ document.querySelectorAll(`[data-ctl="${k}"] button`).forEach(b=>b.classList.toggle('on',b.dataset.v===S[k])); }
+
+document.querySelectorAll('[data-ctl]').forEach(g=>g.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const k=g.dataset.ctl; S[k]=b.dataset.v; syncSeg(k);
+  if(k==='theme'){ if(S.theme==='system') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme',S.theme); }
+  if(k==='screen'){ if(S.screen==='read') return startReading(); S.reading=null; clearInterval(S.timer); }
+  S.noEnter = k!=='screen'; render(); renderSpec(); }));
+
+document.getElementById('main').addEventListener('click',e=>{
+  const pt=e.target.closest('.pt'); if(pt) return go(pt.dataset.m);
+  const pg=e.target.closest('[data-go]'); if(pg) return go(pg.dataset.go);
+  const act=e.target.closest('[data-act]');
+  if(act){ const a=act.dataset.act;
+    if(a==='read'||a==='replay') return startReading();
+    if(a==='stop'){ clearInterval(S.timer); S.reading.total=S.reading.done||1; S.reading.done=Math.max(S.reading.done,1); return render(); }
+    if(a==='write'){ S.reading.writing=true; S.noEnter=true; render();
+      setTimeout(()=>{ S.arrived=BATCH.filter(b=>b.st==='ok').map(b=>b.m); GROSS['2026-03']=2450000; SLIPS['2026-03']=slip('2026-03'); S.reading=null; S.screen='pay'; S.month='2026-06'; syncSeg('screen'); render(); document.getElementById('main').scrollTop=0;
+        setTimeout(()=>{S.arrived=[];},1000); }, 900); return; }
+  }
+  const tr=e.target.closest('tbody tr[data-m]'); if(tr && !e.target.closest('.btn')) { go(tr.dataset.m); document.getElementById('main').scrollTo({top:0,behavior:S.motion==='reduced'?'auto':'smooth'}); }
+});
+document.getElementById('main').addEventListener('keydown',e=>{
+  if(S.screen!=='pay') return; const i=MONTHS.indexOf(S.month);
+  if(e.key==='ArrowLeft'){ const p=MONTHS.slice(0,i).reverse().find(m=>SLIPS[m]); go(p); }
+  if(e.key==='ArrowRight'){ const n=MONTHS.slice(i+1).find(m=>SLIPS[m]); go(n); }
+  if(e.key==='Enter'){ const t=e.target.closest('.pt,tbody tr[data-m]'); if(t) go(t.dataset.m); }
+});
+document.getElementById('main').tabIndex=-1;
+
+/* ---------- specimen ---------- */
+function renderSpec(){
+  document.getElementById('specSpin').innerHTML = [[14,'in a chip or a button'],[24,'in a row'],[56,'leading a screen']].map(([s,t])=>`<div class="sw">${gem(s,'spin')}<small>${s}px, ${t}</small></div>`).join('')
+    + `<div class="sw">${gem(56,'still')}<small>at rest: the mark</small></div>`;
+  const v=+document.getElementById('detRange').value; document.getElementById('specDet').innerHTML = gem(64,'det',piecesFor(v,8));
+  document.getElementById('detLabel').textContent = `${v} of 8 slips read · ${piecesFor(v,8)} of 17 facets in`;
+  const col = st => `<div class="card b${st}"><span class="label">${st==='A'?'A · Faceted':'B · Split tile'}</span>
+    <div class="row">${btn('primary','Read payslips','read')}${btn('secondary','Add by hand','plus')}${btn('ghost','Say which')}</div>
+    <div class="row hover-demo">${btn('primary','Write','write',{count:5})}<small style="color:var(--ink2)">hovered</small></div>
+    <div class="row">${btn('primary','',null,{busy:'Reading…',disabled:true})}${btn('primary','Write','write',{count:0,disabled:true})}<small style="color:var(--ink2)">busy · disabled</small></div>
+    <div class="row">${btn('secondary sm','Edit','edit',{sm:true})}${btn('primary sm','Read','read',{sm:true})}<button class="btn icon danger" aria-label="Delete" title="Delete">${ic('trash')}</button><small style="color:var(--ink2)">small, in a row</small></div></div>`;
+  document.getElementById('btnSpec').innerHTML = col('A')+col('B');
+}
+document.getElementById('detRange').addEventListener('input',renderSpec);
+
+document.getElementById('open').innerHTML = [
+ ['1','Navigation: A or B','A keeps the sidebar and puts a section\'s pages under it, so no tab strip sits above a screen. B moves the sections into the title bar and the section\'s pages into the page header, giving the screen the full width. In both, a screen\'s actions sit with what they act on: Read and Add head the list of paychecks, and a missing month offers Read on its own row.'],
+ ['2','Buttons: A or B','Faceted (cut like the mark) or Split tile (the icon in a darker tile). Both are square, both put the count inside the button.'],
+ ['3','Month paging: both, or one','The mockup has both: arrows in the header (and the arrow keys), and the points of the net line. A row of the table also opens its month. Say if one should go.'],
+ ['4','The indicator in a determinate run','While slips are read, facets in = slips read out of slips chosen, and the last facet glints once. Or it could always cycle, and the count stays in words.'],
+ ['5','A rule this amends','The design note forbids "any loading state longer than one cycle". The indicator cycles for as long as the work runs, which is what you asked for; the note would say so.'],
+].map(([n,t,p])=>`<div class="oq"><span class="choice-tag" style="width:22px;height:22px;font-size:11px">${n}</span><div><b>${t}</b><p>${p}</p></div></div>`).join('');
+
+render(); renderSpec();
+})();
+</script>

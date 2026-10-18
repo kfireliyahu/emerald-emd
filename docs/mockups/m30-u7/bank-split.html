@@ -1,0 +1,429 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bank Split</title>
+<style>
+/* M30 U7. Overview's In the bank card, split between the goals saved there and the cushion, and
+   Plan's cushion line with it. Tokens copied from src/ui/theme/tokens.css (light, and
+   :root[data-theme="dark"]); the bar, the legend, the tag and the chips are the classes
+   Overview.tsx's SpokenFor and src/ui/wealth/parts.tsx use today. Fonts are the app's own bundled
+   woff2, read from node_modules, so this opens from the checkout with the network off. Every figure
+   is made up. The build ports this file's markup and words. */
+@font-face{font-family:"IBM Plex Sans";font-weight:400;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:500;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-500-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:600;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-600-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-weight:400;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2") format("woff2")}
+
+:root{
+  --color-background:#ffffff;--color-surface:#f7f7f6;--color-elevated:#ffffff;
+  --color-ink:#111111;--color-ink-secondary:#6b6b6b;--color-ink-tertiary:#a0a09c;
+  --color-hairline:#ececea;--color-hairline-strong:#d9d9d6;
+  --color-accent:#07805f;--color-accent-ink:#ffffff;--color-accent-hover:#05664b;--color-accent-soft:#e8f6f1;
+  --color-negative:#c4342b;--color-positive:#1f7a4d;--color-flow-saved:#0b4f35;
+  --font-sans:"IBM Plex Sans","IBM Plex Sans Hebrew",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --color-background:#0b0b0c;--color-surface:#151517;--color-elevated:#1b1b1e;
+  --color-ink:#f2f2f0;--color-ink-secondary:#a1a1a0;--color-ink-tertiary:#6a6a6c;
+  --color-hairline:#262629;--color-hairline-strong:#34343a;
+  --color-accent:#34d399;--color-accent-ink:#06231a;--color-accent-hover:#5ee0b0;--color-accent-soft:#10312a;
+  --color-negative:#e5675e;--color-positive:#4caf7d;--color-flow-saved:#2f9e6a;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --color-background:#0b0b0c;--color-surface:#151517;--color-elevated:#1b1b1e;
+  --color-ink:#f2f2f0;--color-ink-secondary:#a1a1a0;--color-ink-tertiary:#6a6a6c;
+  --color-hairline:#262629;--color-hairline-strong:#34343a;
+  --color-accent:#34d399;--color-accent-ink:#06231a;--color-accent-hover:#5ee0b0;--color-accent-soft:#10312a;
+  --color-negative:#e5675e;--color-positive:#4caf7d;--color-flow-saved:#2f9e6a;color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{background:var(--color-background)}
+body{margin:0;color:var(--color-ink);font-family:var(--font-sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
+code{font-family:var(--font-mono);font-size:12px}
+.label{font-size:11px;line-height:1.3;letter-spacing:.08em;font-weight:500;text-transform:uppercase;color:var(--color-ink-secondary)}
+.caption{font-size:12px;line-height:1.4;color:var(--color-ink-secondary)}
+.num{font-variant-numeric:tabular-nums}
+a{color:var(--color-accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ------------------------------------------------------------ the mockup's own page */
+.page{max-width:1120px;margin:0 auto;padding:32px 16px 96px;display:flex;flex-direction:column;gap:44px}
+.intro{display:flex;flex-direction:column;gap:8px;max-width:72ch}
+.intro h1{margin:0;font-size:24px;line-height:1.15;font-weight:600;letter-spacing:-.01em}
+.intro p{margin:0;color:var(--color-ink-secondary)}
+.bar{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center}
+.seg{display:inline-flex}
+.seg button{height:30px;padding:0 12px;border:1px solid var(--color-hairline-strong);margin-left:-1px;font-size:13px;color:var(--color-ink-secondary)}
+.seg button:first-child{margin-left:0}
+.seg button.on{background:var(--color-accent-soft);color:var(--color-ink);border-color:var(--color-accent);position:relative;z-index:1}
+.state-head{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:6px}
+.state-head h2{margin:0;font-size:16px;font-weight:600}
+.state-head .caption{flex:1 1 280px}
+.no{font-family:var(--font-mono);font-size:11px;color:var(--color-ink-tertiary)}
+.frame{border:1px solid var(--color-hairline);padding:24px;display:flex;flex-direction:column;gap:28px}
+@media (max-width:620px){.frame{padding:16px}}
+.where{font-family:var(--font-mono);font-size:11px;color:var(--color-ink-tertiary);margin:0 0 -16px}
+
+/* ------------------------------------------------------------ Section (parts.tsx) */
+.sect{display:flex;flex-direction:column;gap:12px}
+.sh h3{margin:0;font-size:16px;font-weight:500}
+.sh p{margin:2px 0 0;font-size:12px;color:var(--color-ink-secondary)}
+
+/* ------------------------------------------------------------ the bar (SpokenFor's, one part per goal) */
+.split-bar{position:relative;display:flex;height:22px;width:100%;background:var(--color-hairline)}
+.split-bar > div{display:flex;align-items:center;height:100%;overflow:hidden;padding:0 6px;font-size:11px;white-space:nowrap}
+.split-bar > div + div{border-left:1px solid var(--color-background)}
+.b-goal{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--color-flow-saved) 28%,var(--color-background)) 0 4px,color-mix(in srgb,var(--color-flow-saved) 14%,var(--color-background)) 4px 8px)}
+.b-cushion{background:color-mix(in srgb,var(--color-ink-secondary) 30%,var(--color-background))}
+.b-above{background:var(--color-accent-soft)}
+.b-short{background:var(--color-background)!important;outline:1px dashed var(--color-hairline-strong);outline-offset:-1px;color:var(--color-ink-secondary)}
+.b-over{position:absolute;top:-3px;bottom:-3px;border:1px solid var(--color-negative);background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--color-negative) 30%,transparent) 0 3px,transparent 3px 6px);pointer-events:none}
+.mark{position:absolute;top:-5px;bottom:-5px;width:0;border-left:1.5px solid var(--color-ink)}
+.mark span{position:absolute;top:-17px;left:-1px;transform:translateX(-100%);padding-right:4px;font-size:11px;color:var(--color-ink-secondary);white-space:nowrap}
+.mark.r span{transform:none;left:4px}
+.bar-room{padding-top:14px}
+.legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--color-ink-secondary)}
+.legend i{display:inline-block;width:14px;height:8px;margin-right:6px;vertical-align:middle}
+.legend .b-short{background:transparent!important}
+
+/* ------------------------------------------------------------ the add-up: accounts, goals, cushion */
+.box{display:flex;flex-direction:column;gap:10px;border:1px solid var(--color-hairline);background:var(--color-surface);padding:14px}
+.addup{width:100%;border-collapse:collapse}
+.addup td{padding:6px 0;border-top:1px solid var(--color-hairline);vertical-align:middle}
+.addup tr:first-child td{border-top:0}
+.addup td.fig{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;padding-left:16px}
+.addup td.when{color:var(--color-ink-secondary);font-size:12px;white-space:nowrap;padding-left:12px}
+.addup tr.sum td{border-top:1px solid var(--color-hairline-strong);font-weight:500}
+.addup tr.off td{color:var(--color-ink-tertiary)}
+.addup tr.off td.fig{text-decoration:none}
+.addup .sub{display:block;font-size:12px;color:var(--color-ink-secondary);font-weight:400}
+.addup .less{color:var(--color-ink-secondary);margin-right:2px}
+.tick{display:inline-flex;align-items:center;gap:8px}
+.tick input{width:16px;height:16px;margin:0;accent-color:var(--color-accent)}
+.last4{margin-left:6px;font-size:12px;color:var(--color-ink-secondary)}
+.neg{color:var(--color-negative)}
+@media (max-width:620px){.addup td.when{display:none}}
+
+/* .chip / Tag (parts.tsx) */
+.tag{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--color-hairline-strong);padding:2px 7px;font-size:11px;line-height:1.3;font-weight:500;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;color:var(--color-ink-secondary)}
+.tag.good{border-color:color-mix(in srgb,var(--color-positive) 45%,transparent);color:var(--color-positive)}
+.tag.bad{border-color:color-mix(in srgb,var(--color-negative) 45%,transparent);color:var(--color-negative)}
+.verdict{display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+.why{margin:0;font-size:12px;color:var(--color-ink-secondary);max-width:70ch}
+.why b{font-weight:500;color:var(--color-ink)}
+
+/* the months and the buckets: SpokenFor's controls, unchanged but for their first words */
+.ctl{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.months{display:inline-flex}
+.months button,.chipbtn{height:28px;padding:0 10px;font-size:12px;border:1px solid var(--color-hairline-strong);color:var(--color-ink-secondary);white-space:nowrap}
+.months button{margin-left:-1px}
+.months button:first-child{margin-left:0}
+.months button.on,.chipbtn.on{border-color:var(--color-accent);background:var(--color-accent-soft);color:var(--color-ink);position:relative;z-index:1}
+
+/* ------------------------------------------------------------ Plan's cushion line (CushionPanel) */
+.plan-line{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;border:1px solid var(--color-hairline);background:var(--color-surface);padding:10px 14px}
+.plan-line b{font-weight:500;font-variant-numeric:tabular-nums}
+.plan-line .push{margin-left:auto;font-size:12px}
+
+/* ------------------------------------------------------------ notes */
+section > h2{margin:0 0 8px;font-size:16px;font-weight:600}
+.notes{max-width:76ch;display:flex;flex-direction:column;gap:6px;margin:0;padding-left:18px;color:var(--color-ink-secondary)}
+.notes b{color:var(--color-ink);font-weight:500}
+.table-wrap{overflow-x:auto}
+.words{width:100%;border-collapse:collapse;font-size:12px;min-width:640px}
+.words th{text-align:left;font-weight:500;color:var(--color-ink-secondary);padding:6px 12px 6px 0;border-bottom:1px solid var(--color-hairline-strong)}
+.words td{padding:7px 12px 7px 0;border-bottom:1px solid var(--color-hairline);vertical-align:top}
+.words td:first-child{color:var(--color-ink-secondary);width:16%}
+.words td:nth-child(2){color:var(--color-ink-tertiary);width:40%}
+</style>
+</head>
+<body>
+<main class="page">
+
+<header class="intro">
+  <span class="label">M30 U7 · mockup</span>
+  <h1>In the bank, split between the goals and the cushion</h1>
+  <p>You tick which bank accounts count. Their latest statements are what is in the bank. Each goal saved in one of them holds its part, and <b>the cushion is what is left</b>, held up against its target. When the goals hold more than is there, the card says so and does not shrink anything to make it fit. All figures are made up.</p>
+  <div class="bar">
+    <span class="caption">Theme</span>
+    <div class="seg" data-theme-seg>
+      <button data-t="system" class="on">System</button><button data-t="light">Light</button><button data-t="dark">Dark</button>
+    </div>
+  </div>
+</header>
+
+<!-- =============================================================== 1. the ordinary case -->
+<section>
+  <div class="state-head">
+    <span class="no">1</span><h2>The ordinary case</h2>
+    <span class="caption">Two of three accounts count. Two goals are saved in them. What is left is a little above the target.</span>
+  </div>
+  <div class="frame">
+    <p class="where">Overview, under Accounts</p>
+    <div class="sect">
+      <div class="sh">
+        <h3>In the bank: the goals saved there, and the cushion</h3>
+        <p>Goal money is promised. What is left is the cushion.</p>
+      </div>
+      <div class="bar-room">
+        <div class="split-bar" role="img" aria-label="₪48,200.18 in the bank: Car ₪12,000.00, Wedding ₪8,500.00, the cushion ₪27,700.18">
+          <div class="b-goal" style="width:24.9%">Car ₪12,000.00</div>
+          <div class="b-goal" style="width:17.63%">Wedding ₪8,500.00</div>
+          <div class="b-cushion" style="width:56.02%">Cushion ₪27,700.18</div>
+          <div class="b-above" style="width:1.45%"></div>
+          <span class="mark" style="left:98.55%"><span>target</span></span>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i class="b-goal"></i>Saved for a goal</span>
+        <span><i class="b-cushion"></i>The cushion</span>
+        <span><i class="b-above" style="outline:1px solid var(--color-hairline-strong)"></i>Above its target</span>
+      </div>
+
+      <div class="box">
+        <table class="addup">
+          <tbody>
+            <tr><td><label class="tick"><input type="checkbox" checked>Everyday Bank current<span class="last4">···1234</span></label></td><td class="when">30 Sep statement</td><td class="fig">₪31,452.18</td></tr>
+            <tr><td><label class="tick"><input type="checkbox" checked>Everyday Bank savings<span class="last4">···8890</span></label></td><td class="when">30 Sep statement</td><td class="fig">₪16,748.00</td></tr>
+            <tr class="off"><td><label class="tick"><input type="checkbox">Second Bank joint<span class="last4">···4410</span></label></td><td class="when">doesn't count</td><td class="fig">₪5,213.40</td></tr>
+            <tr class="sum"><td>In the bank</td><td class="when"></td><td class="fig">₪48,200.18</td></tr>
+            <tr><td>Car<span class="sub">saved in Everyday Bank savings</span></td><td class="when"></td><td class="fig"><span class="less">−</span>₪12,000.00</td></tr>
+            <tr><td>Wedding<span class="sub">saved in Everyday Bank current</span></td><td class="when"></td><td class="fig"><span class="less">−</span>₪8,500.00</td></tr>
+            <tr class="sum"><td>The cushion, what is left</td><td class="when"></td><td class="fig">₪27,700.18</td></tr>
+          </tbody>
+        </table>
+        <div class="ctl">
+          <span>Its target is</span>
+          <span class="months" role="group" aria-label="Months of expenses"><button>1</button><button>2</button><button class="on">3</button><button>4</button><button>6</button></span>
+          <span>months of fixed expenses and Car insurance</span>
+        </div>
+        <p class="why">Fixed expenses are ₪8,400.00 a month, Car insurance ₪600.00. 3 months is ₪27,000.00.</p>
+        <div class="ctl">
+          <span class="caption">Count from Plan too:</span>
+          <button class="chipbtn on">Car insurance <span class="num">₪600.00</span></button>
+          <button class="chipbtn">Gifts <span class="num">₪350.00</span></button>
+        </div>
+        <div class="verdict">
+          <span class="tag good">Above the cushion</span>
+          <span class="caption">₪700.18 above its ₪27,000.00 target. The same line shows on Plan.</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="where">Plan</p>
+    <div class="plan-line">
+      <span class="label">Cushion</span>
+      <span><b>₪27,000.00</b> stays in the bank (3 months of fixed expenses, Car insurance)</span>
+      <span>After the goals, <b>₪27,700.18</b> is left</span>
+      <span class="tag good">₪700.18 above it</span>
+      <a class="push" href="#">Change it on Overview</a>
+    </div>
+  </div>
+</section>
+
+<!-- =============================================================== 2. over-allocated -->
+<section>
+  <div class="state-head">
+    <span class="no">2</span><h2>The goals hold more than is there</h2>
+    <span class="caption">Same accounts, a month later: ₪18,300.00 in them, ₪20,700.00 promised to goals. A failed check, said plainly. Nothing is shrunk to fit.</span>
+  </div>
+  <div class="frame">
+    <p class="where">Overview, under Accounts</p>
+    <div class="sect">
+      <div class="sh">
+        <h3>In the bank: the goals saved there, and the cushion</h3>
+        <p>Goal money is promised. What is left is the cushion.</p>
+      </div>
+      <div class="bar-room">
+        <div class="split-bar" role="img" aria-label="Goals ₪20,700.00, against ₪18,300.00 in the bank: ₪2,400.00 more than is there">
+          <div class="b-goal" style="width:57.97%">Car ₪12,000.00</div>
+          <div class="b-goal" style="width:42.03%">Wedding ₪8,700.00</div>
+          <span class="b-over" style="left:88.41%;right:0"></span>
+          <span class="mark" style="left:88.41%"><span>in the bank</span></span>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i class="b-goal"></i>Saved for a goal</span>
+        <span><i style="border:1px solid var(--color-negative);background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--color-negative) 30%,transparent) 0 3px,transparent 3px 6px)"></i>More than is in the bank</span>
+      </div>
+
+      <div class="box">
+        <table class="addup">
+          <tbody>
+            <tr><td><label class="tick"><input type="checkbox" checked>Everyday Bank current<span class="last4">···1234</span></label></td><td class="when">31 Oct statement</td><td class="fig">₪11,206.50</td></tr>
+            <tr><td><label class="tick"><input type="checkbox" checked>Everyday Bank savings<span class="last4">···8890</span></label></td><td class="when">31 Oct statement</td><td class="fig">₪7,093.50</td></tr>
+            <tr class="off"><td><label class="tick"><input type="checkbox">Second Bank joint<span class="last4">···4410</span></label></td><td class="when">doesn't count</td><td class="fig">₪4,980.12</td></tr>
+            <tr class="sum"><td>In the bank</td><td class="when"></td><td class="fig">₪18,300.00</td></tr>
+            <tr><td>Car<span class="sub">saved in Everyday Bank savings</span></td><td class="when"></td><td class="fig"><span class="less">−</span>₪12,000.00</td></tr>
+            <tr><td>Wedding<span class="sub">saved in Everyday Bank current</span></td><td class="when"></td><td class="fig"><span class="less">−</span>₪8,700.00</td></tr>
+            <tr class="sum"><td>The cushion, what is left</td><td class="when"></td><td class="fig neg">none</td></tr>
+          </tbody>
+        </table>
+        <div class="verdict">
+          <span class="tag bad">Off by ₪2,400.00</span>
+          <span class="caption">The goals saved here hold ₪20,700.00, and the accounts end at ₪18,300.00.</span>
+        </div>
+        <p class="why">That is <b class="neg">₪2,400.00</b> more than is there, so there is no cushion to measure. Usually money was spent from a goal that the goal still counts, or a deposit was recorded that never reached the bank. <a href="#">Car's deposits</a> · <a href="#">Wedding's deposits</a></p>
+        <div class="ctl">
+          <span>Its target is</span>
+          <span class="months" role="group" aria-label="Months of expenses"><button>1</button><button>2</button><button class="on">3</button><button>4</button><button>6</button></span>
+          <span>months of fixed expenses and Car insurance</span>
+        </div>
+        <p class="why">Fixed expenses are ₪8,400.00 a month, Car insurance ₪600.00. 3 months is ₪27,000.00.</p>
+      </div>
+    </div>
+
+    <p class="where">Plan</p>
+    <div class="plan-line">
+      <span class="label">Cushion</span>
+      <span><b>₪27,000.00</b> stays in the bank (3 months of fixed expenses, Car insurance)</span>
+      <span class="tag bad">Goals hold ₪2,400.00 more than the bank</span>
+      <a class="push" href="#">See it on Overview</a>
+    </div>
+  </div>
+</section>
+
+<!-- =============================================================== 3. no goals in the bank -->
+<section>
+  <div class="state-head">
+    <span class="no">3</span><h2>No goal is saved in the bank</h2>
+    <span class="caption">One account counts and no goal saves in it, so all of it is the cushion. Here it is short of the target.</span>
+  </div>
+  <div class="frame">
+    <p class="where">Overview, under Accounts</p>
+    <div class="sect">
+      <div class="sh">
+        <h3>In the bank: the goals saved there, and the cushion</h3>
+        <p>No goal is saved in these accounts, so all of it is the cushion.</p>
+      </div>
+      <div class="bar-room">
+        <div class="split-bar" role="img" aria-label="The cushion ₪22,614.30, ₪4,385.70 short of its ₪27,000.00 target">
+          <div class="b-cushion" style="width:83.76%">Cushion ₪22,614.30</div>
+          <div class="b-short" style="width:16.24%">short ₪4,385.70</div>
+          <span class="mark" style="left:100%"><span>target</span></span>
+        </div>
+      </div>
+      <div class="legend">
+        <span><i class="b-cushion"></i>The cushion</span>
+        <span><i class="b-short"></i>Short of its target</span>
+      </div>
+
+      <div class="box">
+        <table class="addup">
+          <tbody>
+            <tr><td><label class="tick"><input type="checkbox" checked>Everyday Bank current<span class="last4">···1234</span></label></td><td class="when">30 Sep statement</td><td class="fig">₪22,614.30</td></tr>
+            <tr class="off"><td><label class="tick"><input type="checkbox">Second Bank joint<span class="last4">···4410</span></label></td><td class="when">doesn't count</td><td class="fig">₪5,213.40</td></tr>
+            <tr class="sum"><td>In the bank, and the cushion</td><td class="when"></td><td class="fig">₪22,614.30</td></tr>
+          </tbody>
+        </table>
+        <div class="ctl">
+          <span>Its target is</span>
+          <span class="months" role="group" aria-label="Months of expenses"><button>1</button><button>2</button><button class="on">3</button><button>4</button><button>6</button></span>
+          <span>months of fixed expenses and Car insurance</span>
+        </div>
+        <p class="why">Fixed expenses are ₪8,400.00 a month, Car insurance ₪600.00. 3 months is ₪27,000.00.</p>
+        <div class="verdict">
+          <span class="tag bad">Below the cushion</span>
+          <span class="caption">₪4,385.70 short of its ₪27,000.00 target. The same line shows on Plan.</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="where">Plan</p>
+    <div class="plan-line">
+      <span class="label">Cushion</span>
+      <span><b>₪27,000.00</b> stays in the bank (3 months of fixed expenses, Car insurance)</span>
+      <span>In the bank, <b>₪22,614.30</b></span>
+      <span class="tag bad">₪4,385.70 short</span>
+      <a class="push" href="#">Change it on Overview</a>
+    </div>
+  </div>
+</section>
+
+<!-- =============================================================== 4. nothing ticked yet -->
+<section>
+  <div class="state-head">
+    <span class="no">4</span><h2>Before any account is ticked</h2>
+    <span class="caption">Where a document starts. This replaces "No cushion yet", which waited for the Emergency goal.</span>
+  </div>
+  <div class="frame">
+    <p class="where">Overview, under Accounts</p>
+    <div class="sect">
+      <div class="sh">
+        <h3>In the bank: the goals saved there, and the cushion</h3>
+        <p>Tick the bank accounts the cushion lives in. Their latest statements are what is in the bank.</p>
+      </div>
+      <div class="box">
+        <table class="addup">
+          <tbody>
+            <tr class="off"><td><label class="tick"><input type="checkbox">Everyday Bank current<span class="last4">···1234</span></label></td><td class="when">30 Sep statement</td><td class="fig">₪22,614.30</td></tr>
+            <tr class="off"><td><label class="tick"><input type="checkbox">Second Bank joint<span class="last4">···4410</span></label></td><td class="when">30 Sep statement</td><td class="fig">₪5,213.40</td></tr>
+          </tbody>
+        </table>
+        <div class="ctl">
+          <span>Its target is</span>
+          <span class="months" role="group" aria-label="Months of expenses"><button>1</button><button>2</button><button class="on">3</button><button>4</button><button>6</button></span>
+          <span>months of fixed expenses</span>
+        </div>
+        <p class="why">Fixed expenses are ₪8,400.00 a month. 3 months is ₪25,200.00.</p>
+      </div>
+    </div>
+
+    <p class="where">Plan</p>
+    <div class="plan-line">
+      <span class="label">Cushion</span>
+      <span><b>₪25,200.00</b> stays in the bank (3 months of fixed expenses)</span>
+      <span class="caption">No bank account counts toward it yet.</span>
+      <a class="push" href="#">Pick them on Overview</a>
+    </div>
+  </div>
+</section>
+
+<!-- =============================================================== words -->
+<section>
+  <h2>Every sentence, before and after</h2>
+  <div class="table-wrap">
+    <table class="words">
+      <thead><tr><th>Where</th><th>Today</th><th>After</th></tr></thead>
+      <tbody>
+        <tr><td>Card title</td><td>In the bank: what is already spoken for</td><td>In the bank: the goals saved there, and the cushion</td></tr>
+        <tr><td>Card line</td><td>The cushion stays. Goal money is promised. What is left is yours to spend.</td><td>Goal money is promised. What is left is the cushion.</td></tr>
+        <tr><td>The figure split</td><td>The hero's In the bank: every statement, plus goal money held outside the accounts</td><td>The ticked accounts' latest statements, and nothing else</td></tr>
+        <tr><td>Bar</td><td>Cushion (the Emergency goal) · Goals · Free</td><td>One part per goal · the cushion · above its target, or short of it</td></tr>
+        <tr><td>Months</td><td>The Emergency goal is the cushion: [3] months of fixed expenses</td><td>Its target is [3] months of fixed expenses</td></tr>
+        <tr><td>Failed check</td><td>(nothing: free went below zero and was not drawn)</td><td>Off by ₪2,400.00. The goals saved here hold ₪20,700.00, and the accounts end at ₪18,300.00.</td></tr>
+        <tr><td>Plan</td><td>{Emergency} holds ₪X</td><td>After the goals, ₪X is left</td></tr>
+        <tr><td>Plan, empty</td><td>No cushion yet. Set it on Overview</td><td>No bank account counts toward it yet. Pick them on Overview</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Notes for the build</h2>
+  <ul class="notes">
+    <li><b>The tick is the account's own.</b> An <code>in_cushion</code> flag on the account, set here and by <code>set_cushion</code>. Only ordinary bank accounts are listed: cards and accounts that hold things never are.</li>
+    <li><b>A goal's part is its deposits into a ticked account's cash holding</b> (U1), less what it took out. A goal saved somewhere else (a deposit plan, a fund, an unticked account) is not in this card; it stays in "Where the rest is".</li>
+    <li><b>The check is the whole sum against the whole balance.</b> It fails when the parts add up to more; the cushion then shows "none", never a figure shrunk to zero.</li>
+    <li><b>The hero's In the bank figure does not change.</b> The card's own total is the ticked accounts only, so the two can differ when an account is unticked.</li>
+    <li><b>The Emergency goal retires.</b> Setting the months no longer creates it. A document that has one keeps it as an ordinary goal.</li>
+  </ul>
+</section>
+
+</main>
+
+<script>
+(function(){
+  var seg=document.querySelector('[data-theme-seg]');
+  seg.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
+    seg.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b)});
+    var t=b.dataset.t;if(t==='system')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',t);});
+})();
+</script>
+</body>
+</html>

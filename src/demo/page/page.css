@@ -1,0 +1,861 @@
+/*
+ * Emerald's page (M33 U8, D-459), in the app's own tokens: the rail in the
+ * sidebar's plane (`surface`), the content on `background`, a hairline between
+ * them. The dots are the app's (`.fc-tl-dot`, `.fc-dot`, their tones and the
+ * pulse, all from tokens.css); what is the page's is the measure of its prose,
+ * the growing line, and the strip the rail becomes on a phone. Ported from the
+ * approved mockup, docs/mockups/m33-u8/, with the feel of M33 F8 and the
+ * corrections of M33 F9. Written in logical properties, so a language
+ * that reads right to left mirrors the page (`dir` on the root).
+ */
+
+/* A page reads at 16px where the app's chrome reads at 14. */
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+body {
+  margin: 0;
+}
+a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+a:hover {
+  color: var(--color-accent-hover);
+}
+h1,
+h2 {
+  margin: 0;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+p {
+  margin: 0 0 1em;
+}
+.label {
+  display: block;
+  font-size: 0.6875rem;
+  line-height: 1.3;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--color-ink-secondary);
+  margin-bottom: 8px;
+}
+.secondary {
+  color: var(--color-ink-secondary);
+}
+.caption {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--color-ink-secondary);
+}
+
+/* The icons: drawn as the app draws an icon (IconAction) — 1.75 stroke, round
+   caps, ink-secondary at rest, never accent. 24px at a section's head, 16px in
+   a control. */
+.icon {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex: none;
+}
+.icon.head {
+  display: block;
+  width: 24px;
+  height: 24px;
+  color: var(--color-ink-secondary);
+  margin-bottom: 16px;
+}
+.icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-ink-secondary);
+  cursor: pointer;
+}
+.icon-button:hover {
+  color: var(--color-ink);
+}
+
+/* The app's shape: the rail, then the content. From 960 px the rail is the
+   roadmap down the start side; below it is a strip across the top. */
+.app {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-height: 100vh;
+}
+.rail {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-hairline);
+}
+.rail-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  padding: 0 12px 0 16px;
+  font-weight: 500;
+}
+.rail-head .mark {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+.rail-head .now {
+  color: var(--color-ink-secondary);
+  font-weight: 400;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* On a phone the mark says the name, so the row you are at gets the room. */
+@media (max-width: 959px) {
+  .rail-head .name {
+    display: none;
+  }
+  .rail-head .now {
+    margin-inline-start: -6px;
+  }
+}
+.rail-head .controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-inline-start: auto;
+  flex: none;
+}
+.languages {
+  display: flex;
+  gap: 8px;
+}
+.languages button {
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--color-ink-secondary);
+  background: transparent;
+  border: 0;
+  padding: 0 4px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.languages button:disabled {
+  color: var(--color-ink);
+  text-decoration: none;
+  cursor: default;
+}
+.rail-foot {
+  display: none;
+}
+
+/* The strip's dots: the app's 8px `.fc-dot`, each a link to its row. */
+.strip {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  flex: none;
+}
+.strip a {
+  display: block;
+  padding: 6px 0;
+}
+.strip .fc-dot {
+  display: block;
+}
+.tl {
+  display: none;
+}
+
+@media (min-width: 960px) {
+  .app {
+    grid-template-columns: 280px minmax(0, 1fr);
+  }
+  .rail {
+    height: 100vh;
+    overflow: auto;
+    border-bottom: 0;
+    border-inline-end: 1px solid var(--color-hairline);
+    display: flex;
+    flex-direction: column;
+  }
+  .rail-head {
+    border-bottom: 1px solid var(--color-hairline);
+  }
+  .rail-head .now,
+  .strip {
+    display: none;
+  }
+  .rail-foot {
+    display: block;
+    margin-top: auto;
+    padding: 12px 16px 16px;
+    border-top: 1px solid var(--color-hairline);
+    font-size: 0.75rem;
+    line-height: 1.5;
+    color: var(--color-ink-secondary);
+  }
+  .rail-foot p {
+    margin: 0;
+  }
+
+  /* The timeline, as the app draws it (`.fc-tl` in tokens.css): one line
+     through a dot per row. Here the line is two: the whole way dashed, and
+     over it a solid one that reaches the live dot and grows as you scroll —
+     what you read is solid, what is ahead is dashed. */
+  .tl {
+    display: block;
+    position: relative;
+    margin: 16px 0 0;
+    padding: 8px 0 24px;
+    list-style: none;
+  }
+  .tl::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 35px;
+    top: 8px;
+    bottom: 24px;
+    border-inline-start: 2px dashed var(--color-hairline-strong);
+  }
+  .tl .solid {
+    position: absolute;
+    inset-inline-start: 35px;
+    top: 8px;
+    height: 0;
+    border-inline-start: 2px solid var(--color-ink-tertiary);
+    transition: height var(--duration-enter) var(--ease-out);
+  }
+  .tl li {
+    position: relative;
+    animation: fc-row-in var(--duration-base) var(--ease-out) backwards;
+    animation-delay: calc(200ms + var(--i, 0) * 30ms);
+  }
+  .tl a {
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr);
+    column-gap: 12px;
+    align-items: center;
+    padding: 0 16px;
+    min-height: 32px;
+    color: var(--color-ink-secondary);
+    text-decoration: none;
+    font-size: 0.875rem;
+    line-height: 1.3;
+  }
+  .tl a:hover {
+    color: var(--color-ink);
+  }
+  .tl [data-tone="live"] a {
+    color: var(--color-ink);
+    font-weight: 500;
+  }
+  /* The app's dot sits at (11, 14) of a 40px cell, so the cell is one. */
+  .tl .cell {
+    position: relative;
+    display: block;
+    width: 40px;
+    height: 32px;
+  }
+  .tl .fc-tl-dot {
+    top: 7px;
+  }
+  .tl .ref {
+    display: block;
+    font-size: 0.6875rem;
+    letter-spacing: 0.08em;
+    color: var(--color-ink-tertiary);
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* The rows: every section is a row of the roadmap. A row fades in the first
+   time it is reached — with a script to reach it, and only then — and nothing
+   else moves. */
+.prose,
+.wide {
+  margin: 0 auto;
+  padding: 0 16px;
+}
+.prose {
+  max-width: calc(42rem + 32px);
+}
+.wide {
+  max-width: calc(66rem + 32px);
+}
+/* Prose inside a wide row keeps the reading measure of a prose row. */
+.wide .measure {
+  max-width: 42rem;
+}
+.row {
+  padding: 48px 0;
+}
+html.js .row {
+  opacity: 0;
+  transition: opacity var(--duration-enter) var(--ease-out);
+}
+html.js .row.seen {
+  opacity: 1;
+}
+.row + .row {
+  border-top: 1px solid var(--color-hairline);
+}
+.row h2 {
+  font-size: 1.5rem;
+  line-height: 1.15;
+  margin: 0 0 12px;
+}
+.row p {
+  font-size: 1.0625rem;
+  line-height: 1.6;
+}
+.row p.caption {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+/* A section's points: what a person gains, one short line each, drawn as the
+   app draws rows — hairlines, a mono numeral in `ink-tertiary` where a sheet
+   keeps its row number, no bullet and no accent, since nothing here is acted
+   on. They replace the paragraphs nobody read (2026-10-15).
+
+   Each point grows into place the way a new row does (`fc-row-in`), one after
+   another as the row is reached. docs/11 caps a stagger at three for the
+   app's lists, where a stagger is about the list and not the row; here the
+   list *is* the event, so the step is 50 ms and the longest list is down in
+   under 400 ms, short enough to read as one arrival. Reduced motion: nothing
+   moves, everything is there. */
+.row ul.points {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: point;
+  border-top: 1px solid var(--color-hairline);
+}
+.row ul.points li {
+  counter-increment: point;
+  display: grid;
+  grid-template-columns: 2.5rem 1fr;
+  column-gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-hairline);
+  font-size: 1.0625rem;
+  line-height: 1.5;
+}
+.row ul.points li::before {
+  content: counter(point, decimal-leading-zero);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  color: var(--color-ink-tertiary);
+  padding-top: 0.35em;
+}
+html.js .row ul.points li {
+  opacity: 0;
+}
+html.js .row.seen ul.points li {
+  animation: fc-row-in var(--duration-enter) var(--ease-out) both;
+  animation-delay: calc(var(--i, 0) * 50ms);
+}
+@media (min-width: 960px) {
+  .row ul.points li {
+    grid-template-columns: 3rem 1fr;
+    padding: 16px 0;
+    font-size: 1.125rem;
+  }
+}
+@media (min-width: 960px) {
+  .row {
+    padding: 96px 0;
+  }
+}
+
+/* The hero, in the wide measure: the mark assembles once, each facet from
+   along its own cut, in the order the mark is made — the indicator's cycle
+   with only its entrance kept — then the name, the line and the story arrive
+   in turn. */
+.hero {
+  padding: 48px 0 40px;
+}
+.hero .mark {
+  display: block;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 24px;
+}
+.hero .mark img,
+.hero .mark svg {
+  display: block;
+  width: 64px;
+  height: 64px;
+}
+.hero h1 {
+  font-size: 2.5rem;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+.hero .tagline {
+  font-size: 1.375rem;
+  line-height: 1.3;
+  font-weight: 400;
+  margin: 12px 0 32px;
+  max-width: 36em;
+}
+.hero .story {
+  max-width: 52rem;
+}
+@keyframes page-gem-in {
+  from {
+    opacity: 0;
+    transform: translate(var(--dx), var(--dy)) scale(0.7);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.page-gem .fc-facet {
+  animation: page-gem-in 700ms var(--ease-out) backwards;
+  animation-delay: calc(120ms + var(--i) * 45ms);
+}
+.hero h1,
+.hero .tagline,
+.hero .story {
+  animation: fc-row-in var(--duration-enter) var(--ease-out) backwards;
+}
+.hero h1 {
+  animation-delay: 300ms;
+}
+.hero .tagline {
+  animation-delay: 420ms;
+}
+.hero .story {
+  animation-delay: 540ms;
+}
+@media (min-width: 960px) {
+  .hero {
+    padding: 96px 0 64px;
+  }
+  .hero h1 {
+    font-size: 3.5rem;
+  }
+  .hero .tagline {
+    font-size: 1.625rem;
+  }
+}
+
+/* A tour: one sentence, then the real frame. From 690 px the frame draws the
+   app whole and can be taken over; below it plays as a watched crop, so the
+   phone's box is 440 px high rather than 16:10 (M33 U4's contract). */
+.tour .lead {
+  font-size: 1.125rem;
+  line-height: 1.5;
+  max-width: 42rem;
+  margin: 0 0 16px;
+}
+.tour .try {
+  font-size: 1.5rem;
+  line-height: 1.15;
+  margin: 0 0 16px;
+}
+.tour iframe {
+  display: block;
+  width: 100%;
+  height: 440px;
+  border: 1px solid var(--color-hairline);
+  background: var(--color-surface);
+}
+@media (min-width: 690px) {
+  .tour iframe {
+    height: auto;
+    aspect-ratio: 16 / 10;
+    min-height: 440px;
+  }
+}
+
+/* The claim playing itself (M33 F8): a receipt, a card charge, and the claim
+   between them, in the app's own figures — the receipt's lines arriving as
+   rows arrive, the verdict marked once. */
+.claim {
+  display: grid;
+  gap: 24px;
+  max-width: 32rem;
+  margin: 0 0 16px;
+  padding: 24px;
+  border: 1px solid var(--color-hairline);
+  background: var(--color-surface);
+  min-height: 18rem;
+}
+.claim-block {
+  display: grid;
+  gap: 4px;
+}
+.claim-head {
+  font-size: 0.9375rem;
+  color: var(--color-ink-secondary);
+  margin-bottom: 4px;
+}
+.claim-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  font-size: 1rem;
+  line-height: 1.5;
+  padding: 2px 0;
+  border-bottom: 1px solid var(--color-hairline);
+}
+.claim-row.strong {
+  font-weight: 500;
+  border-bottom: 0;
+  padding-top: 6px;
+}
+.claim-figure {
+  font-variant-numeric: tabular-nums;
+}
+.claim-verdict {
+  display: grid;
+  gap: 4px;
+  min-height: 3.5rem;
+}
+.claim-text {
+  font-size: 0.9375rem;
+  color: var(--color-ink-secondary);
+}
+.claim-word {
+  justify-self: start;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  padding: 0 4px;
+  margin-inline-start: -4px;
+}
+.claim-word[data-verdict="failed"] {
+  color: var(--color-negative);
+}
+@media (min-width: 690px) {
+  .claim {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+  }
+  .claim-verdict {
+    grid-column: 1 / -1;
+    border-top: 1px solid var(--color-hairline);
+    padding-top: 16px;
+  }
+}
+
+/* The inbox across projects (M33 F11): three documents side by side, a note
+   sliding from the one that wrote it into the one that keeps it, its state in
+   the app's tones. Stacked on a phone, where the slide runs downward. */
+.inbox {
+  display: grid;
+  gap: 16px;
+  margin: 24px 0 16px;
+  min-height: 18rem;
+}
+.inbox-doc {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--color-hairline);
+  background: var(--color-surface);
+  min-width: 0;
+}
+.inbox-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+.inbox-name {
+  font-weight: 500;
+}
+.inbox-file {
+  font-size: 0.8125rem;
+  color: var(--color-ink-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+.inbox-session {
+  min-height: 2.6em;
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  color: var(--color-ink-secondary);
+}
+.inbox-rows {
+  display: grid;
+  gap: 8px;
+  min-height: 3.5rem;
+}
+.inbox-empty {
+  font-size: 0.875rem;
+  color: var(--color-ink-tertiary);
+  padding: 6px 0;
+}
+.inbox-row {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+  padding: 8px 0;
+  border-top: 1px solid var(--color-hairline);
+}
+.inbox-row .fc-dot {
+  margin-top: 0.45em;
+}
+.inbox-body {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.inbox-subject {
+  font-size: 0.9375rem;
+  line-height: 1.35;
+}
+.inbox-from,
+.inbox-became {
+  font-size: 0.8125rem;
+  line-height: 1.35;
+  color: var(--color-ink-secondary);
+}
+.inbox-became {
+  color: var(--color-ink);
+}
+.recording {
+  margin: 24px 0 0;
+}
+.recording video {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--color-hairline);
+  background: var(--color-surface);
+}
+@media (min-width: 690px) {
+  .inbox {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    min-height: 15rem;
+  }
+}
+
+/* The ledger's screens as a reel (M33 F12), after an existing site's: the
+   pictures stacked in one frame as tall as the tallest, each centred in it,
+   numbered steps under it whose bars fill while their picture is shown. Each
+   picture is a pair, light and dark, and the one matching the page's theme is
+   shown — the other is never fetched until the theme turns to it. Without
+   script the first picture shows alone and the steps stay hidden. */
+.reel {
+  margin: 32px 0 0;
+}
+.reel-frame {
+  position: relative;
+  display: grid;
+  aspect-ratio: 1000 / 675;
+  overflow: hidden;
+  border: 1px solid var(--color-hairline);
+  background: var(--color-background);
+}
+.reel-live .reel-frame {
+  cursor: pointer;
+}
+.reel-slide {
+  grid-area: 1 / 1;
+  display: grid;
+  place-items: center;
+  min-height: 0;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--duration-enter) var(--ease-out), visibility 0s linear var(--duration-enter);
+}
+.reel-slide.is-current {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity var(--duration-enter) var(--ease-out);
+}
+.reel-slide img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+}
+.reel-slide .dark {
+  display: none;
+}
+:root[data-theme="dark"] .reel-slide .light {
+  display: none;
+}
+:root[data-theme="dark"] .reel-slide .dark {
+  display: block;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .reel-slide .light {
+    display: none;
+  }
+  :root:not([data-theme]) .reel-slide .dark {
+    display: block;
+  }
+}
+.reel-toggle {
+  display: none;
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  padding: 4px 12px;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  background: color-mix(in srgb, var(--color-background) 88%, transparent);
+  border: 1px solid var(--color-hairline-strong);
+  cursor: pointer;
+}
+.reel-live .reel-toggle {
+  display: block;
+}
+.reel-toggle:focus-visible,
+.reel-step:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+.reel-steps {
+  display: none;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 24px;
+  margin-top: 12px;
+}
+.reel-live .reel-steps {
+  display: grid;
+}
+@media (min-width: 690px) {
+  .reel-steps {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.reel-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: baseline;
+  gap: 8px;
+  padding: 12px 0 0;
+  font: inherit;
+  font-size: 0.9375rem;
+  line-height: 1.35;
+  text-align: left;
+  color: var(--color-ink-secondary);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  transition: color var(--duration-base) var(--ease-out);
+}
+.reel-step:hover,
+.reel-step[aria-pressed="true"] {
+  color: var(--color-ink);
+}
+/* reel.ts sets --p on each step: 1 for those shown, the share of its time for the current one. */
+.reel-bar {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  overflow: hidden;
+  background: var(--color-hairline);
+}
+.reel-bar::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--color-ink);
+  transform-origin: left;
+  transform: scaleX(var(--p, 0));
+}
+.reel-num {
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.reel figcaption {
+  margin-top: 12px;
+  min-height: 2.8em;
+}
+
+/* The foot: the form when it has somewhere to go, the address otherwise. */
+.foot form {
+  display: grid;
+  gap: 16px;
+  max-width: 32rem;
+}
+.foot label {
+  display: block;
+}
+.foot input,
+.foot textarea {
+  display: block;
+  width: 100%;
+  margin-top: 6px;
+  font: inherit;
+  color: var(--color-ink);
+  background: var(--color-background);
+  border: 1px solid var(--color-hairline-strong);
+  border-radius: 0;
+  padding: 8px 10px;
+}
+.foot textarea {
+  min-height: 5.5em;
+  resize: vertical;
+}
+.foot button {
+  justify-self: start;
+  font: inherit;
+  font-weight: 500;
+  color: var(--color-action-ink);
+  background: var(--color-action);
+  border: 0;
+  border-radius: 0;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+.foot button:hover {
+  background: var(--color-action-hover);
+}
+footer {
+  border-top: 1px solid var(--color-hairline);
+  padding: 24px 0 48px;
+}
+footer p {
+  margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  html.js .row {
+    opacity: 1;
+    transition: none;
+  }
+  html.js .row ul.points li {
+    opacity: 1;
+    animation: none;
+  }
+  .tl .solid {
+    transition: none;
+  }
+}

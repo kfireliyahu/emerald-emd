@@ -1,0 +1,652 @@
+/*
+ * The demo frame's chrome (M33 U2), ported from the first mockup's (bc37f31) and
+ * now around the real app. Chrome is surface, content is background, and the
+ * hairline between them is the whole separation (docs/11, The window). `accent`
+ * marks what can be acted on — the toggle's live side, the live dot, Reset — and
+ * the ring, since P1 was reversed on 2026-10-07: an ink ring was nearly
+ * invisible over the app's ink, and the ring is where the eye has to be.
+ */
+
+html,
+body,
+#frame {
+  height: 100%;
+  margin: 0;
+}
+body {
+  background: var(--color-background);
+  color: var(--color-ink);
+}
+
+.tour-frame {
+  --ring: var(--color-accent);
+  --ring-fill: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  --travel: 933ms;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-width: 0;
+  background: var(--color-background);
+  /* The strip rearranges by the frame's own width, not the window's: an embed
+     is as wide as its host makes it (M33 U3). */
+  container: tour / inline-size;
+}
+
+.tour-viewport {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--color-background);
+}
+.tour-app {
+  /* Its size is the layout's (layout.ts): never narrower than the app is laid
+     out at, scaled to the frame when the frame is narrower — and drawn smaller,
+     not squeezed, while the paper is beside it, so the scale eases. */
+  display: block;
+  border: 0;
+  transform-origin: 0 0;
+  transition: transform var(--duration-enter) var(--ease-in-out);
+}
+/* A crop pans at the ring's own pace, so the window and the ring arrive
+   together (M33 F1). */
+.tour-frame.movie .tour-app {
+  transition: transform var(--travel) var(--ease-in-out);
+}
+
+/* The shield: while watching it takes every pointer event, so a stray click
+   cannot race the runner, and a click on it is a take-over (P4). Inert in a movie. */
+.tour-shield {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  cursor: pointer;
+}
+.tour-frame.movie .tour-shield {
+  cursor: default;
+}
+
+/* Without autoplay (M33 U4): the first frame, held, and the one thing to press
+   over the app. Accent, because it is the thing you act on. */
+.tour-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  z-index: 48;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 18px;
+  border: 0;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-accent-ink);
+  background: var(--color-accent);
+  box-shadow: var(--shadow-pop);
+  cursor: pointer;
+}
+.tour-play:hover {
+  background: var(--color-accent-hover);
+}
+.tour-play:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+/* The picture beside the app: the paper the ring is typing from. It sits in the
+   width the app gave up, on the app's own background, so it reads as a thing on
+   the desk beside the screen rather than a panel of the app. */
+.tour-beside {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 16px;
+  box-sizing: border-box;
+  border-left: 1px solid var(--color-hairline);
+  background: var(--color-surface);
+  z-index: 30;
+}
+.tour-beside img {
+  display: block;
+  width: 100%;
+  height: auto;
+  box-shadow: var(--shadow-pop);
+}
+/* In a crop the window is on the sheet, so the paper is a card held up in the
+   corner rather than a column (M33 F1): small, tilted a little, over the app's
+   bottom right, where the window keeps the box it is on away from. */
+.tour-beside.card {
+  top: auto;
+  left: auto;
+  right: 10px;
+  bottom: 10px;
+  width: 30%;
+  max-width: 120px;
+  padding: 0;
+  border: 0;
+  background: none;
+  rotate: 2deg;
+}
+
+/* The tour's conversation (M33 F5): the frame's own panel in the paper's
+   column — written for the tour, and its header says so — never the app's
+   chrome. The model's lines on the left, the person's on the right; the newest
+   fades in as a caption does, and the earlier ones stay, dimmed. */
+.tour-chat {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 12px;
+  padding: 16px 14px;
+}
+.tour-chat-head {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-ink-tertiary);
+}
+.tour-chat-lines {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: hidden;
+}
+.tour-line {
+  position: relative;
+  max-width: 88%;
+  margin: 0;
+  padding: 8px 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--color-ink);
+  background: var(--color-background);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--radius-card);
+  transition: opacity var(--duration-base) var(--ease-out);
+}
+.tour-line.model {
+  align-self: flex-start;
+}
+.tour-line.person {
+  align-self: flex-end;
+  background: var(--color-elevated);
+  border-color: var(--color-hairline-strong);
+}
+.tour-line.was {
+  opacity: 0.55;
+}
+.tour-line.new {
+  animation: tour-fade-in var(--duration-enter) var(--ease-out);
+}
+.tour-line .who {
+  display: block;
+  margin-bottom: 2px;
+  font-size: 11px;
+  color: var(--color-ink-tertiary);
+}
+/* In a crop, the newest line only: a card along the window's bottom, which the
+   window keeps the outlined row and the ring above. */
+.tour-chat-card {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+}
+.tour-chat-card .tour-line {
+  max-width: none;
+  box-shadow: var(--shadow-pop);
+}
+
+/* The ring: a pointer that is a ring and not an arrow, its centre on the
+   anchor. It travels between anchors and presses on a click. It is placed by
+   `translate` and pressed by `scale`, and never by `transform`: CSS applies
+   translate, then scale, then transform, so a press over a position held in
+   `transform` scaled the position too and the ring jumped toward the corner. */
+.tour-ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  border-radius: 50%;
+  border: 2px solid var(--ring);
+  background: var(--ring-fill);
+  z-index: 50;
+  pointer-events: none;
+  /* No transition on its place: it travels on the app, in Frame.tsx (M33 F2). */
+  transition: opacity var(--duration-base) var(--ease-out);
+}
+.tour-ring::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  border: 2px solid var(--ring);
+  opacity: 0;
+}
+.tour-ring.press {
+  animation: tour-press var(--duration-micro) var(--ease-out) 2 alternate;
+}
+.tour-ring.press::after {
+  animation: tour-echo 380ms var(--ease-out);
+}
+@keyframes tour-press {
+  to {
+    scale: 0.82;
+  }
+}
+@keyframes tour-echo {
+  from {
+    opacity: 0.5;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+/* The outline: an accent line that travels once around the box the eye should
+   be on, then holds (2026-10-07). The rect's length is 100 by
+   `pathLength`, so one dash of 100 drawn from an offset of 100 to 0 is the line
+   going round, whatever the box's size. It follows its box as the ring does. */
+.tour-look {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 45;
+  overflow: visible;
+  pointer-events: none;
+  transition: opacity var(--duration-base) var(--ease-out);
+}
+.tour-look rect,
+.tour-drawn rect {
+  fill: none;
+  stroke: var(--ring);
+  stroke-width: 2;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+}
+.tour-look.drawn rect,
+.tour-drawn rect {
+  animation: tour-draw calc(var(--travel) * 1.4) var(--ease-in-out) forwards;
+}
+/* The newest chat line's outline (M33 F6): the same line, drawn round the
+   line's own box, inside it so the panel's edge never clips it. */
+.tour-drawn {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.tour-drawn rect {
+  width: calc(100% - 2px);
+  height: calc(100% - 2px);
+}
+@keyframes tour-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.tour-look.gone,
+.tour-frame.trying .tour-look {
+  opacity: 0;
+}
+.tour-ring.gone,
+.tour-frame.trying .tour-ring {
+  opacity: 0;
+}
+.tour-frame.movie .tour-ring {
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+}
+
+/* The strip, above the app (P3 reversed on 2026-10-07): the tour's
+   title and its line, the progress line, then one row — Watch / Try it, the
+   caption, Reset, the speed. One grid, so a narrow frame can give the caption
+   a row of its own and put the dots beside Reset (M33 U3). */
+.tour-strip {
+  flex: none;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    'head head head head'
+    'dots dots dots dots'
+    'seg say reset speed'
+    'wider wider wider wider';
+  align-items: center;
+  column-gap: 16px;
+  padding: 12px 16px 8px;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-hairline);
+}
+.tour-head {
+  grid-area: head;
+  min-width: 0;
+  padding-bottom: 2px;
+}
+.tour-title {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+.tour-about {
+  margin: 2px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--color-ink-secondary);
+}
+.tour-dots {
+  grid-area: dots;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  height: 20px;
+  margin: 6px 0 4px;
+}
+.tour-dots .rail,
+.tour-dots .done {
+  position: absolute;
+  left: 5px;
+  right: 5px;
+  top: 50%;
+  height: 0;
+  border-top: 1px dashed var(--color-hairline-strong);
+}
+.tour-dots .done {
+  right: auto;
+  border-top: 1px solid var(--color-ink);
+  /* It fills to the next dot rather than jumping there. */
+  transition: width var(--duration-enter) var(--ease-in-out);
+}
+.tour-dot {
+  position: relative;
+  z-index: 1;
+  width: 20px;
+  height: 20px;
+  margin: 0 -5px;
+  padding: 0;
+  border: 0;
+  background: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.tour-dot i {
+  display: block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1.5px solid var(--color-ink-tertiary);
+  background: var(--color-surface);
+  transition:
+    background-color var(--duration-base) var(--ease-out),
+    border-color var(--duration-base) var(--ease-out),
+    border-width var(--duration-base) var(--ease-out),
+    width var(--duration-base) var(--ease-out),
+    height var(--duration-base) var(--ease-out),
+    transform var(--duration-micro);
+}
+.tour-dot.past i {
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+}
+.tour-dot.now i {
+  width: 11px;
+  height: 11px;
+  border: 2px solid var(--color-accent);
+  background: var(--color-accent-soft);
+}
+.tour-dot:hover i {
+  border-color: var(--color-accent);
+  transform: scale(1.25);
+}
+.tour-dot:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+  border-radius: 50%;
+}
+
+.tour-seg {
+  grid-area: seg;
+  display: inline-flex;
+}
+.tour-seg button {
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--color-hairline-strong);
+  margin-left: -1px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--color-ink-secondary);
+  background: var(--color-background);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-micro),
+    color var(--duration-micro);
+}
+.tour-seg button:first-child {
+  margin-left: 0;
+}
+.tour-seg button[aria-checked='true'] {
+  position: relative;
+  z-index: 1;
+  background: var(--color-accent-soft);
+  color: var(--color-ink);
+  border-color: var(--color-accent);
+}
+.tour-seg button:hover {
+  color: var(--color-ink);
+}
+.tour-seg button:focus-visible,
+.tour-reset:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 1px;
+}
+.tour-say {
+  grid-area: say;
+  display: flex;
+  align-items: baseline;
+  min-width: 0;
+  margin: 0;
+  padding: 7px 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--color-ink);
+}
+.tour-say .of {
+  flex: none;
+}
+/* A crossfade: the old text and the new share one cell, the old fading out
+   while the new fades in. A caption wraps rather than being cut, and every line
+   it can say sits in the cell unseen (`reserve`), so the cell is as tall as the
+   longest at this width and the strip does not change height between scenes. */
+.tour-fade {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.tour-fade > span {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+.tour-fade > .reserve {
+  visibility: hidden;
+}
+.tour-fade > .in {
+  animation: tour-fade-in var(--duration-enter) var(--ease-out);
+}
+.tour-fade > .out {
+  animation: tour-fade-out var(--duration-enter) var(--ease-out) forwards;
+}
+@keyframes tour-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes tour-fade-out {
+  to {
+    opacity: 0;
+  }
+}
+.tour-say.lost {
+  color: var(--color-negative);
+}
+.tour-say .of {
+  margin-right: 10px;
+  font-size: 12px;
+  color: var(--color-ink-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+.tour-reset {
+  grid-area: reset;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-accent);
+  cursor: pointer;
+}
+.tour-reset:hover {
+  text-decoration: underline;
+  text-underline-offset: 5px;
+}
+.tour-speed {
+  grid-area: speed;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--color-ink-tertiary);
+}
+.tour-speed input {
+  width: 72px;
+  accent-color: var(--color-accent);
+  cursor: pointer;
+}
+.tour-speed-value {
+  min-width: 2.6em;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink-secondary);
+}
+.tour-unread {
+  margin: 24px 16px;
+  font-size: 14px;
+  color: var(--color-negative);
+}
+.tour-wider {
+  grid-area: wider;
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-ink-tertiary);
+}
+
+/* Below the width: a movie (P6). No toggle, so the caption takes its column. */
+.tour-frame.movie .tour-strip {
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas:
+    'head head head'
+    'dots dots dots'
+    'say reset speed'
+    'wider wider wider';
+  column-gap: 12px;
+  padding: 10px 12px 8px;
+}
+.tour-frame.movie .tour-seg {
+  display: none;
+}
+.tour-frame.movie .tour-say {
+  font-size: 13px;
+}
+.tour-frame.movie .tour-say .of {
+  display: none;
+}
+.tour-frame.movie .tour-title {
+  font-size: 17px;
+}
+.tour-frame.movie .tour-about {
+  font-size: 12px;
+}
+.tour-frame.movie .tour-speed-label {
+  display: none;
+}
+.tour-frame.movie .tour-speed input {
+  width: 56px;
+}
+
+/* A phone: the caption gets the strip's whole width, and the dots share a row
+   with Reset and the speed rather than taking one of their own (M33 U3). */
+@container tour (max-width: 560px) {
+  .tour-frame.movie .tour-strip {
+    grid-template-areas:
+      'head head head'
+      'say say say'
+      'dots reset speed'
+      'wider wider wider';
+  }
+  .tour-frame.movie .tour-dots {
+    margin: 0;
+  }
+  .tour-frame.movie .tour-say {
+    padding: 6px 0 4px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-app,
+  .tour-frame.movie .tour-app {
+    transition: none;
+  }
+  .tour-ring {
+    transition: opacity var(--duration-base);
+  }
+  .tour-ring.press,
+  .tour-ring.press::after,
+  .tour-fade > .in,
+  .tour-line.new {
+    animation: none;
+  }
+  .tour-fade > .out {
+    display: none;
+  }
+  .tour-dot i {
+    transition: none;
+  }
+  /* The outline appears whole rather than drawing itself. */
+  .tour-look.drawn rect,
+  .tour-drawn rect {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .tour-dots .done {
+    transition: none;
+  }
+}

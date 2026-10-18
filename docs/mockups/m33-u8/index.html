@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Emerald — where what you and an AI worked out goes to stay true</title>
+    <!--
+      M33 U8a: a mockup of Emerald's page, getemerald.dev, for the author to approve
+      before M33 U8 ports it. A static page in the app's look (the tokens are copied
+      from src/ui/theme/tokens.css, light and dark), readable from 375 to 1440 wide.
+
+      Second pass (the author, 2026-10-12): the first pass fell back to the system
+      face, so the app's type ships beside the page (fonts/, the two weights the app
+      uses); and the page is laid out as the app's roadmap — the timeline on the left,
+      in the sidebar's plane, solid to the row you are at and dashed after, its dot
+      live in accent and advancing as you scroll; every section is a row of it, and a
+      row's dot is a link to its section. The drawing is the app's own `.fc-tl` from
+      tokens.css, the tones `src/ui/formats/tone.ts`. The proposals of the first pass
+      were accepted as written and their marks are gone: the words are the page's.
+
+      The four tours are the real frame from a local `npm run build:demo`, embedded
+      by M33 U4's contract: `?tour=<name>&autoplay=1`, referrerpolicy=no-referrer,
+      allow="". The build is served at http://127.0.0.1:4180/ (the `demo-static`
+      launcher) and this page at http://localhost:4189/ (`page-mockup`): two hosts,
+      as on the real site. `?demo=<url>` points the frames at another build.
+
+      Nothing leaves the origin but the frames' own requests to that folder: the
+      fonts are beside the page, no script comes from anywhere, and the form at the
+      foot sends nothing. The form and the count are drawn, not wired.
+    -->
+    <style>
+      /* The app's type, the two weights it uses, beside the page (D-022: never a font link). */
+      @font-face {
+        font-family: "IBM Plex Sans";
+        font-style: normal;
+        font-weight: 400;
+        font-display: swap;
+        src: url("fonts/ibm-plex-sans-latin-400-normal.woff2") format("woff2");
+      }
+      @font-face {
+        font-family: "IBM Plex Sans";
+        font-style: normal;
+        font-weight: 500;
+        font-display: swap;
+        src: url("fonts/ibm-plex-sans-latin-500-normal.woff2") format("woff2");
+      }
+
+      /* The tokens, verbatim from src/ui/theme/tokens.css (the values live there;
+         this copy is the mockup's and goes when the page is built in the repo). */
+      :root {
+        --font-sans: "IBM Plex Sans", "IBM Plex Sans Hebrew", system-ui, sans-serif;
+        --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+        --color-background: #ffffff;
+        --color-surface: #f7f7f6;
+        --color-elevated: #ffffff;
+        --color-ink: #111111;
+        --color-ink-secondary: #6b6b6b;
+        --color-ink-tertiary: #a0a09c;
+        --color-hairline: #ececea;
+        --color-hairline-strong: #d9d9d6;
+        --color-accent: #07805f;
+        --color-accent-ink: #ffffff;
+        --color-accent-hover: #05664b;
+        --color-accent-soft: #e8f6f1;
+        --color-action: #07805f;
+        --color-action-ink: #ffffff;
+        --color-action-hover: #05664b;
+        --color-negative: #c4342b;
+        --color-positive: #1f7a4d;
+        --radius-full: 9999px;
+        --duration-base: 180ms;
+        --duration-enter: 260ms;
+        --duration-fade: 150ms;
+        --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+        color-scheme: light;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --color-background: #0b0b0c;
+          --color-surface: #151517;
+          --color-elevated: #1b1b1e;
+          --color-ink: #f2f2f0;
+          --color-ink-secondary: #a1a1a0;
+          --color-ink-tertiary: #6a6a6c;
+          --color-hairline: #262629;
+          --color-hairline-strong: #34343a;
+          --color-accent: #34d399;
+          --color-accent-ink: #06231a;
+          --color-accent-hover: #5ee0b0;
+          --color-accent-soft: #10312a;
+          --color-action: #34d399;
+          --color-action-ink: #06231a;
+          --color-action-hover: #5ee0b0;
+          --color-negative: #e5675e;
+          --color-positive: #4caf7d;
+          color-scheme: dark;
+        }
+      }
+      :root[data-theme="dark"] {
+        --color-background: #0b0b0c;
+        --color-surface: #151517;
+        --color-elevated: #1b1b1e;
+        --color-ink: #f2f2f0;
+        --color-ink-secondary: #a1a1a0;
+        --color-ink-tertiary: #6a6a6c;
+        --color-hairline: #262629;
+        --color-hairline-strong: #34343a;
+        --color-accent: #34d399;
+        --color-accent-ink: #06231a;
+        --color-accent-hover: #5ee0b0;
+        --color-accent-soft: #10312a;
+        --color-action: #34d399;
+        --color-action-ink: #06231a;
+        --color-action-hover: #5ee0b0;
+        --color-negative: #e5675e;
+        --color-positive: #4caf7d;
+        color-scheme: dark;
+      }
+
+      * { box-sizing: border-box; }
+      html {
+        background: var(--color-background);
+        color: var(--color-ink);
+        font-family: var(--font-sans);
+        font-size: 16px;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+        scroll-behavior: smooth;
+      }
+      body { margin: 0; }
+      a { color: var(--color-accent); text-decoration: underline; text-underline-offset: 2px; }
+      a:hover { color: var(--color-accent-hover); }
+      :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+      h1, h2, h3 { margin: 0; font-weight: 500; letter-spacing: -0.01em; }
+      p { margin: 0 0 1em; }
+      .label {
+        display: block;
+        font-size: 0.6875rem;
+        line-height: 1.3;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        font-weight: 500;
+        color: var(--color-ink-secondary);
+        margin-bottom: 8px;
+      }
+      .secondary { color: var(--color-ink-secondary); }
+      .caption { font-size: 0.8125rem; line-height: 1.4; color: var(--color-ink-secondary); }
+      .num { font-variant-numeric: tabular-nums; }
+
+      /* ------------------------------------------------------------------
+         The app's shape: the rail in the sidebar's plane (`surface`), the
+         content on `background`, a hairline between them. From 960 px the rail
+         is the roadmap down the left; below it is a strip across the top.
+         ------------------------------------------------------------------ */
+      .app { display: grid; grid-template-columns: minmax(0, 1fr); min-height: 100vh; }
+      .rail {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: var(--color-surface);
+        border-bottom: 1px solid var(--color-hairline);
+      }
+      .rail-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 40px;
+        padding: 0 16px;
+        font-weight: 500;
+      }
+      .rail-head .mark { width: 20px; height: 20px; flex: none; }
+      .rail-head .now { color: var(--color-ink-secondary); font-weight: 400; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .rail-foot { display: none; }
+
+      /* The strip's dots: the app's 8px `.fc-dot`, each a link to its row. */
+      .strip { display: flex; gap: 6px; margin-left: auto; padding: 0; list-style: none; flex: none; }
+      .strip a { display: block; padding: 6px 0; }
+      .strip .dot {
+        display: block;
+        width: 8px;
+        height: 8px;
+        border-radius: var(--radius-full);
+        box-sizing: border-box;
+        border: 1.5px solid var(--color-hairline-strong);
+        background: transparent;
+        transition: background-color var(--duration-enter) var(--ease-out), border-color var(--duration-enter) var(--ease-out);
+      }
+      .strip [data-tone="done"] .dot { background: var(--color-ink); border-color: var(--color-ink); }
+      .strip [data-tone="live"] .dot { background: var(--color-accent); border-color: var(--color-accent); }
+      .tl { display: none; }
+
+      @media (min-width: 960px) {
+        .app { grid-template-columns: 280px minmax(0, 1fr); }
+        .rail {
+          height: 100vh;
+          overflow: auto;
+          border-bottom: 0;
+          border-right: 1px solid var(--color-hairline);
+          display: flex;
+          flex-direction: column;
+        }
+        .rail-head { height: 40px; border-bottom: 1px solid var(--color-hairline); }
+        .rail-head .now { display: none; }
+        .strip { display: none; }
+        .rail-foot {
+          display: block;
+          margin-top: auto;
+          padding: 12px 16px 16px;
+          border-top: 1px solid var(--color-hairline);
+          font-size: 0.75rem;
+          color: var(--color-ink-secondary);
+        }
+
+        /* The timeline, as the app draws it (`.fc-tl` in tokens.css): one line
+           through a dot per row. Here the line is two: the whole way dashed,
+           and over it a solid one that reaches the live dot and grows as you
+           scroll — what you read is solid, what is ahead is dashed. */
+        .tl {
+          display: block;
+          position: relative;
+          margin: 16px 0 0;
+          padding: 8px 0 24px;
+          list-style: none;
+        }
+        .tl::before {
+          content: "";
+          position: absolute;
+          left: 35px;
+          top: 8px;
+          bottom: 24px;
+          border-left: 2px dashed var(--color-hairline-strong);
+        }
+        .tl .solid {
+          position: absolute;
+          left: 35px;
+          top: 8px;
+          height: 0;
+          border-left: 2px solid var(--color-ink-tertiary);
+          transition: height var(--duration-enter) var(--ease-out);
+        }
+        .tl li { position: relative; }
+        .tl a {
+          display: grid;
+          grid-template-columns: 40px minmax(0, 1fr);
+          column-gap: 12px;
+          align-items: start;
+          padding: 7px 16px 7px 16px;
+          min-height: 32px;
+          color: var(--color-ink-secondary);
+          text-decoration: none;
+          font-size: 0.875rem;
+          line-height: 1.3;
+        }
+        .tl a:hover { color: var(--color-ink); }
+        .tl [data-tone="live"] a { color: var(--color-ink); font-weight: 500; }
+        .tl .dot {
+          position: relative;
+          z-index: 1;
+          justify-self: center;
+          margin-top: 0;
+          width: 18px;
+          height: 18px;
+          border-radius: var(--radius-full);
+          box-sizing: border-box;
+          background: var(--color-background);
+          border: 2px solid var(--color-hairline-strong);
+          transition: background-color var(--duration-enter) var(--ease-out), border-color var(--duration-enter) var(--ease-out);
+        }
+        .tl [data-tone="done"] .dot { background: var(--color-ink); border-color: var(--color-ink); }
+        .tl [data-tone="live"] .dot { border-color: var(--color-accent); background: var(--color-accent-soft); }
+        .tl [data-tone="live"] .dot::after {
+          content: "";
+          position: absolute;
+          inset: 3px;
+          border-radius: var(--radius-full);
+          background: var(--color-accent);
+        }
+        .tl [data-tone="live"] .dot::before {
+          content: "";
+          position: absolute;
+          inset: -7px;
+          border-radius: var(--radius-full);
+          border: 1px solid var(--color-accent);
+          opacity: 0.35;
+        }
+        /* The row you arrived at pulses once, as a changed row does on the
+           roadmap; the class alternates so the next arrival replays it. */
+        .tl .pulse-a .dot::before { animation: tl-pulse-a 900ms var(--ease-out) 1; }
+        .tl .pulse-b .dot::before { animation: tl-pulse-b 900ms var(--ease-out) 1; }
+        @keyframes tl-pulse-a { from { transform: scale(0.55); opacity: 1; } to { transform: scale(1); opacity: 0.35; } }
+        @keyframes tl-pulse-b { from { transform: scale(0.55); opacity: 1; } to { transform: scale(1); opacity: 0.35; } }
+        .tl .ref { display: block; font-size: 0.6875rem; letter-spacing: 0.08em; color: var(--color-ink-tertiary); font-variant-numeric: tabular-nums; }
+      }
+
+      /* ------------------------------------------------------------------
+         The rows: every section is a row of the roadmap. A row fades in the
+         first time it is reached, and nothing else moves.
+         ------------------------------------------------------------------ */
+      .prose, .wide { margin: 0 auto; padding: 0 16px; }
+      .prose { max-width: calc(42rem + 32px); }
+      .wide { max-width: calc(66rem + 32px); }
+      .row { padding: 48px 0; opacity: 0; transition: opacity var(--duration-enter) var(--ease-out); }
+      .row.seen { opacity: 1; }
+      .row + .row { border-top: 1px solid var(--color-hairline); }
+      .row h2 { font-size: 1.5rem; line-height: 1.15; margin: 0 0 12px; }
+      .row p { font-size: 1.0625rem; line-height: 1.6; }
+      .row p.caption { font-size: 0.8125rem; line-height: 1.4; }
+      @media (min-width: 960px) { .row { padding: 64px 0; } }
+
+      /* The hero */
+      .hero { padding: 48px 0 40px; }
+      .hero .mark { display: block; width: 56px; height: 56px; margin-bottom: 24px; }
+      .hero h1 { font-size: 2.5rem; line-height: 1.05; letter-spacing: -0.02em; }
+      .hero .tagline { font-size: 1.375rem; line-height: 1.3; margin: 12px 0 32px; max-width: 30em; }
+      .hero .story p { font-size: 1.0625rem; line-height: 1.6; }
+      @media (min-width: 960px) {
+        .hero { padding: 96px 0 64px; }
+        .hero h1 { font-size: 3rem; }
+        .hero .tagline { font-size: 1.625rem; }
+      }
+
+      /* A tour: one sentence, then the real frame. From 690 px the frame draws
+         the app whole and can be taken over; below it plays as a watched crop,
+         so the phone's box is 440 px high rather than 16:10 (M33 U4's contract). */
+      .tour .lead { font-size: 1.125rem; line-height: 1.5; max-width: 42rem; margin: 0 0 16px; }
+      .tour .try { font-size: 1.5rem; line-height: 1.15; margin: 0 0 16px; }
+      .tour iframe {
+        display: block;
+        width: 100%;
+        height: 440px;
+        border: 1px solid var(--color-hairline);
+        background: var(--color-surface);
+      }
+      @media (min-width: 690px) {
+        .tour iframe { height: auto; aspect-ratio: 16 / 10; min-height: 440px; }
+      }
+
+      /* The AI half: where the recording goes. */
+      .recording {
+        display: grid;
+        place-items: center;
+        aspect-ratio: 16 / 9;
+        width: 100%;
+        border: 1px dashed var(--color-hairline-strong);
+        background: var(--color-surface);
+        padding: 24px;
+        text-align: center;
+        margin-bottom: 12px;
+      }
+      .recording .what { max-width: 32em; margin: 0 auto; }
+      .recording .figure { font-size: 1.5rem; font-variant-numeric: tabular-nums; margin: 8px 0 0; }
+      .recording .figure .failed { color: var(--color-negative); }
+      @media (max-width: 689px) { .recording { aspect-ratio: auto; } }
+
+      /* The foot: the form, drawn and not wired. */
+      .foot form { display: grid; gap: 16px; max-width: 32rem; }
+      .foot label { display: block; }
+      .foot input, .foot textarea {
+        display: block;
+        width: 100%;
+        margin-top: 6px;
+        font: inherit;
+        color: var(--color-ink);
+        background: var(--color-background);
+        border: 1px solid var(--color-hairline-strong);
+        border-radius: 0;
+        padding: 8px 10px;
+      }
+      .foot textarea { min-height: 5.5em; resize: vertical; }
+      .foot button {
+        justify-self: start;
+        font: inherit;
+        font-weight: 500;
+        color: var(--color-action-ink);
+        background: var(--color-action);
+        border: 0;
+        border-radius: 0;
+        padding: 8px 16px;
+        cursor: pointer;
+      }
+      .foot button:hover { background: var(--color-action-hover); }
+      .foot .sent { color: var(--color-ink-secondary); margin: 0; }
+      .count {
+        margin-top: 32px;
+        border: 1px dashed var(--color-hairline-strong);
+        padding: 12px 16px;
+        color: var(--color-ink-secondary);
+        max-width: 32rem;
+        font-size: 0.875rem;
+      }
+      footer { border-top: 1px solid var(--color-hairline); padding: 24px 0 48px; }
+      footer p { margin: 0; }
+
+      /* The mockup's own switch, for the author; not part of the page. */
+      .theme button {
+        font: inherit;
+        font-size: 0.75rem;
+        color: var(--color-ink-secondary);
+        background: transparent;
+        border: 0;
+        padding: 0;
+        margin-right: 10px;
+        cursor: pointer;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+      .theme button:hover { color: var(--color-ink); }
+
+      @media (prefers-reduced-motion: reduce) {
+        html { scroll-behavior: auto; }
+        * { transition: none !important; animation: none !important; }
+        .row { opacity: 1; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <nav class="rail" aria-label="The page, as a roadmap">
+        <div class="rail-head">
+          <svg class="mark" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#emerald-mark" /></svg>
+          <span>Emerald</span>
+          <span class="now" id="now"></span>
+          <ol class="strip" id="strip"></ol>
+        </div>
+        <ol class="tl" id="tl">
+          <div class="solid" id="solid"></div>
+        </ol>
+        <div class="rail-foot">
+          <div class="theme">Theme: <button type="button" data-theme-set="system">System</button><button type="button" data-theme-set="light">Light</button><button type="button" data-theme-set="dark">Dark</button></div>
+          <div>Mockup (M33 U8a). The tours play from <code id="there"></code>; the form sends nothing.</div>
+        </div>
+      </nav>
+
+      <main class="content">
+        <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+          <defs>
+            <g id="emerald-mark">
+              <path d="M12.3441 14.9647L21.5169 5.79187L25.0113 11.9071L18.4593 18.4591L12.3441 14.9647Z" fill="#6EE7B7"/>
+              <path d="M21.5168 5.79187H42.4832L38.9888 11.9071H25.0112L21.5168 5.79187Z" fill="#34D399"/>
+              <path d="M42.4832 5.79187L51.656 14.9647L45.5408 18.4591L38.9888 11.9071L42.4832 5.79187Z" fill="#12BC86"/>
+              <path d="M51.656 14.9647V49.0351L45.5408 45.5407V18.4591L51.656 14.9647Z" fill="#068C66"/>
+              <path d="M51.656 49.0353L42.4832 58.2081L38.9888 52.0929L45.5408 45.5409L51.656 49.0353Z" fill="#033A2B"/>
+              <path d="M42.4832 58.208H21.5168L25.0112 52.0928H38.9888L42.4832 58.208Z" fill="#05604A"/>
+              <path d="M21.5169 58.2081L12.3441 49.0353L18.4593 45.5409L25.0113 52.0929L21.5169 58.2081Z" fill="#0BA277"/>
+              <path d="M12.3441 49.0351V14.9647L18.4593 18.4591V45.5407L12.3441 49.0351Z" fill="#28CE95"/>
+              <path d="M18.4592 18.4591L25.0112 11.9071L28.5056 17.5855L24.1376 21.9535L18.4592 18.4591Z" fill="#A7F3D0"/>
+              <path d="M25.0112 11.9071H38.9888L35.4944 17.5855H28.5056L25.0112 11.9071Z" fill="#6EE7B7"/>
+              <path d="M38.9888 11.9071L45.5408 18.4591L39.8624 21.9535L35.4944 17.5855L38.9888 11.9071Z" fill="#34D399"/>
+              <path d="M45.5408 18.4591V45.5407L39.8624 42.0463V21.9535L45.5408 18.4591Z" fill="#0BA277"/>
+              <path d="M45.5408 45.5407L38.9888 52.0927L35.4944 46.4143L39.8624 42.0463L45.5408 45.5407Z" fill="#04503C"/>
+              <path d="M38.9888 52.0927H25.0112L28.5056 46.4143H35.4944L38.9888 52.0927Z" fill="#077A5B"/>
+              <path d="M25.0112 52.0927L18.4592 45.5407L24.1376 42.0463L28.5056 46.4143L25.0112 52.0927Z" fill="#12BC86"/>
+              <path d="M18.4592 45.5407V18.4591L24.1376 21.9535V42.0463L18.4592 45.5407Z" fill="#4ADEB0"/>
+              <path d="M24.1376 21.9536L28.5056 17.5856H35.4944L39.8624 21.9536V42.0464L35.4944 46.4144H28.5056L24.1376 42.0464V21.9536Z" fill="url(#facet)"/>
+              <path d="M27.1952 20.2062H35.9312L35.0576 21.735H26.3216L27.1952 20.2062Z" fill="white" fill-opacity="0.5"/>
+              <path d="M36.8048 20.6431H38.552L37.6784 21.9535H35.9312L36.8048 20.6431Z" fill="white" fill-opacity="0.3"/>
+            </g>
+            <linearGradient id="facet" x1="25.448" y1="18.4592" x2="38.9888" y2="45.5408" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#E8FCF2"/><stop offset="1" stop-color="#34D399"/>
+            </linearGradient>
+          </defs>
+        </svg>
+
+        <section class="row hero" id="story" data-row="Where it came from">
+          <div class="prose">
+            <svg class="mark" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><use href="#emerald-mark" /></svg>
+            <h1>Emerald</h1>
+            <p class="tagline">Where what you and an AI worked out goes to stay true — in a file you own.</p>
+            <div class="story">
+              <p>I kept my notes in Notion for years. It was clunky, and everything I wrote sat on their servers. Obsidian gave me my files back, but no structure: a note is a note, and nothing says when it stopped being true. Excel had the structure, and it held up right until things started to connect, a receipt to a charge, a paycheck to the hours behind it. Then it stopped adding up, quietly.</p>
+              <p>Emerald is what I built instead.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="row tour" id="receipt" data-row="The receipt">
+          <div class="wide">
+            <h2 class="try">Try to make it wrong.</h2>
+            <p class="lead">Four short tours of the real app, on made-up figures. Each plays by itself; on a wide enough screen, stop it anywhere and take over.</p>
+            <span class="label">1 · The receipt</span>
+            <p class="lead">You kept the receipt from the grocery store, and the card statement just came: do they agree?</p>
+            <iframe data-query="?tour=custom&autoplay=1" title="Emerald, a guided tour: did the card charge what the receipt says?" referrerpolicy="no-referrer" allow="" loading="lazy"></iframe>
+          </div>
+        </section>
+
+        <section class="row tour" id="ledger-tour" data-row="Where the money went">
+          <div class="wide">
+            <span class="label">2 · The ledger</span>
+            <p class="lead">September's pay is in and the card statement just came, and you want to know where it all went.</p>
+            <iframe data-query="?tour=ledger&autoplay=1" title="Emerald, a guided tour: where did this month's money go?" referrerpolicy="no-referrer" allow="" loading="lazy"></iframe>
+          </div>
+        </section>
+
+        <section class="row tour" id="development-tour" data-row="The project answers first">
+          <div class="wide">
+            <span class="label">3 · The development pack</span>
+            <p class="lead">The model building your app reads what the project already decided, and writes down what you decide next.</p>
+            <iframe data-query="?tour=development&autoplay=1" title="Emerald, a guided tour: ask for a feature, and the project answers first" referrerpolicy="no-referrer" allow="" loading="lazy"></iframe>
+          </div>
+        </section>
+
+        <section class="row tour" id="timesheet-tour" data-row="Every hour paid">
+          <div class="wide">
+            <span class="label">4 · The timesheet</span>
+            <p class="lead">You keep your hours on paper, September's paycheck just came, and you want to know whether every hour was paid.</p>
+            <iframe data-query="?tour=timesheet&autoplay=1" title="Emerald, a guided tour: was every hour I worked paid?" referrerpolicy="no-referrer" allow="" loading="lazy"></iframe>
+          </div>
+        </section>
+
+        <section class="row ai" id="model" data-row="A model does the reading">
+          <div class="wide">
+            <h2>A model does the reading</h2>
+            <div class="recording" role="img" aria-label="Where the recording goes: a model reads the receipt and Emerald catches the 12.00">
+              <div class="what">
+                <span class="label">Recording · 60 to 90 seconds · not made yet</span>
+                <p class="secondary">The same receipt, handed to a model as a photo. It writes the receipt and its four lines into the document through Emerald's MCP server, and links it to the card charge.</p>
+                <p class="figure">84.00 against 96.00 · <span class="failed">failed, off by 12.00</span></p>
+              </div>
+            </div>
+            <p class="caption">Same receipt as the first tour, same finding. There you typed it in; here a model reads it, and Emerald still says when it doesn't add up. <a href="../../page-recording.md">The recording's script.</a></p>
+          </div>
+        </section>
+
+        <section class="row" id="ideas" data-row="Known concepts, new ideas">
+          <div class="prose">
+            <h2>Integrating known concepts into new ideas</h2>
+            <p>Excel, other note taking apps, all claim to give order to chaos. AI and LLMs are part of the new chaos. They aim to give the user tools working on new ideas, increasing output, but not quality.</p>
+            <p>Emerald gives you a better way to interact and use AI to its full potential. But even if you don't use the AI, you still have a powerful tool for organizing your data.</p>
+          </div>
+        </section>
+
+        <section class="row" id="possibilities" data-row="Infinite possibilities">
+          <div class="prose">
+            <h2>Infinite possibilities</h2>
+            <p>Emerald is a framework for your own formats, and for the AI to read them. You can make a format for a grocery charge, a new project, a book, a paycheck, milestones, plans, ideas. You can make one for anything you want to keep true.</p>
+            <p>You can make packs of your own formats, integrating to ones provided by Emerald. The development pack allows multi-agent communication, long term memory, continuous work, and a way for one session to hand what it found to the next.</p>
+          </div>
+        </section>
+
+        <section class="row" id="ledger" data-row="The ledger">
+          <div class="prose">
+            <h2>The ledger</h2>
+            <p>The ledger is the pack Emerald grew out of: a complete personal-finance application, kept as declared formats. It reads the documents you already get, a card statement, a bank export, a payslip, a fund report, and files every charge. It knows a transfer from a spend and a monthly bill from a one-off, and every total it shows is a sum you can open to the rows.</p>
+            <p>Nothing connects to your bank. You give it the files, and it keeps them adding up.</p>
+          </div>
+        </section>
+
+        <section class="row" id="development" data-row="The development pack">
+          <div class="prose">
+            <h2>The development pack</h2>
+            <p>The development pack is a project's memory, as formats: milestones, units of work, decisions, open questions, and an inbox another project's session can write to. A model working on your project reads what was already decided before it builds, writes down what you decide next, and the next session, or another agent, starts from those rows rather than from a summary of a chat.</p>
+            <p>Emerald is built this way. Its own notes are a document in this pack, and the third tour above plays on one like it.</p>
+          </div>
+        </section>
+
+        <section class="row" id="local" data-row="Locality and security">
+          <div class="prose">
+            <h2>Locality and security</h2>
+            <p>Emerald runs on your machine, with no account and no server, and sends nothing anywhere itself. You can read it with ordinary tools, and you can back it up to a cloud service if you want. It is yours, and it stays that way.</p>
+          </div>
+        </section>
+
+        <section class="row foot" id="download" data-row="Something to download">
+          <div class="prose">
+            <h2>When there is something to download</h2>
+            <form>
+              <label>Email
+                <input type="email" name="email" autocomplete="email" />
+              </label>
+              <label>What would you use it for?
+                <textarea name="use"></textarea>
+              </label>
+              <button type="submit">Send</button>
+              <p class="sent" hidden>This is a mockup: nothing was sent.</p>
+            </form>
+            <p class="caption" style="margin-top: 12px">The address is for one thing: a note when there is a build to download. Nothing else is sent to it.</p>
+            <div class="count">
+              <span class="label">Where the count goes</span>
+              A privacy-respecting count of visits: no cookie, no identifier, a number. Drawn here; M33 U8 wires it and says in PRIVACY.md who processes it.
+            </div>
+          </div>
+        </section>
+
+        <footer>
+          <div class="prose">
+            <p class="caption">Emerald is free software under the AGPL-3.0, by <a href="https://kfireliyahu.com/">Kfir Raphael Eliyahu</a>. The source is on GitHub once the repository is public.</p>
+          </div>
+        </footer>
+      </main>
+    </div>
+
+    <script>
+      // The frames: the built demo, at another origin (M33 U4's embed page does the same).
+      const demo = new URLSearchParams(location.search).get('demo') ?? 'http://127.0.0.1:4180/'
+      document.getElementById('there').textContent = new URL(demo).origin
+      for (const frame of document.querySelectorAll('iframe[data-query]')) {
+        frame.src = new URL(frame.dataset.query, demo).href
+      }
+
+      // The roadmap: one row per section, drawn into the rail and the strip.
+      const rows = [...document.querySelectorAll('.row[data-row]')]
+      const tl = document.getElementById('tl')
+      const strip = document.getElementById('strip')
+      const solid = document.getElementById('solid')
+      const now = document.getElementById('now')
+      const items = rows.map((row, index) => {
+        const item = document.createElement('li')
+        item.dataset.tone = 'waiting'
+        item.innerHTML = `<a href="#${row.id}"><span class="dot" aria-hidden="true"></span><span><span class="ref">${String(index + 1).padStart(2, '0')}</span>${row.dataset.row}</span></a>`
+        tl.append(item)
+        const small = document.createElement('li')
+        small.dataset.tone = 'waiting'
+        small.innerHTML = `<a href="#${row.id}" title="${row.dataset.row}" aria-label="${row.dataset.row}"><span class="dot"></span></a>`
+        strip.append(small)
+        return { item, small }
+      })
+
+      // Where you are: the last row whose top has passed two fifths of the
+      // window. Rows before it are done, it is live, the rest wait; the solid
+      // line grows to its dot, and the dot pulses once on arrival.
+      let at = -1
+      let pulse = 'a'
+      function place() {
+        const mark = window.innerHeight * 0.4
+        let current = 0
+        rows.forEach((row, index) => { if (row.getBoundingClientRect().top <= mark) current = index })
+        if (window.innerHeight + window.scrollY >= document.body.scrollHeight - 2) current = rows.length - 1
+        if (current === at) return
+        at = current
+        items.forEach(({ item, small }, index) => {
+          const tone = index < at ? 'done' : index === at ? 'live' : 'waiting'
+          item.dataset.tone = tone
+          small.dataset.tone = tone
+          item.classList.remove('pulse-a', 'pulse-b')
+        })
+        pulse = pulse === 'a' ? 'b' : 'a'
+        items[at].item.classList.add(`pulse-${pulse}`)
+        const origin = tl.getBoundingClientRect().top
+        const first = items[0].item.querySelector('.dot').getBoundingClientRect().top - origin + 9
+        const dot = items[at].item.querySelector('.dot').getBoundingClientRect().top - origin + 9
+        solid.style.top = `${first}px`
+        solid.style.height = `${dot - first}px`
+        now.textContent = `· ${rows[at].dataset.row}`
+      }
+      // A row fades in the first time it is reached, and nothing else moves.
+      function reveal() {
+        const edge = window.innerHeight * 0.9
+        for (const row of rows) if (!row.classList.contains('seen') && row.getBoundingClientRect().top < edge) row.classList.add('seen')
+      }
+      let ticking = false
+      const onScroll = () => {
+        if (ticking) return
+        ticking = true
+        requestAnimationFrame(() => { ticking = false; place(); reveal() })
+      }
+      window.addEventListener('scroll', onScroll, { passive: true })
+      window.addEventListener('resize', onScroll)
+      place()
+      reveal()
+
+      // The mockup's theme switch: system, light or dark, kept nowhere.
+      for (const button of document.querySelectorAll('[data-theme-set]')) {
+        button.addEventListener('click', () => {
+          const theme = button.dataset.themeSet
+          if (theme === 'system') delete document.documentElement.dataset.theme
+          else document.documentElement.dataset.theme = theme
+        })
+      }
+
+      // The form is drawn, not wired: it sends nothing, and says so.
+      document.querySelector('.foot form').addEventListener('submit', (event) => {
+        event.preventDefault()
+        event.currentTarget.querySelector('.sent').hidden = false
+      })
+    </script>
+  </body>
+</html>

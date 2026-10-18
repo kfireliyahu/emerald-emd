@@ -1,0 +1,780 @@
+<meta charset="utf-8">
+<title>Emerald Transactions and Categories</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Hebrew:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap">
+<style>
+/* M28 U6 reuses U4/U5's tokens, rail and split-tile buttons verbatim (D-312, D-313), then adds
+   Transactions (By merchant, All rows), the row menu and Categories below. Layout: the mockup's
+   choice bar, the app window, then the sheets: the row menu's actions and who can do them,
+   Home against these screens, the picks, and the suggestions. */
+:root{
+  --bg:#ffffff;--surface:#f7f7f6;--elevated:#ffffff;--ink:#0a0a0a;--ink2:#6b6b6b;--ink3:#a3a3a3;
+  --hair:#e8e8e8;--hair2:#d6d6d3;--accent:#07805f;--accent-ink:#ffffff;--accent-hover:#05664b;
+  --accent-soft:#e8f6f1;--accent-deep:#055a43;--positive:#1f7a4d;--negative:#c4342b;
+  --pop:0 1px 2px rgba(10,10,10,.05),0 8px 24px rgba(10,10,10,.08);
+  --sans:'IBM Plex Sans','IBM Plex Sans Hebrew',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --micro:120ms;--base:180ms;--enter:260ms;--ease:cubic-bezier(.22,1,.36,1);
+  --in:#1f7a4d;--out:#c4342b;--saved:#0b4f35;--tax:#b45309;--warnbg:#fdf3e7;
+  /* category hues, choice 2 A: eleven, richer than today's greys, none of them a flow colour */
+  --k1:#3f74c9;--k2:#cf7f22;--k3:#21918c;--k4:#c4497e;--k5:#7b5cc9;--k6:#7f8f26;--k7:#2b97cc;--k8:#d4664a;--k9:#9a52a0;--k10:#5f7590;--k11:#a88a3e;--k0:#b5b5b0;
+  /* choice 2 B: one hue per group, children are steps of it */
+  --fa:#3f74c9;--fb:#cf7f22;--fc:#7b5cc9;--fd:#c4497e;--fe:#21918c;--ff:#5f7590;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0a0a0a;--surface:#141414;--elevated:#1a1a1b;--ink:#f5f5f5;--ink2:#9a9a9a;--ink3:#6b6b6b;
+  --hair:#262626;--hair2:#34343a;--accent:#34d399;--accent-ink:#06231a;--accent-hover:#5ee0b0;
+  --accent-soft:#10312a;--accent-deep:#1fae7d;--positive:#4caf7d;--negative:#e5675e;
+  --pop:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.55);
+  --in:#5cc98c;--out:#e5675e;--saved:#2f9e6a;--tax:#f59e0b;--warnbg:#2a1d0b;
+  --k1:#7aa5ee;--k2:#f0a554;--k3:#4cc2bb;--k4:#ec7fae;--k5:#a78bf0;--k6:#b2c25a;--k7:#62bfee;--k8:#f08f74;--k9:#c98bd0;--k10:#9aaec8;--k11:#d4b46a;--k0:#55555a;
+  --fa:#7aa5ee;--fb:#f0a554;--fc:#a78bf0;--fd:#ec7fae;--fe:#4cc2bb;--ff:#9aaec8;color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0a0a0a;--surface:#141414;--elevated:#1a1a1b;--ink:#f5f5f5;--ink2:#9a9a9a;--ink3:#6b6b6b;
+  --hair:#262626;--hair2:#34343a;--accent:#34d399;--accent-ink:#06231a;--accent-hover:#5ee0b0;
+  --accent-soft:#10312a;--accent-deep:#1fae7d;--positive:#4caf7d;--negative:#e5675e;
+  --pop:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.55);
+  --in:#5cc98c;--out:#e5675e;--saved:#2f9e6a;--tax:#f59e0b;--warnbg:#2a1d0b;
+  --k1:#7aa5ee;--k2:#f0a554;--k3:#4cc2bb;--k4:#ec7fae;--k5:#a78bf0;--k6:#b2c25a;--k7:#62bfee;--k8:#f08f74;--k9:#c98bd0;--k10:#9aaec8;--k11:#d4b46a;--k0:#55555a;
+  --fa:#7aa5ee;--fb:#f0a554;--fc:#a78bf0;--fd:#ec7fae;--fe:#4cc2bb;--ff:#9aaec8;color-scheme:dark}
+html{background:var(--bg)}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input,select{font:inherit;color:inherit}
+.mono{font-family:var(--mono);font-size:12px}
+.label{font-size:11px;line-height:1.3;letter-spacing:.08em;font-weight:500;text-transform:uppercase;color:var(--ink2)}
+.he{font-family:'IBM Plex Sans Hebrew',var(--sans);unicode-bidi:isolate}
+.c-in{color:var(--in)}.c-out{color:var(--out)}
+
+/* the mockup's page */
+.page{max-width:1320px;margin:0 auto;padding-block:32px 96px;padding-inline:16px;display:flex;flex-direction:column;gap:32px}
+.intro{display:flex;flex-direction:column;gap:8px;max-width:76ch}
+.intro h1{margin:0;font-size:24px;font-weight:500;letter-spacing:-.01em;text-wrap:balance}
+.intro p{margin:0;color:var(--ink2)}
+.controls{display:flex;flex-wrap:wrap;gap:16px 28px;align-items:flex-end;padding:16px;background:var(--surface)}
+.ctl{display:flex;flex-direction:column;gap:6px}
+.seg{display:flex;flex-wrap:wrap}
+.seg button{height:30px;padding:0 12px;border:1px solid var(--hair2);margin-left:-1px;font-size:13px;color:var(--ink2);transition:background-color var(--micro),color var(--micro)}
+.seg button:first-child{margin-left:0}
+.seg button.on{background:var(--ink);color:var(--bg);border-color:var(--ink);position:relative;z-index:1}
+.choice-tag{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;margin-right:6px;font-size:10px;font-weight:500;border:1px solid currentColor}
+.stage{overflow-x:auto;border:1px solid var(--hair2)}
+.h2{margin:0;font-size:18px;font-weight:500;letter-spacing:-.005em}
+.note{color:var(--ink2);max-width:76ch;margin:0}
+
+/* the app window */
+.win{min-width:1100px;height:840px;display:grid;grid-template-rows:40px 1fr;background:var(--bg);position:relative}
+.titlebar{display:flex;align-items:center;gap:16px;padding:0 12px 0 16px;background:var(--surface);border-bottom:1px solid var(--hair)}
+.doc{display:flex;align-items:center;gap:8px;font-size:13px}
+.dirty{width:7px;height:7px;border-radius:50%;border:1.5px solid var(--ink2)}
+.dirty.on{background:var(--ink2)}
+.caps{margin-left:auto;display:flex;gap:2px;color:var(--ink3)}
+.caps span{width:36px;height:28px;display:flex;align-items:center;justify-content:center}
+.body{display:grid;grid-template-columns:216px 1fr;min-height:0}
+.side{background:var(--surface);border-right:1px solid var(--hair);display:flex;flex-direction:column;padding:8px 0;overflow:auto}
+.nitem{height:32px;display:flex;align-items:center;gap:10px;padding:0 14px;color:var(--ink2);font-size:13px;position:relative;width:100%;text-align:left;transition:color var(--micro),background-color var(--micro)}
+.nitem:hover{color:var(--ink)}
+.nitem svg{flex:none}
+.nitem.open{color:var(--ink)}
+.nitem.on{color:var(--ink);background:var(--accent-soft)}
+.nitem.on::before{content:"";position:absolute;inset:0 auto 0 0;width:2px;background:var(--accent)}
+.nchild{height:28px;padding-left:40px}
+.nchild.on{color:var(--ink);background:var(--accent-soft)}
+.nchild.on::before{content:"";position:absolute;inset:0 auto 0 0;width:2px;background:var(--accent)}
+.ncount{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--ink2);padding:0 6px;border:1px solid var(--hair2)}
+.nsep{height:1px;background:var(--hair);margin:8px 14px}
+.main{min-width:0;min-height:0;overflow:auto;position:relative}
+.screen{padding:24px 32px 48px;display:flex;flex-direction:column;gap:20px;max-width:1180px}
+.screen.enter{animation:fadein 150ms var(--ease)}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.ph{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap;padding-bottom:16px;border-bottom:1px solid var(--hair)}
+.ph h1{margin:0;font-size:24px;font-weight:500;line-height:1.15;letter-spacing:-.01em}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.pager{display:flex;align-items:center;gap:4px}
+.pg{width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink2);border:1px solid transparent}
+.pg:hover:not(:disabled){border-color:var(--hair2);color:var(--ink)}
+.pg:disabled{opacity:.3;cursor:default}
+.pgl{font-size:12px;color:var(--ink2);padding:0 4px;min-width:64px}
+.pgl.r{text-align:right}
+.vseg{display:flex}
+.vseg button{height:32px;padding:0 14px;border:1px solid var(--hair2);margin-left:-1px;font-size:13px;color:var(--ink2);display:inline-flex;gap:8px;align-items:center}
+.vseg button:first-child{margin-left:0}
+.vseg button.on{color:var(--ink);border-color:var(--accent);background:var(--accent-soft);position:relative;z-index:1}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:11px;line-height:1.3;letter-spacing:.06em;font-weight:500;text-transform:uppercase;padding:2px 7px;border:1px solid var(--hair2);color:var(--ink2);white-space:nowrap}
+.chip.warn{color:var(--tax);border-color:color-mix(in srgb,var(--tax) 45%,transparent)}
+.chip.dash{border-style:dashed}
+
+/* buttons, the approved split tile */
+.btn{position:relative;display:inline-flex;align-items:center;gap:12px;height:36px;padding:0 14px 0 0;font-size:13px;font-weight:500;letter-spacing:.01em;white-space:nowrap;transition:color var(--micro),background-color var(--micro)}
+.btn.sm{height:30px;padding:0 10px 0 0;gap:10px;font-size:12px}
+.btn .tile{width:36px;align-self:stretch;display:inline-flex;align-items:center;justify-content:center;transition:background-color var(--micro)}
+.btn.sm .tile{width:30px}
+.btn .count{font-family:var(--mono);font-size:11px;padding:1px 6px;margin-left:2px}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.primary .tile{background:var(--accent-deep)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.primary:hover .tile{background:var(--accent)}
+.btn.primary .count{background:rgba(0,0,0,.16)}
+.btn.secondary{background:var(--surface);color:var(--ink);box-shadow:inset 0 0 0 1px var(--hair)}
+.btn.secondary .tile{background:var(--hair);color:var(--ink2)}
+.btn.secondary:hover .tile{background:var(--accent);color:var(--accent-ink)}
+.btn.notile{padding:0 14px}
+.btn.ghost{padding:0 4px;color:var(--accent);background:none}
+.btn.ghost .tile{display:contents}
+.btn.ghost::after{content:"";position:absolute;left:4px;right:4px;bottom:6px;height:1px;background:currentColor;transform:scaleX(0);transform-origin:left;transition:transform var(--base) var(--ease)}
+.btn.ghost:hover::after{transform:scaleX(1)}
+.ibtn{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;color:var(--ink3);border:1px solid transparent}
+.ibtn:hover{color:var(--ink);border-color:var(--hair2)}
+.kbd{font-family:var(--mono);font-size:10px;padding:0 5px;border:1px solid var(--hair2);color:var(--ink2);line-height:16px;display:inline-block}
+
+/* category marks, by choice 2 */
+.cm{display:inline-flex;align-items:center;gap:7px;min-width:0;white-space:nowrap}
+.cm .dot{width:9px;height:9px;flex:none;border-radius:50%;background:var(--c)}
+.colC .cm.tint{padding:2px 8px 2px 6px;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--ink)}
+.cm.none .dot{background:none;border:1.5px dashed var(--ink3)}
+.cm.none{color:var(--ink2)}
+
+/* hero line */
+.hero{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)}
+.hero > div{padding:12px 16px 12px 0;display:flex;flex-direction:column;gap:2px;min-width:0}
+.hero > div + div{padding-left:16px;border-left:1px solid var(--hair)}
+.hero .v{font-size:22px;font-weight:500;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1.2}
+.hero small{color:var(--ink2);font-size:12px}
+.meter{height:6px;background:var(--hair);display:flex;gap:2px;margin-top:6px}
+.meter i{display:block;height:100%}
+
+/* By merchant */
+.queue{display:grid;grid-template-columns:minmax(0,1fr) 248px;gap:24px;align-items:start}
+.mrow{display:grid;grid-template-columns:minmax(0,1.5fr) 64px 108px minmax(0,1.5fr) auto;gap:14px;align-items:center;min-height:52px;border-bottom:1px solid var(--hair);padding:0 8px;cursor:default;position:relative;transition:background-color var(--micro)}
+.mrow:hover{background:var(--surface)}
+.mrow.on{background:var(--accent-soft)}
+.mrow.on::before{content:"";position:absolute;inset:0 auto 0 0;width:2px;background:var(--accent)}
+.mrow .nm{display:flex;flex-direction:column;min-width:0}
+.mrow .nm small{color:var(--ink2);font-size:12px}
+.mrow .n{font-family:var(--mono);font-size:12px;color:var(--ink2);text-align:right}
+.mrow .amt{text-align:right;font-variant-numeric:tabular-nums}
+.hint{display:flex;align-items:center;gap:8px;min-width:0;font-size:13px}
+.hint small{color:var(--ink2);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hint .take{display:inline-flex;align-items:center;gap:8px;padding:3px 8px 3px 6px;border:1px solid var(--hair2);transition:border-color var(--micro),background-color var(--micro)}
+.hint .take:hover{border-color:var(--accent);background:var(--accent-soft)}
+.mrow .acts{display:flex;gap:4px;align-items:center}
+.mrow.gone{animation:gone 260ms var(--ease) forwards}
+@keyframes gone{to{opacity:0;transform:translateX(16px)}}
+.charges{grid-column:1/-1;padding:4px 0 12px 0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 24px}
+.charges div{display:flex;justify-content:space-between;gap:12px;font-size:12px;color:var(--ink2);border-bottom:1px dashed var(--hair);height:26px;align-items:center}
+.charges b{font-weight:400;color:var(--ink);font-variant-numeric:tabular-nums}
+.targets{display:flex;flex-direction:column;gap:2px;position:sticky;top:0}
+.targets .t{display:flex;align-items:center;justify-content:space-between;gap:8px;height:30px;padding:0 8px;border:1px solid transparent;font-size:13px;transition:border-color var(--micro),background-color var(--micro)}
+.targets .t:hover,.targets .t.over{border-color:var(--accent);background:var(--accent-soft)}
+.targets .t .k{font-family:var(--mono);font-size:10px;color:var(--ink3)}
+.offer{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;background:var(--accent-soft);animation:fadein 200ms var(--ease)}
+.offer .t{flex:1;min-width:0}
+.keys{display:flex;gap:16px;flex-wrap:wrap;color:var(--ink2);font-size:12px;padding-top:12px;border-top:1px solid var(--hair)}
+.tick{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--ink2);cursor:pointer;user-select:none}
+.tick .bx{width:14px;height:14px;border:1.5px solid var(--hair2);display:inline-flex;align-items:center;justify-content:center}
+.tick.on .bx{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+
+/* All rows */
+.filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.fbox{height:32px;border:1px solid var(--hair2);background:var(--bg);padding:0 10px;display:inline-flex;align-items:center;gap:8px;color:var(--ink2);font-size:13px}
+.fbox.search{width:240px}
+table{width:100%;border-collapse:collapse}
+th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;color:var(--ink3);text-align:left;padding:8px 10px;border-bottom:1px solid var(--hair);white-space:nowrap}
+td{padding:0 10px;height:38px;border-bottom:1px solid var(--hair);white-space:nowrap}
+th.r,td.r{text-align:right}
+td.r{font-variant-numeric:tabular-nums}
+td.mer{max-width:280px;overflow:hidden;text-overflow:ellipsis}
+td.acc{color:var(--ink2);font-size:12px}
+td.dt{color:var(--ink2);font-variant-numeric:tabular-nums;font-size:13px}
+tbody tr{transition:background-color var(--micro);position:relative}
+tbody tr:hover{background:var(--surface)}
+tbody tr.on{background:var(--accent-soft)}
+tbody tr.on td:first-child{box-shadow:inset 2px 0 0 var(--accent)}
+tbody tr.picked{background:color-mix(in srgb,var(--accent-soft) 70%,transparent)}
+tr .more{opacity:0;transition:opacity var(--micro)}
+tr:hover .more,tr.on .more{opacity:1}
+tr.out td.r .a{text-decoration:line-through;text-decoration-color:var(--ink3);color:var(--ink3)}
+tr.out td.mer{color:var(--ink2)}
+.notefld{display:flex;gap:8px;align-items:center;padding:6px 0}
+.notefld input{flex:1;height:30px;border:1px solid var(--accent);background:var(--bg);padding:0 10px}
+.cb{width:14px;height:14px;border:1.5px solid var(--hair2);display:inline-flex;align-items:center;justify-content:center;vertical-align:middle}
+.cb.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.selbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:10px 14px;background:var(--surface);border:1px solid var(--hair)}
+.arrived{animation:arrive 900ms var(--ease) 1}
+@keyframes arrive{0%{background:var(--accent-soft)}100%{background:transparent}}
+
+/* the row menu */
+.menu{position:absolute;z-index:20;min-width:268px;background:var(--elevated);border:1px solid var(--hair2);box-shadow:var(--pop);padding:4px 0;font-size:13px;animation:menuin 120ms var(--ease)}
+@keyframes menuin{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}
+.menu .mh{padding:6px 12px 6px;color:var(--ink2);font-size:12px;border-bottom:1px solid var(--hair);margin-bottom:4px;display:flex;flex-direction:column;gap:1px;max-width:320px}
+.menu .mh b{color:var(--ink);font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mi{display:grid;grid-template-columns:18px minmax(0,1fr) auto;gap:10px;align-items:center;width:100%;min-height:30px;padding:0 12px;text-align:left;color:var(--ink);position:relative}
+.mi svg{color:var(--ink2)}
+.mi:hover,.mi.hot{background:var(--accent-soft)}
+.mi:hover svg{color:var(--accent)}
+.mi small{display:block;color:var(--ink2);font-size:11px;line-height:1.3;padding-bottom:4px}
+.mi[disabled]{color:var(--ink3);cursor:default}
+.mi[disabled]:hover{background:none}
+.mi .sc{font-family:var(--mono);font-size:10px;color:var(--ink3)}
+.msep{height:1px;background:var(--hair);margin:4px 0}
+.sub{position:absolute;left:100%;top:-5px;min-width:220px;display:none}
+.mi.hot > .sub{display:block}
+.menu.flip .sub{left:auto;right:100%}
+
+/* Categories */
+.ktabs{display:flex;gap:0;border-bottom:1px solid var(--hair)}
+.ktabs button{height:36px;padding:0 14px;color:var(--ink2);font-size:13px;position:relative}
+.ktabs button.on{color:var(--ink)}
+.ktabs button.on::after{content:"";position:absolute;left:14px;right:14px;bottom:-1px;height:2px;background:var(--accent)}
+.ktabs .n{font-family:var(--mono);font-size:11px;color:var(--ink3);margin-left:6px}
+.cats{display:grid;grid-template-columns:minmax(0,1fr);gap:24px}
+.layB .cats{grid-template-columns:minmax(0,1fr) 380px}
+.grp{display:flex;flex-direction:column}
+.gh{display:flex;align-items:center;gap:10px;height:36px;border-bottom:1px solid var(--hair2)}
+.gh .label{color:var(--ink)}
+.gh .tot{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--ink2);font-size:13px}
+.crow{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 72px 96px 76px;gap:14px;align-items:center;height:40px;border-bottom:1px solid var(--hair);padding:0 6px 0 18px;position:relative;cursor:default;transition:background-color var(--micro)}
+.layB .crow{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) 96px 28px}
+.layB .crow .spk,.layB .crow .rl{display:none}
+.crow:hover{background:var(--surface)}
+.crow.on{background:var(--accent-soft)}
+.crow.on::before{content:"";position:absolute;inset:0 auto 0 0;width:2px;background:var(--accent)}
+.crow .bar{height:6px;background:var(--c)}
+.crow .amt{text-align:right;font-variant-numeric:tabular-nums}
+.crow .rl{font-size:12px;color:var(--ink2);text-align:right}
+.crow .acts{display:flex;gap:2px;justify-content:flex-end;opacity:0;transition:opacity var(--micro)}
+.crow:hover .acts,.crow.on .acts{opacity:1}
+.layB .crow .acts .ibtn:not(.mm){display:none}
+.unused{font-size:11px;color:var(--ink3);margin-left:8px}
+.swatch{width:22px;height:22px;border:2px solid transparent;display:inline-flex;align-items:center;justify-content:center;border-radius:50%}
+.swatch i{width:14px;height:14px;border-radius:50%;background:var(--c);display:block}
+.swatch.on{border-color:var(--ink)}
+.swatch.taken i{box-shadow:inset 0 0 0 2px var(--bg)}
+.pop{position:absolute;z-index:20;background:var(--elevated);border:1px solid var(--hair2);box-shadow:var(--pop);padding:12px;display:flex;flex-direction:column;gap:10px;width:248px;animation:menuin 120ms var(--ease)}
+.pop .sws{display:flex;flex-wrap:wrap;gap:6px}
+.detail{position:sticky;top:0;border:1px solid var(--hair);padding:18px;display:flex;flex-direction:column;gap:14px}
+.detail h3{margin:0;font-size:18px;font-weight:500;display:flex;align-items:center;gap:10px}
+.detail .big{font-size:26px;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.dl{display:flex;flex-direction:column}
+.dl div{display:flex;justify-content:space-between;gap:12px;height:30px;align-items:center;border-bottom:1px solid var(--hair);font-size:13px}
+.dl div span:last-child{font-variant-numeric:tabular-nums;color:var(--ink2)}
+.bars12{display:flex;align-items:flex-end;gap:3px;height:56px}
+.bars12 i{flex:1;background:var(--c);opacity:.45;display:block}
+.bars12 i:last-child{opacity:1}
+.fldrow{display:flex;gap:8px;align-items:center}
+.fldrow input{height:30px;border:1px solid var(--hair2);background:var(--bg);padding:0 10px;width:120px;font-variant-numeric:tabular-nums}
+
+/* suggestions layer */
+.sg{display:none}
+.sugg .sg{display:inline-flex}
+.stag{align-items:center;justify-content:center;height:18px;padding:0 6px;font-size:10px;font-weight:500;letter-spacing:.06em;border:1px dashed var(--tax);color:var(--tax);white-space:nowrap;vertical-align:middle}
+.s-only{display:none!important}
+.sugg .s-only{display:flex!important}
+.sugg tr.s-only{display:table-row!important}
+
+/* sheets below */
+.opens{display:flex;flex-direction:column}
+.oq{display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;padding:12px 0;border-bottom:1px solid var(--hair)}
+.oq b{font-weight:500}
+.oq p{margin:2px 0 0;color:var(--ink2)}
+.two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:900px){.two{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);padding:20px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.card ul{margin:0;padding-left:18px;color:var(--ink2);display:flex;flex-direction:column;gap:4px}
+.card h3{margin:0;font-size:15px;font-weight:500}
+.ptable{overflow-x:auto}
+.ptable td{white-space:normal;height:auto;padding:8px 10px;vertical-align:top}
+.yes{color:var(--positive)}.no{color:var(--ink3)}
+.rm *{animation:none!important;transition:none!important}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="page" id="root">
+  <header class="intro">
+    <div class="label">M28 U6 · mockup · for the author's judgement</div>
+    <h1>Transactions and Categories, in the frame Paychecks set</h1>
+    <p>By merchant becomes the main place to categorise: one decision per shop, one key to take the hint. Every row has a right-click menu with what can be done to it, leaving it out of the totals included. Categories get real colours and a screen that shows what each one holds. Home reads the month; these screens are where rows get worked on. Right-click any row in the window. Every figure and name is synthetic.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="Mockup controls">
+    <div class="ctl"><span class="label">Screen</span>
+      <div class="seg" data-ctl="screen"><button data-v="merchant" class="on">By merchant</button><button data-v="rows">All rows</button><button data-v="cats">Categories</button></div></div>
+    <div class="ctl"><span class="label">Choice 1 · Where By merchant lives</span>
+      <div class="seg" data-ctl="place"><button data-v="A" class="on"><span class="choice-tag">A</span>First page of Transactions</button><button data-v="B"><span class="choice-tag">B</span>A switch on one page</button><button data-v="C"><span class="choice-tag">C</span>Its own place in the rail</button></div></div>
+    <div class="ctl"><span class="label">Choice 2 · Category colours</span>
+      <div class="seg" data-ctl="col"><button data-v="A" class="on"><span class="choice-tag">A</span>Eleven hues, dots</button><button data-v="B"><span class="choice-tag">B</span>A hue per group</button><button data-v="C"><span class="choice-tag">C</span>Tinted labels</button></div></div>
+    <div class="ctl"><span class="label">Choice 3 · Categories screen</span>
+      <div class="seg" data-ctl="lay"><button data-v="A" class="on"><span class="choice-tag">A</span>One list</button><button data-v="B"><span class="choice-tag">B</span>List and a panel</button></div></div>
+    <div class="ctl"><span class="label">Choice 4 · Filing a merchant</span>
+      <div class="seg" data-ctl="rule"><button data-v="A" class="on"><span class="choice-tag">A</span>Then offer a rule</button><button data-v="B"><span class="choice-tag">B</span>Rule ticked by default</button></div></div>
+    <div class="ctl"><span class="label">Suggestions</span>
+      <div class="seg" data-ctl="sugg"><button data-v="off" class="on">Hidden</button><button data-v="on">Shown</button></div></div>
+    <div class="ctl"><span class="label">Theme</span>
+      <div class="seg" data-ctl="theme"><button data-v="system" class="on">System</button><button data-v="light">Light</button><button data-v="dark">Dark</button></div></div>
+    <div class="ctl"><span class="label">Motion</span>
+      <div class="seg" data-ctl="motion"><button data-v="full" class="on">Full</button><button data-v="reduced">Reduced</button></div></div>
+  </div>
+
+  <div class="stage"><div class="win" id="win">
+    <div class="titlebar">
+      <div class="doc"><span class="dirty" id="dirty" title="Saved"></span><span>household-2026.emd</span><span class="mono" id="saved" style="color:var(--ink3)">saved 09:14</span></div>
+      <div class="caps" aria-hidden="true"><span>&#8211;</span><span>&#9633;</span><span>&#10005;</span></div>
+    </div>
+    <div class="body">
+      <nav class="side" id="side" aria-label="Sections"></nav>
+      <main class="main" id="main" tabindex="-1"></main>
+    </div>
+    <div id="layer"></div>
+  </div></div>
+
+  <section style="display:flex;flex-direction:column;gap:12px">
+    <h2 class="h2">What a row can have done to it, and who can do it</h2>
+    <p class="note">Every action in the menu exists today, behind the detail panel, the selection bar or the merchant queue. The menu adds nothing to the document's writes; it puts them where the row is. The right column is D-227: what a conversation can already do through the plugin's tools.</p>
+    <div class="ptable"><table id="parity"></table></div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:12px">
+    <h2 class="h2">Home reads the month; these screens work on rows</h2>
+    <div class="two" id="split"></div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:8px">
+    <h2 class="h2">What needs your pick</h2>
+    <div class="opens" id="open"></div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:8px">
+    <h2 class="h2">Suggestions, yours to take or leave</h2>
+    <p class="note">Not part of the design until you say so. Switch <b style="font-weight:500;color:var(--ink)">Suggestions · Shown</b> above to see them in place, each marked with its number in orange.</p>
+    <div class="opens" id="sugglist"></div>
+  </section>
+</div>
+
+<script>
+(() => {
+const S = { screen:'merchant', place:'A', col:'A', lay:'A', rule:'A', sugg:'off', theme:'system', motion:'full',
+  month:'2026-08', sel:0, open:null, offer:null, filed:[], rowSel:null, picked:new Set(), noteOn:null, kind:'out', cat:'groceries', pop:null, catFilter:null, dirty:false };
+
+/* ---------- icons ---------- */
+const I = {
+ home:'<path d="M3 8l5-4.5L13 8v5H3z"/>', list:'<path d="M3 4h10M3 8h10M3 12h10"/>',
+ pay:'<path d="M4 2.5h6l2.5 2.5v8.5H4z"/><path d="M6.5 8h4M6.5 10.5h4"/>', plan:'<circle cx="8" cy="8" r="5"/><circle cx="8" cy="8" r="2"/>',
+ wealth:'<path d="M2.5 6l5.5-3 5.5 3-5.5 3z"/><path d="M2.5 9.5l5.5 3 5.5-3"/>', tag:'<path d="M2.5 2.5h5l6 6-5 5-6-6z"/><circle cx="5.5" cy="5.5" r=".8"/>',
+ grid:'<path d="M2.5 2.5h11v11h-11zM2.5 7h11M7 2.5v11"/>', link:'<path d="M6.5 9.5l3-3M5 7.5L3.5 9a2.1 2.1 0 003 3L8 10.5M8 5.5L9.5 4a2.1 2.1 0 013 3L11 8.5"/>',
+ gear:'<circle cx="8" cy="8" r="2.2"/><path d="M8 1.8v2M8 12.2v2M1.8 8h2M12.2 8h2M3.6 3.6L5 5M11 11l1.4 1.4M3.6 12.4L5 11M11 5l1.4-1.4"/>',
+ sort:'<path d="M3 4h7M3 8h5M3 12h3"/><path d="M12 3v10M10 11l2 2 2-2"/>',
+ left:'<path d="M10 3.5L5.5 8l4.5 4.5"/>', right:'<path d="M6 3.5l4.5 4.5L6 12.5"/>',
+ check:'<path d="M3.5 8.5l3 3 6-7"/>', more:'<circle cx="4" cy="8" r=".9"/><circle cx="8" cy="8" r=".9"/><circle cx="12" cy="8" r=".9"/>',
+ eyeoff:'<path d="M2 8s2.2-4 6-4 6 4 6 4-2.2 4-6 4-6-4-6-4z"/><path d="M3 13L13 3"/>', eye:'<path d="M2 8s2.2-4 6-4 6 4 6 4-2.2 4-6 4-6-4-6-4z"/><circle cx="8" cy="8" r="1.6"/>',
+ card:'<rect x="2" y="4" width="12" height="8.5"/><path d="M2 7h12"/>', note:'<path d="M3 3h10v7l-3 3H3z"/><path d="M10 13v-3h3"/>',
+ rule:'<path d="M3 4h10M3 8h6M3 12h4"/><path d="M11 10l1.5 1.5L15 9"/>', filter:'<path d="M2.5 3.5h11L9.5 8.5v4l-3 1v-5z"/>',
+ open:'<path d="M9 3h4v4M13 3L7.5 8.5M11 9.5V13H3V5h3.5"/>', copy:'<rect x="5" y="5" width="8" height="8"/><path d="M3 11V3h8"/>',
+ skip:'<path d="M4 3.5l6 4.5-6 4.5z"/><path d="M12 3.5v9"/>', bill:'<rect x="3" y="2.5" width="10" height="11"/><path d="M5.5 6h5M5.5 8.5h5M5.5 11h3"/>',
+ debt:'<path d="M3 12.5h10M4.5 12.5V7M8 12.5V7M11.5 12.5V7M2.5 6L8 3l5.5 3z"/>', search:'<circle cx="7" cy="7" r="4"/><path d="M10 10l3.5 3.5"/>',
+ palette:'<circle cx="8" cy="8" r="5.5"/><circle cx="6" cy="6" r=".8"/><circle cx="10" cy="6" r=".8"/><circle cx="6" cy="10" r=".8"/>',
+ merge:'<path d="M4 3v3c0 2 4 2 4 4v3M12 3v3c0 2-4 2-4 4"/>', move:'<path d="M3 8h10M10 5l3 3-3 3"/>', archive:'<rect x="2.5" y="3" width="11" height="3"/><path d="M3.5 6v7h9V6M6.5 8.5h3"/>',
+ trash:'<path d="M3 4.5h10M6 4.5V3h4v1.5M4.5 4.5l.7 9h5.6l.7-9"/>', edit:'<path d="M3 13l1-3.5 6.5-6.5 2.5 2.5L6.5 12z"/>', plus:'<path d="M8 3v10M3 8h10"/>',
+ cat:'<circle cx="5" cy="5" r="2"/><path d="M9 4h4.5M9 6.5h3M2.5 9.5h11M2.5 12.5h8"/>', undo:'<path d="M5 3L2.5 5.5 5 8"/><path d="M2.5 5.5h7a3.5 3.5 0 010 7H6"/>',
+};
+const ic = (n,s=16) => `<svg width="${s}" height="${s}" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" aria-hidden="true">${I[n]}</svg>`;
+const btn = (kind,label,icon,attrs='',count) => `<button class="btn ${kind}${icon?'':' notile'}" ${attrs}>${icon?`<span class="tile">${ic(icon)}</span>`:''}${label}${count!=null?`<span class="count">${count}</span>`:''}</button>`;
+const he = t => `<bdi class="he" dir="auto">${t}</bdi>`;
+const stag = n => `<span class="sg stag" title="Suggestion ${n}">S${n}</span>`;
+const ils = minor => { const neg=minor<0; const a=Math.abs(minor); return (neg?'−':'')+'₪'+Math.floor(a/100).toLocaleString('en-US')+'.'+String(a%100).padStart(2,'0'); };
+const ilsR = minor => (minor<0?'−':'')+'₪'+Math.round(Math.abs(minor)/100).toLocaleString('en-US');
+
+/* ---------- categories: synthetic taxonomy, groups own a hue for choice B ---------- */
+const GROUPS = [
+ ['living','Living','fa',[['housing','Housing & rent',1],['utilities','Utilities',7],['internet','Internet & mobile',3],['arnona','Municipal tax',11]]],
+ ['food','Food','fb',[['groceries','Groceries',2],['restaurants','Restaurants & cafes',8],['delivery','Delivery',11]]],
+ ['transport','Transport','fc',[['fuel','Fuel',5],['parking','Parking',10],['transit','Public transport',6]]],
+ ['health','Health','fd',[['pharmacy','Pharmacy',4],['doctors','Doctors',9]]],
+ ['leisure','Leisure & home','fe',[['shopping','Shopping & clothing',3],['kids','Childcare',6],['subs','Subscriptions',7],['fun','Entertainment',1]]],
+ ['money','Money moved','ff',[['cardbill','Card bill',10],['savings','To savings',5],['fees','Bank fees',8]]],
+];
+const CAT = {}; GROUPS.forEach(([gid,gname,fam,kids])=>kids.forEach(([id,name,k],i)=>CAT[id]={id,name,k,gid,gname,fam,step:i}));
+const STEP=[100,74,56,42];
+function cvar(id){ const c=CAT[id]; if(!c) return 'var(--k0)'; return S.col==='B' ? `color-mix(in srgb,var(--${c.fam}) ${STEP[c.step]}%,var(--bg))` : `var(--k${c.k})`; }
+function cm(id, extra=''){ if(!id) return `<span class="cm none"><span class="dot"></span>No category</span>`;
+  return `<span class="cm tint" style="--c:${cvar(id)}"><span class="dot"></span>${CAT[id].name}${extra}</span>`; }
+const RECENT = ['groceries','restaurants','fuel','delivery','shopping','pharmacy'];
+
+/* ---------- the merchant queue ---------- */
+const MERCH = [
+ {k:'shufersal',name:'שופרסל דיל נתניה',n:14,amt:198740,hint:'groceries',why:'9 earlier charges filed there',acc:'Card ···7781'},
+ {k:'wolt',name:'WOLT',n:9,amt:61230,hint:'delivery',why:'looks like your other delivery apps',acc:'Card ···7781'},
+ {k:'paz',name:'פז יילו רעננה',n:6,amt:78230,hint:'fuel',why:'4 earlier charges',acc:'Card ···7781'},
+ {k:'aroma',name:'ארומה הרצליה פיתוח',n:7,amt:31146,hint:'restaurants',why:'12 earlier charges',acc:'Card ···7781'},
+ {k:'paybox',name:'PAYBOX',n:5,amt:42000,hint:null,why:'transfers to people; no pattern yet',acc:'Checking ···4410'},
+ {k:'gan',name:'גן הילד הקטן',n:1,amt:185000,hint:null,why:'first time this name appears',acc:'Checking ···4410'},
+ {k:'superpharm',name:'סופר-פארם',n:4,amt:40295,hint:'pharmacy',why:'6 earlier charges',acc:'Card ···7781'},
+ {k:'amazon',name:'AMAZON MKTPLACE',n:3,amt:28914,hint:'shopping',why:'the provider called it shopping',acc:'Card ···7781'},
+ {k:'arnona',name:'עיריית נתניה ארנונה',n:1,amt:61800,hint:'arnona',why:'same day and amount as last month',acc:'Checking ···4410'},
+ {k:'hot',name:'הוט מובייל',n:1,amt:9990,hint:'internet',why:'3 earlier charges',acc:'Card ···7781'},
+ {k:'maccabi',name:'מכבי שירותי בריאות',n:2,amt:5400,hint:'doctors',why:'2 earlier charges',acc:'Card ···7781'},
+];
+const QTOTAL = MERCH.reduce((a,m)=>a+m.amt,0);
+const live = () => MERCH.filter(m=>!S.filed.includes(m.k));
+function charges(m){ const out=[]; let left=m.amt; for(let i=0;i<Math.min(m.n,6);i++){ const last=i===Math.min(m.n,6)-1; const v=last&&m.n<=6?left:Math.round(m.amt/m.n*(0.8+((i*37)%9)/20)); left-=v; out.push([`2026-0${8-(i>3?1:0)}-${String(28-i*4).padStart(2,'0')}`,v]); } return out; }
+
+/* ---------- the month's rows ---------- */
+let ROWS = [
+ ['2026-08-28','שופרסל דיל נתניה','Card ···7781','groceries',-38420],
+ ['2026-08-27','WOLT','Card ···7781',null,-8950],
+ ['2026-08-26','ארומה הרצליה פיתוח','Card ···7781','restaurants',-4680],
+ ['2026-08-25','פז יילו רעננה','Card ···7781','fuel',-31240],
+ ['2026-08-24','AMAZON MKTPLACE','Card ···7781',null,-12990],
+ ['2026-08-21','איקאה נתניה','Card ···7781','shopping',-89900],
+ ['2026-08-18','סופר-פארם','Card ···7781','pharmacy',-11870],
+ ['2026-08-15','PAYBOX','Checking ···4410',null,-25000],
+ ['2026-08-12','שופרסל דיל נתניה','Card ···7781','groceries',-61245],
+ ['2026-08-10','כרטיס אשראי - חיוב חודשי','Checking ···4410','cardbill',-1284620,'bill'],
+ ['2026-08-10','העברה לחיסכון - פיקדון','Checking ···4410','savings',-320000],
+ ['2026-08-08','גן הילד הקטן','Checking ···4410',null,-185000],
+ ['2026-08-05','SPOTIFY','Card ···7781','subs',-2390],
+ ['2026-08-03','שכר דירה הרצל 14','Checking ···4410','housing',-520000],
+ ['2026-08-02','חברת החשמל','Checking ···4410','utilities',-48715],
+ ['2026-08-01','Software Labs Ltd','Checking ···4410','salary',1894000],
+ ['2026-07-31','עמלת ניהול חשבון','Checking ···4410','fees',-1590],
+].map(([d,m,a,c,v,bill],i)=>({id:'r'+i,d,m,a,c,v,out:bill==='bill',why:bill==='bill'?'card bill':null,note:i===13?'Rent for August, paid on the 3rd':null}));
+CAT.salary={id:'salary',name:'Salary',k:1,gid:'inc',gname:'Income',fam:'fa',step:0};
+const PROVIDER = {r4:'קניות באינטרנט',r0:'מזון ומשקאות'};
+
+/* ---------- rail ---------- */
+function renderNav(){
+  const n=live().length; const tx=['merchant','rows'].includes(S.screen);
+  const kids = S.place==='A' ? [['merchant','By merchant',n],['rows','All rows'],['readers','Readers']]
+             : [['rows','Transactions'],['readers','Readers']];
+  const onKid = k => (S.place==='B'&&k==='rows'&&tx) || (S.place!=='B'&&S.screen===k) || (S.place==='C'&&k==='rows'&&S.screen==='rows');
+  let h = `<button class="nitem">${ic('home')}Home</button>`;
+  if(S.place==='C') h += `<button class="nitem${S.screen==='merchant'?' on':''}" data-nav="merchant">${ic('sort')}Sort out<span class="ncount">${n}</span></button>`;
+  h += `<button class="nitem${tx&&!(S.place==='C'&&S.screen==='merchant')?' open':''}" data-nav="${S.place==='A'?'merchant':'rows'}">${ic('list')}Transactions${S.place==='B'&&!tx?`<span class="ncount">${n}</span>`:''}</button>`;
+  if(tx && !(S.place==='C'&&S.screen==='merchant')) h += kids.map(([k,l,c])=>`<button class="nitem nchild${onKid(k)?' on':''}" data-nav="${k}">${l}${c!=null?`<span class="ncount">${c}</span>`:''}</button>`).join('');
+  h += [['pay','Paychecks'],['plan','Plan'],['wealth','Wealth']].map(([g,l])=>`<button class="nitem">${ic(g)}${l}</button>`).join('');
+  h += `<button class="nitem${S.screen==='cats'?' on':''}" data-nav="cats">${ic('tag')}Categories</button>`;
+  h += '<div class="nsep"></div>' + [['grid','Formats'],['link','Connections']].map(([g,l])=>`<button class="nitem">${ic(g)}${l}</button>`).join('');
+  h += `<div style="margin-top:auto"></div><button class="nitem">${ic('gear')}Settings</button>`;
+  document.getElementById('side').innerHTML = h;
+}
+function viewSwitch(){ if(S.place!=='B') return ''; const n=live().length;
+  return `<div class="vseg" role="tablist"><button data-nav="merchant" class="${S.screen==='merchant'?'on':''}">By merchant <span class="mono" style="color:var(--ink2)">${n}</span></button><button data-nav="rows" class="${S.screen==='rows'?'on':''}">All rows</button></div>`; }
+
+/* ---------- By merchant ---------- */
+function merchantScreen(){
+  const L=live(); const left=L.reduce((a,m)=>a+m.amt,0); const rows=L.reduce((a,m)=>a+m.n,0);
+  const pct=Math.round(100*(1-left/QTOTAL)); const done=QTOTAL-left;
+  if(S.sel>=L.length) S.sel=Math.max(0,L.length-1);
+  const title = S.place==='C'?'Sort out':S.place==='B'?'Transactions':'By merchant';
+  const offer = S.offer ? (S.rule==='A'
+    ? `<div class="offer">${ic('rule')}<span class="t">Filed ${S.offer.n} ${he(S.offer.name)} as <b style="font-weight:500">${CAT[S.offer.c].name}</b>. Make it a rule, so next month's are filed on import?</span>${btn('primary sm','Make the rule','rule','data-act="mkrule"')}${btn('ghost sm','Not now',null,'data-act="nooffer"')}${btn('ghost sm','Undo',null,'data-act="undo"')}</div>`
+    : `<div class="offer">${ic('check')}<span class="t">Filed ${S.offer.n} ${he(S.offer.name)} as <b style="font-weight:500">${CAT[S.offer.c].name}</b>, and made the rule, so next month's are filed on import.</span>${btn('ghost sm','Undo both',null,'data-act="undo"')}</div>`) : '';
+  const list = L.length ? L.map((m,i)=>{ const on=i===S.sel; const open=S.open===m.k;
+    return `<div class="mrow${on?' on':''}" data-m="${m.k}" data-i="${i}" tabindex="0">
+      <span class="nm">${he(m.name)}<small>${m.acc} · ${m.why}</small></span>
+      <span class="n">${m.n}×</span>
+      <span class="amt c-out">${ils(m.amt)}</span>
+      <span class="hint">${m.hint?`<button class="take" data-act="take" title="Enter">${cm(m.hint)}${on?'<span class="kbd">Enter</span>':''}</button>`:`<small>No guess · ${m.why}</small>`}</span>
+      <span class="acts">${S.rule==='B'?`<span class="tick on" title="Make a rule as you file">${'<span class="bx">'+ic('check',10)+'</span>'}rule</span>`:''}<button class="ibtn" data-act="pick" title="Another category (C)">${ic('cat')}</button><button class="ibtn" data-act="skip" title="Skip for now (S)">${ic('skip')}</button><button class="ibtn" data-act="mmenu" title="More (right-click)">${ic('more')}</button></span>
+      ${open?`<div class="charges">${charges(m).map(([d,v])=>`<div><span>${d}</span><b>${ils(v)}</b></div>`).join('')}${m.n>6?`<div><span>and ${m.n-6} more</span><b></b></div>`:''}</div>`:''}
+    </div>`; }).join('')
+    : `<div style="padding:40px 0;display:flex;flex-direction:column;gap:8px;align-items:flex-start"><b style="font-weight:500;font-size:16px">Everything is filed.</b><span style="color:var(--ink2)">The month's totals on Home now cover every row.</span></div>`;
+  return `<div class="screen enter">
+    <div class="ph">
+      <div style="display:flex;flex-direction:column;gap:6px"><div class="label">Transactions · one decision per shop, not per charge</div><h1>${title}</h1></div>
+      <div class="row">${viewSwitch()}<span class="fbox">All accounts ▾</span><span class="fbox">All months ▾</span><span class="fbox">Most charges first ▾</span></div>
+    </div>
+    <div class="hero">
+      <div><span class="label">Waiting</span><span class="v">${L.length} names</span><small>${rows} charges with no category</small></div>
+      <div><span class="label">Without a category</span><span class="v c-out">${ils(left)}</span><small>so Home's categories are short by this</small></div>
+      <div style="grid-column:span 2"><span class="label">Filed this sitting</span><span class="v">${pct}%</span><div class="meter"><i style="width:${pct}%;background:var(--accent)"></i></div><small>${ils(done)} of ${ils(QTOTAL)} placed</small></div>
+    </div>
+    ${offer}
+    <div class="queue">
+      <div><div class="mrow" style="min-height:32px;cursor:default;background:none"><span class="label">Merchant</span><span class="label" style="text-align:right">Rows</span><span class="label" style="text-align:right">Total</span><span class="label">Best guess</span><span></span></div>${list}
+        <div class="keys"><span><span class="kbd">J</span> <span class="kbd">K</span> move</span><span><span class="kbd">Enter</span> take the guess</span><span><span class="kbd">C</span> choose</span><span><span class="kbd">S</span> skip</span><span><span class="kbd">Space</span> show its charges</span><span><span class="kbd">≡</span> or right-click: everything else</span><span class="sg" style="gap:6px">${stag(1)} <span class="kbd">1</span>–<span class="kbd">6</span> file into the categories on the right</span></div>
+      </div>
+      <aside class="targets"><span class="label" style="padding:0 8px 6px">Your usual categories</span>
+        ${RECENT.map((c,i)=>`<button class="t" data-act="to" data-c="${c}">${cm(c)}<span class="k"><span class="sg">${i+1}</span></span></button>`).join('')}
+        <button class="t" data-act="pick">${ic('search',14)}<span style="flex:1;color:var(--ink2)">All categories…</span><span class="kbd">C</span></button>
+        <div class="s-only" style="flex-direction:column;gap:6px;padding:12px 8px 0;color:var(--ink2);font-size:12px">${stag(1)}<span>Drag a merchant onto one of these, or press its number.</span></div>
+      </aside>
+    </div>
+  </div>`; }
+
+/* ---------- All rows ---------- */
+function rowsScreen(){
+  let R=ROWS; if(S.catFilter) R=R.filter(r=>S.catFilter==='none'?!r.c:r.c===S.catFilter);
+  const spent=ROWS.filter(r=>r.v<0&&!r.out).reduce((a,r)=>a-r.v,0); const outN=ROWS.filter(r=>r.out); const outAmt=outN.reduce((a,r)=>a-r.v,0);
+  const unc=ROWS.filter(r=>!r.c).length;
+  const sel = S.picked.size ? `<div class="selbar"><span>${S.picked.size} selected</span><span class="row" style="gap:8px;color:var(--ink2);font-size:13px">Categorise as ${btn('secondary sm','Choose…','cat','data-act="pick"')}</span>${btn('secondary sm','Leave out of totals','eyeoff','data-act="bulkout"')}<span style="color:var(--ink3);font-size:12px">Chosen by hand, so no rule or re-import will change them back.</span><span style="flex:1"></span>${btn('ghost sm','Clear selection',null,'data-act="clearpick"')}</div>` : '';
+  const title = S.place==='A'?'All rows':'Transactions';
+  return `<div class="screen enter">
+    <div class="ph">
+      <div style="display:flex;flex-direction:column;gap:6px"><div class="label">Transactions · ${title==='All rows'?'every row, ':''}August 2026</div><h1>${title}</h1></div>
+      <div class="row" style="gap:16px">${viewSwitch()}<div class="pager"><span class="pgl r">Jul 2026</span><button class="pg" aria-label="Previous month">${ic('left')}</button><button class="pg" disabled aria-label="Next month">${ic('right')}</button><span class="pgl">newest</span></div></div>
+    </div>
+    <div class="filters"><span class="fbox search">${ic('search',14)}Search merchants… <span class="kbd" style="margin-left:auto">/</span></span><span class="fbox">All accounts ▾</span><span class="fbox">${S.catFilter?(S.catFilter==='none'?'No category':CAT[S.catFilter].name)+' ✕':'Any category ▾'}</span><span class="fbox">Any amount ▾</span><span class="fbox">Counted and left out ▾</span>
+      <span style="flex:1"></span>${unc?btn('ghost sm',`${unc} with no category, by merchant`,null,'data-nav="merchant"'):''}</div>
+    <div class="hero">
+      <div><span class="label">Went out</span><span class="v c-out">${ils(spent)}</span><small>${ROWS.filter(r=>r.v<0&&!r.out).length} rows counted</small></div>
+      <div><span class="label">Came in</span><span class="v c-in">${ils(1894000)}</span><small>1 row</small></div>
+      <div><span class="label">Left out of totals</span><span class="v" style="color:var(--ink2)">${ils(outAmt)}</span><small>${outN.length} row${outN.length===1?'':'s'} · ${outN.some(r=>r.why==='card bill')?'the card bill, already in the card\'s rows':'by hand'}</small></div>
+      <div><span class="label">No category</span><span class="v">${unc}</span><small>${unc?'filed fastest by merchant':'all filed'}</small></div>
+    </div>
+    ${sel}
+    <div class="s-only" style="align-items:center;gap:12px;padding:10px 14px;border:1px dashed var(--tax)">${stag(2)}<span style="flex:1">2 bank rows in July look like card bills (<bdi class="he">כרטיס אשראי</bdi>, ₪3,412.80). Leave them out like August's?</span>${btn('secondary sm','Leave both out','eyeoff')}</div>
+    <table>
+      <thead><tr><th style="width:28px"><span class="cb"></span></th><th>Date</th><th>Merchant</th><th>Category</th><th>Account</th><th class="r">Amount</th><th style="width:36px"></th></tr></thead>
+      <tbody>${R.map(r=>{ const on=S.rowSel===r.id; const pk=S.picked.has(r.id);
+        return `<tr data-r="${r.id}" class="${on?'on':''}${pk?' picked':''}${r.out?' out':''}${S.arrived===r.id?' arrived':''}" tabindex="0">
+          <td><span class="cb${pk?' on':''}" data-act="tick">${pk?ic('check',10):''}</span></td>
+          <td class="dt">${r.d.slice(5).replace('-','/')}</td>
+          <td class="mer">${he(r.m)}${r.note?` <span title="${r.note}" style="color:var(--ink3)">${ic('note',12)}</span>`:''}</td>
+          <td>${cm(r.c)}${r.out?` <span class="chip dash" style="margin-left:6px">${r.why==='card bill'?'card bill · not counted':'not counted'}</span>`:''}</td>
+          <td class="acc">${r.a}</td>
+          <td class="r"><span class="a ${r.v>0?'c-in':''}">${ils(r.v)}</span></td>
+          <td><button class="ibtn more" data-act="rmenu" title="Actions (right-click, or the menu key)">${ic('more')}</button></td></tr>
+          ${S.noteOn===r.id?`<tr><td></td><td colspan="6"><div class="notefld">${ic('note')}<input id="notein" value="${r.note||''}" placeholder="Anything worth remembering about this one…">${btn('ghost sm','Done',null,'data-act="notedone"')}</div></td></tr>`:''}`; }).join('')}</tbody>
+    </table>
+    <p style="margin:0;color:var(--ink2);font-size:12px">Right-click a row, or press the menu key on it. Click opens it beside the list, as today. Shift-click ticks a range.</p>
+  </div>`; }
+
+/* ---------- the row menus ---------- */
+function catSub(){ return `<div class="menu sub">${RECENT.map(c=>`<button class="mi" data-act="setcat" data-c="${c}"><span></span>${cm(c)}<span></span></button>`).join('')}<div class="msep"></div><button class="mi" data-act="pick"><span>${ic('search',14)}</span>All categories…<span class="sc">C</span></button></div>`; }
+function rowMenu(r){
+  const bank = r.a.startsWith('Checking') && r.v<0; const prov=PROVIDER[r.id];
+  return `<div class="mh"><b>${he(r.m)}</b><span>${r.d} · ${r.a} · ${ils(r.v)}</span></div>
+    <button class="mi" data-sub="1"><span>${ic('cat')}</span>Category<span class="sc">▸</span>${catSub()}</button>
+    <div class="msep"></div>
+    ${r.out?`<button class="mi" data-act="count"><span>${ic('eye')}</span><span>Count it in the totals again</span><span></span></button>`
+      :`<button class="mi" data-act="leaveout"><span>${ic('eyeoff')}</span><span>Leave out of totals<small>It stays in the list, struck through, and leaves every sum on Home</small></span><span class="sc">X</span></button>`}
+    ${bank?`<button class="mi" data-sub="1"><span>${ic('card')}</span><span>This pays a card<small>Every <bdi class="he">${r.m}</bdi> row, before and after today</small></span><span class="sc">▸</span>
+      <div class="menu sub"><button class="mi" data-act="isbill"><span></span>Card ···7781<span></span></button><button class="mi" data-act="isbill"><span></span>Card ···2290<span></span></button><div class="msep"></div><button class="mi" data-act="notbill"><span></span>Not a card payment<span></span></button></div></button>`:''}
+    <button class="mi" data-act="note"><span>${ic('note')}</span>${r.note?'Edit the note':'Add a note'}<span class="sc">N</span></button>
+    <div class="msep"></div>
+    <button class="mi" disabled title="Highlight words in the name first"><span>${ic('rule')}</span><span>Rule from the words you highlight<small>Highlight part of the name, then right-click</small></span><span></span></button>
+    <button class="mi" data-act="rule"><span>${ic('rule')}</span><span>Rule from ${he(r.m)}</span><span></span></button>
+    ${prov?`<button class="mi" data-act="rule"><span>${ic('rule')}</span><span>Rule from “${he(prov)}”<small>What the provider called it; reaches the most rows</small></span><span></span></button>`:''}
+    <div class="msep"></div>
+    <button class="mi" data-act="same"><span>${ic('filter')}</span><span>Show every ${he(r.m)} row</span><span></span></button>
+    <button class="mi" data-act="openrow"><span>${ic('open')}</span>Open it beside the list<span class="sc">Enter</span></button>
+    <button class="mi" data-act="copy"><span>${ic('copy')}</span>Copy the row<span class="sc">Ctrl+C</span></button>`; }
+function merchMenu(m){
+  return `<div class="mh"><b>${he(m.name)}</b><span>${m.n} charges with no category · ${ils(m.amt)}</span></div>
+    ${m.hint?`<button class="mi" data-act="take"><span>${ic('check')}</span><span>File all ${m.n} as ${CAT[m.hint].name}</span><span class="sc">Enter</span></button>`:''}
+    <button class="mi" data-sub="1"><span>${ic('cat')}</span>File all ${m.n} as<span class="sc">▸</span>${catSub()}</button>
+    <button class="mi" data-act="skip"><span>${ic('skip')}</span><span>Skip for now<small>It waits under Skipped, and its rows stay in the list</small></span><span class="sc">S</span></button>
+    <div class="msep"></div>
+    <button class="mi" data-act="leaveoutm"><span>${ic('eyeoff')}</span><span>Leave all ${m.n} out of totals</span><span></span></button>
+    <button class="mi" data-act="bill"><span>${ic('bill')}</span><span>It's a fixed expense…<small>Watch for it each month, with the amount it usually is</small></span><span></span></button>
+    <button class="mi" data-act="debt"><span>${ic('debt')}</span>It pays a debt<span class="sc">▸</span></button>
+    <div class="msep"></div>
+    <button class="mi" data-act="rule"><span>${ic('rule')}</span><span>Write a rule for ${he(m.name)}…</span><span></span></button>
+    <button class="mi" data-act="showrows"><span>${ic('filter')}</span>Show its rows in All rows<span></span></button>
+    <button class="mi" data-act="expand"><span>${ic('list')}</span>Show its charges here<span class="sc">Space</span></button>`; }
+function catMenu(c){ return `<div class="mh"><b>${c.name}</b><span>${c.gname} · ${ilsR(spendOf(c.id))} in August</span></div>
+    <button class="mi" data-act="rename"><span>${ic('edit')}</span>Rename<span class="sc">F2</span></button>
+    <button class="mi" data-act="colour"><span>${ic('palette')}</span>Colour<span></span></button>
+    <button class="mi" data-act="x"><span>${ic('move')}</span>Move under…<span></span></button>
+    <button class="mi" data-act="x"><span>${ic('merge')}</span><span>Merge into…<small>Its rows and rules go with it</small></span><span></span></button>
+    <div class="msep"></div>
+    <button class="mi" data-act="catrows"><span>${ic('filter')}</span>Show its rows<span></span></button>
+    <button class="mi" data-act="x"><span>${ic('rule')}</span>Its rules<span class="sc">${c.step+1}</span></button>
+    <div class="msep"></div>
+    <button class="mi" data-act="x"><span>${ic('archive')}</span><span>Archive<small>Hidden from pickers, kept on every row it has</small></span><span></span></button>
+    <button class="mi" data-act="x" ${spendOf(c.id)?'disabled':''}><span>${ic('trash')}</span><span>Delete${spendOf(c.id)?'<small>Rows point at it. Merge or archive instead.</small>':''}</span><span></span></button>`; }
+function showMenu(html, x, y){
+  const layer=document.getElementById('layer'); const win=document.getElementById('win').getBoundingClientRect();
+  layer.innerHTML=`<div class="menu" id="menu" role="menu" style="left:${x-win.left}px;top:${y-win.top}px">${html}</div>`;
+  const m=document.getElementById('menu'); const r=m.getBoundingClientRect();
+  if(r.right>win.right-8) m.style.left=(x-win.left-r.width)+'px';
+  if(r.right+230>win.right) m.classList.add('flip');
+  if(r.bottom>win.bottom-8) m.style.top=Math.max(48,y-win.top-r.height)+'px';
+  m.querySelectorAll('[data-sub]').forEach(s=>{ s.addEventListener('mouseenter',()=>{m.querySelectorAll('.mi.hot').forEach(h=>h.classList.remove('hot')); s.classList.add('hot');}); });
+  m.querySelectorAll(':scope > .mi:not([data-sub])').forEach(s=>s.addEventListener('mouseenter',()=>m.querySelectorAll('.mi.hot').forEach(h=>h.classList.remove('hot'))));
+  const first=m.querySelector('.mi:not([disabled])'); first&&first.focus({preventScroll:true});
+}
+const closeMenu=()=>{ document.getElementById('layer').innerHTML=''; S.menuFor=null; };
+
+/* ---------- Categories ---------- */
+const SPEND = {housing:520000,utilities:48715,internet:9990,arnona:61800,groceries:318460,restaurants:84230,delivery:61230,fuel:61290,parking:4800,transit:0,pharmacy:42180,doctors:5400,shopping:137600,kids:185000,subs:21460,fun:0,cardbill:1284620,savings:320000,fees:1590};
+const spendOf = id => SPEND[id]||0;
+const RULES = {groceries:4,restaurants:3,fuel:2,subs:5,utilities:2,housing:1,pharmacy:1,delivery:1,cardbill:2,savings:1};
+function spark(id){ const base=spendOf(id); if(!base) return '<svg width="72" height="20"></svg>'; const pts=[...Array(8)].map((_,i)=>base*(0.75+((i*7+id.length*3)%10)/22)); pts[7]=base; const hi=Math.max(...pts);
+  return `<svg class="spk" width="72" height="20" viewBox="0 0 72 20"><polyline fill="none" stroke="${cvar(id)}" stroke-width="1.5" points="${pts.map((v,i)=>`${(i*10+1).toFixed(0)},${(18-15*v/hi).toFixed(1)}`).join(' ')}"/><circle cx="71" cy="${(18-15*base/hi).toFixed(1)}" r="2" fill="${cvar(id)}"/></svg>`; }
+function catsScreen(){
+  const kinds = {out:['Spending',GROUPS.filter(g=>g[0]!=='money')],move:['Money moved',GROUPS.filter(g=>g[0]==='money')],in:['Income',[]]};
+  const groups = kinds[S.kind][1]; const top=Math.max(...groups.flatMap(g=>g[3].map(c=>spendOf(c[0]))),1);
+  const sel = CAT[S.cat];
+  const detail = S.lay==='B' && sel ? `<aside class="detail" style="--c:${cvar(sel.id)}">
+      <span class="label">${sel.gname}</span><h3>${cm(sel.id)}</h3>
+      <div><span class="label">August</span><div class="big c-out">${ils(spendOf(sel.id))}</div><small style="color:var(--ink2)">average ${ilsR(Math.round(spendOf(sel.id)*0.93))} a month over the year</small></div>
+      <div class="bars12">${[...Array(12)].map((_,i)=>`<i style="height:${spendOf(sel.id)?Math.round(30+((i*13+sel.id.length*5)%26)+(i===11?14:0)):2}px"></i>`).join('')}</div>
+      <div><span class="label">Colour</span><div class="sws" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">${swatches(sel)}</div></div>
+      <div><span class="label">Where it goes</span><div class="dl">${(sel.id==='groceries'?[['שופרסל דיל נתניה',198740],['רמי לוי',114208],['יוחננוף',5512]]:[['Most of it',Math.round(spendOf(sel.id)*.7)],['The rest',Math.round(spendOf(sel.id)*.3)]]).map(([n,v])=>`<div><span>${he(n)}</span><span>${ils(v)}</span></div>`).join('')}</div></div>
+      <div><span class="label">Monthly target</span><div class="fldrow" style="margin-top:6px"><input id="tgt" value="${sel.id==='groceries'?'3,000':''}" placeholder="none"><span style="color:var(--ink2);font-size:12px">${sel.id==='groceries'?'August is 6% over':''}</span></div></div>
+      <div><span class="label">Rules that file here · ${RULES[sel.id]||0}</span><div class="dl">${sel.id==='groceries'?['name has שופרסל','name has רמי לוי','name has יוחננוף','provider said מזון'].map(t=>`<div><span>${he(t)}</span><span>${ic('right',12)}</span></div>`).join(''):'<div><span style="color:var(--ink2)">None yet</span><span></span></div>'}</div></div>
+      <div class="row">${btn('secondary sm','Rename','edit')}${btn('secondary sm','Merge into…','merge')}${btn('ghost sm','Archive')}</div>
+    </aside>` : '';
+  const body = groups.length ? groups.map(([gid,gname,fam,kids])=>`<div class="grp">
+      <div class="gh">${S.col==='B'?`<span class="cm"><span class="dot" style="background:var(--${fam});width:11px;height:11px"></span></span>`:''}<span class="label">${gname}</span><span style="color:var(--ink3);font-size:12px">${kids.length}</span><span class="tot">${ils(kids.reduce((a,c)=>a+spendOf(c[0]),0))}</span>${btn('ghost sm','Add',null)}</div>
+      ${kids.map(([id])=>{ const c=CAT[id]; const v=spendOf(id);
+        return `<div class="crow${S.cat===id?' on':''}" data-cat="${id}" tabindex="0" style="--c:${cvar(id)}">
+          <span class="row" style="gap:6px;flex-wrap:nowrap;min-width:0"><button class="ibtn" data-act="colour" title="Colour" style="width:22px;height:22px"><span class="cm"><span class="dot" style="background:${cvar(id)}"></span></span></button><span>${c.name}</span>${v?'':'<span class="unused">unused</span>'}</span>
+          <span><span class="bar" style="display:block;width:${Math.max(v?3:0,Math.round(100*v/top))}%"></span></span>
+          ${spark(id)}
+          <span class="amt">${v?ils(v):'<span style="color:var(--ink3)">—</span>'}</span>
+          <span class="rl">${RULES[id]?RULES[id]+' rule'+(RULES[id]>1?'s':''):''}</span>
+          <span class="acts"><button class="ibtn" data-act="rename" title="Rename">${ic('edit',14)}</button><button class="ibtn mm" data-act="cmenu" title="More (right-click)">${ic('more',14)}</button></span>
+        </div>`; }).join('')}</div>`).join('')
+    : `<div style="padding:24px 0;color:var(--ink2)">Salary, Refunds, Interest, Other income. Same rows, same menu.</div>`;
+  return `<div class="screen enter ${S.lay==='B'?'layB':''}">
+    <div class="ph">
+      <div style="display:flex;flex-direction:column;gap:6px"><div class="label">Categories · what each one holds, August 2026</div><h1>Categories</h1></div>
+      <div class="row">${btn('secondary','New category','plus')}<span class="fbox search">${ic('search',14)}Find a category…</span></div>
+    </div>
+    <div class="ktabs">${Object.entries(kinds).map(([k,[l,g]])=>`<button data-kind="${k}" class="${S.kind===k?'on':''}">${l}<span class="n">${k==='in'?4:g.reduce((a,x)=>a+x[3].length,0)}</span></button>`).join('')}</div>
+    <div class="s-only" style="align-items:center;gap:12px;padding:10px 14px;border:1px dashed var(--tax)">${stag(4)}<span style="flex:1">27 of your 46 categories have never held a row. Archive them together? They come back with Show archived.</span>${btn('secondary sm','Archive 27','archive')}</div>
+    <div class="cats"><div style="display:flex;flex-direction:column;gap:20px">${body}
+      <p style="margin:0;color:var(--ink2);font-size:12px">The bar is August, in the category's own colour; the line beside it is its last eight months. Right-click a category for the rest: rename, colour, move, merge, archive, delete.</p></div>${detail}</div>
+  </div>`; }
+function swatches(c){ const taken=GROUPS.find(g=>g[0]===c.gid)[3].map(x=>CAT[x[0]].k);
+  if(S.col==='B') return STEP.map((s,i)=>`<button class="swatch${i===c.step?' on':''}" style="--c:color-mix(in srgb,var(--${c.fam}) ${s}%,var(--bg))" title="Step ${i+1} of ${c.gname}'s hue"><i></i></button>`).join('')+`<span style="font-size:12px;color:var(--ink2);align-self:center">${c.gname}'s hue</span>`;
+  return [...Array(11)].map((_,i)=>`<button class="swatch${i+1===c.k?' on':''}${taken.includes(i+1)&&i+1!==c.k?' taken':''}" style="--c:var(--k${i+1})" title="${taken.includes(i+1)&&i+1!==c.k?'A sibling wears this':'Hue '+(i+1)}"><i></i></button>`).join('')+`<button class="swatch" title="Auto" style="--c:var(--k0)"><i></i></button>`; }
+
+/* ---------- render ---------- */
+function render(){
+  const w=document.getElementById('win'); w.className=`win col${S.col}${S.sugg==='on'?' sugg':''}`;
+  document.getElementById('root').classList.toggle('rm',S.motion==='reduced');
+  document.getElementById('root').classList.toggle('sugg',S.sugg==='on');
+  renderNav(); closeMenu();
+  const main=document.getElementById('main'); const keep=main.scrollTop;
+  main.innerHTML = S.screen==='merchant'?merchantScreen():S.screen==='rows'?rowsScreen():S.screen==='cats'?catsScreen():`<div class="screen"><div class="ph"><h1>Readers</h1></div><p class="note">Unchanged from M28 U3: the statement readers, beside what they read.</p></div>`;
+  if(S.keep) main.scrollTop=keep; if(S.keep) main.querySelectorAll('.enter').forEach(e=>e.classList.remove('enter')); S.keep=false;
+  document.getElementById('dirty').classList.toggle('on',S.dirty); document.getElementById('saved').textContent=S.dirty?'unsaved':'saved 09:14';
+  if(S.pop){ const p=S.pop; const c=CAT[p.id]; const layer=document.getElementById('layer'); const win=w.getBoundingClientRect();
+    layer.innerHTML=`<div class="pop" style="left:${p.x-win.left}px;top:${p.y-win.top}px"><span class="label">Colour of ${c.name}</span><div class="sws">${swatches(c)}</div><small style="color:var(--ink2);font-size:12px">${S.col==='B'?'A category wears its group\'s hue; you choose how deep.':'A ring marks a hue a sibling already wears, so neighbours stay apart.'}</small></div>`; }
+}
+const changed = () => { S.dirty=true; };
+function file(m,c){ const el=document.querySelector(`.mrow[data-m="${m.k}"]`); const go=()=>{ S.filed.push(m.k); S.offer={n:m.n,name:m.name,c,k:m.k}; S.open=null; changed(); S.keep=true; render(); };
+  if(el&&S.motion!=='reduced'){ el.classList.add('gone'); setTimeout(go,240); } else go(); }
+function syncSeg(k){ document.querySelectorAll(`[data-ctl="${k}"] button`).forEach(b=>b.classList.toggle('on',b.dataset.v===S[k])); }
+
+document.querySelectorAll('[data-ctl]').forEach(g=>g.addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; const k=g.dataset.ctl; S[k]=b.dataset.v; syncSeg(k);
+  if(k==='theme'){ if(S.theme==='system') document.documentElement.removeAttribute('data-theme'); else document.documentElement.setAttribute('data-theme',S.theme); }
+  if(k==='screen'){ S.pop=null; S.offer=null; } else S.keep=true; S.pop=null; render(); }));
+const nav = t => { if(t==='merchant'||t==='rows'||t==='cats'||t==='readers'){ S.screen=t; S.pop=null; S.offer=null; if(t!=='readers') syncSeg('screen'); render(); document.getElementById('main').scrollTop=0; } };
+document.getElementById('side').addEventListener('click',e=>{ const n=e.target.closest('[data-nav]'); if(n) nav(n.dataset.nav); });
+
+const main=document.getElementById('main'), layer=document.getElementById('layer');
+function openFor(target, x, y){
+  const mr=target.closest('.mrow[data-m]'), tr=target.closest('tr[data-r]'), cr=target.closest('.crow[data-cat]');
+  if(mr){ const m=MERCH.find(q=>q.k===mr.dataset.m); S.sel=+mr.dataset.i; document.querySelectorAll('.mrow').forEach(r=>r.classList.toggle('on',r===mr)); S.menuFor={kind:'m',m}; showMenu(merchMenu(m),x,y); return true; }
+  if(tr){ const r=ROWS.find(q=>q.id===tr.dataset.r); S.rowSel=r.id; document.querySelectorAll('tr[data-r]').forEach(t=>t.classList.toggle('on',t===tr)); S.menuFor={kind:'r',r}; showMenu(rowMenu(r),x,y); return true; }
+  if(cr){ S.cat=cr.dataset.cat; document.querySelectorAll('.crow').forEach(t=>t.classList.toggle('on',t===cr)); S.menuFor={kind:'c',c:CAT[cr.dataset.cat]}; showMenu(catMenu(CAT[cr.dataset.cat]),x,y); return true; }
+  return false; }
+main.addEventListener('contextmenu',e=>{ if(openFor(e.target,e.clientX,e.clientY)) e.preventDefault(); });
+main.addEventListener('click',e=>{
+  if(S.pop){ S.pop=null; layer.innerHTML=''; }
+  const n=e.target.closest('[data-nav]'); if(n) return nav(n.dataset.nav);
+  const kd=e.target.closest('[data-kind]'); if(kd){ S.kind=kd.dataset.kind; S.cat=S.kind==='move'?'cardbill':'groceries'; S.keep=true; return render(); }
+  const a=e.target.closest('[data-act]'); const act=a&&a.dataset.act;
+  const mr=e.target.closest('.mrow[data-m]'); const m=mr&&MERCH.find(q=>q.k===mr.dataset.m);
+  if(act==='mmenu'||act==='rmenu'||act==='cmenu'){ const r=a.getBoundingClientRect(); openFor(a,r.right-4,r.bottom+2); return; }
+  if(act==='take'&&m) return file(m,m.hint);
+  if(act==='skip'&&m){ S.filed.push(m.k); S.offer=null; S.keep=true; return render(); }
+  if(act==='to'){ const L=live(); const t=L[S.sel]; if(t) file(t,a.dataset.c); return; }
+  if(act==='pick'){ const r=a.getBoundingClientRect(); S.menuFor=m?{kind:'m',m}:S.screen==='merchant'?{kind:'m',m:live()[S.sel]}:{kind:'bulk'}; showMenu(`<div class="mh"><b>Choose a category</b><span>Type to narrow, Enter to file</span></div>`+GROUPS.map(g=>g[3].map(([id])=>`<button class="mi" data-act="setcat" data-c="${id}"><span></span>${cm(id)}<span class="sc">${g[1]}</span></button>`).join('')).join('<div class="msep"></div>'), r.left, r.bottom+2); return; }
+  if(act==='mkrule'||act==='nooffer'){ S.offer=null; S.keep=true; return render(); }
+  if(act==='undo'){ S.filed=S.filed.filter(k=>k!==S.offer.k); S.offer=null; S.keep=true; return render(); }
+  if(act==='tick'){ const id=e.target.closest('tr').dataset.r; S.picked.has(id)?S.picked.delete(id):S.picked.add(id); S.keep=true; return render(); }
+  if(act==='clearpick'){ S.picked.clear(); S.keep=true; return render(); }
+  if(act==='bulkout'){ ROWS.forEach(r=>{ if(S.picked.has(r.id)){ r.out=true; r.why='by hand'; } }); S.picked.clear(); changed(); S.keep=true; return render(); }
+  if(act==='notedone'){ const r=ROWS.find(q=>q.id===S.noteOn); r.note=document.getElementById('notein').value||null; S.noteOn=null; changed(); S.keep=true; return render(); }
+  if(act==='colour'){ const cr=e.target.closest('.crow'); if(cr){ const r=a.getBoundingClientRect(); S.cat=cr.dataset.cat; S.pop={id:cr.dataset.cat,x:r.left,y:r.bottom+4}; S.keep=true; render(); e.stopPropagation(); return; } }
+  const cr=e.target.closest('.crow[data-cat]'); if(cr){ S.cat=cr.dataset.cat; S.keep=true; return render(); }
+  if(mr&&!a){ const i=+mr.dataset.i; if(S.sel===i) S.open=S.open===m.k?null:m.k; S.sel=i; S.keep=true; return render(); }
+  const tr=e.target.closest('tr[data-r]'); if(tr&&!a){ if(e.shiftKey){ S.picked.add(tr.dataset.r); } S.rowSel=tr.dataset.r; S.keep=true; return render(); }
+});
+layer.addEventListener('click',e=>{
+  const sw=e.target.closest('.swatch'); if(sw&&S.pop){ const c=CAT[S.pop.id]; const sws=[...sw.parentNode.querySelectorAll('.swatch')]; const i=sws.indexOf(sw); if(S.col==='B') c.step=i; else if(i<11) c.k=i+1; S.pop=null; changed(); S.keep=true; return render(); }
+  const a=e.target.closest('.mi[data-act]'); if(!a||a.disabled) return; const act=a.dataset.act; const f=S.menuFor||{};
+  const r=f.r, m=f.m;
+  if(act==='setcat'){ if(f.kind==='m') { closeMenu(); return file(m,a.dataset.c); } if(r){ r.c=a.dataset.c; S.arrived=r.id; } else if(S.picked.size){ ROWS.forEach(x=>{ if(S.picked.has(x.id)) x.c=a.dataset.c; }); S.picked.clear(); } changed(); S.keep=true; render(); setTimeout(()=>S.arrived=null,1000); return; }
+  if(act==='take'&&m){ closeMenu(); return file(m,m.hint); }
+  if(act==='skip'&&m){ S.filed.push(m.k); S.keep=true; return render(); }
+  if(act==='leaveoutm'&&m){ S.filed.push(m.k); changed(); S.keep=true; return render(); }
+  if(act==='leaveout'){ r.out=true; r.why='by hand'; changed(); S.keep=true; return render(); }
+  if(act==='count'){ r.out=false; r.why=null; changed(); S.keep=true; return render(); }
+  if(act==='isbill'){ r.out=true; r.why='card bill'; r.c='cardbill'; changed(); S.keep=true; return render(); }
+  if(act==='notbill'){ closeMenu(); return; }
+  if(act==='note'){ S.noteOn=r.id; S.keep=true; render(); const i=document.getElementById('notein'); i&&i.focus(); return; }
+  if(act==='same'){ S.catFilter=null; closeMenu(); return; }
+  if(act==='showrows'){ return nav('rows'); }
+  if(act==='expand'&&m){ S.open=m.k; S.keep=true; return render(); }
+  if(act==='catrows'){ S.catFilter=f.c.id; return nav('rows'); }
+  if(act==='colour'&&f.c){ const rr=a.getBoundingClientRect(); S.pop={id:f.c.id,x:rr.left,y:rr.top}; S.keep=true; return render(); }
+  closeMenu();
+});
+document.addEventListener('click',e=>{ if(!e.target.closest('#layer')&&!e.target.closest('[data-act]')) { if(document.getElementById('menu')) closeMenu(); if(S.pop&&!e.target.closest('.pop')){ S.pop=null; layer.innerHTML=''; } } });
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeMenu(); S.pop=null; layer.innerHTML=''; } });
+main.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT') return;
+  if((e.key==='ContextMenu'||(e.shiftKey&&e.key==='F10'))){ const t=e.target.closest('.mrow,tr[data-r],.crow')||main.querySelector('.mrow.on,tr.on,.crow.on'); if(t){ const r=t.getBoundingClientRect(); openFor(t,r.left+120,r.bottom); e.preventDefault(); } return; }
+  if(S.screen!=='merchant') return; const L=live(); const m=L[S.sel];
+  if(e.key==='j'||e.key==='ArrowDown'){ S.sel=Math.min(L.length-1,S.sel+1); S.keep=true; render(); main.querySelector('.mrow.on')?.focus(); e.preventDefault(); }
+  if(e.key==='k'||e.key==='ArrowUp'){ S.sel=Math.max(0,S.sel-1); S.keep=true; render(); main.querySelector('.mrow.on')?.focus(); e.preventDefault(); }
+  if(e.key==='Enter'&&m&&m.hint){ file(m,m.hint); setTimeout(()=>main.querySelector('.mrow.on')?.focus(),300); }
+  if(e.key==='s'&&m){ S.filed.push(m.k); S.keep=true; render(); main.querySelector('.mrow.on')?.focus(); }
+  if(e.key===' '&&m){ S.open=S.open===m.k?null:m.k; S.keep=true; render(); main.querySelector('.mrow.on')?.focus(); e.preventDefault(); }
+  if(S.sugg==='on'&&/^[1-6]$/.test(e.key)&&m){ file(m,RECENT[+e.key-1]); }
+});
+
+/* ---------- the sheets below the window ---------- */
+const P = [
+ ['Set the category','Category submenu, C, the selection bar','yes','assign_category, by merchant or by transaction ids'],
+ ['File a whole merchant','By merchant: Enter, a target, the menu','yes','uncategorized_merchants, then assign_category'],
+ ['Rule from the name, the highlighted words or the provider\'s category','The menu (as today, D-173), the offer after filing','yes','create_rule, apply_rules'],
+ ['Leave a row out of totals, or count it again','The menu (new place), X, the selection bar (new); today only the detail panel','no','No tool. A screen-only ledger write, already on D-251\'s ratchet; this unit adds no new write'],
+ ['This pays a card (and whether its charges count)','The menu on a bank row (new place); today only the detail panel','no','No tool; same ratchet'],
+ ['Add or edit a note','The menu, N; the detail panel','no','No tool; same ratchet'],
+ ['Skip a merchant for now','By merchant: S, the menu','no','No tool; note_merchant_suggestions records guesses, not skips'],
+ ['It\'s a fixed expense / it pays a debt','By merchant\'s menu (both exist on Categorize today)','yes','track_fixed_expenses, record_debt_payments'],
+ ['Create a category','Categories, and the picker\'s "new"','yes','create_category'],
+ ['Rename, colour, move, merge, archive, delete a category; set a target','Categories: hover icons, the menu, choice 3 B\'s panel','no','No tool; same ratchet'],
+];
+document.getElementById('parity').innerHTML = `<thead><tr><th>Action</th><th>On a screen, in this design</th><th>By conversation</th><th>Through</th></tr></thead><tbody>${P.map(([a,s,y,t])=>`<tr><td>${a}</td><td style="color:var(--ink2)">${s}</td><td class="${y}">${y==='yes'?'Yes':'Not yet'}</td><td style="color:var(--ink2)">${t}</td></tr>`).join('')}</tbody>`;
+
+document.getElementById('split').innerHTML = `
+ <div class="card"><span class="label">Home · Month and Year</span><h3>Reads. Nothing on it changes a row.</h3><ul>
+  <li>The five figures, the chart, Where it went, What came in.</li>
+  <li>"14 transactions need a category" is a link to By merchant, not a picker.</li>
+  <li>A category in Where it went opens All rows, filtered to it and the month.</li>
+  <li>No right-click menu, no tick boxes, no category pickers.</li></ul></div>
+ <div class="card"><span class="label">Transactions · Categories</span><h3>Works. Every row action lives here.</h3><ul>
+  <li>By merchant: the queue, one decision per shop, keyboard first.</li>
+  <li>All rows: the month's rows, paged like Home, the right-click menu, the selection bar, the detail panel.</li>
+  <li>Categories: the taxonomy, its colours, what each one holds and which rules file into it.</li>
+  <li>A row left out of totals is still listed, struck through; Home simply does not count it.</li></ul></div>`;
+
+const oq = (n,t,p,cls='choice-tag') => `<div class="oq"><span class="${cls}" style="width:22px;height:22px;font-size:11px;display:inline-flex">${n}</span><div><b>${t}</b><p>${p}</p></div></div>`;
+document.getElementById('open').innerHTML = [
+ ['1','Where By merchant lives','A: it is Transactions\' first page, with a count in the rail, and All rows second (proposed: the rail says where to categorise, and Transactions opens there). B: one Transactions page with a By merchant · All rows switch in its header. C: its own place in the rail, "Sort out", with the count, above Transactions. Today it is #/categorize, reached only from Home.'],
+ ['2','How categories are coloured','A: eleven richer hues as dots, siblings never sharing one while a hue is free (proposed). B: each group has a hue and its categories are steps of it, so a chart reads by group first. C: A\'s hues as a faint tinted label behind the name, which amends docs/11\'s "no coloured category backgrounds". Today\'s eight are greyed on purpose (docs/11); any of the three amends that line, recorded as its own decision when built.'],
+ ['3','The Categories screen','A: one list, each category with August\'s bar in its colour, an eight-month line, its rules, and actions on hover and right-click. B: the same list, narrower, with a panel for the one you pick: twelve months, its merchants, its rules, its target and its colour. Both drop today\'s row of seven buttons per category.'],
+ ['4','When you file a merchant','A: it files, then offers the rule, as today. B: the rule is ticked on each row and made as it files, with one Undo for both. B is faster for someone who always says yes.'],
+].map(x=>oq(...x)).join('');
+
+document.getElementById('sugglist').innerHTML = [
+ ['S1','Number keys and drag onto your usual categories','On By merchant, 1 to 6 file the selected merchant into the six categories on the right; a merchant can also be dragged onto one.'],
+ ['S2','Spot card bills the app has not been told about','A bank row that matches a card statement\'s total gets a one-click "Leave out" offer on All rows, so the month is never doubled quietly.'],
+ ['S3','Undo stays for the session, not one message','Every filing on By merchant goes on a short list under the hero, each with its own Undo, instead of only the last one.'],
+ ['S4','Archive the never-used categories in one go','A line on Categories when most of the starter set has never held a row. Shown in place.'],
+ ['S5','Highlight-then-right-click becomes the way to write a rule','The menu already offers "rule from the words you highlight" (D-173); show a one-line hint the first time a row is right-clicked.'],
+].map(([n,t,p])=>`<div class="oq"><span class="stag" style="display:inline-flex;height:22px">${n}</span><div><b>${t}</b><p>${p}</p></div></div>`).join('');
+
+render();
+})();
+</script>

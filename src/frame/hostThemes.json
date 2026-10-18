@@ -1,0 +1,34 @@
+{
+  "vscode": {
+    "light": {
+      "--color-background-primary": "#f8f8f8",
+      "--color-background-secondary": "#ffffff",
+      "--color-text-primary": "#3b3b3b",
+      "--color-text-secondary": "#616161",
+      "--color-text-tertiary": "#8b8b8b",
+      "--color-border-primary": "#cecece",
+      "--color-border-secondary": "#e5e5e5",
+      "--color-ring-primary": "#005fb8",
+      "--font-sans": "-apple-system, BlinkMacSystemFont, \"Segoe WPC\", \"Segoe UI\", system-ui, \"Ubuntu\", \"Droid Sans\", sans-serif",
+      "--font-mono": "Consolas, \"Courier New\", monospace",
+      "--border-radius-sm": "4px",
+      "--border-radius-md": "6px",
+      "--border-radius-lg": "8px"
+    },
+    "dark": {
+      "--color-background-primary": "#181818",
+      "--color-background-secondary": "#1f1f1f",
+      "--color-text-primary": "#cccccc",
+      "--color-text-secondary": "#9d9d9d",
+      "--color-text-tertiary": "#6e7681",
+      "--color-border-primary": "#3c3c3c",
+      "--color-border-secondary": "#2b2b2b",
+      "--color-ring-primary": "#0078d4",
+      "--font-sans": "-apple-system, BlinkMacSystemFont, \"Segoe WPC\", \"Segoe UI\", system-ui, \"Ubuntu\", \"Droid Sans\", sans-serif",
+      "--font-mono": "Consolas, \"Courier New\", monospace",
+      "--border-radius-sm": "4px",
+      "--border-radius-md": "6px",
+      "--border-radius-lg": "8px"
+    }
+  }
+}

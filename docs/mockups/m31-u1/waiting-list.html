@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Waiting List</title>
+<style>
+/* M31 U1. Every question the app has for you waits in one list at the top of Home, and each is
+   answered in that list. Tokens copied from src/ui/theme/tokens.css (light, and :root[data-theme="dark"]);
+   the buttons are .fc-btn's, the menu ChoiceField's (D-290: never the platform's select), the head
+   parts.tsx's BlockHead. Fonts are the app's own bundled woff2, read from node_modules, so this opens
+   from the checkout with the network off. Every name and figure is made up. The build ports this
+   file's markup and words. */
+@font-face{font-family:"IBM Plex Sans";font-weight:400;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:500;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-500-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:600;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-600-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-weight:400;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2") format("woff2")}
+
+:root{
+  --color-background:#ffffff;--color-surface:#f7f7f6;--color-elevated:#ffffff;
+  --color-ink:#111111;--color-ink-secondary:#6b6b6b;--color-ink-tertiary:#a0a09c;
+  --color-hairline:#ececea;--color-hairline-strong:#d9d9d6;
+  --color-accent:#07805f;--color-accent-ink:#ffffff;--color-accent-hover:#05664b;--color-accent-soft:#e8f6f1;
+  --color-action:#07805f;--color-action-ink:#ffffff;--color-action-hover:#05664b;--color-action-deep:#055a43;
+  --color-negative:#c4342b;--color-positive:#1f7a4d;--color-flow-in:#1f7a4d;--color-flow-out:#c4342b;
+  --color-flow-saved:#0b4f35;--color-flow-tax:#b45309;
+  --shadow-pop:0 1px 2px rgba(17,17,17,.04),0 8px 24px rgba(17,17,17,.08);
+  --font-sans:"IBM Plex Sans","IBM Plex Sans Hebrew",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --color-background:#0b0b0c;--color-surface:#151517;--color-elevated:#1b1b1e;
+  --color-ink:#f2f2f0;--color-ink-secondary:#a1a1a0;--color-ink-tertiary:#6a6a6c;
+  --color-hairline:#262629;--color-hairline-strong:#34343a;
+  --color-accent:#34d399;--color-accent-ink:#06231a;--color-accent-hover:#5ee0b0;--color-accent-soft:#10312a;
+  --color-action:#34d399;--color-action-ink:#06231a;--color-action-hover:#5ee0b0;--color-action-deep:#1fae7d;
+  --color-negative:#e5675e;--color-positive:#4caf7d;--color-flow-in:#5cc98c;--color-flow-out:#e5675e;
+  --color-flow-saved:#2f9e6a;--color-flow-tax:#f59e0b;
+  --shadow-pop:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.55);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --color-background:#0b0b0c;--color-surface:#151517;--color-elevated:#1b1b1e;
+  --color-ink:#f2f2f0;--color-ink-secondary:#a1a1a0;--color-ink-tertiary:#6a6a6c;
+  --color-hairline:#262629;--color-hairline-strong:#34343a;
+  --color-accent:#34d399;--color-accent-ink:#06231a;--color-accent-hover:#5ee0b0;--color-accent-soft:#10312a;
+  --color-action:#34d399;--color-action-ink:#06231a;--color-action-hover:#5ee0b0;--color-action-deep:#1fae7d;
+  --color-negative:#e5675e;--color-positive:#4caf7d;--color-flow-in:#5cc98c;--color-flow-out:#e5675e;
+  --color-flow-saved:#2f9e6a;--color-flow-tax:#f59e0b;
+  --shadow-pop:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.55);color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{background:var(--color-background)}
+body{margin:0;color:var(--color-ink);font-family:var(--font-sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:disabled{cursor:default;opacity:.45}
+input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
+code{font-family:var(--font-mono);font-size:12px}
+.label{font-size:11px;line-height:1.3;letter-spacing:.08em;font-weight:500;text-transform:uppercase;color:var(--color-ink-secondary)}
+.caption{font-size:12px;line-height:1.4;color:var(--color-ink-secondary)}
+.num{font-variant-numeric:tabular-nums}
+.neg{color:var(--color-negative)}
+
+/* ------------------------------------------------------------ the mockup's own page */
+.page{max-width:1120px;margin:0 auto;padding:32px 16px 96px;display:flex;flex-direction:column;gap:44px}
+.intro{display:flex;flex-direction:column;gap:8px;max-width:76ch}
+.intro h1{margin:0;font-size:24px;line-height:1.15;font-weight:600;letter-spacing:-.01em}
+.intro p{margin:0;color:var(--color-ink-secondary)}
+.intro b{color:var(--color-ink);font-weight:500}
+.bar{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center}
+.seg{display:inline-flex}
+.seg button{height:30px;padding:0 12px;border:1px solid var(--color-hairline-strong);margin-left:-1px;font-size:13px;color:var(--color-ink-secondary)}
+.seg button:first-child{margin-left:0}
+.seg button.on{background:var(--color-accent-soft);color:var(--color-ink);border-color:var(--color-accent);position:relative;z-index:1}
+.state-head{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:6px}
+.state-head h2{margin:0;font-size:16px;font-weight:600}
+.state-head .caption{flex:1 1 280px}
+.no{font-family:var(--font-mono);font-size:11px;color:var(--color-ink-tertiary)}
+.frame{border:1px solid var(--color-hairline);display:flex;flex-direction:column}
+.where{font-family:var(--font-mono);font-size:11px;color:var(--color-ink-tertiary);margin:0}
+.reset{margin-left:auto}
+
+/* ------------------------------------------------------------ the window around Home */
+.notices{border-bottom:1px solid var(--color-hairline);background:var(--color-surface)}
+.notice{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:8px 24px;color:var(--color-ink-secondary)}
+.notice + .notice{border-top:1px solid var(--color-hairline)}
+.notice .dot{width:8px;height:8px;border-radius:50%;background:var(--color-ink);flex:none}
+.notice .acts{margin-left:auto;display:flex;gap:8px;flex:none}
+.home{padding:24px 32px 32px;display:flex;flex-direction:column;gap:24px}
+@media (max-width:620px){.home{padding:16px}.notice{padding:8px 16px}}
+.hhead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:16px;border-bottom:1px solid var(--color-hairline);padding-bottom:16px}
+.hhead h3{margin:4px 0 0;font-size:24px;line-height:1.15;font-weight:500;letter-spacing:-.01em}
+.pager{display:flex;gap:16px;color:var(--color-ink-secondary);font-size:13px}
+.wrote{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;background:var(--color-accent-soft);padding:10px 14px;color:var(--color-ink-secondary)}
+.wrote .ink{color:var(--color-ink)}
+.wrote .btn{margin-left:auto}
+.band{border:1px dashed var(--color-hairline-strong);padding:14px 16px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;color:var(--color-ink-secondary);font-size:13px}
+.figs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px;opacity:.55}
+@media (max-width:760px){.figs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.fig .v{font-size:22px;font-weight:500;font-variant-numeric:tabular-nums}
+.fig .v.in{color:var(--color-flow-in)}.fig .v.out{color:var(--color-flow-out)}.fig .v.saved{color:var(--color-flow-saved)}.fig .v.tax{color:var(--color-flow-tax)}
+.more-below{font-size:12px;color:var(--color-ink-tertiary);text-align:center;border-top:1px dashed var(--color-hairline);padding-top:8px}
+
+/* ------------------------------------------------------------ the list */
+.wl{display:flex;flex-direction:column}
+.wl-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-bottom:8px;border-bottom:1px solid var(--color-hairline-strong)}
+.wl-head .aside{font-family:var(--font-mono);font-size:12px;color:var(--color-ink-tertiary)}
+.grp{border-bottom:1px solid var(--color-hairline)}
+.ghead{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;min-height:44px;padding:8px 0}
+.ghead .dot{width:8px;height:8px;border-radius:50%;background:var(--color-ink);flex:none;align-self:flex-start;margin-top:7px}
+.ghead .dot.neg{background:var(--color-negative)}
+.ghead .t{flex:1 1 320px;min-width:0}
+.ghead .t small{display:block;font-size:12px;color:var(--color-ink-secondary)}
+.ghead .acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-left:auto}
+.ghead.one .fig{font-variant-numeric:tabular-nums;white-space:nowrap}
+.rows{padding-left:20px}
+.row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:6px 16px;min-height:40px;padding:6px 0;border-top:1px solid var(--color-hairline)}
+@media (max-width:760px){.row{grid-template-columns:minmax(0,1fr) auto}.row .acts{grid-column:1 / -1;justify-content:flex-start}}
+.row .who small{display:block;font-size:12px;color:var(--color-ink-secondary)}
+.row .who .t3{color:var(--color-ink-tertiary)}
+.row .fig{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.row .acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end}
+.row.done{grid-template-columns:minmax(0,1fr) auto;color:var(--color-ink-secondary);background:var(--color-accent-soft);padding-left:10px;padding-right:6px}
+.showall{padding:6px 0 10px 20px}
+.edit{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.field{height:30px;border:1px solid var(--color-hairline-strong);background:var(--color-elevated);padding:0 10px;display:inline-flex;align-items:center;font-variant-numeric:tabular-nums}
+.field.focus{border-color:var(--color-accent)}
+.field.empty{color:var(--color-ink-tertiary)}
+.choice{height:30px;border:1px solid var(--color-hairline-strong);background:var(--color-elevated);padding:0 8px 0 10px;display:inline-flex;align-items:center;gap:8px;min-width:170px;text-align:left;font-size:13px}
+.choice .v{flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.choice .v.empty{color:var(--color-ink-tertiary)}
+.choice svg{flex:none;color:var(--color-ink-tertiary)}
+.cdot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle}
+.allclear{display:flex;align-items:baseline;gap:10px;color:var(--color-ink-secondary);padding:10px 0;border-bottom:1px solid var(--color-hairline)}
+
+/* .fc-btn, small */
+.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:30px;padding:0 12px;font-size:13px;font-weight:500;white-space:nowrap}
+.btn.primary{background:var(--color-action);color:var(--color-action-ink)}
+.btn.primary:hover{background:var(--color-action-hover)}
+.btn.secondary{background:var(--color-surface);box-shadow:inset 0 0 0 1px var(--color-hairline-strong)}
+.btn.secondary:hover{box-shadow:inset 0 0 0 1px var(--color-ink-tertiary)}
+.btn.ghost{padding:0 4px;color:var(--color-accent)}
+.btn.ghost:hover{color:var(--color-accent-hover);text-decoration:underline;text-underline-offset:5px}
+.tag{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--color-hairline-strong);padding:2px 7px;font-size:11px;line-height:1.3;font-weight:500;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;color:var(--color-ink-secondary)}
+.tag.new{border-style:dashed}
+
+/* ------------------------------------------------------------ before, beside after */
+.pair{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.pair{grid-template-columns:minmax(0,1fr)}}
+.pair > div{display:flex;flex-direction:column;gap:6px;min-width:0}
+
+/* ------------------------------------------------------------ notes and tables */
+section > h2{margin:0 0 8px;font-size:16px;font-weight:600}
+.notes{max-width:80ch;display:flex;flex-direction:column;gap:6px;margin:0;padding-left:18px;color:var(--color-ink-secondary)}
+.notes b{color:var(--color-ink);font-weight:500}
+.table-wrap{overflow-x:auto}
+.words{width:100%;border-collapse:collapse;font-size:12px;min-width:680px}
+.words th{text-align:left;font-weight:500;color:var(--color-ink-secondary);padding:6px 12px 6px 0;border-bottom:1px solid var(--color-hairline-strong)}
+.words td{padding:7px 12px 7px 0;border-bottom:1px solid var(--color-hairline);vertical-align:top}
+.words td:first-child{color:var(--color-ink-secondary);width:16%}
+.words td:nth-child(2){color:var(--color-ink-tertiary);width:40%}
+.steps{width:100%;border-collapse:collapse;font-size:12px;min-width:640px}
+.steps th{text-align:left;font-weight:500;color:var(--color-ink-secondary);padding:6px 12px 6px 0;border-bottom:1px solid var(--color-hairline-strong);width:50%}
+.steps td{padding:7px 12px 7px 0;border-bottom:1px solid var(--color-hairline);vertical-align:top}
+.steps td:first-child{color:var(--color-ink-tertiary)}
+.steps ol{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+.steps .dead{color:var(--color-negative)}
+.steps .count{display:block;margin-top:6px;font-weight:500;color:var(--color-ink)}
+</style>
+</head>
+<body>
+<main class="page">
+
+<header class="intro">
+  <span class="label">M31 U1 · mockup</span>
+  <h1>Everything the app asks you waits in one list, on Home</h1>
+  <p>After an import the questions are spread over five screens today, and one of them has no answer anywhere. Here every one of them is a group in <b>Waiting for an answer</b>, at the top of Home, and each is answered in its row: no <b>Open</b>, no other screen. The notice bar says how many and points at the list. The queues where these are answered today stay where they are. Every name and figure is made up.</p>
+  <div class="bar">
+    <span class="caption">Theme</span>
+    <div class="seg" data-theme-seg>
+      <button data-t="system" class="on">System</button><button data-t="light">Light</button><button data-t="dark">Dark</button>
+    </div>
+  </div>
+</header>
+
+<!-- =============================================================== a. after a monthly import -->
+<section>
+  <div class="state-head">
+    <span class="no">a</span><h2>After a monthly import: the list, and every answer in it</h2>
+    <span class="caption">A card statement and a bank statement were just written. Every button here works: answer a row and it says what was written, with Undo, then leaves; answer them all and the list becomes one line.</span>
+    <button class="btn ghost reset" type="button" data-reset>Start again</button>
+  </div>
+  <div class="frame">
+    <div class="notices" data-notice-a>
+      <div class="notice">
+        <span class="dot" aria-hidden="true"></span>
+        <span data-notice-text></span>
+        <span class="acts"><button class="btn secondary" type="button">Answer them</button><button class="btn ghost" type="button">Not now</button></span>
+      </div>
+    </div>
+    <div class="home">
+      <p class="where">Home · on any other screen the bar above is the only trace; on Home it is not shown (see choice 2)</p>
+      <div class="hhead">
+        <div><span class="label">Home · Month · in progress</span><h3>September 2026</h3></div>
+        <div class="pager"><span>← Aug</span><span style="color:var(--color-ink-tertiary)">Oct →</span></div>
+      </div>
+      <div class="wrote">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2.5 7.5l3 3 6-7"/></svg>
+        <span class="ink">Written: 2 statements, 214 rows.</span>
+        <span data-wrote-tail></span>
+        <button class="btn ghost" type="button">Dismiss</button>
+      </div>
+      <div class="band">Drop a statement, payslip or report here, or anywhere in this window <button class="btn secondary" type="button" style="margin-left:auto">Read files…</button><button class="btn ghost" type="button">Add a payslip by hand</button></div>
+
+      <div class="wl" id="list-a"></div>
+
+      <div class="figs" aria-hidden="true">
+        <div class="fig"><span class="label">Came in</span><div class="v in">₪18,420.00</div></div>
+        <div class="fig"><span class="label">Went out</span><div class="v out">₪14,966.35</div></div>
+        <div class="fig"><span class="label">Saved</span><div class="v saved">₪2,000.00</div></div>
+        <div class="fig"><span class="label">Taxes</span><div class="v tax">₪4,310.00</div></div>
+        <div class="fig"><span class="label">Left over</span><div class="v">₪3,453.65</div></div>
+      </div>
+      <p class="more-below">the month's figures, chart and tables follow, as today; <b style="font-weight:500">What wants you</b> is gone from under What came in</p>
+    </div>
+  </div>
+</section>
+
+<!-- =============================================================== b. a long list -->
+<section>
+  <div class="state-head">
+    <span class="no">b</span><h2>A long list stays short</h2>
+    <span class="caption">A first import of a year: 41 merchants with no category. A group shows its first three rows, biggest first, and <b style="font-weight:500">Show 38 more</b> opens the rest in place. A group of one is one line. Groups never fold away: there are at most ten of them.</span>
+  </div>
+  <div class="frame"><div class="home">
+    <div class="wl" id="list-b"></div>
+  </div></div>
+</section>
+
+<!-- =============================================================== c. answers that need a figure -->
+<section>
+  <div class="state-head">
+    <span class="no">c</span><h2>Answers that need a figure open in the row</h2>
+    <span class="caption">Change… on a bill, Edit on a found payment, and a fund's first balance: the row grows the fields it needs and nothing else. A choice made here writes what the screen it came from writes.</span>
+  </div>
+  <div class="frame"><div class="home">
+    <div class="wl">
+      <div class="grp">
+        <div class="ghead"><span class="dot" aria-hidden="true"></span><span class="t">1 charge looks like a bill<small>changes what there is to split</small></span></div>
+        <div class="rows">
+          <div class="row">
+            <span class="who">Brightline Mobile<small>monthly · 6 months · usually the 3rd · last 3 Sep</small></span>
+            <span class="fig"></span>
+            <span class="acts edit">
+              <span class="caption">Amount</span><span class="field focus" style="width:96px;justify-content:flex-end">94.90</span>
+              <button class="choice" type="button" style="min-width:120px"><span class="v">Monthly</span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4.5l3 3 3-3"/></svg></button>
+              <button class="btn primary" type="button">Track it</button><button class="btn ghost" type="button">Cancel</button>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="grp">
+        <div class="ghead"><span class="dot" aria-hidden="true"></span><span class="t">1 debt payment was found rather than entered<small>the app guessed it, and it counts towards the balance already</small></span></div>
+        <div class="rows">
+          <div class="row">
+            <span class="who">Car loan<small>from the bank statement, 12 Sep · <span class="t3">AUTO FIN 0412</span></small></span>
+            <span class="fig"></span>
+            <span class="acts edit">
+              <span class="caption">Amount</span><span class="field focus" style="width:100px;justify-content:flex-end">1,850.00</span>
+              <span class="caption">on</span><span class="field" style="width:104px">2026-09-12</span>
+              <button class="btn primary" type="button">Save</button><button class="btn ghost" type="button">Cancel</button>
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="grp">
+        <div class="ghead one"><span class="dot" aria-hidden="true"></span><span class="t">Meadow pension has no balance entered<small>missing from net worth</small></span>
+          <span class="acts edit">
+            <span class="field focus" style="width:120px;justify-content:flex-end">₪ 142,300.00</span>
+            <span class="caption">on</span><span class="field" style="width:104px">2026-06-30</span>
+            <button class="btn primary" type="button">Enter</button><button class="btn ghost" type="button">Read its report…</button>
+          </span>
+        </div>
+      </div>
+      <div class="grp">
+        <div class="ghead one"><span class="dot" aria-hidden="true"></span><span class="t">Envelope at home: is it still ₪1,200.00?<small>counted since 14 May, and possibly wrong</small></span>
+          <span class="acts edit">
+            <span class="field focus" style="width:110px;justify-content:flex-end">₪ 900.00</span>
+            <button class="btn primary" type="button">Save</button><button class="btn ghost" type="button">Cancel</button>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div></div>
+</section>
+
+<!-- =============================================================== d. the notice bar -->
+<section>
+  <div class="state-head">
+    <span class="no">d</span><h2>The notice bar points at the list</h2>
+    <span class="caption">Today two notices, each a count, both sending you to Settings › Accounts, and nothing about the other eight questions. After: one notice, the whole count, and the part of it that makes this month's totals wrong. <b style="font-weight:500">Not now</b> is still a session, never a decision.</span>
+  </div>
+  <div class="pair">
+    <div>
+      <span class="label">Today, on any screen</span>
+      <div class="frame">
+        <div class="notices">
+          <div class="notice"><span class="dot" aria-hidden="true"></span><span><span class="num">1</span> credit-card charge in your bank statement is the same money as your card statement. Until you say whether it counts, this month is counted twice.</span><span class="acts"><button class="btn primary" type="button">Sort it out</button><button class="btn ghost" type="button">Not now</button></span></div>
+          <div class="notice"><span class="dot" aria-hidden="true"></span><span><span class="num">2</span> transfers between your own accounts are counted as money in and money out until you say they are.</span><span class="acts"><button class="btn secondary" type="button">Sort it out</button><button class="btn ghost" type="button">Not now</button></span></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <span class="label">After, on any screen but Home</span>
+      <div class="frame">
+        <div class="notices">
+          <div class="notice"><span class="dot" aria-hidden="true"></span><span><span class="num">17</span> answers wait on Home, and <span class="num">5</span> of them change this month's totals.</span><span class="acts"><button class="btn primary" type="button">Answer them</button><button class="btn ghost" type="button">Not now</button></span></div>
+        </div>
+      </div>
+      <span class="caption">When nothing touches a total: <i>6 answers wait on Home.</i> When nothing waits: no notice. A disk conflict, a file waiting to open and an error still come first, as today.</span>
+    </div>
+  </div>
+</section>
+
+<!-- =============================================================== e. all answered -->
+<section>
+  <div class="state-head">
+    <span class="no">e</span><h2>When everything is answered</h2>
+    <span class="caption">The list becomes one quiet line in the same place, so the page does not jump; the line after a write says nothing waits only when that is true.</span>
+  </div>
+  <div class="frame"><div class="home">
+    <div class="wrote">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2.5 7.5l3 3 6-7"/></svg>
+      <span class="ink">Written: 1 statement, 96 rows.</span>
+      <span>The new rows flash below. Nothing waits for an answer.</span>
+      <button class="btn ghost" type="button">Dismiss</button>
+    </div>
+    <div class="wl">
+      <div class="wl-head"><span class="label">Waiting for an answer</span></div>
+      <div class="allclear"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" style="flex:none;align-self:center"><path d="M2.5 7.5l3 3 6-7"/></svg><span>Nothing. Every row has a category, every statement and payslip is here, and nothing the app found is waiting on you.</span></div>
+    </div>
+  </div></div>
+</section>
+
+<!-- =============================================================== click path -->
+<section>
+  <h2>The click path, before and after</h2>
+  <p class="caption" style="margin:0 0 10px;max-width:80ch">After a monthly import, answer everything. The example is section a's: 1 card settlement, 2 transfers, a card charged with no statement, a missing savings statement, 6 merchants with no category (4 of them guessed with confidence), 2 found debt payments, 1 bill, no payslip for September (section a's fund and holding are left out of both columns). Reading the files is the same on both sides and is not counted.</p>
+  <div class="table-wrap">
+    <table class="steps">
+      <thead><tr><th>Today</th><th>After</th></tr></thead>
+      <tbody>
+        <tr><td>
+          <ol>
+            <li>Write lands on Home: <i>Nothing else asks you anything.</i> <span class="dead">It is not true.</span></li>
+            <li>Notice bar: Sort it out → Settings › Accounts</li>
+            <li>Exclude these from spending</li>
+            <li>They are all transfers</li>
+            <li>Read the red line about a card with no statement. <span class="dead">No answer on it; you have to know to go back to Home and read its statement.</span></li>
+            <li>Home: scroll past the figures, chart and What came in to What wants you</li>
+            <li>Uncategorized: Open → Transactions › By merchant</li>
+            <li>Accept the confident ones; then twice: pick a category, confirm</li>
+            <li>Back to Home; debt payments: Open → Wealth › Debts; Accept all 2</li>
+            <li>Back to Home; bills: Open → Plan. <span class="dead">Without a plan the candidates are not shown: a dead end, make a plan first.</span> With one: Confirm</li>
+            <li>Back to Home; payslip: Open → Paychecks; Read</li>
+            <li>The missing savings statement: Read, on Home</li>
+          </ol>
+          <span class="count">~23 clicks over 6 screens; one dead end; one question with no answer anywhere</span>
+        </td><td>
+          <ol>
+            <li>Write lands on Home: <i>17 answers wait, below.</i> The list is right under it.</li>
+            <li>Card settlement: Exclude</li>
+            <li>Transfers: Both are transfers</li>
+            <li>Card with no statement: Read its statement…</li>
+            <li>Missing savings statement: Read…</li>
+            <li>Merchants: File the 4 sure ones; then twice: pick a category, File</li>
+            <li>Debt payments: Accept both</li>
+            <li>Bill: Track it</li>
+            <li>Payslip: Read…</li>
+          </ol>
+          <span class="count">14 clicks, one screen, no scrolling past the month</span>
+        </td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- =============================================================== words -->
+<section>
+  <h2>Every sentence, before and after</h2>
+  <div class="table-wrap">
+    <table class="words">
+      <thead><tr><th>Where</th><th>Today</th><th>After</th></tr></thead>
+      <tbody>
+        <tr><td>Home, the list's head</td><td>What wants you (under What came in, at the foot of the right column)</td><td>Waiting for an answer · aside: {n} change this month's totals (at the top, under the intake band)</td></tr>
+        <tr><td>Home, a row's control</td><td>Open (a link to the screen with the answer)</td><td>The answer itself; no Open</td></tr>
+        <tr><td>Settlement, head</td><td>{n} card charges in your bank statement are the same money as your card statement · the month is counted twice until you say</td><td>(same)</td></tr>
+        <tr><td>Settlement, row</td><td>(on Settings › Accounts) {card} ···4417 ₪3,140.00 · matches 41 transactions totalling … · Exclude · Keep</td><td>Northcard ···4417 · charged 2 Sep · matches 41 transactions totalling ₪3,140.00 in Aug · Exclude · Keep</td></tr>
+        <tr><td>Settlement, bulk</td><td>Exclude these from spending · Keep them · Either answer is remembered for these cards and can be changed here later.</td><td>Exclude all {n} (remembered for these cards, as today) · shown when {n} &gt; 1</td></tr>
+        <tr><td>Transfers</td><td>(not on Home at all) {n} transfers between your own accounts · The same amount left one account and arrived in another within a few days…</td><td>{n} transfers between your own accounts · counted as money in and money out until you say · ₪2,000.00 from Harbor current, 3 Sep, to Harbor savings, 4 Sep · One transfer · Not a transfer · bulk: Both are transfers / All {n} are transfers</td></tr>
+        <tr><td>Card with no statement</td><td>(red, on Settings › Accounts only, with no answer) ₪1,276.30 charged to a card ending 0932, but no statement has been imported for it — that month of card spending is missing from the ledger.</td><td>₪1,276.30 charged to Bluecard ···0932, and no statement of it has been read · that month's card spending is missing · Read its statement… · Count the charge as spending</td></tr>
+        <tr><td>Missing statement</td><td>No {account} statement for September · so Went out is short · Read</td><td>(same, as a group of one) · Read…</td></tr>
+        <tr><td>Uncategorized, head</td><td>{n} transactions need a category · every category total depends on it · Open</td><td>{n} transactions at {m} merchants need a category · every category total depends on it · File the {k} sure ones</td></tr>
+        <tr><td>Uncategorized, row</td><td>(on By merchant) looks like {neighbour} · Choose a category · confirm</td><td>Corner Market · 9 transactions · looks like Groceries · [Groceries ▾] · File · Skip</td></tr>
+        <tr><td>Debt payments</td><td>{n} debt payments were found rather than entered · the app guessed these · Open; (on Debts) Yes, it is · Edit · Not a payment · Accept all {n}</td><td>{n} debt payments were found rather than entered · the app guessed these, and they count towards the balance already · Yes, it is · Edit · Not a payment · Accept both / Accept all {n}</td></tr>
+        <tr><td>Bills</td><td>{n} charges look like a monthly commitment (Home) · {n} charges look like bills (Plan) · Confirm · Change… · Not a bill</td><td>{n} charges look like bills (one name, both places) · changes what there is to split · Track it · Change… · Not a bill</td></tr>
+        <tr><td>Payslip</td><td>No payslip for September 2026 · the splitter is built on it · Open</td><td>(same) · Read… · Add by hand · No pay that month <span class="tag new">new</span></td></tr>
+        <tr><td>Fund</td><td>{n} funds have no balance entered · missing from net worth · Open</td><td>{fund} has no balance entered (a row per fund) · [₪ amount] on [date] · Enter · Read its report…</td></tr>
+        <tr><td>Holding</td><td>{n} holdings have money nobody has counted lately · counted, and possibly wrong · Open</td><td>{holding}: is it still ₪1,200.00? · counted since 14 May, and possibly wrong · Still right · New figure</td></tr>
+        <tr><td>A row, answered</td><td>(nothing: it was answered on another screen)</td><td>Excluded: counted once, on the card · Filed in Groceries, 9 transactions · One transfer · Tracked: ₪94.90 monthly … · Undo</td></tr>
+        <tr><td>Long group</td><td>(none)</td><td>Show {n} more · Show fewer</td></tr>
+        <tr><td>Nothing waits</td><td>Nothing. Every transaction has a category and nothing is missing.</td><td>Nothing. Every row has a category, every statement and payslip is here, and nothing the app found is waiting on you.</td></tr>
+        <tr><td>After a write</td><td>Written: {what}. The new rows flash below. Nothing else asks you anything.</td><td>Written: {what}. {n} answers wait, below. · and only when none: The new rows flash below. Nothing waits for an answer.</td></tr>
+        <tr><td>Notice bar</td><td>Two notices (settlements; transfers), each Sort it out → Settings › Accounts</td><td>One: {n} answers wait on Home, and {k} of them change this month's totals. · Answer them · Not now</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>For the author to judge</h2>
+  <ul class="notes">
+    <li><b>1. Where the list sits.</b> Drawn at the top of Home, above the month's figures, because the figures are wrong until it is answered. The other way: keep it where What wants you is, under What came in, and let the notice bar carry you down to it.</li>
+    <li><b>2. The bar on Home.</b> Drawn hidden on Home, since the list says the same thing a few lines lower. The other way: show it everywhere and let Answer them scroll.</li>
+    <li><b>3. Two new answers.</b> <i>No pay that month</i> on a missing payslip, and <i>Count the charge as spending</i> on a card with no statement. Without them both questions can only be closed by a document that may never exist. Each is a small write (and a tool half, D-227); say no and they stay Read-only.</li>
+    <li><b>4. The order.</b> Everything that changes a total first (settlement, transfers, a card with no statement, a missing statement), then the breakdown (categories), then what the app guessed (payments, bills), then what is missing elsewhere (payslip, fund, holding). It moves transfers and the two missing ones above uncategorized.</li>
+    <li><b>5. Three rows per group, biggest first</b>, and Show more opens in place; no group folds away. Uncategorized is by merchant, as By merchant counts them, so its head carries both numbers.</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Notes for the build</h2>
+  <ul class="notes">
+    <li><b>One list, one source.</b> <code>domain/home.ts</code>'s <code>attention()</code> grows the kinds it lacks (transfers, a card with no statement, missing statements) and returns rows, not only counts; the notice bar and the list read the same answer, so they cannot disagree.</li>
+    <li><b>Every answer calls what its screen calls today</b>: <code>setSettlementDecision</code> / <code>decideAllForCard</code>, <code>setTransferDecisions</code>, By merchant's filing, PaymentReview's confirm and dismiss, <code>confirmCandidate</code>, the fund and holding readings. Parity (D-227) holds because the tools already exist; only choice 3's two answers are new writes.</li>
+    <li><b>A bill is tracked without a plan.</b> <code>confirmCandidate</code> needs none; Plan only hid the candidates until one existed.</li>
+    <li><b>The queues stay</b> on Settings › Accounts, By merchant, Debts, Plan and Paychecks, unchanged, so an answer is reachable where it is today too.</li>
+    <li><b>A row answered</b> shows its receipt with Undo until the next answer or a few seconds, then leaves; the counts in the head, the aside and the notice move at once.</li>
+  </ul>
+</section>
+
+</main>
+
+<script>
+(function(){
+  var seg=document.querySelector('[data-theme-seg]');
+  seg.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
+    seg.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b)});
+    var t=b.dataset.t;if(t==='system')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',t);});
+
+  var chev='<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4.5l3 3 3-3"/></svg>';
+  var CAT={Groceries:'#3f8f5a',Sport:'#7a5bb5','Eating out':'#c27a1a',Transport:'#2f74b5',Home:'#a8506e',Health:'#3a9aa0'};
+  function catChoice(c){return '<button class="choice" type="button"><span class="v'+(c?'':' empty')+'">'+(c?'<span class="cdot" style="background:'+CAT[c]+'"></span>'+c:'Choose a category')+'</span>'+chev+'</button>';}
+
+  /* Each group: kind, head(n), why, totals (changes a total), neg (something missing),
+     bulk(n) or none, rows: {who, sub, fig, acts:[[label, variant, receipt]]} */
+  function groups(){return [
+    {kind:'settle',totals:true,head:function(n){return n+' card '+(n===1?'charge':'charges')+' in your bank statement '+(n===1?'is':'are')+' the same money as your card statement';},
+     why:'the month is counted twice until you say',bulk:function(n){return n>1?'Exclude all '+n:null;},bulkReceipt:'Excluded, and remembered for these cards',
+     rows:[{who:'Northcard ···4417',sub:'charged 2 Sep · matches 41 transactions totalling ₪3,140.00 in Aug',fig:'₪3,140.00',acts:[['Exclude','secondary','Excluded: counted once, on the card'],['Keep','ghost','Kept: counted in the bank statement too']]}]},
+    {kind:'transfer',totals:true,head:function(n){return n+' '+(n===1?'transfer':'transfers')+' between your own accounts';},
+     why:'counted as money in and money out until you say',bulk:function(n){return n===2?'Both are transfers':n>2?'All '+n+' are transfers':null;},bulkReceipt:'One transfer',
+     rows:[{who:'from Harbor current, 3 Sep, to Harbor savings, 4 Sep',fig:'₪2,000.00',acts:[['One transfer','secondary','One transfer: neither income nor spending'],['Not a transfer','ghost','Not a transfer: counted as it was']]},
+           {who:'from Harbor current, 18 Sep, to Northcard ···4417, 18 Sep',sub:'paid the card early',fig:'₪500.00',acts:[['One transfer','secondary','One transfer: neither income nor spending'],['Not a transfer','ghost','Not a transfer: counted as it was']]}]},
+    {kind:'nostatement',totals:true,neg:true,one:true,head:function(){return '₪1,276.30 charged to Bluecard ···0932, and no statement of it has been read';},
+     why:"that month's card spending is missing",
+     rows:[{acts:[['Read its statement…','secondary','Reading Bluecard…'],['Count the charge as spending','ghost','Counted: ₪1,276.30 as one charge, until its statement is read']]}]},
+    {kind:'gap',totals:true,neg:true,one:true,head:function(){return 'No Harbor savings statement for September';},
+     why:'so Went out is short',rows:[{acts:[['Read…','secondary','Reading…']]}]},
+    {kind:'uncat',head:function(n,extra){return extra.tx+' transactions at '+n+' '+(n===1?'merchant':'merchants')+' need a category';},
+     why:'every category total depends on it',bulk:function(n,g){var k=g.rows.filter(function(r){return r.sure;}).length;return k>1?'File the '+k+' sure ones':null;},bulkSure:true,
+     rows:[{who:'Corner Market',sub:'9 transactions · looks like Groceries',fig:'₪812.40',cat:'Groceries',sure:true,tx:9},
+           {who:'Lumen Fitness',sub:'1 transaction · looks like Sport',fig:'₪240.00',cat:'Sport',sure:true,tx:1},
+           {who:'City Parking',sub:'6 transactions · no guess',fig:'₪138.00',cat:null,tx:6},
+           {who:'Pine & Co',sub:'3 transactions · looks like Eating out',fig:'₪126.50',cat:'Eating out',sure:true,tx:3},
+           {who:'Railway kiosk',sub:'2 transactions · looks like Transport',fig:'₪44.00',cat:'Transport',sure:true,tx:2},
+           {who:'H. Levin',sub:'2 transactions · no guess',fig:'₪30.00',cat:null,tx:2}]},
+    {kind:'payment',head:function(n){return n+' debt '+(n===1?'payment was':'payments were')+' found rather than entered';},
+     why:'the app guessed these, and they count towards the balance already',bulk:function(n){return n===2?'Accept both':n>2?'Accept all '+n:null;},bulkReceipt:'Accepted',
+     rows:[{who:'Car loan',sub:'from the bank statement, 12 Sep · AUTO FIN 0412',fig:'₪1,850.00',acts:[['Yes, it is','secondary','Accepted: ₪1,850.00 off Car loan'],['Edit','ghost',null],['Not a payment','ghost','Not a payment: Car loan’s balance is back']]},
+           {who:'Study loan',sub:'off the September payslip',fig:'₪420.00',acts:[['Yes, it is','secondary','Accepted: ₪420.00 off Study loan'],['Edit','ghost',null],['Not a payment','ghost','Not a payment: Study loan’s balance is back']]}]},
+    {kind:'bill',head:function(n){return n+' '+(n===1?'charge looks':'charges look')+' like '+(n===1?'a bill':'bills');},why:'changes what there is to split',
+     rows:[{who:'Brightline Mobile',sub:'monthly · 6 months · usually the 3rd · looks certain',fig:'₪94.90',acts:[['Track it','secondary','Tracked: ₪94.90 monthly; not in a plan until you pick'],['Change…','ghost',null],['Not a bill','ghost','Never suggested again']]}]},
+    {kind:'payslip',one:true,head:function(){return 'No payslip for September 2026';},why:'the splitter is built on it',
+     rows:[{acts:[['Read…','secondary','Reading…'],['Add by hand','ghost',null],['No pay that month','ghost','No pay in September: not asked again']]}]},
+    {kind:'fund',one:true,head:function(){return 'Meadow pension has no balance entered';},why:'missing from net worth',
+     rows:[{acts:[['Enter its balance','secondary',null],['Read its report…','ghost','Reading…']]}]},
+    {kind:'holding',one:true,head:function(){return 'Envelope at home: is it still ₪1,200.00?';},why:'counted since 14 May, and possibly wrong',
+     rows:[{acts:[['Still right','secondary','Checked: ₪1,200.00 today'],['New figure','ghost',null]]}]}
+  ];}
+
+  function btn(label,variant,data){return '<button class="btn '+variant+'" type="button"'+(data||'')+'>'+label+'</button>';}
+
+  function render(el,state,opts){
+    opts=opts||{};
+    var live=state.groups.filter(function(g){return g.rows.some(function(r){return !r.gone;});});
+    var count=0,totals=0;
+    live.forEach(function(g){var n=g.rows.filter(function(r){return !r.gone&&!r.done;}).length;count+=n;if(g.totals)totals+=n;});
+    var h='<div class="wl-head"><span class="label">Waiting for an answer</span>'+(totals>0?'<span class="aside">'+totals+' change this month\'s totals</span>':'')+'</div>';
+    if(live.length===0){
+      h+='<div class="allclear"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true" style="flex:none;align-self:center"><path d="M2.5 7.5l3 3 6-7"/></svg><span>Nothing. Every row has a category, every statement and payslip is here, and nothing the app found is waiting on you.</span></div>';
+    }
+    live.forEach(function(g){
+      var gi=state.groups.indexOf(g);
+      var open=g.rows.filter(function(r){return !r.gone;});
+      var waiting=open.filter(function(r){return !r.done;});
+      var n=waiting.length;
+      var extra={tx:waiting.reduce(function(s,r){return s+(r.tx||0);},0)};
+      var dot='<span class="dot'+(g.neg?' neg':'')+'" aria-hidden="true"></span>';
+      if(g.one){
+        var r=g.rows[0];
+        if(r.done){h+='<div class="grp"><div class="rows" style="padding-left:0"><div class="row done"><span>'+r.done+'</span><span>'+btn('Undo','ghost',' data-undo="'+gi+':0"')+'</span></div></div></div>';return;}
+        h+='<div class="grp"><div class="ghead one">'+dot+'<span class="t'+(g.neg?' neg':'')+'">'+g.head(1)+'<small>'+g.why+'</small></span><span class="acts">'+
+          r.acts.map(function(a,ai){return btn(a[0],a[1],' data-act="'+gi+':0:'+ai+'"');}).join('')+'</span></div></div>';
+        return;
+      }
+      if(n===0){h+='<div class="grp"><div class="rows" style="padding-left:0">';open.forEach(function(r){h+='<div class="row done"><span>'+r.done+'</span><span>'+btn('Undo','ghost',' data-undo="'+gi+':'+g.rows.indexOf(r)+'"')+'</span></div>';});h+='</div></div>';return;}
+      var b=g.bulk?g.bulk(n,{rows:waiting}):null;
+      h+='<div class="grp"><div class="ghead">'+dot+'<span class="t">'+g.head(n,extra)+'<small>'+g.why+'</small></span>'+(b?'<span class="acts">'+btn(b,'ghost',' data-bulk="'+gi+'"')+'</span>':'')+'</div><div class="rows">';
+      var cap=g.expanded?open.length:3;
+      open.slice(0,cap).forEach(function(r){
+        var ri=g.rows.indexOf(r);
+        if(r.done){h+='<div class="row done"><span>'+r.done+'</span><span>'+btn('Undo','ghost',' data-undo="'+gi+':'+ri+'"')+'</span></div>';return;}
+        var acts;
+        if(g.kind==='uncat'){acts=catChoice(r.cat)+btn('File','secondary',' data-file="'+gi+':'+ri+'"'+(r.cat?'':' disabled'))+btn('Skip','ghost',' data-skip="'+gi+':'+ri+'"');}
+        else acts=r.acts.map(function(a,ai){return btn(a[0],a[1],' data-act="'+gi+':'+ri+':'+ai+'"');}).join('');
+        h+='<div class="row"><span class="who">'+r.who+(r.sub?'<small>'+r.sub+'</small>':'')+'</span><span class="fig">'+(r.fig||'')+'</span><span class="acts">'+acts+'</span></div>';
+      });
+      h+='</div>';
+      if(open.length>3)h+='<div class="showall">'+btn(g.expanded?'Show fewer':'Show '+(open.length-3)+' more','ghost',' data-more="'+gi+'"')+'</div>';
+      h+='</div>';
+    });
+    el.innerHTML=h;
+    if(opts.onCount)opts.onCount(count,totals);
+  }
+
+  function wire(el,state,opts){
+    function settle(){state.groups.forEach(function(g){g.rows.forEach(function(r){if(r.done)r.gone=true;});});}
+    el.addEventListener('click',function(e){
+      var t=e.target.closest('button');if(!t)return;var d=t.dataset,p;
+      if(d.more!==undefined){state.groups[+d.more].expanded=!state.groups[+d.more].expanded;}
+      else if(d.undo){p=d.undo.split(':');delete state.groups[+p[0]].rows[+p[1]].done;}
+      else if(d.act){settle();p=d.act.split(':');var g=state.groups[+p[0]],r=g.rows[+p[1]],a=r.acts[+p[2]];if(a[2]===null)return;r.done=a[2];}
+      else if(d.file){settle();p=d.file.split(':');var r2=state.groups[+p[0]].rows[+p[1]];r2.done='Filed in '+r2.cat+', '+r2.tx+(r2.tx===1?' transaction':' transactions');}
+      else if(d.skip){settle();p=d.skip.split(':');state.groups[+p[0]].rows[+p[1]].done='Skipped until the next import';}
+      else if(d.bulk!==undefined){settle();var gb=state.groups[+d.bulk];gb.rows.forEach(function(r){if(r.done||r.gone)return;if(gb.bulkSure){if(r.sure)r.done='Filed in '+r.cat+', '+r.tx+(r.tx===1?' transaction':' transactions');}else r.done=gb.bulkReceipt;});}
+      else return;
+      render(el,state,opts);
+      clearTimeout(state.timer);state.timer=setTimeout(function(){settle();render(el,state,opts);},4000);
+    });
+  }
+
+  /* a: the live list */
+  var listA=document.getElementById('list-a'),stateA={groups:groups()};
+  var noticeA=document.querySelector('[data-notice-a]'),noticeText=noticeA.querySelector('[data-notice-text]'),wroteTail=document.querySelector('[data-wrote-tail]');
+  var optsA={onCount:function(n,k){
+    noticeA.style.display=n===0?'none':'';
+    noticeText.innerHTML='<span class="num">'+n+'</span> answers wait on Home'+(k>0?', and <span class="num">'+k+'</span> of them change this month\'s totals.':'.');
+    wroteTail.textContent=n===0?'The new rows flash below. Nothing waits for an answer.':n+(n===1?' answer waits':' answers wait')+', below.';
+  }};
+  render(listA,stateA,optsA);wire(listA,stateA,optsA);
+  document.querySelector('[data-reset]').addEventListener('click',function(){stateA.groups=groups();render(listA,stateA,optsA);});
+
+  /* b: a long uncategorized group, and two groups of one */
+  var names=['Corner Market','Harbor Pharmacy','City Parking','Pine & Co','Railway kiosk','Lumen Fitness','Bookhouse','Green Bakery','Northside Fuel','Tile & Paint','Café Ora','Riverside Clinic','Kids Corner','Petshop 24','Night Market','Hardware Plus','Old Port Grill','Laundry Lane','Copy Center','Garden World'];
+  var cats=['Groceries','Health','Transport','Eating out','Transport','Sport','Home','Groceries','Transport','Home','Eating out','Health',null,'Home','Groceries','Home','Eating out',null,null,'Home'];
+  var longRows=[];for(var i=0;i<41;i++){var c=cats[i%cats.length];var tx=Math.max(1,14-Math.floor(i/3));var amt=(4210-i*97.35);longRows.push({who:names[i%names.length]+(i>=names.length?' '+(Math.floor(i/names.length)+1):''),sub:tx+(tx===1?' transaction':' transactions')+' · '+(c?'looks like '+c:'no guess'),fig:'₪'+amt.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}),cat:c,sure:!!c&&i%3!==2,tx:tx});}
+  var stateB={groups:[
+    {kind:'uncat',head:function(n,extra){return extra.tx+' transactions at '+n+' merchants need a category';},why:'every category total depends on it',bulk:function(n,g){var k=g.rows.filter(function(r){return r.sure;}).length;return k>1?'File the '+k+' sure ones':null;},bulkSure:true,rows:longRows},
+    {kind:'payslip',one:true,head:function(){return 'No payslip for September 2026';},why:'the splitter is built on it',rows:[{acts:[['Read…','secondary','Reading…'],['Add by hand','ghost',null],['No pay that month','ghost','No pay in September: not asked again']]}]},
+    {kind:'holding',one:true,head:function(){return 'Envelope at home: is it still ₪1,200.00?';},why:'counted since 14 May, and possibly wrong',rows:[{acts:[['Still right','secondary','Checked: ₪1,200.00 today'],['New figure','ghost',null]]}]}
+  ]};
+  var listB=document.getElementById('list-b');render(listB,stateB);wire(listB,stateB);
+})();
+</script>
+</body>
+</html>

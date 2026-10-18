@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Embed test page</title>
+    <!--
+      M33 U4 (D-418): the frame as a page of ANOTHER SITE embeds it. The built
+      demo is served at http://127.0.0.1:4180/ (the `demo-static` launcher) and
+      this page at http://localhost:4182/embed.html (`demo-embed`): two hosts,
+      so two sites, and the frames below get partitioned storage and no access
+      to this page, as on the site. Each iframe is embedded the way the site's
+      brief says: referrerpolicy=no-referrer and an empty allow list.
+      `?demo=<url>` points the frames at another build — the deployed one, once
+      there is one.
+    -->
+    <style>
+      :root {
+        --ink: #1d1d1b;
+        --ink-2: #5b5b57;
+        --rule: #e4e2dc;
+        --page: #fbfaf7;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: 24px 16px 64px;
+        background: var(--page);
+        color: var(--ink);
+        font: 16px/1.5 Georgia, 'Times New Roman', serif;
+      }
+      main {
+        max-width: 1040px;
+        margin: 0 auto;
+      }
+      h2 {
+        margin: 32px 0 8px;
+        font-size: 18px;
+      }
+      p,
+      li {
+        color: var(--ink-2);
+      }
+      code {
+        font-size: 13px;
+      }
+      iframe {
+        display: block;
+        border: 1px solid var(--rule);
+        background: #fff;
+      }
+      .wide {
+        width: 100%;
+        aspect-ratio: 16 / 10;
+      }
+      .phone {
+        width: 375px;
+        max-width: 100%;
+        height: 440px;
+      }
+      #log {
+        font: 13px/1.6 ui-monospace, Consolas, monospace;
+        color: var(--ink);
+        max-height: 220px;
+        overflow: auto;
+        border: 1px solid var(--rule);
+        padding: 8px 8px 8px 40px;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Embed test page</h1>
+      <p>
+        This page is <code id="here"></code>; the frames are <code id="there"></code>. Each is an
+        iframe with <code>referrerpolicy="no-referrer"</code> and <code>allow=""</code>.
+      </p>
+
+      <h2>Wide, <code>?tour=custom&amp;autoplay=1</code></h2>
+      <iframe class="wide" data-query="?tour=custom&autoplay=1" title="Emerald, wide" referrerpolicy="no-referrer" allow=""></iframe>
+
+      <h2>Phone, 375 × 440, <code>?tour=custom&amp;autoplay=1</code></h2>
+      <iframe class="phone" data-query="?tour=custom&autoplay=1" title="Emerald, phone" referrerpolicy="no-referrer" allow=""></iframe>
+
+      <h2>Without autoplay, <code>?tour=custom</code></h2>
+      <iframe class="wide" data-query="?tour=custom" title="Emerald, waiting" referrerpolicy="no-referrer" allow=""></iframe>
+
+      <h2>What the frames posted to this page</h2>
+      <p>Every <code>message</code> event this page received, from any frame, as it came.</p>
+      <ol id="log"></ol>
+    </main>
+    <script>
+      const demo = new URLSearchParams(location.search).get('demo') ?? 'http://127.0.0.1:4180/'
+      document.getElementById('here').textContent = location.origin
+      document.getElementById('there').textContent = new URL(demo).origin
+      const frames = [...document.querySelectorAll('iframe')]
+      for (const frame of frames) frame.src = new URL(frame.dataset.query, demo).href
+      const log = document.getElementById('log')
+      window.received = []
+      window.addEventListener('message', (event) => {
+        const which = frames.findIndex((frame) => frame.contentWindow === event.source)
+        const entry = { frame: which === -1 ? '?' : frames[which].title, origin: event.origin, data: event.data }
+        window.received.push(entry)
+        const line = document.createElement('li')
+        line.textContent = `${entry.frame} · ${entry.origin} · ${JSON.stringify(entry.data)}`
+        log.append(line)
+        log.scrollTop = log.scrollHeight
+      })
+    </script>
+  </body>
+</html>

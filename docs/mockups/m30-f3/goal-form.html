@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Goal Form</title>
+<style>
+/* M30 F3. The goal form asks one question, "Where is the money?", and the answer decides the rest;
+   and the goal's drawer shows that answer with its own Edit. Tokens copied from src/ui/theme/tokens.css
+   (light, and :root[data-theme="dark"]); the buttons are .fc-btn's, the menus ChoiceField's (D-290:
+   never the platform's select), the tags parts.tsx's Tag. Fonts are the app's own bundled woff2, read
+   from node_modules, so this opens from the checkout with the network off. Every name and figure is
+   made up. The build ports this file's markup and words. */
+@font-face{font-family:"IBM Plex Sans";font-weight:400;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:500;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-500-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:600;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-600-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-weight:400;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2") format("woff2")}
+
+:root{
+  --color-background:#ffffff;--color-surface:#f7f7f6;--color-elevated:#ffffff;
+  --color-ink:#111111;--color-ink-secondary:#6b6b6b;--color-ink-tertiary:#a0a09c;
+  --color-hairline:#ececea;--color-hairline-strong:#d9d9d6;
+  --color-accent:#07805f;--color-accent-ink:#ffffff;--color-accent-hover:#05664b;--color-accent-soft:#e8f6f1;
+  --color-action:#07805f;--color-action-ink:#ffffff;--color-action-hover:#05664b;--color-action-deep:#055a43;
+  --color-negative:#c4342b;--color-positive:#1f7a4d;--color-flow-saved:#0b4f35;--color-flow-tax:#b45309;
+  --shadow-pop:0 1px 2px rgba(17,17,17,.04),0 8px 24px rgba(17,17,17,.08);
+  --scrim:rgba(17,17,17,.18);
+  --font-sans:"IBM Plex Sans","IBM Plex Sans Hebrew",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --color-background:#0b0b0c;--color-surface:#151517;--color-elevated:#1b1b1e;
+  --color-ink:#f2f2f0;--color-ink-secondary:#a1a1a0;--color-ink-tertiary:#6a6a6c;
+  --color-hairline:#262629;--color-hairline-strong:#34343a;
+  --color-accent:#34d399;--color-accent-ink:#06231a;--color-accent-hover:#5ee0b0;--color-accent-soft:#10312a;
+  --color-action:#34d399;--color-action-ink:#06231a;--color-action-hover:#5ee0b0;--color-action-deep:#1fae7d;
+  --color-negative:#e5675e;--color-positive:#4caf7d;--color-flow-saved:#2f9e6a;--color-flow-tax:#f59e0b;
+  --shadow-pop:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.55);--scrim:rgba(0,0,0,.5);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --color-background:#0b0b0c;--color-surface:#151517;--color-elevated:#1b1b1e;
+  --color-ink:#f2f2f0;--color-ink-secondary:#a1a1a0;--color-ink-tertiary:#6a6a6c;
+  --color-hairline:#262629;--color-hairline-strong:#34343a;
+  --color-accent:#34d399;--color-accent-ink:#06231a;--color-accent-hover:#5ee0b0;--color-accent-soft:#10312a;
+  --color-action:#34d399;--color-action-ink:#06231a;--color-action-hover:#5ee0b0;--color-action-deep:#1fae7d;
+  --color-negative:#e5675e;--color-positive:#4caf7d;--color-flow-saved:#2f9e6a;--color-flow-tax:#f59e0b;
+  --shadow-pop:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.55);--scrim:rgba(0,0,0,.5);color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{background:var(--color-background)}
+body{margin:0;color:var(--color-ink);font-family:var(--font-sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
+code{font-family:var(--font-mono);font-size:12px}
+.label{font-size:11px;line-height:1.3;letter-spacing:.08em;font-weight:500;text-transform:uppercase;color:var(--color-ink-secondary)}
+.caption{font-size:12px;line-height:1.4;color:var(--color-ink-secondary)}
+.num{font-variant-numeric:tabular-nums}
+a{color:var(--color-accent);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ------------------------------------------------------------ the mockup's own page */
+.page{max-width:1120px;margin:0 auto;padding:32px 16px 96px;display:flex;flex-direction:column;gap:44px}
+.intro{display:flex;flex-direction:column;gap:8px;max-width:72ch}
+.intro h1{margin:0;font-size:24px;line-height:1.15;font-weight:600;letter-spacing:-.01em}
+.intro p{margin:0;color:var(--color-ink-secondary)}
+.bar{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center}
+.seg{display:inline-flex}
+.seg button{height:30px;padding:0 12px;border:1px solid var(--color-hairline-strong);margin-left:-1px;font-size:13px;color:var(--color-ink-secondary)}
+.seg button:first-child{margin-left:0}
+.seg button.on{background:var(--color-accent-soft);color:var(--color-ink);border-color:var(--color-accent);position:relative;z-index:1}
+.state-head{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:6px}
+.state-head h2{margin:0;font-size:16px;font-weight:600}
+.state-head .caption{flex:1 1 280px}
+.no{font-family:var(--font-mono);font-size:11px;color:var(--color-ink-tertiary)}
+.frame{border:1px solid var(--color-hairline);padding:24px;display:flex;flex-direction:column;gap:28px}
+@media (max-width:620px){.frame{padding:16px}}
+.where{font-family:var(--font-mono);font-size:11px;color:var(--color-ink-tertiary);margin:0 0 -16px}
+.pair{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:900px){.pair{grid-template-columns:minmax(0,1fr)}}
+.col{display:flex;flex-direction:column;gap:28px;min-width:0}
+
+/* ------------------------------------------------------------ the form (GoalEditor) */
+.form h3{margin:0;font-size:24px;line-height:1.2;font-weight:500}
+.form .lead{margin:4px 0 22px;font-size:12px;color:var(--color-ink-tertiary);max-width:60ch}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px 32px}
+@media (max-width:620px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field > .label{color:var(--color-ink-tertiary)}
+.field .hint{font-size:12px;color:var(--color-ink-tertiary)}
+.input{height:32px;border:1px solid var(--color-hairline-strong);background:var(--color-elevated);padding:0 12px;display:flex;align-items:center;min-width:0;width:100%}
+.input.empty{color:var(--color-ink-tertiary)}
+.input.date{font-variant-numeric:tabular-nums}
+.area{min-height:32px;border:1px solid var(--color-hairline-strong);background:var(--color-elevated);padding:6px 12px}
+/* ChoiceField, closed: a text field with a chevron */
+.choice{height:32px;border:1px solid var(--color-hairline-strong);background:var(--color-elevated);padding:0 10px 0 12px;display:flex;align-items:center;gap:10px;min-width:0;width:100%;text-align:left}
+.choice .v{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.choice .m{font-size:12px;color:var(--color-ink-secondary);white-space:nowrap;font-variant-numeric:tabular-nums}
+.choice svg{flex:none;color:var(--color-ink-tertiary)}
+.choice.open{border-color:var(--color-accent)}
+.last4{margin-left:6px;font-size:12px;color:var(--color-ink-secondary)}
+.wide{grid-column:1 / -1}
+.ask{margin-top:24px;display:flex;flex-direction:column;gap:4px}
+
+.ask > .label{color:var(--color-ink-tertiary)}
+/* the answer's follow-up: hangs off the field it answers */
+.then{margin-top:10px;border-left:2px solid var(--color-hairline-strong);padding:4px 0 4px 16px;display:flex;flex-direction:column;gap:8px}
+.then .q{font-size:14px}
+.amount{display:flex;align-items:baseline;gap:8px;border-bottom:1px solid var(--color-hairline-strong);width:220px;padding:2px 0 4px}
+.amount.focus{border-bottom:2px solid var(--color-accent);padding-bottom:3px}
+.amount .cur{color:var(--color-ink-secondary);font-size:18px}
+.amount .fig{font-size:22px;font-weight:500;font-variant-numeric:tabular-nums}
+.then p{margin:0;font-size:12px;color:var(--color-ink-secondary);max-width:58ch}
+.then b{font-weight:500;color:var(--color-ink)}
+.mono{font-family:var(--font-mono);font-size:12px}
+/* the fold */
+.fold{margin-top:20px}
+.fold summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--color-ink-secondary)}
+.fold summary::-webkit-details-marker{display:none}
+.fold summary svg{transition:transform .15s}
+.fold[open] summary svg{transform:rotate(90deg)}
+.fold .inside{margin-top:10px;border:1px solid var(--color-hairline);background:var(--color-surface);padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+
+.fold .inside p{margin:0;font-size:12px;color:var(--color-ink-secondary)}
+.actions{margin-top:28px;display:flex;flex-wrap:wrap;align-items:center;gap:12px}
+
+/* .fc-btn */
+.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;height:30px;padding:0 12px;font-size:13px;font-weight:500;white-space:nowrap}
+.btn.tiled{padding-inline-start:0;padding-inline-end:10px}
+.btn .tile{align-self:stretch;width:30px;display:inline-flex;align-items:center;justify-content:center}
+.btn.primary{background:var(--color-action);color:var(--color-action-ink)}
+.btn.primary .tile{background:var(--color-action-deep)}
+.btn.secondary{background:var(--color-surface);box-shadow:inset 0 0 0 1px var(--color-hairline-strong)}
+.btn.secondary .tile{background:var(--color-hairline);color:var(--color-ink-secondary)}
+.btn.ghost{padding:0 4px;color:var(--color-accent)}
+.btn.ghost:hover{text-decoration:underline;text-underline-offset:5px}
+
+/* ChoiceField, open: an elevated list with shadow-pop, square */
+.pop{border:1px solid var(--color-hairline-strong);background:var(--color-elevated);box-shadow:var(--shadow-pop);margin-top:4px;padding:4px 0;max-width:100%}
+.pop .grp{padding:8px 12px 4px;font-size:11px;letter-spacing:.08em;font-weight:500;text-transform:uppercase;color:var(--color-ink-tertiary)}
+.pop .opt{display:flex;align-items:baseline;gap:10px;padding:6px 12px;min-width:0}
+.pop .opt .v{flex:1 1 auto;min-width:0}
+.pop .opt .m{font-size:12px;color:var(--color-ink-secondary);white-space:nowrap;font-variant-numeric:tabular-nums}
+.pop .opt.on{background:var(--color-accent-soft)}
+.pop .opt.off{color:var(--color-ink-tertiary)}
+.pop .opt.off .m{color:var(--color-ink-tertiary)}
+.pop .sep{border-top:1px solid var(--color-hairline);margin:4px 0}
+.pop .new{color:var(--color-accent);font-weight:500}
+.micro{margin:4px 8px 8px;border:1px solid var(--color-hairline);background:var(--color-surface);padding:12px;display:flex;flex-direction:column;gap:12px}
+.micro .ttl{font-size:13px;font-weight:500}
+.chips{display:flex;flex-wrap:wrap;gap:0}
+.chips button{height:28px;padding:0 10px;font-size:12px;border:1px solid var(--color-hairline-strong);margin-left:-1px;color:var(--color-ink-secondary);white-space:nowrap}
+.chips button:first-child{margin-left:0}
+.chips button.on{border-color:var(--color-accent);background:var(--color-accent-soft);color:var(--color-ink);position:relative;z-index:1}
+.micro .grid2{gap:10px 16px}
+.micro p{margin:0;font-size:12px;color:var(--color-ink-secondary)}
+
+/* ------------------------------------------------------------ the drawer (GoalDetail) */
+.drawer-wrap{background:var(--scrim);padding:16px 0 16px 16px;display:flex;justify-content:flex-end}
+.drawer{position:relative;width:100%;max-width:480px;background:var(--color-background);border-left:1px solid var(--color-hairline-strong);padding:20px 24px 28px;display:flex;flex-direction:column;gap:18px}
+.drawer .top{position:absolute;top:12px;right:12px;display:flex;align-items:center;gap:6px}
+.xbtn{display:inline-flex;width:28px;height:28px;align-items:center;justify-content:center;color:var(--color-ink-tertiary);border:1px solid transparent}
+.drawer h4{margin:0;font-size:20px;font-weight:500}
+.src{display:block;font-size:12px;color:var(--color-ink-secondary);font-variant-numeric:tabular-nums}
+.card{border:1px solid var(--color-hairline-strong);background:var(--color-background);padding:12px 14px;display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.card b{font-weight:500}
+.card p{margin:0;font-size:12px;color:var(--color-ink-secondary)}
+.dep{width:100%;border-collapse:collapse;margin-top:6px}
+.dep td{padding:8px 10px;border-bottom:1px solid var(--color-hairline);vertical-align:top}
+.dep td:first-child{padding-left:0;color:var(--color-ink-secondary);font-size:13px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.dep td:last-child{padding-right:0;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+.dep .src{display:block}
+.rowline{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.sw{display:inline-block;width:10px;height:10px;margin-right:8px;vertical-align:middle}
+.sw.already{background:var(--color-ink-tertiary)}
+.sw.derived{background:var(--color-flow-saved)}
+.sw.growth{outline:1px solid var(--color-ink-tertiary);outline-offset:-1px}
+.addrow{margin-top:10px;display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.said{margin:10px 0 0;font-size:12px;color:var(--color-ink-secondary);max-width:52ch}
+
+/* .chip / Tag (parts.tsx) */
+.tag{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--color-hairline-strong);padding:2px 7px;font-size:11px;line-height:1.3;font-weight:500;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap;color:var(--color-ink-secondary)}
+.tag.good{border-color:color-mix(in srgb,var(--color-positive) 45%,transparent);color:var(--color-positive)}
+.tag.bad{border-color:color-mix(in srgb,var(--color-negative) 45%,transparent);color:var(--color-negative)}
+.tag.warn{border-color:color-mix(in srgb,var(--color-flow-tax) 50%,transparent);color:var(--color-flow-tax)}
+.tag.derived{border-color:color-mix(in srgb,var(--color-flow-saved) 50%,transparent);color:var(--color-flow-saved)}
+.tag.new{border-style:dashed}
+.check{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font-size:12px;color:var(--color-ink-secondary)}
+
+/* ------------------------------------------------------------ notes */
+section > h2{margin:0 0 8px;font-size:16px;font-weight:600}
+.notes{max-width:76ch;display:flex;flex-direction:column;gap:6px;margin:0;padding-left:18px;color:var(--color-ink-secondary)}
+.notes b{color:var(--color-ink);font-weight:500}
+.table-wrap{overflow-x:auto}
+.words{width:100%;border-collapse:collapse;font-size:12px;min-width:640px}
+.words th{text-align:left;font-weight:500;color:var(--color-ink-secondary);padding:6px 12px 6px 0;border-bottom:1px solid var(--color-hairline-strong)}
+.words td{padding:7px 12px 7px 0;border-bottom:1px solid var(--color-hairline);vertical-align:top}
+.words td:first-child{color:var(--color-ink-secondary);width:16%}
+.words td:nth-child(2){color:var(--color-ink-tertiary);width:40%}
+.steps{width:100%;border-collapse:collapse;font-size:12px;min-width:640px}
+.steps th{text-align:left;font-weight:500;color:var(--color-ink-secondary);padding:6px 12px 6px 0;border-bottom:1px solid var(--color-hairline-strong);width:50%}
+.steps td{padding:7px 12px 7px 0;border-bottom:1px solid var(--color-hairline);vertical-align:top}
+.steps td:first-child{color:var(--color-ink-tertiary)}
+.steps ol{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:3px}
+.steps .dead{color:var(--color-negative)}
+.steps .count{display:block;margin-top:6px;font-weight:500;color:var(--color-ink)}
+</style>
+</head>
+<body>
+<main class="page">
+
+<header class="intro">
+  <span class="label">M30 F3 · mockup</span>
+  <h1>A goal asks one question: where is the money</h1>
+  <p>The goal form asks <b>Where is the money?</b> and lists the bank accounts, the broker's holdings and the places kept by hand, each by one name. The answer decides what comes next: a bank account asks how much of it is already there; a holding follows the rows that bought it and shows what it is worth; <b>+ New…</b> makes a place without leaving the form. The goal's drawer shows the answer and has its own Edit. Every name and figure is made up.</p>
+  <div class="bar">
+    <span class="caption">Theme</span>
+    <div class="seg" data-theme-seg>
+      <button data-t="system" class="on">System</button><button data-t="light">Light</button><button data-t="dark">Dark</button>
+    </div>
+  </div>
+</header>
+
+<!-- =============================================================== a. money already in a bank account -->
+<section>
+  <div class="state-head">
+    <span class="no">a</span><h2>5,000 in the bank is for a trip</h2>
+    <span class="caption">The money is already in Everyday Bank current. One form: name it, say where the money is, say how much of it is the trip's.</span>
+  </div>
+  <div class="frame">
+    <div class="pair">
+      <div class="col">
+        <p class="where">Goals › Add a goal</p>
+        <form class="form" onsubmit="return false">
+          <h3>Add a goal</h3>
+          <p class="lead">What it is for, and where the money is. The rest follows from that.</p>
+          <div class="grid2">
+            <label class="field"><span class="label">Name</span><span class="input">Trip to Japan</span></label>
+            <label class="field"><span class="label">What it is for</span>
+              <button type="button" class="choice"><span class="v">For something specific</span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4.5l3 3 3-3"/></svg></button></label>
+            <label class="field"><span class="label">Target amount</span><span class="input num">12,000.00</span><span class="hint">optional — open-ended goals are fine</span></label>
+            <label class="field"><span class="label">By when</span><span class="input date">2027-06-01</span><span class="hint">drives the how-much-a-month figure</span></label>
+          </div>
+
+          <div class="ask">
+            <span class="label">Where is the money?</span>
+            <button type="button" class="choice"><span class="v">Everyday Bank current<span class="last4">···1234</span></span><span class="m">₪12,430.55 on 30 Sep</span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4.5l3 3 3-3"/></svg></button>
+          </div>
+          <div class="then">
+            <span class="q">How much of it is already there?</span>
+            <span class="amount focus"><span class="cur">₪</span><span class="fig">5,000.00</span></span>
+            <p>Counted as <b>Was already there</b>, on 5 Oct. The other <b class="num">₪7,430.55</b> in Everyday Bank current stays free.</p>
+          </div>
+
+          <details class="fold">
+            <summary><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.5 2l3 3-3 3"/></svg>Find its deposits another way</summary>
+          </details>
+
+          <div class="grid2" style="margin-top:20px">
+            <label class="field"><span class="label">Note</span><span class="area empty">&nbsp;</span></label>
+          </div>
+
+          <div class="actions">
+            <button class="btn primary tiled"><span class="tile"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 8.5l3 3 7-7"/></svg></span>Add goal</button>
+            <button class="btn ghost">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="col">
+        <p class="where">Goals › Trip to Japan (the drawer, after Add goal)</p>
+        <div class="drawer-wrap">
+          <div class="drawer">
+            <div class="top">
+              <button class="btn ghost">Edit</button>
+              <button class="xbtn" aria-label="Close"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+            </div>
+            <div>
+              <span class="label">Goal</span>
+              <h4>Trip to Japan</h4>
+              <span class="src">₪5,000.00 of ₪12,000.00 by Jun 2027</span>
+            </div>
+            <div>
+              <span class="label">Where the money is</span>
+              <div class="card">
+                <b>Everyday Bank current<span class="last4">···1234</span></b>
+                <p>Inside the account's balance. Adding to it here moves nothing; it only stops that money counting as free.</p>
+              </div>
+            </div>
+            <div>
+              <span class="label">How the balance is made</span>
+              <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px">
+                <div class="rowline"><span class="caption"><i class="sw already"></i>Was already there</span><b class="num" style="font-weight:500">₪5,000.00</b></div>
+                <div class="rowline" style="border-top:1px solid var(--color-hairline);padding-top:6px"><span>Balance</span><b class="num" style="font-weight:500">₪5,000.00</b></div>
+              </div>
+            </div>
+            <div>
+              <span class="label">Deposits</span>
+              <div style="overflow-x:auto"><table class="dep"><tbody>
+                <tr><td>5 Oct</td><td>Was already there<span class="src">in Everyday Bank current</span></td><td><span class="tag">Was already there</span></td><td>₪5,000.00</td></tr>
+              </tbody></table></div>
+              <div class="addrow">
+                <button class="btn secondary tiled"><span class="tile"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M8 3v10M3 8h10"/></svg></span>Set money aside</button>
+                <button class="btn ghost">Was already there</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =============================================================== b. following a broker holding -->
+<section>
+  <div class="state-head">
+    <span class="no">b</span><h2>A goal following a holding at the broker</h2>
+    <span class="caption">Pick the holding and the goal follows the rows that bought or sold it. Nothing to type: what it is worth and what went in show before you save.</span>
+  </div>
+  <div class="frame">
+    <div class="pair">
+      <div class="col">
+        <p class="where">Goals › Add a goal</p>
+        <form class="form" onsubmit="return false">
+          <h3>Add a goal</h3>
+          <p class="lead">What it is for, and where the money is. The rest follows from that.</p>
+          <div class="grid2">
+            <label class="field"><span class="label">Name</span><span class="input">House deposit</span></label>
+            <label class="field"><span class="label">What it is for</span>
+              <button type="button" class="choice"><span class="v">Long term</span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4.5l3 3 3-3"/></svg></button></label>
+            <label class="field"><span class="label">Target amount</span><span class="input num">150,000.00</span><span class="hint">optional — open-ended goals are fine</span></label>
+            <label class="field"><span class="label">By when</span><span class="input date empty">yyyy-mm-dd</span><span class="hint">drives the how-much-a-month figure</span></label>
+          </div>
+
+          <div class="ask">
+            <span class="label">Where is the money?</span>
+            <button type="button" class="choice"><span class="v">World equity ETF<span class="last4">at the broker</span></span><span class="m">₪41,206.00 on 31 Jul</span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4.5l3 3 3-3"/></svg></button>
+          </div>
+          <div class="then">
+            <span class="q">Follows the rows that bought or sold World equity ETF</span>
+            <p>Worth <b class="num">₪41,206.00</b> by its reading of 31 Jul · put in <b class="num">₪35,000.00</b></p>
+            <span class="check"><span class="tag good">Matches its cost</span><span>14 rows put in ₪35,000.00, what the statement says it cost.</span></span>
+            <p>The transfer that brought the cash to the broker is not a deposit: it is the same money.</p>
+          </div>
+
+          <details class="fold">
+            <summary><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.5 2l3 3-3 3"/></svg>Find its deposits another way</summary>
+          </details>
+
+          <div class="actions">
+            <button class="btn primary tiled"><span class="tile"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 8.5l3 3 7-7"/></svg></span>Add goal</button>
+            <button class="btn ghost">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="col">
+        <p class="where">Goals › House deposit (the drawer)</p>
+        <div class="drawer-wrap">
+          <div class="drawer">
+            <div class="top">
+              <button class="btn ghost">Edit</button>
+              <button class="xbtn" aria-label="Close"><svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4l8 8M12 4l-8 8"/></svg></button>
+            </div>
+            <div>
+              <span class="label">Goal</span>
+              <h4>House deposit</h4>
+              <span class="src">₪41,206.00 of ₪150,000.00</span>
+              <span class="src">Worth ₪41,206.00 by its reading of 31 Jul · put in ₪35,000.00</span>
+            </div>
+            <div>
+              <span class="label">Where the money is</span>
+              <div class="card">
+                <b>World equity ETF<span class="last4">at the broker</span></b>
+                <p>Follows the rows that bought or sold it. Every buy or sale is a deposit into House deposit.</p>
+                <span class="mono">14 deposits · ₪35,000.00</span>
+                <span class="check"><span class="tag good">Matches its cost</span><span>14 rows put in ₪35,000.00, what the statement says it cost.</span></span>
+              </div>
+            </div>
+            <div>
+              <span class="label">How the balance is made</span>
+              <div style="margin-top:8px;display:flex;flex-direction:column;gap:8px">
+                <div class="rowline"><span class="caption"><i class="sw derived"></i>Read from a statement</span><b class="num" style="font-weight:500">₪35,000.00</b></div>
+                <div class="rowline"><span class="caption"><i class="sw growth"></i>Growth</span><b class="num" style="font-weight:500">₪6,206.00</b></div>
+                <div class="rowline" style="border-top:1px solid var(--color-hairline);padding-top:6px"><span>Balance</span><b class="num" style="font-weight:500">₪41,206.00</b></div>
+              </div>
+            </div>
+            <div>
+              <span class="label">Deposits</span>
+              <div style="overflow-x:auto"><table class="dep"><tbody>
+                <tr><td>31 Jul</td><td>Growth<span class="src">in World equity ETF</span></td><td><span class="tag">Growth</span></td><td>₪6,206.00</td></tr>
+                <tr><td>14 Jul</td><td>Bought<span class="src">in World equity ETF</span></td><td><span class="tag derived">Read from a statement</span></td><td>₪2,500.00</td></tr>
+                <tr><td>12 Jun</td><td>Bought<span class="src">in World equity ETF</span></td><td><span class="tag derived">Read from a statement</span></td><td>₪2,500.00</td></tr>
+              </tbody></table></div>
+              <p class="caption" style="margin:4px 0 0">and 12 earlier</p>
+              <p class="said">Its deposits are the rows that bought or sold World equity ETF, so there is nothing to type here. <a href="#">Edit</a> to find them another way.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =============================================================== c. + New… opened in place -->
+<section>
+  <div class="state-head">
+    <span class="no">c</span><h2>+ New… makes a place without leaving the form</h2>
+    <span class="caption">The list, opened: bank accounts, the broker's holdings, places kept by hand, and + New… at the foot. A holding another goal follows is shown and cannot be picked. Here a fixed deposit is being made.</span>
+  </div>
+  <div class="frame">
+    <div class="pair">
+      <div class="col">
+        <p class="where">Goals › Add a goal · Where is the money?, open</p>
+        <div class="form">
+          <div class="ask" style="margin-top:0;max-width:none">
+            <span class="label">Where is the money?</span>
+            <button type="button" class="choice open"><span class="v" style="color:var(--color-ink-tertiary)">Pick one, or make a new place</span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 7.5l3-3 3 3"/></svg></button>
+            <div class="pop" role="listbox">
+              <div class="grp">Bank accounts</div>
+              <div class="opt"><span class="v">Everyday Bank current<span class="last4">···1234</span></span><span class="m">₪12,430.55 on 30 Sep</span></div>
+              <div class="opt"><span class="v">Second Bank savings<span class="last4">···8890</span></span><span class="m">₪16,748.00 on 30 Sep</span></div>
+              <div class="grp">At the broker</div>
+              <div class="opt off"><span class="v">World equity ETF</span><span class="m">House deposit follows it</span></div>
+              <div class="opt"><span class="v">TA-125 tracker</span><span class="m">₪8,950.20 on 31 Jul</span></div>
+              <div class="opt"><span class="v">Cash at the broker</span><span class="m">₪312.40 on 31 Jul</span></div>
+              <div class="grp">Kept by hand</div>
+              <div class="opt"><span class="v">Envelope at home</span><span class="m">₪1,200.00 recorded</span></div>
+              <div class="sep"></div>
+              <div class="opt on new">+ New…</div>
+              <div class="micro">
+                <span class="ttl">A place without statements</span>
+                <div class="chips" role="group" aria-label="What is it">
+                  <button>Cash at home</button><button class="on">A deposit</button><button>A fund</button><button>Something else</button>
+                </div>
+                <div class="grid2">
+                  <label class="field"><span class="label">Name</span><span class="input">1-year deposit</span></label>
+                  <label class="field"><span class="label">At</span><span class="input">Second Bank</span><span class="hint">optional — the bank or company</span></label>
+                  <label class="field"><span class="label">Locked until</span><span class="input date">2027-03-31</span><span class="hint">optional</span></label>
+                </div>
+                <div style="display:flex;gap:12px;align-items:center">
+                  <button class="btn secondary">Use it</button>
+                  <button class="btn ghost">Cancel</button>
+                </div>
+                <p>Nothing is written until Add goal. Cancel the goal and no empty place is left behind.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col">
+        <p class="where">… after Use it: the form carries on</p>
+        <div class="form">
+          <div class="ask" style="margin-top:0;max-width:none">
+            <span class="label">Where is the money?</span>
+            <button type="button" class="choice"><span class="v">1-year deposit<span class="last4">at Second Bank</span></span><span class="tag new">New</span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4.5l3 3 3-3"/></svg></button>
+          </div>
+          <div class="then">
+            <span class="q">How much of it is already there?</span>
+            <span class="amount focus"><span class="cur">₪</span><span class="fig">20,000.00</span></span>
+            <p>Counted as <b>Was already there</b>, on 5 Oct. No statement says what is in it, so you add to it from the goal, as today.</p>
+          </div>
+        </div>
+        <div class="form">
+          <p class="caption" style="margin:0 0 8px">The same place, made as <b style="font-weight:500;color:var(--color-ink)">Cash at home</b>: Name only, nothing locked.</p>
+          <div class="chips" role="group" aria-label="What is it"><button class="on">Cash at home</button><button>A deposit</button><button>A fund</button><button>Something else</button></div>
+          <div class="grid2" style="margin-top:10px">
+            <label class="field"><span class="label">Name</span><span class="input">Envelope in the drawer</span></label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =============================================================== d. the advanced category feed -->
+<section>
+  <div class="state-head">
+    <span class="no">d</span><h2>The category feed, folded away</h2>
+    <span class="caption">Closed, it is one quiet line under the answer, as in (a) and (b). Open, it reads a goal's deposits from a Money moved category instead of the answer's own way.</span>
+  </div>
+  <div class="frame">
+    <div class="pair">
+      <div class="col">
+        <p class="where">Goals › Edit Trip to Japan · the fold, open</p>
+        <div class="form">
+          <div class="ask" style="margin-top:0">
+            <span class="label">Where is the money?</span>
+            <button type="button" class="choice"><span class="v">Second Bank savings<span class="last4">···8890</span></span><span class="m">₪16,748.00 on 30 Sep</span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4.5l3 3 3-3"/></svg></button>
+          </div>
+          <details class="fold" open>
+            <summary><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.5 2l3 3-3 3"/></svg>Find its deposits another way</summary>
+            <div class="inside">
+              <span class="label" style="color:var(--color-ink-tertiary)">Read them from a category</span>
+              <button type="button" class="choice"><span class="v">Money moved › Japan</span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4.5l3 3 3-3"/></svg></button>
+              <p>Every transaction you file under it is a deposit into Trip to Japan, read from the bank. One source only, so nothing counts twice.</p>
+            </div>
+          </details>
+        </div>
+      </div>
+      <div class="col">
+        <p class="where">… with a holding picked, the category replaces its rows</p>
+        <div class="form">
+          <div class="ask" style="margin-top:0">
+            <span class="label">Where is the money?</span>
+            <button type="button" class="choice"><span class="v">TA-125 tracker<span class="last4">at the broker</span></span><span class="m">₪8,950.20 on 31 Jul</span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4.5l3 3 3-3"/></svg></button>
+          </div>
+          <details class="fold" open>
+            <summary><svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3.5 2l3 3-3 3"/></svg>Find its deposits another way</summary>
+            <div class="inside">
+              <span class="label" style="color:var(--color-ink-tertiary)">Read them from a category</span>
+              <button type="button" class="choice"><span class="v">Money moved › Pension top-up</span><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4.5l3 3 3-3"/></svg></button>
+              <p>Instead of the rows that bought or sold TA-125 tracker. One source only, so nothing counts twice.</p>
+            </div>
+          </details>
+        </div>
+        <div class="drawer-wrap" style="padding:12px 0 12px 12px">
+          <div class="drawer" style="gap:10px">
+            <span class="label">The drawer, when a goal has no answer yet</span>
+            <div class="card" style="margin-top:0">
+              <b>Where is the money? Not said yet</b>
+              <p>Say where, and you can add to it here.</p>
+              <div><button class="btn secondary">Say where</button></div>
+            </div>
+            <p class="caption" style="margin:0">Say where opens the goal's Edit. A document's older goals with no place land here; nothing is hidden without a sentence.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- =============================================================== click paths -->
+<section>
+  <h2>The click path, before and after</h2>
+  <div class="table-wrap">
+    <table class="steps">
+      <thead><tr><th>Today</th><th>After</th></tr></thead>
+      <tbody>
+        <tr><td>
+          <b style="font-weight:500;color:var(--color-ink-secondary)">(a) 5,000 in the bank is for a trip</b>
+          <ol>
+            <li>Goals: Add a goal</li>
+            <li>Name it</li>
+            <li>Where its deposits usually go: pick the account's Cash. <span class="dead">Before F2 the account had no place, so it was not listed: a dead end, out to the Money map to make a place and link the account, and back.</span></li>
+            <li>Add goal</li>
+            <li>Open the goal from the list</li>
+            <li>Was already there</li>
+            <li>Type 5,000, Save</li>
+          </ol>
+          <span class="count">7 steps, two screens</span>
+        </td><td>
+          <b style="font-weight:500;color:var(--color-ink-secondary)">&nbsp;</b>
+          <ol>
+            <li>Goals: Add a goal</li>
+            <li>Name it</li>
+            <li>Where is the money?: Everyday Bank current</li>
+            <li>How much of it is already there?: 5,000</li>
+            <li>Add goal</li>
+          </ol>
+          <span class="count">5 steps, one form</span>
+        </td></tr>
+        <tr><td>
+          <b style="font-weight:500;color:var(--color-ink-secondary)">(b) a goal following a holding at the broker</b>
+          <ol>
+            <li>Add a goal, name it, Where its deposits usually go: Broker · World equity ETF, Add goal</li>
+            <li>Open the goal from the list</li>
+            <li>How its deposits are found: The rows that bought or sold World equity ETF</li>
+          </ol>
+          <span class="count">3 steps on two screens; what it is worth shows only after the third</span>
+        </td><td>
+          <b style="font-weight:500;color:var(--color-ink-secondary)">&nbsp;</b>
+          <ol>
+            <li>Add a goal, name it</li>
+            <li>Where is the money?: World equity ETF</li>
+            <li>Add goal</li>
+          </ol>
+          <span class="count">One form; worth and put in show before you save</span>
+        </td></tr>
+        <tr><td>
+          <b style="font-weight:500;color:var(--color-ink-secondary)">(c) a goal kept in a deposit nobody has recorded yet</b>
+          <ol>
+            <li>Leave the goal: Money map, Add a place, fill it, Save</li>
+            <li>Add a holding in it, fill it, Save</li>
+            <li>Goals: Add a goal, pick it, Add goal</li>
+            <li>Open the goal, Was already there, amount, Save</li>
+          </ol>
+          <span class="count">Four screens</span>
+        </td><td>
+          <b style="font-weight:500;color:var(--color-ink-secondary)">&nbsp;</b>
+          <ol>
+            <li>Add a goal, name it</li>
+            <li>Where is the money?: + New…, A deposit, name, Use it</li>
+            <li>How much of it is already there?, Add goal</li>
+          </ol>
+          <span class="count">One form</span>
+        </td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- =============================================================== words -->
+<section>
+  <h2>Every sentence, before and after</h2>
+  <div class="table-wrap">
+    <table class="words">
+      <thead><tr><th>Where</th><th>Today</th><th>After</th></tr></thead>
+      <tbody>
+        <tr><td>Form, lead</td><td>A goal is a purpose, not a place. Its balance is whatever the deposits against it add up to, and the money behind it can sit in several holdings at once.</td><td>What it is for, and where the money is. The rest follows from that.</td></tr>
+        <tr><td>What it is for</td><td>Emergency fund · Short term · Long term · Retirement · For something specific</td><td>Short term · Long term · Retirement · For something specific (the cushion's months are on Overview, D-360)</td></tr>
+        <tr><td>Emergency fields</td><td>{n} months of expenses · the slider · the two priced bases · "Three to six months is the usual answer…" · "The one you pick is the target…"</td><td>(gone from the form)</td></tr>
+        <tr><td>The place field</td><td>Where its deposits usually go · hint "what the add-deposit form starts from" · Ask each time</td><td>Where is the money? · no hint · Pick one, or make a new place</td></tr>
+        <tr><td>A choice's name</td><td>Everyday Bank · Cash (place · holding)</td><td>Everyday Bank current ···1234 for an account (its Cash is never named) · World equity ETF at the broker · Envelope at home</td></tr>
+        <tr><td>A choice's figure</td><td>(none)</td><td>₪12,430.55 on 30 Sep · ₪1,200.00 recorded · House deposit follows it</td></tr>
+        <tr><td>Account answer</td><td>(none: a second screen, Was already there)</td><td>How much of it is already there? · Counted as Was already there, on 5 Oct. The other ₪7,430.55 in Everyday Bank current stays free.</td></tr>
+        <tr><td>Holding answer</td><td>(on the drawer) Reads the rows that bought or sold {holding}</td><td>Follows the rows that bought or sold {holding} · Worth ₪X by its reading of 31 Jul · put in ₪Y</td></tr>
+        <tr><td>+ New…</td><td>(none)</td><td>A place without statements · Cash at home · A deposit · A fund · Something else · Name · At · Locked until · Use it · Nothing is written until Add goal. Cancel the goal and no empty place is left behind.</td></tr>
+        <tr><td>The fold</td><td>(on the drawer) What feeds {goal}: Nothing: no deposit is read · A Money moved category · Where it is kept</td><td>Find its deposits another way · Read them from a category · One source only, so nothing counts twice.</td></tr>
+        <tr><td>Drawer, header</td><td>(close only; Edit is on the Goals row's menu)</td><td>Edit · close</td></tr>
+        <tr><td>Drawer, section</td><td>How its deposits are found · Nothing is read from a statement yet · Pick one source…</td><td>Where the money is · {the answer} · for an account: Inside the account's balance. Adding to it here moves nothing; it only stops that money counting as free.</td></tr>
+        <tr><td>Drawer, dead end</td><td>Edit the goal and pick where it is kept first.</td><td>Where is the money? Not said yet · Say where, and you can add to it here. · Say where</td></tr>
+        <tr><td>Drawer, add buttons</td><td>(hidden, with no word, when the goal has no place)</td><td>A holding: Its deposits are the rows that bought or sold {holding}, so there is nothing to type here. Edit to find them another way. · No place: the card above.</td></tr>
+        <tr><td>Deposit form</td><td>Where it sits</td><td>Where the money is</td></tr>
+        <tr><td>Problems</td><td>An emergency fund gets its target from the multiplier, not an amount · Only an emergency fund has a months-of-expenses target · Pick between half a month and two years</td><td>(gone with the kind) · new: More than Everyday Bank current's ₪12,430.55 on its last statement (a warning; it still saves)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2>Notes for the build</h2>
+  <ul class="notes">
+    <li><b>One write.</b> Add goal writes the goal, its place (when + New… made one), the Was already there deposit and the feed in one transaction; Cancel writes nothing. The plugin's <code>create_saving_goals</code> takes the same answer (where, already there), so a conversation does it in one call too (D-227).</li>
+    <li><b>The answer decides the feed.</b> A holding bought by rows sets <code>fed_by_holding</code> (D-357); an account, a broker's cash or a place kept by hand sets none, and its deposits are typed on the drawer as today. The category in the fold replaces either; never both.</li>
+    <li><b>Already there is a deposit dated today</b>, into the account's own Cash (D-362), so it counts inside the statement balance once. More than the last statement is a warning, not a refusal: records can be behind.</li>
+    <li><b>F4 adds one more line under an account's answer</b>: whether transfers arriving there are for this goal. Not drawn here, and it may make the fold's category the rarer choice.</li>
+    <li><b>The drawer's feed menu goes.</b> What feeds a goal is changed in Edit, which is the same form; the drawer keeps the answer, the cost check and the readings.</li>
+    <li><b>The Emergency kind leaves the form.</b> A document that has one keeps it as an ordinary goal (D-360); its months fields are not shown.</li>
+  </ul>
+</section>
+
+</main>
+
+<script>
+(function(){
+  var seg=document.querySelector('[data-theme-seg]');
+  seg.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
+    seg.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b)});
+    var t=b.dataset.t;if(t==='system')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',t);});
+})();
+</script>
+</body>
+</html>

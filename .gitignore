@@ -1,0 +1,86 @@
+# Dependencies
+/node_modules
+.pnp
+.pnp.js
+
+# A plugin writer's lock beside a document, held for one write (M27 U6) — and,
+# beside it, what a hook told each session and what the status line last read (M51 U6)
+*.emd.lock
+*.emd.told
+*.emd.status
+*.emd.status.refreshing
+*.emd.*.tmp
+
+# Build output
+/dist
+/out-tsc
+/tmp
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Obsidian. docs/ is a vault; its settings, pane layout and open tabs are one
+# editor's state, not the spec. Leading `**/`, because a pattern containing a
+# slash anchors to the directory this file sits in, and the vault is `docs/`.
+**/.obsidian/
+
+# ---------------------------------------------------------------------------
+# Never commit real financial data.
+# Real statement files and database files stay local. Public tests use only
+# the synthetic fixtures in fixtures/synthetic/. See docs/conventions.md.
+# ---------------------------------------------------------------------------
+/fixtures/real/
+*.emd
+# ...except this project's own memory, which is the M22 dogfood (D-240). It holds
+# decisions, units, review entries and open questions and no financial data at
+# all, so the rule above does not apply to it. Every write beside it leaves a
+# timestamped `.bak` (the plugin's own protection) and those are not the document.
+!/docs/memory.emd
+*.emd.*.bak
+# The old extension stays ignored: real documents named before D-156 are still
+# on the machine, and this list exists to keep them out of the repo.
+*.emerald
+*.sqlite
+*.xlsx
+*.xls
+*.csv
+!fixtures/synthetic/**/*.csv
+!fixtures/synthetic/**/*.xlsx
+!fixtures/synthetic/**/*.xls
+
+# The demo (M33 U1): built, and its document made at build time, never committed.
+/dist-demo
+/.demo
+
+# The desktop shell (M9). Built, not committed, like the other outputs.
+/dist-electron
+
+# The installers (M9). `build/` is the opposite — icons are build *inputs*, cut
+# from src/ui/emerald.svg by `npm run icons`, and they are committed so a fresh
+# clone can package without a separate step. Only the script's own report is not.
+/release
+build/icons.log
+
+# The Claude plugin's MCP server (M7). Built, not committed, like the other two outputs.
+/dist-plugin
+
+# The MCP App page, built by `vite build --mode frame` and embedded in the plugin (M41 U1)
+/.frame
+# The frame drawn without a host (`npm run frame:try`): a page holding a copy of whatever document it was run on
+/.frame-try
+
+# The long-form record of closed milestones, kept in the maintainer's checkout and
+# not in the repository (D-495). scripts/archive-decisions.mjs still writes it.
+/docs/archive/

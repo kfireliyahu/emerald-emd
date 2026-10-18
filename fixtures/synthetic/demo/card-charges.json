@@ -1,0 +1,21 @@
+{
+  "about": "The custom tour's document (M33 U2): no ledger, one declared format of card charges and a few rows of it. Synthetic and round: the shops are made up, an amount is what the card was charged and is stored positive. CORNER MARKET is the charge the tour's receipt (receipt.json) was paid with, 12.00 more than the receipt's printed total. scripts/make-demo-document.mjs declares this format and writes these rows into .demo/custom.emd.",
+  "currency": "ILS",
+  "format": {
+    "format": "card_charge",
+    "title": "Card charge",
+    "columns": [
+      { "name": "date", "type": "date", "required": true, "note": "The day of the charge." },
+      { "name": "merchant", "type": "text", "required": true, "note": "As the statement prints it." },
+      { "name": "amount", "type": "money", "required": true, "note": "What the card was charged, stored positive." }
+    ],
+    "notes": "One row per line of a card statement."
+  },
+  "rows": [
+    { "date": "2026-07-24", "merchant": "CITY PHARMACY", "amount": 45, "amount_currency": "ILS" },
+    { "date": "2026-07-26", "merchant": "FUEL STATION 24", "amount": 250, "amount_currency": "ILS" },
+    { "date": "2026-07-27", "merchant": "BOOK NOOK", "amount": 60, "amount_currency": "ILS" },
+    { "date": "2026-07-29", "merchant": "CORNER MARKET", "amount": 96, "amount_currency": "ILS" },
+    { "date": "2026-07-30", "merchant": "TOWN BAKERY", "amount": 18, "amount_currency": "ILS" }
+  ]
+}

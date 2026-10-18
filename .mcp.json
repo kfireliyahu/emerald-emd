@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "emerald": {
+      "command": "node",
+      "args": ["dist-plugin/server.mjs", "--engine-only"]
+    }
+  }
+}

@@ -1,0 +1,146 @@
+# The installers, built where anyone can see how (M43 U7, D-452).
+#
+# Pushing a tag `v<version>` — the version in package.json — builds the Windows installer and the
+# two macOS disk images from that tag, attests each one (a signed statement, kept by GitHub, that
+# this workflow in this repository built that exact file from that commit), and publishes them on
+# a release with a SHA256SUMS file and a link to the tagged source. They stay unsigned (D-124):
+# what this adds is that where a download came from can be checked without a certificate —
+#
+#   gh attestation verify Emerald-Setup-0.1.0.exe --repo kfireliyahu/emerald-emd
+#
+# Run by hand (workflow_dispatch), it is a rehearsal: the same builds, kept as the run's
+# artifacts for a few days, attested, and no release.
+#
+# The Mac build runs on Apple silicon and makes both disk images (electron-builder.yml). The
+# release job runs on Linux because checksums and `gh` need nothing more.
+
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: windows-latest
+            script: dist:win
+            files: release/*.exe
+          - os: macos-latest
+            script: dist:mac
+            files: release/*.dmg
+    runs-on: ${{ matrix.os }}
+    # Bash on Windows too: PowerShell runs npm's .ps1 shim and swallows the `--` below, which
+    # would hand `--publish never` to npm instead of to electron-builder.
+    defaults:
+      run:
+        shell: bash
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      # A tag that is not the version in package.json would publish an installer that calls
+      # itself something else, and an About whose "this version" link points at the wrong tree.
+      - name: The tag is the version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          version="v$(node -p "require('./package.json').version")"
+          if [ "$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::The tag is $GITHUB_REF_NAME but package.json says $version"
+            exit 1
+          fi
+
+      # SheetJS is vendored (vendor/xlsx-0.20.3.tgz, D-449), so this needs no remote tarball.
+      - run: npm ci
+
+      # `--publish never`: electron-builder publishes on its own when it sees a tag in CI, and
+      # this workflow publishes in the release job instead. Nothing is signed: there is no
+      # identity to find (`mac.identity: null`), and auto-discovery is off besides.
+      - run: npm run ${{ matrix.script }} -- --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: ${{ matrix.files }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installers-${{ matrix.os }}
+          path: ${{ matrix.files }}
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: installers-*
+          path: out
+          merge-multiple: true
+
+      - name: Checksums
+        working-directory: out
+        run: |
+          sha256sum -- * > SHA256SUMS
+          cat SHA256SUMS
+
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: out/SHA256SUMS
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          REPO: ${{ github.repository }}
+          SERVER: ${{ github.server_url }}
+        run: |
+          cat > notes.md <<EOF
+          **Source:** this release was built from [${TAG}](${SERVER}/${REPO}/tree/${TAG}) by the
+          [release workflow](${SERVER}/${REPO}/blob/${TAG}/.github/workflows/release.yml). Emerald is free
+          software under the GNU AGPL-3.0-only, with no warranty.
+
+          **The installers are not code-signed**, so Windows and macOS warn on first open; the README
+          says how past each. Where a file came from is checkable without a signature:
+
+          - compare its SHA-256 with \`SHA256SUMS\` (\`certutil -hashfile <file> SHA256\` on Windows,
+            \`shasum -a 256 <file>\` on macOS), or
+          - \`gh attestation verify <file> --repo ${REPO}\`.
+
+          On a Mac, take the \`arm64\` image for Apple silicon and \`x64\` for an Intel Mac.
+
+          Emerald computes; it does not advise. Check every figure it read from a paycheck, a pension
+          report or a statement against the document it came from.
+          EOF
+          gh release create "$TAG" out/* \
+            --repo "$REPO" \
+            --title "Emerald ${TAG#v}" \
+            --notes-file notes.md \
+            --verify-tag

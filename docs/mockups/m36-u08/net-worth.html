@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Net Worth Table</title>
+<style>
+/* M36 U08. Net worth as one table: one row per account or place, opening to what is in it.
+   Tokens copied from src/ui/theme/tokens.css (light, and :root[data-theme="dark"]); the buttons are
+   .fc-btn's, the menus ChoiceField's (D-290: never the platform's select), the tags Tag's and the
+   verdict lines Verdict's, as Overview and BankSplit draw them today. Fonts are the app's own bundled
+   woff2, read from node_modules, so this opens from the checkout with the network off. Every name and
+   figure is made up. The build ports this file's markup and words. */
+@font-face{font-family:"IBM Plex Sans";font-weight:400;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:500;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-500-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:600;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-600-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-weight:400;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2") format("woff2")}
+
+:root{
+  --color-background:#ffffff;--color-surface:#f7f7f6;--color-elevated:#ffffff;
+  --color-ink:#111111;--color-ink-secondary:#6b6b6b;--color-ink-tertiary:#a0a09c;
+  --color-hairline:#ececea;--color-hairline-strong:#d9d9d6;
+  --color-accent:#07805f;--color-accent-ink:#ffffff;--color-accent-hover:#05664b;--color-accent-soft:#e8f6f1;
+  --color-action:#07805f;--color-action-ink:#ffffff;--color-action-hover:#05664b;--color-action-deep:#055a43;
+  --color-negative:#c4342b;--color-positive:#1f7a4d;--color-flow-saved:#0b4f35;
+  --shadow-pop:0 1px 2px rgba(17,17,17,.04),0 8px 24px rgba(17,17,17,.08);
+  --font-sans:"IBM Plex Sans","IBM Plex Sans Hebrew",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --color-background:#0b0b0c;--color-surface:#151517;--color-elevated:#1b1b1e;
+  --color-ink:#f2f2f0;--color-ink-secondary:#a1a1a0;--color-ink-tertiary:#6a6a6c;
+  --color-hairline:#262629;--color-hairline-strong:#34343a;
+  --color-accent:#34d399;--color-accent-ink:#06231a;--color-accent-hover:#5ee0b0;--color-accent-soft:#10312a;
+  --color-action:#34d399;--color-action-ink:#06231a;--color-action-hover:#5ee0b0;--color-action-deep:#1fae7d;
+  --color-negative:#e5675e;--color-positive:#4caf7d;--color-flow-saved:#2f9e6a;
+  --shadow-pop:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.55);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --color-background:#0b0b0c;--color-surface:#151517;--color-elevated:#1b1b1e;
+  --color-ink:#f2f2f0;--color-ink-secondary:#a1a1a0;--color-ink-tertiary:#6a6a6c;
+  --color-hairline:#262629;--color-hairline-strong:#34343a;
+  --color-accent:#34d399;--color-accent-ink:#06231a;--color-accent-hover:#5ee0b0;--color-accent-soft:#10312a;
+  --color-action:#34d399;--color-action-ink:#06231a;--color-action-hover:#5ee0b0;--color-action-deep:#1fae7d;
+  --color-negative:#e5675e;--color-positive:#4caf7d;--color-flow-saved:#2f9e6a;
+  --shadow-pop:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.55);color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{background:var(--color-background)}
+body{margin:0;color:var(--color-ink);font-family:var(--font-sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
+code{font-family:var(--font-mono);font-size:12px}
+.label{font-size:11px;line-height:1.3;letter-spacing:.08em;font-weight:500;text-transform:uppercase;color:var(--color-ink-secondary)}
+.caption{font-size:12px;line-height:1.4;color:var(--color-ink-secondary)}
+.t3{color:var(--color-ink-tertiary)}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.neg{color:var(--color-negative)}
+
+/* ------------------------------------------------------------ the mockup's own page */
+.page{max-width:1180px;margin:0 auto;padding:32px 16px 96px;display:flex;flex-direction:column;gap:44px}
+.intro{display:flex;flex-direction:column;gap:8px;max-width:80ch}
+.intro h1{margin:0;font-size:24px;line-height:1.15;font-weight:600;letter-spacing:-.01em}
+.intro p{margin:0;color:var(--color-ink-secondary)}
+.intro b{color:var(--color-ink);font-weight:500}
+.bar-row{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center}
+.seg{display:inline-flex}
+.seg button{height:30px;padding:0 12px;border:1px solid var(--color-hairline-strong);margin-left:-1px;font-size:13px;color:var(--color-ink-secondary)}
+.seg button:first-child{margin-left:0}
+.seg button.on{background:var(--color-accent-soft);color:var(--color-ink);border-color:var(--color-accent);position:relative;z-index:1}
+.seg.sm button{height:26px;font-size:12px;padding:0 9px}
+.state-head{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin-bottom:6px}
+.state-head h2{margin:0;font-size:16px;font-weight:600}
+.state-head .caption{flex:1 1 300px}
+.no{font-family:var(--font-mono);font-size:11px;color:var(--color-ink-tertiary)}
+.frame{border:1px solid var(--color-hairline);overflow:hidden}
+.reset{margin-left:auto}
+section > h2{margin:0 0 10px;font-size:16px;font-weight:600}
+.notes{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:10px;max-width:90ch;color:var(--color-ink-secondary)}
+.notes b{color:var(--color-ink);font-weight:500}
+table.words{width:100%;border-collapse:collapse;font-size:13px}
+table.words th,table.words td{border-top:1px solid var(--color-hairline);padding:7px 10px 7px 0;vertical-align:top;text-align:left}
+table.words th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;color:var(--color-ink-secondary)}
+table.words td:first-child{white-space:nowrap;color:var(--color-ink-secondary)}
+.tag-new{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-accent);margin-left:4px}
+
+/* ------------------------------------------------------------ app parts */
+.btn{height:30px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;border:1px solid transparent;white-space:nowrap}
+.btn.sm{height:26px;padding:0 9px;font-size:12px}
+.btn.primary{background:var(--color-action);color:var(--color-action-ink)}
+.btn.primary:hover{background:var(--color-action-hover)}
+.btn.secondary{border-color:var(--color-hairline-strong);background:var(--color-elevated)}
+.btn.secondary:hover{border-color:var(--color-ink-tertiary)}
+.btn.ghost{color:var(--color-ink-secondary)}
+.btn.ghost:hover{color:var(--color-ink)}
+.link{color:var(--color-accent)}
+.link:hover{text-decoration:underline}
+.choice{height:30px;border:1px solid var(--color-hairline-strong);background:var(--color-elevated);padding:0 8px 0 10px;display:inline-flex;align-items:center;gap:8px;min-width:160px;text-align:left;font-size:13px}
+.choice .v{flex:1 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.choice svg{flex:none;color:var(--color-ink-tertiary)}
+.field{height:30px;border:1px solid var(--color-hairline-strong);background:var(--color-elevated);padding:0 10px;font:inherit;font-size:13px;color:var(--color-ink);min-width:0}
+.tag{display:inline-flex;align-items:center;height:20px;padding:0 7px;font-size:11px;font-weight:500;letter-spacing:.02em;border:1px solid var(--color-hairline-strong);color:var(--color-ink-secondary);white-space:nowrap}
+.tag.good{border-color:var(--color-positive);color:var(--color-positive)}
+.tag.bad{border-color:var(--color-negative);color:var(--color-negative)}
+.verdict{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.verdict p{margin:0;flex:1 1 320px}
+
+/* ------------------------------------------------------------ the Net worth screen */
+.screen{padding:24px 32px 32px;display:flex;flex-direction:column;gap:22px;min-width:0}
+@media (max-width:620px){.screen{padding:16px}}
+.phead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.phead h3{margin:0;font-size:24px;line-height:1.15;font-weight:500;letter-spacing:-.01em}
+.hero{display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px 36px;border-bottom:1px solid var(--color-hairline);padding-bottom:18px}
+.hero .big{display:flex;flex-direction:column;gap:2px}
+.hero .big .fig{font-size:34px;line-height:1.1;font-weight:500;letter-spacing:-.015em}
+.hero .parts{display:flex;flex-wrap:wrap;gap:6px 28px}
+.hero .part{display:flex;flex-direction:column}
+.hero .part .fig{font-size:16px;font-weight:500}
+
+.nw{width:100%;border-collapse:collapse}
+.nw th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;color:var(--color-ink-secondary);text-align:left;padding:0 10px 6px 0;border-bottom:1px solid var(--color-hairline-strong);white-space:nowrap}
+.nw th.r,.nw td.r{text-align:right}
+.nw td{padding:9px 10px 9px 0;border-top:1px solid var(--color-hairline);vertical-align:middle}
+.nw tr.group td{border-top:0;padding:18px 0 4px}
+.nw tr.group:first-child td{padding-top:6px}
+.nw tr.row{cursor:pointer}
+.nw tr.row:hover td{background:var(--color-surface)}
+.nw tr.row.is-open td{background:var(--color-surface);border-top-color:var(--color-hairline-strong)}
+.nw td.tick{width:34px;padding-left:6px}
+.nw td.tick input{margin:0;width:15px;height:15px;accent-color:var(--color-accent);cursor:pointer}
+.nw td.tick input:disabled{cursor:default}
+.nw .name{font-weight:500}
+.nw .name small{font-weight:400;font-size:12px;color:var(--color-ink-secondary);margin-left:6px}
+.nw .sub{display:block;font-size:12px;color:var(--color-ink-secondary)}
+.nw td.fig{font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right;font-weight:500}
+.nw td.chev{width:26px;color:var(--color-ink-tertiary);text-align:center}
+.nw tr.foot td{border-top:1px solid var(--color-ink);padding-top:10px;font-weight:600}
+.nw tr.foot td.fig{font-size:16px}
+.nw tr.add td{border-top:0;padding:6px 0 0}
+@media (max-width:760px){.nw .hide-narrow{display:none}}
+
+.opened td{padding:0 0 0 0 !important;background:var(--color-surface);border-top:0 !important}
+.inside{padding:4px 18px 16px 40px;display:flex;flex-direction:column;gap:14px}
+@media (max-width:620px){.inside{padding:4px 10px 14px}}
+.block{display:flex;flex-direction:column;gap:4px}
+.lines{width:100%;border-collapse:collapse}
+.lines td{padding:6px 10px 6px 0;border-top:1px solid var(--color-hairline);vertical-align:baseline;background:transparent !important}
+.lines tr:first-child td{border-top:0}
+.lines td.fig{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;width:1%}
+.lines tr.rest td{border-top:1px solid var(--color-hairline-strong)}
+.lines tr.rest td:first-child{font-weight:500}
+.actions{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center}
+.panel{border:1px solid var(--color-hairline-strong);background:var(--color-elevated);padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.inline{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.inline label{display:flex;flex-direction:column;gap:3px}
+
+.cushion{display:flex;flex-direction:column;gap:8px;border:1px solid var(--color-hairline);background:var(--color-surface);padding:12px 14px}
+.cushion .head{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline}
+.cushion .head b{font-weight:500}
+</style>
+</head>
+<body>
+<main class="page">
+
+<header class="intro">
+  <span class="label">M36 U08 · mockup</span>
+  <h1>Net worth is one table</h1>
+  <p>Today Wealth shows a bank account three or four times: in <b>Balances</b>, in <b>In the bank: the goals saved there, and the cushion</b>, in <b>Where the rest is</b>, and again under <b>Edit places and holdings</b>, where every bank account also had a place of its own. Here there is <b>one row per account or place</b>, with its figure. A row opens to what is in it: the statement and its opening balance, each goal saved there with its part, <b>Cash, not for any goal</b>, and any other holding. The cushion's ticks are the first column. Adding an account or a place, and merging two accounts, happen on the table. The table ends on <b>Net worth</b>, the same figure the top of the screen, Home and the savings tool read (D-383). Every name and figure here is made up.</p>
+  <div class="bar-row">
+    <span class="caption">Theme</span>
+    <div class="seg" data-theme-seg>
+      <button data-t="system" class="on">System</button><button data-t="light">Light</button><button data-t="dark">Dark</button>
+    </div>
+  </div>
+</header>
+
+<section>
+  <div class="state-head">
+    <span class="no">a</span><h2>The table, nothing open</h2>
+    <span class="caption">Click any row to open it. Untick Second Bank and the cushion line below the table changes: the ticks say which accounts the cushion lives in, as BankSplit's did.</span>
+    <button class="btn ghost reset" type="button" data-reset="a">Start again</button>
+  </div>
+  <div class="frame"><div class="screen" id="screen-a"></div></div>
+</section>
+
+<section>
+  <div class="state-head">
+    <span class="no">b</span><h2>A bank account opened: Everyday Bank</h2>
+    <span class="caption">Its statement and opening balance (what Balances showed), the two goals saved in it with their parts, and Cash, not for any goal, which is the statement less those parts (D-376). The three lines add up to the row's figure.</span>
+    <button class="btn ghost reset" type="button" data-reset="b">Start again</button>
+  </div>
+  <div class="frame"><div class="screen" id="screen-b"></div></div>
+</section>
+
+<section>
+  <div class="state-head">
+    <span class="no">c</span><h2>A bank account with a deposit beside it, and goals holding more than the statement: Second Bank</h2>
+    <span class="caption">A fixed deposit at the bank is not in the statement, so it is a line of its own and the row is part reachable. Here a goal holds more than the 28 Sep statement ends at: the cash line says none, and the check says by how much. Never a negative, never shrunk to fit.</span>
+    <button class="btn ghost reset" type="button" data-reset="c">Start again</button>
+  </div>
+  <div class="frame"><div class="screen" id="screen-c"></div></div>
+</section>
+
+<section>
+  <div class="state-head">
+    <span class="no">d</span><h2>An account that holds things, and a place kept by hand, opened</h2>
+    <span class="caption">Brokerage's holdings, each with its latest reading and growth, and its own cash. Cash at home is a place: money with no statement, written down by hand.</span>
+    <button class="btn ghost reset" type="button" data-reset="d">Start again</button>
+  </div>
+  <div class="frame"><div class="screen" id="screen-d"></div></div>
+</section>
+
+<section>
+  <div class="state-head">
+    <span class="no">e</span><h2>Adding an account, and adding a place, on the table</h2>
+    <span class="caption">Both open in place under the table. A new bank account is a row at once, with nothing in it until a statement is read; a new place asks the same four kinds the goal form's + New… asks (D-363).</span>
+    <button class="btn ghost reset" type="button" data-reset="e">Start again</button>
+  </div>
+  <div class="frame"><div class="screen" id="screen-e"></div></div>
+</section>
+
+<section>
+  <div class="state-head">
+    <span class="no">f</span><h2>Merging two accounts: Old Second Bank into Second Bank</h2>
+    <span class="caption">One account read twice, under two names, is two rows and counts twice: Net worth here is too high by Old Second Bank's ₪7,920.00. From the opened row's <i>Merge into…</i>; the sentence counts what moves before anything is written, as the Accounts screen's merge does.</span>
+    <button class="btn ghost reset" type="button" data-reset="f">Start again</button>
+  </div>
+  <div class="frame"><div class="screen" id="screen-f"></div></div>
+</section>
+
+<section>
+  <h2>Every sentence that changes</h2>
+  <table class="words">
+    <thead><tr><th>Where</th><th>Today</th><th>After</th></tr></thead>
+    <tbody>
+      <tr><td>Head</td><td>Net worth · Add an account (goes to Settings › Accounts)</td><td>Net worth · Add an account · Add a place (both open under the table)</td></tr>
+      <tr><td>Hero</td><td>In the bank · Reachable this week / In funds · {2} funds / You owe · {0} debts / Net worth · Bank money less debt: {₪20,900.00}</td><td>Net worth {₪137,755.00} · Everything you own, each once, less what you owe. Then its parts: In the bank · At accounts that hold things · Locked · Owed</td></tr>
+      <tr><td>Balances</td><td>Balances · Opening balance, what the statements moved, and the balance they end on. · Account · Opening balance · Moved since · Balance · Check</td><td>(the section goes) Inside an opened account: Statement · {1 Oct} statement, ends at {₪20,900.00} · Opening balance {₪13,300.00} on {1 Jan 2026}, and the statements moved {+₪7,600.00} since · Change</td></tr>
+      <tr><td>Balances, none set</td><td>— not set · Set · Say what the account held before its first statement to check it.</td><td>Opening balance not set. Say what the account held before its first statement, and the statements are checked against it. · Set</td></tr>
+      <tr><td>BankSplit</td><td>In the bank: the goals saved there, and the cushion · the bar · the accounts with ticks · goal parts · The cushion, what is left</td><td>(the section goes) The ticks are the table's first column, headed Cushion; each goal's part is a line inside its account; the cushion is one line under the table.</td></tr>
+      <tr><td>Cushion line <span class="tag-new">new</span></td><td>Its target is [1 2 3 4 6] months of bills and Spendings · Above the cushion: {₪9,950.00} above its {₪11,400.00} target. The same line shows on Plan.</td><td>The cushion · what no goal has taken in the ticked accounts: {₪21,350.00} · Its target is [1 2 3 4 6] months of bills and Spendings, {₪11,400.00} · Above the cushion: {₪9,854.30} above its target. The same line shows on Plan.</td></tr>
+      <tr><td>Where the rest is</td><td>Where the rest is · Funds open on their own page. · {Everyday Bank} {₪20,900.00} Reachable …</td><td>(the section goes; every row it had is a row of the table)</td></tr>
+      <tr><td>Edit places and holdings</td><td>Edit places and holdings (the money map, folded) · The places · Add place · Show archived</td><td>(goes) A row opens to its holdings; Show archived is under the table.</td></tr>
+      <tr><td>Table, groups <span class="tag-new">new</span></td><td>(none)</td><td>Bank accounts and cash · Accounts that hold things · Places kept by hand · Funds · Owed</td></tr>
+      <tr><td>Table, columns <span class="tag-new">new</span></td><td>(none)</td><td>Cushion · Account or place · In it · Reach · Worth</td></tr>
+      <tr><td>A bank row's sub-line</td><td>Bank account · {1 Oct} statement</td><td>···{1234} · {1 Oct} statement · or · no statement read yet</td></tr>
+      <tr><td>In it</td><td>(none)</td><td>{2} goals and cash · cash · a deposit and cash · {3} holdings · written down by hand · {fund} · {loan}</td></tr>
+      <tr><td>Reach</td><td>Reachable / Locked / Part reachable</td><td>(the same three words)</td></tr>
+      <tr><td>Goal line</td><td>{Car} · saved in {Everyday Bank} · − {₪5,000.00}</td><td>{Car} · goal saved here · {₪5,000.00}</td></tr>
+      <tr><td>Cash line</td><td>Cash, not for any goal · Own cash of {Everyday Bank} · the statement, less the goals here</td><td>Cash, not for any goal · the statement, less the goals here</td></tr>
+      <tr><td>Cash line, over</td><td>Off by {₪1,200.00} · The goals saved there hold {₪9,650.00}, and it ends at {₪8,450.00}.</td><td>Cash, not for any goal · none · Off by {₪1,200.00} · The goals saved here hold {₪9,650.00}, and the {28 Sep} statement ends at {₪8,450.00}.</td></tr>
+      <tr><td>Row actions <span class="tag-new">new</span></td><td>(on Settings › Accounts, and the money map's Edit / Archive / Delete)</td><td>Add a holding here · Merge into… · Rename · Archive · (a place) Edit · Archive · Delete</td></tr>
+      <tr><td>Merge</td><td>Merge {source} into [Choose an account…] · Everything moves across and {source} goes away. Use this when one card ended up as two accounts — a second download of the same month is enough to do it.</td><td>Merge {Old Second Bank} into [{Second Bank}] · {214} transactions move into {Second Bank}, and {12} rows that are already there are dropped — the same charge, filed twice. Its goal money and its deposit go with them. Imports and readers follow. · Merge · Cancel</td></tr>
+      <tr><td>Add an account <span class="tag-new">new</span></td><td>(Settings › Accounts: a name and a kind)</td><td>Name · Kind [Bank account / Cash / Holds things] · Add · Cancel · A card is added on the Accounts screen: it holds no money of its own.</td></tr>
+      <tr><td>Add a place <span class="tag-new">new</span></td><td>Add place (the money map's place editor)</td><td>[Cash at home / A deposit / A fund / Something else] · Name · At · Locked until · Add · Cancel · Money with no statement of its own. A place an account's statement shows is that account's row.</td></tr>
+      <tr><td>Empty</td><td>No accounts yet. Reading a statement makes its account. · Add an account</td><td>Nothing here yet. Reading a bank statement makes its account; money with no statement — cash at home, a deposit — is a place. · Add an account · Add a place</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>For the author to judge</h2>
+  <ul class="notes">
+    <li><b>1. The top of the screen is Net worth and its four parts, not four equal cards.</b> The four parts are the ones the savings tool prints (D-383): In the bank, At accounts that hold things, Locked, Owed. They add up to the figure, and the table's last line is the same figure. <i>In funds</i> and <i>You owe</i> as cards go; funds are inside Locked, and their own rows are in the table. <i>Bank money less debt</i> goes. The other way: no hero at all, only the table's last line — less to read, but the one number people come for is at the bottom.</li>
+    <li><b>2. Funds and debts are rows of the table too.</b> So the table adds up to Net worth with nothing outside it. A fund row opens on its own page, as today; a debt row on Debts. Cards are not rows: a card holds no money, and what it charges is in the bank account that pays it. The other way: the table is accounts and places only, and funds and debts stay as lines under it.</li>
+    <li><b>3. The cushion is a column of ticks and one line, not a section with a bar.</b> The striped bar and its parts go: each goal's part is now a line inside its account, which is where it is. What is left is the line under the table, with the months chooser and Above / Below the cushion. The other way: keep the bar above the table as the cushion's picture.</li>
+    <li><b>4. Adding a card stays on the Accounts screen.</b> <i>Add an account</i> here offers Bank account, Cash and Holds things. A card would be a row with nothing in it. Merging two cards also stays there; merging two bank accounts, or two accounts that hold things, is in the opened row.</li>
+    <li><b>5. A place an account's statement shows is that account's row.</b> A fixed deposit at Second Bank is a line inside Second Bank's row, not a place of its own. <i>Add a place</i> is only for money with no statement — cash at home, a deposit kept elsewhere, a fund. Your existing places stay as they are; a place that holds an account's cash already reads as that account's row (D-384).</li>
+  </ul>
+</section>
+
+<section>
+  <h2>Notes for the build</h2>
+  <ul class="notes">
+    <li><b>The rows</b> are <code>documentMoneyMap(db, currency).places</code> — since D-384 an account whose own cash is in no place is a row with id <code>account:&lt;id&gt;</code> — plus the bank accounts with no cash holding (<code>accountBalances</code>), the funds and the debts. A row's figure is the place's <code>balance</code> (the statement for an account's row, D-376); the last line is <code>netWorth(db, asOf, currency).worth</code>, and a test holds the rows' sum to it.</li>
+    <li><b>An opened account</b> reads <code>row.statement</code> (balance, parts, cash, short) and <code>accountBalances</code>' opening, moved and check; <i>Change</i> is <code>setOpeningBalance</code>, as <code>AccountsSection</code> does. A place's holdings are <code>row.holdings</code> with <code>HoldingReadings</code>' <i>New figure</i>.</li>
+    <li><b>The ticks</b> are <code>setCushionAccounts</code>; the cushion line is <code>cushionReading</code>'s split and <code>Months</code>, moved out of <code>BankSplit</code>, which goes with its bar.</li>
+    <li><b>Adding</b> is <code>createAccount</code> (no card) and <code>makePlace</code> from <code>goalWhereRepository</code>; <b>merging</b> is <code>mergePreview</code> and <code>mergeAccounts</code>, the Accounts screen's. Parity: no new write, so no new tool.</li>
+    <li><b>Goes:</b> <code>AccountsSection</code>, <code>BankSplit</code>, <i>Where the rest is</i>, and the embedded <code>MoneyMap</code> with <code>#/wealth/places</code> (redirect it to <code>#/wealth</code>; <code>holdingCheck</code>'s link opens the row instead).</li>
+  </ul>
+</section>
+
+</main>
+
+<script>
+(function(){
+  var seg=document.querySelector('[data-theme-seg]');
+  seg.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
+    seg.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b)});
+    var t=b.getAttribute('data-t');
+    if(t==='system')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',t);
+  });
+
+  var CHEV_R='<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4.5 3l3 3-3 3"/></svg>';
+  var CHEV_D='<svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4.5l3 3 3-3"/></svg>';
+  var MENU=CHEV_D;
+  function ils(minor){var neg=minor<0;var v=Math.abs(minor);var s=(v/100).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');return (neg?'−':'')+'₪'+s}
+  function choice(v,w){return '<span class="choice"'+(w?' style="min-width:'+w+'px"':'')+'><span class="v">'+v+'</span>'+MENU+'</span>'}
+
+  /* The document. Second Bank's goal parts depend on the state (c draws them over the statement). */
+  function rows(s){
+    var leumiParts=s.over?[['Renovation',965000]]:[];
+    return [
+      {group:'Bank accounts and cash'},
+      {id:'everyday',kind:'bank',name:'Everyday Bank',last4:'1234',sub:'1 Oct statement',tick:true,
+       inIt:'2 goals and cash',reach:'Reachable',worth:2090000,
+       statement:{on:'1 Oct',ends:2090000,opening:1330000,openingOn:'1 Jan 2026',moved:760000,check:'Proved'},
+       parts:[['Car',500000],['Trip',300000]],other:[]},
+      {id:'leumi',kind:'bank',name:'Second Bank',last4:'5678',sub:'28 Sep statement',tick:true,
+       inIt:(s.over?'a goal, ':'')+'a deposit and cash',reach:'Part reachable',worth:1845000,
+       statement:{on:'28 Sep',ends:845000,opening:null},
+       parts:leumiParts,other:[['Fixed deposit, 12 months','locked until 3 Mar 2027 · read 30 Sep',1000000]]},
+      s.dupe?{id:'oldleumi',kind:'bank',name:'Old Second Bank',sub:'31 Aug statement · the same account, read under another name',
+       inIt:'cash',reach:'Reachable',worth:792000,statement:{on:'31 Aug',ends:792000,opening:null},parts:[],other:[]}:null,
+      {id:'wallet',kind:'cash',name:'Wallet',sub:'no statement read yet',tick:false,noTick:true,
+       inIt:'cash',reach:'Reachable',worth:60000,statement:null,parts:[],other:[]},
+      {group:'Accounts that hold things'},
+      {id:'broker',kind:'held',name:'Brokerage',sub:'31 Jul statement',noTick:true,
+       inIt:'3 holdings',reach:'Reachable',worth:7596500,
+       holdings:[['Money-market fund','read 31 Jul · +₪180.00 growth',2423000],['World index fund','read 31 Jul · +₪3,360.00 growth',5164000],['Cash','its own cash · read 31 Jul',9500]]},
+      {group:'Places kept by hand'},
+      {id:'home',kind:'place',name:'Cash at home',sub:'Cash · checked 12 Sep',noTick:true,
+       inIt:'written down by hand',reach:'Reachable',worth:120000,
+       holdings:[['Cash','what I have written down · checked 12 Sep',120000]]},
+      {group:'Funds'},
+      {id:'f1',kind:'fund',name:'Hishtalmut',sub:'Fund house A · 30 Jun report',noTick:true,inIt:'study fund',reach:'Locked',worth:626000},
+      {id:'f2',kind:'fund',name:'Pension',sub:'Fund house B · 30 Jun report',noTick:true,inIt:'pension',reach:'Locked',worth:2838000},
+      {group:'Owed'},
+      {id:'d1',kind:'debt',name:'Car loan',sub:'Second Bank · 18 payments left',noTick:true,inIt:'loan',reach:'',worth:-1400000}
+    ].filter(Boolean);
+  }
+
+  function cashOf(r){var p=r.parts.reduce(function(a,x){return a+x[1]},0);return r.statement?r.statement.ends-p:r.worth}
+
+  function opened(r,s){
+    var h='<div class="inside">';
+    if(r.kind==='bank'||r.kind==='cash'){
+      if(r.statement){
+        var st=r.statement;
+        h+='<div class="block"><span class="label">Statement</span><div class="verdict"><p>'+st.on+' statement, ends at <b class="num">'+ils(st.ends)+'</b>.</p>'+
+          (st.opening!==null?'<span class="tag good">'+st.check+'</span>':'<span class="tag">Unchecked</span>')+'</div>'+
+          (st.opening!==null
+            ?'<p class="caption" style="margin:0">Opening balance <span class="num">'+ils(st.opening)+'</span> on '+st.openingOn+', and the statements moved <span class="num">+'+ils(st.moved).slice(0)+'</span> since. <button class="link" type="button">Change</button></p>'
+            :'<p class="caption" style="margin:0">Opening balance not set. Say what the account held before its first statement, and the statements are checked against it. <button class="link" type="button">Set</button></p>')+
+          '</div>';
+      } else {
+        h+='<div class="block"><span class="label">Statement</span><p class="caption" style="margin:0">No statement read yet, so what is here is what was written down by hand. Reading a statement for Wallet replaces it with what the statement ends at.</p></div>';
+      }
+      h+='<div class="block"><span class="label">What is in it</span><table class="lines"><tbody>';
+      r.parts.forEach(function(p){h+='<tr><td><a class="link" href="#">'+p[0]+'</a> <span class="caption">goal saved here</span></td><td class="fig">'+ils(p[1])+'</td></tr>'});
+      var cash=cashOf(r);
+      var over=cash<0;
+      h+='<tr class="'+(r.parts.length?'rest':'')+'"><td>Cash, not for any goal <span class="caption">'+(r.statement?(r.parts.length?'the statement, less the goals here':'the statement; no goal is saved here'):'written down by hand')+'</span></td><td class="fig">'+(over?'<span class="neg">none</span>':ils(cash))+'</td></tr>';
+      r.other.forEach(function(o){h+='<tr><td>'+o[0]+' <span class="caption">'+o[1]+'</span></td><td class="fig">'+ils(o[2])+'</td></tr>'});
+      h+='</tbody></table>';
+      if(over){
+        var held=r.parts.reduce(function(a,x){return a+x[1]},0);
+        h+='<div class="verdict" style="margin-top:6px"><span class="tag bad">Off by '+ils(-cash)+'</span><p>The goals saved here hold <span class="num">'+ils(held)+'</span>, and the '+r.statement.on+' statement ends at <span class="num">'+ils(r.statement.ends)+'</span>. Usually money was spent from a goal that the goal still counts, or a deposit was recorded that never reached the bank. <a class="link" href="#">Renovation\'s deposits</a></p></div>';
+      }
+      h+='</div>';
+      if(s.merging===r.id){
+        h+='<div class="panel"><div class="inline"><span>Merge <b style="font-weight:500">'+r.name+'</b> into</span>'+choice('Second Bank ·5678',170)+'</div>'+
+          '<p class="caption" style="margin:0"><span class="num" style="color:var(--color-ink)">214</span> transactions move into <span style="color:var(--color-ink)">Second Bank</span>, and <span class="num" style="color:var(--color-ink)">12</span> rows that are already there are dropped — the same charge, filed twice. Its goal money and its deposit go with them. Imports and readers follow.</p>'+
+          '<div class="actions"><button class="btn primary sm" type="button">Merge</button><button class="btn ghost sm" type="button" data-act="cancel">Cancel</button></div></div>';
+      } else {
+        h+='<div class="actions"><button class="btn secondary sm" type="button">Add a holding here</button><button class="btn ghost sm" type="button" data-act="merge" data-row="'+r.id+'">Merge into…</button><button class="btn ghost sm" type="button">Rename</button><button class="btn ghost sm" type="button">Archive</button></div>';
+      }
+    } else if(r.kind==='held'||r.kind==='place'){
+      h+='<div class="block"><span class="label">'+(r.kind==='held'?'What it holds':'What is here')+'</span><table class="lines"><tbody>';
+      r.holdings.forEach(function(o){h+='<tr><td>'+o[0]+' <span class="caption">'+o[1]+'</span></td><td class="fig">'+ils(o[2])+'</td><td style="width:1%;white-space:nowrap"><button class="link" type="button">'+(r.kind==='held'?'New figure':'Checked today')+'</button></td></tr>'});
+      h+='</tbody></table></div>';
+      h+='<div class="actions"><button class="btn secondary sm" type="button">Add a holding</button>'+
+        (r.kind==='held'
+          ?'<button class="btn ghost sm" type="button">Merge into…</button><button class="btn ghost sm" type="button">Rename</button><button class="btn ghost sm" type="button">Archive</button>'
+          :'<button class="btn ghost sm" type="button">Edit</button><button class="btn ghost sm" type="button">Archive</button><button class="btn ghost sm" type="button">Delete</button>')+'</div>';
+    }
+    return h+'</div>';
+  }
+
+  function render(el,s){
+    var all=rows(s);
+    var money=all.filter(function(r){return !r.group});
+    var worth=money.reduce(function(a,r){return a+r.worth},0);
+    var inBank=0,held=0,locked=0,owed=0;
+    money.forEach(function(r){
+      if(r.kind==='bank'){inBank+=(r.statement?r.statement.ends:0);locked+=r.other.reduce(function(a,o){return a+o[2]},0)}
+      else if(r.kind==='cash'||r.kind==='place')inBank+=r.worth;
+      else if(r.kind==='held')held+=r.worth;
+      else if(r.kind==='fund')locked+=r.worth;
+      else if(r.kind==='debt')owed+=r.worth;
+    });
+    var h='';
+    h+='<div class="phead"><h3>Net worth</h3><div class="actions"><button class="btn secondary" type="button" data-act="add-account">Add an account</button><button class="btn ghost" type="button" data-act="add-place">Add a place</button></div></div>';
+    h+='<div class="hero"><div class="big"><span class="label">Net worth</span><span class="fig num">'+ils(worth)+'</span><span class="caption">Everything you own, each once, less what you owe.</span></div>'+
+       '<div class="parts">'+
+       '<div class="part"><span class="label">In the bank</span><span class="fig num">'+ils(inBank)+'</span></div>'+
+       '<div class="part"><span class="label">At accounts that hold things</span><span class="fig num">'+ils(held)+'</span></div>'+
+       '<div class="part"><span class="label">Locked</span><span class="fig num">'+ils(locked)+'</span></div>'+
+       '<div class="part"><span class="label">Owed</span><span class="fig num">'+ils(owed)+'</span></div>'+
+       '</div></div>';
+
+    h+='<div style="overflow-x:auto"><table class="nw"><thead><tr><th class="tick" title="The accounts the cushion lives in">Cushion</th><th>Account or place</th><th class="hide-narrow">In it</th><th class="hide-narrow">Reach</th><th class="r">Worth</th><th></th></tr></thead><tbody>';
+    all.forEach(function(r){
+      if(r.group){h+='<tr class="group"><td></td><td colspan="5"><span class="label">'+r.group+'</span></td></tr>';return}
+      var open=s.open===r.id;
+      var ticked=r.noTick?false:(s.ticks[r.id]!==false);
+      var opens=r.kind!=='fund'&&r.kind!=='debt';
+      h+='<tr class="row'+(open?' is-open':'')+'" data-row="'+r.id+'">'+
+        '<td class="tick">'+(r.kind==='bank'?'<input type="checkbox" data-tick="'+r.id+'"'+(ticked?' checked':'')+' aria-label="The cushion lives in '+r.name+'">':(r.kind==='cash'?'<input type="checkbox" disabled title="No statement: the cushion is what a statement says">':''))+'</td>'+
+        '<td><span class="name">'+r.name+(r.last4?'<small>···'+r.last4+'</small>':'')+'</span><span class="sub">'+r.sub+'</span></td>'+
+        '<td class="hide-narrow caption">'+r.inIt+'</td>'+
+        '<td class="hide-narrow caption">'+r.reach+'</td>'+
+        '<td class="fig'+(r.worth<0?' neg':'')+'">'+ils(r.worth)+'</td>'+
+        '<td class="chev">'+(opens?(open?CHEV_D:CHEV_R):'<span title="Opens on its own page">'+CHEV_R+'</span>')+'</td></tr>';
+      if(open)h+='<tr class="opened"><td colspan="6">'+opened(r,s)+'</td></tr>';
+    });
+    h+='<tr class="foot"><td></td><td colspan="3">Net worth</td><td class="fig num">'+ils(worth)+'</td><td></td></tr>';
+    if(s.adding==='account'){
+      h+='<tr class="add"><td></td><td colspan="5"><div class="panel"><span class="label">A new account</span><div class="inline">'+
+        '<input class="field" style="width:220px" placeholder="Name, as the bank calls it" value="Second Bank">'+choice('Bank account',150)+
+        '<button class="btn primary sm" type="button">Add</button><button class="btn ghost sm" type="button" data-act="cancel">Cancel</button></div>'+
+        '<p class="caption" style="margin:0">It is a row at once, with nothing in it until a statement is read for it. A card is added on the Accounts screen: it holds no money of its own.</p></div></td></tr>';
+    }
+    if(s.adding==='place'){
+      h+='<tr class="add"><td></td><td colspan="5"><div class="panel"><span class="label">A new place</span>'+
+        '<div class="seg sm"><button>Cash at home</button><button class="on">A deposit</button><button>A fund</button><button>Something else</button></div>'+
+        '<div class="inline"><label><span class="caption">Name</span><input class="field" style="width:200px" value="Deposit at the post office"></label>'+
+        '<label><span class="caption">At</span><input class="field" style="width:150px" value="Postal Bank"></label>'+
+        '<label><span class="caption">Locked until</span><input class="field" style="width:130px" value="2027-06-30"></label></div>'+
+        '<p class="caption" style="margin:0">Money with no statement of its own. A place an account\'s statement shows is that account\'s row.</p>'+
+        '<div class="actions"><button class="btn primary sm" type="button">Add</button><button class="btn ghost sm" type="button" data-act="cancel">Cancel</button></div></div></td></tr>';
+    }
+    h+='</tbody></table></div>';
+
+    /* the cushion line */
+    var cushion=money.filter(function(r){return r.kind==='bank'&&s.ticks[r.id]!==false}).reduce(function(a,r){return a+Math.max(0,cashOf(r))},0);
+    var anyOver=money.some(function(r){return r.kind==='bank'&&s.ticks[r.id]!==false&&cashOf(r)<0});
+    var target=1140000;
+    h+='<div class="cushion"><div class="head"><span class="label">The cushion</span><span>what no goal has taken in the ticked accounts: <b class="num">'+(anyOver?'unchecked':ils(cushion))+'</b></span></div>'+
+      '<div class="inline caption">Its target is <span class="seg sm"><button>1</button><button>2</button><button class="on">3</button><button>4</button><button>6</button></span> months of bills and Spendings, <span class="num">'+ils(target)+'</span>.</div>'+
+      (anyOver
+        ?'<div class="verdict"><span class="tag bad">Unchecked</span><p>A goal in Second Bank holds more than its statement, so there is no cushion to measure.</p></div>'
+        :'<div class="verdict"><span class="tag '+(cushion>=target?'good':'bad')+'">'+(cushion>=target?'Above the cushion':'Below the cushion')+'</span><p>'+(cushion>=target?ils(cushion-target)+' above its target.':ils(target-cushion)+' short of its target.')+' The same line shows on Plan.</p></div>')+
+      '</div>';
+    h+='<label class="caption" style="display:flex;gap:6px;align-items:center"><input type="checkbox"> Show archived</label>';
+    el.innerHTML=h;
+  }
+
+  var START={
+    a:{open:null,ticks:{},adding:null,merging:null,over:false},
+    b:{open:'everyday',ticks:{},adding:null,merging:null,over:false},
+    c:{open:'leumi',ticks:{},adding:null,merging:null,over:true},
+    d:{open:'broker',ticks:{},adding:null,merging:null,over:false,also:'home'},
+    e:{open:null,ticks:{},adding:'account',merging:null,over:false},
+    f:{open:'oldleumi',ticks:{oldleumi:false},adding:null,merging:'oldleumi',over:false,dupe:true}
+  };
+  var state={};
+  function copy(o){return JSON.parse(JSON.stringify(o))}
+  function draw(k){render(document.getElementById('screen-'+k),state[k]);
+    if(state[k].also){ /* d draws a second row open below the first */
+      var el=document.getElementById('screen-'+k);var tr=el.querySelector('tr[data-row="'+state[k].also+'"]');
+      if(tr&&!tr.classList.contains('is-open')){var r=rows(state[k]).filter(function(x){return x.id===state[k].also})[0];
+        tr.classList.add('is-open');tr.querySelector('.chev').innerHTML=CHEV_D;
+        var o=document.createElement('tr');o.className='opened';o.innerHTML='<td colspan="6">'+opened(r,state[k])+'</td>';tr.parentNode.insertBefore(o,tr.nextSibling)}}
+  }
+  Object.keys(START).forEach(function(k){state[k]=copy(START[k]);draw(k);
+    var el=document.getElementById('screen-'+k);
+    el.addEventListener('click',function(e){
+      var tick=e.target.closest('[data-tick]');
+      if(tick){state[k].ticks[tick.getAttribute('data-tick')]=tick.checked;draw(k);return}
+      var act=e.target.closest('[data-act]');
+      if(act){var a=act.getAttribute('data-act');
+        if(a==='add-account'){state[k].adding='account'}
+        else if(a==='add-place'){state[k].adding='place'}
+        else if(a==='merge'){state[k].merging=act.getAttribute('data-row')}
+        else if(a==='cancel'){state[k].adding=null;state[k].merging=null}
+        draw(k);return}
+      if(e.target.closest('.opened')||e.target.closest('.add')||e.target.closest('input'))return;
+      var row=e.target.closest('tr.row');
+      if(row){var id=row.getAttribute('data-row');var r=rows(state[k]).filter(function(x){return x.id===id})[0];
+        if(r.kind==='fund'||r.kind==='debt')return;
+        state[k].also=null;state[k].open=state[k].open===id?null:id;state[k].merging=null;draw(k)}
+    });
+  });
+  document.querySelectorAll('[data-reset]').forEach(function(b){b.addEventListener('click',function(){var k=b.getAttribute('data-reset');state[k]=copy(START[k]);draw(k)})});
+})();
+</script>
+</body>
+</html>

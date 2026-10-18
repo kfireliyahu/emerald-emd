@@ -1,0 +1,45 @@
+-- 029_trade_funding — which money paid for a purchase. See
+-- docs/04-data-model.md, docs/f18-investments.md and D-200.
+--
+-- Numbered and immutable after release (D-020).
+--
+-- **One column added, and no table rebuilt.** Nothing here widens a `CHECK`, so
+-- `security_trade` is altered in place — 023's and 028's situation rather than
+-- 026's and 027's.
+--
+-- **What it is for.** A broker statement prints what was bought and the bank
+-- statement prints the money that went to the broker, and until this column the
+-- two facts sat in one document with nothing joining them: `security_trade` had
+-- no reference to a transaction, and `investmentFunding` reconciles the *plan*
+-- against the split rather than the money against the purchase. So a ₪11,000
+-- `העברה` and ₪11,000.00 of buys the same week were two rows a person had to
+-- put side by side themselves.
+--
+-- **On the trade rather than in a link table**, which is the choice worth
+-- writing down. A trade has at most one funder — the money that paid for it —
+-- while a transfer pays for several trades, so the relation is many-to-one and
+-- a column states it exactly. A link table would allow two rows claiming one
+-- trade, which is a second record of one fact (D-036), and it would carry a
+-- `user_decision` that has nowhere to be false: nothing writes this column
+-- except a person naming the transaction, so there is no suggestion to accept
+-- or reject and no confidence to store. `card_settlement_link` is a table for
+-- the opposite reason — it is the app's own guess, and a guess needs somewhere
+-- to record that it was refused.
+--
+-- **Partial funding is deliberately not modelled.** The transfer's amount and Σ
+-- what its trades moved rarely agree to the agora, and the difference is a real
+-- fact rather than an error: money left over sits as cash, money short came
+-- from cash already there. `tradeFunding` reports the difference and names
+-- which of the two it is; splitting one transfer across trades by amount would
+-- be the app inventing an allocation the bank never printed.
+--
+-- Nullable, and it stays nullable: a purchase made before the bank statement
+-- was imported, one paid for out of a dividend, and one nobody has got round to
+-- naming are all ordinary, and a trade with no funder named is the state every
+-- trade in every existing document is in.
+
+ALTER TABLE security_trade ADD COLUMN funding_transaction_id TEXT REFERENCES "transaction" (id);
+
+-- Read from both ends: "what did this transfer pay for" groups the trades by it,
+-- and "which purchases has nobody accounted for" is the NULLs.
+CREATE INDEX security_trade_funding ON security_trade (funding_transaction_id);

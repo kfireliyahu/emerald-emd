@@ -1,0 +1,40 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|PowerShell",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/scripts/guard-memory-emd.mjs\"",
+            "timeout": 15,
+            "statusMessage": "Checking docs/memory.emd is not being discarded"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "startup|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/dist-plugin/hooks.mjs\" start-here \"$CLAUDE_PROJECT_DIR\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/dist-plugin/hooks.mjs\" rows \"$CLAUDE_PROJECT_DIR\" inbox --match state=new --once-per-session",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

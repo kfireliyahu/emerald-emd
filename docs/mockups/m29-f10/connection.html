@@ -1,0 +1,647 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connection Window</title>
+<style>
+/* M29 F10. The window that opens after a drag on #/connections, said in plain words.
+   Tokens copied from src/ui/theme/tokens.css (light, and :root[data-theme="dark"]); buttons are
+   .fc-btn from the same file. Fonts are the app's own bundled woff2, read from node_modules, so this
+   opens from the checkout with the network off. The build ports this file's markup and words. */
+@font-face{font-family:"IBM Plex Sans";font-weight:400;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:500;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-500-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:600;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-600-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans Hebrew";font-weight:400;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans-hebrew/files/ibm-plex-sans-hebrew-hebrew-400-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-weight:400;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2") format("woff2")}
+
+:root{
+  --color-background:#ffffff;--color-surface:#f7f7f6;--color-elevated:#ffffff;
+  --color-ink:#111111;--color-ink-secondary:#6b6b6b;--color-ink-tertiary:#a0a09c;
+  --color-hairline:#ececea;--color-hairline-strong:#d9d9d6;
+  --color-accent:#07805f;--color-accent-ink:#ffffff;--color-accent-hover:#05664b;--color-accent-soft:#e8f6f1;
+  --color-action:#07805f;--color-action-ink:#ffffff;--color-action-hover:#05664b;--color-action-deep:#055a43;
+  --color-negative:#c4342b;--color-positive:#1f7a4d;
+  --shadow-pop:0 1px 2px rgba(17,17,17,.04),0 8px 24px rgba(17,17,17,.08);
+  --font-sans:"IBM Plex Sans","IBM Plex Sans Hebrew",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,monospace;
+  --duration-micro:120ms;--duration-base:180ms;--ease-out:cubic-bezier(.22,1,.36,1);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --color-background:#0b0b0c;--color-surface:#151517;--color-elevated:#1b1b1e;
+  --color-ink:#f2f2f0;--color-ink-secondary:#a1a1a0;--color-ink-tertiary:#6a6a6c;
+  --color-hairline:#262629;--color-hairline-strong:#34343a;
+  --color-accent:#34d399;--color-accent-ink:#06231a;--color-accent-hover:#5ee0b0;--color-accent-soft:#10312a;
+  --color-action:#34d399;--color-action-ink:#06231a;--color-action-hover:#5ee0b0;--color-action-deep:#1fae7d;
+  --color-negative:#e5675e;--color-positive:#4caf7d;
+  --shadow-pop:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.55);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --color-background:#0b0b0c;--color-surface:#151517;--color-elevated:#1b1b1e;
+  --color-ink:#f2f2f0;--color-ink-secondary:#a1a1a0;--color-ink-tertiary:#6a6a6c;
+  --color-hairline:#262629;--color-hairline-strong:#34343a;
+  --color-accent:#34d399;--color-accent-ink:#06231a;--color-accent-hover:#5ee0b0;--color-accent-soft:#10312a;
+  --color-action:#34d399;--color-action-ink:#06231a;--color-action-hover:#5ee0b0;--color-action-deep:#1fae7d;
+  --color-negative:#e5675e;--color-positive:#4caf7d;
+  --shadow-pop:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.55);color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{background:var(--color-background)}
+body{margin:0;color:var(--color-ink);font-family:var(--font-sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
+code,.mono{font-family:var(--font-mono);font-size:12px}
+.label{font-size:11px;line-height:1.3;letter-spacing:.08em;font-weight:500;text-transform:uppercase;color:var(--color-ink-secondary)}
+.caption{font-size:12px;line-height:1.4;color:var(--color-ink-secondary)}
+.quiet{color:var(--color-ink-tertiary)}
+
+/* ------------------------------------------------------------ the mockup's own page */
+.page{max-width:1120px;margin:0 auto;padding:32px 16px 96px;display:flex;flex-direction:column;gap:40px}
+.intro{display:flex;flex-direction:column;gap:8px;max-width:72ch}
+.intro h1{margin:0;font-size:24px;line-height:1.15;font-weight:600;letter-spacing:-.01em}
+.intro p{margin:0;color:var(--color-ink-secondary)}
+.bar{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center}
+.seg{display:inline-flex}
+.seg button{height:30px;padding:0 12px;border:1px solid var(--color-hairline-strong);margin-left:-1px;font-size:13px;color:var(--color-ink-secondary)}
+.seg button:first-child{margin-left:0}
+.seg button.on{background:var(--color-ink);color:var(--color-background);border-color:var(--color-ink);position:relative;z-index:1}
+h2{margin:0 0 4px;font-size:16px;line-height:1.3;font-weight:600}
+.lede{margin:0 0 16px;color:var(--color-ink-secondary);max-width:72ch}
+.ask{border-left:2px solid var(--color-accent);padding:12px 16px;background:var(--color-surface);max-width:72ch}
+.ask p{margin:0 0 6px}.ask p:last-child{margin:0}
+
+/* ------------------------------------------------------------ a piece of the graph */
+.ports{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:24px}
+.option{border:1px solid var(--color-hairline);padding:16px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.option.pick{border-color:var(--color-hairline-strong)}
+.option h3{margin:0;font-size:14px;font-weight:600;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.tag{font-size:11px;font-weight:500;letter-spacing:.04em;padding:1px 6px;border:1px solid var(--color-hairline-strong);color:var(--color-ink-secondary)}
+.tag.rec{border-color:var(--color-ink);color:var(--color-ink)}
+.canvas{position:relative;width:300px;max-width:100%;height:364px;background:var(--color-surface);background-image:radial-gradient(var(--color-hairline-strong) 1px,transparent 1px);background-size:16px 16px}
+.canvas svg.wires{position:absolute;inset:0;overflow:visible;pointer-events:none}
+.bubble{position:absolute;width:206px;background:var(--color-elevated);border:1px solid var(--color-hairline-strong)}
+.bhead{height:32px;display:flex;align-items:center;gap:8px;padding:0 10px 0 12px;border-bottom:1px solid var(--color-hairline);font-weight:500}
+.bhead code{margin-left:auto;color:var(--color-ink-tertiary);font-size:11px}
+.port{height:26px;display:flex;align-items:center;gap:8px;padding:0 10px 0 12px;font-size:12px;color:var(--color-ink-secondary);width:100%;text-align:left}
+.port:hover{background:var(--color-surface)}
+.port .g{width:14px;text-align:center;color:var(--color-ink-tertiary);font-size:11px;flex:none}
+.port.live{color:var(--color-ink)}
+.port .to{margin-left:auto;color:var(--color-ink-tertiary);white-space:nowrap}
+.port.new{color:var(--color-accent)}
+.port.new .g{color:var(--color-accent)}
+.wire{fill:none;stroke:var(--color-ink-secondary);stroke-width:1.5}
+.end{stroke:var(--color-ink-secondary);stroke-width:1.5;fill:none}
+.endword{font:500 10px var(--font-sans);fill:var(--color-ink-secondary)}
+.list{display:flex;flex-direction:column;gap:2px}
+.list .it{padding:4px 8px;font-size:12px}
+.list .it span{display:block;color:var(--color-ink-tertiary)}
+.cmp{width:100%;border-collapse:collapse;font-size:12px}
+.cmp td{padding:6px 8px 6px 0;vertical-align:top;border-top:1px solid var(--color-hairline)}
+.cmp td:first-child{color:var(--color-ink-tertiary);width:34%}
+
+/* ------------------------------------------------------------ the states */
+.states{display:grid;grid-template-columns:1fr;gap:28px}
+.state{display:flex;flex-direction:column;gap:8px;min-width:0}
+.state-head{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.state-head h3{margin:0;font-size:14px;font-weight:600}
+.state-head .caption{flex:1 1 240px}
+.num{font-family:var(--font-mono);font-size:11px;color:var(--color-ink-tertiary)}
+
+/* The window. It docks under the graph, as today: a hairline above, the elevated plane. */
+.panel{border-top:1px solid var(--color-hairline);background:var(--color-elevated);padding:16px 24px 18px;box-shadow:inset 0 0 0 1px var(--color-hairline)}
+.rel{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--color-ink-secondary);margin-bottom:4px}
+.rel b{font-weight:500;color:var(--color-ink)}
+.rel svg{flex:none}
+.headline{margin:0 0 14px;font-size:16px;line-height:1.35;font-weight:600;max-width:60ch}
+.rows{display:grid;grid-template-columns:132px minmax(0,1fr);gap:12px 16px;align-items:start;max-width:760px}
+.q{font-size:12px;color:var(--color-ink-secondary);padding-top:6px}
+.a{min-width:0;display:flex;flex-direction:column;gap:6px}
+.a .caption{max-width:56ch}
+@media (max-width:620px){
+  .rows{grid-template-columns:1fr;gap:4px}
+  .q{padding-top:8px}
+  .panel{padding:14px 16px 16px}
+}
+
+.choice{display:inline-flex;flex-wrap:wrap;align-self:flex-start}
+.choice button{height:30px;padding:0 12px;font-size:13px;border:1px solid var(--color-hairline-strong);margin-left:-1px;color:var(--color-ink-secondary);background:var(--color-elevated)}
+.choice button:first-child{margin-left:0}
+.choice button.on{background:var(--color-accent-soft);color:var(--color-ink);border-color:var(--color-accent);position:relative;z-index:1}
+
+.check{display:flex;gap:8px;align-items:center;font-size:13px;padding-top:5px}
+.check input{width:16px;height:16px;margin:0;accent-color:var(--color-accent)}
+
+/* A sentence with its blanks in it. A blank is the amount input's treatment: no box, a hairline
+   underline that turns accent on focus (docs/11, component treatment). */
+.say{font-size:14px;line-height:2.1;margin:0;max-width:62ch}
+.blank{display:inline-block;min-width:3ch;border:0;border-bottom:1px solid var(--color-hairline-strong);background:transparent;padding:0 2px;height:24px;line-height:24px;vertical-align:baseline;color:var(--color-ink);outline:none}
+.blank:focus{border-bottom:2px solid var(--color-accent)}
+.blank.fx{font-family:var(--font-mono);font-size:12.5px}
+.menuwrap{position:relative;display:inline-block}
+.pick{display:inline-flex;align-items:center;gap:4px;border-bottom:1px solid var(--color-hairline-strong);height:24px;line-height:24px;padding:0 2px;color:var(--color-ink)}
+.pick:hover{border-bottom-color:var(--color-accent)}
+.pick svg{color:var(--color-ink-tertiary)}
+.menu{position:absolute;left:0;top:28px;z-index:5;min-width:150px;background:var(--color-elevated);border:1px solid var(--color-hairline-strong);box-shadow:var(--shadow-pop);padding:4px 0;display:none;line-height:1.5}
+.menu.open{display:block}
+.menu button{display:flex;justify-content:space-between;gap:16px;width:100%;padding:5px 12px;text-align:left;font-size:13px}
+.menu button span{color:var(--color-ink-tertiary);font-size:12px}
+.menu button:hover,.menu button.on{background:var(--color-accent-soft)}
+.suggest{position:static;display:block;margin-top:4px;max-width:340px}
+.suggest button code{font-size:12px;color:var(--color-ink)}
+
+.addup{border-left:2px solid var(--color-hairline-strong);padding:2px 0 2px 12px;display:flex;flex-direction:column;gap:2px}
+
+details.more{margin-top:12px;max-width:760px}
+details.more summary{cursor:pointer;font-size:12px;color:var(--color-accent);list-style:none;display:inline-flex;align-items:center;gap:4px}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary svg{transition:transform var(--duration-base) var(--ease-out)}
+details.more[open] summary svg{transform:rotate(90deg)}
+details.more .rows{margin-top:10px}
+.field{height:32px;border:1px solid var(--color-hairline-strong);background:var(--color-elevated);padding:0 10px;outline:none;width:200px;max-width:100%}
+.field:focus{border-color:var(--color-accent)}
+textarea.field{height:auto;padding:6px 10px;width:100%;max-width:56ch;resize:vertical;font-size:12px}
+.field[readonly]{color:var(--color-ink-secondary)}
+
+.will{margin:14px 0 0;font-size:12px;color:var(--color-ink-secondary)}
+.will b{font-weight:500;color:var(--color-ink)}
+.bad{margin:6px 0 0;font-size:12px;color:var(--color-negative);max-width:62ch}
+.verbatim{margin:6px 0 0;font-size:12px;color:var(--color-ink-tertiary);max-width:70ch}
+.verbatim summary{cursor:pointer;color:var(--color-ink-secondary);list-style:none}
+.verbatim summary::-webkit-details-marker{display:none}
+
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:14px}
+.actions .push{margin-left:auto}
+
+/* .fc-btn, from tokens.css */
+.fc-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:0 16px;border-radius:0;font-size:14px;font-weight:500;letter-spacing:.01em;white-space:nowrap;user-select:none;cursor:pointer;transition:background-color var(--duration-micro) var(--ease-out),color var(--duration-micro) var(--ease-out),box-shadow var(--duration-micro) var(--ease-out)}
+.fc-btn:disabled{opacity:.4;cursor:default;pointer-events:none}
+.fc-btn:active:not(:disabled){transform:translateY(1px)}
+.fc-btn-primary{background:var(--color-action);color:var(--color-action-ink)}
+.fc-btn-primary:hover:not(:disabled){background:var(--color-action-hover)}
+.fc-btn-secondary{background:var(--color-surface);color:var(--color-ink);box-shadow:inset 0 0 0 1px var(--color-hairline-strong)}
+.fc-btn-secondary:hover:not(:disabled){box-shadow:inset 0 0 0 1px var(--color-ink-tertiary)}
+.fc-btn-secondary.loses:hover:not(:disabled){color:var(--color-negative)}
+.fc-btn-ghost{padding:0 4px;color:var(--color-accent);background:none}
+.fc-btn-ghost::after{content:"";position:absolute;left:4px;right:4px;bottom:6px;height:1px;background:currentColor;transform:scaleX(0);transform-origin:left;transition:transform var(--duration-base) var(--ease-out)}
+.fc-btn-ghost:hover:not(:disabled){color:var(--color-accent-hover)}
+.fc-btn-ghost:hover:not(:disabled)::after{transform:scaleX(1)}
+.icon{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;color:var(--color-ink-secondary)}
+.icon:hover{color:var(--color-negative)}
+
+.notes{max-width:72ch;display:flex;flex-direction:column;gap:6px;margin:0;padding-left:18px;color:var(--color-ink-secondary)}
+.notes b{color:var(--color-ink);font-weight:500}
+.table-wrap{overflow-x:auto}
+.words{width:100%;border-collapse:collapse;font-size:12px;min-width:640px}
+.words th{text-align:left;font-weight:500;color:var(--color-ink-secondary);padding:6px 12px 6px 0;border-bottom:1px solid var(--color-hairline-strong)}
+.words td{padding:7px 12px 7px 0;border-bottom:1px solid var(--color-hairline);vertical-align:top}
+.words td:first-child{color:var(--color-ink-secondary);width:18%}
+.words td:nth-child(2){color:var(--color-ink-tertiary);width:41%}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <!-- one-to-many, as the graph draws it: the fork touches the many, the bar touches the one -->
+  <symbol id="crow" viewBox="0 0 64 16"><path d="M0 8H64" stroke="currentColor" stroke-width="1.5"/><path d="M0 1.5L10 8L0 14.5M0 8H10" stroke="currentColor" stroke-width="1.5" fill="none"/><path d="M57 2V14" stroke="currentColor" stroke-width="1.5"/></symbol>
+  <symbol id="chev" viewBox="0 0 12 12"><path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" stroke-width="1.5" fill="none"/></symbol>
+  <symbol id="right" viewBox="0 0 12 12"><path d="M4.5 3L7.5 6L4.5 9" stroke="currentColor" stroke-width="1.5" fill="none"/></symbol>
+  <symbol id="trash" viewBox="0 0 16 16"><path d="M2.5 4h11M6 4V2.5h4V4M4 4l.7 9.5h6.6L12 4" stroke="currentColor" stroke-width="1.75" fill="none" stroke-linejoin="round"/></symbol>
+</svg>
+
+<main class="page">
+
+<header class="intro">
+  <span class="label">M29 F10 · mockup</span>
+  <h1>The connection window, in plain words</h1>
+  <p>The window that opens after you drag between two formats on Connections. It now says what will happen the way you'd say it out loud: <b>each work day belongs to one paycheck</b>. One headline, a few short questions, and the details folded away. Nothing it could do before is gone.</p>
+  <div class="bar">
+    <span class="caption">Theme</span>
+    <div class="seg" data-theme-seg>
+      <button data-t="system" class="on">System</button><button data-t="light">Light</button><button data-t="dark">Dark</button>
+    </div>
+  </div>
+</header>
+
+<!-- ======================================================================= the ports -->
+<section>
+  <h2>The ports: what you drag from</h2>
+  <p class="lede">Today the two green ports say <i>names a row of…</i> and <i>a total of…</i>. Both describe how it is stored. Two wordings for what you'd mean instead, on the same piece of the graph. A line now ends in a fork at the "many" end and a bar at the "one" end.</p>
+
+  <div class="ports">
+    <div class="option pick">
+      <h3><span class="tag rec">A · recommended</span> One-to-many, said outright</h3>
+      <div class="canvas" aria-label="A piece of the graph, wording A">
+        <svg class="wires" viewBox="0 0 300 364" aria-hidden="true">
+          <path class="wire" d="M98 319 C 6 319, 6 18, 24 18"/>
+          <path class="end" d="M98 312.5 L88 319 L98 325.5 M88 319 H98"/>
+          <path class="end" d="M17 12 V24"/>
+          <text class="endword" x="66" y="312">many</text>
+          <text class="endword" x="4" y="38">one</text>
+        </svg>
+        <div class="bubble" style="left:24px;top:2px">
+          <div class="bhead">Paycheck <code>paycheck</code></div>
+          <button class="port" title="month — a month"><span class="g">▦</span>month</button>
+          <button class="port" title="paid_on — a date"><span class="g">▦</span>paid_on</button>
+          <button class="port" title="net — money"><span class="g">₪</span>net</button>
+          <button class="port live" title="earnings — adds up its work days"><span class="g">Σ</span>earnings<span class="to">from work days</span></button>
+          <button class="port new" title="Drag onto another format: each paycheck has many of those, and can add them up."><span class="g">+</span>has many…</button>
+        </div>
+        <div class="bubble" style="left:98px;top:194px">
+          <div class="bhead">Work day <code>work_day</code></div>
+          <button class="port" title="day — a date. Drag onto a format to make it a connection."><span class="g">▦</span>day</button>
+          <button class="port" title="hours — a number, in h"><span class="g">#</span>hours</button>
+          <button class="port" title="rate — money"><span class="g">₪</span>rate</button>
+          <button class="port live" title="Each work day belongs to one paycheck."><span class="g">↗</span>paycheck<span class="to">one Paycheck</span></button>
+          <button class="port new" title="Drag onto another format: each work day belongs to one of those."><span class="g">+</span>belongs to one…</button>
+        </div>
+      </div>
+      <p class="caption">Read across the line: <b style="font-weight:500;color:var(--color-ink)">a work day belongs to one paycheck; a paycheck has many work days.</b> Either port starts the same connection. <i>has many…</i> opens the window with "add up" already open, because that's usually why you started from that end.</p>
+    </div>
+
+    <div class="option">
+      <h3><span class="tag">B</span> Verbs, closer to today's two jobs</h3>
+      <div class="canvas" aria-label="A piece of the graph, wording B">
+        <svg class="wires" viewBox="0 0 300 364" aria-hidden="true">
+          <path class="wire" d="M98 319 C 6 319, 6 18, 24 18"/>
+          <path class="end" d="M98 312.5 L88 319 L98 325.5 M88 319 H98"/>
+          <path class="end" d="M17 12 V24"/>
+          <text class="endword" x="66" y="312">many</text>
+          <text class="endword" x="4" y="38">one</text>
+        </svg>
+        <div class="bubble" style="left:24px;top:2px">
+          <div class="bhead">Paycheck <code>paycheck</code></div>
+          <button class="port"><span class="g">▦</span>month</button>
+          <button class="port"><span class="g">▦</span>paid_on</button>
+          <button class="port"><span class="g">₪</span>net</button>
+          <button class="port live"><span class="g">Σ</span>earnings<span class="to">of work days</span></button>
+          <button class="port new" title="Drag onto a format linked to this one to add up its rows here."><span class="g">+</span>add up…</button>
+        </div>
+        <div class="bubble" style="left:98px;top:194px">
+          <div class="bhead">Work day <code>work_day</code></div>
+          <button class="port"><span class="g">▦</span>day</button>
+          <button class="port"><span class="g">#</span>hours</button>
+          <button class="port"><span class="g">₪</span>rate</button>
+          <button class="port live"><span class="g">↗</span>paycheck<span class="to">→ Paycheck</span></button>
+          <button class="port new" title="Drag onto another format to link each work day to one of those."><span class="g">+</span>link to…</button>
+        </div>
+      </div>
+      <p class="caption">Short, and a verb (docs/11). But <i>link to…</i> doesn't say which side is the "many", so the direction is still something you learn by trying, which is the problem today.</p>
+    </div>
+  </div>
+
+  <div class="ports" style="margin-top:24px">
+    <div>
+      <span class="label">Beside the graph: every connection, in words</span>
+      <div class="list" style="margin-top:8px">
+        <div class="it">Each work day belongs to one paycheck<span>work day's paycheck column</span></div>
+        <div class="it">Paycheck adds up earnings from its work days<span>worked out each time, not stored</span></div>
+      </div>
+      <p class="caption" style="margin-top:8px">Today this list prints <code>work_day.paycheck → paycheck</code> and <code>paycheck.earnings ← work_day.paycheck</code> under the heading "in words".</p>
+    </div>
+    <div class="ask">
+      <p><b>Your call: A or B.</b></p>
+      <p>I recommend <b>A</b>, <i>belongs to one…</i> and <i>has many…</i>. It names the relationship rather than the storage, it says which end is the "many" before you drag, and the window's headline then just finishes the sentence the port started.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ======================================================================= the states -->
+<section>
+  <h2>The window, in every state</h2>
+  <p class="lede">The layout is the same every time: a small one-to-many line, a headline that says what will be true, a few short questions, and the name and note folded under <i>Name and note</i>. The headline changes as you answer. Work days and paychecks, plus a recipe for a total that isn't money. Try the menus and toggles.</p>
+
+  <div class="states">
+
+  <!-- 1 ---------------------------------------------------------------- new link -->
+  <article class="state">
+    <div class="state-head"><span class="num">1</span><h3>A new connection</h3><span class="caption">dragged from <i>belongs to one…</i> on Work day onto Paycheck</span></div>
+    <div class="panel" data-panel>
+      <div class="rel"><b>Many</b> work days <svg width="64" height="16"><use href="#crow"/></svg> <b>one</b> paycheck</div>
+      <p class="headline">Each work day belongs to one paycheck.</p>
+      <div class="rows">
+        <div class="q">Which paycheck</div>
+        <div class="a">
+          <div class="choice" data-choice><button class="on" data-v="hand">I pick it</button><button data-v="date">Match by date</button></div>
+          <div data-when="date" hidden>
+            <p class="say">The work day's <span class="pick">day <svg width="12" height="12"><use href="#chev"/></svg></span> falls in the paycheck's <span class="pick">month <svg width="12" height="12"><use href="#chev"/></svg></span>.</p>
+            <span class="caption">Fills an empty one when a work day is saved. No match, or two, and the work day isn't saved; it tells you which.</span>
+          </div>
+          <label class="check"><input type="checkbox"> Every work day must have one</label>
+        </div>
+        <div class="q">Add up</div>
+        <div class="a">
+          <label class="check"><input type="checkbox" data-toggle-total> Each paycheck adds up its work days</label>
+          <div class="addup" data-total hidden>
+            <p class="say">Paycheck shows the <span class="pick">count <svg width="12" height="12"><use href="#chev"/></svg></span> of its work days, called <input class="blank" value="work_day_count" size="14" aria-label="Name of the total">.</p>
+          </div>
+        </div>
+      </div>
+      <details class="more"><summary><svg width="12" height="12"><use href="#right"/></svg>Name and note</summary>
+        <div class="rows">
+          <div class="q">Column on Work day</div><div class="a"><input class="field" value="paycheck" aria-label="The new column on Work day"></div>
+          <div class="q">Note</div><div class="a"><textarea class="field" rows="2" placeholder="Why it's worth having (optional)"></textarea></div>
+        </div>
+      </details>
+      <p class="will">Adds a <b>paycheck</b> column to Work day.</p>
+      <div class="actions"><button class="fc-btn fc-btn-primary">Connect</button><button class="fc-btn fc-btn-ghost">Cancel</button></div>
+    </div>
+  </article>
+
+  <!-- 2 ---------------------------------------------------------------- new link + total -->
+  <article class="state">
+    <div class="state-head"><span class="num">2</span><h3>A new connection with a total</h3><span class="caption">the same drag with "adds up" ticked, or dragged from <i>has many…</i> on Paycheck (it opens this way)</span></div>
+    <div class="panel">
+      <div class="rel"><b>Many</b> work days <svg width="64" height="16"><use href="#crow"/></svg> <b>one</b> paycheck</div>
+      <p class="headline">Each work day belongs to one paycheck, and each paycheck counts its work days.</p>
+      <div class="rows">
+        <div class="q">Which paycheck</div>
+        <div class="a">
+          <div class="choice" data-choice><button class="on" data-v="hand">I pick it</button><button data-v="date">Match by date</button></div>
+          <label class="check"><input type="checkbox"> Every work day must have one</label>
+        </div>
+        <div class="q">Add up</div>
+        <div class="a">
+          <label class="check"><input type="checkbox" checked data-toggle-total> Each paycheck adds up its work days</label>
+          <div class="addup" data-total>
+            <p class="say" data-build data-kind="count" data-of="work days" data-on="Paycheck" data-name-count="work_day_count">Paycheck shows the <span class="menuwrap"><button class="pick" data-kind-pick>count <svg width="12" height="12"><use href="#chev"/></svg></button></span><span data-if="fold"> of <input class="blank fx" value="hours" size="12" aria-label="What is added up on each work day"> from its work days</span><span data-if="ord"> <input class="blank fx" value="rate" size="6" aria-label="Which value"> of its work days, by <span class="pick">day <svg width="12" height="12"><use href="#chev"/></svg></span></span><span data-if="count"> of its work days</span>, called <input class="blank" value="work_day_count" size="14" aria-label="Name of the total"><span data-if="unit">, in <input class="blank" value="" placeholder="h" size="4" aria-label="Unit"></span>.</p>
+            <span class="caption" data-if="unit">Its work days' hours are in h.</span>
+          </div>
+        </div>
+      </div>
+      <details class="more"><summary><svg width="12" height="12"><use href="#right"/></svg>Name and note</summary>
+        <div class="rows">
+          <div class="q">Column on Work day</div><div class="a"><input class="field" value="paycheck"></div>
+          <div class="q">Note</div><div class="a"><textarea class="field" rows="2" placeholder="Why it's worth having (optional)"></textarea></div>
+        </div>
+      </details>
+      <p class="will">Adds a <b>paycheck</b> column to Work day, and <b>work_day_count</b> to Paycheck.</p>
+      <div class="actions"><button class="fc-btn fc-btn-primary">Connect</button><button class="fc-btn fc-btn-ghost">Cancel</button></div>
+    </div>
+  </article>
+
+  <!-- 3 ---------------------------------------------------------------- existing link -->
+  <article class="state">
+    <div class="state-head"><span class="num">3</span><h3>An existing connection</h3><span class="caption">pressed on the graph or in the list beside it</span></div>
+    <div class="panel">
+      <div class="rel"><b>Many</b> work days <svg width="64" height="16"><use href="#crow"/></svg> <b>one</b> paycheck</div>
+      <p class="headline">Each work day belongs to one paycheck.</p>
+      <div class="rows">
+        <div class="q">Which paycheck</div>
+        <div class="a">
+          <div class="choice" data-choice><button class="on" data-v="hand">I pick it</button><button data-v="date">Match by date</button></div>
+          <div data-when="date" hidden>
+            <p class="say">The work day's <span class="pick">day <svg width="12" height="12"><use href="#chev"/></svg></span> falls in the paycheck's <span class="pick">month <svg width="12" height="12"><use href="#chev"/></svg></span>.</p>
+          </div>
+          <label class="check"><input type="checkbox"> Every work day must have one</label>
+        </div>
+        <div class="q">Adds up</div>
+        <div class="a"><span class="caption" style="padding-top:6px">Paycheck's <b style="font-weight:500;color:var(--color-ink)">earnings</b> adds up its work days.</span></div>
+      </div>
+      <details class="more"><summary><svg width="12" height="12"><use href="#right"/></svg>Name and note</summary>
+        <div class="rows">
+          <div class="q">Column on Work day</div><div class="a"><input class="field" value="paycheck" readonly><span class="caption">Rename it in Work day's columns.</span></div>
+          <div class="q">Note</div><div class="a"><textarea class="field" rows="2">Every day I worked, against the slip that paid it.</textarea></div>
+        </div>
+      </details>
+      <p class="caption" style="margin-top:12px">To point it at another format, drag its <i>paycheck</i> port there.</p>
+      <div class="actions"><button class="fc-btn fc-btn-primary" disabled>Save</button><button class="fc-btn fc-btn-ghost">Cancel</button><button class="fc-btn fc-btn-ghost">Add up on Paycheck</button><button class="icon push" aria-label="Delete this connection" title="Delete this connection"><svg width="16" height="16"><use href="#trash"/></svg></button></div>
+    </div>
+  </article>
+
+  <!-- 4 ---------------------------------------------------------------- total on an existing link, with a unit -->
+  <article class="state">
+    <div class="state-head"><span class="num">4</span><h3>Adding up along an existing connection</h3><span class="caption"><i>Add up on Recipe</i>, or <i>has many…</i> dropped on a format already connected. A total that isn't money asks for its unit.</span></div>
+    <div class="panel">
+      <div class="rel"><b>Many</b> recipe lines <svg width="64" height="16"><use href="#crow"/></svg> <b>one</b> recipe</div>
+      <p class="headline">Each recipe adds up its recipe lines.</p>
+      <div class="rows">
+        <div class="q">Add up</div>
+        <div class="a">
+          <p class="say" data-build data-kind="sum" data-of="recipe lines" data-on="Recipe">Recipe shows the <span class="menuwrap"><button class="pick" data-kind-pick>sum <svg width="12" height="12"><use href="#chev"/></svg></button></span><span data-if="fold"> of <input class="blank fx" value="grams * ingredient.kcal / 100" size="26" aria-label="What is added up on each recipe line"> from its recipe lines</span><span data-if="ord"> <input class="blank fx" value="grams" size="6" aria-label="Which value"> of its recipe lines, by <span class="pick">added <svg width="12" height="12"><use href="#chev"/></svg></span></span><span data-if="count"> of its recipe lines</span>, called <input class="blank" value="kcal" size="8" aria-label="Name of the total"><span data-if="unit">, in <input class="blank" value="kcal" size="5" aria-label="Unit"></span>.</p>
+          <div class="menu suggest" role="listbox" aria-label="What you can use">
+            <button><code>grams</code><span>on the recipe line</span></button>
+            <button class="on"><code>ingredient.kcal</code><span>its ingredient's kcal</span></button>
+            <button><code>ingredient.protein_g</code><span>its ingredient's protein</span></button>
+            <button><code>ingredient.price</code><span>its ingredient's price</span></button>
+          </div>
+          <span class="caption">Use its columns, and its ingredient's. Typing shows what fits. Its lines come out in kcal.</span>
+        </div>
+      </div>
+      <details class="more"><summary><svg width="12" height="12"><use href="#right"/></svg>Note</summary>
+        <div class="rows"><div class="q">Note</div><div class="a"><textarea class="field" rows="2" placeholder="Why it's worth having (optional)"></textarea></div></div>
+      </details>
+      <p class="will">Adds <b>kcal</b> to Recipe. It's worked out each time; nothing is stored.</p>
+      <div class="actions"><button class="fc-btn fc-btn-primary">Add</button><button class="fc-btn fc-btn-ghost">Cancel</button></div>
+    </div>
+  </article>
+
+  <!-- 5 ---------------------------------------------------------------- found by -->
+  <article class="state">
+    <div class="state-head"><span class="num">5</span><h3>Matched by date</h3><span class="caption">F8's "found by". Shown against a paycheck's <i>paid_on</i> date, where you also choose same month or same day.</span></div>
+    <div class="panel" data-panel>
+      <div class="rel"><b>Many</b> work days <svg width="64" height="16"><use href="#crow"/></svg> <b>one</b> paycheck</div>
+      <p class="headline">Each work day belongs to the paycheck paid in its month.</p>
+      <div class="rows">
+        <div class="q">Which paycheck</div>
+        <div class="a">
+          <div class="choice" data-choice><button data-v="hand">I pick it</button><button class="on" data-v="date">Match by date</button></div>
+          <div data-when="date">
+            <p class="say">The work day's <span class="pick">day <svg width="12" height="12"><use href="#chev"/></svg></span> is in the same <span class="menuwrap"><button class="pick" data-open-menu>month <svg width="12" height="12"><use href="#chev"/></svg></button><span class="menu" data-menu><button class="on" data-set="month">month</button><button data-set="day">day</button></span></span> as the paycheck's <span class="pick">paid_on <svg width="12" height="12"><use href="#chev"/></svg></span>.</p>
+            <span class="caption">Fills an empty one when a work day is saved. No match, or two, and the work day isn't saved; it tells you which. One you picked yourself is never moved.</span>
+          </div>
+          <label class="check"><input type="checkbox" checked> Every work day must have one</label>
+        </div>
+      </div>
+      <p class="will">Adds a <b>paycheck</b> column to Work day.</p>
+      <div class="actions"><button class="fc-btn fc-btn-primary">Connect</button><button class="fc-btn fc-btn-ghost">Cancel</button></div>
+    </div>
+  </article>
+
+  <!-- 6 ---------------------------------------------------------------- money total -->
+  <article class="state">
+    <div class="state-head"><span class="num">6</span><h3>A total of money</h3><span class="caption">no unit to ask for: it stays in the work days' currency</span></div>
+    <div class="panel">
+      <div class="rel"><b>Many</b> work days <svg width="64" height="16"><use href="#crow"/></svg> <b>one</b> paycheck</div>
+      <p class="headline">Each paycheck adds up the earnings of its work days.</p>
+      <div class="rows">
+        <div class="q">Add up</div>
+        <div class="a">
+          <p class="say" data-build data-kind="sum" data-of="work days" data-on="Paycheck" data-money>Paycheck shows the <span class="menuwrap"><button class="pick" data-kind-pick>sum <svg width="12" height="12"><use href="#chev"/></svg></button></span><span data-if="fold"> of <input class="blank fx" value="hours * rate" size="12" aria-label="What is added up on each work day"> from its work days</span><span data-if="ord"> <input class="blank fx" value="rate" size="6" aria-label="Which value"> of its work days, by <span class="pick">day <svg width="12" height="12"><use href="#chev"/></svg></span></span><span data-if="count"> of its work days</span>, called <input class="blank" value="earnings" size="10" aria-label="Name of the total">.</p>
+          <span class="caption" data-if="money">Money, so it stays in the work days' currency.</span>
+        </div>
+      </div>
+      <p class="will">Adds <b>earnings</b> to Paycheck. It's worked out each time; nothing is stored.</p>
+      <div class="actions"><button class="fc-btn fc-btn-primary">Save</button><button class="fc-btn fc-btn-ghost">Cancel</button><button class="icon push" aria-label="Delete this total" title="Delete this total"><svg width="16" height="16"><use href="#trash"/></svg></button></div>
+    </div>
+  </article>
+
+  <!-- 7 ---------------------------------------------------------------- refusals -->
+  <article class="state">
+    <div class="state-head"><span class="num">7a</span><h3>A drag that means nothing</h3><span class="caption">one whole format dropped on another</span></div>
+    <div class="panel">
+      <p class="headline">Drag <i style="font-weight:600">belongs to one…</i> from the format there are many of.</p>
+      <p class="caption" style="margin:0">Two whole formats don't say which one has many of the other.</p>
+      <div class="actions"><button class="fc-btn fc-btn-secondary">OK</button></div>
+    </div>
+  </article>
+
+  <article class="state">
+    <div class="state-head"><span class="num">7b</span><h3>The document refuses it</h3><span class="caption"><i>hours</i> dragged onto Paycheck, with work days already recorded</span></div>
+    <div class="panel">
+      <div class="rel"><b>Many</b> work days <svg width="64" height="16"><use href="#crow"/></svg> <b>one</b> paycheck</div>
+      <p class="headline">hours can't become the connection: 12 work days already have hours in it.</p>
+      <p class="caption" style="margin:0">Turning it into a link to a paycheck would leave those figures meaning nothing. Use a new column instead.</p>
+      <details class="verbatim"><summary>Exactly why</summary>hours was a real and is now a link. 12 rows in fmt_work_day hold a value for it, and what is stored may not still mean what it meant.</details>
+      <div class="actions"><button class="fc-btn fc-btn-primary">Use a new column</button><button class="fc-btn fc-btn-ghost">Cancel</button></div>
+    </div>
+  </article>
+
+  <article class="state">
+    <div class="state-head"><span class="num">7c</span><h3>A delete that would break a total</h3><span class="caption">the trash icon in state 3, while earnings adds up through it</span></div>
+    <div class="panel">
+      <p class="headline">Delete earnings first. Paycheck adds it up through this connection.</p>
+      <p class="caption" style="margin:0">Nothing is deleted for you.</p>
+      <div class="actions"><button class="fc-btn fc-btn-secondary">Open earnings</button><button class="fc-btn fc-btn-ghost">Cancel</button></div>
+    </div>
+  </article>
+
+  <!-- 8 ---------------------------------------------------------------- delete -->
+  <article class="state">
+    <div class="state-head"><span class="num">8</span><h3>Delete</h3><span class="caption">the trash icon, when nothing depends on it</span></div>
+    <div class="panel">
+      <p class="headline">Delete this connection?</p>
+      <p class="caption" style="margin:0">Work day loses its <b style="font-weight:500;color:var(--color-ink)">paycheck</b> column and what's in it. Paycheck doesn't change.</p>
+      <div class="actions"><button class="fc-btn fc-btn-secondary loses">Delete</button><button class="fc-btn fc-btn-ghost">Keep it</button></div>
+    </div>
+    <div class="panel" style="margin-top:8px">
+      <p class="headline">Stop adding up earnings on Paycheck?</p>
+      <p class="caption" style="margin:0">Nothing stored is lost.</p>
+      <div class="actions"><button class="fc-btn fc-btn-secondary loses">Delete</button><button class="fc-btn fc-btn-ghost">Keep it</button></div>
+    </div>
+  </article>
+
+  </div>
+</section>
+
+<!-- ======================================================================= the words -->
+<section>
+  <h2>Every sentence, before and after</h2>
+  <p class="lede">For the build: what each place says today, and what it says instead. Every column name shown is the person's own.</p>
+  <div class="table-wrap">
+  <table class="words">
+    <thead><tr><th>Where</th><th>Today</th><th>Instead</th></tr></thead>
+    <tbody>
+      <tr><td>Port, new link</td><td>names a row of…</td><td>belongs to one… <span class="quiet">(B: link to…)</span></td></tr>
+      <tr><td>Port, new total</td><td>a total of…</td><td>has many… <span class="quiet">(B: add up…)</span></td></tr>
+      <tr><td>Its hover</td><td>A new column on this format that names a row of another. Drop it on a bubble — or on its "a total of…", to keep a total of these rows there too.</td><td>Drag onto another format: each work day belongs to one of those.</td></tr>
+      <tr><td>Its hover</td><td>A total this format keeps of the rows that name it. Drop it on the bubble, or the column, whose rows it adds up — or drop "names a row of…" from there onto it.</td><td>Drag onto another format: each paycheck has many of those, and can add them up.</td></tr>
+      <tr><td>A linked column</td><td>paycheck <code>→ paycheck</code> · "paycheck names a row of paycheck."</td><td>paycheck <span class="quiet">one Paycheck</span> · "Each work day belongs to one paycheck."</td></tr>
+      <tr><td>A plain column</td><td>hours — real. Drop it on a bubble to make it name a row of that format.</td><td>hours — a number. Drag onto a format to make it a connection.</td></tr>
+      <tr><td>A total's port</td><td>earnings — a total of rows elsewhere, added up on every read.</td><td>earnings <span class="quiet">from work days</span> · "earnings adds up its work days."</td></tr>
+      <tr><td>The line</td><td>a plain curve</td><td>a fork at the many end, a bar at the one end, the words <i>many</i> and <i>one</i></td></tr>
+      <tr><td>Headline, new link</td><td>A row of Work day names one row of Paycheck. It becomes a new column.</td><td>Each work day belongs to one paycheck.</td></tr>
+      <tr><td>…with a total</td><td>Work day gets a column naming a row of Paycheck, and Paycheck keeps a total of the rows that name it. Two declarations, one gesture.</td><td>Each work day belongs to one paycheck, and each paycheck counts / adds up the earnings of its work days.</td></tr>
+      <tr><td>…matched by date</td><td>(no headline)</td><td>Each work day belongs to the paycheck paid in its month. / …paid on the same day.</td></tr>
+      <tr><td>…an existing column made a link</td><td>…hours stops holding a value of its own and holds that pointer instead.</td><td>Each work day belongs to one paycheck, through hours. What hours holds now is replaced.</td></tr>
+      <tr><td>…re-pointed</td><td>…paycheck is re-pointed, and every figure that read through it changes with it.</td><td>Each work day will belong to one pay period instead of one paycheck. Totals through it change too.</td></tr>
+      <tr><td>Headline, existing link</td><td>Every row of Work day names one row of Paycheck, through paycheck. Drag it onto another bubble to point it somewhere else.</td><td>Each work day belongs to one paycheck. <span class="quiet">(the drag hint moves to a caption)</span></td></tr>
+      <tr><td>…its target is gone</td><td>…This document declares no format called X, so nothing it names can be read.</td><td>Each work day belonged to one pay period, but there is no Pay period format now.</td></tr>
+      <tr><td>Headline, a total</td><td>Paycheck keeps a total of the Work day rows whose paycheck names it. Added up on every read and never stored.</td><td>Each paycheck adds up its work days. <span class="quiet">(+ "worked out each time; nothing is stored" beside the button)</span></td></tr>
+      <tr><td>…existing total</td><td>Paycheck's earnings is a total of the Work day rows whose paycheck names it.</td><td>Each paycheck adds up the earnings of its work days.</td></tr>
+      <tr><td>…its link is gone</td><td>…But work_day.paycheck does not name a row of Paycheck, so the total cannot be gathered.</td><td>Paycheck's earnings adds up work days, but work days no longer belong to paychecks.</td></tr>
+      <tr><td>The total's fields</td><td>The total is the [sum ▾] · Picked by · Called · Of, on each Work day row · In, each with a hint</td><td>One sentence: Paycheck shows the [sum ▾] of [hours * rate] from its work days, called [earnings], in [h]. Kinds: sum, count, average, smallest, largest, latest, earliest. Count reads "…the count of its work days"; latest and earliest read "…the latest [rate] of its work days, by [day ▾]".</td></tr>
+      <tr><td>Its unit</td><td>Declared, never derived — a figure with no unit beside one with a unit is how a factor of a thousand gets through.</td><td>in [h], filled with the rows' own unit as a placeholder. Money: "Money, so it stays in the work days' currency."</td></tr>
+      <tr><td>Found by</td><td>Found by [— picked by hand ▾] · falls in [Paycheck · month ▾] · Filled when a row is written with it empty. No Paycheck to find, or two, is refused by name — never guessed — and a link somebody picked is never moved.</td><td>Which paycheck: [I pick it | Match by date] · The work day's [day] falls in the paycheck's [month]. · Fills an empty one when a work day is saved. No match, or two, and the work day isn't saved; it tells you which. One you picked yourself is never moved.</td></tr>
+      <tr><td>Required</td><td>Every row must name one</td><td>Every work day must have one</td></tr>
+      <tr><td>Column name</td><td>The column that names it · On the format doing the naming. It holds the row's id.</td><td>Column on Work day, folded under Name and note</td></tr>
+      <tr><td>Note</td><td>Why this connection is worth having. Kept with the declaration, word for word.</td><td>Why it's worth having (optional)</td></tr>
+      <tr><td>What will change</td><td>Add <code>fmt_work_day.paycheck</code></td><td>Adds a paycheck column to Work day.</td></tr>
+      <tr><td>Refusal, two bubbles</td><td>Two bubbles do not say which of them keeps a total of the other. Drag a column onto a bubble, or "a total of…" onto the other format.</td><td>Drag belongs to one… from the format there are many of.</td></tr>
+      <tr><td>…already connected</td><td>paycheck already names a row of Paycheck.</td><td>paycheck already connects each work day to a paycheck.</td></tr>
+      <tr><td>…on a plain column</td><td>hours is not a column that names a row of anything.</td><td>hours isn't a connection. Drop it on the whole format, or on a column that is.</td></tr>
+      <tr><td>…on the wrong link</td><td>paycheck names a row of Paycheck, not of Pay period.</td><td>paycheck connects work days to Paycheck, not to Pay period.</td></tr>
+      <tr><td>…two links aimed here</td><td>Work day names a row of Paycheck 2 times — drop this on the column you mean.</td><td>Work days belong to a paycheck in two ways. Drop it on the one to add up.</td></tr>
+      <tr><td>…a total dragged</td><td>A total that already exists is opened, not dragged.</td><td>Press earnings to change it.</td></tr>
+      <tr><td>…anything else</td><td>Those two endpoints do not make a connection. A column names a bubble; a total gathers from a column.</td><td>Those two don't connect. Drag belongs to one… onto another format.</td></tr>
+      <tr><td>…the document refuses</td><td>the reconciler's sentence, alone, in red</td><td>a plain headline per kind of refusal (state 7b), with the reconciler's own sentence word for word under <i>Exactly why</i></td></tr>
+      <tr><td>Delete refused</td><td>paycheck.earnings gathers its rows by this link. Take that figure away first — a fold whose link is gone is a figure over rows nothing selects, and nothing here is removed on your behalf.</td><td>Delete earnings first. Paycheck adds it up through this connection. · Nothing is deleted for you.</td></tr>
+      <tr><td>Delete</td><td>Take paycheck off Work day. The column and everything in it go; nothing on Paycheck changes.</td><td>Delete this connection? Work day loses its paycheck column and what's in it. Paycheck doesn't change.</td></tr>
+      <tr><td>Buttons</td><td>Make the connection · Save the change · + A total of these rows on Paycheck · Remove the connection · Keep it after all · Remove it · Let it go</td><td>Connect · Save · Add up on Paycheck · (trash icon) · Keep it · Delete · OK</td></tr>
+      <tr><td>The list beside the graph</td><td><code>work_day.paycheck → paycheck</code> · a pointer, stored</td><td>Each work day belongs to one paycheck · work day's paycheck column</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section>
+  <h2>Notes for the build</h2>
+  <ul class="notes">
+    <li><b>Nothing is lost.</b> Link, total, found by (month or same day), required, the unit of a non-money total, the formula with its suggestions, latest/earliest by an order, the column name and the note are all still here. Name and note are folded away.</li>
+    <li><b>The port wording is your choice (A or B above).</b> Under A, <i>has many…</i> is today's <i>a total of…</i> port. Dropped where there is no link yet, it proposes the link with "add up" open, so un-ticking "add up" leaves a plain link. Dropped where a link exists, it goes straight to state 4.</li>
+    <li><b>The headline is built from the answers.</b> It follows the found-by choice, the "add up" tick and the kind of total, so it always says what will be true.</li>
+    <li><b>Menus are the app's own list</b> (ChoiceField's look, D-290), not the platform <code>&lt;select&gt;</code> the panel uses today.</li>
+    <li><b>No refusal before you've typed.</b> A total opens with a name already suggested from what it adds up, and the button stays off quietly until it can save.</li>
+    <li><b>A refusal from the document stays word for word</b> (D-138), folded under a plain headline that the window writes for each kind of refusal.</li>
+  </ul>
+</section>
+
+</main>
+
+<script>
+(function(){
+  // theme
+  var seg=document.querySelector('[data-theme-seg]');
+  seg.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
+    seg.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b)});
+    var t=b.dataset.t;if(t==='system')document.documentElement.removeAttribute('data-theme');else document.documentElement.setAttribute('data-theme',t);});
+
+  // which paycheck: I pick it / match by date
+  document.querySelectorAll('[data-choice]').forEach(function(c){c.addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
+    c.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b)});
+    var a=c.closest('.a');a.querySelectorAll('[data-when]').forEach(function(w){w.hidden=w.dataset.when!==b.dataset.v});
+    var p=c.closest('.panel'),h=p.querySelector('.headline');
+    if(h&&!p.querySelector('[data-toggle-total]:checked'))h.textContent=b.dataset.v==='date'?'Each work day belongs to the paycheck of its month.':'Each work day belongs to one paycheck.';});});
+
+  // "add up" tick
+  document.querySelectorAll('[data-toggle-total]').forEach(function(t){t.addEventListener('change',function(){
+    var p=t.closest('.panel'),box=p.querySelector('[data-total]');if(box)box.hidden=!t.checked;
+    var h=p.querySelector('.headline');h.textContent=t.checked?'Each work day belongs to one paycheck, and each paycheck counts its work days.':'Each work day belongs to one paycheck.';
+    var w=p.querySelector('.will');if(w)w.innerHTML=t.checked?'Adds a <b>paycheck</b> column to Work day, and <b>work_day_count</b> to Paycheck.':'Adds a <b>paycheck</b> column to Work day.';});});
+
+  // the kind of total, as a menu in the sentence
+  var KINDS=[['sum','adds them up'],['count','how many'],['average',''],['smallest',''],['largest',''],['latest','one row'],['earliest','one row']];
+  function apply(build){
+    var k=build.dataset.kind,ord=(k==='latest'||k==='earliest'),money=build.hasAttribute('data-money');
+    build.querySelector('[data-kind-pick]').firstChild.nodeValue=k+' ';
+    build.querySelectorAll('[data-if]').forEach(function(el){var want=el.dataset.if.split(' ');
+      var on=want.some(function(w){return (w==='fold'&&!ord&&k!=='count')||(w==='ord'&&ord)||(w==='count'&&k==='count')||(w==='unit'&&k!=='count'&&!money)||(w==='money'&&money&&k!=='count')});
+      el.hidden=!on;el.style.display=on?'':'none';});
+    var ow=build.querySelector('[data-ordword]');if(ow)ow.textContent=k;
+    var cap=build.parentNode.querySelectorAll(':scope > [data-if]');
+    cap.forEach(function(el){var w=el.dataset.if;var on=(w==='unit'&&k!=='count'&&!money)||(w==='money'&&money&&k!=='count');el.style.display=on?'':'none';});
+  }
+  document.querySelectorAll('[data-build]').forEach(function(build){
+    var pick=build.querySelector('[data-kind-pick]'),wrap=pick.parentNode,menu=document.createElement('span');
+    menu.className='menu';menu.setAttribute('role','listbox');
+    KINDS.forEach(function(k){var b=document.createElement('button');b.type='button';b.innerHTML=k[0]+(k[1]?'<span>'+k[1]+'</span>':'');
+      b.addEventListener('click',function(){build.dataset.kind=k[0];menu.classList.remove('open');
+        menu.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===b)});apply(build);});
+      if(k[0]===build.dataset.kind)b.classList.add('on');menu.appendChild(b);});
+    wrap.appendChild(menu);
+    pick.addEventListener('click',function(e){e.stopPropagation();menu.classList.toggle('open')});
+    apply(build);
+  });
+
+  // same month / same day
+  document.querySelectorAll('[data-open-menu]').forEach(function(b){var m=b.parentNode.querySelector('[data-menu]');
+    b.addEventListener('click',function(e){e.stopPropagation();m.classList.toggle('open')});
+    m.querySelectorAll('button').forEach(function(o){o.addEventListener('click',function(){
+      b.firstChild.nodeValue=o.dataset.set+' ';m.classList.remove('open');
+      m.querySelectorAll('button').forEach(function(x){x.classList.toggle('on',x===o)});
+      var h=b.closest('.panel').querySelector('.headline');
+      h.textContent=o.dataset.set==='day'?'Each work day belongs to the paycheck paid on the same day.':'Each work day belongs to the paycheck paid in its month.';});});});
+  document.addEventListener('click',function(){document.querySelectorAll('.menu.open').forEach(function(m){m.classList.remove('open')})});
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{
+  "description": "Emerald: start_here at session start, and the inbox's new rows before a prompt, each in full once per session and then a count (M47 U1, M51 U6). Silent in a folder that names no document.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|clear|compact",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks.mjs\" start-here \"$CLAUDE_PROJECT_DIR\"",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks.mjs\" rows \"$CLAUDE_PROJECT_DIR\" inbox --match state=new --once-per-session",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}
