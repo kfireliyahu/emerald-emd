@@ -4276,6 +4276,15 @@ question: Why did a model given this server call Emerald 'built for money first'
 answer: Our text taught it: formats said 'besides its finances', the full server opened on the ledger as a personal-finance application a new document keeps unless told otherwise, 'Not everything here is money' / 'know nothing about money' / 'where work that is not money begins' measured the engine against the ledger, 57 finance tools were listed first with document_info saying 'Call this first', create_document defaulted to the ledger on the full server (D-405), and the Markdown-folder reader sat past the 2,000 characters a host may keep. Now both heads open on any kind of thing, what it reads (csv, xlsx, json, a folder of Markdown notes such as an Obsidian vault, read where it is and never changed) and packs as optional, inside 2,000 chars with how-to-show intact; a paragraph tells the model to answer whether something belongs here about the thing; server.test.ts fails on each money-first phrase in both modes; engine tools listed first; create_document keeps no pack unless named; an audit's fixes (neutral examples, packs enum with purposes, record_units 'unit of measure', development tools say they need the pack, connections removed with extend_format, a what-else paragraph); READMEs lead with --engine-only; plugin 0.1.2+2. Reaches models only once emerald-mcp is published to npm (D-497). Rejected: flipping the binary's default (installed ledger configs would lose 57 tools).
 state: live
 
+### D-507
+date: 2026-10-19
+milestone: M42
+scope: plugin
+title: The server says first what a model gains from a document — it asks for the matching rows instead of re-reading files, a typed field filters exactly, a link is followed, every session sees the same rows — and checks are one benefit among them, never the reason; whether something belongs is answered by its shape, never by whether it has numbers; amends D-506
+question: Why did a model given the D-506 server still call checking numbers Emerald's main strength and advise against moving notes without figures, and what does the server say first now?
+answer: The formats section called a claim 'the reason to keep this here rather than in a spreadsheet', server.json said 'a model reads and checks', the plugin and npm descriptions said 'real types and real checks', and nothing said what a model gains. Both heads now open on it: a person's things are rows of formats, so a session asks instead of reading (matching rows in one call, not forty files re-read; exact field filters; links followed; a write checked; every session sees the same rows), inside the 2,000-char budget before how-to-show. A claim is one more thing a document does. Belonging is answered by shape (tasks, meetings, people, projects, decisions, bugs); free prose gains least and stays files, a body column or a link. Listings lead with asking. server.test.ts fails on the old phrases and if the head mentions checking before asking. Ships as emerald-mcp 0.1.5. Rejected: keeping checks first because the pitch says 'won't let you be wrong quietly' — the pitch is the maintainer's to change.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -11883,13 +11892,17 @@ report: Built on main at 777897f. Instructions, tool descriptions, tool order an
 milestone: M42
 scope: plugin
 title: The server leads with what a model gains from a document — asking for rows instead of re-reading files, real fields and links, one memory every session shares — and checks are one benefit among them
-state: in_progress
+landed: 2026-10-19
+decision: D-507
+state: built
 brief: Maintainer, 2026-10-19, after M42 F5 reached their work session: it now called Emerald's 'main strength' checking that numbers add up, and advised against moving notes 'because they don't have numbers'. Only when pushed did it find the real case: start_here instead of grepping 139 daily notes, exact filters on typed fields and links, writes that cannot break a task's syntax, the same rows for the person and every session. Our text caused it: FORMATS says a claim 'is the reason to keep this here rather than in a spreadsheet'; server.json says 'a model reads and checks'; the plugin and npm READMEs say 'real types and real checks'. Fix: (1) the head of both instruction blocks says what a model gains before anything else, within the 2,000-character budget with how-to-show intact; (2) the claim stops being 'the reason'; (3) 'answer about the thing' says honestly where it pays (anything with a repeated shape: tasks, meetings, people, projects, decisions) and where it pays least (free prose, kept as files and linked); (4) server.json, plugin.json and the npm README lead with querying; (5) the test fails on 'the reason to keep this here' and asserts the head names asking instead of reading. Done-test: plugin tests and typecheck green, docs:check green, 0.1.5 built for the maintainer to publish.
-files: src/plugin/instructions.ts, src/plugin/server.test.ts, server.json, hosts/claude/.claude-plugin/plugin.json, hosts/claude/README.md, scripts/npm-package.mjs
+files: src/plugin/instructions.ts (both heads, the claim sentence, answer-about-the-thing), src/plugin/server.test.ts, src/plugin/tools/trialSurface.test.ts, server.json, hosts/claude/.claude-plugin/plugin.json (0.1.4+1), hosts/claude-plugin-release.json, scripts/npm-package.mjs, D-507.
 taken_by: claude-code desktop session
 started: 2026-10-19
 branch: main
+commit: 181da0c
 paths: "src/plugin/instructions.ts\nsrc/plugin/server.test.ts\nserver.json\nhosts/claude/\nscripts/npm-package.mjs"
+report: Built on main at 181da0c. Heads rewritten in both modes (show-format line ends at char 1994 full, 1978 engine-only); claim demoted; belongs-by-shape paragraph; server.json (93 chars), plugin.json and npm README lead with asking; plugin 0.1.4+1. Typecheck green; src/plugin and hosts 723 tests pass. Not yet reaching anyone: needs emerald-mcp 0.1.5 published by the maintainer and the pins moved. Found, like D-506's gaps, by a session outside the repo reading the server cold: a stranger's-eye check is the follow-up.
 
 ### M42 U1
 milestone: M42

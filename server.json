@@ -8,13 +8,13 @@
     "url": "https://github.com/kfireliyahu/emerald-emd",
     "source": "github"
   },
-  "version": "0.1.4",
+  "version": "0.1.5",
   "packages": [
     {
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "emerald-mcp",
-      "version": "0.1.4",
+      "version": "0.1.5",
       "runtimeHint": "npx",
       "transport": {
         "type": "stdio"
