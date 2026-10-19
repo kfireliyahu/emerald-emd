@@ -1441,6 +1441,35 @@ with `start_here` and the inbox row on stdout. **The directory**, if it is ever 
 hold it for a reviewer (a pinned npx package) and would block the hooks'
 `"$CLAUDE_PROJECT_DIR"` argument in a plugin that is a subfolder of its repository.
 
+### A cold read before a release (M42 F7)
+
+**What a stranger's model makes of the server is checked here, not learned from one** — D-506's
+*built for money first* and D-507's *its main strength is checking numbers add up* were both found by
+a session at the maintainer's workplace. After `npm run build:plugin`:
+
+```
+node scripts/ask-cold.mjs                  # both modes; --only engine|full, --model <m>, --out <file>
+```
+
+Each question in the script's list is its own fresh `claude -p` in a new empty temp folder, with
+`--strict-mcp-config` naming only `dist-plugin/server.mjs` (once `--engine-only`, once full),
+settings from `project` only and no built-in tools — so no CLAUDE.md, skill, memory, hook or plugin
+of this machine's reaches it, and a run that sees another MCP server fails. **It drops the
+`CLAUDE*` and `MCP_*` variables of the session that runs it and sets `MCP_CONNECTION_NONBLOCKING=false`**:
+the desktop app sets it `true`, and then `-p` starts the first turn before the server has connected —
+four of ten runs answered with no Emerald at all (*which Emerald do you mean?*) before that. It prints each answer with
+the tools it called, the **red flags** matched mechanically (*money first*, *built for*, *main
+strength is checking*, *add up*, numbers as the reason, *not designed for*, advice against moving
+notes) and which of D-506/D-507's points it said; the answers go to a file in the OS temp folder,
+never the repository. **A flag asks for judgment, it is not a failure** — the session reads the
+answers against D-506 and D-507: any kind of thing; asking for rows instead of re-reading files; typed
+fields and links; the same rows for every session; checks one benefit; a Markdown folder read in
+place; packs optional. A question a session somewhere got wrong goes into the list.
+
+It spends the maintainer's Claude usage through their own `claude` CLI (ten runs, $0.74 on the
+default model on 2026-10-19), so it is a session's tool only: never in CI, never imported by `src/`, and the app and
+the server still make no network call (D-124).
+
 ## Sequencing
 
 **Now — M7**, taken ahead of M6's remaining lines (D-092). The original note said "after M4" and

@@ -87,6 +87,13 @@ one call per format. The columns are the last section of `start_here` (M47 U2), 
 first. Dry-run, read the diff, then `commit: true`. **Commit `docs/memory.emd`** — with the landing,
 in the order above: a diff on it is somebody's write, never debris, and a hook refuses discarding it.
 
+## 2b. A change to what the server says: read it cold
+
+A change to `src/plugin/instructions.ts` or to any tool's description runs `npm run build:plugin`
+and `node scripts/ask-cold.mjs` before the commit, and you read the answers against D-506 and D-507
+(M42 F7) — the flags it prints are prompts for that judgment, not a pass. Say in the report what a
+cold model now gets wrong, if anything.
+
 ## 3. Run the mechanical half
 
 ```bash

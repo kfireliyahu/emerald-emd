@@ -151,6 +151,10 @@ to read `docs/` in order to audit it — the pass is scoped to what you touched.
    decision of the maintainer's is the question, and the first button is *Start <next ready unit>*, sending its
    ref and the instruction to claim it; where there is no box, the message stays prose.
 
+**A change to what the server says** — `src/plugin/instructions.ts` or a tool's description — runs
+`npm run build:plugin` and `node scripts/ask-cold.mjs` before the commit, and the session reads the
+answers (M42 F7): a stranger's model found D-506's and D-507's framing before this project did.
+
 ```
 npm run docs:check
 ```
