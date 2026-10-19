@@ -31,7 +31,6 @@ import {
   setCategoryArchived,
 } from '@/data/repositories/categoryRepository.ts'
 import { holdsWork } from '@/data/repositories/guideRepository.ts'
-import { PACKS } from '@/data/packs/packs.ts'
 
 import { count, paragraphs } from '../format.ts'
 import type { OpenDocument } from '../document.ts'
@@ -102,9 +101,10 @@ export const createDocumentTool: PluginTool = {
     title: 'Create an Emerald document',
     description:
       'Create a new .emd document at a path that does not exist yet; never overwrites. It keeps ' +
-      'the `packs` named and no other (`[]` for none). **Omitted: the ledger** on a server with ' +
-      'the ledger’s tools, **none** engine-only. With no path the user may be shown a form; ' +
-      'otherwise ask them.',
+      'the `packs` named and no other, and **none when omitted**: a document starts empty and ' +
+      'holds what the person declares. Name a pack only when the work is what it is for — ' +
+      '`development` for a project’s memory, `ledger` for their finances. With no path the user ' +
+      'may be shown a form; otherwise ask them.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -122,9 +122,10 @@ export const createDocumentTool: PluginTool = {
     // Read first, so a pack this build has not got is refused before the user
     // is asked anything.
     const named = packsArg(args, 'packs')
-    // **The default** (D-405): the full server is the ledger's front door, as
-    // it always was; an engine-only server knows nothing about money.
-    const packs = named ?? PACKS.filter((pack) => pack.id === 'ledger' && context.engineOnly !== true)
+    // **The default is none, in both modes** (M42 F5, D-506, reversing D-405's
+    // ledger on the full server): a model that saw a new document arrive with
+    // a personal-finance pack took Emerald for a finance app.
+    const packs = named ?? []
     const given = optionalString(args, 'path')
     const path = given ?? (await askForPath(context))
 
@@ -148,8 +149,8 @@ export const createDocumentTool: PluginTool = {
             'and `import_statement`. Nothing there is mandatory.'
         : packs.length > 0
           ? '`formats` with this path lists what it declares.'
-          : 'It declares nothing yet: `declare_format` brings in a kind of thing, and `keep_packs` ' +
-            'a pack.',
+          : 'It declares nothing yet: `declare_format` brings in a kind of thing, `read_onto_format` ' +
+            'reads a spreadsheet or a folder of Markdown notes onto one, and `keep_packs` keeps a pack.',
     )
   },
 }

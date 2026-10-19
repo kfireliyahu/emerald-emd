@@ -11854,6 +11854,18 @@ commit: f7f69e2
 paths: "electron-builder.yml\nscripts/\n.github/workflows/release.yml\nREADME.md\nsrc/demo/page/copy/en.ts"
 report: Built on main at f7f69e2. The hook scripts/sign-mac.mjs ad-hoc signs the packed Mac app (afterPack, darwin only); electron-builder.yml keeps identity: null. Loaded through electron-builder's own resolveFunction on Windows: returns afterPack, no call on win32, codesign --force --deep --sign - on darwin. electron/macSigning.test.ts (3 tests) and typecheck pass. Release rehearsal (workflow_dispatch) run 39231019265 green on both runners, release job skipped as a rehearsal: the Mac log shows release/mac-arm64/Emerald.app and release/mac/Emerald.app 'valid on disk', 'satisfies its Designated Requirement', Signature=adhoc, arm64 and x86_64. README now says what a Mac shows and gives xattr -cr for copies of 0.1.2 or earlier. PROVED ON A REAL MAC, 2026-10-19: the maintainer opened the rehearsal's arm64 dmg on the work Mac that had called 0.1.2 damaged; Open Anyway opened Emerald. The fix reaches people only with the next release, which is the maintainer's to cut.
 
+### M42 F5
+milestone: M42
+scope: plugin
+title: The server says what Emerald is before it says what the ledger is: no money-first framing, the notes folder in the head, and a new document keeps no pack unless asked
+state: in_progress
+brief: Maintainer, 2026-10-19: a model at work, given emerald, told them 'Emerald is built for money first. Its tools describe everything outside finances as an add-on' and argued against moving their Obsidian notes, saying Obsidian needs the files. Our text caused it: `formats` says 'besides its finances'; the full server opens on the ledger as 'a complete personal-finance application that a new document keeps unless told otherwise'; 'Not everything here is money', 'they know nothing about money' and start_here's 'where work that is not money begins' are all defensive; the Markdown-folder reader (M34 U7) is mentioned only past the 2,000 characters a host may keep. Fix: (1) both instruction blocks open on what Emerald is for any kind of thing, what it reads (csv, xlsx, json, a folder of Markdown notes read in place, files unchanged), and packs as optional, ledger one of them; (2) every engine tool description says what it does without measuring against finance; (3) create_document keeps no pack unless `packs` names one, in both modes; (4) a sweep for other wrong or stale claims in the model-facing text (an audit agent's findings), each fixed; (5) a test that the money-first phrases are gone in both modes and the head names the notes folder. Done-test: server tests and typecheck green; docs:check green.
+files: src/plugin/instructions.ts, src/plugin/tools/*.ts descriptions, src/plugin/tools/setup.ts (create_document default), src/plugin/server.test.ts, scripts/npm-package.mjs README, hosts/claude/README.md if wrong
+taken_by: claude-code desktop session
+started: 2026-10-19
+branch: main
+paths: "src/plugin/instructions.ts\nsrc/plugin/tools/\nsrc/plugin/server.test.ts\nscripts/npm-package.mjs\nhosts/claude/"
+
 ### M42 U1
 milestone: M42
 scope: engine

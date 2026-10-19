@@ -81,10 +81,10 @@ Three ways in, all available today:
   Updating yourself is automatic from **0.1.2** on; a copy older than that, download the new one
   once by hand.
 - **The MCP server**, as the npm package `emerald-mcp`: one line in your assistant's MCP
-  configuration, for any document, and `--engine-only` for the engine's tools without the ledger's:
+  configuration, for any document; leave off `--engine-only` for the ledger's tools too:
 
   ```bash
-  claude mcp add emerald -- npx -y emerald-mcp
+  claude mcp add emerald -- npx -y emerald-mcp --engine-only
   ```
 - **The Claude Code plugin**, with the server, its views drawn in the conversation, the skill for
   declaring a format with a person, and the hooks that bring a project's `start_here` and inbox

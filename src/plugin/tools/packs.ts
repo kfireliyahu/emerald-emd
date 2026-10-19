@@ -27,12 +27,25 @@ import type { OpenDocument } from '../document.ts'
 import { mutatingCall, type Mutation } from '../write.ts'
 import { booleanProp, PATH_PROP, requireString, ToolInputError, type Args, type PluginTool } from './tool.ts'
 
+/**
+ * What each pack is for, in the words a model chooses by (M42 F5): its title
+ * alone said `ledger (the ledger)`, which tells a model nothing, and the
+ * ledger came first only because `PACKS` is in that order.
+ */
+const PACK_PURPOSE: Readonly<Record<string, string>> = {
+  development: 'a project’s memory: milestones, units, decisions, open questions, an inbox',
+  ledger: 'personal finance, from statements, paychecks and fund reports',
+}
+
 /** The JSON Schema for a list of packs, by id, from the packs this build has. */
 export function packsProp(description: string): Record<string, unknown> {
   return {
     type: 'array',
     items: { type: 'string', enum: PACKS.map((pack) => pack.id) },
-    description: `${description} One of: ${PACKS.map((pack) => `\`${pack.id}\` (${pack.title.toLowerCase()})`).join(', ')}.`,
+    description: `${description} One of: ${[...PACKS]
+      .sort((one, other) => (one.id === 'ledger' ? 1 : 0) - (other.id === 'ledger' ? 1 : 0))
+      .map((pack) => `\`${pack.id}\` (${PACK_PURPOSE[pack.id] ?? pack.title.toLowerCase()})`)
+      .join(', ')}.`,
   }
 }
 

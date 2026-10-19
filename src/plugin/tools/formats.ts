@@ -229,9 +229,9 @@ const ROWS_MAX = 200
 /** What `rule_sets` is, said once for both tools that take it (D-273). */
 const RULE_SETS_DESCRIPTION =
   'Rows of this format as rules setting a link of another, each `{ name, sets, note }`: ' +
-  '`transaction.category from target when merchant matches pattern by kind (EXACT equals, PART ' +
-  'contains) first by priority, recorded in category_source as RULE, never over MANUAL`. Kinds: ' +
-  'equals, contains, starts with, regex.'
+  '`note.topic from target when title matches pattern by kind (EXACT equals, PART ' +
+  'contains) first by priority, recorded in topic_source as RULE, never over MANUAL`. Kinds: ' +
+  'equals, contains, starts with, regex. `apply_rules` runs them.'
 
 /** What `computed` is (D-334; named `derived` before M33 U3a). */
 const DERIVED_DESCRIPTION =
@@ -243,8 +243,8 @@ const DERIVED_DESCRIPTION =
 /** What `rollups` is, said once for both tools that take it (D-271). */
 const ROLLUPS_DESCRIPTION =
   'Figures per month over this format’s rows, each `{ name, works_out, note }`: ' +
-  '`sum of amount by month of charge_date or transaction_date and category where direction ' +
-  'is OUTFLOW` — sum, count, average, minimum or maximum; `of` one number or money ' +
+  '`sum of minutes by month of done_on or started_on and project where status ' +
+  'is DONE` — sum, count, average, minimum or maximum; `of` one number or money ' +
   'column (none for count); `by` a month column or `month of` a date, one `or` fallback; ' +
   'optionally `and` one link; `where` filters as an aggregate’s, joined by `and`.'
 
@@ -705,7 +705,7 @@ export const formatsTool: PluginTool = {
     name: 'formats',
     title: 'Declared formats',
     description:
-      'What kinds of thing this document can hold besides its finances — every format ' +
+      'What kinds of thing this document holds — every format ' +
       'declared in it, with its columns, their types, units, bounds and enum members, and the ' +
       'prose the author wrote around them. The columns are declared per document: `start_here` ' +
       'ends with one line per format, enough to write a row, and this is the whole declaration. ' +
@@ -742,8 +742,8 @@ export const formatsTool: PluginTool = {
             'workout — declared as markdown and compiled to a real typed table at `#/formats` ' +
             'in the app, or by `declare_format` here. Ask the user what one row is, what they ' +
             'will want to ask of it later, and whether any of its figures relate; the columns ' +
-            'fall out of those answers. If they already keep it in a spreadsheet, declare the ' +
-            'format and then `read_onto_format` the file onto it.',
+            'fall out of those answers. If they already keep it — a spreadsheet, a .json of rows, ' +
+            'or a folder of Markdown notes — declare the format and then `read_onto_format` it onto it.',
         )
       }
 
@@ -3196,10 +3196,10 @@ export const declareFormatTool: PluginTool = {
       'otherwise a `real` with a `unit`. Neither takes a `unit`. A **ratio** has a `unit` and a ' +
       '`per` — `density`, `g` per `ml` — the only way a figure crosses dimensions: a claim ' +
       'writes `amount in g via ingredient.density`. No free-text check, no expression. **Across ' +
-      'two columns of one row** is a `constraint`, one of four sentences: `ref is required when ' +
-      'kind is MANUAL` (`required only when` adds *and empty otherwise*), `at most one of goal, ' +
-      'debt, fund`, `amount is at most 0 when direction is OUTFLOW` (or `at least`), and `one row ' +
-      'per account, natural_key` (`when mode is REMAINDER` limits it) — a row breaking one is ' +
+      'two columns of one row** is a `constraint`, one of four sentences: `isbn is required when ' +
+      'kind is BOOK` (`required only when` adds *and empty otherwise*), `at most one of book, ' +
+      'article, video`, `score is at most 10 when kind is QUIZ` (or `at least`), and `one row ' +
+      'per course, week` (`when status is DONE` limits it) — a row breaking one is ' +
       'refused. `notes` is prose kept word for word: where the figures come from and what was ' +
       'decided. This **creates and never alters**: `extend_format` changes, `connect_formats` joins ' +
       'two. Writes nothing until `commit: true`. **Several ' +
@@ -3251,8 +3251,8 @@ export const declareFormatTool: PluginTool = {
             'optional `unit`. A `count` needs no `works_out`. A `works_out` may reach one hop through the source\u2019s own ' +
             'links: `amount_g / 100 * ingredient.kcal`. An optional `where` folds only the rows ' +
             'that match \u2014 one column of the source, or one hop through its link: ' +
-            '`deduction_type.reduces_net is true`, `kind is not X` (empty passes), `kind is one of X, Y`, ' +
-            '`employer is not empty`. `latest` and `earliest` read the one row ' +
+            '`project.active is true`, `kind is not X` (empty passes), `kind is one of X, Y`, ' +
+            '`author is not empty`. `latest` and `earliest` read the one row ' +
             'with the greatest (least) `by` — a date, month, instant or integer of the source, ' +
             '`by: as_of`; a tie is unchecked. A claim of this format may then ' +
             'name the aggregate, which is what makes a total something the document proves ' +
@@ -3669,7 +3669,8 @@ export const connectFormatsTool: PluginTool = {
       'format gets a total of another declared after it, which `declare_format` ' +
       'cannot do. Name an existing link as `column` to add only the total. **It only ' +
       'adds**: a link may be empty, so rows already there lose nothing; `required: true` on a ' +
-      'format that has rows is refused, and re-pointing or removing a connection is done at ' +
+      'format that has rows is refused. A connection is removed with `extend_format` `remove` ' +
+      '(the link column once its cells are emptied, or the total); re-pointing one is done at ' +
       '`#/connections` in the app. Returns what it would add and writes nothing until ' +
       '`commit: true`.',
     inputSchema: {
@@ -3695,8 +3696,8 @@ export const connectFormatsTool: PluginTool = {
             '`snake_case`, an `of` — one of sum, count, average, minimum, maximum — a ' +
             '`works_out` expression over each of those rows in their own vocabulary (their ' +
             'computed columns too, and one hop, `ingredient.kcal`). A `count` needs no `works_out`. It takes a ' +
-            '`unit` (none for money: it keeps its currency), `where` (only the rows that match: `kind is OUTFLOW`, ' +
-            '`kind is not X`, `kind is one of X, Y`, `employer is empty`) and `note`. No `over_*`: this link is what it ' +
+            '`unit` (none for money: it keeps its currency), `where` (only the rows that match: `status is DONE`, ' +
+            '`kind is not X`, `kind is one of X, Y`, `author is empty`) and `note`. No `over_*`: this link is what it ' +
             'folds over.',
           additionalProperties: true,
         },
@@ -4473,7 +4474,8 @@ function deleteFormatMutation(name: string): Mutation<DeleteFormatPlan> {
             `${verb(referrers.length, 'refers', 'refer')} to it — a link would be left naming rows ` +
             'that are not there, and an aggregate folding a table that is gone. **Nothing was ' +
             'written.** Nothing in this document is removed on somebody’s behalf: take the link ' +
-            'or the aggregate out at `#/connections` in the app first, or remove those formats.',
+            'or the aggregate out first — `extend_format` `remove`, the link once its cells are ' +
+            'emptied — or remove those formats.',
         )
       }
       return { declaration, rows: rowCountOf(document.db, declaration), blocked: undefined }
@@ -4732,10 +4734,10 @@ function currencyChange(change: NonNullable<UnitPlan['currency']>): string {
 export const recordUnitsTool: PluginTool = {
   definition: {
     name: 'record_units',
-    title: 'Add or correct a unit, or set the currency',
+    title: 'Add or correct a unit of measure, or set the currency',
     description:
       'Teach this document a unit it does not know — `slice`, `IU`, a tablespoon that is 20 ml ' +
-      'in this kitchen. A unit is what a declared column says its figures are in and what an ' +
+      'in this kitchen. A unit is what a declared column says its figures are in and what a ' +
       "claim's `in` converts into, so a conversion the document cannot make is a conversion " +
       'this fixes. **The engine converts inside a dimension and never across one**: grams to ' +
       'kilograms is arithmetic, millilitres to grams needs a density, and a density is a column ' +

@@ -33,7 +33,8 @@ release of its own skills, hooks or README on the same package.
 
 ## What it adds
 
-- **The MCP server** `emerald`, engine-only: declare a format, read a `.csv` or `.xlsx` onto it,
+- **The MCP server** `emerald`, engine-only: declare a format, read a spreadsheet, a `.json` of
+  rows or a folder of Markdown notes onto it,
   record and update rows (every write is a dry run until you say yes), and `start_here` /
   `show_format` to see a document's rows, board or roadmap.
 - **The `declare-a-format` skill**: work out a format with you and declare it into your document.

@@ -1578,7 +1578,7 @@ export const readOntoFormatTool: PluginTool = {
     name: 'read_onto_format',
     title: 'Read a file onto a declared format',
     description:
-      'Read any .csv, .xlsx (or .xls) or .json of rows onto a declared format — not only statements — a file ' +
+      'Read what the user already keeps onto a declared format: any .csv, .xlsx (or .xls) or .json of rows, a file ' +
       'row per table row; or **a folder of Markdown notes**, a note per row: `title`, `file`, ' +
       'each frontmatter key, `inline tags`, `body links` and `body`, with a link read from `[[name]]` or ' +
       '`[text](file.md)`; a body link naming no row is left out and named, the note still read; a hidden file is not read; ' +

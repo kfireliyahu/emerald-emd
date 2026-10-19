@@ -75,7 +75,7 @@ export const guideStatusTool: PluginTool = {
     name: 'guide_status',
     title: 'Guide: what to set up, and what is done',
     description:
-      'The places worth setting up in a document, in order — reading statements and paychecks, ' +
+      'In a document that keeps the ledger: the places worth setting up, in order — reading statements and paychecks, ' +
       'making the list of categories yours, giving each merchant a category, the bills, the plan, the opening balance and the ' +
       'cushion — with which are done and what the document shows for each, and the tool that does ' +
       'each one. The same list and the same checks as the app’s Guide me. Call it after ' +

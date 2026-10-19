@@ -609,7 +609,7 @@ export const landUnitsTool: PluginTool = {
     name: 'land_units',
     title: 'Land units',
     description:
-      'A unit’s closing pass in one call, for a list of units by `ref`: their new `decisions` ' +
+      'In a document that keeps the `development` pack: a unit’s closing pass in one call, for a list of units by `ref`: their new `decisions` ' +
       '(date, milestone, scope and `state: live` default to the unit’s), the unit to `built` with ' +
       '`landed` (default today), `files` and `decision` (default its first new one), its ' +
       '`review_entries` (`state: open` default), `close_milestone`, its git `commit` (refused without ' +
@@ -752,7 +752,7 @@ export const claimUnitsTool: PluginTool = {
     name: 'claim_units',
     title: 'Claim units',
     description:
-      'Take units by `ref`: `planned` to `in_progress` with `taken_by`, the git `branch` they are ' +
+      'In a document that keeps the `development` pack, take units by `ref`: `planned` to `in_progress` with `taken_by`, the git `branch` they are ' +
       'taken on and `started` (default today), the batch refused unless every one is still planned. ' +
       'With `take_over`, take units already `in_progress` from that taker — a session that stopped ' +
       'mid-unit — refused unless each is held by exactly that taker; `started` is reset and the taker ' +

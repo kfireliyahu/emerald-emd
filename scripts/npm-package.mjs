@@ -59,16 +59,16 @@ function manifest(app, listing) {
 const README = `# emerald-mcp
 
 The MCP server of [Emerald](https://getemerald.dev): **the database under the chat.** A \`.emd\`
-file is a real SQLite database on your disk. Declare a table for anything you keep — a charge, a
-paycheck, a book, a milestone — and it gets real types and real checks. These tools are how your
-assistant reads, writes and checks it.
+file is a real SQLite database on your disk. Declare a table for anything you keep — notes, tasks,
+books, a project's decisions, money — and it gets real types and real checks. These tools are how
+your assistant reads, writes and checks it.
 
 \`\`\`
-claude mcp add emerald -- npx -y emerald-mcp
+claude mcp add emerald -- npx -y emerald-mcp --engine-only
 \`\`\`
 
 Any MCP client that starts a stdio server runs it the same way: the command \`npx\`, the arguments
-\`["-y", "emerald-mcp"]\`. Every tool takes the absolute path of the \`.emd\` it works on. In Claude
+\`["-y", "emerald-mcp", "--engine-only"]\`. Leave the flag off for the ledger's tools too. Every tool takes the absolute path of the \`.emd\` it works on. In Claude
 Code, the plugin brings it with its hooks and a skill: \`/plugin marketplace add
 kfireliyahu/emerald-emd\`, then \`/plugin install emerald@emerald-emd\`.
 
@@ -77,6 +77,9 @@ kfireliyahu/emerald-emd\`, then \`/plugin install emerald@emerald-emd\`.
 - Your assistant reads and writes the file directly, and where the app draws MCP Apps, shows a
   table, board or roadmap in the chat.
 - Every write is shown first as a dry run. Nothing changes until you say commit.
+- It reads what you already keep onto your tables: a spreadsheet (\`.csv\`, \`.xlsx\`), a \`.json\` of
+  rows, or a folder of Markdown notes — a note a row, its frontmatter as columns, its \`[[links]]\`
+  as links — read where it is and never changed.
 - Shaped tools, never a general query: 28 for any document, 85 with the ledger.
 - A document answers in rows, so the model asks for what it needs instead of reading notes end to
   end.
@@ -102,8 +105,9 @@ come with Emerald:
 
 ## Running it
 
-- \`emerald-mcp\` — the server, with the engine's tools and the ledger's (a personal-finance pack).
-- \`emerald-mcp --engine-only\` — the engine's tools alone, a fifth of the definitions to carry.
+- \`emerald-mcp --engine-only\` — the engine's tools, for any document; a fifth of the definitions
+  to carry.
+- \`emerald-mcp\` — the engine's tools and the ledger's (a personal-finance pack).
 - \`emerald-mcp watch <document.emd> [--format <name>]\` — prints a line for each row that changes.
 
 Two more bins are for Claude Code's plugin: \`emerald-hooks\` (what its hooks print) and

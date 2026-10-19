@@ -20,8 +20,8 @@ export const storeDocumentAsTool: PluginTool = {
     title: 'Store a document as text or as SQLite bytes',
     description:
       'Writes the document again as `text` (diffs in git) or as `sqlite` bytes, and every later write ' +
-      'keeps that shape — the app’s Save as text. Refused when the text would not carry it, as a ' +
-      'ledger. Writes nothing until `commit: true`.',
+      'keeps that shape — the app’s Save as text. Refused when the text would not carry it — a ' +
+      'document keeping the ledger, for one. Writes nothing until `commit: true`.',
     inputSchema: {
       type: 'object',
       properties: {

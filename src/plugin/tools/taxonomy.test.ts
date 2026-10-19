@@ -14,7 +14,7 @@ import { tempDir } from '../../testing/tempDir'
 
 async function newDocument(): Promise<string> {
   const path = join(await tempDir('emerald-taxonomy-'), 'doc.emd')
-  await createDocumentTool.run({ path }, NO_CLIENT)
+  await createDocumentTool.run({ path, packs: ['ledger'] }, NO_CLIENT)
   return path
 }
 

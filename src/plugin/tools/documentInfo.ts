@@ -140,8 +140,8 @@ export const documentInfoTool: PluginTool = {
       'Describe an Emerald document (a .emd file): whether this plugin will serve it, the ' +
       'formats it declares with how many rows each holds, and — when it keeps the ledger — its ' +
       'accounts, transactions, categories and reporting currency. ' +
-      'Call this first — every other tool refuses a document whose schema does not match, and ' +
-      'this is the tool that says so in a sentence the user can act on. Reads the file; never ' +
+      'Call it when a tool refuses a document — every tool refuses one whose schema does not ' +
+      'match, and this is the one that says so in a sentence the user can act on. Reads the file; never ' +
       'modifies it.',
     inputSchema: {
       type: 'object',

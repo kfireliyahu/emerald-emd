@@ -333,7 +333,7 @@ export const dispatchPlanTool: PluginTool = {
     name: 'dispatch_plan',
     title: 'Dispatch plan',
     description:
-      'Before handing units out: for unit refs (every ready unit if left out), which can run at once and which ' +
+      'In a document that keeps the `development` pack, before handing units out: for unit refs (every ready unit if left out), which can run at once and which ' +
       'share a path in their `paths` — one per line — and so go one after another, beside any unit in progress; a ' +
       'unit with no paths is unknown, never safe. Then each one’s brief, the units it waits on and the decisions ' +
       'it names. Read-only.',

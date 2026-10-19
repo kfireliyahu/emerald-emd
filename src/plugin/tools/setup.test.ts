@@ -39,14 +39,15 @@ function clientRefusing(action: 'decline' | 'cancel'): ToolContext {
 
 async function newDocument(): Promise<string> {
   const path = await scratch('fresh.emd')
-  await createDocumentTool.run({ path }, NO_CLIENT)
+  // The ledger, by name: no pack is kept unless asked (M42 F5).
+  await createDocumentTool.run({ path, packs: ['ledger'] }, NO_CLIENT)
   return path
 }
 
 describe('create_document', () => {
   it('creates a document at this build’s schema, new to the guide', async () => {
     const path = await scratch('household.emd')
-    const text = await createDocumentTool.run({ path }, NO_CLIENT)
+    const text = await createDocumentTool.run({ path, packs: ['ledger'] }, NO_CLIENT)
 
     expect(text).toContain(`schema version ${SCHEMA_VERSION}`)
 
@@ -71,7 +72,7 @@ describe('create_document', () => {
 
   it('asks the client for a path when it can, and uses the answer', async () => {
     const path = await scratch('elicited.emd')
-    const text = await createDocumentTool.run({}, clientAnswering({ path }))
+    const text = await createDocumentTool.run({ packs: ['ledger'] }, clientAnswering({ path }))
 
     expect(text).toContain(path)
     const db = await reopen(path)

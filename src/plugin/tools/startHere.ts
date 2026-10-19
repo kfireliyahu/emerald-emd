@@ -41,14 +41,15 @@ import { drawnLine, withView } from './sheet.ts'
 import { PATH_PROP, requireString, type PluginTool } from './tool.ts'
 
 /**
- * Where work that is not money begins (M34 U1). A ledger's views answer only
- * the ledger's questions, so a stranger with a list of books who called this
- * first was handed card settlements and nowhere to go.
+ * Where new work begins (M34 U1). A ledger's views answer only the ledger's
+ * questions, so a stranger with a list of books who called this first was
+ * handed card settlements and nowhere to go. Said without measuring it against
+ * money (M42 F5): a model read "work that is not money" as money coming first.
  */
 const BEGIN =
-  'Work that is not money begins with `formats`, which says what this document holds; then ' +
-  '`read_onto_format` for any .csv or .xlsx the user already keeps — not only a statement — or ' +
-  '`declare_format` for a kind of thing it has no format for.'
+  'New work begins with `formats`, which says what this document holds; then ' +
+  '`read_onto_format` for a .csv, .xlsx or .json the user already keeps, or a folder of Markdown ' +
+  'notes, or `declare_format` for a kind of thing it has no format for.'
 
 /** How many of a document's own formats the untouched-longest line names. */
 const UNTOUCHED_SHOWN = 3
@@ -190,9 +191,9 @@ export const startHereTool: PluginTool = {
     description:
       'Call first. Answers the questions this document’s own views say a session starts from — ' +
       'what is ready to start, what is open, the latest entries — each with the `format_rows` call that ' +
-      'lists it whole; then what a row of each format looks like, enough to write one; and where work ' +
-      'that is not money begins: `formats`, then ' +
-      '`read_onto_format` or `declare_format`. Read-only.',
+      'lists it whole; then what a row of each format looks like, enough to write one; and where new work ' +
+      'begins: `formats`, then `read_onto_format` (files or a folder of notes) or `declare_format`. ' +
+      'Read-only.',
     inputSchema: {
       type: 'object',
       properties: { path: PATH_PROP },

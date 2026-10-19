@@ -56,10 +56,10 @@ describe('create_document with packs', () => {
     expect(await declared(path)).toEqual({ names: [], kept: [] })
   })
 
-  it('keeps the ledger when packs is omitted on the full server, and nothing engine-only', async () => {
+  it('keeps no pack when packs is omitted, on the full server and engine-only (M42 F5)', async () => {
     const full = await scratch('full.emd')
     await createDocumentTool.run({ path: full }, NO_CLIENT)
-    expect((await declared(full)).kept).toEqual(['ledger'])
+    expect(await declared(full)).toEqual({ names: [], kept: [] })
 
     const engine = await scratch('engine.emd')
     await createDocumentTool.run({ path: engine }, { engineOnly: true })

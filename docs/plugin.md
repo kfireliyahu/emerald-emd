@@ -1124,8 +1124,9 @@ rather than three decisions.
 > number). The ledger declares three — transfers, card settlements, payments to confirm (D-382). Shaped in D-095's sense by
 > construction — one format, one member, one count, no join — and each answer prints the
 > `format_rows` call that lists it whole. **On a document that keeps the ledger, or that declares no
-> question at all, it then says where work that is not money begins** — `formats`, then
-> `read_onto_format` or `declare_format` (M34 U1). **And it ends with what a row looks like** (M47 U2,
+> question at all, it then says where new work begins** — `formats`, then
+> `read_onto_format` (a spreadsheet, a `.json` of rows or a folder of Markdown notes) or `declare_format`
+> (M34 U1; reworded in M42 F5, D-506, so it no longer measures the work against money). **And it ends with what a row looks like** (M47 U2,
 > D-460): one line per format the document declares, generated from the declaration by
 > `compactDeclarations` — required columns in bold, types, enum members, what a link points at, the
 > key a money or quantity takes, bounds, worked-out columns — and the line that every write dry-runs
@@ -1308,8 +1309,8 @@ this `.mcp.json` created a document and read it back at schema 20.
 
 What a user needs, in order: Node, and `npx emerald-mcp` (below) or `npm run build:plugin` once in a
 checkout — `dist-plugin/` is **self-contained** since M42 U2; a `.emd` at the app's current schema, or
-`create_document` to make one — with the `packs` it should keep, the ledger only by default on the
-full server and nothing engine-only (D-405), and `keep_packs` for one later, which also brings a
+`create_document` to make one — with the `packs` it should keep, none by default in either mode
+(D-506, reversing D-405's ledger on the full server), and `keep_packs` for one later, which also brings a
 kept pack up to date: its new columns and renames, and its formats' notes and views' settings
 wherever the document still holds an earlier build's, keeping and naming what a person changed
 (D-491); and an absolute path to it, since every tool takes one.

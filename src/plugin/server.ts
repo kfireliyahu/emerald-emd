@@ -375,7 +375,7 @@ export function listedDefinition(definition: Tool): Tool {
 }
 
 /** Everything this server can *answer*, in the order the list above reads. */
-const TOOLS: readonly PluginTool[] = [...LEDGER_TOOLS, ...ENGINE_TOOLS, ...APP_TOOLS]
+const TOOLS: readonly PluginTool[] = [...ENGINE_TOOLS, ...LEDGER_TOOLS, ...APP_TOOLS]
 
 /**
  * How the server was started.
@@ -404,7 +404,9 @@ export interface ServerOptions {
 }
 
 export function createServer(options: ServerOptions = {}): Server {
-  const offered = options.engineOnly === true ? ENGINE_TOOLS : [...LEDGER_TOOLS, ...ENGINE_TOOLS]
+  // The engine's first in both modes (M42 F5): a list that opened on 57 finance
+  // tools taught a model that Emerald is a finance app with formats beside it.
+  const offered = options.engineOnly === true ? ENGINE_TOOLS : [...ENGINE_TOOLS, ...LEDGER_TOOLS]
   const server = new Server(
     { name: SERVER_NAME, version: PLUGIN_VERSION },
     // `instructions` rides on `initialize` and is rendered by the client once

@@ -95,6 +95,33 @@ describe('the MCP server', () => {
     const { tools } = await client.listTools()
 
     expect(tools.map((tool) => tool.name)).toEqual([
+      'formats',
+      'declare_format',
+      'connect_formats',
+      'extend_format',
+      'delete_format',
+      'format_rows',
+      'show_format',
+      'format_problems',
+      'search_document',
+      'start_here',
+      'format_rollup',
+      'apply_rules',
+      'record_format_rows',
+      'update_format_rows',
+      'delete_format_rows',
+      'claim_units',
+      'land_units',
+      'dispatch_plan',
+      'record_units',
+      'read_onto_format',
+      'supersede_reading',
+      'readers',
+      'keep_copy',
+      'store_document_as',
+      'arrange_views',
+      'create_document',
+      'keep_packs',
       'document_info',
       'category_tree',
       'uncategorized_merchants',
@@ -152,39 +179,6 @@ describe('the MCP server', () => {
       'statement_preview',
       'import_statement',
       'record_holdings_statement',
-      // The engine (D-217, D-219). The first names here that are about no
-      // particular subject: what they can reach is whatever this document
-      // declares, and `formats` is what says what that is — while
-      // `declare_format` is how a document comes to declare anything at all.
-      'formats',
-      'declare_format',
-      'connect_formats',
-      'extend_format',
-      'delete_format',
-      'format_rows',
-      'show_format',
-      'format_problems',
-      'search_document',
-      'start_here',
-      'format_rollup',
-      'apply_rules',
-      'record_format_rows',
-      'update_format_rows',
-      'delete_format_rows',
-      'claim_units',
-      'land_units',
-      'dispatch_plan',
-      'record_units',
-      'read_onto_format',
-      'supersede_reading',
-      'readers',
-      'keep_copy',
-      'store_document_as',
-      'arrange_views',
-      'create_document',
-      'keep_packs',
-      // The frame's own call (M44 U4), listed to every client since M41 F2
-      // (D-446) and refused to anyone without the key the page carries (D-447).
       'frame_copy',
     ])
     await client.close()
@@ -258,7 +252,7 @@ describe('the MCP server', () => {
     // M24 U3 (D-254) added the third: a whole format, refused while anything
     // refers to it.
     expect(removes).toEqual(['delete_format', 'delete_format_rows'])
-    expect([...names].filter((name) => name.startsWith('update_'))).toEqual([
+    expect([...names].filter((name) => name.startsWith('update_')).sort()).toEqual([
       'update_account',
       'update_format_rows',
     ])
@@ -1072,7 +1066,10 @@ describe('the server makes zero network calls', () => {
       // `dispatch_plan`, a new read-only tool — growth, ~800 chars. 54k
       // since M51 F4 (D-501): `take_over` on `claim_units`, `same_commit` and
       // `report` on each of `land_units`' units — three parameters, ~400 chars.
-      expect(engineSize).toBeLessThan(54_000)
+      // 55k since M42 F5: the head says what Emerald reads and what a pack is,
+      // and a paragraph names what else a document does — ~1k chars of prose
+      // that stops a model taking Emerald for a finance app.
+      expect(engineSize).toBeLessThan(55_000)
     })
   })
 })
@@ -1110,24 +1107,50 @@ describe('what the plugin says it does (M34 U1)', () => {
     }
   })
 
-  it('says where work that is not money begins, in both modes', async () => {
+  it('never measures Emerald against money, and says in its head that it reads a folder of notes (M42 F5)', async () => {
+    // A model given this server told a person "Emerald is built for money
+    // first; its tools describe everything outside finances as an add-on",
+    // and talked them out of reading their notes into it. Each phrase below is
+    // one this server said, and each one taught that.
+    for (const engineOnly of [false, true]) {
+      const { instructions, tools } = await everything(engineOnly)
+      const all = [instructions, ...tools.values()].join('\n')
+      for (const framing of [
+        'besides its finances',
+        'Not everything here is money',
+        'not money begins',
+        'know nothing about money',
+        'knows nothing about money',
+        'a complete personal-finance application that a new',
+        'Formats come first',
+      ]) {
+        expect(all, `${framing} (engine-only: ${String(engineOnly)})`).not.toContain(framing)
+      }
+      const head = instructions.slice(0, 2000)
+      expect(head, `engine-only: ${String(engineOnly)}`).toContain('**folder of Markdown notes**')
+      expect(head).toMatch(/read\s+where it is and never changed/)
+      expect(head).toMatch(/\*\*Packs\*\* are formats somebody already worked out, each\s+optional/)
+    }
+  })
+
+  it('says where new work begins, in both modes', async () => {
     for (const engineOnly of [false, true]) {
       const { instructions, tools } = await everything(engineOnly)
       expect(instructions).toContain('## Where to start')
-      expect(instructions).toContain('**Not everything here is money.**')
+      expect(instructions).toContain('**Begin from the document.**')
       // The conversation the skill held, said where every model can read it.
       expect(instructions).toContain('Ask what **one row** is')
       expect(instructions).toContain('**whether any of the\nfigures relate**')
       // The decision owed on bulk writes: one yes is one dry run.
       expect(instructions).toContain('**A yes covers the dry run it answered and nothing after it.**')
-      expect(tools.get('start_here')).toContain('where work that is not money begins: `formats`, then ')
+      expect(tools.get('start_here')).toContain('where new work ' + 'begins: `formats`, then ')
       expect(JSON.parse(tools.get('read_onto_format') ?? '{}').description).toMatch(
-        /^Read any \.csv, \.xlsx \(or \.xls\) or \.json of rows onto a declared format — not only statements/,
+        /^Read what the user already keeps onto a declared format: any \.csv, \.xlsx \(or \.xls\) or \.json of rows/,
       )
     }
   })
 
-  it('sends work that is not money to formats, from a ledger and from an empty document', async () => {
+  it('sends new work to formats, from a ledger and from an empty document', async () => {
     // A ledger's views answer only the ledger's questions; an empty document
     // answers none. Both used to leave a list of books nowhere to begin.
     const empty = await createDatabase()
@@ -1140,8 +1163,8 @@ describe('what the plugin says it does (M34 U1)', () => {
     const client = await connected()
     for (const path of [bare, ledger]) {
       const text = textOf(await client.callTool({ name: 'start_here', arguments: { path } }))
-      expect(text, path).toContain('Work that is not money begins with `formats`')
-      expect(text, path).toContain('`read_onto_format` for any .csv or .xlsx the user already keeps')
+      expect(text, path).toContain('New work begins with `formats`')
+      expect(text, path).toContain('`read_onto_format` for a .csv, .xlsx or .json the user already keeps, or a folder of Markdown')
     }
     await client.close()
   })

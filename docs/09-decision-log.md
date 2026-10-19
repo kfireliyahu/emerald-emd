@@ -424,6 +424,7 @@ written out here.
 | D-503 | 2026-10-18 | On Windows, with updates on, the app downloads the release its check found — `releases/download/v<version>/latest.yml` and `Emerald-Setup.exe` through electron-updater, in its own session, gated to that release while it downloads — checks the installer against the release's sha512, and installs only on Install and restart, after the window closes the ordinary way, reopening the document; macOS stays a notice; the installers lose the version from their names and the page links `releases/latest/download/` | [below](#d-503) |
 | D-504 | 2026-10-18 | The Claude plugin ships the development pack's run-milestone, closing-pass and review-phase as generic skills beside this repo's own; its `version` is how an installed copy learns of an update, so a change to what it ships cuts one — `<pin>+<n>` for a plugin release with no package behind it, by `node scripts/pin-plugin.mjs --plugin`, the bare package version when the pins move — and `plugin.test.ts` fails when the shipped files' digest moves under an unchanged version; amends D-500 | [below](#d-504) |
 | D-505 | 2026-10-19 | The Mac app is signed ad hoc after packing — `codesign --force --deep --sign -` from an `afterPack` hook, with `mac.identity: null` kept — so a download is an app Apple could not verify, which Open Anyway opens, rather than a "damaged" one, which nothing does; the release workflow fails a Mac build whose signature does not verify; no certificate, account or notarization, so D-124's unsigned stands; amends D-124 | [below](#d-505) |
+| D-506 | 2026-10-19 | The MCP server says what Emerald is before it says what a pack is: both instruction blocks open on a format for any kind of thing and on what it reads (a spreadsheet, a `.json` of rows, a folder of Markdown notes read where it is), with `development` and `ledger` as optional packs; no tool or instruction measures work against money; the engine's tools are listed first in both modes; `create_document` keeps no pack unless asked, in both modes; reverses D-405's default | [below](#d-506) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1190,6 +1191,63 @@ Mac build.
 **Rejected.** `identity: "-"`, which electron-builder 26 does not read as ad hoc. An Apple Developer
 account, which D-124 declined and nothing here changes. Telling people to run `xattr` as the way in:
 it is the workaround for copies already out, not the path a stranger should meet.
+
+## D-506 · 2026-10-19 · The MCP server says what Emerald is before it says what a pack is: both instruction blocks open on a format for any kind of thing and on what it reads (a spreadsheet, a `.json` of rows, a folder of Markdown notes read where it is), with `development` and `ledger` as optional packs; no tool or instruction measures work against money; the engine's tools are listed first in both modes; `create_document` keeps no pack unless asked, in both modes; reverses D-405's default <a id="d-506"></a>
+
+**Context.** M42 F5. The maintainer started moving their work notes into Emerald with the assistant
+at work, which had this server. It argued against it: *Emerald is built for money first. Its tools
+describe everything outside finances as an add-on*, and Obsidian needs the files. It had read that
+from us. The `formats` tool said it lists *what this document can hold besides its finances*; the
+full server opened on the ledger as *a complete personal-finance application that a new document
+keeps unless told otherwise*; *Not everything here is money*, *they know nothing about money* and
+`start_here`'s *where work that is not money begins* each measured the engine against the ledger;
+the full server listed 57 finance tools before the first engine one, and `document_info`, the first,
+said *Call this first*; `create_document` gave a new document the ledger on the full server (D-405);
+and the one sentence that answers the Obsidian objection — a folder of Markdown notes is read where it
+is (M34 U7) — sat past the 2,000 characters a host may keep. An audit of every engine tool's text
+found more of the same: finance examples in every advanced part of `declare_format`, the packs enum
+reading `ledger (the ledger)`, `record_units` titled *Add or correct a unit* beside the development
+pack's `unit` format, the development tools never saying they need that pack, and two places that
+sent removing a connection to the app though `extend_format` removes one.
+
+**Decision.**
+
+- **Both instruction blocks open on what Emerald is**: what a person and a model worked out, about
+  anything they keep — notes, tasks, books, a project's decisions, money; each kind a format; and
+  what it reads — a `.csv`, `.xlsx` or `.json` of rows, or a folder of Markdown notes such as an
+  Obsidian vault, read where it is and never changed. **Packs** are formats somebody already worked
+  out, each optional: `development` and `ledger`. All of it inside the first 2,000 characters, with
+  M43 U11's *how to show* still whole there.
+- **When a person asks whether something belongs here, the model answers about the thing**: whatever
+  they keep more than one of belongs; prose stays prose in a column shown as Markdown; a folder of
+  notes is read where it is, so the editor that keeps the files keeps working.
+- **No model-facing text measures the work against money.** `server.test.ts` fails, in both modes,
+  on each phrase that did: *besides its finances*, *Not everything here is money*, *not money
+  begins*, *know(s) nothing about money*, *a complete personal-finance application that a new*,
+  *Formats come first*.
+- **The engine's tools are listed first** in both modes; `document_info` is called *when a tool
+  refuses a document*, and `start_here` is the one that is called first.
+- **`create_document` keeps no pack unless `packs` names one**, in both modes. A model names the
+  ledger when the work is the person's finances.
+- **The audit's fixes**: neutral examples for constraints, rollups, rule sets and aggregate filters;
+  the packs enum says what each pack is for, development first; `record_units` is *a unit of
+  measure*; `claim_units`, `land_units`, `dispatch_plan` and `guide_status` say which pack they need;
+  connections are removed with `extend_format` and only re-pointed in the app; one paragraph names
+  what else a document does — rule sets and `apply_rules`, `format_problems`, `search_document`, the
+  agenda, and a PDF or photograph read by the model.
+- **The READMEs lead with `--engine-only`**: the npm package's, the repository's, and the plugin's,
+  which also name the notes folder. The plugin is 0.1.2+2.
+
+**Consequences.** The fix reaches a model only through a published `emerald-mcp`: the plugin and
+`npx -y emerald-mcp` both run the package on npm, which is still 0.1.2 and says all of the above.
+Publishing stays the maintainer's (D-497). The ledger stays exactly as capable on the full server;
+it is named when it is wanted. The engine-only tool list grew by about 1k characters of prose.
+
+**Rejected.** Making `--engine-only` the binary's default, with a flag for the ledger: an installed
+configuration that runs `emerald-mcp` for the ledger would silently lose 57 tools. The READMEs lead
+with the flag instead, which reaches every new install. Keeping D-405's default for the full server:
+a new document that arrives holding a finance pack is the plainest way to say what Emerald is for,
+and it said the wrong thing.
 
 ## Related
 
