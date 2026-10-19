@@ -68,7 +68,7 @@ The status line is your setting, not the plugin's. Add to `~/.claude/settings.js
 version this plugin pins:
 
 ```json
-"statusLine": { "type": "command", "command": "npx -y --prefer-offline -p emerald-mcp@0.1.2 emerald-status-line" }
+"statusLine": { "type": "command", "command": "npx -y --prefer-offline -p emerald-mcp@0.1.4 emerald-status-line" }
 ```
 
 It prints the inbox's new rows and the units in progress, for the project's document; through npx it
