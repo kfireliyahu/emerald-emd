@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx -y --prefer-offline -p emerald-mcp@0.1.4 emerald-hooks start-here \"$CLAUDE_PROJECT_DIR\"",
+            "command": "npx -y --prefer-offline -p emerald-mcp@0.1.5 emerald-hooks start-here \"$CLAUDE_PROJECT_DIR\"",
             "timeout": 60
           }
         ]
@@ -18,7 +18,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx -y --prefer-offline -p emerald-mcp@0.1.4 emerald-hooks rows \"$CLAUDE_PROJECT_DIR\" inbox --match state=new --once-per-session",
+            "command": "npx -y --prefer-offline -p emerald-mcp@0.1.5 emerald-hooks rows \"$CLAUDE_PROJECT_DIR\" inbox --match state=new --once-per-session",
             "timeout": 15
           }
         ]

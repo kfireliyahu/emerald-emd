@@ -1,7 +1,7 @@
 {
   "name": "emerald",
   "displayName": "Emerald",
-  "version": "0.1.4+1",
+  "version": "0.1.5",
   "description": "The database under the chat. Keep tasks, meetings, notes or anything else as typed rows Claude asks for instead of re-reading files, in a .emd file on your machine, read your spreadsheets, JSON or a folder of Markdown notes onto it, and see its rows, board or roadmap in the conversation. No account and no network call.",
   "author": { "name": "Kfir Raphael Eliyahu", "url": "https://getemerald.dev" },
   "homepage": "https://getemerald.dev",
@@ -14,7 +14,7 @@
   "mcpServers": {
     "emerald": {
       "command": "npx",
-      "args": ["-y", "--prefer-offline", "emerald-mcp@0.1.4", "--engine-only"]
+      "args": ["-y", "--prefer-offline", "emerald-mcp@0.1.5", "--engine-only"]
     }
   }
 }
