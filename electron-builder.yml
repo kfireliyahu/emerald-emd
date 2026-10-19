@@ -10,7 +10,8 @@
 # Unsigned, on purpose and on the record (D-124): no Apple Developer account, no
 # notarization, no certificate. Gatekeeper and SmartScreen both warn on first
 # open, and the README says so plainly, because an unexplained warning is what
-# makes a person delete the file.
+# makes a person delete the file. The Mac app is signed ad hoc, which needs none
+# of those, so the warning is one a person can get past (M42 F4, `afterPack`).
 
 # A domain the author controls, reversed (D-449): macOS decides two builds are
 # the same app by it, and the Windows installer derives its uninstall key from
@@ -90,6 +91,11 @@ mac:
   # identity in the keychain and silently use whatever it found.
   identity: null
   notarize: false
+
+# Signs the Mac app ad hoc once it is packed, because with no identity nothing
+# else does and an app with a broken signature is "damaged" to macOS (M42 F4).
+# Does nothing on Windows.
+afterPack: ./scripts/sign-mac.mjs
 
 dmg:
   # No version in the name, as the Windows installer (M42 U9).

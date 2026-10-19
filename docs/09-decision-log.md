@@ -423,6 +423,7 @@ written out here.
 | D-502 | 2026-10-18 | The desktop app makes no network call unless the person turned updates on, or pressed Check for Updates Now — then one request, to `api.github.com/repos/kfireliyahu/emerald-emd/releases/latest`, from a session of its own that the page never runs in, open only while that check asks; the setting is off by default and the app's, a newer version is a quiet notice in the window whose Download opens the release page, and M42 U9's download will reach `github.com/kfireliyahu/emerald-emd/releases/download/` and the asset hosts it redirects to (`release-assets.githubusercontent.com`, `objects.githubusercontent.com`) only on the same terms; amends D-124 and D-452 | [below](#d-502) |
 | D-503 | 2026-10-18 | On Windows, with updates on, the app downloads the release its check found — `releases/download/v<version>/latest.yml` and `Emerald-Setup.exe` through electron-updater, in its own session, gated to that release while it downloads — checks the installer against the release's sha512, and installs only on Install and restart, after the window closes the ordinary way, reopening the document; macOS stays a notice; the installers lose the version from their names and the page links `releases/latest/download/` | [below](#d-503) |
 | D-504 | 2026-10-18 | The Claude plugin ships the development pack's run-milestone, closing-pass and review-phase as generic skills beside this repo's own; its `version` is how an installed copy learns of an update, so a change to what it ships cuts one — `<pin>+<n>` for a plugin release with no package behind it, by `node scripts/pin-plugin.mjs --plugin`, the bare package version when the pins move — and `plugin.test.ts` fails when the shipped files' digest moves under an unchanged version; amends D-500 | [below](#d-504) |
+| D-505 | 2026-10-19 | The Mac app is signed ad hoc after packing — `codesign --force --deep --sign -` from an `afterPack` hook, with `mac.identity: null` kept — so a download is an app Apple could not verify, which Open Anyway opens, rather than a "damaged" one, which nothing does; the release workflow fails a Mac build whose signature does not verify; no certificate, account or notarization, so D-124's unsigned stands; amends D-124 | [below](#d-505) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1154,6 +1155,41 @@ proposal names its worktree's branch while the claim names the driver's, so the 
 would be an update, and a notice in every session with auto-update on. A prerelease (`0.1.2-1`), which
 semver orders below 0.1.2. A plugin version unrelated to the package's, which would hide which server a
 plugin runs. Shipping this repo's own copies, which name paths a stranger has none of (M42 U4's brief).
+
+## D-505 · 2026-10-19 · The Mac app is signed ad hoc after packing — `codesign --force --deep --sign -` from an `afterPack` hook, with `mac.identity: null` kept — so a download is an app Apple could not verify, which Open Anyway opens, rather than a "damaged" one, which nothing does; the release workflow fails a Mac build whose signature does not verify; no certificate, account or notarization, so D-124's unsigned stands; amends D-124 <a id="d-505"></a>
+
+**Context.** M42 F4. The maintainer downloaded `Emerald-arm64.dmg` on a work Mac, dragged the app to
+Applications, and macOS refused it: *Emerald is damaged and can't be opened*, offering only Move to
+Trash. `mac.identity: null` makes electron-builder skip signing altogether, not even ad hoc, and packing
+renames Electron's app and rewrites its `Info.plist`, which breaks the signature Electron shipped with.
+A downloaded bundle whose signature does not match it is "damaged" to Gatekeeper, and that verdict has
+no Open Anyway — so the README's way past the warning, written in M43 U1, could never have worked on
+any release so far. electron-builder 26.17 has no ad-hoc setting: `identity: "-"` is looked up in the
+keychain as a certificate's name.
+
+**Decision.**
+
+- **`scripts/sign-mac.mjs`, electron-builder's `afterPack` hook**, runs `codesign --force --deep --sign
+  -` on the packed `.app` when the build is for macOS, before the disk image is made, for both arches;
+  it fails the build when codesign fails, and does nothing on Windows. `mac.identity: null` stays, so
+  no certificate in a keychain is ever picked up. No hardened runtime and no entitlements: neither
+  means anything without notarization.
+- **The release workflow verifies what it built**: on the Mac runner, `codesign --verify --deep
+  --strict` on both apps, and their `Signature=adhoc` in the log, so a broken signature fails the build
+  rather than reaching a person.
+- **The README says what a Mac shows** — Apple could not verify Emerald; Done, then System Settings →
+  Privacy & Security → Open Anyway — and, for a copy of 0.1.2 or earlier, `xattr -cr
+  /Applications/Emerald.app` once in Terminal.
+
+**Consequences.** D-124's *unsigned* means no certificate, no developer account and no notarization,
+and all three still hold: an ad-hoc signature says only that the bundle is what was built. The Mac
+updater still needs a real identity, so a Mac still gets a notice and a link (D-502). It reaches people
+with the next release; `electron/macSigning.test.ts` holds the hook to signing with `-` and only on a
+Mac build.
+
+**Rejected.** `identity: "-"`, which electron-builder 26 does not read as ad hoc. An Apple Developer
+account, which D-124 declined and nothing here changes. Telling people to run `xattr` as the way in:
+it is the workaround for copies already out, not the path a stranger should meet.
 
 ## Related
 

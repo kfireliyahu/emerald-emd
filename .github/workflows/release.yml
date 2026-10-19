@@ -82,11 +82,23 @@ jobs:
       - run: npm ci
 
       # `--publish never`: electron-builder publishes on its own when it sees a tag in CI, and
-      # this workflow publishes in the release job instead. Nothing is signed: there is no
-      # identity to find (`mac.identity: null`), and auto-discovery is off besides.
+      # this workflow publishes in the release job instead. Nothing is signed with a certificate:
+      # there is no identity to find (`mac.identity: null`), and auto-discovery is off besides.
       - run: npm run ${{ matrix.script }} -- --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      # The hook in electron-builder.yml signs each Mac app ad hoc (M42 F4); an app whose signature
+      # does not hold is "damaged" to macOS, so a build that made one fails here, not on a Mac.
+      - name: The Mac apps are signed ad hoc
+        if: runner.os == 'macOS'
+        run: |
+          apps=(release/mac*/Emerald.app)
+          [ "${#apps[@]}" -eq 2 ] || { echo "::error::expected two Mac apps, found ${apps[*]}"; exit 1; }
+          for app in "${apps[@]}"; do
+            codesign --verify --deep --strict --verbose=2 "$app"
+            codesign --display --verbose=2 "$app" 2>&1 | grep -E '^(Executable|Signature|Format)='
+          done
 
       - uses: actions/attest-build-provenance@v2
         with:

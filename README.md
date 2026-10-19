@@ -65,8 +65,10 @@ Three ways in, all available today:
   [latest release](https://github.com/kfireliyahu/emerald-emd/releases/latest).
   `.emd` documents get their own icon and open on a double-click. It is not code-signed: Windows
   shows *"Windows protected your PC"* (click **More info**, then **Run anyway**; the installer is
-  per-user and asks for no administrator password), and macOS refuses the first open (**System
-  Settings → Privacy & Security**, **Open Anyway**). Every release is built by this repository's
+  per-user and asks for no administrator password), and macOS says Apple could not verify it (click
+  **Done**, then **System Settings → Privacy & Security**, **Open Anyway**). A Mac copy of **0.1.2**
+  or earlier says *"Emerald is damaged"* instead and has no Open Anyway: run
+  `xattr -cr /Applications/Emerald.app` once in Terminal, or download the new one. Every release is built by this repository's
   [release workflow](./.github/workflows/release.yml) from a tag and attested, with a `SHA256SUMS`
   file beside it: `gh attestation verify <file> --repo kfireliyahu/emerald-emd` asks GitHub whether
   the file is one the workflow built. The installers' names carry no version (`Emerald-Setup.exe`,
