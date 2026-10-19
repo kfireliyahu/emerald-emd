@@ -4267,6 +4267,15 @@ question: Why does the Mac download say Emerald is damaged with no way past it, 
 answer: mac.identity: null makes electron-builder skip signing entirely, not even ad hoc, and packing renames Electron's app and rewrites Info.plist, breaking the signature Electron shipped with; a quarantined bundle whose signature does not match is 'damaged', which has no Open Anyway, so the README's path never worked. electron-builder 26.17 has no ad-hoc setting (identity '-' is looked up in the keychain). scripts/sign-mac.mjs, the afterPack hook, runs codesign --force --deep --sign - on the packed .app on a macOS build (both arches, before the dmg), failing the build if codesign fails, nothing on Windows; no hardened runtime or entitlements. release.yml's Mac job runs codesign --verify --deep --strict on both apps and logs Signature=adhoc. The README says what a Mac shows (could not verify; Done, then Privacy & Security, Open Anyway) and, for 0.1.2 or earlier, xattr -cr /Applications/Emerald.app. D-124's unsigned (no certificate, account, notarization) holds; the Mac updater still needs a real identity, so a Mac stays a notice (D-502).
 state: live
 
+### D-506
+date: 2026-10-19
+milestone: M42
+scope: plugin
+title: The MCP server says what Emerald is before it says what a pack is: both instruction blocks open on a format for any kind of thing and on what it reads (spreadsheet, .json, a folder of Markdown notes read in place), development and ledger as optional packs; no model-facing text measures work against money; engine tools listed first in both modes; create_document keeps no pack unless asked, in both modes; reverses D-405's default
+question: Why did a model given this server call Emerald 'built for money first' and argue a person out of reading their notes into it, and what does the server say instead?
+answer: Our text taught it: formats said 'besides its finances', the full server opened on the ledger as a personal-finance application a new document keeps unless told otherwise, 'Not everything here is money' / 'know nothing about money' / 'where work that is not money begins' measured the engine against the ledger, 57 finance tools were listed first with document_info saying 'Call this first', create_document defaulted to the ledger on the full server (D-405), and the Markdown-folder reader sat past the 2,000 characters a host may keep. Now both heads open on any kind of thing, what it reads (csv, xlsx, json, a folder of Markdown notes such as an Obsidian vault, read where it is and never changed) and packs as optional, inside 2,000 chars with how-to-show intact; a paragraph tells the model to answer whether something belongs here about the thing; server.test.ts fails on each money-first phrase in both modes; engine tools listed first; create_document keeps no pack unless named; an audit's fixes (neutral examples, packs enum with purposes, record_units 'unit of measure', development tools say they need the pack, connections removed with extend_format, a what-else paragraph); READMEs lead with --engine-only; plugin 0.1.2+2. Reaches models only once emerald-mcp is published to npm (D-497). Rejected: flipping the binary's default (installed ledger configs would lose 57 tools).
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -11858,13 +11867,17 @@ report: Built on main at f7f69e2. The hook scripts/sign-mac.mjs ad-hoc signs the
 milestone: M42
 scope: plugin
 title: The server says what Emerald is before it says what the ledger is: no money-first framing, the notes folder in the head, and a new document keeps no pack unless asked
-state: in_progress
+landed: 2026-10-19
+decision: D-506
+state: built
 brief: Maintainer, 2026-10-19: a model at work, given emerald, told them 'Emerald is built for money first. Its tools describe everything outside finances as an add-on' and argued against moving their Obsidian notes, saying Obsidian needs the files. Our text caused it: `formats` says 'besides its finances'; the full server opens on the ledger as 'a complete personal-finance application that a new document keeps unless told otherwise'; 'Not everything here is money', 'they know nothing about money' and start_here's 'where work that is not money begins' are all defensive; the Markdown-folder reader (M34 U7) is mentioned only past the 2,000 characters a host may keep. Fix: (1) both instruction blocks open on what Emerald is for any kind of thing, what it reads (csv, xlsx, json, a folder of Markdown notes read in place, files unchanged), and packs as optional, ledger one of them; (2) every engine tool description says what it does without measuring against finance; (3) create_document keeps no pack unless `packs` names one, in both modes; (4) a sweep for other wrong or stale claims in the model-facing text (an audit agent's findings), each fixed; (5) a test that the money-first phrases are gone in both modes and the head names the notes folder. Done-test: server tests and typecheck green; docs:check green.
-files: src/plugin/instructions.ts, src/plugin/tools/*.ts descriptions, src/plugin/tools/setup.ts (create_document default), src/plugin/server.test.ts, scripts/npm-package.mjs README, hosts/claude/README.md if wrong
+files: src/plugin/instructions.ts (both heads, What you are for, How to work, the ledger section, Not here, a what-else paragraph), src/plugin/server.ts (engine tools first), src/plugin/tools/{formats,startHere,setup,intake,packs,documentInfo,guide,storeAs,dispatch,landing}.ts (descriptions; create_document default none), tests (server, packs, setup, taxonomy, trialSurface), scripts/npm-package.mjs and README.md (--engine-only first, the notes folder), hosts/claude README and plugin.json (0.1.2+2), docs/plugin.md, D-506.
 taken_by: claude-code desktop session
 started: 2026-10-19
 branch: main
+commit: 777897f
 paths: "src/plugin/instructions.ts\nsrc/plugin/tools/\nsrc/plugin/server.test.ts\nscripts/npm-package.mjs\nhosts/claude/"
+report: Built on main at 777897f. Instructions, tool descriptions, tool order and create_document's default changed as D-506 says; an audit subagent read every engine tool's text in both modes from the built server and its 16 findings were fixed (all but listing PDFs as a reader, which there is none; the what-else paragraph says a model reads them). Typecheck green; src/plugin, hosts, parity and ui/mcp tests 739 passed; the engine-only weight budget moved 54k to 55k with the reason. NOT YET REACHING ANYONE: the plugin and npx -y emerald-mcp both run emerald-mcp from npm, still 0.1.2 with the old text, so the maintainer's workplace model sees the fix only after an npm publish (D-497, by hand) and the plugin's pins moving to it (pin-plugin.mjs). package.json is 0.1.3 (the desktop release) and npm has no 0.1.3; publishing this commit as 0.1.3 would differ from the v0.1.3 tag's source, so a 0.1.4 bump is the clean path. The app's own new-document flow was not checked for a ledger default.
 
 ### M42 U1
 milestone: M42
