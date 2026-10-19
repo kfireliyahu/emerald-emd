@@ -425,6 +425,7 @@ written out here.
 | D-504 | 2026-10-18 | The Claude plugin ships the development pack's run-milestone, closing-pass and review-phase as generic skills beside this repo's own; its `version` is how an installed copy learns of an update, so a change to what it ships cuts one — `<pin>+<n>` for a plugin release with no package behind it, by `node scripts/pin-plugin.mjs --plugin`, the bare package version when the pins move — and `plugin.test.ts` fails when the shipped files' digest moves under an unchanged version; amends D-500 | [below](#d-504) |
 | D-505 | 2026-10-19 | The Mac app is signed ad hoc after packing — `codesign --force --deep --sign -` from an `afterPack` hook, with `mac.identity: null` kept — so a download is an app Apple could not verify, which Open Anyway opens, rather than a "damaged" one, which nothing does; the release workflow fails a Mac build whose signature does not verify; no certificate, account or notarization, so D-124's unsigned stands; amends D-124 | [below](#d-505) |
 | D-506 | 2026-10-19 | The MCP server says what Emerald is before it says what a pack is: both instruction blocks open on a format for any kind of thing and on what it reads (a spreadsheet, a `.json` of rows, a folder of Markdown notes read where it is), with `development` and `ledger` as optional packs; no tool or instruction measures work against money; the engine's tools are listed first in both modes; `create_document` keeps no pack unless asked, in both modes; reverses D-405's default | [below](#d-506) |
+| D-507 | 2026-10-19 | The server says first what a model gains from a document — it asks for the matching rows instead of re-reading files, a typed field filters exactly, a link is followed, every session sees the same rows — and checks are one benefit among them, never the reason; whether something belongs is answered by its shape, never by whether it has numbers; amends D-506 | [below](#d-507) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1248,6 +1249,38 @@ configuration that runs `emerald-mcp` for the ledger would silently lose 57 tool
 with the flag instead, which reaches every new install. Keeping D-405's default for the full server:
 a new document that arrives holding a finance pack is the plainest way to say what Emerald is for,
 and it said the wrong thing.
+
+## D-507 · 2026-10-19 · The server says first what a model gains from a document — it asks for the matching rows instead of re-reading files, a typed field filters exactly, a link is followed, every session sees the same rows — and checks are one benefit among them, never the reason; whether something belongs is answered by its shape, never by whether it has numbers; amends D-506 <a id="d-507"></a>
+
+**Context.** M42 F6. After D-506 reached the maintainer's work session it stopped calling Emerald
+money-first and started calling its *main strength* checking that numbers add up — and advised
+against moving notes because they hold no numbers. Only when pressed did it find the real case on
+its own: `start_here` instead of grepping 139 daily notes, exact filters on typed fields and links,
+writes that cannot break a task's syntax, the same rows for the person and every session. Our text
+taught the first answer: the formats section called a claim *the reason to keep this here rather
+than in a spreadsheet*, the registry listing said *a model reads and checks*, and the plugin's and
+the package's descriptions said *real types and real checks*. Nothing said what a model gains.
+
+**Decision.**
+
+- **Both heads open on what a model gains**: what a person keeps is rows of formats, so a session
+  *asks instead of reading* — the matching rows in one call, not forty files re-read; a field
+  filters exactly, a link is followed, a write is checked, every session sees the same rows. Inside
+  the 2,000 characters, before *how to show*.
+- **A claim is one more thing a document does**, beside being asked for its rows — not the reason.
+- **Whether something belongs is answered by its shape**: tasks, meetings, people, projects,
+  decisions, bugs belong because a session asks for them; figures that must agree are one more
+  reason, never the only one; free prose gains least and stays files, a body column or a link.
+- **The listings lead with asking**: `server.json`, the plugin's manifest and the npm README.
+- `server.test.ts` fails on *the reason to keep this here* and *a model reads and checks*, and when
+  the head mentions checking before asking.
+
+**Consequences.** Another `emerald-mcp`, 0.1.5, and a plugin pin move once npm serves it. Both of
+D-506's gaps and this one were found by a session outside this repository reading the server cold,
+not by this project: the follow-up is a check that does that on purpose.
+
+**Rejected.** Keeping checks first because the pitch says *won't let you be wrong quietly*: the
+pitch is the maintainer's to change; the server's job is to say what a model can do with it.
 
 ## Related
 

@@ -56,8 +56,8 @@ answers is two formats and a link between them. Ask what they will want to **ask
 because the columns fall out of the questions. **Propose the table and say why** for every column
 they did not ask for; their answer to *do I need that* is the design. Then ask **whether any of the
 figures relate** — a total against its parts, a price against a quantity, a label's own arithmetic.
-Where they do, that is a **claim**, and it is the reason to keep this here rather than in a
-spreadsheet: proved or failed on every row, never refusing one. A figure the app should work out
+Where they do, that is a **claim**: proved or failed on every row, never refusing one — one more
+thing a document does that a folder of files cannot, beside being asked for its rows. A figure the app should work out
 rather than anybody type is a **computed** column. **Where the format is a list** — books,
 contacts, places, tasks — it makes no claim, and none is the honest answer rather than a gap: types, \`required\`, an enum's
 values and links are still refused at every write. Ask the question; do not answer it for them.
@@ -159,16 +159,15 @@ document path its hooks printed, and the manager lands them all with \`land_unit
 export const SERVER_INSTRUCTIONS = `
 # Emerald
 
-**Emerald is a document app on this machine**, not a hosted service that shares the name: no
-account, no service behind these tools and no network call — a file on disk. It keeps what a person
-and a model worked out **typed and true**, about anything they keep — notes, tasks, books,
-a project's decisions, money. Each kind is a **format**: a real table with types, checks,
-claims and links. It reads what they already keep — a \`.csv\`,
-\`.xlsx\` or \`.json\` of rows, or a **folder of Markdown notes** such as an Obsidian vault, read
-where it is and never changed. Every tool takes the absolute \`path\` of one \`.emd\` file, a real
-SQLite database. **Packs** are formats somebody already worked out, each
-optional: \`development\` for a project's memory, \`ledger\` for personal finance, with its own tools
-here.
+**Emerald is a document a person and a model work in** — a file on this machine; no account, no
+network call. What they keep — tasks, meetings, notes, people, money — is rows of
+**formats**, real tables with typed fields and links. So a session **asks instead of reading**: one
+call returns the matching rows, not forty files re-read; a field filters exactly, a link is
+followed, a write is checked, and every session sees the same rows. It reads a \`.csv\`, \`.xlsx\` or
+\`.json\`, or a **folder of Markdown notes** like an Obsidian vault, read where it is and never
+changed. Every tool takes
+the absolute \`path\` of one \`.emd\`, a real SQLite database. **Packs** are formats somebody already
+worked out, each optional: \`development\` for a project's memory, \`ledger\` for personal finance, tools here too.
 
 ${SHOW}
 
@@ -180,11 +179,14 @@ especially if they are keeping it by hand, in a spreadsheet or a folder of notes
 file and offer to declare a format for it. When the work is their finances, the Ledger section
 below says which files to ask for.
 
-**When a person asks whether something belongs here, answer about the thing.** Whatever they
-keep more than one of belongs: what recurs, with fields to fill, links to follow or figures that
-should agree. Prose stays prose, in a column shown as Markdown, and a folder of notes is read where
-it is, so the editor that keeps those files keeps working. Weigh what it costs them, never whether
-Emerald is meant for it — it is meant for any kind of thing.
+**When a person asks whether something belongs here, answer about the thing — never about
+numbers.** Whatever has a repeated shape belongs: tasks, meetings, people, projects, decisions, bugs.
+Each becomes rows a session asks for — *open tasks due this week*, *decisions about X since
+August* — rather than notes it greps and re-reads every time, and a write cannot break a status, a
+date or a link the way an edit to a file can. Figures that must agree are one more reason, never the
+only one. Free prose gains least: keep it as files, read it as a body column, or link a row to its
+note. Weigh what it costs them, never whether Emerald is meant for it — it is meant for any kind of
+thing.
 
 ${START}
 
@@ -355,15 +357,15 @@ list and dry-runs until \`commit: true\`, like \`assign_category\`. Row ids come
 export const ENGINE_INSTRUCTIONS = `
 # Emerald
 
-**Emerald is a document app on this machine**, not a hosted service that shares the name: no
-account, no service behind these tools and no network call — a file on disk. It keeps what a person
-and a model worked out **typed and true**, about anything they keep — notes, tasks, books,
-a project's decisions, money. Each kind is a **format**: a real table with types, checks,
-claims and links. It reads what they already keep — a \`.csv\`,
-\`.xlsx\` or \`.json\` of rows, or a **folder of Markdown notes** such as an Obsidian vault, read
-where it is and never changed. Every tool takes the absolute \`path\` of one \`.emd\` file, a real
-SQLite database. **Packs** are formats somebody already worked out, each
-optional: \`development\` for a project's memory, \`ledger\` for personal finance.
+**Emerald is a document a person and a model work in** — a file on this machine; no account, no
+network call. What they keep — tasks, meetings, notes, people, money — is rows of
+**formats**, real tables with typed fields and links. So a session **asks instead of reading**: one
+call returns the matching rows, not forty files re-read; a field filters exactly, a link is
+followed, a write is checked, and every session sees the same rows. It reads a \`.csv\`, \`.xlsx\` or
+\`.json\`, or a **folder of Markdown notes** like an Obsidian vault, read where it is and never
+changed. Every tool takes
+the absolute \`path\` of one \`.emd\`, a real SQLite database. **Packs** are formats somebody already
+worked out, each optional: \`development\` for a project's memory, \`ledger\` for personal finance.
 
 ${SHOW}
 
@@ -374,11 +376,14 @@ files you do not ask for.** If they are describing a kind of thing they keep tra
 especially if they are keeping it by hand, in a spreadsheet or a folder of notes — ask for the
 file and offer to declare a format for it. That is the job.
 
-**When a person asks whether something belongs here, answer about the thing.** Whatever they
-keep more than one of belongs: what recurs, with fields to fill, links to follow or figures that
-should agree. Prose stays prose, in a column shown as Markdown, and a folder of notes is read where
-it is, so the editor that keeps those files keeps working. Weigh what it costs them, never whether
-Emerald is meant for it — it is meant for any kind of thing.
+**When a person asks whether something belongs here, answer about the thing — never about
+numbers.** Whatever has a repeated shape belongs: tasks, meetings, people, projects, decisions, bugs.
+Each becomes rows a session asks for — *open tasks due this week*, *decisions about X since
+August* — rather than notes it greps and re-reads every time, and a write cannot break a status, a
+date or a link the way an edit to a file can. Figures that must agree are one more reason, never the
+only one. Free prose gains least: keep it as files, read it as a body column, or link a row to its
+note. Weigh what it costs them, never whether Emerald is meant for it — it is meant for any kind of
+thing.
 
 ${START}
 

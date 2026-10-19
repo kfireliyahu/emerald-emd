@@ -190,7 +190,7 @@ describe('M38 U5 — the tool surface the trials tripped on', () => {
     const formats = SERVER_INSTRUCTIONS.indexOf('## Formats')
     const ledger = SERVER_INSTRUCTIONS.indexOf('## The ledger')
     expect(SERVER_INSTRUCTIONS.startsWith('# Emerald')).toBe(true)
-    expect(SERVER_INSTRUCTIONS).toContain('Each kind is a **format**')
+    expect(SERVER_INSTRUCTIONS).toMatch(/is rows of\s+\*\*formats\*\*/)
     expect(formats).toBeGreaterThan(0)
     expect(ledger).toBeGreaterThan(formats)
     // The statements come after the formats, not before them.

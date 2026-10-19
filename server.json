@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.kfireliyahu/emerald",
   "title": "Emerald",
-  "description": "The database under the chat: typed tables in a local SQLite file that a model reads and checks.",
+  "description": "The database under the chat: a local SQLite file a model asks for rows, not notes to re-read.",
   "websiteUrl": "https://getemerald.dev",
   "repository": {
     "url": "https://github.com/kfireliyahu/emerald-emd",

@@ -59,9 +59,10 @@ function manifest(app, listing) {
 const README = `# emerald-mcp
 
 The MCP server of [Emerald](https://getemerald.dev): **the database under the chat.** A \`.emd\`
-file is a real SQLite database on your disk. Declare a table for anything you keep — notes, tasks,
-books, a project's decisions, money — and it gets real types and real checks. These tools are how
-your assistant reads, writes and checks it.
+file is a real SQLite database on your disk. Keep anything as rows of a table you declare — tasks,
+meetings, notes, a project's decisions, money — and your assistant asks for the rows it needs
+instead of re-reading files: typed fields filter exactly, links are followed, and every session sees
+the same rows. Writes are checked as they land.
 
 \`\`\`
 claude mcp add emerald -- npx -y emerald-mcp --engine-only

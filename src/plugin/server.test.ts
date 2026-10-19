@@ -1123,13 +1123,19 @@ describe('what the plugin says it does (M34 U1)', () => {
         'knows nothing about money',
         'a complete personal-finance application that a new',
         'Formats come first',
+        // M42 F6: checks taught as *the* reason, so notes with no figures had none.
+        'the reason to keep this here',
+        'a model reads and checks',
       ]) {
         expect(all, `${framing} (engine-only: ${String(engineOnly)})`).not.toContain(framing)
       }
       const head = instructions.slice(0, 2000)
-      expect(head, `engine-only: ${String(engineOnly)}`).toContain('**folder of Markdown notes**')
-      expect(head).toMatch(/read\s+where it is and never changed/)
-      expect(head).toMatch(/\*\*Packs\*\* are formats somebody already worked out, each\s+optional/)
+      expect(head, `engine-only: ${String(engineOnly)}`).toMatch(/\*\*folder of\s+Markdown notes\*\*/)
+      // What a model gains comes first, before anything about checks (M42 F6).
+      expect(head).toContain('**asks instead of reading**')
+      expect(head.indexOf('asks instead of reading')).toBeLessThan(head.indexOf('checked'))
+      expect(head).toMatch(/read\s+where\s+it\s+is\s+and\s+never\s+changed/)
+      expect(head).toMatch(/\*\*Packs\*\* are formats somebody already\s+worked out, each\s+optional/)
     }
   })
 

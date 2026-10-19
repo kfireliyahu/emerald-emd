@@ -11879,6 +11879,18 @@ commit: 777897f
 paths: "src/plugin/instructions.ts\nsrc/plugin/tools/\nsrc/plugin/server.test.ts\nscripts/npm-package.mjs\nhosts/claude/"
 report: Built on main at 777897f. Instructions, tool descriptions, tool order and create_document's default changed as D-506 says; an audit subagent read every engine tool's text in both modes from the built server and its 16 findings were fixed (all but listing PDFs as a reader, which there is none; the what-else paragraph says a model reads them). Typecheck green; src/plugin, hosts, parity and ui/mcp tests 739 passed; the engine-only weight budget moved 54k to 55k with the reason. NOT YET REACHING ANYONE: the plugin and npx -y emerald-mcp both run emerald-mcp from npm, still 0.1.2 with the old text, so the maintainer's workplace model sees the fix only after an npm publish (D-497, by hand) and the plugin's pins moving to it (pin-plugin.mjs). package.json is 0.1.3 (the desktop release) and npm has no 0.1.3; publishing this commit as 0.1.3 would differ from the v0.1.3 tag's source, so a 0.1.4 bump is the clean path. The app's own new-document flow was not checked for a ledger default.
 
+### M42 F6
+milestone: M42
+scope: plugin
+title: The server leads with what a model gains from a document — asking for rows instead of re-reading files, real fields and links, one memory every session shares — and checks are one benefit among them
+state: in_progress
+brief: Maintainer, 2026-10-19, after M42 F5 reached their work session: it now called Emerald's 'main strength' checking that numbers add up, and advised against moving notes 'because they don't have numbers'. Only when pushed did it find the real case: start_here instead of grepping 139 daily notes, exact filters on typed fields and links, writes that cannot break a task's syntax, the same rows for the person and every session. Our text caused it: FORMATS says a claim 'is the reason to keep this here rather than in a spreadsheet'; server.json says 'a model reads and checks'; the plugin and npm READMEs say 'real types and real checks'. Fix: (1) the head of both instruction blocks says what a model gains before anything else, within the 2,000-character budget with how-to-show intact; (2) the claim stops being 'the reason'; (3) 'answer about the thing' says honestly where it pays (anything with a repeated shape: tasks, meetings, people, projects, decisions) and where it pays least (free prose, kept as files and linked); (4) server.json, plugin.json and the npm README lead with querying; (5) the test fails on 'the reason to keep this here' and asserts the head names asking instead of reading. Done-test: plugin tests and typecheck green, docs:check green, 0.1.5 built for the maintainer to publish.
+files: src/plugin/instructions.ts, src/plugin/server.test.ts, server.json, hosts/claude/.claude-plugin/plugin.json, hosts/claude/README.md, scripts/npm-package.mjs
+taken_by: claude-code desktop session
+started: 2026-10-19
+branch: main
+paths: "src/plugin/instructions.ts\nsrc/plugin/server.test.ts\nserver.json\nhosts/claude/\nscripts/npm-package.mjs"
+
 ### M42 U1
 milestone: M42
 scope: engine
