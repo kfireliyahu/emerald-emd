@@ -11904,6 +11904,22 @@ commit: 181da0c
 paths: "src/plugin/instructions.ts\nsrc/plugin/server.test.ts\nserver.json\nhosts/claude/\nscripts/npm-package.mjs"
 report: Built on main at 181da0c. Heads rewritten in both modes (show-format line ends at char 1994 full, 1978 engine-only); claim demoted; belongs-by-shape paragraph; server.json (93 chars), plugin.json and npm README lead with asking; plugin 0.1.4+1. Typecheck green; src/plugin and hosts 723 tests pass. Not yet reaching anyone: needs emerald-mcp 0.1.5 published by the maintainer and the pins moved. Found, like D-506's gaps, by a session outside the repo reading the server cold: a stranger's-eye check is the follow-up.
 
+### M42 F7
+milestone: M42
+scope: plugin
+title: A cold read of the server: a script asks a stranger's model what Emerald is, so the next wrong framing is caught here
+landed: 2026-10-19
+decision: D-507
+state: built
+brief: D-506 and D-507 were both found by a session outside this repo reading the MCP server cold. scripts/ask-cold.mjs does that on purpose: in a fresh empty temp folder (no CLAUDE.md, skills or memory reach it) it runs headless `claude -p --strict-mcp-config --mcp-config` naming only `node <repo>/dist-plugin/server.mjs`, once --engine-only and once full, asking a fixed list of questions (kept in the script so it grows), each in its own fresh run. Answers go to a file outside the repo. For each answer it prints red flags matched mechanically (money first, finance, built for, main strength is checking, add up, numbers as the reason, not designed for, against notes for lacking figures); the session running it judges the rest against D-506/D-507 (any kind of thing; ask for rows instead of re-reading files; typed fields and links; every session sees the same rows; checks one benefit; a Markdown folder read in place; packs optional). docs/plugin.md says how to run it; the closing pass (conventions.md and .claude/skills/closing-pass) runs it for a change to instructions.ts or a tool description. A maintainer/session tool only: never in CI, never imported by src/, the app and server stay offline (D-124).
+files: scripts/ask-cold.mjs (new), docs/plugin.md (A cold read before a release), docs/conventions.md (closing pass), .claude/skills/closing-pass/SKILL.md (2b)
+taken_by: side session local_2bd05051
+started: 2026-10-19
+branch: main
+commit: 3afd94b
+paths: scripts/ask-cold.mjs, docs/plugin.md, docs/conventions.md, .claude/skills/closing-pass/SKILL.md
+report: "Built scripts/ask-cold.mjs: each question a fresh `claude -p` in an empty temp folder, --strict-mcp-config naming only dist-plugin/server.mjs (engine-only and full), --setting-sources project, --tools \"\" (no built-ins), allowed mcp__emerald; stream-json parsed for the servers, the tools offered, the tools called and the answer; a run that sees another MCP server or a built-in tool, or begins without the server, fails. Trap found: the desktop app sets MCP_CONNECTION_NONBLOCKING=true, and -p then begins before the server connects - 3-4 of 10 runs answered 'which Emerald?'. The script drops CLAUDE*/MCP_* vars and sets it false; 10/10 connected after. Run on 2026-10-19 against 0.1.5's build, $0.74, Opus 4.8 default.\n\nWhat a cold model says now: no money-first framing in either mode. Both modes lead with asking for rows instead of re-reading forty files, typed fields that filter exactly, links followed, the same rows every session, and a Markdown folder read in place; packs named as optional; start_here (create_document for a new file) as the first call; 'no numbers' answered 'yes - numbers are one feature, not the point'. Still off: (1) engine-only 'best at' lists personal finance as one of three headline uses, ends offering 'a project or your finances', and its summary says 'prove the numbers add up' - checks creep back into the one-line summary. (2) The Obsidian answers, both modes, say keep daily notes and MEETINGS in Obsidian as prose, and engine-only ends 'if you mostly read and link notes, Emerald buys you little' - neither names the model-side gain (every session asks instead of re-grepping the vault), the decisive argument in D-507. (3) Full mode's CSV run called frame_copy, a frame's tool, as if it were the model's. Mechanical flags are noisy on correct answers (numbers-as-reason fires on 'a list needs no numbers'); judgment needed, as designed. Answers: side-session notes folder, ask-cold-2026-10-19.md."
+
 ### M42 U1
 milestone: M42
 scope: engine
