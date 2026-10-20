@@ -53,8 +53,14 @@ describe('the plugin', () => {
     expect(marketplace.plugins[0]).toMatchObject({ name: plugin.name, source: './hosts/claude' })
   })
 
-  it('links its privacy policy over https, and the file is there', () => {
-    expect(plugin.privacyPolicyUrl).toBe('https://github.com/kfireliyahu/emerald-emd/blob/main/PRIVACY.md')
+  it('carries only the keys Claude Code reads, or an install warns and strips the rest', () => {
+    const read = ['name', 'displayName', 'version', 'description', 'author', 'homepage', 'repository', 'license', 'keywords',
+      'commands', 'agents', 'skills', 'hooks', 'mcpServers', 'outputStyles', 'lspServers']
+    expect(Object.keys(plugin).filter((key) => !read.includes(key))).toEqual([])
+  })
+
+  it('links its privacy policy over https from its README, and the file is there', () => {
+    expect(readFileSync(join(HERE, 'README.md'), 'utf8')).toContain('https://github.com/kfireliyahu/emerald-emd/blob/main/PRIVACY.md')
     expect(readFileSync(join(ROOT, 'PRIVACY.md'), 'utf8')).toContain('Claude plugin')
   })
 
