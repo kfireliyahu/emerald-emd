@@ -1,4 +1,4 @@
-# The npm package on the Node versions its `engines` claims (M42 F13, D-510).
+# The npm package on the Node versions its `engines` claims (M42 F15, D-510).
 #
 # `emerald-mcp` says `engines.node >=20.19.0` (scripts/npm-package.mjs), and npm prints
 # `npm warn EBADENGINE` before every plugin hook on a Node below that range — a cloud host on Node 22

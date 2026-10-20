@@ -1,5 +1,5 @@
 /**
- * The npm package, run as a stranger runs it, on whatever `node` runs this (M42 F13, D-510): the
+ * The npm package, run as a stranger runs it, on whatever `node` runs this (M42 F15, D-510): the
  * proof behind `engines` in `scripts/npm-package.mjs`, so the range claims only a Node that CI ran.
  *
  *   npm run build:plugin && npm run check:package     # or node scripts/check-package.mjs [<folder>]
