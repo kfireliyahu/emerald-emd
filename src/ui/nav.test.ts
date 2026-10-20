@@ -1,15 +1,18 @@
 import { describe, expect, it } from 'vitest'
 
+import { addressFilter, filterAddress } from './formats/addressFilter.ts'
 import {
   isSectionTabs,
   NAVIGATION,
   activeTab,
   childIsActive,
+  entryPath,
   formatPath,
   packSection,
   railSectionFor,
   railSections,
   sectionFor,
+  tablePath,
   tabsFor,
 } from './nav.ts'
 
@@ -326,5 +329,28 @@ describe('a pack drawn from its views', () => {
   it('draws nothing for a pack the document does not keep, or for formats it lacks', () => {
     expect(railSections({ development: false }, places, [pack]).map((s) => s.label)).not.toContain('Development')
     expect(packSection(pack, [])).toBeUndefined()
+  })
+})
+
+/**
+ * **An entry page goes back to the table it was opened from** (M42 F12): a
+ * delete used to land on the bare table, every row showing, because the row
+ * was gone before the address moved and the missing-row redirect dropped the
+ * filter. Back, a delete and a missing row all go through `tablePath`.
+ */
+describe('the table an entry goes back to keeps its filter', () => {
+  const filter = { match: { state: 'open' }, search: 'bidi' }
+  const address = filterAddress(filter)
+
+  it('is the table with the address the entry was opened with', () => {
+    const entry = entryPath('open_question', '396c8a8b') + address
+    const search = entry.slice(entry.indexOf('?'))
+    const back = tablePath('open_question', search)
+    expect(back).toBe('/formats/open_question?state=open&search=bidi')
+    expect(addressFilter(back.slice(back.indexOf('?')))).toEqual(filter)
+  })
+
+  it('is the bare table when nothing was filtered', () => {
+    expect(tablePath('open_question', '')).toBe(formatPath('open_question'))
   })
 })

@@ -98,7 +98,7 @@ import { cellText, EntryView, type LinkChoice } from '@/ui/formats/EntryView.tsx
 import { RollupView } from '@/ui/formats/RollupView.tsx'
 import { RowSheet, type FootRefusal, type Order } from '@/ui/formats/RowSheet.tsx'
 import { derivedOf } from '@/data/repositories/formatDerivedRepository.ts'
-import { boardPath, entryPath, formatPath, NEW_ENTRY, readPath, readyPath, roadmapPath } from '@/ui/nav.ts'
+import { boardPath, entryPath, formatPath, NEW_ENTRY, readPath, readyPath, roadmapPath, tablePath } from '@/ui/nav.ts'
 import { BoardView } from '@/ui/formats/BoardView.tsx'
 import { boardOf, oneUnitOf, readsAsMarkdown, readyOf, roadmapOf } from '@/domain/format/view.ts'
 import { entryLinked, entryLinks } from '@/data/repositories/formatLinkViewRepository.ts'
@@ -618,9 +618,12 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
     })
   }
 
-  // An entry the format has no row for — deleted, or a stale bookmark.
+  // An entry the format has no row for — deleted, or a stale bookmark. A delete
+  // lands here too: the router moves the address in a transition, so the
+  // document's write is drawn first, on the entry's own address (M42 F12) —
+  // the table it goes to keeps the filter the entry was opened from.
   if (editing === 'MISSING') {
-    return <Navigate to={formatPath(declaration.name)} replace />
+    return <Navigate to={tablePath(declaration.name, address)} replace />
   }
 
   if (editing !== undefined && judged !== undefined) {
@@ -628,7 +631,7 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
     const existing = editing.existing
     const back = (): void => {
       setTyped(undefined)
-      navigate(formatPath(declaration.name) + address)
+      navigate(tablePath(declaration.name, address))
     }
     /**
      * **A field left, or a pick made** (M35 U2, D-401): the draft judged as
