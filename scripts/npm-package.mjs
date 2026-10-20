@@ -51,8 +51,9 @@ function manifest(app, listing) {
     type: 'module',
     bin: BINS,
     files: [...Object.values(BINS), 'LICENSE.txt', 'THIRD_PARTY_NOTICES.txt'],
-    // What CI runs on. The files target Node 20, and npm only warns below the range.
-    engines: { node: '>=24' },
+    // The oldest Node CI runs the package on (.github/workflows/package.yml, D-510): the files
+    // target Node 20, and npm warns EBADENGINE before every hook on a Node below the range.
+    engines: { node: '>=20.19.0' },
   }
 }
 

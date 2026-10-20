@@ -1331,7 +1331,11 @@ read from the root manifest rather than kept twice. **No dependencies**: each pa
 package it reaches (`published` in `vite.config.ts`, with `sql.js` as its browser build — the same
 wasm, handed over as bytes), so an `npx` downloads one 2.9 MB tarball and installs nothing else, and
 `THIRD_PARTY_NOTICES.txt` travels with it. Node's own modules are the only imports left. Engines:
-`>=24`, what CI runs; the files target Node 20 and npm only warns below the range.
+`>=20.19.0`, the oldest Node CI runs it on (D-510): `.github/workflows/package.yml` builds it on Node 24
+and runs `scripts/check-package.mjs` on 20.19.0, 22 and 24 — the server's handshake, a document written
+and read back, both hooks, and an `npx` install of the packed tarball, which fails on npm's
+`EBADENGINE` warning. That warning is printed before every hook on a Node below the range; the
+range was `>=24` until 0.1.6, and a cloud host's Node 22 showed it at every prompt.
 
 **One package, a bin each** — not one bin with subcommands, and not two packages:
 
@@ -1359,8 +1363,9 @@ manifest with `preferOnline` — unless `--prefer-offline` is passed, which wins
 `npx -y --prefer-offline emerald-mcp@<version> --engine-only`. The plugin pays it on every hook, by
 the maintainer's choice (D-499, below).
 
-**Publishing is the maintainer's act** on the project's npm account: `npm run build:plugin`, then
-`npm publish --access public` from `dist-plugin/` (`npm pack` there makes the tarball to try first).
+**Publishing is the maintainer's act** on the project's npm account: `npm run build:plugin`,
+`npm run check:package` (the CI check, on whichever Node runs it), then `npm publish --access public`
+from `dist-plugin/` (`npm pack` there makes the tarball to try first).
 The done-test, run from the tarball: installed in an empty folder, `npx emerald-mcp --engine-only`
 answered `initialize`, listed 28 tools (85 without the flag), created a document with the
 development pack and answered `start_here` on it with the unit recorded there; `npx emerald-hooks`
@@ -1373,7 +1378,7 @@ app — chat, and Cowork on that computer — with no Node to install and no con
 `npm run build:mcpb` (after `build:plugin`, `scripts/mcpb.mjs`) packs `release/emerald.mcpb`: the
 server, its licence files, `build/extension.png` and a manifest whose tools are the server's own
 list. `server.type: "node"`, `node ${__dirname}/server.mjs --engine-only`, darwin and win32,
-`runtimes.node` `>=20.0.0`. The release workflow builds it on every tag and attaches it beside the
+`runtimes.node` `>=20.19.0`, the package's floor. The release workflow builds it on every tag and attaches it beside the
 installers: `releases/latest/download/emerald.mcpb`. It is not submitted anywhere (the directory
 takes none) and does not update itself.
 

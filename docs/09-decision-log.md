@@ -428,6 +428,7 @@ written out here.
 | D-507 | 2026-10-19 | The server says first what a model gains from a document — it asks for the matching rows instead of re-reading files, a typed field filters exactly, a link is followed, every session sees the same rows — and checks are one benefit among them, never the reason; whether something belongs is answered by its shape, never by whether it has numbers; amends D-506 | [below](#d-507) |
 | D-508 | 2026-10-20 | Where the host starts a plugin's skills and hooks but not its MCP server (a cloud Cowork task, `CLAUDE_CODE_SKIP_PLUGIN_MCP_SERVERS`), the plugin tells the session how the person adds `emerald-mcp` to the Claude desktop app's own configuration: an `emerald-setup` skill holds the steps once, and a third `SessionStart` hook, plain Node run from the plugin folder, prints it only there; no new package | [below](#d-508) |
 | D-509 | 2026-10-20 | The server also ships as a Claude desktop extension: `emerald.mcpb` on every tagged release, the npm package's `server.mjs` with a manifest and an icon, run `--engine-only` on the Node the Claude desktop app ships, installed by double-click — which registers it in the app itself, where chat and Cowork on that computer reach it; the plugin keeps `npx`, because Claude Code runs a plugin's `.mcpb` on the system `node`; reverses D-498's *no `.mcpb`* for direct install only | [below](#d-509) |
+| D-510 | 2026-10-20 | The npm package's `engines.node` is `>=20.19.0`, the oldest Node a CI job runs it on: `.github/workflows/package.yml` builds it on Node 24 and runs `scripts/check-package.mjs` on 20.19.0, 22 and 24 — the handshake, a document written and read back, both hooks, and an `npx` install that fails on `EBADENGINE`; the desktop extension's `runtimes.node` follows; amends D-497's `>=24` | [below](#d-510) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1384,6 +1385,48 @@ URL (system `node` either way, measured). No `runtimes.node` (the app would choo
 range is the files' real floor, and an app whose Node fell below it would look for a system one
 rather than fail). A `user_config` folder (every tool takes an absolute path). Submitting it to the
 directory (it takes none).
+
+## D-510 · 2026-10-20 · The npm package's `engines.node` is `>=20.19.0`, the oldest Node a CI job runs it on: `.github/workflows/package.yml` builds it on Node 24 and runs `scripts/check-package.mjs` on 20.19.0, 22 and 24 — the handshake, a document written and read back, both hooks, and an `npx` install that fails on `EBADENGINE`; the desktop extension's `runtimes.node` follows; amends D-497's `>=24` <a id="d-510"></a>
+
+**Amends** [D-497](#d-497)'s `engines.node >=24`, and only it.
+
+**Context.** D-497 set the range to `>=24` as *what CI runs*, while the files target Node 20
+(`vite.config.ts`) and import nothing but Node's own modules. No CI job ran the package at all —
+the workflows built it on 24 for the release and the demo — so the range claimed the one Node anyone
+had used. npm checks it whenever `npx` installs the package, and on a Node below it prints
+`npm warn EBADENGINE` to stderr. The plugin's hooks run `npx -y --prefer-offline -p
+emerald-mcp@<pin>` on every prompt (D-499), and on 2026-10-20 a cloud Cowork task on Node 22.22.0
+showed the five-line warning before each one (D-508 noted it and left it). D-509 had measured the
+server on Node 20.19 and 22.20 by hand; nothing in it needs 24.
+
+**Decision.**
+- **The range is what a CI job proves, and the oldest entry of its matrix is the range, exactly.**
+  `.github/workflows/package.yml` builds `dist-plugin/` on Node 24 — as the published tarball is
+  built — then switches to the matrix's Node and runs `npm run check:package`
+  (`scripts/check-package.mjs`): `server.mjs --engine-only` answers `initialize` and `tools/list`,
+  creates a document with the development pack, commits an inbox row and reads it back with
+  `start_here`; the full server lists more tools; `hooks.mjs start-here` and `rows … inbox --match
+  state=new` print the row; `status-line.mjs` exits cleanly; and `npm pack`, then `npx -y -p
+  <tarball> emerald-hooks rows …` from an empty cache, run with the npm that ships with that Node,
+  must print the row and no `EBADENGINE`. Matrix: 20.19.0, 22, 24. It runs on a push to `main`
+  that touches the package's sources, and by hand.
+- **`engines.node` is `>=20.19.0`** (`scripts/npm-package.mjs`), from `emerald-mcp` 0.1.6. 20.19
+  rather than 20.0 because 20.19.0 is the oldest Node anything here was run on; a lower floor would
+  claim versions no job runs.
+- **The desktop extension's `runtimes.node` follows, `>=20.19.0`** (`scripts/mcpb.mjs`), for the same
+  reason. The app's own Node is 24, so which Node runs it does not change.
+
+**Consequences.** A Node 20.19+ or 22 host runs the hooks with no warning once the plugin's pins move
+to 0.1.6, which waits on the maintainer's `npm publish` and npm serving it (D-498: a pin pushed
+before its publish installs nothing). Node 20 is past its end of life; it stays in the matrix while
+it passes, and the day it does not, the floor moves to 22 with the matrix — never the range alone.
+The check's `EBADENGINE` step was seen to fail on Node 22.20 against the old `>=24` before it
+passed against the new range.
+
+**Rejected.** Dropping `engines` (npm would warn nothing, and the package would claim nothing either —
+a person on Node 18 would meet a stack trace instead of a reason). `--loglevel=error` on the plugin's
+`npx` calls (hides the warning without making it untrue, and every other warning with it). Building
+on each matrix Node (the published tarball is built on 24; what must hold is that it runs elsewhere).
 
 ## Related
 
