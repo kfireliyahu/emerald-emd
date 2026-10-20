@@ -16,6 +16,23 @@ In Claude Code:
 
 Then restart the session. It needs Node 24 or later on your `PATH`.
 
+### In the Claude desktop app and Cowork
+
+Adding the marketplace under **Customize → Plugins** brings the skills to chat and Cowork, but a
+Cowork task in the cloud never starts a plugin's MCP server, and a server there couldn't open a
+`.emd` on your computer anyway. Add the server to the desktop app itself instead. It then runs on
+your computer, in chat and in Cowork. Find `npx` (`which npx` on macOS, `where npx` on Windows),
+then add Emerald under `"mcpServers"` in the app's configuration file, keeping anything already
+there:
+
+- macOS, `~/Library/Application Support/Claude/claude_desktop_config.json`:
+  `"emerald": { "command": "<the path to npx>", "args": ["-y", "emerald-mcp@0.1.5", "--engine-only"] }`
+- Windows, `%APPDATA%\Claude\claude_desktop_config.json`:
+  `"emerald": { "command": "cmd", "args": ["/c", "npx", "-y", "emerald-mcp@0.1.5", "--engine-only"] }`
+
+Quit the app completely and reopen it. A session that has the plugin's skills but no server, as in a
+cloud task, is told these same steps (the `emerald-setup` skill), so it can walk you through them.
+
 ## Updating
 
 Claude Code updates a plugin from a marketplace like this one only when you ask, unless you turn
@@ -43,9 +60,13 @@ release of its own skills, hooks or README on the same package.
   units, each built by a fresh session (several at once where `dispatch_plan` says they share no
   path), `closing-pass` lands a finished unit with its commit and report, and `review-phase` walks a
   built milestone's open review entries with you, one at a time.
-- **Two hooks.** At session start, `start_here` on the project's document; before each prompt, the
+- **The `emerald-setup` skill**: in a session with the plugin's skills but no server, the steps
+  above, so Claude can walk you through them.
+- **Three hooks.** At session start, `start_here` on the project's document; before each prompt, the
   inbox's new rows, each printed once per session. Both are silent in a folder with no `.emd` in
   it, or none named by `.claude/emerald.json` (`{ "document": "docs/project.emd" }`).
+  The third, at session start too, prints the `emerald-setup` steps where the host starts no
+  plugin server (a cloud Cowork task), and nothing anywhere else. It runs from the plugin folder.
 
 ## What it runs, and what it fetches
 

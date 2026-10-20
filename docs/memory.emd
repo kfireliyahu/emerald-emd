@@ -4285,6 +4285,15 @@ question: Why did a model given the D-506 server still call checking numbers Eme
 answer: The formats section called a claim 'the reason to keep this here rather than in a spreadsheet', server.json said 'a model reads and checks', the plugin and npm descriptions said 'real types and real checks', and nothing said what a model gains. Both heads now open on it: a person's things are rows of formats, so a session asks instead of reading (matching rows in one call, not forty files re-read; exact field filters; links followed; a write checked; every session sees the same rows), inside the 2,000-char budget before how-to-show. A claim is one more thing a document does. Belonging is answered by shape (tasks, meetings, people, projects, decisions, bugs); free prose gains least and stays files, a body column or a link. Listings lead with asking. server.test.ts fails on the old phrases and if the head mentions checking before asking. Ships as emerald-mcp 0.1.5. Rejected: keeping checks first because the pitch says 'won't let you be wrong quietly' — the pitch is the maintainer's to change.
 state: live
 
+### D-508
+date: 2026-10-20
+milestone: M42
+scope: plugin
+title: Where the host starts a plugin's skills and hooks but not its MCP server (a cloud Cowork task, CLAUDE_CODE_SKIP_PLUGIN_MCP_SERVERS), the plugin tells the session how the person adds emerald-mcp to the Claude desktop app's own configuration: an emerald-setup skill holds the steps once, and a third SessionStart hook, plain Node run from the plugin folder, prints it only there; no new package
+question: Why did a Cowork task with the emerald plugin have no Emerald tools, and how does the next one know what to tell the person?
+answer: A cloud Cowork task loads a plugin's skills and hooks but skips its MCP server on purpose (its log: CLAUDE_CODE_SKIP_PLUGIN_MCP_SERVERS is set), and a server there couldn't open a .emd on the person's computer anyway. A server in the Claude desktop app's own claude_desktop_config.json reaches Cowork on that computer; the maintainer's Windows PC has run it that way all along. So the plugin carries an emerald-setup skill (find npx, the file on macOS and Windows, the entry, cmd /c npx on Windows, quit and reopen, where the log is), and hooks.json runs node "${CLAUDE_PLUGIN_ROOT}/hooks/no-server.mjs", which prints the skill only when that variable is set. Both live in the plugin folder, so they ship as plugin 0.1.5+2 with no npm publish; pin-plugin moves the skill's pin. Untested: whether the hook sees the variable on a real cloud host (the skill covers it if not). Rejected: the hook in the package, a remote server (D-124), printing the steps everywhere.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -11920,6 +11929,21 @@ commit: 3afd94b
 paths: scripts/ask-cold.mjs, docs/plugin.md, docs/conventions.md, .claude/skills/closing-pass/SKILL.md
 report: "Built scripts/ask-cold.mjs: each question a fresh `claude -p` in an empty temp folder, --strict-mcp-config naming only dist-plugin/server.mjs (engine-only and full), --setting-sources project, --tools \"\" (no built-ins), allowed mcp__emerald; stream-json parsed for the servers, the tools offered, the tools called and the answer; a run that sees another MCP server or a built-in tool, or begins without the server, fails. Trap found: the desktop app sets MCP_CONNECTION_NONBLOCKING=true, and -p then begins before the server connects - 3-4 of 10 runs answered 'which Emerald?'. The script drops CLAUDE*/MCP_* vars and sets it false; 10/10 connected after. Run on 2026-10-19 against 0.1.5's build, $0.74, Opus 4.8 default.\n\nWhat a cold model says now: no money-first framing in either mode. Both modes lead with asking for rows instead of re-reading forty files, typed fields that filter exactly, links followed, the same rows every session, and a Markdown folder read in place; packs named as optional; start_here (create_document for a new file) as the first call; 'no numbers' answered 'yes - numbers are one feature, not the point'. Still off: (1) engine-only 'best at' lists personal finance as one of three headline uses, ends offering 'a project or your finances', and its summary says 'prove the numbers add up' - checks creep back into the one-line summary. (2) The Obsidian answers, both modes, say keep daily notes and MEETINGS in Obsidian as prose, and engine-only ends 'if you mostly read and link notes, Emerald buys you little' - neither names the model-side gain (every session asks instead of re-grepping the vault), the decisive argument in D-507. (3) Full mode's CSV run called frame_copy, a frame's tool, as if it were the model's. Mechanical flags are noisy on correct answers (numbers-as-reason fires on 'a list needs no numbers'); judgment needed, as designed. Answers: side-session notes folder, ask-cold-2026-10-19.md."
 
+### M42 F8
+milestone: M42
+scope: plugin
+title: Where the host starts no plugin server, the plugin tells the session how the person adds Emerald to the Claude app
+landed: 2026-10-20
+decision: D-508
+state: built
+brief: Found 2026-10-20 on the maintainer's work Mac: a cloud Cowork task with the plugin got its skills and hooks but no server (log: CLAUDE_CODE_SKIP_PLUGIN_MCP_SERVERS is set). Ship, from the plugin folder only and so with no new emerald-mcp: an emerald-setup skill with the steps to add emerald-mcp to claude_desktop_config.json on macOS and Windows, and a SessionStart hook (plain Node) that prints it only when that variable is set. README and docs/plugin.md say so; plugin 0.1.5+2.
+files: hosts/claude/skills/emerald-setup/SKILL.md (new), hosts/claude/hooks/no-server.mjs (new), hosts/claude/hooks/hooks.json, hosts/claude/README.md, hosts/claude/.claude-plugin/plugin.json (0.1.5+2), hosts/claude-plugin-release.json, hosts/claude/plugin.test.ts, hosts/claude/skills/skills.test.ts, hosts/claude/hooks/commands.test.ts, scripts/pin-plugin.mjs, docs/plugin.md, docs/09-decision-log.md (D-508)
+taken_by: Claude Code (desktop)
+started: 2026-10-20
+branch: main
+paths: hosts/claude/, scripts/pin-plugin.mjs, docs/plugin.md
+report: Built on main. A cloud Cowork task on the work Mac showed the plugin's skills and hooks loading but its server skipped (CLAUDE_CODE_SKIP_PLUGIN_MCP_SERVERS). Added the emerald-setup skill and a plain-Node SessionStart hook in the plugin folder that prints it only when that variable is set; checked by hand: silent without it, the steps with it. Plugin 0.1.5+2, no npm publish. Tests: hosts/claude (41) plus parity and privacy pass; typecheck clean; claude plugin validate passes. Not yet seen on a real cloud host: the maintainer's next cloud Cowork task after updating the plugin shows whether the hook fires.
+
 ### M42 U1
 milestone: M42
 scope: engine
@@ -12891,7 +12915,7 @@ title: line
 emerald: changed
 ---
 
-decision: 2026-10-19
+decision: 2026-10-20
 finding: 2026-10-18
 inbox: 2026-10-18
 milestone: 2026-10-18
@@ -12899,4 +12923,4 @@ open_question: 2026-10-18
 review_entry: 2026-10-18
 rule: 2026-10-18
 term: 2026-10-18
-unit: 2026-10-19
+unit: 2026-10-20

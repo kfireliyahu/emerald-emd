@@ -426,6 +426,7 @@ written out here.
 | D-505 | 2026-10-19 | The Mac app is signed ad hoc after packing — `codesign --force --deep --sign -` from an `afterPack` hook, with `mac.identity: null` kept — so a download is an app Apple could not verify, which Open Anyway opens, rather than a "damaged" one, which nothing does; the release workflow fails a Mac build whose signature does not verify; no certificate, account or notarization, so D-124's unsigned stands; amends D-124 | [below](#d-505) |
 | D-506 | 2026-10-19 | The MCP server says what Emerald is before it says what a pack is: both instruction blocks open on a format for any kind of thing and on what it reads (a spreadsheet, a `.json` of rows, a folder of Markdown notes read where it is), with `development` and `ledger` as optional packs; no tool or instruction measures work against money; the engine's tools are listed first in both modes; `create_document` keeps no pack unless asked, in both modes; reverses D-405's default | [below](#d-506) |
 | D-507 | 2026-10-19 | The server says first what a model gains from a document — it asks for the matching rows instead of re-reading files, a typed field filters exactly, a link is followed, every session sees the same rows — and checks are one benefit among them, never the reason; whether something belongs is answered by its shape, never by whether it has numbers; amends D-506 | [below](#d-507) |
+| D-508 | 2026-10-20 | Where the host starts a plugin's skills and hooks but not its MCP server (a cloud Cowork task, `CLAUDE_CODE_SKIP_PLUGIN_MCP_SERVERS`), the plugin tells the session how the person adds `emerald-mcp` to the Claude desktop app's own configuration: an `emerald-setup` skill holds the steps once, and a third `SessionStart` hook, plain Node run from the plugin folder, prints it only there; no new package | [below](#d-508) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1281,6 +1282,40 @@ not by this project: the follow-up is a check that does that on purpose.
 
 **Rejected.** Keeping checks first because the pitch says *won't let you be wrong quietly*: the
 pitch is the maintainer's to change; the server's job is to say what a model can do with it.
+
+## D-508 · 2026-10-20 · Where the host starts a plugin's skills and hooks but not its MCP server (a cloud Cowork task, `CLAUDE_CODE_SKIP_PLUGIN_MCP_SERVERS`), the plugin tells the session how the person adds `emerald-mcp` to the Claude desktop app's own configuration: an `emerald-setup` skill holds the steps once, and a third `SessionStart` hook, plain Node run from the plugin folder, prints it only there; no new package <a id="d-508"></a>
+
+**Context.** M42 F8. The maintainer added the plugin from the marketplace on a work Mac and opened
+a Cowork task, which got the plugin's skills and no Emerald tools. The task's log said why:
+`Skipping plugin MCP server discovery for "emerald" (CLAUDE_CODE_SKIP_PLUGIN_MCP_SERVERS is set)`,
+with 4 skills, 2 hooks, 0 MCP. The task ran in the cloud, which skips a plugin's server on purpose,
+and a server there couldn't open a `.emd` on the person's computer anyway. Its hooks did run.
+Meanwhile Cowork on the maintainer's Windows PC has used Emerald throughout, through a hand-written
+entry in `claude_desktop_config.json`. A server registered in the desktop app itself reaches
+Cowork on that computer. The session in the cloud didn't know any of this and offered to write
+files for a later import.
+
+**Decision.**
+- **The `emerald-setup` skill** (`hosts/claude/skills/`, the plugin's alone) holds the steps once:
+  find `npx`, the configuration file on macOS and Windows, the entry (`cmd /c npx …` on Windows,
+  where `npx` is a `.cmd`), quit and reopen, where the log is. Its description fires on a session
+  asked about a `.emd` that has no Emerald tools.
+- **A third `SessionStart` hook** runs `node "${CLAUDE_PLUGIN_ROOT}/hooks/no-server.mjs"`. It is
+  plain Node with no imports but Node's, and it prints that skill's body when
+  `CLAUDE_CODE_SKIP_PLUGIN_MCP_SERVERS` is set and nothing otherwise. It runs from the plugin folder
+  rather than the package, so the fix ships as plugin `0.1.5+2` with no npm publish, and so does
+  any later change to it.
+- `scripts/pin-plugin.mjs` moves the skill's pin with the others, and `plugin.test.ts` holds it to
+  the manifest's.
+
+**Consequences.** A cloud task now says what to do instead of improvising. Whether the hook sees
+the variable is untested on a real cloud host; the skill is there for when it doesn't. The `.mcpb`
+that D-498 rejected would do the same registration in one click; it stays a separate question.
+The npm `engines` range (`>=24`) warns on the cloud host's Node 22 at every hook run, also separate.
+
+**Rejected.** The hook in the package (a new `emerald-mcp` for a message). A remote server, which
+would send a person's document off their machine (D-124). Printing the steps at every session start,
+which would put them where the server runs fine.
 
 ## Related
 

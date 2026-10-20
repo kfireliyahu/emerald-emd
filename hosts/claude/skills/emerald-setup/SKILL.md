@@ -1,0 +1,56 @@
+---
+name: emerald-setup
+description: Tell the person how to make Emerald's tools available on their own computer. Use when they want to open, create or work in a .emd, declare a format, or ask Emerald for rows, and this session has no Emerald tools (no start_here, formats or declare_format) even though the emerald plugin's skills are here.
+---
+
+# Make Emerald available here
+
+The emerald plugin is installed, but its MCP server isn't running in this session. A Cowork task in
+the cloud starts a plugin's skills and hooks but never its MCP server, and a server there couldn't
+open a `.emd` on the person's computer anyway. The fix is the person's, on their own computer, and
+takes a few minutes. Tell them once, plainly, in your own words. Don't start the
+server by hand here, and don't write files for them to import later, unless they ask for that
+instead.
+
+What they do:
+
+1. **Find `npx`.** In Terminal on macOS, `which npx`; in a terminal on Windows, `where npx`. If it
+   prints nothing, they install Node from nodejs.org first.
+2. **Open the Claude desktop app's configuration file**, creating it if it's missing and keeping
+   anything already in it:
+   - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+   - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+3. **Add Emerald under `"mcpServers"`.** On macOS, with the path from step 1:
+
+   ```json
+   {
+     "mcpServers": {
+       "emerald": {
+         "command": "/opt/homebrew/bin/npx",
+         "args": ["-y", "emerald-mcp@0.1.5", "--engine-only"]
+       }
+     }
+   }
+   ```
+
+   On Windows, through `cmd`, which finds `npx` itself:
+
+   ```json
+   {
+     "mcpServers": {
+       "emerald": {
+         "command": "cmd",
+         "args": ["/c", "npx", "-y", "emerald-mcp@0.1.5", "--engine-only"]
+       }
+     }
+   }
+   ```
+
+   If the file already has an `"mcpServers"` section, `"emerald": { … }` goes inside it, beside
+   what's there. Straight quotes only: a text editor that turns them curly breaks the file.
+4. **Quit the Claude app completely and reopen it**, then start a new task with the folder that
+   holds their `.emd`. Emerald's tools are there from then on, in chat and in Cowork.
+
+If they paste the file and want it merged, merge it for them. If the tools still don't appear after
+a restart, the server's log says why: `~/Library/Logs/Claude/mcp-server-emerald.log` on macOS,
+`%APPDATA%\Claude\logs\mcp-server-emerald.log` on Windows.

@@ -9,7 +9,9 @@ import { pluginDigest } from './release.ts'
 /**
  * **The Claude plugin is this folder, served by the repository's marketplace**
  * (M42 U4, D-498, D-499). Nothing builds it: it pins the published
- * `emerald-mcp` and runs it through `npx` — the server and the hooks alike. So
+ * `emerald-mcp` and runs it through `npx` — the server and the hooks alike, but
+ * for one hook of its own folder, which prints the setup skill where no plugin
+ * server starts (M42 F8, D-508). So
  * the one thing that can drift is the version, and it is written once, as the
  * manifest's `version`, which every pin must equal. It may trail the version
  * `npm run build:plugin` stamps on the package (the repository's own), never
@@ -72,11 +74,28 @@ describe('the plugin', () => {
       groups.flatMap((group) => group.hooks.map((hook) => hook.command)),
     )
     expect(commands.length).toBeGreaterThan(0)
-    for (const command of commands) {
+    for (const command of commands.filter((command) => !command.startsWith('node '))) {
       const found = /^npx -y --prefer-offline -p emerald-mcp@(\S+) (\S+) /.exec(command)
       expect(found, command).not.toBeNull()
       expect(found?.[1]).toBe(pin)
       expect(bins).toContain(found?.[2])
     }
+  })
+
+  it('runs a node hook only on a file of its own folder, with no import of the package', () => {
+    const commands = Object.values(hooks.hooks as Record<string, { hooks: { command: string }[] }[]>).flatMap((groups) =>
+      groups.flatMap((group) => group.hooks.map((hook) => hook.command)),
+    )
+    const local = commands.filter((command) => command.startsWith('node '))
+    expect(local).toEqual(['node "${CLAUDE_PLUGIN_ROOT}/hooks/no-server.mjs"'])
+    const source = readFileSync(join(HERE, 'hooks', 'no-server.mjs'), 'utf8')
+    expect([...source.matchAll(/from '([^']+)'/g)].map((found) => found[1]).every((name) => name?.startsWith('node:'))).toBe(true)
+  })
+
+  it('pins the same emerald-mcp in the setup skill as everywhere else', () => {
+    const skill = readFileSync(join(HERE, 'skills', 'emerald-setup', 'SKILL.md'), 'utf8')
+    const pins = [...skill.matchAll(/emerald-mcp@(\d+\.\d+\.\d+)/g)].map((found) => found[1])
+    expect(pins.length).toBeGreaterThan(0)
+    expect(new Set(pins)).toEqual(new Set([pin]))
   })
 })

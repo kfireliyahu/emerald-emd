@@ -420,8 +420,11 @@ describe('the hook set', () => {
     const repo = JSON.parse(await readFile(join('.claude', 'settings.json'), 'utf8'))
     const shipped = JSON.parse(await readFile(join('hosts', 'claude', 'hooks', 'hooks.json'), 'utf8'))
     const here = commandsOf(repo, '$CLAUDE_PROJECT_DIR/dist-plugin/hooks.mjs')
-    // The plugin runs the same bundle from the published package, pinned (M42 U4, D-499).
-    expect(here).toEqual(commandsOf(shipped, /^npx -y --prefer-offline -p emerald-mcp@[\d.]+ emerald-hooks/, 'node "<server>"'))
+    // The plugin runs the same bundle from the published package, pinned (M42 U4, D-499), plus
+    // one of its own this repository never needs: the setup steps where no plugin server starts (M42 F8).
+    const fromThePackage = commandsOf(shipped, /^npx -y --prefer-offline -p emerald-mcp@[\d.]+ emerald-hooks/, 'node "<server>"')
+    fromThePackage['SessionStart'] = (fromThePackage['SessionStart'] ?? []).filter((command) => !command.includes('${CLAUDE_PLUGIN_ROOT}/hooks/no-server.mjs'))
+    expect(here).toEqual(fromThePackage)
     expect(here['SessionStart']).toEqual(['node "<server>" start-here "$CLAUDE_PROJECT_DIR"'])
     expect(here['UserPromptSubmit']).toEqual(['node "<server>" rows "$CLAUDE_PROJECT_DIR" inbox --match state=new --once-per-session'])
   })

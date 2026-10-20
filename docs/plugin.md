@@ -1375,8 +1375,8 @@ printed `start_here` and the inbox row, and `npx emerald-status-line` printed `i
 **The plugin is `hosts/claude/`, and nothing builds it.** `.claude-plugin/marketplace.json` at the
 repository's root lists it, so it installs from the public repository with no review; what it ships
 is the manifest (`.claude-plugin/plugin.json`), the hook set, the `declare-a-format` skill, the
-development pack's three workflows (M42 U7) and a README for a stranger. **Everything it runs is the published package, through `npx`, pinned** — the
-maintainer's *use npm for it* (D-499, amending D-498's launcher):
+development pack's three workflows (M42 U7), the `emerald-setup` skill (M42 F8) and a README for a stranger. **Everything it runs is the published package, through `npx`, pinned** — the
+maintainer's *use npm for it* (D-499, amending D-498's launcher) — but one hook, below:
 
 - **The server**: `npx -y --prefer-offline emerald-mcp@<version> --engine-only`, once a session.
   Claude Code on Windows starts it as written. The views draw from it with nothing else to set up —
@@ -1386,6 +1386,23 @@ maintainer's *use npm for it* (D-499, amending D-498's launcher):
   keeps out of context.
 - **The status line** is a person's setting, not a plugin's:
   `npx -y --prefer-offline -p emerald-mcp@<version> emerald-status-line`.
+
+**Where the host starts no plugin server** (M42 F8, D-508). Chat and Cowork take a plugin from the
+person's claude.ai account, and a Cowork task in the cloud loads its skills and hooks but skips its
+MCP server on purpose. The log says `CLAUDE_CODE_SKIP_PLUGIN_MCP_SERVERS is set` (found on the
+maintainer's work Mac, 2026-10-20). A server there couldn't reach the person's `.emd` anyway, so the
+fix is the person's: add `emerald-mcp` to the Claude desktop app's own `claude_desktop_config.json`,
+which reaches chat and Cowork on that computer. That is how the maintainer's Windows PC has run it
+in Cowork all along. The plugin says so twice, both from its own folder, so a change needs a plugin
+release and never a new package:
+- **The `emerald-setup` skill** holds the steps once: find `npx`, the file on macOS and Windows,
+  the entry (`cmd /c npx …` on Windows), quit and reopen. Its description fires on a session asked
+  about a `.emd` that has no Emerald tools.
+- **A third `SessionStart` hook**, `node "${CLAUDE_PLUGIN_ROOT}/hooks/no-server.mjs"`, plain Node
+  with no imports but Node's, prints that skill when `CLAUDE_CODE_SKIP_PLUGIN_MCP_SERVERS` is set
+  and nothing otherwise.
+
+`scripts/pin-plugin.mjs` moves the skill's `emerald-mcp@<version>` with the other pins.
 
 **What npx costs, accepted** (measured 2026-10-18 on the maintainer's Windows machine, cache warm):
 the inbox hook **~1.95 s before every prompt** (against ~0.35 s for `node` on the file), `start-here`
