@@ -4177,7 +4177,7 @@ state: live
 
 ### D-496
 date: 2026-10-18
-milestone: M42
+milestone: M52
 scope: engine
 title: A tour plays only while its frame is seen, and the frame decides it: the player holds the first step and pauses every hold while an `IntersectionObserver` on the frame's own document says less than a third of it is in view or the tab is hidden, so `?autoplay=1` means play when seen on any page that embeds it
 question: Emerald's page loaded each tour within half a window of the view with `?autoplay=1`, and a loaded frame played at once, so a visitor scrolling down found a tour at a late step; a site embedding a frame below its fold had the same problem. Should the page hold `autoplay` back or post the frame a start, or should the frame itself know whether it is seen?
@@ -4260,7 +4260,7 @@ state: live
 
 ### D-505
 date: 2026-10-19
-milestone: M42
+milestone: M52
 scope: engine
 title: The Mac app is signed ad hoc after packing (codesign --force --deep --sign - from an afterPack hook, mac.identity: null kept), so a download is an app Apple could not verify, which Open Anyway opens, rather than a damaged one, which nothing does; the release workflow fails a Mac build whose signature does not verify; no certificate, account or notarization, so D-124's unsigned stands; amends D-124
 question: Why does the Mac download say Emerald is damaged with no way past it, and how is it fixed without an Apple Developer account?
@@ -4269,7 +4269,7 @@ state: live
 
 ### D-506
 date: 2026-10-19
-milestone: M42
+milestone: M52
 scope: plugin
 title: The MCP server says what Emerald is before it says what a pack is: both instruction blocks open on a format for any kind of thing and on what it reads (spreadsheet, .json, a folder of Markdown notes read in place), development and ledger as optional packs; no model-facing text measures work against money; engine tools listed first in both modes; create_document keeps no pack unless asked, in both modes; reverses D-405's default
 question: Why did a model given this server call Emerald 'built for money first' and argue a person out of reading their notes into it, and what does the server say instead?
@@ -4278,7 +4278,7 @@ state: live
 
 ### D-507
 date: 2026-10-19
-milestone: M42
+milestone: M52
 scope: plugin
 title: The server says first what a model gains from a document — it asks for the matching rows instead of re-reading files, a typed field filters exactly, a link is followed, every session sees the same rows — and checks are one benefit among them, never the reason; whether something belongs is answered by its shape, never by whether it has numbers; amends D-506
 question: Why did a model given the D-506 server still call checking numbers Emerald's main strength and advise against moving notes without figures, and what does the server say first now?
@@ -4287,7 +4287,7 @@ state: live
 
 ### D-508
 date: 2026-10-20
-milestone: M42
+milestone: M52
 scope: plugin
 title: Where the host starts a plugin's skills and hooks but not its MCP server (a cloud Cowork task, CLAUDE_CODE_SKIP_PLUGIN_MCP_SERVERS), the plugin tells the session how the person adds emerald-mcp to the Claude desktop app's own configuration: an emerald-setup skill holds the steps once, and a third SessionStart hook, plain Node run from the plugin folder, prints it only there; no new package
 question: Why did a Cowork task with the emerald plugin have no Emerald tools, and how does the next one know what to tell the person?
@@ -4296,11 +4296,20 @@ state: live
 
 ### D-509
 date: 2026-10-20
-milestone: M42
+milestone: M52
 scope: plugin
 title: The server also ships as a Claude desktop extension: emerald.mcpb on every tagged release, run --engine-only on the Node the Claude desktop app ships, installed by double-click into the app itself, where chat and Cowork on that computer reach it; the plugin keeps npx, because Claude Code runs a plugin's .mcpb on the system node; reverses D-498's 'no .mcpb' for direct install only
 question: Can a person add Emerald to the Claude desktop app, and to Cowork on their computer, without installing Node or editing a configuration file, and should the Claude plugin run that bundle instead of npx?
 answer: Yes, for the desktop app: npm run build:mcpb packs dist-plugin/server.mjs, its licences, a 512 icon and a 0.3 manifest (server.type node, node ${__dirname}/server.mjs --engine-only, darwin and win32, runtimes.node >=20.0.0, the bare author name the app makes the id from) into release/emerald.mcpb, which the release workflow builds, attests and attaches on every tag. Measured on Windows: installed by opening the file and pressing Install, the desktop app 2.42304 (Electron 44.7.2, Node 24.21.0) ran it in its own utility process ('built-in node is compatible'), no node.exe, serving chat (claude-ai) and Cowork (local-agent-mode) from that one process; isUsingBuiltInNodeForMcp is on unless set false and was set nowhere, and with no system Node the app falls back to its own anyway. Unpacked, the bundle's five files answer create, declare, write, read, start_here and formats on Node 20, 22 and 24. No for the plugin: Claude Code 2.1.299, the Code tab's binary, unpacks a plugin's .mcpb and starts it with the system node, and fails to connect with Node off PATH, so mcpServers stays npx. The emerald-setup skill and the plugin README offer the extension first once a release carries it.
+state: live
+
+### D-510
+date: 2026-10-20
+milestone: M52
+scope: plugin
+title: The npm package's engines.node is >=20.19.0, the oldest Node a CI job runs it on: .github/workflows/package.yml builds it on Node 24 and runs scripts/check-package.mjs on 20.19.0, 22 and 24 — the handshake, a document written and read back, both hooks, and an npx install that fails on EBADENGINE; the desktop extension's runtimes.node follows; amends D-497's >=24
+question: What Node range should emerald-mcp claim, now that npm prints `npm warn EBADENGINE` before every plugin hook on a cloud host's Node 22 while the range is >=24?
+answer: The oldest Node a CI job runs the built package on, and nothing lower. .github/workflows/package.yml builds dist-plugin/ on Node 24, switches to the matrix's Node (20.19.0, 22, 24) and runs npm run check:package: server.mjs --engine-only answers initialize and tools/list, creates a document with the development pack, commits an inbox row and reads it back with start_here; the full server lists more tools; hooks.mjs start-here and rows print the row; status-line.mjs exits cleanly; npm pack, then npx -y -p <tarball> emerald-hooks rows from an empty cache with the npm that ships with that Node, must print the row and no EBADENGINE. engines.node is >=20.19.0 from 0.1.6, and scripts/mcpb.mjs's runtimes.node follows. Measured locally: the EBADENGINE step failed on Node 22.20 against >=24 and passed on 20.19.5, 22.20.0 and 24.15.0 against >=20.19.0. Node 20 is past end of life; when it stops passing, the floor and the matrix move to 22 together. Rejected: no engines at all, --loglevel=error on the plugin's npx, building on each matrix Node.
 state: live
 
 <!-- emerald: finding.format.md -->
@@ -5438,7 +5447,7 @@ position: 310
 title: A pack anyone can make and share
 goal: A person turns formats they made into a pack, hands it to someone as one file, and the other person adds it to their document and gets its formats, links, identities, views and readers with no code and no screen of its own. Done when the development pack round-trips through a file into a fresh document unchanged, and one pack that is not ours, made from a real use case, does the same. The line held throughout: a shared pack is data only; a screen it needs is a view kind the engine draws, never UI the pack carries; a reader it carries holds positions and labels, never a figure. Planned 2026-10-05 in a product session: the tool is the product and packs are how anyone finds it.
 state: planned
-position: 347
+position: 348
 
 ### M33
 title: A showcase you can try
@@ -5497,8 +5506,8 @@ position: 324
 ### M42
 title: Public: the showcase, then the listings
 goal: Emerald goes public in two beats, the sequence of 2026-10-15. Beat one: the showcase M33 built is deployed and answering at getemerald.dev while the repository is still private (M33 U4). Beat two, on one day: the repository public, a public npm package, an entry in the official MCP Registry, and a Claude plugin (with a desktop extension if Anthropic's directory still takes one) submitted to Anthropic's directory, so a person installs it in one click and gets M41's views in the conversation, with the kill criterion written before any of it (M33 U9). It works with any app that runs local MCP servers (Claude, Cursor, VS Code, OpenAI's Codex CLI). ChatGPT's app directory takes only remote servers behind OAuth, which would mean a backend holding people's documents, so Emerald is not listed there, and the README says so as a stance. Both beats wait on the maintainer's go, and parts on the public repository and an npm name, both the maintainer's. 2026-10-08; the showcase deploy and the kill criterion moved here from M33 on 2026-10-18.
-state: planned
-position: 345
+state: open
+position: 346
 
 ### M43
 title: In the maintainer's words
@@ -5546,13 +5555,19 @@ position: 340
 title: The first stranger's first hour
 goal: Five small things the strategy session of 2026-10-15 found standing between a stranger and the product, none planned anywhere else: a repo init that writes the CLAUDE.md column table and the hooks, one real session per MCP client written down, an export read twice updating rather than duplicating, the full app hosted on Pages opening a real file, and a web-app manifest. Done when a developer who found the npm package reaches start_here in a fresh session without reading a note, and a visitor who found the page opens their own file without downloading anything. The rest of that session's findings (a general-user pack, a self-hosted image, a drive-backed server, a phone app) are deliberately not here.
 state: planned
-position: 346
+position: 347
 
 ### M51
 title: Sessions side by side on one memory
 goal: What a manager session found on 2026-10-17 running five child sessions in worktrees off a project that keeps the development pack: the children read their branch's stale copy of the memory, could not safely write to it, and reported in prose the manager had to rebuild into a landing. Done when a session in any worktree reads and writes the one canonical document, a claim records the branch and a landing the commit, a child hands its landing back as an inbox row the manager lands with one dry run, and ready units come with which of them share files. Shipping the workflows that drive this to other projects is M42 U7, since it waits on the plugin. The lock (D-304) and the inbox (D-439) already exist; this milestone is the wiring between them and a worktree.
 state: closed
 position: 342
+
+### M52
+title: Post-release fixes
+goal: What real use found once Emerald was public (released 2026-10-18): bugs, hosts behaving in ways no test showed, words that misled a model, and the release fixes that follow. A finding from real use goes here, never into whatever milestone happens to be open; M42 keeps only the listing work. The fixes found 2026-10-18 to 2026-10-20 moved here from M42 with their refs unchanged (M42 F1 to F16), and M51 F6 from the closed M51. Stays open while fixes keep coming; the maintainer closes it, and a new one opens for the next stretch.
+state: open
+position: 345
 
 <!-- emerald: open_question.format.md -->
 ---
@@ -11848,7 +11863,7 @@ taken_by: run-milestone driver
 started: 2026-10-08
 
 ### M42 F1
-milestone: M42
+milestone: M52
 scope: app
 title: A tour on Emerald's page starts when it is seen, not when the page loads
 landed: 2026-10-18
@@ -11863,7 +11878,7 @@ commit: 2f92f70
 paths: "src/demo/page/main.ts\nsrc/demo/tour/player.ts\nsrc/demo/tour/Frame.tsx\nsrc/demo/tour/main.tsx"
 
 ### M42 F10
-milestone: M42
+milestone: M52
 scope: plugin
 title: The setup hook and skill defer to Emerald tools under any prefix, so a cloud task bridged to the person's computer isn't told its working tools are missing
 landed: 2026-10-20
@@ -11878,7 +11893,7 @@ paths: hosts/claude/, docs/plugin.md
 report: The hook's preface and the emerald-setup skill now open by telling the model to check its own tools: any with emerald in the name, under any prefix (e.g. mcp__remote-devices__emerald__*, bridged from the person's computer), means use them and skip the steps. README and docs/plugin.md no longer say a cloud task can't reach the person's computer. Plugin 0.1.5+4, no npm. Tests: hosts/claude 41 pass; docs:check clean. M42 F8's hook did fire on a real cloud Cowork task, which is how this was found.
 
 ### M42 F11
-milestone: M42
+milestone: M52
 scope: engine
 title: arrange_views: an agenda's done setting can name a member called done, and an entry view's order is stored exactly as sent
 landed: 2026-10-20
@@ -11893,7 +11908,7 @@ paths: src/plugin/tools/views.ts, src/plugin/tools/formats.ts, src/data/reposito
 report: Agenda done: readAgendaDone took any member called done, date or line as a stray keyword, so no spelling naming the member done was a setting. Now only the first word is the keyword and commas read as spaces: `done done`, `done done dropped`, `done dropped, done` and `done done, dropped` all mark the members, and arrange_views stores `done done dropped`. `done DONE, DROPPED` is refused as "`state` has no DONE, DROPPED; its members are open, in_progress, done, dropped." The view words say "an agenda" / "an entry". Entry order: did NOT reproduce. Synthetic formats (title declared tenth, sent first; SQLite and text storage; one commit with show_as, board lanes, agenda date, order and header; then extend_format adding two links, a link and a constraint) keep the order exactly, with new columns appended and the declaration only growing at the end. setEntryOrder, the text views part and extend_format's adopt path all keep places by column name. views.test.ts pins both cases. A review entry asks the maintainer for the exact calls. Full suite: 4776 pass; privacy.test.ts and hostBoundary.test.ts timed out under full-suite load and pass alone.
 
 ### M42 F12
-milestone: M42
+milestone: M52
 scope: app
 title: Deleting an entry from a filtered table returns to the table as it was filtered
 landed: 2026-10-20
@@ -11906,8 +11921,38 @@ branch: claude/unruffled-kare-752ad2
 commit: 8880d64
 report: Cause: React Router 7.18's HashRouter moves the location inside startTransition, while the document store's delete renders urgently. That first render is still on the deleted entry's address, finds no row, and the MISSING branch's <Navigate> went to formatPath(name), so the filter was dropped. Fix: the missing-row redirect and the back button both go to tablePath(name, address), which keeps the filter and search the entry was opened with (a stale bookmark keeps its filter too). Leaving without deleting already kept the filter. Browser check on a copy of memory.emd, held in memory only: open_question filtered to state=open with search 'the' (22 of 51), open an entry, delete it, and you're back on the same address at 21 of 50 with both chips. Scroll is kept. Not fixed: sort. It is FormatRows' component state, and the screen remounts between the table and an entry route, so a plain Back loses it too, as does the entry pager's order. That's a separate gap, proposed as a follow-up. Typecheck is clean, all 4777 tests pass, docs:check shows 0 errors.
 
+### M42 F14
+milestone: M52
+scope: app
+title: A format's table keeps its sort when an entry is opened, and the entry's pager walks the rows in that sort
+landed: 2026-10-20
+state: built
+brief: A format's table loses its sort after the person opens an entry, even with a plain Back, and the entry page's pager ignores the table's sort. M42 F12 (8880d64) made filter and search survive by keeping them in the address and routing Back, delete and a missing row through tablePath(name, address) in src/ui/nav.ts, used by src/ui/screens/FormatRows.tsx. The sort is kept only in the screen's own state, so it resets when the screen remounts between the table and an entry route. Keep the sort where filter and search already live, so tablePath carries it: Back, delete and a missing row then keep it, and so do a reload and a bookmark. Make the entry pager step through rows in the table's sort, as the person sees them. Tests in the repo's style (nav.test.ts, addressFilter.test.ts, entryList.test.ts); a browser check on an in-memory copy, never saving: sort, open, Back still sorted, the pager follows the sort.
+files: src/ui/formats/addressFilter.ts (ORDER_KEY, AddressOrder), src/ui/formats/FilterBand.tsx (useAddressFilter order/setOrder), src/ui/screens/FormatRows.tsx (sortOf, the address's order), src/ui/nav.ts (tablePath doc), tests in src/ui/nav.test.ts, src/ui/formats/addressFilter.test.ts, src/ui/formats/entryList.test.ts; docs/plugin.md
+taken_by: claude-code cool-bun-813d1f
+started: 2026-10-20
+branch: claude/cool-bun-813d1f
+commit: 06f7b05
+paths: "src/ui/formats/addressFilter.ts\nsrc/ui/formats/FilterBand.tsx\nsrc/ui/screens/FormatRows.tsx\nsrc/ui/nav.ts"
+report: The sort now rides in the address beside filter and search: ?order:<column>=descending|ascending (the colon keeps it from colliding with a column, as columns: does). useAddressFilter reads it and gives setOrder, which replaces the history entry the way typing a search does, and every other change keeps it, so clearing a filter keeps the sort. FormatRows uses it in place of its own state, so tablePath carries it: Back, delete, a missing row, a reload and a bookmark all keep it. The entry list, which is what the pager walks, reads the same order. sortOf falls back to the default order when the address names a column the format doesn't have, stored or computed. The entry list's search and the 'opened from outside the search' redirect keep the order too. Saving a changed shape still drops the sort, as before. Browser check on an in-memory copy of memory.emd, never saved: open_question sorted by question, descending, writes ?order:question=descending. Opening the first row shows 1 of 51, Next shows 2 of 51 on the table's second row, the list beside it is in the same order, and '<- Open question' comes back on the same address with question shown sorted down. A stale ?order:gone falls back to ref ascending. Typecheck, all 4783 tests and docs:check (0 errors) pass. check:tours could not run, because the worktree has no node_modules of its own (fontsource package.json ENOENT), so it was not run. Briefed as M42 F13, but that ref was already the Node-range unit in the main document, so it landed as F14.
+
+### M42 F15
+milestone: M52
+scope: plugin
+title: The package's Node floor is what CI proves, so a Node 22 host runs the hooks without an EBADENGINE warning
+landed: 2026-10-20
+decision: D-510
+state: built
+brief: engines.node in scripts/npm-package.mjs was >=24 (D-497), what CI ran, though the files target Node 20; a cloud Cowork host on Node 22.22.0 printed `npm warn EBADENGINE` before every prompt. Add a CI job that builds the package and runs its handshake, hooks and an npx install on the lowest Node it can prove, set engines to match, update the docs, bump the version, and stop before npm publish.
+files: .github/workflows/package.yml, scripts/check-package.mjs, scripts/npm-package.mjs, scripts/mcpb.mjs, package.json, server.json, src/plugin/document.ts, docs/plugin.md, docs/09-decision-log.md, hosts/claude/README.md
+taken_by: fix-ebadengine-node22 (stoic-cartwright-6f4790)
+started: 2026-10-20
+branch: claude/stoic-cartwright-6f4790
+commit: b870af6
+report: Built emerald-mcp 0.1.6 with engines.node >=20.19.0 (was >=24, D-497) so Node 20.19+/22 hosts run the plugin's hooks without npm's EBADENGINE warning. New CI workflow .github/workflows/package.yml: build on Node 24, then scripts/check-package.mjs (npm run check:package) on 20.19.0, 22, 24 — server handshake, document write/read, hooks, status line, and an npx install of the packed tarball that fails on EBADENGINE. Reproduced the warning with the check on Node 22.20 against >=24, then passed on 20.19.5, 22.20.0 and 24.15.0 locally. The mcpb's runtimes.node follows. Docs: hosts/claude/README.md (Node 20.19+; plugin 0.1.5+5), docs/plugin.md, CLAUDE.md commands, D-510. Version bumped in package.json, package-lock, server.json, PLUGIN_VERSION. Not done: npm publish (the maintainer's), the pin move (after npm serves 0.1.6), and the CI run itself (runs on the push to main that carries the merge).
+
 ### M42 F2
-milestone: M42
+milestone: M52
 scope: engine
 title: The page's last section says where to get Emerald now: the repository, the Claude plugin, npm, and the installers
 landed: 2026-10-18
@@ -11922,7 +11967,7 @@ commit: 9d81f89
 paths: "src/demo/page/\nREADME.md"
 
 ### M42 F3
-milestone: M42
+milestone: M52
 scope: engine
 title: Vitest 4, so the last test-runner advisory closes
 landed: 2026-10-18
@@ -11937,7 +11982,7 @@ paths: "package.json\npackage-lock.json\nvite.config.ts"
 report: "Built at 328ec3c; docs:check green (0 errors, 2 budget warnings, both pre-existing); typecheck, build, build:plugin green; full suite 4767/4767 in two full runs in a row (runs 4 and 5). check:tours skipped: no tour's harness or ground changed.\n\nVERSIONS. vitest ^3.2.7 -> ^4.1.12 (the current 4.x; 5.0.5 is out and was not taken, the brief says 4.x). npm ls: vitest 4.1.12, @vitest/mocker 4.1.12 (>= 4.1.11). No other @vitest/* package is a direct dependency. tinypool's override from M51 F5 is dropped: Vitest 4 removed tinypool, and no package in the lock needs it. vite stays 6.4.4 (Vitest 4 asks >= 6). npm audit: 8 moderate, all the electron-builder -> app-builder-lib -> @electron/get -> global-agent -> roarr -> sprintf-js chain (#10); no vitest advisory.\n\nMIGRATION (Vitest's own 3-to-4 guide, v4.vitest.dev/guide/migration, fetched 2026-10-18). This config used none of what it renames or removes: no poolOptions, maxThreads/singleThread, workspace, coverage, environmentMatchGlobs, deps.inline, basic reporter, or test options as a third argument. The include globs are src/electron/hosts, so the narrower default exclude changes nothing. Mocks: no vi.fn constructed with new from an arrow (seen.test.ts's IntersectionObserver is a class), no getMockName or invocationCallOrder, and server.test.ts's restoreAllMocks only restores vi.spyOn spies, which is all it had. What did break, and how:\n(1) sql.js's wasm. Vitest 4's module runner hands files under node_modules to Node, and Node 24 imports a .wasm as a WebAssembly module, so `sql.js/dist/sql-wasm.wasm?bytes` reached Node rather than wasmAsBytes and failed on emscripten's import namespace ('Cannot find package a'). Fix: test.server.deps.inline: [/\\.wasm\\?bytes$/] in vite.config.ts.\n(2) vite-node is gone (Vitest 4 replaced it with Vite's module runner). Three tests started a real process through node_modules/vite-node/vite-node.mjs: subscriptions.test.ts (the stdio server), formatWatch.test.ts (the watch command), hooks/commands.test.ts (a hook from stdin). New scripts/run-source.mjs does the same over Vite's createServer + createServerModuleRunner, closing the server after the entry's import as vite-node did; same argv shape. Re-adding vite-node was the alternative: 3.2.4 is the last on Vite 6, 6.0 needs Vite 8.\n(3) Not a Vitest 4 change but found in its full runs: parity.test.ts's two ledger tests took ~8.3 s each alone (8.9 s under vitest 3.2.7 too, measured with npx vitest@3.2.7) and timed out at 15 s under load in two runs. reachesDirectly re-split every file's text for every write; namesIn caches each file's names once (WeakMap). 1.15 s each, same answers, docs/parity.md snapshot unchanged.\n\nNOT FIXED, WATCH: subscriptions.test.ts's 'within a second' measured 1112 ms once under full load (run 3; 204-502 ms in the others). The span includes starting a second bare node process for the rename-save, which is load, not the server; it passed in runs 4 and 5. If it recurs it wants the M51 F5 treatment (measure from the rename, or CPU time).\n\nDependabot: see the landing commit; #6 and #7 checked after the push."
 
 ### M42 F4
-milestone: M42
+milestone: M52
 scope: engine
 title: The Mac app opens: ad-hoc signed after packing, so macOS offers Open Anyway instead of calling it damaged
 landed: 2026-10-19
@@ -11953,7 +11998,7 @@ paths: "electron-builder.yml\nscripts/\n.github/workflows/release.yml\nREADME.md
 report: Built on main at f7f69e2. The hook scripts/sign-mac.mjs ad-hoc signs the packed Mac app (afterPack, darwin only); electron-builder.yml keeps identity: null. Loaded through electron-builder's own resolveFunction on Windows: returns afterPack, no call on win32, codesign --force --deep --sign - on darwin. electron/macSigning.test.ts (3 tests) and typecheck pass. Release rehearsal (workflow_dispatch) run 39231019265 green on both runners, release job skipped as a rehearsal: the Mac log shows release/mac-arm64/Emerald.app and release/mac/Emerald.app 'valid on disk', 'satisfies its Designated Requirement', Signature=adhoc, arm64 and x86_64. README now says what a Mac shows and gives xattr -cr for copies of 0.1.2 or earlier. PROVED ON A REAL MAC, 2026-10-19: the maintainer opened the rehearsal's arm64 dmg on the work Mac that had called 0.1.2 damaged; Open Anyway opened Emerald. The fix reaches people only with the next release, which is the maintainer's to cut.
 
 ### M42 F5
-milestone: M42
+milestone: M52
 scope: plugin
 title: The server says what Emerald is before it says what the ledger is: no money-first framing, the notes folder in the head, and a new document keeps no pack unless asked
 landed: 2026-10-19
@@ -11969,7 +12014,7 @@ paths: "src/plugin/instructions.ts\nsrc/plugin/tools/\nsrc/plugin/server.test.ts
 report: Built on main at 777897f. Instructions, tool descriptions, tool order and create_document's default changed as D-506 says; an audit subagent read every engine tool's text in both modes from the built server and its 16 findings were fixed (all but listing PDFs as a reader, which there is none; the what-else paragraph says a model reads them). Typecheck green; src/plugin, hosts, parity and ui/mcp tests 739 passed; the engine-only weight budget moved 54k to 55k with the reason. NOT YET REACHING ANYONE: the plugin and npx -y emerald-mcp both run emerald-mcp from npm, still 0.1.2 with the old text, so the maintainer's workplace model sees the fix only after an npm publish (D-497, by hand) and the plugin's pins moving to it (pin-plugin.mjs). package.json is 0.1.3 (the desktop release) and npm has no 0.1.3; publishing this commit as 0.1.3 would differ from the v0.1.3 tag's source, so a 0.1.4 bump is the clean path. The app's own new-document flow was not checked for a ledger default.
 
 ### M42 F6
-milestone: M42
+milestone: M52
 scope: plugin
 title: The server leads with what a model gains from a document — asking for rows instead of re-reading files, real fields and links, one memory every session shares — and checks are one benefit among them
 landed: 2026-10-19
@@ -11985,7 +12030,7 @@ paths: "src/plugin/instructions.ts\nsrc/plugin/server.test.ts\nserver.json\nhost
 report: Built on main at 181da0c. Heads rewritten in both modes (show-format line ends at char 1994 full, 1978 engine-only); claim demoted; belongs-by-shape paragraph; server.json (93 chars), plugin.json and npm README lead with asking; plugin 0.1.4+1. Typecheck green; src/plugin and hosts 723 tests pass. Not yet reaching anyone: needs emerald-mcp 0.1.5 published by the maintainer and the pins moved. Found, like D-506's gaps, by a session outside the repo reading the server cold: a stranger's-eye check is the follow-up.
 
 ### M42 F7
-milestone: M42
+milestone: M52
 scope: plugin
 title: A cold read of the server: a script asks a stranger's model what Emerald is, so the next wrong framing is caught here
 landed: 2026-10-19
@@ -12001,7 +12046,7 @@ paths: scripts/ask-cold.mjs, docs/plugin.md, docs/conventions.md, .claude/skills
 report: "Built scripts/ask-cold.mjs: each question a fresh `claude -p` in an empty temp folder, --strict-mcp-config naming only dist-plugin/server.mjs (engine-only and full), --setting-sources project, --tools \"\" (no built-ins), allowed mcp__emerald; stream-json parsed for the servers, the tools offered, the tools called and the answer; a run that sees another MCP server or a built-in tool, or begins without the server, fails. Trap found: the desktop app sets MCP_CONNECTION_NONBLOCKING=true, and -p then begins before the server connects - 3-4 of 10 runs answered 'which Emerald?'. The script drops CLAUDE*/MCP_* vars and sets it false; 10/10 connected after. Run on 2026-10-19 against 0.1.5's build, $0.74, Opus 4.8 default.\n\nWhat a cold model says now: no money-first framing in either mode. Both modes lead with asking for rows instead of re-reading forty files, typed fields that filter exactly, links followed, the same rows every session, and a Markdown folder read in place; packs named as optional; start_here (create_document for a new file) as the first call; 'no numbers' answered 'yes - numbers are one feature, not the point'. Still off: (1) engine-only 'best at' lists personal finance as one of three headline uses, ends offering 'a project or your finances', and its summary says 'prove the numbers add up' - checks creep back into the one-line summary. (2) The Obsidian answers, both modes, say keep daily notes and MEETINGS in Obsidian as prose, and engine-only ends 'if you mostly read and link notes, Emerald buys you little' - neither names the model-side gain (every session asks instead of re-grepping the vault), the decisive argument in D-507. (3) Full mode's CSV run called frame_copy, a frame's tool, as if it were the model's. Mechanical flags are noisy on correct answers (numbers-as-reason fires on 'a list needs no numbers'); judgment needed, as designed. Answers: side-session notes folder, ask-cold-2026-10-19.md."
 
 ### M42 F8
-milestone: M42
+milestone: M52
 scope: plugin
 title: Where the host starts no plugin server, the plugin tells the session how the person adds Emerald to the Claude app
 landed: 2026-10-20
@@ -12016,7 +12061,7 @@ paths: hosts/claude/, scripts/pin-plugin.mjs, docs/plugin.md
 report: Built on main. A cloud Cowork task on the work Mac showed the plugin's skills and hooks loading but its server skipped (CLAUDE_CODE_SKIP_PLUGIN_MCP_SERVERS). Added the emerald-setup skill and a plain-Node SessionStart hook in the plugin folder that prints it only when that variable is set; checked by hand: silent without it, the steps with it. Plugin 0.1.5+2, no npm publish. Tests: hosts/claude (41) plus parity and privacy pass; typecheck clean; claude plugin validate passes. Not yet seen on a real cloud host: the maintainer's next cloud Cowork task after updating the plugin shows whether the hook fires.
 
 ### M42 F9
-milestone: M42
+milestone: M52
 scope: plugin
 title: A desktop extension a person double-clicks: emerald.mcpb on the release, and a measured answer to whether chat, the Code tab and Cowork need Node
 landed: 2026-10-20
@@ -12753,7 +12798,7 @@ paths: ".claude/skills/closing-pass/\n.claude/skills/run-milestone/\nhosts/claud
 report: "Built at 6420daf; docs:check green (0 errors); typecheck, build, build:plugin, build:demo green; full suite 4720/4720 three runs in a row.\n\n(1) ORDER. closing-pass step 2a now says the three steps, always: commit the work (own files only), land_units with commit: that hash and the report, commit the landing (docs/memory.emd alone), push. same_commit: true is named as the tool's option and this repository's no. Step 5 and the 'commit memory.emd' line follow the same order.\n\n(2) ONE WRITER. run-milestone: while a child works in this checkout the driver writes no memory.emd row and commits nothing there; a change goes into the child's prompt or waits for its landing; a commit that cannot wait touches only files outside the child's paths, never memory.emd, and the prompt says so. Step 3 reads the child's report from the unit's report column (format_rows ... columns:[ref, state, commit, report]); a stalled unit (start_here's Stalled) is taken over with claim_units take_over, after git status / git log, with any uncommitted files handed to the next child as a stopped session's, never discarded. The child prompt carries the closing order and 'your full report goes in the report column'.\n\n(3) TIMING TEST. Chose neither median nor a separate pool: the gate is now the status line's own process CPU time (process.cpuUsage at exit, preloaded with --import data: so the line's code is untouched), pair by pair against a bare Node run in the same moment; a pair passes under 200 ms CPU or within 150 ms of its bare Node, best of up to ten; wall time keeps a 1 s ceiling for a line that waits rather than works. Why: the first full run this session, still on the old test, failed exactly as reported (best 209 ms wall vs Node alone 57) — wall time under load measures the other workers. Measured under load: line 140-218 ms CPU, bare 15-93 (Windows ticks of ~15.6 ms); importing dist-plugin/server.mjs costs ~200 ms CPU on its own, so a line that loaded it would sit near 350 and fail.\n\n(4) DEV DEPENDENCIES. vite ^5.4 -> ^6.4.4 (esbuild 0.21 -> 0.25.12), vitest ^2.0.5 -> ^3.2.7, overrides tinypool ^2.1.2 (vitest 3 asks ^1.1.1; resolved 2.2.0, suite green). 'Within their current majors' was read as the majors the fixes are in: vite 5 and vitest 2 have no fixed release. npm audit: 14 -> 10 moderate, 0 high, 0 critical. Fixed: vite high + two medium, vitest critical (UI server), tinypool both critical, esbuild medium. LEFT, none dismissed: (a) @vitest/mocker medium path traversal (GHSA-82fw-gwwq-j7x9): dev-only, fixed only in vitest 4.1.11; vitest 4 is a unit of its own (a major: pool and config changes across a 4,720-test suite) and worth one, small. (b) sprintf-js medium DoS (GHSA-hp3w-g68c-fv3c), via electron-builder -> app-builder-lib -> @electron/get -> global-agent -> roarr: dev-only (the installer build), no fixed release; audit's only 'fix' is electron-builder 26.5.0, an older line. The other moderate counts are that chain's links. Dismissing either in Dependabot is the maintainer's call.\n\nNot verified: Dependabot's own list after the push (it re-scans package-lock.json on GitHub)."
 
 ### M51 F6
-milestone: M51
+milestone: M52
 scope: engine
 title: Tests stop costing more than the work: measured, run on every push, and sessions run only what their change touches
 state: planned
@@ -13005,7 +13050,7 @@ emerald: changed
 decision: 2026-10-20
 finding: 2026-10-18
 inbox: 2026-10-18
-milestone: 2026-10-18
+milestone: 2026-10-20
 open_question: 2026-10-20
 review_entry: 2026-10-20
 rule: 2026-10-18
