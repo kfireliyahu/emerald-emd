@@ -1356,20 +1356,28 @@ Cowork spawn the system `node` instead (closed, not planned).
   entry second, once a tagged release carries it.
 
 **Measured, per surface** (Windows, 2026-10-20):
-- **Chat**: the desktop app 2.42304 (Electron 44.7.2, built-in Node 24.21.0) decides in its own code,
-  for a `node` extension whose command is `node`: unless `isUsingBuiltInNodeForMcp` is turned off
-  (unset is on), it runs the server in a utility process on its built-in Node when the manifest
-  names no Node range or its Node satisfies it — `>=20.0.0` does — and also whenever it finds no
-  system Node. A system Node is used only when the setting is off and one is found.
-- **The Code tab**: system `node`, as above.
-- **Cowork**: a server the desktop app registers reaches a Cowork task on that computer (D-508);
-  whether an installed extension does too, and on which Node, is the live check below.
+- **Chat: built-in Node.** Installed by opening the file and pressing Install, the desktop app
+  2.42304 (Electron 44.7.2, Node 24.21.0) logged *Using UtilityProcess for extension Emerald:
+  appConfig.isUsingBuiltInNodeForMcp is true and built-in node is compatible*, and the server ran
+  inside `Claude.exe --type=utility --utility-sub-type=node.mojom.NodeService`, with no `node.exe`
+  of its own. Its code, read the same day, takes that path before it looks for a system Node at all:
+  unless `isUsingBuiltInNodeForMcp` is off — the test is `!== false`, so unset is on, and it was set
+  nowhere on this machine (`claude_desktop_config.json`, `config.json`, the extension's settings
+  file) — its own Node runs a `node` extension that
+  names no Node range or one it satisfies — `>=20.0.0` — and it falls back to its own Node whenever it
+  finds no system one. So no Node is needed on the machine, and none had to be removed to show it.
+- **Cowork: the same server, built-in Node.** The one utility process answered two clients,
+  `claude-ai` and `local-agent-mode-Emerald`, and the app's bridge announced its tools to Cowork
+  beside the hand-written `emerald-ledger` entry (D-508).
+- **The Code tab: system `node`**, as above.
 
 **Consequences.** A person adds Emerald to the Claude desktop app by downloading one file and
 pressing Install, with no Node and no JSON. The asset exists from the next tagged release; until then
 the skill's new step must not reach `main`. An extension does not update itself from a GitHub
 release: a new version is a new download. A person with the extension and a hand-written entry gets
-two servers and should drop one. The Mac is untested here and is the maintainer's.
+two servers and should drop one. The app makes the extension's id from the author's name, so the
+manifest carries the bare name, never `Name <email>`. The Mac is untested here and is the
+maintainer's.
 
 **Rejected.** The plugin's `mcpServers` pointing at the bundle, as a committed file or an `https`
 URL (system `node` either way, measured). No `runtimes.node` (the app would choose the same today; the

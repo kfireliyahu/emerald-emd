@@ -1378,10 +1378,11 @@ installers: `releases/latest/download/emerald.mcpb`. It is not submitted anywher
 takes none) and does not update itself.
 
 **Which Node runs it** (measured on Windows, 2026-10-20): the desktop app 2.42304 ships Node 24.21.0
-(Electron 44.7.2) and, by its own code, runs a `node` extension on it whenever its Node satisfies
-the manifest's range or it finds no system Node — unless `isUsingBuiltInNodeForMcp` is off. Claude
-Code — the Code tab — runs a plugin's `.mcpb` on the system `node` and fails without one, so the
-plugin below keeps `npx`.
+(Electron 44.7.2), and installed, the extension ran in the app's own utility process — *built-in
+node is compatible*, its log said — serving chat and Cowork from that one process. By the app's code
+it does so whenever its Node satisfies the manifest's range or it finds no system Node, unless
+`isUsingBuiltInNodeForMcp` is off. Claude Code — the Code tab — runs a plugin's `.mcpb` on the
+system `node` and fails without one, so the plugin below keeps `npx`.
 
 ### The Claude plugin (M42 U4, D-498)
 

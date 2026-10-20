@@ -85,7 +85,9 @@ function manifest(app, tools) {
       'The database under the chat: keep tasks, notes, decisions or anything else as typed rows in a .emd file on your disk, and Claude asks for the rows it needs. No account and no network call.',
     long_description:
       "Emerald's engine as a local MCP server. A `.emd` file is a real SQLite database on your disk. Declare a format for any kind of thing you keep, read a spreadsheet, a `.json` of rows or a folder of Markdown notes onto it, and Claude asks for the matching rows instead of re-reading files. Every write is a dry run until you say commit. Every tool takes the absolute path of the `.emd` it works on. The server opens the file it is given and makes no network call of its own.",
-    author: { name: app.author.name ?? app.author, url: 'https://getemerald.dev' },
+    // The bare name, as the plugin's manifest has it: the app makes the extension's id from it, and
+    // `Name <email>` would put the address in the id.
+    author: { name: (app.author.name ?? app.author).replace(/\s*[<(].*$/, ''), url: 'https://getemerald.dev' },
     repository: { type: 'git', url: 'https://github.com/kfireliyahu/emerald-emd' },
     homepage: 'https://getemerald.dev',
     documentation: 'https://github.com/kfireliyahu/emerald-emd/blob/main/hosts/claude/README.md',
