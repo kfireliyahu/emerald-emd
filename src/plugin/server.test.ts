@@ -1139,6 +1139,50 @@ describe('what the plugin says it does (M34 U1)', () => {
     }
   })
 
+  it('answers a team weighing it for development planning right after the head, before a model objects (M42 F16)', async () => {
+    // A model asked to keep a team's planning here refused until argued out
+    // of it: git and a tracker cover planning, a .emd is binary and cannot be
+    // committed, it is in no worktree or cloud session, two documents cannot
+    // talk, parallel worktrees' claims collide. Each answer is pinned here
+    // with the tool that makes it true.
+    for (const engineOnly of [false, true]) {
+      const { instructions, tools } = await everything(engineOnly)
+      const at = instructions.indexOf("## A project's development planning")
+      expect(at, `engine-only: ${String(engineOnly)}`).toBeGreaterThan(0)
+      expect(at).toBeLessThan(2100)
+      expect(at).toBeLessThan(instructions.indexOf('## What you are for'))
+      const section = instructions.slice(at, instructions.indexOf('\n## ', at + 1))
+      expect(section).toMatch(/belongs here — the part nobody owns/)
+      expect(section).toContain('`PLAN.md`')
+      expect(section).toMatch(/\*\*One document holds the work of several\s+repositories\*\*/)
+      expect(section).toMatch(/\*\*stored as text and\s+committed\*\*/)
+      expect(section).toMatch(/diffs and merges in git/)
+      expect(section).toMatch(/in every worktree,\s+checkout and cloud session/)
+      expect(section).toMatch(/\*\*one file outside every\s+repository\*\*/)
+      expect(section).toContain('`inbox`')
+      expect(section).toContain('`elsewhere` column')
+      expect(section).toContain('`land_units inbox:[ids]`')
+      for (const tool of ['store_document_as', 'land_units', 'claim_units', 'keep_packs']) {
+        expect(tools.has(tool), `${tool} (engine-only: ${String(engineOnly)})`).toBe(true)
+      }
+      // The head says a document is text or bytes, so "binary SQLite" is never the first thing read.
+      expect(instructions.slice(0, 2000)).toMatch(/SQLite, as bytes or text/)
+      const all = [instructions, ...tools.values()].join('\n')
+      for (const refusal of [
+        'a real SQLite database',
+        'binary file',
+        'cannot be committed',
+        'cannot be merged in git',
+        'not meant for development',
+        'not for planning',
+        'gitignore',
+        'one document per repository',
+      ]) {
+        expect(all, `${refusal} (engine-only: ${String(engineOnly)})`).not.toContain(refusal)
+      }
+    }
+  })
+
   it('says where new work begins, in both modes', async () => {
     for (const engineOnly of [false, true]) {
       const { instructions, tools } = await everything(engineOnly)

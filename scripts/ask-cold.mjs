@@ -5,6 +5,7 @@
  *
  *   npm run build:plugin
  *   node scripts/ask-cold.mjs [--only engine|full] [--model <m>] [--jobs <n>] [--out <file>]
+ *                               [--question <text>] [--server <server.mjs>]
  *
  * D-506 and D-507 were both found by a session at the maintainer's workplace
  * that read the server cold — *built for money first*, then *its main strength
@@ -39,7 +40,8 @@ import { tmpdir } from 'node:os'
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path'
 
 const root = resolve(import.meta.dirname, '..')
-const server = join(root, 'dist-plugin', 'server.mjs')
+/** `--server <file>` reads another build — the one before a change, kept aside — against the same questions. */
+const server = resolve(option('--server') ?? join(root, 'dist-plugin', 'server.mjs'))
 
 /** What a stranger asks first. Add the question a session got wrong. */
 const QUESTIONS = [
@@ -48,6 +50,8 @@ const QUESTIONS = [
   "I have a CSV of the books I've read. What can you do with it here?",
   'My notes have no numbers in them. Is Emerald still useful?',
   'What would you call first in a new project?',
+  // A model at the maintainer's work refused this until argued out of it (M42 F16, D-513).
+  "Should my team's development planning live in Emerald? We have several repos, use git worktrees and cloud sessions, and already have an issue tracker.",
 ]
 
 /** The phrasings D-506 and D-507 took out of the server, and their near kin. Matched per sentence. */
@@ -61,6 +65,11 @@ const FLAGS = [
   ['add up', /\badds? up\b|\bmust agree\b|\breconcil\w*/i],
   ['numbers as the reason', /\b(no|without|lack\w*|don't have|do not have|aren't|isn't|absent)\b[^.]{0,60}\b(numbers|figures|numeric|amounts|calculations|math)\b/i],
   ['not designed for', /\b(not|isn't|wasn't|aren't) (really |primarily |specifically )?(designed|built|meant|intended|made|suited|ideal|a fit) for\b/i],
+  ['planning is covered elsewhere', /\b(git|issue tracker|tracker|tickets?|memory)\b[^.]{0,80}\b(already (cover|handle|do)|covers? (it|this|planning)|is enough|suffices?)\b/i],
+  ['binary, so not committed', /\bbinary\b|\b(can't|cannot|can not|won't|doesn't|does not) (be )?(diff|merge|commit)\w*/i],
+  ['not in worktrees or cloud', /\bgitignored?\b|\b(not|isn't|won't be) (in|visible (in|to)) (the |other |every |your )?(worktrees?|cloud)|\bcloud sessions? (can't|cannot|won't|don't)/i],
+  ['documents cannot talk', /\b(can't|cannot|don't|do not|no way to)\b[^.]{0,40}\b(talk|refer|link|point|reach)\w*[^.]{0,30}\b(other|another|across|between) (documents?|repos?|repositories|files?)/i],
+  ['per-repo process', /\bper[- ]repo(sitory)?\b[^.]{0,60}\b(docs?|documents?|files?)\b|\bprocess overhead\b|\bceremony\b|\bbureaucra\w*/i],
   ['against moving notes', /\b(wouldn't|would not|don't|do not|not) (recommend |suggest |advise )?(moving|migrating|switching|move|migrate|switch)\b|\bnot worth (it|the)\b|\b(stay|stick) with obsidian\b/i],
 ]
 
@@ -75,12 +84,23 @@ const CONVEYS = [
   ['packs optional', /\bpacks?\b/i],
 ]
 
+/** What the planning question should hear (M42 F16): asked of that answer alone. */
+const PLANNING = /development planning/i
+const PLANNING_CONVEYS = [
+  ['stored as text and committed', /\b(as|in) (plain )?text\b|\btext (form|format|file)\b|\bdiffs?\b/i],
+  ['one document across repos', /\b(across|spans?|spanning|several|multiple|many) (of your |your )?(repos|repositories)\b|\bone (document|file)\b[^.]{0,60}\b(repos|repositories)\b/i],
+  ['an inbox and an elsewhere column', /\binbox\b|\belsewhere\b/i],
+  ['plans nobody owns', /\bPLAN\.md\b|\bdrift\w*|\bnobody owns\b|\bno one owns\b/i],
+  ['a worktree session lands through the main inbox', /\bworktrees?\b[^.]{0,160}\b(inbox|propos\w*|lands?)\b|\bland_units\b/i],
+]
+
 function option(name) {
   const at = process.argv.indexOf(name)
   return at === -1 ? undefined : process.argv[at + 1]
 }
 
 const only = option('--only')
+const asking = option('--question')
 const model = option('--model')
 const jobs = Math.max(1, Number(option('--jobs') ?? 5))
 const modes = [
@@ -109,7 +129,7 @@ function newest(folder) {
   }
   return latest
 }
-if (newest(join(root, 'src', 'plugin')) > statSync(server).mtimeMs) {
+if (!option('--server') && newest(join(root, 'src', 'plugin')) > statSync(server).mtimeMs) {
   console.warn('ask-cold: src/plugin/ changed after dist-plugin/server.mjs was built — `npm run build:plugin` first, or this reads the old text\n')
 }
 
@@ -198,7 +218,9 @@ function read(mode, question, code, stdout, stderr) {
   }
   if (code !== 0 && !run.error) run.error = stderr.trim().slice(0, 400) || `claude exited ${code}`
   run.flags = matches(run.answer, FLAGS)
-  run.conveys = CONVEYS.filter(([, pattern]) => pattern.test(run.answer)).map(([label]) => label)
+  const conveys = PLANNING.test(question) ? [...CONVEYS, ...PLANNING_CONVEYS] : CONVEYS
+  run.expected = conveys.map(([label]) => label)
+  run.conveys = conveys.filter(([, pattern]) => pattern.test(run.answer)).map(([label]) => label)
   return run
 }
 
@@ -224,14 +246,15 @@ async function runAll(tasks) {
       let run = await ask(...tasks[at])
       if (run.error?.startsWith('the emerald server')) run = await ask(...tasks[at])
       results[at] = run
-      process.stderr.write(`  ${run.mode} · ${at % QUESTIONS.length + 1}/${QUESTIONS.length} ${run.error ? 'failed' : 'answered'}\n`)
+      process.stderr.write(`  ${run.mode} · ${at % questions.length + 1}/${questions.length} ${run.error ? 'failed' : 'answered'}\n`)
     }
   }
   await Promise.all(Array.from({ length: Math.min(jobs, tasks.length) }, worker))
   return results
 }
 
-const tasks = modes.flatMap((mode) => QUESTIONS.map((question) => [mode, question]))
+const questions = QUESTIONS.filter((question) => !asking || question.toLowerCase().includes(asking.toLowerCase()))
+const tasks = modes.flatMap((mode) => questions.map((question) => [mode, question]))
 console.error(`ask-cold: ${tasks.length} fresh runs against ${relative(root, server)} (${modes.map((m) => m.name).join(', ')})`)
 const runs = await runAll(tasks)
 
@@ -245,7 +268,7 @@ for (const mode of modes) {
     if (run.error) lines.push(`- **FAILED**: ${run.error}`)
     lines.push(`- red flags: ${run.flags.length ? '' : 'none'}`)
     for (const flag of run.flags) lines.push(`  - **${flag.label}**: “${flag.sentence}”`)
-    const missing = CONVEYS.map(([label]) => label).filter((label) => !run.conveys.includes(label))
+    const missing = run.expected.filter((label) => !run.conveys.includes(label))
     lines.push(`- said: ${run.conveys.join(', ') || 'none of them'}`)
     lines.push(`- did not say: ${missing.join(', ') || 'nothing missing'}`)
     lines.push('', run.answer.trim().replace(/^/gm, '> '), '')
@@ -256,6 +279,7 @@ const failed = runs.filter((run) => run.error).length
 const cost = runs.reduce((sum, run) => sum + run.cost, 0)
 lines.push('---', '', `${runs.length} runs · ${flagged} with a red flag · ${failed} failed · $${cost.toFixed(2)}`)
 lines.push('', 'Judge each answer against D-506 and D-507: any kind of thing; a model asks for rows instead of re-reading files; typed fields and links; every session sees the same rows; checks one benefit, never the reason; a folder of Markdown notes read where it is; packs optional.')
+lines.push('', 'And the planning answer against D-513: plans nobody owns (PLAN.md, notes) are what it is for, not what git or a tracker owns; one document holds work across repos; stored as text and committed it diffs, merges and is in every checkout, or one file lives outside every repo; documents talk through an inbox and an elsewhere column; a worktree session proposes its landing to the main inbox and one driver lands it.')
 
 const report = `${lines.join('\n')}\n`
 mkdirSync(dirname(out), { recursive: true })

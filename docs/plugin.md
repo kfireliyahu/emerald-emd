@@ -1496,6 +1496,7 @@ a session at the maintainer's workplace. After `npm run build:plugin`:
 
 ```
 node scripts/ask-cold.mjs                  # both modes; --only engine|full, --model <m>, --out <file>
+node scripts/ask-cold.mjs --question planning --server <a build kept aside>   # one question, an earlier build
 ```
 
 Each question in the script's list is its own fresh `claude -p` in a new empty temp folder, with
@@ -1512,6 +1513,18 @@ never the repository. **A flag asks for judgment, it is not a failure** — the 
 answers against D-506 and D-507: any kind of thing; asking for rows instead of re-reading files; typed
 fields and links; the same rows for every session; checks one benefit; a Markdown folder read in
 place; packs optional. A question a session somewhere got wrong goes into the list.
+
+**The planning question has its own flags and points** (M42 F16, D-513): a model at the
+maintainer's work refused to keep a team's development planning here until argued out of it. Its
+answer is flagged for *git or a tracker already covers it*, *binary, so not committed*, *not in
+worktrees or the cloud*, *documents cannot talk* and *per-repository process*, and read for what
+both instruction blocks now say right after their head: plans nobody owns (`PLAN.md`, notes) are
+what it is for; one document across repositories; stored as text and committed, or one file outside
+every repository; an inbox and an `elsewhere` column; a worktree session's landing proposed to the
+main document's inbox. `--server` reads a build kept aside, so one session compares before and
+after. **The `claude` CLI has to be logged in itself**: it drops the `CLAUDE*` variables of the
+session that runs it, so a session whose host lends it its own sign-in gets *Not logged in* until
+someone runs `claude` in a terminal and signs in.
 
 It spends the maintainer's Claude usage through their own `claude` CLI (ten runs, $0.74 on the
 default model on 2026-10-19), so it is a session's tool only: never in CI, never imported by `src/`, and the app and
