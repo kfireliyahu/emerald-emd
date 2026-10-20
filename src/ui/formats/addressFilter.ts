@@ -24,7 +24,13 @@
  * planned}` in a conversation — and `?columns:unit=title,state` is which of a
  * format's columns its lines and cards draw. No column's name holds a `.` or a
  * `:`, so neither is ever read as a column held. `addressFilter` reads the
- * format's own filter alone; `addressView` all three.
+ * format's own filter alone; `addressView` all of them.
+ *
+ * **What the table is sorted by** (M42 F14): `?order:date=descending` — the
+ * column after `order:`, and which way. Held here rather than in the screen,
+ * because the table and an entry are two routes and the screen is drawn afresh
+ * between them: a Back, a delete, a reload and a bookmark keep it, and the
+ * entry's pager walks the rows in it. Absent is the format's default order.
  *
  * Pure, and no React: the frame's host code reads it too.
  */
@@ -43,15 +49,29 @@ export const COLUMNS_KEY = 'columns:'
 /** Between a folded format and its column, in a held key: `unit.state=planned` (M37 U5). */
 export const FOLD_MARK = '.'
 
+/** The key a table's sort rides under: `order:date=descending` (M42 F14). */
+export const ORDER_KEY = 'order:'
+
+const DESCENDING = 'descending'
+const ASCENDING = 'ascending'
+
+/** A column sorted by, and which way — `format_rows`' `order` and `descending`. */
+export interface AddressOrder {
+  readonly column: string
+  readonly descending: boolean
+}
+
 /** Which columns a format's lines draw, by format — absent is what its views declare. */
 export type ColumnChoice = Readonly<Record<string, readonly string[]>>
 
-/** Everything a view's address holds: its own filter, what it folds held, and the columns chosen. */
+/** Everything a view's address holds: its own filter, what it folds held, the columns chosen and the sort. */
 export interface ViewAddress {
   readonly filter: RowFilter
   /** `unit.state` to its held value, as `match` holds one. */
   readonly folds: Readonly<Record<string, unknown>>
   readonly columns: ColumnChoice
+  /** Absent is the format's default order. */
+  readonly order?: AddressOrder
 }
 
 /** Whether a held key names a folded format's column rather than the format's own. */
@@ -72,21 +92,29 @@ function memberText(value: unknown): string {
 
 /**
  * A filter as an address's query — `?action=author&state=open` — or empty when
- * it asks for nothing; then what the folds are held to, and the columns chosen.
+ * it asks for nothing; then what the folds are held to, the columns chosen and
+ * the sort.
  */
 export function filterAddress(
   filter: RowFilter,
-  more: { readonly folds?: Readonly<Record<string, unknown>>; readonly columns?: ColumnChoice } = {},
+  more: {
+    readonly folds?: Readonly<Record<string, unknown>>
+    readonly columns?: ColumnChoice
+    readonly order?: AddressOrder
+  } = {},
 ): string {
   const parts: string[] = []
   for (const [name, value] of [...Object.entries(filter.match ?? {}), ...Object.entries(more.folds ?? {})]) {
-    if (name === SEARCH_KEY || name.startsWith(COLUMNS_KEY)) continue
+    if (name === SEARCH_KEY || name.startsWith(COLUMNS_KEY) || name.startsWith(ORDER_KEY)) continue
     const { values, not } = heldAs(value)
     parts.push(`${escaped(name)}${not ? NOT : ''}=${escaped(values.map(memberText).join(','))}`)
   }
   if (filter.search !== undefined && filter.search !== '') parts.push(`${SEARCH_KEY}=${escaped(filter.search)}`)
   for (const [format, columns] of Object.entries(more.columns ?? {})) {
     parts.push(`${COLUMNS_KEY}${escaped(format)}=${escaped(columns.join(','))}`)
+  }
+  if (more.order !== undefined) {
+    parts.push(`${ORDER_KEY}${escaped(more.order.column)}=${more.order.descending ? DESCENDING : ASCENDING}`)
   }
   return parts.length === 0 ? '' : `?${parts.join('&')}`
 }
@@ -119,12 +147,13 @@ export function addressFilter(query: string): RowFilter {
   return addressView(query).filter
 }
 
-/** An address's query, read back whole: the filter, what the folds are held to, and the columns chosen. */
+/** An address's query, read back whole: the filter, what the folds are held to, the columns chosen and the sort. */
 export function addressView(query: string): ViewAddress {
   const params = new URLSearchParams(query.startsWith('?') ? query.slice(1) : query)
   const held = new Map<string, { values: string[]; not: boolean }>()
   const columns: Record<string, readonly string[]> = {}
   let search: string | undefined
+  let order: AddressOrder | undefined
   for (const [key, value] of params) {
     if (key === SEARCH_KEY) {
       search = value
@@ -133,6 +162,12 @@ export function addressView(query: string): ViewAddress {
     if (key.startsWith(COLUMNS_KEY)) {
       // An empty list is every column let go but the name: `columns:unit=`.
       columns[key.slice(COLUMNS_KEY.length)] = value === '' ? [] : value.split(',').filter((each) => each !== '')
+      continue
+    }
+    if (key.startsWith(ORDER_KEY)) {
+      // `order:date` alone, or anything but `descending`, is the column's own way up.
+      const column = key.slice(ORDER_KEY.length)
+      if (column !== '') order = { column, descending: value === DESCENDING }
       continue
     }
     const not = key.endsWith(NOT)
@@ -152,6 +187,7 @@ export function addressView(query: string): ViewAddress {
     },
     folds,
     columns,
+    ...(order === undefined ? {} : { order }),
   }
 }
 

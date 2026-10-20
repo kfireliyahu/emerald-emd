@@ -21,7 +21,7 @@ import { declareFormatTool, formatRowsTool, recordFormatRowsTool } from '@/plugi
 import { NO_CLIENT } from '@/plugin/tools/tool.ts'
 import { tempDir } from '@/testing/tempDir'
 
-import { addressFilter } from './addressFilter.ts'
+import { addressFilter, addressView } from './addressFilter.ts'
 import { entryList, heldIds, listColumns, listQuery } from './entryList.ts'
 
 const DAY = '2026-10-14'
@@ -80,11 +80,15 @@ async function library(): Promise<string> {
 }
 
 /** Every id `format_rows` answers, page by page — the tool's own `offset`. */
-async function toolIds(path: string, filter: RowFilter): Promise<readonly string[]> {
+async function toolIds(
+  path: string,
+  filter: RowFilter,
+  order: { readonly order?: string; readonly descending?: boolean } = {},
+): Promise<readonly string[]> {
   const found: string[] = []
   for (let offset = 0; ; offset += 200) {
     const answer = await formatRowsTool.run(
-      { path, format: 'book', columns: ['title'], limit: 200, offset, ...filter },
+      { path, format: 'book', columns: ['title'], limit: 200, offset, ...filter, ...order },
       NO_CLIENT,
     )
     const ids = answer.match(/^\| [0-9a-f-]{36} \|/gm)?.map((line) => line.slice(2, 38)) ?? []
@@ -122,6 +126,36 @@ describe('the list beside an entry (M37 U2b)', () => {
     }
     // Hundreds, not a page of them: the list is uncapped where the Table stops at 200.
     expect(entryList(db, book, declarations, listQuery(db, book, declarations, {}, order, DAY), SHAPE)).toHaveLength(350)
+    db.close()
+  })
+
+  /**
+   * **The pager walks the table's sort** (M42 F14): the sort rides in the
+   * address beside the filter, so the entry page, drawn afresh on its own
+   * route, reads the order the table was in — and pages through what
+   * `format_rows` answers for the same `order` and `descending`.
+   */
+  it('holds the rows in the order the address carries, as format_rows answers them', async () => {
+    const path = await library()
+    const db = await openDatabase(readFileSync(path))
+    const declarations = listFormats(db)
+    const book = declarations.find((each) => each.name === 'book')
+    if (book === undefined) throw new Error('book is declared')
+
+    for (const [address, told] of [
+      ['?order:pages=descending', { order: 'pages', descending: true }],
+      ['?state=read&order:finished=ascending', { order: 'finished', descending: false }],
+      ['?search=Book 1&order:state=descending', { order: 'state', descending: true }],
+    ] as const) {
+      const { filter, order } = addressView(address)
+      expect(order, address).toEqual({ column: told.order, descending: told.descending })
+      const listed = entryList(db, book, declarations, listQuery(db, book, declarations, filter, order, DAY), SHAPE)
+      expect(listed.map((row) => row.id), address).toEqual(await toolIds(path, filter, told))
+    }
+    // Most pages first: not the name's order the screen falls back to.
+    const [most] = entryList(db, book, declarations, listQuery(db, book, declarations, {}, { column: 'pages', descending: true }, DAY), SHAPE)
+    const [named] = entryList(db, book, declarations, listQuery(db, book, declarations, {}, { column: 'title', descending: false }, DAY), SHAPE)
+    expect(most?.id).not.toBe(named?.id)
     db.close()
   })
 

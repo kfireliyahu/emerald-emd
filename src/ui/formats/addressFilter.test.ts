@@ -58,6 +58,24 @@ describe('a format’s filter in its address (M44 U6)', () => {
     expect(addressView(filterAddress({ match: { 'unit.state': { not: 'built' } } })).folds).toEqual({ 'unit.state': { not: 'built' } })
   })
 
+  it('carries the table’s sort beside the filter, and never reads it as a column held (M42 F14)', () => {
+    const said = filterAddress({ match: { state: 'open' }, search: 'bidi' }, { order: { column: 'date', descending: true } })
+    expect(said).toBe('?state=open&search=bidi&order:date=descending')
+    const read = addressView(said)
+    expect(read.filter).toEqual({ match: { state: 'open' }, search: 'bidi' })
+    expect(read.order).toEqual({ column: 'date', descending: true })
+    expect(addressView(filterAddress({}, { order: { column: 'title', descending: false } })).order).toEqual({
+      column: 'title',
+      descending: false,
+    })
+    // Anything but `descending` is the column's own way up; no column is no sort.
+    expect(addressView('?order:title').order).toEqual({ column: 'title', descending: false })
+    expect(addressView('?order:=descending').order).toBeUndefined()
+    expect(addressView('?state=open').order).toBeUndefined()
+    // A Hebrew column's name goes there and back as typed.
+    expect(addressView(filterAddress({}, { order: { column: 'תאריך', descending: true } })).order?.column).toBe('תאריך')
+  })
+
   it('reads one folded format’s filter, and writes it back among the others (M37 U5)', () => {
     const folds = { 'unit.state': 'planned', 'unit.scope': 'engine', 'decision.state': 'live' }
     expect(foldFilter(folds, 'unit')).toEqual({ match: { state: 'planned', scope: 'engine' } })

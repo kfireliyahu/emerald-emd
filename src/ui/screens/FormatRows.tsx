@@ -209,11 +209,12 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
   const [typed, setTyped] = useState<{ readonly key: string; readonly draft: RowDraft } | undefined>()
   // **The filter is the address's** (M44 U6, U7): `?state=open&search=bidi`,
   // so back, a reload and a bookmark keep it, and the frame opens on it.
-  const { filter, address, set: setFilter, clear: clearFilter, columns, setColumns } = useAddressFilter()
+  // The sort rides there too (M42 F14): the table and an entry are two routes,
+  // and this screen is drawn afresh between them.
+  const { filter, address, set: setFilter, clear: clearFilter, columns, setColumns, order, setOrder } = useAddressFilter()
   const search = filter.search ?? ''
   const setSearch = (text: string): void => setFilter({ ...filter, search: text }, true)
   const filtered = isFiltered(filter)
-  const [order, setOrder] = useState<Order | undefined>(undefined)
   // The rows, or one of the format's rollups by name (M25 E2, D-271).
   const [view, setView] = useState<string | undefined>(undefined)
   const [deleting, setDeleting] = useState<StoredRow | undefined>(undefined)
@@ -294,7 +295,7 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
 
     const formats = indexOf(declarations)
     const units = listUnits(db)
-    const sort = order ?? defaultOrder(declaration)
+    const sort = sortOf(declaration, order)
     const { query: asked, refusal } = filteredQuery(db, declaration, filter, declarations)
     const query: RowQuery = {
       ...asked,
@@ -531,9 +532,11 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
     if (db === undefined || data?.declaration === undefined || !isFiltered(filter)) return
     if (listed.some((row) => row.id === entry)) return
     const kept: RowFilter = filter.match === undefined ? {} : { match: filter.match }
-    const query = listQuery(db, data.declaration, data.declarations, kept, order ?? defaultOrder(data.declaration), toISODate(today()))
+    const query = listQuery(db, data.declaration, data.declarations, kept, sortOf(data.declaration, order), toISODate(today()))
     const holds = isFiltered(kept) && heldIds(db, data.declaration, query).includes(entry)
-    navigate(entryPath(name, entry) + (holds ? filterAddress(kept) : ''), { replace: true })
+    navigate(entryPath(name, entry) + filterAddress(holds ? kept : {}, order === undefined ? {} : { order }), {
+      replace: true,
+    })
   }, [name, entry])
 
   /**
@@ -693,11 +696,13 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
      */
     const searchList = (next: RowFilter): void => {
       if (existing === undefined) return
-      const query = listQuery(db, declaration, data.declarations, next, order ?? defaultOrder(declaration), toISODate(today()))
+      const query = listQuery(db, declaration, data.declarations, next, sortOf(declaration, order), toISODate(today()))
       const held = heldIds(db, declaration, query)
       const to = held.length === 0 || held.includes(existing) ? existing : (held[0] ?? existing)
       if (to !== existing) setTyped(undefined)
-      navigate(entryPath(declaration.name, to) + filterAddress(next), { replace: true })
+      navigate(entryPath(declaration.name, to) + filterAddress(next, order === undefined ? {} : { order }), {
+        replace: true,
+      })
     }
     const view = (
       <EntryView
@@ -1185,7 +1190,7 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
           first={data.rows.length + 1}
           labels={data.labels ?? new Map()}
           links={data.links}
-          order={order ?? defaultOrder(declaration)}
+          order={sortOf(declaration, order)}
           widths={data.widths}
           foot={
             locked !== undefined || filtered
@@ -1216,7 +1221,7 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
                       filter={filter}
                       onChange={setFilter}
                       onClose={close}
-                      order={order ?? defaultOrder(declaration)}
+                      order={sortOf(declaration, order)}
                       onSort={setOrder}
                     />
                   ),
@@ -1441,6 +1446,17 @@ function boardData(
 function defaultOrder(declaration: FormatDeclaration): Order | undefined {
   const first = labelColumn(declaration)
   return first === undefined ? undefined : { column: first.name, descending: false }
+}
+
+/**
+ * **The order the table is in: the address's, when it names a column the
+ * format has** (M42 F14) — stored or worked out — and the default otherwise:
+ * a bookmark kept from before a column was renamed sorts by the name, not by id.
+ */
+function sortOf(declaration: FormatDeclaration, order: Order | undefined): Order | undefined {
+  if (order === undefined) return defaultOrder(declaration)
+  const named = (each: { readonly name: string }): boolean => each.name === order.column
+  return declaration.columns.some(named) || (declaration.derived ?? []).some(named) ? order : defaultOrder(declaration)
 }
 
 /** The foot's drafts, the batch each belongs to, and the last refusal. */

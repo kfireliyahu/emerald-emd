@@ -20,7 +20,7 @@ import { ChoiceField } from '@/ui/components/ChoiceField.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
 import { useDismiss } from '@/ui/components/useDismiss.ts'
 
-import { addressView, filterAddress, type ColumnChoice } from './addressFilter.ts'
+import { addressView, filterAddress, type AddressOrder, type ColumnChoice } from './addressFilter.ts'
 import { toISODate } from '@/core/time.ts'
 import { parseClockWords } from '@/domain/format/clock.ts'
 import { today } from '@/ui/today.ts'
@@ -41,16 +41,31 @@ function isClockWords(value: unknown): boolean {
  * beside it** (M37 U5): `folds` and `columns`, each with its own setter, and a
  * change to any one keeps the other two — a filter changed on the roadmap
  * keeps the units' columns chosen.
+ *
+ * **And the table's sort** (M42 F14): `order`, absent for the format's default,
+ * and `setOrder`, which replaces the entry as a search does — Back is not a
+ * click on a header. Every other change keeps it, so a filter cleared is the
+ * same rows in the same order.
  */
 export function useAddressFilter() {
   const location = useLocation()
   const navigate = useNavigate()
-  const { filter, folds, columns } = useMemo(() => addressView(location.search), [location.search])
+  const { filter, folds, columns, order } = useMemo(() => addressView(location.search), [location.search])
   const go = (
-    next: { filter?: RowFilter; folds?: Readonly<Record<string, unknown>>; columns?: ColumnChoice },
+    next: {
+      filter?: RowFilter
+      folds?: Readonly<Record<string, unknown>>
+      columns?: ColumnChoice
+      order?: AddressOrder | null
+    },
     replace: boolean,
   ): void => {
-    const search = filterAddress(next.filter ?? filter, { folds: next.folds ?? folds, columns: next.columns ?? columns })
+    const sort = next.order === null ? undefined : (next.order ?? order)
+    const search = filterAddress(next.filter ?? filter, {
+      folds: next.folds ?? folds,
+      columns: next.columns ?? columns,
+      ...(sort === undefined ? {} : { order: sort }),
+    })
     navigate({ pathname: location.pathname, search }, { replace })
   }
   const set = (next: RowFilter, replace = false): void => go({ filter: next }, replace)
@@ -58,10 +73,13 @@ export function useAddressFilter() {
     filter,
     folds,
     columns,
+    order,
     address: location.search,
     set,
     setFolds: (next: Readonly<Record<string, unknown>>, replace = false): void => go({ folds: next }, replace),
     setColumns: (next: ColumnChoice): void => go({ columns: next }, false),
+    /** `undefined` is the format's default order again. */
+    setOrder: (next: AddressOrder | undefined): void => go({ order: next ?? null }, true),
     clear: () => set({}),
   }
 }
