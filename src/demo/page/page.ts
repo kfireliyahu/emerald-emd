@@ -69,7 +69,7 @@ export const README_INSTALL_URL = `${SOURCE_URL}#installing-it`
 
 /**
  * The installers and the checksums beside them, by the name each is linked under, and
- * the Claude desktop extension the same release carries (M42 F9, F15), which the page
+ * the Claude desktop extension the same release carries (M42 F9, F13), which the page
  * offers first to anyone with the Claude app.
  */
 export const INSTALLERS: Readonly<Record<'windows' | 'arm64' | 'x64' | 'sums' | 'extension', string>> = {
