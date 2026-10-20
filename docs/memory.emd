@@ -11906,6 +11906,18 @@ branch: claude/unruffled-kare-752ad2
 commit: 8880d64
 report: Cause: React Router 7.18's HashRouter moves the location inside startTransition, while the document store's delete renders urgently. That first render is still on the deleted entry's address, finds no row, and the MISSING branch's <Navigate> went to formatPath(name), so the filter was dropped. Fix: the missing-row redirect and the back button both go to tablePath(name, address), which keeps the filter and search the entry was opened with (a stale bookmark keeps its filter too). Leaving without deleting already kept the filter. Browser check on a copy of memory.emd, held in memory only: open_question filtered to state=open with search 'the' (22 of 51), open an entry, delete it, and you're back on the same address at 21 of 50 with both chips. Scroll is kept. Not fixed: sort. It is FormatRows' component state, and the screen remounts between the table and an entry route, so a plain Back loses it too, as does the entry pager's order. That's a separate gap, proposed as a follow-up. Typecheck is clean, all 4777 tests pass, docs:check shows 0 errors.
 
+### M42 F15
+milestone: M42
+scope: app
+title: Emerald's page offers emerald.mcpb as the first way in for the Claude desktop app
+state: in_progress
+brief: Since release v0.1.5 the easiest way in for anyone with the Claude desktop app is emerald.mcpb (D-509, M42 F9): download, double-click, Install; it runs on the app's own Node, in chat and in Cowork on their computer. Emerald's page (getemerald.dev, src/demo/page/) links the installers through releases/latest but never names it. Add it to Get Emerald's ways in, ahead of the Claude plugin (Claude Code) and the npm line (any other MCP client), linked with installerLink / LATEST_DOWNLOAD (https://github.com/kfireliyahu/emerald-emd/releases/latest/download/emerald.mcpb). Keep the page's voice and layout, no new section; words in copy/en.ts, the address in page.ts. Done when build:demo and check:tours pass and the built page's card links the file.
+files: demo-page.html, src/demo/page/copy/en.ts, src/demo/page/copy.ts, src/demo/page/page.ts, src/demo/page/main.ts, src/demo/page/rail.test.ts
+taken_by: claude-code determined-jang-7d7492
+started: 2026-10-20
+branch: claude/determined-jang-7d7492
+paths: "demo-page.html\nsrc/demo/page/"
+
 ### M42 F2
 milestone: M42
 scope: engine

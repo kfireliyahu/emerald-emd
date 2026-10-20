@@ -43,6 +43,16 @@ describe('the page as a roadmap (M33 U8)', () => {
     expect(named('x64')).toContain(INSTALLERS.x64.replace(/\.dmg$/, '.${ext}'))
   })
 
+  it('offers the Claude extension the release workflow attaches, by its own name (M42 F15)', () => {
+    const script = readFileSync(new URL('../../../scripts/mcpb.mjs', import.meta.url), 'utf8')
+    expect(script).toContain(`join(root, 'release', '${INSTALLERS.extension}')`)
+    expect(installerLink(INSTALLERS.extension, true)).toBe(
+      'https://github.com/kfireliyahu/emerald-emd/releases/latest/download/emerald.mcpb',
+    )
+    const page = readFileSync(new URL('../../../demo-page.html', import.meta.url), 'utf8')
+    expect(page).toContain('data-installer="extension"')
+  })
+
   it('links the newest release’s file once the names are out, and its page until then (M42 U9)', () => {
     expect(installerLink(INSTALLERS.windows, true)).toBe(`${SOURCE_URL}/releases/latest/download/Emerald-Setup.exe`)
     expect(installerLink(INSTALLERS.sums, true)).toBe(`${SOURCE_URL}/releases/latest/download/SHA256SUMS`)
