@@ -1,14 +1,18 @@
 ---
 name: emerald-setup
-description: Tell the person how to make Emerald's tools available on their own computer. Use when they want to open, create or work in a .emd, declare a format, or ask Emerald for rows, and this session has no Emerald tools (no start_here, formats or declare_format) even though the emerald plugin's skills are here.
+description: Tell the person how to make Emerald's tools available on their own computer. Use when they want to open, create or work in a .emd, declare a format, or ask Emerald for rows, and this session has no Emerald tools under any name or prefix (no start_here, formats or declare_format) even though the emerald plugin's skills are here.
 ---
 
 # Make Emerald available here
 
-The emerald plugin is installed, but its MCP server isn't running in this session. A Cowork task in
-the cloud starts a plugin's skills and hooks but never its MCP server, and a server there couldn't
-open a `.emd` on the person's computer anyway. The fix is the person's, on their own computer, and
-takes a few minutes. Tell them once, plainly, in your own words. Don't start the
+**First, look at your tools.** If any have `emerald` in their name, whatever the prefix (for
+example `mcp__remote-devices__emerald__start_here`, reached through the person's computer), then
+Emerald is already there: use those tools, and skip everything below.
+
+Otherwise: the emerald plugin is installed, but its MCP server isn't running in this session. A
+Cowork task in the cloud starts a plugin's skills and hooks but never its MCP server. It can still
+reach an Emerald the person installed in the Claude app on their own computer, so the fix is
+theirs, on that computer, and takes a few minutes. Tell them once, plainly, in your own words. Don't start the
 server by hand here, and don't write files for them to import later, unless they ask for that
 instead.
 

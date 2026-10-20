@@ -11844,6 +11844,29 @@ branch: main
 commit: 2f92f70
 paths: "src/demo/page/main.ts\nsrc/demo/tour/player.ts\nsrc/demo/tour/Frame.tsx\nsrc/demo/tour/main.tsx"
 
+### M42 F10
+milestone: M42
+scope: plugin
+title: The setup hook and skill defer to Emerald tools under any prefix, so a cloud task bridged to the person's computer isn't told its working tools are missing
+landed: 2026-10-20
+decision: D-508
+state: built
+brief: Found 2026-10-20 in a cloud Cowork task on the work Mac: M42 F8's SessionStart hook said Emerald's tools couldn't run there and told the person to install the .mcpb, while the task had them through the desktop bridge as mcp__remote-devices__emerald__* and they worked. A hook can't see the tool list, so the hook's preface and the emerald-setup skill open by telling the model to check its own tools: any with emerald in the name, under any prefix, means use them and skip the steps. README and docs/plugin.md lose the claim that a cloud task can't reach the person's computer.
+files: hosts/claude/hooks/no-server.mjs, hosts/claude/skills/emerald-setup/SKILL.md, hosts/claude/README.md, docs/plugin.md, hosts/claude/.claude-plugin/plugin.json (0.1.5+4), hosts/claude-plugin-release.json
+taken_by: Claude Code (desktop)
+started: 2026-10-20
+branch: main
+paths: hosts/claude/, docs/plugin.md
+report: The hook's preface and the emerald-setup skill now open by telling the model to check its own tools: any with emerald in the name, under any prefix (e.g. mcp__remote-devices__emerald__*, bridged from the person's computer), means use them and skip the steps. README and docs/plugin.md no longer say a cloud task can't reach the person's computer. Plugin 0.1.5+4, no npm. Tests: hosts/claude 41 pass; docs:check clean. M42 F8's hook did fire on a real cloud Cowork task, which is how this was found.
+
+### M42 F11
+milestone: M42
+scope: engine
+title: arrange_views: an agenda's done setting can name a member called done, and an entry view's order is stored exactly as sent
+state: planned
+brief: Two bugs the maintainer hit 2026-10-20 while moving a real document onto declared formats (its names stay out of the repo; reproduce with synthetic ones). (1) AGENDA DONE: on a format whose state enum is open, in_progress, done, dropped, arrange_views view:agenda column:state accepts setting 'done dropped' but refuses every spelling that includes the member done: 'done done', 'done done dropped', 'done dropped done' and 'done dropped, done' all get "`done done` is not a agenda setting; a agenda keeps date, done <members>, line."; 'done done, dropped' and 'done DONE, DROPPED' get "`done` names members of an enum (...) that say a row is finished; `state` is enum." The member done seems to collide with the done keyword when the setting is parsed, so finished rows count as overdue unless the person drops the setting. Fix the parse so 'done done dropped' and the comma form mark both, and make the comma-list refusal say what is wrong rather than describe the setting. Nit: 'a agenda' should read 'an agenda' (grep for every 'a agenda' / 'a entry' the view words build). (2) ENTRY ORDER: one arrange_views commit set a board's lanes, an agenda's date and an entry view's order [title, state, areas, due, …]; the commit echoed that order, but the next dry run's 'Was' showed title and the 10th column swapped, and the app's entry heading (the first column) showed the wrong field. Set again and confirmed by formats, then extend_format added three link columns and a constraint, and the next dry run showed title and state swapped, with the new columns appended. Expected: the order is stored exactly as sent, and extend_format leaves the existing order alone (appending new columns is fine). Find where order is written or rebuilt (arrange_views several settings in one commit; extend_format rebuilding the table or its views) and add a test for each case. Both reach people only with a new emerald-mcp and a release, which are the maintainer's.
+paths: src/domain/format/
+
 ### M42 F2
 milestone: M42
 scope: engine

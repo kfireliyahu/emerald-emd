@@ -1409,9 +1409,10 @@ maintainer's *use npm for it* (D-499, amending D-498's launcher) — but one hoo
 **Where the host starts no plugin server** (M42 F8, D-508). Chat and Cowork take a plugin from the
 person's claude.ai account, and a Cowork task in the cloud loads its skills and hooks but skips its
 MCP server on purpose. The log says `CLAUDE_CODE_SKIP_PLUGIN_MCP_SERVERS is set` (found on the
-maintainer's work Mac, 2026-10-20). A server there couldn't reach the person's `.emd` anyway, so the
-fix is the person's: add `emerald-mcp` to the Claude desktop app's own `claude_desktop_config.json`,
-which reaches chat and Cowork on that computer. That is how the maintainer's Windows PC has run it
+maintainer's work Mac, 2026-10-20). An Emerald installed in the Claude desktop app itself (the
+`.mcpb`, or `emerald-mcp` in its own `claude_desktop_config.json`) runs on that computer and reaches
+chat and Cowork there. A cloud task reaches it too, through the app's bridge to the computer, as
+`mcp__remote-devices__emerald__*` (seen on the work Mac the same day, M42 F10). That is how the maintainer's Windows PC has run it
 in Cowork all along. The plugin says so twice, both from its own folder, so a change needs a plugin
 release and never a new package:
 - **The `emerald-setup` skill** holds the steps once: find `npx`, the file on macOS and Windows,
@@ -1419,7 +1420,10 @@ release and never a new package:
   about a `.emd` that has no Emerald tools.
 - **A third `SessionStart` hook**, `node "${CLAUDE_PLUGIN_ROOT}/hooks/no-server.mjs"`, plain Node
   with no imports but Node's, prints that skill when `CLAUDE_CODE_SKIP_PLUGIN_MCP_SERVERS` is set
-  and nothing otherwise.
+  and nothing otherwise. A hook can't see the session's tools, so both open by telling the model to
+  check its own: any tool with `emerald` in its name, under any prefix, is the person's Emerald, and
+  the steps are skipped (M42 F10). The first version said the tools were missing while the bridged
+  ones worked.
 
 `scripts/pin-plugin.mjs` moves the skill's `emerald-mcp@<version>` with the other pins.
 

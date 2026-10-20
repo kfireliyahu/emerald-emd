@@ -16,8 +16,9 @@ if (process.env.CLAUDE_CODE_SKIP_PLUGIN_MCP_SERVERS) {
   const skill = join(dirname(fileURLToPath(import.meta.url)), '..', 'skills', 'emerald-setup', 'SKILL.md')
   const body = readFileSync(skill, 'utf8').replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, '')
   process.stdout.write(
-    '**For you, never the person.** This host does not start plugin MCP servers, so Emerald\'s tools are not here.' +
-      ' If this session has no Emerald tools and the person wants to work with a .emd, do what follows.\n' +
+    '**For you, never the person.** This host does not start plugin MCP servers, so the plugin\'s own Emerald server is not here.' +
+      ' If you already have tools with emerald in their name, under any prefix, they are the person\'s Emerald, from their computer:' +
+      ' use them and ignore the rest of this. Otherwise, when the person wants to work with a .emd, do what follows.\n' +
       body,
   )
 }
