@@ -277,6 +277,16 @@ export function formatPath(name: string): string {
 }
 
 /**
+ * **The table an entry page goes back to, as it was filtered** (M42 F12): by
+ * its back button, after a delete, and when its row is gone. `search` is the
+ * address's — `?state=open&search=bidi`, or empty — so the filter the entry was
+ * opened from is the one the table comes back with.
+ */
+export function tablePath(name: string, search: string): string {
+  return formatPath(name) + search
+}
+
+/**
  * One entry of a format — **the one view of a row** (M26 U6; M35 U2, D-401):
  * a row's id, or `new` for a row not written yet. An id is a uuid, so it is
  * never the word `new`. Every way in lands here; `page/:id` redirects.

@@ -11883,9 +11883,12 @@ paths: src/plugin/tools/views.ts, src/plugin/tools/formats.ts, src/data/reposito
 milestone: M42
 scope: app
 title: Deleting an entry from a filtered table returns to the table as it was filtered
-state: planned
+state: in_progress
 brief: Maintainer, 2026-10-20: in the app, open a format's table, filter it, open an entry, delete it. The app goes back to the table, but the filter is gone and every row shows. Expected: back on the same table, with the same filter (and search, sort, scroll if the table keeps them), minus the deleted row. Find where the entry page's delete navigates (the formats UI under src/ui/formats/) and whether the table's filter lives in the route, the store or component state. The fix is likely to send the person back to where they came from (history back, or the table's own URL with its query) rather than to the bare table route. Check that leaving an entry without deleting already keeps the filter. If it doesn't, the same fix covers both. Add a test in the repo's style, plus a browser check: filter, open, delete, still filtered. App-only; reaches people with the next release.
 files: src/ui/formats/ (the entry page's delete, the table's filter state), docs/11-ui-design-language.md only if a rule changes
+taken_by: claude-code unruffled-kare-752ad2
+started: 2026-10-20
+branch: claude/unruffled-kare-752ad2
 
 ### M42 F2
 milestone: M42
