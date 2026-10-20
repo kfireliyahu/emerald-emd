@@ -11,6 +11,7 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build && node scripts/third-party-notices.mjs dist",
     "build:plugin": "tsc --noEmit && vite build --mode frame && vite build --mode plugin && vite build --mode claude-hooks && vite build --mode claude-status-line && node scripts/third-party-notices.mjs dist-plugin && node scripts/npm-package.mjs",
+    "build:mcpb": "node scripts/mcpb.mjs",
     "build:demo": "npm run build:plugin && node scripts/make-demo-document.mjs && vite build --mode demo && node scripts/third-party-notices.mjs dist-demo",
     "dev:demo": "node scripts/make-demo-document.mjs && vite --mode demo",
     "check:tours": "npm run build:demo && node scripts/check-tours.mjs",
@@ -48,6 +49,7 @@
     "zustand": "^4.5.5"
   },
   "devDependencies": {
+    "@anthropic-ai/mcpb": "2.1.2",
     "@tailwindcss/vite": "^4.0.0",
     "@types/node": "^24.13.3",
     "@types/react": "^18.3.5",

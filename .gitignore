@@ -75,6 +75,8 @@ build/icons.log
 
 # The Claude plugin's MCP server (M7). Built, not committed, like the other two outputs.
 /dist-plugin
+# Its desktop extension's contents, staged by scripts/mcpb.mjs before it packs release/emerald.mcpb (M42 F9)
+/dist-mcpb
 
 # The MCP App page, built by `vite build --mode frame` and embedded in the plugin (M41 U1)
 /.frame

@@ -213,6 +213,12 @@ app.whenReady().then(async () => {
 
     lines.push(...(await write(pngAt, 'icon', applicationSvg(body))))
     lines.push(...(await write(pngAt, 'document', documentSvg(body))))
+
+    // The desktop extension's icon (scripts/mcpb.mjs): the mark at the 512 its packer asks for.
+    await writeFile(join(BUILD, 'extension.png'), await pngAt(applicationSvg(body), 512))
+    const extension = nativeImage.createFromPath(join(BUILD, 'extension.png'))
+    if (extension.isEmpty()) throw new Error('build/extension.png is not readable as an image')
+    lines.push(`extension.png ${extension.getSize().width}x${extension.getSize().height}`)
     window.destroy()
   } catch (error) {
     lines.push(`failed: ${error instanceof Error ? error.message : String(error)}`)

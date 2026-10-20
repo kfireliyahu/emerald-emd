@@ -427,6 +427,7 @@ written out here.
 | D-506 | 2026-10-19 | The MCP server says what Emerald is before it says what a pack is: both instruction blocks open on a format for any kind of thing and on what it reads (a spreadsheet, a `.json` of rows, a folder of Markdown notes read where it is), with `development` and `ledger` as optional packs; no tool or instruction measures work against money; the engine's tools are listed first in both modes; `create_document` keeps no pack unless asked, in both modes; reverses D-405's default | [below](#d-506) |
 | D-507 | 2026-10-19 | The server says first what a model gains from a document — it asks for the matching rows instead of re-reading files, a typed field filters exactly, a link is followed, every session sees the same rows — and checks are one benefit among them, never the reason; whether something belongs is answered by its shape, never by whether it has numbers; amends D-506 | [below](#d-507) |
 | D-508 | 2026-10-20 | Where the host starts a plugin's skills and hooks but not its MCP server (a cloud Cowork task, `CLAUDE_CODE_SKIP_PLUGIN_MCP_SERVERS`), the plugin tells the session how the person adds `emerald-mcp` to the Claude desktop app's own configuration: an `emerald-setup` skill holds the steps once, and a third `SessionStart` hook, plain Node run from the plugin folder, prints it only there; no new package | [below](#d-508) |
+| D-509 | 2026-10-20 | The server also ships as a Claude desktop extension: `emerald.mcpb` on every tagged release, the npm package's `server.mjs` with a manifest and an icon, run `--engine-only` on the Node the Claude desktop app ships, installed by double-click — which registers it in the app itself, where chat and Cowork on that computer reach it; the plugin keeps `npx`, because Claude Code runs a plugin's `.mcpb` on the system `node`; reverses D-498's *no `.mcpb`* for direct install only | [below](#d-509) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1316,6 +1317,65 @@ The npm `engines` range (`>=24`) warns on the cloud host's Node 22 at every hook
 **Rejected.** The hook in the package (a new `emerald-mcp` for a message). A remote server, which
 would send a person's document off their machine (D-124). Printing the steps at every session start,
 which would put them where the server runs fine.
+
+## D-509 · 2026-10-20 · The server also ships as a Claude desktop extension: `emerald.mcpb` on every tagged release, the npm package's `server.mjs` with a manifest and an icon, run `--engine-only` on the Node the Claude desktop app ships, installed by double-click — which registers it in the app itself, where chat and Cowork on that computer reach it; the plugin keeps `npx`, because Claude Code runs a plugin's `.mcpb` on the system `node`; reverses D-498's *no `.mcpb`* for direct install only <a id="d-509"></a>
+
+**Reverses** [D-498](#d-498)'s last bullet, and only it: the directory still takes no desktop
+extension, and none is submitted.
+
+**Context.** M42 F9. D-508 found where the plugin falls short: a Cowork task in the cloud loads its
+skills and hooks and skips its MCP server, and the remedy it prints is a hand edit of
+`claude_desktop_config.json` with `npx` on the person's `PATH`. A server registered in the desktop
+app itself is what reaches Cowork — the maintainer's Windows PC has run Emerald in Cowork for weeks
+from such an entry — and a desktop extension is that registration done in one click. Anthropic's
+MCPB page (read 2026-10-20) says Node is included with the desktop app on macOS and Windows, and
+that a plugin may name a `.mcpb` as its server; anthropics/claude-code#35175 says the Code tab and
+Cowork spawn the system `node` instead (closed, not planned).
+
+**Decision.**
+- **`npm run build:mcpb`** (`scripts/mcpb.mjs`, after `build:plugin`) stages `dist-plugin/server.mjs`,
+  its two licence files and `build/extension.png` — the mark at 512, cut by `npm run icons` — writes
+  a `manifest.json` (0.3) and packs `release/emerald.mcpb` with `@anthropic-ai/mcpb` 2.1.2, pinned as
+  a dev dependency. The server needs no `node_modules`: everything it reaches is bundled. The
+  manifest's tools are the server's own `tools/list`, asked over stdio at build time, first sentence
+  each.
+- **`server.type: "node"`, `mcp_config` `node ${__dirname}/server.mjs --engine-only`**, the plugin's
+  mode; `compatibility` darwin and win32, `runtimes.node` `>=20.0.0`, the files' target
+  (`vite.config.ts`). Measured: the server answers `tools/list` and a create, declare, write and read
+  on Node 20.19 and 22.20 — nothing in it needs 24.
+- **The release workflow builds it** on Linux in an `extension` job from the same tag, attests it,
+  and the release job sums and publishes it with the installers, so
+  `releases/latest/download/emerald.mcpb` is its link.
+- **The plugin's `mcpServers` stays `npx`.** Measured on Windows with Claude Code 2.1.299, the
+  binary the desktop app's Code tab runs: given a plugin whose `mcpServers` is `./servers/emerald.mcpb`,
+  it unpacks the bundle into `.mcpb-cache/` beside it and starts `node …/server.mjs` — the system
+  `node`. It connects with Node on `PATH`, and with Node taken off `PATH` it fails (`CONNECTION_CLOSED`).
+  So the bundle answers *does a person need Node* no better there, and pointing at it would
+  trade the pinned package for a file in the plugin or a release URL for nothing.
+- **The `emerald-setup` skill and the plugin's README offer the extension first**, the hand-written
+  entry second, once a tagged release carries it.
+
+**Measured, per surface** (Windows, 2026-10-20):
+- **Chat**: the desktop app 2.42304 (Electron 44.7.2, built-in Node 24.21.0) decides in its own code,
+  for a `node` extension whose command is `node`: unless `isUsingBuiltInNodeForMcp` is turned off
+  (unset is on), it runs the server in a utility process on its built-in Node when the manifest
+  names no Node range or its Node satisfies it — `>=20.0.0` does — and also whenever it finds no
+  system Node. A system Node is used only when the setting is off and one is found.
+- **The Code tab**: system `node`, as above.
+- **Cowork**: a server the desktop app registers reaches a Cowork task on that computer (D-508);
+  whether an installed extension does too, and on which Node, is the live check below.
+
+**Consequences.** A person adds Emerald to the Claude desktop app by downloading one file and
+pressing Install, with no Node and no JSON. The asset exists from the next tagged release; until then
+the skill's new step must not reach `main`. An extension does not update itself from a GitHub
+release: a new version is a new download. A person with the extension and a hand-written entry gets
+two servers and should drop one. The Mac is untested here and is the maintainer's.
+
+**Rejected.** The plugin's `mcpServers` pointing at the bundle, as a committed file or an `https`
+URL (system `node` either way, measured). No `runtimes.node` (the app would choose the same today; the
+range is the files' real floor, and an app whose Node fell below it would look for a system one
+rather than fail). A `user_config` folder (every tool takes an absolute path). Submitting it to the
+directory (it takes none).
 
 ## Related
 

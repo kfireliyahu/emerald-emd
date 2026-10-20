@@ -849,7 +849,7 @@ rejected.
 | Surface | Reaches the local file | Cost |
 |---|---|---|
 | **Claude Code plugin** | Yes — bundled stdio MCP server, read and write | Lowest. Build here first; iteration is in minutes. |
-| **Claude Desktop extension** | Yes — the same server, double-click install, no terminal | Packaging, the runtime question, install docs. Ship once the tool surface stops moving. |
+| **Claude Desktop extension** | Yes — the same server, double-click install, no terminal | Shipped as `emerald.mcpb` on each release, on the app's own Node (M42 F9, D-509). |
 | **claude.ai web / mobile** | **No.** Web chat reaches only remote MCP servers. | — |
 
 The third has a fallback worth confirming: a `.emd` is a plain SQLite file, so a user
@@ -1318,8 +1318,9 @@ wherever the document still holds an earlier build's, keeping and naming what a 
 **How it ran until M42 U2** (M41 U4): `node dist-plugin/server.mjs`, with three packages resolvable
 from where it sat — `@modelcontextprotocol/sdk`, `sql.js` and `xlsx`, the imports it kept external.
 Now every package is bundled and the folder is the npm package, below. The conversation views ride
-inside it. **The Claude plugin runs this package** (M42 U4, below); there is no desktop extension,
-because the directory no longer takes one (D-498).
+inside it. **The Claude plugin runs this package** (M42 U4, below), and the desktop extension packs
+its `server.mjs` for a double-click install (M42 F9, D-509), never for the directory, which no
+longer takes one (D-498).
 
 ### The npm package, `emerald-mcp` (M42 U2, D-497)
 
@@ -1364,6 +1365,23 @@ The done-test, run from the tarball: installed in an empty folder, `npx emerald-
 answered `initialize`, listed 28 tools (85 without the flag), created a document with the
 development pack and answered `start_here` on it with the unit recorded there; `npx emerald-hooks`
 printed `start_here` and the inbox row, and `npx emerald-status-line` printed `inbox 1 new`.
+
+### The desktop extension, `emerald.mcpb` (M42 F9, D-509)
+
+**The same `server.mjs`, as a file a person double-clicks** to add Emerald to the Claude desktop
+app — chat, and Cowork on that computer — with no Node to install and no configuration to edit.
+`npm run build:mcpb` (after `build:plugin`, `scripts/mcpb.mjs`) packs `release/emerald.mcpb`: the
+server, its licence files, `build/extension.png` and a manifest whose tools are the server's own
+list. `server.type: "node"`, `node ${__dirname}/server.mjs --engine-only`, darwin and win32,
+`runtimes.node` `>=20.0.0`. The release workflow builds it on every tag and attaches it beside the
+installers: `releases/latest/download/emerald.mcpb`. It is not submitted anywhere (the directory
+takes none) and does not update itself.
+
+**Which Node runs it** (measured on Windows, 2026-10-20): the desktop app 2.42304 ships Node 24.21.0
+(Electron 44.7.2) and, by its own code, runs a `node` extension on it whenever its Node satisfies
+the manifest's range or it finds no system Node — unless `isUsingBuiltInNodeForMcp` is off. Claude
+Code — the Code tab — runs a plugin's `.mcpb` on the system `node` and fails without one, so the
+plugin below keeps `npx`.
 
 ### The Claude plugin (M42 U4, D-498)
 
@@ -1498,9 +1516,9 @@ thing before building around it.
 
 ## Open questions
 
-- ~~How the Desktop extension supplies a Node runtime~~ — **moot (D-498)**: the directory no longer
-  takes desktop extensions, and the Claude plugin runs on the person's own `node`. Whether a person
-  needs Node installed is therefore still yes.
+- ~~How the Desktop extension supplies a Node runtime~~ — **answered (D-509)**: the desktop app runs
+  `emerald.mcpb` on the Node it ships, so chat needs none installed; the Claude plugin, in Claude
+  Code and the Code tab, still runs on the person's own `node`, and so would a `.mcpb` named by it.
 - Whether the web-chat fallback actually works end to end. **Still open**, and worth a cheap test
   before writing the skill: attach a `.emd` to a conversation and see whether code
   execution's `sqlite3` reads it.

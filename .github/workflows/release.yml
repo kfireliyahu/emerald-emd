@@ -14,6 +14,11 @@
 # and attested with the installers. The names carry no version, so getemerald.dev links
 # `releases/latest/download/<name>`.
 #
+# Beside them goes `emerald.mcpb` (M42 F9, D-509): the MCP server as a Claude desktop extension, a
+# file a person double-clicks to add Emerald to the Claude app with no Node and no configuration
+# file. It is built on Linux from the same tag (`build:plugin`, then `build:mcpb`), attested and
+# summed with the installers, and linked the same way.
+#
 # Run by hand (workflow_dispatch), it is a rehearsal: the same builds, kept as the run's
 # artifacts for a few days, attested, and no release.
 #
@@ -111,8 +116,47 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  # The desktop extension: the npm package's server packed with its manifest and icon (scripts/mcpb.mjs).
+  extension:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: The tag is the version
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          version="v$(node -p "require('./package.json').version")"
+          if [ "$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::The tag is $GITHUB_REF_NAME but package.json says $version"
+            exit 1
+          fi
+
+      - run: npm ci
+      - run: npm run build:plugin
+      - run: npm run build:mcpb
+
+      - uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: release/emerald.mcpb
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: installers-extension
+          path: release/emerald.mcpb
+          if-no-files-found: error
+          retention-days: 7
+
   release:
-    needs: build
+    needs: [build, extension]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
@@ -156,6 +200,10 @@ jobs:
           - \`gh attestation verify <file> --repo ${REPO}\`.
 
           On a Mac, take the \`arm64\` image for Apple silicon and \`x64\` for an Intel Mac.
+
+          **\`emerald.mcpb\`** adds Emerald's MCP server to the Claude desktop app's chat, on macOS or
+          Windows: double-click it and press Install. It runs on the Node the app ships, so nothing
+          else needs installing. Every tool takes the absolute path of a \`.emd\`.
 
           **Updates** are off until you turn them on in About. Then, on Windows, a newer version downloads
           in the background, is checked against the \`latest.yml\` published here, and installs when you

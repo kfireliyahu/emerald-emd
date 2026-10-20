@@ -4294,6 +4294,15 @@ question: Why did a Cowork task with the emerald plugin have no Emerald tools, a
 answer: A cloud Cowork task loads a plugin's skills and hooks but skips its MCP server on purpose (its log: CLAUDE_CODE_SKIP_PLUGIN_MCP_SERVERS is set), and a server there couldn't open a .emd on the person's computer anyway. A server in the Claude desktop app's own claude_desktop_config.json reaches Cowork on that computer; the maintainer's Windows PC has run it that way all along. So the plugin carries an emerald-setup skill (find npx, the file on macOS and Windows, the entry, cmd /c npx on Windows, quit and reopen, where the log is), and hooks.json runs node "${CLAUDE_PLUGIN_ROOT}/hooks/no-server.mjs", which prints the skill only when that variable is set. Both live in the plugin folder, so they ship as plugin 0.1.5+2 with no npm publish; pin-plugin moves the skill's pin. Untested: whether the hook sees the variable on a real cloud host (the skill covers it if not). Rejected: the hook in the package, a remote server (D-124), printing the steps everywhere.
 state: live
 
+### D-509
+date: 2026-10-20
+milestone: M42
+scope: plugin
+title: The server also ships as a Claude desktop extension: emerald.mcpb on every tagged release, run --engine-only on the Node the Claude desktop app ships, installed by double-click into the app itself, where chat and Cowork on that computer reach it; the plugin keeps npx, because Claude Code runs a plugin's .mcpb on the system node; reverses D-498's 'no .mcpb' for direct install only
+question: Can a person add Emerald to the Claude desktop app, and to Cowork on their computer, without installing Node or editing a configuration file, and should the Claude plugin run that bundle instead of npx?
+answer: Yes, for the desktop app: npm run build:mcpb packs dist-plugin/server.mjs, its licences, a 512 icon and a 0.3 manifest (server.type node, node ${__dirname}/server.mjs --engine-only, darwin and win32, runtimes.node >=20.0.0) into release/emerald.mcpb, which the release workflow builds, attests and attaches on every tag. The desktop app 2.42304 (Electron 44.7.2, Node 24.21.0) runs such an extension on its own Node unless isUsingBuiltInNodeForMcp is off, and whenever it finds no system Node; the server runs on Node 20 and 22. No for the plugin: Claude Code 2.1.299, the Code tab's binary, unpacks a plugin's .mcpb and starts it with the system node, and fails to connect with Node off PATH, so mcpServers stays npx. The emerald-setup skill and the plugin README offer the extension first once a release carries it.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -11943,6 +11952,18 @@ started: 2026-10-20
 branch: main
 paths: hosts/claude/, scripts/pin-plugin.mjs, docs/plugin.md
 report: Built on main. A cloud Cowork task on the work Mac showed the plugin's skills and hooks loading but its server skipped (CLAUDE_CODE_SKIP_PLUGIN_MCP_SERVERS). Added the emerald-setup skill and a plain-Node SessionStart hook in the plugin folder that prints it only when that variable is set; checked by hand: silent without it, the steps with it. Plugin 0.1.5+2, no npm publish. Tests: hosts/claude (41) plus parity and privacy pass; typecheck clean; claude plugin validate passes. Not yet seen on a real cloud host: the maintainer's next cloud Cowork task after updating the plugin shows whether the hook fires.
+
+### M42 F9
+milestone: M42
+scope: plugin
+title: A desktop extension a person double-clicks: emerald.mcpb on the release, and a measured answer to whether chat, the Code tab and Cowork need Node
+state: in_progress
+brief: Reverse D-498's 'no .mcpb' for direct install only (the directory still takes none): build release/emerald.mcpb from dist-plugin/server.mjs with @anthropic-ai/mcpb (server.type node, --engine-only, darwin and win32, an icon cut from src/ui/emerald.svg), attach it to a tagged release beside the installers, and check on Windows that Claude Desktop chat installs it by double-click and runs it on its own Node. Then decide whether hosts/claude/.claude-plugin/plugin.json's mcpServers should point at the bundle: only if the Code tab or Cowork run it on built-in Node (anthropics/claude-code#35175 says they spawn the system node). Update hosts/claude/README.md with the double-click path. Done: a release asset, the measured answer per surface (or which only the maintainer's Mac can test), the decision row, the README.
+files: scripts/mcpb.mjs, scripts/make-icons.cjs, build/extension.png, package.json, .github/workflows/release.yml, hosts/claude/README.md, hosts/claude/.claude-plugin/plugin.json, docs/plugin.md, docs/09-decision-log.md (D-509)
+taken_by: side session of local_20b8b494 (mcpb)
+started: 2026-10-20
+branch: claude/zealous-hertz-c180d3
+paths: "scripts/mcpb.mjs\nscripts/make-icons.cjs\nbuild/extension.png\npackage.json\npackage-lock.json\n.gitignore\n.github/workflows/release.yml\nhosts/claude/README.md\ndocs/plugin.md\ndocs/09-decision-log.md"
 
 ### M42 U1
 milestone: M42
