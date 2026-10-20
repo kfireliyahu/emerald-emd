@@ -21,9 +21,16 @@ Then restart the session. It needs Node 24 or later on your `PATH`.
 Adding the marketplace under **Customize → Plugins** brings the skills to chat and Cowork, but a
 Cowork task in the cloud never starts a plugin's MCP server, and a server there couldn't open a
 `.emd` on your computer anyway. Add the server to the desktop app itself instead. It then runs on
-your computer, in chat and in Cowork. Find `npx` (`which npx` on macOS, `where npx` on Windows),
-then add Emerald under `"mcpServers"` in the app's configuration file, keeping anything already
-there:
+your computer, in chat and in Cowork.
+
+**The easy way: the desktop extension.** Download
+[`emerald.mcpb`](https://github.com/kfireliyahu/emerald-emd/releases/latest/download/emerald.mcpb)
+from the latest release, double-click it, and press **Install** in the Claude app (or drag it onto
+**Settings → Extensions**). It runs on the Node the app ships, so you don't need Node installed and
+there's no file to edit. It doesn't update itself: download the new one when a release says so.
+
+**Or by hand.** Find `npx` (`which npx` on macOS, `where npx` on Windows), then add Emerald under
+`"mcpServers"` in the app's configuration file, keeping anything already there:
 
 - macOS, `~/Library/Application Support/Claude/claude_desktop_config.json`:
   `"emerald": { "command": "<the path to npx>", "args": ["-y", "emerald-mcp@0.1.5", "--engine-only"] }`

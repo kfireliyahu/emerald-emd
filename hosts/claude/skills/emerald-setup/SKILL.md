@@ -12,7 +12,13 @@ takes a few minutes. Tell them once, plainly, in your own words. Don't start the
 server by hand here, and don't write files for them to import later, unless they ask for that
 instead.
 
-What they do:
+**The easy way, on macOS or Windows: the desktop extension.** They download `emerald.mcpb` from
+https://github.com/kfireliyahu/emerald-emd/releases/latest/download/emerald.mcpb, double-click it
+and press **Install** in the Claude app (or drag it onto Settings → Extensions). It runs on the Node
+the app ships, so they need no Node and edit no file. Then they start a new task with the folder that
+holds their `.emd`. Offer this first.
+
+**Or by hand**, if they'd rather, or already keep servers in the configuration file:
 
 1. **Find `npx`.** In Terminal on macOS, `which npx`; in a terminal on Windows, `where npx`. If it
    prints nothing, they install Node from nodejs.org first.
