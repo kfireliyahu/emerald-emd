@@ -11921,6 +11921,22 @@ branch: claude/unruffled-kare-752ad2
 commit: 8880d64
 report: Cause: React Router 7.18's HashRouter moves the location inside startTransition, while the document store's delete renders urgently. That first render is still on the deleted entry's address, finds no row, and the MISSING branch's <Navigate> went to formatPath(name), so the filter was dropped. Fix: the missing-row redirect and the back button both go to tablePath(name, address), which keeps the filter and search the entry was opened with (a stale bookmark keeps its filter too). Leaving without deleting already kept the filter. Browser check on a copy of memory.emd, held in memory only: open_question filtered to state=open with search 'the' (22 of 51), open an entry, delete it, and you're back on the same address at 21 of 50 with both chips. Scroll is kept. Not fixed: sort. It is FormatRows' component state, and the screen remounts between the table and an entry route, so a plain Back loses it too, as does the entry pager's order. That's a separate gap, proposed as a follow-up. Typecheck is clean, all 4777 tests pass, docs:check shows 0 errors.
 
+### M42 F13
+milestone: M52
+scope: app
+title: Emerald's page offers emerald.mcpb as the first way in for the Claude desktop app
+landed: 2026-10-20
+decision: D-509
+state: built
+brief: Since release v0.1.5 the easiest way in for anyone with the Claude desktop app is emerald.mcpb (D-509, M42 F9): download, double-click, Install; it runs on the app's own Node, in chat and in Cowork on their computer. Emerald's page (getemerald.dev, src/demo/page/) links the installers through releases/latest but never names it. Add it to Get Emerald's ways in, ahead of the Claude plugin (Claude Code) and the npm line (any other MCP client), linked with installerLink / LATEST_DOWNLOAD (https://github.com/kfireliyahu/emerald-emd/releases/latest/download/emerald.mcpb). Keep the page's voice and layout, no new section; words in copy/en.ts, the address in page.ts. Done when build:demo and check:tours pass and the built page's card links the file.
+files: demo-page.html (the extension's card, ahead of the plugin), src/demo/page/page.ts (INSTALLERS.extension), src/demo/page/copy.ts, src/demo/page/copy/en.ts (foot.extension, the lead, the MCP section's run line), src/demo/page/rail.test.ts
+taken_by: claude-code determined-jang-7d7492
+started: 2026-10-20
+branch: claude/determined-jang-7d7492
+commit: 66a0c11
+paths: "demo-page.html\nsrc/demo/page/"
+report: Get Emerald now has a card for the Claude extension, second after the source and ahead of the Claude plugin (Claude Code) and the npm package (any other client). Its name links https://github.com/kfireliyahu/emerald-emd/releases/latest/download/emerald.mcpb through installerLink(INSTALLERS.extension), so main.ts's installer loop sets it like the downloads. The card's third column shows the file, emerald.mcpb, where the others show their command. The line reads: 'For the Claude desktop app, chat and Cowork alike: download, double-click, Install. It runs on the app’s own Node.' The lead says five ways in, and the MCP section's last line now says the Claude desktop app takes one file and any other client one config line. rail.test.ts pins the name to the one scripts/mcpb.mjs writes. No new section and no decision. Checks: the demo's 92 tests, typecheck and docs:check (0 errors). check:tours played every tour, and nothing left the page. The built page, read in the browser preview, links the right address, with no sideways scroll at 375 px or 1280 px. At 1280 px the card's line wraps to three lines where the plugin's takes two. The worktree has no node_modules of its own, so build:demo's last step (scripts/third-party-notices.mjs) cannot run there; the other steps were run by hand. The full suite gave 4778/4781: privacy.test.ts and the status-line timing test timed out under load, and both pass alone. The README's install section still says nothing of the extension; that change is held on claude/zealous-hertz-c180d3 (e3c05d7).
+
 ### M42 F14
 milestone: M52
 scope: app

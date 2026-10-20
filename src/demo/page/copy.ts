@@ -100,6 +100,7 @@ export interface Copy {
     readonly lead: string
     /** The ways in, each a card: its name is the link, its line says what it is for. */
     readonly source: Way
+    readonly extension: Way
     readonly plugin: Way
     readonly npm: Way
     /** The label over the installers, and each installer's name; the file name beside it is the page's. */

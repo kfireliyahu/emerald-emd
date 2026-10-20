@@ -164,7 +164,7 @@ export const en: Copy = {
         'A document answers in rows, so the model asks for what it needs instead of reading notes end to end.',
         'One project’s session leaves a note in another’s inbox, and the next session there starts with it.',
         'The server opens the file it is given, does one job, closes it, and makes no network call of its own.',
-        'One line in your MCP config runs it: npx -y emerald-mcp.',
+        'In the Claude desktop app it is one file to install; in any other client, one line in its MCP config: npx -y emerald-mcp.',
       ],
     },
     packs: {
@@ -206,10 +206,14 @@ export const en: Copy = {
 
   foot: {
     heading: 'Get Emerald',
-    lead: 'Four ways in, all free: the source, the Claude plugin, the npm package and the desktop app.',
+    lead: 'Five ways in, all free: the source, the Claude extension, the Claude plugin, the npm package and the desktop app.',
     source: {
       name: 'The source, on GitHub',
       line: 'Read it, build it, run it from the repository.',
+    },
+    extension: {
+      name: 'The Claude extension',
+      line: 'For the Claude desktop app, chat and Cowork alike: download, double-click, Install. It runs on the app’s own Node.',
     },
     plugin: {
       name: 'The Claude plugin',

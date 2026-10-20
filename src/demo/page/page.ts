@@ -67,12 +67,17 @@ export const RELEASES_URL = `${SOURCE_URL}/releases`
 /** The README's own install section, which says how past each platform's warning. */
 export const README_INSTALL_URL = `${SOURCE_URL}#installing-it`
 
-/** The installers and the checksums beside them, by the name each is linked under. */
-export const INSTALLERS: Readonly<Record<'windows' | 'arm64' | 'x64' | 'sums', string>> = {
+/**
+ * The installers and the checksums beside them, by the name each is linked under, and
+ * the Claude desktop extension the same release carries (M42 F9, F15), which the page
+ * offers first to anyone with the Claude app.
+ */
+export const INSTALLERS: Readonly<Record<'windows' | 'arm64' | 'x64' | 'sums' | 'extension', string>> = {
   windows: 'Emerald-Setup.exe',
   arm64: 'Emerald-arm64.dmg',
   x64: 'Emerald-x64.dmg',
   sums: 'SHA256SUMS',
+  extension: 'emerald.mcpb',
 }
 
 /** Where an installer card links: the newest release's file, or its page until the names are out. */
