@@ -5841,6 +5841,10 @@ state: open
 question: Should a row's id be made once, at creation, and written into the text document — a short random id that never changes — instead of derived from the row's content (D-247) and left out of the text (D-245)? A derived id changes on every edit: on 2026-09-23 an update was refused because the ids from the call before it were already stale. A written id stays valid across edits, survives a merge (two branches cannot collide on a random short id), and answers 'M22 U6 #1'. Cost: a text row carries one more line, and D-245 and D-247 are revisited.
 state: open
 
+### entry overview
+question: Does a format need a view for looking over its entries, a dashboard of some kind, beside the table, board, roadmap and agenda? The maintainer felt one was missing after weeks on a real document, and said it may be only a feeling. Before any build: what would it show that the table and the other views don't (counts by a column, what's due, recent changes, rollups), is that a new view kind or a start_here-like page for one format, and would a conversation get the same through show_format?
+state: open
+
 ### parity gap #11
 question: A tool must be able to make a connection. `#/connections` can write a `link` and an aggregate by dragging between two endpoints, and no tool can: what is the conversation's half of that, and does it write the link and the fold together the way the drag does?
 opened_by: D-234
@@ -9035,6 +9039,13 @@ branch: main
 commit: dd0d3b0b
 paths: "src/frame/host.ts\nsrc/frame/main.tsx\nsrc/frame/host.test.ts\nscripts/try-frame.mjs\ndocs/plugin.md"
 
+### Later U-entry-layout
+milestone: Later
+scope: ui
+title: Arranging an entry page: moving fields is easy, and a person can hide fields they don't use
+state: planned
+brief: Maintainer, 2026-10-20, after weeks on a real format with many columns: arranging an entry page (moving the fields) is clunky, and a page with many columns feels heavy. Some fields should be hidden by the person's choice. The entry page and its order are M26 F2 and M35 U1/U2 (headings over inputs, the order is the view's). Start from suggestions and a mockup, as M35 U1 did, before code: (1) a lighter way to reorder: drag the field itself, or a compact list of names to drag, in place of whatever is clunky now (try it first and say what is); (2) hiding a field in the entry view, kept with the view's order and the same in arrange_views, so a conversation can do it too (parity, D-227); a hidden field is still in the format, in the table and in every tool, and its value shows if it holds one or there's a way to reveal it (the person decides); (3) whether a long page groups or folds. Respect the rule that labels name exactly what they cover, and make it in place (count the click paths). The mockup is the maintainer's to approve before the build unit.
+
 ### Later U-template
 milestone: Later
 scope: engine
@@ -11868,6 +11879,14 @@ brief: Two bugs the maintainer hit 2026-10-20 while moving a real document onto 
 files: src/plugin/tools/views.ts (arrange_views, the agenda settings and their words), src/plugin/tools/agenda.test.ts, src/data/repositories/formatViewRepository.ts (how an entry view's order is stored), src/plugin/tools/formats.ts (extend_format)
 paths: src/plugin/tools/views.ts, src/plugin/tools/formats.ts, src/data/repositories/formatViewRepository.ts
 
+### M42 F12
+milestone: M42
+scope: app
+title: Deleting an entry from a filtered table returns to the table as it was filtered
+state: planned
+brief: Maintainer, 2026-10-20: in the app, open a format's table, filter it, open an entry, delete it. The app goes back to the table, but the filter is gone and every row shows. Expected: back on the same table, with the same filter (and search, sort, scroll if the table keeps them), minus the deleted row. Find where the entry page's delete navigates (the formats UI under src/ui/formats/) and whether the table's filter lives in the route, the store or component state. The fix is likely to send the person back to where they came from (history back, or the table's own URL with its query) rather than to the bare table route. Check that leaving an entry without deleting already keeps the filter. If it doesn't, the same fix covers both. Add a test in the repo's style, plus a browser check: filter, open, delete, still filtered. App-only; reaches people with the next release.
+files: src/ui/formats/ (the entry page's delete, the table's filter state), docs/11-ui-design-language.md only if a rule changes
+
 ### M42 F2
 milestone: M42
 scope: engine
@@ -12968,7 +12987,7 @@ decision: 2026-10-20
 finding: 2026-10-18
 inbox: 2026-10-18
 milestone: 2026-10-18
-open_question: 2026-10-18
+open_question: 2026-10-20
 review_entry: 2026-10-18
 rule: 2026-10-18
 term: 2026-10-18
