@@ -43,7 +43,7 @@ describe('the page as a roadmap (M33 U8)', () => {
     expect(named('x64')).toContain(INSTALLERS.x64.replace(/\.dmg$/, '.${ext}'))
   })
 
-  it('offers the Claude extension the release workflow attaches, by its own name (M42 F15)', () => {
+  it('offers the Claude extension the release workflow attaches, by its own name (M42 F13)', () => {
     const script = readFileSync(new URL('../../../scripts/mcpb.mjs', import.meta.url), 'utf8')
     expect(script).toContain(`join(root, 'release', '${INSTALLERS.extension}')`)
     expect(installerLink(INSTALLERS.extension, true)).toBe(
