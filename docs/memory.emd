@@ -11957,13 +11957,17 @@ report: Built on main. A cloud Cowork task on the work Mac showed the plugin's s
 milestone: M42
 scope: plugin
 title: A desktop extension a person double-clicks: emerald.mcpb on the release, and a measured answer to whether chat, the Code tab and Cowork need Node
-state: in_progress
+landed: 2026-10-20
+decision: D-509
+state: built
 brief: Reverse D-498's 'no .mcpb' for direct install only (the directory still takes none): build release/emerald.mcpb from dist-plugin/server.mjs with @anthropic-ai/mcpb (server.type node, --engine-only, darwin and win32, an icon cut from src/ui/emerald.svg), attach it to a tagged release beside the installers, and check on Windows that Claude Desktop chat installs it by double-click and runs it on its own Node. Then decide whether hosts/claude/.claude-plugin/plugin.json's mcpServers should point at the bundle: only if the Code tab or Cowork run it on built-in Node (anthropics/claude-code#35175 says they spawn the system node). Update hosts/claude/README.md with the double-click path. Done: a release asset, the measured answer per surface (or which only the maintainer's Mac can test), the decision row, the README.
-files: scripts/mcpb.mjs, scripts/make-icons.cjs, build/extension.png, package.json, .github/workflows/release.yml, hosts/claude/README.md, hosts/claude/.claude-plugin/plugin.json, docs/plugin.md, docs/09-decision-log.md (D-509)
+files: scripts/mcpb.mjs, scripts/make-icons.cjs, build/extension.png, package.json, package-lock.json, .gitignore, .github/workflows/release.yml, docs/plugin.md (The desktop extension), docs/09-decision-log.md (D-509); held for after the first release that carries the asset: hosts/claude/README.md, hosts/claude/skills/emerald-setup/SKILL.md, hosts/claude/.claude-plugin/plugin.json (0.1.5+3)
 taken_by: side session of local_20b8b494 (mcpb)
 started: 2026-10-20
 branch: claude/zealous-hertz-c180d3
+commit: 6c510a9
 paths: "scripts/mcpb.mjs\nscripts/make-icons.cjs\nbuild/extension.png\npackage.json\npackage-lock.json\n.gitignore\n.github/workflows/release.yml\nhosts/claude/README.md\ndocs/plugin.md\ndocs/09-decision-log.md"
+report: Built at 6c510a9 and 61606a6. npm run build:mcpb packs release/emerald.mcpb (2.2 MB: server.mjs, licences, 512 icon, 0.3 manifest with the server's 28 tools); the release workflow's new extension job builds, attests and publishes it with the installers. Measured on Windows: Claude Desktop 2.42304 ran the installed extension on its own Node 24.21.0 in a utility process serving chat and Cowork, no node.exe; Claude Code 2.1.299 runs a plugin's .mcpb on the system node and fails without it, so the plugin keeps npx. The bundle's files answer real calls on Node 20, 22 and 24. Not verified: the release job itself (runs at the next tag), the Mac, a tools/call from chat (the maintainer skipped it). The installed test copy (id ...mekfireliyahu.com.emerald, from the old author string) is still in the maintainer's Settings > Extensions for them to uninstall. The README and emerald-setup skill step pointing at releases/latest/download/emerald.mcpb is a separate commit, held until a release carries the asset.
 
 ### M42 U1
 milestone: M42
