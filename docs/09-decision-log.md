@@ -428,6 +428,7 @@ written out here.
 | D-507 | 2026-10-19 | The server says first what a model gains from a document — it asks for the matching rows instead of re-reading files, a typed field filters exactly, a link is followed, every session sees the same rows — and checks are one benefit among them, never the reason; whether something belongs is answered by its shape, never by whether it has numbers; amends D-506 | [below](#d-507) |
 | D-508 | 2026-10-20 | Where the host starts a plugin's skills and hooks but not its MCP server (a cloud Cowork task, `CLAUDE_CODE_SKIP_PLUGIN_MCP_SERVERS`), the plugin tells the session how the person adds `emerald-mcp` to the Claude desktop app's own configuration: an `emerald-setup` skill holds the steps once, and a third `SessionStart` hook, plain Node run from the plugin folder, prints it only there; no new package | [below](#d-508) |
 | D-509 | 2026-10-20 | The server also ships as a Claude desktop extension: `emerald.mcpb` on every tagged release, the npm package's `server.mjs` with a manifest and an icon, run `--engine-only` on the Node the Claude desktop app ships, installed by double-click — which registers it in the app itself, where chat and Cowork on that computer reach it; the plugin keeps `npx`, because Claude Code runs a plugin's `.mcpb` on the system `node`; reverses D-498's *no `.mcpb`* for direct install only | [below](#d-509) |
+| D-513 | 2026-10-20 | A team weighing Emerald for its development planning is answered before its model objects: both instruction blocks say, right after the 2,000-character head, that plans nobody owns are what it is for, that one document holds work across repositories, stored as text and committed or kept as one file outside every repository, that documents talk through an inbox and an `elsewhere` column, and that a worktree session's landing goes through the main document's inbox; the head says SQLite as bytes or text | [below](#d-513) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1384,6 +1385,46 @@ URL (system `node` either way, measured). No `runtimes.node` (the app would choo
 range is the files' real floor, and an app whose Node fell below it would look for a system one
 rather than fail). A `user_config` folder (every tool takes an absolute path). Submitting it to the
 directory (it takes none).
+
+
+## D-513 · 2026-10-20 · A team weighing Emerald for its development planning is answered before its model objects: both instruction blocks say, right after the 2,000-character head, that plans nobody owns are what it is for, that one document holds work across repositories, stored as text and committed or kept as one file outside every repository, that documents talk through an inbox and an `elsewhere` column, and that a worktree session's landing goes through the main document's inbox; the head says SQLite as bytes or text <a id="d-513"></a>
+
+**Context.** M42 F16. A model at the maintainer's work, asked to keep a development team's planning
+in Emerald, refused until argued out of it, then read the `development` pack and corrected two
+more of its own objections. Every objection had an answer the server could have given first and
+did not: *git, a tracker and memory already cover planning* (the plans between them — a `PLAN.md`, a
+roadmap in notes — drift because nobody owns them); *the pack means a pile of per-repository
+documents* (one document holds milestones that cross repositories); *a `.emd` is binary SQLite and
+cannot be committed or merged* (`store_document_as text` diffs in git, and the head called it *a
+real SQLite database*); *a document kept out of git is in no worktree and no cloud session* (a
+committed text file is in every checkout and reads as Markdown without Emerald); *two documents
+cannot talk* (an inbox, and an `elsewhere` column that reads the other row's state each time,
+`unit M1 U3 · built` — live, never enforced); *claims see only their own copy, so parallel worktrees
+collide* (a worktree session proposes its landing to the main document's inbox at an absolute path
+and one driver lands it, M51 U3; a document outside every repository is one copy, written under a
+lock beside it).
+
+**Decision.**
+
+- **A section of its own in both blocks, straight after *When they ask to see*** — the head is
+  full (1,996 of 2,000 characters in the full block), so it is the next thing read. It says each
+  answer above in the order a model raises them, and what it costs: a write goes through the
+  server, and a one-line fix may not need a unit.
+- **The head says *SQLite, as bytes or text*** in place of *a real SQLite database*, two characters
+  longer, so the first thing read about the file is not *binary*.
+- `server.test.ts` pins the section's place and each claim beside the tool that makes it true
+  (`store_document_as`, `land_units`, `claim_units`, `keep_packs`), and fails on *a real SQLite
+  database*, *binary file*, *cannot be committed*, *not meant for development*, *gitignore* and
+  *one document per repository* anywhere in the instructions or a tool's text.
+- `scripts/ask-cold.mjs` asks the planning question, flags the refusal's phrasings and lists what
+  the answer should hear; `--question` runs one question, `--server` an earlier build.
+
+**Consequences.** Reaches people with `emerald-mcp` 0.1.6. What a model still holds, fairly, is
+not argued with: `CLAUDE.md` stays Markdown, a `link` does not cross documents, a write needs the
+server, and a one-file fix costs more here than in a note.
+
+**Rejected.** Squeezing it into the head: the head's budget is how to show (D-482), and a sentence
+there would push it past 2,000. Naming the tracker or memory product the model named: D-450.
 
 ## Related
 

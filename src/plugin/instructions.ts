@@ -133,6 +133,38 @@ and \`search\` as \`format_rows\` — never a table of your own. **\`format_rows
 count or reason over**, and draws nothing.`.trim()
 
 /**
+ * What a team weighing Emerald for its development planning is told, in both
+ * blocks straight after the head (M42 F16, D-513).
+ *
+ * On 2026-10-20 a model at the maintainer's work, asked to keep a team's
+ * planning here, refused until argued out of it and then corrected two more
+ * of its own objections by reading the pack: git and a tracker already cover
+ * planning; the pack is a pile of per-repository documents; a `.emd` is
+ * binary and cannot be committed; a document outside git is in no worktree or
+ * cloud session; two documents cannot talk; parallel worktrees' claims
+ * collide. Each one was answerable from this text and none was said, so each
+ * is said here, in the order a model raises them — and each is a capability:
+ * `store_document_as` (text), the lock in `write.ts`, `elsewhere.ts` and
+ * `land_units inbox`. The head is full, so this is the next thing read.
+ */
+const PLANNING = `## A project's development planning
+
+**A team's development planning belongs here — the part nobody owns.** Git keeps the code and an
+issue tracker the tickets; the plans between them — a \`PLAN.md\`, a roadmap in notes, a memory file
+each session rewrites — drift, because nothing checks them. The \`development\` pack keeps them as
+rows: milestones, units, decisions, open questions. **One document holds the work of several
+repositories**, never a document per repository. Keep it one of two ways: **stored as text and
+committed** (\`store_document_as\`) — it diffs and merges in git like any file, is in every worktree,
+checkout and cloud session, and reads as Markdown without Emerald; or **one file outside every
+repository**, reached by its absolute path, so every session claims from the same rows (a write
+takes a lock beside the file). **Documents talk**: a session writes a row into another document's
+\`inbox\`, and an \`elsewhere\` column names a row in another document by its path and name and reads
+its state each time — \`unit S1 U5 · built\` — though nothing enforces it. **Parallel sessions land
+through one driver**: a session in a worktree proposes its landing as an \`inbox\` row in the main
+document, at its absolute path, and the driver lands them all with \`land_units inbox:[ids]\`. What it
+costs: a write goes through this server, and a one-line fix may not need a unit.`.trim()
+
+/**
  * Where a conversation begins, said in both blocks (M34 U1).
  *
  * The full block used to open on statements and payslips, so a conversation
@@ -166,10 +198,12 @@ call returns the matching rows, not forty files re-read; a field filters exactly
 followed, a write is checked, and every session sees the same rows. It reads a \`.csv\`, \`.xlsx\` or
 \`.json\`, or a **folder of Markdown notes** like an Obsidian vault, read where it is and never
 changed. Every tool takes
-the absolute \`path\` of one \`.emd\`, a real SQLite database. **Packs** are formats somebody already
+the absolute \`path\` of one \`.emd\`: SQLite, as bytes or text. **Packs** are formats somebody already
 worked out, each optional: \`development\` for a project's memory, \`ledger\` for personal finance, tools here too.
 
 ${SHOW}
+
+${PLANNING}
 
 ## What you are for
 
@@ -364,10 +398,12 @@ call returns the matching rows, not forty files re-read; a field filters exactly
 followed, a write is checked, and every session sees the same rows. It reads a \`.csv\`, \`.xlsx\` or
 \`.json\`, or a **folder of Markdown notes** like an Obsidian vault, read where it is and never
 changed. Every tool takes
-the absolute \`path\` of one \`.emd\`, a real SQLite database. **Packs** are formats somebody already
+the absolute \`path\` of one \`.emd\`: SQLite, as bytes or text. **Packs** are formats somebody already
 worked out, each optional: \`development\` for a project's memory, \`ledger\` for personal finance.
 
 ${SHOW}
+
+${PLANNING}
 
 ## What you are for
 
