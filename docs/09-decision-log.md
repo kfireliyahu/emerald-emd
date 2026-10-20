@@ -368,12 +368,12 @@ written out here.
 | D-446 | 2026-10-08 | No tool result carries a copy of the document: the drawn view fetches it with `frame_copy`, now listed to every client and refused without the ticket the view's result carried; the server logs what each client advertised; and the text beside a drawn view names every row it shows and nothing longer | M41 |
 | D-447 | 2026-10-08 | The frame takes what to draw from the call's input and proves itself with a key the server writes into the page it serves; no result carries the proof, and `frame_copy` answers in `structuredContent` | M41 |
 | D-448 | 2026-10-08 | The frame paints no page of its own in any host, and inside VS Code's webview its root declares no colour scheme, so the browser lays no backdrop under it; it says in the host's log and its own console what the host handed | M41 |
-| D-449 | 2026-10-09 | The installers say AGPL and carry every bundled package's licence: a build writes THIRD_PARTY_NOTICES.txt beside what it built, the app's id is `com.kfireliyahu.emerald`, and SheetJS comes vendored from its own CDN at 0.20.3, because npm's 0.18.5 is unpatched | [M43](#d-449) |
-| D-450 | 2026-10-09 | Before the repository is public: another product is described by its category, never named, except a host Emerald runs inside, a runtime it speaks to and the maintainer's own story; outside code is not taken for now — issues and discussion are welcome, and a contributor agreement comes first if code ever is; there is no code of conduct; and security reports go to the address LICENSING.md gives | [M43](#d-450) |
-| D-451 | 2026-10-09 | The chosen names land everywhere at once: a paycheck is never a payslip or a slip on a screen or in a tool, to categorize is never to file, a bill's form says bill, a link is made under *Links to*, a computed column under *Computed*, the table view is *Table*, a pack's list is *Ready to start*, the rail says *Assistants*, a backup is *Back up now*, a goal is a goal, a reader is never a mapping, and a source read is a file — a document is only the .emd | [M43](#d-451) |
-| D-452 | 2026-10-09 | What a downloader is owed: Help opens the license and the third-party notices from the app's own files and an About that names the version, AGPL-3.0-only with no warranty, the source and the not-advice line; Source Code hands the repository — one address, read from package.json — to the system browser on a click; a tag builds the unsigned installers in CI with SHA-256 checksums and attestations; the privacy policy is PRIVACY.md | [M43](#d-452) |
-| D-453 | 2026-10-09 | A fresh clone builds the same on every machine: every text file checks out with LF whatever core.autocrlf says, the notices are read from package-lock.json rather than from what npm ls prints, and the three dependencies with install scripts are declined in package.json, because nothing Emerald needs runs at install | [M43](#d-453) |
-| D-454 | 2026-10-09 | No known advisory ships: the MCP SDK goes to 1.32 and React Router to 7, because no 6.x release carries the fix; a navigation is drawn as a transition, so the tour runner waits for the routed view to say it drew the address; the dev-only advisories left are major upgrades of build tools that never ship | [M43](#d-454) |
+| D-449 | 2026-10-09 | The installers say AGPL and carry every bundled package's licence: a build writes THIRD_PARTY_NOTICES.txt beside what it built, the app's id is `com.kfireliyahu.emerald`, and SheetJS comes vendored from its own CDN at 0.20.3, because npm's 0.18.5 is unpatched | M43 |
+| D-450 | 2026-10-09 | Before the repository is public: another product is described by its category, never named, except a host Emerald runs inside, a runtime it speaks to and the maintainer's own story; outside code is not taken for now — issues and discussion are welcome, and a contributor agreement comes first if code ever is; there is no code of conduct; and security reports go to the address LICENSING.md gives | M43 |
+| D-451 | 2026-10-09 | The chosen names land everywhere at once: a paycheck is never a payslip or a slip on a screen or in a tool, to categorize is never to file, a bill's form says bill, a link is made under *Links to*, a computed column under *Computed*, the table view is *Table*, a pack's list is *Ready to start*, the rail says *Assistants*, a backup is *Back up now*, a goal is a goal, a reader is never a mapping, and a source read is a file — a document is only the .emd | M43 |
+| D-452 | 2026-10-09 | What a downloader is owed: Help opens the license and the third-party notices from the app's own files and an About that names the version, AGPL-3.0-only with no warranty, the source and the not-advice line; Source Code hands the repository — one address, read from package.json — to the system browser on a click; a tag builds the unsigned installers in CI with SHA-256 checksums and attestations; the privacy policy is PRIVACY.md | M43 |
+| D-453 | 2026-10-09 | A fresh clone builds the same on every machine: every text file checks out with LF whatever core.autocrlf says, the notices are read from package-lock.json rather than from what npm ls prints, and the three dependencies with install scripts are declined in package.json, because nothing Emerald needs runs at install | M43 |
+| D-454 | 2026-10-09 | No known advisory ships: the MCP SDK goes to 1.32 and React Router to 7, because no 6.x release carries the fix; a navigation is drawn as a transition, so the tour runner waits for the routed view to say it drew the address; the dev-only advisories left are major upgrades of build tools that never ship | M43 |
 | D-455 | 2026-10-09 | The copy taken before a write goes to Emerald's own per-user folder, one folder per document, and the app lists them to restore; restoring is a person's, on the screen; a named copy stays beside the document | M45 |
 | D-456 | 2026-10-09 | The rulings on the survey: the old-document leftovers go, the twins that read differently become one reader each in @/core/ or the engine, a popover is dismissed one way, and a basis point prints one way | M45 |
 | D-457 | 2026-10-09 | Earlier copies clean up after themselves: a gone document's folder goes 30 days after its last copy, the Windows uninstaller takes the folder, and Help › About shows it | M45 |
@@ -399,8 +399,8 @@ written out here.
 | D-478 | 2026-10-15 | Which columns a line or a card draws is chosen per format and held in the address, `?columns:unit=title,state`, beside the filter; a roadmap holds the rows it folds by `?unit.state=planned` and says *n of m shown*; `format_sheet` takes both, `columns:{unit:[title,state]}` and `match:{"unit.state":…}`; saving a choice into the document's views waits for the maintainer | M37 |
 | D-479 | 2026-10-15 | A `file` column holds where a file on this computer is, never what is in it: a path, kept relative to the document's folder when the file is under it and absolute otherwise, or a local app's own address from an allowlist of one (`obsidian:`), never `http`; filled by the shell's dialog, a drop or a typed path; opened by the system's own app from the cell, with *show in folder*; a file gone reads *missing* and stops nothing; text columns do not turn paths into links (driver's picks, per the brief) | M37 |
 | D-480 | 2026-10-15 | The history was rewritten once, on 2026-10-15, and origin is the private kfireliyahu/emerald-emd from that day: 712 commits under one identity, no denylist term or old address in any object, the tree at HEAD unchanged; the old repository is never pushed to again, and what still holds the old history is the maintainer's to delete | M33 |
-| D-481 | 2026-10-16 | The npm package is `emerald-mcp`, because it is the MCP server and nothing else; the repository stays `emerald-emd`, the file format's name, and the plugin and the desktop app ship under the project's name, so the three need no one slug | [M43](#d-481) |
-| D-482 | 2026-10-17 | `format_sheet` is `show_format`, with no alias, because a host that defers tools shows a model only the name and the name has to say *show*; and the head of the server's instructions is a budget: both blocks say what Emerald is and when to draw within the first 2,000 characters | [M43](#d-482) |
+| D-481 | 2026-10-16 | The npm package is `emerald-mcp`, because it is the MCP server and nothing else; the repository stays `emerald-emd`, the file format's name, and the plugin and the desktop app ship under the project's name, so the three need no one slug | M43 |
+| D-482 | 2026-10-17 | `format_sheet` is `show_format`, with no alias, because a host that defers tools shows a model only the name and the name has to say *show*; and the head of the server's instructions is a budget: both blocks say what Emerald is and when to draw within the first 2,000 characters | M43 |
 | D-483 | 2026-10-17 | A session in a git worktree reads and writes the main checkout's document: a document the project names, found inside a linked worktree, is taken at the same place under the parent of the common `.git` when it is there; the hooks' heading names both files; and the guard refuses a worktree's commit of its own copy | M51 |
 | D-484 | 2026-10-17 | A unit records where it was worked in git's own words: `branch` and `commit` are text columns of the development pack's `unit`, `claim_units` writes the branch and `land_units` the commit, and a landing that names another branch than the claim's is refused unless it says `other_branch: true` | M51 |
 | D-485 | 2026-10-17 | A child session proposes its landing as one `inbox` row — `refs` its unit, its `body` one fenced `json` block in the shape of one of `land_units`' units — and `land_units inbox:[ids]` lands every proposal named as one dry run and one commit, moving each row to `applied` | M51 |
@@ -449,264 +449,6 @@ thirteen closures late: the step was remembered by hand and was not.
 **Now `npm run docs:check` fails while a closed milestone has an entry here**, and
 `node scripts/archive-decisions.mjs` is the fix — it moves the entries, repoints their index rows and
 rewrites every link to them.
-
-## D-449 · 2026-10-09 · The installers say AGPL and carry every bundled package's licence: a build writes THIRD_PARTY_NOTICES.txt beside what it built, the app's id is `com.kfireliyahu.emerald`, and SheetJS comes vendored from its own CDN at 0.20.3, because npm's 0.18.5 is unpatched <a id="d-449"></a>
-
-**M43 U6, from a legal, privacy and security read of the repository before it is public.** Four
-things a stranger's download would have got wrong, none of them visible in a test.
-
-- **The copyright line.** `electron-builder.yml` still said *MIT licensed*, which D-430 replaced;
-  the line lands in every installer's metadata. It now names the publisher and AGPL-3.0-only.
-- **Third-party notices.** The bundles carry Apache-2.0 (pdf.js, tesseract.js, SheetJS, the Hebrew
-  OCR data), MIT (sql.js, React, the MCP SDK) and OFL-1.1 (IBM Plex) code, and each of those
-  licences asks that its text travel with the copy; electron-builder adds only Electron's and
-  Chromium's. `scripts/third-party-notices.mjs` writes `THIRD_PARTY_NOTICES.txt` from the
-  production dependency tree into `dist/`, `dist-plugin/` and `dist-demo/` at the end of each
-  build, and **stops the build when a package declares no licence**. It lists the whole production
-  tree, not what the bundler kept: a few lines too many is cheap, one too few is the breach.
-- **The app's id.** `com.emerald.desktop` named a domain the project does not own, and D-129 had it
-  as a placeholder that becomes permanent once anything ships: macOS knows an app by it and the
-  Windows installer derives its uninstall key from it. Nothing has shipped, so it is
-  `com.kfireliyahu.emerald` now, with `app.setAppUserModelId` beside it. A build already installed
-  on a development machine under the old id is a separate app to Windows: uninstall it first.
-- **SheetJS.** npm's `xlsx` stopped at 0.18.5, which carries CVE-2023-30533 (prototype pollution)
-  and CVE-2024-22363 (ReDoS), and Emerald parses strangers' spreadsheets with it. The fixed
-  releases are published only on SheetJS's own CDN. npm 12 refuses a remote tarball dependency by
-  default (`EALLOWREMOTE`), so the 0.20.3 tarball is **vendored** at `vendor/xlsx-0.20.3.tgz` (2.4
-  MB, SHA-256 `8dc73fc3…9fe8`) and `package.json` names it by path — the route SheetJS's own
-  install notes give, and one `npm ci` takes offline. Upgrading is replacing the file.
-- Rejected: `--allow-remote` on every install (CI's `npm ci` and every session would need it); a
-  notices file kept by hand (it drifts the first time a dependency changes); generating notices
-  from what the bundler kept (a plugin per build, for a saving of a few kilobytes).
-- Left for M43 U7: the About that names the licence and the source, the not-advice line, releases
-  built and checksummed in CI, and the privacy policy at its own address.
-
-## D-450 · 2026-10-09 · Before the repository is public: another product is described by its category, never named, except a host Emerald runs inside, a runtime it speaks to and the maintainer's own story; outside code is not taken for now — issues and discussion are welcome, and a contributor agreement comes first if code ever is; there is no code of conduct; and security reports go to the address LICENSING.md gives <a id="d-450"></a>
-
-**M43 U4, the rulings of 2026-10-08 ('all recommended').** A sweep of everything a
-stranger reads, beyond the README (U1) and the on-screen terms (U2-U3), found four things only the
-maintainer could settle.
-
-- **Names.** The standing wish (*no competitor names: describe by category, keep the points as our
-  own questions*) was a habit, not a rule, and `engine.md`, `product.md`, the ledger's market note,
-  two code comments and the server's own instructions still named products. Now a `rule` row: a
-  competitor is its category — *a spreadsheet*, *an all-in-one notes-and-database workspace*, *a
-  notes app over plain Markdown files*, *typed, relational spreadsheet-databases*, *a
-  bank-connected budgeting subscription*, *a licensed account aggregator*, *a design tool*, *a
-  sync folder*, *another app or service that shares the name*. **Three kinds stay named**: a host
-  Emerald runs inside (Claude, Claude Code, ChatGPT, VS Code, Goose), named as where it works; a
-  runtime or protocol it speaks to (Ollama, LM Studio, llama.cpp, OpenAI-compatible), and a tool
-  whose behaviour the code works around (a spreadsheet program's CSV encoding); and **the project's
-  own story** (the notes-app prototype, the Notion trial, the pitch's *Excel*), in the maintainer's
-  voice by design. `docs/archive/` and the decision rows are dated record, never edited, and keep the names
-  they were written with. A mockup draws made-up institutions (*Everyday Bank*, *Second Bank*);
-  the ledger pack's seeded institutions stay, because the readers match them.
-- **Contributions.** The commercial licence of D-430 needs the maintainer to hold every line's
-  copyright. A DCO only certifies where code came from, so DCO-merged code could never be
-  relicensed without each contributor's consent; a CLA keeps the commercial licence at the cost of
-  an agreement per contributor. So: **no outside code for now, issues and discussion welcome, a
-  CLA before code is ever taken.** `LICENSING.md` and the README's *Contributing* already say it.
-- **No code of conduct** while there are no outside contributions.
-- **Security reports** go to the address `LICENSING.md` already gives (`SECURITY.md`); there is
-  no server, so there is no response time and no bounty.
-- Rejected: scrubbing the names from `docs/archive/` (a past entry is never edited, and one
-  name-only pass would make every archived argument read as if it had been written that way);
-  a DCO (it forecloses the commercial licence); a code of conduct with no one yet to hold to it.
-- Left to the maintainer: the history rewrite (D-430's gate on M33 U4), and the README's wording (M43 U1).
-
-## D-451 · 2026-10-09 · The chosen names land everywhere at once: a paycheck is never a payslip or a slip on a screen or in a tool, to categorize is never to file, a bill's form says bill, a link is made under *Links to*, a computed column under *Computed*, the table view is *Table*, a pack's list is *Ready to start*, the rail says *Assistants*, a backup is *Back up now*, a goal is a goal, a reader is never a mapping, and a source read is a file — a document is only the .emd <a id="d-451"></a>
-
-**M43 U3, the marks of U2 (2026-10-08, all as proposed).** Thirty-one terms were flagged;
-seventeen are renamed and fourteen kept. Each `term` row now carries the name it became, and the
-old one under `rejected`.
-
-- **Renamed, on every screen, in every tool's text, in the tours and in the notes that describe
-  them:** *payslip* and *slip* → **paycheck** (Read paychecks, a paycheck's review, every figure
-  that was off the payslip); *file* (to categorize) → **categorize** (*Categorized this sitting*,
-  and the tour's line); the bill form's *New/Edit/Add fixed expense* → **New/Edit/Add bill**; the
-  accessible name *Card bills* → **Card payments**; a debt that *claims* charges → **covers**
-  them, so *claim* is the engine's alone; the column form's *Works out* → **Computed**; a link's
-  *Points at* → **Links to** (the far entry keeps *Links here*, the tour says link); the view
-  picker's *Entries* and `arrange_views`' *sheet* → **Table** (a spreadsheet's tab on Read files
-  stays *Sheet*); *Ready* → **Ready to start** (the rail, the picker, `start_here`, the frame);
-  the rail's *MCP* → **Assistants**; *Keep a copy as it is now* → **Back up now**; *saving goal*
-  and *savings goal* → **goal**; tool text's *mapping* → **reader**; a source read onto a format
-  is a **file** (*Read a file*), so a **document** is only the .emd; the import column role
-  *balance* → **running balance**. *Monthly debt obligation* and *Snapshot* become the words the
-  screens already said, **Paid each month** and **Reading**; no screen changed for them.
-- **Kept as they are:** Balance (the engine's two pans), Decision number, Declaration, Declared
-  table prefix, Entry and Row (both, on purpose), Format, Reading, Rollup, Rule, Rule set,
-  Unchecked, Unit, What looks wrong.
-- **Names of tools.** One changed: `create_saving_goals` is `create_goals`, with no alias,
-  because nothing outside the repository calls it (the demo's script was its one caller). The read
-  `savings` keeps its name: it answers net worth, places and holdings as well as goals.
-  `keep_copy`, `format_sheet` and the `fixed_expenses` family keep theirs (none of them was
-  asked for), as does `import_statement`'s `save_mapping_as` parameter. A model that still
-  says `view: sheet` to `arrange_views` or `format_sheet` is understood; both list `table`.
-- **A pack's format titles follow** (*Goal*, *Bill*, *Bill in a plan*, *Card payment*, *Reader
-  (spreadsheet)*, *Reader (PDF or text)*), in a document that keeps the ledger from now on. A
-  document that already keeps it holds the title it was given, as it holds its column names:
-  they are its own.
-- Rejected: renaming every tool whose name carries an old word (`keep_copy`, `format_sheet`,
-  the `fixed_expense` family) — a name a model has learned is cheap to keep and the
-  description says the word; rewriting *payslip* in the ledger's parked notes, where it names the
-  printed page in the domain's own argument rather than a screen.
-
-## D-452 · 2026-10-09 · What a downloader is owed: Help opens the license and the third-party notices from the app's own files and an About that names the version, AGPL-3.0-only with no warranty, the source and the not-advice line; Source Code hands the repository — one address, read from package.json — to the system browser on a click; a tag builds the unsigned installers in CI with SHA-256 checksums and attestations; the privacy policy is PRIVACY.md <a id="d-452"></a>
-
-**M43 U7, the rest of the 2026-10-09 legal and security read after D-449.** AGPL section 6 says
-whoever gets an installer can get its Corresponding Source, and an unsigned download says nothing
-about where it came from. Six things, each the smallest that meets it:
-
-- **The About** (`electron/about.ts`). `app.setAboutPanelOptions` fills the native panel — macOS
-  shows it from the app menu, Windows and Linux from **Help → About Emerald** — with the version,
-  *Free software under the GNU AGPL-3.0-only, with no warranty*, the not-advice line, the
-  repository and the tree of this exact version (`/tree/v<version>`, the tag the release workflow
-  builds from). Help also gains **License** and **Third-Party Notices**, each a plain window over a
-  file in `dist/` served by `app://` (`.txt` is served as text now), so reading them asks nothing
-  of the network; `scripts/third-party-notices.mjs` copies `LICENSE` in as `LICENSE.txt` beside the
-  notices, in every build. Text windows are not the document's window: they receive no command,
-  ask no unsaved-work question, do not reset the page's listening flag, and close with it.
-- **Source Code opens the repository in the system browser**, the first address the shell has ever
-  handed outward. D-124 is about the *page* reaching the network, and it is unchanged: the session
-  guard is untouched, the renderer cannot name a URL, and `openExternal` is called once, from a menu
-  click, with `SOURCE_URL` — a constant read from `package.json`'s `repository`, refused unless it is
-  a plain https address. `electron/network.test.ts` fails on a second call or a different argument.
-  The address is the planned public repository, `github.com/kfireliyahu/emerald-emd`, which does
-  not exist yet (the history rewrite is the maintainer's act); another slug is a one-line change there.
-- **The not-advice line**, in the About, the README and each release's notes: *Emerald computes; it
-  does not advise. Check every figure it read from a paycheck, a pension report or a statement
-  against the document it came from* (D-308 kept the ledger computing, never recommending).
-- **Releases are built in CI** (`.github/workflows/release.yml`). A `v*` tag that matches
-  `package.json`'s version builds on `windows-latest` and `macos-latest` with `--publish never`,
-  attests every installer with `actions/attest-build-provenance`, then a Linux job writes
-  `SHA256SUMS`, attests it too, and publishes the release with notes that link the tagged source.
-  Run by hand it is a rehearsal: the same builds as run artifacts, and no release. Unsigned stays
-  (D-124): `gh attestation verify <file> --repo …` is the check that needs no certificate. The Mac
-  build makes **two disk images, arm64 and x64** (`Emerald-<version>-<arch>.dmg`), rather than one
-  for Apple silicon only or one universal image twice the size.
-- **The README** (drafts for M43 U1) says the macOS path past Gatekeeper that still exists —
-  System Settings, Privacy & Security, Open Anyway — since recent macOS dropped Control-click →
-  Open, how to check a download, and the source-and-licence line. **The privacy policy moved,
-  unreworded, to `PRIVACY.md`**: a stable address for registry and directory listings. If M33 U8's
-  page ever takes a form post or a count, that file says so first.
-- **`SECURITY.md`**: text a model read out of a document is untrusted input, and prompt injection
-  is in scope where it makes a tool do more than the tool says. GitHub's private vulnerability
-  reporting is named, behind a comment saying it is true once it is switched on.
-- Rejected: an About screen in the renderer (a route the browser build would have to explain, for
-  information the native panel already shows); opening the license on GitHub instead of from
-  `dist/` (a request for a file the app already holds); a universal macOS image; publishing from
-  electron-builder itself (it would need the token in the build job and checksums it does not
-  write); running the workflow or pushing a tag here — macOS minutes are the maintainer's to spend.
-
-## D-453 · 2026-10-09 · A fresh clone builds the same on every machine: every text file checks out with LF whatever core.autocrlf says, the notices are read from package-lock.json rather than from what npm ls prints, and the three dependencies with install scripts are declined in package.json, because nothing Emerald needs runs at install <a id="d-453"></a>
-
-**M43 U9, a stranger's first ten minutes.** The whole sequence — `npm ci` against an empty npm
-cache and an empty Electron cache, typecheck, the suite, every build, `check:tours`, `docs:check`
-and the plugin answering `initialize` and `tools/list` over stdio — was run on fresh clones with
-`core.autocrlf` true (git's Windows default) and false. Two things failed that only a fresh clone
-shows, and one more asked a stranger to act:
-
-- **Line endings.** On a CRLF checkout four tour tests failed: they take `.format.md` files apart
-  by `
-`. The readers already accept CRLF; what does not is everything that reads this
-  repository's text as bytes — tests over fixtures, migrations and pack notes embedded raw by the
-  builds, and the Windows installer built on a runner whose checkout is CRLF. So `.gitattributes`
-  says `* text=auto eol=lf`: every text file checks out with LF on every machine, git still
-  decides what is binary, `*.emd -text` stands. A narrower list (`*.format.md`, fixtures, `*.sql`,
-  pack notes) was rejected: it is already four groups and the next `?raw` import would be the same
-  trap again. The index was LF throughout, so renormalizing changed no file. The history-rewrite
-  runbook no longer needs `-c core.autocrlf=false`, and its preflight no longer asks for it.
-- **The notices read the lockfile.** `scripts/third-party-notices.mjs` took the production tree
-  from `npm ls --parseable`, and npm redacts anything shaped like a UUID in what it prints (its old
-  token format) — a clone under such a directory read `***` for its own root, and `build`,
-  `build:plugin` and `build:demo` all failed. It now takes the packages the lockfile does not mark
-  dev-only, skipping a platform's optional package that is not installed: the same 138 entries,
-  byte for byte, and no npm spawned.
-- **Install scripts are declined, and said so.** npm 12 blocks dependency install scripts unless
-  `allowScripts` in package.json allows them, and ended every install by inviting an approval for
-  `electron-winstaller` (picks a 7-Zip for the Squirrel target, which Emerald does not build),
-  `esbuild` (checks a binary its optional dependency already installed) and `tesseract.js` (a
-  donation banner). Every build and the tours pass without them, and Electron 44 fetches its binary
-  on first run rather than at install, so each is declined with a `false` entry: the warning goes,
-  and nothing a dependency ships runs on install. An older npm ignores the field and runs them, as
-  it always did.
-
-Not fixed here: `npm audit` reports advisories on install; the production ones are in the MCP SDK and the
-packages it brings, and in React Router. An upgrade is its own unit.
-
-## D-454 · 2026-10-09 · No known advisory ships: the MCP SDK goes to 1.32 and React Router to 7, because no 6.x release carries the fix; a navigation is drawn as a transition, so the tour runner waits for the routed view to say it drew the address; the dev-only advisories left are major upgrades of build tools that never ship <a id="d-454"></a>
-
-**M43 U10.** `npm audit --omit=dev` printed 8 advisories on a fresh clone, and now prints none.
-Each was upgraded whether or not Emerald reaches it, because "not reachable" is an argument a
-stranger will not read — but for the record, none was reached:
-
-- `@modelcontextprotocol/sdk` < 1.31 (an OAuth *client* sending credentials where a server says):
-  Emerald is an MCP server over stdio, never an OAuth client. Now `^1.32.1`.
-- `hono`, `express`'s `proxy-addr` and `qs`, `express-rate-limit`'s `ip-address`: the SDK's HTTP
-  transports, which the stdio server never imports. `fast-uri` (through `ajv`): URI host parsing,
-  reached by no schema Emerald validates. All moved by `npm audit fix` inside their ranges.
-- `react-router` 6.0–7.17 (an open redirect through a backslash in `<Link>` and `useNavigate`; a
-  constructor injection in SSR hydration): the app navigates to its own literal paths in a
-  `HashRouter` and renders nothing on a server. **No 6.x release is fixed** — 6.30.6 is still in
-  range — so it is `^7.18.4`, through `react-router-dom`, which v7 keeps as a re-export.
-
-**What 7 changed here.** `navigate()` is typed `void | Promise<void>`, so five handlers that
-returned it say `void navigate(...)`. And a navigation is rendered as a React transition: for a
-frame or more after a click the leaving screen is still in the tree. The suite did not notice;
-`check:tours` did — the timesheet tour's first outline was found on Home's *September 2026* row,
-which was gone a frame later. The routed view now carries `data-route` (`App.tsx`), and the tour
-runner waits until it names the address before it looks for an anchor or an outline
-(`routeDrawn`, `src/demo/tour/runner.ts`). 6.30.5 and 6.30.6 fail the same tour the same way.
-
-**The dev-only advisories left are majors, and none ships.** `vite` ≤ 6.4.2 and its `esbuild`
-(dev-server path traversal and request forgery) need Vite 8; `vitest`, `tinypool`,
-`@vitest/mocker` and `vite-node` need Vitest 5; `electron-builder`'s chain down to `sprintf-js`
-(through `@electron/get` → `global-agent` → `roarr`) has no fixed release, and npm's offered "fix"
-is a downgrade to 26.5.0. The dev server is a session's, on loopback; the tests run on a
-development machine; electron-builder runs at packaging. What `npm audit fix` could move inside its
-ranges it moved (electron-builder 26.15 → 26.17 among them). The Vite and Vitest majors are a unit
-of their own if they are wanted before launch: every build mode and ~4,400 tests ride on them.
-
-Rejected: staying on React Router 6 and recording the advisory as unreachable — the brief's own
-argument against it; and `npm audit fix --force`, which would have taken Vite and Vitest across
-two majors and downgraded electron-builder in one unreviewed step.
-
-## D-481 · 2026-10-16 · The npm package is `emerald-mcp`, because it is the MCP server and nothing else; the repository stays `emerald-emd`, the file format's name, and the plugin and the desktop app ship under the project's name, so the three need no one slug <a id="d-481"></a>
-
-**Context.** The release sequence (the release sequence of 2026-10-15) named the package `emerald-emd` after the
-repository. Writing the README's install line made the mismatch visible: the package is one build output, the
-server, and `npx emerald-emd` says nothing about what it does. Chosen 2026-10-16; `emerald-mcp`,
-`emerald-emd` and `emd-mcp` were all still free on npm that day.
-
-**Decision.** The package is `emerald-mcp` and the line in an assistant's configuration is `npx emerald-mcp`
-(`claude mcp add emerald -- npx emerald-mcp`); the MCP registry entry matches it. The repository is
-`kfireliyahu/emerald-emd`. Nothing is published before beat two (D-480).
-
-## D-482 · 2026-10-17 · `format_sheet` is `show_format`, with no alias, because a host that defers tools shows a model only the name and the name has to say *show*; and the head of the server's instructions is a budget: both blocks say what Emerald is and when to draw within the first 2,000 characters <a id="d-482"></a>
-
-**Context.** On 2026-10-09 a Claude Code session in the desktop Code tab was asked to "show me the
-roadmap" and gave a hand-written list. Two causes, both measured that day. The Code tab cut the engine-only
-instructions (9,376 characters) after the first 2,038, and the paragraph saying when to draw began at
-character 4,324, so it never reached the model. And Claude Code defers MCP tools: until a session searches
-for one it sees the tool's name and not its description, and `format_sheet` says nothing about showing —
-besides carrying *sheet*, the word D-451 retired on screen for *table*.
-
-**Decision.** The tool is `show_format`, everywhere, and `format_sheet` is not kept as an alias: nothing
-public has called it yet, and a name is an API from the first stranger's conversation (D-092), which has
-not happened. Its `view` already takes `table` (D-451), as `arrange_views` does. Both instruction blocks now
-open with what Emerald is, in one paragraph, then **When they ask to see**: call `show_format` or
-`start_here` when a person asks to see the roadmap, the board, what is ready or a format's rows;
-`format_rows` is for rows the model will count or reason over. The disambiguation became a clause, and
-how a file is stored moved into *How to work*. `server.test.ts` pins both blocks naming both tools as the
-way to show within the first 2,000 characters, and cites the 2,038.
-
-- Rejected: keeping `format_sheet` beside the new name. Two names for one tool is the drift the rename is
-  for, and the only callers were this project's own sessions.
-- Rejected: renaming `start_here`. It already reads as the place to begin, and the instructions now name it
-  as a way to show.
-- Whether a fresh Code-tab session draws the roadmap unprompted is the maintainer's try, after restarting the
-  emerald server.
 
 ## D-494 · 2026-10-18 · What only Claude reads lives in `hosts/claude/` — the hooks and the status line, the skills a stranger gets, and the plugin's manifest — built beside the server as `hooks.mjs` and `status-line.mjs`; nothing in `src/` or `electron/` imports from `hosts/`, and a host reaches the server only through `src/plugin/host.ts` <a id="d-494"></a>
 
@@ -1428,7 +1170,6 @@ passed against the new range.
 a person on Node 18 would meet a stack trace instead of a reason). `--loglevel=error` on the plugin's
 `npx` calls (hides the warning without making it untrue, and every other warning with it). Building
 on each matrix Node (the published tarball is built on 24; what must hold is that it runs elsewhere).
-
 
 ## D-513 · 2026-10-20 · A team weighing Emerald for its development planning is answered before its model objects: both instruction blocks say, right after the 2,000-character head, that plans nobody owns are what it is for, that one document holds work across repositories, stored as text and committed or kept as one file outside every repository, that documents talk through an inbox and an `elsewhere` column, and that a worktree session's landing goes through the main document's inbox; the head says SQLite as bytes or text <a id="d-513"></a>
 

@@ -247,7 +247,7 @@ every row the view shows and nothing longer, which is what a client that draws n
   (anthropics/claude-ai-mcp#1069 — its bridge drops `_meta.ui`); the issue was still open on
   2026-10-09, and that chat has not been tried here since.
 - **When a model draws** is in both instruction blocks, **within their first 2,000 characters**
-  ([D-482](./09-decision-log.md#d-482)): `show_format` and `start_here` when a person asks to *see*
+  (D-482): `show_format` and `start_here` when a person asks to *see*
   something; `format_rows` for rows it will filter, count or reason over. A host may keep only the head
   of the instructions — the desktop Code tab kept 2,038 characters of the engine-only block — and one
   that defers tools shows a model only a tool's name, which is why the tool was renamed from
