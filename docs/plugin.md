@@ -296,7 +296,9 @@ every row the view shows and nothing longer, which is what a client that draws n
   `RowQuery` `listRows` answers for both tools and for the app's format screen, so there is no
   second filter. The frame opens on the format's address with the filter in it —
   `#/formats/finding?action=maintainer&state=open&search=bidi`, every key a column held to a value
-  but `search` (`src/ui/formats/addressFilter.ts`) — or to several, `?state=planned,in_progress`,
+  but `search`, a `columns:` choice and the table's sort, `order:date=descending`, which the app
+  keeps there so an entry opened and left comes back to the table in its order (M42 F14;
+  `src/ui/formats/addressFilter.ts`) — or to several, `?state=planned,in_progress`,
   or to none of them, `?state!=built` (M37 U3, D-476) — and every view of the format reads it back,
   says what it is filtered by and how many of how many, offers Clear, and keeps it when the file
   changes and the view is drawn again. The text answer says the same and names the

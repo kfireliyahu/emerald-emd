@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { addressFilter, filterAddress } from './formats/addressFilter.ts'
+import { addressFilter, addressView, filterAddress } from './formats/addressFilter.ts'
 import {
   isSectionTabs,
   NAVIGATION,
@@ -348,6 +348,16 @@ describe('the table an entry goes back to keeps its filter', () => {
     const back = tablePath('open_question', search)
     expect(back).toBe('/formats/open_question?state=open&search=bidi')
     expect(addressFilter(back.slice(back.indexOf('?')))).toEqual(filter)
+  })
+
+  // M42 F14: the sort rides in the same address, so Back, a delete and a
+  // missing row come back to the table in the order it was in.
+  it('keeps the sort the table was in', () => {
+    const sorted = filterAddress(filter, { order: { column: 'raised', descending: true } })
+    const entry = entryPath('open_question', '396c8a8b') + sorted
+    const back = tablePath('open_question', entry.slice(entry.indexOf('?')))
+    expect(back).toBe('/formats/open_question?state=open&search=bidi&order:raised=descending')
+    expect(addressView(back.slice(back.indexOf('?'))).order).toEqual({ column: 'raised', descending: true })
   })
 
   it('is the bare table when nothing was filtered', () => {

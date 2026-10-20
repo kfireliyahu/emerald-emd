@@ -279,8 +279,9 @@ export function formatPath(name: string): string {
 /**
  * **The table an entry page goes back to, as it was filtered** (M42 F12): by
  * its back button, after a delete, and when its row is gone. `search` is the
- * address's — `?state=open&search=bidi`, or empty — so the filter the entry was
- * opened from is the one the table comes back with.
+ * address's — `?state=open&search=bidi&order:date=descending`, or empty — so the
+ * filter and the sort the entry was opened from (M42 F14) are the ones the
+ * table comes back with.
  */
 export function tablePath(name: string, search: string): string {
   return formatPath(name) + search
