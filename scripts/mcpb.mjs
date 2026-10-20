@@ -11,7 +11,8 @@
  * runs it, `--engine-only` (hosts/claude/.claude-plugin/plugin.json).
  *
  * **`server.type: "node"`, so the app runs it on the Node it ships** rather than on one the person
- * installed; the files target Node 20 (vite.config.ts), and `compatibility.runtimes.node` says so.
+ * installed; the files target Node 20 (vite.config.ts), and `compatibility.runtimes.node` is the npm
+ * package's floor, the oldest Node CI runs them on (.github/workflows/package.yml, D-510).
  * Measured on Windows (D-509): the chat side of the app runs it with no `node` on the machine.
  *
  * **The tools are the server's own list**, asked over stdio here rather than written twice, so the
@@ -103,7 +104,7 @@ function manifest(app, tools) {
     keywords: ['local-first', 'sqlite', 'spreadsheet', 'documents', 'formats', 'mcp-apps'],
     license: app.license,
     privacy_policies: ['https://github.com/kfireliyahu/emerald-emd/blob/main/PRIVACY.md'],
-    compatibility: { platforms: ['darwin', 'win32'], runtimes: { node: '>=20.0.0' } },
+    compatibility: { platforms: ['darwin', 'win32'], runtimes: { node: '>=20.19.0' } },
   }
 }
 

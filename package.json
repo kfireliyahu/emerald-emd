@@ -1,6 +1,6 @@
 {
   "name": "emerald",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "private": true,
   "author": "Kfir Raphael Eliyahu <me@kfireliyahu.com>",
   "license": "AGPL-3.0-only",
@@ -14,6 +14,7 @@
     "build:mcpb": "node scripts/mcpb.mjs",
     "build:demo": "npm run build:plugin && node scripts/make-demo-document.mjs && vite build --mode demo && node scripts/third-party-notices.mjs dist-demo",
     "dev:demo": "node scripts/make-demo-document.mjs && vite --mode demo",
+    "check:package": "node scripts/check-package.mjs",
     "check:tours": "npm run build:demo && node scripts/check-tours.mjs",
     "build:electron": "tsc --noEmit && vite build --mode electron && vite build --mode electron-preload",
     "dev:desktop": "node scripts/dev-desktop.mjs",

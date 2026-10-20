@@ -14,7 +14,7 @@ In Claude Code:
 /plugin install emerald@emerald-emd
 ```
 
-Then restart the session. It needs Node 24 or later on your `PATH`.
+Then restart the session. It needs Node 20.19 or later on your `PATH`.
 
 ### In the Claude desktop app and Cowork
 

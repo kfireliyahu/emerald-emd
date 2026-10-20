@@ -1,0 +1,59 @@
+# The npm package on the Node versions its `engines` claims (M42 F13, D-510).
+#
+# `emerald-mcp` says `engines.node >=20.19.0` (scripts/npm-package.mjs), and npm prints
+# `npm warn EBADENGINE` before every plugin hook on a Node below that range — a cloud host on Node 22
+# did, at every prompt, while the range was `>=24`. So the range is what this workflow runs, and
+# nothing lower: the package is built once per job on Node 24, as the maintainer builds what is
+# published, then `scripts/check-package.mjs` runs it on the matrix's Node — the server's handshake
+# and a document written and read back, the hooks against it, and an `npx` install of the packed
+# tarball that fails on an EBADENGINE warning. The oldest entry is the floor, exactly; moving the
+# floor moves both.
+#
+#   gh workflow run package.yml          # run it now rather than at the next push
+
+name: Package
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - src/**
+      - hosts/claude/**
+      - electron/bridge.ts
+      - vite.config.ts
+      - package.json
+      - package-lock.json
+      - scripts/npm-package.mjs
+      - scripts/check-package.mjs
+      - .github/workflows/package.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  run:
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['20.19.0', '22', '24']
+    name: Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      # The package needs no Electron binary; the build is Vite and Node alone.
+      - run: npm ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+      - run: npm run build:plugin
+
+      # Then the Node it is checked on, with the npm that ships with it.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+      - run: node scripts/check-package.mjs dist-plugin
