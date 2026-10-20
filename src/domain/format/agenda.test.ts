@@ -37,7 +37,12 @@ describe('the agenda’s shape (M49 U3, D-473)', () => {
     expect(isViewSetting('agenda', 'done handed_in')).toBe(true)
     expect(isViewSetting('agenda', 'done')).toBe(false)
     expect(isViewSetting('agenda', 'order')).toBe(false)
-    expect(readAgendaDone('done line')).toBeUndefined()
+    // Only the first word is the keyword: a member may be called done, date or line (M42 F11).
+    expect(readAgendaDone('done done dropped')).toEqual(['done', 'dropped'])
+    expect(readAgendaDone('done done, dropped')).toEqual(['done', 'dropped'])
+    expect(readAgendaDone('done line')).toEqual(['line'])
+    expect(readAgendaDone('done ,')).toBeUndefined()
+    expect(isViewSetting('agenda', 'done done')).toBe(true)
     expect(soleWordOf('agenda', 'date')).toBe('date')
     expect(soleWordOf('agenda', 'done a b')).toBe('done')
     expect(soleWordOf('agenda', 'line')).toBeUndefined()

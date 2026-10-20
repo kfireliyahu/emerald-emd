@@ -1285,12 +1285,15 @@ export function relativeMonth(month: string, today: string): string | undefined 
  */
 export type AgendaPart = 'date' | 'line'
 
-/** `done handed_in dropped` into its members — or nothing, when it is not one. */
+/**
+ * `done handed_in dropped` into its members — or nothing, when it is not one.
+ * Only the first word is the keyword, so a member may be called `done` itself
+ * (`done done dropped`), and commas between members read as spaces (M42 F11).
+ */
 export function readAgendaDone(setting: string): readonly string[] | undefined {
-  const [word, ...members] = setting.trim().split(/\s+/)
+  const [word, ...members] = setting.split(/[\s,]+/).filter((each) => each !== '')
   if (word !== 'done' || members.length === 0) return undefined
-  if (members.some((member) => member === 'done' || member === 'date' || member === 'line')) return undefined
-  return members
+  return [...new Set(members)]
 }
 
 /** What one format puts on the agenda. */

@@ -6016,6 +6016,13 @@ unit: M37 U6
 should: The cell reads the file's name, opens it in its usual app, and a file under the folder is stored relative (scans/x.pdf); delete or rename the file and the cell reads 'missing' without anything else changing; an https address is refused with the reason.
 state: open
 
+### In the document where the entry order swapped, run arrange_views with the same entry `order` as a dry run, and note the Was column. If it is wrong again, keep the exact calls since the last right one (arrange_views settings, extend_format arguments) and whether the app had the document open.
+unit: M42 F11
+should: Was equals the order last sent, with any columns extend_format added at the end.
+breaks: The swap (title with the 10th column after a mixed commit; title with state after extend_format) did not reproduce with synthetic formats in SQLite or text storage, so whatever caused it is untested. Candidates not ruled out: a step between the calls that was not in the report, or the app saving over the file.
+not_tried: The real document, which never enters the repo.
+state: open
+
 ### In your own Claude Code: `claude plugin marketplace update emerald-emd`, then `claude plugin update emerald@emerald-emd`, start a new session and type /emerald: (or ask which skills it has).
 unit: M42 U7
 should: It updates 0.1.2 → 0.1.2+1 and the session lists emerald:run-milestone, emerald:closing-pass and emerald:review-phase beside emerald:declare-a-format; in this repo the unprefixed copies are this repo's own.
@@ -11874,10 +11881,16 @@ report: The hook's preface and the emerald-setup skill now open by telling the m
 milestone: M42
 scope: engine
 title: arrange_views: an agenda's done setting can name a member called done, and an entry view's order is stored exactly as sent
-state: planned
+landed: 2026-10-20
+state: built
 brief: Two bugs the maintainer hit 2026-10-20 while moving a real document onto declared formats (its names stay out of the repo; reproduce with synthetic ones). (1) AGENDA DONE: on a format whose state enum is open, in_progress, done, dropped, arrange_views view:agenda column:state accepts setting 'done dropped' but refuses every spelling that includes the member done: 'done done', 'done done dropped', 'done dropped done' and 'done dropped, done' all get "`done done` is not a agenda setting; a agenda keeps date, done <members>, line."; 'done done, dropped' and 'done DONE, DROPPED' get "`done` names members of an enum (...) that say a row is finished; `state` is enum." The member done seems to collide with the done keyword when the setting is parsed, so finished rows count as overdue unless the person drops the setting. Fix the parse so 'done done dropped' and the comma form mark both, and make the comma-list refusal say what is wrong rather than describe the setting. Nit: 'a agenda' should read 'an agenda' (grep for every 'a agenda' / 'a entry' the view words build). (2) ENTRY ORDER: one arrange_views commit set a board's lanes, an agenda's date and an entry view's order [title, state, areas, due, …]; the commit echoed that order, but the next dry run's 'Was' showed title and the 10th column swapped, and the app's entry heading (the first column) showed the wrong field. Set again and confirmed by formats, then extend_format added three link columns and a constraint, and the next dry run showed title and state swapped, with the new columns appended. Expected: the order is stored exactly as sent, and extend_format leaves the existing order alone (appending new columns is fine). Find where order is written or rebuilt (arrange_views several settings in one commit; extend_format rebuilding the table or its views) and add a test for each case. Both reach people only with a new emerald-mcp and a release, which are the maintainer's.
-files: src/plugin/tools/views.ts (arrange_views, the agenda settings and their words), src/plugin/tools/agenda.test.ts, src/data/repositories/formatViewRepository.ts (how an entry view's order is stored), src/plugin/tools/formats.ts (extend_format)
+files: src/domain/format/view.ts (readAgendaDone), src/plugin/tools/views.ts (the done word kept as it reads back, the refusal naming what an enum lacks, an agenda / an entry), src/domain/format/agenda.test.ts, src/plugin/tools/agenda.test.ts, src/plugin/tools/views.test.ts
+taken_by: claude session eager-wilson-38deb4
+started: 2026-10-20
+branch: claude/eager-wilson-38deb4
+commit: 57ca8a4
 paths: src/plugin/tools/views.ts, src/plugin/tools/formats.ts, src/data/repositories/formatViewRepository.ts
+report: Agenda done: readAgendaDone took any member called done, date or line as a stray keyword, so no spelling naming the member done was a setting. Now only the first word is the keyword and commas read as spaces: `done done`, `done done dropped`, `done dropped, done` and `done done, dropped` all mark the members, and arrange_views stores `done done dropped`. `done DONE, DROPPED` is refused as "`state` has no DONE, DROPPED; its members are open, in_progress, done, dropped." The view words say "an agenda" / "an entry". Entry order: did NOT reproduce. Synthetic formats (title declared tenth, sent first; SQLite and text storage; one commit with show_as, board lanes, agenda date, order and header; then extend_format adding two links, a link and a constraint) keep the order exactly, with new columns appended and the declaration only growing at the end. setEntryOrder, the text views part and extend_format's adopt path all keep places by column name. views.test.ts pins both cases. A review entry asks the maintainer for the exact calls. Full suite: 4776 pass; privacy.test.ts and hostBoundary.test.ts timed out under full-suite load and pass alone.
 
 ### M42 F12
 milestone: M42
@@ -12988,7 +13001,7 @@ finding: 2026-10-18
 inbox: 2026-10-18
 milestone: 2026-10-18
 open_question: 2026-10-20
-review_entry: 2026-10-18
+review_entry: 2026-10-20
 rule: 2026-10-18
 term: 2026-10-18
 unit: 2026-10-20

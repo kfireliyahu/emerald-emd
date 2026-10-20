@@ -24,6 +24,7 @@
 
 import type { Database } from 'sql.js'
 
+import { capitalize } from '@/core/text.ts'
 import { listFormats } from '@/data/repositories/formatRepository.ts'
 import {
   boardSettings,
@@ -129,6 +130,11 @@ function shownColumns(db: Database, declaration: FormatDeclaration, others: read
   ]
 }
 
+/** `a board`, `an agenda`, `an entry`: a view's name with its article. */
+function aView(view: string): string {
+  return `${/^[aeiou]/.test(view) ? 'an' : 'a'} ${view}`
+}
+
 function namesOf(columns: readonly { readonly name: string }[]): string {
   return columns.map((each) => `\`${each.name}\``).join(', ')
 }
@@ -161,7 +167,7 @@ function judge(
   if (column !== undefined && typeof column !== 'string') return { reason: '`column` is a column’s name.' }
   const extra = (allowed: readonly string[]): string | undefined => {
     const stray = Object.keys(entry).filter((key) => !['format', 'view', ...allowed].includes(key))
-    return stray.length === 0 ? undefined : `${stray.join(', ')} is not a ${view} setting; a ${view} takes ${allowed.join(', ')}.`
+    return stray.length === 0 ? undefined : `${stray.join(', ')} is not ${aView(view)} setting; ${aView(view)} takes ${allowed.join(', ')}.`
   }
   const db = document.db
 
@@ -313,8 +319,11 @@ function agendaMisfit(target: ColumnDeclaration, word: string): string | undefin
   if (members.length > 0 && members.every((each) => has.includes(each)) && (target.type !== 'boolean' || members.length === 1)) {
     return undefined
   }
-  return target.type === 'boolean'
-    ? `\`done\` on a boolean is \`done true\` or \`done false\`.`
+  if (target.type === 'boolean') return `\`done\` on a boolean is \`done true\` or \`done false\`.`
+  // An enum that lacks a member says which, rather than what `done` is (M42 F11).
+  const strange = members.filter((each) => !has.includes(each))
+  return target.type === 'enum' && strange.length > 0
+    ? `${named} has no ${strange.join(', ')}; its members are ${has.join(', ')}.`
     : `\`done\` names members of an enum (${(target.values ?? []).join(', ') || 'none here'}) that say a row is finished; ${named} is ${target.type}.`
 }
 
@@ -331,15 +340,18 @@ function judgeWord(
   if (target === undefined) {
     return { reason: `${format} has no column called ${String(column)}. It has ${namesOf(declaration.columns)}.` }
   }
-  if (offered === undefined) return { reason: `A ${view} setting takes \`setting\`: ${VIEW_PARTS[view].join(', ')}, or null.` }
+  if (offered === undefined) return { reason: `${capitalize(aView(view))} setting takes \`setting\`: ${VIEW_PARTS[view].join(', ')}, or null.` }
   if (offered !== null && typeof offered !== 'string') return { reason: '`setting` is a word, or null to clear it.' }
-  const word = offered === null ? undefined : offered.trim().split(/\s+/).join(' ')
+  const spaced = offered === null ? undefined : offered.trim().split(/\s+/).join(' ')
+  // An agenda's `done` is kept as it reads back — `done done, dropped` as `done done dropped`.
+  const members = view === 'agenda' && spaced !== undefined ? readAgendaDone(spaced) : undefined
+  const word = members === undefined ? spaced : ['done', ...members].join(' ')
   if (word !== undefined) {
     if (word.length > SETTING_LONGEST) {
       return { reason: `\`${word}\` is longer than the ${String(SETTING_LONGEST)} characters a view keeps for a column; shorter member names fit.` }
     }
     if (!isViewSetting(view, word)) {
-      return { reason: `\`${word}\` is not a ${view} setting; a ${view} keeps ${VIEW_PARTS[view].join(', ')}.` }
+      return { reason: `\`${word}\` is not ${aView(view)} setting; ${aView(view)} keeps ${VIEW_PARTS[view].join(', ')}.` }
     }
     const misfit = wordMisfit(declaration, view, target, word)
     if (misfit !== undefined) return { reason: misfit }
