@@ -11863,9 +11863,12 @@ report: The hook's preface and the emerald-setup skill now open by telling the m
 milestone: M42
 scope: engine
 title: arrange_views: an agenda's done setting can name a member called done, and an entry view's order is stored exactly as sent
-state: planned
+state: in_progress
 brief: Two bugs the maintainer hit 2026-10-20 while moving a real document onto declared formats (its names stay out of the repo; reproduce with synthetic ones). (1) AGENDA DONE: on a format whose state enum is open, in_progress, done, dropped, arrange_views view:agenda column:state accepts setting 'done dropped' but refuses every spelling that includes the member done: 'done done', 'done done dropped', 'done dropped done' and 'done dropped, done' all get "`done done` is not a agenda setting; a agenda keeps date, done <members>, line."; 'done done, dropped' and 'done DONE, DROPPED' get "`done` names members of an enum (...) that say a row is finished; `state` is enum." The member done seems to collide with the done keyword when the setting is parsed, so finished rows count as overdue unless the person drops the setting. Fix the parse so 'done done dropped' and the comma form mark both, and make the comma-list refusal say what is wrong rather than describe the setting. Nit: 'a agenda' should read 'an agenda' (grep for every 'a agenda' / 'a entry' the view words build). (2) ENTRY ORDER: one arrange_views commit set a board's lanes, an agenda's date and an entry view's order [title, state, areas, due, …]; the commit echoed that order, but the next dry run's 'Was' showed title and the 10th column swapped, and the app's entry heading (the first column) showed the wrong field. Set again and confirmed by formats, then extend_format added three link columns and a constraint, and the next dry run showed title and state swapped, with the new columns appended. Expected: the order is stored exactly as sent, and extend_format leaves the existing order alone (appending new columns is fine). Find where order is written or rebuilt (arrange_views several settings in one commit; extend_format rebuilding the table or its views) and add a test for each case. Both reach people only with a new emerald-mcp and a release, which are the maintainer's.
 files: src/plugin/tools/views.ts (arrange_views, the agenda settings and their words), src/plugin/tools/agenda.test.ts, src/data/repositories/formatViewRepository.ts (how an entry view's order is stored), src/plugin/tools/formats.ts (extend_format)
+taken_by: claude session eager-wilson-38deb4
+started: 2026-10-20
+branch: claude/eager-wilson-38deb4
 paths: src/plugin/tools/views.ts, src/plugin/tools/formats.ts, src/data/repositories/formatViewRepository.ts
 
 ### M42 F2

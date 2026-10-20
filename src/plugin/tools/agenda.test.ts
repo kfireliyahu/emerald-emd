@@ -211,7 +211,62 @@ describe('the agenda (M49 U3)', () => {
       NO_CLIENT,
     )
     expect(refused).toContain('`date` goes on a date column; `course` is text.')
-    expect(refused).toContain('`done` names members of an enum (todo, doing, handed_in)')
+    expect(refused).toContain('`state` has no finished; its members are todo, doing, handed_in.')
+  })
+
+  it('reads a done that names a member called done, spaced or with commas (M42 F11)', async () => {
+    const db = await createDatabase()
+    const path = join(await tempDir('emerald-agenda-'), 'chores.emd')
+    await writeFile(path, exportDatabase(db))
+    db.close()
+    const chore = {
+      format: 'chore',
+      title: 'Chore',
+      columns: [
+        { name: 'name', type: 'text', required: true },
+        { name: 'due', type: 'date' },
+        { name: 'state', type: 'enum', values: ['open', 'in_progress', 'done', 'dropped'] },
+      ],
+      nothing_must_hold: true,
+    }
+    await declareFormatTool.run({ path, formats: [chore], commit: true }, NO_CLIENT)
+    await recordFormatRowsTool.run(
+      {
+        path,
+        format: 'chore',
+        rows: [
+          { name: 'Sweep', due: '2026-10-10', state: 'done' },
+          { name: 'Mop', due: '2026-10-11', state: 'dropped' },
+          { name: 'Dust', due: '2026-10-12', state: 'open' },
+        ],
+        commit: true,
+      },
+      NO_CLIENT,
+    )
+    const done = (setting: string) =>
+      arrangeViewsTool.run({ path, settings: [{ format: 'chore', view: 'agenda', column: 'state', setting }] }, NO_CLIENT)
+    for (const setting of ['done done', 'done done dropped', 'done dropped done', 'done done, dropped', 'done dropped, done']) {
+      const dry = await done(setting)
+      expect(dry, setting).not.toContain('refused')
+      expect(dry, setting).not.toContain('a agenda')
+    }
+    // Kept the way it reads back, commas or not.
+    expect(await done('done done, dropped')).toContain('| chore | agenda | state | setting | - | done done dropped |')
+    expect(await done('done done dropped')).toContain('overdue is before today with `state` not done or dropped.')
+
+    // A member the column has not got says which, not what the setting is.
+    const wrong = await done('done DONE, DROPPED')
+    expect(wrong).toContain('`state` has no DONE, DROPPED; its members are open, in_progress, done, dropped.')
+    expect(await done('finished')).toContain('is not an agenda setting; an agenda keeps date, done <members>, line.')
+
+    await arrangeViewsTool.run(
+      { path, settings: [{ format: 'chore', view: 'agenda', column: 'state', setting: 'done done, dropped' }], commit: true },
+      NO_CLIENT,
+    )
+    const after = await showFormatTool.run({ path, view: 'agenda' }, NO_CLIENT)
+    expect(after).toContain('Overdue (1):\n- Mon 12 Oct 2026 · chore · Dust · open')
+    expect(after).not.toContain('Sweep')
+    expect(after).not.toContain('Mop')
   })
 
   it('has start_here ask what is due within 7 days once a format chose its date', async () => {

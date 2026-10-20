@@ -25,7 +25,8 @@ import { column, type FormatDeclaration } from '@/domain/format/declaration.ts'
 import { derived } from '@/domain/format/derived.ts'
 import { entryOrder } from '@/domain/format/view.ts'
 
-import { formatsTool } from './formats.ts'
+import { declareFormatTool, extendFormatTool, formatsTool } from './formats.ts'
+import { storeDocumentAsTool } from './storeAs.ts'
 import { NO_CLIENT } from './tool.ts'
 import { arrangeViewsTool } from './views.ts'
 import { tempDir } from '../../testing/tempDir'
@@ -170,4 +171,87 @@ describe('arrange_views (M35 U4)', () => {
     expect(entryInputs(db, 'recipe').size).toBe(0)
     db.close()
   })
+})
+
+/**
+ * **An entry's order comes back as it was sent** (M42 F11): set in one commit
+ * with a board's lanes, an agenda's date and other entry settings, and kept by
+ * an `extend_format` that adds columns, which go after it. Title is declared
+ * tenth here and sent first, the shape of the report.
+ */
+describe('an entry order kept exactly (M42 F11)', () => {
+  const COLUMNS = [
+    { name: 'ref', type: 'text' },
+    { name: 'notes', type: 'text' },
+    { name: 'owner', type: 'text' },
+    { name: 'due', type: 'date' },
+    { name: 'state', type: 'enum', values: ['open', 'in_progress', 'done', 'dropped'] },
+    { name: 'priority', type: 'enum', values: ['low', 'high'] },
+    { name: 'started', type: 'date' },
+    { name: 'estimate', type: 'real' },
+    { name: 'areas', type: 'links', target: 'area' },
+    { name: 'title', type: 'text', required: true },
+    { name: 'flag', type: 'boolean' },
+    { name: 'source', type: 'text' },
+  ]
+  const ORDER = ['title', 'state', 'areas', 'due', 'priority', 'owner', 'started', 'estimate', 'notes', 'ref', 'source', 'flag']
+
+  /** What a dry run of the same order says the entry runs in now. */
+  async function stored(path: string): Promise<string> {
+    const dry = await arrangeViewsTool.run({ path, settings: [{ format: 'task', view: 'entry', order: ORDER }] }, NO_CLIENT)
+    return dry.split('\n').find((line) => line.startsWith('| task | entry | - | order |'))?.split('|')[5]?.trim() ?? ''
+  }
+
+  for (const encoding of ['sqlite', 'text'] as const) {
+    it(`keeps it through one commit of several settings and an extend_format, stored as ${encoding}`, async () => {
+      const db = await createDatabase()
+      const path = join(await tempDir('emerald-views-'), 'work.emd')
+      await writeFile(path, exportDatabase(db))
+      db.close()
+      const area = { format: 'area', title: 'Area', columns: [{ name: 'name', type: 'text', required: true }], nothing_must_hold: true }
+      const task = { format: 'task', title: 'Task', columns: COLUMNS, nothing_must_hold: true }
+      expect(await declareFormatTool.run({ path, formats: [area, task], commit: true }, NO_CLIENT)).not.toMatch(/refus/i)
+      if (encoding === 'text') await storeDocumentAsTool.run({ path, as: 'text', commit: true }, NO_CLIENT)
+
+      const set = await arrangeViewsTool.run(
+        {
+          path,
+          settings: [
+            { format: 'task', view: 'entry', column: 'notes', show_as: 'markdown' },
+            { format: 'task', view: 'board', column: 'state' },
+            { format: 'task', view: 'agenda', column: 'due', setting: 'date' },
+            { format: 'task', view: 'entry', order: ORDER },
+            { format: 'task', view: 'entry', column: 'owner', header: true },
+          ],
+          commit: true,
+        },
+        NO_CLIENT,
+      )
+      expect(set).not.toContain('refused')
+      expect(await stored(path)).toBe(ORDER.join(', '))
+
+      const extended = await extendFormatTool.run(
+        {
+          path,
+          format: 'task',
+          columns: [
+            { name: 'blocks', type: 'links', target: 'task' },
+            { name: 'parent', type: 'link', target: 'area' },
+            { name: 'tags', type: 'links', target: 'area' },
+          ],
+          constraints: [{ rule: 'owner is required when state is in_progress', note: 'Somebody has it.' }],
+          commit: true,
+        },
+        NO_CLIENT,
+      )
+      expect(extended).toContain('Added')
+      expect(await stored(path)).toBe([...ORDER, 'blocks', 'parent', 'tags'].join(', '))
+      // And the declaration's own order only grew at the end.
+      const read = await formatsTool.run({ path, format: 'task' }, NO_CLIENT)
+      const declared = [...COLUMNS.map((each) => each.name), 'blocks', 'parent', 'tags']
+      const at = declared.map((name) => read.indexOf(`| ${name} |`))
+      expect(at.every((each) => each >= 0)).toBe(true)
+      expect([...at].sort((a, b) => a - b)).toEqual(at)
+    })
+  }
 })
