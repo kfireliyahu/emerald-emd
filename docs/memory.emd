@@ -5521,7 +5521,7 @@ position: 346
 ### M43
 title: In the maintainer's words
 goal: Before anything goes public (the public repository, the first Pages deploy, the npm package, a listing, a post), the words a stranger reads first are the maintainer's: the README written by the maintainer and checked by a session for truth, and the app's on-screen terms and names reviewed by the maintainer and applied everywhere they appear (screens, tool descriptions, tours, docs). Set 2026-10-08 as the milestone before anything public: the README edited by hand and confirmed by a session, and the UI's terms and naming reviewed. Every public step waits on it: M33 U4's first deploy, M33 U8 and U9, and M42 U2 onward.
-state: planned
+state: closed
 position: 343
 
 ### M44
@@ -5562,8 +5562,8 @@ position: 340
 
 ### M50
 title: The first stranger's first hour
-goal: Five small things the strategy session of 2026-10-15 found standing between a stranger and the product, none planned anywhere else: a repo init that writes the CLAUDE.md column table and the hooks, one real session per MCP client written down, an export read twice updating rather than duplicating, the full app hosted on Pages opening a real file, and a web-app manifest. Done when a developer who found the npm package reaches start_here in a fresh session without reading a note, and a visitor who found the page opens their own file without downloading anything. The rest of that session's findings (a general-user pack, a self-hosted image, a drive-backed server, a phone app) are deliberately not here.
-state: planned
+goal: Five small things the strategy session of 2026-10-15 found standing between a stranger and the product: a repo init that writes the CLAUDE.md column table and the hooks, one real session per MCP client written down, an export read twice updating rather than duplicating, the full app hosted on Pages opening a real file, and a web-app manifest. Closed unbuilt on 2026-10-20 by the maintainer, after the release showed the first-hour problems were installing (answered by emerald.mcpb, M42 F9) and how a model frames Emerald (M42 F16): U3 (an export read twice) and a slimmed U1 (repo init, mainly the development pack) moved to M52 with their refs unchanged; U2 (the per-client table) was folded into M42 U5 and dropped here; U4 (the app hosted on Pages) and U5 (the web-app manifest) were parked in Later.
+state: closed
 position: 347
 
 ### M51
@@ -12175,7 +12175,7 @@ milestone: M42
 scope: engine
 title: Submitted, and the ChatGPT stance written down
 state: planned
-brief: STOP for the maintainer: submitting is the maintainer's act on the maintainer's account. The session prepares everything the form asks: at least three working examples on synthetic documents (the M33 tours' grocery receipt, the timesheet, the development pack are ready-made), what each tool does, screenshots or the M33 poster, support contact, the privacy link, and test instructions that need no account (there is none). A decision row records where Emerald is listed and why ChatGPT's app directory is not one of them (it takes only remote servers behind OAuth, which would mean a backend holding people's documents; Emerald works with any local-MCP app instead), and the README says it in a line. Also answers the open question 'Engine server on its own' with what M41 and M42 built. Done-test: the submission material is in the repo for the maintainer; the decision row is written; the open question is answered; the maintainer has submitted.
+brief: STOP for the maintainer: submitting is the maintainer's act on the maintainer's account. The session prepares everything the form asks: at least three working examples on synthetic documents (the M33 tours' grocery receipt, the timesheet, the development pack are ready-made), what each tool does, screenshots or the M33 poster, support contact, the privacy link, and test instructions that need no account (there is none). A decision row records where Emerald is listed and why ChatGPT's app directory is not one of them (it takes only remote servers behind OAuth, which would mean a backend holding people's documents; Emerald works with any local-MCP app instead), and the README says it in a line. Folded in from M50 U2 on 2026-10-20: a table, written from one real session per MCP client (Claude desktop with emerald.mcpb, Claude Code with the plugin, and whichever other local-MCP clients the session can run), of what works in each: the tools, the drawn views, the hooks, and what each needs (Node or not). The listing pages and the README use it rather than a claim nobody ran. Also answers the open question 'Engine server on its own' with what M41 and M42 built. Done-test: the submission material and the client table are in the repo for the maintainer; the decision row is written; the open question is answered; the maintainer has submitted.
 files: README.md, docs/plugin.md, docs/memory.emd, submission notes (e.g. docs/listing.md)
 blocks: ["M42 U3","M42 U4"]
 
@@ -12721,11 +12721,11 @@ taken_by: run-milestone driver
 started: 2026-10-14
 
 ### M50 U1
-milestone: M50
+milestone: M52
 scope: engine
 title: A repo init: the CLAUDE.md column table and the session hooks, written by one command
 state: planned
-brief: The usage study of 2026-10-13 (17 sessions on three documents) measured `formats` called up to 8 times a session and columns re-learned every session, because those projects' CLAUDE.md had no column table; M47 U1 put the start_here and inbox hooks in this repo's .claude/settings.json and they were copied to user settings by hand. One command on the npm package (M42 U2), e.g. `npx <package> init [path/to/document.emd]`, run in a repo: (1) names the document, creating it with the development pack when it does not exist (create_document's packs); (2) appends to the repo's CLAUDE.md one marked section (begin/end markers, so re-running regenerates it in place and never touches the rest) holding the three-question table CLAUDE.md carries today (what is ready, what is open, what was decided) and the one-line-per-format column table generated the way start_here's tail is (M47 U2, D-460); (3) writes the SessionStart and UserPromptSubmit hooks into .claude/settings.json, merging into what is there and refusing to overwrite a hook it did not write; (4) prints what it wrote and what a session will now see first. Idempotent: a second run changes nothing; after a format changes, a run regenerates only the marked section. The hooks are the same ones the Claude Code plugin (M42 U4) carries, so a repo that has the plugin needs only the table; init says which half it did. Done-test: on an empty repo with the package installed, init then a fresh session's first hook prints start_here; a second init leaves CLAUDE.md and settings byte-identical; a declared column shows in the regenerated section; the full suite is green.
+brief: Slimmed 2026-10-20, moved from M50: the Claude plugin already carries the SessionStart and UserPromptSubmit hooks, so this is mainly setting a repo up with the development pack, which a team adopting Emerald for its planning needs first (a work session on 2026-10-20 argued its way there by hand). The usage study of 2026-10-13 (17 sessions on three documents) measured `formats` called up to 8 times a session and columns re-learned every session, because those projects' CLAUDE.md had no column table. One command on the npm package (M42 U2), e.g. `npx <package> init [path/to/document.emd]`, run in a repo: (1) names the document, creating it with the development pack when it does not exist (create_document's packs), and says whether it is stored as text (committed, diffs) or kept outside the repo; (2) appends to the repo's CLAUDE.md one marked section (begin/end markers, so re-running regenerates it in place and never touches the rest) holding the three-question table CLAUDE.md carries today (what is ready, what is open, what was decided) and the one-line-per-format column table generated the way start_here's tail is (M47 U2, D-460); (3) only where the plugin is not installed, writes the two hooks into .claude/settings.json, merging into what is there and refusing to overwrite a hook it did not write; (4) prints what it wrote and what a session will now see first. Idempotent: a second run changes nothing; after a format changes, a run regenerates only the marked section. Done-test: on an empty repo, init then a fresh session sees start_here; a second init leaves CLAUDE.md and settings byte-identical; a declared column shows in the regenerated section; the full suite is green.
 files: src/plugin/ (a subcommand of the server's bin), scripts/, README.md, docs/plugin.md
 blocks: ["M42 U2"]
 
@@ -12733,12 +12733,12 @@ blocks: ["M42 U2"]
 milestone: M50
 scope: engine
 title: One real session per MCP client, written down as a table a stranger can trust
-state: planned
+state: dropped
 brief: The server has only ever been driven by Claude (Claude Code, Claude Desktop, and VS Code's Copilot Chat once, at M41's close). The open question 'Other models' asks what we may claim. One real session each, on a synthetic document (dist-demo's project.emd or a copy, never docs/memory.emd): Cursor, Codex CLI, Gemini CLI, VS Code Copilot Chat again on the current build, and the ChatGPT desktop app's Codex host, which the strategy session of 2026-10-15 found (from secondary sources, to be confirmed here) accepts local STDIO servers under Settings > Plugins while its standard chat mode reaches remote servers only and the Free plan has no custom servers at all. In each: start_here answers, a dry-run write shows what would change, a commit lands, and whether the frame draws (show_format / format_sheet) or falls back to text. Results as one table in README.md, a row per client with the plan tried, the date and what worked, and one line in the page's MCP section pointing at it; the open question row answered or amended with the facts, including which plans gate what. Clients the session cannot sign into are the maintainer's: STOP at each with the exact steps, and record 'not tried' rather than a guess. Nothing here changes the server unless a client exposes a fault, which becomes a unit of its own. Done-test: the table has a dated row per client; every claim on the page about clients traces to a row; the open question is no longer open.
 files: README.md (a compatibility table), src/demo/page/copy/en.ts (the MCP section's line), docs/plugin.md, the open_question row 'Other models'
 
 ### M50 U3
-milestone: M50
+milestone: M52
 scope: engine
 title: An export read twice updates its rows by their unique key instead of duplicating them
 state: planned
@@ -12746,7 +12746,7 @@ brief: Today read_onto_format and the app's readers only ever create rows, so dr
 files: src/domain/format/ (the reading's plan), src/plugin/tools/intake.ts and rows.ts (read_onto_format), src/ui/screens/ReadFiles.tsx and the confirm surface, docs/mapping-templates.md
 
 ### M50 U4
-milestone: M50
+milestone: Later
 scope: engine
 title: The full app hosted on Pages, opening a real file in the browser
 state: planned
@@ -12755,7 +12755,7 @@ files: .github/workflows/ (the Pages workflow), vite.config.ts (base path), src/
 blocks: ["M33 U4"]
 
 ### M50 U5
-milestone: M50
+milestone: Later
 scope: engine
 title: A web-app manifest, so the hosted app installs on a phone and opens a file from Files
 state: planned
