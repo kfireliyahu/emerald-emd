@@ -33,9 +33,9 @@ there's no file to edit. It doesn't update itself: download the new one when a r
 `"mcpServers"` in the app's configuration file, keeping anything already there:
 
 - macOS, `~/Library/Application Support/Claude/claude_desktop_config.json`:
-  `"emerald": { "command": "<the path to npx>", "args": ["-y", "emerald-mcp@0.1.5", "--engine-only"] }`
+  `"emerald": { "command": "<the path to npx>", "args": ["-y", "emerald-mcp@0.1.6", "--engine-only"] }`
 - Windows, `%APPDATA%\Claude\claude_desktop_config.json`:
-  `"emerald": { "command": "cmd", "args": ["/c", "npx", "-y", "emerald-mcp@0.1.5", "--engine-only"] }`
+  `"emerald": { "command": "cmd", "args": ["/c", "npx", "-y", "emerald-mcp@0.1.6", "--engine-only"] }`
 
 Quit the app completely and reopen it. A session that has the plugin's skills but no server, as in a
 cloud task, is told these same steps (the `emerald-setup` skill), so it can walk you through them.
@@ -96,7 +96,7 @@ The status line is your setting, not the plugin's. Add to `~/.claude/settings.js
 version this plugin pins:
 
 ```json
-"statusLine": { "type": "command", "command": "npx -y --prefer-offline -p emerald-mcp@0.1.5 emerald-status-line" }
+"statusLine": { "type": "command", "command": "npx -y --prefer-offline -p emerald-mcp@0.1.6 emerald-status-line" }
 ```
 
 It prints the inbox's new rows and the units in progress, for the project's document; through npx it
