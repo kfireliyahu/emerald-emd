@@ -725,6 +725,7 @@ function refusedPlan(blocked: string): Plan {
     keys: [],
     key: { kind: 'NONE' },
     again: undefined,
+    unkeyed: undefined,
     existing: 0,
     audits: [],
     removeGone: false,
@@ -834,14 +835,24 @@ function againText(plan: Plan, again: PlannedRereading): string {
   const removable = new Set(removableGone(again))
   const removing = plan.removeGone ? removable.size : 0
   const changes = planChanges(plan, plan.removeGone)
+  // A file not read before whose lines a unique column finds in rows already
+  // there — last month's export, or typed by hand (M50 U3).
+  const found = `${plural(again.elsewhere, 'line')} ${verb(again.elsewhere, 'names a row', 'name rows')} ${title} already holds ${keySentence(again.key)}`
   return paragraphs(
     section(
-      'Read before — what this read changes',
-      `**${again.from}** was read onto ${title} before, each line found again ${keySentence(again.key)}. ` +
+      again.readBefore ? 'Read before — what this read changes' : `Already in ${title} — what this read changes`,
+      (again.readBefore
+        ? `**${again.from}** was read onto ${title} before, each line found again ${keySentence(again.key)}` +
+          (again.elsewhere === 0 ? '. ' : `, and ${found} from another file or by hand. `)
+        : `**${again.from}** was not read onto ${title} before, but ${found}: each is that row, not a second one. `) +
         `This read changes ${plural(again.changed.length, 'row')}, adds ${count(again.added.length)}, and finds ` +
         `${count(again.same)} as ${verb(again.same, 'it was', 'they were')}` +
         (again.gone.length === 0 ? '.' : `; ${count(again.gone.length)} ${verb(again.gone.length, 'row has', 'rows have')} no line any more.`) +
-        (changes ? '' : ' **Nothing has changed since the last read**, so there is nothing to write.'),
+        (changes
+          ? ''
+          : again.readBefore
+            ? ' **Nothing has changed since the last read**, so there is nothing to write.'
+            : ' **Every line is already there as the file says it**, so there is nothing to write.'),
     ),
     again.changed.length === 0
       ? undefined
@@ -1217,7 +1228,9 @@ function describePlan(loaded: Loaded, plan: Plan): string {
       `${plural(typed.length, 'row')}` +
         `${typed.length === 0 ? '. **Nothing types**, so there is nothing to write.' : '.'}` +
         // Every line accounted for (M34 U3, D-396), so none is dropped quietly.
-        (plan.lines === undefined ? '' : ` Every line of the file: ${tallySentence(plan.lines)}`),
+        (plan.lines === undefined ? '' : ` Every line of the file: ${tallySentence(plan.lines)}`) +
+        // Nothing to find a row by, said once and nothing guessed (M50 U3, D-224).
+        (plan.unkeyed === undefined || typed.length === 0 ? '' : ` ${plan.unkeyed}`),
     ),
     staged.length === 0
       ? undefined
@@ -1341,7 +1354,10 @@ function applyPlan(document: OpenDocument, loaded: Loaded, plan: Plan): string {
       ? `**${plural(intake.rowCount, 'row')} written from ${loaded.fileName}** onto ` +
         `${declaration.title}, which now holds ` +
         `${plural(rowCountOf(document.db, declaration), 'row')}.`
-      : `**${loaded.fileName} read again** onto ${declaration.title}: ${againWritten(intake.again)} ` +
+      : (plan.again?.readBefore === false
+          ? `**${loaded.fileName} read** onto ${declaration.title}, its lines found ${keySentence(plan.again.key)}: `
+          : `**${loaded.fileName} read again** onto ${declaration.title}: `) +
+        `${againWritten(intake.again)} ` +
         `${declaration.title} now holds ${plural(rowCountOf(document.db, declaration), 'row')}.`,
     plan.header === undefined || intake.headerRowId === undefined
       ? undefined
@@ -1561,7 +1577,7 @@ function applyBatch(document: OpenDocument, asked: readonly Asked[], batch: Batc
     }),
     ...written.order.map((k) => {
       const again = written.intakes[k]?.again
-      return again === undefined ? undefined : `${batch.files[k]?.name ?? ''}, read again: ${againWritten(again)}`
+      return again === undefined ? undefined : `${batch.files[k]?.name ?? ''}: ${againWritten(again)}`
     }),
     ...written.order.map((k) => {
       const read = written.plans[k]?.read
@@ -1591,7 +1607,8 @@ export const readOntoFormatTool: PluginTool = {
       'line belongs to). A column fills a `link` only by the exact unique name of its row, and ' +
       'a line naming none is refused; a link is guessed only from a header that names it. `header` writes the file\u2019s ' +
       'total, period or card as one row of another format that every line links to. ' +
-      '**A source read again updates its rows** by note file name or a unique column: changed, added ' +
+      '**A source read again updates its rows** by note file name, and any file by a unique column (so a later ' +
+      'export updates what an earlier one wrote): changed, added ' +
       'and gone named; gone kept unless `remove_gone`. `supersede_reading` takes a reading back. **Several ' +
       'files in one call**: `files`, each `{ file, format }` with its own columns — read in the ' +
       'order their links need, so a line names a row from a file above it; one dry run for the ' +

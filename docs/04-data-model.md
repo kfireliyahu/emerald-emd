@@ -392,7 +392,7 @@ Two `CHECK`s: a position is both halves or neither, and a key is a position **or
 
 | Field | Type | Notes |
 |---|---|---|
-| `source_key` | text? | **Which line of its source the row is** (schema 60, M38 U3, D-408): a note's file name, or the value of the format's unique column the reading fills (its name column when that is unique). A second read of a file of the same name updates the row whose key its line holds, adds a row for a new key, and names — never removes unasked — a row whose key is gone. NULL for a read with no key, which adds to what it wrote as every read did. |
+| `source_key` | text? | **Which line of its source the row is** (schema 60, M38 U3, D-408): a note's file name, or the value of the format's unique column the reading fills (its name column when that is unique). A second read of a file of the same name updates the row whose key its line holds, adds a row for a new key, and names — never removes unasked — a row whose key is gone. A file of another name keyed by a unique column finds its rows across the whole format (M50 U3, D-522), and a row it updates moves to its reading. NULL for a read with no key, which adds to what it wrote as every read did. |
 | `written` | text? | **The mark of what the read put in the row**: a hash of its filled cells less its links, then the keys it covers (`<hash>:name,kcal`). A row that no longer matches it was changed by a person since, and a later read leaves it and says so — a manual value is never overwritten by a re-import. Links are left out because a text document re-mints ids (D-247). |
 
 A source read again moves its rows' records to the new reading; a gone row stays under the reading

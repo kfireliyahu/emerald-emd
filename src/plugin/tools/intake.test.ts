@@ -615,10 +615,10 @@ describe('a unique column, read from a file (M24 U4, D-255)', () => {
     db.close()
   })
 
-  it('refuses a value the table already holds', async () => {
+  // Since M50 U3 (D-522) the column a read is keyed by finds the row a value
+  // names, whichever file wrote it; a second unique column still refuses.
+  it('finds a value the table already holds as that row, from another file', async () => {
     const path = await documentWith(TAG)
-    const db = await reopen(path)
-    db.close()
     await readOntoFormatTool.run(
       { path, format: 'tag', file: await csv(path, 'one.csv', 'name\nred\n'), columns: { 0: 'name' }, commit: true },
       NO_CLIENT,
@@ -627,9 +627,27 @@ describe('a unique column, read from a file (M24 U4, D-255)', () => {
       { path, format: 'tag', file: await csv(path, 'two.csv', 'name\ngreen\nred\n'), columns: { 0: 'name' }, commit: true },
       NO_CLIENT,
     )
+    expect(again).toContain('its lines found by name, which is unique: 0 rows changed, 1 added, 1 as it was.')
+    const after = await reopen(path)
+    expect(countRows(after, TAG)).toBe(2)
+    after.close()
+  })
+
+  it('refuses a value the table already holds in a unique column the read is not keyed by', async () => {
+    const coded: FormatDeclaration = { ...TAG, columns: [...TAG.columns, column('code', 'text', { unique: true })] }
+    const path = await documentWith(coded)
+    const columns = { 0: 'name', 1: 'code' }
+    await readOntoFormatTool.run(
+      { path, format: 'tag', file: await csv(path, 'one.csv', 'name,code\nred,R\n'), columns, commit: true },
+      NO_CLIENT,
+    )
+    const again = await readOntoFormatTool.run(
+      { path, format: 'tag', file: await csv(path, 'two.csv', 'name,code\ngreen,R\n'), columns, commit: true },
+      NO_CLIENT,
+    )
     expect(again).toContain('already holds')
     const after = await reopen(path)
-    expect(countRows(after, TAG)).toBe(1)
+    expect(countRows(after, coded)).toBe(1)
     after.close()
   })
 })

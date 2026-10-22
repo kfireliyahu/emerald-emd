@@ -438,6 +438,7 @@ written out here.
 | D-519 | 2026-10-22 | Every format has a list: one line per row, a tick, the name and the line's columns, grouped by an enum, a link or a date's buckets; `group`, `line` and `done <members>` are words one column's `format_view_column` setting holds together, `group` and `done` one column's each; the tick writes the done member and an untick the member held before; quick add writes the title, the group's value, the filter's exact values and a required enum's first member as `record_format_rows`' batch, or opens entry/new when a required column is still empty; the list beside an entry is the same list, narrow; the View menu became the format's one tab strip | [below](#d-519) |
 | D-520 | 2026-10-22 | A saved view is its own table, `format_saved_view` (063): a format, a name, a kind (table, board, list, roadmap, ready) and the address as the address spells it, so a window around today stays the phrase; *Save this view* on the FilterBand, the rail lists them under their format and renames and deletes in place; `arrange_views view:saved` saves, renames and deletes, and `show_format` and `format_rows` take `view:"<name>"`; an entry's back link names the view it was opened from | [below](#d-520) |
 | D-521 | 2026-10-22 | A dashboard is an ordered set of blocks in its own table, `format_dashboard_block` (064): a saved view drawn compact in its kind, a rollup's chart, or a headline total (a count, or the sum of a number or money column, under a filter kept as the address spells it), and nothing else; one per format, the last tab of its strip, and one for the document, the rail's *Dashboard* — first and `#/` without a ledger, right under Home with one; arranged in place (Add a block, drag, Move earlier and later, Remove from this dashboard), a block's title opening it in full with `← Dashboard` back; `arrange_views view:dashboard` adds, orders and removes, `show_format view:dashboard` draws it | [below](#d-521) |
+| D-522 | 2026-10-22 | A spreadsheet keyed by a unique column is matched against every row of its format, whichever file or person wrote it: next month's export, renamed, changes the rows last month's wrote and adds what is new, and the dry run and the Read screen say both counts and name the changed cells; only a file's own rows can be gone from it; a row moves to the reading that last wrote it; a read fills only the columns it maps; a format with no unique column the reading fills says so in one sentence and matches on nothing else; amends D-408 | [below](#d-522) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1186,6 +1187,47 @@ move. A size per block: a second layout to keep beside the order. Free text or a
 commit — all the migration changes in a text document with no dashboard — and a plugin built before
 it refuses the file until it is rebuilt. `#/` without a ledger is the dashboard, so an empty document
 opens on *Nothing on this dashboard yet.* rather than the list of formats.
+
+## D-522 · 2026-10-22 · A spreadsheet keyed by a unique column is matched against every row of its format, whichever file or person wrote it: next month's export, renamed, changes the rows last month's wrote and adds what is new, and the dry run and the Read screen say both counts and name the changed cells; only a file's own rows can be gone from it; a row moves to the reading that last wrote it; a read fills only the columns it maps; a format with no unique column the reading fills says so in one sentence and matches on nothing else; amends D-408 <a id="d-522"></a>
+
+**Context.** M50 U3. D-408 made a second read of *the same source* update what it wrote, and a source
+was a file name: `pantry.csv` read again found its rows. Next month's export is rarely the same name
+(`board-export (1).csv`, `november.csv`), and a format with a unique column then refused every line of
+it as repeating a value a row already held — the opposite of *bring what you have, every month*. Read
+under the same name it worked, and a third read after a read had changed a row called that row edited
+by a person, because the commit kept the mark of the read before.
+
+**Decision.**
+
+- **A unique column says no two rows hold a value, of the whole format** (D-255), so a spreadsheet
+  keyed by one (`sourceKeyOf`, unchanged: the name column when unique, else the first unique column
+  mapped) is matched against every row of the format, not only those its file wrote: a line whose
+  value a row holds is that row — read from another file, or typed by a person — and is written over
+  cell by cell where the file differs (`rowsHolding`, `compareRereading`'s `elsewhere`). A row a person
+  changed since the last read that wrote it is left, as in D-408.
+- **Gone is still per file**: only a row this file wrote can have no line any more. A row another file
+  wrote was never this file's line.
+- **A row moves to the reading that last wrote it**, from whichever file: its records under the
+  readings before go, so superseding an older reading never takes back a row a later one updated.
+- **A read fills only the columns it maps or fixes** (`readingFills`): a typed row holds a null for
+  every column, and a column no line of this reading has is not one it may clear — a note typed beside
+  a task survives the export that updates its state.
+- **A read that writes over a row marks it afresh**, so the next read sees a change, not an edit.
+- **Both halves (D-227)**: `read_onto_format`'s dry run heads such a read *Already in <format> — what
+  this read changes*, counts changed, added and as it was, and names each changed row with its
+  columns; the Read screen says *Already here, each found by <column>, which is unique* with the same
+  counts and names. A first read with no key, and no header row, says why in one sentence: the format
+  has no unique column, or the unique one is not filled by this reading — and that reading the file
+  again adds every line again.
+
+**Alternatives rejected.** Matching on other columns, or on a near match, when there is no unique
+column: a guessed match is not a truer row (D-224). Refusing a renamed export until the person names
+the file it repeats: the unique column already says which row a line is. Keeping a row recorded under
+every file that read it: superseding the oldest would take back a row the latest wrote.
+
+**Consequences.** A notes folder (keyed by file name) and a read with a header row are unchanged. A
+renamed copy of an export read before is no longer offered as a supersede when its format is keyed —
+it changes nothing instead. No schema change.
 
 ## Related
 

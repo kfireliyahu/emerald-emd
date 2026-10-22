@@ -73,7 +73,12 @@ line has a key — a note's file name, or the value of the format's unique colum
 and a second read of a file of the same name changes the rows whose line changed, adds the new ones,
 and names the rows whose line is gone, removing them only when asked (`remove_gone`, or *Remove it*
 on the screen). A row a person edited since the last read is left and named. A source with no key
-adds to what it wrote, and `supersede_reading` still takes a reading back.
+adds to what it wrote, and `supersede_reading` still takes a reading back. **A unique column keys
+every row of the format, not one file's** (M50 U3, D-522): next month's export under another name
+changes the rows last month's wrote — or a person typed — and adds what is new, and the dry run and the
+Read screen count changed against added and name the changed cells; only a file's own rows can be gone.
+A read fills only the columns it maps, so a value typed in another column stays. A format with no
+unique column the reading fills says so in one sentence and matches on nothing else (D-224).
 Nothing in it knows which program wrote the folder. A guess is now **shown in place** on the Read
 screen and kept as the reader when the file is written; and a link column is guessed when a
 header names it and its target is called by a unique name.

@@ -50,7 +50,7 @@ import {
   type ReadingHeader,
 } from '@/domain/format/reading.ts'
 import { readersOf, type Reader } from '@/domain/format/reader.ts'
-import { filledKeys, stillAsWritten, writtenMark, type SourceRecord } from '@/domain/format/reread.ts'
+import { filledKeys, readingFills, stillAsWritten, writtenMark, type SourceRecord } from '@/domain/format/reread.ts'
 import type { StoredValue } from '@/domain/format/row.ts'
 import { stringListOf } from '@/domain/format/stringList.ts'
 import { inTransaction, query } from '../db/database.ts'
@@ -198,7 +198,8 @@ export function recordIntake(db: Database, request: IntakeRequest): Intake {
       rows,
       fresh.map(({ at }) => rowIds[at] ?? newId()),
     )
-    const filled = filledKeys(linked)
+    // What this reading fills, and no column it never maps (M50 U3).
+    const filled = filledKeys(linked, readingFills(request.declaration, request.reading))
     const written = new Map<number, string>()
     fresh.forEach(({ at }, k) => {
       const rowId = inserted[k]
@@ -256,19 +257,29 @@ export function recordIntake(db: Database, request: IntakeRequest): Intake {
     }
 
     // Each row with the key of its line and the mark of what was put in it
-    // (D-408). A row this source wrote before moves to this reading: its
-    // record under the last one goes, so a source's rows are each held once.
+    // (D-408). A row read before moves to this reading — from this source, or
+    // from another file that wrote it and this one found by its unique column
+    // (M50 U3): its records under the readings before go, so a row is held by
+    // the one reading that last wrote it, and superseding an older reading
+    // never takes back a row a later one updated.
     for (const [at, rowId] of [...written.entries()].sort(([a], [b]) => a - b)) {
       const key = request.keys?.[at]
-      const previous =
-        again?.matched[at] === undefined ? undefined : priorRecord(db, request.declaration.name, request.fileName, rowId)
+      const previous = again?.matched[at] === undefined ? undefined : priorRecord(db, request.declaration.name, rowId)
       if (previous !== undefined) {
-        db.run(`DELETE FROM format_intake_row WHERE intake_id = ? AND row_id = ?`, [previous.intakeId, rowId])
+        db.run(
+          `DELETE FROM format_intake_row WHERE row_id = ? AND format_name IS NULL AND intake_id IN
+             (SELECT id FROM format_intake WHERE format_name = ?)`,
+          [rowId, request.declaration.name],
+        )
       }
       const now = readRow(db, request.declaration, rowId)
-      // A row a person changed since keeps the mark it had, so it stays theirs.
+      // A row a person changed since keeps the mark it had, so it stays theirs —
+      // unless this read wrote over it, which makes what it holds the read's.
       const kept =
-        previous?.written !== undefined && now !== undefined && !stillAsWritten(now.cells, previous.written)
+        again?.update[at] !== true &&
+        previous?.written !== undefined &&
+        now !== undefined &&
+        !stillAsWritten(now.cells, previous.written)
           ? previous.written
           : undefined
       const mark = kept ?? (now === undefined ? null : writtenMark(request.declaration, now.cells, filled))
@@ -295,8 +306,8 @@ export function recordIntake(db: Database, request: IntakeRequest): Intake {
       db.run(
         `UPDATE format_intake SET row_count =
            (SELECT COUNT(*) FROM format_intake_row r WHERE r.intake_id = format_intake.id)
-         WHERE format_name = ? AND file_name = ? AND id <> ?`,
-        [request.declaration.name, request.fileName, id],
+         WHERE format_name = ? AND id <> ?`,
+        [request.declaration.name, id],
       )
     }
 
@@ -370,19 +381,18 @@ function cleared(
   return out
 }
 
-/** The record a row of this source has now: under which reading, and its mark. */
+/** The record a row read before has now, from whichever file: under which reading, and its mark. */
 function priorRecord(
   db: Database,
   format: string,
-  fileName: string,
   rowId: string,
 ): { readonly intakeId: string; readonly written: string | undefined } | undefined {
   const row = query(
     db,
     `SELECT r.intake_id, r.written FROM format_intake_row r JOIN format_intake i ON i.id = r.intake_id
-      WHERE i.format_name = ? AND i.file_name = ? AND r.row_id = ? AND r.format_name IS NULL
-      ORDER BY i.read_at DESC LIMIT 1`,
-    [format, fileName, rowId],
+      WHERE i.format_name = ? AND r.row_id = ? AND r.format_name IS NULL
+      ORDER BY i.read_at DESC, i.id DESC LIMIT 1`,
+    [format, rowId],
   )[0]
   if (row === undefined) return undefined
   return {
@@ -409,6 +419,20 @@ export function sourceRecords(db: Database, format: string, fileName: string): r
     key: String(row['source_key']),
     written: typeof row['written'] === 'string' ? row['written'] : undefined,
   }))
+}
+
+/**
+ * Each row's latest record, whichever file read it, by the key of its line —
+ * for rows a read finds by a unique column rather than by its own source
+ * (M50 U3). A row no reading wrote has none, and nothing marks it as written.
+ */
+export function rowRecords(db: Database, format: string, rowIds: readonly string[]): ReadonlyMap<string, string | undefined> {
+  const out = new Map<string, string | undefined>()
+  for (const rowId of new Set(rowIds)) {
+    const record = priorRecord(db, format, rowId)
+    if (record !== undefined) out.set(rowId, record.written)
+  }
+  return out
 }
 
 /** The formats a file of this name was read onto, each once (M38 U4). */

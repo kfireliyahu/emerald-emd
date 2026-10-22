@@ -34,6 +34,7 @@ import { formatsNamed, indexOf, type FormatIndex } from '@/data/repositories/for
 import { listFormats } from '@/data/repositories/formatRepository.ts'
 import type { FormatDeclaration } from '@/domain/format/declaration.ts'
 import { verdictSentence } from '@/domain/format/identity.ts'
+import { keySentence } from '@/domain/format/reread.ts'
 import { rowWriteRefusal } from '@/domain/format/owner.ts'
 import {
   closeSentence,
@@ -1045,6 +1046,11 @@ function FileRow({
         <AgainLines again={plan.again} removeGone={removeGone} onRemoveGone={onRemoveGone} />
       )}
 
+      {/* Nothing to find an entry by, said once (M50 U3, D-224). */}
+      {plan?.unkeyed !== undefined && plan.prior === undefined && lineCounts(plan).typed > 0 && (
+        <p className="mt-1 text-caption text-ink-tertiary">{plan.unkeyed}</p>
+      )}
+
       {plan !== undefined && <PlanLines declaration={declaration} plan={plan} table={reviewed.table} />}
 
       {editing !== undefined && (
@@ -1200,8 +1206,20 @@ function AgainLines({
   return (
     <div className="mt-1 space-y-1 text-caption">
       <p className="text-ink-secondary tabular-nums">
-        Read before, from <Bidi>{again.from}</Bidi>: {counts.join(' · ')}
-        {nothing && <span className="text-ink-tertiary"> — nothing has changed since, so there is nothing to write</span>}
+        {again.readBefore ? (
+          <>Read before, from <Bidi>{again.from}</Bidi>: </>
+        ) : (
+          // Not this file before, but its entries are here already (M50 U3).
+          <>Already here, each found {keySentence(again.key)}: </>
+        )}
+        {counts.join(' · ')}
+        {nothing && (
+          <span className="text-ink-tertiary">
+            {again.readBefore
+              ? ' — nothing has changed since, so there is nothing to write'
+              : ' — every entry already says what the file says, so there is nothing to write'}
+          </span>
+        )}
       </p>
       {again.changed.length > 0 && (
         <p className="text-ink-secondary">
@@ -1593,7 +1611,7 @@ function Written({
               ? each.rowCount === 1
                 ? '1 entry'
                 : `${String(each.rowCount)} entries`
-              : `read again: ${String(each.again.changed)} changed · ${String(each.again.added)} added` +
+              : `${String(each.again.changed)} changed · ${String(each.again.added)} added` +
                 (each.again.removed === 0 ? '' : ` · ${String(each.again.removed)} removed`) +
                 (each.again.gone === 0 ? '' : ` · ${String(each.again.gone)} gone, kept`)}
             {titles.length > 1 && (

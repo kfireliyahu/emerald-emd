@@ -1155,6 +1155,27 @@ function escapeLike(value: string): string {
   return value.replace(/[\\%_]/g, (character) => `\\${character}`)
 }
 
+/**
+ * The row holding each value in a unique column, at the value's place — or
+ * `undefined` where none does (M50 U3): how a read of any file finds the row a
+ * line already is, by the one column the format says no two rows share.
+ */
+export function rowsHolding(
+  db: Database,
+  declaration: FormatDeclaration,
+  column: string,
+  values: readonly StoredValue[],
+): readonly (string | undefined)[] {
+  const sql =
+    `SELECT ${quoteIdentifier(ROW_ID_COLUMN)} AS id FROM ${quoteIdentifier(tableNameFor(declaration))} ` +
+    `WHERE ${quoteIdentifier(column)} = ? LIMIT 1`
+  return values.map((value) => {
+    if (value === undefined || value === null || typeof value === 'object' || typeof value === 'boolean') return undefined
+    const id = query(db, sql, [value])[0]?.['id']
+    return typeof id === 'string' ? id : undefined
+  })
+}
+
 /** One unique value a write would repeat (M24 U4, D-255). */
 export interface Repeat {
   /** Which of the rows handed in, from 0. */

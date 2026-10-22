@@ -1124,7 +1124,7 @@ rather than three decisions.
 > (D-400), with its subfolders on
 > `recursive`, and since M48 U2 a `.json` file of rows (D-468) — onto a declared format and `supersede_reading` takes back exactly what one file
 > wrote, keeping the mapping; since M38 U3 a source read again updates its rows by a key, naming
-> what changed, was added and is gone (D-408). Since M38 U4 `items` reads a note's list items or table rows onto a second format, each linked back to its note's row (D-410). **Nothing in either parses anything** — `readWorkbook` reads the
+> what changed, was added and is gone (D-408), and since M50 U3 a unique column keys any file against every row of the format, so next month's export updates last month's rows (D-522). Since M38 U4 `items` reads a note's list items or table rows onto a second format, each linked back to its note's row (D-410). **Nothing in either parses anything** — `readWorkbook` reads the
 > file, `sheetReading.ts` is the seam, and `readRows` and `tally` are the screen's own functions —
 > and **the dry run is the preview**, which is why this is two tools where the pack needs
 > `statement_preview` beside `import_statement`. Two things a grid gave a person for free are the

@@ -24,6 +24,7 @@ import type { Database } from 'sql.js'
 
 import {
   priorIntake,
+  rowRecords,
   sourceRecords,
   type Intake,
   type IntakeRequest,
@@ -34,13 +35,22 @@ import {
   stagedHeaderVerdicts,
   type FormatIndex,
 } from '@/data/repositories/formatJoinRepository.ts'
-import { readRow, repeatedValues, rowsLinkingTo } from '@/data/repositories/formatRowRepository.ts'
+import { readRow, repeatedValues, rowsHolding, rowsLinkingTo } from '@/data/repositories/formatRowRepository.ts'
 import { listUnits } from '@/data/repositories/unitRepository.ts'
 import { lineTally, type LineTally } from '@/domain/format/audit.ts'
 import type { FormatDeclaration } from '@/domain/format/declaration.ts'
 import { verdictSentence } from '@/domain/format/identity.ts'
 import { rowWriteRefusal } from '@/domain/format/owner.ts'
-import { compareRereading, lineKeys, sourceKeyOf, type Rereading, type SourceKey } from '@/domain/format/reread.ts'
+import {
+  compareRereading,
+  lineKeys,
+  readingFills,
+  sourceKeyOf,
+  unkeyedSentence,
+  type Rereading,
+  type SourceKey,
+  type SourceRecord,
+} from '@/domain/format/reread.ts'
 import {
   headerProblems,
   readHeader,
@@ -110,14 +120,27 @@ export interface ReadingPlan {
   readonly keys: readonly (string | undefined)[]
   /** How the lines are keyed. */
   readonly key: SourceKey
-  /** The same source read before (D-408): what this read changes, adds and finds gone. */
+  /**
+   * The same source read before (D-408), or rows of the format this read's
+   * unique column finds whichever file wrote them (M50 U3): what this read
+   * changes, adds and finds gone.
+   */
   readonly again: PlannedRereading | undefined
+  /**
+   * Why this read is not keyed, in one sentence, when it is not and writes no
+   * header row (M50 U3): read again, it adds every line again.
+   */
+  readonly unkeyed: string | undefined
 }
 
 /** A read again, with where from and which gone rows cannot be taken away. */
 export interface PlannedRereading extends Rereading {
   /** The file name the source is known by. */
   readonly from: string
+  /** Whether a file of this name was read onto the format before and still has rows. */
+  readonly readBefore: boolean
+  /** Lines found by the unique column in rows this source never wrote (M50 U3). */
+  readonly elsewhere: number
   /** Gone rows another row links to: named, and kept even when removing is asked. */
   readonly linked: ReadonlySet<string>
 }
@@ -161,6 +184,7 @@ export function planReading(
     keys: [],
     key: none,
     again: undefined,
+    unkeyed: undefined,
   } as const
 
   const wanted = reading.header
@@ -191,7 +215,10 @@ export function planReading(
   const key = wanted === undefined ? sourceKeyOf(declaration, reading, table) : none
   const everyKey = lineKeys(key, table, read)
   const keys = read.rows.flatMap((row, at) => (row.cells === undefined ? [] : [everyKey[at]]))
-  const again = key.kind === 'NONE' ? undefined : rereadingOf(db, declaration, file.name, key, staged, keys, read, everyKey, formats)
+  const again =
+    key.kind === 'NONE'
+      ? undefined
+      : rereadingOf(db, declaration, file.name, key, staged, keys, read, everyKey, formats, readingFills(declaration, reading))
 
   // A fixed value is the same on every row, so the first staged row answers for
   // the file — and a file with no rows has no link to dangle. The link to the
@@ -233,12 +260,20 @@ export function planReading(
     keys,
     key,
     again,
+    unkeyed: key.kind === 'NONE' && wanted === undefined ? unkeyedSentence(declaration, reading) : undefined,
   }
 }
 
 /**
  * The source read before, against this read — `undefined` when no reading of a
- * file by this name keyed its rows, which is a first read.
+ * file by this name keyed its rows and no row of the format holds a line's
+ * unique value, which is a first read.
+ *
+ * **Keyed by a unique column, every row of the format is a candidate** (M50
+ * U3): the column says no two rows hold a value, whoever wrote them, so a line
+ * whose value a row holds is that row — read from last month's file, typed by a
+ * person — and is changed, not refused as a repeat. Its gone rows are still
+ * only this source's.
  */
 function rereadingOf(
   db: Database,
@@ -250,11 +285,18 @@ function rereadingOf(
   read: ReadResult,
   everyKey: readonly (string | undefined)[],
   formats: FormatIndex,
+  fills: ReadonlySet<string>,
 ): PlannedRereading | undefined {
   const records = sourceRecords(db, declaration.name, from)
-  if (records.length === 0) return undefined
   const current = new Map<string, StoredRow>()
   for (const record of records) {
+    if (current.has(record.rowId)) continue
+    const row = readRow(db, declaration, record.rowId)
+    if (row !== undefined) current.set(record.rowId, row)
+  }
+  const readBefore = current.size > 0
+  const elsewhere = elsewhereRecords(db, declaration, key, staged, keys, current)
+  for (const record of elsewhere) {
     if (current.has(record.rowId)) continue
     const row = readRow(db, declaration, record.rowId)
     if (row !== undefined) current.set(record.rowId, row)
@@ -278,13 +320,41 @@ function rereadingOf(
       return row.cells === undefined && each !== undefined ? [each] : []
     }),
   )
-  const compared = compareRereading({ declaration, key, staged: compared_staged, keys, refused, records, current })
+  const compared = compareRereading({ declaration, key, staged: compared_staged, keys, refused, records, elsewhere, current, fills })
   const linking = rowsLinkingTo(db, declaration, compared.gone.map((each) => each.rowId), formats.values())
+  const ours = new Set(records.map((record) => record.rowId))
   return {
     ...compared,
     from,
+    readBefore,
+    elsewhere: compared.matched.filter((rowId) => rowId !== undefined && !ours.has(rowId)).length,
     linked: new Set(linking.flatMap((each) => [...each.counts.keys()])),
   }
+}
+
+/**
+ * The rows of the format a spreadsheet's lines name by its unique column, that
+ * this source did not write (M50 U3) — each a record under the line's key, with
+ * the mark of whichever reading last wrote it, so a row a person changed since
+ * is left as theirs here too.
+ */
+function elsewhereRecords(
+  db: Database,
+  declaration: FormatDeclaration,
+  key: SourceKey,
+  staged: readonly StoredRow[],
+  keys: readonly (string | undefined)[],
+  ours: ReadonlyMap<string, StoredRow>,
+): readonly SourceRecord[] {
+  if (key.kind !== 'COLUMN') return []
+  const found = rowsHolding(db, declaration, key.column, staged.map((row) => row.cells[key.column] ?? null))
+  const rowIds = found.flatMap((rowId) => (rowId === undefined || ours.has(rowId) ? [] : [rowId]))
+  if (rowIds.length === 0) return []
+  const marks = rowRecords(db, declaration.name, rowIds)
+  return found.flatMap((rowId, at) => {
+    const each = keys[at]
+    return rowId === undefined || each === undefined || ours.has(rowId) ? [] : [{ rowId, key: each, written: marks.get(rowId) }]
+  })
 }
 
 /**

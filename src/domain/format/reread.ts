@@ -33,19 +33,32 @@
  * line with a key no row holds is **added**. A row of the source whose line is
  * gone is **gone**: named, and removed only when somebody asks.
  *
+ * ## Any file, by a unique column (M50 U3)
+ *
+ * A unique column says *no two rows hold this* of the whole format, not of one
+ * file — so a spreadsheet keyed by one is matched against **every row of the
+ * format**, whichever file or person wrote it: next month's export, renamed,
+ * updates the rows last month's wrote instead of being refused for repeating
+ * them. Only this source's own rows can be gone; a row another file wrote was
+ * never this file's line. A format with no unique column the read fills says
+ * so in a sentence and matches on nothing else — a guessed match is not a
+ * truer row (D-224).
+ *
  * Nothing here touches a database; `readingPlan.ts` hands it the rows.
  */
 
 import {
   isLinkType,
+  isListType,
   labelColumn,
   moneyColumnNames,
   quantityColumnNames,
+  storedColumnsOf,
   type ColumnDeclaration,
   type FormatDeclaration,
 } from './declaration.ts'
 import type { ReadResult, ReadTable, Reading } from './reading.ts'
-import type { StoredRow, StoredValue } from './row.ts'
+import { companionKeyOf, type StoredRow, type StoredValue } from './row.ts'
 
 /** How a read's lines are told apart from one read to the next. */
 export type SourceKey =
@@ -82,6 +95,20 @@ export function keySentence(key: SourceKey): string {
 }
 
 /**
+ * Why a read is not keyed, in one sentence (M50 U3): reading the file again —
+ * or next month's — adds every line again, and nothing else is matched on.
+ */
+export function unkeyedSentence(declaration: FormatDeclaration, reading: Reading): string {
+  const unique = declaration.columns.filter((column) => column.unique && KEYABLE.has(column.type))
+  const again = 'so reading this file again, or a later export of it, adds every line again rather than updating rows'
+  const mapped = new Set(reading.columns.map((each) => each.key))
+  const unfilled = unique.filter((column) => !mapped.has(column.name)).map((column) => column.name)
+  if (unfilled.length === 0) return `${declaration.title} has no unique column to find a row by, ${again}.`
+  const named = unfilled.length === 1 ? unfilled[0] ?? '' : `${unfilled.slice(0, -1).join(', ')} and ${unfilled.at(-1) ?? ''}`
+  return `${named} ${unfilled.length === 1 ? 'is' : 'are'} unique but this reading does not fill ${unfilled.length === 1 ? 'it' : 'them'}, ${again}.`
+}
+
+/**
  * Each line's key, at its place in `read.rows` — a line that did not type keeps
  * its key too, so the row it would have updated is not called gone.
  */
@@ -100,9 +127,38 @@ function keyText(value: unknown): string | undefined {
   return trimmed === '' ? undefined : trimmed
 }
 
-/** Every key a read fills, across all its lines, in one order. */
-export function filledKeys(rows: readonly Readonly<Record<string, StoredValue>>[]): readonly string[] {
-  return [...new Set(rows.flatMap((cells) => Object.keys(cells)))].sort()
+/**
+ * Every key a read fills, across all its lines, in one order — less, given
+ * `fills`, the keys of columns the reading does not map: a typed row holds a
+ * null for every column, and a column no file of this reading has is not one
+ * a read again may clear (M50 U3).
+ */
+export function filledKeys(
+  rows: readonly Readonly<Record<string, StoredValue>>[],
+  fills?: ReadonlySet<string>,
+): readonly string[] {
+  return [...new Set(rows.flatMap((cells) => Object.keys(cells)))].filter((key) => fills?.has(key) ?? true).sort()
+}
+
+/**
+ * The stored keys a reading fills (M50 U3): each column it maps or fixes, as a
+ * row holds it — a money column's two, a list by its name — and a currency or
+ * unit given alone as only that key.
+ */
+export function readingFills(declaration: FormatDeclaration, reading: Reading): ReadonlySet<string> {
+  const named = new Set([
+    ...reading.columns.map((each) => each.key),
+    ...reading.fixed.filter((each) => each.value.trim() !== '').map((each) => each.key),
+    ...(reading.header === undefined ? [] : [reading.header.link]),
+  ])
+  return new Set(
+    declaration.columns.flatMap((column) => {
+      if (named.has(column.name)) return isListType(column.type) ? [column.name] : storedColumnsOf(column)
+      const companion = companionKeyOf(column)
+      if (companion === undefined || !named.has(companion)) return []
+      return column.type === 'money' ? [moneyColumnNames(column).currency] : [quantityColumnNames(column).unit]
+    }),
+  )
 }
 
 /**
@@ -201,7 +257,15 @@ export function compareRereading(input: {
   readonly keys: readonly (string | undefined)[]
   readonly refused: ReadonlySet<string>
   readonly records: readonly SourceRecord[]
+  /**
+   * Rows of the format another source or a person wrote, each found by the
+   * unique column the read keys on (M50 U3): matched like a record, never gone,
+   * since this source never held them.
+   */
+  readonly elsewhere?: readonly SourceRecord[] | undefined
   readonly current: ReadonlyMap<string, StoredRow>
+  /** The keys the reading fills (`readingFills`); every key a line holds when absent. */
+  readonly fills?: ReadonlySet<string> | undefined
 }): Rereading {
   const { declaration, staged, keys, records, current } = input
   const naming = labelColumn(declaration)
@@ -213,7 +277,19 @@ export function compareRereading(input: {
   for (const record of records) {
     if (current.has(record.rowId) && !byKey.has(record.key)) byKey.set(record.key, record)
   }
-  const filled = filledKeys(staged.map((row) => row.cells))
+  // What this source holds is gone when its line is; a row found elsewhere is not.
+  const ours = new Map(byKey)
+  const held = new Set([...byKey.values()].map((record) => record.rowId))
+  for (const record of input.elsewhere ?? []) {
+    if (current.has(record.rowId) && !byKey.has(record.key) && !held.has(record.rowId)) {
+      byKey.set(record.key, record)
+      held.add(record.rowId)
+    }
+  }
+  const filled = filledKeys(
+    staged.map((row) => row.cells),
+    input.fills,
+  )
 
   const matched: (string | undefined)[] = []
   const update: boolean[] = []
@@ -251,7 +327,7 @@ export function compareRereading(input: {
     changed.push({ ...named, columns })
   }
 
-  const gone = [...byKey.values()]
+  const gone = [...ours.values()]
     .filter((record) => !seen.has(record.key) && !input.refused.has(record.key))
     .map((record) => ({ key: record.key, rowId: record.rowId, name: nameOf(current.get(record.rowId)) }))
 
