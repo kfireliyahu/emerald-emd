@@ -25,7 +25,7 @@ D-198.
 
 **Writing a new decision:** append it to the *Open milestones* section below and add its row to
 the index. When a milestone closes, `node scripts/archive-decisions.mjs` moves its entries out of this
-file in the same commit, and its index rows and every link to them become the plain D-ref;
+file in the same commit: its index rows name the milestone, and every Markdown link to them becomes its text;
 `npm run docs:check` fails until it has. **Numbering continues** across both
 indexes — the next decision is the next number, whichever half it belongs to.
 

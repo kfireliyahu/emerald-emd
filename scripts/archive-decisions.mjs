@@ -11,6 +11,8 @@
  *   node scripts/archive-decisions.mjs --dry      # say what would move, write nothing
  *   node scripts/archive-decisions.mjs M34="What the trial found"
  *                                                 # a title for the file other than the row's
+ *   node scripts/archive-decisions.mjs --root <folder>
+ *                                                 # another checkout's docs (the test's fixture)
  *
  * The log opens with an index of every decision and holds the open milestones'
  * entries in full; a closed milestone's entries live in an archive file, moved
@@ -30,9 +32,11 @@
  *    `<a id="d-NNN"></a>`, which is what every link to an entry targets.
  * 2. Relative links inside a moved entry are rebased to the archive folder, and
  *    a `](#d-NNN)` points at wherever D-NNN now lives.
- * 3. The index rows of what moved point at the archive file.
- * 4. Every `09-decision-log.md#d-NNN` in the repository whose entry is not in
- *    the log any more is rewritten to the file that holds it.
+ * 3. The index rows of what moved name their milestone, from the decision row —
+ *    never the link's text, which says `below` while the entry is in the log.
+ * 4. Every Markdown link in a tracked `.md` file to an entry that is not in the
+ *    log any more becomes its text. Only a link: a code file's comment quoting
+ *    a path to an entry as an example is left as written.
  *
  * Entries are never reworded. The remaining log is rewritten in number order,
  * with its `## Related` footer last.
@@ -43,7 +47,7 @@ import path from 'node:path'
 import { execSync } from 'node:child_process'
 import { pathToFileURL } from 'node:url'
 
-const root = path.resolve(import.meta.dirname, '..')
+let root = path.resolve(import.meta.dirname, '..')
 const LOG = 'docs/09-decision-log.md'
 const ARCHIVE = 'docs/archive/decisions'
 const MEMORY = 'docs/memory.emd'
@@ -163,6 +167,8 @@ function relative(from, to) {
 
 function main() {
   const dry = process.argv.includes('--dry')
+  const at = process.argv.indexOf('--root')
+  if (at > 0) root = path.resolve(process.argv[at + 1])
   const titles = new Map(
     process.argv.slice(2).flatMap((arg) => {
       const match = /^(M\d+)=(.+)$/.exec(arg)
@@ -254,8 +260,7 @@ function main() {
   const preamble = log.preamble.map((line) => {
     const row = /^(\| (D-\d+) \| [^|]* \| [^|]* \| )([^|]*)( \|.*)$/.exec(line)
     if (!row || !movedIds.has(row[2])) return line
-    const label = /^\[([^\]]+)\]/.exec(row[3].trim())?.[1] ?? memory.decisions.get(row[2])
-    return `${row[1]}${label}${row[4]}`
+    return `${row[1]}${memory.decisions.get(row[2])}${row[4]}`
   })
   const staying = log.blocks.filter((block) => !moving.includes(block))
   const footer = staying.filter((block) => /^## Related\b/.test(block.body[0]))
@@ -271,9 +276,10 @@ function main() {
   // Every link into the log for an entry that is not there any more.
   const files = execSync('git ls-files', { cwd: root, encoding: 'utf8' })
     .split('\n')
-    .filter((file) => /\.(md|mjs|js|ts|tsx|json)$/.test(file) && !file.endsWith('.emd'))
+    .filter((file) => file.endsWith('.md') && fs.existsSync(path.join(root, file)))
   // The archive is not in the repository, so a tracked file never links into it:
-  // a link to a moved entry keeps its text, and a bare path becomes the plain D-NNN.
+  // a link to a moved entry keeps its text. A path that is not a link is prose,
+  // and is left alone: M42's run rewrote an example in docs-check.mjs's comment.
   const moved = (n) => where.get(`D-${n}`)?.startsWith(`${ARCHIVE}/`)
   const intoLog = (file, prefix) =>
     posix(path.relative(root, path.resolve(root, path.dirname(file), `${prefix}09-decision-log.md`))) === LOG
@@ -291,23 +297,7 @@ function main() {
         repointed += 1
         return label
       })
-    const next = own.replace(/((?:\.{1,2}\/|[\w.-]+\/)*)09-decision-log\.md#d-(\d+)/g, (whole, prefix, n) => {
-      if (moved(n)) {
-        repointed += 1
-        return `D-${n}`
-      }
-      const home = where.get(`D-${n}`)
-      if (!home || home === LOG) return whole
-      const relativeToFile = prefix.startsWith('.')
-      const resolved = relativeToFile
-        ? posix(path.relative(root, path.resolve(root, path.dirname(file), `${prefix}09-decision-log.md`)))
-        : posix(path.normalize(`${prefix}09-decision-log.md`))
-      if (resolved !== LOG && !(file === LOG && prefix === '')) return whole
-      repointed += 1
-      if (home === file) return `#d-${n}`
-      return `${relativeToFile || prefix === '' ? relative(file, home) : home}#d-${n}`
-    })
-    if (next !== text) writes.set(file, next)
+    if (own !== text) writes.set(file, own)
   }
 
   for (const [milestone, group] of groups) {
