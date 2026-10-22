@@ -468,15 +468,30 @@ export function lanesOf<R>(
  * column in the line under the title beside the ones its type puts there
  * (`entryLayout`) — what a page's `line` said before the page and the entry
  * were one view.
+ *
+ * **`hidden` and `new`** (M53 U2, D-517): `hidden` keeps a column off this
+ * entry view even when it holds a value — never the title nor a required
+ * column, which are drawn whatever the setting says — and `new` marks a column
+ * a new entry asks for beside the required ones (M53 U3 reads it). Both are the
+ * view's, beside the order: the column stays in the format, the table and
+ * every tool.
  */
 export interface EntrySetting {
   readonly way?: ShowAs | undefined
   readonly place?: number | undefined
   readonly header?: boolean | undefined
+  readonly hidden?: boolean | undefined
+  readonly asked?: boolean | undefined
 }
 
 /** The word that puts a column in the entry's header line. */
 export const HEADER_WORD = 'header'
+
+/** The word that keeps a column off the entry view (M53 U2). */
+export const HIDDEN_WORD = 'hidden'
+
+/** The word that has a new entry ask for a column (M53 U2; read by U3). */
+export const ASKED_WORD = 'new'
 
 /**
  * A setting back into its parts, or nothing when it is not one the entry view
@@ -487,6 +502,8 @@ export function readEntrySetting(setting: string): EntrySetting | undefined {
   let way: ShowAs | undefined
   let place: number | undefined
   let header: boolean | undefined
+  let hidden: boolean | undefined
+  let asked: boolean | undefined
   let retired = false
   for (const word of words) {
     const placed = /^#(\d{1,4})$/.exec(word)
@@ -494,6 +511,10 @@ export function readEntrySetting(setting: string): EntrySetting | undefined {
       place = Number(placed[1])
     } else if (word === HEADER_WORD && header === undefined) {
       header = true
+    } else if (word === HIDDEN_WORD && hidden === undefined) {
+      hidden = true
+    } else if (word === ASKED_WORD && asked === undefined) {
+      asked = true
     } else if (isShowAs(word) && way === undefined && !retired) {
       way = word
     } else if (RETIRED_WAYS.has(word) && way === undefined && !retired) {
@@ -502,9 +523,9 @@ export function readEntrySetting(setting: string): EntrySetting | undefined {
       return undefined
     }
   }
-  return way === undefined && place === undefined && header === undefined && !retired
+  return way === undefined && place === undefined && header === undefined && hidden === undefined && asked === undefined && !retired
     ? undefined
-    : { way, place, header }
+    : { way, place, header, hidden, asked }
 }
 
 /** The parts as one setting, or nothing when there is nothing left to keep. */
@@ -513,6 +534,8 @@ export function writeEntrySetting(entry: EntrySetting): string | undefined {
     ...(entry.way === undefined ? [] : [entry.way]),
     ...(entry.place === undefined ? [] : [`#${String(entry.place)}`]),
     ...(entry.header === true ? [HEADER_WORD] : []),
+    ...(entry.hidden === true ? [HIDDEN_WORD] : []),
+    ...(entry.asked === true ? [ASKED_WORD] : []),
   ]
   return words.length === 0 ? undefined : words.join(' ')
 }
@@ -620,6 +643,26 @@ export function entryOrder<T extends { readonly name: string }>(
     .map((column, at) => ({ column, at, place: places.get(column.name) ?? Number.POSITIVE_INFINITY }))
     .sort((a, b) => a.place - b.place || a.at - b.at)
     .map((each) => each.column)
+}
+
+/**
+ * **A column moved within its part** (M53 U2): `part` is the names of one part
+ * of the entry (`entryLayout`) in the view's order, and the column at `from` in
+ * it goes to `to` in it. The part's columns keep the places in the whole order
+ * they held between them, so the title and every other part stay where they
+ * were — a text moved up never jumps above the title and becomes it.
+ */
+export function movedWithin(
+  names: readonly string[],
+  part: readonly string[],
+  from: number,
+  to: number,
+): readonly string[] {
+  const moved = movedTo(part, from, to)
+  if (moved === part) return names
+  const slots = new Set(part)
+  let next = 0
+  return names.map((name) => (slots.has(name) ? (moved[next++] ?? name) : name))
 }
 
 /** Names with the one at `from` moved to `to` — what a drag or a move button asks for. */

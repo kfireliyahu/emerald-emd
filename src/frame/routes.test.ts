@@ -82,11 +82,11 @@ function problemsOn(html: string): string[] {
     const text = inner.replace(/<[^>]*>/g, '').trim()
     const label = /aria-label="([^"]*)"/.exec(attributes)?.[1] ?? ''
     const writes =
-      ['Add', 'Add a claim', 'Change the claims', 'Done arranging'].includes(text) ||
+      ['Add', 'Add a claim', 'Change the claims'].includes(text) ||
       text.startsWith('Apply ') ||
       ['Read', 'Add a column', 'Delete'].includes(label) ||
       label.startsWith('Edit ') ||
-      label.startsWith('Arrange this view')
+      label.startsWith('Fields:')
     if (writes) found.push(`a button that writes on a read-only page: ${label || text}`)
   }
   if (html.includes('draggable="true"')) found.push('something to drag on a read-only page')

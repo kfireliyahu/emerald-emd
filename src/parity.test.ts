@@ -297,6 +297,14 @@ const CAPABILITIES: readonly Capability[] = [
     tool: 'arrange_views',
   },
   {
+    // M53 U2 (D-517): the entry's Fields list and a column's ⋯ menu; the
+    // conversation's `hidden` and `new_entry` on `arrange_views`.
+    does: 'Hide a column on a format’s entry, or mark it for a new entry to ask for.',
+    writes: ['setEntryHidden', 'setEntryAsked'],
+    screen: FORMAT_ROWS,
+    tool: 'arrange_views',
+  },
+  {
     // M27 U3 (D-301); a conversation's since M35 U4 (D-403). The move itself
     // is `updateRow`, above.
     does: 'Choose which enum column a format’s board lays its lanes by.',

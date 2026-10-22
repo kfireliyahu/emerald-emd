@@ -1333,7 +1333,7 @@ export function readViews(
         if (!isViewSetting(view, setting)) {
           return err(
             view === 'entry'
-              ? `Line ${String(block.value.line)}: ${column} under ${heading} is a way to show it (line, markdown, figure, bar…), a place like #2, header, or several of them, ` +
+              ? `Line ${String(block.value.line)}: ${column} under ${heading} is a way to show it (line, markdown, figure, bar…), a place like #2, header, hidden, new, or several of them, ` +
                   `and ${setting} is not.`
               : `Line ${String(block.value.line)}: ${column} under ${heading} is ${VIEW_PARTS[view].join(' or ')}, ` +
                   `and ${setting} is not.`,

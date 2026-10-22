@@ -199,6 +199,41 @@ export function setEntryHeader(db: Database, format: string, column: string, hea
 }
 
 /**
+ * **Which columns this entry view keeps off the page** (M53 U2, D-517) —
+ * written by the entry's Fields list, a column's ⋯ and `arrange_views`. A
+ * hidden column is still in the format, the table and every tool; the title
+ * and a required column are drawn whatever this says.
+ */
+export function entryHidden(db: Database, format: string): ReadonlySet<string> {
+  return new Set(
+    [...entrySettings(db, format)].flatMap(([column, entry]) => (entry.hidden === true ? [column] : [])),
+  )
+}
+
+/** Keep a column off the entry view, or show it again (M53 U2). */
+export function setEntryHidden(db: Database, format: string, column: string, hidden: boolean): void {
+  const kept = entrySettings(db, format).get(column)
+  writeEntry(db, format, column, { ...kept, hidden: hidden ? true : undefined })
+}
+
+/**
+ * **Which columns a new entry asks for** beside the required ones — the
+ * *New entry* tick in the Fields list (M53 U2, D-517); M53 U3's new entry
+ * reads it.
+ */
+export function entryAsked(db: Database, format: string): ReadonlySet<string> {
+  return new Set(
+    [...entrySettings(db, format)].flatMap(([column, entry]) => (entry.asked === true ? [column] : [])),
+  )
+}
+
+/** Have a new entry ask for a column, or not (M53 U2). */
+export function setEntryAsked(db: Database, format: string, column: string, asked: boolean): void {
+  const kept = entrySettings(db, format).get(column)
+  writeEntry(db, format, column, { ...kept, asked: asked ? true : undefined })
+}
+
+/**
  * Put the entry page's columns in this order — every column, as the page
  * shows them after a drag — or, given nothing, back in the declaration's. A
  * way a column was given stays with it either way.

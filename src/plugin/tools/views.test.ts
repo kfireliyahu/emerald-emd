@@ -17,7 +17,9 @@ import { adoptFormat } from '@/data/repositories/formatRepository.ts'
 import {
   boardSettings,
   columnWidths,
+  entryAsked,
   entryHeaders,
+  entryHidden,
   entryInputs,
   entryPlaces,
 } from '@/data/repositories/formatViewRepository.ts'
@@ -170,6 +172,82 @@ describe('arrange_views (M35 U4)', () => {
     const db = await reopened(path)
     expect(entryInputs(db, 'recipe').size).toBe(0)
     db.close()
+  })
+
+  it('hides a column and marks one for a new entry, as the Fields list does (M53 U2)', async () => {
+    const path = await recipes()
+    const done = await arrangeViewsTool.run(
+      {
+        path,
+        settings: [
+          { format: 'recipe', view: 'entry', column: 'course', hidden: true },
+          { format: 'recipe', view: 'entry', column: 'kcal', new_entry: true, hidden: true },
+          { format: 'recipe', view: 'entry', order: ['kcal', 'course'] },
+        ],
+        commit: true,
+      },
+      NO_CLIENT,
+    )
+    expect(done).toContain('| recipe | entry | course | shown | shown | hidden |')
+    expect(done).toContain('| recipe | entry | kcal | new entry | - | asks |')
+
+    const db = await reopened(path)
+    // What the screen reads: hidden and asked beside the order, which kept them.
+    expect(entryHidden(db, 'recipe')).toEqual(new Set(['course', 'kcal']))
+    expect(entryAsked(db, 'recipe')).toEqual(new Set(['kcal']))
+    expect(entryPlaces(db, 'recipe').get('kcal')).toBe(1)
+    db.close()
+    const read = await formatsTool.run({ path, format: 'recipe' }, NO_CLIENT)
+    expect(read).toContain('| kcal | - | figure, bar, slider | #1 | - | hidden | asks | - |')
+
+    // The title, a required column and a computed one are never hidden.
+    const refused = await arrangeViewsTool.run(
+      {
+        path,
+        settings: [
+          { format: 'recipe', view: 'entry', column: 'name', hidden: true },
+          { format: 'recipe', view: 'entry', column: 'share', hidden: true },
+          { format: 'recipe', view: 'entry', column: 'steps', hidden: 'yes' },
+        ],
+        commit: true,
+      },
+      NO_CLIENT,
+    )
+    expect(refused).toContain('3 settings were refused')
+    expect(refused).toContain('`name` is required')
+    expect(refused).toContain('`share` is computed')
+    expect(refused).toContain('`hidden` is true or false.')
+
+    // Shown again, and no longer asked for.
+    await arrangeViewsTool.run(
+      {
+        path,
+        settings: [
+          { format: 'recipe', view: 'entry', column: 'course', hidden: false },
+          { format: 'recipe', view: 'entry', column: 'kcal', hidden: false, new_entry: false },
+        ],
+        commit: true,
+      },
+      NO_CLIENT,
+    )
+    const back = await reopened(path)
+    expect(entryHidden(back, 'recipe').size).toBe(0)
+    expect(entryAsked(back, 'recipe').size).toBe(0)
+    back.close()
+  })
+
+  it('refuses hiding the column an entry draws as its title, required or not', async () => {
+    const db = await createDatabase()
+    const loose: FormatDeclaration = { ...RECIPE, name: 'note', title: 'Note', columns: [column('heading', 'text'), column('body', 'text')], derived: [] }
+    expect(adoptFormat(db, loose, NOW).refusals).toEqual([])
+    const path = join(await tempDir('emerald-views-'), 'notes.emd')
+    await writeFile(path, exportDatabase(db))
+    db.close()
+    const answer = await arrangeViewsTool.run(
+      { path, settings: [{ format: 'note', view: 'entry', column: 'heading', hidden: true }], commit: true },
+      NO_CLIENT,
+    )
+    expect(answer).toContain('`heading` is the title of note’s entry')
   })
 })
 

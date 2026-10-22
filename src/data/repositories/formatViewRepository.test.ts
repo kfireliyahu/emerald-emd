@@ -6,6 +6,7 @@ import {
   entryLayout,
   entryOrder,
   movedTo,
+  movedWithin,
   wayOf,
   readEntrySetting,
   writeEntrySetting,
@@ -17,11 +18,15 @@ import { insertRows } from './formatRowRepository.ts'
 import {
   clearGraphPlaces,
   columnWidths,
+  entryAsked,
   entryHeaders,
+  entryHidden,
   entryInputs,
   entryPlaces,
   graphPlaces,
   setColumnWidth,
+  setEntryAsked,
+  setEntryHidden,
   setEntryInput,
   setEntryOrder,
   setGraphPlaces,
@@ -338,6 +343,50 @@ describe('entry order', () => {
     expect(entryPlaces(back, 'book')).toEqual(new Map([['pages', 1], ['title', 2]]))
     expect(entryInputs(back, 'book')).toEqual(new Map([['title', 'markdown']]))
     expect(readViews(views?.text.replace('#1', '#first') ?? '').ok).toBe(false)
+  })
+
+  it('moves a column within its part, leaving the title and the other parts where they were (M53 U2)', () => {
+    // title, state (line), notes (text), due (line), body (text)
+    const names = ['title', 'state', 'notes', 'due', 'body']
+    expect(movedWithin(names, ['notes', 'body'], 1, 0)).toEqual(['title', 'state', 'body', 'due', 'notes'])
+    expect(movedWithin(names, ['state', 'due'], 0, 1)).toEqual(['title', 'due', 'notes', 'state', 'body'])
+    expect(movedWithin(names, ['state', 'due'], 0, 0)).toBe(names)
+    expect(movedWithin(names, ['state', 'due'], 0, 4)).toBe(names)
+  })
+
+  it('keeps a column hidden and asked for beside its place and way, through a text document (M53 U2)', async () => {
+    expect(readEntrySetting('markdown #2 hidden new')).toEqual({ way: 'markdown', place: 2, hidden: true, asked: true })
+    expect(writeEntrySetting({ place: 1, hidden: true })).toBe('#1 hidden')
+    expect(writeEntrySetting({ asked: true })).toBe('new')
+    for (const bad of ['hidden hidden', 'new new', 'shown']) expect(readEntrySetting(bad)).toBeUndefined()
+    // The longest a setting can be still fits the table's CHECK.
+    expect(writeEntrySetting({ way: 'relative', place: 1234, header: true, hidden: true, asked: true })?.length).toBeLessThanOrEqual(32)
+
+    const db = await withBook()
+    setEntryOrder(db, 'book', ['pages', 'title'])
+    setEntryHidden(db, 'book', 'pages', true)
+    setEntryAsked(db, 'book', 'pages', true)
+    expect(entryHidden(db, 'book')).toEqual(new Set(['pages']))
+    expect(entryAsked(db, 'book')).toEqual(new Set(['pages']))
+    expect(entryPlaces(db, 'book').get('pages')).toBe(1)
+    // A new order keeps both.
+    setEntryOrder(db, 'book', undefined)
+    expect(entryHidden(db, 'book')).toEqual(new Set(['pages']))
+
+    const parts = serializeDocument(db)
+    if (!parts.ok) throw new Error(parts.error)
+    const views = parts.value.find((part) => part.name === 'views.md')
+    expect(views?.text).toContain('### book entry\npages: hidden new')
+    const back = await createDatabase()
+    const applied = applyParts(back, parts.value, NOW)
+    if (!applied.ok) throw new Error(applied.error)
+    expect(entryHidden(back, 'book')).toEqual(new Set(['pages']))
+    expect(entryAsked(back, 'book')).toEqual(new Set(['pages']))
+
+    setEntryHidden(db, 'book', 'pages', false)
+    setEntryAsked(db, 'book', 'pages', false)
+    expect(entryHidden(db, 'book').size).toBe(0)
+    expect(entryAsked(db, 'book').size).toBe(0)
   })
 
   it('keeps how a worked-out column is shown, and drops a retired word, through a text document (D-402)', async () => {

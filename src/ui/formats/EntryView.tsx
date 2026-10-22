@@ -28,7 +28,7 @@ import {
   entryLayout,
   entryOrder,
   entryWayOf,
-  movedTo,
+  movedWithin,
   printsAsPercent,
   relativeDay,
   wayOf,
@@ -108,6 +108,8 @@ export function EntryView({
   chosen,
   places,
   headers,
+  hidden,
+  asked,
   long,
   largest,
   oneUnit,
@@ -132,6 +134,8 @@ export function EntryView({
   onRevert,
   onChoose,
   onOrder,
+  onHide,
+  onAsk,
   onBack,
   onAdd,
   onDelete,
@@ -150,6 +154,10 @@ export function EntryView({
   places: ReadonlyMap<string, number>
   /** The columns the view puts in the header line beyond their type's. */
   headers: ReadonlySet<string>
+  /** The columns this entry view keeps off the page (M53 U2) — never the title or a required one. */
+  hidden: ReadonlySet<string>
+  /** The columns a new entry asks for beside the required ones (M53 U2; U3 reads it). */
+  asked: ReadonlySet<string>
   /** The text columns that read as markdown by default (`readsAsMarkdown`). */
   long: ReadonlySet<string>
   /** The largest figure of each number column on the page, which a bar is measured against. */
@@ -201,19 +209,56 @@ export function EntryView({
   onChoose: (column: string, way: ShowAs | undefined) => void
   /** Put the view's columns in this order, or — given nothing — the declaration's back. */
   onOrder: (columns: readonly string[] | undefined) => void
+  /** Keep a column off this entry view, or show it again. */
+  onHide: (column: string, hidden: boolean) => void
+  /** Have a new entry ask for a column, or not. */
+  onAsk: (column: string, asked: boolean) => void
   onBack: () => void
   onAdd: () => void
   onDelete: (() => void) | undefined
   /** Open a row of a format in this same view. */
   onOpen: (format: string, id: string) => void
 }) {
-  // Showing where each column comes, to move it. A glance, so this visit's.
-  const [arranging, setArranging] = useState(false)
+  // The Fields list (M53 U2): this view's order, what it shows, and what a new
+  // entry asks for — where the Arrange mode was.
+  const [fieldsOpen, setFieldsOpen] = useState(false)
+  // "N hidden" pressed: the hidden fields drawn in place, dimmed, until the
+  // entry is left — the view is keyed per entry, so leaving it forgets this.
+  const [revealed, setRevealed] = useState(false)
   const ordered = entryOrder(declaration.columns, places)
   const names = ordered.map((column) => column.name)
   const wayOfColumn = (column: ColumnDeclaration): ShowAs =>
     entryWayOf(column, chosen.get(column.name), long.has(column.name))
   const layout = entryLayout(ordered, wayOfColumn, headers)
+  // **The title and a required column are drawn whatever the view says** —
+  // a hand-edited `hidden` on one is read as nothing.
+  const hideable = (column: ColumnDeclaration): boolean => column.required !== true && column !== layout.title
+  const isHidden = (column: ColumnDeclaration): boolean => hidden.has(column.name) && hideable(column)
+  const hiddenCount = ordered.filter(isHidden).length
+  const drawn = (column: ColumnDeclaration): boolean => revealed || !isHidden(column)
+  // A field moves within its part, as the order always worked (D-296): the
+  // part comes from the column's type, so a move across parts would change
+  // nothing a person could see.
+  const parts = [layout.header, layout.figures, layout.texts, layout.links]
+  const partOf = (name: string): readonly string[] =>
+    (parts.find((part) => part.some((column) => column.name === name)) ?? []).map((column) => column.name)
+  const reorder = (next: readonly string[]): void => {
+    if (next === names) return
+    // The declaration's own order is kept as nothing, so a view put back by
+    // hand is a view nobody arranged.
+    const declared = declaration.columns.every((column, at) => next[at] === column.name)
+    onOrder(declared ? undefined : next)
+  }
+  const step = (name: string, by: -1 | 1): void => {
+    const part = partOf(name)
+    const at = part.indexOf(name)
+    reorder(movedWithin(names, part, at, at + by))
+  }
+  const dropOn = (name: string, target: string): void => {
+    const part = partOf(name)
+    if (!part.includes(target)) return
+    reorder(movedWithin(names, part, part.indexOf(name), part.indexOf(target)))
+  }
   // What a bar is measured against: the bound declared, or the largest on the
   // page — and for a percent never less than the whole.
   const topOf = (column: ColumnDeclaration): number | undefined =>
@@ -222,38 +267,39 @@ export function EntryView({
   const one = declaration.title.toLowerCase()
   const fresh = existing === undefined
   const readOnly = locked !== undefined
-  // The column being dragged, and the one it would land on.
+  // The column being dragged — by its label on the page or its row in Fields —
+  // and the one it would land on.
   const [dragging, setDragging] = useState<string | undefined>(undefined)
   const [over, setOver] = useState<string | undefined>(undefined)
-  const move = (from: number, to: number): void => {
-    const next = movedTo(names, from, to)
-    if (next === names) return
-    // The declaration's own order is kept as nothing, so a view put back by
-    // hand is a view nobody arranged.
-    const declared = declaration.columns.every((column, at) => next[at] === column.name)
-    onOrder(declared ? undefined : next)
-  }
   const settle = (): void => {
     setDragging(undefined)
     setOver(undefined)
   }
+  const drag: Drag = {
+    dragging,
+    over,
+    accepts: (name) => dragging !== undefined && dragging !== name && partOf(dragging).includes(name),
+    start: setDragging,
+    hover: setOver,
+    drop: (name) => {
+      if (dragging !== undefined) dropOn(dragging, name)
+      settle()
+    },
+    end: settle,
+  }
   const mover = (column: ColumnDeclaration): Mover | undefined => {
-    if (!arranging || ordered.length < 2) return undefined
-    const at = names.indexOf(column.name)
+    if (readOnly || column === layout.title) return undefined
+    const part = partOf(column.name)
+    const at = part.indexOf(column.name)
     return {
-      first: at === 0,
-      last: at === ordered.length - 1,
-      dragging: dragging === column.name,
-      over: over === column.name && dragging !== undefined && dragging !== column.name,
-      onUp: () => move(at, at - 1),
-      onDown: () => move(at, at + 1),
-      onDragStart: () => setDragging(column.name),
-      onDragOver: () => setOver(column.name),
-      onDrop: () => {
-        if (dragging !== undefined) move(names.indexOf(dragging), at)
-        settle()
-      },
-      onDragEnd: settle,
+      first: at <= 0,
+      last: at === part.length - 1,
+      hideable: hideable(column),
+      hidden: isHidden(column),
+      drag,
+      onUp: () => step(column.name, -1),
+      onDown: () => step(column.name, 1),
+      onHide: () => onHide(column.name, !isHidden(column)),
     }
   }
 
@@ -298,6 +344,7 @@ export function EntryView({
       marked={failing.has(column.name)}
       refused={refused?.column === column.name ? refused.text : undefined}
       mover={mover(column)}
+      dimmed={isHidden(column)}
       onChange={(key, text) => onChange(withField(draft, key, text))}
       onPick={(key, text) => onCommit(column.name, withField(draft, key, text))}
       onLeave={() => setLeaving(column.name)}
@@ -307,8 +354,17 @@ export function EntryView({
     />
   )
 
-  const hasFigures =
-    layout.figures.length > 0 || derived.length > 0 || aggregates.length > 0 || verdicts.length > 0
+  // What is drawn: every part's columns but the hidden ones, unless revealed.
+  const header = layout.header.filter(drawn)
+  const figures = layout.figures.filter(drawn)
+  const texts = layout.texts.filter(drawn)
+  const linkColumns = layout.links.filter(drawn)
+  const hasFigures = figures.length > 0 || derived.length > 0 || aggregates.length > 0 || verdicts.length > 0
+  // "holds a value", in the Fields list: what the entry shows now.
+  const holds = (column: ColumnDeclaration): boolean => {
+    const text = (draft[column.name] ?? '').trim()
+    return text !== '' && text !== '[]'
+  }
 
   return (
     <div className="fc-view-enter flex h-full flex-col">
@@ -363,21 +419,27 @@ export function EntryView({
         )}
         <span className="ml-auto flex items-center gap-1.5">
           {written !== undefined && <span className="text-caption text-ink-tertiary">Written {written}</span>}
-          {arranging && places.size > 0 && (
-            <Button variant="ghost" onClick={() => onOrder(undefined)}>
-              The declaration’s order
-            </Button>
-          )}
-          {!readOnly && ordered.length > 1 && (
-            <IconAction
-              label={arranging ? 'Done arranging' : 'Arrange this view: each column’s place'}
-              onClick={() => setArranging(!arranging)}
-            >
-              <path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0" />
-              <circle cx="16" cy="6" r="2" />
-              <circle cx="10" cy="12" r="2" />
-              <circle cx="18" cy="18" r="2" />
-            </IconAction>
+          {!readOnly && ordered.some((column) => column !== layout.title) && (
+            <FieldsList
+              open={fieldsOpen}
+              setOpen={setFieldsOpen}
+              sections={[
+                { label: 'Line under the title', columns: layout.header },
+                { label: 'Figures', columns: layout.figures },
+                { label: 'Text', columns: layout.texts },
+                { label: 'Links', columns: layout.links },
+              ]}
+              isHidden={isHidden}
+              hideable={hideable}
+              asked={asked}
+              holds={holds}
+              drag={drag}
+              arranged={places.size > 0}
+              onStep={step}
+              onHide={(column) => onHide(column.name, !isHidden(column))}
+              onAsk={(column) => onAsk(column.name, !asked.has(column.name))}
+              onReset={() => onOrder(undefined)}
+            />
           )}
           {onDelete !== undefined && (
             <IconAction label="Delete" tone="negative" onClick={onDelete}>
@@ -394,9 +456,9 @@ export function EntryView({
               <Bidi>{declaration.title}</Bidi>
             </div>
             {layout.title !== undefined && field(layout.title, 'title')}
-            {layout.header.length > 0 && (
+            {header.length > 0 && (
               <div className="flex flex-wrap items-center gap-x-[18px] gap-y-1.5">
-                {layout.header.map((column) => field(column, 'header'))}
+                {header.map((column) => field(column, 'header'))}
               </div>
             )}
           </header>
@@ -408,9 +470,9 @@ export function EntryView({
               )}
               {hasFigures && (
                 <section className="flex flex-col gap-3.5" aria-label="Figures">
-                  {(layout.figures.length > 0 || derived.length > 0 || aggregates.length > 0) && (
+                  {(figures.length > 0 || derived.length > 0 || aggregates.length > 0) && (
                     <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-x-[22px] gap-y-3.5">
-                      {layout.figures.map((column) => field(column, 'figure'))}
+                      {figures.map((column) => field(column, 'figure'))}
                       {derived.map((each) => (
                         <WorkedOut
                           key={each.compiled.declaration.name}
@@ -437,11 +499,25 @@ export function EntryView({
                   )}
                 </section>
               )}
-              {layout.texts.map((column) => field(column, 'text'))}
+              {texts.map((column) => field(column, 'text'))}
+              {hiddenCount > 0 && (
+                // The foot of the entry, where M53 U3's Empty line comes: the
+                // hidden fields, shown in place until the entry is left.
+                <div className="flex flex-wrap items-center gap-1 border-t border-hairline pt-3.5">
+                  <button
+                    type="button"
+                    className="ms-auto h-6 px-2 text-caption text-ink-tertiary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                    aria-pressed={revealed}
+                    onClick={() => setRevealed(!revealed)}
+                  >
+                    {revealed ? 'Hide again' : `${String(hiddenCount)} hidden`}
+                  </button>
+                </div>
+              )}
             </div>
 
             <aside className="flex flex-col gap-[22px]" aria-label="Links">
-              {layout.links.map((column) => field(column, 'links'))}
+              {linkColumns.map((column) => field(column, 'links'))}
               <NamedBy
                 groups={named?.namedBy ?? []}
                 title={declaration.title}
@@ -538,6 +614,7 @@ function Field({
   marked,
   refused,
   mover,
+  dimmed,
   onChange,
   onPick,
   onLeave,
@@ -564,6 +641,8 @@ function Field({
   marked: boolean
   refused: string | undefined
   mover: Mover | undefined
+  /** A hidden field drawn because "N hidden" was pressed: dimmed, and tagged so. */
+  dimmed: boolean
   onChange: (key: string, text: string) => void
   onPick: (key: string, text: string) => void
   onLeave: () => void
@@ -573,19 +652,55 @@ function Field({
 }) {
   const [focused, setFocused] = useState(false)
   const [menu, setMenu] = useState(false)
-  const showAs = !readOnly && offered.length > 1 && mover === undefined && (
-    <ShowAsMenu name={column.name} way={way} offered={offered} one={one} open={menu} setOpen={setMenu} onChoose={onChoose} />
+  const showAs = !readOnly && (offered.length > 1 || mover !== undefined) && (
+    <ShowAsMenu
+      name={column.name}
+      way={way}
+      offered={offered}
+      one={one}
+      open={menu}
+      setOpen={setMenu}
+      onChoose={onChoose}
+      mover={mover}
+    />
+  )
+  const drag = mover?.drag
+  // **A shown field is dragged by its label** (M53 U2), within its part; the
+  // value under it stays typable, since only the label drags.
+  const grabbed = (label: ReactNode) =>
+    drag === undefined ? (
+      label
+    ) : (
+      <span
+        draggable
+        className="cursor-grab active:cursor-grabbing"
+        onDragStart={(event) => {
+          event.dataTransfer.effectAllowed = 'move'
+          event.dataTransfer.setData('text/plain', column.name)
+          drag.start(column.name)
+        }}
+        onDragEnd={drag.end}
+      >
+        {label}
+      </span>
+    )
+  const hiddenTag = dimmed && (
+    <span className="border border-dashed border-hairline-strong px-[5px] text-[10px] tracking-[.06em] text-ink-tertiary uppercase">
+      hidden
+    </span>
   )
   const name = (
     <span className="flex min-h-[18px] items-center gap-1.5">
-      {mover !== undefined && <MoveHandle name={column.name} mover={mover} />}
-      <span
-        className={`fc-label ${part === 'header' ? 'text-ink-tertiary' : ''}`}
-        title={describe(column)}
-      >
-        <Bidi>{column.name}</Bidi>
-        {fresh && column.required && <span className="ms-1 text-ink-tertiary normal-case">needed</span>}
-      </span>
+      {grabbed(
+        <span
+          className={`fc-label ${part === 'header' ? 'text-ink-tertiary' : ''}`}
+          title={describe(column)}
+        >
+          <Bidi>{column.name}</Bidi>
+          {fresh && column.required && <span className="ms-1 text-ink-tertiary normal-case">needed</span>}
+        </span>,
+      )}
+      {hiddenTag}
       {showAs}
     </span>
   )
@@ -626,7 +741,7 @@ function Field({
 
   return (
     <section
-      className={`group/field relative flex min-w-0 ${part === 'header' ? 'flex-row items-center gap-2' : 'flex-col gap-1'} border-t-2 ${mover?.over === true ? 'border-accent' : 'border-transparent'} ${mover?.dragging === true ? 'opacity-50' : ''}`}
+      className={`group/field relative flex min-w-0 ${part === 'header' ? 'flex-row items-center gap-2' : 'flex-col gap-1'} border-t-2 ${drag !== undefined && drag.over === column.name && drag.accepts(column.name) ? 'border-accent' : 'border-transparent'} ${drag?.dragging === column.name ? 'opacity-50' : dimmed ? 'opacity-[.55]' : ''}`}
       aria-label={column.name}
       onFocus={() => setFocused(true)}
       onBlur={(event) => {
@@ -641,29 +756,33 @@ function Field({
         }
       }}
       onDragOver={
-        mover === undefined
+        drag === undefined
           ? undefined
           : (event) => {
+              // A field takes a drop only from its own part.
+              if (!drag.accepts(column.name)) return
               event.preventDefault()
-              mover.onDragOver()
+              drag.hover(column.name)
             }
       }
       onDrop={
-        mover === undefined
+        drag === undefined
           ? undefined
           : (event) => {
               event.preventDefault()
-              mover.onDrop()
+              drag.drop(column.name)
             }
       }
     >
-      {(part !== 'title' || mover !== undefined) && part !== 'links' && name}
+      {part !== 'title' && part !== 'links' && name}
       {part === 'links' && (
         <h3 className="flex items-center gap-1.5 pb-1">
-          {mover !== undefined && <MoveHandle name={column.name} mover={mover} />}
-          <span className="fc-label">
-            <Bidi>{column.name}</Bidi>
-          </span>
+          {grabbed(
+            <span className="fc-label">
+              <Bidi>{column.name}</Bidi>
+            </span>,
+          )}
+          {hiddenTag}
           {showAs}
         </h3>
       )}
@@ -697,10 +816,11 @@ const TYPED: ReadonlySet<ShowAs> = new Set<ShowAs>([
 const PRESSED_OPEN: ReadonlySet<ShowAs> = new Set<ShowAs>(['bar', 'ring', 'unit', 'relative'])
 
 /**
- * **How a column is shown, picked on the field** — the glyph beside its name on
- * hover, and the list under it (M35 U2's pick 3; M35 U3, D-402). Kept per format
- * beside the declaration, so it holds for every entry; it never reaches the
- * sheet's cells or the board's cards (pick 4).
+ * **A field's ⋯** — how a column is shown, picked on the field (M35 U2's pick
+ * 3; M35 U3, D-402), and since M53 U2 where Move up, Move down and Hide are
+ * too. How it is shown is kept per format beside the declaration, so it holds
+ * for every entry; it never reaches the sheet's cells or the board's cards
+ * (pick 4). A worked-out column's has Show as alone.
  */
 function ShowAsMenu({
   name,
@@ -710,6 +830,7 @@ function ShowAsMenu({
   open,
   setOpen,
   onChoose,
+  mover,
 }: {
   name: string
   way: ShowAs
@@ -718,24 +839,32 @@ function ShowAsMenu({
   open: boolean
   setOpen: (open: boolean) => void
   onChoose: (way: ShowAs) => void
+  mover?: Mover | undefined
 }) {
   const box = useRef<HTMLSpanElement>(null)
   const dismissKey = useDismiss(open, box, () => setOpen(false))
+  const label = mover === undefined ? `Show ${name} as` : `${name}: more`
+  const ways = offered.length > 1
+  const act = (then: () => void) => () => {
+    setOpen(false)
+    then()
+  }
+  const item =
+    'flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-body hover:bg-accent-soft disabled:opacity-35 disabled:hover:bg-transparent'
   return (
     <span ref={box} className="relative inline-flex" onKeyDown={dismissKey}>
       <button
         type="button"
-        aria-label={`Show ${name} as`}
-        title={`Show ${name} as`}
+        aria-label={label}
+        title={label}
         aria-expanded={open}
         className={`inline-flex h-5 w-5 items-center justify-center text-ink-tertiary hover:text-ink focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${open ? 'opacity-100' : 'opacity-0 group-hover/field:opacity-100 group-hover/worked:opacity-100'}`}
         onClick={() => setOpen(!open)}
       >
-        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-          <path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0" />
-          <circle cx="16" cy="6" r="2" />
-          <circle cx="10" cy="12" r="2" />
-          <circle cx="18" cy="18" r="2" />
+        <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor" aria-hidden>
+          <circle cx="3.5" cy="8" r="1.3" />
+          <circle cx="8" cy="8" r="1.3" />
+          <circle cx="12.5" cy="8" r="1.3" />
         </svg>
       </button>
       {open && (
@@ -743,10 +872,12 @@ function ShowAsMenu({
           role="menu"
           className="fc-pop-enter absolute top-[22px] left-0 z-20 flex min-w-[220px] flex-col border border-hairline-strong bg-elevated py-1 shadow-[var(--shadow-pop)]"
         >
-          <span className="fc-label px-3 pt-1.5 pb-1 text-ink-tertiary">
-            Show <Bidi>{name}</Bidi> as
-          </span>
-          {offered.map((each) => (
+          {ways && (
+            <span className="fc-label px-3 pt-1.5 pb-1 text-ink-tertiary">
+              Show <Bidi>{name}</Bidi> as
+            </span>
+          )}
+          {ways && offered.map((each) => (
             <button
               key={each}
               type="button"
@@ -765,9 +896,31 @@ function ShowAsMenu({
               )}
             </button>
           ))}
-          <span className="mt-1 max-w-[260px] border-t border-hairline px-3 pt-2 pb-1 text-label text-ink-tertiary normal-case">
-            For every <Bidi>{one}</Bidi>, in this view. Kept beside the declaration.
-          </span>
+          {ways && (
+            <span className="mt-1 max-w-[260px] border-t border-hairline px-3 pt-2 pb-1 text-label text-ink-tertiary normal-case">
+              For every <Bidi>{one}</Bidi>, in this view. Kept beside the declaration.
+            </span>
+          )}
+          {mover !== undefined && (
+            <>
+              {ways && <span className="my-1 h-px bg-hairline" role="separator" />}
+              <button type="button" role="menuitem" className={item} disabled={mover.first} onClick={act(mover.onUp)}>
+                <span className="w-3.5" />
+                Move up
+              </button>
+              <button type="button" role="menuitem" className={item} disabled={mover.last} onClick={act(mover.onDown)}>
+                <span className="w-3.5" />
+                Move down
+              </button>
+              {mover.hideable && (
+                <button type="button" role="menuitem" className={item} onClick={act(mover.onHide)}>
+                  <span className="inline-flex w-3.5 text-accent">{mover.hidden ? <EyeGlyph /> : <EyeGlyph off />}</span>
+                  {mover.hidden ? 'Show' : 'Hide'}
+                  <span className="ms-auto ps-3 text-caption text-ink-tertiary">on this entry view</span>
+                </button>
+              )}
+            </>
+          )}
         </span>
       )}
     </span>
@@ -1025,60 +1178,239 @@ function Concerns({
   )
 }
 
-/** What a column needs to be moved on the page while it is arranged (D-296). */
+/**
+ * **A drag in progress** (M53 U2) — of a field by its label on the page, or of
+ * its row in the Fields list. One for the whole entry, so a row dragged in the
+ * list and a label dragged on the page are the same move.
+ */
+interface Drag {
+  readonly dragging: string | undefined
+  readonly over: string | undefined
+  /** Whether a column takes the one being dragged: another column of its part. */
+  readonly accepts: (name: string) => boolean
+  readonly start: (name: string) => void
+  readonly hover: (name: string) => void
+  readonly drop: (name: string) => void
+  readonly end: () => void
+}
+
+/** What a field needs to be moved and hidden from the page (D-296, M53 U2). Never the title's. */
 interface Mover {
+  /** First or last of its part, where a step that way goes nowhere. */
   readonly first: boolean
   readonly last: boolean
-  readonly dragging: boolean
-  readonly over: boolean
+  /** Not the title and not required. */
+  readonly hideable: boolean
+  readonly hidden: boolean
+  readonly drag: Drag
   readonly onUp: () => void
   readonly onDown: () => void
-  readonly onDragStart: () => void
-  readonly onDragOver: () => void
-  readonly onDrop: () => void
-  readonly onDragEnd: () => void
+  readonly onHide: () => void
+}
+
+/** The eye of Shown, or struck through for hidden — the mockup's two glyphs. */
+function EyeGlyph({ off = false }: { off?: boolean }) {
+  return (
+    <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth={1.5} aria-hidden>
+      {off ? (
+        <path d="M2 2l12 12M6.5 4C7 3.7 7.5 3.5 8 3.5c4 0 6.5 4.5 6.5 4.5a12 12 0 0 1-2 2.5M4 5.2A12 12 0 0 0 1.5 8S4 12.5 8 12.5c1 0 1.8-.2 2.6-.6" />
+      ) : (
+        <>
+          <path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z" />
+          <circle cx="8" cy="8" r="2" />
+        </>
+      )}
+    </svg>
+  )
+}
+
+/** A column's name as words: `done_on` reads "done on". */
+function inWords(name: string): string {
+  return name.replace(/_/g, ' ')
 }
 
 /**
- * **A column's place on the page, dragged** — or moved a step with the two
- * buttons beside the grip, which is the same move for a keyboard. The grip is
- * the only thing that drags, so the inputs under it stay typable while the
- * page is being arranged.
+ * **The Fields list** — M53 U2, U1's approved mockup
+ * (`docs/mockups/m53-u1/tasks.html`). It replaced *Arrange this view*: every
+ * column but the title, in this view's order and sectioned by the part of the
+ * page it sits in, each a grip, its name, whether it is needed or holds a
+ * value, an eye (Shown) and a *New entry* tick. A row is dragged within its
+ * section, or moved a step with Alt+Up and Alt+Down while it has focus — the
+ * list is where a field that is not on the page (hidden, or empty) is moved.
  */
-function MoveHandle({ name, mover }: { name: string; mover: Mover }) {
+function FieldsList({
+  open,
+  setOpen,
+  sections,
+  isHidden,
+  hideable,
+  asked,
+  holds,
+  drag,
+  arranged,
+  onStep,
+  onHide,
+  onAsk,
+  onReset,
+}: {
+  open: boolean
+  setOpen: (open: boolean) => void
+  sections: readonly { readonly label: string; readonly columns: readonly ColumnDeclaration[] }[]
+  isHidden: (column: ColumnDeclaration) => boolean
+  hideable: (column: ColumnDeclaration) => boolean
+  asked: ReadonlySet<string>
+  holds: (column: ColumnDeclaration) => boolean
+  drag: Drag
+  /** Whether somebody moved a column, so the declaration's order can be had back. */
+  arranged: boolean
+  onStep: (name: string, by: -1 | 1) => void
+  onHide: (column: ColumnDeclaration) => void
+  onAsk: (column: ColumnDeclaration) => void
+  onReset: () => void
+}) {
+  const box = useRef<HTMLSpanElement>(null)
+  const dismissKey = useDismiss(open, box, () => setOpen(false))
+  // The row Alt+Up or Alt+Down just moved, focused again once it is drawn in its new place.
+  const [stepped, setStepped] = useState<string | undefined>(undefined)
+  useEffect(() => {
+    if (stepped === undefined) return
+    box.current?.querySelector<HTMLElement>(`[data-field-row="${CSS.escape(stepped)}"]`)?.focus()
+    setStepped(undefined)
+  })
+  const label = 'Fields: order, shown, new entry'
+  const grid = 'grid grid-cols-[20px_minmax(0,1fr)_28px_56px] items-center gap-1.5 px-2.5'
   return (
-    <span className="flex items-center gap-0.5">
-      <span
-        draggable
-        role="img"
-        aria-label={`Drag ${name} to another place on the page`}
-        title={`Drag ${name} to another place on the page`}
-        className="cursor-grab px-1 text-ink-tertiary hover:text-ink active:cursor-grabbing"
-        onDragStart={(event) => {
-          event.dataTransfer.effectAllowed = 'move'
-          event.dataTransfer.setData('text/plain', name)
-          mover.onDragStart()
-        }}
-        onDragEnd={mover.onDragEnd}
+    <span ref={box} className="relative inline-flex" onKeyDown={dismissKey}>
+      <button
+        type="button"
+        aria-label={label}
+        title={label}
+        aria-expanded={open}
+        onClick={() => setOpen(!open)}
+        className={`fc-icon-action ${open ? 'bg-surface text-ink shadow-[inset_0_0_0_1px_var(--color-hairline-strong)]' : ''}`}
       >
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" aria-hidden>
-          <circle cx="9" cy="6" r="1.5" />
-          <circle cx="15" cy="6" r="1.5" />
-          <circle cx="9" cy="12" r="1.5" />
-          <circle cx="15" cy="12" r="1.5" />
-          <circle cx="9" cy="18" r="1.5" />
-          <circle cx="15" cy="18" r="1.5" />
+        <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth={1.5} aria-hidden>
+          <path d="M2 4h8M2 8h12M2 12h6" />
+          <circle cx="12" cy="4" r="1.5" />
+          <circle cx="10" cy="12" r="1.5" />
         </svg>
-      </span>
-      {!mover.first && (
-        <IconAction label={`Move ${name} up`} onClick={mover.onUp}>
-          <path d="M12 19V5M6 11l6-6 6 6" />
-        </IconAction>
-      )}
-      {!mover.last && (
-        <IconAction label={`Move ${name} down`} onClick={mover.onDown}>
-          <path d="M12 5v14M6 13l6 6 6-6" />
-        </IconAction>
+      </button>
+      {open && (
+        <div
+          role="dialog"
+          aria-label="Fields"
+          className="fc-pop-enter absolute top-[34px] right-0 z-30 w-[340px] max-w-[calc(100vw-32px)] border border-hairline-strong bg-elevated pt-1 pb-2 shadow-[var(--shadow-pop)]"
+        >
+          <div className={`${grid} h-6 text-[10px] tracking-[.06em] text-ink-tertiary uppercase`} aria-hidden>
+            <span />
+            <span>Field</span>
+            <span>Shown</span>
+            <span className="text-center">New entry</span>
+          </div>
+          {sections
+            .filter((section) => section.columns.length > 0)
+            .map((section) => (
+              <div key={section.label} role="group" aria-label={section.label}>
+                <div className="fc-label px-3 pt-2 pb-0.5">{section.label}</div>
+                {section.columns.map((column) => {
+                  const off = isHidden(column)
+                  const words = inWords(column.name)
+                  const needed = column.required === true
+                  return (
+                    <div
+                      key={column.name}
+                      data-field-row={column.name}
+                      draggable
+                      tabIndex={0}
+                      aria-label={`${words}, Alt+Up or Alt+Down moves it`}
+                      className={`${grid} relative h-8 text-body hover:bg-surface focus-visible:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
+                        drag.over === column.name && drag.accepts(column.name) ? 'shadow-[inset_0_2px_0_var(--color-accent)]' : ''
+                      } ${drag.dragging === column.name ? 'opacity-40' : ''}`}
+                      onDragStart={(event) => {
+                        event.dataTransfer.effectAllowed = 'move'
+                        event.dataTransfer.setData('text/plain', column.name)
+                        drag.start(column.name)
+                      }}
+                      onDragEnd={drag.end}
+                      onDragOver={(event) => {
+                        if (!drag.accepts(column.name)) return
+                        event.preventDefault()
+                        drag.hover(column.name)
+                      }}
+                      onDrop={(event) => {
+                        event.preventDefault()
+                        drag.drop(column.name)
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.target !== event.currentTarget) return
+                        if (!event.altKey || (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')) return
+                        event.preventDefault()
+                        onStep(column.name, event.key === 'ArrowUp' ? -1 : 1)
+                        setStepped(column.name)
+                      }}
+                    >
+                      <span className="inline-flex cursor-grab text-ink-tertiary" aria-hidden>
+                        <svg width="12" height="14" viewBox="0 0 12 16" fill="currentColor">
+                          <circle cx="4" cy="4" r="1.2" />
+                          <circle cx="8" cy="4" r="1.2" />
+                          <circle cx="4" cy="8" r="1.2" />
+                          <circle cx="8" cy="8" r="1.2" />
+                          <circle cx="4" cy="12" r="1.2" />
+                          <circle cx="8" cy="12" r="1.2" />
+                        </svg>
+                      </span>
+                      <span className={`flex min-w-0 items-baseline ${off ? 'text-ink-tertiary' : ''}`}>
+                        <Bidi className="min-w-0 truncate">{words}</Bidi>
+                        {needed ? (
+                          <span className="ms-1.5 shrink-0 text-label text-ink-tertiary">needed</span>
+                        ) : (
+                          holds(column) && <span className="ms-1.5 shrink-0 text-label text-ink-tertiary">holds a value</span>
+                        )}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={!hideable(column)}
+                        aria-label={`${off ? 'Show' : 'Hide'} ${words}`}
+                        title={
+                          !hideable(column)
+                            ? needed
+                              ? 'A needed field is always shown'
+                              : 'The title is always shown'
+                            : off
+                              ? 'Hidden: click to show'
+                              : 'Shown: click to hide'
+                        }
+                        className="inline-flex h-7 w-7 items-center justify-center text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-default disabled:opacity-35"
+                        onClick={() => onHide(column)}
+                      >
+                        <EyeGlyph off={off} />
+                      </button>
+                      <span className="flex justify-center">
+                        <input
+                          type="checkbox"
+                          className="accent-[var(--color-ink)]"
+                          checked={needed || asked.has(column.name)}
+                          disabled={needed}
+                          aria-label={`Ask for ${words} on a new entry`}
+                          onChange={() => onAsk(column)}
+                        />
+                      </span>
+                    </div>
+                  )
+                })}
+              </div>
+            ))}
+          <div className="mt-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t border-hairline px-3 pt-2 text-label text-ink-tertiary">
+            <span className="min-w-0 flex-1">
+              Drag a field within its part to move it. A hidden field stays in the table and every tool.
+            </span>
+            {arranged && (
+              <button type="button" className="text-accent hover:underline" onClick={onReset}>
+                The declaration’s order
+              </button>
+            )}
+          </div>
+        </div>
       )}
     </span>
   )

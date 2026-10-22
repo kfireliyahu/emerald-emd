@@ -431,6 +431,7 @@ written out here.
 | D-510 | 2026-10-20 | The npm package's `engines.node` is `>=20.19.0`, the oldest Node a CI job runs it on: `.github/workflows/package.yml` builds it on Node 24 and runs `scripts/check-package.mjs` on 20.19.0, 22 and 24 — the handshake, a document written and read back, both hooks, and an `npx` install that fails on `EBADENGINE`; the desktop extension's `runtimes.node` follows; amends D-497's `>=24` | [below](#d-510) |
 | D-513 | 2026-10-20 | A team weighing Emerald for its development planning is answered before its model objects: both instruction blocks say, right after the 2,000-character head, that plans nobody owns are what it is for, that one document holds work across repositories, stored as text and committed or kept as one file outside every repository, that documents talk through an inbox and an `elsewhere` column, and that a worktree session's landing goes through the main document's inbox; the head says SQLite as bytes or text | [below](#d-513) |
 | D-514 | 2026-10-22 | A view can be saved, and a dashboard holds only views: a saved view is a format's filter, order, columns and kind under a name, kept beside its other views; a dashboard, one per format and one for the document, is an ordered set of saved views, charts of rollups and headline totals, never a free block; neither is a format; recent changes wait and D-462 stands; amends D-402 | [below](#d-514) |
+| D-517 | 2026-10-22 | Hiding a field is the entry view's, beside its order: `hidden` in a column's `format_view_column` setting (and `views.md`) keeps it off the page even when it holds a value, never the title or a required column; `new` marks a column a new entry asks for; one Fields list behind the entry's icon replaces the Arrange mode, and a field moves only within its part, by its label, its row, its menu or Alt+Up/Down; `arrange_views` takes `hidden` and `new_entry`; amends D-296 | [below](#d-517) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -827,6 +828,49 @@ question *entry overview* is answered by this.
 **Rejected.** A dashboard as rows of a format: it puts presentation in the domain layer and needs
 storage views already have. Free blocks on a dashboard: D-402's reason holds. **Recent changes**
 for now: rows carry no time of change (D-462), so it needs that decision reopened; it waits.
+
+## D-517 · 2026-10-22 · Hiding a field is the entry view's, beside its order: `hidden` in a column's `format_view_column` setting (and `views.md`) keeps it off the page even when it holds a value, never the title or a required column; `new` marks a column a new entry asks for; one Fields list behind the entry's icon replaces the Arrange mode, and a field moves only within its part, by its label, its row, its menu or Alt+Up/Down; `arrange_views` takes `hidden` and `new_entry`; amends D-296 <a id="d-517"></a>
+
+**Context.** M53 U2, building U1's approved mockup (`docs/mockups/m53-u1/tasks.html`). The
+maintainer, after weeks on a real format with many columns: arranging an entry was clunky — a mode
+to enter, a small grip, arrows, and a mode to leave — and some fields should be hidden by the
+person's choice. D-296 made the order the view's; it said nothing of what the view leaves out.
+
+**Decision.**
+
+- **Hidden is a word of the entry's setting**, beside the way, the place and `header`: `hidden`
+  keeps the column off this format's entry view even when it holds a value. The column stays in
+  the format, the table, the list's line and every tool; only this page leaves it out. **The title
+  and a required column are drawn whatever the setting says**, and `arrange_views` refuses to hide
+  either, by name.
+- **`new` marks a column a new entry asks for** beside the required ones — the *New entry* tick.
+  It is kept here and read by M53 U3's new entry.
+- **One Fields list replaces *Arrange this view***, behind the icon where it was: every column but
+  the title in this view's order, in sections by the part of the page it sits in (the line under
+  the title, figures, text, links), each with a grip, its name in words, *needed* or *holds a
+  value*, an eye and the *New entry* tick. The list is needed because a hidden or empty field is
+  not on the page to drag.
+- **A field moves only within its part**, as the order always worked: the part comes from the
+  column's type, so a move across parts changes nothing a person could see. A move keeps the
+  part's columns in the slots they held in the whole order (`movedWithin`), so a text moved up
+  never jumps above the title and becomes it. A shown field is dragged by its label; its ⋯, where
+  Show as is, adds Move up, Move down and Hide; a focused row in the list moves a step on
+  Alt+Up/Down.
+- **"N hidden" at the foot of the entry shows the hidden fields in place, dimmed and tagged
+  *hidden*, until the entry is left** ("Hide again"). M53 U3's Empty line takes it as its last word.
+- **No grouping or folding of the page into sections**: hiding empty fields (U3) is what makes a
+  page short.
+
+**Consequences.** Parity holds (D-227): `setEntryHidden` and `setEntryAsked` are written by the
+entry's screen and by `arrange_views` (`hidden`, `new_entry`), and `formats` with a `format` reads
+both back. A text document keeps both in `views.md` with no new part. The longest setting —
+`relative #1234 header hidden new` — still fits 052's 32-character CHECK, so nothing migrates.
+
+**Rejected.** Hiding as a column of the declaration: it is presentation, and the declaration is the
+domain layer. Groups a person makes on the page: a second layout to keep beside the order, which
+the mockup dropped. Moving a field across parts: its part is its type's, so the move would be
+undone by the drawing. A shortcut hint (Alt+↑) in the field's ⋯ on the page: on the page a focused
+field is an input, where Alt+arrows already mean something, so the shortcut is the list's alone.
 
 ## Related
 

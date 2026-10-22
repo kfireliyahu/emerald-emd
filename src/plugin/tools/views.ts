@@ -29,13 +29,17 @@ import { listFormats } from '@/data/repositories/formatRepository.ts'
 import {
   boardSettings,
   columnWidths,
+  entryAsked,
   entryHeaders,
+  entryHidden,
   entryInputs,
   entryPlaces,
   setBoardLanes,
   setAgendaDate,
   setColumnWidth,
+  setEntryAsked,
   setEntryHeader,
+  setEntryHidden,
   setEntryInput,
   setEntryOrder,
   setRoadmapOrder,
@@ -51,6 +55,7 @@ import {
   boardOf,
   agendaOf,
   boundedWidth,
+  entryLayout,
   entryOrder,
   isPercentWorkedOut,
   isShowAs,
@@ -64,6 +69,7 @@ import {
   startOf,
   startQuestions,
   VIEW_PARTS,
+  wayOf,
   waysFor,
   workedOutType,
   type ShowAs,
@@ -80,12 +86,14 @@ type View = (typeof VIEWS)[number]
 const WORD_VIEWS: readonly WordView[] = ['roadmap', 'ready', 'start', 'agenda']
 
 const SETTINGS_MAX = 200
-const KEYS = ['format', 'view', 'column', 'show_as', 'header', 'order', 'width', 'setting'] as const
+const KEYS = ['format', 'view', 'column', 'show_as', 'header', 'hidden', 'new_entry', 'order', 'width', 'setting'] as const
 
 /** One change a setting makes, with what it was, so the dry run shows both. */
 type Change =
   | { readonly kind: 'WAY'; readonly format: string; readonly column: string; readonly was: ShowAs | undefined; readonly now: ShowAs | undefined }
   | { readonly kind: 'HEADER'; readonly format: string; readonly column: string; readonly was: boolean; readonly now: boolean }
+  | { readonly kind: 'HIDDEN'; readonly format: string; readonly column: string; readonly was: boolean; readonly now: boolean }
+  | { readonly kind: 'ASKED'; readonly format: string; readonly column: string; readonly was: boolean; readonly now: boolean }
   | { readonly kind: 'ORDER'; readonly format: string; readonly was: readonly string[]; readonly now: readonly string[] | undefined }
   | { readonly kind: 'LANES'; readonly format: string; readonly was: string | undefined; readonly now: string | undefined }
   | { readonly kind: 'WIDTH'; readonly format: string; readonly column: string; readonly was: number | undefined; readonly now: number | undefined }
@@ -231,7 +239,7 @@ function judge(
         return { changes: [{ kind: 'ORDER', format, was, now: names.length === 0 ? undefined : names }] }
       }
 
-      const wrong = extra(['column', 'show_as', 'header'])
+      const wrong = extra(['column', 'show_as', 'header', 'hidden', 'new_entry'])
       if (wrong !== undefined) return { reason: wrong }
       const shown = shownColumns(db, declaration, declared)
       const target = shown.find((each) => each.name === column)
@@ -240,7 +248,11 @@ function judge(
       }
       const way = entry['show_as']
       const header = entry['header']
-      if (way === undefined && header === undefined) return { reason: 'An entry setting takes `show_as`, `header` or `order`.' }
+      const hidden = entry['hidden']
+      const asked = entry['new_entry']
+      if (way === undefined && header === undefined && hidden === undefined && asked === undefined) {
+        return { reason: 'An entry setting takes `show_as`, `header`, `hidden`, `new_entry` or `order`.' }
+      }
       const changes: Change[] = []
       if (way !== undefined) {
         if (way !== null && (typeof way !== 'string' || !isShowAs(way) || !target.ways.includes(way))) {
@@ -257,12 +269,42 @@ function judge(
         if (target.worked) return { reason: `\`${target.name}\` is computed; it sits with the figures, never in the header line.` }
         changes.push({ kind: 'HEADER', format, column: target.name, was: entryHeaders(db, format).has(target.name), now: header })
       }
+      // Hidden and asked for on a new entry are the Fields list's (M53 U2, D-517):
+      // a stored column's, and never the title's or a required one's when hiding.
+      if (hidden !== undefined || asked !== undefined) {
+        if (target.worked) {
+          return { reason: `\`${target.name}\` is computed; it is drawn with the figures and never typed, so it is neither hidden nor asked for.` }
+        }
+        const stored = declaration.columns.find((each) => each.name === target.name)
+        if (hidden !== undefined) {
+          if (typeof hidden !== 'boolean') return { reason: '`hidden` is true or false.' }
+          if (hidden && stored?.required === true) return { reason: `\`${target.name}\` is required, so ${format}’s entry always shows it.` }
+          if (hidden && titleOf(db, declaration) === target.name) {
+            return { reason: `\`${target.name}\` is the title of ${format}’s entry, so it is always shown.` }
+          }
+          changes.push({ kind: 'HIDDEN', format, column: target.name, was: entryHidden(db, format).has(target.name), now: hidden })
+        }
+        if (asked !== undefined) {
+          if (typeof asked !== 'boolean') return { reason: '`new_entry` is true or false.' }
+          changes.push({ kind: 'ASKED', format, column: target.name, was: entryAsked(db, format).has(target.name), now: asked })
+        }
+      }
       return { changes }
     }
 
     default:
       return { reason: `\`view\` is one of ${VIEWS.join(', ')}.` }
   }
+}
+
+/** The column an entry draws as its title, which no setting hides — `entryLayout`'s reading of the view. */
+function titleOf(db: Database, declaration: FormatDeclaration): string | undefined {
+  const chosen = entryInputs(db, declaration.name)
+  return entryLayout(
+    entryOrder(declaration.columns, entryPlaces(db, declaration.name)),
+    (each) => wayOf(each, chosen.get(each.name)),
+    entryHeaders(db, declaration.name),
+  ).title?.name
 }
 
 const LINKS: ReadonlySet<string> = new Set(['link', 'links'])
@@ -465,6 +507,10 @@ function changeRow(change: Change): readonly string[] {
       return [change.format, 'entry', change.column, 'show as', wayText(change.was), wayText(change.now)]
     case 'HEADER':
       return [change.format, 'entry', change.column, 'header line', change.was ? 'in' : 'out', change.now ? 'in' : 'out']
+    case 'HIDDEN':
+      return [change.format, 'entry', change.column, 'shown', change.was ? 'hidden' : 'shown', change.now ? 'hidden' : 'shown']
+    case 'ASKED':
+      return [change.format, 'entry', change.column, 'new entry', change.was ? 'asks' : '-', change.now ? 'asks' : '-']
     case 'ORDER':
       return [change.format, 'entry', '-', 'order', orderText(change.was), orderText(change.now)]
     case 'LANES':
@@ -504,6 +550,12 @@ function apply(document: OpenDocument, plan: ViewPlan): string {
         break
       case 'HEADER':
         setEntryHeader(db, change.format, change.column, change.now)
+        break
+      case 'HIDDEN':
+        setEntryHidden(db, change.format, change.column, change.now)
+        break
+      case 'ASKED':
+        setEntryAsked(db, change.format, change.column, change.now)
         break
       case 'ORDER':
         setEntryOrder(db, change.format, change.now)
@@ -548,19 +600,23 @@ export function arrangementText(document: OpenDocument, declaration: FormatDecla
   const ways = entryInputs(db, format)
   const places = entryPlaces(db, format)
   const headers = entryHeaders(db, format)
+  const hidden = entryHidden(db, format)
+  const asked = entryAsked(db, format)
   const widths = columnWidths(db, format)
   const board = boardOf(declaration.columns, boardSettings(db, format))
   return section(
     'How it is shown — `arrange_views` changes it',
     paragraphs(
       table(
-        ['Column', 'Show as', 'Ways (default first)', 'Place', 'Header', 'Width'],
+        ['Column', 'Show as', 'Ways (default first)', 'Place', 'Header', 'Shown', 'New entry', 'Width'],
         shown.map((each) => [
           each.worked ? `${each.name} (computed)` : each.name,
           ways.get(each.name) ?? '-',
           each.ways.join(', '),
           places.has(each.name) ? `#${String(places.get(each.name))}` : '-',
           headers.has(each.name) ? 'yes' : '-',
+          hidden.has(each.name) ? 'hidden' : '-',
+          asked.has(each.name) ? 'asks' : '-',
           widths.has(each.name) ? String(widths.get(each.name)) : '-',
         ]),
       ),
@@ -579,8 +635,8 @@ export const arrangeViewsTool: PluginTool = {
     name: 'arrange_views',
     title: 'Arrange a format’s views',
     description:
-      'How the app shows a format: on its entry, a column’s `show_as`, `header` line and the ' +
-      '`order`; a board’s lanes; a table column’s `width`; a column’s `setting` in a roadmap, a ' +
+      'How the app shows a format: on its entry, a column’s `show_as`, `header` line, `hidden`, ' +
+      '`new_entry` and the `order`; a board’s lanes; a table column’s `width`; a column’s `setting` in a roadmap, a ' +
       'ready list or a start-here question. `formats` with a `format` shows the ' +
       'arrangement and each column’s ways. Dry-runs until `commit: true`.',
     inputSchema: {
@@ -598,6 +654,8 @@ export const arrangeViewsTool: PluginTool = {
               column: stringProp('On a board, the enum for lanes; omit for its first.'),
               show_as: { type: ['string', 'null'], description: 'entry: a way the column offers; null resets.' },
               header: booleanProp('entry: in the line under the title.'),
+              hidden: booleanProp('entry: kept off the page, still in the table and every tool.'),
+              new_entry: booleanProp('entry: a new entry asks for it.'),
               order: {
                 type: 'array',
                 items: { type: 'string' },

@@ -36,12 +36,16 @@ import { listReaders } from '@/data/repositories/formatIntakeRepository.ts'
 import {
   boardSettings,
   columnWidths,
+  entryAsked,
   entryHeaders,
+  entryHidden,
   entryInputs,
   entryPlaces,
   setBoardLanes,
   viewSettings,
   setColumnWidth,
+  setEntryAsked,
+  setEntryHidden,
   setEntryInput,
   setEntryOrder,
 } from '@/data/repositories/formatViewRepository.ts'
@@ -341,6 +345,9 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
       chosen: entryInputs(db, declaration.name),
       // The columns its header line takes beyond their type's (M35 U2, D-401).
       headers: entryHeaders(db, declaration.name),
+      // What its entry hides, and what a new entry asks for (M53 U2, D-517).
+      hidden: entryHidden(db, declaration.name),
+      asked: entryAsked(db, declaration.name),
       // **A text reads as markdown** unless somebody chose (D-401): any value
       // of it on the page of rows holding a line break, a line's worth, or
       // inline markdown (D-402).
@@ -717,6 +724,8 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
         chosen={data.chosen}
         places={data.places}
         headers={data.headers}
+        hidden={data.hidden}
+        asked={data.asked}
         long={data.long}
         largest={data.largest}
         oneUnit={data.oneUnit}
@@ -787,6 +796,12 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
         }
         onOrder={(columns) =>
           mutate((database) => setEntryOrder(database, declaration.name, columns))
+        }
+        onHide={(column, hidden) =>
+          mutate((database) => setEntryHidden(database, declaration.name, column, hidden))
+        }
+        onAsk={(column, asked) =>
+          mutate((database) => setEntryAsked(database, declaration.name, column, asked))
         }
         onBack={back}
         onDelete={existing === undefined || locked !== undefined ? undefined : () => setDeletingEntry(true)}
