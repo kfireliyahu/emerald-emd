@@ -6066,6 +6066,12 @@ should: The pack's open_question carries an answer column, and perhaps blocks
 breaks: No column for it; the identity document extended its own copy with answer and blocks
 state: accepted
 
+### Arrange a dashboard: make one block wider or taller than the others
+unit: M53 U7
+should: A block is resized by dragging its edge, in width and height
+breaks: Maintainer, 2026-10-22, reviewing the dashboard: 'id like the blocks to be resizeable.' Blocks have fixed widths (a total one column, others two) and height by content. Fix: M53 F4.
+state: fault
+
 ### At `#/formats`, go to New format → By hand. Call it `Ingredient`, then add a real column with a unit and a minimum, an enum with two members, and a money column. Change a type after filling its fields. Save, then Edit, take a column out, and read the plan. Then use From a declaration: paste the ingredient fixture and press Open it in the editor. Try Copy the declaration. (M20 T1 has since turned this form into a four-step walk; judge it there.)
 unit: M19 U2a
 should: Fields follow the type: bounds only on integer and real, members only on enum, no unit on money. A retype clears what the new type cannot hold. A new format does not open red — the count says 3 things to fix and Save is disabled, but no field is accused until it has been typed in. Each problem sits beside its column. Removing a money column shows two steps (`price_minor`, `price_currency`). The import lands as 31 filled fields with the name locked. Copy puts on the clipboard the same markdown that Show prints.
@@ -6271,6 +6277,12 @@ should: The first session start fetches emerald-mcp through npx (once per versio
 breaks: Nothing drawn (the desktop app may not draw a plugin's server either, D-489), a hook error at session start, or a pause before each prompt longer than the accepted ~2 s.
 not_tried: The desktop Code tab with the plugin installed; a session on a clean profile with a model (the headless run used this machine's profile and --plugin-dir).
 state: open
+
+### On a dashboard, click a row in a list or table block, or a card in a board block
+unit: M53 U7
+should: It opens that entry, and the entry leads back to the dashboard
+breaks: Maintainer, 2026-10-22, reviewing the dashboard: 'and the rows inside the views to be clickable to lead to the entry clicked.' Only a block's title opens anything. Fix: M53 F5.
+state: fault
 
 ### On a format's dashboard, press Add a block to put a new filtered view or a chart on it
 unit: M53 U7
@@ -13352,6 +13364,24 @@ started: 2026-10-22
 branch: main
 commit: c861927
 report: M53 F3 built at c861927, D-526 (amends D-521). (1) RailFolder lists each format's rollups after its saved views (SavedRow's row, factored into a shared RailRow; new 'chart' ActionGlyph); the name opens the format on its tab (state {rollup}); rename in place (words folded by rollupName) and delete asking once, refusals said under the row. (2) RollupView has 'Delete chart', asking once. (3) adoptFormat now always reads the previous declaration and follows rollups: a dropped rollup deletes its dashboard blocks, a renamed one (renames map carries rollups new-to-old; planFor ignores non-columns) updates them (UPDATE OR IGNORE). The screen half is src/ui/formats/rollupInPlace.ts (rollupRenamed/rollupDeleted judged by declarationProblems and declarationChangeRefusal, then adoptFormat). (4) Dashboard block Remove note: 'The chart itself stays — delete it under <Format> in the rail, or on its tab.' Parity: the brief said extend_format rename existed for rollups; it took columns only, so extend_format rename now accepts a rollup's name (error text 'no column or rollup called…'), and its dry run says the rename/removal and that dashboard charts follow/go. Parity entry added (adoptFormat, RailFolder, extend_format). Tests: rollupInPlace.test.ts (listed, deleted with blocks, renamed with blocks, refusals, Remove leaves it), dashboard.test.ts conversation half. Related suite (179 files) green, parity+privacy green, typecheck green, check:tours green. Browser (dev server, synthetic doc): chart x listed under Task in the rail, opened its tab, renamed to done_by_month (blocks followed), deleted from the rail (rollup and both blocks gone); a second chart deleted from its tab; block menu note read. Calls not in the brief: rename on the conversation side extended; the param description of extend_format rename left unchanged so ask-cold was not needed; a rollup row is never lit (which rollup the tab shows is not in the address). Not done: ask-cold not run (no server text changed).
+
+### M53 F4
+milestone: M53
+scope: app
+title: A dashboard block is resized by dragging its edge, in width and height, snapped to the grid
+decision: D-521
+state: planned
+brief: From the maintainer's 0.2.0 review of the dashboard (2026-10-22): 'id like the blocks to be resizeable.' Today the grid (src/ui/formats/Dashboard.tsx) has four columns, a headline total takes one and every other block two, and height follows the content. Maintainer's answers, 2026-10-22: resize by dragging the block's edge (right edge for width, bottom edge for height, corner for both), snapping to the grid's columns and rows so blocks stay aligned; width AND height. A taller view block shows more rows and scrolls inside past that; a wider one shows more columns; a chart redraws to its size. Each block keeps its size beside its place: format_dashboard_block (migration 064) needs a width and a height, so this is a migration (docs/04-data-model.md) and the text document's dashboard lines carry them. A block with none keeps today's default (total one column, others two; height by content). Parity (D-227): arrange_views view:dashboard sets a block's size; show_format view:dashboard draws it at its size. Write a decision row that amends D-521. Anything not settled here (beyond the handle's look, the row height unit and the minimum size) is the maintainer's: stop and ask (rule: Maintainer's decisions before briefs). Tests: a size kept and read back, through the screen and arrange_views; a text document round-trips it; a block with no size draws as today. Done-test: on a synthetic task dashboard, widen a list block to four columns and make it taller, reload, and it holds; a conversation does the same.
+files: src/ui/formats/Dashboard.tsx, src/ui/formats/dashboard.ts, src/data/repositories/formatViewRepository.ts, src/data/migrations/, docs/04-data-model.md, src/plugin/tools/
+
+### M53 F5
+milestone: M53
+scope: app
+title: A row or a board card in a dashboard block opens its entry, and the entry leads back to the dashboard
+decision: D-521
+state: planned
+brief: From the maintainer's 0.2.0 review of the dashboard (2026-10-22): 'and the rows inside the views to be clickable to lead to the entry clicked.' Today only a block's title opens anything (its view in full). Maintainer's answers, 2026-10-22: a row in a list or table block, and a card in a board block, opens that entry's page (entryPath), with the list beside it holding that block's rows (the saved view's address, as opening from the full view does) and the back link reading '← Dashboard', returning to the dashboard it came from (format's or the document's). Chart bars and headline totals stay as they are: not clickable. A list block's tick still ticks and never opens the entry; the title still opens the view in full. Keyboard: a row is a link, reachable by Tab, opened by Enter. Reads only, so no parity entry. Write a decision row that amends D-521 only if something here changes what it says. Anything not settled here (beyond styling) is the maintainer's: stop and ask (rule: Maintainer's decisions before briefs). Tests: clicking a row and a card navigates to its entry with the block's address and the back state; the back link returns to the dashboard; a tick does not navigate. Done-test: on a synthetic task dashboard, click a task in a list block, page through the block's rows beside it, and come back with '← Dashboard'.
+files: src/ui/formats/Dashboard.tsx, src/ui/formats/ListView.tsx, src/ui/formats/BoardView.tsx, src/ui/screens/FormatRows.tsx
 
 ### M53 U1
 milestone: M53
