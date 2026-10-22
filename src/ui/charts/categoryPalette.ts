@@ -1,6 +1,17 @@
-import type { Category } from '@/data/repositories/categoryRepository.ts'
-
 import { CATEGORY_COLOR_SLOTS, CATEGORY_COLOR_TOKENS, slotOf, token, UNCATEGORIZED_COLOR_TOKEN } from './categoryColor.ts'
+
+/**
+ * What resolving reads of a category — the ledger's `Category` is one. Said
+ * here rather than imported, so nothing in `src/ui/charts/` reaches into the
+ * pack (M53 U6, `boundary.test.ts`).
+ */
+export interface Category {
+  readonly id: string
+  readonly name: string
+  readonly parentId: string | undefined
+  readonly isArchived: boolean
+  readonly color?: string | undefined
+}
 
 /**
  * Which colour each category is drawn in, resolved **against the categories it

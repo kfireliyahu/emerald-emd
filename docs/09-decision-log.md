@@ -431,6 +431,7 @@ written out here.
 | D-510 | 2026-10-20 | The npm package's `engines.node` is `>=20.19.0`, the oldest Node a CI job runs it on: `.github/workflows/package.yml` builds it on Node 24 and runs `scripts/check-package.mjs` on 20.19.0, 22 and 24 — the handshake, a document written and read back, both hooks, and an `npx` install that fails on `EBADENGINE`; the desktop extension's `runtimes.node` follows; amends D-497's `>=24` | [below](#d-510) |
 | D-513 | 2026-10-20 | A team weighing Emerald for its development planning is answered before its model objects: both instruction blocks say, right after the 2,000-character head, that plans nobody owns are what it is for, that one document holds work across repositories, stored as text and committed or kept as one file outside every repository, that documents talk through an inbox and an `elsewhere` column, and that a worktree session's landing goes through the main document's inbox; the head says SQLite as bytes or text | [below](#d-513) |
 | D-514 | 2026-10-22 | A view can be saved, and a dashboard holds only views: a saved view is a format's filter, order, columns and kind under a name, kept beside its other views; a dashboard, one per format and one for the document, is an ordered set of saved views, charts of rollups and headline totals, never a free block; neither is a format; recent changes wait and D-462 stands; amends D-402 | [below](#d-514) |
+| D-516 | 2026-10-22 | One general chart draws plain series — labels, series of `Money` or plain figures, and an axis in a currency or a unit — as bars or a line; it draws only what that axis can hold, one series in ink and several in the category palette by key, and a screen reader reads it as a table; a rollup's chart is bars by month (a line on a toggle), one series per linked row, the eight largest drawn and what is left out said under it, never summed into a new figure | [below](#d-516) |
 | D-517 | 2026-10-22 | Hiding a field is the entry view's, beside its order: `hidden` in a column's `format_view_column` setting (and `views.md`) keeps it off the page even when it holds a value, never the title or a required column; `new` marks a column a new entry asks for; one Fields list behind the entry's icon replaces the Arrange mode, and a field moves only within its part, by its label, its row, its menu or Alt+Up/Down; `arrange_views` takes `hidden` and `new_entry`; amends D-296 | [below](#d-517) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
@@ -828,6 +829,45 @@ question *entry overview* is answered by this.
 **Rejected.** A dashboard as rows of a format: it puts presentation in the domain layer and needs
 storage views already have. Free blocks on a dashboard: D-402's reason holds. **Recent changes**
 for now: rows carry no time of change (D-462), so it needs that decision reopened; it waits.
+
+## D-516 · 2026-10-22 · One general chart draws plain series — labels, series of `Money` or plain figures, and an axis in a currency or a unit — as bars or a line; it draws only what that axis can hold, one series in ink and several in the category palette by key, and a screen reader reads it as a table; a rollup's chart is bars by month (a line on a toggle), one series per linked row, the eight largest drawn and what is left out said under it, never summed into a new figure <a id="d-516"></a>
+
+**Context.** M53 U6 (D-514: a dashboard holds charts of a rollup). Every chart was the ledger's —
+eight of them, each with its own shape of data — and `src/ui/charts/` held only colours and
+`useWidth`. A rollup (D-271) had a table and nothing to look at.
+
+**Decision.**
+
+- **`src/ui/charts/chart.ts` says a chart as plain data**: labels, series of points, and an axis
+  that is `{ currency }` or `{ unit }`. A point is a `Money`, a plain figure, a word said in place
+  of a figure (`unchecked`), or nothing — a gap, never a zero. **Money is a number only in
+  `drawnValue`**, for a position, and printed with `formatMoney` wherever it is read.
+- **It draws only what the axis can hold.** Money in another currency, or a plain figure on a money
+  axis, is not drawn; the table still says it. A chart that converted or mixed them would be wrong
+  quietly.
+- **`Chart.tsx` keeps docs/11**: ink on nothing, no axis lines or gridlines, a line 1.5pt with no
+  marker but the column under the pointer, bars labelled directly (all when every label fits, else
+  the tallest and the hovered column), drawn once on first appearance. **One series is ink; several
+  take the category palette**, each from its key's hash to the least taken slot, as
+  `categoryPalette.ts` resolves a level. The picture is hidden from a screen reader, which reads a
+  table of every label, series and point in full.
+- **A rollup's chart** (`src/ui/formats/rollupChart.ts`) is bars by month, a line on a toggle, one
+  series per linked row (and `none`) when it groups by a link, every month from the first to the
+  last. The axis is the currency most figures are in. **What it cannot draw is said under it** —
+  rows with no month, figures in another currency, series past the eighth largest — and nothing is
+  summed into an *other* that no rollup declared (an average of averages would be a new, wrong
+  figure). `RollupView` draws it above its table; the frame draws it wherever it draws that view.
+- **Nothing in `src/ui/charts/` imports the ledger** (`chart.test.ts` checks the folder):
+  `categoryPalette.ts` says the shape of a category it reads instead of importing the pack's type.
+
+**Consequences.** U7's dashboard takes a rollup's chart from here. The ledger's own charts stay as
+they are; moving one onto the general chart is a swap whenever a session touches it, and none had
+to.
+
+**Rejected.** Stacked bars: right for a sum and wrong for an average, minimum or maximum, which a
+rollup can be. An *other* series folding the rest: the same reason. Filling a month with no row
+with zero: a sum of nothing is zero, but the rollup did not say so, and the chart says only what it
+did. A chart library: the dependency list stays short, and the offline rule holds without one.
 
 ## D-517 · 2026-10-22 · Hiding a field is the entry view's, beside its order: `hidden` in a column's `format_view_column` setting (and `views.md`) keeps it off the page even when it holds a value, never the title or a required column; `new` marks a column a new entry asks for; one Fields list behind the entry's icon replaces the Arrange mode, and a field moves only within its part, by its label, its row, its menu or Alt+Up/Down; `arrange_views` takes `hidden` and `new_entry`; amends D-296 <a id="d-517"></a>
 

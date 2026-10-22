@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import type { Database } from 'sql.js'
 
 import { formatMoney, money } from '@/core/money.ts'
@@ -7,6 +7,9 @@ import { runRollup } from '@/data/repositories/formatRollupRepository.ts'
 import type { FormatDeclaration } from '@/domain/format/declaration.ts'
 import { figureText, rollupText } from '@/domain/format/rollup.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { Chart } from '@/ui/charts/Chart.tsx'
+import { drawnValue, type ChartKind } from '@/ui/charts/chart.ts'
+import { rollupChart } from '@/ui/formats/rollupChart.ts'
 import { today } from '@/ui/today.ts'
 
 /**
@@ -17,6 +20,11 @@ import { today } from '@/ui/today.ts'
  * figure and how many rows made it. A group that cannot answer says
  * *unchecked* with the reason on hover, as an aggregate's cell does — and only
  * that group: every other month is still the whole of itself.
+ *
+ * **Above the table, its chart** (M53 U6, D-516): bars by month — or a line —
+ * one series per linked row when the rollup groups by a link, drawn by the
+ * general chart. The table stays whole beneath it: every figure the chart draws
+ * is a cell there, and what it cannot draw is said under it.
  */
 export function RollupView({
   db,
@@ -36,6 +44,19 @@ export function RollupView({
     // `revision` is what says the rows moved underneath.
     [db, declaration, name, formats, revision],
   )
+  const [kind, setKind] = useState<ChartKind>('bars')
+  const chart = useMemo(
+    () =>
+      result === undefined
+        ? undefined
+        : rollupChart(result.groups, {
+            names: result.labels,
+            by: result.rollup.by !== undefined,
+            name: result.rollup.name,
+            unit: result.rollup.kind === 'COUNT' ? 'rows' : undefined,
+          }),
+    [result],
+  )
   if (result === undefined) return null
 
   const moneyOf = (minor: number, currency: string): string => formatMoney(money(minor, currency))
@@ -47,6 +68,42 @@ export function RollupView({
         <code>{rollupText(result.rollup)}</code>
         {result.rollup.note === '' ? '' : ` — ${result.rollup.note}`}
       </p>
+      {chart !== undefined &&
+        chart.series.some((each) => each.points.some((one) => drawnValue(one, chart.axis) !== undefined)) && (
+        <section className="px-6 pt-2 pb-4" aria-label={`${result.rollup.name} as a chart`}>
+          <div className="mb-1 flex items-center gap-1" role="group" aria-label="Draw as">
+            {(['bars', 'line'] as const).map((each) => (
+              <button
+                key={each}
+                type="button"
+                aria-pressed={kind === each}
+                onClick={() => setKind(each)}
+                className={[
+                  'rounded px-2 py-0.5 text-caption',
+                  'focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent',
+                  kind === each ? 'bg-surface text-ink' : 'text-ink-tertiary hover:text-ink',
+                ].join(' ')}
+              >
+                {each === 'bars' ? 'Bars' : 'Line'}
+              </button>
+            ))}
+          </div>
+          <Chart
+            labels={chart.labels}
+            ticks={chart.ticks}
+            series={chart.series}
+            axis={chart.axis}
+            kind={kind}
+            title={`${result.rollup.name} by month${by === undefined ? '' : ` and ${by}`}`}
+            labelHeading="month"
+          />
+          {chart.left.map((sentence) => (
+            <p key={sentence} className="m-0 text-caption text-ink-tertiary">
+              {sentence}
+            </p>
+          ))}
+        </section>
+      )}
       {result.groups.length === 0 ? (
         <p className="px-6 py-4 text-ink-secondary">No row falls in it yet.</p>
       ) : (
