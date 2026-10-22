@@ -431,6 +431,7 @@ written out here.
 | D-510 | 2026-10-20 | The npm package's `engines.node` is `>=20.19.0`, the oldest Node a CI job runs it on: `.github/workflows/package.yml` builds it on Node 24 and runs `scripts/check-package.mjs` on 20.19.0, 22 and 24 — the handshake, a document written and read back, both hooks, and an `npx` install that fails on `EBADENGINE`; the desktop extension's `runtimes.node` follows; amends D-497's `>=24` | [below](#d-510) |
 | D-513 | 2026-10-20 | A team weighing Emerald for its development planning is answered before its model objects: both instruction blocks say, right after the 2,000-character head, that plans nobody owns are what it is for, that one document holds work across repositories, stored as text and committed or kept as one file outside every repository, that documents talk through an inbox and an `elsewhere` column, and that a worktree session's landing goes through the main document's inbox; the head says SQLite as bytes or text | [below](#d-513) |
 | D-514 | 2026-10-22 | A view can be saved, and a dashboard holds only views: a saved view is a format's filter, order, columns and kind under a name, kept beside its other views; a dashboard, one per format and one for the document, is an ordered set of saved views, charts of rollups and headline totals, never a free block; neither is a format; recent changes wait and D-462 stands; amends D-402 | [below](#d-514) |
+| D-515 | 2026-10-22 | Tests stop costing more than the work: `.github/workflows/test.yml` runs typecheck and the whole suite on every push to main and the demo deploys only after it (`needs`; demo.yml is gone); a session runs the tests related to its change (`npx vitest related`), `src/privacy.test.ts` and typecheck, and the full suite only when the change is broad; a red CI run is the next session's first task; no slow project, because no few files dominate | [below](#d-515) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -827,6 +828,51 @@ question *entry overview* is answered by this.
 **Rejected.** A dashboard as rows of a format: it puts presentation in the domain layer and needs
 storage views already have. Free blocks on a dashboard: D-402's reason holds. **Recent changes**
 for now: rows carry no time of change (D-462), so it needs that decision reopened; it waits.
+
+## D-515 · 2026-10-22 · Tests stop costing more than the work: `.github/workflows/test.yml` runs typecheck and the whole suite on every push to main and the demo deploys only after it (`needs`; demo.yml is gone); a session runs the tests related to its change (`npx vitest related`), `src/privacy.test.ts` and typecheck, and the full suite only when the change is broad; a red CI run is the next session's first task; no slow project, because no few files dominate <a id="d-515"></a>
+
+**Context.** M51 F6, the maintainer, 2026-10-18: units took 13 to 40 minutes and the tests took
+longer than the work. No CI ran the tests — `.github/workflows` built the demo, the installers,
+the registry listing and the package — so every session ran all of them itself, and briefs asked
+for repeat runs (M42 F3 ran the full suite five times). Measured 2026-10-22, one full run on the
+maintainer's machine (8 cores, Windows, Vitest 4.1): 340 files, 4,786 tests, **115 s** (transform
+22 s, import 113 s and tests 594 s summed over the workers); the fixed startup of a one-file run is
+about 2 s; `tsc --noEmit` is 24 s. The slowest twenty files are 338 s of the 587 s of summed file
+time, all but four of them in `src/plugin/`, whose tool tests open and write a real document; the slowest one
+is 28 s, and `src/plugin/` is 333 s of the total.
+
+**Decision.**
+
+- **`test.yml`** runs on every push to main (and by hand): `npm ci` on ubuntu-latest with Node 24
+  (SheetJS installs from `vendor/`, no Electron binary), `npm run typecheck`, `npx vitest run`.
+- **The demo deploys from the same workflow, after it**: `demo` needs `test`, `deploy` needs
+  `demo` and runs only on main. One workflow rather than `workflow_run`, because the chain can be
+  seen in one run, and checked on a branch before it reaches main, and the deploy cannot check out
+  a commit other than the one tested. `demo.yml` is removed.
+- **The session rule** (conventions, the closing-pass and run-milestone skills, their generic copies):
+  while building and before the commit, `npx vitest related <changed files> --run` and typecheck;
+  before the commit `src/privacy.test.ts` too; a test that reads a changed file rather than importing
+  it is named by path; the full suite locally only for a broad change — `src/domain/`, a dependency,
+  `vite.config.ts`, `src/testing/` — and once. A driver reads the latest run on main after each unit,
+  and red is a stop. Briefs stop asking for repeat full runs.
+- **The privacy check in CI** runs when the repository has an `EMERALD_DENYLIST` secret, written to a
+  file outside the checkout for the run, and skips otherwise. Its failures name a file and a
+  denylist line, never a term, so a public log leaks nothing.
+
+**Consequences.** A plugin or UI unit's local testing drops from the suite plus typecheck (~140 s a
+run, and several runs a unit) to `related` plus typecheck (~45-50 s); a change to `src/domain/format/`
+is as broad as it says, because `related` reaches 178 files from `view.ts`. **`privacy.test.ts` is the
+one test a session must name**: it was run on the maintainer's machine by every full run, and
+`related` never reaches it. `package.yml` and `release.yml` are not gated by `test.yml`: a release is
+a tag the maintainer pushes after a green main.
+
+**Rejected.** **A slow Vitest project or `test:slow`** (the brief's fourth part): no few files
+dominate — the slowest five are a fifth of the summed time and the wall time is bounded by the workers,
+not by one file — so splitting would only hide the plugin's tests from the sessions that change the
+plugin, and `related` already runs a slow file only when it is touched. **`workflow_run`** to chain a
+separate demo.yml: it cannot be tried before it is on main, and the deploy must check out the tested
+commit by hand. **Running on every branch**: nothing here pushes branches but a check like this one.
+**Committing the denylist, or a hash of it**: the list is the names themselves.
 
 ## Related
 

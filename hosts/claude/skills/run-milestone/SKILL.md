@@ -90,8 +90,9 @@ Self-contained, whichever tool carries it:
 >
 > <brief, verbatim>
 >
-> Start from the files the brief names. While you build, run only the tests near the change; the
-> project's full suite and its other checks run once, before the commit. Then run the closing pass
+> Start from the files the brief names. While you build and before the commit, run the tests related
+> to the change and the project's other checks; the full suite only when the change is broad, and
+> once — CI runs the rest where the project has it. Then run the closing pass
 > (the `closing-pass` skill) in its order: commit the work, then `land_units` with that commit's hash
 > and your `report`, then commit the landing; push if the project pushes. Stage only your own files,
 > never `git add -A`. **Do not start another unit.** You are run by a driver: end with a report, not
@@ -116,7 +117,8 @@ Give each worktree child its own decision refs, from the next after the highest 
 
 1. **Check it landed, whatever the report says.** A session's note back is only its first few
    hundred characters, and a subagent's report is its own account, so read the facts: `git log
-   --oneline -3`, `git status --short` and the project's checks, in one call, and the unit's row
+   --oneline -3`, `git status --short`, the project's checks and, where CI runs on push, its latest
+   run on the main branch (red is a stop: fixing it is the next unit), in one call, and the unit's row
    (`format_rows unit match:{ref:"<ref>"} columns:[ref, state, commit, report]`). **The full report is
    the row's `report` column**, never the child's transcript paged through. No commit, or a red
    check, means **stop and say so**. Do not repair it yourself. One still `in_progress` after its child

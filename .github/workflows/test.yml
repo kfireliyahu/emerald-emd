@@ -1,0 +1,103 @@
+# Typecheck and the whole suite on every push to main, and the demo only after them (M51 F6, D-515).
+#
+# Until this workflow nothing ran the tests but the session that wrote the change, so every session
+# ran all of them itself, often more than once: units took 13 to 40 minutes and the tests took
+# longer than the work. Now a session runs the tests related to what it changed (docs/conventions.md)
+# and this runs the rest, on every push. **A red run here is the next session's first task.**
+#
+# **The demo is deployed from here, after the tests and never without them** — it was demo.yml, on
+# its own trigger, so a push that broke the suite still reached getemerald.dev. `demo` needs `test`
+# and `deploy` needs `demo`, so a red push builds nothing and publishes nothing. What it publishes is
+# dist-demo/ (M33 U4, D-418): Emerald's page at index.html (M33 U8, D-459), the tour frame at
+# tour.html and the app at app.html, with relative paths, at the repository's Pages address, which
+# getemerald.dev points at; Pages sends no X-Frame-Options, so any page can embed the frame. Pages on the free
+# plan serves public repositories only, so in a private one the demo is skipped and the tests still
+# run. Before the first deploy, Settings > Pages > Source is "GitHub Actions". The tours are not
+# replayed here (`npm run check:tours` needs a display for Electron).
+#
+# **The privacy check** (src/privacy.test.ts) reads a denylist kept outside the repository and skips
+# without it, by design: the list is the very names and figures the repository must not hold. Here
+# it runs when the repository has an `EMERALD_DENYLIST` secret, written to a file outside the
+# checkout for the run, and skips otherwise; a failure names the file and the denylist's line
+# number, never a term. Either way this run is after the push — the gate before a commit is the
+# maintainer's machine, where the list is, which is why a session runs that file before every commit.
+#
+#   gh workflow run test.yml          # run it now; on main it deploys the demo as well
+
+name: Test
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Typecheck and tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      # SheetJS is vendored (vendor/xlsx-0.20.3.tgz), so npm ci installs it from the checkout. The
+      # tests need no Electron binary: electron/'s tests import types from it, never the runtime.
+      - run: npm ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+      - run: npm run typecheck
+      - name: The denylist, when the repository has one
+        env:
+          DENYLIST: ${{ secrets.EMERALD_DENYLIST }}
+        run: |
+          if [ -n "$DENYLIST" ]; then
+            printf '%s\n' "$DENYLIST" > "$RUNNER_TEMP/denylist.txt"
+            echo "EMERALD_DENYLIST=$RUNNER_TEMP/denylist.txt" >> "$GITHUB_ENV"
+            echo "The privacy check runs against the repository's denylist."
+          else
+            echo "No EMERALD_DENYLIST secret: the privacy check skips, as on any machine without the list."
+          fi
+      - run: npx vitest run
+
+  demo:
+    name: Demo build
+    needs: test
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+      - run: npm run build:demo
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist-demo
+
+  # Only main publishes: run by hand on another branch, the demo is built and nothing is deployed.
+  deploy:
+    name: Demo deploy
+    needs: demo
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

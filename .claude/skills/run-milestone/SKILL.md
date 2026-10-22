@@ -86,9 +86,11 @@ Self-contained, whichever tool carries it:
 >
 > <brief, verbatim>
 >
-> Start from the files the brief names. Build it, test it — only the tests near the change while you
-> build; the full suite, typecheck and docs:check once, before the commit; `check:tours` only if the
-> unit touches what a tour drives (`docs/conventions.md`) — verify it in the browser where it renders,
+> Start from the files the brief names. Build it, test it — the tests related to the change
+> (`npx vitest related <changed files> --run`) while you build and before the commit, with
+> `src/privacy.test.ts`, typecheck and docs:check before it; the full suite only when the change is
+> broad, and once; `check:tours` only if the unit touches what a tour drives (`docs/conventions.md`);
+> CI runs the rest — verify it in the browser where it renders,
 > then run the closing pass (the `closing-pass` skill) in its order: commit the work, then
 > `land_units` with that commit's hash and your `report`, then commit the landing; push to origin
 > main. Stage only your own files, never `git add -A`. **Do not start another unit.** You are run by
@@ -113,7 +115,9 @@ Give each worktree child its own decision numbers, from the next free one in the
 
 1. **Check it landed, whatever the report says.** A session's note back is only its first 400
    characters, and a subagent's report is its own account, so read the facts: `git log --oneline -3`,
-   `git status --short` and `npm run docs:check`, in one call, and the unit's row
+   `git status --short`, `npm run docs:check` and `gh run list --workflow test.yml --branch main
+   --limit 2` (CI on what was pushed — a run still going is checked again before the next unit, and a
+   red one is a stop: fixing it is the next unit, M51 F6), in one call, and the unit's row
    (`format_rows unit match:{ref:"<ref>"} columns:[ref, state, commit, report]`). **The full report
    is the row's `report` column** (M51 F4), never the child's transcript paged through. No commit, or
    a red check, means **stop and say so**. Do not repair it yourself. One still `in_progress` after its child
