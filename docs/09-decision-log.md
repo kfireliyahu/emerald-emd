@@ -864,7 +864,12 @@ run, and several runs a unit) to `related` plus typecheck (~45-50 s); a change t
 is as broad as it says, because `related` reaches 178 files from `view.ts`. **`privacy.test.ts` is the
 one test a session must name**: it was run on the maintainer's machine by every full run, and
 `related` never reaches it. `package.yml` and `release.yml` are not gated by `test.yml`: a release is
-a tag the maintainer pushes after a green main.
+a tag the maintainer pushes after a green main. On CI's four cores the suite takes ~5 minutes and the
+job ~5½, so the demo is published ~9 minutes after a push rather than ~3. The first Linux runs found
+two failures no Windows run could: `electron/windowsUpdater.test.ts` asked the stub feed for
+`latest-linux.yml` (it now runs as Windows), and a file whose every test skips runs no `afterAll`, so
+the privacy test, skipped without its denylist, left the backups folder `src/testing/setup.ts` made up
+front (it is now named and made by the first copy).
 
 **Rejected.** **A slow Vitest project or `test:slow`** (the brief's fourth part): no few files
 dominate — the slowest five are a fifth of the summed time and the wall time is bounded by the workers,
