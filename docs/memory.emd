@@ -4366,6 +4366,15 @@ question: What does an entry draw of a format with many columns, and what does a
 answer: On a row that exists a column is drawn when it holds a value, is required (saying needed while empty), or was opened from the Empty line / is being typed in; every other non-hidden column is '+ name' on the Empty line at the foot of the left column (after a hairline, in the view's order, U2's 'N hidden' at its end); a name opens its field in place, focused (a menu opens), and left empty it folds back. A worked-out figure or total is drawn when it has a value; a check is always drawn (unchecked is its verdict). Labels read as words, dropping a suffix naming the column's unit (entryLabel). Two figures or fewer sit in the line under the title unless a check, a worked-out figure or a roomy way (large, bar, ring, slider) claims the grid (entryShown). A new entry asks for the title (focused), every required column and the columns ticked New entry; a hidden one stays off; no Links here; Add is never disabled and says the first missing required column in one line ('A task needs a title.', entryNeeds) only once pressed; Enter in the title adds. A required enum nothing implies starts at its first member (entryDefaults, implied for U4's quick add) — a view default, never a model's value, and not counted as touched. EntryList shows the draft as its first marked row ('A new task' until titled) and gains a '+' ('Add a task') opening entry/new.
 state: live
 
+### D-519
+date: 2026-10-22
+milestone: M53
+scope: engine
+title: Every format has a list: one line per row, a tick, grouped by an enum, a link or a date's buckets, and quick add; the list beside an entry is the same list, narrow; the View menu became the format's one tab strip
+question: How does the list view keep its settings, tick a row, and add one in place?
+answer: View kind 'list'. A column's format_view_column setting holds the words together: group, line, done <members> (done last); group and done are one column's each (setListSetting takes them off the other column, keeping its other words). Defaults: no group; done = first enum's last member, else first boolean; line = first enums, first link, first date (date last, relative: today, tomorrow, 'Sat, in 2 days', '5 Nov', late open rows 'N days late' in negative). Tick = updateRow through move's checks; untick restores the member held before (session memory by line name), else the first non-done member. Quick add = title + group's value + the address filter's exact values + entryDefaults, staged and written as record_format_rows' batch; a required column still empty opens entry/new with the draft. EntryList renders the same groups narrow (flat past 1000 rows). Parity: arrange_views view:list, show_format view:list, formats' **List:** line.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -7557,6 +7566,15 @@ shown_in: nowhere
 appears: on no screen, in no tool text, not in the tour
 state: live
 
+### Add a task · values
+means: Quick add's placeholder on a list: 'Add a <format> · ' and every value the new row will take besides its title — the group's, the address filter's exact values, a required enum's first member — so nothing is taken silently. Enter writes it; Esc clears.
+not: Not the Add button, which opens a new entry with every field it asks for.
+code_word: quickAdd(...).placeholder
+named_by: D-519
+scope: app
+shown_in: screen
+state: live
+
 ### Allocation
 means: How much of the splittable amount a bucket gets, as a percentage, an amount, or the remainder.
 scope: ledger
@@ -8214,6 +8232,15 @@ shown_in: rail
 appears: screen 74 in 14 files (screens/Goals 19, savings/Cushion 9, savings/DepositEditor 8, …); tools 60 in 10 files (tools/wealth 16, tools/goalRhythm 15, tools/savings 10, …); tour 7 in 3 files (demo/project 4, demo/ledger 2, demo/tour_step.format 1)
 state: live
 
+### Group by / Ticked when / Line
+means: The list's three settings, set in place in one row of menus above it: the column the groups come from (an enum, one link or a date's buckets), the member or yes/no that ticks a row, and the columns after the title.
+not: Not a board's Lanes by, which is the board's own setting; the list's are words in format_view_column under view 'list'.
+code_word: group, done <members>, line (one column's list setting, together)
+named_by: D-519
+scope: app
+shown_in: screen
+state: live
+
 ### Guide me
 means: The rail's button that walks a newcomer through the first things to do in this document.
 code_word: guide
@@ -8401,6 +8428,15 @@ shown_in: nowhere
 appears: on no screen, in no tool text, not in the tour
 state: live
 
+### List
+means: The view kind: one row per line, with a tick, the title and the line's columns, grouped by one column. Every format has one, at #/formats/<name>/list, and it sits beside Table and Board in the format's one tab strip. The list beside an open entry is the same list, narrow.
+not: Not the entry's list (EntryList) as a separate thing — since M53 U4 it is this list in its narrow width. Not a `links` column (several rows of another format), nor an `enums` column's members.
+code_word: list (VIEW_KINDS), ListLines, ListPage, listPicture
+named_by: D-519
+scope: app
+shown_in: view
+state: live
+
 ### Local model
 means: Settings: a model running on this machine, which reads a file onto a format or works a declaration out from an example — never over the network.
 scope: app
@@ -8451,6 +8487,14 @@ printed_as: ארנונה
 scope: ledger
 shown_in: nowhere
 appears: on no screen, in no tool text, not in the tour
+state: live
+
+### N done
+means: The ticked rows of one group of a list, folded at its foot; pressing it shows them, 'Hide N done' folds them again. When the list is grouped by the column that ticks a row, done is its own last group instead.
+not: Not the state member called done itself: a list may tick on any member or a yes/no.
+named_by: D-519
+scope: app
+shown_in: screen
 state: live
 
 ### National Insurance
@@ -13142,15 +13186,18 @@ report: "M53 U3 built at 9657597 on main. D-518. docs:check green after this lan
 milestone: M53
 scope: engine
 title: The list view: one line per row, a done tick, grouped by a column, and quick add
-decision: D-514
-state: in_progress
+landed: 2026-10-22
+decision: D-519
+state: built
 brief: "A new view kind, 'list', in VIEW_KINDS (src/domain/format/view.ts), settings in format_view_column and views.md like the board's: 'group' (an enum, a link or a date bucket; none by default), 'done' (the enum member(s) or boolean that tick a row; default the state enum's last member, as agenda's 'done' does), 'line' (columns after the name, shown per D-402's ways). Any format has one at #/formats/<name>/list and in the View select. A row is one line: the tick, the name, the line columns; clicking the name opens the entry with the list beside it. Ticking is update_format_rows's checks and updateRow, as moving a card on the board is. Quick add: a line at the top of the list and of each group, Enter writes a row with the name typed and the values the view implies (the group's member, the address filter's exact values), refusing as record_format_rows does when a required column has no value (it then opens entry/new with what it has). Parity (D-227): show_format view:list draws it (src/plugin/tools/sheet.ts VIEWS, the frame's routes), arrange_views sets group/done/line, and a row added in place is record_format_rows. Follow U1's mockup. Done-test: the synthetic task format as a list grouped by project, ticked and added to in place, in the app and drawn by show_format; parity.test.ts green.\n\nSETTLED by U1's approved mockup (docs/mockups/m53-u1/tasks.html, approved 2026-10-22; port its markup and words): (a) 'List' is a tab in the format's one tab strip beside Table and Board. Under it, the settings sit in place as one 32px row of menus, never a settings screen: 'Group by <column>', 'Ticked when <state is done>', 'Line <columns>', and the address filter's chip when there is one. (b) A row is one 40px line: the tick (a 16px square, filled ink when ticked), the title (opens the entry), then the line's columns right-aligned: an enums column as dot-chips (text with a small dot, no pill), a link's name (left out when grouped by it), and due relative to today, right-aligned: 'today', 'tomorrow', 'Sat, in 2 days' within a week, then '5 Nov'; a late open row reads 'N days late' ('yesterday' for one) in negative, the one colour on the line. Default line: tags, project, due. (c) Group by takes an enum (a group per member), a link (a group per row in the target's order, then 'No <column>'), or a date in buckets: Late, Today, Tomorrow, In the next 7 days, Later, No due date. Group heads are 32px with a chevron, the name and the count of open rows; groups fold (grid-template-rows). Grouped by the column that ticks a row, done is the last group; otherwise each group's ticked rows fold at its foot as 'N done', which opens them. (d) The tick sets the done member; untick restores the member the row held before the tick, else the first member. A ticked row stays in place, struck, for about a second, then sinks into 'N done'. (e) Quick add is a line at the top of the list and of each group whose value is one value (Late, In the next 7 days and Later have none, so no line). Its placeholder names every value the row will take besides its title: 'Add a task · inbox, Garden shed', '… due today'. Enter writes the title, the group's value, the address filter's exact values, and a required enum's first member when nothing implies one (U3's rule); the new row grows into place with a brief accent-soft mark, and the line keeps focus for the next; Esc clears. A required column it still cannot fill opens entry/new with what it has. (f) EntryList, the list beside an open entry, becomes the same list, narrow: the same groups (24px heads), ticks and quick add (one line at the top), the title with due · project under it. Clicking a title in the list view opens the entry with it beside. One list in two widths, so its settings hold in both. (g) New on-screen words, to become term rows when this lands: List, N done, Group by / Ticked when / Line, and quick add's placeholder."
-files: src/domain/format/view.ts (VIEW_KINDS, the board's settings), src/ui/formats/BoardView.tsx, src/ui/formats/LinkViews.tsx (AgendaView), src/plugin/tools/sheet.ts, src/frame/routes.tsx, src/parity.test.ts
+files: src/domain/format/view.ts, src/data/repositories/formatViewRepository.ts, src/data/repositories/formatLinkViewRepository.ts, src/ui/formats/listView.ts, src/ui/formats/ListView.tsx, src/ui/formats/EntryList.tsx, src/ui/formats/entryList.ts, src/ui/screens/FormatRows.tsx, src/ui/nav.ts, src/App.tsx, src/frame/routes.tsx, src/frame/contract.ts, src/plugin/tools/sheet.ts, src/plugin/tools/views.ts, src/ui/theme/tokens.css, src/parity.test.ts, src/ui/formats/listView.test.ts
 blocks: ["M53 U1"]
 taken_by: run-milestone driver
 started: 2026-10-22
 branch: main
+commit: 124a17d
 paths: src/domain/format/view.ts, src/ui/formats/, src/plugin/tools/sheet.ts, src/frame/routes.tsx
+report: M53 U4 built at 124a17d (D-519). A 'list' view kind: every format has one at #/formats/<name>/list. Settings are words one column holds together (group, line, done <members>), set in place under the List tab by Group by / Ticked when / Line menus, and by arrange_views view:list (whole setting per column; group and done move off the column that held them, keeping its line). Groups: enum members (done last when grouped by the tick's column), a link's rows in the target's order then 'No <col>', or date buckets Late/Today/Tomorrow/In the next 7 days/Later/No <col> date. Each group's ticked rows fold as 'N done'. The tick is the board's move (updateRow through the same checks); untick restores the previous member. Quick add at the top of each one-value group: placeholder names every value ('Add a task · inbox, Garden shed'), Enter writes via stageRows/insertRows (record_format_rows' batch), keeps focus, marks the new row accent-soft; a required column nothing fills opens entry/new with the draft. EntryList is the same list narrow (24px heads, tick, due · link under the title, one quick add at the top, the new-entry draft in the group it will land in); past 1000 rows it draws flat and windowed. The View <select> became the format's tab strip (Table, Board, List, Roadmap, Ready to start, rollups). show_format view:list names each group's rows with their tick; formats prints a **List:** line. Verified: listView.test.ts (11), parity, full suite once, typecheck, check:tours (10 runs), and the browser on a synthetic task document (grouped by project, added, ticked/sank/unticked back to waiting, entry beside the list, draft in No project). Not done: the cold read (scripts/ask-cold.mjs) could not run — the claude CLI here is not logged in; the tool description changes are one clause each in show_format and arrange_views. Left: the entry bar still says '← Task' and goes to the table even when opened from the list (the mockup's '← List'); Line has no word for an empty line (unticking every column gives the default back); Ticked when offers one member, several only through arrange_views; a self-link (blocked_by) is offered as a grouping.
 
 ### M53 U5
 milestone: M53
