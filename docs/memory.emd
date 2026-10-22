@@ -4393,6 +4393,15 @@ question: What can a dashboard hold, where does it sit, how is it arranged and k
 answer: Blocks: saved view (compact: list 5 open lines + 'N more'/'N done', grouped 2 a group; table 4 rows; board lanes with count + 2 cards; roadmap/ready 5 names), rollup chart (bars, 150px), headline total (count, or sum of a money/integer/real/decimal column, under a filter kept as an address so 'today' stays a phrase; money summed per currency). Grid of 4 columns: total 1, others 2; order is the only arrangement. In place: 'Add a block' (saved views + rollups, grouped by format on the document's; 'Headline total' made in place with conditions from the saved views, the list's done turned round and date windows), drag by grip, menu: Open in full / Move earlier / Move later / Remove from this dashboard (a total goes with its block; a view or rollup stays). Title opens in full with '← Dashboard' back (route state from:dashboard). Placement: #/formats/<name>/dashboard, last tab after a rule, format still opens on Table; #/dashboard, the rail's Dashboard: first and #/ without a ledger, right under Home with it. Storage: format_dashboard_block (dashboard NULL = document's, position, format_name, kind saved|rollup|total, name 1-60, sum, address); saved view rename/delete cascades; dropped rollup drawn as gone; deleteFormat clears. Text: '### <format> dashboard' / '### Document dashboard' blocks (kind, name, format, sum, address). Tools: arrange_views {view:dashboard, format?, add:[{saved}|{rollup}|{total, count|sum, match, search}], order:[names], remove:[names]} ('format/name' when ambiguous); show_format view:dashboard (no format = document's) names every block with what it holds; formats lists a format's blocks. start_here unchanged. 'Dashboard' is refused as a saved view's name.
 state: live
 
+### D-522
+date: 2026-10-22
+milestone: M52
+scope: engine
+title: A spreadsheet keyed by a unique column is matched against every row of its format, whichever file or person wrote it; gone stays per file, a row moves to the reading that last wrote it, a read fills only the columns it maps, and a read with no unique column says so and matches on nothing else; amends D-408
+question: Does a second export of the same thing under another name (next month's file) duplicate, refuse, or update the rows the first wrote?
+answer: When the format has a unique column the reading fills, it updates them: each line whose value a row holds is that row, written over cell by cell where the file differs; the rest are added. Only rows this file wrote can be gone. Without a unique column the read says so in one sentence and adds every line, with no matching on other columns (D-224).
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -6347,6 +6356,11 @@ state: open
 unit: M34 T1
 should: List items can become rows of a linked format, one per item
 breaks: One note is one row; 38 rows typed by hand
+state: open
+
+### Read a real export (a task board, a sheet you re-download) onto a format with a unique column, then next month's under its own name.
+unit: M50 U3
+should: The second read says Already in <format> with changed and added counts naming the changed cells, writes no duplicate, and leaves alone a value you typed in a column the file does not have.
 state: open
 
 ### Read a spreadsheet whose cells hold emoji
@@ -12981,12 +12995,16 @@ files: README.md (a compatibility table), src/demo/page/copy/en.ts (the MCP sect
 milestone: M52
 scope: engine
 title: An export read twice updates its rows by their unique key instead of duplicating them
-state: in_progress
+landed: 2026-10-22
+decision: D-522
+state: built
 brief: Today read_onto_format and the app's readers only ever create rows, so dropping the same export again (next month's task-board JSON, a re-exported sheet, a calendar file) duplicates every row that was already there. The strategy session of 2026-10-15 named this the thing that makes 'bring what you have, every month' true: adoption without a migration. When the target format has a `unique` column (M24 U4, D-255) and the mapping fills it, a read row whose key already exists becomes an update of that row, cell by cell, and the dry run says it in two counts, new and changed, naming the changed cells; a row whose key is absent is new as today. Without a unique column the reading says so in one line and offers nothing more: no matching on other columns, no fuzzy merge (a sum that guessed a row is not a truer one, D-224's honesty). A computed or claimed figure re-evaluates as it does on any update. Both halves (D-227 parity): the tool and the screen's confirm surface show new against changed before the commit. Done-test: the same csv read twice yields the same row count; one changed cell in the second file updates that cell and nothing else; the dry run and the confirm surface name new and changed; a format without a unique column reads as today and says why it cannot repeat; the full suite is green.
-files: src/domain/format/ (the reading's plan), src/plugin/tools/intake.ts and rows.ts (read_onto_format), src/ui/screens/ReadFiles.tsx and the confirm surface, docs/mapping-templates.md
+files: "src/domain/format/reread.ts\nsrc/data/intake/readingPlan.ts\nsrc/data/repositories/formatIntakeRepository.ts\nsrc/data/repositories/formatRowRepository.ts\nsrc/plugin/tools/intake.ts\nsrc/ui/screens/ReadFiles.tsx\nsrc/plugin/tools/intakeExport.test.ts\nsrc/plugin/tools/intake.test.ts\ndocs/mapping-templates.md"
 taken_by: run-milestone driver
 started: 2026-10-22
 branch: main
+commit: 9fe7f94
+report: M50 U3 built at 9fe7f94 (D-522). A spreadsheet keyed by a unique column (sourceKeyOf, unchanged) is now matched against every row of its format, whichever file or person wrote it: next month's export under another name changes the rows last month's wrote and adds what is new, where before it was refused line by line as repeating a unique value (only a file of the same name was read again, D-408). Gone stays per file. A row an export updates moves to that reading, so superseding the older reading keeps it. A read fills only the columns it maps (readingFills), so a value typed in another column survives. Found along the way and fixed: after a read had changed a row, the commit kept the old mark, so a third read called that row edited by a person and left it; a read that writes over a row now marks it afresh (a test fails without the fix). Both halves: read_onto_format's dry run heads it 'Already in <format> - what this read changes' with changed / added / as it was and each changed row's columns; the Read screen says 'Already here, each found by <col>, which is unique: 1 changed · 1 added · 1 as before', with 'Changed: T-1 (state)'. A read with no key and no header row says why in one sentence on both (no unique column, or the unique one not filled). The written summaries no longer say 'read again' for a file not read before. The M24 U4 test that expected a value from another file to be refused now expects it found; a second unique column the read is not keyed by still refuses. Tests: the full suite once (one failure, that M24 U4 test, updated), then related (177 files) green, plus privacy and typecheck. Checked in the browser on a synthetic text document: November's csv onto October's three rows gave 4 rows and the lines above; a format with no unique column shows the sentence. check:tours skipped: no tour drives the Read screen. The read_onto_format description gained a clause, build:plugin rebuilt; ask-cold.mjs could not run (the claude CLI here is not logged in), so nobody did a cold read. No schema change.
 
 ### M50 U4
 milestone: Later
