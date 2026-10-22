@@ -13204,9 +13204,12 @@ milestone: M53
 scope: engine
 title: Saved views: a filter, order, columns and kind under a name
 decision: D-514
-state: planned
+state: in_progress
 brief: A saved view is what the address already holds (src/ui/formats/addressFilter.ts: column values, search, order, columns) plus a view kind (sheet, board, list, roadmap, ready, agenda), under a name, per format. Store it beside the format's other views: in format_view_column if a named view fits it without a migration, else say why and add one (docs/04-data-model.md); in a text document as views.md lines (pack.test.ts and the text round trip hold). On screen: 'Save this view' on the FilterBand when the address holds something, a name asked in place; the rail lists a format's saved views under it (src/ui/RailFolder.tsx); opening one restores the address; rename and delete in place. Parity (D-227): arrange_views saves, renames and deletes one; show_format takes view:'<saved name>' and draws it with its filter; format_rows takes the same name (or says the match to pass). A relative date ('due today', 'within 7 days', as format_rows' match takes) is kept as the phrase, never a fixed date. Done-test: 'Due today' on the synthetic task format saved on screen, listed in the rail, drawn by show_format view:'Due today' tomorrow with tomorrow's rows; a conversation saves 'Open by project' and the screen shows it.
 files: src/ui/formats/addressFilter.ts, src/ui/formats/FilterBand.tsx, src/domain/format/view.ts, src/ui/RailFolder.tsx, src/plugin/tools/sheet.ts
+taken_by: run-milestone driver
+started: 2026-10-22
+branch: main
 paths: src/domain/format/view.ts, src/ui/formats/FilterBand.tsx, src/ui/formats/addressFilter.ts, src/ui/RailFolder.tsx, src/plugin/tools/
 
 ### M53 U6
