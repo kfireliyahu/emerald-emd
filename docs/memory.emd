@@ -4330,6 +4330,15 @@ question: Does a customizable dashboard, per format and for the whole document, 
 answer: A saved view is a format's match, search, order, columns and view kind under a name: what the address already holds and what format_rows and show_format already take, kept beside the format's other views (format_view_column, views.md), saved by arrange_views, drawn by show_format, listed under its format in the rail. A dashboard, one per format and one for the document, holds saved views, charts of a rollup and headline totals (a count or sum under a filter), arranged in place, and nothing else: no free text, no embeds; D-402's line moves from the entry to the dashboard. Neither is a format: rows are the person's data, a view is how to look at it. The entry page and adding by hand get lighter in the same milestone (mockup first), and tasks get a view kind of their own, list. Every write has both halves (D-227). Rejected: a dashboard as rows of a format; free blocks; recent changes for now, since rows carry no time of change (D-462) and that decision would have to be reopened. Answers the open question 'entry overview'.
 state: live
 
+### D-517
+date: 2026-10-22
+milestone: M53
+scope: ui
+title: Hiding a field is the entry view's, beside its order; one Fields list replaces the Arrange mode; a field moves only within its part
+question: How does a person hide a field on an entry and reorder the page without the Arrange mode, and how does a conversation do the same?
+answer: `hidden` and `new` are words of a column's entry setting in format_view_column (and views.md), beside the way, place and header: hidden keeps it off this entry view even with a value (never the title or a required column, drawn whatever it says); new marks it for a new entry to ask (M53 U3 reads it). One Fields list behind the entry's icon ('Fields: order, shown, new entry') lists every column but the title by part, with grip, eye and New entry tick; a field moves only within its part (movedWithin keeps parts in their slots), by its label, its row, its ⋯ menu (Move up/down, Hide) or Alt+Up/Down on a row. 'N hidden' at the foot shows hidden fields dimmed until the entry is left. arrange_views takes hidden and new_entry and refuses hiding the title, a required or a computed column. Amends D-296.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -5359,6 +5368,13 @@ body: "M52 F1 is built at 91a05dd on claude/quizzical-cerf-24d153: merge the bra
 refs: M52 F1
 state: applied
 became_unit: M52 F1
+
+### M53 U6 built: charts of a rollup, from one general chart
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-10-22
+body: "M53 U6 is built on worktree-agent-a55f1f9ab4b315ff9 at 5d39450; land it with D-516.\n\n```json\n{\"unit\":\"M53 U6\",\"files\":\"src/ui/charts/chart.ts, src/ui/charts/Chart.tsx, src/ui/charts/chart.test.ts, src/ui/charts/categoryPalette.ts, src/ui/formats/rollupChart.ts, src/ui/formats/rollupChart.test.ts, src/ui/formats/RollupView.tsx, src/ui/theme/tokens.css, docs/09-decision-log.md\",\"commit\":\"5d39450\",\"branch\":\"worktree-agent-a55f1f9ab4b315ff9\",\"decisions\":[{\"ref\":\"D-516\",\"title\":\"One general chart draws plain series as bars or a line, only what its axis can hold, read by a screen reader as a table; a rollup's chart is bars by month, one series per linked row, the eight largest drawn and the rest said, never summed\",\"question\":\"How does Emerald draw a chart that is not the ledger's, and what does a rollup's chart show?\",\"answer\":\"src/ui/charts/Chart.tsx takes plain series (chart.ts): labels, points that are Money, a plain figure, a word (unchecked) or nothing, and an axis {currency} or {unit}. Money becomes a number only in drawnValue; money in another currency or a plain figure on a money axis is not drawn. One series is ink, several take the category palette by key; the SVG is aria-hidden and an sr-only table reads every point. rollupChart.ts turns a rollup into bars by month (a line on a toggle), every month first to last, one series per linked row plus none, the axis the most common currency, at most 8 series; rows with no month, other currencies and series past the eighth are said under the chart, never folded into an other. Nothing in src/ui/charts/ imports the ledger (chart.test.ts).\"}],\"review_entries\":[],\"report\":\"M53 U6 built at 5d39450 on worktree-agent-a55f1f9ab4b315ff9. One general chart, src/ui/charts/Chart.tsx over plain data in chart.ts: labels, series of Money / plain figures / a said word / nothing, an axis in a currency or a unit; bars or a line, hand-rolled SVG in the theme tokens, light and dark, the picture aria-hidden and an sr-only table reading every point. RollupView draws its rollup above the table with a Bars/Line toggle, one series per linked row (rollupChart.ts); what the chart cannot hold is said under it. The frame draws it through FormatRows' View menu, unchanged (no new FrameView, so show_format cannot open on a rollup yet). categoryPalette.ts now declares the Category shape it reads instead of importing the ledger's type, so chart.test.ts checks the whole folder imports no ledger. tokens.css gains .fc-grow (bars grow once) and the chart's hover classes. Ledger charts not moved. Verified in the worktree's dev server on a synthetic expense/project document (bars 19 rects, line 4 paths, light and dark) and in the frame stand-in (try-frame) with the same counts. docs:check fails on this branch only for D-516's missing row, which this landing writes. check:tours skipped: no tour passes a rollup view.\"}\n```"
+refs: M53 U6
+state: new
 
 <!-- emerald: milestone.format.md -->
 ---
@@ -8072,6 +8088,15 @@ shown_in: screen
 appears: screen 2 in 1 file (funds/FundEditor 2); tools 1 in 1 file (tools/funds 1)
 state: live
 
+### Fields
+means: The entry's list of every column but the title: its order on this entry view, whether it is shown (the eye), and whether a new entry asks for it (New entry). Sectioned by the part of the page a column sits in; it replaced 'Arrange this view'.
+rejected: Arrange this view (the mode it replaced, until D-517)
+named_by: D-517
+scope: engine
+shown_in: view
+appears: screen: formats/EntryView (the icon 'Fields: order, shown, new entry')
+state: live
+
 ### File mode
 means: The app opened from a single HTML file on file://. Retired with the single-file build.
 named_by: D-133
@@ -8156,6 +8181,15 @@ printed_as: מס בריאות
 scope: ledger
 shown_in: nowhere
 appears: on no screen, in no tool text, not in the tour
+state: live
+
+### Hidden
+means: A column this entry view leaves off the page, even when it holds a value; never the title or a required column. It stays in the format, the table, the list's line and every tool. 'N hidden' at the foot of the entry shows them in place until the entry is left.
+code_word: hidden (format_view_column, arrange_views)
+named_by: D-517
+scope: engine
+shown_in: view
+appears: screen: formats/EntryView ('N hidden', 'Hide again', a field's ⋯ Hide); tools: arrange_views hidden
 state: live
 
 ### Holding
@@ -8388,6 +8422,15 @@ named_by: D-375
 scope: ledger
 shown_in: rail
 appears: screen 6 in 2 files (screens/Overview 5, nav 1); tools 5 in 3 files (tools/wealth 3, tools/holdingStatement 1, tools/placeAccounts 1)
+state: live
+
+### New entry (a column's mark)
+means: A column a new entry asks for beside the required ones, ticked in Fields; kept as the word 'new' in format_view_column and as new_entry on arrange_views.
+code_word: new (format_view_column), new_entry (arrange_views)
+named_by: D-517
+scope: engine
+shown_in: view
+appears: screen: formats/EntryView (Fields' New entry); tools: arrange_views new_entry
 state: live
 
 ### Of which saved
@@ -13007,15 +13050,18 @@ report: Tried the entry page, its Arrange mode and Add on a synthetic 12-column 
 milestone: M53
 scope: ui
 title: Hiding fields on an entry, and reordering that is light
-decision: D-514
-state: in_progress
+landed: 2026-10-22
+decision: D-517
+state: built
 brief: "Was Later U-entry-layout, moved into M53 on 2026-10-22. Maintainer, 2026-10-20, after weeks on a real format with many columns: arranging an entry page (moving the fields) is clunky, and a page with many columns feels heavy; some fields should be hidden by the person's choice. Build U1's approved mockup for: (1) a lighter way to reorder, in place of the separate 'Arrange this view' mode and its small handle (EntryView.tsx, setEntryOrder, D-296): drag the field itself, or a compact list of names; (2) hiding a field in the entry view, kept with the view's order in format_view_column and views.md, and the same in arrange_views so a conversation can do it too (parity, D-227); a hidden field is still in the format, the table and every tool, and how its value shows when it holds one is what the mockup settled; (3) grouping or folding a long page, if the mockup kept it. Labels name exactly what they cover; make it in place. Done-test: a field hidden and the page reordered on screen and by arrange_views, each seen by the other; parity.test.ts green; a text document round-trips both.\n\nSETTLED by U1's approved mockup (docs/mockups/m53-u1/tasks.html, approved 2026-10-22; port its markup and words): (a) The Arrange mode goes. One 'Fields' list replaces it, behind the icon where Arrange was (aria-label 'Fields: order, shown, new entry'): every column but the title in this view's order, sectioned by entryLayout's part (Line under the title, Figures, Text), each row a grip, the name in words, 'needed' or 'holds a value', an eye (Shown), and a 'New entry' checkbox (U3 reads it). Drag a row to move it; Alt+Up/Down on a focused row moves it a step. A field moves only within its part, as the order works today, and the list's sections make that plain. (b) A shown field can also be dragged by its label on the page, within its part; its ⋯ menu (where Show as is) adds Move up, Move down and Hide. (c) Hiding is per entry view, kept beside the order in format_view_column's setting string and views.md. A hidden field is not drawn even when it holds a value; the title and a needed (required) column cannot be hidden. 'N hidden' at the end of the entry's Empty line (U3) shows the hidden fields in place, dimmed, with a 'hidden' tag, until the entry is left ('Hide again'). A hidden field stays in the table, every tool and the list view's line. (d) No grouping or folding into sections: hiding empty fields (U3) is what makes a page short; only a long Markdown text folds, after about twelve lines, behind 'Show all N lines'. (e) arrange_views takes hidden and the 'new entry' mark as well as order (parity)."
-files: src/ui/formats/EntryView.tsx, src/domain/format/view.ts (entryOrder, writeEntrySetting), src/plugin/tools/ (arrange_views)
+files: "src/ui/formats/EntryView.tsx\nsrc/ui/screens/FormatRows.tsx\nsrc/domain/format/view.ts\nsrc/domain/format/document.ts\nsrc/data/repositories/formatViewRepository.ts\nsrc/plugin/tools/views.ts\nsrc/parity.test.ts\nsrc/frame/routes.test.ts\ndocs/04-data-model.md\ndocs/09-decision-log.md"
 blocks: ["M53 U1"]
 taken_by: run-milestone driver
 started: 2026-10-22
 branch: main
+commit: 5ed2282
 paths: src/ui/formats/EntryView.tsx, src/domain/format/view.ts, src/plugin/tools/
+report: M53 U2 built at 5ed2282; docs:check green after the landing; full suite 4790 tests green, typecheck clean, check:tours all 10 runs ok. Landed: the Arrange mode is gone; one Fields list (icon 'Fields: order, shown, new entry') lists every column but the title in this view's order, sectioned Line under the title / Figures / Text / Links, each row a grip, the name in words, 'needed' or 'holds a value', an eye and a 'New entry' tick; rows drag within their section and Alt+Up/Down moves a focused row. A shown field drags by its label within its part; its ⋯ (formerly the Show as glyph) adds Move up, Move down and Hide. 'hidden' and 'new' are words of the entry setting (format_view_column, views.md round-trips them; longest setting still fits the 32-char CHECK). The title and required columns are always drawn. 'N hidden' at the foot of the entry shows hidden fields dimmed with a 'hidden' tag until the entry is left ('Hide again'); U3's Empty line should absorb that button. arrange_views takes hidden and new_entry (refuses the title, a required or a computed column); formats reads both back; parity.test.ts has the new inventory row. Decision D-517. Browser-checked on a synthetic 10-column task: hide, reveal, Alt+Down, ⋯ Move up, label drag, cross-part drop refused, settings written. Not done: ask-cold could not run (the claude CLI here is not logged in) — the change only adds two booleans to arrange_views' schema, nothing about framing. The Alt+arrow hints were left off the page's ⋯ menu (on the page a focused field is an input); the shortcut is the list's. 'New entry' header wraps to two lines in its 56px column, as in the mockup.
 
 ### M53 U3
 milestone: M53
@@ -13213,5 +13259,5 @@ milestone: 2026-10-22
 open_question: 2026-10-22
 review_entry: 2026-10-20
 rule: 2026-10-18
-term: 2026-10-18
+term: 2026-10-22
 unit: 2026-10-22
