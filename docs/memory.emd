@@ -7020,6 +7020,14 @@ decided_by: ["D-247"]
 enforced_by: src/ui/useChanges.test.ts
 state: live
 
+### Maintainer's decisions before briefs
+statement: Planning a milestone lists the maintainer's decisions before any brief is written: every default, every behaviour where nothing is set, and where a thing gets made. Briefs carry only what was answered, and a unit that meets an unlisted one stops and asks instead of guessing.
+why: M53's 0.2.0 review (2026-10-22) found two faults that were choices the planning session wrote into briefs as detail: the list's tick guessing done as the first enum's last member (M53 F1), and a dashboard that could only pick existing views (M53 F2). The maintainer approved the milestone and never saw either as a question; the driver ran through, so the review was the first place they met them. A short list of decisions costs minutes, and a fault found in review costs a fix unit.
+kind: non_negotiable
+scope: practice
+always: true
+state: live
+
 ### Make it in place
 statement: A form that needs something the person may not have offers *+ New…* right there and returns with it chosen — never a hint to make it on another screen first — and the app infers what the data already says and asks only to confirm.
 why: The author (2026-10-05): everything took a lot of steps; a goal for money in the bank took seven, with a dead end, because the app asked for structure it already knew. Count the click path of the task a screen serves.
@@ -13540,6 +13548,6 @@ inbox: 2026-10-22
 milestone: 2026-10-22
 open_question: 2026-10-22
 review_entry: 2026-10-22
-rule: 2026-10-18
+rule: 2026-10-22
 term: 2026-10-22
 unit: 2026-10-22

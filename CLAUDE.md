@@ -174,6 +174,7 @@ marked `always`. The rest are a query, and it is cheaper than a read:
 - **Anything a person can do on a screen, a conversation can do too, and a new engine write is a failing test until both halves exist.** (D-227, D-234) — `src/parity.test.ts`
 - **Another product is described by its category, never named — except a host Emerald runs inside, a runtime it speaks to, and the maintainer's own story.** (D-450)
 - **Hebrew strings need bidi isolation: use the `Bidi` component, and never render a raw string that came out of a document.**
+- **Planning a milestone lists the maintainer's decisions before any brief is written: every default, every behaviour where nothing is set, and where a thing gets made. Briefs carry only what was answered, and a unit that meets an unlisted one stops and asks instead of guessing.**
 - **Money is never a `number`.** (D-003, D-204)
 - **Offline is not optional and is not on trust: the page makes no request it did not serve itself.** (D-124, D-133, D-134, D-136, D-308, D-502, D-503) — `electron/network.test.ts, electron/runtimes.test.ts, electron/generate.test.ts, electron/updates.test.ts, electron/windowsUpdater.test.ts`
 - **Real documents never enter the repo, and nor do their names and figures.** (D-390) — `src/privacy.test.ts`
