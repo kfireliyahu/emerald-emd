@@ -1,0 +1,958 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tasks, Lighter</title>
+<style>
+/* M53 U1. A lighter entry, a new entry that asks only for what is needed, a list view for tasks
+   and quick add — for the maintainer's approval before M53 U2-U4 build it. Tokens copied from
+   src/ui/theme/tokens.css (light, and :root[data-theme="dark"]); the frame is D-312's; chips and
+   dots are .fc-state/.fc-dot with tone.ts's tones; base CSS is M35 U1's mockup's. Fonts are the
+   app's own bundled woff2, read from node_modules, so this opens from the checkout with the network
+   off. Every name and figure is made up. The build ports this file's markup and words. */
+@font-face{font-family:"IBM Plex Sans";font-weight:400;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:500;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-500-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:600;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-600-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans Hebrew";font-weight:400;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans-hebrew/files/ibm-plex-sans-hebrew-hebrew-400-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-weight:400;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2") format("woff2")}
+
+:root{
+  --color-background:#ffffff;--color-surface:#f7f7f6;--color-elevated:#ffffff;
+  --color-ink:#111111;--color-ink-secondary:#6b6b6b;--color-ink-tertiary:#a0a09c;
+  --color-hairline:#ececea;--color-hairline-strong:#d9d9d6;
+  --color-accent:#07805f;--color-accent-ink:#ffffff;--color-accent-hover:#05664b;--color-accent-soft:#e8f6f1;
+  --color-action:#07805f;--color-action-ink:#ffffff;--color-action-hover:#05664b;--color-action-deep:#055a43;
+  --color-negative:#c4342b;--color-positive:#1f7a4d;
+  --shadow-pop:0 1px 2px rgba(17,17,17,.04),0 8px 24px rgba(17,17,17,.08);
+  --font-sans:"IBM Plex Sans","IBM Plex Sans Hebrew",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,monospace;
+  --micro:120ms;--base:180ms;--ease:cubic-bezier(.22,1,.36,1);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --color-background:#0b0b0c;--color-surface:#151517;--color-elevated:#1b1b1e;
+  --color-ink:#f2f2f0;--color-ink-secondary:#a1a1a0;--color-ink-tertiary:#6a6a6c;
+  --color-hairline:#262629;--color-hairline-strong:#34343a;
+  --color-accent:#34d399;--color-accent-ink:#06231a;--color-accent-hover:#5ee0b0;--color-accent-soft:#10312a;
+  --color-action:#34d399;--color-action-ink:#06231a;--color-action-hover:#5ee0b0;--color-action-deep:#1fae7d;
+  --color-negative:#e5675e;--color-positive:#4caf7d;
+  --shadow-pop:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.55);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --color-background:#0b0b0c;--color-surface:#151517;--color-elevated:#1b1b1e;
+  --color-ink:#f2f2f0;--color-ink-secondary:#a1a1a0;--color-ink-tertiary:#6a6a6c;
+  --color-hairline:#262629;--color-hairline-strong:#34343a;
+  --color-accent:#34d399;--color-accent-ink:#06231a;--color-accent-hover:#5ee0b0;--color-accent-soft:#10312a;
+  --color-action:#34d399;--color-action-ink:#06231a;--color-action-hover:#5ee0b0;--color-action-deep:#1fae7d;
+  --color-negative:#e5675e;--color-positive:#4caf7d;
+  --shadow-pop:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.55);color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{background:var(--color-background)}
+body{margin:0;color:var(--color-ink);font-family:var(--font-sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+input,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
+.label{font-size:11px;line-height:1.3;letter-spacing:.08em;font-weight:500;text-transform:uppercase;color:var(--color-ink-secondary)}
+.caption{font-size:12px;line-height:1.4;color:var(--color-ink-secondary)}
+.t3{color:var(--color-ink-tertiary)}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.neg{color:var(--color-negative)}
+bdi{unicode-bidi:isolate}
+svg{flex:none}
+
+/* ------------------------------------------------------------ the mockup's own page */
+.page{max-width:1320px;margin:0 auto;padding:32px 16px 96px;display:flex;flex-direction:column;gap:40px}
+.intro{display:flex;flex-direction:column;gap:8px;max-width:88ch}
+.intro h1{margin:0;font-size:24px;line-height:1.15;font-weight:600;letter-spacing:-.01em}
+.intro p{margin:0;color:var(--color-ink-secondary)}
+.intro b{color:var(--color-ink);font-weight:500}
+.controls{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:flex-end;padding:16px;background:var(--color-surface)}
+.ctl{display:flex;flex-direction:column;gap:6px}
+.seg{display:inline-flex;flex-wrap:wrap}
+.seg button{height:30px;padding:0 12px;border:1px solid var(--color-hairline-strong);margin-left:-1px;font-size:13px;color:var(--color-ink-secondary);background:var(--color-background)}
+.seg button:first-child{margin-left:0}
+.seg button.on{background:var(--color-accent-soft);color:var(--color-ink);border-color:var(--color-accent);position:relative;z-index:1}
+.choice-tag{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;margin-right:6px;font-size:10px;font-weight:500;border:1px solid currentColor}
+.stage{overflow-x:auto;border:1px solid var(--color-hairline-strong)}
+section.doc > h2{margin:0 0 10px;font-size:16px;font-weight:600}
+section.doc > p.note{margin:0 0 12px;color:var(--color-ink-secondary);max-width:90ch}
+.notes{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:10px;max-width:96ch;color:var(--color-ink-secondary)}
+.notes b{color:var(--color-ink);font-weight:500}
+table.words{width:100%;border-collapse:collapse;font-size:13px}
+table.words th,table.words td{border-top:1px solid var(--color-hairline);padding:8px 12px 8px 0;vertical-align:top;text-align:left}
+table.words th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;color:var(--color-ink-secondary)}
+table.words td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.words td:first-child{white-space:nowrap}
+.sn{font-family:var(--font-mono);font-size:11px;color:var(--color-ink-tertiary);margin-right:6px}
+.unit{display:inline-block;font-size:11px;font-weight:500;letter-spacing:.04em;color:var(--color-ink-secondary);border:1px solid var(--color-hairline-strong);padding:0 5px;margin-left:6px;white-space:nowrap}
+
+/* ------------------------------------------------------------ the window (D-312) */
+.win{min-width:1120px;height:820px;display:grid;grid-template-rows:40px 1fr;background:var(--color-background);position:relative}
+.titlebar{display:flex;align-items:center;gap:16px;padding:0 12px 0 16px;background:var(--color-surface);border-bottom:1px solid var(--color-hairline)}
+.docname{display:flex;align-items:center;gap:8px;font-size:13px}
+.dirty{width:7px;height:7px;border-radius:50%;border:1.5px solid var(--color-ink-secondary)}
+.dirty.on{background:var(--color-ink);border-color:var(--color-ink)}
+.body{display:grid;grid-template-columns:200px minmax(0,1fr);min-height:0}
+.side{background:var(--color-surface);border-right:1px solid var(--color-hairline);display:flex;flex-direction:column;padding:8px 0;overflow:auto}
+.nitem{height:32px;display:flex;align-items:center;gap:10px;padding:0 14px;color:var(--color-ink-secondary);font-size:13px;position:relative;width:100%;text-align:left}
+.nitem.open{color:var(--color-ink)}
+.nchild{height:24px;padding-left:34px}
+.nchild.on{color:var(--color-ink);background:var(--color-accent-soft)}
+.nchild.on::before{content:"";position:absolute;inset:0 auto 0 0;width:2px;background:var(--color-accent)}
+.nsep{height:1px;background:var(--color-hairline);margin:8px 14px}
+.main{min-width:0;min-height:0;display:flex;flex-direction:column;position:relative}
+
+/* .fc-btn, the split tile */
+.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;height:30px;padding:0 12px;font-size:13px;font-weight:500;white-space:nowrap}
+.btn.tiled{padding-inline-start:0;padding-inline-end:10px}
+.btn .tile{align-self:stretch;width:30px;display:inline-flex;align-items:center;justify-content:center;transition:background-color var(--micro)}
+.btn.primary{background:var(--color-action);color:var(--color-action-ink)}
+.btn.primary .tile{background:var(--color-action-deep)}
+.btn.primary:hover .tile{background:var(--color-accent-hover)}
+.btn.secondary{background:var(--color-surface);box-shadow:inset 0 0 0 1px var(--color-hairline-strong)}
+.btn.secondary .tile{background:var(--color-hairline);color:var(--color-ink-secondary)}
+.btn.ghost{padding:0 4px;color:var(--color-accent)}
+.btn.ghost:hover{text-decoration:underline;text-underline-offset:5px}
+.icon{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;color:var(--color-ink-secondary)}
+.icon:hover{color:var(--color-ink);background:var(--color-surface)}
+.icon.danger:hover{color:var(--color-negative)}
+.icon.on{color:var(--color-ink);background:var(--color-surface);box-shadow:inset 0 0 0 1px var(--color-hairline-strong)}
+
+/* the format's head and its one tab strip */
+.fhead2{flex:none;display:flex;align-items:center;gap:14px;padding:12px 24px 0}
+.fhead2 h2{margin:0;font-size:20px;font-weight:600}
+.fhead2 .end{margin-left:auto;display:flex;gap:8px;align-items:center}
+.tabs{flex:none;display:flex;gap:18px;height:32px;align-items:stretch;padding:0 24px;border-bottom:1px solid var(--color-hairline)}
+.tabs button{font-size:13px;color:var(--color-ink-tertiary);box-shadow:inset 0 -2px 0 transparent}
+.tabs button.on{color:var(--color-ink);box-shadow:inset 0 -2px 0 var(--color-accent)}
+/* the list's settings, in place: each one names what it sets and opens a menu */
+.lset{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 18px;padding:8px 24px;border-bottom:1px solid var(--color-hairline);font-size:12px;color:var(--color-ink-secondary);position:relative}
+.lset .pick{color:var(--color-ink);display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 4px;margin:0 -4px}
+.lset .pick:hover{background:var(--color-surface)}
+.fchip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 4px 0 8px;border:1px solid var(--color-hairline-strong);font-size:12px;color:var(--color-ink)}
+.fchip .x{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;color:var(--color-ink-tertiary)}
+
+/* ------------------------------------------------------------ the list view */
+.lscroll{flex:1 1 auto;min-height:0;overflow:auto}
+.lwrap{max-width:980px;padding:8px 24px 64px}
+.grp{display:flex;flex-direction:column}
+.ghd{height:32px;display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;font-weight:500;width:100%;text-align:left}
+.ghd .chev{color:var(--color-ink-tertiary);transition:transform var(--base) var(--ease)}
+.ghd.shut .chev{transform:rotate(-90deg)}
+.ghd .cnt{font-weight:400;color:var(--color-ink-tertiary);font-variant-numeric:tabular-nums}
+.gbody{display:grid;grid-template-rows:1fr;transition:grid-template-rows var(--base) var(--ease)}
+.gbody.shut{grid-template-rows:0fr}
+.gbody > div{min-height:0;overflow:hidden}
+.lrow2{height:40px;display:flex;align-items:center;gap:12px;border-top:1px solid var(--color-hairline);padding:0 4px;position:relative}
+.lrow2:hover{background:var(--color-surface)}
+.lrow2 .name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
+.lrow2 .name:hover{text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--color-hairline-strong)}
+.lrow2 .bits{display:flex;align-items:center;gap:16px;flex:none;font-size:12px;color:var(--color-ink-secondary)}
+.lrow2 .due{min-width:84px;text-align:right;font-variant-numeric:tabular-nums}
+.lrow2.done .name{color:var(--color-ink-tertiary);text-decoration:line-through;text-decoration-color:var(--color-ink-tertiary)}
+.lrow2.fresh{animation:fresh 900ms var(--ease)}
+@keyframes fresh{from{background:var(--color-accent-soft)}to{background:transparent}}
+.tk{width:16px;height:16px;border:1.5px solid var(--color-ink-secondary);display:inline-flex;align-items:center;justify-content:center;flex:none;color:var(--color-background)}
+.tk:hover{border-color:var(--color-ink)}
+.tk.on{background:var(--color-ink);border-color:var(--color-ink)}
+.dchip{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.dchip i{width:6px;height:6px;border-radius:9999px;background:var(--color-ink-tertiary);display:inline-block}
+.qadd{height:40px;display:flex;align-items:center;gap:12px;border-top:1px solid var(--color-hairline);padding:0 4px;color:var(--color-ink-tertiary)}
+.qadd input{flex:1 1 auto;border:0;outline:0;background:transparent;height:100%;padding:0}
+.qadd input::placeholder{color:var(--color-ink-tertiary)}
+.qadd:focus-within{box-shadow:inset 2px 0 0 var(--color-accent)}
+.qadd .hint{font-size:11px;color:var(--color-ink-tertiary);white-space:nowrap;opacity:0}
+.qadd:focus-within .hint{opacity:1}
+.dfold{height:32px;display:flex;align-items:center;gap:8px;border-top:1px solid var(--color-hairline);padding:0 4px;font-size:12px;color:var(--color-ink-secondary);width:100%;text-align:left}
+.dfold:hover{color:var(--color-ink)}
+
+/* ------------------------------------------------------------ the list beside an entry (EntryList) */
+.split2{display:grid;grid-template-columns:272px minmax(0,1fr);min-height:0;flex:1 1 auto}
+.elist{border-right:1px solid var(--color-hairline);display:flex;flex-direction:column;min-height:0}
+.elist .ehd{flex:none;display:flex;align-items:center;gap:8px;padding:8px 8px 8px 12px}
+.elist .ehd b{font-size:13px;font-weight:600}
+.elist .srch{flex:none;margin:0 12px 6px;height:28px;border:1px solid var(--color-hairline-strong);display:flex;align-items:center;gap:6px;padding:0 8px;color:var(--color-ink-tertiary);font-size:12px}
+.elist .esc{flex:1 1 auto;min-height:0;overflow:auto;padding-bottom:24px}
+.elist .ghd{height:24px;margin-top:8px;padding:0 12px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-ink-secondary)}
+.erow{display:flex;gap:10px;padding:6px 12px;align-items:flex-start;width:100%;text-align:left;position:relative}
+.erow:hover{background:var(--color-surface)}
+.erow.on{background:var(--color-accent-soft)}
+.erow.on::before{content:"";position:absolute;inset:0 auto 0 0;width:2px;background:var(--color-accent)}
+.erow .tk{margin-top:2px}
+.erow .t{font-size:13px;line-height:1.35;min-width:0}
+.erow .s{font-size:11px;color:var(--color-ink-secondary);display:flex;gap:6px;flex-wrap:wrap}
+.erow.done .t{color:var(--color-ink-tertiary);text-decoration:line-through}
+.erow.draft .t{color:var(--color-ink-tertiary);font-style:italic}
+.elist .esc{overflow-x:hidden}
+.elist .qadd .hint{display:none}
+.elist .qadd{height:32px;margin:0 12px;padding:0;border-top:0;border-bottom:1px solid var(--color-hairline);font-size:13px}
+.elist .dfold{height:24px;padding:0 12px;border-top:0;font-size:11px}
+
+/* ------------------------------------------------------------ the entry */
+.ebar{flex:none;display:flex;align-items:center;gap:6px 14px;border-bottom:1px solid var(--color-hairline);padding:6px 16px 6px 24px;min-height:41px;position:relative}
+.ebar .end{margin-left:auto;display:flex;align-items:center;gap:6px}
+.back{font-size:12px;color:var(--color-ink-secondary)}
+.back:hover{color:var(--color-ink)}
+.scroll{flex:1 1 auto;min-height:0;overflow:auto}
+.sheet{max-width:980px;padding:24px 24px 64px;display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:40px;align-items:start}
+.sheet.one{grid-template-columns:minmax(0,1fr)}
+.left{display:flex;flex-direction:column;gap:22px;min-width:0;max-width:680px}
+.ehead{display:flex;flex-direction:column;gap:12px}
+.ehead .ttl{margin:0;font-size:24px;line-height:1.2;font-weight:600;letter-spacing:-.01em;border:1px solid transparent;padding:2px 6px;margin:0 -7px;cursor:text}
+.ehead .ttl:hover{border-color:var(--color-hairline)}
+.ehead input.ttl{background:var(--color-elevated);border-color:var(--color-accent);outline:0;width:100%}
+.ehead .ttl.ph{color:var(--color-ink-tertiary)}
+.lineup{display:flex;flex-wrap:wrap;align-items:center;gap:8px 22px}
+.lineup .fld{flex-direction:row;align-items:center;gap:8px}
+.lineup .fld .fh .label{color:var(--color-ink-tertiary)}
+.part{display:flex;flex-direction:column;gap:18px;padding-top:18px;border-top:1px solid var(--color-hairline)}
+.figs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px 22px}
+.fig{font-size:20px;font-weight:500;font-variant-numeric:tabular-nums}
+.fig small{font-size:13px;font-weight:400;color:var(--color-ink-secondary);margin-left:3px}
+.lineup .fig{font-size:14px}
+.lineup .fig small{font-size:12px}
+
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0;position:relative}
+.fld[draggable="true"] .fh .label{cursor:grab}
+.fld.dragging{opacity:.4}
+.fld.over{box-shadow:-2px 0 0 var(--color-accent)}
+.part .fld.over,.figs .fld.over{box-shadow:0 -2px 0 var(--color-accent)}
+.fh{display:flex;align-items:center;gap:6px;min-height:18px}
+.fh .how{opacity:0;width:20px;height:20px;display:inline-flex;align-items:center;justify-content:center;color:var(--color-ink-tertiary)}
+.fld:hover .how,.how.open,.fld:focus-within .how{opacity:1}
+.how:hover{color:var(--color-ink)}
+.need{font-size:11px;color:var(--color-ink-tertiary);text-transform:none;letter-spacing:0}
+.hidtag{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-ink-tertiary);border:1px dashed var(--color-hairline-strong);padding:0 5px}
+.fld.isHidden{opacity:.55}
+.val{border:1px solid transparent;padding:2px 6px;margin:0 -7px;min-height:30px;display:flex;align-items:center;gap:8px;cursor:text;min-width:0}
+.val:hover{border-color:var(--color-hairline)}
+.val.block{display:block}
+.empty{color:var(--color-ink-tertiary)}
+.edit{border:1px solid var(--color-accent);background:var(--color-elevated);padding:3px 8px;margin:0 -7px;display:flex;min-height:30px;align-items:center}
+.edit input,.edit textarea{border:0;outline:0;background:transparent;width:100%;padding:0;min-width:120px}
+.edit textarea{font-family:var(--font-mono);font-size:12px;line-height:1.6;resize:vertical;min-height:140px}
+.fc-state{display:inline-flex;align-items:center;padding:3px 8px;border:1px solid var(--color-hairline-strong);color:var(--color-ink-secondary);font-size:11px;line-height:1.3;letter-spacing:.06em;font-weight:500;text-transform:uppercase;white-space:nowrap}
+.fc-state[data-tone="done"]{color:var(--color-ink);background:var(--color-surface);border-color:var(--color-hairline)}
+.fc-state[data-tone="live"]{color:var(--color-accent);border-color:var(--color-accent);background:var(--color-accent-soft)}
+.fc-state[data-tone="waiting"]{border-style:dashed}
+.fc-dot{display:inline-block;width:8px;height:8px;flex:none;border-radius:9999px;border:1.5px solid var(--color-hairline-strong)}
+.fc-dot[data-tone="done"]{background:var(--color-ink);border-color:var(--color-ink)}
+.fc-dot[data-tone="live"]{background:var(--color-accent);border-color:var(--color-accent)}
+.fc-dot[data-tone="waiting"]{border-style:dashed;border-color:var(--color-ink-secondary)}
+.lk{color:var(--color-accent)}
+.rel{font-size:12px;color:var(--color-ink-secondary)}
+.chips{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
+.md{line-height:1.65;max-width:68ch}
+.md p{margin:0 0 10px}
+.md ul{margin:0 0 10px;padding-left:22px}
+.md li{margin:2px 0}
+.fold{position:relative;max-height:13.5em;overflow:hidden}
+.fold::after{content:"";position:absolute;inset:auto 0 0 0;height:3em;background:linear-gradient(transparent,var(--color-background))}
+.more{font-size:12px;color:var(--color-accent)}
+.more:hover{text-decoration:underline;text-underline-offset:3px}
+
+/* empty fields: one line of names (A) or one "+ Field" menu (B) */
+.empties{display:flex;flex-wrap:wrap;align-items:center;gap:4px 4px;padding-top:14px;border-top:1px solid var(--color-hairline)}
+.empties .label{color:var(--color-ink-tertiary);margin-right:8px}
+.ef{height:24px;padding:0 8px;font-size:12px;color:var(--color-ink-secondary);display:inline-flex;align-items:center;gap:4px}
+.ef:hover{color:var(--color-ink);background:var(--color-surface)}
+.ef svg{color:var(--color-ink-tertiary)}
+.hidbtn{height:24px;padding:0 8px;font-size:12px;color:var(--color-ink-tertiary);margin-left:auto}
+.hidbtn:hover{color:var(--color-ink)}
+
+/* links here */
+.aside{display:flex;flex-direction:column;gap:8px}
+.lrow{display:grid;grid-template-columns:14px minmax(0,1fr);column-gap:10px;padding:9px 0;border-top:1px solid var(--color-hairline);font-size:13px}
+.lrow .fc-dot{margin-top:6px}
+.nothing{border-top:1px solid var(--color-hairline);padding:9px 0;font-size:12px;color:var(--color-ink-secondary)}
+
+/* popovers: ChoiceField's list, the Fields list */
+.pop{position:absolute;z-index:20;min-width:200px;border:1px solid var(--color-hairline-strong);background:var(--color-elevated);box-shadow:var(--shadow-pop);padding:4px 0}
+.pop .ph{padding:6px 12px 4px;font-size:11px;letter-spacing:.08em;font-weight:500;text-transform:uppercase;color:var(--color-ink-tertiary)}
+.pop > button,.pop .opt{display:flex;width:100%;align-items:center;gap:10px;padding:6px 12px;font-size:13px;text-align:left}
+.pop > button:hover,.pop .opt:hover{background:var(--color-accent-soft)}
+.pop .ck{width:14px;color:var(--color-accent);display:inline-flex}
+.pop .eg{margin-left:auto;font-size:12px;color:var(--color-ink-tertiary)}
+.pop .sep{height:1px;background:var(--color-hairline);margin:4px 0}
+.fields{width:340px;padding:4px 0 8px}
+.fields .fhrow{display:grid;grid-template-columns:20px minmax(0,1fr) 28px 56px;align-items:center;gap:6px;padding:0 10px;height:24px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-ink-tertiary)}
+.fields .fhrow span:last-child{text-align:center}
+.fields .sec{padding:8px 12px 2px;font-size:11px;letter-spacing:.08em;font-weight:500;text-transform:uppercase;color:var(--color-ink-secondary)}
+.frow{display:grid;grid-template-columns:20px minmax(0,1fr) 28px 56px;align-items:center;gap:6px;padding:0 10px;height:32px;font-size:13px;position:relative}
+.frow:hover,.frow:focus-visible{background:var(--color-surface)}
+.frow.over{box-shadow:inset 0 2px 0 var(--color-accent)}
+.frow.dragging{opacity:.4}
+.frow .g{color:var(--color-ink-tertiary);cursor:grab;display:inline-flex}
+.frow .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.frow.off .nm{color:var(--color-ink-tertiary)}
+.frow .nm .v{font-size:11px;color:var(--color-ink-tertiary);margin-left:6px}
+.frow .eye{width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;color:var(--color-ink-secondary)}
+.frow .eye:hover{color:var(--color-ink)}
+.frow .eye[disabled]{opacity:.35;cursor:default}
+.frow .nw{display:flex;justify-content:center}
+.frow .nw input{accent-color:var(--color-ink)}
+.fields .ft{padding:8px 12px 0;font-size:11px;color:var(--color-ink-tertiary);border-top:1px solid var(--color-hairline);margin-top:6px}
+
+/* the draft bar */
+.foot{flex:none;border-top:1px solid var(--color-hairline);background:var(--color-elevated);padding:10px 24px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px}
+.refused{font-size:12px;color:var(--color-negative)}
+
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="intro">
+    <h1>Tasks, lighter: the entry, a new entry, a list view and quick add</h1>
+    <p><b>M53 U1, for your approval before U2–U4 build it.</b> One synthetic task format of twelve columns
+      (title, state, due, priority, project, notes, tags, estimate&nbsp;h, assignee, started, done on, blocked by),
+      sixteen made-up tasks, today fixed at <b>Thu 22 Oct 2026</b>. Everything below is live: tick, add, open,
+      fill an empty field, hide one, drag one. The switches marked <span class="choice-tag">A</span>/<span class="choice-tag">B</span>
+      are the choices that are yours; the list under the window says which unit each one settles.</p>
+  </div>
+
+  <div class="controls" id="controls"></div>
+  <div class="stage"><div class="win" id="win"></div></div>
+
+  <section class="doc">
+    <h2>What is clunky today</h2>
+    <p class="note">Tried on the same twelve-column task format in the app on 2026-10-22: the entry page, its Arrange mode, and Add.</p>
+    <ol class="notes">
+      <li><b>Every column is drawn, filled or not.</b> A task with five values shows twelve fields: <i>done_on</i> as an empty mm/dd/yyyy box, <i>blocked_by</i> as “Type to find one”, <i>assignee</i> as a heading over nothing, and “One more” after the tags. Most of the page is empty fields.</li>
+      <li><b>Raw column names are the labels:</b> DONE_ON, BLOCKED_BY, ESTIMATE_H, with the underscores.</li>
+      <li><b>One optional figure gets a section of its own.</b> <i>estimate_h</i> sits alone under a rule as a large “3 h”, with a wide gap under it, because figures are a part of their own.</li>
+      <li><b>Two date formats on one screen.</b> The list beside it says “Sat 24 Oct 2026”, while the entry’s date inputs say 10/24/2026 and show mm/dd/yyyy when they are empty (the platform’s date input).</li>
+      <li><b>Arrange is a mode.</b> The icon turns every field into a grip with ↑ and ↓ arrows. The line under the title reflows from four fields a row to three, and it has no way to hide a field. The order holds only inside a part (the line, figures, texts), because the part comes from the column’s type. So dragging <i>estimate_h</i> above <i>state</i> changes nothing you can see.</li>
+      <li><b>Adding takes three steps and loses the list.</b> From an open entry: ← Task, Add, fill it in, Add. <i>entry/new</i> drops the list that was beside the entry and shows every column, plus a “Links here” that says nothing can link yet.</li>
+      <li><b>It scolds before you start.</b> The new entry opens with “Nothing has been filled in yet.” in red beside Add. The required <i>state</i> starts “Empty”, so even a task with only a title needs a menu opened.</li>
+      <li><b>No view suits a task.</b> A task gets the table, the board or the entry. There is no tick, and nothing reads “due tomorrow”. The list beside an entry is good (title, dot, state, date) but cannot be ticked, grouped or added to.</li>
+    </ol>
+  </section>
+
+  <section class="doc">
+    <h2>The choices U2–U4 depend on</h2>
+    <p class="note">Each one is drawn above with the recommended answer first. The ones marked with a switch can be flipped in the controls to compare.</p>
+    <table class="words" id="choices"></table>
+  </section>
+
+  <section class="doc">
+    <h2>Click paths</h2>
+    <p class="note">Counted from an open task with the list beside it. A click or an Enter counts as one, typing counts as nothing.</p>
+    <table class="words">
+      <thead><tr><th>To</th><th>Today</th><th>Here</th><th></th></tr></thead>
+      <tbody>
+        <tr><td>Add a task with a title</td><td class="n">5</td><td class="n">1</td><td>Today: ← Task, Add, open the state menu, pick a state, Add. Here: type in the list’s top line, then Enter. Inbox is taken from the state’s first member.</td></tr>
+        <tr><td>Add a task to a project</td><td class="n">7</td><td class="n">1</td><td>The same, plus finding the project. Here: type in that project’s group, then Enter.</td></tr>
+        <tr><td>Mark a task done</td><td class="n">2</td><td class="n">1</td><td>Today: open the state menu, pick done. Here: the tick, in the list or beside the entry.</td></tr>
+        <tr><td>Fill an empty field</td><td class="n">1</td><td class="n">1</td><td>Its name in the Empty line opens the field where it belongs in the order.</td></tr>
+        <tr><td>Hide a field</td><td class="n">—</td><td class="n">2</td><td>Its ⋯ then Hide, or the eye in Fields.</td></tr>
+        <tr><td>Move a field</td><td class="n">2</td><td class="n">1</td><td>Today: Arrange, drag by the grip, Arrange again to leave. Here: drag it by its label on the page, or by its row in Fields.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Words new on screen</h2>
+    <p class="note">Checked against the term rows. Each becomes a term row when its unit lands.</p>
+    <table class="words">
+      <thead><tr><th>Word</th><th>Covers exactly</th></tr></thead>
+      <tbody>
+        <tr><td>List</td><td>The view kind: one row per line, with a tick, the title and the line’s columns, grouped by one column. It sits beside Table and Board in the one tab strip.</td></tr>
+        <tr><td>Fields</td><td>The entry’s list of every column: its order on this entry view, whether it is shown, and whether a new entry asks for it. It replaces “Arrange this view”.</td></tr>
+        <tr><td>Empty</td><td>The line at the foot of an entry naming the columns that hold no value and are not hidden.</td></tr>
+        <tr><td>N hidden</td><td>The columns hidden on this entry view, whether they hold a value or not. Pressing it shows them in place, dimmed, until the entry is left.</td></tr>
+        <tr><td>Add a task · <i>values</i></td><td>Quick add’s placeholder. It names every value the new row will take besides its title (the group’s, the filter’s, a required column’s first member), so nothing is taken silently.</td></tr>
+        <tr><td>N done</td><td>The ticked rows of a group, folded at its foot.</td></tr>
+        <tr><td>Group by / Ticked when / Line</td><td>The list’s three settings, set in place above the list: the column the groups come from, the member or boolean that ticks a row, and the columns after the title.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<script>
+'use strict'
+const TODAY = '2026-10-22'
+const PROJECTS = ['Garden shed', 'Quarterly report', 'Move flat']
+const STATES = ['inbox', 'next', 'doing', 'waiting', 'done']
+const COLS = [
+  { name: 'title', type: 'text', req: true },
+  { name: 'state', type: 'enum', req: true, members: STATES },
+  { name: 'due', type: 'date' },
+  { name: 'priority', type: 'enum', members: ['low', 'normal', 'high', 'urgent'] },
+  { name: 'project', type: 'link' },
+  { name: 'notes', type: 'text', md: true },
+  { name: 'tags', type: 'enums', members: ['call', 'email', 'errand', 'deep work', 'review'] },
+  { name: 'estimate_h', type: 'real', unit: 'h' },
+  { name: 'assignee', type: 'text' },
+  { name: 'started', type: 'date' },
+  { name: 'done_on', type: 'date' },
+  { name: 'blocked_by', type: 'link', self: true },
+]
+const col = (name) => COLS.find((c) => c.name === name)
+// entryLayout's parts: the line under the title (enum, enums, date, link, boolean), figures, texts
+const PART = (c) => c.name === 'title' ? 'title' : ['enum', 'enums', 'date', 'link', 'boolean'].includes(c.type) ? 'line' : c.type === 'real' ? 'figs' : 'texts'
+const PART_NAME = { line: 'Line under the title', figs: 'Figures', texts: 'Text' }
+
+let seq = 100
+const T = (title, o = {}) => ({ id: 'r' + (++seq), title, state: 'inbox', tags: [], ...o })
+const LONG = 'Cover the **three** open points before Friday:\n\n- intake, and why it slowed in the second month\n- the review, with the two changes it asked for\n- what slipped, and whether it is still wanted\n\nThe figures are in last quarter’s sheet; keep the same headings so the two read side by side.\n\nAsk for the missing numbers on Thursday at the latest. If they do not arrive, write the section with what there is and mark the gaps rather than waiting.\n\nLength: two pages, no more.'
+const INITIAL = () => {
+  seq = 100
+  const rows = [
+    T('Order timber for the shed floor', { state: 'next', due: '2026-10-22', priority: 'high', project: 'Garden shed', tags: ['errand'] }),
+    T('Draft section 2 of the report', { state: 'doing', due: '2026-10-24', priority: 'normal', project: 'Quarterly report', notes: LONG, estimate_h: 3, started: '2026-10-20', tags: ['deep work'] }),
+    T('Call the council about the permit', { state: 'waiting', due: '2026-10-21', project: 'Garden shed', tags: ['call'], assignee: 'Dana' }),
+    T('Book the van', { state: 'done', project: 'Move flat', done_on: '2026-10-18', tags: ['call'] }),
+    T('Pick paint colour'),
+    T('Send figures to Noa', { state: 'next', due: '2026-10-23', project: 'Quarterly report', tags: ['email'] }),
+    T('Measure the doorway', { state: 'next', due: '2026-10-22', project: 'Garden shed', estimate_h: 0.5 }),
+    T('Return the drill', { due: '2026-10-29', tags: ['errand'] }),
+    T('Buy hinges and a hasp', { state: 'next', due: '2026-10-25', project: 'Garden shed', tags: ['errand'] }),
+    T('Check last quarter’s totals', { state: 'done', project: 'Quarterly report', done_on: '2026-10-19', tags: ['review'] }),
+    T('Ask for the missing numbers', { state: 'next', due: '2026-10-20', project: 'Quarterly report', priority: 'urgent', tags: ['email'] }),
+    T('Pack the kitchen boxes', { state: 'next', due: '2026-11-02', project: 'Move flat', estimate_h: 4 }),
+    T('Cancel the old internet plan', { due: '2026-10-30', project: 'Move flat', tags: ['call'] }),
+    T('Clear the corner for the base', { state: 'done', project: 'Garden shed', done_on: '2026-10-17' }),
+    T('Read the review notes', { state: 'inbox', project: 'Quarterly report', tags: ['review'] }),
+    T('Renew the library card', { due: '2026-11-12', tags: ['errand'] }),
+  ]
+  rows[5].blocked_by = rows[1].id
+  return rows
+}
+
+const S = {
+  rows: INITIAL(),
+  screen: 'list', open: 'r102', group: 'project', filter: 'none', empties: 'names', theme: 'system',
+  shut: new Set(), showDone: new Set(),
+  order: COLS.map((c) => c.name), hidden: new Set(['started', 'assignee']), onNew: new Set(['due', 'project']),
+  line: ['tags', 'project', 'due'],
+  reveal: false, opened: new Set(), editing: null, menu: null, fields: false, setMenu: null,
+  draft: null, refused: '', fresh: null, unfold: false, sinking: new Set(),
+}
+
+// ------------------------------------------------------------ small helpers
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]))
+const bdi = (s) => `<bdi>${esc(s)}</bdi>`
+const words = (name) => name.replace(/_h$/, '').replace(/_/g, ' ')
+const filled = (row, c) => { const v = row[c.name]; return Array.isArray(v) ? v.length > 0 : v !== undefined && v !== null && v !== '' }
+const isDone = (row) => row.state === 'done'
+const rowById = (id) => S.rows.find((r) => r.id === id)
+const days = (d) => Math.round((Date.parse(d) - Date.parse(TODAY)) / 86400000)
+const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const longDate = (d) => { const x = new Date(d + 'T00:00:00Z'); return `${DOW[x.getUTCDay()]} ${x.getUTCDate()} ${MON[x.getUTCMonth()]} ${x.getUTCFullYear()}` }
+const shortDate = (d) => { const x = new Date(d + 'T00:00:00Z'); return `${x.getUTCDate()} ${MON[x.getUTCMonth()]}` }
+// due relative to today: a late date is a problem, so it is the one place colour is spent, beside the word
+function rel(d, done) {
+  const n = days(d)
+  if (n < 0 && !done) return `<span class="neg">${-n === 1 ? 'yesterday' : `${-n} days late`}</span>`
+  if (n < 0) return shortDate(d)
+  if (n === 0) return 'today'
+  if (n === 1) return 'tomorrow'
+  if (n < 7) return `${DOW[new Date(d + 'T00:00:00Z').getUTCDay()]}, in ${n} days`
+  return shortDate(d)
+}
+const tone = (m) => m === 'done' ? 'done' : m === 'doing' ? 'live' : m === 'waiting' ? 'waiting' : 'none'
+
+const I = {
+  chev: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M4 6l4 4 4-4"/></svg>',
+  plus: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M8 3v10M3 8h10"/></svg>',
+  check: '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 8.5l3.2 3L13 4.5"/></svg>',
+  grip: '<svg width="12" height="14" viewBox="0 0 12 16" fill="currentColor"><circle cx="4" cy="4" r="1.2"/><circle cx="8" cy="4" r="1.2"/><circle cx="4" cy="8" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="4" cy="12" r="1.2"/><circle cx="8" cy="12" r="1.2"/></svg>',
+  eye: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1.5 8S4 3.5 8 3.5 14.5 8 14.5 8 12 12.5 8 12.5 1.5 8 1.5 8z"/><circle cx="8" cy="8" r="2"/></svg>',
+  eyeOff: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2l12 12M6.5 4C7 3.7 7.5 3.5 8 3.5c4 0 6.5 4.5 6.5 4.5a12 12 0 0 1-2 2.5M4 5.2A12 12 0 0 0 1.5 8S4 12.5 8 12.5c1 0 1.8-.2 2.6-.6"/></svg>',
+  dots: '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="3.5" cy="8" r="1.3"/><circle cx="8" cy="8" r="1.3"/><circle cx="12.5" cy="8" r="1.3"/></svg>',
+  fields: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 4h8M2 8h12M2 12h6"/><circle cx="12" cy="4" r="1.5"/><circle cx="10" cy="12" r="1.5"/></svg>',
+  trash: '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 4.5h10M6.5 4.5V3h3v1.5M4.5 4.5l.6 8.5h5.8l.6-8.5"/></svg>',
+  search: '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"><circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/></svg>',
+  x: '<svg width="10" height="10" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4l8 8M12 4l-8 8"/></svg>',
+}
+
+// ------------------------------------------------------------ the list's groups
+// What a group implies is what quick add writes: the group's member, the address filter's value.
+function implied(group) {
+  const v = { ...(group.implies || {}) }
+  if (S.filter === 'today') v.due = TODAY
+  return v
+}
+function visibleRows() {
+  return S.rows.filter((r) => S.filter !== 'today' || r.due === TODAY)
+}
+function groups() {
+  const rows = visibleRows()
+  const by = (pred) => rows.filter(pred)
+  if (S.group === 'project') return [
+    ...PROJECTS.map((p) => ({ key: 'p:' + p, name: p, rows: by((r) => r.project === p), implies: { project: p } })),
+    { key: 'p:', name: 'No project', rows: by((r) => !r.project), implies: {} },
+  ]
+  if (S.group === 'state') return STATES.filter((m) => m !== 'done').map((m) => ({ key: 's:' + m, name: m, dot: tone(m), rows: by((r) => r.state === m), implies: { state: m } }))
+    .concat([{ key: 's:done', name: 'done', dot: 'done', rows: by(isDone), implies: { state: 'done' }, doneGroup: true }])
+  if (S.group === 'due') {
+    const b = (r) => !r.due ? 'none' : days(r.due) < 0 ? 'late' : days(r.due) === 0 ? 'today' : days(r.due) === 1 ? 'tomorrow' : days(r.due) < 7 ? 'week' : 'later'
+    return [
+      { key: 'd:late', name: 'Late', rows: by((r) => b(r) === 'late'), implies: null },
+      { key: 'd:today', name: 'Today', rows: by((r) => b(r) === 'today'), implies: { due: TODAY } },
+      { key: 'd:tomorrow', name: 'Tomorrow', rows: by((r) => b(r) === 'tomorrow'), implies: { due: '2026-10-23' } },
+      { key: 'd:week', name: 'In the next 7 days', rows: by((r) => b(r) === 'week'), implies: null },
+      { key: 'd:later', name: 'Later', rows: by((r) => b(r) === 'later'), implies: null },
+      { key: 'd:none', name: 'No due date', rows: by((r) => b(r) === 'none'), implies: {} },
+    ]
+  }
+  if (S.group === 'priority') return ['urgent', 'high', 'normal', 'low'].map((m) => ({ key: 'r:' + m, name: m, rows: by((r) => r.priority === m), implies: { priority: m } }))
+    .concat([{ key: 'r:', name: 'No priority', rows: by((r) => !r.priority), implies: {} }])
+  return [{ key: 'all', name: '', rows, implies: {}, bare: true }]
+}
+const sortOpen = (a, b) => (a.due || '9999').localeCompare(b.due || '9999') || a.title.localeCompare(b.title)
+
+function placeholder(group) {
+  const v = implied(group)
+  const bits = []
+  if (!v.state) bits.push('inbox')
+  for (const k of ['state', 'project', 'priority']) if (v[k]) bits.push(v[k])
+  if (v.due) bits.push(v.due === TODAY ? 'due today' : `due ${rel(v.due).replace(/<[^>]+>/g, '')}`)
+  return `Add a task · ${bits.join(', ')}`
+}
+
+// ------------------------------------------------------------ the frame
+function sidebar() {
+  return `<nav class="side" aria-label="Places">
+    <div class="nitem open"><b style="font-weight:600;color:var(--color-ink)">Emerald</b></div>
+    <div class="nitem open">Formats</div>
+    <div class="nitem nchild">Project</div>
+    <div class="nitem nchild on">Task</div>
+    <div class="nsep"></div>
+    <div class="nitem">Connections</div><div class="nitem">Agenda</div><div class="nitem">Settings</div>
+  </nav>`
+}
+function titlebar() {
+  return `<div class="titlebar"><div class="docname"><span class="dirty${S.dirty ? ' on' : ''}"></span>tasks.emd <span class="caption">${S.dirty ? 'unsaved' : 'no changes'}</span></div></div>`
+}
+
+// ------------------------------------------------------------ one line of the list
+function tick(r) {
+  return `<button class="tk${isDone(r) ? ' on' : ''}" data-act="tick" data-id="${r.id}" role="checkbox" aria-checked="${isDone(r)}" aria-label="${isDone(r) ? 'Done' : 'Mark done'}: ${esc(r.title)}" title="${isDone(r) ? 'Ticked: state is done. Untick puts it back to ' + esc(r.prev || 'inbox') : 'Tick: state becomes done'}">${isDone(r) ? I.check : ''}</button>`
+}
+function lineBits(r) {
+  const out = []
+  for (const name of S.line) {
+    if (name === 'tags') out.push(r.tags.length ? `<span class="chips">${r.tags.map((t) => `<span class="dchip"><i></i>${bdi(t)}</span>`).join('')}</span>` : '')
+    if (name === 'project' && S.group !== 'project') out.push(r.project ? `<span>${bdi(r.project)}</span>` : '')
+    if (name === 'state' && S.group !== 'state') out.push(`<span class="dchip"><span class="fc-dot" data-tone="${tone(r.state)}"></span>${esc(r.state)}</span>`)
+    if (name === 'priority' && r.priority && S.group !== 'priority') out.push(`<span>${esc(r.priority)}</span>`)
+    if (name === 'due') out.push(`<span class="due" title="${r.due ? longDate(r.due) : 'No due date'}">${r.due ? rel(r.due, isDone(r)) : ''}</span>`)
+  }
+  return out.join('')
+}
+function listRow(r) {
+  const cls = ['lrow2', isDone(r) || S.sinking.has(r.id) ? 'done' : '', S.fresh === r.id ? 'fresh' : ''].join(' ')
+  return `<div class="${cls}">${tick(r)}<button class="name" data-act="open" data-id="${r.id}">${bdi(r.title)}</button><span class="bits">${lineBits(r)}</span></div>`
+}
+function qadd(group, narrow) {
+  if (group.implies === null) return ''
+  return `<label class="qadd">${narrow ? '' : `<span style="width:16px;display:inline-flex;justify-content:center">${I.plus}</span>`}<input data-qadd="${esc(group.key)}" placeholder="${esc(placeholder(group))}" aria-label="${esc(placeholder(group))}"><span class="hint">Enter adds · Esc clears</span></label>`
+}
+
+function listView() {
+  const gs = groups()
+  const body = gs.map((g) => {
+    const open = g.rows.filter((r) => g.doneGroup || !isDone(r) || S.sinking.has(r.id)).sort(sortOpen)
+    const done = g.doneGroup ? [] : g.rows.filter((r) => isDone(r) && !S.sinking.has(r.id))
+    const shut = S.shut.has(g.key)
+    const head = g.bare ? '' : `<button class="ghd${shut ? ' shut' : ''}" data-act="fold" data-key="${esc(g.key)}" aria-expanded="${!shut}"><span class="chev">${I.chev}</span>${g.dot ? `<span class="fc-dot" data-tone="${g.dot}"></span>` : ''}${bdi(g.name)}<span class="cnt">${open.length}</span></button>`
+    const doneFold = done.length ? `<button class="dfold" data-act="showdone" data-key="${esc(g.key)}">${S.showDone.has(g.key) ? 'Hide' : ''} ${done.length} done</button>${S.showDone.has(g.key) ? done.map(listRow).join('') : ''}` : ''
+    return `<div class="grp">${head}<div class="gbody${shut ? ' shut' : ''}"><div>${g.doneGroup ? '' : qadd(g)}${open.map(listRow).join('')}${doneFold}</div></div></div>`
+  }).join('')
+  return `<div class="fhead2"><h2>Task</h2><span class="caption">${S.rows.length} rows</span><span class="end"><button class="btn primary tiled" data-act="new"><span class="tile">${I.plus}</span>Add</button></span></div>
+    <div class="tabs" role="tablist"><button role="tab">Table</button><button role="tab">Board</button><button role="tab" class="on">List</button></div>
+    ${listSettings()}
+    <div class="lscroll"><div class="lwrap">${body}</div></div>`
+}
+function listSettings() {
+  const groupName = { project: 'project', state: 'state', due: 'due', priority: 'priority', none: 'nothing' }[S.group]
+  const menu = S.setMenu === 'group' ? `<div class="pop" style="top:34px;left:24px"><div class="ph">Group by</div>${['project', 'state', 'due', 'priority', 'none'].map((g) => `<button data-act="group" data-g="${g}"><span class="ck">${S.group === g ? I.check : ''}</span>${g === 'none' ? 'Nothing' : g}<span class="eg">${g === 'due' ? 'late, today, tomorrow…' : g === 'project' ? 'a link' : g === 'none' ? '' : 'an enum'}</span></button>`).join('')}</div>`
+    : S.setMenu === 'line' ? `<div class="pop" style="top:34px;left:330px"><div class="ph">Line: after the title</div>${['tags', 'project', 'state', 'priority', 'due'].map((n) => `<button data-act="line" data-n="${n}"><span class="ck">${S.line.includes(n) ? I.check : ''}</span>${n}</button>`).join('')}</div>` : ''
+  return `<div class="lset">
+    <span>Group by <button class="pick" data-act="setmenu" data-m="group">${groupName}${I.chev}</button></span>
+    <span>Ticked when <button class="pick" title="The state's last member, as the agenda reads done">state is done</button></span>
+    <span>Line <button class="pick" data-act="setmenu" data-m="line">${S.line.join(', ')}${I.chev}</button></span>
+    ${S.filter === 'today' ? `<span class="fchip">due is today<button class="x" data-act="unfilter" aria-label="Clear the filter: due is today">${I.x}</button></span>` : ''}
+    ${menu}
+  </div>`
+}
+
+// ------------------------------------------------------------ the list beside an entry
+function entryList() {
+  const gs = groups()
+  const cur = S.screen === 'entry' ? S.open : null
+  const draftRow = S.screen === 'new' ? `<div class="erow on draft"><span class="tk"></span><span><div class="t">${S.draft.title ? bdi(S.draft.title) : 'A new task'}</div></span></div>` : ''
+  const body = gs.map((g, i) => {
+    const open = g.rows.filter((r) => g.doneGroup || !isDone(r) || S.sinking.has(r.id)).sort(sortOpen)
+    const done = g.doneGroup ? [] : g.rows.filter((r) => isDone(r) && !S.sinking.has(r.id))
+    const shut = S.shut.has(g.key)
+    const head = g.bare ? '' : `<button class="ghd${shut ? ' shut' : ''}" data-act="fold" data-key="${esc(g.key)}"><span class="chev">${I.chev}</span>${bdi(g.name)}<span class="cnt">${open.length}</span></button>`
+    const rows = open.map((r) => erow(r, cur)).join('')
+    const df = done.length ? `<button class="dfold" data-act="showdone" data-key="${esc(g.key)}">${S.showDone.has(g.key) ? 'Hide' : ''} ${done.length} done</button>${S.showDone.has(g.key) ? done.map((r) => erow(r, cur)).join('') : ''}` : ''
+    return `${head}<div class="gbody${shut ? ' shut' : ''}"><div>${S.screen === 'new' && draftGroup() === g.key ? draftRow : ''}${rows}${df}</div></div>`
+  }).join('')
+  return `<aside class="elist" aria-label="Tasks">
+    <div class="ehd"><b>Task</b><span class="caption">${S.rows.length}</span><span style="margin-left:auto"><button class="icon" data-act="new" aria-label="Add a task" title="Add a task">${I.plus}</button></span></div>
+    <div class="srch">${I.search} Search ${S.rows.length} tasks</div>
+    <div class="esc">${qadd({ key: 'top', implies: {} }, true)}${body}</div>
+  </aside>`
+}
+function draftGroup() {
+  const d = S.draft
+  if (S.group === 'project') return 'p:' + (d.project || '')
+  if (S.group === 'state') return 's:' + d.state
+  if (S.group === 'priority') return 'r:' + (d.priority || '')
+  if (S.group === 'due') return !d.due ? 'd:none' : d.due === TODAY ? 'd:today' : 'd:later'
+  return 'all'
+}
+function erow(r, cur) {
+  const sub = [r.due ? rel(r.due, isDone(r)) : '', S.group !== 'project' && r.project ? bdi(r.project) : ''].filter(Boolean).join(' · ')
+  return `<div class="erow${r.id === cur ? ' on' : ''}${isDone(r) || S.sinking.has(r.id) ? ' done' : ''}${S.fresh === r.id ? ' fresh' : ''}">${tick(r)}<button style="text-align:left;min-width:0;flex:1" data-act="open" data-id="${r.id}"><div class="t">${bdi(r.title)}</div>${sub ? `<div class="s">${sub}</div>` : ''}</button></div>`
+}
+
+// ------------------------------------------------------------ the entry
+function valueHTML(row, c) {
+  const v = row[c.name]
+  if (c.name === 'state') return `<span class="fc-state" data-tone="${tone(v)}">${esc(v)}</span>`
+  if (c.type === 'enum') return `<span class="fc-state">${esc(v)}</span>`
+  if (c.type === 'enums') return `<span class="chips">${v.map((t) => `<span class="dchip"><i></i>${bdi(t)}</span>`).join('')}</span>`
+  if (c.type === 'date') return `<span class="num">${longDate(v)}</span>${c.name === 'due' ? `<span class="rel">${rel(v, isDone(row))}</span>` : ''}`
+  if (c.type === 'link') return `<span class="lk">${bdi(c.self ? rowById(v)?.title : v)}</span>`
+  if (c.type === 'real') return `<span class="fig">${v}<small>${c.unit}</small></span>`
+  if (c.md) return mdHTML(v)
+  return bdi(v)
+}
+function mdHTML(src) {
+  const blocks = String(src).split(/\n\n+/)
+  return blocks.map((b) => {
+    const inline = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+    if (/^- /m.test(b)) return `<ul>${b.split('\n').map((l) => `<li>${inline(l.replace(/^- /, ''))}</li>`).join('')}</ul>`
+    return `<p>${inline(b)}</p>`
+  }).join('')
+}
+function editorHTML(row, c) {
+  const v = row[c.name]
+  if (c.type === 'date') return `<div class="edit"><input type="date" data-in="${c.name}" value="${esc(v || '')}"></div>`
+  if (c.md) return `<div class="edit"><textarea data-in="${c.name}">${esc(v || '')}</textarea></div>`
+  if (c.type === 'real') return `<div class="edit" style="max-width:160px"><input inputmode="decimal" data-in="${c.name}" value="${esc(v ?? '')}" placeholder="0 or more"><span class="t3">h</span></div>`
+  return `<div class="edit"><input data-in="${c.name}" value="${esc(v || '')}"></div>`
+}
+function choiceMenu(row, c) {
+  let opts
+  if (c.type === 'enum') opts = c.members.map((m) => [m, row[c.name] === m])
+  else if (c.type === 'enums') opts = c.members.map((m) => [m, row[c.name].includes(m)])
+  else if (c.self) opts = S.rows.filter((r) => r.id !== row.id && !isDone(r)).slice(0, 8).map((r) => [r.id, row[c.name] === r.id, r.title])
+  else opts = PROJECTS.map((p) => [p, row[c.name] === p])
+  return `<div class="pop" style="top:100%;left:0">${opts.map(([v, on, label]) => `<button data-act="choose" data-col="${c.name}" data-v="${esc(v)}"><span class="ck">${on ? I.check : ''}</span>${bdi(label || v)}</button>`).join('')}${!c.req && filled(row, c) ? `<div class="sep"></div><button data-act="choose" data-col="${c.name}" data-v=""><span class="ck"></span><span class="t3">Clear</span></button>` : ''}${c.type === 'link' && !c.self ? `<div class="sep"></div><button><span class="ck">${I.plus}</span>New project…</button>` : ''}</div>`
+}
+function fieldHTML(row, c, isNew) {
+  const hid = S.hidden.has(c.name)
+  const editing = S.editing === c.name
+  const choice = ['enum', 'enums', 'link'].includes(c.type)
+  let val
+  if (editing && !choice) val = editorHTML(row, c)
+  else if (!filled(row, c)) val = `<div class="val" data-act="edit" data-col="${c.name}"><span class="empty">${c.type === 'link' ? 'Choose' : c.type === 'enum' || c.type === 'enums' ? 'Choose' : c.type === 'date' ? 'Pick a date' : 'Write'}</span></div>`
+  else if (c.md && !S.unfold && String(row[c.name]).length > 300) val = `<div class="val block" data-act="edit" data-col="${c.name}"><div class="md fold">${valueHTML(row, c)}</div></div><button class="more" data-act="unfold">Show all ${String(row[c.name]).split('\n').length} lines</button>`
+  else val = `<div class="val${c.md ? ' block' : ''}" data-act="edit" data-col="${c.name}">${c.md ? `<div class="md">${valueHTML(row, c)}</div>` : valueHTML(row, c)}</div>`
+  const menu = S.menu === c.name ? fieldMenu(c) : ''
+  const pop = editing && choice ? choiceMenu(row, c) : ''
+  const needed = c.req && !filled(row, c) ? '<span class="need">needed</span>' : ''
+  return `<div class="fld${hid ? ' isHidden' : ''}" data-fld="${c.name}" data-part="${PART(c)}" ${isNew ? '' : 'draggable="true"'}>
+    <div class="fh"><span class="label">${words(c.name)}</span>${needed}${hid ? '<span class="hidtag">hidden</span>' : ''}<button class="how${S.menu === c.name ? ' open' : ''}" data-act="menu" data-col="${c.name}" aria-label="${words(c.name)}: more">${I.dots}</button>${menu}</div>
+    ${val}${pop}</div>`
+}
+function fieldMenu(c) {
+  const i = S.order.indexOf(c.name)
+  const hid = S.hidden.has(c.name)
+  return `<div class="pop" style="top:20px;left:0">
+    <button><span class="ck"></span>Show as<span class="eg">${c.type === 'date' ? 'Date, Relative, Both' : c.type === 'enum' ? 'Chip, Menu, Buttons, Steps' : '…'}</span></button>
+    <div class="sep"></div>
+    <button data-act="move" data-col="${c.name}" data-d="-1" ${i <= 1 ? 'disabled' : ''}><span class="ck"></span>Move up<span class="eg">Alt+↑</span></button>
+    <button data-act="move" data-col="${c.name}" data-d="1"><span class="ck"></span>Move down<span class="eg">Alt+↓</span></button>
+    ${c.req ? '' : `<button data-act="hide" data-col="${c.name}"><span class="ck">${hid ? I.eye : I.eyeOff}</span>${hid ? 'Show' : 'Hide'}<span class="eg">on this entry view</span></button>`}
+  </div>`
+}
+function ordered() { return S.order.map(col) }
+
+function entryBody(row, isNew) {
+  const cols = ordered()
+  const show = (c) => {
+    if (c.name === 'title') return false
+    const hid = S.hidden.has(c.name) && !c.req
+    if (hid && !S.reveal) return false
+    if (S.editing === c.name || S.opened.has(c.name)) return true
+    if (filled(row, c) || c.req) return true
+    if (isNew && S.onNew.has(c.name)) return true
+    return hid && S.reveal
+  }
+  const shown = cols.filter(show)
+  const by = (p) => shown.filter((c) => PART(c) === p)
+  // two figures or fewer, with no claim to read them as a grid, sit in the line rather than a part of their own
+  const fewFigs = by('figs').length <= 2
+  const line = fewFigs ? shown.filter((c) => PART(c) === 'line' || PART(c) === 'figs') : by('line')
+  const figs = fewFigs ? [] : by('figs'), texts = by('texts')
+  const empties = cols.filter((c) => c.name !== 'title' && !show(c) && !S.hidden.has(c.name))
+  const hiddenCount = cols.filter((c) => S.hidden.has(c.name) && !c.req).length
+  const title = S.editing === 'title' || isNew
+    ? `<input class="ttl" data-in="title" value="${esc(row.title || '')}" placeholder="Title" aria-label="Title">`
+    : `<h1 class="ttl" data-act="edit" data-col="title">${bdi(row.title)}</h1>`
+  const emptyLine = S.empties === 'names'
+    ? `<div class="empties"><span class="label">Empty</span>${empties.map((c) => `<button class="ef" data-act="addfield" data-col="${c.name}">${I.plus}${words(c.name)}</button>`).join('') || '<span class="caption">Nothing: every field holds a value.</span>'}${hiddenCount ? `<button class="hidbtn" data-act="reveal">${S.reveal ? 'Hide again' : `${hiddenCount} hidden`}</button>` : ''}</div>`
+    : `<div class="empties" style="position:relative"><button class="ef" data-act="plusfield">${I.plus}Field</button>${hiddenCount ? `<button class="hidbtn" data-act="reveal">${S.reveal ? 'Hide again' : `${hiddenCount} hidden`}</button>` : ''}${S.menu === '+field' ? `<div class="pop" style="top:100%;left:0"><div class="ph">Empty</div>${empties.map((c) => `<button data-act="addfield" data-col="${c.name}"><span class="ck"></span>${words(c.name)}</button>`).join('')}</div>` : ''}</div>`
+  const named = isNew ? [] : S.rows.filter((r) => r.blocked_by === row.id)
+  const aside = isNew ? '' : `<aside class="aside"><span class="label">Links here</span>${named.length ? `<span class="caption">Task · blocked by</span>${named.map((r) => `<div class="lrow"><span class="fc-dot" data-tone="${tone(r.state)}"></span><button style="text-align:left" class="lk" data-act="open" data-id="${r.id}">${bdi(r.title)}</button></div>`).join('')}` : '<div class="nothing">Nothing</div>'}</aside>`
+  return `<div class="sheet${isNew ? ' one' : ''}"><div class="left">
+      <div class="ehead">${title}<div class="lineup" data-zone="line">${line.map((c) => fieldHTML(row, c, isNew)).join('')}</div></div>
+      ${figs.length ? `<div class="part"><div class="figs" data-zone="figs">${figs.map((c) => fieldHTML(row, c, isNew)).join('')}</div></div>` : ''}
+      ${texts.length ? `<div class="part" data-zone="texts">${texts.map((c) => fieldHTML(row, c, isNew)).join('')}</div>` : ''}
+      ${emptyLine}
+    </div>${aside}</div>`
+}
+function fieldsPopover() {
+  const cols = ordered().filter((c) => c.name !== 'title')
+  const secs = ['line', 'figs', 'texts'].map((p) => {
+    const cs = cols.filter((c) => PART(c) === p)
+    return `<div class="sec">${PART_NAME[p]}</div>${cs.map((c) => {
+      const hid = S.hidden.has(c.name)
+      const has = S.screen === 'entry' && filled(rowById(S.open), c)
+      return `<div class="frow${hid ? ' off' : ''}" draggable="true" data-frow="${c.name}" data-part="${p}" tabindex="0" aria-label="${words(c.name)}, Alt+Up or Alt+Down moves it">
+        <span class="g">${I.grip}</span>
+        <span class="nm">${words(c.name)}${c.req ? '<span class="v">needed</span>' : has ? '<span class="v">holds a value</span>' : ''}</span>
+        <button class="eye" data-act="hide" data-col="${c.name}" ${c.req ? 'disabled title="A needed field is always shown"' : ''} aria-label="${hid ? 'Show' : 'Hide'} ${words(c.name)}" title="${hid ? 'Hidden: click to show' : 'Shown: click to hide'}">${hid ? I.eyeOff : I.eye}</button>
+        <span class="nw"><input type="checkbox" data-act="onnew" data-col="${c.name}" ${c.req ? 'checked disabled' : S.onNew.has(c.name) ? 'checked' : ''} aria-label="Ask for ${words(c.name)} on a new entry"></span>
+      </div>`
+    }).join('')}`
+  }).join('')
+  return `<div class="pop fields" style="top:40px;right:16px">
+    <div class="fhrow"><span></span><span>Field</span><span>Shown</span><span>New entry</span></div>
+    ${secs}
+    <div class="ft">Drag a field within its part to move it. A hidden field stays in the table and every tool.</div>
+  </div>`
+}
+
+function entryView() {
+  const row = rowById(S.open)
+  return `<div class="split2">${entryList()}<div class="main">
+    <div class="ebar"><button class="back" data-act="tolist">← List</button>
+      <span class="end"><button class="icon${S.fields ? ' on' : ''}" data-act="fields" aria-label="Fields: order, shown, new entry" title="Fields: order, shown, new entry">${I.fields}</button><button class="icon danger" aria-label="Delete this task" title="Delete">${I.trash}</button></span>
+      ${S.fields ? fieldsPopover() : ''}</div>
+    <div class="scroll">${entryBody(row, false)}</div></div></div>`
+}
+function newView() {
+  return `<div class="split2">${entryList()}<div class="main">
+    <div class="ebar"><button class="back" data-act="cancel">← List</button><span class="label" style="color:var(--color-ink)">A new task</span>
+      <span class="end"><button class="icon${S.fields ? ' on' : ''}" data-act="fields" aria-label="Fields: order, shown, new entry" title="Fields: order, shown, new entry">${I.fields}</button></span>
+      ${S.fields ? fieldsPopover() : ''}</div>
+    <div class="scroll">${entryBody(S.draft, true)}</div>
+    <div class="foot"><button class="btn primary tiled" data-act="adddraft"><span class="tile">${I.plus}</span>Add</button><button class="btn ghost" data-act="cancel">Cancel</button>${S.refused ? `<span class="refused">${esc(S.refused)}</span>` : ''}</div>
+  </div></div>`
+}
+
+// ------------------------------------------------------------ controls and choices
+function seg(name, pairs, cur, tag) {
+  return `<div class="ctl"><span class="label">${tag ? `<span class="choice-tag">${tag}</span>` : ''}${name}</span><div class="seg">${pairs.map(([v, l]) => `<button data-ctl="${name}" data-v="${v}" class="${cur === v ? 'on' : ''}">${l}</button>`).join('')}</div></div>`
+}
+function controls() {
+  document.getElementById('controls').innerHTML =
+    seg('Screen', [['list', 'List view'], ['entry', 'An entry'], ['new', 'A new entry']], S.screen) +
+    seg('Empty fields', [['names', 'A · a line of names'], ['menu', 'B · one + Field menu']], S.empties, '1') +
+    seg('Group by', [['project', 'Project'], ['state', 'State'], ['due', 'Due'], ['none', 'Nothing']], S.group) +
+    seg('Address filter', [['none', 'None'], ['today', 'due is today']], S.filter) +
+    seg('Theme', [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']], S.theme) +
+    `<div class="ctl"><span class="label">&nbsp;</span><button class="btn secondary" data-ctl="reset">Start again</button></div>`
+}
+const CHOICES = [
+  ['U3', 'An entry that exists draws only the fields that hold a value, plus every needed field, filled or not.', 'Empty fields are named once, at the foot. Clicking a name opens that field where it belongs in the order, and it folds back if it is left empty.'],
+  ['U3', '<b>1 · How empty fields are offered.</b> A: a line of their names, “Empty  + priority  + tags …”, one click each. B: one “+ Field” menu, two clicks, fewer words on the page.', 'Recommended: A. Twelve columns make at most eleven names, and naming them is what keeps a field from being forgotten. Flip switch 1.'],
+  ['U2', 'Hiding is per entry view and is kept beside the order in format_view_column (views.md in a text document). A hidden field is not drawn even when it holds a value. “N hidden” at the end of the Empty line shows them in place, dimmed, until the entry is left.', 'A needed field and the title cannot be hidden. A hidden field stays in the table, every tool and the list’s line.'],
+  ['U2', 'The Arrange mode goes. Order and hiding live in one Fields list behind the icon where Arrange was: every column in this view’s order, a grip, an eye and “New entry”. A shown field can also be dragged by its label on the page.', 'The list is needed because an empty field is not on the page to drag. Keyboard: Alt+↑/↓ on a row, or Move up/down in the field’s ⋯. A field moves only within its part (the line under the title, figures, text), as the order works today. The Fields list shows the parts so this is plain.'],
+  ['U2', 'A long page neither groups nor folds into sections. Hiding empty fields is what makes it short. A long Markdown text folds after about twelve lines behind “Show all N lines”.', 'No groups that a person makes. Groups would be a second layout to keep beside the order.'],
+  ['U3', 'Labels read as words: done_on reads “done on”, and a unit suffix is dropped, so estimate_h reads “estimate” with its h on the value.', 'Only the label changes. The column keeps its name everywhere else.'],
+  ['U3', 'A new entry asks for the title, every needed field, and the fields marked “New entry” in Fields. Everything else is on the Empty line. The list stays beside it, with the draft as a row in the group it will land in.', 'Nothing about what is missing is said until Add is pressed. Then it is one line naming it. A new entry has no “Links here”.'],
+  ['U3 · U4', 'A needed enum that nothing implies starts at its first member: a new task is inbox, from the form and from quick add.', 'Otherwise quick add on a project’s group could never write a task, because state is needed. The placeholder says the member it takes (“Add a task · inbox, Garden shed”), so nothing is taken silently. This is a default the view applies, never a value a model makes.'],
+  ['U4', 'The list: one 40px line per row with the tick, the title (opens the entry), then the line’s columns. Tags show as dot-chips, the project shows when the list is not grouped by it, and due is relative and right-aligned: today, tomorrow, “Sat, in 2 days”, then “5 Nov”. Late is “3 days late” in negative, the one colour on the line.', 'The settings sit in place above the list: Group by, Ticked when, Line. They are menus, never a settings screen.'],
+  ['U4', 'Group by takes an enum (a group per member), a link (a group per row, then “No …”) or a date in buckets: Late, Today, Tomorrow, In the next 7 days, Later, No due date. Groups fold.', 'Grouping by the state that ticks a row makes done the last group. Otherwise the ticked rows of each group fold at its foot as “N done”.'],
+  ['U4', 'The tick sets state to done. Untick puts back the member the row held before the tick, or the first member if it is not known. A ticked row stays in place, struck, for a moment, then sinks into “N done”.', 'Ticking is update_format_rows, as moving a card on the board is.'],
+  ['U4', 'Quick add is a line at the top of the list and of each group whose value is one value (Late and Later have none). Enter writes the row with the title typed, the group’s value, the address filter’s exact values (“due is today”) and the needed first member. The line stays focused for the next one.', 'A needed column it still cannot fill opens the new entry with what it has, as record_format_rows would refuse it.'],
+  ['U4', 'The list beside an open entry (EntryList) becomes the same list, narrow: the same groups, ticks and quick add, with one title line and due · project under it. Clicking a title in the list view opens the entry with this beside it.', 'One list in two widths, so what you set on the list view holds beside the entry too.'],
+]
+function choices() {
+  document.getElementById('choices').innerHTML = `<thead><tr><th>Unit</th><th>Choice</th><th>Why, and what it leaves</th></tr></thead><tbody>${CHOICES.map(([u, c, w], i) => `<tr><td><span class="sn">${i + 1}</span>${u}</td><td>${c}</td><td style="color:var(--color-ink-secondary)">${w}</td></tr>`).join('')}</tbody>`
+}
+
+// ------------------------------------------------------------ render
+function render() {
+  const focus = document.activeElement?.dataset?.qadd
+  const theme = S.theme === 'system' ? null : S.theme
+  if (theme) document.documentElement.dataset.theme = theme; else delete document.documentElement.dataset.theme
+  controls()
+  const main = S.screen === 'list' ? `<div class="main">${listView()}</div>` : S.screen === 'entry' ? entryView() : newView()
+  document.getElementById('win').innerHTML = `${titlebar()}<div class="body">${sidebar()}${main}</div>`
+  const t = document.querySelector(S.editing ? `[data-in="${S.editing}"]` : '[data-in]')
+  if (t && !focus && (S.editing || (S.screen === 'new' && !S.draft.title))) t.focus()
+  if (focus) document.querySelector(`[data-qadd="${CSS.escape(focus)}"]`)?.focus()
+  S.fresh = null
+}
+
+// ------------------------------------------------------------ writes
+function write(row, name, value) {
+  const c = col(name)
+  if (c?.type === 'real') value = value === '' ? undefined : Number(value)
+  if (value === '' || value === undefined) delete row[name]; else row[name] = value
+  S.dirty = true
+}
+function setTick(r) {
+  if (isDone(r)) { r.state = r.prev || 'inbox'; delete r.prev; S.sinking.delete(r.id) }
+  else {
+    r.prev = r.state; r.state = 'done'
+    S.sinking.add(r.id)
+    setTimeout(() => { S.sinking.delete(r.id); render() }, 1100)
+  }
+  S.dirty = true
+}
+function quickAdd(key, title) {
+  const g = key === 'top' ? { implies: {} } : groups().find((x) => x.key === key)
+  if (!g || !title.trim()) return
+  const v = implied(g)
+  const r = T(title.trim(), { state: v.state || 'inbox', ...v })
+  S.rows.push(r); S.fresh = r.id; S.dirty = true
+}
+function commitEdit() {
+  const el = document.querySelector(S.editing ? `[data-in="${S.editing}"]` : '[data-in]')
+  if (!el) return
+  const target = S.screen === 'new' ? S.draft : rowById(S.open)
+  write(target, el.dataset.in, el.value)
+}
+function moveField(name, d) {
+  const i = S.order.indexOf(name)
+  const part = PART(col(name))
+  let j = i + d
+  while (j > 0 && j < S.order.length && PART(col(S.order[j])) !== part) j += d
+  if (j <= 0 || j >= S.order.length) return
+  S.order.splice(i, 1); S.order.splice(j, 0, name)
+}
+function dropBefore(name, before) {
+  if (name === before || PART(col(name)) !== PART(col(before))) return
+  S.order.splice(S.order.indexOf(name), 1)
+  S.order.splice(S.order.indexOf(before), 0, name)
+}
+
+// ------------------------------------------------------------ events
+document.addEventListener('click', (e) => {
+  const ctl = e.target.closest('[data-ctl]')
+  if (ctl) {
+    const k = ctl.dataset.ctl, v = ctl.dataset.v
+    if (k === 'reset') { Object.assign(S, { rows: INITIAL(), order: COLS.map((c) => c.name), hidden: new Set(['started', 'assignee']), onNew: new Set(['due', 'project']), dirty: false, screen: 'list', open: 'r102' }) }
+    if (k === 'Screen') { S.screen = v; if (v === 'new') S.draft = { state: 'inbox', tags: [] } }
+    if (k === 'Empty fields') S.empties = v
+    if (k === 'Group by') S.group = v
+    if (k === 'Address filter') S.filter = v
+    if (k === 'Theme') S.theme = v
+    S.editing = null; S.menu = null; S.fields = false; S.setMenu = null; S.opened.clear(); S.reveal = false; S.refused = ''; S.unfold = false
+    return render()
+  }
+  const a = e.target.closest('[data-act]')
+  if (!a) {
+    if (S.menu || S.setMenu || (S.fields && !e.target.closest('.fields')) || (S.editing && !e.target.closest('.edit,.pop,[data-in]'))) {
+      if (S.editing) { commitEdit(); S.opened.delete(S.editing) }
+      S.menu = null; S.setMenu = null; S.editing = null
+      if (!e.target.closest('.fields')) S.fields = false
+      render()
+    }
+    return
+  }
+  const act = a.dataset.act, id = a.dataset.id, name = a.dataset.col
+  if (act === 'onnew') return
+  if (S.editing && act !== 'choose') { commitEdit() }
+  switch (act) {
+    case 'tick': setTick(rowById(id)); break
+    case 'open': S.screen = 'entry'; S.open = id; S.editing = null; S.opened.clear(); S.reveal = false; S.unfold = false; break
+    case 'tolist': S.screen = 'list'; break
+    case 'fold': S.shut.has(a.dataset.key) ? S.shut.delete(a.dataset.key) : S.shut.add(a.dataset.key); break
+    case 'showdone': S.showDone.has(a.dataset.key) ? S.showDone.delete(a.dataset.key) : S.showDone.add(a.dataset.key); break
+    case 'new': S.screen = 'new'; S.draft = { state: 'inbox', tags: [] }; S.refused = ''; S.opened.clear(); S.editing = null; break
+    case 'cancel': S.screen = S.open ? 'entry' : 'list'; S.draft = null; break
+    case 'adddraft': {
+      const d = S.draft
+      if (!d.title?.trim()) { S.refused = 'A task needs a title.'; break }
+      const r = T(d.title.trim(), d); S.rows.push(r); S.open = r.id; S.screen = 'entry'; S.fresh = r.id; S.dirty = true; S.opened.clear(); break
+    }
+    case 'edit': S.editing = name; S.menu = null; break
+    case 'choose': {
+      const target = S.screen === 'new' ? S.draft : rowById(S.open)
+      const c = col(name), v = a.dataset.v
+      if (c.type === 'enums') { const set = new Set(target.tags); set.has(v) ? set.delete(v) : set.add(v); target.tags = [...set]; S.dirty = true; return render() }
+      write(target, name, v); S.editing = null; break
+    }
+    case 'menu': S.menu = S.menu === name ? null : name; break
+    case 'hide': S.hidden.has(name) ? S.hidden.delete(name) : S.hidden.add(name); S.menu = null; break
+    case 'move': moveField(name, Number(a.dataset.d)); S.menu = null; break
+    case 'addfield': S.opened.add(name); S.editing = name; S.menu = null; break
+    case 'plusfield': S.menu = S.menu === '+field' ? null : '+field'; break
+    case 'reveal': S.reveal = !S.reveal; break
+    case 'unfold': S.unfold = true; break
+    case 'fields': S.fields = !S.fields; break
+    case 'setmenu': S.setMenu = S.setMenu === a.dataset.m ? null : a.dataset.m; break
+    case 'group': S.group = a.dataset.g; S.setMenu = null; break
+    case 'line': { const n = a.dataset.n; S.line = S.line.includes(n) ? S.line.filter((x) => x !== n) : [...S.line.filter((x) => x !== 'due'), n, ...(S.line.includes('due') && n !== 'due' ? ['due'] : [])]; break }
+    case 'unfilter': S.filter = 'none'; break
+  }
+  render()
+})
+document.addEventListener('change', (e) => {
+  const t = e.target
+  if (t.dataset.act === 'onnew') { t.checked ? S.onNew.add(t.dataset.col) : S.onNew.delete(t.dataset.col); render() }
+  if (t.matches('input[type=date][data-in]')) { commitEdit(); S.editing = null; S.opened.delete(t.dataset.in); render() }
+})
+document.addEventListener('input', (e) => {
+  const t = e.target
+  if (S.screen === 'new' && t.dataset.in === 'title') { S.draft.title = t.value; const d = document.querySelector('.erow.draft .t'); if (d) d.textContent = t.value || 'A new task' }
+})
+document.addEventListener('keydown', (e) => {
+  const t = e.target
+  if (t.dataset?.qadd !== undefined) {
+    if (e.key === 'Enter') { quickAdd(t.dataset.qadd, t.value); t.value = ''; render() }
+    if (e.key === 'Escape') t.value = ''
+    return
+  }
+  if (t.dataset?.in && e.key === 'Enter' && t.tagName !== 'TEXTAREA') {
+    if (S.screen === 'new' && t.dataset.in === 'title') { commitEdit(); document.querySelector('[data-act=adddraft]').click(); return }
+    commitEdit(); const n = S.editing; S.editing = null; if (n) S.opened.delete(n); render()
+  }
+  if (t.dataset?.in && e.key === 'Escape') { S.editing = null; render() }
+  if (t.dataset?.frow && e.altKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+    e.preventDefault(); const n = t.dataset.frow; moveField(n, e.key === 'ArrowUp' ? -1 : 1); render(); document.querySelector(`[data-frow="${n}"]`)?.focus()
+  }
+})
+// drag: a field by its label on the page, or its row in Fields; within its part only
+let dragging = null
+document.addEventListener('dragstart', (e) => {
+  const f = e.target.closest?.('[data-fld],[data-frow]')
+  if (!f) return
+  dragging = f.dataset.fld || f.dataset.frow
+  f.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dragging)
+})
+document.addEventListener('dragover', (e) => {
+  const f = e.target.closest?.('[data-fld],[data-frow]')
+  document.querySelectorAll('.over').forEach((x) => x.classList.remove('over'))
+  if (!f || !dragging) return
+  const name = f.dataset.fld || f.dataset.frow
+  if (PART(col(name)) !== PART(col(dragging))) return
+  e.preventDefault(); f.classList.add('over')
+})
+document.addEventListener('drop', (e) => {
+  const f = e.target.closest?.('[data-fld],[data-frow]')
+  if (!f || !dragging) return
+  e.preventDefault(); dropBefore(dragging, f.dataset.fld || f.dataset.frow); dragging = null; render()
+})
+document.addEventListener('dragend', () => { dragging = null; document.querySelectorAll('.over,.dragging').forEach((x) => x.classList.remove('over', 'dragging')) })
+
+choices()
+render()
+</script>
+</body>
+</html>
