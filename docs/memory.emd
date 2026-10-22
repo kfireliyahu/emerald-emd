@@ -4375,6 +4375,15 @@ question: How does the list view keep its settings, tick a row, and add one in p
 answer: View kind 'list'. A column's format_view_column setting holds the words together: group, line, done <members> (done last); group and done are one column's each (setListSetting takes them off the other column, keeping its other words). Defaults: no group; done = first enum's last member, else first boolean; line = first enums, first link, first date (date last, relative: today, tomorrow, 'Sat, in 2 days', '5 Nov', late open rows 'N days late' in negative). Tick = updateRow through move's checks; untick restores the member held before (session memory by line name), else the first non-done member. Quick add = title + group's value + the address filter's exact values + entryDefaults, staged and written as record_format_rows' batch; a required column still empty opens entry/new with the draft. EntryList renders the same groups narrow (flat past 1000 rows). Parity: arrange_views view:list, show_format view:list, formats' **List:** line.
 state: live
 
+### D-520
+date: 2026-10-22
+milestone: M53
+scope: engine
+title: A saved view is its own table, format_saved_view (063): a format, a name, a kind and the address as the address spells it; Save this view on the FilterBand, listed and renamed/deleted in the rail; arrange_views view:saved; show_format and format_rows take view:"<name>"; an entry's back link names the view it was opened from
+question: Where is a saved view kept, what does it hold, and how do the screen and a conversation reach it?
+answer: Table format_saved_view (063): format_name, name (1-60, one line, not '?…', not a view's own word), kind (table|board|list|roadmap|ready), address (<=2000, canonicalAddress: parts in name order). Not format_view_column: its setting is one 32-char word per column. The address keeps filter, folds, columns and sort as addressFilter spells them, so 'today'/'within 7 days' stay phrases. Screen: FilterBand 'Save this view' while the address holds anything (sort alone draws 'Every entry'), name asked in place, a taken name = Replace, 'Saved as X' when the address is one (same kind + same canonical address); the rail lists them under the format, opens savedViewPath, lights the current one, renames/deletes in place. Agenda saves none. Tools: arrange_views {view:saved, name, kind, match, search, order, descending, columns} saves (checked as format_rows checks a filter), {name, rename} renames, {name, delete:true} deletes; show_format view:'<name>' draws its kind with its filter; format_rows view:'<name>' reads it (a given match adds, anything else given replaces); formats lists them. Frame reads the name from the fetched document. Text: '### <format> saved' blocks with name/kind/address. Entry back link: route state from:list|board, '← List'/'← Board', else the format's title.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -8891,6 +8900,15 @@ shown_in: screen
 appears: screen 5 in 4 files (screens/Export 2, commands 1, Notices 1, …)
 state: live
 
+### Saved view
+means: A format's filter, folds, columns, sort and kind of view (table, board, list, roadmap, ready) under a name, kept in format_saved_view as the address spells it. Saved from the FilterBand (Save this view), listed under its format in the rail, drawn by show_format view:"<name>"; what a dashboard points at, by format and name.
+not: Not a format (D-514) and not a route of its own: opening one is going to its kind's address. Not the list's own settings (group, line, done), which stay the list's.
+code_word: SavedView, format_saved_view, savedViewPath, useSaving
+named_by: D-520
+scope: app
+shown_in: view
+state: live
+
 ### Set aside
 means: Money put towards a goal, a month at a time; a goal's balance is what has been set aside less what was drawn.
 scope: ledger
@@ -13203,14 +13221,17 @@ report: M53 U4 built at 124a17d (D-519). A 'list' view kind: every format has on
 milestone: M53
 scope: engine
 title: Saved views: a filter, order, columns and kind under a name
-decision: D-514
-state: in_progress
+landed: 2026-10-22
+decision: D-520
+state: built
 brief: A saved view is what the address already holds (src/ui/formats/addressFilter.ts: column values, search, order, columns) plus a view kind (sheet, board, list, roadmap, ready, agenda), under a name, per format. Store it beside the format's other views: in format_view_column if a named view fits it without a migration, else say why and add one (docs/04-data-model.md); in a text document as views.md lines (pack.test.ts and the text round trip hold). On screen: 'Save this view' on the FilterBand when the address holds something, a name asked in place; the rail lists a format's saved views under it (src/ui/RailFolder.tsx); opening one restores the address; rename and delete in place. Parity (D-227): arrange_views saves, renames and deletes one; show_format takes view:'<saved name>' and draws it with its filter; format_rows takes the same name (or says the match to pass). A relative date ('due today', 'within 7 days', as format_rows' match takes) is kept as the phrase, never a fixed date. Done-test: 'Due today' on the synthetic task format saved on screen, listed in the rail, drawn by show_format view:'Due today' tomorrow with tomorrow's rows; a conversation saves 'Open by project' and the screen shows it.
-files: src/ui/formats/addressFilter.ts, src/ui/formats/FilterBand.tsx, src/domain/format/view.ts, src/ui/RailFolder.tsx, src/plugin/tools/sheet.ts
+files: src/data/db/migrations/063_saved_view.sql, src/domain/format/view.ts, src/domain/format/document.ts, src/data/repositories/formatViewRepository.ts, src/data/repositories/formatDocumentRepository.ts, src/ui/formats/savedView.ts, src/ui/formats/FilterBand.tsx, src/ui/formats/addressFilter.ts, src/ui/RailFolder.tsx, src/ui/nav.ts, src/ui/screens/FormatRows.tsx, src/ui/screens/FormatLinkViews.tsx, src/ui/formats/EntryView.tsx, src/plugin/tools/saved.ts, src/plugin/tools/views.ts, src/plugin/tools/sheet.ts, src/plugin/tools/formats.ts, src/frame/host.ts, src/frame/main.tsx, docs/04-data-model.md, docs/plugin.md
 taken_by: run-milestone driver
 started: 2026-10-22
 branch: main
+commit: d20b5e7
 paths: src/domain/format/view.ts, src/ui/formats/FilterBand.tsx, src/ui/formats/addressFilter.ts, src/ui/RailFolder.tsx, src/plugin/tools/
+report: M53 U5 built at d20b5e7 (D-520). Saved views: a format's filter, folds, columns, sort and kind (table, board, list, roadmap, ready) under a name, kept in a new table format_saved_view (migration 063) because format_view_column's setting is one 32-character word per column and cannot hold an address. The address is stored as the address spells it, in one canonical spelling, so 'due today' / 'within 7 days' stay phrases and are worked out on the day opened. Screen: 'Save this view' on the FilterBand whenever the address holds anything (a sort alone shows the band as 'Every entry'), the name asked in place, a taken name offered as Replace, 'Saved as <name>' while the address is one; the rail lists a format's saved views under it (open or not), opens one by its address, lights it, and renames/deletes it in place (pencil, bin with an inline confirm). Parity: arrange_views view:saved (name, kind, match, search, order, descending, columns; rename; delete:true), show_format view:'<name>', format_rows view:'<name>' (a given match adds to the view's), formats lists them; the frame resolves a saved name from the fetched document. Text documents carry each as a '### <format> saved' block in views.md. Done-test is src/plugin/tools/savedViews.test.ts ('Due today' saved as the screen saves it, drawn by show_format the next day with the next day's rows; 'Open by project' saved by arrange_views and read by the screen's savedNow). Carried task: the entry's back link now names and returns to the view it was opened from ('← List', '← Board', else the format's title), kept across entry-to-entry steps. Verified in the browser on a synthetic task document: save, Saved as, rail lighting, opening from the rail, rename, delete, back link. Tests: full suite once (3 failures fixed: ledger pack table list, readViews shape, engine tool-definition budget raised 55k->56k after trimming), typecheck, privacy, check:tours all green. SCHEMA: migration 063 means docs/memory.emd's header was moved to schema 63 in the work commit (a text document with no saved view changes in nothing else); any emerald plugin process built before d20b5e7 now refuses memory.emd (UNREADABLE) until rebuilt/restarted - npm run build:plugin and restart the emerald server (this landing was written by a fresh build over stdio). Not done: ask-cold.mjs could not run here (the claude CLI is not logged in), so the tool-description changes were not read cold; they add parameters only, no framing. The agenda has no saved views (it is every dated format's).
 
 ### M53 U6
 milestone: M53
