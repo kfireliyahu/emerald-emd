@@ -24,7 +24,7 @@ import { Button } from '@/ui/components/Button.tsx'
 import { useKeepsLedger } from '@/ui/packs.ts'
 import { installLedgerPack } from '@/data/packs/ledger/pack.ts'
 import { NoLedger } from '@/ui/screens/NoLedger.tsx'
-import { packOf } from '@/ui/nav.ts'
+import { DASHBOARD_PATH, packOf } from '@/ui/nav.ts'
 import { Guide } from '@/ui/guide/Guide.tsx'
 import { Accounts } from '@/ui/screens/Accounts.tsx'
 import { Categories } from '@/ui/screens/Categories.tsx'
@@ -33,6 +33,7 @@ import { DebtDetail } from '@/ui/screens/DebtDetail.tsx'
 import { Debts } from '@/ui/screens/Debts.tsx'
 import { DeductionTypes } from '@/ui/screens/DeductionTypes.tsx'
 import { Agenda } from '@/ui/screens/Agenda.tsx'
+import { DocumentDashboard } from '@/ui/screens/Dashboard.tsx'
 import { Connections } from '@/ui/screens/Connections.tsx'
 import { Mcp } from '@/ui/screens/Mcp.tsx'
 import { DeclaredFormats } from '@/ui/screens/DeclaredFormats.tsx'
@@ -533,6 +534,8 @@ function RoutedViews() {
         {/* **A list** (M53 U4, D-519): one line per row, a tick, grouped by a
             column, and quick add — every format has one. */}
         <Route path="/formats/:name/list" element={<FormatRows list />} />
+        {/* **A format's dashboard** (M53 U7, D-521): the last tab of its strip. */}
+        <Route path="/formats/:name/dashboard" element={<FormatRows dashboard />} />
         {/* **A roadmap** (M27 U4, D-302): rows in order with what names each. */}
         <Route path="/formats/:name/roadmap" element={<FormatRoadmap />} />
         {/* **What is ready** (M27 U5, D-303): rows waiting on nothing open. */}
@@ -544,6 +547,9 @@ function RoutedViews() {
         {/* **The third arrow, as a place** (M20 U5, D-233): the graph across
             formats, where a `link` and an aggregate are authored between two
             bubbles rather than in a section of a form about one. */}
+        {/* **The document's dashboard** (M53 U7, D-521): blocks from any format;
+            `#/` itself in a document with no ledger. */}
+        <Route path="/dashboard" element={<DocumentDashboard />} />
         <Route path="/connections" element={<Connections />} />
         {/* **The agenda** (M49 U3, D-473): every dated format's rows from
             today, grouped by day, and what is overdue above it. */}
@@ -596,7 +602,9 @@ function LandingScreen() {
   // way back to `/` while the last redirect was still loading `/formats` keeps
   // this same one mounted — which left the demo on a blank root (M33 U2).
   const at = useLocation().key
-  return useKeepsLedger() ? <Home /> : <Navigate key={at} to="/formats" replace />
+  // **Without a ledger, `#/` is the document's dashboard** (M53 U7, D-521);
+  // it was Formats until then. With one, Home stays the root.
+  return useKeepsLedger() ? <Home /> : <Navigate key={at} to={DASHBOARD_PATH} replace />
 }
 
 /**

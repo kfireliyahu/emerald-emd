@@ -437,6 +437,7 @@ written out here.
 | D-518 | 2026-10-22 | An entry draws what it holds: on a row that exists a column with no value is not drawn but named on one Empty line at the foot, where a name opens its field in place; a required column is always drawn and says it is needed; a new entry asks for the title, every required column and the ones ticked New entry, starts a required enum nothing implies at its first member, and says what is missing in one line only once Add is pressed; labels read as words without a unit suffix; two plain figures sit in the line under the title | [below](#d-518) |
 | D-519 | 2026-10-22 | Every format has a list: one line per row, a tick, the name and the line's columns, grouped by an enum, a link or a date's buckets; `group`, `line` and `done <members>` are words one column's `format_view_column` setting holds together, `group` and `done` one column's each; the tick writes the done member and an untick the member held before; quick add writes the title, the group's value, the filter's exact values and a required enum's first member as `record_format_rows`' batch, or opens entry/new when a required column is still empty; the list beside an entry is the same list, narrow; the View menu became the format's one tab strip | [below](#d-519) |
 | D-520 | 2026-10-22 | A saved view is its own table, `format_saved_view` (063): a format, a name, a kind (table, board, list, roadmap, ready) and the address as the address spells it, so a window around today stays the phrase; *Save this view* on the FilterBand, the rail lists them under their format and renames and deletes in place; `arrange_views view:saved` saves, renames and deletes, and `show_format` and `format_rows` take `view:"<name>"`; an entry's back link names the view it was opened from | [below](#d-520) |
+| D-521 | 2026-10-22 | A dashboard is an ordered set of blocks in its own table, `format_dashboard_block` (064): a saved view drawn compact in its kind, a rollup's chart, or a headline total (a count, or the sum of a number or money column, under a filter kept as the address spells it), and nothing else; one per format, the last tab of its strip, and one for the document, the rail's *Dashboard* — first and `#/` without a ledger, right under Home with one; arranged in place (Add a block, drag, Move earlier and later, Remove from this dashboard), a block's title opening it in full with `← Dashboard` back; `arrange_views view:dashboard` adds, orders and removes, `show_format view:dashboard` draws it | [below](#d-521) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1127,6 +1128,64 @@ is already the one spelling the screen, the frame and a bookmark share.
 — its header says schema 63, which is all the migration changes in a text document with no saved
 view — and a plugin built before it refuses the file until it is rebuilt. M53 U7 holds saved views
 as a dashboard's blocks, by format and name.
+
+## D-521 · 2026-10-22 · A dashboard is an ordered set of blocks in its own table, `format_dashboard_block` (064): a saved view drawn compact in its kind, a rollup's chart, or a headline total (a count, or the sum of a number or money column, under a filter kept as the address spells it), and nothing else; one per format, the last tab of its strip, and one for the document, the rail's *Dashboard* — first and `#/` without a ledger, right under Home with one; arranged in place (Add a block, drag, Move earlier and later, Remove from this dashboard), a block's title opening it in full with `← Dashboard` back; `arrange_views view:dashboard` adds, orders and removes, `show_format view:dashboard` draws it <a id="d-521"></a>
+
+**Context.** M53 U7, under D-514: *a dashboard, one per format and one for the document, is an
+ordered set of saved views, charts of rollups and headline totals, never a free block*. The mockup
+(`docs/mockups/m53-u7/dashboard.html`, 5b7166c) was approved as recommended on 2026-10-22, with the
+maintainer's answers to its three questions: placement option 1, the Dashboard tab last, and a table of
+its own.
+
+**Decision.**
+
+- **Three kinds of block and nothing else**: a saved view (D-520) drawn compact in its kind — a list's
+  first five open lines with *N more* and *N done*, two lines a group when it is grouped, a table's
+  first four rows, a board's lanes with a count and two cards, a roadmap's and a ready list's first
+  five names — a rollup's chart (D-516), bars at 150 px, and a headline total. A block names what it is
+  under its title, in the filter's own words (`List · due is today`, `Count · state is not done`), the
+  format's title first on the document's. A list's tick works on the dashboard, judged as the list's
+  own.
+- **The grid is four columns**: a headline total takes one, every other block two. No sizes; the
+  order is the only arrangement.
+- **Arranged in place, never in a mode**: *Add a block* at the end of the grid lists the format's
+  saved views and rollups (one already on it ticked and disabled), grouped by format on the
+  document's, then *Headline total*, made in place: *Count of rows* or *Sum of* a number or money
+  column, conditions ticked from what the format's saved views hold, what its list counts as done
+  turned round and the windows around today on its dates, a name, and the figure live before *Add*. A
+  block is dragged by its grip; its ⋯ holds *Open in full*, *Move earlier*, *Move later* and *Remove
+  from this dashboard*. Removing a saved view's or a rollup's block leaves it where it was kept; a
+  headline total lives only on its dashboard and goes.
+- **A block's title opens it in full**: a saved view at its address (*Saved as …* lit), a rollup on its
+  format's tab, a headline total as the list of the rows it counts; the band says `← Dashboard` and
+  goes back (the roadmap's and ready list's header too).
+- **Placement**: a format's dashboard is `#/formats/<name>/dashboard`, the last tab of its strip after
+  a rule, and the format still opens on Table. The document's is `#/dashboard`, the rail's own
+  *Dashboard*: without a ledger it is the first item and `#/` opens it (it went to Formats); with the
+  ledger it sits right under Home, and Home stays `#/`.
+- **Storage**: `format_dashboard_block` (064), a row per block — `dashboard` (a format's name, NULL for
+  the document's), `position`, `format_name`, `kind`, `name`, and a headline total's `sum` and
+  `address`, held as the address spells it so `today` stays the phrase. A saved view's rename renames
+  its blocks and its delete deletes them; a rollup the declaration drops is drawn as gone, with the
+  sentence, until removed; `deleteFormat` clears its dashboard and every block that reads it. Money is
+  summed per currency and never across two. A text document writes each block under `### <format>
+  dashboard`, the document's under `### Document dashboard`.
+- **Parity (D-227)**: `arrange_views` with `view: dashboard` (a `format`, or none for the
+  document's) takes `add` — `{saved}`, `{rollup}` or `{total, count | sum, match, search}`, each with
+  its `format` on the document's — and `order` and `remove` by block name (`<format>/<name>` where two
+  formats share one); `show_format view:dashboard` draws it in the frame and names every block with
+  what it holds now; `formats` with a `format` lists its blocks. `start_here` is unchanged. *Dashboard*
+  is a word a saved view may not be called.
+
+**Alternatives rejected.** Rows of `format_view_column`: U5's reason, a setting is one word of at most
+32 characters. The document's dashboard as a tab of Home or Home gaining the blocks (the mockup's
+options 2 and 3): *Home* would name two things, and the ledger's month would be mixed with blocks that
+move. A size per block: a second layout to keep beside the order. Free text or an embed: D-514.
+
+**Consequences.** A schema change: `docs/memory.emd`, stored as text, moves to schema 64 with this
+commit — all the migration changes in a text document with no dashboard — and a plugin built before
+it refuses the file until it is rebuilt. `#/` without a ledger is the dashboard, so an empty document
+opens on *Nothing on this dashboard yet.* rather than the list of formats.
 
 ## Related
 

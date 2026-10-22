@@ -147,6 +147,54 @@ export function countRows(db: Database, declaration: FormatDeclaration, query_: 
   return typeof found === 'number' ? found : 0
 }
 
+/**
+ * **One column summed over the rows a query finds** (M53 U7, D-521) — a
+ * headline total's figure. The same `WHERE` `countRows` reads, so the sum is
+ * of exactly the rows the count is of. Money sums its minor units per currency
+ * — never across two — and comes back as minor units and the currency for the
+ * caller to make a `Money` of; an integer, a real and a decimal (as stored,
+ * scaled) sum as they are. `rows` is how many rows held a figure. A column of
+ * any other type sums nothing.
+ */
+export function sumColumn(
+  db: Database,
+  declaration: FormatDeclaration,
+  name: string,
+  query_: RowQuery = {},
+): readonly { readonly currency?: string; readonly total: number; readonly rows: number }[] {
+  const column = columnOf(declaration, name)
+  if (column === undefined) return []
+  const where = whereClause(declaration, query_)
+  const table = quoteIdentifier(tableNameFor(declaration))
+  const and = (condition: string): string => (where.sql === '' ? ` WHERE ${condition}` : `${where.sql} AND ${condition}`)
+  if (column.type === 'money') {
+    const names = moneyColumnNames(column)
+    const minor = quoteIdentifier(names.minor)
+    const currency = quoteIdentifier(names.currency)
+    return query(
+      db,
+      `SELECT ${currency} AS currency, SUM(${minor}) AS total, COUNT(${minor}) AS rows FROM ${table}` +
+        `${and(`${minor} IS NOT NULL`)} GROUP BY ${currency} ORDER BY ${currency}`,
+      sqlBindings(where.bindings),
+    ).flatMap((row) => {
+      const total = row['total']
+      const rows = row['rows']
+      const code = row['currency']
+      return typeof total === 'number' && typeof rows === 'number' && typeof code === 'string' ? [{ currency: code, total, rows }] : []
+    })
+  }
+  if (column.type !== 'integer' && column.type !== 'real' && column.type !== 'decimal') return []
+  const quoted = quoteIdentifier(column.name)
+  const found = query(
+    db,
+    `SELECT SUM(${quoted}) AS total, COUNT(${quoted}) AS rows FROM ${table}${and(`${quoted} IS NOT NULL`)}`,
+    sqlBindings(where.bindings),
+  )[0]
+  const total = found?.['total']
+  const rows = found?.['rows']
+  return [{ total: typeof total === 'number' ? total : 0, rows: typeof rows === 'number' ? rows : 0 }]
+}
+
 /** The rows themselves, in the order asked for. */
 export function listRows(
   db: Database,

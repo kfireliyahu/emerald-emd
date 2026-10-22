@@ -16,7 +16,8 @@ import { Bidi } from '@/ui/Bidi.tsx'
 import { filterAddress, type ColumnChoice } from '@/ui/formats/addressFilter.ts'
 import { ReadyView, RoadmapView } from '@/ui/formats/LinkViews.tsx'
 import { liveIndex, toneOf } from '@/ui/formats/tone.ts'
-import { AGENDA_PATH, boardPath, formatPath, listPath, readyPath, roadmapPath } from '@/ui/nav.ts'
+import { AGENDA_PATH, boardPath, DASHBOARD_PATH, dashboardPath, formatPath, listPath, readyPath, roadmapPath } from '@/ui/nav.ts'
+import { DocumentDashboard } from '@/ui/screens/Dashboard.tsx'
 import { Agenda } from '@/ui/screens/Agenda.tsx'
 import { FormatPage, FormatReady, FormatRoadmap } from '@/ui/screens/FormatLinkViews.tsx'
 import { FormatRows } from '@/ui/screens/FormatRows.tsx'
@@ -46,6 +47,9 @@ export const FRAME_ROUTES: readonly { readonly path: string; readonly element: R
   { path: '/formats/:name/entry/:entry', element: <FormatRows /> },
   { path: '/formats/:name/board', element: <FormatRows board /> },
   { path: '/formats/:name/list', element: <FormatRows list /> },
+  // A dashboard, a format's and the document's (M53 U7, D-521), read-only here as every page is.
+  { path: '/formats/:name/dashboard', element: <FormatRows dashboard /> },
+  { path: DASHBOARD_PATH, element: <DocumentDashboard /> },
   { path: '/formats/:name/roadmap', element: <FormatRoadmap /> },
   { path: '/formats/:name/ready', element: <FormatReady /> },
   { path: '/formats/:name/page/:entry', element: <FormatPage /> },
@@ -87,6 +91,8 @@ export function firstPath(view: FrameView, format: string, filter: RowFilter = {
       return formatPath(format) + held
     case 'agenda':
       return AGENDA_PATH + held
+    case 'dashboard':
+      return format === '' ? DASHBOARD_PATH : dashboardPath(format)
   }
 }
 

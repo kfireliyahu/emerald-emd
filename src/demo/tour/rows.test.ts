@@ -37,7 +37,7 @@ describe('a tour is rows of a declared format (M33 U3)', () => {
     )
     expect(shuffled).not.toBe(committed['tour_step.format.md'])
     const [tour] = await read({ ...committed, 'tour_step.format.md': shuffled })
-    expect(tour?.steps.slice(0, 2).map((step) => step.anchor)).toEqual(['nav-formats-card_charge', 'nav-formats'])
+    expect(tour?.steps.slice(0, 3).map((step) => step.anchor)).toEqual(['nav-formats', 'nav-formats-card_charge', 'nav-formats'])
   })
 
   it('refuses a step with an action the runner has not got, before anything plays', async () => {

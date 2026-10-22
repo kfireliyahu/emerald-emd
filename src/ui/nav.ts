@@ -35,6 +35,7 @@
 /** Which of the hand-drawn glyphs a top-level item wears when collapsed. */
 export type NavGlyph =
   | 'home'
+  | 'dashboard'
   | 'transactions'
   | 'paychecks'
   | 'plan'
@@ -133,6 +134,10 @@ export const NAVIGATION: readonly NavSection[] = [
       { to: '/year', label: 'Year' },
     ],
   },
+  // **The document's dashboard** (M53 U7, D-521): its own place, right under
+  // Home — first, and `#/` itself, in a document with no ledger. Blocks from any
+  // format, and nothing else (D-514).
+  { to: '/dashboard', label: 'Dashboard', glyph: 'dashboard' },
   {
     to: '/transactions',
     label: 'Transactions',
@@ -334,6 +339,26 @@ export function savedViewPath(format: string, kind: 'table' | 'board' | 'list' |
             ? readyPath(format)
             : formatPath(format)
   return path + address
+}
+
+/** The document's own dashboard (M53 U7, D-521): blocks from any format. */
+export const DASHBOARD_PATH = '/dashboard'
+
+/** A format's dashboard (M53 U7, D-521): the last tab of its strip. */
+export function dashboardPath(name: string): string {
+  return `${formatPath(name)}/dashboard`
+}
+
+/**
+ * **Where a view opened from a dashboard goes back to** (M53 U7): a block's
+ * title hands the route `{ from: 'dashboard', dashboard }` — a format's name,
+ * or empty for the document's — and the view's back link reads it here.
+ */
+export function dashboardBack(state: unknown): string | undefined {
+  if (typeof state !== 'object' || state === null) return undefined
+  const held = state as { readonly from?: unknown; readonly dashboard?: unknown }
+  if (held.from !== 'dashboard') return undefined
+  return typeof held.dashboard === 'string' && held.dashboard !== '' ? dashboardPath(held.dashboard) : DASHBOARD_PATH
 }
 
 /** The word an entry's route takes for a row not written yet. */

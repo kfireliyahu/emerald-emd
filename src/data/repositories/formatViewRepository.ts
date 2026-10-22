@@ -12,6 +12,7 @@ import type { Database } from 'sql.js'
 import {
   boundedCoordinate,
   boundedWidth,
+  isBlockKind,
   isBoardPart,
   isSavedKind,
   isViewKind,
@@ -29,6 +30,7 @@ import {
   type EntrySetting,
   type GraphPlace,
   type BoardPart,
+  type DashboardBlock,
   type SavedView,
   type ViewKind,
   type ViewSetting,
@@ -577,10 +579,14 @@ export function renameSavedView(db: Database, format: string, from: string, to: 
   if (from === to) return
   if (savedView(db, format, to) !== undefined) throw new Error(`${format} already has a view called ${to}.`)
   db.run('UPDATE format_saved_view SET name = ? WHERE format_name = ? AND name = ?', [to, format, from])
+  // A dashboard's block points at it by name (M53 U7), and follows it.
+  db.run("UPDATE format_dashboard_block SET name = ? WHERE kind = 'saved' AND format_name = ? AND name = ?", [to, format, from])
 }
 
 export function deleteSavedView(db: Database, format: string, name: string): void {
   db.run('DELETE FROM format_saved_view WHERE format_name = ? AND name = ?', [format, name])
+  // Its blocks go with it (M53 U7): a dashboard holds views, and this one is gone.
+  db.run("DELETE FROM format_dashboard_block WHERE kind = 'saved' AND format_name = ? AND name = ?", [format, name])
 }
 
 /** The inside of `applyDocument`: a text document's saved views, after its formats. */
@@ -594,4 +600,86 @@ export function restoreSavedViews(db: Database, views: readonly SavedView[]): vo
 /** Called by `deleteFormat`, for `forgetSeeds`'s reason. */
 export function forgetSavedViews(db: Database, format: string): void {
   db.run('DELETE FROM format_saved_view WHERE format_name = ?', [format])
+}
+
+/**
+ * **A dashboard's blocks, in order** — M53 U7, D-514, D-521: a format's when
+ * `dashboard` names it, the document's own when it is `undefined`. Written by
+ * the dashboard's own screen and by `arrange_views view:dashboard`.
+ */
+export function dashboardBlocks(db: Database, dashboard: string | undefined): readonly DashboardBlock[] {
+  const rows =
+    dashboard === undefined
+      ? query(db, 'SELECT * FROM format_dashboard_block WHERE dashboard IS NULL ORDER BY position, rowid')
+      : query(db, 'SELECT * FROM format_dashboard_block WHERE dashboard = ? ORDER BY position, rowid', [dashboard])
+  return rows.flatMap(blockOf)
+}
+
+/** Every dashboard's blocks — the document's first, then each format's by name, each in order. */
+export function allDashboardBlocks(db: Database): readonly DashboardBlock[] {
+  return query(db, "SELECT * FROM format_dashboard_block ORDER BY ifnull(dashboard, ''), position, rowid").flatMap(blockOf)
+}
+
+function blockOf(row: Readonly<Record<string, unknown>>): readonly DashboardBlock[] {
+  const dashboard = row['dashboard']
+  const format = row['format_name']
+  const kind = row['kind']
+  const name = row['name']
+  const sum = row['sum']
+  const address = row['address']
+  if (typeof format !== 'string' || typeof kind !== 'string' || typeof name !== 'string' || !isBlockKind(kind)) return []
+  return [
+    {
+      dashboard: typeof dashboard === 'string' ? dashboard : undefined,
+      format,
+      kind,
+      name,
+      ...(typeof sum === 'string' ? { sum } : {}),
+      address: typeof address === 'string' ? address : '',
+    },
+  ]
+}
+
+/**
+ * A dashboard's blocks, all of them, in this order — what adding one, moving
+ * one and removing one each write. A block on a format's dashboard reads that
+ * format; two blocks of one name and format are refused by the index.
+ */
+export function setDashboardBlocks(db: Database, dashboard: string | undefined, blocks: readonly DashboardBlock[]): void {
+  inTransaction(db, () => {
+    if (dashboard === undefined) db.run('DELETE FROM format_dashboard_block WHERE dashboard IS NULL')
+    else db.run('DELETE FROM format_dashboard_block WHERE dashboard = ?', [dashboard])
+    blocks.forEach((block, position) => {
+      if (dashboard !== undefined && block.format !== dashboard) {
+        throw new Error(`${dashboard}’s dashboard holds ${dashboard}’s own views; ${block.name} reads ${block.format}.`)
+      }
+      db.run(
+        'INSERT INTO format_dashboard_block (dashboard, position, format_name, kind, name, sum, address) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [
+          dashboard ?? null,
+          position,
+          block.format,
+          block.kind,
+          block.name,
+          block.kind === 'total' ? (block.sum ?? null) : null,
+          block.kind === 'total' ? savedAddress(block.address) : '',
+        ],
+      )
+    })
+  })
+}
+
+/** The inside of `applyDocument`: a text document's dashboards, after its formats and saved views. */
+export function restoreDashboardBlocks(db: Database, blocks: readonly DashboardBlock[]): void {
+  if (blocks.length === 0) return
+  const keys = [...new Set(blocks.map((each) => each.dashboard ?? ''))]
+  for (const key of keys) {
+    const dashboard = key === '' ? undefined : key
+    setDashboardBlocks(db, dashboard, blocks.filter((each) => (each.dashboard ?? '') === key))
+  }
+}
+
+/** Called by `deleteFormat`: its dashboard, and every block anywhere that reads it. */
+export function forgetDashboardBlocks(db: Database, format: string): void {
+  db.run('DELETE FROM format_dashboard_block WHERE dashboard = ? OR format_name = ?', [format, format])
 }

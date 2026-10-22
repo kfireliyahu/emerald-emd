@@ -337,6 +337,15 @@ const CAPABILITIES: readonly Capability[] = [
     screen: 'ui/RailFolder.tsx',
     tool: 'arrange_views',
   },
+  {
+    // M53 U7 (D-521): the dashboard's Add a block, drag, Move earlier and
+    // later and Remove from this dashboard; the conversation's `view:
+    // dashboard` on `arrange_views`, with `add`, `order` and `remove`.
+    does: 'Add a block to a dashboard, move one, or remove one.',
+    writes: ['setDashboardBlocks'],
+    screen: 'ui/formats/Dashboard.tsx',
+    tool: 'arrange_views',
+  },
   // A screen trail, so no gap (M35 U4, D-403): a pack's views and a text
   // document set the header line, and no screen does yet.
   {
@@ -453,6 +462,9 @@ const THROUGH_ANOTHER: Readonly<Record<string, string>> = {
   // M53 U5 (D-520).
   restoreSavedViews: 'The inside of `applyDocument`: a text document’s saved views, after its rows.',
   forgetSavedViews: 'Called by `deleteFormat`, for `forgetIntakes`’s reason.',
+  // M53 U7 (D-521).
+  restoreDashboardBlocks: 'The inside of `applyDocument`: a text document’s dashboards, after its saved views.',
+  forgetDashboardBlocks: 'Called by `deleteFormat`: its dashboard, and every block that reads it.',
   // M29 U3b (D-334). A derived view is compiled from the declarations, so it
   // is dropped and rebuilt around every change to one; nobody chooses it.
   dropDerivedViews:

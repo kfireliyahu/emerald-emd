@@ -1076,6 +1076,13 @@ rather than three decisions.
 > built}}` or `{not:[a, b]}` none of them with an empty cell let through, and `null` the empty cell
 > — `{owner:null}`, `{owner:{not:null}}`, `[planned, null]`: D-380's words for a declared filter, in
 > a question. `where` and `expect` still name one value per column.
+> **M53 U7 added dashboards** (D-521): `arrange_views view:dashboard format:task add:[{saved:"Due
+> today"}, {rollup:done_by_month}, {total:"Open", count:true, match:{state:{not:done}}}]` puts
+> blocks on a format's dashboard — a saved view, a rollup's chart, a headline total (a `count`, or the
+> `sum` of a number or money column, under a `match`) and nothing else — and `order` and `remove`
+> take blocks' names; with no `format` it is the document's, each block naming its `format`.
+> `show_format view:dashboard` (no `format`: the document's) draws it, its text naming every block
+> with what it holds now. `start_here` is unchanged.
 > **M53 U5 added saved views** (D-520): `arrange_views view:saved name:"Due today" kind:list
 > match:{due:"today"}` keeps a format's filter, folds, columns, sort and kind under a name — the
 > address as the app spells it, so `today` stays the phrase — and `rename` and `delete: true` change

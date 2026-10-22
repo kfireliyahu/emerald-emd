@@ -52,8 +52,10 @@ import { listSeeds, restoreSeeds } from './formatSeedRepository.ts'
 import {
   graphPlaces,
   listColumnWidths,
+  allDashboardBlocks,
   listViewSettings,
   restoreColumnWidths,
+  restoreDashboardBlocks,
   restoreGraphPlaces,
   restoreSavedViews,
   restoreViewSettings,
@@ -87,6 +89,7 @@ export function serializeDocument(db: Database): Result<readonly DocumentPart[],
     places: graphPlaces(db),
     views: listViewSettings(db),
     saved: savedViews(db),
+    dashboards: allDashboardBlocks(db),
     currency: documentCurrency(db),
     readings: listIntakeContent(db),
     readerNames: listReaderNames(db),
@@ -192,6 +195,7 @@ export function applyDocument(
       restoreGraphPlaces(db, document.places)
       restoreViewSettings(db, document.views)
       restoreSavedViews(db, document.saved)
+      restoreDashboardBlocks(db, document.dashboards)
       restoreDocumentCurrency(db, document.currency)
       // What was read in, each row found by the name the text gave it (D-408).
       const refs = new Map<string, ReadonlyMap<string, string>>()

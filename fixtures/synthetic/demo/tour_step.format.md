@@ -36,139 +36,144 @@ A step makes no claim.
 
 ## rows
 
-### nav-formats-card_charge
+### nav-formats
 tour: custom
 position: 1
 action: click
 caption: Here is the card statement. One of these is the grocery store.
+
+### nav-formats-card_charge
+tour: custom
+position: 2
+action: click
 highlight: row:CORNER MARKET
 
 ### nav-formats
 tour: custom
-position: 2
+position: 3
 action: click
 caption: To find out, describe the receipt: shop, day, total, and its charge.
 
 ### new-format
 tour: custom
-position: 3
+position: 4
 action: click
 
 ### door-empty
 tour: custom
-position: 4
+position: 5
 action: click
 
 ### format-title
 tour: custom
-position: 5
+position: 6
 action: type
 value: Receipt
 
 ### add-columns
 tour: custom
-position: 6
+position: 7
 action: click
 
 ### column-name
 tour: custom
-position: 7
+position: 8
 action: type
 value: shop
 
 ### type-text
 tour: custom
-position: 8
+position: 9
 action: click
 
 ### add-column
 tour: custom
-position: 9
+position: 10
 action: click
 
 ### column-name
 tour: custom
-position: 10
+position: 11
 action: type
 value: date
 
 ### type-date
 tour: custom
-position: 11
+position: 12
 action: click
 
 ### add-column
 tour: custom
-position: 12
+position: 13
 action: click
 
 ### column-name
 tour: custom
-position: 13
+position: 14
 action: type
 value: total
 
 ### type-money
 tour: custom
-position: 14
+position: 15
 action: click
 
 ### add-column
 tour: custom
-position: 15
+position: 16
 action: click
 
 ### column-name
 tour: custom
-position: 16
+position: 17
 action: type
 value: paid_with
 
 ### type-link
 tour: custom
-position: 17
+position: 18
 action: click
 
 ### points-at
 tour: custom
-position: 18
+position: 19
 action: click
 
 ### choice:card_charge
 tour: custom
-position: 19
+position: 20
 action: click
 
 ### create-format
 tour: custom
-position: 20
+position: 21
 action: click
 
 ### claims
 tour: custom
-position: 21
+position: 22
 action: click
 caption: Then make a claim: the receipt's total is what the card charged.
 
 ### add-claim
 tour: custom
-position: 22
+position: 23
 action: click
 
 ### claim-holds
 tour: custom
-position: 23
+position: 24
 action: type
 value: total = paid_with.amount
 
 ### save-shape
 tour: custom
-position: 24
+position: 25
 action: click
 
 ### foot-shop
 tour: custom
-position: 25
+position: 26
 action: type
 value: Corner Market
 caption: Now type the receipt in from the paper, and link it to its charge.
@@ -176,41 +181,41 @@ beside: receipt.png
 
 ### foot-date
 tour: custom
-position: 26
+position: 27
 action: type
 value: 2026-07-29
 
 ### foot-total
 tour: custom
-position: 27
+position: 28
 action: type
 value: 84.00
 
 ### foot-paid_with
 tour: custom
-position: 28
+position: 29
 action: type
 value: CORNER
 
 ### choice:CORNER MARKET
 tour: custom
-position: 29
+position: 30
 action: click
 
 ### foot-paid_with
 tour: custom
-position: 30
+position: 31
 action: press
 value: Enter
 
 ### row-open
 tour: custom
-position: 31
+position: 32
 action: click
 
 ### verdict-total_adds_up
 tour: custom
-position: 32
+position: 33
 action: say
 caption: They don't: the card was charged 12.00 more than the receipt says.
 highlight: verdict-total_adds_up

@@ -1,4 +1,4 @@
-import { useContext, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { toISODate } from '@/core/time.ts'
@@ -104,7 +104,20 @@ import { RollupView } from '@/ui/formats/RollupView.tsx'
 import { RowSheet, type FootRefusal, type Order } from '@/ui/formats/RowSheet.tsx'
 import { derivedOf } from '@/data/repositories/formatDerivedRepository.ts'
 import { useSaving } from '@/ui/formats/savedView.ts'
-import { boardPath, entryPath, formatPath, listPath, NEW_ENTRY, readPath, readyPath, roadmapPath, tablePath } from '@/ui/nav.ts'
+import {
+  boardPath,
+  dashboardBack,
+  dashboardPath,
+  entryPath,
+  formatPath,
+  listPath,
+  NEW_ENTRY,
+  readPath,
+  readyPath,
+  roadmapPath,
+  tablePath,
+} from '@/ui/nav.ts'
+import { DashboardView } from '@/ui/formats/Dashboard.tsx'
 import { BoardView } from '@/ui/formats/BoardView.tsx'
 import {
   boardOf,
@@ -211,7 +224,11 @@ import { toggleEntryList, useEntryListHidden } from '@/ui/useEntryList.ts'
  *
  * `accent` marks the actions and colours no figure (D-125).
  */
-export function FormatRows({ board = false, list = false }: { readonly board?: boolean; readonly list?: boolean } = {}) {
+export function FormatRows({
+  board = false,
+  list = false,
+  dashboard = false,
+}: { readonly board?: boolean; readonly list?: boolean; readonly dashboard?: boolean } = {}) {
   const { name, entry } = useParams<{ name: string; entry: string }>()
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
@@ -233,7 +250,9 @@ export function FormatRows({ board = false, list = false }: { readonly board?: b
   // What the address holds, saved under a name from the FilterBand (M53 U5, D-520).
   const saving = useSaving(name, board ? 'board' : list ? 'list' : 'table')
   // The rows, or one of the format's rollups by name (M25 E2, D-271).
-  const [view, setView] = useState<string | undefined>(undefined)
+  // A dashboard's rollup block opens its format on that rollup (M53 U7).
+  const opening = useLocation().state as unknown
+  const [view, setView] = useState<string | undefined>(() => rollupAsked(opening))
   const [deleting, setDeleting] = useState<StoredRow | undefined>(undefined)
   // A rule set's dry run, shown before it writes (M25 E4, D-273).
   const [applying, setApplying] = useState<RuleSetPlan | undefined>(undefined)
@@ -287,6 +306,13 @@ export function FormatRows({ board = false, list = false }: { readonly board?: b
   // every step between entries keeps it. Absent is the table.
   const came = cameFrom(location.state)
   const along = came === undefined ? {} : { state: { from: came } }
+  // **A view opened from a dashboard's block** (M53 U7): its band says
+  // `← Dashboard` and goes back there; a rollup's block opens its tab.
+  const fromDashboard = dashboardBack(location.state)
+  useEffect(() => {
+    const rollup = rollupAsked(location.state)
+    if (rollup !== undefined) setView(rollup)
+  }, [location.key])
   useEffect(() => {
     const imported = (location.state as ImportedShape | null)?.imported
     if (imported === undefined || imported.name !== name) return
@@ -643,7 +669,7 @@ export function FormatRows({ board = false, list = false }: { readonly board?: b
   const locked = rowWriteRefusal(declaration) ?? readOnly
   // A view named by a rollup the format no longer declares falls back to the rows.
   const shownRollup =
-    !board && (declaration.rollups ?? []).some((each) => each.name === view) ? view : undefined
+    !board && !dashboard && (declaration.rollups ?? []).some((each) => each.name === view) ? view : undefined
   // Every format with an enum has a board (M27 U3, D-301).
   const enums = declaration.columns.filter((each) => each.type === 'enum')
   const hasBoard = enums.length > 0
@@ -1192,7 +1218,7 @@ export function FormatRows({ board = false, list = false }: { readonly board?: b
               </Button>
             )
           })}
-          {shownRollup === undefined && (
+          {shownRollup === undefined && !dashboard && (
             <ColumnFilter
               db={db}
               declaration={declaration}
@@ -1201,7 +1227,7 @@ export function FormatRows({ board = false, list = false }: { readonly board?: b
               onChange={setFilter}
             />
           )}
-          {shownRollup === undefined && (
+          {shownRollup === undefined && !dashboard && (
           <input
             ref={searchField}
             className={`${FIELD} w-48`}
@@ -1240,10 +1266,10 @@ export function FormatRows({ board = false, list = false }: { readonly board?: b
         {[
           {
             label: 'Table',
-            on: !board && !list && shownRollup === undefined,
+            on: !board && !list && !dashboard && shownRollup === undefined,
             go: () => {
               setView(undefined)
-              if (board || list) navigate(formatPath(declaration.name) + address)
+              if (board || list || dashboard) navigate(formatPath(declaration.name) + address)
             },
           },
           ...(hasBoard ? [{ label: 'Board', on: board, go: () => navigate(boardPath(declaration.name) + address) }] : []),
@@ -1255,23 +1281,27 @@ export function FormatRows({ board = false, list = false }: { readonly board?: b
             on: shownRollup === each.name,
             go: () => {
               setView(each.name)
-              if (board || list) navigate(formatPath(declaration.name) + address)
+              if (board || list || dashboard) navigate(formatPath(declaration.name) + address)
             },
           })),
+          // **Its dashboard, last** (M53 U7, D-521): the format still opens on Table.
+          { label: 'Dashboard', on: dashboard, go: () => navigate(dashboardPath(declaration.name)), apart: true },
         ].map((tab) => (
-          <button
-            key={tab.label}
-            type="button"
-            aria-current={tab.on ? 'page' : undefined}
-            onClick={tab.on ? undefined : tab.go}
-            className={`text-[13px] whitespace-nowrap focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
-              tab.on
-                ? 'text-ink shadow-[inset_0_-2px_0_var(--color-accent)]'
-                : 'text-ink-tertiary shadow-[inset_0_-2px_0_transparent] hover:text-ink'
-            }`}
-          >
-            <Bidi>{tab.label}</Bidi>
-          </button>
+          <Fragment key={`${'apart' in tab ? 'apart ' : ''}${tab.label}`}>
+            {'apart' in tab && <span aria-hidden className="my-2 w-px shrink-0 bg-hairline" />}
+            <button
+              type="button"
+              aria-current={tab.on ? 'page' : undefined}
+              onClick={tab.on ? undefined : tab.go}
+              className={`text-[13px] whitespace-nowrap focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
+                tab.on
+                  ? 'text-ink shadow-[inset_0_-2px_0_var(--color-accent)]'
+                  : 'text-ink-tertiary shadow-[inset_0_-2px_0_transparent] hover:text-ink'
+              }`}
+            >
+              <Bidi>{tab.label}</Bidi>
+            </button>
+          </Fragment>
         ))}
       </nav>
       {locked !== undefined && readOnly === undefined && (
@@ -1280,6 +1310,7 @@ export function FormatRows({ board = false, list = false }: { readonly board?: b
         </p>
       )}
 
+      {!dashboard && (
       <FilterBand
         filter={filter}
         shown={data.total}
@@ -1289,19 +1320,25 @@ export function FormatRows({ board = false, list = false }: { readonly board?: b
         onChange={setFilter}
         declaration={declaration}
         saving={entry === undefined ? saving : undefined}
+        back={fromDashboard === undefined ? undefined : { label: 'Dashboard', go: () => navigate(fromDashboard) }}
       />
+      )}
 
       {/* **What has to add up is a place, not an icon** (M29 U1, D-331): the
           `=` in the toolbar was found *"small and not intuitive"*. */}
+      {!dashboard && (
       <AddsUpPlace
         identities={declaration.identities}
         proof={data.proof}
         open={shaping?.focus.kind === 'ADDS_UP'}
         onOpen={readOnly !== undefined ? undefined : () => shape((draft) => ({ draft, focus: { kind: 'ADDS_UP' } }))}
       />
-      <WhatLooksWrong audits={[data.audit]} onOpen={(format, row) => navigate(entryPath(format, row))} />
+      )}
+      {!dashboard && <WhatLooksWrong audits={[data.audit]} onOpen={(format, row) => navigate(entryPath(format, row))} />}
 
-      {board && data.board !== undefined ? (
+      {dashboard ? (
+        <DashboardView dashboard={declaration.name} />
+      ) : board && data.board !== undefined ? (
         <BoardView
           board={data.board.shape}
           enums={enums}
@@ -1571,6 +1608,13 @@ export function FormatRows({ board = false, list = false }: { readonly board?: b
 }
 
 /** The view an entry was opened from, as its route's state carries it (M53 U5) — or nothing, the table. */
+/** The rollup a dashboard's block asked its format's page to open on (M53 U7), or nothing. */
+function rollupAsked(state: unknown): string | undefined {
+  if (typeof state !== 'object' || state === null) return undefined
+  const rollup = (state as { readonly rollup?: unknown }).rollup
+  return typeof rollup === 'string' ? rollup : undefined
+}
+
 function cameFrom(state: unknown): 'list' | 'board' | undefined {
   const from = typeof state === 'object' && state !== null ? (state as { from?: unknown }).from : undefined
   return from === 'list' || from === 'board' ? from : undefined

@@ -335,6 +335,8 @@ const CARRIED: ReadonlySet<string> = new Set([
   'format_view_column',
   // A format's saved views (M53 U5, D-520), in the same part.
   'format_saved_view',
+  // A dashboard's blocks (M53 U7, D-521), in the same part.
+  'format_dashboard_block',
   'measurement_unit',
   // The document's currency (M29 F3, D-344), in the settings part.
   'document_setting',

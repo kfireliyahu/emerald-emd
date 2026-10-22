@@ -51,6 +51,7 @@ import {
   savedView,
   savedViews,
   saveView,
+  setDashboardBlocks,
   type WordView,
 } from '@/data/repositories/formatViewRepository.ts'
 import { filterQuery } from '@/data/repositories/formatFilterRepository.ts'
@@ -59,6 +60,7 @@ import { toISODate } from '@/core/time.ts'
 import { canonicalAddress, filterAddress, foldFilter, isFoldKey } from '@/ui/formats/addressFilter.ts'
 import { today } from '../today.ts'
 import { savedViewSaid } from './saved.ts'
+import { dashboardLine, judgeDashboard, type DashboardChange } from './dashboard.ts'
 import { listUnits } from '@/data/repositories/unitRepository.ts'
 import type { FormatDeclaration } from '@/domain/format/declaration.ts'
 import { compileDerived } from '@/domain/format/derived.ts'
@@ -93,6 +95,7 @@ import {
   SAVED_KINDS,
   savedNameRefusal,
   type SavedView,
+  type DashboardBlock,
   type ShowAs,
 } from '@/domain/format/view.ts'
 import type { ColumnDeclaration } from '@/domain/format/declaration.ts'
@@ -106,7 +109,7 @@ import { PATH_PROP, ToolInputError, booleanProp, requireString, stringProp, type
  * replaced (D-401), and the table — and `saved`, a view saved under a name
  * (M53 U5, D-520).
  */
-const VIEWS = ['entry', 'board', 'list', 'table', 'roadmap', 'ready', 'start', 'agenda', 'saved'] as const
+const VIEWS = ['entry', 'board', 'list', 'table', 'roadmap', 'ready', 'start', 'agenda', 'saved', 'dashboard'] as const
 type View = (typeof VIEWS)[number]
 const WORD_VIEWS: readonly WordView[] = ['roadmap', 'ready', 'start', 'agenda']
 
@@ -130,6 +133,8 @@ const KEYS = [
   'columns',
   'rename',
   'delete',
+  'add',
+  'remove',
 ] as const
 
 /** One change a setting makes, with what it was, so the dry run shows both. */
@@ -145,6 +150,7 @@ type Change =
   | { readonly kind: 'LIST'; readonly format: string; readonly column: string; readonly was: string | undefined; readonly now: string | undefined }
   | { readonly kind: 'SAVED'; readonly format: string; readonly name: string; readonly was: SavedView | undefined; readonly now: SavedView | undefined }
   | { readonly kind: 'RENAMED'; readonly format: string; readonly from: string; readonly to: string }
+  | DashboardChange
 
 interface Refused {
   readonly index: number
@@ -199,6 +205,7 @@ function judge(
   document: OpenDocument,
   declared: readonly FormatDeclaration[],
   offered: unknown,
+  working: Map<string, readonly DashboardBlock[]>,
 ): { readonly changes: readonly Change[] } | { readonly reason: string } {
   if (typeof offered !== 'object' || offered === null || Array.isArray(offered)) {
     return { reason: 'Not an object with a `format` and a `view`.' }
@@ -207,7 +214,11 @@ function judge(
   const unknown = Object.keys(entry).filter((key) => !(KEYS as readonly string[]).includes(key))
   if (unknown.length > 0) return { reason: `Unknown ${unknown.join(', ')}; a setting takes ${KEYS.join(', ')}.` }
 
+  // **A dashboard** (M53 U7, D-521): a format's, or the document's with no `format`.
+  if (entry['view'] === 'dashboard') return judgeDashboard(document.db, declared, entry, working)
+
   const name = entry['format']
+  if (name === undefined) return { reason: '`format` names the format; only a dashboard takes none, for the document’s own.' }
   const declaration = declared.find((each) => each.name === name)
   if (declaration === undefined) {
     return { reason: `This document has no format called ${String(name)}. It has ${namesOf(declared)}.` }
@@ -739,8 +750,10 @@ function planOf(document: OpenDocument, settings: readonly unknown[]): ViewPlan 
   const declared = listFormats(document.db)
   const changes: Change[] = []
   const refusals: Refused[] = []
+  // What each dashboard holds after the settings before, so one call can add and then order.
+  const working = new Map<string, readonly DashboardBlock[]>()
   settings.forEach((offered, index) => {
-    const judged = judge(document, declared, offered)
+    const judged = judge(document, declared, offered, working)
     if ('reason' in judged) refusals.push({ index, reason: judged.reason })
     else changes.push(...judged.changes)
   })
@@ -784,7 +797,16 @@ function changeRow(change: Change): readonly string[] {
       return [change.format, 'saved', change.name, change.now === undefined ? 'deleted' : 'view', savedText(change.was), savedText(change.now)]
     case 'RENAMED':
       return [change.format, 'saved', change.from, 'name', change.from, change.to]
+    case 'DASHBOARD':
+      // One row per thing it changes; `describe` spreads them.
+      return [change.dashboard ?? 'the document', 'dashboard', ...(change.said[0] ?? ['-', '-', '-', '-'])]
   }
+}
+
+/** A change as the diff's rows: a dashboard's are one per block it touches. */
+function changeRows(change: Change): readonly (readonly string[])[] {
+  if (change.kind !== 'DASHBOARD') return [changeRow(change)]
+  return change.said.map((each) => [change.dashboard ?? 'the document', 'dashboard', ...each])
 }
 
 function describe(plan: ViewPlan): string {
@@ -798,7 +820,7 @@ function describe(plan: ViewPlan): string {
   }
   return paragraphs(
     `${plural(plan.changes.length, 'view setting')} — the app draws ${plan.changes.length === 1 ? 'it' : 'them'} the next time the page is shown.`,
-    table(['Format', 'View', 'Column', 'Sets', 'Was', 'Becomes'], plan.changes.map(changeRow)),
+    table(['Format', 'View', 'Column', 'Sets', 'Was', 'Becomes'], plan.changes.flatMap(changeRows)),
     plan.after.length === 0 ? undefined : plan.after.join('\n\n'),
   )
 }
@@ -840,6 +862,9 @@ function apply(document: OpenDocument, plan: ViewPlan): string {
         break
       case 'RENAMED':
         renameSavedView(db, change.format, change.from, change.to)
+        break
+      case 'DASHBOARD':
+        setDashboardBlocks(db, change.dashboard, change.now)
         break
       case 'WORD':
         // The roadmap's order is the screen's write too (*In the order of*).
@@ -904,6 +929,7 @@ export function arrangementText(document: OpenDocument, declaration: FormatDecla
           : `**Saved views** — \`show_format view:"<name>"\` draws one, \`format_rows view:"<name>"\` reads it: ` +
               `${saved.map((each) => `\`${each.name}\` (${savedViewSaid(each)})`).join(', ')}.`
       })(),
+      dashboardLine(db, format),
       ...WORD_VIEWS.map((view) => {
         const kept = [...viewSettings(db, format, view)]
         const label = view === 'roadmap' ? 'Roadmap' : view === 'ready' ? 'Ready' : view === 'agenda' ? 'Agenda' : 'Start'
@@ -921,7 +947,8 @@ export const arrangeViewsTool: PluginTool = {
       'How the app shows a format: on its entry, a column’s `show_as`, `header` line, `hidden`, ' +
       '`new_entry` and the `order`; a board’s lanes; a table column’s `width`; a column’s `setting` in a list, a roadmap, a ' +
       'ready list or a start-here question; `view: saved`, a `name` and what it keeps (`today` stays that phrase), or ' +
-      '`rename`, or `delete: true`. `formats` with a `format` shows the ' +
+      '`rename`, or `delete: true`; `view: dashboard` `add`s, `order`s and `remove`s blocks (no `format`: the document’s). ' +
+      '`formats` with a `format` shows the ' +
       'arrangement and each column’s ways. Dry-runs until `commit: true`.',
     inputSchema: {
       type: 'object',
@@ -943,7 +970,7 @@ export const arrangeViewsTool: PluginTool = {
               order: {
                 type: ['array', 'string'],
                 items: { type: 'string' },
-                description: 'entry, alone: these columns first; [] resets. saved: the column it sorts by.',
+                description: 'entry, alone: these columns first; [] resets. saved: the column it sorts by. dashboard: blocks’ names.',
               },
               width: { type: ['number', 'null'], description: 'table: pixels; null resets.' },
               setting: {
@@ -960,8 +987,14 @@ export const arrangeViewsTool: PluginTool = {
               columns: { type: ['array', 'object'], items: { type: 'string' }, description: 'saved: what its lines draw.' },
               rename: stringProp('saved, alone: a new name.'),
               delete: booleanProp('saved, alone.'),
+              add: {
+                type: 'array',
+                items: { type: 'object' },
+                description: 'dashboard: `{saved}`, `{rollup}` or `{total, count|sum, match}`, with `format` on the document’s.',
+              },
+              remove: { type: 'array', items: { type: 'string' }, description: 'dashboard: blocks’ names.' },
             },
-            required: ['format', 'view'],
+            required: ['view'],
             additionalProperties: false,
           },
         },

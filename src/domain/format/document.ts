@@ -111,16 +111,21 @@ import {
   waysFor,
   readEntrySetting,
   writeEntrySetting,
+  isBlockKind,
   isSavedKind,
   isViewKind,
   isViewSetting,
   savedAddress,
   savedNameRefusal,
   SAVED_KINDS,
+  BLOCK_KINDS,
+  DOCUMENT_DASHBOARD,
+  totalNameRefusal,
   VIEW_PARTS,
   type ColumnWidth,
   type GraphPlace,
   type SavedView,
+  type DashboardBlock,
   type ViewSetting,
 } from './view.ts'
 import { coerceValue, idsIn, offeredKeysOf, type StoredRow, type StoredValue } from './row.ts'
@@ -155,6 +160,8 @@ export interface DocumentContent {
   readonly views?: readonly ViewSetting[]
   /** A format's filter, order, columns and kind under a name (M53 U5, D-514, D-520). */
   readonly saved?: readonly SavedView[]
+  /** Each dashboard's blocks, in order — a format's and the document's (M53 U7, D-521). */
+  readonly dashboards?: readonly DashboardBlock[]
   /** The currency a new money figure is in until a row says otherwise (M29 F3, D-344). */
   readonly currency?: string | undefined
   /** What was read in, and which rows each read wrote (M38 U3, D-408). */
@@ -286,6 +293,7 @@ export interface ParsedDocument {
   readonly places: readonly GraphPlace[]
   readonly views: readonly ViewSetting[]
   readonly saved: readonly SavedView[]
+  readonly dashboards: readonly DashboardBlock[]
   readonly currency: string | undefined
   readonly readings: readonly ReadingRecord[]
   readonly readerNames: readonly ReaderNameRecord[]
@@ -407,8 +415,12 @@ export function writeDocument(content: DocumentContent): Result<readonly Documen
   // A saved view goes with its format; an address naming a column that has
   // gone is still the person's, and is drawn with a sentence saying so.
   const saved = (content.saved ?? []).filter((each) => formats.some((format) => format.declaration.name === each.format))
-  if (shown.length > 0 || kept.length > 0 || saved.length > 0) {
-    parts.push({ name: VIEWS_PART, text: writeWidths(shown, kept, saved) })
+  // A dashboard's block goes with the format it reads and the one it is on.
+  const declared = (name: string | undefined): boolean =>
+    name === undefined || formats.some((format) => format.declaration.name === name)
+  const dashboards = (content.dashboards ?? []).filter((each) => declared(each.dashboard) && declared(each.format))
+  if (shown.length > 0 || kept.length > 0 || saved.length > 0 || dashboards.length > 0) {
+    parts.push({ name: VIEWS_PART, text: writeWidths(shown, kept, saved, dashboards) })
   }
 
   // The same rule for a place: a format that has gone, or a pack that owns
@@ -530,7 +542,7 @@ export function readDocument(parts: readonly DocumentPart[]): Result<ParsedDocum
   if (!seeds.ok) return seeds
 
   const viewsPart = parts.find((part) => part.name === VIEWS_PART)
-  const views = viewsPart === undefined ? ok({ widths: [], views: [], saved: [] }) : readViews(viewsPart.text)
+  const views = viewsPart === undefined ? ok({ widths: [], views: [], saved: [], dashboards: [] }) : readViews(viewsPart.text)
   if (!views.ok) return views
 
   const graphPart = parts.find((part) => part.name === GRAPH_PART)
@@ -584,6 +596,7 @@ export function readDocument(parts: readonly DocumentPart[]): Result<ParsedDocum
     places: places.value,
     views: views.value.views,
     saved: views.value.saved,
+    dashboards: views.value.dashboards,
     currency: currency.value,
     readings: readings.value.readings,
     readerNames: readings.value.readerNames,
@@ -1289,11 +1302,16 @@ export function readSeeds(text: string): Result<readonly SeedRecord[], string> {
  * — all in name order. A format name has no space in it, so the word after one
  * is the view's. Then each saved view as a block of its own under `### recipe
  * saved` — its `name`, `kind` and `address` (M53 U5, D-520) — in name order.
+ * Then each dashboard's blocks in its order (M53 U7, D-521), the document's
+ * first under `### Document dashboard` — a capital no format's name has — and
+ * each format's under `### recipe dashboard`: `kind`, `name`, the `format` it
+ * reads on the document's, and a headline total's `sum` and `address`.
  */
 export function writeWidths(
   widths: readonly ColumnWidth[],
   views: readonly ViewSetting[] = [],
   saved: readonly SavedView[] = [],
+  dashboards: readonly DashboardBlock[] = [],
 ): string {
   const formats = [...new Set(widths.map((each) => each.format))].sort(compareText)
   const viewed = [...new Set(views.map((each) => `${each.format} ${each.view}`))].sort(compareText)
@@ -1326,9 +1344,24 @@ export function writeWidths(
         `kind: ${each.kind}`,
         ...(each.address === '' ? [] : [`address: ${writeScalar(each.address)}`]),
       ]),
+    ...[...dashboards]
+      // Stable: each dashboard's blocks keep the order they were given in.
+      .sort((a, b) => compareText(a.dashboard ?? '', b.dashboard ?? ''))
+      .flatMap((each) => [
+        '',
+        `### ${each.dashboard ?? DOCUMENT_DASHBOARD} ${DASHBOARD_HEADING}`,
+        `kind: ${each.kind}`,
+        `name: ${writeScalar(each.name)}`,
+        ...(each.dashboard === undefined ? [`format: ${each.format}`] : []),
+        ...(each.kind === 'total' && each.sum !== undefined ? [`sum: ${each.sum}`] : []),
+        ...(each.kind === 'total' && each.address !== '' ? [`address: ${writeScalar(each.address)}`] : []),
+      ]),
     '',
   ].join('\n')
 }
+
+/** The word after a format's name — or `Document` — that heads a dashboard's block in the views part. */
+const DASHBOARD_HEADING = 'dashboard'
 
 /** The word after a format's name that heads a saved view's block in the views part. */
 const SAVED_HEADING = 'saved'
@@ -1337,7 +1370,12 @@ const SAVED_HEADING = 'saved'
 export function readViews(
   text: string,
 ): Result<
-  { readonly widths: readonly ColumnWidth[]; readonly views: readonly ViewSetting[]; readonly saved: readonly SavedView[] },
+  {
+    readonly widths: readonly ColumnWidth[]
+    readonly views: readonly ViewSetting[]
+    readonly saved: readonly SavedView[]
+    readonly dashboards: readonly DashboardBlock[]
+  },
   string
 > {
   const lines = text.replace(/\r\n/g, '\n').split('\n')
@@ -1349,6 +1387,7 @@ export function readViews(
   const widths: ColumnWidth[] = []
   const views: ViewSetting[] = []
   const saved: SavedView[] = []
+  const dashboards: DashboardBlock[] = []
   for (const block of blocksIn(lines, start + 1)) {
     if (!block.ok) return block
     const heading = block.value.heading
@@ -1356,6 +1395,15 @@ export function readViews(
       return err(`Line ${String(block.value.line)}: a view is a ### format name with its columns under it.`)
     }
     const [format = '', view, ...rest] = heading.split(/\s+/)
+    if (view === DASHBOARD_HEADING && rest.length === 0) {
+      const read = readBlock(format === DOCUMENT_DASHBOARD ? undefined : format, block.value.cells, block.value.line)
+      if (!read.ok) return read
+      if (dashboards.some((each) => each.dashboard === read.value.dashboard && each.format === read.value.format && each.name === read.value.name)) {
+        return err(`Line ${String(block.value.line)}: ${format}’s dashboard has two blocks called ${read.value.name}.`)
+      }
+      dashboards.push(read.value)
+      continue
+    }
     if (view === SAVED_HEADING && rest.length === 0) {
       const read = readSaved(format, block.value.cells, block.value.line)
       if (!read.ok) return read
@@ -1396,7 +1444,33 @@ export function readViews(
       widths.push({ format, column, width })
     }
   }
-  return ok({ widths, views, saved })
+  return ok({ widths, views, saved, dashboards })
+}
+
+/**
+ * One `### format dashboard` block back into a dashboard's block (M53 U7,
+ * D-521): a `kind` and a `name`, the `format` it reads on the document's, and
+ * a headline total's `sum` and `address`.
+ */
+function readBlock(dashboard: string | undefined, cells: ReadonlyMap<string, string>, line: number): Result<DashboardBlock, string> {
+  const at = `Line ${String(line)}: a block on ${dashboard ?? 'the document'}’s dashboard`
+  const allowed = ['kind', 'name', 'format', 'sum', 'address']
+  const stray = [...cells.keys()].filter((key) => !allowed.includes(key))
+  if (stray.length > 0) return err(`${at} has a kind, a name, a format, a sum and an address, and ${stray.join(', ')} is none of them.`)
+  const kind = cells.get('kind') ?? ''
+  if (!isBlockKind(kind)) return err(`${at} is ${BLOCK_KINDS.join(', ')}, and ${kind === '' ? 'it names none' : kind} is not one.`)
+  const name = cells.get('name') ?? ''
+  const refusal = totalNameRefusal(name)
+  if (refusal !== undefined) return err(`${at}: ${refusal}`)
+  const format = dashboard ?? cells.get('format') ?? ''
+  if (format === '') return err(`${at} names the \`format\` it reads.`)
+  if (dashboard !== undefined && cells.has('format') && cells.get('format') !== dashboard) {
+    return err(`${at} reads ${dashboard}; a format’s dashboard holds its own views.`)
+  }
+  const sum = cells.get('sum')
+  const address = cells.get('address') ?? ''
+  if (kind !== 'total' && (sum !== undefined || address !== '')) return err(`${at} is a ${kind}; only a headline total has a sum and an address.`)
+  return ok({ dashboard, format, kind, name, ...(sum === undefined || sum === '' ? {} : { sum }), address: savedAddress(address) })
 }
 
 /** One `### format saved` block back into a saved view: a `name`, a `kind`, and an `address` when it holds one. */

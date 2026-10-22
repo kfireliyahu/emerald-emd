@@ -3,6 +3,9 @@ import { describe, expect, it } from 'vitest'
 import { addressFilter, addressView, filterAddress } from './formats/addressFilter.ts'
 import {
   isSectionTabs,
+  DASHBOARD_PATH,
+  dashboardBack,
+  dashboardPath,
   NAVIGATION,
   activeTab,
   childIsActive,
@@ -183,8 +186,10 @@ describe('the ledger, staged', () => {
 
   it('leaves the engine’s own places standing, and nothing of the pack', () => {
     // Connections joined them in M20 U5 (D-233): the third arrow is a place of
-    // the engine's, so staging the pack does not touch it.
+    // the engine's, so staging the pack does not touch it. The document's
+    // dashboard is first without the ledger (M53 U7, D-521).
     expect(staged.map((section) => section.label)).toEqual([
+      'Dashboard',
       'Formats',
       'Connections',
       'Assistants',
@@ -301,7 +306,7 @@ describe('a pack drawn from its views', () => {
   const drawn = rail.find((section) => section.label === 'Development')
 
   it('sits before Formats, and takes its formats out of it', () => {
-    expect(rail.map((section) => section.label)).toEqual(['Development', 'Formats', 'Connections', 'Assistants', 'Settings'])
+    expect(rail.map((section) => section.label)).toEqual(['Dashboard', 'Development', 'Formats', 'Connections', 'Assistants', 'Settings'])
     expect(rail.find((section) => section.to === '/formats')?.children?.map((child) => child.label)).toEqual([
       'Ingredient',
     ])
@@ -362,5 +367,20 @@ describe('the table an entry goes back to keeps its filter', () => {
 
   it('is the bare table when nothing was filtered', () => {
     expect(tablePath('open_question', '')).toBe(formatPath('open_question'))
+  })
+})
+
+describe('the document’s dashboard (M53 U7, D-521)', () => {
+  it('is right under Home with the ledger, and first without it', () => {
+    expect(railSections({ ledger: true }).map((section) => section.label).slice(0, 2)).toEqual(['Home', 'Dashboard'])
+    expect(railSections({ ledger: false })[0]?.to).toBe(DASHBOARD_PATH)
+    expect(sectionFor(dashboardPath('task'))?.to).toBe('/formats')
+  })
+
+  it('reads the way back from a route a dashboard’s block opened', () => {
+    expect(dashboardBack({ from: 'dashboard', dashboard: 'task' })).toBe('/formats/task/dashboard')
+    expect(dashboardBack({ from: 'dashboard', dashboard: '' })).toBe('/dashboard')
+    expect(dashboardBack({ from: 'list' })).toBeUndefined()
+    expect(dashboardBack(null)).toBeUndefined()
   })
 })

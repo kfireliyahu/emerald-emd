@@ -463,6 +463,34 @@ column. Written by the FilterBand's *Save this view* and the rail's rename and d
 `arrange_views view:saved` (D-520). A text document carries each as a block of its `views.md` part
 under `### <format> saved` — `name`, `kind`, `address`.
 
+### FormatDashboardBlock
+
+**No key; one row per block.** Schema 64, M53 U7, D-514, D-521.
+
+> A dashboard's blocks, in order — a format's (`dashboard` its name) or the document's (`dashboard`
+> NULL). A block is a saved view drawn compact in its kind, a rollup's chart, or a headline total,
+> **and nothing else** (D-514): no free text, no embed. **Presentation, never the declaration**, and
+> not a format.
+
+| Field | Type | Notes |
+|---|---|---|
+| `dashboard` | text, nullable | The format whose dashboard it is on, or NULL for the document's. |
+| `position` | integer | Its place, from 0; every write renumbers the dashboard's blocks. |
+| `format_name` | text | The format the block reads — always `dashboard` on a format's (`setDashboardBlocks` refuses another). |
+| `kind` | text | `saved` · `rollup` · `total`, `CHECK`ed. |
+| `name` | text | 1 to 60 characters: the saved view's name, the rollup's, or the headline total's own. Unique with `format_name` on one dashboard (`format_dashboard_block_one`, on `ifnull(dashboard, '')`). |
+| `sum` | text, nullable | A headline total's column summed — a number or money column; NULL is a count. Only on `total`. |
+| `address` | text | A headline total's filter as `addressFilter.ts` spells it (`?state!=done`), empty for every row; at most 2,000 characters. Only on `total`. |
+
+Not more rows of `format_view_column`, for 063's reason. A saved view's rename renames its blocks and
+its delete deletes them; a rollup a declaration drops leaves its block drawn as gone, with the
+sentence, until it is removed; `deleteFormat` clears the format's dashboard and every block that reads
+it. Written by the dashboard's own screen (Add a block, drag, Move earlier and later, Remove from this
+dashboard) and by `arrange_views view:dashboard` (D-521). A text document carries each block in its
+`views.md` part in order, under `### <format> dashboard` or, for the document's, `### Document
+dashboard` (a capital no format's name has) — `kind`, `name`, the `format` it reads on the document's,
+and a headline total's `sum` and `address`.
+
 ### FormatGraphPlace
 
 **Primary key** (`kind`, `name`). Schema 50, M26 U4, D-291.
@@ -581,7 +609,7 @@ screen retypes a column that holds data.
   a sheet's column widths are the document's, in `format_column_view` (D-289), and so are the
   connections canvas's places, in `format_graph_place` (D-291), and the way each column is
   shown on a format's entry (Show as, D-294, D-402), in `format_view_column`, and its currency, in `document_setting` (D-344) — one table for every view, and
-  a board is more rows of it: `lanes` on the enum its lanes are, `card` on a column a card shows (D-301), and so are a roadmap (`order`, `under`, `line`) and a page (`body`, `line`) (D-302, retired by D-401: still read, drawn by nothing), a ready view (`waits`, `ready <members> done <members>`, `line`, and `stalls <days>` on a date, D-501) and a start view (`is <member>`, `latest <count>`, `line`) (D-303), and an agenda (`date`, `done <members>`, `line`) (D-473), and a list (`group`, `line`, `done <members>`, words one column holds together, D-519); a view saved under a name is its own table, `format_saved_view` (D-520). An entry's `setting` is a way to show the column (`figure`, `bar`, `steps`… — a worked-out column's too; the retired `field` and `search` read as none, D-402), a place on the page
+  a board is more rows of it: `lanes` on the enum its lanes are, `card` on a column a card shows (D-301), and so are a roadmap (`order`, `under`, `line`) and a page (`body`, `line`) (D-302, retired by D-401: still read, drawn by nothing), a ready view (`waits`, `ready <members> done <members>`, `line`, and `stalls <days>` on a date, D-501) and a start view (`is <member>`, `latest <count>`, `line`) (D-303), and an agenda (`date`, `done <members>`, `line`) (D-473), and a list (`group`, `line`, `done <members>`, words one column holds together, D-519); a view saved under a name is its own table, `format_saved_view` (D-520), and so is a dashboard's block, `format_dashboard_block` (D-521). An entry's `setting` is a way to show the column (`figure`, `bar`, `steps`… — a worked-out column's too; the retired `field` and `search` read as none, D-402), a place on the page
   (`#2`), `header` (in the line under the title, D-401), `hidden` (kept off this entry view even when it holds a value, never the title or a required column) and `new` (a new entry asks for it) (D-517), or several (`line #1 header`): the page's order is the view's and never the declaration's (D-296). The screens write these and so does a conversation, through `arrange_views` (D-403) — Show as, `header`, `hidden`, `new_entry`, the order, a board's `lanes` and a width, and since D-469 every roadmap, ready and start word as a column's `setting`, one column holding a sole word (`order`, `waits`, `ready …`, `latest`) at a time; the roadmap's *In the order of* is the screen's too, and a word is at most 32 characters (052's CHECK); a canvas place stays the screen's (D-291). **A pack's settings are a format it
   declares** (D-282): the ledger's `setting`, a unique `key` and a JSON `value`, which is what
   `app_setting` (migration 006, D-034) was until migration 048 dropped it.

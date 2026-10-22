@@ -376,7 +376,8 @@ export function sheetOf(input: Record<string, unknown> | undefined, result: unkn
     return {
       ok: true,
       format,
-      view: format === '' ? 'start' : viewOf(asked, 'sheet'),
+      // A dashboard with no format is the document's (M53 U7).
+      view: format === '' ? (asked === 'dashboard' ? 'dashboard' : 'start') : viewOf(asked, 'sheet'),
       path,
       filter: filterOf(input?.['match'], input?.['search']),
       columns: columnsOf(input?.['columns']),

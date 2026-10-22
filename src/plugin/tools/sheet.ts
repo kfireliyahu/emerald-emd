@@ -73,6 +73,7 @@ import { documentUri } from '../subscriptions.ts'
 import { markOf } from '../watch.ts'
 import { askedOn, cellText, filterArgs, formatRowsTool, MATCH_PROP, SEARCH_PROP } from './formats.ts'
 import { savedViewArgs, savedViewNamed, savedViewSaid } from './saved.ts'
+import { dashboardText } from './dashboard.ts'
 import {
   optionalString,
   PATH_PROP,
@@ -106,6 +107,9 @@ const saidOf = (view: string): string => SAID[view as SheetView] ?? view
 /** How the read below tells its answer from a refusal's sentence. */
 const VIEWS_SAID = 'views:'
 
+/** The same, for a dashboard's answer (M53 U7). */
+const DASHBOARD_SAID = 'dashboard:'
+
 /**
  * How many rows the text names before it says how many more (M41 F2). High:
  * a view the person sees whole is not named to the model cut at 25, but a
@@ -120,7 +124,7 @@ export const showFormatTool: PluginTool = {
     description:
       'Shows the person one declared format as the app draws it — its table, its list (one line per row, a tick, ' +
       'grouped as `arrange_views view:list` says), or its board, roadmap or ready-to-start list when the format has one; ' +
-      'or the agenda, every dated format’s rows from today — ' +
+      'or the agenda, every dated format’s rows from today; or a dashboard (no `format`: the document’s) — ' +
       'in the conversation, in a client that draws MCP Apps; the answer’s first line says whether this client said it draws them. ' +
       'Call it when they ask to see a format, or some of its rows: `match` and `search` filter exactly ' +
       'as `format_rows` does, and the view draws only those rows and says it is filtered. The text ' +
@@ -132,7 +136,7 @@ export const showFormatTool: PluginTool = {
         path: PATH_PROP,
         format: stringProp('The declared format, by name. `formats` lists them. The agenda takes none.'),
         view: stringProp(
-          `${VIEWS.map(saidOf).join(', ')} (default table), or a saved view’s name.`,
+          `${VIEWS.map(saidOf).join(', ')} (default table), dashboard, or a saved view’s name.`,
         ),
         match: MATCH_PROP,
         search: SEARCH_PROP,
@@ -264,10 +268,27 @@ function askedFilter(args: Record<string, unknown>): RowFilter {
  */
 async function sheetAnswer(
   args: Record<string, unknown>,
-): Promise<{ text: string; drawn?: { format: string; view: SheetView; filter: RowFilter; columns: ColumnChoice } }> {
+): Promise<{ text: string; drawn?: { format: string; view: SheetView | 'dashboard'; filter: RowFilter; columns: ColumnChoice } }> {
   const path = requireString(args, 'path')
   const asked = optionalString(args, 'view') ?? 'table'
   const view = asked === 'table' ? 'sheet' : asked
+  if (asked === 'dashboard') {
+    // **A dashboard** (M53 U7, D-521): a format's, or the document's with no
+    // `format` — every block in order, with what it holds now.
+    const format = optionalString(args, 'format')
+    let declared = true
+    const read = await readDocument(path, (document) => {
+      const declarations = listFormats(document.db)
+      if (format !== undefined && !declarations.some((each) => each.name === format)) {
+        declared = false
+        return ''
+      }
+      return DASHBOARD_SAID + dashboardText(document.db, format, declarations)
+    })
+    if (!declared && format !== undefined) return { text: await formatRowsTool.run({ path, format }, {}) }
+    if (!read.startsWith(DASHBOARD_SAID)) return { text: read }
+    return { text: read.slice(DASHBOARD_SAID.length), drawn: { format: format ?? '', view: 'dashboard', filter: {}, columns: {} } }
+  }
   if (!(VIEWS as readonly string[]).includes(view)) {
     // **A saved view, by its name** (M53 U5, D-520): drawn as its kind, with
     // its filter, folds and columns under whatever else the call gives.

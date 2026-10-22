@@ -1,4 +1,4 @@
-<!-- emerald document, schema 63 -->
+<!-- emerald document, schema 64 -->
 <!-- emerald: decision.format.md -->
 ---
 format: decision
@@ -4384,6 +4384,15 @@ question: Where is a saved view kept, what does it hold, and how do the screen a
 answer: Table format_saved_view (063): format_name, name (1-60, one line, not '?…', not a view's own word), kind (table|board|list|roadmap|ready), address (<=2000, canonicalAddress: parts in name order). Not format_view_column: its setting is one 32-char word per column. The address keeps filter, folds, columns and sort as addressFilter spells them, so 'today'/'within 7 days' stay phrases. Screen: FilterBand 'Save this view' while the address holds anything (sort alone draws 'Every entry'), name asked in place, a taken name = Replace, 'Saved as X' when the address is one (same kind + same canonical address); the rail lists them under the format, opens savedViewPath, lights the current one, renames/deletes in place. Agenda saves none. Tools: arrange_views {view:saved, name, kind, match, search, order, descending, columns} saves (checked as format_rows checks a filter), {name, rename} renames, {name, delete:true} deletes; show_format view:'<name>' draws its kind with its filter; format_rows view:'<name>' reads it (a given match adds, anything else given replaces); formats lists them. Frame reads the name from the fetched document. Text: '### <format> saved' blocks with name/kind/address. Entry back link: route state from:list|board, '← List'/'← Board', else the format's title.
 state: live
 
+### D-521
+date: 2026-10-22
+milestone: M53
+scope: engine
+title: A dashboard is an ordered set of blocks in format_dashboard_block (064): a saved view drawn compact, a rollup's chart, or a headline total (count or sum under a filter), nothing else; one per format (last tab) and one for the document (rail's Dashboard: first and #/ without a ledger, under Home with one); arranged in place; arrange_views view:dashboard and show_format view:dashboard
+question: What can a dashboard hold, where does it sit, how is it arranged and kept, and how does a conversation reach it?
+answer: Blocks: saved view (compact: list 5 open lines + 'N more'/'N done', grouped 2 a group; table 4 rows; board lanes with count + 2 cards; roadmap/ready 5 names), rollup chart (bars, 150px), headline total (count, or sum of a money/integer/real/decimal column, under a filter kept as an address so 'today' stays a phrase; money summed per currency). Grid of 4 columns: total 1, others 2; order is the only arrangement. In place: 'Add a block' (saved views + rollups, grouped by format on the document's; 'Headline total' made in place with conditions from the saved views, the list's done turned round and date windows), drag by grip, menu: Open in full / Move earlier / Move later / Remove from this dashboard (a total goes with its block; a view or rollup stays). Title opens in full with '← Dashboard' back (route state from:dashboard). Placement: #/formats/<name>/dashboard, last tab after a rule, format still opens on Table; #/dashboard, the rail's Dashboard: first and #/ without a ledger, right under Home with it. Storage: format_dashboard_block (dashboard NULL = document's, position, format_name, kind saved|rollup|total, name 1-60, sum, address); saved view rename/delete cascades; dropped rollup drawn as gone; deleteFormat clears. Text: '### <format> dashboard' / '### Document dashboard' blocks (kind, name, format, sum, address). Tools: arrange_views {view:dashboard, format?, add:[{saved}|{rollup}|{total, count|sum, match, search}], order:[names], remove:[names]} ('format/name' when ambiguous); show_format view:dashboard (no format = document's) names every block with what it holds; formats lists a format's blocks. start_here unchanged. 'Dashboard' is refused as a saved view's name.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -7575,6 +7584,15 @@ shown_in: nowhere
 appears: on no screen, in no tool text, not in the tour
 state: live
 
+### Add a block
+means: The tile at the end of a dashboard's grid and its menu: the format's saved views and rollups not on it yet (one on it ticked), grouped by format on the document's, then Headline total, made in place.
+not: Not where a view is saved (Save this view, on its tab) nor where a rollup is declared (with the format).
+code_word: AddMenu, HeadlineForm
+named_by: D-521
+scope: app
+shown_in: view
+state: live
+
 ### Add a task · values
 means: Quick add's placeholder on a list: 'Add a <format> · ' and every value the new row will take besides its title — the group's, the address filter's exact values, a required enum's first member — so nothing is taken silently. Enter writes it; Esc clears.
 not: Not the Add button, which opens a new entry with every field it asks for.
@@ -7703,6 +7721,15 @@ not: Financial month, the reporting month.
 scope: ledger
 shown_in: nowhere
 appears: on no screen, in no tool text, not in the tour
+state: live
+
+### Block
+means: One thing on a dashboard: a saved view drawn compact in its kind, a rollup's chart, or a headline total. Its title opens it in full; it names what it is under its title in the filter's own words.
+not: Not a widget of any kind a person writes: only those three kinds exist (D-514).
+code_word: DashboardBlock, format_dashboard_block, setDashboardBlocks
+named_by: D-521
+scope: app
+shown_in: view
 state: live
 
 ### Board
@@ -7925,6 +7952,15 @@ code_word: cushion (set_cushion)
 scope: ledger
 shown_in: screen
 appears: screen 10 in 2 files (savings/Cushion 9, wealth/NetWorthOpened 1); tools 4 in 2 files (tools/goalDeposits 3, catalog 1)
+state: live
+
+### Dashboard
+means: An ordered set of blocks: saved views, rollups' charts and headline totals, and nothing else. A format's is the last tab of its strip (#/formats/<name>/dashboard); the document's is the rail's Dashboard (#/dashboard), whose blocks may come from any format — first and #/ in a document with no ledger, right under Home with one.
+not: Not a format and not a free page (D-514): no text, no embed, no recent changes. Not Home, which stays the ledger's month.
+code_word: DashboardView, DocumentDashboard, dashboardBlocks, DASHBOARD_PATH, dashboardPath
+named_by: D-521
+scope: app
+shown_in: view
 state: live
 
 ### Date basis
@@ -8265,6 +8301,15 @@ shown_in: nowhere
 appears: on no screen, in no tool text, not in the tour
 state: live
 
+### Headline total
+means: One figure on a dashboard: the count of a format's rows, or the sum of one of its number or money columns, under a filter as format_rows match takes it, with a name. Money is summed per currency, never across two.
+not: Not a declared total or an aggregate of the format: it lives only on its dashboard, and removing the block removes it.
+code_word: headline, kind 'total', totalNameRefusal
+named_by: D-521
+scope: app
+shown_in: view
+state: live
+
 ### Health tax
 means: The mandatory health insurance levy deducted on a payslip.
 printed_as: מס בריאות
@@ -8504,6 +8549,15 @@ not: Not the state member called done itself: a list may tick on any member or a
 named_by: D-519
 scope: app
 shown_in: screen
+state: live
+
+### N more
+means: The rows a compact block on a dashboard does not show, as a link that opens its view in full.
+not: Not a page or a count of every row: the rows the block left out.
+code_word: more
+named_by: D-521
+scope: app
+shown_in: view
 state: live
 
 ### National Insurance
@@ -8774,6 +8828,15 @@ printed_as: אסמכתא
 scope: ledger
 shown_in: nowhere
 appears: on no screen, in no tool text, not in the tour
+state: live
+
+### Remove from this dashboard
+means: A block's menu item that takes the block off. A saved view or a rollup stays where it was kept; a headline total, which lives only on its dashboard, goes.
+not: Not Delete: nothing kept elsewhere is deleted by it.
+code_word: onRemove, arrange_views remove
+named_by: D-521
+scope: app
+shown_in: view
 state: live
 
 ### Retroactive adjustment

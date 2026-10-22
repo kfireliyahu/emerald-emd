@@ -193,6 +193,10 @@ describe('what the frame draws', () => {
     // A saved view's name (M53 U5): kept for the frame to read from the document; the table's word is not one.
     expect(sheetOf({ path: 'F:/a.emd', format: 'task', view: 'Due today' }, text)).toMatchObject({ view: 'sheet', saved: 'Due today' })
     expect(sheetOf({ path: 'F:/a.emd', format: 'task', view: 'table' }, text)).not.toHaveProperty('saved')
+    // A dashboard (M53 U7): a format's, and with no format the document's — never a saved view's name.
+    expect(sheetOf({ path: 'F:/a.emd', format: 'task', view: 'dashboard' }, text)).toMatchObject({ format: 'task', view: 'dashboard' })
+    expect(sheetOf({ path: 'F:/a.emd', format: 'task', view: 'dashboard' }, text)).not.toHaveProperty('saved')
+    expect(sheetOf({ path: 'F:/a.emd', view: 'dashboard' }, text)).toMatchObject({ format: '', view: 'dashboard' })
     // A view this frame does not know — a newer server — is the sheet.
     expect(sheetOf({ path: 'F:/a.emd', format: 'book', view: 'gantt' }, text)).toMatchObject({ view: 'sheet' })
   })

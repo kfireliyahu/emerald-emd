@@ -1071,7 +1071,10 @@ describe('the server makes zero network calls', () => {
       // that stops a model taking Emerald for a finance app. 56k since M53 U5
       // (D-520): `view: saved` on `arrange_views` — eight parameters a saved
       // view takes — and `view` on `format_rows`, ~700 chars, trimmed first.
-      expect(engineSize).toBeLessThan(56_000)
+      // 56.5k since M53 U7 (D-521): `view: dashboard` on `arrange_views` and
+      // `show_format`, and `add` and `remove` for its blocks — ~400 chars,
+      // trimmed first.
+      expect(engineSize).toBeLessThan(56_500)
     })
   })
 })

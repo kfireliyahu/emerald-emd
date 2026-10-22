@@ -40,6 +40,15 @@ const PATHS: Record<Glyph, React.ReactNode> = {
       <path d="M2.5 7 8 2.5 13.5 7v6a.5.5 0 0 1-.5.5h-3v-4H6v4H3a.5.5 0 0 1-.5-.5Z" />
     </>
   ),
+  // A dashboard (M53 U7): blocks in a grid, two small and one wide — the
+  // headline totals and a view under them.
+  dashboard: (
+    <>
+      <rect x="2.5" y="2.5" width="4.5" height="4.5" rx=".5" />
+      <rect x="9" y="2.5" width="4.5" height="4.5" rx=".5" />
+      <rect x="2.5" y="9" width="11" height="4.5" rx=".5" />
+    </>
+  ),
   // A ledger: lines, each with an amount at the end.
   transactions: (
     <>

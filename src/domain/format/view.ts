@@ -1908,7 +1908,7 @@ export function savedNameRefusal(name: string): string | undefined {
   if (name.length > SAVED_NAME_LONGEST) return `A saved view’s name is at most ${String(SAVED_NAME_LONGEST)} characters.`
   if (name.startsWith('?')) return 'A saved view’s name is words, not an address.'
   const word = name.toLowerCase()
-  if (isSavedKind(word) || word === 'sheet' || word === 'agenda' || word === 'entry') {
+  if (isSavedKind(word) || word === 'sheet' || word === 'agenda' || word === 'entry' || word === DASHBOARD_VIEW) {
     return `${name} is a view’s own name; a saved view is called something else.`
   }
   return undefined
@@ -1919,4 +1919,122 @@ export function savedAddress(address: string): string {
   const trimmed = address.trim()
   if (trimmed === '' || trimmed === '?') return ''
   return trimmed.startsWith('?') ? trimmed : `?${trimmed}`
+}
+
+/**
+ * **A dashboard** — M53 U7, D-514, D-521.
+ *
+ * An ordered set of blocks and nothing else: a saved view drawn compact in its
+ * kind, a rollup's chart, or a headline total — a count of a format's rows, or
+ * the sum of one of its number or money columns, under a filter as
+ * `format_rows` takes it. **Never a free block** (D-514): no text, no embed.
+ * One per format (`dashboard` is its name) and one for the document
+ * (`dashboard` absent), whose blocks may read any format. Not a format, and
+ * presentation, so never the declaration.
+ *
+ * Kept in `format_dashboard_block` (064), a row per block in its order; a text
+ * document writes each under `### <format> dashboard` in its views part, the
+ * document's under `### Document dashboard`. A saved view and a rollup are
+ * pointed at by name; a headline total lives only on its dashboard, so its
+ * figure, column and filter are the block's own.
+ */
+export const BLOCK_KINDS = ['saved', 'rollup', 'total'] as const
+
+export type BlockKind = (typeof BLOCK_KINDS)[number]
+
+export interface DashboardBlock {
+  /** The format whose dashboard it is on, or absent for the document's. */
+  readonly dashboard: string | undefined
+  /** The format the block reads — always its dashboard's, on a format's. */
+  readonly format: string
+  readonly kind: BlockKind
+  /** The saved view's name, the rollup's, or the headline total's own. */
+  readonly name: string
+  /** A headline total's column summed; absent is a count of the rows. */
+  readonly sum?: string | undefined
+  /** A headline total's filter as the address spells it (`?state!=done`), or empty for every row. */
+  readonly address: string
+}
+
+/** The word `show_format` and `arrange_views` take for a dashboard, and a format's route ends in. */
+export const DASHBOARD_VIEW = 'dashboard'
+
+/** Its heading's first word in a text document's views part for the document's own: no format is capitalised. */
+export const DOCUMENT_DASHBOARD = 'Document'
+
+/** The longest name a block takes — `064_dashboard_block`'s CHECK, as a saved view's. */
+export const BLOCK_NAME_LONGEST = 60
+
+export function isBlockKind(word: string): word is BlockKind {
+  return (BLOCK_KINDS as readonly string[]).includes(word)
+}
+
+/** Why a name cannot be a headline total's, or nothing — one line, trimmed, at most 60 characters. */
+export function totalNameRefusal(name: string): string | undefined {
+  const trimmed = name.trim()
+  if (trimmed === '') return 'A headline total needs a name.'
+  if (trimmed !== name) return 'A headline total’s name does not start or end with a space.'
+  if (/[\r\n]/.test(name)) return 'A headline total’s name is one line.'
+  if (name.length > BLOCK_NAME_LONGEST) return `A headline total’s name is at most ${String(BLOCK_NAME_LONGEST)} characters.`
+  return undefined
+}
+
+/** Whether two blocks are one: the same format's thing under the same name. */
+export function sameBlock(a: Pick<DashboardBlock, 'format' | 'name'>, b: Pick<DashboardBlock, 'format' | 'name'>): boolean {
+  return a.format === b.format && a.name === b.name
+}
+
+/**
+ * **A block named in a sentence** — a conversation's `order` and `remove`:
+ * its name, or `<format>/<name>` where two formats' blocks on the document's
+ * dashboard share one. The block, or why none.
+ */
+export function blockNamed(
+  blocks: readonly DashboardBlock[],
+  said: string,
+): { readonly block: DashboardBlock } | { readonly reason: string } {
+  const named = blocks.filter((each) => each.name === said)
+  if (named.length === 1 && named[0] !== undefined) return { block: named[0] }
+  if (named.length > 1) {
+    return { reason: `${String(named.length)} blocks are called ${said}; say which: ${named.map((each) => `${each.format}/${each.name}`).join(', ')}.` }
+  }
+  const slash = said.indexOf('/')
+  if (slash > 0) {
+    const format = said.slice(0, slash)
+    const name = said.slice(slash + 1)
+    const found = blocks.find((each) => each.format === format && each.name === name)
+    if (found !== undefined) return { block: found }
+  }
+  return {
+    reason:
+      blocks.length === 0
+        ? `Nothing is on this dashboard, so nothing is called ${said}.`
+        : `No block here is called ${said}; it has ${blocks.map((each) => each.name).join(', ')}.`,
+  }
+}
+
+/** Blocks with one moved to stand at `to` — its place after the move. */
+export function blockMoved(blocks: readonly DashboardBlock[], from: number, to: number): readonly DashboardBlock[] {
+  const moving = blocks[from]
+  if (moving === undefined || to < 0 || to >= blocks.length || from === to) return blocks
+  const rest = blocks.filter((_, at) => at !== from)
+  return [...rest.slice(0, to), moving, ...rest.slice(to)]
+}
+
+/** Blocks with one dropped in front of another — or at the end, before nothing. */
+export function blockDropped(
+  blocks: readonly DashboardBlock[],
+  moving: DashboardBlock,
+  before: DashboardBlock | undefined,
+): readonly DashboardBlock[] {
+  if (before !== undefined && sameBlock(moving, before)) return blocks
+  const rest = blocks.filter((each) => !sameBlock(each, moving))
+  const at = before === undefined ? rest.length : rest.findIndex((each) => sameBlock(each, before))
+  return at === -1 ? blocks : [...rest.slice(0, at), moving, ...rest.slice(at)]
+}
+
+/** Blocks in the order named first — every name one of them — and the rest after, as they stood. */
+export function blocksInOrder(blocks: readonly DashboardBlock[], first: readonly DashboardBlock[]): readonly DashboardBlock[] {
+  const rest = blocks.filter((each) => !first.some((one) => sameBlock(one, each)))
+  return [...first, ...rest]
 }

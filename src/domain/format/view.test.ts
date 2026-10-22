@@ -4,6 +4,12 @@ import {
   dayText,
   savedAddress,
   savedNameRefusal,
+  blockDropped,
+  blockMoved,
+  blockNamed,
+  blocksInOrder,
+  totalNameRefusal,
+  type DashboardBlock,
   entryDefaults,
   entryLabel,
   entryLayout,
@@ -290,5 +296,38 @@ describe('a saved view’s name (M53 U5)', () => {
   it('keeps an address with its question mark, or empty', () => {
     expect(savedAddress('state=open')).toBe('?state=open')
     expect(savedAddress('?')).toBe('')
+  })
+})
+
+describe('a dashboard’s blocks (M53 U7)', () => {
+  const block = (format: string, name: string): DashboardBlock => ({ dashboard: undefined, format, kind: 'saved', name, address: '' })
+  const blocks = [block('task', 'Open'), block('task', 'Due today'), block('book', 'Due today'), block('task', 'Done by month')]
+  const names = (each: readonly DashboardBlock[]): readonly string[] => each.map((one) => `${one.format}/${one.name}`)
+
+  it('finds one by its name, or by its format’s when two formats share it', () => {
+    expect(blockNamed(blocks, 'Open')).toEqual({ block: blocks[0] })
+    expect(blockNamed(blocks, 'Due today')).toMatchObject({ reason: expect.stringMatching(/2 blocks are called Due today; say which: task\/Due today, book\/Due today/) })
+    expect(blockNamed(blocks, 'book/Due today')).toEqual({ block: blocks[2] })
+    expect(blockNamed(blocks, 'Late')).toMatchObject({ reason: expect.stringMatching(/No block here is called Late/) })
+  })
+
+  it('moves one, drops one before another, and orders by the names given first', () => {
+    expect(names(blockMoved(blocks, 0, 2))).toEqual(['task/Due today', 'book/Due today', 'task/Open', 'task/Done by month'])
+    expect(blockMoved(blocks, 0, -1)).toBe(blocks)
+    expect(names(blockDropped(blocks, block('task', 'Done by month'), block('task', 'Open')))).toEqual([
+      'task/Done by month',
+      'task/Open',
+      'task/Due today',
+      'book/Due today',
+    ])
+    expect(names(blockDropped(blocks, block('task', 'Open'), undefined))).toEqual(['task/Due today', 'book/Due today', 'task/Done by month', 'task/Open'])
+    expect(names(blocksInOrder(blocks, [block('task', 'Done by month')]))).toEqual(['task/Done by month', 'task/Open', 'task/Due today', 'book/Due today'])
+  })
+
+  it('names a headline total in one line, and keeps the word dashboard for the view', () => {
+    expect(totalNameRefusal('Open')).toBeUndefined()
+    expect(totalNameRefusal('')).toMatch(/needs a name/)
+    expect(totalNameRefusal('Two\nlines')).toMatch(/one line/)
+    expect(savedNameRefusal('Dashboard')).toMatch(/view’s own name/)
   })
 })

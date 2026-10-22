@@ -1,5 +1,5 @@
 import { useMemo, type ReactNode } from 'react'
-import { Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { readyData, roadmapData } from '@/data/repositories/formatLinkViewRepository.ts'
 import { listFormats } from '@/data/repositories/formatRepository.ts'
@@ -18,7 +18,7 @@ import { FIELD } from '@/ui/components/fieldLook.ts'
 import type { Database } from 'sql.js'
 import type { RowFilter } from '@/data/repositories/formatFilterRepository.ts'
 import { ReadyView, RoadmapView } from '@/ui/formats/LinkViews.tsx'
-import { entryPath, formatPath } from '@/ui/nav.ts'
+import { dashboardBack, entryPath, formatPath } from '@/ui/nav.ts'
 import { useSaving } from '@/ui/formats/savedView.ts'
 
 /**
@@ -244,15 +244,17 @@ function Frame({
   children: ReactNode
 }) {
   const navigate = useNavigate()
+  // Opened from a dashboard's block (M53 U7): the way back is to the dashboard.
+  const fromDashboard = dashboardBack(useLocation().state)
   return (
     <div className="fc-view-enter flex h-full flex-col">
       <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-b border-hairline px-6 py-2">
         <button
           type="button"
           className="text-caption text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
-          onClick={() => navigate(formatPath(declaration.name) + address)}
+          onClick={() => navigate(fromDashboard ?? formatPath(declaration.name) + address)}
         >
-          ← <Bidi>{declaration.title}</Bidi>
+          ← {fromDashboard === undefined ? <Bidi>{declaration.title}</Bidi> : 'Dashboard'}
         </button>
         <span className="font-medium">{what}</span>
         {action !== undefined && <span className="ml-auto flex items-center gap-2">{action}</span>}

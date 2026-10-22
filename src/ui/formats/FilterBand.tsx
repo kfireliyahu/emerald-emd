@@ -127,6 +127,7 @@ export function FilterBand({
   onChange,
   declaration,
   saving,
+  back,
 }: {
   readonly filter: RowFilter
   readonly shown: number
@@ -143,17 +144,35 @@ export function FilterBand({
    * and *Saved as …* while it is a saved view. Absent where nothing is written.
    */
   readonly saving?: Saving | undefined
+  /**
+   * **The way back to where the view was opened from** (M53 U7): `← Dashboard`
+   * when a dashboard's block opened it, first in the band, which is drawn for
+   * it even when nothing is filtered.
+   */
+  readonly back?: { readonly label: string; readonly go: () => void } | undefined
 }) {
   const filtered = isFiltered(filter)
-  if (!filtered && saving?.held !== true) return null
+  if (!filtered && saving?.held !== true && back === undefined) return null
   const held = Object.entries(filter.match ?? {})
   const search = filter.search?.trim() ?? ''
+  // Drawn only for the way back: nothing is filtered or kept to say.
+  const bare = !filtered && saving?.held !== true
   return (
     <div
       role="status"
       aria-label="Filter"
       className="flex shrink-0 flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-hairline px-6 py-1.5 text-caption text-ink-secondary"
     >
+      {back !== undefined && (
+        <button
+          type="button"
+          onClick={back.go}
+          className="text-caption text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+        >
+          ← {back.label}
+        </button>
+      )}
+      {!bare && (
       <span>
         {!filtered && 'Every entry'}
         {filtered && 'Filtered by '}
@@ -182,9 +201,12 @@ export function FilterBand({
           </>
         )}
       </span>
+      )}
+      {!bare && (
       <span className="tabular-nums">
         {refusal === undefined ? `${String(shown)} of ${String(total)} ${total === 1 ? 'entry' : 'entries'}` : refusal}
       </span>
+      )}
       {filtered && (
         <button
           type="button"
