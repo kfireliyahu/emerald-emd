@@ -483,8 +483,10 @@ under `### <format> saved` — `name`, `kind`, `address`.
 | `address` | text | A headline total's filter as `addressFilter.ts` spells it (`?state!=done`), empty for every row; at most 2,000 characters. Only on `total`. |
 
 Not more rows of `format_view_column`, for 063's reason. A saved view's rename renames its blocks and
-its delete deletes them; a rollup a declaration drops leaves its block drawn as gone, with the
-sentence, until it is removed; `deleteFormat` clears the format's dashboard and every block that reads
+its delete deletes them; so does a rollup's, in `adoptFormat` (M53 F3, D-526) — a rollup renamed
+(`renames` carries it, new to old, as it does a column) takes its blocks along and one the
+declaration drops takes them away, and a block that still cannot find its rollup (a text document's
+declaration changed by hand) is drawn as gone, with the sentence, until it is removed; `deleteFormat` clears the format's dashboard and every block that reads
 it. Written by the dashboard's own screen (Add a block, drag, Move earlier and later, Remove from this
 dashboard) and by `arrange_views view:dashboard` (D-521). A text document carries each block in its
 `views.md` part in order, under `### <format> dashboard` or, for the document's, `### Document

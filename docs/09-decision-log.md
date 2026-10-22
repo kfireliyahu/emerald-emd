@@ -441,6 +441,7 @@ written out here.
 | D-522 | 2026-10-22 | A spreadsheet keyed by a unique column is matched against every row of its format, whichever file or person wrote it: next month's export, renamed, changes the rows last month's wrote and adds what is new, and the dry run and the Read screen say both counts and name the changed cells; only a file's own rows can be gone from it; a row moves to the reading that last wrote it; a read fills only the columns it maps; a format with no unique column the reading fills says so in one sentence and matches on nothing else; amends D-408 | [below](#d-522) |
 | D-524 | 2026-10-22 | A list ticks only where someone said what done is: no default, so a list with no `done` set is plain lines with no tick column in the List tab, beside an entry and on a dashboard; done is set in place from the list's header (*Tick to mark…*, *No ticks*), by `arrange_views` or by a pack's `views.md`; the header says what a tick sets and each circle says it (*Mark done*, *Undo: back to open*); a tick stays in place a moment with an *Undo* that restores the member it held; the development pack declares done for unit, milestone, open_question, review_entry and inbox, the ledger for none; amends D-519 | [below](#d-524) |
 | D-525 | 2026-10-22 | A dashboard makes the view or chart it needs in place: *Add a block* offers *New view* — a list, a table or a board of one format, its filter, order and columns made with the format tab's own pieces and a name — saved and placed in one step, and *New chart* — a count or a sum by month of a date, per a link or not, under a filter — declared as a rollup of its format and placed in one step; picking an existing view or rollup stays; no new write; amends D-521 | [below](#d-525) |
+| D-526 | 2026-10-22 | A chart is listed in the rail under its format, beside the saved views, with a chart glyph: its name opens its tab, and it is renamed and deleted where it stands, Delete asking once; its tab deletes it too; deleting a rollup deletes its dashboard blocks and renaming one takes them along, in `adoptFormat`, so `extend_format remove` and `rename` (which now takes a rollup's name) do the same; a block's *Remove* still leaves the chart and says where to delete it; amends D-521 | [below](#d-526) |
 | D-523 | 2026-10-22 | A repository is set up by `npx emerald-mcp init`, a subcommand of the server's bin: it names or creates the document (with the development pack, as text inside the repository and as bytes outside it), writes CLAUDE.md a section between its own markers holding the start-here table and the column lines from the document, and writes the plugin's two hooks into `.claude/settings.json` only where no Emerald plugin is enabled, never over a hook it did not write; every file is compared before it is written, so a second run changes nothing | [below](#d-523) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
@@ -1339,6 +1340,42 @@ a saved view of the same name: *Save this view* is where a replace is offered, w
 
 **Consequences.** `ColumnFilter` takes `offered`, `order` and `onSort`. A chart's name is a rollup's,
 so it reads `done_by_month` on its block and its tab. No schema change.
+
+## D-526 · 2026-10-22 · A chart is listed in the rail under its format, beside the saved views, with a chart glyph: its name opens its tab, and it is renamed and deleted where it stands, Delete asking once; its tab deletes it too; deleting a rollup deletes its dashboard blocks and renaming one takes them along, in `adoptFormat`, so `extend_format remove` and `rename` (which now takes a rollup's name) do the same; a block's *Remove* still leaves the chart and says where to delete it; amends D-521 <a id="d-526"></a>
+
+**Context.** M53 F3, from the 0.2.0 review. The maintainer made a chart *x* with F2's *New chart*
+and found nowhere to delete it: *"i added "x" to decision view and i see nowhere to delete"*. A chart
+is a rollup in its format's declaration; the rail listed saved views only, a block's *Remove* leaves
+the rollup, and only `extend_format remove` took one away. Ruled (the maintainer, 2026-10-22): list a
+format's charts in the rail beside its saved views, deletable there too.
+
+**Decision.**
+
+- **The rail lists each rollup a format declares** under it, after its saved views, open or not, in the
+  saved view's row with a chart glyph in place of the filter. Its name opens the format on its tab; the
+  pencil renames it in place (typed words folded as *New chart* folds them, *Done by month* is
+  `done_by_month`) and the bin asks once, where it stands. A refusal — a name a column has, a pack's
+  own rollup — is said under the row and nothing is written.
+- **Its tab deletes it too**: *Delete chart* beside its sentence, asked once; the format then opens on
+  its table.
+- **A dashboard's chart follows its rollup, in `adoptFormat`**: a rollup the declaration no longer has
+  takes its blocks away, as a deleted saved view's go (D-521), and one renamed — `renames` carries a
+  rollup's new name to its old one, as it does a column's, and a name is never both — takes them along.
+  A rename that would land beside a block already called that is refused on screen; one that cannot
+  follow anyway leaves the block saying its rollup is gone.
+- **A block's *Remove* still leaves the chart**, and its note now says where it is deleted: *under the
+  format in the rail, or on its tab*.
+
+**Parity.** No new write: the screen adopts the format with the rollup renamed or gone, as
+`extend_format rename` and `remove` do. `rename` took only columns until now and says *no column or
+rollup called…* when it finds neither; both answers say what happens to a dashboard's chart.
+
+**Alternatives rejected.** Deleting the rollup with its last block: a chart on a format's tab is not
+only a block. Following the blocks in each surface: a conversation's `remove` would have left them
+saying their rollup is gone, which is what the review found on the other side.
+
+**Consequences.** `ActionGlyph` has `chart`. A rollup row is never lit: which rollup the format's tab
+shows is the tab's, not the address's. A pack's rollup is listed, and refuses to go.
 
 ## Related
 

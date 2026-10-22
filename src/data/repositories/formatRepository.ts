@@ -312,7 +312,7 @@ export function adoptFormat(
    */
   vouched: ReadonlySet<string> = new Set(),
 ): ReconcilePlan {
-  const before = renames.size === 0 ? undefined : readFormat(db, declaration.name)
+  const before = readFormat(db, declaration.name)
   const plan = planFor(db, declaration, renames, vouched)
   if (plan.refusals.length > 0) return plan
 
@@ -320,11 +320,41 @@ export function adoptFormat(
     dropDerivedViews(db)
     apply(db, plan)
     saveFormat(db, declaration, now)
-    if (before !== undefined) followRenames(db, before, plan)
+    if (before !== undefined && renames.size > 0) followRenames(db, before, plan)
+    if (before !== undefined) followRollups(db, before, declaration, renames)
     buildDerivedViews(db)
     keepChangeMarks(db)
   })
   return plan
+}
+
+/**
+ * **What knew a rollup by its name** (M53 F3): a dashboard's chart blocks. A
+ * rollup renamed — `renames` holds rollups as well as columns, new name to old,
+ * and a name is never both (`declarationProblems`) — takes its blocks with it;
+ * one the declaration no longer has takes them away, as a deleted saved view's
+ * go (M53 U7). A block that cannot follow (its new name is a block there
+ * already) stays, and says on the dashboard that its rollup is gone.
+ */
+function followRollups(
+  db: Database,
+  before: FormatDeclaration,
+  after: FormatDeclaration,
+  renames: ReadonlyMap<string, string>,
+): void {
+  const now = new Set((after.rollups ?? []).map((each) => each.name))
+  for (const was of before.rollups ?? []) {
+    if (now.has(was.name)) continue
+    const to = [...renames].find(([next, from]) => from === was.name && now.has(next))?.[0]
+    if (to !== undefined) {
+      db.run(
+        "UPDATE OR IGNORE format_dashboard_block SET name = ? WHERE kind = 'rollup' AND format_name = ? AND name = ?",
+        [to, before.name, was.name],
+      )
+    } else {
+      db.run("DELETE FROM format_dashboard_block WHERE kind = 'rollup' AND format_name = ? AND name = ?", [before.name, was.name])
+    }
+  }
 }
 
 /**

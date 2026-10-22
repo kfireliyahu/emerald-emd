@@ -462,7 +462,10 @@ function Block({
           <p className="mt-1 max-w-[300px] border-t border-hairline px-3 pt-2 pb-1 text-[11px] text-ink-tertiary">
             {block.kind === 'total'
               ? 'A headline total lives only on this dashboard, so it goes with the block.'
-              : `The ${block.kind === 'saved' ? 'saved view' : 'rollup'} itself stays.`}
+              : block.kind === 'saved'
+                ? 'The saved view itself stays.'
+                : // M53 F3: and where it is deleted, since it stays.
+                  `The chart itself stays — delete it under ${declaration?.title ?? block.format} in the rail, or on its tab.`}
           </p>
         </div>
       )}

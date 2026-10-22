@@ -339,6 +339,16 @@ const CAPABILITIES: readonly Capability[] = [
     tool: 'arrange_views',
   },
   {
+    // M53 F3: the rail renames and deletes a chart — a format's rollup — where
+    // it is listed, and its tab deletes it too; the conversation's
+    // `extend_format` `rename` and `remove`. `adoptFormat` takes its dashboard
+    // blocks along.
+    does: 'Rename a format’s rollup, or delete it.',
+    writes: ['adoptFormat'],
+    screen: 'ui/RailFolder.tsx',
+    tool: 'extend_format',
+  },
+  {
     // M53 U7 (D-521): the dashboard's Add a block, drag, Move earlier and
     // later and Remove from this dashboard; the conversation's `view:
     // dashboard` on `arrange_views`, with `add`, `order` and `remove`.

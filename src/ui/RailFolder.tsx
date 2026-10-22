@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import type { Database } from 'sql.js'
 
+import type { Result } from '@/core/result.ts'
 import { listFormats } from '@/data/repositories/formatRepository.ts'
 import { countRows } from '@/data/repositories/formatRowRepository.ts'
 import type { FormatDeclaration } from '@/domain/format/declaration.ts'
@@ -13,6 +14,7 @@ import type { SavedView } from '@/domain/format/view.ts'
 import { filterAddress, sameAddress } from '@/ui/formats/addressFilter.ts'
 import { useSavedViews } from '@/ui/formats/savedView.ts'
 import { FOLDER_SIZE, folderOf } from '@/ui/formats/folder.ts'
+import { changeRollup, rollupDeleted, rollupRenamed, type RollupChange } from '@/ui/formats/rollupInPlace.ts'
 import { toneOf } from '@/ui/formats/tone.ts'
 import { entryPath, formatPath, NEW_ENTRY, savedViewPath, type NavChild } from '@/ui/nav.ts'
 import { folderIsOpen, toggleFolder, useOpenFolders } from '@/ui/railFolders.ts'
@@ -30,7 +32,8 @@ import { folderIsOpen, toggleFolder, useOpenFolders } from '@/ui/railFolders.ts'
  *
  * **Its saved views are listed under it, open or not** (M53 U5, D-520): each
  * opens its address, is lit while the address is it, and is renamed or
- * deleted where it stands.
+ * deleted where it stands. **Its charts beside them** (M53 F3): each rollup
+ * the format declares, opening its tab, renamed and deleted the same way.
  */
 
 /** The document's declarations, read once per change for every folder in the rail. */
@@ -146,6 +149,9 @@ export function RailFolder({
           indent={indent}
         />
       ))}
+      {(declaration?.rollups ?? []).map((rollup) => (
+        <RollupRow key={`rollup ${rollup.name}`} format={name} name={rollup.name} indent={indent} />
+      ))}
 
       {open && folder !== undefined && (
         <>
@@ -222,23 +228,99 @@ export function RailFolder({
 
 /**
  * **One saved view in the rail** (M53 U5): its name opens its address; the
- * pencil renames it in place — Enter writes, Escape lets it go — and the bin
- * asks once, where it stands, before it deletes. A refusal (a name already
- * taken) is said under the field and nothing is written.
+ * pencil renames it in place and the bin deletes it, both where it stands.
  */
 function SavedRow({ view, here, indent }: { view: SavedView; here: boolean; indent: number }) {
   const mutate = useDocumentStore((state) => state.mutate)
+  return (
+    <RailRow
+      name={view.name}
+      to={savedViewPath(view.format, view.kind, view.address)}
+      glyph="filter"
+      title={`${view.name} — a saved ${view.kind}`}
+      here={here}
+      indent={indent}
+      onRename={(to) => mutate((db) => renameSavedView(db, view.format, view.name, to.trim()))}
+      onDelete={() => mutate((db) => deleteSavedView(db, view.format, view.name))}
+    />
+  )
+}
+
+/**
+ * **One chart in the rail** (M53 F3): a rollup of the format, beside its saved
+ * views. Its name opens its tab on the format; renaming it and deleting it
+ * change the format's declaration, as `extend_format rename` and `remove` do,
+ * and a dashboard's chart of it follows the rename or goes with it.
+ */
+function RollupRow({ format, name, indent }: { format: string; name: string; indent: number }) {
+  const mutate = useDocumentStore((state) => state.mutate)
+  const change = (judge: (db: Database) => Result<RollupChange | undefined, string>): void =>
+    mutate((db) => {
+      const judged = judge(db)
+      if (!judged.ok) throw new Error(judged.error)
+      if (judged.value !== undefined) changeRollup(db, judged.value)
+    })
+  return (
+    <RailRow
+      name={name}
+      to={formatPath(format)}
+      state={{ rollup: name }}
+      glyph="chart"
+      title={`${name} — a chart`}
+      here={false}
+      indent={indent}
+      onRename={(to) => change((db) => rollupRenamed(db, listFormats(db), format, name, to))}
+      onDelete={() => change((db) => rollupDeleted(db, listFormats(db), format, name))}
+    />
+  )
+}
+
+/**
+ * **A named row under a format in the rail** — a saved view or a chart: its
+ * name opens it; the pencil renames it in place — Enter writes, Escape lets it
+ * go — and the bin asks once, where it stands, before it deletes. A refusal (a
+ * name already taken, a pack's own) is said under it and nothing is written.
+ */
+function RailRow({
+  name,
+  to,
+  state,
+  glyph,
+  title,
+  here,
+  indent,
+  onRename,
+  onDelete,
+}: {
+  name: string
+  to: string
+  state?: unknown
+  glyph: 'filter' | 'chart'
+  title: string
+  here: boolean
+  indent: number
+  /** Writes the new name, or throws the refusal. */
+  onRename: (to: string) => void
+  /** Deletes it, or throws the refusal. */
+  onDelete: () => void
+}) {
   const [renaming, setRenaming] = useState<string | undefined>(undefined)
   const [deleting, setDeleting] = useState(false)
   const [refusal, setRefusal] = useState<string | undefined>(undefined)
   const left = { paddingLeft: 46 + indent }
   const quiet =
     'text-ink-tertiary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent'
+  const said =
+    refusal === undefined ? null : (
+      <div className="pb-1 text-[11px] text-negative" role="alert">
+        {refusal}
+      </div>
+    )
 
   if (renaming !== undefined) {
     const rename = (): void => {
       try {
-        mutate((db) => renameSavedView(db, view.format, view.name, renaming.trim()))
+        onRename(renaming)
       } catch (error) {
         setRefusal(error instanceof Error ? error.message : String(error))
         return
@@ -252,7 +334,7 @@ function SavedRow({ view, here, indent }: { view: SavedView; here: boolean; inde
           autoFocus
           value={renaming}
           maxLength={60}
-          aria-label={`Rename ${view.name}`}
+          aria-label={`Rename ${name}`}
           onChange={(event) => {
             setRenaming(event.target.value)
             setRefusal(undefined)
@@ -272,31 +354,43 @@ function SavedRow({ view, here, indent }: { view: SavedView; here: boolean; inde
           }}
           className="h-6 w-full min-w-0 border-0 border-b border-accent bg-transparent p-0 text-[12.5px] text-ink outline-none"
         />
-        {refusal !== undefined && (
-          <div className="pb-1 text-[11px] text-negative" role="alert">
-            {refusal}
-          </div>
-        )}
+        {said}
       </div>
     )
   }
 
   if (deleting) {
     return (
-      <div className="flex h-6 items-center gap-2 pr-2.5 text-[12px] text-ink-secondary" style={left}>
-        <span className="min-w-0 truncate">
-          Delete <Bidi>{view.name}</Bidi>?
-        </span>
-        <button
-          type="button"
-          className="text-negative hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
-          onClick={() => mutate((db) => deleteSavedView(db, view.format, view.name))}
-        >
-          Delete
-        </button>
-        <button type="button" className={quiet} onClick={() => setDeleting(false)}>
-          Keep
-        </button>
+      <div className="pr-2.5" style={left}>
+        <div className="flex h-6 items-center gap-2 text-[12px] text-ink-secondary">
+          <span className="min-w-0 truncate">
+            Delete <Bidi>{name}</Bidi>?
+          </span>
+          <button
+            type="button"
+            className="text-negative hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+            onClick={() => {
+              try {
+                onDelete()
+              } catch (error) {
+                setRefusal(error instanceof Error ? error.message : String(error))
+              }
+            }}
+          >
+            Delete
+          </button>
+          <button
+            type="button"
+            className={quiet}
+            onClick={() => {
+              setDeleting(false)
+              setRefusal(undefined)
+            }}
+          >
+            Keep
+          </button>
+        </div>
+        {said}
       </div>
     )
   }
@@ -310,30 +404,31 @@ function SavedRow({ view, here, indent }: { view: SavedView; here: boolean; inde
       }`}
     >
       <Link
-        to={savedViewPath(view.format, view.kind, view.address)}
+        to={to}
+        state={state}
         aria-current={here ? 'page' : undefined}
-        title={`${view.name} — a saved ${view.kind}`}
+        title={title}
         className="flex h-6 min-w-0 flex-1 items-center gap-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
         style={left}
       >
         <span className="flex-none text-ink-tertiary">
-          <ActionGlyph name="filter" size={11} />
+          <ActionGlyph name={glyph} size={11} />
         </span>
-        <Bidi className="min-w-0 truncate">{view.name}</Bidi>
+        <Bidi className="min-w-0 truncate">{name}</Bidi>
       </Link>
       <span className="flex flex-none items-center gap-0.5 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100">
         <button
           type="button"
-          aria-label={`Rename ${view.name}`}
+          aria-label={`Rename ${name}`}
           title="Rename"
           className={`inline-flex h-5 w-5 items-center justify-center ${quiet}`}
-          onClick={() => setRenaming(view.name)}
+          onClick={() => setRenaming(name)}
         >
           <ActionGlyph name="edit" size={11} />
         </button>
         <button
           type="button"
-          aria-label={`Delete ${view.name}`}
+          aria-label={`Delete ${name}`}
           title="Delete"
           className={`inline-flex h-5 w-5 items-center justify-center ${quiet}`}
           onClick={() => setDeleting(true)}

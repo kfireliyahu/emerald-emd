@@ -23,7 +23,7 @@ import { dashboardBlocks, deleteSavedView, renameSavedView, setDashboardBlocks }
 import { openEncoded } from '@/data/storage/encoding.ts'
 import { headline } from '@/ui/formats/dashboard.ts'
 
-import { declareFormatTool, formatsTool, recordFormatRowsTool } from './formats.ts'
+import { declareFormatTool, extendFormatTool, formatsTool, recordFormatRowsTool } from './formats.ts'
 import { showFormatTool } from './sheet.ts'
 import { storeDocumentAsTool } from './storeAs.ts'
 import { NO_CLIENT } from './tool.ts'
@@ -251,5 +251,44 @@ describe('dashboards (M53 U7)', () => {
     expect(dashboardBlocks(db, undefined)).toEqual([])
     expect(dashboardBlocks(db, 'task')).toEqual([])
     db.close()
+  })
+
+  it('keeps a chart its block was removed from, renames its blocks with it and deletes them with it (M53 F3)', async () => {
+    const path = await document()
+    await arrangeViewsTool.run(
+      {
+        path,
+        settings: [
+          { format: 'task', view: 'dashboard', add: [{ rollup: 'done_by_month' }, { saved: 'Due today' }] },
+          { view: 'dashboard', add: [{ format: 'task', rollup: 'done_by_month' }] },
+        ],
+        commit: true,
+      },
+      NO_CLIENT,
+    )
+    // A block's Remove leaves the rollup where it is.
+    await arrangeViewsTool.run({ path, settings: [{ format: 'task', view: 'dashboard', remove: ['done_by_month'] }], commit: true }, NO_CLIENT)
+    expect((await blocksIn(path, 'task')).map((each) => each.name)).toEqual(['Due today'])
+    expect((await blocksIn(path, undefined)).map((each) => each.name)).toEqual(['done_by_month'])
+    const listed = async (): Promise<readonly string[]> => {
+      const { db } = await openEncoded(readFileSync(path))
+      const rollups = (listFormats(db).find((each) => each.name === 'task')?.rollups ?? []).map((each) => each.name)
+      db.close()
+      return rollups
+    }
+    expect(await listed()).toEqual(['done_by_month'])
+
+    // `extend_format rename` takes a rollup, and its chart follows.
+    const renamed = await extendFormatTool.run({ path, format: 'task', rename: { done_by_month: 'finished_monthly' }, commit: true }, NO_CLIENT)
+    expect(renamed).toContain('The rollup `done_by_month` becomes `finished_monthly`')
+    expect(await listed()).toEqual(['finished_monthly'])
+    expect((await blocksIn(path, undefined)).map((each) => each.name)).toEqual(['finished_monthly'])
+
+    // `extend_format remove` deletes it, and its chart with it.
+    const removed = await extendFormatTool.run({ path, format: 'task', remove: ['finished_monthly'], commit: true }, NO_CLIENT)
+    expect(removed).toContain('A dashboard’s chart of `finished_monthly` goes with it.')
+    expect(await listed()).toEqual([])
+    expect(await blocksIn(path, undefined)).toEqual([])
+    expect((await blocksIn(path, 'task')).map((each) => each.name)).toEqual(['Due today'])
   })
 })

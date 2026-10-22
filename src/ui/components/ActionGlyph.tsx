@@ -37,6 +37,7 @@ export type ActionGlyphName =
   | 'guide'
   | 'close'
   | 'equals'
+  | 'chart'
 
 const PATHS: Readonly<Record<ActionGlyphName, React.ReactNode>> = {
   add: <path d="M8 3v10M3 8h10" />,
@@ -114,6 +115,8 @@ const PATHS: Readonly<Record<ActionGlyphName, React.ReactNode>> = {
   close: <path d="M4 4l8 8M12 4l-8 8" />,
   // What has to add up (M29 U1): the sign an identity is written around.
   equals: <path d="M3 6h10M3 10h10" />,
+  // A chart in the rail (M53 F3): three bars on a baseline.
+  chart: <path d="M2.5 13.5h11M4.5 13.5V9M8 13.5V4.5M11.5 13.5V7" />,
 }
 
 export function ActionGlyph({ name, size = 16 }: { readonly name: ActionGlyphName; readonly size?: number }) {

@@ -3806,9 +3806,15 @@ function alteredOf(
   const wrong: Wrong[] = []
   const had = before.columns.map((column) => column.name)
   const renamed = new Map([...alter.renames].map(([to, from]) => [from, to]))
+  // A rollup is renamed by the same `rename` (M53 F3): a name is never both a
+  // column and a rollup, and `adoptFormat` takes its dashboard blocks along.
+  const rollupNames = (before.rollups ?? []).map((each) => each.name)
   for (const from of renamed.keys()) {
-    if (!had.includes(from)) {
-      wrong.push({ column: from, message: `${before.name} has no column called ${from} to rename. It has ${had.join(', ')}.` })
+    if (!had.includes(from) && !rollupNames.includes(from)) {
+      wrong.push({
+        column: from,
+        message: `${before.name} has no column or rollup called ${from} to rename. It has ${[...had, ...rollupNames].join(', ')}.`,
+      })
     }
   }
   let columns = before.columns.map((column) => ({ ...column, name: renamed.get(column.name) ?? column.name }))
@@ -3848,7 +3854,10 @@ function alteredOf(
   let identities = before.identities
   let aggregates = before.aggregates
   let derived = before.derived
-  let rollups = before.rollups
+  let rollups = before.rollups?.map((each) => {
+    const to = renamed.get(each.name)
+    return to === undefined ? each : { ...each, name: to }
+  })
   let ruleSets = before.ruleSets
   const removed: string[] = []
   for (const name of alter.removals) {
@@ -4216,9 +4225,19 @@ function describeExtension(plan: ExtendPlan, done: boolean): string {
       ? ''
       : table(['Column', 'Type', 'Unit', 'Constraint', 'Values', 'Bounds', 'What it means'], changed.map(columnRow)),
     stepsText(plan),
+    // A rollup renamed (M53 F3): no step of the table's, and its charts follow.
+    [...plan.renames]
+      .filter(([, from]) => (before.rollups ?? []).some((each) => each.name === from))
+      .map(([to, from]) => `The rollup \`${from}\` becomes \`${to}\`, and a dashboard’s chart of it follows.`)
+      .join('\n'),
     plan.removed.length === 0
       ? ''
       : `${plan.removed.map((each) => `\`${each}\``).join(', ')} ${verb(plan.removed.length, 'goes', 'go')} from the declaration.`,
+    // A rollup's charts go with it (M53 F3), as a deleted saved view's blocks do.
+    plan.removed
+      .filter((each) => (before.rollups ?? []).some((rollup) => rollup.name === each))
+      .map((each) => `A dashboard’s chart of \`${each}\` goes with it.`)
+      .join('\n'),
     columns.length === 0
       ? ''
       : table(
@@ -4363,7 +4382,7 @@ export const extendFormatTool: PluginTool = {
       Array.isArray(rename) ||
       Object.values(rename).some((each) => typeof each !== 'string' || each.trim() === '')
     ) {
-      throw new ToolInputError('`rename` maps each old column name to its new one: `{ "price": "cost" }`.')
+      throw new ToolInputError('`rename` maps each old column or rollup name to its new one: `{ "price": "cost" }`.')
     }
     if (!Array.isArray(change) || !Array.isArray(remove) || remove.some((each) => typeof each !== 'string')) {
       throw new ToolInputError('`change` is a list of column objects and `remove` a list of names.')

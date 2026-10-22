@@ -10,6 +10,9 @@ import { Bidi } from '@/ui/Bidi.tsx'
 import { Chart } from '@/ui/charts/Chart.tsx'
 import { drawnValue, type ChartKind } from '@/ui/charts/chart.ts'
 import { rollupChart } from '@/ui/formats/rollupChart.ts'
+import { useDocumentStore } from '@/state/documentStore.ts'
+import { listFormats } from '@/data/repositories/formatRepository.ts'
+import { changeRollup, rollupDeleted } from '@/ui/formats/rollupInPlace.ts'
 import { today } from '@/ui/today.ts'
 
 /**
@@ -25,6 +28,9 @@ import { today } from '@/ui/today.ts'
  * one series per linked row when the rollup groups by a link, drawn by the
  * general chart. The table stays whole beneath it: every figure the chart draws
  * is a cell there, and what it cannot draw is said under it.
+ *
+ * **Deleted on its own tab** (M53 F3), as in the rail: asked once, and a
+ * dashboard's chart of it goes with it. The format then opens on its table.
  */
 export function RollupView({
   db,
@@ -64,10 +70,13 @@ export function RollupView({
 
   return (
     <div className="fc-view-enter min-h-0 flex-1 overflow-auto">
-      <p className="px-6 py-2 text-caption text-ink-secondary">
-        <code>{rollupText(result.rollup)}</code>
-        {result.rollup.note === '' ? '' : ` — ${result.rollup.note}`}
-      </p>
+      <div className="flex items-baseline gap-3 px-6 py-2 text-caption text-ink-secondary">
+        <p className="m-0 min-w-0 flex-1">
+          <code>{rollupText(result.rollup)}</code>
+          {result.rollup.note === '' ? '' : ` — ${result.rollup.note}`}
+        </p>
+        <DeleteChart format={declaration.name} name={result.rollup.name} />
+      </div>
       {chart !== undefined &&
         chart.series.some((each) => each.points.some((one) => drawnValue(one, chart.axis) !== undefined)) && (
         <section className="px-6 pt-2 pb-4" aria-label={`${result.rollup.name} as a chart`}>
@@ -156,5 +165,62 @@ export function RollupView({
         </table>
       )}
     </div>
+  )
+}
+
+/** *Delete chart*, asking once where it stands; a refusal (a pack's own rollup) is said beside it. */
+function DeleteChart({ format, name }: { format: string; name: string }) {
+  const mutate = useDocumentStore((state) => state.mutate)
+  const [asking, setAsking] = useState(false)
+  const [refusal, setRefusal] = useState<string | undefined>(undefined)
+  const quiet = 'text-ink-tertiary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent'
+  if (!asking) {
+    return (
+      <button type="button" className={`flex-none ${quiet}`} onClick={() => setAsking(true)}>
+        Delete chart
+      </button>
+    )
+  }
+  return (
+    <span className="flex flex-none items-baseline gap-2" role="group" aria-label={`Delete ${name}`}>
+      {refusal === undefined ? (
+        <span>
+          Delete <Bidi>{name}</Bidi> and its charts on dashboards?
+        </span>
+      ) : (
+        <span className="text-negative" role="alert">
+          {refusal}
+        </span>
+      )}
+      {refusal === undefined && (
+        <button
+          type="button"
+          className="text-negative hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+          onClick={() => {
+            try {
+              mutate((db) => {
+                const judged = rollupDeleted(db, listFormats(db), format, name)
+                if (!judged.ok) throw new Error(judged.error)
+                changeRollup(db, judged.value)
+              })
+            } catch (error) {
+              setRefusal(error instanceof Error ? error.message : String(error))
+            }
+          }}
+        >
+          Delete
+        </button>
+      )}
+      <button
+        type="button"
+        className={quiet}
+        onClick={() => {
+          setAsking(false)
+          setRefusal(undefined)
+        }}
+      >
+        Keep
+      </button>
+    </span>
   )
 }
