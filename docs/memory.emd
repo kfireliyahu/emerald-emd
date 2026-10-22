@@ -5357,7 +5357,8 @@ from: F:/projects/emerald/docs/memory.emd
 sent_on: 2026-10-22
 body: "M52 F1 is built at 91a05dd on claude/quizzical-cerf-24d153: merge the branch, then land this.\n\n```json\n{\"unit\": \"M52 F1\", \"files\": \"scripts/archive-decisions.mjs, src/archiveDecisions.test.ts, docs/09-decision-log.md (preamble line on what the script does)\", \"commit\": \"91a05dd\", \"branch\": \"claude/quizzical-cerf-24d153\", \"decisions\": [], \"review_entries\": []}\n```"
 refs: M52 F1
-state: new
+state: applied
+became_unit: M52 F1
 
 <!-- emerald: milestone.format.md -->
 ---
@@ -12976,9 +12977,12 @@ paths: "src/data/packs/packs.ts\nsrc/plugin/tools/packs.ts\nsrc/ui/screens/Packs
 milestone: M52
 scope: practice
 title: archive-decisions names the milestone on every archived index row, and rewrites only Markdown links
-state: planned
+landed: 2026-10-22
+state: built
 brief: Seen when scripts/archive-decisions.mjs archived M42's nine entries on 2026-10-22 (9e0ad68 has the hand-corrected result). (1) Only D-494's index row became `| M42 |`: the script took the label from the link's text, so every `[below](#d-NNN)` stayed `below` and docs:check failed on eight rows. (2) Its bare-path rewrite ran over every tracked .mjs/.ts/.json file and turned the example `09-decision-log.md#d-307` in a docs-check.mjs comment into `D-307`. Fix: the index label is the decision row's milestone; the rewrite touches only Markdown links in tracked .md files. Done-test: a test runs the script with --root on a fixture checkout and shows every archived row ending in its milestone and no file outside docs/ changed; docs:check green.
-files: scripts/archive-decisions.mjs, src/archiveDecisions.test.ts
+files: scripts/archive-decisions.mjs, src/archiveDecisions.test.ts, docs/09-decision-log.md (preamble line on what the script does)
+branch: claude/quizzical-cerf-24d153
+commit: 91a05dd
 
 ### M53 U1
 milestone: M53
