@@ -21,6 +21,9 @@ refs: header
 sent_on: header
 subject: line #1
 
+### inbox list
+state: done applied
+
 ### inbox start
 about: line
 from: line
@@ -31,6 +34,9 @@ subject: line
 goal: markdown
 ref: header
 title: line #1
+
+### milestone list
+state: done closed
 
 ### milestone roadmap
 goal: line
@@ -49,12 +55,18 @@ state: lanes
 question: line #1
 ref: header
 
+### open_question list
+state: done answered
+
 ### open_question start
 question: line
 state: is open
 
 ### review_entry entry
 do: line #1
+
+### review_entry list
+state: done accepted
 
 ### review_entry start
 state: is open
@@ -75,6 +87,9 @@ paths: mono
 ref: header
 scope: header
 title: line #1
+
+### unit list
+state: done built
 
 ### unit ready
 blocks: waits

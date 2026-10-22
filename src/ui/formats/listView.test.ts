@@ -22,6 +22,7 @@ import {
   listOf,
   readListSetting,
   tickValue,
+  tickWords,
   writeListSetting,
 } from '@/domain/format/view.ts'
 import { declareFormatTool, formatsTool, recordFormatRowsTool } from '@/plugin/tools/formats.ts'
@@ -57,14 +58,45 @@ describe('a list’s words (M53 U4)', () => {
     expect(writeListSetting({ group: false, line: false })).toBeUndefined()
   })
 
-  it('defaults to the state’s last member as the tick, and tags, project, due as the line', () => {
+  it('draws no tick where nobody said what done is — enums or not (M53 F1, D-524) — and tags, project, due as the line', () => {
     const shape = listOf(TASK, new Map())
     expect(shape.name?.name).toBe('title')
     expect(shape.group).toBeUndefined()
-    expect(shape.done).toMatchObject({ members: ['done'], chosen: false })
-    expect(shape.done?.column.name).toBe('state')
+    expect(shape.done).toBeUndefined()
     expect(shape.lines.map((each) => each.name)).toEqual(['tags', 'project', 'due'])
     expect(shape.due?.name).toBe('due')
+    expect(listOf([{ name: 'title', type: 'text' }, { name: 'flag', type: 'boolean' }], new Map()).done).toBeUndefined()
+    // Said, it ticks that column — and the line leaves it off.
+    const said = listOf(TASK, new Map([['state', 'done done']]))
+    expect(said.done).toMatchObject({ members: ['done'] })
+    expect(said.done?.column.name).toBe('state')
+  })
+
+  it('ticks a finding’s state to done, never its kind, and the undo puts back the state it held', () => {
+    const finding = [
+      { name: 'title', type: 'text' },
+      { name: 'kind', type: 'enum', values: ['dead', 'duplicated', 'retired', 'bad'] },
+      { name: 'state', type: 'enum', values: ['open', 'done', 'kept'] },
+    ] as const
+    expect(listOf(finding, new Map()).done).toBeUndefined()
+    const done = listOf(finding, new Map([['state', 'done done']])).done
+    if (done === undefined) throw new Error('no tick')
+    expect(done.column.name).toBe('state')
+    expect(tickValue(done, true)).toBe('done')
+    expect(tickValue(done, false, 'kept')).toBe('kept')
+    expect(tickWords(done, 'kept')).toEqual({ header: 'Ticking marks state done', mark: 'Mark done', undo: 'Undo: back to kept' })
+  })
+
+  it('says what a tick sets, on the header and the circle, and what an untick puts back', () => {
+    const done = listOf(TASK, new Map([['state', 'done done']])).done
+    if (done === undefined) throw new Error('no tick')
+    expect(tickWords(done)).toEqual({ header: 'Ticking marks state done', mark: 'Mark done', undo: 'Undo: back to inbox' })
+    expect(tickWords(done, 'waiting').undo).toBe('Undo: back to waiting')
+    expect(tickWords({ column: { name: 'is_paid', type: 'boolean' }, members: ['true'] })).toEqual({
+      header: 'Ticking marks is paid yes',
+      mark: 'Mark is paid yes',
+      undo: 'Undo: back to is paid no',
+    })
   })
 
   it('leaves the column it is grouped by off the line, and a word its column cannot hold out', () => {
@@ -90,7 +122,7 @@ describe('a list’s groups and dues (M53 U4)', () => {
     (row as Record<string, string | undefined>)[column.name]
 
   it('groups by the state with done last, and by a date in buckets', () => {
-    const byState = listGroups(listOf(TASK, new Map([['state', 'group']])), rows, valueOf, TODAY)
+    const byState = listGroups(listOf(TASK, new Map([['state', 'group done done']])), rows, valueOf, TODAY)
     expect(byState.map((each) => each.name)).toEqual(['inbox', 'next', 'doing', 'waiting', 'done'])
     expect(byState.at(-1)).toMatchObject({ ticked: true, implies: { state: 'done' } })
     const byDue = listGroups(listOf(TASK, new Map([['due', 'group']])), rows, valueOf, TODAY)
@@ -137,7 +169,7 @@ describe('a list’s groups and dues (M53 U4)', () => {
   })
 
   it('ticks to the first done member, and an untick goes back to what it held', () => {
-    const done = listOf(TASK, new Map()).done
+    const done = listOf(TASK, new Map([['state', 'done done']])).done
     if (done === undefined) throw new Error('no tick')
     expect(tickValue(done, true)).toBe('done')
     expect(tickValue(done, false, 'waiting')).toBe('waiting')
@@ -180,7 +212,20 @@ describe('the task list, in the app and in a conversation (M53 U4, D-519)', () =
       { path, settings: [{ format: 'task', view: 'list', column: 'project', setting: 'group' }], commit: true },
       NO_CLIENT,
     )
-    expect(set).toContain('task’s list is grouped by `project`, ticked when `state` is done')
+    // Nobody said what done is yet: no tick, here or in the conversation (D-524).
+    expect(set).toContain('task’s list is grouped by `project`, with no tick')
+    const plain = await read(path)
+    const untouched = listFormats(plain).find((each) => each.name === 'task')
+    if (untouched === undefined) throw new Error('no task')
+    const lines = listPicture(plain, untouched, listFormats(plain), {}, viewSettings(plain, 'task', 'list'), TODAY)
+    expect(lines.shape.done).toBeUndefined()
+    expect(lines.groups.flatMap((each) => each.rows).some((line) => line.ticked)).toBe(false)
+    plain.close()
+    const ticks = await arrangeViewsTool.run(
+      { path, settings: [{ format: 'task', view: 'list', column: 'state', setting: 'done done' }], commit: true },
+      NO_CLIENT,
+    )
+    expect(ticks).toContain('task’s list is grouped by `project`, ticked when `state` is done')
     const db = await read(path)
     const declarations = listFormats(db)
     const task = declarations.find((each) => each.name === 'task')

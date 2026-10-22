@@ -313,7 +313,8 @@ const CAPABILITIES: readonly Capability[] = [
     tool: 'arrange_views',
   },
   {
-    // M53 U4 (D-519): the list's *Group by*, *Ticked when* and *Line*; the
+    // M53 U4 (D-519): the list's *Group by*, its tick (M53 F1, D-524: *Tick to
+    // mark…* and *No ticks*) and *Line*; the
     // tick itself is `updateRow` and a row added in place `insertRows`, above.
     does: 'Choose what a format’s list groups by, what ticks a row, and what its lines show.',
     writes: ['setListSetting'],

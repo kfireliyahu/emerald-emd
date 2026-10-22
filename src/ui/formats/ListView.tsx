@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 
 import type { ColumnDeclaration, FormatDeclaration } from '@/domain/format/declaration.ts'
-import { listGroupable, tickValue, type ListGroup, type ListSetting, type ListShape } from '@/domain/format/view.ts'
+import { listGroupable, tickValue, tickWords, type ListGroup, type ListSetting, type ListShape } from '@/domain/format/view.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { useDismiss } from '@/ui/components/useDismiss.ts'
@@ -28,10 +28,15 @@ import { toneOf } from '@/ui/formats/tone.ts'
  * A tick is the screen's `updateRow`, judged as `update_format_rows` judges it
  * (the caller's `onTick`), and a row added in place is `record_format_rows`'s
  * batch (`onAdd`).
+ *
+ * **A tick only where somebody said what done is** (M53 F1, D-524): with no
+ * `done` set the list is plain lines, no circle; with one, the circle says
+ * what it sets (*Mark done*, *Undo: back to open*), and a tick stays in place
+ * a moment with an *Undo* that puts back the member the row held.
  */
 
-/** How long a ticked row stays in place, struck, before it sinks into *N done*. */
-const SINK_MS = 1100
+/** How long a ticked row stays in place, struck and with its *Undo*, before it sinks into *N done*. */
+const SINK_MS = 4000
 
 // ---------------------------------------------------------------- kept for the session
 
@@ -99,9 +104,10 @@ export function ListLines(props: ListLinesProps) {
   useEffect(() => () => timers.current.forEach((each) => window.clearTimeout(each)), [])
 
   const done = shape.done
+  const memoryOf = (line: ListLine): string => `${format}\u0000${line.key}`
   const tick = (line: ListLine): void => {
     if (done === undefined || locked) return
-    const memory = `${format}\u0000${line.key}`
+    const memory = memoryOf(line)
     const ticking = !line.ticked
     if (ticking && line.value !== undefined) before.set(memory, line.value)
     const value = tickValue(done, ticking, ticking ? undefined : before.get(memory))
@@ -134,12 +140,16 @@ export function ListLines(props: ListLinesProps) {
 
   const row = (line: ListLine): ReactNode => {
     const struck = line.ticked || sinking.has(line.key)
+    const said = done === undefined ? undefined : tickWords(done, before.get(memoryOf(line)))
     const common = {
       line,
       struck,
       fresh: fresh !== undefined && line.title === fresh,
       done: done !== undefined,
       locked,
+      words: said,
+      // Ticked a moment ago and still in place: the undo, as the untick is.
+      undoable: !locked && line.ticked && sinking.has(line.key),
       onTick: () => tick(line),
       onOpen: () => props.onOpen(line),
     }
@@ -233,13 +243,33 @@ interface RowProps {
   readonly fresh: boolean
   readonly done: boolean
   readonly locked: boolean
+  /** What a tick sets and an untick puts back, said on the circle — or nothing, with no tick. */
+  readonly words: { readonly mark: string; readonly undo: string } | undefined
+  /** Ticked a moment ago: the *Undo* beside it. */
+  readonly undoable: boolean
   readonly onTick: () => void
   readonly onOpen: () => void
 }
 
+/** The *Undo* a tick leaves in place for a moment: the untick, said as what it puts back. */
+function Undo({ line, words, undoable, onTick }: RowProps) {
+  if (!undoable || words === undefined) return null
+  return (
+    <button
+      type="button"
+      onClick={onTick}
+      aria-label={`${words.undo}: ${line.title}`}
+      title={words.undo}
+      className="fc-pop-enter flex-none px-1 text-[12px] text-accent underline-offset-[3px] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+    >
+      Undo
+    </button>
+  )
+}
+
 /** The tick: a 16px square, filled ink when ticked. */
-function Tick({ line, struck, done, locked, onTick, className = '' }: RowProps & { readonly className?: string }) {
-  if (!done) return null
+function Tick({ line, struck, done, locked, words, onTick, className = '' }: RowProps & { readonly className?: string }) {
+  if (!done || words === undefined) return null
   const look = `inline-flex size-4 flex-none items-center justify-center border-[1.5px] ${
     struck ? 'border-ink bg-ink text-background' : 'border-ink-secondary'
   } ${className}`
@@ -255,8 +285,8 @@ function Tick({ line, struck, done, locked, onTick, className = '' }: RowProps &
       type="button"
       role="checkbox"
       aria-checked={struck}
-      aria-label={`${struck ? 'Done' : 'Mark done'}: ${line.title}`}
-      title={struck ? 'Untick: back to what it was' : 'Tick: mark it done'}
+      aria-label={`${struck ? words.undo : words.mark}: ${line.title}`}
+      title={struck ? words.undo : words.mark}
       onClick={onTick}
       className={`${look} hover:border-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent`}
     >
@@ -283,6 +313,7 @@ function WideRow(props: RowProps) {
       >
         <Bidi className="min-w-0 truncate">{line.title}</Bidi>
       </button>
+      <Undo {...props} />
       <span className="flex flex-none items-center gap-4 text-[12px] text-ink-secondary">
         {line.cells.map((cell) => (
           <Cell key={cell.column} cell={cell} />
@@ -329,6 +360,7 @@ function NarrowRow(props: RowProps & { readonly current: boolean }) {
           </span>
         )}
       </button>
+      <Undo {...props} />
     </div>
   )
 }
@@ -420,7 +452,10 @@ function QuickAddLine({
 
 /**
  * **The list's settings, in place** (the mockup's (a)): one 32px row of menus
- * above the list — *Group by*, *Ticked when*, *Line* — never a settings screen.
+ * above the list — *Group by*, the tick, *Line* — never a settings screen. The
+ * tick's says what a tick sets (*Ticking marks state done*) or *No ticks*, and
+ * opens *Tick to mark…* — each enum's members and each yes/no — and *No ticks*
+ * (M53 F1, D-524): nothing is ticked until somebody says what done is.
  */
 export function ListSettings({
   shape,
@@ -428,6 +463,7 @@ export function ListSettings({
   locked,
   onGroup,
   onDone,
+  onNoTicks,
   onLine,
 }: {
   shape: ListShape<ColumnDeclaration>
@@ -436,6 +472,8 @@ export function ListSettings({
   locked: boolean
   onGroup: (column: string | undefined) => void
   onDone: (column: string, member: string) => void
+  /** No ticks: the list's `done` cleared. */
+  onNoTicks: () => void
   onLine: (columns: readonly string[]) => void
 }) {
   const groupable = columns.filter(listGroupable)
@@ -448,7 +486,8 @@ export function ListSettings({
         : [],
   )
   const doneText = (column: string, member: string): string =>
-    member === 'true' ? `${column.replace(/_/g, ' ')} is yes` : `${column.replace(/_/g, ' ')} is ${member.replace(/_/g, ' ')}`
+    `${column.replace(/_/g, ' ')} ${member === 'true' ? 'yes' : member.replace(/_/g, ' ')}`
+  const ticking = shape.done === undefined ? 'No ticks' : tickWords(shape.done).header
   const lines = shape.lines.map((column) => column.name)
   return (
     <div className="flex min-h-8 shrink-0 flex-wrap items-center gap-x-[18px] gap-y-1.5 border-b border-hairline px-6 py-1 text-[12px] text-ink-secondary">
@@ -483,28 +522,34 @@ export function ListSettings({
           )}
         </Menu>
       </span>
-      {shape.done !== undefined && (
+      {(doneable.length > 0 || shape.done !== undefined) && !(locked && shape.done === undefined) && (
         <span className="inline-flex items-center gap-1">
-          Ticked when
-          <Menu
-            label="Ticked when"
-            said={shape.done.members.map((member) => doneText(shape.done?.column.name ?? '', member)).join(' or ')}
-            locked={locked || doneable.length < 2}
-          >
-            {(close) =>
-              doneable.map((each) => (
+          <Menu label="Tick to mark…" said={ticking} locked={locked}>
+            {(close) => (
+              <>
+                {doneable.map((each) => (
+                  <MenuItem
+                    key={`${each.column}:${each.member}`}
+                    on={shape.done?.column.name === each.column && shape.done.members[0] === each.member}
+                    onPick={() => {
+                      onDone(each.column, each.member)
+                      close()
+                    }}
+                  >
+                    {doneText(each.column, each.member)}
+                  </MenuItem>
+                ))}
                 <MenuItem
-                  key={`${each.column}:${each.member}`}
-                  on={shape.done?.column.name === each.column && shape.done.members.includes(each.member)}
+                  on={shape.done === undefined}
                   onPick={() => {
-                    onDone(each.column, each.member)
+                    onNoTicks()
                     close()
                   }}
                 >
-                  {doneText(each.column, each.member)}
+                  No ticks
                 </MenuItem>
-              ))
-            }
+              </>
+            )}
           </Menu>
         </span>
       )}
@@ -638,6 +683,10 @@ export function ListPage({
           )
         }
         onDone={(column, member) => onSetting([column], (_name, was) => ({ ...was, done: [member] }))}
+        onNoTicks={() => {
+          const column = shape.done?.column.name
+          if (column !== undefined) onSetting([column], (_name, was) => ({ group: was.group, line: was.line }))
+        }}
         onLine={(chosen) =>
           onSetting(
             names.filter((name) => name !== shape.name?.name),

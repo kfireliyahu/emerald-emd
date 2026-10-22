@@ -439,6 +439,7 @@ written out here.
 | D-520 | 2026-10-22 | A saved view is its own table, `format_saved_view` (063): a format, a name, a kind (table, board, list, roadmap, ready) and the address as the address spells it, so a window around today stays the phrase; *Save this view* on the FilterBand, the rail lists them under their format and renames and deletes in place; `arrange_views view:saved` saves, renames and deletes, and `show_format` and `format_rows` take `view:"<name>"`; an entry's back link names the view it was opened from | [below](#d-520) |
 | D-521 | 2026-10-22 | A dashboard is an ordered set of blocks in its own table, `format_dashboard_block` (064): a saved view drawn compact in its kind, a rollup's chart, or a headline total (a count, or the sum of a number or money column, under a filter kept as the address spells it), and nothing else; one per format, the last tab of its strip, and one for the document, the rail's *Dashboard* — first and `#/` without a ledger, right under Home with one; arranged in place (Add a block, drag, Move earlier and later, Remove from this dashboard), a block's title opening it in full with `← Dashboard` back; `arrange_views view:dashboard` adds, orders and removes, `show_format view:dashboard` draws it | [below](#d-521) |
 | D-522 | 2026-10-22 | A spreadsheet keyed by a unique column is matched against every row of its format, whichever file or person wrote it: next month's export, renamed, changes the rows last month's wrote and adds what is new, and the dry run and the Read screen say both counts and name the changed cells; only a file's own rows can be gone from it; a row moves to the reading that last wrote it; a read fills only the columns it maps; a format with no unique column the reading fills says so in one sentence and matches on nothing else; amends D-408 | [below](#d-522) |
+| D-524 | 2026-10-22 | A list ticks only where someone said what done is: no default, so a list with no `done` set is plain lines with no tick column in the List tab, beside an entry and on a dashboard; done is set in place from the list's header (*Tick to mark…*, *No ticks*), by `arrange_views` or by a pack's `views.md`; the header says what a tick sets and each circle says it (*Mark done*, *Undo: back to open*); a tick stays in place a moment with an *Undo* that restores the member it held; the development pack declares done for unit, milestone, open_question, review_entry and inbox, the ledger for none; amends D-519 | [below](#d-524) |
 | D-523 | 2026-10-22 | A repository is set up by `npx emerald-mcp init`, a subcommand of the server's bin: it names or creates the document (with the development pack, as text inside the repository and as bytes outside it), writes CLAUDE.md a section between its own markers holding the start-here table and the column lines from the document, and writes the plugin's two hooks into `.claude/settings.json` only where no Emerald plugin is enabled, never over a hook it did not write; every file is compared before it is written, so a second run changes nothing | [below](#d-523) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
@@ -1265,6 +1266,39 @@ a repository may run its own build's (this one does).
 **Consequences.** `scripts/check-package.mjs` runs `init` from the packed tarball, runs the hook it
 wrote, and checks a second run is byte-identical. `createDocumentFile` takes an encoding. The
 published package has it from 0.2.0. No schema change.
+
+## D-524 · 2026-10-22 · A list ticks only where someone said what done is: no default, so a list with no `done` set is plain lines with no tick column in the List tab, beside an entry and on a dashboard; done is set in place from the list's header (*Tick to mark…*, *No ticks*), by `arrange_views` or by a pack's `views.md`; the header says what a tick sets and each circle says it (*Mark done*, *Undo: back to open*); a tick stays in place a moment with an *Undo* that restores the member it held; the development pack declares done for unit, milestone, open_question, review_entry and inbox, the ledger for none; amends D-519 <a id="d-524"></a>
+
+**Context.** M53 F1, from the 0.2.0 review. On `docs/memory.emd`'s finding list, in the narrow list
+beside an entry, the maintainer ticked two rows by accident and their `kind` moved from dead to bad:
+D-519 guessed what done is (the first enum's last member, else the first boolean), so nearly every
+format's list carried ticks, and nothing on screen said what a tick writes. *"Its just not clear what
+am i ticking and why does everything have a tick? who defines that?"*
+
+**Decision.**
+
+- **No default.** `listOf` gives a `done` only where a column's list setting says `done <members>`;
+  everywhere else the list is plain lines — the List tab, the narrow list beside an entry, a
+  dashboard's list block, `show_format view:list` and `formats`' **List:** line (*with no tick*).
+- **Said in three places**: in place from the list's header — *No ticks* ▾ opens *Tick to mark…*,
+  each enum's members and each yes/no, and *No ticks* to clear it — by `arrange_views view:list`
+  (`done <members>`, `null` clears), or by a pack's `views.md`.
+- **The tick says what it sets** (`tickWords`): the header *Ticking marks state done*, the circle's
+  hover and accessible name *Mark done* on an open row and *Undo: back to open* on a ticked one,
+  naming the member the untick writes.
+- **Undo in place**: a ticked row stays where it was, struck, with an *Undo* beside it for four
+  seconds before it sinks into *N done*; the undo writes back the member the row held.
+- **The packs**: the development pack's `views.md` declares unit `built`, milestone `closed`,
+  open_question `answered`, review_entry `accepted`, inbox `applied`; decision, rule and term get none.
+  The ledger declares none. `finding` is this repository's own format, and its done (`state: done`) is
+  set in `docs/memory.emd` by `arrange_views`.
+
+**Alternatives rejected.** Keeping the guess and only labelling it: a tick nobody chose is still a
+write nobody meant. Guessing only from an enum named `state`: a name is not a declaration, and the
+finding's `state` would be right while a format with `status` ticked nothing or the wrong column.
+
+**Consequences.** `ListShape.done` loses `chosen`. A document's lists made before this draw no tick
+until a done is set; parity is unchanged (`arrange_views` already set and cleared it). No schema change.
 
 ## Related
 

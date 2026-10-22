@@ -425,7 +425,7 @@ export function setAgendaDate(db: Database, format: string, column: string | und
  * `readListSetting` reads it; nothing clears it. `group` and `done` are one
  * column's each, so saying either here takes it off whichever other column
  * held it, and leaves that column's other words. Written by the list's
- * *Group by*, *Ticked when* and *Line*, and by `arrange_views`.
+ * *Group by*, its tick (*Tick to mark…*, *No ticks*) and *Line*, and by `arrange_views`.
  */
 export function setListSetting(db: Database, format: string, column: string, setting: string | undefined): void {
   const next = setting === undefined ? undefined : readListSetting(setting)

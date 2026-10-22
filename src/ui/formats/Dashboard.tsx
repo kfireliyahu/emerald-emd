@@ -34,6 +34,7 @@ import {
   boardOf,
   sameBlock,
   tickValue,
+  tickWords,
   totalNameRefusal,
   type DashboardBlock,
   type SavedView,
@@ -695,8 +696,8 @@ function ListBody({
             type="button"
             role="checkbox"
             aria-checked={each.ticked}
-            aria-label={`${each.ticked ? 'Done' : 'Mark done'}: ${each.title}`}
-            title={each.ticked ? 'Untick: back to what it was' : 'Tick: mark it done'}
+            aria-label={`${each.ticked ? tickWords(done).undo : tickWords(done).mark}: ${each.title}`}
+            title={each.ticked ? tickWords(done).undo : tickWords(done).mark}
             onClick={() => onTick(declaration, each.row, done.column, tickValue(done, !each.ticked, each.ticked ? undefined : each.value))}
             className={`inline-flex size-4 flex-none items-center justify-center border-[1.5px] hover:border-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
               each.ticked ? 'border-ink bg-ink text-background' : 'border-ink-secondary'

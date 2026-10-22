@@ -1561,8 +1561,10 @@ export function meetWindows(
  *   the first list of members, the first link and the first date (*tags,
  *   project, due*), a date always last because it is read right-aligned.
  * - `done <members>` — last, as the agenda's: what ticks a row, an enum's
- *   members or `done true` on a boolean. Nobody choosing gives the first
- *   enum's last member (a task's `done`), else the first boolean.
+ *   members or `done true` on a boolean. **Nobody choosing gives no tick**
+ *   (M53 F1, D-524, amending D-519's guess of the first enum's last member):
+ *   a list ticks only where a person, a conversation or a pack's `views.md`
+ *   said what done is, and is plain lines everywhere else.
  *
  * Ticking writes the first `done` member; unticking the member the row held
  * before, else the first that is not done (`tickValue`). Today is an argument.
@@ -1612,8 +1614,8 @@ export interface ListShape<C> {
   readonly name: C | undefined
   /** The column the groups come from, or nothing for one list. */
   readonly group: C | undefined
-  /** What ticks a row, and whether a setting chose it — or nothing, and there is no tick. */
-  readonly done: { readonly column: C; readonly members: readonly string[]; readonly chosen: boolean } | undefined
+  /** What ticks a row, as a setting said it — or nothing, and there is no tick (D-524). */
+  readonly done: { readonly column: C; readonly members: readonly string[] } | undefined
   /** The line's columns, as chosen or by default — the group's among them. */
   readonly lines: readonly C[]
   /** Whether a setting chose the line rather than the default. */
@@ -1629,19 +1631,12 @@ export function listOf<C extends BoardColumn>(columns: readonly C[], settings: R
   const name = nameColumnOf(columns)
   const read = (column: C): ListSetting | undefined => readListSetting(settings.get(column.name) ?? '')
   const group = columns.find((column) => read(column)?.group === true && listGroupable(column))
-  let done: { column: C; members: readonly string[]; chosen: boolean } | undefined
+  let done: { column: C; members: readonly string[] } | undefined
   for (const column of columns) {
     const members = read(column)?.done
     if (members === undefined || done !== undefined) continue
     const kept = members.filter((member) => isMemberOf(column, member))
-    if (kept.length > 0 && (column.type !== 'boolean' || kept.length === 1)) done = { column, members: kept, chosen: true }
-  }
-  if (done === undefined) {
-    const state = columns.find((column) => column.type === 'enum' && (column.values ?? []).length > 1)
-    const last = state?.values?.[state.values.length - 1]
-    const flag = columns.find((column) => column.type === 'boolean')
-    if (state !== undefined && last !== undefined) done = { column: state, members: [last], chosen: false }
-    else if (flag !== undefined) done = { column: flag, members: ['true'], chosen: false }
+    if (kept.length > 0 && (column.type !== 'boolean' || kept.length === 1)) done = { column, members: kept }
   }
   const chosen = columns.filter((column) => column !== name && read(column)?.line === true)
   const fallback = [
@@ -1683,6 +1678,30 @@ export function tickValue(
   const values = done.column.values ?? []
   if (before !== undefined && values.includes(before) && !done.members.includes(before)) return before
   return values.find((each) => !done.members.includes(each)) ?? values[0] ?? ''
+}
+
+/** A column's member as a person reads it: `in_progress` as *in progress*, a boolean's `true` as *yes*. */
+function memberWords(column: BoardColumn, member: string): string {
+  if (column.type === 'boolean') return member === 'true' ? 'yes' : 'no'
+  return member.replace(/_/g, ' ')
+}
+
+/**
+ * **What a tick says it sets** — M53 F1, D-524: the list's header (*Ticking
+ * marks state done*), and a circle's hover and accessible name — *Mark done*
+ * on an open row, *Undo: back to open* on a ticked one, naming the member an
+ * untick writes (`tickValue`, from what the row held when it is known).
+ */
+export function tickWords(
+  done: { readonly column: BoardColumn; readonly members: readonly string[] },
+  before?: string,
+): { readonly header: string; readonly mark: string; readonly undo: string } {
+  const column = done.column.name.replace(/_/g, ' ')
+  const on = memberWords(done.column, tickValue(done, true))
+  const back = memberWords(done.column, tickValue(done, false, before))
+  return done.column.type === 'boolean'
+    ? { header: `Ticking marks ${column} ${on}`, mark: `Mark ${column} ${on}`, undo: `Undo: back to ${column} ${back}` }
+    : { header: `Ticking marks ${column} ${on}`, mark: `Mark ${on}`, undo: `Undo: back to ${back}` }
 }
 
 /** Where a date falls against today, as the list groups by a date. */
