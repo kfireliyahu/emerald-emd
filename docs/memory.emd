@@ -4402,6 +4402,15 @@ question: Does a second export of the same thing under another name (next month'
 answer: When the format has a unique column the reading fills, it updates them: each line whose value a row holds is that row, written over cell by cell where the file differs; the rest are added. Only rows this file wrote can be gone. Without a unique column the read says so in one sentence and adds every line, with no matching on other columns (D-224).
 state: live
 
+### D-523
+date: 2026-10-22
+milestone: M52
+scope: engine
+title: A repository is set up by `npx emerald-mcp init`: the document, a marked CLAUDE.md section from it, and the hooks only where no Emerald plugin is enabled
+question: How does a repository adopting the development pack get the document, the CLAUDE.md start-here and column table, and the session hooks?
+answer: `npx emerald-mcp init [document.emd]`, a subcommand of the server's bin (not a fourth bin). Document: named, else .claude/emerald.json's, else the one .emd in the folder, else docs/memory.emd; a new one keeps the development pack, text inside the repo and SQLite bytes outside; an existing one is only read; .claude/emerald.json names it. CLAUDE.md gets one section between <!-- emerald-init: ... --> and <!-- /emerald-init --> written from the document (its views' start-here table via startTableOf, and compactDeclarations), replaced in place. The plugin's two hooks go into .claude/settings.json only where no emerald@ plugin is enabled, never over a hook it did not write. Every file is compared before writing, so a second run changes nothing.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -6156,6 +6165,11 @@ state: open
 unit: M51 F1
 should: Either the ready list is drawn (from emerald-ledger) and U7's Start this unit and Ctrl-click can be judged, or the session says in words that nothing was drawn and gives the list. Wrong: a session saying 'drawn above' with nothing on screen.
 state: accepted
+
+### In an empty folder (git init), run node F:/projects/emerald/dist-plugin/server.mjs init, read the CLAUDE.md section and .claude/settings.json it wrote, then run it again
+unit: M50 U1
+should: The section reads as something a session would want first (start-here table, then a line per format with its columns); the second run prints unchanged for every file. Wrong: the section is noisy or misleading, or anything changes on the second run
+state: open
 
 ### In the desktop app, declare a format with a `file` column in a document of your own; Choose… a file under the document's folder, drop one from Explorer, and paste a path; click the name and 'show in folder'.
 unit: M37 U6
@@ -12978,13 +12992,17 @@ started: 2026-10-14
 milestone: M52
 scope: engine
 title: A repo init: the CLAUDE.md column table and the session hooks, written by one command
-state: in_progress
+landed: 2026-10-22
+decision: D-523
+state: built
 brief: Slimmed 2026-10-20, moved from M50: the Claude plugin already carries the SessionStart and UserPromptSubmit hooks, so this is mainly setting a repo up with the development pack, which a team adopting Emerald for its planning needs first (a work session on 2026-10-20 argued its way there by hand). The usage study of 2026-10-13 (17 sessions on three documents) measured `formats` called up to 8 times a session and columns re-learned every session, because those projects' CLAUDE.md had no column table. One command on the npm package (M42 U2), e.g. `npx <package> init [path/to/document.emd]`, run in a repo: (1) names the document, creating it with the development pack when it does not exist (create_document's packs), and says whether it is stored as text (committed, diffs) or kept outside the repo; (2) appends to the repo's CLAUDE.md one marked section (begin/end markers, so re-running regenerates it in place and never touches the rest) holding the three-question table CLAUDE.md carries today (what is ready, what is open, what was decided) and the one-line-per-format column table generated the way start_here's tail is (M47 U2, D-460); (3) only where the plugin is not installed, writes the two hooks into .claude/settings.json, merging into what is there and refusing to overwrite a hook it did not write; (4) prints what it wrote and what a session will now see first. Idempotent: a second run changes nothing; after a format changes, a run regenerates only the marked section. Done-test: on an empty repo, init then a fresh session sees start_here; a second init leaves CLAUDE.md and settings byte-identical; a declared column shows in the regenerated section; the full suite is green.
-files: src/plugin/ (a subcommand of the server's bin), scripts/, README.md, docs/plugin.md
+files: src/plugin/init.ts, src/plugin/init.test.ts, src/plugin/main.ts, src/plugin/write.ts, src/data/packs/development/pack.ts, scripts/check-package.mjs, scripts/npm-package.mjs, README.md, docs/plugin.md, docs/09-decision-log.md
 blocks: ["M42 U2"]
 taken_by: run-milestone driver
 started: 2026-10-22
 branch: main
+commit: 0e9da04
+report: Built `npx emerald-mcp init [path/to/document.emd]`, a subcommand of the server's bin (src/plugin/init.ts, wired in main.ts; no new bin, no package.json change). Run in a repository it (1) takes the named document, else .claude/emerald.json's, else the one .emd in the folder, else docs/memory.emd; creates it with the development pack as text inside the repo (committed, diffs) or SQLite bytes outside; an existing one is only read; writes .claude/emerald.json so hooks find it. (2) Appends/replaces one CLAUDE.md section between <!-- emerald-init: ... --> and <!-- /emerald-init -->: the start_here questions from the document's own views (new startTableOf, shared with the pack's startHereTable) and compactDeclarations' column lines; keeps the file's line endings, refuses an unclosed section. (3) Only where no emerald@ plugin is enabled (CLAUDE_CONFIG_DIR or ~/.claude settings, or the repo's), merges the plugin's two hook commands pinned to PLUGIN_VERSION into .claude/settings.json; re-pins its own, leaves a foreign start-here hook and says so. (4) Prints what it wrote and start_here. Every file is compared before writing, so a second run is byte-identical. createDocumentFile takes an encoding. check-package.mjs step 4: npx -p <tarball> emerald-mcp init in an empty folder, runs the SessionStart hook it wrote (local hooks.mjs) and checks start_here, then a second run changes nothing — green on Node 24. init.test.ts: 8 tests incl. a declared column showing after extend_format. Full suite green (4877), typecheck, docs:check green after landing. docs/plugin.md: new 'A repository set up by one command' section, plus headings breaking the 243-line stretch after 916 and the 180-line one after 219. D-523. Not touched: hosts/claude, versions, pins. Note: the published 0.1.6 has no init (it starts the server); docs say from 0.2.0.
 
 ### M50 U2
 milestone: M50
