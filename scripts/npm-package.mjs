@@ -9,7 +9,8 @@
  * package they reach is bundled into them (`published` in vite.config.ts) — so the manifest
  * names no dependency and an `npx` has nothing to install but the tarball:
  *
- *   emerald-mcp          server.mjs        the MCP server; `--engine-only` for the engine's tools alone
+ *   emerald-mcp          server.mjs        the MCP server; `--engine-only` for the engine's tools alone;
+ *                                          `watch` and `init` (M50 U1) are its subcommands
  *   emerald-hooks        hooks.mjs         what a Claude Code hook prints (start-here, rows, status)
  *   emerald-status-line  status-line.mjs   Claude Code's status line
  *
@@ -111,6 +112,11 @@ come with Emerald:
   to carry.
 - \`emerald-mcp\` — the engine's tools and the ledger's (a personal-finance pack).
 - \`emerald-mcp watch <document.emd> [--format <name>]\` — prints a line for each row that changes.
+- \`emerald-mcp init [path/to/document.emd]\` — run in a repository: creates its document with the
+  development pack (\`docs/memory.emd\` unless named; as text inside the repository, so it diffs),
+  writes a marked section of \`CLAUDE.md\` with the questions a session starts from and every
+  format's columns, and, where the Claude Code plugin is not installed, its two hooks into
+  \`.claude/settings.json\`. A second run changes nothing.
 
 Two more bins are for Claude Code's plugin: \`emerald-hooks\` (what its hooks print) and
 \`emerald-status-line\`. They are reached with \`npx -p emerald-mcp <bin>\`.

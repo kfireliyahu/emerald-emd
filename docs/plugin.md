@@ -246,6 +246,9 @@ every row the view shows and nothing longer, which is what a client that draws n
   Windows showed local servers' views as text only from about 2026-09-22
   (anthropics/claude-ai-mcp#1069 — its bridge drops `_meta.ui`); the issue was still open on
   2026-10-09, and that chat has not been tried here since.
+
+### When a model draws, and what each line is for (M51 F1-F3)
+
 - **When a model draws** is in both instruction blocks, **within their first 2,000 characters**
   (D-482): `show_format` and `start_here` when a person asks to *see*
   something; `format_rows` for rows it will filter, count or reason over. A host may keep only the head
@@ -284,6 +287,9 @@ every row the view shows and nothing longer, which is what a client that draws n
   one plain sentence that it is a list here when a board was asked for. Saying nothing about drawing
   is how F1's protection holds: a model that never mentions a view never claims one that was not
   drawn. Both instruction blocks and `CLAUDE.md` say the same.
+
+### What is drawn, and how the rows reach it (D-432, M41 F2)
+
 - **Every view, read-only, and no control leads nowhere** (D-432):
   the frame routes the app's own format pages at the app's own paths — sheet, entry, board, list (D-519),
   roadmap, ready, and the agenda (D-473) — under `ReadOnly`, and **read-only is where it stays**: edits in the frame (M41
@@ -345,6 +351,9 @@ every row the view shows and nothing longer, which is what a client that draws n
   state, a ready list's ready and held — then the `format_rows` call that has every column. No cut
   at 25 (500 names, then a count). `docs/memory.emd`'s milestone roadmap went from 15,292 bytes,
   cut at 25 of 27 rows, to ~1.1 KB naming all 27. `start_here`'s text is its own and unchanged.
+
+### The host's look, and trying it without a host (M41 F1)
+
 - **The frame wears the host's look and keeps Emerald's meaning** (M41 F1,
   D-445). A host hands it `hostContext.theme`, `styles.variables`
   (the spec's standard names) and `styles.css.fonts` at `ui/initialize`, and again — only what
@@ -677,6 +686,44 @@ first, two of them, and the rest counted. Wiring it is a person's choice, one se
 "statusLine": { "type": "command", "command": "node \"<path to>/dist-plugin/status-line.mjs\"" }
 ```
 
+### A repository set up by one command: `init` (M50 U1)
+
+**The study of 2026-10-13** (17 sessions on three documents) measured `formats` called up to eight
+times a session and the columns learned again every session, because those projects' CLAUDE.md said
+nothing about the document, where this repository's has the start-here table and `start_here` ends
+with the columns. `init` writes that for any repository, as a subcommand of the server's bin like
+`watch` (`src/plugin/init.ts`):
+
+```
+npx -y emerald-mcp init [path/to/document.emd]        # run in the repository's folder
+```
+
+1. **The document**: the one named, else the one `.claude/emerald.json` names, else the one `.emd`
+   in the folder, else `docs/memory.emd`. One that is not there is created keeping the development
+   pack — **as text inside the repository**, to be committed and diffed, and as SQLite bytes
+   outside it, reached by its path. One that is there is only read, and said: how it is stored, and
+   `keep_packs` when it lacks the development pack. `.claude/emerald.json` is written to name it —
+   relative inside the repository, absolute outside — which is how a hook finds it.
+2. **A marked section of `CLAUDE.md`**, between `<!-- emerald-init: … -->` and
+   `<!-- /emerald-init -->`: the `start_here` questions from the document's own views, in the
+   table this repository's CLAUDE.md carries (`startTableOf`, beside `startHereTable` in the
+   development pack), and the one-line-per-format column lines `start_here` ends with
+   (`compactDeclarations`, D-460). Added at the end of a CLAUDE.md that has none, written again in
+   place in one that has, in the file's own line endings; nothing outside the markers is touched,
+   and a section opened and never closed is refused.
+3. **The two hooks**, the plugin's own commands pinned to this package's version, merged into
+   `.claude/settings.json` — **only when no `emerald@…` plugin is enabled** in the person's settings
+   (`CLAUDE_CONFIG_DIR`, else `~/.claude`) or the repository's, since the plugin brings the same
+   two. A hook it wrote is re-pinned; a hook it did not write that already prints the same thing
+   (this repository's `node dist-plugin/hooks.mjs start-here`, say) is left as it is and said.
+4. **What it wrote, and what a session there now sees first**: start_here on the document.
+
+**Idempotent by comparison**: every file is compared before it is written, so a second run leaves
+CLAUDE.md, the settings, `.claude/emerald.json` and the document byte-identical, and after a format
+changes only the section is written. `scripts/check-package.mjs` runs it from the packed tarball in
+an empty folder, runs the hook it wrote and checks a second run changes nothing; `init.test.ts` has
+the rest. The published package has it from 0.2.0.
+
 ## Claiming and landing a unit, a call each (M47 U3)
 
 **The closing pass was a write per row** (D-460): 302 of 346 writes
@@ -947,7 +994,9 @@ rather than three decisions.
 > drawn against rows that already exist. The same entry fixed a sentence in `mutatingCall` — a dry
 > run that was going to refuse no longer invites a `commit: true` — which is one fix to every
 > mutating tool that can refuse in advance.
->
+
+### What the rows prove, where they come from and what they point at (M19 U3, U4)
+
 > **U3 gave those rows something to prove** ([D-222](./09-decision-log.md)). `formats` prints what
 > a format claims about one of these; `format_rows` carries a **verdict** with every row it returns —
 > `proved`, `failed`, or `unchecked` when the row has nothing in a column the identity names — and
@@ -980,7 +1029,9 @@ rather than three decisions.
 > into it already on the page. **A row naming an id the other format has not got is refused when it
 > is written** — the `REFERENCES` clause enforces nothing here (D-067), so this is the check that
 > holds, and it names the column and the id.
->
+
+### Joining formats, and the engine owing no tool (M20 U5, M24)
+
 > **The one thing this surface cannot do on its own**: `recipe_line` links to `recipe` and `recipe`
 > folds `recipe_line`, so neither can be declared first by a tool that creates and never alters. A
 > conversation sets up the link and **Connections** adds the aggregate — on the graph, where both
@@ -1056,7 +1107,9 @@ rather than three decisions.
 > `extend_format` — `sum of amount by month of charge_date or transaction_date and category where
 > direction is OUTFLOW`. One `GROUP BY`; money per currency; a month with a row that cannot answer
 > is `unchecked` and names it. The format's page shows the same table.
->
+
+### Derived columns, the list, the agenda and a fourth constraint
+
 > **M29 U3b added derived columns** (D-334): `derived: [{ name,
 > works_out, note }]` on `declare_format` and `extend_format` — `price * (1 + vat)`. `formats` lists
 > each with what it comes out as; `format_rows` prints it marked *(derived)*, or names the empty
@@ -1106,6 +1159,8 @@ rather than three decisions.
 > natural_key`, and `one row per plan when mode is REMAINDER` — unique together, an index rather than
 > triggers. Every row write refuses a repeat naming the row that holds the values, and
 > `extend_format` refuses adding one over rows that already share them, listing which.
+
+### What is missing, intake, and the first call (M19 U6, U7, M27 U5)
 
 > **U6 counted what is missing rather than arguing about it** ([D-234](./09-decision-log.md)).
 > `src/parity.test.ts` derives the engine's capabilities from the writes both halves share and

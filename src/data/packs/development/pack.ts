@@ -38,7 +38,7 @@ import type { Database } from 'sql.js'
 
 import { err, ok, type Result } from '@/core/result.ts'
 import { readFormat as readFormatText, readViews, type ParsedFormat } from '@/domain/format/document.ts'
-import { startQuestions, type ViewSetting } from '@/domain/format/view.ts'
+import { startQuestions, type StartQuestion, type ViewSetting } from '@/domain/format/view.ts'
 import { SEEDED_UNITS } from '@/domain/format/unit.ts'
 import { adoptFormat, readFormat } from '../../repositories/formatRepository.ts'
 import { restoreViewSettings } from '../../repositories/formatViewRepository.ts'
@@ -108,17 +108,24 @@ export function startHereTable(): Result<string, string> {
     settingsOf('ready'),
     settingsOf('start'),
   )
-  return ok(
-    [
-      '| `start_here` answers | The whole list |',
-      '|---|---|',
-      ...questions.map(
-        (each) =>
-          `| ${each.kind === 'ready' ? `**Ready to start** \`${each.format}\`` : `\`${each.format}\``}: ${each.what} | ` +
-          `${each.call === undefined ? 'only `start_here`' : `\`${each.call}\``} |`,
-      ),
-    ].join('\n'),
-  )
+  return ok(startTableOf(questions))
+}
+
+/**
+ * The table itself, for any document's questions: the pack's above, and the
+ * section `emerald-mcp init` writes into a repository's CLAUDE.md from that
+ * document's own views (M50 U1), so the two are one shape.
+ */
+export function startTableOf(questions: readonly StartQuestion[]): string {
+  return [
+    '| `start_here` answers | The whole list |',
+    '|---|---|',
+    ...questions.map(
+      (each) =>
+        `| ${each.kind === 'ready' ? `**Ready to start** \`${each.format}\`` : `\`${each.format}\``}: ${each.what} | ` +
+        `${each.call === undefined ? 'only `start_here`' : `\`${each.call}\``} |`,
+    ),
+  ].join('\n')
 }
 
 function parseAll(): Result<readonly ParsedFormat[], string> {

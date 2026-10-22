@@ -56,6 +56,17 @@ Free software, AGPL-3.0. Desktop only, no server, no account. [getemerald.dev](h
   starts with it.
 - Emerald is built with it: [docs/memory.emd](./docs/memory.emd) is this project's memory, and every
   session on this repository starts by asking it.
+- Setting a repository up is one command, run in its folder (from 0.2.0):
+
+  ```bash
+  npx -y emerald-mcp init [path/to/document.emd]
+  ```
+
+  It creates the document with the development pack (`docs/memory.emd` unless you name one;
+  stored as text inside the repository, so it is committed and diffs), writes a marked section of
+  `CLAUDE.md` with the questions a session starts from and the columns of every format, and — where
+  the Claude Code plugin is not installed — the two hooks that print `start_here` and the inbox
+  into a session. A second run changes nothing; after a format changes, it rewrites only its section.
 
 ## Installing it
 

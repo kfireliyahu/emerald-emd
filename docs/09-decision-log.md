@@ -439,6 +439,7 @@ written out here.
 | D-520 | 2026-10-22 | A saved view is its own table, `format_saved_view` (063): a format, a name, a kind (table, board, list, roadmap, ready) and the address as the address spells it, so a window around today stays the phrase; *Save this view* on the FilterBand, the rail lists them under their format and renames and deletes in place; `arrange_views view:saved` saves, renames and deletes, and `show_format` and `format_rows` take `view:"<name>"`; an entry's back link names the view it was opened from | [below](#d-520) |
 | D-521 | 2026-10-22 | A dashboard is an ordered set of blocks in its own table, `format_dashboard_block` (064): a saved view drawn compact in its kind, a rollup's chart, or a headline total (a count, or the sum of a number or money column, under a filter kept as the address spells it), and nothing else; one per format, the last tab of its strip, and one for the document, the rail's *Dashboard* — first and `#/` without a ledger, right under Home with one; arranged in place (Add a block, drag, Move earlier and later, Remove from this dashboard), a block's title opening it in full with `← Dashboard` back; `arrange_views view:dashboard` adds, orders and removes, `show_format view:dashboard` draws it | [below](#d-521) |
 | D-522 | 2026-10-22 | A spreadsheet keyed by a unique column is matched against every row of its format, whichever file or person wrote it: next month's export, renamed, changes the rows last month's wrote and adds what is new, and the dry run and the Read screen say both counts and name the changed cells; only a file's own rows can be gone from it; a row moves to the reading that last wrote it; a read fills only the columns it maps; a format with no unique column the reading fills says so in one sentence and matches on nothing else; amends D-408 | [below](#d-522) |
+| D-523 | 2026-10-22 | A repository is set up by `npx emerald-mcp init`, a subcommand of the server's bin: it names or creates the document (with the development pack, as text inside the repository and as bytes outside it), writes CLAUDE.md a section between its own markers holding the start-here table and the column lines from the document, and writes the plugin's two hooks into `.claude/settings.json` only where no Emerald plugin is enabled, never over a hook it did not write; every file is compared before it is written, so a second run changes nothing | [below](#d-523) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1228,6 +1229,42 @@ every file that read it: superseding the oldest would take back a row the latest
 **Consequences.** A notes folder (keyed by file name) and a read with a header row are unchanged. A
 renamed copy of an export read before is no longer offered as a supersede when its format is keyed —
 it changes nothing instead. No schema change.
+
+## D-523 · 2026-10-22 · A repository is set up by `npx emerald-mcp init`, a subcommand of the server's bin: it names or creates the document (with the development pack, as text inside the repository and as bytes outside it), writes CLAUDE.md a section between its own markers holding the start-here table and the column lines from the document, and writes the plugin's two hooks into `.claude/settings.json` only where no Emerald plugin is enabled, never over a hook it did not write; every file is compared before it is written, so a second run changes nothing <a id="d-523"></a>
+
+**Context.** M50 U1, slimmed when the Claude plugin took the hooks. The usage study of 2026-10-13
+(17 sessions on three documents) measured `formats` called up to eight times a session and the
+columns learned again every session, because those projects' CLAUDE.md said nothing about their
+document. This repository's CLAUDE.md has the start-here table and `start_here` ends with the columns
+(D-460); a team adopting the development pack had to argue its way to the same by hand.
+
+**Decision.**
+
+- **A subcommand of `emerald-mcp`, not a fourth bin** (as `watch`, D-441): `npx emerald-mcp init
+  [document.emd]` is the package's own name, so it needs no `-p`, and a bin is a thing to build and ship.
+- **The document**: the one named, else `.claude/emerald.json`'s, else the one `.emd` in the folder,
+  else `docs/memory.emd`. A new one keeps the development pack and is **text inside the repository**
+  (committed, diffs, in every worktree) and **SQLite bytes outside it** (one file, reached by its path).
+  An existing one is only read. `.claude/emerald.json` names it, since a hook finds a document there.
+- **CLAUDE.md gets one section between `<!-- emerald-init: … -->` and `<!-- /emerald-init -->`**,
+  written from the document — its own views' start-here questions (`startTableOf`, the table
+  `startHereTable` writes for this repository) and `compactDeclarations` — so a declared column is in
+  the next run's section. Appended when absent, replaced in place when present, in the file's line
+  endings; an unclosed section is refused rather than guessed at.
+- **The hooks only where no `emerald@…` plugin is enabled** (the person's settings or the
+  repository's), the plugin's own two commands pinned to this package. A hook it wrote is re-pinned; a
+  hook that prints the same and that it did not write is left and said.
+- **Idempotent by comparison**: nothing is written that would come out the same.
+
+**Alternatives rejected.** A fourth bin (`emerald-init`): one more file for one command a person runs
+once. Writing the section from the development pack rather than the document: a repository's own
+formats and views would never reach it, and the done-test is a declared column showing. Always writing
+the hooks: with the plugin they would print start_here twice. Overwriting hooks that mention Emerald:
+a repository may run its own build's (this one does).
+
+**Consequences.** `scripts/check-package.mjs` runs `init` from the packed tarball, runs the hook it
+wrote, and checks a second run is byte-identical. `createDocumentFile` takes an encoding. The
+published package has it from 0.2.0. No schema change.
 
 ## Related
 

@@ -26,7 +26,6 @@ import { err, ok, type Result } from '@/core/result.ts'
 import {
   SCHEMA_VERSION,
   createDatabase,
-  exportDatabase,
   inTransaction,
 } from '@/data/db/database.ts'
 import { keepPack, type PackDescription } from '@/data/packs/packs.ts'
@@ -88,6 +87,11 @@ export async function createDocumentFile(
   path: string,
   /** The packs it starts with, in the order they are kept (M38 U7, D-405). */
   packs: readonly PackDescription[],
+  /**
+   * How the new file is stored (D-246): SQLite bytes unless asked. `emerald-mcp init` asks for
+   * text when the document goes inside the repository, so it is committed and diffs (M50 U1).
+   */
+  encoding: DocumentEncoding = 'sqlite',
 ): Promise<Result<number, DocumentProblem>> {
   const db = await createDatabase()
   // Each pack is kept before the first byte is written, as the Packs screen
@@ -99,8 +103,10 @@ export async function createDocumentFile(
       return err({ code: 'UNREADABLE', message: `Could not create ${path}: ${kept.error}` })
     }
   }
-  const bytes = exportDatabase(db)
+  const encoded = await exportEncoded(db, encoding)
   db.close()
+  if (!encoded.ok) return err({ code: 'UNREADABLE', message: `Could not create ${path}: ${encoded.error}` })
+  const bytes = encoded.value
 
   try {
     const handle = await open(path, 'wx')

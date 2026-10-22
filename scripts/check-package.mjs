@@ -15,6 +15,8 @@
  *    rows …` with an empty npm cache, which installs the package and checks its `engines` on the way.
  *    On a Node below the range npm prints `npm warn EBADENGINE` before every hook (seen on a cloud
  *    host's Node 22, 2026-10-20); that warning fails the check.
+ * 4. **`init` in an empty repository** (M50 U1) — `npx -y -p <tarball> emerald-mcp init`, then the
+ *    SessionStart hook it wrote printing start_here, then a second run that changes no file.
  *
  * It imports only Node's own modules and runs on the oldest Node it checks. It writes nothing in
  * the repository: the document, the tarball and the npm cache go in a temporary folder.
@@ -172,6 +174,31 @@ try {
   )
   check(viaNpx.code === 0 && viaNpx.stdout.includes(SUBJECT), 'npx -p <tarball> emerald-hooks rows', viaNpx.stderr || viaNpx.stdout)
   check(!/EBADENGINE/.test(viaNpx.stderr), 'npm prints no EBADENGINE warning', viaNpx.stderr)
+
+  // 4. `npx emerald-mcp init` in an empty repository (M50 U1), from the tarball, with a Claude config
+  // folder that enables no plugin: the hook it writes then prints start_here, and a second run
+  // leaves every file it wrote byte-identical.
+  const repo = join(work, 'repo')
+  mkdirSync(repo)
+  mkdirSync(join(work, 'config'))
+  const initEnv = { ...process.env, npm_config_update_notifier: 'false', CLAUDE_CONFIG_DIR: join(work, 'config') }
+  const initFiles = ['CLAUDE.md', '.claude/settings.json', '.claude/emerald.json', 'docs/memory.emd']
+  const initRun = run(node, [npmCli('npx'), '-y', '--cache', join(work, 'npm-cache'), '-p', tarball, 'emerald-mcp', 'init'], { cwd: repo, env: initEnv })
+  check(
+    initRun.code === 0 && initFiles.every((file) => existsSync(join(repo, file))) && initRun.stdout.includes('start_here on docs/memory.emd'),
+    'npx -p <tarball> emerald-mcp init',
+    initRun.stderr || initRun.stdout,
+  )
+  const written = JSON.parse(readFileSync(join(repo, '.claude', 'settings.json'), 'utf8'))
+  const hook = written.hooks?.SessionStart?.[0]?.hooks?.[0]?.command ?? ''
+  check(/emerald-hooks start-here "\$CLAUDE_PROJECT_DIR"$/.test(hook), 'init writes the SessionStart hook', hook)
+  // The hook as written, run from this folder's hooks.mjs rather than the registry's pinned copy.
+  const hooked = run(node, [join(folder, 'hooks.mjs'), 'start-here', repo])
+  check(hooked.code === 0 && hooked.stdout.includes('Ready to start'), 'the hook init wrote prints start_here', hooked.stderr || hooked.stdout)
+  const before = initFiles.map((file) => readFileSync(join(repo, file), 'utf8'))
+  const again = run(node, [join(folder, 'server.mjs'), 'init'], { cwd: repo, env: initEnv })
+  const same = initFiles.every((file, at) => readFileSync(join(repo, file), 'utf8') === before[at])
+  check(again.code === 0 && same, 'a second init changes nothing', again.stderr || again.stdout)
 } finally {
   rmSync(work, { recursive: true, force: true })
 }
