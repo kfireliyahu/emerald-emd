@@ -4411,6 +4411,15 @@ question: How does a repository adopting the development pack get the document, 
 answer: `npx emerald-mcp init [document.emd]`, a subcommand of the server's bin (not a fourth bin). Document: named, else .claude/emerald.json's, else the one .emd in the folder, else docs/memory.emd; a new one keeps the development pack, text inside the repo and SQLite bytes outside; an existing one is only read; .claude/emerald.json names it. CLAUDE.md gets one section between <!-- emerald-init: ... --> and <!-- /emerald-init --> written from the document (its views' start-here table via startTableOf, and compactDeclarations), replaced in place. The plugin's two hooks go into .claude/settings.json only where no emerald@ plugin is enabled, never over a hook it did not write. Every file is compared before writing, so a second run changes nothing.
 state: live
 
+### D-524
+date: 2026-10-22
+milestone: M53
+scope: app
+title: A list ticks only where someone said what done is, and the tick says what it sets; amends D-519
+question: Which rows of a list get a tick, who decides what a tick writes, and how does a person see and undo it?
+answer: No default: listOf gives a done only where a column's list setting says `done <members>`; otherwise the list is plain lines with no tick column (List tab, narrow list beside an entry, dashboard list block, show_format, formats' List: line). Done is set in place from the list header (No ticks / Ticking marks <column> <member> opens 'Tick to mark…' with each enum member and yes/no, and 'No ticks'), by arrange_views view:list, or by a pack's views.md. The header says 'Ticking marks state done'; each circle's hover and accessible name says 'Mark done' / 'Undo: back to <member>' (tickWords). A ticked row stays in place 4 s with an Undo that writes back the member it held. The development pack declares unit built, milestone closed, open_question answered, review_entry accepted, inbox applied; decision, rule and term none; the ledger none. finding (this repo's own format) is set to state done in memory.emd.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -13279,10 +13288,16 @@ commit: 91a05dd
 milestone: M53
 scope: app
 title: A list ticks only where someone said what done is, and the tick says what it sets
-decision: D-519
-state: planned
+landed: 2026-10-22
+decision: D-524
+state: built
 brief: Found in the 0.2.0 review (2026-10-22). On memory.emd's finding list, in the narrow list beside an entry, the maintainer ticked two rows by accident and their KIND changed from dead to bad. D-519's default guesses done = the first enum's last member, else the first boolean. So nearly every format's list carries ticks, and nothing on screen says what a tick writes. Maintainer: 'its just not clear what am i ticking and why does everything have a tick? who defines that?' Ruled: a tick only where someone said what done is, labelled with what it sets; no guessing. Write a decision row that amends D-519. (1) No default at all: a list shows ticks only when its view names the done column and member(s). That comes from the person, set in place from the list (a small control in the list's header, e.g. 'Tick to mark… <column> <member>', and 'No ticks'), from a conversation (arrange_views view:list, which already sets done), or from a pack's views.md. Without it the list is plain lines with no tick column, in the List tab and in the narrow list beside an entry alike. Drop the guess from view.ts and its tests. (2) The tick says what it sets: the header names it ('Ticking marks state done'), and each circle's hover and accessible name says it ('Mark done' / 'Undo: back to open'). (3) Undo: a tick shows a short undo in place, restoring the member it held, beyond the in-session untick. (4) The development pack's views.md declares done for its own formats: unit built, milestone closed, finding done, open_question answered, review_entry accepted, inbox applied. decision, rule and term get none. The ledger pack declares NONE (maintainer, 2026-10-22). Parity is unchanged: arrange_views already sets and clears done; show_format and formats' **List:** line show no tick and no done where none is set. Anything not decided here (beyond wording and the undo's timing) is the maintainer's: stop and ask (rule: Maintainer's decisions before briefs). Tests: a format with enums but no done set draws no ticks; finding's list ticks state to done; undo restores; the header names what is set. Done-test: on memory.emd, findings tick state (never kind), decisions show no ticks, and a person sets done on a task format from the list's header in place.
-files: src/domain/format/view.ts (list settings, done default), src/ui/formats/ (the list view), src/data/packs/development/views.md
+files: "src/domain/format/view.ts (listOf: no done default, tickWords)\nsrc/ui/formats/ListView.tsx (header tick control, labelled circles, Undo in place)\nsrc/ui/formats/Dashboard.tsx (tick labels only)\nsrc/data/packs/development/views.md, past.ts (done for unit, milestone, open_question, review_entry, inbox)\nsrc/data/repositories/formatViewRepository.ts (comment)\nsrc/ui/formats/listView.test.ts, src/parity.test.ts\ndocs/09-decision-log.md (D-524), docs/plugin.md\ndocs/memory.emd (list done set for unit, milestone, inbox, open_question, review_entry, finding)"
+taken_by: run-milestone driver
+started: 2026-10-22
+branch: main
+commit: daf2c99
+report: M53 F1 built at daf2c99. listOf no longer guesses done (D-519's first-enum-last-member / first-boolean fallback is gone, and ListShape.done lost `chosen`); a list with no `done <members>` is plain lines everywhere it draws — List tab, the narrow list beside an entry, a dashboard list block, show_format and formats' List: line ('with no tick'). The list header's tick control replaces 'Ticked when': it says 'No ticks' or 'Ticking marks state done' and opens 'Tick to mark…' (each enum member and each yes/no, then 'No ticks', which clears done off its column). New tickWords(done, before) in view.ts names what the circle sets: 'Mark done' / 'Undo: back to open' (from the member the row held when known, else tickValue's fallback), used by the list and the dashboard's list block. A tick stays in place, struck, for 4 s (SINK_MS was 1100) with an 'Undo' button that writes back the held member. views.md declares done for unit (built), milestone (closed), open_question (answered), review_entry (accepted), inbox (applied); past.ts lists them. memory.emd: the same set by arrange_views, plus finding state done (finding is not a pack format). Tests: listView.test (no tick without done, incl. boolean; finding ticks state not kind; undo restores the held member; header/circle words; arrange_views says 'with no tick' then 'ticked when'); related suite 2239 green, typecheck green. Browser (dev server, a copy of memory.emd opened in memory): finding list header 'Ticking marks state done', circles 'Mark done'; decision list and its entry's narrow list have no ticks; set 'state superseded' from the header in place, ticked a row, Undo put it back to live; No ticks cleared it. Not done: no browser check of a dashboard list block (same shape, no own logic).
 
 ### M53 F2
 milestone: M53
@@ -13434,12 +13449,18 @@ title: line #1
 date: latest 5
 title: line
 
+### finding list
+state: done done
+
 ### inbox entry
 body: markdown
 from: header
 refs: header
 sent_on: header
 subject: line #1
+
+### inbox list
+state: done applied
 
 ### inbox start
 about: line
@@ -13451,6 +13472,9 @@ subject: line
 goal: markdown
 ref: header
 title: line #1
+
+### milestone list
+state: done closed
 
 ### milestone roadmap
 goal: line
@@ -13469,12 +13493,18 @@ state: lanes
 question: line #1
 ref: header
 
+### open_question list
+state: done answered
+
 ### open_question start
 question: line
 state: is open
 
 ### review_entry entry
 do: line #1
+
+### review_entry list
+state: done accepted
 
 ### review_entry start
 state: is open
@@ -13521,6 +13551,9 @@ paths: mono
 ref: header
 scope: header
 title: line #1
+
+### unit list
+state: done built
 
 ### unit ready
 blocks: waits
