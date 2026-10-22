@@ -12981,9 +12981,12 @@ files: README.md (a compatibility table), src/demo/page/copy/en.ts (the MCP sect
 milestone: M52
 scope: engine
 title: An export read twice updates its rows by their unique key instead of duplicating them
-state: planned
+state: in_progress
 brief: Today read_onto_format and the app's readers only ever create rows, so dropping the same export again (next month's task-board JSON, a re-exported sheet, a calendar file) duplicates every row that was already there. The strategy session of 2026-10-15 named this the thing that makes 'bring what you have, every month' true: adoption without a migration. When the target format has a `unique` column (M24 U4, D-255) and the mapping fills it, a read row whose key already exists becomes an update of that row, cell by cell, and the dry run says it in two counts, new and changed, naming the changed cells; a row whose key is absent is new as today. Without a unique column the reading says so in one line and offers nothing more: no matching on other columns, no fuzzy merge (a sum that guessed a row is not a truer one, D-224's honesty). A computed or claimed figure re-evaluates as it does on any update. Both halves (D-227 parity): the tool and the screen's confirm surface show new against changed before the commit. Done-test: the same csv read twice yields the same row count; one changed cell in the second file updates that cell and nothing else; the dry run and the confirm surface name new and changed; a format without a unique column reads as today and says why it cannot repeat; the full suite is green.
 files: src/domain/format/ (the reading's plan), src/plugin/tools/intake.ts and rows.ts (read_onto_format), src/ui/screens/ReadFiles.tsx and the confirm surface, docs/mapping-templates.md
+taken_by: run-milestone driver
+started: 2026-10-22
+branch: main
 
 ### M50 U4
 milestone: Later
