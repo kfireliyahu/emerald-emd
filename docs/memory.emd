@@ -12978,10 +12978,13 @@ started: 2026-10-14
 milestone: M52
 scope: engine
 title: A repo init: the CLAUDE.md column table and the session hooks, written by one command
-state: planned
+state: in_progress
 brief: Slimmed 2026-10-20, moved from M50: the Claude plugin already carries the SessionStart and UserPromptSubmit hooks, so this is mainly setting a repo up with the development pack, which a team adopting Emerald for its planning needs first (a work session on 2026-10-20 argued its way there by hand). The usage study of 2026-10-13 (17 sessions on three documents) measured `formats` called up to 8 times a session and columns re-learned every session, because those projects' CLAUDE.md had no column table. One command on the npm package (M42 U2), e.g. `npx <package> init [path/to/document.emd]`, run in a repo: (1) names the document, creating it with the development pack when it does not exist (create_document's packs), and says whether it is stored as text (committed, diffs) or kept outside the repo; (2) appends to the repo's CLAUDE.md one marked section (begin/end markers, so re-running regenerates it in place and never touches the rest) holding the three-question table CLAUDE.md carries today (what is ready, what is open, what was decided) and the one-line-per-format column table generated the way start_here's tail is (M47 U2, D-460); (3) only where the plugin is not installed, writes the two hooks into .claude/settings.json, merging into what is there and refusing to overwrite a hook it did not write; (4) prints what it wrote and what a session will now see first. Idempotent: a second run changes nothing; after a format changes, a run regenerates only the marked section. Done-test: on an empty repo, init then a fresh session sees start_here; a second init leaves CLAUDE.md and settings byte-identical; a declared column shows in the regenerated section; the full suite is green.
 files: src/plugin/ (a subcommand of the server's bin), scripts/, README.md, docs/plugin.md
 blocks: ["M42 U2"]
+taken_by: run-milestone driver
+started: 2026-10-22
+branch: main
 
 ### M50 U2
 milestone: M50
