@@ -44,9 +44,9 @@ export const UI_EXTENSION = 'io.modelcontextprotocol/ui'
  * `start_here`'s picture: the roadmaps the ready rows fold under, then what is
  * ready. An entry is not opened from a tool; it is a row clicked in any of them.
  */
-export type FrameView = 'sheet' | 'board' | 'roadmap' | 'ready' | 'start' | 'agenda'
+export type FrameView = 'sheet' | 'board' | 'list' | 'roadmap' | 'ready' | 'start' | 'agenda'
 
-export const FRAME_VIEWS: readonly FrameView[] = ['sheet', 'board', 'roadmap', 'ready', 'start', 'agenda']
+export const FRAME_VIEWS: readonly FrameView[] = ['sheet', 'board', 'list', 'roadmap', 'ready', 'start', 'agenda']
 
 /**
  * What travels under `SHEET_META`: which document and which view (M41 F2).

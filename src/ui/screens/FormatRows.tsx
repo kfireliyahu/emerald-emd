@@ -42,6 +42,7 @@ import {
   entryInputs,
   entryPlaces,
   setBoardLanes,
+  setListSetting,
   viewSettings,
   setColumnWidth,
   setEntryAsked,
@@ -102,9 +103,23 @@ import { cellText, EntryView, type LinkChoice } from '@/ui/formats/EntryView.tsx
 import { RollupView } from '@/ui/formats/RollupView.tsx'
 import { RowSheet, type FootRefusal, type Order } from '@/ui/formats/RowSheet.tsx'
 import { derivedOf } from '@/data/repositories/formatDerivedRepository.ts'
-import { boardPath, entryPath, formatPath, NEW_ENTRY, readPath, readyPath, roadmapPath, tablePath } from '@/ui/nav.ts'
+import { boardPath, entryPath, formatPath, listPath, NEW_ENTRY, readPath, readyPath, roadmapPath, tablePath } from '@/ui/nav.ts'
 import { BoardView } from '@/ui/formats/BoardView.tsx'
-import { boardOf, entryDefaults, entryNeeds, entryOrder, oneUnitOf, readsAsMarkdown, readyOf, roadmapOf } from '@/domain/format/view.ts'
+import {
+  boardOf,
+  entryDefaults,
+  entryNeeds,
+  entryOrder,
+  oneUnitOf,
+  readListSetting,
+  readsAsMarkdown,
+  readyOf,
+  roadmapOf,
+  writeListSetting,
+  type ListGroup,
+} from '@/domain/format/view.ts'
+import { ListPage } from '@/ui/formats/ListView.tsx'
+import { groupKeyOf, listOrder, listPicture, quickAdd, type ListLine, type ListPicture } from '@/ui/formats/listView.ts'
 import { entryLinked, entryLinks } from '@/data/repositories/formatLinkViewRepository.ts'
 import { figureOf, isPercentFigure } from '@/ui/formats/EntryValue.tsx'
 import { linkedRowOf, type LinkedRow } from '@/ui/formats/LinkViews.tsx'
@@ -114,11 +129,6 @@ import { today } from '@/ui/today.ts'
 import type { RowQuery } from '@/data/repositories/formatRowRepository.ts'
 import type { Database } from 'sql.js'
 
-/** The View menu's word for the board — not a name a rollup can have. */
-const BOARD_OPTION = ' board'
-/** And the roadmap's (M27 U4), a route of its own like the board. */
-const ROADMAP_OPTION = ' roadmap'
-const READY_OPTION = ' ready'
 import { ReadersLine } from '@/ui/formats/ReadersLine.tsx'
 import { ShapePanel, type ShapeFocus } from '@/ui/formats/ShapePanel.tsx'
 import { inDraftOrder, sheetMark } from '@/ui/formats/shape.ts'
@@ -130,7 +140,7 @@ import { ReadOnly } from '@/ui/formats/readOnly.ts'
 import { ColumnFilter, ColumnMenu, FilterBand, filteredQuery, useAddressFilter } from '@/ui/formats/FilterBand.tsx'
 import { isFiltered, type RowFilter } from '@/data/repositories/formatFilterRepository.ts'
 import { EntryList } from '@/ui/formats/EntryList.tsx'
-import { entryList, heldIds, listColumns, listQuery } from '@/ui/formats/entryList.ts'
+import { heldIds, listColumns, listQuery } from '@/ui/formats/entryList.ts'
 import { filterAddress } from '@/ui/formats/addressFilter.ts'
 import { toggleEntryList, useEntryListHidden } from '@/ui/useEntryList.ts'
 
@@ -200,7 +210,7 @@ import { toggleEntryList, useEntryListHidden } from '@/ui/useEntryList.ts'
  *
  * `accent` marks the actions and colours no figure (D-125).
  */
-export function FormatRows({ board = false }: { readonly board?: boolean } = {}) {
+export function FormatRows({ board = false, list = false }: { readonly board?: boolean; readonly list?: boolean } = {}) {
   const { name, entry } = useParams<{ name: string; entry: string }>()
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
@@ -234,7 +244,8 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
 
   // The format's shape, being changed under the sheet (M26 U3), or nothing.
   const [shaping, setShaping] = useState<Shaping | undefined>(undefined)
-  // What the last card moved on the board was refused with (M27 U3).
+  // What the last card moved on the board was refused with (M27 U3) — or the
+  // last tick, or row added in place, on the list (M53 U4).
   const [moveRefusal, setMoveRefusal] = useState<string | undefined>(undefined)
   // A write the checks passed and the document still refused — said on the
   // page that asked for it, never swallowed (M29 F2, D-343).
@@ -258,7 +269,7 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
     setFoot(EMPTY_FOOT)
     setShaping(undefined)
     setMoveRefusal(undefined)
-  }, [name, board])
+  }, [name, board, list])
 
   /**
    * **A declaration read in for a format this document already has** (M29 U1,
@@ -373,7 +384,12 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
       // The board, when it is the view (M27 U3, D-301): every row up to its
       // own cap rather than the sheet's, since a lane is read whole.
       board: board ? boardData(db, declaration, declarations, query) : undefined,
-      // Whether the View menu offers a roadmap (M27 U4, D-302): a number to
+      // The list, when it is the view (M53 U4, D-519): every row the filter
+      // holds, uncapped, as the list beside an entry reads them.
+      list: list
+        ? listPicture(db, declaration, declarations, query, viewSettings(db, declaration.name, 'list'), toISODate(today()))
+        : undefined,
+      // Whether the tab strip offers a roadmap (M27 U4, D-302): a number to
       // run in, and another format naming this one.
       hasRoadmap:
         roadmapOf(declaration, declarations, (format) => viewSettings(db, format, 'roadmap')) !== undefined,
@@ -389,7 +405,7 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
       audit: auditFormat(db, declaration, formats, units),
     }
     // `revision` is the dependency that matters: every mutation bumps it.
-  }, [db, name, revision, filter, order, board])
+  }, [db, name, revision, filter, order, board, list])
 
   /**
    * **The entry the route names** (M26 U6), as a draft: what was typed on its
@@ -541,11 +557,19 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
   const onEntry = entry !== undefined && entry !== NEW_ENTRY
   const listHidden = useEntryListHidden()
   // A new entry keeps the list beside it too (M53 U3), with its draft as a row.
-  const listed = useMemo(() => {
+  // **It is the list view, narrow** (M53 U4, D-519): the same groups and ticks.
+  const pictured = useMemo(() => {
     if (entry === undefined || db === undefined || data === undefined || data.declaration === undefined) return undefined
-    const { places, chosen, headers, long } = data
-    return entryList(db, data.declaration, data.declarations, data.query, { places, chosen, headers, long })
+    return listPicture(
+      db,
+      data.declaration,
+      data.declarations,
+      data.query,
+      viewSettings(db, data.declaration.name, 'list'),
+      toISODate(today()),
+    )
   }, [entry, db, data])
+  const listed = useMemo(() => (pictured === undefined ? undefined : listOrder(pictured)), [pictured])
 
   /**
    * **An entry opened from outside the list's search lets the search go** —
@@ -626,10 +650,10 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
    * the row's constraints and its unique columns, on the row as it would
    * stand — and written by the same `updateRow`.
    */
-  const move = (row: StoredRow, column: string, member: string): void => {
-    if (locked !== undefined) return
+  const move = (row: StoredRow, column: string, member: string | number): boolean => {
+    if (locked !== undefined) return false
     const before = readRow(db, declaration, row.id)
-    if (before === undefined) return
+    if (before === undefined) return false
     const ruled = withRules(db, declaration, { [column]: member }, before.cells)
     const cells = ruled.cells
     const standing = { ...before.cells, ...cells }
@@ -641,13 +665,76 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
     ]
     if (refused.length > 0) {
       setMoveRefusal(refused.join(' '))
-      return
+      return false
     }
     setMoveRefusal(undefined)
     mutate((database) => {
       updateRow(database, declaration, row.id, cells)
     })
+    return true
   }
+
+  /**
+   * **A tick on the list** (M53 U4, D-519): the column that ticks a row set to
+   * what `tickValue` says — a move, as a card's is, through the same checks.
+   */
+  const tickLine = (picture: ListPicture, line: ListLine, value: string): void => {
+    const done = picture.shape.done
+    if (done === undefined) return
+    move(line.row, done.column.name, done.column.type === 'boolean' ? (value === 'true' ? 1 : 0) : value)
+  }
+
+  /**
+   * **A row added in place** (M53 U4, D-519): the title typed, the group's
+   * value, the filter's exact values and a required enum's first member — the
+   * batch `record_format_rows` writes, whole or not at all. A required column
+   * nothing fills opens entry/new with what it has, rather than refusing.
+   */
+  const addLine = (picture: ListPicture, group: ListGroup<ListLine> | undefined, title: string): boolean => {
+    if (locked !== undefined) return false
+    const asked = quickAdd(
+      declaration,
+      picture.shape,
+      group?.implies ?? {},
+      filter,
+      toISODate(today()),
+      picture.names,
+      data.rows[data.rows.length - 1]?.row,
+      data.currency,
+    )
+    const named = picture.shape.name
+    const draft = named === undefined ? asked.draft : { ...asked.draft, [named.name]: title }
+    if (asked.missing.length > 0 || named === undefined) {
+      setTyped({ key: `${declaration.name}/${NEW_ENTRY}`, draft })
+      navigate(entryPath(declaration.name, NEW_ENTRY) + address)
+      return false
+    }
+    const batch = stageRows(db, declaration, [offeredOf(declaration, draft)], data.declarations)
+    const [first] = batch.refusals
+    if (first !== undefined) {
+      setMoveRefusal(`Not added: ${first.reason}`)
+      return false
+    }
+    try {
+      mutate((database) => {
+        insertRows(
+          database,
+          declaration,
+          batch.accepted.map((each) => each.cells),
+          batch.accepted.map((each) => each.id),
+        )
+      })
+    } catch (error) {
+      setMoveRefusal(`Not added: ${describeTableError(declaration, error).reason}`)
+      return false
+    }
+    setMoveRefusal(undefined)
+    return true
+  }
+
+  /** Quick add's placeholder for a group, naming every value the row will take. */
+  const placeholderOf = (picture: ListPicture, group: ListGroup<ListLine> | undefined): string =>
+    quickAdd(declaration, picture.shape, group?.implies ?? {}, filter, toISODate(today()), picture.names).placeholder
 
   // An entry the format has no row for — deleted, or a stale bookmark. A delete
   // lands here too: the router moves the address in a transition, so the
@@ -853,17 +940,30 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
         }}
       />
     )
-    if (listed === undefined) return view
-    // The draft's row in the list: its title as typed, or "A new task" until it has one.
+    if (pictured === undefined) return view
+    // The draft's row in the list: its title as typed, or "A new task" until it
+    // has one — in the group it will land in (M53 U4).
     const titled = listColumns(declaration, data).title
-    const drafted = existing === undefined ? (titled === undefined ? '' : (editing.draft[titled.name] ?? '').trim()) : undefined
+    const grouped = pictured.shape.group
+    const drafted =
+      existing === undefined
+        ? {
+            title: titled === undefined ? '' : (editing.draft[titled.name] ?? '').trim(),
+            group: groupKeyOf(pictured.shape, grouped === undefined ? undefined : editing.draft[grouped.name], toISODate(today())),
+          }
+        : undefined
     return (
       <div className="flex h-full min-h-0">
         <EntryList
           declaration={declaration}
-          rows={listed}
+          picture={pictured}
           current={existing}
           draft={drafted}
+          locked={locked !== undefined}
+          refusal={spoken(moveRefusal, declaration)}
+          onTick={(line, value) => tickLine(pictured, line, value)}
+          onAdd={(group, title) => addLine(pictured, group, title)}
+          placeholder={(group) => placeholderOf(pictured, group)}
           onNew={locked !== undefined ? undefined : () => {
             setTyped(undefined)
             navigate(entryPath(declaration.name, NEW_ENTRY) + address)
@@ -1067,42 +1167,6 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
         </span>
         {locked === undefined && <ReadersLine readers={data.readers} />}
         <span className="ml-auto flex items-center gap-2">
-          {((declaration.rollups ?? []).length > 0 || hasBoard || data.hasRoadmap || data.hasReady) && (
-            <select
-              className={`${FIELD} w-40`}
-              value={board ? BOARD_OPTION : (shownRollup ?? '')}
-              onChange={(event) => {
-                const picked = event.target.value
-                // The board is a route (M27 U3), so it can be bookmarked and
-                // linked to; a rollup is a choice on the sheet's.
-                if (picked === BOARD_OPTION) {
-                  navigate(boardPath(declaration.name) + address)
-                  return
-                }
-                if (picked === ROADMAP_OPTION) {
-                  navigate(roadmapPath(declaration.name) + address)
-                  return
-                }
-                if (picked === READY_OPTION) {
-                  navigate(readyPath(declaration.name) + address)
-                  return
-                }
-                setView(picked === '' ? undefined : picked)
-                if (board) navigate(formatPath(declaration.name) + address)
-              }}
-              aria-label="View"
-            >
-              <option value="">Table</option>
-              {hasBoard && <option value={BOARD_OPTION}>Board</option>}
-              {data.hasRoadmap && <option value={ROADMAP_OPTION}>Roadmap</option>}
-              {data.hasReady && <option value={READY_OPTION}>Ready to start</option>}
-              {(declaration.rollups ?? []).map((each) => (
-                <option key={each.name} value={each.name}>
-                  {each.name}
-                </option>
-              ))}
-            </select>
-          )}
           {(declaration.ruleSets ?? []).map((each) => {
             const target = data.declarations.find((format) => format.name === each.target)
             // A pack's target is sorted by the pack, on its own write (D-269).
@@ -1157,6 +1221,48 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
           )}
         </span>
       </div>
+      {/* **The format's one tab strip** (M53 U4, U1's mockup (a)): Table, Board
+          and List, then the views a format has only when it has them, then its
+          rollups — what the View menu held. A view of its own is a route, so it
+          can be bookmarked; a rollup is a choice on the table's. */}
+      <nav aria-label="Views" className="flex h-8 shrink-0 items-stretch gap-[18px] overflow-x-auto border-b border-hairline px-6">
+        {[
+          {
+            label: 'Table',
+            on: !board && !list && shownRollup === undefined,
+            go: () => {
+              setView(undefined)
+              if (board || list) navigate(formatPath(declaration.name) + address)
+            },
+          },
+          ...(hasBoard ? [{ label: 'Board', on: board, go: () => navigate(boardPath(declaration.name) + address) }] : []),
+          { label: 'List', on: list, go: () => navigate(listPath(declaration.name) + address) },
+          ...(data.hasRoadmap ? [{ label: 'Roadmap', on: false, go: () => navigate(roadmapPath(declaration.name) + address) }] : []),
+          ...(data.hasReady ? [{ label: 'Ready to start', on: false, go: () => navigate(readyPath(declaration.name) + address) }] : []),
+          ...(declaration.rollups ?? []).map((each) => ({
+            label: each.name,
+            on: shownRollup === each.name,
+            go: () => {
+              setView(each.name)
+              if (board || list) navigate(formatPath(declaration.name) + address)
+            },
+          })),
+        ].map((tab) => (
+          <button
+            key={tab.label}
+            type="button"
+            aria-current={tab.on ? 'page' : undefined}
+            onClick={tab.on ? undefined : tab.go}
+            className={`text-[13px] whitespace-nowrap focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
+              tab.on
+                ? 'text-ink shadow-[inset_0_-2px_0_var(--color-accent)]'
+                : 'text-ink-tertiary shadow-[inset_0_-2px_0_transparent] hover:text-ink'
+            }`}
+          >
+            <Bidi>{tab.label}</Bidi>
+          </button>
+        ))}
+      </nav>
       {locked !== undefined && readOnly === undefined && (
         <p className="shrink-0 border-b border-hairline px-6 py-2 text-caption text-ink-secondary">
           {locked}
@@ -1201,6 +1307,26 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
           format={declaration}
           columns={columns}
           onColumns={setColumns}
+        />
+      ) : list && data.list !== undefined ? (
+        <ListPage
+          picture={data.list}
+          declaration={declaration}
+          locked={locked !== undefined}
+          refusal={spoken(moveRefusal, declaration)}
+          onTick={tickLine}
+          onAdd={addLine}
+          placeholder={placeholderOf}
+          onOpen={(line) => navigate(entryPath(declaration.name, line.id) + address)}
+          onSetting={(column, change) =>
+            mutate((database) => {
+              for (const name of column) {
+                const kept = viewSettings(database, declaration.name, 'list').get(name) ?? ''
+                const was = readListSetting(kept) ?? { group: false, line: false }
+                setListSetting(database, declaration.name, name, writeListSetting(change(name, was)))
+              }
+            })
+          }
         />
       ) : shownRollup !== undefined ? (
         <RollupView

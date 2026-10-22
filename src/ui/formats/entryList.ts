@@ -116,7 +116,7 @@ export function entryList(
 }
 
 /** One value as a row of the list says it — the header's words, without its controls. */
-function valueText(column: ColumnDeclaration, row: StoredRow, labels: ReadonlyMap<string, string>): string {
+export function valueText(column: ColumnDeclaration, row: StoredRow, labels: ReadonlyMap<string, string>): string {
   const value = readValue(column, row)
   if (value === undefined || value === '') return ''
   if (typeof value === 'boolean') return value ? column.name.replace(/_/g, ' ') : ''

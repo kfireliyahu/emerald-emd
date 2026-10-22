@@ -828,6 +828,21 @@ html {
   animation: fc-row-in var(--duration-base) var(--ease-out);
 }
 
+/* A row added in place on a list (M53 U4, D-519): it grows into place with a
+   brief accent-soft mark, once, as it mounts — the mockup's `fresh`. */
+@keyframes fc-fresh {
+  from {
+    background-color: var(--color-accent-soft);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+.fc-fresh {
+  animation: fc-fresh 900ms var(--ease-out);
+}
+
 /* The three doors a format begins at (M20 U2). The same fade and 4px rise a row
    gets, at the entrance duration because a door is a screen-sized event, and
    staggered by `--fc-door-at` — 0, 1, 2. docs/11 caps a stagger at 3 items and

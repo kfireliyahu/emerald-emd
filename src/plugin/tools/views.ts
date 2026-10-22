@@ -42,6 +42,7 @@ import {
   setEntryHidden,
   setEntryInput,
   setEntryOrder,
+  setListSetting,
   setRoadmapOrder,
   setViewSetting,
   viewSettings,
@@ -60,8 +61,11 @@ import {
   isPercentWorkedOut,
   isShowAs,
   isViewSetting,
+  listGroupable,
+  listOf,
   orderColumns,
   readAgendaDone,
+  readListSetting,
   readReadyState,
   roadmapOf,
   SETTING_LONGEST,
@@ -72,6 +76,7 @@ import {
   wayOf,
   waysFor,
   workedOutType,
+  writeListSetting,
   type ShowAs,
 } from '@/domain/format/view.ts'
 import type { ColumnDeclaration } from '@/domain/format/declaration.ts'
@@ -81,7 +86,7 @@ import { mutatingCall, type Mutation } from '../write.ts'
 import { PATH_PROP, ToolInputError, booleanProp, requireString, stringProp, type PluginTool } from './tool.ts'
 
 /** The views a setting may name: every kind but the page, which the entry replaced (D-401), and the table. */
-const VIEWS = ['entry', 'board', 'table', 'roadmap', 'ready', 'start', 'agenda'] as const
+const VIEWS = ['entry', 'board', 'list', 'table', 'roadmap', 'ready', 'start', 'agenda'] as const
 type View = (typeof VIEWS)[number]
 const WORD_VIEWS: readonly WordView[] = ['roadmap', 'ready', 'start', 'agenda']
 
@@ -98,6 +103,7 @@ type Change =
   | { readonly kind: 'LANES'; readonly format: string; readonly was: string | undefined; readonly now: string | undefined }
   | { readonly kind: 'WIDTH'; readonly format: string; readonly column: string; readonly was: number | undefined; readonly now: number | undefined }
   | { readonly kind: 'WORD'; readonly format: string; readonly view: WordView; readonly column: string; readonly was: string | undefined; readonly now: string | undefined }
+  | { readonly kind: 'LIST'; readonly format: string; readonly column: string; readonly was: string | undefined; readonly now: string | undefined }
 
 interface Refused {
   readonly index: number
@@ -186,6 +192,12 @@ function judge(
   }
 
   switch (view as View) {
+    case 'list': {
+      const wrong = extra(['column', 'setting'])
+      if (wrong !== undefined) return { reason: wrong }
+      return judgeList(db, declaration, column, entry['setting'])
+    }
+
     case 'board': {
       const wrong = extra(['column'])
       if (wrong !== undefined) return { reason: wrong }
@@ -407,14 +419,74 @@ function judgeWord(
 }
 
 /**
+ * **A list's words on one column** (M53 U4, D-519): the column's whole setting
+ * — `group`, `line`, `done <members>`, together — or null to clear it. `group`
+ * and `done` are one column's each, so saying one takes it off the column that
+ * held it, keeping that column's other words, as the screen's menus do.
+ */
+function judgeList(
+  db: Database,
+  declaration: FormatDeclaration,
+  column: string | undefined,
+  offered: unknown,
+): { readonly changes: readonly Change[] } | { readonly reason: string } {
+  const format = declaration.name
+  const target = declaration.columns.find((each) => each.name === column)
+  if (target === undefined) {
+    return { reason: `${format} has no column called ${String(column)}. It has ${namesOf(declaration.columns)}.` }
+  }
+  if (offered === undefined) return { reason: `A list setting takes \`setting\`: ${VIEW_PARTS.list.join(', ')} — together, as \`group line\` — or null.` }
+  if (offered !== null && typeof offered !== 'string') return { reason: '`setting` is a column’s words, or null to clear them.' }
+  const read = offered === null ? undefined : readListSetting(offered)
+  if (offered !== null && read === undefined) {
+    return { reason: `\`${offered}\` is not a list setting; a list keeps ${VIEW_PARTS.list.join(', ')}, together on one column, \`done\` last.` }
+  }
+  const named = `\`${target.name}\``
+  if (read?.group === true && !listGroupable(target)) {
+    return { reason: `A list groups by an enum, one link or a date; ${named} is ${target.type}.` }
+  }
+  if (read?.done !== undefined) {
+    const has = target.type === 'boolean' ? ['true', 'false'] : target.type === 'enum' ? (target.values ?? []) : []
+    const strange = read.done.filter((each) => !has.includes(each))
+    if (target.type === 'boolean' && read.done.length !== 1) return { reason: '`done` on a boolean is `done true` or `done false`.' }
+    if (has.length === 0) return { reason: `\`done\` names members of an enum, or true of a boolean, that tick a row; ${named} is ${target.type}.` }
+    if (strange.length > 0) return { reason: `${named} has no ${strange.join(', ')}; its members are ${has.join(', ')}.` }
+  }
+  const now = read === undefined ? undefined : writeListSetting(read)
+  if (now !== undefined && now.length > SETTING_LONGEST) {
+    return { reason: `\`${now}\` is longer than the ${String(SETTING_LONGEST)} characters a view keeps for a column; shorter member names fit.` }
+  }
+  const kept = viewSettings(db, format, 'list')
+  const cleared: Change[] = [...kept].flatMap(([other, word]): Change[] => {
+    const was = readListSetting(word)
+    if (other === target.name || was === undefined || read === undefined) return []
+    const left = writeListSetting({ group: was.group && !read.group, line: was.line, done: read.done === undefined ? was.done : undefined })
+    return left === word ? [] : [{ kind: 'LIST', format, column: other, was: word, now: left }]
+  })
+  return { changes: [...cleared, { kind: 'LIST', format, column: target.name, was: kept.get(target.name), now }] }
+}
+
+/**
  * **What the views a batch touches draw once it is written** — each start-here
  * question a touched format asks, and each roadmap a touched setting reaches,
  * or why it has none yet. Read from the settings as they will be, so the dry
  * run says what `start_here` and `show_format` will answer.
  */
 function afterText(db: Database, declared: readonly FormatDeclaration[], changes: readonly Change[]): readonly string[] {
+  const lists = changes.filter((each): each is Extract<Change, { kind: 'LIST' }> => each.kind === 'LIST')
+  const listed = [...new Set(lists.map((each) => each.format))].flatMap((format) => {
+    const declaration = declared.find((each) => each.name === format)
+    if (declaration === undefined) return []
+    const map = new Map(viewSettings(db, format, 'list'))
+    for (const each of lists) {
+      if (each.format !== format) continue
+      if (each.now === undefined) map.delete(each.column)
+      else map.set(each.column, each.now)
+    }
+    return [listText(declaration, map)]
+  })
   const words = changes.filter((each): each is Extract<Change, { kind: 'WORD' }> => each.kind === 'WORD')
-  if (words.length === 0) return []
+  if (words.length === 0) return listed
   const settingsOf =
     (view: WordView) =>
     (format: string): ReadonlyMap<string, string> => {
@@ -473,7 +545,17 @@ function afterText(db: Database, declared: readonly FormatDeclaration[], changes
             `${shape.folds.map((each) => `${each.format.name} by \`${each.through.name}\``).join(', ')}.`,
     )
   }
-  return lines
+  return [...listed, ...lines]
+}
+
+/** What a format's list draws under these settings, in one sentence — the dry run's, and `formats`'. */
+function listText(declaration: FormatDeclaration, settings: ReadonlyMap<string, string>): string {
+  const shape = listOf(declaration.columns, settings)
+  return (
+    `${declaration.name}’s list is ${shape.group === undefined ? 'one list' : `grouped by \`${shape.group.name}\``}` +
+    (shape.done === undefined ? ', with no tick' : `, ticked when \`${shape.done.column.name}\` is ${shape.done.members.join(' or ')}`) +
+    (shape.lines.length === 0 ? ', each line its name alone.' : `, each line showing ${shape.lines.map((each) => `\`${each.name}\``).join(', ')}${shape.lineChosen ? '' : ' (its default)'}.`)
+  )
 }
 
 function planOf(document: OpenDocument, settings: readonly unknown[]): ViewPlan {
@@ -519,6 +601,8 @@ function changeRow(change: Change): readonly string[] {
       return [change.format, 'table', change.column, 'width', widthText(change.was), widthText(change.now)]
     case 'WORD':
       return [change.format, change.view, change.column, 'setting', change.was ?? '-', change.now ?? '-']
+    case 'LIST':
+      return [change.format, 'list', change.column, 'setting', change.was ?? '-', change.now ?? '-']
   }
 }
 
@@ -565,6 +649,9 @@ function apply(document: OpenDocument, plan: ViewPlan): string {
         break
       case 'WIDTH':
         setColumnWidth(db, change.format, change.column, change.now)
+        break
+      case 'LIST':
+        setListSetting(db, change.format, change.column, change.now)
         break
       case 'WORD':
         // The roadmap's order is the screen's write too (*In the order of*).
@@ -621,6 +708,7 @@ export function arrangementText(document: OpenDocument, declaration: FormatDecla
         ]),
       ),
       board === undefined ? undefined : `**Board:** lanes by \`${board.lanes.name}\`.`,
+      `**List:** ${listText(declaration, viewSettings(db, format, 'list'))}`,
       ...WORD_VIEWS.map((view) => {
         const kept = [...viewSettings(db, format, view)]
         const label = view === 'roadmap' ? 'Roadmap' : view === 'ready' ? 'Ready' : view === 'agenda' ? 'Agenda' : 'Start'
@@ -636,7 +724,7 @@ export const arrangeViewsTool: PluginTool = {
     title: 'Arrange a format’s views',
     description:
       'How the app shows a format: on its entry, a column’s `show_as`, `header` line, `hidden`, ' +
-      '`new_entry` and the `order`; a board’s lanes; a table column’s `width`; a column’s `setting` in a roadmap, a ' +
+      '`new_entry` and the `order`; a board’s lanes; a table column’s `width`; a column’s `setting` in a list, a roadmap, a ' +
       'ready list or a start-here question. `formats` with a `format` shows the ' +
       'arrangement and each column’s ways. Dry-runs until `commit: true`.',
     inputSchema: {
@@ -665,7 +753,7 @@ export const arrangeViewsTool: PluginTool = {
               setting: {
                 type: ['string', 'null'],
                 description:
-                  'roadmap: order, under, line; ready: waits, ready <members> done <members>, line; ' +
+                  'list: group, line, done <members>, together (`group line`); roadmap: order, under, line; ready: waits, ready <members> done <members>, line; ' +
                   'start: is <member>, latest <n>, line; agenda: date, done <members>, line. null clears.',
               },
             },

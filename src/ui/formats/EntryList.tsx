@@ -5,10 +5,10 @@ import type { FormatDeclaration } from '@/domain/format/declaration.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { Kbd } from '@/ui/components/Kbd.tsx'
-import type { ListRow } from '@/ui/formats/entryList.ts'
-import { withArticle } from '@/domain/format/view.ts'
+import { withArticle, type ListGroup } from '@/domain/format/view.ts'
 import { HeldValues } from '@/ui/formats/FilterBand.tsx'
-import { toneOf } from '@/ui/formats/tone.ts'
+import { ListLines } from '@/ui/formats/ListView.tsx'
+import { listOrder, type ListLine, type ListPicture } from '@/ui/formats/listView.ts'
 
 /**
  * **The entry keeps its format's list beside it** — M37 U2b (D-475, direction
@@ -24,8 +24,11 @@ import { toneOf } from '@/ui/formats/tone.ts'
  * a value is pressed — and from the list's own search box. That works with the
  * list hidden too, so this is mounted either way and draws nothing then.
  *
- * Hundreds of rows draw as they are; past a thousand the list draws only what
- * is in view, every row the same height.
+ * **Since M53 U4 (D-519) it is the list view, narrow**: the same groups, ticks
+ * and quick add (one line at the top), the title with due · link under it, and
+ * ↑ ↓ walking the rows in the order it draws them. Hundreds of rows draw as
+ * they are; past a thousand it draws flat, only what is in view, every row the
+ * same height.
  */
 
 /** A row's height: its title over its line. Fixed, so a long list can be drawn in part. */
@@ -36,27 +39,39 @@ const SPARE = 20
 
 export function EntryList({
   declaration,
-  rows,
+  picture,
   current,
   draft,
   entries,
   filter,
   shown,
+  locked,
+  refusal,
   onOpen,
   onNew,
+  onTick,
+  onAdd,
+  placeholder,
   onSearch,
   onFilter,
 }: {
   declaration: FormatDeclaration
-  /** Every row the address's filter holds, in the Table's order. */
-  rows: readonly ListRow[]
+  /** Every row the address's filter holds, as the list's groups (M53 U4). */
+  picture: ListPicture
   /** The entry beside the list — nothing while a new one is being written. */
   current: string | undefined
   /**
    * A new entry's title as typed, when one is being written (M53 U3): drawn as
-   * the list's first row and marked, "A new task" until it has a title.
+   * a row in the group it will land in and marked, "A new task" until it has a title.
    */
-  draft?: string | undefined
+  draft?: { readonly title: string; readonly group: string | undefined } | undefined
+  /** Nothing is ticked or added from here. */
+  locked: boolean
+  /** What the last tick or quick add was refused with, or nothing. */
+  refusal?: string | undefined
+  onTick: (line: ListLine, value: string) => void
+  onAdd: (group: ListGroup<ListLine> | undefined, title: string) => boolean
+  placeholder: (group: ListGroup<ListLine> | undefined) => string
   /** How many entries the format holds, filter or not. */
   entries: number
   filter: RowFilter
@@ -69,6 +84,7 @@ export function EntryList({
   /** The filter with one thing let go of. */
   onFilter: (next: RowFilter) => void
 }) {
+  const rows = listOrder(picture)
   const at = rows.findIndex((row) => row.id === current)
   const box = useRef<HTMLDivElement>(null)
 
@@ -113,10 +129,19 @@ export function EntryList({
   useLayoutEffect(() => {
     const list = box.current
     if (list === null || at < 0) return
+    if (!windowed) {
+      const marked = list.querySelector<HTMLElement>('[aria-current="page"]')
+      const item = marked?.closest<HTMLElement>('[role="listitem"]') ?? marked
+      if (item === null || item === undefined) return
+      const top = item.offsetTop
+      if (top < list.scrollTop) list.scrollTop = top
+      else if (top + item.offsetHeight > list.scrollTop + list.clientHeight) list.scrollTop = top + item.offsetHeight - list.clientHeight
+      return
+    }
     const top = at * ROW
     if (top < list.scrollTop) list.scrollTop = top
     else if (top + ROW > list.scrollTop + list.clientHeight) list.scrollTop = top + ROW - list.clientHeight
-    if (windowed) measure()
+    measure()
   }, [current, rows.length, shown])
 
   if (!shown) return null
@@ -203,24 +228,37 @@ export function EntryList({
         className="relative min-h-0 flex-1 overflow-auto outline-none"
         onScroll={windowed ? measure : undefined}
       >
-        {draft !== undefined && (
-          // The draft, as the row it will be — the list has no groups yet (U4).
-          <div
-            aria-current="page"
-            className="relative flex w-full flex-col justify-center border-b border-hairline bg-accent-soft pr-3 pl-3.5 before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:bg-accent"
-            style={{ height: ROW }}
-          >
-            <Bidi className={`truncate text-[13px] ${draft === '' ? 'text-ink-secondary' : 'text-ink'}`}>
-              {draft === '' ? `A new ${one}` : draft}
-            </Bidi>
-          </div>
+        {refusal !== undefined && (
+          <p className="fc-pop-enter border-b border-hairline px-3 py-1.5 text-[12px] text-negative" role="status">
+            <Bidi>{refusal}</Bidi>
+          </p>
         )}
-        {rows.length === 0 ? (
-          draft === undefined && <div className="p-4 text-[13px] text-ink-secondary">Nothing in this format holds it.</div>
+        {!windowed ? (
+          <div className="pb-6">
+            <ListLines
+              format={declaration.name}
+              shape={picture.shape}
+              groups={picture.groups}
+              width="narrow"
+              current={current}
+              draft={draft === undefined ? undefined : { ...draft, one }}
+              locked={locked}
+              onTick={onTick}
+              onOpen={(line) => onOpen(line.id)}
+              onAdd={onAdd}
+              placeholder={placeholder}
+            />
+            {rows.length === 0 && draft === undefined && filtered && (
+              <div className="p-4 text-[13px] text-ink-secondary">Nothing in this format holds it.</div>
+            )}
+          </div>
         ) : (
           <div style={{ paddingTop: first * ROW, paddingBottom: (rows.length - last) * ROW }}>
             {rows.slice(first, last).map((row) => {
               const on = row.id === current
+              const under = row.cells.flatMap((cell) =>
+                cell.kind === 'date' || (cell.kind === 'text' && cell.link) ? [cell.text] : [],
+              )
               return (
                 <button
                   key={row.id}
@@ -234,19 +272,9 @@ export function EntryList({
                   }`}
                   style={{ height: ROW }}
                 >
-                  <Bidi className="truncate text-[13px] text-ink">{row.title}</Bidi>
-                  {row.line.length > 0 && (
-                    <span className="flex items-center gap-1.5 overflow-hidden text-[12px] whitespace-nowrap text-ink-secondary">
-                      {row.line.map((cell, index) => (
-                        <span key={cell.column} className="inline-flex min-w-0 items-center gap-1.5">
-                          {index > 0 && <span className="text-ink-tertiary">·</span>}
-                          {cell.member !== undefined && (
-                            <span className="fc-dot" data-tone={toneOf(cell.member)} aria-hidden style={{ width: 6, height: 6 }} />
-                          )}
-                          <Bidi className="truncate">{cell.text}</Bidi>
-                        </span>
-                      ))}
-                    </span>
+                  <Bidi className={`truncate text-[13px] ${row.ticked ? 'text-ink-tertiary line-through' : 'text-ink'}`}>{row.title}</Bidi>
+                  {under.length > 0 && (
+                    <Bidi className="block truncate text-[12px] text-ink-secondary">{under.join(' · ')}</Bidi>
                   )}
                 </button>
               )

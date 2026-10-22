@@ -311,6 +311,11 @@ export function readyPath(name: string): string {
   return `${formatPath(name)}/ready`
 }
 
+/** A format's list (M53 U4, D-519): one line per row, a tick, grouped by a column. Every format has one. */
+export function listPath(name: string): string {
+  return `${formatPath(name)}/list`
+}
+
 /** The word an entry's route takes for a row not written yet. */
 export const NEW_ENTRY = 'new'
 

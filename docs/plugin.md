@@ -285,7 +285,7 @@ every row the view shows and nothing longer, which is what a client that draws n
   is how F1's protection holds: a model that never mentions a view never claims one that was not
   drawn. Both instruction blocks and `CLAUDE.md` say the same.
 - **Every view, read-only, and no control leads nowhere** (D-432):
-  the frame routes the app's own format pages at the app's own paths — sheet, entry, board,
+  the frame routes the app's own format pages at the app's own paths — sheet, entry, board, list (D-519),
   roadmap, ready, and the agenda (D-473) — under `ReadOnly`, and **read-only is where it stays**: edits in the frame (M41
   U3) went to Later on 2026-10-08. `ReadOnly` locks every format as a pack's is locked: no add, no edit, no
   remove, no change of shape. `show_format` takes `view` (one the format has — or, for a
@@ -1074,6 +1074,10 @@ rather than three decisions.
 > built}}` or `{not:[a, b]}` none of them with an empty cell let through, and `null` the empty cell
 > — `{owner:null}`, `{owner:{not:null}}`, `[planned, null]`: D-380's words for a declared filter, in
 > a question. `where` and `expect` still name one value per column.
+> **M53 U4 added the list** (D-519): `show_format view:list` draws a format's rows one line each,
+> grouped as `arrange_views view:list` says (`group`, `line`, `done <members>` — words one column
+> holds together, `group line`), each row named with its tick; every format has one.
+>
 > **M49 U3 added the agenda** (D-473): `show_format view:agenda` (no `format`) draws every dated
 > format's rows from today grouped by day, overdue above it where a format says what finished is;
 > `match:{date: "within 14 days"}` holds each format by its own agenda date. `arrange_views

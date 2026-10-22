@@ -225,7 +225,7 @@ const CAPABILITIES: readonly Capability[] = [
   {
     // A card dragged to another lane of a board is this too (M27 U3, D-301):
     // one enum column of one row, judged as `update_format_rows` judges it.
-    does: 'Correct a row — or move its card to another lane of a board.',
+    does: 'Correct a row — or move its card to another lane of a board, or tick it on a list.',
     writes: ['updateRow'],
     screen: FORMAT_ROWS,
     tool: 'update_format_rows',
@@ -309,6 +309,14 @@ const CAPABILITIES: readonly Capability[] = [
     // is `updateRow`, above.
     does: 'Choose which enum column a format’s board lays its lanes by.',
     writes: ['setBoardLanes'],
+    screen: FORMAT_ROWS,
+    tool: 'arrange_views',
+  },
+  {
+    // M53 U4 (D-519): the list's *Group by*, *Ticked when* and *Line*; the
+    // tick itself is `updateRow` and a row added in place `insertRows`, above.
+    does: 'Choose what a format’s list groups by, what ticks a row, and what its lines show.',
+    writes: ['setListSetting'],
     screen: FORMAT_ROWS,
     tool: 'arrange_views',
   },

@@ -356,7 +356,7 @@ export function readyData(
 }
 
 /**
- * The views a format has, as the View menu on its sheet offers them (M27 U3-U5):
+ * The views a format has, as the tab strip on its sheet offers them (M27 U3-U5; the View menu until M53 U4):
  * the sheet always, a board with an enum, a roadmap when `roadmapOf` finds
  * one, and a ready list when its views declare one. What `show_format` may
  * open the frame on (M41 U2).
@@ -365,11 +365,13 @@ export function formatViews(
   db: Database,
   declaration: FormatDeclaration,
   declarations: readonly FormatDeclaration[],
-): readonly ('sheet' | 'board' | 'roadmap' | 'ready')[] {
+): readonly ('sheet' | 'board' | 'list' | 'roadmap' | 'ready')[] {
   const settings = (format: string) => viewSettings(db, format, 'roadmap')
   return [
     'sheet',
     ...(declaration.columns.some((each) => each.type === 'enum') ? (['board'] as const) : []),
+    // Every format has a list (M53 U4, D-519).
+    'list' as const,
     ...(roadmapOf<ColumnDeclaration, FormatDeclaration>(declaration, declarations, settings) === undefined ? [] : (['roadmap'] as const)),
     ...(readyOf<ColumnDeclaration>(declaration, viewSettings(db, declaration.name, 'ready')) === undefined ? [] : (['ready'] as const)),
   ]

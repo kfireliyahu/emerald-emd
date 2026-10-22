@@ -435,6 +435,7 @@ written out here.
 | D-516 | 2026-10-22 | One general chart draws plain series — labels, series of `Money` or plain figures, and an axis in a currency or a unit — as bars or a line; it draws only what that axis can hold, one series in ink and several in the category palette by key, and a screen reader reads it as a table; a rollup's chart is bars by month (a line on a toggle), one series per linked row, the eight largest drawn and what is left out said under it, never summed into a new figure | [below](#d-516) |
 | D-517 | 2026-10-22 | Hiding a field is the entry view's, beside its order: `hidden` in a column's `format_view_column` setting (and `views.md`) keeps it off the page even when it holds a value, never the title or a required column; `new` marks a column a new entry asks for; one Fields list behind the entry's icon replaces the Arrange mode, and a field moves only within its part, by its label, its row, its menu or Alt+Up/Down; `arrange_views` takes `hidden` and `new_entry`; amends D-296 | [below](#d-517) |
 | D-518 | 2026-10-22 | An entry draws what it holds: on a row that exists a column with no value is not drawn but named on one Empty line at the foot, where a name opens its field in place; a required column is always drawn and says it is needed; a new entry asks for the title, every required column and the ones ticked New entry, starts a required enum nothing implies at its first member, and says what is missing in one line only once Add is pressed; labels read as words without a unit suffix; two plain figures sit in the line under the title | [below](#d-518) |
+| D-519 | 2026-10-22 | Every format has a list: one line per row, a tick, the name and the line's columns, grouped by an enum, a link or a date's buckets; `group`, `line` and `done <members>` are words one column's `format_view_column` setting holds together, `group` and `done` one column's each; the tick writes the done member and an untick the member held before; quick add writes the title, the group's value, the filter's exact values and a required enum's first member as `record_format_rows`' batch, or opens entry/new when a required column is still empty; the list beside an entry is the same list, narrow; the View menu became the format's one tab strip | [below](#d-519) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1008,6 +1009,65 @@ been filled in yet.") with its required state starting empty.
 **Consequences.** A pack's entry, read here and not written (D-269), and the frame draw the same
 page with no names to fill. The timesheet tour opens `end` from the Empty line before typing it
 (one more step, `empty-end`). Nothing in the engine or the file changes.
+
+## D-519 · 2026-10-22 · Every format has a list: one line per row, a tick, the name and the line's columns, grouped by an enum, a link or a date's buckets; `group`, `line` and `done <members>` are words one column's `format_view_column` setting holds together, `group` and `done` one column's each; the tick writes the done member and an untick the member held before; quick add writes the title, the group's value, the filter's exact values and a required enum's first member as `record_format_rows`' batch, or opens entry/new when a required column is still empty; the list beside an entry is the same list, narrow; the View menu became the format's one tab strip <a id="d-519"></a>
+
+**Context.** M53 U4, building U1's approved mockup (`docs/mockups/m53-u1/tasks.html`, approved
+2026-10-22: its list view, quick add and the list beside an entry). A task format had a table, a
+board and an entry, and none of them was the thing a to-do is read in: one line per task, a tick,
+grouped by project, with a place to type the next one.
+
+**Decision.**
+
+- **`list` is a view kind** (`VIEW_KINDS`), and every format has one at `#/formats/<name>/list`.
+  Its settings are words in a column's one `format_view_column` setting, **together**, as the
+  entry's are, because one column can be both what the list groups by and on its line:
+  `group`, `line`, and `done <members>` last (`group line`, `line done done dropped`).
+  `group` and `done` are one column's each: saying either takes it off the column that held it and
+  keeps that column's other words (`setListSetting`). A pack's `views.md` and a text document carry
+  them as any view's.
+- **Group by** an enum (a group per member; grouped by what ticks a row, the done members are the
+  last groups), one link (a group per row of the target in its order, then *No …*), or a date
+  (Late, Today, Tomorrow, In the next 7 days, Later, No … date — a bucket that is not one value is
+  left out while it holds nothing). None by default. A group's ticked rows fold at its foot as
+  *N done*, which opens them; groups fold.
+- **Ticked when**: by default the first enum's last member (a task's `done`), else the first
+  boolean. The tick writes the first done member — a move, as a board's card is, through the same
+  checks and `updateRow` as `update_format_rows`; an untick writes the member the row held before
+  the tick (kept for the session, by the line's name, since a text document renews ids), else the
+  first member that is not done. A ticked row stays in place, struck, about a second, then sinks.
+- **Line**: by default the first list of members, the first link and the first date (*tags,
+  project, due*); a date is always last, read right-aligned and relative to today (`dueText`:
+  *today*, *tomorrow*, *Sat, in 2 days*, *5 Nov*, and an open row before today *yesterday* or
+  *N days late* in negative, the one colour on the line). The column grouped by is left off it.
+  Rows within a group run by the line's date, else the format's, then the table's order.
+  Unticking every column in *Line* gives the default back — there is no word for an empty line.
+- **Quick add** is a line at the top of each group that is one value, and one at the top of the
+  list beside an entry. Its placeholder names every value the row will take besides its title
+  (*Add a task · inbox, Garden shed*, *… due today*). Enter writes the title, the group's value,
+  the address filter's exact values (`due:today` is today's date) and a required enum's first
+  member when nothing implies one (D-518's `entryDefaults`) — `stageRows` and `insertRows`,
+  `record_format_rows`' batch. A required column it still cannot fill opens `entry/new` with
+  what it has.
+- **The list beside an entry is the same list, narrow**: the same groups, ticks and quick add,
+  the title with due · link under it, ↑ ↓ walking the rows in the order drawn; a new entry's draft
+  sits in the group it will land in. Past a thousand rows it draws flat, only what is in view.
+  Which groups are folded is kept per format for the session, so it holds in both widths.
+- **The View menu became the format's one tab strip** (the mockup's (a)): Table, Board, List,
+  then Roadmap and Ready to start where the format has them, then its rollups. Under List the
+  settings sit in place as one row of menus: *Group by*, *Ticked when*, *Line*. The filter's
+  chips stay on the band above.
+- **Parity (D-227)**: `arrange_views view:list` sets a column's words (dry run says what the list
+  will draw), `show_format view:list` draws it and names every row by group with its tick, and
+  `formats` with a `format` says the list's arrangement.
+
+**Alternatives rejected.** One word per column, as the roadmap's: grouping by `project` would
+have taken its `line` away and ungrouping would not give it back. A settings screen for the list:
+the mockup put them in place. Keeping the untick's member in the document: it is a moment's
+memory, not a fact about the row.
+
+**Consequences.** M53 U5 names a saved view's kind `list` and its settings these words. A pack's
+format draws the list read-only (no tick, no quick add), as the frame does.
 
 **Rejected.** The *+ Field* menu (option B): two clicks, and a name not on the page is a field
 forgotten. Hiding *unchecked* checks: it would make a claim go quiet exactly where it cannot yet be

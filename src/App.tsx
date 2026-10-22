@@ -530,6 +530,9 @@ function RoutedViews() {
         {/* **A board** (M27 U3, D-301): the rows as cards in lanes, one per
             member of an enum — a view the engine draws for any format with one. */}
         <Route path="/formats/:name/board" element={<FormatRows board />} />
+        {/* **A list** (M53 U4, D-519): one line per row, a tick, grouped by a
+            column, and quick add — every format has one. */}
+        <Route path="/formats/:name/list" element={<FormatRows list />} />
         {/* **A roadmap** (M27 U4, D-302): rows in order with what names each. */}
         <Route path="/formats/:name/roadmap" element={<FormatRoadmap />} />
         {/* **What is ready** (M27 U5, D-303): rows waiting on nothing open. */}

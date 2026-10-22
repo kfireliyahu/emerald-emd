@@ -16,8 +16,10 @@ import {
   isViewKind,
   isViewSetting,
   readEntrySetting,
+  readListSetting,
   soleWordOf,
   writeEntrySetting,
+  writeListSetting,
   type ColumnWidth,
   type ShowAs,
   type EntrySetting,
@@ -408,6 +410,52 @@ export function setAgendaDate(db: Database, format: string, column: string | und
     return
   }
   db.run("DELETE FROM format_view_column WHERE format_name = ? AND view = 'agenda' AND setting = 'date'", [format])
+}
+
+/**
+ * **Set one column's words in a format's list, or clear them** — M53 U4,
+ * D-519. The whole setting of the column (`group line`, `line done done`), as
+ * `readListSetting` reads it; nothing clears it. `group` and `done` are one
+ * column's each, so saying either here takes it off whichever other column
+ * held it, and leaves that column's other words. Written by the list's
+ * *Group by*, *Ticked when* and *Line*, and by `arrange_views`.
+ */
+export function setListSetting(db: Database, format: string, column: string, setting: string | undefined): void {
+  const next = setting === undefined ? undefined : readListSetting(setting)
+  inTransaction(db, () => {
+    if (next !== undefined) {
+      for (const [other, word] of viewSettings(db, format, 'list')) {
+        const was = readListSetting(word)
+        if (other === column || was === undefined) continue
+        const kept = {
+          group: was.group && !next.group,
+          line: was.line,
+          done: next.done === undefined ? was.done : undefined,
+        }
+        const written = writeListSetting(kept)
+        if (written === word) continue
+        if (written === undefined) {
+          db.run("DELETE FROM format_view_column WHERE format_name = ? AND view = 'list' AND column_name = ?", [format, other])
+        } else {
+          db.run("UPDATE format_view_column SET setting = ? WHERE format_name = ? AND view = 'list' AND column_name = ?", [
+            written,
+            format,
+            other,
+          ])
+        }
+      }
+    }
+    const written = next === undefined ? undefined : writeListSetting(next)
+    if (written === undefined) {
+      db.run("DELETE FROM format_view_column WHERE format_name = ? AND view = 'list' AND column_name = ?", [format, column])
+      return
+    }
+    db.run(
+      `INSERT INTO format_view_column (format_name, view, column_name, setting) VALUES (?, 'list', ?, ?)
+         ON CONFLICT (format_name, view, column_name) DO UPDATE SET setting = excluded.setting`,
+      [format, column, written],
+    )
+  })
 }
 
 /** Every view's settings in the document, for the text to carry (D-246). */

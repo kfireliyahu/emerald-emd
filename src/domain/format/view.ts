@@ -72,7 +72,7 @@ export function boundedCoordinate(value: number): number {
  * word added here and a reading of what its settings mean, not a table of its
  * own.
  */
-export const VIEW_KINDS = ['entry', 'board', 'roadmap', 'page', 'ready', 'start', 'agenda'] as const
+export const VIEW_KINDS = ['entry', 'board', 'roadmap', 'page', 'ready', 'start', 'agenda', 'list'] as const
 
 export type ViewKind = (typeof VIEW_KINDS)[number]
 
@@ -325,6 +325,8 @@ export function isViewSetting(view: ViewKind, setting: string): boolean {
       return setting === 'line' || readStartSetting(setting) !== undefined
     case 'agenda':
       return setting === 'date' || setting === 'line' || readAgendaDone(setting) !== undefined
+    case 'list':
+      return readListSetting(setting) !== undefined
   }
 }
 
@@ -363,6 +365,7 @@ export const VIEW_PARTS: Readonly<Record<Exclude<ViewKind, 'entry'>, readonly st
   ready: ['waits', 'line', 'ready <member> done <members>', 'stalls <days>'],
   start: ['is <member>', 'latest <count>', 'line'],
   agenda: ['date', 'done <members>', 'line'],
+  list: ['group', 'line', 'done <members>'],
 }
 
 /**
@@ -1540,3 +1543,309 @@ export function meetWindows(
   return { from, through }
 }
 
+
+/**
+ * **The list** — M53 U4, D-519, from U1's approved mockup
+ * (`docs/mockups/m53-u1/tasks.html`).
+ *
+ * Any format's rows as one line each: a tick, the name, and the line's
+ * columns — grouped by one column, its ticked rows folded at each group's
+ * foot. A view like the others, kept per column in `format_view_column`, and
+ * three words a column may hold **together**, as the entry's do, because one
+ * column can be both what the list groups by and on its line:
+ *
+ * - `group` — on an enum (a group per member), a link (a group per row it may
+ *   name, in that format's order, then *No …*) or a date (Late, Today,
+ *   Tomorrow, In the next 7 days, Later, No … date). None by default.
+ * - `line` — a column after the name. Nobody choosing gives the default line:
+ *   the first list of members, the first link and the first date (*tags,
+ *   project, due*), a date always last because it is read right-aligned.
+ * - `done <members>` — last, as the agenda's: what ticks a row, an enum's
+ *   members or `done true` on a boolean. Nobody choosing gives the first
+ *   enum's last member (a task's `done`), else the first boolean.
+ *
+ * Ticking writes the first `done` member; unticking the member the row held
+ * before, else the first that is not done (`tickValue`). Today is an argument.
+ */
+export interface ListSetting {
+  readonly group: boolean
+  readonly line: boolean
+  readonly done?: readonly string[] | undefined
+}
+
+/** `group line done finished dropped` into its words — or nothing, when it is not a list's setting. */
+export function readListSetting(setting: string): ListSetting | undefined {
+  const words = setting.split(/[\s,]+/).filter((each) => each !== '')
+  if (words.length === 0) return undefined
+  let group = false
+  let line = false
+  for (let at = 0; at < words.length; at++) {
+    const word = words[at]
+    if (word === 'done') {
+      const members = [...new Set(words.slice(at + 1))]
+      return members.length === 0 ? undefined : { group, line, done: members }
+    }
+    if (word === 'group' && !group) group = true
+    else if (word === 'line' && !line) line = true
+    else return undefined
+  }
+  return { group, line }
+}
+
+/** A list's setting as the table keeps it, or nothing when it holds no word. */
+export function writeListSetting(setting: ListSetting): string | undefined {
+  const words = [
+    ...(setting.group ? ['group'] : []),
+    ...(setting.line ? ['line'] : []),
+    ...(setting.done !== undefined && setting.done.length > 0 ? ['done', ...setting.done] : []),
+  ]
+  return words.length === 0 ? undefined : words.join(' ')
+}
+
+/** Whether a list may group by this column: an enum, one link, or a date. */
+export function listGroupable(column: BoardColumn): boolean {
+  return column.type === 'enum' || column.type === 'link' || column.type === 'date'
+}
+
+/** What a list draws of a format. */
+export interface ListShape<C> {
+  readonly name: C | undefined
+  /** The column the groups come from, or nothing for one list. */
+  readonly group: C | undefined
+  /** What ticks a row, and whether a setting chose it — or nothing, and there is no tick. */
+  readonly done: { readonly column: C; readonly members: readonly string[]; readonly chosen: boolean } | undefined
+  /** The line's columns, as chosen or by default — the group's among them. */
+  readonly lines: readonly C[]
+  /** Whether a setting chose the line rather than the default. */
+  readonly lineChosen: boolean
+  /** The line as drawn: without the column the rows are grouped by, a date last. */
+  readonly shown: readonly C[]
+  /** The date rows are in the order of within a group: the line's first date, else the format's. */
+  readonly due: C | undefined
+}
+
+/** The list a format draws. Every format has one; a word its column cannot hold is left out, as the other views leave theirs. */
+export function listOf<C extends BoardColumn>(columns: readonly C[], settings: ReadonlyMap<string, string>): ListShape<C> {
+  const name = nameColumnOf(columns)
+  const read = (column: C): ListSetting | undefined => readListSetting(settings.get(column.name) ?? '')
+  const group = columns.find((column) => read(column)?.group === true && listGroupable(column))
+  let done: { column: C; members: readonly string[]; chosen: boolean } | undefined
+  for (const column of columns) {
+    const members = read(column)?.done
+    if (members === undefined || done !== undefined) continue
+    const kept = members.filter((member) => isMemberOf(column, member))
+    if (kept.length > 0 && (column.type !== 'boolean' || kept.length === 1)) done = { column, members: kept, chosen: true }
+  }
+  if (done === undefined) {
+    const state = columns.find((column) => column.type === 'enum' && (column.values ?? []).length > 1)
+    const last = state?.values?.[state.values.length - 1]
+    const flag = columns.find((column) => column.type === 'boolean')
+    if (state !== undefined && last !== undefined) done = { column: state, members: [last], chosen: false }
+    else if (flag !== undefined) done = { column: flag, members: ['true'], chosen: false }
+  }
+  const chosen = columns.filter((column) => column !== name && read(column)?.line === true)
+  const fallback = [
+    columns.find((column) => column.type === 'enums'),
+    columns.find((column) => column.type === 'link'),
+    columns.find((column) => column.type === 'date'),
+  ].filter((column): column is C => column !== undefined && column !== name && column !== done?.column)
+  const picked = chosen.length > 0 ? chosen : fallback
+  const isDate = (column: C): boolean => column.type === 'date'
+  const lines = [...picked.filter((column) => !isDate(column)), ...picked.filter(isDate)]
+  return {
+    name,
+    group,
+    done,
+    lines,
+    lineChosen: chosen.length > 0,
+    shown: lines.filter((column) => column !== group),
+    due: lines.find(isDate) ?? columns.find(isDate),
+  }
+}
+
+/** Whether a row holding this value is ticked. */
+export function isTicked(done: { readonly members: readonly string[] } | undefined, value: string | undefined): boolean {
+  return done !== undefined && value !== undefined && done.members.includes(value)
+}
+
+/**
+ * **What a tick writes** (the mockup's (d)): the first done member, or `true`;
+ * and an untick the member the row held before the tick, else the first member
+ * that is not done — or `false` on a boolean.
+ */
+export function tickValue(
+  done: { readonly column: BoardColumn; readonly members: readonly string[] },
+  ticking: boolean,
+  before?: string,
+): string {
+  if (ticking) return done.members[0] ?? 'true'
+  if (done.column.type === 'boolean') return 'false'
+  const values = done.column.values ?? []
+  if (before !== undefined && values.includes(before) && !done.members.includes(before)) return before
+  return values.find((each) => !done.members.includes(each)) ?? values[0] ?? ''
+}
+
+/** Where a date falls against today, as the list groups by a date. */
+export type DueBucket = 'late' | 'today' | 'tomorrow' | 'week' | 'later' | 'none'
+
+/** The bucket a date is in — `none` for no date, or text that is not one. */
+export function dueBucket(date: string | undefined, today: string): DueBucket {
+  const then = date === undefined ? undefined : dayCount(date)
+  const now = dayCount(today)
+  if (then === undefined || now === undefined) return 'none'
+  const days = then - now
+  return days < 0 ? 'late' : days === 0 ? 'today' : days === 1 ? 'tomorrow' : days < 7 ? 'week' : 'later'
+}
+
+/** The day so many days after this one, as ISO — or nothing when it is not a date. */
+export function dayAfter(date: string, days: number): string | undefined {
+  const count = dayCount(date)
+  return count === undefined ? undefined : new Date((count + days) * 86_400_000).toISOString().slice(0, 10)
+}
+
+/**
+ * **A due as the list reads it** (the mockup's (b)): `today`, `tomorrow`,
+ * `Sat, in 2 days` within a week, then `5 Nov` (with the year when it is not
+ * this one). An open row before today is late — `yesterday`, `3 days late` —
+ * the one thing on the line drawn in colour; a ticked one is only its date.
+ */
+export function dueText(
+  date: string,
+  today: string,
+  ticked: boolean,
+): { readonly text: string; readonly late: boolean } | undefined {
+  const then = dayCount(date)
+  const now = dayCount(today)
+  const day = parseISODate(date)
+  const year = parseISODate(today)?.year
+  if (then === undefined || now === undefined || day === undefined) return undefined
+  const days = then - now
+  const short = day.year === year ? formatDayMonth(day) : `${formatDayMonth(day)} ${String(day.year)}`
+  if (days < 0) {
+    return ticked ? { text: short, late: false } : { text: days === -1 ? 'yesterday' : `${String(-days)} days late`, late: true }
+  }
+  if (days === 0) return { text: 'today', late: false }
+  if (days === 1) return { text: 'tomorrow', late: false }
+  if (days < 7) return { text: `${DAY_WORDS[(((then + 4) % 7) + 7) % 7] ?? ''}, in ${String(days)} days`, late: false }
+  return { text: short, late: false }
+}
+
+/** One group of a list: its head, its rows, and the values a row added in it takes. */
+export interface ListGroup<R> {
+  readonly key: string
+  /** The head's words; empty for the one group of a list not grouped. */
+  readonly name: string
+  /** An enum's member, for the head's dot. */
+  readonly member?: string | undefined
+  readonly rows: readonly R[]
+  /**
+   * What a row added here holds — the member, the link's row, the day — or
+   * nothing when the group is not one value (Late, In the next 7 days, Later),
+   * and so has no quick add.
+   */
+  readonly implies: Readonly<Record<string, string>> | undefined
+  /** The group of ticked rows, last, when the list is grouped by what ticks a row. */
+  readonly ticked: boolean
+}
+
+const DATE_GROUPS: readonly { readonly bucket: DueBucket; readonly name: string; readonly days?: number }[] = [
+  { bucket: 'late', name: 'Late' },
+  { bucket: 'today', name: 'Today', days: 0 },
+  { bucket: 'tomorrow', name: 'Tomorrow', days: 1 },
+  { bucket: 'week', name: 'In the next 7 days' },
+  { bucket: 'later', name: 'Later' },
+]
+
+/**
+ * The rows into the list's groups (the mockup's (c)). An enum's members in
+ * their order — the done ones last when they are what ticks a row — then the
+ * rows with none, when there are some; a link's rows in `targets`' order, then
+ * *No …*; a date's buckets, a bucket that is not one value left out while it
+ * holds nothing. Ungrouped, one group holding every row.
+ */
+export function listGroups<C extends BoardColumn, R>(
+  shape: ListShape<C>,
+  rows: readonly R[],
+  valueOf: (row: R, column: C) => string | undefined,
+  today: string,
+  targets: readonly { readonly id: string; readonly name: string }[] = [],
+): readonly ListGroup<R>[] {
+  const column = shape.group
+  if (column === undefined) return [{ key: 'all', name: '', rows, implies: {}, ticked: false }]
+  const label = column.name.replace(/_/g, ' ')
+  const of = (row: R): string | undefined => {
+    const value = valueOf(row, column)
+    return value === undefined || value === '' ? undefined : value
+  }
+  if (column.type === 'date') {
+    const groups: ListGroup<R>[] = DATE_GROUPS.map((each) => {
+      const day = each.days === undefined ? undefined : dayAfter(today, each.days)
+      return {
+        key: `date:${each.bucket}`,
+        name: each.name,
+        rows: rows.filter((row) => dueBucket(of(row), today) === each.bucket),
+        implies: day === undefined ? undefined : { [column.name]: day },
+        ticked: false,
+      }
+    })
+    groups.push({
+      key: 'date:none',
+      name: /date$/i.test(label) ? `No ${label}` : `No ${label} date`,
+      rows: rows.filter((row) => dueBucket(of(row), today) === 'none'),
+      implies: {},
+      ticked: false,
+    })
+    return groups.filter((group) => group.rows.length > 0 || group.implies !== undefined)
+  }
+  if (column.type === 'link') {
+    const known = new Set(targets.map((each) => each.id))
+    return [
+      ...targets.map((target) => ({
+        key: `link:${target.id}`,
+        name: target.name,
+        rows: rows.filter((row) => of(row) === target.id),
+        implies: { [column.name]: target.id },
+        ticked: false,
+      })),
+      {
+        key: 'link:',
+        name: `No ${label}`,
+        rows: rows.filter((row) => {
+          const value = of(row)
+          return value === undefined || !known.has(value)
+        }),
+        implies: {},
+        ticked: false,
+      },
+    ]
+  }
+  const members = column.values ?? []
+  const ticks = shape.done?.column === column ? shape.done.members : []
+  const ordered = [...members.filter((each) => !ticks.includes(each)), ...members.filter((each) => ticks.includes(each))]
+  const groups: ListGroup<R>[] = ordered.map((member) => ({
+    key: `member:${member}`,
+    name: member.replace(/_/g, ' '),
+    member,
+    rows: rows.filter((row) => of(row) === member),
+    implies: { [column.name]: member },
+    ticked: ticks.includes(member),
+  }))
+  const none = rows.filter((row) => {
+    const value = of(row)
+    return value === undefined || !members.includes(value)
+  })
+  if (none.length === 0) return groups
+  const at = groups.findIndex((group) => group.ticked)
+  const loose: ListGroup<R> = { key: 'member:', name: `No ${label}`, rows: none, implies: {}, ticked: false }
+  return at === -1 ? [...groups, loose] : [...groups.slice(0, at), loose, ...groups.slice(at)]
+}
+
+/** Rows earliest due first, the undated after, each tie in the order it came — the list's order within a group. */
+export function inDueOrder<R>(rows: readonly R[], dueOf: (row: R) => string | undefined): readonly R[] {
+  const keyed = rows.map((row, at) => ({ row, at, day: dayCount(dueOf(row) ?? '') }))
+  keyed.sort((a, b) => {
+    if (a.day !== b.day) return a.day === undefined ? 1 : b.day === undefined ? -1 : a.day - b.day
+    return a.at - b.at
+  })
+  return keyed.map((each) => each.row)
+}

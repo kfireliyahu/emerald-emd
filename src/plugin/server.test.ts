@@ -602,7 +602,7 @@ describe('the frame’s views, and who is handed what (M41 U2)', () => {
     expect((board._meta as Record<string, { view: string }>)[SHEET_META]?.view).toBe('board')
     const roadmap = await client.callTool({ name: 'show_format', arguments: { path, format: 'book', view: 'roadmap' } })
     expect(roadmap.isError).toBe(true)
-    expect(textOf(roadmap)).toBe('book has no roadmap. Its views: table, board.')
+    expect(textOf(roadmap)).toBe('book has no roadmap. Its views: table, board, list.')
     await client.close()
   })
 

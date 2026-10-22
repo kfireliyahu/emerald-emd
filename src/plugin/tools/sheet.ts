@@ -39,6 +39,7 @@ import type { Database } from 'sql.js'
 
 import { filterText, heldAs, isFiltered, type RowFilter } from '@/data/repositories/formatFilterRepository.ts'
 import { foldFilter as foldHeld, isFoldKey, type ColumnChoice } from '@/ui/formats/addressFilter.ts'
+import { listOrder, listPicture, type ListLine } from '@/ui/formats/listView.ts'
 import {
   agendaData,
   AGENDA_DATE,
@@ -51,7 +52,7 @@ import {
 } from '@/data/repositories/formatLinkViewRepository.ts'
 import { listFormats } from '@/data/repositories/formatRepository.ts'
 import { countRows, linkLabels, listRows, type RowQuery } from '@/data/repositories/formatRowRepository.ts'
-import { boardSettings } from '@/data/repositories/formatViewRepository.ts'
+import { boardSettings, viewSettings } from '@/data/repositories/formatViewRepository.ts'
 import { labelColumn, type ColumnDeclaration, type FormatDeclaration } from '@/domain/format/declaration.ts'
 import type { StoredRow } from '@/domain/format/row.ts'
 import { boardOf, dayText } from '@/domain/format/view.ts'
@@ -83,7 +84,7 @@ import {
 } from './tool.ts'
 
 /** The views a tool may open the frame on, as `show_format` names them. */
-const VIEWS = ['sheet', 'board', 'roadmap', 'ready', 'agenda'] as const
+const VIEWS = ['sheet', 'board', 'list', 'roadmap', 'ready', 'agenda'] as const
 type SheetView = (typeof VIEWS)[number]
 
 /**
@@ -91,7 +92,14 @@ type SheetView = (typeof VIEWS)[number]
  * the app's view picker says it; `sheet` stays the code's word, and is still
  * taken from a model that says it.
  */
-const SAID: Record<SheetView, string> = { sheet: 'table', board: 'board', roadmap: 'roadmap', ready: 'ready', agenda: 'agenda' }
+const SAID: Record<SheetView, string> = {
+  sheet: 'table',
+  board: 'board',
+  list: 'list',
+  roadmap: 'roadmap',
+  ready: 'ready',
+  agenda: 'agenda',
+}
 const saidOf = (view: string): string => SAID[view as SheetView] ?? view
 
 /** How the read below tells its answer from a refusal's sentence. */
@@ -109,8 +117,9 @@ export const showFormatTool: PluginTool = {
     name: 'show_format',
     title: 'A declared format’s rows, drawn as the app draws them',
     description:
-      'Shows the person one declared format as the app draws it — its table, or its board, roadmap ' +
-      'or ready-to-start list when the format has one; or the agenda, every dated format’s rows from today — ' +
+      'Shows the person one declared format as the app draws it — its table, its list (one line per row, a tick, ' +
+      'grouped as `arrange_views view:list` says), or its board, roadmap or ready-to-start list when the format has one; ' +
+      'or the agenda, every dated format’s rows from today — ' +
       'in the conversation, in a client that draws MCP Apps; the answer’s first line says whether this client said it draws them. ' +
       'Call it when they ask to see a format, or some of its rows: `match` and `search` filter exactly ' +
       'as `format_rows` does, and the view draws only those rows and says it is filtered. The text ' +
@@ -436,6 +445,30 @@ function viewText(
         whole(`format_rows ${format}`),
       ].join('\n\n')
     }
+  }
+
+  if (view === 'list') {
+    // **The list** (M53 U4, D-519): its groups in order, each row with its tick.
+    const picture = listPicture(db, declaration, declarations, query, viewSettings(db, declaration.name, 'list'), askedOn())
+    const { shape } = picture
+    const said = (line: ListLine): string => (line.ticked ? `${line.title} (done)` : line.title)
+    const grouped = picture.groups.flatMap((group) => {
+      const lines = group.ticked ? group.rows : [...group.rows.filter((line) => !line.ticked), ...group.rows.filter((line) => line.ticked)]
+      if (lines.length === 0) return []
+      return shape.group === undefined ? [capped(lines.map((line) => `- ${said(line)}`))] : [`- ${group.name} (${String(lines.length)}): ${named(lines.map(said))}`]
+    })
+    const ticks =
+      shape.done === undefined
+        ? 'Nothing ticks a row: it has no enum and no yes/no.'
+        : `A row is ticked when ${shape.done.column.name} is ${shape.done.members.join(' or ')}.`
+    return [
+      `${format} as its list — ${plural(listOrder(picture).length, 'row')}` +
+        (shape.group === undefined ? ', one line each.' : `, grouped by ${shape.group.name}.`),
+      ...(by === undefined ? [] : [by]),
+      ticks + (shape.shown.length === 0 ? '' : ` Each line shows ${shape.shown.map((column) => column.name).join(', ')}.`),
+      ...(grouped.length === 0 ? [none] : [grouped.join('\n')]),
+      whole(`format_rows ${format}`),
+    ].join('\n\n')
   }
 
   const name = labelColumn(declaration)

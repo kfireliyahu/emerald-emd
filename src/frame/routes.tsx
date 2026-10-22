@@ -16,7 +16,7 @@ import { Bidi } from '@/ui/Bidi.tsx'
 import { filterAddress, type ColumnChoice } from '@/ui/formats/addressFilter.ts'
 import { ReadyView, RoadmapView } from '@/ui/formats/LinkViews.tsx'
 import { liveIndex, toneOf } from '@/ui/formats/tone.ts'
-import { AGENDA_PATH, boardPath, formatPath, readyPath, roadmapPath } from '@/ui/nav.ts'
+import { AGENDA_PATH, boardPath, formatPath, listPath, readyPath, roadmapPath } from '@/ui/nav.ts'
 import { Agenda } from '@/ui/screens/Agenda.tsx'
 import { FormatPage, FormatReady, FormatRoadmap } from '@/ui/screens/FormatLinkViews.tsx'
 import { FormatRows } from '@/ui/screens/FormatRows.tsx'
@@ -45,6 +45,7 @@ export const FRAME_ROUTES: readonly { readonly path: string; readonly element: R
   { path: '/formats/:name', element: <FormatRows /> },
   { path: '/formats/:name/entry/:entry', element: <FormatRows /> },
   { path: '/formats/:name/board', element: <FormatRows board /> },
+  { path: '/formats/:name/list', element: <FormatRows list /> },
   { path: '/formats/:name/roadmap', element: <FormatRoadmap /> },
   { path: '/formats/:name/ready', element: <FormatReady /> },
   { path: '/formats/:name/page/:entry', element: <FormatPage /> },
@@ -76,6 +77,8 @@ export function firstPath(view: FrameView, format: string, filter: RowFilter = {
       return START_PATH
     case 'board':
       return boardPath(format) + held
+    case 'list':
+      return listPath(format) + held
     case 'roadmap':
       return roadmapPath(format) + held
     case 'ready':
