@@ -6176,6 +6176,12 @@ unit: M37 U6
 should: The cell reads the file's name, opens it in its usual app, and a file under the folder is stored relative (scans/x.pdf); delete or rename the file and the cell reads 'missing' without anything else changing; an https address is refused with the reason.
 state: open
 
+### In the desktop app, open a format's List tab and tick a row
+unit: M53 U4
+should: A tick appears only where someone said what done is, and says what it sets
+breaks: Maintainer, 2026-10-22, on memory.emd's findings: 'its just not clear what am i ticking and why does everything have a tick? who defines that?' Two accidental ticks in the list beside an entry changed their kind from dead to bad, because D-519 guesses done as the first enum's last member and finding's first enum is kind. Restored by hand. Fix: M53 F1.
+state: fault
+
 ### In the document where the entry order swapped, run arrange_views with the same entry `order` as a dry run, and note the Was column. If it is wrong again, keep the exact calls since the last right one (arrange_views settings, extend_format arguments) and whether the app had the document open.
 unit: M42 F11
 should: Was equals the order last sent, with any columns extend_format added at the end.
@@ -13255,6 +13261,15 @@ files: scripts/archive-decisions.mjs, src/archiveDecisions.test.ts, docs/09-deci
 branch: claude/quizzical-cerf-24d153
 commit: 91a05dd
 
+### M53 F1
+milestone: M53
+scope: app
+title: A list ticks only where someone said what done is, and the tick says what it sets
+decision: D-519
+state: planned
+brief: Found in the 0.2.0 review (2026-10-22). On memory.emd's finding list, in the narrow list beside an entry, the maintainer ticked two rows by accident and their KIND changed from dead to bad. D-519's default guesses done = the first enum's last member, else the first boolean. So nearly every format's list carries ticks, and nothing on screen says what a tick writes. Maintainer: 'its just not clear what am i ticking and why does everything have a tick? who defines that?' Ruled: a tick only where someone said what done is, labelled with what it sets; no guessing. Write a decision row that amends D-519. (1) No default at all: a list shows ticks only when its view names the done column and member(s). That comes from the person, set in place from the list (a small control in the list's header, e.g. 'Tick to mark… <column> <member>', and 'No ticks'), from a conversation (arrange_views view:list, which already sets done), or from a pack's views.md. Without it the list is plain lines with no tick column, in the List tab and in the narrow list beside an entry alike. Drop the guess from view.ts and its tests. (2) The tick says what it sets: the header names it ('Ticking marks state done'), and each circle's hover and accessible name says it ('Mark done' / 'Undo: back to open'). (3) Undo: a tick shows a short undo in place, restoring the member it held, beyond the in-session untick. (4) The development pack's views.md declares done for its own formats: unit built, milestone closed, finding done, open_question answered, review_entry accepted, inbox applied. decision, rule and term get none. The ledger pack declares none unless one obviously fits. Parity is unchanged: arrange_views already sets and clears done; show_format and formats' **List:** line show no tick and no done where none is set. Tests: a format with enums but no done set draws no ticks; finding's list ticks state to done; undo restores; the header names what is set. Done-test: on memory.emd, findings tick state (never kind), decisions show no ticks, and a person sets done on a task format from the list's header in place.
+files: src/domain/format/view.ts (list settings, done default), src/ui/formats/ (the list view), src/data/packs/development/views.md
+
 ### M53 U1
 milestone: M53
 scope: app
@@ -13505,7 +13520,7 @@ emerald: changed
 ---
 
 decision: 2026-10-22
-finding: 2026-10-18
+finding: 2026-10-22
 inbox: 2026-10-22
 milestone: 2026-10-22
 open_question: 2026-10-22
