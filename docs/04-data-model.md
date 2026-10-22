@@ -443,6 +443,26 @@ text document carries the records in a `seeds.md` part when there are any.
 A text document carries the widths in a `views.md` part, only for columns that still exist. No tool
 writes here (D-289).
 
+### FormatSavedView
+
+**Primary key** (`format_name`, `name`). Schema 63, M53 U5, D-514, D-520.
+
+> A format's filter, order, columns and kind of view under a name — what a view's address holds,
+> kept so the rail opens it again and a conversation draws it by name. **Presentation, never the
+> declaration**, and not a format (D-514).
+
+| Field | Type | Notes |
+|---|---|---|
+| `format_name` | text | The format. `deleteFormat` clears its rows. |
+| `name` | text | 1 to 60 characters, one line, never opening with `?` nor a view's own word (`savedNameRefusal`). What a dashboard points at, with the format. |
+| `kind` | text | `table` · `board` · `list` · `roadmap` · `ready`, `CHECK`ed: the view it opens as. |
+| `address` | text | The address's query as `addressFilter.ts` spells it, in one spelling — `?due=today&state!=done&order:due=ascending`, or empty for every row; at most 2,000 characters. Kept as words, so a window around today (`today`, `within 7 days`) is worked out the day it is opened. No foreign key to a column: an address naming a column that has gone draws every row and says why. |
+
+Not more rows of `format_view_column`: a setting there is one word of at most 32 characters for one
+column. Written by the FilterBand's *Save this view* and the rail's rename and delete, and by
+`arrange_views view:saved` (D-520). A text document carries each as a block of its `views.md` part
+under `### <format> saved` — `name`, `kind`, `address`.
+
 ### FormatGraphPlace
 
 **Primary key** (`kind`, `name`). Schema 50, M26 U4, D-291.
@@ -561,7 +581,7 @@ screen retypes a column that holds data.
   a sheet's column widths are the document's, in `format_column_view` (D-289), and so are the
   connections canvas's places, in `format_graph_place` (D-291), and the way each column is
   shown on a format's entry (Show as, D-294, D-402), in `format_view_column`, and its currency, in `document_setting` (D-344) — one table for every view, and
-  a board is more rows of it: `lanes` on the enum its lanes are, `card` on a column a card shows (D-301), and so are a roadmap (`order`, `under`, `line`) and a page (`body`, `line`) (D-302, retired by D-401: still read, drawn by nothing), a ready view (`waits`, `ready <members> done <members>`, `line`, and `stalls <days>` on a date, D-501) and a start view (`is <member>`, `latest <count>`, `line`) (D-303), and an agenda (`date`, `done <members>`, `line`) (D-473), and a list (`group`, `line`, `done <members>`, words one column holds together, D-519). An entry's `setting` is a way to show the column (`figure`, `bar`, `steps`… — a worked-out column's too; the retired `field` and `search` read as none, D-402), a place on the page
+  a board is more rows of it: `lanes` on the enum its lanes are, `card` on a column a card shows (D-301), and so are a roadmap (`order`, `under`, `line`) and a page (`body`, `line`) (D-302, retired by D-401: still read, drawn by nothing), a ready view (`waits`, `ready <members> done <members>`, `line`, and `stalls <days>` on a date, D-501) and a start view (`is <member>`, `latest <count>`, `line`) (D-303), and an agenda (`date`, `done <members>`, `line`) (D-473), and a list (`group`, `line`, `done <members>`, words one column holds together, D-519); a view saved under a name is its own table, `format_saved_view` (D-520). An entry's `setting` is a way to show the column (`figure`, `bar`, `steps`… — a worked-out column's too; the retired `field` and `search` read as none, D-402), a place on the page
   (`#2`), `header` (in the line under the title, D-401), `hidden` (kept off this entry view even when it holds a value, never the title or a required column) and `new` (a new entry asks for it) (D-517), or several (`line #1 header`): the page's order is the view's and never the declaration's (D-296). The screens write these and so does a conversation, through `arrange_views` (D-403) — Show as, `header`, `hidden`, `new_entry`, the order, a board's `lanes` and a width, and since D-469 every roadmap, ready and start word as a column's `setting`, one column holding a sole word (`order`, `waits`, `ready …`, `latest`) at a time; the roadmap's *In the order of* is the screen's too, and a word is at most 32 characters (052's CHECK); a canvas place stays the screen's (D-291). **A pack's settings are a format it
   declares** (D-282): the ledger's `setting`, a unique `key` and a JSON `value`, which is what
   `app_setting` (migration 006, D-034) was until migration 048 dropped it.

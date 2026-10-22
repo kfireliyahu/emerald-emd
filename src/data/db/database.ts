@@ -77,6 +77,7 @@ import migration059 from './migrations/059_enums.sql?raw'
 import migration060 from './migrations/060_source_key.sql?raw'
 import migration061 from './migrations/061_elsewhere.sql?raw'
 import migration062 from './migrations/062_file.sql?raw'
+import migration063 from './migrations/063_saved_view.sql?raw'
 
 /**
  * Numbered, additive, immutable after release. `schema_version` records the
@@ -146,6 +147,7 @@ const MIGRATIONS: readonly { readonly version: number; readonly sql: string }[] 
   { version: 60, sql: migration060 },
   { version: 61, sql: migration061 },
   { version: 62, sql: migration062 },
+  { version: 63, sql: migration063 },
 ]
 
 export const SCHEMA_VERSION = MIGRATIONS[MIGRATIONS.length - 1]?.version ?? 0

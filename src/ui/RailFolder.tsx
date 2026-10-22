@@ -8,10 +8,13 @@ import type { FormatDeclaration } from '@/domain/format/declaration.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
-import { filterAddress } from '@/ui/formats/addressFilter.ts'
+import { deleteSavedView, renameSavedView } from '@/data/repositories/formatViewRepository.ts'
+import type { SavedView } from '@/domain/format/view.ts'
+import { filterAddress, sameAddress } from '@/ui/formats/addressFilter.ts'
+import { useSavedViews } from '@/ui/formats/savedView.ts'
 import { FOLDER_SIZE, folderOf } from '@/ui/formats/folder.ts'
 import { toneOf } from '@/ui/formats/tone.ts'
-import { entryPath, formatPath, NEW_ENTRY, type NavChild } from '@/ui/nav.ts'
+import { entryPath, formatPath, NEW_ENTRY, savedViewPath, type NavChild } from '@/ui/nav.ts'
 import { folderIsOpen, toggleFolder, useOpenFolders } from '@/ui/railFolders.ts'
 
 /**
@@ -24,6 +27,10 @@ import { folderIsOpen, toggleFolder, useOpenFolders } from '@/ui/railFolders.ts'
  * the entry's header uses, a filter line once there are more than twelve —
  * the Table's own search — and *All n*, which opens the entry's list holding
  * it, on the first entry it holds (M37 U2b).
+ *
+ * **Its saved views are listed under it, open or not** (M53 U5, D-520): each
+ * opens its address, is lit while the address is it, and is renamed or
+ * deleted where it stands.
  */
 
 /** The document's declarations, read once per change for every folder in the rail. */
@@ -62,6 +69,7 @@ export function RailFolder({
   // In the format already, an entry keeps the list's search; one the search
   // does not hold lets it go when it opens (M37 U2b).
   const kept = useLocation().search
+  const saved = useSavedViews(name)
   const held = useOpenFolders()
   const [filter, setFilter] = useState('')
   const declaration = declarations.find((each) => each.name === name)
@@ -85,13 +93,17 @@ export function RailFolder({
   )
 
   const indent = grouped ? 16 : 0
+  // The saved view the address is, when it is one: it carries the marker, as an entry does.
+  const savedHere = (view: SavedView): boolean =>
+    lit && pathname === savedViewPath(name, view.kind, '') && sameAddress(kept, view.address)
+  const onSaved = saved.some(savedHere)
   const q = filter.trim()
   return (
     <>
       <div
         // The format's row: lit on its own screens, ink while one of its entries is (the entry carries the marker).
         className={`fc-row-enter relative flex h-7 items-center text-[13px] transition-colors duration-[var(--duration-micro)] ${
-          lit && current === undefined
+          lit && current === undefined && !onSaved
             ? 'bg-accent-soft text-ink before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:bg-accent'
             : lit
               ? 'text-ink'
@@ -125,6 +137,15 @@ export function RailFolder({
           )}
         </Link>
       </div>
+
+      {saved.map((view) => (
+        <SavedRow
+          key={view.name}
+          view={view}
+          here={savedHere(view)}
+          indent={indent}
+        />
+      ))}
 
       {open && folder !== undefined && (
         <>
@@ -196,5 +217,130 @@ export function RailFolder({
         </>
       )}
     </>
+  )
+}
+
+/**
+ * **One saved view in the rail** (M53 U5): its name opens its address; the
+ * pencil renames it in place — Enter writes, Escape lets it go — and the bin
+ * asks once, where it stands, before it deletes. A refusal (a name already
+ * taken) is said under the field and nothing is written.
+ */
+function SavedRow({ view, here, indent }: { view: SavedView; here: boolean; indent: number }) {
+  const mutate = useDocumentStore((state) => state.mutate)
+  const [renaming, setRenaming] = useState<string | undefined>(undefined)
+  const [deleting, setDeleting] = useState(false)
+  const [refusal, setRefusal] = useState<string | undefined>(undefined)
+  const left = { paddingLeft: 46 + indent }
+  const quiet =
+    'text-ink-tertiary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent'
+
+  if (renaming !== undefined) {
+    const rename = (): void => {
+      try {
+        mutate((db) => renameSavedView(db, view.format, view.name, renaming.trim()))
+      } catch (error) {
+        setRefusal(error instanceof Error ? error.message : String(error))
+        return
+      }
+      setRenaming(undefined)
+      setRefusal(undefined)
+    }
+    return (
+      <div className="pr-2.5 text-[12.5px]" style={left}>
+        <input
+          autoFocus
+          value={renaming}
+          maxLength={60}
+          aria-label={`Rename ${view.name}`}
+          onChange={(event) => {
+            setRenaming(event.target.value)
+            setRefusal(undefined)
+          }}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault()
+              rename()
+            } else if (event.key === 'Escape') {
+              event.stopPropagation()
+              setRenaming(undefined)
+              setRefusal(undefined)
+            }
+          }}
+          onBlur={() => {
+            if (refusal === undefined) setRenaming(undefined)
+          }}
+          className="h-6 w-full min-w-0 border-0 border-b border-accent bg-transparent p-0 text-[12.5px] text-ink outline-none"
+        />
+        {refusal !== undefined && (
+          <div className="pb-1 text-[11px] text-negative" role="alert">
+            {refusal}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  if (deleting) {
+    return (
+      <div className="flex h-6 items-center gap-2 pr-2.5 text-[12px] text-ink-secondary" style={left}>
+        <span className="min-w-0 truncate">
+          Delete <Bidi>{view.name}</Bidi>?
+        </span>
+        <button
+          type="button"
+          className="text-negative hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+          onClick={() => mutate((db) => deleteSavedView(db, view.format, view.name))}
+        >
+          Delete
+        </button>
+        <button type="button" className={quiet} onClick={() => setDeleting(false)}>
+          Keep
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div
+      className={`group relative flex h-6 items-center pr-1.5 text-[12.5px] transition-colors duration-[var(--duration-micro)] ${
+        here
+          ? 'bg-accent-soft text-ink before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:bg-accent'
+          : 'text-ink-secondary hover:text-ink'
+      }`}
+    >
+      <Link
+        to={savedViewPath(view.format, view.kind, view.address)}
+        aria-current={here ? 'page' : undefined}
+        title={`${view.name} — a saved ${view.kind}`}
+        className="flex h-6 min-w-0 flex-1 items-center gap-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+        style={left}
+      >
+        <span className="flex-none text-ink-tertiary">
+          <ActionGlyph name="filter" size={11} />
+        </span>
+        <Bidi className="min-w-0 truncate">{view.name}</Bidi>
+      </Link>
+      <span className="flex flex-none items-center gap-0.5 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100">
+        <button
+          type="button"
+          aria-label={`Rename ${view.name}`}
+          title="Rename"
+          className={`inline-flex h-5 w-5 items-center justify-center ${quiet}`}
+          onClick={() => setRenaming(view.name)}
+        >
+          <ActionGlyph name="edit" size={11} />
+        </button>
+        <button
+          type="button"
+          aria-label={`Delete ${view.name}`}
+          title="Delete"
+          className={`inline-flex h-5 w-5 items-center justify-center ${quiet}`}
+          onClick={() => setDeleting(true)}
+        >
+          <ActionGlyph name="trash" size={11} />
+        </button>
+      </span>
+    </div>
   )
 }

@@ -333,6 +333,8 @@ const CARRIED: ReadonlySet<string> = new Set([
   // part has carried them since M26 U6, and this list did not say so until M27
   // U3 — so a text document with an input chosen could not be saved as text.
   'format_view_column',
+  // A format's saved views (M53 U5, D-520), in the same part.
+  'format_saved_view',
   'measurement_unit',
   // The document's currency (M29 F3, D-344), in the settings part.
   'document_setting',

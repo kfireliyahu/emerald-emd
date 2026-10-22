@@ -436,6 +436,7 @@ written out here.
 | D-517 | 2026-10-22 | Hiding a field is the entry view's, beside its order: `hidden` in a column's `format_view_column` setting (and `views.md`) keeps it off the page even when it holds a value, never the title or a required column; `new` marks a column a new entry asks for; one Fields list behind the entry's icon replaces the Arrange mode, and a field moves only within its part, by its label, its row, its menu or Alt+Up/Down; `arrange_views` takes `hidden` and `new_entry`; amends D-296 | [below](#d-517) |
 | D-518 | 2026-10-22 | An entry draws what it holds: on a row that exists a column with no value is not drawn but named on one Empty line at the foot, where a name opens its field in place; a required column is always drawn and says it is needed; a new entry asks for the title, every required column and the ones ticked New entry, starts a required enum nothing implies at its first member, and says what is missing in one line only once Add is pressed; labels read as words without a unit suffix; two plain figures sit in the line under the title | [below](#d-518) |
 | D-519 | 2026-10-22 | Every format has a list: one line per row, a tick, the name and the line's columns, grouped by an enum, a link or a date's buckets; `group`, `line` and `done <members>` are words one column's `format_view_column` setting holds together, `group` and `done` one column's each; the tick writes the done member and an untick the member held before; quick add writes the title, the group's value, the filter's exact values and a required enum's first member as `record_format_rows`' batch, or opens entry/new when a required column is still empty; the list beside an entry is the same list, narrow; the View menu became the format's one tab strip | [below](#d-519) |
+| D-520 | 2026-10-22 | A saved view is its own table, `format_saved_view` (063): a format, a name, a kind (table, board, list, roadmap, ready) and the address as the address spells it, so a window around today stays the phrase; *Save this view* on the FilterBand, the rail lists them under their format and renames and deletes in place; `arrange_views view:saved` saves, renames and deletes, and `show_format` and `format_rows` take `view:"<name>"`; an entry's back link names the view it was opened from | [below](#d-520) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1073,6 +1074,59 @@ format draws the list read-only (no tick, no quick add), as the frame does.
 forgotten. Hiding *unchecked* checks: it would make a claim go quiet exactly where it cannot yet be
 proved. Disabling Add until the draft is a row: it said nothing about why, and a page that scolds
 before anything is typed is the thing the mockup removed.
+
+## D-520 · 2026-10-22 · A saved view is its own table, `format_saved_view` (063): a format, a name, a kind (table, board, list, roadmap, ready) and the address as the address spells it, so a window around today stays the phrase; *Save this view* on the FilterBand, the rail lists them under their format and renames and deletes in place; `arrange_views view:saved` saves, renames and deletes, and `show_format` and `format_rows` take `view:"<name>"`; an entry's back link names the view it was opened from <a id="d-520"></a>
+
+**Context.** M53 U5, under D-514: *a saved view is a format's filter, order, columns and kind under
+a name, kept beside its other views*. The brief asked for it in `format_view_column` if a named view
+fit there without a migration.
+
+**Decision.**
+
+- **Its own table, `format_saved_view`** (migration 063): `format_name`, `name` (1 to 60
+  characters), `kind` (`table`, `board`, `list`, `roadmap`, `ready`) and `address`, keyed by format
+  and name. Not `format_view_column`: a setting there is one word of at most 32 characters for one
+  column (052's CHECK), and a saved view is a sentence about the whole format. Presentation, so no
+  foreign key to a column; `deleteFormat` clears a format's, and an address naming a column that has
+  gone draws every row with the sentence an old bookmark gets.
+- **The address is kept as the address spells it** (`addressFilter.ts`, written in one spelling,
+  its parts in name order): `?due=today&state!=done&order:due=ascending`. So `due today` and
+  `within 7 days` are kept as the phrase and worked out the day the view is opened, never the day
+  it was saved. What is held is everything the address holds: the filter, a roadmap's folds, the
+  columns chosen and the sort. The list's own settings (group, line, done) stay the list's — a saved
+  list draws by them.
+- **Named per format** — `task` / `Due today` is what M53 U7's dashboard points at. A name is one
+  line, never opens with `?`, and is not a view's own word (`list`, `table`, `board`…), since
+  `show_format view:list` already means the list.
+- **On screen**: the FilterBand offers *Save this view* while the address holds anything — a sort
+  alone draws the band too, saying *Every entry* — and asks the name in place; a name already taken
+  is offered as *Replace*. While the address is a saved view's (same kind, same address in one
+  spelling) the band says *Saved as Due today*. The rail lists a format's saved views under it, open
+  or not; one opens its kind's route with its address, is lit while the address is it, and the
+  pencil and the bin rename and delete it where it stands. The agenda saves none: it is every dated
+  format's, and a saved view is one format's.
+- **Parity (D-227)**: `arrange_views` with `view: saved` saves one (`name`, `kind`, `match`,
+  `search`, `order`, `descending`, `columns`, checked as `format_rows` checks a filter), `rename`s
+  one or `delete`s one; `show_format view:"Due today"` draws it as its kind with its filter, and
+  `format_rows view:"Due today"` reads its rows — a `match` given beside it adds to the view's, and a
+  `search`, `order` or `columns` given replaces it. `formats` with a `format` lists them. The frame,
+  handed a name it does not know as a view, reads the saved view from the document it fetches.
+- **A text document** writes each as a block of the views part, under `### <format> saved`, with
+  `name`, `kind` and `address`.
+- **And an entry's back link names the view it was opened from** (carried from U3 and U4): `← List`
+  from the list, `← Board` from the board, the format's title from the table — kept in the route's
+  state across every step between entries, and going back to that view with the address.
+
+**Alternatives rejected.** Rows of `format_view_column` under view `saved`, the name as the column
+and the address split across words: the 32-character cap makes an address a puzzle, and a CHECK
+widened there would loosen every view's words. `document_setting` keys: a document's settings, not
+a format's, and nothing would clear them with the format. Storing the filter as JSON: the address
+is already the one spelling the screen, the frame and a bookmark share.
+
+**Consequences.** A schema change: `docs/memory.emd`, stored as text, was migrated with this commit
+— its header says schema 63, which is all the migration changes in a text document with no saved
+view — and a plugin built before it refuses the file until it is rebuilt. M53 U7 holds saved views
+as a dashboard's blocks, by format and name.
 
 ## Related
 

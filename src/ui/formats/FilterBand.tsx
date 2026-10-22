@@ -21,6 +21,7 @@ import { FIELD } from '@/ui/components/fieldLook.ts'
 import { useDismiss } from '@/ui/components/useDismiss.ts'
 
 import { addressView, filterAddress, type AddressOrder, type ColumnChoice } from './addressFilter.ts'
+import type { Saving } from './savedView.ts'
 import { toISODate } from '@/core/time.ts'
 import { parseClockWords } from '@/domain/format/clock.ts'
 import { today } from '@/ui/today.ts'
@@ -125,6 +126,7 @@ export function FilterBand({
   onClear,
   onChange,
   declaration,
+  saving,
 }: {
   readonly filter: RowFilter
   readonly shown: number
@@ -135,8 +137,15 @@ export function FilterBand({
   readonly onChange?: ((next: RowFilter) => void) | undefined
   /** The format filtered, so an enum's member is said as its words — `in progress` (M37 U3). */
   readonly declaration?: FormatDeclaration | undefined
+  /**
+   * **Save this view** (M53 U5, D-520): offered while the address holds
+   * anything — a sort alone too, which draws the band with every entry —
+   * and *Saved as …* while it is a saved view. Absent where nothing is written.
+   */
+  readonly saving?: Saving | undefined
 }) {
-  if (!isFiltered(filter)) return null
+  const filtered = isFiltered(filter)
+  if (!filtered && saving?.held !== true) return null
   const held = Object.entries(filter.match ?? {})
   const search = filter.search?.trim() ?? ''
   return (
@@ -146,7 +155,8 @@ export function FilterBand({
       className="flex shrink-0 flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-hairline px-6 py-1.5 text-caption text-ink-secondary"
     >
       <span>
-        Filtered by{' '}
+        {!filtered && 'Every entry'}
+        {filtered && 'Filtered by '}
         {held.map(([name, value], at) => (
           <span key={name}>
             {at > 0 && ', '}
@@ -175,14 +185,103 @@ export function FilterBand({
       <span className="tabular-nums">
         {refusal === undefined ? `${String(shown)} of ${String(total)} ${total === 1 ? 'entry' : 'entries'}` : refusal}
       </span>
+      {filtered && (
+        <button
+          type="button"
+          className="text-ink-secondary underline decoration-hairline underline-offset-2 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+          onClick={onClear}
+        >
+          Clear
+        </button>
+      )}
+      {saving !== undefined && saving.held && <SaveView saving={saving} />}
+    </div>
+  )
+}
+
+/**
+ * **Save this view, with its name asked in place** (M53 U5): the button opens
+ * a field where it stood; Enter saves, Escape lets it go. A name the format's
+ * views already have is offered as a replace, said on the button, so changing
+ * a saved view is saving it again under its name.
+ */
+function SaveView({ saving }: { readonly saving: Saving }) {
+  const [naming, setNaming] = useState<string | undefined>(undefined)
+  const [refusal, setRefusal] = useState<string | undefined>(undefined)
+  if (saving.current !== undefined) {
+    return (
+      <span className="ml-auto">
+        Saved as <span className="text-ink"><Bidi>{saving.current}</Bidi></span>
+      </span>
+    )
+  }
+  if (naming === undefined) {
+    return (
       <button
         type="button"
-        className="text-ink-secondary underline decoration-hairline underline-offset-2 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
-        onClick={onClear}
+        className="ml-auto text-accent hover:underline hover:underline-offset-[3px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+        onClick={() => {
+          setNaming('')
+          setRefusal(undefined)
+        }}
       >
-        Clear
+        Save this view
       </button>
-    </div>
+    )
+  }
+  const replaces = saving.names.includes(naming.trim())
+  const save = (): void => {
+    const said = saving.save(naming)
+    if (said === undefined) setNaming(undefined)
+    setRefusal(said)
+  }
+  return (
+    <span className="ml-auto inline-flex flex-wrap items-baseline gap-x-2">
+      <input
+        autoFocus
+        value={naming}
+        onChange={(event) => {
+          setNaming(event.target.value)
+          setRefusal(undefined)
+        }}
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault()
+            save()
+          } else if (event.key === 'Escape') {
+            event.stopPropagation()
+            setNaming(undefined)
+            setRefusal(undefined)
+          }
+        }}
+        placeholder="Name this view"
+        aria-label="Name this view"
+        maxLength={60}
+        className="w-44 border-0 border-b border-hairline-strong bg-transparent px-0 py-0 text-caption text-ink outline-none placeholder:text-ink-tertiary focus:border-accent"
+      />
+      <button
+        type="button"
+        className="text-accent hover:underline hover:underline-offset-[3px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+        onClick={save}
+      >
+        {replaces ? 'Replace' : 'Save'}
+      </button>
+      <button
+        type="button"
+        className="text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+        onClick={() => {
+          setNaming(undefined)
+          setRefusal(undefined)
+        }}
+      >
+        Cancel
+      </button>
+      {refusal !== undefined && (
+        <span className="text-negative" role="alert">
+          {refusal}
+        </span>
+      )}
+    </span>
   )
 }
 

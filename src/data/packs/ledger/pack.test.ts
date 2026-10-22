@@ -64,6 +64,7 @@ describe('the ledger pack', () => {
       'format_column_view',
       'format_graph_place',
       'format_view_column',
+      'format_saved_view',
       'format_constraint',
       'format_identity',
       'format_intake',

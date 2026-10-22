@@ -190,6 +190,9 @@ describe('what the frame draws', () => {
     })
     // `start_here` names no format, and its view is the picture.
     expect(sheetOf({ path: 'F:/a.emd' }, text)).toMatchObject({ ok: true, format: '', view: 'start' })
+    // A saved view's name (M53 U5): kept for the frame to read from the document; the table's word is not one.
+    expect(sheetOf({ path: 'F:/a.emd', format: 'task', view: 'Due today' }, text)).toMatchObject({ view: 'sheet', saved: 'Due today' })
+    expect(sheetOf({ path: 'F:/a.emd', format: 'task', view: 'table' }, text)).not.toHaveProperty('saved')
     // A view this frame does not know — a newer server — is the sheet.
     expect(sheetOf({ path: 'F:/a.emd', format: 'book', view: 'gantt' }, text)).toMatchObject({ view: 'sheet' })
   })

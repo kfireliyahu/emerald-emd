@@ -4,10 +4,10 @@ import { MemoryRouter, matchPath, useLocation, useNavigate } from 'react-router-
 import '@/ui/theme/tokens.css'
 import './frame.css'
 import type { RowFilter } from '@/data/repositories/formatFilterRepository.ts'
-import type { ColumnChoice } from '@/ui/formats/addressFilter.ts'
+import { addressView, filterAddress, type ColumnChoice } from '@/ui/formats/addressFilter.ts'
 import { listFormats } from '@/data/repositories/formatRepository.ts'
 import { readRow } from '@/data/repositories/formatRowRepository.ts'
-import { viewSettings } from '@/data/repositories/formatViewRepository.ts'
+import { savedView, viewSettings } from '@/data/repositories/formatViewRepository.ts'
 import type { FormatDeclaration } from '@/domain/format/declaration.ts'
 import type { StoredRow } from '@/domain/format/row.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
@@ -15,6 +15,8 @@ import { Bidi } from '@/ui/Bidi.tsx'
 import { ReadOnly } from '@/ui/formats/readOnly.ts'
 import { Conversation } from '@/ui/formats/conversation.ts'
 import { initTheme, setThemePreference } from '@/ui/theme/useTheme.ts'
+import { savedViewPath } from '@/ui/nav.ts'
+import type { Database } from 'sql.js'
 import type { FrameView } from './contract.ts'
 import { aboutMessage, selectionContext, startMessage, type Handed, type Where } from './handOff.ts'
 import { connect, handedOver, INLINE_ONLY, offersLine, pageKey, parentPort, sheetOf, type Display, type DisplayMode, type Offers } from './host.ts'
@@ -63,6 +65,8 @@ type Shown =
       readonly filter: RowFilter
       /** Which columns each format's lines draw (M37 U5). */
       readonly columns: ColumnChoice
+      /** Where it opens instead, when `show_format` named a saved view (M53 U5): its kind's route and address. */
+      readonly at?: string
       /** Whether, and how, it is drawn again when the file changes (M44 U4). */
       readonly live?: LiveState
     }
@@ -144,6 +148,38 @@ let begun = false
 let waited = false
 const INPUT_GRACE_MS = 1_000
 
+/**
+ * **Where a saved view opens, read from the document** (M53 U5, D-520):
+ * `show_format view:"Due today"` hands the frame a name, and the frame — which
+ * has the document, not the server's answer — finds it and opens on its kind
+ * with its address, the call's own `match` laid over it as the server does.
+ * A name the document has not got opens where the server's answer drew.
+ */
+function openedAt(
+  db: Database | undefined,
+  format: string,
+  saved: string | undefined,
+  filter: RowFilter,
+  columns: ColumnChoice,
+): { readonly at?: string } {
+  if (db === undefined || saved === undefined) return {}
+  const view = savedView(db, format, saved)
+  if (view === undefined) return {}
+  const held = addressView(view.address)
+  const address = filterAddress(
+    {
+      ...(held.filter.match === undefined && filter.match === undefined ? {} : { match: { ...held.filter.match, ...filter.match } }),
+      ...(filter.search ?? held.filter.search ? { search: filter.search ?? held.filter.search } : {}),
+    },
+    {
+      folds: held.folds,
+      columns: Object.keys(columns).length > 0 ? columns : held.columns,
+      ...(held.order === undefined ? {} : { order: held.order }),
+    },
+  )
+  return { at: savedViewPath(format, view.kind, address) }
+}
+
 function begin(): void {
   if (begun || result === undefined) return
   const sheet = sheetOf(input, result.value)
@@ -181,7 +217,16 @@ function begin(): void {
         ? { kind: 'FAILED', reason: error }
         : missing
           ? { kind: 'FAILED', reason: `${name} declares no format named ${sheet.format}. The answer is in the conversation as text.` }
-          : { kind: 'OPEN', name, path: sheet.path, format: sheet.format, view: sheet.view, filter: sheet.filter, columns: sheet.columns },
+          : {
+              kind: 'OPEN',
+              name,
+              path: sheet.path,
+              format: sheet.format,
+              view: sheet.view,
+              filter: sheet.filter,
+              columns: sheet.columns,
+              ...openedAt(db, sheet.format, sheet.saved, sheet.filter, sheet.columns),
+            },
     )
     if (error === undefined && !missing && key !== undefined) goLive({ path: sheet.path, uri: copy.uri ?? '', key, stamp: copy.stamp })
   })()
@@ -285,7 +330,7 @@ function Frame() {
     return <p className="p-4 text-[13px] text-ink-secondary">{now.reason}</p>
   }
   return (
-    <MemoryRouter initialEntries={[firstPath(now.view, now.format, now.filter, now.columns)]}>
+    <MemoryRouter initialEntries={[now.at ?? firstPath(now.view, now.format, now.filter, now.columns)]}>
       <ReadOnly.Provider value="Read only here.">
         <Handing where={{ name: now.name, path: now.path }}>
           <CopyBar name={now.name} live={now.live} />

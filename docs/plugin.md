@@ -290,7 +290,9 @@ every row the view shows and nothing longer, which is what a client that draws n
   U3) went to Later on 2026-10-08. `ReadOnly` locks every format as a pack's is locked: no add, no edit, no
   remove, no change of shape. `show_format` takes `view` (one the format has — or, for a
   roadmap, the one its rows fold under: `unit view:roadmap match:{milestone:M9}` draws the
-  milestone roadmap at M9 with its units named, M47 U7; or `agenda`, which takes no format, D-473), and
+  milestone roadmap at M9 with its units named, M47 U7; or `agenda`, which takes no format, D-473;
+  or a saved view's name, `view:"Due today"`, drawn as its kind with its address, D-520 — the frame,
+  handed a name it does not know as a view, reads the saved view from the document it fetches), and
   **`match` and `search`, read exactly as `format_rows` reads them** (M44 U6): one
   `filterQuery` (`src/data/repositories/formatFilterRepository.ts`) turns them into the
   `RowQuery` `listRows` answers for both tools and for the app's format screen, so there is no
@@ -1074,6 +1076,12 @@ rather than three decisions.
 > built}}` or `{not:[a, b]}` none of them with an empty cell let through, and `null` the empty cell
 > — `{owner:null}`, `{owner:{not:null}}`, `[planned, null]`: D-380's words for a declared filter, in
 > a question. `where` and `expect` still name one value per column.
+> **M53 U5 added saved views** (D-520): `arrange_views view:saved name:"Due today" kind:list
+> match:{due:"today"}` keeps a format's filter, folds, columns, sort and kind under a name — the
+> address as the app spells it, so `today` stays the phrase — and `rename` and `delete: true` change
+> one; `show_format view:"Due today"` draws it and `format_rows view:"Due today"` reads it, a `match`
+> given beside it added to the view's. `formats` with a `format` lists them.
+>
 > **M53 U4 added the list** (D-519): `show_format view:list` draws a format's rows one line each,
 > grouped as `arrange_views view:list` says (`group`, `line`, `done <members>` — words one column
 > holds together, `group line`), each row named with its tick; every format has one.

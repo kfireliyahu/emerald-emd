@@ -111,11 +111,16 @@ import {
   waysFor,
   readEntrySetting,
   writeEntrySetting,
+  isSavedKind,
   isViewKind,
   isViewSetting,
+  savedAddress,
+  savedNameRefusal,
+  SAVED_KINDS,
   VIEW_PARTS,
   type ColumnWidth,
   type GraphPlace,
+  type SavedView,
   type ViewSetting,
 } from './view.ts'
 import { coerceValue, idsIn, offeredKeysOf, type StoredRow, type StoredValue } from './row.ts'
@@ -148,6 +153,8 @@ export interface DocumentContent {
   readonly places?: readonly GraphPlace[]
   /** What each view keeps per column — how an entry shows each (M26 U6, D-294; D-402). */
   readonly views?: readonly ViewSetting[]
+  /** A format's filter, order, columns and kind under a name (M53 U5, D-514, D-520). */
+  readonly saved?: readonly SavedView[]
   /** The currency a new money figure is in until a row says otherwise (M29 F3, D-344). */
   readonly currency?: string | undefined
   /** What was read in, and which rows each read wrote (M38 U3, D-408). */
@@ -278,6 +285,7 @@ export interface ParsedDocument {
   readonly widths: readonly ColumnWidth[]
   readonly places: readonly GraphPlace[]
   readonly views: readonly ViewSetting[]
+  readonly saved: readonly SavedView[]
   readonly currency: string | undefined
   readonly readings: readonly ReadingRecord[]
   readonly readerNames: readonly ReaderNameRecord[]
@@ -396,8 +404,11 @@ export function writeDocument(content: DocumentContent): Result<readonly Documen
     const setting = writeEntrySetting({ ...entry, way })
     return setting === undefined ? [] : [{ ...each, setting }]
   })
-  if (shown.length > 0 || kept.length > 0) {
-    parts.push({ name: VIEWS_PART, text: writeWidths(shown, kept) })
+  // A saved view goes with its format; an address naming a column that has
+  // gone is still the person's, and is drawn with a sentence saying so.
+  const saved = (content.saved ?? []).filter((each) => formats.some((format) => format.declaration.name === each.format))
+  if (shown.length > 0 || kept.length > 0 || saved.length > 0) {
+    parts.push({ name: VIEWS_PART, text: writeWidths(shown, kept, saved) })
   }
 
   // The same rule for a place: a format that has gone, or a pack that owns
@@ -519,7 +530,7 @@ export function readDocument(parts: readonly DocumentPart[]): Result<ParsedDocum
   if (!seeds.ok) return seeds
 
   const viewsPart = parts.find((part) => part.name === VIEWS_PART)
-  const views = viewsPart === undefined ? ok({ widths: [], views: [] }) : readViews(viewsPart.text)
+  const views = viewsPart === undefined ? ok({ widths: [], views: [], saved: [] }) : readViews(viewsPart.text)
   if (!views.ok) return views
 
   const graphPart = parts.find((part) => part.name === GRAPH_PART)
@@ -572,6 +583,7 @@ export function readDocument(parts: readonly DocumentPart[]): Result<ParsedDocum
     widths: views.value.widths,
     places: places.value,
     views: views.value.views,
+    saved: views.value.saved,
     currency: currency.value,
     readings: readings.value.readings,
     readerNames: readings.value.readerNames,
@@ -1275,9 +1287,14 @@ export function readSeeds(text: string): Result<readonly SeedRecord[], string> {
  * columns were dragged to (D-289), then one block per format and view with what
  * that view keeps per column (D-294) — `### recipe entry` and `method: markdown`
  * — all in name order. A format name has no space in it, so the word after one
- * is the view's.
+ * is the view's. Then each saved view as a block of its own under `### recipe
+ * saved` — its `name`, `kind` and `address` (M53 U5, D-520) — in name order.
  */
-export function writeWidths(widths: readonly ColumnWidth[], views: readonly ViewSetting[] = []): string {
+export function writeWidths(
+  widths: readonly ColumnWidth[],
+  views: readonly ViewSetting[] = [],
+  saved: readonly SavedView[] = [],
+): string {
   const formats = [...new Set(widths.map((each) => each.format))].sort(compareText)
   const viewed = [...new Set(views.map((each) => `${each.format} ${each.view}`))].sort(compareText)
   return [
@@ -1300,14 +1317,29 @@ export function writeWidths(widths: readonly ColumnWidth[], views: readonly View
         .sort((a, b) => compareText(a.column, b.column))
         .map((each) => `${each.column}: ${each.setting}`),
     ]),
+    ...[...saved]
+      .sort((a, b) => compareText(a.format, b.format) || compareText(a.name, b.name))
+      .flatMap((each) => [
+        '',
+        `### ${each.format} ${SAVED_HEADING}`,
+        `name: ${writeScalar(each.name)}`,
+        `kind: ${each.kind}`,
+        ...(each.address === '' ? [] : [`address: ${writeScalar(each.address)}`]),
+      ]),
     '',
   ].join('\n')
 }
 
+/** The word after a format's name that heads a saved view's block in the views part. */
+const SAVED_HEADING = 'saved'
+
 /** The views part back into widths and view settings. */
 export function readViews(
   text: string,
-): Result<{ readonly widths: readonly ColumnWidth[]; readonly views: readonly ViewSetting[] }, string> {
+): Result<
+  { readonly widths: readonly ColumnWidth[]; readonly views: readonly ViewSetting[]; readonly saved: readonly SavedView[] },
+  string
+> {
   const lines = text.replace(/\r\n/g, '\n').split('\n')
   const start = lines.findIndex((line, index) => index > 0 && line.trim() === '---')
   if (lines[0]?.trim() !== '---' || start === -1) {
@@ -1316,6 +1348,7 @@ export function readViews(
 
   const widths: ColumnWidth[] = []
   const views: ViewSetting[] = []
+  const saved: SavedView[] = []
   for (const block of blocksIn(lines, start + 1)) {
     if (!block.ok) return block
     const heading = block.value.heading
@@ -1323,6 +1356,15 @@ export function readViews(
       return err(`Line ${String(block.value.line)}: a view is a ### format name with its columns under it.`)
     }
     const [format = '', view, ...rest] = heading.split(/\s+/)
+    if (view === SAVED_HEADING && rest.length === 0) {
+      const read = readSaved(format, block.value.cells, block.value.line)
+      if (!read.ok) return read
+      if (saved.some((each) => each.format === format && each.name === read.value.name)) {
+        return err(`Line ${String(block.value.line)}: ${format} has two saved views called ${read.value.name}.`)
+      }
+      saved.push(read.value)
+      continue
+    }
     if (view !== undefined) {
       if (rest.length > 0 || !isViewKind(view)) {
         return err(
@@ -1354,7 +1396,20 @@ export function readViews(
       widths.push({ format, column, width })
     }
   }
-  return ok({ widths, views })
+  return ok({ widths, views, saved })
+}
+
+/** One `### format saved` block back into a saved view: a `name`, a `kind`, and an `address` when it holds one. */
+function readSaved(format: string, cells: ReadonlyMap<string, string>, line: number): Result<SavedView, string> {
+  const at = `Line ${String(line)}: a saved view of ${format}`
+  const stray = [...cells.keys()].filter((key) => key !== 'name' && key !== 'kind' && key !== 'address')
+  if (stray.length > 0) return err(`${at} has a name, a kind and an address, and ${stray.join(', ')} is none of them.`)
+  const name = cells.get('name') ?? ''
+  const refusal = savedNameRefusal(name)
+  if (refusal !== undefined) return err(`${at}: ${refusal}`)
+  const kind = cells.get('kind') ?? ''
+  if (!isSavedKind(kind)) return err(`${at} opens as ${SAVED_KINDS.join(', ')}, and ${kind === '' ? 'it names none' : kind} is not one.`)
+  return ok({ format, name, kind, address: savedAddress(cells.get('address') ?? '') })
 }
 
 /**

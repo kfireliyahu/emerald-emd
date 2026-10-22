@@ -139,6 +139,7 @@ export function EntryView({
   onHide,
   onAsk,
   onBack,
+  backLabel,
   onAdd,
   onDelete,
   onOpen,
@@ -216,6 +217,8 @@ export function EntryView({
   /** Have a new entry ask for a column, or not. */
   onAsk: (column: string, asked: boolean) => void
   onBack: () => void
+  /** What the back link says: the view the entry was opened from — `List`, `Board` — or the format's title for its table (M53 U5). */
+  backLabel?: string | undefined
   onAdd: () => void
   onDelete: (() => void) | undefined
   /** Open a row of a format in this same view. */
@@ -450,7 +453,7 @@ export function EntryView({
           className="text-caption text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
           onClick={onBack}
         >
-          ← <Bidi>{declaration.title}</Bidi>
+          ← <Bidi>{backLabel ?? declaration.title}</Bidi>
         </button>
         {fresh ? (
           <span className="font-medium">

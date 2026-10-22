@@ -1849,3 +1849,74 @@ export function inDueOrder<R>(rows: readonly R[], dueOf: (row: R) => string | un
   })
   return keyed.map((each) => each.row)
 }
+
+/**
+ * **A saved view** — M53 U5, D-514, D-520.
+ *
+ * A format's filter, order, columns and kind under a name: what a view's
+ * address already holds (`?due=today&state!=done&order:due=ascending`), and
+ * which of the format's views draws it, kept so a person can open it again from
+ * the rail and a conversation can draw it by name. **Not a format**: a view is
+ * how to look at the rows, never rows of its own (D-514).
+ *
+ * Its own table, `format_saved_view` (063), rather than more rows of
+ * `format_view_column`: a view setting is one word of at most 32 characters
+ * for one column, and an address is a sentence about the whole format.
+ *
+ * **The address is kept as it is spelled**, so a window around today stays the
+ * phrase — `due=today`, `due=within+7+days` — and is worked out on the day it
+ * is opened, never the day it was saved. What the spelling means is
+ * `addressFilter.ts`'s, and what a filter means is `filterQuery`'s: this file
+ * only keeps the words.
+ *
+ * Named per format: `task` / `Due today` is what a dashboard (M53 U7) points at.
+ */
+export const SAVED_KINDS = ['table', 'board', 'list', 'roadmap', 'ready'] as const
+
+export type SavedKind = (typeof SAVED_KINDS)[number]
+
+export interface SavedView {
+  readonly format: string
+  readonly name: string
+  readonly kind: SavedKind
+  /** The address's query as the address spells it — `?due=today` — or empty for every row. */
+  readonly address: string
+}
+
+/** The longest name a saved view takes — `063_saved_view`'s CHECK. */
+export const SAVED_NAME_LONGEST = 60
+
+/** The longest address a saved view keeps — `063_saved_view`'s CHECK. */
+export const SAVED_ADDRESS_LONGEST = 2000
+
+export function isSavedKind(word: string): word is SavedKind {
+  return (SAVED_KINDS as readonly string[]).includes(word)
+}
+
+/**
+ * Why a name cannot be a saved view's, or nothing. A name is said in a
+ * sentence and drawn in the rail, so it is one line, and it never opens with a
+ * `?` — a model passing an address where a name goes is told so rather than
+ * keeping a view called `?state=open`. A view kind's own word is the view
+ * itself (`show_format view:list`), so it cannot be a saved view's name too.
+ */
+export function savedNameRefusal(name: string): string | undefined {
+  const trimmed = name.trim()
+  if (trimmed === '') return 'A saved view needs a name.'
+  if (trimmed !== name) return 'A saved view’s name does not start or end with a space.'
+  if (/[\r\n]/.test(name)) return 'A saved view’s name is one line.'
+  if (name.length > SAVED_NAME_LONGEST) return `A saved view’s name is at most ${String(SAVED_NAME_LONGEST)} characters.`
+  if (name.startsWith('?')) return 'A saved view’s name is words, not an address.'
+  const word = name.toLowerCase()
+  if (isSavedKind(word) || word === 'sheet' || word === 'agenda' || word === 'entry') {
+    return `${name} is a view’s own name; a saved view is called something else.`
+  }
+  return undefined
+}
+
+/** An address as a saved view keeps it: empty, or the query with its `?`. */
+export function savedAddress(address: string): string {
+  const trimmed = address.trim()
+  if (trimmed === '' || trimmed === '?') return ''
+  return trimmed.startsWith('?') ? trimmed : `?${trimmed}`
+}

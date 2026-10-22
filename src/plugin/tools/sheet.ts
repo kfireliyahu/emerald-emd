@@ -72,6 +72,7 @@ import { plural } from '../format.ts'
 import { documentUri } from '../subscriptions.ts'
 import { markOf } from '../watch.ts'
 import { askedOn, cellText, filterArgs, formatRowsTool, MATCH_PROP, SEARCH_PROP } from './formats.ts'
+import { savedViewArgs, savedViewNamed, savedViewSaid } from './saved.ts'
 import {
   optionalString,
   PATH_PROP,
@@ -130,11 +131,9 @@ export const showFormatTool: PluginTool = {
       properties: {
         path: PATH_PROP,
         format: stringProp('The declared format, by name. `formats` lists them. The agenda takes none.'),
-        view: {
-          type: 'string',
-          enum: VIEWS.map(saidOf),
-          description: 'Which of the format’s views to open on. Defaults to the table.',
-        },
+        view: stringProp(
+          `${VIEWS.map(saidOf).join(', ')} (default table), or a saved view’s name.`,
+        ),
         match: MATCH_PROP,
         search: SEARCH_PROP,
         columns: {
@@ -270,7 +269,27 @@ async function sheetAnswer(
   const asked = optionalString(args, 'view') ?? 'table'
   const view = asked === 'table' ? 'sheet' : asked
   if (!(VIEWS as readonly string[]).includes(view)) {
-    throw new ToolInputError(`\`view\` is one of ${VIEWS.map(saidOf).join(', ')}; got ${asked}.`)
+    // **A saved view, by its name** (M53 U5, D-520): drawn as its kind, with
+    // its filter, folds and columns under whatever else the call gives.
+    const format = optionalString(args, 'format')
+    if (format === undefined) {
+      throw new ToolInputError(`\`view\` is one of ${VIEWS.map(saidOf).join(', ')}, or a format’s saved view with its \`format\`; got ${asked}.`)
+    }
+    let said = ''
+    let laid: Record<string, unknown> | undefined
+    const read = await readDocument(path, (document) => {
+      if (!listFormats(document.db).some((each) => each.name === format)) return ''
+      const saved = savedViewNamed(document.db, format, asked)
+      said = `The saved view ${saved.name}: ${savedViewSaid(saved)}.\n\n`
+      laid = { ...savedViewArgs(saved, args), view: saved.kind }
+      return 'ok'
+    })
+    if (laid === undefined) {
+      if (read === '') return { text: await formatRowsTool.run({ path, format }, {}) }
+      return { text: read }
+    }
+    const drawn = await sheetAnswer(laid)
+    return { ...drawn, text: said + drawn.text }
   }
   if (view === 'agenda') {
     const filter = askedFilter(args)

@@ -216,3 +216,25 @@ export function withFold(
   const own = Object.entries(filter.match ?? {}).map(([name, value]) => [`${prefix}${name}`, value] as const)
   return Object.fromEntries([...rest, ...own])
 }
+
+/**
+ * **An address in one spelling** (M53 U5): read back and written again, its
+ * parts in name order — so `?state=open&due=today` and `?due=today&state=open`
+ * are one view, and the FilterBand and the rail can tell when the address is a
+ * saved view's.
+ */
+export function canonicalAddress(query: string): string {
+  const { filter, folds, columns, order } = addressView(query)
+  const written = filterAddress(filter, { folds, columns, ...(order === undefined ? {} : { order }) })
+  return written === '' ? '' : `?${written.slice(1).split('&').sort().join('&')}`
+}
+
+/** Whether two addresses hold the same view. */
+export function sameAddress(a: string, b: string): boolean {
+  return canonicalAddress(a) === canonicalAddress(b)
+}
+
+/** Whether an address holds anything — a filter, a fold, columns chosen or a sort: what a view can be saved with. */
+export function holdsAnything(query: string): boolean {
+  return canonicalAddress(query) !== ''
+}

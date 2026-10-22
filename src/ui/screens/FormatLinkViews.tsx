@@ -19,6 +19,7 @@ import type { Database } from 'sql.js'
 import type { RowFilter } from '@/data/repositories/formatFilterRepository.ts'
 import { ReadyView, RoadmapView } from '@/ui/formats/LinkViews.tsx'
 import { entryPath, formatPath } from '@/ui/nav.ts'
+import { useSaving } from '@/ui/formats/savedView.ts'
 
 /**
  * **A format's roadmap, as a screen** — M27 U4, D-302. Read on every revision
@@ -38,6 +39,7 @@ export function FormatRoadmap() {
   const mutate = useDocumentStore((state) => state.mutate)
   const { filter, folds, columns, address, set, setFolds, setColumns } = useAddressFilter()
   const navigate = useNavigate()
+  const saving = useSaving(name, 'roadmap')
 
   const data = useMemo(() => {
     if (db === undefined || name === undefined) return undefined
@@ -106,6 +108,7 @@ export function FormatRoadmap() {
         onClear={() => navigate({ search: filterAddress({}, { columns }) })}
         onChange={fromBand}
         declaration={data.declaration}
+        saving={saving}
       />
       <RoadmapView
         data={data.roadmap}
@@ -139,6 +142,7 @@ export function FormatReady() {
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
   const { filter, columns, address, set, clear, setColumns } = useAddressFilter()
+  const saving = useSaving(name, 'ready')
 
   const data = useMemo(() => {
     if (db === undefined || name === undefined) return undefined
@@ -160,7 +164,7 @@ export function FormatReady() {
       address={address}
       action={<Filtering db={db} declaration={data.declaration} declarations={data.declarations} filter={filter} set={set} />}
     >
-      <FilterBand filter={filter} {...data.counted} onClear={clear} onChange={set} declaration={data.declaration} />
+      <FilterBand filter={filter} {...data.counted} onClear={clear} onChange={set} declaration={data.declaration} saving={saving} />
       <ReadyView data={data.ready} columns={columns} choosing={{ format: data.declaration, onChange: setColumns }} />
     </Frame>
   )

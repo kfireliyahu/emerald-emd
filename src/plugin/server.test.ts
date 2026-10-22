@@ -1068,8 +1068,10 @@ describe('the server makes zero network calls', () => {
       // `report` on each of `land_units`' units — three parameters, ~400 chars.
       // 55k since M42 F5: the head says what Emerald reads and what a pack is,
       // and a paragraph names what else a document does — ~1k chars of prose
-      // that stops a model taking Emerald for a finance app.
-      expect(engineSize).toBeLessThan(55_000)
+      // that stops a model taking Emerald for a finance app. 56k since M53 U5
+      // (D-520): `view: saved` on `arrange_views` — eight parameters a saved
+      // view takes — and `view` on `format_rows`, ~700 chars, trimmed first.
+      expect(engineSize).toBeLessThan(56_000)
     })
   })
 })

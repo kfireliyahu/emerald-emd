@@ -222,7 +222,7 @@ describe('entry inputs', () => {
     const text = writeWidths([], [{ format: 'book', view: 'entry', column: 'title', setting: 'markdown' }])
     expect(readViews(text)).toEqual({
       ok: true,
-      value: { widths: [], views: [{ format: 'book', view: 'entry', column: 'title', setting: 'markdown' }] },
+      value: { widths: [], views: [{ format: 'book', view: 'entry', column: 'title', setting: 'markdown' }], saved: [] },
     })
     const view = readViews(text.replace('book entry', 'book gallery'))
     expect(view.ok).toBe(false)

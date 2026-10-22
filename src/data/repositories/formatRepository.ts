@@ -72,7 +72,7 @@ function storedFilter(column: string, predicate: string): AggregateFilter {
 }
 import { forgetIntakes } from './formatIntakeRepository.ts'
 import { forgetSeeds } from './formatSeedRepository.ts'
-import { forgetColumnWidths, forgetGraphPlace, forgetViewSettings } from './formatViewRepository.ts'
+import { forgetColumnWidths, forgetGraphPlace, forgetSavedViews, forgetViewSettings } from './formatViewRepository.ts'
 
 /** Every declaration in the document, in the order they were created. */
 export function listFormats(db: Database): readonly FormatDeclaration[] {
@@ -445,6 +445,7 @@ export function deleteFormat(db: Database, name: string): void {
     forgetColumnWidths(db, name)
     forgetGraphPlace(db, name)
     forgetViewSettings(db, name)
+    forgetSavedViews(db, name)
     db.run('DELETE FROM format WHERE name = ?', [name])
     buildDerivedViews(db)
   })

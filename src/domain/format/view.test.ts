@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import {
   dayText,
+  savedAddress,
+  savedNameRefusal,
   entryDefaults,
   entryLabel,
   entryLayout,
@@ -272,5 +274,21 @@ describe('what an entry draws, and its Empty line (M53 U3, D-518)', () => {
     expect(opened.texts.map((each) => each.name)).toEqual(['notes'])
     const fresh = entryShown(columns, layout, { ...ask, asked: new Set(['due']), holds: filled([]) })
     expect(fresh.header.map((each) => each.name)).toEqual(['state', 'due'])
+  })
+})
+
+describe('a saved view’s name (M53 U5)', () => {
+  it('is words on one line, never an address or a view’s own word', () => {
+    expect(savedNameRefusal('Due today')).toBeUndefined()
+    expect(savedNameRefusal('')).toMatch(/needs a name/)
+    expect(savedNameRefusal(' Due')).toMatch(/space/)
+    expect(savedNameRefusal('?state=open')).toMatch(/not an address/)
+    expect(savedNameRefusal('List')).toMatch(/view’s own name/)
+    expect(savedNameRefusal('x'.repeat(61))).toMatch(/at most 60/)
+  })
+
+  it('keeps an address with its question mark, or empty', () => {
+    expect(savedAddress('state=open')).toBe('?state=open')
+    expect(savedAddress('?')).toBe('')
   })
 })

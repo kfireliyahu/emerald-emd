@@ -55,7 +55,9 @@ import {
   listViewSettings,
   restoreColumnWidths,
   restoreGraphPlaces,
+  restoreSavedViews,
   restoreViewSettings,
+  savedViews,
 } from './formatViewRepository.ts'
 import {
   addUnit,
@@ -84,6 +86,7 @@ export function serializeDocument(db: Database): Result<readonly DocumentPart[],
     widths: listColumnWidths(db),
     places: graphPlaces(db),
     views: listViewSettings(db),
+    saved: savedViews(db),
     currency: documentCurrency(db),
     readings: listIntakeContent(db),
     readerNames: listReaderNames(db),
@@ -188,6 +191,7 @@ export function applyDocument(
       restoreColumnWidths(db, document.widths)
       restoreGraphPlaces(db, document.places)
       restoreViewSettings(db, document.views)
+      restoreSavedViews(db, document.saved)
       restoreDocumentCurrency(db, document.currency)
       // What was read in, each row found by the name the text gave it (D-408).
       const refs = new Map<string, ReadonlyMap<string, string>>()

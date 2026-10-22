@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { addressFilter, addressView, filterAddress, foldFilter, withFold } from './addressFilter.ts'
+import { addressFilter, addressView, canonicalAddress, filterAddress, foldFilter, holdsAnything, sameAddress, withFold } from './addressFilter.ts'
 
 describe('a format’s filter in its address (M44 U6)', () => {
   it('spells every column held and the search, and reads them back', () => {
@@ -82,5 +82,20 @@ describe('a format’s filter in its address (M44 U6)', () => {
     expect(foldFilter(folds, 'review_entry')).toEqual({})
     expect(withFold(folds, 'unit', { match: { state: 'built' } })).toEqual({ 'decision.state': 'live', 'unit.state': 'built' })
     expect(withFold(folds, 'unit', {})).toEqual({ 'decision.state': 'live' })
+  })
+})
+
+describe('one spelling of an address (M53 U5)', () => {
+  it('is the same view whichever order its parts came in', () => {
+    expect(sameAddress('?state=open&due=today', '?due=today&state=open')).toBe(true)
+    expect(sameAddress('?state=open', '?state!=open')).toBe(false)
+    expect(canonicalAddress('?order:due=descending&due=within+7+days')).toBe('?due=within+7+days&order:due=descending')
+    expect(canonicalAddress('')).toBe('')
+  })
+
+  it('holds something when anything is held, a sort alone too', () => {
+    expect(holdsAnything('')).toBe(false)
+    expect(holdsAnything('?order:due=ascending')).toBe(true)
+    expect(holdsAnything('?columns:unit=title')).toBe(true)
   })
 })

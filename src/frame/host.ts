@@ -341,6 +341,12 @@ type Sheet =
       readonly filter: RowFilter
       /** Which columns each format's lines draw (M37 U5), in the same address. */
       readonly columns: ColumnChoice
+      /**
+       * A saved view's name, when `show_format`'s `view` named one (M53 U5,
+       * D-520): the frame reads it from the document once it has it, and opens
+       * on its kind and its address.
+       */
+      readonly saved?: string
       /** Where it was read from, for the host's log. */
       readonly from: 'input' | '_meta' | 'structuredContent'
     }
@@ -364,13 +370,17 @@ export function sheetOf(input: Record<string, unknown> | undefined, result: unkn
     // `show_format` names a format; `start_here` names none, and its view is
     // the picture of where to start.
     const format = typeof input?.['format'] === 'string' ? input['format'] : ''
+    const asked = input?.['view']
+    const saved =
+      format !== '' && typeof asked === 'string' && asked !== 'table' && !FRAME_VIEWS.includes(asked as FrameView) ? asked : undefined
     return {
       ok: true,
       format,
-      view: format === '' ? 'start' : viewOf(input?.['view'], 'sheet'),
+      view: format === '' ? 'start' : viewOf(asked, 'sheet'),
       path,
       filter: filterOf(input?.['match'], input?.['search']),
       columns: columnsOf(input?.['columns']),
+      ...(saved === undefined ? {} : { saved }),
       from: 'input',
     }
   }

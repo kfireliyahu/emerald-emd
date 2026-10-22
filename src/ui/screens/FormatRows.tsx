@@ -103,6 +103,7 @@ import { cellText, EntryView, type LinkChoice } from '@/ui/formats/EntryView.tsx
 import { RollupView } from '@/ui/formats/RollupView.tsx'
 import { RowSheet, type FootRefusal, type Order } from '@/ui/formats/RowSheet.tsx'
 import { derivedOf } from '@/data/repositories/formatDerivedRepository.ts'
+import { useSaving } from '@/ui/formats/savedView.ts'
 import { boardPath, entryPath, formatPath, listPath, NEW_ENTRY, readPath, readyPath, roadmapPath, tablePath } from '@/ui/nav.ts'
 import { BoardView } from '@/ui/formats/BoardView.tsx'
 import {
@@ -229,6 +230,8 @@ export function FormatRows({ board = false, list = false }: { readonly board?: b
   const search = filter.search ?? ''
   const setSearch = (text: string): void => setFilter({ ...filter, search: text }, true)
   const filtered = isFiltered(filter)
+  // What the address holds, saved under a name from the FilterBand (M53 U5, D-520).
+  const saving = useSaving(name, board ? 'board' : list ? 'list' : 'table')
   // The rows, or one of the format's rollups by name (M25 E2, D-271).
   const [view, setView] = useState<string | undefined>(undefined)
   const [deleting, setDeleting] = useState<StoredRow | undefined>(undefined)
@@ -279,6 +282,11 @@ export function FormatRows({ board = false, list = false }: { readonly board?: b
    * back does not open it a second time.
    */
   const location = useLocation()
+  // **Which view an entry was opened from** (M53 U5, carried from U3): its
+  // back link names that view and goes to it — `← List` from the list — and
+  // every step between entries keeps it. Absent is the table.
+  const came = cameFrom(location.state)
+  const along = came === undefined ? {} : { state: { from: came } }
   useEffect(() => {
     const imported = (location.state as ImportedShape | null)?.imported
     if (imported === undefined || imported.name !== name) return
@@ -588,6 +596,7 @@ export function FormatRows({ board = false, list = false }: { readonly board?: b
     const holds = isFiltered(kept) && heldIds(db, data.declaration, query).includes(entry)
     navigate(entryPath(name, entry) + filterAddress(holds ? kept : {}, order === undefined ? {} : { order }), {
       replace: true,
+      ...along,
     })
   }, [name, entry])
 
@@ -706,7 +715,7 @@ export function FormatRows({ board = false, list = false }: { readonly board?: b
     const draft = named === undefined ? asked.draft : { ...asked.draft, [named.name]: title }
     if (asked.missing.length > 0 || named === undefined) {
       setTyped({ key: `${declaration.name}/${NEW_ENTRY}`, draft })
-      navigate(entryPath(declaration.name, NEW_ENTRY) + address)
+      navigate(entryPath(declaration.name, NEW_ENTRY) + address, list ? { state: { from: 'list' } } : along)
       return false
     }
     const batch = stageRows(db, declaration, [offeredOf(declaration, draft)], data.declarations)
@@ -749,7 +758,7 @@ export function FormatRows({ board = false, list = false }: { readonly board?: b
     const existing = editing.existing
     const back = (): void => {
       setTyped(undefined)
-      navigate(tablePath(declaration.name, address))
+      navigate(came === 'list' ? listPath(declaration.name) + address : came === 'board' ? boardPath(declaration.name) + address : tablePath(declaration.name, address))
     }
     /**
      * **A field left, or a pick made** (M35 U2, D-401): the draft judged as
@@ -802,7 +811,7 @@ export function FormatRows({ board = false, list = false }: { readonly board?: b
     const storedRow = existing === undefined ? undefined : readRow(db, declaration, existing)
     const openHere = (id: string): void => {
       setTyped(undefined)
-      navigate(entryPath(declaration.name, id) + address)
+      navigate(entryPath(declaration.name, id) + address, along)
     }
     /**
      * The list's search, written to the address as the Table's is. When it
@@ -817,6 +826,7 @@ export function FormatRows({ board = false, list = false }: { readonly board?: b
       if (to !== existing) setTyped(undefined)
       navigate(entryPath(declaration.name, to) + filterAddress(next, order === undefined ? {} : { order }), {
         replace: true,
+        ...along,
       })
     }
     const view = (
@@ -912,11 +922,12 @@ export function FormatRows({ board = false, list = false }: { readonly board?: b
           mutate((database) => setEntryAsked(database, declaration.name, column, asked))
         }
         onBack={back}
+        backLabel={came === 'list' ? 'List' : came === 'board' ? 'Board' : declaration.title}
         onDelete={existing === undefined || locked !== undefined ? undefined : () => setDeletingEntry(true)}
         onOpen={(format, id) => {
           setTyped(undefined)
           // Within the format, the filter goes along: its pager walks the rows it holds.
-          navigate(entryPath(format, id) + (format === declaration.name ? address : ''))
+          navigate(entryPath(format, id) + (format === declaration.name ? address : ''), format === declaration.name ? along : {})
         }}
         onAdd={() => {
           const cells = 'cells' in judged ? judged.cells : undefined
@@ -936,7 +947,7 @@ export function FormatRows({ board = false, list = false }: { readonly board?: b
           setTyped(undefined)
           // **The entry it became** — a draft until Add, and the row after.
           if (added === undefined) back()
-          else navigate(entryPath(declaration.name, added) + address, { replace: true })
+          else navigate(entryPath(declaration.name, added) + address, { replace: true, ...along })
         }}
       />
     )
@@ -966,7 +977,7 @@ export function FormatRows({ board = false, list = false }: { readonly board?: b
           placeholder={(group) => placeholderOf(pictured, group)}
           onNew={locked !== undefined ? undefined : () => {
             setTyped(undefined)
-            navigate(entryPath(declaration.name, NEW_ENTRY) + address)
+            navigate(entryPath(declaration.name, NEW_ENTRY) + address, along)
           }}
           entries={data.entries}
           filter={filter}
@@ -1277,6 +1288,7 @@ export function FormatRows({ board = false, list = false }: { readonly board?: b
         onClear={clearFilter}
         onChange={setFilter}
         declaration={declaration}
+        saving={entry === undefined ? saving : undefined}
       />
 
       {/* **What has to add up is a place, not an icon** (M29 U1, D-331): the
@@ -1303,7 +1315,7 @@ export function FormatRows({ board = false, list = false }: { readonly board?: b
             const lanes = data.board?.shape.lanes.name
             if (lanes !== undefined) move(row, lanes, member)
           }}
-          onOpen={(row) => navigate(entryPath(declaration.name, row.id) + address)}
+          onOpen={(row) => navigate(entryPath(declaration.name, row.id) + address, { state: { from: 'board' } })}
           format={declaration}
           columns={columns}
           onColumns={setColumns}
@@ -1317,7 +1329,7 @@ export function FormatRows({ board = false, list = false }: { readonly board?: b
           onTick={tickLine}
           onAdd={addLine}
           placeholder={placeholderOf}
-          onOpen={(line) => navigate(entryPath(declaration.name, line.id) + address)}
+          onOpen={(line) => navigate(entryPath(declaration.name, line.id) + address, { state: { from: 'list' } })}
           onSetting={(column, change) =>
             mutate((database) => {
               for (const name of column) {
@@ -1556,6 +1568,12 @@ export function FormatRows({ board = false, list = false }: { readonly board?: b
       </Reveal>
     </div>
   )
+}
+
+/** The view an entry was opened from, as its route's state carries it (M53 U5) — or nothing, the table. */
+function cameFrom(state: unknown): 'list' | 'board' | undefined {
+  const from = typeof state === 'object' && state !== null ? (state as { from?: unknown }).from : undefined
+  return from === 'list' || from === 'board' ? from : undefined
 }
 
 /** The time of day as the bar says a write happened: `09:41`. */

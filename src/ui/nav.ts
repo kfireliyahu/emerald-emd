@@ -316,6 +316,26 @@ export function listPath(name: string): string {
   return `${formatPath(name)}/list`
 }
 
+/**
+ * **Where a saved view opens** (M53 U5, D-520): its kind's route with the
+ * address it keeps — `#/formats/task/list?due=today`. A saved view is not a
+ * route of its own, so a bookmark of it is the same address, and changing the
+ * filter there is changing the view as it is drawn, never the one kept.
+ */
+export function savedViewPath(format: string, kind: 'table' | 'board' | 'list' | 'roadmap' | 'ready', address: string): string {
+  const path =
+    kind === 'board'
+      ? boardPath(format)
+      : kind === 'list'
+        ? listPath(format)
+        : kind === 'roadmap'
+          ? roadmapPath(format)
+          : kind === 'ready'
+            ? readyPath(format)
+            : formatPath(format)
+  return path + address
+}
+
 /** The word an entry's route takes for a row not written yet. */
 export const NEW_ENTRY = 'new'
 

@@ -320,6 +320,23 @@ const CAPABILITIES: readonly Capability[] = [
     screen: FORMAT_ROWS,
     tool: 'arrange_views',
   },
+  {
+    // M53 U5 (D-520): the FilterBand's *Save this view*; the conversation's
+    // `view: saved` on `arrange_views`.
+    does: 'Save a format’s filter, order, columns and kind of view under a name.',
+    writes: ['saveView'],
+    // The band's control is drawn by the table, board, list, roadmap and ready
+    // views alike, so its write is in the hook they share.
+    screen: 'ui/formats/savedView.ts',
+    tool: 'arrange_views',
+  },
+  {
+    // M53 U5 (D-520): the rail renames and deletes a saved view in place.
+    does: 'Rename a saved view, or delete it.',
+    writes: ['renameSavedView', 'deleteSavedView'],
+    screen: 'ui/RailFolder.tsx',
+    tool: 'arrange_views',
+  },
   // A screen trail, so no gap (M35 U4, D-403): a pack's views and a text
   // document set the header line, and no screen does yet.
   {
@@ -433,6 +450,9 @@ const THROUGH_ANOTHER: Readonly<Record<string, string>> = {
   // M38 U3 (D-408).
   restoreReadings: 'The inside of `applyDocument`: a text document’s readings and reader names, after its rows.',
   forgetViewSettings: 'Called by `deleteFormat`, for `forgetIntakes`’s reason.',
+  // M53 U5 (D-520).
+  restoreSavedViews: 'The inside of `applyDocument`: a text document’s saved views, after its rows.',
+  forgetSavedViews: 'Called by `deleteFormat`, for `forgetIntakes`’s reason.',
   // M29 U3b (D-334). A derived view is compiled from the declarations, so it
   // is dropped and rebuilt around every change to one; nobody chooses it.
   dropDerivedViews:

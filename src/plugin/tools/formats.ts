@@ -45,6 +45,7 @@
 
 import { toISODate } from '@/core/time.ts'
 import { today } from '../today.ts'
+import { savedViewArgs, savedViewNamed, savedViewSaid } from './saved.ts'
 import {
   planIsSettled,
   type ReconcilePlan,
@@ -1043,20 +1044,28 @@ export const formatRowsTool: PluginTool = {
         },
         offset: numberProp('Rows to skip first — the `offset` a cut-short answer hands back for the rest.'),
         values: stringProp('A column: each value it holds and how many rows, under the other filters.'),
+        view: stringProp(
+          'A saved view’s name: its match, search, order and columns, under any given here.',
+        ),
       },
       required: ['path', 'format'],
       additionalProperties: false,
     },
     annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
   },
-  run: async (args) => {
-    const path = requireString(args, 'path')
-    const name = requireString(args, 'format')
-    const limit = limitArg(args, ROWS_DEFAULT, ROWS_MAX)
-    const offset = Math.max(0, Math.floor(optionalNumber(args, 'offset') ?? 0))
+  run: async (given) => {
+    const path = requireString(given, 'path')
+    const name = requireString(given, 'format')
+    const limit = limitArg(given, ROWS_DEFAULT, ROWS_MAX)
+    const offset = Math.max(0, Math.floor(optionalNumber(given, 'offset') ?? 0))
+    const viewName = optionalString(given, 'view')
 
     return readDocument(path, (document) =>
       withFormat(document, name, async (declaration) => {
+        // **A saved view by its name** (M53 U5, D-520): its filter, order and
+        // columns laid under whatever this call gives.
+        const saved = viewName === undefined ? undefined : savedViewNamed(document.db, declaration.name, viewName)
+        const args = saved === undefined ? given : savedViewArgs(saved, given, { withFolds: false, columnsAsList: true })
         // A worked-out figure may be asked for by name beside the stored ones:
         // a derived column (D-334), and a total folded from the rows that point
         // here (M38 U5) — `recipe has no column total_kcal` was a figure the
@@ -1141,7 +1150,7 @@ export const formatRowsTool: PluginTool = {
             : undefined
 
         return paragraphs(
-          `${plural(total, 'row')} of ${declaration.title}${shown}.`,
+          `${plural(total, 'row')} of ${declaration.title}${shown}${saved === undefined ? '' : ` in the saved view ${saved.name} (${savedViewSaid(saved)})`}.`,
           narrowed
             ? ((): string => {
                 const formats = indexOf(listFormats(document.db))

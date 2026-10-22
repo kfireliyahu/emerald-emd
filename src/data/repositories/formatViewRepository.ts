@@ -13,10 +13,14 @@ import {
   boundedCoordinate,
   boundedWidth,
   isBoardPart,
+  isSavedKind,
   isViewKind,
   isViewSetting,
   readEntrySetting,
   readListSetting,
+  SAVED_ADDRESS_LONGEST,
+  savedAddress,
+  savedNameRefusal,
   soleWordOf,
   writeEntrySetting,
   writeListSetting,
@@ -25,6 +29,7 @@ import {
   type EntrySetting,
   type GraphPlace,
   type BoardPart,
+  type SavedView,
   type ViewKind,
   type ViewSetting,
 } from '@/domain/format/view.ts'
@@ -517,4 +522,76 @@ export function writeViewSettings(
 /** Called by `deleteFormat`, for `forgetSeeds`'s reason. */
 export function forgetViewSettings(db: Database, format: string): void {
   db.run('DELETE FROM format_view_column WHERE format_name = ?', [format])
+}
+
+/**
+ * **A format's saved views** — M53 U5, D-514, D-520: a filter, order, columns
+ * and kind under a name, kept beside the format's other views and written by
+ * the FilterBand and the rail, and by `arrange_views`. In name order, which is
+ * the order the rail lists them and a text document writes them.
+ */
+export function savedViews(db: Database, format?: string): readonly SavedView[] {
+  const rows =
+    format === undefined
+      ? query(db, 'SELECT format_name, name, kind, address FROM format_saved_view ORDER BY format_name, name')
+      : query(db, 'SELECT format_name, name, kind, address FROM format_saved_view WHERE format_name = ? ORDER BY name', [format])
+  return rows.flatMap((row) => {
+    const owner = row['format_name']
+    const name = row['name']
+    const kind = row['kind']
+    const address = row['address']
+    if (typeof owner !== 'string' || typeof name !== 'string' || typeof kind !== 'string' || typeof address !== 'string') return []
+    if (!isSavedKind(kind)) return []
+    return [{ format: owner, name, kind, address }]
+  })
+}
+
+/** One saved view by its name, or nothing. Case is kept, as a column's is. */
+export function savedView(db: Database, format: string, name: string): SavedView | undefined {
+  return savedViews(db, format).find((each) => each.name === name)
+}
+
+/**
+ * Save a view, or write over the one of that name. Refused with a thrown
+ * sentence when the name or the kind is not one a saved view takes — the
+ * screen and the tool both ask `savedNameRefusal` first, so this is the gate
+ * behind them.
+ */
+export function saveView(db: Database, view: SavedView): void {
+  const refusal = savedNameRefusal(view.name)
+  if (refusal !== undefined) throw new Error(refusal)
+  if (!isSavedKind(view.kind)) throw new Error(`${String(view.kind)} is not a view a saved view opens.`)
+  const address = savedAddress(view.address)
+  if (address.length > SAVED_ADDRESS_LONGEST) throw new Error(`A saved view keeps at most ${String(SAVED_ADDRESS_LONGEST)} characters of address.`)
+  db.run(
+    `INSERT INTO format_saved_view (format_name, name, kind, address) VALUES (?, ?, ?, ?)
+       ON CONFLICT (format_name, name) DO UPDATE SET kind = excluded.kind, address = excluded.address`,
+    [view.format, view.name, view.kind, address],
+  )
+}
+
+/** Give a saved view another name; one already called that is refused, never written over. */
+export function renameSavedView(db: Database, format: string, from: string, to: string): void {
+  const refusal = savedNameRefusal(to)
+  if (refusal !== undefined) throw new Error(refusal)
+  if (from === to) return
+  if (savedView(db, format, to) !== undefined) throw new Error(`${format} already has a view called ${to}.`)
+  db.run('UPDATE format_saved_view SET name = ? WHERE format_name = ? AND name = ?', [to, format, from])
+}
+
+export function deleteSavedView(db: Database, format: string, name: string): void {
+  db.run('DELETE FROM format_saved_view WHERE format_name = ? AND name = ?', [format, name])
+}
+
+/** The inside of `applyDocument`: a text document's saved views, after its formats. */
+export function restoreSavedViews(db: Database, views: readonly SavedView[]): void {
+  if (views.length === 0) return
+  inTransaction(db, () => {
+    for (const each of views) saveView(db, each)
+  })
+}
+
+/** Called by `deleteFormat`, for `forgetSeeds`'s reason. */
+export function forgetSavedViews(db: Database, format: string): void {
+  db.run('DELETE FROM format_saved_view WHERE format_name = ?', [format])
 }
