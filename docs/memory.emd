@@ -12860,9 +12860,12 @@ report: "Built at 6420daf; docs:check green (0 errors); typecheck, build, build:
 milestone: M52
 scope: engine
 title: Tests stop costing more than the work: measured, run on every push, and sessions run only what their change touches
-state: planned
+state: in_progress
 brief: Maintainer, 2026-10-18: units took 13 to 40 minutes, and the tests took longer than the work. Cause: no CI runs the tests (.github/workflows has only demo.yml, registry.yml and release.yml), so every session runs all ~4,770 tests in 338 files itself, and briefs asked for repeat runs (M42 F3 ran the full suite five times). (1) MEASURE first: one full run with per-file durations (Vitest 4's reporter); write the slowest twenty files, the fixed startup cost and the total on this row's report. Five test files start real processes (hosts/claude/hooks/commands.test.ts, src/plugin/formatWatch.test.ts, registry.test.ts, subscriptions.test.ts, src/privacy.test.ts). (2) A TEST WORKFLOW: .github/workflows/test.yml runs typecheck and the full suite on every push to main (ubuntu-latest, Node 24, npm ci with the vendored SheetJS); demo.yml's deploy runs only after it passes (workflow_run, or one workflow with needs), so a red push never reaches getemerald.dev. The privacy test skips without ~/.emerald/denylist.txt by design; say what CI does about it. (3) THE SESSION RULE: docs/conventions.md, this repo's closing-pass and run-milestone skills, and the generic copies in hosts/claude/skills (M42 U7) say: while building and before the commit, run the tests related to the change (`npx vitest related <changed files> --run`) and typecheck; the full suite locally only when the change is broad (the engine core in src/domain/, a dependency, the test setup); CI runs the rest, and a red CI run is the next session's first task. Briefs stop asking for repeat full runs. (4) IF A FEW FILES DOMINATE: move them to a separate Vitest project or `npm run test:slow` that CI always runs and sessions rarely do. Done-test: a push shows test.yml green and the deploy following it; a deliberately failing test on a throwaway branch shows red and no deploy (then the branch is deleted); the measured before and after of a typical unit's local testing time are on this row's report; docs:check is green.
 files: .github/workflows/test.yml (new), .github/workflows/demo.yml, docs/conventions.md, .claude/skills/closing-pass/SKILL.md, .claude/skills/run-milestone/SKILL.md, hosts/claude/skills/, vite.config.ts (the test section) if tests are split
+taken_by: run-milestone driver
+started: 2026-10-22
+branch: main
 paths: ".github/workflows/\ndocs/conventions.md\n.claude/skills/\nhosts/claude/skills/\nvite.config.ts\npackage.json"
 
 ### M51 U1
@@ -13005,10 +13008,13 @@ milestone: M53
 scope: ui
 title: Hiding fields on an entry, and reordering that is light
 decision: D-514
-state: planned
+state: in_progress
 brief: "Was Later U-entry-layout, moved into M53 on 2026-10-22. Maintainer, 2026-10-20, after weeks on a real format with many columns: arranging an entry page (moving the fields) is clunky, and a page with many columns feels heavy; some fields should be hidden by the person's choice. Build U1's approved mockup for: (1) a lighter way to reorder, in place of the separate 'Arrange this view' mode and its small handle (EntryView.tsx, setEntryOrder, D-296): drag the field itself, or a compact list of names; (2) hiding a field in the entry view, kept with the view's order in format_view_column and views.md, and the same in arrange_views so a conversation can do it too (parity, D-227); a hidden field is still in the format, the table and every tool, and how its value shows when it holds one is what the mockup settled; (3) grouping or folding a long page, if the mockup kept it. Labels name exactly what they cover; make it in place. Done-test: a field hidden and the page reordered on screen and by arrange_views, each seen by the other; parity.test.ts green; a text document round-trips both.\n\nSETTLED by U1's approved mockup (docs/mockups/m53-u1/tasks.html, approved 2026-10-22; port its markup and words): (a) The Arrange mode goes. One 'Fields' list replaces it, behind the icon where Arrange was (aria-label 'Fields: order, shown, new entry'): every column but the title in this view's order, sectioned by entryLayout's part (Line under the title, Figures, Text), each row a grip, the name in words, 'needed' or 'holds a value', an eye (Shown), and a 'New entry' checkbox (U3 reads it). Drag a row to move it; Alt+Up/Down on a focused row moves it a step. A field moves only within its part, as the order works today, and the list's sections make that plain. (b) A shown field can also be dragged by its label on the page, within its part; its ⋯ menu (where Show as is) adds Move up, Move down and Hide. (c) Hiding is per entry view, kept beside the order in format_view_column's setting string and views.md. A hidden field is not drawn even when it holds a value; the title and a needed (required) column cannot be hidden. 'N hidden' at the end of the entry's Empty line (U3) shows the hidden fields in place, dimmed, with a 'hidden' tag, until the entry is left ('Hide again'). A hidden field stays in the table, every tool and the list view's line. (d) No grouping or folding into sections: hiding empty fields (U3) is what makes a page short; only a long Markdown text folds, after about twelve lines, behind 'Show all N lines'. (e) arrange_views takes hidden and the 'new entry' mark as well as order (parity)."
 files: src/ui/formats/EntryView.tsx, src/domain/format/view.ts (entryOrder, writeEntrySetting), src/plugin/tools/ (arrange_views)
 blocks: ["M53 U1"]
+taken_by: run-milestone driver
+started: 2026-10-22
+branch: main
 paths: src/ui/formats/EntryView.tsx, src/domain/format/view.ts, src/plugin/tools/
 
 ### M53 U3
@@ -13048,9 +13054,12 @@ milestone: M53
 scope: app
 title: Charts of a rollup, from one general chart
 decision: D-514
-state: planned
+state: in_progress
 brief: Every chart today is the ledger's (MonthChart, NetTrend, BalanceChart, BalanceLine, AmountHistory, PlanBar, Year's private YearBars and Spark); src/ui/charts/ holds only colours and useWidth. Make one general chart in src/ui/charts/ that takes plain series (labels, one or more series of figures, a unit or currency for the axis): bars and a line, hand-rolled SVG, the theme's tokens and categoryPalette, light and dark, read by a screen reader as a table. RollupView (src/ui/formats/RollupView.tsx) gains a chart beside its table: bars by month, one series per group when the rollup groups by a link. Money stays Money until it is drawn (never a number in the domain). The ledger charts may move onto it where it is a straight swap; none has to. The frame draws a rollup's chart too. Done-test: a rollup on a synthetic format drawn as bars and as a line in the app and the frame; the chart's own tests; no ledger import from src/ui/charts/.
 files: src/ui/charts/, src/ui/formats/RollupView.tsx, src/ui/home/MonthChart.tsx, src/ui/screens/Year.tsx (Spark)
+taken_by: run-milestone driver
+started: 2026-10-22
+branch: main
 paths: src/ui/charts/, src/ui/formats/RollupView.tsx
 
 ### M53 U7
