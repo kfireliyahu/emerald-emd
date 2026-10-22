@@ -412,17 +412,17 @@ written out here.
 | D-490 | 2026-10-18 | A closing message ends with the host's next-step box when the host offers one — the recap is what landed and what is not verified, a decision left to the maintainer is the question, and the first button is *Start <next ready unit>*, sending its ref and the instruction to claim it — and a driver hands each unit to a session of the host's when it offers them: sharing the checkout one after another, or each in its own worktree for units `dispatch_plan` says share no path, landing through their inbox proposals; where the host has neither, the message is prose and the driver uses the Agent tool, as before | M51 |
 | D-491 | 2026-10-18 | Keeping a pack again brings its formats' notes and its views' settings to this build's wherever the document still holds a value an earlier build of the pack declared there; any other value is the person's, kept, and named in the dry run — and the pack lists what every build declared (`past.ts`), so no session edits a document by hand to catch it up | M51 |
 | D-493 | 2026-10-18 | A drawing tool's first line and the hook's are the model's, never the person's: each opens by saying so, and is an instruction — where the client draws, the view is the answer: say nothing about drawing, views, servers or tools, never retype its rows, and add at most a line it does not show; where it does not, answer with the rows as text and no word about why | M51 |
-| D-494 | 2026-10-18 | What only Claude reads lives in `hosts/claude/` — the hooks and the status line, the skills a stranger gets, and the plugin's manifest — built beside the server as `hooks.mjs` and `status-line.mjs`; nothing in `src/` or `electron/` imports from `hosts/`, and a host reaches the server only through `src/plugin/host.ts` | [M42](#d-494) |
-| D-495 | 2026-10-18 | The repository goes public before the showcase, as one fresh commit with its history kept privately; what a visitor or a new session reads first says what holds, not who decided it; `docs/archive/` leaves the repository; and M33 U4 then deploys with GitHub Pages and a getemerald.dev record at Cloudflare | [below](#d-495) |
+| D-494 | 2026-10-18 | What only Claude reads lives in `hosts/claude/` — the hooks and the status line, the skills a stranger gets, and the plugin's manifest — built beside the server as `hooks.mjs` and `status-line.mjs`; nothing in `src/` or `electron/` imports from `hosts/`, and a host reaches the server only through `src/plugin/host.ts` | M42 |
+| D-495 | 2026-10-18 | The repository goes public before the showcase, as one fresh commit with its history kept privately; what a visitor or a new session reads first says what holds, not who decided it; `docs/archive/` leaves the repository; and M33 U4 then deploys with GitHub Pages and a getemerald.dev record at Cloudflare | M42 |
 | D-496 | 2026-10-18 | A tour plays only while its frame is seen, and the frame decides it: the player holds the first step and pauses every hold while an `IntersectionObserver` on the frame's own document says less than a third of it is in view or the tab is hidden, so `?autoplay=1` means play when seen on any page that embeds it | [below](#d-496) |
-| D-497 | 2026-10-18 | The MCP server is published as one npm package, `emerald-mcp`, that is `dist-plugin/` as built: every package bundled and no dependencies, a manifest generated from the root one, and a bin each for the server (`emerald-mcp`, full or `--engine-only` by flag), the hooks (`emerald-hooks`) and the status line (`emerald-status-line`) | [below](#d-497) |
-| D-498 | 2026-10-18 | The Claude plugin is `hosts/claude/`, listed by a marketplace at the public repository's root and built by nothing: it pins the published `emerald-mcp` at the manifest's `version`, runs the server through `npx --prefer-offline`, and runs the hooks through `emerald.mjs`, a hand-written launcher that keeps a copy of the package in `${CLAUDE_PLUGIN_DATA}` and starts it with plain `node`; no `.mcpb`, because the directory no longer takes one | [below](#d-498) |
-| D-499 | 2026-10-18 | The Claude plugin runs everything through npm: the hooks are `npx -y --prefer-offline -p emerald-mcp@<version> emerald-hooks …` and the status line `npx … emerald-status-line`, like the server, and `emerald.mjs` is gone; the cost is accepted — ~1.95 s before every prompt for the inbox hook on Windows, against ~0.35 s for `node` | [below](#d-499) |
-| D-500 | 2026-10-18 | The server is listed in the official MCP Registry as `io.github.kfireliyahu/emerald`, from a `server.json` at the repository's root that a workflow publishes, signed in with GitHub OIDC, whenever npm has a version the registry lacks; a version is cut in `package.json`, `server.json` and `PLUGIN_VERSION` and pushed first, and the plugin's pins follow once npm has it, so they may trail the package and never lead it | [below](#d-500) |
+| D-497 | 2026-10-18 | The MCP server is published as one npm package, `emerald-mcp`, that is `dist-plugin/` as built: every package bundled and no dependencies, a manifest generated from the root one, and a bin each for the server (`emerald-mcp`, full or `--engine-only` by flag), the hooks (`emerald-hooks`) and the status line (`emerald-status-line`) | M42 |
+| D-498 | 2026-10-18 | The Claude plugin is `hosts/claude/`, listed by a marketplace at the public repository's root and built by nothing: it pins the published `emerald-mcp` at the manifest's `version`, runs the server through `npx --prefer-offline`, and runs the hooks through `emerald.mjs`, a hand-written launcher that keeps a copy of the package in `${CLAUDE_PLUGIN_DATA}` and starts it with plain `node`; no `.mcpb`, because the directory no longer takes one | M42 |
+| D-499 | 2026-10-18 | The Claude plugin runs everything through npm: the hooks are `npx -y --prefer-offline -p emerald-mcp@<version> emerald-hooks …` and the status line `npx … emerald-status-line`, like the server, and `emerald.mjs` is gone; the cost is accepted — ~1.95 s before every prompt for the inbox hook on Windows, against ~0.35 s for `node` | M42 |
+| D-500 | 2026-10-18 | The server is listed in the official MCP Registry as `io.github.kfireliyahu/emerald`, from a `server.json` at the repository's root that a workflow publishes, signed in with GitHub OIDC, whenever npm has a version the registry lacks; a version is cut in `package.json`, `server.json` and `PLUGIN_VERSION` and pushed first, and the plugin's pins follow once npm has it, so they may trail the package and never lead it | M42 |
 | D-501 | 2026-10-18 | A unit left `in_progress` by a session that stopped is taken over with `claim_units take_over:<its taker>`, refused unless that taker holds it, with `started` reset and the taker replaced kept on `taken_over_from`; `start_here` lists a unit `in_progress` for more than a day as stalled; `land_units` refuses a landing with no `commit` unless it says `same_commit: true`, and keeps the builder's `report` on the unit | M51 |
-| D-502 | 2026-10-18 | The desktop app makes no network call unless the person turned updates on, or pressed Check for Updates Now — then one request, to `api.github.com/repos/kfireliyahu/emerald-emd/releases/latest`, from a session of its own that the page never runs in, open only while that check asks; the setting is off by default and the app's, a newer version is a quiet notice in the window whose Download opens the release page, and M42 U9's download will reach `github.com/kfireliyahu/emerald-emd/releases/download/` and the asset hosts it redirects to (`release-assets.githubusercontent.com`, `objects.githubusercontent.com`) only on the same terms; amends D-124 and D-452 | [below](#d-502) |
-| D-503 | 2026-10-18 | On Windows, with updates on, the app downloads the release its check found — `releases/download/v<version>/latest.yml` and `Emerald-Setup.exe` through electron-updater, in its own session, gated to that release while it downloads — checks the installer against the release's sha512, and installs only on Install and restart, after the window closes the ordinary way, reopening the document; macOS stays a notice; the installers lose the version from their names and the page links `releases/latest/download/` | [below](#d-503) |
-| D-504 | 2026-10-18 | The Claude plugin ships the development pack's run-milestone, closing-pass and review-phase as generic skills beside this repo's own; its `version` is how an installed copy learns of an update, so a change to what it ships cuts one — `<pin>+<n>` for a plugin release with no package behind it, by `node scripts/pin-plugin.mjs --plugin`, the bare package version when the pins move — and `plugin.test.ts` fails when the shipped files' digest moves under an unchanged version; amends D-500 | [below](#d-504) |
+| D-502 | 2026-10-18 | The desktop app makes no network call unless the person turned updates on, or pressed Check for Updates Now — then one request, to `api.github.com/repos/kfireliyahu/emerald-emd/releases/latest`, from a session of its own that the page never runs in, open only while that check asks; the setting is off by default and the app's, a newer version is a quiet notice in the window whose Download opens the release page, and M42 U9's download will reach `github.com/kfireliyahu/emerald-emd/releases/download/` and the asset hosts it redirects to (`release-assets.githubusercontent.com`, `objects.githubusercontent.com`) only on the same terms; amends D-124 and D-452 | M42 |
+| D-503 | 2026-10-18 | On Windows, with updates on, the app downloads the release its check found — `releases/download/v<version>/latest.yml` and `Emerald-Setup.exe` through electron-updater, in its own session, gated to that release while it downloads — checks the installer against the release's sha512, and installs only on Install and restart, after the window closes the ordinary way, reopening the document; macOS stays a notice; the installers lose the version from their names and the page links `releases/latest/download/` | M42 |
+| D-504 | 2026-10-18 | The Claude plugin ships the development pack's run-milestone, closing-pass and review-phase as generic skills beside this repo's own; its `version` is how an installed copy learns of an update, so a change to what it ships cuts one — `<pin>+<n>` for a plugin release with no package behind it, by `node scripts/pin-plugin.mjs --plugin`, the bare package version when the pins move — and `plugin.test.ts` fails when the shipped files' digest moves under an unchanged version; amends D-500 | M42 |
 | D-505 | 2026-10-19 | The Mac app is signed ad hoc after packing — `codesign --force --deep --sign -` from an `afterPack` hook, with `mac.identity: null` kept — so a download is an app Apple could not verify, which Open Anyway opens, rather than a "damaged" one, which nothing does; the release workflow fails a Mac build whose signature does not verify; no certificate, account or notarization, so D-124's unsigned stands; amends D-124 | [below](#d-505) |
 | D-506 | 2026-10-19 | The MCP server says what Emerald is before it says what a pack is: both instruction blocks open on a format for any kind of thing and on what it reads (a spreadsheet, a `.json` of rows, a folder of Markdown notes read where it is), with `development` and `ledger` as optional packs; no tool or instruction measures work against money; the engine's tools are listed first in both modes; `create_document` keeps no pack unless asked, in both modes; reverses D-405's default | [below](#d-506) |
 | D-507 | 2026-10-19 | The server says first what a model gains from a document — it asks for the matching rows instead of re-reading files, a typed field filters exactly, a link is followed, every session sees the same rows — and checks are one benefit among them, never the reason; whether something belongs is answered by its shape, never by whether it has numbers; amends D-506 | [below](#d-507) |
@@ -430,6 +430,7 @@ written out here.
 | D-509 | 2026-10-20 | The server also ships as a Claude desktop extension: `emerald.mcpb` on every tagged release, the npm package's `server.mjs` with a manifest and an icon, run `--engine-only` on the Node the Claude desktop app ships, installed by double-click — which registers it in the app itself, where chat and Cowork on that computer reach it; the plugin keeps `npx`, because Claude Code runs a plugin's `.mcpb` on the system `node`; reverses D-498's *no `.mcpb`* for direct install only | [below](#d-509) |
 | D-510 | 2026-10-20 | The npm package's `engines.node` is `>=20.19.0`, the oldest Node a CI job runs it on: `.github/workflows/package.yml` builds it on Node 24 and runs `scripts/check-package.mjs` on 20.19.0, 22 and 24 — the handshake, a document written and read back, both hooks, and an `npx` install that fails on `EBADENGINE`; the desktop extension's `runtimes.node` follows; amends D-497's `>=24` | [below](#d-510) |
 | D-513 | 2026-10-20 | A team weighing Emerald for its development planning is answered before its model objects: both instruction blocks say, right after the 2,000-character head, that plans nobody owns are what it is for, that one document holds work across repositories, stored as text and committed or kept as one file outside every repository, that documents talk through an inbox and an `elsewhere` column, and that a worktree session's landing goes through the main document's inbox; the head says SQLite as bytes or text | [below](#d-513) |
+| D-514 | 2026-10-22 | A view can be saved, and a dashboard holds only views: a saved view is a format's filter, order, columns and kind under a name, kept beside its other views; a dashboard, one per format and one for the document, is an ordered set of saved views, charts of rollups and headline totals, never a free block; neither is a format; recent changes wait and D-462 stands; amends D-402 | [below](#d-514) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -449,84 +450,6 @@ thirteen closures late: the step was remembered by hand and was not.
 **Now `npm run docs:check` fails while a closed milestone has an entry here**, and
 `node scripts/archive-decisions.mjs` is the fix — it moves the entries, repoints their index rows and
 rewrites every link to them.
-
-## D-494 · 2026-10-18 · What only Claude reads lives in `hosts/claude/` — the hooks and the status line, the skills a stranger gets, and the plugin's manifest — built beside the server as `hooks.mjs` and `status-line.mjs`; nothing in `src/` or `electron/` imports from `hosts/`, and a host reaches the server only through `src/plugin/host.ts` <a id="d-494"></a>
-
-**Context.** 2026-10-17: what is specific to Claude belongs in one folder and ships in the
-Claude plugin. Measured that day, the MCP server was already host-neutral in what it says; what was
-not were the hook commands, which `server.mjs` ran as subcommands beside `watch` (M47 U1, M51 U6),
-the status line's entry in `src/plugin/`, the `.claude/emerald.json` they read, and the skills. MCP
-has no hooks, so no other client ever runs one, yet every client loaded the code that answers them.
-
-**Decision.** `hosts/claude/` is the one home for what only Claude reads. `hosts/claude/hooks/` holds
-what `src/plugin/hooks/` held, the status line's entry and a new `main.ts` that is the hooks' own entry:
-`vite build --mode claude-hooks` writes `dist-plugin/hooks.mjs` and `--mode claude-status-line` writes
-`status-line.mjs`, both beside `server.mjs`, so the plugin M42 U4 builds ships one folder and its
-`hooks.json` names `${CLAUDE_PLUGIN_ROOT}/hooks.mjs`. `server.mjs` answers MCP and `watch`, nothing
-else. `hosts/claude/skills/` holds the skills a stranger gets — `declare-a-format` now, M42 U7's later —
-each the same file as this repository's `.claude/skills/` copy (`skills.test.ts`); this repository's
-own skills stay out, since they name its paths. `src/plugin/host.ts` is what the server exports for a
-host: the tools a hook answers with, `formatWatch`'s readers, `FOR_THE_MODEL`, `NO_CLIENT` and
-`Result`. `src/plugin/hostBoundary.test.ts` holds the line both ways: nothing in `src/` or `electron/`
-imports from `hosts/`; a host's code imports from `src/` only `host.ts` (a test may add `src/testing/`)
-and from `electron/` only `bridge.ts`. The frame stays in the server: MCP Apps is an open extension.
-A second host later is `hosts/<name>/`. This repository's `.claude/` stays the configuration for
-developing Emerald, and its hooks run `dist-plugin/hooks.mjs`.
-
-- Rejected: keeping the hooks a subcommand of `server.mjs`, built from `hosts/claude/`. The server's
-  entry would have to import the host to dispatch to it, which is the one import the line forbids.
-- Rejected: `plugin/` for the folder. `src/plugin` is already the MCP server's name (`docs/plugin.md`).
-- Rejected: moving `declare-a-format` out of `.claude/skills/`. Sessions here use it; a test that the
-  two copies are one file costs less than a session without it.
-
-## D-495 · 2026-10-18 · The repository goes public before the showcase, as one fresh commit with its history kept privately; what a visitor or a new session reads first says what holds, not who decided it; `docs/archive/` leaves the repository; and M33 U4 then deploys with GitHub Pages and a getemerald.dev record at Cloudflare <a id="d-495"></a>
-
-**Context.** The release sequence of 2026-10-15 put the showcase first, deployed and answering at
-getemerald.dev while the repository was still private, and only then the repository, npm, the registry
-and the plugin on one day. GitHub Pages serves a private repository only on a paid plan, so M33 U4 was
-to move to Cloudflare Pages or a direct upload. Once going public was approved (2026-10-16), the
-order was decided again, and an audit before publishing (2026-10-18) found that the repository read
-as one person's notebook: real document names and paths of other projects, the publisher's
-employment, personal finances, and "the author" narrating 307 of 1,335 rows and about 1,500 lines.
-
-**Decision.**
-- **The repository goes public first, and the showcase deploys after it.** M33 U4 deploys with the
-  GitHub Pages workflow the repository already holds, free once it is public, and getemerald.dev
-  answers through one DNS record at Cloudflare, where the domain lives. No Cloudflare Pages, no
-  direct upload. The frame's contract (D-418), the no-request rule and the poster hand-off are
-  unchanged. Nothing in the project competes with the publisher's employer or relies on its code or
-  material, and nothing new may.
-- **Published as one commit.** A single orphan commit of the cleaned tree goes to a fresh, empty
-  repository, with a message saying it is the first public release and that the history is kept
-  privately. The full history stays in a private bare mirror. A unit's `commit` names a commit of
-  that private history, and the format's notes say so.
-- **Personal content goes everywhere.** No employer, no real document or project names of the
-  publisher's own (the stand-ins of M47: notes.emd, planner.emd, homepage/site.emd), no personal
-  finances or figures, no machine paths but this repository's own.
-- **What a visitor or a new session reads first says what holds.** CLAUDE.md, the skills, README,
-  PRIVACY and SECURITY, `docs/*.md`, code comments, and the rows still acted on (planned units, open
-  milestones, live rules and terms, open questions and review entries): a statement with its D-ref or
-  date, "the maintainer" where a role is needed, a quote turned into the decision it carried.
-- **`docs/archive/` leaves the repository.** It is ignored and kept in the maintainer's checkout;
-  `scripts/archive-decisions.mjs` still moves a closed milestone's entries there, and the index and
-  every link name the plain D-ref. `npm run docs:check` fails on a link into it.
-- **The inbox is emptied.** Its rows were hand-offs from the publisher's own projects; what each
-  carried already landed as a unit or a decision. The two of 2026-10-15 and 2026-10-18 became this.
-- **Past rows and entries were reworded for voice only, on 2026-10-18.** Decision rows, built units,
-  closed milestones, findings and the log's open entries say who said, felt or approved something
-  differently, and nothing about what was decided, built, rejected or measured; refs, dates and
-  figures are as they were. This is the one exception to "a past entry is never edited", and the
-  wording before it is in the private history.
-- **Amends D-450**, whose consequence kept `docs/archive/` and the rows "dated record, never edited",
-  and **supersedes the order** of the 2026-10-15 release sequence. A private copy of the document
-  before this was made outside the repository.
-
-- Rejected: leaving the history. Scrubbing the current files leaves every earlier version readable
-  in history, including the commits that carried the employment rows.
-- Rejected: a second `filter-repo` rewrite. It swaps tokens, so the names would go and the voice in
-  745 commits would stay, and every hash would change again anyway.
-- Rejected: flipping the existing private repository public. A known hash can still reach a commit
-  that a force-push left behind.
 
 ## D-496 · 2026-10-18 · A tour plays only while its frame is seen, and the frame decides it: the player holds the first step and pauses every hold while an `IntersectionObserver` on the frame's own document says less than a third of it is in view or the tab is hidden, so `?autoplay=1` means play when seen on any page that embeds it <a id="d-496"></a>
 
@@ -555,354 +478,6 @@ start, or in the frame.
 **Consequences.** Where there is no `IntersectionObserver` the frame counts as seen and plays as it
 did. A frame posts its first `step` message when it is loaded, before it is seen, since that step
 is the one on screen.
-
-## D-497 · 2026-10-18 · The MCP server is published as one npm package, `emerald-mcp`, that is `dist-plugin/` as built: every package bundled and no dependencies, a manifest generated from the root one, and a bin each for the server (`emerald-mcp`, full or `--engine-only` by flag), the hooks (`emerald-hooks`) and the status line (`emerald-status-line`) <a id="d-497"></a>
-
-**Context.** The README's install line has said `npx emerald-mcp` since D-481, and the maintainer
-decided on 2026-10-18 that the Claude plugin (M42 U4) runs everything from this package rather than a
-committed build or a release asset. Until now `dist-plugin/server.mjs` kept `sql.js`, `xlsx` and the
-MCP SDK external, so it ran only beside a checkout's `node_modules`; the root `package.json` is the
-app's and private.
-
-**Decision.**
-- **One package, and it is `dist-plugin/`.** `npm run build:plugin` ends with
-  `scripts/npm-package.mjs`, which writes `package.json` and `README.md` into the folder: name
-  `emerald-mcp`, the root's version, licence (AGPL-3.0-only, D-430), author, homepage and
-  repository, `files` naming the three bins with `LICENSE.txt` and `THIRD_PARTY_NOTICES.txt`, and
-  `engines.node >=24`, what CI runs. Generated, not kept, so the two manifests cannot drift.
-- **No dependencies.** The three passes bundle every package (`ssr.noExternal`), `sql.js` as its
-  browser build since its Node build's export is lost to the CommonJS transform; the wasm is the
-  same bytes, handed over as before. The server's public folder (the OCR's language data, which no
-  tool reads) is no longer copied in. An `npx` downloads a 2.9 MB tarball and installs nothing else.
-- **Both servers in the one package, chosen by `--engine-only`.** Two packages would ship the same
-  7.5 MB twice for a choice `tools/list` makes at run time.
-- **A bin each for the hooks and the status line**, rather than subcommands of one bin: each is
-  already its own entry (D-494), the inbox hook runs on every prompt and the status line has 200 ms,
-  and a dispatcher would load the server's bundle to reach them or be a fourth file. A plugin calls
-  them with `npx -y -p emerald-mcp@<version> emerald-hooks …`.
-- **Publishing is the maintainer's** (`npm publish --access public` from `dist-plugin/`); a session
-  prepares and proves the tarball.
-
-**Consequences.** Measured once cached, the inbox hook costs ~0.35 s run by `node`, ~2.1 s through
-`npx` with the package installed, ~2.7 s from the npx cache — npm's start-up, on every prompt — and
-for a registry spec npx revalidates the manifest each call unless `--prefer-offline` is passed, which
-a pinned version makes safe. How the plugin's hooks pay that is M42 U4's. This checkout's
-`.mcp.json` and hooks run the same self-contained files.
-
-**Rejected.** Two packages, full and engine-only (twice the bytes for one flag). One bin with
-subcommands (the cost above, paid at the front of every hook). Dependencies resolved at install
-(an `npx` that installs the MCP SDK's tree on first run, for files that bundle in seconds). A
-manifest kept by hand beside the root one.
-
-## D-498 · 2026-10-18 · The Claude plugin is `hosts/claude/`, listed by a marketplace at the public repository's root and built by nothing: it pins the published `emerald-mcp` at the manifest's `version`, runs the server through `npx --prefer-offline`, and runs the hooks through `emerald.mjs`, a hand-written launcher that keeps a copy of the package in `${CLAUDE_PLUGIN_DATA}` and starts it with plain `node`; no `.mcpb`, because the directory no longer takes one <a id="d-498"></a>
-
-**Context.** M42 U4 packages Emerald for one-click install in Claude. Its first attempt committed a
-bundle of the server and hooks into the plugin (parked on the unpushed `m42-u4-wip`); the
-maintainer ordered npm first, and `emerald-mcp@0.1.0` is published (D-497). An `npx` call costs
-~2 s on the maintainer's Windows machine against ~0.35 s for `node`, and the inbox hook runs before
-every prompt. Anthropic's publish page, read on the day, says the directory no longer accepts local
-servers packaged as desktop extensions (MCPB): a local server goes inside a plugin.
-
-**Decision.**
-- **The plugin folder is `hosts/claude/`** (D-494's home for what only Claude reads), and
-  `.claude-plugin/marketplace.json` at the repository's root lists it, so `/plugin marketplace add
-  kfireliyahu/emerald-emd` then `/plugin install emerald@emerald-emd` installs it with no review.
-  Nothing builds it: no committed bundle, no build script, no release asset.
-- **The server is `npx -y --prefer-offline emerald-mcp@<version> --engine-only`.** Once per
-  session, so npx's two seconds are paid once; `--prefer-offline` keeps a pinned version off the
-  network after the first fetch. Measured on Windows: Claude Code starts it as written and it
-  connects.
-- **The hooks run through `emerald.mjs`**, ~85 lines of plain JavaScript with no imports but
-  Node's. It reads the version from `.claude-plugin/plugin.json`, keeps `emerald-mcp` at that
-  version in `${CLAUDE_PLUGIN_DATA}/node_modules/` (installed with npm, `--prefer-offline`, at the
-  first `start-here` after an install or update — ~10 s once), and imports the bin there in its own
-  process. The per-prompt `rows` never installs: until the copy is there it is silent. Measured:
-  `rows` through the launcher ~0.35 s, the same as `node` on the file.
-- **The version is written once**, as `plugin.json`'s `version`; the server's pin must equal it and
-  it must equal the root `package.json`'s, which `npm run build:plugin` stamps on the package
-  (`hosts/claude/plugin.test.ts`). So a release is: bump, build, publish, then push — the
-  marketplace serves `main`, and a pin pushed before its publish installs nothing. A change to the
-  plugin alone ships with the next package version.
-- **No `.mcpb`.** The directory has deprecated desktop-extension listings, and a plugin answers
-  M41 U4's *does a person need Node* no better: Claude Code's plugin runs on the person's `node`.
-- **The status line stays the person's setting** (a plugin's `settings` take only `agent` and
-  `subagentStatusLine`); since the data folder does not move between versions, it can name
-  `.../plugins/data/emerald-emerald-emd/node_modules/emerald-mcp/status-line.mjs`.
-
-**Consequences.** The plugin needs Node on the `PATH` and the network once per version. The
-directory, if Emerald is submitted to it later, would hold this version for a reviewer (a pinned
-npx package and a launcher that installs are always held) and would block the hooks' `"$CLAUDE_PROJECT_DIR"`
-argument in a plugin that is a subfolder of its repository; the launcher could take the folder from
-the environment instead. A person who also wired the hooks by hand (`.claude/settings.json`) gets
-them twice and should drop their own.
-
-**Rejected.** `npx` in `hooks.json` (two seconds before every prompt). The committed bundle (the
-maintainer's *why a workaround*: the package is the build). Finding the npx cache's copy (its folder
-is a hash of npm's choosing, and moves with npm). Running the server through the launcher too (two seconds saved once
-a session, for a plugin that no longer runs the command every other client runs).
-A `.mcpb` beside the plugin (the directory no longer takes one).
-
-## D-499 · 2026-10-18 · The Claude plugin runs everything through npm: the hooks are `npx -y --prefer-offline -p emerald-mcp@<version> emerald-hooks …` and the status line `npx … emerald-status-line`, like the server, and `emerald.mjs` is gone; the cost is accepted — ~1.95 s before every prompt for the inbox hook on Windows, against ~0.35 s for `node` <a id="d-499"></a>
-
-**Amends [D-498](#d-498)**: its launcher and the status-line path, nothing else — the marketplace,
-the server's command, the single version and no `.mcpb` stand.
-
-**Context.** D-498 ran the hooks through `emerald.mjs`, which kept a copy of the package in
-`${CLAUDE_PLUGIN_DATA}` and started it with plain `node`, to keep npx's start-up off every prompt.
-The maintainer, the same day: *use npm for it* — the server, the hooks and the status line all
-through the published package, nothing on a cached path and nothing bundled, and the cost accepted.
-
-**Decision.**
-- **Hooks**: `npx -y --prefer-offline -p emerald-mcp@<version> emerald-hooks start-here
-  "$CLAUDE_PROJECT_DIR"` at `SessionStart` (timeout 60 s, for a first download), and `… rows
-  "$CLAUDE_PROJECT_DIR" inbox --match state=new --once-per-session` at `UserPromptSubmit` — the
-  arguments this repo's own hooks pass. **Status line**: `npx -y --prefer-offline -p
-  emerald-mcp@<version> emerald-status-line`, still the person's setting.
-- **`emerald.mjs` is removed**, and with it the data-folder copy and its install.
-- **Every pin equals the manifest's `version`**, the server's and each hook's
-  (`hosts/claude/plugin.test.ts`).
-
-**Consequences — the cost, measured** on the maintainer's Windows machine with npm's cache warm:
-the inbox hook **~1.95 s before every prompt** (five runs, 1.93–1.97 s; ~0.35 s as `node` on the file),
-`start-here` ~2 s once a session, the server ~2.2–2.6 s once a session, the status line ~1.7 s
-against its 200 ms. The first run of a version downloads the 2.9 MB tarball; `--prefer-offline`
-keeps every later one off the network. npm's `npm notice` lines go to stderr, which a hook exiting 0
-keeps out of context. The upside: one way to run Emerald everywhere — the command another client
-runs — with no file of the plugin's own between Claude Code and the package.
-
-**Rejected.** Keeping the launcher (the maintainer's call). `npm i -g emerald-mcp` and bare bins (a
-global install the plugin cannot make, and one more step for a person).
-
-## D-500 · 2026-10-18 · The server is listed in the official MCP Registry as `io.github.kfireliyahu/emerald`, from a `server.json` at the repository's root that a workflow publishes, signed in with GitHub OIDC, whenever npm has a version the registry lacks; a version is cut in `package.json`, `server.json` and `PLUGIN_VERSION` and pushed first, and the plugin's pins follow once npm has it, so they may trail the package and never lead it <a id="d-500"></a>
-
-**Amends [D-498](#d-498) and [D-499](#d-499)** on one point: the pins equal the manifest's `version`
-still, but that version may trail the root `package.json`'s instead of equalling it.
-
-**Context.** M42 U3: be found where MCP clients look. The registry
-(`registry.modelcontextprotocol.io`, in preview) keeps metadata only — a `server.json` naming the
-server and the npm package and version it runs — and accepts a version only when npm already has
-it and the *published* `package.json` carries the server's name as `mcpName`. `emerald-mcp@0.1.0`
-carries none, so it cannot be listed: a new version has to be published, and publishing to npm is
-the maintainer's, with a browser sign-in (D-497). And the old order — bump, build, publish, *then*
-push — cannot hold when every session pushes to `main`: a pin pushed before its publish starts
-nothing for anyone whose plugin updates in between.
-
-**Decision.**
-- **The name is `io.github.kfireliyahu/emerald`**: the GitHub namespace, which needs no domain, and
-  `emerald` after the server (`SERVER_NAME`) and the plugin's server, not the npm package, whose
-  `-mcp` was only because `emerald` was taken there. `title` Emerald, `websiteUrl` getemerald.dev.
-- **`server.json` at the root is the listing**, written by hand against the
-  `2025-12-11` schema: one npm package, `emerald-mcp`, `registryBaseUrl` npm's, `runtimeHint` npx,
-  transport stdio, no arguments — the full server, as the README's `npx -y emerald-mcp` runs it.
-  `scripts/npm-package.mjs` stamps its `name` on the package as `mcpName`, so it is written once.
-- **A version is cut in three places and pushed first**: the root `package.json` (and its lock),
-  `server.json` (its `version` and the package's) and `PLUGIN_VERSION`, the version the server
-  reports; `src/plugin/registry.test.ts` fails when they differ. **The plugin's pins follow once npm
-  has it**: `node scripts/pin-plugin.mjs` asks npm, refuses while the version is not there, and
-  moves every `emerald-mcp@<version>` and the manifest's `version`. `hosts/claude/plugin.test.ts`
-  now requires the pins never to lead the package, rather than to equal it.
-- **`.github/workflows/registry.yml` lists whatever npm has**: on a push to `main` that touches
-  `server.json` or the plugin's manifest, once a day, and by hand (`gh workflow run registry.yml`). It
-  asks npm (no such version → a notice, green; a different `mcpName` → red) and the registry (listed
-  already → nothing), then runs `mcp-publisher` — pinned at 1.8.1 and checked against its release's
-  sha256 — to `validate`, `login github-oidc` and `publish`, and asks the search API for the name
-  at that version. **No stored secret**: the job's OIDC token proves the repository is
-  `kfireliyahu`'s, which is the namespace. **No tag**: the registry follows npm, and npm is
-  published by hand, so a tag would be one more thing to push in the right order.
-- **0.1.1 is the first listed version**, and it carries the npm README rewritten after 0.1.0. The
-  app's version moves with it, because it is the one version; **the desktop release does not**:
-  installers are cut only by a `v<version>` tag (release.yml), none is pushed for this, and the
-  page's `RELEASE` stays 0.1.0, the installers that exist.
-
-**Consequences.** Between the cut and the publish, `main` says 0.1.1 while the plugin still runs
-0.1.0, which is the point; the workflow's notice says so. The registry's schema is checked where it
-lives, by `mcp-publisher validate` before every publish; the tests check only what must agree here.
-A desktop release now takes whatever version the package is at, not a version of its own.
-
-**Rejected.** Publishing npm and the registry from one workflow on a tag (the npm publish would need
-a stored token or trusted publishing set up on the account, and the publish is the maintainer's by
-D-497). A name after the npm package (`io.github.kfireliyahu/emerald-mcp`: one more name for one
-thing). A domain namespace (`dev.getemerald/…`: a DNS key to keep, for a listing the GitHub one
-already proves). Keeping the pins equal to the package (every cut would break the plugin until the
-publish, or wait unpushed on `main`). A personal access token for the registry (a secret to rotate,
-where OIDC needs none).
-
-## D-502 · 2026-10-18 · The desktop app makes no network call unless the person turned updates on, or pressed Check for Updates Now — then one request, to `api.github.com/repos/kfireliyahu/emerald-emd/releases/latest`, from a session of its own that the page never runs in, open only while that check asks; the setting is off by default and the app's, a newer version is a quiet notice in the window whose Download opens the release page, and M42 U9's download will reach `github.com/kfireliyahu/emerald-emd/releases/download/` and the asset hosts it redirects to (`release-assets.githubusercontent.com`, `objects.githubusercontent.com`) only on the same terms; amends D-124 and D-452 <a id="d-502"></a>
-
-**Context.** M42 U8. D-124 said nothing inside the app reaches the network, and `electron/network.ts`
-enforced it: the README's "Updates are download the new one; there is no update check". Once the
-app is public, a person who installed v0.1.0 has no way to learn there is a v0.1.1 short of
-revisiting the page. The maintainer decided on 2026-10-18 that the desktop app gets updates as an
-opt-in, off by default and never intrusive — no modal, no dialog that takes focus, nothing installed
-unasked — the way the Claude desktop app shows one.
-
-**Decision.**
-
-- **The rule, amended.** The desktop app makes no network call unless the person turned updates on
-  — and then only to GitHub's release addresses for this repository. A press of Help → Check for
-  Updates Now is consent for that one check, with the setting off. The check asks exactly
-  `https://api.github.com/repos/kfireliyahu/emerald-emd/releases/latest`; M42 U9's download will
-  reach `https://github.com/kfireliyahu/emerald-emd/releases/download/…` and the asset hosts GitHub
-  redirects a release download to (`release-assets.githubusercontent.com`,
-  `objects.githubusercontent.com`), on the same terms, and widens the predicate then — not before.
-- **A session of its own, not a loosening of the page's.** The check runs in
-  `session.fromPartition('emerald-updates')`, held in memory, which nothing the page loads runs in.
-  `isAllowedRequest` — the page's — is unchanged and refuses the address with the setting on or off;
-  `isAllowedUpdateRequest` allows that one URL, exactly, and only while `Updates.gateOpen()` — which
-  is narrower than the brief asked: open while a check is in flight, not for as long as the setting
-  is on. A redirect is an error. It sends `User-Agent: Emerald/<version>` and `Accept-Language: en`,
-  so GitHub sees the IP address, the version and the time, and not the system's language or OS.
-- **The release API, not `latest.yml`.** One request answers both platforms, from the host that
-  answers it (no redirect to an asset host), it exists today, and `releases/latest` skips drafts and
-  pre-releases itself. `latest.yml` is published only once U9's build ships it, and macOS would read a
-  second file. Only `tag_name` is read from the answer; nothing else in it reaches the window or the
-  browser.
-- **One setting, the app's.** `settings.json` beside `recents.json` in the app's own folder,
-  `{"automaticUpdates": true}` or off — anything else is off. It is switched in About (the page's,
-  M45 F3), where the version is, under words that say what it does on this platform; until U9 that is
-  the same on both: check at start and once a day, and say so.
-- **The schedule.** At start, then a tick every hour that checks only when on and a day has passed
-  since the last check — so a laptop that slept still checks. A scheduled check that finds nothing,
-  or fails, says nothing; the next day's tries again.
-- **The notice.** The lowest row of the notice region (it is about the app, not anything open in
-  it): *Emerald <version> is out. You have <version>.* with **Download** — `shell.openExternal` of
-  `<repository>/releases/latest`, a constant, never an address from the answer — and **Later**, which
-  hides it until the next start or the next day's check. Check for Updates Now answers in the same
-  row: *Checking…*, *You have the latest — Emerald <version>.*, or *Could not check for updates.* with
-  the reason. No dialog, and nothing takes focus. It is in Help on both platforms and in the palette.
-
-**Consequences.** `electron/network.test.ts` proves the update predicate closed with no check
-asking, open for that URL alone while one does, and the page's predicate refusing it either way;
-`electron/updates.test.ts` proves the schedule asks nothing while off over ten days, and every answer
-against a stubbed release. A verify-in-shell run with Chromium's net log showed no HTTP request at
-all with the setting off. The rule rows for the offline law and for `openExternal` say the same. An
-unpackaged shell reads a release answer from the file `EMERALD_UPDATE_ANSWER` names instead of
-asking, for verifying the notice; a packaged app ignores it.
-
-**Rejected.** Widening the page's session for the address (a renderer that ever loaded something
-foreign could then ask it). `electron-updater` for the check (U9's to choose for the download; for a
-version number it is a dependency and a second file). Opening the `html_url` from the answer (an
-address the network chose, handed to the browser). A dialog for Check for Updates Now (the maintainer
-ruled out anything that takes focus). The gate open for as long as the setting is on (the narrower
-gate costs nothing).
-
-## D-503 · 2026-10-18 · On Windows, with updates on, the app downloads the release its check found — `releases/download/v<version>/latest.yml` and `Emerald-Setup.exe` through electron-updater, in its own session, gated to that release while it downloads — checks the installer against the release's sha512, and installs only on Install and restart, after the window closes the ordinary way, reopening the document; macOS stays a notice; the installers lose the version from their names and the page links `releases/latest/download/` <a id="d-503"></a>
-
-**Context.** M42 U9. D-502 gave the desktop app an opt-in update check and a quiet notice, and named
-the addresses a Windows download would reach. The maintainer's brief: Windows downloads by itself with
-the setting on and installs only on a press; macOS stays a notice until the installers are signed
-(electron-updater needs a signed app there); never intrusive; and getemerald.dev must always link the
-newest installers, which their versioned names stopped it doing.
-
-**Decision.**
-
-- **One check, then the release it found.** M42 U8's check (the release API) still decides. A newer
-  version is handed to `electron/windowsUpdater.ts`, which points electron-updater's *generic* feed at
-  `github.com/kfireliyahu/emerald-emd/releases/download/v<that version>/` and reads that release's
-  `latest.yml` — not `releases/latest/download/`, which could be a newer release a second later, and not
-  the GitHub provider, which reads the releases feed and a second endpoint to find what the check
-  already found. `latest.yml` naming another version, or one not newer, is a refusal.
-- **Its own session, gated.** electron-updater asks from its partition (`electron-updater`), which
-  nothing the page loads runs in. `isAllowedDownloadRequest` allows exactly that release's `latest.yml`
-  (with electron-updater's `noCache` query) and `Emerald-Setup.exe`, and the two file-store hosts D-502
-  named, over https on the default port — only while `Updates.downloading()` names that version, which
-  happens only with the setting on. With the setting off nothing is downloaded, a press of Check for
-  Updates Now included: it says so, as on macOS. The headers are D-502's (`Emerald/<version>`, `en`);
-  electron-updater's staging id is never made (`QuietNsisUpdater`) and its header is dropped at the session.
-- **The checksum is the guarantee.** electron-updater checks the file against `latest.yml`'s sha512 and
-  deletes it on a mismatch. `verifyUpdateCodeSignature` would compare the installer's signature with a
-  publisher name; the installers are unsigned (D-124) and `app-update.yml` names none, so it is skipped:
-  what stands behind the file is that both came from this repository's release, built and attested by its
-  workflow (D-452). The GitHub account is the real guard, as it is for a download from the page.
-- **Installed only on a press.** `autoDownload` and `autoInstallOnAppQuit` are off. The notice says
-  *Emerald <version> is ready. Installing it restarts Emerald; your documents are not touched.* with
-  **Install and restart** and **Later**. The press closes the window the ordinary way — the unsaved-work
-  question included, and Cancel cancels the install — and the installer runs (`/S`, per-user,
-  `--force-run`) only once the app is quitting because of it. The document open then is written to
-  `reopen.json` in the app's folder, and opened again at the next start if the recents still grant it.
-- **Quiet otherwise.** A scheduled download says nothing until it is ready. A pressed one says
-  *Downloading Emerald <version>…*. A failed one is never silent, because there is a newer version: it
-  falls back to the macOS notice (Download opens the release page) with the reason, a checksum
-  mismatch said in words. Turning the setting off stops a download in flight. Differential download is
-  off — one request to one file; the blockmap is published so turning it on is a later decision.
-- **Version-free installer names.** `Emerald-Setup.exe`, `Emerald-arm64.dmg`, `Emerald-x64.dmg`. The
-  release workflow uploads, sums and attests `latest.yml` and the blockmap with them. The page links
-  `releases/latest/download/<name>` — but only once a release carries those names
-  (`NAMED_INSTALLERS_RELEASED` in `src/demo/page/page.ts`); until then the cards link the newest release's
-  page, which is never broken and never stale. `RELEASE` is gone.
-- **From which version.** The first release built from this is 0.1.2; a copy older than that downloads
-  the new one once by hand, as the README says.
-
-**Consequences.** electron-updater is a dependency of the shell, bundled into `main.cjs` (the
-packaged app ships no `node_modules`). `electron/windowsUpdater.test.ts` drives the real
-electron-updater against a local feed laid out as a release: newer downloaded and checked, the same and
-an older version refused, a wrong sha512 refused with nothing kept, a `latest.yml` naming another
-version refused, no staging id. `updates.test.ts` covers the schedule with a stubbed downloader;
-`network.test.ts` the gate. An unpackaged shell downloads from the feed `EMERALD_UPDATE_FEED` names, for
-verifying itself; a packaged one ignores it. The real update — a tagged release installed, then a second
-tag — is the maintainer's, in a review entry.
-
-**Rejected.** The GitHub provider (more requests and endpoints than the check it would repeat). Reading
-`releases/latest/download/latest.yml` (a race between the check and the download). Installing on quit
-(the brief: nothing installed unasked). Running the installer straight from the press (the
-unsaved-work question would come after the installer had started). Keeping v0.1.0's files on the page
-until the next release (stale the moment a newer one is out).
-
-## D-504 · 2026-10-18 · The Claude plugin ships the development pack's run-milestone, closing-pass and review-phase as generic skills beside this repo's own; its `version` is how an installed copy learns of an update, so a change to what it ships cuts one — `<pin>+<n>` for a plugin release with no package behind it, by `node scripts/pin-plugin.mjs --plugin`, the bare package version when the pins move — and `plugin.test.ts` fails when the shipped files' digest moves under an unchanged version; amends D-500 <a id="d-504"></a>
-
-**Context.** M42 U7. A project that keeps only the development pack had none of the workflows this
-repo drives its milestones with: `run-milestone`, `closing-pass` and `review-phase` live in
-`.claude/skills/` and name this repo's paths, its decision log and its npm scripts. And the
-maintainer asked whether shipping them reaches people who already installed the plugin. Claude Code's
-plugin docs (*Plugin loading reference*, *Versions and updates*, read 2026-10-18) answer it: it
-computes a version for an installed plugin — the manifest's `version` first, then the marketplace
-entry's, else the source's commit — and `claude plugin update` and auto-update **replace the cached
-copy only when that differs** from the one it installed; auto-update is **off by default for every
-marketplace but Anthropic's own**; an update loads in the next session or after `/reload-plugins`.
-Since D-500 the manifest's `version` equalled the npm pin, so a skills-only change under 0.1.2 would
-have reached a new install and no existing one, until the next npm publish.
-
-**Decision.**
-
-- **Three generic skills in `hosts/claude/skills/`**, written from this repo's (as they are after M51
-  F4 and F5): take-over of a stalled unit, the `report` column, one closing order (checks, commit the
-  work, `land_units` with its hash and report, commit the landing), one writer per checkout, nearby
-  tests while building and the full suite once, effort by the unit, the parallel mode with worktree
-  children proposing through the inbox, the host's sessions and next-step box *if the host offers
-  them*. They find the document as the hooks do: the path the session-start hook printed, else
-  `.claude/emerald.json`, else the one `.emd` in the folder, and the main checkout's copy in a
-  worktree. They name the project's checks as its `CLAUDE.md` or README says, never an npm script.
-  This repo's copies stay in `.claude/skills/`; `skills.test.ts` holds `declare-a-format` byte for
-  byte and fails when a generic one cites a decision or unit, a `docs/` note, a script, `npm run`,
-  the memory document or a decision log.
-- **The manifest's `version` is the plugin's release, its part before `+` the pin.** A pin move
-  (`node scripts/pin-plugin.mjs`, after a publish) makes it the bare package version; a change to the
-  plugin's own files makes it `<pin>+<n>`, the n-th plugin release on that pin
-  (`node scripts/pin-plugin.mjs --plugin`, which asks npm nothing). `claude plugin validate` accepts
-  it; Claude Code compares versions as strings, so `+1` is an update to anyone at the bare version, and
-  the next pin move is one to anyone at `+n`. The pins stay where D-500 put them: never ahead of the
-  package, moved only once npm has the version.
-- **A digest makes it mechanical.** `hosts/claude/release.ts` hashes what a person's Claude reads
-  from the plugin — the manifest without its version, the hook set, the skills, the README; not the
-  TypeScript, which runs from the package — with line endings as LF; both modes of the script record it
-  with the version in `hosts/claude-plugin-release.json`, and `plugin.test.ts` fails when the folder's
-  digest differs from the record's, saying to run `--plugin`.
-- **The README says how to update**: turn on auto-update for `emerald-emd` under `/plugin` →
-  Marketplaces, or `claude plugin marketplace update emerald-emd` then `claude plugin update
-  emerald@emerald-emd`.
-
-**Consequences.** This unit cuts 0.1.2+1 with the three skills. Everyone at 0.1.2 gets it on their next
-manual update, or within ten minutes of a session's first message with auto-update on. Proved on a clean
-`CLAUDE_CONFIG_DIR`: 0.1.2 installed from the GitHub marketplace before the push, then updated after it
-(the unit's report). A synthetic project keeping the pack ran two units at once through
-`dispatch_plan`, two worktrees, a merge and one `land_units inbox` dry run — which found that a
-proposal names its worktree's branch while the claim names the driver's, so the driver lands them with
-`{id, other_branch: true}`; both `run-milestone` skills say so now.
-
-**Rejected.** Leaving `version` out of the manifest so the commit is the version: every push to `main`
-would be an update, and a notice in every session with auto-update on. A prerelease (`0.1.2-1`), which
-semver orders below 0.1.2. A plugin version unrelated to the package's, which would hide which server a
-plugin runs. Shipping this repo's own copies, which name paths a stranger has none of (M42 U4's brief).
 
 ## D-505 · 2026-10-19 · The Mac app is signed ad hoc after packing — `codesign --force --deep --sign -` from an `afterPack` hook, with `mac.identity: null` kept — so a download is an app Apple could not verify, which Open Anyway opens, rather than a "damaged" one, which nothing does; the release workflow fails a Mac build whose signature does not verify; no certificate, account or notarization, so D-124's unsigned stands; amends D-124 <a id="d-505"></a>
 
@@ -1064,7 +639,7 @@ which would put them where the server runs fine.
 
 ## D-509 · 2026-10-20 · The server also ships as a Claude desktop extension: `emerald.mcpb` on every tagged release, the npm package's `server.mjs` with a manifest and an icon, run `--engine-only` on the Node the Claude desktop app ships, installed by double-click — which registers it in the app itself, where chat and Cowork on that computer reach it; the plugin keeps `npx`, because Claude Code runs a plugin's `.mcpb` on the system `node`; reverses D-498's *no `.mcpb`* for direct install only <a id="d-509"></a>
 
-**Reverses** [D-498](#d-498)'s last bullet, and only it: the directory still takes no desktop
+**Reverses** D-498's last bullet, and only it: the directory still takes no desktop
 extension, and none is submitted.
 
 **Context.** M42 F9. D-508 found where the plugin falls short: a Cowork task in the cloud loads its
@@ -1131,7 +706,7 @@ directory (it takes none).
 
 ## D-510 · 2026-10-20 · The npm package's `engines.node` is `>=20.19.0`, the oldest Node a CI job runs it on: `.github/workflows/package.yml` builds it on Node 24 and runs `scripts/check-package.mjs` on 20.19.0, 22 and 24 — the handshake, a document written and read back, both hooks, and an `npx` install that fails on `EBADENGINE`; the desktop extension's `runtimes.node` follows; amends D-497's `>=24` <a id="d-510"></a>
 
-**Amends** [D-497](#d-497)'s `engines.node >=24`, and only it.
+**Amends** D-497's `engines.node >=24`, and only it.
 
 **Context.** D-497 set the range to `>=24` as *what CI runs*, while the files target Node 20
 (`vite.config.ts`) and import nothing but Node's own modules. No CI job ran the package at all —
@@ -1209,6 +784,49 @@ server, and a one-file fix costs more here than in a note.
 
 **Rejected.** Squeezing it into the head: the head's budget is how to show (D-482), and a sentence
 there would push it past 2,000. Naming the tracker or memory product the model named: D-450.
+
+## D-514 · 2026-10-22 · A view can be saved, and a dashboard holds only views: a saved view is a format's filter, order, columns and kind under a name, kept beside its other views; a dashboard, one per format and one for the document, is an ordered set of saved views, charts of rollups and headline totals, never a free block; neither is a format; recent changes wait and D-462 stands; amends D-402 <a id="d-514"></a>
+
+**Context.** M53, from the maintainer's weeks on a `task` format at work (2026-10-22). Tasks had
+no view that suits them: the sheet is a spreadsheet, the board is lanes, and only the agenda reads
+like a task list. The entry page felt cluttered, and adding an entry by hand was heavy — every
+column, three steps. The open question *entry overview* asked whether a format needs a page for
+looking over its entries; the maintainer answered it with what was missed — charts, a filtered
+list (which is *due soon* too) and recent changes — and asked whether a customizable dashboard,
+per format and for the whole document, fits the premise. D-402 drew the entry's line: *no free
+blocks, nothing on it a column did not put there — the line between a view and a workspace.*
+
+**Decision.**
+
+- **A saved view** is a format's `match`, `search`, `order`, `columns` and view kind under a
+  name — what the address already holds (`addressFilter.ts`) and what `format_rows` and
+  `show_format` already take, kept. It lives beside the format's other views (`format_view_column`,
+  and `views.md` in a text document), a conversation saves one with `arrange_views` and draws one
+  with `show_format`, and the rail lists them under their format.
+- **A dashboard holds views and nothing else**: saved views, charts of a rollup, and headline
+  totals (a count or a sum under a filter), in an order the person arranges in place. One per
+  format, and one for the document. No free text, no embeds, no block that is not one of those —
+  so D-402's line moves from the entry to the dashboard rather than being dropped, and Emerald
+  does not become an all-in-one notes-and-database workspace, whose race is polish; its own is the
+  checks and the conversation.
+- **Neither is a format.** A format's rows are the person's data; a view is how to look at it.
+  Presentation is not the domain layer, and views are already declarations kept beside the
+  formats.
+- **The entry page and adding by hand get lighter in the same milestone**, from a mockup first:
+  fields can be hidden, reordering is lighter, a filled entry shows what it holds, a new one asks
+  for what is needed, and a row can be added in place from a list with the values its view implies.
+- **Tasks get a view kind of their own**, `list`: one line per row, a done tick, grouped by a
+  column.
+
+**Consequences.** M53's units carry it: a mockup (U1), hiding and reordering (U2), a lighter
+entry (U3), the list view (U4), saved views (U5), charts of a rollup from one general chart in
+`src/ui/charts/` (U6), and dashboards (U7). Every write each adds — saving a view, arranging a
+dashboard, hiding a field — has both halves, the screen and `arrange_views` (D-227). The open
+question *entry overview* is answered by this.
+
+**Rejected.** A dashboard as rows of a format: it puts presentation in the domain layer and needs
+storage views already have. Free blocks on a dashboard: D-402's reason holds. **Recent changes**
+for now: rows carry no time of change (D-462), so it needs that decision reopened; it waits.
 
 ## Related
 

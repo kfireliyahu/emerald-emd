@@ -4321,6 +4321,15 @@ question: Why did a model asked to keep a development team's planning in Emerald
 answer: Each objection had an answer the server never gave: git and a tracker cover planning (the plans between them, a PLAN.md or notes, drift because nobody owns them); the pack means per-repository documents (one document holds work across repositories); a .emd is binary SQLite (store_document_as text diffs and merges in git, and the head called it 'a real SQLite database'); a document outside git is in no worktree or cloud session (a committed text file is in every checkout and reads as Markdown); two documents cannot talk (an inbox, and an elsewhere column reading the other row's state live, not enforced); parallel worktrees' claims collide (a worktree session proposes its landing to the main document's inbox and one driver lands it; one document outside every repository is one copy, written under a lock). A section in both blocks says so straight after 'When they ask to see', since the head is full (1,996 of 2,000); the head says 'SQLite, as bytes or text'. server.test.ts pins the section's place and each claim beside store_document_as, land_units, claim_units and keep_packs, and fails on 'a real SQLite database', 'binary file', 'cannot be committed', 'not meant for development', 'gitignore' and 'one document per repository'. ask-cold.mjs asks the planning question with its own flags; --question and --server added. What a model still holds fairly is not argued: CLAUDE.md stays Markdown, a link does not cross documents, a write needs the server, a one-file fix costs more here. Ships in emerald-mcp 0.1.6. Rejected: squeezing it into the head (D-482's budget); naming the products the model named (D-450).
 state: live
 
+### D-514
+date: 2026-10-22
+milestone: M53
+scope: app
+title: A view can be saved, and a dashboard holds only views: a saved view is a format's filter, order, columns and kind under a name, kept beside its other views; a dashboard, one per format and one for the document, is an ordered set of saved views, charts of rollups and headline totals, never a free block; neither is a format; recent changes wait and D-462 stands; amends D-402
+question: Does a customizable dashboard, per format and for the whole document, fit the premise, and what is it made of? The maintainer's task format had no view that suits tasks, the entry page felt cluttered and adding by hand was heavy; D-402 said an entry has no free blocks, the line between a view and a workspace.
+answer: A saved view is a format's match, search, order, columns and view kind under a name: what the address already holds and what format_rows and show_format already take, kept beside the format's other views (format_view_column, views.md), saved by arrange_views, drawn by show_format, listed under its format in the rail. A dashboard, one per format and one for the document, holds saved views, charts of a rollup and headline totals (a count or sum under a filter), arranged in place, and nothing else: no free text, no embeds; D-402's line moves from the entry to the dashboard. Neither is a format: rows are the person's data, a view is how to look at it. The entry page and adding by hand get lighter in the same milestone (mockup first), and tasks get a view kind of their own, list. Every write has both halves (D-227). Rejected: a dashboard as rows of a format; free blocks; recent changes for now, since rows carry no time of change (D-462) and that decision would have to be reopened. Answers the open question 'entry overview'.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -5515,7 +5524,7 @@ position: 324
 ### M42
 title: Public: the showcase, then the listings
 goal: Emerald goes public in two beats, the sequence of 2026-10-15. Beat one: the showcase M33 built is deployed and answering at getemerald.dev while the repository is still private (M33 U4). Beat two, on one day: the repository public, a public npm package, an entry in the official MCP Registry, and a Claude plugin (with a desktop extension if Anthropic's directory still takes one) submitted to Anthropic's directory, so a person installs it in one click and gets M41's views in the conversation, with the kill criterion written before any of it (M33 U9). It works with any app that runs local MCP servers (Claude, Cursor, VS Code, OpenAI's Codex CLI). ChatGPT's app directory takes only remote servers behind OAuth, which would mean a backend holding people's documents, so Emerald is not listed there, and the README says so as a stance. Both beats wait on the maintainer's go, and parts on the public repository and an npm name, both the maintainer's. 2026-10-08; the showcase deploy and the kill criterion moved here from M33 on 2026-10-18.
-state: open
+state: closed
 position: 346
 
 ### M43
@@ -5577,6 +5586,12 @@ title: Post-release fixes
 goal: What real use found once Emerald was public (released 2026-10-18): bugs, hosts behaving in ways no test showed, words that misled a model, and the release fixes that follow. A finding from real use goes here, never into whatever milestone happens to be open; M42 keeps only the listing work. The fixes found 2026-10-18 to 2026-10-20 moved here from M42 with their refs unchanged (M42 F1 to F16), and M51 F6 from the closed M51. Stays open while fixes keep coming; the maintainer closes it, and a new one opens for the next stretch.
 state: open
 position: 345
+
+### M53
+title: Views worth living in: a lighter entry page, a list for tasks, saved views and dashboards
+goal: From the maintainer's weeks on a task format at work (2026-10-22): tasks have no view that suits them, the entry page is cluttered, adding by hand is heavy, and the UI as it is is not nice. Done when a person keeps tasks in Emerald without the table: a list view with a done tick and quick add, an entry page that shows what it holds and hides what they chose, saved views (a filter, order, columns and kind under a name), charts of a rollup, and a dashboard per format and one for the document built only of those (D-514). Every write has its conversation half through arrange_views and show_format draws every new view. Recent changes are out: they need D-462 reopened. Starts from a mockup the maintainer approves (U1).
+state: planned
+position: 349
 
 <!-- emerald: open_question.format.md -->
 ---
@@ -5867,7 +5882,9 @@ state: open
 
 ### entry overview
 question: Does a format need a view for looking over its entries, a dashboard of some kind, beside the table, board, roadmap and agenda? The maintainer felt one was missing after weeks on a real document, and said it may be only a feeling. Before any build: what would it show that the table and the other views don't (counts by a column, what's due, recent changes, rollups), is that a new view kind or a start_here-like page for one format, and would a conversation get the same through show_format?
-state: open
+answered_by: D-514
+state: answered
+answer: Yes, and it is more than a feeling (2026-10-22): what was missed was charts, a filtered list (which is 'due soon' too) and recent changes. D-514 answers it with saved views and a dashboard per format and one for the document, built only of saved views, rollup charts and headline totals; M53 builds it. Recent changes wait on D-462.
 
 ### parity gap #11
 question: A tool must be able to make a connection. `#/connections` can write a `link` and an aggregate by dragging between two endpoints, and no tool can: what is the conversation's half of that, and does it write the link and the fold together the way the drag does?
@@ -9070,13 +9087,6 @@ branch: main
 commit: dd0d3b0b
 paths: "src/frame/host.ts\nsrc/frame/main.tsx\nsrc/frame/host.test.ts\nscripts/try-frame.mjs\ndocs/plugin.md"
 
-### Later U-entry-layout
-milestone: Later
-scope: ui
-title: Arranging an entry page: moving fields is easy, and a person can hide fields they don't use
-state: planned
-brief: Maintainer, 2026-10-20, after weeks on a real format with many columns: arranging an entry page (moving the fields) is clunky, and a page with many columns feels heavy. Some fields should be hidden by the person's choice. The entry page and its order are M26 F2 and M35 U1/U2 (headings over inputs, the order is the view's). Start from suggestions and a mockup, as M35 U1 did, before code: (1) a lighter way to reorder: drag the field itself, or a compact list of names to drag, in place of whatever is clunky now (try it first and say what is); (2) hiding a field in the entry view, kept with the view's order and the same in arrange_views, so a conversation can do it too (parity, D-227); a hidden field is still in the format, in the table and in every tool, and its value shows if it holds one or there's a way to reveal it (the person decides); (3) whether a long page groups or folds. Respect the rule that labels name exactly what they cover, and make it in place (count the click paths). The mockup is the maintainer's to approve before the build unit.
-
 ### Later U-template
 milestone: Later
 scope: engine
@@ -11071,7 +11081,7 @@ taken_by: Fable session
 started: 2026-10-12
 
 ### M33 U9
-milestone: M42
+milestone: Later
 scope: engine
 title: Published, with the kill criterion written first
 decision: D-413
@@ -12171,7 +12181,7 @@ started: 2026-10-18
 branch: main
 
 ### M42 U5
-milestone: M42
+milestone: Later
 scope: engine
 title: Submitted, and the ChatGPT stance written down
 state: planned
@@ -12955,6 +12965,80 @@ started: 2026-10-18
 branch: main
 paths: "src/data/packs/packs.ts\nsrc/plugin/tools/packs.ts\nsrc/ui/screens/Packs.tsx\nsrc/data/packs/development/pack.test.ts\ndocs/plugin.md"
 
+### M53 U1
+milestone: M53
+scope: app
+title: A mockup: a lighter entry page, quick add and a list view for tasks
+decision: D-514
+state: planned
+brief: Mockup first, as M35 U1 did; the maintainer approves it before U2-U4 build (he said the UI as it is is not nice, so this is his taste to judge, not a driver's). Start by trying the current entry page (src/ui/formats/EntryView.tsx, entryLayout in src/domain/format/view.ts) and the Add flow (entry/new, three steps, every column) on a synthetic task format with ~12 columns (title, state enum, due date, priority, project link, notes markdown, a few optional ones), and say what is clunky. Then draw, in the app's own tokens (src/ui/theme/tokens.css, the rule rows with scope ui): (1) the entry page lighter: a filled entry shows the fields that hold a value plus '+ field' for the rest; hidden fields and how to reveal them; reordering by dragging the field itself or a compact list of names, not a separate arrange mode; whether a long page groups or folds; (2) a new entry that asks for the required fields and the ones the view chose; (3) the list view: one line per row, a done tick (the state enum's done member or a boolean), the title, due relative to today, chips, grouped by a column, collapsible groups; (4) quick add: type a title and Enter at the top of a list or a group, the row taking the values its view implies (the group's member, a 'due today' filter's date). Keep the list beside an open entry (EntryList, which the maintainer likes). Labels name exactly what they cover; make it in place (count click paths). Synthetic data only. Done-test: a mockup file the maintainer has approved, and the decisions it settles written into U2-U4's briefs.
+files: src/ui/formats/EntryView.tsx, src/ui/formats/EntryList.tsx, src/domain/format/view.ts (entryLayout), src/ui/theme/tokens.css, mockups/
+paths: mockups/
+
+### M53 U2
+milestone: M53
+scope: ui
+title: Hiding fields on an entry, and reordering that is light
+decision: D-514
+state: planned
+brief: Was Later U-entry-layout, moved into M53 on 2026-10-22. Maintainer, 2026-10-20, after weeks on a real format with many columns: arranging an entry page (moving the fields) is clunky, and a page with many columns feels heavy; some fields should be hidden by the person's choice. Build U1's approved mockup for: (1) a lighter way to reorder, in place of the separate 'Arrange this view' mode and its small handle (EntryView.tsx, setEntryOrder, D-296): drag the field itself, or a compact list of names; (2) hiding a field in the entry view, kept with the view's order in format_view_column and views.md, and the same in arrange_views so a conversation can do it too (parity, D-227); a hidden field is still in the format, the table and every tool, and how its value shows when it holds one is what the mockup settled; (3) grouping or folding a long page, if the mockup kept it. Labels name exactly what they cover; make it in place. Done-test: a field hidden and the page reordered on screen and by arrange_views, each seen by the other; parity.test.ts green; a text document round-trips both.
+files: src/ui/formats/EntryView.tsx, src/domain/format/view.ts (entryOrder, writeEntrySetting), src/plugin/tools/ (arrange_views)
+blocks: ["M53 U1"]
+paths: src/ui/formats/EntryView.tsx, src/domain/format/view.ts, src/plugin/tools/
+
+### M53 U3
+milestone: M53
+scope: app
+title: A filled entry shows what it holds, and a new one asks for what is needed
+decision: D-514
+state: planned
+brief: Build U1's approved mockup for the entry's empty fields and the new-entry form. On an entry that exists, a column with no value is not drawn; a '+ field' control lists them and adds one in place (the field opens, writes when left, as now). A required column with no value is always drawn and says it is needed. entry/new shows the required columns and the ones the entry view marks to show (or U2's not-hidden ones), with '+ field' for the rest; the draft and Add/Cancel stay. Worked-out columns and checks follow the same rule (shown when they have a value). Mind entryLayout's parts (title, header line, figures, texts, links) so a part with nothing drawn leaves no empty heading. The frame (src/frame) draws the same page read-only. Done-test: on a synthetic task with 12 columns and 4 filled, the page shows 4 plus '+ field'; a new task shows only what is required and chosen; tests in EntryView's suite.
+files: src/ui/formats/EntryView.tsx, src/domain/format/view.ts (entryLayout), src/ui/screens/FormatRows.tsx
+blocks: ["M53 U1"]
+paths: src/ui/formats/EntryView.tsx, src/domain/format/view.ts
+
+### M53 U4
+milestone: M53
+scope: engine
+title: The list view: one line per row, a done tick, grouped by a column, and quick add
+decision: D-514
+state: planned
+brief: A new view kind, 'list', in VIEW_KINDS (src/domain/format/view.ts), settings in format_view_column and views.md like the board's: 'group' (an enum, a link or a date bucket; none by default), 'done' (the enum member(s) or boolean that tick a row; default the state enum's last member, as agenda's 'done' does), 'line' (columns after the name, shown per D-402's ways). Any format has one at #/formats/<name>/list and in the View select. A row is one line: the tick, the name, the line columns; clicking the name opens the entry with the list beside it. Ticking is update_format_rows's checks and updateRow, as moving a card on the board is. Quick add: a line at the top of the list and of each group, Enter writes a row with the name typed and the values the view implies (the group's member, the address filter's exact values), refusing as record_format_rows does when a required column has no value (it then opens entry/new with what it has). Parity (D-227): show_format view:list draws it (src/plugin/tools/sheet.ts VIEWS, the frame's routes), arrange_views sets group/done/line, and a row added in place is record_format_rows. Follow U1's mockup. Done-test: the synthetic task format as a list grouped by project, ticked and added to in place, in the app and drawn by show_format; parity.test.ts green.
+files: src/domain/format/view.ts (VIEW_KINDS, the board's settings), src/ui/formats/BoardView.tsx, src/ui/formats/LinkViews.tsx (AgendaView), src/plugin/tools/sheet.ts, src/frame/routes.tsx, src/parity.test.ts
+blocks: ["M53 U1"]
+paths: src/domain/format/view.ts, src/ui/formats/, src/plugin/tools/sheet.ts, src/frame/routes.tsx
+
+### M53 U5
+milestone: M53
+scope: engine
+title: Saved views: a filter, order, columns and kind under a name
+decision: D-514
+state: planned
+brief: A saved view is what the address already holds (src/ui/formats/addressFilter.ts: column values, search, order, columns) plus a view kind (sheet, board, list, roadmap, ready, agenda), under a name, per format. Store it beside the format's other views: in format_view_column if a named view fits it without a migration, else say why and add one (docs/04-data-model.md); in a text document as views.md lines (pack.test.ts and the text round trip hold). On screen: 'Save this view' on the FilterBand when the address holds something, a name asked in place; the rail lists a format's saved views under it (src/ui/RailFolder.tsx); opening one restores the address; rename and delete in place. Parity (D-227): arrange_views saves, renames and deletes one; show_format takes view:'<saved name>' and draws it with its filter; format_rows takes the same name (or says the match to pass). A relative date ('due today', 'within 7 days', as format_rows' match takes) is kept as the phrase, never a fixed date. Done-test: 'Due today' on the synthetic task format saved on screen, listed in the rail, drawn by show_format view:'Due today' tomorrow with tomorrow's rows; a conversation saves 'Open by project' and the screen shows it.
+files: src/ui/formats/addressFilter.ts, src/ui/formats/FilterBand.tsx, src/domain/format/view.ts, src/ui/RailFolder.tsx, src/plugin/tools/sheet.ts
+paths: src/domain/format/view.ts, src/ui/formats/FilterBand.tsx, src/ui/formats/addressFilter.ts, src/ui/RailFolder.tsx, src/plugin/tools/
+
+### M53 U6
+milestone: M53
+scope: app
+title: Charts of a rollup, from one general chart
+decision: D-514
+state: planned
+brief: Every chart today is the ledger's (MonthChart, NetTrend, BalanceChart, BalanceLine, AmountHistory, PlanBar, Year's private YearBars and Spark); src/ui/charts/ holds only colours and useWidth. Make one general chart in src/ui/charts/ that takes plain series (labels, one or more series of figures, a unit or currency for the axis): bars and a line, hand-rolled SVG, the theme's tokens and categoryPalette, light and dark, read by a screen reader as a table. RollupView (src/ui/formats/RollupView.tsx) gains a chart beside its table: bars by month, one series per group when the rollup groups by a link. Money stays Money until it is drawn (never a number in the domain). The ledger charts may move onto it where it is a straight swap; none has to. The frame draws a rollup's chart too. Done-test: a rollup on a synthetic format drawn as bars and as a line in the app and the frame; the chart's own tests; no ledger import from src/ui/charts/.
+files: src/ui/charts/, src/ui/formats/RollupView.tsx, src/ui/home/MonthChart.tsx, src/ui/screens/Year.tsx (Spark)
+paths: src/ui/charts/, src/ui/formats/RollupView.tsx
+
+### M53 U7
+milestone: M53
+scope: app
+title: Dashboards: one per format and one for the document, made only of views
+decision: D-514
+state: planned
+brief: A dashboard is an ordered set of blocks, each one of: a saved view (U5) drawn in its kind, compact; a rollup's chart (U6); a headline total (a count, or a sum of a money or number column, under a filter, as format_rows match takes). Nothing else (D-514): no free text, no embeds. One per format at #/formats/<name>/dashboard, and one for the document (its home for a document with no ledger; decide with the maintainer where it sits beside the ledger's Home when both exist). Arranged in place: add a block from the views and rollups the format has, drag to reorder, remove; a block opens its view in full. Kept beside the views (format_view_column or what U5 chose; views.md in a text document). Parity: arrange_views adds, orders and removes blocks; show_format view:dashboard draws it; start_here unchanged. Mockup the dashboard before building (a small one, against U1's look). Done-test: the synthetic task format's dashboard with 'Due today', 'Open by project', a monthly done-count chart and an open count, made on screen and by a conversation, drawn by show_format; a document-wide one with blocks from two formats.
+files: src/domain/format/view.ts, src/ui/screens/FormatRows.tsx, src/ui/home/parts.tsx (Figure, BlockHead), src/plugin/tools/sheet.ts, src/frame/routes.tsx
+blocks: ["M53 U4","M53 U5","M53 U6"]
+paths: src/ui/formats/, src/ui/screens/, src/domain/format/view.ts, src/plugin/tools/
+
 <!-- emerald: views.md -->
 ---
 emerald: views
@@ -13088,12 +13172,12 @@ title: line
 emerald: changed
 ---
 
-decision: 2026-10-20
+decision: 2026-10-22
 finding: 2026-10-18
 inbox: 2026-10-18
-milestone: 2026-10-20
-open_question: 2026-10-20
+milestone: 2026-10-22
+open_question: 2026-10-22
 review_entry: 2026-10-20
 rule: 2026-10-18
 term: 2026-10-18
-unit: 2026-10-20
+unit: 2026-10-22
