@@ -105,7 +105,7 @@ npm run typecheck
 ```
 
 `related` follows imports: a test that *reads* a file you changed — a skill, a script it runs, a
-pack's `views.md` — is named by its path. The full suite (`npx vitest run`) only when the change is broad — the engine core in `src/domain/`, a
+pack's `views.md` — is named by its path (a skill: `npx vitest run hosts/claude`). The full suite (`npx vitest run`) only when the change is broad — the engine core in `src/domain/`, a
 dependency, `vite.config.ts`, the test setup in `src/testing/` — and once, never repeated.
 `.github/workflows/test.yml` runs it on every push to main and deploys the demo only after it
 passes; **a red run there is the next session's first task**. Red here means fix it or stop and say

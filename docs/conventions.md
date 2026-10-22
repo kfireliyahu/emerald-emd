@@ -123,7 +123,7 @@ superseded decision, and fails when CLAUDE.md's block differs from the `always` 
   before the commit `npx vitest run src/privacy.test.ts` too — it reads what is tracked, so no change
   is ever "related" to it, and its denylist is on the maintainer's machine. `related` follows imports,
   so a test that *reads* a changed file — a skill, a script it runs, a pack's `views.md` — is named by
-  its path (`npx vitest run hosts/claude/skills`). **The full suite locally
+  its path (a skill: `npx vitest run hosts/claude`, which holds the plugin's version check). **The full suite locally
   only when the change is broad**: the engine core in `src/domain/`, a dependency, `vite.config.ts` or
   the test setup in `src/testing/` — `related` reaches half the suite from there anyway.
   `.github/workflows/test.yml` runs typecheck and the whole suite on every push to main, and the demo
