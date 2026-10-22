@@ -4330,6 +4330,15 @@ question: Does a customizable dashboard, per format and for the whole document, 
 answer: A saved view is a format's match, search, order, columns and view kind under a name: what the address already holds and what format_rows and show_format already take, kept beside the format's other views (format_view_column, views.md), saved by arrange_views, drawn by show_format, listed under its format in the rail. A dashboard, one per format and one for the document, holds saved views, charts of a rollup and headline totals (a count or sum under a filter), arranged in place, and nothing else: no free text, no embeds; D-402's line moves from the entry to the dashboard. Neither is a format: rows are the person's data, a view is how to look at it. The entry page and adding by hand get lighter in the same milestone (mockup first), and tasks get a view kind of their own, list. Every write has both halves (D-227). Rejected: a dashboard as rows of a format; free blocks; recent changes for now, since rows carry no time of change (D-462) and that decision would have to be reopened. Answers the open question 'entry overview'.
 state: live
 
+### D-516
+date: 2026-10-22
+milestone: M53
+scope: app
+title: One general chart draws plain series as bars or a line, only what its axis can hold, read by a screen reader as a table; a rollup's chart is bars by month, one series per linked row, the eight largest drawn and the rest said, never summed
+question: How does Emerald draw a chart that is not the ledger's, and what does a rollup's chart show?
+answer: src/ui/charts/Chart.tsx takes plain series (chart.ts): labels, points that are Money, a plain figure, a word (unchecked) or nothing, and an axis {currency} or {unit}. Money becomes a number only in drawnValue; money in another currency or a plain figure on a money axis is not drawn. One series is ink, several take the category palette by key; the SVG is aria-hidden and an sr-only table reads every point. rollupChart.ts turns a rollup into bars by month (a line on a toggle), every month first to last, one series per linked row plus none, the axis the most common currency, at most 8 series; rows with no month, other currencies and series past the eighth are said under the chart, never folded into an other. Nothing in src/ui/charts/ imports the ledger (chart.test.ts).
+state: live
+
 ### D-517
 date: 2026-10-22
 milestone: M53
@@ -5374,7 +5383,9 @@ from: F:/projects/emerald/docs/memory.emd
 sent_on: 2026-10-22
 body: "M53 U6 is built on worktree-agent-a55f1f9ab4b315ff9 at 5d39450; land it with D-516.\n\n```json\n{\"unit\":\"M53 U6\",\"files\":\"src/ui/charts/chart.ts, src/ui/charts/Chart.tsx, src/ui/charts/chart.test.ts, src/ui/charts/categoryPalette.ts, src/ui/formats/rollupChart.ts, src/ui/formats/rollupChart.test.ts, src/ui/formats/RollupView.tsx, src/ui/theme/tokens.css, docs/09-decision-log.md\",\"commit\":\"5d39450\",\"branch\":\"worktree-agent-a55f1f9ab4b315ff9\",\"decisions\":[{\"ref\":\"D-516\",\"title\":\"One general chart draws plain series as bars or a line, only what its axis can hold, read by a screen reader as a table; a rollup's chart is bars by month, one series per linked row, the eight largest drawn and the rest said, never summed\",\"question\":\"How does Emerald draw a chart that is not the ledger's, and what does a rollup's chart show?\",\"answer\":\"src/ui/charts/Chart.tsx takes plain series (chart.ts): labels, points that are Money, a plain figure, a word (unchecked) or nothing, and an axis {currency} or {unit}. Money becomes a number only in drawnValue; money in another currency or a plain figure on a money axis is not drawn. One series is ink, several take the category palette by key; the SVG is aria-hidden and an sr-only table reads every point. rollupChart.ts turns a rollup into bars by month (a line on a toggle), every month first to last, one series per linked row plus none, the axis the most common currency, at most 8 series; rows with no month, other currencies and series past the eighth are said under the chart, never folded into an other. Nothing in src/ui/charts/ imports the ledger (chart.test.ts).\"}],\"review_entries\":[],\"report\":\"M53 U6 built at 5d39450 on worktree-agent-a55f1f9ab4b315ff9. One general chart, src/ui/charts/Chart.tsx over plain data in chart.ts: labels, series of Money / plain figures / a said word / nothing, an axis in a currency or a unit; bars or a line, hand-rolled SVG in the theme tokens, light and dark, the picture aria-hidden and an sr-only table reading every point. RollupView draws its rollup above the table with a Bars/Line toggle, one series per linked row (rollupChart.ts); what the chart cannot hold is said under it. The frame draws it through FormatRows' View menu, unchanged (no new FrameView, so show_format cannot open on a rollup yet). categoryPalette.ts now declares the Category shape it reads instead of importing the ledger's type, so chart.test.ts checks the whole folder imports no ledger. tokens.css gains .fc-grow (bars grow once) and the chart's hover classes. Ledger charts not moved. Verified in the worktree's dev server on a synthetic expense/project document (bars 19 rects, line 4 paths, light and dark) and in the frame stand-in (try-frame) with the same counts. docs:check fails on this branch only for D-516's missing row, which this landing writes. check:tours skipped: no tour passes a rollup view.\"}\n```"
 refs: M53 U6
-state: new
+state: applied
+answered_by: D-516
+became_unit: M53 U6
 
 <!-- emerald: milestone.format.md -->
 ---
@@ -13068,10 +13079,13 @@ milestone: M53
 scope: app
 title: A filled entry shows what it holds, and a new one asks for what is needed
 decision: D-514
-state: planned
+state: in_progress
 brief: "Build U1's approved mockup for the entry's empty fields and the new-entry form. On an entry that exists, a column with no value is not drawn; a '+ field' control lists them and adds one in place (the field opens, writes when left, as now). A required column with no value is always drawn and says it is needed. entry/new shows the required columns and the ones the entry view marks to show (or U2's not-hidden ones), with '+ field' for the rest; the draft and Add/Cancel stay. Worked-out columns and checks follow the same rule (shown when they have a value). Mind entryLayout's parts (title, header line, figures, texts, links) so a part with nothing drawn leaves no empty heading. The frame (src/frame) draws the same page read-only. Done-test: on a synthetic task with 12 columns and 4 filled, the page shows 4 plus '+ field'; a new task shows only what is required and chosen; tests in EntryView's suite.\n\nSETTLED by U1's approved mockup (docs/mockups/m53-u1/tasks.html, approved 2026-10-22, choice 1 as A; port its markup and words): (a) Empty fields are offered as ONE LINE OF NAMES at the foot of the entry's left column, after a hairline: the label 'Empty', then '+ <name>' per column that holds no value and is not hidden, one click each; then 'N hidden' at the end of the line (U2). Clicking a name opens that field where it belongs in the order, focused; left empty it folds back into the line. Not a '+ Field' menu (option B, rejected). (b) Labels read as words: underscores become spaces (done_on reads 'done on'), and a unit suffix is dropped from the label (estimate_h reads 'estimate', the h shown on the value). Only the label changes. (c) Two figures or fewer, with no claim to lay them out as a grid, sit in the line under the title instead of a figures part of their own (a lone '3 h' no longer gets a section). (d) entry/new keeps the list beside it (EntryList, with the draft as a row in the group it will land in, 'A new task' until titled), and asks for: the title (focused), every required column, and the columns ticked 'New entry' in U2's Fields list; everything else is on the Empty line. A new entry has no 'Links here'. Nothing about what is missing is said until Add is pressed; then one line in negative names it ('A task needs a title.'). Enter in the title adds. (e) A required enum that nothing implies starts at its first member on a new entry (a new task is inbox): a default the view applies, never a value a model makes; the same rule serves U4's quick add. (f) The list beside an entry gains a '+' (aria 'Add a task') that opens entry/new, so adding from an open entry is two steps, not four."
 files: src/ui/formats/EntryView.tsx, src/domain/format/view.ts (entryLayout), src/ui/screens/FormatRows.tsx
 blocks: ["M53 U1"]
+taken_by: run-milestone driver
+started: 2026-10-22
+branch: main
 paths: src/ui/formats/EntryView.tsx, src/domain/format/view.ts
 
 ### M53 U4
@@ -13099,14 +13113,17 @@ paths: src/domain/format/view.ts, src/ui/formats/FilterBand.tsx, src/ui/formats/
 milestone: M53
 scope: app
 title: Charts of a rollup, from one general chart
-decision: D-514
-state: in_progress
+landed: 2026-10-22
+decision: D-516
+state: built
 brief: Every chart today is the ledger's (MonthChart, NetTrend, BalanceChart, BalanceLine, AmountHistory, PlanBar, Year's private YearBars and Spark); src/ui/charts/ holds only colours and useWidth. Make one general chart in src/ui/charts/ that takes plain series (labels, one or more series of figures, a unit or currency for the axis): bars and a line, hand-rolled SVG, the theme's tokens and categoryPalette, light and dark, read by a screen reader as a table. RollupView (src/ui/formats/RollupView.tsx) gains a chart beside its table: bars by month, one series per group when the rollup groups by a link. Money stays Money until it is drawn (never a number in the domain). The ledger charts may move onto it where it is a straight swap; none has to. The frame draws a rollup's chart too. Done-test: a rollup on a synthetic format drawn as bars and as a line in the app and the frame; the chart's own tests; no ledger import from src/ui/charts/.
-files: src/ui/charts/, src/ui/formats/RollupView.tsx, src/ui/home/MonthChart.tsx, src/ui/screens/Year.tsx (Spark)
+files: src/ui/charts/chart.ts, src/ui/charts/Chart.tsx, src/ui/charts/chart.test.ts, src/ui/charts/categoryPalette.ts, src/ui/formats/rollupChart.ts, src/ui/formats/rollupChart.test.ts, src/ui/formats/RollupView.tsx, src/ui/theme/tokens.css, docs/09-decision-log.md
 taken_by: run-milestone driver
 started: 2026-10-22
-branch: main
+branch: worktree-agent-a55f1f9ab4b315ff9
+commit: 5d39450
 paths: src/ui/charts/, src/ui/formats/RollupView.tsx
+report: M53 U6 built at 5d39450 on worktree-agent-a55f1f9ab4b315ff9. One general chart, src/ui/charts/Chart.tsx over plain data in chart.ts: labels, series of Money / plain figures / a said word / nothing, an axis in a currency or a unit; bars or a line, hand-rolled SVG in the theme tokens, light and dark, the picture aria-hidden and an sr-only table reading every point. RollupView draws its rollup above the table with a Bars/Line toggle, one series per linked row (rollupChart.ts); what the chart cannot hold is said under it. The frame draws it through FormatRows' View menu, unchanged (no new FrameView, so show_format cannot open on a rollup yet). categoryPalette.ts now declares the Category shape it reads instead of importing the ledger's type, so chart.test.ts checks the whole folder imports no ledger. tokens.css gains .fc-grow (bars grow once) and the chart's hover classes. Ledger charts not moved. Verified in the worktree's dev server on a synthetic expense/project document (bars 19 rects, line 4 paths, light and dark) and in the frame stand-in (try-frame) with the same counts. docs:check fails on this branch only for D-516's missing row, which this landing writes. check:tours skipped: no tour passes a rollup view.
 
 ### M53 U7
 milestone: M53
