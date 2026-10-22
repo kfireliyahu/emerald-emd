@@ -118,6 +118,17 @@ function updater(name: string) {
 }
 
 describe('the Windows download, through electron-updater, against a stubbed feed', () => {
+  // **It runs as Windows wherever it runs** (M51 F6): electron-updater names the feed's file by the
+  // platform at the moment it asks — `latest.yml` on Windows, `latest-linux.yml` on the Linux CI runs
+  // on — and this is the Windows download, so the platform it reads is Windows for these tests alone.
+  const platform = Object.getOwnPropertyDescriptor(process, 'platform')!
+  beforeAll(() => {
+    Object.defineProperty(process, 'platform', { ...platform, value: 'win32' })
+  })
+  afterAll(() => {
+    Object.defineProperty(process, 'platform', platform)
+  })
+
   it('downloads a newer installer, checked against its sha512, from that release and nowhere else', async () => {
     asked.length = 0
     const { downloader, pending } = updater('newer')

@@ -3,10 +3,11 @@
 import { afterAll } from 'vitest'
 
 import { BACKUPS_ROOT_VARIABLE } from '../../electron/bridge'
-import { removeTempDirs, tempDirSync } from './tempDir'
+import { removeTempDirs, tempPathSync } from './tempDir'
 
 // The plugin's copies before a write go to Emerald's own per-user folder
-// (D-455); a test's go to a folder of the file's own, removed with the rest.
-process.env[BACKUPS_ROOT_VARIABLE] = tempDirSync('emerald-backups-')
+// (D-455); a test's go to a folder of the file's own, removed with the rest —
+// made by the first copy, so a file whose tests all skip leaves nothing (M51 F6).
+process.env[BACKUPS_ROOT_VARIABLE] = tempPathSync('emerald-backups-')
 
 afterAll(removeTempDirs)

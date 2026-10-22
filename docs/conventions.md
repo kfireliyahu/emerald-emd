@@ -40,11 +40,13 @@ on-ramp, the demo, and the whole evidence base.
    whole orientation, and there is no status file (D-434); [the index](./00-index.md) is the map if
    you need to find a note. **A review session asks for its milestone's open `review_entry` rows**
    (the `review-phase` skill).
-2. Read the specific note for the thing you're touching, plus [04 Data Model](./04-data-model.md).
-3. Do **not** read every note in the folder. Context is the scarce resource. There is no roadmap
+2. **A red CI run is your first task** (M51 F6): `gh run list --workflow test.yml --branch main
+   --limit 1`. If the last push to main failed, fixing it comes before the unit you came for.
+3. Read the specific note for the thing you're touching, plus [04 Data Model](./04-data-model.md).
+4. Do **not** read every note in the folder. Context is the scarce resource. There is no roadmap
    note: the plan is the `milestone` rows, in `position` order (D-438). Never read the decision log
    whole: it opens with an index of every decision, one line each, and you grep from there.
-4. If a decision is missing, check [the decision log](./09-decision-log.md) before inventing one.
+5. If a decision is missing, check [the decision log](./09-decision-log.md) before inventing one.
 
 **The full record of earlier milestones is kept privately**; every decision is a `decision` row in
 `docs/memory.emd` (`format_rows decision search:"…"`).
@@ -116,9 +118,17 @@ superseded decision, and fails when CLAUDE.md's block differs from the `always` 
   same files one per line, which `dispatch_plan` compares to say which units can run at once (D-486). Units a session writes are
   listed in its closing message, one line each with the question it is least sure of: **the maintainer
   sees a unit before any session builds it.**
-- **Testing during a unit → only the tests near the change** (`npx vitest run <paths>`); the full
-  suite, `npm run typecheck` and `npm run docs:check` run **once, before the commit** (2026-10-04). A unit costs its tool calls × its context, and the ~4,700-test suite run several
-  times a unit was a large share of the calls.
+- **Testing → the tests related to the change; CI runs the rest** (M51 F6, D-515). While building
+  and before the commit: `npx vitest related <changed files> --run` and `npm run typecheck`, and
+  before the commit `npx vitest run src/privacy.test.ts` too — it reads what is tracked, so no change
+  is ever "related" to it, and its denylist is on the maintainer's machine. `related` follows imports,
+  so a test that *reads* a changed file — a skill, a script it runs, a pack's `views.md` — is named by
+  its path (a skill: `npx vitest run hosts/claude`, which holds the plugin's version check). **The full suite locally
+  only when the change is broad**: the engine core in `src/domain/`, a dependency, `vite.config.ts` or
+  the test setup in `src/testing/` — `related` reaches half the suite from there anyway.
+  `.github/workflows/test.yml` runs typecheck and the whole suite on every push to main, and the demo
+  deploys only after it passes. A brief never asks for repeat full runs. Measured 2026-10-22 on the
+  maintainer's 8 cores: the suite ~115 s, typecheck ~24 s, `related` for a plugin or UI change ~22 s.
 - **`npm run check:tours` → only when the unit touches what a tour drives or shows**: `src/ui/`,
   `src/demo/`, the tours' data, or the words on a screen a tour passes through. A unit in
   `electron/`, `src/plugin/`, `hosts/`, `scripts/` or the docs alone skips it and says so; it rebuilds
