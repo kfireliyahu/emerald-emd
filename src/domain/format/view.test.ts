@@ -2,7 +2,13 @@ import { describe, expect, it } from 'vitest'
 
 import {
   dayText,
+  entryDefaults,
+  entryLabel,
+  entryLayout,
+  entryNeeds,
+  entryShown,
   entryWayOf,
+  withArticle,
   isShowAs,
   isViewSetting,
   lineShapeOf,
@@ -195,5 +201,76 @@ describe('the column a row is called by', () => {
 
   it('is nothing when there is neither', () => {
     expect(lineShapeOf([column('amount', 'money'), column('kind', 'enum')], new Map()).name).toBeUndefined()
+  })
+})
+
+describe('what an entry draws, and its Empty line (M53 U3, D-518)', () => {
+  const columns = [
+    { name: 'title', type: 'text', required: true, unit: undefined, values: [] },
+    { name: 'state', type: 'enum', required: true, unit: undefined, values: ['inbox', 'done'] },
+    { name: 'due', type: 'date', required: false, unit: undefined, values: [] },
+    { name: 'estimate_h', type: 'real', required: false, unit: 'h', values: [] },
+    { name: 'cost', type: 'decimal', required: false, unit: undefined, values: [] },
+    { name: 'notes', type: 'text', required: false, unit: undefined, values: [] },
+  ] as const
+  const layout = entryLayout(columns, (column) => (column.type === 'text' ? 'line' : 'figure'), new Set())
+  const filled = (names: readonly string[]) => (column: { readonly name: string }) => names.includes(column.name)
+  const ask = {
+    hidden: () => false,
+    opened: new Set<string>(),
+    asked: undefined,
+    revealed: false,
+    grid: () => false,
+  }
+
+  it('reads a label as words, dropping a suffix that names the column’s unit', () => {
+    expect(entryLabel({ name: 'done_on' })).toBe('done on')
+    expect(entryLabel({ name: 'estimate_h', unit: 'h' })).toBe('estimate')
+    expect(entryLabel({ name: 'estimate_h' })).toBe('estimate h')
+    expect(entryLabel({ name: 'h', unit: 'h' })).toBe('h')
+  })
+
+  it('says what a new entry needs in one line, with the right article', () => {
+    expect(entryNeeds('Task', columns, (name) => name === 'state')).toBe('A task needs a title.')
+    expect(entryNeeds('Ingredient', columns, (name) => name === 'title')).toBe('An ingredient needs a state.')
+    expect(entryNeeds('Task', columns, () => true)).toBeUndefined()
+    expect(withArticle('estimate')).toBe('an estimate')
+  })
+
+  it('starts only a required enum at its first member, and never one something implies', () => {
+    expect(entryDefaults(columns)).toEqual({ state: 'inbox' })
+    expect(entryDefaults(columns, new Set(['state']))).toEqual({})
+  })
+
+  it('draws what holds a value and what is required; the rest are the Empty line, in the view’s order', () => {
+    const shown = entryShown(columns, layout, { ...ask, holds: filled(['title', 'due']) })
+    expect(shown.header.map((each) => each.name)).toEqual(['state', 'due'])
+    expect(shown.empty.map((each) => each.name)).toEqual(['estimate_h', 'cost', 'notes'])
+  })
+
+  it('sits two figures or fewer in the line under the title, unless something claims them as a grid', () => {
+    const holds = filled(['title', 'estimate_h', 'cost'])
+    const inLine = entryShown(columns, layout, { ...ask, holds })
+    expect(inLine.header.map((each) => each.name)).toEqual(['state', 'estimate_h', 'cost'])
+    expect(inLine.figures).toEqual([])
+    const grid = entryShown(columns, layout, { ...ask, holds, grid: () => true })
+    expect(grid.figures.map((each) => each.name)).toEqual(['estimate_h', 'cost'])
+  })
+
+  it('keeps a hidden column off the page and the Empty line until revealed, and counts it', () => {
+    const hidden = (column: { readonly name: string }) => column.name === 'due'
+    const kept = entryShown(columns, layout, { ...ask, hidden, holds: filled(['title', 'due']) })
+    expect(kept.header.map((each) => each.name)).toEqual(['state'])
+    expect(kept.empty.map((each) => each.name)).not.toContain('due')
+    expect(kept.hidden).toBe(1)
+    const revealed = entryShown(columns, layout, { ...ask, hidden, revealed: true, holds: filled(['title']) })
+    expect(revealed.header.map((each) => each.name)).toEqual(['state', 'due'])
+  })
+
+  it('draws a field opened from the Empty line, and on a new entry the ones asked for', () => {
+    const opened = entryShown(columns, layout, { ...ask, opened: new Set(['notes']), holds: filled([]) })
+    expect(opened.texts.map((each) => each.name)).toEqual(['notes'])
+    const fresh = entryShown(columns, layout, { ...ask, asked: new Set(['due']), holds: filled([]) })
+    expect(fresh.header.map((each) => each.name)).toEqual(['state', 'due'])
   })
 })

@@ -104,7 +104,7 @@ import { RowSheet, type FootRefusal, type Order } from '@/ui/formats/RowSheet.ts
 import { derivedOf } from '@/data/repositories/formatDerivedRepository.ts'
 import { boardPath, entryPath, formatPath, NEW_ENTRY, readPath, readyPath, roadmapPath, tablePath } from '@/ui/nav.ts'
 import { BoardView } from '@/ui/formats/BoardView.tsx'
-import { boardOf, oneUnitOf, readsAsMarkdown, readyOf, roadmapOf } from '@/domain/format/view.ts'
+import { boardOf, entryDefaults, entryNeeds, entryOrder, oneUnitOf, readsAsMarkdown, readyOf, roadmapOf } from '@/domain/format/view.ts'
 import { entryLinked, entryLinks } from '@/data/repositories/formatLinkViewRepository.ts'
 import { figureOf, isPercentFigure } from '@/ui/formats/EntryValue.tsx'
 import { linkedRowOf, type LinkedRow } from '@/ui/formats/LinkViews.tsx'
@@ -130,7 +130,7 @@ import { ReadOnly } from '@/ui/formats/readOnly.ts'
 import { ColumnFilter, ColumnMenu, FilterBand, filteredQuery, useAddressFilter } from '@/ui/formats/FilterBand.tsx'
 import { isFiltered, type RowFilter } from '@/data/repositories/formatFilterRepository.ts'
 import { EntryList } from '@/ui/formats/EntryList.tsx'
-import { entryList, heldIds, listQuery } from '@/ui/formats/entryList.ts'
+import { entryList, heldIds, listColumns, listQuery } from '@/ui/formats/entryList.ts'
 import { filterAddress } from '@/ui/formats/addressFilter.ts'
 import { toggleEntryList, useEntryListHidden } from '@/ui/useEntryList.ts'
 
@@ -405,7 +405,12 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
       return {
         key,
         existing: undefined,
-        draft: typed?.key === key ? typed.draft : blankDraft(declaration, data.rows[data.rows.length - 1]?.row, data.currency),
+        // **A required enum starts at its first member** (M53 U3, D-518): a
+        // default the view applies, drawn in its field, never a value a model makes.
+        draft:
+          typed?.key === key
+            ? typed.draft
+            : { ...blankDraft(declaration, data.rows[data.rows.length - 1]?.row, data.currency), ...entryDefaults(declaration.columns) },
         stored: undefined,
         aggregates: [],
         derived: [],
@@ -443,13 +448,28 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
       return undefined
     }
     const declaration = data.declaration
+    // **A new entry says what it needs in one line** (M53 U3, D-518): the first
+    // required column that holds nothing — "A task needs a title." — said once
+    // Add is pressed.
+    if (editing.existing === undefined) {
+      const needs = entryNeeds(declaration.title, entryOrder(declaration.columns, data.places), (column) => {
+        const text = (draft[column] ?? '').trim()
+        return text !== '' && text !== '[]'
+      })
+      if (needs !== undefined) return { problem: needs, verdicts: [] as readonly RowVerdict[] }
+    }
     // **An untouched row is refused before it is coerced.** A format with no
     // required column would otherwise accept an entirely blank row, and no
     // message about it would be useful — nothing is wrong with it, it is just a
     // row nobody meant. Asked of the *offered* row, so a currency the form
-    // carried forward by itself does not count as having been typed.
+    // carried forward by itself does not count as having been typed — nor a
+    // member a new entry starts at (D-518).
     const offered = offeredOf(declaration, draft)
-    if (isEmpty(offered)) {
+    const defaults = editing.existing === undefined ? entryDefaults(declaration.columns) : {}
+    const touched = Object.fromEntries(
+      Object.entries(offered).filter(([column, value]) => defaults[column] === undefined || defaults[column] !== value),
+    )
+    if (isEmpty(touched)) {
       return {
         problem: 'Nothing has been filled in yet.',
         verdicts: [] as readonly RowVerdict[],
@@ -520,11 +540,12 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
    */
   const onEntry = entry !== undefined && entry !== NEW_ENTRY
   const listHidden = useEntryListHidden()
+  // A new entry keeps the list beside it too (M53 U3), with its draft as a row.
   const listed = useMemo(() => {
-    if (!onEntry || db === undefined || data === undefined || data.declaration === undefined) return undefined
+    if (entry === undefined || db === undefined || data === undefined || data.declaration === undefined) return undefined
     const { places, chosen, headers, long } = data
     return entryList(db, data.declaration, data.declarations, data.query, { places, chosen, headers, long })
-  }, [onEntry, db, data])
+  }, [entry, db, data])
 
   /**
    * **An entry opened from outside the list's search lets the search go** —
@@ -754,7 +775,7 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
             ? undefined
             : { at: at + 1, of: ids.length, previous: ids[at - 1], next: ids[at + 1] }
         }
-        list={existing === undefined ? undefined : { hidden: listHidden, onToggle: toggleEntryList }}
+        list={{ hidden: listHidden, onToggle: toggleEntryList }}
         written={written}
         below={
           deletingEntry && storedRow !== undefined ? (
@@ -832,13 +853,21 @@ export function FormatRows({ board = false }: { readonly board?: boolean } = {})
         }}
       />
     )
-    if (existing === undefined || listed === undefined) return view
+    if (listed === undefined) return view
+    // The draft's row in the list: its title as typed, or "A new task" until it has one.
+    const titled = listColumns(declaration, data).title
+    const drafted = existing === undefined ? (titled === undefined ? '' : (editing.draft[titled.name] ?? '').trim()) : undefined
     return (
       <div className="flex h-full min-h-0">
         <EntryList
           declaration={declaration}
           rows={listed}
           current={existing}
+          draft={drafted}
+          onNew={locked !== undefined ? undefined : () => {
+            setTyped(undefined)
+            navigate(entryPath(declaration.name, NEW_ENTRY) + address)
+          }}
           entries={data.entries}
           filter={filter}
           shown={!listHidden}

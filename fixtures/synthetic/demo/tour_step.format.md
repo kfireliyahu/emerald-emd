@@ -451,50 +451,55 @@ tour: timesheet
 position: 18
 action: click
 
-### field-end
+### empty-end
 tour: timesheet
 position: 19
+action: click
+
+### field-end
+tour: timesheet
+position: 20
 action: type
 value: 13:30
 
 ### field-end
 tour: timesheet
-position: 20
+position: 21
 action: press
 value: Enter
 
 ### link-paycheck
 tour: timesheet
-position: 21
+position: 22
 action: click
 highlight: verdict-hours_paid
 
 ### nav-formats-timesheet_day
 tour: timesheet
-position: 22
+position: 23
 action: click
 caption: Your calendar says 15:30. Every hour was paid: 14.5 hours, 870.00.
 
 ### row:2026-09-14
 tour: timesheet
-position: 23
+position: 24
 action: click
 
 ### field-end
 tour: timesheet
-position: 24
+position: 25
 action: type
 value: 15:30
 replace: yes
 
 ### field-end
 tour: timesheet
-position: 25
+position: 26
 action: press
 value: Enter
 
 ### link-paycheck
 tour: timesheet
-position: 26
+position: 27
 action: click
 highlight: verdict-hours_paid

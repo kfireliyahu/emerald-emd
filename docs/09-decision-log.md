@@ -433,6 +433,7 @@ written out here.
 | D-514 | 2026-10-22 | A view can be saved, and a dashboard holds only views: a saved view is a format's filter, order, columns and kind under a name, kept beside its other views; a dashboard, one per format and one for the document, is an ordered set of saved views, charts of rollups and headline totals, never a free block; neither is a format; recent changes wait and D-462 stands; amends D-402 | [below](#d-514) |
 | D-516 | 2026-10-22 | One general chart draws plain series — labels, series of `Money` or plain figures, and an axis in a currency or a unit — as bars or a line; it draws only what that axis can hold, one series in ink and several in the category palette by key, and a screen reader reads it as a table; a rollup's chart is bars by month (a line on a toggle), one series per linked row, the eight largest drawn and what is left out said under it, never summed into a new figure | [below](#d-516) |
 | D-517 | 2026-10-22 | Hiding a field is the entry view's, beside its order: `hidden` in a column's `format_view_column` setting (and `views.md`) keeps it off the page even when it holds a value, never the title or a required column; `new` marks a column a new entry asks for; one Fields list behind the entry's icon replaces the Arrange mode, and a field moves only within its part, by its label, its row, its menu or Alt+Up/Down; `arrange_views` takes `hidden` and `new_entry`; amends D-296 | [below](#d-517) |
+| D-518 | 2026-10-22 | An entry draws what it holds: on a row that exists a column with no value is not drawn but named on one Empty line at the foot, where a name opens its field in place; a required column is always drawn and says it is needed; a new entry asks for the title, every required column and the ones ticked New entry, starts a required enum nothing implies at its first member, and says what is missing in one line only once Add is pressed; labels read as words without a unit suffix; two plain figures sit in the line under the title | [below](#d-518) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -911,6 +912,54 @@ domain layer. Groups a person makes on the page: a second layout to keep beside 
 the mockup dropped. Moving a field across parts: its part is its type's, so the move would be
 undone by the drawing. A shortcut hint (Alt+↑) in the field's ⋯ on the page: on the page a focused
 field is an input, where Alt+arrows already mean something, so the shortcut is the list's alone.
+
+## D-518 · 2026-10-22 · An entry draws what it holds: on a row that exists a column with no value is not drawn but named on one Empty line at the foot, where a name opens its field in place; a required column is always drawn and says it is needed; a new entry asks for the title, every required column and the ones ticked New entry, starts a required enum nothing implies at its first member, and says what is missing in one line only once Add is pressed; labels read as words without a unit suffix; two plain figures sit in the line under the title <a id="d-518"></a>
+
+**Context.** M53 U3, building U1's approved mockup (`docs/mockups/m53-u1/tasks.html`, approved
+2026-10-22, choice 1 as A). Every column was drawn, filled or not: a task holding five values
+showed twelve fields, most of the page empty boxes; the labels were raw column names; one optional
+figure got a section of its own; and a new entry scolded before anything was typed ("Nothing has
+been filled in yet.") with its required state starting empty.
+
+**Decision.**
+
+- **On an entry that exists, a column with no value is not drawn.** It is a name on the **Empty
+  line** at the foot of the entry's left column, after a hairline: the label *Empty*, then
+  *+ name* for each column that holds nothing and is not hidden, in the view's order, and U2's
+  *N hidden* at its end. A name opens its field where it belongs in the order, focused (a menu
+  opens); left empty, it folds back into the line. A field being typed in stays drawn until it is
+  left, so clearing one never makes it vanish under the cursor. Not a *+ Field* menu (option B).
+- **A required column is always drawn**, and says *needed* while it holds nothing.
+- **A worked-out figure and a total are drawn when they have a value.** A check is always drawn:
+  *unchecked* is its verdict, the thing the product exists to say, and the timesheet tour's story
+  rests on it — so "checks follow the same rule" is read as a check always having one.
+- **Labels read as words** (`entryLabel`): underscores become spaces, and a suffix naming the
+  column's own unit is dropped — `estimate_h` in h reads *estimate*, the h on the value. Only the
+  label; the Fields list says the same words.
+- **Two figures or fewer sit in the line under the title** unless something claims them as a grid:
+  a check, a worked-out figure or total beside them, or a way that needs the room (large, bar,
+  ring, slider).
+- **A new entry asks for the title (focused), every required column, and the columns ticked
+  *New entry*** in U2's Fields list; everything else is on the Empty line. A hidden column stays
+  off it even ticked. The list stays beside it with the draft as its first, marked row (*A new
+  task* until titled — the list has no groups until U4). It has no *Links here*.
+- **Nothing about what is missing is said until Add is pressed**; then one line in the negative
+  names the first required column that holds nothing (*A task needs a title.*). Add is never
+  disabled, and Enter in the title presses it.
+- **A required enum that nothing implies starts at its first member** on a new entry
+  (`entryDefaults`): a new task is *inbox*. A default the view applies and draws in its field, never
+  a value a model makes (D-137); an entry given nothing else is still untouched. U4's quick add
+  takes the same rule, with what its group implies passed as `implied`.
+- **The list beside an entry gains a +** (*Add a task*) that opens `entry/new`.
+
+**Consequences.** A pack's entry, read here and not written (D-269), and the frame draw the same
+page with no names to fill. The timesheet tour opens `end` from the Empty line before typing it
+(one more step, `empty-end`). Nothing in the engine or the file changes.
+
+**Rejected.** The *+ Field* menu (option B): two clicks, and a name not on the page is a field
+forgotten. Hiding *unchecked* checks: it would make a claim go quiet exactly where it cannot yet be
+proved. Disabling Add until the draft is a row: it said nothing about why, and a page that scolds
+before anything is typed is the thing the mockup removed.
 
 ## Related
 

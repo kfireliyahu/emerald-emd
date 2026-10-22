@@ -25,8 +25,10 @@ import type { UnitTable } from '@/domain/format/unit.ts'
 import {
   SHOW_AS_HINT,
   SHOW_AS_LABEL,
+  entryLabel,
   entryLayout,
   entryOrder,
+  entryShown,
   entryWayOf,
   movedWithin,
   printsAsPercent,
@@ -234,8 +236,32 @@ export function EntryView({
   // a hand-edited `hidden` on one is read as nothing.
   const hideable = (column: ColumnDeclaration): boolean => column.required !== true && column !== layout.title
   const isHidden = (column: ColumnDeclaration): boolean => hidden.has(column.name) && hideable(column)
-  const hiddenCount = ordered.filter(isHidden).length
-  const drawn = (column: ColumnDeclaration): boolean => revealed || !isHidden(column)
+  // **The fields opened from the Empty line, or being typed in** (M53 U3): drawn
+  // until they are left empty, when they fold back into the line.
+  const [opened, setOpened] = useState<ReadonlySet<string>>(() => new Set())
+  // The field just opened from the Empty line — or a new entry's title — focused once it is drawn.
+  const [focusing, setFocusing] = useState<string | undefined>(() =>
+    existing === undefined && locked === undefined ? layout.title?.name : undefined,
+  )
+  const page = useRef<HTMLDivElement>(null)
+  const open = (name: string, focus: boolean): void => {
+    setOpened((now) => (now.has(name) ? now : new Set([...now, name])))
+    if (focus) setFocusing(name)
+  }
+  useLayoutEffect(() => {
+    if (focusing === undefined) return
+    setFocusing(undefined)
+    const at = page.current?.querySelector(`[data-field="${CSS.escape(focusing)}"]`)
+    const control = at?.querySelector<HTMLElement>('input, textarea, select, button:not([aria-label$=": more"]), [tabindex="0"]')
+    if (control === null || control === undefined) return
+    control.focus()
+    // A menu, or a way drawn until pressed, opens as the mockup's field does.
+    if (control instanceof HTMLButtonElement && (control.getAttribute('aria-haspopup') === 'menu' || control.getAttribute('aria-label')?.endsWith(': change') === true)) {
+      control.click()
+    }
+  }, [focusing])
+  // "Add" pressed on a new entry: only then is what is missing said (U1's choice d).
+  const [tried, setTried] = useState(false)
   // A field moves within its part, as the order always worked (D-296): the
   // part comes from the column's type, so a move across parts would change
   // nothing a person could see.
@@ -311,6 +337,11 @@ export function EntryView({
     if (leaving === undefined) return
     setLeaving(undefined)
     onCommit(leaving)
+    // Left empty, a field opened from the Empty line folds back into it.
+    const column = declaration.columns.find((each) => each.name === leaving)
+    if (column !== undefined && !holds(column)) {
+      setOpened((now) => (now.has(leaving) ? new Set([...now].filter((name) => name !== leaving)) : now))
+    }
   }, [leaving])
 
   // A failed check underlines, in red, every figure it names (S4).
@@ -347,24 +378,52 @@ export function EntryView({
       dimmed={isHidden(column)}
       onChange={(key, text) => onChange(withField(draft, key, text))}
       onPick={(key, text) => onCommit(column.name, withField(draft, key, text))}
+      onFocus={() => open(column.name, false)}
       onLeave={() => setLeaving(column.name)}
+      onSubmit={fresh && part === 'title' ? add : undefined}
       onRevert={() => onRevert(column)}
       onChoose={(next) => onChoose(column.name, next === waysFor(column)[0] ? undefined : next)}
       onOpen={onOpen}
     />
   )
 
-  // What is drawn: every part's columns but the hidden ones, unless revealed.
-  const header = layout.header.filter(drawn)
-  const figures = layout.figures.filter(drawn)
-  const texts = layout.texts.filter(drawn)
-  const linkColumns = layout.links.filter(drawn)
-  const hasFigures = figures.length > 0 || derived.length > 0 || aggregates.length > 0 || verdicts.length > 0
-  // "holds a value", in the Fields list: what the entry shows now.
+  // "holds a value": what the entry draws, and what the Fields list says.
   const holds = (column: ColumnDeclaration): boolean => {
     const text = (draft[column.name] ?? '').trim()
     return text !== '' && text !== '[]'
   }
+  // **A worked-out figure is drawn when it has a value**, as a typed one is
+  // (M53 U3); a check always is, since "unchecked" is its verdict, not nothing.
+  const workedOut = derived.filter((each) => each.value.kind !== 'EMPTY')
+  const folded = aggregates.filter((each) => each.value.kind !== 'UNCHECKED')
+  // What is drawn, and what the Empty line offers instead (`entryShown`).
+  const shown = entryShown(ordered, layout, {
+    holds,
+    hidden: isHidden,
+    opened: refused === undefined ? opened : new Set([...opened, refused.column]),
+    asked: fresh ? asked : undefined,
+    revealed,
+    grid: (drawnFigures) =>
+      verdicts.length > 0 ||
+      workedOut.length > 0 ||
+      folded.length > 0 ||
+      drawnFigures.some((column) => !IN_LINE.has(wayOfColumn(column))),
+  })
+  const header = shown.header
+  const figures = shown.figures
+  const texts = shown.texts
+  const linkColumns = shown.links
+  const hasFigures = figures.length > 0 || workedOut.length > 0 || folded.length > 0 || verdicts.length > 0
+  // **Add says what is missing only once it is pressed**, and Enter in a new
+  // entry's title presses it.
+  const add = (): void => {
+    setTried(true)
+    if (problem === undefined) onAdd()
+  }
+  // The foot's line (U1's choice a): the names to fill, and "N hidden" at its end.
+  const emptyLine = (!readOnly && shown.empty.length > 0) || shown.hidden > 0
+  // The column on the right: the links drawn, and what names a row that exists.
+  const aside = !fresh || linkColumns.length > 0
 
   return (
     <div className="fc-view-enter flex h-full flex-col">
@@ -394,7 +453,9 @@ export function EntryView({
           ← <Bidi>{declaration.title}</Bidi>
         </button>
         {fresh ? (
-          <span className="font-medium">A new entry</span>
+          <span className="font-medium">
+            A new <Bidi>{one}</Bidi>
+          </span>
         ) : (
           pager !== undefined && (
             <span
@@ -449,7 +510,7 @@ export function EntryView({
         </span>
       </div>
 
-      <div className="@container min-h-0 flex-1 overflow-auto">
+      <div ref={page} className="@container min-h-0 flex-1 overflow-auto">
         <div className="mx-auto flex max-w-[1120px] flex-col gap-7 px-6 pt-7 pb-16">
           <header className="flex flex-col gap-2.5 border-b border-hairline pb-5">
             <div className="fc-label">
@@ -463,17 +524,17 @@ export function EntryView({
             )}
           </header>
 
-          <div className="grid items-start gap-11 @3xl:grid-cols-[minmax(0,1fr)_280px]">
+          <div className={`grid items-start gap-11 ${aside ? '@3xl:grid-cols-[minmax(0,1fr)_280px]' : ''}`}>
             <div className="flex min-w-0 max-w-[700px] flex-col gap-7">
               {findings.length > 0 && existing !== undefined && (
                 <Concerns findings={findings} id={existing} onOpen={(id) => onOpen(declaration.name, id)} />
               )}
               {hasFigures && (
                 <section className="flex flex-col gap-3.5" aria-label="Figures">
-                  {(figures.length > 0 || derived.length > 0 || aggregates.length > 0) && (
+                  {(figures.length > 0 || workedOut.length > 0 || folded.length > 0) && (
                     <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-x-[22px] gap-y-3.5">
                       {figures.map((column) => field(column, 'figure'))}
-                      {derived.map((each) => (
+                      {workedOut.map((each) => (
                         <WorkedOut
                           key={each.compiled.declaration.name}
                           each={each}
@@ -489,7 +550,7 @@ export function EntryView({
                           }
                         />
                       ))}
-                      {aggregates.map((each) => (
+                      {folded.map((each) => (
                         <Folded key={each.aggregate.name} each={each} marked={failing.has(each.aggregate.name)} />
                       ))}
                     </div>
@@ -500,34 +561,65 @@ export function EntryView({
                 </section>
               )}
               {texts.map((column) => field(column, 'text'))}
-              {hiddenCount > 0 && (
-                // The foot of the entry, where M53 U3's Empty line comes: the
-                // hidden fields, shown in place until the entry is left.
-                <div className="flex flex-wrap items-center gap-1 border-t border-hairline pt-3.5">
-                  <button
-                    type="button"
-                    className="ms-auto h-6 px-2 text-caption text-ink-tertiary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
-                    aria-pressed={revealed}
-                    onClick={() => setRevealed(!revealed)}
-                  >
-                    {revealed ? 'Hide again' : `${String(hiddenCount)} hidden`}
-                  </button>
+              {emptyLine && (
+                // **The Empty line** (M53 U3, U1's choice a): one line of names at
+                // the foot, after a hairline — each opens its field where it
+                // belongs, focused — and "N hidden" at its end (U2).
+                <div className="flex flex-wrap items-center gap-1 border-t border-hairline pt-3.5" aria-label="Empty">
+                  {!readOnly && shown.empty.length > 0 && (
+                    <>
+                      <span className="fc-label me-2 text-ink-tertiary">Empty</span>
+                      {shown.empty.map((column) => (
+                        <button
+                          key={column.name}
+                          type="button"
+                          data-tour={`empty-${column.name}`}
+                          aria-label={`Fill ${entryLabel(column)}`}
+                          title={describe(column)}
+                          className="inline-flex h-6 items-center gap-1 px-2 text-caption text-ink-secondary hover:bg-surface hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                          onClick={() => open(column.name, true)}
+                        >
+                          <svg viewBox="0 0 16 16" width="12" height="12" fill="none" stroke="currentColor" strokeWidth={1.5} className="text-ink-tertiary" aria-hidden>
+                            <path d="M8 3v10M3 8h10" />
+                          </svg>
+                          <Bidi>{entryLabel(column)}</Bidi>
+                        </button>
+                      ))}
+                    </>
+                  )}
+                  {shown.hidden > 0 && (
+                    <button
+                      type="button"
+                      className="ms-auto h-6 px-2 text-caption text-ink-tertiary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                      aria-pressed={revealed}
+                      onClick={() => setRevealed(!revealed)}
+                    >
+                      {revealed ? 'Hide again' : `${String(shown.hidden)} hidden`}
+                    </button>
+                  )}
                 </div>
               )}
             </div>
 
-            <aside className="flex flex-col gap-[22px]" aria-label="Links">
-              {linkColumns.map((column) => field(column, 'links'))}
-              <NamedBy
-                groups={named?.namedBy ?? []}
-                title={declaration.title}
-                fresh={fresh}
-                labels={named?.labels ?? labels}
-              />
-              <p className="border-t border-hairline pt-2.5 text-caption text-ink-secondary" role="note">
-                One hop each way. A name opens that row here.
-              </p>
-            </aside>
+            {aside && (
+              <aside className="flex flex-col gap-[22px]" aria-label="Links">
+                {linkColumns.map((column) => field(column, 'links'))}
+                {/* A new entry has no "Links here": nothing names it yet (U1's choice d). */}
+                {!fresh && (
+                  <>
+                    <NamedBy
+                      groups={named?.namedBy ?? []}
+                      title={declaration.title}
+                      fresh={fresh}
+                      labels={named?.labels ?? labels}
+                    />
+                    <p className="border-t border-hairline pt-2.5 text-caption text-ink-secondary" role="note">
+                      One hop each way. A name opens that row here.
+                    </p>
+                  </>
+                )}
+              </aside>
+            )}
           </div>
         </div>
       </div>
@@ -536,13 +628,17 @@ export function EntryView({
       <Reveal>{below}</Reveal>
       {fresh && !readOnly && below === undefined && (
         <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-t border-hairline bg-elevated px-6 py-2.5">
-          <Button variant="primary" icon="add" disabled={problem !== undefined} onClick={onAdd}>
+          <Button variant="primary" icon="add" onClick={add}>
             Add
           </Button>
           <Button variant="ghost" onClick={onBack}>
             Cancel
           </Button>
-          {problem !== undefined && <span className="text-caption text-negative">{problem}</span>}
+          {tried && problem !== undefined && (
+            <span className="text-caption text-negative" role="alert">
+              {problem}
+            </span>
+          )}
         </div>
       )}
     </div>
@@ -617,7 +713,9 @@ function Field({
   dimmed,
   onChange,
   onPick,
+  onFocus,
   onLeave,
+  onSubmit,
   onRevert,
   onChoose,
   onOpen,
@@ -645,12 +743,19 @@ function Field({
   dimmed: boolean
   onChange: (key: string, text: string) => void
   onPick: (key: string, text: string) => void
+  /** Focus came into the field: it stays drawn until it is left (M53 U3). */
+  onFocus: () => void
   onLeave: () => void
+  /** Enter in a new entry's title: Add (M53 U3). */
+  onSubmit: (() => void) | undefined
   onRevert: () => void
   onChoose: (way: ShowAs) => void
   onOpen: (format: string, id: string) => void
 }) {
   const [focused, setFocused] = useState(false)
+  // The label as words (M53 U3): `done_on` reads "done on", `estimate_h` "estimate".
+  const label = entryLabel(column)
+  const empty = (draft[column.name] ?? '').trim() === '' || draft[column.name] === '[]'
   const [menu, setMenu] = useState(false)
   const showAs = !readOnly && (offered.length > 1 || mover !== undefined) && (
     <ShowAsMenu
@@ -696,8 +801,8 @@ function Field({
           className={`fc-label ${part === 'header' ? 'text-ink-tertiary' : ''}`}
           title={describe(column)}
         >
-          <Bidi>{column.name}</Bidi>
-          {fresh && column.required && <span className="ms-1 text-ink-tertiary normal-case">needed</span>}
+          <Bidi>{label}</Bidi>
+          {column.required && empty && <span className="ms-1 text-ink-tertiary normal-case">needed</span>}
         </span>,
       )}
       {hiddenTag}
@@ -722,6 +827,11 @@ function Field({
       onChange={onChange}
       onPick={onPick}
       onEnter={() => {
+        // Enter in a new entry's title adds it (U1's choice d).
+        if (onSubmit !== undefined) {
+          onSubmit()
+          return
+        }
         // Enter writes the field, as its hint says, and does not wait for the
         // blur to: a page without focus — the demo's frame — gets none (M33 U6).
         // The blur that follows sets the same field leaving in the same batch.
@@ -743,7 +853,11 @@ function Field({
     <section
       className={`group/field relative flex min-w-0 ${part === 'header' ? 'flex-row items-center gap-2' : 'flex-col gap-1'} border-t-2 ${drag !== undefined && drag.over === column.name && drag.accepts(column.name) ? 'border-accent' : 'border-transparent'} ${drag?.dragging === column.name ? 'opacity-50' : dimmed ? 'opacity-[.55]' : ''}`}
       aria-label={column.name}
-      onFocus={() => setFocused(true)}
+      data-field={column.name}
+      onFocus={() => {
+        setFocused(true)
+        onFocus()
+      }}
       onBlur={(event) => {
         if (event.currentTarget.contains(event.relatedTarget as Node | null)) return
         setFocused(false)
@@ -779,7 +893,7 @@ function Field({
         <h3 className="flex items-center gap-1.5 pb-1">
           {grabbed(
             <span className="fc-label">
-              <Bidi>{column.name}</Bidi>
+              <Bidi>{label}</Bidi>
             </span>,
           )}
           {hiddenTag}
@@ -811,6 +925,13 @@ const TYPED: ReadonlySet<ShowAs> = new Set<ShowAs>([
   'datetime',
   'clock',
 ])
+
+/**
+ * The ways a figure keeps in the line under the title (M53 U3): a figure
+ * written as it is. A large figure, a bar, a ring and a slider claim the room
+ * of the figures part.
+ */
+const IN_LINE: ReadonlySet<ShowAs> = new Set<ShowAs>(['figure', 'written', 'unit'])
 
 /** The ways that open a field when pressed, and are drawn until then (D-402). */
 const PRESSED_OPEN: ReadonlySet<ShowAs> = new Set<ShowAs>(['bar', 'ring', 'unit', 'relative'])
@@ -1224,11 +1345,6 @@ function EyeGlyph({ off = false }: { off?: boolean }) {
   )
 }
 
-/** A column's name as words: `done_on` reads "done on". */
-function inWords(name: string): string {
-  return name.replace(/_/g, ' ')
-}
-
 /**
  * **The Fields list** — M53 U2, U1's approved mockup
  * (`docs/mockups/m53-u1/tasks.html`). It replaced *Arrange this view*: every
@@ -1314,7 +1430,7 @@ function FieldsList({
                 <div className="fc-label px-3 pt-2 pb-0.5">{section.label}</div>
                 {section.columns.map((column) => {
                   const off = isHidden(column)
-                  const words = inWords(column.name)
+                  const words = entryLabel(column)
                   const needed = column.required === true
                   return (
                     <div

@@ -6,6 +6,7 @@ import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { Kbd } from '@/ui/components/Kbd.tsx'
 import type { ListRow } from '@/ui/formats/entryList.ts'
+import { withArticle } from '@/domain/format/view.ts'
 import { HeldValues } from '@/ui/formats/FilterBand.tsx'
 import { toneOf } from '@/ui/formats/tone.ts'
 
@@ -37,24 +38,33 @@ export function EntryList({
   declaration,
   rows,
   current,
+  draft,
   entries,
   filter,
   shown,
   onOpen,
+  onNew,
   onSearch,
   onFilter,
 }: {
   declaration: FormatDeclaration
   /** Every row the address's filter holds, in the Table's order. */
   rows: readonly ListRow[]
-  /** The entry beside the list. */
-  current: string
+  /** The entry beside the list — nothing while a new one is being written. */
+  current: string | undefined
+  /**
+   * A new entry's title as typed, when one is being written (M53 U3): drawn as
+   * the list's first row and marked, "A new task" until it has a title.
+   */
+  draft?: string | undefined
   /** How many entries the format holds, filter or not. */
   entries: number
   filter: RowFilter
   /** Drawn, or only listening for ↑ ↓. */
   shown: boolean
   onOpen: (id: string) => void
+  /** The list's "+": a new entry beside it (M53 U3), two steps from an open one. */
+  onNew?: (() => void) | undefined
   onSearch: (text: string) => void
   /** The filter with one thing let go of. */
   onFilter: (next: RowFilter) => void
@@ -65,6 +75,8 @@ export function EntryList({
   // **The step** (the mockup's `step`): the next or previous row, kept at the ends.
   const step = useRef<(by: number) => void>(() => undefined)
   step.current = (by) => {
+    // A draft is not paged away from: ↑ ↓ would drop what was typed.
+    if (draft !== undefined) return
     const to = rows[Math.max(0, Math.min(rows.length - 1, (at < 0 ? 0 : at + by)))]
     if (to !== undefined && to.id !== current) onOpen(to.id)
   }
@@ -115,6 +127,8 @@ export function EntryList({
   const held = Object.entries(filter.match ?? {})
   const filtered = search !== '' || held.length > 0
   const name = declaration.title
+  const one = declaration.title.toLowerCase()
+  const addLabel = `Add ${withArticle(one)}`
 
   return (
     <div
@@ -129,6 +143,17 @@ export function EntryList({
           <span className="text-caption text-ink-tertiary tabular-nums">
             {filtered ? `${String(rows.length)} of ${String(entries)}` : String(entries)}
           </span>
+          {onNew !== undefined && (
+            <button
+              type="button"
+              aria-label={addLabel}
+              title={addLabel}
+              onClick={onNew}
+              className="ms-auto inline-flex h-7 w-7 items-center justify-center text-ink-secondary hover:bg-surface hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+            >
+              <ActionGlyph name="add" size={16} />
+            </button>
+          )}
         </div>
         <label className="flex h-7 min-w-0 items-center gap-1.5 border border-hairline-strong bg-elevated px-2 text-ink-tertiary">
           <ActionGlyph name="search" size={14} />
@@ -178,8 +203,20 @@ export function EntryList({
         className="relative min-h-0 flex-1 overflow-auto outline-none"
         onScroll={windowed ? measure : undefined}
       >
+        {draft !== undefined && (
+          // The draft, as the row it will be — the list has no groups yet (U4).
+          <div
+            aria-current="page"
+            className="relative flex w-full flex-col justify-center border-b border-hairline bg-accent-soft pr-3 pl-3.5 before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:bg-accent"
+            style={{ height: ROW }}
+          >
+            <Bidi className={`truncate text-[13px] ${draft === '' ? 'text-ink-secondary' : 'text-ink'}`}>
+              {draft === '' ? `A new ${one}` : draft}
+            </Bidi>
+          </div>
+        )}
         {rows.length === 0 ? (
-          <div className="p-4 text-[13px] text-ink-secondary">Nothing in this format holds it.</div>
+          draft === undefined && <div className="p-4 text-[13px] text-ink-secondary">Nothing in this format holds it.</div>
         ) : (
           <div style={{ paddingTop: first * ROW, paddingBottom: (rows.length - last) * ROW }}>
             {rows.slice(first, last).map((row) => {

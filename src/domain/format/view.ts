@@ -646,6 +646,131 @@ export function entryOrder<T extends { readonly name: string }>(
 }
 
 /**
+ * **A column's label on the entry, as words** — M53 U3, D-518, U1's approved
+ * mockup: `done_on` reads "done on", and a suffix naming the column's own unit
+ * is dropped, so `estimate_h` (in h) reads "estimate" with its h on the value.
+ * Only the label: the column keeps its name in the table and every tool.
+ */
+export function entryLabel(column: { readonly name: string; readonly unit?: string | undefined }): string {
+  const { name, unit } = column
+  const suffix = unit === undefined || unit === '' ? '' : `_${unit.toLowerCase()}`
+  const bare = suffix !== '' && name.length > suffix.length && name.toLowerCase().endsWith(suffix)
+    ? name.slice(0, -suffix.length)
+    : name
+  return bare.replace(/_/g, ' ')
+}
+
+/** A word with the article a sentence on the screen puts before it: "a task", "an ingredient". */
+export function withArticle(word: string): string {
+  return `${/^[aeiou]/i.test(word) ? 'an' : 'a'} ${word}`
+}
+
+/**
+ * **What a new entry starts holding** — M53 U3, D-518 (U1's choice e): every
+ * required enum that nothing implies, at its first member, so a new task is
+ * `inbox` and a person need not open a menu to be allowed to Add. **A default
+ * the view applies, never a value a model makes** (D-137): it is drawn in its
+ * field from the start, and an entry given nothing else is still untouched.
+ * `implied` names the columns something else already sets — U4's quick add,
+ * from the group it is typed in.
+ */
+export function entryDefaults(
+  columns: readonly { readonly name: string; readonly type: string; readonly required: boolean; readonly values: readonly string[] }[],
+  implied: ReadonlySet<string> = new Set(),
+): Readonly<Record<string, string>> {
+  const defaults: Record<string, string> = {}
+  for (const column of columns) {
+    const first = column.values[0]
+    if (column.type === 'enum' && column.required && first !== undefined && !implied.has(column.name)) {
+      defaults[column.name] = first
+    }
+  }
+  return defaults
+}
+
+/**
+ * **Why a new entry cannot be added yet, in one line** — M53 U3, D-518: the
+ * first required column that holds nothing, said in the negative as the
+ * mockup says it — "A task needs a title." — and nothing when every one holds.
+ */
+export function entryNeeds(
+  one: string,
+  columns: readonly { readonly name: string; readonly unit?: string | undefined; readonly required: boolean }[],
+  holds: (name: string) => boolean,
+): string | undefined {
+  const missing = columns.find((column) => column.required && !holds(column.name))
+  if (missing === undefined) return undefined
+  const subject = withArticle(one.toLowerCase())
+  return `${subject.charAt(0).toUpperCase()}${subject.slice(1)} needs ${withArticle(entryLabel(missing))}.`
+}
+
+/** What the entry draws of a layout, and what its foot offers — `entryShown`. */
+export interface EntryShown<C> {
+  /** The line under the title — with the figures, when two or fewer sit in it. */
+  readonly header: readonly C[]
+  readonly figures: readonly C[]
+  readonly texts: readonly C[]
+  readonly links: readonly C[]
+  /** The Empty line: every column not drawn and not hidden, in the view's order. */
+  readonly empty: readonly C[]
+  /** How many columns the view hides — "N hidden" — whether they hold a value or not. */
+  readonly hidden: number
+}
+
+/**
+ * **What an entry draws, and what it offers instead** — M53 U3, D-518, U1's
+ * approved mockup (`docs/mockups/m53-u1/tasks.html`, its `entryBody`).
+ *
+ * A column is drawn when it holds a value, when it is required (and says it is
+ * needed), when it was opened from the Empty line or is being typed in, and —
+ * on a new entry — when the view asks for it (`asked`, U2's *New entry* tick).
+ * A hidden column is not drawn even holding a value, unless "N hidden" was
+ * pressed (`revealed`). Every other column is a name on the Empty line.
+ *
+ * **Two figures or fewer, with nothing claiming them as a grid** (`grid`: a
+ * check under them, a worked-out figure beside them, or a way that needs the
+ * room), sit in the line under the title rather than a part of their own — a
+ * lone "3 h" no longer gets a section.
+ */
+export function entryShown<C extends { readonly name: string; readonly required: boolean }>(
+  /** The columns in the view's order, which the Empty line keeps. */
+  ordered: readonly C[],
+  layout: EntryLayout<C>,
+  ask: {
+    readonly holds: (column: C) => boolean
+    readonly hidden: (column: C) => boolean
+    /** Opened from the Empty line, or being typed in: drawn until it is left empty. */
+    readonly opened: ReadonlySet<string>
+    /** On a new entry, the columns the view asks for; nothing on one that exists. */
+    readonly asked: ReadonlySet<string> | undefined
+    readonly revealed: boolean
+    /** Whether the figures part is claimed as a grid, given the figures drawn. */
+    readonly grid: (figures: readonly C[]) => boolean
+  },
+): EntryShown<C> {
+  const drawn = (column: C): boolean =>
+    ask.hidden(column)
+      ? ask.revealed
+      : ask.holds(column) ||
+        column.required ||
+        ask.opened.has(column.name) ||
+        (ask.asked?.has(column.name) ?? false)
+  const header = layout.header.filter(drawn)
+  const figures = layout.figures.filter(drawn)
+  const inLine = figures.length > 0 && figures.length <= 2 && !ask.grid(figures)
+  const rest = ordered.filter((column) => column !== layout.title)
+  return {
+    // The line keeps the view's order: its own columns, then the figures.
+    header: inLine ? [...header, ...figures] : header,
+    figures: inLine ? [] : figures,
+    texts: layout.texts.filter(drawn),
+    links: layout.links.filter(drawn),
+    empty: rest.filter((column) => !drawn(column) && !ask.hidden(column)),
+    hidden: rest.filter(ask.hidden).length,
+  }
+}
+
+/**
  * **A column moved within its part** (M53 U2): `part` is the names of one part
  * of the entry (`entryLayout`) in the view's order, and the column at `from` in
  * it goes to `to` in it. The part's columns keep the places in the whole order

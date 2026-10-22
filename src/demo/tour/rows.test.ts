@@ -315,6 +315,8 @@ describe('the timesheet tour, on top of the ledger (M33 U7)', () => {
       /^nav-(paychecks|formats|formats-[a-z_]+)$/,
       /^foot-[a-z_]+$/,
       /^field-[a-z_]+$/,
+      // A name on an entry's Empty line, which opens its field (M53 U3).
+      /^empty-[a-z_]+$/,
       /^link-[a-z_]+$/,
       /^verdict-[a-z_]+$/,
       /^row:/,
