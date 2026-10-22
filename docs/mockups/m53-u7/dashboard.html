@@ -1,0 +1,813 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboards</title>
+<style>
+/* M53 U7. A dashboard per format and one for the document, made only of views (D-514) — for the
+   maintainer's approval, and one placement question, before U7 builds it. Tokens, frame, tab strip,
+   list lines, chips and popovers are M53 U1's mockup's (docs/mockups/m53-u1/tasks.html), which copied
+   them from src/ui/theme/tokens.css; the chart follows U6's Chart.tsx (ink on nothing, bars labelled
+   directly, one series in ink-secondary). Fonts are the app's own bundled woff2, read from
+   node_modules, so this opens from the checkout with the network off. Every name and figure is made up. */
+@font-face{font-family:"IBM Plex Sans";font-weight:400;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-400-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:500;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-500-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Sans";font-weight:600;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-600-normal.woff2") format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-weight:400;font-display:swap;src:url("../../../node_modules/@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2") format("woff2")}
+
+:root{
+  --color-background:#ffffff;--color-surface:#f7f7f6;--color-elevated:#ffffff;
+  --color-ink:#111111;--color-ink-secondary:#6b6b6b;--color-ink-tertiary:#a0a09c;
+  --color-hairline:#ececea;--color-hairline-strong:#d9d9d6;
+  --color-accent:#07805f;--color-accent-ink:#ffffff;--color-accent-hover:#05664b;--color-accent-soft:#e8f6f1;
+  --color-action:#07805f;--color-action-ink:#ffffff;--color-action-hover:#05664b;--color-action-deep:#055a43;
+  --color-negative:#c4342b;--color-positive:#1f7a4d;
+  --shadow-pop:0 1px 2px rgba(17,17,17,.04),0 8px 24px rgba(17,17,17,.08);
+  --font-sans:"IBM Plex Sans",system-ui,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,monospace;
+  --micro:120ms;--base:180ms;--ease:cubic-bezier(.22,1,.36,1);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --color-background:#0b0b0c;--color-surface:#151517;--color-elevated:#1b1b1e;
+  --color-ink:#f2f2f0;--color-ink-secondary:#a1a1a0;--color-ink-tertiary:#6a6a6c;
+  --color-hairline:#262629;--color-hairline-strong:#34343a;
+  --color-accent:#34d399;--color-accent-ink:#06231a;--color-accent-hover:#5ee0b0;--color-accent-soft:#10312a;
+  --color-action:#34d399;--color-action-ink:#06231a;--color-action-hover:#5ee0b0;--color-action-deep:#1fae7d;
+  --color-negative:#e5675e;--color-positive:#4caf7d;
+  --shadow-pop:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.55);color-scheme:dark}}
+:root[data-theme="dark"]{
+  --color-background:#0b0b0c;--color-surface:#151517;--color-elevated:#1b1b1e;
+  --color-ink:#f2f2f0;--color-ink-secondary:#a1a1a0;--color-ink-tertiary:#6a6a6c;
+  --color-hairline:#262629;--color-hairline-strong:#34343a;
+  --color-accent:#34d399;--color-accent-ink:#06231a;--color-accent-hover:#5ee0b0;--color-accent-soft:#10312a;
+  --color-action:#34d399;--color-action-ink:#06231a;--color-action-hover:#5ee0b0;--color-action-deep:#1fae7d;
+  --color-negative:#e5675e;--color-positive:#4caf7d;
+  --shadow-pop:0 1px 2px rgba(0,0,0,.4),0 8px 28px rgba(0,0,0,.55);color-scheme:dark}
+
+*{box-sizing:border-box}
+html,body{background:var(--color-background)}
+body{margin:0;color:var(--color-ink);font-family:var(--font-sans);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button[disabled]{cursor:default;opacity:.45}
+input,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--color-accent);outline-offset:2px}
+.label{font-size:11px;line-height:1.3;letter-spacing:.08em;font-weight:500;text-transform:uppercase;color:var(--color-ink-secondary)}
+.caption{font-size:12px;line-height:1.4;color:var(--color-ink-secondary)}
+.t3{color:var(--color-ink-tertiary)}
+.neg{color:var(--color-negative)}
+bdi{unicode-bidi:isolate}
+svg{flex:none}
+
+/* ------------------------------------------------------------ the mockup's own page (U1's) */
+.page{max-width:1320px;margin:0 auto;padding:32px 16px 96px;display:flex;flex-direction:column;gap:40px}
+.intro{display:flex;flex-direction:column;gap:8px;max-width:88ch}
+.intro h1{margin:0;font-size:24px;line-height:1.15;font-weight:600;letter-spacing:-.01em}
+.intro p{margin:0;color:var(--color-ink-secondary)}
+.intro b{color:var(--color-ink);font-weight:500}
+.controls{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:flex-end;padding:16px;background:var(--color-surface)}
+.ctl{display:flex;flex-direction:column;gap:6px}
+.seg{display:inline-flex;flex-wrap:wrap}
+.seg button{height:30px;padding:0 12px;border:1px solid var(--color-hairline-strong);margin-left:-1px;font-size:13px;color:var(--color-ink-secondary);background:var(--color-background)}
+.seg button:first-child{margin-left:0}
+.seg button.on{background:var(--color-accent-soft);color:var(--color-ink);border-color:var(--color-accent);position:relative;z-index:1}
+.choice-tag{display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;margin-right:6px;font-size:10px;font-weight:500;border:1px solid currentColor}
+.stage{overflow-x:auto;border:1px solid var(--color-hairline-strong)}
+section.doc > h2{margin:0 0 10px;font-size:16px;font-weight:600}
+section.doc > p.note{margin:0 0 12px;color:var(--color-ink-secondary);max-width:90ch}
+table.words{width:100%;border-collapse:collapse;font-size:13px}
+table.words th,table.words td{border-top:1px solid var(--color-hairline);padding:8px 12px 8px 0;vertical-align:top;text-align:left}
+table.words th{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;color:var(--color-ink-secondary)}
+table.words td.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+table.words td:first-child{white-space:nowrap}
+.sn{font-family:var(--font-mono);font-size:11px;color:var(--color-ink-tertiary);margin-right:6px}
+pre.calls{margin:0;padding:14px 16px;background:var(--color-surface);font-family:var(--font-mono);font-size:12px;line-height:1.7;overflow-x:auto;color:var(--color-ink)}
+pre.calls i{font-style:normal;color:var(--color-ink-tertiary)}
+
+/* ------------------------------------------------------------ the window (D-312) */
+.win{min-width:1120px;height:820px;display:grid;grid-template-rows:40px 1fr;background:var(--color-background);position:relative}
+.titlebar{display:flex;align-items:center;gap:16px;padding:0 12px 0 16px;background:var(--color-surface);border-bottom:1px solid var(--color-hairline)}
+.docname{display:flex;align-items:center;gap:8px;font-size:13px}
+.dirty{width:7px;height:7px;border-radius:50%;border:1.5px solid var(--color-ink-secondary)}
+.dirty.on{background:var(--color-ink);border-color:var(--color-ink)}
+.body{display:grid;grid-template-columns:200px minmax(0,1fr);min-height:0}
+.side{background:var(--color-surface);border-right:1px solid var(--color-hairline);display:flex;flex-direction:column;padding:8px 0;overflow:auto}
+.nitem{height:32px;display:flex;align-items:center;gap:10px;padding:0 14px;color:var(--color-ink-secondary);font-size:13px;position:relative;width:100%;text-align:left;flex:none}
+.nitem.open{color:var(--color-ink)}
+.nitem.on{color:var(--color-ink);background:var(--color-accent-soft)}
+.nitem.on::before{content:"";position:absolute;inset:0 auto 0 0;width:2px;background:var(--color-accent)}
+.nchild{height:26px;padding-left:34px}
+.nsaved{height:24px;padding-left:50px;font-size:12px}
+.nsaved .k{margin-left:auto;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--color-ink-tertiary)}
+.nsep{height:1px;background:var(--color-hairline);margin:8px 14px;flex:none}
+.main{min-width:0;min-height:0;display:flex;flex-direction:column;position:relative}
+
+.btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:10px;height:30px;padding:0 12px;font-size:13px;font-weight:500;white-space:nowrap}
+.btn.tiled{padding-inline-start:0;padding-inline-end:10px}
+.btn .tile{align-self:stretch;width:30px;display:inline-flex;align-items:center;justify-content:center}
+.btn.primary{background:var(--color-action);color:var(--color-action-ink)}
+.btn.primary .tile{background:var(--color-action-deep)}
+.btn.secondary{background:var(--color-surface);box-shadow:inset 0 0 0 1px var(--color-hairline-strong)}
+.btn.ghost{padding:0 4px;color:var(--color-accent)}
+.btn.ghost:hover{text-decoration:underline;text-underline-offset:5px}
+.icon{width:26px;height:26px;display:inline-flex;align-items:center;justify-content:center;color:var(--color-ink-secondary)}
+.icon:hover{color:var(--color-ink);background:var(--color-surface)}
+
+/* the format's head and its one tab strip (U4) */
+.fhead2{flex:none;display:flex;align-items:center;gap:14px;padding:12px 24px 0}
+.fhead2 h2{margin:0;font-size:20px;font-weight:600}
+.fhead2 .end{margin-left:auto;display:flex;gap:8px;align-items:center}
+.tabs{flex:none;display:flex;gap:18px;height:32px;align-items:stretch;padding:0 24px;border-bottom:1px solid var(--color-hairline)}
+.tabs button{font-size:13px;color:var(--color-ink-tertiary);box-shadow:inset 0 -2px 0 transparent}
+.tabs button.on{color:var(--color-ink);box-shadow:inset 0 -2px 0 var(--color-accent)}
+.tabs .tsep{width:1px;background:var(--color-hairline);margin:8px 0}
+.lset{flex:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 14px;padding:8px 24px;border-bottom:1px solid var(--color-hairline);font-size:12px;color:var(--color-ink-secondary);position:relative}
+.fchip{display:inline-flex;align-items:center;gap:6px;height:24px;padding:0 8px;border:1px solid var(--color-hairline-strong);font-size:12px;color:var(--color-ink)}
+.back{font-size:12px;color:var(--color-ink-secondary)}
+.back:hover{color:var(--color-ink)}
+
+/* list lines, ticks and chips (U1's) */
+.lscroll{flex:1 1 auto;min-height:0;overflow:auto}
+.lwrap{max-width:980px;padding:8px 24px 64px}
+.ghd{height:32px;display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13px;font-weight:500}
+.ghd .cnt{font-weight:400;color:var(--color-ink-tertiary);font-variant-numeric:tabular-nums}
+.lrow2{height:40px;display:flex;align-items:center;gap:12px;border-top:1px solid var(--color-hairline);padding:0 4px;position:relative}
+.lrow2:hover{background:var(--color-surface)}
+.lrow2 .name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
+.lrow2 .bits{display:flex;align-items:center;gap:16px;flex:none;font-size:12px;color:var(--color-ink-secondary)}
+.lrow2 .due{min-width:84px;text-align:right;font-variant-numeric:tabular-nums}
+.lrow2.done .name{color:var(--color-ink-tertiary);text-decoration:line-through;text-decoration-color:var(--color-ink-tertiary)}
+.tk{width:16px;height:16px;border:1.5px solid var(--color-ink-secondary);display:inline-flex;align-items:center;justify-content:center;flex:none;color:var(--color-background)}
+.tk:hover{border-color:var(--color-ink)}
+.tk.on{background:var(--color-ink);border-color:var(--color-ink)}
+.dchip{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.fc-dot{display:inline-block;width:8px;height:8px;flex:none;border-radius:9999px;border:1.5px solid var(--color-hairline-strong)}
+.fc-dot[data-tone="done"]{background:var(--color-ink);border-color:var(--color-ink)}
+.fc-dot[data-tone="live"]{background:var(--color-accent);border-color:var(--color-accent)}
+.fc-dot[data-tone="waiting"]{border-style:dashed;border-color:var(--color-ink-secondary)}
+table.rows{width:100%;border-collapse:collapse;font-size:13px}
+table.rows th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:500;color:var(--color-ink-secondary);text-align:left;padding:6px 12px 6px 0;border-bottom:1px solid var(--color-hairline)}
+table.rows td{padding:7px 12px 7px 0;border-bottom:1px solid var(--color-hairline);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
+table.rows td.n,table.rows th.n{text-align:right;font-variant-numeric:tabular-nums}
+
+/* popovers (U1's) */
+.pop{position:absolute;z-index:20;min-width:220px;border:1px solid var(--color-hairline-strong);background:var(--color-elevated);box-shadow:var(--shadow-pop);padding:4px 0}
+.pop .ph{padding:8px 12px 4px;font-size:11px;letter-spacing:.08em;font-weight:500;text-transform:uppercase;color:var(--color-ink-tertiary)}
+.pop > button,.pop .opt{display:flex;width:100%;align-items:center;gap:10px;padding:6px 12px;font-size:13px;text-align:left}
+.pop > button:hover:not([disabled]){background:var(--color-accent-soft)}
+.pop .ck{width:14px;color:var(--color-accent);display:inline-flex}
+.pop .eg{margin-left:auto;font-size:12px;color:var(--color-ink-tertiary);white-space:nowrap}
+.pop .sep{height:1px;background:var(--color-hairline);margin:4px 0}
+.pop .ft{padding:8px 12px 4px;font-size:11px;color:var(--color-ink-tertiary);border-top:1px solid var(--color-hairline);margin-top:4px;max-width:300px}
+
+/* ------------------------------------------------------------ the dashboard */
+.dscroll{flex:1 1 auto;min-height:0;overflow:auto}
+.dash{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;padding:20px 24px 64px;max-width:1000px;align-items:start}
+.blk{grid-column:span 2;border:1px solid var(--color-hairline);background:var(--color-background);display:flex;flex-direction:column;min-width:0;position:relative}
+.blk.total{grid-column:span 1}
+.blk.dragging{opacity:.4}
+.blk.over{box-shadow:-3px 0 0 var(--color-accent)}
+.bhd{display:flex;align-items:flex-start;gap:6px;padding:10px 8px 8px 14px;min-height:44px}
+.bhd .tt{display:flex;flex-direction:column;min-width:0;flex:1 1 auto}
+.bhd .nm{font-size:13px;font-weight:600;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bhd .nm:hover{text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--color-hairline-strong)}
+.bhd .what{font-size:11px;color:var(--color-ink-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bhd .acts{display:flex;gap:0;opacity:0;transition:opacity var(--micro)}
+.blk:hover .acts,.blk:focus-within .acts,.acts.open{opacity:1}
+.grip{cursor:grab}
+.bbody{padding:0 14px 12px;min-width:0}
+.crow{height:34px;display:flex;align-items:center;gap:10px;border-top:1px solid var(--color-hairline);font-size:13px}
+.crow .name{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left}
+.crow .r{font-size:12px;color:var(--color-ink-secondary);white-space:nowrap;font-variant-numeric:tabular-nums}
+.crow.done .name{color:var(--color-ink-tertiary);text-decoration:line-through}
+.cgh{display:flex;align-items:center;gap:6px;height:26px;margin-top:6px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;font-weight:500;color:var(--color-ink-secondary)}
+.cgh .cnt{color:var(--color-ink-tertiary);font-variant-numeric:tabular-nums}
+.bfoot{display:flex;gap:12px;align-items:center;border-top:1px solid var(--color-hairline);padding-top:6px;font-size:12px;color:var(--color-ink-secondary)}
+.more{font-size:12px;color:var(--color-accent)}
+.more:hover{text-decoration:underline;text-underline-offset:3px}
+.fig{font-size:32px;line-height:1.1;font-weight:500;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.fig small{font-size:14px;font-weight:400;color:var(--color-ink-secondary);margin-left:4px}
+.nothing{font-size:12px;color:var(--color-ink-tertiary);padding:8px 0}
+.addt{grid-column:span 1;min-height:96px;border:1px dashed var(--color-hairline-strong);display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;color:var(--color-ink-secondary);position:relative}
+.addt:hover{color:var(--color-ink);border-color:var(--color-ink-tertiary)}
+.addwrap{grid-column:span 1;position:relative}
+.addwrap .addt{width:100%}
+.emptyd{grid-column:1 / -1;padding:24px 0 8px;display:flex;flex-direction:column;gap:6px;max-width:60ch}
+.emptyd b{font-weight:500}
+.fresh{animation:fresh 900ms var(--ease)}
+@keyframes fresh{from{background:var(--color-accent-soft)}to{background:transparent}}
+
+/* the headline total, made in place */
+.form{width:340px;padding:4px 12px 12px;display:flex;flex-direction:column;gap:10px}
+.form .row{display:flex;flex-direction:column;gap:4px}
+.form .inline{display:flex;align-items:center;gap:8px;font-size:13px}
+.form input[type=text],.form select{height:28px;border:1px solid var(--color-hairline-strong);background:var(--color-background);padding:0 8px;width:100%}
+.form label.ck2{display:flex;align-items:center;gap:8px;font-size:13px;height:24px}
+.form input[type=checkbox],.form input[type=radio]{accent-color:var(--color-ink)}
+.form .prev{display:flex;align-items:baseline;gap:10px;padding:8px 10px;background:var(--color-surface)}
+.form .prev .fig{font-size:22px}
+.form .acts2{display:flex;gap:8px;align-items:center}
+
+/* ------------------------------------------------------------ the placement question */
+.opts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.opt3{border:1px solid var(--color-hairline-strong);padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.opt3.rec{border-color:var(--color-accent);box-shadow:inset 0 0 0 1px var(--color-accent)}
+.opt3 h3{margin:0;font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.rtag{font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:500;color:var(--color-accent);border:1px solid var(--color-accent);background:var(--color-accent-soft);padding:1px 6px}
+.cases{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.case{display:flex;flex-direction:column;gap:4px;min-width:0}
+.mini{display:grid;grid-template-columns:92px minmax(0,1fr);height:178px;border:1px solid var(--color-hairline-strong);font-size:10px;line-height:1.2;overflow:hidden}
+.mini .mr{background:var(--color-surface);border-right:1px solid var(--color-hairline);padding:4px 0;display:flex;flex-direction:column}
+.mini .mi{height:16px;display:flex;align-items:center;padding:0 7px;color:var(--color-ink-secondary);white-space:nowrap;overflow:hidden;position:relative}
+.mini .mi.c{padding-left:16px}
+.mini .mi.on{color:var(--color-ink);background:var(--color-accent-soft);font-weight:500}
+.mini .mi.on::before{content:"";position:absolute;inset:0 auto 0 0;width:2px;background:var(--color-accent)}
+.mini .ms{padding:6px 7px;display:flex;flex-direction:column;gap:5px;min-width:0}
+.mini .mh{font-size:11px;font-weight:600}
+.mini .mt{display:flex;gap:7px;border-bottom:1px solid var(--color-hairline);padding-bottom:2px;color:var(--color-ink-tertiary)}
+.mini .mt b{color:var(--color-ink);font-weight:500;box-shadow:0 3px 0 -1px var(--color-accent)}
+.mini .mg{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.mini .mb{height:26px;border:1px solid var(--color-hairline-strong);background:var(--color-background)}
+.mini .mb.w{grid-column:span 2}
+.mini .mm{height:44px;background:var(--color-surface);display:flex;align-items:center;justify-content:center;color:var(--color-ink-tertiary)}
+.opt3 ul{margin:0;padding-left:16px;font-size:12px;color:var(--color-ink-secondary);display:flex;flex-direction:column;gap:4px}
+.opt3 ul b{color:var(--color-ink);font-weight:500}
+
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="intro">
+    <h1>Dashboards: one per format and one for the document, made only of views</h1>
+    <p><b>M53 U7, for your approval before it is built, and one question that is yours: where the document’s dashboard sits when the ledger’s Home is there too</b> (drawn under the window).
+      A dashboard holds three kinds of block and nothing else (D-514): a <b>saved view</b> (U5) drawn compact in its kind,
+      a <b>rollup’s chart</b> (U6), and a <b>headline total</b>, a count or a sum under a filter. Two synthetic formats,
+      Task (U1’s sixteen tasks) and Book (seven made-up books); today is fixed at <b>Thu 22 Oct 2026</b>.
+      Everything in the window is live: tick a task, open a block’s title, add a block, drag one by its grip, remove one.
+      The other tabs of the strip are U4’s and are not drawn here.</p>
+  </div>
+
+  <div class="controls" id="controls"></div>
+  <div class="stage"><div class="win" id="win"></div></div>
+
+  <section class="doc">
+    <h2>The question that is yours: where the document’s dashboard sits beside the ledger’s Home</h2>
+    <p class="note">Today a document with no ledger has no Home: <i>#/</i> goes to Formats. Each option is drawn twice, without the ledger and with it. The lit item is where <i>#/</i> lands.</p>
+    <div class="opts" id="opts"></div>
+  </section>
+
+  <section class="doc">
+    <h2>The choices U7 makes, drawn above</h2>
+    <p class="note">The recommended answer is the one drawn. Switch 2 in the controls flips the one other choice that may be yours.</p>
+    <table class="words" id="choices"></table>
+  </section>
+
+  <section class="doc">
+    <h2>The same, by a conversation</h2>
+    <p class="note">Parity (D-227): every arrangement above is one <i>arrange_views</i> call, dry-run until <i>commit: true</i>; <i>show_format view:"dashboard"</i> draws it; <i>start_here</i> is unchanged. The done-test’s Task dashboard, made by a conversation:</p>
+    <pre class="calls" id="calls"></pre>
+  </section>
+
+  <section class="doc">
+    <h2>Click paths</h2>
+    <p class="note">From the format’s table, or from anywhere for the document’s. A click or an Enter counts as one; typing counts as nothing.</p>
+    <table class="words">
+      <thead><tr><th>To</th><th>Clicks</th><th></th></tr></thead>
+      <tbody>
+        <tr><td>See a format’s dashboard</td><td class="n">1</td><td>Its Dashboard tab.</td></tr>
+        <tr><td>See the document’s dashboard</td><td class="n">1</td><td>The rail’s Dashboard (option 1).</td></tr>
+        <tr><td>Put a saved view or a rollup on it</td><td class="n">2</td><td>Add a block, then its name.</td></tr>
+        <tr><td>Put a headline total on it</td><td class="n">4</td><td>Add a block, Headline total, tick a filter, Add. Count is the default; the name is typed.</td></tr>
+        <tr><td>Move a block</td><td class="n">1</td><td>Drag it by its grip. Or ⋯ then Move earlier or Move later.</td></tr>
+        <tr><td>Remove a block</td><td class="n">2</td><td>⋯ then Remove from this dashboard. The saved view or rollup itself stays.</td></tr>
+        <tr><td>Open a block in full</td><td class="n">1</td><td>Its title. ← Dashboard comes back.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="doc">
+    <h2>Words new on screen</h2>
+    <p class="note">Checked against the term rows (Saved view, List, Rollup are already there). Each becomes a term row when U7 lands.</p>
+    <table class="words">
+      <thead><tr><th>Word</th><th>Covers exactly</th></tr></thead>
+      <tbody>
+        <tr><td>Dashboard</td><td>An ordered set of blocks: saved views, rollups’ charts and headline totals, and nothing else. A format’s is its Dashboard tab; the document’s is the rail’s Dashboard, and its blocks may come from any format.</td></tr>
+        <tr><td>Block</td><td>One thing on a dashboard: a saved view drawn compact in its kind, a rollup’s chart, or a headline total. Its title opens it in full.</td></tr>
+        <tr><td>Headline total</td><td>One figure: the count of a format’s rows, or the sum of one of its number or money columns, under a filter as format_rows match takes it, with a name.</td></tr>
+        <tr><td>Add a block</td><td>The menu of what this dashboard may hold: the format’s saved views and rollups not on it yet, and Headline total. On the document’s, grouped by format.</td></tr>
+        <tr><td>Remove from this dashboard</td><td>Takes the block off. A saved view or a rollup stays where it was kept; a headline total, which lives only on its dashboard, goes.</td></tr>
+        <tr><td>N more</td><td>The rows a compact block does not show. It opens the view in full.</td></tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+
+<script>
+'use strict'
+const TODAY = '2026-10-22'
+const PROJECTS = ['Garden shed', 'Quarterly report', 'Move flat']
+const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+const days = (d) => Math.round((Date.parse(d) - Date.parse(TODAY)) / 86400000)
+const shortDate = (d) => { const x = new Date(d + 'T00:00:00Z'); return `${x.getUTCDate()} ${MON[x.getUTCMonth()]}` }
+function rel(d, done) {
+  const n = days(d)
+  if (n < 0 && !done) return `<span class="neg">${-n === 1 ? 'yesterday' : `${-n} days late`}</span>`
+  if (n < 0) return shortDate(d)
+  if (n === 0) return 'today'
+  if (n === 1) return 'tomorrow'
+  if (n < 7) return `${DOW[new Date(d + 'T00:00:00Z').getUTCDay()]}, in ${n} days`
+  return shortDate(d)
+}
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]))
+const bdi = (s) => `<bdi>${esc(s)}</bdi>`
+const tone = (m) => m === 'done' || m === 'finished' ? 'done' : m === 'doing' || m === 'reading' ? 'live' : m === 'waiting' ? 'waiting' : 'none'
+
+// ------------------------------------------------------------ the data: U1's tasks, and some made-up books
+let seq = 100
+const T = (title, o = {}) => ({ id: 'r' + (++seq), title, state: 'inbox', ...o })
+const TASKS = () => { seq = 100; return [
+  T('Order timber for the shed floor', { state: 'next', due: '2026-10-22', project: 'Garden shed' }),
+  T('Draft section 2 of the report', { state: 'doing', due: '2026-10-24', project: 'Quarterly report', estimate_h: 3 }),
+  T('Call the council about the permit', { state: 'waiting', due: '2026-10-21', project: 'Garden shed' }),
+  T('Book the van', { state: 'done', project: 'Move flat', done_on: '2026-10-18' }),
+  T('Pick paint colour'),
+  T('Send figures to Noa', { state: 'next', due: '2026-10-23', project: 'Quarterly report' }),
+  T('Measure the doorway', { state: 'next', due: '2026-10-22', project: 'Garden shed', estimate_h: 0.5 }),
+  T('Return the drill', { due: '2026-10-29' }),
+  T('Buy hinges and a hasp', { state: 'next', due: '2026-10-25', project: 'Garden shed' }),
+  T('Check last quarter’s totals', { state: 'done', project: 'Quarterly report', done_on: '2026-10-19' }),
+  T('Ask for the missing numbers', { state: 'next', due: '2026-10-20', project: 'Quarterly report' }),
+  T('Pack the kitchen boxes', { state: 'next', due: '2026-11-02', project: 'Move flat', estimate_h: 4 }),
+  T('Cancel the old internet plan', { due: '2026-10-30', project: 'Move flat' }),
+  T('Clear the corner for the base', { state: 'done', project: 'Garden shed', done_on: '2026-10-17' }),
+  T('Read the review notes', { project: 'Quarterly report' }),
+  T('Renew the library card', { due: '2026-10-22' }),
+] }
+const B = (title, author, state, pages, finished_on) => ({ id: 'b' + (++seq), title, author, state, pages, finished_on })
+const BOOKS = () => [
+  B('Nine Small Harbours', 'R. Ashdown', 'reading', 312),
+  B('Copper and Rain', 'L. Moravec', 'reading', 248),
+  B('The Lantern Keeper’s Notes', 'P. Ilsley', 'finished', 410, '2026-09-28'),
+  B('Maps of a Lost Week', 'T. Okonjo-Hart', 'finished', 196, '2026-10-11'),
+  B('Under the Pear Tree', 'S. Vell', 'want', 288),
+  B('The Quiet Engine', 'D. Harrow', 'want', 352),
+  B('Salt on the Sill', 'A. Brenneck', 'finished', 240, '2026-10-19'),
+]
+
+// ------------------------------------------------------------ the formats: their filters, saved views (U5) and rollups (U6)
+const isDone = (r) => r.state === 'done'
+const FMT = {
+  task: {
+    title: 'Task', noun: 'tasks', rows: () => S.tasks,
+    filters: {
+      open: ['state is not done', (r) => !isDone(r)],
+      today: ['due is today', (r) => r.due === TODAY],
+      late: ['due is before today', (r) => !!r.due && r.due < TODAY],
+      week: ['due is within 7 days', (r) => !!r.due && days(r.due) >= 0 && days(r.due) < 7],
+      waiting: ['state is waiting', (r) => r.state === 'waiting'],
+      shed: ['project is Garden shed', (r) => r.project === 'Garden shed'],
+    },
+    sums: { estimate_h: ['estimate', 'h'] },
+    saved: {
+      'Due today': { kind: 'list', filters: ['today'] },
+      'Open by project': { kind: 'list', filters: ['open'], group: 'project' },
+      'Late': { kind: 'list', filters: ['late', 'open'] },
+      'This week': { kind: 'table', filters: ['week', 'open'] },
+    },
+    rollups: {
+      'Done by month': { what: 'count of rows, by done on’s month', series: () => {
+        const oct = S.tasks.filter((r) => r.done_on?.startsWith('2026-10')).length
+        return [['May', 3], ['Jun', 5], ['Jul', 4], ['Aug', 7], ['Sep', 6], ['Oct', oct]]
+      } },
+      'Hours by project': { what: 'sum of estimate, open rows, by project', unit: 'h', series: () =>
+        PROJECTS.map((p) => [p, S.tasks.filter((r) => r.project === p && !isDone(r)).reduce((a, r) => a + (r.estimate_h || 0), 0)]) },
+    },
+  },
+  book: {
+    title: 'Book', noun: 'books', rows: () => S.books,
+    filters: {
+      reading: ['state is reading', (r) => r.state === 'reading'],
+      finished: ['state is finished', (r) => r.state === 'finished'],
+      want: ['state is want', (r) => r.state === 'want'],
+      thisyear: ['finished on is in 2026', (r) => !!r.finished_on?.startsWith('2026')],
+    },
+    sums: { pages: ['pages', 'pages'] },
+    saved: {
+      'Reading now': { kind: 'list', filters: ['reading'] },
+      'Want to read': { kind: 'table', filters: ['want'] },
+    },
+    rollups: {
+      'Pages by month': { what: 'sum of pages, by finished on’s month', series: () => [['May', 410], ['Jun', 280], ['Jul', 350], ['Aug', 190], ['Sep', 520], ['Oct', 436]] },
+    },
+  },
+}
+
+let bid = 0
+const blk = (format, kind, name, extra = {}) => ({ id: 'k' + (++bid), format, kind, name, ...extra })
+const BOARDS = () => { bid = 0; return {
+  task: [
+    blk('task', 'total', 'Open', { agg: 'count', filters: ['open'] }),
+    blk('task', 'total', 'Hours estimated, open', { agg: 'sum', column: 'estimate_h', filters: ['open'] }),
+    blk('task', 'saved', 'Due today'),
+    blk('task', 'saved', 'Open by project'),
+    blk('task', 'rollup', 'Done by month'),
+  ],
+  book: [],
+  doc: [
+    blk('task', 'total', 'Open tasks', { agg: 'count', filters: ['open'] }),
+    blk('book', 'total', 'Finished in 2026', { agg: 'count', filters: ['thisyear'] }),
+    blk('task', 'saved', 'Due today'),
+    blk('book', 'saved', 'Reading now'),
+    blk('book', 'rollup', 'Pages by month'),
+    blk('task', 'rollup', 'Done by month'),
+  ],
+} }
+
+const S = {
+  tasks: TASKS(), books: BOOKS(), boards: BOARDS(),
+  screen: 'fmt', fmt: 'task', tabAt: 'last', theme: 'system',
+  full: null, from: null, menu: null, adding: null, fresh: null, dirty: false,
+}
+const boardKey = () => S.screen === 'doc' ? 'doc' : S.fmt
+const board = () => S.boards[boardKey()]
+
+const I = {
+  plus: '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M8 3v10M3 8h10"/></svg>',
+  check: '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M3 8.5l3.2 3L13 4.5"/></svg>',
+  grip: '<svg width="12" height="14" viewBox="0 0 12 16" fill="currentColor"><circle cx="4" cy="4" r="1.2"/><circle cx="8" cy="4" r="1.2"/><circle cx="4" cy="8" r="1.2"/><circle cx="8" cy="8" r="1.2"/><circle cx="4" cy="12" r="1.2"/><circle cx="8" cy="12" r="1.2"/></svg>',
+  dots: '<svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><circle cx="3.5" cy="8" r="1.3"/><circle cx="8" cy="8" r="1.3"/><circle cx="12.5" cy="8" r="1.3"/></svg>',
+}
+
+// ------------------------------------------------------------ what a block reads
+const rowsOf = (format, filters) => FMT[format].rows().filter((r) => filters.every((f) => FMT[format].filters[f][1](r)))
+const filterWords = (format, filters) => filters.map((f) => FMT[format].filters[f][0]).join(', ')
+function totalValue(b) {
+  const rows = rowsOf(b.format, b.filters)
+  if (b.agg === 'count') return { n: rows.length, unit: '' }
+  const [, unit] = FMT[b.format].sums[b.column]
+  return { n: rows.reduce((a, r) => a + (r[b.column] || 0), 0), unit }
+}
+function whatLine(b, withFormat) {
+  const f = FMT[b.format]
+  const pre = withFormat ? `${f.title} · ` : ''
+  if (b.kind === 'saved') { const v = f.saved[b.name]; return `${pre}${v.kind[0].toUpperCase() + v.kind.slice(1)} · ${filterWords(b.format, v.filters)}${v.group ? `, by ${v.group}` : ''}` }
+  if (b.kind === 'rollup') return `${pre}Rollup · ${f.rollups[b.name].what}`
+  const what = b.agg === 'count' ? 'Count' : `Sum of ${f.sums[b.column][0]}`
+  return `${pre}${what} · ${filterWords(b.format, b.filters)}`
+}
+
+// ------------------------------------------------------------ the chart (U6's look: ink on nothing, bars labelled directly)
+function chart(series, h, unit) {
+  const W = 400, top = 18, bottom = 20, max = Math.max(1, ...series.map(([, v]) => v))
+  const slot = W / series.length, bw = Math.min(28, slot * 0.56)
+  const bars = series.map(([l, v], i) => {
+    const x = i * slot + (slot - bw) / 2, bh = Math.round((h - top - bottom) * v / max), y = h - bottom - bh
+    const short = l.length > 12 ? l.slice(0, 11) + '…' : l
+    return `<rect x="${x.toFixed(1)}" y="${y}" width="${bw.toFixed(1)}" height="${Math.max(bh, v ? 1 : 0)}" fill="var(--color-ink-secondary)"/>
+      <text x="${(x + bw / 2).toFixed(1)}" y="${y - 5}" text-anchor="middle" font-size="11" fill="var(--color-ink)" style="font-variant-numeric:tabular-nums">${v}${unit ? ' ' + unit : ''}</text>
+      <text x="${(x + bw / 2).toFixed(1)}" y="${h - 5}" text-anchor="middle" font-size="11" fill="var(--color-ink-secondary)">${esc(short)}</text>`
+  }).join('')
+  return `<svg viewBox="0 0 ${W} ${h}" width="100%" role="img" aria-hidden="true" style="display:block">${bars}</svg>`
+}
+
+// ------------------------------------------------------------ one block, compact
+function tick(r) {
+  return `<button class="tk${isDone(r) ? ' on' : ''}" data-act="tick" data-id="${r.id}" role="checkbox" aria-checked="${isDone(r)}" aria-label="${isDone(r) ? 'Done' : 'Mark done'}: ${esc(r.title)}">${isDone(r) ? I.check : ''}</button>`
+}
+function crow(format, r) {
+  if (format === 'book') return `<div class="crow"><span class="fc-dot" data-tone="${tone(r.state)}"></span><span class="name">${bdi(r.title)}</span><span class="r">${bdi(r.author)}</span></div>`
+  return `<div class="crow${isDone(r) ? ' done' : ''}">${tick(r)}<span class="name">${bdi(r.title)}</span><span class="r">${r.due && !isDone(r) ? rel(r.due, false) : ''}</span></div>`
+}
+function compact(b) {
+  const f = FMT[b.format]
+  if (b.kind === 'total') {
+    const { n, unit } = totalValue(b)
+    return `<div class="bbody"><div class="fig">${n}${unit ? `<small>${unit}</small>` : ''}</div><div class="caption">of ${f.rows().length} ${f.noun}</div></div>`
+  }
+  if (b.kind === 'rollup') {
+    const r = f.rollups[b.name]
+    return `<div class="bbody">${chart(r.series(), 150, r.unit)}</div>`
+  }
+  const v = f.saved[b.name]
+  const rows = rowsOf(b.format, v.filters)
+  const more = (n) => n > 0 ? `<button class="more" data-act="full" data-blk="${b.id}">${n} more</button>` : ''
+  if (v.kind === 'table') {
+    const shown = rows.slice(0, 4)
+    const cols = b.format === 'book' ? [['title', 'Title'], ['author', 'Author'], ['pages', 'Pages', 'n']] : [['title', 'Title'], ['due', 'Due'], ['project', 'Project']]
+    return `<div class="bbody"><table class="rows"><thead><tr>${cols.map(([, h, n]) => `<th class="${n || ''}">${h}</th>`).join('')}</tr></thead><tbody>${shown.map((r) => `<tr>${cols.map(([c, , n]) => `<td class="${n || ''}">${c === 'due' && r.due ? rel(r.due, isDone(r)) : bdi(r[c] ?? '')}</td>`).join('')}</tr>`).join('')}</tbody></table>${rows.length > 4 ? `<div class="bfoot">${more(rows.length - 4)}</div>` : ''}</div>`
+  }
+  if (!rows.length) return `<div class="bbody"><div class="nothing">Nothing matches: ${esc(filterWords(b.format, v.filters))}.</div></div>`
+  if (v.group) {
+    const gs = PROJECTS.map((p) => [p, rows.filter((r) => r.project === p)]).concat([['No project', rows.filter((r) => !r.project)]]).filter(([, rs]) => rs.length)
+    let hidden = 0
+    const body = gs.map(([g, rs]) => { hidden += Math.max(0, rs.length - 2); return `<div class="cgh">${bdi(g)}<span class="cnt">${rs.length}</span></div>${rs.slice(0, 2).map((r) => crow(b.format, r)).join('')}` }).join('')
+    return `<div class="bbody">${body}${hidden ? `<div class="bfoot">${more(hidden)}</div>` : ''}</div>`
+  }
+  const open = rows.filter((r) => !isDone(r)), done = rows.filter(isDone)
+  const shown = open.slice(0, 5)
+  const foot = [more(open.length - shown.length), done.length ? `<span>${done.length} done</span>` : ''].filter(Boolean).join('')
+  return `<div class="bbody">${shown.map((r) => crow(b.format, r)).join('')}${foot ? `<div class="bfoot">${foot}</div>` : ''}</div>`
+}
+function blockMenu(b, i, n) {
+  return `<div class="pop" style="top:34px;right:6px;min-width:230px">
+    <button data-act="full" data-blk="${b.id}"><span class="ck"></span>Open in full</button>
+    <div class="sep"></div>
+    <button data-act="move" data-blk="${b.id}" data-d="-1" ${i === 0 ? 'disabled' : ''}><span class="ck"></span>Move earlier</button>
+    <button data-act="move" data-blk="${b.id}" data-d="1" ${i === n - 1 ? 'disabled' : ''}><span class="ck"></span>Move later</button>
+    <div class="sep"></div>
+    <button data-act="remove" data-blk="${b.id}"><span class="ck"></span>Remove from this dashboard</button>
+    <div class="ft">${b.kind === 'total' ? 'A headline total lives only on this dashboard, so it goes with the block.' : `The ${b.kind === 'saved' ? 'saved view' : 'rollup'} itself stays.`}</div>
+  </div>`
+}
+function block(b, i, n) {
+  const doc = S.screen === 'doc'
+  return `<div class="blk${b.kind === 'total' ? ' total' : ''}${S.fresh === b.id ? ' fresh' : ''}" data-blk="${b.id}" draggable="true">
+    <div class="bhd">
+      <div class="tt"><button class="nm" data-act="full" data-blk="${b.id}" title="Open ${esc(b.name)} in full">${bdi(b.name)}</button><span class="what" title="${esc(whatLine(b, doc))}">${esc(whatLine(b, doc))}</span></div>
+      <span class="acts${S.menu === b.id ? ' open' : ''}"><span class="icon grip" title="Drag to move" aria-hidden="true">${I.grip}</span><button class="icon" data-act="bmenu" data-blk="${b.id}" aria-label="${esc(b.name)}: more">${I.dots}</button></span>
+    </div>
+    ${compact(b)}
+    ${S.menu === b.id ? blockMenu(b, i, n) : ''}
+  </div>`
+}
+
+// ------------------------------------------------------------ Add a block
+function addMenu() {
+  const fmts = S.screen === 'doc' ? ['task', 'book'] : [S.fmt]
+  const on = (format, kind, name) => board().some((b) => b.format === format && b.kind === kind && b.name === name)
+  if (S.adding) return headlineForm()
+  const part = (format) => {
+    const f = FMT[format], head = S.screen === 'doc' ? `<div class="ph" style="color:var(--color-ink-secondary)">${f.title}</div>` : ''
+    return `${head}<div class="ph">Saved views</div>${Object.entries(f.saved).map(([nm, v]) => `<button data-act="addblk" data-f="${format}" data-k="saved" data-n="${esc(nm)}" ${on(format, 'saved', nm) ? 'disabled' : ''}><span class="ck">${on(format, 'saved', nm) ? I.check : ''}</span>${bdi(nm)}<span class="eg">${v.kind}</span></button>`).join('')}
+      <div class="ph">Rollups</div>${Object.keys(f.rollups).map((nm) => `<button data-act="addblk" data-f="${format}" data-k="rollup" data-n="${esc(nm)}" ${on(format, 'rollup', nm) ? 'disabled' : ''}><span class="ck">${on(format, 'rollup', nm) ? I.check : ''}</span>${bdi(nm)}<span class="eg">chart</span></button>`).join('')}`
+  }
+  return `<div class="pop" style="top:calc(100% + 4px);left:0;min-width:270px">
+    ${fmts.map(part).join('<div class="sep"></div>')}
+    <div class="sep"></div>
+    <button data-act="headline"><span class="ck">${I.plus}</span>Headline total<span class="eg">a count or a sum</span></button>
+    <div class="ft">A view is saved from its own tab with Save this view; a rollup is declared with the format.</div>
+  </div>`
+}
+function headlineForm() {
+  const a = S.adding, f = FMT[a.format]
+  const prev = totalValue({ format: a.format, agg: a.agg, column: Object.keys(f.sums)[0], filters: [...a.filters] })
+  return `<div class="pop" style="top:calc(100% + 4px);left:0"><div class="ph">Headline total</div><div class="form">
+    ${S.screen === 'doc' ? `<div class="row"><span class="label">Of</span><div class="inline">${['task', 'book'].map((k) => `<label class="ck2"><input type="radio" name="hf" data-hf="${k}" ${a.format === k ? 'checked' : ''}>${FMT[k].title}</label>`).join('')}</div></div>` : ''}
+    <div class="row"><span class="label">Figure</span>
+      <label class="ck2"><input type="radio" name="agg" data-agg="count" ${a.agg === 'count' ? 'checked' : ''}>Count of rows</label>
+      ${Object.entries(f.sums).map(([c, [w]]) => `<label class="ck2"><input type="radio" name="agg" data-agg="sum" ${a.agg === 'sum' ? 'checked' : ''}>Sum of ${w}</label>`).join('')}
+    </div>
+    <div class="row"><span class="label">Where</span>${Object.entries(f.filters).map(([k, [w]]) => `<label class="ck2"><input type="checkbox" data-hfil="${k}" ${a.filters.has(k) ? 'checked' : ''}>${esc(w)}</label>`).join('')}</div>
+    <div class="row"><span class="label">Name</span><input type="text" data-hname value="${esc(a.name)}" placeholder="What the figure is, e.g. Open"></div>
+    <div class="prev"><span class="fig">${prev.n}${prev.unit ? `<small>${prev.unit}</small>` : ''}</span><span class="caption">${a.filters.size ? esc(filterWords(a.format, [...a.filters])) : `every ${f.title.toLowerCase()}`}</span></div>
+    <div class="acts2"><button class="btn primary tiled" data-act="addheadline"><span class="tile">${I.plus}</span>Add</button><button class="btn ghost" data-act="cancelheadline">Cancel</button><span class="caption">${a.refused ? `<span class="neg">${esc(a.refused)}</span>` : ''}</span></div>
+  </div></div>`
+}
+
+// ------------------------------------------------------------ the dashboard
+function dashboard() {
+  const bs = board()
+  const add = `<div class="addwrap"><button class="addt" data-act="addmenu">${I.plus}Add a block</button>${S.menu === 'add' ? addMenu() : ''}</div>`
+  const empty = bs.length ? '' : `<div class="emptyd"><b>Nothing on this dashboard yet.</b><span class="caption">A dashboard holds ${S.screen === 'doc' ? 'any format’s' : 'this format’s'} saved views, its rollups’ charts and headline totals, in the order you put them.</span></div>`
+  return `<div class="dscroll"><div class="dash" id="dash">${empty}${bs.map((b, i) => block(b, i, bs.length)).join('')}${add}</div></div>`
+}
+function tabsFor(format, lit) {
+  const f = FMT[format]
+  const base = ['Table', 'Board', 'List', ...Object.keys(f.rollups)]
+  const dash = `<button role="tab" data-act="todash" class="${lit === 'Dashboard' ? 'on' : ''}">Dashboard</button>`
+  const rest = base.map((t) => `<button role="tab" class="${lit === t ? 'on' : ''}" title="${lit === t ? '' : 'U4’s tab, not drawn in this mockup'}">${esc(t)}</button>`).join('')
+  return `<div class="tabs" role="tablist">${S.tabAt === 'first' ? dash + '<span class="tsep"></span>' + rest : rest + '<span class="tsep"></span>' + dash}</div>`
+}
+function formatScreen() {
+  const f = FMT[S.fmt]
+  return `<div class="fhead2"><h2>${f.title}</h2><span class="caption">${f.rows().length} rows</span><span class="end"><button class="btn primary tiled"><span class="tile">${I.plus}</span>Add</button></span></div>
+    ${tabsFor(S.fmt, 'Dashboard')}${dashboard()}`
+}
+function docScreen() {
+  return `<div class="fhead2"><h2>Dashboard</h2><span class="caption">tasks.emd · blocks from any format</span></div>
+    <div class="lset"><span>Blocks from Task and Book. Each says which format it reads under its title.</span></div>${dashboard()}`
+}
+
+// ------------------------------------------------------------ a block opened in full
+function fullScreen() {
+  const b = S.full, f = FMT[b.format]
+  let lit, chips = [], body, saved = ''
+  if (b.kind === 'rollup') {
+    const r = f.rollups[b.name]; lit = b.name
+    body = `<div style="max-width:760px;padding:24px">${chart(r.series(), 220, r.unit)}</div>`
+  } else {
+    const v = b.kind === 'saved' ? f.saved[b.name] : { kind: 'list', filters: b.filters }
+    lit = v.kind === 'table' ? 'Table' : 'List'
+    chips = v.filters.map((k) => f.filters[k][0])
+    if (b.kind === 'saved') saved = `<span>Saved as <span style="color:var(--color-ink)">${bdi(b.name)}</span></span>`
+    const rows = rowsOf(b.format, v.filters)
+    const line = (r) => b.format === 'book'
+      ? `<div class="lrow2"><span class="fc-dot" data-tone="${tone(r.state)}"></span><span class="name">${bdi(r.title)}</span><span class="bits"><span>${bdi(r.author)}</span><span>${r.pages} pages</span></span></div>`
+      : `<div class="lrow2${isDone(r) ? ' done' : ''}">${tick(r)}<span class="name">${bdi(r.title)}</span><span class="bits">${r.project && !v.group ? `<span>${bdi(r.project)}</span>` : ''}<span class="due">${r.due ? rel(r.due, isDone(r)) : ''}</span></span></div>`
+    if (v.group) {
+      const gs = PROJECTS.map((p) => [p, rows.filter((r) => r.project === p)]).concat([['No project', rows.filter((r) => !r.project)]]).filter(([, rs]) => rs.length)
+      body = `<div class="lscroll"><div class="lwrap">${gs.map(([g, rs]) => `<div class="ghd">${bdi(g)}<span class="cnt">${rs.length}</span></div>${rs.map(line).join('')}`).join('')}</div></div>`
+    } else body = `<div class="lscroll"><div class="lwrap">${b.kind === 'total' ? (() => { const t = totalValue(b); return `<div class="ghd">${bdi(b.name)}<span class="cnt">${t.n}${t.unit ? ' ' + t.unit : ''}${b.agg === 'sum' ? ` · ${rows.length} rows` : ''}</span></div>` })() : ''}${rows.map(line).join('') || '<div class="nothing">Nothing matches.</div>'}</div></div>`
+  }
+  return `<div class="fhead2"><h2>${f.title}</h2><span class="caption">${f.rows().length} rows</span></div>
+    ${tabsFor(b.format, lit)}
+    <div class="lset"><button class="back" data-act="back">← Dashboard</button>${chips.map((c) => `<span class="fchip">${esc(c)}</span>`).join('')}${saved}${b.kind === 'rollup' ? `<span>${esc(f.rollups[b.name].what)}</span>` : ''}</div>
+    ${body}`
+}
+
+// ------------------------------------------------------------ the frame
+function sidebar() {
+  const litFmt = S.screen === 'fmt' ? S.fmt : S.screen === 'full' && S.full.kind !== 'saved' ? S.full.format : null
+  const litSaved = S.screen === 'full' && S.full.kind === 'saved' ? S.full.format + ':' + S.full.name : null
+  const fmt = (k) => `<button class="nitem nchild${litFmt === k ? ' on' : ''}" data-act="tofmt" data-f="${k}">${FMT[k].title}</button>
+    ${Object.entries(FMT[k].saved).map(([nm, v]) => `<div class="nitem nsaved${litSaved === k + ':' + nm ? ' on' : ''}">${bdi(nm)}<span class="k">${v.kind}</span></div>`).join('')}`
+  return `<nav class="side" aria-label="Places">
+    <button class="nitem${S.screen === 'doc' ? ' on' : ''}" data-act="todoc">Dashboard</button>
+    <div class="nitem open">Formats</div>
+    ${fmt('book')}<div class="nitem nchild">Project</div>${fmt('task')}
+    <div class="nsep"></div>
+    <div class="nitem">Connections</div><div class="nitem">Agenda</div><div class="nitem">Settings</div>
+  </nav>`
+}
+const titlebar = () => `<div class="titlebar"><div class="docname"><span class="dirty${S.dirty ? ' on' : ''}"></span>tasks.emd <span class="caption">${S.dirty ? 'unsaved' : 'no changes'}</span></div></div>`
+
+// ------------------------------------------------------------ the placement options
+const MINI_LEDGER = ['Transactions', 'Paychecks', 'Plan', 'Wealth', 'Categories']
+function mini(items, screen) {
+  return `<div class="mini"><div class="mr">${items.map(([t, c]) => `<div class="mi${c ? ' ' + c : ''}">${esc(t)}</div>`).join('')}</div><div class="ms">${screen}</div></div>`
+}
+const blocks = '<div class="mg"><div class="mb"></div><div class="mb"></div><div class="mb w"></div><div class="mb"></div><div class="mb"></div></div>'
+const tail = [['Formats'], ['Task', 'c'], ['Book', 'c'], ['Connections'], ['Settings']]
+const OPTS = [
+  { n: 1, rec: true, name: 'Its own rail item, “Dashboard”',
+    no: mini([['Dashboard', 'on'], ...tail], `<div class="mh">Dashboard</div>${blocks}`),
+    yes: mini([['Home', 'on'], ['Dashboard'], ...MINI_LEDGER.slice(0, 3).map((t) => [t]), ['Formats'], ['Settings']], '<div class="mh">Home</div><div class="mt"><b>Month</b><span>Year</span></div><div class="mm">the month</div>'),
+    pts: ['<b>No ledger:</b> Dashboard is the rail’s first item and <i>#/</i> opens it, where today it goes to Formats.', '<b>With the ledger:</b> Home stays first and stays <i>#/</i>; Dashboard is right under it.', 'One place at one route, <i>#/dashboard</i>, in both. Home keeps meaning the ledger’s month. Nothing of the ledger moves.'] },
+  { n: 2, name: 'A tab of Home',
+    no: mini([['Home', 'on'], ...tail], `<div class="mh">Home</div><div class="mt"><b>Dashboard</b></div>${blocks}`),
+    yes: mini([['Home', 'on'], ...MINI_LEDGER.slice(0, 4).map((t) => [t]), ['Formats'], ['Settings']], `<div class="mh">Home</div><div class="mt"><span>Month</span><span>Year</span><b>Dashboard</b></div>${blocks}`),
+    pts: ['<b>No ledger:</b> a Home appears, with one tab, Dashboard.', '<b>With the ledger:</b> Home’s strip becomes Month, Year, Dashboard. Home still opens on Month.', 'Cost: “Home” names two different things, and with the ledger the dashboard is a tab behind the month.'] },
+  { n: 3, name: 'Home gains the blocks',
+    no: mini([['Home', 'on'], ...tail], `<div class="mh">Home</div>${blocks}`),
+    yes: mini([['Home', 'on'], ...MINI_LEDGER.slice(0, 4).map((t) => [t]), ['Formats'], ['Settings']], '<div class="mh">Home</div><div class="mm" style="height:34px">the month</div><div class="mg"><div class="mb"></div><div class="mb"></div><div class="mb w"></div></div>'),
+    pts: ['<b>No ledger:</b> Home is the blocks.', '<b>With the ledger:</b> the document’s blocks are drawn on Home, under the month’s own page.', 'Cost: Home mixes a hand-drawn page with blocks that move, and only the blocks can be arranged; it gets long.'] },
+]
+function opts() {
+  document.getElementById('opts').innerHTML = OPTS.map((o) => `<div class="opt3${o.rec ? ' rec' : ''}">
+    <h3><span class="choice-tag">${o.n}</span>${esc(o.name)}${o.rec ? '<span class="rtag">Recommended</span>' : ''}</h3>
+    <div class="cases"><div class="case"><span class="label">No ledger</span>${o.no}</div><div class="case"><span class="label">With the ledger</span>${o.yes}</div></div>
+    <ul>${o.pts.map((p) => `<li>${p}</li>`).join('')}</ul></div>`).join('')
+}
+
+// ------------------------------------------------------------ controls, choices, calls
+function seg(name, pairs, cur, tag) {
+  return `<div class="ctl"><span class="label">${tag ? `<span class="choice-tag">${tag}</span>` : ''}${name}</span><div class="seg">${pairs.map(([v, l]) => `<button data-ctl="${name}" data-v="${v}" class="${cur === v ? 'on' : ''}">${l}</button>`).join('')}</div></div>`
+}
+function controls() {
+  const scr = S.screen === 'full' ? S.from : S.screen === 'fmt' ? 'fmt:' + S.fmt : 'doc'
+  document.getElementById('controls').innerHTML =
+    seg('Screen', [['fmt:task', 'Task’s dashboard'], ['fmt:book', 'Book’s, empty'], ['doc', 'The document’s dashboard']], scr) +
+    seg('The format’s Dashboard tab', [['last', 'A · last, the format opens on Table'], ['first', 'B · first, opens on it once it has a block']], S.tabAt, '2') +
+    seg('Theme', [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']], S.theme) +
+    `<div class="ctl"><span class="label">&nbsp;</span><button class="btn secondary" data-ctl="reset">Start again</button></div>`
+}
+const CHOICES = [
+  ['A block is one of three kinds and nothing else: a saved view drawn compact in its kind, a rollup’s chart, a headline total.', 'No free text, no embeds, no recent changes (D-514, D-462). A block names what it is under its title: its kind and its filter, in the filter’s own words.'],
+  ['Compact: a list shows its first five open rows, with “N more” and “N done”; a grouped list two rows a group; a table four rows; a board, when one is saved, a column’s count and its first cards.', 'A task can be ticked on the dashboard, as on the list, since ticking is the list’s own write.'],
+  ['The grid is four columns. A headline total takes one, every other block two. No sizes to set.', 'A size per block would be a second layout to keep beside the order. The order is the only arrangement.'],
+  ['Arranged in place, never in a mode: Add a block at the end of the grid; drag a block by its grip; ⋯ holds Move earlier, Move later and Remove from this dashboard.', 'As U1 took the Arrange mode out of the entry. The keyboard has the two Move items.'],
+  ['Add a block lists the format’s saved views and rollups, a ticked one already on it, then Headline total. On the document’s, grouped by format.', 'A saved view is made where it always is, Save this view on its tab (U5); the menu says so.'],
+  ['A headline total is made in place: Count of rows or Sum of a number or money column, ticked filters as format_rows match takes them, a name, and the figure shown live before Add.', 'A name is needed; nothing else is. It lives only on its dashboard, so removing the block removes it.'],
+  ['A block’s title opens it in full: the saved view at its own address with Saved as lit in the rail, the rollup at its tab, a headline total as the list of the rows it counts. ← Dashboard comes back.', 'The same back link U5 gave an entry opened from a list.'],
+  ['<span class="choice-tag">2</span>The format’s Dashboard tab comes last in U4’s strip, after the rollups, and the format still opens on Table. B: first, and the format opens on it once it has a block.', 'Recommended: A. One click on the rail still gives the rows, and a format with no dashboard looks as it does today. Flip switch 2.'],
+  ['Kept beside the saved views: one table, format_dashboard_block (064), a row per block with its dashboard (a format’s name, or none for the document’s), position, kind and what it points at; a headline total keeps its figure, column and filter there. In a text document, a “### <format> dashboard” block in views.md.', 'Not format_view_column, for the reason U5 gave: its setting is one word per column. A block naming a saved view or rollup that is gone is dropped and said once.'],
+]
+function choices() {
+  document.getElementById('choices').innerHTML = `<thead><tr><th>Choice</th><th>Why, and what it leaves</th></tr></thead><tbody>${CHOICES.map(([c, w], i) => `<tr><td style="white-space:normal"><span class="sn">${i + 1}</span>${c}</td><td style="color:var(--color-ink-secondary)">${w}</td></tr>`).join('')}</tbody>`
+}
+function calls() {
+  document.getElementById('calls').innerHTML = esc(`arrange_views { path, format: "task", view: "dashboard",
+  add: [ { saved: "Due today" },
+         { saved: "Open by project" },
+         { rollup: "Done by month" },
+         { total: "Open", count: true, match: { state: { not: "done" } } } ],
+  commit: true }
+arrange_views { path, format: "task", view: "dashboard", order: ["Open", "Due today", "Open by project", "Done by month"], commit: true }
+arrange_views { path, format: "task", view: "dashboard", remove: ["Open by project"], commit: true }
+arrange_views { path, view: "dashboard",                     `) + '<i>// no format: the document’s</i>' + esc(`
+  add: [ { format: "task", saved: "Due today" }, { format: "book", rollup: "Pages by month" } ], commit: true }
+show_format { path, format: "task", view: "dashboard" }`) + '         <i>// draws it; without format, the document’s</i>'
+}
+
+// ------------------------------------------------------------ render
+function render() {
+  const theme = S.theme === 'system' ? null : S.theme
+  if (theme) document.documentElement.dataset.theme = theme; else delete document.documentElement.dataset.theme
+  controls()
+  const main = S.screen === 'full' ? fullScreen() : S.screen === 'doc' ? docScreen() : formatScreen()
+  document.getElementById('win').innerHTML = `${titlebar()}<div class="body">${sidebar()}<div class="main">${main}</div></div>`
+  S.fresh = null
+  if (S.menu === 'add') document.querySelector('.addwrap .pop')?.scrollIntoView({ block: 'nearest' })
+  if (S.adding && !S.adding.focused) { S.adding.focused = true; document.querySelector('[data-hname]')?.focus() }
+}
+
+// ------------------------------------------------------------ writes
+function setTick(r) {
+  if (isDone(r)) { r.state = r.prev || 'inbox'; delete r.prev; delete r.done_on }
+  else { r.prev = r.state; r.state = 'done'; r.done_on = TODAY }
+  S.dirty = true
+}
+function moveBlock(id, d) {
+  const bs = board(), i = bs.findIndex((b) => b.id === id), j = i + d
+  if (j < 0 || j >= bs.length) return
+  const [b] = bs.splice(i, 1); bs.splice(j, 0, b); S.dirty = true
+}
+function dropBefore(id, before) {
+  const bs = board()
+  if (id === before) return
+  const [b] = bs.splice(bs.findIndex((x) => x.id === id), 1)
+  const j = before ? bs.findIndex((x) => x.id === before) : bs.length
+  bs.splice(j, 0, b); S.dirty = true
+}
+const byId = (id) => Object.values(S.boards).flat().find((b) => b.id === id)
+
+document.addEventListener('click', (e) => {
+  const ctl = e.target.closest('[data-ctl]')
+  if (ctl) {
+    const k = ctl.dataset.ctl, v = ctl.dataset.v
+    if (k === 'reset') Object.assign(S, { tasks: TASKS(), books: BOOKS(), boards: BOARDS(), screen: 'fmt', fmt: 'task', dirty: false })
+    if (k === 'Screen') { if (v === 'doc') S.screen = 'doc'; else { S.screen = 'fmt'; S.fmt = v.slice(4) } }
+    if (k === 'The format’s Dashboard tab') S.tabAt = v
+    if (k === 'Theme') S.theme = v
+    S.menu = null; S.adding = null
+    return render()
+  }
+  const a = e.target.closest('[data-act]')
+  if (!a) { if (S.menu && !e.target.closest('.pop')) { S.menu = null; S.adding = null; render() } return }
+  const act = a.dataset.act
+  switch (act) {
+    case 'tick': setTick(S.tasks.find((r) => r.id === a.dataset.id)); break
+    case 'bmenu': S.menu = S.menu === a.dataset.blk ? null : a.dataset.blk; S.adding = null; break
+    case 'addmenu': S.menu = S.menu === 'add' ? null : 'add'; S.adding = null; break
+    case 'move': moveBlock(a.dataset.blk, Number(a.dataset.d)); S.menu = null; break
+    case 'remove': { const bs = board(); bs.splice(bs.findIndex((b) => b.id === a.dataset.blk), 1); S.menu = null; S.dirty = true; break }
+    case 'addblk': { const b = blk(a.dataset.f, a.dataset.k, a.dataset.n); board().push(b); S.fresh = b.id; S.menu = null; S.dirty = true; break }
+    case 'headline': S.adding = { format: S.screen === 'doc' ? 'task' : S.fmt, agg: 'count', filters: new Set(), name: '' }; break
+    case 'cancelheadline': S.adding = null; S.menu = null; break
+    case 'addheadline': {
+      const ad = S.adding
+      if (!ad.name.trim()) { ad.refused = 'A headline total needs a name.'; break }
+      if (board().some((x) => x.name === ad.name.trim())) { ad.refused = `A block here is called ${ad.name.trim()} already.`; break }
+      const b = blk(ad.format, 'total', ad.name.trim(), { agg: ad.agg, column: Object.keys(FMT[ad.format].sums)[0], filters: [...ad.filters] })
+      board().push(b); S.fresh = b.id; S.adding = null; S.menu = null; S.dirty = true; break
+    }
+    case 'full': S.from = S.screen === 'doc' ? 'doc' : 'fmt:' + S.fmt; S.full = byId(a.dataset.blk); S.screen = 'full'; S.menu = null; break
+    case 'back': if (S.from === 'doc') S.screen = 'doc'; else { S.screen = 'fmt'; S.fmt = S.from.slice(4) } break
+    case 'todoc': S.screen = 'doc'; S.menu = null; break
+    case 'tofmt': S.screen = 'fmt'; S.fmt = a.dataset.f; S.menu = null; break
+    case 'todash': if (S.screen === 'full') { S.screen = 'fmt'; S.fmt = S.full.format } break
+  }
+  render()
+})
+document.addEventListener('change', (e) => {
+  const t = e.target, ad = S.adding
+  if (!ad) return
+  if (t.dataset.hf) { ad.format = t.dataset.hf; ad.filters = new Set(); ad.agg = 'count' }
+  if (t.dataset.agg) ad.agg = t.dataset.agg
+  if (t.dataset.hfil) t.checked ? ad.filters.add(t.dataset.hfil) : ad.filters.delete(t.dataset.hfil)
+  render()
+})
+document.addEventListener('input', (e) => { if (e.target.dataset.hname !== undefined && S.adding) { S.adding.name = e.target.value; S.adding.refused = '' } })
+document.addEventListener('keydown', (e) => {
+  if (e.target.dataset?.hname !== undefined && e.key === 'Enter') document.querySelector('[data-act=addheadline]')?.click()
+  if (e.key === 'Escape' && S.menu) { S.menu = null; S.adding = null; render() }
+})
+// drag: a block by its grip (the whole block is the drag source), dropped before another block or on Add a block
+let dragging = null
+document.addEventListener('dragstart', (e) => {
+  const b = e.target.closest?.('[data-blk].blk')
+  if (!b) return
+  dragging = b.dataset.blk; b.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', dragging)
+})
+document.addEventListener('dragover', (e) => {
+  if (!dragging) return
+  const b = e.target.closest?.('.blk,.addwrap')
+  document.querySelectorAll('.over').forEach((x) => x.classList.remove('over'))
+  if (!b) return
+  e.preventDefault(); b.classList.add('over')
+})
+document.addEventListener('drop', (e) => {
+  if (!dragging) return
+  const b = e.target.closest?.('.blk,.addwrap')
+  if (!b) return
+  e.preventDefault(); dropBefore(dragging, b.classList.contains('blk') ? b.dataset.blk : null); dragging = null; render()
+})
+document.addEventListener('dragend', () => { dragging = null; document.querySelectorAll('.over,.dragging').forEach((x) => x.classList.remove('over', 'dragging')) })
+
+opts(); choices(); calls(); render()
+</script>
+</body>
+</html>
