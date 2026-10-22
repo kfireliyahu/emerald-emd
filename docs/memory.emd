@@ -3,7 +3,7 @@
 ---
 format: decision
 title: Decision
-language: 13
+language: 24
 ---
 
 One entry of docs/09-decision-log.md, which is 2,770 lines of markdown and which CLAUDE.md tells every session not to read end to end. That instruction is the admission this format exists to answer: prose does not scale as memory.
@@ -6236,6 +6236,12 @@ unit: M34 T1
 should: Entries are findable: each format's entries listed under it in the rail like a folder, and a view to page through and search one format's entries
 breaks: Entries are reachable only through the sheet; nothing to browse or search them by (author, 2026-10-06: 'a problem of feel')
 state: open
+
+### Make a chart with New chart on a dashboard, then delete it
+unit: M53 F2
+should: The chart is found where it was made or in the rail, and can be deleted on screen
+breaks: Maintainer, 2026-10-22: 'i added "x" to decision view and i see nowhere to delete'. x was a rollup on Decision placed on the document dashboard. The rail lists only saved views, no screen deletes a rollup, and a block's Remove leaves the rollup. Removed by hand (arrange_views and extend_format). Fix: M53 F3.
+state: fault
 
 ### Make the first writes into a fresh document
 unit: M34 T1
@@ -13322,6 +13328,15 @@ started: 2026-10-22
 branch: main
 commit: 2033a54
 report: M53 F2 built at 2033a54. Add a block (src/ui/formats/Dashboard.tsx) now offers New view and New chart beside the existing saved views/rollups and Headline total; the 'saved from its own tab' note is dropped. New view (MakeBlock.tsx ViewForm): format (document's dashboard), List/Table/Board, ColumnFilter (its ColumnMenu sorts too: ColumnFilter gained offered/order/onSort, no fork), ColumnsChoice for table and board, a name, a live 'N of M rows' line; Save and add writes saveView + setDashboardBlocks in one transaction (madeInPlace.ts makeView). New chart (ChartForm): count or sum of a number/money column, by month of a date/month column, optional link, optional filter (ColumnFilter over enum/boolean/date, said as a rollup where), a name folded to snake_case and shown with the declared sentence; Declare and add judges with declarationProblems + pack ownership then adoptFormat + setDashboardBlocks in one transaction. No new write (parity: arrange_views view:saved, extend_format rollups, arrange_views view:dashboard). Decision D-525 amends D-521. Tests: madeInPlace.test.ts (6) - one step makes a saved view and its block and the rail's savedViews lists it; one step declares done_by_month and its chart block; refusals write nothing; filter translation. Related tests, privacy, parity, typecheck green; check:tours skipped (no tour drives the dashboard or the filter's words). Browser check on a synthetic task document in the dev server: Due today (list, due is today, sorted by due) and Done by month (count by month of done_on where state is done) made without leaving #/formats/task/dashboard; the list block shows no ticks (no done set, D-524), the rail lists Due today, the chart draws Sep and Oct. Judgment calls the maintainer may want to see: a chart's name is a rollup's, so 'Done by month' is declared and drawn as done_by_month; the period radio is preselected only when the format has exactly one date/month column; a list made here offers no Columns choice since nothing draws a list's columns.
+
+### M53 F3
+milestone: M53
+scope: app
+title: A chart made on screen can be found and deleted on screen
+decision: D-521
+state: planned
+brief: Found in the 0.2.0 review (2026-10-22). The maintainer made a chart 'x' with F2's New chart on the document's dashboard, then looked for it under Decision in the rail to delete it and found nothing: 'i added "x" to decision view and i see nowhere to delete'. A chart is a rollup in the format's declaration. The rail lists only saved views, and no screen deletes a rollup: Remove on a dashboard block leaves the rollup, and only extend_format remove does it. So F2 made creating a chart one step and gave it no undo. It was removed by hand for the maintainer. Do: (1) a rollup can be deleted where it is seen. Its tab on the format (the View tab strip's rollup tab, RollupView) gets Delete, asking once, the way a saved view's does (RailFolder's SavedRow). Deleting it removes its dashboard blocks too, as deleting a saved view does (dashboard.test.ts), and renaming follows. (2) On a dashboard block, Remove keeps saying the chart stays, and names where to delete it ('Delete the chart on Decision's x tab'). (3) Decide with the maintainer before building (rule: Maintainer's decisions before briefs): should rollups be listed in the rail under their format beside saved views, so made things are found in one place? Ask, don't guess. Parity: extend_format remove already deletes a rollup, and the screen half is what is missing (D-227). Write a decision row that amends D-521 if the rail question changes what the rail lists. Tests: deleting a rollup on screen removes it and its blocks; a block's Remove leaves it. Done-test: make a chart from the dashboard, find it, and delete it without a conversation.
+files: src/ui/formats/RollupView.tsx, src/ui/RailFolder.tsx, src/ui/formats/Dashboard.tsx, src/data/repositories/formatViewRepository.ts
 
 ### M53 U1
 milestone: M53
