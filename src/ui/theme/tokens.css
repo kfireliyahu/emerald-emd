@@ -861,6 +861,47 @@ html {
   animation: fc-draw-line var(--duration-enter) var(--ease-out);
 }
 
+/* The general chart's bars (M53 U6): each grows from where it stands, once —
+   up from zero, or down from it for a negative figure. */
+@keyframes fc-grow-bar {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.fc-grow {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: fc-grow-bar var(--duration-enter) var(--ease-out);
+}
+
+.fc-grow-down {
+  transform-origin: 50% 0%;
+}
+
+/* The column under the pointer, and what it says. */
+.fc-chart-col {
+  fill: transparent;
+  transition: fill var(--duration-micro);
+}
+
+.fc-chart-col-on {
+  fill: color-mix(in srgb, var(--color-ink) 4%, transparent);
+}
+
+.fc-col-tick.fc-chart-tick-on {
+  fill: var(--color-ink);
+}
+
+.fc-chart-val {
+  fill: var(--color-ink-secondary);
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
 /* Every number in this app is tabular. Proportional digits make columns of
    money visibly ragged — the highest-leverage typographic rule here. */
 .tabular,
