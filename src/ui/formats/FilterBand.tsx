@@ -419,6 +419,9 @@ export function ColumnFilter({
   filter,
   onChange,
   rows,
+  offered,
+  order,
+  onSort,
 }: {
   readonly db: Database
   readonly declaration: FormatDeclaration
@@ -427,11 +430,17 @@ export function ColumnFilter({
   readonly onChange: (next: RowFilter, replace?: boolean) => void
   /** Whose rows it holds, when not the view's own — a roadmap's folded `units` (M37 U5). */
   readonly rows?: string | undefined
+  /** The columns it offers, when not every one — a chart's filter takes fewer (M53 F2). */
+  readonly offered?: readonly ColumnDeclaration[] | undefined
+  /** The order being made, and its setter: the column's menu offers *Sort* as the table's header does (M53 F2). */
+  readonly order?: { readonly column: string; readonly descending: boolean } | undefined
+  readonly onSort?: ((order: { readonly column: string; readonly descending: boolean }) => void) | undefined
 }) {
   const [column, setColumn] = useState<ColumnDeclaration | undefined>(undefined)
   const held = filter.match ?? {}
-  const columns = filterableColumns(declaration)
+  const columns = offered ?? filterableColumns(declaration)
   if (columns.length === 0) return null
+  const by = onSort === undefined ? 'Filter' : 'Filter or sort'
 
   return (
     <span className="relative inline-flex">
@@ -442,7 +451,7 @@ export function ColumnFilter({
         readOnly
         text={column?.name ?? ''}
         placeholder={rows === undefined ? 'Filter by…' : `Filter ${rows} by…`}
-        aria-label={rows === undefined ? 'Filter by' : `Filter ${rows} by`}
+        aria-label={rows === undefined ? `${by} by` : `Filter ${rows} by`}
         title={rows === undefined ? 'Hold a column to some of its values' : `Hold the ${rows} under each row to some of their values`}
         choices={columns.map((each) => ({
           value: each.name,
@@ -463,6 +472,8 @@ export function ColumnFilter({
           filter={filter}
           onChange={onChange}
           onClose={() => setColumn(undefined)}
+          order={order}
+          onSort={onSort}
         />
       )}
     </span>

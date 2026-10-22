@@ -62,6 +62,7 @@ import {
 import { valueText } from '@/ui/formats/entryList.ts'
 import { listPicture, type ListLine } from '@/ui/formats/listView.ts'
 import { ReadOnly } from '@/ui/formats/readOnly.ts'
+import { ChartForm, newChart, newView, ViewForm, type ChartMaking, type Placing, type ViewMaking } from '@/ui/formats/MakeBlock.tsx'
 import { rollupChart } from '@/ui/formats/rollupChart.ts'
 import { formatPath, listPath, savedViewPath } from '@/ui/nav.ts'
 import { today } from '@/ui/today.ts'
@@ -88,7 +89,7 @@ export function DashboardView({ dashboard }: { readonly dashboard: string | unde
   const readOnly = useContext(ReadOnly)
   const navigate = useNavigate()
   const [menu, setMenu] = useState<string | undefined>(undefined)
-  const [adding, setAdding] = useState<Adding | undefined>(undefined)
+  const [adding, setAdding] = useState<Making | undefined>(undefined)
   const [fresh, setFresh] = useState<string | undefined>(undefined)
   const [dragging, setDragging] = useState<string | undefined>(undefined)
   const [over, setOver] = useState<string | undefined>(undefined)
@@ -138,6 +139,18 @@ export function DashboardView({ dashboard }: { readonly dashboard: string | unde
       setFresh(keyOf(block))
       close()
     }
+  }
+  // A view or a chart made in place (M53 F2): its own write and its block, together.
+  const place: Placing = (work, block) => {
+    try {
+      mutate(work)
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error)
+    }
+    setRefusal(undefined)
+    setFresh(keyOf(block))
+    close()
+    return undefined
   }
 
   return (
@@ -242,6 +255,7 @@ export function DashboardView({ dashboard }: { readonly dashboard: string | unde
                 adding={adding}
                 onAdding={setAdding}
                 onAdd={add}
+                onPlace={place}
                 onClose={close}
               />
             )}
@@ -868,6 +882,7 @@ function BoardBody({
 
 /** The headline total being made in place: of which format, what figure, where, and its name. */
 interface Adding {
+  readonly what: 'total'
   readonly format: string
   readonly sum: string | undefined
   readonly ticked: readonly number[]
@@ -875,10 +890,14 @@ interface Adding {
   readonly refused?: string
 }
 
+/** What *Add a block* is making in place: a headline total, a view or a chart. */
+type Making = Adding | ViewMaking | ChartMaking
+
 /**
  * **Add a block**: the formats' saved views and rollups — a ticked one is on
- * this dashboard already — grouped by format on the document's, then
- * *Headline total*, which is made in place.
+ * this dashboard already — grouped by format on the document's, then what is
+ * made in place: *New view* and *New chart* (M53 F2, D-525), each saved and
+ * placed in one step, and *Headline total*.
  */
 function AddMenu({
   db,
@@ -890,6 +909,7 @@ function AddMenu({
   adding,
   onAdding,
   onAdd,
+  onPlace,
   onClose,
 }: {
   readonly db: Database
@@ -898,9 +918,10 @@ function AddMenu({
   readonly blocks: readonly DashboardBlock[]
   readonly document: boolean
   readonly day: string
-  readonly adding: Adding | undefined
-  readonly onAdding: (next: Adding | undefined) => void
+  readonly adding: Making | undefined
+  readonly onAdding: (next: Making | undefined) => void
   readonly onAdd: (block: DashboardBlock) => void
+  readonly onPlace: Placing
   readonly onClose: () => void
 }) {
   const box = useRef<HTMLDivElement>(null)
@@ -910,8 +931,12 @@ function AddMenu({
   const offered = formats.map((each) => offeredOf(db, each)).filter((each) => !document || each.saved.length > 0 || each.rollups.length > 0)
   return (
     <div ref={box} onKeyDown={dismiss} className="fc-pop-enter absolute top-[calc(100%+4px)] left-0 z-20 min-w-[270px] border border-hairline-strong bg-elevated py-1 shadow-pop">
-      {adding !== undefined ? (
+      {adding?.what === 'total' ? (
         <HeadlineForm db={db} formats={formats} declarations={declarations} blocks={blocks} document={document} day={day} adding={adding} onAdding={onAdding} onAdd={onAdd} dashboard={dashboard} />
+      ) : adding?.what === 'view' ? (
+        <ViewForm db={db} formats={formats} declarations={declarations} blocks={blocks} document={document} dashboard={dashboard} day={day} making={adding} onMaking={onAdding} onPlace={onPlace} />
+      ) : adding?.what === 'chart' ? (
+        <ChartForm db={db} formats={formats} declarations={declarations} blocks={blocks} document={document} dashboard={dashboard} making={adding} onMaking={onAdding} onPlace={onPlace} />
       ) : (
         <>
           {offered.map((each, at) => (
@@ -954,18 +979,37 @@ function AddMenu({
           {offered.length > 0 && <Sep />}
           <MenuItem
             check={<ActionGlyph name="plus" size={12} />}
+            aside="a list, table or board"
+            disabled={formats.length === 0}
+            onClick={() => {
+              const first = formats[0]
+              if (first !== undefined) onAdding(newView(first))
+            }}
+          >
+            New view
+          </MenuItem>
+          <MenuItem
+            check={<ActionGlyph name="plus" size={12} />}
+            aside="a count or a sum by month"
+            disabled={formats.length === 0}
+            onClick={() => {
+              const first = formats[0]
+              if (first !== undefined) onAdding(newChart(first))
+            }}
+          >
+            New chart
+          </MenuItem>
+          <MenuItem
+            check={<ActionGlyph name="plus" size={12} />}
             aside="a count or a sum"
             disabled={formats.length === 0}
             onClick={() => {
               const first = formats[0]
-              if (first !== undefined) onAdding({ format: first.name, sum: undefined, ticked: [], name: '' })
+              if (first !== undefined) onAdding({ what: 'total', format: first.name, sum: undefined, ticked: [], name: '' })
             }}
           >
             Headline total
           </MenuItem>
-          <p className="mt-1 max-w-[300px] border-t border-hairline px-3 pt-2 pb-1 text-[11px] text-ink-tertiary">
-            A view is saved from its own tab with Save this view; a rollup is declared with the format.
-          </p>
         </>
       )}
     </div>
@@ -1035,7 +1079,7 @@ function HeadlineForm({
                     name="headline-format"
                     className="accent-ink"
                     checked={each.name === declaration.name}
-                    onChange={() => onAdding({ format: each.name, sum: undefined, ticked: [], name: adding.name })}
+                    onChange={() => onAdding({ what: 'total', format: each.name, sum: undefined, ticked: [], name: adding.name })}
                   />
                   <Bidi>{each.title}</Bidi>
                 </label>

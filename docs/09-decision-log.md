@@ -440,6 +440,7 @@ written out here.
 | D-521 | 2026-10-22 | A dashboard is an ordered set of blocks in its own table, `format_dashboard_block` (064): a saved view drawn compact in its kind, a rollup's chart, or a headline total (a count, or the sum of a number or money column, under a filter kept as the address spells it), and nothing else; one per format, the last tab of its strip, and one for the document, the rail's *Dashboard* — first and `#/` without a ledger, right under Home with one; arranged in place (Add a block, drag, Move earlier and later, Remove from this dashboard), a block's title opening it in full with `← Dashboard` back; `arrange_views view:dashboard` adds, orders and removes, `show_format view:dashboard` draws it | [below](#d-521) |
 | D-522 | 2026-10-22 | A spreadsheet keyed by a unique column is matched against every row of its format, whichever file or person wrote it: next month's export, renamed, changes the rows last month's wrote and adds what is new, and the dry run and the Read screen say both counts and name the changed cells; only a file's own rows can be gone from it; a row moves to the reading that last wrote it; a read fills only the columns it maps; a format with no unique column the reading fills says so in one sentence and matches on nothing else; amends D-408 | [below](#d-522) |
 | D-524 | 2026-10-22 | A list ticks only where someone said what done is: no default, so a list with no `done` set is plain lines with no tick column in the List tab, beside an entry and on a dashboard; done is set in place from the list's header (*Tick to mark…*, *No ticks*), by `arrange_views` or by a pack's `views.md`; the header says what a tick sets and each circle says it (*Mark done*, *Undo: back to open*); a tick stays in place a moment with an *Undo* that restores the member it held; the development pack declares done for unit, milestone, open_question, review_entry and inbox, the ledger for none; amends D-519 | [below](#d-524) |
+| D-525 | 2026-10-22 | A dashboard makes the view or chart it needs in place: *Add a block* offers *New view* — a list, a table or a board of one format, its filter, order and columns made with the format tab's own pieces and a name — saved and placed in one step, and *New chart* — a count or a sum by month of a date, per a link or not, under a filter — declared as a rollup of its format and placed in one step; picking an existing view or rollup stays; no new write; amends D-521 | [below](#d-525) |
 | D-523 | 2026-10-22 | A repository is set up by `npx emerald-mcp init`, a subcommand of the server's bin: it names or creates the document (with the development pack, as text inside the repository and as bytes outside it), writes CLAUDE.md a section between its own markers holding the start-here table and the column lines from the document, and writes the plugin's two hooks into `.claude/settings.json` only where no Emerald plugin is enabled, never over a hook it did not write; every file is compared before it is written, so a second run changes nothing | [below](#d-523) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
@@ -1299,6 +1300,45 @@ finding's `state` would be right while a format with `status` ticked nothing or 
 
 **Consequences.** `ListShape.done` loses `chosen`. A document's lists made before this draw no tick
 until a done is set; parity is unchanged (`arrange_views` already set and cleared it). No schema change.
+
+## D-525 · 2026-10-22 · A dashboard makes the view or chart it needs in place: *Add a block* offers *New view* — a list, a table or a board of one format, its filter, order and columns made with the format tab's own pieces and a name — saved and placed in one step, and *New chart* — a count or a sum by month of a date, per a link or not, under a filter — declared as a rollup of its format and placed in one step; picking an existing view or rollup stays; no new write; amends D-521 <a id="d-525"></a>
+
+**Context.** M53 F2, from the 0.2.0 review. *"are saved views only created through format screen and
+then go into dashboard? a user cant create directly from dashboard?"* D-521's *Add a block* offered only
+saved views and rollups that already existed, and said so in a note under the menu — the make-it-in-place
+rule broken on the screen meant to gather things. The maintainer ruled both in place, without a mockup,
+and *New view* to make a list, a table or a board only.
+
+**Decision.**
+
+- **New view** is a small builder inside the *Add a block* panel: the format (on the document's
+  dashboard), *List*, *Table* or *Board* (a board only where the format has lanes), the rows by
+  `ColumnFilter` — whose column menu now sorts as the table's header does — the columns by
+  `ColumnsChoice` where something draws them (a table's beside its name, a board's cards; a list draws
+  none), and a name. *Save and add* writes the saved view (`format_saved_view`, D-520) and the block
+  together, so the view is in the rail at once. A name already a saved view's is refused, never written
+  over. **It guesses no done**: a list made here ticks only where its format's list says what done is (D-524).
+- **New chart**: *Count of rows* or *Sum of* a number or money column, *By month of* a date (or a
+  month column), *And per* a link or nothing else, *Only rows where* — `ColumnFilter` over the enum,
+  yes-or-no and date columns, said as a rollup's `where` (members, empty, a window around today; no
+  search, no range) — and a name, declared as typed words folded to a rollup's name (*Done by month* is
+  `done_by_month`), which the panel shows beside the sentence it declares. *Declare and add* adds the
+  rollup to the format as the format's own edit and `extend_format` do — judged by
+  `declarationProblems` and a pack's ownership, written by `adoptFormat` — and places its chart.
+- **One step, both or neither**: each is judged first and written in one transaction.
+- The note *"A view is saved from its own tab…"* is gone; picking an existing view or rollup is as before.
+
+**Parity.** No new write. A conversation saves a view with `arrange_views view:saved`, declares a
+rollup with `extend_format rollups`, and places either with `arrange_views view:dashboard` — the same
+`saveView`, `adoptFormat` and `setDashboardBlocks` the panel calls, in two or three calls where the
+screen makes one.
+
+**Alternatives rejected.** Sending the person to the format's tab and back: the review's complaint. A
+free-text rollup sentence in the panel: the format's grammar is the model's, not a person's. Writing over
+a saved view of the same name: *Save this view* is where a replace is offered, with the view on screen.
+
+**Consequences.** `ColumnFilter` takes `offered`, `order` and `onSort`. A chart's name is a rollup's,
+so it reads `done_by_month` on its block and its tab. No schema change.
 
 ## Related
 
