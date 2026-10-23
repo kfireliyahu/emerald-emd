@@ -361,6 +361,60 @@ export function dashboardBack(state: unknown): string | undefined {
   return typeof held.dashboard === 'string' && held.dashboard !== '' ? dashboardPath(held.dashboard) : DASHBOARD_PATH
 }
 
+/** The state a dashboard hands what it opens: a format's name, or empty for the document's (M53 U7). */
+export function dashboardState(dashboard: string | undefined): { readonly from: 'dashboard'; readonly dashboard: string } {
+  return { from: 'dashboard', dashboard: dashboard ?? '' }
+}
+
+/**
+ * **Where a dashboard's row or board card opens** (M53 F5, D-521): its
+ * entry, with the block's saved view's address — so the list beside the
+ * entry holds that block's rows, as opening from the full view does — and the
+ * state its back link reads, `← Dashboard`.
+ */
+export function dashboardEntry(
+  format: string,
+  row: string,
+  address: string,
+  dashboard: string | undefined,
+): { readonly to: string; readonly state: ReturnType<typeof dashboardState> } {
+  return { to: entryPath(format, row) + address, state: dashboardState(dashboard) }
+}
+
+/**
+ * **What an entry was opened from**, as its route's state carries it — a
+ * list or a board (M53 U5), or a dashboard's row or card (M53 F5) — or
+ * nothing, the table. Every step between entries keeps it.
+ */
+export type EntryCame =
+  | { readonly from: 'list' | 'board' }
+  | { readonly from: 'dashboard'; readonly dashboard: string }
+
+export function entryCame(state: unknown): EntryCame | undefined {
+  const from = typeof state === 'object' && state !== null ? (state as { from?: unknown }).from : undefined
+  if (from === 'list' || from === 'board') return { from }
+  if (from !== 'dashboard') return undefined
+  const dashboard = (state as { dashboard?: unknown }).dashboard
+  return dashboardState(typeof dashboard === 'string' ? dashboard : undefined)
+}
+
+/**
+ * **Where an entry's back link goes, and what it reads**: `← List` to the
+ * list and `← Board` to the board, each with the address the entry kept;
+ * `← Dashboard` to the dashboard it came from (M53 F5); and nothing — the
+ * format's own title — to the table.
+ */
+export function entryBack(
+  came: EntryCame | undefined,
+  name: string,
+  address: string,
+): { readonly path: string; readonly label: 'List' | 'Board' | 'Dashboard' | undefined } {
+  if (came?.from === 'dashboard') return { path: dashboardBack(came) ?? DASHBOARD_PATH, label: 'Dashboard' }
+  if (came?.from === 'list') return { path: listPath(name) + address, label: 'List' }
+  if (came?.from === 'board') return { path: boardPath(name) + address, label: 'Board' }
+  return { path: tablePath(name, address), label: undefined }
+}
+
 /** The word an entry's route takes for a row not written yet. */
 export const NEW_ENTRY = 'new'
 

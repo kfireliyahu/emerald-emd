@@ -1,5 +1,5 @@
 import { useContext, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode, type RefObject } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import type { Database } from 'sql.js'
 
 import { toISODate } from '@/core/time.ts'
@@ -74,7 +74,7 @@ import { listPicture, type ListLine } from '@/ui/formats/listView.ts'
 import { ReadOnly } from '@/ui/formats/readOnly.ts'
 import { ChartForm, newChart, newView, ViewForm, type ChartMaking, type Placing, type ViewMaking } from '@/ui/formats/MakeBlock.tsx'
 import { rollupChart } from '@/ui/formats/rollupChart.ts'
-import { formatPath, listPath, savedViewPath } from '@/ui/nav.ts'
+import { dashboardEntry, dashboardState, formatPath, listPath, savedViewPath } from '@/ui/nav.ts'
 import { today } from '@/ui/today.ts'
 
 /**
@@ -88,7 +88,9 @@ import { today } from '@/ui/today.ts'
  * a block dragged by its grip, resized by its right edge, its bottom edge or
  * its corner and snapped to the grid's columns and rows (M53 F4, D-527), and
  * its ⋯ holding *Move earlier*, *Move later* and *Remove from this dashboard*.
- * A block's title opens it in full, and *← Dashboard* comes back.
+ * A block's title opens it in full, and *← Dashboard* comes back; a row of a
+ * list or a table, or a board's card, opens its entry, with the block's rows
+ * beside it and *← Dashboard* back (M53 F5). A chart and a total open nothing.
  *
  * One component for both: a format's (`dashboard` its name — its blocks read
  * it alone) and the document's (`dashboard` absent — any format's, each saying
@@ -120,7 +122,7 @@ export function DashboardView({ dashboard }: { readonly dashboard: string | unde
   const document = dashboard === undefined
   const formats = document ? declarations : declarations.filter((each) => each.name === dashboard)
   const day = toISODate(today())
-  const back = { from: 'dashboard', dashboard: dashboard ?? '' }
+  const back = dashboardState(dashboard)
 
   const write = (next: readonly DashboardBlock[]): boolean => {
     try {
@@ -185,6 +187,7 @@ export function DashboardView({ dashboard }: { readonly dashboard: string | unde
               key={key}
               db={db}
               block={block}
+              dashboard={dashboard}
               declarations={declarations}
               withFormat={document}
               day={day}
@@ -472,6 +475,7 @@ function Edges({
 function Block({
   db,
   block,
+  dashboard,
   declarations,
   withFormat,
   day,
@@ -492,6 +496,7 @@ function Block({
 }: {
   readonly db: Database
   readonly block: DashboardBlock
+  readonly dashboard: string | undefined
   readonly declarations: readonly FormatDeclaration[]
   readonly withFormat: boolean
   readonly day: string
@@ -616,6 +621,7 @@ function Block({
             declaration={declaration}
             declarations={declarations}
             name={block.name}
+            dashboard={dashboard}
             day={day}
             locked={locked}
             onTick={onTick}
@@ -807,6 +813,7 @@ function SavedBody({
   declaration,
   declarations,
   name,
+  dashboard,
   day,
   locked,
   onTick,
@@ -818,6 +825,7 @@ function SavedBody({
   readonly declaration: FormatDeclaration
   readonly declarations: readonly FormatDeclaration[]
   readonly name: string
+  readonly dashboard: string | undefined
   readonly day: string
   readonly locked: boolean
   readonly onTick: Ticking
@@ -846,10 +854,11 @@ function SavedBody({
       </button>
     ) : null
   const nothing = <Nothing>Nothing matches: {savedWords(view)}.</Nothing>
+  const entry: Entry = (row) => dashboardEntry(declaration.name, row, view.address, dashboard)
 
-  if (view.kind === 'list') return <ListBody db={db} declaration={declaration} declarations={declarations} query={query} day={day} locked={locked} onTick={onTick} more={more} nothing={nothing} fill={fill} />
-  if (view.kind === 'table') return <TableBody db={db} declaration={declaration} declarations={declarations} view={view} query={query} more={more} nothing={nothing} fill={fill} width={width} />
-  if (view.kind === 'board') return <BoardBody db={db} declaration={declaration} declarations={declarations} query={query} nothing={nothing} fill={fill} width={width} />
+  if (view.kind === 'list') return <ListBody db={db} declaration={declaration} declarations={declarations} query={query} day={day} locked={locked} onTick={onTick} entry={entry} more={more} nothing={nothing} fill={fill} />
+  if (view.kind === 'table') return <TableBody db={db} declaration={declaration} declarations={declarations} view={view} query={query} entry={entry} more={more} nothing={nothing} fill={fill} width={width} />
+  if (view.kind === 'board') return <BoardBody db={db} declaration={declaration} declarations={declarations} query={query} entry={entry} nothing={nothing} fill={fill} width={width} />
   // A roadmap and a ready list, compact, are the names they hold, in order.
   const label = labelColumn(declaration)
   const ready = view.kind === 'ready' ? readyData(db, declaration, declarations, query, day) : undefined
@@ -870,6 +879,30 @@ function SavedBody({
     </>
   )
 }
+
+/** Where a block's row opens: its entry, the block's address, and the way back (M53 F5). */
+type Entry = (row: string) => ReturnType<typeof dashboardEntry>
+
+/**
+ * **A row's link to its entry** (M53 F5): reachable by Tab, opened by Enter,
+ * the rest of its line beside it — a list's tick stays outside it. Never
+ * dragged itself, so a drag from it moves the block, as it always has.
+ */
+function EntryLink({ to, children }: { readonly to: ReturnType<Entry>; readonly children: ReactNode }) {
+  return (
+    <Link
+      to={to.to}
+      state={to.state}
+      draggable={false}
+      className="group/entry flex min-w-0 flex-1 items-center gap-2.5 self-stretch focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+    >
+      {children}
+    </Link>
+  )
+}
+
+/** A row's name, underlined while its link is under the pointer. */
+const ENTRY_NAME = 'min-w-0 truncate decoration-hairline-strong underline-offset-[3px] group-hover/entry:underline'
 
 function Line({ children, done = false }: { readonly children: ReactNode; readonly done?: boolean }) {
   return (
@@ -892,6 +925,7 @@ function ListBody({
   day,
   locked,
   onTick,
+  entry,
   more,
   nothing,
   fill,
@@ -903,6 +937,7 @@ function ListBody({
   readonly day: string
   readonly locked: boolean
   readonly onTick: Ticking
+  readonly entry: Entry
   readonly more: (count: number) => ReactNode
   readonly nothing: ReactNode
   readonly fill: boolean
@@ -933,18 +968,20 @@ function ListBody({
             {each.ticked && <ActionGlyph name="check" size={12} />}
           </button>
         ))}
-      <span className="flex min-w-0 flex-1">
-        <Bidi className="min-w-0 truncate">{each.title}</Bidi>
-      </span>
-      <span className="text-caption whitespace-nowrap text-ink-secondary tabular-nums">
-        {each.ticked
-          ? ''
-          : each.cells.flatMap((cell) => (cell.kind === 'date' ? [cell] : [])).map((cell) => (
-              <span key={cell.column} className={cell.late ? 'text-negative' : ''}>
-                {cell.text}
-              </span>
-            ))}
-      </span>
+      <EntryLink to={entry(each.row.id)}>
+        <span className="flex min-w-0 flex-1">
+          <Bidi className={ENTRY_NAME}>{each.title}</Bidi>
+        </span>
+        <span className="text-caption whitespace-nowrap text-ink-secondary tabular-nums">
+          {each.ticked
+            ? ''
+            : each.cells.flatMap((cell) => (cell.kind === 'date' ? [cell] : [])).map((cell) => (
+                <span key={cell.column} className={cell.late ? 'text-negative' : ''}>
+                  {cell.text}
+                </span>
+              ))}
+        </span>
+      </EntryLink>
     </Line>
   )
   if (picture.shape.group === undefined) {
@@ -994,6 +1031,7 @@ function TableBody({
   declarations,
   view,
   query,
+  entry,
   more,
   nothing,
   fill,
@@ -1004,6 +1042,7 @@ function TableBody({
   readonly declarations: readonly FormatDeclaration[]
   readonly view: SavedView
   readonly query: RowQuery
+  readonly entry: Entry
   readonly more: (count: number) => ReactNode
   readonly nothing: ReactNode
   readonly fill: boolean
@@ -1037,15 +1076,28 @@ function TableBody({
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
-            <tr key={row.id}>
-              {columns.map((column) => (
-                <td key={column.name} className={`border-b border-hairline py-[7px] pr-3 ${figure(column) ? 'text-right tabular-nums' : ''}`}>
-                  <Bidi className="block truncate">{valueText(column, row, labels)}</Bidi>
-                </td>
-              ))}
-            </tr>
-          ))}
+          {rows.map((row) => {
+            const to = entry(row.id)
+            // Every cell opens the entry; only the first is a stop for Tab, and the one read out.
+            return (
+              <tr key={row.id} className="group/entry hover:bg-surface">
+                {columns.map((column, at) => (
+                  <td key={column.name} className={`border-b border-hairline p-0 ${figure(column) ? 'text-right tabular-nums' : ''}`}>
+                    <Link
+                      to={to.to}
+                      state={to.state}
+                      draggable={false}
+                      tabIndex={at === 0 ? undefined : -1}
+                      aria-hidden={at === 0 ? undefined : true}
+                      className="block py-[7px] pr-3 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+                    >
+                      <Bidi className={at === 0 ? `block ${ENTRY_NAME}` : 'block truncate'}>{valueText(column, row, labels)}</Bidi>
+                    </Link>
+                  </td>
+                ))}
+              </tr>
+            )
+          })}
         </tbody>
       </table>
       {total > rows.length && <Foot>{more(total - rows.length)}</Foot>}
@@ -1059,6 +1111,7 @@ function BoardBody({
   declaration,
   declarations,
   query,
+  entry,
   nothing,
   fill,
   width,
@@ -1067,6 +1120,7 @@ function BoardBody({
   readonly declaration: FormatDeclaration
   readonly declarations: readonly FormatDeclaration[]
   readonly query: RowQuery
+  readonly entry: Entry
   readonly nothing: ReactNode
   readonly fill: boolean
   readonly width: number
@@ -1092,9 +1146,11 @@ function BoardBody({
             </div>
             {held.slice(0, fill ? TALL : 2).map((row) => (
               <Line key={row.id}>
-                <span className="flex min-w-0 flex-1">
-                  <Bidi className="min-w-0 truncate">{nameOf(row)}</Bidi>
-                </span>
+                <EntryLink to={entry(row.id)}>
+                  <span className="flex min-w-0 flex-1">
+                    <Bidi className={ENTRY_NAME}>{nameOf(row)}</Bidi>
+                  </span>
+                </EntryLink>
               </Line>
             ))}
           </div>

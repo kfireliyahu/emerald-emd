@@ -5,10 +5,13 @@ import {
   isSectionTabs,
   DASHBOARD_PATH,
   dashboardBack,
+  dashboardEntry,
   dashboardPath,
   NAVIGATION,
   activeTab,
   childIsActive,
+  entryBack,
+  entryCame,
   entryPath,
   formatPath,
   packSection,
@@ -382,5 +385,34 @@ describe('the document’s dashboard (M53 U7, D-521)', () => {
     expect(dashboardBack({ from: 'dashboard', dashboard: '' })).toBe('/dashboard')
     expect(dashboardBack({ from: 'list' })).toBeUndefined()
     expect(dashboardBack(null)).toBeUndefined()
+  })
+})
+
+describe('a dashboard’s row opens its entry (M53 F5)', () => {
+  it('with the block’s address beside it and the dashboard it came from', () => {
+    expect(dashboardEntry('task', 'r1', '?state=open', 'task')).toEqual({
+      to: '/formats/task/entry/r1?state=open',
+      state: { from: 'dashboard', dashboard: 'task' },
+    })
+    expect(dashboardEntry('task', 'r1', '', undefined)).toEqual({
+      to: '/formats/task/entry/r1',
+      state: { from: 'dashboard', dashboard: '' },
+    })
+  })
+
+  it('and the entry’s back link reads ← Dashboard and returns to that dashboard', () => {
+    const own = entryCame(dashboardEntry('task', 'r1', '?state=open', 'task').state)
+    expect(own).toEqual({ from: 'dashboard', dashboard: 'task' })
+    expect(entryBack(own, 'task', '?state=open')).toEqual({ path: '/formats/task/dashboard', label: 'Dashboard' })
+    const document = entryCame(dashboardEntry('task', 'r1', '', undefined).state)
+    expect(entryBack(document, 'task', '')).toEqual({ path: DASHBOARD_PATH, label: 'Dashboard' })
+  })
+
+  it('leaves the list’s, the board’s and the table’s way back as they were', () => {
+    expect(entryBack(entryCame({ from: 'list' }), 'task', '?state=open')).toEqual({ path: '/formats/task/list?state=open', label: 'List' })
+    expect(entryBack(entryCame({ from: 'board' }), 'task', '')).toEqual({ path: '/formats/task/board', label: 'Board' })
+    expect(entryCame(null)).toBeUndefined()
+    expect(entryCame({ rollup: 'x' })).toBeUndefined()
+    expect(entryBack(undefined, 'task', '?state=open')).toEqual({ path: tablePath('task', '?state=open'), label: undefined })
   })
 })

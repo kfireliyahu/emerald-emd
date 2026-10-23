@@ -108,6 +108,8 @@ import {
   boardPath,
   dashboardBack,
   dashboardPath,
+  entryBack,
+  entryCame,
   entryPath,
   formatPath,
   listPath,
@@ -303,9 +305,11 @@ export function FormatRows({
   const location = useLocation()
   // **Which view an entry was opened from** (M53 U5, carried from U3): its
   // back link names that view and goes to it — `← List` from the list — and
-  // every step between entries keeps it. Absent is the table.
-  const came = cameFrom(location.state)
-  const along = came === undefined ? {} : { state: { from: came } }
+  // every step between entries keeps it. Absent is the table. A dashboard's
+  // row opens its entry with `← Dashboard` (M53 F5); a view opened from a
+  // dashboard keeps that for its own band, and hands it to no entry.
+  const came = entryCame(location.state)
+  const along = came === undefined || (came.from === 'dashboard' && entry === undefined) ? {} : { state: came }
   // **A view opened from a dashboard's block** (M53 U7): its band says
   // `← Dashboard` and goes back there; a rollup's block opens its tab.
   const fromDashboard = dashboardBack(location.state)
@@ -784,7 +788,7 @@ export function FormatRows({
     const existing = editing.existing
     const back = (): void => {
       setTyped(undefined)
-      navigate(came === 'list' ? listPath(declaration.name) + address : came === 'board' ? boardPath(declaration.name) + address : tablePath(declaration.name, address))
+      navigate(entryBack(came, declaration.name, address).path)
     }
     /**
      * **A field left, or a pick made** (M35 U2, D-401): the draft judged as
@@ -948,7 +952,7 @@ export function FormatRows({
           mutate((database) => setEntryAsked(database, declaration.name, column, asked))
         }
         onBack={back}
-        backLabel={came === 'list' ? 'List' : came === 'board' ? 'Board' : declaration.title}
+        backLabel={entryBack(came, declaration.name, address).label ?? declaration.title}
         onDelete={existing === undefined || locked !== undefined ? undefined : () => setDeletingEntry(true)}
         onOpen={(format, id) => {
           setTyped(undefined)
@@ -1607,7 +1611,6 @@ export function FormatRows({
   )
 }
 
-/** The view an entry was opened from, as its route's state carries it (M53 U5) — or nothing, the table. */
 /** The rollup a dashboard's block asked its format's page to open on (M53 U7), or nothing. */
 function rollupAsked(state: unknown): string | undefined {
   if (typeof state !== 'object' || state === null) return undefined
@@ -1615,10 +1618,6 @@ function rollupAsked(state: unknown): string | undefined {
   return typeof rollup === 'string' ? rollup : undefined
 }
 
-function cameFrom(state: unknown): 'list' | 'board' | undefined {
-  const from = typeof state === 'object' && state !== null ? (state as { from?: unknown }).from : undefined
-  return from === 'list' || from === 'board' ? from : undefined
-}
 
 /** The time of day as the bar says a write happened: `09:41`. */
 function clockNow(): string {
