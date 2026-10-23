@@ -5736,12 +5736,6 @@ goal: From the maintainer's weeks on a task format at work (2026-10-22): tasks h
 state: planned
 position: 349
 
-### M54
-title: Dates that stay current: words around today in every date filter, on screen and in a conversation
-goal: A view, a dashboard block or a total asked about today, this week or last month is still right tomorrow: no date filter made on screen hardcodes a day, and filters take the past and calendar periods as well as the days ahead (maintainer, 2026-10-23).
-state: planned
-position: 350
-
 <!-- emerald: open_question.format.md -->
 ---
 format: open_question
@@ -6230,6 +6224,13 @@ should: A tick appears only where someone said what done is, and says what it se
 breaks: Maintainer, 2026-10-22, on memory.emd's findings: 'its just not clear what am i ticking and why does everything have a tick? who defines that?' Two accidental ticks in the list beside an entry changed their kind from dead to bad, because D-519 guesses done as the first enum's last member and finding's first enum is kind. Restored by hand. Fix: M53 F1.
 state: fault
 
+### In the desktop app, resize a dashboard block, then make Emerald's window wider and narrower
+unit: M53 F4
+should: A block's size is a share of the dashboard, so it grows and shrinks with the window
+breaks: Maintainer, 2026-10-23: 'the size doesnt scale with the size of emerald's window. rest looks good.' The grid stops at max-w-[1000px] (src/ui/formats/Dashboard.tsx), so on a wider window the four columns and every block keep their size and the rest is empty; heights are fixed 40 px rows.
+not_tried: Maintainer's answers, 2026-10-23: width fills the window with no cap; height stays in the rows dragged to. Fixed in place the same day (the grid's max-w-[1000px] removed); the maintainer has still to see it in the rebuilt shell.
+state: fault
+
 ### In the document where the entry order swapped, run arrange_views with the same entry `order` as a dry run, and note the Was column. If it is wrong again, keep the exact calls since the last right one (arrange_views settings, extend_format arguments) and whether the app had the document open.
 unit: M42 F11
 should: Was equals the order last sent, with any columns extend_format added at the end.
@@ -6292,6 +6293,12 @@ should: The first session start fetches emerald-mcp through npx (once per versio
 breaks: Nothing drawn (the desktop app may not draw a plugin's server either, D-489), a hook error at session start, or a pause before each prompt longer than the accepted ~2 s.
 not_tried: The desktop Code tab with the plugin installed; a session on a clean profile with a model (the headless run used this machine's profile and --plugin-dir).
 state: open
+
+### On a dashboard, click a row in a list block, page through the block's rows beside the entry, then press ← Dashboard
+unit: M53 F5
+should: The entry opens with the block's rows beside it, and the back link returns to the dashboard
+breaks: Maintainer, 2026-10-23: 'rest looks good.' (F4's drag, snap and size after a reload also accepted; only scaling with the window is a fault.)
+state: accepted
 
 ### On a dashboard, click a row in a list or table block, or a card in a board block
 unit: M53 U7
@@ -13410,6 +13417,16 @@ branch: main
 commit: e15535b
 report: "M53 F5 built at e15535b; docs:check green (0 errors), related tests (101), privacy, typecheck and check:tours (10 runs) green. No new decision: D-521 says what a block's title opens and nothing about rows, so nothing it says changed.\n\nWhat landed: on a dashboard (a format's or the document's), a list block's line, a table block's row (every cell; only the first is a Tab stop) and a board block's card are links (react-router Link: Tab reaches, Enter opens) to the row's entry at entryPath + the saved view's address, with route state {from:'dashboard', dashboard}. The entry's back link reads '← Dashboard' and returns to that dashboard; paging and the list beside keep it. A list's tick is a button outside the link and never navigates. The title still opens the view in full. Charts, headline totals, and roadmap/ready blocks open no entry (the brief named list, table and board only). Links are draggable=false, so a drag from a row still moves the block; an edge drag released over a row resizes and opens nothing (checked in the browser).\n\nnav.ts: dashboardState, dashboardEntry, entryCame, entryBack (FormatRows' cameFrom folded into them). A view opened from a dashboard keeps '← Dashboard' on its own band and hands no dashboard state to entries opened from it, as before.\n\nVerified in the dev app on a synthetic task dashboard: clicked a task in a list block, the list beside held the block's 6 open rows (2 of 6), paged to another keeping '← Dashboard', clicked it back to #/formats/task/dashboard; a table date cell and a board card opened their entries; Enter on a focused row opened it; a tick ticked without navigating.\n\nFound along the way: the rail's own entry links (RailFolder) carry no route state, so following one from an entry opened on a dashboard drops '← Dashboard' for '← Task' — as it always did for List and Board. Tests render the dashboard with renderToStaticMarkup and mock the document store, since zustand serves SSR its first state.\n\nTo judge: #/formats/<name>/dashboard (or #/dashboard), click a row in a list block, page, then '← Dashboard'. Wrong would be: the tick opening the entry, the list beside holding every row rather than the block's, or the back link reading the format's name."
 
+### M53 F6
+milestone: M53
+scope: app
+title: A date filter offers words around today on screen, and filters take yesterday, last N days and calendar periods
+decision: D-472
+state: planned
+brief: From the maintainer, 2026-10-23: a dashboard of the day he is watching must stay current, never hardcoded. Today (D-472, src/domain/format/clock.ts) a filter takes `today`, `before today`, `after today` and `within N days|weeks`, stored as words and worked out on read; but on screen a list's date filter (src/ui/formats/FilterBand.tsx, via columnValues) offers only the dates rows hold, as ticks, so ticking today saves a fixed date and the view is stale tomorrow. Only a dashboard total's conditions (src/ui/formats/dashboard.ts conditionsOf) and the Agenda offer words; a conversation can set them, the screen cannot (D-227). Maintainer's answers, 2026-10-23: (1) new words: `yesterday`, `tomorrow`, `last N days|weeks` (today and the N-1 days before it, the backward twin of `within`), and `this|last|next week`, `this|last|next month`, `this|last|next year`; (2) a date column's filter menu offers the words, old and new, above its ticks, written exactly as a conversation types them (`before today`, never a gloss like Overdue), and a view saved from it keeps the words; (3) which day a week starts on is a DOCUMENT setting, not an app preference, because the plugin and another machine must name the same rows; set on screen in the document's settings and from a conversation (parity, D-227; the document's currency is the nearest precedent), and Monday (ISO) when a document sets none; (4) periods use the local calendar day, the clock `today` already reads. A claim still may not read the clock (CLOCK_REASON). Write a decision row amending D-472. Anything not settled here (beyond the menu's look, and where the week-start control sits in settings) is the maintainer's: stop and ask (rule: Maintainer's decisions before briefs). Tests: each new word's range against a pinned today, with the week starting Monday by default and Sunday when set; the menu writes words and a saved view reads back current on another pinned day; parity for the week-start setting; a text document round-trips it. Done-test: on a synthetic task document, save a list view filtered `due is this week` from the menu, move the pinned day a week on and it holds the new week; set the week start to Sunday from a conversation and the screen agrees.
+files: src/domain/format/clock.ts and span.ts (the words and their ranges); src/ui/formats/FilterBand.tsx and src/data/repositories/formatValuesRepository.ts (the menu offers words); src/ui/formats/dashboard.ts (a total's conditions); the document's settings, where its currency is kept, and a migration if the setting needs a column (docs/04-data-model.md); src/plugin/tools/ and docs/plugin.md (the words in tool descriptions; the setting from a conversation); src/parity.test.ts
+paths: "src/domain/format/clock.ts\nsrc/domain/format/span.ts\nsrc/ui/formats/FilterBand.tsx\nsrc/data/repositories/formatValuesRepository.ts\nsrc/ui/formats/dashboard.ts\nsrc/plugin/tools/\ndocs/plugin.md\nsrc/parity.test.ts"
+
 ### M53 U1
 milestone: M53
 scope: app
@@ -13525,16 +13542,6 @@ branch: main
 commit: 2057542
 paths: src/ui/formats/, src/ui/screens/, src/domain/format/view.ts, src/plugin/tools/
 report: M53 U7 built at 2057542 (D-521). Dashboards, ported from the approved mockup: a block is a saved view drawn compact in its kind (list: 5 open lines + N more / N done, 2 a group when grouped; table 4 rows; board lanes; roadmap/ready 5 names), a rollup's chart (bars, 150px) or a headline total (count, or sum of a money/integer/real/decimal column, under a filter kept as an address; money per currency); nothing else. Four-column grid (total 1, others 2). Add a block (saved views + rollups, grouped by format on the document's; Headline total made in place with conditions from the saved views, the list's done turned round and date windows; figure live before Add), drag by grip, menu Open in full / Move earlier / Move later / Remove from this dashboard; list ticks work on the dashboard. A block's title opens it in full (saved view at its address, rollup on its tab, total as the list of its rows) with '← Dashboard' back. Placement per the verdict: format's dashboard = last tab after a rule, format still opens on Table; document's = rail 'Dashboard', first and #/ without a ledger, right under Home with one. Storage: format_dashboard_block (migration 064); saved-view rename/delete cascades; deleteFormat clears; text docs write '### <format> dashboard' / '### Document dashboard'. Parity: arrange_views view:dashboard add/order/remove (no format = document's); show_format view:dashboard draws it in the frame and names each block's contents; formats lists a format's blocks; start_here unchanged. 'Dashboard' is now refused as a saved view's name. Done-test: on screen in the browser (task dashboard with Due today, Open by project, done_by_month chart, Open count; the document's with Book and Task blocks plus a book headline total) and by conversation in src/plugin/tools/dashboard.test.ts. Rollup names are snake_case by the declaration's rule, so the chart block is 'done_by_month', not 'Done by month' as the mockup drew it. Tests: full suite green once (one bidi-truncation finding fixed after), typecheck, privacy, docs:check, check:tours green after the custom tour gained a first step clicking Formats (#/ now opens the dashboard). Not done: ask-cold could not run (the claude CLI in its sandbox is not logged in). The engine-only tool text budget rose 56k -> 56.5k after trimming. Servers need a rebuild and restart (schema 64).
-
-### M54 U1
-milestone: M54
-scope: engine
-title: A date filter offers words around today on screen, and filters take yesterday, last N days and calendar periods
-decision: D-472
-state: planned
-brief: From the maintainer, 2026-10-23: a dashboard of the day he is watching must stay current, never hardcoded. Today (D-472, src/domain/format/clock.ts) a filter takes `today`, `before today`, `after today` and `within N days|weeks`, stored as words and worked out on read; but on screen a list's date filter (src/ui/formats/FilterBand.tsx, via columnValues) offers only the dates rows hold, as ticks, so ticking today saves a fixed date and the view is stale tomorrow. Only a dashboard total's conditions (src/ui/formats/dashboard.ts conditionsOf) and the Agenda offer words; a conversation can set them, the screen cannot (D-227). Maintainer's answers, 2026-10-23: (1) new words: `yesterday`, `tomorrow`, `last N days|weeks` (today and the N-1 days before it, the backward twin of `within`), and `this|last|next week`, `this|last|next month`, `this|last|next year`; (2) a date column's filter menu offers the words, old and new, above its ticks, written exactly as a conversation types them (`before today`, never a gloss like Overdue), and a view saved from it keeps the words; (3) which day a week starts on is a DOCUMENT setting, not an app preference, because the plugin and another machine must name the same rows; set on screen in the document's settings and from a conversation (parity, D-227; the document's currency is the nearest precedent), and Monday (ISO) when a document sets none; (4) periods use the local calendar day, the clock `today` already reads. A claim still may not read the clock (CLOCK_REASON). Write a decision row amending D-472. Anything not settled here (beyond the menu's look, and where the week-start control sits in settings) is the maintainer's: stop and ask (rule: Maintainer's decisions before briefs). Tests: each new word's range against a pinned today, with the week starting Monday by default and Sunday when set; the menu writes words and a saved view reads back current on another pinned day; parity for the week-start setting; a text document round-trips it. Done-test: on a synthetic task document, save a list view filtered `due is this week` from the menu, move the pinned day a week on and it holds the new week; set the week start to Sunday from a conversation and the screen agrees.
-files: src/domain/format/clock.ts and span.ts (the words and their ranges); src/ui/formats/FilterBand.tsx and src/data/repositories/formatValuesRepository.ts (the menu offers words); src/ui/formats/dashboard.ts (a total's conditions); the document's settings, where its currency is kept, and a migration if the setting needs a column (docs/04-data-model.md); src/plugin/tools/ and docs/plugin.md (the words in tool descriptions; the setting from a conversation); src/parity.test.ts
-paths: "src/domain/format/clock.ts\nsrc/domain/format/span.ts\nsrc/ui/formats/FilterBand.tsx\nsrc/data/repositories/formatValuesRepository.ts\nsrc/ui/formats/dashboard.ts\nsrc/plugin/tools/\ndocs/plugin.md\nsrc/parity.test.ts"
 
 <!-- emerald: views.md -->
 ---
@@ -13692,7 +13699,7 @@ finding: 2026-10-22
 inbox: 2026-10-22
 milestone: 2026-10-23
 open_question: 2026-10-22
-review_entry: 2026-10-22
+review_entry: 2026-10-23
 rule: 2026-10-22
 term: 2026-10-22
 unit: 2026-10-23

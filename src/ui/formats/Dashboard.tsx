@@ -170,7 +170,7 @@ export function DashboardView({ dashboard }: { readonly dashboard: string | unde
 
   return (
     <div className="min-h-0 flex-1 overflow-auto">
-      <div ref={grid} className="grid max-w-[1000px] grid-cols-4 items-start gap-4 px-6 pt-5 pb-16 max-[720px]:grid-cols-2">
+      <div ref={grid} className="grid grid-cols-4 items-start gap-4 px-6 pt-5 pb-16 max-[720px]:grid-cols-2">
         {blocks.length === 0 && (
           <div className="col-span-full flex max-w-[60ch] flex-col gap-1.5 pt-6 pb-2">
             <span className="font-medium">Nothing on this dashboard yet.</span>
