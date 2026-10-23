@@ -1,4 +1,4 @@
-<!-- emerald document, schema 64 -->
+<!-- emerald document, schema 65 -->
 <!-- emerald: decision.format.md -->
 ---
 format: decision
@@ -4436,6 +4436,15 @@ scope: app
 title: A chart is listed in the rail under its format beside the saved views, renamed and deleted there or on its tab; a rollup's dashboard blocks follow its rename and go with its delete, in adoptFormat; amends D-521
 question: Where is a chart (a rollup) made on screen found, renamed and deleted, and what happens to its dashboard blocks?
 answer: The rail lists each rollup a format declares under it, after its saved views, with a chart glyph; its name opens its tab, the pencil renames it (typed words folded as New chart folds them) and the bin deletes it, Delete asking once; a refusal (a column's name, a pack's rollup) is said under the row. Its tab has Delete chart. adoptFormat follows a dashboard's chart blocks: a rollup the declaration drops deletes them, one renamed (renames carries it new-to-old, as a column) renames them; so extend_format remove and rename (which now takes a rollup's name) do the same as the screen. A block's Remove still leaves the chart, and its note says to delete it under the format in the rail or on its tab. No new write: the screen adopts the declaration with the rollup renamed or gone.
+state: live
+
+### D-527
+date: 2026-10-23
+milestone: M53
+scope: app
+title: A dashboard block is resized by dragging its edge — right for width, bottom for height, corner for both — snapped to the grid's four columns and rows of 40 px (16 between); kept as width and height on format_dashboard_block (065) and in a text document's dashboard lines; a block with none keeps its old size; arrange_views view:dashboard size sets it; amends D-521
+question: How is a dashboard block resized, how big can it be, and where is its size kept?
+answer: Drag its right edge (width), bottom edge (height) or corner (both); it snaps to the grid's four columns and to rows of 40 px with 16 between, so N rows is 40N + 16(N-1) px; each edge is also a focusable handle moved by the arrow keys. Width 1-4 columns, height 2-20 rows; either may be absent, and absent is the old default (headline total one column, other blocks two, height by content). Given a height, a saved view draws all its rows (up to 200) and scrolls inside; a wider table shows more columns beside its name (1, 2, 4, 6 at widths 1-4), a board of width 3-4 its lanes side by side, and a chart is drawn to the block's height. Kept as width and height on format_dashboard_block (migration 065) and as width:/height: lines under a block in a text document's views part, only when set. Parity: arrange_views view:dashboard size:[{name, width, height}], judged after add and before remove and order; show_format view:dashboard draws it at its size and its text names a sized block's size. No reset-to-default on screen: the maintainer's if wanted.
 state: live
 
 <!-- emerald: finding.format.md -->
@@ -13369,10 +13378,16 @@ report: M53 F3 built at c861927, D-526 (amends D-521). (1) RailFolder lists each
 milestone: M53
 scope: app
 title: A dashboard block is resized by dragging its edge, in width and height, snapped to the grid
-decision: D-521
-state: planned
+landed: 2026-10-23
+decision: D-527
+state: built
 brief: From the maintainer's 0.2.0 review of the dashboard (2026-10-22): 'id like the blocks to be resizeable.' Today the grid (src/ui/formats/Dashboard.tsx) has four columns, a headline total takes one and every other block two, and height follows the content. Maintainer's answers, 2026-10-22: resize by dragging the block's edge (right edge for width, bottom edge for height, corner for both), snapping to the grid's columns and rows so blocks stay aligned; width AND height. A taller view block shows more rows and scrolls inside past that; a wider one shows more columns; a chart redraws to its size. Each block keeps its size beside its place: format_dashboard_block (migration 064) needs a width and a height, so this is a migration (docs/04-data-model.md) and the text document's dashboard lines carry them. A block with none keeps today's default (total one column, others two; height by content). Parity (D-227): arrange_views view:dashboard sets a block's size; show_format view:dashboard draws it at its size. Write a decision row that amends D-521. Anything not settled here (beyond the handle's look, the row height unit and the minimum size) is the maintainer's: stop and ask (rule: Maintainer's decisions before briefs). Tests: a size kept and read back, through the screen and arrange_views; a text document round-trips it; a block with no size draws as today. Done-test: on a synthetic task dashboard, widen a list block to four columns and make it taller, reload, and it holds; a conversation does the same.
-files: src/ui/formats/Dashboard.tsx, src/ui/formats/dashboard.ts, src/data/repositories/formatViewRepository.ts, src/data/migrations/, docs/04-data-model.md, src/plugin/tools/
+files: src/data/db/migrations/065_dashboard_block_size.sql, src/data/db/database.ts, src/domain/format/view.ts, src/domain/format/document.ts, src/data/repositories/formatViewRepository.ts, src/ui/formats/Dashboard.tsx, src/ui/formats/dashboard.ts, src/plugin/tools/dashboard.ts, src/plugin/tools/views.ts, src/plugin/tools/dashboard.test.ts, src/parity.test.ts, docs/04-data-model.md, docs/09-decision-log.md, docs/plugin.md
+taken_by: run-milestone driver
+started: 2026-10-23
+branch: main
+commit: 9862eb9
+report: "M53 F4 built at 9862eb9 (work) on main; docs:check green after the landing commit (its only error before was D-527's row, written here).\n\nWhat landed: a dashboard block is resized by dragging its edge - right edge width, bottom edge height, corner both - snapping as it goes to the grid's 4 columns and to rows of 40 px (16 px between), written once on release through setDashboardBlocks; each edge is also a focusable separator the arrow keys move a column/row at a time; dragging an edge never moves the block. A block given a height draws all its rows (to 200) and scrolls inside; a wider saved table shows more columns beside its name (1/2/4/6 at widths 1-4); a board of width 3-4 puts its lanes side by side; a rollup's chart is drawn to the block's height. A block with no size draws exactly as before. Kept as width (1-4) and height (2-20) on format_dashboard_block, migration 065, and as width:/height: lines in a text document's dashboard blocks. Parity: arrange_views view:dashboard size:[{name, width, height}], either alone; show_format view:dashboard draws it and its text names a sized block's size. Decision D-527 (amends D-521). docs/memory.emd's header moved to schema 65 (as U7 did for 64): the text document carries no size lines, so it is what the app's migration would write.\n\nChoices the brief left to the session: the handle's look (a 2 px accent line on the right/bottom edge on hover, a small diagonal mark in the corner on hover/focus, and a '4 columns · 8 rows' tag while dragging), the row unit (40 px), the minimum (1 column, 2 rows) and a maximum of 20 rows.\n\nVerified: dashboard.test.ts (a size kept and read back through arrange_views and through the screen's snapping and write helpers, a text document round-trips it, a block with no size draws and writes as before, refusals); related tests 189 files / 2365 tests green; typecheck and privacy green. In the browser on a synthetic task document: the corner drag of 'Open tasks' landed at 3 columns x 8 rows (710x432 px, the snapped grid exactly), the arrow key took it to 4, and it then showed all 10 open rows scrolling inside instead of 5 and '5 more'; a 4x6 table showed 6 columns, a 4-wide board its lanes side by side, a 4x8 chart fits (its chrome allowance raised from 64 to 88 px after it overflowed by 23 px); sizes held after export and reopen; at a 700 px window 4-wide blocks take both columns with no overflow; no console errors.\n\nNot done: node scripts/ask-cold.mjs ran but all 12 claude -p runs failed with 'Not logged in', so the cold read of the arrange_views description change (one key, size) is not done. check:tours not run (no tour drives a block's edge).\n\nFor the maintainer: the plugin must be rebuilt (npm run build:plugin; done in this checkout, but a running emerald server started before it refuses memory.emd until restarted) and a binary .emd is migrated by the app on open - back up real documents before the new app opens them, as with every migration. To judge: #/formats/<a format>/dashboard - drag a block's right edge, bottom edge and corner; wrong would be a block that does not snap, a drag that moves the block instead, or a size that does not hold after a reload."
 
 ### M53 F5
 milestone: M53
@@ -13650,7 +13665,7 @@ title: line
 emerald: changed
 ---
 
-decision: 2026-10-22
+decision: 2026-10-23
 finding: 2026-10-22
 inbox: 2026-10-22
 milestone: 2026-10-22
@@ -13658,4 +13673,4 @@ open_question: 2026-10-22
 review_entry: 2026-10-22
 rule: 2026-10-22
 term: 2026-10-22
-unit: 2026-10-22
+unit: 2026-10-23
