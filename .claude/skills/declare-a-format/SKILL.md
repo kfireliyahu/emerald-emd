@@ -183,7 +183,11 @@ this whole design was specified against.
 6. **Then offer to fill it.** Once it compiles, the format is real and this server can put rows in
    it: `formats` says what a row looks like, `record_format_rows` writes them, `format_rows` reads
    them back, and `update_format_rows` corrects one. A format nobody fills was not worth declaring,
-   and the first row is what finds the column that is wrong. **If they already have the thing in a
+   and the first row is what finds the column that is wrong. **Collect the rows and write them in
+   one call** — every write takes a list. While the rows are still being worked out and the document
+   is stored as text, type them into it instead (`### name`, then `column: value` lines, under the
+   format's `## rows`) and check the lot with one `format_problems` call: a bad value refuses the
+   document with its line, so nothing is lost quietly. **If they already have the thing in a
    spreadsheet, ask for the file** — `read_onto_format` reads an `.xlsx` or `.csv` onto the format
    a row at a time, shows the mapping and the verdict before writing, and is the difference between
    a format with three rows in it and one with four hundred.

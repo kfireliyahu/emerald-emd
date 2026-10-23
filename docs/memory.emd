@@ -6,25 +6,27 @@ title: Decision
 language: 24
 ---
 
-One entry of docs/09-decision-log.md, which is 2,770 lines of markdown and which CLAUDE.md tells every session not to read end to end. That instruction is the admission this format exists to answer: prose does not scale as memory.
+One decision the project made, as a row: what was undecided, what was decided, when, and whether it still stands. A decision log kept as prose grows until nobody reads it end to end, and then the same question gets decided again, differently, by somebody who did not know it had been answered. A row is found by asking — `search:"caching"`, `match:{state:live}` — rather than by reading.
 
-The log's own laws are kept rather than replaced. A past entry is never edited — a decision that stops being true is superseded by a later one, which is what `supersedes` and `state` are for, and why there is no `amended_at` and nothing to overwrite. `question` and `answer` are the two halves an entry always had in its prose; here they are columns, so a session can be handed the answer without reading the argument, and can go and read the argument when the answer is not enough.
+**A decision others already rely on is not changed in place.** When it stops being true, a later decision supersedes it: the new row names the old one in `supersedes`, and the old one's `state` becomes `amended` or `superseded`. That is why there is no field to overwrite, and why the history stays readable. Correcting the wording of a decision the same day it was written is fine; changing what it says once others have acted on it is not.
 
-`ref` is the decision's own number and is not the row's `id`, because `id` is the column every declared table already has and a declaration may not name it. That is the first thing this migration found (M22 U1): the name a person uses for a row and the identity a link resolves through are two different columns, and every `supersedes` here was written in a second pass once the first pass had handed back its ids.
+`question` and `answer` are the two halves every decision has. Kept apart, a session can be handed the answer alone and act on it, and go and read the question when the answer is not enough.
 
-A decision makes no claim. That is said on purpose and it is the first of the four gaps D-238 predicted: claims are arithmetic, and a note's invariants are "not empty" and "this link resolves", which the declaration already enforces.
+`ref` is the name people use for the decision — `D-12` — and is not the row's `id`, which every table already has and which a link resolves through.
+
+A decision makes no claim: its rules are "not empty" and "this link resolves", which the columns already enforce.
 
 | column | type | points at | unit | per | required | unique | values | min | max | note |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ref | text |  |  |  | yes | yes |  |  |  | The decision's own number, as the log writes it — `D-227`. Not the row id: `id` is the column every declared table already has. |
-| date | date |  |  |  | yes | no |  |  |  | The day it was decided, which is the day the entry was written. |
-| milestone | text |  |  |  | yes | no |  |  |  | The milestone it belongs to — `M20`. Text rather than an enum: milestones are still being added. |
-| scope | text |  |  |  | yes | no |  |  |  | Whose decision this is: `engine`, or the name of the pack whose rule it is — `ledger`. Text rather than an enum because packs are still being added. Split by what the decision governs, not by the milestone that produced it (D-218): the reading traps were decided during finance milestones and are `engine`. Filter on it so pack work and engine work never read each other's rows. |
-| title | text |  |  |  | yes | no |  |  |  | The headline, verbatim from the entry's own heading. It is a sentence on purpose. |
+| ref | text |  |  |  | yes | yes |  |  |  | The decision's own name, as the project writes it — `D-12`. Not the row id. |
+| date | date |  |  |  | yes | no |  |  |  | The day it was decided. |
+| milestone | text |  |  |  | yes | no |  |  |  | The milestone it was decided in — `M2`. Text rather than a link, so a decision can name a milestone this document does not hold. |
+| scope | text |  |  |  | yes | no |  |  |  | Which part of the project it governs — `api`, `web`, `docs`, or whatever the project's own parts are called. Split by what the decision governs, not by the milestone it came out of, so a filter on it shows one part's rules and nothing else's. |
+| title | text |  |  |  | yes | no |  |  |  | The decision in one line, as a sentence — `Orders are kept for seven years`. |
 | question | text |  |  |  | yes | no |  |  |  | What was undecided before this — the thing a later session would otherwise decide differently by accident. |
 | answer | text |  |  |  | yes | no |  |  |  | What was decided. Enough on its own that a session need not read the argument to act correctly. |
-| supersedes | link | decision |  |  | no | no |  |  |  | The earlier decision this one replaces or amends. A chain of these is the case D-224's one-hop rule cannot follow, and that is a question rather than a licence to change the rule. |
-| state | enum |  |  |  | yes | no | live, amended, superseded |  |  | Whether this is still the decision of record. `amended` means a later entry changed part of it and the rest still stands; `superseded` means it does not. A past entry is never edited, so this column is the only way to ask. |
+| supersedes | link | decision |  |  | no | no |  |  |  | The earlier decision this one replaces or amends — `D-7`. Empty for a decision that changes nothing before it. |
+| state | enum |  |  |  | yes | no | live, amended, superseded |  |  | Whether this is still the decision of record. `amended`: a later decision changed part of it and the rest still stands. `superseded`: a later decision replaced it. A decision others rely on is never rewritten, so this column is how to ask. |
 
 ## rows
 
@@ -5436,36 +5438,36 @@ language: 23
 claims: none
 ---
 
-What another project's session hands this document: a fact it found, a finding about this project, a gate it knows of. Until M44 the only channel was copying and pasting between sessions, and three hand-offs of six never arrived; a message to another session lasts only as long as that session. A row lasts as long as the document.
+What another project's session hands this document: a fact it found, a finding about this project, a gate it knows of. A message to another session lasts only as long as that session; a row lasts as long as the document.
 
-`from` is the sending document's path, absolute — `F:/projects/notes/notes.emd` — and never a session's title, because a title stops meaning anything when the session ends and a path is where the sender's own record can be read. `refs` is the sender's names for the same things in its own document, so the owner can ask that document rather than the session that wrote it.
+`from` is the sending document's absolute path — `/work/shop/plan.emd` — and never a session's title, because a title means nothing once the session ends and a path is where the sender's own record can be read. `refs` is the sender's names for the same things in its own document, so the owner can ask that document rather than the session that wrote it.
 
-The rules are a convention and not a guarantee: the engine does not know which session writes a row (D-138), so nothing here can enforce them. A sender writes a row once, with `state: new`, and never edits it. The owner moves `state` and fills what it became. A foreign session writes to no other format of this document.
+The rules are a convention, not a guarantee: nothing knows which session writes a row, so nothing here can enforce them. A sender writes a row once, with `state: new`, and never edits it. The owner moves `state` and fills what it became. A session from another project writes to no other format of this document.
 
-`about` is the row the hand-off concerns, in whichever document holds it — the sender's own unit, a decision of a third project — written as that document's path and the row's name: `F:/projects/site/site.emd S1 U5`. It is an `elsewhere` column (M47 U4, D-461): `format_rows` and `start_here` read the other document and print what the row holds now beside it — `unit S1 U5 · built` — so the owner sees that the thing a row asks about is already done without asking the sender. A document that is not there, or a name it has no row for, reads *unresolved* and is never refused, because the other file may be closed, moved or on another machine. By name and never by id: a text document renews its ids on every write.
+`about` is the row the hand-off concerns, in whichever document holds it — the sender's own unit, a decision of a third project — written as that document's path and the row's name: `/work/site/plan.emd M2 U3`. It is an `elsewhere` column: `format_rows` and `start_here` read the other document and print what the row holds now beside it — `unit M2 U3 · built` — so the owner sees that the thing a row asks about is already done without asking the sender. A document that is not there, or a name it has no row for, reads *unresolved* and is never refused, because the other file may be closed, moved or on another machine. By name and never by id: a text document renews its ids on every write.
 
-What it became is three columns, because the engine names a link's target by its first text column and only some formats have a unique one: `answered_by` and `became_unit` are links, to a decision and a unit; `became` is text for everything else — an open question or a review entry by its ref, a rule or a term by its name, or why it was dropped.
+What it became is three columns, because a link names its target by that format's first text column and only some formats have a unique one: `answered_by` and `became_unit` are links, to a decision and a unit; `became` is text for everything else — an open question or a review entry by its ref, or why it was dropped.
 
-A text .emd is rewritten whole on every write, so a row written from another project while a session here is writing is the concurrent-writers case and nothing new: the plugin's writers take the document's lock in turn, a batch applies whole or not at all, a copy is taken before it, and the app's save refuses to overwrite a change it has not seen. A session is told a row arrived without asking: the plugin's `UserPromptSubmit` hook runs `hooks.mjs rows <project> inbox --match state=new` before every prompt and prints the rows in state `new`, and nothing when there are none, so a session never polls (M47 U1). The row is printed again at each prompt until the owner moves its `state`. A session that must wake between prompts runs `server.mjs watch <this document> --format inbox --match state=new` under its Monitor tool (M44 U3, D-441).
+A row written from another project while a session here is writing is the ordinary case of two writers: writers take the document's lock in turn, a batch applies whole or not at all, and a copy is taken before it. A session is told a row arrived without asking: the plugin's prompt hook prints the rows in state `new` before every prompt, and nothing when there are none, so a session never polls; the row is printed again until the owner moves its `state`. A session that must wake between prompts can watch the document for `state=new` instead.
 
-**A row is for what the receiver lacks.** Before writing, the sender reads the receiver's document — `start_here`, its latest decisions — and writes only what it does not already hold: of fourteen rows written in one hand-off on 2026-10-08, eleven restated decisions the receiver had. **A document made before a pack changed is brought up to date by `keep_packs`**, which declares what the pack added since (this format, among others) and renames what it renamed, values kept; a kept pack does not update itself.
+**A row is for what the receiver lacks.** Before writing, the sender reads the receiver's document — `start_here`, its latest decisions — and writes only what it does not already hold. A document made before the pack changed is brought up to date by `keep_packs`, which declares what the pack added since and renames what it renamed, values kept; a kept pack does not update itself.
 
-**A child session proposes its landing here** (M51 U3, D-485). A session run for a manager — a worktree's child — lands nothing itself: it writes one row, `state: new`, whose `refs` is its unit's ref and whose `body` is a line or two for a person and then one fenced `json` block in the shape of one of `land_units`' `units` — `unit`, `files`, `commit`, `branch`, `decisions`, `review_entries` — and never `close_milestone`, which is the maintainer's. It writes to the document path its hooks printed, which in a worktree is the main checkout's copy, never one built from the worktree's own folder. `land_units inbox:[ids]` lands every proposal named as one dry run and one commit, refuses the batch by name for any that is not a proposal or not `new`, and moves each to `applied` with `became_unit` and `answered_by` filled. The child writes no other format of this document.
+**A session run by a driver proposes its landing here.** It lands nothing itself: it writes one row, `state: new`, whose `refs` is its unit's ref and whose `body` is a line or two for a person and then one fenced `json` block in the shape of one of `land_units`' `units` — `unit`, `files`, `commit`, `branch`, `decisions`, `review_entries` — and never `close_milestone`, which is the project owner's. It writes to the document path its hooks printed, which in a worktree is the main checkout's copy, never one under the worktree's own folder. `land_units inbox:[ids]` lands every proposal named as one dry run and one commit, refuses the batch by name for any that is not a proposal or not `new`, and moves each to `applied` with `became_unit` and `answered_by` filled. The proposing session writes no other format of this document.
 
 An inbox row makes no claim.
 
 | column | type | points at | unit | per | required | values | min | max | note |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| subject | text |  |  |  | yes |  |  |  | The hand-off in a line: what `start_here` lists and what the text .emd heads the row with. |
-| from | text |  |  |  | yes |  |  |  | The sending document's absolute path — `F:/projects/notes/notes.emd`. Not a session's title: a title means nothing once the session ends. |
+| subject | text |  |  |  | yes |  |  |  | The hand-off in a line: what `start_here` lists and what a text document heads the row with. |
+| from | text |  |  |  | yes |  |  |  | The sending document's absolute path — `/work/shop/plan.emd`. Not a session's title: a title means nothing once the session ends. |
 | sent_on | date |  |  |  | yes |  |  |  | The day it was sent. |
 | body | text |  |  |  | no |  |  |  | The fact or finding in full, in markdown, written for a session that has none of the sender's context. |
-| refs | text |  |  |  | no |  |  |  | The sender's own refs for it, in its own document — `notes.emd D-10, D-18`. |
-| about | elsewhere |  |  |  | no |  |  |  | The row it concerns, in the document that holds it — `F:/projects/site/site.emd S1 U5`. Read back with what that row holds now, or unresolved. |
+| refs | text |  |  |  | no |  |  |  | The sender's own refs for it, in its own document — `plan.emd D-10, D-18`. |
+| about | elsewhere |  |  |  | no |  |  |  | The row it concerns, in the document that holds it — `/work/site/plan.emd M2 U3`. Read back with what that row holds now, or unresolved. |
 | state | enum |  |  |  | yes | new, triaged, applied, dropped |  |  | A sender writes `new`, and `start_here` lists those. `triaged`: the owner has read it and knows what it will become. `applied`: it became that. `dropped`: read and not acted on, and `became` says why. |
 | answered_by | link | decision |  |  | no |  |  |  | The decision it became or answered. |
 | became_unit | link | unit |  |  | no |  |  |  | The unit it became. |
-| became | text |  |  |  | no |  |  |  | Anything else it became, by ref or name — an open question, a review entry, a rule, a term — or why it was dropped. |
+| became | text |  |  |  | no |  |  |  | Anything else it became, by ref or name — an open question, a review entry — or why it was dropped. |
 
 ## rows
 
@@ -5502,21 +5504,21 @@ title: Milestone
 language: 13
 ---
 
-A milestone of docs/07-roadmap.md, as a row (M27 U1). Until this format a milestone was text on a unit, so a roadmap had nothing to order and nothing to say about the milestone itself — what it was for, and whether it was still open.
+A milestone of the project's plan, as a row: what it is for, where it sits in the order, and whether it is still open. Units link to it, so a roadmap is milestones in order with their units under each.
 
-`unit.milestone` links here and names a milestone by its `ref`, which is why `ref` is unique: a document stored as text writes a link as its target's name.
+`unit.milestone` names a milestone by its `ref`, which is why `ref` is unique: a document stored as text writes a link as its target's name.
 
-`position` is the order and `ref` is not. Since D-249 the numbers are not the sequence, and a plan that is reordered changes positions rather than renaming milestones.
+`position` is the order and `ref` is not. Plans get reordered, and a reordered plan changes positions rather than renaming milestones.
 
 A milestone makes no claim.
 
 | column | type | points at | unit | per | required | unique | values | min | max | note |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ref | text |  |  |  | yes | yes |  |  |  | The milestone as the roadmap names it — `M27`. What a unit's `milestone` names it by, so it is unique. |
-| title | text |  |  |  | yes | no |  |  |  | The roadmap heading's clause, verbatim — `The development pack, the first pack after the ledger`. |
+| ref | text |  |  |  | yes | yes |  |  |  | The milestone's short name — `M2`. What a unit's `milestone` names it by, so it is unique. |
+| title | text |  |  |  | yes | no |  |  |  | What the milestone is, in a clause — `Checkout works without an account`. |
 | goal | text |  |  |  | yes | no |  |  |  | What the milestone is for, in a sentence or two: what is true when it is done. |
-| state | enum |  |  |  | yes | no | planned, open, closed |  |  | `planned` is scoped and not started; `open` is the one being built; `closed` was closed by the maintainer — never by a session. A milestone dissolved or stopped short is `closed`, and its goal says so. |
-| position | integer |  |  |  | yes | yes |  |  |  | Where it sits in the plan, so a roadmap has something to order by. Not the number in `ref`: since D-249 numbers are not the sequence. Gaps are left on purpose, so a milestone can be put between two. |
+| state | enum |  |  |  | yes | no | planned, open, closed |  |  | `planned` is scoped and not started; `open` is being built; `closed` is done, and closed by whoever owns the project, never by a session on its own. A milestone stopped short is `closed`, and its goal says so. |
+| position | integer |  |  |  | yes | yes |  |  |  | Where it sits in the plan, so a roadmap has something to order by. Not the number in `ref`. Leave gaps — 10, 20, 30 — so a milestone can be put between two. |
 
 ## rows
 
@@ -5743,24 +5745,22 @@ title: Open question
 language: 4
 ---
 
-A question the project is deliberately carrying: docs/engine.md's H-numbers, docs/status.md's "Open, and carried" list, and the parity gaps that src/parity.test.ts keeps honest.
+A question the project is deliberately carrying: something not yet decided, written down so that it is decided on purpose rather than by accident. Kept in notes, the same question ends up open in one file and closed in another, and nothing notices; a question answered in one place and open in another is worse than one nobody wrote down.
 
-These live in three files today and the three disagree, because closing one in status.md does not close it in engine.md and nothing checks. A question that is answered in one place and open in another is worse than a question nobody wrote down, and that is what this format is for.
+`opened_by` and `answered_by` are both links to a decision, and the pair is the whole shape: a question exists because some decision left it open, and stops existing because a later decision answered it. A question with an `answered_by` and a `state` of `open` is a contradiction the document can be asked for.
 
-`opened_by` and `answered_by` are both links to a decision, and the pair is the whole shape: a question exists because some decision left it open, and it stops existing because some later decision answered it. A question with an `answered_by` and a `state` of `open` is a contradiction the document can now be asked for.
-
-Both links are optional, and in this migration that is not tidiness — H10 was opened by D-226, which belongs to M19 and has not been migrated, so its `opened_by` is empty because the engine refuses a link to a row that is not there rather than dangling. A partial migration leaves real holes, and they are visible rather than silently wrong.
+Both links are optional. A question can come from anywhere — a conversation, a bug, a user — not only from a decision, and some are answered by a fact rather than a decision; `answer` holds that.
 
 An open question makes no claim.
 
 | column | type | points at | unit | per | required | values | min | max | note |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ref | text |  |  |  | yes |  |  |  | How the project already names it — `H10`, `parity gap #11`. Not the row id. |
+| ref | text |  |  |  | yes |  |  |  | How the project names it — `Q3`. Not the row id. |
 | question | text |  |  |  | yes |  |  |  | The question itself, as a question. A statement of a problem is not one and cannot be answered. |
-| opened_by | link | decision |  |  | no |  |  |  | The decision that left this open. Empty when that decision is not in this document — which is what a partial migration looks like from the inside. |
+| opened_by | link | decision |  |  | no |  |  |  | The decision that left this open. Empty when no decision did, or when that decision is not in this document. |
 | answered_by | link | decision |  |  | no |  |  |  | The decision that answered it. Empty while it is open; a row carrying one with `state: open` is a contradiction worth asking for. |
-| state | enum |  |  |  | yes | open, answered, dropped |  |  | `dropped` is the third state — a question that stopped being worth answering, which is different from one that was answered and different again from one still live. |
-| answer | text |  |  |  | no |  |  |  | The answer in words, for a question answered by a fact rather than a decision — an npm name being free, a support case closed (M44 U5, D-444). A question a decision answered names it in `answered_by`; one answered by a fact says it here, and needs no decision row made up to hold it. |
+| state | enum |  |  |  | yes | open, answered, dropped |  |  | `open` is still live. `answered` was settled, by a decision or a fact. `dropped` stopped being worth answering, which is different from being answered. |
+| answer | text |  |  |  | no |  |  |  | The answer in words, for a question settled by a fact rather than a decision — a name turned out to be free, a vendor replied. A question a decision answered names it in `answered_by` instead, and needs no decision made up to hold a fact. |
 
 ## rows
 
@@ -6042,24 +6042,24 @@ title: Review entry
 language: 4
 ---
 
-What a unit session left for the maintainer to drive: docs/review.md, which reached 1,214 lines and thirty entries with no way to ask which four were live. That file is frozen as of D-238 and this format is what sorts it.
+Something a session that built a unit leaves for a person to try: what to open, what should happen, and where it is likely to break. Tests say the code does what the session believed; only somebody trying it says the feature is right, and that is easy to put off until nobody remembers what each note was about.
 
-`state` is the column whose absence made the graveyard, and it is the whole reason this format exists rather than the prose staying prose. Thirty entries with no state is a queue nobody can triage; thirty rows with one is four `match` calls. The finding review.md was built on still stands — four real documents, and nothing else, ever rewrote this design — and what failed was the deferral, not the writing down.
+`state` is why this is a format rather than a list in a file. A list of thirty entries with no state is a queue nobody can triage; thirty rows with one is a `match` call for the four still open.
 
-An entry is deliberately four prose columns rather than one body. `do`, `should`, `breaks` and `not_tried` are the four questions the file's own template asks, and separating them is what lets a session be handed `breaks` alone: "where nothing checked it" is the half that predicts the next expensive bug, and it was buried in the middle of a bullet list.
+An entry is four prose columns rather than one body. `do`, `should`, `breaks` and `not_tried` are the four questions a good hand-over answers, and keeping them apart lets a session be handed `breaks` alone — where nothing checked it, which is the part that predicts the next bug.
 
-`unit` is required. An entry with no unit is a note, and this project already has somewhere to put notes.
+`unit` is required: an entry with no unit is a note, not something to try.
 
-A review entry makes no claim — which is gap #1 of the four D-238 predicted, met for the second time in this document.
+A review entry makes no claim.
 
 | column | type | points at | unit | per | required | values | min | max | note |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| unit | link | unit |  |  | yes |  |  |  | The unit this is about. Required: an entry with no unit is a note rather than something to drive. |
-| do | text |  |  |  | yes |  |  |  | The screen, the route and the file to open, in order. Named by route and file, never by "the screen you added" — the reader has no memory of the work. |
-| should | text |  |  |  | yes |  |  |  | The figure, the row, the message. Precise enough to be wrong, which is the only kind of claim a review can reject. |
-| breaks | text |  |  |  | no |  |  |  | Where it breaks, usually wherever nothing checked it. Said plainly. This is the column worth reading on its own. |
-| not_tried | text |  |  |  | no |  |  |  | What could not be tried in the session that built it, and why — a real document, a running model, a Mac. |
-| state | enum |  |  |  | yes | open, accepted, fault, dropped |  |  | **The column whose absence made the graveyard.** `open` has not been driven or was outranked and still stands. `accepted` was driven and holds. `fault` was driven and is wrong, and work follows from it. `dropped` stopped mattering — usually because the milestone it belonged to stopped. |
+| unit | link | unit |  |  | yes |  |  |  | The unit this is about. Required: an entry with no unit is a note rather than something to try. |
+| do | text |  |  |  | yes |  |  |  | What to open and do, in order — the page, the command, the file. Named exactly, never "the screen you added": the reader has no memory of the work. |
+| should | text |  |  |  | yes |  |  |  | What should happen — the figure, the row, the message. Precise enough to be wrong, which is the only kind of claim a review can reject. |
+| breaks | text |  |  |  | no |  |  |  | Where it breaks, usually wherever nothing checked it. Said plainly. The column worth reading on its own. |
+| not_tried | text |  |  |  | no |  |  |  | What the session that built it could not try, and why — a real file, a device, an account it had no access to. |
+| state | enum |  |  |  | yes | open, accepted, fault, dropped |  |  | `open` has not been tried yet. `accepted` was tried and holds. `fault` was tried and is wrong, and work follows from it. `dropped` stopped mattering — usually because the work it belonged to stopped. |
 
 ## rows
 
@@ -9379,42 +9379,40 @@ title: Unit
 language: 14
 ---
 
-One unit of work, as docs/07-roadmap.md writes it: a checkbox, a clause, a date and the decision it produced. The roadmap is the plan of record and it is read end to end far too often — twenty-eight times, measured — because a session that wants to know what U4 was has no way to ask for one line.
+One unit of work: a piece of a milestone small enough for one session to build, commit and hand over. The questions a plan is asked — "which units of M2 are built", "what is ready to start", "which decision came out of this one" — are each one `match` call rather than a read of the whole plan.
 
-A unit is where the project's own cadence lives: one unit per session, then commit and start fresh. So the questions this format has to answer are "which units of M20 are built", "what landed on this date" and "which decision came out of this one", and they are three `match` calls rather than three greps.
+`decision` is optional, and empty is a real state rather than missing data: a unit dropped before it was built produced no decision, and a unit still open has not produced one yet. `landed` is empty for the same reason.
 
-`decision` is optional and that is a real state rather than missing data: a unit that was dropped before it was built produced no decision, and a unit still open has not produced one yet. `landed` is empty for the same reason.
+`ref` carries its milestone — `M2 U3` rather than `U3` — because a unit's number is only unique inside its milestone, and a link printed on another row has to be readable on its own. `milestone` is kept beside it anyway, because that is what gets filtered on; it links to a `milestone` row, which a text document writes as that row's `ref`, and `match:{milestone:M2}` finds it by that name.
 
-`ref` carries its milestone — `M20 U0` rather than `U0` — because a unit id is only unique inside its milestone and a link printed on another format's row has to be readable on its own. `milestone` is kept beside it anyway, because that is what gets filtered on.
+`brief` is what a session needs to build the unit without the conversation that planned it. `files` is what the unit touches, in prose, written when it is planned and corrected when it lands. `paths` is the same files as a machine reads them, one path per line: `dispatch_plan` compares them, so units that share a path are not handed out at once. `blocks` is the units it waits on; a unit is ready when every one of them is built. `undone_by` is the decision that reversed a unit after it was built, so work undone is counted rather than reconstructed.
 
-`milestone` links to a row of `milestone` and a text document writes it as that row's `ref` (M27 U1); `match:{milestone:M20}` finds it by that name (M27 U2). `files` is what a unit touches, written when it is planned and corrected when it lands, and it replaced the `Files:` line a brief used to end with. `paths` is the same files as a machine reads them, one path per line (M51 U4): `files` keeps the prose — *docs/mapping-templates.md if the reading changes* — and `paths` is what `dispatch_plan` compares, so units that share a path are not handed out at once. `undone_by` is the decision that reversed a unit after it was built, so work undone is counted rather than reconstructed (D-286). `blocks` is the units it waits on, a link to several rows (M27 U2). `in_progress`, `taken_by` and `started` are a session at work on it (M27 U6): a session takes a unit with `update_format_rows`, addressing it by `ref` and expecting it still `planned`, so two that try at once cannot both get it.
+`in_progress`, `taken_by` and `started` are a session at work on it. `claim_units` takes a unit only while it is still `planned`, so two sessions that try at once cannot both get it; it writes the git `branch` the session took it on. `land_units` moves it to `built` with the `commit` that carries its work and the session's closing `report`, and refuses a landing from another branch unless told. `taken_by` is whatever the host calls its session — the pack depends on no host's session API, which is why `branch` and `commit` are git's words. So `match:{state:in_progress}` is a live list of who is where.
 
-`branch` and `commit` are where a unit was worked and what it became, in plain git (M51 U2): `claim_units` writes the branch a session took it on, and `land_units` the commit that carries its work, refusing a landing from another branch unless told. `taken_by` stays whatever the host calls its session; the pack depends on no host's session API, which is why these two are git's words rather than a session's. So `match:{state:in_progress}` is a live list of who is where.
-
-A claim can be taken over, and an old one shows itself (M51 F4). `claim_units` with `take_over` names whose claim it replaces and is refused unless the unit is `in_progress` under that taker; the new taker gets the unit with `started` reset, and the one it replaced goes onto `taken_over_from`. The ready view lists a unit `in_progress` taken more than a day ago as stalled, so a session that died mid-unit is seen at the next `start_here` rather than found by somebody hand-editing `taken_by`. `report` is the closing report of the session that built it, as `land_units` was given it, so a driver reads a child's report with one `format_rows` call rather than paging its transcript.
+A claim can be taken over. `claim_units` with `take_over` names whose claim it replaces, and is refused unless the unit is `in_progress` under that taker; the new taker gets the unit with `started` reset, and the old one goes onto `taken_over_from`. A unit `in_progress` for more than a day is listed as stalled, so a session that stopped mid-unit is seen at the next `start_here`.
 
 A unit makes no claim.
 
 | column | type | points at | unit | per | required | unique | values | min | max | note |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| ref | text |  |  |  | yes | yes |  |  |  | The unit as the roadmap names it, with its milestone — `M20 U0`, `M20 T1`. Unique on its own, which `U0` is not. |
-| milestone | link | milestone |  |  | yes | no |  |  |  | `M20` — the `milestone` row it belongs to, written by its `ref`. What gets filtered on, which is why it is a column of its own as well as part of `ref`; `match` takes the name as well as the id. |
-| scope | text |  |  |  | yes | no |  |  |  | `engine`, or the pack the unit belongs to — `ledger`. So `match:{state:planned, scope:engine}` is the engine's handoff and a parked pack's planned units never show up in it. |
-| title | text |  |  |  | yes | no |  |  |  | The clause the roadmap gives it, verbatim — `the pack is staged, and the rail is the engine's`. |
+| ref | text |  |  |  | yes | yes |  |  |  | The unit's name, with its milestone — `M2 U3`. Unique on its own, which `U3` is not. |
+| milestone | link | milestone |  |  | yes | no |  |  |  | `M2` — the `milestone` row it belongs to, written by its `ref`. What gets filtered on, which is why it is a column of its own as well as part of `ref`; `match` takes the name as well as the id. |
+| scope | text |  |  |  | yes | no |  |  |  | Which part of the project it belongs to — `api`, `web`, or whatever the project's own parts are called. So `match:{state:planned, scope:api}` is one part's next work, and another part's never shows up in it. |
+| title | text |  |  |  | yes | no |  |  |  | What the unit does, in a clause — `the cart survives a reload`. |
 | landed | date |  |  |  | no | no |  |  |  | The day it was committed. Empty for a unit that is open or was dropped, which is a state rather than a missing figure. |
 | decision | link | decision |  |  | no | no |  |  |  | The decision this unit produced. Empty for a unit that produced none — dropped before it was built, or not built yet. |
-| state | enum |  |  |  | yes | no | planned, in_progress, built, dropped |  |  | `built` is committed and in the roadmap as ticked. `in_progress` is a session working on it now, set when it is handed out and moved on when it lands (M27 U6). `dropped` was scoped and then deliberately not built — M20's tail has seven of those and they are the reason this column is not a boolean. |
+| state | enum |  |  |  | yes | no | planned, in_progress, built, dropped |  |  | `planned` is scoped and waiting. `in_progress` is a session working on it now, set when it is taken and moved on when it lands. `built` is committed. `dropped` was scoped and then deliberately not built — which is why this column is not a boolean. |
 | brief | text |  |  |  | no | no |  |  |  |  |
-| files | text |  |  |  | no | no |  |  |  | What the unit touches: written when it is planned and corrected when it lands (D-286). It replaces the `Files:` line a brief used to end with. |
-| undone_by | link | decision |  |  | no | no |  |  |  | The decision that reversed this unit after it was built — M25 U4 by D-283 — so work undone is counted rather than reconstructed from transcripts (D-286). Empty for work that stands. |
-| blocks | links | unit |  |  | no | no |  |  |  | The units that have to be built before this one can be — M27 U3 waiting on U2 (M27 U2, D-300). Several, in order, and empty for a unit nothing holds up. A unit is ready when every one of these is built. |
-| taken_by | text |  |  |  | no | no |  |  |  | Who took it — the driver or the session that set it `in_progress` (M27 U6). Kept after it lands, so a unit says who built it. Called `claimed_by` until D-420: a format's band says Claims, and one word meant two things on one screen. |
-| started | date |  |  |  | no | no |  |  |  | The day it went `in_progress` (M27 U6). Shown beside the state, because a session that dies leaves its unit `in_progress` for ever and only the date says so. |
-| branch | text |  |  |  | no | no |  |  |  | The git branch a session took the unit on — `main`, or a worktree's own (M51 U2). Written by `claim_units` and kept after it lands; a landing from another branch is refused unless it says so. Empty for a unit claimed without one. |
-| commit | text |  |  |  | no | no |  |  |  | The git commit that carries the unit's work, as `land_units` was given it (M51 U2) — a hash, short or full. Empty when the landing went in the same commit as the work, since a commit cannot name itself; `git log --grep` on the ref finds that one. A unit built before the first public commit names a commit of the history kept privately (D-495). |
-| paths | text |  |  |  | no | no |  |  |  | The files and folders it touches, one repository path per line — `src/plugin/catalog.ts`, or `src/plugin/tools/` for a whole folder (M51 U4). Written when it is planned, beside `files`, which keeps the prose; what every unit appends to — the decision log, `docs/memory.emd` — is left out, or every pair shares it. What `dispatch_plan` compares: a unit with none is unknown, never safe. |
-| taken_over_from | text |  |  |  | no | no |  |  |  | Who held the claim before a take-over, oldest first, each with the day they took it — `session A (2026-10-16)` (M51 F4). Written by `claim_units` with `take_over`; empty for a unit nobody took over. |
-| report | text |  |  |  | no | no |  |  |  | The closing report of the session that built it — what landed, what is left, what it found — as `land_units` was given it, plain text (M51 F4). The host cuts a child's note to its driver short; this is the whole of it, one `format_rows` call away. |
+| files | text |  |  |  | no | no |  |  |  | What the unit touches, in prose: written when it is planned and corrected when it lands, so the next session opens those files first rather than searching for them. |
+| undone_by | link | decision |  |  | no | no |  |  |  | The decision that reversed this unit after it was built, so work undone is counted rather than reconstructed. Empty for work that stands. |
+| blocks | links | unit |  |  | no | no |  |  |  | The units that have to be built before this one can be — `M2 U2`. Several, in order, and empty for a unit nothing holds up. A unit is ready when every one of these is built. |
+| taken_by | text |  |  |  | no | no |  |  |  | Who took it — the session or the driver that set it `in_progress`. Kept after it lands, so a unit says who built it. |
+| started | date |  |  |  | no | no |  |  |  | The day it went `in_progress`. Shown beside the state, because a session that stops leaves its unit `in_progress` for ever and only the date says so. |
+| branch | text |  |  |  | no | no |  |  |  | The git branch a session took the unit on — `main`, or a worktree's own. Written by `claim_units` and kept after it lands; a landing from another branch is refused unless it says so. Empty for a unit claimed without one. |
+| commit | text |  |  |  | no | no |  |  |  | The git commit that carries the unit's work, as `land_units` was given it — a hash, short or full. Empty when the landing went in the same commit as the work, since a commit cannot name itself; `git log --grep` on the ref finds that one. |
+| paths | text |  |  |  | no | no |  |  |  | The files and folders it touches, one repository path per line — `src/cart/store.ts`, or `src/cart/` for a whole folder. Written when it is planned, beside `files`, which keeps the prose; a file every unit appends to, such as a changelog, is left out, or every pair shares it. What `dispatch_plan` compares: a unit with none is unknown, never safe. |
+| taken_over_from | text |  |  |  | no | no |  |  |  | Who held the claim before a take-over, oldest first, each with the day they took it — `session A (2026-03-02)`. Written by `claim_units` with `take_over`; empty for a unit nobody took over. |
+| report | text |  |  |  | no | no |  |  |  | The closing report of the session that built it — what landed, what is left, what it found — as `land_units` was given it. A host may cut a session's note to its driver short; this is the whole of it, one `format_rows` call away. |
 
 ## rows
 

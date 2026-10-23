@@ -9,7 +9,8 @@
  * per-user folder (`backupsRoot` in `electron/bridge.ts`), one folder per
  * document, and the reason D-098 gave is answered by the app instead: File ›
  * *Earlier copies of this document* lists them to restore. Still timestamped,
- * still the last five, and the tool still names the full path. **The named
+ * still the last five, and the tool still names the full path — on the first
+ * write to a document in a server's run, since M52 F2 (`write.ts`). **The named
  * copies followed them there** (M48 U4, D-470).
  *
  * Why a copy at all, when the plugin also dry-runs: the two protect against

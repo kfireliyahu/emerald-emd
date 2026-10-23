@@ -36,7 +36,10 @@ then be quiet. The maintainer is the instrument here. Never put two entries in o
 
 ## 3. Write down each verdict as you go
 
-On the row itself, as you finish it — `update_format_rows review_entry`, not from memory at the end:
+On the row itself, as you finish it — `update_format_rows review_entry`, not from memory at the end.
+In a document stored as text, editing the row's `state` and `breaks` lines in the file is the same
+write without a call; one `format_problems` call at the end checks every edit, and refuses the
+document at the line of a bad one:
 
 - **accepted** — it did what the entry said.
 - **fault** — it did not. Put what was seen, in the maintainer's words, in `breaks` before moving on.
