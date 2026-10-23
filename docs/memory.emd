@@ -13342,6 +13342,18 @@ files: scripts/archive-decisions.mjs, src/archiveDecisions.test.ts, docs/09-deci
 branch: claude/quizzical-cerf-24d153
 commit: 91a05dd
 
+### M52 F2
+milestone: M52
+scope: plugin
+title: Writing from a conversation costs fewer calls and less noise, and the development pack speaks to any project, not Emerald's
+state: in_progress
+brief: From the maintainer, 2026-10-23, after a session on another project with the development pack: (1) 'About 45 Emerald calls this session. Every write is a call, and every write prints a backup notice. Typing into a doc is faster while ideas are still fluid.' (2) 'The development pack's decision and open-question formats carry notes about Emerald's own repo (docs/engine.md, D-227, H-numbers). Someone else adopting the pack would find that confusing.' Maintainer said fix both, before 0.2.0. What to do: (a) the backup notice (src/plugin/write.ts, src/plugin/backup.ts) prints on a document's first write in a server's run and is silent after that; the copy is still taken every time, and keep_copy and a refusal still say where copies are. (b) Typing into the document: a document stored as text is Markdown; establish whether a hand edit to a text .emd is read back and checked on the next call (a bad value refused or reported by format_problems, never silently dropped). If it is, say so where a session learns how to write (src/plugin/instructions.ts, docs/plugin.md, and the shipped skills under hosts/claude/skills/ that write rows): while ideas are fluid, edit the text document, then one call checks it. If a bad hand edit is silently lost, do NOT build a fix: stop and ask (it is the maintainer's). (c) The same places tell a session to collect rows and write them in one call, since every write tool takes a list. (d) The development pack's shipped declarations (src/data/packs/development/formats/*.format.md, every one, decision and open_question first) say what each format and column is for in general terms, with neutral examples (`D-12`, `Q3`, `M2`), and name nothing of Emerald's own: no docs/ file, no D-, H- or M-number of this repo, no migration story. Also correct decision's law: a decision others already rely on is not changed in place but superseded by a later one; correcting a wording the same day is fine. This repo's docs/memory.emd keeps the development pack: find out whether it keeps its own copy of each declaration (then Emerald's history may stay in it) or follows the pack (then it reads the new prose, and nothing is lost: the decisions hold the history); src/data/packs/development/pack.test.ts says which. Anything not settled here is the maintainer's: stop and ask. Write a decision row only if (b)'s answer or the pack's law changes what a decision says. Tests: the notice once per document per run and the copy still taken; the pack's prose names no repo path or this repo's numbers (a test that fails when it does); pack.test.ts green. Done-test: a fresh synthetic document with the development pack, three writes, one backup notice; its decision and open_question declarations read sensibly to a stranger.
+files: src/plugin/write.ts, src/plugin/backup.ts (the notice once per document); src/plugin/instructions.ts, docs/plugin.md, hosts/claude/skills/ (hand edits and batching); src/data/packs/development/formats/*.format.md and pack.test.ts (the pack's prose)
+taken_by: run-milestone driver
+started: 2026-10-23
+branch: worktree (m52-f2)
+paths: "src/plugin/write.ts\nsrc/plugin/backup.ts\nsrc/plugin/instructions.ts\ndocs/plugin.md\nhosts/claude/skills/\nsrc/data/packs/development/"
+
 ### M53 F1
 milestone: M53
 scope: app
