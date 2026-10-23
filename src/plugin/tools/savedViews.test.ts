@@ -163,6 +163,42 @@ describe('saved views (M53 U5)', () => {
     expect(await savedIn(path)).toEqual([])
   })
 
+  it('changes only what it is given on one already saved, and empties what is named empty (M52 F3)', async () => {
+    const path = await tasks()
+    const saved = { format: 'task', view: 'saved', name: 'Open work', kind: 'list', match: { state: 'open' }, search: 'the', columns: ['title', 'due'] }
+    await arrangeViewsTool.run({ path, settings: [saved], commit: true }, NO_CLIENT)
+    const held = '?columns:task=title,due&search=the&state=open'
+    expect((await savedIn(path))[0]?.address).toBe(canonicalAddress(held))
+
+    // Only the sort: the dry run shows the view merged, and says what it keeps.
+    const sort = [{ format: 'task', view: 'saved', name: 'Open work', order: 'due', descending: false }]
+    const dry = await arrangeViewsTool.run({ path, settings: sort }, NO_CLIENT)
+    const merged = canonicalAddress(`${held}&order:due=ascending`)
+    expect(dry).toContain(`list ${merged}`)
+    expect(dry).toContain('**Open work** (task) keeps its kind, match, search and columns, and changes its order.')
+    expect((await savedIn(path))[0]?.address).toBe(canonicalAddress(held))
+    await arrangeViewsTool.run({ path, settings: sort, commit: true }, NO_CLIENT)
+    expect(await savedIn(path)).toEqual([{ format: 'task', name: 'Open work', kind: 'list', address: merged }])
+
+    // `descending` alone turns the kept order round.
+    await arrangeViewsTool.run({ path, settings: [{ format: 'task', view: 'saved', name: 'Open work', descending: true }], commit: true }, NO_CLIENT)
+    expect((await savedIn(path))[0]?.address).toBe(canonicalAddress(`${held}&order:due=descending`))
+
+    // Named empty, a setting is let go and the rest stays.
+    const emptied = [{ format: 'task', view: 'saved', name: 'Open work', match: {}, search: '', order: '' }]
+    const said = await arrangeViewsTool.run({ path, settings: emptied, commit: true }, NO_CLIENT)
+    expect(said).toContain('keeps its kind and columns, and changes its match, search and order.')
+    expect(await savedIn(path)).toEqual([{ format: 'task', name: 'Open work', kind: 'list', address: '?columns:task=title,due' }])
+    await arrangeViewsTool.run({ path, settings: [{ format: 'task', view: 'saved', name: 'Open work', columns: {} }], commit: true }, NO_CLIENT)
+    expect((await savedIn(path))[0]?.address).toBe('')
+
+    // Nothing to turn round once the order is gone; a new view is saved as given.
+    const refused = await arrangeViewsTool.run({ path, settings: [{ format: 'task', view: 'saved', name: 'Open work', descending: true }] }, NO_CLIENT)
+    expect(refused).toContain('name the `order` too')
+    const fresh = await arrangeViewsTool.run({ path, settings: [{ format: 'task', view: 'saved', name: 'Home', match: { project: 'Home' } }], commit: true }, NO_CLIENT)
+    expect(fresh).not.toContain('keeps')
+  })
+
   it('travels in a text document’s views part, and goes with its format', async () => {
     const path = await tasks()
     await saveOnScreen(path, 'Due within a week', 'table', '?due=within+7+days&order:due=descending')
