@@ -57,7 +57,7 @@ import {
 import { filterQuery } from '@/data/repositories/formatFilterRepository.ts'
 import { formatViews } from '@/data/repositories/formatLinkViewRepository.ts'
 import { toISODate } from '@/core/time.ts'
-import { canonicalAddress, filterAddress, foldFilter, isFoldKey } from '@/ui/formats/addressFilter.ts'
+import { addressView, canonicalAddress, filterAddress, foldFilter, isFoldKey, type AddressOrder } from '@/ui/formats/addressFilter.ts'
 import { today } from '../today.ts'
 import { savedViewSaid } from './saved.ts'
 import { dashboardLine, judgeDashboard, type DashboardChange } from './dashboard.ts'
@@ -149,7 +149,16 @@ type Change =
   | { readonly kind: 'WIDTH'; readonly format: string; readonly column: string; readonly was: number | undefined; readonly now: number | undefined }
   | { readonly kind: 'WORD'; readonly format: string; readonly view: WordView; readonly column: string; readonly was: string | undefined; readonly now: string | undefined }
   | { readonly kind: 'LIST'; readonly format: string; readonly column: string; readonly was: string | undefined; readonly now: string | undefined }
-  | { readonly kind: 'SAVED'; readonly format: string; readonly name: string; readonly was: SavedView | undefined; readonly now: SavedView | undefined }
+  | {
+      readonly kind: 'SAVED'
+      readonly format: string
+      readonly name: string
+      readonly was: SavedView | undefined
+      readonly now: SavedView | undefined
+      /** On one already saved, what it was not given and keeps, and what it was given (M52 F3). */
+      readonly kept?: readonly string[]
+      readonly given?: readonly string[]
+    }
   | { readonly kind: 'RENAMED'; readonly format: string; readonly from: string; readonly to: string }
   | DashboardChange
 
@@ -528,10 +537,16 @@ function judgeList(
 /**
  * **A view saved under a name** (M53 U5, D-514, D-520): `name` with what it
  * holds — `kind`, `match`, `search`, `order` and `descending`, `columns` —
- * saves it, writing over one of that name; `rename` alone gives it another
- * name, and `delete: true` removes it. What it holds is checked as
- * `format_rows` checks a filter, and kept as the address spells it, so a
- * window around today — `match:{due:"today"}` — stays the phrase.
+ * saves it; `rename` alone gives it another name, and `delete: true` removes
+ * it. What it holds is checked as `format_rows` checks a filter, and kept as
+ * the address spells it, so a window around today — `match:{due:"today"}` —
+ * stays the phrase.
+ *
+ * **On one already saved, only what is given changes** (M52 F3): a setting
+ * left out stays as the view holds it, as `update_format_rows` leaves a
+ * column it is not given; one given replaces that setting whole, and one
+ * named empty — `match:{}`, `search:""`, `order:""`, `columns:{}` — is let go.
+ * `columns:[]` stays what it always said, the name alone.
  */
 function judgeSaved(
   db: Database,
@@ -557,7 +572,7 @@ function judgeSaved(
   const rename = entry['rename']
   if (rename !== undefined) {
     if (typeof rename !== 'string') return { reason: '`rename` is the view’s new name.' }
-    if (holds.length > 0) return { reason: '`rename` goes with the `name` alone; save it again to change what it holds.' }
+    if (holds.length > 0) return { reason: '`rename` goes with the `name` alone; what it holds changes in a setting of its own.' }
     if (was === undefined) return { reason: missing }
     const refusal = savedNameRefusal(rename)
     if (refusal !== undefined) return { reason: refusal }
@@ -578,9 +593,12 @@ function judgeSaved(
   if (match !== undefined && (match === null || typeof match !== 'object' || Array.isArray(match))) {
     return { reason: '`match` is an object of column name to value, as `format_rows` takes it.' }
   }
-  const search = entry['search']
-  if (search !== undefined && typeof search !== 'string') return { reason: '`search` is the text looked for.' }
-  const held = (match ?? {}) as Record<string, unknown>
+  const searchGiven = entry['search']
+  if (searchGiven !== undefined && typeof searchGiven !== 'string') return { reason: '`search` is the text looked for.' }
+  // What the view holds now, read back from its address: what is not given stays.
+  const holding = was === undefined ? undefined : addressView(was.address)
+  const search = searchGiven ?? holding?.filter.search
+  const held = (match ?? { ...(holding?.filter.match ?? {}), ...(holding?.folds ?? {}) }) as Record<string, unknown>
   const own = Object.fromEntries(Object.entries(held).filter(([key]) => !isFoldKey(key)))
   const folds = Object.fromEntries(Object.entries(held).filter(([key]) => isFoldKey(key)))
   const filter = {
@@ -609,14 +627,25 @@ function judgeSaved(
   const order = entry['order']
   const descending = entry['descending']
   const sortable = [...declaration.columns.map((each) => each.name), ...(declaration.derived ?? []).map((each) => each.name)]
-  if (order !== undefined && (typeof order !== 'string' || !sortable.includes(order))) {
-    return { reason: `\`order\` is a column of ${format} to sort by: ${sortable.map((each) => `\`${each}\``).join(', ')}.` }
+  // `order:""` (or `[]`, as the entry's order resets) lets the sort go.
+  const unsorted = order === '' || (Array.isArray(order) && order.length === 0)
+  if (order !== undefined && !unsorted && (typeof order !== 'string' || !sortable.includes(order))) {
+    return { reason: `\`order\` is a column of ${format} to sort by: ${sortable.map((each) => `\`${each}\``).join(', ')}, or "" for none.` }
   }
   if (descending !== undefined && typeof descending !== 'boolean') return { reason: '`descending` is true or false.' }
-  if (descending !== undefined && order === undefined) return { reason: '`descending` turns an `order` round; name the `order` too.' }
+  // Given alone, it turns round the order the view keeps.
+  const sorted: AddressOrder | undefined =
+    order === undefined
+      ? holding?.order === undefined
+        ? undefined
+        : { column: holding.order.column, descending: typeof descending === 'boolean' ? descending : holding.order.descending }
+      : typeof order === 'string' && !unsorted
+        ? { column: order, descending: descending === true }
+        : undefined
+  if (descending !== undefined && sorted === undefined) return { reason: '`descending` turns an `order` round; name the `order` too.' }
 
   const columnsOffered = entry['columns']
-  let columns: Record<string, readonly string[]> = {}
+  let columns: Record<string, readonly string[]> = columnsOffered === undefined ? { ...(holding?.columns ?? {}) } : {}
   if (columnsOffered !== undefined) {
     const byFormat: Record<string, unknown> = Array.isArray(columnsOffered)
       ? { [format]: columnsOffered }
@@ -635,19 +664,44 @@ function judgeSaved(
     }
   }
 
-  const address = canonicalAddress(
-    filterAddress(filter, {
-      folds,
-      columns,
-      ...(typeof order === 'string' ? { order: { column: order, descending: descending === true } } : {}),
-    }),
-  )
+  const address = canonicalAddress(filterAddress(filter, { folds, columns, ...(sorted === undefined ? {} : { order: sorted }) }))
   if (address.length > SAVED_ADDRESS_LONGEST) {
     return { reason: `A saved view keeps at most ${String(SAVED_ADDRESS_LONGEST)} characters of address; this one is ${String(address.length)}.` }
   }
   const now: SavedView = { format, name, kind: offeredKind, address }
-  if (was !== undefined && was.kind === now.kind && was.address === now.address) return { changes: [] }
-  return { changes: [{ kind: 'SAVED', format, name, was, now }] }
+  if (was === undefined) return { changes: [{ kind: 'SAVED', format, name, was, now }] }
+  if (was.kind === now.kind && was.address === now.address) return { changes: [] }
+  // What it keeps is what it was not given and holds something; the kind always.
+  const keeps: Readonly<Record<string, boolean>> = {
+    kind: true,
+    match: Object.keys(holding?.filter.match ?? {}).length + Object.keys(holding?.folds ?? {}).length > 0,
+    search: holding?.filter.search !== undefined,
+    order: holding?.order !== undefined,
+    columns: Object.keys(holding?.columns ?? {}).length > 0,
+  }
+  const given = ['kind', 'match', 'search', 'order', 'columns'].filter(
+    (key) => entry[key] !== undefined || (key === 'order' && descending !== undefined),
+  )
+  const kept = Object.keys(keeps).filter((key) => keeps[key] === true && !given.includes(key))
+  return { changes: [{ kind: 'SAVED', format, name, was, now, kept, given }] }
+}
+
+/** `a, b and c`. */
+function listed(words: readonly string[]): string {
+  return words.length <= 1 ? words.join('') : `${words.slice(0, -1).join(', ')} and ${words[words.length - 1] ?? ''}`
+}
+
+/** What a view already saved keeps beside what it changes (M52 F3), a line each. */
+function keptText(changes: readonly Change[]): string | undefined {
+  const lines = changes.flatMap((change) =>
+    change.kind === 'SAVED' && change.now !== undefined && change.kept !== undefined && change.given !== undefined
+      ? [
+          `**${change.name}** (${change.format}) keeps ${change.kept.length === 0 ? 'nothing it was not given' : `its ${listed(change.kept)}`}` +
+            `${change.given.length === 0 ? '' : `, and changes its ${listed(change.given)}`}.`,
+        ]
+      : [],
+  )
+  return lines.length === 0 ? undefined : lines.join('\n')
 }
 
 /** A saved view as the dry run's table says it: its kind and address, or `-` for none. */
@@ -822,6 +876,7 @@ function describe(plan: ViewPlan): string {
   return paragraphs(
     `${plural(plan.changes.length, 'view setting')} — the app draws ${plan.changes.length === 1 ? 'it' : 'them'} the next time the page is shown.`,
     table(['Format', 'View', 'Column', 'Sets', 'Was', 'Becomes'], plan.changes.flatMap(changeRows)),
+    keptText(plan.changes),
     plan.after.length === 0 ? undefined : plan.after.join('\n\n'),
   )
 }
@@ -947,7 +1002,8 @@ export const arrangeViewsTool: PluginTool = {
     description:
       'How the app shows a format: on its entry, a column’s `show_as`, `header` line, `hidden`, ' +
       '`new_entry` and the `order`; a board’s lanes; a table column’s `width`; a column’s `setting` in a list, a roadmap, a ' +
-      'ready list or a start-here question; `view: saved`, a `name` and what it keeps (`today` stays that phrase), or ' +
+      'ready list or a start-here question; `view: saved`, a `name` and what it keeps (`today` stays that phrase) — on one saved, ' +
+      'only what is given changes; `match:{}`, `search:""`, `order:""`, `columns:{}` empty one — or ' +
       '`rename`, or `delete: true`; `view: dashboard` `add`s, `size`s, `order`s and `remove`s blocks (no `format`: the document’s). ' +
       '`formats` with a `format` shows the ' +
       'arrangement and each column’s ways. Dry-runs until `commit: true`.',

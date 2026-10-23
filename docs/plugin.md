@@ -1143,7 +1143,9 @@ rather than three decisions.
 > match:{due:"today"}` keeps a format's filter, folds, columns, sort and kind under a name — the
 > address as the app spells it, so `today` stays the phrase — and `rename` and `delete: true` change
 > one; `show_format view:"Due today"` draws it and `format_rows view:"Due today"` reads it, a `match`
-> given beside it added to the view's. `formats` with a `format` lists them.
+> given beside it added to the view's. `formats` with a `format` lists them. **On one already saved, only
+> what is given changes** (M52 F3): a setting left out stays, one given replaces that setting, one named
+> empty (`match:{}`, `search:""`, `order:""`, `columns:{}`) is let go, and the answer says what it kept.
 >
 > **M53 U4 added the list** (D-519): `show_format view:list` draws a format's rows one line each,
 > grouped as `arrange_views view:list` says (`group`, `line`, `done <members>` — words one column
