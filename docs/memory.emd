@@ -6152,8 +6152,8 @@ state: open
 unit: M51 F6
 should: After the cut, both generic skills say: run `npx vitest related <changed files> --run`, `src/privacy.test.ts` and typecheck before a commit, and the full suite locally only for a broad change, with CI running the rest. `hosts/claude/plugin.test.ts` passes with the new version and digest.
 breaks: The driver merged M51 F6 without these edits on 2026-10-22, at the maintainer's choice (option B), because changing what the plugin ships cuts its version (0.1.6+1) and the release is the maintainer's. Until the cut, installed plugins still teach the old run-the-whole-suite habit.
-not_tried: Also the maintainer's to decide: an EMERALD_DENYLIST repository secret, without which CI skips src/privacy.test.ts.
-state: open
+not_tried: Done at the 0.2.0 cut, 2026-10-23: ee9d513's hunks applied to hosts/claude/skills/closing-pass and run-milestone in the version commit. Still the maintainer's: an EMERALD_DENYLIST repository secret, without which CI skips src/privacy.test.ts.
+state: accepted
 
 ### Back the document up first: migration 031 takes it to schema 31, and older builds will then refuse it. Open your document. Import a statement through `#/import`, read one payslip at `#/paychecks/read` and one fund report at `#/funds`, and if a local model is running, press propose on the mapper.
 unit: M19 U1a

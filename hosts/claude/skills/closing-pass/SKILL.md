@@ -32,9 +32,12 @@ claim is worse than no claim, because it reads as current. Never grep build outp
 
 A commit cannot name itself, and a landing without its commit leaves the row pointing nowhere. So:
 
-1. **Run the project's checks once** — its full test suite and whatever else its `CLAUDE.md` or
-   README says runs before a commit. While building you ran only the tests near the change; this is
-   the one full run. Red means fix it or stop and say so, never commit around it.
+1. **Run the project's checks once** — the tests related to what you changed (with Vitest,
+   `npx vitest related <changed files> --run`; most runners have the same), its typecheck, and
+   whatever else its `CLAUDE.md` or README says runs before a commit. **The full suite only when the
+   change is broad** — the core everything imports, a dependency, the test setup — and once: where CI
+   runs the suite on every push, it runs the rest, and a red CI run is the next session's first task.
+   Red here means fix it or stop and say so, never commit around it.
 2. **Commit the work**, staging only your own files by name — never `git add -A`. Leave the document
    out of this commit.
 3. **`land_units` with `commit:` that commit's short hash** (`git rev-parse --short HEAD`) and your
