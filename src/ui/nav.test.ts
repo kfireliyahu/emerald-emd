@@ -213,6 +213,7 @@ describe('the ledger, staged', () => {
     expect(settings?.children?.map((child) => child.to)).toEqual([
       '/settings/packs',
       '/settings/model',
+      '/settings/calendar',
     ])
   })
 

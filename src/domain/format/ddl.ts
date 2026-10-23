@@ -55,7 +55,7 @@ import {
   type FormatDeclaration,
 } from './declaration.ts'
 import { filterMembers, isEmptyTest, type AggregateFilter } from './aggregate.ts'
-import { clockRange } from './clock.ts'
+import { clockRange, type Weekday } from './clock.ts'
 import { constraintKey, constraintText, isTableConstraint, type RowConstraint } from './constraint.ts'
 import { parseDecimal } from './decimal.ts'
 import { parsePercent } from './percent.ts'
@@ -542,9 +542,11 @@ export function filterConditionSql(
   members: readonly string[],
   keepUndecided: boolean,
   today?: string,
+  /** The document's first day of the week, for `this week` (D-528); Monday when not said. */
+  weekStart?: Weekday,
 ): string {
   if (filter.clock !== undefined) {
-    const range = today === undefined ? undefined : clockRange(filter.clock, today)
+    const range = today === undefined ? undefined : clockRange(filter.clock, today, weekStart)
     if (range === undefined) throw new Error(`where ${filter.column} is ${filter.is} needs to be told what day it is.`)
     const parts = [
       ...(range.from === undefined ? [] : [`${sql} >= ${quoteLiteral(range.from)}`]),
@@ -578,6 +580,7 @@ export function rollupFilterSql(
   alias: string,
   skip: readonly string[] = [],
   today?: string,
+  weekStart?: Weekday,
 ): string {
   const parts: string[] = []
   for (const filter of each.where) {
@@ -598,7 +601,7 @@ export function rollupFilterSql(
     const members = filterMembers(filter).map((member) =>
       column?.type === 'boolean' ? (member === 'true' ? '1' : '0') : quoteLiteral(member),
     )
-    parts.push(filterConditionSql(sql, filter, members, false, today))
+    parts.push(filterConditionSql(sql, filter, members, false, today, weekStart))
   }
   return parts.length === 0 ? '1 = 1' : parts.join(' AND ')
 }
@@ -611,6 +614,8 @@ export interface RollupRange {
   readonly to?: string | undefined
   /** `YYYY-MM-DD`, for a filter that reads the day (D-472) — the asking runtime's. */
   readonly today?: string | undefined
+  /** The document's first day of the week, for `this week` (D-528) — Monday when not said. */
+  readonly weekStart?: Weekday | undefined
 }
 
 /**
@@ -693,7 +698,7 @@ export function rollupQuerySql(
   // empty test decides it (M36 U04, D-380).
   const where: string[] = []
   for (const decider of deciders) {
-    where.push(filterConditionSql(decider.sql, decider.filter, decider.members.map(() => '?'), true, range.today))
+    where.push(filterConditionSql(decider.sql, decider.filter, decider.members.map(() => '?'), true, range.today, range.weekStart))
     params.push(...decider.members)
   }
   if (range.from !== undefined) {

@@ -8,7 +8,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { aggregate, filterText, parseFilter } from './aggregate.ts'
-import { clockRange, parseClockWords } from './clock.ts'
+import { clockRange, clockText, looksLikeClock, parseClockWords, type ClockWindow } from './clock.ts'
 import { column, declarationRejection, DECLARATION_LANGUAGE, nameRejection, type FormatDeclaration } from './declaration.ts'
 import { filterConditionSql, rollupQuerySql } from './ddl.ts'
 import { compileDerived, createDerivedViewSql, derived, derivedSelectSql, evaluateDerived } from './derived.ts'
@@ -71,6 +71,69 @@ describe('a window around today', () => {
     const wrong = parseRollup('soon', 'sum of hours by month of due where hours is within 14 days')
     if (!wrong.ok) throw new Error(wrong.error)
     expect(declarationRejection({ ...ASSIGNMENT, rollups: [wrong.value] })).toMatch(/hours is an integer\. A window around today is a date's/)
+  })
+})
+
+describe('the words around today grew (M53 F6, D-528)', () => {
+  /** The days a phrase takes on Wednesday 2026-10-14, a week starting Monday unless said. */
+  const range = (said: string, weekStart?: 7): unknown => {
+    const window = parseClockWords(said)
+    if (window === undefined) throw new Error(`${said} is not a window`)
+    return clockRange(window, TODAY, weekStart)
+  }
+
+  it('reads yesterday, tomorrow and last N days — today and the days before it, that many in all', () => {
+    expect(range('yesterday')).toEqual({ from: '2026-10-13', through: '2026-10-13' })
+    expect(range('Tomorrow')).toEqual({ from: '2026-10-15', through: '2026-10-15' })
+    expect(range('last 7 days')).toEqual({ from: '2026-10-08', through: TODAY })
+    expect(range('last 2 weeks')).toEqual({ from: '2026-10-01', through: TODAY })
+    expect(range('last 1 day')).toEqual({ from: TODAY, through: TODAY })
+    expect(parseClockWords('last 0 days')).toBeUndefined()
+    expect(parseClockWords('last 3 months')).toBeUndefined()
+  })
+
+  it('reads this, last and next week from Monday, and from Sunday when the document says', () => {
+    expect(range('this week')).toEqual({ from: '2026-10-12', through: '2026-10-18' })
+    expect(range('last week')).toEqual({ from: '2026-10-05', through: '2026-10-11' })
+    expect(range('next week')).toEqual({ from: '2026-10-19', through: '2026-10-25' })
+    expect(range('this week', 7)).toEqual({ from: '2026-10-11', through: '2026-10-17' })
+    expect(range('last week', 7)).toEqual({ from: '2026-10-04', through: '2026-10-10' })
+    expect(range('next week', 7)).toEqual({ from: '2026-10-18', through: '2026-10-24' })
+    // On the week's own first day, the week is the one it starts.
+    expect(clockRange({ kind: 'PERIOD', period: 'week', offset: 0 }, '2026-10-12')).toEqual({ from: '2026-10-12', through: '2026-10-18' })
+    expect(clockRange({ kind: 'PERIOD', period: 'week', offset: 0 }, '2026-10-18', 7)).toEqual({ from: '2026-10-18', through: '2026-10-24' })
+    // A week across the year's end.
+    expect(clockRange({ kind: 'PERIOD', period: 'week', offset: 0 }, '2027-01-01')).toEqual({ from: '2026-12-28', through: '2027-01-03' })
+  })
+
+  it('reads this, last and next month and year on the calendar, a leap February included', () => {
+    expect(range('this month')).toEqual({ from: '2026-10-01', through: '2026-10-31' })
+    expect(range('last month')).toEqual({ from: '2026-09-01', through: '2026-09-30' })
+    expect(range('next month')).toEqual({ from: '2026-11-01', through: '2026-11-30' })
+    expect(range('this year')).toEqual({ from: '2026-01-01', through: '2026-12-31' })
+    expect(range('last year')).toEqual({ from: '2025-01-01', through: '2025-12-31' })
+    expect(range('next year')).toEqual({ from: '2027-01-01', through: '2027-12-31' })
+    const month = (offset: -1 | 0 | 1, today: string) => clockRange({ kind: 'PERIOD', period: 'month', offset }, today)
+    expect(month(1, '2028-01-31')).toEqual({ from: '2028-02-01', through: '2028-02-29' })
+    expect(month(-1, '2027-01-05')).toEqual({ from: '2026-12-01', through: '2026-12-31' })
+    expect(month(1, '2026-12-05')).toEqual({ from: '2027-01-01', through: '2027-01-31' })
+  })
+
+  it('writes each back as it is typed, and knows a near miss', () => {
+    for (const said of ['yesterday', 'tomorrow', 'last 7 days', 'this week', 'last month', 'next year']) {
+      expect(clockText(parseClockWords(said) as ClockWindow)).toBe(said)
+    }
+    expect(looksLikeClock('this quarter')).toBe(true)
+    expect(looksLikeClock('last 3 months')).toBe(true)
+    expect(parseFilter('due is this quarter')).toEqual({ problem: expect.stringMatching(/not a window of days/) })
+    expect(parseFilter('due is this week')).toMatchObject({ clock: { kind: 'PERIOD', period: 'week', offset: 0 } })
+  })
+
+  it('is a rollup’s condition with the document’s week start', () => {
+    const filter = parseFilter('due is this week')
+    if ('problem' in filter) throw new Error(filter.problem)
+    expect(filterConditionSql('t.due', filter, [], false, TODAY)).toBe("(t.due >= '2026-10-12' AND t.due <= '2026-10-18')")
+    expect(filterConditionSql('t.due', filter, [], false, TODAY, 7)).toBe("(t.due >= '2026-10-11' AND t.due <= '2026-10-17')")
   })
 })
 

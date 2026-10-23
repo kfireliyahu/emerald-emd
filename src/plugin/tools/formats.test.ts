@@ -16,7 +16,7 @@ import {
   saveFormat,
 } from '@/data/repositories/formatRepository.ts'
 import { listRows } from '@/data/repositories/formatRowRepository.ts'
-import { listUnits } from '@/data/repositories/unitRepository.ts'
+import { chosenWeekStart, listUnits } from '@/data/repositories/unitRepository.ts'
 import { identity } from '@/domain/format/identity.ts'
 
 import { documentInfoTool } from './documentInfo.ts'
@@ -955,6 +955,20 @@ describe('the units a document knows', () => {
     )
     expect(answer).toContain('not a usable unit symbol')
     expect(listUnits(await reopen(path)).some((each) => each.symbol === 'slice')).toBe(false)
+  })
+
+  /** M53 F6 (D-528): the screen's Settings › Calendar, from a conversation. */
+  it('sets the day the weeks start on, beside the currency, and `formats` says it', async () => {
+    const path = await withIngredients()
+    expect(await formatsTool.run({ path }, NO_CLIENT)).toContain('**Weeks start on** monday, ISO’s, since none is chosen')
+    const dry = await recordUnitsTool.run({ path, week_starts_on: 'Sunday' }, NO_CLIENT)
+    expect(dry).toContain('weeks start on sunday')
+    expect(chosenWeekStart(await reopen(path))).toBeUndefined()
+
+    await recordUnitsTool.run({ path, week_starts_on: 'Sunday', commit: true }, NO_CLIENT)
+    expect(chosenWeekStart(await reopen(path))).toBe('sunday')
+    expect(await formatsTool.run({ path }, NO_CLIENT)).toContain('**Weeks start on** sunday')
+    expect(await recordUnitsTool.run({ path, week_starts_on: 'someday' }, NO_CLIENT)).toContain('not a day of the week')
   })
 })
 

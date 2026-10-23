@@ -11,6 +11,11 @@
  * enum's member, `yes`/`no`, a link's row by the name `matchCells` resolves —
  * so ticking one names exactly the rows its count promised.
  *
+ * **A date's words around today come first** (M53 F6, D-528): `today`, `this
+ * week`, `before today`… each with the rows it names now, counted from the same
+ * values — so a view saved from the menu keeps the words and is current
+ * tomorrow, where a ticked date would not be.
+ *
  * Read-only.
  */
 
@@ -19,12 +24,14 @@ import type { Database } from 'sql.js'
 import { money, toDecimalString } from '@/core/money.ts'
 import { err, ok, type Result } from '@/core/result.ts'
 import { isLinkType, labelColumn, tableNameFor, ROW_ID_COLUMN, type ColumnDeclaration, type FormatDeclaration } from '@/domain/format/declaration.ts'
+import { clockRange, OFFERED_WORDS, parseClockWords } from '@/domain/format/clock.ts'
 import { quoteIdentifier } from '@/domain/format/ddl.ts'
 import { readValue } from '@/domain/format/row.ts'
 import { query } from '../db/database.ts'
 
 import { filterQuery, type FilterRefusal, type RowFilter } from './formatFilterRepository.ts'
 import { countRows, holdsPassages, valueCounts } from './formatRowRepository.ts'
+import { documentWeekStart } from './unitRepository.ts'
 
 /** A value longer than a line is a passage, not a thing to filter by: such a column is searched instead. */
 export const VALUE_LONGEST = 80
@@ -52,7 +59,14 @@ export interface ColumnUnit {
  * leave.
  */
 export type ColumnValues =
-  | { readonly kind: 'VALUES'; readonly values: readonly ColumnValue[]; readonly empty: number; readonly rows: number }
+  | {
+      readonly kind: 'VALUES'
+      readonly values: readonly ColumnValue[]
+      readonly empty: number
+      readonly rows: number
+      /** A date's words around today, each with the rows it names on the day asked (D-528); absent for any other column, or when no day was said. */
+      readonly words?: readonly ColumnValue[]
+    }
   | { readonly kind: 'RANGE'; readonly units: readonly ColumnUnit[]; readonly empty: number; readonly rows: number }
   | { readonly kind: 'PASSAGES'; readonly rows: number }
 
@@ -121,7 +135,30 @@ export function columnValues(
     const text = typeof shown === 'string' || typeof shown === 'number' ? String(shown) : String(each.value)
     return { value: text, label: text, count: each.count }
   })
+  if (column.type === 'date' && today !== undefined) {
+    return ok({ kind: 'VALUES', values, empty, rows, words: dateWords(db, held, today) })
+  }
   return ok({ kind: 'VALUES', values, empty, rows })
+}
+
+/** The offered words around today, each counted over a date column's held values — a range the stored `YYYY-MM-DD` compares to as text. */
+function dateWords(
+  db: Database,
+  held: readonly { readonly value: string | number; readonly count: number }[],
+  today: string,
+): readonly ColumnValue[] {
+  const weekStart = documentWeekStart(db)
+  return OFFERED_WORDS.flatMap((word) => {
+    const window = parseClockWords(word)
+    const range = window === undefined ? undefined : clockRange(window, today, weekStart)
+    if (range === undefined) return []
+    const count = held.reduce((sum, each) => {
+      const day = String(each.value)
+      const inside = (range.from === undefined || day >= range.from) && (range.through === undefined || day <= range.through)
+      return inside ? sum + each.count : sum
+    }, 0)
+    return [{ value: word, label: word, count }]
+  })
 }
 
 /**

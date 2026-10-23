@@ -416,6 +416,13 @@ const CAPABILITIES: readonly Capability[] = [
     screen: FORMAT_ROWS,
     tool: 'record_units',
   },
+  {
+    // M53 F6 (D-528): Settings › Calendar, and beside the currency in a call.
+    does: 'Choose the day the document’s weeks start on — what `this week` names.',
+    writes: ['setDocumentWeekStart'],
+    screen: 'ui/screens/Calendar.tsx',
+    tool: 'record_units',
+  },
 ]
 
 /**
@@ -487,6 +494,7 @@ const THROUGH_ANOTHER: Readonly<Record<string, string>> = {
   keepChangeMarks:
     'Called by `adoptFormat`, `reconcileFormats` and every plugin open, after a table may have changed; nobody chooses it.',
   restoreChangeMarks: 'The inside of `applyDocument`: a text document’s change marks, after its rows.',
+  restoreDocumentWeekStart: 'The inside of `applyDocument`: a text document’s week start, after its formats.',
 }
 
 

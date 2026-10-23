@@ -5,7 +5,16 @@ import { createDatabase } from '../db/database.ts'
 import { column, DECLARATION_LANGUAGE } from '@/domain/format/declaration.ts'
 import { applyParts, serializeDocument } from './formatDocumentRepository.ts'
 import { adoptFormat } from './formatRepository.ts'
-import { addUnit, correctUnit, documentCurrency, listUnits, setDocumentCurrency } from './unitRepository.ts'
+import {
+  addUnit,
+  chosenWeekStart,
+  correctUnit,
+  documentCurrency,
+  documentWeekStart,
+  listUnits,
+  setDocumentCurrency,
+  setDocumentWeekStart,
+} from './unitRepository.ts'
 
 describe('the seeded units', () => {
   /**
@@ -158,5 +167,49 @@ describe("the document's currency (M29 F3, D-344)", () => {
     const applied = applyParts(rebuilt, parts.value, 100)
     if (!applied.ok) throw new Error(applied.error)
     expect(documentCurrency(rebuilt)).toBe('GBP')
+  })
+})
+
+describe("the day the document's weeks start on (M53 F6, D-528)", () => {
+  it('is Monday until one is chosen, then the day named, and refuses what is not a day', async () => {
+    const db = await createDatabase()
+    expect(chosenWeekStart(db)).toBeUndefined()
+    expect(documentWeekStart(db)).toBe(1)
+    expect(setDocumentWeekStart(db, ' Sunday ')).toEqual({ weekStart: 'sunday' })
+    expect(chosenWeekStart(db)).toBe('sunday')
+    expect(documentWeekStart(db)).toBe(7)
+    expect('problem' in setDocumentWeekStart(db, 'someday')).toBe(true)
+    expect(chosenWeekStart(db)).toBe('sunday')
+  })
+
+  it('goes into a text document beside the currency, and comes back out of one', async () => {
+    const source = await createDatabase()
+    adoptFormat(
+      source,
+      {
+        language: DECLARATION_LANGUAGE,
+        name: 'task',
+        title: 'Task',
+        notes: '',
+        columns: [column('name', 'text'), column('due', 'date')],
+        identities: [],
+        aggregates: [],
+        nothingMustHold: true,
+      },
+      100,
+    )
+    setDocumentWeekStart(source, 'sunday')
+    const alone = serializeDocument(source)
+    if (!alone.ok) throw new Error(alone.error)
+    expect(alone.value.find((part) => part.name === 'settings.md')?.text).toContain('week_starts_on: sunday')
+    setDocumentCurrency(source, 'ILS')
+    const parts = serializeDocument(source)
+    if (!parts.ok) throw new Error(parts.error)
+
+    const rebuilt = await createDatabase()
+    const applied = applyParts(rebuilt, parts.value, 100)
+    if (!applied.ok) throw new Error(applied.error)
+    expect(chosenWeekStart(rebuilt)).toBe('sunday')
+    expect(documentCurrency(rebuilt)).toBe('ILS')
   })
 })
