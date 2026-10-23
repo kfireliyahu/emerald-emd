@@ -103,6 +103,7 @@ import {
   type FormatDeclaration,
 } from './declaration.ts'
 import { formatDecimal } from './decimal.ts'
+import { parseWeekday, weekdayText } from './clock.ts'
 import { parseCurrency } from './currency.ts'
 import { formatStoredPercent } from './percent.ts'
 import {
@@ -165,6 +166,8 @@ export interface DocumentContent {
   readonly dashboards?: readonly DashboardBlock[]
   /** The currency a new money figure is in until a row says otherwise (M29 F3, D-344). */
   readonly currency?: string | undefined
+  /** The day a week starts on, `sunday`, when the document chose one (M53 F6, D-528). */
+  readonly weekStart?: string | undefined
   /** What was read in, and which rows each read wrote (M38 U3, D-408). */
   readonly readings?: readonly IntakeContent[]
   /** The names a person gave readers (M26 F1). */
@@ -296,6 +299,7 @@ export interface ParsedDocument {
   readonly saved: readonly SavedView[]
   readonly dashboards: readonly DashboardBlock[]
   readonly currency: string | undefined
+  readonly weekStart: string | undefined
   readonly readings: readonly ReadingRecord[]
   readonly readerNames: readonly ReaderNameRecord[]
   /** Format name to the day it last changed (M47 U5, D-462); a format the text gives none is absent. */
@@ -317,7 +321,7 @@ export const VIEWS_PART = 'views.md'
 /** What the canvas part is called, when a bubble was moved (D-291). */
 export const GRAPH_PART = 'graph.md'
 
-/** What the document's own settings are called, when it has one — its currency (D-344). */
+/** What the document's own settings are called, when it has one — its currency (D-344) and week start (D-528). */
 export const SETTINGS_PART = 'settings.md'
 
 /** What the record of what was read in is called, when anything was (M38 U3, D-408). */
@@ -436,7 +440,9 @@ export function writeDocument(content: DocumentContent): Result<readonly Documen
   if (placed.length > 0) parts.push({ name: GRAPH_PART, text: writePlaces(placed) })
 
   // Only when one was chosen: a document that never kept money says nothing.
-  if (content.currency !== undefined) parts.push({ name: SETTINGS_PART, text: writeSettings(content.currency) })
+  if (content.currency !== undefined || content.weekStart !== undefined) {
+    parts.push({ name: SETTINGS_PART, text: writeSettings({ currency: content.currency, weekStart: content.weekStart }) })
+  }
 
   // **What was read in** (M38 U3, D-408) — once the text could not carry it, a
   // read into a text document could not be saved at all. Each row a reading
@@ -551,8 +557,8 @@ export function readDocument(parts: readonly DocumentPart[]): Result<ParsedDocum
   if (!places.ok) return places
 
   const settingsPart = parts.find((part) => part.name === SETTINGS_PART)
-  const currency = settingsPart === undefined ? ok(undefined) : readSettings(settingsPart.text)
-  if (!currency.ok) return currency
+  const settings = settingsPart === undefined ? ok<DocumentSettings>({}) : readSettings(settingsPart.text)
+  if (!settings.ok) return settings
 
   const changedPart = parts.find((part) => part.name === CHANGED_PART)
   const changed = changedPart === undefined ? ok(new Map<string, string>()) : readChanged(changedPart.text)
@@ -598,7 +604,8 @@ export function readDocument(parts: readonly DocumentPart[]): Result<ParsedDocum
     views: views.value.views,
     saved: views.value.saved,
     dashboards: views.value.dashboards,
-    currency: currency.value,
+    currency: settings.value.currency,
+    weekStart: settings.value.weekStart,
     readings: readings.value.readings,
     readerNames: readings.value.readerNames,
     changed: changed.value,
@@ -1698,21 +1705,39 @@ function readingRowsOf(value: unknown): ReadingRecord['rows'] | undefined {
   return out
 }
 
-/** The document's own settings (D-344): its currency, one line under the header. */
-export function writeSettings(currency: string): string {
-  return ['---', 'emerald: settings', '---', '', `currency: ${currency}`, ''].join('\n')
+/** What the settings part holds: the currency (D-344) and the day a week starts on (D-528), each when chosen. */
+export interface DocumentSettings {
+  readonly currency?: string | undefined
+  readonly weekStart?: string | undefined
 }
 
-/** The settings part back into the currency it holds. */
-export function readSettings(text: string): Result<string | undefined, string> {
+/** The document's own settings: one line each under the header, only those chosen. */
+export function writeSettings(settings: DocumentSettings): string {
+  const lines = [
+    ...(settings.currency === undefined ? [] : [`currency: ${settings.currency}`]),
+    ...(settings.weekStart === undefined ? [] : [`week_starts_on: ${settings.weekStart}`]),
+  ]
+  return ['---', 'emerald: settings', '---', '', ...lines, ''].join('\n')
+}
+
+/** The settings part back into what it holds. */
+export function readSettings(text: string): Result<DocumentSettings, string> {
   const lines = text.replace(/\r\n/g, '\n').split('\n')
   const start = lines.findIndex((line, index) => index > 0 && line.trim() === '---')
   if (lines[0]?.trim() !== '---' || start === -1) {
     return err('The settings part starts with a --- block saying "emerald: settings".')
   }
   let currency: string | undefined
+  let weekStart: string | undefined
   for (const [at, line] of lines.entries()) {
     if (at <= start || line.trim() === '') continue
+    const week = /^week_starts_on:\s*(.*)$/.exec(line.trim())
+    if (week !== null) {
+      const day = parseWeekday(week[1] ?? '')
+      if (day === undefined) return err(`Line ${String(at + 1)} of the settings: "${week[1] ?? ''}" is not a day of the week.`)
+      weekStart = weekdayText(day)
+      continue
+    }
     const match = /^currency:\s*(.*)$/.exec(line.trim())
     if (match === null) {
       return err(`Line ${String(at + 1)} of the settings: "${line.trim()}" is not a setting this build knows.`)
@@ -1721,7 +1746,7 @@ export function readSettings(text: string): Result<string | undefined, string> {
     if (!code.ok) return err(`Line ${String(at + 1)} of the settings: ${code.error}`)
     currency = code.value
   }
-  return ok(currency)
+  return ok({ ...(currency === undefined ? {} : { currency }), ...(weekStart === undefined ? {} : { weekStart }) })
 }
 
 /** When each format last changed (M47 U5, D-462): one `name: YYYY-MM-DD` line per format, in name order. */

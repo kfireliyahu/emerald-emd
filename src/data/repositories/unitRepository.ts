@@ -30,6 +30,7 @@ import {
   type UnitRow,
   type UnitTable,
 } from '@/domain/format/unit.ts'
+import { MONDAY, parseWeekday, weekdayText, type Weekday } from '@/domain/format/clock.ts'
 import { parseCurrency } from '@/domain/format/currency.ts'
 import { query } from '../db/database.ts'
 
@@ -148,6 +149,40 @@ export function setDocumentCurrency(db: Database, typed: string): { problem: str
 /** The inside of `applyDocument`: a text document's currency, after its formats. */
 export function restoreDocumentCurrency(db: Database, currency: string | undefined): void {
   if (currency !== undefined) setDocumentCurrency(db, currency)
+}
+
+/**
+ * **The day this document's weeks start on** (M53 F6, D-528) — what `this
+ * week` and `last week` name. The document's and never the machine's, beside
+ * its currency for the same reason: the plugin and another machine must name
+ * the same rows. Nothing when none was chosen, which reads as Monday (ISO).
+ */
+export function chosenWeekStart(db: Database): string | undefined {
+  const value = query(db, "SELECT value FROM document_setting WHERE key = 'week_start'")[0]?.['value']
+  const day = typeof value === 'string' ? parseWeekday(value) : undefined
+  return day === undefined ? undefined : weekdayText(day)
+}
+
+/** The day this document's weeks start on, Monday when it chose none — what a window is worked out with. */
+export function documentWeekStart(db: Database): Weekday {
+  return parseWeekday(chosenWeekStart(db) ?? '') ?? MONDAY
+}
+
+/** Choose the day this document's weeks start on: `sunday`, `Monday`. Rows are untouched; a window is worked out again on read. */
+export function setDocumentWeekStart(db: Database, typed: string): { problem: string } | { weekStart: string } {
+  const day = parseWeekday(typed)
+  if (day === undefined) return { problem: `"${typed.trim()}" is not a day of the week: say monday, sunday, or another day by name.` }
+  db.run(
+    `INSERT INTO document_setting (key, value) VALUES ('week_start', ?)
+       ON CONFLICT (key) DO UPDATE SET value = excluded.value`,
+    [weekdayText(day)],
+  )
+  return { weekStart: weekdayText(day) }
+}
+
+/** The inside of `applyDocument`: a text document's week start, after its formats. */
+export function restoreDocumentWeekStart(db: Database, weekStart: string | undefined): void {
+  if (weekStart !== undefined) setDocumentWeekStart(db, weekStart)
 }
 
 function decode(row: Record<string, unknown>): UnitRow | undefined {

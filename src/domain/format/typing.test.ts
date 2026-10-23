@@ -205,8 +205,12 @@ describe("the document's currency", () => {
   })
 
   it('is kept in a text document, one line, and read back', () => {
-    expect(writeSettings('ILS')).toBe('---\nemerald: settings\n---\n\ncurrency: ILS\n')
-    expect(readSettings(writeSettings('EUR'))).toEqual({ ok: true, value: 'EUR' })
+    expect(writeSettings({ currency: 'ILS' })).toBe('---\nemerald: settings\n---\n\ncurrency: ILS\n')
+    expect(readSettings(writeSettings({ currency: 'EUR' }))).toEqual({ ok: true, value: { currency: 'EUR' } })
+    // The day a week starts on (M53 F6, D-528), beside it or alone.
+    expect(writeSettings({ weekStart: 'sunday' })).toBe('---\nemerald: settings\n---\n\nweek_starts_on: sunday\n')
+    expect(readSettings(writeSettings({ currency: 'ILS', weekStart: 'sunday' }))).toEqual({ ok: true, value: { currency: 'ILS', weekStart: 'sunday' } })
+    expect(readSettings('---\nemerald: settings\n---\n\nweek_starts_on: someday\n').ok).toBe(false)
     expect(readSettings('---\nemerald: settings\n---\n\ncurrency: $\n').ok).toBe(false)
     expect(readSettings('---\nemerald: settings\n---\n\ncolour: green\n').ok).toBe(false)
 

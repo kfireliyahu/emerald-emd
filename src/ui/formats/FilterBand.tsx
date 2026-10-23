@@ -31,6 +31,11 @@ function isClockWords(value: unknown): boolean {
   return typeof value === 'string' && parseClockWords(value) !== undefined
 }
 
+/** Words as a conversation types them: one space, lower case — `this week`. */
+function wordsSaid(text: string): string {
+  return text.trim().replace(/\s+/g, ' ').toLowerCase()
+}
+
 /**
  * **The filter the address holds, and the way to change it** (M44 U6, U7).
  * `set` writes a new one into the address — replacing the entry while a search
@@ -494,7 +499,10 @@ function counted(count: number): string {
  * **A column's menu** (M37 U4): every value the column holds, each with how
  * many rows hold it under the other filters — counted in SQL by `columnValues`,
  * the reading `format_rows`' `values` gives a conversation — with a search over
- * them, a tick per value, and *is* / *is not*. An enum lists every member in
+ * them, a tick per value, and *is* / *is not*. A date lists its words around
+ * today above its ticks — `today`, `this week`, `before today`, each with the
+ * rows it names now (M53 F6, D-528) — and choosing one writes the words, so a
+ * view saved from it is current tomorrow. An enum lists every member in
  * the order declared, a zero dimmed; a link its rows by name; money and a
  * quantity a range in one currency or unit; a column of passages the search
  * alone. Sorting by the column sits at the top when the table is what opened
@@ -607,6 +615,7 @@ export function ColumnMenu({
         <ValuesBody
           column={column}
           values={read.value.values}
+          words={read.value.words}
           empty={read.value.empty}
           held={column.name in held ? held[column.name] : undefined}
           text={text}
@@ -632,6 +641,7 @@ export function ColumnMenu({
 function ValuesBody({
   column,
   values,
+  words,
   empty,
   held,
   text,
@@ -641,6 +651,8 @@ function ValuesBody({
 }: {
   readonly column: ColumnDeclaration
   readonly values: readonly ColumnValue[]
+  /** A date's words around today, each with its rows (D-528). */
+  readonly words?: readonly ColumnValue[] | undefined
   readonly empty: number
   readonly held: unknown
   readonly text: string
@@ -661,6 +673,12 @@ function ValuesBody({
   const needle = text.trim().toLocaleLowerCase()
   const narrowed = needle === '' ? values : values.filter((each) => memberSaid(column, each.label).toLocaleLowerCase().includes(needle) || each.value.toLocaleLowerCase().includes(needle))
   const drawn = narrowed.slice(0, VALUES_DRAWN)
+  // The words held, when they are words — one window, asked alone (D-472) — and
+  // listed first when the menu does not offer them (`within 14 days`).
+  const heldWords = typeof held === 'string' && isClockWords(held) ? wordsSaid(held) : undefined
+  const wordsShown = (words ?? []).filter((each) => needle === '' || each.value.includes(needle))
+  const heldExtra = heldWords !== undefined && words !== undefined && !words.some((each) => each.value === heldWords) ? heldWords : undefined
+  const pickWords = (value: string): void => onWrite(heldWords === value ? undefined : value)
 
   const writeTicks = (next: readonly string[], turned: boolean): void =>
     onWrite(next.length === 0 ? undefined : heldValue({ values: next.map((each) => (each === '' ? null : each)), not: turned }))
@@ -706,12 +724,26 @@ function ValuesBody({
         onKeyDown={(event) => {
           if (event.key !== 'Enter' || text.trim() === '') return
           event.preventDefault()
+          // Words typed — `last 3 weeks` — are written as the words, never a value (D-528).
+          if (words !== undefined && isClockWords(text)) {
+            onWrite(wordsSaid(text))
+            onText('')
+            return
+          }
           const exact = values.find((each) => each.label.toLocaleLowerCase() === needle || each.value.toLocaleLowerCase() === needle)
           const value = exact?.value ?? text.trim()
           if (!tickedKeys.has(tickKey(value))) toggle(value)
           onText('')
         }}
       />
+      {(wordsShown.length > 0 || heldExtra !== undefined) && (
+        <ul className="flex max-h-48 flex-col overflow-y-auto border-b border-hairline pb-1" aria-label={`Around today, for ${column.name}`}>
+          {heldExtra !== undefined && <Word value={heldExtra} column={column.name} checked onPick={() => pickWords(heldExtra)} />}
+          {wordsShown.map((each) => (
+            <Word key={each.value} value={each.value} count={each.count} column={column.name} checked={heldWords === each.value} onPick={() => pickWords(each.value)} />
+          ))}
+        </ul>
+      )}
       <ul className="flex max-h-64 flex-col overflow-y-auto" aria-label={`Values of ${column.name}`}>
         <Tick label={<i>(empty)</i>} count={empty} checked={tickedKeys.has('')} onToggle={() => toggle('')} />
         {extra.map((value) => (
@@ -831,6 +863,37 @@ function RangeBody({
       )}
       {empty > 0 && <p className="text-caption text-ink-tertiary">{counted(empty)} with none.</p>}
     </>
+  )
+}
+
+/**
+ * **Words around today, one of them chosen** (M53 F6, D-528): a radio, since a
+ * window is asked alone, that lets go when chosen again. Written exactly as a
+ * conversation types it — `before today`, never a gloss.
+ */
+function Word({
+  value,
+  count,
+  column,
+  checked,
+  onPick,
+}: {
+  readonly value: string
+  readonly count?: number | undefined
+  readonly column: string
+  readonly checked: boolean
+  readonly onPick: () => void
+}) {
+  return (
+    <li>
+      <label
+        className={`flex h-7 cursor-pointer items-center gap-2 rounded px-1 select-none hover:bg-accent-soft ${count === 0 && !checked ? 'text-ink-tertiary' : ''}`}
+      >
+        <input type="radio" name={`${column}-words`} checked={checked} onChange={onPick} onClick={() => checked && onPick()} />
+        <span className="min-w-0 flex-1 truncate">{value}</span>
+        {count !== undefined && <span className="text-caption text-ink-tertiary tabular-nums">{counted(count)}</span>}
+      </label>
+    </li>
   )
 }
 

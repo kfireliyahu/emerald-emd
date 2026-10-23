@@ -24,6 +24,7 @@ import {
   type RollupQueryRow,
 } from '@/domain/format/rollup.ts'
 import { query } from '../db/database.ts'
+import { documentWeekStart } from './unitRepository.ts'
 
 export interface RollupResult {
   readonly rollup: RollupDeclaration
@@ -50,7 +51,8 @@ export function runRollup(
   const rollup = (declaration.rollups ?? []).find((each) => each.name === name)
   if (rollup === undefined) return undefined
 
-  const { sql, params } = rollupQuerySql(declaration, rollup, formats, range)
+  // A week starts on the document's day unless the caller said (D-528).
+  const { sql, params } = rollupQuerySql(declaration, rollup, formats, { weekStart: documentWeekStart(db), ...range })
   const queried: RollupQueryRow[] = query(db, sql, [...params]).map((row) => ({
     period: textOrNull(row['period']),
     by: textOrNull(row['by']),

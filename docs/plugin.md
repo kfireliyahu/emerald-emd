@@ -1136,6 +1136,10 @@ rather than three decisions.
 > take blocks' names; with no `format` it is the document's, each block naming its `format`.
 > `show_format view:dashboard` (no `format`: the document's) draws it, its text naming every block
 > with what it holds now. `start_here` is unchanged.
+> **M53 F6 added words around today** (D-528): `match:{due: "this week"}` — and `yesterday`,
+> `tomorrow`, `last 7 days`, `this|last|next week|month|year` — beside D-472's; `format_rows values:due`
+> lists them first with their rows, as a date's filter menu does. A week starts on the document's day,
+> which `record_units week_starts_on:"sunday"` sets and `formats` says; Monday when unset.
 > **M53 F4 sizes a block** (D-527): `size:[{name:"Open tasks", width:4, height:8}]` on the same setting
 > — a width in the grid's columns (1 to 4) and a height in its rows (2 to 20), either alone — as dragging
 > the block's edge does on screen; `show_format` names a sized block's size, and one with none draws as it did.

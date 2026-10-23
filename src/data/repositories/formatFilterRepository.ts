@@ -30,6 +30,7 @@ import { parseCurrency } from '@/domain/format/currency.ts'
 import { figureRangeSaid, parseFigureRange, type FigureRangeWords } from '@/domain/format/figureRange.ts'
 
 import { indexOf, linksByName } from './formatJoinRepository.ts'
+import { documentWeekStart } from './unitRepository.ts'
 import type { FigureRange, HeldTo, RowQuery } from './formatRowRepository.ts'
 
 /**
@@ -214,7 +215,7 @@ export function filterQuery(
           return err({
             kind: 'REFUSED',
             column: name,
-            reason: `${name} is held to a window of days ${holding.not ? 'turned round' : 'among other values'}; a window is asked alone — say \`before today\`, \`after today\` or \`within 14 days\`.`,
+            reason: `${name} is held to a window of days ${holding.not ? 'turned round' : 'among other values'}; a window is asked alone — say \`before today\`, \`after today\`, \`within 14 days\` or \`this week\`.`,
           })
         }
       }
@@ -222,7 +223,8 @@ export function filterQuery(
       continue
     }
     if ('refused' in column) return err({ kind: 'REFUSED', column: name, reason: column.refused })
-    const range = today === undefined ? undefined : clockRange(clock, today)
+    // A week starts on the document's day, never the machine's (D-528).
+    const range = today === undefined ? undefined : clockRange(clock, today, documentWeekStart(db))
     if (range === undefined) {
       return err({ kind: 'REFUSED', column: name, reason: `${name} ${clockText(clock)} needs the day it is asked on, and nothing said what day it is.` })
     }

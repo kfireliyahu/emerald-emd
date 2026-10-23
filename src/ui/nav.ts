@@ -245,6 +245,9 @@ export const NAVIGATION: readonly NavSection[] = [
       // The engine's, and the one Settings child that is: U2c asks a local
       // model to work a declaration out from an example (D-221).
       { to: '/settings/model', label: 'Local model' },
+      // **The day this document's weeks start on** (M53 F6, D-528): what
+      // `this week` names, kept in the file beside its currency.
+      { to: '/settings/calendar', label: 'Calendar' },
       // **A spreadsheet of what the document holds** (M28 U5, D-313): the
       // months' CSV was a button above the month on Home, and it was asked
       // for here.

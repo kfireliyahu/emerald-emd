@@ -443,6 +443,7 @@ written out here.
 | D-525 | 2026-10-22 | A dashboard makes the view or chart it needs in place: *Add a block* offers *New view* — a list, a table or a board of one format, its filter, order and columns made with the format tab's own pieces and a name — saved and placed in one step, and *New chart* — a count or a sum by month of a date, per a link or not, under a filter — declared as a rollup of its format and placed in one step; picking an existing view or rollup stays; no new write; amends D-521 | [below](#d-525) |
 | D-526 | 2026-10-22 | A chart is listed in the rail under its format, beside the saved views, with a chart glyph: its name opens its tab, and it is renamed and deleted where it stands, Delete asking once; its tab deletes it too; deleting a rollup deletes its dashboard blocks and renaming one takes them along, in `adoptFormat`, so `extend_format remove` and `rename` (which now takes a rollup's name) do the same; a block's *Remove* still leaves the chart and says where to delete it; amends D-521 | [below](#d-526) |
 | D-527 | 2026-10-23 | A dashboard block is resized by dragging its edge — the right edge its width, the bottom its height, the corner both — snapped to the grid's four columns and its rows of 40 pixels (16 between two), from one column and two rows to four columns and twenty rows; a taller view shows more rows and scrolls inside, a wider table more columns and a wider board its lanes side by side, and a chart redraws to its height; the size is kept beside the block's place, `width` and `height` on `format_dashboard_block` (065), written in a text document's dashboard lines, and a block with none keeps the size it had; `arrange_views view:dashboard` `size` sets it and `show_format` names it; amends D-521 | [below](#d-527) |
+| D-528 | 2026-10-23 | A date's filter takes `yesterday`, `tomorrow`, `last N days/weeks` (today and the N−1 days before it) and `this/last/next week/month/year` beside D-472's words, on the local calendar; a date column's filter menu offers them above its ticks, written as a conversation types them, so a view saved from it stays current; the day a week starts on is the document's — `week_start` in `document_setting`, set in Settings › Calendar and by `record_units` `week_starts_on`, and Monday when unset; amends D-472 | [below](#d-528) |
 | D-523 | 2026-10-22 | A repository is set up by `npx emerald-mcp init`, a subcommand of the server's bin: it names or creates the document (with the development pack, as text inside the repository and as bytes outside it), writes CLAUDE.md a section between its own markers holding the start-here table and the column lines from the document, and writes the plugin's two hooks into `.claude/settings.json` only where no Emerald plugin is enabled, never over a hook it did not write; every file is compared before it is written, so a second run changes nothing | [below](#d-523) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
@@ -1423,6 +1424,59 @@ for it, and it is an unlisted behaviour — the maintainer's if wanted.
 
 **Consequences.** A block's size is presentation, never the declaration (D-289). A document opened by
 an older build than 065 is refused as too new, as every migration is.
+
+## D-528 · 2026-10-23 · A date's filter takes `yesterday`, `tomorrow`, `last N days|weeks` (today and the N−1 days before it) and `this|last|next week|month|year` beside D-472's words, on the local calendar; a date column's filter menu offers them above its ticks, written as a conversation types them, so a view saved from it stays current; the day a week starts on is the document's — `week_start` in `document_setting`, set in Settings › Calendar and by `record_units` `week_starts_on`, and Monday when unset; amends D-472 <a id="d-528"></a>
+
+**Context.** M53 F6, from the maintainer's 0.2.0 review: a dashboard of the day he is watching must
+stay current, never hardcoded. D-472 gave a filter `today`, `before today`, `after today` and
+`within N days|weeks`, kept as words and worked out on read; but on screen a list's date filter
+offered only the dates its rows held, as ticks, so ticking today saved a fixed date and the view was
+stale tomorrow. Only a dashboard total's conditions and the Agenda offered words, and a conversation
+could set what the screen could not (D-227). Ruled (the maintainer, 2026-10-23): (1) the words
+`yesterday`, `tomorrow`, `last N days|weeks` — today and the N−1 days before it — and `this|last|next
+week|month|year`; (2) a date column's filter menu offers the words, old and new, above its ticks,
+written exactly as a conversation types them, and a view saved from it keeps them; (3) the day a week
+starts on is a document setting, not an app preference, set on screen in the document's settings and
+from a conversation, Monday (ISO) when unset; (4) periods use the local calendar day `today` already
+reads. The menu's look and where the control sits in settings were left to the session.
+
+**Decision.**
+
+- **The new words** (`clock.ts`): `yesterday` and `tomorrow` are one day each; `last 7 days` is today
+  and the six days before it, so `last 1 day` is today and `last 0 days` is not a window; `this week`
+  is the seven days from the document's first day of the week that holds today, `last` and `next` the
+  seven either side; `this month` and `this year` are the calendar's, a leap February included. Each is
+  written back as typed. `within 14 days` is unchanged — today and fourteen days on — so `last` and
+  `within` are not mirror images by a day; the maintainer's definition of `last` was taken as said.
+  A near miss (`this quarter`, `last 3 months`) is refused naming every word, as `within 1 month` was.
+- **The menu** (`FilterBand.tsx`, `columnValues`): a typed date column lists, above its ticks, `today`,
+  `yesterday`, `tomorrow`, `this|last|next week`, `this|last|next month`, `this|last|next year`,
+  `before today`, `after today`, `last 7 days`, `within 7 days`, `last 30 days` and `within 30 days`,
+  each with the rows it names now under the other filters, counted from the same values as the ticks.
+  They are radios — a window is asked alone (D-472) — and choosing the held one again lets it go;
+  ticking a date replaces a word, as before. Words typed in the menu's find box and entered (`last 3
+  weeks`) are written as words. `format_rows` `values` lists the same words first, under *Around today*.
+- **The week start is the document's**: `week_start` in `document_setting` (057's key/value table, so
+  no migration), the day spelled `monday`…`sunday`; read as Monday when absent or unreadable. A text
+  document writes it in `settings.md` as `week_starts_on: sunday`, beside the currency. Every reading
+  of a window takes it — `filterQuery`, a rollup's `where` through `runRollup`, the menu's counts — so
+  the screen and the plugin name the same rows on the same day.
+- **Settings › Calendar** holds the control — a select of the seven days, and a line saying which days
+  *this week* is now. Any of the seven may be chosen; nothing narrowed it to two.
+
+**Parity.** `record_units` takes `week_starts_on`, beside `currency` as the same kind of fact — what
+this document's figures are counted in — dry run first; `formats` says the week start under the
+currency. Same write (`setDocumentWeekStart`). The words in a `match` were already a conversation's.
+
+**Alternatives rejected.** An app preference: the plugin and another machine would name other rows
+(the ruling). A tool of its own for one setting: `record_units` already sets the document's currency,
+the nearest precedent the brief named. Glosses in the menu (*Overdue*, *This week's*): ruled out — the
+words are the conversation's. Words as checkboxes beside the ticks: a window is one question.
+
+**Consequences.** A view saved from the menu holds words and is current every day. A claim still may
+not read the clock (`CLOCK_REASON`). A match value that is one of the new words on a column that is
+not a date is refused as `today` was (D-472) — an enum member called `next week` is matched quoted in
+a declared filter, and is the maintainer's to raise if it ever bites.
 
 ## Related
 

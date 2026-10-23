@@ -138,7 +138,10 @@ import {
   documentCurrency,
   listUnits,
   setDocumentCurrency,
+  chosenWeekStart,
+  setDocumentWeekStart,
 } from '@/data/repositories/unitRepository.ts'
+import { parseWeekday, weekdayText } from '@/domain/format/clock.ts'
 import { parseCurrency } from '@/domain/format/currency.ts'
 import { stageRows } from '@/data/repositories/formatBatchRepository.ts'
 import {
@@ -361,7 +364,7 @@ function columnRow(column: ColumnDeclaration): readonly string[] {
  * to know whether their symbol is in here, and a twenty-eight-row table to
  * answer that is the kind of output that costs more to read than it says.
  */
-function unitsText(units: UnitTable, currency?: string | undefined): string {
+function unitsText(units: UnitTable, currency?: string | undefined, weekStart?: string | undefined): string {
   const lines = DIMENSIONS.map((dimension) => {
     const members = unitsOf(units, dimension)
     if (members.length === 0) return undefined
@@ -386,6 +389,10 @@ function unitsText(units: UnitTable, currency?: string | undefined): string {
     currency === undefined
       ? 'No currency is chosen for this document; `record_units` with `currency` sets one.'
       : `**Currency:** ${currency} — what a new amount on a screen starts in. A row still names its own.`,
+    // The day its weeks start on, beside it (M53 F6, D-528).
+    weekStart === undefined
+      ? '**Weeks start on** monday, ISO’s, since none is chosen; `record_units` with `week_starts_on` sets another — what `this week` names.'
+      : `**Weeks start on** ${weekStart} — what \`this week\` and \`last week\` name, here and on a screen.`,
   )
 }
 
@@ -792,7 +799,7 @@ export const formatsTool: PluginTool = {
           ? undefined
           : `${plural(orphans.length, 'table')} — ${orphans.join(', ')} — ${verb(orphans.length, 'carries', 'carry')} ` +
             'the declared-format prefix with no declaration behind it. Left strictly alone.',
-        unitsText(listUnits(document.db), documentCurrency(document.db)),
+        unitsText(listUnits(document.db), documentCurrency(document.db), chosenWeekStart(document.db)),
       )
     })
   },
@@ -820,7 +827,7 @@ export const MATCH_PROP = {
     'Column name to the value it must equal. Text and enum columns match without ' +
     'regard to case; money or a quantity, a range: `10..50 ILS`. A list is any of them (`[planned, in_progress]`; a list column holding any), ' +
     '`{not: x}` or `{not: [a, b]}` none (empty passes), `null` empty. ' +
-    'A date takes `within 14 days`, `before today`, `after today`, `today`.',
+    'A date takes `today`, `yesterday`, `tomorrow`, `before|after today`, `within|last 14 days`, `this|last|next week|month|year`.',
   additionalProperties: true,
 } as const
 
@@ -1230,6 +1237,16 @@ function valuesText(db: Database, declaration: FormatDeclaration, name: string, 
   }
   return paragraphs(
     lead,
+    // A date's words around today first, as the header menu lists them (M53 F6, D-528).
+    found.words === undefined
+      ? undefined
+      : section(
+          'Around today',
+          [
+            table(['Words', 'Rows'], found.words.map((each) => [each.value, count(each.count)])),
+            `Held by the words, not a date, so it is current tomorrow: \`match:{${name}: "this week"}\`.`,
+          ].join('\n\n'),
+        ),
     table(['Value', 'Rows'], [
       ...found.values.map((each) => [each.value === each.label ? each.value : `${each.label} (${each.value})`, count(each.count)]),
       ['(empty)', count(found.empty)],
@@ -4574,6 +4591,8 @@ interface UnitPlan {
   readonly correcting: readonly { readonly was: UnitRow; readonly now: UnitRow }[]
   /** The document's currency, when the call chooses or changes it (M29 F3, D-344). */
   readonly currency: { readonly was: string | undefined; readonly now: string } | undefined
+  /** The day its weeks start on, when the call chooses or changes it (M53 F6, D-528). */
+  readonly weekStart: { readonly was: string | undefined; readonly now: string } | undefined
   readonly refusals: readonly Refused[]
 }
 
@@ -4592,7 +4611,11 @@ function dimensionOf(offered: unknown): Dimension | undefined {
     : undefined
 }
 
-function unitMutation(offered: readonly Record<string, unknown>[], currency?: string | undefined): Mutation<UnitPlan> {
+function unitMutation(
+  offered: readonly Record<string, unknown>[],
+  currency?: string | undefined,
+  weekStart?: string | undefined,
+): Mutation<UnitPlan> {
   return {
     // Whole or not at all, so a refused batch takes no copy of the document to
     // explain that nothing happened (D-217).
@@ -4662,8 +4685,15 @@ function unitMutation(offered: readonly Record<string, unknown>[], currency?: st
         if (!code.ok) refusals.push({ index: offered.length, reason: code.error })
         else chosen = { was: documentCurrency(document.db), now: code.value }
       }
+      // And the day its weeks start on, the same kind of fact (D-528).
+      let week: UnitPlan['weekStart']
+      if (weekStart !== undefined) {
+        const day = parseWeekday(weekStart)
+        if (day === undefined) refusals.push({ index: offered.length, reason: `"${weekStart}" is not a day of the week: say monday, sunday, or another day by name.` })
+        else week = { was: chosenWeekStart(document.db), now: weekdayText(day) }
+      }
 
-      return { adding, correcting, currency: chosen, refusals }
+      return { adding, correcting, currency: chosen, weekStart: week, refusals }
     },
 
     describe: (plan) => {
@@ -4671,6 +4701,7 @@ function unitMutation(offered: readonly Record<string, unknown>[], currency?: st
       return paragraphs(
         `${plural(plan.adding.length, 'unit')} added and ${plural(plan.correcting.length, 'unit')} corrected.`,
         plan.currency === undefined ? undefined : currencyChange(plan.currency),
+        plan.weekStart === undefined ? undefined : weekStartChange(plan.weekStart),
         plan.adding.length === 0
           ? undefined
           : section(
@@ -4734,9 +4765,11 @@ function unitMutation(offered: readonly Record<string, unknown>[], currency?: st
         correctUnit(document.db, each.now.symbol, each.now.perBase, each.now.note)
       }
       if (plan.currency !== undefined) setDocumentCurrency(document.db, plan.currency.now)
+      if (plan.weekStart !== undefined) setDocumentWeekStart(document.db, plan.weekStart.now)
       return paragraphs(
         `${plural(plan.adding.length, 'unit')} added and ${plural(plan.correcting.length, 'unit')} corrected.`,
         plan.currency === undefined ? undefined : currencyChange(plan.currency),
+        plan.weekStart === undefined ? undefined : weekStartChange(plan.weekStart),
       )
     },
   }
@@ -4748,6 +4781,12 @@ function currencyChange(change: NonNullable<UnitPlan['currency']>): string {
   return change.was === undefined
     ? `The document's currency becomes ${change.now}: a new amount on a screen starts in it.`
     : `The document's currency moves from ${change.was} to ${change.now}. No amount already kept changes.`
+}
+
+/** A week start chosen or changed, in a sentence. */
+function weekStartChange(change: NonNullable<UnitPlan['weekStart']>): string {
+  if (change.was === change.now) return `This document's weeks already start on ${change.now}.`
+  return `This document's weeks start on ${change.now}${change.was === undefined ? '' : `, not ${change.was}`}: \`this week\` and \`last week\` name its weeks from there, here and on a screen. No row changes.`
 }
 
 /**
@@ -4771,7 +4810,8 @@ export const recordUnitsTool: PluginTool = {
       'kilograms is arithmetic, millilitres to grams needs a density, and a density is a column ' +
       'of the format rather than a unit. A symbol the document already has is corrected — its ' +
       'factor and its note, never what it measures. `currency` sets the document’s currency — ' +
-      'what a new amount on a screen starts in; a row still names its own. `formats` lists both. ' +
+      'what a new amount on a screen starts in; a row still names its own. `week_starts_on` is ' +
+      'what `this week` counts from (Monday). `formats` lists them. ' +
       'Returns the diff and writes nothing until `commit: true`.',
     inputSchema: {
       type: 'object',
@@ -4779,7 +4819,7 @@ export const recordUnitsTool: PluginTool = {
         path: PATH_PROP,
         units: {
           type: 'array',
-          description: `One object per unit. Up to ${String(UNITS_MAX)} in a call; none when only \`currency\` is set.`,
+          description: `One object per unit. Up to ${String(UNITS_MAX)} in a call; none for a setting alone.`,
           items: {
             type: 'object',
             properties: {
@@ -4808,6 +4848,7 @@ export const recordUnitsTool: PluginTool = {
           },
         },
         currency: stringProp('The document’s currency, a three-letter code: `ILS`.'),
+        week_starts_on: stringProp('A day by name: `sunday`.'),
         commit: booleanProp('Write it. Omit or false for the dry run.'),
       },
       required: ['path'],
@@ -4818,12 +4859,14 @@ export const recordUnitsTool: PluginTool = {
   run: async (args) => {
     const path = requireString(args, 'path')
     const currency = typeof args['currency'] === 'string' ? args['currency'] : undefined
-    const units = currency !== undefined && args['units'] === undefined ? [] : batchOf(args, 'units', 'unit')
+    const weekStart = typeof args['week_starts_on'] === 'string' ? args['week_starts_on'] : undefined
+    const settingOnly = currency !== undefined || weekStart !== undefined
+    const units = settingOnly && args['units'] === undefined ? [] : batchOf(args, 'units', 'unit')
     if (units.length > UNITS_MAX) {
       throw new ToolInputError(
         `${String(units.length)} units is more than the ${String(UNITS_MAX)} this takes in one call.`,
       )
     }
-    return mutatingCall(path, args['commit'] === true, unitMutation(units, currency))
+    return mutatingCall(path, args['commit'] === true, unitMutation(units, currency, weekStart))
   },
 }

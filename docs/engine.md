@@ -192,7 +192,7 @@ moved it after a real domain needed sums across a join. **The forbidden set did 
 permitted set grew, and the difference is a unit system** ([H7](#h7-is-the-unit-system-the-engines-or-a-packs)).
 
 **Today belongs in questions, never in claims** (D-472). A filter
-(`due is within 14 days`, `before today`), a sort and a computed column worked out on read (`days_left
+(`due is within 14 days`, `before today`, `this week` — D-528), a sort and a computed column worked out on read (`days_left
 = due - today`) may read the clock; an identity, a total a claim reads, a rule set and the stored view
 may not. A proof that held yesterday must not fail tomorrow with nothing changed.
 

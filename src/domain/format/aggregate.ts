@@ -369,7 +369,9 @@ export function parseFilter(text: string): AggregateFilter | { readonly problem:
     return { column, is: rest.toLowerCase(), clock }
   }
   if (!rest.startsWith('"') && looksLikeClock(rest)) {
-    return refuse(`"${rest}" is not a window of days: say \`within 14 days\`, \`within 2 weeks\`, \`before today\`, \`after today\` or \`today\`.`)
+    return refuse(
+      `"${rest}" is not a window of days: say \`today\`, \`yesterday\`, \`tomorrow\`, \`before today\`, \`after today\`, \`within 14 days\`, \`last 7 days\`, or \`this\`, \`last\` or \`next\` \`week\`, \`month\` or \`year\`.`,
+    )
   }
 
   if (rest === 'one of' || rest.startsWith('one of ')) {

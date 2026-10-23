@@ -47,6 +47,7 @@ import { ReadFilesBar } from '@/ui/import/ReadFilesBar.tsx'
 import { FundDetail } from '@/ui/screens/FundDetail.tsx'
 import { Funds } from '@/ui/screens/Funds.tsx'
 import { GoalDetail } from '@/ui/screens/GoalDetail.tsx'
+import { Calendar } from '@/ui/screens/Calendar.tsx'
 import { Export } from '@/ui/screens/Export.tsx'
 import { FileGap } from '@/ui/screens/FileGap.tsx'
 import { Home } from '@/ui/screens/Home.tsx'
@@ -579,6 +580,8 @@ function RoutedViews() {
           {/* M10. Off by default and inert until asked: the screen opens having
               looked at nothing (D-134). */}
           <Route path="model" element={<LocalModel />} />
+          {/* The day this document's weeks start on (M53 F6, D-528). */}
+          <Route path="calendar" element={<Calendar />} />
           {/* The months' CSV left Home for here (M28 U5, D-313). */}
           <Route path="export" element={<Export />} />
         </Route>

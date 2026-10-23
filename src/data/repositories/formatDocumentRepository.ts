@@ -64,9 +64,11 @@ import {
 import {
   addUnit,
   correctUnit,
+  chosenWeekStart,
   documentCurrency,
   listUnits,
   restoreDocumentCurrency,
+  restoreDocumentWeekStart,
 } from './unitRepository.ts'
 
 /**
@@ -91,6 +93,7 @@ export function serializeDocument(db: Database): Result<readonly DocumentPart[],
     saved: savedViews(db),
     dashboards: allDashboardBlocks(db),
     currency: documentCurrency(db),
+    weekStart: chosenWeekStart(db),
     readings: listIntakeContent(db),
     readerNames: listReaderNames(db),
     // The day each format last changed (M47 U5, D-462), as it is here.
@@ -197,6 +200,7 @@ export function applyDocument(
       restoreSavedViews(db, document.saved)
       restoreDashboardBlocks(db, document.dashboards)
       restoreDocumentCurrency(db, document.currency)
+      restoreDocumentWeekStart(db, document.weekStart)
       // What was read in, each row found by the name the text gave it (D-408).
       const refs = new Map<string, ReadonlyMap<string, string>>()
       for (const format of document.formats) {
