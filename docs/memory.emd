@@ -5484,13 +5484,14 @@ An inbox row makes no claim.
 from: another document of the maintainer's
 sent_on: 2026-10-23
 body: "Seen 2026-10-23 while working in `another project's document`. The desktop extension's server had been started on a schema-64 build, and `dist-plugin` was rebuilt to 65 at 09:46 while it ran. After that:\n\n- a write at 09:50 left `another project's document` at schema 65 (its `schema_version` table holds 62, 63, 64, 65), and every later call refused it with `SCHEMA_AHEAD` (plugin understands 64);\n- `create_document` on a new path replied \"Created ... at schema version 64\", but the file's `schema_version` already held 65, and the next call (`declare_format`) refused it with `SCHEMA_AHEAD`.\n\nSo one server process wrote with the new build's code and read with the old build's. That looks like part of the code being loaded from disk lazily. Restarting the extension fixed it. The user can't recover without a restart, and `create_document` reports a version it didn't write."
-state: new
+state: dropped
 
 ### Development pack format notes describe Emerald's own repo, not the adopting project
 from: another document of the maintainer's
 sent_on: 2026-10-23
 body: A new document created with `packs: ["development"]` (`another project's document`, a game design project) gets format notes written about Emerald itself. `decision` talks about docs/09-decision-log.md, D-227 and M22 U1; `open_question` about docs/engine.md's H-numbers, src/parity.test.ts and D-226; `milestone` about docs/07-roadmap.md and M27 U1. Column notes do the same (`D-224's one-hop rule`, `M44 U5, D-444`). In another project these read as noise or as instructions that don't apply. The pack's notes should describe the format in general terms, with Emerald's own history kept in Emerald's document.
-state: new
+state: applied
+became_unit: M52 F2
 
 ### M51 F6 ready to land: test.yml on every push, demo after it, related tests in sessions
 from: F:/projects/emerald/docs/memory.emd
@@ -5539,13 +5540,14 @@ became_unit: M53 U6
 from: another document of the maintainer's
 sent_on: 2026-10-23
 body: A saved list view of `open_question` ordered by `ref` shows Q10, Q11, Q12, Q14, Q15, Q2, Q3 and so on. Decision refs will do the same from D10. Every development-pack document numbers its rows like this (D-, Q-, M-, U-), so ordering by ref looks wrong once there are ten of anything. Natural-order sorting for text columns, or for `ref` in particular, would fix it.
-state: new
+state: triaged
 
 ### arrange_views on a saved view replaces every setting it is not given
 from: another document of the maintainer's
 sent_on: 2026-10-23
 body: On `another project's document`, saved view `Decided` (decision, list, `match {state: live}`, columns ref and title) was updated with `{view: saved, format: decision, name: Decided, order: ref, descending: false}` to change only the sort. The commit's table showed it becoming `list ?order:ref=ascending`: the match and columns were gone. The dry run would have shown it, but `update_format_rows` leaves unnamed columns alone and a view setting doesn't, which is easy to miss. Either keep what isn't named, or say in the result which settings were dropped.
-state: new
+state: triaged
+became_unit: M52 F3
 
 <!-- emerald: milestone.format.md -->
 ---
@@ -13415,6 +13417,18 @@ branch: claude/m52-f2-quieter-writes-76670d
 commit: f1edbee
 paths: "src/plugin/write.ts\nsrc/plugin/backup.ts\nsrc/plugin/instructions.ts\ndocs/plugin.md\nhosts/claude/skills/\nsrc/data/packs/development/"
 report: M52 F2 built at f1edbee. (a) The backup notice prints on a document's first write in a server's run and is silent after (write.ts, a set of resolved paths); the copy is still taken every time; named copies and keep_copy still print; a refused write now names the folder of earlier copies. Test: three writes, one notice, three copies. (b) Hand edits to a text .emd are checked on the next call: a bad date, enum member, unknown column, missing required value, repeated name or dangling link refuses the whole document (UNREADABLE) with the line and reason, until fixed; nothing is dropped. So the instructions (shared Formats section), docs/plugin.md and the skills declare-a-format, closing-pass and review-phase say: edit the text while ideas move, then one format_problems call checks it. (c) Both instruction blocks now say to collect rows and write them in one call. (d) The six declarations of the development pack are rewritten in general terms, column specs unchanged; decision's law corrected. pack.test.ts has a new test failing on this repo's paths or numbers; past.ts has the new fingerprints; docs/memory.emd follows the pack (pack.test says so), so its declaration prose was replaced in the text, frontmatter kept. No decision: no row stated the old law. Not done: hosts/claude/plugin.test.ts wants a new plugin version (skills changed), left for the 0.2.0 cut; ask-cold could not run (claude CLI not logged in). Found: keep_packs brings a format's notes but never a column's note, so documents already keeping the pack keep the old column prose.
+
+### M52 F3
+milestone: M52
+scope: plugin
+title: arrange_views on a saved view changes only what it is given, and keeps the rest
+state: in_progress
+brief: From the inbox (c34510f4, sent from another project's session, 2026-10-23): on a saved view `Decided` (decision, list, match {state: live}, columns ref and title), `arrange_views {view: saved, format: decision, name: Decided, order: ref, descending: false}` to change only the sort left it `list ?order:ref=ascending`: the match and the columns were gone. `update_format_rows` leaves unnamed columns alone and a view's settings do not, which is easy to miss. Maintainer, 2026-10-23: fix it before 0.2.0. What to do: updating an existing saved view through arrange_views (src/plugin/tools/views.ts and whatever writes a saved view's address, src/data/repositories/formatViewRepository.ts) merges what it is given into what the view holds: an unnamed setting (match, search, order and descending, columns, kind) stays as it was; a setting given replaces that setting. Emptying one must still be possible, by naming it empty (e.g. `match: {}`, `columns: []`); say which in the tool's description. The answer names the settings it kept beside the ones it changed. Creating a new saved view is unchanged. The screen already edits a view whole, so parity holds; check it does not go through the same path and start keeping stale settings. Anything not settled here is the maintainer's: stop and ask. Write a decision row only if this changes what a decision says about saved views (D-5xx for saved views, M53 U5). Tests: changing only the order keeps match, search, columns and kind; naming match: {} empties it; the dry run shows the merged view. Done-test: on a synthetic document, save a view with a match and columns, change only its order from a conversation, and the match and columns are still there.
+files: src/plugin/tools/views.ts (arrange_views view:saved), src/data/repositories/formatViewRepository.ts (the saved view's address), docs/plugin.md, their tests
+taken_by: run-milestone driver
+started: 2026-10-23
+branch: worktree (m52-f3)
+paths: "src/plugin/tools/views.ts\nsrc/data/repositories/formatViewRepository.ts\ndocs/plugin.md"
 
 ### M53 F1
 milestone: M53
