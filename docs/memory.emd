@@ -5518,6 +5518,14 @@ refs: M52 F2
 state: applied
 became_unit: M52 F2
 
+### M52 F3 built at ca12ce4: arrange_views on a saved view changes only what it is given
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-10-23
+body: "M52 F3's landing, proposed from its worktree branch claude/m52-f3-saved-view-merge-9da5f9 at ca12ce4; no decision.\n\n```json\n{\"unit\":\"M52 F3\",\"files\":\"src/plugin/tools/views.ts, src/plugin/tools/savedViews.test.ts, docs/plugin.md\",\"commit\":\"ca12ce4\",\"branch\":\"claude/m52-f3-saved-view-merge-9da5f9\",\"decisions\":[],\"review_entries\":[],\"report\":\"Updating a saved view through arrange_views merges what it is given into what the view's address holds: kind, match (folds with it), search, order and descending, and columns each stay when left out and are replaced whole when given; match:{}, search:\\\"\\\", order:\\\"\\\" and columns:{} let one go, and the tool's description says so. columns:[] keeps its old meaning, the name alone, so emptying the column choice is columns:{}. descending alone turns the kept order round (refused when there is none). The answer and the dry run name what it kept beside what it changed, and the dry run's table shows the merged view. Creating a view is unchanged; the screen writes a view whole through saveView and never reaches this path, so parity holds. No decision row: D-520 says nothing of replace or merge. Tests: savedViews.test.ts (sort only keeps match, search, columns and kind; emptied settings; dry run merged); related 512 passed, typecheck, privacy and docs:check green. Done-test on a synthetic document against the built server: Decided (list, state live, columns ref,title) given only order:ref kept its match and columns. ask-cold could not run here: the claude CLI was not logged in.\"}\n```"
+refs: M52 F3
+state: applied
+became_unit: M52 F3
+
 ### M53 F6 ready to land: date words in the filter menu, week start a document setting (D-528)
 from: F:/projects/emerald/docs/memory.emd
 sent_on: 2026-10-23
@@ -13422,13 +13430,16 @@ report: M52 F2 built at f1edbee. (a) The backup notice prints on a document's fi
 milestone: M52
 scope: plugin
 title: arrange_views on a saved view changes only what it is given, and keeps the rest
-state: in_progress
+landed: 2026-10-23
+state: built
 brief: From the inbox (c34510f4, sent from another project's session, 2026-10-23): on a saved view `Decided` (decision, list, match {state: live}, columns ref and title), `arrange_views {view: saved, format: decision, name: Decided, order: ref, descending: false}` to change only the sort left it `list ?order:ref=ascending`: the match and the columns were gone. `update_format_rows` leaves unnamed columns alone and a view's settings do not, which is easy to miss. Maintainer, 2026-10-23: fix it before 0.2.0. What to do: updating an existing saved view through arrange_views (src/plugin/tools/views.ts and whatever writes a saved view's address, src/data/repositories/formatViewRepository.ts) merges what it is given into what the view holds: an unnamed setting (match, search, order and descending, columns, kind) stays as it was; a setting given replaces that setting. Emptying one must still be possible, by naming it empty (e.g. `match: {}`, `columns: []`); say which in the tool's description. The answer names the settings it kept beside the ones it changed. Creating a new saved view is unchanged. The screen already edits a view whole, so parity holds; check it does not go through the same path and start keeping stale settings. Anything not settled here is the maintainer's: stop and ask. Write a decision row only if this changes what a decision says about saved views (D-5xx for saved views, M53 U5). Tests: changing only the order keeps match, search, columns and kind; naming match: {} empties it; the dry run shows the merged view. Done-test: on a synthetic document, save a view with a match and columns, change only its order from a conversation, and the match and columns are still there.
-files: src/plugin/tools/views.ts (arrange_views view:saved), src/data/repositories/formatViewRepository.ts (the saved view's address), docs/plugin.md, their tests
+files: src/plugin/tools/views.ts, src/plugin/tools/savedViews.test.ts, docs/plugin.md
 taken_by: run-milestone driver
 started: 2026-10-23
-branch: worktree (m52-f3)
+branch: claude/m52-f3-saved-view-merge-9da5f9
+commit: ca12ce4
 paths: "src/plugin/tools/views.ts\nsrc/data/repositories/formatViewRepository.ts\ndocs/plugin.md"
+report: Updating a saved view through arrange_views merges what it is given into what the view's address holds: kind, match (folds with it), search, order and descending, and columns each stay when left out and are replaced whole when given; match:{}, search:"", order:"" and columns:{} let one go, and the tool's description says so. columns:[] keeps its old meaning, the name alone, so emptying the column choice is columns:{}. descending alone turns the kept order round (refused when there is none). The answer and the dry run name what it kept beside what it changed, and the dry run's table shows the merged view. Creating a view is unchanged; the screen writes a view whole through saveView and never reaches this path, so parity holds. No decision row: D-520 says nothing of replace or merge. Tests: savedViews.test.ts (sort only keeps match, search, columns and kind; emptied settings; dry run merged); related 512 passed, typecheck, privacy and docs:check green. Done-test on a synthetic document against the built server: Decided (list, state live, columns ref,title) given only order:ref kept its match and columns. ask-cold could not run here: the claude CLI was not logged in.
 
 ### M53 F1
 milestone: M53
