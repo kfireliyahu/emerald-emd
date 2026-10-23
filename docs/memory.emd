@@ -5795,7 +5795,7 @@ position: 345
 ### M53
 title: Views worth living in: a lighter entry page, a list for tasks, saved views and dashboards
 goal: From the maintainer's weeks on a task format at work (2026-10-22): tasks have no view that suits them, the entry page is cluttered, adding by hand is heavy, and the UI as it is is not nice. Done when a person keeps tasks in Emerald without the table: a list view with a done tick and quick add, an entry page that shows what it holds and hides what they chose, saved views (a filter, order, columns and kind under a name), charts of a rollup, and a dashboard per format and one for the document built only of those (D-514). Every write has its conversation half through arrange_views and show_format draws every new view. Recent changes are out: they need D-462 reopened. Starts from a mockup the maintainer approves (U1).
-state: planned
+state: closed
 position: 349
 
 <!-- emerald: open_question.format.md -->
@@ -6288,8 +6288,8 @@ state: fault
 unit: M53 F4
 should: A block's size is a share of the dashboard, so it grows and shrinks with the window
 breaks: Maintainer, 2026-10-23: 'the size doesnt scale with the size of emerald's window. rest looks good.' The grid stops at max-w-[1000px] (src/ui/formats/Dashboard.tsx), so on a wider window the four columns and every block keep their size and the rest is empty; heights are fixed 40 px rows.
-not_tried: Maintainer's answers, 2026-10-23: width fills the window with no cap; height stays in the rows dragged to. Fixed in place the same day (the grid's max-w-[1000px] removed); the maintainer has still to see it in the rebuilt shell.
-state: fault
+not_tried: Maintainer's answers, 2026-10-23: width fills the window with no cap; height stays in the rows dragged to. Fixed in place the same day (70561d4, the grid's max-w-[1000px] removed). Maintainer, 2026-10-23: 'never mind. its fine.' Accepted without seeing the rebuilt shell.
+state: accepted
 
 ### In the document where the entry order swapped, run arrange_views with the same entry `order` as a dry run, and note the Was column. If it is wrong again, keep the exact calls since the last right one (arrange_views settings, extend_format arguments) and whether the app had the document open.
 unit: M42 F11
