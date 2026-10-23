@@ -37,7 +37,7 @@ holds their `.emd`. Offer this first.
      "mcpServers": {
        "emerald": {
          "command": "/opt/homebrew/bin/npx",
-         "args": ["-y", "emerald-mcp@0.1.6", "--engine-only"]
+         "args": ["-y", "emerald-mcp@0.2.0", "--engine-only"]
        }
      }
    }
@@ -50,7 +50,7 @@ holds their `.emd`. Offer this first.
      "mcpServers": {
        "emerald": {
          "command": "cmd",
-         "args": ["/c", "npx", "-y", "emerald-mcp@0.1.6", "--engine-only"]
+         "args": ["/c", "npx", "-y", "emerald-mcp@0.2.0", "--engine-only"]
        }
      }
    }
