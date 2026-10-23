@@ -351,8 +351,9 @@ const CAPABILITIES: readonly Capability[] = [
   {
     // M53 U7 (D-521): the dashboard's Add a block, drag, Move earlier and
     // later and Remove from this dashboard; the conversation's `view:
-    // dashboard` on `arrange_views`, with `add`, `order` and `remove`.
-    does: 'Add a block to a dashboard, move one, or remove one.',
+    // dashboard` on `arrange_views`, with `add`, `order` and `remove`. And a
+    // block's edge dragged to resize it, and `size` (M53 F4, D-527).
+    does: 'Add a block to a dashboard, move one, resize one, or remove one.',
     writes: ['setDashboardBlocks'],
     screen: 'ui/formats/Dashboard.tsx',
     tool: 'arrange_views',

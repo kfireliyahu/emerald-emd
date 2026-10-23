@@ -1,8 +1,8 @@
 /**
  * **A dashboard, to a conversation** — M53 U7, D-514, D-521.
  *
- * Parity (D-227): `arrange_views` with `view: dashboard` adds, orders and
- * removes a dashboard's blocks as the screen does — a format's with its
+ * Parity (D-227): `arrange_views` with `view: dashboard` adds, sizes (M53 F4,
+ * D-527), orders and removes a dashboard's blocks as the screen does — a format's with its
  * `format`, the document's without one — and `show_format view:dashboard`
  * draws it, its text naming each block with what it reads and what it holds
  * now, in the words the screen draws (`ui/formats/dashboard.ts`). `start_here`
@@ -22,6 +22,8 @@ import { labelColumn, type FormatDeclaration } from '@/domain/format/declaration
 import { figureText } from '@/domain/format/rollup.ts'
 import {
   blockNamed,
+  blockSizeRefusal,
+  blockSizeText,
   blocksInOrder,
   sameBlock,
   totalNameRefusal,
@@ -62,7 +64,9 @@ export function dashboardText(db: Database, dashboard: string | undefined, decla
   const day = toISODate(today())
   const lines = blocks.map((block, at) => {
     const what = blockWhat(db, block, declarations, dashboard === undefined)
-    return `${String(at + 1)}. **${block.name}** — ${what}: ${blockHolds(db, block, declarations, day)}`
+    // A block given a size says it; one with none is drawn as before there were sizes.
+    const size = block.width === undefined && block.height === undefined ? '' : ` (${blockSizeText(block)})`
+    return `${String(at + 1)}. **${block.name}** — ${what}${size}: ${blockHolds(db, block, declarations, day)}`
   })
   return [`**${title}** — ${plural(blocks.length, 'block')}, in order:`, '', ...lines].join('\n')
 }
@@ -123,15 +127,19 @@ export interface DashboardChange {
 }
 
 /** The keys a dashboard's setting takes. */
-export const DASHBOARD_KEYS = ['format', 'view', 'add', 'order', 'remove'] as const
+export const DASHBOARD_KEYS = ['format', 'view', 'add', 'size', 'order', 'remove'] as const
+
+/** The keys one block in `size` takes. */
+const SIZE_KEYS = ['name', 'width', 'height']
 
 /** The keys one block in `add` takes. */
 const BLOCK_KEYS = ['format', 'saved', 'rollup', 'total', 'count', 'sum', 'match', 'search']
 
 /**
  * **One dashboard setting, judged** against the blocks as earlier settings in
- * the same call left them (`working`): `add` first, then `remove`, then
- * `order`, so an order may name a block the same setting adds.
+ * the same call left them (`working`): `add` first, then `size`, then
+ * `remove`, then `order`, so a size or an order may name a block the same
+ * setting adds.
  */
 export function judgeDashboard(
   db: Database,
@@ -140,7 +148,7 @@ export function judgeDashboard(
   working: Map<string, readonly DashboardBlock[]>,
 ): { readonly changes: readonly DashboardChange[] } | { readonly reason: string } {
   const stray = Object.keys(entry).filter((key) => !(DASHBOARD_KEYS as readonly string[]).includes(key))
-  if (stray.length > 0) return { reason: `${stray.join(', ')} is not a dashboard setting; a dashboard takes format, add, order and remove.` }
+  if (stray.length > 0) return { reason: `${stray.join(', ')} is not a dashboard setting; a dashboard takes format, add, size, order and remove.` }
   const named = entry['format']
   if (named !== undefined && typeof named !== 'string') return { reason: '`format` is a format’s name, or left out for the document’s dashboard.' }
   if (named !== undefined && !declared.some((each) => each.name === named)) {
@@ -152,8 +160,9 @@ export function judgeDashboard(
   const add = entry['add']
   const remove = entry['remove']
   const order = entry['order']
-  if (add === undefined && remove === undefined && order === undefined) {
-    return { reason: 'A dashboard setting takes `add`, `order` or `remove` — what to put on it, the order, or what to take off.' }
+  const size = entry['size']
+  if (add === undefined && size === undefined && remove === undefined && order === undefined) {
+    return { reason: 'A dashboard setting takes `add`, `size`, `order` or `remove` — what to put on it, how big, the order, or what to take off.' }
   }
   const said: (readonly [string, string, string, string])[] = []
   let blocks = was
@@ -170,6 +179,33 @@ export function judgeDashboard(
       }
       blocks = [...blocks, block]
       said.push([block.name, 'added', '-', judged.what])
+    }
+  }
+
+  if (size !== undefined) {
+    const sizing = '`size` is a list of `{name, width, height}`: a block’s name, its width in columns and its height in rows, either alone.'
+    if (!Array.isArray(size) || size.length === 0) return { reason: sizing }
+    for (const offered of size as readonly unknown[]) {
+      if (typeof offered !== 'object' || offered === null || Array.isArray(offered)) return { reason: sizing }
+      const item = offered as Record<string, unknown>
+      const strayed = Object.keys(item).filter((each) => !SIZE_KEYS.includes(each))
+      if (strayed.length > 0) return { reason: `A size takes ${SIZE_KEYS.join(', ')}; ${strayed.join(', ')} is none of them.` }
+      const name = item['name']
+      if (typeof name !== 'string') return { reason: sizing }
+      const found = blockNamed(blocks, name)
+      if ('reason' in found) return found
+      if (item['width'] === undefined && item['height'] === undefined) return { reason: `${name}: a size gives a \`width\`, a \`height\` or both.` }
+      const wrong = blockSizeRefusal(item)
+      if (wrong !== undefined) return { reason: `${name}: ${wrong}` }
+      const was = found.block
+      const now: DashboardBlock = {
+        ...was,
+        ...(typeof item['width'] === 'number' ? { width: item['width'] } : {}),
+        ...(typeof item['height'] === 'number' ? { height: item['height'] } : {}),
+      }
+      if (now.width === was.width && now.height === was.height) continue
+      blocks = blocks.map((each) => (sameBlock(each, was) ? now : each))
+      said.push([was.name, 'size', blockSizeText(was), blockSizeText(now)])
     }
   }
 

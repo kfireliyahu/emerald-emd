@@ -21,7 +21,9 @@ import { createDatabase, exportDatabase } from '@/data/db/database.ts'
 import { deleteFormat, listFormats } from '@/data/repositories/formatRepository.ts'
 import { dashboardBlocks, deleteSavedView, renameSavedView, setDashboardBlocks } from '@/data/repositories/formatViewRepository.ts'
 import { openEncoded } from '@/data/storage/encoding.ts'
-import { headline } from '@/ui/formats/dashboard.ts'
+import { readViews } from '@/domain/format/document.ts'
+import { blockPixels, defaultBlockWidth } from '@/domain/format/view.ts'
+import { blockResized, headline, snappedSize, steppedSize } from '@/ui/formats/dashboard.ts'
 
 import { declareFormatTool, extendFormatTool, formatsTool, recordFormatRowsTool } from './formats.ts'
 import { showFormatTool } from './sheet.ts'
@@ -290,5 +292,97 @@ describe('dashboards (M53 U7)', () => {
     expect(await listed()).toEqual([])
     expect(await blocksIn(path, undefined)).toEqual([])
     expect((await blocksIn(path, 'task')).map((each) => each.name)).toEqual(['Due today'])
+  })
+
+  it('sizes a block by a conversation and by its edge, keeps it, and draws one with none as before (M53 F4)', async () => {
+    const path = await document()
+    await arrangeViewsTool.run(
+      { path, settings: [{ format: 'task', view: 'dashboard', add: [{ total: 'Open', count: true }, { saved: 'Open by project' }, { saved: 'Due today' }] }], commit: true },
+      NO_CLIENT,
+    )
+    // A block with no size: a total one column, a list two, as tall as it holds — and nothing said or written of it.
+    const before = await blocksIn(path, 'task')
+    expect(before.map((each) => [each.width, each.height, defaultBlockWidth(each)])).toEqual([
+      [undefined, undefined, 1],
+      [undefined, undefined, 2],
+      [undefined, undefined, 2],
+    ])
+    expect(await showFormatTool.run({ path, format: 'task', view: 'dashboard' }, NO_CLIENT)).not.toMatch(/columns?, /)
+
+    // The done-test, the conversation's half: the list widened to four columns and made taller.
+    const settings = [{ format: 'task', view: 'dashboard', size: [{ name: 'Open by project', width: 4, height: 8 }] }]
+    const dry = await arrangeViewsTool.run({ path, settings }, NO_CLIENT)
+    expect(dry).toContain('2 columns, as tall as it holds')
+    expect(dry).toContain('4 columns, 8 rows')
+    expect((await blocksIn(path, 'task'))[1]?.width).toBeUndefined()
+    await arrangeViewsTool.run({ path, settings, commit: true }, NO_CLIENT)
+    expect((await blocksIn(path, 'task'))[1]).toMatchObject({ name: 'Open by project', width: 4, height: 8 })
+    // Either alone: the other stays as it was.
+    await arrangeViewsTool.run({ path, settings: [{ format: 'task', view: 'dashboard', size: [{ name: 'Open', height: 3 }] }], commit: true }, NO_CLIENT)
+    expect((await blocksIn(path, 'task'))[0]).toMatchObject({ name: 'Open', height: 3 })
+    expect((await blocksIn(path, 'task'))[0]?.width).toBeUndefined()
+    const drawn = await showFormatTool.run({ path, format: 'task', view: 'dashboard' }, NO_CLIENT)
+    expect(drawn).toContain('**Open by project** — List · state is not done (4 columns, 8 rows):')
+    expect(drawn).toContain('**Open** — Count · every task (1 column, 3 rows):')
+    expect(drawn).not.toContain('Due today** — List · due is today (')
+
+    const refused = await arrangeViewsTool.run(
+      {
+        path,
+        settings: [
+          { format: 'task', view: 'dashboard', size: [{ name: 'Due today', width: 5 }] },
+          { format: 'task', view: 'dashboard', size: [{ name: 'Due today', height: 1 }] },
+          { format: 'task', view: 'dashboard', size: [{ name: 'Due today' }] },
+          { format: 'task', view: 'dashboard', size: [{ name: 'Nowhere', width: 2 }] },
+        ],
+        commit: true,
+      },
+      NO_CLIENT,
+    )
+    expect(refused).toContain('Nothing was written')
+    expect(refused).toContain('a whole number of columns, 1 to 4')
+    expect(refused).toContain('a whole number of rows, 2 to 20')
+    expect(refused).toContain('a `width`, a `height` or both')
+    expect(refused).toContain('No block here is called Nowhere')
+
+    // A text document carries the size, and only where one was given.
+    expect(await storeDocumentAsTool.run({ path, as: 'text', commit: true }, NO_CLIENT)).not.toMatch(/refus/i)
+    const text = readFileSync(path, 'utf8')
+    expect(text).toContain('### task dashboard\nkind: saved\nname: Open by project\nwidth: 4\nheight: 8')
+    expect(text).toContain('### task dashboard\nkind: saved\nname: Due today\n\n')
+    const read = await blocksIn(path, 'task')
+    expect(read.map((each) => [each.name, each.width, each.height])).toEqual([
+      ['Open', undefined, 3],
+      ['Open by project', 4, 8],
+      ['Due today', undefined, undefined],
+    ])
+    expect(readViews('---\nemerald: views\n---\n\n### task dashboard\nkind: saved\nname: Due today\nwidth: wide\n')).toMatchObject({
+      ok: false,
+      error: expect.stringContaining('a whole number of columns'),
+    })
+
+    // The screen's half: the bottom edge of *Due today* dragged down, snapped to the grid's rows, kept and read back.
+    const { db } = await openEncoded(readFileSync(path))
+    const grid = { columns: 4, column: 226 }
+    expect(snappedSize('right', { width: 468, height: 300 }, { x: 470, y: 90 }, grid)).toEqual({ width: 4 })
+    expect(snappedSize('right', { width: 468, height: 300 }, { x: -900, y: 0 }, grid)).toEqual({ width: 1 })
+    expect(snappedSize('bottom', { width: 468, height: 200 }, { x: 300, y: 230 }, grid)).toEqual({ height: 8 })
+    expect(snappedSize('corner', { width: 226, height: 96 }, { x: 250, y: 2000 }, grid)).toEqual({ width: 2, height: 20 })
+    expect(snappedSize('corner', { width: 226, height: 96 }, { x: 0, y: 0 }, { columns: 2, column: 300 })).toEqual({ width: 1, height: 2 })
+    expect(blockPixels(8)).toBe(8 * 40 + 7 * 16)
+    expect(steppedSize('right', 'ArrowRight', { width: 4, height: undefined }, 200, 4)).toEqual({ width: 4 })
+    expect(steppedSize('bottom', 'ArrowDown', { width: 2, height: undefined }, blockPixels(3), 4)).toEqual({ height: 4 })
+    expect(steppedSize('bottom', 'ArrowRight', { width: 2, height: 3 }, 0, 4)).toBeUndefined()
+    const blocks = dashboardBlocks(db, 'task')
+    const today = blocks[2]
+    if (today === undefined) throw new Error('Due today is on the dashboard')
+    expect(blockResized(blocks, today, {})).toBe(blocks)
+    setDashboardBlocks(db, 'task', blockResized(blocks, today, snappedSize('bottom', { width: 468, height: 200 }, { x: 0, y: 230 }, grid)))
+    expect(dashboardBlocks(db, 'task').map((each) => [each.name, each.width, each.height])).toEqual([
+      ['Open', undefined, 3],
+      ['Open by project', 4, 8],
+      ['Due today', undefined, 8],
+    ])
+    db.close()
   })
 })

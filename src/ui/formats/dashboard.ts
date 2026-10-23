@@ -8,7 +8,16 @@ import { nounOf, pluralOf } from '@/domain/format/connections.ts'
 import { formatDecimal } from '@/domain/format/decimal.ts'
 import type { ColumnDeclaration, FormatDeclaration } from '@/domain/format/declaration.ts'
 import { rollupText } from '@/domain/format/rollup.ts'
-import { listOf, type DashboardBlock, type SavedView } from '@/domain/format/view.ts'
+import {
+  BLOCK_GAP,
+  BLOCK_HEIGHT_MAX,
+  BLOCK_ROW,
+  BLOCK_SIZE_MIN,
+  listOf,
+  sameBlock,
+  type DashboardBlock,
+  type SavedView,
+} from '@/domain/format/view.ts'
 import { err, ok, type Result } from '@/core/result.ts'
 
 import { addressView, canonicalAddress, filterAddress } from './addressFilter.ts'
@@ -205,4 +214,78 @@ export function conditionsOf(db: Database, declaration: FormatDeclaration): read
 export function conditionsAddress(ticked: readonly Condition[]): string {
   if (ticked.length === 0) return ''
   return canonicalAddress(filterAddress({ match: Object.fromEntries(ticked.map((each) => [each.column, each.value])) }))
+}
+
+/** A block's edge: the right sets its width, the bottom its height, the corner both (M53 F4, D-527). */
+export type Edge = 'right' | 'bottom' | 'corner'
+
+/** A size an edge sets: the width, the height, or both — what it leaves out stays as it was. */
+export interface BlockSize {
+  readonly width?: number | undefined
+  readonly height?: number | undefined
+}
+
+/** The grid as an edge measures it: its columns now — four, or two on a narrow window — and one column's width in pixels. */
+export interface GridMeasure {
+  readonly columns: number
+  readonly column: number
+}
+
+/** A height in pixels, snapped to the grid's rows. */
+export function rowsOf(pixels: number): number {
+  return Math.min(BLOCK_HEIGHT_MAX, Math.max(BLOCK_SIZE_MIN.height, Math.round((pixels + BLOCK_GAP) / (BLOCK_ROW + BLOCK_GAP))))
+}
+
+/**
+ * **An edge dragged**: the block's drawn size in pixels and how far the
+ * pointer has gone, snapped to the grid's columns and rows — the right edge
+ * the width alone, the bottom the height alone, the corner both.
+ */
+export function snappedSize(
+  edge: Edge,
+  drawn: { readonly width: number; readonly height: number },
+  moved: { readonly x: number; readonly y: number },
+  grid: GridMeasure,
+): BlockSize {
+  return {
+    ...(edge === 'bottom'
+      ? {}
+      : { width: Math.min(grid.columns, Math.max(BLOCK_SIZE_MIN.width, Math.round((drawn.width + moved.x + BLOCK_GAP) / (grid.column + BLOCK_GAP)))) }),
+    ...(edge === 'right' ? {} : { height: rowsOf(drawn.height + moved.y) }),
+  }
+}
+
+/**
+ * **An edge moved by an arrow key**: a column or a row at a time, from the
+ * size the block has — a height by content counts from the rows it fills now
+ * (`drawnHeight`, pixels). Nothing when the key is not one this edge takes.
+ */
+export function steppedSize(
+  edge: Edge,
+  key: string,
+  size: { readonly width: number; readonly height: number | undefined },
+  drawnHeight: number,
+  columns: number,
+): BlockSize | undefined {
+  const across = edge === 'bottom' ? 0 : key === 'ArrowRight' ? 1 : key === 'ArrowLeft' ? -1 : 0
+  const along = edge === 'right' ? 0 : key === 'ArrowDown' ? 1 : key === 'ArrowUp' ? -1 : 0
+  if (across === 0 && along === 0) return undefined
+  const rows = size.height ?? rowsOf(drawnHeight)
+  return {
+    ...(across === 0 ? {} : { width: Math.min(columns, Math.max(BLOCK_SIZE_MIN.width, size.width + across)) }),
+    ...(along === 0 ? {} : { height: Math.min(BLOCK_HEIGHT_MAX, Math.max(BLOCK_SIZE_MIN.height, rows + along)) }),
+  }
+}
+
+/**
+ * **A dashboard's blocks with one resized** — what letting go of an edge
+ * writes: its width and height as given, what is left out as it was; the
+ * same blocks when nothing changed, so nothing is written.
+ */
+export function blockResized(blocks: readonly DashboardBlock[], block: DashboardBlock, size: BlockSize): readonly DashboardBlock[] {
+  const width = size.width ?? block.width
+  const height = size.height ?? block.height
+  if (width === block.width && height === block.height) return blocks
+  const now: DashboardBlock = { ...block, ...(width === undefined ? {} : { width }), ...(height === undefined ? {} : { height }) }
+  return blocks.map((each) => (sameBlock(each, block) ? now : each))
 }

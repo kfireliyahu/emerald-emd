@@ -119,6 +119,7 @@ import {
   savedNameRefusal,
   SAVED_KINDS,
   BLOCK_KINDS,
+  blockSizeRefusal,
   DOCUMENT_DASHBOARD,
   totalNameRefusal,
   VIEW_PARTS,
@@ -1305,7 +1306,8 @@ export function readSeeds(text: string): Result<readonly SeedRecord[], string> {
  * Then each dashboard's blocks in its order (M53 U7, D-521), the document's
  * first under `### Document dashboard` — a capital no format's name has — and
  * each format's under `### recipe dashboard`: `kind`, `name`, the `format` it
- * reads on the document's, and a headline total's `sum` and `address`.
+ * reads on the document's, a headline total's `sum` and `address`, and the
+ * block's `width` and `height` when it was given a size (M53 F4, D-527).
  */
 export function writeWidths(
   widths: readonly ColumnWidth[],
@@ -1355,6 +1357,8 @@ export function writeWidths(
         ...(each.dashboard === undefined ? [`format: ${each.format}`] : []),
         ...(each.kind === 'total' && each.sum !== undefined ? [`sum: ${each.sum}`] : []),
         ...(each.kind === 'total' && each.address !== '' ? [`address: ${writeScalar(each.address)}`] : []),
+        ...(each.width === undefined ? [] : [`width: ${String(each.width)}`]),
+        ...(each.height === undefined ? [] : [`height: ${String(each.height)}`]),
       ]),
     '',
   ].join('\n')
@@ -1449,14 +1453,16 @@ export function readViews(
 
 /**
  * One `### format dashboard` block back into a dashboard's block (M53 U7,
- * D-521): a `kind` and a `name`, the `format` it reads on the document's, and
- * a headline total's `sum` and `address`.
+ * D-521): a `kind` and a `name`, the `format` it reads on the document's, a
+ * headline total's `sum` and `address`, and its `width` and `height` (M53 F4).
  */
 function readBlock(dashboard: string | undefined, cells: ReadonlyMap<string, string>, line: number): Result<DashboardBlock, string> {
   const at = `Line ${String(line)}: a block on ${dashboard ?? 'the document'}’s dashboard`
-  const allowed = ['kind', 'name', 'format', 'sum', 'address']
+  const allowed = ['kind', 'name', 'format', 'sum', 'address', 'width', 'height']
   const stray = [...cells.keys()].filter((key) => !allowed.includes(key))
-  if (stray.length > 0) return err(`${at} has a kind, a name, a format, a sum and an address, and ${stray.join(', ')} is none of them.`)
+  if (stray.length > 0) {
+    return err(`${at} has a kind, a name, a format, a sum, an address, a width and a height, and ${stray.join(', ')} is none of them.`)
+  }
   const kind = cells.get('kind') ?? ''
   if (!isBlockKind(kind)) return err(`${at} is ${BLOCK_KINDS.join(', ')}, and ${kind === '' ? 'it names none' : kind} is not one.`)
   const name = cells.get('name') ?? ''
@@ -1470,7 +1476,26 @@ function readBlock(dashboard: string | undefined, cells: ReadonlyMap<string, str
   const sum = cells.get('sum')
   const address = cells.get('address') ?? ''
   if (kind !== 'total' && (sum !== undefined || address !== '')) return err(`${at} is a ${kind}; only a headline total has a sum and an address.`)
-  return ok({ dashboard, format, kind, name, ...(sum === undefined || sum === '' ? {} : { sum }), address: savedAddress(address) })
+  const size = { width: wholeOf(cells.get('width')), height: wholeOf(cells.get('height')) }
+  const wrong = blockSizeRefusal(size)
+  if (wrong !== undefined) return err(`${at}: ${wrong}`)
+  return ok({
+    dashboard,
+    format,
+    kind,
+    name,
+    ...(sum === undefined || sum === '' ? {} : { sum }),
+    address: savedAddress(address),
+    // Refused above unless each is a whole number in range.
+    ...(typeof size.width === 'number' ? { width: size.width } : {}),
+    ...(typeof size.height === 'number' ? { height: size.height } : {}),
+  })
+}
+
+/** A size's line as written — a whole number, or what was written for the refusal to name. */
+function wholeOf(written: string | undefined): number | string | undefined {
+  if (written === undefined || written.trim() === '') return undefined
+  return /^\d+$/.test(written.trim()) ? Number(written.trim()) : written
 }
 
 /** One `### format saved` block back into a saved view: a `name`, a `kind`, and an `address` when it holds one. */

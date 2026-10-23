@@ -442,6 +442,7 @@ written out here.
 | D-524 | 2026-10-22 | A list ticks only where someone said what done is: no default, so a list with no `done` set is plain lines with no tick column in the List tab, beside an entry and on a dashboard; done is set in place from the list's header (*Tick to mark…*, *No ticks*), by `arrange_views` or by a pack's `views.md`; the header says what a tick sets and each circle says it (*Mark done*, *Undo: back to open*); a tick stays in place a moment with an *Undo* that restores the member it held; the development pack declares done for unit, milestone, open_question, review_entry and inbox, the ledger for none; amends D-519 | [below](#d-524) |
 | D-525 | 2026-10-22 | A dashboard makes the view or chart it needs in place: *Add a block* offers *New view* — a list, a table or a board of one format, its filter, order and columns made with the format tab's own pieces and a name — saved and placed in one step, and *New chart* — a count or a sum by month of a date, per a link or not, under a filter — declared as a rollup of its format and placed in one step; picking an existing view or rollup stays; no new write; amends D-521 | [below](#d-525) |
 | D-526 | 2026-10-22 | A chart is listed in the rail under its format, beside the saved views, with a chart glyph: its name opens its tab, and it is renamed and deleted where it stands, Delete asking once; its tab deletes it too; deleting a rollup deletes its dashboard blocks and renaming one takes them along, in `adoptFormat`, so `extend_format remove` and `rename` (which now takes a rollup's name) do the same; a block's *Remove* still leaves the chart and says where to delete it; amends D-521 | [below](#d-526) |
+| D-527 | 2026-10-23 | A dashboard block is resized by dragging its edge — the right edge its width, the bottom its height, the corner both — snapped to the grid's four columns and its rows of 40 pixels (16 between two), from one column and two rows to four columns and twenty rows; a taller view shows more rows and scrolls inside, a wider table more columns and a wider board its lanes side by side, and a chart redraws to its height; the size is kept beside the block's place, `width` and `height` on `format_dashboard_block` (065), written in a text document's dashboard lines, and a block with none keeps the size it had; `arrange_views view:dashboard` `size` sets it and `show_format` names it; amends D-521 | [below](#d-527) |
 | D-523 | 2026-10-22 | A repository is set up by `npx emerald-mcp init`, a subcommand of the server's bin: it names or creates the document (with the development pack, as text inside the repository and as bytes outside it), writes CLAUDE.md a section between its own markers holding the start-here table and the column lines from the document, and writes the plugin's two hooks into `.claude/settings.json` only where no Emerald plugin is enabled, never over a hook it did not write; every file is compared before it is written, so a second run changes nothing | [below](#d-523) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
@@ -1376,6 +1377,52 @@ saying their rollup is gone, which is what the review found on the other side.
 
 **Consequences.** `ActionGlyph` has `chart`. A rollup row is never lit: which rollup the format's tab
 shows is the tab's, not the address's. A pack's rollup is listed, and refuses to go.
+
+## D-527 · 2026-10-23 · A dashboard block is resized by dragging its edge — the right edge its width, the bottom its height, the corner both — snapped to the grid's four columns and its rows of 40 pixels (16 between two), from one column and two rows to four columns and twenty rows; a taller view shows more rows and scrolls inside, a wider table more columns and a wider board its lanes side by side, and a chart redraws to its height; the size is kept beside the block's place, `width` and `height` on `format_dashboard_block` (065), written in a text document's dashboard lines, and a block with none keeps the size it had; `arrange_views view:dashboard` `size` sets it and `show_format` names it; amends D-521 <a id="d-527"></a>
+
+**Context.** M53 F4, from the maintainer's 0.2.0 review of the dashboard: *"id like the blocks to be
+resizeable."* The grid had four columns, a headline total took one and every other block two, and a
+block was as tall as what it held. Ruled (the maintainer, 2026-10-22): resize by dragging the edge —
+right for width, bottom for height, corner for both — snapping to the grid's columns and rows so
+blocks stay aligned; a taller view shows more rows and scrolls inside past that, a wider one more
+columns, a chart redraws to its size; the size is kept beside the place; a block with none keeps
+today's default; and a conversation does the same. The handle's look, the row's height and the
+smallest size were left to the session.
+
+**Decision.**
+
+- **A block's size is a width in the grid's columns and a height in its rows**: `width` 1 to 4,
+  `height` 2 to 20, a row 40 pixels and the gap between two 16, so two blocks of one height line up
+  and *N* rows is `40N + 16(N − 1)` pixels. Two rows — a title and one line — is the shortest. Either
+  may be absent: no width is the old default (a headline total one column, every other block two), no
+  height is the content's. A block written before 065 has neither and draws as it did.
+- **The edges are the handles.** The right edge and the bottom edge draw a two-pixel accent line on
+  hover; the corner carries a small diagonal mark, shown as the grip and the ⋯ are, on hover or focus.
+  Dragging snaps as it goes and shows the size it will land on (*4 columns · 8 rows*); letting go
+  writes it once, through `setDashboardBlocks`. Each edge is a focusable separator the arrow keys move
+  a column or a row at a time. Dragging an edge never moves the block. On a narrow window the grid has
+  two columns, and a block of three or four takes both.
+- **What a size changes in a block.** Given a height, a saved view draws its rows to the end — up to
+  200, then *N more* — and scrolls inside the block past what fits; with none it draws its first few,
+  as before. A wider table shows more columns beside its name (one at width 1, two at 2, four at 3,
+  six at 4); a board of width 3 or 4 puts its lanes side by side, two or three across. A chart is
+  drawn to the block's height. A headline total is the same figure in a bigger box.
+- **Kept beside its place**: `width` and `height` on `format_dashboard_block` (migration 065), and in a
+  text document's `### <format> dashboard` block as `width:` and `height:` lines, written only where
+  a size was given.
+
+**Parity.** `arrange_views view:dashboard` takes `size: [{name, width, height}]`, either alone,
+judged after `add` and before `remove` and `order`; the dry run says the size it was and the size it
+becomes. `show_format view:dashboard` draws the block at its size and its text names a sized block's
+size beside what it reads. Same write (`setDashboardBlocks`).
+
+**Alternatives rejected.** A height in pixels: blocks would not line up, which the maintainer asked
+for. Grid rows that every block sits in (`grid-auto-rows`): a block with no height would have to be
+measured into a row count, and drawing it as it was is the ruling. A *Reset size* item: nothing asked
+for it, and it is an unlisted behaviour — the maintainer's if wanted.
+
+**Consequences.** A block's size is presentation, never the declaration (D-289). A document opened by
+an older build than 065 is refused as too new, as every migration is.
 
 ## Related
 

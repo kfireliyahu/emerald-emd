@@ -1973,6 +1973,58 @@ export interface DashboardBlock {
   readonly sum?: string | undefined
   /** A headline total's filter as the address spells it (`?state!=done`), or empty for every row. */
   readonly address: string
+  /** Its width in the grid's columns (M53 F4, D-527); absent is `defaultBlockWidth`. */
+  readonly width?: number | undefined
+  /** Its height in the grid's rows; absent is its content's. */
+  readonly height?: number | undefined
+}
+
+/**
+ * **A block's size** — M53 F4, D-527. Dragged by its edge and snapped to the
+ * grid: a width in its four columns, a height in rows of `BLOCK_ROW` pixels
+ * with `BLOCK_GAP` between two, so blocks of one size line up. A block given
+ * none keeps what it had before there were sizes — a headline total one
+ * column, every other two, and its content's height.
+ */
+export const BLOCK_COLUMNS = 4
+
+/** The narrowest a block is, and the shortest given a height: a title and one line. */
+export const BLOCK_SIZE_MIN = { width: 1, height: 2 } as const
+
+/** The tallest a block is given, in rows — `065_dashboard_block_size`'s CHECK. */
+export const BLOCK_HEIGHT_MAX = 20
+
+/** A grid row's height and the gap between two rows or columns, in pixels. */
+export const BLOCK_ROW = 40
+export const BLOCK_GAP = 16
+
+/** The width a block with none takes: a headline total one column, every other block two. */
+export function defaultBlockWidth(block: Pick<DashboardBlock, 'kind'>): number {
+  return block.kind === 'total' ? 1 : 2
+}
+
+/** A block's height of `rows`, in pixels: the rows and the gaps between them. */
+export function blockPixels(rows: number): number {
+  return rows * BLOCK_ROW + (rows - 1) * BLOCK_GAP
+}
+
+/** Why a size is not one a block takes, or nothing when it is. */
+export function blockSizeRefusal(size: { readonly width?: unknown; readonly height?: unknown }): string | undefined {
+  const { width, height } = size
+  if (width !== undefined && (typeof width !== 'number' || !Number.isInteger(width) || width < BLOCK_SIZE_MIN.width || width > BLOCK_COLUMNS)) {
+    return `A block’s width is a whole number of columns, ${String(BLOCK_SIZE_MIN.width)} to ${String(BLOCK_COLUMNS)}.`
+  }
+  if (height !== undefined && (typeof height !== 'number' || !Number.isInteger(height) || height < BLOCK_SIZE_MIN.height || height > BLOCK_HEIGHT_MAX)) {
+    return `A block’s height is a whole number of rows, ${String(BLOCK_SIZE_MIN.height)} to ${String(BLOCK_HEIGHT_MAX)}.`
+  }
+  return undefined
+}
+
+/** A block's size in words — `4 columns, 6 rows`, or `2 columns, as tall as it holds` with no height. */
+export function blockSizeText(block: Pick<DashboardBlock, 'kind' | 'width' | 'height'>): string {
+  const width = block.width ?? defaultBlockWidth(block)
+  const columns = `${String(width)} column${width === 1 ? '' : 's'}`
+  return block.height === undefined ? `${columns}, as tall as it holds` : `${columns}, ${String(block.height)} rows`
 }
 
 /** The word `show_format` and `arrange_views` take for a dashboard, and a format's route ends in. */

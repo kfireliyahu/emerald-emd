@@ -134,6 +134,7 @@ const KEYS = [
   'rename',
   'delete',
   'add',
+  'size',
   'remove',
 ] as const
 
@@ -947,7 +948,7 @@ export const arrangeViewsTool: PluginTool = {
       'How the app shows a format: on its entry, a column’s `show_as`, `header` line, `hidden`, ' +
       '`new_entry` and the `order`; a board’s lanes; a table column’s `width`; a column’s `setting` in a list, a roadmap, a ' +
       'ready list or a start-here question; `view: saved`, a `name` and what it keeps (`today` stays that phrase), or ' +
-      '`rename`, or `delete: true`; `view: dashboard` `add`s, `order`s and `remove`s blocks (no `format`: the document’s). ' +
+      '`rename`, or `delete: true`; `view: dashboard` `add`s, `size`s, `order`s and `remove`s blocks (no `format`: the document’s). ' +
       '`formats` with a `format` shows the ' +
       'arrangement and each column’s ways. Dry-runs until `commit: true`.',
     inputSchema: {
@@ -991,6 +992,11 @@ export const arrangeViewsTool: PluginTool = {
                 type: 'array',
                 items: { type: 'object' },
                 description: 'dashboard: `{saved}`, `{rollup}` or `{total, count|sum, match}`, with `format` on the document’s.',
+              },
+              size: {
+                type: 'array',
+                items: { type: 'object' },
+                description: 'dashboard: `{name, width, height}` — columns 1–4, rows 2–20, either alone.',
               },
               remove: { type: 'array', items: { type: 'string' }, description: 'dashboard: blocks’ names.' },
             },

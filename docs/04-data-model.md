@@ -465,7 +465,7 @@ under `### <format> saved` — `name`, `kind`, `address`.
 
 ### FormatDashboardBlock
 
-**No key; one row per block.** Schema 64, M53 U7, D-514, D-521.
+**No key; one row per block.** Schema 64, M53 U7, D-514, D-521; its size schema 65, M53 F4, D-527.
 
 > A dashboard's blocks, in order — a format's (`dashboard` its name) or the document's (`dashboard`
 > NULL). A block is a saved view drawn compact in its kind, a rollup's chart, or a headline total,
@@ -481,17 +481,19 @@ under `### <format> saved` — `name`, `kind`, `address`.
 | `name` | text | 1 to 60 characters: the saved view's name, the rollup's, or the headline total's own. Unique with `format_name` on one dashboard (`format_dashboard_block_one`, on `ifnull(dashboard, '')`). |
 | `sum` | text, nullable | A headline total's column summed — a number or money column; NULL is a count. Only on `total`. |
 | `address` | text | A headline total's filter as `addressFilter.ts` spells it (`?state!=done`), empty for every row; at most 2,000 characters. Only on `total`. |
+| `width` | integer, nullable | Its width in the grid's columns, 1 to 4 (065). NULL is the width it had before there were sizes: a headline total one column, every other block two. |
+| `height` | integer, nullable | Its height in the grid's rows, 2 to 20 — a row 40 pixels, and 16 between two (065). NULL is its content's height. |
 
 Not more rows of `format_view_column`, for 063's reason. A saved view's rename renames its blocks and
 its delete deletes them; so does a rollup's, in `adoptFormat` (M53 F3, D-526) — a rollup renamed
 (`renames` carries it, new to old, as it does a column) takes its blocks along and one the
 declaration drops takes them away, and a block that still cannot find its rollup (a text document's
 declaration changed by hand) is drawn as gone, with the sentence, until it is removed; `deleteFormat` clears the format's dashboard and every block that reads
-it. Written by the dashboard's own screen (Add a block, drag, Move earlier and later, Remove from this
-dashboard) and by `arrange_views view:dashboard` (D-521). A text document carries each block in its
+it. Written by the dashboard's own screen (Add a block, drag, an edge dragged to resize, Move earlier and later, Remove from this
+dashboard) and by `arrange_views view:dashboard` (D-521; `size`, D-527). A text document carries each block in its
 `views.md` part in order, under `### <format> dashboard` or, for the document's, `### Document
 dashboard` (a capital no format's name has) — `kind`, `name`, the `format` it reads on the document's,
-and a headline total's `sum` and `address`.
+a headline total's `sum` and `address`, and a `width` and `height` where the block was given a size.
 
 ### FormatGraphPlace
 

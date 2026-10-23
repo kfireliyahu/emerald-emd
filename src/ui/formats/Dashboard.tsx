@@ -1,4 +1,4 @@
-import { useContext, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useContext, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode, type RefObject } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Database } from 'sql.js'
 
@@ -29,9 +29,13 @@ import { labelColumn, type ColumnDeclaration, type FormatDeclaration } from '@/d
 import { rowWriteRefusal } from '@/domain/format/owner.ts'
 import { brokenConstraints, type StoredRow } from '@/domain/format/row.ts'
 import {
+  BLOCK_COLUMNS,
+  BLOCK_GAP,
   blockDropped,
   blockMoved,
+  blockPixels,
   boardOf,
+  defaultBlockWidth,
   sameBlock,
   tickValue,
   tickWords,
@@ -49,6 +53,7 @@ import { drawnValue } from '@/ui/charts/chart.ts'
 import { addressView } from '@/ui/formats/addressFilter.ts'
 import {
   blockGone,
+  blockResized,
   blockWhat,
   conditionsAddress,
   conditionsOf,
@@ -56,8 +61,13 @@ import {
   offeredOf,
   ofText,
   savedWords,
+  snappedSize,
+  steppedSize,
   summableColumns,
+  type BlockSize,
   type Condition,
+  type Edge,
+  type GridMeasure,
 } from '@/ui/formats/dashboard.ts'
 import { valueText } from '@/ui/formats/entryList.ts'
 import { listPicture, type ListLine } from '@/ui/formats/listView.ts'
@@ -72,11 +82,13 @@ import { today } from '@/ui/today.ts'
  * (`docs/mockups/m53-u7/dashboard.html`).
  *
  * An ordered set of blocks in a four-column grid — a headline total takes one
- * column, every other block two — and nothing else: a saved view drawn compact
- * in its kind, a rollup's chart, a headline total. **Arranged in place, never
- * in a mode**: *Add a block* at the end of the grid, a block dragged by its
- * grip, and its ⋯ holding *Move earlier*, *Move later* and *Remove from this
- * dashboard*. A block's title opens it in full, and *← Dashboard* comes back.
+ * column, every other block two, until it is given a size — and nothing else:
+ * a saved view drawn compact in its kind, a rollup's chart, a headline total.
+ * **Arranged in place, never in a mode**: *Add a block* at the end of the grid,
+ * a block dragged by its grip, resized by its right edge, its bottom edge or
+ * its corner and snapped to the grid's columns and rows (M53 F4, D-527), and
+ * its ⋯ holding *Move earlier*, *Move later* and *Remove from this dashboard*.
+ * A block's title opens it in full, and *← Dashboard* comes back.
  *
  * One component for both: a format's (`dashboard` its name — its blocks read
  * it alone) and the document's (`dashboard` absent — any format's, each saying
@@ -94,6 +106,7 @@ export function DashboardView({ dashboard }: { readonly dashboard: string | unde
   const [dragging, setDragging] = useState<string | undefined>(undefined)
   const [over, setOver] = useState<string | undefined>(undefined)
   const [refusal, setRefusal] = useState<string | undefined>(undefined)
+  const grid = useRef<HTMLDivElement>(null)
 
   const data = useMemo(() => {
     if (db === undefined) return undefined
@@ -155,7 +168,7 @@ export function DashboardView({ dashboard }: { readonly dashboard: string | unde
 
   return (
     <div className="min-h-0 flex-1 overflow-auto">
-      <div className="grid max-w-[1000px] grid-cols-4 items-start gap-4 px-6 pt-5 pb-16 max-[720px]:grid-cols-2">
+      <div ref={grid} className="grid max-w-[1000px] grid-cols-4 items-start gap-4 px-6 pt-5 pb-16 max-[720px]:grid-cols-2">
         {blocks.length === 0 && (
           <div className="col-span-full flex max-w-[60ch] flex-col gap-1.5 pt-6 pb-2">
             <span className="font-medium">Nothing on this dashboard yet.</span>
@@ -190,6 +203,11 @@ export function DashboardView({ dashboard }: { readonly dashboard: string | unde
               onRemove={() => {
                 write(blocks.filter((each) => !sameBlock(each, block)))
                 close()
+              }}
+              grid={grid}
+              onResize={(size) => {
+                const next = blockResized(blocks, block, size)
+                if (next !== blocks) write(next)
               }}
               onTick={(declaration, row, column, value) => {
                 const refused = tick(db, declarations, declaration, row, column, value, mutate)
@@ -314,6 +332,143 @@ function tick(
 
 type Ticking = (declaration: FormatDeclaration, row: StoredRow, column: ColumnDeclaration, value: string) => void
 
+/** A width's span: on a narrow window the grid has two columns, and a wider block takes both. */
+const SPANS: Readonly<Record<number, string>> = {
+  1: 'col-span-1',
+  2: 'col-span-2',
+  3: 'col-span-3 max-[720px]:col-span-2',
+  4: 'col-span-4 max-[720px]:col-span-2',
+}
+
+/** A tall block's chart: its block's height less its title, its padding and the labels under the bars, and never shorter than this. */
+const CHART_CHROME = 88
+const CHART_MIN = 72
+
+/** How many rows a block given a height draws before *N more* — it scrolls inside past what fits. */
+const TALL = 200
+
+/** The columns a saved table shows beside its name, by its width: a wider one shows more. */
+function tableColumns(width: number): number {
+  return width <= 1 ? 1 : width === 2 ? 2 : width === 3 ? 4 : 6
+}
+
+/**
+ * **A block's edges** (M53 F4, D-527): its right edge sets its width, its
+ * bottom edge its height, its corner both, each snapped to the grid's columns
+ * and rows while it is dragged, and written once when it is let go. Each is
+ * also a handle the keyboard moves a column or a row at a time.
+ */
+function Edges({
+  box,
+  grid,
+  width,
+  height,
+  resizing,
+  onSizing,
+  onSized,
+}: {
+  readonly box: RefObject<HTMLDivElement | null>
+  readonly grid: RefObject<HTMLDivElement | null>
+  readonly width: number
+  readonly height: number | undefined
+  readonly resizing: { current: boolean }
+  readonly onSizing: (size: BlockSize | undefined) => void
+  readonly onSized: (size: BlockSize) => void
+}) {
+  /** The grid's columns now and one column's width, and the block as it is drawn. */
+  const measure = (): (GridMeasure & { readonly rect: DOMRect }) | undefined => {
+    const block = box.current
+    const area = grid.current
+    if (block === null || area === null) return undefined
+    const style = getComputedStyle(area)
+    const columns = Math.max(1, Math.min(BLOCK_COLUMNS, style.gridTemplateColumns.split(' ').filter(Boolean).length))
+    const inner = area.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
+    return { columns, column: (inner - BLOCK_GAP * (columns - 1)) / columns, rect: block.getBoundingClientRect() }
+  }
+
+  const down = (edge: Edge) => (event: PointerEvent<HTMLSpanElement>) => {
+    if (event.button !== 0) return
+    const at = measure()
+    if (at === undefined) return
+    event.preventDefault()
+    event.stopPropagation()
+    resizing.current = true
+    const handle = event.currentTarget
+    handle.setPointerCapture(event.pointerId)
+    const x = event.clientX
+    const y = event.clientY
+    let last = snappedSize(edge, at.rect, { x: 0, y: 0 }, at)
+    const move = (moved: globalThis.PointerEvent): void => {
+      last = snappedSize(edge, at.rect, { x: moved.clientX - x, y: moved.clientY - y }, at)
+      onSizing(last)
+    }
+    const up = (): void => {
+      handle.removeEventListener('pointermove', move)
+      handle.removeEventListener('pointerup', up)
+      handle.removeEventListener('pointercancel', up)
+      resizing.current = false
+      onSized(last)
+    }
+    handle.addEventListener('pointermove', move)
+    handle.addEventListener('pointerup', up)
+    handle.addEventListener('pointercancel', up)
+    onSizing(last)
+  }
+
+  const key = (edge: Edge) => (event: KeyboardEvent<HTMLSpanElement>) => {
+    const at = measure()
+    if (at === undefined) return
+    const stepped = steppedSize(edge, event.key, { width, height }, at.rect.height, at.columns)
+    if (stepped === undefined) return
+    event.preventDefault()
+    event.stopPropagation()
+    onSized(stepped)
+  }
+
+  const tall = height === undefined ? 'as tall as it holds' : `${String(height)} rows`
+  const wide = `${String(width)} ${width === 1 ? 'column' : 'columns'}`
+  const line = 'bg-accent opacity-0 transition-opacity duration-[var(--micro)] group-hover/edge:opacity-100 group-focus-visible/edge:opacity-100'
+  return (
+    <>
+      <span
+        role="separator"
+        aria-orientation="vertical"
+        aria-label={`Width: ${wide}. Drag, or press the left and right arrows.`}
+        tabIndex={0}
+        onPointerDown={down('right')}
+        onKeyDown={key('right')}
+        className="group/edge absolute top-0 -right-[5px] z-10 flex h-full w-[9px] cursor-ew-resize justify-center focus-visible:outline-none"
+      >
+        <span className={`h-full w-[2px] ${line}`} />
+      </span>
+      <span
+        role="separator"
+        aria-orientation="horizontal"
+        aria-label={`Height: ${tall}. Drag, or press the up and down arrows.`}
+        tabIndex={0}
+        onPointerDown={down('bottom')}
+        onKeyDown={key('bottom')}
+        className="group/edge absolute -bottom-[5px] left-0 z-10 flex h-[9px] w-full cursor-ns-resize items-center focus-visible:outline-none"
+      >
+        <span className={`h-[2px] w-full ${line}`} />
+      </span>
+      <span
+        role="separator"
+        aria-label={`Size: ${wide}, ${tall}. Drag, or press the arrows.`}
+        tabIndex={0}
+        onPointerDown={down('corner')}
+        onKeyDown={key('corner')}
+        title="Drag to resize"
+        className="absolute -right-[5px] -bottom-[5px] z-20 flex size-[14px] cursor-nwse-resize items-end justify-end p-[3px] text-ink-tertiary opacity-0 transition-opacity duration-[var(--micro)] group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:text-accent focus-visible:outline-none"
+      >
+        <svg width="8" height="8" viewBox="0 0 8 8" stroke="currentColor" strokeWidth="1.2" aria-hidden>
+          <path d="M7 1 1 7M7 4.5 4.5 7" />
+        </svg>
+      </span>
+    </>
+  )
+}
+
 function Block({
   db,
   block,
@@ -331,6 +486,8 @@ function Block({
   onMove,
   onRemove,
   onTick,
+  grid,
+  onResize,
   drag,
 }: {
   readonly db: Database
@@ -349,6 +506,8 @@ function Block({
   readonly onMove: (by: number) => void
   readonly onRemove: () => void
   readonly onTick: Ticking
+  readonly grid: RefObject<HTMLDivElement | null>
+  readonly onResize: (size: BlockSize) => void
   readonly drag:
     | { readonly start: () => void; readonly over: () => void; readonly drop: () => void; readonly end: () => void }
     | undefined
@@ -358,13 +517,25 @@ function Block({
   const declaration = declarations.find((each) => each.name === block.format)
   const gone = blockGone(db, block, declarations)
   const what = blockWhat(db, block, declarations, withFormat)
+  // While an edge is dragged, the size it snaps to; written when it is let go.
+  const [sizing, setSizing] = useState<BlockSize | undefined>(undefined)
+  const resizing = useRef(false)
+  const width = sizing?.width ?? block.width ?? defaultBlockWidth(block)
+  const height = sizing === undefined ? block.height : (sizing.height ?? block.height)
+  const fill = height !== undefined
   return (
     <div
       ref={box}
       onKeyDown={dismiss}
       data-block={block.name}
-      draggable={drag !== undefined}
+      data-size={`${String(width)}x${height === undefined ? 'auto' : String(height)}`}
+      draggable={drag !== undefined && sizing === undefined}
       onDragStart={(event) => {
+        // An edge being dragged resizes; it never moves the block.
+        if (resizing.current) {
+          event.preventDefault()
+          return
+        }
         if (drag === undefined) return
         event.dataTransfer.effectAllowed = 'move'
         event.dataTransfer.setData('text/plain', block.name)
@@ -383,11 +554,12 @@ function Block({
       onDragEnd={drag?.end}
       className={[
         'group relative flex min-w-0 flex-col border border-hairline bg-background',
-        block.kind === 'total' ? 'col-span-1' : 'col-span-2',
+        SPANS[width] ?? 'col-span-2',
         dragging ? 'opacity-40' : '',
         over ? 'shadow-[-3px_0_0_var(--color-accent)]' : '',
         fresh ? 'fc-pop-enter' : '',
       ].join(' ')}
+      style={height === undefined ? undefined : { height: blockPixels(height) }}
     >
       <div className="flex min-h-11 items-start gap-1.5 pt-2.5 pr-2 pb-2 pl-3.5">
         <div className="flex min-w-0 flex-1 flex-col">
@@ -425,13 +597,19 @@ function Block({
           </span>
         )}
       </div>
-      <div className="min-w-0 px-3.5 pb-3">
+      <div className={`min-w-0 px-3.5 pb-3 ${fill ? 'min-h-0 flex-1 overflow-y-auto' : ''}`}>
         {gone !== undefined || declaration === undefined ? (
           <Nothing>{gone}</Nothing>
         ) : block.kind === 'total' ? (
           <TotalBody db={db} block={block} declaration={declaration} declarations={declarations} day={day} />
         ) : block.kind === 'rollup' ? (
-          <RollupBody db={db} declaration={declaration} declarations={declarations} name={block.name} />
+          <RollupBody
+            db={db}
+            declaration={declaration}
+            declarations={declarations}
+            name={block.name}
+            height={height === undefined ? undefined : Math.max(CHART_MIN, blockPixels(height) - CHART_CHROME)}
+          />
         ) : (
           <SavedBody
             db={db}
@@ -442,9 +620,30 @@ function Block({
             locked={locked}
             onTick={onTick}
             onMore={onOpen}
+            fill={fill}
+            width={width}
           />
         )}
       </div>
+      {!locked && (
+        <Edges
+          box={box}
+          grid={grid}
+          width={width}
+          height={height}
+          resizing={resizing}
+          onSizing={setSizing}
+          onSized={(size) => {
+            setSizing(undefined)
+            onResize(size)
+          }}
+        />
+      )}
+      {sizing !== undefined && (
+        <span className="pointer-events-none absolute right-3 bottom-2 z-10 border border-hairline-strong bg-elevated px-1.5 py-0.5 text-[11px] text-ink-secondary tabular-nums shadow-pop">
+          {width} {width === 1 ? 'column' : 'columns'} · {height === undefined ? 'as tall as it holds' : `${String(height)} rows`}
+        </span>
+      )}
       {menu !== undefined && (
         <div role="menu" className="fc-pop-enter absolute top-[34px] right-1.5 z-20 min-w-[230px] border border-hairline-strong bg-elevated py-1 shadow-pop">
           <MenuItem onClick={onOpen} disabled={gone !== undefined}>
@@ -569,11 +768,14 @@ function RollupBody({
   declaration,
   declarations,
   name,
+  height,
 }: {
   readonly db: Database
   readonly declaration: FormatDeclaration
   readonly declarations: readonly FormatDeclaration[]
   readonly name: string
+  /** A block given a height draws its chart to it; one with none, as before. */
+  readonly height: number | undefined
 }) {
   const result = runRollup(db, declaration, name, declarations, { today: toISODate(today()) })
   if (result === undefined) return <Nothing>{declaration.title} has no rollup called {name} any more.</Nothing>
@@ -594,7 +796,7 @@ function RollupBody({
       kind="bars"
       title={`${result.rollup.name} by month`}
       labelHeading="month"
-      height={150}
+      height={height ?? 150}
     />
   )
 }
@@ -609,6 +811,8 @@ function SavedBody({
   locked,
   onTick,
   onMore,
+  fill,
+  width,
 }: {
   readonly db: Database
   readonly declaration: FormatDeclaration
@@ -618,6 +822,9 @@ function SavedBody({
   readonly locked: boolean
   readonly onTick: Ticking
   readonly onMore: () => void
+  /** Given a height: every row, scrolling inside past what fits. */
+  readonly fill: boolean
+  readonly width: number
 }) {
   const view = savedView(db, declaration.name, name)
   if (view === undefined) return <Nothing>{declaration.title} has no saved view called {name} any more.</Nothing>
@@ -640,25 +847,26 @@ function SavedBody({
     ) : null
   const nothing = <Nothing>Nothing matches: {savedWords(view)}.</Nothing>
 
-  if (view.kind === 'list') return <ListBody db={db} declaration={declaration} declarations={declarations} query={query} day={day} locked={locked} onTick={onTick} more={more} nothing={nothing} />
-  if (view.kind === 'table') return <TableBody db={db} declaration={declaration} declarations={declarations} view={view} query={query} more={more} nothing={nothing} />
-  if (view.kind === 'board') return <BoardBody db={db} declaration={declaration} declarations={declarations} query={query} nothing={nothing} />
+  if (view.kind === 'list') return <ListBody db={db} declaration={declaration} declarations={declarations} query={query} day={day} locked={locked} onTick={onTick} more={more} nothing={nothing} fill={fill} />
+  if (view.kind === 'table') return <TableBody db={db} declaration={declaration} declarations={declarations} view={view} query={query} more={more} nothing={nothing} fill={fill} width={width} />
+  if (view.kind === 'board') return <BoardBody db={db} declaration={declaration} declarations={declarations} query={query} nothing={nothing} fill={fill} width={width} />
   // A roadmap and a ready list, compact, are the names they hold, in order.
   const label = labelColumn(declaration)
   const ready = view.kind === 'ready' ? readyData(db, declaration, declarations, query, day) : undefined
   const rows = ready !== undefined ? ready.ready.map((each) => each.row) : listRows(db, declaration, query)
   if (rows.length === 0) return nothing
-  const labels = linkLabels(db, rows.slice(0, 5), declaration, declarations)
+  const shown = rows.slice(0, fill ? TALL : 5)
+  const labels = linkLabels(db, shown, declaration, declarations)
   return (
     <>
-      {rows.slice(0, 5).map((row) => (
+      {shown.map((row) => (
         <Line key={row.id}>
           <span className="flex min-w-0 flex-1">
             <Bidi className="min-w-0 truncate">{(label === undefined ? '' : valueText(label, row, labels)) || row.id}</Bidi>
           </span>
         </Line>
       ))}
-      {rows.length > 5 && <Foot>{more(rows.length - 5)}</Foot>}
+      {rows.length > shown.length && <Foot>{more(rows.length - shown.length)}</Foot>}
     </>
   )
 }
@@ -686,6 +894,7 @@ function ListBody({
   onTick,
   more,
   nothing,
+  fill,
 }: {
   readonly db: Database
   readonly declaration: FormatDeclaration
@@ -696,6 +905,7 @@ function ListBody({
   readonly onTick: Ticking
   readonly more: (count: number) => ReactNode
   readonly nothing: ReactNode
+  readonly fill: boolean
 }) {
   const picture = listPicture(db, declaration, declarations, query, viewSettings(db, declaration.name, 'list'), day)
   const done = picture.shape.done
@@ -740,7 +950,7 @@ function ListBody({
   if (picture.shape.group === undefined) {
     const open = all.filter((each) => !each.ticked)
     const ticked = all.length - open.length
-    const shown = open.slice(0, 5)
+    const shown = open.slice(0, fill ? TALL : 5)
     const rest = open.length - shown.length
     return (
       <>
@@ -760,14 +970,15 @@ function ListBody({
     <>
       {groups.map((group) => {
         const ordered = [...group.rows.filter((each) => !each.ticked), ...group.rows.filter((each) => each.ticked)]
-        hidden += Math.max(0, ordered.length - 2)
+        const each = fill ? TALL : 2
+        hidden += Math.max(0, ordered.length - each)
         return (
           <div key={group.key}>
             <div className="mt-1.5 flex h-[26px] items-center gap-1.5 text-[11px] font-medium tracking-[.06em] text-ink-secondary uppercase">
               <Bidi>{group.name}</Bidi>
               <span className="text-ink-tertiary tabular-nums">{group.rows.length}</span>
             </div>
-            {ordered.slice(0, 2).map(line)}
+            {ordered.slice(0, each).map(line)}
           </div>
         )
       })}
@@ -785,6 +996,8 @@ function TableBody({
   query,
   more,
   nothing,
+  fill,
+  width,
 }: {
   readonly db: Database
   readonly declaration: FormatDeclaration
@@ -793,17 +1006,19 @@ function TableBody({
   readonly query: RowQuery
   readonly more: (count: number) => ReactNode
   readonly nothing: ReactNode
+  readonly fill: boolean
+  readonly width: number
 }) {
   const total = countRows(db, declaration, query)
   if (total === 0) return <>{nothing}</>
-  const rows = listRows(db, declaration, { ...query, limit: 4 })
+  const rows = listRows(db, declaration, { ...query, limit: fill ? TALL : 4 })
   const labels = linkLabels(db, rows, declaration, declarations)
   const label = labelColumn(declaration)
   const chosen = addressView(view.address).columns[declaration.name]
   const others = (chosen === undefined
     ? declaration.columns.filter((each) => each !== label)
     : chosen.flatMap((name) => declaration.columns.filter((each) => each.name === name && each !== label))
-  ).slice(0, 2)
+  ).slice(0, tableColumns(width))
   const columns = [...(label === undefined ? [] : [label]), ...others]
   const figure = (column: ColumnDeclaration): boolean => ['integer', 'real', 'decimal', 'money', 'percent', 'quantity'].includes(column.type)
   return (
@@ -833,7 +1048,7 @@ function TableBody({
           ))}
         </tbody>
       </table>
-      {total > 4 && <Foot>{more(total - 4)}</Foot>}
+      {total > rows.length && <Foot>{more(total - rows.length)}</Foot>}
     </>
   )
 }
@@ -845,12 +1060,16 @@ function BoardBody({
   declarations,
   query,
   nothing,
+  fill,
+  width,
 }: {
   readonly db: Database
   readonly declaration: FormatDeclaration
   readonly declarations: readonly FormatDeclaration[]
   readonly query: RowQuery
   readonly nothing: ReactNode
+  readonly fill: boolean
+  readonly width: number
 }) {
   const shape = boardOf(declaration.columns, boardSettings(db, declaration.name))
   const rows = listRows(db, declaration, query)
@@ -858,8 +1077,10 @@ function BoardBody({
   const labels = linkLabels(db, rows, declaration, declarations)
   const lanes = shape.lanes
   const nameOf = (row: StoredRow): string => (shape.name === undefined ? '' : valueText(shape.name, row, labels)) || row.id
+  // A wider board puts its lanes side by side, as its own tab does.
+  const across = width - 1
   return (
-    <>
+    <div className={across > 1 ? 'grid gap-x-4' : undefined} style={across > 1 ? { gridTemplateColumns: `repeat(${String(across)}, minmax(0, 1fr))` } : undefined}>
       {(lanes.values ?? []).map((member) => {
         const held = rows.filter((row) => row.cells[lanes.name] === member)
         if (held.length === 0) return null
@@ -869,7 +1090,7 @@ function BoardBody({
               <Bidi>{member.replace(/_/g, ' ')}</Bidi>
               <span className="text-ink-tertiary tabular-nums">{held.length}</span>
             </div>
-            {held.slice(0, 2).map((row) => (
+            {held.slice(0, fill ? TALL : 2).map((row) => (
               <Line key={row.id}>
                 <span className="flex min-w-0 flex-1">
                   <Bidi className="min-w-0 truncate">{nameOf(row)}</Bidi>
@@ -879,7 +1100,7 @@ function BoardBody({
           </div>
         )
       })}
-    </>
+    </div>
   )
 }
 

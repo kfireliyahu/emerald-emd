@@ -627,6 +627,8 @@ function blockOf(row: Readonly<Record<string, unknown>>): readonly DashboardBloc
   const name = row['name']
   const sum = row['sum']
   const address = row['address']
+  const width = row['width']
+  const height = row['height']
   if (typeof format !== 'string' || typeof kind !== 'string' || typeof name !== 'string' || !isBlockKind(kind)) return []
   return [
     {
@@ -636,6 +638,9 @@ function blockOf(row: Readonly<Record<string, unknown>>): readonly DashboardBloc
       name,
       ...(typeof sum === 'string' ? { sum } : {}),
       address: typeof address === 'string' ? address : '',
+      // Its size (M53 F4, D-527); NULL is the size it had before there were sizes.
+      ...(typeof width === 'number' ? { width } : {}),
+      ...(typeof height === 'number' ? { height } : {}),
     },
   ]
 }
@@ -654,7 +659,7 @@ export function setDashboardBlocks(db: Database, dashboard: string | undefined, 
         throw new Error(`${dashboard}’s dashboard holds ${dashboard}’s own views; ${block.name} reads ${block.format}.`)
       }
       db.run(
-        'INSERT INTO format_dashboard_block (dashboard, position, format_name, kind, name, sum, address) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        'INSERT INTO format_dashboard_block (dashboard, position, format_name, kind, name, sum, address, width, height) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
         [
           dashboard ?? null,
           position,
@@ -663,6 +668,8 @@ export function setDashboardBlocks(db: Database, dashboard: string | undefined, 
           block.name,
           block.kind === 'total' ? (block.sum ?? null) : null,
           block.kind === 'total' ? savedAddress(block.address) : '',
+          block.width ?? null,
+          block.height ?? null,
         ],
       )
     })
