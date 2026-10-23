@@ -85,7 +85,9 @@ it is three things rather than one:
   the millisecond (`<name>.emd.20261009T121112.315.bak`, then `-2` if that is taken) in Emerald's
   own per-user folder of earlier copies, one folder per document, the last five kept, and names
   the full path in its answer (D-455, which moved it from
-  beside the document). The desktop app's File › *Earlier copies of this document* lists them and
+  beside the document) — **in the first write to that document in a server's run, and not again**
+  (M52 F2): a session of forty writes read the same paragraph forty times. The copy is still taken
+  every time, and a named copy, `keep_copy` and a refusal still say where the copies are. The desktop app's File › *Earlier copies of this document* lists them and
   restores one — a person's act on a screen, with no tool for it. It costs a file copy. **Each copy
   also sweeps** (D-457): a folder whose recorded document is gone goes
   30 days after its newest copy, the answer says when one did, and the Windows uninstaller takes
@@ -1324,6 +1326,24 @@ The instructions also say plainly **what is not here** — paychecks, funds, sav
 splitter, and category management. That is the sentence that went stale twice already, so the test
 over it asserts the *capability*: every tool it names must exist, and every screen it calls app-only
 must have no tool matching. The day `record_paycheck` lands, the assertion goes red in the same diff.
+
+### Forty-five calls on another project (M52 F2)
+
+The development pack, used on another project, cost about forty-five calls in one session: every
+write a call, and every call the backup paragraph again. *Typing into a doc is faster while ideas are
+still fluid.* Three answers, none of them a new tool:
+
+- **The copy is said once.** See the backup bullet above.
+- **Collect, then write once.** Every write tool already took a list; the instructions now say to
+  collect the rows a conversation turns up and send them together.
+- **A text document can be typed into.** Stored as text (D-246), a document is Markdown: a row is
+  `### its name` and `column: value` lines under its format's `## rows`. **Measured before it was
+  said**: the next call reads a hand edit back and checks every value, and a bad one — a date that is
+  not one, a member the enum has not got, an unknown column, a required one left out, a name used
+  twice, a link to no row — refuses the whole document (`UNREADABLE`) with the line and the reason
+  until it is fixed. Nothing is dropped quietly, so the instructions and the skills that write rows
+  say: while ideas are moving, edit the text, then one `format_problems` call checks it. A hand edit
+  takes no copy, and its rows get ids only when read again.
 
 ## The tool that lied about itself
 

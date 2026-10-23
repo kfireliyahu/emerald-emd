@@ -34,6 +34,7 @@ import {
   updateFormatRowsTool,
 } from './formats.ts'
 import { NO_CLIENT } from './tool.ts'
+import { listBackups } from '../backup.ts'
 import { tempDir } from '../../testing/tempDir'
 
 /**
@@ -170,6 +171,20 @@ describe('record_format_rows', () => {
     // types were applied — which is the whole reason for showing it.
     expect(answer).toContain('kcal: 352')
     expect(listRows(await reopen(path), PASTA)).toHaveLength(0)
+  })
+
+  it('says where the copies go on the first write to a document, and takes one silently after', async () => {
+    const path = await withIngredients()
+    const answers = [
+      await record(path, [PASTA_ROW], true),
+      await record(path, [{ ...PASTA_ROW, name: 'Rice' }], true),
+      await record(path, [{ ...PASTA_ROW, name: 'Oats' }], true),
+    ]
+
+    expect(answers.map((answer) => answer.includes('The document was copied to'))).toEqual([true, false, false])
+    expect(await listBackups(path)).toHaveLength(3)
+    // Another document is told once too, whatever this one was.
+    expect(await record(await withIngredients(), [PASTA_ROW], true)).toContain('The document was copied to')
   })
 
   it('writes on commit, returns the ids, and takes a copy first', async () => {
@@ -391,7 +406,10 @@ describe('delete_format_rows', () => {
       NO_CLIENT,
     )
     expect(done).toContain('1 row removed')
-    expect(done).toContain('The document was copied to')
+    // The second write to this document in this run: its copy is taken, and
+    // the first write already said where they go (M52 F2).
+    expect(done).not.toContain('The document was copied to')
+    expect(await listBackups(path)).toHaveLength(2)
     expect(listRows(await reopen(path), PASTA)).toHaveLength(0)
   })
 })

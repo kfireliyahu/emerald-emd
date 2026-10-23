@@ -1,4 +1,4 @@
-import { copyFileSync, readFileSync } from 'node:fs'
+import { copyFileSync, existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -55,6 +55,26 @@ describe('the development pack (M27 U1)', () => {
         if (column.type !== 'link') continue
         const naming = byName.get(column.target ?? '')?.columns.find((each) => each.type === 'text')
         expect(naming?.unique, `${declaration.name}.${column.name} → ${column.target ?? ''}`).toBe(true)
+      }
+    }
+  })
+
+  // Any project keeps this pack, so its prose is for any project (M52 F2): it
+  // names no file of this repository, none of its decisions, milestones or
+  // open questions, and none of its history. Examples are neutral — `D-12`, `Q3`, `M2`.
+  it('says what each format and column is for in general terms, naming nothing of this repository', () => {
+    const ROOT = fileURLToPath(new URL('../../../../', import.meta.url))
+    const ours = [/\bD-\d{3,}\b/, /\bM\d{2,}\b/, /\bH\d+\b/, /\bmigrat/i, /\bEmerald\b/, /\bledger\b/i, /CLAUDE\.md/, /\bdocs\//]
+    for (const declaration of formats()) {
+      const prose = [
+        declaration.notes,
+        ...declaration.columns.map((column) => `${column.name}: ${column.note}`),
+      ]
+      for (const line of prose) {
+        for (const pattern of ours) expect(line, `${declaration.name} names ${String(pattern)}`).not.toMatch(pattern)
+        for (const path of line.match(/[\w.-]*\/[\w./-]+/g) ?? []) {
+          expect(existsSync(join(ROOT, path)), `${declaration.name} names this repository's ${path}`).toBe(false)
+        }
       }
     }
   })

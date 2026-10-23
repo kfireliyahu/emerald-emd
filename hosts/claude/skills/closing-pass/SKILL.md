@@ -75,7 +75,7 @@ holding exactly what `land_units`' `units` would: `unit`, `files`, `commit`, `br
 checks it; report the id. Write no other format.
 
 **Anything else** — a unit you planned, a question you opened or answered — is `record_format_rows`
-or `update_format_rows`, one call per format, dry run first:
+or `update_format_rows`, one call per format with every row of it in its list, dry run first:
 
 - **A unit you planned → a `unit` row with `files`** (the files to open first) and `paths` (the same
   files one per line, which `dispatch_plan` compares to say what can run at once). List every unit you

@@ -20,6 +20,7 @@
  */
 
 import { open, rename, stat, unlink, writeFile } from 'node:fs/promises'
+import { resolve } from 'node:path'
 import type { Database } from 'sql.js'
 
 import { err, ok, type Result } from '@/core/result.ts'
@@ -41,7 +42,7 @@ import {
   type DocumentProblem,
   type OpenDocument,
 } from './document.ts'
-import { BACKUPS_KEPT, backupDocument, keepNamedCopy, type BackupResult } from './backup.ts'
+import { BACKUPS_KEPT, backupDocument, backupFolderFor, keepNamedCopy, type BackupResult } from './backup.ts'
 import { NAMED_COPIES_KEPT, NAMED_COPY_ROWS, ORPHANED_COPIES_DAYS, writeAtomically } from '../../electron/bridge.ts'
 
 /**
@@ -286,13 +287,41 @@ export async function writeWithBackup(
       } catch (error) {
         throw new Error(
           'Refusing to write: the backup failed ' +
-            `(${error instanceof Error ? error.message : String(error)}). Nothing was changed.`,
+            `(${error instanceof Error ? error.message : String(error)}). Nothing was changed.` +
+            copiesAreIn(path),
         )
       }
     },
   })
 
-  return backup === undefined ? answer : [answer, '', backupNote(backup)].join('\n')
+  const note = backup === undefined ? undefined : backupNoteOnce(path, backup)
+  return note === undefined ? answer : [answer, '', note].join('\n')
+}
+
+/**
+ * The documents this server's run has already told where their copies go
+ * (M52 F2).
+ *
+ * Every write takes a copy, and every write used to say so in a paragraph: a
+ * session of forty writes read the same paragraph forty times. **The first
+ * write to a document in a run says where its copies go, and the rest are
+ * silent.** The copy is still taken every time; `keep_copy`, a named copy and
+ * a refusal still name where the copies are, because those are the moments
+ * somebody is looking for them.
+ */
+const toldWhereCopiesGo = new Set<string>()
+
+/** The rolling copy's note the first time this run writes `path`, and nothing after. */
+function backupNoteOnce(path: string, backup: BackupResult): string | undefined {
+  const key = resolve(path)
+  if (toldWhereCopiesGo.has(key)) return undefined
+  toldWhereCopiesGo.add(key)
+  return backupNote(backup)
+}
+
+/** What a refusal ends with: where this document's earlier copies are, so a failed write still says. */
+function copiesAreIn(path: string): string {
+  return ` Its earlier copies are in \`${backupFolderFor(path)}\` (File › Earlier copies of this document).`
 }
 
 function backupNote(backup: BackupResult): string {
@@ -432,7 +461,8 @@ export async function mutatingCall<T>(
           // went ahead" is the sentence nobody wants to read afterwards.
           throw new Error(
             'Refusing to write: the backup failed ' +
-              `(${error instanceof Error ? error.message : String(error)}). Nothing was changed.`,
+              `(${error instanceof Error ? error.message : String(error)}). Nothing was changed.` +
+              copiesAreIn(path),
           )
         }
 
@@ -449,17 +479,19 @@ export async function mutatingCall<T>(
         } catch (error) {
           throw new Error(
             'Refusing to write: the copy from before it failed ' +
-              `(${error instanceof Error ? error.message : String(error)}). Nothing was changed.`,
+              `(${error instanceof Error ? error.message : String(error)}). Nothing was changed.` +
+              copiesAreIn(path),
           )
         }
       },
     },
   )
 
+  const note = backup === undefined ? undefined : backupNoteOnce(path, backup)
   return [
     answer,
     ...(named === undefined ? [] : ['', namedNote(named.copy, named.what)]),
-    ...(backup === undefined ? [] : ['', backupNote(backup)]),
+    ...(note === undefined ? [] : ['', note]),
   ].join('\n')
 }
 
@@ -498,7 +530,8 @@ export async function storeDocumentAs(path: string, encoding: DocumentEncoding, 
     if (write === undefined) {
       return `${path} is stored as ${STORED_AS[document.encoding]}; it would be written as ${said}, ${size}, with the same formats, rows and units.\n\n${DRY_RUN}`
     }
-    return `${path} is stored as ${said} now, ${size}. Every write from here keeps it that way.\n\n${await write(encoded.value)}`
+    const note = await write(encoded.value)
+    return `${path} is stored as ${said} now, ${size}. Every write from here keeps it that way.${note === '' ? '' : `\n\n${note}`}`
   }
   if (!commit) return readDocument(path, (document) => answer(document))
 
@@ -512,11 +545,12 @@ export async function storeDocumentAs(path: string, encoding: DocumentEncoding, 
           backup = await backupDocument(path)
         } catch (error) {
           throw new Error(
-            `Refusing to write: the backup failed (${error instanceof Error ? error.message : String(error)}). Nothing was changed.`,
+            `Refusing to write: the backup failed (${error instanceof Error ? error.message : String(error)}). Nothing was changed.` +
+              copiesAreIn(path),
           )
         }
         await writeAtomically({ pid: process.pid, writeFile, rename, unlink }, path, bytes)
-        return backupNote(backup)
+        return backupNoteOnce(path, backup) ?? ''
       })
     } finally {
       opened.value.db.close()
