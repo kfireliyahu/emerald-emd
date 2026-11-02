@@ -6181,7 +6181,7 @@ state: fault
 unit: M54 U8
 should: The outlined box is brought well into view with its context (the outline is the box the eye should be on).
 breaks: bringIntoView scrolls each box only to the nearest edge, so every one sits on the frame's bottom edge (838-880, 832-880, 727-880, 721-880 in a viewport ending at 900); ledger 5/5's 'every charge is categorized' is below the fold, and development 3/4's outline clips to 920 for a frame when the second unit lands.
-state: open
+state: fault
 
 ### At `#/formats`, go to New format → By hand. Call it `Ingredient`, then add a real column with a unit and a minimum, an enum with two members, and a money column. Change a type after filling its fields. Save, then Edit, take a column out, and read the plan. Then use From a declaration: paste the ingredient fixture and press Open it in the editor. Try Copy the declaration. (M20 T1 has since turned this form into a four-step walk; judge it there.)
 unit: M19 U2a
@@ -6194,7 +6194,7 @@ state: open
 unit: M54 U7
 should: The words get the room and the command box takes what is left (a readable measure).
 breaks: The command column takes up to 28rem, which squeezes each card's name and line into about 150px. 'The source, on GitHub' wraps to two lines, and the descriptions run 5-6 lines.
-state: open
+state: fault
 
 ### At the 0.2.0 release cut: bring the testing rule into the plugin's generic skill copies, `hosts/claude/skills/closing-pass/SKILL.md` and `hosts/claude/skills/run-milestone/SKILL.md`, from M51 F6's own edits (`git show ee9d513 -- hosts/claude/skills`, reachable from main through merge f19f264), in the same commit that sets the plugin manifest's version for 0.2.0.
 unit: M51 F6
@@ -6228,19 +6228,19 @@ state: open
 unit: M54 U7
 should: The page's footer is a contentinfo landmark, outside main (WCAG 1.3.1).
 breaks: The footer sits inside main, so it is no landmark.
-state: open
+state: fault
 
 ### Close a window with unsaved changes; and press Install and restart on an update notice with unsaved changes.
 unit: M54 U6
 should: The question names the document, and says restart when it is a restart (platform save-on-close dialogs).
 breaks: 'Save your changes before closing?' for both, never naming the document (main.ts:657).
-state: open
+state: fault
 
 ### Command palette › Back up now, then read the notice that follows.
 unit: M54 U6
 should: Words that read as a sentence about this act (Words name the rule), e.g. 'A copy of <name> as it is now is among its earlier copies'.
 breaks: Driven: 'A copy from before now is among this document’s earlier copies, as project.before-20261102T093325-now.emd.' — the keep-copy label 'now' is dropped into 'a copy from before <what>' (Notices.tsx:240).
-state: open
+state: fault
 
 ### Compare each tour's three names: the rail row (en.ts:30-35 `rows`), its label (`tours.*.label`) and its frame title (`tours.*.title`).
 unit: M54 U7
@@ -6284,44 +6284,44 @@ state: open
 unit: M54 U4
 should: Words that are true where they are read (Words name the rule); Ctrl+Shift+S does what the screen says or nothing.
 breaks: It says File › Save a copy… Ctrl+Shift+S; a browser tab has no File menu, and useSaveShortcuts.ts:19 ignores Shift, so Ctrl+Shift+S runs a plain Save.
-state: open
+state: fault
 
 ### Demo (the browser build), #/settings/model.
 unit: M54 U3
 should: The screen's title, its one sentence and one text action — where to get the desktop app (An empty state is one sentence and one text action).
 breaks: One centred sentence with no title and no action; it says the desktop version can, and does not link to it. LocalModel.tsx.
 not_tried: The rest of the screen, which needs the Electron shell; nothing was turned on.
-state: open
+state: fault
 
 ### Demo (the browser build), custom.emd: #/formats → New format.
 unit: M54 U1
 should: A start that this build cannot do is shown unavailable, not offered (Nielsen: error prevention).
 breaks: From an example is an ordinary tile, while its own words say it needs the desktop app.
-state: open
+state: fault
 
 ### Demo, a document with no reader: #/read/readers.
 unit: M54 U3
 should: One sentence and one text action (An empty state is one sentence).
 breaks: Two sentences and a filled primary "Read a file" button. Readers.tsx:36-50.
-state: open
+state: fault
 
 ### Demo, a fresh load of app.html?document=project.emd#/: press Back in the title bar.
 unit: M54 U4
 should: Back is disabled where there is nowhere to go, or the redirect replaces the history entry.
 breaks: Back is enabled (history.state.idx is null) and lands on the same Dashboard through the redirect (HistoryArrows.tsx:43).
-state: open
+state: fault
 
 ### Demo, any document and screen: read the browser tab's title.
 unit: M54 U4
 should: The page title names the document and the screen (WCAG 2.4.2).
 breaks: It is always "Emerald": nothing sets document.title.
-state: open
+state: fault
 
 ### Demo, any document, #/formats/<a format> (Table) — read the headings (a screen reader's heading list).
 unit: M54 U1
 should: A screen names itself with a heading, as Roadmap and Ready to start do with an h1 (WCAG 1.3.1 and 2.4.6; web interface guidelines: hierarchical headings).
 breaks: A format's table page has no h1 or h2 at all; its name (Unit) is plain text.
-state: open
+state: fault
 
 ### Demo, any document, #/mcp: read the headings and the buttons; look at a tool's removes line.
 unit: M54 U4
@@ -6333,7 +6333,7 @@ state: open
 unit: M54 U4
 should: The command that works today, npx -y emerald-mcp, as docs/plugin.md gives it (Words name the rule).
 breaks: The snippet points at '<folder Emerald was built in>/dist-plugin/server.mjs' and a note says it is not in the download yet (mcp/connect.ts:20 SERVER_PLACEHOLDER, Mcp.tsx:47) — the server has shipped on npm since 0.1.0.
-state: open
+state: fault
 
 ### Demo, any document, light and dark: the dashboard popovers' headings (NEW CHART, HEADLINE TOTAL) and menu descriptions, every block's subtitle, the filter band's zero-count choices, counts, "· 18.00 to 250.00" and its × button, the rollup's Delete chart and unpressed Bars/Line, #/connections' instructions and column names.
 unit: M54 U2
@@ -6345,19 +6345,19 @@ state: open
 unit: M54 U4
 should: Square by spending the radius tokens; No gradients, no shadows (--shadow-pop belongs to menus, panels and dialogs); a radio group is one tab stop moved by arrows (APG radio group).
 breaks: A rounded-full pill whose knob wears shadow-pop; each role=radio is its own tab stop and the arrows do nothing (ThemeToggle.tsx:24-50); ThemeCycleButton hovers bg-surface on a surface rail, so hover shows nothing.
-state: open
+state: fault
 
 ### Demo, any document, light: the rail's collapse and Guide buttons, a folder's open arrow, and the unselected theme buttons at the rail's foot.
 unit: M54 U4
 should: An icon you act on reads at least 3:1 against its plane (WCAG 1.4.11); An icon is an action puts icons at ink-secondary at rest.
 breaks: text-ink-tertiary on surface, 2.45:1 (Sidebar.tsx:302, :320; ThemeToggle.tsx:47; RailFolder.tsx:121).
-state: open
+state: fault
 
 ### Demo, any document: Ctrl+K and read the results with a screen reader.
 unit: M54 U4
 should: A listbox owns only options, or groups of them: each heading a role=group with aria-labelledby, or outside the list (ARIA required owned elements).
 breaks: The group headings are <p> elements directly inside role=listbox (CommandPalette.tsx:384, :471).
-state: open
+state: fault
 
 ### Demo, any format: the view tabs (Table, Board, List, Dashboard, Claims) in light and dark.
 unit: M54 U1
@@ -6369,13 +6369,13 @@ state: open
 unit: M54 U3
 should: On a format's read page a drop anywhere reads onto that format, and the window overlay's words say so (Desktop affordances over polish; Words name the rule).
 breaks: The overlay reads "Drop statements, payslips and fund reports, any number" and the drop goes to the ledger: "bank-statement.csv needs a ledger to go into… Keep a ledger here and read it". Only the dashed box reads onto Card charge. App.tsx:271 (useWindowFileDrop), ReadFiles.tsx ~837-843, NoLedger.tsx:54.
-state: open
+state: fault
 
 ### Demo, custom.emd, #/dashboard → Add a block → Headline total, Sum of amount. Both themes.
 unit: M54 U2
 should: The currency symbol and the decimals are smaller and ink-secondary, so the eye lands on the magnitude (The magnitude leads); the figure's size is a ramp step (Every value is a token).
 breaks: "\"₪469.00\" is one 32px run, symbol and decimals in the digits' size and colour; its sizes are text-[32px] and text-[22px], neither on the ramp (20, 24, 40). Dashboard.tsx:764."
-state: open
+state: fault
 
 ### Demo, custom.emd, #/formats/card_charge. In the blank row type abc into amount, leave date empty, press Enter. Then open Add (card_charge/entry/new), leave date empty, press Add.
 unit: M54 U1
@@ -6393,25 +6393,25 @@ state: open
 unit: M54 U1
 should: Late, due and overdue are said only of a column that means a due date (rules: Words name the rule; Colour carries meaning).
 breaks: Every charge reads "101 days late" … "95 days late" in negative. listView's shape takes the first date column as due (src/domain/format/view.ts, due: lines.find(isDate) ?? columns.find(isDate)), and a charge's date is when it happened, not when it is due.
-state: open
+state: fault
 
 ### Demo, custom.emd, #/formats/card_charge/read → Add files → bank-statement.csv → Change → map date, merchant and amount. Both themes.
 unit: M54 U3
 should: One problem list, and it follows the draft while the reader is being changed (Colour carries meaning — a red claim must be true).
 breaks: The problems print twice, above and below the grid; the upper copy is the committed reading and stays stale — "Nothing is mapped yet." and "date is required…" in red while the grid shows date, merchant and amount mapped. ReadFiles.tsx (the file row's problems), IntakePanel.tsx.
-state: open
+state: fault
 
 ### Demo, custom.emd, #/formats/card_charge/read → Add files → fixtures/synthetic/demo/card-statement-2026-08.xlsx, with no reader yet.
 unit: M54 U3
 should: A guess puts a money column on money and a text column of codes on a currency, and asks for what the cells do not say (Make it in place: infer what the data says).
 breaks: The guess maps Charge amount → amount_currency (a column of figures onto a three-letter code), so 0 of 26 lines read and 26 are refused ("amount needs amount_currency as a three-letter code"). The guess, not the screen — guessReading in ReadFiles.
-state: open
+state: fault
 
 ### Demo, custom.emd, #/formats/card_charge/read → Change: a column's choice, the problems under it, and the Header row choice.
 unit: M54 U3
 should: A column's title ("Currency of amount"), never a snake_case key, wherever a person reads it (Words name the rule).
 breaks: The choices are raw keys — amount_currency — and the problem repeats the key ("every row needs amount_currency"); the header-row choice is the row's cells joined with " · ". IntakePanel.tsx keys list.
-state: open
+state: fault
 
 ### Demo, custom.emd, #/formats/card_charge/read → Change: the intake grid's preview cells.
 unit: M54 U3
@@ -6423,31 +6423,31 @@ state: open
 unit: M54 U2
 should: The band counts the rows held out of the whole format — "3 of 5 entries" (Words name the rule).
 breaks: Under an amount range the band reads "3 of 3 entries"; a date filter counts right ("4 of 7"). src/ui/screens/FormatRows.tsx:358 recounts the whole only when match, windows or search is set, so a range falls through to the filtered total.
-state: open
+state: fault
 
 ### Demo, custom.emd, #/formats/card_charge: Filter by…, Search, a value popover and its is / is not group; the rollup tab's Bars/Line toggle. Compare with the dashboard's menus and blocks.
 unit: M54 U2
 should: Cards and controls are square by spending --radius-card and --radius-control (Square by spending the radius tokens).
 breaks: FIELD in src/ui/components/fieldLook.ts is rounded-md (8px), so every field in the app is round while buttons, menus and blocks are square; the band's popover and Held as group are rounded-md, its option rows and the Bars/Line toggle rounded. FilterBand.tsx:565, 583, 694, 836, 890, 915; RollupView.tsx:91. Not fixed here: FIELD reaches every screen.
-state: open
+state: fault
 
 ### Demo, custom.emd, #/formats/card_charge: click Filter by…, type amo, press Enter; open a value popover and press Escape.
 unit: M54 U2
 should: A field that looks typeable narrows as typed (Choices are ChoiceField: it stays a text field), or looks like a button; Escape returns focus to what opened it (Keyboard first).
 breaks: It is a read-only search field: typing goes nowhere and Enter picks the first column, date. Escape from the value popover drops focus to the body. FilterBand.tsx:452-466.
-state: open
+state: fault
 
 ### Demo, custom.emd, #/settings/packs and #/settings/export; custom.emd #/year (NoLedger).
 unit: M54 U4
 should: Every screen opens the same way, with one h1 (WCAG 1.3.1/2.4.6).
 breaks: Export has an eyebrow and an h1; Packs and NoLedger have no heading at all.
-state: open
+state: fault
 
 ### Demo, custom.emd, #/settings/packs.
 unit: M54 U4
 should: One primary action per screen; an action names its object when the verb alone is ambiguous (An action is a verb); Square by spending the radius tokens; No card borders by default.
 breaks: Two filled "Keep this pack here" buttons, neither naming its pack; each pack is a rounded-lg (12px) card with a hairline-strong border.
-state: open
+state: fault
 
 ### Demo, custom.emd, the entry list beside a card charge: in quick add ("Add a card charge") type Lunch spot 35 and press Enter.
 unit: M54 U1
@@ -6465,13 +6465,13 @@ state: open
 unit: M54 U3
 should: A verb and its object — "Keep a ledger" (An action is a verb).
 breaks: The action reads "Keep a ledger here and read it", a sentence. NoLedger.tsx.
-state: open
+state: fault
 
 ### Demo, custom.emd: save a card_charge view sorted merchant ascending ("Over 50") and add it to #/dashboard; project.emd: "Landed this year" on #/formats/unit/dashboard.
 unit: M54 U2
 should: A saved view reads the same wherever it is placed, in its own order.
 breaks: The block ignores the view's order: FUEL STATION, CORNER MARKET, BOOK NOOK; M2 U2, M1 U1, M2 U1, M1 U2.
-state: open
+state: fault
 
 ### Demo, demo.emd with an answer waiting, both themes: #/paychecks, #/wealth/goals, #/wealth/funds, #/categories/rules, #/plan.
 unit: M54 U5
@@ -6483,7 +6483,7 @@ state: open
 unit: M54 U4
 should: Text at 4.5:1 against its plane (Contrast 4.5:1 for text), on the selected row's plane too.
 breaks: On the fc-row-on plane (accent-soft) flow-saved reads 4.16:1 and flow-out / negative 4.30:1, at 14px and 11px.
-state: open
+state: fault
 
 ### Demo, demo.emd, #/ in light and dark: Home's All months column headers and a card's missing-statement line ("Everyday Card ···1234 · No statement read for this month"); the palette's group headings and counts (Ctrl+K); the rail folders' entry counts; #/settings/packs' list of places; #/settings/export's shortcut line; #/mcp's tool names and its two notes; the guide's mono reopen line.
 unit: M54 U4
@@ -6501,7 +6501,7 @@ state: open
 unit: M54 U2
 should: The empty line names the window — "Nothing in the next 7 days." — and the subtitle follows it (Words name the rule); the agenda is the first thing on its screen.
 breaks: It says "Nothing on the agenda from today on." under a subtitle still reading "From today on —" (LinkViews.tsx:579). The "by" sentence is 13 fixed 112px fields that cut their values ("last_confirme", "transaction_d") and push the agenda down.
-state: open
+state: fault
 
 ### Demo, demo.emd, #/categories, both themes: each category's spend bar.
 unit: M54 U5
@@ -6525,7 +6525,7 @@ state: open
 unit: M54 U3
 should: The shared Button (secondary, square split tile) on the density ladder; widths from the spacing tokens (The button is a split tile; Square by spending the radius tokens; Every value is a token).
 breaks: A label hand-styled as a button — rounded-md, h-9, its own border — beside the square split-tile "Read it"; the wrapper is max-w-[820px]. DocumentTextInput.tsx:94, :117.
-state: open
+state: fault
 
 ### Demo, demo.emd, #/paychecks/deductions, both themes.
 unit: M54 U5
@@ -6549,13 +6549,13 @@ state: open
 unit: M54 U3
 should: One sentence and one text action, no illustration (An empty state is one sentence); Working alone, never counting (One progress indicator); type from the ramp in rem.
 breaks: A 56px still Working gem as an illustration, a heading, a two-clause sentence and an "Add more" button when there is nothing yet; while reading, "Reading 2 of 5" with a width-animated bar beside Working; text-[24px] tracking-[-0.01em] and text-[18px]. src/ui/screens/ReadStatements.tsx:141, 151-175 (the ledger's read screen).
-state: open
+state: fault
 
 ### Demo, demo.emd, #/read → Map its columns → Show cell types: the tags.
 unit: M54 U3
 should: A type step in rem (rem for type; Every value is a token).
 breaks: text-[9px]; the ramp has no step that small, so it needs a token or a ramp step chosen. SheetGrid.tsx:212.
-state: open
+state: fault
 
 ### Demo, demo.emd, #/read → Map its columns: each column's role above the grid, and the unmapped cells and rows above the header. Both themes.
 unit: M54 U3
@@ -6567,7 +6567,7 @@ state: open
 unit: M54 U3
 should: The mapper names what it maps — the file and its sheet — as its title (Impeccable: visibility of system status; Words name the rule).
 breaks: The mapper takes the whole window with no heading; its first line is "17 rows × 8 columns" and the file's name appears only as the default of Reader's name. MapperScreen.tsx ~540-600, StageBar.tsx.
-state: open
+state: fault
 
 ### Demo, demo.emd, #/read → installments.xlsx → Map its columns: the preview strip's "1/3" installments tag. Both themes.
 unit: M54 U3
@@ -6580,7 +6580,7 @@ unit: M54 U3
 should: One row per file (Impeccable: consistency, error prevention).
 breaks: The same file is listed twice as two identical rows — probably React StrictMode's double effect adding to the module-level slip batch in dev. ReadSlips.tsx ~78-90.
 not_tried: A production build, where StrictMode does not double the effect.
-state: open
+state: fault
 
 ### Demo, demo.emd, #/read → typed-cells.xlsx: the NO READER YET chip.
 unit: M54 U3
@@ -6592,7 +6592,7 @@ state: open
 unit: M54 U3
 should: Its actions visible at rest (IconAction, or the row's one menu); the account binding drawn as a field; header → role with a visible separator; the last four once (An icon is an action; A row's menu is one menu; Words name the rule).
 breaks: Duplicate and Delete are opacity-0 until hover or focus; the binding is borderless and reads as text, "Everyday Card 1234 ·1234" (the name already ends in the digits); pairs read "transaction date date · merchant · transaction amount original amount". Mappings.tsx:175, ~187-240, ~250-280.
-state: open
+state: fault
 
 ### Demo, demo.emd, #/transactions → open Daily Basket: the line under the pane.
 unit: M54 U5
@@ -6676,7 +6676,7 @@ state: open
 unit: M54 U4
 should: Agreement in number, and a button named for what it does (An action is a verb); an error announced as an alert.
 breaks: "\"1 answer waits on Home.\" with \"Answer them\", which only navigates to Home (Notices.tsx:501-512); the error notice is text-negative inside a polite role=status region (Notices.tsx:104, :462)."
-state: open
+state: fault
 
 ### Demo, demo.emd, both themes: #/categories → a category's colour and icon button (the picker); the category picker in a transaction's pane; #/wealth/debts → Edit debt's option cards; a fund report's review (funds/ReportReview); #/wealth/goals' controls.
 unit: M54 U5
@@ -6772,7 +6772,7 @@ state: open
 unit: M54 U4
 should: Targets of at least 24px (WCAG 2.5.8).
 breaks: Each step dot is a button 18x6px (Guide.tsx:289-299).
-state: open
+state: fault
 
 ### Demo, demo.emd: a transaction's pane; a row's context menu on #/transactions; #/paychecks → Edit; #/wealth/debts → Add a payment; the Add buttons on #/wealth/funds, #/wealth/goals, #/wealth/debts and the accounts.
 unit: M54 U5
@@ -6790,25 +6790,25 @@ state: open
 unit: M54 U2
 should: A format's title wins over its machine name, labels do not print on each other, and the fit leaves room for the side list.
 breaks: Six edges meet at Decision's header and their "one" labels overprint; "Every connection, in words" covers the Decision, Milestone, Deduct… and Holding… cards; on demo.emd titles truncate ("Bill in a…", "Categor…") while the snake_case table name beside them shows whole. Edge labels are text-[10px], below the ramp. ConnectionGraph.tsx:626-631, :847, :855.
-state: open
+state: fault
 
 ### Demo, project.emd, #/connections: read "Every connection, in words" for unit's blocks, and open question's opened_by and answered_by.
 unit: M54 U2
 should: Each sentence says what the connection is, and no two say the same (Words name the rule).
 breaks: "\"Each unit belongs to one unit — unit's blocks column\", though blocks lists several units, and its card row shows no target; opened_by and answered_by are two buttons both named \"Each open question belongs to one decision.\""
-state: open
+state: fault
 
 ### Demo, project.emd, #/dashboard with a block: Tab to its width, height and corner resize handles (light and dark), and read them with a screen reader.
 unit: M54 U2
 should: Each stop shows a visible focus mark (Keyboard first), and a focusable separator carries aria-valuenow (WAI-ARIA separator).
 breaks: The edges draw a 2px accent rule on focus, but the corner only turns its 8px glyph accent — barely a mark; none of the three has aria-valuenow, the value is only in the label. Dashboard.tsx:436-466.
-state: open
+state: fault
 
 ### Demo, project.emd, #/dashboard with a block: click its ⋯ ("<name>: more"), press Escape, then Tab; open Add a block and press the arrows.
 unit: M54 U2
 should: Focus moves into the menu, the arrows move through it, Esc closes it and returns focus to ⋯ (Keyboard first; WAI-ARIA menu pattern).
 breaks: Focus stays on ⋯ and Escape leaves the menu open; Tab closes it and lands on the width handle, so Open in full, Move earlier, Move later and Remove from this dashboard are out of the keyboard's reach. Add a block ignores the arrows. src/ui/formats/Dashboard.tsx:654 (role=menu with no key handling) and :1213.
-state: open
+state: fault
 
 ### Demo, project.emd, #/dashboard → Add a block → New chart → Unit (two dates, landed and started) → name it → Declare and add without touching By month of.
 unit: M54 U2
@@ -6820,7 +6820,7 @@ state: open
 unit: M54 U2
 should: Every bar carries its value and the numbers are visible beside the chart; each series is named where it is drawn (Every chart has its numbers; Never colour alone; Charts are ink, labelled directly). The format's rollup tab already shows its table.
 breaks: Only the tallest bar is labelled at any block width; series (M1/M2/M3, nine spending categories) are told apart by a colour legend alone; the figures are an sr-only table and a hover readout that is aria-hidden and pointer-only. src/ui/charts/Chart.tsx:95 — with more than one series a label must fit bar + 2 px, and a count's " rows" never does.
-state: open
+state: fault
 
 ### Demo, project.emd, #/dashboard → Add a block → New chart; name it "Landed by month" → Declare and add. Read the block title, the format's tabs, the sidebar and the Add a block menu.
 unit: M54 U2
@@ -6832,13 +6832,13 @@ state: open
 unit: M54 U2
 should: At least 4.5:1 — an accent is chosen to carry its text at AA (Contrast 4.5:1 for text).
 breaks: accent on accent-soft at 11px measures 4.43:1. src/ui/theme/tokens.css, .fc-state[data-tone="live"] (~994).
-state: open
+state: fault
 
 ### Demo, project.emd, #/formats/milestone: open the Roadmap tab, and unit's Ready to start; read the header bar and the h1 on those and on #/agenda.
 unit: M54 U2
 should: A view offered as a tab opens under the same tab strip (One level of tabs), and a screen names itself once.
 breaks: Both open as screens with only "← Unit" and the tab strip gone; Agenda, Roadmap and Ready to start repeat their title in the header bar and the h1.
-state: open
+state: fault
 
 ### Demo, project.emd, #/formats/unit (Table). In the table's blank row at the foot, type ref, milestone, scope and title, then Enter. Then do the same through Add (the entry form) and through quick add in the entry list.
 unit: M54 U1
@@ -6850,7 +6850,7 @@ state: open
 unit: M54 U4
 should: Exactly one aria-current=page, on the page that is lit.
 breaks: Development and Formats both carry aria-current=page (the NavLink to /formats is active and only its class is suppressed, Sidebar.tsx:149-166); the lit child (Unit board, Packs, Roadmap) is a plain Link with none (Sidebar.tsx:210).
-state: open
+state: fault
 
 ### Demo, project.emd, #/formats/unit/board and #/formats/milestone/roadmap, both themes: the M2 and SESSION 1 marks on a card, and the PLANNED / OPEN state marks.
 unit: M54 U1
@@ -6868,7 +6868,7 @@ state: open
 unit: M54 U2
 should: One click opens the rollup.
 breaks: The first click lands on Table and a second opens the rollup — the tab's go sets the view, then navigates to the format's path (src/ui/screens/FormatRows.tsx).
-state: open
+state: fault
 
 ### Demo, project.emd, #/formats/unit/entry/new (Add). Type M9 into milestone (no such milestone), fill the rest, press Add. Then type M9 into the milestone cell of the table's blank row and press Enter.
 unit: M54 U1
@@ -6886,7 +6886,7 @@ state: open
 unit: M54 U2
 should: A saved view is one of the format's tabs, marked current when open, and can be renamed or removed there (One level of tabs).
 breaks: It shows only in the sidebar; the tab strip keeps Table current while the sidebar marks the view current; the band's "Saved as Landed this year" is plain text with no rename or delete.
-state: open
+state: fault
 
 ### Demo, project.emd, #/formats/unit: open a row (the row's Open icon, a board card's title, or Add). Also open #/formats/unit/page/<any entry>.
 unit: M54 U1
@@ -6910,13 +6910,13 @@ state: open
 unit: M54 U4
 should: The focused result is the one that runs, and Tab stays inside a modal dialog: options tabIndex -1 with the field as the combobox that owns them (aria-activedescendant), and a Tab trap (Keyboard first; the ARIA combobox pattern).
 breaks: Each option is a tab stop, but Enter is handled on the dialog and runs items[selected] — the arrow-selected row (Dashboard), not the focused one. Tab walks every result and then leaves the aria-modal dialog (CommandPalette.tsx:165-184, :392-398).
-state: open
+state: fault
 
 ### Demo, project.emd: a dashboard chart of units counted by month — its hover readout, the rollup tab's Line chart axis.
 unit: M54 U2
 should: Counts in the format's own word and whole numbers — "1 unit", ticks 0, 1, 2 (Words name the rule).
 breaks: "\"1 rows\"; the line chart's count axis reads \"1 rows / 1.5 rows / 2 rows\". (The roadmap's \"4 of 7 Unit rows done\" is M54 U1's row.)"
-state: open
+state: fault
 
 ### Demo, project.emd: a date in the table's blank row (type tomorrow); the same date column on the Add form; the same row's entry page beside the table.
 unit: M54 U1
@@ -6928,19 +6928,19 @@ state: open
 unit: M54 U2
 should: Screens name themselves alike with one h1 at one ramp step (consistency; web interface guidelines: hierarchical headings).
 breaks: Dashboard's h1 is secondary-number (20px) semibold, Calendar's title (24px) medium; #/connections has no h1 at all — its first heading is the h2 "Every connection, in words".
-state: open
+state: fault
 
 ### Demo, project.emd: the rail's format folders (Decision, Inbox, Open question) and the collapse button; read them with a screen reader and measure them.
 unit: M54 U4
 should: A stable name with aria-expanded / aria-pressed carrying the state, the count apart from the name, and targets of at least 24px (WCAG 2.5.8; Keyboard first).
 breaks: Names read "Decision4", "Inbox0"; the toggle's label flips with its state beside aria-expanded ("Open Open question"); the collapse button flips its label beside aria-pressed; folder toggles are 20x25 and Rename/Delete icons 20x20 (RailFolder.tsx:119-139, :424-433; Sidebar.tsx:318-337).
-state: open
+state: fault
 
 ### Demo: #/dashboard on custom.emd (empty), #/agenda with nothing ahead, #/connections on a document with no connection.
 unit: M54 U2
 should: One sentence in ink-secondary and one text action, carried by words, not colour (An empty state is one sentence; Never colour alone).
 breaks: The dashboard's is two sentences (Dashboard.tsx:176-178); the agenda's has no action; Connections' says "The two accented ports…" in ink-tertiary (Connections.tsx:248).
-state: open
+state: fault
 
 ### Demo: #/dashboard → Add a block (New chart's and Headline total's buttons); Home's notice; a date in project.emd's unit table, its dashboard block and its rollup; an amount in custom.emd's filter band and table.
 unit: M54 U2
@@ -6952,32 +6952,32 @@ state: open
 unit: M54 U1
 should: One name for one thing (the term rows, D-436): a format holds entries or rows, not both.
 breaks: /formats says "5 rows", the format's header "5 entries", the roadmap "4 of 7 Unit rows done".
-state: open
+state: fault
 
 ### Demo: #/formats on demo.emd and project.emd; #/formats/unit table headers; the Fill chips' tooltips on an entry; Links here on an entry; demo.emd #/formats/debt.
 unit: M54 U1
 should: A person reads names, never the machinery (rule: Words name the rule): a column's label rather than its key, no table id, no tool name.
 breaks: Each format card shows its table (fmt_card_charge) and repeats last changed; table headers read undone_by, taken_by while the entry says undone by; a Fill chip's tooltip shows `in_progress` literally; Links here reads Inbox · became_unit; the debt format's lock tells a person to use create_debts. demo.emd's /formats is 34 such cards in one flat list.
-state: open
+state: fault
 
 ### Demo: #/read (demo.emd) with a notice; #/paychecks/read; #/formats/card_charge/read with a reader open.
 unit: M54 U3
 should: One filled action at a time; a disabled Write, or one that is not the next step, is secondary (One primary action per screen).
 breaks: #/read: "Answer them" and a disabled "Write 0" both filled; #/paychecks/read: "Answer them", "Write 0" and "Check them over"; the format read page: "Use" and "Write 0 files". ReadStatements.tsx, ReadSlips.tsx, ReadFiles.tsx:458 and :1544.
-state: open
+state: fault
 
 ### Demo: custom.emd #/year (NoLedger) beside #/settings/packs; demo.emd #/ (Home's read and add buttons).
 unit: M54 U4
 should: One name per thing (Make it in place; An action is a verb).
 breaks: Keeping the ledger is "Keep a ledger in this document" on NoLedger and "Keep this pack here" on Packs; Home says Read files, Read… and Read for one act, and has two buttons both named Add by hand.
-state: open
+state: fault
 
 ### Desktop shell: Help › About, and the document bar's Earlier copies; Tab through each and close it.
 unit: M54 U4
 should: A modal traps Tab and returns focus to what opened it; loading is Working.tsx (One progress indicator).
 breaks: Both are aria-modal with no Tab trap and do not restore focus on close (About.tsx:72, EarlierCopies.tsx); loading is the text "Looking…" (About.tsx:121, EarlierCopies.tsx:178).
 not_tried: Shell only: read in code, not driven (U6 drives the shell).
-state: open
+state: fault
 
 ### Dry-run a read of long notes
 unit: M34 T1
@@ -7000,7 +7000,7 @@ state: accepted
 unit: M54 U6
 should: An empty state is one sentence and one text action (An empty state is one sentence); a file name keeps its case (Words name the rule).
 breaks: 'None yet. One is taken the first time an assistant writes to it.' is two sentences with no action (the colour is fixed in add2d7c); the heading is .fc-label, uppercase, so the name reads 'EARLIER COPIES OF PROJECT.EMD' (EarlierCopies.tsx:143).
-state: open
+state: fault
 
 ### Find bulk reading.
 unit: M26 U5
@@ -7020,7 +7020,7 @@ state: open
 unit: M54 U6
 should: Words true where they are read (Words name the rule), and reachable without hover on a disabled button.
 breaks: 'The file changed on disk. Answer that above before saving over it.' (DocumentBar.tsx:137) — the notices render below the title bar, and the hint is a title on a disabled button that takes no focus.
-state: open
+state: fault
 
 ### Get the 'Emerald <version> is out' notice and read its button.
 unit: M54 U6
@@ -7038,7 +7038,7 @@ state: open
 unit: M54 U6
 should: The ellipsis on the Bidi span (Hebrew needs bidi isolation, the rule bidiTruncation.test.ts holds), so a Hebrew name keeps its start.
 breaks: bidiTruncation.test.ts only sees a box that opens straight onto <Bidi>; widening its regex to text-before-Bidi finds these six (four in the parked ledger). Earlier copies' one is fixed in add2d7c and guarded in surfaceRules.test.ts.
-state: open
+state: fault
 
 ### Hand the person a readable rendering of a format from a conversation
 unit: M38 T1
@@ -7050,25 +7050,25 @@ state: open
 unit: M54 U6
 should: One dialog at a time: the menu's command closes or waits for the open one.
 breaks: Driven: both modal dialogs are open at once, Earlier copies over About, each aria-modal.
-state: open
+state: fault
 
 ### Help › About Emerald; read the credits, then press Open folder where the folder cannot be opened.
 unit: M54 U6
 should: A way to what it names (the menu bar is behind Alt, D-458), and a plain error with a way forward.
 breaks: 'The license and the third-party notices are in the Help menu.' (about.ts:78) — hidden behind Alt on Windows, with no button in About; a failed Open folder prints the raw IPC text after 'Could not open it:' (About.tsx:165).
-state: open
+state: fault
 
 ### Help › Check for Updates Now while offline, or let a Windows download fail.
 unit: M54 U6
 should: A plain cause and Try again (an error names the fix).
 breaks: Driven with a pushed state: 'Could not check for updates.' followed by the raw reason (net::ERR_INTERNET_DISCONNECTED, or electron-updater's HttpError after 'It could not be downloaded here:'), and only Dismiss (Notices.tsx:444, updates.ts:233).
-state: open
+state: fault
 
 ### Help › Check for Updates Now, and watch the notice while it asks; or with automatic updates on Windows, while it downloads.
 unit: M54 U6
 should: An in-progress state is Working.tsx (One progress indicator), as the dirty dot swaps to it while saving.
 breaks: Driven: 'Checking for a newer version of Emerald…' and 'Downloading Emerald 0.3.0…' sit beside the static notice dot; nothing says the work is running (Notices.tsx:383, :406).
-state: open
+state: fault
 
 ### In a Code tab conversation of your own (not a subagent's), ask to see what is ready in docs/memory.emd, so start_here or show_format unit view:ready draws. Click Start this unit on one ready row; then Ctrl-click two rows and ask 'what are these?'.
 unit: M51 U7
@@ -7096,7 +7096,7 @@ state: open
 unit: M54 U8
 should: Words that name what happens, a forward jump included (Words name the rule), and the in-progress state drawn by Working (One progress indicator) rather than fast-forwarded screens at full opacity.
 breaks: The strip says 'Putting the document back…' even on a forward jump where nothing is put back, and for ~2.6 s the app flips through six or more screens (formats, a card charge, the new-format dialog, the Claims dialog, the receipt) with no Working indicator.
-state: open
+state: fault
 
 ### In any tour, light and dark, read the step counter ('3 / 5'), the Speed label, the chat panel's 'A conversation, written for this tour.', its 'Person'/'Model' labels, and the narrow note 'Try it yourself on a wider screen.'
 unit: M54 U8
@@ -7108,7 +7108,7 @@ state: open
 unit: M54 U8
 should: A control's boundary at 3:1 against its plane (WCAG 1.4.11 Non-text Contrast).
 breaks: The upcoming dot is a 1.5px ink-tertiary ring at 2.45:1 on surface, and it is the dot's only visible part.
-state: open
+state: fault
 
 ### In light, read the inbox diagram's file names (.inbox-file, page.css:590-594). This is the same question as U2's and U4's ink-tertiary rows.
 unit: M54 U7
@@ -7146,7 +7146,7 @@ unit: M54 U6
 should: The location has a home outside the drag region (shell rule 'A button in a drag region', by extension) — the name's no-drag, or About, or the menu.
 breaks: title={adapter.describe()} sits on a span inside app-drag that is not on the no-drag list (tokens.css:382); Windows delivers no hover in a drag region.
 not_tried: Hover over a drag region needs a real pointer; CDP cannot show the native tooltip.
-state: open
+state: fault
 
 ### In the shell, open a document, then File › Save a Copy… (or Ctrl+Shift+S), name it and keep editing.
 unit: M54 U6
@@ -7158,7 +7158,7 @@ state: open
 unit: M54 U6
 should: Say what happened and offer to open the document again, with the crash snapshot (plain error with a way forward; shell rule 'beforeunload cancels silently' names the same silence).
 breaks: Driven: forcefullyCrashRenderer leaves a blank window (capturePage empty) and nothing is said; main.ts has no render-process-gone handler. Closing with unsaved work asks 'Save your changes before closing?' and Save sends save-and-close to the dead page, so the window stays (main.ts:657); only Don't Save gets out.
-state: open
+state: fault
 
 ### In your own Claude Code: `claude plugin marketplace update emerald-emd`, then `claude plugin update emerald@emerald-emd`, start a new session and type /emerald: (or ask which skills it has).
 unit: M42 U7
@@ -7170,7 +7170,7 @@ state: open
 unit: M54 U6
 should: The entries tell the two apart (Words name the rule): the folder in the menu label, the folder's distinguishing end in the field, an '&' in a name escaped as '&&'.
 breaks: menu.ts:71 puts the path in toolTip, which Windows menus do not show, so the two look the same; the field's folder detail is tail-truncated ink-tertiary, cutting the part that differs (ChoiceField.tsx:231); entry.name is unescaped, so 'A & B.emd' turns & into a mnemonic.
-state: open
+state: fault
 
 ### Leave a guessed column unmapped in read_onto_format
 unit: M34 T1
@@ -7182,13 +7182,13 @@ state: open
 unit: M54 U6
 should: A question that names the document, with Restore and Discard (An action is a verb); discarding unsaved work is never the default exit of a Cancel.
 breaks: window.confirm('Unsaved work from <date> was found. Restore it?') with OK and Cancel (App.tsx:353); Cancel calls clearSnapshot() and the work is gone. It does not name the document though snapshot.documentName is there.
-state: open
+state: fault
 
 ### Let an autoplaying tour run (Emerald's page plays every frame with autoplay=1) and look for a way to stop the motion.
 unit: M54 U8
 should: WCAG 2.2.2 Pause, Stop, Hide: motion that starts by itself and lasts over 5 s can be paused.
 breaks: The tour loops forever; the only way to stop it is Try it, which hands the visitor the app. Question: whether there should be a Pause.
-state: open
+state: fault
 
 ### Let any tour lose its way (timesheet 6/6 above), then read the strip.
 unit: M54 U8
@@ -7206,13 +7206,13 @@ state: open
 unit: M54 U7
 should: Every section the rail lists has a heading (WCAG 1.3.1, 2.4.6).
 breaks: One h2, 'Do my receipts line up…', covers all four tours. Tours 2-4 have only a span.label, so there are 9 headings for 12 rail rows. Some h2s also differ from their rail row: 'MCP' against 'A model works in it, through MCP'.
-state: open
+state: fault
 
 ### Load the page and press Tab from the top.
 unit: M54 U7
 should: The first stop is a 'skip to content' link (WCAG 2.4.1; Keyboard first).
 breaks: There is no skip link. Content starts only after 15 stops: the theme button, 12 rail links, Source and Privacy.
-state: open
+state: fault
 
 ### Look at any screen in the shell with a document open and unsaved.
 unit: M54 U6
@@ -7224,7 +7224,7 @@ state: open
 unit: M54 U7
 should: A file to download looks like a download, not something to type (Words name the rule).
 breaks: `emerald.mcpb` sits in the same pre.run code box as `git clone` and `npx`, so it reads as a command.
-state: open
+state: fault
 
 ### Look at the outline drawn around a box in custom 5/5, development 3/4 or 4/4 (Frame.tsx, the tour-look rect).
 unit: M54 U8
@@ -7248,7 +7248,7 @@ state: fault
 unit: M54 U8
 should: The ring rests on what it names and does not cover its label.
 breaks: In custom 5/5 anchorPoint's INTO_WIDE offset puts the ring's centre on the empty hairline left of 'total'; in development 4/4 the ring sits on the 'M4 U1' text it names and hides it.
-state: open
+state: fault
 
 ### Look for a note or entry in the app, the way a notes app lets you
 unit: M34 T1
@@ -7278,7 +7278,7 @@ state: open
 unit: M54 U6
 should: '<name> is not at <folder> any more', with Open… as the way forward, and the path inside Bidi (Hebrew needs bidi isolation; error text names the fix).
 breaks: Driven: the notice reads "Error invoking remote method 'emerald:documents/read': Error: ENOENT: no such file or directory, open 'C:\…\custom.emd'" in negative, with only Dismiss; the entry drops off the list without a word (main.ts:533).
-state: open
+state: fault
 
 ### Next closing pass in this repo: the session calls land_units against docs/memory.emd (dry run, then commit: true) — or a driver's claim_units before it.
 unit: M47 U3
@@ -7291,7 +7291,7 @@ state: accepted
 unit: M54 U6
 should: ⌘S, as commandPaletteKey() already says ⌘K (Keyboard first).
 breaks: 'unsaved · Ctrl+S' is hard-coded (DocumentBar.tsx:118).
-state: open
+state: fault
 
 ### On a clean profile in the Claude desktop app's Code tab: `/plugin marketplace add kfireliyahu/emerald-emd`, `/plugin install emerald@emerald-emd`, restart the session in a folder holding a synthetic .emd with the development pack (or ask Claude to create one), then ask to see what is ready, and the board.
 unit: M42 U4
@@ -7355,19 +7355,19 @@ state: open
 unit: M54 U8
 should: Watch the tour, the one thing to press on the held frame, comes before the app in the order; and while the tour plays the keyboard cannot reach under the shield (Keyboard first; the shield exists so nothing races the runner).
 breaks: The order is the five dots, Watch, Try it, Reset, Speed, then the app's iframe (tabIndex 0, not inert, outside a crop), and only then Watch the tour; while watching, Tab walks into the app under the shield and can act on it.
-state: open
+state: fault
 
 ### Open /tour.html?tour=timesheet&autoplay=1 at a desktop width, in light or dark, and watch it to 6/6 (row 25 types "15:30" into field-end with replace).
 unit: M54 U8
 should: The tour reaches its end: 'Every hour was paid: 14.5 hours, 870.00'. The check replays every tour so that none loses its way (the tour_step declaration), and the watched path does what the check does.
-breaks: Watched, player.ts empties the field first (setText(element, '') for a replace); End moves to the EMPTY group, field-end unmounts, the ring jumps to 'Weekend job', and after ~10 s the strip turns red: 'Step 26: nothing on the screen is "field-end".' Same in both themes, and on the public page. check:tours cannot see it: its path and reduced motion never write an empty value. P0, a bug, not fixed in a review unit.
-state: open
+breaks: Watched, player.ts empties the field first (setText(element, '') for a replace); End moves to the EMPTY group, field-end unmounts, the ring jumps to 'Weekend job', and after ~10 s the strip turns red: 'Step 26: nothing on the screen is "field-end".' Same in both themes, and on the public page. check:tours cannot see it: its path and reduced motion never write an empty value. P0, a bug, not fixed in a review unit. Fixed in bef0eeb (2026-11-02): a watched replace types over the field; runner.test.ts guards it, and the tour was played watched to 6/6 in both themes.
+state: accepted
 
 ### Open Help › License (or Third-Party Notices) with the app set to Light and Windows set to dark; then press Ctrl+O in that window.
 unit: M54 U6
 should: The text window follows the app's theme and type (The theme is light, dark or system; One family, two scripts), and the app's accelerators do not act on the hidden document window (shell rule 'Text windows are not the document's window').
 breaks: Driven: the window follows the OS scheme (prefers-color-scheme dark while fc-theme was light) in the plain-text viewer's system mono; per code, the application menu's Ctrl+N/Ctrl+O still fire and send to the document window behind it.
-state: open
+state: fault
 
 ### Open a document with a format of a few hundred entries; in the rail press the arrow beside its name, then another format's; type in the folder's filter line; press an entry; open a far entry from the Table.
 unit: M37 U2
@@ -7378,7 +7378,7 @@ state: open
 unit: M54 U6
 should: The window title is the document's name (WCAG 2.4.2 Page Titled), and macOS shows the edited mark (setDocumentEdited, setRepresentedFilename).
 breaks: Driven: getTitle() is 'Emerald' with any document open; main.ts never sets it. The shell half of U4's document.title row.
-state: open
+state: fault
 
 ### Open a format with a few hundred rows in the table, click a column header's funnel, tick two values, then open another column's funnel; try an amount column's From/To.
 unit: M37 U4
@@ -7474,7 +7474,7 @@ state: open
 unit: M54 U7
 should: An empty frame is no tab stop (WCAG 2.4.3).
 breaks: A frame away from the view has no src but stays focusable, so Tab lands on an empty frame.
-state: open
+state: fault
 
 ### Publish emerald-mcp 0.1.1 and let the registry list it: `npm run build:plugin`, then `cd dist-plugin && npm publish --access public` (browser 2FA). Then, from the repo root, `node scripts/pin-plugin.mjs`, commit the three hosts/claude files and push to main (a session can do this step). That push runs .github/workflows/registry.yml; or `gh workflow run registry.yml`. Check: `curl "https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.kfireliyahu/emerald"`.
 unit: M42 U3
@@ -7521,7 +7521,7 @@ unit: M54 U3
 should: Radii from the tokens (Square by spending the radius tokens).
 breaks: rounded-md on the page's frame and rounded-[2px] on the read and active boxes; Look.tsx:38 rounded-sm. (Its colours became --color-paper* tokens in M54 U3.)
 not_tried: The pane over a real page: there is no synthetic PDF the paycheck or fund readers read cleanly.
-state: open
+state: fault
 
 ### Read Get Emerald's lead (en.ts:209, `foot.lead`) and the order of the cards (demo-page.html:227-276).
 unit: M54 U7
@@ -7533,7 +7533,7 @@ state: open
 unit: M54 U7
 should: A figure on the public page is derived or pinned by a test.
 breaks: It says "28 for any document, 85 with the ledger." No test pins it; the only other copy is scripts/npm-package.mjs:86. The emerald-ledger server in this session listed 84.
-state: open
+state: fault
 
 ### Read Packs (en.ts:173) beside The engine (en.ts:83). Check the term rows (`format_rows term search:"format"`).
 unit: M54 U7
@@ -7551,7 +7551,7 @@ state: open
 unit: M54 U6
 should: Every value is a token: the title bar's inset floor and the window's first-paint background come from the tokens (or sit beside titleBarOverlay's documented pair with its test).
 breaks: Math.max(frame.insetStart, 12) is an inline pixel value; backgroundColor '#0b0b0c'/'#ffffff' duplicates --color-background with no test noticing when the tokens move.
-state: open
+state: fault
 
 ### Read a folder of notes holding [[name]] links in the body
 unit: M34 T1
@@ -7616,13 +7616,13 @@ state: open
 unit: M54 U7
 should: Logical properties throughout: inset-inline-end and text-align: start (Hebrew first-class).
 breaks: `right: 12px` and `text-align: left` would not mirror under dir=rtl.
-state: open
+state: fault
 
 ### Read the class strings and styles of the dashboard and its charts: tokens.css .fc-chart-val (~914), Dashboard.tsx's ⋯ button and drop targets (:242, :564).
 unit: M54 U2
 should: Mono for raw cells only (One family, two scripts); an icon action is a 28px target with a 16px icon (An icon is an action); no shadow outside the floating rooms (No gradients, no shadows).
 breaks: Chart value labels are Plex Mono at 11px; ⋯ is a 26px target with a 14px icon; drop targets mark with shadow-[-3px_0_0_var(--color-accent)]. (Off-ramp text-[13px]/[11px] across src/ui is M54 U1's row.)
-state: open
+state: fault
 
 ### Read the class strings of the ledger's screens (screens/Categories, Overview, ByMerchant, Plan, Transactions, GoalDetail; plan/PlanBar, PointsAt, BucketTable; wealth/parts; savings/; home/parts.tsx:210) — grep text-\[ and -\[…px\].
 unit: M54 U5
@@ -7719,13 +7719,13 @@ state: open
 unit: M54 U3
 should: When Write is disabled a word says why — "Tick a file to write it: this one has a refused line" — and the tick has a visible label (Words name the rule; Impeccable: no dead end).
 breaks: The reading is done ("4 entries · 1 line will not be read") yet the file stays unticked and the only primary is a disabled "Write 0 files" / "0 entries onto Card charge"; nothing says why. The tick is a bare checkbox at the row's far left. ReadFiles.tsx:203 isTicked, ~455-467, ~945.
-state: open
+state: fault
 
 ### Same flow → the "Every amount is in" field.
 unit: M54 U3
 should: The app infers the currency (₪ is in the cells, or the document has one) and shows it as a value to confirm; a placeholder never looks like an answer (Make it in place).
 breaks: The field is empty but its placeholder reads ILS, so it looks set; under it, red: "amount is money, so every row needs amount_currency…" until ILS is typed. IntakePanel.tsx Fixed (placeholder={column.type === 'money' ? 'ILS' : 'g'}).
-state: open
+state: fault
 
 ### Same flow, after Use: "Line 7 — amount is required and was not given."; and the mapper on demo.emd #/read: "Row 17 Could not read transaction date from "סה"כ"" (the printed total line).
 unit: M54 U3
@@ -7737,7 +7737,7 @@ state: open
 unit: M54 U3
 should: ink-secondary words; negative only for a genuine problem (Colour carries meaning).
 breaks: Red the moment the screen opens; having no model is a choice, not an error. src/ui/paychecks/ReadSlip.tsx (its problem line).
-state: open
+state: fault
 
 ### Schema 33, and every existing format will refuse to save until it answers H3. Edit a format you have, answer No to every column, press Nothing does, and save. Read the Atwater identity in the ingredient fixture. Declare a format with an identity from a conversation (declare_format takes identities), add rows with one deliberately wrong, and read them back with format_rows. (M20 U4 and T4 replaced the equation box; judge that picture.)
 unit: M19 U3
@@ -7750,13 +7750,13 @@ state: open
 unit: M54 U7
 should: The frames follow the page's theme (Dark mode is not an inversion).
 breaks: A loaded frame keeps the theme it loaded with: a light app panel sits on the near-black page until the frame is let go and reloaded. initTheme (src/ui/theme/useTheme.ts) has no `storage` listener.
-state: open
+state: fault
 
 ### Tab through the strip of any tour, and read it with a screen reader.
 unit: M54 U8
 should: A radio group is one Tab stop moved by the arrow keys (WAI-ARIA Authoring Practices), its checked radio is the true state, and the current step is announced (aria-current="step", WCAG 4.1.2).
 breaks: Watch and Try it are role=radio with a Tab stop each and no arrow keys; Watch reports aria-checked="true" in the held first frame when nothing plays; the current dot is marked only by a class and colour. Focus rings are present on every control.
-state: open
+state: fault
 
 ### The real update, on Windows. (1) On main, with package.json at 0.1.2: `git tag v0.1.2 && git push origin v0.1.2`; when the Release workflow finishes, the release must list Emerald-Setup.exe, Emerald-Setup.exe.blockmap, latest.yml, Emerald-arm64.dmg, Emerald-x64.dmg and SHA256SUMS. (2) Set NAMED_INSTALLERS_RELEASED = true in src/demo/page/page.ts, `npm run build:demo`, commit, push (the page then links releases/latest/download/<name>). (3) Download Emerald-Setup.exe from getemerald.dev, install it over 0.1.0, open a document, open About and tick 'Check at start and once a day, and download'; Check now should say 'You have the latest — Emerald 0.1.2.' (4) `npm version 0.1.3 --no-git-tag-version`, commit, push, `git tag v0.1.3 && git push origin v0.1.3`, wait for the release. (5) In the running 0.1.2: Help > Check for Updates Now. (6) Make an unsaved change, press Install and restart, answer Cancel; then press it again and answer Save.
 unit: M42 U9
@@ -7789,13 +7789,13 @@ state: open
 unit: M54 U7
 should: Valid list children and readable names (WCAG 1.3.1, 4.1.2).
 breaks: ol.tl has a div.solid as a direct child, which an ol may not hold. Link text runs together as '01What it is' and 'WindowsEmerald-Setup.exe'.
-state: open
+state: fault
 
 ### Watch /tour.html?tour=custom from the end of 3/5 (after Save) into 4/5, in either theme.
 unit: M54 U8
 should: The ring is hidden, or held, while its anchor is out of the viewport (frame.css: 'the ring is where the eye has to be').
 breaks: The ring follows a target that is still connected but has moved to y≈1330 in a 900px viewport, so for ~1.2 s it is off the bottom, then reappears. The ring-outside check runs only in a crop.
-state: open
+state: fault
 
 ### Watch /tour.html?tour=development to 3/4, 'The conclusion is written down, beside the decision it kept.', through to the end of the scene.
 unit: M54 U8
@@ -7831,19 +7831,19 @@ state: open
 unit: M54 U7
 should: Either a label that changes or aria-pressed, not both (WAI-ARIA APG toggle button).
 breaks: The text swaps between Pause and Play while aria-pressed also flips, so it is announced as, for example, 'Play, toggle button, pressed'.
-state: open
+state: fault
 
 ### With a screen reader, reach The engine's claim card (demo-page.html:118, div#claim).
 unit: M54 U7
 should: The summary is what is announced: a role (img or group), or the animation hidden with the summary exposed (WCAG 1.1.1, 4.1.2). The inbox diagram does this with role=img.
 breaks: div#claim has an aria-label but no role, so most screen readers ignore the label and read the animated rows mid-play.
-state: open
+state: fault
 
 ### With no document open, use File › Save, Save a Copy… or Earlier copies; or Help › Guide me in a document that keeps no ledger.
 unit: M54 U6
 should: An item that cannot act is disabled (platform menu guideline), as the palette already hides Guide me there (commands.ts:287).
 breaks: All enabled and nothing happens; the menu is rebuilt only when recents change (main.ts refreshMenu).
-state: open
+state: fault
 
 ### With the maintainer's yes, through the MCP only: declare investment (name unique, security_number unique, place -> holding_place), investment_reading (investment link, as_of, quantity decimal 6, price decimal 4 in agorot as printed, cost money, value money; identity quantity * price = value within 1%; one row per investment, as_of) and broker_transfer (transaction -> transaction unique, place -> holding_place) on a real .emd, then transcribe one real periodic statement.
 unit: M28 U1
@@ -7855,7 +7855,7 @@ state: dropped
 unit: M54 U6
 should: The document just opened is first: recents.ts's withRecent says 'most recent first'.
 breaks: Driven: it stays where it was. The read handler (main.ts:527) never calls withRecent — only the Open… picker, Save a copy and a launch path do — so a document opened from the list never rises on it.
-state: open
+state: fault
 
 ### Write a quantity in the unit 'ug'
 unit: M34 T1
