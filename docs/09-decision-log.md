@@ -448,6 +448,7 @@ written out here.
 | D-529 | 2026-11-02 | Design work runs with Impeccable, installed per person and never vendored, its per-edit hook off and its detector run once at the end of a UI unit; it reads a thin `PRODUCT.md` and `DESIGN.md` at the root that point at docs/product.md, tokens.css and the ui rule rows and repeat none of them; the UX-strategy skill set and the design-tool connector are not adopted | [below](#d-529) |
 | D-530 | 2026-11-02 | M54 reviews every surface — the engine's screens, the parked ledger pack's, the desktop shell's chrome, Emerald's page and its tour — against the demo documents in light and dark; each finding is an open `review_entry` row the maintainer judges; a plain breach of a live ui rule row is fixed in place except in the ledger, where it is only recorded; a last unit makes the procedure a project skill | [below](#d-530) |
 | D-531 | 2026-11-02 | M54's rule conflicts answered: needed text is `ink-secondary`, the ramp gains no 13px, a chip is text and a dot everywhere, a chart of several series wears category colours, the entry route replaced the detail pane, the title bar holds no primary, a command has one name in sentence case, the page and the tour keep token sets of their own, and "The database under the chat." leads everywhere | [below](#d-531) |
+| D-532 | 2026-11-02 | M54's faults become thirteen fix units, M54 F1-F13, before M55: shared looks first, each unit sweeping its own files; the ledger's Home, NoLedger and #/read included; a due date only where declared; a window drop onto the open format; recovery as a three-choice notice; the page's first screen leads to Get Emerald; the tour pauses; words are drafted for the maintainer to pick | [below](#d-532) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1036,6 +1037,45 @@ wrong quietly* as the line said first: the maintainer chose the page's.
 while the ledger is parked. Eighteen rule rows changed and one was added. The fixes are units the
 maintainer plans next, from these faults and the 99 sorted on 2026-11-02; until the pitch unit lands,
 the seven files above still lead with the old line. No schema change.
+
+## D-532 · 2026-11-02 · M54's faults become thirteen fix units, M54 F1-F13, before M55: shared looks first, each unit sweeping its own files; the ledger's Home, NoLedger and #/read included; a due date only where declared; a window drop onto the open format; recovery as a three-choice notice; the page's first screen leads to Get Emerald; the tour pauses; words are drafted for the maintainer to pick <a id="d-532"></a>
+
+**Context.** M54's review left 145 `fault` rows on the engine's side (D-531 and the sort of
+2026-11-02). The maintainer chose the shape of the fix units, and the behaviours the code leaves
+unset, before any brief was written.
+
+**Decision.**
+
+- **Where:** units `M54 F1`-`F13` in M54, which stays open until they are built and the maintainer
+  reviews it. **Order:** before M55 and M56 (positions unchanged: M54 350, M55 360, M56 370).
+- **Sweeps:** F1 changes the shared tokens and components alone (`.fc-state`, the field look, tones)
+  and goes first; every other unit moves its own files' off-ramp sizes onto the ramp and its needed
+  `ink-tertiary` text onto `ink-secondary`.
+- **The parked ledger:** F13 fixes what a stranger meets from the engine's screens — Home, NoLedger,
+  `#/read` and its mapper. The rest of the ledger stays parked (D-265).
+- **A due date only where declared:** a list shows lateness only from a date column someone set as
+  `due`, set the way D-524's `done` is, on the screen and by a tool; nothing is guessed.
+- **A file dropped on the window** reads onto the format the screen shows; anywhere else it opens
+  *Read a file* with the file in it, asking which format; it goes to the ledger only when the
+  document keeps one.
+- **Recovery:** unsaved work found at launch is a notice that names the document, with *Restore*,
+  *Not now* (the snapshot is kept) and *Discard*; a crashed window reloads itself and shows it.
+- **A recent document no longer at its path** is said in one sentence and leaves the list.
+- **The page's first screen** has one filled button, *Get Emerald*, which scrolls to the ways in
+  (refining D-531's *desktop download*).
+- **The tour** gets *Pause* and *Play*.
+- **Words** (the page's, the tour's captions, names and lost-way line) are STOP units: the unit
+  writes a file of drafts, two or three per line beside the current one, and stops; the maintainer
+  picks or writes, and the words are put in after.
+
+**Alternatives rejected** (the options offered). A new milestone for the fixes; skipping the ledger
+entirely; one sweep unit before every surface unit; a due date by the column's name; always asking
+which format a drop goes onto; restoring by default; keeping a missing recent with *Locate…*; a
+download button by platform, or to the release page; no pause; drafts as `review_entry` rows.
+
+**Consequences.** Thirteen planned units; F1 blocks every unit that draws, F9 waits on F8, F12 on
+F11, F7 on F6, F13 on F4. A fixed row keeps `fault` with *Fixed in M54 Fn* added to `breaks`, for
+the maintainer's review to accept. No schema change; F2's `due` is a view setting beside `done`.
 
 ## Related
 
