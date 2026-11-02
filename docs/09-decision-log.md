@@ -445,6 +445,7 @@ written out here.
 | D-527 | 2026-10-23 | A dashboard block is resized by dragging its edge — the right edge its width, the bottom its height, the corner both — snapped to the grid's four columns and its rows of 40 pixels (16 between two), from one column and two rows to four columns and twenty rows; a taller view shows more rows and scrolls inside, a wider table more columns and a wider board its lanes side by side, and a chart redraws to its height; the size is kept beside the block's place, `width` and `height` on `format_dashboard_block` (065), written in a text document's dashboard lines, and a block with none keeps the size it had; `arrange_views view:dashboard` `size` sets it and `show_format` names it; amends D-521 | M53 |
 | D-528 | 2026-10-23 | A date's filter takes `yesterday`, `tomorrow`, `last N days/weeks` (today and the N−1 days before it) and `this/last/next week/month/year` beside D-472's words, on the local calendar; a date column's filter menu offers them above its ticks, written as a conversation types them, so a view saved from it stays current; the day a week starts on is the document's — `week_start` in `document_setting`, set in Settings › Calendar and by `record_units` `week_starts_on`, and Monday when unset; amends D-472 | M53 |
 | D-523 | 2026-10-22 | A repository is set up by `npx emerald-mcp init`, a subcommand of the server's bin: it names or creates the document (with the development pack, as text inside the repository and as bytes outside it), writes CLAUDE.md a section between its own markers holding the start-here table and the column lines from the document, and writes the plugin's two hooks into `.claude/settings.json` only where no Emerald plugin is enabled, never over a hook it did not write; every file is compared before it is written, so a second run changes nothing | [below](#d-523) |
+| D-529 | 2026-11-02 | Design work runs with Impeccable, installed per person and never vendored, its per-edit hook off and its detector run once at the end of a UI unit; it reads a thin `PRODUCT.md` and `DESIGN.md` at the root that point at docs/product.md, tokens.css and the ui rule rows and repeat none of them; the UX-strategy skill set and the design-tool connector are not adopted | [below](#d-529) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -927,6 +928,35 @@ a repository may run its own build's (this one does).
 **Consequences.** `scripts/check-package.mjs` runs `init` from the packed tarball, runs the hook it
 wrote, and checks a second run is byte-identical. `createDocumentFile` takes an encoding. The
 published package has it from 0.2.0. No schema change.
+
+## D-529 · 2026-11-02 · Design work runs with Impeccable, installed per person and never vendored, its per-edit hook off and its detector run once at the end of a UI unit; it reads a thin `PRODUCT.md` and `DESIGN.md` at the root that point at docs/product.md, tokens.css and the ui rule rows and repeat none of them; the UX-strategy skill set and the design-tool connector are not adopted <a id="d-529"></a>
+
+**Context.** The maintainer asked for UI/UX skills before input views are built, to be used while
+building them and for a full review of the app and its page, and weighed a visual-design skill, a
+UX-strategy skill set and the design-tool connector.
+
+**Decision.**
+
+- **Impeccable** (Apache-2.0) is the design skill: `shape` before a screen is planned, `critique` and
+  `audit` for a review, `harden`, `clarify` and `polish` on a unit's screens. It is installed **at user
+  level** (`/plugin marketplace add pbakaus/impeccable`), so nothing of it is in the public repository;
+  its launcher fetches its own binary the first time it runs, on the person's machine.
+- **Its per-edit detector hook is off.** A reminder after every edit is context every later turn
+  re-reads; the detector runs once at the end of a unit, which the skill asks for when no hook is set.
+- **`PRODUCT.md` and `DESIGN.md` at the root are pointers** — the surfaces and their mode, the
+  absolutes and the components — and say that `docs/product.md`, `tokens.css` and the `rule` rows win
+  (D-437). `docs:check` checks their links as it does CLAUDE.md's.
+
+**Alternatives rejected.** Vendoring the skill into `.claude/skills/`: a megabyte and a half of
+someone else's code in a public repository, to be kept current by hand. Letting its `init` and
+`document` write the two files: they would restate the ui rule rows in prose, which D-437 retired.
+The UX-strategy skill set: eighteen skills and half a megabyte of instructions, most of it ground
+`docs/product.md` and planning with the maintainer's decisions first already cover. The design-tool
+connector: there are no design files to read, mockups are HTML ported into source, and a second
+source of truth drifts.
+
+**Consequences.** A session doing UI work needs the plugin installed on the machine; without it the
+two root files and the rows still say what is right. No schema change.
 
 ## Related
 

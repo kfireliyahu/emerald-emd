@@ -4458,6 +4458,15 @@ question: How does a screen filter a date by words around today, and which day d
 answer: clock.ts parses yesterday, tomorrow, last N days|weeks (today and the N-1 days before it; last 0 days is not a window), and this|last|next week|month|year on the local calendar; within N is unchanged. A typed date column's filter menu (FilterBand via columnValues.words) lists 18 words above its ticks with their row counts, as radios (a window is asked alone); typed words in the find box are written as words; format_rows values lists them under Around today. The week start is week_start in document_setting (no migration), week_starts_on in a text document's settings.md, set in Settings > Calendar (any of seven days) and by record_units week_starts_on; filterQuery, runRollup and the menu's counts read it. A claim still may not read the clock.
 state: live
 
+### D-529
+date: 2026-11-02
+milestone: M54
+scope: practice
+title: Design work runs with Impeccable, installed per person and never vendored, its per-edit hook off and its detector run once at the end of a UI unit; it reads a thin PRODUCT.md and DESIGN.md at the root that point at docs/product.md, tokens.css and the ui rule rows and repeat none of them; the UX-strategy skill set and the design-tool connector are not adopted
+question: Which UI/UX skills do sessions use for design work and reviews, how are they installed, and where do they read the product and design system from?
+answer: Impeccable (Apache-2.0) at user level via /plugin marketplace add pbakaus/impeccable: shape before a screen is planned, critique and audit for a review, harden/clarify/polish on a unit's screens. Its per-edit hook is off; the detector runs once at the end of a unit. Root PRODUCT.md and DESIGN.md are pointers (surfaces and modes, the absolutes, the components) and defer to docs/product.md, tokens.css and the rule rows (D-437); docs:check checks their links. Not adopted: vendoring it, letting init/document write the two files, the 18-skill UX-strategy set, the design-tool connector.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -5797,6 +5806,18 @@ title: Views worth living in: a lighter entry page, a list for tasks, saved view
 goal: From the maintainer's weeks on a task format at work (2026-10-22): tasks have no view that suits them, the entry page is cluttered, adding by hand is heavy, and the UI as it is is not nice. Done when a person keeps tasks in Emerald without the table: a list view with a done tick and quick add, an entry page that shows what it holds and hides what they chose, saved views (a filter, order, columns and kind under a name), charts of a rollup, and a dashboard per format and one for the document built only of those (D-514). Every write has its conversation half through arrange_views and show_format draws every new view. Recent changes are out: they need D-462 reopened. Starts from a mockup the maintainer approves (U1).
 state: closed
 position: 349
+
+### M54
+title: Design review: the app and getemerald.dev
+goal: A design critique and audit of every surface of the app and of Emerald's page (with the tour it embeds), run with Impeccable's critique and audit against the ui rule rows (D-529). Its findings are written down as rows the maintainer judges, and those findings on manual entry and forms shape M55 before M55 is planned.
+state: planned
+position: 350
+
+### M55
+title: Input views: a format's own entry form, on its tab and in a dashboard
+goal: As a person can save views and arrange dashboards (M53), they can make their own input view of a format, choosing which fields it asks for, in what order and with what defaults, and open it under that format or put it in a dashboard, so adding rows by hand is quick. A conversation can make and use one too. It is planned after M54's findings, with Impeccable's shape, and lists the maintainer's decisions before any brief.
+state: planned
+position: 360
 
 <!-- emerald: open_question.format.md -->
 ---
@@ -13799,10 +13820,10 @@ title: line
 emerald: changed
 ---
 
-decision: 2026-10-23
+decision: 2026-11-02
 finding: 2026-10-22
 inbox: 2026-10-23
-milestone: 2026-10-23
+milestone: 2026-11-02
 open_question: 2026-10-22
 review_entry: 2026-10-23
 rule: 2026-10-22

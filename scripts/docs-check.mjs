@@ -101,8 +101,9 @@ const lines = (file) => read(file).split(/\r?\n/)
 
 /**
  * The files outside `docs/` that send a session somewhere: the one every session
- * reads, the README, and the skills. A link from one of them to a retired note
- * sends a session nowhere — D-434 retired `status.md`, and all of them named it.
+ * reads, the README, the two a design tool reads (D-529), and the skills. A link
+ * from one of them to a retired note sends a session nowhere — D-434 retired
+ * `status.md`, and all of them named it.
  */
 function orientationFiles() {
   const skills = path.join(root, '.claude', 'skills')
@@ -112,7 +113,7 @@ function orientationFiles() {
         .filter((entry) => entry.isDirectory() && fs.existsSync(path.join(skills, entry.name, 'SKILL.md')))
         .map((entry) => `.claude/skills/${entry.name}/SKILL.md`)
     : []
-  return ['CLAUDE.md', 'README.md', ...skillFiles]
+  return ['CLAUDE.md', 'README.md', 'PRODUCT.md', 'DESIGN.md', ...skillFiles]
 }
 
 /** A relative link to a note that is not there. Silent in every renderer. */
