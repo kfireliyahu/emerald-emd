@@ -6263,7 +6263,7 @@ state: fault
 ### Compare each tour's three names: the rail row (en.ts:30-35 `rows`), its label (`tours.*.label`) and its frame title (`tours.*.title`).
 unit: M54 U7
 should: One name per thing (Words name the rule; the maintainer's simplicity rule).
-breaks: Tour 2 is 'Where the money went', '2 · The ledger' and 'where did this month's money go?'. Tour 3 is 'The project answers first' and '3 · The development pack'. Tour 4 is 'Every hour paid' and '4 · The timesheet'. Verdict 2026-11-02 (D-531): fault; a unit drafts one name per tour, the maintainer picks. Owned by M54 F9.
+breaks: Tour 2 is 'Where the money went', '2 · The ledger' and 'where did this month's money go?'. Tour 3 is 'The project answers first' and '3 · The development pack'. Tour 4 is 'Every hour paid' and '4 · The timesheet'. Verdict 2026-11-02 (D-531): fault; a unit drafts one name per tour, the maintainer picks. Owned by M54 F9. Fixed in M54 F9 (6d8e071).
 state: fault
 
 ### Copy an older planner.emd backup from before 2026-10-11 (the 2026-10-09 .bak beside it) somewhere outside any repo, open the copy in the app once (it is at an older schema), then ask a session for search_document on it with the terms the planner.emd scrub hunted (the old address, the note's words, the old account name).
@@ -7544,7 +7544,7 @@ state: fault
 ### Read Get Emerald's lead (en.ts:209, `foot.lead`) and the order of the cards (demo-page.html:227-276).
 unit: M54 U7
 should: The order leads with what most strangers will install (PRODUCT.md's two crowds). The maintainer picks the order.
-breaks: It says "Five ways in, all free: the source, the Claude extension, the Claude plugin, the npm package and the desktop app." `git clone` comes first and the desktop app comes last, under a small label. The ledger crowd needs the app and reaches it last. Verdict 2026-11-02 (D-531): fault; the desktop download is the page's filled primary (d98b19a9), and a words unit drafts the lead and order for the maintainer to pick. Owned by M54 F9.
+breaks: It says "Five ways in, all free: the source, the Claude extension, the Claude plugin, the npm package and the desktop app." `git clone` comes first and the desktop app comes last, under a small label. The ledger crowd needs the app and reaches it last. Verdict 2026-11-02 (D-531): fault; the desktop download is the page's filled primary (d98b19a9), and a words unit drafts the lead and order for the maintainer to pick. Owned by M54 F9. Fixed in M54 F9 (6d8e071).
 state: fault
 
 ### Read MCP's tool counts (en.ts:163) beside the server's tool list.
@@ -7556,13 +7556,13 @@ state: fault
 ### Read Packs (en.ts:173) beside The engine (en.ts:83). Check the term rows (`format_rows term search:"format"`).
 unit: M54 U7
 should: One word for the thing, defined once (Words name the rule; the term rows).
-breaks: Packs says "A pack is formats somebody already worked out…" and the page never says what a format is. The engine calls the same thing a table: "Declare a table for anything you keep". Verdict 2026-11-02 (D-531): fault; a words unit drafts options, the maintainer picks. Owned by M54 F9.
+breaks: Packs says "A pack is formats somebody already worked out…" and the page never says what a format is. The engine calls the same thing a table: "Declare a table for anything you keep". Verdict 2026-11-02 (D-531): fault; a words unit drafts options, the maintainer picks. Owned by M54 F9. Fixed in M54 F9 (6d8e071).
 state: fault
 
 ### Read The engine's caption (en.ts:90, `engine.caption`) under the claim card (#claim).
 unit: M54 U7
 should: The caption describes what plays under it.
-breaks: It says "There you typed it in; here a model reads it…". The card is a drawn animation (claim.ts:5, 'drawn until the recording exists'), and no model appears in it. Verdict 2026-11-02 (D-531): fault; a words unit drafts options, the maintainer picks. Owned by M54 F9.
+breaks: It says "There you typed it in; here a model reads it…". The card is a drawn animation (claim.ts:5, 'drawn until the recording exists'), and no model appears in it. Verdict 2026-11-02 (D-531): fault; a words unit drafts options, the maintainer picks. Owned by M54 F9. Fixed in M54 F9 (6d8e071).
 state: fault
 
 ### Read TitleBar.tsx:52 and main.ts:895.
@@ -7609,7 +7609,7 @@ state: open
 ### Read en.ts:184, en.ts:143 and en.ts:88.
 unit: M54 U7
 should: Words a stranger outside the maintainer's country and history can parse.
-breaks: "\"A year of study-fund reports read in…\": a study fund is a local savings product. \"every shekel followed\" is a local currency. \"Anything counts. Years of old accounts found in mail became one row each, and none was missed when closing them.\" is hard to parse. Verdict 2026-11-02 (D-531): fault; a words unit drafts options, the maintainer picks. Owned by M54 F9."
+breaks: "\"A year of study-fund reports read in…\": a study fund is a local savings product. \"every shekel followed\" is a local currency. \"Anything counts. Years of old accounts found in mail became one row each, and none was missed when closing them.\" is hard to parse. Verdict 2026-11-02 (D-531): fault; a words unit drafts options, the maintainer picks. Owned by M54 F9. Fixed in M54 F9 (6d8e071)."
 state: fault
 
 ### Read frame.css's literal values: font sizes 11, 13, 17px; spacing 6, 7, 10, 14, 18px and the on-step 8/12/16/24px literals; durations tour-echo 380ms, the --travel 933ms default, and Crossfade's setTimeout 400 in Frame.tsx.
@@ -7663,31 +7663,31 @@ state: fault
 ### Read the four tour leads (en.ts:58, 63, 68, 73) together.
 unit: M54 U7
 should: One voice across the four, addressing the reader (the guidelines' copy rules).
-breaks: en.ts:63 says "September's pay is in and the card statement just came, I spent how much on groceries?!": a comma splice and a jump to the first person, while the others say 'You'. en.ts:68 ends "Recorded decisions become memory that is no longer ephemeral." Verdict 2026-11-02 (D-531): fault; a words unit drafts options, the maintainer picks. Owned by M54 F9.
+breaks: en.ts:63 says "September's pay is in and the card statement just came, I spent how much on groceries?!": a comma splice and a jump to the first person, while the others say 'You'. en.ts:68 ends "Recorded decisions become memory that is no longer ephemeral." Verdict 2026-11-02 (D-531): fault; a words unit drafts options, the maintainer picks. Owned by M54 F9. Fixed in M54 F9 (6d8e071).
 state: fault
 
 ### Read the heading 'No internet, no login' (en.ts:199) beside its body (en.ts:201), on a page whose main path is a hosted assistant working the file.
 unit: M54 U7
 should: The heading is as careful as its body. en.ts's own header says "sends nothing anywhere itself", never "your data never leaves it".
-breaks: The body is careful: "Runs on your machine and sends nothing anywhere itself." But the heading alone reads as the claim the page must never make. Verdict 2026-11-02 (D-531): fault; a words unit drafts options, the maintainer picks. Owned by M54 F9.
+breaks: The body is careful: "Runs on your machine and sends nothing anywhere itself." But the heading alone reads as the claim the page must never make. Verdict 2026-11-02 (D-531): fault; a words unit drafts options, the maintainer picks. Owned by M54 F9. Fixed in M54 F9 (6d8e071).
 state: fault
 
 ### Read the hero story (en.ts:49, `hero.story`), then the first h2 below it.
 unit: M54 U7
 should: The story names who it is for and the concrete thing it does. product.md 'Who it is for' names both crowds, and product.md also says nobody wants an architecture. The words are the maintainer's.
-breaks: It says "What is an application? Most are a database and a UI that exposes it. Most people now talk to an AI chat instead, the new UI, and those chats have no reliable long-term memory. Emerald closes that gap." It opens on architecture and never says it is a desktop app keeping your own file. The next h2 jumps to grocery receipts, so the hero (AI memory) and the first proof (money) do not connect. Verdict 2026-11-02 (D-531): fault; a words unit drafts options quoting this line, the maintainer picks or writes. Owned by M54 F9.
+breaks: It says "What is an application? Most are a database and a UI that exposes it. Most people now talk to an AI chat instead, the new UI, and those chats have no reliable long-term memory. Emerald closes that gap." It opens on architecture and never says it is a desktop app keeping your own file. The next h2 jumps to grocery receipts, so the hero (AI memory) and the first proof (money) do not connect. Verdict 2026-11-02 (D-531): fault; a words unit drafts options quoting this line, the maintainer picks or writes. Owned by M54 F9. Fixed in M54 F9 (6d8e071).
 state: fault
 
 ### Read the lines a stranger has no word for. en.ts:81 "The engine". en.ts:86 "Claims: … Each one proved, failed or unchecked, and unchecked says why." en.ts:159 "A model works in it, through MCP" (MCP is never spelled out, and the rail row is just 'MCP'). en.ts:163 "Shaped tools, never a general query". en.ts:124 "became unit S4 U2". en.ts:216 "It runs on the app's own Node."
 unit: M54 U7
 should: Plain words a stranger can follow (persuade mode). The words are the maintainer's.
-breaks: Each line uses an insider word the page never defines. Verdict 2026-11-02 (D-531): fault; a words unit drafts options per line, the maintainer picks. Owned by M54 F9.
+breaks: Each line uses an insider word the page never defines. Verdict 2026-11-02 (D-531): fault; a words unit drafts options per line, the maintainer picks. Owned by M54 F9. Fixed in M54 F9 (6d8e071).
 state: fault
 
 ### Read the page's meta description: en.ts:19, `description`. It is what search results and link previews show.
 unit: M54 U7
 should: It says what Emerald is, in a stranger's words, and agrees with the tagline and the pitch. Which words is the maintainer's call; none is proposed as settled.
-breaks: It says "Emerald: Order to chaos using engineering". That reads backwards, as if it turns order into chaos, and it matches neither the tagline nor docs/product.md's pitch. Verdict 2026-11-02 (D-531): it agrees with "The database under the chat."; a words unit drafts options and the maintainer picks. Owned by M54 F9.
+breaks: It says "Emerald: Order to chaos using engineering". That reads backwards, as if it turns order into chaos, and it matches neither the tagline nor docs/product.md's pitch. Verdict 2026-11-02 (D-531): it agrees with "The database under the chat."; a words unit drafts options and the maintainer picks. Owned by M54 F9. Fixed in M54 F9 (6d8e071).
 state: fault
 
 ### Read the same commands in the File menu, the palette and the title bar.
@@ -7705,7 +7705,7 @@ state: open
 ### Read the twelve rail rows in order, as a stranger would read the page.
 unit: M54 U7
 should: The sections are grouped by who they persuade, and the privacy promise comes early (persuade rhythm). The order is the maintainer's.
-breaks: The tours mix the ledger and the development pack, then The engine, MCP and Packs follow, and then The ledger and The development pack come again. 'No internet, no login', the ledger crowd's first promise, is row 11 of 12. Verdict 2026-11-02 (D-531): fault; a words unit proposes orders, the maintainer picks. Owned by M54 F9.
+breaks: The tours mix the ledger and the development pack, then The engine, MCP and Packs follow, and then The ledger and The development pack come again. 'No internet, no login', the ledger crowd's first promise, is row 11 of 12. Verdict 2026-11-02 (D-531): fault; a words unit proposes orders, the maintainer picks. Owned by M54 F9. Fixed in M54 F9 (6d8e071).
 state: fault
 
 ### Remove an identity, rename or delete a column, change a type, from a conversation
@@ -15137,14 +15137,17 @@ report: M54 F8 built at 1cf3540; docs:check green (0 errors, 7 standing warnings
 milestone: M54
 scope: page
 title: The page's words: drafts for the maintainer to pick, then put in (STOP)
-state: in_progress
-brief: M54 fix unit (D-531, D-532). YOUR ROWS, exactly these: `format_rows review_entry search:"Owned by M54 F9." columns:[unit, do, should, breaks]` — 11 rows; the phrases below say what each asks., after F8. STOP unit: no word ships before the maintainer picks it. Rows (`format_rows review_entry match:{unit:"M54 U7", state:fault} columns:[do, should, breaks]`) by their breaks: 'Emerald: Order to chaos using engineering' (the meta description — it agrees with the tagline "The database under the chat.", which is settled, D-531); 'A year of study-fund reports'; 'Each line uses an insider word' (its do names the lines: The engine, Claims, MCP unspelled, Shaped tools, unit S4 U2, the app's own Node); 'en.ts:63 says "September's pay is in'; 'Five ways in, all free' (the lead and the order of the ways in); 'The body is careful' (the No internet, no login heading); 'Packs says "A pack is formats' (one word, defined once — check `format_rows term search:"format"`); 'What is an application?' (the hero story); 'The tours mix the ledger' (the section order); 'There you typed it in' (the engine's caption); 'Tour 2 is \'Where the money went\'' (one name per tour across rail row, label and frame title). PART 1: write docs/drafts/m54-f9-page-words.md — per line: the row it answers, the current words quoted, two or three options, one line on what each says to a stranger (PRODUCT.md's two crowds); for the order, two or three orders. Commit it and stop; the closing message asks the maintainer to pick or write. PART 2 (after the pick, the same or a next session): put the words into src/demo/page/copy/en.ts (and the README's matching lines), delete the drafts file, check:tours if a tour name changed. Land after part 2: 'Fixed in M54 F9 (<commit>).' on each row's breaks, state left `fault` (D-532). MAINTAINER'S EYE: the driver stops after part 1 for the pick, and after part 2 for a last read of the page.
-files: docs/drafts/m54-f9-page-words.md (new, deleted at the end), src/demo/page/copy/en.ts, README.md
+landed: 2026-11-02
+state: built
+brief: "M54 fix unit (D-531, D-532). YOUR ROWS, exactly these: `format_rows review_entry search:\"Owned by M54 F9.\" columns:[unit, do, should, breaks]` — 11 rows; the phrases below say what each asks., after F8. STOP unit: no word ships before the maintainer picks it. Rows (`format_rows review_entry match:{unit:\"M54 U7\", state:fault} columns:[do, should, breaks]`) by their breaks: 'Emerald: Order to chaos using engineering' (the meta description — it agrees with the tagline \"The database under the chat.\", which is settled, D-531); 'A year of study-fund reports'; 'Each line uses an insider word' (its do names the lines: The engine, Claims, MCP unspelled, Shaped tools, unit S4 U2, the app's own Node); 'en.ts:63 says \"September's pay is in'; 'Five ways in, all free' (the lead and the order of the ways in); 'The body is careful' (the No internet, no login heading); 'Packs says \"A pack is formats' (one word, defined once — check `format_rows term search:\"format\"`); 'What is an application?' (the hero story); 'The tours mix the ledger' (the section order); 'There you typed it in' (the engine's caption); 'Tour 2 is \\'Where the money went\\'' (one name per tour across rail row, label and frame title). PART 1: write docs/drafts/m54-f9-page-words.md — per line: the row it answers, the current words quoted, two or three options, one line on what each says to a stranger (PRODUCT.md's two crowds); for the order, two or three orders. Commit it and stop; the closing message asks the maintainer to pick or write. PART 2 (after the pick, the same or a next session): put the words into src/demo/page/copy/en.ts (and the README's matching lines), delete the drafts file, check:tours if a tour name changed. Land after part 2: 'Fixed in M54 F9 (<commit>).' on each row's breaks, state left `fault` (D-532). MAINTAINER'S EYE: the driver stops after part 1 for the pick, and after part 2 for a last read of the page.\nMaintainer, 2026-11-02: All the A drafts; tool count, hero label and 'Files every charge' kept."
+files: src/demo/page/copy/en.ts, demo-page.html (section order, the ways in), README.md (savings-fund line), scripts/check-tours-window.cjs (scrolls to the first frame), docs/drafts/m54-f9-page-words.md (deleted)
 blocks: ["M54 F8"]
 taken_by: run-milestone driver
 started: 2026-11-02
 branch: main
+commit: 6d8e071
 paths: "docs/drafts/m54-f9-page-words.md\nsrc/demo/page/copy/en.ts\nREADME.md"
+report: M54 F9 part 2 at 6d8e071: the maintainer's verdict (2026-11-02, All the A drafts) put in. en.ts: meta description A; hero story A; sections reordered by crowd (What it is, Runs on your machine, The receipt, Where the money went, Every hour paid, The ledger, The project remembers, The development pack, How it works, With your AI, Packs, Get Emerald), tours numbered 1-4 in that order, each tour's rail row, label 'N · name' and frame title 'Emerald, a guided tour: name'; tour 2 and 4 (the project) leads A; How it works; the claims line A; MCP heading 'Your AI assistant works in it', rail 'With your AI', first body line adds 'through MCP, the standard way assistants connect to tools'; 'The model gets named actions, never free rein over the database: 28 for any document, 85 with the ledger.'; 'became a task'; 'Nothing else to install.'; savings-fund (README too), 'all of it followed', 'Anything you keep can be a table.'; engine first line declares a format; engine caption A; 'Runs on your machine' heading and rail row; Get Emerald lead A with installers first, then extension, plugin, npm, source last (demo-page.html). Kept: 28/85, the hero button's 'Get Emerald', 'Files every charge'. Two consequences of the order: the development body now says 'The fourth tour plays…' (was third), and check:tours' page run scrolls to the first frame, which is now below the fold (it failed 0 of 0 frames before). Not changed, not named by the brief: README's 'No internet, no login.' bullet and scripts/npm-package.mjs's 'Shaped tools' line and 'No internet, no login' heading (the npm README). Verified: check:tours green (10 runs), toolCount/rail/privacy/surfaceRules tests, typecheck, docs:check 0 errors; the page on 4185 shows every A line, all 12 sections, nothing offsite.
 
 ### M54 U1
 milestone: M54
