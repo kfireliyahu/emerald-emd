@@ -6,7 +6,7 @@
   "license": "AGPL-3.0-only",
   "type": "module",
   "main": "dist-electron/main.cjs",
-  "description": "Excel that reads your documents and won't let you be wrong quietly. Local-first and document-based: what you and an AI worked out, kept true in a file you own.",
+  "description": "The database under the chat. Local-first and document-based: what you and an AI worked out, kept true in a file you own.",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build && node scripts/third-party-notices.mjs dist",

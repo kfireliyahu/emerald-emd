@@ -5,8 +5,8 @@ project: Emerald
 
 # The map
 
-**Emerald is Excel that reads your documents and won't let you be wrong quietly** — and,
-underneath, the domain layer between a person, a model, and their own data. A person and a
+**Emerald is the database under the chat** — a local, file-based database that you and an AI
+model fill together — and, underneath, the domain layer between a person, a model, and their own data. A person and a
 model work something out — what a kind of thing is, which fields it has, what has to add up — and
 this is where that goes to stay true. Local-first, document-based, no network call.
 

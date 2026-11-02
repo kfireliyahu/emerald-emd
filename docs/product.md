@@ -1,28 +1,33 @@
 ---
 type: product
 project: Emerald
-updated: 2026-09-20
+updated: 2026-11-02
 ---
 
 # What Emerald is, and who it is for
 
 *Settled in conversation on 2026-09-20; [D-238](./09-decision-log.md) carries the argument and the
-evidence. **This note is deliberately plainer than the rest of `docs/`.** If it needs the house
+evidence, and [D-531](./09-decision-log.md) moved the sentence on 2026-11-02. **This note is deliberately plainer than the rest of `docs/`.** If it needs the house
 style to be understood, it has failed, and so has the thing it describes.*
 
 ## The sentence
 
-> **Excel that reads your documents and won't let you be wrong quietly.**
+> **The database under the chat.**
 
-That is the pitch, and it replaces *"the domain layer between a person, a model, and their own
-data"* as the thing said first. The old sentence describes the architecture. Nobody wants an
+That is the pitch: a local, file-based database that you and an AI model fill together, where every
+table has real types and real checks, so what you worked out stays true. It is the README's first
+line and the page's, and since [D-531](./09-decision-log.md) it is the thing said first everywhere.
+
+It replaces *"Excel that reads your documents and won't let you be wrong quietly"* (D-238), which
+stays as what it does — the next section — but no longer opens. That one replaced *"the domain layer
+between a person, a model, and their own data"*, which describes the architecture. Nobody wants an
 architecture, nobody searches for one, and it does not survive being tired.
 
-### What it means, because it is two things and not one
+### *Won't let you be wrong quietly*: two things, not one
 
 **M22 U1 tested this against a real document and it needed saying** ([D-240](./09-decision-log.md),
 [D-242](./09-decision-log.md)). All four memory formats declared `nothing_must_hold: true`, and the
-first reading of that was *the pitch did nothing for them*. It is wrong, and the reason matters:
+first reading of that was *the promise did nothing for them*. It is wrong, and the reason matters:
 
 1. **It refuses what contradicts what you said.** Types, `required`, an `enum`'s members, a `link`
    that has to resolve — checked at the moment you write, on **every** format. A list of books with
@@ -30,7 +35,7 @@ first reading of that was *the pitch did nothing for them*. It is wrong, and the
 2. **It proves what you claim.** Claims — a total against its parts — and the third state. Only where figures relate to
    each other, which is money, recipes, payslips — and not books.
 
-**The pitch is both, and most formats only ever get the first.** That is still something a folder
+**The promise is both, and most formats only ever get the first.** That is still something a folder
 of markdown and a good model gives you none of, which is the competitor that actually matters.
 Saying "won't let you be wrong quietly" and meaning *identities* is the mistake — it writes off
 everyone whose data is a list, and that is most people.

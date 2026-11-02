@@ -6,7 +6,7 @@ and where this file and that one disagree, that one is right.*
 
 ## What it is
 
-**Excel that reads your documents and won't let you be wrong quietly.** A local-first desktop app
+**The database under the chat.** A local-first desktop app
 (and the same build as a static site) where a person keeps the things they track as *formats* —
 declared tables with real types, checks and links — in one `.emd` file on their own machine. No
 account, no backend, no network call. A model can drive the same file through an MCP server.

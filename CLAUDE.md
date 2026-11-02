@@ -1,7 +1,8 @@
 # Emerald
 
-**Excel that reads your documents and won't let you be wrong quietly** — and, underneath, the
-domain layer between a person, a model, and their own data. A person works something out
+**The database under the chat** — a local, file-based database that you and an AI model fill
+together, and that won't let you be wrong quietly — and, underneath,
+the domain layer between a person, a model, and their own data. A person works something out
 with a model — what a thing is, which fields it has, what has to add up — and Emerald is where
 that goes to stay true. It is local-first and document-based: no backend, no accounts, no network
 call. The user opens a `.emd` file — a real SQLite database, **stored as text or as SQLite bytes and

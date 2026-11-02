@@ -10,8 +10,9 @@ sessions. `CLAUDE.md` at the repo root points here.
 
 ## What this project is
 
-**Excel that reads your documents and won't let you be wrong quietly** ([product](./product.md) is
-the short version, and the sentence said first). Underneath, it is the domain layer between a
+**The database under the chat** ([product](./product.md) is the short version, and the sentence
+said first, D-531): a local, file-based database that you and an AI model fill together, and that won't
+let you be wrong quietly. Underneath, it is the domain layer between a
 person, a model, and their own data. A person and a model work
 something out — what a kind of thing is, which fields it has, what has to add up — and Emerald is
 where that goes to stay true. TypeScript, React, SQLite in the browser via sql.js. No backend, no

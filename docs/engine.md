@@ -25,7 +25,7 @@ whole thing is for.
 > what you and a model worked out goes to stay true.
 
 **That is the architecture, and since [D-238](./09-decision-log.md) it is no longer the sentence
-said first.** The pitch is *Excel that reads your documents and won't let you be wrong quietly*;
+said first.** The pitch is *The database under the chat* ([D-531](./09-decision-log.md));
 [`product.md`](./product.md) carries it, and who this is for. This note is the argument underneath,
 and it stays as it is.
 
