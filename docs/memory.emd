@@ -6356,7 +6356,7 @@ state: fault
 ### Demo, any document, light and dark: the dashboard popovers' headings (NEW CHART, HEADLINE TOTAL) and menu descriptions, every block's subtitle, the filter band's zero-count choices, counts, "· 18.00 to 250.00" and its × button, the rollup's Delete chart and unpressed Bars/Line, #/connections' instructions and column names.
 unit: M54 U2
 should: Text a reader needs is at 4.5:1; ink-tertiary only for what is not essential (Contrast 4.5:1 for text). QUESTION for the maintainer: One level of tabs and Charts are ink set tab labels and axis labels in ink-tertiary, and on a chart whose bars are unlabelled the month is the bar's only label — does either rule give way?
-breaks: All are ink-tertiary: 2.62:1 in light, 3.18–3.65:1 in dark (M54 U1 recorded the tab labels alone). The block subtitle is the one the empty dashboard promises says which format a block reads; the band's × is ~12px wide and does what Clear does. Dashboard.tsx:580, :705, :715; MakeBlock.tsx:99; FilterBand.tsx:393, 848-919; Connections.tsx:247. Verdict 2026-11-02 (D-531): all move to ink-secondary, axis labels too; Charts are ink now says ink-secondary. Owned by M54 F3.
+breaks: All are ink-tertiary: 2.62:1 in light, 3.18–3.65:1 in dark (M54 U1 recorded the tab labels alone). The block subtitle is the one the empty dashboard promises says which format a block reads; the band's × is ~12px wide and does what Clear does. Dashboard.tsx:580, :705, :715; MakeBlock.tsx:99; FilterBand.tsx:393, 848-919; Connections.tsx:247. Verdict 2026-11-02 (D-531): all move to ink-secondary, axis labels too; Charts are ink now says ink-secondary. Owned by M54 F3. Fixed in M54 F3 (22d61aa). The × is a 24px target; .fc-col-tick (every chart's axis, the ledger's too) is ink-secondary.
 state: fault
 
 ### Demo, any document, light and dark: the theme control at the rail's foot; Tab to it and press the arrows; hover the collapsed rail's theme button.
@@ -6392,7 +6392,7 @@ state: fault
 ### Demo, custom.emd, #/dashboard → Add a block → Headline total, Sum of amount. Both themes.
 unit: M54 U2
 should: The currency symbol and the decimals are smaller and ink-secondary, so the eye lands on the magnitude (The magnitude leads); the figure's size is a ramp step (Every value is a token).
-breaks: "\"₪469.00\" is one 32px run, symbol and decimals in the digits' size and colour; its sizes are text-[32px] and text-[22px], neither on the ramp (20, 24, 40). Dashboard.tsx:764. Owned by M54 F3."
+breaks: "\"₪469.00\" is one 32px run, symbol and decimals in the digits' size and colour; its sizes are text-[32px] and text-[22px], neither on the ramp (20, 24, 40). Dashboard.tsx:764. Owned by M54 F3. Fixed in M54 F3 (22d61aa). The block's figure is text-title (24px), the preview's secondary-number; symbol and decimals text-heading/text-body in ink-secondary."
 state: fault
 
 ### Demo, custom.emd, #/formats/card_charge. In the blank row type abc into amount, leave date empty, press Enter. Then open Add (card_charge/entry/new), leave date empty, press Add.
@@ -6446,13 +6446,13 @@ state: fault
 ### Demo, custom.emd, #/formats/card_charge: Filter by…, Search, a value popover and its is / is not group; the rollup tab's Bars/Line toggle. Compare with the dashboard's menus and blocks.
 unit: M54 U2
 should: Cards and controls are square by spending --radius-card and --radius-control (Square by spending the radius tokens).
-breaks: FIELD in src/ui/components/fieldLook.ts is rounded-md (8px), so every field in the app is round while buttons, menus and blocks are square; the band's popover and Held as group are rounded-md, its option rows and the Bars/Line toggle rounded. FilterBand.tsx:565, 583, 694, 836, 890, 915; RollupView.tsx:91. Not fixed here: FIELD reaches every screen. Owned by M54 F1. Fixed in M54 F1 (96048e9). FIELD, SELECT and FIELD_MULTILINE only: the FilterBand and RollupView lines are in M54 F3's paths and were left to it.
+breaks: FIELD in src/ui/components/fieldLook.ts is rounded-md (8px), so every field in the app is round while buttons, menus and blocks are square; the band's popover and Held as group are rounded-md, its option rows and the Bars/Line toggle rounded. FilterBand.tsx:565, 583, 694, 836, 890, 915; RollupView.tsx:91. Not fixed here: FIELD reaches every screen. Owned by M54 F1. Fixed in M54 F1 (96048e9). FIELD, SELECT and FIELD_MULTILINE only: the FilterBand and RollupView lines are in M54 F3's paths and were left to it. Also fixed in M54 F3 (22d61aa).
 state: fault
 
 ### Demo, custom.emd, #/formats/card_charge: click Filter by…, type amo, press Enter; open a value popover and press Escape.
 unit: M54 U2
 should: A field that looks typeable narrows as typed (Choices are ChoiceField: it stays a text field), or looks like a button; Escape returns focus to what opened it (Keyboard first).
-breaks: It is a read-only search field: typing goes nowhere and Enter picks the first column, date. Escape from the value popover drops focus to the body. FilterBand.tsx:452-466. Owned by M54 F3.
+breaks: It is a read-only search field: typing goes nowhere and Enter picks the first column, date. Escape from the value popover drops focus to the body. FilterBand.tsx:452-466. Owned by M54 F3. Fixed in M54 F3 (22d61aa). The field filters as typed (labels in words), and Escape gives focus back to it.
 state: fault
 
 ### Demo, custom.emd, #/settings/packs and #/settings/export; custom.emd #/year (NoLedger).
@@ -6488,7 +6488,7 @@ state: fault
 ### Demo, custom.emd: save a card_charge view sorted merchant ascending ("Over 50") and add it to #/dashboard; project.emd: "Landed this year" on #/formats/unit/dashboard.
 unit: M54 U2
 should: A saved view reads the same wherever it is placed, in its own order.
-breaks: The block ignores the view's order: FUEL STATION, CORNER MARKET, BOOK NOOK; M2 U2, M1 U1, M2 U1, M1 U2. Owned by M54 F3.
+breaks: The block ignores the view's order: FUEL STATION, CORNER MARKET, BOOK NOOK; M2 U2, M1 U1, M2 U1, M1 U2. Owned by M54 F3. Fixed in M54 F3 (22d61aa): no code change — it already held at HEAD (F2's listPicture keeps the asked order); verified a table block (order:merchant, amount at least 50) and a list block (order:ref descending) read in the saved order.
 state: fault
 
 ### Demo, demo.emd with an answer waiting, both themes: #/paychecks, #/wealth/goals, #/wealth/funds, #/categories/rules, #/plan.
@@ -6518,7 +6518,7 @@ state: fault
 ### Demo, demo.emd, #/agenda: click 7 days (a later row exists); then read the "by" sentence above it.
 unit: M54 U2
 should: The empty line names the window — "Nothing in the next 7 days." — and the subtitle follows it (Words name the rule); the agenda is the first thing on its screen.
-breaks: It says "Nothing on the agenda from today on." under a subtitle still reading "From today on —" (LinkViews.tsx:579). The "by" sentence is 13 fixed 112px fields that cut their values ("last_confirme", "transaction_d") and push the agenda down. Owned by M54 F3.
+breaks: It says "Nothing on the agenda from today on." under a subtitle still reading "From today on —" (LinkViews.tsx:579). The "by" sentence is 13 fixed 112px fields that cut their values ("last_confirme", "transaction_d") and push the agenda down. Owned by M54 F3. Fixed in M54 F3 (22d61aa). Subtitle and empty line name the window ("Nothing in the next 7 days. Show all ahead"); past three formats the dates fold into "Which date puts each format here", each field as wide as its words.
 state: fault
 
 ### Demo, demo.emd, #/categories, both themes: each category's spend bar.
@@ -6807,25 +6807,25 @@ state: open
 ### Demo, project.emd and demo.emd, #/connections in light and dark, first fit.
 unit: M54 U2
 should: A format's title wins over its machine name, labels do not print on each other, and the fit leaves room for the side list.
-breaks: Six edges meet at Decision's header and their "one" labels overprint; "Every connection, in words" covers the Decision, Milestone, Deduct… and Holding… cards; on demo.emd titles truncate ("Bill in a…", "Categor…") while the snake_case table name beside them shows whole. Edge labels are text-[10px], below the ramp. ConnectionGraph.tsx:626-631, :847, :855. Owned by M54 F3.
+breaks: Six edges meet at Decision's header and their "one" labels overprint; "Every connection, in words" covers the Decision, Milestone, Deduct… and Holding… cards; on demo.emd titles truncate ("Bill in a…", "Categor…") while the snake_case table name beside them shows whole. Edge labels are text-[10px], below the ramp. ConnectionGraph.tsx:626-631, :847, :855. Owned by M54 F3. Fixed in M54 F3 (22d61aa). "one" drawn once a point; the first view is fitted to the canvas; the table name is gone from the bubble; edge words text-label.
 state: fault
 
 ### Demo, project.emd, #/connections: read "Every connection, in words" for unit's blocks, and open question's opened_by and answered_by.
 unit: M54 U2
 should: Each sentence says what the connection is, and no two say the same (Words name the rule).
-breaks: "\"Each unit belongs to one unit — unit's blocks column\", though blocks lists several units, and its card row shows no target; opened_by and answered_by are two buttons both named \"Each open question belongs to one decision.\" Owned by M54 F3."
+breaks: "\"Each unit belongs to one unit — unit's blocks column\", though blocks lists several units, and its card row shows no target; opened_by and answered_by are two buttons both named \"Each open question belongs to one decision.\" Owned by M54 F3. Fixed in M54 F3 (22d61aa). linkSaid in connections.ts: \"Each unit names any number of units in blocks\", \"Each open question names one decision in opened by\"; a list link's port shows \"many units\"."
 state: fault
 
 ### Demo, project.emd, #/dashboard with a block: Tab to its width, height and corner resize handles (light and dark), and read them with a screen reader.
 unit: M54 U2
 should: Each stop shows a visible focus mark (Keyboard first), and a focusable separator carries aria-valuenow (WAI-ARIA separator).
-breaks: The edges draw a 2px accent rule on focus, but the corner only turns its 8px glyph accent — barely a mark; none of the three has aria-valuenow, the value is only in the label. Dashboard.tsx:436-466. Owned by M54 F3.
+breaks: The edges draw a 2px accent rule on focus, but the corner only turns its 8px glyph accent — barely a mark; none of the three has aria-valuenow, the value is only in the label. Dashboard.tsx:436-466. Owned by M54 F3. Fixed in M54 F3 (22d61aa). The corner draws the 2px accent ring; all three carry aria-valuenow/min/max/valuetext (height 0 = as tall as it holds; the corner's value is the width, its text both).
 state: fault
 
 ### Demo, project.emd, #/dashboard with a block: click its ⋯ ("<name>: more"), press Escape, then Tab; open Add a block and press the arrows.
 unit: M54 U2
 should: Focus moves into the menu, the arrows move through it, Esc closes it and returns focus to ⋯ (Keyboard first; WAI-ARIA menu pattern).
-breaks: Focus stays on ⋯ and Escape leaves the menu open; Tab closes it and lands on the width handle, so Open in full, Move earlier, Move later and Remove from this dashboard are out of the keyboard's reach. Add a block ignores the arrows. src/ui/formats/Dashboard.tsx:654 (role=menu with no key handling) and :1213. Owned by M54 F3.
+breaks: Focus stays on ⋯ and Escape leaves the menu open; Tab closes it and lands on the width handle, so Open in full, Move earlier, Move later and Remove from this dashboard are out of the keyboard's reach. Add a block ignores the arrows. src/ui/formats/Dashboard.tsx:654 (role=menu with no key handling) and :1213. Owned by M54 F3. Fixed in M54 F3 (22d61aa). Opening focuses the first item; arrows, Home and End move (disabled passed); Escape closes and returns to ⋯ or Add a block; Tab closes.
 state: fault
 
 ### Demo, project.emd, #/dashboard → Add a block → New chart → Unit (two dates, landed and started) → name it → Declare and add without touching By month of.
@@ -6837,7 +6837,7 @@ state: open
 ### Demo, project.emd, #/dashboard → Add a block → New chart → Unit, landed, per milestone → Declare and add; demo.emd #/dashboard → Add a block → spending. Both themes.
 unit: M54 U2
 should: Every bar carries its value and the numbers are visible beside the chart; each series is named where it is drawn (Every chart has its numbers; Never colour alone; Charts are ink, labelled directly). The format's rollup tab already shows its table.
-breaks: Only the tallest bar is labelled at any block width; series (M1/M2/M3, nine spending categories) are told apart by a colour legend alone; the figures are an sr-only table and a hover readout that is aria-hidden and pointer-only. src/ui/charts/Chart.tsx:95 — with more than one series a label must fit bar + 2 px, and a count's " rows" never does. Owned by M54 F3.
+breaks: Only the tallest bar is labelled at any block width; series (M1/M2/M3, nine spending categories) are told apart by a colour legend alone; the figures are an sr-only table and a hover readout that is aria-hidden and pointer-only. src/ui/charts/Chart.tsx:95 — with more than one series a label must fit bar + 2 px, and a count's " rows" never does. Owned by M54 F3. Fixed in M54 F3 (22d61aa). Every bar labelled, across or stood on its end; a line's series named at its end; whenever the picture does not say every figure the figures are a visible table under it, a series a row beside its dot (the rollup tab keeps its own table). Judge: several series of bars are named in that table, not on the bars themselves.
 state: fault
 
 ### Demo, project.emd, #/dashboard → Add a block → New chart; name it "Landed by month" → Declare and add. Read the block title, the format's tabs, the sidebar and the Add a block menu.
@@ -6855,7 +6855,7 @@ state: fault
 ### Demo, project.emd, #/formats/milestone: open the Roadmap tab, and unit's Ready to start; read the header bar and the h1 on those and on #/agenda.
 unit: M54 U2
 should: A view offered as a tab opens under the same tab strip (One level of tabs), and a screen names itself once.
-breaks: Both open as screens with only "← Unit" and the tab strip gone; Agenda, Roadmap and Ready to start repeat their title in the header bar and the h1. Owned by M54 F3.
+breaks: Both open as screens with only "← Unit" and the tab strip gone; Agenda, Roadmap and Ready to start repeat their title in the header bar and the h1. Owned by M54 F3. Fixed in M54 F3 (22d61aa). Roadmap and Ready to start draw the format's tab strip (their tab current, the format's title the h1, ← Dashboard in the band); Agenda's bar no longer repeats its title.
 state: fault
 
 ### Demo, project.emd, #/formats/unit (Table). In the table's blank row at the foot, type ref, milestone, scope and title, then Enter. Then do the same through Add (the entry form) and through quick add in the entry list.
@@ -6933,7 +6933,7 @@ state: fault
 ### Demo, project.emd: a dashboard chart of units counted by month — its hover readout, the rollup tab's Line chart axis.
 unit: M54 U2
 should: Counts in the format's own word and whole numbers — "1 unit", ticks 0, 1, 2 (Words name the rule).
-breaks: "\"1 rows\"; the line chart's count axis reads \"1 rows / 1.5 rows / 2 rows\". (The roadmap's \"4 of 7 Unit rows done\" is M54 U1's row.) Owned by M54 F3."
+breaks: "\"1 rows\"; the line chart's count axis reads \"1 rows / 1.5 rows / 2 rows\". (The roadmap's \"4 of 7 Unit rows done\" is M54 U1's row.) Owned by M54 F3. Fixed in M54 F3 (22d61aa). A count's axis is {count:{one,many}} in the format's words — \"1 unit\", \"2 units\" — bare on bars and ticks, ticks whole."
 state: fault
 
 ### Demo, project.emd: a date in the table's blank row (type tomorrow); the same date column on the Add form; the same row's entry page beside the table.
@@ -6945,7 +6945,7 @@ state: open
 ### Demo, project.emd: read the h1 on #/dashboard, #/settings/calendar and #/connections.
 unit: M54 U2
 should: Screens name themselves alike with one h1 at one ramp step (consistency; web interface guidelines: hierarchical headings).
-breaks: Dashboard's h1 is secondary-number (20px) semibold, Calendar's title (24px) medium; #/connections has no h1 at all — its first heading is the h2 "Every connection, in words". Owned by M54 F3.
+breaks: Dashboard's h1 is secondary-number (20px) semibold, Calendar's title (24px) medium; #/connections has no h1 at all — its first heading is the h2 "Every connection, in words". Owned by M54 F3. Fixed in M54 F3 (22d61aa). Dashboard, Calendar and Connections each have one h1 text-title. (A format's own page keeps F2's text-body h1.)
 state: fault
 
 ### Demo, project.emd: the rail's format folders (Decision, Inbox, Open question) and the collapse button; read them with a screen reader and measure them.
@@ -6957,7 +6957,7 @@ state: fault
 ### Demo: #/dashboard on custom.emd (empty), #/agenda with nothing ahead, #/connections on a document with no connection.
 unit: M54 U2
 should: One sentence in ink-secondary and one text action, carried by words, not colour (An empty state is one sentence; Never colour alone).
-breaks: The dashboard's is two sentences (Dashboard.tsx:176-178); the agenda's has no action; Connections' says "The two accented ports…" in ink-tertiary (Connections.tsx:248). Owned by M54 F3.
+breaks: The dashboard's is two sentences (Dashboard.tsx:176-178); the agenda's has no action; Connections' says "The two accented ports…" in ink-tertiary (Connections.tsx:248). Owned by M54 F3. Fixed in M54 F3 (22d61aa). "Nothing on this dashboard yet. Add a block"; the agenda's "Show all ahead" or "Open formats"; "No connection yet. Start one" (arms the first format's belongs-to port).
 state: fault
 
 ### Demo: #/dashboard → Add a block (New chart's and Headline total's buttons); Home's notice; a date in project.emd's unit table, its dashboard block and its rollup; an amount in custom.emd's filter band and table.
@@ -7639,7 +7639,7 @@ state: fault
 ### Read the class strings and styles of the dashboard and its charts: tokens.css .fc-chart-val (~914), Dashboard.tsx's ⋯ button and drop targets (:242, :564).
 unit: M54 U2
 should: Mono for raw cells only (One family, two scripts); an icon action is a 28px target with a 16px icon (An icon is an action); no shadow outside the floating rooms (No gradients, no shadows).
-breaks: Chart value labels are Plex Mono at 11px; ⋯ is a 26px target with a 14px icon; drop targets mark with shadow-[-3px_0_0_var(--color-accent)]. (Off-ramp text-[13px]/[11px] across src/ui is M54 U1's row.) Owned by M54 F3.
+breaks: Chart value labels are Plex Mono at 11px; ⋯ is a 26px target with a 14px icon; drop targets mark with shadow-[-3px_0_0_var(--color-accent)]. (Off-ramp text-[13px]/[11px] across src/ui is M54 U1's row.) Owned by M54 F3. Fixed in M54 F3 (22d61aa). .fc-chart-val is sans on --text-label; ⋯ is .fc-icon-action (28px) with a 16px glyph; a drop target is a 2px accent pseudo-element rule.
 state: fault
 
 ### Read the class strings of the ledger's screens (screens/Categories, Overview, ByMerchant, Plan, Transactions, GoalDetail; plan/PlanBar, PointsAt, BucketTable; wealth/parts; savings/; home/parts.tsx:210) — grep text-\[ and -\[…px\].
@@ -15016,11 +15016,18 @@ report: M54 F2 built at de87c49; docs:check green (0 errors, 7 standing warnings
 milestone: M54
 scope: app
 title: Views and dashboards: a keyboard for the block menu, the view's own order, labelled charts, and connections that read
-state: planned
+landed: 2026-11-02
+decision: D-531
+state: built
 brief: M54 fix unit (D-531, D-532). YOUR ROWS, exactly these: `format_rows review_entry search:"Owned by M54 F3." columns:[unit, do, should, breaks]` — 15 rows; the phrases below say what each asks., after F1. Rows (`format_rows review_entry match:{unit:"M54 U2", state:fault} columns:[do, should, breaks]`) by their breaks: 'The dashboard's is two sentences' (empty states: one sentence, one text action); 'Six edges meet at Decision's header' (connection graph overprint, truncation, 10px labels); 'It says "Nothing on the agenda from today on."' (subtitle, the 13 fixed 112px fields); 'Chart value labels are Plex Mono at 11px' (labels, the 26px target, the shadow drop mark); 'The block ignores the view's order'; 'All are ink-tertiary' (popover headings, subtitles, the band's counts and ×, axis labels — ink-secondary, Charts are ink); 'Focus stays on ⋯ and Escape leaves the menu open' (the block menu and Add a block by keyboard); '"₪469.00" is one 32px run' (The magnitude leads, on the ramp); 'It is a read-only search field' (the band's column field); 'Only the tallest bar is labelled' (every bar labelled; several series in category colours, each labelled directly — D-531; figures in text, not hover only); 'The edges draw a 2px accent rule on focus' (resize handles: a visible mark, aria-valuenow); 'Both open as screens with only "← Unit"' (the views' headers, no repeated title); 'Dashboard's h1 is secondary-number' (one h1 per screen on the title step, Connections' h1); '"Each unit belongs to one unit — unit's blocks column"' (a list link said as many; two buttons with one name); '"1 rows"' (plural and the count axis). SWEEP this unit's files as F2's brief says, and add them to surfaceRules.test.ts REVIEWED. Not this unit: the Entry: rows on MakeBlock (M55), FormatRows.tsx (F2's). Verify on project.emd and demo.emd, light and dark; screenshots only for charts in dark. Tests: related, typecheck, privacy, check:tours. Land: 'Fixed in M54 F3 (<commit>).' on each row's breaks, state left `fault` (D-532). Unset: stop and ask.
-files: src/ui/formats/Dashboard.tsx, MakeBlock.tsx (its non-Entry parts only), RollupView.tsx, FilterBand.tsx, ConnectionGraph.tsx, ConnectionPanel.tsx, LinkViews.tsx; src/ui/screens/Dashboard.tsx, Connections.tsx, Agenda.tsx, Calendar.tsx, FormatLinkViews.tsx; src/ui/charts/
+files: src/ui/formats/Dashboard.tsx, MakeBlock.tsx, RollupView.tsx, FilterBand.tsx, ConnectionGraph.tsx, ConnectionPanel.tsx, LinkViews.tsx, rollupChart.ts (+test), surfaceRules.test.ts; src/ui/screens/Dashboard.tsx, Connections.tsx, Agenda.tsx, Calendar.tsx, FormatLinkViews.tsx; src/ui/charts/Chart.tsx, chart.ts, chart.test.ts; src/domain/format/connections.ts (+test: linkSaid); src/ui/theme/tokens.css (.fc-chart-val, .fc-col-tick, .fc-board-card hover); src/frame/routes.test.ts
 blocks: ["M54 F1"]
+taken_by: run-milestone driver
+started: 2026-11-02
+branch: main
+commit: 22d61aa
 paths: "src/ui/formats/Dashboard.tsx\nsrc/ui/formats/MakeBlock.tsx\nsrc/ui/formats/RollupView.tsx\nsrc/ui/formats/FilterBand.tsx\nsrc/ui/formats/ConnectionGraph.tsx\nsrc/ui/formats/ConnectionPanel.tsx\nsrc/ui/formats/LinkViews.tsx\nsrc/ui/screens/Dashboard.tsx\nsrc/ui/screens/Connections.tsx\nsrc/ui/screens/Agenda.tsx\nsrc/ui/screens/Calendar.tsx\nsrc/ui/screens/FormatLinkViews.tsx\nsrc/ui/charts/"
+report: M54 F3 built at 22d61aa; docs:check green (0 errors, 7 standing warnings). No new decision (D-531 covers it). DASHBOARD: the block's ⋯ menu focuses its first item on open, arrows/Home/End move (disabled passed), Escape closes and returns to ⋯, Tab closes; Add a block the same, Escape back to its tile. Resize handles: aria-valuenow/min/max/valuetext on all three (height 0 = as tall as it holds), the corner draws the 2px accent ring; geometry on the steps. ⋯ and the grip are .fc-icon-action (28px; size-7 is 24.5px since the root is 14px) with a 16px glyph. Drop target = a 2px accent pseudo-element rule, no shadow. Headline total: text-title magnitude, symbol and decimals text-heading ink-secondary (preview secondary-number/body). Empty state: 'Nothing on this dashboard yet. Add a block'. Subtitles, headings, asides ink-secondary. CHARTS: every bar labelled (across, else stood on its end, with room above/below); several lines named at their ends; a visible figures table under the chart whenever the picture alone does not say every figure (several series, a line, an unlabelled bar or month); the rollup tab passes figures='elsewhere' (its own table). Counts: ChartAxis {count:{one,many}} from the format title — '1 unit', ticks whole. .fc-chart-val sans on --text-label; .fc-col-tick ink-secondary (reaches the ledger's Home/Year charts too, via the token). FILTER BAND: column field typeable (ChoiceField filter, labels in words), Escape returns focus to it; 'of N rows' / 'Every row'; × a 24px ink-secondary target; popover square, text-body, zero counts and ranges ink-secondary. ROLLUP tab: Bars/Line square, unpressed ink-secondary. AGENDA: subtitle/empty line name the window ('Nothing in the next 7 days. Show all ahead' / 'Open formats'); past 3 formats the dates fold into a details list, fields as wide as their words; bar no longer repeats 'Agenda'. ROADMAP/READY: open under the format's tab strip (h1 = format title, tab current, ← Dashboard in the band), RoadmapView/ReadyView titled=false there (the MCP frame keeps their h1). LINKS HERE: column in words ('Inbox · became unit'). CONNECTIONS: h1 text-title; linkSaid in connections.ts ('Each unit names any number of units in blocks', 'Each open question names one decision in opened by'), list-link port detail 'many units'; 'one' drawn once per point; bubble shows title only; first view fitted (layout effect); empty 'No connection yet. Start one'. Dashboard/Calendar h1 text-title. Sweep: no px type/tracking/leading, between-step spacing, radius, text-ink-tertiary or shadow-[ in the 13 files, guarded in surfaceRules.test.ts (new describe; old guard text-[13px] etc. fails at HEAD~1). ORDER row: no change needed, already held (F2); verified table and list blocks. Board card hover: accent edge + surface + firmer border, no shadow. Verified on demo (port 4184, pane hidden: JS probes + one dark screenshot of a chart). Tests: related (61 files, 1089), privacy, bidiTruncation, typecheck, check:tours (10 runs) green. Look at: several series of BARS are named in the table under the chart, not on the bars. Left: FormatRows.tsx still draws its own copy of the tab strip (FormatLinkViews has a matching one).
 
 ### M54 F4
 milestone: M54
