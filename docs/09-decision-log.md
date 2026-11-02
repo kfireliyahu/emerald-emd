@@ -447,6 +447,7 @@ written out here.
 | D-523 | 2026-10-22 | A repository is set up by `npx emerald-mcp init`, a subcommand of the server's bin: it names or creates the document (with the development pack, as text inside the repository and as bytes outside it), writes CLAUDE.md a section between its own markers holding the start-here table and the column lines from the document, and writes the plugin's two hooks into `.claude/settings.json` only where no Emerald plugin is enabled, never over a hook it did not write; every file is compared before it is written, so a second run changes nothing | [below](#d-523) |
 | D-529 | 2026-11-02 | Design work runs with Impeccable, installed per person and never vendored, its per-edit hook off and its detector run once at the end of a UI unit; it reads a thin `PRODUCT.md` and `DESIGN.md` at the root that point at docs/product.md, tokens.css and the ui rule rows and repeat none of them; the UX-strategy skill set and the design-tool connector are not adopted | [below](#d-529) |
 | D-530 | 2026-11-02 | M54 reviews every surface — the engine's screens, the parked ledger pack's, the desktop shell's chrome, Emerald's page and its tour — against the demo documents in light and dark; each finding is an open `review_entry` row the maintainer judges; a plain breach of a live ui rule row is fixed in place except in the ledger, where it is only recorded; a last unit makes the procedure a project skill | [below](#d-530) |
+| D-531 | 2026-11-02 | M54's rule conflicts answered: needed text is `ink-secondary`, the ramp gains no 13px, a chip is text and a dot everywhere, a chart of several series wears category colours, the entry route replaced the detail pane, the title bar holds no primary, a command has one name in sentence case, the page and the tour keep token sets of their own, and "The database under the chat." leads everywhere | [below](#d-531) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -987,6 +988,54 @@ conditions: not asked for this time.
 
 **Consequences.** M54 is open with nine units; U1 (formats and rows) sets the procedure and U2-U8
 wait on it; U9 waits on all. No schema change.
+
+## D-531 · 2026-11-02 · M54's rule conflicts answered: needed text is `ink-secondary`, the ramp gains no 13px, a chip is text and a dot everywhere, a chart of several series wears category colours, the entry route replaced the detail pane, the title bar holds no primary, a command has one name in sentence case, the page and the tour keep token sets of their own, and "The database under the chat." leads everywhere <a id="d-531"></a>
+
+**Context.** M54's 203 `review_entry` rows were sorted on 2026-11-02 (844c7cf); 51 rows on U1-U4 and
+U6-U8 were rule conflicts, wording, or whether a rule binds a surface. The maintainer answered them
+as twelve decisions, one session (the `review-phase` skill).
+
+**Decision.**
+
+- **Tertiary grey:** what a person needs to read — tabs, axes, counts, headings, labels, a line that
+  reports — is `ink-secondary`; `ink-tertiary` is not raised and stays for what nobody needs. *One
+  level of tabs*, *Charts are ink* and *Contrast 4.5:1* say so; U5's ledger row is the same fault.
+- **13px is a breach, not a missing step:** every size off the ramp moves onto 12 or 14 (or the
+  nearest step); *Every value is a token* says the ramp gains no step for it.
+- **A chip is text and a dot everywhere:** `.fc-state` loses its border app-wide, board and roadmap
+  marks included; *square* in *The views' shapes* means no radius, never a box.
+- **A chart of several series wears category colours**, each series labelled directly.
+- **The mapper rule covers both mappers**: mono, numbers right, mapped `ink`, unmapped `ink-secondary`,
+  the role a small label at rest that opens as a `ChoiceField`.
+- **The entry route replaced the detail pane**: the rule is now *A detail is a page beside its entry
+  list*. **A board card is a card**: the whole card is the link, and it still drags.
+- **Colour as signal:** #/mcp's *removes* goes ink; a month row of Home's All months is a single row
+  and stays ink.
+- **Shell words:** *Save a copy* is renamed *Save as…* (the act stays; the term row is *Save as*); a
+  command has one name across the menu, the palette and the title bar, in sentence case (a new rule);
+  the title bar is chrome and holds no primary, so its Save goes secondary; *Download* stays.
+- **The public page** has one filled primary, the desktop download, on its first screen; its theme is
+  light, dark or system; `page.css` and `frame.css` keep token sets of their own — spacing on the 8px
+  steps, a rem ramp, named durations — and spend them.
+- **The tour's chrome** follows the radius and shadow rules (the outline goes square, pictures lose
+  `--shadow-pop`); the ring and what travels with it keep their own easing as a named token, and the
+  app drawn scaled is a picture, not a rem breach; a click mid-move lands, the take-over included.
+- **"The database under the chat." leads everywhere**: `product.md`'s sentence said first,
+  `PRODUCT.md`, `CLAUDE.md`, `docs/00-index.md`, `conventions.md`, `engine.md` and `package.json`
+  move to it in the fix unit (the README and the page have it already).
+- **The page's and the tour's other words are faults, not settled here**: a unit drafts two or three
+  options per line, quoting the current one, and the maintainer picks or writes.
+
+**Alternatives rejected** (the options the maintainer was offered). Raising `ink-tertiary` to AA, which
+leaves two greys nearly alike. A 13px step between caption and body. A state mark allowed a square
+hairline box. The two-state theme toggle (2026-10-12) and the shield that eats the first click
+(take-over P4): both give way to their rules. *Excel that reads your documents and won't let you be
+wrong quietly* as the line said first: the maintainer chose the page's.
+
+**Consequences.** 46 of the 51 rows are `fault` and 5 `dropped`; U5's tertiary row is `fault` and waits
+while the ledger is parked. Eighteen rule rows changed and one was added. The fixes are units the
+maintainer plans next, from these faults and the 99 sorted on 2026-11-02; until the pitch unit lands,
+the seven files above still lead with the old line. No schema change.
 
 ## Related
 

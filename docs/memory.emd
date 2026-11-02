@@ -4476,6 +4476,15 @@ question: What does M54's design review cover, against which document and under 
 answer: Maintainer, 2026-11-02. Scope: the engine's screens, the ledger pack's (parked, so record only), the shell's chrome (driven over CDP), demo-page.html and the tour. Against: the demo documents npm run dev:demo builds, never a working .emd. Conditions: light and dark at a desktop width only. Findings: one review_entry row each, linked to its unit, state open, judged by the maintainer; those about entering rows by hand start breaks with 'Entry:' for M55. Fixing: a plain breach of a live ui rule row is fixed in place with its test and listed; anything needing judgement is recorded. Tools: /impeccable critique and audit, web-design-guidelines, the ui rule rows; the detector once at the end. A last unit turns the procedure into .claude/skills/design-review with skill-creator. M54 opened.
 state: live
 
+### D-531
+date: 2026-11-02
+milestone: M54
+scope: ui
+title: M54's rule conflicts answered: needed text is ink-secondary, the ramp gains no 13px, a chip is text and a dot everywhere, a chart of several series wears category colours, the entry route replaced the detail pane, the title bar holds no primary, a command has one name in sentence case, the page and the tour keep token sets of their own, and "The database under the chat." leads everywhere
+question: M54's 51 open rows on U1-U4 and U6-U8 that are rule conflicts, wording, or whether a rule binds a surface: which rule gives way, and what does each row become?
+answer: Maintainer, 2026-11-02, as twelve decisions. (1) Text a person needs moves to ink-secondary; ink-tertiary is not raised. (2) 13px and every off-ramp size move onto 12 or 14; no new step. (3) A chip is text and a dot everywhere; .fc-state loses its border; square means no radius. (4) A chart of several series may wear category colours, each labelled. (5) The mapper rule covers the engine's intake grid and the ledger's mapper: mono, numbers right, unmapped ink-secondary, the role a small label that opens as a ChoiceField. (6) The entry route replaced the detail pane (rule renamed A detail is a page beside its entry list); a board card is one link. (7) #/mcp's removes and Home's month rows go ink. (8) Save a copy is renamed Save as…; one name per command in sentence case everywhere (new rule); the title bar holds no primary; Download stays. (9) The page gets one filled primary, the desktop download, on its first screen; its theme is light/dark/system; page.css keeps its own token set. (10) The tour's outline goes square and its pictures lose the shadow, frame.css keeps its own tokens, the ring's easing and the scaled app are exempt, and a click mid-move lands. (11) "The database under the chat." leads everywhere (product.md, PRODUCT.md, CLAUDE.md, 00-index, conventions, engine.md, package.json move to it). (11-12) The page's and the tour's other words are faults; a unit drafts options and the maintainer picks. 46 rows fault, 5 dropped; U5's tertiary row fault.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -6245,8 +6254,8 @@ state: fault
 ### Compare each tour's three names: the rail row (en.ts:30-35 `rows`), its label (`tours.*.label`) and its frame title (`tours.*.title`).
 unit: M54 U7
 should: One name per thing (Words name the rule; the maintainer's simplicity rule).
-breaks: Tour 2 is 'Where the money went', '2 · The ledger' and 'where did this month's money go?'. Tour 3 is 'The project answers first' and '3 · The development pack'. Tour 4 is 'Every hour paid' and '4 · The timesheet'.
-state: open
+breaks: Tour 2 is 'Where the money went', '2 · The ledger' and 'where did this month's money go?'. Tour 3 is 'The project answers first' and '3 · The development pack'. Tour 4 is 'Every hour paid' and '4 · The timesheet'. Verdict 2026-11-02 (D-531): fault; a unit drafts one name per tour, the maintainer picks.
+state: fault
 
 ### Copy an older planner.emd backup from before 2026-10-11 (the 2026-10-09 .bak beside it) somewhere outside any repo, open the copy in the app once (it is at an older schema), then ask a session for search_document on it with the terms the planner.emd scrub hunted (the old address, the note's words, the old account name).
 unit: M47 U6
@@ -6326,8 +6335,8 @@ state: fault
 ### Demo, any document, #/mcp: read the headings and the buttons; look at a tool's removes line.
 unit: M54 U4
 should: One h1 per screen (WCAG 1.3.1/2.4.6); a button named for what it copies; colour for genuine signal only (Colour carries meaning). QUESTION for the maintainer: is removes in negative meant as a warning?
-breaks: The page starts at h2; two buttons are both named Copy; removes is coloured negative (Mcp.tsx:95, :113).
-state: open
+breaks: The page starts at h2; two buttons are both named Copy; removes is coloured negative (Mcp.tsx:95, :113). Verdict 2026-11-02 (D-531): removes is not a warning — it goes ink; the h1 and the Copy names are faults besides.
+state: fault
 
 ### Demo, any document, #/mcp: read the setup snippets.
 unit: M54 U4
@@ -6338,8 +6347,8 @@ state: fault
 ### Demo, any document, light and dark: the dashboard popovers' headings (NEW CHART, HEADLINE TOTAL) and menu descriptions, every block's subtitle, the filter band's zero-count choices, counts, "· 18.00 to 250.00" and its × button, the rollup's Delete chart and unpressed Bars/Line, #/connections' instructions and column names.
 unit: M54 U2
 should: Text a reader needs is at 4.5:1; ink-tertiary only for what is not essential (Contrast 4.5:1 for text). QUESTION for the maintainer: One level of tabs and Charts are ink set tab labels and axis labels in ink-tertiary, and on a chart whose bars are unlabelled the month is the bar's only label — does either rule give way?
-breaks: All are ink-tertiary: 2.62:1 in light, 3.18–3.65:1 in dark (M54 U1 recorded the tab labels alone). The block subtitle is the one the empty dashboard promises says which format a block reads; the band's × is ~12px wide and does what Clear does. Dashboard.tsx:580, :705, :715; MakeBlock.tsx:99; FilterBand.tsx:393, 848-919; Connections.tsx:247.
-state: open
+breaks: All are ink-tertiary: 2.62:1 in light, 3.18–3.65:1 in dark (M54 U1 recorded the tab labels alone). The block subtitle is the one the empty dashboard promises says which format a block reads; the band's × is ~12px wide and does what Clear does. Dashboard.tsx:580, :705, :715; MakeBlock.tsx:99; FilterBand.tsx:393, 848-919; Connections.tsx:247. Verdict 2026-11-02 (D-531): all move to ink-secondary, axis labels too; Charts are ink now says ink-secondary.
+state: fault
 
 ### Demo, any document, light and dark: the theme control at the rail's foot; Tab to it and press the arrows; hover the collapsed rail's theme button.
 unit: M54 U4
@@ -6362,8 +6371,8 @@ state: fault
 ### Demo, any format: the view tabs (Table, Board, List, Dashboard, Claims) in light and dark.
 unit: M54 U1
 should: Question for the maintainer — two live rules disagree: One level of tabs asks for ink-tertiary labels; Contrast 4.5:1 for text keeps ink-tertiary for non-essential text, and a tab's label is how a person finds the view.
-breaks: Inactive tab labels are 2.62:1 on the page in light and 3.65:1 in dark.
-state: open
+breaks: Inactive tab labels are 2.62:1 on the page in light and 3.65:1 in dark. Verdict 2026-11-02 (D-531): move them to ink-secondary; One level of tabs now says ink-secondary.
+state: fault
 
 ### Demo, custom.emd (no ledger), #/formats/card_charge/read → drop bank-statement.csv anywhere outside the dashed box.
 unit: M54 U3
@@ -6416,8 +6425,8 @@ state: fault
 ### Demo, custom.emd, #/formats/card_charge/read → Change: the intake grid's preview cells.
 unit: M54 U3
 should: Numbers right-aligned (Numbers right, text left — plain). QUESTION for the maintainer: does The mapper shows the raw cell (mono, mapped in ink, unmapped tertiary) cover this engine mapper as well as the ledger's?
-breaks: Every cell is Plex Sans, ink-secondary and left-aligned: "₪ 421.05" and "5,000.00" sit left, and mapped columns look the same as unmapped. IntakePanel.tsx ~137-153.
-state: open
+breaks: Every cell is Plex Sans, ink-secondary and left-aligned: "₪ 421.05" and "5,000.00" sit left, and mapped columns look the same as unmapped. IntakePanel.tsx ~137-153. Verdict 2026-11-02 (D-531): the mapper rule covers this grid too — mono, numbers right, mapped ink, unmapped ink-secondary, the role a small label.
+state: fault
 
 ### Demo, custom.emd, #/formats/card_charge: Filter by → amount → From 50 → Enter. Then filter date instead and compare.
 unit: M54 U2
@@ -6488,14 +6497,14 @@ state: fault
 ### Demo, demo.emd, #/ in light and dark: Home's All months column headers and a card's missing-statement line ("Everyday Card ···1234 · No statement read for this month"); the palette's group headings and counts (Ctrl+K); the rail folders' entry counts; #/settings/packs' list of places; #/settings/export's shortcut line; #/mcp's tool names and its two notes; the guide's mono reopen line.
 unit: M54 U4
 should: Text a person needs is at least 4.5:1 and ink-tertiary is for non-essential text only (Contrast 4.5:1 for text). QUESTION for the maintainer: the missing-statement line is the genuine signal the product exists for, and ink-tertiary is 2.45-2.62:1 in light — move these to ink-secondary (5.33:1 light, 7.61:1 dark), or raise ink-tertiary itself?
-breaks: All in ink-tertiary: 2.45-2.62:1 in light (fails even 3:1), 3.18-3.65:1 in dark. Home.tsx:555, :601; CommandPalette.tsx:385-386; RailFolder.tsx:139; Packs.tsx; Export.tsx; Mcp.tsx:40,47,121; Guide.tsx:113.
-state: open
+breaks: All in ink-tertiary: 2.45-2.62:1 in light (fails even 3:1), 3.18-3.65:1 in dark. Home.tsx:555, :601; CommandPalette.tsx:385-386; RailFolder.tsx:139; Packs.tsx; Export.tsx; Mcp.tsx:40,47,121; Guide.tsx:113. Verdict 2026-11-02 (D-531): move to ink-secondary; ink-tertiary itself is not raised.
+state: fault
 
 ### Demo, demo.emd, #/: Home's All months table — Tab to a month, press Space, scroll; and read its rows' colours.
 unit: M54 U4
 should: A data table: sticky header on its own scroll region; a row you open behaves as a link or button. QUESTION for the maintainer: The four flows colour Home's figures says a single row stays ink — is a month row a single row?
-breaks: Rows are <tr tabIndex=0> with no role and Space does nothing; the header does not stick; each month row's figures wear their flow colours (Home.tsx:571-580).
-state: open
+breaks: Rows are <tr tabIndex=0> with no role and Space does nothing; the header does not stick; each month row's figures wear their flow colours (Home.tsx:571-580). Verdict 2026-11-02 (D-531): a month row is a single row and stays ink; the keyboard and sticky header are faults besides.
+state: fault
 
 ### Demo, demo.emd, #/agenda: click 7 days (a later row exists); then read the "by" sentence above it.
 unit: M54 U2
@@ -6518,8 +6527,8 @@ state: open
 ### Demo, demo.emd, #/dashboard → Add a block → spending (a rollup by category), both themes.
 unit: M54 U2
 should: QUESTION for the maintainer: Charts are ink, labelled directly allows category colours only for a donut, and Category colours are dots says never as a background. Is a multi-series rollup an allowed exception?
-breaks: Rollup series fill bars and lines with category hues — nine on demo's spending.
-state: open
+breaks: Rollup series fill bars and lines with category hues — nine on demo's spending. Dropped 2026-11-02 (D-531): a chart of several series may wear category colours, each series labelled directly; Charts are ink and Category colours are dots now say so.
+state: dropped
 
 ### Demo, demo.emd, #/paychecks → Open alone ("Read a paycheck"): the "Open a paycheck" control and the text box.
 unit: M54 U3
@@ -6560,8 +6569,8 @@ state: fault
 ### Demo, demo.emd, #/read → Map its columns: each column's role above the grid, and the unmapped cells and rows above the header. Both themes.
 unit: M54 U3
 should: QUESTION for the maintainer: The mapper shows the raw cell asks for the role as a small label rather than dropdown chrome, and unmapped cells in ink-tertiary; Choices are ChoiceField (the role is a choice) and Contrast 4.5:1 for text (cells the person reads to decide) pull the other way. Which gives?
-breaks: The role is a boxed field in each header (now a ChoiceField, M54 U3; was a <select>); unmapped columns and pre-header rows are ink-tertiary at 2.45:1 light, 3.38:1 dark. SheetGrid.tsx role field ~297, cell tone ~142/198.
-state: open
+breaks: The role is a boxed field in each header (now a ChoiceField, M54 U3; was a <select>); unmapped columns and pre-header rows are ink-tertiary at 2.45:1 light, 3.38:1 dark. SheetGrid.tsx role field ~297, cell tone ~142/198. Verdict 2026-11-02 (D-531): rule amended — the role is a small label at rest that opens as a ChoiceField on focus or click; unmapped cells in ink-secondary.
+state: fault
 
 ### Demo, demo.emd, #/read → add installments.xlsx (or typed-cells.xlsx) → Map its columns. Read the top of the screen.
 unit: M54 U3
@@ -6572,8 +6581,8 @@ state: fault
 ### Demo, demo.emd, #/read → installments.xlsx → Map its columns: the preview strip's "1/3" installments tag. Both themes.
 unit: M54 U3
 should: Text, or text and a dot, no border and no radius (A chip is text and a dot; Square by spending the radius tokens).
-breaks: A rounded, bordered pill (rounded border border-hairline). PreviewStrip.tsx Tag (~116).
-state: open
+breaks: A rounded, bordered pill (rounded border border-hairline). PreviewStrip.tsx Tag (~116). Verdict 2026-11-02 (D-531): text and a dot.
+state: fault
 
 ### Demo, demo.emd, #/read → payslip-2026-07.txt → A paycheck → #/paychecks/read.
 unit: M54 U3
@@ -6585,8 +6594,8 @@ state: fault
 ### Demo, demo.emd, #/read → typed-cells.xlsx: the NO READER YET chip.
 unit: M54 U3
 should: A file with no reader is not a problem: a neutral or waiting tone, text and a dot, said once. QUESTION for the maintainer: A chip is text and a dot (no border) disagrees with the shared .fc-state border that A state has a tone draws — app-wide.
-breaks: The chip is red (data-tone negative) and bordered, and the words beside it repeat it: "no reader knows these columns yet". tokens.css ~972-976, ~1267-1270; ReadStatements.tsx file row.
-state: open
+breaks: The chip is red (data-tone negative) and bordered, and the words beside it repeat it: "no reader knows these columns yet". tokens.css ~972-976, ~1267-1270; ReadStatements.tsx file row. Verdict 2026-11-02 (D-531): the chip rule wins app-wide — no border on .fc-state; this one is also not a problem, so not negative, and said once.
+state: fault
 
 ### Demo, demo.emd, #/read/readers: the reader row Everyday Card.
 unit: M54 U3
@@ -6729,8 +6738,8 @@ state: open
 ### Demo, demo.emd, light and dark: every ledger table's column headers (#/transactions, #/paychecks, #/year, #/wealth/debts), the editors' field labels (SALARY MONTH, GROSS, WHICH DEBT), the detail panes' labels (ACCOUNT, PURCHASED), #/year's 'Not in this document' / 'Not yet', a paycheck's 'not checked: no bank statement…', the debt pane's sentences, a reader's 'used once', and #/paychecks/deductions' two explainer paragraphs.
 unit: M54 U5
 should: Text a person needs to read is at least 4.5:1 on its plane; ink-tertiary only for what is not essential (rule: Contrast 4.5:1 for text).
-breaks: All are ink-tertiary: 2.62:1 on the page in light, 3.38-3.65:1 in dark. 331 uses of text-ink-tertiary across the ledger's screens. QUESTION, the same as M54 U2's and U4's: One level of tabs and Charts are ink put tab and axis labels in ink-tertiary on purpose.
-state: open
+breaks: All are ink-tertiary: 2.62:1 on the page in light, 3.38-3.65:1 in dark. 331 uses of text-ink-tertiary across the ledger's screens. Verdict 2026-11-02 (D-531), the same as U1/U2/U4's: what a person needs to read moves to ink-secondary. The fix waits while the ledger is parked.
+state: fault
 
 ### Demo, demo.emd, with a screen reader: #/paychecks → Edit (the lines' Remove); #/categories/rules (each rule's Edit, Disable, Delete); #/read/readers (Delete).
 unit: M54 U5
@@ -6855,14 +6864,14 @@ state: fault
 ### Demo, project.emd, #/formats/unit/board and #/formats/milestone/roadmap, both themes: the M2 and SESSION 1 marks on a card, and the PLANNED / OPEN state marks.
 unit: M54 U1
 should: Question for the maintainer: the rule A chip is text and a dot says no border; The views' shapes says labels and chips are uppercase and square. Are these marks chips, and may they carry a 1px border?
-breaks: They are .fc-state with a 1px solid border — boxed labels, not text and a dot.
-state: open
+breaks: They are .fc-state with a 1px solid border — boxed labels, not text and a dot. Verdict 2026-11-02 (D-531): text and a dot everywhere — .fc-state loses its border app-wide; square in The views' shapes means no radius, never a box.
+state: fault
 
 ### Demo, project.emd, #/formats/unit/board: click a card anywhere but its title.
 unit: M54 U1
 should: Question for the maintainer: the rule A card is one link says the whole card is the link (a stretched link). Does a board card count as a card in that rule?
-breaks: A board card is an <article> and only its title opens it (BoardView.tsx); a click elsewhere on the card does nothing.
-state: open
+breaks: A board card is an <article> and only its title opens it (BoardView.tsx); a click elsewhere on the card does nothing. Verdict 2026-11-02 (D-531): a board card is a card — the whole card is the link, and it still drags.
+state: fault
 
 ### Demo, project.emd, #/formats/unit/dashboard (or Board, List) with a rollup declared: click its tab once.
 unit: M54 U2
@@ -6891,8 +6900,8 @@ state: fault
 ### Demo, project.emd, #/formats/unit: open a row (the row's Open icon, a board card's title, or Add). Also open #/formats/unit/page/<any entry>.
 unit: M54 U1
 should: Question for the maintainer: the rule A detail is a pane beside its list says 30rem, at most 45% of the row, and the way out is one word, Close. Is the entry route that pane, or has the entry (an entry list plus a full-width page) replaced the rule?
-breaks: The table or board is replaced by an entry list and a full-width page; the way out is ← Board / ← Table. /formats/:name/page/:entry now redirects to /entry/ (FormatLinkViews.tsx), so the page view the brief lists no longer exists as its own screen.
-state: open
+breaks: The table or board is replaced by an entry list and a full-width page; the way out is ← Board / ← Table. /formats/:name/page/:entry now redirects to /entry/. Dropped 2026-11-02 (D-531): the entry route replaced the pane; the rule is now A detail is a page beside its entry list.
+state: dropped
 
 ### Demo, project.emd, #/formats/unit: quick add's placeholder, the + button in the entry list, and the Add form's refusals.
 unit: M54 U1
@@ -7025,8 +7034,8 @@ state: fault
 ### Get the 'Emerald <version> is out' notice and read its button.
 unit: M54 U6
 should: QUESTION for the maintainer: the shell rule 'One address leaves for the browser' names the button Download; Words name the rule suggests 'Open download page', since it downloads nothing.
-breaks: Download opens the release page in the browser and the notice goes away (Notices.tsx:397).
-state: open
+breaks: Download opens the release page in the browser and the notice goes away (Notices.tsx:397). Dropped 2026-11-02 (D-531): the maintainer keeps Download — the page is where the download is.
+state: dropped
 
 ### Give a currency for a whole file with fixed
 unit: M34 T1
@@ -7101,8 +7110,8 @@ state: fault
 ### In any tour, light and dark, read the step counter ('3 / 5'), the Speed label, the chat panel's 'A conversation, written for this tour.', its 'Person'/'Model' labels, and the narrow note 'Try it yourself on a wider screen.'
 unit: M54 U8
 should: Essential text at 4.5:1 (Contrast 4.5:1 for text; ink-tertiary is for non-essential text only).
-breaks: All are ink-tertiary on surface: 2.45:1 light, 3.38:1 dark. Earlier chat lines dimmed to 0.55 read ~4.2:1 in light and their labels ~1.6:1. Which of these is essential is the same question U2, U4 and U5 raised.
-state: open
+breaks: All are ink-tertiary on surface: 2.45:1 light, 3.38:1 dark. Earlier chat lines dimmed to 0.55 read ~4.2:1 in light and their labels ~1.6:1. Verdict 2026-11-02 (D-531): what a visitor reads moves to ink-secondary.
+state: fault
 
 ### In light, look at the dots of steps not yet reached in any tour's strip.
 unit: M54 U8
@@ -7113,8 +7122,8 @@ state: fault
 ### In light, read the inbox diagram's file names (.inbox-file, page.css:590-594). This is the same question as U2's and U4's ink-tertiary rows.
 unit: M54 U7
 should: Contrast 4.5:1 for text: ink-tertiary only for text nobody needs.
-breaks: shop.emd, site.emd and notes.emd are ink-tertiary at about 2.4:1 in light, yet they carry the inbox story.
-state: open
+breaks: shop.emd, site.emd and notes.emd are ink-tertiary at about 2.4:1 in light, yet they carry the inbox story. Verdict 2026-11-02 (D-531): move to the page's secondary grey.
+state: fault
 
 ### In the desktop app, declare a format with a `file` column in a document of your own; Choose… a file under the document's folder, drop one from Explorer, and paste a path; click the name and 'show in folder'.
 unit: M37 U6
@@ -7151,8 +7160,8 @@ state: fault
 ### In the shell, open a document, then File › Save a Copy… (or Ctrl+Shift+S), name it and keep editing.
 unit: M54 U6
 should: QUESTION for the maintainer: the live term row 'Save a copy' says it carries on in the new file — which is what every platform calls Save As (Words name the rule). Either the name changes, or the act keeps the window on the original. The native dialog should carry the action's own title.
-breaks: The window moves onto 'x (copy).emd' and later saves go there; the original is left behind. showSaveDialog has no title, so Windows titles it 'Save As' under a menu item that says Save a Copy (main.ts:510).
-state: open
+breaks: The window moves onto 'x (copy).emd' and later saves go there; the original is left behind. showSaveDialog has no title, so Windows titles it 'Save As' under a menu item that says Save a Copy (main.ts:510). Verdict 2026-11-02 (D-531): keep the act, rename it Save as… everywhere, with the dialog titled to match; the term row is now Save as.
+state: fault
 
 ### In the shell, with a document open, crash the page (or let it be killed by the OS), then close the window with unsaved work.
 unit: M54 U6
@@ -7193,8 +7202,8 @@ state: fault
 ### Let any tour lose its way (timesheet 6/6 above), then read the strip.
 unit: M54 U8
 should: One plain sentence that says what happened and points at Watch or Reset, with no anchor ids (An empty state is one sentence; Nielsen 9, recover from errors). The wording is the maintainer's.
-breaks: The strip shows the internal anchor in negative, 'Step 26: nothing on the screen is "field-end".', or 'The tour stopped: Error: …' for an unexpected error; nothing says what to do next, and the line stays up after the visitor changes the document. Question for the maintainer.
-state: open
+breaks: The strip shows the internal anchor in negative, 'Step 26: nothing on the screen is "field-end".', or 'The tour stopped: Error: …' for an unexpected error; nothing says what to do next, and the line stays up after the visitor changes the document. Verdict 2026-11-02 (D-531): fault; a unit drafts the sentence, the maintainer picks.
+state: fault
 
 ### Link to a row whose name is not unique (tasks, study periods)
 unit: M34 T1
@@ -7217,8 +7226,8 @@ state: fault
 ### Look at any screen in the shell with a document open and unsaved.
 unit: M54 U6
 should: QUESTION for the maintainer: One primary action per screen — does the title bar's Save count against the screen's own primary?
-breaks: Save is always variant primary in the chrome (DocumentBar.tsx:127), so a screen with its own primary shows two filled buttons (Home's Read files beside it).
-state: open
+breaks: Save is always variant primary in the chrome (DocumentBar.tsx:127), so a screen with its own primary shows two filled buttons (Home's Read files beside it). Verdict 2026-11-02 (D-531): the title bar is chrome and holds no primary — its Save goes secondary.
+state: fault
 
 ### Look at the Claude extension's card (demo-page.html:242).
 unit: M54 U7
@@ -7229,14 +7238,14 @@ state: fault
 ### Look at the outline drawn around a box in custom 5/5, development 3/4 or 4/4 (Frame.tsx, the tour-look rect).
 unit: M54 U8
 should: Whether Square by spending the radius tokens, written for cards and controls, binds the tour's own outline.
-breaks: The outline is <rect rx="6" ry="6">, a rounded line round square rows and cards, a literal radius rather than a token; the chat line's own outline is already square. Not changed: it would change the public page. Question for the maintainer.
-state: open
+breaks: The outline is <rect rx="6" ry="6">, a rounded line round square rows and cards, a literal radius rather than a token; the chat line's own outline is already square. Verdict 2026-11-02 (D-531): the radius rule binds the tour — the outline goes square.
+state: fault
 
 ### Look at the receipt in custom 4/5 and, below 690px, the crop's chat card (frame.css .tour-beside img, .tour-chat-card .tour-line).
 unit: M54 U8
 should: Whether a picture on the desk, or a floating card, is one of the rooms that float that --shadow-pop belongs to (No gradients, no shadows).
-breaks: Both carry --shadow-pop. (Watch the tour's shadow was removed in this unit: it is a control.) Question for the maintainer.
-state: open
+breaks: Both carry --shadow-pop. (Watch the tour's shadow was removed in this unit: it is a control.) Verdict 2026-11-02 (D-531): a picture or card in the tour is not a floating room — both lose the shadow.
+state: fault
 
 ### Look at the views as screens: the milestone roadmap, the boards, a page.
 unit: M27 U4
@@ -7271,8 +7280,8 @@ state: open
 ### Mid-tour, in any tour, click a control on the app.
 unit: M54 U8
 should: Nothing is blocked by motion says 'a click mid-move lands'; the take-over decision P4 says the shield takes it. Which holds is the maintainer's.
-breaks: The shield takes the click and only switches to Try it; what was clicked is not acted on, so the visitor clicks again. The only cue is the pointer cursor and a 'Click to take over' tooltip. Question for the maintainer.
-state: open
+breaks: The shield takes the click and only switches to Try it; what was clicked is not acted on, so the visitor clicks again. The only cue is the pointer cursor and a 'Click to take over' tooltip. Verdict 2026-11-02 (D-531): the click lands — the shield switches to Try it and passes the click through; take-over P4 gives way.
+state: fault
 
 ### Move a document that is on the recents list, then pick it from Open recent in the title bar (or File › Open Recent).
 unit: M54 U6
@@ -7348,8 +7357,8 @@ state: accepted
 ### Open /tour.html?tour=custom (no autoplay) and look at 1/5, 'Here is the card statement. One of these is the grocery store.'; then let it loop, or press Reset, and time 1/5. Also development 1/4.
 unit: M54 U8
 should: The statement is on screen while the caption says it, and the outlined row is held long enough to read (the tour_step contract: a caption says what is happening).
-breaks: The held first frame shows the empty Dashboard ('Nothing on this dashboard yet.'); on a loop or Reset the Formats list stays ~4.8 s, and the statement with its outlined CORNER MARKET row appears only ~1.6 s before 2/5 replaces the caption. development 1/4 also opens on the empty dashboard. Question: the rows are the maintainer's.
-state: open
+breaks: The held first frame shows the empty Dashboard ('Nothing on this dashboard yet.'); on a loop or Reset the Formats list stays ~4.8 s, and the statement with its outlined CORNER MARKET row appears only ~1.6 s before 2/5 replaces the caption. development 1/4 also opens on the empty dashboard. Verdict 2026-11-02 (D-531): fault; a unit fixes the timing and drafts any caption change for the maintainer to pick.
+state: fault
 
 ### Open /tour.html?tour=ledger (no autoplay) and press Tab from the top.
 unit: M54 U8
@@ -7416,8 +7425,8 @@ state: open
 ### Open any tour at 1024 wide (a desktop width) and read the app's text inside the frame.
 unit: M54 U8
 should: Whether rem for type (so zoom and the reader's font size are respected) binds an app the frame draws scaled.
-breaks: The app is drawn at scale(0.742), so its 13px text appears ~9.6px, and browser zoom cannot enlarge what the transform shrinks. Question for the maintainer.
-state: open
+breaks: The app is drawn at scale(0.742), so its 13px text appears ~9.6px, and browser zoom cannot enlarge what the transform shrinks. Dropped 2026-11-02 (D-531): the app the tour draws scaled is a picture of the app, not a rem breach; rem for type now says so.
+state: dropped
 
 ### Open docs/memory.emd in the app and look at the units board, which now shows taken_by and branch on every card
 unit: M51 U2
@@ -7433,8 +7442,8 @@ state: fault
 ### Open getemerald.dev at a desktop width, in either theme, and look at the first screen (#story).
 unit: M54 U7
 should: A stranger sees what to do next on the first screen, before they scroll: a way to get it, or the source (Impeccable persuade: the action above the fold).
-breaks: The first screen holds the h1, the tagline, the story, the twelve-row rail and the top of tour 1. It has no download and no repo action. The only ways onward are the rail row '12 Get Emerald' and a 12px 'Source' link in the rail foot. Get Emerald starts about 9,300px down a 10,659px page.
-state: open
+breaks: The first screen holds the h1, the tagline, the story, the twelve-row rail and the top of tour 1. It has no download and no repo action. The only ways onward are the rail row '12 Get Emerald' and a 12px 'Source' link in the rail foot. Get Emerald starts about 9,300px down a 10,659px page. Verdict 2026-11-02 (D-531): the desktop download, filled, on the first screen.
+state: fault
 
 ### Open site.emd in the app once (it is at schema 60 anyway), look at #/formats, then ask start_here on it in a session
 unit: M47 U5
@@ -7489,32 +7498,32 @@ state: accepted
 ### QUESTION for the maintainer. Press the theme button twice (main.ts:86-107).
 unit: M54 U7
 should: The theme is light, dark or system, system the default (The theme is applied before first paint). main.ts says the two-state toggle was deliberate (2026-10-12). Does that hold against the rule?
-breaks: It is a light/dark toggle. Once pressed, the page stops following the system and there is no way back.
-state: open
+breaks: It is a light/dark toggle. Once pressed, the page stops following the system and there is no way back. Verdict 2026-11-02 (D-531): three states, light, dark and system, system the default — the 2026-10-12 two-state choice gives way to the rule.
+state: fault
 
 ### QUESTION for the maintainer. Read page.css's spacing: gaps, paddings and margins.
 unit: M54 U7
 should: Every value is a token, and nothing sits between the spacing steps (--spacing-1..16). Question: does that bind the page's own hand-written sheet, ported from the approved M33 U8 mockup? Not fixed here, because moving the off-step values changes the public page's layout.
-breaks: No var(--spacing-*) is used anywhere. Values sit between the steps: 10px (109, 613), 14px (356), 6px (133, 170, 178, 526, 608, 924), 7px (278), 35px (233, 240).
-state: open
+breaks: No var(--spacing-*) is used anywhere. Values sit between the steps: 10px (109, 613), 14px (356), 6px (133, 170, 178, 526, 608, 924), 7px (278), 35px (233, 240). Verdict 2026-11-02 (D-531): page.css gets a token set of its own and spends it; spacing on the 8px steps.
+state: fault
 
 ### QUESTION for the maintainer. Read page.css's type sizes.
 unit: M54 U7
 should: Every value is a token and rem for type, but the --text-* ramp is in px. Question: does the page get its own token ramp in rem, with the near-duplicates folded (0.8125, 0.875 and 0.9375rem; 1.0625 and 1.125rem)?
-breaks: There are about 13 rem literals: 0.6875, 0.75, 0.8125, 0.875, 0.9375, 1, 1.0625, 1.125, 1.375, 1.5, 1.625, 2.5 and 3.5rem. The h1 is 56px against --text-hero's 40px.
-state: open
+breaks: There are about 13 rem literals: 0.6875, 0.75, 0.8125, 0.875, 0.9375, 1, 1.0625, 1.125, 1.375, 1.5, 1.625, 2.5 and 3.5rem. The h1 is 56px against --text-hero's 40px. Verdict 2026-11-02 (D-531): yes — the page gets its own rem ramp with the near-duplicates folded, and its own hero size.
+state: fault
 
 ### QUESTION for the maintainer. Read the hero tagline (en.ts:47, `hero.tagline`) beside docs/product.md (D-238) and the README's first line.
 unit: M54 U7
 should: One settled pitch across the page, the README and product.md. Which one is the maintainer's call.
-breaks: The page says "The database under the chat." product.md says the sentence said first is "Excel that reads your documents and won't let you be wrong quietly." en.ts says the tagline is the README's first line, so the README and product.md disagree. A stranger may also not know which chat is meant.
-state: open
+breaks: The page says "The database under the chat." product.md says the sentence said first is "Excel that reads your documents and won't let you be wrong quietly." en.ts says the tagline is the README's first line, so the README and product.md disagree. A stranger may also not know which chat is meant. Verdict 2026-11-02 (D-531): "The database under the chat." leads everywhere — product.md's sentence said first, PRODUCT.md, CLAUDE.md, docs/00-index.md, conventions.md, engine.md and package.json's description move to it; the README and the page already have it.
+state: fault
 
 ### QUESTION for the maintainer. Scroll to Get Emerald (#download, .foot .ways and .downloads).
 unit: M54 U7
 should: One primary action per screen: accent-filled. Question: does a persuade page get one filled primary, such as the desktop download, when the rule was written for app screens?
-breaks: The seven ways in are equal-weight cards. The page's only filled button, the form's Send, is hidden because FORM_ACTION is ''. So the page has no primary action at all, and its strongest moment ends on equal cards.
-state: open
+breaks: The seven ways in are equal-weight cards. The page's only filled button, the form's Send, is hidden because FORM_ACTION is ''. So the page has no primary action at all, and its strongest moment ends on equal cards. Verdict 2026-11-02 (D-531): one filled primary, the desktop download; the other ways stay equal cards.
+state: fault
 
 ### Read DocumentPane.tsx (a PDF page under the reading's marks).
 unit: M54 U3
@@ -7526,8 +7535,8 @@ state: fault
 ### Read Get Emerald's lead (en.ts:209, `foot.lead`) and the order of the cards (demo-page.html:227-276).
 unit: M54 U7
 should: The order leads with what most strangers will install (PRODUCT.md's two crowds). The maintainer picks the order.
-breaks: It says "Five ways in, all free: the source, the Claude extension, the Claude plugin, the npm package and the desktop app." `git clone` comes first and the desktop app comes last, under a small label. The ledger crowd needs the app and reaches it last.
-state: open
+breaks: It says "Five ways in, all free: the source, the Claude extension, the Claude plugin, the npm package and the desktop app." `git clone` comes first and the desktop app comes last, under a small label. The ledger crowd needs the app and reaches it last. Verdict 2026-11-02 (D-531): fault; the desktop download is the page's filled primary (d98b19a9), and a words unit drafts the lead and order for the maintainer to pick.
+state: fault
 
 ### Read MCP's tool counts (en.ts:163) beside the server's tool list.
 unit: M54 U7
@@ -7538,14 +7547,14 @@ state: fault
 ### Read Packs (en.ts:173) beside The engine (en.ts:83). Check the term rows (`format_rows term search:"format"`).
 unit: M54 U7
 should: One word for the thing, defined once (Words name the rule; the term rows).
-breaks: Packs says "A pack is formats somebody already worked out…" and the page never says what a format is. The engine calls the same thing a table: "Declare a table for anything you keep".
-state: open
+breaks: Packs says "A pack is formats somebody already worked out…" and the page never says what a format is. The engine calls the same thing a table: "Declare a table for anything you keep". Verdict 2026-11-02 (D-531): fault; a words unit drafts options, the maintainer picks.
+state: fault
 
 ### Read The engine's caption (en.ts:90, `engine.caption`) under the claim card (#claim).
 unit: M54 U7
 should: The caption describes what plays under it.
-breaks: It says "There you typed it in; here a model reads it…". The card is a drawn animation (claim.ts:5, 'drawn until the recording exists'), and no model appears in it.
-state: open
+breaks: It says "There you typed it in; here a model reads it…". The card is a drawn animation (claim.ts:5, 'drawn until the recording exists'), and no model appears in it. Verdict 2026-11-02 (D-531): fault; a words unit drafts options, the maintainer picks.
+state: fault
 
 ### Read TitleBar.tsx:52 and main.ts:895.
 unit: M54 U6
@@ -7591,14 +7600,14 @@ state: open
 ### Read en.ts:184, en.ts:143 and en.ts:88.
 unit: M54 U7
 should: Words a stranger outside the maintainer's country and history can parse.
-breaks: "\"A year of study-fund reports read in…\": a study fund is a local savings product. \"every shekel followed\" is a local currency. \"Anything counts. Years of old accounts found in mail became one row each, and none was missed when closing them.\" is hard to parse."
-state: open
+breaks: "\"A year of study-fund reports read in…\": a study fund is a local savings product. \"every shekel followed\" is a local currency. \"Anything counts. Years of old accounts found in mail became one row each, and none was missed when closing them.\" is hard to parse. Verdict 2026-11-02 (D-531): fault; a words unit drafts options, the maintainer picks."
+state: fault
 
 ### Read frame.css's literal values: font sizes 11, 13, 17px; spacing 6, 7, 10, 14, 18px and the on-step 8/12/16/24px literals; durations tour-echo 380ms, the --travel 933ms default, and Crossfade's setTimeout 400 in Frame.tsx.
 unit: M54 U8
 should: Every value is a token, nothing between the spacing steps, one duration, one easing.
-breaks: None of these is a token; 11/13/17px and the off-step spacing have no step at all, so each change would change what the public page draws. The same question as U7's on whether the ramp and the spacing tokens bind a hand-written sheet.
-state: open
+breaks: None of these is a token; 11/13/17px and the off-step spacing have no step at all, so each change would change what the public page draws. Verdict 2026-11-02 (D-531): frame.css gets a token set of its own, as page.css does — a rem ramp, spacing on the 8px steps, named durations (the ring's travel among them).
+state: fault
 
 ### Read notes with inline #tags
 unit: M34 T1
@@ -7609,8 +7618,8 @@ state: open
 ### Read page.css's animation timings: 249, 374, 434-449.
 unit: M54 U7
 should: One duration, one easing; every duration a --duration-* token. Not fixed: changing them changes how the public page enters.
-breaks: The literals are 700ms for the gem, 300/420/540ms hero delays, 120ms + 45ms per facet, 200ms + 30ms and 50ms per row. The hero's entrance is also polish rather than one of the four changes motion may say.
-state: open
+breaks: The literals are 700ms for the gem, 300/420/540ms hero delays, 120ms + 45ms per facet, 200ms + 30ms and 50ms per row. The hero's entrance is also polish rather than one of the four changes motion may say. Verdict 2026-11-02 (D-531): the page's durations become named tokens of its own sheet.
+state: fault
 
 ### Read page.css:718 and 763 against the header's claim (page.css:8-9) that the page mirrors for a right-to-left language.
 unit: M54 U7
@@ -7633,50 +7642,50 @@ state: open
 ### Read the class strings of the surface: src/ui/RailFolder.tsx, About.tsx, guide/Guide.tsx, guide/GuideLine.tsx, EarlierCopies.tsx, Sidebar.tsx, CommandPalette.tsx, screens/Home.tsx (grep text-\[ and -\[…px\], style={{).
 unit: M54 U4
 should: rem for type; Every value is a token; Nothing between the spacing steps. QUESTION for the maintainer: most of these are 13px — does the ramp want a 13px step?
-breaks: Type the ramp has no step for: text-[13px], [12.5px], [11px], [10px], [15px], [34px] (RailFolder 7, About 10, Guide 6, EarlierCopies 5, Sidebar 2, GuideLine 2, Overview 1); inline pixel sizes: the rail width 56/200 (Sidebar.tsx:75) and paddingLeft 46+indent (RailFolder); off-scale spacing pl-[26px], h-[34px], h-[26px], gap-[3px].
-state: open
+breaks: Type the ramp has no step for: text-[13px], [12.5px], [11px], [10px], [15px], [34px] (RailFolder 7, About 10, Guide 6, EarlierCopies 5, Sidebar 2, GuideLine 2, Overview 1); inline pixel sizes: the rail width 56/200 (Sidebar.tsx:75) and paddingLeft 46+indent (RailFolder); off-scale spacing pl-[26px], h-[34px], h-[26px], gap-[3px]. Verdict 2026-11-02 (D-531): no 13px step; each moves onto 12 or 14 (or the ramp's nearest step).
+state: fault
 
 ### Read the class strings of the surface: src/ui/formats/EntryView.tsx, EntryValue.tsx, EntryList.tsx, ListView.tsx, LinkViews.tsx, BoardView.tsx, FormatRows.tsx (grep text-\[ and -\[…px\]).
 unit: M54 U1
 should: Question for the maintainer: rules Every value is a token, Nothing between the spacing steps and rem for type. The ramp has no 13px, 11px-without-tracking, 10px or 28px; is 13px a missing step (the most used size in src/ui, 66 times) or a breach to be moved onto 12 or 14?
-breaks: After M54 U1's fix of the sizes the ramp has, 26 type sizes with no ramp step remain on the surface (text-[13px] most) and 45 spacing and size literals between the 8px steps (gap-[18px], gap-x-[22px], px-[7px], min-h-[41px], h-[22px]…); 193 pixel type sizes across src/ui.
-state: open
+breaks: After M54 U1's fix of the sizes the ramp has, 26 type sizes with no ramp step remain on the surface (text-[13px] most) and 45 spacing and size literals between the 8px steps (gap-[18px], gap-x-[22px], px-[7px], min-h-[41px], h-[22px]…); 193 pixel type sizes across src/ui. Verdict 2026-11-02 (D-531): a breach, not a missing step — 13px moves onto 12 or 14.
+state: fault
 
 ### Read the four tour leads (en.ts:58, 63, 68, 73) together.
 unit: M54 U7
 should: One voice across the four, addressing the reader (the guidelines' copy rules).
-breaks: en.ts:63 says "September's pay is in and the card statement just came, I spent how much on groceries?!": a comma splice and a jump to the first person, while the others say 'You'. en.ts:68 ends "Recorded decisions become memory that is no longer ephemeral."
-state: open
+breaks: en.ts:63 says "September's pay is in and the card statement just came, I spent how much on groceries?!": a comma splice and a jump to the first person, while the others say 'You'. en.ts:68 ends "Recorded decisions become memory that is no longer ephemeral." Verdict 2026-11-02 (D-531): fault; a words unit drafts options, the maintainer picks.
+state: fault
 
 ### Read the heading 'No internet, no login' (en.ts:199) beside its body (en.ts:201), on a page whose main path is a hosted assistant working the file.
 unit: M54 U7
 should: The heading is as careful as its body. en.ts's own header says "sends nothing anywhere itself", never "your data never leaves it".
-breaks: The body is careful: "Runs on your machine and sends nothing anywhere itself." But the heading alone reads as the claim the page must never make.
-state: open
+breaks: The body is careful: "Runs on your machine and sends nothing anywhere itself." But the heading alone reads as the claim the page must never make. Verdict 2026-11-02 (D-531): fault; a words unit drafts options, the maintainer picks.
+state: fault
 
 ### Read the hero story (en.ts:49, `hero.story`), then the first h2 below it.
 unit: M54 U7
 should: The story names who it is for and the concrete thing it does. product.md 'Who it is for' names both crowds, and product.md also says nobody wants an architecture. The words are the maintainer's.
-breaks: It says "What is an application? Most are a database and a UI that exposes it. Most people now talk to an AI chat instead, the new UI, and those chats have no reliable long-term memory. Emerald closes that gap." It opens on architecture and never says it is a desktop app keeping your own file. The next h2 jumps to grocery receipts, so the hero (AI memory) and the first proof (money) do not connect.
-state: open
+breaks: It says "What is an application? Most are a database and a UI that exposes it. Most people now talk to an AI chat instead, the new UI, and those chats have no reliable long-term memory. Emerald closes that gap." It opens on architecture and never says it is a desktop app keeping your own file. The next h2 jumps to grocery receipts, so the hero (AI memory) and the first proof (money) do not connect. Verdict 2026-11-02 (D-531): fault; a words unit drafts options quoting this line, the maintainer picks or writes.
+state: fault
 
 ### Read the lines a stranger has no word for. en.ts:81 "The engine". en.ts:86 "Claims: … Each one proved, failed or unchecked, and unchecked says why." en.ts:159 "A model works in it, through MCP" (MCP is never spelled out, and the rail row is just 'MCP'). en.ts:163 "Shaped tools, never a general query". en.ts:124 "became unit S4 U2". en.ts:216 "It runs on the app's own Node."
 unit: M54 U7
 should: Plain words a stranger can follow (persuade mode). The words are the maintainer's.
-breaks: Each line uses an insider word the page never defines.
-state: open
+breaks: Each line uses an insider word the page never defines. Verdict 2026-11-02 (D-531): fault; a words unit drafts options per line, the maintainer picks.
+state: fault
 
 ### Read the page's meta description: en.ts:19, `description`. It is what search results and link previews show.
 unit: M54 U7
 should: It says what Emerald is, in a stranger's words, and agrees with the tagline and the pitch. Which words is the maintainer's call; none is proposed as settled.
-breaks: It says "Emerald: Order to chaos using engineering". That reads backwards, as if it turns order into chaos, and it matches neither the tagline nor docs/product.md's pitch.
-state: open
+breaks: It says "Emerald: Order to chaos using engineering". That reads backwards, as if it turns order into chaos, and it matches neither the tagline nor docs/product.md's pitch. Verdict 2026-11-02 (D-531): it agrees with "The database under the chat."; a words unit drafts options and the maintainer picks.
+state: fault
 
 ### Read the same commands in the File menu, the palette and the title bar.
 unit: M54 U6
 should: QUESTION for the maintainer: one name per thing (term rows, D-436) and one casing convention — is the native menu Title Case (the platform's) and the palette sentence case, or one for both?
-breaks: 'New'/'Open…' vs 'New document'/'Open document…'; 'Open Recent' vs 'Open recent…'; 'Command Palette…' vs the 'Commands' button; 'Third-Party Notices' vs 'Third-party notices'; the menu itself mixes Title Case and sentence case ('Earlier copies of this document…', 'Guide me'); 'Clear Menu' vs 'Clear recent documents'.
-state: open
+breaks: 'New'/'Open…' vs 'New document'/'Open document…'; 'Open Recent' vs 'Open recent…'; 'Command Palette…' vs the 'Commands' button; 'Third-Party Notices' vs 'Third-party notices'; the menu itself mixes Title Case and sentence case ('Earlier copies of this document…', 'Guide me'); 'Clear Menu' vs 'Clear recent documents'. Verdict 2026-11-02 (D-531): one name per command, sentence case everywhere, the native menu included (rule: A command has one name, in sentence case).
+state: fault
 
 ### Read the same folder again after editing notes
 unit: M34 T1
@@ -7687,8 +7696,8 @@ state: open
 ### Read the twelve rail rows in order, as a stranger would read the page.
 unit: M54 U7
 should: The sections are grouped by who they persuade, and the privacy promise comes early (persuade rhythm). The order is the maintainer's.
-breaks: The tours mix the ledger and the development pack, then The engine, MCP and Packs follow, and then The ledger and The development pack come again. 'No internet, no login', the ledger crowd's first promise, is row 11 of 12.
-state: open
+breaks: The tours mix the ledger and the development pack, then The engine, MCP and Packs follow, and then The ledger and The development pack come again. 'No internet, no login', the ledger crowd's first promise, is row 11 of 12. Verdict 2026-11-02 (D-531): fault; a words unit proposes orders, the maintainer picks.
+state: fault
 
 ### Remove an identity, rename or delete a column, change a type, from a conversation
 unit: M34 T1
@@ -7800,32 +7809,32 @@ state: fault
 ### Watch /tour.html?tour=development to 3/4, 'The conclusion is written down, beside the decision it kept.', through to the end of the scene.
 unit: M54 U8
 should: The caption describes what is shown for the whole scene (the tour_step contract); that may need a caption row of its own, which is the maintainer's wording.
-breaks: For ~8 s of the scene's second half the screen has left the Decision sheet for the Roadmap, outlining milestone M4 while its two units land; only the chat line ('And the work: milestone M4…') says so. Question for the maintainer.
-state: open
+breaks: For ~8 s of the scene's second half the screen has left the Decision sheet for the Roadmap, outlining milestone M4 while its two units land; only the chat line ('And the work: milestone M4…') says so. Verdict 2026-11-02 (D-531): fault; a unit drafts a caption row of its own, the maintainer picks.
+state: fault
 
 ### Watch /tour.html?tour=timesheet at 2/6, 'The model writes the timesheet down as a format of its own.'
 unit: M54 U8
 should: The screen shows the format being made while the caption says it (the tour_step contract).
-breaks: For ~8.4 s there is no ring and no outline and the screen stays on Paychecks; the new format is ringed in the sidebar only at the scene's end. Question for the maintainer.
-state: open
+breaks: For ~8.4 s there is no ring and no outline and the screen stays on Paychecks; the new format is ringed in the sidebar only at the scene's end. Verdict 2026-11-02 (D-531): fault; a unit shows the format being made and drafts any caption change for the maintainer to pick.
+state: fault
 
 ### Watch /tour.html?tour=timesheet at 3/6, 'Now the days, from the paper. It has no end time for the 14th.'
 unit: M54 U8
 should: The paper is shown beside the app, as custom's receipt is (a beside picture is the paper being typed in), or the caption does not point at something absent.
-breaks: The row has no beside, so no paper is shown and the visitor never sees that the 14th has no end time. Question for the maintainer.
-state: open
+breaks: The row has no beside, so no paper is shown and the visitor never sees that the 14th has no end time. Verdict 2026-11-02 (D-531): fault; a unit adds the paper beside it, or drafts a caption for the maintainer to pick.
+state: fault
 
 ### Watch custom 4/5 in dark, and again at 1024x720.
 unit: M54 U8
 should: The paper is legible at a desktop width (the caption asks to 'type the receipt in from the paper'), and dark mode treats it on purpose (Dark mode is not an inversion).
-breaks: In dark it is the same bright white light-mode PNG, where other demo images have -dark versions; at 1024x720 the column is 193px and its figures (Bread 12.00, TOTAL ILS 84.00) are ~6px tall. The img has no width/height attributes (web interface guidelines: images need dimensions). Question for the maintainer.
-state: open
+breaks: In dark it is the same bright white light-mode PNG, where other demo images have -dark versions; at 1024x720 the column is 193px and its figures (Bread 12.00, TOTAL ILS 84.00) are ~6px tall. The img has no width/height attributes. Verdict 2026-11-02 (D-531): fault — a dark version, legible at a desktop width, with dimensions.
+state: fault
 
 ### Watch the ring travel, the crop's pan, the outline drawing round and the dots' progress line in any tour.
 unit: M54 U8
 should: Whether One duration, one easing and Motion says what changed bind the tour's own chrome, or the ring is the tour's medium and exempt.
-breaks: All of them run on --ease-in-out at the 933ms travel (the outline at 1.4x), while the rule says --ease-out and the tokens' durations. Question for the maintainer.
-state: open
+breaks: All of them run on --ease-in-out at the 933ms travel (the outline at 1.4x), while the rule says --ease-out and the tokens' durations. Dropped 2026-11-02 (D-531): the ring and what travels with it are the tour's medium and keep their own easing; One duration, one easing now says so (the literal durations become tokens under 290d15a8's fault).
+state: dropped
 
 ### With a screen reader, press the reel's Pause/Play button (reel.ts:66-67).
 unit: M54 U7
@@ -7946,11 +7955,11 @@ decided_by: ["D-130"]
 state: live
 
 ### A card is one link
-statement: A thing you open is one card and the whole card is the link (a stretched link, so the icons inside stay buttons); its hover draws a 2px `accent` leading edge, tints its plane and firms its border — never a lift, a shadow, a scale or a transform on the card.
+statement: A thing you open is one card and the whole card is the link (a stretched link, so the icons inside stay buttons) — a board's card included, which still drags; its hover draws a 2px `accent` leading edge, tints its plane and firms its border — never a lift, a shadow, a scale or a transform on the card.
 why: The leading edge is the app's one way of saying *here*, accent because the card is an action. Elevation is the floating rooms' alone, and a hover never moves layout.
 kind: non_negotiable
 scope: ui
-decided_by: ["D-154","D-288","D-312"]
+decided_by: ["D-154","D-288","D-312","D-531"]
 state: live
 
 ### A change from anywhere is marked on its view
@@ -7971,10 +7980,11 @@ decided_by: ["D-125","D-421"]
 state: live
 
 ### A chip is text and a dot
-statement: A chip is text with a small dot: no filled pill, no border, no coloured background, and colour only for a problem.
+statement: A chip is text with a small dot: no filled pill, no border, no coloured background, and colour only for a problem — the shared `.fc-state` mark and a board's or roadmap's state and milestone marks included.
 why: Category chips wear their hue as the dot; a status chip is `ink-secondary` text with a dot for a problem. Nothing gets a filled badge — coloured category backgrounds and filled tag pills are ruled out by name.
 kind: non_negotiable
 scope: ui
+decided_by: ["D-531"]
 state: live
 
 ### A command before ready is lost
@@ -7983,6 +7993,14 @@ why: The page calls `documents.ready()` when it is actually listening, and `did-
 kind: trap
 scope: shell
 decided_by: ["D-128"]
+state: live
+
+### A command has one name, in sentence case
+statement: A command is called the same in the native menu, the palette and the title bar, and all three are in sentence case — the app's own voice, never the platform's Title Case.
+why: M54 U6 found the same commands under two names and two casings (New / New document, Open Recent / Open recent…, Clear Menu / Clear recent documents), and the File menu mixing both: a person learns one name and then cannot find it in the other place.
+kind: style
+scope: shell
+decided_by: ["D-531"]
 state: live
 
 ### A component is one file
@@ -8015,11 +8033,12 @@ scope: engine
 decided_by: ["D-214"]
 state: live
 
-### A detail is a pane beside its list
-statement: A detail is a pane beside its list, not a screen instead of it — 30rem, capped at 45% of the row — and the way out is one word, Close.
+### A detail is a page beside its entry list
+statement: A row opens as its entry: a page beside the format's entry list, not a screen that loses its place — and the way out is one link back to the view it came from (← Table, ← Board).
 why: The list keeps more than half even at the window's minimum, and the card whose detail is open wears the table cursor's `accent-soft` plane and 2px rule. A back-link points at something you can already see.
 kind: style
 scope: ui
+decided_by: ["D-531"]
 state: live
 
 ### A diff on memory.emd is somebody's write
@@ -8251,18 +8270,19 @@ scope: practice
 state: live
 
 ### Category colours are dots
-statement: Category colours are the one exception to the monochrome rule: eleven hues, drawn as a dot beside the name and never as a background, none of them a flow colour, and resolved against the level they are drawn in rather than one category at a time.
+statement: Category colours are the one exception to the monochrome rule: eleven hues, drawn as a dot beside the name — or as the series of a chart with several, each labelled directly — and never as a background, none of them a flow colour, and resolved against the level they are drawn in rather than one category at a time.
 why: They must be told apart in charts and beside a name. Eleven hues do not cover forty categories, so what is guaranteed is that siblings differ while a slot is free, and that the app says so where they cannot (`src/domain/categoryColors.ts`). In dark mode they lift in lightness and drop in saturation.
 kind: non_negotiable
 scope: ui
-decided_by: ["D-161","D-314"]
+decided_by: ["D-161","D-314","D-531"]
 state: live
 
 ### Charts are ink, labelled directly
-statement: A chart is ink on nothing: lines 1.5pt with no fill and no markers but the selected one, bars with no axis lines or gridlines and their values labelled directly, axes with only the labels needed in `ink-tertiary`, a donut in category colours with its total in the centre, a progress ring ink on a hairline track.
+statement: A chart is ink on nothing: lines 1.5pt with no fill and no markers but the selected one, bars with no axis lines or gridlines and their values labelled directly, axes with only the labels needed in `ink-secondary`, a donut in category colours with its total in the centre, a chart of several series in category colours with each series labelled directly, a progress ring ink on a hairline track.
 why: Charts follow the same discipline as everything else: a comparison series is hairline weight and `ink-tertiary`, and nothing glows. They are hand-rolled SVG — every charting library would fight this.
 kind: style
 scope: ui
+decided_by: ["D-531"]
 state: live
 
 ### Charts draw once
@@ -8289,11 +8309,11 @@ scope: ui
 state: live
 
 ### Contrast 4.5:1 for text
-statement: Text is at least 4.5:1 against its plane; `ink-tertiary` is for non-essential text only, and an accent is chosen to carry its text at AA.
+statement: Text is at least 4.5:1 against its plane; `ink-tertiary` is for text nobody needs to read — never a tab, an axis, a count, a heading, a label or a line that reports something, which take `ink-secondary` — and an accent is chosen to carry its text at AA.
 why: Why the light accent is a deepened emerald (4.93:1 with white) rather than the gem's bright face (`#10B981` gives 2.56:1 and fails), and why the dark theme's dark ink on mint measures 8.65:1.
 kind: non_negotiable
 scope: ui
-decided_by: ["D-125"]
+decided_by: ["D-125","D-531"]
 state: live
 
 ### Dark mode is not an inversion
@@ -8347,10 +8367,11 @@ scope: engine
 state: live
 
 ### Every value is a token
-statement: Every colour, size, space, radius, shadow and duration is a token in `src/ui/theme/tokens.css` — never a hex, an inline pixel size or a hardcoded duration in a component.
+statement: Every colour, size, space, radius, shadow and duration is a token in `src/ui/theme/tokens.css` — never a hex, an inline pixel size or a hardcoded duration in a component. A type size the ramp has no step for (13px, 12.5px, 10px…) moves onto a step of the ramp, and the ramp gains no step for it. The public page's and the tour's hand-written sheets (`page.css`, `frame.css`) keep a token set of their own — spacing on the 8px steps, a rem ramp with no near-duplicates, named durations — and spend it, never a literal.
 why: Tailwind v4 with a CSS-variable layer: the palette, the type ramp (`text-hero` to `text-label`), the spacing scale and the motion durations live in one `@theme` block, and dark mode is a `:root[data-theme=dark]` override of the same variables, so a component never knows which theme it is in. The values are stated there and only there — a note or a row that copies them drifts (docs/11's pre-M39 motion table said 200 and 250 ms while the tokens said 180 and 260). Built from tokens from day one, because retrofitting a theme means touching every screen.
 kind: non_negotiable
 scope: ui
+decided_by: ["D-531"]
 state: live
 
 ### Few dependencies
@@ -8499,11 +8520,11 @@ decided_by: ["D-095"]
 state: live
 
 ### No gradients, no shadows
-statement: No gradients and no shadows: elevation is space and hairlines, and the one soft `--shadow-pop` belongs to the rooms that float — menus, panels, dialogs — and to nothing else.
+statement: No gradients and no shadows: elevation is space and hairlines, and the one soft `--shadow-pop` belongs to the rooms that float — menus, panels, dialogs — and to nothing else; a picture or a card in the tour is not one.
 why: D-154 once let the primary button carry an inset highlight and a hover lift, fenced narrowly; D-312's split tile retired both, so no control carries a shadow at all. Card shadows, elevation layers and a second accent hue are ruled out.
 kind: non_negotiable
 scope: ui
-decided_by: ["D-154","D-312"]
+decided_by: ["D-154","D-312","D-531"]
 state: live
 
 ### Nothing between the spacing steps
@@ -8521,11 +8542,11 @@ scope: engine
 state: live
 
 ### Nothing is blocked by motion
-statement: Nothing is ever blocked by motion: the real elements stay where React put them, a closing panel is inert, and a click mid-move lands.
+statement: Nothing is ever blocked by motion: the real elements stay where React put them, a closing panel is inert, and a click mid-move lands — in a tour too, where the click that takes over from the shield also reaches what was under it.
 why: Motion is a picture over the real layout, never a state the app waits on.
 kind: non_negotiable
 scope: ui
-decided_by: ["D-421"]
+decided_by: ["D-421","D-531"]
 state: live
 
 ### Numbers right, text left
@@ -8555,11 +8576,11 @@ enforced_by: electron/network.test.ts, electron/about.test.ts
 state: live
 
 ### One duration, one easing
-statement: Motion spends the tokens' durations on `--ease-out`: a move, a growth or a panel's room `--duration-base`, navigating and closing `--duration-fade`, a verdict's mark 900 ms, once.
+statement: Motion spends the tokens' durations on `--ease-out`: a move, a growth or a panel's room `--duration-base`, navigating and closing `--duration-fade`, a verdict's mark 900 ms, once. The tour's ring, and what travels with it (the crop's pan, the outline, the dots' line), is the tour's medium and keeps its own easing and travel as named tokens.
 why: Nearly there at once, then settling. A new duration is a token, never a number in a component. `--ease-in-out` stays for a morph between two states — the theme fade, the plan's ring — which is the pre-M39 table's second easing. A figure's count is the one duration in JavaScript (`COUNT_DURATION_MS`, 200 ms), because a count that outlasts the gesture is a wait.
 kind: style
 scope: ui
-decided_by: ["D-421"]
+decided_by: ["D-421","D-531"]
 state: live
 
 ### One family, two scripts, bundled
@@ -8579,11 +8600,11 @@ decided_by: ["D-224","D-397"]
 state: live
 
 ### One level of tabs
-statement: A screen's views are one tab strip above it — a 32px chrome row, `ink-tertiary` labels, the active one `ink` over a 2px `accent` underline — and two levels of tab on one screen is the failure mode.
+statement: A screen's views are one tab strip above it — a 32px chrome row, `ink-secondary` labels, the active one `ink` over a 2px `accent` underline — and two levels of tab on one screen is the failure mode.
 why: It is the sidebar's active bar turned back into the underline it came from, and accent for the reason the rail is: it marks a thing you operate, with no figure in it. A strip above a screen that already has its own switcher is a thing to look at rather than reason about.
 kind: non_negotiable
 scope: ui
-decided_by: ["D-125","D-157"]
+decided_by: ["D-125","D-157","D-531"]
 state: live
 
 ### One place registers .emd
@@ -8595,11 +8616,11 @@ decided_by: ["D-129"]
 state: live
 
 ### One primary action per screen
-statement: One primary action per screen, top right of its section, `accent`-filled with `accent-ink` text — and one across a stack of notices too: only the top one is filled.
+statement: One primary action per screen, top right of its section, `accent`-filled with `accent-ink` text — and one across a stack of notices too: only the top one is filled. The title bar is chrome, not the screen, and holds no primary: its Save is a secondary button beside the dirty dot. The public page has one too: the desktop download, filled, on its first screen and again at Get Emerald.
 why: The primary button is the one filled surface in either theme, carried by its own `--color-action` token (white on emerald light, dark ink on mint dark), so a button never knows its theme. Everything else is a secondary or a text button.
 kind: non_negotiable
 scope: ui
-decided_by: ["D-125","D-130"]
+decided_by: ["D-125","D-130","D-531"]
 state: live
 
 ### One progress indicator
@@ -8685,11 +8706,11 @@ enforced_by: electron/appProtocol.test.ts
 state: live
 
 ### Square by spending the radius tokens
-statement: Cards and controls are square, on trial, by spending `--radius-card` and `--radius-control` — never by redefining `--radius-sm/md/lg`.
+statement: Cards and controls are square, on trial, by spending `--radius-card` and `--radius-control` — never by redefining `--radius-sm/md/lg` — and the tour's outline round them is square too.
 why: The author asked for square corners; doing it through two named tokens keeps the trial reversible in one place.
 kind: trap
 scope: ui
-decided_by: ["D-288"]
+decided_by: ["D-288","D-531"]
 state: live
 
 ### Tabular figures everywhere
@@ -8774,11 +8795,11 @@ always: true
 state: live
 
 ### The four flows colour Home's figures
-statement: On Home only, the four flows — came in, went out, saved, taxes — colour the headline figures, the charts and the totals, always beside the word that names the flow; a single row stays ink, and left over (a difference, not a flow) stays ink.
+statement: On Home only, the four flows — came in, went out, saved, taxes — colour the headline figures, the charts and the totals, always beside the word that names the flow; a single row stays ink — a month of All months included — and left over (a difference, not a flow) stays ink.
 why: The one amendment to *outflows are ink* (M28 U5). Where red means a flow, a problem keeps its own form — a chip with a dot and a word — and `accent` still never colours a figure. The flow tokens are used in those places and only those.
 kind: non_negotiable
 scope: ui
-decided_by: ["D-313"]
+decided_by: ["D-313","D-531"]
 state: live
 
 ### The log holds open milestones only
@@ -8799,10 +8820,11 @@ scope: ui
 state: live
 
 ### The mapper shows the raw cell
-statement: The mapper's preview grid shows raw cell values in `--font-mono`, mapped columns in `ink`, unmapped in `ink-tertiary`, and the role as a small label above each column rather than dropdown chrome.
+statement: A mapper's preview grid — the engine's intake grid and the ledger's alike — shows raw cell values in `--font-mono`, numbers right, mapped columns in `ink` and unmapped in `ink-secondary`, and the role as a small label above each column that opens as a `ChoiceField` on focus or click, never boxed dropdown chrome at rest.
 why: Mono so stray spaces and directional marks stay visible — they are what reads a document wrongly.
 kind: style
 scope: ui
+decided_by: ["D-531"]
 state: live
 
 ### The numbers are the interface
@@ -8863,10 +8885,11 @@ decided_by: ["D-125","D-312"]
 state: live
 
 ### The theme is applied before first paint
-statement: The theme is light, dark or system (the default), kept in `localStorage` and applied to `:root[data-theme]` before the first paint; the colour transition is enabled a frame later, so toggling animates and loading does not.
+statement: The theme is light, dark or system (the default) — the public page's toggle too — kept in `localStorage` and applied to `:root[data-theme]` before the first paint; the colour transition is enabled a frame later, so toggling animates and loading does not.
 why: No flash of the wrong palette; and the app should look like the machine it opened on until told otherwise. `useTheme` applies it.
 kind: trap
 scope: ui
+decided_by: ["D-531"]
 state: live
 
 ### The user maps the columns
@@ -8878,11 +8901,11 @@ decided_by: ["D-013"]
 state: live
 
 ### The views' shapes
-statement: Labels and chips are uppercase and square; the roadmap is a timeline (solid to the live row, dashed after, a bar of segments per row); a board's lanes are `surface` with square cards and an empty lane a dashed *Nothing <member>*; a page is body left and links right, one hop each way, *Nothing* where there is nothing.
+statement: Labels and chips are uppercase and square — square meaning no radius, never a box; the roadmap is a timeline (solid to the live row, dashed after, a bar of segments per row); a board's lanes are `surface` with square cards and an empty lane a dashed *Nothing <member>*; a page is body left and links right, one hop each way, *Nothing* where there is nothing.
 why: From the approved M27 U8 mockup, so every pack's views look like one app.
 kind: style
 scope: ui
-decided_by: ["D-306"]
+decided_by: ["D-306","D-531"]
 state: live
 
 ### Two facts no equation runs through
@@ -8946,10 +8969,11 @@ decided_by: ["D-128"]
 state: live
 
 ### rem for type
-statement: Type is sized in `rem` so browser zoom and the user's font size are respected; `px` only for hairlines and icon sizes.
+statement: Type is sized in `rem` so browser zoom and the user's font size are respected; `px` only for hairlines and icon sizes. The app the tour draws scaled inside its frame is a picture of the app, not a breach.
 why: A person who has set a larger font has said something the app must hear.
 kind: style
 scope: ui
+decided_by: ["D-531"]
 state: live
 
 ### src imports only the bridge
@@ -9610,7 +9634,7 @@ appears: on no screen, in no tool text, not in the tour
 state: live
 
 ### Export
-means: Settings: the months as a spreadsheet (CSV); Save a copy is how the whole document goes elsewhere (D-313).
+means: Settings: the months as a spreadsheet (CSV); Save as is how the whole document goes elsewhere (D-313).
 named_by: D-313
 scope: ledger
 shown_in: rail
@@ -10400,8 +10424,9 @@ shown_in: screen
 appears: screen 4 in 3 files (screens/ReadStatements 2, screens/FileGap 1, wealth/NetWorthOpened 1); the import column role says 'balance' (import/roleLabel).
 state: live
 
-### Save a copy
-means: Writes the open document to a new file and carries on in that one (Ctrl+Shift+S).
+### Save as
+means: Writes the open document to a new file and carries on in that one (Ctrl+Shift+S); its dialog is titled Save as.
+rejected: Save a copy — the name of a different act, given to what every platform calls Save As (M54, D-531)
 code_word: saveCopyAs
 scope: app
 shown_in: screen
@@ -15256,6 +15281,6 @@ inbox: 2026-10-23
 milestone: 2026-11-02
 open_question: 2026-10-22
 review_entry: 2026-11-02
-rule: 2026-10-22
-term: 2026-10-22
+rule: 2026-11-02
+term: 2026-11-02
 unit: 2026-11-02
