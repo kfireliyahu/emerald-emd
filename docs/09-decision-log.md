@@ -1073,8 +1073,10 @@ entirely; one sweep unit before every surface unit; a due date by the column's n
 which format a drop goes onto; restoring by default; keeping a missing recent with *Locate…*; a
 download button by platform, or to the release page; no pause; drafts as `review_entry` rows.
 
-**Consequences.** Thirteen planned units; F1 blocks every unit that draws, F9 waits on F8, F12 on
-F11, F7 on F6, F13 on F4. A fixed row keeps `fault` with *Fixed in M54 Fn* added to `breaks`, for
+**Consequences.** Thirteen planned units; F1 blocks every unit that draws; F6 waits on F4 and F5, F7 on F6, F13 on
+F4, F5 and F6, F9 on F8, F12 on F11. Every fault has one owner, stamped *Owned by M54 Fn.* on its
+`breaks` (143 rows; a row that spans units is owned by the one that runs last, the others add *Part
+fixed*); the paycheck reader's two rows stay parked, as does U5's. A fixed row keeps `fault` with *Fixed in M54 Fn* added to `breaks`, for
 the maintainer's review to accept. No schema change; F2's `due` is a view setting beside `done`.
 
 ## Related
