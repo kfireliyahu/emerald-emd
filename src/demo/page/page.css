@@ -9,9 +9,10 @@
  * that reads right to left mirrors the page (`dir` on the root).
  */
 
-/* A page reads at 16px where the app's chrome reads at 14. */
+/* A page reads at the browser's own size (16px unless the reader set another) where the
+   app's chrome reads at 14: `rem for type`, so a reader's font size is respected (M54 U7). */
 html {
-  font-size: 16px;
+  font-size: 100%;
   scroll-behavior: smooth;
 }
 body {

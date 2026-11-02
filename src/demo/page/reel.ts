@@ -80,7 +80,8 @@ export function mountReel(reel: HTMLElement, words: Copy['shots']): void {
 
   for (const step of steps) {
     step.addEventListener('click', () => {
-      paused = false
+      // A step shows its picture; under reduced motion the round still waits for Play (M54 U7).
+      if (!reduced.matches) paused = false
       show(Number(step.dataset.stepTo))
     })
   }

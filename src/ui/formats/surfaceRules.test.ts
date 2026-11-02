@@ -208,6 +208,28 @@ describe('an empty state is ink-secondary', () => {
   })
 })
 
+describe('Emerald’s page respects the reader’s font size', () => {
+  // *rem for type*: the page's root was `font-size: 16px`, which overrode a reader's own
+  // setting for every rem on the page (M54 U7). A percentage keeps 16px as the default.
+  it('sizes its root in a percentage, never in pixels', () => {
+    const page = readFileSync('src/demo/page/page.css', 'utf8')
+    const root = /\nhtml \{([^}]*)\}/.exec(page)?.[1] ?? ''
+    expect(root).toMatch(/font-size: 100%;/)
+    expect(page).not.toMatch(/font-size:\s*[\d.]+px/)
+  })
+})
+
+describe('the page’s reel holds still under reduced motion', () => {
+  // *Reduced motion runs none of it*: a picked step un-paused the reel, so after one pick
+  // the pictures advanced every 6 s under reduced motion (M54 U7). Only Play starts it there.
+  it('un-pauses on a picked step only when motion is on', () => {
+    const reel = readFileSync('src/demo/page/reel.ts', 'utf8')
+    const pick = /step\.addEventListener\('click', \(\) => \{([^}]*)\}\)/.exec(reel)?.[1] ?? ''
+    expect(pick).toContain('if (!reduced.matches) paused = false')
+    expect(pick.replace('if (!reduced.matches) paused = false', '')).not.toMatch(/paused = false/)
+  })
+})
+
 describe('an earlier copy keeps its label’s start', () => {
   // *Hebrew needs bidi isolation*: the ellipsis on the Bidi span, never on the box around
   // "named · before …" (M54 U6). bidiTruncation.test.ts sees only a box that opens onto <Bidi>.
