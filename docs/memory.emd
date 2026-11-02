@@ -5828,6 +5828,12 @@ goal: As a person can save views and arrange dashboards (M53), they can make the
 state: planned
 position: 360
 
+### M56
+title: Emerald inside Claude: a live pane, skills, and showing it
+goal: The emerald plugin stops being only an MCP server with command hooks. Claude Code's mods (plugins of function hooks, early access) let the plugin draw a live project pane beside the chat on every surface, answer the inbox and the status line without an npx call per prompt, and hold the write rules as hooks rather than prose. Skills carry the how-to a newcomer needs first (a file onto a format, a plan brought in, a project set up, what is wrong), so the server's instructions can say less where the plugin runs. Recordings of the pane and the inbox show it on getemerald.dev. Maintainer's answers, 2026-11-02: inside the emerald plugin (hosts/claude/), never a separate mod; the pane opens by itself only in a folder that means a document; the command hooks stay as the floor and the mod takes over where it runs; all four skills; the guards in this milestone; the maintainer records, desktop app first. After M55.
+state: planned
+position: 370
+
 <!-- emerald: open_question.format.md -->
 ---
 format: open_question
@@ -6431,6 +6437,12 @@ should: A saved view reads the same wherever it is placed, in its own order.
 breaks: The block ignores the view's order: FUEL STATION, CORNER MARKET, BOOK NOOK; M2 U2, M1 U1, M2 U1, M1 U2.
 state: open
 
+### Demo, demo.emd with an answer waiting, both themes: #/paychecks, #/wealth/goals, #/wealth/funds, #/categories/rules, #/plan.
+unit: M54 U5
+should: One filled primary on a screen, notices included (rule: One primary action per screen).
+breaks: The notice's 'Answer them' is filled and so is each screen's own primary: Read paychecks, New goal, Add fund, New rule, Start with 50 / 30 / 20. (#/read and #/paychecks/read are M54 U3's row.)
+state: open
+
 ### Demo, demo.emd, #/ in dark: select a month in All months and read its flow figures.
 unit: M54 U4
 should: Text at 4.5:1 against its plane (Contrast 4.5:1 for text), on the selected row's plane too.
@@ -6455,6 +6467,18 @@ should: The empty line names the window — "Nothing in the next 7 days." — an
 breaks: It says "Nothing on the agenda from today on." under a subtitle still reading "From today on —" (LinkViews.tsx:579). The "by" sentence is 13 fixed 112px fields that cut their values ("last_confirme", "transaction_d") and push the agenda down.
 state: open
 
+### Demo, demo.emd, #/categories, both themes: each category's spend bar.
+unit: M54 U5
+should: Category colours are dots beside the name, never a background (rule: Category colours are dots).
+breaks: QUESTION: each category's spend bar is filled in its category hue — is a bar a background under that rule, or a chart segment that may wear it?
+state: open
+
+### Demo, demo.emd, #/categories/rules → Edit on the first rule.
+unit: M54 U5
+should: The editor opens beside the rule it edits — as a pane beside the list, or in place (rule: A detail is a pane beside its list).
+breaks: Entry: the editor docks at the foot of the screen (y≈749) while the edited row sits at y≈216 (rules/RuleEditor.tsx).
+state: open
+
 ### Demo, demo.emd, #/dashboard → Add a block → spending (a rollup by category), both themes.
 unit: M54 U2
 should: QUESTION for the maintainer: Charts are ink, labelled directly allows category colours only for a donut, and Category colours are dots says never as a background. Is a multi-series rollup an allowed exception?
@@ -6467,10 +6491,22 @@ should: The shared Button (secondary, square split tile) on the density ladder; 
 breaks: A label hand-styled as a button — rounded-md, h-9, its own border — beside the square split-tile "Read it"; the wrapper is max-w-[820px]. DocumentTextInput.tsx:94, :117.
 state: open
 
+### Demo, demo.emd, #/paychecks/deductions, both themes.
+unit: M54 U5
+should: A data table — hairline rows, values read as text, editing on demand (rules: A data table; The numbers are the interface).
+breaks: Entry: every row is permanently boxed inputs and selects (14 selects), followed by two dense explainer paragraphs in ink-tertiary (853 characters).
+state: open
+
 ### Demo, demo.emd, #/paychecks/read → payslip-2026-07.txt → Open alone ("Read a paycheck").
 unit: M54 U3
 should: The sentence that says "enter it by hand" sits beside the form, or an Add by hand action is right there (Make it in place; An empty state is one sentence and one text action).
 breaks: Entry: "No model is switched on, so nothing derived a template." then "Nothing was written. Enter the paycheck by hand…" — and the screen has no control to enter it; Back to the list is the only way out. src/ui/paychecks/ReadSlip.tsx:232, 389, 404.
+state: open
+
+### Demo, demo.emd, #/paychecks/read: press Tab to 'Choose paychecks, or drop them here'.
+unit: M54 U5
+should: A visible focus ring on what has focus — the label rings on focus-within, as M54 U3 did for intake's pickers (rule: Keyboard first).
+breaks: Focus lands on a 1×1 sr-only input[type=file] and the dashed label shows nothing (paychecks/ReadSlips.tsx:438; no focus-within in the file).
 state: open
 
 ### Demo, demo.emd, #/read with nothing added ("Nothing to read yet"), then add files and watch it read.
@@ -6522,16 +6558,196 @@ should: Its actions visible at rest (IconAction, or the row's one menu); the acc
 breaks: Duplicate and Delete are opacity-0 until hover or focus; the binding is borderless and reads as text, "Everyday Card 1234 ·1234" (the name already ends in the digits); pairs read "transaction date date · merchant · transaction amount original amount". Mappings.tsx:175, ~187-240, ~250-280.
 state: open
 
+### Demo, demo.emd, #/transactions → open Daily Basket: the line under the pane.
+unit: M54 U5
+should: Nothing internal on screen — say in words why a re-import changed nothing (rule: The numbers are the interface).
+breaks: 'Recognised on re-import as 2026-07-24␟20890ILS␟DAILY BASKET␟␟0' — the natural key, with unit-separator characters shown raw (transactions/DetailPanel.tsx:381).
+state: open
+
+### Demo, demo.emd, #/wealth (Net worth) and a debt's pane, both themes: the hero figure.
+unit: M54 U5
+should: The currency symbol and decimals smaller and ink-secondary, so the eye lands on the magnitude (rule: The magnitude leads).
+breaks: '-₪28,000.00' is one text-[34px] run (screens/Overview.tsx); the debt pane's '₪40,000.00' is the same.
+state: open
+
+### Demo, demo.emd, #/wealth/debts → a debt's ⋯ → Edit debt: the four 'How its payments are found' choices; read them with a screen reader.
+unit: M54 U5
+should: A radiogroup (or buttons with aria-pressed) and a mark besides colour for the chosen one (rule: Never colour alone; WAI-ARIA state).
+breaks: Entry: four plain <button>s with no role, aria-pressed or aria-checked; only the border and colour say which is chosen (debts/DebtEditor.tsx ~193-215, rounded-md option cards).
+state: open
+
+### Demo, demo.emd, #/wealth/debts → open Car loan.
+unit: M54 U5
+should: The pane's empty state is one sentence and one action, and that action records a payment there (rules: An empty state is one sentence; Make it in place).
+breaks: Entry: it reads 'Nothing recorded yet… its payments are the ones you enter' and the pane's only control is Close; Add a payment exists only in the list row's ⋯ menu (screens/DebtDetail.tsx:182).
+state: open
+
+### Demo, demo.emd, #/wealth/debts → open a debt whose payments are entered by hand.
+unit: M54 U5
+should: The label as written, in sentence case.
+breaks: It reads 'i will enter payments myself' — TRACK_KIND_LABEL.NONE.toLowerCase() (screens/DebtDetail.tsx:228).
+state: open
+
+### Demo, demo.emd, #/wealth/debts: read Car loan's row, then open it.
+unit: M54 U5
+should: One figure for one fact, and the pane agreeing with the list (PRODUCT.md: won't let you be wrong quietly).
+breaks: The list says 'Paid off Mar 2030' and the pane 'Clear by February 2030'; the list says '₪1,000.00 standing order' where the pane says its payments are entered by hand and repeats 'You entered ₪1,000.00 a month…' twice; the loan is 'due by 2028-12-31' and nothing warns that it runs past it.
+state: open
+
+### Demo, demo.emd, #/wealth/funds → Add fund → Managed by.
+unit: M54 U5
+should: Another product is described by its category, never named (rule row, D-450) — unless a seeded list a person picks from is data, not a description.
+breaks: QUESTION: the list names real brokerages and fund managers, seeded by the ledger pack (src/data/packs/ledger/formats/institution.format.md, migration 006) and so shipped in the public repo.
+state: open
+
+### Demo, demo.emd, #/wealth/goals → open a goal → Set money aside; then type.
+unit: M54 U5
+should: Opening the form puts the cursor in its amount (rule: Keyboard first).
+breaks: Entry: focus stays on <body>; the keyboard has to find the form again.
+state: open
+
+### Demo, demo.emd, #/wealth/goals: a goal with ₪0 a month going in.
+unit: M54 U5
+should: Its verdict follows its figures.
+breaks: It reads 'on time' beside a NO MONEY YET chip and ₪0 a month.
+state: open
+
+### Demo, demo.emd, #/wealth/goals: the legend's 'Set aside inside the bank' swatch.
+unit: M54 U5
+should: No gradients (rule: No gradients, no shadows).
+breaks: QUESTION: the hatch is a repeating-linear-gradient (wealth/parts.tsx:220) — it carries meaning (set aside, not deposited), so is a hatch pattern allowed?
+state: open
+
+### Demo, demo.emd, #/year in dark: the months table's In, Out and Saved figures.
+unit: M54 U5
+should: At least 4.5:1 on the page (rule: Contrast 4.5:1 for text).
+breaks: flow-saved reads 4.16:1 and flow-out / negative 4.30:1 on the dark page at 14px (tokens.css ~317-322). Home's same figures on the fc-row-on plane are M54 U4's row.
+state: open
+
+### Demo, demo.emd, #/year → 'Where it actually goes, by shop': Tab to a merchant row, press Enter; then Ctrl-click one.
+unit: M54 U5
+should: Every operation reachable from the keyboard, and navigation a link (rule: Keyboard first; guideline: use a link for navigation).
+breaks: Each row is a <tr onClick> that navigates to #/transactions, with no tabIndex, no key handler and no link (screens/Year.tsx:238-241) — the keyboard cannot reach it. The months table below has tabIndex and Enter.
+state: open
+
+### Demo, demo.emd, #/year: the months table's July and September; the 'a month, typically' figure and the sparklines.
+unit: M54 U5
+should: A month with no statement read says so rather than showing a figure (rule: Colour carries meaning names a missing statement as genuine signal).
+breaks: July and September read 'Went out ₪0.00' — no statement, shown as a fact; '₪2,161.25 a month, typically' averages over months with no data, and a sparkline draws one month as a peak.
+state: open
+
 ### Demo, demo.emd, any screen but Home with one answer waiting: read the notice and press its button. Then raise an error notice.
 unit: M54 U4
 should: Agreement in number, and a button named for what it does (An action is a verb); an error announced as an alert.
 breaks: "\"1 answer waits on Home.\" with \"Answer them\", which only navigates to Home (Notices.tsx:501-512); the error notice is text-negative inside a polite role=status region (Notices.tsx:104, :462)."
 state: open
 
+### Demo, demo.emd, both themes: #/categories → a category's colour and icon button (the picker); the category picker in a transaction's pane; #/wealth/debts → Edit debt's option cards; a fund report's review (funds/ReportReview); #/wealth/goals' controls.
+unit: M54 U5
+should: Cards and controls square by spending --radius-card and --radius-control (rule: Square by spending the radius tokens).
+breaks: The ledger's own rounding, beside FIELD's app-wide rounded-md (M54 U2's row): CategoryPicker.tsx:231/241 and AppearancePicker.tsx:86 popovers rounded-lg, AppearancePicker.tsx:212 field rounded-md, DebtEditor.tsx:207/227 rounded-md, ReportReview.tsx:337/409/629 rounded-lg, Plan.tsx:1628 rounded-md, Goals.tsx:967/979 rounded; the goal pane's inputs are square, so two looks sit side by side.
+state: open
+
+### Demo, demo.emd, both themes: #/paychecks → Edit a paycheck (Gross, Net); #/wealth/debts → ⋯ → Add a payment ('How much left the account', 'Of which interest', When); a goal → Set money aside; #/wealth/funds → Add fund (the fee %); #/categories/rules → Edit (amount bounds).
+unit: M54 U5
+should: An amount input has no box: large tabular figures, the currency symbol fixed at its start in ink-secondary, one hairline underline that thickens on focus, right-aligned (rules: The amount is the hero of its input; Numbers right, text left); a date reads as the app's dates do.
+breaks: Entry: Gross and Net are boxed 20px fields aligned left; the payment's amounts are left-aligned with no ₪; Set money aside is a 14px field with no ₪; the fee and the bounds are left-aligned boxes; the payment's When is a native date field showing MM/DD/YYYY where the app writes ISO.
+state: open
+
+### Demo, demo.emd, both themes: #/plan with no plan; #/wealth/funds with no fund; #/transactions/merchants with everything categorized.
+unit: M54 U5
+should: One sentence in ink-secondary and one text action, no illustration (rule: An empty state is one sentence).
+breaks: #/plan is a heading-sized line, three paragraphs and two buttons; #/wealth/funds says 'No funds yet. Add fund adds one; …' — two clauses and no action of its own; By merchant adds a second sentence to 'Everything is categorized.'.
+state: open
+
+### Demo, demo.emd, both themes: #/transactions → click a transaction; #/wealth/goals → open a goal; #/wealth/debts → open a debt. Compare the three panes.
+unit: M54 U5
+should: A detail is a pane beside its list — 30rem, capped at 45% of the row — and the way out is Close (rule: A detail is a pane beside its list).
+breaks: The transaction pane is w-[23rem] (transactions/DetailPanel.tsx:119); the goal opens as an absolute overlay with shadow-pop over the list (App.tsx:493, ListDetail overlay); only the debt pane is 30rem/45%.
+state: open
+
+### Demo, demo.emd, both themes: #/transactions' WENT OUT / CAME IN tiles; #/transactions/merchants' WITHOUT A CATEGORY figure; #/wealth/goals' 'What you will have' bars and its '… set aside 90+ days: check it' line; #/wealth/debts' '<n> payments to confirm'; #/wealth's figures with a problem; #/year's months table and the taxes figure in its paycheck sentence.
+unit: M54 U5
+should: Outside Home figures, bars and warnings stay ink, and a problem is negative beside its word (rules: The four flows colour Home's figures — Home only, a single row stays ink; Colour carries meaning).
+breaks: The flow colours are used as figure colours and as warning tones off Home: Transactions.tsx:815-818 (home/parts Figure with flow), ByMerchant.tsx:623 flow-out, wealth/parts.tsx:56 a problem figure in flow-out, Goals.tsx:651 and Debts.tsx:607 warnings in flow-tax, plan/BucketTable.tsx:168 'money with no job to do' in flow-tax; Year.tsx:310-313 colours every month row's four figures and :170 the taxes. QUESTION: #/year sits under Home in the rail — if it counts as Home, its chart may wear the flows, but its rows still may not.
+state: open
+
+### Demo, demo.emd, both themes: #/transactions/merchants with nothing left uncategorized; #/wealth and #/wealth/debts' balance of an ordinary loan; #/wealth/goals' NO MONEY YET chip.
+unit: M54 U5
+should: Red only for a genuine problem — a reconciliation gap, an over-allocated split, a missing statement (rule: Colour carries meaning).
+breaks: 'WITHOUT A CATEGORY ₪0.00' is red when there is nothing to do; '-₪40,000.00' is red for a loan being paid on schedule (the minus sign already says it); a goal with no money yet is a red chip.
+state: open
+
+### Demo, demo.emd, both themes: #/wealth/goals' 'What you will have' chart; #/year's bars.
+unit: M54 U5
+should: Ink bars with their values labelled directly and no axis scale, and the numbers in text beside them (rules: Charts are ink, labelled directly; Every chart has its numbers).
+breaks: The goals chart fills its bars flow-saved green over a ₪0-₪12,500 y-axis and labels only the last bar; #/year's bars carry no values.
+state: open
+
+### Demo, demo.emd, both themes: #/wealth/goals' NO MONEY YET chip and the other tone chips wealth/parts.tsx draws (derived, set aside, warn); #/plan's 'money with no job to do' tag.
+unit: M54 U5
+should: A chip is text and a small dot — no border, no coloured background, colour only for a problem (rule: A chip is text and a dot).
+breaks: Each is a bordered label (color-mix borders, a dashed one for set aside) in px-[7px] text-[11px], coloured by tone (wealth/parts.tsx:141-146); BucketTable.tsx:168 is a dashed flow-tax box. (.fc-state's border is M54 U1's row.)
+state: open
+
+### Demo, demo.emd, light and dark: every ledger table's column headers (#/transactions, #/paychecks, #/year, #/wealth/debts), the editors' field labels (SALARY MONTH, GROSS, WHICH DEBT), the detail panes' labels (ACCOUNT, PURCHASED), #/year's 'Not in this document' / 'Not yet', a paycheck's 'not checked: no bank statement…', the debt pane's sentences, a reader's 'used once', and #/paychecks/deductions' two explainer paragraphs.
+unit: M54 U5
+should: Text a person needs to read is at least 4.5:1 on its plane; ink-tertiary only for what is not essential (rule: Contrast 4.5:1 for text).
+breaks: All are ink-tertiary: 2.62:1 on the page in light, 3.38-3.65:1 in dark. 331 uses of text-ink-tertiary across the ledger's screens. QUESTION, the same as M54 U2's and U4's: One level of tabs and Charts are ink put tab and axis labels in ink-tertiary on purpose.
+state: open
+
+### Demo, demo.emd, with a screen reader: #/paychecks → Edit (the lines' Remove); #/categories/rules (each rule's Edit, Disable, Delete); #/read/readers (Delete).
+unit: M54 U5
+should: Repeated row controls carry the row in their name, and a decorative glyph is hidden (guideline: icon and repeated buttons need a distinct accessible name).
+breaks: 'Remove' ×8 in the paycheck editor (PaycheckEditor.tsx:390); Edit, Disable, Delete ×20 on the rules; the ⠿ drag glyph is announced.
+state: open
+
+### Demo, demo.emd: #/paychecks (the deduction lines that 'Stop here'); #/wealth/debts → Edit debt; #/wealth/goals with no place for a goal; #/read/readers; #/wealth/funds → Add fund → Managed by.
+unit: M54 U5
+should: A form offers + New… where the thing is needed and returns with it chosen, never a hint to make it elsewhere first (rule: Make it in place).
+breaks: Entry: '…Say which fund on Deduction types' and three 'Stops here: this deduction type does not say which fund…'; Edit debt says it is 'linked from the deduction type instead — Paychecks › Deduction types'; Goals says 'Make one on Plan'; Readers says to read a file of that kind again under Read files; Add fund has a separate 'Add a manager' field 'only if it is not in the list'.
+state: open
+
+### Demo, demo.emd: #/paychecks → Edit a paycheck (a deduction line's type); #/paychecks/deductions; #/wealth/funds → Add fund (Type, Managed by, Status); #/wealth/debts → a debt's ⋯ → Add a payment (Which debt) and → Edit debt (What kind, Paid from); #/categories/rules → Edit a rule; #/categories → a category's pane (Under); #/transactions → the filter bar's Category; #/transactions/merchants → Account, Month, Order. Both themes.
+unit: M54 U5
+should: Every choice is a ChoiceField — a handful a menu, many an autocomplete, still a text field a paste lands on (rule: Choices are ChoiceField).
+breaks: Entry: each is the platform <select>. 64 <select>/<datalist> across 27 ledger files — #/paychecks/deductions alone has 14; also PointsAt, FixedSection, FixedExpenseEditor, CandidateCard, Deposit/Holding/PlaceEditor, SplitPurchases, PromotionPanel, ReapplyPanel, TestBox, FormatPicker, DeductionTypeSelect, Accounts, FeeImpact, Goals.tsx:966, Plan.tsx, ReadStatements. (SelectOrNew itself is M54 U1's row.)
+state: open
+
+### Demo, demo.emd: #/paychecks' Paid dates; #/categories' tab counts.
+unit: M54 U5
+should: Tabular figures wherever a number appears (rule: Tabular figures everywhere).
+breaks: Both are set in proportional figures.
+state: open
+
+### Demo, demo.emd: #/transactions → the filter bar's Category; a debt's ⋯ menu beside its open pane; Home's waiting list with no paycheck.
+unit: M54 U5
+should: One word, one meaning, and words that name the screen they point at (rule: Words name the rule; the term rows).
+breaks: Category lists 'Uncategorized' twice — no category, and the real category cat:uncategorized (transactions/FilterBar.tsx:139); 'Close this debt' sits beside the pane's 'Close'; Home says 'the splitter is built on it' where the screen is Plan (home/WaitingList.tsx).
+state: open
+
+### Demo, demo.emd: #/wealth/debts → ⋯ → Add a payment; #/wealth/funds → Add fund. Read the form before typing.
+unit: M54 U5
+should: A form says what it still needs neutrally and shows an error in red only after an attempt or a blur, at its field (rule: Colour carries meaning; guideline: errors appear inline).
+breaks: Entry: 'Enter how much was paid' and 'Give it a name' are red the moment each form opens, in the footer beside Cancel (debts/PaymentEditor.tsx:220, funds/FundEditor.tsx:325).
+state: open
+
 ### Demo, demo.emd: Guide me, then click between the step dots.
 unit: M54 U4
 should: Targets of at least 24px (WCAG 2.5.8).
 breaks: Each step dot is a button 18x6px (Guide.tsx:289-299).
+state: open
+
+### Demo, demo.emd: a transaction's pane; a row's context menu on #/transactions; #/paychecks → Edit; #/wealth/debts → Add a payment; the Add buttons on #/wealth/funds, #/wealth/goals, #/wealth/debts and the accounts.
+unit: M54 U5
+should: An action is one verb, or a verb and its object — Open, Edit, Add, Save, Cancel (rule: An action is a verb), and one verb per act.
+breaks: 'Make a rule for this merchant', 'Open it beside the list', 'Rule from the words you highlight' (its explanation shown twice), 'Back to the list' as the editor's Cancel, 'Record it' as Save; and one act four ways: Add fund, New goal, New debt, Add an account.
+state: open
+
+### Demo, demo.emd: read the headings (a screen reader's heading list) on #/plan, #/paychecks/deductions, #/paychecks/read, #/categories/rules, #/read/readers, #/paychecks → Edit, #/read, #/wealth/debts, #/wealth/debts → Add a payment, #/categories.
+unit: M54 U5
+should: Each screen has one h1 that names it, and headings below it in order holding only their words (guideline: headings are hierarchical).
+breaks: No h1 on #/plan, #/paychecks/deductions, #/paychecks/read, #/read/readers, or the paycheck editor ('Edit paycheck' is a span); #/categories/rules starts at h2; #/read's h1 reads 'Read filesReaders' (the Readers link sits inside it); #/wealth/debts has h1 Debts and h2 Debts; Add a payment renders two h1s; #/categories' h2s read '▾Living13 · 9 unused₪4,565.80'.
 state: open
 
 ### Demo, project.emd and demo.emd, #/connections in light and dark, first fit.
@@ -7063,6 +7279,12 @@ state: open
 unit: M54 U2
 should: Mono for raw cells only (One family, two scripts); an icon action is a 28px target with a 16px icon (An icon is an action); no shadow outside the floating rooms (No gradients, no shadows).
 breaks: Chart value labels are Plex Mono at 11px; ⋯ is a 26px target with a 14px icon; drop targets mark with shadow-[-3px_0_0_var(--color-accent)]. (Off-ramp text-[13px]/[11px] across src/ui is M54 U1's row.)
+state: open
+
+### Read the class strings of the ledger's screens (screens/Categories, Overview, ByMerchant, Plan, Transactions, GoalDetail; plan/PlanBar, PointsAt, BucketTable; wealth/parts; savings/; home/parts.tsx:210) — grep text-\[ and -\[…px\].
+unit: M54 U5
+should: Every size and space a token, type in rem (rules: Every value is a token; rem for type; Nothing between the spacing steps).
+breaks: 72 pixel type sizes — 22 the ramp has (text-[12/16/20/24px], fixable like M54 U1-U4 did) and 50 it does not (13px ×20, 11px ×11, 22px ×6, 10px ×5, 18px ×3, 34/32/26/17/15px), plus text-[length:clamp(17px,…)]; 175 arbitrary pixel spaces and sizes (Overview 21, Categories 17, PlanBar 13, wealth/parts 12: py-[9px], px-[7px], h-[30px]…).
 state: open
 
 ### Read the class strings of the surface: src/ui/RailFolder.tsx, About.tsx, guide/Guide.tsx, guide/GuideLine.tsx, EarlierCopies.tsx, Sidebar.tsx, CommandPalette.tsx, screens/Home.tsx (grep text-\[ and -\[…px\], style={{).
@@ -14289,10 +14511,15 @@ report: LANDED 871058f. 21 open review_entry rows on M54 U4 (0 start breaks with
 milestone: M54
 scope: ledger
 title: The ledger pack's screens reviewed and recorded only: transactions, by merchant, paychecks, the plan, wealth, categories and rules, the year, reading statements
-state: planned
+landed: 2026-11-02
+state: built
 brief: M54 (D-530), after U1 set the procedure — read M54 U1's report first (`format_rows unit match:{ref:"M54 U1"} columns:[report]`). The ledger is parked; the maintainer put its screens in the review but this unit CHANGES NO CODE: every finding, however plain, is only recorded, and its code is touched only by units he chooses to unpark. Surface, over demo.emd (the ledger pack): /transactions and /transactions/merchants, /paychecks (and deductions, read slips), /plan, /wealth (funds, goals, debts and their details), /categories and rules, /year, /read and /read/readers. Maintainer's answers, 2026-11-02. AGAINST: the demo documents only — `npm run dev:demo` (preview `demo-tour`, :4181; the app is /app.html, opening demo.emd), synthetic. Never a working .emd. CONDITIONS: light and dark at a desktop width, nothing else. TOOLS: `format_rows rule match:{scope:ui, state:live} columns:[name, statement]`, root DESIGN.md and PRODUCT.md; `/impeccable critique` and `/impeccable audit` on the surface (Impeccable 4.8.0, user level; per-edit hook off — if per-edit findings appear, `/impeccable hooks off`); the `web-design-guidelines` skill over the surface's files; the Impeccable detector once at the end. Verify with read_page / get_page_text; screenshots only where the answer is visual. FINDINGS: one open `review_entry` row per finding on this unit — `do` route and action named exactly, `should` what is right with its rule row or guideline, `breaks` what happens now; a finding about entering or editing rows by hand (a paycheck editor, a fund snapshot, a debt payment) starts `breaks` with `Entry:` for M55, since the engine's forms may learn from the ledger's. Never taste alone; arguing with a live rule row is a question for the maintainer. Unsettled: stop and ask. REPORT: rows written and what in the procedure worked or wasted time. Done-test: each listed screen critiqued and audited in both themes, findings are open rows on M54 U5, git diff shows nothing outside docs/memory.emd.
-files: Reviewed, not changed: src/ui/screens/ (Transactions, ByMerchant, Paychecks, DeductionTypes, Plan, Funds, FundDetail, Goals, GoalDetail, Debts, DebtDetail, Categories, Rules, Year, ReadStatements, FileGap), src/ui/paychecks/, plan/, funds/, debts/, fixed/, savings/, split/, transactions/, wealth/, categories/, categorize/, rules/, home/. Rows only: docs/memory.emd (review_entry).
+files: Reviewed, not changed (the ledger is parked): src/ui/screens/ (Transactions, ByMerchant, Paychecks, DeductionTypes, Plan, Overview, Funds, FundDetail, Goals, GoalDetail, Debts, DebtDetail, Categories, Rules, Year, ReadStatements, Readers, FileGap, Accounts, FeeImpact, DepositCheck), src/ui/paychecks/, plan/, funds/, debts/, fixed/, savings/, split/, transactions/, wealth/, categories/, categorize/, rules/. Rows only: docs/memory.emd (review_entry).
 blocks: ["M54 U1"]
+taken_by: run-milestone driver
+started: 2026-11-02
+branch: main
+report: "LANDED with this commit (rows only; no code changed - the ledger is parked). 36 open review_entry rows on M54 U5 (9 start breaks with Entry:, 5 are questions for the maintainer: Year under Home and the flow colours, category spend bars in the hue, the hatched set-aside swatch as a gradient, ink-tertiary on the ledger's labels (same question as U2/U4), seeded institution names vs D-450). No decision.\n\nPROCEDURE - WHAT WORKED: preview_start first (got 4183 again; 4181/4182 still held), then Assessment A at once as one background general-purpose subagent with the port, 'open your own tab', 'cancel every dialog, never save' and 'leave fc-theme light' - ~12 min, 221k tokens, 128 tool uses, 32 findings + a list of wrong-looking figures. While it walked: one python grep script over 80 surface files (counts per file for <select, text-[Npx], -[Npx], outline-none, hex, rgb, rounded, shadow, autoFocus, ink-tertiary, onClick on non-buttons, text-flow-*) - found the 64 selects, the 72 pixel type sizes and the Year rows' flow colours before A did; web-design-guidelines by one WebFetch applied to greps (onClick navigation on <tr>, clickable rows without key handlers); the detector once (0 findings, fifth unit running); one javascript_tool sweep of h1-h3 and unnamed controls over 15 routes in the seed tab (one call, setTimeout between hash changes). Verified A's claims in code before writing: all spot-checked held except one - 'Plan is empty though the demo builder ran set_plan' is wrong (make-demo-document.mjs calls set_plan on the timesheet document, not demo.emd); its D-450 point is seeded institution data, so it is recorded as a question. Dedupe against U1-U4's 90 rows: dropped A's .fc-state border (U1), FIELD rounded-md (U2), #/read's two primaries and 'Add more' (U3), Home's dark flow figures on fc-row-on (U4). Rows written inside land_units with commit:true and same_commit - one call; count the rows before writing the report's numbers (the first report said 35/13 and needed an update).\n\nWHAT WASTED TIME: the detector path in U2's report is a shell launcher - `node <it>` fails with a SyntaxError; run `sh <path> detect --json <files>`. A found 4183 not answering at first (the demo document was still building) - tell A to wait for the first load. Waiting on A after my own audit (~4 min) - for a review-only unit the code audit is shorter than the walk; a second subagent split by route would not help, since both would fight over the shared fc-theme.\n\nNOT DONE: a fund's detail page and a fund reading (demo.emd has no funds), editing a plan (demo.emd has none; starting one would write), categorizing on By merchant (all categorized), fixed expenses and the splitter (not reachable without a plan). Driving a paycheck/payment/rule editor to Save was out of scope (review only)."
 
 ### M54 U6
 milestone: M54
@@ -14333,6 +14560,57 @@ brief: Last of M54 (D-530): the maintainer asked for the procedure to become a p
 files: .claude/skills/design-review/SKILL.md (new). Reads: docs/memory.emd (unit reports, review_entry rows).
 blocks: ["M54 U1","M54 U2","M54 U3","M54 U4","M54 U5","M54 U6","M54 U7","M54 U8"]
 paths: .claude/skills/design-review/
+
+### M56 U1
+milestone: M56
+scope: plugin
+title: The project pane: a live start_here beside the chat, from a hooks module in the emerald plugin
+state: planned
+brief: M56. Maintainer's answers, 2026-11-02. WHAT: a hooks module (a Claude Code mod: `hooks/hooks.json` naming `modules`, `register(on)`, JSX through `$.ui.resolve(e)`) inside the emerald plugin, hosts/claude/ — never a separate plugin. The API is early access; the plugin-authoring skill's types file for the running build is the authority, `claude plugin validate` and `claude plugin test` the checks. THE PANE: `$.ui.open` + a `ui.render` hook on `{component:'Pane'}` showing what `start_here` answers for the project's document — ready units, in progress, new inbox rows, open milestones — read through `$.mcp.call` on the plugin's own emerald server. READ TOOLS ONLY: `$.mcp.call` asks no permission, so the module never calls a write tool. WHEN IT OPENS: by itself at `session.start` only in a folder that means a document, by hosts/claude/hooks/project.ts's rule (`.claude/emerald.json`, else the one .emd; a linked worktree means the main checkout's copy); silent in every other folder. Closed by the person, it stays closed for that project (`$.store`). It redraws after an emerald write tool's `tool.call` resolves. `/emerald show <format>` opens the same pane on one format or saved view. Its words follow the machinery-stays-invisible rule (D-493): nothing about servers, tools or drawing. RELEASE: the module is a shipped file, so hosts/claude/release.ts's digest covers it and the version moves by `node scripts/pin-plugin.mjs --plugin`. Unsettled: stop and ask. Done-test: validate and plugin test pass; the pane draws in the terminal and in the desktop app on a copy of the demo's synthetic project (never docs/memory.emd), redraws after a write, and nothing shows in a folder with no document; npm run test and typecheck pass.
+paths: hosts/claude/
+
+### M56 U2
+milestone: M56
+scope: plugin
+title: The inbox and the status line inside Claude Code: the mod takes over from the npx hooks where it runs
+state: planned
+brief: M56, after U1 (the same module). Maintainer's answers, 2026-11-02: the command hooks stay as the floor for every host that runs no mods (cloud Cowork, an older Claude Code); where the mod runs it takes over. FIRST, PROVE TWO THINGS and stop and ask if either fails: one plugin ships its command hooks and a hooks module together, and the module answering `classic.SessionStart` / `classic.UserPromptSubmit` without `next` keeps the npx command from running. THEN: new inbox rows printed in full once per session from `$.state` (the same rule as M51 U6, without the `.told` file where the mod runs); a `$.clock` watch that raises `$.ui.toast` when a row arrives between prompts (for the person; the model still learns of it at the next prompt, never mid-turn); `$.ui.status` in place of the status-line command. MEASURE: the time before a prompt with and without the mod on this machine (docs/plugin.md has ~1.95 s for the npx inbox hook), written into docs/plugin.md. Done-test: in a mod-running session no npx hook process starts and the inbox row still reaches context once; with the module removed the command hooks behave as today (hosts/claude/hooks/commands.test.ts unchanged); validate, plugin test, npm run test and typecheck pass.
+blocks: ["M56 U1"]
+paths: hosts/claude/
+
+### M56 U3
+milestone: M56
+scope: plugin
+title: The write rules as hooks, and /claim and /land
+state: planned
+brief: M56, after U1. Maintainer's answers, 2026-11-02: in this milestone. The rules that are prose today become `tool.call` guards in the plugin's module, each written as the guard pattern the types show (a hook that fails refuses rather than lets through): (1) an Edit or Write on a `.emd` file is refused, with why — the document is changed through its tools; (2) a `git commit` in a linked worktree while the document's copy is staged, or would be taken by `-a` or a pathspec, is refused — the same rule as scripts/guard-memory-emd.mjs, which stays for sessions without the mod; (3) an emerald write with `commit: true` that this session did not dry-run first is refused — how 'the same write' is matched is unsettled: stop and ask before choosing. `/claim <ref>` and `/land` are slash commands that hand the model the call to make; the mod itself writes nothing (U1's read-only line holds). Done-test: each guard refuses its case and lets the plain case through in a plugin test; npm run test and typecheck pass.
+blocks: ["M56 U1"]
+paths: hosts/claude/
+
+### M56 U4
+milestone: M56
+scope: plugin
+title: Four skills for a newcomer: a file onto a format, a plan brought in, a project set up, what is wrong
+state: planned
+brief: M56. Maintainer's answers, 2026-11-02: all four, in the plugin (hosts/claude/skills/), generic for a stranger — skills.test.ts already fails when one names this repo's decisions, units, notes or scripts. Names: `format_rows term search:` before naming each (D-436). (1) A FILE ONTO A FORMAT: a .csv, .xlsx, .json or a folder of Markdown notes read onto a new or existing format — `readers`, `read_onto_format`, the saved mapping (docs/mapping-templates.md); kinds of file only, never a product's export (the generic-readers rule). (2) A PLAN BROUGHT IN: an existing PLAN.md, TODO list or roadmap note made into the development pack's milestones, units and decisions, with what M48 (a planner migration) found. (3) A PROJECT SET UP: the choices `npx emerald-mcp init` leaves to the person — stored as text and committed, or one file outside every repository; the hooks; the status line setting (docs/plugin.md, the M50 U1 section). (4) WHAT IS WRONG: `format_problems` read, explained in the person's words, and fixed through the tools — the 'won't let you be wrong quietly' half. Each description says when it fires in the words a person would use; examples use fixtures/synthetic only, never a real document's names or figures (D-390). Done-test: a fresh session given each skill's trigger phrase loads it (`claude plugin eval` where it runs); skills.test.ts and plugin.test.ts pass; the plugin version moves by pin-plugin --plugin.
+paths: hosts/claude/skills/
+
+### M56 U5
+milestone: M56
+scope: plugin
+title: The server says less where the plugin's skills say it
+state: planned
+brief: M56, after U4. src/plugin/instructions.ts is ~34 KB, in context in every session of every client; a skill costs one line until it fires. The plugin already starts the server with `--engine-only`; where the server is started by the plugin, the sections U4's skills now carry shrink to one line pointing at the skill. Every other client (another runtime, the .mcpb in chat, emerald-mcp in a config file) keeps the full text — the server stays what every client gets (D-494), and only Claude reads a skill. How the server tells that the plugin launched it is the unit's to settle with the smallest signal; if it needs more than a flag the plugin passes, stop and ask. MEASURE: the instructions' size in tokens before and after, for both launches, written into docs/plugin.md. Done-test: server.test.ts holds both texts; a session on the plugin still reaches each moved how-to through its skill; npm run test and typecheck pass.
+blocks: ["M56 U4"]
+paths: src/plugin/instructions.ts, hosts/claude/
+
+### M56 U6
+milestone: M56
+scope: demo
+title: Recordings on getemerald.dev: the pane and the inbox inside Claude
+state: planned
+brief: M56, after U1 and U2. Maintainer's answers, 2026-11-02: the maintainer records; the desktop app first, one terminal clip beside it. The hard rule first, as in M33 F11: recorded on the demo's synthetic project (dist-demo/project.emd or a copy), NEVER on docs/memory.emd or any working .emd. THE SESSION WRITES: the script, as docs/page-recording.md does for the engine's — shots, captions, what is on screen — for three short clips: the project pane opening beside the chat as a session starts; an inbox row sent from another project arriving as a toast and in the pane; a format declared in conversation and its pane filling. And the page's slot for them beside M33 F11's, every word in the page's copy file, showing nothing until a file exists (the page names no file it does not have). The video is served from dist-demo beside the page — no request leaves it (D-459) — with a poster frame under prefers-reduced-motion. Done-test: the slot is empty and clean with no file, plays a placeholder clip at 1280 and 375 wide in both schemes, is still with motion off; check:tours passes, 'nothing leaves the page' included; the script is in docs/.
+blocks: ["M56 U1","M56 U2"]
 
 <!-- emerald: views.md -->
 ---
