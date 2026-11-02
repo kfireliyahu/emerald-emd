@@ -45,6 +45,22 @@ export const MOVIE_BELOW = 690
 export const BESIDE_WIDTH = 260
 
 /**
+ * **The papers a tour shows beside the app** (M54 F12), as `scripts/make-demo-receipt.cjs`
+ * draws them: what each shows, said for a screen reader, and its size in CSS
+ * pixels, so the column keeps its height before the picture arrives. Each has
+ * a `-dark` version, its own paper rather than an inversion, shown in dark.
+ */
+export const PAPERS: Readonly<Record<string, { readonly alt: string; readonly width: number; readonly height: number }>> = {
+  'receipt.png': { alt: 'A grocery receipt: four lines and the total printed under them', width: 240, height: 386 },
+  'timesheet.png': { alt: 'A paper timesheet for September: two days, the second with no end time', width: 240, height: 274 },
+}
+
+/** A paper's dark version, by name: `receipt.png` is `receipt-dark.png`. */
+export function darkPaper(name: string): string {
+  return name.replace(/(\.[a-z]+)$/i, '-dark$1')
+}
+
+/**
  * The crop's scale: the app's 13 px text at 9.75 px, which a phone reads, and a
  * window 497 app pixels wide in the host page's 375 column — wide enough for
  * what a charge's row holds, its date, merchant and amount (466 px of text),

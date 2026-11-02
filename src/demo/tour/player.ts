@@ -4,6 +4,7 @@ import type { DemoHandle } from '../contract.ts'
 import {
   bringIntoView,
   click,
+  findAnchor,
   keystrokes,
   onScreen,
   OutlineOutlived,
@@ -142,6 +143,39 @@ export function startingSpeed(chosen: number | undefined, movie: boolean): numbe
 /** The ring's travel at a speed, in ms — and what a crop's CSS pan takes, so the two arrive together. */
 export function travelAt(speed: number): number {
   return Math.round(PACE.travel / speedOf(speed))
+}
+
+/**
+ * **The rows the held first frame plays** (M54 F12): from the first, while each
+ * is a click on a place in the rail (`nav-…`) inside the first scene — going
+ * somewhere, changing nothing. A tour that opens on doing something holds on
+ * the screen it opens on.
+ */
+export function leadingRows(steps: readonly TourStep[]): number {
+  let rows = 0
+  for (const [index, step] of steps.entries()) {
+    if (index > 0 && step.caption !== undefined) break
+    if (step.action !== 'click' || step.anchor?.startsWith('nav-') !== true) break
+    rows += 1
+  }
+  return rows
+}
+
+/** The first row of a scene that outlines, or `undefined`. */
+export function firstOutline(steps: readonly TourStep[], scene: Scene | undefined): number | undefined {
+  if (scene === undefined) return undefined
+  for (let index = scene.first; index <= scene.last; index += 1) if (steps[index]?.highlight !== undefined) return index
+  return undefined
+}
+
+/**
+ * **A scene read at its outline** (M54 F12): its caption's row outlines
+ * nothing and a later row of it does — the caption is about what that row
+ * brings on, so it is read there rather than over the screen before it.
+ */
+export function readsAtOutline(steps: readonly TourStep[], scene: Scene | undefined): boolean {
+  if (scene === undefined || steps[scene.first]?.highlight !== undefined) return false
+  return firstOutline(steps, scene) !== undefined
 }
 
 export interface TourStage {
@@ -283,8 +317,33 @@ export class TourPlayer {
    * on the app, Reset or a dot starts it from here.
    */
   wait(): void {
-    this.next()
+    const generation = this.next()
     this.set({ mode: 'ready', step: 0, scene: 0, target: undefined, highlight: undefined, lost: undefined, paused: false })
+    void this.setTheScene(generation)
+  }
+
+  /**
+   * **The held first frame shows what its caption is about** (M54 F12): the
+   * rows the tour opens with that only go somewhere in the rail (`leadingRows`)
+   * are played at fast-forward under it, with the outline of the last, so a
+   * visitor reads the first caption over its screen — the card statement, the
+   * roadmap, the paycheck — rather than over an empty dashboard. Watch plays
+   * them again from the first, at the tour's pace.
+   */
+  private async setTheScene(generation: number): Promise<void> {
+    const rows = leadingRows(this.steps)
+    if (rows === 0) return
+    try {
+      await this.stage.handle()
+      if (generation !== this.generation) return
+      for (let step = 0; step < rows; step += 1) await this.act(step, generation, true)
+      const outline = this.steps[rows - 1]?.highlight
+      const highlight = outline === undefined ? undefined : findAnchor(this.stage.doc(), outline)
+      if (generation === this.generation) this.set({ step: 0, highlight })
+    } catch (error) {
+      // A Watch, a dot or Try it started first; anything else is the tour's to find when it plays.
+      if (!(error instanceof TourCancelled)) console.error(error)
+    }
   }
 
   /** From the first row. Also Reset, from either mode. */
@@ -419,8 +478,10 @@ export class TourPlayer {
       const handle = await this.stage.handle()
       live()
       if (this.unsubscribe === undefined) {
+        // A visitor's write in Try it: the strip says so, and a lost tour's
+        // line goes, since the screen it was about is not the one now (M54 F12).
         this.unsubscribe = handle.onWrite(() => {
-          if (this.state.mode === 'try' && !this.state.changed) this.set({ changed: true })
+          if (this.state.mode === 'try' && (!this.state.changed || this.state.lost !== undefined)) this.set({ changed: true, lost: undefined })
         })
       }
       for (let at = from; ; at = 0) {
@@ -466,6 +527,11 @@ export class TourPlayer {
     const reading = fresh === '' ? 0 : readingTime(fresh)
     const saying = step.action === 'say' || step.action === 'wait'
     const outlines = step.highlight !== undefined
+    // A scene whose caption is about a box a later row of it outlines is read
+    // at that outline, not before its first action (M54 F12): the card
+    // statement's grocery row, the claim's verdict.
+    const atOutline = !fast && readsAtOutline(this.steps, this.scenes[scene])
+    const opensScene = this.scenes[scene]?.first === index
 
     // An outline is the point of its row and of the rows after it that only
     // talk: a new scene lets go of it, and so does a row that acts without
@@ -483,7 +549,7 @@ export class TourPlayer {
     // F1). A row that outlines what its caption is about acts first: the action
     // brings the box on, the outline draws, and the caption is read with it in
     // view. A `say` is read after the ring is on its anchor.
-    const reads = !fast && !saying && reading > 0 && !outlines
+    const reads = !fast && !saying && reading > 0 && !outlines && !(atOutline && opensScene)
     if (reads) await this.hold(Math.min(PACE.lead, this.unread(reading)), generation)
 
     let element: HTMLElement | undefined
@@ -587,8 +653,18 @@ export class TourPlayer {
     if (last) return
     // A caption read with its box in view is held for what is left of its
     // reading, counted from when it came up, and long enough to see the outline.
+    // The scene's caption, read at its first outline, is held there whole, capped as a read before an action is.
+    const caption = this.scenes[scene]?.caption
+    const readHere =
+      atOutline && caption !== undefined && firstOutline(this.steps, this.scenes[scene]) === index
+        ? Math.min(readingTime(caption), PACE.read)
+        : 0
     await this.hold(
-      outlines ? Math.max(this.unread(reading), PACE.outlined) : saying ? Math.max(this.unread(reading), PACE.beat) : PACE.beat,
+      outlines
+        ? Math.max(this.unread(reading), readHere, PACE.outlined)
+        : saying
+          ? Math.max(this.unread(reading), PACE.beat)
+          : PACE.beat,
       generation,
     )
   }

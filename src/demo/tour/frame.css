@@ -182,6 +182,17 @@ body {
   width: 100%;
   height: auto;
 }
+/* Each paper in light and in dark (M54 F12): the dark one is its own dim slip,
+   drawn for it, never the light one inverted or left glaring beside a dark app. */
+.tour-beside img.paper-dark {
+  display: none;
+}
+:root[data-theme='dark'] .tour-beside img.paper-dark {
+  display: block;
+}
+:root[data-theme='dark'] .tour-beside img.paper-light {
+  display: none;
+}
 /* In a crop the window is on the sheet, so the paper is a card held up in the
    corner rather than a column (M33 F1): small, tilted a little, over the app's
    bottom right, where the window keeps the box it is on away from. */
@@ -595,9 +606,6 @@ body {
   to {
     opacity: 0;
   }
-}
-.tour-say.lost {
-  color: var(--color-negative);
 }
 .tour-say .of {
   margin-right: var(--tour-space-2);

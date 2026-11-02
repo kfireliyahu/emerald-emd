@@ -22,7 +22,8 @@
  *     `card_charge` format and its rows from `fixtures/synthetic/demo/
  *     card-charges.json`, and the document's currency, ILS, so an amount typed
  *     on a sheet starts in it; and `receipt.png`, copied beside it for the
- *     frame to show
+ *     frame to show (with `timesheet.png`, the timesheet tour's paper, and a
+ *     `-dark` version of each, M54 F12)
  *   - `project.emd`, the development tour's (U6): a made-up project — a
  *     service with a versioned API (M33 F6) — in the development pack's formats, as
  *     a text document: the pack's own declarations and views from
@@ -236,8 +237,11 @@ for (const name of readdirSync(folder)) {
   if (name.endsWith('.bak') || /\.before-.*\.emd$/.test(name)) rmSync(path.join(folder, name), { force: true })
 }
 
-// The picture the frame shows beside the sheet, served beside the documents.
-copyFileSync(path.join(FIXTURES, 'demo', 'receipt.png'), path.join(folder, 'receipt.png'))
+// The papers the frame shows beside the app, each in light and dark (M54 F12),
+// served beside the documents.
+for (const name of readdirSync(path.join(FIXTURES, 'demo'))) {
+  if (/^(receipt|timesheet)(-dark)?\.png$/.test(name)) copyFileSync(path.join(FIXTURES, 'demo', name), path.join(folder, name))
+}
 
 // The recordings for Emerald's page (M33 F11), once they are made,
 // and the ledger's pictures (M33 F12, npm run demo:shots): served beside the page.

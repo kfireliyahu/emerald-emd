@@ -262,7 +262,8 @@ export function DeclaredFormats() {
 
   /** One format's card — the same wherever it is listed. */
   const card = ({ format, rows, changed, proof }: Listed): React.ReactNode => (
-    <li key={format.name} className="fc-card group">
+    // The demo's tour outlines a format the model just made by this (M54 F12): `formats-card-timesheet_day`.
+    <li key={format.name} className="fc-card group" data-tour={`formats-card-${format.name}`}>
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         {/* A title can be Hebrew — typed, imported, or proposed from
             a Hebrew receipt since U2c — and a raw one scrambles beside

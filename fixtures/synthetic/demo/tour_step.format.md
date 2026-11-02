@@ -8,7 +8,7 @@ One step of a tour (M33 U3, D-413): an anchor on the real app, one thing a perso
 
 **An anchor** is a `data-tour` name on one of the app's elements (`new-format`), `choice:<text>` for the option with exactly that text in an open list, or `row:<text>` for the sheet row with a cell holding exactly that text. **The ring points at `anchor`; the outline is drawn around `highlight`**, found after the step's action, so it can name what the action brought on screen, and held through the rows after it that only talk (`say`, `wait`): a new scene, or a row that acts without outlining, lets go of it (M33 F6). `scripts/check-tours.mjs` replays every tour at fast-forward in a real browser and fails on the first step whose anchor or highlight is not on the screen, or whose held outline is over a box that has left it.
 
-**A caption starts a scene**: one dot in the strip, and the rows under it keep it until the next. A caption says what is happening and why it is a move toward the tour's question, never what the engine is. `beside` is a picture the frame shows beside the app for that scene (the paper being typed in), a file beside the document; the app never reads it, and no caption says it does.
+**A caption starts a scene**: one dot in the strip, and the rows under it keep it until the next. A caption says what is happening and why it is a move toward the tour's question, never what the engine is. A caption is read before its scene's first action, **unless a later row of its scene outlines what it is about**: then it is read at that outline, held there whole, and the rows before it play under it (M54 F12). **The held first frame shows the first caption's screen**: the rows a tour opens with that only go somewhere in the rail (a `nav-` anchor) are played before it is held, with the last one's outline. `beside` is a picture the frame shows beside the app for that scene (the paper being typed in), a file beside the document with a `-dark` version for dark mode; the app never reads it, and no caption says it does. In a conversation it takes the chat's column while its scene plays.
 
 **A tour told as a conversation** (M33 F5) carries a `chat` line on the rows where one is said, and `from` says whose. The frame shows them in a panel of its own in the paper's place — its header says the conversation was written for the tour, since the app has no chat on its screens — and a `write` row is the model writing what the conversation concluded: its `value` goes through the same `stageRows` and `insertRows` as `record_format_rows`, so a batch the engine refuses fails the step, and the check with it. A `write` whose value is `{"declare": {…}}` writes a format instead, as `declare_format` and `extend_format` are handed one (M33 U7): one the document does not hold is made, and one it holds — a pack's paycheck — is only added to, judged as the screens judge it. Nothing is painted into the page.
 
@@ -350,32 +350,33 @@ highlight: row:September 2026
 chat: I keep a timesheet: each day's date, start, end and hour rate. Was September's paycheck right?
 from: person
 
-###
+### nav-formats
 tour: timesheet
 position: 2
-action: write
-value: {"declare": {"format": "timesheet_day", "title": "Timesheet day", "notes": "One day worked, as the paper timesheet has it.", "columns": [{"name": "date", "type": "date", "required": true}, {"name": "start", "type": "time"}, {"name": "end", "type": "time"}, {"name": "rate", "type": "money", "note": "The hour rate."}, {"name": "paycheck", "type": "link", "target": "paycheck", "found_by": "date in period", "note": "The paycheck of the day's month."}], "computed": [{"name": "hours", "works_out": "end - start"}, {"name": "earned", "works_out": "hours * rate", "note": "The day's gross earning."}], "widths": {"date": 104, "start": 72, "end": 72, "rate": 120, "paycheck": 140, "hours": 80, "earned": 112}}}
+action: click
 caption: The model writes the timesheet down as a format of its own.
-chat: A timesheet day: date, start, end and rate. Its hours and its pay are worked out, never typed.
-from: model
 
 ###
 tour: timesheet
 position: 3
 action: write
-value: {"declare": {"format": "paycheck", "aggregates": [{"name": "worked", "of": "sum", "over_format": "timesheet_day", "over_column": "paycheck", "works_out": "earned", "note": "What the month's timesheet days earned."}], "claims": [{"name": "hours_paid", "expression": "gross = worked", "note": "Every hour worked is in the gross."}]}}
-chat: Each day finds the paycheck of its month. The paycheck adds up their pay and claims its gross is that.
+value: {"declare": {"format": "timesheet_day", "title": "Timesheet day", "notes": "One day worked, as the paper timesheet has it.", "columns": [{"name": "date", "type": "date", "required": true}, {"name": "start", "type": "time"}, {"name": "end", "type": "time"}, {"name": "rate", "type": "money", "note": "The hour rate."}, {"name": "paycheck", "type": "link", "target": "paycheck", "found_by": "date in period", "note": "The paycheck of the day's month."}], "computed": [{"name": "hours", "works_out": "end - start"}, {"name": "earned", "works_out": "hours * rate", "note": "The day's gross earning."}], "widths": {"date": 104, "start": 72, "end": 72, "rate": 120, "paycheck": 140, "hours": 80, "earned": 112}}}
+highlight: formats-card-timesheet_day
+chat: A timesheet day: date, start, end and rate. Its hours and its pay are worked out, never typed.
 from: model
 
-### nav-formats
+### nav-formats-timesheet_day
 tour: timesheet
 position: 4
 action: click
 
-### nav-formats-timesheet_day
+###
 tour: timesheet
 position: 5
-action: click
+action: write
+value: {"declare": {"format": "paycheck", "aggregates": [{"name": "worked", "of": "sum", "over_format": "timesheet_day", "over_column": "paycheck", "works_out": "earned", "note": "What the month's timesheet days earned."}], "claims": [{"name": "hours_paid", "expression": "gross = worked", "note": "Every hour worked is in the gross."}]}}
+chat: Each day finds the paycheck of its month. The paycheck adds up their pay and claims its gross is that.
+from: model
 
 ### foot-date
 tour: timesheet
@@ -383,6 +384,7 @@ position: 6
 action: type
 value: 2026-09-07
 caption: Now the days, from the paper. It has no end time for the 14th.
+beside: timesheet.png
 
 ### foot-start
 tour: timesheet

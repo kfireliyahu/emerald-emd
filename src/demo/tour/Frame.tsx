@@ -5,7 +5,7 @@ import { Working } from '@/ui/components/Working.tsx'
 import { reducedMotion } from '@/ui/motion/motion.ts'
 import type { DemoHandle } from '../contract.ts'
 import { messageBetween, resetMessage, tell } from './embed.ts'
-import { CROP_SCALE, cropAt, layoutOf } from './layout.ts'
+import { CROP_SCALE, cropAt, darkPaper, layoutOf, PAPERS } from './layout.ts'
 import { anchorPoint, besidePoint, contentOf, lookBox, onView, onViewport, samePlace, travelled, type Box, type Point } from './place.ts'
 import { SPEEDS, speedOf, startingSpeed, travelAt, TourPlayer, type TourCheck } from './player.ts'
 import { click } from './runner.ts'
@@ -483,7 +483,9 @@ export function Frame({
             <span className="tour-pause-label">Pause</span>
           </button>
         )}
-        <p className={`tour-say ${state.lost === undefined ? '' : 'lost'}`} aria-live="polite">
+        {/* A lost tour says so in the caption's own ink (M54 F12): it is the
+            tour that lost its place, not something the visitor got wrong. */}
+        <p className="tour-say" aria-live="polite">
           {(state.mode === 'watch' || state.mode === 'opening' || waiting) && (
             <span className="of">
               {state.scene + 1} / {dots}
@@ -567,17 +569,30 @@ export function Frame({
             {...(movie ? {} : { style: { width: `${String(layout.beside)}px` } })}
             aria-label="Beside the app: the paper being typed in"
           >
-            <img src={`./${beside}`} alt="A grocery receipt: four lines and the total printed under them" />
+            <Paper name={beside} />
           </aside>
         )}
-        {talks && !movie && <Chat lines={lines} width={layout.beside} />}
-        {talks && movie && lines.length > 0 && <ChatCard line={lines[lines.length - 1]} />}
+        {/* The paper takes the conversation's column while its scene plays (M54 F12): the scene is typing from it, and nothing is said. */}
+        {talks && !movie && beside === undefined && <Chat lines={lines} width={layout.beside} />}
+        {talks && movie && beside === undefined && lines.length > 0 && <ChatCard line={lines[lines.length - 1]} />}
         <svg ref={look} className="tour-look gone" aria-hidden>
           <rect x="1" y="1" pathLength={100} />
         </svg>
         <div ref={ring} className="tour-ring gone" aria-hidden />
       </div>
     </div>
+  )
+}
+
+/** A paper, in light and in dark: the frame's theme shows one (frame.css). */
+function Paper({ name }: { name: string }) {
+  const known = PAPERS[name]
+  const size = known === undefined ? {} : { width: known.width, height: known.height }
+  return (
+    <>
+      <img className="paper-light" src={`./${name}`} alt={known?.alt ?? ''} {...size} />
+      <img className="paper-dark" src={`./${darkPaper(name)}`} alt={known?.alt ?? ''} {...size} />
+    </>
   )
 }
 

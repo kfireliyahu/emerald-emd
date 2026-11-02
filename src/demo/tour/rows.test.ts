@@ -2,7 +2,8 @@ import { readFileSync } from 'node:fs'
 import { beforeAll, describe, expect, it } from 'vitest'
 import { SCHEMA_VERSION } from '@/data/db/database.ts'
 import { joinParts } from '@/domain/format/document.ts'
-import { PACE } from './player.ts'
+import { darkPaper, PAPERS } from './layout.ts'
+import { firstOutline, leadingRows, PACE, readsAtOutline } from './player.ts'
 import { toursFrom } from './rows.ts'
 import { chatUpTo, readingTime, scenesOf, type Tour } from './steps.ts'
 
@@ -313,6 +314,8 @@ describe('the timesheet tour, on top of the ledger (M33 U7)', () => {
   it('names no anchor the app does not carry', () => {
     const carried = [
       /^nav-(paychecks|formats|formats-[a-z_]+)$/,
+      // A format's card on the Formats screen (M54 F12): the one the model just made.
+      /^formats-card-[a-z_]+$/,
       /^foot-[a-z_]+$/,
       /^field-[a-z_]+$/,
       // A name on an entry's Empty line, which opens its field (M53 U3).
@@ -324,6 +327,64 @@ describe('the timesheet tour, on top of the ledger (M33 U7)', () => {
     for (const step of tour.steps) {
       for (const anchor of [step.anchor, step.highlight]) {
         if (anchor !== undefined) expect(carried.some((each) => each.test(anchor)), anchor).toBe(true)
+      }
+    }
+  })
+})
+
+describe('what is on screen while a caption says it (M54 F12)', () => {
+  let tours: readonly Tour[]
+  beforeAll(async () => {
+    tours = await read(committed)
+  })
+  const named = (name: string): Tour => tours.find((each) => each.name === name) as Tour
+
+  it('holds the first frame over the screen the first caption is about, never over an empty dashboard', () => {
+    // The card statement, the roadmap and the paycheck are a rail click away; the ledger opens on reading a file.
+    expect(Object.fromEntries(tours.map((each) => [each.name, leadingRows(each.steps)]))).toEqual({
+      custom: 2,
+      development: 1,
+      ledger: 0,
+      timesheet: 1,
+    })
+    expect(named('custom').steps[1]?.highlight).toBe('row:CORNER MARKET')
+  })
+
+  it("reads the card statement's caption at its outlined row, not over the screen before it", () => {
+    const custom = named('custom')
+    const first = scenesOf(custom.steps)[0]
+    expect(readsAtOutline(custom.steps, first)).toBe(true)
+    expect(firstOutline(custom.steps, first)).toBe(1)
+  })
+
+  it('shows the timesheet being made: its card outlined as it arrives, then its sheet', () => {
+    const timesheet = named('timesheet')
+    const scene = scenesOf(timesheet.steps)[1]
+    expect(scene?.caption).toMatch(/format of its own/)
+    const rows = timesheet.steps.slice(scene?.first, (scene?.last ?? 0) + 1)
+    expect(rows.map((each) => each.highlight ?? each.anchor ?? each.action)).toEqual([
+      'nav-formats',
+      'formats-card-timesheet_day',
+      'nav-formats-timesheet_day',
+      'write',
+    ])
+  })
+
+  it('shows the paper beside the app while its days are typed in', () => {
+    const typed = scenesOf(named('timesheet').steps).find((each) => each.beside !== undefined)
+    expect(typed?.beside).toBe('timesheet.png')
+    expect(typed?.caption).toMatch(/from the paper/)
+  })
+
+  it('has every paper a tour shows drawn, in light and dark, at the size the frame gives its img', () => {
+    const besides = new Set(tours.flatMap((each) => scenesOf(each.steps).flatMap((scene) => (scene.beside === undefined ? [] : [scene.beside]))))
+    expect([...besides].sort()).toEqual(Object.keys(PAPERS).sort())
+    for (const [name, paper] of Object.entries(PAPERS)) {
+      expect(paper.alt, name).not.toBe('')
+      for (const file of [name, darkPaper(name)]) {
+        const png = readFileSync(new URL(file, DEMO))
+        // Drawn at 3x (scripts/make-demo-receipt.cjs).
+        expect([png.readUInt32BE(16), png.readUInt32BE(20)], file).toEqual([paper.width * 3, paper.height * 3])
       }
     }
   })

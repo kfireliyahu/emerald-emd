@@ -1,6 +1,17 @@
 {
-  "about": "The timesheet tour's document (M33 U7): the ledger pack and one paycheck, for September, from a made-up weekend job. Synthetic and round: two days at 60.00 an hour, 8 hours on the 7th and 6.5 on the 14th, are 870.00, the paycheck's gross; its lines take 70.00, so its own claim (net) proves. A plan, Everyday, sends the whole net to spending, so the Paychecks screen shows nothing red that is not the story (M33 F7). The tour declares the timesheet itself and types the days; nothing of it is in this file. scripts/make-demo-document.mjs writes this into .demo/timesheet.emd.",
+  "about": "The timesheet tour's document (M33 U7): the ledger pack and one paycheck, for September, from a made-up weekend job. Synthetic and round: two days at 60.00 an hour, 8 hours on the 7th and 6.5 on the 14th, are 870.00, the paycheck's gross; its lines take 70.00, so its own claim (net) proves. A plan, Everyday, sends the whole net to spending, so the Paychecks screen shows nothing red that is not the story (M33 F7). The tour declares the timesheet itself and types the days from the paper below; nothing of it is in the document. scripts/make-demo-document.mjs writes this into .demo/timesheet.emd.",
   "currency": "ILS",
+  "paper": {
+    "about": "The paper timesheet the tour types in (M54 F12), drawn into timesheet.png by scripts/make-demo-receipt.cjs. The 14th has no end: the tour's point.",
+    "title": "Timesheet",
+    "employer": "Weekend job",
+    "month": "September 2026",
+    "rate": "60",
+    "days": [
+      { "date": "2026-09-07", "start": "09:00", "end": "17:00" },
+      { "date": "2026-09-14", "start": "09:00" }
+    ]
+  },
   "plans": [
     {
       "create": true,

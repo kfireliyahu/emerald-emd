@@ -1,5 +1,5 @@
 {
-  "about": "The grocery receipt the custom tour types in (M33 U2). Synthetic and round: the shop is made up and the lines add up to the printed total. The tour types only its shop, date and total; the card charge that paid it is CORNER MARKET in card-charges.json, 12.00 more than this total. scripts/make-demo-receipt.cjs draws receipt.png from this file.",
+  "about": "The grocery receipt the custom tour types in (M33 U2). Synthetic and round: the shop is made up and the lines add up to the printed total. The tour types only its shop, date and total; the card charge that paid it is CORNER MARKET in card-charges.json, 12.00 more than this total. scripts/make-demo-receipt.cjs draws receipt.png and receipt-dark.png from this file.",
   "shop": "Corner Market",
   "address": "12 Orchard Street",
   "date": "2026-07-29",

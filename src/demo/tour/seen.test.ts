@@ -190,3 +190,38 @@ describe('the frame knows whether it is seen', () => {
     expect(said).toEqual([])
   })
 })
+
+describe('a tour that lost its way (M54 F12)', () => {
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it('lets go of the line that says so once the visitor changes the document', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] })
+    let wrote: (() => void) | undefined
+    const refusing = {
+      ready: Promise.resolve(),
+      reopen: () => Promise.resolve(),
+      onWrite: (listener: () => void) => {
+        wrote = listener
+        return () => undefined
+      },
+      record: () => {
+        throw new Error('no such format')
+      },
+    } as unknown as DemoHandle
+    const lost = new TourPlayer(
+      [{ action: 'write', caption: 'One', value: '{}', write: { format: 'nothing', rows: [] } }],
+      { handle: () => Promise.resolve(refusing), doc: () => ({ defaultView: null }) as unknown as Document },
+      { reduced: true },
+    )
+    const quiet = vi.spyOn(console, 'error').mockImplementation(() => undefined)
+    lost.start()
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(lost.snapshot()).toMatchObject({ mode: 'try', lost: expect.stringMatching(/refused/) })
+    wrote?.()
+    expect(lost.snapshot()).toMatchObject({ mode: 'try', changed: true, lost: undefined })
+    quiet.mockRestore()
+    lost.dispose()
+  })
+})
