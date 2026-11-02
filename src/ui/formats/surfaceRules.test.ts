@@ -1,6 +1,9 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 
+import { contrast, parseColour } from '@/frame/hostStyle.ts'
+import { FIELD, FIELD_MULTILINE, SELECT } from '@/ui/components/fieldLook.ts'
+
 /**
  * **The ui rule rows a reviewed surface keeps** (M54 U1): the plain breaches a
  * design review fixed in place, held here so they do not come back. Each M54
@@ -271,5 +274,49 @@ describe('the tour’s play button casts no shadow', () => {
     const play = /\n\.tour-play \{([^}]*)\}/.exec(frame)?.[1] ?? ''
     expect(play).toContain('background: var(--color-accent)')
     expect(play).not.toMatch(/box-shadow/)
+  })
+})
+
+describe('the shared looks every screen spends (M54 F1)', () => {
+  const tokens = readFileSync('src/ui/theme/tokens.css', 'utf8')
+
+  // *A chip is text and a dot* (D-531): `.fc-state` loses its border app-wide, and
+  // its fill with it; the tone is the text's colour and the dot's.
+  it('draws a chip as text and a dot, with no border and no fill', () => {
+    const rules = [...tokens.matchAll(/\n\s*(\.fc-state[^{,]*)\{([^}]*)\}/g)]
+    const boxed = rules.flatMap(([, selector = '', body = '']) =>
+      selector.includes('::before') || selector.includes('-dot') ? [] : /\b(border|background)\b/.test(body) ? [selector.trim()] : [],
+    )
+    expect(rules.length).toBeGreaterThan(4)
+    expect(boxed).toEqual([])
+    expect(tokens).toMatch(/\.fc-state:not\(:has\(> \.fc-state-dot, > svg\)\)::before \{/)
+  })
+
+  // *Square by spending the radius tokens*: a field is square like a button and a menu.
+  it('squares every field by spending --radius-control', () => {
+    for (const look of [FIELD, SELECT, FIELD_MULTILINE]) {
+      expect(look).not.toMatch(/\brounded-(sm|md|lg|xl|full)\b/)
+      expect(look).toMatch(/\brounded-control\b/)
+    }
+  })
+
+  // *Contrast 4.5:1 for text*: a live chip, a flow and a negative figure on a selected
+  // row's plane, in both themes (accent 4.43:1 light, flow-saved 4.16:1 dark before).
+  it('keeps every tone that sits on a selected row at AA', () => {
+    const value = (token: string, theme: 'light' | 'dark') => {
+      const blocks = theme === 'light' ? [tokens.slice(tokens.indexOf('@theme {'))] : tokens.split(':root[data-theme="dark"] {').slice(1)
+      for (const block of blocks) {
+        const found = new RegExp(`${token}:\\s*(#[0-9a-fA-F]+);`).exec(block.slice(0, block.indexOf('\n}')))?.[1]
+        if (found !== undefined) return parseColour(found)!
+      }
+      throw new Error(`${token} has no ${theme} value`)
+    }
+    const short = (['light', 'dark'] as const).flatMap((theme) =>
+      ['accent', 'negative', 'positive', 'flow-in', 'flow-out', 'flow-saved', 'flow-tax', 'ink-secondary'].flatMap((tone) => {
+        const ratio = contrast(value(`--color-${tone}`, theme), value('--color-accent-soft', theme))
+        return ratio >= 4.5 ? [] : [`${theme} ${tone} ${ratio.toFixed(2)}`]
+      }),
+    )
+    expect(short).toEqual([])
   })
 })

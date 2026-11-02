@@ -8,9 +8,12 @@
  *
  * Promoted here on the third copy (Categories, the mapper's mapping bar, and
  * the mappings screen), which is the point at which they had started to drift.
+ *
+ * Square, like a button and a menu: a field spends `--radius-control`
+ * (`rounded-control`), never a radius of its own (M54 F1).
  */
 export const FIELD =
-  'h-8 rounded-md border border-hairline-strong bg-elevated px-3 outline-none ' +
+  'h-8 rounded-control border border-hairline-strong bg-elevated px-3 outline-none ' +
   'focus:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent'
 
 export const SELECT = `${FIELD} cursor-pointer pr-2`
@@ -21,7 +24,7 @@ export const SELECT = `${FIELD} cursor-pointer pr-2`
  * order they are written in, which is a coin toss.
  */
 export const FIELD_MULTILINE =
-  'rounded-md border border-hairline-strong bg-elevated px-3 py-2 outline-none ' +
+  'rounded-control border border-hairline-strong bg-elevated px-3 py-2 outline-none ' +
   'focus:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent'
 
 /**
