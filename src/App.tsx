@@ -3,7 +3,7 @@ import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-
 
 import { SUPPORTED_EXTENSIONS } from '@/data/importer/sheetTable.ts'
 import type { StatementSheet } from '@/data/importer/statementBatch.ts'
-import { readSnapshot, clearSnapshot } from '@/data/storage/crashCache.ts'
+import { readSnapshot } from '@/data/storage/crashCache.ts'
 import { shellDocuments } from '@/data/storage/desktop.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { batchFor, updateStatementBatch, useStatementBatch } from '@/state/statementBatch.ts'
@@ -11,7 +11,7 @@ import { CommandPalette } from '@/ui/CommandPalette.tsx'
 import { EarlierCopies } from '@/ui/EarlierCopies.tsx'
 import { About } from '@/ui/About.tsx'
 import { watchClosing } from '@/ui/motion/closing.ts'
-import { Notices } from '@/ui/Notices.tsx'
+import { Notices, offerRestore } from '@/ui/Notices.tsx'
 import { ScreenBoundary } from '@/ui/ScreenBoundary.tsx'
 import { Sidebar } from '@/ui/Sidebar.tsx'
 import { ReadingBar } from '@/ui/components/ReadingBar.tsx'
@@ -380,10 +380,11 @@ function useSidebarShortcut(): void {
  * Offer the crash snapshot back when it is newer than anything on screen.
  *
  * Never restores silently: the snapshot may be from a session the user
- * deliberately abandoned, and nothing is auto-anything in this app.
+ * deliberately abandoned, and nothing is auto-anything in this app. It is a
+ * notice naming the document, with Restore, Discard and Not now (M54 F6,
+ * D-532) — never a Cancel that discards it.
  */
 function useCrashRecovery(): void {
-  const openBytes = useDocumentStore((state) => state.openBytes)
   const db = useDocumentStore((state) => state.db)
   const [asked, setAsked] = useState(false)
 
@@ -392,15 +393,8 @@ function useCrashRecovery(): void {
     setAsked(true)
 
     const snapshot = readSnapshot()
-    if (snapshot === undefined) return
-
-    const when = new Date(snapshot.savedAt).toLocaleString()
-    if (window.confirm(`Unsaved work from ${when} was found. Restore it?`)) {
-      void openBytes(snapshot.bytes, snapshot.documentName)
-    } else {
-      clearSnapshot()
-    }
-  }, [asked, db, openBytes])
+    if (snapshot !== undefined) offerRestore(snapshot)
+  }, [asked, db])
 }
 
 /**
@@ -764,16 +758,17 @@ function RecentDocuments() {
 
   return (
     <div className="flex w-full flex-col items-center gap-1 border-t border-hairline pt-5">
-      <p className="text-caption text-ink-tertiary">Recent</p>
+      <p className="text-caption text-ink-secondary">Recent</p>
+      {/* The name a file came with, isolated: a Hebrew one keeps its start (M54 F6). */}
       {recents.map((entry) => (
         <button
           key={entry.path}
           type="button"
           onClick={() => void requestOpen(entry.path)}
           title={entry.path}
-          className="max-w-full truncate rounded px-2 py-1 text-accent underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          className="flex max-w-full min-w-0 px-2 py-1 text-accent underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
-          {entry.name}
+          <Bidi className="min-w-0 truncate">{entry.name}</Bidi>
         </button>
       ))}
     </div>

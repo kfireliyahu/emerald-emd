@@ -22,7 +22,7 @@
  *
  * **Kept by a document that declares these formats**, as `docs/memory.emd`
  * does — and, since M38 U7, by any document a person or a conversation asks to
- * keep it: the Packs screen's *Keep this pack here*, `keep_packs` and
+ * keep it: the Packs screen's *Keep … here*, `keep_packs` and
  * `create_document`'s `packs`, all through `installDevelopmentPack` below.
  *
  * ## Its views are a line each, beside the formats (M27 U3, D-301)

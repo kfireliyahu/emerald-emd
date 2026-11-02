@@ -4,7 +4,7 @@
  * 2026-10-06: every document the MCP created was a ledger document, and no
  * tool could enable a pack, so formats were declared by hand because the
  * development pack's were not reachable. `create_document` takes `packs` now,
- * and `keep_packs` is the Packs screen's *Keep this pack here* for a document
+ * and `keep_packs` is the Packs screen's *Keep … here* for a document
  * that exists. Both go through `keepPack` (`data/packs/packs.ts`), the one write
  * the screen's button runs, so a conversation and a person keep a pack the same
  * way — generic over `PACKS`, with no branch naming a pack.
@@ -141,7 +141,7 @@ export const keepPacksTool: PluginTool = {
     name: 'keep_packs',
     title: 'Keep packs in a document',
     description:
-      'Keep packs in an existing document (the Packs screen’s *Keep this pack here*): declares ' +
+      'Keep packs in an existing document (the Packs screen’s *Keep … here*): declares ' +
       'the pack’s formats it lacks, adds missing optional columns to those it holds, renames a ' +
       'column the pack renamed with its values, changes no row; a pack kept already is ' +
       'brought up to date this way, its formats’ notes and views’ settings too wherever the document still holds an ' +

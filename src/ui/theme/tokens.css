@@ -1545,19 +1545,25 @@ input[type="number"] {
   border-left: 0;
 }
 .fc-guide-dots button {
-  width: 18px;
-  height: 6px;
+  /* A 24px target (WCAG 2.5.8, M54 F6) drawing an 18x6 bar: the padding is
+     the target's, the background only the content's. */
+  box-sizing: border-box;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  padding: 9px 3px;
   background: var(--color-hairline-strong);
+  background-clip: content-box;
 }
 .fc-guide-dots button[data-state='done'] {
-  background: var(--color-ink);
+  background-color: var(--color-ink);
 }
 .fc-guide-dots button[data-state='now'] {
-  background: var(--color-accent);
+  background-color: var(--color-accent);
 }
 .fc-guide-dots button:hover {
   outline: 1px solid var(--color-accent);
-  outline-offset: 2px;
+  outline-offset: -6px;
 }
 .fc-guide-toast {
   position: fixed;
@@ -1568,7 +1574,7 @@ input[type="number"] {
   background: var(--color-ink);
   color: var(--color-background);
   padding: 8px 14px;
-  font-size: 13px;
+  font-size: var(--text-body);
 }
 @media (prefers-reduced-motion: reduce) {
   .fc-guide-ring,

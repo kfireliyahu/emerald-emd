@@ -376,8 +376,11 @@ function RailRow({
     return (
       <div className={`pr-2.5 ${left}`}>
         <div className="flex h-6 items-center gap-2 text-caption text-ink-secondary">
-          <span className="min-w-0 truncate">
-            Delete <Bidi>{name}</Bidi>?
+          {/* The ellipsis on the Bidi span, so a Hebrew name keeps its start (M54 F6). */}
+          <span className="flex min-w-0 gap-1">
+            <span className="shrink-0">Delete</span>
+            <Bidi className="min-w-0 truncate">{name}</Bidi>
+            <span className="shrink-0">?</span>
           </span>
           <button
             type="button"

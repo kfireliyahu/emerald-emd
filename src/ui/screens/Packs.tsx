@@ -27,7 +27,7 @@ import { useKeptPacks } from '@/ui/packs.ts'
  * where every format is deleted.
  *
  * **Every pack is listed** (M27 U7), each with whether this document keeps it,
- * and **every pack has the button** (M38 U7, D-405): *Keep this pack here*, the
+ * and **every pack has the button** (M38 U7, D-405): *Keep this pack here* (since M54 F6 *Keep the ledger here*, naming its pack), the
  * one write `keepPack`, which `keep_packs` and `create_document` share. Under
  * it, what keeping it does to formats the document already holds of it —
  * completes the ones that are the pack's, and refuses, naming the column, the
@@ -39,11 +39,21 @@ import { useKeptPacks } from '@/ui/packs.ts'
  *
  * `accent` marks what you can act on and colours no figure (D-125); there are
  * none here, and the buttons are the actions.
+ *
+ * **One heading, one primary, and each button naming its pack** (M54 F6): the
+ * first pack offered is the filled one and the rest are secondary, *Keep the
+ * ledger here* rather than two alike; and the packs are sections between
+ * hairlines, square and unboxed (No card borders by default).
  */
 const PLACE_LABEL: Record<PlaceKind, string> = { roadmap: 'Roadmap', board: 'Boards', ready: 'Ready to start' }
 
 /** The ledger's places are hand-drawn in `ui/nav.ts`, from before a pack could declare a view. */
 const LEDGER_PLACES = 'Home · Transactions · Paychecks · Plan · Wealth · Categories'
+
+/** The pack in a button's words: *the ledger*, *the development pack*. */
+function packObject(pack: Pick<PackDescription, 'title'>): string {
+  return /^the /i.test(pack.title) ? pack.title.replace(/^The /, 'the ') : `the ${pack.title.toLowerCase()} pack`
+}
 
 export function Packs() {
   const kept = useKeptPacks()
@@ -63,14 +73,18 @@ export function Packs() {
     }
   }
 
+  // The first pack offered is this screen's one primary (M54 F6).
+  let primaryTaken = false
+
   return (
     <div className="fc-view-enter h-full overflow-auto px-6 py-4">
-      <p className="mb-4 max-w-prose text-caption text-ink-secondary">
+      <h1 className="m-0 text-title">Packs</h1>
+      <p className="mt-2 mb-4 max-w-prose text-ink-secondary">
         A pack is a set of formats and the screens for one kind of work. A document keeps the packs
         it uses: their tables are in the file, and so is everything you put in them.
       </p>
 
-      {PACKS.map((pack, index) => {
+      {PACKS.map((pack) => {
         // Read with `kept`, which moves on every mutation.
         const planned = db === undefined ? undefined : planKeep(db, pack)
         const plan = planned?.ok === true ? planned.value : undefined
@@ -82,19 +96,19 @@ export function Packs() {
         // a column since the document kept it (D-443).
         const behind = plan !== undefined && kept.has(pack.id) && !upToDate(plan)
         const offered = plan !== undefined && (behind || (!kept.has(pack.id) && plan.clashes.length === 0))
+        const primary = offered && !primaryTaken
+        if (offered) primaryTaken = true
         return (
-          <section
-            key={pack.id}
-            aria-label={pack.title}
-            className={`${index > 0 ? 'mt-4 ' : ''}max-w-prose rounded-lg border border-hairline-strong bg-elevated p-4`}
-          >
+          <section key={pack.id} aria-labelledby={`pack-${pack.id}`} className="max-w-prose border-t border-hairline py-4">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <span className="font-medium">{pack.title}</span>
-              <span className="text-caption text-ink-tertiary">{places}</span>
+              <h2 id={`pack-${pack.id}`} className="m-0 text-body font-medium">
+                {pack.title}
+              </h2>
+              <span className="text-caption text-ink-secondary">{places}</span>
               {offered && (
                 <span className="ml-auto">
-                  <Button variant="primary" size="sm" onClick={() => keep(pack)}>
-                    {behind ? 'Bring it up to date' : 'Keep this pack here'}
+                  <Button variant={primary ? 'primary' : 'secondary'} size="sm" onClick={() => keep(pack)}>
+                    {behind ? `Bring ${packObject(pack)} up to date` : `Keep ${packObject(pack)} here`}
                   </Button>
                 </span>
               )}
@@ -111,7 +125,7 @@ export function Packs() {
               )}
             </p>
             {plan !== undefined && keptParts(plan).length > 0 && (
-              <p className="mt-2 max-w-prose text-caption text-ink-tertiary">
+              <p className="mt-2 max-w-prose text-caption text-ink-secondary">
                 Kept as this document has it, over what the pack says: {keptParts(plan).join('; ')}.
               </p>
             )}
@@ -128,7 +142,7 @@ export function Packs() {
         )
       })}
 
-      <p className="mt-4 max-w-prose text-caption text-ink-tertiary">
+      <p className="max-w-prose border-t border-hairline pt-4 text-caption text-ink-secondary">
         The engine underneath them — the formats you declare, their rows, their units and their
         claims — is not a pack, and every document has it.
       </p>

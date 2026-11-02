@@ -21,7 +21,7 @@ export function GuideLine() {
   const count = steps.length
   const done = doneCount(steps, checks)
   const meter = (
-    <span className="flex gap-[3px]" aria-hidden>
+    <span className="flex gap-1" aria-hidden>
       {steps.map((step) => (
         <i key={step.id} className={`h-1 w-4 ${checks[step.id]?.done === true ? 'bg-ink' : 'bg-hairline-strong'}`} />
       ))}
@@ -30,7 +30,7 @@ export function GuideLine() {
 
   if (done === count) {
     return (
-      <div className="fc-pop-enter flex flex-wrap items-center gap-3 text-[13px] text-ink-secondary" data-guide="home.line">
+      <div className="fc-pop-enter flex flex-wrap items-center gap-3 text-ink-secondary" data-guide="home.line">
         {meter}
         <span>Getting started: all {count} places done.</span>
         <Button variant="ghost" size="sm" onClick={() => openGuide(0)}>
@@ -42,7 +42,7 @@ export function GuideLine() {
 
   const next = steps[firstOpen(steps, checks)]
   return (
-    <div className="fc-pop-enter flex flex-wrap items-center gap-3 text-[13px] text-ink-secondary" data-guide="home.line">
+    <div className="fc-pop-enter flex flex-wrap items-center gap-3 text-ink-secondary" data-guide="home.line">
       {meter}
       <span>
         Getting started, {done} of {count} done.{next === undefined ? '' : ` Next: ${asNext(next)}.`}

@@ -12,13 +12,25 @@ import { describe, expect, it } from 'vitest'
  * tail. The fix is the one CategoryMark and By merchant use: the wrapper is a
  * `flex min-w-0`, and `<Bidi className="min-w-0 truncate">` does the clipping.
  *
- * This scan finds a `truncate` class whose element opens straight onto a
- * `<Bidi>`, anywhere under `src/ui`. **It has no exceptions** (M28 F21): every
- * one F20 found is fixed, so a new one fails. A table cell is the one place the
- * wrapper cannot be a flex box; there the `Bidi` is `block truncate` itself.
+ * This scan finds a `truncate` class whose element runs into a `<Bidi>` —
+ * straight away, or after words or a fragment before it (`Delete <Bidi>`,
+ * `under <Bidi>`: M54 F6 widened it from the first case alone) — anywhere
+ * under `src/ui`. A table cell is the one place the wrapper cannot be a flex
+ * box; there the `Bidi` is `block truncate` itself.
+ *
+ * **Its only exceptions are the parked ledger's** (D-265: no work is taken
+ * from it), each named with how many it holds, so the count can only fall.
  */
 const TRUNCATING_WRAPPER =
-  /className=(?:"[^"]*\btruncate\b[^"]*"|\{`[^`]*\btruncate\b[^`]*`\})[^<]{0,300}?>\s*(?:\{[^}]*\}\s*)?<Bidi[\s>]/g
+  /className=(?:"[^"]*\btruncate\b[^"]*"|\{`[^`]*\btruncate\b[^`]*`\})[^<]{0,300}?>(?:[^<]|<>)*<Bidi[\s>]/g
+
+/** The ledger's, parked: a category's parent, and the plan's buckets, months and pointers. */
+const PARKED = {
+  'categories/ParentPicker.tsx': 1,
+  'plan/BucketTable.tsx': 1,
+  'plan/MonthRow.tsx': 1,
+  'plan/PointsAt.tsx': 1,
+}
 
 function sources(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
@@ -36,6 +48,6 @@ describe('truncated document names', () => {
       const count = readFileSync(file, 'utf8').match(TRUNCATING_WRAPPER)?.length ?? 0
       if (count > 0) found[relative(root, file).replaceAll('\\', '/')] = count
     }
-    expect(found).toEqual({})
+    expect(found).toEqual(PARKED)
   })
 })

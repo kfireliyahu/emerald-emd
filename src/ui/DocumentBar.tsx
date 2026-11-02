@@ -12,6 +12,7 @@ import { Working } from '@/ui/components/Working.tsx'
 import { Kbd } from '@/ui/components/Kbd.tsx'
 import { loadRecents } from '@/ui/commands.ts'
 import { isDemo } from '@/ui/edition.ts'
+import { isMac } from '@/ui/platform.ts'
 
 /**
  * The document's state, always visible and never a modal (D-021).
@@ -41,6 +42,12 @@ import { isDemo } from '@/ui/edition.ts'
  * download adapter has nowhere to write and a document that has never been
  * saved has no path yet, so both keep the `Ctrl+S` nudge. Pretending otherwise
  * would be the one lie the storage layer has never told.
+ *
+ * **The title bar holds no primary** (M54 F6, D-531): it is chrome, and a
+ * screen's own primary is the one filled button in the window. Save and New
+ * are secondary here. While the file has changed on disk the status says so
+ * and points at the notice below it, in words rather than a hover title on a
+ * disabled button that takes no focus.
  *
  * **Save stays, and goes quiet** (rule 7 keeps `Ctrl/Cmd+S`; the button is its
  * visible half). Under auto-save it is disabled almost all the time, which is
@@ -84,7 +91,7 @@ export function DocumentBar() {
     return (
       <div key="none" className="fc-view-enter flex items-center gap-3">
         <span className="text-ink-secondary">No document open</span>
-        <Button variant="primary" size="sm" onClick={() => void createNew()} disabled={working}>
+        <Button size="sm" onClick={() => void createNew()} disabled={working}>
           New
         </Button>
         <Button size="sm" onClick={() => void openFile()} disabled={working}>
@@ -109,6 +116,8 @@ export function DocumentBar() {
         <DirtyDot dirty={isDirty} busy={working} />
         {busy !== undefined ? (
           BUSY_WORD[busy]
+        ) : blocked ? (
+          'changed on disk · answer the notice below'
         ) : isDirty ? (
           // The same word in both cases and a different promise behind it: under
           // auto-save "unsaved" is a state that is about to end by itself, and
@@ -117,7 +126,7 @@ export function DocumentBar() {
             'unsaved'
           ) : (
             <>
-              unsaved · <Kbd>Ctrl</Kbd>+<Kbd>S</Kbd>
+              unsaved · <SaveKeys />
             </>
           )
         ) : lastSavedAt === undefined ? (
@@ -130,22 +139,13 @@ export function DocumentBar() {
         )}
       </span>
 
-      <Button
-        variant="primary"
-        size="sm"
-        onClick={() => void save()}
-        disabled={working || !isDirty || blocked}
-        {...(blocked
-          ? { title: 'The file changed on disk. Answer that above before saving over it.' }
-          : {})}
-      >
+      <Button size="sm" onClick={() => void save()} disabled={working || !isDirty || blocked}>
         Save
       </Button>
       {/* New, while a document is open (M38 F1): `requestNew`, so unsaved work
           here is asked about rather than thrown away — the same path as
-          Ctrl+N, the palette and the shell's File menu. Secondary, because
-          Save is this row's one primary. Open… asks the same before its
-          picker (M38 U3). */}
+          Ctrl+N, the palette and the shell's File menu. Open… asks the same
+          before its picker (M38 U3). */}
       <Button size="sm" onClick={() => void requestNew()} disabled={working}>
         New
       </Button>
@@ -196,6 +196,20 @@ function OpenRecent() {
       aria-label="Open a recent document"
       className={`${FIELD} h-7 w-40`}
     />
+  )
+}
+
+/** `⌘S` on a Mac, `Ctrl+S` elsewhere — as the palette's own key is written (M54 F6). */
+function SaveKeys() {
+  return isMac() ? (
+    <>
+      <Kbd>⌘</Kbd>
+      <Kbd>S</Kbd>
+    </>
+  ) : (
+    <>
+      <Kbd>Ctrl</Kbd>+<Kbd>S</Kbd>
+    </>
   )
 }
 

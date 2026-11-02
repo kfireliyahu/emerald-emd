@@ -343,7 +343,7 @@ export const ENGINE_TOOLS: readonly PluginTool[] = [
   // for is looking at the page.
   arrangeViewsTool,
   // M38 U7 (D-405): a document made with the packs it is asked for, and a
-  // pack kept in one that exists — the Packs screen's *Keep this pack here*.
+  // pack kept in one that exists — the Packs screen's *Keep … here*.
   // `create_document` is the only tool here that does not take a path to
   // something that already exists.
   createDocumentTool,

@@ -599,3 +599,92 @@ describe('the rail, the palette and the way back, swept (M54 F5)', () => {
     expect(arrows).toContain('window.history.replaceState(')
   })
 })
+
+describe('the document’s own screens, notices and dialogs, swept (M54 F6)', () => {
+  const SWEPT = [
+    'src/ui/screens/Mcp.tsx',
+    'src/ui/screens/Packs.tsx',
+    'src/ui/screens/Export.tsx',
+    'src/ui/screens/Overview.tsx',
+    'src/ui/About.tsx',
+    'src/ui/EarlierCopies.tsx',
+    'src/ui/Notices.tsx',
+    'src/ui/DocumentBar.tsx',
+    'src/ui/guide/Guide.tsx',
+    'src/ui/guide/GuideLine.tsx',
+  ]
+  // As F5's: no type, tracking or leading in pixels, no spacing between the
+  // steps (a field's width is a measure, kept), no control's radius (a dialog
+  // keeps its room's, a status dot is round), no text in ink-tertiary.
+  it.each(SWEPT)('%s sizes, spaces, squares and inks from the tokens', (path) => {
+    const source = readFileSync(path, 'utf8')
+    expect(source.match(/\btext-\[[0-9.]+px\]|\btracking-\[|\bleading-\[/g) ?? []).toEqual([])
+    const between = /(?<![\w-])-?(?:m|p|[mp][xytblrse]|gap|gap-[xy]|space-[xy]|inset|inset-[xy]|top|left|right|bottom|h|min-h|w)-\[[0-9.]+px\]/g
+    expect((source.match(between) ?? []).filter((each) => !/^w-\[\d+px\]$/.test(each))).toEqual([])
+    expect(source.match(/\brounded(?:-(?:sm|md|\[[^\]]*\]))?(?![\w-])/g) ?? []).toEqual([])
+    expect(source.match(/(?<![\w:-])text-ink-tertiary\b/g) ?? []).toEqual([])
+  })
+
+  // One h1 a screen; a button named for what it does; colour for signal only.
+  it('heads #/mcp, #/settings/packs and #/settings/export once, and names their buttons', () => {
+    const mcp = readFileSync('src/ui/screens/Mcp.tsx', 'utf8')
+    expect(mcp).toContain('<h1 className="m-0 text-title">Assistants</h1>')
+    expect(mcp).toContain('copy="Copy the command"')
+    expect(mcp).not.toMatch(/'Copied' : 'Copy'\}/)
+    expect(mcp).not.toContain('text-negative')
+    expect(readFileSync('src/ui/mcp/connect.ts', 'utf8')).not.toMatch(/dist-plugin|SERVER_PLACEHOLDER/)
+    const packs = readFileSync('src/ui/screens/Packs.tsx', 'utf8')
+    expect(packs).toContain('<h1 className="m-0 text-title">Packs</h1>')
+    expect(packs).toContain("variant={primary ? 'primary' : 'secondary'}")
+    expect(packs).toContain('`Keep ${packObject(pack)} here`')
+    expect(packs).not.toMatch(/rounded-lg|border-hairline-strong bg-elevated/)
+    const exported = readFileSync('src/ui/screens/Export.tsx', 'utf8')
+    expect(exported).not.toMatch(/Settings · Export|File ›/)
+    expect(exported).toContain('Save as…')
+  })
+
+  // A modal traps Tab and gives focus back; one at a time; loading is Working.
+  it('holds focus in About and Earlier copies, one at a time', () => {
+    for (const path of ['src/ui/About.tsx', 'src/ui/EarlierCopies.tsx']) {
+      const source = readFileSync(path, 'utf8')
+      expect(source).toContain('useModalDialog(panel, close)')
+      expect(source).toContain('openDialog.set(')
+      expect(source).not.toContain('Looking…')
+      expect(source).toContain('<Working size={20}')
+    }
+    const earlier = readFileSync('src/ui/EarlierCopies.tsx', 'utf8')
+    expect(earlier).not.toMatch(/None yet\. One is taken/)
+    expect(earlier).not.toMatch(/<span className="fc-label flex-1">\s*Earlier copies of/)
+    expect(readFileSync('src/ui/About.tsx', 'utf8')).not.toMatch(/Could not open it: \{failure\}/)
+  })
+
+  // An error is an alert, work running is Working, a cause is a person's, and
+  // unsaved work is never discarded by the exit that looks safe.
+  it('says the notices plainly', () => {
+    const notices = readFileSync('src/ui/Notices.tsx', 'utf8')
+    expect(notices).toContain('<span role="alert" className="min-w-0">')
+    expect(notices.match(/working: true/g)?.length).toBe(2)
+    expect(notices).not.toMatch(/Could not check for updates\. \{notice\.reason\}/)
+    expect(notices).toContain("label: 'Try again'")
+    expect(notices).not.toContain("'Answer them'")
+    expect(notices).not.toMatch(/A copy from before <Bidi>\{kept\.what\}<\/Bidi> is among this document/)
+    expect(notices).toContain("label: 'Not now', onClick: () => recovery.set(undefined)")
+    expect(readFileSync('src/App.tsx', 'utf8')).not.toContain('window.confirm(')
+  })
+
+  // The title bar is chrome: no primary, and nothing said only on hover.
+  it('keeps the title bar secondary and its words true', () => {
+    const bar = readFileSync('src/ui/DocumentBar.tsx', 'utf8')
+    expect(bar).not.toContain('variant="primary"')
+    expect(bar).not.toMatch(/Answer that above/)
+    expect(bar).toContain('isMac()')
+  })
+
+  // WCAG 2.5.8: a guide step is a 24px target.
+  it('gives each guide step a 24px target', () => {
+    const tokens = readFileSync('src/ui/theme/tokens.css', 'utf8')
+    const rule = /\.fc-guide-dots button \{([^}]*)\}/.exec(tokens)?.[1] ?? ''
+    expect(rule).toMatch(/width: 24px/)
+    expect(rule).toMatch(/height: 24px/)
+  })
+})

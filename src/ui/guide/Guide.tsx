@@ -96,8 +96,8 @@ function Offer({ guide, onToast }: { readonly guide: OpenGuide; readonly onToast
         <CloseButton label="Not now" onClick={notNow} />
       </div>
       <div className="flex flex-col gap-2 px-3.5 py-3">
-        <h3 className="m-0 text-[15px] leading-[1.3] font-medium text-balance">A new document. Walk through where things go?</h3>
-        <p className="m-0 text-[13px] text-ink-secondary">
+        <h3 className="m-0 font-medium text-balance">A new document. Walk through where things go?</h3>
+        <p className="m-0 text-ink-secondary">
           {guide.steps.length} places on the real screens: statements and paychecks, your categories and shops, the bills, the plan, and
           what is in the bank. Stop whenever you like; it picks up where you left it.
         </p>
@@ -110,7 +110,7 @@ function Offer({ guide, onToast }: { readonly guide: OpenGuide; readonly onToast
           Not now
         </Button>
         <span className="flex-1" />
-        <span className="font-mono text-[10px] text-ink-tertiary">{reopenedFrom()}, any time</span>
+        <span className="text-caption text-ink-secondary">{reopenedFrom()}, any time</span>
       </div>
     </div>
   )
@@ -239,12 +239,15 @@ function Walk({ guide, onToast }: { readonly guide: OpenGuide; readonly onToast:
           <span className="fc-label flex-1">
             {step.where} · {index + 1} of {count}
           </span>
-          <Dots steps={steps} checks={checks} index={index} onPick={go} />
           <CloseButton label="Put the guide away" title="Put the guide away (Esc)" onClick={putAway} />
         </div>
+        {/* A row of their own, so each step is a 24px target (WCAG 2.5.8, M54 F6). */}
+        <div className="px-3.5 pt-1">
+          <Dots steps={steps} checks={checks} index={index} onPick={go} />
+        </div>
         <div className="flex flex-col gap-2 px-3.5 py-3">
-          <h3 className="m-0 text-[15px] leading-[1.3] font-medium text-balance">{step.title}</h3>
-          <p className="m-0 text-[13px] text-ink-secondary">{step.body}</p>
+          <h3 className="m-0 font-medium text-balance">{step.title}</h3>
+          <p className="m-0 text-ink-secondary">{step.body}</p>
           <State step={step} checks={checks} />
         </div>
         <div className="flex flex-wrap items-center gap-2 px-3.5 pt-2 pb-3">
@@ -286,7 +289,7 @@ function Dots({
   readonly onPick: (index: number) => void
 }) {
   return (
-    <div className="fc-guide-dots flex gap-[3px]" role="group" aria-label="Steps">
+    <div className="fc-guide-dots flex flex-wrap" role="group" aria-label="Steps">
       {steps.map((one, at) => {
         const done = isDone(checks, one.id)
         return (
@@ -331,7 +334,7 @@ function CloseButton({ label, title, onClick }: { readonly label: string; readon
       aria-label={label}
       title={title ?? label}
       onClick={onClick}
-      className="inline-flex size-7 items-center justify-center border border-transparent text-ink-tertiary transition-colors duration-[var(--duration-micro)] hover:border-hairline-strong hover:text-ink"
+      className="fc-icon-action"
     >
       <ActionGlyph name="close" />
     </button>
@@ -341,7 +344,7 @@ function CloseButton({ label, title, onClick }: { readonly label: string; readon
 /** `.kbd`, the mockup's: a key in mono, in a hairline box. */
 function Key({ children }: { readonly children: React.ReactNode }) {
   return (
-    <kbd className="inline-block border border-hairline-strong px-[5px] font-mono text-[10px] leading-4 text-ink-secondary">
+    <kbd className="inline-block border border-hairline-strong px-1.5 font-mono text-label text-ink-secondary">
       {children}
     </kbd>
   )

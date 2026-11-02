@@ -5,10 +5,11 @@ import { instantDay } from '@/core/instant.ts'
 import { shellDocuments } from '@/data/storage/desktop.ts'
 import { formatBytes } from '@/domain/provider.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
-import { createStore } from '@/state/store.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { Working } from '@/ui/components/Working.tsx'
+import { openDialog, useModalDialog } from '@/ui/useModalDialog.ts'
 
 /**
  * **File › Earlier copies of this document** (M45 U4, D-455).
@@ -30,13 +31,14 @@ import { Button } from '@/ui/components/Button.tsx'
  * now is taken first, into the same folder, then the earlier one replaces it and
  * the document is read again. Not while this window has unsaved work, which the
  * file does not hold and the reopen would throw away.
+ *
+ * **A modal that holds focus** (M54 F6), as About is: one of the two open at
+ * a time, Tab kept inside, focus given back on close (`useModalDialog`).
  */
-
-const open = createStore(false)
 
 /** The File menu and the palette: show the list for the open document. */
 export function openEarlierCopies(): void {
-  open.set(true)
+  openDialog.set('earlier-copies')
 }
 
 /** Whether this window can list earlier copies at all — the shell, with a document open from a file. */
@@ -63,7 +65,7 @@ type Listing =
   | { readonly kind: 'copies'; readonly copies: readonly EarlierCopy[] }
 
 export function EarlierCopies() {
-  const isOpen = open.use()
+  const isOpen = openDialog.use() === 'earlier-copies'
   return isOpen ? <EarlierCopiesDialog /> : null
 }
 
@@ -74,7 +76,10 @@ function EarlierCopiesDialog() {
   const [restoring, setRestoring] = useState<string | undefined>(undefined)
   const [restored, setRestored] = useState<{ readonly from: number } | undefined>(undefined)
   const [failure, setFailure] = useState<string | undefined>(undefined)
+  const [backingUp, setBackingUp] = useState(false)
   const panel = useRef<HTMLDivElement>(null)
+  const close = (): void => openDialog.set(undefined)
+  const onKeyDown = useModalDialog(panel, close)
 
   const load = useCallback(async (): Promise<void> => {
     const shell = shellDocuments()
@@ -90,12 +95,18 @@ function EarlierCopiesDialog() {
     }
   }, [])
 
-  useEffect(() => {
-    void load()
-    panel.current?.focus()
-  }, [load])
+  useEffect(() => void load(), [load])
 
-  const close = (): void => open.set(false)
+  // The empty list's one action: Back up now, the palette's, and the list again.
+  const backUp = async (): Promise<void> => {
+    setBackingUp(true)
+    try {
+      await useDocumentStore.getState().keepCopy('now')
+      await load()
+    } finally {
+      setBackingUp(false)
+    }
+  }
 
   const restore = async (copy: EarlierCopy): Promise<void> => {
     const shell = shellDocuments()
@@ -131,51 +142,46 @@ function EarlierCopiesDialog() {
         aria-label="Earlier copies of this document"
         tabIndex={-1}
         className="fc-pop-enter flex max-h-[70vh] w-full max-w-lg flex-col overflow-hidden rounded-lg border border-hairline-strong bg-elevated shadow-pop outline-none"
-        onKeyDown={(event) => {
-          if (event.key === 'Escape') {
-            event.preventDefault()
-            close()
-          }
-        }}
+        onKeyDown={onKeyDown}
       >
         <div className="flex items-center gap-2.5 border-b border-hairline py-2 pr-2 pl-3.5">
-          <span className="fc-label flex-1">
-            Earlier copies of <Bidi>{documentName}</Bidi>
-          </span>
-          <button
-            type="button"
-            aria-label="Close"
-            title="Close (Esc)"
-            onClick={close}
-            className="inline-flex size-7 items-center justify-center border border-transparent text-ink-tertiary transition-colors duration-[var(--duration-micro)] hover:border-hairline-strong hover:text-ink"
-          >
+          {/* The heading in sentence case, so the file's name keeps its own (M54 F6). */}
+          <h2 className="m-0 flex min-w-0 flex-1 gap-1 text-body font-medium">
+            <span className="shrink-0">Earlier copies of</span>
+            <Bidi className="min-w-0 truncate">{documentName}</Bidi>
+          </h2>
+          <button type="button" aria-label="Close" title="Close (Esc)" onClick={close} className="fc-icon-action">
             <ActionGlyph name="close" />
           </button>
         </div>
 
-        <p className="m-0 px-3.5 pt-3 text-[13px] text-ink-secondary">
+        <p className="m-0 px-3.5 pt-3 text-ink-secondary">
           A copy is taken before an assistant writes to this document, and the last five are kept in Emerald’s own folder.
           Named copies, kept before a large write or when asked, are kept apart, the last three. Restoring one keeps a
           copy of the document as it is now first, so it can be undone from here.
         </p>
         {isDirty && (
-          <p className="m-0 px-3.5 pt-2 text-[13px] text-ink">
+          <p className="m-0 px-3.5 pt-2 text-ink">
             Save first — restoring replaces the file and opens it again, and the changes in this window are not in it yet.
           </p>
         )}
         {restored !== undefined && (
-          <p className="m-0 px-3.5 pt-2 text-[13px] text-ink" role="status">
+          <p className="m-0 px-3.5 pt-2 text-ink" role="status">
             Restored the copy from {moment(restored.from)}. The document as it was just before is the newest copy below.
           </p>
         )}
         {failure !== undefined && (
-          <p className="m-0 px-3.5 pt-2 text-[13px] text-negative" role="alert">
+          <p className="m-0 px-3.5 pt-2 text-negative" role="alert">
             Could not restore it: {failure}
           </p>
         )}
 
         <div className="min-h-0 flex-1 overflow-y-auto px-3.5 pt-2 pb-3">
-          {listing.kind === 'loading' && <p className="m-0 py-3 text-ink-tertiary">Looking…</p>}
+          {listing.kind === 'loading' && (
+            <div className="py-3">
+              <Working size={20} label="Listing the copies" />
+            </div>
+          )}
           {listing.kind === 'nothing-open' && (
             <p className="m-0 py-3 text-ink-secondary">Open a document from a file to see its earlier copies.</p>
           )}
@@ -185,14 +191,24 @@ function EarlierCopiesDialog() {
             </p>
           )}
           {listing.kind === 'copies' && listing.copies.length === 0 && (
-            <p className="m-0 py-3 text-ink-secondary">None yet. One is taken the first time an assistant writes to it.</p>
+            <p className="m-0 py-3 text-ink-secondary">
+              None yet: one is taken the first time an assistant writes to it.{' '}
+              <button
+                type="button"
+                disabled={backingUp}
+                onClick={() => void backUp()}
+                className="text-accent underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:text-ink-secondary"
+              >
+                Back up now
+              </button>
+            </p>
           )}
           {listing.kind === 'copies' && listing.copies.length > 0 && (
             <ul className="m-0 flex list-none flex-col p-0">
               {listing.copies.map((copy) => (
                 <li key={copy.name} className="flex items-center gap-3 border-b border-hairline py-2 last:border-b-0">
                   <span className="flex min-w-0 flex-1 items-baseline gap-2">
-                    <span className="font-mono text-[13px] tabular-nums">{moment(copy.at)}</span>
+                    <span className="font-mono tabular-nums">{moment(copy.at)}</span>
                     {copy.before !== undefined && (
                       // The ellipsis on the Bidi span, so a Hebrew label keeps its start (M54 U6).
                       <span className="flex min-w-0 gap-1 text-caption text-ink-secondary">
@@ -201,7 +217,7 @@ function EarlierCopiesDialog() {
                       </span>
                     )}
                   </span>
-                  <span className="font-mono text-caption text-ink-tertiary tabular-nums">{formatBytes(copy.size)}</span>
+                  <span className="font-mono text-caption text-ink-secondary tabular-nums">{formatBytes(copy.size)}</span>
                   <Button
                     size="sm"
                     disabled={isDirty || (restoring !== undefined && restoring !== copy.name)}

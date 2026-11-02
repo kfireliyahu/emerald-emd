@@ -37,7 +37,7 @@ Start-Process -FilePath node_modules\electron\dist\electron.exe -ArgumentList ".
 **Launch in one call, probe in the next.** Never both in one Bash call.
 
 `--user-data-dir` pointed at the scratchpad matters: each run then starts on a clean
-`localStorage`, which is what keeps the crash-recovery `window.confirm` from firing (see below).
+`localStorage`, which keeps the crash-recovery notice (Restore, Discard, Not now) out of the way.
 
 ## Attach
 
@@ -59,9 +59,9 @@ Three different causes present as "CDP opened and then answered nothing":
 - **A blocking native dialog** (`showMessageBoxSync`) stalls all CDP traffic, because it blocks
   the main process. Usable as a signal: if an `invoke` stops answering right after you trigger a
   close, the modal is up.
-- **A renderer `window.confirm` stalls it identically.** The crash-recovery prompt fires on the
-  next launch after any probe that left a dirty document. Fix with a fresh `--user-data-dir`, or
-  send `Page.enable` and answer `Page.javascriptDialogOpening` with `Page.handleJavaScriptDialog`.
+- **A renderer `window.confirm` stalls it identically.** The crash-recovery prompt was one until
+  M54 F6 and is a notice now, which blocks nothing; any confirm left is answered by sending
+  `Page.enable` and `Page.handleJavaScriptDialog` on `Page.javascriptDialogOpening`.
 - **Its other symptom is no window at all, and that one reads as a broken build.** `main.ts`
   creates the window with `show: false` ([`electron/main.ts:531`](../../../electron/main.ts)) and
   shows it on `ready-to-show` (:548); a confirm that blocks before first paint means

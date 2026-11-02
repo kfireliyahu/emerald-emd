@@ -277,8 +277,10 @@ export function CategoryPicker({
                     />
                     {canCreate ? (
                       <>
-                        <span className="min-w-0 truncate">
-                          Create “<Bidi className="text-ink">{wanted}</Bidi>”
+                        <span className="flex min-w-0">
+                          <span className="shrink-0">Create “</span>
+                          <Bidi className="min-w-0 truncate text-ink">{wanted}</Bidi>
+                          <span className="shrink-0">”</span>
                         </span>
                         <span className="ml-auto shrink-0 text-caption text-ink-tertiary">new</span>
                       </>

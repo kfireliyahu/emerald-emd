@@ -1,14 +1,18 @@
 import { useMemo, useState, type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
+import { instantDay } from '@/core/instant.ts'
 import { waitingItems } from '@/data/repositories/homeRepository.ts'
 import { documentCurrency } from '@/data/repositories/statisticsRepository.ts'
+import { clearSnapshot, type Snapshot } from '@/data/storage/crashCache.ts'
 import { shellUpdates } from '@/data/storage/desktop.ts'
 import { waitingCounts } from '@/domain/home.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
+import { createStore } from '@/state/store.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { openEarlierCopies } from '@/ui/EarlierCopies.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { Working } from '@/ui/components/Working.tsx'
 import { useKeepsLedger } from '@/ui/packs.ts'
 import { today } from '@/ui/today.ts'
 import { answer, useUpdateState } from '@/ui/useUpdates.ts'
@@ -31,9 +35,11 @@ import { answer, useUpdateState } from '@/ui/useUpdates.ts'
  * 2. **The document waiting to open**, because something outside the app is
  *    blocked on the answer — a double-click that appears to have done nothing.
  *    A new document asked for over unsaved work waits in the same rank and
- *    asks the same three things (M38 F1).
+ *    asks the same three things (M38 F1). **Unsaved work found at launch**
+ *    leads this rank (M54 F6, D-532): Restore, Discard, or Not now, which keeps
+ *    it to ask again next time — never a Cancel that throws it away.
  * 3. **The error**, because it reports something that already failed. It is
- *    the past; the two above are the present.
+ *    the past; the two above are the present. It is said as an alert (M54 F6).
  * 3½. **The copy kept before a large read** (M34 U6, D-399), because where it
  *    is has to be said once, and in a browser it is gone with the page unless
  *    it is downloaded — a present-tense question, but about a file rather than
@@ -67,6 +73,10 @@ interface Notice {
   readonly id: string
   readonly body: ReactNode
   readonly actions: readonly NoticeAction[]
+  /** Work still running: the one progress indicator where the dot is (M54 F6). */
+  readonly working?: boolean
+  /** Something failed: said as an alert, not politely (M54 F6). */
+  readonly alert?: boolean
 }
 
 export function Notices({
@@ -81,6 +91,7 @@ export function Notices({
   offerResume: boolean
 }) {
   const conflict = useDiskConflictNotice()
+  const restore = useRestoreNotice()
   const pending = usePendingOpenNotice()
   const replacing = usePendingReplaceNotice()
   const failure = useErrorNotice()
@@ -93,7 +104,7 @@ export function Notices({
 
   // The array order *is* the ranking. Written out rather than sorted by a
   // number, because four fixed things in a fixed order is what this is.
-  const notices = [conflict, pending, replacing, failure, kept, waiting, update].filter(
+  const notices = [conflict, restore, pending, replacing, failure, kept, waiting, update].filter(
     (notice): notice is Notice => notice !== undefined,
   )
 
@@ -117,8 +128,18 @@ function Row({ notice, leading }: { notice: Notice; leading: boolean }) {
     <div className="fc-pop-enter flex flex-wrap items-center gap-x-4 gap-y-2 px-6 py-2 text-ink-secondary">
       {/* The same marker the dashboard's ranked list uses, so a stack of two
           reads as one list rather than as two unrelated bars. */}
-      <span aria-hidden className="size-2 shrink-0 rounded-full bg-ink" />
-      <span className="min-w-0">{notice.body}</span>
+      {notice.working === true ? (
+        <Working size={14} />
+      ) : (
+        <span aria-hidden className={`size-2 shrink-0 rounded-full ${notice.alert === true ? 'bg-negative' : 'bg-ink'}`} />
+      )}
+      {notice.alert === true ? (
+        <span role="alert" className="min-w-0">
+          {notice.body}
+        </span>
+      ) : (
+        <span className="min-w-0">{notice.body}</span>
+      )}
 
       <div className="ml-auto flex shrink-0 items-center gap-2">
         {notice.actions.map((action) => (
@@ -232,17 +253,31 @@ function useDiskConflictNotice(): Notice | undefined {
  */
 function useKeptCopyNotice(): Notice | undefined {
   const kept = useDocumentStore((state) => state.keptCopy)
+  const documentName = useDocumentStore((state) => state.documentName)
   const download = useDocumentStore((state) => state.downloadKeptCopy)
   const dismiss = useDocumentStore((state) => state.dismissKeptCopy)
 
   if (kept === undefined) return undefined
+
+  // *Back up now* keeps a copy of the document as it is now; a large read keeps
+  // one from before it (M54 F6): the sentence names which.
+  const copy =
+    kept.what === 'now' ? (
+      <>
+        A copy of <Bidi>{documentName}</Bidi> as it is now
+      </>
+    ) : (
+      <>
+        A copy from before <Bidi>{kept.what}</Bidi>
+      </>
+    )
 
   if (kept.where === 'earlier-copies') {
     return {
       id: 'kept-copy',
       body: (
         <>
-          A copy from before <Bidi>{kept.what}</Bidi> is among this document’s earlier copies, as{' '}
+          {copy} is among its earlier copies, as{' '}
           <strong className="font-medium">
             <Bidi>{kept.name}</Bidi>
           </strong>
@@ -260,8 +295,7 @@ function useKeptCopyNotice(): Notice | undefined {
     id: 'kept-copy',
     body: (
       <>
-        A copy from before <Bidi>{kept.what}</Bidi> is held in this page until it closes. Download
-        it to keep it.
+        {copy} is held in this page until it closes. Download it to keep it.
       </>
     ),
     actions: [
@@ -381,14 +415,14 @@ function useUpdateNotice(): Notice | undefined {
 
   switch (notice.kind) {
     case 'checking':
-      return { id: 'update', body: <>Checking for a newer version of Emerald…</>, actions: [] }
+      return { id: 'update', body: <>Checking for a newer version of Emerald…</>, actions: [], working: true }
     case 'available':
       return {
         id: 'update',
         body: (
           <>
             <strong className="font-medium">Emerald {notice.version}</strong> is out. You have {state?.version}.
-            {notice.unfetched !== undefined && <> It could not be downloaded here: {notice.unfetched}</>}
+            {notice.unfetched !== undefined && <> {plainDownloadFailure(notice.unfetched)}</>}
           </>
         ),
         actions: [
@@ -408,6 +442,7 @@ function useUpdateNotice(): Notice | undefined {
         id: 'update',
         body: <>Downloading Emerald {notice.version}…</>,
         actions: [{ label: 'Later', onClick: later, quiet: true }],
+        working: true,
       }
     case 'ready':
       return {
@@ -444,10 +479,31 @@ function useUpdateNotice(): Notice | undefined {
     case 'failed':
       return {
         id: 'update',
-        body: <>Could not check for updates. {notice.reason}</>,
-        actions: [{ label: 'Dismiss', onClick: later, quiet: true }],
+        body: <>Could not check for updates. {plainCheckFailure(notice.reason)}</>,
+        actions: [
+          { label: 'Try again', onClick: () => void answer(updates.checkNow()), lead: true },
+          { label: 'Dismiss', onClick: later, quiet: true },
+        ],
       }
   }
+}
+
+/**
+ * **A cause a person can act on, never the raw one** (M54 F6): Chromium's
+ * `net::ERR_…` and electron-updater's `HttpError` say where it broke for a
+ * developer. Offline is the one a person can fix; the rest is GitHub's.
+ */
+export function plainCheckFailure(reason: string): string {
+  if (/ERR_INTERNET_DISCONNECTED|ERR_NAME_NOT_RESOLVED|ERR_NETWORK_CHANGED|ERR_CONNECTION|ERR_TIMED_OUT|ENOTFOUND|EAI_AGAIN|ECONNREFUSED|ETIMEDOUT/i.test(reason)) {
+    return 'This computer could not reach GitHub: check the connection, then try again.'
+  }
+  return 'GitHub did not answer as expected: try again in a while.'
+}
+
+/** Why a download failed, the same way: the checksum's sentence is already a person's (`downloadFailure`). */
+export function plainDownloadFailure(reason: string): string {
+  if (/checksum/i.test(reason)) return reason
+  return 'It could not be downloaded here, so Download opens its page instead.'
 }
 
 /** Whatever the document store last failed at, until it is dismissed. */
@@ -461,6 +517,7 @@ function useErrorNotice(): Notice | undefined {
     id: 'error',
     body: <span className="text-negative">{error}</span>,
     actions: [{ label: 'Dismiss', onClick: dismissError, quiet: true }],
+    alert: true,
   }
 }
 
@@ -509,8 +566,72 @@ function useWaitingNotice(offer: boolean): Notice | undefined {
       </>
     ),
     actions: [
-      { label: 'Answer them', onClick: () => navigate('/'), lead: true },
+      // It goes to the list, where each is answered: the button says so (M54 F6).
+      { label: 'Open Home', onClick: () => navigate('/'), lead: true },
       { label: 'Not now', onClick: () => setDismissed(true), quiet: true },
+    ],
+  }
+}
+
+/**
+ * **Unsaved work found at launch** (M54 F6, D-532), offered once the window is
+ * up. It was `window.confirm`, whose Cancel cleared the snapshot, so the exit
+ * that looks safe threw the work away. Now a notice naming the document:
+ * **Restore** opens it; **Discard** clears it; **Not now** hides the notice and
+ * keeps the snapshot, to be offered at the next launch.
+ */
+const recovery = createStore<Snapshot | undefined>(undefined)
+
+/** `App`'s crash recovery: offer this snapshot back. */
+export function offerRestore(snapshot: Snapshot): void {
+  recovery.set(snapshot)
+}
+
+/** `2026-11-02 14:05`: the day as every date on screen is (D-023), and the minute. */
+function moment(at: number): string {
+  const date = new Date(at)
+  const pad = (value: number): string => String(value).padStart(2, '0')
+  return `${instantDay(at)} ${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
+function useRestoreNotice(): Notice | undefined {
+  const snapshot = recovery.use()
+  const busy = useDocumentStore((state) => state.busy) !== undefined
+  // Restoring opens the snapshot in this window, so not over unsaved work here.
+  const isDirty = useDocumentStore((state) => state.isDirty)
+  const openBytes = useDocumentStore((state) => state.openBytes)
+
+  if (snapshot === undefined) return undefined
+
+  return {
+    id: 'restore',
+    body: (
+      <>
+        <strong className="font-medium">
+          <Bidi>{snapshot.documentName}</Bidi>
+        </strong>{' '}
+        has unsaved work from {moment(snapshot.savedAt)}, kept when Emerald closed without saving it.
+      </>
+    ),
+    actions: [
+      {
+        label: 'Restore',
+        onClick: () => {
+          recovery.set(undefined)
+          void openBytes(snapshot.bytes, snapshot.documentName)
+        },
+        disabled: busy || isDirty,
+        lead: true,
+      },
+      {
+        label: 'Discard',
+        onClick: () => {
+          recovery.set(undefined)
+          clearSnapshot()
+        },
+        disabled: busy,
+      },
+      { label: 'Not now', onClick: () => recovery.set(undefined), quiet: true },
     ],
   }
 }

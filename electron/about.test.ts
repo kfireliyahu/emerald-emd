@@ -76,6 +76,14 @@ describe('what the About says', () => {
   it('is the same text on every platform', () => {
     expect(aboutCredits('0.9.0', 'https://github.com/a/b')).toBe(options.credits)
   })
+
+  // The page's About has a button for each; Help sits behind Alt on Windows (M54 F6).
+  it('points at the Help menu only from the native panel', () => {
+    expect(options.credits).toContain('in the Help menu')
+    const page = aboutCredits('0.9.0', 'https://github.com/a/b', 'page')
+    expect(page).not.toContain('Help menu')
+    expect(page).toContain(NOT_ADVICE)
+  })
 })
 
 describe('the README says it too', () => {

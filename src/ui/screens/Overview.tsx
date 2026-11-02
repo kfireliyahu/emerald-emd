@@ -124,7 +124,7 @@ export function Overview() {
     <div className="h-full overflow-auto">
       <Screen>
         <header className="flex flex-wrap items-end justify-between gap-3">
-          <h1 className="m-0 text-title leading-[1.15] font-medium tracking-[-0.01em]">Net worth</h1>
+          <h1 className="m-0 text-title">Net worth</h1>
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="secondary" icon="add" onClick={() => setAdding('ACCOUNT')}>
               Add an account
@@ -146,10 +146,10 @@ export function Overview() {
           </div>
         </header>
 
-        <div className="flex flex-wrap items-end gap-x-9 gap-y-2.5 border-b border-hairline pb-[18px]">
+        <div className="flex flex-wrap items-end gap-x-9 gap-y-2.5 border-b border-hairline pb-5">
           <div className="flex flex-col gap-0.5">
             <span className={LABEL}>Net worth</span>
-            <span className="text-[34px] leading-[1.1] font-medium tracking-[-0.015em] whitespace-nowrap tabular-nums">
+            <span className="text-hero whitespace-nowrap tabular-nums">
               {formatMoney(now.worth)}
             </span>
             <span className="text-caption text-ink-secondary">Everything you own, each once, less what you owe.</span>
@@ -201,7 +201,7 @@ export function Overview() {
                   if (members.length === 0) return null
                   return [
                     <tr key={group}>
-                      <td colSpan={5} className={index === 0 ? 'pt-1.5 pb-1' : 'pt-[18px] pb-1'}>
+                      <td colSpan={5} className={index === 0 ? 'pt-1.5 pb-1' : 'pt-5 pb-1'}>
                         <span className={LABEL}>{GROUP_LABEL[group]}</span>
                       </td>
                     </tr>,
@@ -252,9 +252,9 @@ export function Overview() {
   )
 }
 
-const LABEL = 'text-label tracking-[0.08em] text-ink-secondary uppercase font-medium'
-const TH = 'border-b border-hairline-strong pr-2.5 pb-1.5 text-left text-label font-medium tracking-[0.08em] whitespace-nowrap text-ink-secondary uppercase'
-const TD = 'border-t border-hairline py-[9px] pr-2.5 align-middle'
+const LABEL = 'text-label text-ink-secondary uppercase font-medium'
+const TH = 'border-b border-hairline-strong pr-2.5 pb-1.5 text-left text-label font-medium whitespace-nowrap text-ink-secondary uppercase'
+const TD = 'border-t border-hairline py-2.5 pr-2.5 align-middle'
 const NARROW = 'max-[760px]:hidden'
 
 function Part({ label, children }: { label: string; children: ReactNode }) {
@@ -315,7 +315,7 @@ function Row({
       <td className={`${cell} text-right font-medium whitespace-nowrap tabular-nums ${row.figure !== undefined && row.figure.minor < 0 ? 'text-negative' : ''}`}>
         {row.figure === undefined ? <span className="font-normal text-ink-secondary">unchecked</span> : formatMoney(row.figure)}
       </td>
-      <td className={`${cell} w-[26px] text-center text-ink-tertiary`} title={opens ? undefined : 'Opens on its own page'}>
+      <td className={`${cell} w-7 text-center text-ink-secondary`} title={opens ? undefined : 'Opens on its own page'}>
         <Chevron down={isOpen} />
       </td>
     </tr>
@@ -483,7 +483,7 @@ function AddAccount({ write, onDone }: { write: Write; onDone: () => void }) {
             if (event.key === 'Enter') add()
             if (event.key === 'Escape') onDone()
           }}
-          className={`${FIELD} h-[30px] w-[220px]`}
+          className={`${FIELD} w-[220px]`}
         />
         <ChoiceField
           text={ACCOUNT_KINDS.find((one) => one.value === kind)?.label ?? ''}
@@ -493,7 +493,7 @@ function AddAccount({ write, onDone }: { write: Write; onDone: () => void }) {
           aria-label="What kind of account"
           onText={() => undefined}
           onPick={(choice) => setKind(choice.value as AccountKind)}
-          className={`${FIELD} h-[30px] w-[190px]`}
+          className={`${FIELD} w-[190px]`}
         />
         <Button variant="primary" size="sm" disabled={name.trim() === ''} onClick={add}>
           Add
@@ -550,7 +550,7 @@ function AddPlace({ write, onDone }: { write: Write; onDone: () => void }) {
             type="button"
             aria-pressed={draft.kind === kind}
             onClick={() => set({ kind, ...(LOCKABLE.has(kind) ? {} : { lockedUntil: undefined }) })}
-            className={`-ml-px h-[26px] border px-[9px] text-caption whitespace-nowrap first:ml-0 ${
+            className={`-ml-px h-7 border px-2.5 text-caption whitespace-nowrap first:ml-0 ${
               draft.kind === kind ? 'relative z-[1] border-accent bg-accent-soft text-ink' : 'border-hairline-strong text-ink-secondary'
             }`}
           >
@@ -559,7 +559,7 @@ function AddPlace({ write, onDone }: { write: Write; onDone: () => void }) {
         ))}
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <label className="flex flex-col gap-[3px]">
+        <label className="flex flex-col gap-1">
           <span className="text-caption text-ink-secondary">Name</span>
           <input
             autoFocus
@@ -570,28 +570,28 @@ function AddPlace({ write, onDone }: { write: Write; onDone: () => void }) {
               if (event.key === 'Enter') add()
               if (event.key === 'Escape') onDone()
             }}
-            className={`${FIELD} h-[30px] w-[200px]`}
+            className={`${FIELD} w-[200px]`}
           />
         </label>
         {draft.kind !== 'CASH_AT_HOME' && (
-          <label className="flex flex-col gap-[3px]">
+          <label className="flex flex-col gap-1">
             <span className="text-caption text-ink-secondary">At</span>
             <input
               dir="auto"
               value={draft.institution ?? ''}
               onChange={(event) => set({ institution: event.target.value === '' ? undefined : event.target.value })}
-              className={`${FIELD} h-[30px] w-[150px]`}
+              className={`${FIELD} w-[150px]`}
             />
           </label>
         )}
         {LOCKABLE.has(draft.kind) && (
-          <label className="flex flex-col gap-[3px]">
+          <label className="flex flex-col gap-1">
             <span className="text-caption text-ink-secondary">Locked until</span>
             <input
               type="date"
               value={draft.lockedUntil === undefined ? '' : toISODate(draft.lockedUntil)}
               onChange={(event) => set({ lockedUntil: parseISODate(event.target.value) ?? undefined })}
-              className={`${FIELD} h-[30px] w-[150px]`}
+              className={`${FIELD} w-[150px]`}
             />
           </label>
         )}

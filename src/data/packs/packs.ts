@@ -363,7 +363,7 @@ export function keptParts(plan: KeepPlan): readonly string[] {
 
 /**
  * **Keep a pack in a document** (M38 U7, D-405) — the one write behind the
- * Packs screen's *Keep this pack here*, `keep_packs` and `create_document`'s
+ * Packs screen's *Keep … here*, `keep_packs` and `create_document`'s
  * `packs`. A pack the document keeps already is left alone and says so, unless
  * this build's pack has grown or renamed a column since (D-443); a clash is
  * refused, naming the column, before anything is written.

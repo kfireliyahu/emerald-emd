@@ -198,7 +198,7 @@ const CAPABILITIES: readonly Capability[] = [
     tool: 'connect_formats',
   },
   {
-    // M38 U7 (D-405): *Keep this pack here* on each pack's card, and
+    // M38 U7 (D-405): *Keep … here* on each pack's card, and
     // `keep_packs` (with `create_document`'s `packs`), through the one
     // `keepPack` in `data/packs/packs.ts` — which declares through `adoptFormat`,
     // and since M51 U9 (D-491) brings an earlier build's view settings to this

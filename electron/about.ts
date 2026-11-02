@@ -65,8 +65,12 @@ export const NOT_ADVICE =
 
 const LICENSE_LINE = 'Free software under the GNU AGPL-3.0-only, with no warranty.'
 
-/** The body of the About, the same on every platform. */
-export function aboutCredits(version: string, source: string = SOURCE_URL): string {
+/**
+ * The body of the About, the same on every platform. The native panel points at the Help menu for
+ * the license and the notices; the page's About (`'page'`) leaves that line out, because it has a
+ * button for each and Help sits behind Alt on Windows (M54 F6, D-458).
+ */
+export function aboutCredits(version: string, source: string = SOURCE_URL, where: 'panel' | 'page' = 'panel'): string {
   return [
     LICENSE_LINE,
     '',
@@ -74,8 +78,7 @@ export function aboutCredits(version: string, source: string = SOURCE_URL): stri
     '',
     `Source: ${source}`,
     `This version: ${taggedSourceUrl(version, source)}`,
-    '',
-    'The license and the third-party notices are in the Help menu.',
+    ...(where === 'panel' ? ['', 'The license and the third-party notices are in the Help menu.'] : []),
   ].join('\n')
 }
 

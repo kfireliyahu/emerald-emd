@@ -39,7 +39,7 @@ import {
   type WebContents,
 } from 'electron'
 
-import { aboutPanelOptions, BUNDLED_TEXTS, SOURCE_URL, type BundledText } from './about.ts'
+import { aboutCredits, aboutPanelOptions, BUNDLED_TEXTS, SOURCE_URL, type BundledText } from './about.ts'
 import { APP_ORIGIN, APP_SCHEME, contentTypeFor, resolveAppRequest } from './appProtocol.ts'
 import {
   APP_CHANNELS,
@@ -591,7 +591,7 @@ function serveDocuments(updates: Updates): void {
       applicationName: panel.applicationName,
       version: panel.applicationVersion,
       copyright: panel.copyright,
-      credits: panel.credits,
+      credits: aboutCredits(app.getVersion(), SOURCE_URL, 'page'),
       backups: await measureEarlierCopies(copiesRoot()),
     }
   })

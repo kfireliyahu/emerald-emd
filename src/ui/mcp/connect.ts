@@ -8,23 +8,25 @@
  * Every tool takes an absolute `path` and the server holds nothing open
  * between calls (`tools/tool.ts`, `PATH_PROP`), so one server serves every
  * document and the path is part of each question rather than of the setup.
+ *
+ * **The server is the npm package** (M42 U2, D-497), so the command is the one
+ * `docs/plugin.md` and the README give: `npx -y emerald-mcp` (M54 F6). It was
+ * a placeholder path into a source checkout until then. A desktop assistant on
+ * Windows starts `npx` through `cmd /c`, as `hosts/claude/README.md` says.
  */
 
 import { CATALOG_SERVER_NAME, ENGINE_ONLY_FLAG } from '@/plugin/catalog.ts'
 
-/**
- * Where the server is, until it ships with the app. `npm run build:plugin`
- * writes it into the source checkout and the installer does not carry it
- * (the open question *Engine server on its own*, D-284).
- */
-export const SERVER_PLACEHOLDER = '<folder Emerald was built in>/dist-plugin/server.mjs'
+/** The npm package the server ships as. */
+export const SERVER_PACKAGE = 'emerald-mcp'
 
 export interface ConnectInput {
   /** The open document's absolute path, or `undefined` when it has none yet. */
   readonly documentPath: string | undefined
   /** True when the document keeps no ledger, so its tools are not worth offering. */
   readonly engineOnly: boolean
-  readonly serverScript?: string
+  /** True on Windows, where a desktop assistant starts `npx` through `cmd /c`. */
+  readonly windows?: boolean
 }
 
 export interface ConnectSnippets {
@@ -35,28 +37,13 @@ export interface ConnectSnippets {
 }
 
 export function connectSnippets(input: ConnectInput): ConnectSnippets {
-  const script = input.serverScript ?? SERVER_PLACEHOLDER
-  const args = input.engineOnly ? [script, ENGINE_ONLY_FLAG] : [script]
-  const claudeCode = [
-    'claude mcp add',
-    CATALOG_SERVER_NAME,
-    '-- node',
-    quoted(script),
-    ...(input.engineOnly ? [ENGINE_ONLY_FLAG] : []),
-  ].join(' ')
-  const desktop = JSON.stringify(
-    { mcpServers: { [CATALOG_SERVER_NAME]: { command: 'node', args } } },
-    null,
-    2,
-  )
+  const npx = ['-y', SERVER_PACKAGE, ...(input.engineOnly ? [ENGINE_ONLY_FLAG] : [])]
+  const claudeCode = ['claude mcp add', CATALOG_SERVER_NAME, '-- npx', ...npx].join(' ')
+  const server = input.windows === true ? { command: 'cmd', args: ['/c', 'npx', ...npx] } : { command: 'npx', args: npx }
+  const desktop = JSON.stringify({ mcpServers: { [CATALOG_SERVER_NAME]: server } }, null, 2)
   const firstMessage =
     input.documentPath === undefined
       ? undefined
       : `My Emerald document is at ${input.documentPath} — start with the formats it declares.`
   return { claudeCode, desktop, firstMessage }
-}
-
-/** Double quotes, so a path with a space survives a shell. */
-function quoted(text: string): string {
-  return `"${text.replace(/"/g, '\\"')}"`
 }
