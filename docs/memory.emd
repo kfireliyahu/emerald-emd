@@ -6314,7 +6314,7 @@ state: fault
 ### Demo (the browser build), custom.emd: #/formats → New format.
 unit: M54 U1
 should: A start that this build cannot do is shown unavailable, not offered (Nielsen: error prevention).
-breaks: From an example is an ordinary tile, while its own words say it needs the desktop app. Owned by M54 F2.
+breaks: From an example is an ordinary tile, while its own words say it needs the desktop app. Owned by M54 F2. Fixed in M54 F2 (de87c49).
 state: fault
 
 ### Demo, a document with no reader: #/read/readers.
@@ -6338,7 +6338,7 @@ state: fault
 ### Demo, any document, #/formats/<a format> (Table) — read the headings (a screen reader's heading list).
 unit: M54 U1
 should: A screen names itself with a heading, as Roadmap and Ready to start do with an h1 (WCAG 1.3.1 and 2.4.6; web interface guidelines: hierarchical headings).
-breaks: A format's table page has no h1 or h2 at all; its name (Unit) is plain text. Owned by M54 F2.
+breaks: A format's table page has no h1 or h2 at all; its name (Unit) is plain text. Owned by M54 F2. Fixed in M54 F2 (de87c49).
 state: fault
 
 ### Demo, any document, #/mcp: read the headings and the buttons; look at a tool's removes line.
@@ -6380,7 +6380,7 @@ state: fault
 ### Demo, any format: the view tabs (Table, Board, List, Dashboard, Claims) in light and dark.
 unit: M54 U1
 should: Question for the maintainer — two live rules disagree: One level of tabs asks for ink-tertiary labels; Contrast 4.5:1 for text keeps ink-tertiary for non-essential text, and a tab's label is how a person finds the view.
-breaks: Inactive tab labels are 2.62:1 on the page in light and 3.65:1 in dark. Verdict 2026-11-02 (D-531): move them to ink-secondary; One level of tabs now says ink-secondary. Owned by M54 F2.
+breaks: Inactive tab labels are 2.62:1 on the page in light and 3.65:1 in dark. Verdict 2026-11-02 (D-531): move them to ink-secondary; One level of tabs now says ink-secondary. Owned by M54 F2. Fixed in M54 F2 (de87c49).
 state: fault
 
 ### Demo, custom.emd (no ledger), #/formats/card_charge/read → drop bank-statement.csv anywhere outside the dashed box.
@@ -6410,7 +6410,7 @@ state: open
 ### Demo, custom.emd, #/formats/card_charge/list — and the entry list beside any open card charge.
 unit: M54 U1
 should: Late, due and overdue are said only of a column that means a due date (rules: Words name the rule; Colour carries meaning).
-breaks: Every charge reads "101 days late" … "95 days late" in negative. listView's shape takes the first date column as due (src/domain/format/view.ts, due: lines.find(isDate) ?? columns.find(isDate)), and a charge's date is when it happened, not when it is due. Owned by M54 F2.
+breaks: Every charge reads "101 days late" … "95 days late" in negative. listView's shape takes the first date column as due (src/domain/format/view.ts, due: lines.find(isDate) ?? columns.find(isDate)), and a charge's date is when it happened, not when it is due. Owned by M54 F2. Fixed in M54 F2 (de87c49).
 state: fault
 
 ### Demo, custom.emd, #/formats/card_charge/read → Add files → bank-statement.csv → Change → map date, merchant and amount. Both themes.
@@ -6440,7 +6440,7 @@ state: fault
 ### Demo, custom.emd, #/formats/card_charge: Filter by → amount → From 50 → Enter. Then filter date instead and compare.
 unit: M54 U2
 should: The band counts the rows held out of the whole format — "3 of 5 entries" (Words name the rule).
-breaks: Under an amount range the band reads "3 of 3 entries"; a date filter counts right ("4 of 7"). src/ui/screens/FormatRows.tsx:358 recounts the whole only when match, windows or search is set, so a range falls through to the filtered total. Owned by M54 F2.
+breaks: Under an amount range the band reads "3 of 3 entries"; a date filter counts right ("4 of 7"). src/ui/screens/FormatRows.tsx:358 recounts the whole only when match, windows or search is set, so a range falls through to the filtered total. Owned by M54 F2. Fixed in M54 F2 (de87c49).
 state: fault
 
 ### Demo, custom.emd, #/formats/card_charge: Filter by…, Search, a value popover and its is / is not group; the rollup tab's Bars/Line toggle. Compare with the dashboard's menus and blocks.
@@ -6879,13 +6879,13 @@ state: fault
 ### Demo, project.emd, #/formats/unit/board: click a card anywhere but its title.
 unit: M54 U1
 should: Question for the maintainer: the rule A card is one link says the whole card is the link (a stretched link). Does a board card count as a card in that rule?
-breaks: A board card is an <article> and only its title opens it (BoardView.tsx); a click elsewhere on the card does nothing. Verdict 2026-11-02 (D-531): a board card is a card — the whole card is the link, and it still drags. Owned by M54 F2.
+breaks: A board card is an <article> and only its title opens it (BoardView.tsx); a click elsewhere on the card does nothing. Verdict 2026-11-02 (D-531): a board card is a card — the whole card is the link, and it still drags. Owned by M54 F2. Fixed in M54 F2 (de87c49).
 state: fault
 
 ### Demo, project.emd, #/formats/unit/dashboard (or Board, List) with a rollup declared: click its tab once.
 unit: M54 U2
 should: One click opens the rollup.
-breaks: The first click lands on Table and a second opens the rollup — the tab's go sets the view, then navigates to the format's path (src/ui/screens/FormatRows.tsx). Owned by M54 F2.
+breaks: The first click lands on Table and a second opens the rollup — the tab's go sets the view, then navigates to the format's path (src/ui/screens/FormatRows.tsx). Owned by M54 F2. Fixed in M54 F2 (de87c49).
 state: fault
 
 ### Demo, project.emd, #/formats/unit/entry/new (Add). Type M9 into milestone (no such milestone), fill the rest, press Add. Then type M9 into the milestone cell of the table's blank row and press Enter.
@@ -6903,7 +6903,7 @@ state: open
 ### Demo, project.emd, #/formats/unit: Filter by landed is this year → Save this view → "Landed this year". Read the tab strip and the band.
 unit: M54 U2
 should: A saved view is one of the format's tabs, marked current when open, and can be renamed or removed there (One level of tabs).
-breaks: It shows only in the sidebar; the tab strip keeps Table current while the sidebar marks the view current; the band's "Saved as Landed this year" is plain text with no rename or delete. Owned by M54 F2.
+breaks: It shows only in the sidebar; the tab strip keeps Table current while the sidebar marks the view current; the band's "Saved as Landed this year" is plain text with no rename or delete. Owned by M54 F2. Fixed in M54 F2 (de87c49): a tab, renamed and deleted there; the band's text is F3's FilterBand.
 state: fault
 
 ### Demo, project.emd, #/formats/unit: open a row (the row's Open icon, a board card's title, or Add). Also open #/formats/unit/page/<any entry>.
@@ -6969,13 +6969,13 @@ state: open
 ### Demo: #/formats (a format's card), a format's header, and #/formats/milestone/roadmap.
 unit: M54 U1
 should: One name for one thing (the term rows, D-436): a format holds entries or rows, not both.
-breaks: /formats says "5 rows", the format's header "5 entries", the roadmap "4 of 7 Unit rows done". Owned by M54 F2.
+breaks: /formats says "5 rows", the format's header "5 entries", the roadmap "4 of 7 Unit rows done". Owned by M54 F2. Fixed in M54 F2 (de87c49). The band's "of N entries" is FilterBand.tsx, F3's.
 state: fault
 
 ### Demo: #/formats on demo.emd and project.emd; #/formats/unit table headers; the Fill chips' tooltips on an entry; Links here on an entry; demo.emd #/formats/debt.
 unit: M54 U1
 should: A person reads names, never the machinery (rule: Words name the rule): a column's label rather than its key, no table id, no tool name.
-breaks: Each format card shows its table (fmt_card_charge) and repeats last changed; table headers read undone_by, taken_by while the entry says undone by; a Fill chip's tooltip shows `in_progress` literally; Links here reads Inbox · became_unit; the debt format's lock tells a person to use create_debts. demo.emd's /formats is 34 such cards in one flat list. Owned by M54 F2.
+breaks: Each format card shows its table (fmt_card_charge) and repeats last changed; table headers read undone_by, taken_by while the entry says undone by; a Fill chip's tooltip shows `in_progress` literally; Links here reads Inbox · became_unit; the debt format's lock tells a person to use create_debts. demo.emd's /formats is 34 such cards in one flat list. Owned by M54 F2. Fixed in M54 F2 (de87c49). Left: Links here (LinkViews.tsx, F3's), last changed (D-462), the 34-card ledger group.
 state: fault
 
 ### Demo: #/read (demo.emd) with a notice; #/paychecks/read; #/formats/card_charge/read with a reader open.
@@ -7657,7 +7657,7 @@ state: fault
 ### Read the class strings of the surface: src/ui/formats/EntryView.tsx, EntryValue.tsx, EntryList.tsx, ListView.tsx, LinkViews.tsx, BoardView.tsx, FormatRows.tsx (grep text-\[ and -\[…px\]).
 unit: M54 U1
 should: Question for the maintainer: rules Every value is a token, Nothing between the spacing steps and rem for type. The ramp has no 13px, 11px-without-tracking, 10px or 28px; is 13px a missing step (the most used size in src/ui, 66 times) or a breach to be moved onto 12 or 14?
-breaks: After M54 U1's fix of the sizes the ramp has, 26 type sizes with no ramp step remain on the surface (text-[13px] most) and 45 spacing and size literals between the 8px steps (gap-[18px], gap-x-[22px], px-[7px], min-h-[41px], h-[22px]…); 193 pixel type sizes across src/ui. Verdict 2026-11-02 (D-531): a breach, not a missing step — 13px moves onto 12 or 14. Owned by M54 F2.
+breaks: After M54 U1's fix of the sizes the ramp has, 26 type sizes with no ramp step remain on the surface (text-[13px] most) and 45 spacing and size literals between the 8px steps (gap-[18px], gap-x-[22px], px-[7px], min-h-[41px], h-[22px]…); 193 pixel type sizes across src/ui. Verdict 2026-11-02 (D-531): a breach, not a missing step — 13px moves onto 12 or 14. Owned by M54 F2. Fixed in M54 F2 (de87c49) for F2's files; half steps (gap-1.5) and LinkViews/FilterBand/RowSheet left.
 state: fault
 
 ### Read the four tour leads (en.ts:58, 63, 68, 73) together.
@@ -14999,11 +14999,18 @@ paths: "src/ui/screens/Home.tsx\nsrc/ui/screens/NoLedger.tsx\nsrc/ui/screens/Rea
 milestone: M54
 scope: app
 title: Formats and rows: headings, a board card that is one link, a person's words for the engine's names, and a due date only where declared
-state: planned
+landed: 2026-11-02
+decision: D-532
+state: built
 brief: M54 fix unit (D-531, D-532). YOUR ROWS, exactly these: `format_rows review_entry search:"Owned by M54 F2." columns:[unit, do, should, breaks]` — 11 rows; the phrases below say what each asks., after F1. Rows (`format_rows review_entry match:{unit:["M54 U1","M54 U2"], state:fault} columns:[do, should, breaks]`, these by their breaks): U1 'A format's table page has no h1 or h2'; U1 'A board card is an <article>' — the whole card is the link and still drags (A card is one link); U1 'Inactive tab labels are 2.62:1' — ink-secondary (One level of tabs); U1 'From an example is an ordinary tile'; U1 'Every charge reads "101 days late"' — DECIDED (D-532): a list shows lateness only from a date column someone set as `due`, set the way D-524's `done` is, on the screen and by a tool (parity: src/parity.test.ts), nothing guessed — view.ts stops taking the first date; U1 'Each format card shows its table (fmt_card_charge)' — no table names, column names in words (undone by), no literal in_progress, no tool names to a person; U1 '/formats says "5 rows", the format's header "5 entries"' — the term rows: Row is the thing, Entry is its page, so the count is rows everywhere; U1 'After M54 U1's fix of the sizes' — sweep these files; U2 'The first click lands on Table' (the tab's go); U2 'Under an amount range the band reads "3 of 3 entries"' (FormatRows recount); U2 'It shows only in the sidebar' (a saved view's tab current, rename and delete in reach). SWEEP this unit's files: text-[Npx] onto the ramp (11/12/14/16/20/24/40; 13px to 12 or 14, no new step), needed ink-tertiary to ink-secondary, off-step spacing onto the 8px steps; add them to src/ui/formats/surfaceRules.test.ts REVIEWED. Not this unit: the Entry: rows (M55). Verify on project.emd and custom.emd (`npm run dev:demo`), light and dark, read_page. Tests: `npx vitest related <files> --run`, typecheck, src/privacy.test.ts, check:tours. Land: 'Fixed in M54 F2 (<commit>).' appended to each row's breaks, state left `fault` (D-532). Unset: stop and ask.
-files: src/ui/screens/Formats.tsx, src/ui/screens/FormatRows.tsx, src/ui/formats/BoardView.tsx, EntryView.tsx, EntryValue.tsx, EntryList.tsx, ListView.tsx (and listView.test.ts), src/domain/format/view.ts (the list shape's due), where D-524's done is set (screen and tool), src/parity.test.ts, src/ui/formats/surfaceRules.test.ts
+files: src/domain/format/view.ts (list `due`, listSettingKept, noteWords), src/domain/format/owner.ts (rowWriteRefusalOnScreen), src/data/repositories/formatViewRepository.ts, src/plugin/tools/views.ts (arrange_views list `due`), src/ui/formats/listView.ts, ListView.tsx (Due by menu), BoardView.tsx, EntryView.tsx, EntryValue.tsx, EntryList.tsx, RowSheet.tsx, FormatDoors.tsx, SavedTab.tsx (new), src/ui/screens/FormatRows.tsx, DeclaredFormats.tsx, Formats.tsx, src/parity.test.ts, src/ui/formats/listView.test.ts, src/domain/format/owner.test.ts, src/ui/formats/surfaceRules.test.ts, docs/plugin.md
 blocks: ["M54 F1"]
+taken_by: run-milestone driver
+started: 2026-11-02
+branch: main
+commit: de87c49
 paths: "src/ui/screens/Formats.tsx\nsrc/ui/screens/FormatRows.tsx\nsrc/ui/formats/BoardView.tsx\nsrc/ui/formats/EntryView.tsx\nsrc/ui/formats/EntryValue.tsx\nsrc/ui/formats/EntryList.tsx\nsrc/ui/formats/ListView.tsx\nsrc/ui/formats/listView.test.ts\nsrc/domain/format/view.ts\nsrc/parity.test.ts"
+report: M54 F2 built at de87c49; docs:check green (0 errors, 7 standing warnings). DUE (D-532): a list says late only of a date column set `due` - a new list word (readListSetting/writeListSetting, one column's, `group line due done x`), set on screen by the list's 'Due by' menu and by arrange_views view:list (parity row updated; refused on a non-date). listOf no longer takes the first date; without a due a list is in the name's order (listRows by the name column unless an order is asked), every date is only its day, and a date group's past is 'Before today' (Late only on the due). FORMAT PAGE: h1 with the title, no table name, 'N rows' (rule-set panel too); tabs text-body ink-secondary (5.33:1 light, 7.61:1 dark measured); a rollup tab from board/list/dashboard navigates with state {rollup} - one click (code-verified only: no demo format has a rollup); a saved view is a tab (SavedTab.tsx), current while the address is it (then no built-in tab is), with rename and delete in place - verified on project.emd. Band recount: the whole format is always counted. BOARD: the title button stretched over the article (after:inset-0), arrows z-10; verified a click anywhere opens the entry and a drag still starts on the article (the harness never drops, so the lane move itself was not seen). /FORMATS: h1, no table names, referrers by title (the old <code>.join('</code>') printed literal tags), needed text ink-secondary; From an example drawn unavailable (aria-disabled div, dashed) where isProviderSupported() is false. WORDS: sheet headers and labels use entryLabel; column notes on screen through noteWords (no backticks, in_progress -> in progress); a pack's lock on screen names its screens, never tools (rowWriteRefusalOnScreen; tools keep rowWriteRefusal). SWEEP: no text-[Npx], tracking-[ ], leading-[ ] or between-step px spacing/heights in the unit's files, guarded by a new describe in surfaceRules.test.ts (fails on HEAD~1's EntryView); needed ink-tertiary to secondary. Tests: related (197 files), full suite (5338), privacy, typecheck, check:tours (10 runs) green. ask-cold ran but every answer failed: the claude CLI's OAuth session expired - the only description change is arrange_views' list words gaining `due`. LEFT for others: LinkViews.tsx 'Links here' shows column names (Inbox · became_unit) and FilterBand.tsx says 'of N entries' - both F3's paths; .fc-board-card:hover casts --shadow-pop in tokens.css (F7's path) against A card is one link; half steps (gap-1.5, mt-3.5, gap-7) not swept; layout widths kept; cards' 'last changed' (D-462) and demo.emd's 34-card ledger group left; an entry page has no h1.
 
 ### M54 F3
 milestone: M54
