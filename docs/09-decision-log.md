@@ -445,10 +445,10 @@ written out here.
 | D-527 | 2026-10-23 | A dashboard block is resized by dragging its edge — the right edge its width, the bottom its height, the corner both — snapped to the grid's four columns and its rows of 40 pixels (16 between two), from one column and two rows to four columns and twenty rows; a taller view shows more rows and scrolls inside, a wider table more columns and a wider board its lanes side by side, and a chart redraws to its height; the size is kept beside the block's place, `width` and `height` on `format_dashboard_block` (065), written in a text document's dashboard lines, and a block with none keeps the size it had; `arrange_views view:dashboard` `size` sets it and `show_format` names it; amends D-521 | M53 |
 | D-528 | 2026-10-23 | A date's filter takes `yesterday`, `tomorrow`, `last N days/weeks` (today and the N−1 days before it) and `this/last/next week/month/year` beside D-472's words, on the local calendar; a date column's filter menu offers them above its ticks, written as a conversation types them, so a view saved from it stays current; the day a week starts on is the document's — `week_start` in `document_setting`, set in Settings › Calendar and by `record_units` `week_starts_on`, and Monday when unset; amends D-472 | M53 |
 | D-523 | 2026-10-22 | A repository is set up by `npx emerald-mcp init`, a subcommand of the server's bin: it names or creates the document (with the development pack, as text inside the repository and as bytes outside it), writes CLAUDE.md a section between its own markers holding the start-here table and the column lines from the document, and writes the plugin's two hooks into `.claude/settings.json` only where no Emerald plugin is enabled, never over a hook it did not write; every file is compared before it is written, so a second run changes nothing | [below](#d-523) |
-| D-529 | 2026-11-02 | Design work runs with Impeccable, installed per person and never vendored, its per-edit hook off and its detector run once at the end of a UI unit; it reads a thin `PRODUCT.md` and `DESIGN.md` at the root that point at docs/product.md, tokens.css and the ui rule rows and repeat none of them; the UX-strategy skill set and the design-tool connector are not adopted | [below](#d-529) |
-| D-530 | 2026-11-02 | M54 reviews every surface — the engine's screens, the parked ledger pack's, the desktop shell's chrome, Emerald's page and its tour — against the demo documents in light and dark; each finding is an open `review_entry` row the maintainer judges; a plain breach of a live ui rule row is fixed in place except in the ledger, where it is only recorded; a last unit makes the procedure a project skill | [below](#d-530) |
-| D-531 | 2026-11-02 | M54's rule conflicts answered: needed text is `ink-secondary`, the ramp gains no 13px, a chip is text and a dot everywhere, a chart of several series wears category colours, the entry route replaced the detail pane, the title bar holds no primary, a command has one name in sentence case, the page and the tour keep token sets of their own, and "The database under the chat." leads everywhere | [below](#d-531) |
-| D-532 | 2026-11-02 | M54's faults become thirteen fix units, M54 F1-F13, before M55: shared looks first, each unit sweeping its own files; the ledger's Home, NoLedger and #/read included; a due date only where declared; a window drop onto the open format; recovery as a three-choice notice; the page's first screen leads to Get Emerald; the tour pauses; words are drafted for the maintainer to pick | [below](#d-532) |
+| D-529 | 2026-11-02 | Design work runs with Impeccable, installed per person and never vendored, its per-edit hook off and its detector run once at the end of a UI unit; it reads a thin `PRODUCT.md` and `DESIGN.md` at the root that point at docs/product.md, tokens.css and the ui rule rows and repeat none of them; the UX-strategy skill set and the design-tool connector are not adopted | M54 |
+| D-530 | 2026-11-02 | M54 reviews every surface — the engine's screens, the parked ledger pack's, the desktop shell's chrome, Emerald's page and its tour — against the demo documents in light and dark; each finding is an open `review_entry` row the maintainer judges; a plain breach of a live ui rule row is fixed in place except in the ledger, where it is only recorded; a last unit makes the procedure a project skill | M54 |
+| D-531 | 2026-11-02 | M54's rule conflicts answered: needed text is `ink-secondary`, the ramp gains no 13px, a chip is text and a dot everywhere, a chart of several series wears category colours, the entry route replaced the detail pane, the title bar holds no primary, a command has one name in sentence case, the page and the tour keep token sets of their own, and "The database under the chat." leads everywhere | M54 |
+| D-532 | 2026-11-02 | M54's faults become thirteen fix units, M54 F1-F13, before M55: shared looks first, each unit sweeping its own files; the ledger's Home, NoLedger and #/read included; a due date only where declared; a window drop onto the open format; recovery as a three-choice notice; the page's first screen leads to Get Emerald; the tour pauses; words are drafted for the maintainer to pick | M54 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -931,153 +931,6 @@ a repository may run its own build's (this one does).
 **Consequences.** `scripts/check-package.mjs` runs `init` from the packed tarball, runs the hook it
 wrote, and checks a second run is byte-identical. `createDocumentFile` takes an encoding. The
 published package has it from 0.2.0. No schema change.
-
-## D-529 · 2026-11-02 · Design work runs with Impeccable, installed per person and never vendored, its per-edit hook off and its detector run once at the end of a UI unit; it reads a thin `PRODUCT.md` and `DESIGN.md` at the root that point at docs/product.md, tokens.css and the ui rule rows and repeat none of them; the UX-strategy skill set and the design-tool connector are not adopted <a id="d-529"></a>
-
-**Context.** The maintainer asked for UI/UX skills before input views are built, to be used while
-building them and for a full review of the app and its page, and weighed a visual-design skill, a
-UX-strategy skill set and the design-tool connector.
-
-**Decision.**
-
-- **Impeccable** (Apache-2.0) is the design skill: `shape` before a screen is planned, `critique` and
-  `audit` for a review, `harden`, `clarify` and `polish` on a unit's screens. It is installed **at user
-  level** (`/plugin marketplace add pbakaus/impeccable`), so nothing of it is in the public repository;
-  its launcher fetches its own binary the first time it runs, on the person's machine.
-- **Its per-edit detector hook is off.** A reminder after every edit is context every later turn
-  re-reads; the detector runs once at the end of a unit, which the skill asks for when no hook is set.
-- **`PRODUCT.md` and `DESIGN.md` at the root are pointers** — the surfaces and their mode, the
-  absolutes and the components — and say that `docs/product.md`, `tokens.css` and the `rule` rows win
-  (D-437). `docs:check` checks their links as it does CLAUDE.md's.
-
-**Alternatives rejected.** Vendoring the skill into `.claude/skills/`: a megabyte and a half of
-someone else's code in a public repository, to be kept current by hand. Letting its `init` and
-`document` write the two files: they would restate the ui rule rows in prose, which D-437 retired.
-The UX-strategy skill set: eighteen skills and half a megabyte of instructions, most of it ground
-`docs/product.md` and planning with the maintainer's decisions first already cover. The design-tool
-connector: there are no design files to read, mockups are HTML ported into source, and a second
-source of truth drifts.
-
-**Consequences.** A session doing UI work needs the plugin installed on the machine; without it the
-two root files and the rows still say what is right. No schema change.
-
-## D-530 · 2026-11-02 · M54 reviews every surface — the engine's screens, the parked ledger pack's, the desktop shell's chrome, Emerald's page and its tour — against the demo documents in light and dark; each finding is an open `review_entry` row the maintainer judges; a plain breach of a live ui rule row is fixed in place except in the ledger, where it is only recorded; a last unit makes the procedure a project skill <a id="d-530"></a>
-
-**Context.** M54 was planned as a design review of the app and Emerald's page, run with D-529's
-tools, whose findings shape M55 (input views). The maintainer's answers came before any brief.
-
-**Decision.**
-
-- **Scope:** the engine's screens (formats and rows, views and dashboards, intake, the document's
-  own screens), the ledger pack's screens, the shell's chrome (driven over CDP with
-  `verify-in-shell`, since the browser pane cannot drive the window), `demo-page.html` and the tour.
-- **Against the demo documents** `npm run dev:demo` builds from synthetic sources — `demo.emd`,
-  `custom.emd` and `project.emd` — never a working `.emd`; **in light and dark at a desktop width**,
-  and no other condition.
-- **A finding is an open `review_entry` row** on the unit that found it, judged by the maintainer;
-  one about entering rows by hand starts `breaks` with `Entry:`, so M55 is planned from them.
-- **A plain breach of a live ui rule row is fixed in place**, with its test, and listed; anything that
-  needs judgement is recorded. **The ledger is parked, so its unit changes no code.**
-- **A last unit turns the procedure into `.claude/skills/design-review`** with `skill-creator`, written
-  from the eight units' reports.
-
-**Alternatives rejected.** Findings as units or inbox rows: a finding is a claim to try before it is
-work, which is what `review_entry` is for. Record only everywhere: a hex in a component is not a
-matter of taste, and a row for it costs more than the fix. A copy of a working document: real names
-and figures would reach the rows (D-390). Hebrew, narrow widths, keyboard and reduced motion as
-conditions: not asked for this time.
-
-**Consequences.** M54 is open with nine units; U1 (formats and rows) sets the procedure and U2-U8
-wait on it; U9 waits on all. No schema change.
-
-## D-531 · 2026-11-02 · M54's rule conflicts answered: needed text is `ink-secondary`, the ramp gains no 13px, a chip is text and a dot everywhere, a chart of several series wears category colours, the entry route replaced the detail pane, the title bar holds no primary, a command has one name in sentence case, the page and the tour keep token sets of their own, and "The database under the chat." leads everywhere <a id="d-531"></a>
-
-**Context.** M54's 203 `review_entry` rows were sorted on 2026-11-02 (844c7cf); 51 rows on U1-U4 and
-U6-U8 were rule conflicts, wording, or whether a rule binds a surface. The maintainer answered them
-as twelve decisions, one session (the `review-phase` skill).
-
-**Decision.**
-
-- **Tertiary grey:** what a person needs to read — tabs, axes, counts, headings, labels, a line that
-  reports — is `ink-secondary`; `ink-tertiary` is not raised and stays for what nobody needs. *One
-  level of tabs*, *Charts are ink* and *Contrast 4.5:1* say so; U5's ledger row is the same fault.
-- **13px is a breach, not a missing step:** every size off the ramp moves onto 12 or 14 (or the
-  nearest step); *Every value is a token* says the ramp gains no step for it.
-- **A chip is text and a dot everywhere:** `.fc-state` loses its border app-wide, board and roadmap
-  marks included; *square* in *The views' shapes* means no radius, never a box.
-- **A chart of several series wears category colours**, each series labelled directly.
-- **The mapper rule covers both mappers**: mono, numbers right, mapped `ink`, unmapped `ink-secondary`,
-  the role a small label at rest that opens as a `ChoiceField`.
-- **The entry route replaced the detail pane**: the rule is now *A detail is a page beside its entry
-  list*. **A board card is a card**: the whole card is the link, and it still drags.
-- **Colour as signal:** #/mcp's *removes* goes ink; a month row of Home's All months is a single row
-  and stays ink.
-- **Shell words:** *Save a copy* is renamed *Save as…* (the act stays; the term row is *Save as*); a
-  command has one name across the menu, the palette and the title bar, in sentence case (a new rule);
-  the title bar is chrome and holds no primary, so its Save goes secondary; *Download* stays.
-- **The public page** has one filled primary, the desktop download, on its first screen; its theme is
-  light, dark or system; `page.css` and `frame.css` keep token sets of their own — spacing on the 8px
-  steps, a rem ramp, named durations — and spend them.
-- **The tour's chrome** follows the radius and shadow rules (the outline goes square, pictures lose
-  `--shadow-pop`); the ring and what travels with it keep their own easing as a named token, and the
-  app drawn scaled is a picture, not a rem breach; a click mid-move lands, the take-over included.
-- **"The database under the chat." leads everywhere**: `product.md`'s sentence said first,
-  `PRODUCT.md`, `CLAUDE.md`, `docs/00-index.md`, `conventions.md`, `engine.md` and `package.json`
-  move to it in the fix unit (the README and the page have it already).
-- **The page's and the tour's other words are faults, not settled here**: a unit drafts two or three
-  options per line, quoting the current one, and the maintainer picks or writes.
-
-**Alternatives rejected** (the options the maintainer was offered). Raising `ink-tertiary` to AA, which
-leaves two greys nearly alike. A 13px step between caption and body. A state mark allowed a square
-hairline box. The two-state theme toggle (2026-10-12) and the shield that eats the first click
-(take-over P4): both give way to their rules. *Excel that reads your documents and won't let you be
-wrong quietly* as the line said first: the maintainer chose the page's.
-
-**Consequences.** 46 of the 51 rows are `fault` and 5 `dropped`; U5's tertiary row is `fault` and waits
-while the ledger is parked. Eighteen rule rows changed and one was added. The fixes are units the
-maintainer plans next, from these faults and the 99 sorted on 2026-11-02; until the pitch unit lands,
-the seven files above still lead with the old line. No schema change.
-
-## D-532 · 2026-11-02 · M54's faults become thirteen fix units, M54 F1-F13, before M55: shared looks first, each unit sweeping its own files; the ledger's Home, NoLedger and #/read included; a due date only where declared; a window drop onto the open format; recovery as a three-choice notice; the page's first screen leads to Get Emerald; the tour pauses; words are drafted for the maintainer to pick <a id="d-532"></a>
-
-**Context.** M54's review left 145 `fault` rows on the engine's side (D-531 and the sort of
-2026-11-02). The maintainer chose the shape of the fix units, and the behaviours the code leaves
-unset, before any brief was written.
-
-**Decision.**
-
-- **Where:** units `M54 F1`-`F13` in M54, which stays open until they are built and the maintainer
-  reviews it. **Order:** before M55 and M56 (positions unchanged: M54 350, M55 360, M56 370).
-- **Sweeps:** F1 changes the shared tokens and components alone (`.fc-state`, the field look, tones)
-  and goes first; every other unit moves its own files' off-ramp sizes onto the ramp and its needed
-  `ink-tertiary` text onto `ink-secondary`.
-- **The parked ledger:** F13 fixes what a stranger meets from the engine's screens — Home, NoLedger,
-  `#/read` and its mapper. The rest of the ledger stays parked (D-265).
-- **A due date only where declared:** a list shows lateness only from a date column someone set as
-  `due`, set the way D-524's `done` is, on the screen and by a tool; nothing is guessed.
-- **A file dropped on the window** reads onto the format the screen shows; anywhere else it opens
-  *Read a file* with the file in it, asking which format; it goes to the ledger only when the
-  document keeps one.
-- **Recovery:** unsaved work found at launch is a notice that names the document, with *Restore*,
-  *Not now* (the snapshot is kept) and *Discard*; a crashed window reloads itself and shows it.
-- **A recent document no longer at its path** is said in one sentence and leaves the list.
-- **The page's first screen** has one filled button, *Get Emerald*, which scrolls to the ways in
-  (refining D-531's *desktop download*).
-- **The tour** gets *Pause* and *Play*.
-- **Words** (the page's, the tour's captions, names and lost-way line) are STOP units: the unit
-  writes a file of drafts, two or three per line beside the current one, and stops; the maintainer
-  picks or writes, and the words are put in after.
-
-**Alternatives rejected** (the options offered). A new milestone for the fixes; skipping the ledger
-entirely; one sweep unit before every surface unit; a due date by the column's name; always asking
-which format a drop goes onto; restoring by default; keeping a missing recent with *Locate…*; a
-download button by platform, or to the release page; no pause; drafts as `review_entry` rows.
-
-**Consequences.** Thirteen planned units; F1 blocks every unit that draws; F6 waits on F4 and F5, F7 on F6, F13 on
-F4, F5 and F6, F9 on F8, F12 on F11. Every fault has one owner, stamped *Owned by M54 Fn.* on its
-`breaks` (143 rows; a row that spans units is owned by the one that runs last, the others add *Part
-fixed*); the paycheck reader's two rows stay parked, as does U5's. A fixed row keeps `fault` with *Fixed in M54 Fn* added to `breaks`, for
-the maintainer's review to accept. No schema change; F2's `due` is a view setting beside `done`.
 
 ## Related
 
