@@ -905,10 +905,12 @@ html.js .row.seen ul.points li {
 }
 /* The ways in give their words the room (M54 F8): one grid for the cards, each card a
    subgrid of it so the commands line up, the command column only as wide as the
-   longest command; with less than 48rem the command goes under the words. */
+   longest command; with less than 48rem the command goes under the words. The tile's
+   column is `auto`, not 40px: a subgrid's padding lands on its edge tracks, and a
+   fixed track does not grow for it, so the tile ran into the gap (M54 F9). */
 .foot .ways {
   margin: var(--page-space-6) 0 var(--page-space-8);
-  grid-template-columns: 40px minmax(20rem, 1fr) minmax(0, max-content);
+  grid-template-columns: auto minmax(20rem, 1fr) minmax(0, max-content);
   column-gap: var(--page-space-4);
 }
 .foot .downloads {
@@ -1029,7 +1031,7 @@ html.js .row.seen ul.points li {
 }
 @container (max-width: 48rem) {
   .foot .ways {
-    grid-template-columns: 40px minmax(0, 1fr);
+    grid-template-columns: auto minmax(0, 1fr);
   }
   /* Narrow, the command goes under the words and wraps rather than hiding its end: a soft wrap still copies as one line. */
   .foot .run {
