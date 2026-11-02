@@ -82,7 +82,8 @@ export function listPicture(
   day: string,
 ): ListPicture {
   const shape = listOf(declaration.columns, settings)
-  const rows = listRows(db, declaration, query)
+  // In the order asked, else the name's — then, within a group, by the due when one is said (M54 F2).
+  const rows = listRows(db, declaration, query.order === undefined && shape.name !== undefined ? { ...query, order: shape.name.name } : query)
   const labels = linkLabels(db, rows, declaration, declarations)
   const untitled = `Untitled ${declaration.title.toLowerCase()}`
   const seen = new Map<string, number>()
@@ -100,7 +101,8 @@ export function listPicture(
       title,
       ticked,
       value,
-      cells: shape.shown.flatMap((column) => cellOf(column, row, labels, day, ticked)),
+      // Late only by the date a row is due by (M54 F2, D-532): any other date is its day.
+      cells: shape.shown.flatMap((column) => cellOf(column, row, labels, day, ticked || column !== shape.due)),
     }
   })
   // A link's rows, in that format's order, each a group even while empty.
@@ -124,6 +126,7 @@ function cellOf(
   row: StoredRow,
   labels: ReadonlyMap<string, string>,
   day: string,
+  /** Ticked, or not the due: a past date is only its day. */
   ticked: boolean,
 ): LineCell[] {
   const value = readValue(column, row)

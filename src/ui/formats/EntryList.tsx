@@ -165,7 +165,7 @@ export function EntryList({
           <b className="text-body font-semibold">
             <Bidi>{name}</Bidi>
           </b>
-          <span className="text-caption text-ink-tertiary tabular-nums">
+          <span className="text-caption text-ink-secondary tabular-nums">
             {filtered ? `${String(rows.length)} of ${String(entries)}` : String(entries)}
           </span>
           {onNew !== undefined && (
@@ -180,7 +180,7 @@ export function EntryList({
             </button>
           )}
         </div>
-        <label className="flex h-7 min-w-0 items-center gap-1.5 border border-hairline-strong bg-elevated px-2 text-ink-tertiary focus-within:border-accent has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-accent">
+        <label className="flex h-7 min-w-0 items-center gap-2 border border-hairline-strong bg-elevated px-2 text-ink-secondary focus-within:border-accent has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-accent">
           <ActionGlyph name="search" size={14} />
           <input
             type="search"
@@ -193,9 +193,9 @@ export function EntryList({
                 onSearch('')
               }
             }}
-            placeholder={`Search ${String(entries)} entries`}
+            placeholder={`Search ${String(entries)} ${entries === 1 ? 'row' : 'rows'}`}
             aria-label={`Search ${name}`}
-            className="w-full min-w-0 border-0 bg-transparent p-0 text-[13px] text-ink outline-none placeholder:text-ink-tertiary"
+            className="w-full min-w-0 border-0 bg-transparent p-0 text-body text-ink outline-none placeholder:text-ink-secondary"
           />
         </label>
         {filtered && (
@@ -249,7 +249,7 @@ export function EntryList({
               placeholder={placeholder}
             />
             {rows.length === 0 && draft === undefined && filtered && (
-              <div className="p-4 text-[13px] text-ink-secondary">Nothing in this format holds it.</div>
+              <div className="p-4 text-body text-ink-secondary">Nothing in this format holds it.</div>
             )}
           </div>
         ) : (
@@ -272,7 +272,7 @@ export function EntryList({
                   }`}
                   style={{ height: ROW }}
                 >
-                  <Bidi className={`truncate text-[13px] ${row.ticked ? 'text-ink-tertiary line-through' : 'text-ink'}`}>{row.title}</Bidi>
+                  <Bidi className={`truncate text-body ${row.ticked ? 'text-ink-tertiary line-through' : 'text-ink'}`}>{row.title}</Bidi>
                   {under.length > 0 && (
                     <Bidi className="block truncate text-caption text-ink-secondary">{under.join(' · ')}</Bidi>
                   )}
@@ -283,7 +283,7 @@ export function EntryList({
         )}
       </div>
 
-      <div className="flex flex-none gap-2.5 border-t border-hairline px-3 py-1.5 text-[11px] text-ink-tertiary">
+      <div className="flex flex-none gap-3 border-t border-hairline px-3 py-2 text-caption text-ink-secondary">
         <span className="tabular-nums">
           {at < 0 ? '–' : String(at + 1)} of {String(rows.length)}
         </span>
@@ -298,7 +298,7 @@ export function EntryList({
 /** One thing the list is held to, and the way to let go of it. */
 function HeldChip({ label, onClear, children }: { label: string; onClear: () => void; children: React.ReactNode }) {
   return (
-    <span className="inline-flex h-[22px] max-w-full items-center gap-1 border border-accent bg-accent-soft pr-1 pl-2 text-caption">
+    <span className="inline-flex h-6 max-w-full items-center gap-1 border border-accent bg-accent-soft pr-1 pl-2 text-caption">
       <span className="truncate">{children}</span>
       <button
         type="button"

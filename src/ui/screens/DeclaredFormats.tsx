@@ -18,7 +18,7 @@ import {
   unreadableFormats,
 } from '@/data/repositories/formatRepository.ts'
 import { ARTEFACT_EXTENSION, read, write } from '@/domain/format/artefact.ts'
-import { tableNameFor, type FormatDeclaration } from '@/domain/format/declaration.ts'
+import { type FormatDeclaration } from '@/domain/format/declaration.ts'
 import {
   declarationOf,
   draftOf,
@@ -213,8 +213,8 @@ export function DeclaredFormats() {
     return (
       <div key="doors" className="fc-view-enter flex h-full flex-col">
         <div className="flex shrink-0 flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-hairline px-6 py-2">
-          <span className="font-medium">A new format</span>
-          <span className="text-caption text-ink-tertiary">
+          <h1 className="text-body font-medium">A new format</h1>
+          <span className="text-caption text-ink-secondary">
             A format is a kind of thing this document can hold. Nothing is written until you save.
           </span>
           <span className="ml-auto">
@@ -266,11 +266,11 @@ export function DeclaredFormats() {
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         {/* A title can be Hebrew — typed, imported, or proposed from
             a Hebrew receipt since U2c — and a raw one scrambles beside
-            the table name next to it. */}
+            what follows it. Its table's name is machinery, never shown to a
+            person (M54 F2, Words name the rule). */}
         <Link to={formatPath(format.name)} className="fc-card-link font-medium text-ink">
           <Bidi>{format.title}</Bidi>
         </Link>
-        <code className="text-caption text-ink-tertiary">{tableNameFor(format)}</code>
         <Chip>
           {format.columns.length === 1 ? '1 column' : `${format.columns.length} columns`}
         </Chip>
@@ -328,10 +328,11 @@ export function DeclaredFormats() {
   return (
     <div key="list" className="fc-view-enter flex h-full flex-col">
       <div className="flex shrink-0 flex-wrap items-baseline gap-x-6 gap-y-1 border-b border-hairline px-6 py-2">
-        <span className="text-ink-secondary tabular-nums">
+        {/* The screen names itself with a heading (M54 F2). */}
+        <h1 className="text-body font-medium tabular-nums">
           {data.formats.length === 1 ? '1 format' : `${data.formats.length} formats`}
-        </span>
-        <span className="text-caption text-ink-tertiary">
+        </h1>
+        <span className="text-caption text-ink-secondary">
           A format is a kind of thing this document can hold. The declaration is the source of
           truth; its table is made to match on every open.
         </span>
@@ -379,7 +380,7 @@ export function DeclaredFormats() {
         )}
 
         {data.orphans.length > 0 && (
-          <p className="mb-6 text-caption text-ink-tertiary">
+          <p className="mb-6 text-caption text-ink-secondary">
             {data.orphans.join(', ')} {data.orphans.length === 1 ? 'is a table' : 'are tables'} with
             no declaration behind {data.orphans.length === 1 ? 'it' : 'them'}. Left exactly as{' '}
             {data.orphans.length === 1 ? 'it is' : 'they are'} — the app only touches what it can
@@ -424,7 +425,10 @@ export function DeclaredFormats() {
       {deleting !== undefined && (
         <DeletePanel
           format={deleting}
-          referrers={formatsPointingAt(db, deleting.name)}
+          // By their titles, as a person knows them — never their names (M54 F2).
+          referrers={formatsPointingAt(db, deleting.name).map(
+            (name) => data.formats.find((each) => each.format.name === name)?.format.title ?? name,
+          )}
           rows={data.formats.find((each) => each.format.name === deleting.name)?.rows ?? 0}
           onCancel={() => setDeleting(undefined)}
           onDelete={() => {
@@ -454,18 +458,18 @@ export function DeclaredFormats() {
 function ProofChip({ format, proof }: { format: FormatDeclaration; proof: Tally | undefined }) {
   if (proof === undefined) {
     return (
-      <span className="text-caption text-ink-tertiary">
+      <span className="text-caption text-ink-secondary">
         no claims
       </span>
     )
   }
   const counted = format.identities.length === 1 ? '1 claim' : `${format.identities.length} claims`
   if (proof.proved + proof.failed + proof.unchecked === 0) {
-    return <span className="text-caption text-ink-tertiary">{counted}, no rows to check yet</span>
+    return <span className="text-caption text-ink-secondary">{counted}, no rows to check yet</span>
   }
   return (
     <span className="flex items-baseline gap-2 text-caption tabular-nums">
-      <span className="text-ink-tertiary">{counted}</span>
+      <span className="text-ink-secondary">{counted}</span>
       {proof.proved > 0 && <span className="text-positive">{proof.proved} proved</span>}
       {proof.failed > 0 && <span className="text-negative">{proof.failed} failed</span>}
       {proof.unchecked > 0 && (
@@ -688,7 +692,7 @@ function DeletePanel({
               <Bidi>{format.title}</Bidi>
             </span>{' '}
             cannot go while {referrers.length === 1 ? 'another format refers' : 'other formats refer'}{' '}
-            to it: <code>{referrers.join('</code>, <code>')}</code>. Take the link or the total
+            to it: <Bidi>{referrers.join(', ')}</Bidi>. Take the link or the total
             out there first — deleting it here would leave a column of ids pointing at nothing, and
             nothing in this document is removed on your behalf.
           </>
@@ -698,7 +702,7 @@ function DeletePanel({
             <span className="font-medium">
               <Bidi>{format.title}</Bidi>
             </span>
-            ? Its declaration and <code>{tableNameFor(format)}</code> both go, and{' '}
+            ? Its declaration and its table both go, and{' '}
             {rows === 0
               ? 'the table is empty'
               : `${rows === 1 ? '1 row' : `${rows} rows`} go with it`}

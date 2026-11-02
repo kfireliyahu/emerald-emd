@@ -148,7 +148,7 @@ export function Shown(props: ShownProps) {
   const { column, way, value, beside, part, onPick } = props
   const empty = value.trim() === '' || (membersOfDraft(value)?.length ?? 1) === 0
   if (empty && !(onPick !== undefined && PRESSED_EMPTY.has(way))) {
-    return <span className="inline-flex min-h-8 items-center text-ink-tertiary">Empty</span>
+    return <span className="inline-flex min-h-8 items-center text-ink-secondary">Empty</span>
   }
   const named = props.named ?? ((id: string) => id)
   const mark = props.marked === true ? MARKED : ''
@@ -179,10 +179,10 @@ export function Shown(props: ShownProps) {
       const { figure, small } = figureParts(column, value, beside)
       return (
         <span className="inline-flex min-h-8 items-baseline">
-          <span className={`${way === 'large' ? 'text-[28px]' : 'text-secondary-number'} font-medium tabular-nums ${mark}`}>
+          <span className={`${way === 'large' ? 'text-title' : 'text-secondary-number'} font-medium tabular-nums ${mark}`}>
             {figure}
             {small !== undefined && small !== '' && (
-              <small className={`text-[13px] font-normal text-ink-secondary ${small === '%' ? '' : 'ms-[3px]'}`}>{small}</small>
+              <small className={`text-body font-normal text-ink-secondary ${small === '%' ? '' : 'ms-1'}`}>{small}</small>
             )}
           </span>
           {props.worked !== undefined && (
@@ -205,7 +205,7 @@ export function Shown(props: ShownProps) {
         <span className="inline-flex min-h-8 items-baseline" title={`${value} ${beside ?? ''}`.trim()}>
           <span className={`text-secondary-number font-medium tabular-nums ${mark}`}>
             {shown.figure}
-            {shown.small !== undefined && <small className="ms-[3px] text-[13px] font-normal text-ink-secondary">{shown.small}</small>}
+            {shown.small !== undefined && <small className="ms-1 text-body font-normal text-ink-secondary">{shown.small}</small>}
           </span>
         </span>
       )
@@ -323,7 +323,7 @@ export function Shown(props: ShownProps) {
         <span className="inline-flex min-h-8 flex-wrap items-center gap-1" role={onPick === undefined ? undefined : 'radiogroup'} aria-label={column.name}>
           {choices.map((each) => {
             const on = each.value === value
-            const look = `border px-[9px] py-0.5 text-caption ${on ? 'border-ink bg-surface text-ink' : 'border-hairline text-ink-secondary'}`
+            const look = `border px-2 py-0.5 text-caption ${on ? 'border-ink bg-surface text-ink' : 'border-hairline text-ink-secondary'}`
             return onPick === undefined ? (
               <span key={each.value} className={look}>
                 <Bidi>{each.label}</Bidi>
@@ -405,7 +405,7 @@ export function Shown(props: ShownProps) {
           {(membersOfDraft(value) ?? [value]).map((id) => {
             const row = props.linked?.(id)
             return (
-              <div key={id} className="flex items-center gap-2 border-t border-hairline py-[5px] first:border-t-0">
+              <div key={id} className="flex items-center gap-2 border-t border-hairline py-1 first:border-t-0">
                 <span className="fc-dot" data-tone={toneOf(row?.state)} aria-hidden />
                 <NameOf id={id} named={named} onOpen={props.onOpen} />
                 <StateChip member={row?.state} />
@@ -514,8 +514,9 @@ function Steps({
     <span className="flex min-h-8 min-w-[260px] items-center" role={onPick === undefined ? undefined : 'radiogroup'} aria-label={label}>
       {members.map((member, index) => {
         const tone = index === at ? 'live' : index < at ? 'done' : 'waiting'
-        const look = `flex flex-none flex-col items-center gap-1 text-[11px] uppercase tracking-[.06em] ${
-          index === at ? 'text-accent' : index < at ? 'text-ink-secondary' : 'text-ink-tertiary'
+        const look = `flex flex-none flex-col items-center gap-1 text-label uppercase ${
+          // Every step is read to know where a row is: none is ink-tertiary (D-531).
+          index === at ? 'text-accent' : 'text-ink-secondary'
         }`
         const step = (
           <>
@@ -525,7 +526,7 @@ function Steps({
         )
         return (
           <span key={member} className="contents">
-            {index > 0 && <span className={`mb-[18px] h-0.5 min-w-[18px] flex-1 ${index <= at ? 'bg-ink-tertiary' : 'bg-hairline-strong'}`} aria-hidden />}
+            {index > 0 && <span className={`mb-5 h-0.5 min-w-4 flex-1 ${index <= at ? 'bg-ink-tertiary' : 'bg-hairline-strong'}`} aria-hidden />}
             {onPick === undefined ? (
               <span className={look}>{step}</span>
             ) : (

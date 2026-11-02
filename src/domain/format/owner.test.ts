@@ -4,7 +4,7 @@ import { read, write } from './artefact.ts'
 import { declarationOf, draftOf, draftProblems } from './draft.ts'
 import { parseConstraint, type RowConstraint } from './constraint.ts'
 import { column, declarationRejection, type FormatDeclaration } from './declaration.ts'
-import { declarationChangeRefusal, deleteFormatRefusal, rowWriteRefusal } from './owner.ts'
+import { declarationChangeRefusal, deleteFormatRefusal, rowWriteRefusal, rowWriteRefusalOnScreen } from './owner.ts'
 
 /**
  * **A pack's format: read anywhere, written only through the pack** — M25 E5,
@@ -47,6 +47,18 @@ describe('a format a pack owns (M25 E5, D-269)', () => {
         'on the Categories screen, or with `create_category`. Reading them here is fine.',
     )
     expect(rowWriteRefusal(PERSONS)).toBeUndefined()
+  })
+
+  it('says the same to a person without the tools a conversation uses (M54 F2)', () => {
+    expect(rowWriteRefusalOnScreen(CATEGORY)).toBe(
+      'Category belongs to the ledger pack, so its rows are written only through it — ' +
+        'on the Categories screen. Reading them here is fine.',
+    )
+    const account = { ...CATEGORY, owner: { pack: 'ledger', written: 'on the Accounts settings screen, by importing a statement, with `update_account`, or with `set_opening_balances`', columns: [] } }
+    expect(rowWriteRefusalOnScreen(account)).toContain('— on the Accounts settings screen or by importing a statement.')
+    const tools = { ...CATEGORY, owner: { pack: 'ledger', written: 'with `record_holding_readings`', columns: [] } }
+    expect(rowWriteRefusalOnScreen(tools)).toContain("— in the ledger pack's own screens.")
+    expect(rowWriteRefusalOnScreen(PERSONS)).toBeUndefined()
   })
 
   it('refuses deleting the format, and lets a person delete their own', () => {

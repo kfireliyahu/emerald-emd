@@ -2,7 +2,7 @@ import { useContext, useState } from 'react'
 
 import type { ColumnDeclaration, FormatDeclaration } from '@/domain/format/declaration.ts'
 import { readValue, type StoredRow } from '@/domain/format/row.ts'
-import { lanesOf, type BoardShape } from '@/domain/format/view.ts'
+import { entryLabel, lanesOf, type BoardShape } from '@/domain/format/view.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ChoiceField } from '@/ui/components/ChoiceField.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
@@ -112,15 +112,15 @@ export function BoardView({
               readOnly
               filter={false}
               aria-label="Lanes by"
-              text={board.lanes.name}
-              choices={enums.map((each) => ({ value: each.name, label: each.name }))}
+              text={entryLabel(board.lanes)}
+              choices={enums.map((each) => ({ value: each.name, label: entryLabel(each) }))}
               onText={() => undefined}
               onPick={(choice) => onLanes(choice.value)}
             />
           </label>
         ) : (
           <span>
-            Lanes by <code>{board.lanes.name}</code>
+            Lanes by <Bidi>{entryLabel(board.lanes)}</Bidi>
           </span>
         )}
         {capped !== undefined && (
@@ -172,7 +172,7 @@ export function BoardView({
                 drop(lane.member)
               }}
             >
-              <header className="flex items-center gap-2 px-0.5 pt-0.5 pb-1.5">
+              <header className="flex items-center gap-2 px-1 pt-1 pb-2">
                 <span className="fc-dot" data-tone={toneOf(lane.member)} aria-hidden />
                 <span className="fc-label text-ink">{lane.member === undefined ? 'No value' : memberText(lane.member)}</span>
                 <span className="ml-auto font-mono text-caption text-ink-secondary tabular-nums">
@@ -195,10 +195,14 @@ export function BoardView({
                     const titleText = title === undefined ? '' : cardText(title, row, labels)
                     return (
                       <li key={cardKey} data-motion-key={cardKey}>
+                        {/* **A board card is one link** (M54 F2, D-531, A card is one link):
+                            the title's button is stretched over the card, so a click
+                            anywhere opens the entry, the arrows raised above it stay
+                            buttons, and the card still drags. */}
                         <article
                           draggable={movable}
                           aria-selected={selection === undefined ? undefined : selection.has(row.id)}
-                          className={`fc-board-card flex flex-col gap-2 p-3 ${dragging === row.id ? 'opacity-60' : ''} ${selection?.has(row.id) === true ? 'outline outline-2 outline-accent' : ''}`}
+                          className={`fc-board-card relative flex cursor-pointer flex-col gap-2 p-3 ${dragging === row.id ? 'opacity-60' : ''} ${selection?.has(row.id) === true ? 'outline outline-2 outline-accent' : ''}`}
                           data-tone={toneOf(memberOf(board.lanes, row))}
                           onDragStart={(event) => {
                             event.dataTransfer.effectAllowed = 'move'
@@ -215,7 +219,7 @@ export function BoardView({
                               <Bidi className="min-w-0 truncate">{name}</Bidi>
                             </span>
                             {movable && (
-                              <span className="ml-auto flex gap-0.5">
+                              <span className="relative z-10 ml-auto flex gap-1">
                                 <MoveButton side="left" name={name} to={step(row, -1)} onMove={(member) => onMove(row, member)} />
                                 <MoveButton side="right" name={name} to={step(row, 1)} onMove={(member) => onMove(row, member)} />
                               </span>
@@ -226,7 +230,7 @@ export function BoardView({
                             data-row={row.id}
                             // The demo tour's anchor (M33 U6): `card-M2 U3`.
                             data-tour={`card-${name}`}
-                            className="fc-card-title line-clamp-3 text-left leading-snug font-medium hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                            className="fc-card-title line-clamp-3 text-left leading-snug font-medium after:absolute after:inset-0 after:content-[''] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
                             onClick={(event) => {
                               // Ctrl-click selects the card for the conversation (M51 U7).
                               if (format !== undefined && selects(event, conversation)) selection?.toggle(format, row)

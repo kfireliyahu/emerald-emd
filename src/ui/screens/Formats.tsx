@@ -167,14 +167,14 @@ function Row({
         </span>
       </div>
 
-      <div className="mt-1.5 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-caption">
+      <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-caption">
         <FieldSummary template={template} />
-        <span className="ml-auto whitespace-nowrap text-ink-tertiary tabular-nums">
+        <span className="ml-auto whitespace-nowrap text-ink-secondary tabular-nums">
           {usage(template)}
         </span>
       </div>
 
-      <div className="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-caption text-ink-tertiary">
+      <div className="mt-1 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-caption text-ink-secondary">
         <span>{provenance(template)}</span>
         {template.kind === 'PAYSLIP' && <span>{deductionRows(template, typeCount)}</span>}
       </div>
@@ -222,7 +222,7 @@ function FieldSummary({ template }: { template: DocumentTemplate }) {
   const pinned = new Set(template.pinnedFields)
 
   if (anchors.length === 0) {
-    return <span className="text-ink-tertiary">reads no single figure — deduction rows only</span>
+    return <span className="text-ink-secondary">reads no single figure — deduction rows only</span>
   }
 
   return (
@@ -231,11 +231,11 @@ function FieldSummary({ template }: { template: DocumentTemplate }) {
         <span key={anchor.field} className="whitespace-nowrap">
           {index > 0 && <span className="mr-2 text-ink-tertiary/60">·</span>}
           <Bidi className="text-ink-secondary">{anchor.label}</Bidi>{' '}
-          <span className="text-ink-tertiary">
+          <span className="text-ink-secondary">
             {FIELD_LABEL[anchor.field] ?? anchor.field}
             {/* A field the user moved by hand, which no re-derivation moves back
                 (`carryPinnedFields`). Worth seeing on the row that keeps it. */}
-            {pinned.has(anchor.field) && <span className="text-ink-tertiary/60"> · yours</span>}
+            {pinned.has(anchor.field) && <span className="text-ink-secondary"> · yours</span>}
           </span>
         </span>
       ))}

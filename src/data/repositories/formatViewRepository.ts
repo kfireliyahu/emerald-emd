@@ -18,6 +18,7 @@ import {
   isViewKind,
   isViewSetting,
   readEntrySetting,
+  listSettingKept,
   readListSetting,
   SAVED_ADDRESS_LONGEST,
   savedAddress,
@@ -421,11 +422,11 @@ export function setAgendaDate(db: Database, format: string, column: string | und
 
 /**
  * **Set one column's words in a format's list, or clear them** — M53 U4,
- * D-519. The whole setting of the column (`group line`, `line done done`), as
- * `readListSetting` reads it; nothing clears it. `group` and `done` are one
- * column's each, so saying either here takes it off whichever other column
+ * D-519. The whole setting of the column (`group line`, `line due`, `line done done`), as
+ * `readListSetting` reads it; nothing clears it. `group`, `due` and `done` are one
+ * column's each, so saying one here takes it off whichever other column
  * held it, and leaves that column's other words. Written by the list's
- * *Group by*, its tick (*Tick to mark…*, *No ticks*) and *Line*, and by `arrange_views`.
+ * *Group by*, *Due*, its tick (*Tick to mark…*, *No ticks*) and *Line*, and by `arrange_views`.
  */
 export function setListSetting(db: Database, format: string, column: string, setting: string | undefined): void {
   const next = setting === undefined ? undefined : readListSetting(setting)
@@ -434,12 +435,7 @@ export function setListSetting(db: Database, format: string, column: string, set
       for (const [other, word] of viewSettings(db, format, 'list')) {
         const was = readListSetting(word)
         if (other === column || was === undefined) continue
-        const kept = {
-          group: was.group && !next.group,
-          line: was.line,
-          done: next.done === undefined ? was.done : undefined,
-        }
-        const written = writeListSetting(kept)
+        const written = writeListSetting(listSettingKept(was, next))
         if (written === word) continue
         if (written === undefined) {
           db.run("DELETE FROM format_view_column WHERE format_name = ? AND view = 'list' AND column_name = ?", [format, other])

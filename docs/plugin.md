@@ -1154,10 +1154,11 @@ rather than three decisions.
 > empty (`match:{}`, `search:""`, `order:""`, `columns:{}`) is let go, and the answer says what it kept.
 >
 > **M53 U4 added the list** (D-519): `show_format view:list` draws a format's rows one line each,
-> grouped as `arrange_views view:list` says (`group`, `line`, `done <members>` — words one column
+> grouped as `arrange_views view:list` says (`group`, `line`, `due`, `done <members>` — words one column
 > holds together, `group line`), each row named with its tick; every format has one. **A row has a
 > tick only where `done <members>` is set** (M53 F1, D-524): nothing guesses it, and a list with none
-> is plain lines.
+> is plain lines. **A date says late only where `due` is set** on it (M54 F2, D-532), as the list's
+> *Due* sets it on screen; the first date is never taken for one.
 >
 > **M49 U3 added the agenda** (D-473): `show_format view:agenda` (no `format`) draws every dated
 > format's rows from today grouped by day, overdue above it where a format says what finished is;

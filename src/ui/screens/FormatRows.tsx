@@ -54,7 +54,6 @@ import {
   isLinkType,
   labelColumn,
   orderChange,
-  tableNameFor,
   type FormatDeclaration,
 } from '@/domain/format/declaration.ts'
 import { write } from '@/domain/format/artefact.ts'
@@ -95,7 +94,7 @@ import {
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
-import { rowWriteRefusal } from '@/domain/format/owner.ts'
+import { rowWriteRefusal, rowWriteRefusalOnScreen } from '@/domain/format/owner.ts'
 import { Chip } from '@/ui/components/Chip.tsx'
 import { IconAction } from '@/ui/components/IconAction.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
@@ -103,7 +102,8 @@ import { cellText, EntryView, type LinkChoice } from '@/ui/formats/EntryView.tsx
 import { RollupView } from '@/ui/formats/RollupView.tsx'
 import { RowSheet, type FootRefusal, type Order } from '@/ui/formats/RowSheet.tsx'
 import { derivedOf } from '@/data/repositories/formatDerivedRepository.ts'
-import { useSaving } from '@/ui/formats/savedView.ts'
+import { SavedTab, TAB_LABEL, TAB_OFF, TAB_ON } from '@/ui/formats/SavedTab.tsx'
+import { useSavedViews, useSaving } from '@/ui/formats/savedView.ts'
 import {
   boardPath,
   dashboardBack,
@@ -117,6 +117,7 @@ import {
   readPath,
   readyPath,
   roadmapPath,
+  savedViewPath,
   tablePath,
 } from '@/ui/nav.ts'
 import { DashboardView } from '@/ui/formats/Dashboard.tsx'
@@ -251,6 +252,9 @@ export function FormatRows({
   const filtered = isFiltered(filter)
   // What the address holds, saved under a name from the FilterBand (M53 U5, D-520).
   const saving = useSaving(name, board ? 'board' : list ? 'list' : 'table')
+  // The format's saved views, each a tab; the one the address is, current (M54 F2).
+  const saved = useSavedViews(name)
+  const savedHere = dashboard || entry !== undefined ? undefined : saving?.current
   // The rows, or one of the format's rollups by name (M25 E2, D-271).
   // A dashboard's rollup block opens its format on that rollup (M53 U7).
   const opening = useLocation().state as unknown
@@ -355,7 +359,8 @@ export function FormatRows({
       ...(sort === undefined ? {} : { order: sort.column, descending: sort.descending }),
     }
     const total = countRows(db, declaration, query)
-    const entries = asked.match === undefined && asked.windows === undefined && asked.search === undefined ? total : countRows(db, declaration, {})
+    // The whole format, whatever the filter holds — a range too (M54 F2): the band's *3 of 5*.
+    const entries = countRows(db, declaration, {})
     const rows = listRows(db, declaration, { ...query, limit: PAGE })
     // The worked-out columns of the rows shown, out of the format's view (D-334).
     const worked = derivedOf(db, declaration, rows, formats, units, toISODate(today()))
@@ -670,7 +675,8 @@ export function FormatRows({
   // D-269): no add, no edit, no remove, and the sentence saying where instead.
   // A copy nothing is saved from is locked the same way (M41 U2), and says
   // so once, at the top of the frame, rather than here.
-  const locked = rowWriteRefusal(declaration) ?? readOnly
+  // Said to a person: where, never which tool (M54 F2).
+  const locked = rowWriteRefusalOnScreen(declaration) ?? readOnly
   // A view named by a rollup the format no longer declares falls back to the rows.
   const shownRollup =
     !board && !dashboard && (declaration.rollups ?? []).some((each) => each.name === view) ? view : undefined
@@ -1193,17 +1199,20 @@ export function FormatRows({
   return (
     <div className="fc-view-enter flex h-full flex-col">
       <div className="flex shrink-0 flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-hairline px-6 py-2">
-        <span className="font-medium">
+        {/* **The screen names itself with a heading** (M54 F2, WCAG 2.4.6), as
+            Roadmap and Ready to start do; its table's name is machinery, never
+            a person's (Words name the rule). */}
+        <h1 className="text-body font-medium">
           <Bidi>{declaration.title}</Bidi>
-        </span>
-        <code className="text-caption text-ink-tertiary">{tableNameFor(declaration)}</code>
+        </h1>
         <Chip>
           {declaration.columns.length === 1
             ? '1 column'
             : `${String(declaration.columns.length)} columns`}
         </Chip>
         <span className="text-caption text-ink-secondary tabular-nums">
-          {data.total === 1 ? '1 entry' : `${String(data.total)} entries`}
+          {/* A format holds rows; an entry is one row's page (the term rows, M54 F2). */}
+          {data.total === 1 ? '1 row' : `${String(data.total)} rows`}
           {data.total > PAGE ? `, showing ${String(PAGE)}` : ''}
         </span>
         {locked === undefined && <ReadersLine readers={data.readers} />}
@@ -1266,45 +1275,54 @@ export function FormatRows({
           and List, then the views a format has only when it has them, then its
           rollups — what the View menu held. A view of its own is a route, so it
           can be bookmarked; a rollup is a choice on the table's. */}
-      <nav aria-label="Views" className="flex h-8 shrink-0 items-stretch gap-[18px] overflow-x-auto border-b border-hairline px-6">
+      {/* **A saved view is one of its tabs** (M54 F2): marked current while
+          the address is the one it saved, and then no other tab is. */}
+      <nav aria-label="Views" className="flex h-8 shrink-0 items-stretch gap-4 overflow-x-auto border-b border-hairline px-6">
         {[
           {
             label: 'Table',
-            on: !board && !list && !dashboard && shownRollup === undefined,
+            on: !board && !list && !dashboard && shownRollup === undefined && savedHere === undefined,
             go: () => {
               setView(undefined)
               if (board || list || dashboard) navigate(formatPath(declaration.name) + address)
             },
           },
-          ...(hasBoard ? [{ label: 'Board', on: board, go: () => navigate(boardPath(declaration.name) + address) }] : []),
-          { label: 'List', on: list, go: () => navigate(listPath(declaration.name) + address) },
+          ...(hasBoard ? [{ label: 'Board', on: board && savedHere === undefined, go: () => navigate(boardPath(declaration.name) + address) }] : []),
+          { label: 'List', on: list && savedHere === undefined, go: () => navigate(listPath(declaration.name) + address) },
           ...(data.hasRoadmap ? [{ label: 'Roadmap', on: false, go: () => navigate(roadmapPath(declaration.name) + address) }] : []),
           ...(data.hasReady ? [{ label: 'Ready to start', on: false, go: () => navigate(readyPath(declaration.name) + address) }] : []),
+          ...saved.map((each) => ({ label: each.name, on: savedHere === each.name, go: () => undefined, saved: each })),
           ...(declaration.rollups ?? []).map((each) => ({
             label: each.name,
             on: shownRollup === each.name,
+            // **One click** (M54 F2): from another view the rollup rides the
+            // navigation, where setting it first was lost to the new route.
             go: () => {
-              setView(each.name)
-              if (board || list || dashboard) navigate(formatPath(declaration.name) + address)
+              if (board || list || dashboard) navigate(formatPath(declaration.name) + address, { state: { rollup: each.name } })
+              else setView(each.name)
             },
           })),
           // **Its dashboard, last** (M53 U7, D-521): the format still opens on Table.
           { label: 'Dashboard', on: dashboard, go: () => navigate(dashboardPath(declaration.name)), apart: true },
         ].map((tab) => (
-          <Fragment key={`${'apart' in tab ? 'apart ' : ''}${tab.label}`}>
+          <Fragment key={`${'apart' in tab ? 'apart ' : 'saved' in tab ? 'saved ' : ''}${tab.label}`}>
             {'apart' in tab && <span aria-hidden className="my-2 w-px shrink-0 bg-hairline" />}
-            <button
-              type="button"
-              aria-current={tab.on ? 'page' : undefined}
-              onClick={tab.on ? undefined : tab.go}
-              className={`text-[13px] whitespace-nowrap focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
-                tab.on
-                  ? 'text-ink shadow-[inset_0_-2px_0_var(--color-accent)]'
-                  : 'text-ink-tertiary shadow-[inset_0_-2px_0_transparent] hover:text-ink'
-              }`}
-            >
-              <Bidi>{tab.label}</Bidi>
-            </button>
+            {'saved' in tab && tab.saved !== undefined ? (
+              <SavedTab
+                view={tab.saved}
+                on={tab.on}
+                onGo={() => navigate(savedViewPath(declaration.name, tab.saved.kind, tab.saved.address))}
+              />
+            ) : (
+              <button
+                type="button"
+                aria-current={tab.on ? 'page' : undefined}
+                onClick={tab.on ? undefined : tab.go}
+                className={`${TAB_LABEL} ${tab.on ? TAB_ON : TAB_OFF}`}
+              >
+                <Bidi>{tab.label}</Bidi>
+              </button>
+            )}
           </Fragment>
         ))}
       </nav>
@@ -1750,7 +1768,7 @@ function ApplyRulesPanel({
   onCancel: () => void
   onApply: () => void
 }) {
-  const rows = (count: number): string => (count === 1 ? '1 entry' : `${String(count)} entries`)
+  const rows = (count: number): string => (count === 1 ? '1 row' : `${String(count)} rows`)
   return (
     <div className="shrink-0 border-t border-hairline bg-elevated px-6 py-4">
       <p className="mb-3 max-w-prose text-body">

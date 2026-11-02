@@ -26,6 +26,7 @@ import {
   SHOW_AS_HINT,
   SHOW_AS_LABEL,
   entryLabel,
+  noteWords,
   entryLayout,
   entryOrder,
   entryShown,
@@ -430,7 +431,7 @@ export function EntryView({
 
   return (
     <div className="fc-view-enter flex h-full flex-col">
-      <div className="flex min-h-[41px] shrink-0 flex-wrap items-center gap-x-3.5 gap-y-1.5 border-b border-hairline px-6 py-1.5">
+      <div className="flex min-h-10 shrink-0 flex-wrap items-center gap-x-3.5 gap-y-1.5 border-b border-hairline px-6 py-1.5">
         {list !== undefined && (
           <button
             type="button"
@@ -482,7 +483,7 @@ export function EntryView({
           <span className="max-w-prose text-caption text-ink-secondary">{locked}</span>
         )}
         <span className="ml-auto flex items-center gap-1.5">
-          {written !== undefined && <span className="text-caption text-ink-tertiary">Written {written}</span>}
+          {written !== undefined && <span className="text-caption text-ink-secondary">Written {written}</span>}
           {!readOnly && ordered.some((column) => column !== layout.title) && (
             <FieldsList
               open={fieldsOpen}
@@ -521,7 +522,7 @@ export function EntryView({
             </div>
             {layout.title !== undefined && field(layout.title, 'title')}
             {header.length > 0 && (
-              <div className="flex flex-wrap items-center gap-x-[18px] gap-y-1.5">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                 {header.map((column) => field(column, 'header'))}
               </div>
             )}
@@ -535,7 +536,7 @@ export function EntryView({
               {hasFigures && (
                 <section className="flex flex-col gap-3.5" aria-label="Figures">
                   {(figures.length > 0 || workedOut.length > 0 || folded.length > 0) && (
-                    <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-x-[22px] gap-y-3.5">
+                    <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-x-6 gap-y-4">
                       {figures.map((column) => field(column, 'figure'))}
                       {workedOut.map((each) => (
                         <WorkedOut
@@ -571,7 +572,7 @@ export function EntryView({
                 <div className="flex flex-wrap items-center gap-1 border-t border-hairline pt-3.5" aria-label="Empty">
                   {!readOnly && shown.empty.length > 0 && (
                     <>
-                      <span className="fc-label me-2 text-ink-tertiary">Empty</span>
+                      <span className="fc-label me-2 text-ink-secondary">Empty</span>
                       {shown.empty.map((column) => (
                         <button
                           key={column.name}
@@ -593,7 +594,7 @@ export function EntryView({
                   {shown.hidden > 0 && (
                     <button
                       type="button"
-                      className="ms-auto h-6 px-2 text-caption text-ink-tertiary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                      className="ms-auto h-6 px-2 text-caption text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
                       aria-pressed={revealed}
                       onClick={() => setRevealed(!revealed)}
                     >
@@ -605,7 +606,7 @@ export function EntryView({
             </div>
 
             {aside && (
-              <aside className="flex flex-col gap-[22px]" aria-label="Links">
+              <aside className="flex flex-col gap-6" aria-label="Links">
                 {linkColumns.map((column) => field(column, 'links'))}
                 {/* A new entry has no "Links here": nothing names it yet (U1's choice d). */}
                 {!fresh && (
@@ -684,7 +685,7 @@ function PagerStep({
  * plane taken away, rather than a second look of its own.
  */
 const SEAMLESS =
-  'min-h-8 -mx-[7px] border border-transparent bg-transparent px-1.5 py-0.5 outline-none ' +
+  'min-h-8 -mx-2 border border-transparent bg-transparent px-2 py-0.5 outline-none ' +
   'hover:border-hairline focus:border-accent focus:bg-elevated ' +
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent'
 
@@ -793,19 +794,19 @@ function Field({
       </span>
     )
   const hiddenTag = dimmed && (
-    <span className="border border-dashed border-hairline-strong px-[5px] text-[10px] tracking-[.06em] text-ink-tertiary uppercase">
+    <span className="border border-dashed border-hairline-strong px-1 text-label text-ink-secondary uppercase">
       hidden
     </span>
   )
   const name = (
-    <span className="flex min-h-[18px] items-center gap-1.5">
+    <span className="flex min-h-5 items-center gap-1.5">
       {grabbed(
         <span
-          className={`fc-label ${part === 'header' ? 'text-ink-tertiary' : ''}`}
+          className={`fc-label ${part === 'header' ? 'text-ink-secondary' : ''}`}
           title={describe(column)}
         >
           <Bidi>{label}</Bidi>
-          {column.required && empty && <span className="ms-1 text-ink-tertiary normal-case">needed</span>}
+          {column.required && empty && <span className="ms-1 text-ink-secondary normal-case">needed</span>}
         </span>,
       )}
       {hiddenTag}
@@ -847,7 +848,7 @@ function Field({
   )
   const hint =
     focused && !readOnly && TYPED.has(way) && column.type !== 'boolean' ? (
-      <span className="text-label text-ink-tertiary">
+      <span className="text-label text-ink-secondary">
         {fresh ? 'Kept as typed until Add' : 'Enter or leaving the field writes it · Esc puts it back'}
       </span>
     ) : null
@@ -994,10 +995,10 @@ function ShowAsMenu({
       {open && (
         <span
           role="menu"
-          className="fc-pop-enter absolute top-[22px] left-0 z-20 flex min-w-[220px] flex-col border border-hairline-strong bg-elevated py-1 shadow-[var(--shadow-pop)]"
+          className="fc-pop-enter absolute top-6 left-0 z-20 flex min-w-[220px] flex-col border border-hairline-strong bg-elevated py-1 shadow-[var(--shadow-pop)]"
         >
           {ways && (
-            <span className="fc-label px-3 pt-1.5 pb-1 text-ink-tertiary">
+            <span className="fc-label px-3 pt-1.5 pb-1 text-ink-secondary">
               Show <Bidi>{name}</Bidi> as
             </span>
           )}
@@ -1016,12 +1017,12 @@ function ShowAsMenu({
               <span className="w-3.5 text-accent">{each === way ? '✓' : ''}</span>
               {SHOW_AS_LABEL[each]}
               {SHOW_AS_HINT[each] !== undefined && (
-                <span className="ms-auto ps-3 text-caption text-ink-tertiary">{SHOW_AS_HINT[each]}</span>
+                <span className="ms-auto ps-3 text-caption text-ink-secondary">{SHOW_AS_HINT[each]}</span>
               )}
             </button>
           ))}
           {ways && (
-            <span className="mt-1 max-w-[260px] border-t border-hairline px-3 pt-2 pb-1 text-label text-ink-tertiary normal-case">
+            <span className="mt-1 max-w-[260px] border-t border-hairline px-3 pt-2 pb-1 text-caption text-ink-secondary">
               For every <Bidi>{one}</Bidi>, in this view. Kept beside the declaration.
             </span>
           )}
@@ -1040,7 +1041,7 @@ function ShowAsMenu({
                 <button type="button" role="menuitem" className={item} onClick={act(mover.onHide)}>
                   <span className="inline-flex w-3.5 text-accent">{mover.hidden ? <EyeGlyph /> : <EyeGlyph off />}</span>
                   {mover.hidden ? 'Show' : 'Hide'}
-                  <span className="ms-auto ps-3 text-caption text-ink-tertiary">on this entry view</span>
+                  <span className="ms-auto ps-3 text-caption text-ink-secondary">on this entry view</span>
                 </button>
               )}
             </>
@@ -1095,7 +1096,7 @@ function WorkedOut({
   const figureWay = way === 'figure' || way === 'large'
   return (
     <section className="group/worked flex min-w-0 flex-col gap-1" aria-label={name}>
-      <span className="flex min-h-[18px] items-center gap-1.5">
+      <span className="flex min-h-5 items-center gap-1.5">
         <span className="fc-label">
           <Bidi>{name}</Bidi>
         </span>
@@ -1114,7 +1115,7 @@ function WorkedOut({
       {value.kind === 'EMPTY' ? (
         <span className="flex min-h-8 items-baseline" title={`Empty: ${value.reason}`}>
           <span className="text-secondary-number font-medium text-ink-tertiary">—</span>
-          <span className="ms-1 text-label text-ink-tertiary normal-case">computed</span>
+          <span className="ms-1 text-label text-ink-secondary normal-case">computed</span>
         </span>
       ) : (
         <span className={`flex min-w-0 ${figureWay ? 'items-baseline' : 'items-center gap-1'}`} title={`= ${expression}`}>
@@ -1129,7 +1130,7 @@ function WorkedOut({
             marked={marked}
             worked={figureWay ? expression : undefined}
           />
-          {!figureWay && <span className="text-label text-ink-tertiary normal-case">computed</span>}
+          {!figureWay && <span className="text-label text-ink-secondary normal-case">computed</span>}
         </span>
       )}
     </section>
@@ -1160,7 +1161,7 @@ function Folded({ each, marked }: { each: RowAggregate; marked: boolean }) {
         <span className={`text-secondary-number font-medium tabular-nums ${marked ? MARKED : ''}`}>
           {value.kind === 'UNCHECKED' ? <span className="text-ink-tertiary">—</span> : aggregateFigure(value)}
         </span>
-        <span className="ms-1 text-label text-ink-tertiary normal-case">computed</span>
+        <span className="ms-1 text-label text-ink-secondary normal-case">computed</span>
       </span>
     </section>
   )
@@ -1214,7 +1215,7 @@ function Verdicts({
             data-tour={`verdict-${each.identity.name}`}
           >
             <span
-              className={`mt-[5px] h-2 w-2 rounded-full ${kind === 'PROVED' ? 'bg-positive' : kind === 'FAILED' ? 'bg-negative' : 'bg-hairline-strong'}`}
+              className={`mt-1 h-2 w-2 rounded-full ${kind === 'PROVED' ? 'bg-positive' : kind === 'FAILED' ? 'bg-negative' : 'bg-hairline-strong'}`}
               aria-hidden
             />
             <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
@@ -1243,7 +1244,7 @@ function Verdicts({
 function VerdictChip({ kind, tone, marked }: { kind: RowVerdict['verdict']['kind']; tone: string; marked: number | undefined }) {
   const mark = useMark<HTMLSpanElement>(marked, kind === 'FAILED' ? 'negative' : kind === 'PROVED' ? 'positive' : 'neutral')
   return (
-    <span ref={mark} className={`inline-flex h-5 items-center border px-[7px] text-label font-medium ${tone}`}>
+    <span ref={mark} className={`inline-flex h-5 items-center border px-2 text-label font-medium ${tone}`}>
       {kind === 'PROVED' ? 'proved' : kind === 'FAILED' ? 'failed' : 'unchecked'}
     </span>
   )
@@ -1268,8 +1269,8 @@ function Concerns({
       case 'LINK_GAP':
         return [
           <li key={at}>
-            <code>{finding.column}</code> is empty here, where {finding.filled}{' '}
-            {finding.filled === 1 ? 'entry names' : 'entries name'} a <Bidi>{finding.target}</Bidi>.
+            <Bidi>{entryLabel({ name: finding.column })}</Bidi> is empty here, where {finding.filled}{' '}
+            {finding.filled === 1 ? 'row names' : 'rows name'} a <Bidi>{finding.target}</Bidi>.
           </li>,
         ]
       case 'DUPLICATE': {
@@ -1418,9 +1419,9 @@ function FieldsList({
         <div
           role="dialog"
           aria-label="Fields"
-          className="fc-pop-enter absolute top-[34px] right-0 z-30 w-[340px] max-w-[calc(100vw-32px)] border border-hairline-strong bg-elevated pt-1 pb-2 shadow-[var(--shadow-pop)]"
+          className="fc-pop-enter absolute top-full right-0 z-30 mt-1 w-[340px] max-w-[calc(100vw-32px)] border border-hairline-strong bg-elevated pt-1 pb-2 shadow-[var(--shadow-pop)]"
         >
-          <div className={`${grid} h-6 text-[10px] tracking-[.06em] text-ink-tertiary uppercase`} aria-hidden>
+          <div className={`${grid} h-6 text-label text-ink-secondary uppercase`} aria-hidden>
             <span />
             <span>Field</span>
             <span>Shown</span>
@@ -1478,12 +1479,12 @@ function FieldsList({
                           <circle cx="8" cy="12" r="1.2" />
                         </svg>
                       </span>
-                      <span className={`flex min-w-0 items-baseline ${off ? 'text-ink-tertiary' : ''}`}>
+                      <span className={`flex min-w-0 items-baseline ${off ? 'text-ink-secondary' : ''}`}>
                         <Bidi className="min-w-0 truncate">{words}</Bidi>
                         {needed ? (
-                          <span className="ms-1.5 shrink-0 text-label text-ink-tertiary">needed</span>
+                          <span className="ms-1.5 shrink-0 text-label text-ink-secondary">needed</span>
                         ) : (
-                          holds(column) && <span className="ms-1.5 shrink-0 text-label text-ink-tertiary">holds a value</span>
+                          holds(column) && <span className="ms-1.5 shrink-0 text-label text-ink-secondary">holds a value</span>
                         )}
                       </span>
                       <button
@@ -1519,7 +1520,7 @@ function FieldsList({
                 })}
               </div>
             ))}
-          <div className="mt-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t border-hairline px-3 pt-2 text-label text-ink-tertiary">
+          <div className="mt-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t border-hairline px-3 pt-2 text-label text-ink-secondary">
             <span className="min-w-0 flex-1">
               Drag a field within its part to move it. A hidden field stays in the table and every tool.
             </span>
@@ -1542,7 +1543,7 @@ function describe(column: ColumnDeclaration): string {
     column.unit === undefined ? '' : ` · ${column.unit}`,
     column.per === undefined ? '' : ` per ${column.per}`,
     column.required ? ' · required' : '',
-    column.note === '' ? '' : ` — ${column.note}`,
+    column.note === '' ? '' : ` — ${noteWords(column.note)}`,
   ].join('')
 }
 
@@ -1604,7 +1605,7 @@ function Control({
   const set = (text: string): void => onChange(column.name, text)
   const pick = (text: string): void => onPick(column.name, text)
   const figure = part === 'figure'
-  const big = figure ? `${way === 'large' ? 'text-[28px]' : 'text-secondary-number'} font-medium ${marked ? MARKED : ''}` : ''
+  const big = figure ? `${way === 'large' ? 'text-title' : 'text-secondary-number'} font-medium ${marked ? MARKED : ''}` : ''
   const named = (id: string): string =>
     choices.find((each) => each.id === id)?.label ?? labels.get(id) ?? id
   const target = column.target
@@ -1781,7 +1782,7 @@ function Control({
         <button
           type="button"
           aria-label={`${column.name}: change`}
-          className="-mx-[7px] flex w-[calc(100%+14px)] min-w-0 border border-transparent px-1.5 text-left hover:border-hairline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+          className="-mx-2 flex w-[calc(100%+16px)] min-w-0 border border-transparent px-2 text-left hover:border-hairline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
           onClick={() => setOpen(true)}
         >
           {shown()}
@@ -1854,13 +1855,13 @@ function Control({
       // line's look, and a pick that writes as it is made.
       return (
         <PickMenu label={column.name} value={value} choices={menuOf(column)} tour={`field-${column.name}`} onPick={pick}>
-          {value === '' ? <span className="text-ink-tertiary">Empty</span> : <StateChip member={value} />}
+          {value === '' ? <span className="text-ink-secondary">Empty</span> : <StateChip member={value} />}
         </PickMenu>
       )
     case 'word':
       return (
         <PickMenu label={column.name} value={value} choices={menuOf(column)} onPick={pick}>
-          {value === '' ? <span className="text-ink-tertiary">Empty</span> : <span>{value === 'true' ? 'Yes' : 'No'}</span>}
+          {value === '' ? <span className="text-ink-secondary">Empty</span> : <span>{value === 'true' ? 'Yes' : 'No'}</span>}
         </PickMenu>
       )
     case 'buttons':
@@ -2259,7 +2260,7 @@ function MarkdownField({
       }}
     >
       {blocks.length === 0 ? (
-        <p className="text-ink-tertiary">{readOnly ? '—' : 'Nothing written yet.'}</p>
+        <p className="text-ink-secondary">{readOnly ? '—' : 'Nothing written yet.'}</p>
       ) : (
         <Markdown blocks={blocks} />
       )}

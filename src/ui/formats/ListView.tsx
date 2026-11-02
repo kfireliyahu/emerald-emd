@@ -15,7 +15,8 @@ import { toneOf } from '@/ui/formats/tone.ts'
  *
  * One row per line: the tick, the name (which opens the entry), and the
  * line's columns right-aligned — a list of members as dot-chips, a link's name,
- * a due relative to today, late in negative. Grouped by one column, each group
+ * a date relative to today — late, in negative, only on the column somebody
+ * set as the date a row is due by (M54 F2, D-532). Grouped by one column, each group
  * folds, and its ticked rows fold at its foot as *N done*. A quick add line at
  * the top of each group that is one value writes a row with what typed and
  * what the group implies.
@@ -167,7 +168,7 @@ export function ListLines(props: ListLinesProps) {
         className="relative flex w-full items-start gap-2.5 bg-accent-soft px-3 py-1.5 before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:bg-accent"
       >
         {done !== undefined && <span className="mt-0.5 inline-flex size-4 flex-none border-[1.5px] border-ink-secondary" aria-hidden />}
-        <Bidi className={`min-w-0 truncate text-[13px] leading-[1.35] ${props.draft.title === '' ? 'text-ink-tertiary italic' : 'text-ink'}`}>
+        <Bidi className={`min-w-0 truncate text-body ${props.draft.title === '' ? 'text-ink-tertiary italic' : 'text-ink'}`}>
           {props.draft.title === '' ? `A new ${props.draft.one}` : props.draft.title}
         </Bidi>
       </div>
@@ -193,16 +194,16 @@ export function ListLines(props: ListLinesProps) {
                 onClick={() => fold(group.key)}
                 className={
                   narrow
-                    ? 'mt-2 flex h-6 w-full items-center gap-1.5 px-3 text-left text-[11px] tracking-[.06em] text-ink-secondary uppercase hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent'
-                    : 'mt-3.5 flex h-8 w-full items-center gap-2 text-left text-[13px] font-medium focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent'
+                    ? 'mt-2 flex h-6 w-full items-center gap-1.5 px-3 text-left text-label text-ink-secondary uppercase hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent'
+                    : 'mt-3.5 flex h-8 w-full items-center gap-2 text-left text-body font-medium focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent'
                 }
               >
-                <span className="fc-chev text-[10px]" data-open={!isShut} aria-hidden>
+                <span className="fc-chev text-label" data-open={!isShut} aria-hidden>
                   ▸
                 </span>
                 {group.member !== undefined && !narrow && <span className="fc-dot" data-tone={toneOf(group.member)} aria-hidden />}
                 <Bidi className="min-w-0 truncate">{group.name}</Bidi>
-                <span className="font-normal text-ink-tertiary tabular-nums">{String(count)}</span>
+                <span className="font-normal text-ink-secondary tabular-nums">{String(count)}</span>
               </button>
             )}
             <div className="fc-fold" data-open={!isShut}>
@@ -219,7 +220,7 @@ export function ListLines(props: ListLinesProps) {
                     onClick={() => show(group.key)}
                     className={
                       narrow
-                        ? 'flex h-6 w-full items-center px-3 text-left text-[11px] text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent'
+                        ? 'flex h-6 w-full items-center px-3 text-left text-caption text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent'
                         : 'flex h-8 w-full items-center gap-2 border-t border-hairline px-1 text-left text-caption text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent'
                     }
                   >
@@ -342,11 +343,11 @@ function NarrowRow(props: RowProps & { readonly current: boolean }) {
         onClick={onOpen}
         className="flex min-w-0 flex-1 flex-col text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
       >
-        <Bidi className={`min-w-0 truncate text-[13px] leading-[1.35] ${struck ? 'text-ink-tertiary line-through' : 'text-ink'}`}>
+        <Bidi className={`min-w-0 truncate text-body ${struck ? 'text-ink-tertiary line-through' : 'text-ink'}`}>
           {line.title}
         </Bidi>
         {under.length > 0 && (
-          <span className="flex flex-wrap gap-1.5 text-[11px] text-ink-secondary">
+          <span className="flex flex-wrap gap-2 text-caption text-ink-secondary">
             {under.map((cell, index) => (
               <span key={cell.column} className="inline-flex items-center gap-1.5">
                 {index > 0 && <span className="text-ink-tertiary">·</span>}
@@ -372,7 +373,7 @@ function Cell({ cell }: { cell: LineCell }) {
       return (
         <span className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
           {cell.members.map((member) => (
-            <span key={member} className="inline-flex items-center gap-[5px] whitespace-nowrap">
+            <span key={member} className="inline-flex items-center gap-1 whitespace-nowrap">
               <i className="inline-block size-1.5 rounded-full bg-ink-tertiary" aria-hidden />
               <Bidi>{member.replace(/_/g, ' ')}</Bidi>
             </span>
@@ -381,7 +382,7 @@ function Cell({ cell }: { cell: LineCell }) {
       )
     case 'member':
       return (
-        <span className="inline-flex items-center gap-[5px] whitespace-nowrap">
+        <span className="inline-flex items-center gap-1 whitespace-nowrap">
           <span className="fc-dot" data-tone={toneOf(cell.member)} aria-hidden />
           {cell.member.replace(/_/g, ' ')}
         </span>
@@ -416,8 +417,8 @@ function QuickAddLine({
     <label
       className={
         narrow
-          ? 'mx-3 flex h-8 items-center border-b border-hairline text-[13px] text-ink-tertiary focus-within:shadow-[inset_2px_0_0_var(--color-accent)]'
-          : 'group flex h-10 items-center gap-3 border-t border-hairline px-1 text-ink-tertiary focus-within:shadow-[inset_2px_0_0_var(--color-accent)]'
+          ? 'mx-3 flex h-8 items-center border-b border-hairline text-body text-ink-secondary focus-within:shadow-[inset_2px_0_0_var(--color-accent)]'
+          : 'group flex h-10 items-center gap-3 border-t border-hairline px-1 text-ink-secondary focus-within:shadow-[inset_2px_0_0_var(--color-accent)]'
       }
     >
       {!narrow && (
@@ -441,9 +442,9 @@ function QuickAddLine({
         }}
         placeholder={placeholder}
         aria-label={placeholder}
-        className="h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-ink outline-none placeholder:text-ink-tertiary"
+        className="h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-ink outline-none placeholder:text-ink-secondary"
       />
-      {!narrow && <span className="text-[11px] whitespace-nowrap opacity-0 group-focus-within:opacity-100">Enter adds · Esc clears</span>}
+      {!narrow && <span className="text-caption whitespace-nowrap opacity-0 group-focus-within:opacity-100">Enter adds · Esc clears</span>}
     </label>
   )
 }
@@ -455,7 +456,9 @@ function QuickAddLine({
  * above the list — *Group by*, the tick, *Line* — never a settings screen. The
  * tick's says what a tick sets (*Ticking marks state done*) or *No ticks*, and
  * opens *Tick to mark…* — each enum's members and each yes/no — and *No ticks*
- * (M53 F1, D-524): nothing is ticked until somebody says what done is.
+ * (M53 F1, D-524): nothing is ticked until somebody says what done is. *Due*
+ * is the same for lateness (M54 F2, D-532): a date says *late* only once
+ * somebody picks it as the date a row is due by.
  */
 export function ListSettings({
   shape,
@@ -464,6 +467,7 @@ export function ListSettings({
   onGroup,
   onDone,
   onNoTicks,
+  onDue,
   onLine,
 }: {
   shape: ListShape<ColumnDeclaration>
@@ -474,8 +478,11 @@ export function ListSettings({
   onDone: (column: string, member: string) => void
   /** No ticks: the list's `done` cleared. */
   onNoTicks: () => void
+  /** The date a row is due by, or none. */
+  onDue: (column: string | undefined) => void
   onLine: (columns: readonly string[]) => void
 }) {
+  const dated = columns.filter((column) => column.type === 'date')
   const groupable = columns.filter(listGroupable)
   const lineable = columns.filter((column) => column !== shape.name)
   const doneable = columns.flatMap((column) =>
@@ -490,7 +497,7 @@ export function ListSettings({
   const ticking = shape.done === undefined ? 'No ticks' : tickWords(shape.done).header
   const lines = shape.lines.map((column) => column.name)
   return (
-    <div className="flex min-h-8 shrink-0 flex-wrap items-center gap-x-[18px] gap-y-1.5 border-b border-hairline px-6 py-1 text-caption text-ink-secondary">
+    <div className="flex min-h-8 shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline px-6 py-1 text-caption text-ink-secondary">
       <span className="inline-flex items-center gap-1">
         Group by
         <Menu label="Group by" said={shape.group === undefined ? 'nothing' : shape.group.name.replace(/_/g, ' ')} locked={locked}>
@@ -500,7 +507,15 @@ export function ListSettings({
                 <MenuItem
                   key={column.name}
                   on={shape.group === column}
-                  hint={column.type === 'date' ? 'late, today, tomorrow…' : column.type === 'link' ? 'a link' : 'an enum'}
+                  hint={
+                    column.type === 'date'
+                      ? shape.due === column
+                        ? 'late, today, tomorrow…'
+                        : 'before today, today…'
+                      : column.type === 'link'
+                        ? 'a link'
+                        : 'an enum'
+                  }
                   onPick={() => {
                     onGroup(column.name)
                     close()
@@ -547,6 +562,38 @@ export function ListSettings({
                   }}
                 >
                   No ticks
+                </MenuItem>
+              </>
+            )}
+          </Menu>
+        </span>
+      )}
+      {dated.length > 0 && !(locked && shape.due === undefined) && (
+        <span className="inline-flex items-center gap-1">
+          Due by
+          <Menu label="Due by" said={shape.due === undefined ? 'nothing' : shape.due.name.replace(/_/g, ' ')} locked={locked}>
+            {(close) => (
+              <>
+                {dated.map((column) => (
+                  <MenuItem
+                    key={column.name}
+                    on={shape.due === column}
+                    onPick={() => {
+                      onDue(column.name)
+                      close()
+                    }}
+                  >
+                    {column.name.replace(/_/g, ' ')}
+                  </MenuItem>
+                ))}
+                <MenuItem
+                  on={shape.due === undefined}
+                  onPick={() => {
+                    onDue(undefined)
+                    close()
+                  }}
+                >
+                  Nothing
                 </MenuItem>
               </>
             )}
@@ -603,7 +650,7 @@ function Menu({
         className="inline-flex h-6 items-center gap-1 px-1 text-ink hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
       >
         <Bidi>{said}</Bidi>
-        <span className="text-[10px] text-ink-tertiary" aria-hidden>
+        <span className="text-label text-ink-secondary" aria-hidden>
           ▾
         </span>
       </button>
@@ -611,9 +658,9 @@ function Menu({
         <div
           role="menu"
           aria-label={label}
-          className="fc-pop-enter absolute top-full left-0 z-30 mt-1 flex max-h-[60vh] w-60 flex-col overflow-y-auto rounded-md border border-hairline-strong bg-elevated p-1 text-[13px] text-ink shadow-[var(--shadow-pop)]"
+          className="fc-pop-enter absolute top-full left-0 z-30 mt-1 flex max-h-[60vh] w-60 flex-col overflow-y-auto rounded-md border border-hairline-strong bg-elevated p-1 text-body text-ink shadow-[var(--shadow-pop)]"
         >
-          <div className="px-2 pt-1 pb-1.5 text-[11px] tracking-[.06em] text-ink-tertiary uppercase">{label}</div>
+          <div className="px-2 pt-1 pb-2 text-label text-ink-secondary uppercase">{label}</div>
           {children(() => setOpen(false))}
         </div>
       )}
@@ -634,7 +681,7 @@ function MenuItem({ on, hint, onPick, children }: { on: boolean; hint?: string; 
         {on && <ActionGlyph name="check" size={12} />}
       </span>
       <span className="min-w-0 flex-1 truncate">{children}</span>
-      {hint !== undefined && <span className="text-[11px] text-ink-tertiary">{hint}</span>}
+      {hint !== undefined && <span className="text-caption text-ink-secondary">{hint}</span>}
     </button>
   )
 }
@@ -685,8 +732,14 @@ export function ListPage({
         onDone={(column, member) => onSetting([column], (_name, was) => ({ ...was, done: [member] }))}
         onNoTicks={() => {
           const column = shape.done?.column.name
-          if (column !== undefined) onSetting([column], (_name, was) => ({ group: was.group, line: was.line }))
+          if (column !== undefined) onSetting([column], (_name, was) => ({ group: was.group, line: was.line, due: was.due }))
         }}
+        onDue={(column) =>
+          onSetting(
+            [...new Set([...(shape.due === undefined ? [] : [shape.due.name]), ...(column === undefined ? [] : [column])])],
+            (name, was) => ({ ...was, due: name === column }),
+          )
+        }
         onLine={(chosen) =>
           onSetting(
             names.filter((name) => name !== shape.name?.name),

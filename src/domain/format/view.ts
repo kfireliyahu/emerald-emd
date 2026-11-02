@@ -365,7 +365,7 @@ export const VIEW_PARTS: Readonly<Record<Exclude<ViewKind, 'entry'>, readonly st
   ready: ['waits', 'line', 'ready <member> done <members>', 'stalls <days>'],
   start: ['is <member>', 'latest <count>', 'line'],
   agenda: ['date', 'done <members>', 'line'],
-  list: ['group', 'line', 'done <members>'],
+  list: ['group', 'line', 'due', 'done <members>'],
 }
 
 /**
@@ -646,6 +646,16 @@ export function entryOrder<T extends { readonly name: string }>(
     .map((column, at) => ({ column, at, place: places.get(column.name) ?? Number.POSITIVE_INFINITY }))
     .sort((a, b) => a.place - b.place || a.at - b.at)
     .map((each) => each.column)
+}
+
+/**
+ * **A column's note as a person reads it** — M54 F2 (Words name the rule): a
+ * note is written for a conversation too, and names members, columns and
+ * tools in code — `in_progress`, `taken_by`. On a screen a name reads as its
+ * words, *in progress*, *taken by*, and no code keeps its backticks.
+ */
+export function noteWords(note: string): string {
+  return note.replace(/`([^`]+)`/g, (_whole, code: string) => (/^[A-Za-z0-9_]+$/.test(code) ? code.replace(/_/g, ' ') : code))
 }
 
 /**
@@ -1560,6 +1570,11 @@ export function meetWindows(
  * - `line` — a column after the name. Nobody choosing gives the default line:
  *   the first list of members, the first link and the first date (*tags,
  *   project, due*), a date always last because it is read right-aligned.
+ * - `due` — on a date: the date a row is due by, one column's. **Nobody
+ *   choosing gives no due** (M54 F2, D-532): only this column's dates say
+ *   *late*, order the rows within a group, and name a date group's *Late*;
+ *   every other date on the line is only its day. A card charge's date is when
+ *   it happened, and the list took the first date for a due until F2.
  * - `done <members>` — last, as the agenda's: what ticks a row, an enum's
  *   members or `done true` on a boolean. **Nobody choosing gives no tick**
  *   (M53 F1, D-524, amending D-519's guess of the first enum's last member):
@@ -1572,26 +1587,31 @@ export function meetWindows(
 export interface ListSetting {
   readonly group: boolean
   readonly line: boolean
+  /** The date a row is due by — one column's (M54 F2, D-532). */
+  readonly due?: boolean | undefined
   readonly done?: readonly string[] | undefined
 }
 
-/** `group line done finished dropped` into its words — or nothing, when it is not a list's setting. */
+/** `group line due done finished dropped` into its words — or nothing, when it is not a list's setting. */
 export function readListSetting(setting: string): ListSetting | undefined {
   const words = setting.split(/[\s,]+/).filter((each) => each !== '')
   if (words.length === 0) return undefined
   let group = false
   let line = false
+  let due = false
+  const said = (): ListSetting => (due ? { group, line, due } : { group, line })
   for (let at = 0; at < words.length; at++) {
     const word = words[at]
     if (word === 'done') {
       const members = [...new Set(words.slice(at + 1))]
-      return members.length === 0 ? undefined : { group, line, done: members }
+      return members.length === 0 ? undefined : { ...said(), done: members }
     }
     if (word === 'group' && !group) group = true
     else if (word === 'line' && !line) line = true
+    else if (word === 'due' && !due) due = true
     else return undefined
   }
-  return { group, line }
+  return said()
 }
 
 /** A list's setting as the table keeps it, or nothing when it holds no word. */
@@ -1599,9 +1619,24 @@ export function writeListSetting(setting: ListSetting): string | undefined {
   const words = [
     ...(setting.group ? ['group'] : []),
     ...(setting.line ? ['line'] : []),
+    ...(setting.due === true ? ['due'] : []),
     ...(setting.done !== undefined && setting.done.length > 0 ? ['done', ...setting.done] : []),
   ]
   return words.length === 0 ? undefined : words.join(' ')
+}
+
+/**
+ * What another column keeps of its list setting when `next` is said on one:
+ * `group`, `due` and `done` are one column's each, so saying one takes it off
+ * the column that held it, leaving that column's other words.
+ */
+export function listSettingKept(was: ListSetting, next: ListSetting): ListSetting {
+  return {
+    group: was.group && !next.group,
+    line: was.line,
+    ...(was.due === true && next.due !== true ? { due: true } : {}),
+    ...(next.done === undefined && was.done !== undefined ? { done: was.done } : {}),
+  }
 }
 
 /** Whether a list may group by this column: an enum, one link, or a date. */
@@ -1622,7 +1657,10 @@ export interface ListShape<C> {
   readonly lineChosen: boolean
   /** The line as drawn: without the column the rows are grouped by, a date last. */
   readonly shown: readonly C[]
-  /** The date rows are in the order of within a group: the line's first date, else the format's. */
+  /**
+   * The date a row is due by, as a setting said it — or nothing (M54 F2,
+   * D-532): only its dates say late, and rows are in its order within a group.
+   */
   readonly due: C | undefined
 }
 
@@ -1654,7 +1692,7 @@ export function listOf<C extends BoardColumn>(columns: readonly C[], settings: R
     lines,
     lineChosen: chosen.length > 0,
     shown: lines.filter((column) => column !== group),
-    due: lines.find(isDate) ?? columns.find(isDate),
+    due: columns.find((column) => isDate(column) && read(column)?.due === true),
   }
 }
 
@@ -1797,11 +1835,13 @@ export function listGroups<C extends BoardColumn, R>(
     return value === undefined || value === '' ? undefined : value
   }
   if (column.type === 'date') {
+    // *Late* only of the date a row is due by; any other date's past is only before today (M54 F2, D-532).
+    const due = shape.due === column
     const groups: ListGroup<R>[] = DATE_GROUPS.map((each) => {
       const day = each.days === undefined ? undefined : dayAfter(today, each.days)
       return {
         key: `date:${each.bucket}`,
-        name: each.name,
+        name: each.bucket === 'late' && !due ? 'Before today' : each.name,
         rows: rows.filter((row) => dueBucket(of(row), today) === each.bucket),
         implies: day === undefined ? undefined : { [column.name]: day },
         ticked: false,

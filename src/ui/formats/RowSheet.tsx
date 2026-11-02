@@ -17,7 +17,7 @@ import {
 import { foundByText } from '@/domain/format/foundBy.ts'
 import { companionKeyOf, isList, readValue, type RowVerdict, type StoredRow } from '@/domain/format/row.ts'
 import type { RowDraft } from '@/domain/format/rowDraft.ts'
-import { boundedWidth, isPercentWorkedOut } from '@/domain/format/view.ts'
+import { boundedWidth, entryLabel, isPercentWorkedOut, noteWords } from '@/domain/format/view.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ChoiceField, type Choice } from '@/ui/components/ChoiceField.tsx'
 import { CurrencyField, TypedHint, useTyped } from '@/ui/formats/TypedField.tsx'
@@ -329,9 +329,9 @@ export function RowSheet({
                       role="button"
                       tabIndex={0}
                       draggable
-                      aria-label={`Move ${column.name}`}
+                      aria-label={`Move ${entryLabel(column)}`}
                       aria-keyshortcuts="ArrowLeft ArrowRight Home End"
-                      title={`Move ${column.name} — drag it, or press ← → while it has focus`}
+                      title={`Move ${entryLabel(column)} — drag it, or press ← → while it has focus`}
                       className="fc-icon-action cursor-grab"
                       onDragStart={(event) => {
                         event.dataTransfer.effectAllowed = 'move'
@@ -370,7 +370,7 @@ export function RowSheet({
                   type="button"
                   className="flex min-w-0 flex-1 text-left text-label underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                   title={headed(
-                    `${column.name}${column.unit === undefined ? '' : ` (${column.unit})`}${
+                    `${entryLabel(column)}${column.unit === undefined ? '' : ` (${column.unit})`}${
                       column.foundBy === undefined
                         ? ''
                         : ` — found by ${foundByText(column.foundBy)}: filled on a write while it is empty`
@@ -384,8 +384,9 @@ export function RowSheet({
                     })
                   }
                 >
+                  {/* A person reads the column's words — `undone by`, never `undone_by` (M54 F2). */}
                   <Bidi className="min-w-0 truncate">
-                    {column.name}
+                    {entryLabel(column)}
                     {column.unit === undefined ? '' : ` (${column.unit})`}
                     {/* A link that fills itself says how (D-350). */}
                     {column.foundBy === undefined ? null : (
@@ -407,7 +408,7 @@ export function RowSheet({
                     data-held={columnMenu.held.has(column.name) ? 'true' : undefined}
                   >
                     <IconAction
-                      label={`${column.name}: values and filter${columnMenu.held.has(column.name) ? ' (held)' : ''}`}
+                      label={`${entryLabel(column)}: values and filter${columnMenu.held.has(column.name) ? ' (held)' : ''}`}
                       onClick={() => setMenuOf(column.name)}
                     >
                       <path d="M3 5h18l-7 8v6l-4 2v-8Z" fill={columnMenu.held.has(column.name) ? 'currentColor' : 'none'} />
@@ -419,7 +420,7 @@ export function RowSheet({
                     focus, so a sheet at rest reads as entries. */}
                 {onShape !== undefined && (
                   <span className={`${UNTIL_HOVER} group-hover/head:ml-1 focus-within:ml-1`}>
-                    <IconAction label={`Edit ${column.name}`} onClick={() => onShape(column.name)}>
+                    <IconAction label={`Edit ${entryLabel(column)}`} onClick={() => onShape(column.name)}>
                       <path d="m6 9 6 6 6-6" />
                     </IconAction>
                   </span>
@@ -606,7 +607,7 @@ export function RowSheet({
                   className="truncate px-3 py-1.5 text-right align-top tabular-nums whitespace-nowrap"
                 >
                   {each.value.kind === 'VALUE' ? (
-                    <span title={`over ${String(each.value.rows)} ${each.value.rows === 1 ? 'entry' : 'entries'}`}>
+                    <span title={`over ${String(each.value.rows)} ${each.value.rows === 1 ? 'row' : 'rows'}`}>
                       {/* A total of money is an amount, never its minor units (M29 F7). */}
                       {each.value.currency !== undefined
                         ? moneyText(each.value.value, each.value.currency)
@@ -787,7 +788,7 @@ function FootCell({
           <MembersField
             compact
             value={draft[column.name] ?? ''}
-            label={column.name}
+            label={entryLabel(column)}
             choices={choices ?? []}
             onChange={(text) => onChange(column.name, text)}
             onEnter={onEnter}
@@ -849,7 +850,7 @@ function FootCell({
             ref={picker}
             kind={kind}
             value={draft[column.name] ?? ''}
-            label={column.name}
+            label={entryLabel(column)}
             onPick={(value) => onChange(column.name, value)}
           />
         )}
@@ -859,7 +860,7 @@ function FootCell({
           <CurrencyField
             className="w-12 shrink-0 bg-transparent px-1 py-1.5 font-mono text-caption text-ink-secondary outline-none focus:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
             value={draft[companion] ?? ''}
-            label={`${column.name} currency`}
+            label={`${entryLabel(column)} currency`}
             tour={row === 0 ? `foot-${column.name}-currency` : undefined}
             onChange={(code) => onChange(companion, code)}
             onEnter={onEnter}
@@ -869,7 +870,7 @@ function FootCell({
           <input
             className="w-12 shrink-0 bg-transparent px-1 py-1.5 font-mono text-caption text-ink-secondary outline-none focus:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
             value={draft[companion] ?? ''}
-            aria-label={`${column.name} unit`}
+            aria-label={`${entryLabel(column)} unit`}
             placeholder="unit"
             spellCheck={false}
             onChange={(event) => onChange(companion, event.target.value)}
@@ -979,7 +980,7 @@ const UNTIL_HOVER =
 
 /** A header's title: its whole name, so a truncated one reads in full, then its note. */
 function headed(name: string, note: string): string {
-  return note === '' ? name : `${name} — ${note}`
+  return note === '' ? name : `${name} — ${noteWords(note)}`
 }
 
 /** A column nobody has sized, by what it holds. */

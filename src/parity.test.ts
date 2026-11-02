@@ -314,9 +314,10 @@ const CAPABILITIES: readonly Capability[] = [
   },
   {
     // M53 U4 (D-519): the list's *Group by*, its tick (M53 F1, D-524: *Tick to
-    // mark…* and *No ticks*) and *Line*; the
+    // mark…* and *No ticks*), its *Due* (M54 F2, D-532: the date a row is late
+    // after, `due` on `arrange_views`) and *Line*; the
     // tick itself is `updateRow` and a row added in place `insertRows`, above.
-    does: 'Choose what a format’s list groups by, what ticks a row, and what its lines show.',
+    does: 'Choose what a format’s list groups by, what ticks a row, which date it is due by, and what its lines show.',
     writes: ['setListSetting'],
     screen: FORMAT_ROWS,
     tool: 'arrange_views',

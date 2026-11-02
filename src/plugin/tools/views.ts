@@ -78,6 +78,7 @@ import {
   listOf,
   orderColumns,
   readAgendaDone,
+  listSettingKept,
   readListSetting,
   readReadyState,
   roadmapOf,
@@ -488,9 +489,10 @@ function judgeWord(
 
 /**
  * **A list's words on one column** (M53 U4, D-519): the column's whole setting
- * — `group`, `line`, `done <members>`, together — or null to clear it. `group`
- * and `done` are one column's each, so saying one takes it off the column that
- * held it, keeping that column's other words, as the screen's menus do.
+ * — `group`, `line`, `due`, `done <members>`, together — or null to clear it.
+ * `group`, `due` and `done` are one column's each, so saying one takes it off
+ * the column that held it, keeping that column's other words, as the screen's
+ * menus do. **Only `due` makes a date say late** (M54 F2, D-532).
  */
 function judgeList(
   db: Database,
@@ -513,6 +515,9 @@ function judgeList(
   if (read?.group === true && !listGroupable(target)) {
     return { reason: `A list groups by an enum, one link or a date; ${named} is ${target.type}.` }
   }
+  if (read?.due === true && target.type !== 'date') {
+    return { reason: `\`due\` names the date a row is due by; ${named} is ${target.type}.` }
+  }
   if (read?.done !== undefined) {
     const has = target.type === 'boolean' ? ['true', 'false'] : target.type === 'enum' ? (target.values ?? []) : []
     const strange = read.done.filter((each) => !has.includes(each))
@@ -528,7 +533,7 @@ function judgeList(
   const cleared: Change[] = [...kept].flatMap(([other, word]): Change[] => {
     const was = readListSetting(word)
     if (other === target.name || was === undefined || read === undefined) return []
-    const left = writeListSetting({ group: was.group && !read.group, line: was.line, done: read.done === undefined ? was.done : undefined })
+    const left = writeListSetting(listSettingKept(was, read))
     return left === word ? [] : [{ kind: 'LIST', format, column: other, was: word, now: left }]
   })
   return { changes: [...cleared, { kind: 'LIST', format, column: target.name, was: kept.get(target.name), now }] }
@@ -797,6 +802,7 @@ function listText(declaration: FormatDeclaration, settings: ReadonlyMap<string, 
   return (
     `${declaration.name}’s list is ${shape.group === undefined ? 'one list' : `grouped by \`${shape.group.name}\``}` +
     (shape.done === undefined ? ', with no tick' : `, ticked when \`${shape.done.column.name}\` is ${shape.done.members.join(' or ')}`) +
+    (shape.due === undefined ? ', with no due date' : `, due by \`${shape.due.name}\``) +
     (shape.lines.length === 0 ? ', each line its name alone.' : `, each line showing ${shape.lines.map((each) => `\`${each.name}\``).join(', ')}${shape.lineChosen ? '' : ' (its default)'}.`)
   )
 }
@@ -1033,7 +1039,7 @@ export const arrangeViewsTool: PluginTool = {
               setting: {
                 type: ['string', 'null'],
                 description:
-                  'list: group, line, done <members>, together (`group line`); roadmap: order, under, line; ready: waits, ready <members> done <members>, line; ' +
+                  'list: group, line, due (the date a row is due by; only it says late), done <members>, together (`group line`); roadmap: order, under, line; ready: waits, ready <members> done <members>, line; ' +
                   'start: is <member>, latest <n>, line; agenda: date, done <members>, line. null clears.',
               },
               name: stringProp('saved: the view’s name.'),

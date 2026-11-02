@@ -46,10 +46,11 @@ import { isProviderSupported, readChosenProvider } from '@/data/runtime/provider
  * place where it would otherwise have promised something — which is the same
  * separation D-138 puts on a verifier, applied to an affordance.
  *
- * **The door stays, and is not hidden or disabled.** `ExamplePanel` makes the
- * same call for the same reason: somebody who has never opened
- * `#/settings/model` would otherwise never learn the app can do this, and
- * showing it costs nothing because no socket opens until a button is pressed.
+ * **The door stays, and is not hidden.** Somebody who has never opened
+ * `#/settings/model` would otherwise never learn the app can do this, so a
+ * desktop with no model switched on still offers it. **Where this build cannot
+ * do it at all — a page in a browser — it is drawn unavailable, not offered**
+ * (M54 F2, error prevention): no button, no hover, its words saying why.
  */
 export function FormatDoors({
   onExample,
@@ -64,7 +65,7 @@ export function FormatDoors({
   // a settings screen that unmounts this one (D-134).
   const example = useMemo(() => {
     if (!isProviderSupported()) {
-      return 'Needs the desktop app: a model runs beside it on your own machine, and a page in a browser has no way to reach one.'
+      return 'Not in a browser: it needs the desktop app, where a model runs beside it on your own machine.'
     }
     if (readChosenProvider() === undefined) {
       return 'Needs a local model switched on, under Settings → Model. Everything it reads stays on this machine.'
@@ -79,7 +80,7 @@ export function FormatDoors({
       title: 'From an example',
       lead: 'A label, a receipt, a note, a spreadsheet — one of the things you already have.',
       cost: example,
-      onChoose: onExample,
+      onChoose: isProviderSupported() ? onExample : undefined,
     },
     {
       key: 'import',
@@ -126,19 +127,35 @@ export function FormatDoors({
             className="fc-door-enter"
             style={{ '--fc-door-at': index } as React.CSSProperties}
           >
-            <button
-              type="button"
-              data-tour={`door-${door.key}`}
-              onClick={door.onChoose}
-              className="flex h-full w-full flex-col items-start gap-2 rounded-lg border border-hairline-strong bg-elevated p-5 text-left transition-colors duration-[var(--duration-micro)] hover:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            >
-              {/* `accent` marks what you can act on, and a door is nothing but
-                  something to act on (D-125). No figure is coloured here. */}
-              <span className="text-accent">{door.glyph}</span>
-              <span className="font-medium">{door.title}</span>
-              <span className="text-caption text-ink-secondary">{door.lead}</span>
-              <span className="mt-auto pt-2 text-caption text-ink-tertiary">{door.cost}</span>
-            </button>
+            {door.onChoose === undefined ? (
+              // Unavailable in this build: drawn as a door you cannot go through —
+              // no button, no accent, its words saying why (M54 F2).
+              <div
+                data-tour={`door-${door.key}`}
+                aria-disabled="true"
+                className="flex h-full w-full flex-col items-start gap-2 rounded-lg border border-dashed border-hairline-strong p-5 text-left"
+              >
+                <span className="text-ink-secondary">{door.glyph}</span>
+                <span className="font-medium text-ink-secondary">{door.title}</span>
+                <span className="text-caption text-ink-secondary">{door.lead}</span>
+                <span className="mt-auto pt-2 text-caption text-ink-secondary">{door.cost}</span>
+              </div>
+            ) : (
+              <button
+                type="button"
+                data-tour={`door-${door.key}`}
+                onClick={door.onChoose}
+                className="flex h-full w-full flex-col items-start gap-2 rounded-lg border border-hairline-strong bg-elevated p-5 text-left transition-colors duration-[var(--duration-micro)] hover:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              >
+                {/* `accent` marks what you can act on, and a door is nothing but
+                    something to act on (D-125). No figure is coloured here. */}
+                <span className="text-accent">{door.glyph}</span>
+                <span className="font-medium">{door.title}</span>
+                <span className="text-caption text-ink-secondary">{door.lead}</span>
+                {/* What it costs is read before going through: ink-secondary (D-531). */}
+                <span className="mt-auto pt-2 text-caption text-ink-secondary">{door.cost}</span>
+              </button>
+            )}
           </li>
         ))}
       </ul>

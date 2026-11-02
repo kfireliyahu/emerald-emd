@@ -20,6 +20,8 @@ import {
   inDueOrder,
   listGroups,
   listOf,
+  listSettingKept,
+  noteWords,
   readListSetting,
   tickValue,
   tickWords,
@@ -56,6 +58,23 @@ describe('a list’s words (M53 U4)', () => {
     expect(readListSetting('lanes')).toBeUndefined()
     expect(writeListSetting({ group: true, line: false, done: ['done'] })).toBe('group done done')
     expect(writeListSetting({ group: false, line: false })).toBeUndefined()
+    expect(readListSetting('line due done done')).toEqual({ group: false, line: true, due: true, done: ['done'] })
+    expect(writeListSetting({ group: false, line: true, due: true })).toBe('line due')
+    expect(readListSetting('due due')).toBeUndefined()
+  })
+
+  it('reads a column’s note in words on a screen — no backticks, no underscores (M54 F2)', () => {
+    expect(noteWords('`in_progress` is a session; `match:{state:planned}` lists them')).toBe('in progress is a session; match:{state:planned} lists them')
+  })
+
+  it('has no due until somebody says which date it is — never the first date (M54 F2, D-532)', () => {
+    expect(listOf(TASK, new Map()).due).toBeUndefined()
+    expect(listOf(TASK, new Map([['started', 'due']])).due?.name).toBe('started')
+    // A word its column cannot hold is left out: a due is a date.
+    expect(listOf(TASK, new Map([['notes', 'due']])).due).toBeUndefined()
+    // Saying it on one column takes it off the other, keeping that column's line.
+    expect(listSettingKept({ group: false, line: true, due: true }, { group: false, line: false, due: true })).toEqual({ group: false, line: true })
+    expect(listSettingKept({ group: false, line: true, due: true }, { group: true, line: false })).toEqual({ group: false, line: true, due: true })
   })
 
   it('draws no tick where nobody said what done is — enums or not (M53 F1, D-524) — and tags, project, due as the line', () => {
@@ -64,7 +83,6 @@ describe('a list’s words (M53 U4)', () => {
     expect(shape.group).toBeUndefined()
     expect(shape.done).toBeUndefined()
     expect(shape.lines.map((each) => each.name)).toEqual(['tags', 'project', 'due'])
-    expect(shape.due?.name).toBe('due')
     expect(listOf([{ name: 'title', type: 'text' }, { name: 'flag', type: 'boolean' }], new Map()).done).toBeUndefined()
     // Said, it ticks that column — and the line leaves it off.
     const said = listOf(TASK, new Map([['state', 'done done']]))
@@ -121,11 +139,14 @@ describe('a list’s groups and dues (M53 U4)', () => {
   const valueOf = (row: (typeof rows)[number], column: { name: string }): string | undefined =>
     (row as Record<string, string | undefined>)[column.name]
 
-  it('groups by the state with done last, and by a date in buckets', () => {
+  it('groups by the state with done last, and by a date in buckets — Late only of the due', () => {
     const byState = listGroups(listOf(TASK, new Map([['state', 'group done done']])), rows, valueOf, TODAY)
     expect(byState.map((each) => each.name)).toEqual(['inbox', 'next', 'doing', 'waiting', 'done'])
     expect(byState.at(-1)).toMatchObject({ ticked: true, implies: { state: 'done' } })
-    const byDue = listGroups(listOf(TASK, new Map([['due', 'group']])), rows, valueOf, TODAY)
+    // A date nobody said is the due is only before today (M54 F2, D-532).
+    const byDate = listGroups(listOf(TASK, new Map([['due', 'group']])), rows, valueOf, TODAY)
+    expect(byDate[0]?.name).toBe('Before today')
+    const byDue = listGroups(listOf(TASK, new Map([['due', 'group due']])), rows, valueOf, TODAY)
     expect(byDue.map((each) => [each.name, each.rows.map((row) => row.title).join('')])).toEqual([
       ['Late', 'a'],
       ['Today', 'b'],
@@ -238,23 +259,41 @@ describe('the task list, in the app and in a conversation (M53 U4, D-519)', () =
       ['No project', 1],
     ])
     const shed = picture.groups[0]
+    // With no due, in the name's order; the ticked rows are drawn at the foot (listOrder).
     expect(shed?.rows.map((line) => [line.title, line.ticked])).toEqual([
       ['Call the council about the permit', false],
-      ['Order timber for the shed floor', false],
       ['Clear the corner for the base', true],
+      ['Order timber for the shed floor', false],
     ])
-    // Late reads late, in the one colour on the line; the project is left off it.
     expect(shed?.rows[0]?.cells).toEqual([
       { kind: 'chips', column: 'tags', members: ['call'] },
-      { kind: 'date', column: 'due', text: 'yesterday', late: true, long: 'Wed 21 Oct 2026' },
+      { kind: 'date', column: 'due', text: '21 Oct', late: false, long: 'Wed 21 Oct 2026' },
     ])
+    // Nobody said which date is the due: yesterday is only its day (M54 F2, D-532); the project is left off the line.
     expect(listOrder(picture).at(-1)?.title).toBe('Pick paint colour')
+    db.close()
+
+    // Said in a call, late reads late, in the one colour on the line — as the screen's Due sets it.
+    const due = await arrangeViewsTool.run(
+      { path, settings: [{ format: 'task', view: 'list', column: 'due', setting: 'due' }], commit: true },
+      NO_CLIENT,
+    )
+    expect(due).toContain(', due by `due`')
+    const notDate = await arrangeViewsTool.run({ path, settings: [{ format: 'task', view: 'list', column: 'notes', setting: 'due' }] }, NO_CLIENT)
+    expect(notDate).toContain('`due` names the date a row is due by; `notes` is text.')
+    const dated = await read(path)
+    const late = listPicture(dated, task, listFormats(dated), {}, viewSettings(dated, 'task', 'list'), TODAY)
+    expect(late.groups[0]?.rows[0]?.cells.at(-1)).toEqual({ kind: 'date', column: 'due', text: 'yesterday', late: true, long: 'Wed 21 Oct 2026' })
+    // The screen's Due moves it to another date, and the first stops saying late.
+    setListSetting(dated, 'task', 'started', 'due')
+    expect(viewSettings(dated, 'task', 'list').get('due')).toBeUndefined()
+    expect(listOf(task.columns, viewSettings(dated, 'task', 'list')).due?.name).toBe('started')
+    dated.close()
 
     // Drawn by show_format, the same groups.
     const shown = await showFormatTool.run({ path, format: 'task', view: 'list' }, NO_CLIENT)
     expect(shown).toContain('task as its list — 6 rows, grouped by project.')
     expect(shown).toContain('- Garden shed (3): Call the council about the permit, Order timber for the shed floor, Clear the corner for the base (done)')
-    db.close()
   })
 
   it('adds a row in place with the group’s value and a required enum’s first member — record_format_rows’ batch', async () => {

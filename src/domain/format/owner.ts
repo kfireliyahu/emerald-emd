@@ -63,6 +63,28 @@ export function rowWriteRefusal(declaration: FormatDeclaration): string | undefi
   )
 }
 
+/**
+ * **The same, for a person on a screen** — M54 F2 (Words name the rule): where
+ * the rows are written, without the tools a conversation writes them with.
+ * `on the Debts screen, or with \`create_debts\`` reads *on the Debts screen*;
+ * a pack that names only tools reads *in the pack's own screens*.
+ */
+export function rowWriteRefusalOnScreen(declaration: FormatDeclaration): string | undefined {
+  const owner = declaration.owner
+  if (owner === undefined) return undefined
+  const places = owner.written
+    .split(/,\s*(?:or\s+)?|\s+or\s+/)
+    .map((each) => each.trim())
+    .filter((each) => each !== '' && !each.includes('`'))
+  const where =
+    places.length === 0
+      ? `in the ${owner.pack} pack's own screens`
+      : places.length === 1
+        ? (places[0] ?? '')
+        : `${places.slice(0, -1).join(', ')} or ${places.at(-1) ?? ''}`
+  return `${declaration.title} belongs to the ${owner.pack} pack, so its rows are written only through it — ${where}. Reading them here is fine.`
+}
+
 /** Why a generic surface may not delete this format, or nothing. */
 export function deleteFormatRefusal(declaration: FormatDeclaration): string | undefined {
   const owner = declaration.owner

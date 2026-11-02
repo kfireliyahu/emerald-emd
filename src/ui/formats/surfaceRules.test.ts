@@ -111,7 +111,7 @@ const REPLACEMENTS = ['focus-visible:outline-2', 'focus-visible:bg-accent', 'foc
 /** Where the ring is drawn by what holds the field, not the field itself. */
 const HELD_ELSEWHERE = [
   // The entry list's search: its label draws the ring (`has-[:focus-visible]`).
-  'p-0 text-[13px] text-ink outline-none placeholder:text-ink-tertiary',
+  'p-0 text-body text-ink outline-none placeholder:text-ink-secondary',
   // The entry list's scroll box, which is not a stop of its own.
   'relative min-h-0 flex-1 overflow-auto outline-none',
   // Quick add: its label draws the accent rule inside it on focus-within.
@@ -125,6 +125,8 @@ const HELD_ELSEWHERE = [
   'w-full min-w-0 border-0 bg-transparent p-0 text-caption text-ink outline-none placeholder:text-ink-tertiary',
   // A rail entry being renamed: the field exists only while it has focus, and its rule is `accent` throughout.
   'h-6 w-full min-w-0 border-0 border-b border-accent bg-transparent p-0 text-[12.5px] text-ink outline-none',
+  // A saved view's tab being renamed (M54 F2): as the rail's, its rule is `accent` throughout.
+  'h-6 w-40 min-w-0 border-0 border-b border-accent bg-transparent p-0 text-body text-ink outline-none',
   // A dialog's own box (About, Earlier copies): focused by script so Esc reaches it, never a Tab stop.
   'flex-col overflow-hidden rounded-lg border border-hairline-strong bg-elevated shadow-pop outline-none',
 ]
@@ -320,3 +322,56 @@ describe('the shared looks every screen spends (M54 F1)', () => {
     expect(short).toEqual([])
   })
 })
+
+describe('the formats and rows surface, swept (M54 F2)', () => {
+  // *Every value is a token* and *Nothing between the spacing steps* (D-531): no
+  // type size in pixels at all — 13px moves onto 12 or 14, 11px onto the label or
+  // the caption — and no spacing or height between the steps. A layout width
+  // (`max-w-[1120px]`, a lane's `min-w-[200px]`) is a measure, not a step.
+  const SWEPT = [
+    'src/ui/screens/Formats.tsx',
+    'src/ui/screens/DeclaredFormats.tsx',
+    'src/ui/screens/FormatRows.tsx',
+    'src/ui/formats/BoardView.tsx',
+    'src/ui/formats/EntryView.tsx',
+    'src/ui/formats/EntryValue.tsx',
+    'src/ui/formats/EntryList.tsx',
+    'src/ui/formats/ListView.tsx',
+    'src/ui/formats/FormatDoors.tsx',
+    'src/ui/formats/SavedTab.tsx',
+  ]
+  it.each(SWEPT)('%s sizes type from the ramp and spaces on the steps', (path) => {
+    const source = readFileSync(path, 'utf8')
+    expect(source.match(/\btext-\[[0-9.]+px\]|\btracking-\[|\bleading-\[/g) ?? []).toEqual([])
+    const between = /(?<![\w-])-?(?:m|p|[mp][xytblrse]|gap|gap-[xy]|space-[xy]|inset|inset-[xy]|top|left|right|bottom|h|min-h)-\[[0-9.]+px\]/g
+    expect(source.match(between) ?? []).toEqual([])
+  })
+
+  // *One level of tabs* (D-531): every tab's label is ink-secondary, and the open one ink.
+  it('labels the format’s tabs in ink-secondary', () => {
+    const tabs = readFileSync('src/ui/formats/SavedTab.tsx', 'utf8')
+    expect(tabs).toMatch(/TAB_OFF =\s*'text-ink-secondary /)
+    const rows = readFileSync('src/ui/screens/FormatRows.tsx', 'utf8')
+    expect(rows).toContain('${tab.on ? TAB_ON : TAB_OFF}')
+    expect(rows).not.toMatch(/text-ink-tertiary shadow-\[inset_0_-2px_0_transparent\]/)
+  })
+
+  // *A screen names itself with a heading* (WCAG 2.4.6), and *Words name the rule*:
+  // a format's table name is machinery, never on its page or its card.
+  it('heads a format’s page with its title, and shows no table name', () => {
+    for (const path of ['src/ui/screens/FormatRows.tsx', 'src/ui/screens/DeclaredFormats.tsx']) {
+      const source = readFileSync(path, 'utf8')
+      expect(source).toMatch(/<h1 className="text-body font-medium/)
+      expect(source).not.toContain('tableNameFor(')
+    }
+  })
+
+  // *A card is one link* (D-531): a board card's title is stretched over it, and its arrows sit above.
+  it('makes the whole board card its link', () => {
+    const board = readFileSync('src/ui/formats/BoardView.tsx', 'utf8')
+    expect(board).toMatch(/fc-board-card relative /)
+    expect(board).toMatch(/fc-card-title [^"]*after:absolute after:inset-0/)
+    expect(board).toContain('relative z-10 ml-auto flex')
+  })
+})
+
