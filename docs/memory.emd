@@ -6386,7 +6386,7 @@ state: fault
 ### Demo, custom.emd (no ledger), #/formats/card_charge/read → drop bank-statement.csv anywhere outside the dashed box.
 unit: M54 U3
 should: On a format's read page a drop anywhere reads onto that format, and the window overlay's words say so (Desktop affordances over polish; Words name the rule).
-breaks: The overlay reads "Drop statements, payslips and fund reports, any number" and the drop goes to the ledger: "bank-statement.csv needs a ledger to go into… Keep a ledger here and read it". Only the dashed box reads onto Card charge. App.tsx:271 (useWindowFileDrop), ReadFiles.tsx ~837-843, NoLedger.tsx:54. Owned by M54 F13. Part fixed in M54 F4.
+breaks: The overlay reads "Drop statements, payslips and fund reports, any number" and the drop goes to the ledger: "bank-statement.csv needs a ledger to go into… Keep a ledger here and read it". Only the dashed box reads onto Card charge. App.tsx:271 (useWindowFileDrop), ReadFiles.tsx ~837-843, NoLedger.tsx:54. Owned by M54 F13. Part fixed in M54 F4. Fixed in M54 F13 (368d722).
 state: fault
 
 ### Demo, custom.emd, #/dashboard → Add a block → Headline total, Sum of amount. Both themes.
@@ -6458,7 +6458,7 @@ state: fault
 ### Demo, custom.emd, #/settings/packs and #/settings/export; custom.emd #/year (NoLedger).
 unit: M54 U4
 should: Every screen opens the same way, with one h1 (WCAG 1.3.1/2.4.6).
-breaks: Export has an eyebrow and an h1; Packs and NoLedger have no heading at all. Owned by M54 F13. Part fixed in M54 F6 (Export, Packs).
+breaks: Export has an eyebrow and an h1; Packs and NoLedger have no heading at all. Owned by M54 F13. Part fixed in M54 F6 (Export, Packs). Fixed in M54 F13 (368d722).
 state: fault
 
 ### Demo, custom.emd, #/settings/packs.
@@ -6482,7 +6482,7 @@ state: open
 ### Demo, custom.emd: drop a csv outside the read box (as above) → the NoLedger prompt.
 unit: M54 U3
 should: A verb and its object — "Keep a ledger" (An action is a verb).
-breaks: The action reads "Keep a ledger here and read it", a sentence. NoLedger.tsx. Owned by M54 F13.
+breaks: The action reads "Keep a ledger here and read it", a sentence. NoLedger.tsx. Owned by M54 F13. Fixed in M54 F13 (368d722).
 state: fault
 
 ### Demo, custom.emd: save a card_charge view sorted merchant ascending ("Over 50") and add it to #/dashboard; project.emd: "Landed this year" on #/formats/unit/dashboard.
@@ -6506,13 +6506,13 @@ state: fault
 ### Demo, demo.emd, #/ in light and dark: Home's All months column headers and a card's missing-statement line ("Everyday Card ···1234 · No statement read for this month"); the palette's group headings and counts (Ctrl+K); the rail folders' entry counts; #/settings/packs' list of places; #/settings/export's shortcut line; #/mcp's tool names and its two notes; the guide's mono reopen line.
 unit: M54 U4
 should: Text a person needs is at least 4.5:1 and ink-tertiary is for non-essential text only (Contrast 4.5:1 for text). QUESTION for the maintainer: the missing-statement line is the genuine signal the product exists for, and ink-tertiary is 2.45-2.62:1 in light — move these to ink-secondary (5.33:1 light, 7.61:1 dark), or raise ink-tertiary itself?
-breaks: All in ink-tertiary: 2.45-2.62:1 in light (fails even 3:1), 3.18-3.65:1 in dark. Home.tsx:555, :601; CommandPalette.tsx:385-386; RailFolder.tsx:139; Packs.tsx; Export.tsx; Mcp.tsx:40,47,121; Guide.tsx:113. Verdict 2026-11-02 (D-531): move to ink-secondary; ink-tertiary itself is not raised. Owned by M54 F13. Part fixed in M54 F5 (CommandPalette, RailFolder). Part fixed in M54 F6 (Packs, Export, Mcp, Guide).
+breaks: All in ink-tertiary: 2.45-2.62:1 in light (fails even 3:1), 3.18-3.65:1 in dark. Home.tsx:555, :601; CommandPalette.tsx:385-386; RailFolder.tsx:139; Packs.tsx; Export.tsx; Mcp.tsx:40,47,121; Guide.tsx:113. Verdict 2026-11-02 (D-531): move to ink-secondary; ink-tertiary itself is not raised. Owned by M54 F13. Part fixed in M54 F5 (CommandPalette, RailFolder). Part fixed in M54 F6 (Packs, Export, Mcp, Guide). Fixed in M54 F13 (368d722).
 state: fault
 
 ### Demo, demo.emd, #/: Home's All months table — Tab to a month, press Space, scroll; and read its rows' colours.
 unit: M54 U4
 should: A data table: sticky header on its own scroll region; a row you open behaves as a link or button. QUESTION for the maintainer: The four flows colour Home's figures says a single row stays ink — is a month row a single row?
-breaks: Rows are <tr tabIndex=0> with no role and Space does nothing; the header does not stick; each month row's figures wear their flow colours (Home.tsx:571-580). Verdict 2026-11-02 (D-531): a month row is a single row and stays ink; the keyboard and sticky header are faults besides. Owned by M54 F13.
+breaks: Rows are <tr tabIndex=0> with no role and Space does nothing; the header does not stick; each month row's figures wear their flow colours (Home.tsx:571-580). Verdict 2026-11-02 (D-531): a month row is a single row and stays ink; the keyboard and sticky header are faults besides. Owned by M54 F13. Fixed in M54 F13 (368d722).
 state: fault
 
 ### Demo, demo.emd, #/agenda: click 7 days (a later row exists); then read the "by" sentence above it.
@@ -6566,31 +6566,31 @@ state: open
 ### Demo, demo.emd, #/read with nothing added ("Nothing to read yet"), then add files and watch it read.
 unit: M54 U3
 should: One sentence and one text action, no illustration (An empty state is one sentence); Working alone, never counting (One progress indicator); type from the ramp in rem.
-breaks: A 56px still Working gem as an illustration, a heading, a two-clause sentence and an "Add more" button when there is nothing yet; while reading, "Reading 2 of 5" with a width-animated bar beside Working; text-[24px] tracking-[-0.01em] and text-[18px]. src/ui/screens/ReadStatements.tsx:141, 151-175 (the ledger's read screen). Owned by M54 F13.
+breaks: A 56px still Working gem as an illustration, a heading, a two-clause sentence and an "Add more" button when there is nothing yet; while reading, "Reading 2 of 5" with a width-animated bar beside Working; text-[24px] tracking-[-0.01em] and text-[18px]. src/ui/screens/ReadStatements.tsx:141, 151-175 (the ledger's read screen). Owned by M54 F13. Fixed in M54 F13 (368d722).
 state: fault
 
 ### Demo, demo.emd, #/read → Map its columns → Show cell types: the tags.
 unit: M54 U3
 should: A type step in rem (rem for type; Every value is a token).
-breaks: text-[9px]; the ramp has no step that small, so it needs a token or a ramp step chosen. SheetGrid.tsx:212. Owned by M54 F13.
+breaks: text-[9px]; the ramp has no step that small, so it needs a token or a ramp step chosen. SheetGrid.tsx:212. Owned by M54 F13. Fixed in M54 F13 (368d722).
 state: fault
 
 ### Demo, demo.emd, #/read → Map its columns: each column's role above the grid, and the unmapped cells and rows above the header. Both themes.
 unit: M54 U3
 should: QUESTION for the maintainer: The mapper shows the raw cell asks for the role as a small label rather than dropdown chrome, and unmapped cells in ink-tertiary; Choices are ChoiceField (the role is a choice) and Contrast 4.5:1 for text (cells the person reads to decide) pull the other way. Which gives?
-breaks: The role is a boxed field in each header (now a ChoiceField, M54 U3; was a <select>); unmapped columns and pre-header rows are ink-tertiary at 2.45:1 light, 3.38:1 dark. SheetGrid.tsx role field ~297, cell tone ~142/198. Verdict 2026-11-02 (D-531): rule amended — the role is a small label at rest that opens as a ChoiceField on focus or click; unmapped cells in ink-secondary. Owned by M54 F13.
+breaks: The role is a boxed field in each header (now a ChoiceField, M54 U3; was a <select>); unmapped columns and pre-header rows are ink-tertiary at 2.45:1 light, 3.38:1 dark. SheetGrid.tsx role field ~297, cell tone ~142/198. Verdict 2026-11-02 (D-531): rule amended — the role is a small label at rest that opens as a ChoiceField on focus or click; unmapped cells in ink-secondary. Owned by M54 F13. Fixed in M54 F13 (368d722).
 state: fault
 
 ### Demo, demo.emd, #/read → add installments.xlsx (or typed-cells.xlsx) → Map its columns. Read the top of the screen.
 unit: M54 U3
 should: The mapper names what it maps — the file and its sheet — as its title (Impeccable: visibility of system status; Words name the rule).
-breaks: The mapper takes the whole window with no heading; its first line is "17 rows × 8 columns" and the file's name appears only as the default of Reader's name. MapperScreen.tsx ~540-600, StageBar.tsx. Owned by M54 F13.
+breaks: The mapper takes the whole window with no heading; its first line is "17 rows × 8 columns" and the file's name appears only as the default of Reader's name. MapperScreen.tsx ~540-600, StageBar.tsx. Owned by M54 F13. Fixed in M54 F13 (368d722).
 state: fault
 
 ### Demo, demo.emd, #/read → installments.xlsx → Map its columns: the preview strip's "1/3" installments tag. Both themes.
 unit: M54 U3
 should: Text, or text and a dot, no border and no radius (A chip is text and a dot; Square by spending the radius tokens).
-breaks: A rounded, bordered pill (rounded border border-hairline). PreviewStrip.tsx Tag (~116). Verdict 2026-11-02 (D-531): text and a dot. Owned by M54 F13.
+breaks: A rounded, bordered pill (rounded border border-hairline). PreviewStrip.tsx Tag (~116). Verdict 2026-11-02 (D-531): text and a dot. Owned by M54 F13. Fixed in M54 F13 (368d722).
 state: fault
 
 ### Demo, demo.emd, #/read → payslip-2026-07.txt → A paycheck → #/paychecks/read.
@@ -6603,7 +6603,7 @@ state: fault
 ### Demo, demo.emd, #/read → typed-cells.xlsx: the NO READER YET chip.
 unit: M54 U3
 should: A file with no reader is not a problem: a neutral or waiting tone, text and a dot, said once. QUESTION for the maintainer: A chip is text and a dot (no border) disagrees with the shared .fc-state border that A state has a tone draws — app-wide.
-breaks: The chip is red (data-tone negative) and bordered, and the words beside it repeat it: "no reader knows these columns yet". tokens.css ~972-976, ~1267-1270; ReadStatements.tsx file row. Verdict 2026-11-02 (D-531): the chip rule wins app-wide — no border on .fc-state; this one is also not a problem, so not negative, and said once. Owned by M54 F13.
+breaks: The chip is red (data-tone negative) and bordered, and the words beside it repeat it: "no reader knows these columns yet". tokens.css ~972-976, ~1267-1270; ReadStatements.tsx file row. Verdict 2026-11-02 (D-531): the chip rule wins app-wide — no border on .fc-state; this one is also not a problem, so not negative, and said once. Owned by M54 F13. Fixed in M54 F13 (368d722).
 state: fault
 
 ### Demo, demo.emd, #/read/readers: the reader row Everyday Card.
@@ -6981,13 +6981,13 @@ state: fault
 ### Demo: #/read (demo.emd) with a notice; #/paychecks/read; #/formats/card_charge/read with a reader open.
 unit: M54 U3
 should: One filled action at a time; a disabled Write, or one that is not the next step, is secondary (One primary action per screen).
-breaks: #/read: "Answer them" and a disabled "Write 0" both filled; #/paychecks/read: "Answer them", "Write 0" and "Check them over"; the format read page: "Use" and "Write 0 files". ReadStatements.tsx, ReadSlips.tsx, ReadFiles.tsx:458 and :1544. Owned by M54 F13. Part fixed in M54 F4.
+breaks: #/read: "Answer them" and a disabled "Write 0" both filled; #/paychecks/read: "Answer them", "Write 0" and "Check them over"; the format read page: "Use" and "Write 0 files". ReadStatements.tsx, ReadSlips.tsx, ReadFiles.tsx:458 and :1544. Owned by M54 F13. Part fixed in M54 F4. Fixed in M54 F13 (368d722); ReadSlips' Write stays parked (D-532).
 state: fault
 
 ### Demo: custom.emd #/year (NoLedger) beside #/settings/packs; demo.emd #/ (Home's read and add buttons).
 unit: M54 U4
 should: One name per thing (Make it in place; An action is a verb).
-breaks: Keeping the ledger is "Keep a ledger in this document" on NoLedger and "Keep this pack here" on Packs; Home says Read files, Read… and Read for one act, and has two buttons both named Add by hand. Owned by M54 F13. Part fixed in M54 F6 (Packs says Keep the ledger here).
+breaks: Keeping the ledger is "Keep a ledger in this document" on NoLedger and "Keep this pack here" on Packs; Home says Read files, Read… and Read for one act, and has two buttons both named Add by hand. Owned by M54 F13. Part fixed in M54 F6 (Packs says Keep the ledger here). Fixed in M54 F13 (368d722).
 state: fault
 
 ### Desktop shell: Help › About, and the document bar's Earlier copies; Tab through each and close it.
@@ -14989,11 +14989,18 @@ paths: "fixtures/synthetic/demo/\nscripts/make-demo-document.mjs\nsrc/demo/tour/
 milestone: M54
 scope: ledger
 title: The ledger screens a stranger meets: Home, NoLedger, #/read and its mapper
-state: planned
+landed: 2026-11-02
+decision: D-532
+state: built
 brief: M54 fix unit (D-531, D-532). YOUR ROWS, exactly these: `format_rows review_entry search:"Owned by M54 F13." columns:[unit, do, should, breaks]` — 13 rows; the phrases below say what each asks., after F1 and F4. The ledger is parked; D-532 lets this unit, and only it, fix Home, NoLedger, #/read and its mapper — no other ledger screen. Rows (`format_rows review_entry match:{unit:["M54 U3","M54 U4"], state:fault} columns:[do, should, breaks]`) by their breaks: U3 'The role is a boxed field in each header' (the mapper rule, D-531: a small label at rest that opens as a ChoiceField, unmapped ink-secondary); U3 '#/read: "Answer them" and a disabled "Write 0" both filled' (ReadStatements' part; F4 did ReadFiles'; the paycheck reader's stays parked); U3 'A 56px still Working gem as an illustration' (the read screen's empty state, its bar, sizes on the ramp); U3 'The action reads "Keep a ledger here and read it"'; U3 'The mapper takes the whole window with no heading'; U3 'The chip is red (data-tone negative)' (a file with no reader is waiting, not negative, said once; F1 took the border); U3 'A rounded, bordered pill' (PreviewStrip's tag: text and a dot); U3 'text-[9px]' (SheetGrid: onto the ramp's label step, no new step); U3 'The overlay reads "Drop statements' (NoLedger's words now that F4 routes the drop); U4 'Rows are <tr tabIndex=0>' (Home's All months: a row is a link or button, Space works, a sticky header on its own scroll, month rows in ink — D-531); U4 'Keeping the ledger is' (Home's and NoLedger's words: one name for keeping the ledger, one for reading, one Add by hand); U4 'All in ink-tertiary' (Home's part, the missing-statement line among it, to ink-secondary); U4 'Export has an eyebrow and an h1' (NoLedger's heading). SWEEP these files as F2's brief says; surfaceRules.test.ts REVIEWED. Verify on demo.emd (ledger) and custom.emd (no ledger), light and dark. Tests: related, typecheck, privacy, check:tours. Land: 'Fixed in M54 F13 (<commit>).' on each row's breaks, state left `fault` (D-532). Unset: stop and ask. Owned here and landed last, after the other parts: '#/read: "Answer them"' (F4 did ReadFiles'), 'The overlay reads "Drop statements' (F4 built the routing), 'All in ink-tertiary: 2.45-2.62' (F5 and F6 did theirs), 'Export has an eyebrow' and 'Keeping the ledger is' (F6 did Packs'). Left parked by D-532 and not this unit's: M54 U3 'The same file is listed twice' and 'Red the moment the screen opens' (the paycheck reader), and ReadSlips' part of '#/read: "Answer them"'.
-files: src/ui/screens/Home.tsx, src/ui/screens/NoLedger.tsx, src/ui/screens/ReadStatements.tsx, src/ui/import/ (MapperScreen.tsx, SheetGrid.tsx, PreviewStrip.tsx, StageBar.tsx)
+files: src/ui/screens/Home.tsx, src/ui/home/parts.tsx, src/ui/home/WaitingList.tsx, src/ui/screens/NoLedger.tsx, src/ui/screens/ReadStatements.tsx, src/ui/import/MapperScreen.tsx, src/ui/import/SheetGrid.tsx, src/ui/import/PreviewStrip.tsx, src/ui/Notices.tsx, src/App.tsx, src/ui/formats/surfaceRules.test.ts
 blocks: ["M54 F1","M54 F4","M54 F5","M54 F6"]
+taken_by: run-milestone driver
+started: 2026-11-02
+branch: main
+commit: 368d722
 paths: "src/ui/screens/Home.tsx\nsrc/ui/screens/NoLedger.tsx\nsrc/ui/screens/ReadStatements.tsx\nsrc/ui/import/"
+report: M54 F13 built at 368d722; docs:check green (0 errors, 7 standing warnings). No new decision (D-531, D-532 cover it). HOME: All months' month name is a <button> (Enter/Space; a click anywhere on the row is the same press, the tr is no tab stop), aria-current on it; the table sits in its own scroll region (max-h 70vh) with border-separate and sticky header cells; month rows' figures in ink (D-531); header, missing-statement line and the tax dash ink-secondary; the gap's account name in Bidi; 34px rows -> h-8; h1 and figure tracking dropped; BlockHead aside and an empty figure ink-secondary. ONE NAME: Read... and Read -> Read files (WaitingList twice, the missing-statement row); WaitingList's payslip row lost its Add by hand, so the band's is the one. NOLEDGER: an h1 in both states (text-title, as Packs); Keep the ledger here (as Packs) in both; the waiting state is now reached only when the document has no format and no ledger (F4's dropTarget), so it says 'No format here to read X onto' and that keeping the ledger reads it; problems role=alert. OVERLAY (App.tsx): the ledger case 'Drop statements, paychecks and fund reports to read them', the no-format case 'Drop statements to read them into a ledger'. #/READ: empty state one sentence + text action 'Add files'; no gem, no 'Reading N of M', no bar (each file row keeps its Reading chip); h1 text-title; Write primary only when reading is done and something is ticked; the no-reader chip data-tone wait (hollow dot, ink-secondary), its figure 'mapped once, then read on its own'; the fund <select> a ChoiceMenu; 13px -> text-body; min-h-12. The waiting notice's Open Home is not filled on a path ending /read (Notices.tsx). MAPPER: an h1 with the file name and, for a workbook of several, its sheet (Bidi, truncate on the Bidi) and one line under; the role a small uppercase label opening as the menu (IntakePanel's ROLE); cells caption mono, unmapped/preamble/row numbers ink-secondary; type tags text-label; installment/foreign tags .fc-state (text and a dot); missing roles named in words; sheet tabs square with aria-pressed; Close the shared Button. Sweep guarded by a new describe in surfaceRules.test.ts; ReadStatements in REVIEWED. bidiTruncation: none of its four parked exceptions are in these files. VERIFIED on demo port 4185 (pane hidden: JS probes, no screenshots), dark theme only: demo.emd Home (Space/click opens a month, sticky th, ink rows, 1 Add by hand, 3 Read files), #/read empty and with typed-cells.xlsx + installments.xlsx (Write secondary/disabled, Open Home secondary, chip wait, no border), the mapper (h1 'installments.xlsx · sheet', role labels 11px uppercase borderless, tags 0 radius), custom.emd #/year (h1, one primary). Not reached: NoLedger's waiting state (no demo document has no format), light theme (tokens AA since F1). Tests: related, surfaceRules, bidiTruncation, updateFailure, import, privacy, typecheck green; check:tours NOT run (driver's ask) - data-tour anchors unchanged, Write still enabled for the tour. LEFT, parked by D-532: ReadSlips' filled buttons, the paycheck reader's rows; SettlementPrompt/TransferPrompt in src/ui/import still have ink-tertiary and a radius (not named by the brief).
 
 ### M54 F2
 milestone: M54
