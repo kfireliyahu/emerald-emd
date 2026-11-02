@@ -16,7 +16,8 @@ export const en: Copy = {
   dir: 'ltr',
   name: 'English',
   title: 'Emerald',
-  description: 'Emerald: Order to chaos using engineering',
+  description:
+    'Emerald, the database under the chat: a file on your machine that you and an AI model fill together, with real types and checks, so what you worked out stays true.',
 
   rail: {
     roadmap: 'The page, as a roadmap',
@@ -30,16 +31,16 @@ export const en: Copy = {
 
   rows: {
     story: 'What it is',
+    local: 'Runs on your machine',
     receipt: 'The receipt',
     'ledger-tour': 'Where the money went',
-    'development-tour': 'The project answers first',
     'timesheet-tour': 'Every hour paid',
-    engine: 'The engine',
-    mcp: 'MCP',
-    packs: 'Packs',
     ledger: 'The ledger',
+    'development-tour': 'The project remembers',
     development: 'The development pack',
-    local: 'No internet, no login',
+    engine: 'How it works',
+    mcp: 'With your AI',
+    packs: 'Packs',
     download: 'Get Emerald',
   },
 
@@ -47,7 +48,7 @@ export const en: Copy = {
     name: 'Emerald',
     tagline: 'The database under the chat.',
     story: [
-      'What is an application? Most are a database and a UI that exposes it. Most people now talk to an AI chat instead, the new UI, and those chats have no reliable long-term memory. Emerald closes that gap.',
+      'Emerald is a desktop app that keeps your own file: a real database that you and an AI model fill together. Hand it a card statement, a payslip or a project’s notes, and it reads them into tables with real types, and tells you when something doesn’t add up.',
     ],
   },
 
@@ -57,38 +58,38 @@ export const en: Copy = {
     receipt: {
       label: '1 · The receipt',
       lead: 'You kept the receipt from the grocery store, and the card statement just came. Do they agree?',
-      title: 'Emerald, a guided tour: did the card charge what the receipt says?',
+      title: 'Emerald, a guided tour: The receipt',
     },
     ledger: {
-      label: '2 · The ledger',
-      lead: "September's pay is in and the card statement just came, I spent how much on groceries?!",
-      title: 'Emerald, a guided tour: where did this month’s money go?',
+      label: '2 · Where the money went',
+      lead: 'September’s pay is in and the card statement just came. Where did the month’s money go?',
+      title: 'Emerald, a guided tour: Where the money went',
     },
     development: {
-      label: '3 · The development pack',
-      lead: 'You\'re working on a new app with an AI model. But you forgot what you decided earlier. Recorded decisions become memory that is no longer ephemeral.',
-      title: 'Emerald, a guided tour: ask for a feature, and the project answers first',
+      label: '4 · The project remembers',
+      lead: 'You’re building an app with an AI model, and you’ve forgotten what you decided last month. The project hasn’t: the decision is a row, and it answers first.',
+      title: 'Emerald, a guided tour: The project remembers',
     },
     timesheet: {
-      label: '4 · The timesheet',
+      label: '3 · Every hour paid',
       lead: 'You keep your hours on paper, September’s paycheck just came, and you want to know whether every hour was paid.',
-      title: 'Emerald, a guided tour: was every hour I worked paid?',
+      title: 'Emerald, a guided tour: Every hour paid',
     },
   },
 
   // DRAFT (M33 F10): a session's words for The engine, MCP and Packs, every
   // figure checked against the code on 2026-10-13 — the maintainer's to rewrite.
   engine: {
-    heading: 'The engine',
+    heading: 'How it works',
     body: [
-      'Declare a table for anything you keep: a charge, a paycheck, a book, a milestone. It gets real types, not a template.',
+      'Declare a format for anything you keep (a charge, a paycheck, a book, a milestone): its fields, stored as a real table with real types, not a template.',
       'A value that does not fit is refused the moment it is written, not found later.',
       'Tables link, and figures are worked out across them: hours from a start and an end, a total over the rows that point here.',
-      'Claims: the receipt total is the card charge, every hour was paid. Each one proved, failed or unchecked, and unchecked says why.',
+      'Say what should add up (the receipt total is the card charge, every hour was paid) and each row shows whether it does: proved, failed, or unchecked with the reason.',
       'A total never quietly skips a row it cannot read.',
-      'Anything counts. Years of old accounts found in mail became one row each, and none was missed when closing them.',
+      'Anything you keep can be a table. Old accounts found in years of mail became one row each, and none was missed when closing them.',
     ],
-    caption: "Same receipt as the first tour, same finding. There you typed it in; here a model reads it, and Emerald still says when it doesn't add up.",
+    caption: 'Same receipt as the first tour: the lines arrive, the total and the charge follow, and the claim that they agree fails by 12.00.',
     claim: {
       receipt: 'Receipt',
       receiptHead: 'Corner Market · 29 Jul',
@@ -122,7 +123,7 @@ export const en: Copy = {
     from: 'from {project}',
     starts: 'The next session starts with it: 1 new.',
     states: { new: 'new', triaged: 'triaged', applied: 'applied' },
-    became: 'became unit S4 U2: point the download link at /get',
+    became: 'became a task: point the download link at /get',
     decided: 'A session here settles a name.',
     second: 'Call it a plan, never a budget',
     recording: 'A session in a coding agent, with the development pack’s view drawn in the conversation.',
@@ -140,7 +141,7 @@ export const en: Copy = {
     whereitwent: {
       label: 'Where it went',
       alt: 'Where a paycheck went: the paycheck’s lines on the left, and on the right every part of it followed to the goal, the loan, the spending or the fund it landed in.',
-      caption: 'Where a paycheck went: every shekel followed, from gross to where it landed.',
+      caption: 'Where a paycheck went: all of it followed, from gross to where it landed.',
     },
     wealth: {
       label: 'Wealth',
@@ -156,11 +157,11 @@ export const en: Copy = {
 
   words: {
     mcp: {
-      heading: 'A model works in it, through MCP',
+      heading: 'Your AI assistant works in it',
       body: [
-        'Your assistant reads and writes the file directly, and where the app allows, draws the sheet in the chat.',
+        'Your assistant reads and writes the file directly, through MCP, the standard way assistants connect to tools, and where the app allows, draws the sheet in the chat.',
         'Every write is shown first as a dry run. Nothing changes until you say commit.',
-        'Shaped tools, never a general query: 28 for any document, 85 with the ledger.',
+        'The model gets named actions, never free rein over the database: 28 for any document, 85 with the ledger.',
         'A document answers in rows, so the model asks for what it needs instead of reading notes end to end.',
         'One project’s session leaves a note in another’s inbox, and the next session there starts with it.',
         'The server opens the file it is given, does one job, closes it, and makes no network call of its own.',
@@ -181,7 +182,7 @@ export const en: Copy = {
         'Reads what you already get: card statements, bank exports, payslips, fund reports.',
         'Files every charge, and tells a transfer from a spend and a monthly bill from a one-off.',
         'Every total opens to the rows it was summed from.',
-        'A year of study-fund reports read in: one month the fund received nothing, though the payslip showed the deduction.',
+        'A year of savings-fund reports read in: one month the fund received nothing, though the payslip showed the deduction.',
         'Nothing connects to your bank. You give it the files.',
       ],
     },
@@ -192,11 +193,11 @@ export const en: Copy = {
         'A session starts from the rows, not from a summary of a chat.',
         'A request that contradicts a decision already taken is answered with the decision.',
         'Several projects, one document each, and one above them that keeps the whole lot in view.',
-        'Emerald was built with Emerald this way. The third tour plays on a project like one of these.',
+        'Emerald was built with Emerald this way. The fourth tour plays on a project like one of these.',
       ],
     },
     local: {
-      heading: 'No internet, no login',
+      heading: 'Runs on your machine',
       body: [
         'Runs on your machine and sends nothing anywhere itself. It asks GitHub for a newer version only if you turn updates on.',
         'The file is yours: ordinary tools read it, back it up where you like, take it anywhere.',
@@ -206,14 +207,14 @@ export const en: Copy = {
 
   foot: {
     heading: 'Get Emerald',
-    lead: 'Five ways in, all free: the source, the Claude extension, the Claude plugin, the npm package and the desktop app.',
+    lead: 'All free. The desktop app for your own files; the Claude extension, the Claude plugin or the npm package to work in it with a model; or the source.',
     source: {
       name: 'The source, on GitHub',
       line: 'Read it, build it, run it from the repository.',
     },
     extension: {
       name: 'The Claude extension',
-      line: 'For the Claude desktop app, chat and Cowork alike: download, double-click, Install. It runs on the app’s own Node.',
+      line: 'For the Claude desktop app, chat and Cowork alike: download, double-click, Install. Nothing else to install.',
     },
     plugin: {
       name: 'The Claude plugin',

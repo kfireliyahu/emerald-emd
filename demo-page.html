@@ -82,6 +82,14 @@
           </div>
         </section>
 
+        <section class="row" id="local" data-row>
+          <div class="wide">
+            <svg class="icon head" aria-hidden="true"><use href="#i-local"/></svg>
+            <h2 data-t="words.local.heading"></h2>
+            <div data-t="words.local.body" data-list></div>
+          </div>
+        </section>
+
         <section class="row tour" id="receipt" data-row>
           <div class="wide">
             <svg class="icon head" aria-hidden="true"><use href="#i-receipt"/></svg>
@@ -102,49 +110,12 @@
           </div>
         </section>
 
-        <section class="row tour" id="development-tour" data-row>
-          <div class="wide">
-            <svg class="icon head" aria-hidden="true"><use href="#i-development-tour"/></svg>
-            <h3 class="label" data-t="tours.development.label"></h3>
-            <p class="lead" data-t="tours.development.lead"></p>
-            <iframe data-tour="development" data-t-attr="title:tours.development.title" referrerpolicy="no-referrer" allow="" tabindex="-1" aria-hidden="true"></iframe>
-          </div>
-        </section>
-
         <section class="row tour" id="timesheet-tour" data-row>
           <div class="wide">
             <svg class="icon head" aria-hidden="true"><use href="#i-timesheet-tour"/></svg>
             <h3 class="label" data-t="tours.timesheet.label"></h3>
             <p class="lead" data-t="tours.timesheet.lead"></p>
             <iframe data-tour="timesheet" data-t-attr="title:tours.timesheet.title" referrerpolicy="no-referrer" allow="" tabindex="-1" aria-hidden="true"></iframe>
-          </div>
-        </section>
-
-        <section class="row ai" id="engine" data-row>
-          <div class="wide">
-            <svg class="icon head" aria-hidden="true"><use href="#i-engine"/></svg>
-            <h2 data-t="engine.heading"></h2>
-            <div data-t="engine.body" data-list></div>
-            <div class="claim" id="claim" role="img" data-t-attr="aria-label:engine.claim.summary">
-              <noscript data-t="engine.claim.summary"></noscript>
-            </div>
-            <p class="caption" data-t="engine.caption"></p>
-          </div>
-        </section>
-
-        <section class="row" id="mcp" data-row>
-          <div class="wide">
-            <svg class="icon head" aria-hidden="true"><use href="#i-mcp"/></svg>
-            <h2 data-t="words.mcp.heading"></h2>
-            <div data-t="words.mcp.body" data-list></div>
-          </div>
-        </section>
-
-        <section class="row" id="packs" data-row>
-          <div class="wide">
-            <svg class="icon head" aria-hidden="true"><use href="#i-packs"/></svg>
-            <h2 data-t="words.packs.heading"></h2>
-            <div data-t="words.packs.body" data-list></div>
           </div>
         </section>
 
@@ -203,6 +174,15 @@
           </div>
         </section>
 
+        <section class="row tour" id="development-tour" data-row>
+          <div class="wide">
+            <svg class="icon head" aria-hidden="true"><use href="#i-development-tour"/></svg>
+            <h3 class="label" data-t="tours.development.label"></h3>
+            <p class="lead" data-t="tours.development.lead"></p>
+            <iframe data-tour="development" data-t-attr="title:tours.development.title" referrerpolicy="no-referrer" allow="" tabindex="-1" aria-hidden="true"></iframe>
+          </div>
+        </section>
+
         <section class="row" id="development" data-row>
           <div class="wide">
             <svg class="icon head" aria-hidden="true"><use href="#i-development"/></svg>
@@ -218,31 +198,60 @@
           </div>
         </section>
 
-        <section class="row" id="local" data-row>
+        <section class="row ai" id="engine" data-row>
           <div class="wide">
-            <svg class="icon head" aria-hidden="true"><use href="#i-local"/></svg>
-            <h2 data-t="words.local.heading"></h2>
-            <div data-t="words.local.body" data-list></div>
+            <svg class="icon head" aria-hidden="true"><use href="#i-engine"/></svg>
+            <h2 data-t="engine.heading"></h2>
+            <div data-t="engine.body" data-list></div>
+            <div class="claim" id="claim" role="img" data-t-attr="aria-label:engine.claim.summary">
+              <noscript data-t="engine.claim.summary"></noscript>
+            </div>
+            <p class="caption" data-t="engine.caption"></p>
           </div>
         </section>
 
-        <!-- Where to get Emerald (M42 F2): the ways in, each a card with its mark, its link and
-             the one line it takes (for the Claude extension, the one file, M42 F13); then the installers, one card a download. The commands are
+        <section class="row" id="mcp" data-row>
+          <div class="wide">
+            <svg class="icon head" aria-hidden="true"><use href="#i-mcp"/></svg>
+            <h2 data-t="words.mcp.heading"></h2>
+            <div data-t="words.mcp.body" data-list></div>
+          </div>
+        </section>
+
+        <section class="row" id="packs" data-row>
+          <div class="wide">
+            <svg class="icon head" aria-hidden="true"><use href="#i-packs"/></svg>
+            <h2 data-t="words.packs.heading"></h2>
+            <div data-t="words.packs.body" data-list></div>
+          </div>
+        </section>
+
+        <!-- Where to get Emerald (M42 F2): the installers first, one card a download, then the ways
+             to work in it with a model, each a card with its mark, its link and the one line it takes
+             (for the Claude extension, the one file, M42 F13), and the source last (M54 F9). The commands are
              code, not words, so they are here and not in the copy; the addresses are page.ts's. -->
         <section class="row foot" id="download" data-row>
           <div class="wide">
             <svg class="icon head" aria-hidden="true"><use href="#i-download"/></svg>
             <h2 data-t="foot.heading"></h2>
             <p class="measure" data-t="foot.lead"></p>
-            <ul class="ways">
-              <li class="fc-card way">
-                <span class="tile" aria-hidden="true"><svg class="mark-icon"><use href="#m-github"/></svg></span>
-                <div class="what">
-                  <a class="fc-card-link name" data-source href="#" data-t="foot.source.name"></a>
-                  <p data-t="foot.source.line"></p>
-                </div>
-                <pre class="run"><code>git clone https://github.com/kfireliyahu/emerald-emd</code></pre>
+            <span class="label" data-t="foot.desktop"></span>
+            <ul class="downloads">
+              <li class="fc-card download">
+                <span class="tile" aria-hidden="true"><svg class="mark-icon"><use href="#m-windows"/></svg></span>
+                <a class="fc-card-link" data-installer="windows" href="#"><span class="name" data-t="foot.windows"></span> <span class="file"></span></a>
               </li>
+              <li class="fc-card download">
+                <span class="tile" aria-hidden="true"><svg class="mark-icon"><use href="#m-apple"/></svg></span>
+                <a class="fc-card-link" data-installer="arm64" href="#"><span class="name" data-t="foot.appleSilicon"></span> <span class="file"></span></a>
+              </li>
+              <li class="fc-card download">
+                <span class="tile" aria-hidden="true"><svg class="mark-icon"><use href="#m-apple"/></svg></span>
+                <a class="fc-card-link" data-installer="x64" href="#"><span class="name" data-t="foot.intel"></span> <span class="file"></span></a>
+              </li>
+            </ul>
+            <p class="caption measure" data-t="foot.unsigned"><a data-readme href="#" data-slot="readme" data-t="foot.readme"></a><a data-installer="sums" href="#" data-slot="sums" data-t="foot.sums"></a><a data-releases href="#" data-slot="releases" data-t="foot.releases"></a></p>
+            <ul class="ways">
               <li class="fc-card way">
                 <span class="tile" aria-hidden="true"><svg class="mark-icon"><use href="#m-claude"/></svg></span>
                 <div class="what">
@@ -268,23 +277,15 @@
                 </div>
                 <pre class="run"><code>npx -y emerald-mcp</code></pre>
               </li>
-            </ul>
-            <span class="label" data-t="foot.desktop"></span>
-            <ul class="downloads">
-              <li class="fc-card download">
-                <span class="tile" aria-hidden="true"><svg class="mark-icon"><use href="#m-windows"/></svg></span>
-                <a class="fc-card-link" data-installer="windows" href="#"><span class="name" data-t="foot.windows"></span> <span class="file"></span></a>
-              </li>
-              <li class="fc-card download">
-                <span class="tile" aria-hidden="true"><svg class="mark-icon"><use href="#m-apple"/></svg></span>
-                <a class="fc-card-link" data-installer="arm64" href="#"><span class="name" data-t="foot.appleSilicon"></span> <span class="file"></span></a>
-              </li>
-              <li class="fc-card download">
-                <span class="tile" aria-hidden="true"><svg class="mark-icon"><use href="#m-apple"/></svg></span>
-                <a class="fc-card-link" data-installer="x64" href="#"><span class="name" data-t="foot.intel"></span> <span class="file"></span></a>
+              <li class="fc-card way">
+                <span class="tile" aria-hidden="true"><svg class="mark-icon"><use href="#m-github"/></svg></span>
+                <div class="what">
+                  <a class="fc-card-link name" data-source href="#" data-t="foot.source.name"></a>
+                  <p data-t="foot.source.line"></p>
+                </div>
+                <pre class="run"><code>git clone https://github.com/kfireliyahu/emerald-emd</code></pre>
               </li>
             </ul>
-            <p class="caption measure" data-t="foot.unsigned"><a data-readme href="#" data-slot="readme" data-t="foot.readme"></a><a data-installer="sums" href="#" data-slot="sums" data-t="foot.sums"></a><a data-releases href="#" data-slot="releases" data-t="foot.releases"></a></p>
             <form>
               <label><span data-t="foot.email"></span>
                 <input type="email" name="email" autocomplete="email" required />

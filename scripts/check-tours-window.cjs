@@ -82,6 +82,12 @@ async function checkPage(size) {
   const started = Date.now()
   try {
     await window.loadURL(BASE)
+    // A frame loads only within half a window of the view, and since M54 F9 the first
+    // tour is below the fold (Runs on your machine comes before it), so the check
+    // scrolls to it, as a visitor would.
+    await window.webContents.executeJavaScript(
+      "document.querySelector('iframe[data-tour]')?.scrollIntoView({ block: 'center', behavior: 'instant' })",
+    )
     const until = started + PER_TOUR
     for (;;) {
       const found = await window.webContents.executeJavaScript('window.emeraldPageCheck ?? null')

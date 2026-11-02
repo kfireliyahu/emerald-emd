@@ -43,8 +43,8 @@ Free software, AGPL-3.0. Desktop only, no server, no account. [getemerald.dev](h
 - Reads what you already get: card statements, bank exports, payslips, fund reports.
 - Files every charge, and tells a transfer from a spend and a monthly bill from a one-off.
 - Every total opens to the rows it was summed from.
-- A year of study-fund reports read in: one month the fund received nothing, though the payslip
-  showed the deduction.
+- A year of savings-fund reports read in: one month the fund received nothing, though the
+  payslip showed the deduction.
 - Nothing connects to your bank. You give it the files.
 
 ### The development pack
