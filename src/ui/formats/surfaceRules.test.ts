@@ -11,7 +11,8 @@ import { describe, expect, it } from 'vitest'
  *   `tokens.css` has a step of that size (`text-caption` is 12px, `text-body`
  *   14px, `text-heading` 16px, `text-secondary-number` 20px, `text-title` 24px,
  *   `text-hero` 40px). Sizes the ramp has no step for are a review entry, not
- *   this test's.
+ *   this test's. And no colour written in a component: no hex, no `rgb()` or
+ *   `rgba()`, no Tailwind `white` or `black` (M54 U3).
  */
 const REVIEWED = [
   'src/ui/screens/DeclaredFormats.tsx',
@@ -41,6 +42,23 @@ const REVIEWED = [
   'src/ui/screens/Agenda.tsx',
   'src/ui/screens/Calendar.tsx',
   'src/ui/charts/Chart.tsx',
+  // M54 U3: intake — reading a file onto a format, the mapper, the document pane, readers.
+  'src/ui/screens/ReadFiles.tsx',
+  'src/ui/import/ReadFilesBar.tsx',
+  'src/ui/formats/IntakePanel.tsx',
+  'src/ui/formats/ReadersLine.tsx',
+  'src/ui/import/MapperScreen.tsx',
+  'src/ui/import/MappingBar.tsx',
+  'src/ui/import/PreviewStrip.tsx',
+  'src/ui/import/SheetGrid.tsx',
+  'src/ui/import/StageBar.tsx',
+  'src/ui/documents/DocumentPane.tsx',
+  'src/ui/documents/DocumentTextInput.tsx',
+  'src/ui/documents/ReadField.tsx',
+  'src/ui/documents/Look.tsx',
+  'src/ui/screens/Readers.tsx',
+  'src/ui/screens/Mappings.tsx',
+  'src/ui/screens/LocalModel.tsx',
 ]
 
 const RAMP_SIZES = ['12', '14', '16', '20', '24', '40']
@@ -81,6 +99,24 @@ describe('a reviewed surface keeps the ui rule rows', () => {
       expect(source.match(literal) ?? []).toEqual([])
     })
 
+    it(`${path} takes every colour from the tokens`, () => {
+      const literal = /#[0-9a-fA-F]{3,8}\b|\brgba?\(|\b(bg|text|border|fill|stroke)-(white|black)\b/g
+      expect(source.match(literal) ?? []).toEqual([])
+    })
+
+    it(`${path} rings what holds a hidden input`, () => {
+      // A visually hidden input takes focus where nobody can see it, so what
+      // holds it draws the ring on focus-within (*Keyboard first*, M54 U3).
+      const lines = source.split('\n')
+      const unringed = lines.flatMap((line, at) => {
+        if (!line.includes('className="sr-only"')) return []
+        const before = lines.slice(Math.max(0, at - 8), at)
+        if (!before.some((each) => each.includes('<input'))) return []
+        return before.some((each) => each.includes('focus-within:outline')) ? [] : [`${path}:${String(at + 1)}`]
+      })
+      expect(unringed).toEqual([])
+    })
+
     it(`${path} replaces every outline it takes away`, () => {
       const lines = source.split('\n')
       const bare = lines.flatMap((line, at) => {
@@ -92,4 +128,11 @@ describe('a reviewed surface keeps the ui rule rows', () => {
       expect(bare).toEqual([])
     })
   }
+})
+
+describe('raw cells keep the bundled type', () => {
+  it('falls back from Plex Mono to the bundled Hebrew, which carries ₪ (M54 U3)', () => {
+    const tokens = readFileSync('src/ui/theme/tokens.css', 'utf8')
+    expect(tokens).toMatch(/--font-mono: "IBM Plex Mono", "IBM Plex Sans Hebrew",/)
+  })
 })

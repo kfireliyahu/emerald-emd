@@ -82,7 +82,7 @@ export function MappingBar({
           type="text"
           value={name}
           onChange={(event) => onNameChange(event.target.value)}
-          placeholder="Cal – Visa 1234"
+          placeholder="Everyday card 1234"
           className={`${FIELD} w-64`}
         />
       </label>

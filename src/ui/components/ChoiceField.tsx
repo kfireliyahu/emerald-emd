@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState, type InputHTMLAttributes } from 'react'
 
 import { Bidi } from '@/ui/Bidi.tsx'
+import { SELECT } from '@/ui/components/fieldLook.ts'
 
 /** One thing a field can be set to: what is stored, and what a person reads. */
 export interface Choice {
@@ -240,5 +241,36 @@ export function ChoiceField({
         </ul>
       )}
     </>
+  )
+}
+
+/**
+ * **A menu nothing is typed into** — what a platform `<select>` was (M54 U3).
+ * Drawn as wide as its longest choice, as the `<select>` sized itself to its
+ * longest option, so a short one does not leave a long field behind it.
+ */
+export function ChoiceMenu({
+  text,
+  choices,
+  onPick,
+  className = SELECT,
+  ...input
+}: {
+  text: string
+  choices: readonly Choice[]
+  onPick: (choice: Choice) => void
+} & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'readOnly' | 'size'>) {
+  return (
+    <ChoiceField
+      {...input}
+      readOnly
+      filter={false}
+      size={Math.max(4, ...choices.map((each) => each.label.length + 2))}
+      className={className}
+      text={text}
+      choices={choices}
+      onText={() => undefined}
+      onPick={onPick}
+    />
   )
 }

@@ -21,6 +21,7 @@ import { readChosenProvider } from '@/data/runtime/provider.ts'
 import type { DraftMapping } from '@/domain/model/importing.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { ChoiceMenu } from '@/ui/components/ChoiceField.tsx'
 import { SELECT } from '@/ui/components/fieldLook.ts'
 import { MappingBar, type SavedMappingRef } from './MappingBar.tsx'
 import { PreviewStrip, totalOf } from './PreviewStrip.tsx'
@@ -629,17 +630,12 @@ function CurrencyPicker({
   return (
     <label className="flex items-center gap-2" title="What amounts are in, unless a column says otherwise">
       currency
-      <select
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
+      <ChoiceMenu
+        text={value}
+        choices={choices.map((currency) => ({ value: currency, label: currency }))}
+        onPick={(choice) => onChange(choice.value)}
         className={`${SELECT} text-ink`}
-      >
-        {choices.map((currency) => (
-          <option key={currency} value={currency}>
-            {currency}
-          </option>
-        ))}
-      </select>
+      />
     </label>
   )
 }

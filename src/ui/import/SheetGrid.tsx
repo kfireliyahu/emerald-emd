@@ -5,6 +5,7 @@ import type { SheetCell, SheetCellKind, SheetTable } from '@/data/importer/sheet
 import type { ColumnRoleId } from '@/domain/model/columnRoles.ts'
 import type { DraftMapping } from '@/domain/model/importing.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { ChoiceField } from '@/ui/components/ChoiceField.tsx'
 import { labelFor, ROLE_LABEL } from './roleLabel.ts'
 
 /**
@@ -294,37 +295,36 @@ function RolePicker({
   }
 
   return (
-    <select
-      value={role ?? ''}
-      onChange={(event) => {
-        if (event.target.value === ADD) {
+    <ChoiceField
+      readOnly
+      filter={false}
+      text={role === undefined ? 'ignore' : labelFor(ROLE_LABEL, role)}
+      choices={[
+        { value: '', label: 'ignore' },
+        ...roles.map((option) => ({ value: option, label: labelFor(ROLE_LABEL, option) })),
+        { value: ADD, label: '— add a role —' },
+      ]}
+      onText={() => undefined}
+      onPick={(choice) => {
+        if (choice.value === ADD) {
           setNaming(true)
           return
         }
-        onChange(event.target.value === '' ? undefined : event.target.value)
+        onChange(choice.value === '' ? undefined : choice.value)
       }}
       aria-label="Column role"
       // `title` as a safety net for the one or two role names long enough to
       // clip even at the widened size.
       title={role === undefined ? 'ignore' : labelFor(ROLE_LABEL, role)}
-      // The minimum lives on the select rather than the cell: a min-width on
-      // the `th` is eaten by its padding, and the select then fills only what
-      // is left. Widening the select is what actually forces the column open,
-      // and reading the mapping off the header is this screen's whole job.
-      // Sized in px, not `ch`: a select does not resolve `ch` against the font
-      // it is displaying, so a ch-based minimum lands well short.
-      className={`mt-0.5 w-full cursor-pointer rounded border border-hairline bg-background px-1 py-0.5 font-mono text-xs ${
-        role === undefined ? 'min-w-[56px] text-ink-tertiary' : 'min-w-[132px] text-ink'
+      // The width lives on the field rather than the cell: a min-width on the
+      // `th` is eaten by its padding. Widening the field is what forces the
+      // column open, and reading the mapping off the header is this screen's
+      // whole job; `size` counts characters of the field's own font.
+      size={role === undefined ? 6 : 18}
+      className={`mt-0.5 w-full min-w-max rounded border border-hairline bg-background px-1 py-0.5 font-mono text-xs focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent ${
+        role === undefined ? 'text-ink-tertiary' : 'text-ink'
       }`}
-    >
-      <option value="">ignore</option>
-      {roles.map((option) => (
-        <option key={option} value={option}>
-          {labelFor(ROLE_LABEL, option)}
-        </option>
-      ))}
-      <option value={ADD}>— add a role —</option>
-    </select>
+    />
   )
 }
 

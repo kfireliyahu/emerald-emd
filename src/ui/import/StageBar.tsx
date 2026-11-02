@@ -7,6 +7,7 @@ import { guessKind, judgeBatch, placeRows, sheetFrom, type StatementSheet } from
 import { listAccounts, type AccountKind } from '@/data/repositories/accountRepository.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { ChoiceMenu } from '@/ui/components/ChoiceField.tsx'
 import { SELECT } from '@/ui/components/fieldLook.ts'
 import type { DraftMapping, DraftTransaction } from '@/domain/model/importing.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
@@ -112,6 +113,16 @@ export function StageBar({
   const chosenAccount = where?.accounts.find((account) => account.id === chosen)
   const chosenMaking = where?.making.find((each) => each.key === chosen)
   const held = where?.held
+  const into =
+    where === undefined
+      ? []
+      : [
+          ...where.accounts.map((account) => ({ value: account.id, label: account.name })),
+          ...where.making.map((each) => ({ value: each.key, label: `${each.name}, new with ${each.madeBy}` })),
+          ...(where.found === undefined && where.joins === undefined
+            ? [{ value: 'new', label: `a new account, ${accountName}` }]
+            : []),
+        ]
 
   const read = (): void => {
     if (fileHash === undefined) return
@@ -183,42 +194,26 @@ export function StageBar({
       {boundAccountId === undefined && where !== undefined && (
         <label className="ml-auto flex items-center gap-2 text-caption text-ink-secondary">
           Into
-          <select
-            className={`${SELECT} h-7 max-w-[240px] text-body`}
-            value={chosen}
+          <ChoiceMenu
+            className={`${SELECT} h-7 max-w-60 text-body`}
+            text={into.find((each) => each.value === chosen)?.label ?? ''}
+            choices={into}
             aria-label="Which account this file belongs to"
-            onChange={(event) => setChoice(event.target.value)}
-          >
-            {where.accounts.map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.name}
-              </option>
-            ))}
-            {where.making.map((each) => (
-              <option key={each.key} value={each.key}>
-                {each.name}, new with {each.madeBy}
-              </option>
-            ))}
-            {where.found === undefined && where.joins === undefined && (
-              <option value="new">a new account, {accountName}</option>
-            )}
-          </select>
+            onPick={(choice) => setChoice(choice.value)}
+          />
         </label>
       )}
 
       {boundAccountId === undefined && chosenAccount === undefined && chosenMaking === undefined && (
         <label className="flex items-center gap-2 text-caption text-ink-secondary">
           as a
-          <select
+          <ChoiceMenu
             className={`${SELECT} h-7 text-body`}
-            value={kind ?? guessedKind}
+            text={KINDS.find((each) => each.value === (kind ?? guessedKind))?.label ?? ''}
+            choices={KINDS}
             aria-label="What kind of account this file belongs to"
-            onChange={(event) => setKind(event.target.value as AccountKind)}
-          >
-            <option value="CREDIT_CARD">card</option>
-            <option value="BANK">bank account</option>
-            <option value="CASH">cash</option>
-          </select>
+            onPick={(choice) => setKind(choice.value as AccountKind)}
+          />
         </label>
       )}
 
@@ -242,3 +237,9 @@ function Bar({ children }: { children: React.ReactNode }) {
     </div>
   )
 }
+
+const KINDS = [
+  { value: 'CREDIT_CARD', label: 'card' },
+  { value: 'BANK', label: 'bank account' },
+  { value: 'CASH', label: 'cash' },
+]

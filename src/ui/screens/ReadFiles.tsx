@@ -78,9 +78,10 @@ import { useDocumentStore } from '@/state/documentStore.ts'
 import { NAMED_COPY_ROWS } from '../../../electron/bridge.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { ChoiceMenu } from '@/ui/components/ChoiceField.tsx'
 import { Chip } from '@/ui/components/Chip.tsx'
 import { IconAction, removableRow } from '@/ui/components/IconAction.tsx'
-import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
+import { FIELD } from '@/ui/components/fieldLook.ts'
 import { Fixed, Mapper } from '@/ui/formats/IntakePanel.tsx'
 import { ReadersLine } from '@/ui/formats/ReadersLine.tsx'
 import { WhatLooksWrong } from '@/ui/formats/WhatLooksWrong.tsx'
@@ -846,7 +847,7 @@ function Picker({ onFiles, empty }: { onFiles: (files: readonly PickedFile[]) =>
       }}
     >
       <span className="flex flex-wrap items-baseline gap-x-3 text-ink">
-        <label className="cursor-pointer text-accent underline-offset-2 hover:underline">
+        <label className="cursor-pointer text-accent underline-offset-2 hover:underline focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent">
           {empty ? 'Choose files' : 'Add files'}
           <input
             type="file"
@@ -856,7 +857,7 @@ function Picker({ onFiles, empty }: { onFiles: (files: readonly PickedFile[]) =>
             onChange={(event) => take(event.target)}
           />
         </label>
-        <label className="cursor-pointer text-accent underline-offset-2 hover:underline">
+        <label className="cursor-pointer text-accent underline-offset-2 hover:underline focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent">
           {empty ? 'Choose a folder of notes' : 'Add a folder'}
           <input
             type="file"
@@ -975,27 +976,17 @@ function FileRow({
         {writable.length > 1 && (
           <label className="flex items-center gap-1.5 text-caption text-ink-secondary">
             onto
-            <select
-              className={SELECT}
-              value={declaration.name}
+            <ChoiceMenu
+              text={declaration.title}
               aria-label={`The format ${file.name} is read onto`}
-              onChange={(event) => onOnto(event.target.value)}
-            >
-              {onto.own.map((each) => (
-                <option key={each.name} value={each.name}>
-                  {each.title}
-                </option>
-              ))}
-              {onto.packs.map((group) => (
-                <optgroup key={group.pack} label={group.title}>
-                  {group.formats.map((each) => (
-                    <option key={each.name} value={each.name}>
-                      {each.title}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
+              choices={[
+                ...onto.own.map((each) => ({ value: each.name, label: each.title })),
+                ...onto.packs.flatMap((group) =>
+                  group.formats.map((each) => ({ value: each.name, label: each.title, group: group.title })),
+                ),
+              ]}
+              onPick={(choice) => onOnto(choice.value)}
+            />
           </label>
         )}
         {reviewed.writable && plan !== undefined && reconciles(plan) && <Chip>reconciled</Chip>}
@@ -1094,19 +1085,15 @@ function ItemsLine({
       {sections.length > 0 && (
         <>
           {' '}from
-          <select
-            className={SELECT}
-            value={under ?? ''}
+          <ChoiceMenu
             aria-label={`The heading ${name} is read from`}
-            onChange={(event) => onUnder(event.target.value === '' ? undefined : event.target.value)}
-          >
-            <option value="">every heading</option>
-            {sections.map((each) => (
-              <option key={each} value={each}>
-                {each}
-              </option>
-            ))}
-          </select>
+            text={under ?? 'every heading'}
+            choices={[
+              { value: '', label: 'every heading' },
+              ...sections.map((each) => ({ value: each, label: each })),
+            ]}
+            onPick={(choice) => onUnder(choice.value === '' ? undefined : choice.value)}
+          />
         </>
       )}
     </span>
@@ -1527,21 +1514,15 @@ function ReaderEditor({
       {sheets.length > 1 && (
         <label className="mb-3 flex items-center gap-2 text-caption">
           <span className="text-ink-secondary">Sheet</span>
-          <select
-            className={SELECT}
-            value={editing.sheet}
-            onChange={(event) => {
-              const sheet = Number(event.target.value)
+          <ChoiceMenu
+            text={sheets[editing.sheet] ?? ''}
+            choices={sheets.map((sheet, index) => ({ value: String(index), label: sheet }))}
+            onPick={(choice) => {
+              const sheet = Number(choice.value)
               const next = file.tables[sheet] ?? { rows: [], columnCount: 0 }
               onChange({ ...editing, sheet, reading: guessReading(declaration, next, formats) })
             }}
-          >
-            {sheets.map((sheet, index) => (
-              <option key={sheet} value={index}>
-                {sheet}
-              </option>
-            ))}
-          </select>
+          />
         </label>
       )}
       <Mapper

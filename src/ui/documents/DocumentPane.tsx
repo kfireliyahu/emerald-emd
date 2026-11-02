@@ -179,7 +179,7 @@ function Page({
   const placedActive = draw === undefined || active === undefined ? undefined : draw.place(active)
 
   return (
-    <div className="relative overflow-hidden rounded-md border border-hairline-strong bg-white">
+    <div className="relative overflow-hidden rounded-md border border-hairline-strong bg-paper">
       <canvas ref={canvas} className="block" />
 
       {draw !== undefined &&
@@ -198,7 +198,7 @@ function Page({
                 // Barely there. The question it answers is whether the reading
                 // looked anywhere near the right part of the page, which does
                 // not need to compete with the page itself.
-                background: 'rgba(17, 17, 17, 0.06)',
+                background: 'var(--color-paper-read)',
               }}
             />
           )
@@ -214,8 +214,8 @@ function Page({
             top: placedActive.top - 2,
             width: placedActive.width + 4,
             height: placedActive.height + 4,
-            background: 'rgba(250, 204, 21, 0.38)',
-            outline: '1.5px solid rgba(202, 138, 4, 0.85)',
+            background: 'var(--color-paper-mark)',
+            outline: '1.5px solid var(--color-paper-mark-edge)',
           }}
         />
       )}

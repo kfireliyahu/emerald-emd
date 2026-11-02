@@ -95,7 +95,7 @@ export function PreviewStrip({
       {firstError?.outcome.kind === 'error' && (
         <p className="mt-2 border-t border-hairline pt-2 text-ink-secondary">
           <span className="text-negative">Row {firstError.rowIndex + 1}</span>{' '}
-          {firstError.outcome.errors.map((error) => error.message).join('; ')}
+          <Bidi>{firstError.outcome.errors.map((error) => error.message).join('; ')}</Bidi>
           {summary.errors > 1 && <span className="text-ink-tertiary"> · and {summary.errors - 1} more</span>}
         </p>
       )}

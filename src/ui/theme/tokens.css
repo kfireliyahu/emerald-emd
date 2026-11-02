@@ -81,7 +81,9 @@
 @theme {
   /* Type ------------------------------------------------------------------ */
   --font-sans: "IBM Plex Sans", "IBM Plex Sans Hebrew", system-ui, sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  /* A raw cell in Hebrew, or a ₪, falls back to the bundled Hebrew before any
+     system font: Plex Mono is subset to latin (M54 U3). */
+  --font-mono: "IBM Plex Mono", "IBM Plex Sans Hebrew", ui-monospace, monospace;
 
   /* The type ramp of docs/11, as real tokens so nothing hardcodes a size.
      `text-title`, `text-hero` etc. become Tailwind utilities. Line-heights and
@@ -127,6 +129,15 @@
   --color-ink-tertiary: #a0a09c;
   --color-hairline: #ececea;
   --color-hairline-strong: #d9d9d6;
+
+  /* The page a document is drawn on (M54 U3): paper in both themes, since the
+     renderer draws a PDF page white whatever the window's theme. On it, where
+     the reading found each value, barely there, and the one in hand in a
+     highlighter's yellow. */
+  --color-paper: #ffffff;
+  --color-paper-read: rgb(17 17 17 / 0.06);
+  --color-paper-mark: rgb(250 204 21 / 0.38);
+  --color-paper-mark-edge: rgb(202 138 4 / 0.85);
 
   /* Emerald — the identity colour, and since D-125 the interactive one too.
      It marks what you can *act on*: the filled button, a prose link, the focus

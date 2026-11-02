@@ -12,6 +12,7 @@ import {
 } from '@/data/repositories/importMappingRepository.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Button } from '@/ui/components/Button.tsx'
+import { ChoiceMenu } from '@/ui/components/ChoiceField.tsx'
 import { Chip } from '@/ui/components/Chip.tsx'
 import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
 import { labelFor, ROLE_LABEL } from '@/ui/import/roleLabel.ts'
@@ -217,21 +218,22 @@ function AccountBinding({
   // empty select — accounts come from onboarding or from the first import.
   if (accounts.length === 0) return <Chip>ask each time</Chip>
 
+  const choices = [
+    { value: '', label: 'ask each time' },
+    ...accounts.map((account) => ({
+      value: account.id,
+      label: `${account.name}${account.last4 === undefined ? '' : ` ·${account.last4}`}`,
+    })),
+  ]
+
   return (
-    <select
-      value={mapping.accountId ?? ''}
-      onChange={(event) => onBind(event.target.value === '' ? undefined : event.target.value)}
+    <ChoiceMenu
+      text={choices.find((each) => each.value === (mapping.accountId ?? ''))?.label ?? ''}
+      choices={choices}
+      onPick={(choice) => onBind(choice.value === '' ? undefined : choice.value)}
       aria-label={`Which account ${mapping.name} imports into`}
       className={`${SELECT} h-7 max-w-56 border-transparent bg-transparent text-caption text-ink-tertiary hover:border-hairline-strong`}
-    >
-      <option value="">ask each time</option>
-      {accounts.map((account) => (
-        <option key={account.id} value={account.id}>
-          {account.name}
-          {account.last4 === undefined ? '' : ` ·${account.last4}`}
-        </option>
-      ))}
-    </select>
+    />
   )
 }
 

@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type { Database } from 'sql.js'
 
 import { listRows } from '@/data/repositories/formatRowRepository.ts'
@@ -5,7 +6,8 @@ import { labelColumn, type FormatDeclaration } from '@/domain/format/declaration
 import type { DateOrder, ReadTable, Reading } from '@/domain/format/reading.ts'
 import { companionKeyOf } from '@/domain/format/row.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
-import { SELECT, FIELD } from '@/ui/components/fieldLook.ts'
+import { ChoiceField, ChoiceMenu } from '@/ui/components/ChoiceField.tsx'
+import { FIELD } from '@/ui/components/fieldLook.ts'
 
 /**
  * **The mapper: a file's columns pointed at a format's keys** — M19 U5
@@ -47,6 +49,10 @@ export function Mapper({
   const bound = new Map(reading.columns.map((each) => [each.index, each.key]))
   const preview = table.rows.slice(reading.headerRow + 1, reading.headerRow + 7)
   const indexes = Array.from({ length: table.columnCount }, (_, index) => index)
+  const headerRows = table.rows.slice(0, 20).map((row, index) => ({
+    value: String(index),
+    label: `${String(index + 1)}: ${row.map((cell) => cell.text).join(' · ').slice(0, 60) || '(blank)'}`,
+  }))
   // A column holding several of a list is split by what the person states
   // (M34 U5, D-398), never by a guess — or by what the file joined it with,
   // when the file held it as a list (a note's frontmatter, M34 U7).
@@ -78,31 +84,19 @@ export function Mapper({
       <div className="mb-2 flex flex-wrap items-center gap-4 text-caption">
         <label className="flex items-center gap-2">
           <span className="text-ink-secondary">Header row</span>
-          <select
-            className={SELECT}
-            value={reading.headerRow}
-            onChange={(event) => onChange({ ...reading, headerRow: Number(event.target.value) })}
-          >
-            {table.rows.slice(0, 20).map((row, index) => (
-              <option key={index} value={index}>
-                {index + 1}: {row.map((cell) => cell.text).join(' · ').slice(0, 60) || '(blank)'}
-              </option>
-            ))}
-          </select>
+          <ChoiceMenu
+            text={headerRows[reading.headerRow]?.label ?? ''}
+            choices={headerRows}
+            onPick={(choice) => onChange({ ...reading, headerRow: Number(choice.value) })}
+          />
         </label>
         <label className="flex items-center gap-2">
           <span className="text-ink-secondary">Dates are</span>
-          <select
-            className={SELECT}
-            value={reading.dateOrder}
-            onChange={(event) =>
-              onChange({ ...reading, dateOrder: event.target.value as DateOrder })
-            }
-          >
-            <option value="dmy">day / month / year</option>
-            <option value="mdy">month / day / year</option>
-            <option value="ymd">year / month / day</option>
-          </select>
+          <ChoiceMenu
+            text={DATE_ORDERS.find((each) => each.value === reading.dateOrder)?.label ?? ''}
+            choices={DATE_ORDERS}
+            onPick={(choice) => onChange({ ...reading, dateOrder: choice.value as DateOrder })}
+          />
         </label>
       </div>
 
@@ -112,25 +106,20 @@ export function Mapper({
             <tr className="border-b border-hairline bg-surface">
               {indexes.map((index) => (
                 <th key={index} className="p-1 text-left align-top font-normal">
-                  <select
-                    className={`${SELECT} w-full`}
-                    value={bound.get(index) ?? ''}
-                    onChange={(event) => set(index, event.target.value)}
-                  >
-                    <option value="">Ignore</option>
-                    {keys.map((key) => (
-                      // A link takes a cell naming its row exactly (D-261); a
-                      // format it cannot fill that way says so under the grid.
-                      <option key={key} value={key}>
-                        {key}
-                      </option>
-                    ))}
-                  </select>
+                  {/* A link takes a cell naming its row exactly (D-261); a
+                      format it cannot fill that way says so under the grid. */}
+                  <ChoiceMenu
+                    className={`${FIELD} w-full min-w-max pr-2`}
+                    aria-label={`What column ${String(index + 1)} is read into`}
+                    text={bound.get(index) ?? 'Ignore'}
+                    choices={[{ value: '', label: 'Ignore' }, ...keys.map((key) => ({ value: key, label: key }))]}
+                    onPick={(choice) => set(index, choice.value)}
+                  />
                   {listKeys.has(bound.get(index) ?? '') && (
                     <label className="fc-pop-enter mt-1 flex items-center gap-1 px-1 text-ink-secondary">
                       <span className="shrink-0">Split by</span>
                       <input
-                        className={`${SELECT} w-12`}
+                        className={`${FIELD} w-12`}
                         aria-label={`What splits a cell of ${bound.get(index) ?? ''}`}
                         placeholder=","
                         value={separatorAt(index) ?? ''}
@@ -214,18 +203,11 @@ export function Fixed({
                 : `Every ${column.name} is in`}
           </span>
           {column.type === 'link' ? (
-            <select
-              className={SELECT}
-              value={fixed.get(key) ?? ''}
-              onChange={(event) => set(key, event.target.value)}
-            >
-              <option value="">Not set</option>
-              {targetRows(db, declared, column.target).map((row) => (
-                <option key={row.id} value={row.id}>
-                  {row.label}
-                </option>
-              ))}
-            </select>
+            <RowChoice
+              rows={targetRows(db, declared, column.target)}
+              id={fixed.get(key) ?? ''}
+              onPick={(id) => set(key, id)}
+            />
           ) : (
             <input
               className={`${FIELD} w-28`}
@@ -264,3 +246,40 @@ function targetRows(
   }))
 }
 
+const DATE_ORDERS = [
+  { value: 'dmy', label: 'day / month / year' },
+  { value: 'mdy', label: 'month / day / year' },
+  { value: 'ymd', label: 'year / month / day' },
+]
+
+/**
+ * The row every read row belongs to: an autocomplete, since a format can hold
+ * two hundred of them (*Choices are ChoiceField*, M54 U3). What is typed only
+ * narrows the list; leaving the field puts back the row that is chosen.
+ */
+function RowChoice({
+  rows,
+  id,
+  onPick,
+}: {
+  rows: readonly { readonly id: string; readonly label: string }[]
+  id: string
+  onPick: (id: string) => void
+}) {
+  const [typed, setTyped] = useState<string | undefined>()
+  const chosen = id === '' ? 'Not set' : (rows.find((row) => row.id === id)?.label ?? '')
+  return (
+    <ChoiceField
+      className={`${FIELD} w-56`}
+      filter
+      text={typed ?? chosen}
+      choices={[{ value: '', label: 'Not set' }, ...rows.map((row) => ({ value: row.id, label: row.label }))]}
+      onText={setTyped}
+      onPick={(choice) => {
+        setTyped(undefined)
+        onPick(choice.value)
+      }}
+      onBlur={() => setTyped(undefined)}
+    />
+  )
+}
