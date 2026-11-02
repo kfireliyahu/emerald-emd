@@ -6184,6 +6184,12 @@ breaks: A refusal drawn on the wrong column: `price_minor` has to find its way b
 not_tried: A refusal on screen; the clipboard inside the shell; and a format you actually want, declared from scratch in the form with nobody helping.
 state: open
 
+### At about 1000px wide, look at the Get Emerald cards (.foot .way, page.css:820-824, `grid-template-columns: 40px minmax(0,1fr) minmax(0,28rem)`).
+unit: M54 U7
+should: The words get the room and the command box takes what is left (a readable measure).
+breaks: The command column takes up to 28rem, which squeezes each card's name and line into about 150px. 'The source, on GitHub' wraps to two lines, and the descriptions run 5-6 lines.
+state: open
+
 ### At the 0.2.0 release cut: bring the testing rule into the plugin's generic skill copies, `hosts/claude/skills/closing-pass/SKILL.md` and `hosts/claude/skills/run-milestone/SKILL.md`, from M51 F6's own edits (`git show ee9d513 -- hosts/claude/skills`, reachable from main through merge f19f264), in the same commit that sets the plugin manifest's version for 0.2.0.
 unit: M51 F6
 should: After the cut, both generic skills say: run `npx vitest related <changed files> --run`, `src/privacy.test.ts` and typecheck before a commit, and the full suite locally only for a broad change, with CI running the rest. `hosts/claude/plugin.test.ts` passes with the new version and digest.
@@ -6212,6 +6218,12 @@ breaks: Judge first: the ordering does not close, so a conversation can never se
 not_tried: A real vault and any scale: a fold is one query per row per aggregate, and scale.test.ts covers no declared table. Also untried: what a model does when it needs two linked formats and gets one call.
 state: open
 
+### Check the landmarks (demo-page.html:292).
+unit: M54 U7
+should: The page's footer is a contentinfo landmark, outside main (WCAG 1.3.1).
+breaks: The footer sits inside main, so it is no landmark.
+state: open
+
 ### Close a window with unsaved changes; and press Install and restart on an update notice with unsaved changes.
 unit: M54 U6
 should: The question names the document, and says restart when it is a restart (platform save-on-close dialogs).
@@ -6222,6 +6234,12 @@ state: open
 unit: M54 U6
 should: Words that read as a sentence about this act (Words name the rule), e.g. 'A copy of <name> as it is now is among its earlier copies'.
 breaks: Driven: 'A copy from before now is among this document’s earlier copies, as project.before-20261102T093325-now.emd.' — the keep-copy label 'now' is dropped into 'a copy from before <what>' (Notices.tsx:240).
+state: open
+
+### Compare each tour's three names: the rail row (en.ts:30-35 `rows`), its label (`tours.*.label`) and its frame title (`tours.*.title`).
+unit: M54 U7
+should: One name per thing (Words name the rule; the maintainer's simplicity rule).
+breaks: Tour 2 is 'Where the money went', '2 · The ledger' and 'where did this month's money go?'. Tour 3 is 'The project answers first' and '3 · The development pack'. Tour 4 is 'Every hour paid' and '4 · The timesheet'.
 state: open
 
 ### Copy an older planner.emd backup from before 2026-10-11 (the 2026-10-09 .bak beside it) somewhere outside any repo, open the copy in the app once (it is at an older schema), then ask a session for search_document on it with the terms the planner.emd scrub hunted (the old address, the note's words, the old account name).
@@ -7068,6 +7086,12 @@ unit: M50 U1
 should: The section reads as something a session would want first (start-here table, then a line per format with its columns); the second run prints unchanged for every file. Wrong: the section is noisy or misleading, or anything changes on the second run
 state: open
 
+### In light, read the inbox diagram's file names (.inbox-file, page.css:590-594). This is the same question as U2's and U4's ink-tertiary rows.
+unit: M54 U7
+should: Contrast 4.5:1 for text: ink-tertiary only for text nobody needs.
+breaks: shop.emd, site.emd and notes.emd are ink-tertiary at about 2.4:1 in light, yet they carry the inbox story.
+state: open
+
 ### In the desktop app, declare a format with a `file` column in a document of your own; Choose… a file under the document's folder, drop one from Explorer, and paste a path; click the name and 'show in folder'.
 unit: M37 U6
 should: The cell reads the file's name, opens it in its usual app, and a file under the folder is stored relative (scans/x.pdf); delete or rename the file and the cell reads 'missing' without anything else changing; an https address is refused with the reason.
@@ -7142,10 +7166,28 @@ should: A link can name its row by more than the name when the name repeats
 breaks: The model looked up ids and pasted 55 link fixes in a second pass
 state: open
 
+### List the page's headings (h1-h3), or move through them with a screen reader's heading navigation (demo-page.html:78-109).
+unit: M54 U7
+should: Every section the rail lists has a heading (WCAG 1.3.1, 2.4.6).
+breaks: One h2, 'Do my receipts line up…', covers all four tours. Tours 2-4 have only a span.label, so there are 9 headings for 12 rail rows. Some h2s also differ from their rail row: 'MCP' against 'A model works in it, through MCP'.
+state: open
+
+### Load the page and press Tab from the top.
+unit: M54 U7
+should: The first stop is a 'skip to content' link (WCAG 2.4.1; Keyboard first).
+breaks: There is no skip link. Content starts only after 15 stops: the theme button, 12 rail links, Source and Privacy.
+state: open
+
 ### Look at any screen in the shell with a document open and unsaved.
 unit: M54 U6
 should: QUESTION for the maintainer: One primary action per screen — does the title bar's Save count against the screen's own primary?
 breaks: Save is always variant primary in the chrome (DocumentBar.tsx:127), so a screen with its own primary shows two filled buttons (Home's Read files beside it).
+state: open
+
+### Look at the Claude extension's card (demo-page.html:242).
+unit: M54 U7
+should: A file to download looks like a download, not something to type (Words name the rule).
+breaks: `emerald.mcpb` sits in the same pre.run code box as `git clone` and `npx`, so it reads as a command.
 state: open
 
 ### Look at the views as screens: the milestone roadmap, the boards, a page.
@@ -7304,6 +7346,12 @@ should: The document declares the development pack's formats, so it shows as a p
 breaks: Author, 2026-10-01: 'i opened the memory emd i dont see the dev pack.' The rail and the Packs screen ask only keepsLedger (src/ui/packs.ts); the pack's views are reachable only through each format's View menu under #/formats. 'It should work same as ledger - a pack.'
 state: fault
 
+### Open getemerald.dev at a desktop width, in either theme, and look at the first screen (#story).
+unit: M54 U7
+should: A stranger sees what to do next on the first screen, before they scroll: a way to get it, or the source (Impeccable persuade: the action above the fold).
+breaks: The first screen holds the h1, the tagline, the story, the twelve-row rail and the top of tour 1. It has no download and no repo action. The only ways onward are the rail row '12 Get Emerald' and a 12px 'Source' link in the rail foot. Get Emerald starts about 9,300px down a 10,659px page.
+state: open
+
 ### Open site.emd in the app once (it is at schema 60 anyway), look at #/formats, then ask start_here on it in a session
 unit: M47 U5
 should: Every card says 'last changed <date>'; start_here's 'Untouched longest' line names asset and copy_slot first; a write to dns_record moves only its date
@@ -7338,6 +7386,12 @@ unit: M37 F2
 should: Offer '6 charges look like bills' (City Transit Card, Clearwater Utility, Fastline Internet, Parrot Mobile, StreamBox, Tuneful Music) and none of the shops. The tour's step 5 Home was 'nothing waiting' before; if the bills card is unwanted in the tour, the lived-in document could track those six bills instead of hiding them.
 state: open
 
+### Press Tab past a tour that is out of view (main.ts:194-211).
+unit: M54 U7
+should: An empty frame is no tab stop (WCAG 2.4.3).
+breaks: A frame away from the view has no src but stays focusable, so Tab lands on an empty frame.
+state: open
+
 ### Publish emerald-mcp 0.1.1 and let the registry list it: `npm run build:plugin`, then `cd dist-plugin && npm publish --access public` (browser 2FA). Then, from the repo root, `node scripts/pin-plugin.mjs`, commit the three hosts/claude files and push to main (a session can do this step). That push runs .github/workflows/registry.yml; or `gh workflow run registry.yml`. Check: `curl "https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.kfireliyahu/emerald"`.
 unit: M42 U3
 should: npm shows emerald-mcp 0.1.1 with mcpName io.github.kfireliyahu/emerald; the workflow's run goes green through validate, login github-oidc and publish; the search returns Emerald at version 0.1.1; the plugin, after /plugin update, starts emerald-mcp@0.1.1. Wrong would be: the OIDC login refused for the io.github.kfireliyahu namespace, or validate rejecting server.json.
@@ -7348,11 +7402,65 @@ unit: M42 U2
 should: The package page shows emerald-mcp 0.1.0 under AGPL-3.0-only with no dependencies, and the server starts with nothing installed and answers start_here.
 state: accepted
 
+### QUESTION for the maintainer. Press the theme button twice (main.ts:86-107).
+unit: M54 U7
+should: The theme is light, dark or system, system the default (The theme is applied before first paint). main.ts says the two-state toggle was deliberate (2026-10-12). Does that hold against the rule?
+breaks: It is a light/dark toggle. Once pressed, the page stops following the system and there is no way back.
+state: open
+
+### QUESTION for the maintainer. Read page.css's spacing: gaps, paddings and margins.
+unit: M54 U7
+should: Every value is a token, and nothing sits between the spacing steps (--spacing-1..16). Question: does that bind the page's own hand-written sheet, ported from the approved M33 U8 mockup? Not fixed here, because moving the off-step values changes the public page's layout.
+breaks: No var(--spacing-*) is used anywhere. Values sit between the steps: 10px (109, 613), 14px (356), 6px (133, 170, 178, 526, 608, 924), 7px (278), 35px (233, 240).
+state: open
+
+### QUESTION for the maintainer. Read page.css's type sizes.
+unit: M54 U7
+should: Every value is a token and rem for type, but the --text-* ramp is in px. Question: does the page get its own token ramp in rem, with the near-duplicates folded (0.8125, 0.875 and 0.9375rem; 1.0625 and 1.125rem)?
+breaks: There are about 13 rem literals: 0.6875, 0.75, 0.8125, 0.875, 0.9375, 1, 1.0625, 1.125, 1.375, 1.5, 1.625, 2.5 and 3.5rem. The h1 is 56px against --text-hero's 40px.
+state: open
+
+### QUESTION for the maintainer. Read the hero tagline (en.ts:47, `hero.tagline`) beside docs/product.md (D-238) and the README's first line.
+unit: M54 U7
+should: One settled pitch across the page, the README and product.md. Which one is the maintainer's call.
+breaks: The page says "The database under the chat." product.md says the sentence said first is "Excel that reads your documents and won't let you be wrong quietly." en.ts says the tagline is the README's first line, so the README and product.md disagree. A stranger may also not know which chat is meant.
+state: open
+
+### QUESTION for the maintainer. Scroll to Get Emerald (#download, .foot .ways and .downloads).
+unit: M54 U7
+should: One primary action per screen: accent-filled. Question: does a persuade page get one filled primary, such as the desktop download, when the rule was written for app screens?
+breaks: The seven ways in are equal-weight cards. The page's only filled button, the form's Send, is hidden because FORM_ACTION is ''. So the page has no primary action at all, and its strongest moment ends on equal cards.
+state: open
+
 ### Read DocumentPane.tsx (a PDF page under the reading's marks).
 unit: M54 U3
 should: Radii from the tokens (Square by spending the radius tokens).
 breaks: rounded-md on the page's frame and rounded-[2px] on the read and active boxes; Look.tsx:38 rounded-sm. (Its colours became --color-paper* tokens in M54 U3.)
 not_tried: The pane over a real page: there is no synthetic PDF the paycheck or fund readers read cleanly.
+state: open
+
+### Read Get Emerald's lead (en.ts:209, `foot.lead`) and the order of the cards (demo-page.html:227-276).
+unit: M54 U7
+should: The order leads with what most strangers will install (PRODUCT.md's two crowds). The maintainer picks the order.
+breaks: It says "Five ways in, all free: the source, the Claude extension, the Claude plugin, the npm package and the desktop app." `git clone` comes first and the desktop app comes last, under a small label. The ledger crowd needs the app and reaches it last.
+state: open
+
+### Read MCP's tool counts (en.ts:163) beside the server's tool list.
+unit: M54 U7
+should: A figure on the public page is derived or pinned by a test.
+breaks: It says "28 for any document, 85 with the ledger." No test pins it; the only other copy is scripts/npm-package.mjs:86. The emerald-ledger server in this session listed 84.
+state: open
+
+### Read Packs (en.ts:173) beside The engine (en.ts:83). Check the term rows (`format_rows term search:"format"`).
+unit: M54 U7
+should: One word for the thing, defined once (Words name the rule; the term rows).
+breaks: Packs says "A pack is formats somebody already worked out…" and the page never says what a format is. The engine calls the same thing a table: "Declare a table for anything you keep".
+state: open
+
+### Read The engine's caption (en.ts:90, `engine.caption`) under the claim card (#claim).
+unit: M54 U7
+should: The caption describes what plays under it.
+breaks: It says "There you typed it in; here a model reads it…". The card is a drawn animation (claim.ts:5, 'drawn until the recording exists'), and no model appears in it.
 state: open
 
 ### Read TitleBar.tsx:52 and main.ts:895.
@@ -7396,10 +7504,28 @@ should: Text is kept exactly
 breaks: The spreadsheet reader silently dropped emoji
 state: open
 
+### Read en.ts:184, en.ts:143 and en.ts:88.
+unit: M54 U7
+should: Words a stranger outside the maintainer's country and history can parse.
+breaks: "\"A year of study-fund reports read in…\": a study fund is a local savings product. \"every shekel followed\" is a local currency. \"Anything counts. Years of old accounts found in mail became one row each, and none was missed when closing them.\" is hard to parse."
+state: open
+
 ### Read notes with inline #tags
 unit: M34 T1
 should: Inline tags can fill an enums column
 breaks: Inline tags are not read
+state: open
+
+### Read page.css's animation timings: 249, 374, 434-449.
+unit: M54 U7
+should: One duration, one easing; every duration a --duration-* token. Not fixed: changing them changes how the public page enters.
+breaks: The literals are 700ms for the gem, 300/420/540ms hero delays, 120ms + 45ms per facet, 200ms + 30ms and 50ms per row. The hero's entrance is also polish rather than one of the four changes motion may say.
+state: open
+
+### Read page.css:718 and 763 against the header's claim (page.css:8-9) that the page mirrors for a right-to-left language.
+unit: M54 U7
+should: Logical properties throughout: inset-inline-end and text-align: start (Hebrew first-class).
+breaks: `right: 12px` and `text-align: left` would not mirror under dir=rtl.
 state: open
 
 ### Read the class strings and styles of the dashboard and its charts: tokens.css .fc-chart-val (~914), Dashboard.tsx's ⋯ button and drop targets (:242, :564).
@@ -7426,6 +7552,36 @@ should: Question for the maintainer: rules Every value is a token, Nothing betwe
 breaks: After M54 U1's fix of the sizes the ramp has, 26 type sizes with no ramp step remain on the surface (text-[13px] most) and 45 spacing and size literals between the 8px steps (gap-[18px], gap-x-[22px], px-[7px], min-h-[41px], h-[22px]…); 193 pixel type sizes across src/ui.
 state: open
 
+### Read the four tour leads (en.ts:58, 63, 68, 73) together.
+unit: M54 U7
+should: One voice across the four, addressing the reader (the guidelines' copy rules).
+breaks: en.ts:63 says "September's pay is in and the card statement just came, I spent how much on groceries?!": a comma splice and a jump to the first person, while the others say 'You'. en.ts:68 ends "Recorded decisions become memory that is no longer ephemeral."
+state: open
+
+### Read the heading 'No internet, no login' (en.ts:199) beside its body (en.ts:201), on a page whose main path is a hosted assistant working the file.
+unit: M54 U7
+should: The heading is as careful as its body. en.ts's own header says "sends nothing anywhere itself", never "your data never leaves it".
+breaks: The body is careful: "Runs on your machine and sends nothing anywhere itself." But the heading alone reads as the claim the page must never make.
+state: open
+
+### Read the hero story (en.ts:49, `hero.story`), then the first h2 below it.
+unit: M54 U7
+should: The story names who it is for and the concrete thing it does. product.md 'Who it is for' names both crowds, and product.md also says nobody wants an architecture. The words are the maintainer's.
+breaks: It says "What is an application? Most are a database and a UI that exposes it. Most people now talk to an AI chat instead, the new UI, and those chats have no reliable long-term memory. Emerald closes that gap." It opens on architecture and never says it is a desktop app keeping your own file. The next h2 jumps to grocery receipts, so the hero (AI memory) and the first proof (money) do not connect.
+state: open
+
+### Read the lines a stranger has no word for. en.ts:81 "The engine". en.ts:86 "Claims: … Each one proved, failed or unchecked, and unchecked says why." en.ts:159 "A model works in it, through MCP" (MCP is never spelled out, and the rail row is just 'MCP'). en.ts:163 "Shaped tools, never a general query". en.ts:124 "became unit S4 U2". en.ts:216 "It runs on the app's own Node."
+unit: M54 U7
+should: Plain words a stranger can follow (persuade mode). The words are the maintainer's.
+breaks: Each line uses an insider word the page never defines.
+state: open
+
+### Read the page's meta description: en.ts:19, `description`. It is what search results and link previews show.
+unit: M54 U7
+should: It says what Emerald is, in a stranger's words, and agrees with the tagline and the pitch. Which words is the maintainer's call; none is proposed as settled.
+breaks: It says "Emerald: Order to chaos using engineering". That reads backwards, as if it turns order into chaos, and it matches neither the tagline nor docs/product.md's pitch.
+state: open
+
 ### Read the same commands in the File menu, the palette and the title bar.
 unit: M54 U6
 should: QUESTION for the maintainer: one name per thing (term rows, D-436) and one casing convention — is the native menu Title Case (the platform's) and the palette sentence case, or one for both?
@@ -7436,6 +7592,12 @@ state: open
 unit: M34 T1
 should: A re-read updates the rows it read before, by a key, instead of adding them again
 breaks: It is a one-time copy; both trial verdicts say it drifts from the source within a week
+state: open
+
+### Read the twelve rail rows in order, as a stranger would read the page.
+unit: M54 U7
+should: The sections are grouped by who they persuade, and the privacy promise comes early (persuade rhythm). The order is the maintainer's.
+breaks: The tours mix the ledger and the development pack, then The engine, MCP and Packs follow, and then The ledger and The development pack come again. 'No internet, no login', the ledger crowd's first promise, is row 11 of 12.
 state: open
 
 ### Remove an identity, rename or delete a column, change a type, from a conversation
@@ -7494,6 +7656,12 @@ breaks: Whether you would actually write these. Is a tolerance of ± 2% of the r
 not_tried: A real vault, a real conversation, and any scale: the tally on `#/formats` reads every row of every format on each render, which is unmeasured at a thousand rows.
 state: open
 
+### Scroll until a tour frame loads, then press the theme button.
+unit: M54 U7
+should: The frames follow the page's theme (Dark mode is not an inversion).
+breaks: A loaded frame keeps the theme it loaded with: a light app panel sits on the near-black page until the frame is let go and reloaded. initTheme (src/ui/theme/useTheme.ts) has no `storage` listener.
+state: open
+
 ### The real update, on Windows. (1) On main, with package.json at 0.1.2: `git tag v0.1.2 && git push origin v0.1.2`; when the Release workflow finishes, the release must list Emerald-Setup.exe, Emerald-Setup.exe.blockmap, latest.yml, Emerald-arm64.dmg, Emerald-x64.dmg and SHA256SUMS. (2) Set NAMED_INSTALLERS_RELEASED = true in src/demo/page/page.ts, `npm run build:demo`, commit, push (the page then links releases/latest/download/<name>). (3) Download Emerald-Setup.exe from getemerald.dev, install it over 0.1.0, open a document, open About and tick 'Check at start and once a day, and download'; Check now should say 'You have the latest — Emerald 0.1.2.' (4) `npm version 0.1.3 --no-git-tag-version`, commit, push, `git tag v0.1.3 && git push origin v0.1.3`, wait for the release. (5) In the running 0.1.2: Help > Check for Updates Now. (6) Make an unsaved change, press Install and restart, answer Cancel; then press it again and answer Save.
 unit: M42 U9
 should: (5) shows 'Downloading Emerald 0.1.3…' and then 'Emerald 0.1.3 is ready. Installing it restarts Emerald; your documents are not touched.' with Install and restart and Later, no dialog, focus not taken (without the press, the next start shows the same within a minute). (6) Cancel keeps the window and installs nothing; Save saves, Emerald closes, the installer runs with no window and no prompt, and Emerald opens again on the same document; About says 0.1.3. Turning the setting off and pressing Check now only says 0.1.3 is out.
@@ -7519,6 +7687,24 @@ state: open
 unit: M34 T1
 should: The server and document_info read as Emerald, formats first
 breaks: The server is named financial-companion and document_info counts accounts and transactions
+state: open
+
+### Validate the rail's markup (demo-page.html:32-34) and listen to the rail and installer link names (main.ts:239-242).
+unit: M54 U7
+should: Valid list children and readable names (WCAG 1.3.1, 4.1.2).
+breaks: ol.tl has a div.solid as a direct child, which an ol may not hold. Link text runs together as '01What it is' and 'WindowsEmerald-Setup.exe'.
+state: open
+
+### With a screen reader, press the reel's Pause/Play button (reel.ts:66-67).
+unit: M54 U7
+should: Either a label that changes or aria-pressed, not both (WAI-ARIA APG toggle button).
+breaks: The text swaps between Pause and Play while aria-pressed also flips, so it is announced as, for example, 'Play, toggle button, pressed'.
+state: open
+
+### With a screen reader, reach The engine's claim card (demo-page.html:118, div#claim).
+unit: M54 U7
+should: The summary is what is announced: a role (img or group), or the animation hidden with the summary exposed (WCAG 1.1.1, 4.1.2). The inbox diagram does this with role=img.
+breaks: div#claim has an aria-label but no role, so most screen readers ignore the label and read the animated rows mid-play.
 state: open
 
 ### With no document open, use File › Save, Save a Copy… or Earlier copies; or Help › Guide me in a document that keeps no ledger.
@@ -14686,11 +14872,17 @@ report: "LANDED add2d7c. 24 open review_entry rows on M54 U6 (4 are questions fo
 milestone: M54
 scope: demo
 title: Emerald's page reviewed: getemerald.dev, its words and its layout
-state: planned
+landed: 2026-11-02
+state: built
 brief: M54 (D-530), after U1 set the procedure — read M54 U1's report first (`format_rows unit match:{ref:"M54 U1"} columns:[report]`). Surface: Emerald's page, demo-page.html (getemerald.dev; index.html in dist-demo), its words in src/demo/page/copy/en.ts and its parts in src/demo/page/ (page.css, rail, reel, claim, inbox). Its mode is persuade (PRODUCT.md), unlike the app's operate: critique it as a page a stranger reads first, and the words count as much as the layout. The embedded tour is U8's. Maintainer's answers, 2026-11-02. AGAINST: `npm run dev:demo` (preview `demo-tour`, :4181; the page is /), over the synthetic demo documents. CONDITIONS: light and dark at a desktop width, nothing else (not a phone width). TOOLS: `format_rows rule match:{scope:ui, state:live}` and `match:{scope:product, state:live}` (columns:[name, statement]) — the product rules carry the no-competitor-names rule (D-450) and the offline rule; root DESIGN.md and PRODUCT.md, and docs/product.md for the pitch; `/impeccable critique` and `/impeccable audit` on the page (Impeccable 4.8.0, user level; per-edit hook off — if per-edit findings appear, `/impeccable hooks off`); the `web-design-guidelines` skill over demo-page.html and src/demo/page/; the Impeccable detector once at the end, never per edit. Verify with get_page_text / read_page; screenshots only where the answer is visual (the first screen, dark). Check read_network_requests shows no request the page did not serve itself. FINDINGS: one open `review_entry` row per finding on this unit — `do` the section and what to look at, `should` what is right with its rule row or guideline, `breaks` what happens now. A wording finding quotes the line and proposes none as settled; the words are the maintainer's. Never taste alone; arguing with a live rule row is a question for the maintainer. FIXING: a plain breach of a live ui rule row (hex or pixel literal, missing focus ring, a request off the page) is fixed in place with a test where one can fail and listed; copy and layout changes are judgement, only recorded. Unsettled: stop and ask. REPORT: rows written, fixes made, what in the procedure worked or wasted time. Done-test: the page critiqued and audited in both themes, findings are open rows on M54 U7, tests and typecheck pass.
-files: Reviewed: demo-page.html, src/demo/page/ (copy/en.ts, copy.ts, page.ts, page.css, rail.ts, reel.ts, claim.ts, inbox.ts, main.ts). Rows: docs/memory.emd (review_entry).
+files: src/demo/page/page.css, src/demo/page/reel.ts, src/ui/formats/surfaceRules.test.ts; rows: docs/memory.emd (review_entry)
 blocks: ["M54 U1"]
+taken_by: run-milestone driver
+started: 2026-11-02
+branch: main
+commit: ff949f3
 paths: "demo-page.html\nsrc/demo/page/"
+report: "LANDED ff949f3. 31 open review_entry rows on M54 U7. 6 are questions for the maintainer: a filled primary on a persuade page; the tagline against product.md's pitch; the hero story; whether the spacing tokens and the type ramp bind the page's hand-written sheet; and the two-state theme toggle. No decision. Guard, privacy, related tests (390) and typecheck are green, and docs:check has 0 errors.\n\nFIXES (plain ui-rule breaches, in place, invisible at the default): (1) rem for type: page.css's html was font-size 16px, which overrode a reader's own font size for every rem on the page; it is now 100%, still 16px by default (checked in the browser). (2) Reduced motion runs none of it: a picked step un-paused the reel (reel.ts), so under reduced motion the pictures advanced every 6 s after one pick; now only Play starts it there. Both are guarded in surfaceRules.test.ts, and each fails on HEAD. NOT fixed, though Assessment A marked them plain: the off-step spacing and the literal durations, because changing them changes the public page's layout and entrance, and Pages deploys on push. They are recorded with the type-ramp question.\n\nCHECKED AND CLEAN: no request off the page, in the page or its four frames (performance entries walked into each iframe in one javascript_tool call — cheaper than read_network_requests, which returned 200 of 499 rows of app modules and dropped the rest). D-450: only the hosts and runtimes are named (Claude, GitHub, npm). Focus: a 2px accent ring from tokens.css on every stop. Contrast: every text token is at least 4.5:1 in both themes except .inbox-file. The detector found nothing, for the seventh unit running.\n\nPROCEDURE, WHAT WORKED: preview_start first (it got 4184, since 4181-4183 were still held), then A at once with the port, 'open your own tab' and 'leave fc-theme light'. It took about 7 min, 184k tokens, 54 tool uses and found 32 findings; every one I checked in code held. While it walked: one grep over the page (hex, px font-size, outline, ms literals, off-step spacing by awk), a JS sweep (headings, unnamed controls, links, img alt, off-origin resources), and web-design-guidelines by one WebFetch applied to greps. The page is one CSS file and plain TS, so source-reading guards in surfaceRules.test.ts fit it as well as they fit TSX. No earlier rows overlapped, because the page is its own surface. Rows went in this one land_units call.\n\nWHAT WASTED TIME: read_network_requests without a urlPattern (above). My naive unnamed-control sweep flagged inputs wrapped in a <label> — check the wrapping label too. Vitest runs in node with no DOM, so a behaviour test for reel.ts would need a pure helper; the guard reads the source instead. The seed tab must be fronted for a screenshot.\n\nNOT DONE: reduced motion and a screen reader were checked in code only (the pane cannot emulate them). Phone width is out of conditions. The tours inside the frames are U8's. The gem's two hex stops in main.ts are the brand mark, shared with Working.tsx and emerald.svg, and are left alone."
 
 ### M54 U8
 milestone: M54
