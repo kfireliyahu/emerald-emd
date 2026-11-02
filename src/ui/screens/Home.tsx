@@ -564,7 +564,6 @@ function AllMonths({
               <th className="px-3 py-2 text-right font-medium">Saved</th>
               <th className="px-3 py-2 text-right font-medium">Taxes</th>
               <th className="px-3 py-2 text-right font-medium">Left over</th>
-              <th className="px-3 py-2" />
             </tr>
           </thead>
           <tbody>
@@ -607,20 +606,23 @@ function AllMonths({
                     {tax === undefined ? <span className="text-ink-secondary">—</span> : formatMoney(tax)}
                   </td>
                   <td className="px-3 text-right tabular-nums">{formatMoney(one.balance)}</td>
-                  <td />
                 </tr>,
                 ...missing.map((gap) => (
                   <tr key={`${key}:${gap.accountId}`} className="h-10 text-ink-secondary *:border-b *:border-hairline">
                     <td className="py-0 pr-3 pl-7 whitespace-nowrap">
                       <Bidi>{accountLabel(gap)}</Bidi> · {formatYearMonth(gap.period)}
                     </td>
+                    {/* Read files sits in the line's own cell, never a column of
+                        its own: an empty column on every month row was what
+                        pushed the table past its region once the months
+                        scrolled under the header (M54 F13 F). */}
                     <td className="px-3" colSpan={5}>
-                      No statement read for this month
-                    </td>
-                    <td className="px-3 text-right">
-                      <Button variant="ghost" size="sm" onClick={onRead}>
-                        Read files
-                      </Button>
+                      <span className="flex items-center justify-between gap-3">
+                        No statement read for this month
+                        <Button variant="ghost" size="sm" onClick={onRead}>
+                          Read files
+                        </Button>
+                      </span>
                     </td>
                   </tr>
                 )),
