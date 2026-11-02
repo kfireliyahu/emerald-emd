@@ -6326,13 +6326,13 @@ state: fault
 ### Demo, a fresh load of app.html?document=project.emd#/: press Back in the title bar.
 unit: M54 U4
 should: Back is disabled where there is nowhere to go, or the redirect replaces the history entry.
-breaks: Back is enabled (history.state.idx is null) and lands on the same Dashboard through the redirect (HistoryArrows.tsx:43). Owned by M54 F5.
+breaks: Back is enabled (history.state.idx is null) and lands on the same Dashboard through the redirect (HistoryArrows.tsx:43). Owned by M54 F5. Fixed in M54 F5 (2ef306a).
 state: fault
 
 ### Demo, any document and screen: read the browser tab's title.
 unit: M54 U4
 should: The page title names the document and the screen (WCAG 2.4.2).
-breaks: It is always "Emerald": nothing sets document.title. Owned by M54 F5.
+breaks: It is always "Emerald": nothing sets document.title. Owned by M54 F5. Fixed in M54 F5 (2ef306a).
 state: fault
 
 ### Demo, any document, #/formats/<a format> (Table) — read the headings (a screen reader's heading list).
@@ -6362,19 +6362,19 @@ state: fault
 ### Demo, any document, light and dark: the theme control at the rail's foot; Tab to it and press the arrows; hover the collapsed rail's theme button.
 unit: M54 U4
 should: Square by spending the radius tokens; No gradients, no shadows (--shadow-pop belongs to menus, panels and dialogs); a radio group is one tab stop moved by arrows (APG radio group).
-breaks: A rounded-full pill whose knob wears shadow-pop; each role=radio is its own tab stop and the arrows do nothing (ThemeToggle.tsx:24-50); ThemeCycleButton hovers bg-surface on a surface rail, so hover shows nothing. Owned by M54 F5.
+breaks: A rounded-full pill whose knob wears shadow-pop; each role=radio is its own tab stop and the arrows do nothing (ThemeToggle.tsx:24-50); ThemeCycleButton hovers bg-surface on a surface rail, so hover shows nothing. Owned by M54 F5. Fixed in M54 F5 (2ef306a).
 state: fault
 
 ### Demo, any document, light: the rail's collapse and Guide buttons, a folder's open arrow, and the unselected theme buttons at the rail's foot.
 unit: M54 U4
 should: An icon you act on reads at least 3:1 against its plane (WCAG 1.4.11); An icon is an action puts icons at ink-secondary at rest.
-breaks: text-ink-tertiary on surface, 2.45:1 (Sidebar.tsx:302, :320; ThemeToggle.tsx:47; RailFolder.tsx:121). Owned by M54 F5.
+breaks: text-ink-tertiary on surface, 2.45:1 (Sidebar.tsx:302, :320; ThemeToggle.tsx:47; RailFolder.tsx:121). Owned by M54 F5. Fixed in M54 F5 (2ef306a).
 state: fault
 
 ### Demo, any document: Ctrl+K and read the results with a screen reader.
 unit: M54 U4
 should: A listbox owns only options, or groups of them: each heading a role=group with aria-labelledby, or outside the list (ARIA required owned elements).
-breaks: The group headings are <p> elements directly inside role=listbox (CommandPalette.tsx:384, :471). Owned by M54 F5.
+breaks: The group headings are <p> elements directly inside role=listbox (CommandPalette.tsx:384, :471). Owned by M54 F5. Fixed in M54 F5 (2ef306a).
 state: fault
 
 ### Demo, any format: the view tabs (Table, Board, List, Dashboard, Claims) in light and dark.
@@ -6506,7 +6506,7 @@ state: fault
 ### Demo, demo.emd, #/ in light and dark: Home's All months column headers and a card's missing-statement line ("Everyday Card ···1234 · No statement read for this month"); the palette's group headings and counts (Ctrl+K); the rail folders' entry counts; #/settings/packs' list of places; #/settings/export's shortcut line; #/mcp's tool names and its two notes; the guide's mono reopen line.
 unit: M54 U4
 should: Text a person needs is at least 4.5:1 and ink-tertiary is for non-essential text only (Contrast 4.5:1 for text). QUESTION for the maintainer: the missing-statement line is the genuine signal the product exists for, and ink-tertiary is 2.45-2.62:1 in light — move these to ink-secondary (5.33:1 light, 7.61:1 dark), or raise ink-tertiary itself?
-breaks: All in ink-tertiary: 2.45-2.62:1 in light (fails even 3:1), 3.18-3.65:1 in dark. Home.tsx:555, :601; CommandPalette.tsx:385-386; RailFolder.tsx:139; Packs.tsx; Export.tsx; Mcp.tsx:40,47,121; Guide.tsx:113. Verdict 2026-11-02 (D-531): move to ink-secondary; ink-tertiary itself is not raised. Owned by M54 F13.
+breaks: All in ink-tertiary: 2.45-2.62:1 in light (fails even 3:1), 3.18-3.65:1 in dark. Home.tsx:555, :601; CommandPalette.tsx:385-386; RailFolder.tsx:139; Packs.tsx; Export.tsx; Mcp.tsx:40,47,121; Guide.tsx:113. Verdict 2026-11-02 (D-531): move to ink-secondary; ink-tertiary itself is not raised. Owned by M54 F13. Part fixed in M54 F5 (CommandPalette, RailFolder).
 state: fault
 
 ### Demo, demo.emd, #/: Home's All months table — Tab to a month, press Space, scroll; and read its rows' colours.
@@ -6867,7 +6867,7 @@ state: open
 ### Demo, project.emd, #/formats/unit/board (any place under Development): read the rail with a screen reader.
 unit: M54 U4
 should: Exactly one aria-current=page, on the page that is lit.
-breaks: Development and Formats both carry aria-current=page (the NavLink to /formats is active and only its class is suppressed, Sidebar.tsx:149-166); the lit child (Unit board, Packs, Roadmap) is a plain Link with none (Sidebar.tsx:210). Owned by M54 F5.
+breaks: Development and Formats both carry aria-current=page (the NavLink to /formats is active and only its class is suppressed, Sidebar.tsx:149-166); the lit child (Unit board, Packs, Roadmap) is a plain Link with none (Sidebar.tsx:210). Owned by M54 F5. Fixed in M54 F5 (2ef306a).
 state: fault
 
 ### Demo, project.emd, #/formats/unit/board and #/formats/milestone/roadmap, both themes: the M2 and SESSION 1 marks on a card, and the PLANNED / OPEN state marks.
@@ -6927,7 +6927,7 @@ state: open
 ### Demo, project.emd: Ctrl+K, press Tab into the results until "Development · Unit board" has focus, press Enter. Then keep pressing Tab.
 unit: M54 U4
 should: The focused result is the one that runs, and Tab stays inside a modal dialog: options tabIndex -1 with the field as the combobox that owns them (aria-activedescendant), and a Tab trap (Keyboard first; the ARIA combobox pattern).
-breaks: Each option is a tab stop, but Enter is handled on the dialog and runs items[selected] — the arrow-selected row (Dashboard), not the focused one. Tab walks every result and then leaves the aria-modal dialog (CommandPalette.tsx:165-184, :392-398). Owned by M54 F5.
+breaks: Each option is a tab stop, but Enter is handled on the dialog and runs items[selected] — the arrow-selected row (Dashboard), not the focused one. Tab walks every result and then leaves the aria-modal dialog (CommandPalette.tsx:165-184, :392-398). Owned by M54 F5. Fixed in M54 F5 (2ef306a).
 state: fault
 
 ### Demo, project.emd: a dashboard chart of units counted by month — its hover readout, the rollup tab's Line chart axis.
@@ -6951,7 +6951,7 @@ state: fault
 ### Demo, project.emd: the rail's format folders (Decision, Inbox, Open question) and the collapse button; read them with a screen reader and measure them.
 unit: M54 U4
 should: A stable name with aria-expanded / aria-pressed carrying the state, the count apart from the name, and targets of at least 24px (WCAG 2.5.8; Keyboard first).
-breaks: Names read "Decision4", "Inbox0"; the toggle's label flips with its state beside aria-expanded ("Open Open question"); the collapse button flips its label beside aria-pressed; folder toggles are 20x25 and Rename/Delete icons 20x20 (RailFolder.tsx:119-139, :424-433; Sidebar.tsx:318-337). Owned by M54 F5.
+breaks: Names read "Decision4", "Inbox0"; the toggle's label flips with its state beside aria-expanded ("Open Open question"); the collapse button flips its label beside aria-pressed; folder toggles are 20x25 and Rename/Delete icons 20x20 (RailFolder.tsx:119-139, :424-433; Sidebar.tsx:318-337). Owned by M54 F5. Fixed in M54 F5 (2ef306a).
 state: fault
 
 ### Demo: #/dashboard on custom.emd (empty), #/agenda with nothing ahead, #/connections on a document with no connection.
@@ -7395,7 +7395,7 @@ state: open
 ### Open a document with unsaved changes and look at the taskbar or Alt+Tab.
 unit: M54 U6
 should: The window title is the document's name (WCAG 2.4.2 Page Titled), and macOS shows the edited mark (setDocumentEdited, setRepresentedFilename).
-breaks: Driven: getTitle() is 'Emerald' with any document open; main.ts never sets it. The shell half of U4's document.title row. Owned by M54 F5.
+breaks: Driven: getTitle() is 'Emerald' with any document open; main.ts never sets it. The shell half of U4's document.title row. Owned by M54 F5. Fixed in M54 F5 (2ef306a): the window follows document.title; the macOS edited mark is not built.
 state: fault
 
 ### Open a format with a few hundred rows in the table, click a column header's funnel, tick two values, then open another column's funnel; try an amount column's From/To.
@@ -7651,7 +7651,7 @@ state: open
 ### Read the class strings of the surface: src/ui/RailFolder.tsx, About.tsx, guide/Guide.tsx, guide/GuideLine.tsx, EarlierCopies.tsx, Sidebar.tsx, CommandPalette.tsx, screens/Home.tsx (grep text-\[ and -\[…px\], style={{).
 unit: M54 U4
 should: rem for type; Every value is a token; Nothing between the spacing steps. QUESTION for the maintainer: most of these are 13px — does the ramp want a 13px step?
-breaks: Type the ramp has no step for: text-[13px], [12.5px], [11px], [10px], [15px], [34px] (RailFolder 7, About 10, Guide 6, EarlierCopies 5, Sidebar 2, GuideLine 2, Overview 1); inline pixel sizes: the rail width 56/200 (Sidebar.tsx:75) and paddingLeft 46+indent (RailFolder); off-scale spacing pl-[26px], h-[34px], h-[26px], gap-[3px]. Verdict 2026-11-02 (D-531): no 13px step; each moves onto 12 or 14 (or the ramp's nearest step). Owned by M54 F6.
+breaks: Type the ramp has no step for: text-[13px], [12.5px], [11px], [10px], [15px], [34px] (RailFolder 7, About 10, Guide 6, EarlierCopies 5, Sidebar 2, GuideLine 2, Overview 1); inline pixel sizes: the rail width 56/200 (Sidebar.tsx:75) and paddingLeft 46+indent (RailFolder); off-scale spacing pl-[26px], h-[34px], h-[26px], gap-[3px]. Verdict 2026-11-02 (D-531): no 13px step; each moves onto 12 or 14 (or the ramp's nearest step). Owned by M54 F6. Part fixed in M54 F5 (Sidebar, RailFolder, CommandPalette).
 state: fault
 
 ### Read the class strings of the surface: src/ui/formats/EntryView.tsx, EntryValue.tsx, EntryList.tsx, ListView.tsx, LinkViews.tsx, BoardView.tsx, FormatRows.tsx (grep text-\[ and -\[…px\]).
@@ -15049,11 +15049,18 @@ report: M54 F4 built at d683467; docs:check green (0 errors, 7 standing warnings
 milestone: M54
 scope: app
 title: The rail, the palette and the way back: one current mark, a keyboard that agrees, names a reader hears, and the document in the title
-state: planned
+landed: 2026-11-02
+decision: D-531
+state: built
 brief: M54 fix unit (D-531, D-532). YOUR ROWS, exactly these: `format_rows review_entry search:"Owned by M54 F5." columns:[unit, do, should, breaks]` — 9 rows; the phrases below say what each asks., after F1. Rows (`format_rows review_entry match:{unit:["M54 U4","M54 U6"], state:fault} columns:[do, should, breaks]`) by their breaks: U4 'Development and Formats both carry aria-current=page'; U4 'The group headings are <p> elements directly inside role=listbox'; U4 'Each option is a tab stop, but Enter is handled on the dialog' (one selection: arrows move it, Enter runs it, Tab stays in the dialog); U4 'Names read "Decision4", "Inbox0"' (names, fixed labels beside aria-expanded/aria-pressed, targets); U4 'text-ink-tertiary on surface, 2.45:1' (rail); U4 'A rounded-full pill whose knob wears shadow-pop' (ThemeToggle: square, no shadow, one tab stop with arrows, a hover that shows); U4 'Back is enabled (history.state.idx is null)'; U4 'It is always "Emerald": nothing sets document.title' and U6 'getTitle() is "Emerald" with any document open' — the document's name in the title; set it from a hook beside the document store, not App.tsx; the shell window follows document.title unless main.ts stops it — if it needs a line in main.ts, that line is allowed. U4 'Type the ramp has no step for' and 'All in ink-tertiary' cover Sidebar, RailFolder and CommandPalette among others: sweep this unit's files as F2's brief says, append your part. SurfaceRules.test.ts REVIEWED. Verify on all three demo documents, light and dark, keyboard by javascript_tool. Tests: related, typecheck, privacy, check:tours. Land: 'Fixed in M54 F5 (<commit>).' on each row's breaks, state left `fault` (D-532). Unset: stop and ask. Parts only: 'Type the ramp has no step for' (owned by F6) and 'All in ink-tertiary: 2.45-2.62' (owned by F13) — do your files' share and add 'Part fixed in M54 F5.' to each.
-files: src/ui/Sidebar.tsx, src/ui/RailFolder.tsx, src/ui/CommandPalette.tsx, src/ui/components/ThemeToggle.tsx, src/ui/HistoryArrows.tsx, a document-title hook beside src/state/documentStore.ts
+files: src/ui/Sidebar.tsx, src/ui/RailFolder.tsx, src/ui/CommandPalette.tsx, src/ui/components/ThemeToggle.tsx, src/ui/HistoryArrows.tsx, src/state/documentTitle.ts, src/state/documentTitle.test.ts, src/ui/formats/surfaceRules.test.ts
 blocks: ["M54 F1"]
+taken_by: run-milestone driver
+started: 2026-11-02
+branch: main
+commit: 2ef306a
 paths: "src/ui/Sidebar.tsx\nsrc/ui/RailFolder.tsx\nsrc/ui/CommandPalette.tsx\nsrc/ui/components/ThemeToggle.tsx\nsrc/ui/HistoryArrows.tsx\nsrc/state/"
+report: M54 F5 built at 2ef306a; docs:check green (0 errors, 7 standing warnings). No new decision (D-531, D-532 cover it). RAIL: exactly one aria-current=page, on the place that is lit - sections are a Link with NavLink's match (linkActive), marked only when no page beneath carries the marker; a page, a format's row (RailFolder) and an entry/saved view carry it when lit. Verified on project.emd (Unit board, Decision, Formats, Dashboard), demo.emd (13 places) and custom.emd (6 places + collapsed): one each. NAMES: a folder's arrow is '<format> entries' beside aria-expanded (title Open/Close), 24px wide; the format's link is named by its label and described by its count ('4 entries', sr-only word); Collapse sidebar is a stable name beside aria-pressed, aria-keyshortcuts Control+B; Rename/Delete icons 24px. Guide and Collapse are .fc-icon-action (28px, square, ink-secondary: 4.97:1 light, 7.05:1 dark on surface). THEME: square (rounded-control), knob a hairline-strong plane with no shadow sliding by its own width (it slid 2rem=28px over 32px buttons before), one tab stop moved by the arrows with wrap (verified by JS), unchosen ink-secondary with a hairline hover; the collapsed rail's ThemeCycleButton is .fc-icon-action. PALETTE: the field is role=combobox (aria-expanded, aria-autocomplete=list, activedescendant); options are divs, never Tab stops, mousedown keeps focus in the field; Tab is held in the dialog; each heading names a role=group (aria-hidden heading, 'Unit 5 entries' - a space and sr-only word, never 'Unit5'); the 'No entry holds' / 'Nothing matches' lines sit outside the listbox. Verified: 1 tab stop, Enter after two ArrowDowns ran 'Development - Open question board'. BACK: an entry the router did not make (the crash screen's plain #/ link, a typed hash) is counted once its address settles (idx = the one before + 1); one that lands where the entry before it is (#/ from the dashboard, redirected) is stepped back over; Back is disabled while an entry is uncounted. Verified by JS on project.emd. TITLE: useDocumentTitle in src/state/documentTitle.ts, called from Sidebar with the lit page or section: 'project.emd - Unit board - Emerald', 'Emerald' with no document; a right-to-left name is FSI/PDI isolated. The shell's main window follows document.title (only text windows prevent page-title-updated), so no main.ts line - not driven in the shell. SWEEP: Sidebar, RailFolder, CommandPalette, ThemeToggle, HistoryArrows have no px type, between-step px, control radius, text-ink-tertiary (placeholders kept) or inline pixel sizes; 13px rail type -> text-body, 12.5/11px -> text-caption; insets 20/46+16 px -> ml-4/ml-8 and pl-12/pl-16 classes; rail width a w-[56px]/w-[200px] measure; palette entry indent pl-[26px] -> pl-6 with gap-2. Guarded by a new describe in surfaceRules.test.ts (9 tests fail on HEAD~1's files). Verified on demo port 4185, pane hidden: JS probes only, no screenshots; light contrast read after the transition (a hidden tab does not run transitions). Tests: related (4 files), parity/menuParity/folder/paletteEntries, privacy, bidiTruncation, surfaceRules, documentTitle, typecheck green; check:tours NOT run (driver's speed ask) - the rail's data-tour anchors are unchanged. LOOK AT: the rail's type is now 14px (was 13) for sections and pages, 12px for entries. LEFT: macOS edited mark (setDocumentEdited/setRepresentedFilename) from the U6 row is not built; the palette dialog keeps rounded-lg like About/EarlierCopies (a room, not a control); App.tsx Recent list (rounded, ink-tertiary 'Recent', bare entry.name) not in my paths - F6's; half steps (gap-2.5, gap-3.5, my-0.5) not swept; RailRow's Rename/Delete still hidden until hover.
 
 ### M54 F6
 milestone: M54
