@@ -6198,7 +6198,7 @@ state: fault
 ### At 1440x900, watch ledger 5/5 (Groceries row), timesheet 1/6 (the paycheck row), timesheet 4/6 and 5/6 (the verdict) and development 3/4 (roadmap-M4), and note where the outline sits.
 unit: M54 U8
 should: The outlined box is brought well into view with its context (the outline is the box the eye should be on).
-breaks: bringIntoView scrolls each box only to the nearest edge, so every one sits on the frame's bottom edge (838-880, 832-880, 727-880, 721-880 in a viewport ending at 900); ledger 5/5's 'every charge is categorized' is below the fold, and development 3/4's outline clips to 920 for a frame when the second unit lands. Owned by M54 F11.
+breaks: bringIntoView scrolls each box only to the nearest edge, so every one sits on the frame's bottom edge (838-880, 832-880, 727-880, 721-880 in a viewport ending at 900); ledger 5/5's 'every charge is categorized' is below the fold, and development 3/4's outline clips to 920 for a frame when the second unit lands. Owned by M54 F11. Fixed in M54 F11 (0e36b92).
 state: fault
 
 ### At `#/formats`, go to New format → By hand. Call it `Ingredient`, then add a real column with a unit and a minimum, an enum with two members, and a money column. Change a type after filling its fields. Save, then Edit, take a column out, and read the plan. Then use From a declaration: paste the ingredient fixture and press Open it in the editor. Try Copy the declaration. (M20 T1 has since turned this form into a four-step walk; judge it there.)
@@ -7113,19 +7113,19 @@ state: open
 ### In any tour, click a later dot, or Watch after Try it, or Reset, and watch the strip and the app for ~3 s.
 unit: M54 U8
 should: Words that name what happens, a forward jump included (Words name the rule), and the in-progress state drawn by Working (One progress indicator) rather than fast-forwarded screens at full opacity.
-breaks: The strip says 'Putting the document back…' even on a forward jump where nothing is put back, and for ~2.6 s the app flips through six or more screens (formats, a card charge, the new-format dialog, the Claims dialog, the receipt) with no Working indicator. Owned by M54 F11.
+breaks: The strip says 'Putting the document back…' even on a forward jump where nothing is put back, and for ~2.6 s the app flips through six or more screens (formats, a card charge, the new-format dialog, the Claims dialog, the receipt) with no Working indicator. Owned by M54 F11. Fixed in M54 F11 (0e36b92).
 state: fault
 
 ### In any tour, light and dark, read the step counter ('3 / 5'), the Speed label, the chat panel's 'A conversation, written for this tour.', its 'Person'/'Model' labels, and the narrow note 'Try it yourself on a wider screen.'
 unit: M54 U8
 should: Essential text at 4.5:1 (Contrast 4.5:1 for text; ink-tertiary is for non-essential text only).
-breaks: All are ink-tertiary on surface: 2.45:1 light, 3.38:1 dark. Earlier chat lines dimmed to 0.55 read ~4.2:1 in light and their labels ~1.6:1. Verdict 2026-11-02 (D-531): what a visitor reads moves to ink-secondary. Owned by M54 F11.
+breaks: All are ink-tertiary on surface: 2.45:1 light, 3.38:1 dark. Earlier chat lines dimmed to 0.55 read ~4.2:1 in light and their labels ~1.6:1. Verdict 2026-11-02 (D-531): what a visitor reads moves to ink-secondary. Owned by M54 F11. Fixed in M54 F11 (0e36b92).
 state: fault
 
 ### In light, look at the dots of steps not yet reached in any tour's strip.
 unit: M54 U8
 should: A control's boundary at 3:1 against its plane (WCAG 1.4.11 Non-text Contrast).
-breaks: The upcoming dot is a 1.5px ink-tertiary ring at 2.45:1 on surface, and it is the dot's only visible part. Owned by M54 F11.
+breaks: The upcoming dot is a 1.5px ink-tertiary ring at 2.45:1 on surface, and it is the dot's only visible part. Owned by M54 F11. Fixed in M54 F11 (0e36b92).
 state: fault
 
 ### In light, read the inbox diagram's file names (.inbox-file, page.css:590-594). This is the same question as U2's and U4's ink-tertiary rows.
@@ -7205,7 +7205,7 @@ state: fault
 ### Let an autoplaying tour run (Emerald's page plays every frame with autoplay=1) and look for a way to stop the motion.
 unit: M54 U8
 should: WCAG 2.2.2 Pause, Stop, Hide: motion that starts by itself and lasts over 5 s can be paused.
-breaks: The tour loops forever; the only way to stop it is Try it, which hands the visitor the app. Question: whether there should be a Pause. Owned by M54 F11.
+breaks: The tour loops forever; the only way to stop it is Try it, which hands the visitor the app. Question: whether there should be a Pause. Owned by M54 F11. Fixed in M54 F11 (0e36b92).
 state: fault
 
 ### Let any tour lose its way (timesheet 6/6 above), then read the strip.
@@ -7247,13 +7247,13 @@ state: fault
 ### Look at the outline drawn around a box in custom 5/5, development 3/4 or 4/4 (Frame.tsx, the tour-look rect).
 unit: M54 U8
 should: Whether Square by spending the radius tokens, written for cards and controls, binds the tour's own outline.
-breaks: The outline is <rect rx="6" ry="6">, a rounded line round square rows and cards, a literal radius rather than a token; the chat line's own outline is already square. Verdict 2026-11-02 (D-531): the radius rule binds the tour — the outline goes square. Owned by M54 F11.
+breaks: The outline is <rect rx="6" ry="6">, a rounded line round square rows and cards, a literal radius rather than a token; the chat line's own outline is already square. Verdict 2026-11-02 (D-531): the radius rule binds the tour — the outline goes square. Owned by M54 F11. Fixed in M54 F11 (0e36b92).
 state: fault
 
 ### Look at the receipt in custom 4/5 and, below 690px, the crop's chat card (frame.css .tour-beside img, .tour-chat-card .tour-line).
 unit: M54 U8
 should: Whether a picture on the desk, or a floating card, is one of the rooms that float that --shadow-pop belongs to (No gradients, no shadows).
-breaks: Both carry --shadow-pop. (Watch the tour's shadow was removed in this unit: it is a control.) Verdict 2026-11-02 (D-531): a picture or card in the tour is not a floating room — both lose the shadow. Owned by M54 F11.
+breaks: Both carry --shadow-pop. (Watch the tour's shadow was removed in this unit: it is a control.) Verdict 2026-11-02 (D-531): a picture or card in the tour is not a floating room — both lose the shadow. Owned by M54 F11. Fixed in M54 F11 (0e36b92).
 state: fault
 
 ### Look at the views as screens: the milestone roadmap, the boards, a page.
@@ -7265,7 +7265,7 @@ state: fault
 ### Look at where the ring rests in custom 5/5 (the verdict) and development 4/4 ('M4 U1').
 unit: M54 U8
 should: The ring rests on what it names and does not cover its label.
-breaks: In custom 5/5 anchorPoint's INTO_WIDE offset puts the ring's centre on the empty hairline left of 'total'; in development 4/4 the ring sits on the 'M4 U1' text it names and hides it. Owned by M54 F11.
+breaks: In custom 5/5 anchorPoint's INTO_WIDE offset puts the ring's centre on the empty hairline left of 'total'; in development 4/4 the ring sits on the 'M4 U1' text it names and hides it. Owned by M54 F11. Fixed in M54 F11 (0e36b92).
 state: fault
 
 ### Look for a note or entry in the app, the way a notes app lets you
@@ -7289,7 +7289,7 @@ state: open
 ### Mid-tour, in any tour, click a control on the app.
 unit: M54 U8
 should: Nothing is blocked by motion says 'a click mid-move lands'; the take-over decision P4 says the shield takes it. Which holds is the maintainer's.
-breaks: The shield takes the click and only switches to Try it; what was clicked is not acted on, so the visitor clicks again. The only cue is the pointer cursor and a 'Click to take over' tooltip. Verdict 2026-11-02 (D-531): the click lands — the shield switches to Try it and passes the click through; take-over P4 gives way. Owned by M54 F11.
+breaks: The shield takes the click and only switches to Try it; what was clicked is not acted on, so the visitor clicks again. The only cue is the pointer cursor and a 'Click to take over' tooltip. Verdict 2026-11-02 (D-531): the click lands — the shield switches to Try it and passes the click through; take-over P4 gives way. Owned by M54 F11. Fixed in M54 F11 (0e36b92).
 state: fault
 
 ### Move a document that is on the recents list, then pick it from Open recent in the title bar (or File › Open Recent).
@@ -7372,7 +7372,7 @@ state: fault
 ### Open /tour.html?tour=ledger (no autoplay) and press Tab from the top.
 unit: M54 U8
 should: Watch the tour, the one thing to press on the held frame, comes before the app in the order; and while the tour plays the keyboard cannot reach under the shield (Keyboard first; the shield exists so nothing races the runner).
-breaks: The order is the five dots, Watch, Try it, Reset, Speed, then the app's iframe (tabIndex 0, not inert, outside a crop), and only then Watch the tour; while watching, Tab walks into the app under the shield and can act on it. Owned by M54 F11.
+breaks: The order is the five dots, Watch, Try it, Reset, Speed, then the app's iframe (tabIndex 0, not inert, outside a crop), and only then Watch the tour; while watching, Tab walks into the app under the shield and can act on it. Owned by M54 F11. Fixed in M54 F11 (0e36b92).
 state: fault
 
 ### Open /tour.html?tour=timesheet&autoplay=1 at a desktop width, in light or dark, and watch it to 6/6 (row 25 types "15:30" into field-end with replace).
@@ -7615,7 +7615,7 @@ state: fault
 ### Read frame.css's literal values: font sizes 11, 13, 17px; spacing 6, 7, 10, 14, 18px and the on-step 8/12/16/24px literals; durations tour-echo 380ms, the --travel 933ms default, and Crossfade's setTimeout 400 in Frame.tsx.
 unit: M54 U8
 should: Every value is a token, nothing between the spacing steps, one duration, one easing.
-breaks: None of these is a token; 11/13/17px and the off-step spacing have no step at all, so each change would change what the public page draws. Verdict 2026-11-02 (D-531): frame.css gets a token set of its own, as page.css does — a rem ramp, spacing on the 8px steps, named durations (the ring's travel among them). Owned by M54 F11.
+breaks: None of these is a token; 11/13/17px and the off-step spacing have no step at all, so each change would change what the public page draws. Verdict 2026-11-02 (D-531): frame.css gets a token set of its own, as page.css does — a rem ramp, spacing on the 8px steps, named durations (the ring's travel among them). Owned by M54 F11. Fixed in M54 F11 (0e36b92).
 state: fault
 
 ### Read notes with inline #tags
@@ -7773,7 +7773,7 @@ state: fault
 ### Tab through the strip of any tour, and read it with a screen reader.
 unit: M54 U8
 should: A radio group is one Tab stop moved by the arrow keys (WAI-ARIA Authoring Practices), its checked radio is the true state, and the current step is announced (aria-current="step", WCAG 4.1.2).
-breaks: Watch and Try it are role=radio with a Tab stop each and no arrow keys; Watch reports aria-checked="true" in the held first frame when nothing plays; the current dot is marked only by a class and colour. Focus rings are present on every control. Owned by M54 F11.
+breaks: Watch and Try it are role=radio with a Tab stop each and no arrow keys; Watch reports aria-checked="true" in the held first frame when nothing plays; the current dot is marked only by a class and colour. Focus rings are present on every control. Owned by M54 F11. Fixed in M54 F11 (0e36b92).
 state: fault
 
 ### The real update, on Windows. (1) On main, with package.json at 0.1.2: `git tag v0.1.2 && git push origin v0.1.2`; when the Release workflow finishes, the release must list Emerald-Setup.exe, Emerald-Setup.exe.blockmap, latest.yml, Emerald-arm64.dmg, Emerald-x64.dmg and SHA256SUMS. (2) Set NAMED_INSTALLERS_RELEASED = true in src/demo/page/page.ts, `npm run build:demo`, commit, push (the page then links releases/latest/download/<name>). (3) Download Emerald-Setup.exe from getemerald.dev, install it over 0.1.0, open a document, open About and tick 'Check at start and once a day, and download'; Check now should say 'You have the latest — Emerald 0.1.2.' (4) `npm version 0.1.3 --no-git-tag-version`, commit, push, `git tag v0.1.3 && git push origin v0.1.3`, wait for the release. (5) In the running 0.1.2: Help > Check for Updates Now. (6) Make an unsaved change, press Install and restart, answer Cancel; then press it again and answer Save.
@@ -7812,7 +7812,7 @@ state: fault
 ### Watch /tour.html?tour=custom from the end of 3/5 (after Save) into 4/5, in either theme.
 unit: M54 U8
 should: The ring is hidden, or held, while its anchor is out of the viewport (frame.css: 'the ring is where the eye has to be').
-breaks: The ring follows a target that is still connected but has moved to y≈1330 in a 900px viewport, so for ~1.2 s it is off the bottom, then reappears. The ring-outside check runs only in a crop. Owned by M54 F11.
+breaks: The ring follows a target that is still connected but has moved to y≈1330 in a 900px viewport, so for ~1.2 s it is off the bottom, then reappears. The ring-outside check runs only in a crop. Owned by M54 F11. Fixed in M54 F11 (0e36b92).
 state: fault
 
 ### Watch /tour.html?tour=development to 3/4, 'The conclusion is written down, beside the decision it kept.', through to the end of the scene.
@@ -14977,10 +14977,17 @@ report: "\"The database under the chat.\" is now the line said first in docs/pro
 milestone: M54
 scope: tour
 title: The tour's chrome: a click that lands, Pause, a keyboard that stays out of the app, a square outline, and its own tokens
-state: planned
+landed: 2026-11-02
+decision: D-532
+state: built
 brief: M54 fix unit (D-531, D-532). YOUR ROWS, exactly these: `format_rows review_entry search:"Owned by M54 F11." columns:[unit, do, should, breaks]` — 13 rows; the phrases below say what each asks.. Rows (`format_rows review_entry match:{unit:"M54 U8", state:fault} columns:[do, should, breaks]`) by their breaks: 'The shield takes the click' — the click switches to Try it and also reaches what was under it (rule Nothing is blocked by motion; take-over P4 gives way); 'The tour loops forever' — DECIDED (D-532): Pause holds the scene where it is, Play resumes; a fixed name with aria-pressed; 'Watch and Try it are role=radio' (one tab stop and arrows, no checked state when nothing plays, the current dot named); 'The order is the five dots' (Tab never walks into the app under the shield: inert while watching); 'The outline is <rect rx="6"' (square); 'Both carry --shadow-pop' (none on pictures); 'None of these is a token' (frame.css gets a token set of its own: a rem ramp, spacing on the 8px steps, named durations — the ring's travel and easing kept as named tokens, they are exempt, rule One duration, one easing); 'All are ink-tertiary on surface' and 'The upcoming dot is a 1.5px ink-tertiary ring' (secondary); 'bringIntoView scrolls each box only to the nearest edge'; 'The ring follows a target that is still connected but has moved'; 'In custom 5/5 anchorPoint's INTO_WIDE offset'; 'The strip says \'Putting the document back…\'' (true words for a forward jump, Working while the app flips). The app drawn scaled inside the frame is not a breach (rem for type, D-531). Captions and scene rows are F12's. Verify /tour.html and demo-frame.html for each tour, light and dark, at 1024 and a wide width. Tests: related (src/demo/tour/*.test.ts), typecheck, privacy, `npm run check:tours` (mandatory). Land: 'Fixed in M54 F11 (<commit>).' on each row's breaks, state left `fault` (D-532). Unset: stop and ask. MAINTAINER'S EYE: the driver stops after this unit — the maintainer plays a tour on /tour.html and tries Pause, a click mid-move and Tab.
-files: src/demo/tour/Frame.tsx, frame.css, runner.ts, player.ts, place.ts, layout.ts, embed.ts, main.tsx; demo-frame.html
+files: src/demo/tour/Frame.tsx, frame.css, player.ts, place.ts, runner.ts; tests frame.test.ts (new), place.test.ts, runner.test.ts, seen.test.ts
+taken_by: run-milestone driver
+started: 2026-11-02
+branch: main
+commit: 0e36b92
 paths: "src/demo/tour/\ndemo-frame.html"
+report: M54 F11 built at 0e36b92; docs:check green (0 errors, 7 standing warnings); check:tours green (10/10 at 1280x800 and 375x440, page and 'nothing leaves the page' ok). No new decision (D-531, D-532). CLICK LANDS: the shield's click takes over and dispatches the click sequence at the same point on the element under it in the app (worked out by geometry, since the inert iframe is out of the hit test); a click on the paper or chat panel only takes over; the held first frame's shield still starts the tour. PAUSE: a 'Pause' toggle (aria-pressed, ink fill when pressed, icon-only with aria-label in a crop) beside Watch/Try it while a tour moves; it is the same stop an unseen frame makes (holds before the next motion, keeps what is left of a hold; a ring mid-travel finishes its travel); a dot or Reset while paused goes there and holds at the scene's start; Try it clears it. KEYBOARD: the iframe is inert while not in Try it; the tour's own clicks still move focus into the app (as a pointer would), so a trusted key in the app while watched is swallowed and Tab/Shift+Tab goes to the strip's first/last control. Watch/Try it: one Tab stop (checked radio, else Watch), arrows switch and act, neither checked on the held first frame; the current dot has aria-current=step. LOOKS: outline square; receipt and chat card lose --shadow-pop; frame.css :root holds --tour-space-*, a rem ramp (label .6875, caption .75, body .875, heading 1.125, title 1.25; html 100%, so 16px root; 13px->14 except a crop's caption 12, 17->18), sizes, --tour-travel/--tour-ease/--tour-echo/--tour-fade-gone (Crossfade reads it). Step count, Speed, chat head, Person/Model, earlier lines, the narrow note and an upcoming dot's ring are ink-secondary (4.97:1 light, 7.05:1 dark); earlier chat lines no longer use opacity. RING: a say row's ring rests BESIDE (18px before) the start of the anchor's text, on its middle (custom 5/5 now sits on the verdict row's status dot left of its label; dev 4/4 on the row's dot, clear of 'M4 U1'); it hides while its anchor is off the frame, and the check now asks that of a full frame too. bringIntoView centres a box unless it is clear of both edges by max(24px, 1/8 of the box) (ledger 5/5 Groceries 382-422 of 759; timesheet 4/6 is at its scroller's end and cannot move further). CATCHING UP: a dot says 'Going to step N...'; Reset/Watch/the loop keep 'Putting the document back...'; the app is veiled (opacity 0) with Working over it. VERIFIED in the Browser pane on 4185 (shown, not hidden: rAF stalls when hidden): JS sampling every 150 ms at 1440x900, 1024x768, 1600x900, 375x667, dark and light, /tour.html and /demo-frame.html, all four tours; real clicks through the shield and real Tab/Shift+Tab. Tests: tour tests, privacy, surfaceRules, typecheck green. LEFT FOR F12/the maintainer: 'Going to step N...' is new tour wording (D-531 says the tour's words are drafted for a pick); the shield keeps its pointer cursor and 'Click to take over' tooltip.
 
 ### M54 F12
 milestone: M54
