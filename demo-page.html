@@ -15,6 +15,7 @@
     <title data-t="title">Emerald</title>
   </head>
   <body>
+    <a class="skip" href="#main" data-t="rail.skip"></a>
     <div class="app">
       <nav class="rail" data-t-attr="aria-label:rail.roadmap">
         <div class="rail-head">
@@ -24,20 +25,22 @@
           <ol class="strip" id="strip"></ol>
           <div class="controls">
             <div class="languages" id="languages" hidden></div>
-            <button type="button" class="icon-button" id="theme" data-theme="light">
-              <svg class="icon" aria-hidden="true"><use href="#i-dark" /></svg>
+            <button type="button" class="icon-button" id="theme">
+              <svg class="icon" aria-hidden="true"><use href="#i-system" /></svg>
             </button>
           </div>
         </div>
-        <ol class="tl" id="tl">
+        <div class="tl" id="tl">
           <div class="solid" id="solid"></div>
-        </ol>
+          <ol class="tl-rows" id="tl-rows"></ol>
+        </div>
         <div class="rail-foot">
           <p><span data-t="rail.free"></span> <a data-source href="#" data-t="rail.source"></a> · <a data-privacy href="#" data-t="rail.privacy"></a></p>
         </div>
       </nav>
 
-      <main class="content">
+      <div class="content">
+      <main id="main" tabindex="-1">
         <!-- The icons: one line icon per section, drawn as the app draws an icon — 24-unit box,
              1.75 stroke, round caps (IconAction) — and never accent at rest. Two more for the
              theme toggle: light and dark. -->
@@ -61,6 +64,7 @@
           <symbol id="m-apple" viewBox="0 0 24 24"><path d="M12.15 6.9c-.95 0-2.42-1.08-3.96-1.04-2.04.03-3.91 1.18-4.96 3.01-2.12 3.68-.55 9.1 1.52 12.09 1.01 1.45 2.21 3.09 3.79 3.04 1.52-.07 2.09-.99 3.94-.99 1.83 0 2.35.99 3.96.95 1.64-.03 2.68-1.48 3.68-2.95 1.16-1.69 1.64-3.33 1.66-3.42-.04-.01-3.18-1.22-3.22-4.86-.03-3.04 2.48-4.49 2.6-4.56-1.43-2.09-3.62-2.32-4.39-2.38-2-.16-3.68 1.09-4.62 1.09zm3.38-3.07c.84-1.01 1.4-2.43 1.25-3.83-1.21.05-2.66.81-3.53 1.82-.78.9-1.45 2.34-1.27 3.71 1.34.1 2.72-.69 3.56-1.7z"/></symbol>
           <symbol id="i-light" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></symbol>
           <symbol id="i-dark" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></symbol>
+          <symbol id="i-system" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor" stroke="none"/></symbol>
         </svg>
 
         <section class="row hero" id="story" data-row>
@@ -69,6 +73,12 @@
             <h1 data-t="hero.name"></h1>
             <p class="tagline" data-t="hero.tagline"></p>
             <div class="story" data-t="hero.story"></div>
+            <!-- The page's one primary (M54 F8, D-531): Get Emerald, filled, on the first screen,
+                 scrolling to the ways in. -->
+            <a class="fc-btn fc-btn-primary fc-btn-tiled get" href="#download">
+              <span class="fc-btn-tile" aria-hidden="true"><svg class="icon"><use href="#i-download"/></svg></span>
+              <span data-t="foot.heading"></span>
+            </a>
           </div>
         </section>
 
@@ -77,36 +87,36 @@
             <svg class="icon head" aria-hidden="true"><use href="#i-receipt"/></svg>
             <h2 class="try" data-t="tours.try"></h2>
             <p class="lead" data-t="tours.lead"></p>
-            <span class="label" data-t="tours.receipt.label"></span>
+            <h3 class="label" data-t="tours.receipt.label"></h3>
             <p class="lead" data-t="tours.receipt.lead"></p>
-            <iframe data-tour="custom" data-t-attr="title:tours.receipt.title" referrerpolicy="no-referrer" allow=""></iframe>
+            <iframe data-tour="custom" data-t-attr="title:tours.receipt.title" referrerpolicy="no-referrer" allow="" tabindex="-1" aria-hidden="true"></iframe>
           </div>
         </section>
 
         <section class="row tour" id="ledger-tour" data-row>
           <div class="wide">
             <svg class="icon head" aria-hidden="true"><use href="#i-ledger-tour"/></svg>
-            <span class="label" data-t="tours.ledger.label"></span>
+            <h3 class="label" data-t="tours.ledger.label"></h3>
             <p class="lead" data-t="tours.ledger.lead"></p>
-            <iframe data-tour="ledger" data-t-attr="title:tours.ledger.title" referrerpolicy="no-referrer" allow=""></iframe>
+            <iframe data-tour="ledger" data-t-attr="title:tours.ledger.title" referrerpolicy="no-referrer" allow="" tabindex="-1" aria-hidden="true"></iframe>
           </div>
         </section>
 
         <section class="row tour" id="development-tour" data-row>
           <div class="wide">
             <svg class="icon head" aria-hidden="true"><use href="#i-development-tour"/></svg>
-            <span class="label" data-t="tours.development.label"></span>
+            <h3 class="label" data-t="tours.development.label"></h3>
             <p class="lead" data-t="tours.development.lead"></p>
-            <iframe data-tour="development" data-t-attr="title:tours.development.title" referrerpolicy="no-referrer" allow=""></iframe>
+            <iframe data-tour="development" data-t-attr="title:tours.development.title" referrerpolicy="no-referrer" allow="" tabindex="-1" aria-hidden="true"></iframe>
           </div>
         </section>
 
         <section class="row tour" id="timesheet-tour" data-row>
           <div class="wide">
             <svg class="icon head" aria-hidden="true"><use href="#i-timesheet-tour"/></svg>
-            <span class="label" data-t="tours.timesheet.label"></span>
+            <h3 class="label" data-t="tours.timesheet.label"></h3>
             <p class="lead" data-t="tours.timesheet.lead"></p>
-            <iframe data-tour="timesheet" data-t-attr="title:tours.timesheet.title" referrerpolicy="no-referrer" allow=""></iframe>
+            <iframe data-tour="timesheet" data-t-attr="title:tours.timesheet.title" referrerpolicy="no-referrer" allow="" tabindex="-1" aria-hidden="true"></iframe>
           </div>
         </section>
 
@@ -115,7 +125,7 @@
             <svg class="icon head" aria-hidden="true"><use href="#i-engine"/></svg>
             <h2 data-t="engine.heading"></h2>
             <div data-t="engine.body" data-list></div>
-            <div class="claim" id="claim" data-t-attr="aria-label:engine.claim.summary">
+            <div class="claim" id="claim" role="img" data-t-attr="aria-label:engine.claim.summary">
               <noscript data-t="engine.claim.summary"></noscript>
             </div>
             <p class="caption" data-t="engine.caption"></p>
@@ -239,7 +249,7 @@
                   <a class="fc-card-link name" data-installer="extension" href="#" data-t="foot.extension.name"></a>
                   <p data-t="foot.extension.line"></p>
                 </div>
-                <pre class="run"><code>emerald.mcpb</code></pre>
+                <span class="get-file"><svg class="icon" aria-hidden="true"><use href="#i-download"/></svg><span class="file-name">emerald.mcpb</span></span>
               </li>
               <li class="fc-card way">
                 <span class="tile" aria-hidden="true"><svg class="mark-icon"><use href="#m-claude"/></svg></span>
@@ -263,15 +273,15 @@
             <ul class="downloads">
               <li class="fc-card download">
                 <span class="tile" aria-hidden="true"><svg class="mark-icon"><use href="#m-windows"/></svg></span>
-                <a class="fc-card-link" data-installer="windows" href="#"><span class="name" data-t="foot.windows"></span><span class="file"></span></a>
+                <a class="fc-card-link" data-installer="windows" href="#"><span class="name" data-t="foot.windows"></span> <span class="file"></span></a>
               </li>
               <li class="fc-card download">
                 <span class="tile" aria-hidden="true"><svg class="mark-icon"><use href="#m-apple"/></svg></span>
-                <a class="fc-card-link" data-installer="arm64" href="#"><span class="name" data-t="foot.appleSilicon"></span><span class="file"></span></a>
+                <a class="fc-card-link" data-installer="arm64" href="#"><span class="name" data-t="foot.appleSilicon"></span> <span class="file"></span></a>
               </li>
               <li class="fc-card download">
                 <span class="tile" aria-hidden="true"><svg class="mark-icon"><use href="#m-apple"/></svg></span>
-                <a class="fc-card-link" data-installer="x64" href="#"><span class="name" data-t="foot.intel"></span><span class="file"></span></a>
+                <a class="fc-card-link" data-installer="x64" href="#"><span class="name" data-t="foot.intel"></span> <span class="file"></span></a>
               </li>
             </ul>
             <p class="caption measure" data-t="foot.unsigned"><a data-readme href="#" data-slot="readme" data-t="foot.readme"></a><a data-installer="sums" href="#" data-slot="sums" data-t="foot.sums"></a><a data-releases href="#" data-slot="releases" data-t="foot.releases"></a></p>
@@ -289,12 +299,13 @@
           </div>
         </section>
 
+      </main>
         <footer>
           <div class="prose">
             <p class="caption" data-t="footer.line"><a href="https://kfireliyahu.com/" data-slot="author">Kfir Raphael Eliyahu</a><a data-source href="#" data-slot="source" data-t="footer.source"></a></p>
           </div>
         </footer>
-      </main>
+      </div>
     </div>
     <script type="module" src="/src/demo/page/main.ts"></script>
   </body>

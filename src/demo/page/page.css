@@ -11,12 +11,77 @@
 
 /* A page reads at the browser's own size (16px unless the reader set another) where the
    app's chrome reads at 14: `rem for type`, so a reader's font size is respected (M54 U7). */
+/* The page's own tokens (M54 F8, D-531; rule *Every value is a token*): its
+   spacing, on the 8px scale of tokens.css with one step more for a row's room;
+   its type, in rem so a reader's own size is respected, with no near-duplicates
+   and a hero size of its own; and its durations, named. The sheet spends these
+   and never a literal; surfaceRules.test.ts holds it to that. */
+:root {
+  --page-space-1: var(--spacing-1); /* 4px */
+  --page-space-2: var(--spacing-2); /* 8px */
+  --page-space-3: var(--spacing-3); /* 12px */
+  --page-space-4: var(--spacing-4); /* 16px */
+  --page-space-6: var(--spacing-6); /* 24px */
+  --page-space-8: var(--spacing-8); /* 32px */
+  --page-space-10: var(--spacing-10); /* 40px */
+  --page-space-12: var(--spacing-12); /* 48px */
+  --page-space-16: var(--spacing-16); /* 64px */
+  --page-space-24: 96px; /* a row's room at a desktop width */
+
+  --page-text-label: 0.6875rem; /* the small capitals over a block */
+  --page-text-caption: 0.75rem; /* a number, a file name, the rail's foot */
+  --page-text-small: 0.875rem; /* a caption, a card's line, the rail's rows */
+  --page-text-body: 1rem;
+  --page-text-lead: 1.125rem; /* the page's reading size: a point, a lead */
+  --page-text-title: 1.5rem; /* a section's heading, the tagline */
+  --page-text-display: 2.5rem; /* the name, on a phone */
+  --page-text-hero: 3.5rem; /* the name, from 960px */
+
+  --page-gem: 700ms; /* a facet of the mark flying in */
+  --page-gem-delay: 120ms; /* before the first facet */
+  --page-gem-step: 45ms; /* between facets */
+  --page-hero-delay: 300ms; /* before the name */
+  --page-hero-step: 120ms; /* between the name, the line and the story */
+  --page-rail-delay: 200ms; /* before the rail's first row */
+  --page-rail-step: 30ms; /* between the rail's rows */
+  --page-point-step: 50ms; /* between a section's points */
+
+  --page-measure: 42rem; /* prose */
+  --page-wide: 66rem; /* a wide row */
+  /* The rail's line runs through the dots' centres: the row's padding, the dot's
+     11px inset and half its 18px, less half the 2px line. */
+  --page-tl-line: calc(var(--page-space-4) + 19px);
+  --page-tl-dot-top: 7px; /* the app's dot, centred in a 32px row */
+}
+
 html {
   font-size: 100%;
   scroll-behavior: smooth;
 }
 body {
   margin: 0;
+}
+/* The skip link (M54 F8, WCAG 2.4.1): the first stop, out of sight until it has focus. */
+.skip {
+  position: absolute;
+  z-index: 3;
+  inset-inline-start: var(--page-space-2);
+  top: var(--page-space-2);
+  padding: var(--page-space-2) var(--page-space-4);
+  color: var(--color-action-ink);
+  background: var(--color-action);
+  font-weight: 500;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+.skip:focus {
+  transform: none;
+}
+.skip:hover {
+  color: var(--color-action-ink);
+}
+main:focus {
+  outline: none;
 }
 a {
   color: var(--color-accent);
@@ -27,7 +92,8 @@ a:hover {
   color: var(--color-accent-hover);
 }
 h1,
-h2 {
+h2,
+h3 {
   margin: 0;
   font-weight: 500;
   letter-spacing: -0.01em;
@@ -37,19 +103,19 @@ p {
 }
 .label {
   display: block;
-  font-size: 0.6875rem;
+  font-size: var(--page-text-label);
   line-height: 1.3;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   font-weight: 500;
   color: var(--color-ink-secondary);
-  margin-bottom: 8px;
+  margin-bottom: var(--page-space-2);
 }
 .secondary {
   color: var(--color-ink-secondary);
 }
 .caption {
-  font-size: 0.8125rem;
+  font-size: var(--page-text-small);
   line-height: 1.4;
   color: var(--color-ink-secondary);
 }
@@ -72,7 +138,7 @@ p {
   width: 24px;
   height: 24px;
   color: var(--color-ink-secondary);
-  margin-bottom: 16px;
+  margin-bottom: var(--page-space-4);
 }
 .icon-button {
   display: inline-grid;
@@ -107,9 +173,10 @@ p {
 .rail-head {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--page-space-2);
   height: 40px;
-  padding: 0 12px 0 16px;
+  padding-block: 0;
+  padding-inline: var(--page-space-4) var(--page-space-3);
   font-weight: 500;
 }
 .rail-head .mark {
@@ -131,27 +198,27 @@ p {
     display: none;
   }
   .rail-head .now {
-    margin-inline-start: -6px;
+    margin-inline-start: calc(-1 * var(--page-space-2));
   }
 }
 .rail-head .controls {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: var(--page-space-1);
   margin-inline-start: auto;
   flex: none;
 }
 .languages {
   display: flex;
-  gap: 8px;
+  gap: var(--page-space-2);
 }
 .languages button {
   font: inherit;
-  font-size: 0.8125rem;
+  font-size: var(--page-text-small);
   color: var(--color-ink-secondary);
   background: transparent;
   border: 0;
-  padding: 0 4px;
+  padding: 0 var(--page-space-1);
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -168,7 +235,7 @@ p {
 /* The strip's dots: the app's 8px `.fc-dot`, each a link to its row. */
 .strip {
   display: flex;
-  gap: 6px;
+  gap: var(--page-space-1);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -176,7 +243,7 @@ p {
 }
 .strip a {
   display: block;
-  padding: 6px 0;
+  padding: var(--page-space-2) 0;
 }
 .strip .fc-dot {
   display: block;
@@ -207,9 +274,9 @@ p {
   .rail-foot {
     display: block;
     margin-top: auto;
-    padding: 12px 16px 16px;
+    padding: var(--page-space-3) var(--page-space-4) var(--page-space-4);
     border-top: 1px solid var(--color-hairline);
-    font-size: 0.75rem;
+    font-size: var(--page-text-caption);
     line-height: 1.5;
     color: var(--color-ink-secondary);
   }
@@ -224,22 +291,26 @@ p {
   .tl {
     display: block;
     position: relative;
-    margin: 16px 0 0;
-    padding: 8px 0 24px;
+    margin: var(--page-space-4) 0 0;
+    padding: var(--page-space-2) 0 var(--page-space-6);
+  }
+  .tl-rows {
+    margin: 0;
+    padding: 0;
     list-style: none;
   }
   .tl::before {
     content: "";
     position: absolute;
-    inset-inline-start: 35px;
-    top: 8px;
-    bottom: 24px;
+    inset-inline-start: var(--page-tl-line);
+    top: var(--page-space-2);
+    bottom: var(--page-space-6);
     border-inline-start: 2px dashed var(--color-hairline-strong);
   }
   .tl .solid {
     position: absolute;
-    inset-inline-start: 35px;
-    top: 8px;
+    inset-inline-start: var(--page-tl-line);
+    top: var(--page-space-2);
     height: 0;
     border-inline-start: 2px solid var(--color-ink-tertiary);
     transition: height var(--duration-enter) var(--ease-out);
@@ -247,18 +318,18 @@ p {
   .tl li {
     position: relative;
     animation: fc-row-in var(--duration-base) var(--ease-out) backwards;
-    animation-delay: calc(200ms + var(--i, 0) * 30ms);
+    animation-delay: calc(var(--page-rail-delay) + var(--i, 0) * var(--page-rail-step));
   }
   .tl a {
     display: grid;
     grid-template-columns: 40px minmax(0, 1fr);
-    column-gap: 12px;
+    column-gap: var(--page-space-3);
     align-items: center;
-    padding: 0 16px;
+    padding: 0 var(--page-space-4);
     min-height: 32px;
     color: var(--color-ink-secondary);
     text-decoration: none;
-    font-size: 0.875rem;
+    font-size: var(--page-text-small);
     line-height: 1.3;
   }
   .tl a:hover {
@@ -276,11 +347,11 @@ p {
     height: 32px;
   }
   .tl .fc-tl-dot {
-    top: 7px;
+    top: var(--page-tl-dot-top);
   }
   .tl .ref {
     display: block;
-    font-size: 0.6875rem;
+    font-size: var(--page-text-label);
     letter-spacing: 0.08em;
     color: var(--color-ink-tertiary);
     font-variant-numeric: tabular-nums;
@@ -293,20 +364,20 @@ p {
 .prose,
 .wide {
   margin: 0 auto;
-  padding: 0 16px;
+  padding: 0 var(--page-space-4);
 }
 .prose {
-  max-width: calc(42rem + 32px);
+  max-width: calc(var(--page-measure) + 2 * var(--page-space-4));
 }
 .wide {
-  max-width: calc(66rem + 32px);
+  max-width: calc(var(--page-wide) + 2 * var(--page-space-4));
 }
 /* Prose inside a wide row keeps the reading measure of a prose row. */
 .wide .measure {
-  max-width: 42rem;
+  max-width: var(--page-measure);
 }
 .row {
-  padding: 48px 0;
+  padding: var(--page-space-12) 0;
 }
 html.js .row {
   opacity: 0;
@@ -319,16 +390,16 @@ html.js .row.seen {
   border-top: 1px solid var(--color-hairline);
 }
 .row h2 {
-  font-size: 1.5rem;
+  font-size: var(--page-text-title);
   line-height: 1.15;
-  margin: 0 0 12px;
+  margin: 0 0 var(--page-space-3);
 }
 .row p {
-  font-size: 1.0625rem;
+  font-size: var(--page-text-lead);
   line-height: 1.6;
 }
 .row p.caption {
-  font-size: 0.8125rem;
+  font-size: var(--page-text-small);
   line-height: 1.4;
 }
 /* A section's points: what a person gains, one short line each, drawn as the
@@ -353,16 +424,16 @@ html.js .row.seen {
   counter-increment: point;
   display: grid;
   grid-template-columns: 2.5rem 1fr;
-  column-gap: 12px;
-  padding: 14px 0;
+  column-gap: var(--page-space-3);
+  padding: var(--page-space-3) 0;
   border-bottom: 1px solid var(--color-hairline);
-  font-size: 1.0625rem;
+  font-size: var(--page-text-lead);
   line-height: 1.5;
 }
 .row ul.points li::before {
   content: counter(point, decimal-leading-zero);
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: var(--page-text-caption);
   letter-spacing: 0.04em;
   color: var(--color-ink-tertiary);
   padding-top: 0.35em;
@@ -372,18 +443,18 @@ html.js .row ul.points li {
 }
 html.js .row.seen ul.points li {
   animation: fc-row-in var(--duration-enter) var(--ease-out) both;
-  animation-delay: calc(var(--i, 0) * 50ms);
+  animation-delay: calc(var(--i, 0) * var(--page-point-step));
 }
 @media (min-width: 960px) {
   .row ul.points li {
     grid-template-columns: 3rem 1fr;
-    padding: 16px 0;
-    font-size: 1.125rem;
+    padding: var(--page-space-4) 0;
+    font-size: var(--page-text-lead);
   }
 }
 @media (min-width: 960px) {
   .row {
-    padding: 96px 0;
+    padding: var(--page-space-24) 0;
   }
 }
 
@@ -392,13 +463,13 @@ html.js .row.seen ul.points li {
    with only its entrance kept — then the name, the line and the story arrive
    in turn. */
 .hero {
-  padding: 48px 0 40px;
+  padding: var(--page-space-12) 0 var(--page-space-10);
 }
 .hero .mark {
   display: block;
   width: 64px;
   height: 64px;
-  margin-bottom: 24px;
+  margin-bottom: var(--page-space-6);
 }
 .hero .mark img,
 .hero .mark svg {
@@ -407,19 +478,29 @@ html.js .row.seen ul.points li {
   height: 64px;
 }
 .hero h1 {
-  font-size: 2.5rem;
+  font-size: var(--page-text-display);
   line-height: 1.05;
   letter-spacing: -0.02em;
 }
 .hero .tagline {
-  font-size: 1.375rem;
+  font-size: var(--page-text-title);
   line-height: 1.3;
   font-weight: 400;
-  margin: 12px 0 32px;
+  margin: var(--page-space-3) 0 var(--page-space-8);
   max-width: 36em;
 }
 .hero .story {
   max-width: 52rem;
+}
+/* The page's one primary (M54 F8, D-531): Get Emerald, the app's filled button with its
+   tile, on the first screen, scrolling to the ways in. */
+.hero .get {
+  margin-top: var(--page-space-2);
+  font-size: var(--page-text-body);
+  text-decoration: none;
+}
+.hero .get:hover {
+  color: var(--color-action-ink);
 }
 @keyframes page-gem-in {
   from {
@@ -432,32 +513,34 @@ html.js .row.seen ul.points li {
   }
 }
 .page-gem .fc-facet {
-  animation: page-gem-in 700ms var(--ease-out) backwards;
-  animation-delay: calc(120ms + var(--i) * 45ms);
+  animation: page-gem-in var(--page-gem) var(--ease-out) backwards;
+  animation-delay: calc(var(--page-gem-delay) + var(--i) * var(--page-gem-step));
 }
 .hero h1,
 .hero .tagline,
-.hero .story {
+.hero .story,
+.hero .get {
   animation: fc-row-in var(--duration-enter) var(--ease-out) backwards;
 }
 .hero h1 {
-  animation-delay: 300ms;
+  animation-delay: var(--page-hero-delay);
 }
 .hero .tagline {
-  animation-delay: 420ms;
+  animation-delay: calc(var(--page-hero-delay) + var(--page-hero-step));
 }
-.hero .story {
-  animation-delay: 540ms;
+.hero .story,
+.hero .get {
+  animation-delay: calc(var(--page-hero-delay) + 2 * var(--page-hero-step));
 }
 @media (min-width: 960px) {
   .hero {
-    padding: 96px 0 64px;
+    padding: var(--page-space-24) 0 var(--page-space-16);
   }
   .hero h1 {
-    font-size: 3.5rem;
+    font-size: var(--page-text-hero);
   }
   .hero .tagline {
-    font-size: 1.625rem;
+    font-size: var(--page-text-title);
   }
 }
 
@@ -465,15 +548,15 @@ html.js .row.seen ul.points li {
    app whole and can be taken over; below it plays as a watched crop, so the
    phone's box is 440 px high rather than 16:10 (M33 U4's contract). */
 .tour .lead {
-  font-size: 1.125rem;
+  font-size: var(--page-text-lead);
   line-height: 1.5;
-  max-width: 42rem;
-  margin: 0 0 16px;
+  max-width: var(--page-measure);
+  margin: 0 0 var(--page-space-4);
 }
 .tour .try {
-  font-size: 1.5rem;
+  font-size: var(--page-text-title);
   line-height: 1.15;
-  margin: 0 0 16px;
+  margin: 0 0 var(--page-space-4);
 }
 .tour iframe {
   display: block;
@@ -495,55 +578,55 @@ html.js .row.seen ul.points li {
    rows arrive, the verdict marked once. */
 .claim {
   display: grid;
-  gap: 24px;
+  gap: var(--page-space-6);
   max-width: 32rem;
-  margin: 0 0 16px;
-  padding: 24px;
+  margin: 0 0 var(--page-space-4);
+  padding: var(--page-space-6);
   border: 1px solid var(--color-hairline);
   background: var(--color-surface);
   min-height: 18rem;
 }
 .claim-block {
   display: grid;
-  gap: 4px;
+  gap: var(--page-space-1);
 }
 .claim-head {
-  font-size: 0.9375rem;
+  font-size: var(--page-text-small);
   color: var(--color-ink-secondary);
-  margin-bottom: 4px;
+  margin-bottom: var(--page-space-1);
 }
 .claim-row {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
-  font-size: 1rem;
+  gap: var(--page-space-4);
+  font-size: var(--page-text-body);
   line-height: 1.5;
-  padding: 2px 0;
+  padding: var(--page-space-1) 0;
   border-bottom: 1px solid var(--color-hairline);
 }
 .claim-row.strong {
   font-weight: 500;
   border-bottom: 0;
-  padding-top: 6px;
+  padding-top: var(--page-space-2);
 }
 .claim-figure {
   font-variant-numeric: tabular-nums;
 }
 .claim-verdict {
   display: grid;
-  gap: 4px;
+  gap: var(--page-space-1);
   min-height: 3.5rem;
 }
 .claim-text {
-  font-size: 0.9375rem;
+  font-size: var(--page-text-small);
   color: var(--color-ink-secondary);
 }
 .claim-word {
   justify-self: start;
   font-weight: 500;
   font-variant-numeric: tabular-nums;
-  padding: 0 4px;
-  margin-inline-start: -4px;
+  padding: 0 var(--page-space-1);
+  margin-inline-start: calc(-1 * var(--page-space-1));
 }
 .claim-word[data-verdict="failed"] {
   color: var(--color-negative);
@@ -556,7 +639,7 @@ html.js .row.seen ul.points li {
   .claim-verdict {
     grid-column: 1 / -1;
     border-top: 1px solid var(--color-hairline);
-    padding-top: 16px;
+    padding-top: var(--page-space-4);
   }
 }
 
@@ -565,15 +648,15 @@ html.js .row.seen ul.points li {
    the app's tones. Stacked on a phone, where the slide runs downward. */
 .inbox {
   display: grid;
-  gap: 16px;
-  margin: 24px 0 16px;
+  gap: var(--page-space-4);
+  margin: var(--page-space-6) 0 var(--page-space-4);
   min-height: 18rem;
 }
 .inbox-doc {
   display: grid;
   align-content: start;
-  gap: 8px;
-  padding: 16px;
+  gap: var(--page-space-2);
+  padding: var(--page-space-4);
   border: 1px solid var(--color-hairline);
   background: var(--color-surface);
   min-width: 0;
@@ -582,38 +665,38 @@ html.js .row.seen ul.points li {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  gap: 8px;
+  gap: var(--page-space-2);
 }
 .inbox-name {
   font-weight: 500;
 }
 .inbox-file {
-  font-size: 0.8125rem;
-  color: var(--color-ink-tertiary);
+  font-size: var(--page-text-small);
+  color: var(--color-ink-secondary);
   font-variant-numeric: tabular-nums;
 }
 .inbox-session {
   min-height: 2.6em;
-  font-size: 0.9375rem;
+  font-size: var(--page-text-small);
   line-height: 1.35;
   color: var(--color-ink-secondary);
 }
 .inbox-rows {
   display: grid;
-  gap: 8px;
+  gap: var(--page-space-2);
   min-height: 3.5rem;
 }
 .inbox-empty {
-  font-size: 0.875rem;
+  font-size: var(--page-text-small);
   color: var(--color-ink-tertiary);
-  padding: 6px 0;
+  padding: var(--page-space-2) 0;
 }
 .inbox-row {
   display: grid;
   grid-template-columns: 8px minmax(0, 1fr) auto;
-  gap: 10px;
+  gap: var(--page-space-2);
   align-items: start;
-  padding: 8px 0;
+  padding: var(--page-space-2) 0;
   border-top: 1px solid var(--color-hairline);
 }
 .inbox-row .fc-dot {
@@ -621,16 +704,16 @@ html.js .row.seen ul.points li {
 }
 .inbox-body {
   display: grid;
-  gap: 2px;
+  gap: var(--page-space-1);
   min-width: 0;
 }
 .inbox-subject {
-  font-size: 0.9375rem;
+  font-size: var(--page-text-small);
   line-height: 1.35;
 }
 .inbox-from,
 .inbox-became {
-  font-size: 0.8125rem;
+  font-size: var(--page-text-small);
   line-height: 1.35;
   color: var(--color-ink-secondary);
 }
@@ -638,7 +721,7 @@ html.js .row.seen ul.points li {
   color: var(--color-ink);
 }
 .recording {
-  margin: 24px 0 0;
+  margin: var(--page-space-6) 0 0;
 }
 .recording video {
   display: block;
@@ -661,7 +744,7 @@ html.js .row.seen ul.points li {
    shown — the other is never fetched until the theme turns to it. Without
    script the first picture shows alone and the steps stay hidden. */
 .reel {
-  margin: 32px 0 0;
+  margin: var(--page-space-8) 0 0;
 }
 .reel-frame {
   position: relative;
@@ -715,11 +798,11 @@ html.js .row.seen ul.points li {
 .reel-toggle {
   display: none;
   position: absolute;
-  right: 12px;
-  bottom: 12px;
-  padding: 4px 12px;
+  inset-inline-end: var(--page-space-3);
+  bottom: var(--page-space-3);
+  padding: var(--page-space-1) var(--page-space-3);
   font: inherit;
-  font-size: 0.75rem;
+  font-size: var(--page-text-caption);
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -731,6 +814,12 @@ html.js .row.seen ul.points li {
 .reel-live .reel-toggle {
   display: block;
 }
+/* One name, Pause, and pressed while paused (M54 F8; the APG toggle button). */
+.reel-toggle[aria-pressed="true"] {
+  color: var(--color-background);
+  background: var(--color-ink);
+  border-color: var(--color-ink);
+}
 .reel-toggle:focus-visible,
 .reel-step:focus-visible {
   outline: 2px solid var(--color-accent);
@@ -739,8 +828,8 @@ html.js .row.seen ul.points li {
 .reel-steps {
   display: none;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px 24px;
-  margin-top: 12px;
+  gap: var(--page-space-3) var(--page-space-6);
+  margin-top: var(--page-space-3);
 }
 .reel-live .reel-steps {
   display: grid;
@@ -755,12 +844,12 @@ html.js .row.seen ul.points li {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: baseline;
-  gap: 8px;
-  padding: 12px 0 0;
+  gap: var(--page-space-2);
+  padding: var(--page-space-3) 0 0;
   font: inherit;
-  font-size: 0.9375rem;
+  font-size: var(--page-text-small);
   line-height: 1.35;
-  text-align: left;
+  text-align: start;
   color: var(--color-ink-secondary);
   background: none;
   border: 0;
@@ -787,13 +876,17 @@ html.js .row.seen ul.points li {
   transform-origin: left;
   transform: scaleX(var(--p, 0));
 }
+/* A bar fills from where the line starts reading. */
+:root[dir="rtl"] .reel-bar::after {
+  transform-origin: right;
+}
 .reel-num {
-  font-size: 0.75rem;
+  font-size: var(--page-text-caption);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 .reel figcaption {
-  margin-top: 12px;
+  margin-top: var(--page-space-3);
   min-height: 2.8em;
 }
 
@@ -808,25 +901,31 @@ html.js .row.seen ul.points li {
   margin: 0;
   padding: 0;
   display: grid;
-  gap: 8px;
+  gap: var(--page-space-2);
 }
+/* The ways in give their words the room (M54 F8): one grid for the cards, each card a
+   subgrid of it so the commands line up, the command column only as wide as the
+   longest command; with less than 48rem the command goes under the words. */
 .foot .ways {
-  margin: 24px 0 32px;
+  margin: var(--page-space-6) 0 var(--page-space-8);
+  grid-template-columns: 40px minmax(20rem, 1fr) minmax(0, max-content);
+  column-gap: var(--page-space-4);
 }
 .foot .downloads {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  margin-bottom: 16px;
+  margin-bottom: var(--page-space-4);
 }
 .foot .way {
+  grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) minmax(0, 28rem);
-  gap: 16px;
+  grid-template-columns: subgrid;
+  row-gap: var(--page-space-3);
   align-items: center;
 }
 .foot .download {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--page-space-4);
 }
 .foot .tile {
   display: grid;
@@ -860,8 +959,8 @@ html.js .row.seen ul.points li {
   font-weight: 500;
 }
 .foot .way p {
-  margin: 2px 0 0;
-  font-size: 0.9375rem;
+  margin: var(--page-space-1) 0 0;
+  font-size: var(--page-text-small);
   line-height: 1.5;
   color: var(--color-ink-secondary);
 }
@@ -869,10 +968,10 @@ html.js .row.seen ul.points li {
   position: relative;
   z-index: 1;
   margin: 0;
-  padding: 8px 12px;
+  padding: var(--page-space-2) var(--page-space-3);
   overflow-x: auto;
   font-family: var(--font-mono);
-  font-size: 0.8125rem;
+  font-size: var(--page-text-small);
   line-height: 1.6;
   color: var(--color-ink);
   background: var(--color-background);
@@ -886,24 +985,63 @@ html.js .row.seen ul.points li {
 }
 .foot .file {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: var(--page-text-caption);
   line-height: 1.6;
   color: var(--color-ink-secondary);
   overflow-wrap: anywhere;
 }
-.foot .address {
-  margin-top: 12px;
+/* The Claude extension's file is a download, not a command: the card is its link. */
+.foot .get-file {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--page-space-2);
+  justify-self: start;
+  font-family: var(--font-mono);
+  font-size: var(--page-text-small);
+  color: var(--color-ink-secondary);
 }
-@media (max-width: 52rem) {
-  .foot .way {
+/* The page's one filled action at the ways in (M54 F8, D-531): the desktop app for
+   the machine reading the page; main.ts marks it. */
+.foot .download.primary {
+  background: var(--color-action);
+  border-color: var(--color-action);
+}
+.foot .download.primary:hover,
+.foot .download.primary:focus-within {
+  background: var(--color-action-hover);
+  border-color: var(--color-action-hover);
+}
+.foot .download.primary .fc-card-link,
+.foot .download.primary .file {
+  color: var(--color-action-ink);
+}
+.foot .download.primary .tile,
+.foot .download.primary:hover .tile,
+.foot .download.primary:focus-within .tile {
+  color: var(--color-action-ink);
+  background: var(--color-action-deep);
+}
+.foot .address {
+  margin-top: var(--page-space-3);
+}
+.foot .wide {
+  container-type: inline-size;
+}
+@container (max-width: 48rem) {
+  .foot .ways {
     grid-template-columns: 40px minmax(0, 1fr);
   }
-  /* A phone wraps a long command rather than hiding its end: a soft wrap still copies as one line. */
+  /* Narrow, the command goes under the words and wraps rather than hiding its end: a soft wrap still copies as one line. */
   .foot .run {
     grid-column: 1 / -1;
     white-space: pre-wrap;
     overflow-wrap: anywhere;
   }
+  .foot .get-file {
+    grid-column: 2 / -1;
+  }
+}
+@container (max-width: 36rem) {
   .foot .downloads {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -912,7 +1050,7 @@ html.js .row.seen ul.points li {
 /* The form when it has somewhere to go, the address otherwise. */
 .foot form {
   display: grid;
-  gap: 16px;
+  gap: var(--page-space-4);
   max-width: 32rem;
 }
 .foot label {
@@ -922,13 +1060,13 @@ html.js .row.seen ul.points li {
 .foot textarea {
   display: block;
   width: 100%;
-  margin-top: 6px;
+  margin-top: var(--page-space-2);
   font: inherit;
   color: var(--color-ink);
   background: var(--color-background);
   border: 1px solid var(--color-hairline-strong);
   border-radius: 0;
-  padding: 8px 10px;
+  padding: var(--page-space-2) var(--page-space-2);
 }
 .foot textarea {
   min-height: 5.5em;
@@ -942,7 +1080,7 @@ html.js .row.seen ul.points li {
   background: var(--color-action);
   border: 0;
   border-radius: 0;
-  padding: 8px 16px;
+  padding: var(--page-space-2) var(--page-space-4);
   cursor: pointer;
 }
 .foot button:hover {
@@ -950,7 +1088,7 @@ html.js .row.seen ul.points li {
 }
 footer {
   border-top: 1px solid var(--color-hairline);
-  padding: 24px 0 48px;
+  padding: var(--page-space-6) 0 var(--page-space-12);
 }
 footer p {
   margin: 0;

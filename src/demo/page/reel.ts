@@ -63,7 +63,9 @@ export function mountReel(reel: HTMLElement, words: Copy['shots']): void {
       spent += performance.now() - since
       since = 0
     }
-    toggle.textContent = paused ? words.play : words.pause
+    // One name, and pressed while paused (M54 F8): a toggle button whose words
+    // also swapped was announced as "Play, toggle button, pressed".
+    toggle.textContent = words.pause
     toggle.setAttribute('aria-pressed', String(paused))
     fill()
   }

@@ -1,7 +1,7 @@
 import '@/ui/theme/tokens.css'
 import './page.css'
 import { CORE, FACETS, GLINTS } from '@/ui/gem.ts'
-import { initTheme, setThemePreference, type ThemePreference } from '@/ui/theme/useTheme.ts'
+import { currentTheme, initTheme, onThemeChange, setThemePreference, type ThemePreference } from '@/ui/theme/useTheme.ts'
 import { mountClaim } from './claim.ts'
 import { mountInbox } from './inbox.ts'
 import { mountReel } from './reel.ts'
@@ -83,27 +83,27 @@ if (languages && LANGUAGES.length > 1) {
   }
 }
 
-// The theme: a plain toggle (2026-10-12). The page follows the
-// system until pressed; a press switches to the other scheme and keeps it,
-// under the key the app keeps its own (`fc-theme`). The icon is what a press
-// does — the moon in light, the sun in dark — and so is the label.
+// The theme: three states, as the app's (M54 F8, D-531, rule *The theme is applied
+// before first paint*) — system, the default, then light and dark, a press moving
+// to the next and keeping it under the key the app keeps its own (`fc-theme`), so
+// a press can always come back to following the machine. The icon is the state it
+// is on (the half-filled circle for system), and the label says that and the next.
+// The two-state toggle of 2026-10-12 gave way to the rule.
 const themeButton = document.getElementById('theme')
 if (themeButton) {
+  const after: Record<ThemePreference, ThemePreference> = { system: 'light', light: 'dark', dark: 'system' }
   const show = (): void => {
-    const dark = document.documentElement.dataset.theme === 'dark'
-    themeButton.dataset.theme = dark ? 'dark' : 'light'
-    themeButton.setAttribute('aria-label', dark ? copy.rail.theme.toLight : copy.rail.theme.toDark)
-    themeButton.setAttribute('title', dark ? copy.rail.theme.toLight : copy.rail.theme.toDark)
-    themeButton.querySelector('use')?.setAttribute('href', dark ? '#i-light' : '#i-dark')
+    const now = currentTheme().preference
+    const label = copy.rail.theme.label
+      .replace('{now}', copy.rail.theme[now])
+      .replace('{next}', copy.rail.theme[after[now]].toLowerCase())
+    themeButton.setAttribute('aria-label', label)
+    themeButton.setAttribute('title', label)
+    themeButton.querySelector('use')?.setAttribute('href', `#i-${now}`)
   }
-  themeButton.addEventListener('click', () => {
-    const next: ThemePreference = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'
-    setThemePreference(next)
-    show()
-  })
+  themeButton.addEventListener('click', () => setThemePreference(after[currentTheme().preference]))
+  onThemeChange(show)
   show()
-  // Following the system, until pressed: a change of the machine's own scheme redraws the icon.
-  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => requestAnimationFrame(show))
 }
 
 // The hero's mark assembles from its facets, once, the way the progress
@@ -198,9 +198,11 @@ const nearby = new IntersectionObserver(
       if (entry.isIntersecting && !loaded.has(frame)) {
         frame.src = `./tour.html?tour=${encodeURIComponent(frame.dataset.tour ?? '')}&autoplay=1`
         loaded.add(frame)
+        reach(frame, true)
       } else if (!entry.isIntersecting && loaded.has(frame)) {
         frame.removeAttribute('src')
         loaded.delete(frame)
+        reach(frame, false)
         if (frame.contentWindow) stepped.delete(frame.contentWindow)
       }
     }
@@ -208,6 +210,13 @@ const nearby = new IntersectionObserver(
   },
   { rootMargin: '50% 0px 50% 0px' },
 )
+// A frame away from the view is empty, and an empty frame is no stop for Tab
+// nor anything a screen reader finds (M54 F8): the markup starts each one so.
+function reach(frame: HTMLIFrameElement, loaded: boolean): void {
+  frame.tabIndex = loaded ? 0 : -1
+  if (loaded) frame.removeAttribute('aria-hidden')
+  else frame.setAttribute('aria-hidden', 'true')
+}
 for (const frame of frames) nearby.observe(frame)
 publish()
 
@@ -225,11 +234,14 @@ window.addEventListener('message', (event) => {
 
 // The roadmap: one row per section, named by the copy, drawn into the rail and the strip.
 const rows = [...document.querySelectorAll<HTMLElement>('.row[data-row]')]
-const rail = document.getElementById('tl')
+// The rows are the list; the line and its solid part are drawn in the box round it
+// (`#tl`), which the solid one is placed against — an `ol` holds only its rows (M54 F8).
+const line = document.getElementById('tl')
+const rail = document.getElementById('tl-rows')
 const strip = document.getElementById('strip')
 const solid = document.getElementById('solid')
 const now = document.getElementById('now')
-if (!rail || !strip || !solid || !now) throw new Error('the rail is missing from the page')
+if (!line || !rail || !strip || !solid || !now) throw new Error('the rail is missing from the page')
 const nameOf = (row: HTMLElement): string => copy.rows[row.id] ?? row.id
 const items = rows.map((row, index) => {
   const item = document.createElement('li')
@@ -238,7 +250,8 @@ const items = rows.map((row, index) => {
   const ref = String(index + 1).padStart(2, '0')
   item.innerHTML =
     `<a href="#${row.id}"><span class="cell"><span class="fc-tl-dot fc-pulse" aria-hidden="true"></span></span>` +
-    `<span class="name"><span class="ref">${ref}</span></span></a>`
+    // The space keeps the number and the name two words to a screen reader ("01 What it is").
+    `<span class="name"><span class="ref">${ref}</span> </span></a>`
   item.querySelector('.name')?.append(nameOf(row))
   rail.append(item)
   const small = document.createElement('li')
@@ -265,7 +278,7 @@ function place(): void {
     window.innerHeight * 0.4,
     atEnd,
   )
-  if (current === at || current === -1 || !rail || !solid || !now) return
+  if (current === at || current === -1 || !line || !solid || !now) return
   const first = at === -1
   at = current
   tones(items.length, at).forEach((tone, index) => {
@@ -277,7 +290,7 @@ function place(): void {
   })
   pulse = pulse === 'a' ? 'b' : 'a'
   items[at]?.dot?.classList.add(`fc-pulse-${pulse}`)
-  const origin = rail.getBoundingClientRect().top
+  const origin = line.getBoundingClientRect().top
   const centre = (index: number): number => (items[index]?.dot?.getBoundingClientRect().top ?? origin) - origin + 9
   solid.style.top = `${String(centre(0))}px`
   solid.style.height = `${String(centre(at) - centre(0))}px`
@@ -350,3 +363,15 @@ for (const link of document.querySelectorAll<HTMLAnchorElement>('a[data-installe
   const shown = link.querySelector<HTMLElement>('.file')
   if (shown) shown.textContent = file
 }
+
+// The page's one primary at the ways in (M54 F8, D-531): the desktop app's download
+// for the machine reading the page, filled; the other ways stay equal cards. What
+// the browser says it runs on is all it asks, and nothing leaves the page. A Mac is
+// taken for Apple silicon, which every Mac since 2020 is; the Intel card stays beside
+// it. A machine the installers are not for (a phone, Linux) fills none.
+const platform = (
+  (navigator as Navigator & { userAgentData?: { platform?: string } }).userAgentData?.platform ?? navigator.platform
+).toLowerCase()
+const mobile = /android|iphone|ipad/i.test(navigator.userAgent)
+const yours = mobile ? undefined : platform.startsWith('win') ? 'windows' : platform.startsWith('mac') ? 'arm64' : undefined
+if (yours) document.querySelector(`.foot a[data-installer="${yours}"]`)?.closest('.download')?.classList.add('primary')

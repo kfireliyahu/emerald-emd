@@ -67,7 +67,10 @@ function choose(preference: ThemePreference): void {
  * Run once, as early as possible — from `main.tsx`, before the first render —
  * so the correct palette is on the element for the first paint. Also wires the
  * OS-preference listener, so `system` tracks a change made while the app is
- * open.
+ * open, and the storage one, so a choice made in another document of this
+ * origin reaches this one: a tour frame follows the page it is embedded in, and
+ * a second window the first (M54 F8). A `storage` event never fires in the
+ * document that wrote the value, so this cannot loop.
  */
 export function initTheme(): void {
   choose(storedTheme())
@@ -77,6 +80,22 @@ export function initTheme(): void {
       if (theme.get().preference === 'system') choose('system')
     })
   }
+  if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+    window.addEventListener('storage', (event) => {
+      // `key` is null when the whole store was cleared: back to the default.
+      if (event.key === STORAGE_KEY || event.key === null) choose(storedTheme())
+    })
+  }
+}
+
+/** The preference and what it resolves to, now — for a page that is not React. */
+export function currentTheme(): ThemeState {
+  return theme.get()
+}
+
+/** Called whenever the preference or what it resolves to changes; returns the unsubscribe. */
+export function onThemeChange(listener: () => void): () => void {
+  return theme.subscribe(listener)
 }
 
 export function setThemePreference(next: ThemePreference): void {

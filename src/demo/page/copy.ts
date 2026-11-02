@@ -24,8 +24,13 @@ export interface Copy {
   readonly description: string
   readonly rail: {
     readonly roadmap: string
-    /** The toggle's label says what a press does. */
-    readonly theme: { readonly toLight: string; readonly toDark: string }
+    /** The skip link, the first stop: past the rail to the content (M54 F8). */
+    readonly skip: string
+    /**
+     * The theme button's three states (M54 F8, D-531): system, the default, then light and dark.
+     * `label` says the one it is on and the one a press moves to: `{now}` and `{next}`.
+     */
+    readonly theme: { readonly light: string; readonly dark: string; readonly system: string; readonly label: string }
     readonly language: string
     readonly free: string
     readonly source: string
@@ -81,7 +86,6 @@ export interface Copy {
   readonly shots: {
     readonly label: string
     readonly pause: string
-    readonly play: string
     readonly split: Shot
     readonly whereitwent: Shot
     readonly wealth: Shot

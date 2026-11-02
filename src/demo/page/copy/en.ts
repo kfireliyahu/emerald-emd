@@ -20,7 +20,8 @@ export const en: Copy = {
 
   rail: {
     roadmap: 'The page, as a roadmap',
-    theme: { toLight: 'Switch to light', toDark: 'Switch to dark' },
+    skip: 'Skip to content',
+    theme: { light: 'Light', dark: 'Dark', system: 'System', label: 'Theme: {now}. Switch to {next}.' },
     language: 'Language',
     free: 'Free software, AGPL-3.0.',
     source: 'Source',
@@ -131,7 +132,6 @@ export const en: Copy = {
   shots: {
     label: 'Four of the ledger’s screens',
     pause: 'Pause',
-    play: 'Play',
     split: {
       label: 'The split',
       alt: 'The split: September’s net pay, less the bills, divided into buckets for two goals, a car loan, groceries and spending, each filled to what it actually got.',

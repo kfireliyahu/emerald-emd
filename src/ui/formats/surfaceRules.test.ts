@@ -226,6 +226,55 @@ describe('Emerald’s page respects the reader’s font size', () => {
   })
 })
 
+describe('Emerald’s page spends a token set of its own (M54 F8)', () => {
+  // *Every value is a token*: the page's hand-written sheet keeps its own spacing on the
+  // 8px steps, a rem ramp with no near-duplicates and named durations, and spends them —
+  // it wrote 10, 14, 6, 7 and 35px between the steps, thirteen rem sizes and 700ms for the gem.
+  const page = readFileSync('src/demo/page/page.css', 'utf8')
+  const body = page.replace(/\n:root \{[^}]*\}/, '')
+
+  it('declares its tokens once, at its root', () => {
+    expect(page).toMatch(/\n:root \{[^}]*--page-space-2:[^}]*--page-text-body:[^}]*--page-gem:/)
+  })
+
+  it('spaces with its steps: no number in a margin, padding, gap or inset', () => {
+    const spacing = /\n\s*((?:margin|padding|gap|row-gap|column-gap|inset|top|bottom)(?:-[a-z-]+)?):\s*([^;]+);/g
+    const literal = [...body.matchAll(spacing)]
+      .filter(([, , value = '']) => /(^|[\s(])-?\d*\.?\d+(px|rem)/.test(value.replace(/calc\(-1 \* var\([^)]*\)\)/g, '')))
+      .map(([line = '']) => line.trim())
+    expect(literal).toEqual([])
+  })
+
+  it('sizes its type from its ramp, and times its motion with named durations', () => {
+    expect(body.match(/font-size:\s*[\d.]+rem/g) ?? []).toEqual([])
+    expect(body.match(/\b\d+ms\b/g) ?? []).toEqual([])
+  })
+
+  it('can be walked by a keyboard and a screen reader (WCAG 1.3.1, 2.4.1, 2.4.3, 4.1.2)', () => {
+    const html = readFileSync('demo-page.html', 'utf8')
+    // A skip link is the first stop, to main; the footer is a landmark of its own, outside main.
+    expect(/<body>\s*<a class="skip" href="#main"/.test(html)).toBe(true)
+    expect(html).toContain('<main id="main"')
+    expect(html.indexOf('<footer>')).toBeGreaterThan(html.indexOf('</main>'))
+    // An ol holds only its rows; the claim card is announced by its summary.
+    expect(html).toMatch(/<ol class="tl-rows" id="tl-rows"><\/ol>/)
+    expect(html).toMatch(/id="claim" role="img"/)
+    // An empty frame is no tab stop until main.ts loads it.
+    const frames = html.match(/<iframe [^>]*>/g) ?? []
+    expect(frames.length).toBe(4)
+    for (const frame of frames) expect(frame).toContain('tabindex="-1"')
+    // Every row of the rail has a heading in its section.
+    const sections = [...html.matchAll(/<section class="row[^"]*" id="([^"]+)" data-row>([\s\S]*?)<\/section>/g)]
+    expect(sections.length).toBe(12)
+    expect(sections.filter(([, , inner = '']) => !/<h[1-3][\s>]/.test(inner)).map(([, id]) => id)).toEqual([])
+  })
+
+  it('writes start and end, never left and right, so a right-to-left language mirrors it', () => {
+    expect(body.match(/\n\s*(left|right|margin-left|margin-right|padding-left|padding-right):/g) ?? []).toEqual([])
+    expect(body).not.toMatch(/text-align:\s*(left|right)/)
+  })
+})
+
 describe('the page’s reel holds still under reduced motion', () => {
   // *Reduced motion runs none of it*: a picked step un-paused the reel, so after one pick
   // the pictures advanced every 6 s under reduced motion (M54 U7). Only Play starts it there.
