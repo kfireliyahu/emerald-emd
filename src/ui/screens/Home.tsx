@@ -183,7 +183,7 @@ export function Home() {
               Home · Month
               {shown !== undefined && !shown.isComplete && ' · in progress'}
             </span>
-            <h1 className="m-0 text-[24px] leading-tight font-medium tracking-[-0.01em]" data-guide="home.title">
+            <h1 className="m-0 text-title leading-tight font-medium tracking-[-0.01em]" data-guide="home.title">
               {period === undefined ? 'Month' : formatYearMonth(period)}
             </h1>
           </div>

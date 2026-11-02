@@ -146,7 +146,7 @@ function AboutDialog() {
                   When a document is moved or deleted, its copies go once the newest is more than{' '}
                   {ORPHANED_COPIES_DAYS} days old{uninstaller ? '; uninstalling Emerald removes the folder.' : '.'}
                 </p>
-                <p className="m-0 pt-2 font-mono text-[12px] break-all text-ink" data-testid="backups-path">
+                <p className="m-0 pt-2 font-mono text-caption break-all text-ink" data-testid="backups-path">
                   <Bidi>{facts.facts.backups.path}</Bidi>
                 </p>
                 <div className="flex items-center gap-3 pt-2">

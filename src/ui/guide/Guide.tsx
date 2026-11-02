@@ -263,7 +263,7 @@ function Walk({ guide, onToast }: { readonly guide: OpenGuide; readonly onToast:
             {label}
           </Button>
         </div>
-        <div className="flex flex-wrap items-center gap-2.5 px-3.5 pb-3 text-[12px] text-ink-secondary">
+        <div className="flex flex-wrap items-center gap-2.5 px-3.5 pb-3 text-caption text-ink-secondary">
           <span>
             <Key>←</Key> <Key>→</Key> move · <Key>Esc</Key> put away
           </span>
@@ -309,7 +309,7 @@ function Dots({
 function State({ step, checks }: { readonly step: GuideStep; readonly checks: OpenGuide['checks'] }) {
   const state = stepState(step, checks)
   return (
-    <div className="flex items-start gap-2 text-[12px] text-ink-secondary">
+    <div className="flex items-start gap-2 text-caption text-ink-secondary">
       <span className="flex-none">
         {state.kind === 'done' ? <Tag tone="good">Done</Tag> : state.kind === 'later' ? <Tag>Later</Tag> : <Tag tone="dash">Waiting</Tag>}
       </span>

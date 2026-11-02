@@ -134,7 +134,7 @@ export function RailFolder({
           data-tour={`nav${child.to.replace(/\//g, '-')}`}
           className="flex h-7 min-w-0 flex-1 items-center gap-2 pr-3.5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
         >
-          <span className="truncate">{child.label}</span>
+          <Bidi className="truncate">{child.label}</Bidi>
           {total !== undefined && (
             <span className="ml-auto text-[11px] text-ink-tertiary tabular-nums">{total}</span>
           )}
@@ -157,7 +157,7 @@ export function RailFolder({
         <>
           {folder.total > FOLDER_SIZE && (
             <label
-              className="my-0.5 mr-3 flex h-[26px] items-center gap-1.5 border-b border-hairline-strong text-ink-tertiary"
+              className="my-0.5 mr-3 flex h-[26px] items-center gap-1.5 border-b border-hairline-strong text-ink-tertiary focus-within:border-accent"
               style={{ marginLeft: 46 + indent }}
             >
               <ActionGlyph name="search" size={12} />
@@ -172,12 +172,12 @@ export function RailFolder({
                 }}
                 placeholder={`Filter ${folder.total}`}
                 aria-label={`Filter ${child.label}`}
-                className="w-full min-w-0 border-0 bg-transparent p-0 text-[12px] text-ink outline-none placeholder:text-ink-tertiary"
+                className="w-full min-w-0 border-0 bg-transparent p-0 text-caption text-ink outline-none placeholder:text-ink-tertiary"
               />
             </label>
           )}
           {folder.found === 0 && (
-            <div className="pt-0.5 pr-2.5 pb-1 text-[12px] text-ink-tertiary" style={{ paddingLeft: 46 + indent }}>
+            <div className="pt-0.5 pr-2.5 pb-1 text-caption text-ink-tertiary" style={{ paddingLeft: 46 + indent }}>
               {q === '' ? 'Nothing in it yet' : <>Nothing holds “<Bidi>{q}</Bidi>”</>}
             </div>
           )}
@@ -213,7 +213,7 @@ export function RailFolder({
               // The list, not the Table (M37 U2b, the mockup's `openAll`): the
               // first entry it holds, with the filter line's text as its search.
               to={entryPath(name, folder.entries[0]?.id ?? '') + filterAddress(q === '' ? {} : { search: q })}
-              className="flex h-6 w-full items-center pr-2.5 text-left text-[12px] text-accent hover:underline hover:underline-offset-[3px] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+              className="flex h-6 w-full items-center pr-2.5 text-left text-caption text-accent hover:underline hover:underline-offset-[3px] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
               style={{ paddingLeft: 46 + indent }}
             >
               All {folder.found}
@@ -362,7 +362,7 @@ function RailRow({
   if (deleting) {
     return (
       <div className="pr-2.5" style={left}>
-        <div className="flex h-6 items-center gap-2 text-[12px] text-ink-secondary">
+        <div className="flex h-6 items-center gap-2 text-caption text-ink-secondary">
           <span className="min-w-0 truncate">
             Delete <Bidi>{name}</Bidi>?
           </span>

@@ -5,6 +5,7 @@ import { guideFor } from '@/data/packs/packs.ts'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { EmeraldMark } from '@/ui/EmeraldMark.tsx'
 import { openGuide, useGuideOpen } from '@/ui/guide/guideState.ts'
+import { Bidi } from '@/ui/Bidi.tsx'
 import { NavGlyph } from '@/ui/NavGlyph.tsx'
 import { activeTab, childIsActive, railSectionFor, railSections, type NavChild, type NavSection } from '@/ui/nav.ts'
 import { useDocumentRead } from '@/state/reading.ts'
@@ -171,7 +172,7 @@ function Section({
         ) : (
           <NavGlyph glyph={section.glyph} />
         )}
-        {!collapsed && <span className="truncate">{section.label}</span>}
+        {!collapsed && <Bidi className="truncate">{section.label}</Bidi>}
         {/* Work in progress under this section (a batch of slips being read, a
             document being read), shown where the work is, wherever you are. */}
         {!collapsed && busy && (
@@ -188,7 +189,7 @@ function Section({
                 where a group starts, not a link — the pack is not a place. */}
             {child.group !== undefined && child.group !== pages[index - 1]?.group && (
               <span className="fc-row-enter flex h-7 items-end truncate pr-3.5 pb-1 pl-10 text-caption text-ink-tertiary">
-                {child.group}
+                <Bidi>{child.group}</Bidi>
               </span>
             )}
             {/* **A format is a folder of its entries** (M37 U2, D-475): an arrow
@@ -214,7 +215,7 @@ function Section({
               // The tour's anchor (M33 U2): `nav-formats-receipt`, as a section's is `nav-formats`.
               data-tour={`nav${child.to.replace(/\//g, '-')}`}
             >
-              <span className="truncate">{child.label}</span>
+              <Bidi className="truncate">{child.label}</Bidi>
             </Link>
             )}
           </Fragment>

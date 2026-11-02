@@ -124,7 +124,7 @@ export function Overview() {
     <div className="h-full overflow-auto">
       <Screen>
         <header className="flex flex-wrap items-end justify-between gap-3">
-          <h1 className="m-0 text-[24px] leading-[1.15] font-medium tracking-[-0.01em]">Net worth</h1>
+          <h1 className="m-0 text-title leading-[1.15] font-medium tracking-[-0.01em]">Net worth</h1>
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="secondary" icon="add" onClick={() => setAdding('ACCOUNT')}>
               Add an account
@@ -226,7 +226,7 @@ export function Overview() {
                   <td colSpan={3} className="border-t border-ink pt-2.5 pr-2.5 font-semibold">
                     Net worth
                   </td>
-                  <td className="border-t border-ink pt-2.5 pr-2.5 text-right text-[16px] font-semibold whitespace-nowrap tabular-nums">
+                  <td className="border-t border-ink pt-2.5 pr-2.5 text-right text-heading font-semibold whitespace-nowrap tabular-nums">
                     {formatMoney(now.worth)}
                   </td>
                   <td className="border-t border-ink" />
@@ -261,7 +261,7 @@ function Part({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex flex-col">
       <span className={LABEL}>{label}</span>
-      <span className="text-[16px] font-medium whitespace-nowrap tabular-nums">{children}</span>
+      <span className="text-heading font-medium whitespace-nowrap tabular-nums">{children}</span>
     </div>
   )
 }
@@ -305,7 +305,7 @@ function Row({
         <span className="font-medium">
           <Bidi>{nameOf(row)}</Bidi>
           {row.kind === 'ACCOUNT' && row.account.last4 !== undefined && (
-            <small className="ml-1.5 text-[12px] font-normal text-ink-secondary">···{row.account.last4}</small>
+            <small className="ml-1.5 text-caption font-normal text-ink-secondary">···{row.account.last4}</small>
           )}
         </span>
         <span className="block text-caption text-ink-secondary">{subOf(row, worths)}</span>
@@ -550,7 +550,7 @@ function AddPlace({ write, onDone }: { write: Write; onDone: () => void }) {
             type="button"
             aria-pressed={draft.kind === kind}
             onClick={() => set({ kind, ...(LOCKABLE.has(kind) ? {} : { lockedUntil: undefined }) })}
-            className={`-ml-px h-[26px] border px-[9px] text-[12px] whitespace-nowrap first:ml-0 ${
+            className={`-ml-px h-[26px] border px-[9px] text-caption whitespace-nowrap first:ml-0 ${
               draft.kind === kind ? 'relative z-[1] border-accent bg-accent-soft text-ink' : 'border-hairline-strong text-ink-secondary'
             }`}
           >

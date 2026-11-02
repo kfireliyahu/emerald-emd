@@ -59,7 +59,37 @@ const REVIEWED = [
   'src/ui/screens/Readers.tsx',
   'src/ui/screens/Mappings.tsx',
   'src/ui/screens/LocalModel.tsx',
+  // M54 U4: the document's own screens — home, the rail, the document bar, the palette, notices, the guide, settings.
+  'src/ui/Sidebar.tsx',
+  'src/ui/RailFolder.tsx',
+  'src/ui/NavGlyph.tsx',
+  'src/ui/DocumentBar.tsx',
+  'src/ui/TitleBar.tsx',
+  'src/ui/HistoryArrows.tsx',
+  'src/ui/EarlierCopies.tsx',
+  'src/ui/CommandPalette.tsx',
+  'src/ui/Notices.tsx',
+  'src/ui/About.tsx',
+  'src/ui/guide/Guide.tsx',
+  'src/ui/guide/GuideLine.tsx',
+  'src/ui/screens/Home.tsx',
+  'src/ui/screens/HomeShell.tsx',
+  'src/ui/screens/Overview.tsx',
+  'src/ui/screens/NoLedger.tsx',
+  'src/ui/screens/Mcp.tsx',
+  'src/ui/screens/Packs.tsx',
+  'src/ui/screens/Export.tsx',
+  'src/ui/screens/Section.tsx',
+  'src/ui/home/WaitingList.tsx',
+  'src/ui/home/parts.tsx',
 ]
+
+/**
+ * *Hebrew needs bidi isolation* (M54 U4): the names that come out of a
+ * document — its file name, a format's title, a pack's group, a page's label
+ * in the rail — are rendered inside `Bidi`, never as a bare child.
+ */
+const DOCUMENT_STRINGS = ['documentName', 'fileName(pendingOpen)', 'child.label', 'child.group', 'section.label', 'format.title', 'command.label']
 
 const RAMP_SIZES = ['12', '14', '16', '20', '24', '40']
 
@@ -84,6 +114,12 @@ const HELD_ELSEWHERE = [
   'group/edge absolute -bottom-[5px] left-0 z-10 flex h-[9px] w-full cursor-ns-resize',
   // Its corner turns its glyph `accent` on focus (M54 U2 recorded whether that is enough).
   'cursor-nwse-resize items-end justify-end p-[3px] text-ink-tertiary',
+  // A rail folder's filter: its label turns its rule `accent` on focus-within (M54 U4).
+  'w-full min-w-0 border-0 bg-transparent p-0 text-caption text-ink outline-none placeholder:text-ink-tertiary',
+  // A rail entry being renamed: the field exists only while it has focus, and its rule is `accent` throughout.
+  'h-6 w-full min-w-0 border-0 border-b border-accent bg-transparent p-0 text-[12.5px] text-ink outline-none',
+  // A dialog's own box (About, Earlier copies): focused by script so Esc reaches it, never a Tab stop.
+  'flex-col overflow-hidden rounded-lg border border-hairline-strong bg-elevated shadow-pop outline-none',
 ]
 
 describe('a reviewed surface keeps the ui rule rows', () => {
@@ -112,9 +148,19 @@ describe('a reviewed surface keeps the ui rule rows', () => {
         if (!line.includes('className="sr-only"')) return []
         const before = lines.slice(Math.max(0, at - 8), at)
         if (!before.some((each) => each.includes('<input'))) return []
+        // One that never takes focus (a picker opened by a button) needs no ring.
+        if (lines.slice(at, at + 3).some((each) => each.includes('tabIndex={-1}'))) return []
         return before.some((each) => each.includes('focus-within:outline')) ? [] : [`${path}:${String(at + 1)}`]
       })
       expect(unringed).toEqual([])
+    })
+
+    it(`${path} isolates every name a document gave it`, () => {
+      const names = DOCUMENT_STRINGS.map((each) => each.replace(/[.()]/g, '\\$&')).join('|')
+      const bare = [...source.matchAll(new RegExp(`(?<![$=])\\{(${names})\\}`, 'g'))].flatMap((found) =>
+        /<Bidi(\s[^>]*)?>\s*$/.test(source.slice(0, found.index)) ? [] : [`${path}: ${found[0]}`],
+      )
+      expect(bare).toEqual([])
     })
 
     it(`${path} replaces every outline it takes away`, () => {

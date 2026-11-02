@@ -176,7 +176,7 @@ function useDiskConflictNotice(): Notice | undefined {
       id: 'unreadable',
       body: (
         <>
-          <strong className="font-medium">{documentName}</strong> could not be read where it was —
+          <strong className="font-medium"><Bidi>{documentName}</Bidi></strong> could not be read where it was —
           it may have been moved, renamed, or deleted. {diskState.reason}
         </>
       ),
@@ -192,7 +192,7 @@ function useDiskConflictNotice(): Notice | undefined {
       id: 'conflict',
       body: (
         <>
-          <strong className="font-medium">{documentName}</strong> changed on disk since you opened
+          <strong className="font-medium"><Bidi>{documentName}</Bidi></strong> changed on disk since you opened
           it, and you have unsaved changes here. Saving would overwrite the newer file; reloading
           would discard your changes.
         </>
@@ -213,7 +213,7 @@ function useDiskConflictNotice(): Notice | undefined {
     id: 'conflict',
     body: (
       <>
-        <strong className="font-medium">{documentName}</strong> changed on disk since you opened it.
+        <strong className="font-medium"><Bidi>{documentName}</Bidi></strong> changed on disk since you opened it.
         Nothing here is unsaved, so reloading loses nothing.
       </>
     ),
@@ -301,8 +301,8 @@ function usePendingOpenNotice(): Notice | undefined {
     id: 'pending-open',
     body: (
       <>
-        <strong className="font-medium">{fileName(pendingOpen)}</strong> is waiting to open, and{' '}
-        <strong className="font-medium">{documentName}</strong> has unsaved changes. Opening it
+        <strong className="font-medium"><Bidi>{fileName(pendingOpen)}</Bidi></strong> is waiting to open, and{' '}
+        <strong className="font-medium"><Bidi>{documentName}</Bidi></strong> has unsaved changes. Opening it
         replaces what is in this window.
       </>
     ),
@@ -348,7 +348,7 @@ function usePendingReplaceNotice(): Notice | undefined {
     id: 'pending-replace',
     body: (
       <>
-        <strong className="font-medium">{documentName}</strong> has unsaved changes.{' '}
+        <strong className="font-medium"><Bidi>{documentName}</Bidi></strong> has unsaved changes.{' '}
         {pending === 'new' ? 'A new document' : 'Opening another document'} replaces what is in this
         window.
       </>

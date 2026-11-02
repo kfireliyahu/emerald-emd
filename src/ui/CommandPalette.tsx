@@ -213,7 +213,7 @@ export function CommandPalette({ onImportStatement }: { onImportStatement: () =>
           aria-label="Search"
           aria-controls="command-list"
           aria-activedescendant={items[selected] === undefined ? undefined : `command-${selected}`}
-          className="shrink-0 border-b border-hairline bg-transparent px-4 py-3 text-body outline-none placeholder:text-ink-tertiary"
+          className="shrink-0 border-b border-hairline bg-transparent px-4 py-3 text-body outline-none placeholder:text-ink-tertiary focus:border-accent"
         />
 
         <div ref={list} id="command-list" role="listbox" className="min-h-0 flex-1 overflow-y-auto py-1">
@@ -404,7 +404,7 @@ function EntryRow({
           <span className="min-w-0 truncate">
             {entry.rank < 3 ? <Snip text={entry.name} query={query} /> : <Bidi>{entry.name}</Bidi>}
           </span>
-          <span className="ml-auto shrink-0 text-caption text-ink-tertiary">{format.title}</span>
+          <Bidi className="ml-auto shrink-0 text-caption text-ink-tertiary">{format.title}</Bidi>
         </span>
         {entry.column !== undefined && entry.text !== undefined && (
           <span className="w-full truncate pl-[26px] text-caption text-ink-secondary">
@@ -443,7 +443,7 @@ function MoreRow({
           <ActionGlyph name="arrow" size={14} />
         </span>
         <span>
-          {more} more in {format.title}, in its list
+          {more} more in <Bidi>{format.title}</Bidi>, in its list
         </span>
       </span>
     </button>
@@ -482,7 +482,7 @@ function Row({
           selected ? 'bg-accent-soft text-ink' : 'text-ink-secondary'
         }`}
       >
-        <span className="min-w-0 truncate">{command.label}</span>
+        <Bidi className="min-w-0 truncate">{command.label}</Bidi>
         {command.detail !== undefined && (
           <span className="min-w-0 shrink truncate text-caption text-ink-tertiary">
             {command.detail}

@@ -194,12 +194,12 @@ function EarlierCopiesDialog() {
                   <span className="flex min-w-0 flex-1 items-baseline gap-2">
                     <span className="font-mono text-[13px] tabular-nums">{moment(copy.at)}</span>
                     {copy.before !== undefined && (
-                      <span className="truncate text-[12px] text-ink-secondary">
+                      <span className="truncate text-caption text-ink-secondary">
                         {copy.before === '' ? 'named' : <>named · before <Bidi>{copy.before}</Bidi></>}
                       </span>
                     )}
                   </span>
-                  <span className="font-mono text-[12px] text-ink-tertiary tabular-nums">{formatBytes(copy.size)}</span>
+                  <span className="font-mono text-caption text-ink-tertiary tabular-nums">{formatBytes(copy.size)}</span>
                   <Button
                     size="sm"
                     disabled={isDirty || (restoring !== undefined && restoring !== copy.name)}

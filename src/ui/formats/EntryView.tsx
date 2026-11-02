@@ -1430,7 +1430,7 @@ function FieldsList({
             .filter((section) => section.columns.length > 0)
             .map((section) => (
               <div key={section.label} role="group" aria-label={section.label}>
-                <div className="fc-label px-3 pt-2 pb-0.5">{section.label}</div>
+                <div className="fc-label px-3 pt-2 pb-0.5"><Bidi>{section.label}</Bidi></div>
                 {section.columns.map((column) => {
                   const off = isHidden(column)
                   const words = entryLabel(column)

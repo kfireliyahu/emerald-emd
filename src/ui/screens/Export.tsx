@@ -32,7 +32,7 @@ export function Export() {
       <div className="fc-view-enter flex max-w-4xl flex-col gap-6 px-8 pt-6 pb-12">
         <header className="flex flex-col gap-1.5 border-b border-hairline pb-4">
           <span className="fc-label text-ink-secondary uppercase">Settings · Export</span>
-          <h1 className="m-0 text-[24px] leading-tight font-medium tracking-[-0.01em]">Export</h1>
+          <h1 className="m-0 text-title leading-tight font-medium tracking-[-0.01em]">Export</h1>
           <span className="text-ink-secondary">A spreadsheet of what this document holds.</span>
         </header>
         <div>

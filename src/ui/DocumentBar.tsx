@@ -4,6 +4,7 @@ import { canAutoSaveAtAll } from '@/data/storage/autoSave.ts'
 import { shellDocuments } from '@/data/storage/desktop.ts'
 import { wouldOverwrite } from '@/data/storage/externalChange.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
+import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { ChoiceField } from '@/ui/components/ChoiceField.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
@@ -75,7 +76,7 @@ export function DocumentBar() {
   // no New, no Open…, no Save, no recents and no "unsaved", because a visitor
   // has no file for any of them to be about.
   if (isDemo()) {
-    return db === undefined ? null : <span className="fc-view-enter truncate">{documentName}</span>
+    return db === undefined ? null : <Bidi className="fc-view-enter truncate">{documentName}</Bidi>
   }
 
   if (db === undefined) {
@@ -97,7 +98,7 @@ export function DocumentBar() {
   return (
     <div key="open" className="fc-view-enter flex items-center gap-3">
       <span className="truncate" title={adapter.describe()}>
-        {documentName}
+        <Bidi>{documentName}</Bidi>
       </span>
 
       {/* The dirty state, as a dot rather than a word (docs/11): filled ink when
