@@ -28,7 +28,7 @@ export function DocumentDashboard() {
   return (
     <div className="fc-view-enter flex h-full flex-col">
       <div className="flex shrink-0 items-baseline gap-3.5 px-6 pt-3">
-        <h1 className="m-0 text-[20px] font-semibold">Dashboard</h1>
+        <h1 className="m-0 text-secondary-number font-semibold">Dashboard</h1>
         <span className="text-caption text-ink-secondary">
           <Bidi>{name}</Bidi> · blocks from any format
         </span>

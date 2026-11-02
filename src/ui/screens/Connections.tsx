@@ -1,4 +1,4 @@
-import { useId, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { adoptFormat, listFormats, planFor } from '@/data/repositories/formatRepository.ts'
@@ -28,6 +28,7 @@ import { declarationChangeRefusal, rowWriteRefusal } from '@/domain/format/owner
 import type { ReconcilePlan } from '@/domain/format/reconcile.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { ChoiceField } from '@/ui/components/ChoiceField.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
 import { ConnectionGraph } from '@/ui/formats/ConnectionGraph.tsx'
 import { ConnectionPanel } from '@/ui/formats/ConnectionPanel.tsx'
@@ -432,7 +433,6 @@ function FindFormat({
   onQuery: (query: string) => void
   onFind: (name: string) => void
 }) {
-  const list = useId()
   const wanted = query.trim().toLowerCase()
   const matches =
     wanted === ''
@@ -445,18 +445,19 @@ function FindFormat({
   )
   return (
     <span className="flex items-baseline gap-2">
-      <input
+      <ChoiceField
         type="search"
-        list={list}
-        value={query}
+        filter
+        text={query}
+        choices={declarations.map((each) => ({ value: each.name, label: each.title, search: each.name }))}
         aria-label="Find a format"
         placeholder="Find a format…"
         dir="auto"
-        onChange={(event) => {
-          onQuery(event.target.value)
-          // Picked from the list: it is the whole title, so it goes at once.
-          const picked = declarations.find((each) => each.title === event.target.value)
-          if (picked !== undefined) onFind(picked.name)
+        onText={onQuery}
+        // Picked from the list: it is the whole title, so it goes at once.
+        onPick={(choice) => {
+          onQuery(choice.label)
+          onFind(choice.value)
         }}
         onKeyDown={(event) => {
           if (event.key !== 'Enter') return
@@ -465,13 +466,6 @@ function FindFormat({
         }}
         className={`${FIELD} h-7 w-44 text-caption`}
       />
-      <datalist id={list}>
-        {declarations.map((each) => (
-          <option key={each.name} value={each.title}>
-            {each.name}
-          </option>
-        ))}
-      </datalist>
       {wanted !== '' && matches.length === 0 && (
         <span className="text-ink-tertiary">No format is called that.</span>
       )}

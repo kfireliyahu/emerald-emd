@@ -6250,10 +6250,22 @@ should: A screen names itself with a heading, as Roadmap and Ready to start do w
 breaks: A format's table page has no h1 or h2 at all; its name (Unit) is plain text.
 state: open
 
+### Demo, any document, light and dark: the dashboard popovers' headings (NEW CHART, HEADLINE TOTAL) and menu descriptions, every block's subtitle, the filter band's zero-count choices, counts, "· 18.00 to 250.00" and its × button, the rollup's Delete chart and unpressed Bars/Line, #/connections' instructions and column names.
+unit: M54 U2
+should: Text a reader needs is at 4.5:1; ink-tertiary only for what is not essential (Contrast 4.5:1 for text). QUESTION for the maintainer: One level of tabs and Charts are ink set tab labels and axis labels in ink-tertiary, and on a chart whose bars are unlabelled the month is the bar's only label — does either rule give way?
+breaks: All are ink-tertiary: 2.62:1 in light, 3.18–3.65:1 in dark (M54 U1 recorded the tab labels alone). The block subtitle is the one the empty dashboard promises says which format a block reads; the band's × is ~12px wide and does what Clear does. Dashboard.tsx:580, :705, :715; MakeBlock.tsx:99; FilterBand.tsx:393, 848-919; Connections.tsx:247.
+state: open
+
 ### Demo, any format: the view tabs (Table, Board, List, Dashboard, Claims) in light and dark.
 unit: M54 U1
 should: Question for the maintainer — two live rules disagree: One level of tabs asks for ink-tertiary labels; Contrast 4.5:1 for text keeps ink-tertiary for non-essential text, and a tab's label is how a person finds the view.
 breaks: Inactive tab labels are 2.62:1 on the page in light and 3.65:1 in dark.
+state: open
+
+### Demo, custom.emd, #/dashboard → Add a block → Headline total, Sum of amount. Both themes.
+unit: M54 U2
+should: The currency symbol and the decimals are smaller and ink-secondary, so the eye lands on the magnitude (The magnitude leads); the figure's size is a ramp step (Every value is a token).
+breaks: "\"₪469.00\" is one 32px run, symbol and decimals in the digits' size and colour; its sizes are text-[32px] and text-[22px], neither on the ramp (20, 24, 40). Dashboard.tsx:764."
 state: open
 
 ### Demo, custom.emd, #/formats/card_charge. In the blank row type abc into amount, leave date empty, press Enter. Then open Add (card_charge/entry/new), leave date empty, press Add.
@@ -6274,6 +6286,24 @@ should: Late, due and overdue are said only of a column that means a due date (r
 breaks: Every charge reads "101 days late" … "95 days late" in negative. listView's shape takes the first date column as due (src/domain/format/view.ts, due: lines.find(isDate) ?? columns.find(isDate)), and a charge's date is when it happened, not when it is due.
 state: open
 
+### Demo, custom.emd, #/formats/card_charge: Filter by → amount → From 50 → Enter. Then filter date instead and compare.
+unit: M54 U2
+should: The band counts the rows held out of the whole format — "3 of 5 entries" (Words name the rule).
+breaks: Under an amount range the band reads "3 of 3 entries"; a date filter counts right ("4 of 7"). src/ui/screens/FormatRows.tsx:358 recounts the whole only when match, windows or search is set, so a range falls through to the filtered total.
+state: open
+
+### Demo, custom.emd, #/formats/card_charge: Filter by…, Search, a value popover and its is / is not group; the rollup tab's Bars/Line toggle. Compare with the dashboard's menus and blocks.
+unit: M54 U2
+should: Cards and controls are square by spending --radius-card and --radius-control (Square by spending the radius tokens).
+breaks: FIELD in src/ui/components/fieldLook.ts is rounded-md (8px), so every field in the app is round while buttons, menus and blocks are square; the band's popover and Held as group are rounded-md, its option rows and the Bars/Line toggle rounded. FilterBand.tsx:565, 583, 694, 836, 890, 915; RollupView.tsx:91. Not fixed here: FIELD reaches every screen.
+state: open
+
+### Demo, custom.emd, #/formats/card_charge: click Filter by…, type amo, press Enter; open a value popover and press Escape.
+unit: M54 U2
+should: A field that looks typeable narrows as typed (Choices are ChoiceField: it stays a text field), or looks like a button; Escape returns focus to what opened it (Keyboard first).
+breaks: It is a read-only search field: typing goes nowhere and Enter picks the first column, date. Escape from the value popover drops focus to the body. FilterBand.tsx:452-466.
+state: open
+
 ### Demo, custom.emd, the entry list beside a card charge: in quick add ("Add a card charge") type Lunch spot 35 and press Enter.
 unit: M54 U1
 should: Quick add either fills what it can and says which fields are still needed, or says plainly that it opened the form and why (Nielsen: visibility of system status). Whether quick add parses values or only takes a title is M55's to decide.
@@ -6284,6 +6314,78 @@ state: open
 unit: M54 U1
 should: A decision point offers no more than a handful at once, in a person's words (Impeccable critique: cognitive load, more than four visible options; rule: Words name the rule).
 breaks: Entry: twenty types at once (nineteen and computed), in engineering names — integer, real, enum, enums, instant.
+state: open
+
+### Demo, custom.emd: save a card_charge view sorted merchant ascending ("Over 50") and add it to #/dashboard; project.emd: "Landed this year" on #/formats/unit/dashboard.
+unit: M54 U2
+should: A saved view reads the same wherever it is placed, in its own order.
+breaks: The block ignores the view's order: FUEL STATION, CORNER MARKET, BOOK NOOK; M2 U2, M1 U1, M2 U1, M1 U2.
+state: open
+
+### Demo, demo.emd, #/agenda: click 7 days (a later row exists); then read the "by" sentence above it.
+unit: M54 U2
+should: The empty line names the window — "Nothing in the next 7 days." — and the subtitle follows it (Words name the rule); the agenda is the first thing on its screen.
+breaks: It says "Nothing on the agenda from today on." under a subtitle still reading "From today on —" (LinkViews.tsx:579). The "by" sentence is 13 fixed 112px fields that cut their values ("last_confirme", "transaction_d") and push the agenda down.
+state: open
+
+### Demo, demo.emd, #/dashboard → Add a block → spending (a rollup by category), both themes.
+unit: M54 U2
+should: QUESTION for the maintainer: Charts are ink, labelled directly allows category colours only for a donut, and Category colours are dots says never as a background. Is a multi-series rollup an allowed exception?
+breaks: Rollup series fill bars and lines with category hues — nine on demo's spending.
+state: open
+
+### Demo, project.emd and demo.emd, #/connections in light and dark, first fit.
+unit: M54 U2
+should: A format's title wins over its machine name, labels do not print on each other, and the fit leaves room for the side list.
+breaks: Six edges meet at Decision's header and their "one" labels overprint; "Every connection, in words" covers the Decision, Milestone, Deduct… and Holding… cards; on demo.emd titles truncate ("Bill in a…", "Categor…") while the snake_case table name beside them shows whole. Edge labels are text-[10px], below the ramp. ConnectionGraph.tsx:626-631, :847, :855.
+state: open
+
+### Demo, project.emd, #/connections: read "Every connection, in words" for unit's blocks, and open question's opened_by and answered_by.
+unit: M54 U2
+should: Each sentence says what the connection is, and no two say the same (Words name the rule).
+breaks: "\"Each unit belongs to one unit — unit's blocks column\", though blocks lists several units, and its card row shows no target; opened_by and answered_by are two buttons both named \"Each open question belongs to one decision.\""
+state: open
+
+### Demo, project.emd, #/dashboard with a block: Tab to its width, height and corner resize handles (light and dark), and read them with a screen reader.
+unit: M54 U2
+should: Each stop shows a visible focus mark (Keyboard first), and a focusable separator carries aria-valuenow (WAI-ARIA separator).
+breaks: The edges draw a 2px accent rule on focus, but the corner only turns its 8px glyph accent — barely a mark; none of the three has aria-valuenow, the value is only in the label. Dashboard.tsx:436-466.
+state: open
+
+### Demo, project.emd, #/dashboard with a block: click its ⋯ ("<name>: more"), press Escape, then Tab; open Add a block and press the arrows.
+unit: M54 U2
+should: Focus moves into the menu, the arrows move through it, Esc closes it and returns focus to ⋯ (Keyboard first; WAI-ARIA menu pattern).
+breaks: Focus stays on ⋯ and Escape leaves the menu open; Tab closes it and lands on the width handle, so Open in full, Move earlier, Move later and Remove from this dashboard are out of the keyboard's reach. Add a block ignores the arrows. src/ui/formats/Dashboard.tsx:654 (role=menu with no key handling) and :1213.
+state: open
+
+### Demo, project.emd, #/dashboard → Add a block → New chart → Unit (two dates, landed and started) → name it → Declare and add without touching By month of.
+unit: M54 U2
+should: The first date is chosen already, and a missing one is said once, beside By month of (Make it in place: infer what the data says and ask only to confirm).
+breaks: Entry: no date is chosen; "Say which date the month is of." shows twice — in place of the preview under Name and as an alert under the buttons — and at neither field. src/ui/formats/MakeBlock.tsx:186 and :434.
+state: open
+
+### Demo, project.emd, #/dashboard → Add a block → New chart → Unit, landed, per milestone → Declare and add; demo.emd #/dashboard → Add a block → spending. Both themes.
+unit: M54 U2
+should: Every bar carries its value and the numbers are visible beside the chart; each series is named where it is drawn (Every chart has its numbers; Never colour alone; Charts are ink, labelled directly). The format's rollup tab already shows its table.
+breaks: Only the tallest bar is labelled at any block width; series (M1/M2/M3, nine spending categories) are told apart by a colour legend alone; the figures are an sr-only table and a hover readout that is aria-hidden and pointer-only. src/ui/charts/Chart.tsx:95 — with more than one series a label must fit bar + 2 px, and a count's " rows" never does.
+state: open
+
+### Demo, project.emd, #/dashboard → Add a block → New chart; name it "Landed by month" → Declare and add. Read the block title, the format's tabs, the sidebar and the Add a block menu.
+unit: M54 U2
+should: The chart is called what the person typed (Words name the rule).
+breaks: Entry: everywhere it reads landed_by_month (MakeBlock.tsx:369 rollupName); its subtitle reads "Unit · Rollup · count by month of landed and milestone" and the rollup tab heads its chart with the rollup text in mono.
+state: open
+
+### Demo, project.emd, #/formats/milestone/roadmap and #/agenda in light: the OPEN state label.
+unit: M54 U2
+should: At least 4.5:1 — an accent is chosen to carry its text at AA (Contrast 4.5:1 for text).
+breaks: accent on accent-soft at 11px measures 4.43:1. src/ui/theme/tokens.css, .fc-state[data-tone="live"] (~994).
+state: open
+
+### Demo, project.emd, #/formats/milestone: open the Roadmap tab, and unit's Ready to start; read the header bar and the h1 on those and on #/agenda.
+unit: M54 U2
+should: A view offered as a tab opens under the same tab strip (One level of tabs), and a screen names itself once.
+breaks: Both open as screens with only "← Unit" and the tab strip gone; Agenda, Roadmap and Ready to start repeat their title in the header bar and the h1.
 state: open
 
 ### Demo, project.emd, #/formats/unit (Table). In the table's blank row at the foot, type ref, milestone, scope and title, then Enter. Then do the same through Add (the entry form) and through quick add in the entry list.
@@ -6304,6 +6406,12 @@ should: Question for the maintainer: the rule A card is one link says the whole 
 breaks: A board card is an <article> and only its title opens it (BoardView.tsx); a click elsewhere on the card does nothing.
 state: open
 
+### Demo, project.emd, #/formats/unit/dashboard (or Board, List) with a rollup declared: click its tab once.
+unit: M54 U2
+should: One click opens the rollup.
+breaks: The first click lands on Table and a second opens the rollup — the tab's go sets the view, then navigates to the format's path (src/ui/screens/FormatRows.tsx).
+state: open
+
 ### Demo, project.emd, #/formats/unit/entry/new (Add). Type M9 into milestone (no such milestone), fill the rest, press Add. Then type M9 into the milestone cell of the table's blank row and press Enter.
 unit: M54 U1
 should: Both name what was typed and what to do: no milestone is called "M9". Pick one from the list (Nielsen: help users recognise, diagnose and recover from errors).
@@ -6314,6 +6422,12 @@ state: open
 unit: M54 U1
 should: A link picker lists its rows in order with each row's title beside the ref (ChoiceField's detail), and opens on focus; an enum shows its members as the board does (Nielsen: recognition rather than recall; rule: Words name the rule).
 breaks: Entry: milestone lists M2, M3, M1 and decision D-1, D-2, D-4, D-3 — unsorted bare refs to recall; the list opens only on typing or a click; state's choices read in_progress while the board's lane says IN PROGRESS.
+state: open
+
+### Demo, project.emd, #/formats/unit: Filter by landed is this year → Save this view → "Landed this year". Read the tab strip and the band.
+unit: M54 U2
+should: A saved view is one of the format's tabs, marked current when open, and can be renamed or removed there (One level of tabs).
+breaks: It shows only in the sidebar; the tab strip keeps Table current while the sidebar marks the view current; the band's "Saved as Landed this year" is plain text with no rename or delete.
 state: open
 
 ### Demo, project.emd, #/formats/unit: open a row (the row's Open icon, a board card's title, or Add). Also open #/formats/unit/page/<any entry>.
@@ -6334,10 +6448,34 @@ should: A link field ends its list with + New…, makes the linked row in place 
 breaks: Entry: no link field of a declared format offers + New…, and an unknown name lists nothing at all — no "no match" line, no way to make it. The only + New… in the app is SelectOrNew, which only the parked ledger's screens use (and it is a <select>, below).
 state: open
 
+### Demo, project.emd: a dashboard chart of units counted by month — its hover readout, the rollup tab's Line chart axis.
+unit: M54 U2
+should: Counts in the format's own word and whole numbers — "1 unit", ticks 0, 1, 2 (Words name the rule).
+breaks: "\"1 rows\"; the line chart's count axis reads \"1 rows / 1.5 rows / 2 rows\". (The roadmap's \"4 of 7 Unit rows done\" is M54 U1's row.)"
+state: open
+
 ### Demo, project.emd: a date in the table's blank row (type tomorrow); the same date column on the Add form; the same row's entry page beside the table.
 unit: M54 U1
 should: One typed date field everywhere, the way TimeField already takes words (D-335) and shows the settled value, and one way a date is shown (Nielsen: consistency; match with the real world).
 breaks: Entry: the cell takes ISO only and refuses words (must be YYYY-MM-DD); the form is a native date input showing mm/dd/yyyy; the entry page shows 09/03/2026 while the table beside it shows 2026-09-03.
+state: open
+
+### Demo, project.emd: read the h1 on #/dashboard, #/settings/calendar and #/connections.
+unit: M54 U2
+should: Screens name themselves alike with one h1 at one ramp step (consistency; web interface guidelines: hierarchical headings).
+breaks: Dashboard's h1 is secondary-number (20px) semibold, Calendar's title (24px) medium; #/connections has no h1 at all — its first heading is the h2 "Every connection, in words".
+state: open
+
+### Demo: #/dashboard on custom.emd (empty), #/agenda with nothing ahead, #/connections on a document with no connection.
+unit: M54 U2
+should: One sentence in ink-secondary and one text action, carried by words, not colour (An empty state is one sentence; Never colour alone).
+breaks: The dashboard's is two sentences (Dashboard.tsx:176-178); the agenda's has no action; Connections' says "The two accented ports…" in ink-tertiary (Connections.tsx:248).
+state: open
+
+### Demo: #/dashboard → Add a block (New chart's and Headline total's buttons); Home's notice; a date in project.emd's unit table, its dashboard block and its rollup; an amount in custom.emd's filter band and table.
+unit: M54 U2
+should: One word for one act and one shape for one value (An action is a verb; consistency).
+breaks: Entry: within one menu New chart says "Declare and add" and Headline total "Add"; "1 answer waits on Home" with "Answer them"; dates read 2026-07-27 in the table, "Sun 26 Jul 2026" in the block, 2026-09 in the rollup table and "Sep 2026" on its chart; the band says "50 ILS" where the table says "₪60.00".
 state: open
 
 ### Demo: #/formats (a format's card), a format's header, and #/formats/milestone/roadmap.
@@ -6675,6 +6813,12 @@ state: open
 unit: M34 T1
 should: Inline tags can fill an enums column
 breaks: Inline tags are not read
+state: open
+
+### Read the class strings and styles of the dashboard and its charts: tokens.css .fc-chart-val (~914), Dashboard.tsx's ⋯ button and drop targets (:242, :564).
+unit: M54 U2
+should: Mono for raw cells only (One family, two scripts); an icon action is a 28px target with a 16px icon (An icon is an action); no shadow outside the floating rooms (No gradients, no shadows).
+breaks: Chart value labels are Plex Mono at 11px; ⋯ is a 26px target with a 14px icon; drop targets mark with shadow-[-3px_0_0_var(--color-accent)]. (Off-ramp text-[13px]/[11px] across src/ui is M54 U1's row.)
 state: open
 
 ### Read the class strings of the surface: src/ui/formats/EntryView.tsx, EntryValue.tsx, EntryList.tsx, ListView.tsx, LinkViews.tsx, BoardView.tsx, FormatRows.tsx (grep text-\[ and -\[…px\]).
@@ -13823,10 +13967,13 @@ report: "LANDED ab1f82e. 21 open review_entry rows on M54 U1 (11 start breaks wi
 milestone: M54
 scope: app
 title: Views and dashboards reviewed: saved views, the filter band, a format's dashboard and the document's, rollup charts, connections and the agenda
-state: planned
+state: in_progress
 brief: M54 (D-530), after U1 set the procedure — read M54 U1's report first (`format_rows unit match:{ref:"M54 U1"} columns:[report]`) and follow what it says worked. Surface: saved views and the filter band, a format's dashboard /formats/:name/dashboard and the document's /dashboard (Dashboard, block resize, New chart), rollup charts (RollupView, src/ui/charts/), /connections (ConnectionGraph, ConnectionPanel, LinkViews, FormatLinkViews) and /agenda (Agenda, Calendar). Maintainer's answers, 2026-11-02. AGAINST: the demo documents only — `npm run dev:demo` (preview `demo-tour`, :4181; the app is /app.html): demo.emd (ledger pack), custom.emd (no pack), project.emd (development pack), synthetic. Never a working .emd. CONDITIONS: light and dark at a desktop width, nothing else. TOOLS: `format_rows rule match:{scope:ui, state:live} columns:[name, statement]` (and `search:"chart"` for the chart rules), root DESIGN.md and PRODUCT.md; `/impeccable critique` and `/impeccable audit` on the surface (Impeccable 4.8.0, user level; per-edit hook off — if per-edit findings appear, `/impeccable hooks off`); the `web-design-guidelines` skill over the surface's files; the Impeccable detector once at the end, never per edit. Verify with read_page / get_page_text; screenshots only where the answer is visual (charts in dark are). FINDINGS: one open `review_entry` row per finding on this unit — `do` route and action named exactly, `should` what is right with its rule row or guideline, `breaks` what happens now; anything about adding or editing a row by hand (a list's quick add, a dashboard block's entry) starts `breaks` with `Entry:` for M55. Never taste alone; arguing with a live rule row is a question for the maintainer. FIXING: a plain breach of a live ui rule row (hex or pixel literal, missing focus ring, <select> for ChoiceField, document string outside Bidi) is fixed in place with a test where one can fail and listed; anything needing judgement is only recorded. Unsettled: stop and ask. REPORT: rows written, fixes made, what in the procedure worked or wasted time. Done-test: each listed screen critiqued and audited in both themes, findings are open rows on M54 U2, tests and typecheck pass.
 files: Reviewed: src/ui/formats/Dashboard.tsx, RollupView.tsx, FilterBand.tsx, ConnectionGraph.tsx, ConnectionPanel.tsx, LinkViews.tsx; src/ui/screens/Dashboard.tsx, Connections.tsx, Agenda.tsx, Calendar.tsx, FormatLinkViews.tsx; src/ui/charts/. Rows: docs/memory.emd (review_entry).
 blocks: ["M54 U1"]
+taken_by: run-milestone driver
+started: 2026-11-02
+branch: main
 paths: "src/ui/formats/Dashboard.tsx\nsrc/ui/formats/RollupView.tsx\nsrc/ui/formats/FilterBand.tsx\nsrc/ui/formats/ConnectionGraph.tsx\nsrc/ui/formats/ConnectionPanel.tsx\nsrc/ui/formats/LinkViews.tsx\nsrc/ui/screens/Dashboard.tsx\nsrc/ui/screens/Connections.tsx\nsrc/ui/screens/Agenda.tsx\nsrc/ui/screens/Calendar.tsx\nsrc/ui/screens/FormatLinkViews.tsx\nsrc/ui/charts/"
 
 ### M54 U3

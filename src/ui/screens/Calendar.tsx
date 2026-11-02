@@ -4,7 +4,8 @@ import { toISODate } from '@/core/time.ts'
 import { chosenWeekStart, documentWeekStart, setDocumentWeekStart } from '@/data/repositories/unitRepository.ts'
 import { clockRange, WEEKDAYS } from '@/domain/format/clock.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
-import { SELECT } from '@/ui/components/fieldLook.ts'
+import { ChoiceField } from '@/ui/components/ChoiceField.tsx'
+import { FIELD } from '@/ui/components/fieldLook.ts'
 import { today } from '@/ui/today.ts'
 
 /**
@@ -35,7 +36,7 @@ export function Calendar() {
       <div className="fc-view-enter flex max-w-4xl flex-col gap-6 px-8 pt-6 pb-12">
         <header className="flex flex-col gap-1.5 border-b border-hairline pb-4">
           <span className="fc-label text-ink-secondary uppercase">Settings · Calendar</span>
-          <h1 className="m-0 text-[24px] leading-tight font-medium tracking-[-0.01em]">Calendar</h1>
+          <h1 className="m-0 text-title font-medium">Calendar</h1>
           <span className="text-ink-secondary">How this document counts its weeks. It is kept in the file, so every machine and every conversation counts them alike.</span>
         </header>
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-hairline py-4">
@@ -54,22 +55,16 @@ export function Calendar() {
               )}
             </p>
           </div>
-          <select
+          <ChoiceField
             id="week-start"
-            value={read.chosen ?? 'monday'}
-            onChange={(event) => {
-              const typed = event.target.value
-              mutate((database) => void setDocumentWeekStart(database, typed))
-            }}
-            className={`${SELECT} h-7`}
-          >
-            {WEEKDAYS.map((day) => (
-              <option key={day} value={day}>
-                {day[0]?.toUpperCase()}
-                {day.slice(1)}
-              </option>
-            ))}
-          </select>
+            className={`${FIELD} h-7 w-32`}
+            readOnly
+            filter={false}
+            text={weekday(read.chosen ?? 'monday')}
+            choices={WEEKDAYS.map((day) => ({ value: day, label: weekday(day) }))}
+            onText={() => undefined}
+            onPick={(choice) => mutate((database) => void setDocumentWeekStart(database, choice.value))}
+          />
         </div>
       </div>
     </div>
@@ -80,4 +75,9 @@ export function Calendar() {
 function dayLabel(date: string): string {
   const [year, month, day] = date.split('-').map(Number)
   return new Date(year ?? 1970, (month ?? 1) - 1, day ?? 1).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+}
+
+/** `monday` as `Monday`, as the choice reads. */
+function weekday(day: string): string {
+  return `${day[0]?.toUpperCase() ?? ''}${day.slice(1)}`
 }

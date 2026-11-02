@@ -917,7 +917,7 @@ interface PickOption {
 
 /**
  * **A word in a sentence that opens the app's own list** — D-290's rule: no
- * platform `<select>`, which draws dark, in a font and a shape that are not
+ * platform select element, which draws dark, in a font and a shape that are not
  * this app's. The look is `ChoiceField`'s list, fixed to the viewport so a
  * window that scrolls cannot cut it off.
  */
@@ -1476,7 +1476,7 @@ function figureEdge(format: string, figure: string, over: AggregateSource): Edge
 
 /* -------------------------------------------------------------- the frame */
 
-const HEADLINE = 'm-0 mb-3.5 max-w-[60ch] text-[16px] leading-[1.35] font-semibold'
+const HEADLINE = 'm-0 mb-3.5 max-w-[60ch] text-heading'
 const ROWS = 'grid max-w-[760px] grid-cols-[132px_minmax(0,1fr)] items-start gap-x-4 gap-y-3 max-[620px]:grid-cols-1 max-[620px]:gap-y-1'
 const Q = 'pt-1.5 text-caption text-ink-secondary max-[620px]:pt-2'
 const A = 'flex min-w-0 flex-col gap-1.5'

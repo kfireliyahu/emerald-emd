@@ -763,7 +763,7 @@ function Figure({ figure, unit, small = false }: { readonly figure: string; read
   return (
     <div className={`${small ? 'text-[22px]' : 'text-[32px]'} leading-[1.1] font-medium tracking-[-0.01em] tabular-nums`}>
       {figure}
-      {unit !== undefined && unit !== '' && <small className="ml-1 text-[14px] font-normal text-ink-secondary">{unit}</small>}
+      {unit !== undefined && unit !== '' && <small className="ml-1 text-body font-normal text-ink-secondary">{unit}</small>}
     </div>
   )
 }
@@ -1411,6 +1411,7 @@ function HeadlineForm({
           <span className="text-label">Name</span>
           <input
             type="text"
+            aria-label="Name"
             autoFocus
             value={adding.name}
             placeholder="What the figure is, e.g. Open"

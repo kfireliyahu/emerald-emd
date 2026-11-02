@@ -29,6 +29,18 @@ const REVIEWED = [
   'src/ui/formats/BoardView.tsx',
   'src/ui/formats/ListView.tsx',
   'src/ui/formats/LinkViews.tsx',
+  // M54 U2: views and dashboards.
+  'src/ui/formats/Dashboard.tsx',
+  'src/ui/formats/MakeBlock.tsx',
+  'src/ui/formats/RollupView.tsx',
+  'src/ui/formats/FilterBand.tsx',
+  'src/ui/formats/ConnectionGraph.tsx',
+  'src/ui/formats/ConnectionPanel.tsx',
+  'src/ui/screens/Dashboard.tsx',
+  'src/ui/screens/Connections.tsx',
+  'src/ui/screens/Agenda.tsx',
+  'src/ui/screens/Calendar.tsx',
+  'src/ui/charts/Chart.tsx',
 ]
 
 const RAMP_SIZES = ['12', '14', '16', '20', '24', '40']
@@ -49,6 +61,11 @@ const HELD_ELSEWHERE = [
   'relative min-h-0 flex-1 overflow-auto outline-none',
   // Quick add: its label draws the accent rule inside it on focus-within.
   'h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-ink outline-none',
+  // A dashboard block's resize edges: the 2px `accent` rule inside them shows on focus.
+  'group/edge absolute top-0 -right-[5px] z-10 flex h-full w-[9px] cursor-ew-resize',
+  'group/edge absolute -bottom-[5px] left-0 z-10 flex h-[9px] w-full cursor-ns-resize',
+  // Its corner turns its glyph `accent` on focus (M54 U2 recorded whether that is enough).
+  'cursor-nwse-resize items-end justify-end p-[3px] text-ink-tertiary',
 ]
 
 describe('a reviewed surface keeps the ui rule rows', () => {
