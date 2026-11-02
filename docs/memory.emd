@@ -5837,7 +5837,7 @@ position: 349
 ### M54
 title: Design review: the app and getemerald.dev
 goal: A design critique and audit of every surface of the app and of Emerald's page (with the tour it embeds), run with Impeccable's critique and audit against the ui rule rows (D-529). Its findings are written down as rows the maintainer judges, and those findings on manual entry and forms shape M55 before M55 is planned.
-state: open
+state: closed
 position: 350
 
 ### M55
