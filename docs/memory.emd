@@ -6238,6 +6238,12 @@ should: Saying nothing adds up is the default, not a declaration
 breaks: The model still read 'nothing here has to add up' as extra ceremony for lists
 state: open
 
+### Demo (the browser build), #/settings/export: read the whole-document line, then press Ctrl+Shift+S in a browser with a document open.
+unit: M54 U4
+should: Words that are true where they are read (Words name the rule); Ctrl+Shift+S does what the screen says or nothing.
+breaks: It says File › Save a copy… Ctrl+Shift+S; a browser tab has no File menu, and useSaveShortcuts.ts:19 ignores Shift, so Ctrl+Shift+S runs a plain Save.
+state: open
+
 ### Demo (the browser build), #/settings/model.
 unit: M54 U3
 should: The screen's title, its one sentence and one text action — where to get the desktop app (An empty state is one sentence and one text action).
@@ -6257,16 +6263,58 @@ should: One sentence and one text action (An empty state is one sentence).
 breaks: Two sentences and a filled primary "Read a file" button. Readers.tsx:36-50.
 state: open
 
+### Demo, a fresh load of app.html?document=project.emd#/: press Back in the title bar.
+unit: M54 U4
+should: Back is disabled where there is nowhere to go, or the redirect replaces the history entry.
+breaks: Back is enabled (history.state.idx is null) and lands on the same Dashboard through the redirect (HistoryArrows.tsx:43).
+state: open
+
+### Demo, any document and screen: read the browser tab's title.
+unit: M54 U4
+should: The page title names the document and the screen (WCAG 2.4.2).
+breaks: It is always "Emerald": nothing sets document.title.
+state: open
+
 ### Demo, any document, #/formats/<a format> (Table) — read the headings (a screen reader's heading list).
 unit: M54 U1
 should: A screen names itself with a heading, as Roadmap and Ready to start do with an h1 (WCAG 1.3.1 and 2.4.6; web interface guidelines: hierarchical headings).
 breaks: A format's table page has no h1 or h2 at all; its name (Unit) is plain text.
 state: open
 
+### Demo, any document, #/mcp: read the headings and the buttons; look at a tool's removes line.
+unit: M54 U4
+should: One h1 per screen (WCAG 1.3.1/2.4.6); a button named for what it copies; colour for genuine signal only (Colour carries meaning). QUESTION for the maintainer: is removes in negative meant as a warning?
+breaks: The page starts at h2; two buttons are both named Copy; removes is coloured negative (Mcp.tsx:95, :113).
+state: open
+
+### Demo, any document, #/mcp: read the setup snippets.
+unit: M54 U4
+should: The command that works today, npx -y emerald-mcp, as docs/plugin.md gives it (Words name the rule).
+breaks: The snippet points at '<folder Emerald was built in>/dist-plugin/server.mjs' and a note says it is not in the download yet (mcp/connect.ts:20 SERVER_PLACEHOLDER, Mcp.tsx:47) — the server has shipped on npm since 0.1.0.
+state: open
+
 ### Demo, any document, light and dark: the dashboard popovers' headings (NEW CHART, HEADLINE TOTAL) and menu descriptions, every block's subtitle, the filter band's zero-count choices, counts, "· 18.00 to 250.00" and its × button, the rollup's Delete chart and unpressed Bars/Line, #/connections' instructions and column names.
 unit: M54 U2
 should: Text a reader needs is at 4.5:1; ink-tertiary only for what is not essential (Contrast 4.5:1 for text). QUESTION for the maintainer: One level of tabs and Charts are ink set tab labels and axis labels in ink-tertiary, and on a chart whose bars are unlabelled the month is the bar's only label — does either rule give way?
 breaks: All are ink-tertiary: 2.62:1 in light, 3.18–3.65:1 in dark (M54 U1 recorded the tab labels alone). The block subtitle is the one the empty dashboard promises says which format a block reads; the band's × is ~12px wide and does what Clear does. Dashboard.tsx:580, :705, :715; MakeBlock.tsx:99; FilterBand.tsx:393, 848-919; Connections.tsx:247.
+state: open
+
+### Demo, any document, light and dark: the theme control at the rail's foot; Tab to it and press the arrows; hover the collapsed rail's theme button.
+unit: M54 U4
+should: Square by spending the radius tokens; No gradients, no shadows (--shadow-pop belongs to menus, panels and dialogs); a radio group is one tab stop moved by arrows (APG radio group).
+breaks: A rounded-full pill whose knob wears shadow-pop; each role=radio is its own tab stop and the arrows do nothing (ThemeToggle.tsx:24-50); ThemeCycleButton hovers bg-surface on a surface rail, so hover shows nothing.
+state: open
+
+### Demo, any document, light: the rail's collapse and Guide buttons, a folder's open arrow, and the unselected theme buttons at the rail's foot.
+unit: M54 U4
+should: An icon you act on reads at least 3:1 against its plane (WCAG 1.4.11); An icon is an action puts icons at ink-secondary at rest.
+breaks: text-ink-tertiary on surface, 2.45:1 (Sidebar.tsx:302, :320; ThemeToggle.tsx:47; RailFolder.tsx:121).
+state: open
+
+### Demo, any document: Ctrl+K and read the results with a screen reader.
+unit: M54 U4
+should: A listbox owns only options, or groups of them: each heading a role=group with aria-labelledby, or outside the list (ARIA required owned elements).
+breaks: The group headings are <p> elements directly inside role=listbox (CommandPalette.tsx:384, :471).
 state: open
 
 ### Demo, any format: the view tabs (Table, Board, List, Dashboard, Claims) in light and dark.
@@ -6347,6 +6395,18 @@ should: A field that looks typeable narrows as typed (Choices are ChoiceField: i
 breaks: It is a read-only search field: typing goes nowhere and Enter picks the first column, date. Escape from the value popover drops focus to the body. FilterBand.tsx:452-466.
 state: open
 
+### Demo, custom.emd, #/settings/packs and #/settings/export; custom.emd #/year (NoLedger).
+unit: M54 U4
+should: Every screen opens the same way, with one h1 (WCAG 1.3.1/2.4.6).
+breaks: Export has an eyebrow and an h1; Packs and NoLedger have no heading at all.
+state: open
+
+### Demo, custom.emd, #/settings/packs.
+unit: M54 U4
+should: One primary action per screen; an action names its object when the verb alone is ambiguous (An action is a verb); Square by spending the radius tokens; No card borders by default.
+breaks: Two filled "Keep this pack here" buttons, neither naming its pack; each pack is a rounded-lg (12px) card with a hairline-strong border.
+state: open
+
 ### Demo, custom.emd, the entry list beside a card charge: in quick add ("Add a card charge") type Lunch spot 35 and press Enter.
 unit: M54 U1
 should: Quick add either fills what it can and says which fields are still needed, or says plainly that it opened the form and why (Nielsen: visibility of system status). Whether quick add parses values or only takes a title is M55's to decide.
@@ -6369,6 +6429,24 @@ state: open
 unit: M54 U2
 should: A saved view reads the same wherever it is placed, in its own order.
 breaks: The block ignores the view's order: FUEL STATION, CORNER MARKET, BOOK NOOK; M2 U2, M1 U1, M2 U1, M1 U2.
+state: open
+
+### Demo, demo.emd, #/ in dark: select a month in All months and read its flow figures.
+unit: M54 U4
+should: Text at 4.5:1 against its plane (Contrast 4.5:1 for text), on the selected row's plane too.
+breaks: On the fc-row-on plane (accent-soft) flow-saved reads 4.16:1 and flow-out / negative 4.30:1, at 14px and 11px.
+state: open
+
+### Demo, demo.emd, #/ in light and dark: Home's All months column headers and a card's missing-statement line ("Everyday Card ···1234 · No statement read for this month"); the palette's group headings and counts (Ctrl+K); the rail folders' entry counts; #/settings/packs' list of places; #/settings/export's shortcut line; #/mcp's tool names and its two notes; the guide's mono reopen line.
+unit: M54 U4
+should: Text a person needs is at least 4.5:1 and ink-tertiary is for non-essential text only (Contrast 4.5:1 for text). QUESTION for the maintainer: the missing-statement line is the genuine signal the product exists for, and ink-tertiary is 2.45-2.62:1 in light — move these to ink-secondary (5.33:1 light, 7.61:1 dark), or raise ink-tertiary itself?
+breaks: All in ink-tertiary: 2.45-2.62:1 in light (fails even 3:1), 3.18-3.65:1 in dark. Home.tsx:555, :601; CommandPalette.tsx:385-386; RailFolder.tsx:139; Packs.tsx; Export.tsx; Mcp.tsx:40,47,121; Guide.tsx:113.
+state: open
+
+### Demo, demo.emd, #/: Home's All months table — Tab to a month, press Space, scroll; and read its rows' colours.
+unit: M54 U4
+should: A data table: sticky header on its own scroll region; a row you open behaves as a link or button. QUESTION for the maintainer: The four flows colour Home's figures says a single row stays ink — is a month row a single row?
+breaks: Rows are <tr tabIndex=0> with no role and Space does nothing; the header does not stick; each month row's figures wear their flow colours (Home.tsx:571-580).
 state: open
 
 ### Demo, demo.emd, #/agenda: click 7 days (a later row exists); then read the "by" sentence above it.
@@ -6444,6 +6522,18 @@ should: Its actions visible at rest (IconAction, or the row's one menu); the acc
 breaks: Duplicate and Delete are opacity-0 until hover or focus; the binding is borderless and reads as text, "Everyday Card 1234 ·1234" (the name already ends in the digits); pairs read "transaction date date · merchant · transaction amount original amount". Mappings.tsx:175, ~187-240, ~250-280.
 state: open
 
+### Demo, demo.emd, any screen but Home with one answer waiting: read the notice and press its button. Then raise an error notice.
+unit: M54 U4
+should: Agreement in number, and a button named for what it does (An action is a verb); an error announced as an alert.
+breaks: "\"1 answer waits on Home.\" with \"Answer them\", which only navigates to Home (Notices.tsx:501-512); the error notice is text-negative inside a polite role=status region (Notices.tsx:104, :462)."
+state: open
+
+### Demo, demo.emd: Guide me, then click between the step dots.
+unit: M54 U4
+should: Targets of at least 24px (WCAG 2.5.8).
+breaks: Each step dot is a button 18x6px (Guide.tsx:289-299).
+state: open
+
 ### Demo, project.emd and demo.emd, #/connections in light and dark, first fit.
 unit: M54 U2
 should: A format's title wins over its machine name, labels do not print on each other, and the fit leaves room for the side list.
@@ -6504,6 +6594,12 @@ should: All three ways start a new row from the same defaults: D-518 has a new e
 breaks: Entry: the table's blank row refuses — "Row 8, state: state is required and was not given" — while Add and quick add both start state at planned. The person has to know which of three ways applies the defaults.
 state: open
 
+### Demo, project.emd, #/formats/unit/board (any place under Development): read the rail with a screen reader.
+unit: M54 U4
+should: Exactly one aria-current=page, on the page that is lit.
+breaks: Development and Formats both carry aria-current=page (the NavLink to /formats is active and only its class is suppressed, Sidebar.tsx:149-166); the lit child (Unit board, Packs, Roadmap) is a plain Link with none (Sidebar.tsx:210).
+state: open
+
 ### Demo, project.emd, #/formats/unit/board and #/formats/milestone/roadmap, both themes: the M2 and SESSION 1 marks on a card, and the PLANNED / OPEN state marks.
 unit: M54 U1
 should: Question for the maintainer: the rule A chip is text and a dot says no border; The views' shapes says labels and chips are uppercase and square. Are these marks chips, and may they carry a 1px border?
@@ -6558,6 +6654,12 @@ should: A link field ends its list with + New…, makes the linked row in place 
 breaks: Entry: no link field of a declared format offers + New…, and an unknown name lists nothing at all — no "no match" line, no way to make it. The only + New… in the app is SelectOrNew, which only the parked ledger's screens use (and it is a <select>, below).
 state: open
 
+### Demo, project.emd: Ctrl+K, press Tab into the results until "Development · Unit board" has focus, press Enter. Then keep pressing Tab.
+unit: M54 U4
+should: The focused result is the one that runs, and Tab stays inside a modal dialog: options tabIndex -1 with the field as the combobox that owns them (aria-activedescendant), and a Tab trap (Keyboard first; the ARIA combobox pattern).
+breaks: Each option is a tab stop, but Enter is handled on the dialog and runs items[selected] — the arrow-selected row (Dashboard), not the focused one. Tab walks every result and then leaves the aria-modal dialog (CommandPalette.tsx:165-184, :392-398).
+state: open
+
 ### Demo, project.emd: a dashboard chart of units counted by month — its hover readout, the rollup tab's Line chart axis.
 unit: M54 U2
 should: Counts in the format's own word and whole numbers — "1 unit", ticks 0, 1, 2 (Words name the rule).
@@ -6574,6 +6676,12 @@ state: open
 unit: M54 U2
 should: Screens name themselves alike with one h1 at one ramp step (consistency; web interface guidelines: hierarchical headings).
 breaks: Dashboard's h1 is secondary-number (20px) semibold, Calendar's title (24px) medium; #/connections has no h1 at all — its first heading is the h2 "Every connection, in words".
+state: open
+
+### Demo, project.emd: the rail's format folders (Decision, Inbox, Open question) and the collapse button; read them with a screen reader and measure them.
+unit: M54 U4
+should: A stable name with aria-expanded / aria-pressed carrying the state, the count apart from the name, and targets of at least 24px (WCAG 2.5.8; Keyboard first).
+breaks: Names read "Decision4", "Inbox0"; the toggle's label flips with its state beside aria-expanded ("Open Open question"); the collapse button flips its label beside aria-pressed; folder toggles are 20x25 and Rename/Delete icons 20x20 (RailFolder.tsx:119-139, :424-433; Sidebar.tsx:318-337).
 state: open
 
 ### Demo: #/dashboard on custom.emd (empty), #/agenda with nothing ahead, #/connections on a document with no connection.
@@ -6604,6 +6712,19 @@ state: open
 unit: M54 U3
 should: One filled action at a time; a disabled Write, or one that is not the next step, is secondary (One primary action per screen).
 breaks: #/read: "Answer them" and a disabled "Write 0" both filled; #/paychecks/read: "Answer them", "Write 0" and "Check them over"; the format read page: "Use" and "Write 0 files". ReadStatements.tsx, ReadSlips.tsx, ReadFiles.tsx:458 and :1544.
+state: open
+
+### Demo: custom.emd #/year (NoLedger) beside #/settings/packs; demo.emd #/ (Home's read and add buttons).
+unit: M54 U4
+should: One name per thing (Make it in place; An action is a verb).
+breaks: Keeping the ledger is "Keep a ledger in this document" on NoLedger and "Keep this pack here" on Packs; Home says Read files, Read… and Read for one act, and has two buttons both named Add by hand.
+state: open
+
+### Desktop shell: Help › About, and the document bar's Earlier copies; Tab through each and close it.
+unit: M54 U4
+should: A modal traps Tab and returns focus to what opened it; loading is Working.tsx (One progress indicator).
+breaks: Both are aria-modal with no Tab trap and do not restore focus on close (About.tsx:72, EarlierCopies.tsx); loading is the text "Looking…" (About.tsx:121, EarlierCopies.tsx:178).
+not_tried: Shell only: read in code, not driven (U6 drives the shell).
 state: open
 
 ### Dry-run a read of long notes
@@ -6942,6 +7063,12 @@ state: open
 unit: M54 U2
 should: Mono for raw cells only (One family, two scripts); an icon action is a 28px target with a 16px icon (An icon is an action); no shadow outside the floating rooms (No gradients, no shadows).
 breaks: Chart value labels are Plex Mono at 11px; ⋯ is a 26px target with a 14px icon; drop targets mark with shadow-[-3px_0_0_var(--color-accent)]. (Off-ramp text-[13px]/[11px] across src/ui is M54 U1's row.)
+state: open
+
+### Read the class strings of the surface: src/ui/RailFolder.tsx, About.tsx, guide/Guide.tsx, guide/GuideLine.tsx, EarlierCopies.tsx, Sidebar.tsx, CommandPalette.tsx, screens/Home.tsx (grep text-\[ and -\[…px\], style={{).
+unit: M54 U4
+should: rem for type; Every value is a token; Nothing between the spacing steps. QUESTION for the maintainer: most of these are 13px — does the ramp want a 13px step?
+breaks: Type the ramp has no step for: text-[13px], [12.5px], [11px], [10px], [15px], [34px] (RailFolder 7, About 10, Guide 6, EarlierCopies 5, Sidebar 2, GuideLine 2, Overview 1); inline pixel sizes: the rail width 56/200 (Sidebar.tsx:75) and paddingLeft 46+indent (RailFolder); off-scale spacing pl-[26px], h-[34px], h-[26px], gap-[3px].
 state: open
 
 ### Read the class strings of the surface: src/ui/formats/EntryView.tsx, EntryValue.tsx, EntryList.tsx, ListView.tsx, LinkViews.tsx, BoardView.tsx, FormatRows.tsx (grep text-\[ and -\[…px\]).
@@ -14146,11 +14273,17 @@ report: "LANDED 3933d58. 24 open review_entry rows on M54 U3 (3 start breaks wit
 milestone: M54
 scope: app
 title: The document's own screens reviewed: home, the rail, the document bar, the command palette, notices, the guide, settings, MCP, packs, export and about
-state: planned
+landed: 2026-11-02
+state: built
 brief: M54 (D-530), after U1 set the procedure — read M54 U1's report first (`format_rows unit match:{ref:"M54 U1"} columns:[report]`). Surface: the home / landing screen (Home, HomeShell, Overview, NoLedger), the rail (Sidebar, RailFolder, NavGlyph), the document bar and title bar as the browser shows them (DocumentBar, TitleBar, HistoryArrows, EarlierCopies), the command palette, notices, the guide (src/ui/guide/), /settings, /mcp (Mcp), Packs, Export and About. The desktop window's own chrome is U6's, not this one's. Maintainer's answers, 2026-11-02. AGAINST: the demo documents only — `npm run dev:demo` (preview `demo-tour`, :4181; the app is /app.html): demo.emd (ledger pack), custom.emd (no pack), project.emd (development pack), synthetic. Never a working .emd. CONDITIONS: light and dark at a desktop width, nothing else. TOOLS: `format_rows rule match:{scope:ui, state:live} columns:[name, statement]`, root DESIGN.md and PRODUCT.md; `/impeccable critique` and `/impeccable audit` on the surface (Impeccable 4.8.0, user level; per-edit hook off — if per-edit findings appear, `/impeccable hooks off`); the `web-design-guidelines` skill over the surface's files; the Impeccable detector once at the end, never per edit. Verify with read_page / get_page_text; screenshots only where the answer is visual. FINDINGS: one open `review_entry` row per finding on this unit — `do` route and action named exactly, `should` what is right with its rule row or guideline, `breaks` what happens now; anything about adding or editing a row by hand starts `breaks` with `Entry:` for M55. Never taste alone; arguing with a live rule row is a question for the maintainer. FIXING: a plain breach of a live ui rule row (hex or pixel literal, missing focus ring, <select> for ChoiceField, document string outside Bidi) is fixed in place with a test where one can fail and listed; anything needing judgement is only recorded. The rail's ledger entries are reviewed here as rail items; the ledger's screens are U5's. Unsettled: stop and ask. REPORT: rows written, fixes made, what in the procedure worked or wasted time. Done-test: each listed screen critiqued and audited in both themes, findings are open rows on M54 U4, tests and typecheck pass.
-files: Reviewed: src/ui/Sidebar.tsx, RailFolder.tsx, NavGlyph.tsx, DocumentBar.tsx, TitleBar.tsx, HistoryArrows.tsx, EarlierCopies.tsx, CommandPalette.tsx, Notices.tsx, About.tsx; src/ui/guide/; src/ui/screens/Home.tsx, HomeShell.tsx, Overview.tsx, NoLedger.tsx, Mcp.tsx, Packs.tsx, Export.tsx and the settings screen. Rows: docs/memory.emd (review_entry).
+files: src/ui/Sidebar.tsx, RailFolder.tsx, DocumentBar.tsx, CommandPalette.tsx, Notices.tsx, About.tsx, EarlierCopies.tsx, guide/Guide.tsx; src/ui/screens/Home.tsx, Overview.tsx, Export.tsx; src/ui/formats/EntryView.tsx, surfaceRules.test.ts. Reviewed, unchanged: NavGlyph, TitleBar, HistoryArrows, guide/GuideLine, screens/HomeShell, NoLedger, Mcp, Packs, Section, home/WaitingList, home/parts. Rows: docs/memory.emd (review_entry).
 blocks: ["M54 U1"]
+taken_by: run-milestone driver
+started: 2026-11-02
+branch: main
+commit: 871058f
 paths: "src/ui/Sidebar.tsx\nsrc/ui/RailFolder.tsx\nsrc/ui/NavGlyph.tsx\nsrc/ui/DocumentBar.tsx\nsrc/ui/TitleBar.tsx\nsrc/ui/HistoryArrows.tsx\nsrc/ui/EarlierCopies.tsx\nsrc/ui/CommandPalette.tsx\nsrc/ui/Notices.tsx\nsrc/ui/About.tsx\nsrc/ui/guide/\nsrc/ui/screens/Home.tsx\nsrc/ui/screens/HomeShell.tsx\nsrc/ui/screens/Overview.tsx\nsrc/ui/screens/NoLedger.tsx\nsrc/ui/screens/Mcp.tsx\nsrc/ui/screens/Packs.tsx\nsrc/ui/screens/Export.tsx"
+report: LANDED 871058f. 21 open review_entry rows on M54 U4 (0 start breaks with Entry: - nothing on this surface adds or edits a row by hand; 3 are questions for the maintainer: ink-tertiary on essential text here, a Home month row coloured by flow, and the removes-in-red on #/mcp). No decision. Guard, privacy, typecheck and docs:check (0 errors) green; related tests 55/55.  FIXES (plain ui-rule breaches, in place): (1) Every value is a token - text-[12/16/24px] -> text-caption/heading/title in RailFolder, About, EarlierCopies, Guide, Home, Overview, Export. (2) Keyboard first - the rail folder's filter had outline-none and no replacement: its label turns its rule accent on focus-within; the palette's field turns its bottom rule accent on focus. (3) Hebrew needs bidi isolation - the document's name (DocumentBar, four Notices, the file waiting to open), a format's title and a pack's group in the rail (Sidebar, RailFolder) and the palette (titles, '<n> more in <format>', command labels), and EntryView's column sections now inside Bidi. Guard: surfaceRules.test.ts REVIEWED +22 files; new check 'isolates every name a document gave it' (named expressions must sit directly inside <Bidi>) - it caught EntryView's section label on its first run; a hidden input with tabIndex -1 (a picker a button opens) is exempt from the ring check; the rail's rename field and the dialogs' own boxes listed in HELD_ELSEWHERE.  PROCEDURE - WHAT WORKED: preview_start first (got 4183; 4181/4182 still held), then A at once with the port and 'open your own tab'; while it walked (~9 min, 200k tokens, 95 tool uses, 22 findings) I did the whole code audit, fixes, guard, related tests, typecheck, the detector (0 findings, fourth time) and web-design-guidelines (one WebFetch) - A came back just as I ran out, almost no idle. The guard-first habit again paid: extending it with a Bidi check found a breach outside this surface. Verified A's claims in code before writing (Mcp's stale server path, Ctrl+Shift+S ignoring Shift, palette options as tab stops, ThemeToggle's rounded-full + shadow-pop, the Packs heading): all held; dropped one as taste (palette rows repeating the format under its heading).  WHAT WASTED TIME: a stray `cat > file` before a python heredoc sat on stdin until the 2-minute timeout - Write the script and run it with < /dev/null; my first replace script asserted a count of 4 where there were 5 - count with grep first. A changed the shared fc-theme while walking (it set it back) - tell A which theme to leave.  NOT DONE: About, Earlier copies, Open recent, the dirty dot and save notices exist only in the shell (U6 should drive them); GuideLine hidden by guide state (code only); Overview is the ledger's net worth (U5's). Most of this surface's off-ramp sizes are 13px - a question whether the ramp wants that step.
 
 ### M54 U5
 milestone: M54
