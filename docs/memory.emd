@@ -6446,7 +6446,7 @@ state: fault
 ### Demo, custom.emd, #/formats/card_charge: Filter by…, Search, a value popover and its is / is not group; the rollup tab's Bars/Line toggle. Compare with the dashboard's menus and blocks.
 unit: M54 U2
 should: Cards and controls are square by spending --radius-card and --radius-control (Square by spending the radius tokens).
-breaks: FIELD in src/ui/components/fieldLook.ts is rounded-md (8px), so every field in the app is round while buttons, menus and blocks are square; the band's popover and Held as group are rounded-md, its option rows and the Bars/Line toggle rounded. FilterBand.tsx:565, 583, 694, 836, 890, 915; RollupView.tsx:91. Not fixed here: FIELD reaches every screen. Owned by M54 F1.
+breaks: FIELD in src/ui/components/fieldLook.ts is rounded-md (8px), so every field in the app is round while buttons, menus and blocks are square; the band's popover and Held as group are rounded-md, its option rows and the Bars/Line toggle rounded. FilterBand.tsx:565, 583, 694, 836, 890, 915; RollupView.tsx:91. Not fixed here: FIELD reaches every screen. Owned by M54 F1. Fixed in M54 F1 (96048e9). FIELD, SELECT and FIELD_MULTILINE only: the FilterBand and RollupView lines are in M54 F3's paths and were left to it.
 state: fault
 
 ### Demo, custom.emd, #/formats/card_charge: click Filter by…, type amo, press Enter; open a value popover and press Escape.
@@ -6500,7 +6500,7 @@ state: open
 ### Demo, demo.emd, #/ in dark: select a month in All months and read its flow figures.
 unit: M54 U4
 should: Text at 4.5:1 against its plane (Contrast 4.5:1 for text), on the selected row's plane too.
-breaks: On the fc-row-on plane (accent-soft) flow-saved reads 4.16:1 and flow-out / negative 4.30:1, at 14px and 11px. Owned by M54 F1.
+breaks: On the fc-row-on plane (accent-soft) flow-saved reads 4.16:1 and flow-out / negative 4.30:1, at 14px and 11px. Owned by M54 F1. Fixed in M54 F1 (96048e9).
 state: fault
 
 ### Demo, demo.emd, #/ in light and dark: Home's All months column headers and a card's missing-statement line ("Everyday Card ···1234 · No statement read for this month"); the palette's group headings and counts (Ctrl+K); the rail folders' entry counts; #/settings/packs' list of places; #/settings/export's shortcut line; #/mcp's tool names and its two notes; the guide's mono reopen line.
@@ -6849,7 +6849,7 @@ state: open
 ### Demo, project.emd, #/formats/milestone/roadmap and #/agenda in light: the OPEN state label.
 unit: M54 U2
 should: At least 4.5:1 — an accent is chosen to carry its text at AA (Contrast 4.5:1 for text).
-breaks: accent on accent-soft at 11px measures 4.43:1. src/ui/theme/tokens.css, .fc-state[data-tone="live"] (~994). Owned by M54 F1.
+breaks: accent on accent-soft at 11px measures 4.43:1. src/ui/theme/tokens.css, .fc-state[data-tone="live"] (~994). Owned by M54 F1. Fixed in M54 F1 (96048e9).
 state: fault
 
 ### Demo, project.emd, #/formats/milestone: open the Roadmap tab, and unit's Ready to start; read the header bar and the h1 on those and on #/agenda.
@@ -6873,7 +6873,7 @@ state: fault
 ### Demo, project.emd, #/formats/unit/board and #/formats/milestone/roadmap, both themes: the M2 and SESSION 1 marks on a card, and the PLANNED / OPEN state marks.
 unit: M54 U1
 should: Question for the maintainer: the rule A chip is text and a dot says no border; The views' shapes says labels and chips are uppercase and square. Are these marks chips, and may they carry a 1px border?
-breaks: They are .fc-state with a 1px solid border — boxed labels, not text and a dot. Verdict 2026-11-02 (D-531): text and a dot everywhere — .fc-state loses its border app-wide; square in The views' shapes means no radius, never a box. Owned by M54 F1.
+breaks: They are .fc-state with a 1px solid border — boxed labels, not text and a dot. Verdict 2026-11-02 (D-531): text and a dot everywhere — .fc-state loses its border app-wide; square in The views' shapes means no radius, never a box. Owned by M54 F1. Fixed in M54 F1 (96048e9).
 state: fault
 
 ### Demo, project.emd, #/formats/unit/board: click a card anywhere but its title.
@@ -14945,10 +14945,17 @@ report: M53 U7 built at 2057542 (D-521). Dashboards, ported from the approved mo
 milestone: M54
 scope: app
 title: Shared looks: a chip without a border, square fields, and the tones that miss AA
-state: planned
+landed: 2026-11-02
+decision: D-531
+state: built
 brief: M54 fix unit (D-531, D-532). YOUR ROWS, exactly these: `format_rows review_entry search:"Owned by M54 F1." columns:[unit, do, should, breaks]` — 4 rows; the phrases below say what each asks.; goes first, every unit that draws waits on it. Change ONLY the shared tokens and components; every other unit sweeps its own files. Rows (`format_rows review_entry match:{unit:["M54 U1","M54 U2","M54 U4"], state:fault} search:"<phrase>" columns:[do, should, breaks]`): U1 'They are .fc-state with a 1px solid border' — `.fc-state` loses its border app-wide, text and a dot, uppercase, no radius (rules A chip is text and a dot, The views' shapes); U2 'FIELD in src/ui/components/fieldLook.ts is rounded-md' — fields square like buttons and menus (Square by spending the radius tokens); U2 'accent on accent-soft at 11px measures 4.43:1' — the live tone at AA; U4 'On the fc-row-on plane flow-saved reads 4.16:1' — the flows and negative at AA on the row-on plane. U3's 'NO READER YET' border goes with .fc-state here; its tone is F13's. The ledger's screens get these through the shared tokens — that is allowed (D-532). Verify on the demo documents (`npm run dev:demo`, preview demo-tour), light and dark, contrast by a javascript_tool probe; read_page over screenshots. Tests: `npx vitest related <files> --run`, `npm run typecheck`, `npx vitest run src/privacy.test.ts`, `npm run check:tours` (it draws every tour). Land: append 'Fixed in M54 F1 (<commit>).' to each row's breaks and leave it `fault` for the maintainer's review (D-532). Unset: stop and ask.
-files: src/ui/theme/tokens.css (.fc-state, tones, flows), src/ui/components/fieldLook.ts, src/ui/formats/tone.ts
+files: src/ui/theme/tokens.css src/ui/components/fieldLook.ts src/ui/formats/surfaceRules.test.ts
+taken_by: run-milestone driver
+started: 2026-11-02
+branch: main
+commit: 96048e9
 paths: "src/ui/theme/tokens.css\nsrc/ui/components/fieldLook.ts\nsrc/ui/formats/tone.ts"
+report: M54 F1 built at 96048e9; docs:check green (0 errors, 7 standing warnings). .fc-state is now text and a dot app-wide: no border, no fill, no radius; tokens.css draws the dot as ::before unless the chip carries .fc-state-dot or the working svg - filled for done/live/finding tones and untoned marks, hollow for waiting/wait, dashed for struck. FIELD, SELECT and FIELD_MULTILINE spend --radius-control (rounded-control). Tones: light accent-soft #e8f6f1 -> #eef9f5 (accent on it 4.43 -> 4.58:1; the mark's green untouched); dark negative and flow-out #e5675e -> #ea736a (4.30 -> 4.79:1 on accent-soft), dark flow-saved #2f9e6a -> #37a874 (4.16 -> 4.69:1). Guard: a new describe in src/ui/formats/surfaceRules.test.ts (no border/background on .fc-state rules, fields spend rounded-control, accent/negative/positive/flows/ink-secondary >= 4.5:1 on accent-soft in both themes); it fails against HEAD~1's tokens.css and fieldLook.ts. Verified on the demo (preview on 4184) by javascript_tool probes in light and dark: project.emd roadmap and unit board chips 0px border, transparent fill, dot present, min 4.93:1 light / 6.64:1 dark; demo.emd Home's selected month on fc-row-on min 4.66:1 light / 4.69:1 dark; custom.emd card_charge Filter by and Search fields radius 0. Tests: related (8 files, 472), privacy, typecheck, check:tours (10 runs) all green. No new decision (D-531 covers it). Left for others: FilterBand.tsx 565/583/694/836/890/915 and RollupView.tsx:91 rounded-md/rounded on the band's popover, option rows and Bars/Line toggle are in F3's paths, not swept here though the U2 row names them; the sidebar's Collapse button is 3.5px round (F5's). Nothing for the maintainer to look at beyond the four fault rows.
 
 ### M54 F10
 milestone: M54
