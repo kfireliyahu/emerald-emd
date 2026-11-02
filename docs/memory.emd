@@ -6251,7 +6251,7 @@ state: fault
 ### Close a window with unsaved changes; and press Install and restart on an update notice with unsaved changes.
 unit: M54 U6
 should: The question names the document, and says restart when it is a restart (platform save-on-close dialogs).
-breaks: 'Save your changes before closing?' for both, never naming the document (main.ts:657). Owned by M54 F7.
+breaks: 'Save your changes before closing?' for both, never naming the document (main.ts:657). Owned by M54 F7. Fixed in M54 F7 (2f07b5d).
 state: fault
 
 ### Command palette › Back up now, then read the notice that follows.
@@ -7162,20 +7162,20 @@ state: open
 ### In the shell, hover the document's name in the title bar to see where the file lives.
 unit: M54 U6
 should: The location has a home outside the drag region (shell rule 'A button in a drag region', by extension) — the name's no-drag, or About, or the menu.
-breaks: title={adapter.describe()} sits on a span inside app-drag that is not on the no-drag list (tokens.css:382); Windows delivers no hover in a drag region. Owned by M54 F7.
+breaks: title={adapter.describe()} sits on a span inside app-drag that is not on the no-drag list (tokens.css:382); Windows delivers no hover in a drag region. Owned by M54 F7. Fixed in M54 F7 (2f07b5d).
 not_tried: Hover over a drag region needs a real pointer; CDP cannot show the native tooltip.
 state: fault
 
 ### In the shell, open a document, then File › Save a Copy… (or Ctrl+Shift+S), name it and keep editing.
 unit: M54 U6
 should: QUESTION for the maintainer: the live term row 'Save a copy' says it carries on in the new file — which is what every platform calls Save As (Words name the rule). Either the name changes, or the act keeps the window on the original. The native dialog should carry the action's own title.
-breaks: The window moves onto 'x (copy).emd' and later saves go there; the original is left behind. showSaveDialog has no title, so Windows titles it 'Save As' under a menu item that says Save a Copy (main.ts:510). Verdict 2026-11-02 (D-531): keep the act, rename it Save as… everywhere, with the dialog titled to match; the term row is now Save as. Owned by M54 F7.
+breaks: The window moves onto 'x (copy).emd' and later saves go there; the original is left behind. showSaveDialog has no title, so Windows titles it 'Save As' under a menu item that says Save a Copy (main.ts:510). Verdict 2026-11-02 (D-531): keep the act, rename it Save as… everywhere, with the dialog titled to match; the term row is now Save as. Owned by M54 F7. Fixed in M54 F7 (2f07b5d).
 state: fault
 
 ### In the shell, with a document open, crash the page (or let it be killed by the OS), then close the window with unsaved work.
 unit: M54 U6
 should: Say what happened and offer to open the document again, with the crash snapshot (plain error with a way forward; shell rule 'beforeunload cancels silently' names the same silence).
-breaks: Driven: forcefullyCrashRenderer leaves a blank window (capturePage empty) and nothing is said; main.ts has no render-process-gone handler. Closing with unsaved work asks 'Save your changes before closing?' and Save sends save-and-close to the dead page, so the window stays (main.ts:657); only Don't Save gets out. Owned by M54 F7.
+breaks: Driven: forcefullyCrashRenderer leaves a blank window (capturePage empty) and nothing is said; main.ts has no render-process-gone handler. Closing with unsaved work asks 'Save your changes before closing?' and Save sends save-and-close to the dead page, so the window stays (main.ts:657); only Don't Save gets out. Owned by M54 F7. Fixed in M54 F7 (2f07b5d).
 state: fault
 
 ### In your own Claude Code: `claude plugin marketplace update emerald-emd`, then `claude plugin update emerald@emerald-emd`, start a new session and type /emerald: (or ask which skills it has).
@@ -7187,7 +7187,7 @@ state: open
 ### Keep two documents with the same name in different folders on the recents list, and open File › Open Recent and the title bar's Open recent.
 unit: M54 U6
 should: The entries tell the two apart (Words name the rule): the folder in the menu label, the folder's distinguishing end in the field, an '&' in a name escaped as '&&'.
-breaks: menu.ts:71 puts the path in toolTip, which Windows menus do not show, so the two look the same; the field's folder detail is tail-truncated ink-tertiary, cutting the part that differs (ChoiceField.tsx:231); entry.name is unescaped, so 'A & B.emd' turns & into a mnemonic. Owned by M54 F7.
+breaks: menu.ts:71 puts the path in toolTip, which Windows menus do not show, so the two look the same; the field's folder detail is tail-truncated ink-tertiary, cutting the part that differs (ChoiceField.tsx:231); entry.name is unescaped, so 'A & B.emd' turns & into a mnemonic. Owned by M54 F7. Fixed in M54 F7 (2f07b5d).
 state: fault
 
 ### Leave a guessed column unmapped in read_onto_format
@@ -7295,7 +7295,7 @@ state: fault
 ### Move a document that is on the recents list, then pick it from Open recent in the title bar (or File › Open Recent).
 unit: M54 U6
 should: '<name> is not at <folder> any more', with Open… as the way forward, and the path inside Bidi (Hebrew needs bidi isolation; error text names the fix).
-breaks: Driven: the notice reads "Error invoking remote method 'emerald:documents/read': Error: ENOENT: no such file or directory, open 'C:\…\custom.emd'" in negative, with only Dismiss; the entry drops off the list without a word (main.ts:533). Owned by M54 F7.
+breaks: Driven: the notice reads "Error invoking remote method 'emerald:documents/read': Error: ENOENT: no such file or directory, open 'C:\…\custom.emd'" in negative, with only Dismiss; the entry drops off the list without a word (main.ts:533). Owned by M54 F7. Fixed in M54 F7 (2f07b5d).
 state: fault
 
 ### Next closing pass in this repo: the session calls land_units against docs/memory.emd (dry run, then commit: true) — or a driver's claim_units before it.
@@ -7384,7 +7384,7 @@ state: accepted
 ### Open Help › License (or Third-Party Notices) with the app set to Light and Windows set to dark; then press Ctrl+O in that window.
 unit: M54 U6
 should: The text window follows the app's theme and type (The theme is light, dark or system; One family, two scripts), and the app's accelerators do not act on the hidden document window (shell rule 'Text windows are not the document's window').
-breaks: Driven: the window follows the OS scheme (prefers-color-scheme dark while fc-theme was light) in the plain-text viewer's system mono; per code, the application menu's Ctrl+N/Ctrl+O still fire and send to the document window behind it. Owned by M54 F7.
+breaks: Driven: the window follows the OS scheme (prefers-color-scheme dark while fc-theme was light) in the plain-text viewer's system mono; per code, the application menu's Ctrl+N/Ctrl+O still fire and send to the document window behind it. Owned by M54 F7. Fixed in M54 F7 (2f07b5d).
 state: fault
 
 ### Open a document with a format of a few hundred entries; in the rail press the arrow beside its name, then another format's; type in the folder's filter line; press an entry; open a far entry from the Table.
@@ -7568,7 +7568,7 @@ state: fault
 ### Read TitleBar.tsx:52 and main.ts:895.
 unit: M54 U6
 should: Every value is a token: the title bar's inset floor and the window's first-paint background come from the tokens (or sit beside titleBarOverlay's documented pair with its test).
-breaks: Math.max(frame.insetStart, 12) is an inline pixel value; backgroundColor '#0b0b0c'/'#ffffff' duplicates --color-background with no test noticing when the tokens move. Owned by M54 F7.
+breaks: Math.max(frame.insetStart, 12) is an inline pixel value; backgroundColor '#0b0b0c'/'#ffffff' duplicates --color-background with no test noticing when the tokens move. Owned by M54 F7. Fixed in M54 F7 (2f07b5d).
 state: fault
 
 ### Read a folder of notes holding [[name]] links in the body
@@ -7693,7 +7693,7 @@ state: fault
 ### Read the same commands in the File menu, the palette and the title bar.
 unit: M54 U6
 should: QUESTION for the maintainer: one name per thing (term rows, D-436) and one casing convention — is the native menu Title Case (the platform's) and the palette sentence case, or one for both?
-breaks: 'New'/'Open…' vs 'New document'/'Open document…'; 'Open Recent' vs 'Open recent…'; 'Command Palette…' vs the 'Commands' button; 'Third-Party Notices' vs 'Third-party notices'; the menu itself mixes Title Case and sentence case ('Earlier copies of this document…', 'Guide me'); 'Clear Menu' vs 'Clear recent documents'. Verdict 2026-11-02 (D-531): one name per command, sentence case everywhere, the native menu included (rule: A command has one name, in sentence case). Owned by M54 F7.
+breaks: 'New'/'Open…' vs 'New document'/'Open document…'; 'Open Recent' vs 'Open recent…'; 'Command Palette…' vs the 'Commands' button; 'Third-Party Notices' vs 'Third-party notices'; the menu itself mixes Title Case and sentence case ('Earlier copies of this document…', 'Guide me'); 'Clear Menu' vs 'Clear recent documents'. Verdict 2026-11-02 (D-531): one name per command, sentence case everywhere, the native menu included (rule: A command has one name, in sentence case). Owned by M54 F7. Fixed in M54 F7 (2f07b5d).
 state: fault
 
 ### Read the same folder again after editing notes
@@ -7860,7 +7860,7 @@ state: fault
 ### With no document open, use File › Save, Save a Copy… or Earlier copies; or Help › Guide me in a document that keeps no ledger.
 unit: M54 U6
 should: An item that cannot act is disabled (platform menu guideline), as the palette already hides Guide me there (commands.ts:287).
-breaks: All enabled and nothing happens; the menu is rebuilt only when recents change (main.ts refreshMenu). Owned by M54 F7.
+breaks: All enabled and nothing happens; the menu is rebuilt only when recents change (main.ts refreshMenu). Owned by M54 F7. Fixed in M54 F7 (2f07b5d).
 state: fault
 
 ### With the maintainer's yes, through the MCP only: declare investment (name unique, security_number unique, place -> holding_place), investment_reading (investment link, as_of, quantity decimal 6, price decimal 4 in agorot as printed, cost money, value money; identity quantity * price = value within 1%; one row per investment, as_of) and broker_transfer (transaction -> transaction unique, place -> holding_place) on a real .emd, then transcribe one real periodic statement.
@@ -7872,7 +7872,7 @@ state: dropped
 ### With three documents on Open Recent, open the third from Open recent in the title bar, then look at the list again.
 unit: M54 U6
 should: The document just opened is first: recents.ts's withRecent says 'most recent first'.
-breaks: Driven: it stays where it was. The read handler (main.ts:527) never calls withRecent — only the Open… picker, Save a copy and a launch path do — so a document opened from the list never rises on it. Owned by M54 F7.
+breaks: Driven: it stays where it was. The read handler (main.ts:527) never calls withRecent — only the Open… picker, Save a copy and a launch path do — so a document opened from the list never rises on it. Owned by M54 F7. Fixed in M54 F7 (2f07b5d).
 state: fault
 
 ### Write a quantity in the unit 'ug'
@@ -8738,7 +8738,7 @@ state: live
 
 ### Text windows are not the document's window
 statement: A window that is not the document's — Help's license and notices — gets no shell command, asks no unsaved-work question and does not reset the page's listening flag; code that means "the window" asks documentWindows(), never BrowserWindow.getAllWindows()[0].
-why: browser-window-created and did-start-loading fire for every window: a license window loading would otherwise mark the page as not listening and clear its unsaved flag, so the next close loses work without asking.
+why: browser-window-created and did-start-navigation fire for every window: a license window loading would otherwise mark the page as not listening and clear its unsaved flag, so the next close loses work without asking. (Since M54 F7 the reset is did-start-navigation on a new document, never did-start-loading, which Electron also fires for every #/ route.)
 kind: trap
 scope: shell
 decided_by: ["D-452"]
@@ -15083,11 +15083,18 @@ report: M54 F6 built at d3972c0; docs:check green (0 errors, 7 standing warnings
 milestone: M54
 scope: shell
 title: The shell's main process: recents that rise and say what is missing, a crash that recovers, one name per command, and Save as
-state: planned
+landed: 2026-11-02
+decision: D-532
+state: built
 brief: M54 fix unit (D-531, D-532). YOUR ROWS, exactly these: `format_rows review_entry search:"Owned by M54 F7." columns:[unit, do, should, breaks]` — 11 rows; the phrases below say what each asks., after F6 (its restore notice, Notices.tsx) and F1 (tokens.css). Rows (`format_rows review_entry match:{unit:"M54 U6", state:fault} columns:[do, should, breaks]`) by their breaks: 'menu.ts:71 puts the path in toolTip' (recents told apart, & escaped); '\'Save your changes before closing?\' for both' (name the document); 'the window follows the OS scheme' (the text window: the app's theme, no document shortcuts); 'Error invoking remote method' — DECIDED (D-532): '<name> is no longer at <folder>' in one sentence, and it leaves the recents list; 'New\'/\'Open…\' vs' — one name per command across the menu, the palette and the title bar, all sentence case (rule A command has one name, in sentence case); 'forcefullyCrashRenderer leaves a blank window' — DECIDED (D-532): render-process-gone reloads the window, which shows F6's restore notice; Save on a dead page never traps the close; 'The window moves onto' — rename Save a copy to Save as… everywhere (menu, palette, notices, ScreenBoundary, Export, comments, tests; the term row is already Save as) and title the dialog to match; 'title={adapter.describe()} sits on a span inside app-drag' (tokens.css no-drag); 'it stays where it was' (a document opened from the list rises); 'All enabled and nothing happens' (disable what has nothing to act on); 'Math.max(frame.insetStart, 12)' (no inline px, the background from the tokens with a test). Drive the shell with the verify-in-shell skill (kill leftover electron first). Tests: related (electron/menu.test.ts, src/ui/menuParity.test.ts, src/ui/commands.test.ts), typecheck, privacy; check:tours if the palette's words changed. Land: 'Fixed in M54 F7 (<commit>).' on each row's breaks, state left `fault` (D-532). Unset: stop and ask.
-files: electron/main.ts, electron/menu.ts, electron/menu.test.ts, src/ui/commands.ts, src/ui/commands.test.ts, src/ui/menuParity.test.ts, src/ui/Notices.tsx (labels), src/ui/ScreenBoundary.tsx, src/ui/useSaveShortcuts.ts, src/ui/theme/tokens.css (no-drag list)
+files: electron/main.ts, electron/menu.ts, electron/menu.test.ts, electron/bridge.ts, electron/preload.ts, electron/recents.ts, electron/recents.test.ts, electron/windowChrome.ts, electron/windowChrome.test.ts, src/ui/commands.ts, src/ui/commands.test.ts, src/ui/menuParity.test.ts, src/ui/Notices.tsx, src/ui/ScreenBoundary.tsx, src/ui/useSaveShortcuts.ts, src/ui/useSaveShortcuts.test.ts, src/ui/useShellCommands.ts, src/ui/DocumentBar.tsx, src/ui/TitleBar.tsx, src/ui/theme/tokens.css, src/state/documentStore.ts, src/data/storage/desktop.ts, src/data/storage/desktop.test.ts, src/data/storage/fileSystem.ts, src/App.tsx, src/ui/edition.ts, docs/02-architecture.md, docs/plugin.md
 blocks: ["M54 F1","M54 F6"]
+taken_by: run-milestone driver
+started: 2026-11-02
+branch: main
+commit: 2f07b5d
 paths: "electron/main.ts\nelectron/menu.ts\nelectron/menu.test.ts\nsrc/ui/commands.ts\nsrc/ui/commands.test.ts\nsrc/ui/menuParity.test.ts\nsrc/ui/Notices.tsx\nsrc/ui/ScreenBoundary.tsx\nsrc/ui/useSaveShortcuts.ts\nsrc/ui/theme/tokens.css"
+report: M54 F7 built at 2f07b5d; docs:check green (0 errors, 7 standing warnings). No new decision (D-531, D-532 cover it). RECENTS: recentFolders() in bridge.ts (shared by the File menu and the title bar's Open recent field) shows each document's folder cut to the end that tells two of one name apart ('finances.emd — …\b\2025'); the menu label carries it (no toolTip) with & doubled (menuText). A document opened from the list rises (the read handler calls noteOpened on success). A missing one: '<name> is no longer at <folder>.' with FSI/PDI around each (missingRecent in recents.ts, ENOENT only) and it leaves the list; documentStore's describe() strips Electron's "Error invoking remote method '…': Error: " from every shell error. CLOSE: 'Save your changes to <name> before closing?' / '… before restarting?' with an install line for Install and restart; buttons Save / Don't save / Cancel. CRASH: render-process-gone reloads the document window (not on clean-exit), which shows F6's restore notice when a snapshot exists; a crashed page's close asks nothing; a second crash within 10 s is not reloaded and says 'This window stopped working again.' MENU STATE: the page pushes {name, unsaved, guide} (setState replaces setUnsaved; channel emerald:documents/state); Save, Save as…, Earlier copies grey with no document, Guide me with no ledger. FOUND AND FIXED: main reset its listening flag on did-start-loading, which Electron 44 fires on every #/ route, so after the first rail click the File menu reached nothing; it now resets on did-start-navigation for a new document only (rule 'Text windows are not the document's window' why updated). NAMES (sentence case, roles labelled): New, Open…, Open recent, Save, Save as… (dialog titled 'Save as'), Clear recent documents, Commands… (the title bar's button is Commands), Toggle the sidebar, Actual size/Zoom in/Zoom out/Toggle full screen/Toggle developer tools, Third-party notices, Source code, Check for updates now, Quit / Close window; palette New and Open… (keywords keep 'document'). Save a copy -> Save as… in Notices, ScreenBoundary, comments, docs/plugin.md. menuParity now also checks palette label == menu label; menu.test checks sentence case. TEXT WINDOWS: the app's built stylesheet + data-theme from the page's last theme (re-dressed on change), backgroundColor from windowBackground; removeMenu() on Win/Linux; on macOS a menu command from a text window focuses the document window first. TITLE BAR: '.app-drag [title]' is no-drag (the name's hover works); Math.max(insetStart,12) -> ps-3 when the platform takes no start inset; windowBackground() for first paint, and windowChrome.test now reads tokens.css for it and the overlay pair. VERIFIED in the shell over CDP (scratch user-data, EMERALD_BACKUPS_DIR scratch, demo copies): recent labels and rise, missing notice and removal, Save/Guide greying through open, navigation and crash, Save as dialog title, close question text (patched showMessageBoxSync), crash -> restore notice, second crash -> message and an unasked close, license window light/dark with Plex Sans. NOT DRIVEN: Ctrl+O in the license window (removeMenu per code), macOS. Tests: related (101 files), privacy, surfaceRules, bidiTruncation, parity, typecheck, build:electron green; check:tours not run (no tour text changed). LOOK AT: the command names chosen (New/Open… not 'New document'; Commands… for the palette). LEFT: App.tsx welcome screen keeps 'New document'/'New ledger' (a choice, not the command); a dialog run from the palette restores focus to body (useModalDialog/CommandPalette, not my files).
 
 ### M54 F8
 milestone: M54
