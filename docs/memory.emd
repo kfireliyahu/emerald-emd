@@ -6238,6 +6238,120 @@ should: Saying nothing adds up is the default, not a declaration
 breaks: The model still read 'nothing here has to add up' as extra ceremony for lists
 state: open
 
+### Demo (the browser build), custom.emd: #/formats → New format.
+unit: M54 U1
+should: A start that this build cannot do is shown unavailable, not offered (Nielsen: error prevention).
+breaks: From an example is an ordinary tile, while its own words say it needs the desktop app.
+state: open
+
+### Demo, any document, #/formats/<a format> (Table) — read the headings (a screen reader's heading list).
+unit: M54 U1
+should: A screen names itself with a heading, as Roadmap and Ready to start do with an h1 (WCAG 1.3.1 and 2.4.6; web interface guidelines: hierarchical headings).
+breaks: A format's table page has no h1 or h2 at all; its name (Unit) is plain text.
+state: open
+
+### Demo, any format: the view tabs (Table, Board, List, Dashboard, Claims) in light and dark.
+unit: M54 U1
+should: Question for the maintainer — two live rules disagree: One level of tabs asks for ink-tertiary labels; Contrast 4.5:1 for text keeps ink-tertiary for non-essential text, and a tab's label is how a person finds the view.
+breaks: Inactive tab labels are 2.62:1 on the page in light and 3.65:1 in dark.
+state: open
+
+### Demo, custom.emd, #/formats/card_charge. In the blank row type abc into amount, leave date empty, press Enter. Then open Add (card_charge/entry/new), leave date empty, press Add.
+unit: M54 U1
+should: Every bad field is marked at once, with its reason beside it and aria-invalid on it (Nielsen: visibility of system status; error recovery).
+breaks: Entry: in the table the message shows at the page's bottom-left ("Row 6, date: date is required…"), only date is outlined, and the abc problem appears only after date is fixed — three problems, three rounds. On the form, "A card charge needs a date." sits in the footer beside Cancel and no field is marked.
+state: open
+
+### Demo, custom.emd, #/formats/card_charge/entry/new in light and dark: the "needed" mark beside a required field, the fields' placeholders, and quick add in the list (whose only visible label is its placeholder).
+unit: M54 U1
+should: Text a person needs is at least 4.5:1; ink-tertiary is for non-essential text only (rule: Contrast 4.5:1 for text).
+breaks: Entry: "needed", the placeholders and quick add's label are ink-tertiary — 2.62:1 on the page in light, 3.65:1 in dark (measured from the tokens).
+state: open
+
+### Demo, custom.emd, #/formats/card_charge/list — and the entry list beside any open card charge.
+unit: M54 U1
+should: Late, due and overdue are said only of a column that means a due date (rules: Words name the rule; Colour carries meaning).
+breaks: Every charge reads "101 days late" … "95 days late" in negative. listView's shape takes the first date column as due (src/domain/format/view.ts, due: lines.find(isDate) ?? columns.find(isDate)), and a charge's date is when it happened, not when it is due.
+state: open
+
+### Demo, custom.emd, the entry list beside a card charge: in quick add ("Add a card charge") type Lunch spot 35 and press Enter.
+unit: M54 U1
+should: Quick add either fills what it can and says which fields are still needed, or says plainly that it opened the form and why (Nielsen: visibility of system status). Whether quick add parses values or only takes a title is M55's to decide.
+breaks: Entry: the whole string becomes the merchant, the date is not today and 35 is not the amount; it silently becomes a draft form, still showing the earlier refusal.
+state: open
+
+### Demo, custom.emd: #/formats → New format → Start empty → add a column and reach its type.
+unit: M54 U1
+should: A decision point offers no more than a handful at once, in a person's words (Impeccable critique: cognitive load, more than four visible options; rule: Words name the rule).
+breaks: Entry: twenty types at once (nineteen and computed), in engineering names — integer, real, enum, enums, instant.
+state: open
+
+### Demo, project.emd, #/formats/unit (Table). In the table's blank row at the foot, type ref, milestone, scope and title, then Enter. Then do the same through Add (the entry form) and through quick add in the entry list.
+unit: M54 U1
+should: All three ways start a new row from the same defaults: D-518 has a new entry start every required enum nothing implies at its first member, so state is planned whichever way the row is made (Nielsen: consistency and standards).
+breaks: Entry: the table's blank row refuses — "Row 8, state: state is required and was not given" — while Add and quick add both start state at planned. The person has to know which of three ways applies the defaults.
+state: open
+
+### Demo, project.emd, #/formats/unit/board and #/formats/milestone/roadmap, both themes: the M2 and SESSION 1 marks on a card, and the PLANNED / OPEN state marks.
+unit: M54 U1
+should: Question for the maintainer: the rule A chip is text and a dot says no border; The views' shapes says labels and chips are uppercase and square. Are these marks chips, and may they carry a 1px border?
+breaks: They are .fc-state with a 1px solid border — boxed labels, not text and a dot.
+state: open
+
+### Demo, project.emd, #/formats/unit/board: click a card anywhere but its title.
+unit: M54 U1
+should: Question for the maintainer: the rule A card is one link says the whole card is the link (a stretched link). Does a board card count as a card in that rule?
+breaks: A board card is an <article> and only its title opens it (BoardView.tsx); a click elsewhere on the card does nothing.
+state: open
+
+### Demo, project.emd, #/formats/unit/entry/new (Add). Type M9 into milestone (no such milestone), fill the rest, press Add. Then type M9 into the milestone cell of the table's blank row and press Enter.
+unit: M54 U1
+should: Both name what was typed and what to do: no milestone is called "M9". Pick one from the list (Nielsen: help users recognise, diagnose and recover from errors).
+breaks: Entry: the form says "An unit needs a milestone." — false, one was given — while the cell says no milestone is called "M9". Same input, two refusals, and the form's is wrong.
+state: open
+
+### Demo, project.emd, #/formats/unit/entry/new: click into milestone, then decision; on the same form open state.
+unit: M54 U1
+should: A link picker lists its rows in order with each row's title beside the ref (ChoiceField's detail), and opens on focus; an enum shows its members as the board does (Nielsen: recognition rather than recall; rule: Words name the rule).
+breaks: Entry: milestone lists M2, M3, M1 and decision D-1, D-2, D-4, D-3 — unsorted bare refs to recall; the list opens only on typing or a click; state's choices read in_progress while the board's lane says IN PROGRESS.
+state: open
+
+### Demo, project.emd, #/formats/unit: open a row (the row's Open icon, a board card's title, or Add). Also open #/formats/unit/page/<any entry>.
+unit: M54 U1
+should: Question for the maintainer: the rule A detail is a pane beside its list says 30rem, at most 45% of the row, and the way out is one word, Close. Is the entry route that pane, or has the entry (an entry list plus a full-width page) replaced the rule?
+breaks: The table or board is replaced by an entry list and a full-width page; the way out is ← Board / ← Table. /formats/:name/page/:entry now redirects to /entry/ (FormatLinkViews.tsx), so the page view the brief lists no longer exists as its own screen.
+state: open
+
+### Demo, project.emd, #/formats/unit: quick add's placeholder, the + button in the entry list, and the Add form's refusals.
+unit: M54 U1
+should: "\"a unit\" (Nielsen: match with the real world). withArticle (src/domain/format/view.ts) picks the article by the first letter, not the sound."
+breaks: Entry: "Add an unit · planned", "Add an unit", "An unit needs a ref."
+state: open
+
+### Demo, project.emd: #/formats/unit/entry/new, the milestone field; an entry's "Fill decision" chip; the milestone and decision cells of the table's blank row. Type a name no row has.
+unit: M54 U1
+should: A link field ends its list with + New…, makes the linked row in place and comes back with it chosen (rule: Make it in place). With no match the list says so rather than going blank.
+breaks: Entry: no link field of a declared format offers + New…, and an unknown name lists nothing at all — no "no match" line, no way to make it. The only + New… in the app is SelectOrNew, which only the parked ledger's screens use (and it is a <select>, below).
+state: open
+
+### Demo, project.emd: a date in the table's blank row (type tomorrow); the same date column on the Add form; the same row's entry page beside the table.
+unit: M54 U1
+should: One typed date field everywhere, the way TimeField already takes words (D-335) and shows the settled value, and one way a date is shown (Nielsen: consistency; match with the real world).
+breaks: Entry: the cell takes ISO only and refuses words (must be YYYY-MM-DD); the form is a native date input showing mm/dd/yyyy; the entry page shows 09/03/2026 while the table beside it shows 2026-09-03.
+state: open
+
+### Demo: #/formats (a format's card), a format's header, and #/formats/milestone/roadmap.
+unit: M54 U1
+should: One name for one thing (the term rows, D-436): a format holds entries or rows, not both.
+breaks: /formats says "5 rows", the format's header "5 entries", the roadmap "4 of 7 Unit rows done".
+state: open
+
+### Demo: #/formats on demo.emd and project.emd; #/formats/unit table headers; the Fill chips' tooltips on an entry; Links here on an entry; demo.emd #/formats/debt.
+unit: M54 U1
+should: A person reads names, never the machinery (rule: Words name the rule): a column's label rather than its key, no table id, no tool name.
+breaks: Each format card shows its table (fmt_card_charge) and repeats last changed; table headers read undone_by, taken_by while the entry says undone by; a Fill chip's tooltip shows `in_progress` literally; Links here reads Inbox · became_unit; the debt format's lock tells a person to use create_debts. demo.emd's /formats is 34 such cards in one flat list.
+state: open
+
 ### Dry-run a read of long notes
 unit: M34 T1
 should: A dry run shows long text cut short
@@ -6563,6 +6677,12 @@ should: Inline tags can fill an enums column
 breaks: Inline tags are not read
 state: open
 
+### Read the class strings of the surface: src/ui/formats/EntryView.tsx, EntryValue.tsx, EntryList.tsx, ListView.tsx, LinkViews.tsx, BoardView.tsx, FormatRows.tsx (grep text-\[ and -\[…px\]).
+unit: M54 U1
+should: Question for the maintainer: rules Every value is a token, Nothing between the spacing steps and rem for type. The ramp has no 13px, 11px-without-tracking, 10px or 28px; is 13px a missing step (the most used size in src/ui, 66 times) or a breach to be moved onto 12 or 14?
+breaks: After M54 U1's fix of the sizes the ramp has, 26 type sizes with no ramp step remain on the surface (text-[13px] most) and 45 spacing and size literals between the 8px steps (gap-[18px], gap-x-[22px], px-[7px], min-h-[41px], h-[22px]…); 193 pixel type sizes across src/ui.
+state: open
+
 ### Read the same folder again after editing notes
 unit: M34 T1
 should: A re-read updates the rows it read before, by a key, instead of adding them again
@@ -6670,6 +6790,12 @@ state: open
 unit: M34 T1
 should: Worked-out columns can be picked, and a listing can continue past its limit
 breaks: 'recipe has no column total_kcal'; no way to get rows 201 on
+state: open
+
+### src/ui/components/SelectOrNew.tsx — the + New… select, used by the ledger's PlaceEditor, DepositEditor, GoalEditor and DeductionTypes.
+unit: M54 U1
+should: The component the rule Make it in place was built around draws its choice with ChoiceField (rule: Choices are ChoiceField) — and M55 may want it for declared formats' link fields (the + New… finding above).
+breaks: Entry: it is a platform <select> whose last option is + New…; its callers pass <option> children, so moving it to ChoiceField changes its API and touches parked ledger screens — left for a unit, not fixed here.
 state: open
 
 <!-- emerald: rule.format.md -->
@@ -13682,10 +13808,16 @@ report: M53 U7 built at 2057542 (D-521). Dashboards, ported from the approved mo
 milestone: M54
 scope: app
 title: Formats and rows reviewed: the formats screen, a format's table, its entry page and every way to add or edit a row by hand — and the procedure the other units follow
-state: planned
+landed: 2026-11-02
+state: built
 brief: First of M54 (D-530): it reviews the surface M55 is planned from, and sets the procedure U2-U8 repeat, so write down what you did in the order you did it. Surface: /formats (DeclaredFormats, Formats, NewFormat), a format's table /formats/:name (FormatRows), its entry page and page view (/formats/:name/entry/:entry, /formats/:name/page/:entry: EntryView, EntryList, RowSheet, TypedField, MembersField, FormulaField, ChoiceField, SelectOrNew), its list, board, roadmap and ready views — and every way a person adds or edits a row by hand (quick add, the sheet, inline cells, + New… in place). Maintainer's answers, 2026-11-02. AGAINST: the demo documents only — `npm run dev:demo` (preview `demo-tour`, :4181; the app is /app.html, the page /, the tour /tour.html; src/demo/main.tsx says which document opens and how to pick another): demo.emd (ledger pack), custom.emd (no pack, one declared format), project.emd (development pack), built from synthetic sources. Never a working .emd. CONDITIONS: light and dark themes at a desktop width, nothing else — not Hebrew, narrow widths, keyboard or reduced motion. TOOLS: first `format_rows rule match:{scope:ui, state:live} columns:[name, statement]` and the root DESIGN.md and PRODUCT.md; then `/impeccable critique` and `/impeccable audit` on the surface (Impeccable 4.8.0, user-level plugin; its per-edit hook is off by IMPECCABLE_HOOK_DISABLED=1 — if per-edit findings appear anyway, run `/impeccable hooks off`), and the `web-design-guidelines` skill over the surface's files. The Impeccable detector runs once, at the end of the unit, never per edit. Verify in the browser pane with read_page / get_page_text; a screenshot only where the answer is visual (a dark-theme colour, an alignment). FINDINGS: one `review_entry` row per finding (record_format_rows, all in one call), unit = this unit, state open — `do` the route and the action named exactly, `should` what is right with the rule row or guideline it rests on, `breaks` what happens now. A finding about adding or editing a row by hand starts `breaks` with `Entry:` — M55 (input views) is planned from those, so this unit should be thorough there. Write what a rule row, a guideline or the critique can name, never taste alone; a finding that argues with a live rule row is written as a question for the maintainer. The maintainer judges the rows (review-phase skill); faults become units later. FIXING: a plain breach of a live ui rule row (a hex or pixel literal in a component, a missing focus ring, a <select> where ChoiceField belongs, a document string outside Bidi) is fixed in place, with a test where one can fail, and listed in the report; anything that needs judgement — layout, wording, hierarchy, a new component — is only recorded. Anything not settled here is the maintainer's: stop and ask. REPORT: the rows written, the fixes made, and the procedure as it actually ran — what worked and what wasted time — for U9 to make a skill of. Done-test: every listed screen was critiqued and audited in both themes, its findings are open review_entry rows on M54 U1, and npm run test and typecheck pass after the fixes.
-files: Reviewed: src/ui/screens/DeclaredFormats.tsx, Formats.tsx, FormatRows.tsx; src/ui/formats/ (NewFormat, EntryView, EntryList, RowSheet, TypedField, MembersField, FormulaField, ListView, BoardView, StateChip, FilterBand); src/ui/components/ (ChoiceField, SelectOrNew, Field, Button). Fixed only where a ui rule row is plainly broken. Rows: docs/memory.emd (review_entry).
+files: src/ui/formats/BoardView.tsx, src/ui/formats/LinkViews.tsx, src/ui/formats/EntryList.tsx, src/ui/formats/EntryView.tsx, src/ui/formats/EntryValue.tsx, src/ui/formats/ListView.tsx, src/ui/formats/RowSheet.tsx, src/ui/formats/MembersField.tsx, src/ui/components/SelectOrNew.tsx, src/ui/formats/surfaceRules.test.ts, src/frame/routes.test.ts
+taken_by: run-milestone driver
+started: 2026-11-02
+branch: main
+commit: ab1f82e
 paths: "src/ui/screens/DeclaredFormats.tsx\nsrc/ui/screens/Formats.tsx\nsrc/ui/screens/FormatRows.tsx\nsrc/ui/formats/\nsrc/ui/components/"
+report: "LANDED ab1f82e. 21 open review_entry rows on M54 U1 (11 start breaks with Entry:, 5 are questions for the maintainer where two rules or a rule and the screen disagree). No decision.\n\nFIXES (plain ui-rule breaches, in place): (1) Choices are ChoiceField - board Lanes by, roadmap In the order of, agenda date choice were <select>; now ChoiceField readOnly menus. Not reachable on the demo documents (none has two enums or two orders); src/frame/routes.test.ts renders the board over docs/memory.emd's finding format and shows it. That test counted the new input as 'a field' on a read-only page - it never scanned <select>s; a readonly combobox is now allowed (readOnly.ts lets a frame arrange its view). (2) Keyboard first - RowSheet cells and unit fields, MembersField marked focus with bg-surface only (1.07:1 vs page, both themes); now the 2px accent ring. EntryList search: ring on its label via has-[:focus-visible]. (3) text-[12/14/20px] -> text-caption/body/secondary-number. Guard: src/ui/formats/surfaceRules.test.ts (REVIEWED file list: no <select>/<datalist>, no px size the ramp has, no outline-none without a replacement; fails on HEAD's RowSheet).\n\nPROCEDURE AS IT RAN (for U2-U9; also in the shared notes folder as M54-procedure.md):\n1. Read conventions.md, DESIGN.md, PRODUCT.md; ui rules in one call: format_rows rule match:{scope:ui,state:live} columns:[name,statement] limit:120 (72 rows); formats review_entry.\n2. preview_start demo-tour. Documents: app.html?document=custom.emd|project.emd|demo.emd#/... Theme: localStorage.setItem('fc-theme','dark'); reload.\n3. impeccable context --target <dir> once. critique.md demands Assessment A and B as isolated subagents. A = ONE general-purpose subagent, background, with a self-contained brief: surface + routes + documents + theme switch + the ui rules pasted in + 'never detect, never edit' + return numbered findings (route/now/should/rule/P0-3, ENTRY-marked). It cost ~209k tokens, 101 tool uses, 9.5 min. B = the detector, run ONCE at the end on the surface's source files (brief: never per edit): 0 findings. Browser overlay injection not run.\n4. While A ran, the audit by hand (audit.md's dimensions, code-level): one grep over the surface files for hex, text-[Npx], -[Npx], outline-none, <select, <datalist, transition-all, autoFocus; one javascript_tool call computing WCAG ratios of every text token on every plane in both themes (probe element resolves var(--color-x)); headings per route (h1,h2,h3).\n5. web-design-guidelines: WebFetch command.md once, applied to the same grep output.\n6. Fix plain breaches, add files to surfaceRules.test.ts, npx vitest related <files> --run.\n7. Verify A's claims before writing: 2 of 18 were false (unnamed NewFormat tiles - named by their text; Cancel in accent - the rule allows accent on what you act on). Grep the code for each 'why'.\n8. All findings in ONE record_format_rows call (dry run, then commit).\n\nWHAT WASTED TIME: waiting on A with nothing left to do (start A first, before reading rules yourself); the seed tab is hidden while A's tab is fronted, so focus/viewport checks there fail (viewport 0x0) - check compiled CSS instead; A mistook HMR reloads from my own edits for another writer - tell A that edits may land while it walks; the demo documents lack cases (two enums, two orders) so some fixes are provable only by routes.test.ts.\n\nNOT DONE: Hebrew, narrow, keyboard-only, reduced motion (out of scope); row context menu and board drag not reached; NewFormat not driven to Create; SelectOrNew still a <select> (recorded)."
 
 ### M54 U2
 milestone: M54
@@ -13922,7 +14054,7 @@ finding: 2026-10-22
 inbox: 2026-10-23
 milestone: 2026-11-02
 open_question: 2026-10-22
-review_entry: 2026-10-23
+review_entry: 2026-11-02
 rule: 2026-10-22
 term: 2026-10-22
 unit: 2026-11-02
