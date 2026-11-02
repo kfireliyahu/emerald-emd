@@ -7525,7 +7525,7 @@ state: fault
 ### QUESTION for the maintainer. Read the hero tagline (en.ts:47, `hero.tagline`) beside docs/product.md (D-238) and the README's first line.
 unit: M54 U7
 should: One settled pitch across the page, the README and product.md. Which one is the maintainer's call.
-breaks: The page says "The database under the chat." product.md says the sentence said first is "Excel that reads your documents and won't let you be wrong quietly." en.ts says the tagline is the README's first line, so the README and product.md disagree. A stranger may also not know which chat is meant. Verdict 2026-11-02 (D-531): "The database under the chat." leads everywhere — product.md's sentence said first, PRODUCT.md, CLAUDE.md, docs/00-index.md, conventions.md, engine.md and package.json's description move to it; the README and the page already have it. Owned by M54 F10.
+breaks: The page says "The database under the chat." product.md says the sentence said first is "Excel that reads your documents and won't let you be wrong quietly." en.ts says the tagline is the README's first line, so the README and product.md disagree. A stranger may also not know which chat is meant. Verdict 2026-11-02 (D-531): "The database under the chat." leads everywhere — product.md's sentence said first, PRODUCT.md, CLAUDE.md, docs/00-index.md, conventions.md, engine.md and package.json's description move to it; the README and the page already have it. Owned by M54 F10. Fixed in M54 F10 (912fe86).
 state: fault
 
 ### QUESTION for the maintainer. Scroll to Get Emerald (#download, .foot .ways and .downloads).
@@ -14961,10 +14961,17 @@ report: M54 F1 built at 96048e9; docs:check green (0 errors, 7 standing warnings
 milestone: M54
 scope: docs
 title: The pitch: "The database under the chat." leads every note
-state: planned
+landed: 2026-11-02
+decision: D-531
+state: built
 brief: M54 fix unit (D-531, D-532). YOUR ROWS, exactly these: `format_rows review_entry search:"Owned by M54 F10." columns:[unit, do, should, breaks]` — 1 row; the phrases below say what each asks.. Row: `format_rows review_entry match:{unit:"M54 U7", state:fault} search:"leads everywhere"`. Make "The database under the chat." the line said first in docs/product.md (its quoted sentence and the paragraph that introduces it), PRODUCT.md, CLAUDE.md (line 3), docs/00-index.md, docs/conventions.md (What this project is), docs/engine.md (:28) and package.json's description. Keep "won't let you be wrong quietly" where it names the mechanism (D-242, product.md :35, the code comments) — it stops being the opening line, not the idea. The README and the page already have it. `git grep -n "wrong quietly"` before and after, and read each hit. `npm run docs:check`; a package.json description reaches npm only at the next publish — say so, publish nothing. Tell the maintainer his own memory note on the pitch (outside the repo) now says the old line. Land: 'Fixed in M54 F10 (<commit>).' on the row's breaks, state left `fault` (D-532). MAINTAINER'S EYE: the driver stops after this unit — the maintainer reads the new opening of docs/product.md, PRODUCT.md and CLAUDE.md.
 files: docs/product.md, PRODUCT.md, CLAUDE.md, docs/00-index.md, docs/conventions.md, docs/engine.md, package.json
+taken_by: run-milestone driver
+started: 2026-11-02
+branch: main
+commit: 912fe86
 paths: "docs/product.md\nPRODUCT.md\nCLAUDE.md\ndocs/00-index.md\ndocs/conventions.md\ndocs/engine.md\npackage.json"
+report: "\"The database under the chat.\" is now the line said first in docs/product.md (the quoted sentence, glossed with the README's second sentence; the D-238 line named as replaced and kept as what it does), PRODUCT.md, CLAUDE.md line 3, docs/00-index.md, docs/conventions.md (What this project is), docs/engine.md (the pitch line) and package.json's description. \"Won't let you be wrong quietly\" stays where it names the mechanism: product.md's section is retitled to it and says 'the promise is both' instead of 'the pitch is both'; CLAUDE.md and conventions.md keep it as a clause; the code comments (audit.ts, AddsUpPlace.tsx, row.ts) and the m33-u2 mockups are untouched. git grep 'wrong quietly' read before and after: no opening line says the old pitch. docs:check green (0 errors), privacy.test.ts passes. The package.json description reaches npm only at the next publish; nothing published. The maintainer's own memory note on the pitch, outside the repo, still says the old line."
 
 ### M54 F11
 milestone: M54
@@ -15123,10 +15130,13 @@ report: M54 F8 built at 1cf3540; docs:check green (0 errors, 7 standing warnings
 milestone: M54
 scope: page
 title: The page's words: drafts for the maintainer to pick, then put in (STOP)
-state: planned
+state: in_progress
 brief: M54 fix unit (D-531, D-532). YOUR ROWS, exactly these: `format_rows review_entry search:"Owned by M54 F9." columns:[unit, do, should, breaks]` — 11 rows; the phrases below say what each asks., after F8. STOP unit: no word ships before the maintainer picks it. Rows (`format_rows review_entry match:{unit:"M54 U7", state:fault} columns:[do, should, breaks]`) by their breaks: 'Emerald: Order to chaos using engineering' (the meta description — it agrees with the tagline "The database under the chat.", which is settled, D-531); 'A year of study-fund reports'; 'Each line uses an insider word' (its do names the lines: The engine, Claims, MCP unspelled, Shaped tools, unit S4 U2, the app's own Node); 'en.ts:63 says "September's pay is in'; 'Five ways in, all free' (the lead and the order of the ways in); 'The body is careful' (the No internet, no login heading); 'Packs says "A pack is formats' (one word, defined once — check `format_rows term search:"format"`); 'What is an application?' (the hero story); 'The tours mix the ledger' (the section order); 'There you typed it in' (the engine's caption); 'Tour 2 is \'Where the money went\'' (one name per tour across rail row, label and frame title). PART 1: write docs/drafts/m54-f9-page-words.md — per line: the row it answers, the current words quoted, two or three options, one line on what each says to a stranger (PRODUCT.md's two crowds); for the order, two or three orders. Commit it and stop; the closing message asks the maintainer to pick or write. PART 2 (after the pick, the same or a next session): put the words into src/demo/page/copy/en.ts (and the README's matching lines), delete the drafts file, check:tours if a tour name changed. Land after part 2: 'Fixed in M54 F9 (<commit>).' on each row's breaks, state left `fault` (D-532). MAINTAINER'S EYE: the driver stops after part 1 for the pick, and after part 2 for a last read of the page.
 files: docs/drafts/m54-f9-page-words.md (new, deleted at the end), src/demo/page/copy/en.ts, README.md
 blocks: ["M54 F8"]
+taken_by: run-milestone driver
+started: 2026-11-02
+branch: main
 paths: "docs/drafts/m54-f9-page-words.md\nsrc/demo/page/copy/en.ts\nREADME.md"
 
 ### M54 U1
