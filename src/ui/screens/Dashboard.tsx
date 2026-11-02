@@ -27,13 +27,13 @@ export function DocumentDashboard() {
   if (db === undefined || read === undefined) return null
   return (
     <div className="fc-view-enter flex h-full flex-col">
-      <div className="flex shrink-0 items-baseline gap-3.5 px-6 pt-3">
-        <h1 className="m-0 text-secondary-number font-semibold">Dashboard</h1>
+      <div className="flex shrink-0 items-baseline gap-4 px-6 pt-3">
+        <h1 className="m-0 text-title">Dashboard</h1>
         <span className="text-caption text-ink-secondary">
           <Bidi>{name}</Bidi> · blocks from any format
         </span>
       </div>
-      <div className="flex min-h-[37px] shrink-0 flex-wrap items-center gap-x-3.5 gap-y-1.5 border-b border-hairline px-6 py-2 text-caption text-ink-secondary">
+      <div className="flex min-h-9 shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline px-6 py-2 text-caption text-ink-secondary">
         {read.length > 0 && (
           <span>
             Blocks from <Bidi>{andList(read)}</Bidi>. Each says which format it reads under its title.

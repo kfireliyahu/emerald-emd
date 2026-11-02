@@ -84,7 +84,7 @@ export function newChart(format: FormatDeclaration): ChartMaking {
 /** Write a made thing and place its block: the refusal, or nothing once it is written. */
 export type Placing = (work: (db: Database) => void, block: DashboardBlock) => string | undefined
 
-const RADIO = 'flex h-6 items-center gap-2 text-[13px]'
+const RADIO = 'flex h-6 items-center gap-2 text-body'
 
 function Field({ label, children }: { readonly label: string; readonly children: ReactNode }) {
   return (
@@ -96,7 +96,8 @@ function Field({ label, children }: { readonly label: string; readonly children:
 }
 
 function Heading({ children }: { readonly children: ReactNode }) {
-  return <div className="px-3 pt-2 pb-1 text-[11px] font-medium tracking-[.08em] text-ink-tertiary uppercase">{children}</div>
+  // A popover's heading is a label a reader needs: ink-secondary (D-531, M54 F3).
+  return <div className="px-3 pt-2 pb-1 text-label text-ink-secondary uppercase">{children}</div>
 }
 
 /** On the document's dashboard, which format it is of: changing it starts over. */
@@ -166,7 +167,7 @@ function NameField({
       onKeyDown={(event) => {
         if (event.key === 'Enter') onSubmit()
       }}
-      className="h-7 w-full border border-hairline-strong bg-background px-2 text-[13px] outline-none focus:border-accent"
+      className="h-7 w-full border border-hairline-strong bg-background px-2 text-body outline-none focus:border-accent"
     />
   )
 }
@@ -387,7 +388,7 @@ export function ChartForm({
         </Field>
         <Field label="By month of">
           {periods.length === 0 ? (
-            <span className="text-caption text-ink-tertiary">{declaration.title} has no date or month column to chart by.</span>
+            <span className="text-caption text-ink-secondary">{declaration.title} has no date or month column to chart by.</span>
           ) : (
             periods.map((column) => (
               <label key={column.name} className={RADIO}>

@@ -24,6 +24,7 @@ import { addressView, filterAddress, type AddressOrder, type ColumnChoice } from
 import type { Saving } from './savedView.ts'
 import { toISODate } from '@/core/time.ts'
 import { parseClockWords } from '@/domain/format/clock.ts'
+import { entryLabel } from '@/domain/format/view.ts'
 import { today } from '@/ui/today.ts'
 
 /** `within 14 days`, `before today` — a held value that is a window, said with `is` (D-472). */
@@ -179,7 +180,7 @@ export function FilterBand({
       )}
       {!bare && (
       <span>
-        {!filtered && 'Every entry'}
+        {!filtered && 'Every row'}
         {filtered && 'Filtered by '}
         {held.map(([name, value], at) => (
           <span key={name}>
@@ -209,7 +210,8 @@ export function FilterBand({
       )}
       {!bare && (
       <span className="tabular-nums">
-        {refusal === undefined ? `${String(shown)} of ${String(total)} ${total === 1 ? 'entry' : 'entries'}` : refusal}
+        {/* A format holds rows; an entry is one row's page (the term rows, M54 F2/F3). */}
+        {refusal === undefined ? `${String(shown)} of ${String(total)} ${total === 1 ? 'row' : 'rows'}` : refusal}
       </span>
       )}
       {filtered && (
@@ -390,7 +392,8 @@ function Drop({ what, onClick }: { readonly what: string; readonly onClick: () =
       type="button"
       aria-label={`Stop filtering by ${what}`}
       title={`Stop filtering by ${what}`}
-      className="ml-1 px-0.5 text-ink-tertiary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+      // A 24px target in ink-secondary: it does what Clear does, to one value (D-531, M54 F3).
+      className="ml-1 inline-flex size-6 items-center justify-center align-middle text-ink-secondary hover:bg-surface hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
       onClick={onClick}
     >
       ×
@@ -442,30 +445,44 @@ export function ColumnFilter({
   readonly onSort?: ((order: { readonly column: string; readonly descending: boolean }) => void) | undefined
 }) {
   const [column, setColumn] = useState<ColumnDeclaration | undefined>(undefined)
+  const [text, setText] = useState('')
+  const holder = useRef<HTMLSpanElement>(null)
   const held = filter.match ?? {}
   const columns = offered ?? filterableColumns(declaration)
   if (columns.length === 0) return null
   const by = onSort === undefined ? 'Filter' : 'Filter or sort'
+  // **Escape comes back here** (M54 F3, *Keyboard first*): the menu closed from
+  // inside it gives the keyboard back to the field that opened it, never the page.
+  const closed = (): void => {
+    const was = document.activeElement
+    setColumn(undefined)
+    if (was === null || was === document.body || holder.current?.contains(was) === true) holder.current?.querySelector('input')?.focus()
+  }
 
   return (
-    <span className="relative inline-flex">
+    <span ref={holder} className="relative inline-flex">
+      {/* **It narrows as it is typed** (M54 F3, *Choices are ChoiceField*): a
+          field that looks typeable is, and Enter picks the first column left. */}
       <ChoiceField
         key="column"
         className={`${FIELD} w-32`}
         type="search"
-        readOnly
-        text={column?.name ?? ''}
+        text={text}
         placeholder={rows === undefined ? 'Filter by…' : `Filter ${rows} by…`}
         aria-label={rows === undefined ? `${by} by` : `Filter ${rows} by`}
         title={rows === undefined ? 'Hold a column to some of its values' : `Hold the ${rows} under each row to some of their values`}
         choices={columns.map((each) => ({
           value: each.name,
-          label: each.name,
+          label: entryLabel(each),
+          search: each.name,
           ...(each.name in held ? { detail: 'held' } : {}),
         }))}
-        filter={false}
-        onText={() => undefined}
-        onPick={(choice) => setColumn(columns.find((each) => each.name === choice.value))}
+        filter
+        onText={setText}
+        onPick={(choice) => {
+          setText('')
+          setColumn(columns.find((each) => each.name === choice.value))
+        }}
       />
       {column !== undefined && (
         <ColumnMenu
@@ -476,7 +493,7 @@ export function ColumnFilter({
           column={column}
           filter={filter}
           onChange={onChange}
-          onClose={() => setColumn(undefined)}
+          onClose={closed}
           order={order}
           onSort={onSort}
         />
@@ -562,7 +579,7 @@ export function ColumnMenu({
             key={String(descending)}
             type="button"
             aria-pressed={on}
-            className={`flex-1 rounded-md border border-hairline-strong px-2 py-0.5 text-caption focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
+            className={`flex-1 border border-hairline-strong px-2 py-0.5 text-caption focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
               on ? 'bg-accent-soft text-ink' : 'text-ink-secondary hover:text-ink'
             }`}
             onClick={() => onSort({ column: column.name, descending })}
@@ -578,13 +595,13 @@ export function ColumnMenu({
     <div
       ref={box}
       role="dialog"
-      aria-label={`${column.name}, its values`}
+      aria-label={`${entryLabel(column)}, its values`}
       onKeyDown={dismiss}
-      className={`fc-pop-enter absolute top-full ${align === 'end' ? 'right-0' : 'left-0'} z-30 mt-1 flex w-72 flex-col gap-2 rounded-md border border-hairline-strong bg-elevated p-2 text-left text-[13px] font-normal whitespace-normal shadow-[var(--shadow-pop)]`}
+      className={`fc-pop-enter absolute top-full ${align === 'end' ? 'right-0' : 'left-0'} z-30 mt-1 flex w-72 flex-col gap-2 border border-hairline-strong bg-elevated p-2 text-left text-body font-normal whitespace-normal shadow-pop`}
     >
       {!read.ok ? (
         <>
-          <Bidi className="min-w-0 truncate font-medium">{column.name}</Bidi>
+          <Bidi className="min-w-0 truncate font-medium">{entryLabel(column)}</Bidi>
           {sorts}
           <p className="text-caption text-ink-secondary">{refusalSaid(declaration, read.error)}</p>
         </>
@@ -592,7 +609,7 @@ export function ColumnMenu({
         <RangeBody column={column} units={read.value.units} empty={read.value.empty} held={held[column.name]} sorts={sorts} onWrite={write} />
       ) : read.value.kind === 'PASSAGES' ? (
         <>
-          <Bidi className="min-w-0 truncate font-medium">{column.name}</Bidi>
+          <Bidi className="min-w-0 truncate font-medium">{entryLabel(column)}</Bidi>
           {sorts}
           <input
             autoFocus
@@ -607,8 +624,8 @@ export function ColumnMenu({
               onChange({ ...(filter.match === undefined ? {} : { match: filter.match }), ...(search === '' ? {} : { search }) }, true)
             }}
           />
-          <p className="text-caption text-ink-tertiary">
-            <Bidi>{column.name}</Bidi> holds passages, so it is searched rather than listed.
+          <p className="text-caption text-ink-secondary">
+            <Bidi>{entryLabel(column)}</Bidi> holds passages, so it is searched rather than listed.
           </p>
         </>
       ) : (
@@ -690,8 +707,8 @@ function ValuesBody({
   return (
     <>
       <div className="flex items-center gap-2">
-        <Bidi className="min-w-0 flex-1 truncate font-medium">{column.name}</Bidi>
-        <div role="group" aria-label="Held as" className="flex overflow-hidden rounded-md border border-hairline-strong">
+        <Bidi className="min-w-0 flex-1 truncate font-medium">{entryLabel(column)}</Bidi>
+        <div role="group" aria-label="Held as" className="flex overflow-hidden border border-hairline-strong">
           {([false, true] as const).map((turned) => (
             <button
               key={String(turned)}
@@ -760,7 +777,7 @@ function ValuesBody({
         ))}
       </ul>
       {narrowed.length > drawn.length && (
-        <p className="text-caption text-ink-tertiary">
+        <p className="text-caption text-ink-secondary">
           {counted(narrowed.length - drawn.length)} more — type to narrow them.
         </p>
       )}
@@ -824,7 +841,7 @@ function RangeBody({
 
   return (
     <>
-      <Bidi className="min-w-0 truncate font-medium">{column.name}</Bidi>
+      <Bidi className="min-w-0 truncate font-medium">{entryLabel(column)}</Bidi>
       {sorts}
       {units.length === 0 ? (
         <p className="text-caption text-ink-secondary">No row holds an amount here yet.</p>
@@ -833,7 +850,7 @@ function RangeBody({
           <ul className="flex flex-col" aria-label={`The ${kind} it is in`}>
             {units.map((each) => (
               <li key={each.unit}>
-                <label className="flex h-7 cursor-pointer items-center gap-2 rounded px-1 select-none hover:bg-accent-soft">
+                <label className="flex h-7 cursor-pointer items-center gap-2 px-1 select-none hover:bg-accent-soft">
                   <input
                     type="radio"
                     name={`${column.name}-unit`}
@@ -845,12 +862,12 @@ function RangeBody({
                   />
                   <span className="min-w-0 flex-1">
                     <Bidi>{each.unit}</Bidi>
-                    <span className="text-ink-tertiary tabular-nums">
+                    <span className="text-ink-secondary tabular-nums">
                       {' '}
                       · {each.least} to {each.most}
                     </span>
                   </span>
-                  <span className="text-ink-tertiary tabular-nums">{counted(each.count)}</span>
+                  <span className="text-ink-secondary tabular-nums">{counted(each.count)}</span>
                 </label>
               </li>
             ))}
@@ -861,7 +878,7 @@ function RangeBody({
           </div>
         </>
       )}
-      {empty > 0 && <p className="text-caption text-ink-tertiary">{counted(empty)} with none.</p>}
+      {empty > 0 && <p className="text-caption text-ink-secondary">{counted(empty)} with none.</p>}
     </>
   )
 }
@@ -887,17 +904,17 @@ function Word({
   return (
     <li>
       <label
-        className={`flex h-7 cursor-pointer items-center gap-2 rounded px-1 select-none hover:bg-accent-soft ${count === 0 && !checked ? 'text-ink-tertiary' : ''}`}
+        className={`flex h-7 cursor-pointer items-center gap-2 px-1 select-none hover:bg-accent-soft ${count === 0 && !checked ? 'text-ink-secondary' : ''}`}
       >
         <input type="radio" name={`${column}-words`} checked={checked} onChange={onPick} onClick={() => checked && onPick()} />
         <span className="min-w-0 flex-1 truncate">{value}</span>
-        {count !== undefined && <span className="text-caption text-ink-tertiary tabular-nums">{counted(count)}</span>}
+        {count !== undefined && <span className="text-caption text-ink-secondary tabular-nums">{counted(count)}</span>}
       </label>
     </li>
   )
 }
 
-/** One value, its tick, and how many rows hold it — dimmed when none do. */
+/** One value, its tick, and how many rows hold it — ink-secondary when none do, which a reader still needs (D-531). */
 function Tick({
   label,
   count,
@@ -912,11 +929,11 @@ function Tick({
   return (
     <li>
       <label
-        className={`flex h-7 cursor-pointer items-center gap-2 rounded px-1 select-none hover:bg-accent-soft ${count === 0 && !checked ? 'text-ink-tertiary' : ''}`}
+        className={`flex h-7 cursor-pointer items-center gap-2 px-1 select-none hover:bg-accent-soft ${count === 0 && !checked ? 'text-ink-secondary' : ''}`}
       >
         <input type="checkbox" checked={checked} onChange={onToggle} />
         <span className="min-w-0 flex-1 truncate">{label}</span>
-        {count !== undefined && <span className="text-caption text-ink-tertiary tabular-nums">{counted(count)}</span>}
+        {count !== undefined && <span className="text-caption text-ink-secondary tabular-nums">{counted(count)}</span>}
       </label>
     </li>
   )

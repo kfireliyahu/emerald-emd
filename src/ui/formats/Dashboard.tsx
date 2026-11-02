@@ -1,4 +1,4 @@
-import { useContext, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode, type RefObject } from 'react'
+import { useContext, useEffect, useMemo, useRef, useState, type KeyboardEvent, type PointerEvent, type ReactNode, type RefObject } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import type { Database } from 'sql.js'
 
@@ -25,17 +25,20 @@ import {
   setDashboardBlocks,
   viewSettings,
 } from '@/data/repositories/formatViewRepository.ts'
+import { nounOf, pluralOf } from '@/domain/format/connections.ts'
 import { labelColumn, type ColumnDeclaration, type FormatDeclaration } from '@/domain/format/declaration.ts'
 import { rowWriteRefusal } from '@/domain/format/owner.ts'
 import { brokenConstraints, type StoredRow } from '@/domain/format/row.ts'
 import {
   BLOCK_COLUMNS,
   BLOCK_GAP,
+  BLOCK_HEIGHT_MAX,
   blockDropped,
   blockMoved,
   blockPixels,
   boardOf,
   defaultBlockWidth,
+  entryLabel,
   sameBlock,
   tickValue,
   tickWords,
@@ -109,6 +112,7 @@ export function DashboardView({ dashboard }: { readonly dashboard: string | unde
   const [over, setOver] = useState<string | undefined>(undefined)
   const [refusal, setRefusal] = useState<string | undefined>(undefined)
   const grid = useRef<HTMLDivElement>(null)
+  const addButton = useRef<HTMLButtonElement>(null)
 
   const data = useMemo(() => {
     if (db === undefined) return undefined
@@ -171,14 +175,26 @@ export function DashboardView({ dashboard }: { readonly dashboard: string | unde
   return (
     <div className="min-h-0 flex-1 overflow-auto">
       <div ref={grid} className="grid grid-cols-4 items-start gap-4 px-6 pt-5 pb-16 max-[720px]:grid-cols-2">
+        {/* *An empty state is one sentence* and one text action (M54 F3). */}
         {blocks.length === 0 && (
-          <div className="col-span-full flex max-w-[60ch] flex-col gap-1.5 pt-6 pb-2">
-            <span className="font-medium">Nothing on this dashboard yet.</span>
-            <span className="text-caption text-ink-secondary">
-              A dashboard holds {document ? 'any format’s' : 'this format’s'} saved views, its rollups’ charts and
-              headline totals, in the order you put them.
-            </span>
-          </div>
+          <p className="col-span-full pt-6 pb-2 text-ink-secondary">
+            Nothing on this dashboard yet.
+            {readOnly === undefined && (
+              <>
+                {' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAdding(undefined)
+                    setMenu(ADD)
+                  }}
+                  className="text-accent hover:underline hover:underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                >
+                  Add a block
+                </button>
+              </>
+            )}
+          </p>
         )}
         {blocks.map((block, at) => {
           const key = keyOf(block)
@@ -239,7 +255,7 @@ export function DashboardView({ dashboard }: { readonly dashboard: string | unde
         })}
         {readOnly === undefined && (
           <div
-            className={`relative col-span-1 ${over === ADD ? 'shadow-[-3px_0_0_var(--color-accent)]' : ''}`}
+            className={`relative col-span-1 ${over === ADD ? DROP_HERE : ''}`}
             onDragOver={(event) => {
               if (dragging === undefined) return
               event.preventDefault()
@@ -254,13 +270,15 @@ export function DashboardView({ dashboard }: { readonly dashboard: string | unde
             }}
           >
             <button
+              ref={addButton}
               type="button"
               aria-expanded={menu === ADD}
+              aria-haspopup="menu"
               onClick={() => {
                 setAdding(undefined)
                 setMenu(menu === ADD ? undefined : ADD)
               }}
-              className="flex min-h-24 w-full items-center justify-center gap-1.5 border border-dashed border-hairline-strong text-[13px] text-ink-secondary hover:border-ink-tertiary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+              className="flex min-h-24 w-full items-center justify-center gap-2 border border-dashed border-hairline-strong text-body text-ink-secondary hover:border-ink-tertiary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
             >
               <ActionGlyph name="plus" size={14} />
               Add a block
@@ -278,6 +296,7 @@ export function DashboardView({ dashboard }: { readonly dashboard: string | unde
                 onAdd={add}
                 onPlace={place}
                 onClose={close}
+                opener={addButton}
               />
             )}
           </div>
@@ -294,6 +313,34 @@ export function DashboardView({ dashboard }: { readonly dashboard: string | unde
 
 /** The *Add a block* tile's key, among the blocks' own. */
 const ADD = '\u0000add'
+
+/**
+ * **Where a dragged block would land**: a 2px `accent` rule in the gap before
+ * it, drawn by a pseudo-element — never a shadow (*No gradients, no shadows*,
+ * M54 F3).
+ */
+const DROP_HERE = "before:pointer-events-none before:absolute before:inset-y-0 before:-left-2.5 before:w-0.5 before:bg-accent before:content-['']"
+
+/**
+ * **A menu's keys** (M54 F3, *Keyboard first*; the WAI-ARIA menu pattern): the
+ * arrows move through its items, Home and End to the first and the last, and
+ * a disabled item is passed. Escape and Tab are the menu's caller's.
+ */
+function menuKeys(event: KeyboardEvent<HTMLElement>): void {
+  if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return
+  const items = [...event.currentTarget.querySelectorAll<HTMLElement>('[role="menuitem"]:not(:disabled)')]
+  if (items.length === 0) return
+  event.preventDefault()
+  const at = items.indexOf(document.activeElement as HTMLElement)
+  const next =
+    event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : event.key === 'ArrowDown' ? (at + 1) % items.length : (at - 1 + items.length) % items.length
+  items[next]?.focus()
+}
+
+/** A menu just opened takes the keyboard to its first item. */
+function firstItem(box: HTMLElement | null): void {
+  box?.querySelector<HTMLElement>('[role="menuitem"]:not(:disabled)')?.focus()
+}
 
 /** What a block is known by on its dashboard: its format and its name. */
 function keyOf(block: Pick<DashboardBlock, 'format' | 'name'>): string {
@@ -431,38 +478,48 @@ function Edges({
   const tall = height === undefined ? 'as tall as it holds' : `${String(height)} rows`
   const wide = `${String(width)} ${width === 1 ? 'column' : 'columns'}`
   const line = 'bg-accent opacity-0 transition-opacity duration-[var(--micro)] group-hover/edge:opacity-100 group-focus-visible/edge:opacity-100'
+  // **A focusable separator says its value** (WAI-ARIA, M54 F3): a width in
+  // columns, a height in rows — none, as tall as it holds, is 0 and said so.
+  const across = { 'aria-valuenow': width, 'aria-valuemin': 1, 'aria-valuemax': BLOCK_COLUMNS, 'aria-valuetext': wide }
+  const along = { 'aria-valuenow': height ?? 0, 'aria-valuemin': 0, 'aria-valuemax': BLOCK_HEIGHT_MAX, 'aria-valuetext': tall }
   return (
     <>
       <span
         role="separator"
         aria-orientation="vertical"
-        aria-label={`Width: ${wide}. Drag, or press the left and right arrows.`}
+        aria-label="Width. Drag, or press the left and right arrows."
+        {...across}
         tabIndex={0}
         onPointerDown={down('right')}
         onKeyDown={key('right')}
-        className="group/edge absolute top-0 -right-[5px] z-10 flex h-full w-[9px] cursor-ew-resize justify-center focus-visible:outline-none"
+        className="group/edge absolute top-0 -right-1 z-10 flex h-full w-2 cursor-ew-resize justify-center focus-visible:outline-none"
       >
-        <span className={`h-full w-[2px] ${line}`} />
+        <span className={`h-full w-0.5 ${line}`} />
       </span>
       <span
         role="separator"
         aria-orientation="horizontal"
-        aria-label={`Height: ${tall}. Drag, or press the up and down arrows.`}
+        aria-label="Height. Drag, or press the up and down arrows."
+        {...along}
         tabIndex={0}
         onPointerDown={down('bottom')}
         onKeyDown={key('bottom')}
-        className="group/edge absolute -bottom-[5px] left-0 z-10 flex h-[9px] w-full cursor-ns-resize items-center focus-visible:outline-none"
+        className="group/edge absolute -bottom-1 left-0 z-10 flex h-2 w-full cursor-ns-resize items-center focus-visible:outline-none"
       >
-        <span className={`h-[2px] w-full ${line}`} />
+        <span className={`h-0.5 w-full ${line}`} />
       </span>
+      {/* The corner is both: its value is the width, its words say both, and
+          on focus it draws the ring every other stop does. */}
       <span
         role="separator"
-        aria-label={`Size: ${wide}, ${tall}. Drag, or press the arrows.`}
+        aria-label="Size. Drag, or press the arrows."
+        {...across}
+        aria-valuetext={`${wide}, ${tall}`}
         tabIndex={0}
         onPointerDown={down('corner')}
         onKeyDown={key('corner')}
         title="Drag to resize"
-        className="absolute -right-[5px] -bottom-[5px] z-20 flex size-[14px] cursor-nwse-resize items-end justify-end p-[3px] text-ink-tertiary opacity-0 transition-opacity duration-[var(--micro)] group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:text-accent focus-visible:outline-none"
+        className="absolute -right-1.5 -bottom-1.5 z-20 flex size-4 cursor-nwse-resize items-end justify-end p-0.5 text-ink-secondary opacity-0 transition-opacity duration-[var(--micro)] group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
       >
         <svg width="8" height="8" viewBox="0 0 8 8" stroke="currentColor" strokeWidth="1.2" aria-hidden>
           <path d="M7 1 1 7M7 4.5 4.5 7" />
@@ -518,7 +575,13 @@ function Block({
     | undefined
 }) {
   const box = useRef<HTMLDivElement>(null)
+  const more = useRef<HTMLButtonElement>(null)
+  const list = useRef<HTMLDivElement>(null)
   const dismiss = useDismiss(menu !== undefined, box, onClose)
+  const opened = menu !== undefined
+  useEffect(() => {
+    if (opened) firstItem(list.current)
+  }, [opened])
   const declaration = declarations.find((each) => each.name === block.format)
   const gone = blockGone(db, block, declarations)
   const what = blockWhat(db, block, declarations, withFormat)
@@ -561,23 +624,24 @@ function Block({
         'group relative flex min-w-0 flex-col border border-hairline bg-background',
         SPANS[width] ?? 'col-span-2',
         dragging ? 'opacity-40' : '',
-        over ? 'shadow-[-3px_0_0_var(--color-accent)]' : '',
+        over ? DROP_HERE : '',
         fresh ? 'fc-pop-enter' : '',
       ].join(' ')}
       style={height === undefined ? undefined : { height: blockPixels(height) }}
     >
-      <div className="flex min-h-11 items-start gap-1.5 pt-2.5 pr-2 pb-2 pl-3.5">
+      <div className="flex min-h-11 items-start gap-2 pt-2 pr-2 pb-2 pl-4">
         <div className="flex min-w-0 flex-1 flex-col">
           <button
             type="button"
             onClick={onOpen}
             disabled={gone !== undefined}
             title={`Open ${block.name} in full`}
-            className="flex min-w-0 text-left text-[13px] font-semibold decoration-hairline-strong underline-offset-[3px] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:no-underline"
+            className="flex min-w-0 text-left text-body font-semibold decoration-hairline-strong underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:no-underline"
           >
             <Bidi className="min-w-0 truncate">{block.name}</Bidi>
           </button>
-          <span className="truncate text-[11px] text-ink-tertiary" title={what}>
+          {/* Which format it reads and how: a reader needs it (D-531), so ink-secondary. */}
+          <span className="truncate text-caption text-ink-secondary" title={what}>
             {what}
           </span>
         </div>
@@ -587,22 +651,26 @@ function Block({
               menu !== undefined ? 'opacity-100' : 'opacity-0 group-focus-within:opacity-100 group-hover:opacity-100'
             }`}
           >
-            <span className="inline-flex size-[26px] cursor-grab items-center justify-center text-ink-secondary" title="Drag to move" aria-hidden>
+            <span className="fc-icon-action cursor-grab" title="Drag to move" aria-hidden>
               <Grip />
             </span>
+            {/* *An icon is an action*: a square 28px target, a 16px icon (M54 F3). */}
             <button
+              ref={more}
               type="button"
               aria-label={`${block.name}: more`}
+              title="More"
+              aria-haspopup="menu"
               aria-expanded={menu !== undefined}
               onClick={onMenu}
-              className="inline-flex size-[26px] items-center justify-center text-ink-secondary hover:bg-surface hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+              className="fc-icon-action focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
             >
-              <ActionGlyph name="more" size={14} />
+              <ActionGlyph name="more" size={16} />
             </button>
           </span>
         )}
       </div>
-      <div className={`min-w-0 px-3.5 pb-3 ${fill ? 'min-h-0 flex-1 overflow-y-auto' : ''}`}>
+      <div className={`min-w-0 px-4 pb-3 ${fill ? 'min-h-0 flex-1 overflow-y-auto' : ''}`}>
         {gone !== undefined || declaration === undefined ? (
           <Nothing>{gone}</Nothing>
         ) : block.kind === 'total' ? (
@@ -646,12 +714,31 @@ function Block({
         />
       )}
       {sizing !== undefined && (
-        <span className="pointer-events-none absolute right-3 bottom-2 z-10 border border-hairline-strong bg-elevated px-1.5 py-0.5 text-[11px] text-ink-secondary tabular-nums shadow-pop">
+        <span className="pointer-events-none absolute right-3 bottom-2 z-10 border border-hairline-strong bg-elevated px-2 py-0.5 text-caption text-ink-secondary tabular-nums">
           {width} {width === 1 ? 'column' : 'columns'} · {height === undefined ? 'as tall as it holds' : `${String(height)} rows`}
         </span>
       )}
       {menu !== undefined && (
-        <div role="menu" className="fc-pop-enter absolute top-[34px] right-1.5 z-20 min-w-[230px] border border-hairline-strong bg-elevated py-1 shadow-pop">
+        <div
+          ref={list}
+          role="menu"
+          aria-label={`${block.name}: more`}
+          onKeyDown={(event) => {
+            // Escape closes it and gives the keyboard back to ⋯; Tab closes it and goes on.
+            if (event.key === 'Escape') {
+              event.stopPropagation()
+              onClose()
+              more.current?.focus()
+              return
+            }
+            if (event.key === 'Tab') {
+              onClose()
+              return
+            }
+            menuKeys(event)
+          }}
+          className="fc-pop-enter absolute top-10 right-2 z-20 min-w-60 border border-hairline-strong bg-elevated py-1 shadow-pop"
+        >
           <MenuItem onClick={onOpen} disabled={gone !== undefined}>
             Open in full
           </MenuItem>
@@ -664,7 +751,7 @@ function Block({
           </MenuItem>
           <Sep />
           <MenuItem onClick={onRemove}>Remove from this dashboard</MenuItem>
-          <p className="mt-1 max-w-[300px] border-t border-hairline px-3 pt-2 pb-1 text-[11px] text-ink-tertiary">
+          <p className="mt-1 max-w-[300px] border-t border-hairline px-3 pt-2 pb-1 text-caption text-ink-secondary">
             {block.kind === 'total'
               ? 'A headline total lives only on this dashboard, so it goes with the block.'
               : block.kind === 'saved'
@@ -697,11 +784,11 @@ function MenuItem({
       role="menuitem"
       onClick={onClick}
       disabled={disabled}
-      className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-[13px] enabled:hover:bg-accent-soft disabled:cursor-default disabled:opacity-45 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+      className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-body enabled:hover:bg-accent-soft disabled:cursor-default disabled:opacity-45 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
     >
       <span className="inline-flex w-3.5 text-accent">{check}</span>
       <span className="min-w-0 truncate">{children}</span>
-      {aside !== undefined && <span className="ml-auto pl-3 text-caption whitespace-nowrap text-ink-tertiary">{aside}</span>}
+      {aside !== undefined && <span className="ml-auto pl-3 text-caption whitespace-nowrap text-ink-secondary">{aside}</span>}
     </button>
   )
 }
@@ -710,16 +797,13 @@ function Sep() {
   return <div className="my-1 h-px bg-hairline" />
 }
 
+/** A popover's heading: a label a reader needs, so ink-secondary — a format's own, ink (D-531). */
 function Heading({ children, strong = false }: { readonly children: ReactNode; readonly strong?: boolean }) {
-  return (
-    <div className={`px-3 pt-2 pb-1 text-[11px] font-medium tracking-[.08em] uppercase ${strong ? 'text-ink-secondary' : 'text-ink-tertiary'}`}>
-      {children}
-    </div>
-  )
+  return <div className={`px-3 pt-2 pb-1 text-label uppercase ${strong ? 'text-ink' : 'text-ink-secondary'}`}>{children}</div>
 }
 
 function Nothing({ children }: { readonly children: ReactNode }) {
-  return <p className="py-2 text-caption text-ink-tertiary">{children}</p>
+  return <p className="py-2 text-caption text-ink-secondary">{children}</p>
 }
 
 function Grip() {
@@ -759,11 +843,36 @@ function TotalBody({
   )
 }
 
+/**
+ * **The magnitude leads** (M54 F3): a figure's currency symbol and its
+ * decimals are smaller and ink-secondary, its whole part on a step of the
+ * ramp — `title` on the block, `secondary-number` in the preview. Money in two
+ * currencies is two figures, each led by its own magnitude.
+ */
 function Figure({ figure, unit, small = false }: { readonly figure: string; readonly unit?: string | undefined; readonly small?: boolean }) {
+  const quiet = `${small ? 'text-body' : 'text-heading'} font-normal text-ink-secondary`
   return (
-    <div className={`${small ? 'text-[22px]' : 'text-[32px]'} leading-[1.1] font-medium tracking-[-0.01em] tabular-nums`}>
-      {figure}
-      {unit !== undefined && unit !== '' && <small className="ml-1 text-body font-normal text-ink-secondary">{unit}</small>}
+    <div className={`${small ? 'text-secondary-number' : 'text-title'} font-medium tabular-nums`}>
+      {figure.split(' + ').map((part, at) => {
+        const parts = /^(-?)([^\d-]*)([\d,]+)(\.\d+)?(.*)$/.exec(part)
+        return (
+          <span key={at}>
+            {at > 0 && <span className={quiet}> + </span>}
+            {parts === null ? (
+              part
+            ) : (
+              <>
+                {parts[1]}
+                {parts[2] !== '' && <span className={quiet}>{parts[2]}</span>}
+                {parts[3]}
+                {parts[4] !== undefined && <span className={quiet}>{parts[4]}</span>}
+                {parts[5] !== '' && <span className={quiet}>{parts[5]}</span>}
+              </>
+            )}
+          </span>
+        )
+      })}
+      {unit !== undefined && unit !== '' && <span className={`ml-1 ${quiet}`}>{unit}</span>}
     </div>
   )
 }
@@ -789,7 +898,8 @@ function RollupBody({
     names: result.labels,
     by: result.rollup.by !== undefined,
     name: result.rollup.name,
-    unit: result.rollup.kind === 'COUNT' ? 'rows' : undefined,
+    // A count in the format's own word: `1 unit`, `2 units` (M54 F3).
+    count: result.rollup.kind === 'COUNT' ? { one: nounOf(declaration.title), many: pluralOf(declaration.title) } : undefined,
   })
   const drawable = chart.series.some((each) => each.points.some((one) => drawnValue(one, chart.axis) !== undefined))
   if (!drawable) return <Nothing>No row falls in it yet.</Nothing>
@@ -848,7 +958,7 @@ function SavedBody({
       <button
         type="button"
         onClick={onMore}
-        className="text-caption text-accent hover:underline hover:underline-offset-[3px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+        className="text-caption text-accent hover:underline hover:underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
       >
         {count} more
       </button>
@@ -902,18 +1012,18 @@ function EntryLink({ to, children }: { readonly to: ReturnType<Entry>; readonly 
 }
 
 /** A row's name, underlined while its link is under the pointer. */
-const ENTRY_NAME = 'min-w-0 truncate decoration-hairline-strong underline-offset-[3px] group-hover/entry:underline'
+const ENTRY_NAME = 'min-w-0 truncate decoration-hairline-strong underline-offset-4 group-hover/entry:underline'
 
 function Line({ children, done = false }: { readonly children: ReactNode; readonly done?: boolean }) {
   return (
-    <div className={`flex h-[34px] items-center gap-2.5 border-t border-hairline text-[13px] ${done ? 'text-ink-tertiary line-through' : ''}`}>
+    <div className={`flex h-8 items-center gap-2 border-t border-hairline text-body ${done ? 'text-ink-secondary line-through' : ''}`}>
       {children}
     </div>
   )
 }
 
 function Foot({ children }: { readonly children: ReactNode }) {
-  return <div className="flex items-center gap-3 border-t border-hairline pt-1.5 text-caption text-ink-secondary">{children}</div>
+  return <div className="flex items-center gap-3 border-t border-hairline pt-2 text-caption text-ink-secondary">{children}</div>
 }
 
 /** A saved list: its first five open lines and *N more*, or two lines a group when it is grouped. */
@@ -1011,9 +1121,9 @@ function ListBody({
         hidden += Math.max(0, ordered.length - each)
         return (
           <div key={group.key}>
-            <div className="mt-1.5 flex h-[26px] items-center gap-1.5 text-[11px] font-medium tracking-[.06em] text-ink-secondary uppercase">
+            <div className="mt-2 flex h-6 items-center gap-2 text-label text-ink-secondary uppercase">
               <Bidi>{group.name}</Bidi>
-              <span className="text-ink-tertiary tabular-nums">{group.rows.length}</span>
+              <span className="tabular-nums">{group.rows.length}</span>
             </div>
             {ordered.slice(0, each).map(line)}
           </div>
@@ -1062,15 +1172,15 @@ function TableBody({
   const figure = (column: ColumnDeclaration): boolean => ['integer', 'real', 'decimal', 'money', 'percent', 'quantity'].includes(column.type)
   return (
     <>
-      <table className="w-full table-fixed border-collapse text-[13px]">
+      <table className="w-full table-fixed border-collapse text-body">
         <thead>
           <tr>
             {columns.map((column) => (
               <th
                 key={column.name}
-                className={`border-b border-hairline py-1.5 pr-3 text-[11px] font-medium tracking-[.06em] text-ink-secondary uppercase ${figure(column) ? 'text-right' : 'text-left'}`}
+                className={`border-b border-hairline py-1.5 pr-3 text-label text-ink-secondary uppercase ${figure(column) ? 'text-right' : 'text-left'}`}
               >
-                {column.name.replace(/_/g, ' ')}
+                {entryLabel(column)}
               </th>
             ))}
           </tr>
@@ -1089,7 +1199,7 @@ function TableBody({
                       draggable={false}
                       tabIndex={at === 0 ? undefined : -1}
                       aria-hidden={at === 0 ? undefined : true}
-                      className="block py-[7px] pr-3 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+                      className="block py-2 pr-3 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
                     >
                       <Bidi className={at === 0 ? `block ${ENTRY_NAME}` : 'block truncate'}>{valueText(column, row, labels)}</Bidi>
                     </Link>
@@ -1140,9 +1250,9 @@ function BoardBody({
         if (held.length === 0) return null
         return (
           <div key={member}>
-            <div className="mt-1.5 flex h-[26px] items-center gap-1.5 text-[11px] font-medium tracking-[.06em] text-ink-secondary uppercase">
+            <div className="mt-2 flex h-6 items-center gap-2 text-label text-ink-secondary uppercase">
               <Bidi>{member.replace(/_/g, ' ')}</Bidi>
-              <span className="text-ink-tertiary tabular-nums">{held.length}</span>
+              <span className="tabular-nums">{held.length}</span>
             </div>
             {held.slice(0, fill ? TALL : 2).map((row) => (
               <Line key={row.id}>
@@ -1191,6 +1301,7 @@ function AddMenu({
   onAdd,
   onPlace,
   onClose,
+  opener,
 }: {
   readonly db: Database
   readonly formats: readonly FormatDeclaration[]
@@ -1203,14 +1314,34 @@ function AddMenu({
   readonly onAdd: (block: DashboardBlock) => void
   readonly onPlace: Placing
   readonly onClose: () => void
+  /** *Add a block*, which the keyboard goes back to when Escape closes the menu. */
+  readonly opener: RefObject<HTMLButtonElement | null>
 }) {
   const box = useRef<HTMLDivElement>(null)
   const dismiss = useDismiss(true, box, onClose)
+  const choosing = adding === undefined
+  useEffect(() => {
+    if (choosing) firstItem(box.current)
+  }, [choosing])
   const dashboard = document ? undefined : formats[0]?.name
   const on = (format: string, name: string): boolean => blocks.some((each) => each.format === format && each.name === name)
   const offered = formats.map((each) => offeredOf(db, each)).filter((each) => !document || each.saved.length > 0 || each.rollups.length > 0)
   return (
-    <div ref={box} onKeyDown={dismiss} className="fc-pop-enter absolute top-[calc(100%+4px)] left-0 z-20 min-w-[270px] border border-hairline-strong bg-elevated py-1 shadow-pop">
+    <div
+      ref={box}
+      role={choosing ? 'menu' : undefined}
+      aria-label={choosing ? 'Add a block' : undefined}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape') {
+          // A form inside lets Escape through to here: the menu closes, and the keyboard goes back to *Add a block*.
+          dismiss(event)
+          opener.current?.focus()
+          return
+        }
+        if (choosing) menuKeys(event)
+      }}
+      className="fc-pop-enter absolute top-[calc(100%+4px)] left-0 z-20 min-w-[270px] border border-hairline-strong bg-elevated py-1 shadow-pop"
+    >
       {adding?.what === 'total' ? (
         <HeadlineForm db={db} formats={formats} declarations={declarations} blocks={blocks} document={document} day={day} adding={adding} onAdding={onAdding} onAdd={onAdd} dashboard={dashboard} />
       ) : adding?.what === 'view' ? (
@@ -1252,7 +1383,7 @@ function AddMenu({
                 </MenuItem>
               ))}
               {!document && each.saved.length === 0 && each.rollups.length === 0 && (
-                <p className="px-3 py-1.5 text-caption text-ink-tertiary">No saved views or rollups yet.</p>
+                <p className="px-3 py-1.5 text-caption text-ink-secondary">No saved views or rollups yet.</p>
               )}
             </div>
           ))}
@@ -1343,11 +1474,11 @@ function HeadlineForm({
     }
     onAdd(block)
   }
-  const radio = 'flex h-6 items-center gap-2 text-[13px]'
+  const radio = 'flex h-6 items-center gap-2 text-body'
   return (
     <>
       <Heading>Headline total</Heading>
-      <div className="flex w-[340px] flex-col gap-2.5 px-3 pt-1 pb-3">
+      <div className="flex w-[340px] flex-col gap-2 px-3 pt-1 pb-3">
         {document && formats.length > 1 && (
           <div className="flex flex-col gap-1">
             <span className="text-label">Of</span>
@@ -1382,7 +1513,7 @@ function HeadlineForm({
                 checked={adding.sum === column.name}
                 onChange={() => onAdding({ ...adding, sum: column.name })}
               />
-              Sum of {column.name.replace(/_/g, ' ')}
+              Sum of {entryLabel(column)}
             </label>
           ))}
         </div>
@@ -1422,10 +1553,10 @@ function HeadlineForm({
             onKeyDown={(event) => {
               if (event.key === 'Enter') submit()
             }}
-            className="h-7 w-full border border-hairline-strong bg-background px-2 text-[13px] outline-none focus:border-accent"
+            className="h-7 w-full border border-hairline-strong bg-background px-2 text-body outline-none focus:border-accent"
           />
         </div>
-        <div className="flex items-baseline gap-2.5 bg-surface px-2.5 py-2">
+        <div className="flex items-baseline gap-2 bg-surface px-2 py-2">
           {preview.ok ? (
             <>
               <Figure figure={preview.value.figure} unit={preview.value.unit} small />

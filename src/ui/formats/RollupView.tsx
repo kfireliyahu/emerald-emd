@@ -4,6 +4,7 @@ import type { Database } from 'sql.js'
 import { formatMoney, money } from '@/core/money.ts'
 import { toISODate } from '@/core/time.ts'
 import { runRollup } from '@/data/repositories/formatRollupRepository.ts'
+import { nounOf, pluralOf } from '@/domain/format/connections.ts'
 import type { FormatDeclaration } from '@/domain/format/declaration.ts'
 import { figureText, rollupText } from '@/domain/format/rollup.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
@@ -59,9 +60,10 @@ export function RollupView({
             names: result.labels,
             by: result.rollup.by !== undefined,
             name: result.rollup.name,
-            unit: result.rollup.kind === 'COUNT' ? 'rows' : undefined,
+            // A count in the format's own word: `1 unit`, `2 units` (M54 F3).
+            count: result.rollup.kind === 'COUNT' ? { one: nounOf(declaration.title), many: pluralOf(declaration.title) } : undefined,
           }),
-    [result],
+    [result, declaration.title],
   )
   if (result === undefined) return null
 
@@ -88,9 +90,9 @@ export function RollupView({
                 aria-pressed={kind === each}
                 onClick={() => setKind(each)}
                 className={[
-                  'rounded px-2 py-0.5 text-caption',
+                  'px-2 py-0.5 text-caption',
                   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent',
-                  kind === each ? 'bg-surface text-ink' : 'text-ink-tertiary hover:text-ink',
+                  kind === each ? 'bg-surface text-ink' : 'text-ink-secondary hover:text-ink',
                 ].join(' ')}
               >
                 {each === 'bars' ? 'Bars' : 'Line'}
@@ -105,9 +107,11 @@ export function RollupView({
             kind={kind}
             title={`${result.rollup.name} by month${by === undefined ? '' : ` and ${by}`}`}
             labelHeading="month"
+            // Its table is the tab's own, beneath: every figure the chart draws is a cell there.
+            figures="elsewhere"
           />
           {chart.left.map((sentence) => (
-            <p key={sentence} className="m-0 text-caption text-ink-tertiary">
+            <p key={sentence} className="m-0 text-caption text-ink-secondary">
               {sentence}
             </p>
           ))}
@@ -134,12 +138,12 @@ export function RollupView({
                 className="border-b border-hairline"
               >
                 <td className="px-3 py-1.5 whitespace-nowrap tabular-nums">
-                  {group.period ?? <span className="text-ink-tertiary">no month</span>}
+                  {group.period ?? <span className="text-ink-secondary">no month</span>}
                 </td>
                 {by !== undefined && (
                   <td className="px-3 py-1.5 whitespace-nowrap">
                     {group.by === undefined ? (
-                      <span className="text-ink-tertiary">none</span>
+                      <span className="text-ink-secondary">none</span>
                     ) : (
                       // A linked row's name came from a document, and half of
                       // them are Hebrew.
@@ -151,7 +155,7 @@ export function RollupView({
                   {group.value.kind === 'VALUE' ? (
                     group.value.figures.map((figure) => figureText(figure, moneyOf)).join(' + ')
                   ) : (
-                    <span className="text-ink-tertiary" title={group.value.reason}>
+                    <span className="text-ink-secondary" title={group.value.reason}>
                       unchecked
                     </span>
                   )}
@@ -173,7 +177,7 @@ function DeleteChart({ format, name }: { format: string; name: string }) {
   const mutate = useDocumentStore((state) => state.mutate)
   const [asking, setAsking] = useState(false)
   const [refusal, setRefusal] = useState<string | undefined>(undefined)
-  const quiet = 'text-ink-tertiary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent'
+  const quiet = 'text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent'
   if (!asking) {
     return (
       <button type="button" className={`flex-none ${quiet}`} onClick={() => setAsking(true)}>

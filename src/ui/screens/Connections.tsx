@@ -13,7 +13,6 @@ import {
   edgesOf,
   edgeWords,
   graphOf,
-  NEW_FIGURE_WORDS,
   NEW_LINK_WORDS,
   proposalFor,
   type Edge,
@@ -174,10 +173,12 @@ export function Connections() {
   return (
     <div className="flex h-full flex-col">
       <div className="flex shrink-0 flex-wrap items-baseline gap-x-6 gap-y-1 border-b border-hairline px-6 py-2">
+        {/* The screen names itself with one h1 on the title step, as every screen does (M54 F3). */}
+        <h1 className="m-0 text-title">Connections</h1>
         <span className="text-ink-secondary tabular-nums">
           {data.edges.length === 1 ? '1 connection' : `${data.edges.length} connections`}
         </span>
-        <span className="max-w-prose text-caption text-ink-tertiary">
+        <span className="max-w-prose text-caption text-ink-secondary">
           Drag <em>{NEW_LINK_WORDS}</em> from one format onto another — or press one and then the
           other. Nothing is written until you say so.
         </span>
@@ -244,9 +245,19 @@ export function Connections() {
         <aside className="w-72 shrink-0 overflow-auto border-l border-hairline px-4 py-3">
           <h2 className="mb-2 text-caption text-ink-secondary">Every connection, in words</h2>
           {data.edges.length === 0 ? (
-            <p className="text-caption text-ink-tertiary">
-              None yet. The two accented ports on each format — <em>{NEW_LINK_WORDS}</em> and{' '}
-              <em>{NEW_FIGURE_WORDS}</em> — are where one starts.
+            // *An empty state is one sentence* in ink-secondary and one text action (M54 F3).
+            <p className="text-caption text-ink-secondary">
+              No connection yet.{' '}
+              {data.declarations[0] !== undefined && (
+                <button
+                  type="button"
+                  className="text-accent hover:underline hover:underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                  title={`Arms ${NEW_LINK_WORDS} on the first format; press another to connect them`}
+                  onClick={() => setArmed({ kind: 'NEW_LINK', format: data.declarations[0]?.name ?? '' })}
+                >
+                  Start one
+                </button>
+              )}
             </p>
           ) : (
             <ul className="space-y-1">
@@ -260,12 +271,12 @@ export function Connections() {
                       setArmed(undefined)
                       setOpen({ proposal: proposalOf(edge), existing: edge })
                     }}
-                    className="w-full rounded-md px-2 py-1 text-left text-caption hover:bg-surface"
+                    className="w-full px-2 py-1 text-left text-caption hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
                   >
                     <span className={edge.dangling ? 'text-negative' : 'text-ink'}>
                       <Bidi>{said.says}</Bidi>
                     </span>
-                    <span className="block text-ink-tertiary">
+                    <span className="block text-ink-secondary">
                       <Bidi>{said.under}</Bidi>
                     </span>
                   </button>
@@ -275,7 +286,7 @@ export function Connections() {
             </ul>
           )}
 
-          <p className="mt-4 text-caption text-ink-tertiary">
+          <p className="mt-4 text-caption text-ink-secondary">
             A connection is a column on one format, or a total on the other — nothing else. Read
             one back in{' '}
             <Link to={FORMATS_PATH} className="text-accent">
@@ -467,7 +478,7 @@ function FindFormat({
         className={`${FIELD} h-7 w-44 text-caption`}
       />
       {wanted !== '' && matches.length === 0 && (
-        <span className="text-ink-tertiary">No format is called that.</span>
+        <span className="text-ink-secondary">No format is called that.</span>
       )}
     </span>
   )

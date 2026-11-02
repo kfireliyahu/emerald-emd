@@ -148,7 +148,7 @@ describe('the frame’s pages over the development pack: docs/memory.emd', () =>
       expect(problemsOn(html), view).toEqual([])
     }
     const sheet = page(firstPath('sheet', 'unit', filter))
-    expect(sheet).toContain(`${String(kept)} of ${String(countRows(db, unit))} entries`)
+    expect(sheet).toContain(`${String(kept)} of ${String(countRows(db, unit))} rows`)
     expect(sheet).toContain('M44 U1')
     expect(sheet).not.toContain('M43 U1<')
 

@@ -1009,7 +1009,7 @@ function Pick({
         className="inline-flex h-6 items-center gap-1 border-b border-hairline-strong px-0.5 leading-6 text-ink hover:border-accent disabled:text-ink-tertiary"
       >
         {shown?.label ?? '—'}
-        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden className="text-ink-tertiary">
+        <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden className="text-ink-secondary">
           <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" fill="none" />
         </svg>
       </button>
@@ -1018,7 +1018,7 @@ function Pick({
           ref={list}
           role="listbox"
           aria-label={label}
-          className="fc-pop-enter fixed z-50 max-h-64 min-w-[150px] overflow-auto border border-hairline-strong bg-elevated py-1 text-[13px] leading-normal text-ink shadow-pop"
+          className="fc-pop-enter fixed z-50 max-h-64 min-w-[150px] overflow-auto border border-hairline-strong bg-elevated py-1 text-body leading-normal text-ink shadow-pop"
           style={{ top: place.top, left: place.left }}
         >
           {options.map((option, at) => (
@@ -1026,7 +1026,7 @@ function Pick({
               key={option.value}
               role="option"
               aria-selected={option.value === value}
-              className={`flex cursor-pointer justify-between gap-4 px-3 py-[5px] whitespace-nowrap ${
+              className={`flex cursor-pointer justify-between gap-4 px-3 py-1 whitespace-nowrap ${
                 at === active || option.value === value ? 'bg-accent-soft' : 'hover:bg-accent-soft'
               }`}
               onMouseDown={(event) => {
@@ -1036,7 +1036,7 @@ function Pick({
               onMouseEnter={() => setActive(at)}
             >
               {option.label}
-              {option.detail !== undefined && <span className="text-caption text-ink-tertiary">{option.detail}</span>}
+              {option.detail !== undefined && <span className="text-caption text-ink-secondary">{option.detail}</span>}
             </li>
           ))}
         </ul>
@@ -1066,7 +1066,7 @@ function ChoiceButton({
       disabled={disabled}
       title={title}
       onClick={onClick}
-      className={`-ml-px h-[30px] border px-3 text-[13px] first:ml-0 disabled:cursor-default disabled:opacity-40 ${
+      className={`-ml-px h-8 border px-3 text-body first:ml-0 disabled:cursor-default disabled:opacity-40 ${
         on
           ? 'relative z-[1] border-accent bg-accent-soft text-ink'
           : 'border-hairline-strong bg-elevated text-ink-secondary'
@@ -1480,9 +1480,9 @@ const HEADLINE = 'm-0 mb-3.5 max-w-[60ch] text-heading'
 const ROWS = 'grid max-w-[760px] grid-cols-[132px_minmax(0,1fr)] items-start gap-x-4 gap-y-3 max-[620px]:grid-cols-1 max-[620px]:gap-y-1'
 const Q = 'pt-1.5 text-caption text-ink-secondary max-[620px]:pt-2'
 const A = 'flex min-w-0 flex-col gap-1.5'
-const SAY = 'm-0 max-w-[62ch] text-body leading-[2.1]'
+const SAY = 'm-0 max-w-[62ch] text-body leading-loose'
 const CAPTION = 'max-w-[56ch] text-caption text-ink-secondary'
-const CHECK = 'flex items-center gap-2 pt-[5px] text-[13px]'
+const CHECK = 'flex items-center gap-2 pt-1 text-body'
 const BAD = 'mt-1.5 mb-0 max-w-[62ch] text-caption text-negative'
 
 
@@ -1533,7 +1533,7 @@ function Frame({ children }: { children: ReactNode }) {
   return (
     <div
       data-connection-window
-      className="fc-pop-enter max-h-[55%] shrink-0 overflow-y-auto border-t border-hairline bg-elevated px-6 pt-4 pb-[18px] max-[620px]:px-4 max-[620px]:pt-3.5 max-[620px]:pb-4"
+      className="fc-pop-enter max-h-[55%] shrink-0 overflow-y-auto border-t border-hairline bg-elevated px-6 pt-4 pb-4 max-[620px]:px-4 max-[620px]:pt-3.5 max-[620px]:pb-4"
     >
       {children}
     </div>

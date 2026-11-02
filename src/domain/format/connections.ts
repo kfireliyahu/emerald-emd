@@ -223,16 +223,17 @@ export function graphOf(declarations: readonly FormatDeclaration[]): readonly Gr
     const columns = format.columns.map((column): GraphPort => {
       const port: Port = { kind: 'COLUMN', format: format.name, column: column.name }
       const target = isLinkType(column.type) ? column.target : undefined
-      const linked = column.type === 'link' && target !== undefined && target !== ''
+      const linked = target !== undefined && target !== ''
       return {
         port,
         label: column.name,
         type: column.type,
         target: target !== undefined && declared.has(target) ? target : undefined,
         edges: through(port),
-        detail: linked ? `one ${title(target)}` : undefined,
+        // A list link names several, and says so where its row is drawn (M54 F3).
+        detail: linked ? (column.type === 'links' ? `many ${pluralOf(title(target))}` : `one ${title(target)}`) : undefined,
         says: linked
-          ? `Each ${each} belongs to one ${nounOf(title(target))}.`
+          ? `${linkSaid(format.title, column, title(target))}.`
           : `${column.name} — ${typeWord(column.type)}${column.unit === undefined ? '' : `, in ${column.unit}`}. ` +
             'Drag onto a format to make it a connection.',
       }
@@ -327,6 +328,20 @@ export function pluralOf(title: string): string {
   if (/[^aeiou]y$/i.test(noun)) return `${noun.slice(0, -1)}ies`
   if (/(s|x|z|ch|sh)$/i.test(noun)) return `${noun}es`
   return `${noun}s`
+}
+
+/**
+ * **A link said as what it is** (M54 F3, *Words name the rule*): one row or
+ * several, and by which column when the column is not just the other format's
+ * name — so two links to one format never read the same. *Each recipe line
+ * belongs to one recipe*; *each open question names one decision in opened
+ * by*; *each unit names any number of units in blocks*.
+ */
+export function linkSaid(from: string, column: { readonly name: string; readonly type: ColumnType }, to: string): string {
+  const words = column.name.replace(/_/g, ' ')
+  if (column.type === 'links') return `Each ${nounOf(from)} names any number of ${pluralOf(to)} in ${words}`
+  if (words.toLowerCase() === nounOf(to).toLowerCase()) return `Each ${nounOf(from)} belongs to one ${nounOf(to)}`
+  return `Each ${nounOf(from)} names one ${nounOf(to)} in ${words}`
 }
 
 /** A format's title, or — for one this document does not declare — its name, said. */
@@ -684,7 +699,9 @@ export function edgeHeadline(edge: Edge, declarations: readonly FormatDeclaratio
       )
     }
     const column = index.get(edge.format)?.columns.find((each) => each.name === edge.column)
-    return `${belongs(title(edge.format), title(edge.target), column?.foundBy?.grain)}.`
+    // A link found by its date says how; any other says which column, and how many (M54 F3).
+    if (column?.foundBy?.grain !== undefined || column === undefined) return `${belongs(title(edge.format), title(edge.target), column?.foundBy?.grain)}.`
+    return `${linkSaid(title(edge.format), column, title(edge.target))}.`
   }
 
   const many = pluralOf(title(edge.over.format))
@@ -711,13 +728,14 @@ export function edgeWords(
   if (edge.dangling) {
     return {
       says: edgeHeadline(edge, declarations).replace(/\.$/, ''),
-      under: edge.kind === 'LINK' ? `${nounOf(title(edge.format))}’s ${edge.column} column` : 'computed each time, not stored',
+      under: edge.kind === 'LINK' ? `${nounOf(title(edge.format))}’s ${edge.column.replace(/_/g, ' ')} column` : 'computed each time, not stored',
     }
   }
   if (edge.kind === 'LINK') {
+    const column = declarations.find((each) => each.name === edge.format)?.columns.find((each) => each.name === edge.column)
     return {
-      says: `Each ${nounOf(title(edge.format))} belongs to one ${nounOf(title(edge.target))}`,
-      under: `${nounOf(title(edge.format))}’s ${edge.column} column`,
+      says: linkSaid(title(edge.format), column ?? { name: edge.column, type: 'link' }, title(edge.target)),
+      under: `${nounOf(title(edge.format))}’s ${edge.column.replace(/_/g, ' ')} column`,
     }
   }
   return {

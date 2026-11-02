@@ -926,10 +926,13 @@ html {
   fill: var(--color-ink);
 }
 
+/* A bar's figure: the app's own type, on the label step, tabular (M54 F3) —
+   mono is for raw cells only (One family, two scripts). */
 .fc-chart-val {
   fill: var(--color-ink-secondary);
-  font-size: 11px;
-  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Every number in this app is tabular. Proportional digits make columns of
@@ -1189,25 +1192,26 @@ input[type="number"] {
   border-style: dashed;
 }
 
-/* A card on a board: square, elevated, lifted on hover; a live one wears the
-   accent rule down its left edge, the one the sidebar's active item wears. */
+/* A card on a board: square and elevated; a live one wears the accent rule
+   down its left edge, the one the sidebar's active item wears. **Its hover
+   lifts nothing** (A card is one link, M54 F3): the 2px `accent` leading edge,
+   the plane tinted to `surface` and the border firmed — never a shadow. */
 .fc-board-card {
   border: 1px solid var(--color-hairline);
   border-radius: var(--radius-card);
   background: var(--color-elevated);
   transition:
     border-color var(--duration-micro) var(--ease-out),
+    background-color var(--duration-micro) var(--ease-out),
     box-shadow var(--duration-base) var(--ease-out);
 }
-.fc-board-card:hover {
-  border-color: var(--color-hairline-strong);
-  box-shadow: var(--shadow-pop);
-}
+.fc-board-card:hover,
 .fc-board-card[data-tone="live"] {
   box-shadow: inset 2px 0 0 var(--color-accent);
 }
-.fc-board-card[data-tone="live"]:hover {
-  box-shadow: inset 2px 0 0 var(--color-accent), var(--shadow-pop);
+.fc-board-card:hover {
+  border-color: var(--color-hairline-strong);
+  background: var(--color-surface);
 }
 .fc-board-card[data-tone="struck"] .fc-card-title {
   text-decoration: line-through;
@@ -1434,9 +1438,10 @@ input[type="number"] {
 .fc-col:focus-visible {
   outline: none;
 }
+/* An axis's labels are text a reader needs: `ink-secondary` (D-531, M54 F3). */
 .fc-col-tick {
-  fill: var(--color-ink-tertiary);
-  font-size: 11px;
+  fill: var(--color-ink-secondary);
+  font-size: var(--text-label);
   font-family: var(--font-sans);
 }
 .fc-col-on .fc-col-tick {

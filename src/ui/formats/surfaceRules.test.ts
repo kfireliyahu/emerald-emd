@@ -117,10 +117,9 @@ const HELD_ELSEWHERE = [
   // Quick add: its label draws the accent rule inside it on focus-within.
   'h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-ink outline-none',
   // A dashboard block's resize edges: the 2px `accent` rule inside them shows on focus.
-  'group/edge absolute top-0 -right-[5px] z-10 flex h-full w-[9px] cursor-ew-resize',
-  'group/edge absolute -bottom-[5px] left-0 z-10 flex h-[9px] w-full cursor-ns-resize',
-  // Its corner turns its glyph `accent` on focus (M54 U2 recorded whether that is enough).
-  'cursor-nwse-resize items-end justify-end p-[3px] text-ink-tertiary',
+  // Its corner draws the ring every other stop does (M54 F3), so it is not here.
+  'group/edge absolute top-0 -right-1 z-10 flex h-full w-2 cursor-ew-resize',
+  'group/edge absolute -bottom-1 left-0 z-10 flex h-2 w-full cursor-ns-resize',
   // A rail folder's filter: its label turns its rule `accent` on focus-within (M54 U4).
   'w-full min-w-0 border-0 bg-transparent p-0 text-caption text-ink outline-none placeholder:text-ink-tertiary',
   // A rail entry being renamed: the field exists only while it has focus, and its rule is `accent` throughout.
@@ -375,3 +374,82 @@ describe('the formats and rows surface, swept (M54 F2)', () => {
   })
 })
 
+
+describe('the views and dashboards, swept (M54 F3)', () => {
+  const SWEPT = [
+    'src/ui/formats/Dashboard.tsx',
+    'src/ui/formats/MakeBlock.tsx',
+    'src/ui/formats/RollupView.tsx',
+    'src/ui/formats/FilterBand.tsx',
+    'src/ui/formats/ConnectionGraph.tsx',
+    'src/ui/formats/ConnectionPanel.tsx',
+    'src/ui/formats/LinkViews.tsx',
+    'src/ui/screens/Dashboard.tsx',
+    'src/ui/screens/Connections.tsx',
+    'src/ui/screens/Agenda.tsx',
+    'src/ui/screens/Calendar.tsx',
+    'src/ui/screens/FormatLinkViews.tsx',
+    'src/ui/charts/Chart.tsx',
+  ]
+  // *Every value is a token*, *Nothing between the spacing steps*, *Square by
+  // spending the radius tokens* and *Contrast 4.5:1 for text* (D-531): no type,
+  // tracking or leading in pixels, no spacing between the steps, no radius but a
+  // dot's, and no text in ink-tertiary but a placeholder's or a disabled one's.
+  it.each(SWEPT)('%s sizes, spaces, squares and inks from the tokens', (path) => {
+    const source = readFileSync(path, 'utf8')
+    expect(source.match(/\btext-\[[0-9.]+px\]|\btracking-\[|\bleading-\[/g) ?? []).toEqual([])
+    const between = /(?<![\w-])-?(?:m|p|[mp][xytblrse]|gap|gap-[xy]|space-[xy]|inset|inset-[xy]|top|left|right|bottom|h|min-h)-\[[0-9.]+px\]/g
+    expect(source.match(between) ?? []).toEqual([])
+    expect(source.match(/\brounded(?:-(?:sm|md|lg|xl))?\b(?!-)/g) ?? []).toEqual([])
+    expect(source.match(/(?<![\w:-])text-ink-tertiary\b/g) ?? []).toEqual([])
+    // *No gradients, no shadows*: a drop target is a rule, never a shadow.
+    expect(source).not.toMatch(/shadow-\[/)
+  })
+
+  // *Mono for raw cells only* and *Charts are ink*: a bar's figure is the app's own
+  // type, an axis's labels ink-secondary; and *A card is one link*: a board card's
+  // hover lifts nothing.
+  it('draws a chart’s figures in the app’s type, and a board card’s hover without a shadow', () => {
+    const tokens = readFileSync('src/ui/theme/tokens.css', 'utf8')
+    const rule = (selector: string): string => {
+      const at = tokens.indexOf(`\n${selector} {`)
+      return at === -1 ? '' : tokens.slice(at, tokens.indexOf('}', at))
+    }
+    expect(rule('.fc-chart-val')).not.toMatch(/font-mono/)
+    expect(rule('.fc-chart-val')).toMatch(/font-size: var\(--text-label\)/)
+    expect(rule('.fc-col-tick')).toMatch(/fill: var\(--color-ink-secondary\)/)
+    const hover = [...tokens.matchAll(/\n(\.fc-board-card[^{]*:hover[^{]*)\{([^}]*)\}/g)].map(([, , body = '']) => body)
+    expect(hover.length).toBeGreaterThan(0)
+    for (const body of hover) expect(body).not.toMatch(/shadow-pop/)
+  })
+
+  // *Keyboard first*, the WAI-ARIA menu pattern and separator: a block's ⋯ menu
+  // and Add a block move by the arrows and give Escape back to what opened them;
+  // each resize handle says its value; ⋯ is a 28px target with a 16px icon.
+  it('keeps the dashboard’s menus and handles in the keyboard’s reach', () => {
+    const dashboard = readFileSync('src/ui/formats/Dashboard.tsx', 'utf8')
+    expect(dashboard.match(/menuKeys\(event\)/g)).toHaveLength(2)
+    expect(dashboard).toContain('more.current?.focus()')
+    expect(dashboard).toContain('opener.current?.focus()')
+    expect(dashboard.match(/\{\.\.\.(across|along)\}/g)).toHaveLength(3)
+    expect(dashboard).toContain(`'aria-valuenow': width`)
+    expect(dashboard).toMatch(/className="fc-icon-action [^"]*"\s*>\s*<ActionGlyph name="more" size=\{16\}/)
+  })
+
+  // *Choices are ChoiceField: it stays a text field* — the band's column field is typed into.
+  it('lets the filter’s column field be typed into', () => {
+    const band = readFileSync('src/ui/formats/FilterBand.tsx', 'utf8')
+    const field = band.slice(band.indexOf('export function ColumnFilter'), band.indexOf('function tickKey'))
+    expect(field).not.toMatch(/readOnly/)
+    expect(field).toMatch(/\n\s*filter\n/)
+  })
+
+  // *A screen names itself*: one h1, on the title step.
+  it('heads each screen with one h1 on the title step', () => {
+    for (const path of ['src/ui/screens/Dashboard.tsx', 'src/ui/screens/Calendar.tsx', 'src/ui/screens/Connections.tsx']) {
+      const source = readFileSync(path, 'utf8')
+      expect(source.match(/<h1 /g)).toHaveLength(1)
+      expect(source).toMatch(/<h1 className="m-0 text-title">/)
+    }
+  })
+})

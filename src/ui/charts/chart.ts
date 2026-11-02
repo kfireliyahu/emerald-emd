@@ -33,8 +33,14 @@ export interface ChartSeries {
   readonly points: readonly ChartPoint[]
 }
 
-/** What the axis counts in: a currency, or a unit (`rows`, `kg`) or nothing. */
-export type ChartAxis = { readonly currency: string } | { readonly unit?: string | undefined }
+/**
+ * What the axis counts in: a currency, or a unit (`kg`) or nothing — or rows
+ * counted, said in the format's own word, `1 unit`, `2 units` (M54 F3), and
+ * only in whole numbers.
+ */
+export type ChartAxis =
+  | { readonly currency: string }
+  | { readonly unit?: string | undefined; readonly count?: { readonly one: string; readonly many: string } | undefined }
 
 export type ChartKind = 'bars' | 'line'
 
@@ -61,12 +67,14 @@ export function drawnValue(point: ChartPoint, axis: ChartAxis): number | undefin
   return 'currency' in axis || !Number.isFinite(point) ? undefined : point
 }
 
-/** A point as a person reads it in full — `₪1,234.50`, `12 rows`, `unchecked`, `nothing`. */
+/** A point as a person reads it in full — `₪1,234.50`, `12 units`, `1 unit`, `unchecked`, `nothing`. */
 export function pointText(point: ChartPoint, axis: ChartAxis): string {
   if (point === undefined) return 'nothing'
   if (isSaid(point)) return point.said
   if (isMoney(point)) return formatMoney(point)
   const figure = String(Number(point.toPrecision(12)))
+  const count = countOf(axis)
+  if (count !== undefined) return `${figure} ${point === 1 ? count.one : count.many}`
   const unit = 'unit' in axis ? axis.unit : undefined
   return unit === undefined || unit === '' ? figure : `${figure} ${unit}`
 }
@@ -82,15 +90,22 @@ function compact(value: number): string {
   return trim(value, magnitude >= 10 ? 0 : 2)
 }
 
+/** Rows counted, in the format's word — or nothing, when the axis is not a count. */
+export function countOf(axis: ChartAxis): { readonly one: string; readonly many: string } | undefined {
+  return 'currency' in axis ? undefined : axis.count
+}
+
 /**
  * A drawn value said short, for a tick or the top of a bar: `₪1.2k`, `-₪40`,
- * `12 rows`. Never the figure a person reads as the answer — that is
- * `pointText`, in the table and the hover.
+ * `12 kg`, and a count bare — `12`, its word said once in the figures (M54 F3).
+ * Never the figure a person reads as the answer — that is `pointText`, in the
+ * table and the hover.
  */
 export function shortText(value: number, axis: ChartAxis): string {
   if ('currency' in axis) {
     return `${value < 0 ? '-' : ''}${currencySymbol(axis.currency)}${compact(Math.abs(value))}`
   }
+  if (axis.count !== undefined) return compact(value)
   const unit = axis.unit
   return unit === undefined || unit === '' ? compact(value) : `${compact(value)} ${unit}`
 }
@@ -100,13 +115,15 @@ export function shortText(value: number, axis: ChartAxis): string {
  * about `count` of them, the first at or below `low` and the last at or above
  * `high`. One tick for a range of nothing.
  */
-export function niceTicks(low: number, high: number, count = 4): readonly number[] {
+export function niceTicks(low: number, high: number, count = 4, whole = false): readonly number[] {
   if (!Number.isFinite(low) || !Number.isFinite(high)) return [0]
-  if (low > high) return niceTicks(high, low, count)
+  if (low > high) return niceTicks(high, low, count, whole)
   if (low === high) return [low]
   const rough = (high - low) / Math.max(1, count)
   const power = 10 ** Math.floor(Math.log10(rough))
-  const step = [1, 2, 5, 10].map((each) => each * power).find((each) => each >= rough) ?? 10 * power
+  const nice = [1, 2, 5, 10].map((each) => each * power).find((each) => each >= rough) ?? 10 * power
+  // A count is whole: its ticks are 0, 1, 2, never 1.5 (M54 F3).
+  const step = whole ? Math.max(1, nice) : nice
   const first = Math.floor(low / step) * step
   const ticks: number[] = []
   // Rounded to the step's own digits, so 0.1 + 0.2 is printed as 0.3.
@@ -120,9 +137,14 @@ export function niceTicks(low: number, high: number, count = 4): readonly number
 
 /**
  * The span the axis draws: bars stand on zero, so it is always inside; a line
- * reads its shape, so it spans only what it shows. Rounded out to ticks.
+ * reads its shape, so it spans only what it shows. Rounded out to ticks — whole
+ * ones for a count.
  */
-export function axisSpan(values: readonly number[], kind: ChartKind): { low: number; high: number; ticks: readonly number[] } {
+export function axisSpan(
+  values: readonly number[],
+  kind: ChartKind,
+  whole = false,
+): { low: number; high: number; ticks: readonly number[] } {
   if (values.length === 0) return { low: 0, high: 1, ticks: [0] }
   let low = Math.min(...values)
   let high = Math.max(...values)
@@ -139,7 +161,7 @@ export function axisSpan(values: readonly number[], kind: ChartKind): { low: num
       high += pad
     }
   }
-  const ticks = niceTicks(low, high, 4)
+  const ticks = niceTicks(low, high, 4, whole)
   return { low: Math.min(low, ticks[0] ?? low), high: Math.max(high, ticks[ticks.length - 1] ?? high), ticks }
 }
 

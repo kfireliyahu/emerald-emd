@@ -11,15 +11,26 @@ import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ColumnFilter, FilterBand, filteredQuery, useAddressFilter } from '@/ui/formats/FilterBand.tsx'
 import { filterAddress, foldFilter, isFoldKey, withFold } from '@/ui/formats/addressFilter.ts'
-import { roadmapOf, type RoadmapShape } from '@/domain/format/view.ts'
+import { readyOf, roadmapOf, type RoadmapShape } from '@/domain/format/view.ts'
 import { viewSettings } from '@/data/repositories/formatViewRepository.ts'
 import type { ColumnDeclaration } from '@/domain/format/declaration.ts'
 import { FIELD } from '@/ui/components/fieldLook.ts'
 import type { Database } from 'sql.js'
 import type { RowFilter } from '@/data/repositories/formatFilterRepository.ts'
 import { ReadyView, RoadmapView } from '@/ui/formats/LinkViews.tsx'
-import { dashboardBack, entryPath, formatPath } from '@/ui/nav.ts'
-import { useSaving } from '@/ui/formats/savedView.ts'
+import {
+  boardPath,
+  dashboardBack,
+  dashboardPath,
+  entryPath,
+  formatPath,
+  listPath,
+  readyPath,
+  roadmapPath,
+  savedViewPath,
+} from '@/ui/nav.ts'
+import { SavedTab, TAB_LABEL, TAB_OFF, TAB_ON } from '@/ui/formats/SavedTab.tsx'
+import { useSavedViews, useSaving, type Saving } from '@/ui/formats/savedView.ts'
 
 /**
  * **A format's roadmap, as a screen** — M27 U4, D-302. Read on every revision
@@ -40,6 +51,7 @@ export function FormatRoadmap() {
   const { filter, folds, columns, address, set, setFolds, setColumns } = useAddressFilter()
   const navigate = useNavigate()
   const saving = useSaving(name, 'roadmap')
+  const fromDashboard = dashboardBack(useLocation().state)
 
   const data = useMemo(() => {
     if (db === undefined || name === undefined) return undefined
@@ -60,7 +72,8 @@ export function FormatRoadmap() {
     }
     const roadmap = roadmapData(db, declaration, declarations, query, held)
     const said = [refusal, ...refused].filter((each) => each !== undefined)
-    return { declaration, declarations, roadmap, counted: counted(db, declaration, query, said.length === 0 ? undefined : said.join(' ')) }
+    const views = { roadmap: true, ready: readyOf(declaration, viewSettings(db, declaration.name, 'ready')) !== undefined }
+    return { declaration, declarations, roadmap, views, counted: counted(db, declaration, query, said.length === 0 ? undefined : said.join(' ')) }
     // `revision` is the dependency that matters: every write bumps it.
   }, [db, name, revision, filter, folds])
 
@@ -81,9 +94,11 @@ export function FormatRoadmap() {
   return (
     <Frame
       declaration={data.declaration}
-      what="Roadmap"
-      // The table is not the milestones' units: the way back keeps the
-      // milestones' filter and lets the folds' go.
+      on="roadmap"
+      views={data.views}
+      saving={saving}
+      // The table is not the milestones' units: the other tabs keep the
+      // milestones' filter and let the folds' go.
       address={filterAddress(filter)}
       action={
         <>
@@ -109,6 +124,7 @@ export function FormatRoadmap() {
         onChange={fromBand}
         declaration={data.declaration}
         saving={saving}
+        back={back(fromDashboard, navigate)}
       />
       <RoadmapView
         data={data.roadmap}
@@ -116,6 +132,7 @@ export function FormatRoadmap() {
         onOrder={(column) => mutate((database) => setRoadmapOrder(database, format, column))}
         columns={columns}
         onColumns={setColumns}
+        titled={false}
       />
     </Frame>
   )
@@ -143,6 +160,8 @@ export function FormatReady() {
   const revision = useDocumentStore((state) => state.revision)
   const { filter, columns, address, set, clear, setColumns } = useAddressFilter()
   const saving = useSaving(name, 'ready')
+  const navigate = useNavigate()
+  const fromDashboard = dashboardBack(useLocation().state)
 
   const data = useMemo(() => {
     if (db === undefined || name === undefined) return undefined
@@ -150,7 +169,8 @@ export function FormatReady() {
     const declaration = declarations.find((each) => each.name === name)
     if (declaration === undefined) return { declaration: undefined, declarations, ready: undefined }
     const { query, refusal } = filteredQuery(db, declaration, filter, declarations)
-    return { declaration, declarations, ready: readyData(db, declaration, declarations, query), counted: counted(db, declaration, query, refusal) }
+    const views = { roadmap: roadmapOf(declaration, declarations, (format) => viewSettings(db, format, 'roadmap')) !== undefined, ready: true }
+    return { declaration, declarations, views, ready: readyData(db, declaration, declarations, query), counted: counted(db, declaration, query, refusal) }
     // `revision` is the dependency that matters: every write bumps it.
   }, [db, name, revision, filter])
 
@@ -160,12 +180,22 @@ export function FormatReady() {
   return (
     <Frame
       declaration={data.declaration}
-      what="Ready to start"
+      on="ready"
+      views={data.views}
+      saving={saving}
       address={address}
       action={<Filtering db={db} declaration={data.declaration} declarations={data.declarations} filter={filter} set={set} />}
     >
-      <FilterBand filter={filter} {...data.counted} onClear={clear} onChange={set} declaration={data.declaration} saving={saving} />
-      <ReadyView data={data.ready} columns={columns} choosing={{ format: data.declaration, onChange: setColumns }} />
+      <FilterBand
+        filter={filter}
+        {...data.counted}
+        onClear={clear}
+        onChange={set}
+        declaration={data.declaration}
+        saving={saving}
+        back={back(fromDashboard, navigate)}
+      />
+      <ReadyView data={data.ready} columns={columns} choosing={{ format: data.declaration, onChange: setColumns }} titled={false} />
     </Frame>
   )
 }
@@ -229,38 +259,86 @@ function Filtering({
   )
 }
 
+/** *← Dashboard*, first in the band, when a dashboard's block opened the view (M53 U7). */
+function back(
+  fromDashboard: string | undefined,
+  navigate: ReturnType<typeof useNavigate>,
+): { readonly label: string; readonly go: () => void } | undefined {
+  return fromDashboard === undefined ? undefined : { label: 'Dashboard', go: () => navigate(fromDashboard) }
+}
+
+/**
+ * **A roadmap and a ready list open under the format's one tab strip** (M54
+ * F3, *One level of tabs*): the format's title is the screen's one heading, as
+ * on its table, and the strip says which view is open — the same tabs, in the
+ * same order, as `FormatRows` draws them: Table, Board, List, Roadmap, Ready to
+ * start, the saved views, the rollups, and Dashboard apart.
+ */
 function Frame({
   declaration,
-  what,
+  on,
+  views,
+  saving,
   address,
   action,
   children,
 }: {
   declaration: FormatDeclaration
-  what: string
-  /** The address's filter, which the way back to the table carries. */
+  on: 'roadmap' | 'ready'
+  views: { readonly roadmap: boolean; readonly ready: boolean }
+  saving: Saving | undefined
+  /** The address's filter, which every other tab carries. */
   address: string
   action?: ReactNode
   children: ReactNode
 }) {
   const navigate = useNavigate()
-  // Opened from a dashboard's block (M53 U7): the way back is to the dashboard.
-  const fromDashboard = dashboardBack(useLocation().state)
+  const saved = useSavedViews(declaration.name)
+  const savedHere = saving?.current
+  const format = declaration.name
+  const tabs = [
+    { label: 'Table', on: false, go: () => navigate(formatPath(format) + address) },
+    ...(declaration.columns.some((each) => each.type === 'enum') ? [{ label: 'Board', on: false, go: () => navigate(boardPath(format) + address) }] : []),
+    { label: 'List', on: false, go: () => navigate(listPath(format) + address) },
+    ...(views.roadmap ? [{ label: 'Roadmap', on: on === 'roadmap' && savedHere === undefined, go: () => navigate(roadmapPath(format) + address) }] : []),
+    ...(views.ready ? [{ label: 'Ready to start', on: on === 'ready' && savedHere === undefined, go: () => navigate(readyPath(format) + address) }] : []),
+    ...(declaration.rollups ?? []).map((each) => ({
+      label: each.name,
+      on: false,
+      go: () => navigate(formatPath(format) + address, { state: { rollup: each.name } }),
+    })),
+  ]
   return (
     <div className="fc-view-enter flex h-full flex-col">
-      <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-b border-hairline px-6 py-2">
-        <button
-          type="button"
-          className="text-caption text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
-          onClick={() => navigate(fromDashboard ?? formatPath(declaration.name) + address)}
-        >
-          ← {fromDashboard === undefined ? <Bidi>{declaration.title}</Bidi> : 'Dashboard'}
-        </button>
-        <span className="font-medium">{what}</span>
+      <div className="flex shrink-0 flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-hairline px-6 py-2">
+        <h1 className="text-body font-medium">
+          <Bidi>{declaration.title}</Bidi>
+        </h1>
         {action !== undefined && <span className="ml-auto flex items-center gap-2">{action}</span>}
       </div>
+      <nav aria-label="Views" className="flex h-8 shrink-0 items-stretch gap-4 overflow-x-auto border-b border-hairline px-6">
+        {tabs.slice(0, tabs.length - (declaration.rollups ?? []).length).map((tab) => (
+          <Tab key={tab.label} {...tab} />
+        ))}
+        {saved.map((each) => (
+          <SavedTab key={`saved ${each.name}`} view={each} on={savedHere === each.name} onGo={() => navigate(savedViewPath(format, each.kind, each.address))} />
+        ))}
+        {tabs.slice(tabs.length - (declaration.rollups ?? []).length).map((tab) => (
+          <Tab key={`rollup ${tab.label}`} {...tab} />
+        ))}
+        <span aria-hidden className="my-2 w-px shrink-0 bg-hairline" />
+        <Tab label="Dashboard" on={false} go={() => navigate(dashboardPath(format))} />
+      </nav>
       {children}
     </div>
+  )
+}
+
+function Tab({ label, on, go }: { readonly label: string; readonly on: boolean; readonly go: () => void }) {
+  return (
+    <button type="button" aria-current={on ? 'page' : undefined} onClick={on ? undefined : go} className={`${TAB_LABEL} ${on ? TAB_ON : TAB_OFF}`}>
+      <Bidi>{label}</Bidi>
+    </button>
   )
 }
 

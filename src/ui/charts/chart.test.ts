@@ -35,6 +35,11 @@ describe('what a person reads', () => {
   it('says a point in full', () => {
     expect(pointText(money(123_450, 'ILS'), ILS)).toBe('₪1,234.50')
     expect(pointText(12, { unit: 'rows' })).toBe('12 rows')
+    // A count in the format's word, one and many (M54 F3), and bare on a bar or a tick.
+    const units = { count: { one: 'unit', many: 'units' } }
+    expect(pointText(1, units)).toBe('1 unit')
+    expect(pointText(2, units)).toBe('2 units')
+    expect(shortText(2, units)).toBe('2')
     expect(pointText(0.1 + 0.2, {})).toBe('0.3')
     expect(pointText({ said: 'unchecked' }, ILS)).toBe('unchecked')
     expect(pointText(undefined, ILS)).toBe('nothing')
@@ -66,6 +71,12 @@ describe('the axis', () => {
     expect(line.low).toBeGreaterThan(0)
     expect(line.low).toBeLessThanOrEqual(40)
     expect(line.high).toBeGreaterThanOrEqual(60)
+  })
+
+  it('ticks a count in whole numbers (M54 F3)', () => {
+    for (const ticks of [axisSpan([1, 1, 2], 'line', true).ticks, axisSpan([1], 'line', true).ticks, axisSpan([0, 3], 'bars', true).ticks]) {
+      expect(ticks.every((tick) => Number.isInteger(tick))).toBe(true)
+    }
   })
 
   it('has a span when every figure is the same, or zero', () => {
@@ -130,12 +141,14 @@ describe('Chart', () => {
 
   it('is read as a table: every label, every series, every point in full', () => {
     const html = render('bars', two)
-    const table = /<table class="sr-only">(.*)<\/table>/.exec(html)?.[1] ?? ''
-    expect(table).toContain('<caption>spent by month</caption>')
-    expect(table).toContain('<th scope="col">month</th>')
+    const table = /<table[^>]*>(.*)<\/table>/.exec(html)?.[1] ?? ''
+    expect(table).toContain('<caption class="sr-only">spent by month</caption>')
+    expect(table).toContain('<span class="sr-only">month</span>')
+    expect(table).toContain('<span class="sr-only">February 2026</span>')
     expect(table).toContain('Food')
     expect(table).toContain('Rent')
-    expect(table).toContain('<th scope="row">February 2026</th><td>nothing</td><td>unchecked</td>')
+    expect(table).toContain('nothing</td>')
+    expect(table).toContain('unchecked</td>')
     expect(table).toContain('₪4,000.00')
   })
 
@@ -143,9 +156,20 @@ describe('Chart', () => {
     expect(render('bars', [{ name: 'x', points: [undefined, { said: 'unchecked' }, money(1, 'USD')] }])).toBe('')
   })
 
-  it('shows a legend only for several series', () => {
-    expect(render('bars', two)).toContain('<ul')
-    expect(render('bars', [two[0] as ChartSeries])).not.toContain('<ul')
+  // *Every chart has its numbers* and *Charts are ink, labelled directly* (M54 F3).
+  it('labels every bar, and says the figures beneath whenever the picture does not', () => {
+    const one = render('bars', [two[1] as ChartSeries])
+    expect(one.match(/class="fc-chart-val"/g)).toHaveLength(2)
+    expect(one).toContain('<div class="sr-only"><table')
+    // Several series, or a line: the figures are a table anybody can read.
+    expect(render('bars', two)).toContain('<div class="mt-1 overflow-x-auto"><table')
+    expect(render('line', [two[1] as ChartSeries])).toContain('<div class="mt-1 overflow-x-auto"><table')
+  })
+
+  it('names each of several lines at its end', () => {
+    const line = render('line', two)
+    expect(line).toMatch(/<text class="fc-col-tick"[^>]*>Food<\/text>/)
+    expect(line).toMatch(/<text class="fc-col-tick"[^>]*>Rent<\/text>/)
   })
 })
 

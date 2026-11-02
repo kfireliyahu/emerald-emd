@@ -49,8 +49,10 @@ export function rollupChart(
     readonly by: boolean
     /** The rollup's own name, its one series when there is no link. */
     readonly name: string
-    /** What a plain figure counts — `rows` for a count. */
+    /** What a plain figure is in — `kg` — when it is not a count. */
     readonly unit?: string | undefined
+    /** A count's word, the format's own: `1 unit`, `2 units` (M54 F3). */
+    readonly count?: { readonly one: string; readonly many: string } | undefined
   },
 ): RollupChart {
   // The months, first to last, with every month between them.
@@ -76,7 +78,7 @@ export function rollupChart(
     }
   }
   const currency = [...currencies].sort(([a, x], [b, y]) => y - x || a.localeCompare(b))[0]?.[0]
-  const axis: ChartAxis = currency !== undefined ? { currency } : { unit: options.unit }
+  const axis: ChartAxis = currency !== undefined ? { currency } : options.count !== undefined ? { count: options.count } : { unit: options.unit }
 
   const point = (group: RollupGroup | undefined): ChartPoint => {
     if (group === undefined) return undefined

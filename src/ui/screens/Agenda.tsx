@@ -51,8 +51,8 @@ export function Agenda() {
   }
   return (
     <div className="fc-view-enter flex h-full flex-col">
+      {/* The screen names itself once, in its h1 (M54 F3): the bar holds only its controls. */}
       <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-b border-hairline px-6 py-2">
-        <span className="font-medium">Agenda</span>
         <span className="ml-auto flex flex-wrap items-center gap-2">
           <span className="flex items-center" role="group" aria-label="How far ahead">
             {[undefined, ...WINDOWS].map((window) => {
@@ -82,7 +82,12 @@ export function Agenda() {
         </span>
       </div>
       <FilterBand filter={filter} shown={data.shown} total={data.total} onClear={clear} onChange={set} />
-      <AgendaView data={data.drawn} onDate={(format, column) => mutate((database) => setAgendaDate(database, format, column))} />
+      <AgendaView
+        data={data.drawn}
+        onDate={(format, column) => mutate((database) => setAgendaDate(database, format, column))}
+        window={typeof held === 'string' ? held : undefined}
+        onAll={() => set(windowed(undefined))}
+      />
     </div>
   )
 }

@@ -12,7 +12,7 @@ import type {
 } from '@/data/repositories/formatLinkViewRepository.ts'
 import type { ColumnDeclaration, FormatDeclaration } from '@/domain/format/declaration.ts'
 import { idsIn, readValue } from '@/domain/format/row.ts'
-import { dayText, relativeDay } from '@/domain/format/view.ts'
+import { dayText, entryLabel, relativeDay } from '@/domain/format/view.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { ChoiceField } from '@/ui/components/ChoiceField.tsx'
@@ -24,7 +24,7 @@ import { Conversation, selects } from '@/ui/formats/conversation.ts'
 import { chosenLines, lineChoosable } from '@/ui/formats/lineColumns.ts'
 import { StateChip } from '@/ui/formats/StateChip.tsx'
 import { liveIndex, memberText, toneOf } from '@/ui/formats/tone.ts'
-import { entryPath } from '@/ui/nav.ts'
+import { entryPath, FORMATS_PATH } from '@/ui/nav.ts'
 import { changeClass, useChanges, type Change } from '@/ui/useChanges.ts'
 
 /**
@@ -63,12 +63,15 @@ export function RoadmapView({
   onOrder,
   columns = {},
   onColumns,
+  titled = true,
 }: {
   data: RoadmapData
   orders?: readonly ColumnDeclaration[]
   onOrder?: (column: string) => void
   columns?: ColumnChoice
   onColumns?: (next: ColumnChoice) => void
+  /** Its own heading — false under a format's tab strip, which already names it (M54 F3, *a screen names itself once*). */
+  titled?: boolean
 }) {
   const { shape, labels } = data
   const last = shape.state?.values?.at(-1)
@@ -104,7 +107,7 @@ export function RoadmapView({
             <div className="fc-label">
               <Bidi>{data.rows[0]?.line.format.title ?? ''}</Bidi> · in the order of {memberText(shape.order.name)}
             </div>
-            <h1 className="text-title">Roadmap</h1>
+            {titled && <h1 className="text-title">Roadmap</h1>}
             <Counts data={data} />
           </div>
           <div className="flex flex-wrap items-center gap-3">
@@ -187,12 +190,12 @@ export function RoadmapView({
                         <StateChip member={stateText(line)} />
                         {rest.links}
                       </div>
-                      <div className="flex flex-wrap items-center gap-4 pt-1.5 pl-[22px]">
+                      <div className="flex flex-wrap items-center gap-4 pt-1.5 pl-6">
                         <SegmentBar lines={lines} />
                         <span className="text-caption text-ink-secondary">{countsText(folds)}</span>
                       </div>
                       {rest.texts.length > 0 && (
-                        <p className={`max-w-[720px] pt-1.5 pl-[22px] text-ink-secondary ${open ? '' : 'line-clamp-1'}`}>
+                        <p className={`max-w-[720px] pt-1.5 pl-6 text-ink-secondary ${open ? '' : 'line-clamp-1'}`}>
                           {rest.texts.map((each) => (
                             <span key={each.column}>
                               <Bidi>{each.text}</Bidi>{' '}
@@ -338,7 +341,7 @@ function RowLine({
       // The demo tour's anchor (M33 U6): `line-M2 U3`, a unit on the roadmap.
       data-tour={`line-${nameText(line)}`}
       aria-selected={selected}
-      className={`-ml-3 grid grid-cols-[18px_auto_minmax(0,1fr)_auto] items-center gap-x-3 border-t border-hairline px-3 py-[7px] ${selected === true ? 'bg-accent-soft' : ''} ${changeClass('fc-changed', change)}`}
+      className={`-ml-3 grid grid-cols-[18px_auto_minmax(0,1fr)_auto] items-center gap-x-3 border-t border-hairline px-3 py-2 ${selected === true ? 'bg-accent-soft' : ''} ${changeClass('fc-changed', change)}`}
       // Ctrl-click selects the row for the conversation (M51 U7), before the
       // name's link would open it.
       onClickCapture={(event) => {
@@ -434,10 +437,13 @@ export function ReadyView({
   data,
   columns = {},
   choosing,
+  titled = true,
 }: {
   data: ReadyData
   columns?: ColumnChoice
   choosing?: { readonly format: FormatDeclaration; readonly onChange: (next: ColumnChoice) => void }
+  /** Its own heading — false under a format's tab strip, which already names it (M54 F3). */
+  titled?: boolean
 }) {
   const { shape, labels } = data
   const { start } = useContext(Conversation)
@@ -448,7 +454,7 @@ export function ReadyView({
       <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-8 px-6 pt-8 pb-24">
         <header className="flex flex-col gap-2 border-b border-hairline pb-6">
           <div className="flex flex-wrap items-end justify-between gap-6">
-            <h1 className="text-title">Ready to start</h1>
+            {titled && <h1 className="text-title">Ready to start</h1>}
             {choosing !== undefined && (
               <ColumnsChoice
                 formats={[lineChoosable(choosing.format, shape, [shape.waits])]}
@@ -540,13 +546,23 @@ export function ReadyView({
 export function AgendaView({
   data,
   onDate,
+  window,
+  onAll,
 }: {
   data: AgendaData
   /** Put a format on the agenda by another of its dates — the agenda's *by*, what `arrange_views` writes. */
   onDate?: (format: string, column: string) => void
+  /** How far ahead it is held — `within 7 days` — or every day ahead. */
+  window?: string | undefined
+  /** Let the window go, so every day ahead is drawn. */
+  onAll?: () => void
 }) {
   const { labels } = data
   const empty = data.overdue.length === 0 && data.days.length === 0
+  // **The words name the window** (M54 F3, *Words name the rule*): the subtitle and the empty line alike.
+  const ahead = aheadWords(window)
+  const many = data.formats.length > 3
+  const choosable = onDate !== undefined && data.formats.some(({ declaration }) => declaration.columns.filter((column) => column.type === 'date').length > 1)
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
       <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-8 px-6 pt-8 pb-24">
@@ -558,25 +574,62 @@ export function AgendaView({
               'No format here is on the agenda.'
             ) : (
               <>
-                From today on —{' '}
-                {data.formats.map(({ declaration, shape }, at) => (
-                  <span key={declaration.name}>
-                    {at > 0 && ', '}
-                    <Bidi>{declaration.title}</Bidi> by{' '}
-                    <DateChoice declaration={declaration} chosen={shape.date.name} onDate={onDate} />
-                  </span>
-                ))}
+                {capitalize(ahead)} —{' '}
+                {many
+                  ? `${String(data.formats.length)} formats, each by a date of its own`
+                  : data.formats.map(({ declaration, shape }, at) => (
+                      <span key={declaration.name}>
+                        {at > 0 && ', '}
+                        <Bidi>{declaration.title}</Bidi> by {entryLabel(shape.date)}
+                      </span>
+                    ))}
                 {data.formats.some((each) => each.shape.done !== undefined) && ', and what is overdue above it'}.
               </>
             )}
           </p>
+          {/* **Which date puts a format here, folded away** (M54 F3): thirteen
+              fields in a sentence pushed the agenda off its own screen. */}
+          {(many || choosable) && (
+            <details className="text-caption text-ink-secondary">
+              <summary className="cursor-pointer select-none hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">
+                Which date puts each format here
+              </summary>
+              <ul className="mt-2 grid grid-cols-[repeat(auto-fill,minmax(16rem,1fr))] gap-x-6 gap-y-1">
+                {data.formats.map(({ declaration, shape }) => (
+                  <li key={declaration.name} className="flex min-w-0 items-center gap-2">
+                    <Bidi className="min-w-0 truncate">{declaration.title}</Bidi>
+                    <span className="shrink-0">by</span>
+                    <DateChoice declaration={declaration} chosen={shape.date} onDate={onDate} />
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
           {data.left.length > 0 && (
             <p className="text-caption text-ink-secondary">
               Left off: {data.left.map((each) => each.reason).join(' ')}
             </p>
           )}
         </header>
-        {empty && <p className="text-ink-secondary">Nothing on the agenda from today on.</p>}
+        {/* *An empty state is one sentence* and one text action (M54 F3). */}
+        {empty && (
+          <p className="text-ink-secondary">
+            {data.formats.length === 0 ? 'No format here has a date to put it on the agenda.' : `Nothing ${ahead}.`}{' '}
+            {window !== undefined && onAll !== undefined && data.formats.length > 0 ? (
+              <button
+                type="button"
+                onClick={onAll}
+                className="text-accent hover:underline hover:underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+              >
+                Show all ahead
+              </button>
+            ) : (
+              <Link to={FORMATS_PATH} className="text-accent hover:underline hover:underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent">
+                Open formats
+              </Link>
+            )}
+          </p>
+        )}
         {data.overdue.length > 0 && (
           <section aria-label="Overdue">
             <h3 className="fc-label pb-2">Overdue · {data.overdue.length}</h3>
@@ -629,23 +682,38 @@ function DateChoice({
   onDate,
 }: {
   declaration: AgendaData['formats'][number]['declaration']
-  chosen: string
+  chosen: ColumnDeclaration
   onDate: ((format: string, column: string) => void) | undefined
 }) {
   const dates = declaration.columns.filter((column) => column.type === 'date')
-  if (onDate === undefined || dates.length < 2) return <code>{chosen}</code>
+  const said = entryLabel(chosen)
+  if (onDate === undefined || dates.length < 2) return <span className="text-ink">{said}</span>
+  // As wide as its longest choice, so no date's name is cut (M54 F3).
+  const widest = Math.max(...dates.map((each) => entryLabel(each).length))
   return (
     <ChoiceField
-      className={`${FIELD} inline-block w-32 py-0`}
+      className={`${FIELD} inline-block py-0`}
+      style={{ width: `${String(widest + 4)}ch` }}
       readOnly
       filter={false}
       aria-label={`${declaration.title} is on the agenda by`}
-      text={chosen}
-      choices={dates.map((each) => ({ value: each.name, label: each.name }))}
+      text={said}
+      choices={dates.map((each) => ({ value: each.name, label: entryLabel(each) }))}
       onText={() => undefined}
       onPick={(choice) => onDate(declaration.name, choice.value)}
     />
   )
+}
+
+/** How far ahead an agenda is held, in words: `from today on`, `in the next 7 days`. */
+function aheadWords(window: string | undefined): string {
+  if (window === undefined) return 'from today on'
+  const days = /^within (\d+) days?$/.exec(window)?.[1]
+  return days === undefined ? window : `in the next ${days} ${days === '1' ? 'day' : 'days'}`
+}
+
+function capitalize(words: string): string {
+  return words.charAt(0).toUpperCase() + words.slice(1)
 }
 
 /** One row of the agenda: its tone, its format, its name and lines, its state — and on an overdue row, its day. */
@@ -656,7 +724,7 @@ function AgendaRow({ line, labels, today }: { line: AgendaLine; labels: Readonly
   return (
     <li
       data-agenda={`${line.format.name}-${nameText(line)}`}
-      className="-ml-3 grid grid-cols-[18px_minmax(0,8rem)_minmax(0,1fr)_auto] items-center gap-x-3 border-t border-hairline px-3 py-[7px]"
+      className="-ml-3 grid grid-cols-[18px_minmax(0,8rem)_minmax(0,1fr)_auto] items-center gap-x-3 border-t border-hairline px-3 py-2"
     >
       <span className="fc-dot justify-self-center" data-tone={tone} aria-hidden />
       <Bidi className="block truncate text-caption text-ink-secondary">{line.format.title}</Bidi>
@@ -745,11 +813,12 @@ export function NamedBy({
         <section
           key={`${group.format.name}.${group.column.name}`}
           className="flex flex-col"
-          aria-label={`${group.format.title} · ${group.column.name}`}
+          aria-label={`${group.format.title} · ${entryLabel(group.column)}`}
           data-tour={`links-here-${group.format.name}-${group.column.name}`}
         >
           <h3 className="fc-label pb-2">
-            <Bidi>{group.format.title}</Bidi> · <Bidi>{group.column.name}</Bidi>
+            {/* A column by its words — *became unit*, never `became_unit` (M54 F3). */}
+            <Bidi>{group.format.title}</Bidi> · <Bidi>{entryLabel(group.column)}</Bidi>
           </h3>
           {group.lines.map((each) => {
               const { lead } = splitLines(each, labels)
@@ -780,7 +849,7 @@ export function NamedBy({
             {empty.map((group, at) => (
               <span key={`${group.format.name}.${group.column.name}`}>
                 {at === 0 ? '' : ', '}
-                <Bidi>{group.format.title}</Bidi> · <Bidi>{group.column.name}</Bidi>
+                <Bidi>{group.format.title}</Bidi> · <Bidi>{entryLabel(group.column)}</Bidi>
               </span>
             ))}
             .

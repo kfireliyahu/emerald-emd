@@ -36,7 +36,7 @@ export function Calendar() {
       <div className="fc-view-enter flex max-w-4xl flex-col gap-6 px-8 pt-6 pb-12">
         <header className="flex flex-col gap-1.5 border-b border-hairline pb-4">
           <span className="fc-label text-ink-secondary uppercase">Settings · Calendar</span>
-          <h1 className="m-0 text-title font-medium">Calendar</h1>
+          <h1 className="m-0 text-title">Calendar</h1>
           <span className="text-ink-secondary">How this document counts its weeks. It is kept in the file, so every machine and every conversation counts them alike.</span>
         </header>
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-hairline py-4">

@@ -55,6 +55,11 @@ describe('rollupChart: a rollup as the general chart’s series', () => {
     expect(chart.series[0]?.points).toEqual([4])
   })
 
+  it('counts rows in the format’s own word (M54 F3)', () => {
+    const chart = rollupChart([group('2026-01', undefined, plain(1))], { ...options, count: { one: 'unit', many: 'units' } })
+    expect(chart.axis).toEqual({ count: { one: 'unit', many: 'units' } })
+  })
+
   it('draws the currency most figures are in, and says the rest are in the table', () => {
     const chart = rollupChart(
       [

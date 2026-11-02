@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -401,6 +402,23 @@ export function ConnectionGraph({
     setView({ zoom, x: 24 - left * zoom, y: 24 - top * zoom })
   }
 
+  // **The first view is fitted** (M54 F3): everything in the canvas, which
+  // stops at the side list, so the list never sits over a bubble — once, when
+  // the canvas first has a size, and never again behind a person's own pan.
+  const fitted = useRef(false)
+  useLayoutEffect(() => {
+    if (fitted.current) return
+    const box = viewport.current?.getBoundingClientRect()
+    if (box === undefined || box.width === 0 || box.height === 0) return
+    fitted.current = true
+    fit()
+    // The placement is read as it is when the canvas first has a size.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tall])
+
+  /** The points a link's "one" is already said at, on this render. */
+  const worded = new Set<string>()
+
   return (
     <div
       ref={viewport}
@@ -505,6 +523,11 @@ export function ConnectionGraph({
             const manyEnd = edge.to.kind === 'COLUMN' ? to : from
             const oneEnd = edge.to.kind === 'COLUMN' ? from : to
             const tone = edge.dangling ? 'stroke-[var(--color-negative)]' : 'stroke-[var(--color-ink-secondary)]'
+            // **Its words once a point** (M54 F3): six links meeting at one
+            // header printed six "one"s on each other; the first says it.
+            const meets = `${String(oneEnd.x)} ${String(oneEnd.y)}`
+            const words = edge.kind === 'LINK' && !worded.has(meets)
+            if (words) worded.add(meets)
             return (
               <g key={key}>
                 {/* The wide invisible stroke is the hit area. A curve is one and a
@@ -526,7 +549,7 @@ export function ConnectionGraph({
                   strokeDasharray={edge.kind === 'FIGURE' ? '4 3' : undefined}
                   className={tone}
                 />
-                <Ends many={manyEnd} one={oneEnd} tone={tone} words={edge.kind === 'LINK'} />
+                <Ends many={manyEnd} one={oneEnd} tone={tone} words={words} />
               </g>
             )
           })}
@@ -602,7 +625,7 @@ export function ConnectionGraph({
                 type="button"
                 aria-label={`Move ${placed.node.title}`}
                 title={`Move ${placed.node.title} — drag, or the arrow keys`}
-                className="flex w-6 shrink-0 cursor-grab items-center justify-center text-ink-tertiary hover:bg-surface hover:text-ink-secondary active:cursor-grabbing"
+                className="flex w-6 shrink-0 cursor-grab items-center justify-center text-ink-secondary hover:bg-surface hover:text-ink active:cursor-grabbing"
                 {...dragHandlers('FORMAT', placed.node.name, placed)}
               >
                 <Grip />
@@ -623,12 +646,11 @@ export function ConnectionGraph({
                     : 'hover:bg-surface'
                 }`}
               >
+                {/* The title alone: its table's name is machinery, and it took the
+                    room the title was cut short for (M54 F3, *Words name the rule*). */}
                 <span className="flex min-w-0 font-medium">
                   <Bidi className="min-w-0 truncate">{placed.node.title}</Bidi>
                 </span>
-                <code className="ml-auto shrink-0 text-caption text-ink-tertiary">
-                  {placed.node.name}
-                </code>
               </button>
             </div>
 
@@ -795,7 +817,7 @@ function PortButton({
       } ${proposing ? 'text-accent' : port.edges > 0 ? 'text-ink' : 'text-ink-secondary'}`}
     >
       {port.type !== undefined && <TypeGlyph type={port.type} className="h-3.5 w-3.5 shrink-0" />}
-      {port.port.kind === 'FIGURE' && <span className="shrink-0 text-ink-tertiary">Σ</span>}
+      {port.port.kind === 'FIGURE' && <span className="shrink-0 text-ink-secondary">Σ</span>}
       {proposing && <span className="shrink-0">+</span>}
       <span className="flex min-w-0">
         <Bidi className="min-w-0 truncate">{port.label}</Bidi>
@@ -844,7 +866,7 @@ function Ends({
             x={many.x + m * 12}
             y={many.y - 7}
             textAnchor={m > 0 ? 'start' : 'end'}
-            className="fill-[var(--color-ink-secondary)] text-[10px] font-medium"
+            className="fill-[var(--color-ink-secondary)] text-label"
           >
             many
           </text>
@@ -852,7 +874,7 @@ function Ends({
             x={one.x + o * 12}
             y={one.y - 7}
             textAnchor={o > 0 ? 'start' : 'end'}
-            className="fill-[var(--color-ink-secondary)] text-[10px] font-medium"
+            className="fill-[var(--color-ink-secondary)] text-label"
           >
             one
           </text>

@@ -607,3 +607,26 @@ describe('a connection asked for in words (M24 U2)', () => {
     expect(again.ok ? '' : again.error).toContain('nothing to make')
   })
 })
+
+describe('a link said as what it is (M54 F3)', () => {
+  const decision = format('decision', [], { title: 'Decision' })
+  const question = format(
+    'open_question',
+    [column('opened_by', 'link', { target: 'decision' }), column('answered_by', 'link', { target: 'decision' })],
+    { title: 'Open question' },
+  )
+  const unit = format('unit', [column('blocks', 'links', { target: 'unit' })], { title: 'Unit' })
+
+  it('says which column when two links name one format, so no two read the same', () => {
+    const said = edgesOf([decision, question]).map((edge) => edgeWords(edge, [decision, question]).says)
+    expect(said).toEqual(['Each open question names one decision in opened by', 'Each open question names one decision in answered by'])
+    const ports = graphOf([decision, question]).find((node) => node.name === 'open_question')?.ports.map((port) => port.says)
+    expect(new Set(ports).size).toBe(ports?.length)
+  })
+
+  it('says a list link names several', () => {
+    const [edge] = edgesOf([unit])
+    expect(edge === undefined ? '' : edgeWords(edge, [unit]).says).toBe('Each unit names any number of units in blocks')
+    expect(graphOf([unit])[0]?.ports[0]?.detail).toBe('many units')
+  })
+})
