@@ -295,6 +295,19 @@ export function startingText(element: HTMLElement, step: TourStep): string {
 }
 
 /**
+ * What a field holds after each keystroke a watched `type` step makes: `before`
+ * and one more character of `value` each time, so a replace types over what
+ * was there and the field is never empty on the way. Emptying it first is
+ * what lost the timesheet tour (M54 U8): an empty End moved to the form's
+ * empty group, its anchor unmounted, and the next step found nothing. With no
+ * `value`, one write of `before`, as fast-forward makes.
+ */
+export function keystrokes(before: string, value: string): string[] {
+  if (value.length === 0) return [before]
+  return Array.from({ length: value.length }, (_, typed) => before + value.slice(0, typed + 1))
+}
+
+/**
  * **Typing moves nothing** (M39 F1): types `value` after `before` a character
  * at a time, a frame apart, and names the first layout motion — a row, a
  * column or a panel growing or sliding (`LAYOUT_MOTION`) — that a keystroke

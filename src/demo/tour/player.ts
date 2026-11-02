@@ -4,6 +4,7 @@ import type { DemoHandle } from '../contract.ts'
 import {
   bringIntoView,
   click,
+  keystrokes,
   onScreen,
   OutlineOutlived,
   painted,
@@ -511,9 +512,8 @@ export class TourPlayer {
           if (moved !== undefined) throw new TypingMoved(index, moved)
         } else if (fast || this.motion.reduced) setText(element, before + value)
         else {
-          if (step.replace === true) setText(element, '')
-          for (let typed = 1; typed <= value.length; typed += 1) {
-            setText(element, before + value.slice(0, typed))
+          for (const text of keystrokes(before, value)) {
+            setText(element, text)
             await this.hold(PACE.key, generation)
           }
         }
