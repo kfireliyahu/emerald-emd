@@ -315,6 +315,7 @@ from: model
 tour: development
 position: 5
 action: click
+caption: The work goes on the roadmap: milestone M4, in two units.
 chat: And the work: milestone M4, Renamed fields, in two units.
 from: model
 

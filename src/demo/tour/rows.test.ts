@@ -185,8 +185,8 @@ describe('the development tour, as a conversation (M33 F5)', () => {
     expect(tour.document).toBe('project.emd')
   })
 
-  it('is four captions and six chat lines, and no row brings more than one of each', () => {
-    expect(scenes().length).toBe(4)
+  it('is five captions and six chat lines, and no row brings more than one of each', () => {
+    expect(scenes().length).toBe(5)
     expect(tour.steps.filter((step) => step.chat !== undefined).length).toBe(6)
     for (const step of tour.steps) if (step.chat !== undefined) expect(step.from).toBeDefined()
   })

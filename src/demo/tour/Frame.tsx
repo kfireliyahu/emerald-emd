@@ -46,6 +46,8 @@ const CATCHING_UP = 'Putting the document back…'
 /** A dot's fast-forward, back or on (M54 F11): nothing is put back on a forward jump, so the strip says where it goes. */
 const goingTo = (scene: number): string => `Going to step ${String(scene + 1)}…`
 const WIDER = 'Try it yourself on a wider screen.'
+/** A tour that lost its way (M54 F12): one sentence, both ways back; what it could not find stays in the console. */
+const LOST_CAPTION = 'The tour lost its place. Watch picks it up again, and Reset starts it over.'
 
 /**
  * The visitor's speed, remembered in this browser only: a convenience, so
@@ -374,14 +376,15 @@ export function Frame({
   const plays = state.mode === 'watch' || state.mode === 'opening' || catching
 
   const caption =
-    state.lost ??
-    (catching
-      ? catchingWords
-      : trying
-        ? state.changed
-          ? CHANGED_CAPTION
-          : TRY_CAPTION
-        : (scene?.caption ?? ''))
+    state.lost !== undefined
+      ? LOST_CAPTION
+      : catching
+        ? catchingWords
+        : trying
+          ? state.changed
+            ? CHANGED_CAPTION
+            : TRY_CAPTION
+          : (scene?.caption ?? '')
   // Every line the tour's own caption can say, laid in its cell unseen, so the
   // strip is as tall as the longest at this width and the app under it never
   // jumps while it plays. Try it's lines are left out: the app is the visitor's
