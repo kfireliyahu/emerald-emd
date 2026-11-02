@@ -220,7 +220,7 @@ export function ListLines(props: ListLinesProps) {
                     className={
                       narrow
                         ? 'flex h-6 w-full items-center px-3 text-left text-[11px] text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent'
-                        : 'flex h-8 w-full items-center gap-2 border-t border-hairline px-1 text-left text-[12px] text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent'
+                        : 'flex h-8 w-full items-center gap-2 border-t border-hairline px-1 text-left text-caption text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent'
                     }
                   >
                     {showing ? 'Hide ' : ''}
@@ -260,7 +260,7 @@ function Undo({ line, words, undoable, onTick }: RowProps) {
       onClick={onTick}
       aria-label={`${words.undo}: ${line.title}`}
       title={words.undo}
-      className="fc-pop-enter flex-none px-1 text-[12px] text-accent underline-offset-[3px] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+      className="fc-pop-enter flex-none px-1 text-caption text-accent underline-offset-[3px] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
     >
       Undo
     </button>
@@ -314,7 +314,7 @@ function WideRow(props: RowProps) {
         <Bidi className="min-w-0 truncate">{line.title}</Bidi>
       </button>
       <Undo {...props} />
-      <span className="flex flex-none items-center gap-4 text-[12px] text-ink-secondary">
+      <span className="flex flex-none items-center gap-4 text-caption text-ink-secondary">
         {line.cells.map((cell) => (
           <Cell key={cell.column} cell={cell} />
         ))}
@@ -490,7 +490,7 @@ export function ListSettings({
   const ticking = shape.done === undefined ? 'No ticks' : tickWords(shape.done).header
   const lines = shape.lines.map((column) => column.name)
   return (
-    <div className="flex min-h-8 shrink-0 flex-wrap items-center gap-x-[18px] gap-y-1.5 border-b border-hairline px-6 py-1 text-[12px] text-ink-secondary">
+    <div className="flex min-h-8 shrink-0 flex-wrap items-center gap-x-[18px] gap-y-1.5 border-b border-hairline px-6 py-1 text-caption text-ink-secondary">
       <span className="inline-flex items-center gap-1">
         Group by
         <Menu label="Group by" said={shape.group === undefined ? 'nothing' : shape.group.name.replace(/_/g, ' ')} locked={locked}>

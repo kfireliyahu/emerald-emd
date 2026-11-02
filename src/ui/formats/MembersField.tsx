@@ -78,7 +78,7 @@ export function MembersField({
         </span>
       ))}
       <ChoiceField
-        className={`min-w-24 flex-1 bg-transparent px-2 py-1 outline-none focus:bg-surface ${compact ? '' : 'max-w-sm'}`}
+        className={`min-w-24 flex-1 bg-transparent px-2 py-1 outline-none focus:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${compact ? '' : 'max-w-sm'}`}
         filter
         dir="auto"
         aria-label={label}

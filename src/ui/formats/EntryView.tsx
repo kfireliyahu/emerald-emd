@@ -1113,7 +1113,7 @@ function WorkedOut({
       </span>
       {value.kind === 'EMPTY' ? (
         <span className="flex min-h-8 items-baseline" title={`Empty: ${value.reason}`}>
-          <span className="text-[20px] font-medium text-ink-tertiary">—</span>
+          <span className="text-secondary-number font-medium text-ink-tertiary">—</span>
           <span className="ms-1 text-label text-ink-tertiary normal-case">computed</span>
         </span>
       ) : (
@@ -1157,7 +1157,7 @@ function Folded({ each, marked }: { each: RowAggregate; marked: boolean }) {
         <Bidi>{aggregate.name}</Bidi>
       </span>
       <span className="flex min-h-8 items-baseline" title={aggregateSentence(aggregate, value)}>
-        <span className={`text-[20px] font-medium tabular-nums ${marked ? MARKED : ''}`}>
+        <span className={`text-secondary-number font-medium tabular-nums ${marked ? MARKED : ''}`}>
           {value.kind === 'UNCHECKED' ? <span className="text-ink-tertiary">—</span> : aggregateFigure(value)}
         </span>
         <span className="ms-1 text-label text-ink-tertiary normal-case">computed</span>
@@ -1604,7 +1604,7 @@ function Control({
   const set = (text: string): void => onChange(column.name, text)
   const pick = (text: string): void => onPick(column.name, text)
   const figure = part === 'figure'
-  const big = figure ? `${way === 'large' ? 'text-[28px]' : 'text-[20px]'} font-medium ${marked ? MARKED : ''}` : ''
+  const big = figure ? `${way === 'large' ? 'text-[28px]' : 'text-secondary-number'} font-medium ${marked ? MARKED : ''}` : ''
   const named = (id: string): string =>
     choices.find((each) => each.id === id)?.label ?? labels.get(id) ?? id
   const target = column.target

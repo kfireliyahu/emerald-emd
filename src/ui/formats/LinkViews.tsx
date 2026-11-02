@@ -15,6 +15,7 @@ import { idsIn, readValue } from '@/domain/format/row.ts'
 import { dayText, relativeDay } from '@/domain/format/view.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { ChoiceField } from '@/ui/components/ChoiceField.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
 import type { ColumnChoice } from '@/ui/formats/addressFilter.ts'
 import { cardText } from '@/ui/formats/BoardView.tsx'
@@ -110,18 +111,16 @@ export function RoadmapView({
             {onOrder !== undefined && orders.length > 1 && (
               <label className="flex items-center gap-2 text-caption text-ink-secondary">
                 In the order of
-                <select
+                <ChoiceField
                   className={`${FIELD} w-40`}
-                  value={shape.order.name}
-                  onChange={(event) => onOrder(event.target.value)}
+                  readOnly
+                  filter={false}
                   aria-label="In the order of"
-                >
-                  {orders.map((each) => (
-                    <option key={each.name} value={each.name}>
-                      {each.name}
-                    </option>
-                  ))}
-                </select>
+                  text={shape.order.name}
+                  choices={orders.map((each) => ({ value: each.name, label: each.name }))}
+                  onText={() => undefined}
+                  onPick={(choice) => onOrder(choice.value)}
+                />
               </label>
             )}
             {onColumns !== undefined && (
@@ -636,18 +635,16 @@ function DateChoice({
   const dates = declaration.columns.filter((column) => column.type === 'date')
   if (onDate === undefined || dates.length < 2) return <code>{chosen}</code>
   return (
-    <select
-      className={`${FIELD} inline-block w-auto py-0`}
-      value={chosen}
-      onChange={(event) => onDate(declaration.name, event.target.value)}
+    <ChoiceField
+      className={`${FIELD} inline-block w-32 py-0`}
+      readOnly
+      filter={false}
       aria-label={`${declaration.title} is on the agenda by`}
-    >
-      {dates.map((each) => (
-        <option key={each.name} value={each.name}>
-          {each.name}
-        </option>
-      ))}
-    </select>
+      text={chosen}
+      choices={dates.map((each) => ({ value: each.name, label: each.name }))}
+      onText={() => undefined}
+      onPick={(choice) => onDate(declaration.name, choice.value)}
+    />
   )
 }
 

@@ -4,6 +4,7 @@ import type { ColumnDeclaration, FormatDeclaration } from '@/domain/format/decla
 import { readValue, type StoredRow } from '@/domain/format/row.ts'
 import { lanesOf, type BoardShape } from '@/domain/format/view.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { ChoiceField } from '@/ui/components/ChoiceField.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
 import { cellText } from '@/ui/formats/EntryView.tsx'
 import type { ColumnChoice } from '@/ui/formats/addressFilter.ts'
@@ -106,18 +107,16 @@ export function BoardView({
         {enums.length > 1 ? (
           <label className="flex items-center gap-2">
             Lanes by
-            <select
+            <ChoiceField
               className={`${FIELD} w-40`}
-              value={board.lanes.name}
-              onChange={(event) => onLanes(event.target.value)}
+              readOnly
+              filter={false}
               aria-label="Lanes by"
-            >
-              {enums.map((each) => (
-                <option key={each.name} value={each.name}>
-                  {each.name}
-                </option>
-              ))}
-            </select>
+              text={board.lanes.name}
+              choices={enums.map((each) => ({ value: each.name, label: each.name }))}
+              onText={() => undefined}
+              onPick={(choice) => onLanes(choice.value)}
+            />
           </label>
         ) : (
           <span>

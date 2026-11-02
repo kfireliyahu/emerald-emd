@@ -91,9 +91,12 @@ function problemsOn(html: string): string[] {
   }
   if (html.includes('draggable="true"')) found.push('something to drag on a read-only page')
   if (html.includes('This view is not drawn in the conversation')) found.push('the page the frame does not draw')
-  // A field to type in, other than the sheet's search, would take an edit.
+  // A field to type in, other than the sheet's search, would take an edit. A
+  // read-only menu (`ChoiceField`, nothing typed) arranges the copy's view — a
+  // board's lanes — which `readOnly.ts` lets a frame do (M54 U1).
   for (const [input] of html.matchAll(/<(input|textarea)\b[^>]*>/g)) {
-    if (!input.includes('type="search"')) found.push(`a field: ${input.slice(0, 120)}`)
+    const menu = input.includes('readonly=""') && input.includes('role="combobox"')
+    if (!input.includes('type="search"') && !menu) found.push(`a field: ${input.slice(0, 120)}`)
   }
   return found
 }

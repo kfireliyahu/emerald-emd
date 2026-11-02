@@ -179,7 +179,7 @@ export function Shown(props: ShownProps) {
       const { figure, small } = figureParts(column, value, beside)
       return (
         <span className="inline-flex min-h-8 items-baseline">
-          <span className={`${way === 'large' ? 'text-[28px]' : 'text-[20px]'} font-medium tabular-nums ${mark}`}>
+          <span className={`${way === 'large' ? 'text-[28px]' : 'text-secondary-number'} font-medium tabular-nums ${mark}`}>
             {figure}
             {small !== undefined && small !== '' && (
               <small className={`text-[13px] font-normal text-ink-secondary ${small === '%' ? '' : 'ms-[3px]'}`}>{small}</small>
@@ -203,7 +203,7 @@ export function Shown(props: ShownProps) {
       const shown = converted !== undefined && 'value' in converted ? { figure: figureText(converted.value), small: into } : { figure: value, small: beside }
       return (
         <span className="inline-flex min-h-8 items-baseline" title={`${value} ${beside ?? ''}`.trim()}>
-          <span className={`text-[20px] font-medium tabular-nums ${mark}`}>
+          <span className={`text-secondary-number font-medium tabular-nums ${mark}`}>
             {shown.figure}
             {shown.small !== undefined && <small className="ms-[3px] text-[13px] font-normal text-ink-secondary">{shown.small}</small>}
           </span>
@@ -323,7 +323,7 @@ export function Shown(props: ShownProps) {
         <span className="inline-flex min-h-8 flex-wrap items-center gap-1" role={onPick === undefined ? undefined : 'radiogroup'} aria-label={column.name}>
           {choices.map((each) => {
             const on = each.value === value
-            const look = `border px-[9px] py-0.5 text-[12px] ${on ? 'border-ink bg-surface text-ink' : 'border-hairline text-ink-secondary'}`
+            const look = `border px-[9px] py-0.5 text-caption ${on ? 'border-ink bg-surface text-ink' : 'border-hairline text-ink-secondary'}`
             return onPick === undefined ? (
               <span key={each.value} className={look}>
                 <Bidi>{each.label}</Bidi>

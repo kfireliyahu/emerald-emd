@@ -754,7 +754,7 @@ function FootCell({
   // A percent or a time shows what it will be kept as while it is typed, and
   // becomes that when the cell is left (M29 F3, D-344).
   const typed = useTyped(column.type, draft[column.name] ?? '')
-  const look = `w-full min-w-0 bg-transparent px-3 py-1.5 outline-none focus:bg-surface ${numeric(column.type) ? 'text-right tabular-nums' : ''} ${wrong ? 'text-negative' : ''}`
+  const look = `w-full min-w-0 bg-transparent px-3 py-1.5 outline-none focus:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${numeric(column.type) ? 'text-right tabular-nums' : ''} ${wrong ? 'text-negative' : ''}`
   const shared = {
     'data-foot': `${String(row)}:${String(across)}`,
     // The demo tour's anchor (M33 U2): the first foot row's cells only.
@@ -857,7 +857,7 @@ function FootCell({
           /* **A currency is searched and picked** (M29 F3, D-344) — its code,
              its sign and its name — and still typed when the list has not got it. */
           <CurrencyField
-            className="w-12 shrink-0 bg-transparent px-1 py-1.5 font-mono text-caption text-ink-secondary outline-none focus:bg-surface"
+            className="w-12 shrink-0 bg-transparent px-1 py-1.5 font-mono text-caption text-ink-secondary outline-none focus:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
             value={draft[companion] ?? ''}
             label={`${column.name} currency`}
             tour={row === 0 ? `foot-${column.name}-currency` : undefined}
@@ -867,7 +867,7 @@ function FootCell({
         )}
         {companion !== undefined && column.type !== 'money' && (
           <input
-            className="w-12 shrink-0 bg-transparent px-1 py-1.5 font-mono text-caption text-ink-secondary outline-none focus:bg-surface"
+            className="w-12 shrink-0 bg-transparent px-1 py-1.5 font-mono text-caption text-ink-secondary outline-none focus:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
             value={draft[companion] ?? ''}
             aria-label={`${column.name} unit`}
             placeholder="unit"

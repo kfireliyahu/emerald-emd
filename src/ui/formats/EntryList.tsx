@@ -162,7 +162,7 @@ export function EntryList({
     >
       <div className="flex flex-none flex-col gap-2 border-b border-hairline px-3 pt-2.5 pb-2">
         <div className="flex items-center gap-2">
-          <b className="text-[14px] font-semibold">
+          <b className="text-body font-semibold">
             <Bidi>{name}</Bidi>
           </b>
           <span className="text-caption text-ink-tertiary tabular-nums">
@@ -180,7 +180,7 @@ export function EntryList({
             </button>
           )}
         </div>
-        <label className="flex h-7 min-w-0 items-center gap-1.5 border border-hairline-strong bg-elevated px-2 text-ink-tertiary">
+        <label className="flex h-7 min-w-0 items-center gap-1.5 border border-hairline-strong bg-elevated px-2 text-ink-tertiary focus-within:border-accent has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-accent">
           <ActionGlyph name="search" size={14} />
           <input
             type="search"
@@ -229,7 +229,7 @@ export function EntryList({
         onScroll={windowed ? measure : undefined}
       >
         {refusal !== undefined && (
-          <p className="fc-pop-enter border-b border-hairline px-3 py-1.5 text-[12px] text-negative" role="status">
+          <p className="fc-pop-enter border-b border-hairline px-3 py-1.5 text-caption text-negative" role="status">
             <Bidi>{refusal}</Bidi>
           </p>
         )}
@@ -274,7 +274,7 @@ export function EntryList({
                 >
                   <Bidi className={`truncate text-[13px] ${row.ticked ? 'text-ink-tertiary line-through' : 'text-ink'}`}>{row.title}</Bidi>
                   {under.length > 0 && (
-                    <Bidi className="block truncate text-[12px] text-ink-secondary">{under.join(' · ')}</Bidi>
+                    <Bidi className="block truncate text-caption text-ink-secondary">{under.join(' · ')}</Bidi>
                   )}
                 </button>
               )
@@ -298,7 +298,7 @@ export function EntryList({
 /** One thing the list is held to, and the way to let go of it. */
 function HeldChip({ label, onClear, children }: { label: string; onClear: () => void; children: React.ReactNode }) {
   return (
-    <span className="inline-flex h-[22px] max-w-full items-center gap-1 border border-accent bg-accent-soft pr-1 pl-2 text-[12px]">
+    <span className="inline-flex h-[22px] max-w-full items-center gap-1 border border-accent bg-accent-soft pr-1 pl-2 text-caption">
       <span className="truncate">{children}</span>
       <button
         type="button"
