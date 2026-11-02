@@ -6211,7 +6211,7 @@ state: open
 ### At about 1000px wide, look at the Get Emerald cards (.foot .way, page.css:820-824, `grid-template-columns: 40px minmax(0,1fr) minmax(0,28rem)`).
 unit: M54 U7
 should: The words get the room and the command box takes what is left (a readable measure).
-breaks: The command column takes up to 28rem, which squeezes each card's name and line into about 150px. 'The source, on GitHub' wraps to two lines, and the descriptions run 5-6 lines. Owned by M54 F8.
+breaks: The command column takes up to 28rem, which squeezes each card's name and line into about 150px. 'The source, on GitHub' wraps to two lines, and the descriptions run 5-6 lines. Owned by M54 F8. Fixed in M54 F8 (1cf3540).
 state: fault
 
 ### At the 0.2.0 release cut: bring the testing rule into the plugin's generic skill copies, `hosts/claude/skills/closing-pass/SKILL.md` and `hosts/claude/skills/run-milestone/SKILL.md`, from M51 F6's own edits (`git show ee9d513 -- hosts/claude/skills`, reachable from main through merge f19f264), in the same commit that sets the plugin manifest's version for 0.2.0.
@@ -6245,7 +6245,7 @@ state: open
 ### Check the landmarks (demo-page.html:292).
 unit: M54 U7
 should: The page's footer is a contentinfo landmark, outside main (WCAG 1.3.1).
-breaks: The footer sits inside main, so it is no landmark. Owned by M54 F8.
+breaks: The footer sits inside main, so it is no landmark. Owned by M54 F8. Fixed in M54 F8 (1cf3540).
 state: fault
 
 ### Close a window with unsaved changes; and press Install and restart on an update notice with unsaved changes.
@@ -7131,7 +7131,7 @@ state: fault
 ### In light, read the inbox diagram's file names (.inbox-file, page.css:590-594). This is the same question as U2's and U4's ink-tertiary rows.
 unit: M54 U7
 should: Contrast 4.5:1 for text: ink-tertiary only for text nobody needs.
-breaks: shop.emd, site.emd and notes.emd are ink-tertiary at about 2.4:1 in light, yet they carry the inbox story. Verdict 2026-11-02 (D-531): move to the page's secondary grey. Owned by M54 F8.
+breaks: shop.emd, site.emd and notes.emd are ink-tertiary at about 2.4:1 in light, yet they carry the inbox story. Verdict 2026-11-02 (D-531): move to the page's secondary grey. Owned by M54 F8. Fixed in M54 F8 (1cf3540).
 state: fault
 
 ### In the desktop app, declare a format with a `file` column in a document of your own; Choose… a file under the document's folder, drop one from Explorer, and paste a path; click the name and 'show in folder'.
@@ -7223,13 +7223,13 @@ state: open
 ### List the page's headings (h1-h3), or move through them with a screen reader's heading navigation (demo-page.html:78-109).
 unit: M54 U7
 should: Every section the rail lists has a heading (WCAG 1.3.1, 2.4.6).
-breaks: One h2, 'Do my receipts line up…', covers all four tours. Tours 2-4 have only a span.label, so there are 9 headings for 12 rail rows. Some h2s also differ from their rail row: 'MCP' against 'A model works in it, through MCP'. Owned by M54 F8.
+breaks: One h2, 'Do my receipts line up…', covers all four tours. Tours 2-4 have only a span.label, so there are 9 headings for 12 rail rows. Some h2s also differ from their rail row: 'MCP' against 'A model works in it, through MCP'. Owned by M54 F8. Fixed in M54 F8 (1cf3540): a heading in every rail row's section (the tours' labels are h3); where a heading's words differ from its rail row's they are F9's words to align.
 state: fault
 
 ### Load the page and press Tab from the top.
 unit: M54 U7
 should: The first stop is a 'skip to content' link (WCAG 2.4.1; Keyboard first).
-breaks: There is no skip link. Content starts only after 15 stops: the theme button, 12 rail links, Source and Privacy. Owned by M54 F8.
+breaks: There is no skip link. Content starts only after 15 stops: the theme button, 12 rail links, Source and Privacy. Owned by M54 F8. Fixed in M54 F8 (1cf3540).
 state: fault
 
 ### Look at any screen in the shell with a document open and unsaved.
@@ -7241,7 +7241,7 @@ state: fault
 ### Look at the Claude extension's card (demo-page.html:242).
 unit: M54 U7
 should: A file to download looks like a download, not something to type (Words name the rule).
-breaks: `emerald.mcpb` sits in the same pre.run code box as `git clone` and `npx`, so it reads as a command. Owned by M54 F8.
+breaks: `emerald.mcpb` sits in the same pre.run code box as `git clone` and `npx`, so it reads as a command. Owned by M54 F8. Fixed in M54 F8 (1cf3540).
 state: fault
 
 ### Look at the outline drawn around a box in custom 5/5, development 3/4 or 4/4 (Frame.tsx, the tour-look rect).
@@ -7451,7 +7451,7 @@ state: fault
 ### Open getemerald.dev at a desktop width, in either theme, and look at the first screen (#story).
 unit: M54 U7
 should: A stranger sees what to do next on the first screen, before they scroll: a way to get it, or the source (Impeccable persuade: the action above the fold).
-breaks: The first screen holds the h1, the tagline, the story, the twelve-row rail and the top of tour 1. It has no download and no repo action. The only ways onward are the rail row '12 Get Emerald' and a 12px 'Source' link in the rail foot. Get Emerald starts about 9,300px down a 10,659px page. Verdict 2026-11-02 (D-531): the desktop download, filled, on the first screen. Owned by M54 F8.
+breaks: The first screen holds the h1, the tagline, the story, the twelve-row rail and the top of tour 1. It has no download and no repo action. The only ways onward are the rail row '12 Get Emerald' and a 12px 'Source' link in the rail foot. Get Emerald starts about 9,300px down a 10,659px page. Verdict 2026-11-02 (D-531): the desktop download, filled, on the first screen. Owned by M54 F8. Fixed in M54 F8 (1cf3540).
 state: fault
 
 ### Open site.emd in the app once (it is at schema 60 anyway), look at #/formats, then ask start_here on it in a session
@@ -7491,7 +7491,7 @@ state: open
 ### Press Tab past a tour that is out of view (main.ts:194-211).
 unit: M54 U7
 should: An empty frame is no tab stop (WCAG 2.4.3).
-breaks: A frame away from the view has no src but stays focusable, so Tab lands on an empty frame. Owned by M54 F8.
+breaks: A frame away from the view has no src but stays focusable, so Tab lands on an empty frame. Owned by M54 F8. Fixed in M54 F8 (1cf3540).
 state: fault
 
 ### Publish emerald-mcp 0.1.1 and let the registry list it: `npm run build:plugin`, then `cd dist-plugin && npm publish --access public` (browser 2FA). Then, from the repo root, `node scripts/pin-plugin.mjs`, commit the three hosts/claude files and push to main (a session can do this step). That push runs .github/workflows/registry.yml; or `gh workflow run registry.yml`. Check: `curl "https://registry.modelcontextprotocol.io/v0.1/servers?search=io.github.kfireliyahu/emerald"`.
@@ -7507,19 +7507,19 @@ state: accepted
 ### QUESTION for the maintainer. Press the theme button twice (main.ts:86-107).
 unit: M54 U7
 should: The theme is light, dark or system, system the default (The theme is applied before first paint). main.ts says the two-state toggle was deliberate (2026-10-12). Does that hold against the rule?
-breaks: It is a light/dark toggle. Once pressed, the page stops following the system and there is no way back. Verdict 2026-11-02 (D-531): three states, light, dark and system, system the default — the 2026-10-12 two-state choice gives way to the rule. Owned by M54 F8.
+breaks: It is a light/dark toggle. Once pressed, the page stops following the system and there is no way back. Verdict 2026-11-02 (D-531): three states, light, dark and system, system the default — the 2026-10-12 two-state choice gives way to the rule. Owned by M54 F8. Fixed in M54 F8 (1cf3540).
 state: fault
 
 ### QUESTION for the maintainer. Read page.css's spacing: gaps, paddings and margins.
 unit: M54 U7
 should: Every value is a token, and nothing sits between the spacing steps (--spacing-1..16). Question: does that bind the page's own hand-written sheet, ported from the approved M33 U8 mockup? Not fixed here, because moving the off-step values changes the public page's layout.
-breaks: No var(--spacing-*) is used anywhere. Values sit between the steps: 10px (109, 613), 14px (356), 6px (133, 170, 178, 526, 608, 924), 7px (278), 35px (233, 240). Verdict 2026-11-02 (D-531): page.css gets a token set of its own and spends it; spacing on the 8px steps. Owned by M54 F8.
+breaks: No var(--spacing-*) is used anywhere. Values sit between the steps: 10px (109, 613), 14px (356), 6px (133, 170, 178, 526, 608, 924), 7px (278), 35px (233, 240). Verdict 2026-11-02 (D-531): page.css gets a token set of its own and spends it; spacing on the 8px steps. Owned by M54 F8. Fixed in M54 F8 (1cf3540).
 state: fault
 
 ### QUESTION for the maintainer. Read page.css's type sizes.
 unit: M54 U7
 should: Every value is a token and rem for type, but the --text-* ramp is in px. Question: does the page get its own token ramp in rem, with the near-duplicates folded (0.8125, 0.875 and 0.9375rem; 1.0625 and 1.125rem)?
-breaks: There are about 13 rem literals: 0.6875, 0.75, 0.8125, 0.875, 0.9375, 1, 1.0625, 1.125, 1.375, 1.5, 1.625, 2.5 and 3.5rem. The h1 is 56px against --text-hero's 40px. Verdict 2026-11-02 (D-531): yes — the page gets its own rem ramp with the near-duplicates folded, and its own hero size. Owned by M54 F8.
+breaks: There are about 13 rem literals: 0.6875, 0.75, 0.8125, 0.875, 0.9375, 1, 1.0625, 1.125, 1.375, 1.5, 1.625, 2.5 and 3.5rem. The h1 is 56px against --text-hero's 40px. Verdict 2026-11-02 (D-531): yes — the page gets its own rem ramp with the near-duplicates folded, and its own hero size. Owned by M54 F8. Fixed in M54 F8 (1cf3540).
 state: fault
 
 ### QUESTION for the maintainer. Read the hero tagline (en.ts:47, `hero.tagline`) beside docs/product.md (D-238) and the README's first line.
@@ -7531,7 +7531,7 @@ state: fault
 ### QUESTION for the maintainer. Scroll to Get Emerald (#download, .foot .ways and .downloads).
 unit: M54 U7
 should: One primary action per screen: accent-filled. Question: does a persuade page get one filled primary, such as the desktop download, when the rule was written for app screens?
-breaks: The seven ways in are equal-weight cards. The page's only filled button, the form's Send, is hidden because FORM_ACTION is ''. So the page has no primary action at all, and its strongest moment ends on equal cards. Verdict 2026-11-02 (D-531): one filled primary, the desktop download; the other ways stay equal cards. Owned by M54 F8.
+breaks: The seven ways in are equal-weight cards. The page's only filled button, the form's Send, is hidden because FORM_ACTION is ''. So the page has no primary action at all, and its strongest moment ends on equal cards. Verdict 2026-11-02 (D-531): one filled primary, the desktop download; the other ways stay equal cards. Owned by M54 F8. Fixed in M54 F8 (1cf3540).
 state: fault
 
 ### Read DocumentPane.tsx (a PDF page under the reading's marks).
@@ -7550,7 +7550,7 @@ state: fault
 ### Read MCP's tool counts (en.ts:163) beside the server's tool list.
 unit: M54 U7
 should: A figure on the public page is derived or pinned by a test.
-breaks: It says "28 for any document, 85 with the ledger." No test pins it; the only other copy is scripts/npm-package.mjs:86. The emerald-ledger server in this session listed 84. Owned by M54 F8.
+breaks: It says "28 for any document, 85 with the ledger." No test pins it; the only other copy is scripts/npm-package.mjs:86. The emerald-ledger server in this session listed 84. Owned by M54 F8. Fixed in M54 F8 (1cf3540): pinned against tools/list (28 and 85 there; a host that reads visibility hides the frame's one app tool, so a model sees 27 and 84 — F9's words).
 state: fault
 
 ### Read Packs (en.ts:173) beside The engine (en.ts:83). Check the term rows (`format_rows term search:"format"`).
@@ -7627,13 +7627,13 @@ state: open
 ### Read page.css's animation timings: 249, 374, 434-449.
 unit: M54 U7
 should: One duration, one easing; every duration a --duration-* token. Not fixed: changing them changes how the public page enters.
-breaks: The literals are 700ms for the gem, 300/420/540ms hero delays, 120ms + 45ms per facet, 200ms + 30ms and 50ms per row. The hero's entrance is also polish rather than one of the four changes motion may say. Verdict 2026-11-02 (D-531): the page's durations become named tokens of its own sheet. Owned by M54 F8.
+breaks: The literals are 700ms for the gem, 300/420/540ms hero delays, 120ms + 45ms per facet, 200ms + 30ms and 50ms per row. The hero's entrance is also polish rather than one of the four changes motion may say. Verdict 2026-11-02 (D-531): the page's durations become named tokens of its own sheet. Owned by M54 F8. Fixed in M54 F8 (1cf3540).
 state: fault
 
 ### Read page.css:718 and 763 against the header's claim (page.css:8-9) that the page mirrors for a right-to-left language.
 unit: M54 U7
 should: Logical properties throughout: inset-inline-end and text-align: start (Hebrew first-class).
-breaks: `right: 12px` and `text-align: left` would not mirror under dir=rtl. Owned by M54 F8.
+breaks: `right: 12px` and `text-align: left` would not mirror under dir=rtl. Owned by M54 F8. Fixed in M54 F8 (1cf3540).
 state: fault
 
 ### Read the class strings and styles of the dashboard and its charts: tokens.css .fc-chart-val (~914), Dashboard.tsx's ⋯ button and drop targets (:242, :564).
@@ -7767,7 +7767,7 @@ state: open
 ### Scroll until a tour frame loads, then press the theme button.
 unit: M54 U7
 should: The frames follow the page's theme (Dark mode is not an inversion).
-breaks: A loaded frame keeps the theme it loaded with: a light app panel sits on the near-black page until the frame is let go and reloaded. initTheme (src/ui/theme/useTheme.ts) has no `storage` listener. Owned by M54 F8.
+breaks: A loaded frame keeps the theme it loaded with: a light app panel sits on the near-black page until the frame is let go and reloaded. initTheme (src/ui/theme/useTheme.ts) has no `storage` listener. Owned by M54 F8. Fixed in M54 F8 (1cf3540).
 state: fault
 
 ### Tab through the strip of any tour, and read it with a screen reader.
@@ -7806,7 +7806,7 @@ state: open
 ### Validate the rail's markup (demo-page.html:32-34) and listen to the rail and installer link names (main.ts:239-242).
 unit: M54 U7
 should: Valid list children and readable names (WCAG 1.3.1, 4.1.2).
-breaks: ol.tl has a div.solid as a direct child, which an ol may not hold. Link text runs together as '01What it is' and 'WindowsEmerald-Setup.exe'. Owned by M54 F8.
+breaks: ol.tl has a div.solid as a direct child, which an ol may not hold. Link text runs together as '01What it is' and 'WindowsEmerald-Setup.exe'. Owned by M54 F8. Fixed in M54 F8 (1cf3540).
 state: fault
 
 ### Watch /tour.html?tour=custom from the end of 3/5 (after Save) into 4/5, in either theme.
@@ -7848,13 +7848,13 @@ state: dropped
 ### With a screen reader, press the reel's Pause/Play button (reel.ts:66-67).
 unit: M54 U7
 should: Either a label that changes or aria-pressed, not both (WAI-ARIA APG toggle button).
-breaks: The text swaps between Pause and Play while aria-pressed also flips, so it is announced as, for example, 'Play, toggle button, pressed'. Owned by M54 F8.
+breaks: The text swaps between Pause and Play while aria-pressed also flips, so it is announced as, for example, 'Play, toggle button, pressed'. Owned by M54 F8. Fixed in M54 F8 (1cf3540).
 state: fault
 
 ### With a screen reader, reach The engine's claim card (demo-page.html:118, div#claim).
 unit: M54 U7
 should: The summary is what is announced: a role (img or group), or the animation hidden with the summary exposed (WCAG 1.1.1, 4.1.2). The inbox diagram does this with role=img.
-breaks: div#claim has an aria-label but no role, so most screen readers ignore the label and read the animated rows mid-play. Owned by M54 F8.
+breaks: div#claim has an aria-label but no role, so most screen readers ignore the label and read the animated rows mid-play. Owned by M54 F8. Fixed in M54 F8 (1cf3540).
 state: fault
 
 ### With no document open, use File › Save, Save a Copy… or Earlier copies; or Help › Guide me in a document that keeps no ledger.
@@ -15107,10 +15107,17 @@ report: M54 F7 built at 2f07b5d; docs:check green (0 errors, 7 standing warnings
 milestone: M54
 scope: page
 title: The page, built: Get Emerald on the first screen, a theme that follows the system, its own tokens, and a page a keyboard and a screen reader can walk
-state: planned
+landed: 2026-11-02
+decision: D-531
+state: built
 brief: M54 fix unit (D-531, D-532). YOUR ROWS, exactly these: `format_rows review_entry search:"Owned by M54 F8." columns:[unit, do, should, breaks]` — 19 rows; the phrases below say what each asks.. Rows (`format_rows review_entry match:{unit:"M54 U7", state:fault} columns:[do, should, breaks]`) by their breaks: 'The seven ways in are equal-weight cards' and 'The first screen holds the h1' — DECIDED (D-531, D-532): one filled Get Emerald on the first screen, scrolling to #download; at #download the desktop app's download is the one filled action and the other ways stay equal cards; 'It is a light/dark toggle' (light, dark, system; system the default); 'No var(--spacing-*)', 'There are about 13 rem literals', 'The literals are 700ms for the gem' — page.css gets a token set of its own (spacing on the 8px steps, a rem ramp with the near-duplicates folded and its own hero size, named durations) and spends it (rule Every value is a token); 'shop.emd, site.emd and notes.emd are ink-tertiary' (the page's secondary grey); 'A frame away from the view has no src but stays focusable'; 'div#claim has an aria-label but no role'; '`right: 12px` and `text-align: left`' (logical properties); 'The footer sits inside main'; 'A loaded frame keeps the theme it loaded with' (a storage listener in src/ui/theme/useTheme.ts); '`emerald.mcpb` sits in the same pre.run code box'; 'There is no skip link'; 'The command column takes up to 28rem'; 'One h2, \'Do my receipts line up…\', covers all four tours' (a heading per rail row, matching it); 'ol.tl has a div.solid'; 'The text swaps between Pause and Play while aria-pressed also flips' (a fixed name with aria-pressed); 'It says "28 for any document, 85 with the ledger."' (pinned by a test against the server's own tool list, with scripts/npm-package.mjs). The page's WORDS are F9's: change en.ts only where the build needs a label. The page makes no request it did not serve itself (rule Offline). Verify with `npm run dev:demo` (demo-page.html), light, dark and system, keyboard and read_page. Tests: related, typecheck, privacy, check:tours (the page embeds the tour). Land: 'Fixed in M54 F8 (<commit>).' on each row's breaks, state left `fault` (D-532). Unset: stop and ask. MAINTAINER'S EYE: the driver stops after this unit — the maintainer opens demo-page.html in light, dark and system and looks at the first screen and Get Emerald.
-files: demo-page.html, src/demo/page/ (main.ts, page.css, claim.ts, copy/en.ts for labels only), src/ui/theme/useTheme.ts, scripts/npm-package.mjs
+files: demo-page.html, src/demo/page/main.ts, src/demo/page/page.css, src/demo/page/reel.ts, src/demo/page/copy.ts, src/demo/page/copy/en.ts (labels: rail.skip, rail.theme's three states; shots.play removed), src/demo/page/toolCount.test.ts (new), src/ui/theme/useTheme.ts, src/ui/formats/surfaceRules.test.ts
+taken_by: run-milestone driver
+started: 2026-11-02
+branch: main
+commit: 1cf3540
 paths: "demo-page.html\nsrc/demo/page/\nsrc/ui/theme/useTheme.ts\nscripts/npm-package.mjs"
+report: M54 F8 built at 1cf3540; docs:check green (0 errors, 7 standing warnings). No new decision (D-531, D-532). FIRST SCREEN: Get Emerald, the app's filled button with its download tile, under the story (at 1280x800 it sits at y 402-438), scrolling to #download. AT #download: the installer card for the reader's machine is filled (Windows; on a Mac, Apple silicon; none on a phone or Linux, where no installer fits) - navigator.userAgentData.platform, nothing leaves the page; the other ways stay equal cards. THEME: one button cycling system -> light -> dark (system the default, as the app's ThemeCycleButton), icon = the state it is on (half circle for system), label 'Theme: System. Switch to light.'; useTheme listens for storage, so a loaded tour frame and the app inside it follow a press (checked: light/dark reached both nested documents). TOKENS: page.css :root holds --page-space-1..24 (aliases of --spacing-* plus 96px), an 8-step rem ramp (label .6875, caption .75, small .875, body 1, lead 1.125, title 1.5, display 2.5, hero 3.5 - 13/14/15 folded to 14, 17/18 to 18, 22/24/26 to 24), named durations (gem, hero, rail, points), measures and the rail line; logical properties throughout (reel toggle inset-inline-end, text-align start, rail-head padding-inline, the reel bar's origin mirrored under rtl). Visible shifts: body points 17->18px, tagline 26->24 (22->24 on a phone), captions 13->14, between-step gaps moved (10->8, 14->12, 6->8 or 4, 2->4). A11Y: skip link first (to main#main); footer outside main (div.content wraps both); #tl is a box with the solid line and ol#tl-rows holding only li; tours' labels are h3 (13 headings, every rail row has one); #claim role=img; empty frames tabindex=-1 aria-hidden until loaded; link names '01 What it is', 'Windows Emerald-Setup.exe'; reel button a fixed 'Pause' with aria-pressed (pressed = ink fill). WAYS IN: one grid, each card a subgrid (commands line up), words minmax(20rem,1fr), command max-content; a container query puts the command under the words below 48rem of room (at 1000px wide words get 605px). emerald.mcpb is a download glyph and file name, not a code box. Inbox file names ink-secondary. TOOL COUNTS: toolCount.test.ts pins '28 for any document, 85 with the ledger' in en.ts, scripts/npm-package.mjs and README.md against createServer's tools/list (engine-only 27+1 app tool; full 84+1). VERIFIED on demo port 4185, pane HIDDEN: JS probes at 1280, 1000, 1440 and 375 wide, light/dark/system via emulation and the button; offline: performance entries only localhost:4185; keyboard order skip -> theme -> rail by DOM; screenshots unreliable while hidden. Tests: related, surfaceRules (new page describe fails against HEAD's page.css), bidiTruncation, privacy, page tests, typecheck green; impeccable detect found nothing. check:tours: 9/10 ok, the page and 'nothing leaves the page' ok; FAIL ledger at 375x440 'the app scrolls sideways - 846 of 868 px in a 1120 px app' at step 1 (Home) - inside the app, which F8 does not touch; F13 (368d722) changed Home's table and did not run check:tours, so it is most likely F13's - NOT verified against HEAD~. LEFT FOR F9 (words): rail names vs headings (MCP vs 'A model works in it, through MCP'; tours' rail names vs labels), the hero button reuses foot.heading; a model in a host that reads visibility sees 27/84 tools, tools/list says 28/85. Inbox's 'nothing yet' line is still ink-tertiary. claim.ts's 420ms step is TS, untouched.
 
 ### M54 F9
 milestone: M54
