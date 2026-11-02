@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import type { Database } from 'sql.js'
 
@@ -35,6 +35,15 @@ import { folderIsOpen, toggleFolder, useOpenFolders } from '@/ui/railFolders.ts'
  * deleted where it stands. **Its charts beside them** (M53 F3): each rollup
  * the format declares, opening its tab, renamed and deleted the same way.
  */
+
+/**
+ * **Where a folder's parts start**, as classes (M54 F5): the arrow, a 24px
+ * target, ends at the name's start — 40px, as a plain page's `pl-10`, or 56px
+ * under a pack's name, as its `pl-14` — and what is inside the folder (its
+ * filter, its entries, its saved views and charts) starts one step further in.
+ */
+const PLAIN = { arrow: 'ml-4', entry: 'pl-12', field: 'ml-12' } as const
+const GROUPED = { arrow: 'ml-8', entry: 'pl-16', field: 'ml-16' } as const
 
 /** The document's declarations, read once per change for every folder in the rail. */
 export function useDeclarations(): { readonly db: Database | undefined; readonly declarations: readonly FormatDeclaration[] } {
@@ -95,7 +104,11 @@ export function RailFolder({
     [open, db, declaration, declarations, filter, current, revision],
   )
 
-  const indent = grouped ? 16 : 0
+  // Under a pack's name a format sits one step further in (M33 F3). The steps
+  // are classes, not pixels (M54 F5): the arrow's 24px target ends where a plain
+  // page's name starts (`pl-10`, `pl-14`), and the entries start one step past it.
+  const step = grouped ? GROUPED : PLAIN
+  const countId = useId()
   // The saved view the address is, when it is one: it carries the marker, as an entry does.
   const savedHere = (view: SavedView): boolean =>
     lit && pathname === savedViewPath(name, view.kind, '') && sameAddress(kept, view.address)
@@ -105,7 +118,7 @@ export function RailFolder({
     <>
       <div
         // The format's row: lit on its own screens, ink while one of its entries is (the entry carries the marker).
-        className={`fc-row-enter relative flex h-7 items-center text-[13px] transition-colors duration-[var(--duration-micro)] ${
+        className={`fc-row-enter relative flex h-7 items-center text-body transition-colors duration-[var(--duration-micro)] ${
           lit && current === undefined && !onSaved
             ? 'bg-accent-soft text-ink before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:bg-accent'
             : lit
@@ -116,14 +129,14 @@ export function RailFolder({
         <button
           type="button"
           onClick={() => toggleFolder(name, current !== undefined)}
+          // A stable name, the state in `aria-expanded` (M54 F5).
           aria-expanded={open}
-          aria-label={`${open ? 'Close' : 'Open'} ${child.label}`}
-          className="inline-flex h-7 w-5 flex-none items-center justify-center text-ink-tertiary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
-          style={{ marginLeft: 20 + indent }}
+          aria-label={`${child.label} entries`}
+          title={open ? 'Close' : 'Open'}
+          className={`inline-flex h-7 w-6 flex-none items-center justify-center text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${step.arrow}`}
         >
           <span
-            className="inline-flex transition-transform duration-[var(--duration-micro)] ease-[var(--ease-out)]"
-            style={{ transform: open ? 'rotate(90deg)' : undefined }}
+            className={`inline-flex transition-transform duration-[var(--duration-micro)] ease-[var(--ease-out)] ${open ? 'rotate-90' : ''}`}
           >
             <ActionGlyph name="right" size={12} />
           </span>
@@ -132,11 +145,19 @@ export function RailFolder({
           to={child.to}
           // The tour's anchor (M33 U2): `nav-formats-receipt`, as a section's is `nav-formats`.
           data-tour={`nav${child.to.replace(/\//g, '-')}`}
+          // The format's name, and its count apart from it (M54 F5): read
+          // "Decision", described "4 entries" — never "Decision4".
+          aria-label={child.label}
+          aria-current={lit && current === undefined && !onSaved ? 'page' : undefined}
+          {...(total === undefined ? {} : { 'aria-describedby': countId })}
           className="flex h-7 min-w-0 flex-1 items-center gap-2 pr-3.5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
         >
           <Bidi className="truncate">{child.label}</Bidi>
           {total !== undefined && (
-            <span className="ml-auto text-[11px] text-ink-tertiary tabular-nums">{total}</span>
+            <span id={countId} className="ml-auto text-caption text-ink-secondary tabular-nums">
+              {total}
+              <span className="sr-only"> {total === 1 ? 'entry' : 'entries'}</span>
+            </span>
           )}
         </Link>
       </div>
@@ -146,19 +167,18 @@ export function RailFolder({
           key={view.name}
           view={view}
           here={savedHere(view)}
-          indent={indent}
+          left={step.entry}
         />
       ))}
       {(declaration?.rollups ?? []).map((rollup) => (
-        <RollupRow key={`rollup ${rollup.name}`} format={name} name={rollup.name} indent={indent} />
+        <RollupRow key={`rollup ${rollup.name}`} format={name} name={rollup.name} left={step.entry} />
       ))}
 
       {open && folder !== undefined && (
         <>
           {folder.total > FOLDER_SIZE && (
             <label
-              className="my-0.5 mr-3 flex h-[26px] items-center gap-1.5 border-b border-hairline-strong text-ink-tertiary focus-within:border-accent"
-              style={{ marginLeft: 46 + indent }}
+              className={`my-0.5 mr-3 flex h-6 items-center gap-1.5 border-b border-hairline-strong text-ink-secondary focus-within:border-accent ${step.field}`}
             >
               <ActionGlyph name="search" size={12} />
               <input
@@ -177,7 +197,7 @@ export function RailFolder({
             </label>
           )}
           {folder.found === 0 && (
-            <div className="pt-0.5 pr-2.5 pb-1 text-caption text-ink-tertiary" style={{ paddingLeft: 46 + indent }}>
+            <div className={`pt-0.5 pr-2.5 pb-1 text-caption text-ink-secondary ${step.entry}`}>
               {q === '' ? 'Nothing in it yet' : <>Nothing holds “<Bidi>{q}</Bidi>”</>}
             </div>
           )}
@@ -189,20 +209,14 @@ export function RailFolder({
                 to={entryPath(name, entry.id) + (lit ? kept : '')}
                 title={entry.title}
                 aria-current={here ? 'page' : undefined}
-                className={`fc-row-enter relative flex h-6 w-full items-center pr-2.5 text-left text-[12.5px] transition-colors duration-[var(--duration-micro)] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
+                className={`fc-row-enter relative flex h-6 w-full items-center pr-2.5 text-left text-caption transition-colors duration-[var(--duration-micro)] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
                   here
                     ? 'bg-accent-soft text-ink before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:bg-accent'
                     : 'text-ink-secondary hover:text-ink'
-                }`}
-                style={{ paddingLeft: 46 + indent }}
+                } ${step.entry}`}
               >
                 {folder.stated && (
-                  <span
-                    className="fc-dot"
-                    data-tone={toneOf(entry.state)}
-                    aria-hidden
-                    style={{ width: 6, height: 6, marginRight: 7 }}
-                  />
+                  <span className="fc-dot mr-2 flex-none" data-tone={toneOf(entry.state)} aria-hidden />
                 )}
                 <Bidi className="min-w-0 truncate">{entry.title}</Bidi>
               </Link>
@@ -213,8 +227,7 @@ export function RailFolder({
               // The list, not the Table (M37 U2b, the mockup's `openAll`): the
               // first entry it holds, with the filter line's text as its search.
               to={entryPath(name, folder.entries[0]?.id ?? '') + filterAddress(q === '' ? {} : { search: q })}
-              className="flex h-6 w-full items-center pr-2.5 text-left text-caption text-accent hover:underline hover:underline-offset-[3px] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
-              style={{ paddingLeft: 46 + indent }}
+              className={`flex h-6 w-full items-center pr-2.5 text-left text-caption text-accent hover:underline hover:underline-offset-[3px] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${step.entry}`}
             >
               All {folder.found}
               {q !== '' && ' holding it'} →
@@ -230,7 +243,7 @@ export function RailFolder({
  * **One saved view in the rail** (M53 U5): its name opens its address; the
  * pencil renames it in place and the bin deletes it, both where it stands.
  */
-function SavedRow({ view, here, indent }: { view: SavedView; here: boolean; indent: number }) {
+function SavedRow({ view, here, left }: { view: SavedView; here: boolean; left: string }) {
   const mutate = useDocumentStore((state) => state.mutate)
   return (
     <RailRow
@@ -239,7 +252,7 @@ function SavedRow({ view, here, indent }: { view: SavedView; here: boolean; inde
       glyph="filter"
       title={`${view.name} — a saved ${view.kind}`}
       here={here}
-      indent={indent}
+      left={left}
       onRename={(to) => mutate((db) => renameSavedView(db, view.format, view.name, to.trim()))}
       onDelete={() => mutate((db) => deleteSavedView(db, view.format, view.name))}
     />
@@ -252,7 +265,7 @@ function SavedRow({ view, here, indent }: { view: SavedView; here: boolean; inde
  * change the format's declaration, as `extend_format rename` and `remove` do,
  * and a dashboard's chart of it follows the rename or goes with it.
  */
-function RollupRow({ format, name, indent }: { format: string; name: string; indent: number }) {
+function RollupRow({ format, name, left }: { format: string; name: string; left: string }) {
   const mutate = useDocumentStore((state) => state.mutate)
   const change = (judge: (db: Database) => Result<RollupChange | undefined, string>): void =>
     mutate((db) => {
@@ -268,7 +281,7 @@ function RollupRow({ format, name, indent }: { format: string; name: string; ind
       glyph="chart"
       title={`${name} — a chart`}
       here={false}
-      indent={indent}
+      left={left}
       onRename={(to) => change((db) => rollupRenamed(db, listFormats(db), format, name, to))}
       onDelete={() => change((db) => rollupDeleted(db, listFormats(db), format, name))}
     />
@@ -288,7 +301,7 @@ function RailRow({
   glyph,
   title,
   here,
-  indent,
+  left,
   onRename,
   onDelete,
 }: {
@@ -298,7 +311,8 @@ function RailRow({
   glyph: 'filter' | 'chart'
   title: string
   here: boolean
-  indent: number
+  /** Its inset from the rail's edge: a class, `PLAIN.entry` or `GROUPED.entry`. */
+  left: string
   /** Writes the new name, or throws the refusal. */
   onRename: (to: string) => void
   /** Deletes it, or throws the refusal. */
@@ -307,12 +321,11 @@ function RailRow({
   const [renaming, setRenaming] = useState<string | undefined>(undefined)
   const [deleting, setDeleting] = useState(false)
   const [refusal, setRefusal] = useState<string | undefined>(undefined)
-  const left = { paddingLeft: 46 + indent }
   const quiet =
-    'text-ink-tertiary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent'
+    'text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent'
   const said =
     refusal === undefined ? null : (
-      <div className="pb-1 text-[11px] text-negative" role="alert">
+      <div className="pb-1 text-caption text-negative" role="alert">
         {refusal}
       </div>
     )
@@ -329,7 +342,7 @@ function RailRow({
       setRefusal(undefined)
     }
     return (
-      <div className="pr-2.5 text-[12.5px]" style={left}>
+      <div className={`pr-2.5 text-caption ${left}`}>
         <input
           autoFocus
           value={renaming}
@@ -352,7 +365,7 @@ function RailRow({
           onBlur={() => {
             if (refusal === undefined) setRenaming(undefined)
           }}
-          className="h-6 w-full min-w-0 border-0 border-b border-accent bg-transparent p-0 text-[12.5px] text-ink outline-none"
+          className="h-6 w-full min-w-0 border-0 border-b border-accent bg-transparent p-0 text-caption text-ink outline-none"
         />
         {said}
       </div>
@@ -361,7 +374,7 @@ function RailRow({
 
   if (deleting) {
     return (
-      <div className="pr-2.5" style={left}>
+      <div className={`pr-2.5 ${left}`}>
         <div className="flex h-6 items-center gap-2 text-caption text-ink-secondary">
           <span className="min-w-0 truncate">
             Delete <Bidi>{name}</Bidi>?
@@ -397,7 +410,7 @@ function RailRow({
 
   return (
     <div
-      className={`group relative flex h-6 items-center pr-1.5 text-[12.5px] transition-colors duration-[var(--duration-micro)] ${
+      className={`group relative flex h-6 items-center pr-1 text-caption transition-colors duration-[var(--duration-micro)] ${
         here
           ? 'bg-accent-soft text-ink before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:bg-accent'
           : 'text-ink-secondary hover:text-ink'
@@ -408,20 +421,19 @@ function RailRow({
         state={state}
         aria-current={here ? 'page' : undefined}
         title={title}
-        className="flex h-6 min-w-0 flex-1 items-center gap-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
-        style={left}
+        className={`flex h-6 min-w-0 flex-1 items-center gap-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${left}`}
       >
-        <span className="flex-none text-ink-tertiary">
+        <span className="flex-none text-ink-secondary">
           <ActionGlyph name={glyph} size={11} />
         </span>
         <Bidi className="min-w-0 truncate">{name}</Bidi>
       </Link>
-      <span className="flex flex-none items-center gap-0.5 opacity-0 group-focus-within:opacity-100 group-hover:opacity-100">
+      <span className="flex flex-none items-center opacity-0 group-focus-within:opacity-100 group-hover:opacity-100">
         <button
           type="button"
           aria-label={`Rename ${name}`}
           title="Rename"
-          className={`inline-flex h-5 w-5 items-center justify-center ${quiet}`}
+          className={`inline-flex h-6 w-6 items-center justify-center ${quiet}`}
           onClick={() => setRenaming(name)}
         >
           <ActionGlyph name="edit" size={11} />
@@ -430,7 +442,7 @@ function RailRow({
           type="button"
           aria-label={`Delete ${name}`}
           title="Delete"
-          className={`inline-flex h-5 w-5 items-center justify-center ${quiet}`}
+          className={`inline-flex h-6 w-6 items-center justify-center ${quiet}`}
           onClick={() => setDeleting(true)}
         >
           <ActionGlyph name="trash" size={11} />

@@ -181,6 +181,14 @@ export function CommandPalette({ onImportStatement }: { onImportStatement: () =>
     if (event.key === 'Enter') {
       event.preventDefault()
       run(items[selected])
+      return
+    }
+    // **Tab stays in the dialog** (M54 F5, aria-modal): its one stop is the
+    // field, and the results are reached by the arrows, never by Tab — so the
+    // row Enter runs is always the one marked.
+    if (event.key === 'Tab') {
+      event.preventDefault()
+      input.current?.focus()
     }
   }
 
@@ -211,60 +219,69 @@ export function CommandPalette({ onImportStatement }: { onImportStatement: () =>
           }}
           placeholder={db === undefined ? 'Go to a screen, or do something…' : 'Search every entry, or go to a screen…'}
           aria-label="Search"
+          // The ARIA combobox (M54 F5): the field keeps focus, and the row the
+          // arrows mark is its active descendant.
+          role="combobox"
+          aria-expanded="true"
+          aria-autocomplete="list"
           aria-controls="command-list"
           aria-activedescendant={items[selected] === undefined ? undefined : `command-${selected}`}
           className="shrink-0 border-b border-hairline bg-transparent px-4 py-3 text-body outline-none placeholder:text-ink-tertiary focus:border-accent"
         />
 
-        <div ref={list} id="command-list" role="listbox" className="min-h-0 flex-1 overflow-y-auto py-1">
-          {items.map((item, index) => {
-            const at = {
-              index,
-              selected: index === selected,
-              onHover: () => setSelected(index),
-              onPick: () => run(item),
-            }
-            const before = items[index - 1]
-            if (item.kind === 'command') {
-              const command = item.command
-              return (
-                <Row
-                  key={command.id}
-                  command={command}
-                  {...at}
-                  // The heading repeats only when the group changes, so the list
-                  // reads as sections without carrying a header per row.
-                  heading={
-                    before?.kind === 'command' && before.command.group === command.group ? undefined : command.group
+        <div ref={list} className="min-h-0 flex-1 overflow-y-auto py-1">
+          {/* The list holds its groups of options and nothing else; what it says
+              when it holds none is beside it (M54 F5). */}
+          <div id="command-list" role="listbox" aria-label="Results">
+            {segmentsOf(items).map((segment, at) => (
+              // **A listbox owns options, or groups of them** (M54 F5): each
+              // heading names its group, and is not an item of the list itself.
+              <div key={`${String(at)} ${segment.key}`} role="group" aria-labelledby={`command-group-${String(at)}`}>
+                <p id={`command-group-${String(at)}`} aria-hidden className="flex items-baseline gap-2 px-4 pt-3 pb-1">
+                  <Bidi className="text-label text-ink-secondary uppercase">{segment.title}</Bidi>
+                  {/* Named "Unit 5 entries", never "Unit5": the space is the name's, and a flex box draws none. */}
+                  {segment.count !== undefined && ' '}
+                  {segment.count !== undefined && (
+                    <span className="text-caption text-ink-secondary">
+                      {segment.count}
+                      <span className="sr-only"> {segment.count === 1 ? 'entry' : 'entries'}</span>
+                    </span>
+                  )}
+                </p>
+                {segment.members.map(({ item, index }) => {
+                  const at = {
+                    index,
+                    selected: index === selected,
+                    onHover: () => setSelected(index),
+                    onPick: () => run(item),
                   }
-                />
-              )
-            }
-            if (item.kind === 'more') {
-              return <MoreRow key={`more:${item.format.name}`} format={item.format} more={item.more} {...at} />
-            }
-            const heading = before === undefined || before.kind === 'command' || before.format.name !== item.format.name
-            return (
-              <EntryRow
-                key={`entry:${item.format.name}:${item.entry.id}`}
-                format={item.format}
-                entry={item.entry}
-                query={typed}
-                heading={heading ? { title: item.format.title, count: item.count } : undefined}
-                {...at}
-              />
-            )
-          })}
+                  if (item.kind === 'command') return <Row key={item.command.id} command={item.command} {...at} />
+                  if (item.kind === 'more') {
+                    return <MoreRow key={`more:${item.format.name}`} format={item.format} more={item.more} {...at} />
+                  }
+                  return (
+                    <EntryRow
+                      key={`entry:${item.format.name}:${item.entry.id}`}
+                      format={item.format}
+                      entry={item.entry}
+                      query={typed}
+                      {...at}
+                    />
+                  )
+                })}
+              </div>
+            ))}
+          </div>
           {typed.trim().length >= ENTRY_SEARCH_MIN && db !== undefined && held === 0 ? (
             <p className="px-4 py-4 text-ink-secondary">
               No entry holds “<Bidi>{typed.trim()}</Bidi>”.
             </p>
           ) : (
-            items.length === 0 && <p className="px-4 py-6 text-center text-ink-tertiary">Nothing matches that.</p>
+            items.length === 0 && <p className="px-4 py-6 text-center text-ink-secondary">Nothing matches that.</p>
           )}
         </div>
 
-        <div className="flex shrink-0 gap-3.5 border-t border-hairline px-4 py-1.5 text-caption text-ink-tertiary">
+        <div className="flex shrink-0 gap-3.5 border-t border-hairline px-4 py-1.5 text-caption text-ink-secondary">
           <span>
             <Kbd>↑</Kbd> <Kbd>↓</Kbd> to move
           </span>
@@ -328,6 +345,37 @@ type Item =
       readonly first: string | undefined
     }
 
+/**
+ * The rows the arrows walk, cut where the heading changes: a command's group,
+ * or a format whose entries were found — its title and how many hold it.
+ */
+interface Segment {
+  readonly key: string
+  readonly title: string
+  readonly count?: number
+  readonly members: readonly { readonly item: Item; readonly index: number }[]
+}
+
+function segmentsOf(items: readonly Item[]): readonly Segment[] {
+  const out: { key: string; title: string; count?: number; members: { item: Item; index: number }[] }[] = []
+  items.forEach((item, index) => {
+    const key = item.kind === 'command' ? `command:${item.command.group}` : `format:${item.format.name}`
+    const last = out[out.length - 1]
+    if (last?.key === key) {
+      last.members.push({ item, index })
+      return
+    }
+    out.push(
+      item.kind === 'command'
+        ? { key, title: item.command.group, members: [{ item, index }] }
+        : item.kind === 'entry'
+          ? { key, title: item.format.title, count: item.count, members: [{ item, index }] }
+          : { key, title: item.format.title, members: [{ item, index }] },
+    )
+  })
+  return out
+}
+
 interface RowPlace {
   index: number
   selected: boolean
@@ -335,8 +383,24 @@ interface RowPlace {
   onPick: () => void
 }
 
+/**
+ * What every row is: an option of the list, never a Tab stop of its own, and
+ * pressed with the pointer it leaves the focus in the field (M54 F5).
+ */
+function optionProps(index: number, selected: boolean, onHover: () => void, onPick: () => void) {
+  return {
+    id: `command-${String(index)}`,
+    role: 'option',
+    'aria-selected': selected,
+    'data-selected': selected,
+    onMouseMove: onHover,
+    onMouseDown: (event: React.MouseEvent) => event.preventDefault(),
+    onClick: onPick,
+  } as const
+}
+
 function rowClass(selected: boolean): string {
-  return `flex w-full flex-col gap-px px-4 py-1.5 text-left transition-colors duration-[var(--duration-micro)] ${
+  return `flex w-full cursor-default flex-col gap-px px-4 py-1.5 text-left transition-colors duration-[var(--duration-micro)] ${
     selected ? 'bg-accent-soft' : ''
   }`
 }
@@ -367,7 +431,6 @@ function EntryRow({
   format,
   entry,
   query,
-  heading,
   index,
   selected,
   onHover,
@@ -376,44 +439,26 @@ function EntryRow({
   format: FormatDeclaration
   entry: PaletteEntry
   query: string
-  heading: { title: string; count: number } | undefined
 }) {
   return (
-    <>
-      {heading !== undefined && (
-        <p className="flex items-baseline gap-2 px-4 pt-3 pb-1">
-          <span className="text-label text-ink-tertiary uppercase">{heading.title}</span>
-          <span className="text-caption text-ink-tertiary">{heading.count}</span>
-        </p>
-      )}
-      <button
-        type="button"
-        id={`command-${index}`}
-        role="option"
-        aria-selected={selected}
-        data-selected={selected}
-        data-entry={entry.id}
-        onMouseMove={onHover}
-        onClick={onPick}
-        className={rowClass(selected)}
-      >
-        <span className="flex w-full min-w-0 items-center gap-2.5 text-ink">
-          <span className="inline-flex w-4 flex-none justify-center text-ink-tertiary">
-            <ActionGlyph name="note" size={14} />
-          </span>
-          <span className="min-w-0 truncate">
-            {entry.rank < 3 ? <Snip text={entry.name} query={query} /> : <Bidi>{entry.name}</Bidi>}
-          </span>
-          <Bidi className="ml-auto shrink-0 text-caption text-ink-tertiary">{format.title}</Bidi>
+    <div {...optionProps(index, selected, onHover, onPick)} data-entry={entry.id} className={rowClass(selected)}>
+      <span className="flex w-full min-w-0 items-center gap-2 text-ink">
+        <span className="inline-flex w-4 flex-none justify-center text-ink-secondary">
+          <ActionGlyph name="note" size={14} />
         </span>
-        {entry.column !== undefined && entry.text !== undefined && (
-          <span className="w-full truncate pl-[26px] text-caption text-ink-secondary">
-            <span className="mr-1.5 text-ink-tertiary">{entry.column.replace(/_/g, ' ')}</span>
-            <Snip text={entry.text} query={query} />
-          </span>
-        )}
-      </button>
-    </>
+        <span className="min-w-0 truncate">
+          {entry.rank < 3 ? <Snip text={entry.name} query={query} /> : <Bidi>{entry.name}</Bidi>}
+        </span>
+        <Bidi className="ml-auto shrink-0 text-caption text-ink-secondary">{format.title}</Bidi>
+      </span>
+      {entry.column !== undefined && entry.text !== undefined && (
+        // Under the name: past the icon's 16px and the 8px gap beside it.
+        <span className="w-full truncate pl-6 text-caption text-ink-secondary">
+          <span className="mr-1.5 text-ink-secondary">{entry.column.replace(/_/g, ' ')}</span>
+          <Snip text={entry.text} query={query} />
+        </span>
+      )}
+    </div>
   )
 }
 
@@ -427,18 +472,12 @@ function MoreRow({
   onPick,
 }: RowPlace & { format: FormatDeclaration; more: number }) {
   return (
-    <button
-      type="button"
-      id={`command-${index}`}
-      role="option"
-      aria-selected={selected}
-      data-selected={selected}
+    <div
+      {...optionProps(index, selected, onHover, onPick)}
       data-more={format.name}
-      onMouseMove={onHover}
-      onClick={onPick}
       className={`${rowClass(selected)} text-caption text-accent`}
     >
-      <span className="flex min-w-0 items-center gap-2.5">
+      <span className="flex min-w-0 items-center gap-2">
         <span className="inline-flex w-4 flex-none justify-center">
           <ActionGlyph name="arrow" size={14} />
         </span>
@@ -446,7 +485,7 @@ function MoreRow({
           {more} more in <Bidi>{format.title}</Bidi>, in its list
         </span>
       </span>
-    </button>
+    </div>
   )
 }
 
@@ -454,51 +493,32 @@ function Row({
   command,
   index,
   selected,
-  heading,
   onHover,
   onPick,
-}: {
-  command: Command
-  index: number
-  selected: boolean
-  heading: string | undefined
-  onHover: () => void
-  onPick: () => void
-}) {
+}: RowPlace & { command: Command }) {
   return (
-    <>
-      {heading !== undefined && (
-        <p className="px-4 pt-3 pb-1 text-label text-ink-tertiary uppercase">{heading}</p>
+    <div
+      {...optionProps(index, selected, onHover, onPick)}
+      className={`flex w-full cursor-default items-baseline gap-3 px-4 py-1.5 text-left transition-colors duration-[var(--duration-micro)] ${
+        selected ? 'bg-accent-soft text-ink' : 'text-ink-secondary'
+      }`}
+    >
+      <Bidi className="min-w-0 truncate">{command.label}</Bidi>
+      {command.detail !== undefined && (
+        <span className="min-w-0 shrink truncate text-caption text-ink-secondary">
+          {command.detail}
+        </span>
       )}
-      <button
-        type="button"
-        id={`command-${index}`}
-        role="option"
-        aria-selected={selected}
-        data-selected={selected}
-        onMouseMove={onHover}
-        onClick={onPick}
-        className={`flex w-full items-baseline gap-3 px-4 py-1.5 text-left transition-colors duration-[var(--duration-micro)] ${
-          selected ? 'bg-accent-soft text-ink' : 'text-ink-secondary'
-        }`}
-      >
-        <Bidi className="min-w-0 truncate">{command.label}</Bidi>
-        {command.detail !== undefined && (
-          <span className="min-w-0 shrink truncate text-caption text-ink-tertiary">
-            {command.detail}
-          </span>
-        )}
-        {command.hint !== undefined && (
-          <span className="ml-auto shrink-0">
-            {command.hint.split('+').map((key, at) => (
-              <span key={key}>
-                {at > 0 && '+'}
-                <Kbd>{key}</Kbd>
-              </span>
-            ))}
-          </span>
-        )}
-      </button>
-    </>
+      {command.hint !== undefined && (
+        <span className="ml-auto shrink-0">
+          {command.hint.split('+').map((key, at) => (
+            <span key={key}>
+              {at > 0 && '+'}
+              <Kbd>{key}</Kbd>
+            </span>
+          ))}
+        </span>
+      )}
+    </div>
   )
 }

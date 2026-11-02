@@ -123,7 +123,7 @@ const HELD_ELSEWHERE = [
   // A rail folder's filter: its label turns its rule `accent` on focus-within (M54 U4).
   'w-full min-w-0 border-0 bg-transparent p-0 text-caption text-ink outline-none placeholder:text-ink-tertiary',
   // A rail entry being renamed: the field exists only while it has focus, and its rule is `accent` throughout.
-  'h-6 w-full min-w-0 border-0 border-b border-accent bg-transparent p-0 text-[12.5px] text-ink outline-none',
+  'h-6 w-full min-w-0 border-0 border-b border-accent bg-transparent p-0 text-caption text-ink outline-none',
   // A saved view's tab being renamed (M54 F2): as the rail's, its rule is `accent` throughout.
   'h-6 w-40 min-w-0 border-0 border-b border-accent bg-transparent p-0 text-body text-ink outline-none',
   // A dialog's own box (About, Earlier copies): focused by script so Esc reaches it, never a Tab stop.
@@ -523,5 +523,79 @@ describe('intake, swept (M54 F4)', () => {
     expect(app).toContain('Drop to read onto <Bidi>')
     expect(app).not.toMatch(/rounded border-2 border-dashed/)
     expect(readFileSync('src/ui/screens/ReadFiles.tsx', 'utf8')).toContain('windowDrop.use()')
+  })
+})
+
+describe('the rail, the palette and the way back, swept (M54 F5)', () => {
+  const SWEPT = [
+    'src/ui/Sidebar.tsx',
+    'src/ui/RailFolder.tsx',
+    'src/ui/CommandPalette.tsx',
+    'src/ui/components/ThemeToggle.tsx',
+    'src/ui/HistoryArrows.tsx',
+  ]
+  // As F3's and F4's: no type, tracking or leading in pixels, no spacing between
+  // the steps, no control's radius (a dialog keeps its room's), no text or icon
+  // in ink-tertiary but a placeholder's, and no inline pixel sizes.
+  it.each(SWEPT)('%s sizes, spaces, squares and inks from the tokens', (path) => {
+    const source = readFileSync(path, 'utf8')
+    expect(source.match(/\btext-\[[0-9.]+px\]|\btracking-\[|\bleading-\[/g) ?? []).toEqual([])
+    const between = /(?<![\w-])-?(?:m|p|[mp][xytblrse]|gap|gap-[xy]|space-[xy]|inset|inset-[xy]|top|left|right|bottom|h|min-h|w)-\[[0-9.]+px\]/g
+    expect((source.match(between) ?? []).filter((each) => !/^w-\[(56|200)px\]$/.test(each))).toEqual([])
+    expect(source.match(/\brounded(?:-(?:sm|md|full|\[[^\]]*\]))?(?![\w-])/g) ?? []).toEqual([])
+    expect(source.match(/(?<![\w:-])text-ink-tertiary\b/g) ?? []).toEqual([])
+    expect(source.match(/style=\{\{[^}]*\b(?:width|height|margin\w*|padding\w*):\s*\d/g) ?? []).toEqual([])
+  })
+
+  // *Exactly one aria-current=page, on the page that is lit*: the rail draws no
+  // NavLink, which marks every active link, and marks the one it lights.
+  it('marks one place in the rail as the page', () => {
+    const sidebar = readFileSync('src/ui/Sidebar.tsx', 'utf8')
+    expect(sidebar).not.toMatch(/<NavLink\b/)
+    expect(sidebar).toContain(`aria-current={marked ? 'page' : undefined}`)
+    expect(sidebar).toContain(`aria-current={child === litPage ? 'page' : undefined}`)
+    expect(readFileSync('src/ui/RailFolder.tsx', 'utf8')).toContain(`aria-current={lit && current === undefined && !onSaved ? 'page' : undefined}`)
+  })
+
+  // *Keyboard first*, WCAG 2.5.8 and 4.1.2: a stable name beside aria-expanded
+  // and aria-pressed, a count apart from its name, and 24px targets.
+  it('names the rail’s controls stably, and gives them room', () => {
+    const folder = readFileSync('src/ui/RailFolder.tsx', 'utf8')
+    expect(folder).not.toMatch(/\$\{open \? 'Close' : 'Open'\} \$\{child\.label\}/)
+    expect(folder).toContain('aria-label={`${child.label} entries`}')
+    expect(folder).toContain(`'aria-describedby': countId`)
+    expect(folder).not.toMatch(/\bh-5 w-5\b|\bh-7 w-5\b/)
+    const sidebar = readFileSync('src/ui/Sidebar.tsx', 'utf8')
+    expect(sidebar).toContain('<span className="sr-only">Collapse sidebar</span>')
+    expect(sidebar).not.toMatch(/collapsed \? 'Expand sidebar'/)
+  })
+
+  // *Square*, *No gradients, no shadows* and the APG radio group: one stop, the arrows move it.
+  it('draws the theme control square, flat and moved by the arrows', () => {
+    const toggle = readFileSync('src/ui/components/ThemeToggle.tsx', 'utf8')
+    expect(toggle).not.toMatch(/shadow-/)
+    expect(toggle).toContain('tabIndex={chosen ? 0 : -1}')
+    expect(toggle).toMatch(/event\.key === 'ArrowRight'/)
+    expect(toggle).not.toMatch(/hover:bg-surface/)
+  })
+
+  // The ARIA combobox and listbox: the field owns the options, which are never
+  // Tab stops; a heading names a group; Tab stays inside the modal dialog.
+  it('keeps the palette’s keyboard in its field', () => {
+    const palette = readFileSync('src/ui/CommandPalette.tsx', 'utf8')
+    expect(palette).toContain('role="combobox"')
+    expect(palette).toContain(`if (event.key === 'Tab') {`)
+    expect(palette).toContain(`role="group" aria-labelledby=`)
+    expect(palette).not.toMatch(/<button[^>]*\n?[^>]*role="option"/)
+    expect(palette).not.toMatch(/<p className="px-4 pt-3 pb-1 text-label/)
+  })
+
+  // WCAG 2.4.2 and the way back: the title names the document, and Back is
+  // offered only where the window counts an entry behind.
+  it('titles the window and counts every entry it goes back over', () => {
+    expect(readFileSync('src/ui/Sidebar.tsx', 'utf8')).toContain('useDocumentTitle(')
+    const arrows = readFileSync('src/ui/HistoryArrows.tsx', 'utf8')
+    expect(arrows).toContain('disabled={at === undefined || at === 0}')
+    expect(arrows).toContain('window.history.replaceState(')
   })
 })

@@ -1,5 +1,5 @@
 import { Fragment } from 'react'
-import { Link, NavLink, useLocation } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 
 import { guideFor } from '@/data/packs/packs.ts'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
@@ -8,6 +8,7 @@ import { openGuide, useGuideOpen } from '@/ui/guide/guideState.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { NavGlyph } from '@/ui/NavGlyph.tsx'
 import { activeTab, childIsActive, railSectionFor, railSections, type NavChild, type NavSection } from '@/ui/nav.ts'
+import { useDocumentTitle } from '@/state/documentTitle.ts'
 import { useDocumentRead } from '@/state/reading.ts'
 import { useSlipBatch } from '@/state/slipBatch.ts'
 import { Working } from '@/ui/components/Working.tsx'
@@ -68,12 +69,18 @@ export function Sidebar({ navigable }: { navigable: boolean }) {
   const current = railSectionFor(sections, pathname)
   const busy = useBusyPlaces()
   const document = useDeclarations()
+  // **The title names the document and the screen** (M54 F5, WCAG 2.4.2): the
+  // page lit in the rail, else its section — the rail is what knows which it is.
+  const pages = current === undefined ? [] : pagesOf(current)
+  useDocumentTitle((pages.length > 0 ? lit(pages, pathname) : undefined)?.label ?? current?.label)
 
   return (
     <nav
       aria-label="Sections"
-      className="flex shrink-0 flex-col border-r border-hairline bg-surface py-2 transition-[width] duration-[var(--duration-base)] ease-[var(--ease-out)]"
-      style={{ width: collapsed ? 56 : 200 }}
+      // The rail's two widths are measures of the layout, not steps (M54 F5).
+      className={`flex shrink-0 flex-col border-r border-hairline bg-surface py-2 transition-[width] duration-[var(--duration-base)] ease-[var(--ease-out)] ${
+        collapsed ? 'w-[56px]' : 'w-[200px]'
+      }`}
     >
       <span
         className="mb-2 flex h-8 items-center gap-2 overflow-hidden px-3.5 font-medium tracking-tight"
@@ -145,27 +152,25 @@ function Section({
   // rail already lists.
   const pages = pagesOf(section)
   const litPage = pages.length > 0 ? lit(pages, pathname) : undefined
+  // A pack's section links to its first view, so it is lit for any of its
+  // places; and `Formats` is not lit for a format a pack took.
+  const on = section.glyph === 'pack' ? current : linkActive(section, pathname) && (current || section.to !== '/formats')
+  // An open section whose page is lit beneath it is ink, not a plane: the page
+  // carries the marker, and two markers is none — nor two `aria-current`s
+  // (M54 F5): the one marked is the one that is the page.
+  const marked = on && !(expanded && litPage !== undefined)
   return (
     <>
-      <NavLink
+      <Link
         to={section.to}
         // The demo's tour finds a place in the rail by this (M33 U2): `nav-formats`.
         data-tour={`nav${section.to === '/' ? '-home' : section.to.replace(/\//g, '-')}`}
-        // Spread rather than a literal `undefined`: `exactOptionalPropertyTypes`
-        // is on, and an absent prop is not the same as one set to nothing.
-        {...(section.end === true ? { end: true } : {})}
+        aria-current={marked ? 'page' : undefined}
         // The label is the tooltip only when it is not also the text: a title
         // on every item makes a tooltip appear over the thing you just read.
         {...(collapsed ? { title: section.label } : {})}
-        // A pack's section links to its first view, so it is lit for any of
-        // its places; and `Formats` is not lit for a format a pack took.
-        className={({ isActive }) => {
-          const on = section.glyph === 'pack' ? current : isActive && (current || section.to !== '/formats')
-          // An open section whose page is lit beneath it is ink, not a plane:
-          // the page carries the marker, and two markers is none.
-          // A section arrives like a row (M39 F1): a document opening, or a pack kept.
-          return `fc-row-enter ${item(on && !(expanded && litPage !== undefined), on || current, collapsed)}`
-        }}
+        // A section arrives like a row (M39 F1): a document opening, or a pack kept.
+        className={`fc-row-enter ${item(marked, on || current, collapsed)}`}
       >
         {collapsed && busy ? (
           <Working size={16} label={`${section.label}: working`} />
@@ -180,7 +185,7 @@ function Section({
             <Working size={14} label={`${section.label}: working`} />
           </span>
         )}
-      </NavLink>
+      </Link>
 
       {expanded &&
         pages.map((child, index) => (
@@ -188,7 +193,7 @@ function Section({
             {/* **A pack's formats under the pack's name** (M33 F3): a heading
                 where a group starts, not a link — the pack is not a place. */}
             {child.group !== undefined && child.group !== pages[index - 1]?.group && (
-              <span className="fc-row-enter flex h-7 min-w-0 items-end pr-3.5 pb-1 pl-10 text-caption text-ink-tertiary">
+              <span className="fc-row-enter flex h-7 min-w-0 items-end pr-3.5 pb-1 pl-10 text-caption text-ink-secondary">
                 <Bidi className="min-w-0 truncate">{child.group}</Bidi>
               </span>
             )}
@@ -210,6 +215,7 @@ function Section({
                 is lit: a pack's `Unit board` is inside its `Unit` (M27 U7). */
             <Link
               to={child.to}
+              aria-current={child === litPage ? 'page' : undefined}
               // A page arrives like a row: a section opening, or a format just made (M39 F1).
               className={`fc-row-enter ${childItem(child === litPage, child.group !== undefined)}`}
               // The tour's anchor (M33 U2): `nav-formats-receipt`, as a section's is `nav-formats`.
@@ -222,6 +228,18 @@ function Section({
         ))}
     </>
   )
+}
+
+/**
+ * Whether a section's link is active, as `NavLink` judged it: its own path, or
+ * one under it unless it ends there. A plain `Link` here, because `NavLink`
+ * marks every active link `aria-current`, and the rail marks only the one lit.
+ */
+function linkActive(section: NavSection, pathname: string): boolean {
+  const to = section.to
+  const path = pathname.toLowerCase()
+  const own = to.toLowerCase()
+  return path === own || (section.end !== true && own !== '/' && path.startsWith(`${own.replace(/\/$/, '')}/`))
 }
 
 /** A section's pages: its children, or its own views when it has none. */
@@ -259,7 +277,7 @@ function lit(pages: readonly NavChild[], pathname: string): NavChild | undefined
  */
 function item(marked: boolean, inked: boolean, collapsed: boolean): string {
   return [
-    'relative flex h-8 shrink-0 items-center gap-2.5 px-3.5 text-[13px]',
+    'relative flex h-8 shrink-0 items-center gap-2.5 px-3.5 text-body',
     collapsed ? 'justify-center' : '',
     'transition-colors duration-[var(--duration-micro)]',
     'focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent',
@@ -277,7 +295,7 @@ function item(marked: boolean, inked: boolean, collapsed: boolean): string {
  */
 function childItem(active: boolean, grouped: boolean): string {
   return [
-    `relative flex h-7 items-center pr-3.5 ${grouped ? 'pl-14' : 'pl-10'} text-[13px]`,
+    `relative flex h-7 items-center pr-3.5 ${grouped ? 'pl-14' : 'pl-10'} text-body`,
     'transition-colors duration-[var(--duration-micro)]',
     'focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent',
     active
@@ -300,7 +318,7 @@ function GuideButton() {
       onClick={() => openGuide()}
       aria-pressed={open}
       title="Guide me"
-      className={`${CHROME_ICON} ${open ? 'text-ink' : 'text-ink-tertiary'}`}
+      className={`fc-icon-action ${open ? 'text-ink' : ''}`}
     >
       <ActionGlyph name="guide" />
       <span className="sr-only">Guide me</span>
@@ -308,17 +326,16 @@ function GuideButton() {
   )
 }
 
-const CHROME_ICON =
-  'flex h-7 w-7 shrink-0 items-center justify-center rounded transition-colors duration-[var(--duration-micro)] hover:bg-background hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
-
 function CollapseButton({ collapsed }: { collapsed: boolean }) {
   return (
     <button
       type="button"
       onClick={toggleSidebar}
+      // A stable name, the state in `aria-pressed` (M54 F5): pressed, the sidebar is collapsed.
       aria-pressed={collapsed}
-      title={`${collapsed ? 'Expand' : 'Collapse'} sidebar (Ctrl+B)`}
-      className={`${CHROME_ICON} text-ink-tertiary`}
+      aria-keyshortcuts="Control+B"
+      title="Collapse sidebar (Ctrl+B)"
+      className="fc-icon-action"
     >
       <svg
         aria-hidden
@@ -335,7 +352,7 @@ function CollapseButton({ collapsed }: { collapsed: boolean }) {
         {/* The chevron points where the panel is going, not where it is. */}
         <path d={collapsed ? 'M9.5 6.5 11 8l-1.5 1.5' : 'M11.5 6.5 10 8l1.5 1.5'} />
       </svg>
-      <span className="sr-only">{collapsed ? 'Expand sidebar' : 'Collapse sidebar'}</span>
+      <span className="sr-only">Collapse sidebar</span>
     </button>
   )
 }

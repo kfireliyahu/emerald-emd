@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useReducer, useRef } from 'react'
 import { useLocation, useNavigate, useNavigationType } from 'react-router-dom'
 
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
@@ -6,12 +6,36 @@ import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 /**
  * Where this entry sits in the window's history (M31 U9). React Router writes
  * `idx` into `history.state` on every entry it makes, counting from the entry
- * the app opened on; an entry it did not make has none.
+ * the app opened on; an entry it did not make has none — until `HistoryArrows`
+ * counts it (M54 F5).
  */
 export function historyIndex(): number | undefined {
   const state: unknown = window.history.state
   const idx = typeof state === 'object' && state !== null ? (state as { idx?: unknown }).idx : undefined
   return typeof idx === 'number' ? idx : undefined
+}
+
+/**
+ * **An entry the router did not make is counted** (M54 F5). A plain `#/` link
+ * (the crash screen's way home) or an address typed into a browser tab makes
+ * an entry with no index, and the redirect from `/` then replaces it keeping
+ * none — so Back could not tell whether there was anywhere to go, and offered
+ * itself anyway. Such an entry is one past the entry before it, and is written
+ * so; the router's next push counts on from it. And when it lands exactly where
+ * the entry before it is — `#/` from the dashboard, redirected back to the
+ * dashboard — it is stepped back over, so the redirect has replaced it and
+ * Back does not walk to the same screen.
+ */
+function countEntry(before: { readonly at: number; readonly address: string } | undefined, address: string): 'counted' | 'stepped back' | 'known' {
+  if (historyIndex() !== undefined) return 'known'
+  if (before !== undefined && before.address === address) {
+    window.history.back()
+    return 'stepped back'
+  }
+  const state: unknown = window.history.state
+  const kept = typeof state === 'object' && state !== null ? state : {}
+  window.history.replaceState({ ...kept, idx: (before?.at ?? -1) + 1 }, '')
+  return 'counted'
 }
 
 /**
@@ -26,8 +50,24 @@ export function historyIndex(): number | undefined {
 export function HistoryArrows() {
   const navigate = useNavigate()
   const type = useNavigationType()
-  useLocation() // drawn again on every move, which is when the index changes
-  // An entry the router did not make carries no index; Back stays offered there.
+  const location = useLocation() // drawn again on every move, which is when the index changes
+  const before = useRef<{ at: number; address: string } | undefined>(undefined)
+  const [, recount] = useReducer((count: number) => count + 1, 0)
+  // Once the address has settled: a redirect replaces the entry in the same
+  // pass, and an entry is counted where it lands — the window's address then,
+  // which the router may not have drawn yet — not on its way there.
+  useEffect(() => {
+    const settled = window.setTimeout(() => {
+      const address = window.location.hash.replace(/^#/, '') || '/'
+      const counted = countEntry(before.current, address)
+      const at = historyIndex()
+      if (at !== undefined) before.current = { at, address }
+      if (counted === 'counted') recount()
+    }, 0)
+    return () => window.clearTimeout(settled)
+    // The location itself, not its key: every entry the router did not make has the key `default`.
+  }, [location])
+
   const at = historyIndex()
   const furthest = useRef(at ?? 0)
   if (at !== undefined) furthest.current = type === 'PUSH' ? at : Math.max(furthest.current, at)
@@ -39,7 +79,7 @@ export function HistoryArrows() {
         aria-label="Back"
         title="Back"
         className="fc-icon-action"
-        disabled={at === 0}
+        disabled={at === undefined || at === 0}
         onClick={() => navigate(-1)}
       >
         <ActionGlyph name="left" />

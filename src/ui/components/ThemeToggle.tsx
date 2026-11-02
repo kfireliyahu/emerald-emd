@@ -1,3 +1,5 @@
+import { useRef } from 'react'
+
 import { setThemePreference, useTheme, type ThemePreference } from '@/ui/theme/useTheme.ts'
 
 /**
@@ -19,43 +21,69 @@ const OPTIONS: readonly { readonly value: ThemePreference; readonly label: strin
 export function ThemeToggle() {
   const { preference } = useTheme()
   const index = Math.max(0, OPTIONS.findIndex((option) => option.value === preference))
+  const buttons = useRef<(HTMLButtonElement | null)[]>([])
+
+  // **One tab stop, moved by the arrows** (the APG radio group, M54 F5): the
+  // chosen option is the stop, and an arrow chooses the next one and takes focus
+  // to it, wrapping at either end.
+  const onKeyDown = (event: React.KeyboardEvent): void => {
+    const step = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 0
+    if (step === 0) return
+    event.preventDefault()
+    const next = (index + step + OPTIONS.length) % OPTIONS.length
+    const option = OPTIONS[next]
+    if (option === undefined) return
+    setThemePreference(option.value)
+    buttons.current[next]?.focus()
+  }
 
   return (
     <div
       role="radiogroup"
       aria-label="Colour theme"
-      className="relative inline-flex items-center rounded-full border border-hairline bg-surface p-0.5"
+      onKeyDown={onKeyDown}
+      className="relative inline-flex items-center rounded-control border border-hairline bg-surface"
     >
-      {/* The sliding knob, positioned by the selected index. One transform, so
-          it glides rather than repaints. */}
+      {/* The knob: the chosen option's plane, square, with no shadow (M54 F5).
+          It slides by its own width, so it always lands on a button. */}
       <span
         aria-hidden
-        className="absolute top-0.5 bottom-0.5 w-8 rounded-full bg-elevated shadow-pop transition-transform duration-[var(--duration-base)] ease-[var(--ease-out)]"
-        style={{ transform: `translateX(${index * 2}rem)`, left: '0.125rem' }}
+        className="absolute inset-y-0 left-0 w-8 rounded-control border border-hairline-strong bg-elevated transition-transform duration-[var(--duration-base)] ease-[var(--ease-out)]"
+        style={{ transform: `translateX(${String(index * 100)}%)` }}
       />
 
-      {OPTIONS.map((option) => (
-        <button
-          key={option.value}
-          type="button"
-          role="radio"
-          aria-checked={preference === option.value}
-          title={option.label}
-          onClick={() => setThemePreference(option.value)}
-          className={`relative z-10 flex h-7 w-8 items-center justify-center rounded-full transition-colors duration-[var(--duration-micro)] ${
-            preference === option.value ? 'text-ink' : 'text-ink-tertiary hover:text-ink-secondary'
-          }`}
-        >
-          <Icon name={option.value} />
-        </button>
-      ))}
+      {OPTIONS.map((option, at) => {
+        const chosen = preference === option.value
+        return (
+          <button
+            key={option.value}
+            ref={(element) => {
+              buttons.current[at] = element
+            }}
+            type="button"
+            role="radio"
+            aria-checked={chosen}
+            aria-label={option.label}
+            title={option.label}
+            tabIndex={chosen ? 0 : -1}
+            onClick={() => setThemePreference(option.value)}
+            className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-control transition-colors duration-[var(--duration-micro)] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
+              chosen ? 'text-ink' : 'text-ink-secondary hover:bg-hairline hover:text-ink'
+            }`}
+          >
+            <Icon name={option.value} />
+          </button>
+        )
+      })}
     </div>
   )
 }
 
 /**
  * A compact single-button variant for tight chrome: click to cycle
- * light → dark → system, with the current state shown and announced.
+ * light → dark → system, with the current state shown and announced. It is an
+ * icon action (`fc-icon-action`): square, `ink-secondary` at rest, and its hover
+ * a `hairline` plane, which shows on the rail's `surface` (M54 F5).
  */
 export function ThemeCycleButton() {
   const { preference, resolved } = useTheme()
@@ -69,7 +97,7 @@ export function ThemeCycleButton() {
       onClick={() => setThemePreference(next)}
       aria-label={`Theme: ${preference}. Switch to ${next}.`}
       title={`Theme: ${preference}`}
-      className="flex h-8 w-8 items-center justify-center rounded-md text-ink-secondary transition-colors duration-[var(--duration-micro)] hover:bg-surface hover:text-ink"
+      className="fc-icon-action"
     >
       <Icon name={preference === 'system' ? resolved : preference} />
     </button>
