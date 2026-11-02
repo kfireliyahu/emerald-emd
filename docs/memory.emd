@@ -6307,7 +6307,7 @@ state: fault
 ### Demo (the browser build), #/settings/model.
 unit: M54 U3
 should: The screen's title, its one sentence and one text action — where to get the desktop app (An empty state is one sentence and one text action).
-breaks: One centred sentence with no title and no action; it says the desktop version can, and does not link to it. LocalModel.tsx. Owned by M54 F4.
+breaks: One centred sentence with no title and no action; it says the desktop version can, and does not link to it. LocalModel.tsx. Owned by M54 F4. Fixed in M54 F4 (d683467).
 not_tried: The rest of the screen, which needs the Electron shell; nothing was turned on.
 state: fault
 
@@ -6320,7 +6320,7 @@ state: fault
 ### Demo, a document with no reader: #/read/readers.
 unit: M54 U3
 should: One sentence and one text action (An empty state is one sentence).
-breaks: Two sentences and a filled primary "Read a file" button. Readers.tsx:36-50. Owned by M54 F4.
+breaks: Two sentences and a filled primary "Read a file" button. Readers.tsx:36-50. Owned by M54 F4. Fixed in M54 F4 (d683467).
 state: fault
 
 ### Demo, a fresh load of app.html?document=project.emd#/: press Back in the title bar.
@@ -6386,7 +6386,7 @@ state: fault
 ### Demo, custom.emd (no ledger), #/formats/card_charge/read → drop bank-statement.csv anywhere outside the dashed box.
 unit: M54 U3
 should: On a format's read page a drop anywhere reads onto that format, and the window overlay's words say so (Desktop affordances over polish; Words name the rule).
-breaks: The overlay reads "Drop statements, payslips and fund reports, any number" and the drop goes to the ledger: "bank-statement.csv needs a ledger to go into… Keep a ledger here and read it". Only the dashed box reads onto Card charge. App.tsx:271 (useWindowFileDrop), ReadFiles.tsx ~837-843, NoLedger.tsx:54. Owned by M54 F13.
+breaks: The overlay reads "Drop statements, payslips and fund reports, any number" and the drop goes to the ledger: "bank-statement.csv needs a ledger to go into… Keep a ledger here and read it". Only the dashed box reads onto Card charge. App.tsx:271 (useWindowFileDrop), ReadFiles.tsx ~837-843, NoLedger.tsx:54. Owned by M54 F13. Part fixed in M54 F4.
 state: fault
 
 ### Demo, custom.emd, #/dashboard → Add a block → Headline total, Sum of amount. Both themes.
@@ -6416,25 +6416,25 @@ state: fault
 ### Demo, custom.emd, #/formats/card_charge/read → Add files → bank-statement.csv → Change → map date, merchant and amount. Both themes.
 unit: M54 U3
 should: One problem list, and it follows the draft while the reader is being changed (Colour carries meaning — a red claim must be true).
-breaks: The problems print twice, above and below the grid; the upper copy is the committed reading and stays stale — "Nothing is mapped yet." and "date is required…" in red while the grid shows date, merchant and amount mapped. ReadFiles.tsx (the file row's problems), IntakePanel.tsx. Owned by M54 F4.
+breaks: The problems print twice, above and below the grid; the upper copy is the committed reading and stays stale — "Nothing is mapped yet." and "date is required…" in red while the grid shows date, merchant and amount mapped. ReadFiles.tsx (the file row's problems), IntakePanel.tsx. Owned by M54 F4. Fixed in M54 F4 (d683467).
 state: fault
 
 ### Demo, custom.emd, #/formats/card_charge/read → Add files → fixtures/synthetic/demo/card-statement-2026-08.xlsx, with no reader yet.
 unit: M54 U3
 should: A guess puts a money column on money and a text column of codes on a currency, and asks for what the cells do not say (Make it in place: infer what the data says).
-breaks: The guess maps Charge amount → amount_currency (a column of figures onto a three-letter code), so 0 of 26 lines read and 26 are refused ("amount needs amount_currency as a three-letter code"). The guess, not the screen — guessReading in ReadFiles. Owned by M54 F4.
+breaks: The guess maps Charge amount → amount_currency (a column of figures onto a three-letter code), so 0 of 26 lines read and 26 are refused ("amount needs amount_currency as a three-letter code"). The guess, not the screen — guessReading in ReadFiles. Owned by M54 F4. Fixed in M54 F4 (d683467).
 state: fault
 
 ### Demo, custom.emd, #/formats/card_charge/read → Change: a column's choice, the problems under it, and the Header row choice.
 unit: M54 U3
 should: A column's title ("Currency of amount"), never a snake_case key, wherever a person reads it (Words name the rule).
-breaks: The choices are raw keys — amount_currency — and the problem repeats the key ("every row needs amount_currency"); the header-row choice is the row's cells joined with " · ". IntakePanel.tsx keys list. Owned by M54 F4.
+breaks: The choices are raw keys — amount_currency — and the problem repeats the key ("every row needs amount_currency"); the header-row choice is the row's cells joined with " · ". IntakePanel.tsx keys list. Owned by M54 F4. Fixed in M54 F4 (d683467).
 state: fault
 
 ### Demo, custom.emd, #/formats/card_charge/read → Change: the intake grid's preview cells.
 unit: M54 U3
 should: Numbers right-aligned (Numbers right, text left — plain). QUESTION for the maintainer: does The mapper shows the raw cell (mono, mapped in ink, unmapped tertiary) cover this engine mapper as well as the ledger's?
-breaks: Every cell is Plex Sans, ink-secondary and left-aligned: "₪ 421.05" and "5,000.00" sit left, and mapped columns look the same as unmapped. IntakePanel.tsx ~137-153. Verdict 2026-11-02 (D-531): the mapper rule covers this grid too — mono, numbers right, mapped ink, unmapped ink-secondary, the role a small label. Owned by M54 F4.
+breaks: Every cell is Plex Sans, ink-secondary and left-aligned: "₪ 421.05" and "5,000.00" sit left, and mapped columns look the same as unmapped. IntakePanel.tsx ~137-153. Verdict 2026-11-02 (D-531): the mapper rule covers this grid too — mono, numbers right, mapped ink, unmapped ink-secondary, the role a small label. Owned by M54 F4. Fixed in M54 F4 (d683467).
 state: fault
 
 ### Demo, custom.emd, #/formats/card_charge: Filter by → amount → From 50 → Enter. Then filter date instead and compare.
@@ -6542,7 +6542,7 @@ state: dropped
 ### Demo, demo.emd, #/paychecks → Open alone ("Read a paycheck"): the "Open a paycheck" control and the text box.
 unit: M54 U3
 should: The shared Button (secondary, square split tile) on the density ladder; widths from the spacing tokens (The button is a split tile; Square by spending the radius tokens; Every value is a token).
-breaks: A label hand-styled as a button — rounded-md, h-9, its own border — beside the square split-tile "Read it"; the wrapper is max-w-[820px]. DocumentTextInput.tsx:94, :117. Owned by M54 F4.
+breaks: A label hand-styled as a button — rounded-md, h-9, its own border — beside the square split-tile "Read it"; the wrapper is max-w-[820px]. DocumentTextInput.tsx:94, :117. Owned by M54 F4. Fixed in M54 F4 (d683467).
 state: fault
 
 ### Demo, demo.emd, #/paychecks/deductions, both themes.
@@ -6609,7 +6609,7 @@ state: fault
 ### Demo, demo.emd, #/read/readers: the reader row Everyday Card.
 unit: M54 U3
 should: Its actions visible at rest (IconAction, or the row's one menu); the account binding drawn as a field; header → role with a visible separator; the last four once (An icon is an action; A row's menu is one menu; Words name the rule).
-breaks: Duplicate and Delete are opacity-0 until hover or focus; the binding is borderless and reads as text, "Everyday Card 1234 ·1234" (the name already ends in the digits); pairs read "transaction date date · merchant · transaction amount original amount". Mappings.tsx:175, ~187-240, ~250-280. Owned by M54 F4.
+breaks: Duplicate and Delete are opacity-0 until hover or focus; the binding is borderless and reads as text, "Everyday Card 1234 ·1234" (the name already ends in the digits); pairs read "transaction date date · merchant · transaction amount original amount". Mappings.tsx:175, ~187-240, ~250-280. Owned by M54 F4. Fixed in M54 F4 (d683467).
 state: fault
 
 ### Demo, demo.emd, #/transactions → open Daily Basket: the line under the pane.
@@ -6981,7 +6981,7 @@ state: fault
 ### Demo: #/read (demo.emd) with a notice; #/paychecks/read; #/formats/card_charge/read with a reader open.
 unit: M54 U3
 should: One filled action at a time; a disabled Write, or one that is not the next step, is secondary (One primary action per screen).
-breaks: #/read: "Answer them" and a disabled "Write 0" both filled; #/paychecks/read: "Answer them", "Write 0" and "Check them over"; the format read page: "Use" and "Write 0 files". ReadStatements.tsx, ReadSlips.tsx, ReadFiles.tsx:458 and :1544. Owned by M54 F13.
+breaks: #/read: "Answer them" and a disabled "Write 0" both filled; #/paychecks/read: "Answer them", "Write 0" and "Check them over"; the format read page: "Use" and "Write 0 files". ReadStatements.tsx, ReadSlips.tsx, ReadFiles.tsx:458 and :1544. Owned by M54 F13. Part fixed in M54 F4.
 state: fault
 
 ### Demo: custom.emd #/year (NoLedger) beside #/settings/packs; demo.emd #/ (Home's read and add buttons).
@@ -7537,7 +7537,7 @@ state: fault
 ### Read DocumentPane.tsx (a PDF page under the reading's marks).
 unit: M54 U3
 should: Radii from the tokens (Square by spending the radius tokens).
-breaks: rounded-md on the page's frame and rounded-[2px] on the read and active boxes; Look.tsx:38 rounded-sm. (Its colours became --color-paper* tokens in M54 U3.) Owned by M54 F4.
+breaks: rounded-md on the page's frame and rounded-[2px] on the read and active boxes; Look.tsx:38 rounded-sm. (Its colours became --color-paper* tokens in M54 U3.) Owned by M54 F4. Fixed in M54 F4 (d683467).
 not_tried: The pane over a real page: there is no synthetic PDF the paycheck or fund readers read cleanly.
 state: fault
 
@@ -7736,13 +7736,13 @@ state: open
 ### Same flow (bank-statement.csv) → Use.
 unit: M54 U3
 should: When Write is disabled a word says why — "Tick a file to write it: this one has a refused line" — and the tick has a visible label (Words name the rule; Impeccable: no dead end).
-breaks: The reading is done ("4 entries · 1 line will not be read") yet the file stays unticked and the only primary is a disabled "Write 0 files" / "0 entries onto Card charge"; nothing says why. The tick is a bare checkbox at the row's far left. ReadFiles.tsx:203 isTicked, ~455-467, ~945. Owned by M54 F4.
+breaks: The reading is done ("4 entries · 1 line will not be read") yet the file stays unticked and the only primary is a disabled "Write 0 files" / "0 entries onto Card charge"; nothing says why. The tick is a bare checkbox at the row's far left. ReadFiles.tsx:203 isTicked, ~455-467, ~945. Owned by M54 F4. Fixed in M54 F4 (d683467).
 state: fault
 
 ### Same flow → the "Every amount is in" field.
 unit: M54 U3
 should: The app infers the currency (₪ is in the cells, or the document has one) and shows it as a value to confirm; a placeholder never looks like an answer (Make it in place).
-breaks: The field is empty but its placeholder reads ILS, so it looks set; under it, red: "amount is money, so every row needs amount_currency…" until ILS is typed. IntakePanel.tsx Fixed (placeholder={column.type === 'money' ? 'ILS' : 'g'}). Owned by M54 F4.
+breaks: The field is empty but its placeholder reads ILS, so it looks set; under it, red: "amount is money, so every row needs amount_currency…" until ILS is typed. IntakePanel.tsx Fixed (placeholder={column.type === 'money' ? 'ILS' : 'g'}). Owned by M54 F4. Fixed in M54 F4 (d683467).
 state: fault
 
 ### Same flow, after Use: "Line 7 — amount is required and was not given."; and the mapper on demo.emd #/read: "Row 17 Could not read transaction date from "סה"כ"" (the printed total line).
@@ -15033,11 +15033,17 @@ report: M54 F3 built at 22d61aa; docs:check green (0 errors, 7 standing warnings
 milestone: M54
 scope: app
 title: Intake: a guess that reads figures as figures, the words a person reads, one list of problems, and a drop that goes where the screen is
-state: planned
+landed: 2026-11-02
+state: built
 brief: M54 fix unit (D-531, D-532). YOUR ROWS, exactly these: `format_rows review_entry search:"Owned by M54 F4." columns:[unit, do, should, breaks]` — 11 rows; the phrases below say what each asks., after F1. Rows (`format_rows review_entry match:{unit:"M54 U3", state:fault} columns:[do, should, breaks]`) by their breaks: 'The choices are raw keys — amount_currency'; 'The field is empty but its placeholder reads ILS'; '#/read: "Answer them" and a disabled "Write 0" both filled' — the format read page's part (ReadFiles.tsx:458, :1544) here, the ledger's in F13; 'The reading is done' (a finished file ticked, and why the write is 0 said); 'The guess maps Charge amount → amount_currency' (guessReading: a currency key takes only a code column); 'Duplicate and Delete are opacity-0' (Mappings); 'Two sentences and a filled primary "Read a file"' (Readers' empty state); 'A label hand-styled as a button' (DocumentTextInput); 'One centred sentence with no title' (LocalModel); 'rounded-md on the page's frame' (Look); 'Every cell is Plex Sans' — the intake grid follows The mapper shows the raw cell (D-531): mono, numbers right, mapped ink, unmapped ink-secondary, the role a small label that opens as a ChoiceField; 'The problems print twice'; 'The overlay reads "Drop statements…"' — DECIDED (D-532): a file dropped on the window reads onto the format the screen shows; anywhere else it opens Read a file with the file in it, asking which format; the ledger only when the document keeps one (App.tsx useWindowFileDrop; NoLedger's words are F13's). SWEEP this unit's files as F2's brief says; surfaceRules.test.ts REVIEWED. Not this unit: the Entry: rows (M55), src/ui/import/ and the ledger's read screens (F13). Feed files with the U3 trick: fetch /fixtures/synthetic/<file> in javascript_tool, wrap in a File, set input[type=file].files, dispatch change. Verify on custom.emd and demo.emd, light and dark. Tests: related, typecheck, privacy, check:tours. Land: 'Fixed in M54 F4 (<commit>).' on each row's breaks, state left `fault` (D-532). Unset: stop and ask. Two rows named above are owned by F13, which lands them: '#/read: "Answer them"' (do ReadFiles.tsx's part here) and 'The overlay reads "Drop statements' (build the drop's routing here); add 'Part fixed in M54 F4.' to each.
-files: src/ui/screens/ReadFiles.tsx (guessReading, the file row, the tick), src/ui/formats/IntakePanel.tsx, src/ui/documents/DocumentTextInput.tsx, src/ui/documents/Look.tsx, src/ui/screens/Readers.tsx, src/ui/screens/Mappings.tsx, src/ui/screens/LocalModel.tsx, src/App.tsx (useWindowFileDrop)
+files: src/domain/format/reading.ts (guessReading, withInferredCurrency), src/plugin/tools/intake.ts, src/ui/screens/ReadFiles.tsx, src/ui/formats/IntakePanel.tsx, src/ui/import/useWindowFileDrop.ts, src/App.tsx, src/ui/documents/DocumentTextInput.tsx, src/ui/documents/DocumentPane.tsx, src/ui/documents/Look.tsx, src/ui/screens/Readers.tsx, src/ui/screens/Mappings.tsx, src/ui/screens/LocalModel.tsx, src/ui/formats/surfaceRules.test.ts
 blocks: ["M54 F1"]
+taken_by: run-milestone driver
+started: 2026-11-02
+branch: main
+commit: d683467
 paths: "src/ui/screens/ReadFiles.tsx\nsrc/ui/formats/IntakePanel.tsx\nsrc/ui/documents/DocumentTextInput.tsx\nsrc/ui/documents/Look.tsx\nsrc/ui/screens/Readers.tsx\nsrc/ui/screens/Mappings.tsx\nsrc/ui/screens/LocalModel.tsx\nsrc/App.tsx"
+report: M54 F4 built at d683467; docs:check green (0 errors, 7 standing warnings). No new decision (D-531, D-532 cover it). GUESS: guessReading gives a currency key only to a column of three-letter codes, so card-statement-2026-08.xlsx maps Transaction amount -> amount and leaves Charge amount; withInferredCurrency fills a money column's currency from its cells' sign (₪ -> ILS; a shared sign like ¥ or kr names none) else the one currency the format's rows hold (heldCurrencies, valueCounts), as a value in the field - also when a person maps the column by hand. The plugin's guessed currency is dropped when the caller maps a column onto that key (intake.ts). Verified: 25 entries read, 1 refused (the Total line). WORDS: the grid's choices and problems name keys in words ('Currency of amount', keysInWords over refusals, row problems, verdicts, claims); header row 'Row 8: Transaction date, Merchant, ...'; placeholder 'Three letters', never ILS. GRID (D-531): cells mono, figures right, mapped ink, unmapped ink-secondary, the role a small uppercase label opening as the menu. ONE LIST: the file row's committed lines are hidden while the reader is changed. TICK: labelled Write; Use ticks the file; Write is primary only when enabled and no reader is open, and when nothing is ticked says why ('Tick a file to write it: X is not ticked, as it has a refused line'); Use primary only when it can write. DROP (D-532): dropTarget - on /formats/<writable> reads onto it; else the ledger when kept; else Read files on the first own format with each row's onto asking (a line says so when there are several); no format -> the ledger offer (NoLedger, F13's words). Overlay: 'Drop to read onto Card charge' / 'onto a format'. Store windowDrop, taken once (StrictMode double effect caught in the browser). OTHERS: DocumentTextInput's Open is the shared Button (icon open) with a hidden picker, max-w-4xl; DocumentPane/Look square; Readers empty 'No readers yet: one is kept the first time a file of a new kind is read. Read a file' (text action); Mappings: Duplicate/Delete IconActions at rest, binding drawn as SELECT, last four once, header -> role; LocalModel browser: h1 Local model, one sentence, 'Get the desktop app' linking RELEASES_URL (imported from src/demo/page/page.ts). Sweep: ink-tertiary -> secondary, no radius, guarded by a new describe in surfaceRules.test.ts (fails on HEAD~1). Verified on the demo (port 4185, pane hidden: JS probes, no screenshots) on custom.emd, project.emd, demo.emd, timesheet.emd, dark theme only; light not probed (tokens already AA from F1). DocumentTextInput not reached in the browser (code + typecheck only). Tests: related (188 files, 2275), privacy, surfaceRules, bidiTruncation, typecheck, check:tours (10 runs) green. Look at: the currency now arrives filled - confirm that is the wanted default. Left for F13: ReadStatements/ReadSlips' filled 'Answer them'/'Write 0' and NoLedger's words; App.tsx RecentDocuments still has rounded and ink-tertiary 'Recent' and an unisolated entry.name (F6's area).
 
 ### M54 F5
 milestone: M54
