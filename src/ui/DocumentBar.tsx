@@ -97,8 +97,8 @@ export function DocumentBar() {
 
   return (
     <div key="open" className="fc-view-enter flex items-center gap-3">
-      <span className="truncate" title={adapter.describe()}>
-        <Bidi>{documentName}</Bidi>
+      <span className="flex min-w-0" title={adapter.describe()}>
+        <Bidi className="min-w-0 truncate">{documentName}</Bidi>
       </span>
 
       {/* The dirty state, as a dot rather than a word (docs/11): filled ink when

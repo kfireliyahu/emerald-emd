@@ -188,8 +188,8 @@ function Section({
             {/* **A pack's formats under the pack's name** (M33 F3): a heading
                 where a group starts, not a link — the pack is not a place. */}
             {child.group !== undefined && child.group !== pages[index - 1]?.group && (
-              <span className="fc-row-enter flex h-7 items-end truncate pr-3.5 pb-1 pl-10 text-caption text-ink-tertiary">
-                <Bidi>{child.group}</Bidi>
+              <span className="fc-row-enter flex h-7 min-w-0 items-end pr-3.5 pb-1 pl-10 text-caption text-ink-tertiary">
+                <Bidi className="min-w-0 truncate">{child.group}</Bidi>
               </span>
             )}
             {/* **A format is a folder of its entries** (M37 U2, D-475): an arrow

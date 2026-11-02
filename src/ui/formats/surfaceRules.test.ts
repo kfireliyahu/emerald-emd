@@ -87,7 +87,10 @@ const REVIEWED = [
 /**
  * *Hebrew needs bidi isolation* (M54 U4): the names that come out of a
  * document — its file name, a format's title, a pack's group, a page's label
- * in the rail — are rendered inside `Bidi`, never as a bare child.
+ * in the rail — are rendered inside `Bidi`, never as a bare child. Where it
+ * truncates, the ellipsis is the `Bidi`'s own (`<Bidi className="min-w-0
+ * truncate">` in a `flex min-w-0` box), never its wrapper's:
+ * `src/ui/bidiTruncation.test.ts` holds that half.
  */
 const DOCUMENT_STRINGS = ['documentName', 'fileName(pendingOpen)', 'child.label', 'child.group', 'section.label', 'format.title', 'command.label']
 
