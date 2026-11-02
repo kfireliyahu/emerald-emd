@@ -21,6 +21,7 @@ import { readChosenProvider } from '@/data/runtime/provider.ts'
 import type { DraftMapping } from '@/domain/model/importing.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { Button } from '@/ui/components/Button.tsx'
 import { ChoiceMenu } from '@/ui/components/ChoiceField.tsx'
 import { SELECT } from '@/ui/components/fieldLook.ts'
 import { MappingBar, type SavedMappingRef } from './MappingBar.tsx'
@@ -231,6 +232,19 @@ export function MapperScreen({
 
   return (
     <div className="flex h-full flex-col">
+      {/* The mapper names what it maps — the file, and its sheet when it has
+          more than one — as its title (M54 F13). */}
+      <header className="flex shrink-0 flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-hairline px-6 pt-4 pb-3">
+        <h1 className="m-0 flex min-w-0 items-baseline gap-2 text-title leading-tight font-medium">
+          <Bidi className="min-w-0 truncate">{workbook.fileName}</Bidi>
+          {workbook.sheets.length > 1 && (
+            <span className="flex min-w-0 gap-2 text-heading font-normal text-ink-secondary">
+              · <Bidi className="min-w-0 truncate">{table.name}</Bidi>
+            </span>
+          )}
+        </h1>
+        <span className="text-ink-secondary">Map its columns once, and a file like it is read on its own after.</span>
+      </header>
       <Toolbar
         workbook={workbook}
         activeSheet={activeSheet}
@@ -456,7 +470,7 @@ function SheetBody({
       {proposeProblem !== undefined && (
         <div className="fc-pop-enter flex shrink-0 items-center gap-4 border-b border-hairline bg-surface px-6 py-2">
           <span className="text-negative">{proposeProblem}</span>
-          <span className="text-caption text-ink-tertiary">
+          <span className="text-caption text-ink-secondary">
             Nothing changed. The columns below are still yours to set.
           </span>
           <button
@@ -552,10 +566,11 @@ function Toolbar({
               key={sheet.name}
               type="button"
               onClick={() => onPickSheet(index)}
+              aria-pressed={index === activeSheet}
               className={
                 index === activeSheet
-                  ? 'rounded border border-hairline bg-surface px-2 py-0.5 text-ink'
-                  : 'rounded border border-transparent px-2 py-0.5 hover:border-hairline'
+                  ? 'border border-hairline bg-surface px-2 py-0.5 text-ink'
+                  : 'border border-transparent px-2 py-0.5 hover:border-hairline'
               }
             >
               <Bidi>{sheet.name}</Bidi>
@@ -589,13 +604,9 @@ function Toolbar({
         Show cell types
       </label>
 
-      <button
-        type="button"
-        onClick={onDone}
-        className="rounded border border-hairline px-2 py-0.5 hover:border-ink-tertiary"
-      >
+      <Button variant="secondary" size="sm" onClick={onDone}>
         Close
-      </button>
+      </Button>
     </div>
   )
 }

@@ -86,6 +86,8 @@ const REVIEWED = [
   'src/ui/home/WaitingList.tsx',
   'src/demo/tour/Frame.tsx',
   'src/ui/home/parts.tsx',
+  // M54 F13: the ledger's read screen (D-532 lets this one fix unit touch it).
+  'src/ui/screens/ReadStatements.tsx',
 ]
 
 /**
@@ -686,5 +688,74 @@ describe('the document’s own screens, notices and dialogs, swept (M54 F6)', ()
     const rule = /\.fc-guide-dots button \{([^}]*)\}/.exec(tokens)?.[1] ?? ''
     expect(rule).toMatch(/width: 24px/)
     expect(rule).toMatch(/height: 24px/)
+  })
+})
+
+describe('the ledger screens a stranger meets, swept (M54 F13)', () => {
+  const SWEPT = [
+    'src/ui/screens/Home.tsx',
+    'src/ui/home/parts.tsx',
+    'src/ui/screens/NoLedger.tsx',
+    'src/ui/screens/ReadStatements.tsx',
+    'src/ui/import/MapperScreen.tsx',
+    'src/ui/import/SheetGrid.tsx',
+    'src/ui/import/PreviewStrip.tsx',
+    'src/ui/import/StageBar.tsx',
+  ]
+  // As F6's: no type, tracking or leading in pixels, no spacing between the
+  // steps (a column's width is a measure, kept), no control's radius, no text
+  // in ink-tertiary.
+  it.each(SWEPT)('%s sizes, spaces, squares and inks from the tokens', (path) => {
+    const source = readFileSync(path, 'utf8')
+    expect(source.match(/text-\[[0-9.]+px\]|tracking-\[|leading-\[|text-(?:xs|sm|base|lg|xl)/g) ?? []).toEqual([])
+    const between = /(?<![\w-])-?(?:m|p|[mp][xytblrse]|gap|gap-[xy]|space-[xy]|inset|inset-[xy]|top|left|right|bottom|h|min-h|w)-\[[0-9.]+px\]/g
+    expect((source.match(between) ?? []).filter((each) => !/^w-\[\d+px\]$/.test(each))).toEqual([])
+    expect(source.match(/rounded(?:-(?:sm|md|lg|\[[^\]]*\]))?(?![\w-])/g) ?? []).toEqual([])
+    expect(source.match(/(?<![\w:-])text-ink-tertiary/g) ?? []).toEqual([])
+  })
+
+  // Home's All months (D-531): a row opens by a button, the header holds while
+  // the months scroll, and a month row is a single row, so its figures are ink.
+  it('opens a month by a button, under a header that stays', () => {
+    const home = readFileSync('src/ui/screens/Home.tsx', 'utf8')
+    const months = home.slice(home.indexOf('function AllMonths('))
+    expect(months).not.toContain('tabIndex={0}')
+    expect(months).toMatch(/<button\s+type="button"\s+aria-current=/)
+    expect(months).toContain('*:sticky *:top-0')
+    expect(months).not.toMatch(/text-flow-(?:in|out|saved|tax)/)
+    expect(months).toContain('Read files')
+  })
+
+  // One name per thing: one Read files, one Add by hand, one Keep the ledger here.
+  it('names reading, adding by hand and keeping the ledger once', () => {
+    expect(readFileSync('src/ui/home/WaitingList.tsx', 'utf8')).not.toMatch(/Read…|^\s*Add by hand\s*$/m)
+    expect(readFileSync('src/ui/home/parts.tsx', 'utf8').match(/^\s*Add by hand\s*$/gm)?.length).toBe(1)
+    const noLedger = readFileSync('src/ui/screens/NoLedger.tsx', 'utf8')
+    expect(noLedger.match(/^\s*Keep the ledger here\s*$/gm)?.length).toBe(2)
+    expect(noLedger).not.toMatch(/Keep a ledger/)
+    expect(noLedger.match(/<h1 className="m-0 text-title">/g)?.length).toBe(2)
+    expect(readFileSync('src/App.tsx', 'utf8')).not.toContain('Drop statements, payslips and fund reports, any number')
+  })
+
+  // #/read: one sentence and a text action when empty, no counting, a Write
+  // filled only when it writes, and a file with no reader waiting, not wrong.
+  it('reads files with one primary, and no reader is not a problem', () => {
+    const read = readFileSync('src/ui/screens/ReadStatements.tsx', 'utf8')
+    expect(read).not.toMatch(/Working size=\{56\}|Reading \$\{String/)
+    expect(read).toContain("variant={reading === 0 && toWrite.length > 0 ? 'primary' : 'secondary'}")
+    expect(read).not.toMatch(/<Tone tone="negative">No reader yet/)
+    expect(read).not.toContain('no reader knows these columns yet')
+    expect(readFileSync('src/ui/Notices.tsx', 'utf8')).toContain("lead: !reading }")
+  })
+
+  // The mapper (D-531): titled by its file, the role a small label, the raw
+  // cells mono with unmapped ink-secondary, and a chip that is text and a dot.
+  it('titles the mapper and draws its grid as the sheet’s own', () => {
+    expect(readFileSync('src/ui/import/MapperScreen.tsx', 'utf8')).toContain('<Bidi className="min-w-0 truncate">{workbook.fileName}</Bidi>')
+    const grid = readFileSync('src/ui/import/SheetGrid.tsx', 'utf8')
+    expect(grid).toContain('className={`${ROLE} ${role === undefined ?')
+    expect(grid).toContain("? 'text-ink-secondary'")
+    expect(grid).toContain('text-label text-ink-secondary select-none')
+    expect(readFileSync('src/ui/import/PreviewStrip.tsx', 'utf8')).toContain('<span className="fc-state ml-2 align-middle">')
   })
 })

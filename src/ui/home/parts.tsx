@@ -207,8 +207,8 @@ export function Figure({
       <span
         // Scaled with the row's width, never past 24px: a year's ₪194,608.80 spilled out of a
         // tile when five sat in a row at 48rem (M33 F12).
-        className={`text-[length:clamp(17px,2.25cqi,24px)] leading-tight font-medium tracking-[-0.01em] tabular-nums ${
-          value === undefined ? 'text-ink-tertiary' : flow === undefined ? '' : FLOW_TEXT[flow]
+        className={`text-[length:clamp(17px,2.25cqi,24px)] leading-tight font-medium tabular-nums ${
+          value === undefined ? 'text-ink-secondary' : flow === undefined ? '' : FLOW_TEXT[flow]
         }`}
       >
         {value === undefined ? '—' : formatMoney(value)}
@@ -244,7 +244,7 @@ export function BlockHead({ title, aside }: { title: string; aside?: ReactNode }
   return (
     <div className="flex items-baseline justify-between gap-3">
       <h2 className="fc-label m-0 font-medium text-ink-secondary uppercase">{title}</h2>
-      {aside !== undefined && <span className="font-mono text-caption text-ink-tertiary">{aside}</span>}
+      {aside !== undefined && <span className="font-mono text-caption text-ink-secondary">{aside}</span>}
     </div>
   )
 }

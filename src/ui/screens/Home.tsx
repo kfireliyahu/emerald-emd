@@ -183,7 +183,7 @@ export function Home() {
               Home · Month
               {shown !== undefined && !shown.isComplete && ' · in progress'}
             </span>
-            <h1 className="m-0 text-title leading-tight font-medium tracking-[-0.01em]" data-guide="home.title">
+            <h1 className="m-0 text-title leading-tight font-medium" data-guide="home.title">
               {period === undefined ? 'Month' : formatYearMonth(period)}
             </h1>
           </div>
@@ -288,7 +288,7 @@ export function Home() {
                         type="button"
                         onClick={() => drillTo(line.categoryId ?? UNCATEGORIZED_OPTION)}
                         data-tour={`went-${line.categoryId ?? 'none'}`}
-                        className="grid h-[34px] w-full grid-cols-[minmax(0,1fr)_120px_100px] items-center gap-3 border-b border-hairline text-left transition-colors duration-[var(--duration-micro)] hover:bg-surface"
+                        className="grid h-8 w-full grid-cols-[minmax(0,1fr)_120px_100px] items-center gap-3 border-b border-hairline text-left transition-colors duration-[var(--duration-micro)] hover:bg-surface"
                       >
                         <span title={line.name} className="flex min-w-0 items-baseline gap-x-1">
                           <Bidi className="min-w-0 truncate">{line.name}</Bidi>
@@ -325,7 +325,7 @@ export function Home() {
                           key={line.categoryId}
                           type="button"
                           onClick={() => drillTo(line.categoryId)}
-                          className="grid h-[34px] w-full grid-cols-[minmax(0,1fr)_120px_130px] items-center gap-3 border-b border-hairline text-left transition-colors duration-[var(--duration-micro)] hover:bg-surface"
+                          className="grid h-8 w-full grid-cols-[minmax(0,1fr)_120px_130px] items-center gap-3 border-b border-hairline text-left transition-colors duration-[var(--duration-micro)] hover:bg-surface"
                         >
                           <span className="flex min-w-0">
                             <Bidi className="min-w-0 truncate">{line.name}</Bidi>
@@ -386,7 +386,7 @@ export function Home() {
                 <BlockHead title="What came in" />
                 <div>
                   {report.detail.lines.map((line) => (
-                    <div key={`${line.kind}:${line.ref}`} className="grid h-[34px] grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-hairline">
+                    <div key={`${line.kind}:${line.ref}`} className="grid h-8 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-hairline">
                       <span title={line.name} className="flex min-w-0 items-baseline gap-x-1">
                         <Bidi className="min-w-0 truncate">{line.name}</Bidi>
                         <span className="min-w-0 truncate">
@@ -394,7 +394,7 @@ export function Home() {
                             {line.kind === 'PAYSLIP' ? 'net pay, off the paycheck' : line.count > 1 ? `${String(line.count)} payments` : <Bidi>{line.categoryName ?? ''}</Bidi>}
                           </span>
                           {line.salary !== undefined && line.salary.kind !== 'UNCHECKED' && (
-                            <span className={`text-caption ${salaryProblem(line.salary) ? 'text-negative' : 'text-ink-tertiary'}`}>
+                            <span className={`text-caption ${salaryProblem(line.salary) ? 'text-negative' : 'text-ink-secondary'}`}>
                               {' · '}
                               {salaryBankWords(line.salary, { money: formatMoney, date: (day) => toISODate(day) })}
                             </span>
@@ -484,7 +484,7 @@ function Versus({ value }: { value: number | undefined }) {
 /** One of the two parts went out is made of: the tracked fixed bills, and the rest. */
 function SplitRow({ label, note, value }: { label: string; note?: string; value: string }) {
   return (
-    <div className="grid h-[34px] grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-t border-hairline">
+    <div className="grid h-8 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-t border-hairline">
       <span>
         {label}
         {note !== undefined && <span className="text-caption text-ink-secondary"> · {note}</span>}
@@ -500,7 +500,7 @@ function SavedRow({ name, note, value, onClick }: { name: string; note: string; 
     <button
       type="button"
       onClick={onClick}
-      className="grid h-[34px] w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-hairline text-left transition-colors duration-[var(--duration-micro)] hover:bg-surface"
+      className="grid h-8 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-hairline text-left transition-colors duration-[var(--duration-micro)] hover:bg-surface"
     >
       <span title={name} className="flex min-w-0 items-baseline gap-x-1">
         <Bidi className="min-w-0 truncate">{name}</Bidi>
@@ -522,7 +522,7 @@ function Total({ label, flow, value }: { label: string; flow: 'in' | 'out' | 'sa
 
 /**
  * Every month, newest first — a row opens it above. **A missing statement is a
- * row of its own, with Read** (S2), the way a missing payslip
+ * row of its own, with Read files** (S2), the way a missing payslip
  * is a row of Paychecks.
  */
 function AllMonths({
@@ -544,15 +544,20 @@ function AllMonths({
 }) {
   const newestFirst = [...summaries].reverse()
   return (
-    <section className="mt-2 flex flex-col gap-3">
+    <section className="mt-2 flex flex-col gap-3" aria-labelledby="home-all-months">
       <div className="flex flex-col gap-0.5">
-        <h2 className="m-0 text-heading font-medium">All months</h2>
+        <h2 id="home-all-months" className="m-0 text-heading font-medium">
+          All months
+        </h2>
         <span className="text-caption text-ink-secondary">A row opens its month above.</span>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full border-collapse">
+      {/* Its own scroll region, so the header stays while the months scroll
+          under it (M54 F13). Separate borders, because a collapsed one scrolls
+          away from a sticky cell. */}
+      <div className="max-h-[70vh] overflow-auto">
+        <table className="w-full border-separate border-spacing-0">
           <thead>
-            <tr className="border-b border-hairline text-label text-ink-tertiary uppercase">
+            <tr className="text-label text-ink-secondary uppercase *:sticky *:top-0 *:z-10 *:border-b *:border-hairline *:bg-background">
               <th className="px-3 py-2 text-left font-medium">Month</th>
               <th className="px-3 py-2 text-right font-medium">Came in</th>
               <th className="px-3 py-2 text-right font-medium">Went out</th>
@@ -569,45 +574,52 @@ function AllMonths({
               const on = compareYearMonths(one.period, open) === 0
               const tax = taxes.get(key)
               return [
+                // A month row is a single row, so its figures stay ink (D-531);
+                // the flows' colours are the headline's and the chart's. The
+                // month's name is the button — Enter and Space — and a click
+                // anywhere on the row is the same press.
                 <tr
                   key={key}
-                  tabIndex={0}
-                  aria-current={on ? 'true' : undefined}
                   onClick={() => onOpen(one.period)}
-                  onKeyDown={(event) => {
-                    if (event.key === 'Enter' && event.target === event.currentTarget) onOpen(one.period)
-                  }}
-                  className={`h-10 cursor-pointer border-b border-hairline transition-colors duration-[var(--duration-micro)] ${
+                  className={`h-10 cursor-pointer transition-colors duration-[var(--duration-micro)] *:border-b *:border-hairline ${
                     on ? 'fc-row-on' : 'hover:bg-surface'
                   } ${arrived.has(key) ? 'fc-arrived' : ''}`}
                 >
                   <td className="px-3 whitespace-nowrap">
-                    {formatYearMonth(one.period)}
-                    {missing.length > 0 && <span className="fc-state ml-2" data-tone="negative">
+                    <button
+                      type="button"
+                      aria-current={on ? 'true' : undefined}
+                      className="cursor-pointer text-left text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    >
+                      {formatYearMonth(one.period)}
+                    </button>
+                    {missing.length > 0 && (
+                      <span className="fc-state ml-2" data-tone="negative">
                         <span className="fc-state-dot" />
                         part
-                      </span>}
+                      </span>
+                    )}
                   </td>
-                  <td className="px-3 text-right tabular-nums text-flow-in">{formatMoney(one.income)}</td>
-                  <td className="px-3 text-right tabular-nums text-flow-out">{formatMoney(one.expenses)}</td>
-                  <td className="px-3 text-right tabular-nums text-flow-saved">{formatMoney(one.saved)}</td>
-                  <td className="px-3 text-right tabular-nums text-flow-tax">
-                    {tax === undefined ? <span className="text-ink-tertiary">—</span> : formatMoney(tax)}
+                  <td className="px-3 text-right tabular-nums">{formatMoney(one.income)}</td>
+                  <td className="px-3 text-right tabular-nums">{formatMoney(one.expenses)}</td>
+                  <td className="px-3 text-right tabular-nums">{formatMoney(one.saved)}</td>
+                  <td className="px-3 text-right tabular-nums">
+                    {tax === undefined ? <span className="text-ink-secondary">—</span> : formatMoney(tax)}
                   </td>
                   <td className="px-3 text-right tabular-nums">{formatMoney(one.balance)}</td>
                   <td />
                 </tr>,
                 ...missing.map((gap) => (
-                  <tr key={`${key}:${gap.accountId}`} className="h-10 border-b border-hairline text-ink-tertiary">
+                  <tr key={`${key}:${gap.accountId}`} className="h-10 text-ink-secondary *:border-b *:border-hairline">
                     <td className="py-0 pr-3 pl-7 whitespace-nowrap">
-                      {accountLabel(gap)} · {formatYearMonth(gap.period)}
+                      <Bidi>{accountLabel(gap)}</Bidi> · {formatYearMonth(gap.period)}
                     </td>
                     <td className="px-3" colSpan={5}>
                       No statement read for this month
                     </td>
                     <td className="px-3 text-right">
                       <Button variant="ghost" size="sm" onClick={onRead}>
-                        Read
+                        Read files
                       </Button>
                     </td>
                   </tr>

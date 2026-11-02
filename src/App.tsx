@@ -311,8 +311,11 @@ export function App() {
               </>
             ) : target.kind === 'ask' ? (
               'Drop to read onto a format, any number'
+            ) : target.kind === 'ledger' ? (
+              'Drop statements, paychecks and fund reports to read them, any number'
             ) : (
-              'Drop statements, payslips and fund reports, any number'
+              // No format and no ledger: the drop asks whether to keep one (NoLedger).
+              'Drop statements to read them into a ledger, any number'
             )}
           </div>
         </div>

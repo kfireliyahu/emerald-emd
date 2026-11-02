@@ -4,6 +4,7 @@ import type { ParsedRow, ParseSummary } from '@/data/importer/apply.ts'
 import type { ColumnRole, DraftTransaction } from '@/domain/model/importing.ts'
 import { Amount } from '@/ui/components/Amount.tsx'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { labelFor, ROLE_LABEL } from './roleLabel.ts'
 
 /**
  * The live preview: what the mapping currently produces.
@@ -29,8 +30,8 @@ export function PreviewStrip({
     return (
       <Panel>
         <p className="text-ink-secondary">
-          Assign {missingRoles.map((role) => <Tag key={role}>{role}</Tag>)} to a column to see
-          parsed transactions.
+          Set a column as {missingRoles.map((role) => labelFor(ROLE_LABEL, role)).join(' and ')} to see the
+          transactions it reads.
         </p>
       </Panel>
     )
@@ -79,7 +80,7 @@ export function PreviewStrip({
                 )}
                 {transaction.foreign !== undefined && <Tag>foreign</Tag>}
                 {transaction.providerCategory !== undefined && (
-                  <span className="ml-2 text-ink-tertiary">
+                  <span className="ml-2 text-ink-secondary">
                     <Bidi>{transaction.providerCategory}</Bidi>
                   </span>
                 )}
@@ -96,7 +97,7 @@ export function PreviewStrip({
         <p className="mt-2 border-t border-hairline pt-2 text-ink-secondary">
           <span className="text-negative">Row {firstError.rowIndex + 1}</span>{' '}
           <Bidi>{firstError.outcome.errors.map((error) => error.message).join('; ')}</Bidi>
-          {summary.errors > 1 && <span className="text-ink-tertiary"> · and {summary.errors - 1} more</span>}
+          {summary.errors > 1 && <span> · and {summary.errors - 1} more</span>}
         </p>
       )}
     </Panel>
@@ -111,8 +112,7 @@ function Panel({ children }: { children: React.ReactNode }) {
   return <div className="fc-pop-enter border-t border-hairline px-6 py-3">{children}</div>
 }
 
+/** *A chip is text and a dot* (D-531): no border, no radius — the shared `.fc-state`. */
 function Tag({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="mx-1 rounded border border-hairline px-1 text-ink-tertiary">{children}</span>
-  )
+  return <span className="fc-state ml-2 align-middle">{children}</span>
 }

@@ -26,6 +26,7 @@ import {
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { ChoiceMenu } from '@/ui/components/ChoiceField.tsx'
 import { SELECT } from '@/ui/components/fieldLook.ts'
 import { IconAction, removableRow } from '@/ui/components/IconAction.tsx'
 import { Working } from '@/ui/components/Working.tsx'
@@ -138,7 +139,7 @@ export function ReadStatements() {
       <div className="fc-view-enter flex flex-col gap-6 px-8 pt-6 pb-12">
         <header className="flex flex-col gap-1.5 border-b border-hairline pb-4">
           <span className="fc-label text-ink-secondary uppercase">Home · read files</span>
-          <h1 className="m-0 flex items-baseline gap-3 text-[24px] leading-tight font-medium tracking-[-0.01em]">
+          <h1 className="m-0 flex items-baseline gap-3 text-title leading-tight font-medium">
             Read files
             <Link to="/read/readers" className="text-body font-normal text-accent hover:underline">
               Readers
@@ -149,35 +150,30 @@ export function ReadStatements() {
           </span>
         </header>
 
-        <div className="flex items-center gap-5 bg-surface p-5">
-          <Working size={56} still={reading === 0} label={reading === 0 ? 'Read' : 'Reading'} />
-          <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <span className="text-[18px] font-medium tabular-nums">
-              {total === 0
-                ? 'Nothing to read yet'
-                : reading === 0
-                  ? `${String(total)} of ${String(total)} read`
-                  : `Reading ${String(total - reading + 1)} of ${String(total)}`}
+        {/* *An empty state is one sentence* and one text action; a file being
+            read says so on its own row, with Working alone, never counting (M54 F13). */}
+        {total === 0 ? (
+          <p className="m-0 text-ink-secondary">
+            Nothing to read yet, and nothing is written until you press Write.{' '}
+            <button
+              type="button"
+              onClick={picker.open}
+              className="text-accent hover:underline hover:underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+            >
+              Add files
+            </button>
+          </p>
+        ) : (
+          <div className="flex flex-wrap items-center gap-4">
+            <span className="min-w-0 flex-1 text-ink-secondary">
+              A file that adds up is ticked. One that does not, or is new, waits for you and is left out until it does.
             </span>
-            <span className="text-ink-secondary">
-              {total === 0
-                ? 'Add statements, paychecks or fund reports, any number. Nothing is written until you press Write.'
-                : 'A file that adds up is ticked. One that does not, or is new, waits for you and is left out until it does.'}
-            </span>
-            {total > 0 && (
-              <div className="relative mt-2 h-0.5 overflow-hidden bg-hairline">
-                <i
-                  className="absolute inset-y-0 left-0 bg-accent transition-[width] duration-[var(--duration-base)]"
-                  style={{ width: `${String((100 * (total - reading)) / total)}%` }}
-                />
-              </div>
-            )}
+            <Button variant="secondary" icon="add" onClick={picker.open}>
+              Add more
+            </Button>
           </div>
-          <Button variant="secondary" icon="add" onClick={picker.open}>
-            Add more
-          </Button>
-          {picker.input}
-        </div>
+        )}
+        {picker.input}
 
         {problem !== undefined && (
           <div className="fc-pop-enter flex items-center gap-4 bg-surface px-4 py-2">
@@ -221,8 +217,10 @@ export function ReadStatements() {
             own, so there is nothing to accept. Your rules fill the categories; whatever is left waits on
             Transactions.
           </span>
+          {/* Filled only when it is the next step: a Write that writes nothing is
+              not (*One primary action per screen*, M54 F13). */}
           <Button
-            variant="primary"
+            variant={reading === 0 && toWrite.length > 0 ? 'primary' : 'secondary'}
             icon="write"
             count={toWrite.length}
             busy={writing ? 'Writing' : undefined}
@@ -311,29 +309,27 @@ function FileRow({
             A paycheck
           </Button>
           {funds.length > 0 && (
-            <select
-              value=""
-              onChange={(event) => event.target.value !== '' && onReport(event.target.value)}
+            <ChoiceMenu
+              text=""
+              placeholder="A report of…"
+              choices={funds.map((fund) => ({ value: fund.id, label: fund.name }))}
+              onPick={(choice) => onReport(choice.value)}
               aria-label={`The fund ${file.fileName} is a report of`}
               dir="auto"
               className={`${SELECT} h-7 max-w-44`}
-            >
-              <option value="" disabled hidden>
-                A report of…
-              </option>
-              {funds.map((fund) => (
-                <option key={fund.id} value={fund.id}>
-                  {fund.name}
-                </option>
-              ))}
-            </select>
+            />
           )}
         </span>
       )
       break
     case 'new-layout':
-      chip = <Tone tone="negative">No reader yet</Tone>
-      figure = 'no reader knows these columns yet'
+      // Not a problem: a file of a kind not read before waits to be mapped, said once (D-531).
+      chip = (
+        <span className="fc-state" data-tone="wait">
+          No reader yet
+        </span>
+      )
+      figure = 'mapped once, then read on its own'
       action = (
         <Button variant="secondary" size="sm" icon="arrow" onClick={onMap}>
           Map its columns
@@ -400,7 +396,7 @@ function FileRow({
     <div
       {...removable}
       data-tour="read-file"
-      className={`grid min-h-[52px] grid-cols-[20px_minmax(0,1.5fr)_minmax(0,0.9fr)_minmax(0,1.5fr)_auto_auto] items-center gap-4 border-b border-hairline px-1 ${removable.className}`}
+      className={`grid min-h-12 grid-cols-[20px_minmax(0,1.5fr)_minmax(0,0.9fr)_minmax(0,1.5fr)_auto_auto] items-center gap-4 border-b border-hairline px-1 ${removable.className}`}
     >
       {tickable ? (
         <button
@@ -444,7 +440,7 @@ function FileRow({
         </small>
       </span>
       <span>{chip}</span>
-      <span className="text-[13px] text-ink-secondary tabular-nums">{figure}</span>
+      <span className="text-body text-ink-secondary tabular-nums">{figure}</span>
       <span>{action}</span>
       <IconAction label={`Remove ${file.fileName}`} onClick={onRemove}>
         <path d="M6 6l12 12M18 6 6 18" />

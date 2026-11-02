@@ -206,7 +206,7 @@ function Statements({ onRead }: { onRead: () => void }) {
       why="so Went out is short"
     >
       <Button variant="secondary" size="sm" onClick={onRead}>
-        Read…
+        Read files
       </Button>
     </Head>
   ))
@@ -298,15 +298,12 @@ function Bills() {
 
 function Payslip({ item, onRead }: { item: AttentionItem; onRead: () => void }) {
   const { write } = useLedger()
-  const navigate = useNavigate()
   const month = item.period
+  // Its Add by hand is the band's above, the one Home has (M54 F13).
   return (
     <Head title={`No paycheck for ${month === undefined ? 'last month' : formatYearMonth(month)}`} why="the splitter is built on it">
       <Button variant="secondary" size="sm" onClick={onRead}>
-        Read…
-      </Button>
-      <Button variant="ghost" size="sm" onClick={() => navigate('/paychecks', { state: { add: true } })}>
-        Add by hand
+        Read files
       </Button>
       {month !== undefined && (
         <Button variant="ghost" size="sm" onClick={() => write((database, now) => setNoPayMonths(database, [month], true, now))}>

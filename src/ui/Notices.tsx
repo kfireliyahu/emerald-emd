@@ -539,7 +539,10 @@ function useWaitingNotice(offer: boolean): Notice | undefined {
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
   const navigate = useNavigate()
-  const onHome = useLocation().pathname === '/'
+  const pathname = useLocation().pathname
+  const onHome = pathname === '/'
+  // A read screen's next step is its own Write, so the notice is not filled there (M54 F13).
+  const reading = /(^|\/)read$/.test(pathname)
   const [dismissed, setDismissed] = useState(false)
 
   // Not read at all when not offered, or on Home: a document that keeps no
@@ -567,7 +570,7 @@ function useWaitingNotice(offer: boolean): Notice | undefined {
     ),
     actions: [
       // It goes to the list, where each is answered: the button says so (M54 F6).
-      { label: 'Open Home', onClick: () => navigate('/'), lead: true },
+      { label: 'Open Home', onClick: () => navigate('/'), lead: !reading },
       { label: 'Not now', onClick: () => setDismissed(true), quiet: true },
     ],
   }

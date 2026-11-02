@@ -44,52 +44,62 @@ export function NoLedger({
     waiting?.read()
   }
 
+  // One name for the act, as Packs says it (M54 F13): Keep the ledger here.
   if (waiting !== undefined) {
     const first = waiting.files[0]?.name ?? ''
     return (
       <div className="fc-view-enter mx-auto flex h-full max-w-md flex-col items-center justify-center gap-5 px-6 text-center">
-        <p className="text-title">
+        <h1 className="m-0 text-title">
           {waiting.files.length === 1 ? (
             <>
-              <Bidi>{first}</Bidi> needs a ledger to go into.
+              No format here to read <Bidi>{first}</Bidi> onto
             </>
           ) : (
-            `These ${String(waiting.files.length)} files need a ledger to go into.`
+            `No format here to read these ${String(waiting.files.length)} files onto`
           )}
-        </p>
-        <p className="text-ink-secondary">
-          Statements and paychecks are read into a ledger — accounts, months and categories, kept as
-          tables in the document. This one keeps none yet.
+        </h1>
+        <p className="m-0 text-ink-secondary">
+          The ledger reads card and bank statements, paychecks and fund reports into accounts, months and
+          categories, kept as tables in this document. Keep it here and{' '}
+          {waiting.files.length === 1 ? 'the file is' : 'the files are'} read into it.
         </p>
         <div className="flex items-center gap-3">
           <Button variant="primary" onClick={keep}>
-            Keep a ledger here and read {waiting.files.length === 1 ? 'it' : 'them'}
+            Keep the ledger here
           </Button>
           <Button variant="ghost" onClick={waiting.leave}>
             Not now
           </Button>
         </div>
-        {problem !== undefined && <p className="text-negative">{problem}</p>}
+        {problem !== undefined && (
+          <p role="alert" className="m-0 text-negative">
+            {problem}
+          </p>
+        )}
       </div>
     )
   }
 
   return (
     <div className="fc-view-enter mx-auto flex h-full max-w-md flex-col items-center justify-center gap-5 px-6 text-center">
-      <p className="text-title">This document keeps no ledger.</p>
-      <p className="text-ink-secondary">
+      <h1 className="m-0 text-title">This document keeps no ledger</h1>
+      <p className="m-0 text-ink-secondary">
         The ledger is a pack: its accounts, categories and rules are tables in the document that
-        uses it. Add them to this one, or go back to its formats.
+        keeps it. Keep it in this one, or go back to its formats.
       </p>
       <div className="flex items-center gap-3">
         <Button variant="primary" onClick={keep}>
-          Keep a ledger in this document
+          Keep the ledger here
         </Button>
         <Link to="/formats" className="text-ink-secondary hover:text-ink">
           Formats
         </Link>
       </div>
-      {problem !== undefined && <p className="text-negative">{problem}</p>}
+      {problem !== undefined && (
+        <p role="alert" className="m-0 text-negative">
+          {problem}
+        </p>
+      )}
     </div>
   )
 }

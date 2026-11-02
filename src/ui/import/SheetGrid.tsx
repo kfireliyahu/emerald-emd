@@ -58,10 +58,10 @@ export function SheetGrid({
 
   return (
     <div className="h-full overflow-auto" tabIndex={0}>
-      <table className="border-separate border-spacing-0 font-mono text-xs">
+      <table className="border-separate border-spacing-0 font-mono text-caption">
         <thead>
           <tr>
-            <th className="sticky top-0 left-0 z-30 border-r border-b border-hairline bg-surface px-2 py-1 text-right align-bottom font-normal text-ink-tertiary">
+            <th className="sticky top-0 left-0 z-30 border-r border-b border-hairline bg-surface px-2 py-1 text-right align-bottom font-normal text-ink-secondary">
               #
             </th>
             {columns.map((column) => {
@@ -76,7 +76,7 @@ export function SheetGrid({
                     changed ? 'border-b-2 border-b-negative' : 'border-b border-hairline'
                   }`}
                 >
-                  <div className={changed ? 'text-negative' : 'text-ink-tertiary'}>
+                  <div className={changed ? 'text-negative' : 'text-ink-secondary'}>
                     {columnLabel(column)}
                     {changed && ' · changed'}
                   </div>
@@ -140,7 +140,7 @@ function Row({
           onClick={() => onSetHeaderRow(rowIndex)}
           title={isHeader ? 'This is the header row' : 'Use this row as the header'}
           className={`w-full px-2 py-1 text-right hover:bg-hairline ${
-            isHeader ? 'text-ink' : 'text-ink-tertiary'
+            isHeader ? 'text-ink' : 'text-ink-secondary'
           }`}
         >
           {rowIndex + 1}
@@ -191,12 +191,13 @@ function Cell({
 }) {
   const numeric = NUMERIC.has(cell.kind)
 
-  // An unmapped column is greyed rather than hidden: the data is still there,
+  // An unmapped column is quieter rather than hidden: the data is still there,
   // it just is not being read. Hiding it would make a mis-mapping invisible.
+  // ink-secondary, not tertiary: a person reads these cells to decide (D-531).
   const tone = cell.kind === 'error' || failed
     ? 'text-negative'
     : !mapped || dimmed
-      ? 'text-ink-tertiary'
+      ? 'text-ink-secondary'
       : 'text-ink'
 
   return (
@@ -210,7 +211,7 @@ function Cell({
       ].join(' ')}
     >
       {showTypes && cell.kind !== 'empty' && (
-        <span className="mr-1 align-top text-[9px] tracking-wide text-ink-tertiary select-none">
+        <span className="mr-1 align-top text-label text-ink-secondary select-none">
           {KIND_TAG[cell.kind]}
         </span>
       )}
@@ -220,10 +221,16 @@ function Cell({
 }
 
 /**
- * A native select, deliberately. It is keyboard-navigable and screen-reader
- * correct for free, it shows the current role without a hover, and this app
- * takes no component-library dependency (docs/03).
+ * *The role is a small label* (D-531): no field's border at rest, a menu on
+ * focus or a click — the ChoiceField every choice is (M54 U3) — so the header
+ * reads as the sheet's own, the raw cell under it. As the format intake grid's
+ * (`IntakePanel.tsx`), M54 F13.
  */
+const ROLE =
+  'mt-0.5 h-6 w-full min-w-max cursor-pointer border-0 border-b border-transparent bg-transparent px-1 text-label uppercase outline-none ' +
+  'hover:border-hairline-strong focus:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent'
+
+/** What each column is read as: one of the document's roles, ignored, or a new one. */
 function RolePicker({
   role,
   roles,
@@ -272,7 +279,7 @@ function RolePicker({
           }}
           placeholder="settlementDate"
           aria-label="New column role"
-          className="w-full rounded border border-hairline bg-background px-1 py-0.5 font-mono text-xs text-ink"
+          className="w-full border border-hairline bg-background px-1 py-0.5 font-mono text-caption text-ink focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
         />
         <div className="flex gap-1">
           <button type="button" onClick={add} className="text-accent text-caption hover:underline">
@@ -284,7 +291,7 @@ function RolePicker({
               setNaming(false)
               setProblem(undefined)
             }}
-            className="text-caption text-ink-tertiary hover:underline"
+            className="text-caption text-ink-secondary hover:underline"
           >
             cancel
           </button>
@@ -321,9 +328,7 @@ function RolePicker({
       // column open, and reading the mapping off the header is this screen's
       // whole job; `size` counts characters of the field's own font.
       size={role === undefined ? 6 : 18}
-      className={`mt-0.5 w-full min-w-max rounded border border-hairline bg-background px-1 py-0.5 font-mono text-xs focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent ${
-        role === undefined ? 'text-ink-tertiary' : 'text-ink'
-      }`}
+      className={`${ROLE} ${role === undefined ? 'text-ink-secondary' : 'text-ink'}`}
     />
   )
 }
