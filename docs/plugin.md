@@ -168,7 +168,7 @@ keeps a `FileHandle` with **no mtime check anywhere** — so a plugin write made
 open is silently lost the next time the user hits Save. Sharper now that the plugin really writes.
 **Answered (D-092), and the app's half is built (D-103).** The app compares the file's mtime and
 size before every save and on every window focus; a save that would overwrite a file changed
-underneath it refuses, and offers to reload, to save a copy, or to overwrite deliberately.
+underneath it refuses, and offers to reload, to Save as…, or to overwrite deliberately.
 Refusing to write while the app is open was rejected — it is app-side friction of exactly the kind
 removing the review queue was meant to remove — and the app-side check is worth having on its own
 regardless, since two tabs or a sync client cause the same loss with no plugin in sight.

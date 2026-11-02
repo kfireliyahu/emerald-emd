@@ -15,10 +15,10 @@ describe('the save shortcuts', () => {
     expect(saveShortcut(press('s', { meta: true }))).toBe('save')
   })
 
-  // The File menu and the palette show Ctrl+Shift+S as Save a copy…; it saved in place (M54 U6).
-  it('saves a copy on Ctrl/Cmd+Shift+S', () => {
-    expect(saveShortcut(press('S', { ctrl: true, shift: true }))).toBe('save-copy')
-    expect(saveShortcut(press('S', { meta: true, shift: true }))).toBe('save-copy')
+  // The File menu and the palette show Ctrl+Shift+S as Save as…; it saved in place (M54 U6, D-531).
+  it('saves as on Ctrl/Cmd+Shift+S', () => {
+    expect(saveShortcut(press('S', { ctrl: true, shift: true }))).toBe('save-as')
+    expect(saveShortcut(press('S', { meta: true, shift: true }))).toBe('save-as')
   })
 
   it('leaves every other key alone', () => {

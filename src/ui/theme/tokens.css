@@ -393,6 +393,10 @@ html:has(:root[data-theme="dark"]),
 .app-drag [role='listbox'],
 .app-drag [role='option'],
 .app-drag [tabindex]:not([tabindex='-1']),
+/* Anything with a hover title (M54 F7): Windows delivers no hover inside a drag
+   region, so the document's name, whose title says where the file lives, said
+   it to nobody. */
+.app-drag [title],
 .app-no-drag {
   -webkit-app-region: no-drag;
 }

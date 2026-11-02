@@ -73,8 +73,8 @@ export function createFileSystemAdapter(): StorageAdapter {
     },
 
     async saveAs(bytes: Uint8Array, suggestedName: string): Promise<string | undefined> {
-      // Repoints the handle: after "save a copy", this session is working on
-      // the copy, and the file that changed underneath us is left alone.
+      // Repoints the handle: after Save as, this session is working on
+      // the new file, and the file that changed underneath us is left alone.
       handle = await picker.showSaveFilePicker({ suggestedName, types: FILE_TYPES })
       return write(handle, bytes)
     },

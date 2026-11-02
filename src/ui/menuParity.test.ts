@@ -50,22 +50,22 @@ const IN_THE_PALETTE: Readonly<Record<string, string>> = {
   New: 'doc:new',
   'Open…': 'doc:open',
   'Save': 'doc:save',
-  'Save a Copy…': 'doc:save-as',
+  'Save as…': 'doc:save-as',
   'Earlier copies of this document…': 'doc:earlier-copies',
-  [RECENT.name]: `recent:${RECENT.path}`,
-  'Clear Menu': 'recent:clear',
-  'Toggle Sidebar': 'do:sidebar',
+  [`${RECENT.name} — /documents`]: `recent:${RECENT.path}`,
+  'Clear recent documents': 'recent:clear',
+  'Toggle the sidebar': 'do:sidebar',
   'Guide me': 'help:guide',
   License: 'help:license',
-  'Third-Party Notices': 'help:notices',
-  'Source Code': 'help:source',
-  'Check for Updates Now': 'help:check-updates',
+  'Third-party notices': 'help:notices',
+  'Source code': 'help:source',
+  'Check for updates now': 'help:check-updates',
   'About Emerald': 'help:about',
 }
 
 /** A menu item, by its label or its role, and why the palette has no row for it. */
 const NOT_IN_THE_PALETTE: Readonly<Record<string, string>> = {
-  'Command Palette…': 'it is the palette',
+  'Commands…': 'it is the palette',
   'Nothing yet': 'a disabled line saying the recents are empty',
   undo: 'it acts on the focused field, which opening the palette takes focus from; Ctrl+Z works everywhere',
   redo: 'the same as undo',
@@ -92,7 +92,8 @@ function leaves(items: readonly MenuItemConstructorOptions[]): MenuItemConstruct
   })
 }
 
-const keyOf = (item: MenuItemConstructorOptions): string => item.label ?? item.role ?? '(unnamed)'
+// A role by its role: it carries a label of its own since M54 F7, and the reason is about the role.
+const keyOf = (item: MenuItemConstructorOptions): string => item.role ?? item.label ?? '(unnamed)'
 
 const noActions = {
   send: () => undefined,
@@ -134,6 +135,28 @@ describe('every item in the shell menu is a palette command', () => {
     )
     const stale = [...Object.keys(IN_THE_PALETTE), ...Object.keys(NOT_IN_THE_PALETTE)].filter((key) => !keys.has(key))
     expect(stale).toEqual([])
+  })
+
+  /**
+   * **One name per command** (M54 F7, D-531): the palette row says what the
+   * menu item says, word for word — not *New document* beside *New*.
+   */
+  it('calls each command what the menu calls it', () => {
+    const byId = new Map(
+      buildCommands({ go: () => undefined, importStatement: () => undefined, recents: [RECENT] }).map((command) => [
+        command.id,
+        command.label,
+      ]),
+    )
+    const items = leaves(buildMenuTemplate('win32', [RECENT], noActions, { document: true, guide: true }))
+    const differ = items.flatMap((item) => {
+      const id = IN_THE_PALETTE[keyOf(item)]
+      // A recent's menu label carries its folder; the palette shows the folder under it.
+      if (id === undefined || id.startsWith('recent:') && id !== 'recent:clear') return []
+      const label = byId.get(id)
+      return label === item.label ? [] : [`${String(item.label)} / ${String(label)}`]
+    })
+    expect(differ).toEqual([])
   })
 
   it('puts Help under its own heading, as the menu does', () => {

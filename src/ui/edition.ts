@@ -3,7 +3,7 @@
  *
  * The demo (`demo.html`, `src/demo/main.tsx`) is the app's own screens over a
  * document it opened on start, inside somebody else's page. What it leaves out
- * is the document's way in and out — New, Open…, Save, Save a copy, the
+ * is the document's way in and out — New, Open…, Save, Save as…, the
  * recents, their shortcuts, the crash snapshot and the close guard — because
  * a visitor has no file, and a frame that asked to keep their afternoon would
  * be asking about nobody's.

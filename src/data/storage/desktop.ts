@@ -98,7 +98,7 @@ export function createDesktopAdapter(
 
   /**
    * Every path change goes through here, so the shell's watch and the file we
-   * are saving to can never drift apart — including after "save a copy", where
+   * are saving to can never drift apart — including after Save as, where
    * the point is that we stop watching the file the other writer took.
    */
   const pointAt = (opened: { path: string; name: string }): void => {
@@ -127,7 +127,7 @@ export function createDesktopAdapter(
 
     /**
      * No picker: the user already chose this file, by double-clicking it or by
-     * picking it out of Open Recent. The shell refuses any path it did not hand
+     * picking it out of Open recent. The shell refuses any path it did not hand
      * out, so this cannot reach a file the user has not pointed at (D-128).
      */
     async openPath(path: string): Promise<OpenedDocument | undefined> {
@@ -153,7 +153,7 @@ export function createDesktopAdapter(
     async saveAs(bytes: Uint8Array, suggestedName: string): Promise<string | undefined> {
       const chosen = await documents.chooseSavePath(withExtension(suggestedName))
       if (chosen === undefined) return undefined
-      // Repoints: after "save a copy" this session is working on the copy, and
+      // Repoints: after Save as this session is working on the new file, and
       // the file that changed underneath us is left alone (D-092).
       pointAt({ path: chosen, name: baseName(chosen) })
       await documents.write(chosen, bytes)

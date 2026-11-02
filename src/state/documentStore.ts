@@ -89,7 +89,7 @@ interface DocumentState {
   readonly diskState: DiskState
 
   /**
-   * A document the shell was asked to open — a double-click, Open Recent —
+   * A document the shell was asked to open — a double-click, Open recent —
    * held because there is unsaved work in the window that opening would throw
    * away (D-128). The user answers it in `PendingOpenBar`.
    */
@@ -181,7 +181,7 @@ interface DocumentState {
    * about to write something large stops there.
    */
   keepCopy(what: string): Promise<KeptCopy | undefined>
-  /** Save a copy held in a browser, as a download — the one way it leaves the page. */
+  /** Save as, for a document held in a browser: a download — the one way it leaves the page. */
   downloadKeptCopy(): void
   dismissKeptCopy(): void
   dismissError(): void
@@ -550,5 +550,9 @@ async function noteMark(
 
 function describe(error: unknown): string {
   if (error instanceof DOMException && error.name === 'AbortError') return ''
-  return error instanceof Error ? error.message : String(error)
+  // The shell's sentence, without the wrapping Electron puts round every error a
+  // handler throws: "Error invoking remote method '…': Error: " said nothing a
+  // person could act on (M54 F7).
+  const message = error instanceof Error ? error.message : String(error)
+  return message.replace(/^Error invoking remote method '[^']*': (?:Error: )?/, '')
 }

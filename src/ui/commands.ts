@@ -167,8 +167,24 @@ export function buildCommands(context: CommandContext): readonly Command[] {
   if (isDemo()) return [...commands, ...helpCommands(kept.has('ledger') && hasDocument)]
 
   commands.push(
-    { id: 'doc:new', label: 'New document', group: 'Document', hint: 'Ctrl+N', run: () => void useDocumentStore.getState().requestNew() },
-    { id: 'doc:open', label: 'Open document…', group: 'Document', hint: 'Ctrl+O', run: () => void useDocumentStore.getState().requestOpenFile() },
+    // **One name per command, in sentence case** (M54 F7, D-531): New and Open… as the
+    // File menu and the title bar say them; the word *document* is a keyword, not a second name.
+    {
+      id: 'doc:new',
+      label: 'New',
+      group: 'Document',
+      hint: 'Ctrl+N',
+      keywords: 'new document file create blank',
+      run: () => void useDocumentStore.getState().requestNew(),
+    },
+    {
+      id: 'doc:open',
+      label: 'Open…',
+      group: 'Document',
+      hint: 'Ctrl+O',
+      keywords: 'open document file',
+      run: () => void useDocumentStore.getState().requestOpenFile(),
+    },
   )
 
   if (hasDocument) {
@@ -182,9 +198,11 @@ export function buildCommands(context: CommandContext): readonly Command[] {
       },
       {
         id: 'doc:save-as',
-        label: 'Save a copy…',
+        // A new file, and the window carries on in it: Save as (D-531).
+        label: 'Save as…',
         group: 'Document',
         hint: 'Ctrl+Shift+S',
+        keywords: 'save copy new file rename elsewhere',
         run: () => void useDocumentStore.getState().saveCopyAs(),
       },
       // M34 U6 (D-399): `keep_copy`'s half on a screen — a named copy among the
@@ -255,7 +273,7 @@ export function buildCommands(context: CommandContext): readonly Command[] {
     })
   }
 
-  // File › Open Recent › Clear Menu (M46 U1), beside what it clears.
+  // File › Open recent › Clear recent documents (M46 U1), beside what it clears.
   const clearRecents = shellDocuments()?.clearRecents
   if (context.recents.length > 0 && clearRecents !== undefined) {
     commands.push({
@@ -334,7 +352,7 @@ function helpCommands(guide: boolean): Command[] {
       run: () => void openSource(),
     })
   }
-  // Help › Check for Updates Now (M42 U8, D-502): one check, setting on or off, answered in the notice.
+  // Help › Check for updates now (M42 U8, D-502): one check, setting on or off, answered in the notice.
   const updates = shellUpdates()
   if (updates !== undefined) {
     help.push({

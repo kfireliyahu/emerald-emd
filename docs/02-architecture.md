@@ -190,8 +190,9 @@ Getting this right is what makes a document-based app tolerable:
   import and a timer can miss it by 29 seconds. On startup, if the snapshot is newer than the
   last save, offer to restore. Never restore silently.
 - `beforeunload` warning when there are unsaved changes — in a browser. In the shell it cancels
-  the close without showing anything, so the shell asks in a native box instead, on a dirty flag
-  the renderer pushes (D-128).
+  the close without showing anything, so the shell asks in a native box instead, naming the
+  document, on the state the renderer pushes (D-128, M54 F7). A page that crashes reloads into the
+  restore notice, and a crashed page's close is never asked about (D-532).
 - The filename carries a date so accidental overwrites are recoverable:
   `untitled-2026-08.emd` — no pack's word, because a new document keeps none (M38 F1).
 
@@ -268,7 +269,7 @@ shape is:
   what counts as a document in `argv`. `recents.ts` holds the documents opened before and their
   grants (D-128); `menu.ts` the menu as a testable template (D-128); `windowChrome.ts` the title
   bar's measurements, shared by the window and the page (D-130); `about.ts` what the About says and
-  the one address the shell hands the system browser, the repository, on Help → Source Code (D-452).
+  the one address the shell hands the system browser, the repository, on Help → Source code (D-452).
 - `runtimes.ts` and `generate.ts` — the only two places in the app that open a socket, to a local
   model runtime on loopback and nowhere else (D-134, D-136); `generate.ts` re-checks the origin
   because it arrives from `localStorage` (D-135).

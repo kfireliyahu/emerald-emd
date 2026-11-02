@@ -8,12 +8,12 @@ const SNAPSHOT_INTERVAL_MS = 30_000
 
 /**
  * Which save a key press asks for: `Ctrl/Cmd+S` saves, and `Ctrl/Cmd+Shift+S`
- * is Save a copy…, as the File menu and the palette both show it (M54 U6) —
+ * is Save as…, as the File menu and the palette both show it (M54 U6, D-531) —
  * it used to save in place, because Shift was never looked at.
  */
-export function saveShortcut(event: Pick<KeyboardEvent, 'ctrlKey' | 'metaKey' | 'shiftKey' | 'key'>): 'save' | 'save-copy' | undefined {
+export function saveShortcut(event: Pick<KeyboardEvent, 'ctrlKey' | 'metaKey' | 'shiftKey' | 'key'>): 'save' | 'save-as' | undefined {
   if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 's') return undefined
-  return event.shiftKey ? 'save-copy' : 'save'
+  return event.shiftKey ? 'save-as' : 'save'
 }
 
 /**
@@ -35,7 +35,7 @@ export function useSaveShortcuts(): void {
       // browser have its own Save Page. Handled here, the shell's menu
       // accelerator for the same keys never fires, so this runs once.
       event.preventDefault()
-      if (which === 'save-copy') void useDocumentStore.getState().saveCopyAs()
+      if (which === 'save-as') void useDocumentStore.getState().saveCopyAs()
       else void useDocumentStore.getState().save()
     }
 

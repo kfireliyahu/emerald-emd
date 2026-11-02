@@ -54,6 +54,48 @@ export interface RecentDocument {
 }
 
 /**
+ * Each recent document's folder, cut to the end that tells it apart (M54 F7):
+ * the last folder alone, and as many more as it takes when two entries share a
+ * name — `2025.emd` in `…/old` and in `…/k`, not twice `2025.emd`. A tail is
+ * marked with `…` and the path's own separator; a folder shown whole is not.
+ *
+ * Here because both halves list the recents — the File menu in main, the title
+ * bar's Open recent in the page — and the two must tell them apart alike.
+ */
+export function recentFolders(recents: readonly { readonly path: string; readonly name: string }[]): string[] {
+  const folders = recents.map((entry) => {
+    const separator = entry.path.includes('\\') ? '\\' : '/'
+    const parts = entry.path.split(/[\\/]/)
+    parts.pop()
+    return { separator, parts }
+  })
+  const tail = (parts: readonly string[], count: number): string => parts.slice(-count).join('/').toLowerCase()
+  return recents.map((entry, index) => {
+    const { separator, parts } = folders[index] ?? { separator: '/', parts: [] }
+    const rivals = folders.filter(
+      (_folder, other) => other !== index && recents[other]?.name.toLowerCase() === entry.name.toLowerCase(),
+    )
+    let count = 1
+    while (count < parts.length && rivals.some((rival) => tail(rival.parts, count) === tail(parts, count))) count += 1
+    // A path from the root starts with an empty part, which is the root itself.
+    const whole = parts.join(separator) || separator
+    if (count >= parts.length - (parts[0] === '' ? 1 : 0)) return whole
+    return `…${separator}${parts.slice(-count).join(separator)}`
+  })
+}
+
+/**
+ * What the page tells the shell about the document it holds (M54 F7).
+ * `name` is absent with no document open.
+ */
+export interface ShellDocumentState {
+  readonly name?: string
+  readonly unsaved: boolean
+  /** Help › Guide me walks the ledger's screens, so it acts only where one is kept. */
+  readonly guide: boolean
+}
+
+/**
  * The shell asking the app to do something.
  *
  * Everything here is something the document store already knows how to do: the
@@ -69,9 +111,9 @@ export type ShellCommand =
   | { readonly kind: 'open-path'; readonly path: string }
   /** The window is closing and the user chose to save first; see `main.ts`. */
   | { readonly kind: 'save-and-close' }
-  /** View → Toggle Sidebar. The key is the page's; the menu item is the shell's. */
+  /** View › Toggle the sidebar. The key is the page's; the menu item is the shell's. */
   | { readonly kind: 'toggle-sidebar' }
-  /** View → Command Palette. Same split: the shell shows the key, the page binds it. */
+  /** View › Commands…, the same split: the shell shows the key, the page binds it. */
   | { readonly kind: 'command-palette' }
   /** Help → Guide me (M28 U9, D-330): the guide's walk, picked up where it stopped. */
   | { readonly kind: 'guide' }
@@ -99,7 +141,7 @@ export interface EmeraldDocuments {
    */
   recents(): Promise<readonly RecentDocument[]>
   /**
-   * File › Open Recent › Clear Menu, from the palette too (M46 U1). Missing from
+   * File › Open recent › Clear recent documents, from the palette too (M46 U1). Missing from
    * a shell older than M46.
    */
   clearRecents?(): Promise<void>
@@ -155,14 +197,17 @@ export interface EmeraldDocuments {
    */
   onChanged(listener: () => void): () => void
   /**
-   * Whether there is unsaved work in the window, pushed whenever it changes.
+   * What the window holds, pushed whenever it changes: the document's name,
+   * whether there is unsaved work, and whether Guide me has a ledger to walk.
    *
    * The shell cannot see the document — it is bytes in the renderer's memory —
    * and it has to know before it lets the window close. `beforeunload` is not
    * an answer here: in Electron a `beforeunload` that objects cancels the close
    * with **no dialog at all**, which is a window that silently refuses to shut.
+   * The name is what the close question names, and the rest is what the File
+   * and Help menus grey out by (M54 F7).
    */
-  setUnsaved(unsaved: boolean): void
+  setState(state: ShellDocumentState): void
   /** Close the window without asking again — the renderer has just saved. */
   closeWindow(): void
 }
@@ -409,12 +454,12 @@ export interface EmeraldApp {
   /** Open Emerald's folder of earlier copies in the system's file manager — the one folder, never a path the page names. */
   openBackupsFolder(): Promise<void>
   /**
-   * Help › License and Help › Third-Party Notices, from the palette as well as the menu
+   * Help › License and Help › Third-party notices, from the palette as well as the menu
    * (M46 U1): the text, from `dist/`, in a window of its own. Missing from a shell older
    * than M46, which the palette treats as no such command.
    */
   openText?(text: 'license' | 'notices'): Promise<void>
-  /** Help › Source Code: the repository's one address, in the system browser. The page names no URL. */
+  /** Help › Source code: the repository's one address, in the system browser. The page names no URL. */
   openSource?(): Promise<void>
 }
 
@@ -424,7 +469,7 @@ export interface EmeraldApp {
  * nothing: the check runs in a session of its own (`electron/updates.ts`, `network.ts`).
  */
 export type UpdateNotice =
-  /** Check for Updates Now, while it asks. */
+  /** Check for updates now, while it asks. */
   | { readonly kind: 'checking' }
   /**
    * A newer release: `<version> is out`, with Download and Later. On Windows with the setting on it
@@ -548,7 +593,7 @@ export const DOCUMENT_CHANNELS = {
   command: 'emerald:documents/command',
   /** Page → main, one-way: what the shell cannot see for itself. */
   ready: 'emerald:documents/ready',
-  unsaved: 'emerald:documents/unsaved',
+  state: 'emerald:documents/state',
   closeWindow: 'emerald:documents/close-window',
 } as const
 

@@ -1,8 +1,8 @@
 import type { MenuItemConstructorOptions } from 'electron'
 import { describe, expect, it } from 'vitest'
 
-import type { RecentDocument, ShellCommand } from './bridge.ts'
-import { buildMenuTemplate } from './menu.ts'
+import { recentFolders, type RecentDocument, type ShellCommand } from './bridge.ts'
+import { buildMenuTemplate, menuText, NOTHING_OPEN, type MenuState } from './menu.ts'
 
 /**
  * The menu as data (D-128). Worth testing for two reasons that have nothing to
@@ -16,7 +16,9 @@ const RECENTS: RecentDocument[] = [
   { path: '/home/k/old/2025.emd', name: '2025.emd', openedAt: 1 },
 ]
 
-function collect(recents: readonly RecentDocument[] = RECENTS, platform = 'win32') {
+const OPEN: MenuState = { document: true, guide: true }
+
+function collect(recents: readonly RecentDocument[] = RECENTS, platform = 'win32', state: MenuState = OPEN) {
   const sent: ShellCommand[] = []
   /** Every Help action, in the order they were clicked. */
   const shell: string[] = []
@@ -30,7 +32,7 @@ function collect(recents: readonly RecentDocument[] = RECENTS, platform = 'win32
     openText: (text) => shell.push(`text:${text}`),
     openSource: () => shell.push('source'),
     checkForUpdates: () => shell.push('updates'),
-  })
+  }, state)
   return { template, sent, shell, cleared: () => cleared }
 }
 
@@ -55,7 +57,7 @@ describe('the application menu', () => {
     const { template, sent } = collect()
     const file = menu(template, 'File')
 
-    for (const label of ['New', 'Open…', 'Save', 'Save a Copy…', 'Earlier copies of this document…']) {
+    for (const label of ['New', 'Open…', 'Save', 'Save as…', 'Earlier copies of this document…']) {
       item(file, label).click?.(
         undefined as never,
         undefined as never,
@@ -71,24 +73,84 @@ describe('the application menu', () => {
     expect(item(file, 'Save').accelerator).toBe('CmdOrCtrl+S')
     expect(item(file, 'Open…').accelerator).toBe('CmdOrCtrl+O')
     expect(item(file, 'New').accelerator).toBe('CmdOrCtrl+N')
-    expect(item(file, 'Save a Copy…').accelerator).toBe('CmdOrCtrl+Shift+S')
+    expect(item(file, 'Save as…').accelerator).toBe('CmdOrCtrl+Shift+S')
   })
 
-  it('opens a recent document by path, and shows the folder in the tooltip', () => {
+  it('opens a recent document by path, with its folder in the label (M54 F7)', () => {
     const { template, sent } = collect()
-    const recent = menu(template, 'File').find((entry) => entry.label === 'Open Recent')
-    if (recent === undefined || !Array.isArray(recent.submenu)) throw new Error('no Open Recent')
+    const recent = menu(template, 'File').find((entry) => entry.label === 'Open recent')
+    if (recent === undefined || !Array.isArray(recent.submenu)) throw new Error('no Open recent')
 
     expect(recent.enabled).toBe(true)
-    expect(recent.submenu[0]?.toolTip).toBe('/home/k/2026.emd')
+    // A Windows menu shows no tooltip, so the folder is in the label itself.
+    expect(recent.submenu[0]?.label).toBe('2026.emd — …/k')
+    expect(recent.submenu[0]?.toolTip).toBeUndefined()
     recent.submenu[0]?.click?.(undefined as never, undefined as never, undefined as never)
 
     expect(sent).toEqual([{ kind: 'open-path', path: '/home/k/2026.emd' }])
   })
 
-  it('offers Open Recent greyed out rather than not at all on a first run', () => {
-    const recent = menu(collect([]).template, 'File').find((entry) => entry.label === 'Open Recent')
+  it('tells two documents of one name apart by the end of their folders (M54 F7)', () => {
+    const twins: RecentDocument[] = [
+      { path: 'C:\\Users\\k\\2025\\finances.emd', name: 'finances.emd', openedAt: 2 },
+      { path: 'D:\\backup\\2025\\finances.emd', name: 'finances.emd', openedAt: 1 },
+      { path: 'C:\\Users\\k\\notes.emd', name: 'notes.emd', openedAt: 0 },
+    ]
+    expect(recentFolders(twins)).toEqual(['…\\k\\2025', '…\\backup\\2025', '…\\k'])
+    // A folder shown whole carries no ellipsis.
+    expect(recentFolders([{ path: '/a.emd', name: 'a.emd' }, { path: '/x/a.emd', name: 'a.emd' }])).toEqual(['/', '/x'])
+  })
+
+  it("doubles an ampersand, which Windows would read as the item's mnemonic (M54 F7)", () => {
+    expect(menuText('A & B.emd — …/k')).toBe('A && B.emd — …/k')
+    const recent = menu(collect([{ path: '/k/A & B.emd', name: 'A & B.emd', openedAt: 1 }]).template, 'File').find(
+      (entry) => entry.label === 'Open recent',
+    )
+    if (recent === undefined || !Array.isArray(recent.submenu)) throw new Error('no Open recent')
+    expect(recent.submenu[0]?.label).toBe('A && B.emd — /k')
+  })
+
+  it('offers Open recent greyed out rather than not at all on a first run', () => {
+    const recent = menu(collect([]).template, 'File').find((entry) => entry.label === 'Open recent')
     expect(recent?.enabled).toBe(false)
+  })
+
+  it('greys out what has nothing to act on (M54 F7)', () => {
+    const none = collect(RECENTS, 'win32', NOTHING_OPEN).template
+    const file = menu(none, 'File')
+    for (const label of ['Save', 'Save as…', 'Earlier copies of this document…']) {
+      expect(item(file, label).enabled).toBe(false)
+    }
+    for (const label of ['New', 'Open…']) expect(item(file, label).enabled).not.toBe(false)
+    expect(item(menu(none, 'Help'), 'Guide me').enabled).toBe(false)
+
+    // A document that keeps no ledger: everything in File, but no guide.
+    const noLedger = collect(RECENTS, 'win32', { document: true, guide: false }).template
+    expect(item(menu(noLedger, 'File'), 'Save').enabled).toBe(true)
+    expect(item(menu(noLedger, 'Help'), 'Guide me').enabled).toBe(false)
+  })
+
+  it('names every item in sentence case, the roles included (M54 F7, D-531)', () => {
+    for (const platform of ['win32', 'darwin', 'linux']) {
+      const labels: string[] = []
+      const walk = (items: readonly MenuItemConstructorOptions[]): void => {
+        for (const entry of items) {
+          if (entry.type === 'separator' || entry.role === 'appMenu' || entry.role === 'windowMenu') continue
+          if (Array.isArray(entry.submenu)) walk(entry.submenu)
+          else labels.push(entry.label ?? `(no label: ${String(entry.role)})`)
+        }
+      }
+      walk(collect([], platform).template)
+      // After the first word, no word starts upper case but a name: Emerald, and the File menu's own.
+      const titled = labels.filter((label) =>
+        label
+          .split(' ')
+          .slice(1)
+          .some((word) => /^[A-Z]/.test(word) && word !== 'Emerald'),
+      )
+      expect(titled, platform).toEqual([])
+      expect(labels.filter((label) => label.startsWith('(no label')), platform).toEqual([])
+    }
   })
 
   it('has no Reload, because a reload throws away an unsaved document', () => {
@@ -105,9 +167,9 @@ describe('the application menu', () => {
     expect(help.filter((entry) => entry.type !== 'separator').map((entry) => entry.label)).toEqual([
       'Guide me',
       'License',
-      'Third-Party Notices',
-      'Source Code',
-      'Check for Updates Now',
+      'Third-party notices',
+      'Source code',
+      'Check for updates now',
       'About Emerald',
     ])
     for (const entry of help) click(entry)
@@ -115,7 +177,7 @@ describe('the application menu', () => {
     expect(shell).toEqual(['text:license', 'text:notices', 'source', 'updates', 'about'])
   })
 
-  it('names no address in the menu: Source Code asks main for the one it has (D-124, D-452)', () => {
+  it('names no address in the menu: Source code asks main for the one it has (D-124, D-452)', () => {
     const help = menu(collect().template, 'Help')
     const text = JSON.stringify(help)
     expect(text).not.toMatch(/https?:/)
@@ -125,13 +187,13 @@ describe('the application menu', () => {
   it('leaves macOS its About in the app menu, not a second one in Help', () => {
     const help = menu(collect(RECENTS, 'darwin').template, 'Help')
     expect(help.map((entry) => entry.label)).not.toContain('About Emerald')
-    expect(help.map((entry) => entry.label)).toContain('Source Code')
+    expect(help.map((entry) => entry.label)).toContain('Source code')
   })
 
   it('checks for updates from Help on every platform, with no setting in the way (M42 U8)', () => {
     for (const platform of ['win32', 'darwin', 'linux']) {
       const { template, shell } = collect(RECENTS, platform)
-      click(item(menu(template, 'Help'), 'Check for Updates Now'))
+      click(item(menu(template, 'Help'), 'Check for updates now'))
       expect(shell).toEqual(['updates'])
     }
   })
@@ -158,7 +220,7 @@ describe('the application menu', () => {
    */
   it('shows the sidebar accelerator without registering it', () => {
     const { template, sent } = collect()
-    const toggle = item(menu(template, 'View'), 'Toggle Sidebar')
+    const toggle = item(menu(template, 'View'), 'Toggle the sidebar')
     expect(toggle.accelerator).toBe('CmdOrCtrl+B')
     expect(toggle.registerAccelerator).toBe(false)
 

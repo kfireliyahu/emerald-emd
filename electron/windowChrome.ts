@@ -89,3 +89,13 @@ export function titleBarOverlay(theme: 'light' | 'dark'): {
     ? { color: '#151517', symbolColor: '#f2f2f0', height: TITLE_BAR_HEIGHT }
     : { color: '#f7f7f6', symbolColor: '#111111', height: TITLE_BAR_HEIGHT }
 }
+
+/**
+ * The plane a window shows before its page paints, and the one Help's text
+ * windows sit on: `--color-background` from `src/ui/theme/tokens.css`, in the
+ * theme the page last settled on (M54 F7). Copied across the process boundary
+ * for the reason the overlay's pair is, and held to the tokens by the same test.
+ */
+export function windowBackground(theme: 'light' | 'dark'): string {
+  return theme === 'dark' ? '#0b0b0c' : '#ffffff'
+}

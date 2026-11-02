@@ -1,11 +1,13 @@
 import { useEffect } from 'react'
 
+import type { ShellDocumentState } from '../../electron/bridge.ts'
 import { shellDocuments } from '@/data/storage/desktop.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { openAbout } from '@/ui/About.tsx'
 import { openCommandPalette } from '@/ui/commands.ts'
 import { openEarlierCopies } from '@/ui/EarlierCopies.tsx'
 import { openGuide } from '@/ui/guide/guideState.ts'
+import { openDocumentKeptPacks } from '@/ui/packs.ts'
 import { toggleSidebar } from '@/ui/useSidebar.ts'
 
 /**
@@ -37,6 +39,7 @@ export function useShellCommands(): void {
           void store.save()
           return
         case 'save-as':
+          // File › Save as… (D-531): a new file, and the window carries on in it.
           void store.saveCopyAs()
           return
         case 'open-path':
@@ -82,16 +85,40 @@ export function useShellCommands(): void {
    * What the shell cannot see for itself. Pushed on every change rather than
    * asked for on close, because the close handler in `electron/main.ts` runs
    * synchronously and there is no way to ask the page a question from inside it.
+   * The name is what that question names, and the rest is what the menu greys
+   * out by: Save with no document, Guide me with no ledger (M54 F7).
    */
   useEffect(() => {
     const shell = shellDocuments()
     if (shell === undefined) return
 
-    shell.setUnsaved(useDocumentStore.getState().isDirty)
+    let sent = ''
+    const push = (): void => {
+      const next = shellState()
+      const text = JSON.stringify(next)
+      if (text === sent) return
+      sent = text
+      shell.setState(next)
+    }
+    push()
     return useDocumentStore.subscribe((state, previous) => {
-      if (state.isDirty !== previous.isDirty) shell.setUnsaved(state.isDirty)
+      // Only what the answer reads: whether a ledger is kept is a query, and the
+      // store moves for many things that change none of it.
+      const same =
+        state.db === previous.db &&
+        state.revision === previous.revision &&
+        state.documentName === previous.documentName &&
+        state.isDirty === previous.isDirty
+      if (!same) push()
     })
   }, [])
+}
+
+/** The window's document, as the shell is told it. */
+function shellState(): ShellDocumentState {
+  const { db, documentName, isDirty } = useDocumentStore.getState()
+  if (db === undefined) return { unsaved: false, guide: false }
+  return { name: documentName, unsaved: isDirty, guide: openDocumentKeptPacks().has('ledger') }
 }
 
 /**

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 
+import { recentFolders } from '../../electron/bridge.ts'
 import { canAutoSaveAtAll } from '@/data/storage/autoSave.ts'
 import { shellDocuments } from '@/data/storage/desktop.ts'
 import { wouldOverwrite } from '@/data/storage/externalChange.ts'
@@ -176,13 +177,16 @@ function OpenRecent() {
 
   const others = recents.filter((entry) => entry.path !== here)
   if (shellDocuments() === undefined || others.length === 0) return null
+  // The folder cut to the end that tells two of one name apart, as the File menu
+  // shows it (M54 F7): the whole path tail-truncated cut exactly that part off.
+  const folders = recentFolders(others)
   return (
     <ChoiceField
       text={text}
-      choices={others.map((entry) => ({
+      choices={others.map((entry, index) => ({
         value: entry.path,
         label: entry.name,
-        detail: entry.path.slice(0, Math.max(entry.path.length - entry.name.length - 1, 0)),
+        detail: folders[index] ?? '',
         search: entry.path,
       }))}
       filter

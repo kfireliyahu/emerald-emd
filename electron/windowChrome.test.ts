@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -5,8 +8,25 @@ import {
   titleBarOverlay,
   trafficLightPosition,
   usesControlsOverlay,
+  windowBackground,
   windowChrome,
 } from './windowChrome.ts'
+
+/**
+ * A colour token as `tokens.css` declares it: the first declaration is the
+ * light theme's, and the one in the `:root[data-theme="dark"]` block that
+ * declares it is the dark theme's.
+ */
+function token(name: string, theme: 'light' | 'dark'): string {
+  const css = readFileSync(join(__dirname, '..', 'src', 'ui', 'theme', 'tokens.css'), 'utf8')
+  const declaration = new RegExp(`--color-${name}:\\s*(#[0-9a-f]{6})`, 'i')
+  if (theme === 'light') return css.match(declaration)?.[1]?.toLowerCase() ?? 'missing'
+  for (const block of css.split(':root[data-theme="dark"]').slice(1)) {
+    const found = block.slice(0, block.indexOf('}')).match(declaration)?.[1]
+    if (found !== undefined) return found.toLowerCase()
+  }
+  return 'missing'
+}
 
 /**
  * The frame is one agreement held in two processes (D-130): `main.ts` builds
@@ -62,10 +82,16 @@ describe('the window chrome', () => {
    * The caption buttons are painted by Chromium from literal colours, so these
    * two hexes are a copy of `--color-surface` and `--color-ink` living on the
    * other side of the process boundary. Nothing but a test notices when the
-   * tokens move and the buttons stay behind.
+   * tokens move and the buttons stay behind — so it reads the tokens (M54 F7).
    */
   it('paints the caption buttons in the same plane the bar is drawn on', () => {
-    expect(titleBarOverlay('light')).toMatchObject({ color: '#f7f7f6', symbolColor: '#111111' })
-    expect(titleBarOverlay('dark')).toMatchObject({ color: '#151517', symbolColor: '#f2f2f0' })
+    for (const theme of ['light', 'dark'] as const) {
+      expect(titleBarOverlay(theme)).toMatchObject({ color: token('surface', theme), symbolColor: token('ink', theme) })
+    }
+  })
+
+  /** The first paint, and Help's text windows (M54 F7): the page's background, read from the tokens. */
+  it('shows the page background before the page paints', () => {
+    for (const theme of ['light', 'dark'] as const) expect(windowBackground(theme)).toBe(token('background', theme))
   })
 })

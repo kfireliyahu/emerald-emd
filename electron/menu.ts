@@ -20,10 +20,10 @@
  *
  * **What Help gained is what a downloader is owed** (M43 U7, D-452): the license
  * and the third-party notices, each opened in a window of its own from the
- * app's own files, and the About. One item leaves the app — *Source Code*, which
+ * app's own files, and the About. One item leaves the app — *Source code*, which
  * hands the repository's address, and only that one, to the system browser. It
- * is the source the AGPL promises, and a person asked for it by clicking. **Check for Updates
- * Now** (M42 U8, D-502) asks GitHub for the newest version once, with the setting on or off, and
+ * is the source the AGPL promises, and a person asked for it by clicking. **Check for updates
+ * now** (M42 U8, D-502) asks GitHub for the newest version once, with the setting on or off, and
  * answers in the window's notice.
  *
  * **Nothing here is reachable only behind Alt** (M46 U1, D-458): every item is
@@ -35,7 +35,7 @@
 import type { MenuItemConstructorOptions } from 'electron'
 
 import type { BundledText } from './about.ts'
-import type { RecentDocument, ShellCommand } from './bridge.ts'
+import { recentFolders, type RecentDocument, type ShellCommand } from './bridge.ts'
 
 interface MenuActions {
   send(command: ShellCommand): void
@@ -46,19 +46,47 @@ interface MenuActions {
   openText(text: BundledText): void
   /** The repository, in the system browser. Takes no address: there is only one. */
   openSource(): void
-  /** Help › Check for Updates Now (M42 U8): one check, with the setting on or off, answered in the window. */
+  /** Help › Check for updates now (M42 U8): one check, with the setting on or off, answered in the window. */
   checkForUpdates(): void
 }
 
+/**
+ * What the window holds, as far as the menu greys out by it (M54 F7): an item
+ * that has nothing to act on is disabled rather than clicked into silence —
+ * Save, Save as… and Earlier copies with no document, Guide me with no ledger.
+ */
+export interface MenuState {
+  readonly document: boolean
+  readonly guide: boolean
+}
+
+export const NOTHING_OPEN: MenuState = { document: false, guide: false }
+
+/**
+ * A label with its `&` doubled: Windows and Linux read a single one as the
+ * mnemonic's marker, so `A & B.emd` would lose its ampersand and underline a space.
+ */
+export function menuText(text: string): string {
+  return text.replaceAll('&', '&&')
+}
+
+/**
+ * **Every label is the command's one name, in sentence case** (M54 F7, D-531) —
+ * the same words the palette and the title bar use, never the platform's Title
+ * Case: a person who learned *Save as…* in one place finds it by that name in
+ * the others. The roles carry labels for the same reason; their own are Title Case.
+ */
 export function buildMenuTemplate(
   platform: string,
   recents: readonly RecentDocument[],
   actions: MenuActions,
+  state: MenuState = NOTHING_OPEN,
 ): MenuItemConstructorOptions[] {
   const mac = platform === 'darwin'
+  const folders = recentFolders(recents)
 
   const openRecent: MenuItemConstructorOptions = {
-    label: 'Open Recent',
+    label: 'Open recent',
     // Disabled rather than hidden: an empty submenu that vanishes makes the
     // menu jump, and a greyed entry says "this exists, you have not used it".
     enabled: recents.length > 0,
@@ -67,16 +95,16 @@ export function buildMenuTemplate(
         ? [{ label: 'Nothing yet', enabled: false }]
         : [
             ...recents.map(
-              (entry): MenuItemConstructorOptions => ({
-                label: entry.name,
-                // The full path, because two years of `finances.emd` in
-                // different folders is the normal case, not the odd one.
-                toolTip: entry.path,
+              (entry, index): MenuItemConstructorOptions => ({
+                // The folder in the label, cut to the end that differs: two years of
+                // `finances.emd` in different folders is the normal case, not the odd
+                // one, and a Windows menu shows no tooltip to tell them apart (M54 F7).
+                label: menuText(`${entry.name} — ${folders[index] ?? ''}`),
                 click: () => actions.send({ kind: 'open-path', path: entry.path }),
               }),
             ),
             { type: 'separator' },
-            { label: 'Clear Menu', click: () => actions.clearRecents() },
+            { label: 'Clear recent documents', click: () => actions.clearRecents() },
           ],
   }
 
@@ -87,23 +115,32 @@ export function buildMenuTemplate(
       { label: 'Open…', accelerator: 'CmdOrCtrl+O', click: () => actions.send({ kind: 'open' }) },
       openRecent,
       { type: 'separator' },
-      { label: 'Save', accelerator: 'CmdOrCtrl+S', click: () => actions.send({ kind: 'save' }) },
       {
-        label: 'Save a Copy…',
+        label: 'Save',
+        accelerator: 'CmdOrCtrl+S',
+        enabled: state.document,
+        click: () => actions.send({ kind: 'save' }),
+      },
+      // Save as (D-531): a new file, and the window carries on in it — what every
+      // platform calls it, and what its dialog is titled.
+      {
+        label: 'Save as…',
         accelerator: 'CmdOrCtrl+Shift+S',
+        enabled: state.document,
         click: () => actions.send({ kind: 'save-as' }),
       },
       // M45 U4 (D-455): the copies taken before a write, in Emerald's own
       // folder, listed with Restore — what makes a copy there one a person finds.
       {
         label: 'Earlier copies of this document…',
+        enabled: state.document,
         click: () => actions.send({ kind: 'earlier-copies' }),
       },
       { type: 'separator' },
       // On macOS quitting lives in the app menu, and Close is the window verb.
       // Either way it goes through the window's `close`, which is where the
       // unsaved-work question is asked (D-128).
-      mac ? { role: 'close' } : { role: 'quit' },
+      mac ? { role: 'close', label: 'Close window' } : { role: 'quit', label: 'Quit' },
     ],
   }
 
@@ -112,13 +149,13 @@ export function buildMenuTemplate(
   const edit: MenuItemConstructorOptions = {
     label: '&Edit',
     submenu: [
-      { role: 'undo' },
-      { role: 'redo' },
+      { role: 'undo', label: 'Undo' },
+      { role: 'redo', label: 'Redo' },
       { type: 'separator' },
-      { role: 'cut' },
-      { role: 'copy' },
-      { role: 'paste' },
-      { role: 'selectAll' },
+      { role: 'cut', label: 'Cut' },
+      { role: 'copy', label: 'Copy' },
+      { role: 'paste', label: 'Paste' },
+      { role: 'selectAll', label: 'Select all' },
     ],
   }
 
@@ -126,14 +163,15 @@ export function buildMenuTemplate(
     label: '&View',
     submenu: [
       {
-        label: 'Command Palette…',
+        // The title bar's button is *Commands* (M54 F7): one name for the palette.
+        label: 'Commands…',
         accelerator: 'CmdOrCtrl+K',
-        // Shown, not registered — see Toggle Sidebar below.
+        // Shown, not registered — see Toggle the sidebar below.
         registerAccelerator: false,
         click: () => actions.send({ kind: 'command-palette' }),
       },
       {
-        label: 'Toggle Sidebar',
+        label: 'Toggle the sidebar',
         accelerator: 'CmdOrCtrl+B',
         // **Shown, not registered.** The page already binds this key — it has
         // to, because the browser build has no menu — and an accelerator
@@ -144,12 +182,12 @@ export function buildMenuTemplate(
         click: () => actions.send({ kind: 'toggle-sidebar' }),
       },
       { type: 'separator' },
-      { role: 'resetZoom' },
-      { role: 'zoomIn' },
-      { role: 'zoomOut' },
+      { role: 'resetZoom', label: 'Actual size' },
+      { role: 'zoomIn', label: 'Zoom in' },
+      { role: 'zoomOut', label: 'Zoom out' },
       { type: 'separator' },
-      { role: 'togglefullscreen' },
-      { role: 'toggleDevTools' },
+      { role: 'togglefullscreen', label: 'Toggle full screen' },
+      { role: 'toggleDevTools', label: 'Toggle developer tools' },
     ],
   }
 
@@ -158,15 +196,17 @@ export function buildMenuTemplate(
     // `role: 'help'` is what puts the search field in macOS's Help menu.
     role: 'help',
     submenu: [
-      { label: 'Guide me', click: () => actions.send({ kind: 'guide' }) },
+      // The guide walks the ledger's screens, so it is greyed where none is kept,
+      // as the palette leaves it out there.
+      { label: 'Guide me', enabled: state.guide, click: () => actions.send({ kind: 'guide' }) },
       { type: 'separator' },
       { label: 'License', click: () => actions.openText('license') },
-      { label: 'Third-Party Notices', click: () => actions.openText('notices') },
-      { label: 'Source Code', toolTip: 'Opens in your browser', click: () => actions.openSource() },
+      { label: 'Third-party notices', click: () => actions.openText('notices') },
+      { label: 'Source code', toolTip: 'Opens in your browser', click: () => actions.openSource() },
       { type: 'separator' },
       // M42 U8 (D-502): with the setting off too — pressing it is consent for that one check, and
       // the answer is the window's quiet notice, never a dialog.
-      { label: 'Check for Updates Now', click: () => actions.checkForUpdates() },
+      { label: 'Check for updates now', click: () => actions.checkForUpdates() },
       // On macOS the About is the app menu's first item, as every Mac app has it.
       ...(mac ? [] : ([{ label: 'About Emerald', click: () => actions.showAbout() }] as MenuItemConstructorOptions[])),
     ],

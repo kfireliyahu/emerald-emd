@@ -27,7 +27,7 @@ const COMMANDS: readonly Command[] = [
   command('Wealth · Savings', 'Savings'),
   command('Wealth · Deposit check', 'Deposit check'),
   command('Save'),
-  command('Save a copy…'),
+  command('Save as…'),
   command('Import a statement…', 'card bank xlsx csv upload open file'),
 ]
 

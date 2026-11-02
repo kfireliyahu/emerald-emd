@@ -96,7 +96,7 @@ function createFakeShell(open?: string): FakeShell {
     recents: (): Promise<readonly RecentDocument[]> => Promise.resolve([]),
     onCommand: (_listener: (command: ShellCommand) => void) => () => undefined,
     ready: () => undefined,
-    setUnsaved: () => undefined,
+    setState: () => undefined,
     closeWindow: () => undefined,
   }
   return shell

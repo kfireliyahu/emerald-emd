@@ -231,7 +231,7 @@ export function App() {
 
           {/* Inside `main` and outside nothing else: a screen that throws
               leaves the title bar and the sidebar working, which is what makes
-              "save a copy" a way out rather than a suggestion (D-116). */}
+              Save as a way out rather than a suggestion (D-116). */}
           <main className="min-h-0 flex-1">
             <ScreenBoundary>
               {mapper !== undefined && (

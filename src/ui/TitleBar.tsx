@@ -41,15 +41,19 @@ export function TitleBar() {
       // `app-drag` is what makes this a window handle, and only the shell gets
       // it: the double-click to maximise and the OS's snap gestures come with
       // it for free, and in a browser tab it would only stop text selecting.
+      //
+      // The platform's numbers — the bar's height, and the room its own buttons
+      // take — are measured, never chosen; where the platform takes none at the
+      // start, the inset is the step the ramp has for it (M54 F7).
       className={`flex shrink-0 items-center gap-3 border-b border-hairline bg-surface transition-opacity duration-[var(--duration-base)] ${
-        frame === undefined ? 'px-6 py-2' : 'app-drag'
+        frame === undefined ? 'px-6 py-2' : `app-drag ${frame.insetStart > 0 ? '' : 'ps-3'}`
       }`}
       style={
         frame === undefined
           ? {}
           : {
               height: frame.height,
-              paddingInlineStart: Math.max(frame.insetStart, 12),
+              ...(frame.insetStart > 0 ? { paddingInlineStart: frame.insetStart } : {}),
               paddingInlineEnd: frame.insetEnd,
             }
       }

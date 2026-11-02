@@ -6,6 +6,7 @@ import {
   decodeRecents,
   encodeRecents,
   loadRecents,
+  missingRecent,
   RECENT_LIMIT,
   saveRecents,
   withRecent,
@@ -124,5 +125,21 @@ describe('the file on disk', () => {
     expect(await loadRecents(file)).toEqual(list)
     // Readable by a person, because it is a list of their own file paths.
     expect((await readFile(file, 'utf8')).endsWith('\n')).toBe(true)
+  })
+})
+
+describe('a recent that is not there any more (M54 F7, D-532)', () => {
+  it('says so in one sentence, naming the file and its folder, each isolated', () => {
+    const gone = Object.assign(new Error("ENOENT: no such file or directory, open '/home/k/old/2025.emd'"), {
+      code: 'ENOENT',
+    })
+    const said = missingRecent(gone, '/home/k/old/2025.emd')
+    expect(said).toBeInstanceOf(Error)
+    expect((said as Error).message).toBe('\u20682025.emd\u2069 is no longer at \u2068/home/k/old\u2069.')
+  })
+
+  it('hands any other failure back as it was', () => {
+    const locked = Object.assign(new Error('EACCES'), { code: 'EACCES' })
+    expect(missingRecent(locked, '/home/k/2026.emd')).toBe(locked)
   })
 })

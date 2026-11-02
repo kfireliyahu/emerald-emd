@@ -94,7 +94,7 @@ function Failed({ failure, onRetry }: { failure: Error; onRetry: () => void }) {
           <strong className="font-medium text-ink">Your document is still open.</strong> This is a
           bug in one screen, not in your data —{' '}
           {isDirty
-            ? 'nothing since your last save has been lost, and saving a copy now keeps it.'
+            ? 'nothing since your last save has been lost, and Save as… keeps it in a new file now.'
             : 'and there is nothing unsaved to lose.'}
         </p>
       )}
@@ -106,7 +106,7 @@ function Failed({ failure, onRetry }: { failure: Error; onRetry: () => void }) {
         {/* Not in the demo (M33 U1): a visitor has no file to keep. */}
         {db !== undefined && !isDemo() && (
           <Button onClick={() => void saveCopyAs()} disabled={busy !== undefined}>
-            Save a copy…
+            Save as…
           </Button>
         )}
         <a

@@ -202,7 +202,7 @@ function useDiskConflictNotice(): Notice | undefined {
         </>
       ),
       actions: [
-        { label: 'Save a copy…', onClick: () => void saveCopyAs(), disabled: busy, lead: true },
+        { label: 'Save as…', onClick: () => void saveCopyAs(), disabled: busy, lead: true },
         { label: 'Dismiss', onClick: dismiss, disabled: busy, quiet: true },
       ],
     }
@@ -219,7 +219,7 @@ function useDiskConflictNotice(): Notice | undefined {
         </>
       ),
       actions: [
-        { label: 'Save a copy…', onClick: () => void saveCopyAs(), disabled: busy, lead: true },
+        { label: 'Save as…', onClick: () => void saveCopyAs(), disabled: busy, lead: true },
         { label: 'Discard mine, reload', onClick: () => void reloadFromDisk(), disabled: busy },
         {
           label: 'Overwrite the file',
@@ -309,7 +309,7 @@ function useKeptCopyNotice(): Notice | undefined {
  * "Another document is waiting to open, and this one has unsaved work."
  *
  * The shell can hand the app a document at any moment — a double-click while
- * the app is already running, the File menu's Open Recent, a second launch
+ * the app is already running, the File menu's Open recent, a second launch
  * (D-128). Opening replaces everything in the window, so when there is unsaved
  * work the arrival becomes a question instead of an event.
  */
@@ -396,7 +396,7 @@ function usePendingReplaceNotice(): Notice | undefined {
 }
 
 /**
- * **A newer Emerald, or the answer to Check for Updates Now** (M42 U8, D-502). The shell asks and
+ * **A newer Emerald, or the answer to Check for updates now** (M42 U8, D-502). The shell asks and
  * decides; this only says it. Download opens the release page in the browser, and Later hides it
  * until the next start or the next day's check. A scheduled check that finds nothing says nothing.
  *

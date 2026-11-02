@@ -21,7 +21,7 @@
  * `windowChrome.ts`, which the renderer lays its own bar out against.
  */
 
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { mkdir, readFile, rm, stat, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { dirname, join } from 'node:path'
@@ -55,6 +55,7 @@ import {
   type GenerateRequest,
   type RecentDocument,
   type ShellCommand,
+  type ShellDocumentState,
 } from './bridge.ts'
 import {
   createDocumentWatcher,
@@ -71,10 +72,10 @@ import {
   type DocumentWatcher,
 } from './documents.ts'
 import { openLinked, presentLinked, showLinked, type LinkedFileSystem } from './linkedFiles.ts'
-import { buildMenuTemplate } from './menu.ts'
+import { buildMenuTemplate, type MenuState } from './menu.ts'
 import { isAllowedDownloadRequest, isAllowedRequest, isAllowedUpdateRequest } from './network.ts'
 import { cancelGeneration, generate } from './generate.ts'
-import { loadRecents, saveRecents, withRecent, withoutRecent } from './recents.ts'
+import { isolate, loadRecents, missingRecent, saveRecents, withRecent, withoutRecent } from './recents.ts'
 import { detectRuntimes } from './runtimes.ts'
 import {
   automaticFrom,
@@ -90,7 +91,7 @@ import {
   type Updates,
 } from './updates.ts'
 import { createWindowsDownloader, QuietNsisUpdater, UPDATER_PARTITION } from './windowsUpdater.ts'
-import { titleBarOverlay, trafficLightPosition, usesControlsOverlay } from './windowChrome.ts'
+import { titleBarOverlay, trafficLightPosition, usesControlsOverlay, windowBackground } from './windowChrome.ts'
 
 /**
  * Set by `scripts/dev-desktop.mjs` and by nothing else. Present means the
@@ -211,6 +212,9 @@ function guardSession(): void {
  */
 const textWindows = new Map<BundledText, BrowserWindow>()
 
+/** A page that crashes again this soon after its reload is not reloaded again (M54 F7). */
+const CRASH_AGAIN_MS = 10_000
+
 /**
  * The document's window is the one that is not a text window. Everything that speaks to "the
  * window" — the menu's commands, the unsaved-work question, a second launch — means that one,
@@ -241,18 +245,67 @@ function openText(text: BundledText): void {
     height: 720,
     title,
     autoHideMenuBar: true,
+    backgroundColor: windowBackground(currentTheme()),
     // No preload: a page of text has no business with the bridge.
     webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, spellcheck: false },
   })
+  // **No menu of its own** (M54 F7): on Windows and Linux the menu is the window's, and the
+  // application menu here put New and Open… on keys that acted on the document's window behind
+  // it. Copy and Select all are the page's own keys and need none. macOS's one menu bar is the
+  // app's, and `fromMenu` brings the document's window forward before it acts.
+  if (process.platform !== 'darwin') window.removeMenu()
   // A text file has no <title>, and the page would otherwise rename the window to its URL.
   window.on('page-title-updated', (event) => event.preventDefault())
   window.on('closed', () => textWindows.delete(text))
+  window.webContents.on('did-finish-load', () => dressText(window))
   textWindows.set(text, window)
   void window.loadURL(`${APP_ORIGIN}/${file}`)
 }
 
 /**
- * Help → Source Code: the one address this app hands to anything outside itself, and only on a
+ * The theme the page last settled on (M54 F7). The preference lives in the page's localStorage,
+ * which the shell cannot read, so the page says it on every change (`WINDOW_CHANNELS.theme`);
+ * until it has, the system's.
+ */
+let pageTheme: 'light' | 'dark' | undefined
+
+function currentTheme(): 'light' | 'dark' {
+  return pageTheme ?? (nativeTheme.shouldUseDarkColors ? 'dark' : 'light')
+}
+
+/**
+ * **Help's text in the app's theme and type** (M54 F7), not the plain-text viewer's mono on the
+ * system's scheme: the app's own stylesheet from `dist/`, so every colour and size is a token and
+ * none is copied here, and the theme the page settled on as the page sets it, on `data-theme`.
+ */
+function dressText(window: BrowserWindow): void {
+  if (window.isDestroyed()) return
+  void window.webContents.insertCSS(textWindowCss())
+  void window.webContents.executeJavaScript(
+    `document.documentElement.dataset.theme = ${JSON.stringify(currentTheme())}`,
+  )
+}
+
+let textCss: string | undefined
+
+function textWindowCss(): string {
+  if (textCss !== undefined) return textCss
+  let sheet = ''
+  try {
+    const assets = join(RENDERER_ROOT, 'assets')
+    const found = readdirSync(assets).find((name) => /^index-.*\.css$/.test(name))
+    // Its fonts are named relative to the sheet, and a text window's page is one folder up.
+    if (found !== undefined) sheet = readFileSync(join(assets, found), 'utf8').replaceAll('url(./', 'url(/assets/')
+  } catch {
+    // A half-copied build still shows the text, in the viewer's own look.
+    sheet = ''
+  }
+  textCss = `${sheet}\npre { font: inherit; white-space: pre-wrap; margin: 0 auto; max-width: 80ch; padding: calc(var(--spacing) * 6); }`
+  return textCss
+}
+
+/**
+ * Help → Source code: the one address this app hands to anything outside itself, and only on a
  * click. It is a constant read from `package.json` (`about.ts`), never a URL from the renderer,
  * and it opens in the person's own browser — the page still reaches nothing (D-124).
  */
@@ -262,7 +315,7 @@ function openSource(): void {
 
 /**
  * **Updates, if you turn them on** (M42 U8, D-502) — the one request this app makes, and only on
- * the person's say: the setting, or a press of Help › Check for Updates Now.
+ * the person's say: the setting, or a press of Help › Check for updates now.
  *
  * It asks from **a session of its own**, held in memory, which nothing the page loads runs in: the
  * page's session above refuses the address with the setting on or off, and this one allows that
@@ -416,8 +469,12 @@ function serveDocuments(updates: Updates): void {
   let pendingOpen: string | undefined
   let listening = false
 
-  /** Pushed by the renderer, because the shell cannot see inside the document. */
-  let unsavedWork = false
+  /**
+   * Pushed by the renderer, because the shell cannot see inside the document: its name, whether
+   * there is unsaved work, and whether Guide me has a ledger to walk (M54 F7).
+   */
+  let held: ShellDocumentState = { unsaved: false, guide: false }
+  const menuState = (): MenuState => ({ document: held.name !== undefined, guide: held.guide })
 
   const watcher: DocumentWatcher = createDocumentWatcher(() => {
     for (const window of BrowserWindow.getAllWindows()) {
@@ -441,21 +498,45 @@ function serveDocuments(updates: Updates): void {
     window.webContents.send(DOCUMENT_CHANNELS.command, command)
   }
 
+  /**
+   * A command from the menu. On macOS the one menu bar is the app's, so a key pressed in a text
+   * window reaches it too: the document's window comes forward first, rather than being acted on
+   * out of sight behind the license (M54 F7).
+   */
+  function fromMenu(command: ShellCommand): void {
+    const focused = BrowserWindow.getFocusedWindow()
+    if (focused !== null && isTextWindow(focused)) documentWindows()[0]?.focus()
+    send(command)
+  }
+
   function refreshMenu(): void {
     Menu.setApplicationMenu(
       Menu.buildFromTemplate(
-        buildMenuTemplate(process.platform, recents, {
-          send,
-          clearRecents: () => void writeRecents([]),
-          // The page's About, not the native panel (M45 F3, D-457): it shows the folder of
-          // earlier copies, with a button to open it, which the panel cannot hold.
-          showAbout: () => send({ kind: 'about' }),
-          openText,
-          openSource,
-          checkForUpdates: () => void updates.checkNow(),
-        }),
+        buildMenuTemplate(
+          process.platform,
+          recents,
+          {
+            send: fromMenu,
+            clearRecents: () => void writeRecents([]),
+            // The page's About, not the native panel (M45 F3, D-457): it shows the folder of
+            // earlier copies, with a button to open it, which the panel cannot hold.
+            showAbout: () => fromMenu({ kind: 'about' }),
+            openText,
+            openSource,
+            checkForUpdates: () => void updates.checkNow(),
+          },
+          menuState(),
+        ),
       ),
     )
+  }
+
+  /** The page's word on what it holds; the menu is rebuilt only when what it greys out by moves. */
+  function hold(next: ShellDocumentState): void {
+    const before = menuState()
+    held = next
+    const after = menuState()
+    if (before.document !== after.document || before.guide !== after.guide) refreshMenu()
   }
 
   /** The one place recents change: the list, the menu and the file stay in step. */
@@ -512,6 +593,9 @@ function serveDocuments(updates: Updates): void {
     // Spread rather than an explicit `undefined`: `exactOptionalPropertyTypes`
     // is on, and an absent option is not the same as one set to nothing.
     const options = {
+      // The act's own name (D-531): Windows titles an untitled one Save As, under an item
+      // that said something else.
+      title: 'Save as',
       filters,
       ...(typeof suggestedName === 'string' ? { defaultPath: suggestedName } : {}),
     }
@@ -526,14 +610,19 @@ function serveDocuments(updates: Updates): void {
 
   ipcMain.handle(DOCUMENT_CHANNELS.read, async (_event, path: unknown) => {
     const file = granted(path)
+    let read: Awaited<ReturnType<typeof readDocument>>
     try {
-      return await readDocument(file)
+      read = await readDocument(file)
     } catch (error) {
       // A recent that is not there any more takes itself off the list rather
       // than sitting in the menu offering to fail again.
       void writeRecents(withoutRecent(recents, file))
-      throw error
+      throw missingRecent(error, file)
     }
+    // Opened from the list, it rises to the top of it, as a document picked from
+    // Open… does: the list is most recent first (M54 F7).
+    noteOpened(file)
+    return read
   })
 
   ipcMain.handle(DOCUMENT_CHANNELS.write, async (_event, path: unknown, bytes: unknown) => {
@@ -609,10 +698,10 @@ function serveDocuments(updates: Updates): void {
   )
 
   ipcMain.handle(DOCUMENT_CHANNELS.recents, () => recents)
-  // File › Open Recent › Clear Menu, from the palette (M46 U1): the same write the menu makes.
+  // File › Open recent › Clear recent documents, from the palette (M46 U1): the same write the menu makes.
   ipcMain.handle(DOCUMENT_CHANNELS.clearRecents, () => writeRecents([]))
 
-  // Help's License, Third-Party Notices and Source Code, from the palette (M46 U1).
+  // Help's License, Third-party notices and Source code, from the palette (M46 U1).
   // The page names which text, and only one of the two; the address is never the page's.
   ipcMain.handle(APP_CHANNELS.openText, (_event, text: unknown) => {
     if (text !== 'license' && text !== 'notices') throw new Error('No such text.')
@@ -627,8 +716,14 @@ function serveDocuments(updates: Updates): void {
     if (path !== undefined) send({ kind: 'open-path', path })
   })
 
-  ipcMain.on(DOCUMENT_CHANNELS.unsaved, (_event, value: unknown) => {
-    unsavedWork = value === true
+  ipcMain.on(DOCUMENT_CHANNELS.state, (_event, value: unknown) => {
+    const row = typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {}
+    const name = row['name']
+    hold({
+      ...(typeof name === 'string' && name !== '' ? { name } : {}),
+      unsaved: row['unsaved'] === true,
+      guide: row['guide'] === true,
+    })
   })
 
   ipcMain.on(DOCUMENT_CHANNELS.closeWindow, (event) => {
@@ -646,16 +741,27 @@ function serveDocuments(updates: Updates): void {
    */
   function guardClose(window: BrowserWindow): void {
     window.on('close', (event) => {
-      if (!unsavedWork || isTextWindow(window)) return
+      if (!held.unsaved || isTextWindow(window)) return
+      // A page that has gone holds nothing to save: what it had is the crash snapshot,
+      // which the page offers back when it opens. Asking would send Save to nobody,
+      // and the window would stay open on it (M54 F7).
+      if (window.webContents.isCrashed()) return
       event.preventDefault()
 
+      // **The question names the document, and says restart when it is one** (M54 F7):
+      // Install and restart closes the window through here too.
+      const name = isolate(held.name ?? 'this document')
       const choice = dialog.showMessageBoxSync(window, {
         type: 'warning',
-        buttons: ['Save', "Don't Save", 'Cancel'],
+        buttons: ['Save', "Don't save", 'Cancel'],
         defaultId: 0,
         cancelId: 2,
-        message: 'Save your changes before closing?',
-        detail: 'Everything since the last save is lost otherwise.',
+        message: installing
+          ? `Save your changes to ${name} before restarting?`
+          : `Save your changes to ${name} before closing?`,
+        detail: installing
+          ? 'Emerald restarts to install the update. Everything since the last save is lost otherwise.'
+          : 'Everything since the last save is lost otherwise.',
       })
 
       if (choice === 1) window.destroy()
@@ -727,16 +833,50 @@ function serveDocuments(updates: Updates): void {
 
   app.on('second-instance', (_event, argv) => openFromSystem(documentFromArguments(argv)))
 
+  /**
+   * **A page that crashes reloads** (M54 F7, D-532), and opens on the notice that
+   * offers back the unsaved work its crash snapshot kept — Restore, Discard, Not
+   * now — rather than leaving a blank window that says nothing. A second crash
+   * within `CRASH_AGAIN_MS` of that reload is not reloaded into a loop: it says
+   * so, once, and closing the window loses nothing the snapshot did not keep.
+   */
+  let reloadedAt = 0
+
+  function recover(window: BrowserWindow, reason: string): void {
+    if (reason === 'clean-exit' || window.isDestroyed()) return
+    listening = false
+    hold({ unsaved: false, guide: false })
+    const now = Date.now()
+    if (now - reloadedAt < CRASH_AGAIN_MS) {
+      void dialog.showMessageBox(window, {
+        type: 'error',
+        message: 'This window stopped working again.',
+        detail: 'Close it and open Emerald again: unsaved work is offered back when it opens.',
+      })
+      return
+    }
+    reloadedAt = now
+    window.webContents.reload()
+  }
+
   app.on('browser-window-created', (_event, window) => {
     guardClose(window)
-    // A reload — the dev loop's hot restart, or DevTools — throws away the
-    // subscription, and the page says so again when it comes back. A text
-    // window loading is not the page reloading (asked at the event: the window
-    // is not in `textWindows` until its constructor has returned).
-    window.webContents.on('did-start-loading', () => {
-      if (isTextWindow(window)) return
+    // A reload — the dev loop's hot restart, DevTools, or a crash's — throws
+    // away the subscription, and the page says so again when it comes back. A
+    // text window loading is not the page reloading (asked at the event: the
+    // window is not in `textWindows` until its constructor has returned).
+    //
+    // **Only a new document, never a move within one** (M54 F7): this was
+    // `did-start-loading`, which Electron also fires for every `#/` route the
+    // page goes to — so the first click in the rail stopped the File menu
+    // reaching the page at all, and greyed it as though nothing were open.
+    window.webContents.on('did-start-navigation', (details) => {
+      if (isTextWindow(window) || !details.isMainFrame || details.isSameDocument) return
       listening = false
-      unsavedWork = false
+      hold({ unsaved: false, guide: false })
+    })
+    window.webContents.on('render-process-gone', (_gone, details) => {
+      if (!isTextWindow(window)) recover(window, details.reason)
     })
   })
 
@@ -814,8 +954,15 @@ function serveFiles(): void {
  */
 function serveWindow(): void {
   ipcMain.on(WINDOW_CHANNELS.theme, (event, value: unknown) => {
-    if (!usesControlsOverlay(process.platform)) return
     if (value !== 'light' && value !== 'dark') return
+    pageTheme = value
+    // Help's text windows follow the page's theme, not the system's (M54 F7).
+    for (const window of textWindows.values()) {
+      if (window.isDestroyed()) continue
+      window.setBackgroundColor(windowBackground(value))
+      dressText(window)
+    }
+    if (!usesControlsOverlay(process.platform)) return
     BrowserWindow.fromWebContents(event.sender)?.setTitleBarOverlay(titleBarOverlay(value))
   })
 }
@@ -877,7 +1024,7 @@ function createWindow(): void {
     title: 'Emerald',
     ...frameOptions(),
     // The File menu exists now (D-128), and on Windows and Linux it lives
-    // behind Alt: the accelerators and Open Recent are there for whoever looks,
+    // behind Alt: the accelerators and Open recent are there for whoever looks,
     // and the window keeps the clean edge the design language asks for. It stays
     // hidden now that the palette has a button on every screen (M46 U1, D-458):
     // every item in the menu is a palette command too, so nothing is behind Alt only.
@@ -890,9 +1037,10 @@ function createWindow(): void {
     show: false,
     // The renderer decides the theme from localStorage before its first paint
     // (`initTheme` in `src/main.tsx`); the shell cannot read that, so it
-    // follows the system, and the two agree in every case but a deliberate
-    // override.
-    backgroundColor: nativeTheme.shouldUseDarkColors ? '#0b0b0c' : '#ffffff',
+    // follows the system — or the page's word, once a page has said it — and
+    // the two agree in every case but a deliberate override. The colour is
+    // `--color-background`, held to the tokens by `windowChrome.test.ts`.
+    backgroundColor: windowBackground(currentTheme()),
     webPreferences: {
       preload: join(__dirname, 'preload.cjs'),
       contextIsolation: true,
@@ -939,7 +1087,7 @@ if (!app.requestSingleInstanceLock()) {
     app.setAboutPanelOptions(aboutPanelOptions(app.getVersion()))
     guardSession()
     serveRenderer()
-    // Builds the menu as well: File is where Open Recent lives, and D-126's
+    // Builds the menu as well: File is where Open recent lives, and D-126's
     // `setApplicationMenu(null)` was about the *default* menu, not about
     // having one.
     serveDocuments(serveUpdates())

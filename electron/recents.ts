@@ -18,7 +18,7 @@
  */
 
 import { readFile, writeFile } from 'node:fs/promises'
-import { basename, resolve } from 'node:path'
+import { basename, dirname, resolve } from 'node:path'
 
 import type { RecentDocument } from './bridge.ts'
 
@@ -50,6 +50,23 @@ export function withoutRecent(
 ): RecentDocument[] {
   const full = resolve(path)
   return list.filter((entry) => resolve(entry.path) !== full)
+}
+
+/**
+ * **A document that is not where the list remembers it, said in one sentence**
+ * (M54 F7, D-532): `<name> is no longer at <folder>.` rather than the file
+ * system's ENOENT behind Electron's "Error invoking remote method". The name and
+ * the folder are each isolated (FSI…PDI), since either may be Hebrew. Any other
+ * failure is handed back as it was.
+ */
+export function missingRecent(error: unknown, path: string): unknown {
+  if (!(error instanceof Error) || (error as NodeJS.ErrnoException).code !== 'ENOENT') return error
+  return new Error(`${isolate(basename(path))} is no longer at ${isolate(dirname(path))}.`)
+}
+
+/** Text a sentence carries that may run right to left: a name, a folder. */
+export function isolate(text: string): string {
+  return `\u2068${text}\u2069`
 }
 
 /**

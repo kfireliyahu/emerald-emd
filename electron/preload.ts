@@ -34,6 +34,7 @@ import {
   type RecentDocument,
   type RuntimeProbe,
   type ShellCommand,
+  type ShellDocumentState,
   type UpdateState,
 } from './bridge.ts'
 import { windowChrome } from './windowChrome.ts'
@@ -73,8 +74,8 @@ const documents = Object.freeze({
     ipcRenderer.send(DOCUMENT_CHANNELS.ready)
   },
 
-  setUnsaved: (unsaved: boolean): void => {
-    ipcRenderer.send(DOCUMENT_CHANNELS.unsaved, unsaved)
+  setState: (state: ShellDocumentState): void => {
+    ipcRenderer.send(DOCUMENT_CHANNELS.state, state)
   },
 
   closeWindow: (): void => {
