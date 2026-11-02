@@ -1,5 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { readPreference, writePreference } from '@/data/runtime/preference.ts'
+import { Bidi } from '@/ui/Bidi.tsx'
+import { reducedMotion } from '@/ui/motion/motion.ts'
 import type { DemoHandle } from '../contract.ts'
 import { messageBetween, resetMessage, tell } from './embed.ts'
 import { CROP_SCALE, cropAt, layoutOf } from './layout.ts'
@@ -85,7 +87,12 @@ export function Frame({
   const player = useMemo(
     () =>
       new TourPlayer(steps, stageOf(iframe), {
-        reduced: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+        // Asked at the moment a motion would start, never once at mount
+        // (*Reduced motion runs none of it*): the visitor may ask the OS for
+        // less motion while the tour plays (M54 U8).
+        get reduced() {
+          return reducedMotion()
+        },
         speed: startingSpeed(chosen.current, layoutOf(size.width, size.height, false).movie),
       }),
     // The first layout's width decides the starting speed; the effect below follows it after.
@@ -172,8 +179,7 @@ export function Frame({
       ringElement.classList.add('gone')
       return
     }
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    const travel = reduced ? 0 : travelAt(player.snapshot().speed)
+    const travel = reducedMotion() ? 0 : travelAt(player.snapshot().speed)
     const from = ringAt.current
     const started = performance.now()
     let id = 0
@@ -465,7 +471,7 @@ function Chat({ lines, width }: { lines: readonly ChatLine[]; width: number }) {
         {lines.map((line, index) => (
           <li key={line.at} className={`tour-line ${line.from} ${index === lines.length - 1 ? 'new' : 'was'}`}>
             <span className="who">{WHO[line.from]}</span>
-            {line.chat}
+            <Bidi>{line.chat}</Bidi>
             {index === lines.length - 1 && <Drawn />}
           </li>
         ))}
@@ -487,7 +493,7 @@ function ChatCard({ line }: { line: ChatLine | undefined }) {
         <span className="who">
           {WHO[line.from]} · written for this tour
         </span>
-        {line.chat}
+        <Bidi>{line.chat}</Bidi>
         <Drawn />
       </p>
     </aside>
@@ -533,7 +539,7 @@ function Crossfade({ text, reserve }: { text: string; reserve?: readonly string[
     <span className="tour-fade">
       {reserve?.map((each) => (
         <span key={`reserve-${each}`} className="reserve" aria-hidden>
-          {each}
+          <Bidi>{each}</Bidi>
         </span>
       ))}
       {shown.was !== undefined && (
@@ -543,11 +549,11 @@ function Crossfade({ text, reserve }: { text: string; reserve?: readonly string[
           aria-hidden
           onAnimationEnd={() => setShown((then) => (then.turn === shown.turn ? { ...then, was: undefined } : then))}
         >
-          {shown.was}
+          <Bidi>{shown.was}</Bidi>
         </span>
       )}
       <span key={`now-${String(shown.turn)}`} className={shown.turn > 0 ? 'in' : undefined}>
-        {shown.now}
+        <Bidi>{shown.now}</Bidi>
       </span>
     </span>
   )

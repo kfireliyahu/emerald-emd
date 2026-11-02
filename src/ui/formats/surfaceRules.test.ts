@@ -81,6 +81,7 @@ const REVIEWED = [
   'src/ui/screens/Export.tsx',
   'src/ui/screens/Section.tsx',
   'src/ui/home/WaitingList.tsx',
+  'src/demo/tour/Frame.tsx',
   'src/ui/home/parts.tsx',
 ]
 
@@ -92,7 +93,7 @@ const REVIEWED = [
  * truncate">` in a `flex min-w-0` box), never its wrapper's:
  * `src/ui/bidiTruncation.test.ts` holds that half.
  */
-const DOCUMENT_STRINGS = ['documentName', 'fileName(pendingOpen)', 'child.label', 'child.group', 'section.label', 'format.title', 'command.label']
+const DOCUMENT_STRINGS = ['documentName', 'fileName(pendingOpen)', 'child.label', 'child.group', 'section.label', 'format.title', 'command.label', 'line.chat', 'shown.now', 'shown.was']
 
 const RAMP_SIZES = ['12', '14', '16', '20', '24', '40']
 
@@ -236,5 +237,39 @@ describe('an earlier copy keeps its label’s start', () => {
   it('truncates the Bidi span itself', () => {
     const copies = readFileSync('src/ui/EarlierCopies.tsx', 'utf8')
     expect(copies).toContain('<Bidi className="min-w-0 truncate">{copy.before}</Bidi>')
+  })
+})
+
+describe('the tour sizes its type from the ramp', () => {
+  // *Every value is a token*: frame.css wrote 12, 14 and 20px where the ramp has
+  // `--text-caption`, `--text-body` and `--text-secondary-number` (M54 U8). Its 11, 13
+  // and 17px have no step, and are a review entry.
+  it('names the ramp’s step wherever the ramp has the size', () => {
+    const frame = readFileSync('src/demo/tour/frame.css', 'utf8')
+    const literal = new RegExp(`font-size:\\s*(${RAMP_SIZES.join('|')})px`, 'g')
+    expect(frame.match(literal) ?? []).toEqual([])
+  })
+})
+
+describe('the tour asks for reduced motion when it moves', () => {
+  // *Reduced motion runs none of it*: the player read the OS once, when the frame
+  // mounted, so asking for less motion mid-tour left the ring travelling and the
+  // typing typed (M54 U8). It is a getter now, read at each travel and each type.
+  it('reads the preference at the moment, never once at mount', () => {
+    const frame = readFileSync('src/demo/tour/Frame.tsx', 'utf8')
+    expect(frame).toMatch(/get reduced\(\) \{\s*return reducedMotion\(\)/)
+    expect(frame).not.toMatch(/reduced: window\.matchMedia/)
+  })
+})
+
+describe('the tour’s play button casts no shadow', () => {
+  // *No gradients, no shadows*: `--shadow-pop` belongs to the rooms that float, and
+  // Watch the tour is a control (M54 U8). The receipt's and the chat card's shadows
+  // are a question for the maintainer, recorded.
+  it('keeps --shadow-pop off .tour-play', () => {
+    const frame = readFileSync('src/demo/tour/frame.css', 'utf8')
+    const play = /\n\.tour-play \{([^}]*)\}/.exec(frame)?.[1] ?? ''
+    expect(play).toContain('background: var(--color-accent)')
+    expect(play).not.toMatch(/box-shadow/)
   })
 })
