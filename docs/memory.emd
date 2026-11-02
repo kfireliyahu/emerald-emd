@@ -7211,7 +7211,7 @@ state: fault
 ### Let any tour lose its way (timesheet 6/6 above), then read the strip.
 unit: M54 U8
 should: One plain sentence that says what happened and points at Watch or Reset, with no anchor ids (An empty state is one sentence; Nielsen 9, recover from errors). The wording is the maintainer's.
-breaks: The strip shows the internal anchor in negative, 'Step 26: nothing on the screen is "field-end".', or 'The tour stopped: Error: …' for an unexpected error; nothing says what to do next, and the line stays up after the visitor changes the document. Verdict 2026-11-02 (D-531): fault; a unit drafts the sentence, the maintainer picks. Owned by M54 F12.
+breaks: The strip shows the internal anchor in negative, 'Step 26: nothing on the screen is "field-end".', or 'The tour stopped: Error: …' for an unexpected error; nothing says what to do next, and the line stays up after the visitor changes the document. Verdict 2026-11-02 (D-531): fault; a unit drafts the sentence, the maintainer picks. Owned by M54 F12. Fixed in M54 F12 (7e63cc0).
 state: fault
 
 ### Link to a row whose name is not unique (tasks, study periods)
@@ -7366,7 +7366,7 @@ state: accepted
 ### Open /tour.html?tour=custom (no autoplay) and look at 1/5, 'Here is the card statement. One of these is the grocery store.'; then let it loop, or press Reset, and time 1/5. Also development 1/4.
 unit: M54 U8
 should: The statement is on screen while the caption says it, and the outlined row is held long enough to read (the tour_step contract: a caption says what is happening).
-breaks: The held first frame shows the empty Dashboard ('Nothing on this dashboard yet.'); on a loop or Reset the Formats list stays ~4.8 s, and the statement with its outlined CORNER MARKET row appears only ~1.6 s before 2/5 replaces the caption. development 1/4 also opens on the empty dashboard. Verdict 2026-11-02 (D-531): fault; a unit fixes the timing and drafts any caption change for the maintainer to pick. Owned by M54 F12.
+breaks: The held first frame shows the empty Dashboard ('Nothing on this dashboard yet.'); on a loop or Reset the Formats list stays ~4.8 s, and the statement with its outlined CORNER MARKET row appears only ~1.6 s before 2/5 replaces the caption. development 1/4 also opens on the empty dashboard. Verdict 2026-11-02 (D-531): fault; a unit fixes the timing and drafts any caption change for the maintainer to pick. Owned by M54 F12. Fixed in M54 F12 (7e63cc0).
 state: fault
 
 ### Open /tour.html?tour=ledger (no autoplay) and press Tab from the top.
@@ -7818,25 +7818,25 @@ state: fault
 ### Watch /tour.html?tour=development to 3/4, 'The conclusion is written down, beside the decision it kept.', through to the end of the scene.
 unit: M54 U8
 should: The caption describes what is shown for the whole scene (the tour_step contract); that may need a caption row of its own, which is the maintainer's wording.
-breaks: For ~8 s of the scene's second half the screen has left the Decision sheet for the Roadmap, outlining milestone M4 while its two units land; only the chat line ('And the work: milestone M4…') says so. Verdict 2026-11-02 (D-531): fault; a unit drafts a caption row of its own, the maintainer picks. Owned by M54 F12.
+breaks: For ~8 s of the scene's second half the screen has left the Decision sheet for the Roadmap, outlining milestone M4 while its two units land; only the chat line ('And the work: milestone M4…') says so. Verdict 2026-11-02 (D-531): fault; a unit drafts a caption row of its own, the maintainer picks. Owned by M54 F12. Fixed in M54 F12 (7e63cc0).
 state: fault
 
 ### Watch /tour.html?tour=timesheet at 2/6, 'The model writes the timesheet down as a format of its own.'
 unit: M54 U8
 should: The screen shows the format being made while the caption says it (the tour_step contract).
-breaks: For ~8.4 s there is no ring and no outline and the screen stays on Paychecks; the new format is ringed in the sidebar only at the scene's end. Verdict 2026-11-02 (D-531): fault; a unit shows the format being made and drafts any caption change for the maintainer to pick. Owned by M54 F12.
+breaks: For ~8.4 s there is no ring and no outline and the screen stays on Paychecks; the new format is ringed in the sidebar only at the scene's end. Verdict 2026-11-02 (D-531): fault; a unit shows the format being made and drafts any caption change for the maintainer to pick. Owned by M54 F12. Fixed in M54 F12 (7e63cc0).
 state: fault
 
 ### Watch /tour.html?tour=timesheet at 3/6, 'Now the days, from the paper. It has no end time for the 14th.'
 unit: M54 U8
 should: The paper is shown beside the app, as custom's receipt is (a beside picture is the paper being typed in), or the caption does not point at something absent.
-breaks: The row has no beside, so no paper is shown and the visitor never sees that the 14th has no end time. Verdict 2026-11-02 (D-531): fault; a unit adds the paper beside it, or drafts a caption for the maintainer to pick. Owned by M54 F12.
+breaks: The row has no beside, so no paper is shown and the visitor never sees that the 14th has no end time. Verdict 2026-11-02 (D-531): fault; a unit adds the paper beside it, or drafts a caption for the maintainer to pick. Owned by M54 F12. Fixed in M54 F12 (7e63cc0).
 state: fault
 
 ### Watch custom 4/5 in dark, and again at 1024x720.
 unit: M54 U8
 should: The paper is legible at a desktop width (the caption asks to 'type the receipt in from the paper'), and dark mode treats it on purpose (Dark mode is not an inversion).
-breaks: In dark it is the same bright white light-mode PNG, where other demo images have -dark versions; at 1024x720 the column is 193px and its figures (Bread 12.00, TOTAL ILS 84.00) are ~6px tall. The img has no width/height attributes. Verdict 2026-11-02 (D-531): fault — a dark version, legible at a desktop width, with dimensions. Owned by M54 F12.
+breaks: In dark it is the same bright white light-mode PNG, where other demo images have -dark versions; at 1024x720 the column is 193px and its figures (Bread 12.00, TOTAL ILS 84.00) are ~6px tall. The img has no width/height attributes. Verdict 2026-11-02 (D-531): fault — a dark version, legible at a desktop width, with dimensions. Owned by M54 F12. Fixed in M54 F12 (7e63cc0).
 state: fault
 
 ### Watch the ring travel, the crop's pan, the outline drawing round and the dots' progress line in any tour.
@@ -14993,11 +14993,17 @@ report: M54 F11 built at 0e36b92; docs:check green (0 errors, 7 standing warning
 milestone: M54
 scope: tour
 title: The tour's scenes: what is on screen matches the caption, the paper beside it, a dark receipt, and drafts of its words (STOP)
-state: planned
-brief: M54 fix unit (D-531, D-532). YOUR ROWS, exactly these: `format_rows review_entry search:"Owned by M54 F12." columns:[unit, do, should, breaks]` — 6 rows; the phrases below say what each asks., after F11. Rows (`format_rows review_entry match:{unit:"M54 U8", state:fault} columns:[do, should, breaks]`) by their breaks: 'For ~8.4 s there is no ring' (timesheet 2/6: the format seen being made while the caption says so); 'For ~8 s of the scene's second half' (development 3/4); 'The held first frame shows the empty Dashboard' (custom 1/5 and development 1/4: the statement on screen while the caption says it, held long enough to read); 'The row has no beside' (timesheet 3/6: the paper beside it); 'The strip shows the internal anchor in negative' (lost way: no anchor ids, not negative, points at Watch or Reset, clears when the visitor changes the document); 'In dark it is the same bright white' (the receipt: a dark version, legible at 1024 wide, width and height on the img). Fix timing, pictures and behaviour; WORDS are the maintainer's: any caption that must change, a caption row of its own for development 3/4, and the lost-way sentence are drafted in docs/drafts/m54-f12-tour-words.md (the current words quoted, two or three options each), committed, and the unit stops for the pick; then the words go into the tour_step rows and the drafts file is deleted. The tours' names are F9's. Tests: related, typecheck, privacy, `npm run check:tours` (mandatory). Land after the words: 'Fixed in M54 F12 (<commit>).' on each row's breaks, state left `fault` (D-532). MAINTAINER'S EYE: the driver stops after the drafts for the pick, and after the words go in for a last watch of the four tours.
-files: fixtures/synthetic/demo/ (tour.format.md, tour_step.format.md and the tour rows; receipt.png and a dark version), scripts/make-demo-document.mjs, src/demo/tour/rows.ts, docs/drafts/m54-f12-tour-words.md (new, deleted at the end)
+landed: 2026-11-02
+state: built
+brief: "M54 fix unit (D-531, D-532). YOUR ROWS, exactly these: `format_rows review_entry search:\"Owned by M54 F12.\" columns:[unit, do, should, breaks]` — 6 rows; the phrases below say what each asks., after F11. Rows (`format_rows review_entry match:{unit:\"M54 U8\", state:fault} columns:[do, should, breaks]`) by their breaks: 'For ~8.4 s there is no ring' (timesheet 2/6: the format seen being made while the caption says so); 'For ~8 s of the scene's second half' (development 3/4); 'The held first frame shows the empty Dashboard' (custom 1/5 and development 1/4: the statement on screen while the caption says it, held long enough to read); 'The row has no beside' (timesheet 3/6: the paper beside it); 'The strip shows the internal anchor in negative' (lost way: no anchor ids, not negative, points at Watch or Reset, clears when the visitor changes the document); 'In dark it is the same bright white' (the receipt: a dark version, legible at 1024 wide, width and height on the img). Fix timing, pictures and behaviour; WORDS are the maintainer's: any caption that must change, a caption row of its own for development 3/4, and the lost-way sentence are drafted in docs/drafts/m54-f12-tour-words.md (the current words quoted, two or three options each), committed, and the unit stops for the pick; then the words go into the tour_step rows and the drafts file is deleted. The tours' names are F9's. Tests: related, typecheck, privacy, `npm run check:tours` (mandatory). Land after the words: 'Fixed in M54 F12 (<commit>).' on each row's breaks, state left `fault` (D-532). MAINTAINER'S EYE: the driver stops after the drafts for the pick, and after the words go in for a last watch of the four tours.\nMaintainer, 2026-11-02: All the A drafts."
+files: fixtures/synthetic/demo/tour_step.format.md, fixtures/synthetic/demo/receipt.png + receipt-dark.png + receipt.json, fixtures/synthetic/demo/timesheet.png + timesheet-dark.png + timesheet.json, scripts/make-demo-document.mjs, scripts/make-demo-receipt.cjs, src/demo/tour/Frame.tsx, src/demo/tour/frame.css, src/demo/tour/layout.ts, src/demo/tour/player.ts, src/demo/tour/rows.test.ts, src/demo/tour/seen.test.ts, src/ui/screens/DeclaredFormats.tsx; docs/drafts/m54-f12-tour-words.md (made in a57034b, deleted in 7e63cc0)
 blocks: ["M54 F11"]
+taken_by: run-milestone driver
+started: 2026-11-02
+branch: main
+commit: 7e63cc0
 paths: "fixtures/synthetic/demo/\nscripts/make-demo-document.mjs\nsrc/demo/tour/rows.ts\ndocs/drafts/m54-f12-tour-words.md"
+report: M54 F12, the tours' scenes. Part 1 (e938398): what is on screen matches the caption - the held first frame plays a tour's leading rail click so custom opens on the statement with CORNER MARKET outlined and development on the roadmap; a caption whose scene outlines later is read at that outline; the timesheet's format is seen arriving and its sheet opens; the paper timesheet beside 3/6 shows the 14th with no End; the receipt has a dark version, legible at 1024, with width and height; a lost tour speaks in the caption's ink, not negative, and clears when the visitor changes the document. Drafts (a57034b) for the words. Part 2 (7e63cc0), the maintainer's verdict 2026-11-02 'All the A drafts': the development tour gets a caption row of its own for the click to the Roadmap, 'The work goes on the roadmap: milestone M4, in two units.', so it is five dots (rows.test 'is five captions'); the lost-way line is one constant in Frame.tsx, 'The tour lost its place. Watch picks it up again, and Reset starts it over.', the raw detail kept in console.error; every other draft was A, keep it. Drafts file deleted. Checks: npm run check:tours green (all four tours at both sizes, the page, nothing leaves the page); src/demo/tour tests, privacy, surfaceRules (610 passed); typecheck; docs:check 0 errors. Preview on 4185: development plays 1/5..5/5, 4/5 stays up over the Roadmap while M4 and its units arrive; a forced lost step 8 shows the constant and logs 'Step 8: nothing on the screen is "line-M4 U1"' to the console. Everything went in as written.
 
 ### M54 F13
 milestone: M54
