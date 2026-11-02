@@ -60,6 +60,16 @@ export interface TourSnapshot {
   readonly highlight: HTMLElement | undefined
   /** The visitor's speed: every hold is divided by it, reading and actions alike. */
   readonly speed: number
+  /**
+   * **Paused** (M54 F11, D-532): the visitor pressed Pause. The scene holds
+   * where it is — before a row's next motion, or mid-hold with what is left of
+   * the hold kept — until they press it again. Try it lets go of it.
+   */
+  readonly paused: boolean
+  /** The ring's anchor is a box a `say` row names, not one it acts on: the ring rests beside its label (M54 F11). */
+  readonly names: boolean
+  /** While catching up: the scene a dot jumped to, so the strip says where it is going; `undefined` for a start or a Watch (M54 F11). */
+  readonly going: number | undefined
 }
 
 /**
@@ -153,7 +163,7 @@ export type TourCheck =
  * ring on `target` and `highlight` outlined, is the ring off what a visitor
  * sees? What is wrong, or `undefined`.
  */
-export type RingCheck = (target: HTMLElement, highlight: HTMLElement | undefined) => string | undefined
+export type RingCheck = (target: HTMLElement, highlight: HTMLElement | undefined, names: boolean) => string | undefined
 
 /** The ring's point outside what the frame shows, found by the check (M33 F4). */
 class RingOutside extends Error {
@@ -177,6 +187,9 @@ export class TourPlayer {
     lost: undefined,
     highlight: undefined,
     speed: 1,
+    paused: false,
+    names: false,
+    going: undefined,
   }
   private readonly listeners = new Set<Listener>()
   /** Every replay takes a new generation; an older one's next await throws. */
@@ -200,8 +213,8 @@ export class TourPlayer {
    * plays as it always did.
    */
   private seen = true
-  /** When it was last unseen, while it is: the caption's reading starts again from there. */
-  private unseenAt = 0
+  /** When it was last held — unseen or paused — while it is: the caption's reading starts again from there. */
+  private heldAt = 0
   /** Holds and rows waiting on `seen`, woken when it changes or a new generation starts. */
   private readonly waiting = new Set<() => void>()
 
@@ -222,11 +235,34 @@ export class TourPlayer {
    */
   setSeen(seen: boolean): void {
     if (seen === this.seen) return
+    const was = this.held()
     this.seen = seen
+    this.heldChanged(was)
+  }
+
+  /**
+   * **Pause, and Play again** (M54 F11, D-532): the same stop as an unseen
+   * frame's — nothing of the row moves, and a hold keeps what is left of it.
+   * A dot or Reset while paused goes there and holds at the scene's start.
+   */
+  pause(paused: boolean): void {
+    if (paused === this.state.paused) return
+    const was = this.held()
+    this.set({ paused })
+    this.heldChanged(was)
+  }
+
+  /** Unseen, or paused: the tour stands still. */
+  private held(): boolean {
+    return !this.seen || this.state.paused
+  }
+
+  private heldChanged(was: boolean): void {
     const now = performance.now()
-    if (!seen) this.unseenAt = now
-    // Nobody read the caption while nobody saw it.
-    else this.shown = { ...this.shown, at: this.shown.at + (now - this.unseenAt) }
+    if (this.held() === was) return
+    if (!was) this.heldAt = now
+    // Nobody read the caption while it stood still.
+    else this.shown = { ...this.shown, at: this.shown.at + (now - this.heldAt) }
     this.wake()
   }
 
@@ -248,7 +284,7 @@ export class TourPlayer {
    */
   wait(): void {
     this.next()
-    this.set({ mode: 'ready', step: 0, scene: 0, target: undefined, highlight: undefined, lost: undefined })
+    this.set({ mode: 'ready', step: 0, scene: 0, target: undefined, highlight: undefined, lost: undefined, paused: false })
   }
 
   /** From the first row. Also Reset, from either mode. */
@@ -259,7 +295,7 @@ export class TourPlayer {
   /** A dot: the scene's first row, fast-forwarded to. */
   jump(scene: number): void {
     const target = this.scenes[scene]
-    if (target !== undefined) void this.replay(target.first)
+    if (target !== undefined) void this.replay(target.first, scene)
   }
 
   /** Try it, or a click in the app while it plays (P4). */
@@ -267,7 +303,7 @@ export class TourPlayer {
     if (this.state.mode === 'try') return
     this.next()
     this.fresh = false
-    this.set({ mode: 'try', changed: false, target: undefined, highlight: undefined, lost: undefined })
+    this.set({ mode: 'try', changed: false, target: undefined, highlight: undefined, lost: undefined, paused: false })
   }
 
   /** Watch, after Try it: the bytes again, and back to the scene it had reached. From `ready`, the start. */
@@ -309,9 +345,9 @@ export class TourPlayer {
     })
   }
 
-  /** Until the frame is seen; throws if the generation moves on first. */
-  private async untilSeen(generation: number): Promise<void> {
-    while (!this.seen) {
+  /** Until the frame is seen and not paused; throws if the generation moves on first. */
+  private async untilShown(generation: number): Promise<void> {
+    while (this.held()) {
       await this.change()
       if (generation !== this.generation) throw new TourCancelled()
     }
@@ -371,7 +407,7 @@ export class TourPlayer {
     }
   }
 
-  private async replay(from: number): Promise<void> {
+  private async replay(from: number, going?: number): Promise<void> {
     const generation = this.next()
     const live = (): void => {
       if (generation !== this.generation) throw new TourCancelled()
@@ -379,7 +415,7 @@ export class TourPlayer {
     try {
       // The first play shows its first caption while the app opens; every
       // other start says the document is being put back.
-      if (!this.fresh) this.set({ mode: 'catching-up', target: undefined, highlight: undefined, lost: undefined, changed: false })
+      this.set(this.fresh ? { going } : { mode: 'catching-up', target: undefined, highlight: undefined, lost: undefined, changed: false, going })
       const handle = await this.stage.handle()
       live()
       if (this.unsubscribe === undefined) {
@@ -389,7 +425,8 @@ export class TourPlayer {
       }
       for (let at = from; ; at = 0) {
         if (!this.fresh || at !== 0) {
-          this.set({ mode: 'catching-up', target: undefined, highlight: undefined, lost: undefined, changed: false })
+          // The loop's start over is a start, not the dot it began from.
+          this.set({ mode: 'catching-up', target: undefined, highlight: undefined, lost: undefined, changed: false, going: at === 0 ? undefined : going })
           await handle.reopen()
           live()
         }
@@ -440,7 +477,7 @@ export class TourPlayer {
     // scene (the paper beside it) before the row acts.
     this.set(fast ? { step: index, scene } : { mode: 'watch', step: index, scene })
     // Nothing of the row moves while the frame is unseen (M42 F1).
-    if (!fast) await this.untilSeen(generation)
+    if (!fast) await this.untilShown(generation)
     // A row that starts a scene and acts: the ring sets off under the caption
     // at once, and the caption is read before the first click or keystroke (M33
     // F1). A row that outlines what its caption is about acts first: the action
@@ -470,14 +507,14 @@ export class TourPlayer {
         live()
       }
       if (!fast) {
-        this.set({ target: element })
+        this.set({ target: element, names: saying })
         if (!this.motion.reduced) await this.hold(PACE.travel, generation)
       } else if (this.checking) {
-        this.set({ target: element })
-        this.ringSeen(index, element)
+        this.set({ target: element, names: saying })
+        this.ringSeen(index, element, saying)
       }
     } else if (!fast || this.checking) {
-      this.set({ target: undefined })
+      this.set({ target: undefined, names: false })
     }
     if (reads) {
       await this.hold(this.unread(Math.min(reading, PACE.read)), generation)
@@ -539,7 +576,7 @@ export class TourPlayer {
       if (!fast) this.set({ highlight })
       else if (this.checking) {
         this.set({ highlight })
-        if (element?.isConnected === true) this.ringSeen(index, element)
+        if (element?.isConnected === true) this.ringSeen(index, element, this.state.names)
       }
     }
     // The check's: an outline held into this row is over a box still on the
@@ -557,8 +594,8 @@ export class TourPlayer {
   }
 
   /** The check's: the ring on `element`, with this scene's outline, is where a visitor sees it, or the step fails. */
-  private ringSeen(index: number, element: HTMLElement): void {
-    const said = this.ringCheck?.(element, this.state.highlight)
+  private ringSeen(index: number, element: HTMLElement, names: boolean): void {
+    const said = this.ringCheck?.(element, this.state.highlight, names)
     if (said !== undefined) throw new RingOutside(index, said)
   }
 
@@ -569,7 +606,7 @@ export class TourPlayer {
   private async hold(ms: number, generation: number): Promise<void> {
     let left = ms / this.state.speed
     for (;;) {
-      await this.untilSeen(generation)
+      await this.untilShown(generation)
       const from = performance.now()
       const elapsed = await new Promise<boolean>((resolve) => {
         const woken = (): void => {

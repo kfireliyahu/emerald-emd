@@ -86,6 +86,58 @@ describe('a tour plays only while its frame is seen (M42 F1, D-496)', () => {
   })
 })
 
+describe('Pause holds the tour where it is, and Play goes on (M54 F11, D-532)', () => {
+  let player: TourPlayer
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] })
+    player = new TourPlayer(steps, stage, { reduced: false })
+  })
+  afterEach(() => {
+    player.dispose()
+    vi.useRealTimers()
+  })
+
+  it('holds the scene however long it is paused, and keeps what was left of the hold', async () => {
+    player.start()
+    await vi.advanceTimersByTimeAsync(held('One') - 600)
+    player.pause(true)
+    expect(player.snapshot().paused).toBe(true)
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(player.snapshot()).toMatchObject({ mode: 'watch', step: 0 })
+    player.pause(false)
+    await vi.advanceTimersByTimeAsync(650)
+    expect(player.snapshot().step).toBe(1)
+  })
+
+  it('stays paused when it is unseen and seen again', async () => {
+    player.start()
+    player.pause(true)
+    player.setSeen(false)
+    player.setSeen(true)
+    await vi.advanceTimersByTimeAsync(60_000)
+    expect(player.snapshot()).toMatchObject({ mode: 'watch', step: 0, paused: true })
+  })
+
+  it('lets go of the pause when the visitor takes over', async () => {
+    player.start()
+    player.pause(true)
+    player.takeOver()
+    expect(player.snapshot()).toMatchObject({ mode: 'try', paused: false })
+  })
+
+  it('says where a dot is going while it catches up, and nothing of a dot for a start', async () => {
+    // A document that is still opening, so the catching up can be read.
+    const opening = { ...handle, reopen: () => new Promise<void>(() => undefined) } as unknown as DemoHandle
+    const slow = new TourPlayer(steps, { ...stage, handle: () => Promise.resolve(opening) }, { reduced: false })
+    slow.jump(2)
+    await vi.advanceTimersByTimeAsync(0)
+    expect(slow.snapshot()).toMatchObject({ mode: 'catching-up', going: 2 })
+    slow.start()
+    expect(slow.snapshot()).toMatchObject({ mode: 'catching-up', going: undefined })
+    slow.dispose()
+  })
+})
+
 describe('the frame knows whether it is seen', () => {
   type Callback = (entries: Partial<IntersectionObserverEntry>[]) => void
   function fakeWindow() {

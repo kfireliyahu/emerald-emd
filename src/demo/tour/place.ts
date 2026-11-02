@@ -42,6 +42,47 @@ export function anchorPoint(anchor: Box): Point | undefined {
   return { x: anchor.left + Math.min(anchor.width / 2, INTO_WIDE), y: anchor.top + anchor.height / 2 }
 }
 
+/** How far the ring's centre stands off the start of a label it only names, in the app's pixels. */
+export const BESIDE = 18
+
+/**
+ * **Where the ring rests on a box it names** (M54 F11): a `say` row's ring is
+ * read, not pressed, so it rests on what the box holds — `content`, the extent
+ * of its text — and beside its label rather than over it: its centre `BESIDE`
+ * before the text's start, on its middle. Before, it sat `INTO_WIDE` into the
+ * box's own edge, which in a box whose text is centred was empty hairline, and
+ * over a short label it hid the label.
+ */
+export function besidePoint(content: Box): Point | undefined {
+  if (content.width === 0 && content.height === 0) return undefined
+  return { x: content.left - BESIDE, y: content.top + content.height / 2 }
+}
+
+/**
+ * The part of `own` its text covers (M54 F11): the union of its text's boxes,
+ * kept inside `own` — a truncated label's runs reach past its box — or `own`
+ * when it holds no text that measures, as a field or an icon does.
+ */
+export function contentOf(own: Box, runs: readonly Box[]): Box {
+  let left = Number.POSITIVE_INFINITY
+  let top = Number.POSITIVE_INFINITY
+  let right = Number.NEGATIVE_INFINITY
+  let bottom = Number.NEGATIVE_INFINITY
+  for (const run of runs) {
+    if (run.width === 0 || run.height === 0) continue
+    left = Math.min(left, Math.max(run.left, own.left))
+    top = Math.min(top, Math.max(run.top, own.top))
+    right = Math.max(right, Math.min(run.left + run.width, own.left + own.width))
+    bottom = Math.max(bottom, Math.min(run.top + run.height, own.top + own.height))
+  }
+  return right > left && bottom > top ? { left, top, width: right - left, height: bottom - top } : own
+}
+
+/** Whether a point on the viewport is inside it: the ring is hidden while its anchor is off it (M54 F11). */
+export function onView(viewport: { readonly width: number; readonly height: number }, point: Point): boolean {
+  return point.x >= 0 && point.y >= 0 && point.x <= viewport.width && point.y <= viewport.height
+}
+
 /**
  * A point in the app's own pixels, on the frame's viewport: through the iframe
  * **as drawn this frame** — scaled to fit, or panned and scaled in a crop, and

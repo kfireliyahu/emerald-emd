@@ -1,12 +1,14 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
 import { readPreference, writePreference } from '@/data/runtime/preference.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { Working } from '@/ui/components/Working.tsx'
 import { reducedMotion } from '@/ui/motion/motion.ts'
 import type { DemoHandle } from '../contract.ts'
 import { messageBetween, resetMessage, tell } from './embed.ts'
 import { CROP_SCALE, cropAt, layoutOf } from './layout.ts'
-import { anchorPoint, lookBox, onViewport, samePlace, travelled, type Point } from './place.ts'
+import { anchorPoint, besidePoint, contentOf, lookBox, onView, onViewport, samePlace, travelled, type Box, type Point } from './place.ts'
 import { SPEEDS, speedOf, startingSpeed, travelAt, TourPlayer, type TourCheck } from './player.ts'
+import { click } from './runner.ts'
 import { watchSeen } from './seen.ts'
 import { chatUpTo, type Tour } from './steps.ts'
 import './frame.css'
@@ -41,6 +43,8 @@ const TRY_CAPTION = 'It is yours now. Nothing you do leaves this page, and Reset
 /** Ruling 2 (2026-10-07): once a visitor has changed something, say what Watch does to it. */
 const CHANGED_CAPTION = 'Yours now. Watch or Reset puts the document back as it was, and what you changed goes.'
 const CATCHING_UP = 'Putting the document back…'
+/** A dot's fast-forward, back or on (M54 F11): nothing is put back on a forward jump, so the strip says where it goes. */
+const goingTo = (scene: number): string => `Going to step ${String(scene + 1)}…`
 const WIDER = 'Try it yourself on a wider screen.'
 
 /**
@@ -125,7 +129,7 @@ export function Frame({
       if (autoplay) player.start()
       else player.wait()
     } else
-      void player.check((target, highlight) => ringOutside(root.current, iframe.current, viewport.current, target, highlight)).then((result) => {
+      void player.check((target, highlight, names) => ringOutside(root.current, iframe.current, viewport.current, target, highlight, names)).then((result) => {
         if (live) check(result)
       })
     return () => {
@@ -179,6 +183,7 @@ export function Frame({
       ringElement.classList.add('gone')
       return
     }
+    const names = state.names
     const travel = reducedMotion() ? 0 : travelAt(player.snapshot().speed)
     const from = ringAt.current
     const started = performance.now()
@@ -187,25 +192,28 @@ export function Frame({
     let at: Point | undefined
     const place = (): void => {
       // An anchor the last click removed or hid measures 0 by 0 at the corner: hold where it was.
-      const anchor = target.isConnected ? anchorPoint(target.getBoundingClientRect()) : undefined
+      const anchor = target.isConnected ? restingPoint(target, names) : undefined
       if (anchor !== undefined) to = anchor
       if (to !== undefined) {
         const now = from === undefined ? to : travelled(from, to, performance.now() - started, travel)
         ringAt.current = now
-        const point = onViewport(box.getBoundingClientRect(), frame.getBoundingClientRect(), frame.offsetWidth, now)
+        const view = box.getBoundingClientRect()
+        const point = onViewport(view, frame.getBoundingClientRect(), frame.offsetWidth, now)
         if (!samePlace(at, point)) {
           at = point
           // `translate`, not `transform`: the press is a `scale`, and CSS scales
           // whatever `transform` holds — the position too (see place.ts).
           ringElement.style.translate = `${String(point.x)}px ${String(point.y)}px`
         }
-        ringElement.classList.remove('gone')
+        // An anchor the app has moved off the frame — the page grew under it
+        // after a save — takes the ring with it until it is back (M54 F11).
+        ringElement.classList.toggle('gone', !onView(view, point))
       }
       id = requestAnimationFrame(place)
     }
     place()
     return () => cancelAnimationFrame(id)
-  }, [state.target, player])
+  }, [state.target, state.names, player])
 
   // The outline follows its box every frame, as the ring does, and draws itself
   // once per box: a new box is a new element, so the CSS draw starts again.
@@ -263,7 +271,7 @@ export function Frame({
     let id = 0
     let at = { x: Number.NaN, y: Number.NaN }
     const place = (): void => {
-      const next = windowOf(frame, box, scale, state.target, state.highlight, cropWas.current)
+      const next = windowOf(frame, box, scale, state.target, state.highlight, state.names, cropWas.current)
       // Two app pixels or more, so a box that shivers does not restart the ease.
       if (Number.isNaN(at.x) || Math.abs(next.x - at.x) >= 2 || Math.abs(next.y - at.y) >= 2) {
         at = next
@@ -274,7 +282,7 @@ export function Frame({
     }
     place()
     return () => cancelAnimationFrame(id)
-  }, [movie, state.target, state.highlight, scale])
+  }, [movie, state.target, state.highlight, state.names, scale])
 
   // A press: the ring shrinks and echoes once per click the tour makes.
   useEffect(() => {
@@ -285,6 +293,72 @@ export function Frame({
     ringElement.classList.add('press')
   }, [state.presses])
 
+  // **The app is out of the keyboard's reach while it is watched** (M54 F11):
+  // inert under the shield, so Tab goes from the strip to Watch the tour and
+  // never walks into the app, where a key could race the runner. Set here
+  // rather than as a prop, so the shield's click can lift it at once.
+  useLayoutEffect(() => {
+    const frame = iframe.current
+    if (frame !== null) frame.inert = !trying
+  }, [trying])
+
+  // Inert keeps Tab from walking in, but not a focus the tour itself moved in
+  // there — a click the ring made focuses what it clicked, as a pointer does —
+  // and from there Tab walks the app. So while it is watched, a visitor's own
+  // key in the app goes nowhere, and Tab comes back to the strip; the tour's
+  // keystrokes are its own events, never trusted ones, and pass.
+  useEffect(() => {
+    const frame = iframe.current
+    const strip = root.current
+    if (trying || frame === null || strip === null) return
+    const stays = (event: KeyboardEvent): void => {
+      if (!event.isTrusted) return
+      event.preventDefault()
+      event.stopPropagation()
+      if (event.key !== 'Tab') return
+      const stops = [...strip.querySelectorAll<HTMLElement>('button, input')].filter((each) => each.tabIndex >= 0)
+      ;(event.shiftKey ? stops.at(-1) : stops[0])?.focus()
+    }
+    let win: Window | null = null
+    const attach = (): void => {
+      win?.removeEventListener('keydown', stays, true)
+      win = frame.contentWindow
+      win?.addEventListener('keydown', stays, true)
+    }
+    attach()
+    frame.addEventListener('load', attach)
+    return () => {
+      frame.removeEventListener('load', attach)
+      win?.removeEventListener('keydown', stays, true)
+    }
+  }, [trying])
+
+  /**
+   * **A click mid-move lands** (M54 F11, D-531; rule *Nothing is blocked by
+   * motion*): the shield takes the click, hands the app to the visitor, and
+   * passes the click on to what was under it in the app — so the visitor never
+   * clicks twice. A click on the frame's own panel only takes over.
+   */
+  const takeOverAt = (event: React.MouseEvent): void => {
+    const frame = iframe.current
+    // The app is inert, and so out of the page's hit test: what was under the
+    // click is worked out by where it fell — on the frame's own panel, or on the app.
+    const onPanel = document
+      .elementsFromPoint(event.clientX, event.clientY)
+      .some((each) => each.closest('.tour-beside, .tour-chat-card') !== null)
+    player.takeOver()
+    if (frame === null || onPanel) return
+    const drawn = frame.getBoundingClientRect()
+    const by = frame.offsetWidth > 0 ? drawn.width / frame.offsetWidth : 1
+    const point = { x: (event.clientX - drawn.left) / by, y: (event.clientY - drawn.top) / by }
+    if (point.x < 0 || point.y < 0 || point.x > frame.offsetWidth || point.y > frame.offsetHeight) return
+    frame.inert = false
+    const doc = frame.contentDocument
+    const target = doc?.elementFromPoint(point.x, point.y)
+    const win = doc?.defaultView
+    if (target instanceof (win?.HTMLElement ?? HTMLElement)) click(target as HTMLElement, point)
+  }
+
   // The page around the frame hears which step is up and a take-over (M33 U4).
   const told = useRef<typeof state | undefined>(undefined)
   useEffect(() => {
@@ -294,11 +368,15 @@ export function Frame({
     if (message !== undefined) tell(message)
   }, [state, check, player])
   const waiting = state.mode === 'ready'
+  const catching = state.mode === 'catching-up'
+  const catchingWords = state.going === undefined ? CATCHING_UP : goingTo(state.going)
+  // Pause is for a tour that moves: not on the held first frame, and not in Try it.
+  const plays = state.mode === 'watch' || state.mode === 'opening' || catching
 
   const caption =
     state.lost ??
-    (state.mode === 'catching-up'
-      ? CATCHING_UP
+    (catching
+      ? catchingWords
       : trying
         ? state.changed
           ? CHANGED_CAPTION
@@ -308,7 +386,29 @@ export function Frame({
   // strip is as tall as the longest at this width and the app under it never
   // jumps while it plays. Try it's lines are left out: the app is the visitor's
   // then, and a strip one line taller costs it nothing.
-  const reserve = useMemo(() => [...player.scenes.map((each) => each.caption), CATCHING_UP], [player])
+  const reserve = useMemo(
+    () => [...player.scenes.map((each) => each.caption), CATCHING_UP, goingTo(player.scenes.length - 1)],
+    [player],
+  )
+
+  // **Watch / Try it is one radio group** (M54 F11; the APG radio group): one
+  // Tab stop, on the checked radio or else the first, and the arrows move the
+  // choice. On the held first frame nothing plays and nothing is yours, so
+  // neither is checked.
+  const seg = useRef<(HTMLButtonElement | null)[]>([])
+  const chosenSide = waiting ? undefined : trying ? 1 : 0
+  const choose = (side: number): void => {
+    if (side === 0) player.watch()
+    else player.takeOver()
+  }
+  const segKey = (event: React.KeyboardEvent, side: number): void => {
+    const step = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 0
+    if (step === 0) return
+    event.preventDefault()
+    const next = (side + step + 2) % 2
+    seg.current[next]?.focus()
+    choose(next)
+  }
 
   const dots = player.scenes.length
   return (
@@ -316,7 +416,7 @@ export function Frame({
       ref={root}
       className={`tour-frame ${movie ? 'movie' : ''} ${trying ? 'trying' : ''}`}
       data-mode={state.mode}
-      style={{ '--travel': `${String(travelAt(state.speed))}ms` } as React.CSSProperties}
+      style={{ '--tour-travel': `${String(travelAt(state.speed))}ms` } as React.CSSProperties}
     >
       {/* One grid, so the strip can rearrange by the frame's own width
           (frame.css): one row of controls when wide, the caption on a row of its
@@ -334,13 +434,14 @@ export function Frame({
           <span className="rail" />
           <span
             className="done"
-            style={{ width: dots > 1 ? `calc((100% - 10px) * ${String(state.scene / (dots - 1))})` : '0' }}
+            style={{ width: dots > 1 ? `calc((100% - 2 * var(--tour-dot-pull)) * ${String(state.scene / (dots - 1))})` : '0' }}
           />
           {player.scenes.map((each, index) => (
             <button
               key={each.first}
               type="button"
               className={`tour-dot ${index < state.scene ? 'past' : ''} ${index === state.scene ? 'now' : ''}`}
+              aria-current={index === state.scene ? 'step' : undefined}
               aria-label={`Step ${String(index + 1)} of ${String(dots)}: ${each.caption}`}
               title={each.caption}
               onClick={() => player.jump(index)}
@@ -350,13 +451,38 @@ export function Frame({
           ))}
         </div>
         <div className="tour-seg" role="radiogroup" aria-label="Watch or try">
-          <button type="button" role="radio" aria-checked={!trying} onClick={() => player.watch()}>
-            Watch
-          </button>
-          <button type="button" role="radio" aria-checked={trying} onClick={() => player.takeOver()}>
-            Try it
-          </button>
+          {(['Watch', 'Try it'] as const).map((name, side) => (
+            <button
+              key={name}
+              ref={(button) => {
+                seg.current[side] = button
+              }}
+              type="button"
+              role="radio"
+              aria-checked={chosenSide === side}
+              tabIndex={chosenSide === side || (chosenSide === undefined && side === 0) ? 0 : -1}
+              onClick={() => choose(side)}
+              onKeyDown={(event) => segKey(event, side)}
+            >
+              {name}
+            </button>
+          ))}
         </div>
+        {plays && (
+          // One name, Pause, pressed while paused (D-532; the APG toggle button).
+          <button
+            type="button"
+            className="tour-pause"
+            aria-pressed={state.paused}
+            aria-label="Pause"
+            onClick={() => player.pause(!state.paused)}
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" />
+            </svg>
+            <span className="tour-pause-label">Pause</span>
+          </button>
+        )}
         <p className={`tour-say ${state.lost === undefined ? '' : 'lost'}`} aria-live="polite">
           {(state.mode === 'watch' || state.mode === 'opening' || waiting) && (
             <span className="of">
@@ -417,8 +543,15 @@ export function Frame({
           <div
             className="tour-shield"
             title={waiting ? 'Watch the tour' : movie ? undefined : 'Click to take over'}
-            onClick={waiting ? () => player.start() : movie ? undefined : () => player.takeOver()}
+            onClick={waiting ? () => player.start() : movie ? undefined : takeOverAt}
           />
+        )}
+        {catching && (
+          // The app flips through every row it skips (M54 F11): drawn by the one
+          // progress indicator over a veil, never as screens at full opacity.
+          <div className="tour-working">
+            <Working size={24} />
+          </div>
         )}
         {waiting && (
           <button type="button" className="tour-play" onClick={() => player.start()}>
@@ -440,7 +573,7 @@ export function Frame({
         {talks && !movie && <Chat lines={lines} width={layout.beside} />}
         {talks && movie && lines.length > 0 && <ChatCard line={lines[lines.length - 1]} />}
         <svg ref={look} className="tour-look gone" aria-hidden>
-          <rect x="1" y="1" rx="6" ry="6" pathLength={100} />
+          <rect x="1" y="1" pathLength={100} />
         </svg>
         <div ref={ring} className="tour-ring gone" aria-hidden />
       </div>
@@ -532,7 +665,7 @@ function Crossfade({ text, reserve }: { text: string; reserve?: readonly string[
   useEffect(() => {
     if (shown.was === undefined) return
     const turn = shown.turn
-    const id = setTimeout(() => setShown((then) => (then.turn === turn ? { ...then, was: undefined } : then)), 400)
+    const id = setTimeout(() => setShown((then) => (then.turn === turn ? { ...then, was: undefined } : then)), fadeGone())
     return () => clearTimeout(id)
   }, [shown.was, shown.turn])
   return (
@@ -560,6 +693,45 @@ function Crossfade({ text, reserve }: { text: string; reserve?: readonly string[
 }
 
 /**
+ * The latest the old caption goes, in ms: frame.css's `--tour-fade-gone`, so
+ * the sheet's durations are named in one place (M54 F11).
+ */
+function fadeGone(): number {
+  const named = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--tour-fade-gone'))
+  return Number.isFinite(named) ? named : 400
+}
+
+/** The boxes of an element's text, each run that holds more than white space. */
+function textRuns(element: HTMLElement): DOMRect[] {
+  const doc = element.ownerDocument
+  const walker = doc.createTreeWalker(element, NodeFilter.SHOW_TEXT)
+  const runs: DOMRect[] = []
+  for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
+    if ((node.textContent ?? '').trim() === '') continue
+    const range = doc.createRange()
+    range.selectNodeContents(node)
+    runs.push(range.getBoundingClientRect())
+  }
+  return runs
+}
+
+/** The least the ring's centre stands from the app's left edge, so a label at the edge keeps it on the frame. */
+const RING_EDGE = 14
+
+/**
+ * **Where the ring rests on an element**, in the app's pixels (M54 F11): on a
+ * box the row acts on, `anchorPoint`'s; on a box a `say` row only names, beside
+ * the start of its text (`besidePoint`), so it points at what it names and the
+ * label stays readable.
+ */
+function restingPoint(element: HTMLElement, names: boolean): Point | undefined {
+  const own = element.getBoundingClientRect()
+  if (!names) return anchorPoint(own)
+  const point = besidePoint(contentOf(own, textRuns(element)))
+  return point === undefined ? undefined : { x: Math.max(point.x, RING_EDGE), y: point.y }
+}
+
+/**
  * The box a crop keeps in view for an element (M33 F1): its own, except a
  * sheet's row, which is as wide as the sheet with its empty columns — there it
  * is what the row holds, from its first text to its last, so a charge's date,
@@ -568,20 +740,8 @@ function Crossfade({ text, reserve }: { text: string; reserve?: readonly string[
 function heldBy(element: HTMLElement): DOMRect {
   const own = element.getBoundingClientRect()
   if (element.tagName !== 'TR') return own
-  const doc = element.ownerDocument
-  const walker = doc.createTreeWalker(element, NodeFilter.SHOW_TEXT)
-  let left = Number.POSITIVE_INFINITY
-  let right = Number.NEGATIVE_INFINITY
-  for (let node = walker.nextNode(); node !== null; node = walker.nextNode()) {
-    if ((node.textContent ?? '').trim() === '') continue
-    const range = doc.createRange()
-    range.selectNodeContents(node)
-    const box = range.getBoundingClientRect()
-    if (box.width === 0) continue
-    left = Math.min(left, box.left)
-    right = Math.max(right, box.right)
-  }
-  return right > left ? new DOMRect(left, own.top, right - left, own.height) : own
+  const held: Box = contentOf(own, textRuns(element))
+  return new DOMRect(held.left, own.top, held.width, own.height)
 }
 
 /**
@@ -596,12 +756,13 @@ function windowOf(
   scale: number,
   target: HTMLElement | undefined,
   highlight: HTMLElement | undefined,
+  names: boolean,
   was: { readonly x: number; readonly y: number },
 ): { readonly x: number; readonly y: number; readonly width: number; readonly height: number } {
   const shown = (element: HTMLElement | undefined): HTMLElement | undefined => (element?.isConnected === true ? element : undefined)
   const area = shown(highlight) ?? shown(target)
   const ringOn = shown(target)
-  const ring = ringOn === undefined ? undefined : anchorPoint(ringOn.getBoundingClientRect())
+  const ring = ringOn === undefined ? undefined : restingPoint(ringOn, names)
   // The paper's card holds the window's right side: the box is kept left of it.
   const card = box.querySelector<HTMLElement>('.tour-beside.card')
   const held = card === null ? 0 : card.offsetWidth + 16
@@ -622,8 +783,9 @@ function windowOf(
 
 /**
  * The check's question at every anchor (M33 F4): in a crop, is the ring's
- * point inside the window the frame pans to? Said when it is not; nothing in a
- * frame wide enough to show the whole app.
+ * point inside the window the frame pans to? In a frame that shows the whole
+ * app, is it on the frame at all (M54 F11) — the ring is hidden while it is
+ * not? Said when it is not.
  */
 function ringOutside(
   root: HTMLElement | null,
@@ -631,11 +793,18 @@ function ringOutside(
   box: HTMLElement | null,
   target: HTMLElement,
   highlight: HTMLElement | undefined,
+  names: boolean,
 ): string | undefined {
-  if (root === null || frame === null || box === null || !root.classList.contains('movie')) return undefined
-  const ring = anchorPoint(target.getBoundingClientRect())
+  if (root === null || frame === null || box === null) return undefined
+  const ring = restingPoint(target, names)
   if (ring === undefined) return undefined
-  const seen = windowOf(frame, box, CROP_SCALE, target, highlight, { x: 0, y: 0 })
+  if (!root.classList.contains('movie')) {
+    const view = box.getBoundingClientRect()
+    const point = onViewport(view, frame.getBoundingClientRect(), frame.offsetWidth, ring)
+    if (onView(view, point)) return undefined
+    return `the ring at (${String(Math.round(point.x))}, ${String(Math.round(point.y))}) is off the frame's ${String(Math.round(view.width))} by ${String(Math.round(view.height))}`
+  }
+  const seen = windowOf(frame, box, CROP_SCALE, target, highlight, names, { x: 0, y: 0 })
   if (ring.x >= seen.x && ring.x <= seen.x + seen.width && ring.y >= seen.y && ring.y <= seen.y + seen.height) return undefined
   const span = (from: number, size: number): string => `${String(Math.round(from))}–${String(Math.round(from + size))}`
   return `the ring at (${String(Math.round(ring.x))}, ${String(Math.round(ring.y))}) is outside the crop's window, ${span(seen.x, seen.width)} by ${span(seen.y, seen.height)}`

@@ -213,8 +213,8 @@ export async function painted(doc: Document): Promise<void> {
 }
 
 /**
- * Scrolls whatever holds the element until it is in view — by hand, nearest
- * edge, no smoothing, and never past the app's own document: `scrollIntoView`
+ * Scrolls whatever holds the element until it is in view — by hand, no
+ * smoothing, and never past the app's own document: `scrollIntoView`
  * would also scroll the page the frame is embedded in. Says whether it moved
  * anything: **a scroll's event arrives a frame later**, and an app that closes
  * an open list on scroll closes the one the next action opens unless the
@@ -235,11 +235,7 @@ export function bringIntoView(element: HTMLElement): boolean {
     const outer = box.getBoundingClientRect()
     const inner = element.getBoundingClientRect()
     const was = [box.scrollTop, box.scrollLeft]
-    if (scrollsY) {
-      if (inner.top < outer.top + margin) box.scrollTop -= outer.top + margin - inner.top
-      else if (inner.bottom > outer.bottom - margin)
-        box.scrollTop += Math.min(inner.bottom - outer.bottom + margin, inner.top - outer.top - margin)
-    }
+    if (scrollsY) box.scrollTop += verticalScroll(outer, inner, margin)
     if (scrollsX) {
       if (inner.left < outer.left + margin) box.scrollLeft -= outer.left + margin - inner.left
       else if (inner.right > outer.right - margin)
@@ -250,12 +246,37 @@ export function bringIntoView(element: HTMLElement): boolean {
   return moved
 }
 
-/** A click as a pointer makes one: down, focus unless the app kept it, up, click. */
-export function click(element: HTMLElement): void {
+/**
+ * **How far a box scrolls to bring an element well into view** (M54 F11): none
+ * while it sits clear of both edges by its comfort — a margin, or an eighth of
+ * the box, whichever is more — else it is centred, or its top put at the margin
+ * when it is taller than the room. Nearest edge left every outlined box on the
+ * frame's bottom edge, with the line under it that says why below the fold.
+ */
+export function verticalScroll(
+  outer: { readonly top: number; readonly height: number },
+  inner: { readonly top: number; readonly height: number },
+  margin: number,
+): number {
+  const comfort = Math.max(margin, outer.height / 8)
+  const clear = inner.top >= outer.top + comfort && inner.top + inner.height <= outer.top + outer.height - comfort
+  if (clear) return 0
+  const room = outer.height - 2 * margin
+  const want = inner.height >= room ? outer.top + margin : outer.top + (outer.height - inner.height) / 2
+  return inner.top - want
+}
+
+/**
+ * A click as a pointer makes one: down, focus unless the app kept it, up, click —
+ * at the element's middle, or at `point` (a visitor's click passed through the shield, M54 F11).
+ */
+export function click(element: HTMLElement, point?: { readonly x: number; readonly y: number }): void {
   const win = element.ownerDocument.defaultView
   if (win === null) return
   const rect = element.getBoundingClientRect()
-  const at = { bubbles: true, cancelable: true, composed: true, button: 0, clientX: rect.left + rect.width / 2, clientY: rect.top + rect.height / 2 }
+  const clientX = point?.x ?? rect.left + rect.width / 2
+  const clientY = point?.y ?? rect.top + rect.height / 2
+  const at = { bubbles: true, cancelable: true, composed: true, button: 0, clientX, clientY }
   element.dispatchEvent(new win.PointerEvent('pointerdown', { ...at, pointerType: 'mouse', isPrimary: true }))
   const kept = !element.dispatchEvent(new win.MouseEvent('mousedown', { ...at, buttons: 1 }))
   if (!kept && element.tabIndex >= 0) element.focus({ preventScroll: true })

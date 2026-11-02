@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { anchorPoint, easeInOut, INTO_WIDE, LOOK_MARGIN, lookBox, onViewport, ringPoint, samePlace, travelled } from './place.ts'
+import { anchorPoint, BESIDE, besidePoint, contentOf, easeInOut, INTO_WIDE, LOOK_MARGIN, lookBox, onView, onViewport, ringPoint, samePlace, travelled } from './place.ts'
 
 const viewport = { left: 0, top: 50, width: 1200, height: 700 }
 
@@ -173,5 +173,36 @@ describe('the ring lands true when the app is scaled or cropped (M33 F2)', () =>
     expect(easeInOut(0.5)).toBeCloseTo(0.5)
     expect(easeInOut(0.1)).toBeLessThan(0.05)
     expect(easeInOut(0.9)).toBeGreaterThan(0.95)
+  })
+})
+
+describe('where the ring rests on a box a row only names (M54 F11)', () => {
+  it('rests beside the start of its text, on its middle, never over the label', () => {
+    // development 4/4: the ring sat on 'M4 U1' and hid it.
+    const point = besidePoint({ left: 319, top: 590, width: 36, height: 15 })
+    expect(point).toEqual({ x: 319 - BESIDE, y: 597.5 })
+    expect((point?.x ?? 0) + 14).toBeLessThan(319)
+  })
+
+  it('takes what the box holds, not its own edge: a centred verdict is found where its text is', () => {
+    // custom 5/5: INTO_WIDE put the ring on the empty hairline left of 'total'.
+    const own = { left: 512, top: 340, width: 586, height: 80 }
+    const content = contentOf(own, [
+      { left: 639, top: 357, width: 36, height: 15 },
+      { left: 622, top: 386, width: 70, height: 27 },
+    ])
+    expect(content).toEqual({ left: 622, top: 357, width: 70, height: 56 })
+  })
+
+  it('keeps a truncated run inside its box, and falls back to the box with no text', () => {
+    const own = { left: 0, top: 0, width: 100, height: 20 }
+    expect(contentOf(own, [{ left: 10, top: 2, width: 400, height: 16 }])).toEqual({ left: 10, top: 2, width: 90, height: 16 })
+    expect(contentOf(own, [])).toEqual(own)
+    expect(besidePoint({ left: 0, top: 0, width: 0, height: 0 })).toBeUndefined()
+  })
+
+  it('says a point off the frame is off it, so the ring is hidden there', () => {
+    expect(onView({ width: 1440, height: 759 }, { x: 300, y: 1330 })).toBe(false)
+    expect(onView({ width: 1440, height: 759 }, { x: 300, y: 400 })).toBe(true)
   })
 })
