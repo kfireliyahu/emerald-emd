@@ -446,6 +446,7 @@ written out here.
 | D-528 | 2026-10-23 | A date's filter takes `yesterday`, `tomorrow`, `last N days/weeks` (today and the N−1 days before it) and `this/last/next week/month/year` beside D-472's words, on the local calendar; a date column's filter menu offers them above its ticks, written as a conversation types them, so a view saved from it stays current; the day a week starts on is the document's — `week_start` in `document_setting`, set in Settings › Calendar and by `record_units` `week_starts_on`, and Monday when unset; amends D-472 | M53 |
 | D-523 | 2026-10-22 | A repository is set up by `npx emerald-mcp init`, a subcommand of the server's bin: it names or creates the document (with the development pack, as text inside the repository and as bytes outside it), writes CLAUDE.md a section between its own markers holding the start-here table and the column lines from the document, and writes the plugin's two hooks into `.claude/settings.json` only where no Emerald plugin is enabled, never over a hook it did not write; every file is compared before it is written, so a second run changes nothing | [below](#d-523) |
 | D-529 | 2026-11-02 | Design work runs with Impeccable, installed per person and never vendored, its per-edit hook off and its detector run once at the end of a UI unit; it reads a thin `PRODUCT.md` and `DESIGN.md` at the root that point at docs/product.md, tokens.css and the ui rule rows and repeat none of them; the UX-strategy skill set and the design-tool connector are not adopted | [below](#d-529) |
+| D-530 | 2026-11-02 | M54 reviews every surface — the engine's screens, the parked ledger pack's, the desktop shell's chrome, Emerald's page and its tour — against the demo documents in light and dark; each finding is an open `review_entry` row the maintainer judges; a plain breach of a live ui rule row is fixed in place except in the ledger, where it is only recorded; a last unit makes the procedure a project skill | [below](#d-530) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -957,6 +958,35 @@ source of truth drifts.
 
 **Consequences.** A session doing UI work needs the plugin installed on the machine; without it the
 two root files and the rows still say what is right. No schema change.
+
+## D-530 · 2026-11-02 · M54 reviews every surface — the engine's screens, the parked ledger pack's, the desktop shell's chrome, Emerald's page and its tour — against the demo documents in light and dark; each finding is an open `review_entry` row the maintainer judges; a plain breach of a live ui rule row is fixed in place except in the ledger, where it is only recorded; a last unit makes the procedure a project skill <a id="d-530"></a>
+
+**Context.** M54 was planned as a design review of the app and Emerald's page, run with D-529's
+tools, whose findings shape M55 (input views). The maintainer's answers came before any brief.
+
+**Decision.**
+
+- **Scope:** the engine's screens (formats and rows, views and dashboards, intake, the document's
+  own screens), the ledger pack's screens, the shell's chrome (driven over CDP with
+  `verify-in-shell`, since the browser pane cannot drive the window), `demo-page.html` and the tour.
+- **Against the demo documents** `npm run dev:demo` builds from synthetic sources — `demo.emd`,
+  `custom.emd` and `project.emd` — never a working `.emd`; **in light and dark at a desktop width**,
+  and no other condition.
+- **A finding is an open `review_entry` row** on the unit that found it, judged by the maintainer;
+  one about entering rows by hand starts `breaks` with `Entry:`, so M55 is planned from them.
+- **A plain breach of a live ui rule row is fixed in place**, with its test, and listed; anything that
+  needs judgement is recorded. **The ledger is parked, so its unit changes no code.**
+- **A last unit turns the procedure into `.claude/skills/design-review`** with `skill-creator`, written
+  from the eight units' reports.
+
+**Alternatives rejected.** Findings as units or inbox rows: a finding is a claim to try before it is
+work, which is what `review_entry` is for. Record only everywhere: a hex in a component is not a
+matter of taste, and a row for it costs more than the fix. A copy of a working document: real names
+and figures would reach the rows (D-390). Hebrew, narrow widths, keyboard and reduced motion as
+conditions: not asked for this time.
+
+**Consequences.** M54 is open with nine units; U1 (formats and rows) sets the procedure and U2-U8
+wait on it; U9 waits on all. No schema change.
 
 ## Related
 
