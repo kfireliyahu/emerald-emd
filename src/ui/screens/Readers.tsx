@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom'
 import { listMappings } from '@/data/repositories/importMappingRepository.ts'
 import { listTemplates } from '@/data/repositories/documentTemplateRepository.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
-import { Button } from '@/ui/components/Button.tsx'
 import { useFilePicker, useReadFiles } from '@/ui/home/parts.tsx'
 import { DocumentReaders } from '@/ui/screens/Formats.tsx'
 import { StatementReaders } from '@/ui/screens/Mappings.tsx'
@@ -35,17 +34,17 @@ export function Readers() {
 
   if (count === 0) {
     return (
+      // *An empty state is one sentence* and one text action (M54 F4).
       <Centered>
-        <span className="flex flex-col items-center gap-4">
-          <span>
-            No readers yet. A reader is kept the first time a statement, paycheck or fund report of a new kind is
-            read, and every later file like it is read with it.
-          </span>
-          <Button variant="primary" icon="add" onClick={picker.open}>
-            Read a file
-          </Button>
-          {picker.input}
-        </span>
+        No readers yet: one is kept the first time a file of a new kind is read.{' '}
+        <button
+          type="button"
+          onClick={picker.open}
+          className="text-accent hover:underline hover:underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+        >
+          Read a file
+        </button>
+        {picker.input}
       </Centered>
     )
   }
@@ -54,7 +53,7 @@ export function Readers() {
     <div className="flex h-full flex-col">
       <div className="flex shrink-0 flex-wrap items-baseline gap-x-6 gap-y-1 border-b border-hairline px-6 py-2">
         <span className="text-ink-secondary tabular-nums">{count === 1 ? '1 reader' : `${String(count)} readers`}</span>
-        <span className="text-caption text-ink-tertiary">
+        <span className="text-caption text-ink-secondary">
           A reader is how one kind of file is read. To change what one reads, read a file of that kind again
           under{' '}
           <Link to="/read" className="text-accent hover:underline">

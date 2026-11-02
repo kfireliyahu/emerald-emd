@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 
 import { SUPPORTED_EXTENSIONS } from '@/data/importer/sheetTable.ts'
@@ -19,12 +19,15 @@ import { useWindowTaken } from '@/ui/useFullWindow.ts'
 import { toggleSidebar } from '@/ui/useSidebar.ts'
 import { TitleBar } from '@/ui/TitleBar.tsx'
 import { MapperScreen } from '@/ui/import/MapperScreen.tsx'
-import { useWindowFileDrop } from '@/ui/import/useWindowFileDrop.ts'
+import { dropTarget, useWindowFileDrop, windowDrop } from '@/ui/import/useWindowFileDrop.ts'
+import { listFormats } from '@/data/repositories/formatRepository.ts'
+import { rowWriteRefusal } from '@/domain/format/owner.ts'
+import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
-import { useKeepsLedger } from '@/ui/packs.ts'
+import { formatsByPack, useKeepsLedger, useKeptPacks } from '@/ui/packs.ts'
 import { installLedgerPack } from '@/data/packs/ledger/pack.ts'
 import { NoLedger } from '@/ui/screens/NoLedger.tsx'
-import { DASHBOARD_PATH, packOf } from '@/ui/nav.ts'
+import { DASHBOARD_PATH, packOf, readPath } from '@/ui/nav.ts'
 import { Guide } from '@/ui/guide/Guide.tsx'
 import { Accounts } from '@/ui/screens/Accounts.tsx'
 import { Categories } from '@/ui/screens/Categories.tsx'
@@ -73,8 +76,21 @@ import { useShellCommands } from '@/ui/useShellCommands.ts'
 
 export function App() {
   const navigate = useNavigate()
+  const location = useLocation()
 
   const db = useDocumentStore((state) => state.db)
+  const revision = useDocumentStore((state) => state.revision)
+  const kept = useKeptPacks()
+  // The formats a dropped file may be read onto, a person's own first (D-532).
+  const writable = useMemo(() => {
+    if (db === undefined) return []
+    const grouped = formatsByPack(
+      listFormats(db).filter((each) => rowWriteRefusal(each) === undefined),
+      kept,
+      (each) => each.name,
+    )
+    return [...grouped.own, ...grouped.packs.flatMap((group) => group.formats)]
+  }, [db, revision, kept])
 
   useDocumentFile()
 
@@ -85,6 +101,11 @@ export function App() {
   // Only in a document that keeps a ledger: the window-wide drop is the pack's.
   const ledger = useKeepsLedger()
   const batch = batchFor(useStatementBatch(), db)
+  const target = dropTarget(
+    location.pathname,
+    writable.map((each) => each.name),
+    ledger,
+  )
 
   /**
    * **Files are read on Home** (M28 U5): dropped anywhere, picked from the
@@ -111,13 +132,29 @@ export function App() {
    */
   const [held, setHeld] = useState<readonly File[] | undefined>(undefined)
   useEffect(() => setHeld(undefined), [db])
+  /**
+   * **A file dropped on the window reads onto the format the screen shows**
+   * (M54 F4, D-532); anywhere else it opens Read files, each file's row asking
+   * which format it goes onto — the ledger's reading only when the document
+   * keeps one, and the offer of one only when there is no format at all.
+   */
   const readFiles = useCallback(
     (files: readonly File[]): void => {
       if (db === undefined || files.length === 0) return
-      if (ledger) readNow(files)
-      else setHeld(files)
+      switch (target.kind) {
+        case 'format':
+        case 'ask':
+          windowDrop.set({ format: target.name, files, asking: target.kind === 'ask' })
+          navigate(readPath(target.name))
+          return
+        case 'ledger':
+          readNow(files)
+          return
+        case 'offer':
+          setHeld(files)
+      }
     },
-    [db, ledger, readNow],
+    [db, target, navigate, readNow],
   )
 
   // The hook stays wired in every document: without its `dragover` the browser
@@ -267,8 +304,16 @@ export function App() {
       {isDraggingFile && (
         // pointer-events-none, or this swallows the dragleave and drop it exists to announce.
         <div data-motion-close className="fc-view-enter pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-background/80">
-          <div className="rounded border-2 border-dashed border-ink px-12 py-8 text-lg">
-            Drop statements, payslips and fund reports, any number
+          <div className="border-2 border-dashed border-ink px-12 py-8 text-heading">
+            {target.kind === 'format' ? (
+              <>
+                Drop to read onto <Bidi>{writable.find((each) => each.name === target.name)?.title ?? ''}</Bidi>, any number
+              </>
+            ) : target.kind === 'ask' ? (
+              'Drop to read onto a format, any number'
+            ) : (
+              'Drop statements, payslips and fund reports, any number'
+            )}
           </div>
         </div>
       )}

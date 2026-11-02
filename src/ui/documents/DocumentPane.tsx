@@ -97,7 +97,7 @@ export function DocumentPane({
       {problem !== undefined && <p className="text-caption text-negative">{problem}</p>}
 
       {pages === undefined && problem === undefined && (
-        <p className="text-caption text-ink-tertiary">Drawing the document…</p>
+        <p className="text-caption text-ink-secondary">Drawing the document…</p>
       )}
 
       {pages !== undefined &&
@@ -179,7 +179,7 @@ function Page({
   const placedActive = draw === undefined || active === undefined ? undefined : draw.place(active)
 
   return (
-    <div className="relative overflow-hidden rounded-md border border-hairline-strong bg-paper">
+    <div className="relative overflow-hidden border border-hairline-strong bg-paper">
       <canvas ref={canvas} className="block" />
 
       {draw !== undefined &&
@@ -189,7 +189,7 @@ function Page({
             <div
               key={index}
               aria-hidden
-              className="pointer-events-none absolute rounded-[2px]"
+              className="pointer-events-none absolute"
               style={{
                 left: placed.left,
                 top: placed.top,
@@ -208,7 +208,7 @@ function Page({
         <div
           ref={mark}
           aria-hidden
-          className="pointer-events-none absolute rounded-[2px]"
+          className="pointer-events-none absolute"
           style={{
             left: placedActive.left - 2,
             top: placedActive.top - 2,

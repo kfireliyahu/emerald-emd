@@ -16,6 +16,7 @@ import {
   resolveProvider,
   sameProvider,
 } from '@/domain/provider.ts'
+import { RELEASES_URL } from '@/demo/page/page.ts'
 import { Button } from '@/ui/components/Button.tsx'
 
 /**
@@ -72,11 +73,21 @@ export function LocalModel() {
 
   if (state.kind === 'unsupported') {
     return (
-      <Centered>
-        A local model runs beside the app, in the desktop version. This is the app in a browser
-        tab, which has no way to reach one — and should not have: the page is not allowed to open
-        a connection to anything, including this machine.
-      </Centered>
+      // The screen's title, one sentence and one text action (M54 F4).
+      <div className="px-6 py-6">
+        <h1 className="m-0 text-title">Local model</h1>
+        <p className="mt-2 max-w-prose text-ink-secondary">
+          A local model runs beside the desktop app, which a page in a browser has no way to reach.{' '}
+          <a
+            href={RELEASES_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="text-accent hover:underline hover:underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+          >
+            Get the desktop app
+          </a>
+        </p>
+      </div>
     )
   }
 
@@ -124,7 +135,7 @@ export function LocalModel() {
               is listening. That is the only connection this app ever opens, and it goes nowhere
               but here.
             </p>
-            <p className="text-caption text-ink-tertiary">
+            <p className="text-caption text-ink-secondary">
               Nothing is downloaded, nothing is sent, and the app stays whole with no model chosen
               at all — every screen works exactly as it does now.
             </p>
@@ -163,9 +174,9 @@ function RuntimeBlock({
     <section>
       <h2 className="flex flex-wrap items-baseline gap-x-3">
         <span className="font-medium">{RUNTIME_LABELS[probe.runtime]}</span>
-        <span className="text-caption text-ink-tertiary tabular-nums">{probe.origin}</span>
+        <span className="text-caption text-ink-secondary tabular-nums">{probe.origin}</span>
         {probe.kind === 'ready' && probe.version !== undefined && (
-          <span className="text-caption text-ink-tertiary">version {probe.version}</span>
+          <span className="text-caption text-ink-secondary">version {probe.version}</span>
         )}
       </h2>
 
@@ -212,7 +223,7 @@ function RuntimeBlock({
                     onChange={() => onChoose(provider)}
                   />
                   <span className={selected ? 'font-medium' : undefined}>{choice.model.label}</span>
-                  <span className="ml-auto text-caption text-ink-tertiary tabular-nums">
+                  <span className="ml-auto text-caption text-ink-secondary tabular-nums">
                     {choice.model.sizeBytes === undefined
                       ? 'size not stated'
                       : formatBytes(choice.model.sizeBytes)}
@@ -242,17 +253,9 @@ function DiskLine({ probes }: { probes: readonly RuntimeProbe[] }) {
   if (found.length === 0) return null
   const complete = diskUsedIsComplete(probes)
   return (
-    <p className="text-caption text-ink-tertiary tabular-nums">
+    <p className="text-caption text-ink-secondary tabular-nums">
       {found.length === 1 ? '1 model' : `${found.length} models`} on this machine,{' '}
       {complete ? 'taking' : 'taking at least'} {formatBytes(diskUsed(probes))} of disk.
     </p>
-  )
-}
-
-function Centered({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex h-full items-center justify-center px-6 text-center text-ink-secondary">
-      <p className="max-w-md">{children}</p>
-    </div>
   )
 }

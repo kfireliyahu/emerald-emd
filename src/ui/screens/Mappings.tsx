@@ -12,6 +12,7 @@ import {
 } from '@/data/repositories/importMappingRepository.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Button } from '@/ui/components/Button.tsx'
+import { IconAction } from '@/ui/components/IconAction.tsx'
 import { ChoiceMenu } from '@/ui/components/ChoiceField.tsx'
 import { Chip } from '@/ui/components/Chip.tsx'
 import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
@@ -170,21 +171,22 @@ function Row({
             wearing a colour. */}
         {sharedFormat && <Chip problem>shares this format</Chip>}
 
-        {/* Quiet until the row is hovered or something in it has focus, and
-            kept in the DOM so keyboard focus still reaches them. */}
-        <span className="ml-auto flex items-center gap-x-3 text-caption text-ink-secondary opacity-0 transition-opacity duration-[var(--duration-micro)] group-hover:opacity-100 focus-within:opacity-100">
-          <button type="button" onClick={onDuplicate} className="hover:text-ink">
-            Duplicate
-          </button>
-          <button type="button" onClick={onDelete} className="hover:text-negative">
-            Delete
-          </button>
+        {/* *An icon is an action*, seen at rest (M54 F4): a row's actions
+            are not hidden until it is hovered. */}
+        <span className="ml-auto flex items-center gap-1">
+          <IconAction label="Duplicate" onClick={onDuplicate}>
+            <path d="M8 8h11v11H8z" />
+            <path d="M5 16V5h11" />
+          </IconAction>
+          <IconAction label="Delete" tone="negative" onClick={onDelete}>
+            <path d="M5 7h14M10 11v6M14 11v6M6 7l1 12h10l1-12M9 7V4h6v3" />
+          </IconAction>
         </span>
       </div>
 
       <div className="mt-1.5 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-caption">
         <ColumnSummary mapping={mapping} />
-        <span className="ml-auto whitespace-nowrap text-ink-tertiary tabular-nums">{usage(mapping)}</span>
+        <span className="ml-auto whitespace-nowrap text-ink-secondary tabular-nums">{usage(mapping)}</span>
       </div>
     </li>
   )
@@ -220,9 +222,13 @@ function AccountBinding({
 
   const choices = [
     { value: '', label: 'ask each time' },
+    // The last four once: a card named "Everyday Card 1234" is not "… 1234 ·1234" (M54 F4).
     ...accounts.map((account) => ({
       value: account.id,
-      label: `${account.name}${account.last4 === undefined ? '' : ` ·${account.last4}`}`,
+      label:
+        account.last4 === undefined || account.name.trimEnd().endsWith(account.last4)
+          ? account.name
+          : `${account.name} ·${account.last4}`,
     })),
   ]
 
@@ -232,7 +238,8 @@ function AccountBinding({
       choices={choices}
       onPick={(choice) => onBind(choice.value === '' ? undefined : choice.value)}
       aria-label={`Which account ${mapping.name} imports into`}
-      className={`${SELECT} h-7 max-w-56 border-transparent bg-transparent text-caption text-ink-tertiary hover:border-hairline-strong`}
+      // Drawn as a field, since it is one (M54 F4).
+      className={`${SELECT} h-7 max-w-56 text-caption`}
     />
   )
 }
@@ -263,16 +270,17 @@ function ColumnSummary({ mapping }: { mapping: SavedMapping }) {
 
         return (
           <span key={column} className="whitespace-nowrap">
-            {index > 0 && <span className="mr-2 text-ink-tertiary/60">·</span>}
+            {index > 0 && <span className="mr-2 text-ink-secondary">·</span>}
+            {/* Header → role, the arrow the separator (M54 F4). */}
             {header !== undefined && (
               <>
-                <Bidi className="text-ink-secondary">{header}</Bidi>{' '}
+                <Bidi className="text-ink-secondary">{header}</Bidi> <span className="text-ink-secondary">→</span>{' '}
               </>
             )}
             {cells === undefined && (
-              <span className="text-ink-secondary tabular-nums">column {column + 1} </span>
+              <span className="text-ink-secondary tabular-nums">column {column + 1} → </span>
             )}
-            <span className="text-ink-tertiary">{label}</span>
+            <span className="text-ink">{label}</span>
           </span>
         )
       })}

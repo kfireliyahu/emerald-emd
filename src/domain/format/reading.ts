@@ -70,9 +70,11 @@ import {
   type NumericDateOrder,
 } from '@/core/time.ts'
 
+import { CURRENCIES } from './currency.ts'
 import {
   companionKeyOf,
   coerceRow,
+  currencyKeyOf,
   offeredKeysOf,
   type StoredRow,
   type StoredValue,
@@ -1047,12 +1049,21 @@ export function guessReading(
    * the keyed column is guessed onto nothing.
    */
   parent?: string,
+  /**
+   * The one currency each money column's rows are already in, by its currency
+   * key (M54 F4) — what a file whose cells carry no sign is taken to be in.
+   */
+  held?: ReadonlyMap<string, string>,
 ): Reading {
   const headerRow = findHeaderRow(table)
   const header = table.rows[headerRow] ?? []
 
   const taken = new Set<string>()
   const columns: ReadingColumn[] = []
+  // **A currency key takes only a column of codes** (M54 F4): `Charge amount`
+  // shares a word with `amount_currency`, and a column of figures read as a
+  // code refused every line of a card statement.
+  const currencyKeys = declaration.columns.flatMap((column) => (column.type === 'money' ? [currencyKeyOf(column)] : []))
 
   for (const [index, cell] of header.entries()) {
     // A prose column is no header to match by its words (`body links` is not
@@ -1061,7 +1072,8 @@ export function guessReading(
     // A note's item's parts and its way back to its note are guessed by what
     // they are, below (M38 U4) — `link` is not a column called link.
     if (table.parts?.[index] !== undefined || table.keyedBy?.[index] !== undefined) continue
-    const key = matchKey(declaration, cell.text, taken, formats)
+    const closed = currencyKeys.length === 0 || isCodeColumn(table, headerRow, index) ? taken : new Set([...taken, ...currencyKeys])
+    const key = matchKey(declaration, cell.text, closed, formats)
     if (key === undefined) continue
     taken.add(key)
     // A list the file held as a list is split the way the file joined it.
@@ -1106,13 +1118,70 @@ export function guessReading(
     }
   }
 
-  return {
-    format: declaration.name,
-    headerRow,
-    dateOrder: inferDateOrder(samples),
-    columns,
-    fixed: [],
+  return withInferredCurrency(
+    declaration,
+    table,
+    { format: declaration.name, headerRow, dateOrder: inferDateOrder(samples), columns, fixed: [] },
+    held,
+  )
+}
+
+/**
+ * **What the cells say a money column is in** (M54 F4, *Make it in place*):
+ * for each money column a column of the file fills, with no column and no
+ * value for its currency, the currency its cells' sign names — `₪ 421.05` is
+ * ILS — else the one its rows already hold. Filled as a value for the whole
+ * file, shown in its field to confirm, never as a placeholder that looks set.
+ * A sign two currencies share (`¥`, `kr`) names neither.
+ */
+export function withInferredCurrency(
+  declaration: FormatDeclaration,
+  table: ReadTable,
+  reading: Reading,
+  held?: ReadonlyMap<string, string>,
+): Reading {
+  const bound = new Set(reading.columns.map((each) => each.key))
+  const fixed = new Set(reading.fixed.map((each) => each.key))
+  const added = declaration.columns.flatMap((column) => {
+    if (column.type !== 'money') return []
+    const key = currencyKeyOf(column)
+    if (!bound.has(column.name) || bound.has(key) || fixed.has(key)) return []
+    const index = reading.columns.find((each) => each.key === column.name)?.index
+    const code = (index === undefined ? undefined : signedCurrency(table, reading.headerRow, index)) ?? held?.get(key)
+    return code === undefined ? [] : [{ key, value: code }]
+  })
+  return added.length === 0 ? reading : { ...reading, fixed: [...reading.fixed, ...added] }
+}
+
+/** The cells under the header of one column, as text: at most forty, none empty. */
+function columnSamples(table: ReadTable, headerRow: number, index: number): readonly string[] {
+  const samples: string[] = []
+  for (let line = headerRow + 1; line < table.rows.length && samples.length < 40; line += 1) {
+    const cell = table.rows[line]?.[index]
+    if (cell === undefined || cell.kind === 'empty') continue
+    const text = cleanText(cell.text)
+    if (text !== '') samples.push(text)
   }
+  return samples
+}
+
+/** Whether a column holds currency codes — three letters in every cell — and so may fill a currency. */
+function isCodeColumn(table: ReadTable, headerRow: number, index: number): boolean {
+  const samples = columnSamples(table, headerRow, index)
+  return samples.length > 0 && samples.every((text) => /^[A-Za-z]{3}$/.test(text))
+}
+
+/** The one currency a column's figures are written with, by their sign or code; undefined when they disagree or say none. */
+function signedCurrency(table: ReadTable, headerRow: number, index: number): string | undefined {
+  const found = new Set<string>()
+  for (const text of columnSamples(table, headerRow, index)) {
+    const mark = text.replace(/[\d\s.,()+\-−'’]/g, '')
+    if (mark === '') continue
+    const named = CURRENCIES.filter((each) => each.sign === mark || each.code === mark.toUpperCase())
+    if (named.length !== 1) return undefined
+    found.add(named[0]?.code ?? '')
+  }
+  return found.size === 1 ? [...found][0] : undefined
 }
 
 /**

@@ -1,5 +1,34 @@
 import { useEffect, useRef, useState } from 'react'
 
+import { createStore } from '@/state/store.ts'
+
+/**
+ * **Where a file dropped on the window goes** (M54 F4, D-532): onto the format
+ * the screen shows, when a file may be read onto it; else the ledger's reading,
+ * when the document keeps one; else Read files, its rows asking which format
+ * each file goes onto; and with no format to read onto, the offer of a ledger.
+ * `writable` is the formats a file may be read onto, a person's own first.
+ */
+export type DropTarget =
+  | { readonly kind: 'format'; readonly name: string }
+  | { readonly kind: 'ask'; readonly name: string }
+  | { readonly kind: 'ledger' }
+  | { readonly kind: 'offer' }
+
+export function dropTarget(pathname: string, writable: readonly string[], ledger: boolean): DropTarget {
+  const shown = /^\/formats\/([^/]+)/.exec(pathname)?.[1]
+  const name = shown === undefined ? undefined : decodeURIComponent(shown)
+  if (name !== undefined && writable.includes(name)) return { kind: 'format', name }
+  if (ledger) return { kind: 'ledger' }
+  const first = writable[0]
+  return first === undefined ? { kind: 'offer' } : { kind: 'ask', name: first }
+}
+
+/** Files the window took, waiting for the format's Read files to take them as picked. */
+export const windowDrop = createStore<
+  { readonly format: string; readonly files: readonly File[]; readonly asking: boolean } | undefined
+>(undefined)
+
 /**
  * Accepts a file dropped anywhere in the window, and reports whether a drag is
  * currently over it so the UI can show a target.

@@ -453,3 +453,75 @@ describe('the views and dashboards, swept (M54 F3)', () => {
     }
   })
 })
+
+describe('intake, swept (M54 F4)', () => {
+  const SWEPT = [
+    'src/ui/screens/ReadFiles.tsx',
+    'src/ui/formats/IntakePanel.tsx',
+    'src/ui/documents/DocumentTextInput.tsx',
+    'src/ui/documents/DocumentPane.tsx',
+    'src/ui/documents/Look.tsx',
+    'src/ui/screens/Readers.tsx',
+    'src/ui/screens/Mappings.tsx',
+    'src/ui/screens/LocalModel.tsx',
+  ]
+  // As F3's: no type, tracking or leading in pixels, no spacing between the
+  // steps, no radius, no text in ink-tertiary, no shadow.
+  it.each(SWEPT)('%s sizes, spaces, squares and inks from the tokens', (path) => {
+    const source = readFileSync(path, 'utf8')
+    expect(source.match(/\btext-\[[0-9.]+px\]|\btracking-\[|\bleading-\[|\btext-(?:xs|sm|base|lg|xl)\b/g) ?? []).toEqual([])
+    const between = /(?<![\w-])-?(?:m|p|[mp][xytblrse]|gap|gap-[xy]|space-[xy]|inset|inset-[xy]|top|left|right|bottom|h|min-h|max-w)-\[[0-9.]+px\]/g
+    expect(source.match(between) ?? []).toEqual([])
+    expect(source.match(/\brounded(?:-(?:sm|md|lg|xl|\[[^\]]*\]))?(?![\w-])/g) ?? []).toEqual([])
+    expect(source.match(/(?<![\w:-])text-ink-tertiary\b/g) ?? []).toEqual([])
+    expect(source).not.toMatch(/shadow-\[/)
+  })
+
+  // *Words name the rule*: a key is a column's words wherever a person reads it,
+  // and a placeholder never looks like an answer.
+  it('names a format’s keys in words on the intake grid', () => {
+    const panel = readFileSync('src/ui/formats/IntakePanel.tsx', 'utf8')
+    expect(panel).toContain('label: capitalize(keyWords(declaration, each))')
+    expect(panel).not.toMatch(/label: key \}/)
+    expect(panel).not.toMatch(/placeholder=\{column\.type === 'money' \? 'ILS'/)
+    expect(panel).not.toMatch(/join\(' · '\)/)
+    const files = readFileSync('src/ui/screens/ReadFiles.tsx', 'utf8')
+    expect(files.match(/keysInWords\(/g)?.length).toBeGreaterThanOrEqual(4)
+  })
+
+  // *The mapper shows the raw cell* (D-531): mono, numbers right, mapped ink, unmapped ink-secondary.
+  it('draws the intake grid’s cells as the raw cells they are', () => {
+    const panel = readFileSync('src/ui/formats/IntakePanel.tsx', 'utf8')
+    expect(panel).toMatch(/px-2 py-1 font-mono \$\{figures\[index\] === true \? 'text-right tabular-nums'/)
+    expect(panel).toContain(`bound.has(index) ? 'text-ink' : 'text-ink-secondary'`)
+    expect(panel).not.toContain('${FIELD} w-full min-w-max')
+  })
+
+  // *One primary action per screen*: a disabled Write is never filled, and says why.
+  it('fills Write only when it is the next step, and says why it writes nothing', () => {
+    const files = readFileSync('src/ui/screens/ReadFiles.tsx', 'utf8')
+    expect(files).toContain(`variant={accepted.length > 0 && across.length === 0 && editing === undefined ? 'primary' : 'secondary'}`)
+    expect(files).toContain(`variant={planWrites(plan) ? 'primary' : 'secondary'}`)
+    expect(files).toContain('whyNothing(reviewed)')
+    // One list of problems: the committed reading's is not drawn over the draft's.
+    expect(files).toContain('{plan !== undefined && editing === undefined && <PlanLines')
+  })
+
+  // *The button is a split tile* and *An icon is an action*: no label dressed as a
+  // button, no action hidden until hover, no empty state with a filled button.
+  it('draws actions as the shared ones, seen at rest', () => {
+    expect(readFileSync('src/ui/documents/DocumentTextInput.tsx', 'utf8')).toContain('<Button icon="open"')
+    expect(readFileSync('src/ui/screens/Mappings.tsx', 'utf8')).not.toMatch(/opacity-0/)
+    expect(readFileSync('src/ui/screens/Readers.tsx', 'utf8')).not.toMatch(/variant="primary"/)
+    expect(readFileSync('src/ui/screens/LocalModel.tsx', 'utf8')).toContain('<h1 className="m-0 text-title">Local model</h1>')
+  })
+
+  // D-532: the window's drop reads onto the format on screen, and its overlay says so.
+  it('routes a window drop by where it lands', () => {
+    const app = readFileSync('src/App.tsx', 'utf8')
+    expect(app).toContain('dropTarget(')
+    expect(app).toContain('Drop to read onto <Bidi>')
+    expect(app).not.toMatch(/rounded border-2 border-dashed/)
+    expect(readFileSync('src/ui/screens/ReadFiles.tsx', 'utf8')).toContain('windowDrop.use()')
+  })
+})

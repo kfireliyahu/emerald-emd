@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 
-import { watchFileDrag } from '@/ui/import/useWindowFileDrop.ts'
+import { dropTarget, watchFileDrag } from '@/ui/import/useWindowFileDrop.ts'
 
 /** A drag event as far as the listeners read one, on a target with no DOM. */
 function drag(type: string, extra: Record<string, unknown> = {}): Event {
@@ -74,5 +74,23 @@ describe('the window drop overlay (M28 F12)', () => {
     const file = { name: 'a.csv' }
     target.dispatchEvent(drag('drop', { dataTransfer: { types: ['Files'], files: [file] } }))
     expect(files).toHaveBeenCalledWith([file])
+  })
+})
+
+describe('where a file dropped on the window goes (M54 F4, D-532)', () => {
+  it('reads onto the format the screen shows, wherever on its pages', () => {
+    expect(dropTarget('/formats/card_charge/read', ['card_charge'], true)).toEqual({ kind: 'format', name: 'card_charge' })
+    expect(dropTarget('/formats/card_charge/board', ['note', 'card_charge'], false)).toEqual({ kind: 'format', name: 'card_charge' })
+  })
+
+  it('goes to the ledger only when the document keeps one, else asks which format', () => {
+    expect(dropTarget('/', ['card_charge'], true)).toEqual({ kind: 'ledger' })
+    expect(dropTarget('/', ['card_charge', 'note'], false)).toEqual({ kind: 'ask', name: 'card_charge' })
+    // A format nothing may be read onto (a pack's own) is no target of its own.
+    expect(dropTarget('/formats/fmt_account', ['card_charge'], false)).toEqual({ kind: 'ask', name: 'card_charge' })
+  })
+
+  it('offers a ledger only when there is no format to read onto', () => {
+    expect(dropTarget('/dashboard', [], false)).toEqual({ kind: 'offer' })
   })
 })

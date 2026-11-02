@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import type { Database } from 'sql.js'
 
@@ -49,6 +49,7 @@ import {
   readingSignature,
   proseLinkNames,
   rowLabel,
+  withInferredCurrency,
   type ReadTable,
   type Reading,
 } from '@/domain/format/reading.ts'
@@ -73,7 +74,9 @@ import {
   tablesAcross,
   type PickedFile,
 } from '@/ui/formats/noteFiles.ts'
-import { offeredKeysOf } from '@/domain/format/row.ts'
+import { currencyKeyOf, offeredKeysOf } from '@/domain/format/row.ts'
+import { valueCounts } from '@/data/repositories/formatRowRepository.ts'
+import { windowDrop } from '@/ui/import/useWindowFileDrop.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { NAMED_COPY_ROWS } from '../../../electron/bridge.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
@@ -82,7 +85,7 @@ import { ChoiceMenu } from '@/ui/components/ChoiceField.tsx'
 import { Chip } from '@/ui/components/Chip.tsx'
 import { IconAction, removableRow } from '@/ui/components/IconAction.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
-import { Fixed, Mapper } from '@/ui/formats/IntakePanel.tsx'
+import { Fixed, Mapper, keyWords, keysInWords } from '@/ui/formats/IntakePanel.tsx'
 import { ReadersLine } from '@/ui/formats/ReadersLine.tsx'
 import { WhatLooksWrong } from '@/ui/formats/WhatLooksWrong.tsx'
 import { tallyAccounts, type FormatAudit } from '@/domain/format/audit.ts'
@@ -148,6 +151,9 @@ export function ReadFiles() {
   const [removing, setRemoving] = useState<ReadonlyMap<string, boolean>>(new Map())
   const [editing, setEditing] = useState<Editing | undefined>(undefined)
   const [problem, setProblem] = useState<string | undefined>(undefined)
+  // Files dropped on the window anywhere but a format's page: each row asks
+  // which format it goes onto (M54 F4, D-532).
+  const [asking, setAsking] = useState(false)
   const [written, setWritten] = useState<
     { readonly intakes: readonly Intake[]; readonly audits: readonly FormatAudit[] } | undefined
   >(undefined)
@@ -194,6 +200,20 @@ export function ReadFiles() {
     // What the engine would see once the lot is in (M34 U3, D-396).
     return { accepted, across, audits: planned.audits }
   }, [db, context, reviewed, ticks, removing])
+
+  // **A file dropped on the window reads onto the format the screen shows**
+  // (M54 F4, D-532): App hands it here, by the store, and this screen takes it
+  // as a picked file. `adding` is the render's own `add`.
+  const adding = useRef<((picked: readonly PickedFile[]) => void) | undefined>(undefined)
+  const dropped = windowDrop.use()
+  useEffect(() => {
+    // The store's own value, never the render's: an effect run twice takes the files once.
+    const pending = windowDrop.get()
+    if (pending === undefined || pending.format !== name || adding.current === undefined) return
+    windowDrop.set(undefined)
+    setAsking(pending.asking)
+    adding.current(inputFiles(pending.files))
+  }, [dropped, name, context])
 
   if (db === undefined) return null
   if (context === undefined || context.declaration === undefined) return <Navigate to="/formats" replace />
@@ -284,6 +304,7 @@ export function ReadFiles() {
       .then((loaded) => setFiles((current) => withNoteTables([...current, ...loaded], units)))
       .catch((error: unknown) => setProblem(String(error)))
   }
+  adding.current = add
 
   const drop = (id: string): void => {
     // A folder's items go with it.
@@ -398,6 +419,11 @@ export function ReadFiles() {
             />
             <Picker onFiles={add} empty={files.length === 0} />
             {problem !== undefined && <p className="mt-2 text-caption text-negative">{problem}</p>}
+            {asking && reviewed.length > 0 && writable.length > 1 && (
+              <p className="mt-4 text-caption text-ink-secondary">
+                Each file is read onto the format named beside it. Pick another there.
+              </p>
+            )}
 
             {reviewed.length > 0 && (
               <ul className="mt-4 space-y-2">
@@ -425,7 +451,9 @@ export function ReadFiles() {
                       setMade((current) =>
                         new Map(current).set(next.fileId, { format: next.format, sheet: next.sheet, reading: next.reading }),
                       )
-                      setTicks((current) => without(current, next.fileId))
+                      // Use is the person saying the reading is done: the file is
+                      // ticked, so Write is the next step (M54 F4).
+                      setTicks((current) => new Map(current).set(next.fileId, true))
                       setEditing(undefined)
                     }}
                     onRemove={() => drop(each.file.id)}
@@ -442,7 +470,7 @@ export function ReadFiles() {
               </ul>
             )}
             {new Set(reviewed.map((each) => each.declaration.name)).size > 1 && (
-              <p className="mt-2 text-caption text-ink-tertiary">
+              <p className="mt-2 text-caption text-ink-secondary">
                 Read in this order, so an entry can name one from a file above it.
               </p>
             )}
@@ -454,17 +482,25 @@ export function ReadFiles() {
             )}
             {reviewed.length > 0 && (
               <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-hairline pt-3">
+                {/* *One primary action per screen*: Write is filled only when it
+                    is the next step — not while a reader is being changed, and
+                    never disabled (M54 F4). */}
                 <Button
-                  variant="primary"
+                  variant={accepted.length > 0 && across.length === 0 && editing === undefined ? 'primary' : 'secondary'}
                   disabled={accepted.length === 0 || across.length > 0}
                   onClick={() => void write()}
                 >
                   Write {accepted.length === 1 ? '1 file' : `${String(accepted.length)} files`}
                 </Button>
                 <span className="text-caption text-ink-secondary tabular-nums">
-                  {entries === 1 ? '1 entry' : `${String(entries)} entries`} onto{' '}
-                  <Bidi>{(acceptedTitles.length === 0 ? [declaration.title] : acceptedTitles).join(', ')}</Bidi>,
-                  in one go or not at all
+                  {accepted.length === 0 ? (
+                    whyNothing(reviewed)
+                  ) : (
+                    <>
+                      {entries === 1 ? '1 entry' : `${String(entries)} entries`} onto{' '}
+                      <Bidi>{acceptedTitles.join(', ')}</Bidi>, in one go or not at all
+                    </>
+                  )}
                 </span>
                 {across.length > 0 && (
                   <div className="basis-full space-y-1">
@@ -759,7 +795,7 @@ function review(
         : [{ format: other.declaration.name, names: new Set(other.file.notes.map((note) => note.title)) }],
     )
     const into = mentioned.length === 0 ? undefined : formatsNamed(db, each.declaration, mentioned, formats, alongside)
-    return { ...each, reading: guessReading(each.declaration, each.table, formats, into, each.parent) }
+    return { ...each, reading: guessReading(each.declaration, each.table, formats, into, each.parent, heldCurrencies(db, each.declaration)) }
   })
 
   // One batch of the files that read and are not a file again, rehearsed in
@@ -830,8 +866,8 @@ function Picker({ onFiles, empty }: { onFiles: (files: readonly PickedFile[]) =>
       className={`flex flex-col items-start gap-1 border border-dashed px-4 py-3 text-caption transition-colors duration-[var(--duration-micro)] ${
         over ? 'border-ink-tertiary bg-surface' : 'border-hairline-strong'
       }`}
-      // The window's own drop is the ledger's statement mapper (D-227); a
-      // drop here is this screen's, and stops before it gets there.
+      // A drop on the window reads onto this format too (D-532); a drop here
+      // is this screen's, and walks a dropped folder, which the window's cannot.
       onDragOver={(event) => {
         event.preventDefault()
         event.stopPropagation()
@@ -870,7 +906,7 @@ function Picker({ onFiles, empty }: { onFiles: (files: readonly PickedFile[]) =>
         </label>
         <span className="text-ink-secondary">{empty ? 'or drop them here' : 'or drop more here'}</span>
       </span>
-      <span className="text-ink-tertiary">
+      <span className="text-ink-secondary">
         {SUPPORTED_EXTENSIONS.join(', ')}, a .json file of rows, or Markdown notes — a folder of them is a table, a note a row.
         Each file is read by the reader that fits it, or by a guess you can check, and nothing is
         written until you press Write.
@@ -932,7 +968,7 @@ function FileRow({
       fileId: file.id,
       format: declaration.name,
       sheet: reviewed.sheet,
-      reading: reviewed.reading ?? guessReading(declaration, table, formats),
+      reading: reviewed.reading ?? guessReading(declaration, table, formats, undefined, undefined, heldCurrencies(db, declaration)),
     }
   }
 
@@ -940,16 +976,19 @@ function FileRow({
   return (
     <li {...removable} className={`border border-hairline-strong bg-elevated px-4 py-3 ${removable.className}`}>
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <input
-          type="checkbox"
-          checked={ticked}
-          disabled={!reviewed.writable}
-          onChange={(event) => onTick(event.target.checked)}
-          aria-label={`Write ${file.name}`}
-        />
+        {/* The tick says what it does (M54 F4): Write, beside the file it writes. */}
+        <label className="flex items-center gap-1.5 text-caption text-ink-secondary">
+          <input
+            type="checkbox"
+            checked={ticked}
+            disabled={!reviewed.writable}
+            onChange={(event) => onTick(event.target.checked)}
+          />
+          Write
+        </label>
         <Bidi className="font-medium">{file.name}</Bidi>
         {sheets.length > 1 && (
-          <span className="text-caption text-ink-tertiary">
+          <span className="text-caption text-ink-secondary">
             sheet <Bidi>{sheets[reviewed.sheet] ?? ''}</Bidi>
           </span>
         )}
@@ -964,7 +1003,7 @@ function FileRow({
           />
         )}
         {file.notes !== undefined && file.items === undefined && (
-          <span className="text-caption text-ink-tertiary tabular-nums">
+          <span className="text-caption text-ink-secondary tabular-nums">
             {file.notes.length === 1 ? '1 note' : `${String(file.notes.length)} notes`}
             {(file.skipped ?? []).length > 0 && (
               <>
@@ -1006,7 +1045,7 @@ function FileRow({
         <HowLine how={how} title={declaration.title} any={anyReader} />
       </p>
       {(how.kind === 'NONE' || how.kind === 'CLOSE') && editing === undefined && reviewed.reading !== undefined && (
-        <GuessLine table={reviewed.table} reading={reviewed.reading} />
+        <GuessLine declaration={declaration} table={reviewed.table} reading={reviewed.reading} />
       )}
 
       {reviewed.sameAs !== undefined && (
@@ -1039,10 +1078,12 @@ function FileRow({
 
       {/* Nothing to find an entry by, said once (M50 U3, D-224). */}
       {plan?.unkeyed !== undefined && plan.prior === undefined && lineCounts(plan).typed > 0 && (
-        <p className="mt-1 text-caption text-ink-tertiary">{plan.unkeyed}</p>
+        <p className="mt-1 text-caption text-ink-secondary">{plan.unkeyed}</p>
       )}
 
-      {plan !== undefined && <PlanLines declaration={declaration} plan={plan} table={reviewed.table} />}
+      {/* While the reader is changed, its draft's lines are the one list, under
+          the grid — the committed reading's would be stale (M54 F4). */}
+      {plan !== undefined && editing === undefined && <PlanLines declaration={declaration} plan={plan} table={reviewed.table} />}
 
       {editing !== undefined && (
         <ReaderEditor
@@ -1080,7 +1121,7 @@ function ItemsLine({
 }) {
   const what = from === 'list' ? 'item' : 'table row'
   return (
-    <span className="flex items-center gap-1.5 text-caption text-ink-tertiary tabular-nums">
+    <span className="flex items-center gap-1.5 text-caption text-ink-secondary tabular-nums">
       {count === 1 ? `1 ${what}` : `${String(count)} ${what}s`}
       {sections.length > 0 && (
         <>
@@ -1141,16 +1182,16 @@ function HowLine({ how, title, any }: { how: How; title: string; any: boolean })
 }
 
 /** The guessed mapping, in a line: each header the guess read, and the key it read it onto. */
-function GuessLine({ table, reading }: { table: ReadTable; reading: Reading }) {
+function GuessLine({ declaration, table, reading }: { declaration: FormatDeclaration; table: ReadTable; reading: Reading }) {
   const header = table.rows[reading.headerRow] ?? []
   return (
-    <p className="mt-1 text-caption text-ink-tertiary">
+    <p className="mt-1 text-caption text-ink-secondary">
       {reading.columns.length === 0 ? (
         'No column is recognised — Change to say which is which.'
       ) : (
         <Bidi>
           {reading.columns
-            .map((each) => `${header[each.index]?.text ?? ''} → ${each.key}`)
+            .map((each) => `${header[each.index]?.text ?? ''} → ${keyWords(declaration, each.key)}`)
             .join(' · ')}
         </Bidi>
       )}
@@ -1201,7 +1242,7 @@ function AgainLines({
         )}
         {counts.join(' · ')}
         {nothing && (
-          <span className="text-ink-tertiary">
+          <span className="text-ink-secondary">
             {again.readBefore
               ? ' — nothing has changed since, so there is nothing to write'
               : ' — every entry already says what the file says, so there is nothing to write'}
@@ -1236,7 +1277,7 @@ function AgainLines({
           <span>
             Gone from the file: <Bidi>{named(again.gone)}</Bidi>
             {linked > 0 && (
-              <span className="text-ink-tertiary">
+              <span className="text-ink-secondary">
                 {' '}— {linked === 1 ? 'one is' : `${String(linked)} are`} linked to, and stay{linked === 1 ? 's' : ''}
               </span>
             )}
@@ -1300,7 +1341,7 @@ function PlanLines({
               : []),
             ...(declaration.identities.length === 0 && plan.header === undefined
               ? [
-                  <span key="nothing" className="text-ink-tertiary">
+                  <span key="nothing" className="text-ink-secondary">
                     {plan.again !== undefined && failed === 0 ? 'This' : 'this'} format makes no claim, so
                     nothing was checked
                   </span>,
@@ -1320,47 +1361,83 @@ function PlanLines({
           key={each.identity.name}
           className={each.verdict.kind === 'FAILED' ? 'text-negative' : 'text-ink-secondary'}
         >
-          <Bidi>{verdictSentence(each.identity, each.verdict)}</Bidi>
+          <Bidi>{keysInWords(verdictSentence(each.identity, each.verdict), declaration)}</Bidi>
         </p>
       ))}
       {refusals.slice(0, 8).map((each) => (
         <p key={each} className="text-negative">
-          <Bidi>{each}</Bidi>
+          <Bidi>{keysInWords(each, declaration)}</Bidi>
         </p>
       ))}
       {failedRows.slice(0, 5).map((row) => (
         <p key={row.line} className="text-ink-secondary">
-          <span className="text-ink-tertiary tabular-nums">
+          <span className="text-ink-secondary tabular-nums">
             <Bidi>{capitalize(rowLabel(table, row.line))}</Bidi>
           </span>{' '}
           —{' '}
-          <Bidi>{row.problem ?? ''}</Bidi>
+          <Bidi>{keysInWords(row.problem ?? '', declaration)}</Bidi>
         </p>
       ))}
       {failedRows.length > 5 && (
-        <p className="text-ink-tertiary">and {failedRows.length - 5} more.</p>
+        <p className="text-ink-secondary">and {failedRows.length - 5} more.</p>
       )}
       {unlinked.slice(0, 5).map(({ line, each }) => (
         <p key={`${String(line)}:${each.key}:${each.name}`} className="text-ink-secondary">
-          <span className="text-ink-tertiary tabular-nums">
+          <span className="text-ink-secondary tabular-nums">
             <Bidi>{capitalize(rowLabel(table, line))}</Bidi>
           </span>{' '}
-          — <Bidi>{each.reason}</Bidi>
+          — <Bidi>{keysInWords(each.reason, declaration)}</Bidi>
         </p>
       ))}
       {unlinked.length > 5 && (
-        <p className="text-ink-tertiary">and {unlinked.length - 5} more links left out.</p>
+        <p className="text-ink-secondary">and {unlinked.length - 5} more links left out.</p>
       )}
       {failing.slice(0, 5).map((each) => (
         <p key={each.id} className="text-negative">
           <span className="tabular-nums">{capitalize(each.id)}</span> fails a claim —{' '}
-          <Bidi>{each.sentences.join(' ')}</Bidi>
+          <Bidi>{keysInWords(each.sentences.join(' '), declaration)}</Bidi>
         </p>
       ))}
       {failing.length > 5 && (
-        <p className="text-ink-tertiary">and {failing.length - 5} more that fail one.</p>
+        <p className="text-ink-secondary">and {failing.length - 5} more that fail one.</p>
       )}
     </div>
+  )
+}
+
+/**
+ * **Why Write has nothing to write** (M54 F4, *no dead end*): a file that reads
+ * is left for the person to tick unless it proves itself, and says why; one
+ * that does not read says what stops it on its own row.
+ */
+function whyNothing(reviewed: readonly Reviewed[]): string {
+  const waiting = reviewed.find((each) => each.writable)
+  if (waiting === undefined) return 'Nothing here can be written yet: what stops each file is said on its row.'
+  const plan = waiting.plan
+  const failed = plan === undefined ? 0 : lineCounts(plan).failed
+  const reason =
+    plan?.prior !== undefined
+      ? 'it was read before'
+      : failed > 0
+        ? failed === 1 ? 'it has a refused line' : `it has ${String(failed)} refused lines`
+        : waiting.declaration.identities.length === 0
+          ? `${waiting.declaration.title} makes no claim to check it by`
+          : 'not every claim it makes holds'
+  return `Tick a file to write it: ${waiting.file.name} is not ticked, as ${reason}.`
+}
+
+/**
+ * The one currency each money column's rows already hold, by its currency key
+ * — what a file whose figures carry no sign is in (M54 F4).
+ */
+function heldCurrencies(db: Database, declaration: FormatDeclaration): ReadonlyMap<string, string> {
+  return new Map(
+    declaration.columns.flatMap((column) => {
+      if (column.type !== 'money') return []
+      const held = valueCounts(db, declaration, column).filter((each) => typeof each.value === 'string')
+      const only = held.length === 1 ? held[0]?.value : undefined
+      return typeof only === 'string' ? [[currencyKeyOf(column), only] as const] : []
+    }),
   )
 }
 
@@ -1419,7 +1496,7 @@ function ReaderList({
           )}
           {/* Unnamed, it is called after the file it last read; the rest are the history. */}
           {(reader.name === undefined ? reader.files.slice(1) : reader.files).length > 0 && (
-            <span className="text-ink-tertiary">
+            <span className="text-ink-secondary">
               {reader.name === undefined ? 'also read ' : 'has read '}
               {(reader.name === undefined ? reader.files.slice(1) : reader.files).map((file, index) => (
                 <span key={file}>
@@ -1508,6 +1585,7 @@ function ReaderEditor({
       Date.now(),
     ).plans[others.length] ?? planReading(db, declaration, table, file, editing.reading, formats)
   const sheets = file.sheets
+  const held = heldCurrencies(db, declaration)
 
   return (
     <div className="fc-pop-enter mt-3 border-t border-hairline pt-3">
@@ -1520,7 +1598,7 @@ function ReaderEditor({
             onPick={(choice) => {
               const sheet = Number(choice.value)
               const next = file.tables[sheet] ?? { rows: [], columnCount: 0 }
-              onChange({ ...editing, sheet, reading: guessReading(declaration, next, formats) })
+              onChange({ ...editing, sheet, reading: guessReading(declaration, next, formats, undefined, undefined, held) })
             }}
           />
         </label>
@@ -1530,7 +1608,9 @@ function ReaderEditor({
         table={table}
         reading={editing.reading}
         keys={offeredKeysOf(declaration)}
-        onChange={(reading) => onChange({ ...editing, reading })}
+        // A money column mapped by hand takes the currency its cells or the
+        // document say, as a value to confirm (M54 F4).
+        onChange={(reading) => onChange({ ...editing, reading: withInferredCurrency(declaration, table, reading, held) })}
       />
       <Fixed
         db={db}
@@ -1541,7 +1621,7 @@ function ReaderEditor({
       />
       <PlanLines declaration={declaration} plan={plan} table={table} />
       <span className="mt-3 flex gap-2">
-        <Button size="sm" variant="primary" disabled={!planWrites(plan)} onClick={onUse}>
+        <Button size="sm" variant={planWrites(plan) ? 'primary' : 'secondary'} disabled={!planWrites(plan)} onClick={onUse}>
           Use
         </Button>
         <Button size="sm" variant="ghost" onClick={onCancel}>
@@ -1634,7 +1714,7 @@ function LineAccount({ lines, notes }: { lines: NonNullable<ReadingPlan['lines']
   if (notes !== undefined) {
     const count = lines.lines - lines.heading
     return (
-      <p className="text-ink-tertiary tabular-nums">
+      <p className="text-ink-secondary tabular-nums">
         {count === 1 ? `1 ${notes}` : `${String(count)} ${notes}s`}: {lines.read} read · {lines.refused} refused
         {!tallyAccounts(lines) && <span className="text-negative"> · some {notes}s are not accounted for</span>}
       </p>
@@ -1648,7 +1728,7 @@ function LineAccount({ lines, notes }: { lines: NonNullable<ReadingPlan['lines']
     ...(lines.empty === 0 ? [] : [`${String(lines.empty)} empty`]),
   ]
   return (
-    <p className="text-ink-tertiary tabular-nums">
+    <p className="text-ink-secondary tabular-nums">
       {lines.lines === 1 ? '1 line' : `${String(lines.lines)} lines`}: {parts.join(' · ')}
       {!tallyAccounts(lines) && <span className="text-negative"> · some lines are not accounted for</span>}
     </p>

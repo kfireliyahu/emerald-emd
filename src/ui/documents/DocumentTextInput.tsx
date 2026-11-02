@@ -84,6 +84,7 @@ export function DocumentTextInput({
   // The queued document, opened once. A ref rather than a dependency because
   // re-opening a PDF on a re-render would be a second OCR pass nobody asked for.
   const opened = useRef<File | undefined>(undefined)
+  const picker = useRef<HTMLInputElement>(null)
   useEffect(() => {
     if (openNow === undefined || opened.current === openNow) return
     opened.current = openNow
@@ -91,7 +92,7 @@ export function DocumentTextInput({
   }, [onOpen, openNow])
 
   return (
-    <div className="mx-auto max-w-[820px] space-y-4">
+    <div className="mx-auto max-w-4xl space-y-4">
       <p className="text-ink-secondary">{intro}</p>
 
       <textarea
@@ -114,12 +115,18 @@ export function DocumentTextInput({
           Read it
         </Button>
 
-        <label className="inline-flex h-9 cursor-pointer items-center rounded-md border border-hairline-strong bg-elevated px-4 font-medium text-ink transition-colors duration-[var(--duration-micro)] hover:border-ink-tertiary focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent">
+        {/* The shared Button, a split tile beside Read it (M54 F4); the
+            picker it opens is hidden and never a stop of its own. */}
+        <Button icon="open" onClick={() => picker.current?.click()}>
           {onFiles === undefined ? `Open a ${noun}` : `Open ${noun}s`}
-          <input
+        </Button>
+        <input
+            ref={picker}
             type="file"
             accept=".pdf,.txt,.text,application/pdf,text/plain"
             className="sr-only"
+            tabIndex={-1}
+            aria-hidden
             {...(onFiles === undefined ? {} : { multiple: true })}
             onChange={(event) => {
               const picked = [...(event.target.files ?? [])]
@@ -133,7 +140,6 @@ export function DocumentTextInput({
               if (file !== undefined) onOpen(file)
             }}
           />
-        </label>
 
         {beside}
 
@@ -141,7 +147,7 @@ export function DocumentTextInput({
             through 1.7 MB of reader, a second read of the file and four seconds
             of OCR a page, which is the whole of what a person waits through. */}
         {working && (note !== undefined || tokens > 0) && (
-          <span className="text-caption text-ink-tertiary" aria-live="polite">
+          <span className="text-caption text-ink-secondary" aria-live="polite">
             {note ?? `${String(tokens)} tokens so far`}
             {note !== undefined && tokens > 0 && (
               <span className="tabular-nums"> · {tokens} tokens</span>

@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import type { Database } from 'sql.js'
 
+import { capitalize } from '@/core/text.ts'
 import { listRows } from '@/data/repositories/formatRowRepository.ts'
 import { labelColumn, type FormatDeclaration } from '@/domain/format/declaration.ts'
-import type { DateOrder, ReadTable, Reading } from '@/domain/format/reading.ts'
-import { companionKeyOf } from '@/domain/format/row.ts'
+import { parseFigure, type DateOrder, type ReadCell, type ReadTable, type Reading } from '@/domain/format/reading.ts'
+import { companionKeyOf, offeredKeysOf } from '@/domain/format/row.ts'
+import { entryLabel } from '@/domain/format/view.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ChoiceField, ChoiceMenu } from '@/ui/components/ChoiceField.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
@@ -49,10 +51,20 @@ export function Mapper({
   const bound = new Map(reading.columns.map((each) => [each.index, each.key]))
   const preview = table.rows.slice(reading.headerRow + 1, reading.headerRow + 7)
   const indexes = Array.from({ length: table.columnCount }, (_, index) => index)
-  const headerRows = table.rows.slice(0, 20).map((row, index) => ({
-    value: String(index),
-    label: `${String(index + 1)}: ${row.map((cell) => cell.text).join(' · ').slice(0, 60) || '(blank)'}`,
-  }))
+  // *Numbers right, text left*: a column whose shown cells are all figures.
+  const figures = indexes.map((index) => {
+    const cells = preview.map((row) => row[index]).filter((cell): cell is ReadCell => cell !== undefined && cell.kind !== 'empty')
+    return cells.length > 0 && cells.every((cell) => cell.kind === 'number' || parseFigure(cell.text) !== undefined)
+  })
+  // A row by its number and its first cells, as a person reads a sheet (M54 F4).
+  const headerRows = table.rows.slice(0, 20).map((row, index) => {
+    const cells = row.map((cell) => cell.text.trim()).filter((text) => text !== '')
+    const said = cells.join(', ')
+    return {
+      value: String(index),
+      label: cells.length === 0 ? `Row ${String(index + 1)}, empty` : `Row ${String(index + 1)}: ${said.length > 60 ? `${said.slice(0, 59)}…` : said}`,
+    }
+  })
   // A column holding several of a list is split by what the person states
   // (M34 U5, D-398), never by a guess — or by what the file joined it with,
   // when the file held it as a list (a note's frontmatter, M34 U7).
@@ -100,45 +112,59 @@ export function Mapper({
         </label>
       </div>
 
-      <div className="overflow-auto rounded-md border border-hairline">
+      <div className="overflow-auto border border-hairline">
         <table className="w-full text-caption">
           <thead>
             <tr className="border-b border-hairline bg-surface">
-              {indexes.map((index) => (
-                <th key={index} className="p-1 text-left align-top font-normal">
-                  {/* A link takes a cell naming its row exactly (D-261); a
-                      format it cannot fill that way says so under the grid. */}
-                  <ChoiceMenu
-                    className={`${FIELD} w-full min-w-max pr-2`}
-                    aria-label={`What column ${String(index + 1)} is read into`}
-                    text={bound.get(index) ?? 'Ignore'}
-                    choices={[{ value: '', label: 'Ignore' }, ...keys.map((key) => ({ value: key, label: key }))]}
-                    onPick={(choice) => set(index, choice.value)}
-                  />
-                  {listKeys.has(bound.get(index) ?? '') && (
-                    <label className="fc-pop-enter mt-1 flex items-center gap-1 px-1 text-ink-secondary">
-                      <span className="shrink-0">Split by</span>
-                      <input
-                        className={`${FIELD} w-12`}
-                        aria-label={`What splits a cell of ${bound.get(index) ?? ''}`}
-                        placeholder=","
-                        value={separatorAt(index) ?? ''}
-                        onChange={(event) => split(index, event.target.value)}
-                      />
-                    </label>
-                  )}
-                  <span className="flex min-w-0 mt-1 px-1 text-ink-tertiary">
-                    <Bidi className="min-w-0 truncate">{table.rows[reading.headerRow]?.[index]?.text ?? ''}</Bidi>
-                  </span>
-                </th>
-              ))}
+              {indexes.map((index) => {
+                const key = bound.get(index)
+                const header = table.rows[reading.headerRow]?.[index]
+                return (
+                  <th key={index} className={`p-1 align-top font-normal ${figures[index] === true ? 'text-right' : 'text-left'}`}>
+                    {/* *The mapper shows the raw cell* (D-531): the role is a small
+                        label at rest, a menu on focus or a click. A link takes a
+                        cell naming its row exactly (D-261); a format it cannot
+                        fill that way says so under the grid. */}
+                    <ChoiceMenu
+                      className={`${ROLE} ${key === undefined ? 'text-ink-secondary' : 'text-ink'}`}
+                      aria-label={`What column ${String(index + 1)} is read into`}
+                      text={key === undefined ? 'Ignore' : capitalize(keyWords(declaration, key))}
+                      choices={[
+                        { value: '', label: 'Ignore' },
+                        ...keys.map((each) => ({ value: each, label: capitalize(keyWords(declaration, each)) })),
+                      ]}
+                      onPick={(choice) => set(index, choice.value)}
+                    />
+                    {listKeys.has(key ?? '') && (
+                      <label className="fc-pop-enter mt-1 flex items-center gap-1 px-1 text-ink-secondary">
+                        <span className="shrink-0">Split by</span>
+                        <input
+                          className={`${FIELD} w-12`}
+                          aria-label={`What splits a cell of ${keyWords(declaration, key ?? '')}`}
+                          placeholder=","
+                          value={separatorAt(index) ?? ''}
+                          onChange={(event) => split(index, event.target.value)}
+                        />
+                      </label>
+                    )}
+                    <span className={`mt-1 flex min-w-0 px-1 font-mono ${key === undefined ? 'text-ink-secondary' : 'text-ink'}`}>
+                      <Bidi className="min-w-0 truncate">{header?.text ?? ''}</Bidi>
+                    </span>
+                  </th>
+                )
+              })}
             </tr>
           </thead>
           <tbody>
             {preview.map((row, line) => (
               <tr key={line} className="border-b border-hairline last:border-0">
                 {indexes.map((index) => (
-                  <td key={index} className="px-2 py-1 text-ink-secondary">
+                  <td
+                    key={index}
+                    className={`px-2 py-1 font-mono ${figures[index] === true ? 'text-right tabular-nums' : 'text-left'} ${
+                      bound.has(index) ? 'text-ink' : 'text-ink-secondary'
+                    }`}
+                  >
                     <Bidi className="block max-w-48 truncate">{row[index]?.text ?? ''}</Bidi>
                   </td>
                 ))}
@@ -197,10 +223,8 @@ export function Fixed({
         <label key={key} className="flex flex-wrap items-center gap-2 text-caption">
           <span className="text-ink-secondary">
             {column.type === 'link'
-              ? `Every row belongs to which ${column.target ?? 'row'}?`
-              : column.type === 'money'
-                ? `Every ${column.name} is in`
-                : `Every ${column.name} is in`}
+              ? `Every row belongs to which ${(declared.find((each) => each.name === column.target)?.title ?? 'row').toLowerCase()}?`
+              : `Every ${entryLabel(column)} is in`}
           </span>
           {column.type === 'link' ? (
             <RowChoice
@@ -209,10 +233,13 @@ export function Fixed({
               onPick={(id) => set(key, id)}
             />
           ) : (
+            // A placeholder never looks like an answer (M54 F4): the currency
+            // the cells or the document say is a value, here to confirm.
             <input
               className={`${FIELD} w-28`}
+              aria-label={capitalize(keyWords(declaration, key))}
               value={fixed.get(key) ?? ''}
-              placeholder={column.type === 'money' ? 'ILS' : 'g'}
+              placeholder={column.type === 'money' ? 'Three letters' : 'A unit'}
               onChange={(event) => set(key, event.target.value)}
             />
           )}
@@ -244,6 +271,34 @@ function targetRows(
     id: row.id,
     label: naming === undefined ? row.id : String(row.cells[naming.name] ?? row.id),
   }))
+}
+
+/**
+ * *The role is a small label* (D-531): no field's border at rest, the menu's
+ * when it is pointed at, the accent rule and ring when it has focus.
+ */
+const ROLE =
+  'h-6 w-full min-w-max cursor-pointer border-0 border-b border-transparent bg-transparent px-1 text-label uppercase outline-none ' +
+  'hover:border-hairline-strong focus:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent'
+
+/**
+ * **A key as a person reads it** (M54 F4, *Words name the rule*): a column by
+ * its label, and a money column's currency or a quantity's unit as "currency of
+ * amount" — never `amount_currency`. Only the words: the key stays the key in
+ * the reading and every tool.
+ */
+export function keyWords(declaration: FormatDeclaration, key: string): string {
+  for (const column of declaration.columns) {
+    if (column.name === key) return entryLabel(column)
+    if (companionKeyOf(column) === key) return `${column.type === 'money' ? 'currency' : 'unit'} of ${entryLabel(column)}`
+  }
+  return key.replace(/_/g, ' ')
+}
+
+/** A sentence the engine wrote for a conversation, with each of the format's keys in its words. */
+export function keysInWords(sentence: string, declaration: FormatDeclaration): string {
+  const keys = new Set(offeredKeysOf(declaration))
+  return sentence.replace(/\b[a-z][a-z0-9]*(?:_[a-z0-9]+)+\b/g, (word) => (keys.has(word) ? keyWords(declaration, word) : word))
 }
 
 const DATE_ORDERS = [

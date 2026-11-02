@@ -145,6 +145,48 @@ describe('guessing which column is which key', () => {
   })
 })
 
+describe('a guess reads figures as figures (M54 F4)', () => {
+  const charges = declaring(
+    column('date', 'date', { required: true }),
+    column('merchant', 'text', { required: true }),
+    column('amount', 'money', { required: true }),
+  )
+
+  it('puts a currency only on a column of codes, never on one of figures', () => {
+    // A card statement: `Charge amount` shares a word with `amount_currency`.
+    const sheet = table(
+      [text('Transaction date'), text('Merchant'), text('Transaction amount'), text('Charge amount')],
+      [text('1/7/26'), text('Greenleaf Market'), text('₪ 438.20'), text('₪ 438.20')],
+      [text('2/7/26'), text('Harbor Foods'), text('₪ 1,152.75'), text('₪ 1,152.75')],
+    )
+    const guessed = guessReading(charges, sheet)
+    expect(guessed.columns).toEqual([
+      { index: 0, key: 'date' },
+      { index: 1, key: 'merchant' },
+      { index: 2, key: 'amount' },
+    ])
+    // ₪ in the cells is what the amounts are in: a value, here to confirm.
+    expect(guessed.fixed).toEqual([{ key: 'amount_currency', value: 'ILS' }])
+
+    const coded = table(
+      [text('Date'), text('Merchant'), text('Amount'), text('Amount currency')],
+      [text('1/7/26'), text('Greenleaf Market'), number(438.2), text('EUR')],
+    )
+    expect(guessReading(charges, coded).columns.map((each) => each.key)).toEqual(['date', 'merchant', 'amount', 'amount_currency'])
+    expect(guessReading(charges, coded).fixed).toEqual([])
+  })
+
+  it('takes the currency the rows already hold when the cells carry no sign, and none a shared sign names', () => {
+    const plain = table([text('Date'), text('Merchant'), text('Amount')], [text('1/7/26'), text('Bakery'), text('5,000.00')])
+    expect(guessReading(charges, plain).fixed).toEqual([])
+    expect(guessReading(charges, plain, undefined, undefined, undefined, new Map([['amount_currency', 'ILS']])).fixed).toEqual([
+      { key: 'amount_currency', value: 'ILS' },
+    ])
+    const yen = table([text('Date'), text('Merchant'), text('Amount')], [text('1/7/26'), text('Bakery'), text('¥ 500')])
+    expect(guessReading(charges, yen).fixed).toEqual([])
+  })
+})
+
 describe('a date that could be two days', () => {
   it('reads the order off the dates when one of them decides it', () => {
     expect(inferDateOrder(['13/04/2026', '02/04/2026'])).toBe('dmy')

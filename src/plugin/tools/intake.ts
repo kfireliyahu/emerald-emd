@@ -642,17 +642,20 @@ function resolveReading(
   // A remembered reading brings its header back with it (U10) — the printed
   // total is where it was, counted from the end — unless the caller sent one.
   const withHeader = header ?? base.header
+  const mapped = (columns === undefined ? base.columns : overMapping(base.columns, columns, declaration, loaded.table)).map((each) => {
+    const separator = separators?.get(each.key)
+    return separator === undefined ? each : { ...each, separator }
+  })
+  // The guess's currency, read off the cells' sign (M54 F4), gives way to a column the caller maps onto it.
+  const kept = base.fixed.filter((each) => !mapped.some((column) => column.key === each.key))
 
   return {
     reading: {
       format: declaration.name,
       headerRow: headerRow === undefined ? base.headerRow : Math.max(0, Math.floor(headerRow)),
       dateOrder: order ?? base.dateOrder,
-      columns: (columns === undefined ? base.columns : overMapping(base.columns, columns, declaration, loaded.table)).map((each) => {
-        const separator = separators?.get(each.key)
-        return separator === undefined ? each : { ...each, separator }
-      }),
-      fixed: fixed ?? base.fixed,
+      columns: mapped,
+      fixed: fixed ?? kept,
       ...(withHeader === undefined ? {} : { header: withHeader }),
     },
     source,
