@@ -181,7 +181,7 @@ function useDiskConflictNotice(): Notice | undefined {
         </>
       ),
       actions: [
-        { label: 'Save as…', onClick: () => void saveCopyAs(), disabled: busy, lead: true },
+        { label: 'Save a copy…', onClick: () => void saveCopyAs(), disabled: busy, lead: true },
         { label: 'Dismiss', onClick: dismiss, disabled: busy, quiet: true },
       ],
     }

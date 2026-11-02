@@ -185,3 +185,34 @@ describe('raw cells keep the bundled type', () => {
     expect(tokens).toMatch(/--font-mono: "IBM Plex Mono", "IBM Plex Sans Hebrew",/)
   })
 })
+
+describe('the title bar leaves the caption buttons their room', () => {
+  // *The app draws the title bar*: without `min-w-0` the document's row is as wide as its
+  // name, and a long one pushed Save, New, Open… and Open recent under the platform's
+  // caption buttons at the default size (M54 U6).
+  it('lets the document row shrink, so the name truncates instead', () => {
+    const bar = readFileSync('src/ui/DocumentBar.tsx', 'utf8')
+    expect(bar).toMatch(/key="open" className="[^"]*\bmin-w-0\b/)
+  })
+})
+
+describe('an empty state is ink-secondary', () => {
+  // *An empty state is one sentence* in `ink-secondary`; `ink-tertiary` read 2.6:1 on the
+  // light dialog and 3.4:1 on the dark one (M54 U6). The shell's dialogs, checked by name.
+  it.each(['src/ui/EarlierCopies.tsx'])('%s', (path) => {
+    const empties = readFileSync(path, 'utf8')
+      .split('\n')
+      .filter((line) => /None yet|Open a document from a file/.test(line))
+    expect(empties.length).toBeGreaterThan(0)
+    expect(empties.filter((line) => line.includes('text-ink-tertiary'))).toEqual([])
+  })
+})
+
+describe('an earlier copy keeps its label’s start', () => {
+  // *Hebrew needs bidi isolation*: the ellipsis on the Bidi span, never on the box around
+  // "named · before …" (M54 U6). bidiTruncation.test.ts sees only a box that opens onto <Bidi>.
+  it('truncates the Bidi span itself', () => {
+    const copies = readFileSync('src/ui/EarlierCopies.tsx', 'utf8')
+    expect(copies).toContain('<Bidi className="min-w-0 truncate">{copy.before}</Bidi>')
+  })
+})

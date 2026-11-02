@@ -177,7 +177,7 @@ function EarlierCopiesDialog() {
         <div className="min-h-0 flex-1 overflow-y-auto px-3.5 pt-2 pb-3">
           {listing.kind === 'loading' && <p className="m-0 py-3 text-ink-tertiary">Looking…</p>}
           {listing.kind === 'nothing-open' && (
-            <p className="m-0 py-3 text-ink-tertiary">Open a document from a file to see its earlier copies.</p>
+            <p className="m-0 py-3 text-ink-secondary">Open a document from a file to see its earlier copies.</p>
           )}
           {listing.kind === 'failed' && (
             <p className="m-0 py-3 text-negative" role="alert">
@@ -185,7 +185,7 @@ function EarlierCopiesDialog() {
             </p>
           )}
           {listing.kind === 'copies' && listing.copies.length === 0 && (
-            <p className="m-0 py-3 text-ink-tertiary">None yet. One is taken the first time an assistant writes to it.</p>
+            <p className="m-0 py-3 text-ink-secondary">None yet. One is taken the first time an assistant writes to it.</p>
           )}
           {listing.kind === 'copies' && listing.copies.length > 0 && (
             <ul className="m-0 flex list-none flex-col p-0">
@@ -194,8 +194,10 @@ function EarlierCopiesDialog() {
                   <span className="flex min-w-0 flex-1 items-baseline gap-2">
                     <span className="font-mono text-[13px] tabular-nums">{moment(copy.at)}</span>
                     {copy.before !== undefined && (
-                      <span className="truncate text-caption text-ink-secondary">
-                        {copy.before === '' ? 'named' : <>named · before <Bidi>{copy.before}</Bidi></>}
+                      // The ellipsis on the Bidi span, so a Hebrew label keeps its start (M54 U6).
+                      <span className="flex min-w-0 gap-1 text-caption text-ink-secondary">
+                        <span className="shrink-0">{copy.before === '' ? 'named' : 'named · before'}</span>
+                        {copy.before !== '' && <Bidi className="min-w-0 truncate">{copy.before}</Bidi>}
                       </span>
                     )}
                   </span>

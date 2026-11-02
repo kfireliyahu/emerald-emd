@@ -96,7 +96,9 @@ export function DocumentBar() {
   }
 
   return (
-    <div key="open" className="fc-view-enter flex items-center gap-3">
+    // `min-w-0`, or the row's min-content is the whole name and a long one pushes
+    // the controls under the platform's caption buttons (M54 U6).
+    <div key="open" className="fc-view-enter flex min-w-0 items-center gap-3">
       <span className="flex min-w-0" title={adapter.describe()}>
         <Bidi className="min-w-0 truncate">{documentName}</Bidi>
       </span>

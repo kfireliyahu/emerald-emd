@@ -7,6 +7,16 @@ import { useDocumentStore } from '@/state/documentStore.ts'
 const SNAPSHOT_INTERVAL_MS = 30_000
 
 /**
+ * Which save a key press asks for: `Ctrl/Cmd+S` saves, and `Ctrl/Cmd+Shift+S`
+ * is Save a copy…, as the File menu and the palette both show it (M54 U6) —
+ * it used to save in place, because Shift was never looked at.
+ */
+export function saveShortcut(event: Pick<KeyboardEvent, 'ctrlKey' | 'metaKey' | 'shiftKey' | 'key'>): 'save' | 'save-copy' | undefined {
+  if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 's') return undefined
+  return event.shiftKey ? 'save-copy' : 'save'
+}
+
+/**
  * The save discipline D-021 calls for: `Ctrl/Cmd+S`, a `beforeunload` guard
  * while there are unsaved changes, and a crash snapshot every 30 seconds.
  *
@@ -16,14 +26,17 @@ const SNAPSHOT_INTERVAL_MS = 30_000
 export function useSaveShortcuts(): void {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent): void => {
-      if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 's') return
+      const which = saveShortcut(event)
+      if (which === undefined) return
       const { db } = useDocumentStore.getState()
       if (db === undefined) return
 
       // Only once we know there is a document to save — otherwise let the
-      // browser have its own Save Page.
+      // browser have its own Save Page. Handled here, the shell's menu
+      // accelerator for the same keys never fires, so this runs once.
       event.preventDefault()
-      void useDocumentStore.getState().save()
+      if (which === 'save-copy') void useDocumentStore.getState().saveCopyAs()
+      else void useDocumentStore.getState().save()
     }
 
     window.addEventListener('keydown', onKeyDown)
