@@ -6177,6 +6177,12 @@ should: A block is resized by dragging its edge, in width and height
 breaks: Maintainer, 2026-10-22, reviewing the dashboard: 'id like the blocks to be resizeable.' Blocks have fixed widths (a total one column, others two) and height by content. Fix: M53 F4.
 state: fault
 
+### At 1440x900, watch ledger 5/5 (Groceries row), timesheet 1/6 (the paycheck row), timesheet 4/6 and 5/6 (the verdict) and development 3/4 (roadmap-M4), and note where the outline sits.
+unit: M54 U8
+should: The outlined box is brought well into view with its context (the outline is the box the eye should be on).
+breaks: bringIntoView scrolls each box only to the nearest edge, so every one sits on the frame's bottom edge (838-880, 832-880, 727-880, 721-880 in a viewport ending at 900); ledger 5/5's 'every charge is categorized' is below the fold, and development 3/4's outline clips to 920 for a frame when the second unit lands.
+state: open
+
 ### At `#/formats`, go to New format → By hand. Call it `Ingredient`, then add a real column with a unit and a minimum, an enum with two members, and a money column. Change a type after filling its fields. Save, then Edit, take a column out, and read the plan. Then use From a declaration: paste the ingredient fixture and press Open it in the editor. Try Copy the declaration. (M20 T1 has since turned this form into a four-step walk; judge it there.)
 unit: M19 U2a
 should: Fields follow the type: bounds only on integer and real, members only on enum, no unit on money. A retype clears what the new type cannot hold. A new format does not open red — the count says 3 things to fix and Save is disabled, but no field is accused until it has been typed in. Each problem sits beside its column. Removing a money column shows two steps (`price_minor`, `price_currency`). The import lands as 31 filled fields with the name locked. Copy puts on the clipboard the same markdown that Show prints.
@@ -7086,6 +7092,24 @@ unit: M50 U1
 should: The section reads as something a session would want first (start-here table, then a line per format with its columns); the second run prints unchanged for every file. Wrong: the section is noisy or misleading, or anything changes on the second run
 state: open
 
+### In any tour, click a later dot, or Watch after Try it, or Reset, and watch the strip and the app for ~3 s.
+unit: M54 U8
+should: Words that name what happens, a forward jump included (Words name the rule), and the in-progress state drawn by Working (One progress indicator) rather than fast-forwarded screens at full opacity.
+breaks: The strip says 'Putting the document back…' even on a forward jump where nothing is put back, and for ~2.6 s the app flips through six or more screens (formats, a card charge, the new-format dialog, the Claims dialog, the receipt) with no Working indicator.
+state: open
+
+### In any tour, light and dark, read the step counter ('3 / 5'), the Speed label, the chat panel's 'A conversation, written for this tour.', its 'Person'/'Model' labels, and the narrow note 'Try it yourself on a wider screen.'
+unit: M54 U8
+should: Essential text at 4.5:1 (Contrast 4.5:1 for text; ink-tertiary is for non-essential text only).
+breaks: All are ink-tertiary on surface: 2.45:1 light, 3.38:1 dark. Earlier chat lines dimmed to 0.55 read ~4.2:1 in light and their labels ~1.6:1. Which of these is essential is the same question U2, U4 and U5 raised.
+state: open
+
+### In light, look at the dots of steps not yet reached in any tour's strip.
+unit: M54 U8
+should: A control's boundary at 3:1 against its plane (WCAG 1.4.11 Non-text Contrast).
+breaks: The upcoming dot is a 1.5px ink-tertiary ring at 2.45:1 on surface, and it is the dot's only visible part.
+state: open
+
 ### In light, read the inbox diagram's file names (.inbox-file, page.css:590-594). This is the same question as U2's and U4's ink-tertiary rows.
 unit: M54 U7
 should: Contrast 4.5:1 for text: ink-tertiary only for text nobody needs.
@@ -7160,6 +7184,18 @@ should: A question that names the document, with Restore and Discard (An action 
 breaks: window.confirm('Unsaved work from <date> was found. Restore it?') with OK and Cancel (App.tsx:353); Cancel calls clearSnapshot() and the work is gone. It does not name the document though snapshot.documentName is there.
 state: open
 
+### Let an autoplaying tour run (Emerald's page plays every frame with autoplay=1) and look for a way to stop the motion.
+unit: M54 U8
+should: WCAG 2.2.2 Pause, Stop, Hide: motion that starts by itself and lasts over 5 s can be paused.
+breaks: The tour loops forever; the only way to stop it is Try it, which hands the visitor the app. Question: whether there should be a Pause.
+state: open
+
+### Let any tour lose its way (timesheet 6/6 above), then read the strip.
+unit: M54 U8
+should: One plain sentence that says what happened and points at Watch or Reset, with no anchor ids (An empty state is one sentence; Nielsen 9, recover from errors). The wording is the maintainer's.
+breaks: The strip shows the internal anchor in negative, 'Step 26: nothing on the screen is "field-end".', or 'The tour stopped: Error: …' for an unexpected error; nothing says what to do next, and the line stays up after the visitor changes the document. Question for the maintainer.
+state: open
+
 ### Link to a row whose name is not unique (tasks, study periods)
 unit: M34 T1
 should: A link can name its row by more than the name when the name repeats
@@ -7190,11 +7226,29 @@ should: A file to download looks like a download, not something to type (Words n
 breaks: `emerald.mcpb` sits in the same pre.run code box as `git clone` and `npx`, so it reads as a command.
 state: open
 
+### Look at the outline drawn around a box in custom 5/5, development 3/4 or 4/4 (Frame.tsx, the tour-look rect).
+unit: M54 U8
+should: Whether Square by spending the radius tokens, written for cards and controls, binds the tour's own outline.
+breaks: The outline is <rect rx="6" ry="6">, a rounded line round square rows and cards, a literal radius rather than a token; the chat line's own outline is already square. Not changed: it would change the public page. Question for the maintainer.
+state: open
+
+### Look at the receipt in custom 4/5 and, below 690px, the crop's chat card (frame.css .tour-beside img, .tour-chat-card .tour-line).
+unit: M54 U8
+should: Whether a picture on the desk, or a floating card, is one of the rooms that float that --shadow-pop belongs to (No gradients, no shadows).
+breaks: Both carry --shadow-pop. (Watch the tour's shadow was removed in this unit: it is a control.) Question for the maintainer.
+state: open
+
 ### Look at the views as screens: the milestone roadmap, the boards, a page.
 unit: M27 U4
 should: Read as a finished product in one theme with the rest of the app.
 breaks: Author, 2026-10-01: 'the ui is too simple and could improve.' The roadmap should be milestones as dots connected by a line (a timeline), with animation, and the views should share a unified theme.
 state: fault
+
+### Look at where the ring rests in custom 5/5 (the verdict) and development 4/4 ('M4 U1').
+unit: M54 U8
+should: The ring rests on what it names and does not cover its label.
+breaks: In custom 5/5 anchorPoint's INTO_WIDE offset puts the ring's centre on the empty hairline left of 'total'; in development 4/4 the ring sits on the 'M4 U1' text it names and hides it.
+state: open
 
 ### Look for a note or entry in the app, the way a notes app lets you
 unit: M34 T1
@@ -7212,6 +7266,12 @@ state: fault
 unit: M34 T1
 should: The empty starting document survives as a named copy
 breaks: The rolling copies pushed it out; the 100-row named copy did not cover small first writes
+state: open
+
+### Mid-tour, in any tour, click a control on the app.
+unit: M54 U8
+should: Nothing is blocked by motion says 'a click mid-move lands'; the take-over decision P4 says the shield takes it. Which holds is the maintainer's.
+breaks: The shield takes the click and only switches to Try it; what was clicked is not acted on, so the visitor clicks again. The only cue is the pointer cursor and a 'Click to take over' tooltip. Question for the maintainer.
 state: open
 
 ### Move a document that is on the recents list, then pick it from Open recent in the title bar (or File › Open Recent).
@@ -7285,6 +7345,24 @@ unit: M26 U7
 should: Every tool in plain words, grouped, with the connect snippet and the document path.
 state: accepted
 
+### Open /tour.html?tour=custom (no autoplay) and look at 1/5, 'Here is the card statement. One of these is the grocery store.'; then let it loop, or press Reset, and time 1/5. Also development 1/4.
+unit: M54 U8
+should: The statement is on screen while the caption says it, and the outlined row is held long enough to read (the tour_step contract: a caption says what is happening).
+breaks: The held first frame shows the empty Dashboard ('Nothing on this dashboard yet.'); on a loop or Reset the Formats list stays ~4.8 s, and the statement with its outlined CORNER MARKET row appears only ~1.6 s before 2/5 replaces the caption. development 1/4 also opens on the empty dashboard. Question: the rows are the maintainer's.
+state: open
+
+### Open /tour.html?tour=ledger (no autoplay) and press Tab from the top.
+unit: M54 U8
+should: Watch the tour, the one thing to press on the held frame, comes before the app in the order; and while the tour plays the keyboard cannot reach under the shield (Keyboard first; the shield exists so nothing races the runner).
+breaks: The order is the five dots, Watch, Try it, Reset, Speed, then the app's iframe (tabIndex 0, not inert, outside a crop), and only then Watch the tour; while watching, Tab walks into the app under the shield and can act on it.
+state: open
+
+### Open /tour.html?tour=timesheet&autoplay=1 at a desktop width, in light or dark, and watch it to 6/6 (row 25 types "15:30" into field-end with replace).
+unit: M54 U8
+should: The tour reaches its end: 'Every hour was paid: 14.5 hours, 870.00'. The check replays every tour so that none loses its way (the tour_step declaration), and the watched path does what the check does.
+breaks: Watched, player.ts empties the field first (setText(element, '') for a replace); End moves to the EMPTY group, field-end unmounts, the ring jumps to 'Weekend job', and after ~10 s the strip turns red: 'Step 26: nothing on the screen is "field-end".' Same in both themes, and on the public page. check:tours cannot see it: its path and reduced motion never write an empty value. P0, a bug, not fixed in a review unit.
+state: open
+
 ### Open Help › License (or Third-Party Notices) with the app set to Light and Windows set to dark; then press Ctrl+O in that window.
 unit: M54 U6
 should: The text window follows the app's theme and type (The theme is light, dark or system; One family, two scripts), and the app's accelerators do not act on the hidden document window (shell rule 'Text windows are not the document's window').
@@ -7333,6 +7411,12 @@ state: accepted
 ### Open an entry of a format with a few hundred rows (from the Table with a search, and from the rail's All n), page with the arrow keys and from the list's search box, then hide the list with the button left of the back link.
 unit: M37 U2b
 should: The list sits 288px left of the entry with the entry marked and in view, its foot says n of m, the search stays in the address and the Table behind the back link shows the same rows; hidden, the pager returns to the bar and the choice holds after a reload.
+state: open
+
+### Open any tour at 1024 wide (a desktop width) and read the app's text inside the frame.
+unit: M54 U8
+should: Whether rem for type (so zoom and the reader's font size are respected) binds an app the frame draws scaled.
+breaks: The app is drawn at scale(0.742), so its 13px text appears ~9.6px, and browser zoom cannot enlarge what the transform shrinks. Question for the maintainer.
 state: open
 
 ### Open docs/memory.emd in the app and look at the units board, which now shows taken_by and branch on every card
@@ -7510,6 +7594,12 @@ should: Words a stranger outside the maintainer's country and history can parse.
 breaks: "\"A year of study-fund reports read in…\": a study fund is a local savings product. \"every shekel followed\" is a local currency. \"Anything counts. Years of old accounts found in mail became one row each, and none was missed when closing them.\" is hard to parse."
 state: open
 
+### Read frame.css's literal values: font sizes 11, 13, 17px; spacing 6, 7, 10, 14, 18px and the on-step 8/12/16/24px literals; durations tour-echo 380ms, the --travel 933ms default, and Crossfade's setTimeout 400 in Frame.tsx.
+unit: M54 U8
+should: Every value is a token, nothing between the spacing steps, one duration, one easing.
+breaks: None of these is a token; 11/13/17px and the off-step spacing have no step at all, so each change would change what the public page draws. The same question as U7's on whether the ramp and the spacing tokens bind a hand-written sheet.
+state: open
+
 ### Read notes with inline #tags
 unit: M34 T1
 should: Inline tags can fill an enums column
@@ -7662,6 +7752,12 @@ should: The frames follow the page's theme (Dark mode is not an inversion).
 breaks: A loaded frame keeps the theme it loaded with: a light app panel sits on the near-black page until the frame is let go and reloaded. initTheme (src/ui/theme/useTheme.ts) has no `storage` listener.
 state: open
 
+### Tab through the strip of any tour, and read it with a screen reader.
+unit: M54 U8
+should: A radio group is one Tab stop moved by the arrow keys (WAI-ARIA Authoring Practices), its checked radio is the true state, and the current step is announced (aria-current="step", WCAG 4.1.2).
+breaks: Watch and Try it are role=radio with a Tab stop each and no arrow keys; Watch reports aria-checked="true" in the held first frame when nothing plays; the current dot is marked only by a class and colour. Focus rings are present on every control.
+state: open
+
 ### The real update, on Windows. (1) On main, with package.json at 0.1.2: `git tag v0.1.2 && git push origin v0.1.2`; when the Release workflow finishes, the release must list Emerald-Setup.exe, Emerald-Setup.exe.blockmap, latest.yml, Emerald-arm64.dmg, Emerald-x64.dmg and SHA256SUMS. (2) Set NAMED_INSTALLERS_RELEASED = true in src/demo/page/page.ts, `npm run build:demo`, commit, push (the page then links releases/latest/download/<name>). (3) Download Emerald-Setup.exe from getemerald.dev, install it over 0.1.0, open a document, open About and tick 'Check at start and once a day, and download'; Check now should say 'You have the latest — Emerald 0.1.2.' (4) `npm version 0.1.3 --no-git-tag-version`, commit, push, `git tag v0.1.3 && git push origin v0.1.3`, wait for the release. (5) In the running 0.1.2: Help > Check for Updates Now. (6) Make an unsaved change, press Install and restart, answer Cancel; then press it again and answer Save.
 unit: M42 U9
 should: (5) shows 'Downloading Emerald 0.1.3…' and then 'Emerald 0.1.3 is ready. Installing it restarts Emerald; your documents are not touched.' with Install and restart and Later, no dialog, focus not taken (without the press, the next start shows the same within a minute). (6) Cancel keeps the window and installs nothing; Save saves, Emerald closes, the installer runs with no window and no prompt, and Emerald opens again on the same document; About says 0.1.3. Turning the setting off and pressing Check now only says 0.1.3 is out.
@@ -7693,6 +7789,42 @@ state: open
 unit: M54 U7
 should: Valid list children and readable names (WCAG 1.3.1, 4.1.2).
 breaks: ol.tl has a div.solid as a direct child, which an ol may not hold. Link text runs together as '01What it is' and 'WindowsEmerald-Setup.exe'.
+state: open
+
+### Watch /tour.html?tour=custom from the end of 3/5 (after Save) into 4/5, in either theme.
+unit: M54 U8
+should: The ring is hidden, or held, while its anchor is out of the viewport (frame.css: 'the ring is where the eye has to be').
+breaks: The ring follows a target that is still connected but has moved to y≈1330 in a 900px viewport, so for ~1.2 s it is off the bottom, then reappears. The ring-outside check runs only in a crop.
+state: open
+
+### Watch /tour.html?tour=development to 3/4, 'The conclusion is written down, beside the decision it kept.', through to the end of the scene.
+unit: M54 U8
+should: The caption describes what is shown for the whole scene (the tour_step contract); that may need a caption row of its own, which is the maintainer's wording.
+breaks: For ~8 s of the scene's second half the screen has left the Decision sheet for the Roadmap, outlining milestone M4 while its two units land; only the chat line ('And the work: milestone M4…') says so. Question for the maintainer.
+state: open
+
+### Watch /tour.html?tour=timesheet at 2/6, 'The model writes the timesheet down as a format of its own.'
+unit: M54 U8
+should: The screen shows the format being made while the caption says it (the tour_step contract).
+breaks: For ~8.4 s there is no ring and no outline and the screen stays on Paychecks; the new format is ringed in the sidebar only at the scene's end. Question for the maintainer.
+state: open
+
+### Watch /tour.html?tour=timesheet at 3/6, 'Now the days, from the paper. It has no end time for the 14th.'
+unit: M54 U8
+should: The paper is shown beside the app, as custom's receipt is (a beside picture is the paper being typed in), or the caption does not point at something absent.
+breaks: The row has no beside, so no paper is shown and the visitor never sees that the 14th has no end time. Question for the maintainer.
+state: open
+
+### Watch custom 4/5 in dark, and again at 1024x720.
+unit: M54 U8
+should: The paper is legible at a desktop width (the caption asks to 'type the receipt in from the paper'), and dark mode treats it on purpose (Dark mode is not an inversion).
+breaks: In dark it is the same bright white light-mode PNG, where other demo images have -dark versions; at 1024x720 the column is 193px and its figures (Bread 12.00, TOTAL ILS 84.00) are ~6px tall. The img has no width/height attributes (web interface guidelines: images need dimensions). Question for the maintainer.
+state: open
+
+### Watch the ring travel, the crop's pan, the outline drawing round and the dots' progress line in any tour.
+unit: M54 U8
+should: Whether One duration, one easing and Motion says what changed bind the tour's own chrome, or the ring is the tour's medium and exempt.
+breaks: All of them run on --ease-in-out at the 933ms travel (the outline at 1.4x), while the rule says --ease-out and the tokens' durations. Question for the maintainer.
 state: open
 
 ### With a screen reader, press the reel's Pause/Play button (reel.ts:66-67).
@@ -14888,11 +15020,17 @@ report: "LANDED ff949f3. 31 open review_entry rows on M54 U7. 6 are questions fo
 milestone: M54
 scope: demo
 title: The tour reviewed: demo-frame.html played through each tour
-state: planned
+landed: 2026-11-02
+state: built
 brief: M54 (D-530), after U1 set the procedure — read M54 U1's report first (`format_rows unit match:{ref:"M54 U1"} columns:[report]`). Surface: the tour the page embeds, demo-frame.html (tour.html in dist-demo) and src/demo/tour/ (Frame, frame.css, player, steps, layout, place), played through each of its tours (the ledger's over demo.emd, the custom one over custom.emd, the development one over project.emd): the frame's own chrome, the steps' words, how a step points at what it means, and the app as the frame shows it. The app's screens themselves are U1-U5's: here a finding is about the tour, not a screen it passes. Its mode is experience (PRODUCT.md). Maintainer's answers, 2026-11-02. AGAINST: `npm run dev:demo` (preview `demo-tour`, :4181; the tour is /tour.html), over the synthetic demo documents. CONDITIONS: light and dark at a desktop width, nothing else. TOOLS: `format_rows rule match:{scope:ui, state:live} columns:[name, statement]` (and `search:"motion"`), root DESIGN.md and PRODUCT.md; `/impeccable critique` and `/impeccable audit` on the tour (Impeccable 4.8.0, user level; per-edit hook off — if per-edit findings appear, `/impeccable hooks off`); the `web-design-guidelines` skill over demo-frame.html and src/demo/tour/; the Impeccable detector once at the end, never per edit. Verify with read_page / get_page_text between steps; screenshots only where the answer is visual. FINDINGS: one open `review_entry` row per finding on this unit — `do` the tour, the step and what to look at, `should` what is right with its rule row or guideline, `breaks` what happens now. Wording is the maintainer's: quote it, settle none. Never taste alone; arguing with a live rule row is a question for the maintainer. FIXING: a plain breach of a live ui rule row is fixed in place with a test where one can fail (the tour's tests, npm run check:tours) and listed; anything needing judgement is only recorded. Unsettled: stop and ask. REPORT: rows written, fixes made, what in the procedure worked or wasted time. Done-test: every tour played to its end in both themes, findings are open rows on M54 U8, tests, typecheck and check:tours pass.
-files: Reviewed: demo-frame.html, src/demo/tour/ (Frame.tsx, frame.css, player.ts, runner.ts, steps.ts, layout.ts, place.ts, embed.ts). Rows: docs/memory.emd (review_entry).
+files: src/demo/tour/Frame.tsx, src/demo/tour/frame.css, src/ui/formats/surfaceRules.test.ts
 blocks: ["M54 U1"]
+taken_by: run-milestone driver
+started: 2026-11-02
+branch: main
+commit: d5b98a8
 paths: "demo-frame.html\nsrc/demo/tour/"
+report: "LANDED d5b98a8. 22 open review_entry rows on M54 U8 (1 P0 bug, 12 are questions for the maintainer). No decision. check:tours green (10 runs), docs:check 0 errors, surfaceRules + src/demo + privacy tests and typecheck green.\n\nP0, NOT FIXED (a bug, not a ui-rule breach; the brief kept fixes to plain breaches): the timesheet tour loses its way at 6/6 when watched, in both themes, on the public page too. player.ts's watched type path runs setText(element, '') for a replace step before typing; emptying End moves it to the EMPTY group, field-end unmounts, and the strip shows 'Step 26: nothing on the screen is \"field-end\".' check:tours cannot see it: the check and reduced-motion paths never write an empty value. Likely one line (startingText already returns '' for a replace, so the empty write is redundant), but it changes what the tour does, so it is the maintainer's or the driver's call.\n\nFIXES (plain ui-rule breaches, invisible at the default, each guarded in surfaceRules.test.ts and failing on HEAD): (1) Every value is a token: frame.css's 12/14/20px font sizes are --text-caption/body/secondary-number (computed sizes checked unchanged). (2) Hebrew needs bidi isolation: the tour's title, description, captions (and their reserve and outgoing copies) and chat lines come out of tours.emd and now sit inside Bidi; Frame.tsx joined REVIEWED with line.chat/shown.now/shown.was as document strings. (3) Reduced motion runs none of it: the player read prefers-reduced-motion once at mount; it is a getter over reducedMotion() now, read at each travel and each type. (4) No gradients, no shadows: Watch the tour (a control) lost --shadow-pop; the receipt's and chat card's are recorded as a question.\n\nPROCEDURE, WHAT WORKED: preview_start first (got 4184; 4181-4183 still held), then Assessment A at once with the port, 'open your own tab', 'leave fc-theme light', and the four tours by name (the brief named three; tours.emd also holds timesheet, which is where the P0 was). A: ~21 min, 264k tokens, 130 tool uses, 23 findings; it sampled state in JS every 150 ms rather than screenshots (screenshots lagged seconds behind a playing tour) - the right way to review a moving surface. While it walked: one grep over frame.css/Frame.tsx, one contrast probe that flips data-theme in the same call (light and dark in one round trip), a tab-order sweep, web-design-guidelines by one WebFetch, fixes and guards, check:tours in the background, the detector once (0 findings, eighth unit running). Code-checked A's P0 before writing it. Deduped against U7's tour rows (the frame not following the page's theme toggle is U7's).\n\nWHAT WASTED TIME: python heredocs that write TS turn \\s and \\n inside regex literals into 's' and a real newline - two guard tests silently matched nothing until I tested them against HEAD; always run a new guard against the parent's file. Waiting ~10 min on A after my own audit; a tour walk is long because the tours play in real time.\n\nNOT DONE: crop widths (below 690px) and phone are out of conditions; reduced motion and a screen reader in code only; the 'Yours now' caption after a Try it write was not reached (A's test writes were refused)."
 
 ### M54 U9
 milestone: M54
