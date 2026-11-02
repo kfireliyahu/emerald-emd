@@ -6257,7 +6257,7 @@ state: fault
 ### Command palette › Back up now, then read the notice that follows.
 unit: M54 U6
 should: Words that read as a sentence about this act (Words name the rule), e.g. 'A copy of <name> as it is now is among its earlier copies'.
-breaks: Driven: 'A copy from before now is among this document’s earlier copies, as project.before-20261102T093325-now.emd.' — the keep-copy label 'now' is dropped into 'a copy from before <what>' (Notices.tsx:240). Owned by M54 F6.
+breaks: Driven: 'A copy from before now is among this document’s earlier copies, as project.before-20261102T093325-now.emd.' — the keep-copy label 'now' is dropped into 'a copy from before <what>' (Notices.tsx:240). Owned by M54 F6. Fixed in M54 F6 (d3972c0).
 state: fault
 
 ### Compare each tour's three names: the rail row (en.ts:30-35 `rows`), its label (`tours.*.label`) and its frame title (`tours.*.title`).
@@ -6301,7 +6301,7 @@ state: open
 ### Demo (the browser build), #/settings/export: read the whole-document line, then press Ctrl+Shift+S in a browser with a document open.
 unit: M54 U4
 should: Words that are true where they are read (Words name the rule); Ctrl+Shift+S does what the screen says or nothing.
-breaks: It says File › Save a copy… Ctrl+Shift+S; a browser tab has no File menu, and useSaveShortcuts.ts:19 ignores Shift, so Ctrl+Shift+S runs a plain Save. Owned by M54 F6.
+breaks: It says File › Save a copy… Ctrl+Shift+S; a browser tab has no File menu, and useSaveShortcuts.ts:19 ignores Shift, so Ctrl+Shift+S runs a plain Save. Owned by M54 F6. Fixed in M54 F6 (d3972c0).
 state: fault
 
 ### Demo (the browser build), #/settings/model.
@@ -6344,13 +6344,13 @@ state: fault
 ### Demo, any document, #/mcp: read the headings and the buttons; look at a tool's removes line.
 unit: M54 U4
 should: One h1 per screen (WCAG 1.3.1/2.4.6); a button named for what it copies; colour for genuine signal only (Colour carries meaning). QUESTION for the maintainer: is removes in negative meant as a warning?
-breaks: The page starts at h2; two buttons are both named Copy; removes is coloured negative (Mcp.tsx:95, :113). Verdict 2026-11-02 (D-531): removes is not a warning — it goes ink; the h1 and the Copy names are faults besides. Owned by M54 F6.
+breaks: The page starts at h2; two buttons are both named Copy; removes is coloured negative (Mcp.tsx:95, :113). Verdict 2026-11-02 (D-531): removes is not a warning — it goes ink; the h1 and the Copy names are faults besides. Owned by M54 F6. Fixed in M54 F6 (d3972c0).
 state: fault
 
 ### Demo, any document, #/mcp: read the setup snippets.
 unit: M54 U4
 should: The command that works today, npx -y emerald-mcp, as docs/plugin.md gives it (Words name the rule).
-breaks: The snippet points at '<folder Emerald was built in>/dist-plugin/server.mjs' and a note says it is not in the download yet (mcp/connect.ts:20 SERVER_PLACEHOLDER, Mcp.tsx:47) — the server has shipped on npm since 0.1.0. Owned by M54 F6.
+breaks: The snippet points at '<folder Emerald was built in>/dist-plugin/server.mjs' and a note says it is not in the download yet (mcp/connect.ts:20 SERVER_PLACEHOLDER, Mcp.tsx:47) — the server has shipped on npm since 0.1.0. Owned by M54 F6. Fixed in M54 F6 (d3972c0).
 state: fault
 
 ### Demo, any document, light and dark: the dashboard popovers' headings (NEW CHART, HEADLINE TOTAL) and menu descriptions, every block's subtitle, the filter band's zero-count choices, counts, "· 18.00 to 250.00" and its × button, the rollup's Delete chart and unpressed Bars/Line, #/connections' instructions and column names.
@@ -6458,13 +6458,13 @@ state: fault
 ### Demo, custom.emd, #/settings/packs and #/settings/export; custom.emd #/year (NoLedger).
 unit: M54 U4
 should: Every screen opens the same way, with one h1 (WCAG 1.3.1/2.4.6).
-breaks: Export has an eyebrow and an h1; Packs and NoLedger have no heading at all. Owned by M54 F13.
+breaks: Export has an eyebrow and an h1; Packs and NoLedger have no heading at all. Owned by M54 F13. Part fixed in M54 F6 (Export, Packs).
 state: fault
 
 ### Demo, custom.emd, #/settings/packs.
 unit: M54 U4
 should: One primary action per screen; an action names its object when the verb alone is ambiguous (An action is a verb); Square by spending the radius tokens; No card borders by default.
-breaks: Two filled "Keep this pack here" buttons, neither naming its pack; each pack is a rounded-lg (12px) card with a hairline-strong border. Owned by M54 F6.
+breaks: Two filled "Keep this pack here" buttons, neither naming its pack; each pack is a rounded-lg (12px) card with a hairline-strong border. Owned by M54 F6. Fixed in M54 F6 (d3972c0).
 state: fault
 
 ### Demo, custom.emd, the entry list beside a card charge: in quick add ("Add a card charge") type Lunch spot 35 and press Enter.
@@ -6506,7 +6506,7 @@ state: fault
 ### Demo, demo.emd, #/ in light and dark: Home's All months column headers and a card's missing-statement line ("Everyday Card ···1234 · No statement read for this month"); the palette's group headings and counts (Ctrl+K); the rail folders' entry counts; #/settings/packs' list of places; #/settings/export's shortcut line; #/mcp's tool names and its two notes; the guide's mono reopen line.
 unit: M54 U4
 should: Text a person needs is at least 4.5:1 and ink-tertiary is for non-essential text only (Contrast 4.5:1 for text). QUESTION for the maintainer: the missing-statement line is the genuine signal the product exists for, and ink-tertiary is 2.45-2.62:1 in light — move these to ink-secondary (5.33:1 light, 7.61:1 dark), or raise ink-tertiary itself?
-breaks: All in ink-tertiary: 2.45-2.62:1 in light (fails even 3:1), 3.18-3.65:1 in dark. Home.tsx:555, :601; CommandPalette.tsx:385-386; RailFolder.tsx:139; Packs.tsx; Export.tsx; Mcp.tsx:40,47,121; Guide.tsx:113. Verdict 2026-11-02 (D-531): move to ink-secondary; ink-tertiary itself is not raised. Owned by M54 F13. Part fixed in M54 F5 (CommandPalette, RailFolder).
+breaks: All in ink-tertiary: 2.45-2.62:1 in light (fails even 3:1), 3.18-3.65:1 in dark. Home.tsx:555, :601; CommandPalette.tsx:385-386; RailFolder.tsx:139; Packs.tsx; Export.tsx; Mcp.tsx:40,47,121; Guide.tsx:113. Verdict 2026-11-02 (D-531): move to ink-secondary; ink-tertiary itself is not raised. Owned by M54 F13. Part fixed in M54 F5 (CommandPalette, RailFolder). Part fixed in M54 F6 (Packs, Export, Mcp, Guide).
 state: fault
 
 ### Demo, demo.emd, #/: Home's All months table — Tab to a month, press Space, scroll; and read its rows' colours.
@@ -6693,7 +6693,7 @@ state: open
 ### Demo, demo.emd, any screen but Home with one answer waiting: read the notice and press its button. Then raise an error notice.
 unit: M54 U4
 should: Agreement in number, and a button named for what it does (An action is a verb); an error announced as an alert.
-breaks: "\"1 answer waits on Home.\" with \"Answer them\", which only navigates to Home (Notices.tsx:501-512); the error notice is text-negative inside a polite role=status region (Notices.tsx:104, :462). Owned by M54 F6."
+breaks: "\"1 answer waits on Home.\" with \"Answer them\", which only navigates to Home (Notices.tsx:501-512); the error notice is text-negative inside a polite role=status region (Notices.tsx:104, :462). Owned by M54 F6. Fixed in M54 F6 (d3972c0)."
 state: fault
 
 ### Demo, demo.emd, both themes: #/categories → a category's colour and icon button (the picker); the category picker in a transaction's pane; #/wealth/debts → Edit debt's option cards; a fund report's review (funds/ReportReview); #/wealth/goals' controls.
@@ -6789,7 +6789,7 @@ state: open
 ### Demo, demo.emd: Guide me, then click between the step dots.
 unit: M54 U4
 should: Targets of at least 24px (WCAG 2.5.8).
-breaks: Each step dot is a button 18x6px (Guide.tsx:289-299). Owned by M54 F6.
+breaks: Each step dot is a button 18x6px (Guide.tsx:289-299). Owned by M54 F6. Fixed in M54 F6 (d3972c0).
 state: fault
 
 ### Demo, demo.emd: a transaction's pane; a row's context menu on #/transactions; #/paychecks → Edit; #/wealth/debts → Add a payment; the Add buttons on #/wealth/funds, #/wealth/goals, #/wealth/debts and the accounts.
@@ -6987,13 +6987,13 @@ state: fault
 ### Demo: custom.emd #/year (NoLedger) beside #/settings/packs; demo.emd #/ (Home's read and add buttons).
 unit: M54 U4
 should: One name per thing (Make it in place; An action is a verb).
-breaks: Keeping the ledger is "Keep a ledger in this document" on NoLedger and "Keep this pack here" on Packs; Home says Read files, Read… and Read for one act, and has two buttons both named Add by hand. Owned by M54 F13.
+breaks: Keeping the ledger is "Keep a ledger in this document" on NoLedger and "Keep this pack here" on Packs; Home says Read files, Read… and Read for one act, and has two buttons both named Add by hand. Owned by M54 F13. Part fixed in M54 F6 (Packs says Keep the ledger here).
 state: fault
 
 ### Desktop shell: Help › About, and the document bar's Earlier copies; Tab through each and close it.
 unit: M54 U4
 should: A modal traps Tab and returns focus to what opened it; loading is Working.tsx (One progress indicator).
-breaks: Both are aria-modal with no Tab trap and do not restore focus on close (About.tsx:72, EarlierCopies.tsx); loading is the text "Looking…" (About.tsx:121, EarlierCopies.tsx:178). Owned by M54 F6.
+breaks: Both are aria-modal with no Tab trap and do not restore focus on close (About.tsx:72, EarlierCopies.tsx); loading is the text "Looking…" (About.tsx:121, EarlierCopies.tsx:178). Owned by M54 F6. Fixed in M54 F6 (d3972c0).
 not_tried: Shell only: read in code, not driven (U6 drives the shell).
 state: fault
 
@@ -7017,7 +7017,7 @@ state: accepted
 ### File › Earlier copies of this document… on a document that has none, and on a document with a long name.
 unit: M54 U6
 should: An empty state is one sentence and one text action (An empty state is one sentence); a file name keeps its case (Words name the rule).
-breaks: 'None yet. One is taken the first time an assistant writes to it.' is two sentences with no action (the colour is fixed in add2d7c); the heading is .fc-label, uppercase, so the name reads 'EARLIER COPIES OF PROJECT.EMD' (EarlierCopies.tsx:143). Owned by M54 F6.
+breaks: 'None yet. One is taken the first time an assistant writes to it.' is two sentences with no action (the colour is fixed in add2d7c); the heading is .fc-label, uppercase, so the name reads 'EARLIER COPIES OF PROJECT.EMD' (EarlierCopies.tsx:143). Owned by M54 F6. Fixed in M54 F6 (d3972c0).
 state: fault
 
 ### Find bulk reading.
@@ -7037,7 +7037,7 @@ state: open
 ### Get a disk conflict (change the open file outside Emerald while editing), then hover the disabled Save in the title bar.
 unit: M54 U6
 should: Words true where they are read (Words name the rule), and reachable without hover on a disabled button.
-breaks: 'The file changed on disk. Answer that above before saving over it.' (DocumentBar.tsx:137) — the notices render below the title bar, and the hint is a title on a disabled button that takes no focus. Owned by M54 F6.
+breaks: 'The file changed on disk. Answer that above before saving over it.' (DocumentBar.tsx:137) — the notices render below the title bar, and the hint is a title on a disabled button that takes no focus. Owned by M54 F6. Fixed in M54 F6 (d3972c0).
 state: fault
 
 ### Get the 'Emerald <version> is out' notice and read its button.
@@ -7055,7 +7055,7 @@ state: open
 ### Grep src/ui for a truncate box whose text runs into a <Bidi>: RailFolder 'Delete <Bidi>', ParentPicker 'under <Bidi>', CategoryPicker 'Create “<Bidi>', plan/BucketTable, plan/MonthRow, plan/PointsAt 'What is <Bidi>'.
 unit: M54 U6
 should: The ellipsis on the Bidi span (Hebrew needs bidi isolation, the rule bidiTruncation.test.ts holds), so a Hebrew name keeps its start.
-breaks: bidiTruncation.test.ts only sees a box that opens straight onto <Bidi>; widening its regex to text-before-Bidi finds these six (four in the parked ledger). Earlier copies' one is fixed in add2d7c and guarded in surfaceRules.test.ts. Owned by M54 F6.
+breaks: bidiTruncation.test.ts only sees a box that opens straight onto <Bidi>; widening its regex to text-before-Bidi finds these six (four in the parked ledger). Earlier copies' one is fixed in add2d7c and guarded in surfaceRules.test.ts. Owned by M54 F6. Fixed in M54 F6 (d3972c0); the ledger's four are named exceptions.
 state: fault
 
 ### Hand the person a readable rendering of a format from a conversation
@@ -7067,25 +7067,25 @@ state: open
 ### Help › About Emerald, then from the native menu File › Earlier copies of this document… while About is still open.
 unit: M54 U6
 should: One dialog at a time: the menu's command closes or waits for the open one.
-breaks: Driven: both modal dialogs are open at once, Earlier copies over About, each aria-modal. Owned by M54 F6.
+breaks: Driven: both modal dialogs are open at once, Earlier copies over About, each aria-modal. Owned by M54 F6. Fixed in M54 F6 (d3972c0).
 state: fault
 
 ### Help › About Emerald; read the credits, then press Open folder where the folder cannot be opened.
 unit: M54 U6
 should: A way to what it names (the menu bar is behind Alt, D-458), and a plain error with a way forward.
-breaks: 'The license and the third-party notices are in the Help menu.' (about.ts:78) — hidden behind Alt on Windows, with no button in About; a failed Open folder prints the raw IPC text after 'Could not open it:' (About.tsx:165). Owned by M54 F6.
+breaks: 'The license and the third-party notices are in the Help menu.' (about.ts:78) — hidden behind Alt on Windows, with no button in About; a failed Open folder prints the raw IPC text after 'Could not open it:' (About.tsx:165). Owned by M54 F6. Fixed in M54 F6 (d3972c0).
 state: fault
 
 ### Help › Check for Updates Now while offline, or let a Windows download fail.
 unit: M54 U6
 should: A plain cause and Try again (an error names the fix).
-breaks: Driven with a pushed state: 'Could not check for updates.' followed by the raw reason (net::ERR_INTERNET_DISCONNECTED, or electron-updater's HttpError after 'It could not be downloaded here:'), and only Dismiss (Notices.tsx:444, updates.ts:233). Owned by M54 F6.
+breaks: Driven with a pushed state: 'Could not check for updates.' followed by the raw reason (net::ERR_INTERNET_DISCONNECTED, or electron-updater's HttpError after 'It could not be downloaded here:'), and only Dismiss (Notices.tsx:444, updates.ts:233). Owned by M54 F6. Fixed in M54 F6 (d3972c0).
 state: fault
 
 ### Help › Check for Updates Now, and watch the notice while it asks; or with automatic updates on Windows, while it downloads.
 unit: M54 U6
 should: An in-progress state is Working.tsx (One progress indicator), as the dirty dot swaps to it while saving.
-breaks: Driven: 'Checking for a newer version of Emerald…' and 'Downloading Emerald 0.3.0…' sit beside the static notice dot; nothing says the work is running (Notices.tsx:383, :406). Owned by M54 F6.
+breaks: Driven: 'Checking for a newer version of Emerald…' and 'Downloading Emerald 0.3.0…' sit beside the static notice dot; nothing says the work is running (Notices.tsx:383, :406). Owned by M54 F6. Fixed in M54 F6 (d3972c0).
 state: fault
 
 ### In a Code tab conversation of your own (not a subagent's), ask to see what is ready in docs/memory.emd, so start_here or show_format unit view:ready draws. Click Start this unit on one ready row; then Ctrl-click two rows and ask 'what are these?'.
@@ -7199,7 +7199,7 @@ state: open
 ### Leave unsaved work, end the process, start Emerald again.
 unit: M54 U6
 should: A question that names the document, with Restore and Discard (An action is a verb); discarding unsaved work is never the default exit of a Cancel.
-breaks: window.confirm('Unsaved work from <date> was found. Restore it?') with OK and Cancel (App.tsx:353); Cancel calls clearSnapshot() and the work is gone. It does not name the document though snapshot.documentName is there. Owned by M54 F6.
+breaks: window.confirm('Unsaved work from <date> was found. Restore it?') with OK and Cancel (App.tsx:353); Cancel calls clearSnapshot() and the work is gone. It does not name the document though snapshot.documentName is there. Owned by M54 F6. Fixed in M54 F6 (d3972c0); a crashed window reloading into it is F7's.
 state: fault
 
 ### Let an autoplaying tour run (Emerald's page plays every frame with autoplay=1) and look for a way to stop the motion.
@@ -7235,7 +7235,7 @@ state: fault
 ### Look at any screen in the shell with a document open and unsaved.
 unit: M54 U6
 should: QUESTION for the maintainer: One primary action per screen — does the title bar's Save count against the screen's own primary?
-breaks: Save is always variant primary in the chrome (DocumentBar.tsx:127), so a screen with its own primary shows two filled buttons (Home's Read files beside it). Verdict 2026-11-02 (D-531): the title bar is chrome and holds no primary — its Save goes secondary. Owned by M54 F6.
+breaks: Save is always variant primary in the chrome (DocumentBar.tsx:127), so a screen with its own primary shows two filled buttons (Home's Read files beside it). Verdict 2026-11-02 (D-531): the title bar is chrome and holds no primary — its Save goes secondary. Owned by M54 F6. Fixed in M54 F6 (d3972c0).
 state: fault
 
 ### Look at the Claude extension's card (demo-page.html:242).
@@ -7308,7 +7308,7 @@ state: accepted
 ### On a Mac build, make a change and read the title bar's status.
 unit: M54 U6
 should: ⌘S, as commandPaletteKey() already says ⌘K (Keyboard first).
-breaks: 'unsaved · Ctrl+S' is hard-coded (DocumentBar.tsx:118). Owned by M54 F6.
+breaks: 'unsaved · Ctrl+S' is hard-coded (DocumentBar.tsx:118). Owned by M54 F6. Fixed in M54 F6 (d3972c0).
 state: fault
 
 ### On a clean profile in the Claude desktop app's Code tab: `/plugin marketplace add kfireliyahu/emerald-emd`, `/plugin install emerald@emerald-emd`, restart the session in a folder holding a synthetic .emd with the development pack (or ask Claude to create one), then ask to see what is ready, and the board.
@@ -7651,7 +7651,7 @@ state: open
 ### Read the class strings of the surface: src/ui/RailFolder.tsx, About.tsx, guide/Guide.tsx, guide/GuideLine.tsx, EarlierCopies.tsx, Sidebar.tsx, CommandPalette.tsx, screens/Home.tsx (grep text-\[ and -\[…px\], style={{).
 unit: M54 U4
 should: rem for type; Every value is a token; Nothing between the spacing steps. QUESTION for the maintainer: most of these are 13px — does the ramp want a 13px step?
-breaks: Type the ramp has no step for: text-[13px], [12.5px], [11px], [10px], [15px], [34px] (RailFolder 7, About 10, Guide 6, EarlierCopies 5, Sidebar 2, GuideLine 2, Overview 1); inline pixel sizes: the rail width 56/200 (Sidebar.tsx:75) and paddingLeft 46+indent (RailFolder); off-scale spacing pl-[26px], h-[34px], h-[26px], gap-[3px]. Verdict 2026-11-02 (D-531): no 13px step; each moves onto 12 or 14 (or the ramp's nearest step). Owned by M54 F6. Part fixed in M54 F5 (Sidebar, RailFolder, CommandPalette).
+breaks: Type the ramp has no step for: text-[13px], [12.5px], [11px], [10px], [15px], [34px] (RailFolder 7, About 10, Guide 6, EarlierCopies 5, Sidebar 2, GuideLine 2, Overview 1); inline pixel sizes: the rail width 56/200 (Sidebar.tsx:75) and paddingLeft 46+indent (RailFolder); off-scale spacing pl-[26px], h-[34px], h-[26px], gap-[3px]. Verdict 2026-11-02 (D-531): no 13px step; each moves onto 12 or 14 (or the ramp's nearest step). Owned by M54 F6. Part fixed in M54 F5 (Sidebar, RailFolder, CommandPalette). Fixed in M54 F6 (d3972c0).
 state: fault
 
 ### Read the class strings of the surface: src/ui/formats/EntryView.tsx, EntryValue.tsx, EntryList.tsx, ListView.tsx, LinkViews.tsx, BoardView.tsx, FormatRows.tsx (grep text-\[ and -\[…px\]).
@@ -15066,11 +15066,18 @@ report: M54 F5 built at 2ef306a; docs:check green (0 errors, 7 standing warnings
 milestone: M54
 scope: app
 title: The document's own screens, notices and dialogs: one heading, words that name the act, a restore that asks three ways, and modals that hold focus
-state: planned
+landed: 2026-11-02
+decision: D-531
+state: built
 brief: M54 fix unit (D-531, D-532). YOUR ROWS, exactly these: `format_rows review_entry search:"Owned by M54 F6." columns:[unit, do, should, breaks]` — 19 rows; the phrases below say what each asks., after F1 and F4 (both touch App.tsx). Rows (`format_rows review_entry match:{unit:["M54 U4","M54 U6"], state:fault} columns:[do, should, breaks]`) by their breaks: U4 'The page starts at h2; two buttons are both named Copy' (#/mcp: an h1, buttons named for what they copy, removes in ink — D-531); U4 'The snippet points at' (the server ships on npm: point at `npx emerald-mcp`); U4 'Two filled "Keep this pack here" buttons' (one primary, each naming its pack, square cards); U4 'Export has an eyebrow and an h1' (Packs' heading; NoLedger's is F13's); U4 'It says File › Save a copy… Ctrl+Shift+S' (a browser has no File menu; Ctrl+Shift+S runs Save as, not Save — the act is Save as (D-531); F7 renames the rest); U4 'Keeping the ledger is' (Packs' part; Home's and NoLedger's are F13's); U4 'Both are aria-modal with no Tab trap' (About, Earlier copies: trap, restore focus, Working for loading); U4 '"1 answer waits on Home."' (the notice's words; an error in an alert region); U4 'Each step dot is a button 18x6px' (Guide); U6 '"None yet. One is taken…"' (Earlier copies' empty state, its heading); U6 'The file changed on disk. Answer that above' ; U6 'Could not check for updates.' (no raw reason); U6 'window.confirm(\'Unsaved work…' — DECIDED (D-532): a notice that names the document with Restore, Not now (the snapshot is kept) and Discard; F7 makes a crashed window reload into it; U6 'A copy from before now'; U6 '\'unsaved · Ctrl+S\' is hard-coded' (Cmd on a Mac); U6 'Checking for a newer version' (Working while it runs); U6 'Save is always variant primary in the chrome' (secondary, D-531); U6 '\'The license and the third-party notices are in the Help menu.\''; U6 'both modal dialogs are open at once'; U6 'bidiTruncation.test.ts only sees a box' (widen the regex, fix the hits on this unit's and F13's screens, and list the parked ledger's remaining hits as named exceptions in the test). U4 'Type the ramp has no step for' and 'All in ink-tertiary': sweep this unit's files as F2's brief says, append your part. SurfaceRules.test.ts REVIEWED. Verify in the browser on the demo documents, light and dark; the shell parts (notices, the title bar) over CDP with the verify-in-shell skill. Tests: related, typecheck, privacy, check:tours. Land: 'Fixed in M54 F6 (<commit>).' on each row's breaks, state left `fault` (D-532). Unset: stop and ask. Owned here: 'Type the ramp has no step for' — land it after F5's part. Parts only, owned by F13: 'Export has an eyebrow' (Packs' heading), 'Keeping the ledger is' (Packs' words), 'All in ink-tertiary: 2.45-2.62' (Packs, Export, Mcp, Guide) — add 'Part fixed in M54 F6.' to each.
-files: src/ui/screens/Mcp.tsx, src/ui/mcp/connect.ts, src/ui/screens/Packs.tsx, src/ui/screens/Export.tsx, src/ui/screens/Overview.tsx, src/ui/About.tsx, src/ui/EarlierCopies.tsx, src/ui/Notices.tsx, src/ui/DocumentBar.tsx, src/ui/guide/Guide.tsx, src/ui/guide/GuideLine.tsx, src/App.tsx (the restore), src/ui/useSaveShortcuts.ts, src/ui/bidiTruncation.test.ts
+files: src/ui/screens/Mcp.tsx, src/ui/mcp/connect.ts, src/ui/mcp/connect.test.ts, src/ui/screens/Packs.tsx, src/ui/screens/Export.tsx, src/ui/screens/Overview.tsx, src/ui/About.tsx, src/ui/EarlierCopies.tsx, src/ui/Notices.tsx, src/ui/updateFailure.test.ts, src/ui/DocumentBar.tsx, src/ui/guide/Guide.tsx, src/ui/guide/GuideLine.tsx, src/App.tsx, src/ui/useModalDialog.ts (new), src/ui/platform.ts (new), src/ui/theme/tokens.css (guide dots, toast), src/ui/bidiTruncation.test.ts, src/ui/RailFolder.tsx, src/ui/components/CategoryPicker.tsx, src/ui/formats/surfaceRules.test.ts, electron/about.ts, electron/about.test.ts, electron/main.ts, src/plugin/tools/packs.ts (description), src/plugin/server.ts, src/data/packs/packs.ts, src/data/packs/development/pack.ts, src/parity.test.ts, .claude/skills/verify-in-shell/SKILL.md
 blocks: ["M54 F1","M54 F4","M54 F5"]
+taken_by: run-milestone driver
+started: 2026-11-02
+branch: main
+commit: d3972c0
 paths: "src/ui/screens/Mcp.tsx\nsrc/ui/mcp/connect.ts\nsrc/ui/screens/Packs.tsx\nsrc/ui/screens/Export.tsx\nsrc/ui/screens/Overview.tsx\nsrc/ui/About.tsx\nsrc/ui/EarlierCopies.tsx\nsrc/ui/Notices.tsx\nsrc/ui/DocumentBar.tsx\nsrc/ui/guide/Guide.tsx\nsrc/ui/guide/GuideLine.tsx\nsrc/App.tsx\nsrc/ui/useSaveShortcuts.ts\nsrc/ui/bidiTruncation.test.ts"
+report: M54 F6 built at d3972c0; docs:check green (0 errors, 7 standing warnings). No new decision (D-531, D-532 cover it). #/MCP: h1 Assistants; Copy the command / configuration / sentence; reads, writes ink-secondary, removes ink; snippets are `claude mcp add emerald -- npx -y emerald-mcp [--engine-only]` and {command:npx,args:[-y,emerald-mcp,...]} (cmd /c npx on Windows, platform.ts), the not-in-the-download note now says npx fetches the npm package and it needs Node. PACKS: h1 Packs, each pack an h2 section between hairlines (no radius, border box or fill), the first offered button primary and the rest secondary, named 'Keep the ledger here' / 'Keep the development pack here' / 'Bring <pack> up to date'; keep_packs' description now says *Keep … here* (build:plugin run; ask-cold ran but all 12 answers failed: the claude CLI's OAuth session expired, as in F2). EXPORT: no eyebrow; 'The whole document' is a Save as… button (saveCopyAs) with Ctrl+Shift+S / ⌘⇧S shown only outside the demo, where the keys are not listened for. NOTICES: unsaved work at launch is a notice (offerRestore from App's useCrashRecovery, no window.confirm): '<name> has unsaved work from <day hh:mm>, kept when Emerald closed without saving it.' Restore (lead, disabled over unsaved work) / Discard / Not now (snapshot kept, offered next launch). Error notice body role=alert with a negative dot; checking/downloading draw Working where the dot is; a failed check says a plain cause (offline vs GitHub) with Try again; an unfetched download says Download opens the page; kept copy: 'A copy of <doc> as it is now is among its earlier copies, as <file>' for Back up now; waiting notice's button Open Home. DIALOGS: useModalDialog.ts - About and Earlier copies share one openDialog store (one at a time), trap Tab both ways, restore focus to the opener; loading is Working; close is .fc-icon-action; About has License and Third-party notices buttons (credits drop the Help-menu line on the page, aboutCredits(...,'page'); the native panel keeps it), a failed Open folder says a plain sentence. Earlier copies: h2 in sentence case with the name in Bidi; empty state 'None yet: one is taken the first time an assistant writes to it. Back up now' (text action, keepCopy then relist). TITLE BAR: Save and New secondary; a disk conflict reads 'changed on disk · answer the notice below' in the status; ⌘S on a Mac. GUIDE: dots are 24x24 targets drawing the 18x6 bar (content-box), on a row of their own; 15/13/10px type onto body/caption/label. bidiTruncation regex widened to text or a fragment before Bidi; RailFolder Delete and CategoryPicker Create fixed; ParentPicker, plan/BucketTable, MonthRow, PointsAt named as parked exceptions. Sweep (Mcp, Packs, Export, Overview, About, EarlierCopies, Notices, DocumentBar, Guide, GuideLine): no px type/tracking/leading, no between-step px (field widths kept), no control radius, no ink-tertiary; guarded in a new surfaceRules describe. App.tsx Recent: no radius, 'Recent' ink-secondary, names in Bidi. VERIFIED: browser (demo 4185 dark, dev 5173 for the restore notice and the error alert, pane hidden - JS probes, no screenshots); shell over CDP: Save/New/Open secondary, About Tab wraps both ways, palette's Earlier copies over About leaves one dialog, Back up now from the empty list lists the copy and the notice reads right, Escape gives focus back to the opener. Not driven: update notices and disk conflict in the shell (code + tests). Tests: related (96 files), surfaceRules, bidiTruncation, privacy, parity, menuParity, about, updateFailure, typecheck green; check:tours NOT run (driver's ask). LOOK AT: the restore notice words. LEFT: Notices' 'Save a copy…' labels and the palette's are F7's rename; a focus restore after the palette ran a dialog lands on body (the palette's field is gone); dialogs keep rounded-lg like the palette.
 
 ### M54 F7
 milestone: M54
