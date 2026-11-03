@@ -571,6 +571,10 @@ function RoutedViews() {
         {/* **One entry, the one view of a row** (M26 U6, D-294; M35 U2, D-401):
             on the same screen as the sheet, and `new` for one not written yet. */}
         <Route path="/formats/:name/entry/:entry" element={<FormatRows />} />
+        {/* **An input view's form** (M55 U3, D-535): a page where entry/new
+            opens, beside the list, that stays open after Add; bare, a new one. */}
+        <Route path="/formats/:name/input" element={<FormatRows input />} />
+        <Route path="/formats/:name/input/:view" element={<FormatRows input />} />
         {/* **A board** (M27 U3, D-301): the rows as cards in lanes, one per
             member of an enum — a view the engine draws for any format with one. */}
         <Route path="/formats/:name/board" element={<FormatRows board />} />

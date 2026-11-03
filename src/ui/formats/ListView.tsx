@@ -367,7 +367,7 @@ function NarrowRow(props: RowProps & { readonly current: boolean }) {
 }
 
 /** One value on the wide line: chips with a dot, a member with its tone, a due right-aligned. */
-function Cell({ cell }: { cell: LineCell }) {
+export function Cell({ cell }: { cell: LineCell }) {
   switch (cell.kind) {
     case 'chips':
       return (

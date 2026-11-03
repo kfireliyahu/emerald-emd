@@ -221,6 +221,7 @@ export function ViewForm({
   making,
   onMaking,
   onPlace,
+  place = true,
 }: {
   readonly db: Database
   readonly formats: readonly FormatDeclaration[]
@@ -232,6 +233,8 @@ export function ViewForm({
   readonly making: ViewMaking
   readonly onMaking: (next: ViewMaking | undefined) => void
   readonly onPlace: Placing
+  /** False from a format's + (M55 U3): saved, and placed on no dashboard. */
+  readonly place?: boolean
 }) {
   const declaration = formats.find((each) => each.name === making.format) ?? formats[0]
   if (declaration === undefined) return null
@@ -251,7 +254,7 @@ export function ViewForm({
   const held = read.ok ? countRows(db, declaration, read.value) : undefined
   const submit = (): void => {
     const made = { dashboard, format: declaration.name, kind: making.kind, name: making.name.trim(), address }
-    const refused = viewRefusal(db, declaration, blocks, made) ?? onPlace((database) => makeView(database, blocks, made), viewBlock(made))
+    const refused = viewRefusal(db, declaration, blocks, made) ?? onPlace((database) => makeView(database, blocks, made, place), viewBlock(made))
     if (refused !== undefined) onMaking({ ...making, refused })
   }
   return (
@@ -330,6 +333,7 @@ export function ChartForm({
   making,
   onMaking,
   onPlace,
+  place = true,
 }: {
   readonly db: Database
   readonly formats: readonly FormatDeclaration[]
@@ -340,6 +344,8 @@ export function ChartForm({
   readonly making: ChartMaking
   readonly onMaking: (next: ChartMaking | undefined) => void
   readonly onPlace: Placing
+  /** False from a format's + (M55 U3): declared, and placed on no dashboard. */
+  readonly place?: boolean
 }) {
   const declaration = formats.find((each) => each.name === making.format) ?? formats[0]
   if (declaration === undefined) return null
@@ -362,7 +368,7 @@ export function ChartForm({
   const plan = making.name.trim() === '' ? undefined : chartPlan(db, declarations, blocks, made)
   const submit = (): void => {
     const judged = chartPlan(db, declarations, blocks, made)
-    const refused = !judged.ok ? judged.error : onPlace((database) => makeChart(database, blocks, judged.value), judged.value.block)
+    const refused = !judged.ok ? judged.error : onPlace((database) => makeChart(database, blocks, judged.value, place), judged.value.block)
     if (refused !== undefined) onMaking({ ...making, refused })
   }
   // A refusal is said once, where it is mended (M55 U7): a missing month at

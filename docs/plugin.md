@@ -1224,8 +1224,8 @@ rather than three decisions.
 > column neither asked nor defaulted, a default its column refuses (`this week` among them), a computed
 > column. `record_format_rows view:"Card charge"` fills each row's left-out fields from its defaults and
 > the dry run names them per row (*Row 1 — date and account from Card charge*), refusing a view of
-> another kind; `show_format view:"Card charge"` draws its form read-only (the frame opens it on a new
-> entry until M55 U3's form); `format_rows` refuses one; `formats` names a format's input views apart.
+> another kind; `show_format view:"Card charge"` draws its form read-only (the frame opens its own form, its
+> fields disabled and no Add, M55 U3); `format_rows` refuses one; `formats` names a format's input views apart.
 > **M53 U5 added saved views** (D-520): `arrange_views view:saved name:"Due today" kind:list
 > match:{due:"today"}` keeps a format's filter, folds, columns, sort and kind under a name — the
 > address as the app spells it, so `today` stays the phrase — and `rename` and `delete: true` change

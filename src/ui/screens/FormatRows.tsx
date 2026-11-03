@@ -49,7 +49,9 @@ import {
   setEntryHidden,
   setEntryInput,
   setEntryOrder,
+  saveView,
 } from '@/data/repositories/formatViewRepository.ts'
+import { INPUT_KIND, inputDraft, inputViewRefusals, type InputShape } from '@/domain/format/inputView.ts'
 import {
   isLinkType,
   labelColumn,
@@ -122,6 +124,7 @@ import {
   roadmapPath,
   savedViewPath,
   tablePath,
+  inputPath,
 } from '@/ui/nav.ts'
 import { DashboardView } from '@/ui/formats/Dashboard.tsx'
 import { BoardView } from '@/ui/formats/BoardView.tsx'
@@ -135,8 +138,14 @@ import {
   readyOf,
   roadmapOf,
   writeListSetting,
+  entryDefaults,
+  savedNameRefusal,
   type ListGroup,
 } from '@/domain/format/view.ts'
+import { InputView, type InputLine } from '@/ui/formats/InputView.tsx'
+import { draftShape, inputViewName, keptSentence } from '@/ui/formats/inputForm.ts'
+import { FormatPlus } from '@/ui/formats/FormatPlus.tsx'
+import { ChartForm, newChart, newView, ViewForm, type ChartMaking, type ViewMaking } from '@/ui/formats/MakeBlock.tsx'
 import { ListPage } from '@/ui/formats/ListView.tsx'
 import { groupKeyOf, listOrder, listPicture, quickAdd, type ListLine, type ListPicture } from '@/ui/formats/listView.ts'
 import { entryLinked, entryLinks } from '@/data/repositories/formatLinkViewRepository.ts'
@@ -160,7 +169,7 @@ import { ColumnFilter, ColumnMenu, FilterBand, filteredQuery, useAddressFilter }
 import { isFiltered, type RowFilter } from '@/data/repositories/formatFilterRepository.ts'
 import { EntryList } from '@/ui/formats/EntryList.tsx'
 import { heldIds, listColumns, listQuery } from '@/ui/formats/entryList.ts'
-import { filterAddress } from '@/ui/formats/addressFilter.ts'
+import { filterAddress, inputAddress, inputShapeOf } from '@/ui/formats/addressFilter.ts'
 import { toggleEntryList, useEntryListHidden } from '@/ui/useEntryList.ts'
 import { rollupWords } from '@/ui/formats/dashboard.ts'
 
@@ -234,8 +243,9 @@ export function FormatRows({
   board = false,
   list = false,
   dashboard = false,
-}: { readonly board?: boolean; readonly list?: boolean; readonly dashboard?: boolean } = {}) {
-  const { name, entry } = useParams<{ name: string; entry: string }>()
+  input = false,
+}: { readonly board?: boolean; readonly list?: boolean; readonly dashboard?: boolean; readonly input?: boolean } = {}) {
+  const { name, entry, view: inputName } = useParams<{ name: string; entry: string; view: string }>()
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
   const mutate = useDocumentStore((state) => state.mutate)
@@ -257,7 +267,7 @@ export function FormatRows({
   const saving = useSaving(name, board ? 'board' : list ? 'list' : 'table')
   // The format's saved views, each a tab; the one the address is, current (M54 F2).
   const saved = useSavedViews(name)
-  const savedHere = dashboard || entry !== undefined ? undefined : saving?.current
+  const savedHere = dashboard || input || entry !== undefined ? undefined : saving?.current
   // The rows, or one of the format's rollups by name (M25 E2, D-271).
   // A dashboard's rollup block opens its format on that rollup (M53 U7).
   const opening = useLocation().state as unknown
@@ -288,6 +298,8 @@ export function FormatRows({
   const [written, setWritten] = useState<string | undefined>(undefined)
   // Asked about one entry's delete from its own view.
   const [deletingEntry, setDeletingEntry] = useState(false)
+  // A view or a chart being made from the format's + (M55 U3, D-535), saved without a block.
+  const [making, setMaking] = useState<ViewMaking | ChartMaking | undefined>(undefined)
   useEffect(() => {
     setRefused(undefined)
     setWritten(undefined)
@@ -512,10 +524,13 @@ export function FormatRows({
    * The verdicts come off the same cells that would be stored, so what the panel
    * says the row proves is what the row will prove.
    */
-  const judgeEntry = (draft: RowDraft) => {
-    if (db === undefined || editing === undefined || editing === 'MISSING' || data?.declaration === undefined) {
-      return undefined
-    }
+  const judgeEntry = (draft: RowDraft, fresh?: RowDraft) => {
+    if (db === undefined || data?.declaration === undefined) return undefined
+    // An input view's row (M55 U3) is a new one, judged against where its own form starts.
+    const current = fresh === undefined && editing !== undefined && editing !== 'MISSING' ? editing : undefined
+    if (fresh === undefined && current === undefined) return undefined
+    const existing = current?.existing
+    const aggregates = current?.aggregates ?? []
     const declaration = data.declaration
     const day = toISODate(today())
     // **Every problem at once, each at its field** (M55 U5, D-545): what a new
@@ -530,7 +545,7 @@ export function FormatRows({
     const none = { verdicts: [] as readonly RowVerdict[] }
     // A new entry says what it needs (M53 U3, D-518) — "A task needs a title."
     // for every required column that holds nothing, said once Add is pressed.
-    if (editing.existing === undefined) {
+    if (existing === undefined) {
       const needs = entryNeedsEach(declaration.title, entryOrder(declaration.columns, data.places), (column) => {
         const text = (draft[column] ?? '').trim()
         return text !== '' && text !== '[]'
@@ -544,7 +559,7 @@ export function FormatRows({
     // carried forward by itself does not count as having been typed — nor a
     // member a new entry starts at (D-518).
     const offered = offeredOf(declaration, draft, day)
-    const touched = editing.existing === undefined ? typedOf(declaration, draft, newRowDefaults(db, declaration, filter, day)) : offered
+    const touched = existing === undefined ? typedOf(declaration, draft, fresh ?? newRowDefaults(db, declaration, filter, day)) : offered
     if (isEmpty(touched)) {
       if (problems.length === 0) say(undefined, 'Nothing has been filled in yet.')
       return { ...none, problems, problem: joined(problems) }
@@ -563,7 +578,7 @@ export function FormatRows({
     }
     // A rule set over this format sets what it matches, and a link a person
     // changed here is theirs from now on (M25 E4, D-273).
-    const before = editing.existing === undefined ? undefined : readRow(db, declaration, editing.existing)
+    const before = existing === undefined ? undefined : readRow(db, declaration, existing)
     const ruled = withRules(db, declaration, typed.value, before?.cells)
     const coerced = { value: ruled.cells }
 
@@ -573,13 +588,13 @@ export function FormatRows({
       const one = { [column.name]: coerced.value[column.name] ?? null }
       for (const reason of danglingLinks(db, declaration, one, data.formats)) say(column.name, reason)
       // A row may not name itself (M27 U5, D-303) — only an edit has an id to.
-      if (editing.existing !== undefined) {
-        for (const reason of selfLinks(declaration, editing.existing, one)) say(column.name, reason)
+      if (existing !== undefined) {
+        for (const reason of selfLinks(declaration, existing, one)) say(column.name, reason)
       }
     }
     // A unique column the form has no control for yet (D-255) still refuses a
     // repeat here, in words, rather than as SQLite's constraint error.
-    for (const each of repeatedValues(db, declaration, [coerced.value], [editing.existing])) say(each.column, each.message)
+    for (const each of repeatedValues(db, declaration, [coerced.value], [existing])) say(each.column, each.message)
     // A row constraint (D-259) the form has no control for until M26.
     for (const reason of brokenConstraints(declaration, coerced.value)) say(undefined, reason)
     // **And the table's own word** (M29 F2, D-343): the row written and taken
@@ -590,17 +605,17 @@ export function FormatRows({
         db,
         declaration,
         [coerced.value],
-        editing.existing === undefined ? undefined : { existing: editing.existing },
+        existing === undefined ? undefined : { existing: existing },
       )
       for (const each of table) say(each.column, each.reason)
     }
-    const staged: StoredRow = { id: editing.existing ?? '', cells: coerced.value }
+    const staged: StoredRow = { id: existing ?? '', cells: coerced.value }
     // The draft's own figures, one hop through its links, and **its totals** —
     // which fold other rows and not this one, so the stored row's are the
     // draft's too. Without them an identity naming a total said `unchecked`
     // here while the sheet beside it said `proved` (M29 F7).
     const [hopped] = inputsFor(db, declaration, [staged], data.formats)
-    const inputs = inputsWithTotals(hopped ?? identityInputsOf(declaration, staged), editing.aggregates)
+    const inputs = inputsWithTotals(hopped ?? identityInputsOf(declaration, staged), aggregates)
     return {
       problems,
       problem: joined(problems),
@@ -630,7 +645,7 @@ export function FormatRows({
   // A new entry keeps the list beside it too (M53 U3), with its draft as a row.
   // **It is the list view, narrow** (M53 U4, D-519): the same groups and ticks.
   const pictured = useMemo(() => {
-    if (entry === undefined || db === undefined || data === undefined || data.declaration === undefined) return undefined
+    if ((entry === undefined && !input) || db === undefined || data === undefined || data.declaration === undefined) return undefined
     return listPicture(
       db,
       data.declaration,
@@ -639,7 +654,7 @@ export function FormatRows({
       viewSettings(db, data.declaration.name, 'list'),
       toISODate(today()),
     )
-  }, [entry, db, data])
+  }, [entry, input, db, data])
   const listed = useMemo(() => (pictured === undefined ? undefined : listOrder(pictured)), [pictured])
 
   /**
@@ -705,6 +720,11 @@ export function FormatRows({
   // so once, at the top of the frame, rather than here.
   // Said to a person: where, never which tool (M54 F2).
   const locked = rowWriteRefusalOnScreen(declaration) ?? readOnly
+  // **Add opens the format's default input view** where there is one — Add,
+  // the list's + and quick add alike — and entry/new where there is none (M55 U3, D-533).
+  const defaultInput = saved.find((each) => each.kind === INPUT_KIND && each.isDefault === true)
+  const addPath =
+    (defaultInput === undefined ? entryPath(declaration.name, NEW_ENTRY) : inputPath(declaration.name, defaultInput.name)) + address
   // **A link field makes what is missing in place** (M55 U6, D-550): the row
   // checked and written as `record_format_rows` writes it, so no new write.
   const targetOf = (name: string): FormatDeclaration | undefined => data.declarations.find((each) => each.name === name)
@@ -820,6 +840,11 @@ export function FormatRows({
     const named = picture.shape.name
     const draft = named === undefined ? asked.draft : { ...asked.draft, [named.name]: title }
     if (asked.missing.length > 0 || named === undefined) {
+      if (defaultInput !== undefined) {
+        // What was typed rides along to the input view's first row.
+        navigate(addPath, { state: { ...(list ? { from: 'list' } : (came ?? {})), prefill: draft } })
+        return false
+      }
       setTyped({ key: `${declaration.name}/${NEW_ENTRY}`, draft })
       navigate(entryPath(declaration.name, NEW_ENTRY) + address, list ? { state: { from: 'list' } } : along)
       return false
@@ -847,6 +872,17 @@ export function FormatRows({
     return true
   }
 
+  /** A view or a chart made from the +: its own write, and no block (M55 U3). */
+  const placeMade = (work: (database: NonNullable<typeof db>) => void): string | undefined => {
+    try {
+      mutate(work)
+    } catch (error) {
+      return error instanceof Error ? error.message : String(error)
+    }
+    setMaking(undefined)
+    return undefined
+  }
+
   /** Quick add's placeholder for a group, naming every value the row will take. */
   const placeholderOf = (picture: ListPicture, group: ListGroup<ListLine> | undefined): string =>
     quickAdd(declaration, picture.shape, group?.implies ?? {}, filter, toISODate(today()), picture.names, undefined, undefined, inputDefaults(db, declaration, toISODate(today())))
@@ -858,6 +894,158 @@ export function FormatRows({
   // the table it goes to keeps the filter the entry was opened from.
   if (editing === 'MISSING') {
     return <Navigate to={tablePath(declaration.name, address)} replace />
+  }
+
+  /**
+   * **An input view's form** (M55 U3, D-535): where entry/new opens, beside
+   * the list, and it stays open after Add. Its rows are judged by the entry's
+   * own `judgeEntry` and written by the same `insertRows` entry/new writes by;
+   * with no name it is a new one being made, saved through `saveView` after
+   * `inputViewRefusals`, the check `arrange_views` asks too.
+   */
+  if (input) {
+    const shown = inputName === undefined ? undefined : saved.find((each) => each.name === inputName)
+    if (inputName !== undefined && shown === undefined) return <Navigate to={tablePath(declaration.name, address)} replace />
+    if (shown !== undefined && shown.kind !== INPUT_KIND) {
+      return <Navigate to={savedViewPath(declaration.name, shown.kind, shown.address, shown.name)} replace />
+    }
+    // No new input view where no row can be written.
+    if (shown === undefined && locked !== undefined) return <Navigate to={tablePath(declaration.name, address)} replace />
+    const day = toISODate(today())
+    const startsAt = (shape: InputShape): RowDraft => ({
+      ...blankDraft(declaration, data.rows[data.rows.length - 1]?.row, data.currency),
+      ...entryDefaults(declaration.columns, new Set(), { input: inputDraft(declaration, shape.defaults, day), address: {} }),
+    })
+    const titled = listColumns(declaration, data).title
+    const lineOf = (id: string): InputLine | undefined => {
+      const row = readRow(db, declaration, id)
+      if (row === undefined) return undefined
+      const line = listed?.find((each) => each.id === id)
+      const failed = foldedVerdicts(db, declaration, row, data.formats, data.units)
+        .filter((each) => each.verdict.kind === 'FAILED')
+        .map((each) => each.identity.name)
+      return {
+        title: line?.title ?? (titled === undefined ? declaration.title : String(row.cells[titled.name] ?? declaration.title)),
+        cells: line?.cells ?? [],
+        failed,
+      }
+    }
+    const back = entryBack(came, declaration.name, address)
+    const prefill = (location.state as { readonly prefill?: RowDraft } | null)?.prefill
+    const form = (
+      <LinkMakerContext.Provider value={linkMaker}>
+        <InputView
+          key={shown?.name ?? ' new'}
+          declaration={declaration}
+          view={shown}
+          shape={shown === undefined ? draftShape(declaration) : inputShapeOf(shown.address, declaration.name)}
+          name={inputViewName(declaration, saved.map((each) => each.name))}
+          units={data.units}
+          links={data.links}
+          labels={data.labels}
+          today={day}
+          locked={locked}
+          list={{ hidden: listHidden, onToggle: toggleEntryList }}
+          backLabel={back.label ?? declaration.title}
+          prefill={prefill}
+          startsAt={startsAt}
+          judge={(draft, starts) => {
+            const verdict = judgeEntry(draft, starts)
+            if (verdict === undefined) return { problems: [] }
+            const cells = 'cells' in verdict ? verdict.cells : undefined
+            return {
+              problems: verdict.problems,
+              add:
+                verdict.problems.length > 0 || cells === undefined
+                  ? undefined
+                  : () => {
+                      // **The write entry/new writes by**, every Add saying why when it cannot.
+                      let added: string | undefined
+                      try {
+                        mutate((database) => {
+                          added = insertRows(database, declaration, [cells])[0]
+                        })
+                      } catch (error) {
+                        return { refusal: describeTableError(declaration, error).reason }
+                      }
+                      return added === undefined ? { refusal: 'Not added.' } : { id: added }
+                    },
+            }
+          }}
+          lineOf={lineOf}
+          undo={(id) => {
+            // Refused while another row names it, as a delete is (M27 U2, D-300).
+            const linking = rowsLinkingTo(db, declaration, [id], data.declarations)
+            const count = linking.reduce((sum, each) => sum + [...each.counts.values()].reduce((a, b) => a + b, 0), 0)
+            if (count > 0) return keptSentence(count)
+            try {
+              mutate((database) => deleteRows(database, declaration, [id], data.declarations))
+            } catch (error) {
+              return describeTableError(declaration, error).reason
+            }
+            return undefined
+          }}
+          save={(next, was) => {
+            const named = next.name.trim()
+            const refusal = savedNameRefusal(named)
+            if (refusal !== undefined) return refusal
+            if (was === undefined && saved.some((each) => each.name.toLowerCase() === named.toLowerCase())) {
+              return `${declaration.title} already has a view called ${named}.`
+            }
+            const reasons = inputViewRefusals(declaration, next.shape)
+            if (reasons.length > 0) return reasons.join(' ')
+            try {
+              mutate((database) =>
+                saveView(database, {
+                  format: declaration.name,
+                  name: named,
+                  kind: INPUT_KIND,
+                  address: inputAddress(declaration.name, next.shape),
+                  ...(next.isDefault ? { isDefault: true } : {}),
+                }),
+              )
+            } catch (error) {
+              return error instanceof Error ? error.message : String(error)
+            }
+            if (was === undefined) navigate(inputPath(declaration.name, named) + address, { replace: true, ...along })
+            return undefined
+          }}
+          linkGone={(column, text) => {
+            const target = column.target === undefined ? undefined : targetOf(column.target)
+            if (target === undefined) return false
+            const said = text.trim().toLowerCase()
+            return !linkChoicesOf(db, target).some((each) => each.id === text || each.label.toLowerCase() === said)
+          }}
+          oneOf={(target) => (targetOf(target)?.title ?? target).toLowerCase()}
+          onBack={() => navigate(back.path)}
+          onOpen={(id) => navigate(entryPath(declaration.name, id) + address, along)}
+        />
+      </LinkMakerContext.Provider>
+    )
+    if (pictured === undefined) return form
+    return (
+      <div className="flex h-full min-h-0">
+        <EntryList
+          declaration={declaration}
+          picture={pictured}
+          current={undefined}
+          draft={undefined}
+          locked={locked !== undefined}
+          refusal={spoken(moveRefusal, declaration)}
+          onTick={(line, value) => tickLine(pictured, line, value)}
+          onAdd={(group, title) => addLine(pictured, group, title)}
+          placeholder={(group) => placeholderOf(pictured, group)}
+          onNew={undefined}
+          entries={data.entries}
+          filter={filter}
+          shown={!listHidden}
+          onOpen={(id) => navigate(entryPath(declaration.name, id) + address, along)}
+          onSearch={(text) => setFilter({ ...filter, search: text }, true)}
+          onFilter={(next) => setFilter(next, true)}
+        />
+        <div className="min-w-0 flex-1">{form}</div>
+      </div>
+    )
   }
 
   if (editing !== undefined && judged !== undefined) {
@@ -1099,7 +1287,7 @@ export function FormatRows({
           placeholder={(group) => placeholderOf(pictured, group)}
           onNew={locked !== undefined ? undefined : () => {
             setTyped(undefined)
-            navigate(entryPath(declaration.name, NEW_ENTRY) + address, along)
+            navigate(addPath, along)
           }}
           entries={data.entries}
           filter={filter}
@@ -1354,7 +1542,7 @@ export function FormatRows({
           <Button
             size="sm"
             variant="primary"
-            onClick={() => navigate(entryPath(declaration.name, NEW_ENTRY) + address)}
+            onClick={() => navigate(addPath)}
           >
             Add
           </Button>
@@ -1381,7 +1569,10 @@ export function FormatRows({
           { label: 'List', on: list && savedHere === undefined, go: () => navigate(listPath(declaration.name) + address) },
           ...(data.hasRoadmap ? [{ label: 'Roadmap', on: false, go: () => navigate(roadmapPath(declaration.name) + address) }] : []),
           ...(data.hasReady ? [{ label: 'Ready to start', on: false, go: () => navigate(readyPath(declaration.name) + address) }] : []),
-          ...saved.map((each) => ({ label: each.name, on: savedHere === each.name, go: () => undefined, saved: each })),
+          // An input view adds rows rather than showing them: the rail's, never a tab (D-535).
+          ...saved
+            .filter((each) => each.kind !== INPUT_KIND)
+            .map((each) => ({ label: each.name, on: savedHere === each.name, go: () => undefined, saved: each })),
           ...(declaration.rollups ?? []).map((each) => ({
             label: rollupWords(each.name),
             on: shownRollup === each.name,
@@ -1393,15 +1584,25 @@ export function FormatRows({
             },
           })),
           // **Its dashboard, last** (M53 U7, D-521): the format still opens on Table.
+          // **The format's +** (M55 U3, D-535): one place to make its views, before Dashboard's hairline.
+          ...(readOnly === undefined ? [{ label: 'New', on: false, go: () => undefined, plus: true }] : []),
           { label: 'Dashboard', on: dashboard, go: () => navigate(dashboardPath(declaration.name)), apart: true },
         ].map((tab) => (
           <Fragment key={`${'apart' in tab ? 'apart ' : 'saved' in tab ? 'saved ' : ''}${tab.label}`}>
             {'apart' in tab && <span aria-hidden className="my-2 w-px shrink-0 bg-hairline" />}
-            {'saved' in tab && tab.saved !== undefined ? (
+            {'plus' in tab ? (
+              <FormatPlus
+                input={locked === undefined}
+                onPick={(pick) => {
+                  if (pick === 'input') navigate(inputPath(declaration.name, undefined) + address)
+                  else setMaking(pick === 'view' ? newView(declaration) : newChart(declaration))
+                }}
+              />
+            ) : 'saved' in tab && tab.saved !== undefined ? (
               <SavedTab
                 view={tab.saved}
                 on={tab.on}
-                onGo={() => navigate(savedViewPath(declaration.name, tab.saved.kind, tab.saved.address))}
+                onGo={() => navigate(savedViewPath(declaration.name, tab.saved.kind, tab.saved.address, tab.saved.name))}
               />
             ) : (
               <button
@@ -1416,6 +1617,41 @@ export function FormatRows({
           </Fragment>
         ))}
       </nav>
+      {making !== undefined && (
+        // New view and New chart from the +: Add a block's own forms, saved without a block.
+        <div className="fc-pop-enter shrink-0 border-b border-hairline px-6 py-4">
+          <div className="max-w-[520px]">
+            {making.what === 'view' ? (
+              <ViewForm
+                db={db}
+                formats={[declaration]}
+                declarations={data.declarations}
+                blocks={[]}
+                document={false}
+                dashboard={declaration.name}
+                day={toISODate(today())}
+                making={making}
+                onMaking={setMaking}
+                onPlace={placeMade}
+                place={false}
+              />
+            ) : (
+              <ChartForm
+                db={db}
+                formats={[declaration]}
+                declarations={data.declarations}
+                blocks={[]}
+                document={false}
+                dashboard={declaration.name}
+                making={making}
+                onMaking={setMaking}
+                onPlace={placeMade}
+                place={false}
+              />
+            )}
+          </div>
+        </div>
+      )}
       {locked !== undefined && readOnly === undefined && (
         <p className="shrink-0 border-b border-hairline px-6 py-2 text-caption text-ink-secondary">
           {locked}

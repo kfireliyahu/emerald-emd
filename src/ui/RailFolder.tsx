@@ -16,7 +16,7 @@ import { useSavedViews } from '@/ui/formats/savedView.ts'
 import { FOLDER_SIZE, folderOf } from '@/ui/formats/folder.ts'
 import { changeRollup, rollupDeleted, rollupRenamed, type RollupChange } from '@/ui/formats/rollupInPlace.ts'
 import { toneOf } from '@/ui/formats/tone.ts'
-import { entryPath, formatPath, NEW_ENTRY, savedViewPath, type NavChild } from '@/ui/nav.ts'
+import { entryPath, formatPath, inputPath, NEW_ENTRY, savedViewPath, type NavChild } from '@/ui/nav.ts'
 import { folderIsOpen, toggleFolder, useOpenFolders } from '@/ui/railFolders.ts'
 import { rollupWords } from '@/ui/formats/dashboard.ts'
 
@@ -35,6 +35,8 @@ import { rollupWords } from '@/ui/formats/dashboard.ts'
  * opens its address, is lit while the address is it, and is renamed or
  * deleted where it stands. **Its charts beside them** (M53 F3): each rollup
  * the format declares, opening its tab, renamed and deleted the same way.
+ * **Its input views first** (M55 U3, D-535), the one used for Add first of
+ * them and captioned *Add*, each opening its form.
  */
 
 /**
@@ -82,7 +84,16 @@ export function RailFolder({
   // In the format already, an entry keeps the list's search; one the search
   // does not hold lets it go when it opens (M37 U2b).
   const kept = useLocation().search
-  const saved = useSavedViews(name)
+  // Input views first, the one Add opens first of them; then the views of rows.
+  const views = useSavedViews(name)
+  const saved = useMemo(
+    () => [
+      ...views.filter((each) => each.kind === 'input' && each.isDefault === true),
+      ...views.filter((each) => each.kind === 'input' && each.isDefault !== true),
+      ...views.filter((each) => each.kind !== 'input'),
+    ],
+    [views],
+  )
   const held = useOpenFolders()
   const [filter, setFilter] = useState('')
   const declaration = declarations.find((each) => each.name === name)
@@ -112,7 +123,10 @@ export function RailFolder({
   const countId = useId()
   // The saved view the address is, when it is one: it carries the marker, as an entry does.
   const savedHere = (view: SavedView): boolean =>
-    lit && pathname === savedViewPath(name, view.kind, '') && sameAddress(kept, view.address)
+    lit &&
+    (view.kind === 'input'
+      ? pathname === inputPath(name, view.name)
+      : pathname === savedViewPath(name, view.kind, '') && sameAddress(kept, view.address))
   const onSaved = saved.some(savedHere)
   const q = filter.trim()
   return (
@@ -246,12 +260,17 @@ export function RailFolder({
  */
 function SavedRow({ view, here, left }: { view: SavedView; here: boolean; left: string }) {
   const mutate = useDocumentStore((state) => state.mutate)
+  const input = view.kind === 'input'
+  const forAdd = input && view.isDefault === true
   return (
     <RailRow
       name={view.name}
-      to={savedViewPath(view.format, view.kind, view.address)}
-      glyph="filter"
-      title={`${view.name} — a saved ${view.kind}`}
+      to={savedViewPath(view.format, view.kind, view.address, view.name)}
+      glyph={input ? 'input' : 'filter'}
+      title={input ? `${view.name} — an input view` : `${view.name} — a saved ${view.kind}`}
+      // The one Add opens says so where a format's row has its count (M55 U3).
+      caption={forAdd ? 'Add' : undefined}
+      deleteNote={forAdd ? 'Add opens the entry form again.' : undefined}
       here={here}
       left={left}
       onRename={(to) => mutate((db) => renameSavedView(db, view.format, view.name, to.trim()))}
@@ -302,6 +321,8 @@ function RailRow({
   state,
   glyph,
   title,
+  caption,
+  deleteNote,
   here,
   left,
   onRename,
@@ -310,8 +331,12 @@ function RailRow({
   name: string
   to: string
   state?: unknown
-  glyph: 'filter' | 'chart'
+  glyph: 'filter' | 'chart' | 'input'
   title: string
+  /** Said at its end, where a format's row has its count: *Add*. */
+  caption?: string | undefined
+  /** What deleting it changes beyond itself, said with the question. */
+  deleteNote?: string | undefined
   here: boolean
   /** Its inset from the rail's edge: a class, `PLAIN.entry` or `GROUPED.entry`. */
   left: string
@@ -408,6 +433,7 @@ function RailRow({
             Keep
           </button>
         </div>
+        {deleteNote !== undefined && <div className="pb-1 text-caption text-ink-secondary">{deleteNote}</div>}
         {said}
       </div>
     )
@@ -432,6 +458,9 @@ function RailRow({
           <ActionGlyph name={glyph} size={11} />
         </span>
         <Bidi className="min-w-0 truncate">{name}</Bidi>
+        {caption !== undefined && (
+          <span className="ml-auto pr-1 text-caption text-ink-secondary group-focus-within:hidden group-hover:hidden">{caption}</span>
+        )}
       </Link>
       <span className="flex flex-none items-center opacity-0 group-focus-within:opacity-100 group-hover:opacity-100">
         <button

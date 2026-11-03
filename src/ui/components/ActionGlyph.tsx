@@ -38,6 +38,7 @@ export type ActionGlyphName =
   | 'close'
   | 'equals'
   | 'chart'
+  | 'input'
 
 const PATHS: Readonly<Record<ActionGlyphName, React.ReactNode>> = {
   add: <path d="M8 3v10M3 8h10" />,
@@ -117,6 +118,10 @@ const PATHS: Readonly<Record<ActionGlyphName, React.ReactNode>> = {
   equals: <path d="M3 6h10M3 10h10" />,
   // A chart in the rail (M53 F3): three bars on a baseline.
   chart: <path d="M2.5 13.5h11M4.5 13.5V9M8 13.5V4.5M11.5 13.5V7" />,
+  // An input view in the rail (M55 U3): a field's box with a text caret.
+  input: (
+    <><rect x="2" y="4.5" width="12" height="7" /><path d="M5.5 6.5v3" /></>
+  ),
 }
 
 export function ActionGlyph({ name, size = 16 }: { readonly name: ActionGlyphName; readonly size?: number }) {

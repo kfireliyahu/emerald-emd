@@ -150,7 +150,7 @@ export function DashboardView({ dashboard }: { readonly dashboard: string | unde
     close()
     if (block.kind === 'saved') {
       const view = savedView(db, block.format, block.name)
-      if (view !== undefined) navigate(savedViewPath(block.format, view.kind, view.address), { state: back })
+      if (view !== undefined) navigate(savedViewPath(block.format, view.kind, view.address, view.name), { state: back })
     } else if (block.kind === 'rollup') {
       navigate(formatPath(block.format), { state: { ...back, rollup: block.name } })
     } else navigate(listPath(block.format) + block.address, { state: back })

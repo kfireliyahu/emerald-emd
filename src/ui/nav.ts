@@ -330,10 +330,15 @@ export function listPath(name: string): string {
  * route of its own, so a bookmark of it is the same address, and changing the
  * filter there is changing the view as it is drawn, never the one kept.
  */
-export function savedViewPath(format: string, kind: 'table' | 'board' | 'list' | 'roadmap' | 'ready' | 'input', address: string): string {
-  // An input view (M55 U2, D-536) opens a new entry with the address it keeps:
-  // its exact values are what the entry starts at. Its own form is M55 U3's.
-  if (kind === 'input') return entryPath(format, NEW_ENTRY) + address
+export function savedViewPath(
+  format: string,
+  kind: 'table' | 'board' | 'list' | 'roadmap' | 'ready' | 'input',
+  address: string,
+  name?: string,
+): string {
+  // An input view opens its own form (M55 U3, D-535): a page under the
+  // format, not the address it keeps, which is what the form asks and sets.
+  if (kind === 'input') return inputPath(format, name)
   const path =
     kind === 'board'
       ? boardPath(format)
@@ -345,6 +350,15 @@ export function savedViewPath(format: string, kind: 'table' | 'board' | 'list' |
             ? readyPath(format)
             : formatPath(format)
   return path + address
+}
+
+/**
+ * **An input view's form** (M55 U3, D-535): a page beside the format's list,
+ * where entry/new opens, at its own address — `#/formats/card_charge/input/Card%20charge`.
+ * With no name it is a new one being made, a draft until Save.
+ */
+export function inputPath(format: string, view: string | undefined): string {
+  return `${formatPath(format)}/input${view === undefined ? '' : `/${encodeURIComponent(view)}`}`
 }
 
 /** The document's own dashboard (M53 U7, D-521): blocks from any format. */

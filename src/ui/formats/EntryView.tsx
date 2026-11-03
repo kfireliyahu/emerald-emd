@@ -188,7 +188,7 @@ export function NewLinkForm({
   )
 }
 
-const NO_LINKED: ReadonlyMap<string, LinkedRow> = new Map()
+export const NO_LINKED: ReadonlyMap<string, LinkedRow> = new Map()
 const NO_LABELS: ReadonlyMap<string, string> = new Map()
 
 /** Where this entry is in the list it was opened from — the sheet's order and search. */
@@ -851,7 +851,7 @@ const SEAMLESS =
  * beside the name, on hover, is how the column is shown (M35 U2's pick: on the
  * field, not in Arrange; M35 U3, D-402: Show as).
  */
-function Field({
+export function Field({
   column,
   part,
   way,
@@ -872,6 +872,7 @@ function Field({
   mover,
   dimmed,
   autoFocus = false,
+  hint: hinted = true,
   onChange,
   onPick,
   onFocus,
@@ -904,6 +905,8 @@ function Field({
   dimmed: boolean
   /** Focus its control when drawn: the first field a link's inline form asks (M55 U6). */
   autoFocus?: boolean
+  /** Whether a focused field says how it writes — an input view's do not: Add writes them all (M55 U3). */
+  hint?: boolean
   onChange: (key: string, text: string) => void
   onPick: (key: string, text: string) => void
   /** Focus came into the field: it stays drawn until it is left (M53 U3). */
@@ -1029,7 +1032,7 @@ function Field({
     />
   )
   const hint =
-    focused && !readOnly && TYPED.has(way) && column.type !== 'boolean' ? (
+    hinted && focused && !readOnly && TYPED.has(way) && column.type !== 'boolean' ? (
       <span className="text-label text-ink-secondary">
         {fresh ? 'Kept as typed until Add' : 'Enter or leaving the field writes it · Esc puts it back'}
       </span>

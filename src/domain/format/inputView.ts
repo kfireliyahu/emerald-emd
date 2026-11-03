@@ -72,7 +72,7 @@ function computedNames(declaration: FormatDeclaration): ReadonlySet<string> {
 }
 
 /** Why one column's default is not one, or nothing. */
-function defaultRefusal(column: ColumnDeclaration, held: unknown): string | undefined {
+export function defaultRefusal(column: ColumnDeclaration, held: unknown): string | undefined {
   const text = oneValue(held)
   if (text === undefined) return `${column.name}’s default is one value, and ${JSON.stringify(held)} is not.`
   if (column.type === 'date') {

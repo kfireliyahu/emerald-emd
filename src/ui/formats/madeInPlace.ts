@@ -79,10 +79,11 @@ export function viewBlock(made: ViewMade): DashboardBlock {
  * **Save the view and place it, together** — the saved view (D-520), then the
  * dashboard's blocks with its own at the end. Both or neither.
  */
-export function makeView(db: Database, blocks: readonly DashboardBlock[], made: ViewMade): void {
+export function makeView(db: Database, blocks: readonly DashboardBlock[], made: ViewMade, place = true): void {
   inTransaction(db, () => {
     saveView(db, { format: made.format, name: made.name, kind: made.kind, address: made.address })
-    setDashboardBlocks(db, made.dashboard, [...blocks, viewBlock(made)])
+    // Made from a format's + (M55 U3), it is saved and placed nowhere.
+    if (place) setDashboardBlocks(db, made.dashboard, [...blocks, viewBlock(made)])
   })
 }
 
@@ -256,10 +257,10 @@ export function chartPlan(
  * end. Both or neither: a document that stopped agreeing between the plan and
  * now throws its refusal, and nothing is written.
  */
-export function makeChart(db: Database, blocks: readonly DashboardBlock[], plan: ChartPlan): void {
+export function makeChart(db: Database, blocks: readonly DashboardBlock[], plan: ChartPlan, place = true): void {
   inTransaction(db, () => {
     const adopted = adoptFormat(db, plan.after, Date.now())
     if (adopted.refusals.length > 0) throw new Error(adopted.refusals.map((each) => each.detail).join(' '))
-    setDashboardBlocks(db, plan.block.dashboard, [...blocks, plan.block])
+    if (place) setDashboardBlocks(db, plan.block.dashboard, [...blocks, plan.block])
   })
 }

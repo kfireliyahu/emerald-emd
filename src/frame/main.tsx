@@ -177,7 +177,7 @@ function openedAt(
       ...(held.order === undefined ? {} : { order: held.order }),
     },
   )
-  return { at: savedViewPath(format, view.kind, address) }
+  return { at: savedViewPath(format, view.kind, address, view.name) }
 }
 
 function begin(): void {

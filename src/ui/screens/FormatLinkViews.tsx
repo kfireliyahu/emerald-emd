@@ -294,7 +294,8 @@ function Frame({
   children: ReactNode
 }) {
   const navigate = useNavigate()
-  const saved = useSavedViews(declaration.name)
+  // An input view adds rows rather than showing them, so it is no tab (M55 U3, D-535).
+  const saved = useSavedViews(declaration.name).filter((each) => each.kind !== 'input')
   const savedHere = saving?.current
   const format = declaration.name
   const tabs = [

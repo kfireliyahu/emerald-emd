@@ -45,6 +45,8 @@ export const FRAME_ROUTES: readonly { readonly path: string; readonly element: R
   { path: AGENDA_PATH, element: <Agenda /> },
   { path: '/formats/:name', element: <FormatRows /> },
   { path: '/formats/:name/entry/:entry', element: <FormatRows /> },
+  // An input view (M55 U3), drawn with its fields disabled and no Add.
+  { path: '/formats/:name/input/:view', element: <FormatRows input /> },
   { path: '/formats/:name/board', element: <FormatRows board /> },
   { path: '/formats/:name/list', element: <FormatRows list /> },
   // A dashboard, a format's and the document's (M53 U7, D-521), read-only here as every page is.
@@ -66,6 +68,8 @@ export const FRAME_ROUTES: readonly { readonly path: string; readonly element: R
 export const NOT_IN_FRAME: Readonly<Record<string, string>> = {
   '/formats/:name/read':
     'Reading files writes rows. Its button, Read on the table, is hidden wherever a format is locked, and the frame locks every one.',
+  '/formats/:name/input':
+    'A new input view is saved. Its menu item, New input view under the format’s +, is hidden wherever a format is locked, and the + is not drawn in the frame.',
 }
 
 /**
