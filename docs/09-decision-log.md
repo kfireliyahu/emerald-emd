@@ -1616,8 +1616,8 @@ text document for columns that exist.
   still work on the copy*; `readOnly.ts` says so. A pack's format, locked to rows only (D-269), keeps its
   handle — a width is presentation.
 - **A chart's table of figures keeps no width.** Its columns are months, not the format's columns, so the
-  format's store has nowhere to keep them; it already scrolls inside its block. Asked of the maintainer;
-  this is the default until he answers otherwise.
+  format's store has nowhere to keep them; it scrolls inside its block. The maintainer's pick, 2026-11-03:
+  *"No handle there"* — no new store, no migration; only tables of the format's own columns drag widths.
 - **Parity (D-227) applies to a width and is already met**: `arrange_views view:sheet column width`
   (D-403) writes the same row, so a width set in a conversation is the block's too. No tool changes.
 
