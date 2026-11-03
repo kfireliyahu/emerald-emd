@@ -5814,6 +5814,14 @@ state: applied
 answered_by: D-540
 became_unit: M55 U9
 
+### M56 F1 built at 25dae6d: the project pane has structure, and reads again on an outside change, to land
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-03
+body: "M56 F1 is built on claude/cool-greider-d54425 in two commits, 7d00a70 (structure) and 25dae6d (the pane reads again when the document changes from outside): land it with land_units inbox:[{id: this row, other_branch: true}] (it was claimed on main).\n\n```json\n{\"unit\": \"M56 F1\", \"files\": \"hosts/claude/mod/pane.tsx, hosts/claude/mod/answer.ts, hosts/claude/mod/inbox.ts, hosts/claude/mod/pane.test.tsx, hosts/claude/mod.test.ts\", \"commit\": \"25dae6d\", \"branch\": \"claude/cool-greider-d54425\", \"decisions\": [], \"review_entries\": [{\"do\": \"In the Claude desktop app, open a folder holding a copy of the demo's project.emd (never docs/memory.emd) with the plugin from this build, and look at the project pane; then /emerald show unit.\", \"should\": \"Each section reads as a heading at the host's heading size with its rows beneath: a ref (M2 U3, D-541) in semibold beside its title, a held unit's 'waits on …' as a small dim line under it, counts and 'None.' small and dim, a long list cut at six with 'N more'. No colour of Emerald's anywhere: text in the host's ink and dim only, in light and dark. Wrong would be: refs and titles running together, a heading the same size as its rows, a coloured word, or a row whose words were reordered or lost.\"}, {\"do\": \"With the pane open on that copy, write a row into it from another process (another session's record_format_rows, or the app), then wait up to five seconds without prompting.\", \"should\": \"The pane shows the change by itself, beside the toast and the status line; with the pane closed by the person, it stays closed. Wrong would be: the old reading staying until a prompt or an emerald write in this session.\"}], \"report\": \"M56 F1 built at 7d00a70 + 25dae6d (branch claude/cool-greider-d54425); docs:check green (0 errors), test:mod 27/27, mod.test + privacy 16/16, typecheck clean. Structure (7d00a70): the pane (hosts/claude/mod/pane.tsx) draws each section as a Box: a heading Text size heading, weight semibold; the section's notes (its description, counts, the empty 'None.') size caption dimColor; each line a row with its ref (the first ' · ' part when it is at most 32 characters) semibold beside the title, and what follows ' — ' as a caption dimColor line beneath; groups such as Held under a footnote semibold dimColor heading; the first six of each list and 'N more' in caption. Spacing is Box gap: lg between sections, sm inside, xs between rows. No color, backgroundColor or borderColor anywhere (a test walks every Box, Text and Button); no Svg. The row split is paneRow and the cut firstFew in answer.ts, tested in mod.test.ts; every word kept in its order (D-493). Outside changes (25dae6d, from the maintainer's try: 'pane didn't update'): hosts/claude/mod/inbox.ts joins the files. readInbox, when a reading that is not the first finds the document's size or time moved, calls pane.tsx's exported documentChanged($), which refreshes an open pane and does nothing for a closed one: the inbox's 5 s watch stays the one timer on the document, and a prompt's read counts too. A callback seam was refused by the engine ($ may not be passed through a function value), so the seam is that one exported function. The session's own write now refreshes twice (tool.call, then the watch); the second read is cheap and its answer the same. Tests: an outside change makes an open pane read again (fails without the call), a closed pane reads nothing. No decision made. Not seen in the desktop app: the two review entries. Left: Hebrew rows get no dir='rtl'; 'N more' opens nothing, by the brief.\"}\n```"
+refs: M56 F1
+state: applied
+became_unit: M56 F1
+
 ### M56 U1 built: the plugin's hooks module and the project pane (D-541), to land
 from: F:/projects/emerald/docs/memory.emd
 sent_on: 2026-11-03
@@ -7494,6 +7502,11 @@ should: Contrast 4.5:1 for text: ink-tertiary only for text nobody needs.
 breaks: shop.emd, site.emd and notes.emd are ink-tertiary at about 2.4:1 in light, yet they carry the inbox story. Verdict 2026-11-02 (D-531): move to the page's secondary grey. Owned by M54 F8. Fixed in M54 F8 (1cf3540).
 state: fault
 
+### In the Claude desktop app, open a folder holding a copy of the demo's project.emd (never docs/memory.emd) with the plugin from this build, and look at the project pane; then /emerald show unit.
+unit: M56 F1
+should: Each section reads as a heading at the host's heading size with its rows beneath: a ref (M2 U3, D-541) in semibold beside its title, a held unit's 'waits on …' as a small dim line under it, counts and 'None.' small and dim, a long list cut at six with 'N more'. No colour of Emerald's anywhere: text in the host's ink and dim only, in light and dark. Wrong would be: refs and titles running together, a heading the same size as its rows, a coloured word, or a row whose words were reordered or lost.
+state: open
+
 ### In the desktop app, declare a format with a `file` column in a document of your own; Choose… a file under the document's folder, drop one from Explorer, and paste a path; click the name and 'show in folder'.
 unit: M37 U6
 should: The cell reads the file's name, opens it in its usual app, and a file under the folder is stored relative (scans/x.pdf); delete or rename the file and the cell reads 'missing' without anything else changing; an https address is refused with the reason.
@@ -8245,6 +8258,11 @@ unit: M28 U1
 should: Every statement line proves; the broker transfers are rows of broker_transfer, which is what U2 reads as moved rather than spent.
 breaks: A money column in an identity reads minor units: a price in shekels fails by 100, so the price is kept in agorot as the statement prints it.
 state: dropped
+
+### With the pane open on that copy, write a row into it from another process (another session's record_format_rows, or the app), then wait up to five seconds without prompting.
+unit: M56 F1
+should: The pane shows the change by itself, beside the toast and the status line; with the pane closed by the person, it stays closed. Wrong would be: the old reading staying until a prompt or an emerald write in this session.
+state: open
 
 ### With three documents on Open Recent, open the third from Open recent in the title bar, then look at the list again.
 unit: M54 U6
@@ -16025,13 +16043,16 @@ report: M55 U9 built at a27d545 on worktree-agent-abcaa4cd0b365841d, D-540. Re-r
 milestone: M56
 scope: plugin
 title: The project pane has structure: the host's type ramp, grouping and spacing, in the host's own colours
-state: in_progress
+landed: 2026-11-03
+state: built
 brief: Maintainer, 2026-11-03, trying M56 U1 in the Claude desktop app (the pane opened and drew; the frame drew in chat): 'kind of plain text… the pane could be better'. Told the pane cannot mount Emerald's own UI (a hooks module draws only the host's element table: Box, Text, Button, Input, Select, Link, Code, Markdown, Svg on desktop; no HTML), he answered: 'lets add the structure; no need for the colors; we do want to feel part of claude ecosystem'. So: (1) STRUCTURE — each section of the pane (ready to start, the inbox, open milestones, what is left to review, the latest decisions, and what /emerald show draws) gets a heading in the host's Text size/weight ramp (size heading|body|caption|footnote, weight), its rows as rows (a ref and its title set apart, a row's secondary line as caption), grouped and spaced with Box gap/padding, counts and empty states at the host's caption size; a long list shows its first few and says how many more. (2) NO COLOURS OF OUR OWN — no color or backgroundColor strings and no Emerald tokens; only the host's own theme (dimColor or a theme key where the host's own panes use one), so it reads as part of Claude. (3) Svg only if it adds structure in the host's text colour; if a picture would need colours, stop and ask. Behaviour is unchanged (D-541: reads only start_here and show_format, the Read button where the rules do not allow it, redraw after a write, closed stays closed). The words stay the document's (D-493): nothing about servers, tools or drawing. Anything not settled here beyond layout is the maintainer's: stop and ask. Tests: pane.test.tsx over the surfaces the tests already run (terminal and desktop), each section's heading and rows, the more-count, the empty state; npm run test:mod. Done-test: on a copy of the demo's project.emd (never docs/memory.emd), the pane in the desktop app reads as sections with headings and rows, in the host's colours.
-files: hosts/claude/mod/pane.tsx, hosts/claude/mod/answer.ts (paneSections), hosts/claude/mod/pane.test.tsx, hosts/claude/.claude-plugin/types/claude-code/index.d.ts (Elements['desktop'], TextProps, BoxProps — read only)
+files: hosts/claude/mod/pane.tsx, hosts/claude/mod/answer.ts, hosts/claude/mod/inbox.ts, hosts/claude/mod/pane.test.tsx, hosts/claude/mod.test.ts
 taken_by: run-milestone driver
 started: 2026-11-03
-branch: main
+branch: claude/cool-greider-d54425
+commit: 25dae6d
 paths: "hosts/claude/mod/pane.tsx\nhosts/claude/mod/answer.ts\nhosts/claude/mod/pane.test.tsx"
+report: M56 F1 built at 7d00a70 + 25dae6d (branch claude/cool-greider-d54425); docs:check green (0 errors), test:mod 27/27, mod.test + privacy 16/16, typecheck clean. Structure (7d00a70): the pane (hosts/claude/mod/pane.tsx) draws each section as a Box: a heading Text size heading, weight semibold; the section's notes (its description, counts, the empty 'None.') size caption dimColor; each line a row with its ref (the first ' · ' part when it is at most 32 characters) semibold beside the title, and what follows ' — ' as a caption dimColor line beneath; groups such as Held under a footnote semibold dimColor heading; the first six of each list and 'N more' in caption. Spacing is Box gap: lg between sections, sm inside, xs between rows. No color, backgroundColor or borderColor anywhere (a test walks every Box, Text and Button); no Svg. The row split is paneRow and the cut firstFew in answer.ts, tested in mod.test.ts; every word kept in its order (D-493). Outside changes (25dae6d, from the maintainer's try: 'pane didn't update'): hosts/claude/mod/inbox.ts joins the files. readInbox, when a reading that is not the first finds the document's size or time moved, calls pane.tsx's exported documentChanged($), which refreshes an open pane and does nothing for a closed one: the inbox's 5 s watch stays the one timer on the document, and a prompt's read counts too. A callback seam was refused by the engine ($ may not be passed through a function value), so the seam is that one exported function. The session's own write now refreshes twice (tool.call, then the watch); the second read is cheap and its answer the same. Tests: an outside change makes an open pane read again (fails without the call), a closed pane reads nothing. No decision made. Not seen in the desktop app: the two review entries. Left: Hebrew rows get no dir='rtl'; 'N more' opens nothing, by the brief.
 
 ### M56 U1
 milestone: M56
