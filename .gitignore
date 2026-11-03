@@ -86,3 +86,9 @@ build/icons.log
 # The long-form record of closed milestones, kept in the maintainer's checkout and
 # not in the repository (D-495). scripts/archive-decisions.mjs still writes it.
 /docs/archive/
+
+# What Claude Code lays beside a mod it loads from a folder it may write in
+# (`claude --plugin-dir hosts/claude`, M56 U1): its declarations, for the editor
+# and `tsc -p`. Written again at every load, never shipped (hosts/claude/release.ts).
+/hosts/claude/.claude-plugin/types/
+/hosts/claude/tsconfig.json

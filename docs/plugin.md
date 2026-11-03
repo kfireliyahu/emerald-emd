@@ -718,6 +718,10 @@ npx -y emerald-mcp init [path/to/document.emd]        # run in the repository's 
    (`CLAUDE_CONFIG_DIR`, else `~/.claude`) or the repository's, since the plugin brings the same
    two. A hook it wrote is re-pinned; a hook it did not write that already prints the same thing
    (this repository's `node dist-plugin/hooks.mjs start-here`, say) is left as it is and said.
+   **And, plugin or not, the project pane's two reads** in `permissions.allow`
+   (`mcp__plugin_emerald_emerald__start_here` and `…__show_format`, M56 U1, D-541): Claude Code
+   asks the person before a plugin's own `$.mcp.call`, so without them the pane in `hosts/claude/mod/`
+   reads only when the person presses *Read*. Nothing that writes is ever allowed.
 4. **What it wrote, and what a session there now sees first**: start_here on the document.
 
 **Idempotent by comparison**: every file is compared before it is written, so a second run leaves

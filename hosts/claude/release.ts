@@ -6,8 +6,9 @@
  * `plugin.json`, that is the version, compared as a string. So a skill changed
  * under an unchanged version reaches a new install and never an existing one.
  * This digest is of every file the plugin ships that a person's Claude reads —
- * the manifest without its `version`, the hook set, the skills, the README; not
- * the TypeScript beside them, which runs from the npm package — and
+ * the manifest without its `version`, the hook set, the hooks module in `mod/`
+ * (M56 U1), the skills, the README; not the rest of the TypeScript beside them,
+ * which runs from the npm package — and
  * `hosts/claude-plugin-release.json` records it with the version cut for it.
  * `plugin.test.ts` fails when they differ: run `node scripts/pin-plugin.mjs
  * --plugin`, which cuts the next plugin version and records the digest.
@@ -18,13 +19,32 @@ import { createHash } from 'node:crypto'
 import { readdirSync, readFileSync } from 'node:fs'
 import { join, relative, sep } from 'node:path'
 
+/**
+ * What the engine writes beside a mod it loads from a folder it may write in
+ * (`claude --plugin-dir`): its declarations and a tsconfig extending them.
+ * Nobody ships them, and `.gitignore` keeps them out of the repository.
+ */
+const LAID_BY_THE_ENGINE = ['.claude-plugin/types/', 'tsconfig.json']
+
+/**
+ * Whether a file is one a person's Claude reads. TypeScript is not — it runs
+ * from the npm package — except the hooks module in `mod/` (M56 U1), which
+ * Claude Code loads from the plugin folder itself; a test of it is not.
+ */
+function isShipped(file: string): boolean {
+  if (LAID_BY_THE_ENGINE.some((laid) => (laid.endsWith('/') ? file.startsWith(laid) : file === laid))) return false
+  if (/\.test\.tsx?$/.test(file)) return false
+  return file.startsWith('mod/') || !file.endsWith('.ts')
+}
+
 /** Every shipped file under `folder`, relative and with forward slashes, sorted. */
 function shipped(folder: string, under: string = folder): string[] {
   return readdirSync(under, { withFileTypes: true })
     .flatMap((entry) => {
       const path = join(under, entry.name)
       if (entry.isDirectory()) return entry.name === 'node_modules' ? [] : shipped(folder, path)
-      return entry.name.endsWith('.ts') ? [] : [relative(folder, path).split(sep).join('/')]
+      const file = relative(folder, path).split(sep).join('/')
+      return isShipped(file) ? [file] : []
     })
     .sort()
 }

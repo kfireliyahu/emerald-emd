@@ -26,7 +26,9 @@
  *    inbox's new rows, into `.claude/settings.json` — **only where the Claude
  *    plugin is not enabled**, which brings the same two. Merged into what is
  *    there; a hook already printing start_here that this did not write is left
- *    alone and said.
+ *    alone and said. And, plugin or not, **the project pane's two reads** in
+ *    `permissions.allow` (M56 U1, D-541): Claude Code asks the person before a
+ *    plugin's own call of a tool, so without them the pane waits on a press.
  * 4. **What it wrote, and what a session here now sees first**: start_here.
  *
  * **Idempotent**: a second run writes nothing, so CLAUDE.md and the settings stay
@@ -270,6 +272,29 @@ export function withHooks(settings: Record<string, unknown>): Result<{ settings:
   return ok({ settings: { ...settings, hooks: next }, said })
 }
 
+/**
+ * **What the project pane reads with** (M56 U1, D-541): the two read-only tools
+ * of the plugin's own server, as Claude Code names them. Its hooks module calls
+ * them through `$.mcp.call`, which Claude Code puts to the person's permission
+ * check like any call; these rules, in the project's own settings, let the pane
+ * read without asking. Nothing that writes is ever listed.
+ */
+export const PANE_READS = ['mcp__plugin_emerald_emerald__start_here', 'mcp__plugin_emerald_emerald__show_format'] as const
+
+/** The settings with the pane's two reads in `permissions.allow`, and what happened. */
+export function withPaneReads(settings: Record<string, unknown>): Result<{ settings: Record<string, unknown>; said: string }, string> {
+  const permissions = (settings['permissions'] ?? {}) as Record<string, unknown>
+  if (typeof permissions !== 'object' || permissions === null || Array.isArray(permissions)) return err('its `permissions` is not an object')
+  const allow = (permissions['allow'] ?? []) as unknown
+  if (!Array.isArray(allow)) return err('its `permissions.allow` is not a list')
+  const missing = PANE_READS.filter((read) => !allow.includes(read))
+  if (missing.length === 0) return ok({ settings, said: "the project pane's reads: already allowed" })
+  return ok({
+    settings: { ...settings, permissions: { ...permissions, allow: [...allow, ...missing] } },
+    said: `the project pane's reads: allowed (${missing.join(', ')})`,
+  })
+}
+
 /** Runs `init`; returns the exit code: 0 done, 1 a step refused (the rest still done). */
 export async function runInit(args: InitArgs, place: InitPlace, output: InitOutput): Promise<number> {
   const { folder } = args
@@ -370,33 +395,36 @@ export async function runInit(args: InitArgs, place: InitPlace, output: InitOutp
     )
   }
 
-  // 3. The hooks, where the plugin is not there to bring them.
+  // 3. The hooks, where the plugin is not there to bring them; the pane's reads, either way.
   const settingsPath = join(folder, '.claude', 'settings.json')
   const plugin = await pluginEnabled(folder, place)
-  if (plugin !== undefined) {
-    said.push(`.claude/settings.json — no hooks written: the Claude plugin brings the same two (${plugin}).`)
-  } else {
-    const text = await readText(settingsPath)
-    let settings: unknown = {}
-    let readable = true
-    try {
-      settings = text === undefined || text.trim() === '' ? {} : JSON.parse(text)
-    } catch {
-      readable = false
-    }
-    const merged =
-      !readable || typeof settings !== 'object' || settings === null || Array.isArray(settings)
-        ? err('it is not a JSON object')
+  const text = await readText(settingsPath)
+  let settings: unknown = {}
+  let readable = true
+  try {
+    settings = text === undefined || text.trim() === '' ? {} : JSON.parse(text)
+  } catch {
+    readable = false
+  }
+  const object = readable && typeof settings === 'object' && settings !== null && !Array.isArray(settings)
+  const hooked =
+    !object
+      ? err('it is not a JSON object')
+      : plugin !== undefined
+        ? ok({ settings: settings as Record<string, unknown>, said: [`no hooks written: the Claude plugin brings the same two (${plugin})`] })
         : withHooks(settings as Record<string, unknown>)
-    if (!merged.ok) {
-      said.push(`.claude/settings.json — no hooks written: ${merged.error}.`)
-      refused = true
-    } else if (text !== undefined && JSON.stringify(merged.value.settings) === JSON.stringify(settings)) {
-      said.push(`.claude/settings.json — unchanged (${merged.value.said.join('; ')}).`)
+  const merged = hooked.ok ? withPaneReads(hooked.value.settings) : hooked
+  if (!hooked.ok || !merged.ok) {
+    said.push(`.claude/settings.json — nothing written: ${hooked.ok ? (merged.ok ? '' : merged.error) : hooked.error}.`)
+    refused = true
+  } else {
+    const done = [...hooked.value.said, merged.value.said].join('; ')
+    if (text !== undefined && JSON.stringify(merged.value.settings) === JSON.stringify(settings)) {
+      said.push(`.claude/settings.json — unchanged (${done}).`)
     } else {
       const eol = text?.includes('\r\n') === true ? '\r\n' : '\n'
       await writeIfChanged(settingsPath, `${JSON.stringify(merged.value.settings, null, 2).split('\n').join(eol)}${eol}`)
-      said.push(`.claude/settings.json — ${merged.value.said.join('; ')}.`)
+      said.push(`.claude/settings.json — ${done}.`)
     }
   }
 

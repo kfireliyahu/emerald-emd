@@ -4,7 +4,7 @@ import { join, sep } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
 import { openDocument, PLUGIN_VERSION } from './document.ts'
-import { parseInitArgs, runInit, SECTION_BEGIN, SECTION_END, withSection } from './init.ts'
+import { PANE_READS, parseInitArgs, runInit, SECTION_BEGIN, SECTION_END, withSection } from './init.ts'
 import { extendFormatTool } from './tools/formats.ts'
 import { NO_CLIENT } from './tools/tool.ts'
 import { tempDir } from '../testing/tempDir'
@@ -114,13 +114,20 @@ describe('init', () => {
     expect(await read(join(folder, '.claude', 'settings.json'))).toBe(settings)
   })
 
-  it('writes no hooks where the Claude plugin is enabled', async () => {
+  it('writes no hooks where the Claude plugin is enabled, and allows the project pane its two reads (D-541)', async () => {
     const { folder, config } = await repo()
     await writeFile(join(config, 'settings.json'), JSON.stringify({ enabledPlugins: { 'emerald@emerald-emd': true } }))
     const run = await init(folder, config)
     expect(run.code).toBe(0)
     expect(run.out).toContain('no hooks written: the Claude plugin brings the same two')
-    await expect(read(join(folder, '.claude', 'settings.json'))).rejects.toThrow()
+    expect(run.out).toContain("the project pane's reads: allowed")
+    const settings = JSON.parse(await read(join(folder, '.claude', 'settings.json'))) as Record<string, unknown>
+    expect(settings).toEqual({ permissions: { allow: [...PANE_READS] } })
+    // Only reads: the pane never writes, so nothing that writes is allowed for it.
+    expect(PANE_READS.every((tool) => /__(start_here|show_format)$/.test(tool))).toBe(true)
+    const again = await init(folder, config)
+    expect(again.out).toContain(".claude/settings.json — unchanged (no hooks written: the Claude plugin brings the same two")
+    expect(again.out).toContain("the project pane's reads: already allowed")
   })
 
   it('merges into the settings there, and leaves a start-here hook it did not write', async () => {
@@ -144,7 +151,7 @@ describe('init', () => {
       permissions: unknown
       hooks: Record<string, { hooks: { command: string }[] }[]>
     }
-    expect(settings.permissions).toEqual({ allow: ['Bash(ls)'] })
+    expect(settings.permissions).toEqual({ allow: ['Bash(ls)', ...PANE_READS] })
     expect(settings.hooks['PreToolUse']?.[0]?.hooks[0]?.command).toBe('node guard.mjs')
     expect(settings.hooks['SessionStart']).toHaveLength(1)
     expect(settings.hooks['SessionStart']?.[0]?.hooks[0]?.command).toBe(own)
