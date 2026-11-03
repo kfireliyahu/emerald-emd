@@ -2,8 +2,6 @@ import { money } from '@/core/money.ts'
 import {
   addMonths,
   compareYearMonths,
-  formatMonthShort,
-  formatYearMonth,
   monthsBetween,
   parseYearMonth,
   toYearMonthString,
@@ -20,9 +18,9 @@ const MOST_MONTHS = 240
 
 /** A rollup's groups as the general chart's plain series, and what it leaves out. */
 export interface RollupChart {
-  /** `March 2026`, one per month from the first to the last. */
+  /** `2026-03`, one per month from the first to the last, as the table writes a month. */
   readonly labels: readonly string[]
-  /** `Mar 2026`, for under the columns. */
+  /** The same, for under the columns. */
   readonly ticks: readonly string[]
   readonly series: readonly ChartSeries[]
   readonly axis: ChartAxis
@@ -128,5 +126,6 @@ export function rollupChart(
     left.push(`The ${String(series.length)} largest of ${String(all.length)} are drawn; every one is in the table.`)
   }
 
-  return { labels: months.map(formatYearMonth), ticks: months.map(formatMonthShort), series, axis, left }
+  // A month reads as the table writes it, `2026-09`, on the axis as in the rows (M55 U7).
+  return { labels: keys, ticks: keys, series, axis, left }
 }

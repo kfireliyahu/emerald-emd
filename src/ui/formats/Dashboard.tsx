@@ -57,12 +57,15 @@ import { addressView } from '@/ui/formats/addressFilter.ts'
 import {
   blockGone,
   blockResized,
+  blockTitle,
   blockWhat,
   conditionsAddress,
   conditionsOf,
   headline,
   offeredOf,
   ofText,
+  rollupSentence,
+  rollupWords,
   savedWords,
   snappedSize,
   steppedSize,
@@ -585,6 +588,7 @@ function Block({
   const declaration = declarations.find((each) => each.name === block.format)
   const gone = blockGone(db, block, declarations)
   const what = blockWhat(db, block, declarations, withFormat)
+  const title = blockTitle(block)
   // While an edge is dragged, the size it snaps to; written when it is let go.
   const [sizing, setSizing] = useState<BlockSize | undefined>(undefined)
   const resizing = useRef(false)
@@ -635,10 +639,10 @@ function Block({
             type="button"
             onClick={onOpen}
             disabled={gone !== undefined}
-            title={`Open ${block.name} in full`}
+            title={`Open ${title} in full`}
             className="flex min-w-0 text-left text-body font-semibold decoration-hairline-strong underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:no-underline"
           >
-            <Bidi className="min-w-0 truncate">{block.name}</Bidi>
+            <Bidi className="min-w-0 truncate">{title}</Bidi>
           </button>
           {/* Which format it reads and how: a reader needs it (D-531), so ink-secondary. */}
           <span className="truncate text-caption text-ink-secondary" title={what}>
@@ -658,7 +662,7 @@ function Block({
             <button
               ref={more}
               type="button"
-              aria-label={`${block.name}: more`}
+              aria-label={`${title}: more`}
               title="More"
               aria-haspopup="menu"
               aria-expanded={menu !== undefined}
@@ -722,7 +726,7 @@ function Block({
         <div
           ref={list}
           role="menu"
-          aria-label={`${block.name}: more`}
+          aria-label={`${title}: more`}
           onKeyDown={(event) => {
             // Escape closes it and gives the keyboard back to ⋯; Tab closes it and goes on.
             if (event.key === 'Escape') {
@@ -893,11 +897,11 @@ function RollupBody({
   readonly height: number | undefined
 }) {
   const result = runRollup(db, declaration, name, declarations, { today: toISODate(today()) })
-  if (result === undefined) return <Nothing>{declaration.title} has no rollup called {name} any more.</Nothing>
+  if (result === undefined) return <Nothing>{declaration.title} has no chart called {rollupWords(name)} any more.</Nothing>
   const chart = rollupChart(result.groups, {
     names: result.labels,
     by: result.rollup.by !== undefined,
-    name: result.rollup.name,
+    name: rollupWords(result.rollup.name),
     // A count in the format's own word: `1 unit`, `2 units` (M54 F3).
     count: result.rollup.kind === 'COUNT' ? { one: nounOf(declaration.title), many: pluralOf(declaration.title) } : undefined,
   })
@@ -910,7 +914,7 @@ function RollupBody({
       series={chart.series}
       axis={chart.axis}
       kind="bars"
-      title={`${result.rollup.name} by month`}
+      title={rollupSentence(result.rollup, declaration)}
       labelHeading="month"
       height={height ?? 150}
     />
@@ -1379,7 +1383,7 @@ function AddMenu({
                   aside="chart"
                   onClick={() => onAdd({ dashboard, format: each.format.name, kind: 'rollup', name, address: '' })}
                 >
-                  <Bidi>{name}</Bidi>
+                  <Bidi>{rollupWords(name)}</Bidi>
                 </MenuItem>
               ))}
               {!document && each.saved.length === 0 && each.rollups.length === 0 && (

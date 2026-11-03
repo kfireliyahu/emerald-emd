@@ -22,6 +22,7 @@ import { useDismiss } from '@/ui/components/useDismiss.ts'
 
 import { addressView, filterAddress, type AddressOrder, type ColumnChoice } from './addressFilter.ts'
 import type { Saving } from './savedView.ts'
+import { formatMoney, fromDecimalString } from '@/core/money.ts'
 import { toISODate } from '@/core/time.ts'
 import { parseClockWords } from '@/domain/format/clock.ts'
 import { entryLabel } from '@/domain/format/view.ts'
@@ -358,9 +359,12 @@ export function HeldValues({
   readonly className?: string
 }) {
   if (isClockWords(value)) return <span className={className}><Bidi>{String(value)}</Bidi></span>
-  // An amount held to a range says it in words: `10 to 50 ILS` (M37 U4).
+  // An amount held to a range says it in words: `10 to 50 ILS` (M37 U4), and
+  // money as the table writes it, `₪10.00 to ₪50.00` (M55 U7).
   const range = typeof value === 'string' && (column?.type === 'money' || column?.type === 'quantity') ? parseFigureRange(value) : undefined
-  if (range !== undefined) return <span className={className}><Bidi>{figureRangeSaid(range)}</Bidi></span>
+  if (range !== undefined) {
+    return <span className={className}><Bidi>{figureRangeSaid(range, column?.type === 'money' ? amountAsWritten : undefined)}</Bidi></span>
+  }
   const { values, not } = heldAs(value)
   return (
     <>
@@ -373,6 +377,12 @@ export function HeldValues({
       ))}
     </>
   )
+}
+
+/** One end of a money range as the table writes it — `50`, `ILS` is `₪50.00` — or as typed when it is not an amount of that currency. */
+export function amountAsWritten(figure: string, currency: string): string {
+  const amount = fromDecimalString(figure, currency)
+  return amount === undefined ? `${figure} ${currency}` : formatMoney(amount)
 }
 
 /** Whether a held value is the empty cell. */

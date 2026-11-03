@@ -11,6 +11,30 @@ import { openEncoded } from '@/data/storage/encoding.ts'
 
 import { addressFilter } from './addressFilter.ts'
 import { columnValues } from '@/data/repositories/formatValuesRepository.ts'
+import { column, type FormatDeclaration } from '@/domain/format/declaration.ts'
+import { figureRangeSaid, parseFigureRange } from '@/domain/format/figureRange.ts'
+import type { StoredRow } from '@/domain/format/row.ts'
+
+import { valueText } from './entryList.ts'
+import { amountAsWritten } from './FilterBand.tsx'
+
+describe('a date and an amount read one way on every surface (M55 U7)', () => {
+  it('says a money range in the band as the table writes money, and a quantity as before', () => {
+    const range = parseFigureRange('..50 ILS')!
+    expect(figureRangeSaid(range, amountAsWritten)).toBe('at most ₪50.00')
+    expect(figureRangeSaid(parseFigureRange('10..60 ILS')!, amountAsWritten)).toBe('₪10.00 to ₪60.00')
+    expect(figureRangeSaid(parseFigureRange('10..50 g')!)).toBe('10 to 50 g')
+    // A figure that is no amount of the currency is said as typed, never dropped.
+    expect(amountAsWritten('lots', 'ILS')).toBe('lots ILS')
+  })
+
+  it('writes a date and a month on a block and in a list as the table does', () => {
+    const row = { id: 'r', cells: { landed: '2026-07-27', month: '2026-09' } } as unknown as StoredRow
+    const format: Pick<FormatDeclaration, 'columns'> = { columns: [column('landed', 'date'), column('month', 'month')] }
+    expect(valueText(format.columns[0]!, row, new Map())).toBe('2026-07-27')
+    expect(valueText(format.columns[1]!, row, new Map())).toBe('2026-09')
+  })
+})
 
 const MEMORY = fileURLToPath(new URL('../../../docs/memory.emd', import.meta.url))
 

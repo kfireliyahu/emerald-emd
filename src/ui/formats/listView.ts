@@ -7,7 +7,6 @@ import { readValue, type StoredRow } from '@/domain/format/row.ts'
 import { blankDraft, type RowDraft } from '@/domain/format/rowDraft.ts'
 import {
   dayAfter,
-  dayText,
   dueBucket,
   dueText,
   entryDefaults,
@@ -138,7 +137,7 @@ function cellOf(
   }
   if (column.type === 'date' && typeof value === 'string' && value !== '') {
     const said = dueText(value, day, ticked)
-    return said === undefined ? [] : [{ kind: 'date', column: column.name, text: said.text, late: said.late, long: dayText(value) }]
+    return said === undefined ? [] : [{ kind: 'date', column: column.name, text: said.text, late: said.late, long: value }]
   }
   const text = valueText(column, row, labels)
   return text === '' ? [] : [{ kind: 'text', column: column.name, text, link: column.type === 'link' }]

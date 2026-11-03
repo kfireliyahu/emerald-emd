@@ -152,7 +152,8 @@ describe('dashboards (M53 U7)', () => {
     expect(drawn).toContain('1. **Open** — Count · state is not done: **3** of 5 tasks.')
     expect(drawn).toMatch(/2\. \*\*Due today\*\* — List · due is today: 2 rows — (Call the bank, Write the review|Write the review, Call the bank)\./)
     expect(drawn).toContain('**Open by project** — List · state is not done')
-    expect(drawn).toMatch(/done_by_month\*\* — Rollup · .*2026-09 1, 2026-10 1/)
+    // The line under a chart is a sentence, not the rollup's text (M55 U7).
+    expect(drawn).toMatch(/done_by_month\*\* — Count of tasks by month of done on: .*2026-09 1, 2026-10 1/)
     expect(await formatsTool.run({ path, format: 'task' }, NO_CLIENT)).toContain('**Dashboard**')
 
     // Taken off again; the saved view itself stays.

@@ -37,8 +37,17 @@ export function figureRangeText(range: FigureRangeWords): string {
   return `${range.from ?? ''}..${range.to ?? ''} ${range.unit}`
 }
 
-/** A range as a sentence says it: `10 to 50 ILS`, `at least 10 ILS`, `at most 50 ILS`. */
-export function figureRangeSaid(range: FigureRangeWords): string {
+/**
+ * A range as a sentence says it: `10 to 50 ILS`, `at least 10 ILS`, `at most 50 ILS`.
+ * Given how one end is written with its unit — a screen's money, `₪50.00` (M55 U7) —
+ * each end is written so: `₪10.00 to ₪50.00`.
+ */
+export function figureRangeSaid(range: FigureRangeWords, written?: (figure: string, unit: string) => string): string {
+  if (written !== undefined) {
+    const end = (figure: string | undefined): string => written(figure ?? '', range.unit)
+    if (range.from !== undefined && range.to !== undefined) return `${end(range.from)} to ${end(range.to)}`
+    return range.from !== undefined ? `at least ${end(range.from)}` : `at most ${end(range.to)}`
+  }
   if (range.from !== undefined && range.to !== undefined) return `${range.from} to ${range.to} ${range.unit}`
   return range.from !== undefined ? `at least ${range.from} ${range.unit}` : `at most ${range.to ?? ''} ${range.unit}`
 }

@@ -160,6 +160,7 @@ import { EntryList } from '@/ui/formats/EntryList.tsx'
 import { heldIds, listColumns, listQuery } from '@/ui/formats/entryList.ts'
 import { filterAddress } from '@/ui/formats/addressFilter.ts'
 import { toggleEntryList, useEntryListHidden } from '@/ui/useEntryList.ts'
+import { rollupWords } from '@/ui/formats/dashboard.ts'
 
 /**
  * **A format's rows, on the format's own screen** — M20 U1
@@ -1305,7 +1306,7 @@ export function FormatRows({
           ...(data.hasReady ? [{ label: 'Ready to start', on: false, go: () => navigate(readyPath(declaration.name) + address) }] : []),
           ...saved.map((each) => ({ label: each.name, on: savedHere === each.name, go: () => undefined, saved: each })),
           ...(declaration.rollups ?? []).map((each) => ({
-            label: each.name,
+            label: rollupWords(each.name),
             on: shownRollup === each.name,
             // **One click** (M54 F2): from another view the rollup rides the
             // navigation, where setting it first was lost to the new route.

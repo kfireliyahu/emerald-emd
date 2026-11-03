@@ -18,8 +18,9 @@ const options = { names: new Map([['c1', 'Food'], ['c2', 'Rent']]), by: false, n
 describe('rollupChart: a rollup as the general chart’s series', () => {
   it('draws a month per label, first to last, with the months between as gaps', () => {
     const chart = rollupChart([group('2026-03', undefined, ils(300)), group('2026-01', undefined, ils(100))], options)
-    expect(chart.labels).toEqual(['January 2026', 'February 2026', 'March 2026'])
-    expect(chart.ticks).toEqual(['Jan 2026', 'Feb 2026', 'Mar 2026'])
+    // A month reads as the table writes it (M55 U7).
+    expect(chart.labels).toEqual(['2026-01', '2026-02', '2026-03'])
+    expect(chart.ticks).toEqual(['2026-01', '2026-02', '2026-03'])
     expect(chart.series).toHaveLength(1)
     expect(chart.series[0]?.name).toBe('spent')
     expect(chart.series[0]?.points).toEqual([money(100, 'ILS'), undefined, money(300, 'ILS')])
@@ -76,7 +77,7 @@ describe('rollupChart: a rollup as the general chart’s series', () => {
 
   it('leaves the rows with no month to the table, and says so', () => {
     const chart = rollupChart([group('2026-01', undefined, ils(1)), group(undefined, undefined, ils(2), 3)], options)
-    expect(chart.labels).toEqual(['January 2026'])
+    expect(chart.labels).toEqual(['2026-01'])
     expect(chart.left).toEqual(['3 rows have no month, so they are in the table and not the chart.'])
   })
 

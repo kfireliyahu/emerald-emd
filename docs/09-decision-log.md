@@ -453,6 +453,7 @@ written out here.
 | D-534 | 2026-11-03 | A milestone's units run at once wherever `dispatch_plan` allows, each in its own worktree with its own demo port, by sessions or by the `Agent` tool alike, up to four; a screen is measured by `npm run probe:screens` (`window.emeraldProbe()` in a dev build, in an offscreen Electron window) rather than in the browser pane by hand; a child is handed its files and told to batch its reads; a review writes a rule-backed finding as `fault` and only a judgement as `open`; units under ten minutes that share paths go to one child, and a unit stopped for the maintainer's pick goes on in the same child; amends D-287 and D-490's one-at-a-time for the `Agent` tool | [below](#d-534) |
 | D-535 | 2026-11-03 | M55 U1's picks for the input view, not yet the maintainer's: a page where entry/new opens, beside the list, not a tab; fields in one wrapping row with *Adds as* in entry/new's footer bar; *Just added* with *Undo* under it; made from the format's + (*New input view*, *New view*, *New chart*) with the entry's Fields list carrying *Ask* and *Default*; *Use for Add* marks the one Add opens; the rail lists input views first under the new `input` glyph; a dashboard block's Add is secondary | [below](#d-535) |
 | D-540 | 2026-11-03 | A line a read refused offers Add by hand: the format's Add opens with what the line held, the read is kept for the window's life while it is away, the Add goes back to the read, and the read counts the line added by hand; a row the mapper could not read is skipped from that read only — counted as skipped in the mapper and on Read files, never written, never kept in the reader, and taken back by Put back or by a mapping that reads it | [below](#d-540) |
+| D-538 | 2026-11-03 | A date, a month and an amount read as the table writes them on a dashboard's blocks, a list, a rollup's table and its chart — `2026-07-27`, `2026-09`, `₪60.00` — and a rollup reads in words: its name *Landed by month*, what it counts a sentence; the declaration and every tool keep the name | [below](#d-538) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1113,6 +1114,31 @@ total line a reader skips forever is a row it can never be told about.
 **Consequences.** A conversation needs nothing new: `read_onto_format` reports refused lines and
 `record_format_rows` adds one; `import_statement` never writes a row that does not read. A line
 added by hand is not part of the read's intake, so a header's claim over the lines does not count it.
+
+## D-538 · 2026-11-03 · A date, a month and an amount read as the table writes them on a dashboard's blocks, a list, a rollup's table and its chart — `2026-07-27`, `2026-09`, `₪60.00` — and a rollup reads in words: its name *Landed by month*, what it counts a sentence; the declaration and every tool keep the name <a id="d-538"></a>
+
+**Context.** M54 U2 found one value reading three ways on one screen: a date `2026-07-27` in the
+table and `Sun 26 Jul 2026` in a block, a month `2026-09` in a rollup's table and `Sep 2026` on its
+chart, money `₪60.00` in the table and `50 ILS` in the filter band; and a chart made from a dashboard
+reading `landed_by_month` everywhere, under a subtitle and a tab heading that were the rollup's
+own text in mono. M55 U7's brief settled which way wins: the table's.
+
+**Decision.** `valueText` (a dashboard block, the list beside an entry, a list's line and its date's
+hover) writes a date and a month as stored; `rollupChart`'s labels and ticks are the months as the
+table writes them; the band writes a money range's ends with `formatMoney`, a quantity as before. A
+rollup's name reads through `rollupWords` — the block's title, the format's tab, the rail, *Add a
+block*, its tab's table — and what it counts through `rollupSentence`, under the block, above its
+tab's chart and in `show_format view:dashboard`'s line. Left as they were: the agenda's day headings
+and a list's relative due (*in 3 days*), which say a day against today rather than a value; the entry
+page is M55 U5's. *New chart* and *New view* say *Add*, as *Headline total* does, and a chart's
+missing month is said once, at *By month of*, after an attempt.
+
+**Alternatives rejected.** The words everywhere (`Sun 26 Jul 2026`, `Sep 2026`): the table is where a
+value is checked and typed, and it writes ISO. A rollup's name kept as declared on screen: the person
+typed words. Choosing the first date for a chart by default: the brief asks once at the field instead.
+
+**Consequences.** A screen that shows a date, a month or money from a row reads it as the table does;
+a new one that wants words says why. `rollupSentence` is the screen's and the conversation's alike.
 
 ## Related
 
