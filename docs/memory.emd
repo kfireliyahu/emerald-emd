@@ -15300,6 +15300,18 @@ commit: ca12ce4
 paths: "src/plugin/tools/views.ts\nsrc/data/repositories/formatViewRepository.ts\ndocs/plugin.md"
 report: Updating a saved view through arrange_views merges what it is given into what the view's address holds: kind, match (folds with it), search, order and descending, and columns each stay when left out and are replaced whole when given; match:{}, search:"", order:"" and columns:{} let one go, and the tool's description says so. columns:[] keeps its old meaning, the name alone, so emptying the column choice is columns:{}. descending alone turns the kept order round (refused when there is none). The answer and the dry run name what it kept beside what it changed, and the dry run's table shows the merged view. Creating a view is unchanged; the screen writes a view whole through saveView and never reaches this path, so parity holds. No decision row: D-520 says nothing of replace or merge. Tests: savedViews.test.ts (sort only keeps match, search, columns and kind; emptied settings; dry run merged); related 512 passed, typecheck, privacy and docs:check green. Done-test on a synthetic document against the built server: Decided (list, state live, columns ref,title) given only order:ref kept its match and columns. ask-cold could not run here: the claude CLI was not logged in.
 
+### M52 F4
+milestone: M52
+scope: engine
+title: Keeping a pack again brings its columns' notes too, as it brings its formats' notes
+state: in_progress
+brief: From M52 F2's review entry, judged by the maintainer 2026-11-03 ('Fix unit, then close'): 'A document that already keeps the pack (another project's document) gets the new format notes from keep_packs but keeps the old column notes: keep_packs never brings a column's note.' Make keepPack (src/data/packs/packs.ts) bring a column's note the way it already brings a format's (D-491): where the document's column note is still one the pack wrote, it becomes this build's; where the person rewrote it, it is kept and said in the plan's 'leaves' list, as notesKept does for formats. The plan's phrases (the one wording keep_packs and the Packs screen share, D-227) name the columns whose notes were brought. Find how D-491 tells a pack's note from a rewritten one and use the same test for columns; if columns keep nothing that can tell, stop and ask rather than guess. No new tool and no new write path. Tests: a document that kept an older development pack gets this build's decision and open_question column notes; a column note the person rewrote is kept and named; keeping it twice changes nothing the second time. Done-test: create_document at a new path with an older pack's notes (a fixture), keep_packs [development], then formats decision shows this build's column notes. Then M52 F2's review entry is the maintainer's to accept, and M52 closes.
+files: src/data/packs/packs.ts (keepPack, the plan's phrases), src/plugin/tools/packs.ts (keepPacksMutation), src/data/packs/development/pack.ts
+taken_by: run-milestone driver
+started: 2026-11-03
+branch: main
+paths: "src/data/packs/packs.ts\nsrc/plugin/tools/packs.ts"
+
 ### M53 F1
 milestone: M53
 scope: app
