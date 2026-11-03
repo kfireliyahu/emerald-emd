@@ -15336,9 +15336,12 @@ milestone: M55
 scope: app
 title: Shape: the input view's brief, and its new words, picked by the unit for the maintainer to judge after
 decision: D-533
-state: planned
+state: in_progress
 brief: D-533 holds the maintainer's answers; this unit turns them into the brief U3 and U4 build from. No mockup (maintainer, 2026-11-03). Run Impeccable's shape (/impeccable shape, D-529) with D-533 as the discovery round: do not re-ask what it settles, and assert the likely reading for the rest. First try what exists on the demo (npm run probe:screens, and the pane only where a click is needed; custom.emd's card_charge and project.emd's unit): entry/new and its Fields list (src/ui/formats/EntryView.tsx), quick add on a list and beside an entry (ListView.tsx, EntryList.tsx), the table's blank row (RowSheet.tsx), Add a block (MakeBlock.tsx, Dashboard.tsx), the rail (RailFolder.tsx). Write docs/mockups/m55-u1/brief.md (Impeccable's seven parts, smallest useful): the form (field order, focus, the 'Adds as' line, refusals at their field, the list of rows just added with undo, what clears and what stays); how an input view is made and edited in place, counting click paths (from the format's +, which starts from the required columns; a default per field; marking it the format's Add); its rail row and glyph beside saved views and charts; the dashboard block at F4's sizes; quick add with the view's fields inline; the states (no input view, a required column left out, a link with no match, a date word). Then the new on-screen words: the kind's name on screen, 'Adds as', the + menu's items, the default mark, undo's wording — two or three drafts each in brief.md, checked against the term rows first (format_rows term search). Maintainer, 2026-11-03: U1 does not wait for me. So the unit picks: it takes the recommended reading wherever shape would have asked, and its recommended word for each, marks both in brief.md as the unit's picks and not yet the maintainer's (as D-475 did), writes the picked words as term rows, and writes them into U3's and U4's briefs as SETTLED. One open review_entry on this unit lists every pick and where it is written, for the maintainer to judge after; changing one later is a fix unit. Stop and ask only where a pick would contradict D-533 or a live rule row. Done-test: brief.md written with the picks marked, the term rows written, U3 and U4 carry them, and the review row lists them.
 files: docs/09-decision-log.md (D-533), src/ui/formats/EntryView.tsx, src/ui/formats/ListView.tsx, src/ui/formats/EntryList.tsx, src/ui/formats/RowSheet.tsx, src/ui/formats/MakeBlock.tsx, src/ui/RailFolder.tsx, docs/mockups/m53-u1/tasks.html
+taken_by: run-milestone driver
+started: 2026-11-03
+branch: main
 paths: docs/mockups/m55-u1/
 
 ### M55 U2
@@ -15346,9 +15349,12 @@ milestone: M55
 scope: engine
 title: An input view is a saved view of kind input: fields, order and defaults, one the format's default, made and used from a conversation
 decision: D-533
-state: planned
+state: in_progress
 brief: D-533. A saved view (format_saved_view, D-520; src/ui/formats/savedView.ts, addressFilter.ts) gains kind input: its address's columns are the fields it asks, in order; its exact values are its defaults. A default is a fixed value of the column's type or, on a date column, a word naming one day (today, yesterday, tomorrow; clock.ts, D-528), kept as the word and worked out when used; a range word (this week, within 7 days) is refused as a default. Migration 066 widens the kind CHECK and holds 'this is the format's default input view', at most one per format (a column and a partial unique index, or say why another shape); docs/04-data-model.md. views.md carries kind input and the default mark; the text round trip holds (pack.test.ts). Refusals, one function shared by screen and tool: a required column neither asked nor defaulted; a default the column's type or checks refuse; a computed column asked. One defaults rule (entryDefaults in view.ts, D-518): the format's default input view's defaults, then the address's exact values, then a required enum's first member; the table's blank row (RowSheet.tsx), entry/new and quick add all call it, which fixes M54 U1's row where the blank row refuses state while Add and quick add fill it. Parity (D-227): arrange_views view:saved takes kind input (fields, defaults, default:true) and renames and deletes as now; record_format_rows takes view:'<name>' and fills each row's left-out fields from that input view's defaults, the dry run showing which, refusing a view of another kind; show_format view:'<name>' draws the form read-only (sheet.ts VIEWS, the frame); formats' views line names a format's input views. docs/plugin.md. Anything not settled here or in D-533 (beyond names in code) is the maintainer's: stop and ask. Tests: each refusal; a date word worked out on a pinned day; the default mark one per format; the three screen ways agree with entryDefaults; parity.test.ts green; a text document round-trips an input view. Done-test: on a synthetic card-charge format, a conversation saves 'Card charge' asking merchant and amount, with date today and account Visa, marks it the default, and writes two rows with only merchant and amount, both dated today and on Visa.
 files: src/domain/format/view.ts (entryDefaults, savedNameRefusal), src/ui/formats/savedView.ts, src/ui/formats/addressFilter.ts, src/domain/format/clock.ts, src/data/db/migrations/063_saved_view.sql, src/data/repositories/formatViewRepository.ts, src/plugin/tools/saved.ts, src/plugin/tools/views.ts, src/plugin/tools/sheet.ts, src/parity.test.ts, docs/04-data-model.md (FormatSavedView)
+taken_by: run-milestone driver
+started: 2026-11-03
+branch: main
 paths: "src/domain/format/view.ts\nsrc/data/db/migrations/\nsrc/data/repositories/formatViewRepository.ts\nsrc/data/repositories/formatDocumentRepository.ts\nsrc/ui/formats/addressFilter.ts\nsrc/ui/formats/savedView.ts\nsrc/ui/formats/RowSheet.tsx\nsrc/plugin/tools/\nsrc/parity.test.ts"
 
 ### M55 U3
@@ -15399,9 +15405,12 @@ milestone: M55
 scope: app
 title: A dashboard's New chart asks once at its field and reads in words; a date and an amount read one way on every surface
 decision: D-533
-state: planned
+state: in_progress
 brief: D-533, split out of U5 by paths (D-534). M54 U2's Entry: rows (format_rows review_entry search:'Entry:', unit M54 U2). Re-run each first (npm run probe:screens, the pane where a click is needed); one already fixed by M54 F3 is named with its commit and left for the maintainer. Fix the rest: (1) New chart: 'Say which date the month is of' once, at the By month of field, never twice; (2) its name reads in words wherever it shows (landed_by_month reads 'landed by month', as M53 U3 did for labels; the name in the declaration is unchanged), and its subtitle and the rollup tab's heading read as sentences, not the rollup's text in mono; (3) one word per act within one menu (New chart's 'Declare and add' beside Headline total's 'Add'); (4) a date reads one way on the dashboard block, the rollup's table and its chart as the table writes it (2026-07-27 in the table, 'Sun 26 Jul 2026' in a block, 2026-09 and 'Sep 2026' in a rollup today), and an amount reads one way (the filter band's '50 ILS' against the table's '₪60.00'); if one way needs a choice the rows do not imply (which format wins), it is the maintainer's: stop and ask. Tests beside each fix. Done-test: on project.emd, New chart named 'Landed by month' reads so everywhere and refuses once at its field; a date and an amount read the same in the table, a block, a rollup and its chart.
 files: src/ui/formats/MakeBlock.tsx (rollupName, ~186, ~434), src/ui/formats/Dashboard.tsx, src/ui/formats/RollupView.tsx, src/ui/formats/FilterBand.tsx
+taken_by: run-milestone driver
+started: 2026-11-03
+branch: main
 paths: "src/ui/formats/MakeBlock.tsx\nsrc/ui/formats/Dashboard.tsx\nsrc/ui/formats/RollupView.tsx\nsrc/ui/formats/FilterBand.tsx\nsrc/ui/charts/"
 
 ### M55 U8
@@ -15409,9 +15418,12 @@ milestone: M55
 scope: app
 title: New format's type picker in a person's words, the common types first
 decision: D-533
-state: planned
+state: in_progress
 brief: D-533, split out of U5 by paths (D-534). M54 U1's row: #/formats → New format → Start empty → add a column and reach its type shows twenty types at once (nineteen and computed) in engineering names: integer, real, enum, enums, instant. Re-run it first (M54 F2 gave the engine's names a person's words in places; say what it already did). Then: the types in a person's words, the common ones first and the rest one step away, never twenty at once; the stored type word is unchanged. Which types are common and what each is called on screen are words: draft two or three groupings with names, recommend one, and STOP for the maintainer's pick (the U1 practice: drafts, then he picks); the pick goes on in this same child. Check each name against the term rows first. Tests: the picker offers the common group first; every type is still reachable; the stored word is unchanged. Done-test: a new column's type chosen from the short list in two clicks, and a rare one in three.
 files: src/ui/formats/NewFormat.tsx, src/ui/screens/Formats.tsx
+taken_by: run-milestone driver
+started: 2026-11-03
+branch: main
 paths: "src/ui/formats/NewFormat.tsx\nsrc/ui/screens/Formats.tsx"
 
 ### M55 U9
@@ -15419,9 +15431,12 @@ milestone: M55
 scope: app
 title: A line refused during a read is fixed or added by hand there, and the mapper's failed total row is skipped
 decision: D-533
-state: planned
+state: in_progress
 brief: D-533, split out of U5 by paths (D-534). M54 U3's intake row (format_rows review_entry search:'Entry:', unit M54 U3): after Use, 'Line 7 — amount is required and was not given.' can be fixed only by remapping, with no way to correct it or add it by hand during the read; and on demo.emd #/read the mapper's 'Row 17 Could not read transaction date from "סה"כ"' (the printed total line) has no skip or fix. Re-run first (M54 F4 and F13 touched intake). Then: a refused line offers to add it by hand, opening the format's Add with what the line held (U2's defaults apply if the format has a default input view by then); and a row the mapper could not read can be skipped from that read, said in the read's count. Hebrew from a document goes through Bidi. If either needs a choice the row does not imply (where the skip is kept), stop and ask. Tests: a refused line opens Add prefilled; a skipped row is left out and counted. Done-test: on demo.emd, a statement with one refused line is read, the line added by hand there, and the total row skipped.
 files: src/ui/screens/ReadFiles.tsx (the refused-line list), src/ui/import/PreviewStrip.tsx (~95-100), src/ui/import/ReadFilesBar.tsx
+taken_by: run-milestone driver
+started: 2026-11-03
+branch: main
 paths: "src/ui/screens/ReadFiles.tsx\nsrc/ui/import/"
 
 ### M56 U1
