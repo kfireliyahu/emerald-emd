@@ -4521,6 +4521,15 @@ question: D-533 settled what an input view is; how does it look, how is it made 
 answer: The unit's picks, marked with a triangle in docs/mockups/m55-u1/brief.md and judged by the maintainer after through M55 U1's open review entry. A page where entry/new opens, beside the format's list, at its own address, never a tab. Fields in one wrapping row of labelled fields; entry/new's footer bar with Add and 'Adds as account Visa · date today'; 'Just added' under it, the visit's rows newest first, each with 'Undo' (deletes it; refused at its line when another row links to it); Enter adds; the header's Add hidden while the form shows. The format's + at the end of its tab strip: New input view, New view, New chart. A new input view is a draft asking the required columns, named after the format, Fields open with Ask and Default columns; 'Use for Add' marks the one Add opens, captioned 'Add' in the rail and the bar. In the rail input views come first, glyph 'input'. A dashboard block is the form with a secondary Add, stacked at one column and wrapping wider. Quick add with a view used for Add shows its asked fields inline, labelled, crossed with Tab; a group's value wins. Rejected: a tab; per-field menus (9 clicks against 6); a one-item +; 'Form'; 'Default' as the mark; 'Remove' for undo; a filled Add on a block.
 state: live
 
+### D-540
+date: 2026-11-03
+milestone: M55
+scope: app
+title: A line a read refused offers Add by hand, opening the format's Add with what it held while the read is kept; a row the mapper could not read is skipped from that read only
+question: How is a line refused during a read put right there, and how is a printed total row the mapper cannot read got out of the way?
+answer: Add by hand beside a refused line on Read files opens the line's format's entry/new with draftOfOffered of what the reading offered (never a made-up value); the read is kept by format for the window's life and the same document (let go on Write or when the last file is taken off); the entry's back link reads Read and Add goes back to the read, which marks the line and counts N added by hand. A pack's format offers no Add (D-269). Skip beside a row the mapper could not read leaves it out of that read only (LEFT_OUT): counted as skipped in the mapper and on Read files (3 new, 1 skipped), never written, never kept in the reader; Put back takes it back, and a row that reads is never left out.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -5607,6 +5616,15 @@ state: applied
 answered_by: D-516
 became_unit: M53 U6
 
+### M55 U9 ready to land: a refused line is added by hand from the read, and the mapper's failed row is skipped (D-540)
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-03
+body: "M55 U9 is built on worktree-agent-abcaa4cd0b365841d at a27d545 (worktree F:/projects/emerald/.claude/worktrees/agent-abcaa4cd0b365841d). Decision D-540, no migration. Land it with land_units inbox:[this id].\n\n```json\n{\"unit\": \"M55 U9\", \"files\": \"src/ui/screens/ReadFiles.tsx\\nsrc/ui/screens/FormatRows.tsx\\nsrc/ui/nav.ts\\nsrc/ui/nav.test.ts\\nsrc/domain/format/rowDraft.ts\\nsrc/domain/format/rowDraft.test.ts\\nsrc/ui/import/PreviewStrip.tsx\\nsrc/ui/import/MapperScreen.tsx\\nsrc/ui/import/StageBar.tsx\\nsrc/ui/screens/ReadStatements.tsx\\nsrc/data/importer/apply.ts\\nsrc/data/importer/statementBatch.ts\\nsrc/data/importer/statementBatch.test.ts\\ndocs/09-decision-log.md\", \"commit\": \"a27d545\", \"branch\": \"worktree-agent-abcaa4cd0b365841d\", \"decisions\": [{\"ref\": \"D-540\", \"title\": \"A line a read refused offers Add by hand, opening the format's Add with what it held while the read is kept; a row the mapper could not read is skipped from that read only\", \"question\": \"How is a line refused during a read put right there, and how is a printed total row the mapper cannot read got out of the way?\", \"answer\": \"Add by hand beside a refused line on Read files opens the line's format's entry/new with draftOfOffered of what the reading offered (never a made-up value); the read is kept by format for the window's life and the same document (let go on Write or when the last file is taken off); the entry's back link reads Read and Add goes back to the read, which marks the line and counts N added by hand. A pack's format offers no Add (D-269). Skip beside a row the mapper could not read leaves it out of that read only (LEFT_OUT): counted as skipped in the mapper and on Read files (3 new, 1 skipped), never written, never kept in the reader; Put back takes it back, and a row that reads is never left out.\"}], \"review_entries\": [{\"do\": \"Demo, demo.emd #/read: add a card statement whose last line is the printed total with its word in the date column, Map its columns, Skip the failed row, Read it; then custom.emd #/formats/card_charge/read with a csv whose one line has no amount, Add by hand, type the amount, Add.\", \"should\": \"The mapper says 1 skipped and Skipped from this read: row N with Put back; the batch row says 3 new, 1 skipped; Add opens with the line's date, merchant and currency filled, Add goes back to the read with its file still there, and the line says added by hand.\"}], \"report\": \"M55 U9 built at a27d545 on worktree-agent-abcaa4cd0b365841d, D-540. Re-ran both findings first on the worktree's own demo server: the refused line had no action, the mapper's failed total row (Could not read transaction date from the Hebrew total word) had none either. (1) Read files: each refused line has Add by hand, which opens the format's Add (entry/new) prefilled with what the line held (draftOfOffered in rowDraft.ts, from the reading's offered values); the route carries a ReadLine state (nav.ts), so the back link reads Read and Add writes then returns to the read instead of the new entry. ReadFiles keeps its read (files, readers made, ticks, onto, removing, asking, added) in a module map by format and document, restored on return and let go on Write or when the last file goes; the line then says added by hand and the count N added by hand. Pack formats get no Add (D-269). U2's defaults merge under the prefill (entryDefaults then prefill) wherever U2 lands. (2) Mapper: Skip on the first failed row leaves it out of that read (leaveOut in apply.ts, LEFT_OUT reason), summary says 1 skipped, a Skipped from this read line offers Put back; the skip rides on StatementSheet.skipped into the batch (sheetFrom, sheetRows), where Read files says 3 new, 1 skipped; never saved in the reader; only a row that fails is left out. Verified in the browser on demo.emd #/read and custom.emd #/formats/card_charge/read. Tests: rowDraft (prefill), nav (Add by hand state and back), statementBatch (skipped row left out and counted, a reading row never left out); related suite 74 files green, typecheck and privacy green. docs:check: one error, D-540 has no decision row in the worktree's memory.emd, which this landing writes. Not done: probe:screens not run (both changes appear only with files loaded, nothing new at rest on any route); a line added by hand is not part of the read's intake, so a header claim over the lines does not count it; a links column with several names prefills as a JSON list of names.\"}\n```"
+refs: M55 U9
+state: applied
+answered_by: D-540
+became_unit: M55 U9
+
 ### Text refs sort as text, so Q10 lists before Q2
 from: another document of the maintainer's
 sent_on: 2026-10-23
@@ -6517,6 +6535,11 @@ unit: M54 U2
 should: A saved view reads the same wherever it is placed, in its own order.
 breaks: The block ignores the view's order: FUEL STATION, CORNER MARKET, BOOK NOOK; M2 U2, M1 U1, M2 U1, M1 U2. Owned by M54 F3. Fixed in M54 F3 (22d61aa): no code change — it already held at HEAD (F2's listPicture keeps the asked order); verified a table block (order:merchant, amount at least 50) and a list block (order:ref descending) read in the saved order.
 state: fault
+
+### Demo, demo.emd #/read: add a card statement whose last line is the printed total with its word in the date column, Map its columns, Skip the failed row, Read it; then custom.emd #/formats/card_charge/read with a csv whose one line has no amount, Add by hand, type the amount, Add.
+unit: M55 U9
+should: The mapper says 1 skipped and Skipped from this read: row N with Put back; the batch row says 3 new, 1 skipped; Add opens with the line's date, merchant and currency filled, Add goes back to the read with its file still there, and the line says added by hand.
+state: open
 
 ### Demo, demo.emd with an answer waiting, both themes: #/paychecks, #/wealth/goals, #/wealth/funds, #/categories/rules, #/plan.
 unit: M54 U5
@@ -15505,14 +15528,17 @@ paths: "src/ui/formats/NewFormat.tsx\nsrc/ui/screens/Formats.tsx"
 milestone: M55
 scope: app
 title: A line refused during a read is fixed or added by hand there, and the mapper's failed total row is skipped
-decision: D-533
-state: in_progress
+landed: 2026-11-03
+decision: D-540
+state: built
 brief: D-533, split out of U5 by paths (D-534). M54 U3's intake row (format_rows review_entry search:'Entry:', unit M54 U3): after Use, 'Line 7 — amount is required and was not given.' can be fixed only by remapping, with no way to correct it or add it by hand during the read; and on demo.emd #/read the mapper's 'Row 17 Could not read transaction date from "סה"כ"' (the printed total line) has no skip or fix. Re-run first (M54 F4 and F13 touched intake). Then: a refused line offers to add it by hand, opening the format's Add with what the line held (U2's defaults apply if the format has a default input view by then); and a row the mapper could not read can be skipped from that read, said in the read's count. Hebrew from a document goes through Bidi. If either needs a choice the row does not imply (where the skip is kept), stop and ask. Tests: a refused line opens Add prefilled; a skipped row is left out and counted. Done-test: on demo.emd, a statement with one refused line is read, the line added by hand there, and the total row skipped.
-files: src/ui/screens/ReadFiles.tsx (the refused-line list), src/ui/import/PreviewStrip.tsx (~95-100), src/ui/import/ReadFilesBar.tsx
+files: "src/ui/screens/ReadFiles.tsx\nsrc/ui/screens/FormatRows.tsx\nsrc/ui/nav.ts\nsrc/ui/nav.test.ts\nsrc/domain/format/rowDraft.ts\nsrc/domain/format/rowDraft.test.ts\nsrc/ui/import/PreviewStrip.tsx\nsrc/ui/import/MapperScreen.tsx\nsrc/ui/import/StageBar.tsx\nsrc/ui/screens/ReadStatements.tsx\nsrc/data/importer/apply.ts\nsrc/data/importer/statementBatch.ts\nsrc/data/importer/statementBatch.test.ts\ndocs/09-decision-log.md"
 taken_by: run-milestone driver
 started: 2026-11-03
-branch: main
+branch: worktree-agent-abcaa4cd0b365841d
+commit: a27d545
 paths: "src/ui/screens/ReadFiles.tsx\nsrc/ui/import/"
+report: M55 U9 built at a27d545 on worktree-agent-abcaa4cd0b365841d, D-540. Re-ran both findings first on the worktree's own demo server: the refused line had no action, the mapper's failed total row (Could not read transaction date from the Hebrew total word) had none either. (1) Read files: each refused line has Add by hand, which opens the format's Add (entry/new) prefilled with what the line held (draftOfOffered in rowDraft.ts, from the reading's offered values); the route carries a ReadLine state (nav.ts), so the back link reads Read and Add writes then returns to the read instead of the new entry. ReadFiles keeps its read (files, readers made, ticks, onto, removing, asking, added) in a module map by format and document, restored on return and let go on Write or when the last file goes; the line then says added by hand and the count N added by hand. Pack formats get no Add (D-269). U2's defaults merge under the prefill (entryDefaults then prefill) wherever U2 lands. (2) Mapper: Skip on the first failed row leaves it out of that read (leaveOut in apply.ts, LEFT_OUT reason), summary says 1 skipped, a Skipped from this read line offers Put back; the skip rides on StatementSheet.skipped into the batch (sheetFrom, sheetRows), where Read files says 3 new, 1 skipped; never saved in the reader; only a row that fails is left out. Verified in the browser on demo.emd #/read and custom.emd #/formats/card_charge/read. Tests: rowDraft (prefill), nav (Add by hand state and back), statementBatch (skipped row left out and counted, a reading row never left out); related suite 74 files green, typecheck and privacy green. docs:check: one error, D-540 has no decision row in the worktree's memory.emd, which this landing writes. Not done: probe:screens not run (both changes appear only with files loaded, nothing new at rest on any route); a line added by hand is not part of the read's intake, so a header claim over the lines does not count it; a links column with several names prefills as a JSON list of names.
 
 ### M56 U1
 milestone: M56
@@ -15737,7 +15763,7 @@ emerald: changed
 
 decision: 2026-11-03
 finding: 2026-10-22
-inbox: 2026-10-23
+inbox: 2026-11-03
 milestone: 2026-11-03
 open_question: 2026-10-22
 review_entry: 2026-11-03
