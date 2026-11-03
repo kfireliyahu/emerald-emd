@@ -45,7 +45,9 @@
 
 import { toISODate } from '@/core/time.ts'
 import { today } from '../today.ts'
-import { savedViewArgs, savedViewNamed, savedViewSaid } from './saved.ts'
+import { savedViewArgs, savedViewNamed, savedViewSaid, shownViewNamed } from './saved.ts'
+import { INPUT_KIND, inputDraft } from '@/domain/format/inputView.ts'
+import { inputShapeOf } from '@/ui/formats/addressFilter.ts'
 import {
   planIsSettled,
   type ReconcilePlan,
@@ -1071,7 +1073,7 @@ export const formatRowsTool: PluginTool = {
       withFormat(document, name, async (declaration) => {
         // **A saved view by its name** (M53 U5, D-520): its filter, order and
         // columns laid under whatever this call gives.
-        const saved = viewName === undefined ? undefined : savedViewNamed(document.db, declaration.name, viewName)
+        const saved = viewName === undefined ? undefined : shownViewNamed(document.db, declaration.name, viewName)
         const args = saved === undefined ? given : savedViewArgs(saved, given, { withFolds: false, columnsAsList: true })
         // A worked-out figure may be asked for by name beside the stored ones:
         // a derived column (D-334), and a total folded from the rows that point
@@ -1318,6 +1320,48 @@ interface RecordPlan {
    */
   readonly shown: readonly Readonly<Record<string, StoredValue>>[]
   readonly refusals: readonly Refused[]
+  /** With `view` (M55 U2, D-536): the input view's name, and per row the columns its defaults filled. */
+  readonly through?: { readonly view: string; readonly filled: readonly (readonly string[])[] }
+}
+
+/**
+ * **Rows written through an input view** (M55 U2, D-533, D-536): each row's
+ * left-out fields filled from the view's defaults, a date's word worked out on
+ * `day` — and the columns each row took, for the dry run to say. A field a row
+ * names, even empty, is the row's. Refused for a view that is not an input view.
+ */
+export function throughInputView(
+  db: Database,
+  declaration: FormatDeclaration,
+  name: string,
+  rows: readonly Record<string, unknown>[],
+  day: string,
+): Result<{ readonly rows: readonly Record<string, unknown>[]; readonly filled: readonly (readonly string[])[] }, string> {
+  let view
+  try {
+    view = savedViewNamed(db, declaration.name, name)
+  } catch (error) {
+    return err(error instanceof Error ? error.message : String(error))
+  }
+  if (view.kind !== INPUT_KIND) {
+    return err(`${name} is a ${view.kind} view of ${declaration.name}; \`view\` here takes an input view, whose defaults fill what a row leaves out.`)
+  }
+  const draft = inputDraft(declaration, inputShapeOf(view.address, declaration.name).defaults, day)
+  const filled: (readonly string[])[] = []
+  const written = rows.map((row) => {
+    const took: string[] = []
+    const out: Record<string, unknown> = { ...row }
+    for (const column of declaration.columns) {
+      if (draft[column.name] === undefined || Object.hasOwn(row, column.name)) continue
+      out[column.name] = draft[column.name]
+      const companion = companionKeyOf(column)
+      if (companion !== undefined && draft[companion] !== undefined && !Object.hasOwn(row, companion)) out[companion] = draft[companion]
+      took.push(column.name)
+    }
+    filled.push(took)
+    return out
+  })
+  return ok({ rows: written, filled })
 }
 
 /**
@@ -1335,7 +1379,7 @@ export function resolveWritable(
   return locked === undefined ? resolved : { refusal: locked }
 }
 
-export function recordMutation(name: string, offered: readonly Record<string, unknown>[]): Mutation<RecordPlan> {
+export function recordMutation(name: string, given: readonly Record<string, unknown>[], viewName?: string): Mutation<RecordPlan> {
   return {
     // A batch of many rows keeps a named copy first (M34 U6, D-399).
     copyBefore: (plan) => ({ what: `adding ${plan.cells.length} rows to ${name}`, rows: plan.cells.length }),
@@ -1357,12 +1401,22 @@ export function recordMutation(name: string, offered: readonly Record<string, un
         }
       }
 
+      // Through an input view (M55 U2, D-536): its defaults fill what each row leaves out.
+      let offered = given
+      let through: RecordPlan['through']
+      if (viewName !== undefined) {
+        const laid = throughInputView(document.db, resolved.declaration, viewName, given, askedOn())
+        if (!laid.ok) return { declaration: undefined, blocked: laid.error, existing: 0, cells: [], ids: [], shown: [], refusals: [] }
+        offered = laid.value.rows
+        through = { view: viewName, filled: laid.value.filled }
+      }
       // The plan is the sheet's too (M26 U2): a paste is this batch, judged
       // by the same function, so a screen and a conversation cannot disagree
       // about what a batch of rows may hold (D-227).
       // A file under the document's folder is kept beside it (M37 U6).
       const batch = stageRows(document.db, resolved.declaration, withFilesPlaced(resolved.declaration, offered, document.path))
       return {
+        ...(through === undefined ? {} : { through }),
         declaration: resolved.declaration,
         blocked: undefined,
         existing: rowCountOf(document.db, resolved.declaration),
@@ -1388,7 +1442,7 @@ export function recordMutation(name: string, offered: readonly Record<string, un
         plan.shown
           .map((row, index) =>
             [
-              `**Row ${String(index + 1)}**`,
+              `**Row ${String(index + 1)}**${tookText(plan.through, index)}`,
               ...declaration.columns
                 .map((column) => ({ column, text: cellText(column, { id: '', cells: row }) }))
                 .filter((one) => one.text !== '-')
@@ -1467,6 +1521,7 @@ export const recordFormatRowsTool: PluginTool = {
             `One object per row, keyed by declared column name. Up to ${String(BATCH_MAX)} in a call.`,
           items: { type: 'object', additionalProperties: true },
         },
+        view: stringProp('An input view: its defaults fill left-out fields.'),
         commit: booleanProp('Write it. Omit or false for the dry run.'),
       },
       required: ['path', 'format', 'rows'],
@@ -1478,8 +1533,17 @@ export const recordFormatRowsTool: PluginTool = {
     const path = requireString(args, 'path')
     const name = requireString(args, 'format')
     const rows = batchOf(args, 'rows', 'row')
-    return mutatingCall(path, args['commit'] === true, recordMutation(name, rows))
+    const view = args['view'] === undefined ? undefined : requireString(args, 'view')
+    return mutatingCall(path, args['commit'] === true, recordMutation(name, rows, view))
   },
+}
+
+/** ` — date and account from Card charge`: what a row took from the input view it was written through. */
+function tookText(through: RecordPlan['through'], index: number): string {
+  const took = through?.filled[index] ?? []
+  if (through === undefined || took.length === 0) return ''
+  const names = took.length === 1 ? took[0] ?? '' : `${took.slice(0, -1).join(', ')} and ${took[took.length - 1] ?? ''}`
+  return ` — ${names} from ${through.view}`
 }
 
 // --- update_format_rows -----------------------------------------------------

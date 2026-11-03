@@ -1075,8 +1075,10 @@ describe('the server makes zero network calls', () => {
       // `show_format`, and `add` and `remove` for its blocks — ~400 chars,
       // trimmed first. 57k since M53 F6 (D-528): `week_starts_on` on
       // `record_units` and the new date words in `match` — ~200 chars, trimmed
-      // first.
-      expect(engineSize).toBeLessThan(57_000)
+      // first. 57.5k since M55 U2 (D-536): an input view on `arrange_views` —
+      // `fields`, `defaults` and `default` — and `view` on `record_format_rows`,
+      // four parameters, ~550 chars, trimmed first.
+      expect(engineSize).toBeLessThan(57_500)
     })
   })
 })

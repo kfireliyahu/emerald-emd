@@ -330,7 +330,10 @@ export function listPath(name: string): string {
  * route of its own, so a bookmark of it is the same address, and changing the
  * filter there is changing the view as it is drawn, never the one kept.
  */
-export function savedViewPath(format: string, kind: 'table' | 'board' | 'list' | 'roadmap' | 'ready', address: string): string {
+export function savedViewPath(format: string, kind: 'table' | 'board' | 'list' | 'roadmap' | 'ready' | 'input', address: string): string {
+  // An input view (M55 U2, D-536) opens a new entry with the address it keeps:
+  // its exact values are what the entry starts at. Its own form is M55 U3's.
+  if (kind === 'input') return entryPath(format, NEW_ENTRY) + address
   const path =
     kind === 'board'
       ? boardPath(format)

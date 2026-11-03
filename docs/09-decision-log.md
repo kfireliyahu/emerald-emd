@@ -451,6 +451,7 @@ written out here.
 | D-532 | 2026-11-02 | M54's faults become thirteen fix units, M54 F1-F13, before M55: shared looks first, each unit sweeping its own files; the ledger's Home, NoLedger and #/read included; a due date only where declared; a window drop onto the open format; recovery as a three-choice notice; the page's first screen leads to Get Emerald; the tour pauses; words are drafted for the maintainer to pick | M54 |
 | D-533 | 2026-11-03 | M55's input view is a saved view of kind `input`: the fields it asks are its columns in their order and its defaults are its exact values (a member, a link, a number, or a date word that names one day), kept in `format_saved_view` and `views.md`; one per format may be its default, opened by Add, the list's + and quick add; it stays open after Add and lists what it added; it is in the rail, behind +, and a live block on a dashboard; a conversation makes it with `arrange_views` and uses it with `record_format_rows view:`; M54's fourteen engine-side *Entry:* findings come into M55 and the ledger's stay parked | [below](#d-533) |
 | D-534 | 2026-11-03 | A milestone's units run at once wherever `dispatch_plan` allows, each in its own worktree with its own demo port, by sessions or by the `Agent` tool alike, up to four; a screen is measured by `npm run probe:screens` (`window.emeraldProbe()` in a dev build, in an offscreen Electron window) rather than in the browser pane by hand; a child is handed its files and told to batch its reads; a review writes a rule-backed finding as `fault` and only a judgement as `open`; units under ten minutes that share paths go to one child, and a unit stopped for the maintainer's pick goes on in the same child; amends D-287 and D-490's one-at-a-time for the `Agent` tool | [below](#d-534) |
+| D-536 | 2026-11-03 | An input view's default mark is a column of `format_saved_view` with a partial unique index (066), on an input view alone; a new row's defaults are one rule, `entryDefaults` — the default input view's, over the address's exact values, over a required enum's first member — read by the table's blank row, entry/new and quick add; a money or quantity default is written `12.90 ILS`; `record_format_rows view:` fills only the keys a row leaves out; `format_rows` refuses an input view; until M55 U3's form, an input view opens a new entry with its address | [below](#d-536) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1038,6 +1039,33 @@ once. Asking for every review row's verdict: most break a rule the maintainer al
 **Consequences.** `.claude/launch.json` has `demo-tour-1` to `demo-tour-4`. `run-milestone`,
 `design-review` and CLAUDE.md say so. Nothing in the shipped app changes: `probe.ts` is loaded by a
 dynamic import behind `import.meta.env.DEV`.
+
+## D-536 · 2026-11-03 · An input view's default mark is a column of `format_saved_view` with a partial unique index (066), on an input view alone; a new row's defaults are one rule, `entryDefaults` — the default input view's, over the address's exact values, over a required enum's first member — read by the table's blank row, entry/new and quick add; a money or quantity default is written `12.90 ILS`; `record_format_rows view:` fills only the keys a row leaves out; `format_rows` refuses an input view; until M55 U3's form, an input view opens a new entry with its address <a id="d-536"></a>
+
+**Context.** D-533 settled what an input view is and left M55 U2 three shapes: where the default mark
+lives, how a default that is not a word is written, and what a screen opens before U3 builds the form.
+M54 U1 had found the table's blank row refusing a task's `state` while Add and quick add filled it:
+three ways of starting a row, two rules.
+
+**Decision.** `format_saved_view` gains `is_default` (0/1), `CHECK`ed to `kind = 'input'`, and a partial
+unique index on `format_name WHERE is_default = 1` — the mark belongs to the view, follows a rename,
+goes with a delete, and the table itself holds it to one per format; `saveView` takes it from the view
+that had it, and the dry run says so. A text document writes `default: true` in the view's block.
+`inputViewRefusals` (domain, `inputView.ts`) is the one check, asked by `arrange_views` and by the screen's
+save: a required column neither asked nor defaulted, a default its column's type or checks refuse (a
+date word naming more than one day among them), a computed column asked or defaulted — every reason at
+once. A money or a quantity default is the figure and its currency or unit, `12.90 ILS`, so it is
+checked whole. `entryDefaults` takes the default input view's defaults and the address's exact values
+(`heldExactly`, which `filterImplies` now calls) and lays them input over address over a first member;
+the blank row, entry/new and quick add all read it through `newRowDefaults`, and a default drawn in a
+cell is not counted as typed (`typedOf`). `record_format_rows view:` fills a column only when the row
+names neither it nor its companion key, and refuses any other kind; `format_rows view:` refuses an
+input view (it shows no rows). Until U3, `savedViewPath` opens an input view as entry/new with its
+address, so the frame draws a read-only new entry starting at its defaults.
+
+**Rejected.** A `format_view_column` setting or a document setting naming the default view: a rename or
+delete would leave it pointing at nothing, and nothing would hold it to one. A money default as two keys
+of the address: an address holds one value per column.
 
 ## Related
 

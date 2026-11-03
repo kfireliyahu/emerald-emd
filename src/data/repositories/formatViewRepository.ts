@@ -531,8 +531,8 @@ export function forgetViewSettings(db: Database, format: string): void {
 export function savedViews(db: Database, format?: string): readonly SavedView[] {
   const rows =
     format === undefined
-      ? query(db, 'SELECT format_name, name, kind, address FROM format_saved_view ORDER BY format_name, name')
-      : query(db, 'SELECT format_name, name, kind, address FROM format_saved_view WHERE format_name = ? ORDER BY name', [format])
+      ? query(db, 'SELECT format_name, name, kind, address, is_default FROM format_saved_view ORDER BY format_name, name')
+      : query(db, 'SELECT format_name, name, kind, address, is_default FROM format_saved_view WHERE format_name = ? ORDER BY name', [format])
   return rows.flatMap((row) => {
     const owner = row['format_name']
     const name = row['name']
@@ -540,8 +540,17 @@ export function savedViews(db: Database, format?: string): readonly SavedView[] 
     const address = row['address']
     if (typeof owner !== 'string' || typeof name !== 'string' || typeof kind !== 'string' || typeof address !== 'string') return []
     if (!isSavedKind(kind)) return []
-    return [{ format: owner, name, kind, address }]
+    return [{ format: owner, name, kind, address, ...(row['is_default'] === 1 ? { isDefault: true } : {}) }]
   })
+}
+
+/**
+ * **A format's default input view** (M55 U2, D-533, D-536) — the one whose
+ * defaults every new row starts from, on screen and in a conversation — or
+ * nothing, where a new row starts from the address and a first member alone.
+ */
+export function defaultInputView(db: Database, format: string): SavedView | undefined {
+  return savedViews(db, format).find((each) => each.isDefault === true)
 }
 
 /** One saved view by its name, or nothing. Case is kept, as a column's is. */
@@ -561,10 +570,14 @@ export function saveView(db: Database, view: SavedView): void {
   if (!isSavedKind(view.kind)) throw new Error(`${String(view.kind)} is not a view a saved view opens.`)
   const address = savedAddress(view.address)
   if (address.length > SAVED_ADDRESS_LONGEST) throw new Error(`A saved view keeps at most ${String(SAVED_ADDRESS_LONGEST)} characters of address.`)
+  const isDefault = view.isDefault === true
+  if (isDefault && view.kind !== 'input') throw new Error('Only an input view is a format’s default.')
+  // One default per format (066's index): marking this one takes the mark from the other.
+  if (isDefault) db.run('UPDATE format_saved_view SET is_default = 0 WHERE format_name = ? AND name <> ?', [view.format, view.name])
   db.run(
-    `INSERT INTO format_saved_view (format_name, name, kind, address) VALUES (?, ?, ?, ?)
-       ON CONFLICT (format_name, name) DO UPDATE SET kind = excluded.kind, address = excluded.address`,
-    [view.format, view.name, view.kind, address],
+    `INSERT INTO format_saved_view (format_name, name, kind, address, is_default) VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT (format_name, name) DO UPDATE SET kind = excluded.kind, address = excluded.address, is_default = excluded.is_default`,
+    [view.format, view.name, view.kind, address, isDefault ? 1 : 0],
   )
 }
 

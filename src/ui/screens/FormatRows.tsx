@@ -103,7 +103,7 @@ import { RollupView } from '@/ui/formats/RollupView.tsx'
 import { RowSheet, type FootRefusal, type Order } from '@/ui/formats/RowSheet.tsx'
 import { derivedOf } from '@/data/repositories/formatDerivedRepository.ts'
 import { SavedTab, TAB_LABEL, TAB_OFF, TAB_ON } from '@/ui/formats/SavedTab.tsx'
-import { useSavedViews, useSaving } from '@/ui/formats/savedView.ts'
+import { inputDefaults, newRowDefaults, typedOf, useSavedViews, useSaving } from '@/ui/formats/savedView.ts'
 import {
   boardPath,
   dashboardBack,
@@ -124,7 +124,6 @@ import { DashboardView } from '@/ui/formats/Dashboard.tsx'
 import { BoardView } from '@/ui/formats/BoardView.tsx'
 import {
   boardOf,
-  entryDefaults,
   entryNeeds,
   entryOrder,
   oneUnitOf,
@@ -469,7 +468,11 @@ export function FormatRows({
         draft:
           typed?.key === key
             ? typed.draft
-            : { ...blankDraft(declaration, data.rows[data.rows.length - 1]?.row, data.currency), ...entryDefaults(declaration.columns) },
+            : {
+                ...blankDraft(declaration, data.rows[data.rows.length - 1]?.row, data.currency),
+                // D-536's one defaults rule: the default input view's, the address's, a first member.
+                ...newRowDefaults(db, declaration, filter, toISODate(today())),
+              },
         stored: undefined,
         aggregates: [],
         derived: [],
@@ -493,7 +496,7 @@ export function FormatRows({
       // What its own links name, for a card or a list to draw (D-402).
       linked: linkedRows(db, declaration, data.declarations, row),
     }
-  }, [db, entry, data, typed])
+  }, [db, entry, data, typed, filter])
 
   /**
    * The draft, coerced — on every keystroke, because a refusal is useful while
@@ -524,10 +527,7 @@ export function FormatRows({
     // carried forward by itself does not count as having been typed — nor a
     // member a new entry starts at (D-518).
     const offered = offeredOf(declaration, draft)
-    const defaults = editing.existing === undefined ? entryDefaults(declaration.columns) : {}
-    const touched = Object.fromEntries(
-      Object.entries(offered).filter(([column, value]) => defaults[column] === undefined || defaults[column] !== value),
-    )
+    const touched = editing.existing === undefined ? typedOf(declaration, draft, newRowDefaults(db, declaration, filter, toISODate(today()))) : offered
     if (isEmpty(touched)) {
       return {
         problem: 'Nothing has been filled in yet.',
@@ -746,6 +746,7 @@ export function FormatRows({
       picture.names,
       data.rows[data.rows.length - 1]?.row,
       data.currency,
+      inputDefaults(db, declaration, toISODate(today())),
     )
     const named = picture.shape.name
     const draft = named === undefined ? asked.draft : { ...asked.draft, [named.name]: title }
@@ -779,7 +780,8 @@ export function FormatRows({
 
   /** Quick add's placeholder for a group, naming every value the row will take. */
   const placeholderOf = (picture: ListPicture, group: ListGroup<ListLine> | undefined): string =>
-    quickAdd(declaration, picture.shape, group?.implies ?? {}, filter, toISODate(today()), picture.names).placeholder
+    quickAdd(declaration, picture.shape, group?.implies ?? {}, filter, toISODate(today()), picture.names, undefined, undefined, inputDefaults(db, declaration, toISODate(today())))
+      .placeholder
 
   // An entry the format has no row for — deleted, or a stale bookmark. A delete
   // lands here too: the router moves the address in a transition, so the
@@ -1030,10 +1032,15 @@ export function FormatRows({
   // **The foot** (M26 U2). The drafts typed or pasted and not yet written,
   // padded with empty rows so there are always a few to type into and one
   // below the last that holds anything. A blank row carries the currency and
-  // unit of the last entry, as Add does (`blankDraft`).
-  const blank = blankDraft(declaration, data.rows[data.rows.length - 1]?.row, data.currency)
+  // unit of the last entry, as Add does (`blankDraft`), and **starts where Add
+  // and quick add start** (M55 U2, D-536): the one defaults rule, drawn in its
+  // cells and not counted as typed — so a row given only a title takes its
+  // state, as Add's does, rather than being refused for it (M54 U1).
+  const startsAt = newRowDefaults(db, declaration, filter, toISODate(today()))
+  const blank: RowDraft = { ...blankDraft(declaration, data.rows[data.rows.length - 1]?.row, data.currency), ...startsAt }
+  const untyped = (draft: RowDraft): boolean => isEmpty(typedOf(declaration, draft, startsAt))
   const lastTyped = foot.drafts.reduce(
-    (last, draft, at) => (isEmpty(offeredOf(declaration, draft)) ? last : at),
+    (last, draft, at) => (untyped(draft) ? last : at),
     -1,
   )
   const shownFoot = [
@@ -1067,7 +1074,7 @@ export function FormatRows({
       }
       const typed = groups
         .flatMap((each, at) => (each === group ? [at] : []))
-        .filter((at) => !isEmpty(offeredOf(declaration, drafts[at] ?? blank)))
+        .filter((at) => !untyped(drafts[at] ?? blank))
       if (typed.length === 0) continue
       const refusals = stageRows(
         db,
@@ -1094,7 +1101,7 @@ export function FormatRows({
     if (drafts === spent.current) return
     const group = groups[rows[0] ?? -1]
     const others = foot.held.filter((each) => each !== group && groups.includes(each))
-    const typed = rows.filter((at) => !isEmpty(offeredOf(declaration, drafts[at] ?? blank)))
+    const typed = rows.filter((at) => !untyped(drafts[at] ?? blank))
     if (typed.length === 0) {
       setFoot({ drafts, groups, held: others, refusal: judge(drafts, groups, others), dropped })
       return

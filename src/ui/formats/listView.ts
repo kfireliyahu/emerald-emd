@@ -4,9 +4,9 @@ import type { RowFilter } from '@/data/repositories/formatFilterRepository.ts'
 import { linkLabels, listRows, type RowQuery } from '@/data/repositories/formatRowRepository.ts'
 import { labelColumn, type ColumnDeclaration, type FormatDeclaration } from '@/domain/format/declaration.ts'
 import { readValue, type StoredRow } from '@/domain/format/row.ts'
+import { heldExactly } from '@/domain/format/inputView.ts'
 import { blankDraft, type RowDraft } from '@/domain/format/rowDraft.ts'
 import {
-  dayAfter,
   dayText,
   dueBucket,
   dueText,
@@ -160,30 +160,8 @@ export function filterImplies(
   filter: RowFilter,
   day: string,
 ): Readonly<Record<string, string>> {
-  const implied: Record<string, string> = {}
-  for (const [name, held] of Object.entries(filter.match ?? {})) {
-    const column = declaration.columns.find((each) => each.name === name)
-    const one = Array.isArray(held) && held.length === 1 ? (held[0] as unknown) : held
-    if (column === undefined) continue
-    if (typeof one === 'boolean' && column.type === 'boolean') {
-      implied[name] = String(one)
-      continue
-    }
-    if (typeof one !== 'string' || one.trim() === '') continue
-    const said = one.trim()
-    if (column.type === 'enum') {
-      const member = (column.values ?? []).find((each) => each.toLowerCase() === said.toLowerCase())
-      if (member !== undefined) implied[name] = member
-    } else if (column.type === 'date') {
-      const date = said === 'today' ? day : said === 'tomorrow' ? dayAfter(day, 1) : /^\d{4}-\d{2}-\d{2}$/.test(said) ? said : undefined
-      if (date !== undefined) implied[name] = date
-    } else if (column.type === 'boolean') {
-      if (said === 'true' || said === 'false') implied[name] = said
-    } else if (column.type === 'link' || column.type === 'text') {
-      implied[name] = said
-    }
-  }
-  return implied
+  // The domain's since M55 U2 (D-536): the one defaults rule reads it too.
+  return heldExactly(declaration, filter.match, day)
 }
 
 /** What a row added in place starts as, and the words its line's placeholder names. */
@@ -212,10 +190,15 @@ export function quickAdd(
   names: ReadonlyMap<string, string>,
   previous?: StoredRow | undefined,
   currency?: string | undefined,
+  input: Readonly<Record<string, string>> = {},
 ): QuickAdd {
-  const given = { ...filterImplies(declaration, filter, day), ...implies }
-  const defaults = entryDefaults(declaration.columns, new Set(Object.keys(given)))
-  const set = { ...defaults, ...given }
+  // The one defaults rule (M55 U2, D-536): the default input view's, the
+  // address's exact values, a first member — and the group typed in over all.
+  const defaults = entryDefaults(declaration.columns, new Set(Object.keys(implies)), {
+    input,
+    address: filterImplies(declaration, filter, day),
+  })
+  const set = { ...defaults, ...implies }
   const draft: Record<string, string> = { ...blankDraft(declaration, previous, currency), ...set }
   const words = declaration.columns.flatMap((column) => {
     const value = set[column.name]

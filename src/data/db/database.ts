@@ -80,6 +80,7 @@ import migration062 from './migrations/062_file.sql?raw'
 import migration063 from './migrations/063_saved_view.sql?raw'
 import migration064 from './migrations/064_dashboard_block.sql?raw'
 import migration065 from './migrations/065_dashboard_block_size.sql?raw'
+import migration066 from './migrations/066_input_view.sql?raw'
 
 /**
  * Numbered, additive, immutable after release. `schema_version` records the
@@ -152,6 +153,7 @@ const MIGRATIONS: readonly { readonly version: number; readonly sql: string }[] 
   { version: 63, sql: migration063 },
   { version: 64, sql: migration064 },
   { version: 65, sql: migration065 },
+  { version: 66, sql: migration066 },
 ]
 
 export const SCHEMA_VERSION = MIGRATIONS[MIGRATIONS.length - 1]?.version ?? 0

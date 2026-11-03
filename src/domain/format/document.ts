@@ -1352,6 +1352,8 @@ export function writeWidths(
         `name: ${writeScalar(each.name)}`,
         `kind: ${each.kind}`,
         ...(each.address === '' ? [] : [`address: ${writeScalar(each.address)}`]),
+        // The format's default input view (M55 U2, D-536); every other view says nothing.
+        ...(each.isDefault === true ? ['default: true'] : []),
       ]),
     ...[...dashboards]
       // Stable: each dashboard's blocks keep the order they were given in.
@@ -1420,6 +1422,9 @@ export function readViews(
       if (!read.ok) return read
       if (saved.some((each) => each.format === format && each.name === read.value.name)) {
         return err(`Line ${String(block.value.line)}: ${format} has two saved views called ${read.value.name}.`)
+      }
+      if (read.value.isDefault === true && saved.some((each) => each.format === format && each.isDefault === true)) {
+        return err(`Line ${String(block.value.line)}: ${format} has two default input views; it keeps one.`)
       }
       saved.push(read.value)
       continue
@@ -1508,14 +1513,18 @@ function wholeOf(written: string | undefined): number | string | undefined {
 /** One `### format saved` block back into a saved view: a `name`, a `kind`, and an `address` when it holds one. */
 function readSaved(format: string, cells: ReadonlyMap<string, string>, line: number): Result<SavedView, string> {
   const at = `Line ${String(line)}: a saved view of ${format}`
-  const stray = [...cells.keys()].filter((key) => key !== 'name' && key !== 'kind' && key !== 'address')
-  if (stray.length > 0) return err(`${at} has a name, a kind and an address, and ${stray.join(', ')} is none of them.`)
+  const stray = [...cells.keys()].filter((key) => key !== 'name' && key !== 'kind' && key !== 'address' && key !== 'default')
+  if (stray.length > 0) return err(`${at} has a name, a kind, an address and a default mark, and ${stray.join(', ')} is none of them.`)
   const name = cells.get('name') ?? ''
   const refusal = savedNameRefusal(name)
   if (refusal !== undefined) return err(`${at}: ${refusal}`)
   const kind = cells.get('kind') ?? ''
   if (!isSavedKind(kind)) return err(`${at} opens as ${SAVED_KINDS.join(', ')}, and ${kind === '' ? 'it names none' : kind} is not one.`)
-  return ok({ format, name, kind, address: savedAddress(cells.get('address') ?? '') })
+  // The format's default input view (M55 U2, D-536): `default: true`, on an input view alone.
+  const mark = cells.get('default')
+  if (mark !== undefined && mark !== 'true' && mark !== 'false') return err(`${at}: default is true or false, and ${mark} is neither.`)
+  if (mark === 'true' && kind !== 'input') return err(`${at}: only an input view is a format’s default.`)
+  return ok({ format, name, kind, address: savedAddress(cells.get('address') ?? ''), ...(mark === 'true' ? { isDefault: true } : {}) })
 }
 
 /**

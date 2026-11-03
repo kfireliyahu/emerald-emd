@@ -36,6 +36,7 @@
  */
 
 import { heldValue, heldAs, type RowFilter } from '@/data/repositories/formatFilterRepository.ts'
+import type { InputShape } from '@/domain/format/inputView.ts'
 
 /** The key the search rides under. */
 export const SEARCH_KEY = 'search'
@@ -237,4 +238,20 @@ export function sameAddress(a: string, b: string): boolean {
 /** Whether an address holds anything — a filter, a fold, columns chosen or a sort: what a view can be saved with. */
 export function holdsAnything(query: string): boolean {
   return canonicalAddress(query) !== ''
+}
+
+/**
+ * **An input view's address, read as what it asks** (M55 U2, D-533, D-536):
+ * its own format's chosen columns are the fields, in order, and its exact
+ * values the defaults — `?columns:charge=merchant,amount&date=today` asks a
+ * merchant and an amount and dates the row today.
+ */
+export function inputShapeOf(address: string, format: string): InputShape {
+  const { filter, columns } = addressView(address)
+  return { fields: columns[format] ?? [], defaults: filter.match ?? {} }
+}
+
+/** An input view's address written from what it asks: its fields as the format's columns, its defaults as exact values. */
+export function inputAddress(format: string, shape: InputShape): string {
+  return canonicalAddress(filterAddress(Object.keys(shape.defaults).length === 0 ? {} : { match: shape.defaults }, { columns: { [format]: shape.fields } }))
 }

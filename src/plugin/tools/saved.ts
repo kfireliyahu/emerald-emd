@@ -13,8 +13,9 @@
 import type { Database } from 'sql.js'
 
 import { savedView, savedViews } from '@/data/repositories/formatViewRepository.ts'
+import { INPUT_KIND } from '@/domain/format/inputView.ts'
 import type { SavedView } from '@/domain/format/view.ts'
-import { addressView } from '@/ui/formats/addressFilter.ts'
+import { addressView, inputShapeOf } from '@/ui/formats/addressFilter.ts'
 
 import { ToolInputError } from './tool.ts'
 
@@ -68,8 +69,33 @@ export function savedViewArgs(
   }
 }
 
+/**
+ * A saved view of a kind that shows rows, or the sentence saying an input view
+ * asks for them instead (M55 U2, D-536) — for `format_rows` and the like.
+ */
+export function shownViewNamed(db: Database, format: string, name: string): SavedView {
+  const found = savedViewNamed(db, format, name)
+  if (found.kind !== INPUT_KIND) return found
+  throw new ToolInputError(
+    `${name} is an input view of ${format}: it asks for rows rather than showing them. ` +
+      '`record_format_rows` with `view` writes rows through it, and `show_format` with `view` draws its form.',
+  )
+}
+
+/** An input view in words: what it asks, in order, and what every row it adds starts at. */
+export function inputViewSaid(view: SavedView): string {
+  const { fields, defaults } = inputShapeOf(view.address, view.format)
+  const given = Object.entries(defaults).map(([column, value]) => `${column} ${Array.isArray(value) ? value.join(', ') : String(value)}`)
+  return [
+    `input, asks ${fields.length === 0 ? 'nothing' : fields.join(', ')}`,
+    ...(given.length === 0 ? [] : [`defaults ${given.join(', ')}`]),
+    ...(view.isDefault === true ? ['the format’s default'] : []),
+  ].join('; ')
+}
+
 /** A saved view in a line: `list, due is today` — its kind and what its address holds, as a model reads it. */
 export function savedViewSaid(view: SavedView): string {
+  if (view.kind === INPUT_KIND) return inputViewSaid(view)
   const held = addressView(view.address)
   const parts = [
     ...Object.entries({ ...(held.filter.match ?? {}), ...held.folds }).map(([column, value]) => `${column}: ${JSON.stringify(value)}`),
