@@ -287,7 +287,7 @@ function SaveView({ saving }: { readonly saving: Saving }) {
         placeholder="Name this view"
         aria-label="Name this view"
         maxLength={60}
-        className="w-44 border-0 border-b border-hairline-strong bg-transparent px-0 py-0 text-caption text-ink outline-none placeholder:text-ink-tertiary focus:border-accent"
+        className="w-44 border-0 border-b border-hairline-strong bg-transparent px-0 py-0 text-caption text-ink outline-none placeholder:text-ink-secondary focus:border-accent"
       />
       <button
         type="button"

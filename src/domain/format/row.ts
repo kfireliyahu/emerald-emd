@@ -485,6 +485,29 @@ export function coerceRow(
 }
 
 /**
+ * **Everything `coerceRow` would refuse in a row, every column at once** —
+ * M55 U5, D-545: a form or a sheet that names the first problem only makes a
+ * person fix three things in three rounds. Each problem names its column; an
+ * unknown key is about the row and names none, and is said alone, as
+ * `coerceRow` says it. Empty when `coerceRow` would accept the row.
+ */
+export function coerceProblems(
+  declaration: FormatDeclaration,
+  offered: Readonly<Record<string, unknown>>,
+  units: UnitTable = SEEDED_UNITS,
+): readonly { readonly column: string | undefined; readonly reason: string }[] {
+  const unknownKey = firstUnknownKey(Object.keys(offered), new Set(offeredKeysOf(declaration)), declaration)
+  if (unknownKey !== undefined) return [{ column: undefined, reason: unknownKey }]
+  const problems: { column: string | undefined; reason: string }[] = []
+  for (const column of declaration.columns) {
+    const companion = companionKeyOf(column)
+    const coerced = coerceValue(column, offered[column.name], companion === undefined ? undefined : offered[companion], units)
+    if (!coerced.ok) problems.push({ column: column.name, reason: coerced.error })
+  }
+  return problems
+}
+
+/**
  * The cells a *partial* row touches — an edit, where a column nobody named is a
  * column left exactly as it was.
  *

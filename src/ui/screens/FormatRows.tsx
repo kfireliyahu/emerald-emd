@@ -62,7 +62,9 @@ import { inputsWithTotals } from '@/domain/format/aggregate.ts'
 import { gridOf, pasted } from '@/domain/format/paste.ts'
 import {
   brokenConstraints,
+  coerceProblems,
   coerceRow,
+  coerceValue,
   currencyKeyOf,
   identityInputsOf,
   readValue,
@@ -124,7 +126,7 @@ import { DashboardView } from '@/ui/formats/Dashboard.tsx'
 import { BoardView } from '@/ui/formats/BoardView.tsx'
 import {
   boardOf,
-  entryNeeds,
+  entryNeedsEach,
   entryOrder,
   oneUnitOf,
   readListSetting,
@@ -280,7 +282,7 @@ export function FormatRows({
   const [failure, setFailure] = useState<string | undefined>(undefined)
   // **A field left with a value the format refused** (M35 U2, D-401): which
   // field, and the sentence — said there, and nothing written.
-  const [refused, setRefused] = useState<{ readonly column: string; readonly text: string } | undefined>()
+  const [refused, setRefused] = useState<readonly { readonly column: string; readonly text: string }[] | undefined>()
   // When this entry was last written from here, as the bar says it.
   const [written, setWritten] = useState<string | undefined>(undefined)
   // Asked about one entry's delete from its own view.
@@ -514,15 +516,25 @@ export function FormatRows({
       return undefined
     }
     const declaration = data.declaration
-    // **A new entry says what it needs in one line** (M53 U3, D-518): the first
-    // required column that holds nothing — "A task needs a title." — said once
-    // Add is pressed.
+    const day = toISODate(today())
+    // **Every problem at once, each at its field** (M55 U5, D-545): what a new
+    // entry still needs, every value refused, every link that names no row —
+    // never the first, then the next once it is put right.
+    const problems: EntryProblem[] = []
+    const say = (column: string | undefined, reason: string): void => {
+      // One sentence a field: what it needs, before what it holds.
+      if (column !== undefined && problems.some((each) => each.column === column)) return
+      problems.push({ column, reason: atItsField(spoken(reason, declaration) ?? reason, column) })
+    }
+    const none = { verdicts: [] as readonly RowVerdict[] }
+    // A new entry says what it needs (M53 U3, D-518) — "A task needs a title."
+    // for every required column that holds nothing, said once Add is pressed.
     if (editing.existing === undefined) {
-      const needs = entryNeeds(declaration.title, entryOrder(declaration.columns, data.places), (column) => {
+      const needs = entryNeedsEach(declaration.title, entryOrder(declaration.columns, data.places), (column) => {
         const text = (draft[column] ?? '').trim()
         return text !== '' && text !== '[]'
       })
-      if (needs !== undefined) return { problem: needs, verdicts: [] as readonly RowVerdict[] }
+      for (const each of needs) say(each.column, each.reason)
     }
     // **An untouched row is refused before it is coerced.** A format with no
     // required column would otherwise accept an entirely blank row, and no
@@ -530,47 +542,57 @@ export function FormatRows({
     // row nobody meant. Asked of the *offered* row, so a currency the form
     // carried forward by itself does not count as having been typed — nor a
     // member a new entry starts at (D-518).
-    const offered = offeredOf(declaration, draft)
-    const touched = editing.existing === undefined ? typedOf(declaration, draft, newRowDefaults(db, declaration, filter, toISODate(today()))) : offered
+    const offered = offeredOf(declaration, draft, day)
+    const touched = editing.existing === undefined ? typedOf(declaration, draft, newRowDefaults(db, declaration, filter, day)) : offered
     if (isEmpty(touched)) {
-      return {
-        problem: 'Nothing has been filled in yet.',
-        verdicts: [] as readonly RowVerdict[],
-      }
+      if (problems.length === 0) say(undefined, 'Nothing has been filled in yet.')
+      return { ...none, problems, problem: joined(problems) }
     }
     const typed = coerceRow(declaration, offered, data.units)
-    if (!typed.ok) return { problem: typed.error, verdicts: [] as readonly RowVerdict[] }
+    if (!typed.ok) {
+      for (const each of coerceProblems(declaration, offered, data.units)) say(each.column, each.reason)
+      // A link that names no row is said with the rest, though the row as a
+      // whole could not be read: each link is asked alone.
+      for (const column of declaration.columns.filter((each) => isLinkType(each.type))) {
+        const alone = coerceValue(column, offered[column.name], undefined, data.units)
+        if (!alone.ok) continue
+        for (const reason of danglingLinks(db, declaration, alone.value, data.formats)) say(column.name, reason)
+      }
+      return { ...none, problems, problem: joined(problems) }
+    }
     // A rule set over this format sets what it matches, and a link a person
     // changed here is theirs from now on (M25 E4, D-273).
     const before = editing.existing === undefined ? undefined : readRow(db, declaration, editing.existing)
     const ruled = withRules(db, declaration, typed.value, before?.cells)
     const coerced = { value: ruled.cells }
 
-    const dangling = [
-      // A link found by a date that found no row, or two (D-350).
-      ...ruled.refusals.map((each) => each.reason),
-      ...danglingLinks(db, declaration, coerced.value, data.formats),
+    // A link found by a date that found no row, or two (D-350).
+    for (const each of ruled.refusals) say(each.column, each.reason)
+    for (const column of declaration.columns.filter((each) => isLinkType(each.type))) {
+      const one = { [column.name]: coerced.value[column.name] ?? null }
+      for (const reason of danglingLinks(db, declaration, one, data.formats)) say(column.name, reason)
       // A row may not name itself (M27 U5, D-303) — only an edit has an id to.
-      ...(editing.existing === undefined ? [] : selfLinks(declaration, editing.existing, coerced.value)),
-    ]
+      if (editing.existing !== undefined) {
+        for (const reason of selfLinks(declaration, editing.existing, one)) say(column.name, reason)
+      }
+    }
     // A unique column the form has no control for yet (D-255) still refuses a
     // repeat here, in words, rather than as SQLite's constraint error.
-    const repeated = repeatedValues(db, declaration, [coerced.value], [editing.existing])
+    for (const each of repeatedValues(db, declaration, [coerced.value], [editing.existing])) say(each.column, each.message)
     // A row constraint (D-259) the form has no control for until M26.
-    const broken = brokenConstraints(declaration, coerced.value)
-    const checked = [...dangling, ...repeated.map((each) => each.message), ...broken]
+    for (const reason of brokenConstraints(declaration, coerced.value)) say(undefined, reason)
     // **And the table's own word** (M29 F2, D-343): the row written and taken
     // back, so what SQLite would refuse is a sentence here before Add, rather
     // than an exception after it.
-    const refused =
-      checked.length > 0
-        ? checked
-        : tableRefusals(
-            db,
-            declaration,
-            [coerced.value],
-            editing.existing === undefined ? undefined : { existing: editing.existing },
-          ).map((each) => each.reason)
+    if (problems.length === 0) {
+      const table = tableRefusals(
+        db,
+        declaration,
+        [coerced.value],
+        editing.existing === undefined ? undefined : { existing: editing.existing },
+      )
+      for (const each of table) say(each.column, each.reason)
+    }
     const staged: StoredRow = { id: editing.existing ?? '', cells: coerced.value }
     // The draft's own figures, one hop through its links, and **its totals** —
     // which fold other rows and not this one, so the stored row's are the
@@ -579,7 +601,8 @@ export function FormatRows({
     const [hopped] = inputsFor(db, declaration, [staged], data.formats)
     const inputs = inputsWithTotals(hopped ?? identityInputsOf(declaration, staged), editing.aggregates)
     return {
-      problem: refused.length > 0 ? refused.join(' ') : undefined,
+      problems,
+      problem: joined(problems),
       verdicts: declaration.identities.map((identity) => ({
         identity,
         verdict: evaluateIdentity(identity, inputs, data.units),
@@ -759,7 +782,7 @@ export function FormatRows({
       navigate(entryPath(declaration.name, NEW_ENTRY) + address, list ? { state: { from: 'list' } } : along)
       return false
     }
-    const batch = stageRows(db, declaration, [offeredOf(declaration, draft)], data.declarations)
+    const batch = stageRows(db, declaration, [offeredOf(declaration, draft, toISODate(today()))], data.declarations)
     const [first] = batch.refusals
     if (first !== undefined) {
       setMoveRefusal(`Not added: ${first.reason}`)
@@ -822,7 +845,10 @@ export function FormatRows({
       const cells = 'cells' in verdict ? verdict.cells : undefined
       if (verdict.problem !== undefined || cells === undefined) {
         setTyped({ key, draft })
-        setRefused({ column, text: verdict.problem ?? 'Nothing has been filled in yet.' })
+        // Each at its own field, and one about the row at the field that was
+        // left (M55 U5, D-545).
+        const said = verdict.problems.length > 0 ? verdict.problems : [{ column: undefined, reason: 'Nothing has been filled in yet.' }]
+        setRefused(said.map((each) => ({ column: each.column ?? column, text: each.reason })))
         return
       }
       const changed = Object.fromEntries(
@@ -841,7 +867,7 @@ export function FormatRows({
         })
       } catch (error) {
         setTyped({ key, draft })
-        setRefused({ column, text: describeTableError(declaration, error).reason })
+        setRefused([{ column, text: describeTableError(declaration, error).reason }])
         return
       }
       setTyped(undefined)
@@ -891,7 +917,11 @@ export function FormatRows({
         oneUnit={data.oneUnit}
         linked={editing.linked}
         today={toISODate(today())}
-        problem={spoken(judged.problem ?? failure, declaration)}
+        problems={
+          failure === undefined
+            ? judged.problems
+            : [...judged.problems, { column: undefined, reason: spoken(failure, declaration) ?? failure }]
+        }
         refused={refused}
         inputs={'inputs' in judged ? judged.inputs : undefined}
         verdicts={judged.verdicts}
@@ -1074,12 +1104,12 @@ export function FormatRows({
     drafts: readonly RowDraft[],
     groups: readonly number[],
     held: readonly number[],
-    said?: { readonly group: number; readonly refusal: NonNullable<FootState['refusal']> },
-  ): FootState['refusal'] => {
-    const found: NonNullable<FootState['refusal']>[] = []
+    said?: { readonly group: number; readonly refusals: FootState['refusals'] },
+  ): FootState['refusals'] => {
+    const found: FootProblem[] = []
     for (const group of held) {
       if (said?.group === group) {
-        found.push(said.refusal)
+        found.push(...said.refusals)
         continue
       }
       const typed = groups
@@ -1089,16 +1119,16 @@ export function FormatRows({
       const refusals = stageRows(
         db,
         declaration,
-        typed.map((at) => offeredOf(declaration, drafts[at] ?? blank)),
+        typed.map((at) => offeredOf(declaration, drafts[at] ?? blank, toISODate(today()))),
         data.declarations,
       ).refusals
       for (const each of refusals) {
-        found.push({ row: typed[each.index] ?? 0, column: each.column, reason: each.reason, more: 0 })
+        found.push({ row: typed[each.index] ?? 0, column: each.column, reason: each.reason })
       }
     }
-    found.sort((a, b) => a.row - b.row)
-    const [first] = found
-    return first === undefined ? undefined : { ...first, more: found.length - 1 }
+    // Every cell at once, each said under it (M55 U5, D-545) — never the first
+    // and then the next once it is put right.
+    return [...found].sort((a, b) => a.row - b.row)
   }
 
   /** Write these foot rows as one batch, or write none of them and say why. */
@@ -1113,28 +1143,27 @@ export function FormatRows({
     const others = foot.held.filter((each) => each !== group && groups.includes(each))
     const typed = rows.filter((at) => !untyped(drafts[at] ?? blank))
     if (typed.length === 0) {
-      setFoot({ drafts, groups, held: others, refusal: judge(drafts, groups, others), dropped })
+      setFoot({ drafts, groups, held: others, refusals: judge(drafts, groups, others), dropped })
       return
     }
     const batch = stageRows(
       db,
       declaration,
-      typed.map((at) => offeredOf(declaration, drafts[at] ?? blank)),
+      typed.map((at) => offeredOf(declaration, drafts[at] ?? blank, toISODate(today()))),
       data.declarations,
     )
-    const refuse = (refusal: NonNullable<FootState['refusal']>): void => {
+    const refuse = (refusals: FootState['refusals']): void => {
       const held = group === undefined ? others : [...others, group]
       setFoot({
         drafts,
         groups,
         dropped,
         held,
-        refusal: judge(drafts, groups, held, group === undefined ? undefined : { group, refusal }),
+        refusals: judge(drafts, groups, held, group === undefined ? undefined : { group, refusals }),
       })
     }
-    const [first] = batch.refusals
-    if (first !== undefined) {
-      refuse({ row: typed[first.index] ?? 0, column: first.column, reason: first.reason, more: 0 })
+    if (batch.refusals.length > 0) {
+      refuse(batch.refusals.map((each) => ({ row: typed[each.index] ?? 0, column: each.column, reason: each.reason })))
       return
     }
     // A write the batch's checks passed and the document still refused is a
@@ -1150,7 +1179,7 @@ export function FormatRows({
       })
     } catch (error) {
       const said = describeTableError(declaration, error)
-      refuse({ row: typed[0] ?? 0, column: said.column, reason: said.reason, more: 0 })
+      refuse([{ row: typed[0] ?? 0, column: said.column, reason: said.reason }])
       return
     }
     spent.current = drafts
@@ -1161,7 +1190,7 @@ export function FormatRows({
       drafts: left,
       groups: leftGroups,
       held: others,
-      refusal: judge(left, leftGroups, others),
+      refusals: judge(left, leftGroups, others),
       dropped,
     })
   }
@@ -1178,7 +1207,7 @@ export function FormatRows({
       ...foot,
       drafts,
       groups,
-      refusal: foot.held.length === 0 ? undefined : judge(drafts, groups, foot.held),
+      refusals: foot.held.length === 0 ? [] : judge(drafts, groups, foot.held),
     })
   }
 
@@ -1455,7 +1484,7 @@ export function FormatRows({
               ? undefined
               : {
                   drafts: shownFoot,
-                  refused: foot.refusal,
+                  refused: foot.refusals.map((each) => ({ ...each, reason: atItsField(screenWords(each.reason, declaration), each.column) })),
                   onChange: typeAt,
                   onLeave: leave,
                   onPaste: paste,
@@ -1541,15 +1570,21 @@ export function FormatRows({
         />
       )}
 
-      {(foot.refusal !== undefined || foot.dropped > 0) && shownRollup === undefined && (
+      {(foot.refusals.length > 0 || foot.dropped > 0) && shownRollup === undefined && (
         <div className="fc-pop-enter shrink-0 border-t border-hairline px-6 py-2 text-caption" role="status">
-          {foot.refusal !== undefined && (
+          {foot.refusals.length > 0 && (
+            // Each cell's sentence is under the cell (M55 U5, D-545); this line
+            // counts them, and says in full what is about a row as a whole.
             <p className="text-negative" data-tour="refusal">
-              <span className="font-medium">Nothing was written.</span> Row{' '}
-              {String(data.rows.length + 1 + foot.refusal.row)}
-              {foot.refusal.column === undefined ? '' : `, ${foot.refusal.column}`}:{' '}
-              <Bidi>{screenWords(foot.refusal.reason, declaration)}</Bidi>
-              {foot.refusal.more > 0 ? ` And ${String(foot.refusal.more)} more.` : ''}
+              <span className="font-medium">Nothing was written.</span>
+              {cellsToPutRight(foot.refusals)}
+              {foot.refusals
+                .filter((each) => each.column === undefined)
+                .map((each, at) => (
+                  <span key={at}>
+                    {' '}Row {String(data.rows.length + 1 + each.row)}: <Bidi>{screenWords(each.reason, declaration)}</Bidi>
+                  </span>
+                ))}
             </p>
           )}
           {foot.dropped > 0 && (
@@ -1725,18 +1760,28 @@ function sortOf(declaration: FormatDeclaration, order: Order | undefined): Order
   return declaration.columns.some(named) || (declaration.derived ?? []).some(named) ? order : defaultOrder(declaration)
 }
 
-/** The foot's drafts, the batch each belongs to, and the last refusal. */
+/** One cell, or one row, of the foot that stops a write — and why (M55 U5, D-545). */
+type FootProblem = FootRefusal & { readonly reason: string }
+
+/** " Two cells to put right, each said under it." — or nothing when every problem is a row's. */
+function cellsToPutRight(refusals: readonly FootProblem[]): string {
+  const cells = refusals.filter((each) => each.column !== undefined).length
+  if (cells === 0) return ''
+  return ` ${cells === 1 ? 'One cell' : `${String(cells)} cells`} to put right, each said under it.`
+}
+
+/** The foot's drafts, the batch each belongs to, and every refusal. */
 interface FootState {
   readonly drafts: readonly RowDraft[]
   readonly groups: readonly number[]
-  readonly refusal: (FootRefusal & { readonly reason: string; readonly more: number }) | undefined
+  readonly refusals: readonly FootProblem[]
   /** The batches left and refused, by group, until they are written (M29 F2). */
   readonly held: readonly number[]
   /** Cells a paste had past the last column. */
   readonly dropped: number
 }
 
-const EMPTY_FOOT: FootState = { drafts: [], groups: [], refusal: undefined, held: [], dropped: 0 }
+const EMPTY_FOOT: FootState = { drafts: [], groups: [], refusals: [], held: [], dropped: 0 }
 
 /** Empty rows at the foot, at the least. */
 const FOOT_ROWS = 3
@@ -1993,6 +2038,28 @@ function linkedRows(
   const lines = entryLinked(db, declaration, declarations, row)
   const labels = new Map([...lines].map(([id, line]) => [id, linkedRowOf(line, new Map()).name]))
   return new Map([...lines].map(([id, line]) => [id, linkedRowOf(line, labels)]))
+}
+
+/** A problem with an entry, at its field — or about the row, when `column` is nothing (M55 U5, D-545). */
+export interface EntryProblem {
+  readonly column: string | undefined
+  readonly reason: string
+}
+
+/**
+ * A sentence said under its own field, without the field's name in front —
+ * `milestone: no milestone is called "M9".` reads `No milestone is called "M9".`
+ * there (M55 U5, D-545).
+ */
+function atItsField(reason: string, column: string | undefined): string {
+  if (column === undefined || !reason.startsWith(`${column}: `)) return reason
+  const rest = reason.slice(column.length + 2)
+  return rest.charAt(0).toUpperCase() + rest.slice(1)
+}
+
+/** Every problem as one line, or nothing when there is none. */
+function joined(problems: readonly EntryProblem[]): string | undefined {
+  return problems.length === 0 ? undefined : problems.map((each) => each.reason).join(' ')
 }
 
 /** A refusal as the screen says it: the conversation's keys and tool names left out (M33 U2). */

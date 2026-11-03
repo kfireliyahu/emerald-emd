@@ -168,7 +168,7 @@ export function ListLines(props: ListLinesProps) {
         className="relative flex w-full items-start gap-2.5 bg-accent-soft px-3 py-1.5 before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:bg-accent"
       >
         {done !== undefined && <span className="mt-0.5 inline-flex size-4 flex-none border-[1.5px] border-ink-secondary" aria-hidden />}
-        <Bidi className={`min-w-0 truncate text-body ${props.draft.title === '' ? 'text-ink-tertiary italic' : 'text-ink'}`}>
+        <Bidi className={`min-w-0 truncate text-body ${props.draft.title === '' ? 'text-ink-secondary italic' : 'text-ink'}`}>
           {props.draft.title === '' ? `A new ${props.draft.one}` : props.draft.title}
         </Bidi>
       </div>

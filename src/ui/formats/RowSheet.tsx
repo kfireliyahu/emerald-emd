@@ -1,4 +1,4 @@
-import { useContext, useRef, useState } from 'react'
+import { Fragment, useContext, useId, useRef, useState } from 'react'
 
 import type { RowAggregate } from '@/data/repositories/formatJoinRepository.ts'
 import type { RowDerived } from '@/data/repositories/formatDerivedRepository.ts'
@@ -57,7 +57,8 @@ export interface FootRefusal {
 /** The empty rows at the foot, and what typing or pasting into them does. */
 export interface Foot {
   readonly drafts: readonly RowDraft[]
-  readonly refused: FootRefusal | undefined
+  /** Every cell the last write refused, each with its sentence (M55 U5, D-545). */
+  readonly refused: readonly (FootRefusal & { readonly reason: string })[]
   readonly onChange: (row: number, key: string, text: string) => void
   /** Focus left a row, or Enter was pressed in it. */
   readonly onLeave: (row: number) => void
@@ -156,6 +157,11 @@ export function RowSheet({
       }
     | undefined
 }) {
+  // **A refused cell is outlined and named under it** (M55 U5, D-545): every
+  // cell at once, its sentence in a line beneath the row, in its own column.
+  const saidId = useId()
+  const why = (row: number, column: string): string | undefined =>
+    foot?.refused.find((each) => each.row === row && each.column === column)?.reason
   // Selecting rows for the conversation (M51 U7): only in a frame whose host
   // takes model context; Ctrl-click or `x` on the cursor's row.
   const conversation = useContext(Conversation)
@@ -554,7 +560,7 @@ export function RowSheet({
               // `accent-soft` would put the accent behind a column of figures.
               className={`${onOpen === undefined ? '' : 'cursor-pointer '}group border-b border-hairline transition-colors duration-[var(--duration-micro)] ${selection?.has(row.id) === true ? 'bg-accent-soft' : 'hover:bg-surface'}`}
             >
-              <td className="border-r border-hairline px-2 py-1.5 text-right align-top text-caption text-ink-tertiary tabular-nums">
+              <td className="border-r border-hairline px-2 py-1.5 text-right align-top text-caption text-ink-secondary tabular-nums">
                 {index + 1}
               </td>
               {columns.map((column) => (
@@ -664,8 +670,8 @@ export function RowSheet({
           ))}
 
           {foot?.drafts.map((draft, at) => (
+            <Fragment key={`foot-${String(at)}`}>
             <tr
-              key={`foot-${String(at)}`}
               data-motion-key={`foot-${String(at)}`}
               className="border-b border-hairline"
               onBlur={(event) => {
@@ -677,7 +683,7 @@ export function RowSheet({
               // The cursor's keys are the stored rows'; a field keeps its own.
               onKeyDown={(event) => event.stopPropagation()}
             >
-              <td className="border-r border-hairline px-2 py-1.5 text-right align-top text-caption text-ink-tertiary tabular-nums">
+              <td className="border-r border-hairline px-2 py-1.5 text-right align-top text-caption text-ink-secondary tabular-nums">
                 {first + at}
               </td>
               {columns.map((column, across) => (
@@ -689,7 +695,8 @@ export function RowSheet({
                   row={at}
                   across={across}
                   choices={choicesFor(column, links)}
-                  wrong={foot.refused?.row === at && foot.refused.column === column.name}
+                  wrong={why(at, column.name) !== undefined}
+                  said={why(at, column.name) === undefined ? undefined : `${saidId}-${String(at)}-${String(across)}`}
                   onChange={(key, text) => foot.onChange(at, key, text)}
                   onEnter={() => {
                     foot.onLeave(at)
@@ -711,6 +718,36 @@ export function RowSheet({
                 }
               />
             </tr>
+            {columns.some((column) => why(at, column.name) !== undefined) && (
+              // **Why, under the cell it is about** (M55 U5, D-545): each
+              // refused cell's sentence in its own column, all of them at once.
+              <tr data-motion-key={`foot-${String(at)}-why`} className="border-b border-hairline">
+                <td className="border-r border-hairline" />
+                {columns.map((column, across) => {
+                  const reason = why(at, column.name)
+                  return (
+                    <td
+                      key={column.name}
+                      id={reason === undefined ? undefined : `${saidId}-${String(at)}-${String(across)}`}
+                      className="border-r border-hairline px-3 py-1 align-top text-caption text-negative"
+                    >
+                      {reason === undefined ? null : <Bidi>{reason}</Bidi>}
+                    </td>
+                  )
+                })}
+                <td
+                  colSpan={
+                    derived.length +
+                    (adding === undefined ? 0 : 1) +
+                    declaration.aggregates.length +
+                    (identities ? 1 : 0) +
+                    1 +
+                    (onAddColumn === undefined ? 0 : 1)
+                  }
+                />
+              </tr>
+            )}
+            </Fragment>
           ))}
         </Flip>
       </Flip>
@@ -730,6 +767,7 @@ function FootCell({
   across,
   choices,
   wrong,
+  said,
   onChange,
   onEnter,
   onMove,
@@ -743,6 +781,8 @@ function FootCell({
   across: number
   choices: readonly Choice[] | undefined
   wrong: boolean
+  /** The id of the sentence under the cell saying why it was refused. */
+  said?: string | undefined
   onChange: (key: string, text: string) => void
   onEnter: () => void
   onMove: (down: boolean) => void
@@ -762,6 +802,7 @@ function FootCell({
     'data-tour': row === 0 ? `foot-${column.name}` : undefined,
     'aria-label': column.name,
     'aria-invalid': wrong,
+    'aria-describedby': said,
     // A time of day is typed as it is said — `9`, `17:30` (D-335).
     placeholder: column.type === 'time' ? '09:00' : undefined,
     dir: 'auto',

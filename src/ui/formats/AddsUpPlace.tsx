@@ -43,7 +43,7 @@ export function AddsUpPlace({
       aria-label="Claims"
       className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline px-6 py-2"
     >
-      <span className="text-label text-ink-tertiary uppercase">Claims</span>
+      <span className="text-label text-ink-secondary uppercase">Claims</span>
 
       {shown.length > 0 ? (
         <ul className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">

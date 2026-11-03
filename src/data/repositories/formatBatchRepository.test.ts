@@ -84,6 +84,16 @@ describe('a batch of rows, judged whole', () => {
     ])
   })
 
+  it('names every cell a row gets wrong at once, not the first and then the next (M55 U5)', async () => {
+    const db = await document()
+    const batch = stageRows(db, BUY, [{ count: 'two', on: 'soon' }])
+    expect(batch.refusals.map(({ index, column: named }) => [index, named])).toEqual([
+      [0, 'item'],
+      [0, 'count'],
+      [0, 'on'],
+    ])
+  })
+
   it('names the column a repeat is in, across the batch', async () => {
     const db = await document()
     const batch = stageRows(db, SHOP, [{ name: 'Market' }, { name: 'Market' }])

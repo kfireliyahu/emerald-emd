@@ -10,10 +10,10 @@ import { Bidi } from '@/ui/Bidi.tsx'
  */
 export function ReadersLine({ readers }: { readers: readonly Reader[] }) {
   if (readers.length === 0) {
-    return <span className="text-caption text-ink-tertiary">No readers yet</span>
+    return <span className="text-caption text-ink-secondary">No readers yet</span>
   }
   return (
-    <span className="text-caption text-ink-tertiary">
+    <span className="text-caption text-ink-secondary">
       Read from{' '}
       {readers.map((reader, index) => (
         <span key={reader.signature}>

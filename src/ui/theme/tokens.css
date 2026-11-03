@@ -799,6 +799,23 @@ html {
   animation: fc-fade var(--duration-fade) var(--ease-out);
 }
 
+/* A placeholder is often a field's only words — quick add's, a search's — so
+   it is read, and reads at AA: `ink-secondary`, never the half-ink the reset
+   gives it (M55 U5, D-545; rule: Contrast 4.5:1 for text). In the base layer,
+   so a field that asks for another colour still gets it. */
+@layer base {
+  ::placeholder {
+    color: var(--color-ink-secondary);
+  }
+}
+
+/* A field refused, outlined where it is (M55 U5, D-545): the entry's seamless
+   field shows its edge in `negative` until it is put right, and the sentence
+   under it says why. Pointing at it or typing in it draws its usual edge. */
+.fc-problem :is(input, textarea):not(:hover):not(:focus) {
+  border-color: var(--color-negative);
+}
+
 /* A popover or panel arriving over the page. */
 @keyframes fc-pop-in {
   from {

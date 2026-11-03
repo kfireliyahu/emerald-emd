@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
 import { formatMoney, toDecimalString } from '@/core/money.ts'
 import type { RowDerived } from '@/data/repositories/formatDerivedRepository.ts'
@@ -118,7 +118,7 @@ export function EntryView({
   oneUnit,
   linked,
   today,
-  problem,
+  problems,
   refused,
   inputs,
   verdicts,
@@ -172,10 +172,14 @@ export function EntryView({
   linked: ReadonlyMap<string, LinkedRow>
   /** Today, `YYYY-MM-DD`, for a day said against it. */
   today: string
-  /** Why the draft is not yet a row — said at the foot of a new one. */
-  problem: string | undefined
-  /** A field left with a value the format refused: which, and the sentence. */
-  refused: { readonly column: string; readonly text: string } | undefined
+  /**
+   * Why the draft is not yet a row (M55 U5, D-545): every problem at once,
+   * each at its field — or about the row, when it names none — said on a new
+   * entry once Add is pressed.
+   */
+  problems: readonly { readonly column: string | undefined; readonly reason: string }[]
+  /** The fields left with a value the format refused: which, and the sentence, each at its own. */
+  refused: readonly { readonly column: string; readonly text: string }[] | undefined
   /** The row as numbers, for the picture beside each verdict. */
   inputs: IdentityInputs | undefined
   /** What the row proves. */
@@ -255,7 +259,8 @@ export function EntryView({
   useLayoutEffect(() => {
     if (focusing === undefined) return
     setFocusing(undefined)
-    const at = page.current?.querySelector(`[data-field="${CSS.escape(focusing)}"]`)
+    // The first field a problem is said at, in the page's order (M55 U5).
+    const at = page.current?.querySelector(focusing === FIRST_PROBLEM ? '.fc-problem' : `[data-field="${CSS.escape(focusing)}"]`)
     const control = at?.querySelector<HTMLElement>('input, textarea, select, button:not([aria-label$=": more"]), [tabindex="0"]')
     if (control === null || control === undefined) return
     control.focus()
@@ -358,6 +363,18 @@ export function EntryView({
       }),
   )
 
+  // **What is wrong, at its field** (M55 U5, D-545): what a field left was
+  // refused for, and — once Add is pressed on a new entry — every problem the
+  // draft has, so a person puts them all right in one round.
+  const shownProblems = fresh && tried ? problems : []
+  const problemAt = (name: string): string | undefined =>
+    refused?.find((each) => each.column === name)?.text ?? shownProblems.find((each) => each.column === name)?.reason
+  const atFields = [
+    ...(refused ?? []).map((each) => each.column),
+    ...shownProblems.flatMap((each) => (each.column === undefined ? [] : [each.column])),
+  ]
+  const fieldProblems = new Set(shownProblems.flatMap((each) => (each.column === undefined ? [] : [each.column]))).size
+
   const field = (column: ColumnDeclaration, part: Part) => (
     <Field
       key={column.name}
@@ -377,7 +394,7 @@ export function EntryView({
       readOnly={readOnly}
       fresh={fresh}
       marked={failing.has(column.name)}
-      refused={refused?.column === column.name ? refused.text : undefined}
+      refused={problemAt(column.name)}
       mover={mover(column)}
       dimmed={isHidden(column)}
       onChange={(key, text) => onChange(withField(draft, key, text))}
@@ -404,7 +421,7 @@ export function EntryView({
   const shown = entryShown(ordered, layout, {
     holds,
     hidden: isHidden,
-    opened: refused === undefined ? opened : new Set([...opened, refused.column]),
+    opened: atFields.length === 0 ? opened : new Set([...opened, ...atFields]),
     asked: fresh ? asked : undefined,
     revealed,
     grid: (drawnFigures) =>
@@ -419,10 +436,12 @@ export function EntryView({
   const linkColumns = shown.links
   const hasFigures = figures.length > 0 || workedOut.length > 0 || folded.length > 0 || verdicts.length > 0
   // **Add says what is missing only once it is pressed**, and Enter in a new
-  // entry's title presses it.
+  // entry's title presses it — every problem at once, each at its field, and
+  // the first of them focused (M55 U5, D-545).
   const add = (): void => {
     setTried(true)
-    if (problem === undefined) onAdd()
+    if (problems.length === 0) onAdd()
+    else if (problems.some((each) => each.column !== undefined)) setFocusing(FIRST_PROBLEM)
   }
   // The foot's line (U1's choice a): the names to fill, and "N hidden" at its end.
   const emptyLine = (!readOnly && shown.empty.length > 0) || shown.hidden > 0
@@ -638,9 +657,16 @@ export function EntryView({
           <Button variant="ghost" onClick={onBack}>
             Cancel
           </Button>
-          {tried && problem !== undefined && (
-            <span className="text-caption text-negative" role="alert">
-              {problem}
+          {tried && problems.length > 0 && (
+            // The fields say their own; the foot counts them and says what is
+            // about the row as a whole (M55 U5, D-545).
+            <span className="text-caption text-negative" role="alert" data-tour="refusal">
+              {[
+                ...(fieldProblems === 0
+                  ? []
+                  : [`Not added: ${fieldProblems === 1 ? 'one field to put right' : `${String(fieldProblems)} fields to put right`}.`]),
+                ...problems.filter((each) => each.column === undefined).map((each) => each.reason),
+              ].join(' ')}
             </span>
           )}
         </div>
@@ -684,6 +710,9 @@ function PagerStep({
  * so a filled entry reads as text. The sheet's `FIELD` with its border and
  * plane taken away, rather than a second look of its own.
  */
+/** What `focusing` holds to focus the first refused field on the page, wherever it is. */
+const FIRST_PROBLEM = ' first problem'
+
 const SEAMLESS =
   'min-h-8 -mx-2 border border-transparent bg-transparent px-2 py-0.5 outline-none ' +
   'hover:border-hairline focus:border-accent focus:bg-elevated ' +
@@ -757,6 +786,22 @@ function Field({
   onOpen: (format: string, id: string) => void
 }) {
   const [focused, setFocused] = useState(false)
+  // **A refused field is outlined and named there** (M55 U5, D-545): every
+  // control in it is `aria-invalid` and described by the sentence under it —
+  // set here once for whichever control the column's type draws.
+  const box = useRef<HTMLElement>(null)
+  const said = useId()
+  useLayoutEffect(() => {
+    for (const control of box.current?.querySelectorAll('input, textarea') ?? []) {
+      if (refused === undefined) {
+        control.removeAttribute('aria-invalid')
+        if (control.getAttribute('aria-describedby') === said) control.removeAttribute('aria-describedby')
+      } else {
+        control.setAttribute('aria-invalid', 'true')
+        control.setAttribute('aria-describedby', said)
+      }
+    }
+  })
   // The label as words (M53 U3): `done_on` reads "done on", `estimate_h` "estimate".
   const label = entryLabel(column)
   const empty = (draft[column.name] ?? '').trim() === '' || draft[column.name] === '[]'
@@ -855,7 +900,8 @@ function Field({
 
   return (
     <section
-      className={`group/field relative flex min-w-0 ${part === 'header' ? 'flex-row items-center gap-2' : 'flex-col gap-1'} border-t-2 ${drag !== undefined && drag.over === column.name && drag.accepts(column.name) ? 'border-accent' : 'border-transparent'} ${drag?.dragging === column.name ? 'opacity-50' : dimmed ? 'opacity-[.55]' : ''}`}
+      ref={box}
+      className={`group/field relative flex min-w-0 ${refused === undefined ? '' : 'fc-problem'} ${part === 'header' ? 'flex-row items-center gap-2' : 'flex-col gap-1'} border-t-2 ${drag !== undefined && drag.over === column.name && drag.accepts(column.name) ? 'border-accent' : 'border-transparent'} ${drag?.dragging === column.name ? 'opacity-50' : dimmed ? 'opacity-[.55]' : ''}`}
       aria-label={column.name}
       data-field={column.name}
       onFocus={() => {
@@ -906,7 +952,11 @@ function Field({
       )}
       {control}
       {hint}
-      {refused !== undefined && <p className="max-w-prose text-caption text-negative">{refused}</p>}
+      {refused !== undefined && (
+        <p id={said} className="max-w-prose text-caption text-negative">
+          {refused}
+        </p>
+      )}
     </section>
   )
 }
@@ -1723,24 +1773,17 @@ function Control({
         )
       case 'date':
       case 'month':
+        // **Typed as the table writes it** (M55 U5, D-545): `2026-09-03`, or a
+        // date as `today`, `yesterday`, `tomorrow` — and the whole field still
+        // opens the calendar on a click (M29 F2), empty or filled.
         return (
-          <input
-            className={`${SEAMLESS} w-44 tabular-nums`}
-            type={column.type}
-            aria-label={column.name}
-            autoFocus={auto}
+          <TimeField
+            kind={column.type}
+            label={column.name}
             value={value}
-            onChange={(event) => set(event.target.value)}
+            onChange={set}
+            autoFocus={auto}
             onKeyDown={enter}
-            // **The whole field opens the calendar** (M29 F2), empty or filled —
-            // not only the small glyph at its end.
-            onClick={(event) => {
-              try {
-                event.currentTarget.showPicker()
-              } catch {
-                // Not here, or not now; the field still takes a typed date.
-              }
-            }}
           />
         )
       case 'instant':
@@ -1955,7 +1998,18 @@ function LinkField({
   const [changing, setChanging] = useState(false)
   const [typed, setTyped] = useState<string | undefined>(undefined)
   const target = column.target
-  if (value !== '' && !changing && target !== undefined) {
+  // A name typed whole is that row; anything else is kept as typed, and the
+  // write resolves it by name or refuses it, naming it.
+  const keep = (text: string): void => {
+    const exact = choices.filter((each) => each.label === text.trim())
+    setTyped(undefined)
+    setChanging(false)
+    onPick(exact.length === 1 && exact[0] !== undefined ? exact[0].id : text.trim())
+  }
+  // A value no row is called stays a field holding what was typed, with its
+  // sentence under it — never a link to a row that is not there (M55 U5).
+  const resolved = choices.some((each) => each.id === value) || named(value) !== value
+  if (value !== '' && !changing && target !== undefined && resolved) {
     const pencil = (
       <IconAction label={`Change ${column.name}`} onClick={() => setChanging(true)}>
         <path d="M4 20h4L19 9l-4-4L4 16v4Z" />
@@ -2008,16 +2062,15 @@ function LinkField({
         }
         if (event.key === 'Enter' && typed !== undefined) {
           event.preventDefault()
-          // A name typed whole is that row; anything else is kept as typed,
-          // and the write resolves it by name or refuses it, naming it.
-          const exact = choices.filter((each) => each.label === typed.trim())
-          setTyped(undefined)
-          setChanging(false)
-          onPick(exact.length === 1 && exact[0] !== undefined ? exact[0].id : typed.trim())
+          keep(typed)
         }
       }}
       onBlur={() => {
+        // **Leaving keeps what was typed, as Enter does** (M55 U5, D-545): a
+        // name typed and left is the draft's, so Add names it — "No milestone
+        // is called M9" — rather than calling the field empty.
         if (typed === undefined) setChanging(false)
+        else keep(typed)
       }}
     />
   )
@@ -2032,18 +2085,33 @@ function TimeField({
   label,
   value,
   onChange,
+  kind = 'time',
+  autoFocus,
+  onKeyDown,
 }: {
   label: string
   value: string
   onChange: (text: string) => void
+  /**
+   * **A date or a month is typed the same way** (M55 U5, D-545): as the table
+   * writes it, `2026-09-03` — a date as `today`, `yesterday` or `tomorrow`
+   * too — never the platform's mm/dd/yyyy field; a click still opens its
+   * calendar.
+   */
+  kind?: 'time' | 'date' | 'month'
+  autoFocus?: boolean
+  onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void
 }) {
   const picker = useRef<PickerHandle>(null)
-  // `1430`, `2:30pm` — shown as `14:30` while typed, and that once left (D-344).
-  const typed = useTyped('time', value)
+  // `1430`, `2:30pm` — shown as `14:30` while typed, and that once left (D-344);
+  // `tomorrow` shown as the day it names, and that once left.
+  const typed = useTyped(kind, value)
   return (
     <span className="relative inline-flex">
       <input
-        className={`${SEAMLESS} w-32 tabular-nums`}
+        className={`${SEAMLESS} ${kind === 'time' ? 'w-32' : 'w-44'} tabular-nums`}
+        autoFocus={autoFocus}
+        onKeyDown={onKeyDown}
         style={typed.style}
         aria-label={label}
         // The demo tour's anchor (M33 U7): `field-end`, as a text field's is.
@@ -2056,10 +2124,10 @@ function TimeField({
           if (settled !== event.target.value) onChange(settled)
         }}
         onClick={() => picker.current?.open()}
-        placeholder="09:00"
+        placeholder={kind === 'time' ? '09:00' : kind === 'date' ? 'YYYY-MM-DD or today' : 'YYYY-MM'}
       />
       <TypedHint completion={typed.completion} />
-      <NativePicker ref={picker} kind="time" value={value} label={label} onPick={onChange} />
+      <NativePicker ref={picker} kind={kind} value={value} label={label} onPick={onChange} />
     </span>
   )
 }

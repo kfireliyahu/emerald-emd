@@ -1,9 +1,11 @@
 import type { CSSProperties } from 'react'
 
+import { toISODate } from '@/core/time.ts'
 import type { ColumnType } from '@/domain/format/declaration.ts'
 import { completionOf, settledText, type Completion } from '@/domain/format/completion.ts'
 import { CURRENCIES, currencyOf } from '@/domain/format/currency.ts'
 import { ChoiceField, type Choice } from '@/ui/components/ChoiceField.tsx'
+import { today } from '@/ui/today.ts'
 
 /**
  * **What a typed percent or time will be kept as, drawn beside it** — M29 F3,
@@ -23,12 +25,14 @@ export function useTyped(type: ColumnType, text: string): {
   readonly style: CSSProperties | undefined
   readonly settle: (text: string) => string
 } {
-  const completion = completionOf(type, text)
+  // A date takes `today`, `yesterday` and `tomorrow` too (M55 U5, D-545).
+  const day = type === 'date' ? toISODate(today()) : undefined
+  const completion = completionOf(type, text, day)
   const shown = hintText(completion)
   return {
     completion,
     style: shown === undefined ? undefined : { paddingRight: `calc(${String(shown.length)}ch + 0.5rem)` },
-    settle: (typed) => settledText(type, typed),
+    settle: (typed) => settledText(type, typed, day),
   }
 }
 
