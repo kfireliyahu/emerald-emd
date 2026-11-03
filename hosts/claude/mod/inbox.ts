@@ -35,11 +35,17 @@
  * never in the middle of a turn. A prompt after a change the watch has not yet
  * read waits for that one read.
  *
+ * **A change it reads is the pane's cue too** (M56 F1): a reading whose size
+ * or time differs from the one before calls the pane's `documentChanged`, and
+ * an open pane reads its answer again — the only watch on the document is
+ * this one.
+ *
  * Read-only, as the pane is: `start_here` and `format_rows`, nothing else.
  */
 import type { EngineInterface, On } from 'claude-code'
 
 import { ANSWERED_MARK, arrivedToast, inboxAnswer, inboxRows, PRINTED_NOT_DRAWN, worktreeNote, type InboxRow, type Told } from './inboxText.ts'
+import { documentChanged } from './pane.tsx'
 import { projectDocument, type ProjectDocument, type ProjectFiles } from './project.ts'
 import { showStatus, unitsFromTable } from './status.ts'
 
@@ -119,7 +125,9 @@ async function readUnits($: EngineInterface, path: string, rows: Reading['rows']
 /**
  * Reads the inbox's new rows, once at a time; undefined when it could not.
  * The stamp is taken first, so a write that lands while it reads leaves the
- * reading stale, never wrong.
+ * reading stale, never wrong. A reading that is not the first, of a document
+ * whose stamp moved, tells the pane (`documentChanged`) — whether the watch
+ * or a prompt read it.
  */
 function readInbox($: EngineInterface, path: string): Promise<Reading | undefined> {
   inFlight ??= (async () => {
@@ -128,7 +136,9 @@ function readInbox($: EngineInterface, path: string): Promise<Reading | undefine
     const answer = await ask($, 'format_rows', { path, format: 'inbox', match: { state: 'new' } })
     if (answer === undefined) return undefined
     const reading: Reading = { ...stamp, rows: answer.isError ? undefined : inboxRows(answer.text) }
+    const before = cache
     cache = reading
+    if (before !== undefined && !isCurrent(before, stamp)) documentChanged($)
     void readUnits($, path, reading.rows).catch(() => undefined)
     return reading
   })()

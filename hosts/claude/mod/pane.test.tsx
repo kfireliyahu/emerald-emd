@@ -94,6 +94,8 @@ function world(
 ) {
   const calls: { tool: string; args: Record<string, unknown> }[] = []
   const opened: string[] = []
+  // The document's time, which another process moves by writing to it.
+  const stamp = { mtimeMs: 0 }
   // The engine hands a hook the path resolved: on Windows with a drive and backslashes.
   const norm = (path: string) => path.replace(/\\/g, '/').replace(/^[A-Za-z]:/, '')
   const strip = (path: string) => norm(path).replace(/\/$/, '')
@@ -103,7 +105,7 @@ function world(
     return { value: text }
   })
   on('fs.stat', (_, e) => {
-    if (files[norm(e.path)] !== undefined) return { value: { kind: 'file', size: 1, mtimeMs: 0, isLink: false } }
+    if (files[norm(e.path)] !== undefined) return { value: { kind: 'file', size: 1, mtimeMs: stamp.mtimeMs, isLink: false } }
     if (Object.keys(files).some((path) => path.startsWith(`${strip(e.path)}/`))) {
       return { value: { kind: 'dir', size: 0, mtimeMs: 0, isLink: false } }
     }
@@ -151,7 +153,7 @@ function world(
   })
   // The reads run on a timer of their own: `clock.settle()` lets them land.
   const clock = mock.clock(on)
-  return { calls, opened, store, clock, checked }
+  return { calls, opened, store, clock, checked, stamp }
 }
 
 test('in a folder with one document the pane opens and shows what start_here answers, for the person', async ($, on) => {
@@ -317,4 +319,37 @@ test('a long list shows its first few and says how many more', async ($, on) => 
     expect((await ui.find({ type: 'Text', text: /^M3 U1$/ }))?.text).toBe('M3 U1')
     await ui.unmount()
   }
+})
+
+test('a change from outside the session, seen by the watch, makes an open pane read again', async ($, on) => {
+  const { calls, clock, stamp } = world(on, { [DOCUMENT]: '' }, { start: [START] })
+  await $.session.start({ cwd: PROJECT, surface: 'desktop', isInteractive: true })
+  await clock.settle()
+  const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
+  const reads = () => calls.filter((call) => call.tool === 'start_here').length
+  expect(reads()).toBe(1)
+
+  // The watch's first look is its baseline, and nothing changed since.
+  await clock.advance(5000)
+  await clock.advance(5000)
+  expect(reads()).toBe(1)
+
+  // Another process writes the document.
+  stamp.mtimeMs = 1
+  await clock.advance(5000)
+  await clock.settle()
+  expect(reads()).toBe(2)
+  expect((await ui.find({ type: 'Text', text: /renamed/ }))?.text).toBe('Public API, renamed')
+  await ui.unmount()
+})
+
+test('a pane the person closed reads nothing when the document changes from outside', async ($, on) => {
+  const { calls, clock, stamp } = world(on, { [DOCUMENT]: '' }, { start: [START] }, { [`closed:${DOCUMENT}`]: true })
+  await $.session.start({ cwd: PROJECT, surface: 'desktop', isInteractive: true })
+  await clock.settle()
+  await clock.advance(5000)
+  stamp.mtimeMs = 1
+  await clock.advance(5000)
+  await clock.settle()
+  expect(calls.filter((call) => call.tool === 'start_here')).toEqual([])
 })

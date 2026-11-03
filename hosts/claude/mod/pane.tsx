@@ -17,7 +17,9 @@
  *   rules into the project's settings) it reads; where it is not, the pane holds
  *   a "Read" button, and the dialog follows the person's own press.
  * - **It redraws after an emerald write** — any tool of an emerald server the
- *   server does not call read-only — once that call has answered.
+ *   server does not call read-only — once that call has answered; and when
+ *   the document changed from outside the session, which the inbox's watch
+ *   notices and tells it through `documentChanged` (M56 F1).
  * - **`/emerald show <format> [view]`** puts one format, or one of its saved
  *   views, in the same pane; `/emerald` alone puts the project back.
  * - **It looks like the host's own panes** (M56 F1): a heading per section in
@@ -159,6 +161,15 @@ async function open($: EngineInterface, document: string, isNew: boolean): Promi
   refresh($)
   await $.ui.open({ id: PANE, title: titleOf(document) })
   $.ui.invalidate('ui.render')
+}
+
+/**
+ * The document changed since it was last read, from anywhere — another
+ * session, the app, an editor: the inbox's watch saw it (`inbox.ts`, the one
+ * timer on the document). An open pane reads it again; a closed one nothing.
+ */
+export function documentChanged($: EngineInterface): void {
+  if (isOpen) refresh($)
 }
 
 /** Whether a call that answered went to an emerald server and may have changed a document. */
