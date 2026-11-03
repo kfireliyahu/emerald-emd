@@ -4638,6 +4638,15 @@ question: Where does U1's input view live in the code, and what do the seams the
 answer: inputPath(format, name) is #/formats/<f>/input/<view>; bare /input is a new one. Both are FormatRows input, so the list, the link maker and judgeEntry are entry/new's; judgeEntry(draft, startsAt) treats it as a new row. Add writes by insertRows; Undo is deleteRows, refused with 'Kept: N rows link to it' while rowsLinkingTo finds one. A row starts at entryDefaults with the view's defaults and no address. savedViewPath takes the view's name for kind input. The + menu's New view/New chart are ViewForm/ChartForm with place=false (makeView/makeChart write no block). Quick add still writes a title alone; where a required column is left it opens the default input view with the typed draft as prefill (U4 draws the fields inline). The frame draws /input/:view read-only; /input is NOT_IN_FRAME. Input views are never tabs (format strip, link views).
 state: live
 
+### D-557
+date: 2026-11-03
+milestone: M55
+scope: app
+title: An input view's dashboard block judges and writes its row as record_format_rows does (stageRows, then insertRows), every refusal at its field; New input view in Add a block saves the view and its block in one transaction; quick add with the view's fields writes each into its column and opens the input view when a required one is left; the conversation's dashboard text names the block as a form
+question: How does a dashboard block, with no entry beside it, judge and write the row its input view adds, and how do New input view and quick add with the view's fields write?
+answer: Through the batch record_format_rows runs (stageRows, insertRows), every refusal at its column; makeInputView saves the view and places its block in one transaction; quick add takes the default input view's asked columns, each starting at the group's value or the view's default, and opens the input view when a required column is left; show_format's dashboard text calls the block a form. A block draws no + New on a link field.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -6680,6 +6689,11 @@ state: open
 unit: M54 U1
 should: Every bad field is marked at once, with its reason beside it and aria-invalid on it (Nielsen: visibility of system status; error recovery).
 breaks: Entry: in the table the message shows at the page's bottom-left ("Row 6, date: date is required…"), only date is outlined, and the abc problem appears only after date is fixed — three problems, three rounds. On the form, "A card charge needs a date." sits in the footer beside Cancel and no field is marked.
+state: open
+
+### Demo, custom.emd, #/formats/card_charge/dashboard → Add a block → New input view; untick date's Ask, Default 'today', Use for Add, Add; type three charges in the block (merchant, Tab, amount, Enter), Undo one, drag it to one column and short. Then #/formats/card_charge/list: 'Lunch spot', Tab, 35, Enter; open an entry and do the same beside it.
+unit: M55 U4
+should: Question: the picks as built — at one column (about 180px on a 1024px window) the label sits at the left in 80px and wraps 'needed' under it; the merchant field is the format's growing text; a block's link field has no + New (a missing name is refused at Add). Wrong would be the one-column block reading cramped, or quick add's fields reading as a second form rather than one line.
 state: open
 
 ### Demo, custom.emd, #/formats/card_charge/entry/new and the table, light and dark: the needed mark, the fields' placeholders, quick add.
@@ -9433,7 +9447,7 @@ shown_in: view
 state: live
 
 ### Add a task · values
-means: Quick add's placeholder on a list: 'Add a <format> · ' and every value the new row will take besides its title — the group's, the address filter's exact values, a required enum's first member — so nothing is taken silently. Enter writes it; Esc clears.
+means: Quick add's placeholder on a list: 'Add a <format> · ' and every value the new row will take besides what the line asks — the group's, the address filter's exact values, a required enum's first member, the default input view's defaults — so nothing is taken silently. Without a default input view the line asks the title alone; with one it asks that view's fields in its order, the first under this placeholder and each other with its column's name before it (M55 U4, D-557). Enter writes it; Esc clears.
 not: Not the Add button, which opens a new entry with every field it asks for.
 code_word: quickAdd(...).placeholder
 named_by: D-519
@@ -9581,8 +9595,8 @@ appears: on no screen, in no tool text, not in the tour
 state: live
 
 ### Block
-means: One thing on a dashboard: a saved view drawn compact in its kind, a rollup's chart, or a headline total. Its title opens it in full; it names what it is under its title in the filter's own words.
-not: Not a widget of any kind a person writes: only those three kinds exist (D-514).
+means: One thing on a dashboard: a saved view drawn compact in its kind, a rollup's chart, a headline total — or an input view's form, live: its fields, Add, and the rows just added (M55 U4, D-557). Its title opens it in full; it names what it is under its title in the filter's own words, an input view's as the sentence 'Adds a card charge as date today'.
+not: Not a widget of any kind a person writes: only those kinds exist (D-514); an input view's form is a saved view's block, not a kind of its own.
 code_word: DashboardBlock, format_dashboard_block, setDashboardBlocks
 named_by: D-521
 scope: app
@@ -15863,15 +15877,18 @@ report: "M55 U3 built at f7e19ab on main, D-556. docs:check green after the land
 milestone: M55
 scope: app
 title: An input view as a live dashboard block, and quick add with the view's fields inline
-decision: D-533
-state: in_progress
+landed: 2026-11-03
+decision: D-557
+state: built
 brief: "D-533; U1's confirmed brief. (1) Add a block offers the format's input views and New input view, made in place and placed in one step, as New view is (D-525); on the document's dashboard it asks which format first. The block is the form itself, live: type and Add in the dashboard, the fields laid out for the block's size (D-527), the last few rows added shown under it. A block is a saved view (format_dashboard_block kind saved), so no migration; say if it needs one. Removing the block leaves the input view, as a chart's does. show_format view:dashboard draws it read-only. (2) Quick add, on a list and beside an entry, where the format has a default input view: after the title its line shows that view's other asked fields inline, crossed with Tab, Enter adding the row with the view's defaults; nothing is parsed from the typed text (the M54 U1 row 'Lunch spot 35'). Without a default input view, quick add is as now. Run Impeccable's harden and polish and the detector once at the end. Anything not settled in D-533 or the brief is the maintainer's: stop and ask. Tests: a block adds a row; removal leaves the view; quick add with fields writes each into its column. Done-test: on a synthetic card-charge document dashboard, add three charges from its block; on its list, quick add 'Lunch spot', Tab, 35, Enter writes merchant Lunch spot and amount 35, dated today.\n\nSETTLED by M55 U1 (D-535; the unit's picks, judged by the maintainer after through U1's review entry, so build them as written and do not re-ask): the block's title is the view's name and opens the full input view; under it the sentence 'Adds a card charge as account Visa · date today' ('Adds a card charge' alone when it sets nothing); its Add is a SECONDARY button (one primary per screen across several blocks), Enter adds; at one column wide the fields stack one per 40px row with the label at the left, two to four wide they wrap in one row as on U3's page; 'Just added' rows with 'Undo' fill the height left, newest first, the rest not drawn; a block shorter than its fields scrolls inside itself with Add held at its foot. Add a block lists the format's input views with its saved views, and 'New input view' beside 'New view' and 'New chart', made in place with U3's Fields (Ask, Default) inline and placed in one step; 'Of' asks the format on the document's dashboard; 'Remove from this dashboard' leaves the view. Quick add where the format has an input view used for Add: the line is that view's asked fields in its order; the first takes the placeholder 'Add a <format> · <what it sets>', the others follow inline each with its column's name as a small label before it (never a placeholder alone); Tab crosses, Enter adds with the view's defaults, Esc clears all; in a group, the group's value wins over the view's default and a field asking the grouped column starts holding it; beside an entry the first field is the line and the others open under it one 32px row each while the line has focus or holds text; after Enter the line returns to its defaults and the row appears in the list itself (no Just added there). Terms that become false when this lands, to correct in the closing pass: Block (its kinds gain the form) and Add a task · values (it gains the view's fields)."
-files: docs/mockups/m55-u1/brief.md, src/ui/formats/Dashboard.tsx, src/ui/formats/MakeBlock.tsx, src/ui/formats/ListView.tsx, src/ui/formats/EntryList.tsx
+files: src/ui/formats/InputBlock.tsx, src/ui/formats/inputBlock.ts, src/ui/formats/inputBlock.test.ts, src/ui/formats/Dashboard.tsx, src/ui/formats/dashboard.ts, src/ui/formats/MakeBlock.tsx, src/ui/formats/ListView.tsx, src/ui/formats/listView.ts, src/ui/formats/EntryList.tsx, src/ui/formats/InputView.tsx, src/ui/screens/FormatRows.tsx, src/plugin/tools/dashboard.ts, docs/09-decision-log.md
 blocks: ["M55 U3"]
 taken_by: run-milestone driver
 started: 2026-11-03
 branch: main
+commit: 3e2a7fb
 paths: "src/ui/formats/Dashboard.tsx\nsrc/ui/formats/MakeBlock.tsx\nsrc/ui/formats/ListView.tsx\nsrc/ui/formats/EntryList.tsx\nsrc/frame/"
+report: M55 U4 built at 3e2a7fb. (1) An input view on a dashboard is its form, live (InputBlock.tsx): title the view's name, opening the full form; the line 'Adds a card charge as date today'; fields wrapping at 2-4 columns, stacked one per 40px row with the label at the left at 1; a secondary Add, Enter adds; Just added with Undo filling the height left; a short block scrolls with Add held at its foot. A block is a saved view, so no migration. Its row is judged by stageRows (record_format_rows' batch), every refusal at its field. Add a block lists input views ('input view') and New input view (InputViewForm: Of, name, U3's Fields inline, Use for Add), saved and placed in one transaction. Removing the block leaves the view. The frame draws it read-only (fields, no Add); show_format view:dashboard's text calls it a form with its sentence. (2) Quick add with a default input view asks its fields in order (QuickFieldsLine): first under 'Add a card charge · date today', others with a small label, Tab/Enter/Esc; a group's value wins and starts a field asking it; beside an entry the others open under the line while it has focus or holds text. Done-test run in the demo on custom.emd: three charges from the block; 'Lunch spot', Tab, 35, Enter wrote Lunch spot 35.00 dated 2026-11-03. Probe clean in light and dark; Impeccable detector clean on the four files (regex tier). Not done: a block's link field has no + New (the link maker is the format screen's; a missing name is refused at Add). Terms Block and Add a task · values corrected. check:tours skipped: no tour drives a dashboard or quick add, and no tour document has an input view.
 
 ### M55 U5
 milestone: M55
