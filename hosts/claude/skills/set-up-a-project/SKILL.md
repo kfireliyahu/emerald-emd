@@ -15,7 +15,7 @@ running it rather than letting the defaults decide.
 Run in the repository's folder:
 
 ```
-npx -y emerald-mcp@0.2.0 init [path/to/document.emd]
+npx -y emerald-mcp@0.3.0 init [path/to/document.emd]
 ```
 
 1. **The document**: the one named; else the one `.claude/emerald.json` names; else the one `.emd`
@@ -89,7 +89,7 @@ nothing — a hook's text is context, a status line's is not — and it is **the
 the project's**: their own `~/.claude/settings.json`.
 
 ```json
-"statusLine": { "type": "command", "command": "npx -y --prefer-offline -p emerald-mcp@0.2.0 emerald-status-line" }
+"statusLine": { "type": "command", "command": "npx -y --prefer-offline -p emerald-mcp@0.3.0 emerald-status-line" }
 ```
 
 A person has one status line. If they already have one, ask before replacing it. Through `npx` it
