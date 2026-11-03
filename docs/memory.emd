@@ -15862,13 +15862,16 @@ report: 5401012 (work at 7fa6fd2); docs:check green but for D-558's row, which t
 milestone: M55
 scope: ui
 title: CI green again: quick add's narrow label truncates on its Bidi, not on a box around it
-state: in_progress
+landed: 2026-11-03
+state: built
 brief: Driver, 2026-11-03: CI on main has been red since M55 U4's landing (run 41615582864, 3e2a7fb). src/ui/bidiTruncation.test.ts > 'put the ellipsis on the Bidi span, not on a box around it' now counts one more in formats/ListView.tsx than its allowance: U4's QuickFieldsLine label, `<span className={`flex-none text-label text-ink-secondary uppercase ${narrow ? 'w-20 truncate' : ''}`}>` running into a `<Bidi>`. Move the clipping onto the Bidi (the span flex min-w-0 / w-20, `<Bidi className="min-w-0 truncate">`) as the test's comment says, so the count does not rise; never raise the allowance. Then run npx vitest run src/ui/bidiTruncation.test.ts and the related tests, typecheck, privacy, docs:check. Nothing to decide; no decision row.
-files: src/ui/formats/ListView.tsx (QuickFieldsLine's label), src/ui/bidiTruncation.test.ts
+files: src/ui/formats/ListView.tsx
 taken_by: run-milestone driver
 started: 2026-11-03
 branch: main
+commit: 56569eb
 paths: src/ui/formats/ListView.tsx
+report: QuickFieldsLine's narrow label: the span is now `flex w-20 min-w-0` and `<Bidi className="min-w-0 truncate">` does the clipping, so a Hebrew label keeps its start. bidiTruncation.test.ts green with the allowance unchanged; src/ui/formats tests (668), typecheck, privacy and docs:check green. No decision.
 
 ### M55 U1
 milestone: M55
