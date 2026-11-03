@@ -555,7 +555,7 @@ describe('intake, swept (M54 F4)', () => {
     expect(files).toContain(`variant={planWrites(plan) ? 'primary' : 'secondary'}`)
     expect(files).toContain('whyNothing(reviewed)')
     // One list of problems: the committed reading's is not drawn over the draft's.
-    expect(files).toContain('{plan !== undefined && editing === undefined && <PlanLines')
+    expect(files).toMatch(/\{plan !== undefined && editing === undefined && \(?\s*<PlanLines/)
   })
 
   // *The button is a split tile* and *An icon is an action*: no label dressed as a
