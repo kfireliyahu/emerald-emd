@@ -582,8 +582,8 @@ function QuickFieldsLine({
           : `flex flex-none items-center gap-1.5 ${QUICK_NARROW.has(field.column.type) ? 'w-40' : 'w-52'}`
       }
     >
-      <span className={`flex-none text-label text-ink-secondary uppercase ${narrow ? 'w-20 truncate' : ''}`}>
-        <Bidi>{field.label}</Bidi>
+      <span className={`flex-none text-label text-ink-secondary uppercase ${narrow ? 'flex w-20 min-w-0' : ''}`}>
+        <Bidi className={narrow ? 'min-w-0 truncate' : undefined}>{field.label}</Bidi>
       </span>
       {control(field, at)}
     </label>
