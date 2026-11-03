@@ -7633,6 +7633,13 @@ should: Text is kept exactly
 breaks: The spreadsheet reader silently dropped emoji
 state: open
 
+### Read docs/mockups/m55-u1/brief.md: every line marked with a triangle is the unit's pick, not yet yours (D-535). Then format_rows term search:'D-535' for the six word rows, and format_rows unit match:{ref:[M55 U3, M55 U4]} for the SETTLED paragraph at the end of each brief.
+unit: M55 U1
+should: Each pick reads as what you would have answered in shape's interview. The layout picks: the input view is a page where entry/new opens beside the list, never a tab (brief §3); one wrapping row of labelled fields, entry/new's footer bar with Add then 'Adds as account Visa · date today' (§3); 'Just added' under the form, each row with 'Undo' that deletes it, refused at its line when another row links to it, no Ctrl+Z (§6); the header's Add hidden while the form shows (§6); the format's + at the end of the tab strip with 'New input view', 'New view', 'New chart' (§6); a draft named after the format with Fields open, Fields carrying 'Ask' and 'Default', 'Use for Add' as the mark, captioned 'Add' in the rail (§6); input views first in the rail under a new 'input' glyph (§6); a dashboard block's Add secondary, stacked at one column, wrapping wider, Just added filling the height (§6); quick add showing the view's fields inline with small labels, a group's value winning over the view's default (§6); the states in §5. The word picks, each a term row and in U3/U4: Input view; Adds as; New input view · New view · New chart; Use for Add; Ask · Default; Just added · Undo; and the sentence 'This view does not ask amount, which every card charge needs' with 'Ask it here'.
+breaks: The widest pick is the +'s New view and New chart: they add D-525's forms to the format's tab strip, which D-533 did not ask for and which grows U3; the narrower answer is a + that makes only an input view. Next: 'Undo' is a delete under another name, and makes the Re-apply term's 'only undoable action' false when U3 lands. Next: the page-not-tab pick, since saved views are tabs since M54 F2. Changing any pick before U3 starts is a brief edit; after, a fix unit.
+not_tried: Nothing was built, so nothing was clicked: the existing screens were measured with probe:screens only (entry/new on custom.emd's card_charge and project.emd's unit; card_charge's list, table and dashboard). The pane was not opened.
+state: open
+
 ### Read en.ts:184, en.ts:143 and en.ts:88.
 unit: M54 U7
 should: Words a stranger outside the maintainer's country and history can parse.
@@ -15400,14 +15407,17 @@ report: "LANDED d60617f. .claude/skills/design-review/SKILL.md (~110 lines), wri
 milestone: M55
 scope: app
 title: Shape: the input view's brief, and its new words, picked by the unit for the maintainer to judge after
-decision: D-533
-state: in_progress
+landed: 2026-11-03
+decision: D-535
+state: built
 brief: D-533 holds the maintainer's answers; this unit turns them into the brief U3 and U4 build from. No mockup (maintainer, 2026-11-03). Run Impeccable's shape (/impeccable shape, D-529) with D-533 as the discovery round: do not re-ask what it settles, and assert the likely reading for the rest. First try what exists on the demo (npm run probe:screens, and the pane only where a click is needed; custom.emd's card_charge and project.emd's unit): entry/new and its Fields list (src/ui/formats/EntryView.tsx), quick add on a list and beside an entry (ListView.tsx, EntryList.tsx), the table's blank row (RowSheet.tsx), Add a block (MakeBlock.tsx, Dashboard.tsx), the rail (RailFolder.tsx). Write docs/mockups/m55-u1/brief.md (Impeccable's seven parts, smallest useful): the form (field order, focus, the 'Adds as' line, refusals at their field, the list of rows just added with undo, what clears and what stays); how an input view is made and edited in place, counting click paths (from the format's +, which starts from the required columns; a default per field; marking it the format's Add); its rail row and glyph beside saved views and charts; the dashboard block at F4's sizes; quick add with the view's fields inline; the states (no input view, a required column left out, a link with no match, a date word). Then the new on-screen words: the kind's name on screen, 'Adds as', the + menu's items, the default mark, undo's wording — two or three drafts each in brief.md, checked against the term rows first (format_rows term search). Maintainer, 2026-11-03: U1 does not wait for me. So the unit picks: it takes the recommended reading wherever shape would have asked, and its recommended word for each, marks both in brief.md as the unit's picks and not yet the maintainer's (as D-475 did), writes the picked words as term rows, and writes them into U3's and U4's briefs as SETTLED. One open review_entry on this unit lists every pick and where it is written, for the maintainer to judge after; changing one later is a fix unit. Stop and ask only where a pick would contradict D-533 or a live rule row. Done-test: brief.md written with the picks marked, the term rows written, U3 and U4 carry them, and the review row lists them.
-files: docs/09-decision-log.md (D-533), src/ui/formats/EntryView.tsx, src/ui/formats/ListView.tsx, src/ui/formats/EntryList.tsx, src/ui/formats/RowSheet.tsx, src/ui/formats/MakeBlock.tsx, src/ui/RailFolder.tsx, docs/mockups/m53-u1/tasks.html
+files: docs/mockups/m55-u1/brief.md, docs/09-decision-log.md (D-535), docs/memory.emd (D-535's row, six term rows, M55 U3's and U4's briefs and U3's files and paths)
 taken_by: run-milestone driver
 started: 2026-11-03
 branch: main
+commit: 3d2402c
 paths: docs/mockups/m55-u1/
+report: M55 U1 landed in 3d2402c on main; docs:check green (0 errors, the one standing warning on 04-data-model's budget); privacy test green. Wrote docs/mockups/m55-u1/brief.md: Impeccable's shape in seven parts with D-533 as the discovery round, what exists today measured with probe:screens (entry/new on custom.emd card_charge and project.emd unit, card_charge's list, table and dashboard), click paths (making the done-test's 'Card charge' 6, five charges 6 against 20 today, undo 1), the states, and the words with two or three drafts each. Every pick is marked as the unit's and not yet the maintainer's under D-535 (log entry and row). Six term rows written, named by D-535: Input view; Adds as; New input view · New view · New chart; Use for Add; Ask · Default; Just added · Undo. M55 U3's and U4's briefs carry the picks as a SETTLED paragraph; U3's files and paths gained src/ui/components/ActionGlyph.tsx (the new input glyph) and MakeBlock's forms. One open review entry lists every pick and where it is written. Found: no 'format's +' exists today, so the + and its menu are picks; four term rows become false when U3/U4 land (Re-apply's 'only undoable action', Saved view's kinds, Block's kinds, Add a task · values) and each brief says so. Not done: nothing clicked in the pane; no code touched.
 
 ### M55 U2
 milestone: M55
@@ -15727,7 +15737,7 @@ finding: 2026-10-22
 inbox: 2026-10-23
 milestone: 2026-11-03
 open_question: 2026-10-22
-review_entry: 2026-11-02
+review_entry: 2026-11-03
 rule: 2026-11-03
 term: 2026-11-03
 unit: 2026-11-03
