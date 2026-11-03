@@ -27,6 +27,8 @@ const plugin = json(join(HERE, '.claude-plugin', 'plugin.json'))
 const marketplace = json(join(ROOT, '.claude-plugin', 'marketplace.json'))
 const hooks = json(join(HERE, 'hooks', 'hooks.json'))
 const release = json(join(ROOT, 'hosts', 'claude-plugin-release.json'))
+/** What every npx hook starts behind (M56 U2, D-547). */
+const GATE = 'node "${CLAUDE_PLUGIN_ROOT}/hooks/unless-mod.mjs" '
 /** The package version every pin names: the manifest's version before any `+<n>`. */
 const pin = String(plugin.version).split('+')[0] ?? ''
 
@@ -74,8 +76,12 @@ describe('the plugin', () => {
       groups.flatMap((group) => group.hooks.map((hook) => hook.command)),
     )
     expect(commands.length).toBeGreaterThan(0)
-    for (const command of commands.filter((command) => !command.startsWith('node '))) {
-      const found = /^npx -y --prefer-offline -p emerald-mcp@(\S+) (\S+) /.exec(command)
+    const npx = commands.filter((command) => command.includes('npx '))
+    // Every npx hook starts through the gate, which exits where the hooks module answered (M56 U2, D-547).
+    expect(npx.length).toBeGreaterThan(0)
+    for (const command of npx) {
+      expect(command.startsWith(GATE), command).toBe(true)
+      const found = /^npx -y --prefer-offline -p emerald-mcp@(\S+) (\S+) /.exec(command.slice(GATE.length))
       expect(found, command).not.toBeNull()
       expect(found?.[1]).toBe(pin)
       expect(bins).toContain(found?.[2])
@@ -86,10 +92,12 @@ describe('the plugin', () => {
     const commands = Object.values(hooks.hooks as Record<string, { hooks: { command: string }[] }[]>).flatMap((groups) =>
       groups.flatMap((group) => group.hooks.map((hook) => hook.command)),
     )
-    const local = commands.filter((command) => command.startsWith('node '))
+    const local = commands.filter((command) => command.startsWith('node ') && !command.startsWith(GATE))
     expect(local).toEqual(['node "${CLAUDE_PLUGIN_ROOT}/hooks/no-server.mjs"'])
-    const source = readFileSync(join(HERE, 'hooks', 'no-server.mjs'), 'utf8')
-    expect([...source.matchAll(/from '([^']+)'/g)].map((found) => found[1]).every((name) => name?.startsWith('node:'))).toBe(true)
+    for (const file of ['no-server.mjs', 'unless-mod.mjs']) {
+      const source = readFileSync(join(HERE, 'hooks', file), 'utf8')
+      expect([...source.matchAll(/from '([^']+)'/g)].map((found) => found[1]).every((name) => name?.startsWith('node:')), file).toBe(true)
+    }
   })
 
   it('pins the same emerald-mcp in every skill as everywhere else, and the pin script moves each one', () => {

@@ -459,6 +459,7 @@ written out here.
 | D-536 | 2026-11-03 | An input view's default mark is a column of `format_saved_view` with a partial unique index (066), on an input view alone; a new row's defaults are one rule, `entryDefaults` — the default input view's, over the address's exact values, over a required enum's first member — read by the table's blank row, entry/new and quick add; a money or quantity default is written `12.90 ILS`; `record_format_rows view:` fills only the keys a row leaves out; `format_rows` refuses an input view; until M55 U3's form, an input view opens a new entry with its address | [below](#d-536) |
 | D-541 | 2026-11-03 | The project pane is a hooks module in the emerald plugin (`hosts/claude/mod/`); it reads only `start_here` and `show_format`, and because Claude Code puts a plugin's `$.mcp.call` to the person's permission check and lets no module allow its own calls, it reads unasked only where `$.tool.check` says the person's rules allow it — `npx emerald-mcp init` writes those two allow rules into the project's `.claude/settings.json` — and otherwise holds a *Read* button whose press raises the dialog; it reads from a timer, never while drawing; `npm run test:mod` runs `claude plugin test` on a copy of the plugin without its Vitest files | [below](#d-541) |
 | D-545 | 2026-11-03 | An entry's refusal sits at its field and says every problem at once — on the form, under each field, outlined and `aria-invalid`, the first focused; in the table's blank row, in a line under the row, each sentence in its own column — and a link left with a name no row holds keeps it, so Add names it; a date is typed as `YYYY-MM-DD` or `today`, `yesterday`, `tomorrow` in the cell and on the form alike, a text field over the platform's calendar; *a* or *an* goes by the word's sound; a placeholder is `ink-secondary` | [below](#d-545) |
+| D-547 | 2026-11-03 | Where Claude Code runs the plugin's hooks module, the module answers SessionStart and UserPromptSubmit itself (start_here; each new inbox row once per session, then the count) and always passes the event on with `emerald_mod_answered` added, and the two npx hook commands start through `hooks/unless-mod.mjs`, which exits on that mark — because a module that answers without `next` silences every settings hook beneath it, the person's own included; it marks only what it answered, watches the document every 5 s for the status line (`$.ui.status`) and a toast, and `init` allows `format_rows` beside the pane's two reads — the unit's pick, for the maintainer to review | [below](#d-547) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1319,6 +1320,54 @@ the same answer). Moving the Vitest files out of `hosts/claude` (collides with t
 **Consequences.** A project set up before this init asks once, on the press. The setup skill's line
 saying so is M56 U5's. The desktop app's check of the pane is still the maintainer's: it needs
 `CLAUDE_CODE_PLUGIN_DIRS`, which a session does not write.
+
+---
+## D-547 · 2026-11-03 · Where Claude Code runs the plugin's hooks module, the module answers SessionStart and UserPromptSubmit itself (start_here; each new inbox row once per session, then the count) and always passes the event on with `emerald_mod_answered` added, and the two npx hook commands start through `hooks/unless-mod.mjs`, which exits on that mark — because a module that answers without `next` silences every settings hook beneath it, the person's own included; it marks only what it answered, watches the document every 5 s for the status line (`$.ui.status`) and a toast, and `init` allows `format_rows` beside the pane's two reads — the unit's pick, for the maintainer to review <a id="d-547"></a>
+
+**Context.** M56 U2's brief: where the hooks module runs it takes over from the npx hooks (the
+maintainer's answer of 2026-11-02), and the command hooks stay as the floor for every host that runs
+no module. It asked two things proved first. Both held, on Claude Code 2.1.317 with throwaway plugins
+under `claude -p --plugin-dir`: one plugin ships command hooks and a hooks module together, and a
+module that answers `classic.UserPromptSubmit` without `next` keeps the npx command from running.
+**But it keeps every other hook on the event from running too**: the chain is managed hooks, the
+modules, then all other settings hooks as core, and a `--settings` UserPromptSubmit hook of the
+person's own did not run either. A module passing `next({ ...e, mark })` was proved to reach the
+command hooks' stdin with the mark. Asked, the maintainer (2026-11-03) had the unit build the
+recommended structure and explain it for review, so this is the unit's pick and not yet his.
+
+**Decision.**
+
+- **Pass on, marked.** `mod/inbox.ts` answers `classic.SessionStart` (startup, clear, compact — the
+  npx hook's matcher) and `classic.UserPromptSubmit`, adds its text as `additionalContext` to what
+  the hooks beneath answered, and always calls `next` with `"emerald_mod_answered": true` in the input.
+- **A gate in front of npx.** Both npx commands in `hooks/hooks.json` start as
+  `node "${CLAUDE_PLUGIN_ROOT}/hooks/unless-mod.mjs" npx …`: plain Node, which exits 0 on the mark and
+  otherwise runs the command with the same stdin (npm's own `npx-cli.js` beside `node` where it is,
+  so no shell), passing back its exit code and never 2. The pin string stays where `pin-plugin` finds it.
+- **It marks only what it answered.** Where `$.tool.check` would ask before a read, the server is not
+  up or a read fails, it passes on unmarked and the npx command speaks — the floor, inside a modded
+  session too. A folder that means no document is marked with nothing added.
+- **Same words as the npx hooks**, held by `hosts/claude/inbox.test.ts` against `runHook` on a real
+  document; the rows a session was told are kept in the module's memory by session id, not in
+  `<document>.told` and not in `$.state` (which would need a `types` key the manifest test refuses,
+  and survives `/clear`).
+- **A watch between prompts**: `$.clock.every(5000)` stats the document and, when it changed, reads the
+  new inbox rows and the units in progress, sets `$.ui.status` to the status-line command's line,
+  and raises a toast for a row that arrived; the model learns of it at the next prompt.
+- **`init` allows `mcp__plugin_emerald_emerald__format_rows`** beside the pane's two reads.
+
+**Alternatives rejected (the maintainer's to reverse).** *B: answer without `next`* in a folder that
+means a document — meets the brief's done-test as written with no extra process, but silently stops the
+person's own and every other plugin's SessionStart and UserPromptSubmit command hooks in those
+projects. *C: pass on unmarked* and leave the npx hooks as they are — nothing silenced and nothing
+gated, but every prompt still waits ~1.8 s on npx and the module adds only the toast and status line.
+
+**Consequences.** Measured 2026-11-03 (docs/plugin.md): ~1.82 s before a prompt with the npx hook
+alone, ~47 ms with the module (the gate on a marked input), plus ~380 ms on a prompt after a document
+change the watch has not yet read; without a module the gate itself makes npx ~0.5 s quicker (no shell).
+`hosts/claude/hooks/commands.test.ts` changed one regex, to read the gate in front of the npx
+command; `plugin.test.ts`'s hook tests read it too. The plugin's digest changed, so it needs
+`node scripts/pin-plugin.mjs --plugin` once merged.
 
 ## Related
 

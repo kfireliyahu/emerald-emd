@@ -26,9 +26,10 @@
  *    inbox's new rows, into `.claude/settings.json` — **only where the Claude
  *    plugin is not enabled**, which brings the same two. Merged into what is
  *    there; a hook already printing start_here that this did not write is left
- *    alone and said. And, plugin or not, **the project pane's two reads** in
- *    `permissions.allow` (M56 U1, D-541): Claude Code asks the person before a
- *    plugin's own call of a tool, so without them the pane waits on a press.
+ *    alone and said. And, plugin or not, **the hooks module's three reads** in
+ *    `permissions.allow` (M56 U1, D-541; M56 U2, D-547): Claude Code asks the
+ *    person before a plugin's own call of a tool, so without them the pane waits
+ *    on a press and the inbox is left to the npx hook.
  * 4. **What it wrote, and what a session here now sees first**: start_here.
  *
  * **Idempotent**: a second run writes nothing, so CLAUDE.md and the settings stay
@@ -273,15 +274,21 @@ export function withHooks(settings: Record<string, unknown>): Result<{ settings:
 }
 
 /**
- * **What the project pane reads with** (M56 U1, D-541): the two read-only tools
- * of the plugin's own server, as Claude Code names them. Its hooks module calls
+ * **What the hooks module reads with** (M56 U1, D-541): the read-only tools of
+ * the plugin's own server, as Claude Code names them — the pane's two, and
+ * `format_rows` for the inbox and the status line (M56 U2, D-547). The module calls
  * them through `$.mcp.call`, which Claude Code puts to the person's permission
  * check like any call; these rules, in the project's own settings, let the pane
  * read without asking. Nothing that writes is ever listed.
  */
-export const PANE_READS = ['mcp__plugin_emerald_emerald__start_here', 'mcp__plugin_emerald_emerald__show_format'] as const
+export const PANE_READS = [
+  'mcp__plugin_emerald_emerald__start_here',
+  'mcp__plugin_emerald_emerald__show_format',
+  // The inbox and the status line, where the module answers in place of the npx hooks (M56 U2, D-547).
+  'mcp__plugin_emerald_emerald__format_rows',
+] as const
 
-/** The settings with the pane's two reads in `permissions.allow`, and what happened. */
+/** The settings with the module's reads in `permissions.allow`, and what happened. */
 export function withPaneReads(settings: Record<string, unknown>): Result<{ settings: Record<string, unknown>; said: string }, string> {
   const permissions = (settings['permissions'] ?? {}) as Record<string, unknown>
   if (typeof permissions !== 'object' || permissions === null || Array.isArray(permissions)) return err('its `permissions` is not an object')

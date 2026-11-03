@@ -1,5 +1,5 @@
 {
-  "description": "Emerald: start_here at session start, and the inbox's new rows before a prompt, each in full once per session and then a count (M47 U1, M51 U6). Silent in a folder that names no document. Run from the published emerald-mcp, pinned, through npx (M42 U4); where the host starts no plugin MCP server, the emerald-setup skill, from the plugin folder (M42 F8).",
+  "description": "Emerald: start_here at session start, and the inbox's new rows before a prompt, each in full once per session and then a count (M47 U1, M51 U6). Silent in a folder that names no document. Run from the published emerald-mcp, pinned, through npx (M42 U4); where the host starts no plugin MCP server, the emerald-setup skill, from the plugin folder (M42 F8). Where Claude Code runs the plugin's hooks module it answers both events itself and marks them, and unless-mod.mjs, which starts the npx commands, exits at once without starting them (M56 U2, D-547).",
   "modules": ["../mod/register.tsx"],
   "hooks": {
     "SessionStart": [
@@ -8,7 +8,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx -y --prefer-offline -p emerald-mcp@0.2.0 emerald-hooks start-here \"$CLAUDE_PROJECT_DIR\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/unless-mod.mjs\" npx -y --prefer-offline -p emerald-mcp@0.2.0 emerald-hooks start-here \"$CLAUDE_PROJECT_DIR\"",
             "timeout": 60
           },
           {
@@ -24,7 +24,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "npx -y --prefer-offline -p emerald-mcp@0.2.0 emerald-hooks rows \"$CLAUDE_PROJECT_DIR\" inbox --match state=new --once-per-session",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/unless-mod.mjs\" npx -y --prefer-offline -p emerald-mcp@0.2.0 emerald-hooks rows \"$CLAUDE_PROJECT_DIR\" inbox --match state=new --once-per-session",
             "timeout": 15
           }
         ]

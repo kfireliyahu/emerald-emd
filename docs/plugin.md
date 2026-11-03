@@ -689,6 +689,57 @@ first, two of them, and the rest counted. Wiring it is a person's choice, one se
 "statusLine": { "type": "command", "command": "node \"<path to>/dist-plugin/status-line.mjs\"" }
 ```
 
+### Where the hooks module runs: the module answers, and a gate keeps npx from starting (M56 U2)
+
+**Claude Code runs the plugin's hooks module, and the module says what the two npx hooks say**
+(`hosts/claude/mod/inbox.ts`, D-547): start_here at `SessionStart`, headed by the same line for
+the model, and before a prompt each new inbox row in full once per session, then the count once,
+then nothing (`inboxText.ts` holds the rule, and `hosts/claude/inbox.test.ts` holds it to
+`runHook`'s on a real document). It reads with `start_here` and `format_rows` through the plugin's own
+server, already running, and remembers what a session was told in its own memory, in place of
+`<document>.told`.
+
+**It never answers an event alone.** A module that answers `classic.SessionStart` or
+`classic.UserPromptSubmit` without `next` keeps *every* settings hook beneath it from running — the
+person's own and every other plugin's, not only this plugin's npx command (proved on Claude Code
+2.1.317, 2026-11-03). So the module always passes the event on, with
+`"emerald_mod_answered": true` added to the input, and the two npx commands in `hooks/hooks.json`
+start through a gate of the plugin's own:
+
+```
+node "${CLAUDE_PLUGIN_ROOT}/hooks/unless-mod.mjs" npx -y --prefer-offline -p emerald-mcp@<pin> emerald-hooks …
+```
+
+`unless-mod.mjs` (plain Node, nothing imported but Node's) reads the hook's input, exits 0 at once
+when the mark is there, and otherwise runs the npx command with the same input and passes back its
+exit code (never 2). **The floor stays**: where no module runs — cloud Cowork, an older Claude
+Code — nothing marks the input and the npx commands run as they always did. **It marks only what it
+answered**: where the person's rules would ask before a read (`npx emerald-mcp init` allows the three
+reads), the server is not up or a read failed, it passes on unmarked and the npx command speaks. A
+folder that means no document is marked with nothing added — the npx command's own silence, without
+its process. `no-server.mjs` is not gated.
+
+**Between prompts it watches** (`$.clock.every`, 5 s): the document's size and time, and when they
+change it reads the inbox's new rows and the units in progress again, puts the status line right with
+`$.ui.status` — the line `status-line.mjs` prints, so a person with the plugin needs no `statusLine`
+setting — and raises a toast for a row that arrived. The toast is for the person; the model learns
+of the row at the next prompt, never in the middle of a turn.
+
+**What a prompt waits on** (measured 2026-11-03 on the maintainer's Windows machine, npx cache warm,
+median of five, the hook's process timed from start to exit; the inbox read timed on a running
+server against this repo's `docs/memory.emd`):
+
+| | before a prompt |
+|---|---|
+| The npx inbox hook, no module (as before M56 U2) | ~1.82 s |
+| No module, through the gate (node starts npm's npx itself, no shell) | ~1.32 s |
+| With the module: the gate, which exits on the mark | ~47 ms |
+| … plus, when the document changed since the watch last looked, one `format_rows` | ~380 ms |
+
+The units-in-progress read (~370 ms) runs after and is never waited on. Not measured: Claude Code's
+own shell around each hook command, which both rows pay alike, and a whole session end to end
+(`claude -p` could not sign in on the day).
+
 ### A repository set up by one command: `init` (M50 U1)
 
 **The study of 2026-10-13** (17 sessions on three documents) measured `formats` called up to eight
@@ -719,10 +770,11 @@ npx -y emerald-mcp init [path/to/document.emd]        # run in the repository's 
    (`CLAUDE_CONFIG_DIR`, else `~/.claude`) or the repository's, since the plugin brings the same
    two. A hook it wrote is re-pinned; a hook it did not write that already prints the same thing
    (this repository's `node dist-plugin/hooks.mjs start-here`, say) is left as it is and said.
-   **And, plugin or not, the project pane's two reads** in `permissions.allow`
-   (`mcp__plugin_emerald_emerald__start_here` and `…__show_format`, M56 U1, D-541): Claude Code
-   asks the person before a plugin's own `$.mcp.call`, so without them the pane in `hosts/claude/mod/`
-   reads only when the person presses *Read*. Nothing that writes is ever allowed.
+   **And, plugin or not, the hooks module's three reads** in `permissions.allow`
+   (`mcp__plugin_emerald_emerald__start_here`, `…__show_format` and `…__format_rows`, M56 U1, D-541;
+   M56 U2, D-547): Claude Code asks the person before a plugin's own `$.mcp.call`, so without them the
+   pane in `hosts/claude/mod/` reads only when the person presses *Read*, and the inbox is left to the
+   npx hook. Nothing that writes is ever allowed.
 4. **What it wrote, and what a session there now sees first**: start_here on the document.
 
 **Idempotent by comparison**: every file is compared before it is written, so a second run leaves
@@ -1559,7 +1611,8 @@ release and never a new package:
 the inbox hook **~1.95 s before every prompt** (against ~0.35 s for `node` on the file), `start-here`
 ~2 s once a session, the server's start ~2.2–2.6 s once a session, and the status line ~1.7 s — over
 its 200 ms, so it shows the line late rather than not at all. The first run of a version also
-downloads the 2.9 MB tarball.
+downloads the 2.9 MB tarball. **Where Claude Code runs the plugin's hooks module, neither hook starts
+npx** (M56 U2, D-547): the module answers, and the gate in front of each command exits in ~47 ms.
 
 **The pin is written once**, as the manifest's `version` before any `+`: every pin — the server's
 and each hook's — equals it, and it never leads the root `package.json`'s, which `build:plugin`

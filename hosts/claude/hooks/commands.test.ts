@@ -422,7 +422,7 @@ describe('the hook set', () => {
     const here = commandsOf(repo, '$CLAUDE_PROJECT_DIR/dist-plugin/hooks.mjs')
     // The plugin runs the same bundle from the published package, pinned (M42 U4, D-499), plus
     // one of its own this repository never needs: the setup steps where no plugin server starts (M42 F8).
-    const fromThePackage = commandsOf(shipped, /^npx -y --prefer-offline -p emerald-mcp@[\d.]+ emerald-hooks/, 'node "<server>"')
+    const fromThePackage = commandsOf(shipped, /^node "\$\{CLAUDE_PLUGIN_ROOT\}\/hooks\/unless-mod\.mjs" npx -y --prefer-offline -p emerald-mcp@[\d.]+ emerald-hooks/, 'node "<server>"')
     fromThePackage['SessionStart'] = (fromThePackage['SessionStart'] ?? []).filter((command) => !command.includes('${CLAUDE_PLUGIN_ROOT}/hooks/no-server.mjs'))
     expect(here).toEqual(fromThePackage)
     expect(here['SessionStart']).toEqual(['node "<server>" start-here "$CLAUDE_PROJECT_DIR"'])
