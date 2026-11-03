@@ -44,7 +44,7 @@ import {
 } from '@/data/storage/encoding.ts'
 
 /** The plugin's own version, which is not the schema version. */
-export const PLUGIN_VERSION = '0.2.0'
+export const PLUGIN_VERSION = '0.3.0'
 
 export interface OpenDocument {
   readonly path: string
