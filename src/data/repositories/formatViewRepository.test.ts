@@ -31,6 +31,7 @@ import {
   setEntryOrder,
   setGraphPlaces,
   restoreViewSettings,
+  saveView,
 } from './formatViewRepository.ts'
 
 /** A sheet's column widths, kept per document and beside the declaration (M26 U2, D-289). */
@@ -411,5 +412,15 @@ describe('entry order', () => {
     if (!applied.ok) throw new Error(applied.error)
     expect(entryInputs(back, 'scored')).toEqual(new Map([['shift', 'ring']]))
     expect(entryPlaces(back, 'scored')).toEqual(new Map([['before', 2]]))
+  })
+})
+
+describe('input views', () => {
+  // M55 U2 (D-536): the table holds a format to one default, whatever writes.
+  it('keep one default per format in the table itself', async () => {
+    const db = await withBook()
+    saveView(db, { format: 'book', name: 'Quick', kind: 'input', address: 'title', isDefault: true })
+    saveView(db, { format: 'book', name: 'Long', kind: 'input', address: 'title,pages', isDefault: false })
+    expect(() => db.run("UPDATE format_saved_view SET is_default = 1 WHERE name = 'Long'")).toThrow(/UNIQUE/)
   })
 })

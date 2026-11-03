@@ -210,8 +210,6 @@ describe('input views (M55 U2)', () => {
       ['Card charge', false],
       ['Cash', true],
     ])
-    // The table holds it to one, whatever writes.
-    expect(() => db.run("UPDATE format_saved_view SET is_default = 1 WHERE name = 'Card charge'")).toThrow(/UNIQUE/)
     // And only an input view takes it.
     expect(() => saveView(db, { format: 'charge', name: 'Pending', kind: 'table', address: '', isDefault: true })).toThrow(/Only an input view/)
     db.close()
