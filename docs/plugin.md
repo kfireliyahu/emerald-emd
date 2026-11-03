@@ -644,7 +644,9 @@ The heading names both files — `start_here on <main>/docs/memory.emd — the m
 which every worktree reads and writes; write to this path, not to this worktree's <copy>` — because
 the tools take the path a session gives them, and that path is the one to give. **The worktree's copy
 is never committed**: `scripts/guard-memory-emd.mjs` refuses a `git commit` in a linked worktree
-while the copy is staged, or while it has changed and `-a` or a pathspec would take it.
+while the copy is staged, or while it has changed and `-a` or a pathspec would take it. The plugin's
+hooks module refuses the same at the call, for the project's own document wherever the project keeps
+it (`hosts/claude/mod/guards.ts`, M56 U3); the script stays, for a session without the module.
 
 The hook set is `hosts/claude/hooks/hooks.json`, the plugin's (`npx -y --prefer-offline -p
 emerald-mcp@<version> emerald-hooks …`, M42 U4); this repo runs the same two from `.claude/settings.json`
@@ -784,6 +786,18 @@ an empty folder, runs the hook it wrote and checks a second run changes nothing;
 the rest. The published package has it from 0.2.0.
 
 ## Claiming and landing a unit, a call each (M47 U3)
+
+**And in Claude Code, a command each** (M56 U3): `/claim <ref>` and `/land [ref]`, from the plugin's
+hooks module (`hosts/claude/mod/commands.ts`). Neither writes: each answers the person in a line,
+leaves the model the call to make in the command's `context` — `claim_units` with the project's
+document, the unit and this branch; `land_units` with the commit `git rev-parse --short HEAD` names,
+or, from a linked worktree, the one `inbox` row that proposes the landing — and asks for a turn. The
+model makes the call, dry run first, under the person's own permission rules. `/land` with no ref
+lands what `/claim` took on this branch, and says to commit first when the tree has work uncommitted.
+Beside them the module refuses, at the call, an `Edit` or `Write` on any `.emd` file: a document is
+changed through its tools, which check a write against its formats, and a hand edit can break it
+without a word (`hosts/claude/mod/guards.ts`). Each guard refuses when it fails rather than letting
+the call through.
 
 **The closing pass was a write per row** (D-460): 302 of 346 writes
 across a week's three documents carried one row, most of them the unit to `built`, a decision or

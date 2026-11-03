@@ -460,6 +460,7 @@ written out here.
 | D-541 | 2026-11-03 | The project pane is a hooks module in the emerald plugin (`hosts/claude/mod/`); it reads only `start_here` and `show_format`, and because Claude Code puts a plugin's `$.mcp.call` to the person's permission check and lets no module allow its own calls, it reads unasked only where `$.tool.check` says the person's rules allow it — `npx emerald-mcp init` writes those two allow rules into the project's `.claude/settings.json` — and otherwise holds a *Read* button whose press raises the dialog; it reads from a timer, never while drawing; `npm run test:mod` runs `claude plugin test` on a copy of the plugin without its Vitest files | [below](#d-541) |
 | D-545 | 2026-11-03 | An entry's refusal sits at its field and says every problem at once — on the form, under each field, outlined and `aria-invalid`, the first focused; in the table's blank row, in a line under the row, each sentence in its own column — and a link left with a name no row holds keeps it, so Add names it; a date is typed as `YYYY-MM-DD` or `today`, `yesterday`, `tomorrow` in the cell and on the form alike, a text field over the platform's calendar; *a* or *an* goes by the word's sound; a placeholder is `ink-secondary` | [below](#d-545) |
 | D-547 | 2026-11-03 | Where Claude Code runs the plugin's hooks module, the module answers SessionStart and UserPromptSubmit itself (start_here; each new inbox row once per session, then the count) and always passes the event on with `emerald_mod_answered` added, and the two npx hook commands start through `hooks/unless-mod.mjs`, which exits on that mark — because a module that answers without `next` silences every settings hook beneath it, the person's own included; it marks only what it answered, watches the document every 5 s for the status line (`$.ui.status`) and a toast, and `init` allows `format_rows` beside the pane's two reads — the unit's pick, for the maintainer to review | [below](#d-547) |
+| D-549 | 2026-11-03 | The plugin's hooks module refuses two write rules at the call — an `Edit` or `Write` on any `.emd` file, and a `git commit` in a linked worktree that would carry the project document's copy — each guard refusing when it fails; `/claim <ref>` and `/land [ref]` write nothing and hand the model the call in the command's `context`, then ask for a turn; the third rule, no `commit: true` without a dry run, is dropped on the maintainer's word | [below](#d-549) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1368,6 +1369,50 @@ change the watch has not yet read; without a module the gate itself makes npx ~0
 `hosts/claude/hooks/commands.test.ts` changed one regex, to read the gate in front of the npx
 command; `plugin.test.ts`'s hook tests read it too. The plugin's digest changed, so it needs
 `node scripts/pin-plugin.mjs --plugin` once merged.
+
+## D-549 · 2026-11-03 · The plugin's hooks module refuses two write rules at the call — an `Edit` or `Write` on any `.emd` file, and a `git commit` in a linked worktree that would carry the project document's copy — each guard refusing when it fails; `/claim <ref>` and `/land [ref]` write nothing and hand the model the call in the command's `context`, then ask for a turn; the third rule, no `commit: true` without a dry run, is dropped on the maintainer's word <a id="d-549"></a>
+
+**Context.** M56 U3's brief (the maintainer's answers of 2026-11-02): the write rules that were prose
+become `tool.call` guards in the plugin's module, written as the guard pattern the types show, and
+`/claim` and `/land` hand the model the call while the module writes nothing (D-541's read-only line).
+The third guard needed a choice of how a commit is matched to its dry run; the session put three
+options to the maintainer.
+
+**Decision.**
+
+- **No hand edit of a document** (`hosts/claude/mod/guards.ts`): an `Edit` or `Write` whose path
+  ends `.emd` is refused, saying the document is changed through its tools, which check a write
+  against its formats and dry-run it, and naming them.
+- **No worktree commit of the document's copy**: `scripts/guard-memory-emd.mjs`'s rule (M51 U1), for
+  whatever document the project names (`project.ts`), on `Bash` and `PowerShell`, after `-C` and `cd`.
+  The script stays, for a session without the module.
+- **A guard that fails refuses.** Each carries `.catch(… next.called ? next(e) : { deny })`, and the
+  commit guard also catches its own failure inside the hook: the pane's matcher-less `tool.call` hook
+  (D-541) answers its own failure with `next(e)`, and with it above, a guard beneath that threw had its
+  refusal lost and the commit ran (seen under `claude plugin test`; the guard's `.catch` reported
+  *failed closed*, the call still answered). A later guard does the same, or the pane's catch changes.
+- **`/claim` and `/land`** (`commands.ts`) answer the person in a line, put the exact call in the
+  command's `context` — `claim_units` with the document, the unit and this branch; `land_units` with
+  `git rev-parse --short HEAD`; from a linked worktree, the one `inbox` row that proposes the landing —
+  and ask for a turn with `$.prompt.submit` from a timer, never awaited by the command. `/land` with no
+  ref takes what `/claim` took on this branch, kept in `$.store`.
+- **A second `session.start` hook needs a matcher**: the engine refuses two without one in a module, so
+  the commands' takes `{ isInteractive: [true, false] }`, every session. A third with that same matcher
+  validates (checked against U2's).
+- **`$.process.run` is CLI-only.** The commit guard asks git through it; where a host lacks it, a commit
+  in a worktree whose project means a document is refused rather than let through.
+- **The third guard is dropped.** The maintainer, 2026-11-03: *"i think we need to soften the dry run
+  requirements in general and handle concurrency better probably."* Holding every commit to an exact
+  rehearsal hardens the very requirement he wants softened, so it waits on that question.
+
+**Alternatives rejected.** Matching a commit to its dry run by exact arguments, by tool and target, or
+by the last call (the three options put to him). Classic `commands/*.md` prompts for `/claim` and
+`/land` (they cannot know the branch, the commit or the worktree). Excluding the module's tests in
+`vite.config.ts` (a shared file): they are `.test.tsx`, as `pane.test.tsx` is.
+
+**Consequences.** A session in Claude Code with the plugin can no longer hand-edit any `.emd`, its
+own included; a merge conflict in `docs/memory.emd` is resolved outside the `Edit` tool. The dry-run
+question is the driver's to record.
 
 ## Related
 
