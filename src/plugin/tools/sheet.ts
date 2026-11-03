@@ -38,7 +38,8 @@ import { basename, isAbsolute } from 'node:path'
 import type { Database } from 'sql.js'
 
 import { filterText, heldAs, isFiltered, type RowFilter } from '@/data/repositories/formatFilterRepository.ts'
-import { foldFilter as foldHeld, isFoldKey, type ColumnChoice } from '@/ui/formats/addressFilter.ts'
+import { foldFilter as foldHeld, inputShapeOf, isFoldKey, type ColumnChoice } from '@/ui/formats/addressFilter.ts'
+import { INPUT_KIND } from '@/domain/format/inputView.ts'
 import { listOrder, listPicture, type ListLine } from '@/ui/formats/listView.ts'
 import {
   agendaData,
@@ -55,7 +56,7 @@ import { countRows, linkLabels, listRows, type RowQuery } from '@/data/repositor
 import { boardSettings, viewSettings } from '@/data/repositories/formatViewRepository.ts'
 import { labelColumn, type ColumnDeclaration, type FormatDeclaration } from '@/domain/format/declaration.ts'
 import type { StoredRow } from '@/domain/format/row.ts'
-import { boardOf, dayText } from '@/domain/format/view.ts'
+import { boardOf, dayText, type SavedView } from '@/domain/format/view.ts'
 import {
   COPY_TOOL,
   KEY_META,
@@ -68,7 +69,7 @@ import {
 } from '@/frame/contract.ts'
 
 import { readDocument } from '../document.ts'
-import { plural } from '../format.ts'
+import { paragraphs, plural } from '../format.ts'
 import { documentUri } from '../subscriptions.ts'
 import { markOf } from '../watch.ts'
 import { askedOn, cellText, filterArgs, formatRowsTool, MATCH_PROP, SEARCH_PROP } from './formats.ts'
@@ -116,6 +117,33 @@ const DASHBOARD_SAID = 'dashboard:'
  * format of twenty thousand rows is not a sentence either.
  */
 const NAMED_CAP = 500
+
+/**
+ * **An input view's form, as text** (M55 U2, D-536): each field it asks, in
+ * order, with the value it starts at and what the column takes; then what it
+ * sets without asking — "Adds as account Visa" (D-533).
+ */
+function inputFormText(declaration: FormatDeclaration, view: SavedView): string {
+  const { fields, defaults } = inputShapeOf(view.address, declaration.name)
+  const started = (name: string): string | undefined => {
+    const value = defaults[name]
+    return value === undefined ? undefined : Array.isArray(value) ? value.join(', ') : String(value)
+  }
+  const asked = fields.map((name) => {
+    const column = declaration.columns.find((each) => each.name === name)
+    const start = started(name)
+    return `- ${name}${column?.required === true ? ' (required)' : ''}: ${column?.type ?? 'not a column'}${start === undefined ? '' : `, starts at ${start}`}`
+  })
+  const set = Object.keys(defaults)
+    .filter((name) => !fields.includes(name))
+    .map((name) => `${name} ${started(name) ?? ''}`)
+  return paragraphs(
+    `The input view ${view.name} of ${declaration.title}${view.isDefault === true ? ', the format’s default' : ''}: a form, drawn read-only. It asks:`,
+    asked.length === 0 ? 'Nothing: every row it adds is its defaults alone.' : asked.join('\n'),
+    set.length === 0 ? undefined : `Adds as ${set.join(', ')}.`,
+    `\`record_format_rows\` with \`view: "${view.name}"\` writes rows through it: what a row leaves out, its defaults fill.`,
+  )
+}
 
 export const showFormatTool: PluginTool = {
   definition: {
@@ -298,13 +326,22 @@ async function sheetAnswer(
     }
     let said = ''
     let laid: Record<string, unknown> | undefined
+    let form: string | undefined
     const read = await readDocument(path, (document) => {
-      if (!listFormats(document.db).some((each) => each.name === format)) return ''
+      const declaration = listFormats(document.db).find((each) => each.name === format)
+      if (declaration === undefined) return ''
       const saved = savedViewNamed(document.db, format, asked)
+      // **An input view draws its form, read-only** (M55 U2, D-536): the
+      // frame opens it where the app does, and the text says what it asks.
+      if (saved.kind === INPUT_KIND) {
+        form = inputFormText(declaration, saved)
+        return 'ok'
+      }
       said = `The saved view ${saved.name}: ${savedViewSaid(saved)}.\n\n`
       laid = { ...savedViewArgs(saved, args), view: saved.kind }
       return 'ok'
     })
+    if (form !== undefined) return { text: form, drawn: { format, view: 'sheet', filter: {}, columns: {} } }
     if (laid === undefined) {
       if (read === '') return { text: await formatRowsTool.run({ path, format }, {}) }
       return { text: read }

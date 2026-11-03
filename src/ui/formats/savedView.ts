@@ -1,11 +1,18 @@
 import { useContext, useMemo } from 'react'
 import { useLocation } from 'react-router-dom'
 
-import { savedViews, saveView } from '@/data/repositories/formatViewRepository.ts'
-import { savedNameRefusal, type SavedKind, type SavedView } from '@/domain/format/view.ts'
+import type { Database } from 'sql.js'
+
+import type { RowFilter } from '@/data/repositories/formatFilterRepository.ts'
+import { listFormats } from '@/data/repositories/formatRepository.ts'
+import { defaultInputView, savedViews, saveView } from '@/data/repositories/formatViewRepository.ts'
+import type { FormatDeclaration } from '@/domain/format/declaration.ts'
+import { heldExactly, INPUT_KIND, inputDraft, inputViewRefusals } from '@/domain/format/inputView.ts'
+import { offeredOf, type RowDraft } from '@/domain/format/rowDraft.ts'
+import { entryDefaults, savedNameRefusal, type SavedKind, type SavedView } from '@/domain/format/view.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 
-import { canonicalAddress, holdsAnything, sameAddress } from './addressFilter.ts'
+import { canonicalAddress, holdsAnything, inputShapeOf, sameAddress } from './addressFilter.ts'
 import { ReadOnly } from './readOnly.ts'
 
 /**
@@ -53,6 +60,7 @@ export function useSavedViews(format: string | undefined): readonly SavedView[] 
 export function useSaving(format: string | undefined, kind: SavedKind): Saving | undefined {
   const readOnly = useContext(ReadOnly)
   const mutate = useDocumentStore((state) => state.mutate)
+  const db = useDocumentStore((state) => state.db)
   const { search } = useLocation()
   const views = useSavedViews(format)
   if (readOnly !== undefined || format === undefined) return undefined
@@ -64,6 +72,12 @@ export function useSaving(format: string | undefined, kind: SavedKind): Saving |
       const said = name.trim()
       const refusal = savedNameRefusal(said)
       if (refusal !== undefined) return refusal
+      // An input view is refused by the function the tool asks too (M55 U2, D-536).
+      const declaration = db === undefined ? undefined : listFormats(db).find((each) => each.name === format)
+      if (kind === INPUT_KIND && declaration !== undefined) {
+        const reasons = inputViewRefusals(declaration, inputShapeOf(search, format))
+        if (reasons.length > 0) return reasons.join(' ')
+      }
       try {
         mutate((db) => saveView(db, { format, name: said, kind, address: canonicalAddress(search) }))
       } catch (error) {
@@ -72,4 +86,48 @@ export function useSaving(format: string | undefined, kind: SavedKind): Saving |
       return undefined
     },
   }
+}
+
+/**
+ * **The format's default input view's defaults, as a draft holds them** (M55
+ * U2, D-536) — a date's word worked out on `day` — or nothing without one.
+ */
+export function inputDefaults(db: Database, declaration: FormatDeclaration, day: string): Readonly<Record<string, string>> {
+  const view = defaultInputView(db, declaration.name)
+  return view === undefined ? {} : inputDraft(declaration, inputShapeOf(view.address, declaration.name).defaults, day)
+}
+
+/**
+ * **What a new row starts at on screen** — D-536's one defaults rule
+ * (`entryDefaults`), read for the table's blank row, entry/new and quick add
+ * alike: the default input view's defaults, then the address's exact values,
+ * then a required enum's first member. `implied` is what quick add's group sets.
+ */
+export function newRowDefaults(
+  db: Database,
+  declaration: FormatDeclaration,
+  filter: RowFilter,
+  day: string,
+  implied: ReadonlySet<string> = new Set(),
+): Readonly<Record<string, string>> {
+  return entryDefaults(declaration.columns, implied, {
+    input: inputDefaults(db, declaration, day),
+    address: heldExactly(declaration, filter.match, day),
+  })
+}
+
+/**
+ * **What a draft holds beyond what it started at** — the cells somebody
+ * typed, as `offeredOf` offers them. A default drawn in its field from the
+ * start is not typed (D-518), so a row holding only defaults is untouched.
+ */
+export function typedOf(
+  declaration: FormatDeclaration,
+  draft: RowDraft,
+  startsAt: Readonly<Record<string, string>>,
+): Readonly<Record<string, string | readonly string[]>> {
+  const start = offeredOf(declaration, startsAt)
+  return Object.fromEntries(
+    Object.entries(offeredOf(declaration, draft)).filter(([key, value]) => JSON.stringify(value) !== JSON.stringify(start[key])),
+  )
 }

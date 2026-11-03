@@ -685,11 +685,14 @@ export function withArticle(word: string): string {
  * the view applies, never a value a model makes** (D-137): it is drawn in its
  * field from the start, and an entry given nothing else is still untouched.
  * `implied` names the columns something else already sets — U4's quick add,
- * from the group it is typed in.
+ * from the group it is typed in. **Since M55 U2 the one defaults rule**
+ * (D-536): `given` lays the address's exact values over a first member and
+ * the format's default input view's defaults over both.
  */
 export function entryDefaults(
   columns: readonly { readonly name: string; readonly type: string; readonly required: boolean; readonly values: readonly string[] }[],
   implied: ReadonlySet<string> = new Set(),
+  given: EntryGiven = {},
 ): Readonly<Record<string, string>> {
   const defaults: Record<string, string> = {}
   for (const column of columns) {
@@ -698,7 +701,23 @@ export function entryDefaults(
       defaults[column.name] = first
     }
   }
+  // The address's exact values over a first member, the input view's over both.
+  for (const [key, value] of Object.entries({ ...given.address, ...given.input })) {
+    if (implied.has(key) || implied.has(key.replace(/_(currency|unit)$/, ''))) continue
+    defaults[key] = value
+  }
   return defaults
+}
+
+/**
+ * **What a new row is given before anybody types** — M55 U2, D-536, the one
+ * defaults rule: the format's default input view's defaults (`inputDraft`),
+ * then the address's exact values (`heldExactly`), then a required enum's
+ * first member. Each is already a draft's strings, a date worked out.
+ */
+export interface EntryGiven {
+  readonly input?: Readonly<Record<string, string>>
+  readonly address?: Readonly<Record<string, string>>
 }
 
 /**
@@ -1930,9 +1949,12 @@ export function inDueOrder<R>(rows: readonly R[], dueOf: (row: R) => string | un
  *
  * Named per format: `task` / `Due today` is what a dashboard (M53 U7) points at.
  */
-export const SAVED_KINDS = ['table', 'board', 'list', 'roadmap', 'ready'] as const
+export const SAVED_KINDS = ['table', 'board', 'list', 'roadmap', 'ready', 'input'] as const
 
 export type SavedKind = (typeof SAVED_KINDS)[number]
+
+/** The kinds that show rows — every saved view's but an input view's (M55 U2, D-536). */
+export type ShownKind = Exclude<SavedKind, 'input'>
 
 export interface SavedView {
   readonly format: string
@@ -1940,6 +1962,13 @@ export interface SavedView {
   readonly kind: SavedKind
   /** The address's query as the address spells it — `?due=today` — or empty for every row. */
   readonly address: string
+  /**
+   * **The format's default input view** (M55 U2, D-533, D-536): the one Add,
+   * the list's + and quick add open, and whose defaults every new row starts
+   * from. At most one per format (066's partial unique index), and only an
+   * input view. Absent is not the default.
+   */
+  readonly isDefault?: boolean
 }
 
 /** The longest name a saved view takes — `063_saved_view`'s CHECK. */

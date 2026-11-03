@@ -57,7 +57,17 @@ import {
 import { filterQuery } from '@/data/repositories/formatFilterRepository.ts'
 import { formatViews } from '@/data/repositories/formatLinkViewRepository.ts'
 import { toISODate } from '@/core/time.ts'
-import { addressView, canonicalAddress, filterAddress, foldFilter, isFoldKey, type AddressOrder } from '@/ui/formats/addressFilter.ts'
+import {
+  addressView,
+  canonicalAddress,
+  filterAddress,
+  foldFilter,
+  inputAddress,
+  inputShapeOf,
+  isFoldKey,
+  type AddressOrder,
+} from '@/ui/formats/addressFilter.ts'
+import { INPUT_KIND, inputViewRefusals } from '@/domain/format/inputView.ts'
 import { today } from '../today.ts'
 import { savedViewSaid } from './saved.ts'
 import { dashboardLine, judgeDashboard, type DashboardChange } from './dashboard.ts'
@@ -134,6 +144,9 @@ const KEYS = [
   'columns',
   'rename',
   'delete',
+  'fields',
+  'defaults',
+  'default',
   'add',
   'size',
   'remove',
@@ -256,7 +269,7 @@ function judge(
 
   switch (view as View) {
     case 'saved': {
-      const wrong = extra(['name', 'kind', 'match', 'search', 'order', 'descending', 'columns', 'rename', 'delete'])
+      const wrong = extra(['name', 'kind', 'match', 'search', 'order', 'descending', 'columns', 'rename', 'delete', 'fields', 'defaults', 'default'])
       if (wrong !== undefined) return { reason: wrong }
       return judgeSaved(db, declaration, declared, entry)
     }
@@ -565,7 +578,7 @@ function judgeSaved(
   const was = savedView(db, format, name)
   const others = savedViews(db, format).map((each) => `\`${each.name}\``)
   const missing = `${format} has no saved view called ${name}${others.length === 0 ? '' : `; it has ${others.join(', ')}`}.`
-  const holds = ['kind', 'match', 'search', 'order', 'descending', 'columns'].filter((key) => entry[key] !== undefined)
+  const holds = ['kind', 'match', 'search', 'order', 'descending', 'columns', 'fields', 'defaults', 'default'].filter((key) => entry[key] !== undefined)
 
   if (entry['delete'] !== undefined) {
     if (entry['delete'] !== true) return { reason: '`delete` is true, or left out.' }
@@ -592,6 +605,10 @@ function judgeSaved(
   if (typeof offeredKind !== 'string' || !isSavedKind(offeredKind)) {
     return { reason: `\`kind\` is the view it opens as: ${SAVED_KINDS.join(', ')}.` }
   }
+  // An input view (M55 U2, D-533, D-536) asks for rows: its own arguments, its own checks.
+  if (offeredKind === INPUT_KIND) return judgeInput(db, declaration, entry, name, was)
+  const asking = ['fields', 'defaults', 'default'].filter((key) => entry[key] !== undefined)
+  if (asking.length > 0) return { reason: `${asking.map((key) => `\`${key}\``).join(', ')} ${asking.length === 1 ? 'goes' : 'go'} with an input view, \`kind: input\`.` }
   if (!(has as readonly string[]).includes(offeredKind)) return { reason: `${format} has no ${offeredKind}; its views are ${has.join(', ')}.` }
 
   const match = entry['match']
@@ -691,6 +708,68 @@ function judgeSaved(
   return { changes: [{ kind: 'SAVED', format, name, was, now, kept, given }] }
 }
 
+/**
+ * **An input view** (M55 U2, D-533, D-536): `fields`, the columns it asks in
+ * order, and `defaults`, a column to the value every row it adds starts at —
+ * a date's `today`, `yesterday` or `tomorrow` kept as the word. `default: true`
+ * makes it the format's default input view, taking the mark from the one that
+ * had it; `default: false` lets it go. Refused, every reason at once, by
+ * `inputViewRefusals` — the screen's check too. On one already saved, what is
+ * left out stays as it was.
+ */
+function judgeInput(
+  db: Database,
+  declaration: FormatDeclaration,
+  entry: Record<string, unknown>,
+  name: string,
+  was: SavedView | undefined,
+): { readonly changes: readonly Change[] } | { readonly reason: string } {
+  const format = declaration.name
+  const shown = ['match', 'search', 'order', 'descending', 'columns'].filter((key) => entry[key] !== undefined)
+  if (shown.length > 0) {
+    return {
+      reason: `An input view asks for rows rather than showing them: it takes \`fields\` and \`defaults\`, and ${shown.map((key) => `\`${key}\``).join(', ')} ${shown.length === 1 ? 'is' : 'are'} a shown view’s.`,
+    }
+  }
+  const fields = entry['fields']
+  if (fields !== undefined && (!Array.isArray(fields) || fields.some((each) => typeof each !== 'string'))) {
+    return { reason: '`fields` is the column names it asks, in the order it asks them.' }
+  }
+  const defaults = entry['defaults']
+  if (defaults !== undefined && (defaults === null || typeof defaults !== 'object' || Array.isArray(defaults))) {
+    return { reason: '`defaults` is an object of column name to the value a row starts at: `{date: "today", account: "Visa"}`.' }
+  }
+  const mark = entry['default']
+  if (mark !== undefined && typeof mark !== 'boolean') return { reason: '`default` is true or false.' }
+  const holding = was?.kind === INPUT_KIND ? inputShapeOf(was.address, format) : undefined
+  const shape = {
+    fields: (fields as readonly string[] | undefined) ?? holding?.fields ?? [],
+    defaults: (defaults as Record<string, unknown> | undefined) ?? holding?.defaults ?? {},
+  }
+  const reasons = inputViewRefusals(declaration, shape)
+  if (reasons.length > 0) return { reason: reasons.join(' ') }
+  const address = inputAddress(format, shape)
+  if (address.length > SAVED_ADDRESS_LONGEST) {
+    return { reason: `A saved view keeps at most ${String(SAVED_ADDRESS_LONGEST)} characters of address; this one is ${String(address.length)}.` }
+  }
+  const isDefault = mark ?? (was?.isDefault === true)
+  const now: SavedView = { format, name, kind: INPUT_KIND, address, ...(isDefault ? { isDefault: true } : {}) }
+  // The mark is one per format: the view that had it is said to lose it.
+  const other = isDefault ? savedViews(db, format).find((each) => each.isDefault === true && each.name !== name) : undefined
+  const unmarked: readonly Change[] =
+    other === undefined ? [] : [{ kind: 'SAVED', format, name: other.name, was: other, now: { format, name: other.name, kind: other.kind, address: other.address } }]
+  if (was === undefined) return { changes: [...unmarked, { kind: 'SAVED', format, name, was, now }] }
+  if (was.kind === now.kind && was.address === now.address && (was.isDefault === true) === isDefault) return { changes: unmarked }
+  const keeps: Readonly<Record<string, boolean>> = {
+    fields: (holding?.fields.length ?? 0) > 0,
+    defaults: Object.keys(holding?.defaults ?? {}).length > 0,
+    default: was.isDefault === true,
+  }
+  const given = ['kind', 'fields', 'defaults', 'default'].filter((key) => entry[key] !== undefined)
+  const kept = Object.keys(keeps).filter((key) => keeps[key] === true && !given.includes(key))
+  return { changes: [...unmarked, { kind: 'SAVED', format, name, was, now, kept, given }] }
+}
+
 /** `a, b and c`. */
 function listed(words: readonly string[]): string {
   return words.length <= 1 ? words.join('') : `${words.slice(0, -1).join(', ')} and ${words[words.length - 1] ?? ''}`
@@ -711,7 +790,7 @@ function keptText(changes: readonly Change[]): string | undefined {
 
 /** A saved view as the dry run's table says it: its kind and address, or `-` for none. */
 function savedText(view: SavedView | undefined): string {
-  return view === undefined ? '-' : `${view.kind}${view.address === '' ? '' : ` ${view.address}`}`
+  return view === undefined ? '-' : `${view.kind}${view.address === '' ? '' : ` ${view.address}`}${view.isDefault === true ? ' (the default)' : ''}`
 }
 
 /**
@@ -985,11 +1064,19 @@ export function arrangementText(document: OpenDocument, declaration: FormatDecla
       board === undefined ? undefined : `**Board:** lanes by \`${board.lanes.name}\`.`,
       `**List:** ${listText(declaration, viewSettings(db, format, 'list'))}`,
       ((): string | undefined => {
-        const saved = savedViews(db, format)
+        const saved = savedViews(db, format).filter((each) => each.kind !== INPUT_KIND)
         return saved.length === 0
           ? undefined
           : `**Saved views** — \`show_format view:"<name>"\` draws one, \`format_rows view:"<name>"\` reads it: ` +
               `${saved.map((each) => `\`${each.name}\` (${savedViewSaid(each)})`).join(', ')}.`
+      })(),
+      ((): string | undefined => {
+        // M55 U2 (D-536): what asks for rows, apart from what shows them.
+        const inputs = savedViews(db, format).filter((each) => each.kind === INPUT_KIND)
+        return inputs.length === 0
+          ? undefined
+          : `**Input views** — \`record_format_rows view:"<name>"\` fills what a row leaves out from its defaults, ` +
+              `\`show_format view:"<name>"\` draws its form: ${inputs.map((each) => `\`${each.name}\` (${savedViewSaid(each)})`).join(', ')}.`
       })(),
       dashboardLine(db, format),
       ...WORD_VIEWS.map((view) => {
@@ -1010,7 +1097,7 @@ export const arrangeViewsTool: PluginTool = {
       '`new_entry` and the `order`; a board’s lanes; a table column’s `width`; a column’s `setting` in a list, a roadmap, a ' +
       'ready list or a start-here question; `view: saved`, a `name` and what it keeps (`today` stays that phrase) — on one saved, ' +
       'only what is given changes; `match:{}`, `search:""`, `order:""`, `columns:{}` empty one — or ' +
-      '`rename`, or `delete: true`; `view: dashboard` `add`s, `size`s, `order`s and `remove`s blocks (no `format`: the document’s). ' +
+      '`rename`, or `delete: true`; `kind: input` takes `fields`, `defaults`, `default`; `view: dashboard` `add`s, `size`s, `order`s and `remove`s blocks (no `format`: the document’s). ' +
       '`formats` with a `format` shows the ' +
       'arrangement and each column’s ways. Dry-runs until `commit: true`.',
     inputSchema: {
@@ -1048,6 +1135,9 @@ export const arrangeViewsTool: PluginTool = {
               search: stringProp('saved: as `format_rows`.'),
               descending: booleanProp('saved: as `format_rows`.'),
               columns: { type: ['array', 'object'], items: { type: 'string' }, description: 'saved: what its lines draw.' },
+              fields: { type: 'array', items: { type: 'string' }, description: 'input: columns asked, in order.' },
+              defaults: { type: 'object', description: 'input: column to start value; a date: today, yesterday, tomorrow.' },
+              default: booleanProp('input: the format’s default.'),
               rename: stringProp('saved, alone: a new name.'),
               delete: booleanProp('saved, alone.'),
               add: {

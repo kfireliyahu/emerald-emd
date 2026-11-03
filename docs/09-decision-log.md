@@ -456,6 +456,7 @@ written out here.
 | D-538 | 2026-11-03 | A date, a month and an amount read as the table writes them on a dashboard's blocks, a list, a rollup's table and its chart — `2026-07-27`, `2026-09`, `₪60.00` — and a rollup reads in words: its name *Landed by month*, what it counts a sentence; the declaration and every tool keep the name | [below](#d-538) |
 | D-539 | 2026-11-03 | A new column's type is picked from a short list in a person's words — Text · Number · Money · Date · Yes or no · Choice · Link · Computed — with *More types…* one step away under Numbers (Whole number · Exact decimal · Percentage · Quantity), Dates and times (Month · Time of day · Date and time), Several (Several choices · Several links) and Outside this document (File · Row in another document); the picked type shows its name, the stored word is its tooltip, and the declaration's word never changes; the maintainer's pick of three drafts | [below](#d-539) |
 | D-543 | 2026-11-03 | A newcomer's four skills are the plugin's alone, each named for what a person does — `read-a-file`, `what-looks-wrong`, `bring-in-a-plan`, `set-up-a-project` — and setting a project up is a skill of its own beside `emerald-setup`, which fires only where a session has no Emerald tools at all | [below](#d-543) |
+| D-536 | 2026-11-03 | An input view's default mark is a column of `format_saved_view` with a partial unique index (066), on an input view alone; a new row's defaults are one rule, `entryDefaults` — the default input view's, over the address's exact values, over a required enum's first member — read by the table's blank row, entry/new and quick add; a money or quantity default is written `12.90 ILS`; `record_format_rows view:` fills only the keys a row leaves out; `format_rows` refuses an input view; until M55 U3's form, an input view opens a new entry with its address | [below](#d-536) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1210,6 +1211,33 @@ tools, and a skill that fires on both presence and absence fires on neither reli
 `.claude/skills/`: nothing here would run them, and a copy nobody uses drifts. `import-a-file` and
 `file-onto-format` (the rows' placeholders): *import* is the ledger's statement flow, and *onto a
 format* is the tool's phrasing rather than a person's.
+
+## D-536 · 2026-11-03 · An input view's default mark is a column of `format_saved_view` with a partial unique index (066), on an input view alone; a new row's defaults are one rule, `entryDefaults` — the default input view's, over the address's exact values, over a required enum's first member — read by the table's blank row, entry/new and quick add; a money or quantity default is written `12.90 ILS`; `record_format_rows view:` fills only the keys a row leaves out; `format_rows` refuses an input view; until M55 U3's form, an input view opens a new entry with its address <a id="d-536"></a>
+
+**Context.** D-533 settled what an input view is and left M55 U2 three shapes: where the default mark
+lives, how a default that is not a word is written, and what a screen opens before U3 builds the form.
+M54 U1 had found the table's blank row refusing a task's `state` while Add and quick add filled it:
+three ways of starting a row, two rules.
+
+**Decision.** `format_saved_view` gains `is_default` (0/1), `CHECK`ed to `kind = 'input'`, and a partial
+unique index on `format_name WHERE is_default = 1` — the mark belongs to the view, follows a rename,
+goes with a delete, and the table itself holds it to one per format; `saveView` takes it from the view
+that had it, and the dry run says so. A text document writes `default: true` in the view's block.
+`inputViewRefusals` (domain, `inputView.ts`) is the one check, asked by `arrange_views` and by the screen's
+save: a required column neither asked nor defaulted, a default its column's type or checks refuse (a
+date word naming more than one day among them), a computed column asked or defaulted — every reason at
+once. A money or a quantity default is the figure and its currency or unit, `12.90 ILS`, so it is
+checked whole. `entryDefaults` takes the default input view's defaults and the address's exact values
+(`heldExactly`, which `filterImplies` now calls) and lays them input over address over a first member;
+the blank row, entry/new and quick add all read it through `newRowDefaults`, and a default drawn in a
+cell is not counted as typed (`typedOf`). `record_format_rows view:` fills a column only when the row
+names neither it nor its companion key, and refuses any other kind; `format_rows view:` refuses an
+input view (it shows no rows). Until U3, `savedViewPath` opens an input view as entry/new with its
+address, so the frame draws a read-only new entry starting at its defaults.
+
+**Rejected.** A `format_view_column` setting or a document setting naming the default view: a rename or
+delete would leave it pointing at nothing, and nothing would hold it to one. A money default as two keys
+of the address: an address holds one value per column.
 
 ## Related
 

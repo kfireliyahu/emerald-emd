@@ -1146,6 +1146,16 @@ rather than three decisions.
 > **M53 F4 sizes a block** (D-527): `size:[{name:"Open tasks", width:4, height:8}]` on the same setting
 > — a width in the grid's columns (1 to 4) and a height in its rows (2 to 20), either alone — as dragging
 > the block's edge does on screen; `show_format` names a sized block's size, and one with none draws as it did.
+> **M55 U2 added input views** (D-533, D-536): `arrange_views view:saved name:"Card charge" kind:input
+> fields:[merchant, amount] defaults:{date:"today", account:"Visa"} default:true` keeps a saved view
+> that asks for rows — the fields in order, the defaults a value of the column's type or a date's
+> `today`/`yesterday`/`tomorrow`, kept as the word — and makes it the format's default (one per format;
+> `default:false` lets it go). Refused, every reason at once, by the screen's own check: a required
+> column neither asked nor defaulted, a default its column refuses (`this week` among them), a computed
+> column. `record_format_rows view:"Card charge"` fills each row's left-out fields from its defaults and
+> the dry run names them per row (*Row 1 — date and account from Card charge*), refusing a view of
+> another kind; `show_format view:"Card charge"` draws its form read-only (the frame opens it on a new
+> entry until M55 U3's form); `format_rows` refuses one; `formats` names a format's input views apart.
 > **M53 U5 added saved views** (D-520): `arrange_views view:saved name:"Due today" kind:list
 > match:{due:"today"}` keeps a format's filter, folds, columns, sort and kind under a name — the
 > address as the app spells it, so `today` stays the phrase — and `rename` and `delete: true` change

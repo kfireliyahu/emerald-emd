@@ -445,7 +445,7 @@ writes here (D-289).
 
 ### FormatSavedView
 
-**Primary key** (`format_name`, `name`). Schema 63, M53 U5, D-514, D-520.
+**Primary key** (`format_name`, `name`). Schema 63, M53 U5, D-514, D-520; the input view and its default mark schema 66, M55 U2, D-533, D-536.
 
 > A format's filter, order, columns and kind of view under a name — what a view's address holds,
 > kept so the rail opens it again and a conversation draws it by name. **Presentation, never the
@@ -455,13 +455,14 @@ writes here (D-289).
 |---|---|---|
 | `format_name` | text | The format. `deleteFormat` clears its rows. |
 | `name` | text | 1 to 60 characters, one line, never opening with `?` nor a view's own word (`savedNameRefusal`). What a dashboard points at, with the format. |
-| `kind` | text | `table` · `board` · `list` · `roadmap` · `ready`, `CHECK`ed: the view it opens as. |
+| `kind` | text | `table` · `board` · `list` · `roadmap` · `ready` · `input`, `CHECK`ed: the view it opens as. An `input` view asks for rows rather than showing them (066, D-533): its address's columns for its own format are the fields it asks, in order, and its exact values its defaults — a value of the column's type (a money or a quantity as `12.90 ILS`), or on a date `today`, `yesterday` or `tomorrow`, kept as the word and worked out when used. `inputViewRefusals` refuses a required column neither asked nor defaulted, a default its column refuses (a range word like `this week` among them) and a computed column asked or defaulted. |
 | `address` | text | The address's query as `addressFilter.ts` spells it, in one spelling — `?due=today&state!=done&order:due=ascending`, or empty for every row; at most 2,000 characters. Kept as words, so a window around today (`today`, `within 7 days`) is worked out the day it is opened. No foreign key to a column: an address naming a column that has gone draws every row and says why. |
+| `is_default` | integer 0/1 | 1 on **the format's default input view** (066, D-536): its defaults are where every new row starts — the table's blank row, a new entry and quick add (`entryDefaults`: its defaults, then the address's exact values, then a required enum's first member). `CHECK`ed to an `input` view, and at most one per format by the partial unique index `format_saved_view_default`; `saveView` takes the mark from the one that had it. |
 
 Not more rows of `format_view_column`: a setting there is one word of at most 32 characters for one
 column. Written by the FilterBand's *Save this view* and the rail's rename and delete, and by
-`arrange_views view:saved` (D-520). A text document carries each as a block of its `views.md` part
-under `### <format> saved` — `name`, `kind`, `address`.
+`arrange_views view:saved` (D-520; an input view `kind: input` with `fields`, `defaults` and `default`, D-536). A text document carries each as a block of its `views.md` part
+under `### <format> saved` — `name`, `kind`, `address`, and `default: true` on the default input view.
 
 ### FormatDashboardBlock
 
