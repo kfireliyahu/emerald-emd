@@ -55,6 +55,8 @@ export function ChoiceField({
   onText,
   onPick,
   onKeyDown,
+  openOnFocus = false,
+  make,
   className = '',
   ...input
 }: {
@@ -64,6 +66,15 @@ export function ChoiceField({
   filter: boolean
   onText: (text: string) => void
   onPick: (choice: Choice) => void
+  /** Open the list when the field is entered, not only when typed in — a link's rows (M55 U6). */
+  openOnFocus?: boolean
+  /**
+   * **A name no choice has, made in place** (M55 U6, D-550): what the choices
+   * are one of — `milestone` — and what makes one by the name typed. The list
+   * then ends with *+ New "M9"*, under *No milestone is called "M9"* when
+   * nothing else matches.
+   */
+  make?: { readonly one: string; readonly onMake: (name: string) => void } | undefined
 } & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'>) {
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(0)
@@ -84,6 +95,10 @@ export function ChoiceField({
             (each.search?.toLocaleLowerCase().includes(needle) ?? false),
         )
       : choices
+  // The last option, past every choice: never the one Enter is on by itself,
+  // so Enter on a name no row has still keeps it as typed.
+  const maker = make !== undefined && filter && needle !== '' && !exact ? make : undefined
+  const count = shown.length + (maker === undefined ? 0 : 1)
 
   useLayoutEffect(() => {
     if (!open || field.current === null) return
@@ -109,7 +124,7 @@ export function ChoiceField({
   // the field already holds.
   useEffect(() => {
     const at = shown.findIndex((each) => each.label.toLocaleLowerCase() === needle)
-    setActive(at === -1 ? 0 : at)
+    setActive(at === -1 ? (shown.length > 0 ? 0 : -1) : at)
     // `shown` is derived from these two; listing it would re-run every render.
   }, [needle, choices])
 
@@ -139,7 +154,7 @@ export function ChoiceField({
           setOpen(true)
         }}
         onFocus={(event) => {
-          if (!filter || input.readOnly === true) setOpen(true)
+          if (!filter || input.readOnly === true || openOnFocus) setOpen(true)
           input.onFocus?.(event)
         }}
         onClick={(event) => {
@@ -151,11 +166,17 @@ export function ChoiceField({
           input.onBlur?.(event)
         }}
         onKeyDown={(event) => {
-          if (open && shown.length > 0) {
+          if (open && count > 0) {
             if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
               event.preventDefault()
               const step = event.key === 'ArrowDown' ? 1 : -1
-              setActive((at) => Math.min(Math.max(at + step, 0), shown.length - 1))
+              setActive((at) => Math.min(Math.max(at + step, 0), count - 1))
+              return
+            }
+            if (event.key === 'Enter' && maker !== undefined && active === shown.length) {
+              event.preventDefault()
+              setOpen(false)
+              maker.onMake(text.trim())
               return
             }
             if (event.key === 'Enter') {
@@ -188,7 +209,7 @@ export function ChoiceField({
           onKeyDown?.(event)
         }}
       />
-      {open && place !== undefined && shown.length > 0 && (
+      {open && place !== undefined && count > 0 && (
         <ul
           ref={list}
           id={id}
@@ -228,7 +249,7 @@ export function ChoiceField({
               )}
               <Bidi className="truncate">{choice.label}</Bidi>
               {choice.detail !== undefined && (
-                <Bidi className="truncate text-caption text-ink-tertiary">{choice.detail}</Bidi>
+                <Bidi className="truncate text-caption text-ink-secondary">{choice.detail}</Bidi>
               )}
               {choice.label.toLocaleLowerCase() === needle && (
                 <span aria-hidden className="ml-auto pl-3 text-caption text-ink-tertiary">
@@ -238,6 +259,29 @@ export function ChoiceField({
             </li>
             </Fragment>
           ))}
+          {maker !== undefined && shown.length === 0 && (
+            <li role="presentation" className="px-3 py-1 text-caption text-ink-secondary">
+              No {maker.one} is called “<Bidi>{text.trim()}</Bidi>”
+            </li>
+          )}
+          {maker !== undefined && (
+            <li
+              data-index={shown.length}
+              role="option"
+              aria-selected={active === shown.length}
+              className={`flex cursor-pointer items-center gap-2 py-1 px-3 whitespace-nowrap text-accent ${
+                active === shown.length ? 'bg-accent-soft' : 'hover:bg-surface'
+              }`}
+              onMouseEnter={() => setActive(shown.length)}
+              onClick={(event) => {
+                event.preventDefault()
+                setOpen(false)
+                maker.onMake(text.trim())
+              }}
+            >
+              + New “<Bidi>{text.trim()}</Bidi>”
+            </li>
+          )}
         </ul>
       )}
     </>

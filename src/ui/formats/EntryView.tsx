@@ -1,4 +1,4 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
 import { formatMoney, toDecimalString } from '@/core/money.ts'
 import type { RowDerived } from '@/data/repositories/formatDerivedRepository.ts'
@@ -52,17 +52,144 @@ import { BalanceProof, verdictInk } from '@/ui/formats/Balance.tsx'
 import { NamedBy, type LinkedRow } from '@/ui/formats/LinkViews.tsx'
 import { StateChip } from '@/ui/formats/StateChip.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import type { LinkChoice, LinkedRefusal, NewLinked } from '@/ui/formats/linkTargets.ts'
 import { ChoiceField, type Choice } from '@/ui/components/ChoiceField.tsx'
 import { IconAction } from '@/ui/components/IconAction.tsx'
 import { NativePicker, type PickerHandle } from '@/ui/components/NativePicker.tsx'
 import { CurrencyField, TypedHint, useTyped } from '@/ui/formats/TypedField.tsx'
 import { parseMarkdown } from '@/ui/formats/markdown.ts'
 
-/** A row of another format, as something to pick from a list. */
-export interface LinkChoice {
-  readonly id: string
-  readonly label: string
+export type { LinkChoice } from '@/ui/formats/linkTargets.ts'
+
+/** A link's row as a choice: by its name, with its title beside it (M55 U6). */
+export function linkChoice(each: LinkChoice): Choice {
+  return { value: each.id, label: each.label, detail: each.title, search: each.title }
 }
+
+/** An enum's member as a person reads it, here as on the board's lane: `in_progress` is *in progress*. */
+export function memberWords(member: string): string {
+  return member.replace(/_/g, ' ')
+}
+
+/**
+ * **What makes a row a link field names and no row has** (M55 U6, D-550) —
+ * the screen's, given to every link field under it: the target's one-word
+ * name, the row a typed name would make and what it still asks, and the
+ * write, which is `record_format_rows`'s batch. Missing where nothing may be
+ * written: a pack's format, a copy nothing is saved from.
+ */
+export interface LinkMaker {
+  readonly one: (target: string) => string
+  readonly plan: (target: string, name: string) => NewLinked | undefined
+  /** The rows a link of the row being made may name. */
+  readonly choices: (target: string) => readonly LinkChoice[]
+  readonly make: (made: NewLinked) => { readonly id: string } | { readonly refusals: readonly LinkedRefusal[] }
+  readonly units: UnitTable
+  readonly today: string
+}
+
+export const LinkMakerContext = createContext<LinkMaker | undefined>(undefined)
+
+/** A row being made from a link field: what it holds so far, and why it was refused. */
+export interface Making {
+  readonly made: NewLinked
+  readonly refusals: readonly LinkedRefusal[]
+}
+
+/**
+ * **A link field's own small form, under it** (M55 U6, D-550): the name
+ * typed, and the target's required columns nothing fills — each the entry's
+ * own field, with its refusal said at it (M55 U5). Add makes the row and
+ * links it; Esc, or Cancel, leaves the link field as typed.
+ */
+export function NewLinkForm({
+  making,
+  maker,
+  onChange,
+  onAdd,
+  onCancel,
+}: {
+  making: Making
+  maker: LinkMaker
+  onChange: (next: Making) => void
+  onAdd: () => void
+  onCancel: () => void
+}) {
+  const { made, refusals } = making
+  const one = made.format.title.toLowerCase()
+  const fields = [...(made.named === undefined ? [] : [made.named]), ...made.asks]
+  const atNoField = refusals.filter((each) => each.column === undefined || !fields.some((column) => column.name === each.column))
+  return (
+    <div
+      data-new-link
+      role="group"
+      aria-label={`New ${one}`}
+      className="flex min-w-72 flex-col gap-3 border-t border-hairline pt-3"
+      onKeyDown={(event) => {
+        if (event.key !== 'Escape') return
+        event.preventDefault()
+        event.stopPropagation()
+        onCancel()
+      }}
+    >
+      <p className="fc-label">
+        New <Bidi>{one}</Bidi>
+      </p>
+      {fields.map((column, at) => {
+        const way = entryWayOf(column, undefined, false)
+        return (
+          <Field
+            key={column.name}
+            column={column}
+            part="text"
+            way={way === 'markdown' ? 'line' : way}
+            offered={[way]}
+            one={one}
+            draft={made.draft}
+            units={maker.units}
+            top={undefined}
+            oneUnit={undefined}
+            linked={NO_LINKED}
+            today={maker.today}
+            choices={column.target === undefined ? [] : maker.choices(column.target)}
+            labels={NO_LABELS}
+            readOnly={false}
+            fresh
+            marked={false}
+            refused={refusals.find((each) => each.column === column.name)?.reason}
+            mover={undefined}
+            dimmed={false}
+            autoFocus={at === (made.asks.length > 0 ? 1 : 0)}
+            onChange={(key, text) => onChange({ made: { ...made, draft: withField(made.draft, key, text) }, refusals })}
+            onPick={(key, text) => onChange({ made: { ...made, draft: withField(made.draft, key, text) }, refusals })}
+            onFocus={() => undefined}
+            onLeave={() => undefined}
+            onSubmit={onAdd}
+            onRevert={() => undefined}
+            onChoose={() => undefined}
+            onOpen={() => undefined}
+          />
+        )
+      })}
+      {atNoField.map((each) => (
+        <p key={each.reason} className="max-w-prose text-caption text-negative">
+          {each.reason}
+        </p>
+      ))}
+      <span className="flex gap-2">
+        <Button size="sm" onClick={onAdd}>
+          Add
+        </Button>
+        <Button size="sm" variant="ghost" onClick={onCancel}>
+          Cancel
+        </Button>
+      </span>
+    </div>
+  )
+}
+
+const NO_LINKED: ReadonlyMap<string, LinkedRow> = new Map()
+const NO_LABELS: ReadonlyMap<string, string> = new Map()
 
 /** Where this entry is in the list it was opened from — the sheet's order and search. */
 export interface EntryPager {
@@ -744,6 +871,7 @@ function Field({
   refused,
   mover,
   dimmed,
+  autoFocus = false,
   onChange,
   onPick,
   onFocus,
@@ -774,6 +902,8 @@ function Field({
   mover: Mover | undefined
   /** A hidden field drawn because "N hidden" was pressed: dimmed, and tagged so. */
   dimmed: boolean
+  /** Focus its control when drawn: the first field a link's inline form asks (M55 U6). */
+  autoFocus?: boolean
   onChange: (key: string, text: string) => void
   onPick: (key: string, text: string) => void
   /** Focus came into the field: it stays drawn until it is left (M53 U3). */
@@ -793,6 +923,9 @@ function Field({
   const said = useId()
   useLayoutEffect(() => {
     for (const control of box.current?.querySelectorAll('input, textarea') ?? []) {
+      // A link's inline form under this field has fields, and refusals, of its own.
+      const form = control.closest('[data-new-link]')
+      if (form !== null && !form.contains(box.current)) continue
       if (refused === undefined) {
         control.removeAttribute('aria-invalid')
         if (control.getAttribute('aria-describedby') === said) control.removeAttribute('aria-describedby')
@@ -802,6 +935,10 @@ function Field({
       }
     }
   })
+  useEffect(() => {
+    if (autoFocus) box.current?.querySelector<HTMLElement>('input, textarea')?.focus()
+    // Once, as the field is drawn.
+  }, [])
   // The label as words (M53 U3): `done_on` reads "done on", `estimate_h` "estimate".
   const label = entryLabel(column)
   const empty = (draft[column.name] ?? '').trim() === '' || draft[column.name] === '[]'
@@ -1934,9 +2071,9 @@ function Control({
           label={column.name}
           choices={
             column.type === 'enums'
-              ? column.values.map((each) => ({ value: each, label: each }))
+              ? column.values.map((each) => ({ value: each, label: memberWords(each) }))
               : [
-                  ...choices.map((each) => ({ value: each.id, label: each.label })),
+                  ...choices.map(linkChoice),
                   // A member past the list of choices is still called by its name.
                   ...(membersOfDraft(value) ?? [])
                     .filter((id) => !choices.some((each) => each.id === id))
@@ -1957,7 +2094,7 @@ function Control({
           {members.length > 0 && shown({ onTakeOut: (id) => pick(draftOfMembers(members.filter((each) => each !== id))) })}
           <AddMember
             label={column.name}
-            choices={choices.filter((each) => !members.includes(each.id)).map((each) => ({ value: each.id, label: each.label }))}
+            choices={choices.filter((each) => !members.includes(each.id)).map(linkChoice)}
             onAdd={(id) => {
               if (!members.includes(id)) pick(draftOfMembers([...members, id]))
             }}
@@ -1997,15 +2134,46 @@ function LinkField({
 }) {
   const [changing, setChanging] = useState(false)
   const [typed, setTyped] = useState<string | undefined>(undefined)
+  const [making, setMaking] = useState<Making | undefined>(undefined)
+  const holder = useRef<HTMLSpanElement>(null)
+  const maker = useContext(LinkMakerContext)
   const target = column.target
-  // A name typed whole is that row; anything else is kept as typed, and the
-  // write resolves it by name or refuses it, naming it.
+  // A name typed whole is that row — or its title, typed whole — and anything
+  // else is kept as typed, and the write resolves it by name or refuses it, naming it.
   const keep = (text: string): void => {
-    const exact = choices.filter((each) => each.label === text.trim())
+    const said = text.trim()
+    const byName = choices.filter((each) => each.label === said)
+    const exact = byName.length > 0 ? byName : choices.filter((each) => each.title === said)
     setTyped(undefined)
     setChanging(false)
-    onPick(exact.length === 1 && exact[0] !== undefined ? exact[0].id : text.trim())
+    onPick(exact.length === 1 && exact[0] !== undefined ? exact[0].id : said)
   }
+  // **What is missing, made in place** (M55 U6, D-550): a target that asks for
+  // nothing but its name is made at once; else its form opens under the field.
+  const linkIt = (id: string): void => {
+    setMaking(undefined)
+    setTyped(undefined)
+    setChanging(false)
+    onPick(id)
+  }
+  const add = (next: Making): void => {
+    if (maker === undefined) return
+    const done = maker.make(next.made)
+    if ('id' in done) linkIt(done.id)
+    else setMaking({ made: next.made, refusals: done.refusals })
+  }
+  const make =
+    maker === undefined || target === undefined || column.type !== 'link'
+      ? undefined
+      : {
+          one: maker.one(target),
+          onMake: (name: string) => {
+            const made = maker.plan(target, name)
+            if (made === undefined) return
+            if (made.asks.length === 0) add({ made, refusals: [] })
+            else setMaking({ made, refusals: [] })
+          },
+        }
   // A value no row is called stays a field holding what was typed, with its
   // sentence under it — never a link to a row that is not there (M55 U5).
   const resolved = choices.some((each) => each.id === value) || named(value) !== value
@@ -2037,11 +2205,14 @@ function LinkField({
       </span>
     )
   }
-  const all = choices.map((each) => ({ value: each.id, label: each.label }))
+  const all = choices.map(linkChoice)
   return (
+    <span ref={holder} className="inline-flex min-w-0 flex-col gap-1">
     <ChoiceField
       className={`${SEAMLESS} w-56`}
       filter
+      openOnFocus
+      make={make}
       dir="auto"
       autoFocus={changing}
       aria-label={column.name}
@@ -2066,6 +2237,8 @@ function LinkField({
         }
       }}
       onBlur={() => {
+        // Into the form making it: the name stays typed until that is done.
+        if (making !== undefined) return
         // **Leaving keeps what was typed, as Enter does** (M55 U5, D-545): a
         // name typed and left is the draft's, so Add names it — "No milestone
         // is called M9" — rather than calling the field empty.
@@ -2073,6 +2246,20 @@ function LinkField({
         else keep(typed)
       }}
     />
+    {making !== undefined && maker !== undefined && (
+      <NewLinkForm
+        making={making}
+        maker={maker}
+        onChange={setMaking}
+        onAdd={() => add(making)}
+        onCancel={() => {
+          // Esc leaves the field as typed, and back in it.
+          setMaking(undefined)
+          holder.current?.querySelector<HTMLInputElement>('input[role="combobox"]')?.focus()
+        }}
+      />
+    )}
+    </span>
   )
 }
 
@@ -2371,7 +2558,7 @@ function menuOf(column: ColumnDeclaration): readonly Choice[] {
   if (column.type === 'boolean') {
     return [none, { value: 'true', label: 'Yes' }, { value: 'false', label: 'No' }]
   }
-  return [none, ...column.values.map((each) => ({ value: each, label: each }))]
+  return [none, ...column.values.map((each) => ({ value: each, label: memberWords(each) }))]
 }
 
 /** What a stored value reads as among its choices — itself, if it is none of them. */

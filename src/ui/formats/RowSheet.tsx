@@ -26,7 +26,7 @@ import { MembersField } from './MembersField.tsx'
 import { ElsewhereLink } from './ElsewhereLink.tsx'
 import { FileLink } from './FileLink.tsx'
 import { IconAction } from '@/ui/components/IconAction.tsx'
-import { cellText, type LinkChoice } from '@/ui/formats/EntryView.tsx'
+import { cellText, linkChoice, LinkMakerContext, memberWords, NewLinkForm, type LinkChoice, type Making } from '@/ui/formats/EntryView.tsx'
 import { useRowCursor } from '@/ui/useRowCursor.ts'
 import { Conversation, selects } from '@/ui/formats/conversation.ts'
 import type { SheetMark } from '@/ui/formats/shape.ts'
@@ -186,6 +186,10 @@ export function RowSheet({
   // write per drag rather than one per pixel, each of which would dirty the
   // document and bump every reader's revision.
   const [dragging, setDragging] = useState<{ column: string; width: number } | undefined>()
+  // **A blank row's link makes what is missing in place** (M55 U6, D-550):
+  // the form the target asks for, in a row of its own under the cell's.
+  const maker = useContext(LinkMakerContext)
+  const [making, setMaking] = useState<(Making & { readonly row: number; readonly across: number; readonly column: string }) | undefined>()
   // The one column whose menu is open, from its header (M37 U4).
   const [menuOf, setMenuOf] = useState<string | undefined>()
   const widthOf = (column: ColumnDeclaration): number => widthNamed(column.name, defaultWidth(column))
@@ -678,6 +682,8 @@ export function RowSheet({
                 // Leaving the row, not moving between its cells.
                 const next = event.relatedTarget
                 if (next instanceof Node && event.currentTarget.contains(next)) return
+                // Into the form making one of its links: the row is not left.
+                if (next instanceof Element && next.closest('[data-new-link]') !== null) return
                 foot.onLeave(at)
               }}
               // The cursor's keys are the stored rows'; a field keeps its own.
@@ -695,6 +701,25 @@ export function RowSheet({
                   row={at}
                   across={across}
                   choices={choicesFor(column, links)}
+                  make={
+                    maker === undefined || column.type !== 'link' || column.target === undefined
+                      ? undefined
+                      : {
+                          one: maker.one(column.target),
+                          onMake: (name) => {
+                            const made = column.target === undefined ? undefined : maker.plan(column.target, name)
+                            if (made === undefined) return
+                            const into = { row: at, across, column: column.name }
+                            if (made.asks.length > 0) {
+                              setMaking({ made, refusals: [], ...into })
+                              return
+                            }
+                            const done = maker.make(made)
+                            if ('id' in done) foot.onChange(at, column.name, done.id)
+                            else setMaking({ made, refusals: done.refusals, ...into })
+                          },
+                        }
+                  }
                   wrong={why(at, column.name) !== undefined}
                   said={why(at, column.name) === undefined ? undefined : `${saidId}-${String(at)}-${String(across)}`}
                   onChange={(key, text) => foot.onChange(at, key, text)}
@@ -747,6 +772,48 @@ export function RowSheet({
                 />
               </tr>
             )}
+            {making !== undefined && making.row === at && maker !== undefined && (
+              // **The form under the cell** (M55 U6, D-550), from its column on:
+              // Add makes the row and links it; Esc leaves the cell as typed.
+              <tr data-motion-key={`foot-${String(at)}-new`} className="border-b border-hairline" onKeyDown={(event) => event.stopPropagation()}>
+                <td colSpan={1 + making.across} />
+                <td
+                  className="px-3 pb-3"
+                  colSpan={
+                    columns.length -
+                    making.across +
+                    derived.length +
+                    (adding === undefined ? 0 : 1) +
+                    declaration.aggregates.length +
+                    (identities ? 1 : 0) +
+                    1 +
+                    (onAddColumn === undefined ? 0 : 1)
+                  }
+                >
+                  <div className="max-w-md">
+                    <NewLinkForm
+                      making={making}
+                      maker={maker}
+                      onChange={(next) => setMaking({ ...making, ...next })}
+                      onAdd={() => {
+                        const done = maker.make(making.made)
+                        if (!('id' in done)) {
+                          setMaking({ ...making, refusals: done.refusals })
+                          return
+                        }
+                        setMaking(undefined)
+                        foot.onChange(at, making.column, done.id)
+                        focusCell(at, making.across)
+                      }}
+                      onCancel={() => {
+                        setMaking(undefined)
+                        focusCell(at, making.across)
+                      }}
+                    />
+                  </div>
+                </td>
+              </tr>
+            )}
             </Fragment>
           ))}
         </Flip>
@@ -766,6 +833,7 @@ function FootCell({
   row,
   across,
   choices,
+  make,
   wrong,
   said,
   onChange,
@@ -780,6 +848,8 @@ function FootCell({
   row: number
   across: number
   choices: readonly Choice[] | undefined
+  /** A link's *+ New "M9"* (M55 U6). */
+  make?: { readonly one: string; readonly onMake: (name: string) => void } | undefined
   wrong: boolean
   /** The id of the sentence under the cell saying why it was refused. */
   said?: string | undefined
@@ -873,6 +943,8 @@ function FootCell({
             text={labelIn(choices, draft[column.name] ?? '')}
             choices={choices}
             filter={column.type === 'link'}
+            openOnFocus={column.type === 'link'}
+            make={make}
             onText={(text) => {
               const named = choices.filter((each) => each.label === text)
               onChange(column.name, named.length === 1 && named[0] !== undefined ? named[0].value : text)
@@ -1061,12 +1133,12 @@ function choicesFor(
   links: ReadonlyMap<string, readonly LinkChoice[]>,
 ): readonly Choice[] | undefined {
   const plain = (each: string): Choice => ({ value: each, label: each })
-  if (isChoiceType(column.type)) return column.values.map(plain)
+  if (isChoiceType(column.type)) return column.values.map((each) => ({ value: each, label: memberWords(each) }))
   if (column.type === 'boolean') return ['yes', 'no'].map(plain)
   if (isLinkType(column.type) && column.target !== undefined) {
     // By id, shown by name. A name typed or pasted that is no row's own stays
     // text, and the batch resolves it by name or refuses it (D-289).
-    return (links.get(column.target) ?? []).map((each) => ({ value: each.id, label: each.label }))
+    return (links.get(column.target) ?? []).map(linkChoice)
   }
   return undefined
 }

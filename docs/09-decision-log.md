@@ -461,6 +461,7 @@ written out here.
 | D-545 | 2026-11-03 | An entry's refusal sits at its field and says every problem at once — on the form, under each field, outlined and `aria-invalid`, the first focused; in the table's blank row, in a line under the row, each sentence in its own column — and a link left with a name no row holds keeps it, so Add names it; a date is typed as `YYYY-MM-DD` or `today`, `yesterday`, `tomorrow` in the cell and on the form alike, a text field over the platform's calendar; *a* or *an* goes by the word's sound; a placeholder is `ink-secondary` | [below](#d-545) |
 | D-547 | 2026-11-03 | Where Claude Code runs the plugin's hooks module, the module answers SessionStart and UserPromptSubmit itself (start_here; each new inbox row once per session, then the count) and always passes the event on with `emerald_mod_answered` added, and the two npx hook commands start through `hooks/unless-mod.mjs`, which exits on that mark — because a module that answers without `next` silences every settings hook beneath it, the person's own included; it marks only what it answered, watches the document every 5 s for the status line (`$.ui.status`) and a toast, and `init` allows `format_rows` beside the pane's two reads — the unit's pick, for the maintainer to review | [below](#d-547) |
 | D-549 | 2026-11-03 | The plugin's hooks module refuses two write rules at the call — an `Edit` or `Write` on any `.emd` file, and a `git commit` in a linked worktree that would carry the project document's copy — each guard refusing when it fails; `/claim <ref>` and `/land [ref]` write nothing and hand the model the call in the command's `context`, then ask for a turn; the third rule, no `commit: true` without a dry run, is dropped on the maintainer's word | [below](#d-549) |
+| D-550 | 2026-11-03 | A link field opens its rows on focus, in the target's order — the column its roadmap orders by, else its name with numbers read as numbers — each by its name with its entry's title beside it; a name no row has ends the list with *No milestone is called "M9"* and *+ New "M9"*, never the option Enter is on by itself; a target whose required columns its new-row defaults fill is made at once, else a form under the field asks them with the entry's own fields and refusals, Add makes and links it through `stageRows`, and Esc leaves the field as typed; an enum's members read as words in every field | [below](#d-550) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1413,6 +1414,46 @@ by the last call (the three options put to him). Classic `commands/*.md` prompts
 **Consequences.** A session in Claude Code with the plugin can no longer hand-edit any `.emd`, its
 own included; a merge conflict in `docs/memory.emd` is resolved outside the `Edit` tool. The dry-run
 question is the driver's to record.
+
+## D-550 · 2026-11-03 · A link field opens its rows on focus, in the target's order — the column its roadmap orders by, else its name with numbers read as numbers — each by its name with its entry's title beside it; a name no row has ends the list with *No milestone is called "M9"* and *+ New "M9"*, never the option Enter is on by itself; a target whose required columns its new-row defaults fill is made at once, else a form under the field asks them with the entry's own fields and refusals, Add makes and links it through `stageRows`, and Esc leaves the field as typed; an enum's members read as words in every field <a id="d-550"></a>
+
+**Context.** M54 U1's two link rows (D-533 brought them into M55, U6): on project.emd's unit form
+the milestone listed M2, M3, M1 and the decision D-1, D-2, D-4, D-3 — id order, bare refs — opened
+only on typing, and a name no row had listed nothing, with no way to make it. The only *+ New…* was
+the parked ledger's `SelectOrNew`, a platform select.
+
+**Decision.**
+
+- **Order and names** (`linkTargets.ts`, `linkChoices`). A target's rows come in the order its
+  roadmap's `order` column says (a milestone's `position`), else by the column it is named by,
+  compared with numbers read as numbers (`D-2` before `D-10`). Each is its name — what a link is
+  written and kept by — with its entry's title beside it (ChoiceField's detail, now `ink-secondary`,
+  since a title is read) when the title is another column; typing finds either, and a title typed
+  whole is that row.
+- **Open on focus** (`openOnFocus`) in the entry's link field, the *Fill* chip's and the table's
+  blank row; other choice fields are unchanged.
+- **+ New** (`ChoiceField`'s `make`). A typed name no row has whole ends the list with *+ New "M9"*,
+  under *No milestone is called "M9"* when nothing else matches. It is never active by itself, so
+  Enter on a name no row has still keeps it as typed (D-545) and the table's Enter still writes the
+  row; ArrowDown or a click reaches it.
+- **Made in place** (`newLinked`, `stageLinked`). The new row is the target's new-row defaults
+  (D-536) with the name in its naming column; when no required column is left empty it is made at
+  once and linked. Else `NewLinkForm` opens under the field — in the table, in a row of its own under
+  the cell, from the cell's column on — asking the name and those columns with the entry's own `Field`
+  and each refusal at its field, in the screen's words. Add makes it through `stageRows` and
+  `insertRows`, the batch `record_format_rows` writes (D-227), so there is no new write; Esc or
+  Cancel closes the form and leaves the field as typed, back in it. The blank row is not left while
+  focus is in its form.
+- **The screen's** (`LinkMakerContext`): `FormatRows` provides it, and none where nothing may be
+  written; a pack's format is never made from a link field. A link column of the row being made lists
+  its own rows and may make one in turn.
+- **Words**: an enum's members read as words (`in progress`) in the entry's menus and chips and the
+  table's blank row, as the board's lanes do.
+
+**Alternatives rejected.** The title as the choice's label: the field, the cell and every tool name a
+link by its row's name, so a list naming it otherwise would show one thing and keep another. Making a
+name-only target on Enter: one keystroke would write a row nobody saw offered. *+ New* on a column of
+several links: not asked, and `MembersField` is a different control; left for when it is.
 
 ## Related
 

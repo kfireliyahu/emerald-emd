@@ -100,7 +100,8 @@ import { rowWriteRefusal, rowWriteRefusalOnScreen } from '@/domain/format/owner.
 import { Chip } from '@/ui/components/Chip.tsx'
 import { IconAction } from '@/ui/components/IconAction.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
-import { cellText, EntryView, type LinkChoice } from '@/ui/formats/EntryView.tsx'
+import { cellText, EntryView, LinkMakerContext, type LinkMaker } from '@/ui/formats/EntryView.tsx'
+import { linkChoices, linkChoicesOf, newLinked, stageLinked } from '@/ui/formats/linkTargets.ts'
 import { RollupView } from '@/ui/formats/RollupView.tsx'
 import { RowSheet, type FootRefusal, type Order } from '@/ui/formats/RowSheet.tsx'
 import { derivedOf } from '@/data/repositories/formatDerivedRepository.ts'
@@ -704,6 +705,47 @@ export function FormatRows({
   // so once, at the top of the frame, rather than here.
   // Said to a person: where, never which tool (M54 F2).
   const locked = rowWriteRefusalOnScreen(declaration) ?? readOnly
+  // **A link field makes what is missing in place** (M55 U6, D-550): the row
+  // checked and written as `record_format_rows` writes it, so no new write.
+  const targetOf = (name: string): FormatDeclaration | undefined => data.declarations.find((each) => each.name === name)
+  const linkMaker: LinkMaker | undefined =
+    locked !== undefined
+      ? undefined
+      : {
+          one: (target) => (targetOf(target)?.title ?? target).toLowerCase(),
+          plan: (target, typed) => {
+            const format = targetOf(target)
+            // A pack's format is written only through the pack (D-269).
+            if (format === undefined || rowWriteRefusalOnScreen(format) !== undefined) return undefined
+            return newLinked(db, format, typed, toISODate(today()))
+          },
+          choices: (target) => {
+            const format = targetOf(target)
+            return format === undefined ? [] : linkChoicesOf(db, format)
+          },
+          make: (made) => {
+            const staged = stageLinked(db, made, toISODate(today()), data.declarations)
+            // Said as a screen says it, at its field (M55 U5).
+            if ('refusals' in staged) {
+              return {
+                refusals: staged.refusals.map((each) => ({
+                  column: each.column,
+                  reason: atItsField(screenWords(each.reason, made.format), each.column),
+                })),
+              }
+            }
+            try {
+              mutate((database) => {
+                insertRows(database, made.format, [staged.row.cells], [staged.row.id])
+              })
+            } catch (error) {
+              return { refusals: [{ column: undefined, reason: describeTableError(made.format, error).reason }] }
+            }
+            return { id: staged.row.id }
+          },
+          units: data.units,
+          today: toISODate(today()),
+        }
   // A view named by a rollup the format no longer declares falls back to the rows.
   const shownRollup =
     !board && !dashboard && (declaration.rollups ?? []).some((each) => each.name === view) ? view : undefined
@@ -898,6 +940,7 @@ export function FormatRows({
       })
     }
     const view = (
+      <LinkMakerContext.Provider value={linkMaker}>
       <EntryView
         // Each entry is drawn afresh as it arrives: nothing half-typed in one
         // field follows the list to the next entry.
@@ -1028,6 +1071,7 @@ export function FormatRows({
           else navigate(entryPath(declaration.name, added) + address, { replace: true, ...along })
         }}
       />
+      </LinkMakerContext.Provider>
     )
     if (pictured === undefined) return view
     // The draft's row in the list: its title as typed, or "A new task" until it
@@ -1468,6 +1512,7 @@ export function FormatRows({
           )}
         </Centered>
       ) : (
+        <LinkMakerContext.Provider value={linkMaker}>
         <RowSheet
           // In the order being saved, while it is (M29 U2, D-332).
           declaration={
@@ -1568,6 +1613,7 @@ export function FormatRows({
             })
           }
         />
+        </LinkMakerContext.Provider>
       )}
 
       {(foot.refusals.length > 0 || foot.dropped > 0) && shownRollup === undefined && (
@@ -1936,41 +1982,6 @@ function foldedVerdicts(
     identity,
     verdict: evaluateIdentity(identity, inputs, units),
   }))
-}
-
-/**
- * What each `link` column of this format may point at.
- *
- * Labelled by the target's first text column, falling back to its id: a select
- * of thirty UUIDs is a control nobody can use, and the first text column is what
- * every one of these formats has been calling its name since D-216 without the
- * language having a word for it. **Capped**, because this is a select and a
- * format with four thousand rows in it is not one you pick from a list — the
- * refusal for a link nobody could pick is `danglingLinks`, and a conversation
- * can always name the id.
- */
-function linkChoices(
-  db: Parameters<typeof listRows>[0],
-  declaration: FormatDeclaration,
-  formats: ReadonlyMap<string, FormatDeclaration>,
-): ReadonlyMap<string, readonly LinkChoice[]> {
-  const choices = new Map<string, readonly LinkChoice[]>()
-  for (const column of declaration.columns) {
-    if (!isLinkType(column.type) || column.target === undefined) continue
-    if (choices.has(column.target)) continue
-    const target = formats.get(column.target)
-    if (target === undefined) continue
-
-    const label = labelColumn(target)
-    choices.set(
-      column.target,
-      listRows(db, target, { limit: PAGE }).map((row) => ({
-        id: row.id,
-        label: label === undefined ? row.id : (cellText(readValue(label, row)) || row.id),
-      })),
-    )
-  }
-  return choices
 }
 
 function Centered({ children }: { children: React.ReactNode }) {
