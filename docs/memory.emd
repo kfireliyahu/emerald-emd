@@ -15783,20 +15783,26 @@ report: M56 U1 built at dc5bc04. hosts/claude/mod/: register.tsx calls pane.tsx 
 milestone: M56
 scope: plugin
 title: The inbox and the status line inside Claude Code: the mod takes over from the npx hooks where it runs
-state: planned
+state: in_progress
 brief: M56, after U1 (the same module). Maintainer's answers, 2026-11-02: the command hooks stay as the floor for every host that runs no mods (cloud Cowork, an older Claude Code); where the mod runs it takes over. FIRST, PROVE TWO THINGS and stop and ask if either fails: one plugin ships its command hooks and a hooks module together, and the module answering `classic.SessionStart` / `classic.UserPromptSubmit` without `next` keeps the npx command from running. THEN: new inbox rows printed in full once per session from `$.state` (the same rule as M51 U6, without the `.told` file where the mod runs); a `$.clock` watch that raises `$.ui.toast` when a row arrives between prompts (for the person; the model still learns of it at the next prompt, never mid-turn); `$.ui.status` in place of the status-line command. MEASURE: the time before a prompt with and without the mod on this machine (docs/plugin.md has ~1.95 s for the npx inbox hook), written into docs/plugin.md. Done-test: in a mod-running session no npx hook process starts and the inbox row still reaches context once; with the module removed the command hooks behave as today (hosts/claude/hooks/commands.test.ts unchanged); validate, plugin test, npm run test and typecheck pass. || RE-CUT 2026-11-03 (D-534): fill hosts/claude/mod/inbox.ts, U1's empty registration, and status.ts beside it (imported from inbox.ts, so register.tsx stays U1's); edit neither register.tsx nor hooks.json. Runs beside U3.
 files: hosts/claude/mod/register.tsx (U1's; read, do not edit), hosts/claude/hooks/commands.ts, hosts/claude/hooks/told.ts, hosts/claude/hooks/statusLine.ts, hosts/claude/hooks/commands.test.ts, docs/plugin.md (the M51 U6 inbox section)
 blocks: ["M56 U1"]
+taken_by: run-milestone driver
+started: 2026-11-03
+branch: main
 paths: "hosts/claude/mod/inbox.ts\nhosts/claude/mod/status.ts\ndocs/plugin.md"
 
 ### M56 U3
 milestone: M56
 scope: plugin
 title: The write rules as hooks, and /claim and /land
-state: planned
+state: in_progress
 brief: M56, after U1. Maintainer's answers, 2026-11-02: in this milestone. The rules that are prose today become `tool.call` guards in the plugin's module, each written as the guard pattern the types show (a hook that fails refuses rather than lets through): (1) an Edit or Write on a `.emd` file is refused, with why — the document is changed through its tools; (2) a `git commit` in a linked worktree while the document's copy is staged, or would be taken by `-a` or a pathspec, is refused — the same rule as scripts/guard-memory-emd.mjs, which stays for sessions without the mod; (3) an emerald write with `commit: true` that this session did not dry-run first is refused — how 'the same write' is matched is unsettled: stop and ask before choosing. `/claim <ref>` and `/land` are slash commands that hand the model the call to make; the mod itself writes nothing (U1's read-only line holds). Done-test: each guard refuses its case and lets the plain case through in a plugin test; npm run test and typecheck pass. || RE-CUT 2026-11-03 (D-534): fill hosts/claude/mod/guards.ts and commands.ts, U1's empty registrations; edit neither register.tsx nor hooks.json. Runs beside U2.
 files: hosts/claude/mod/register.tsx (U1's; read, do not edit), scripts/guard-memory-emd.mjs, the plugin-authoring skill's examples/tool-call.ts
 blocks: ["M56 U1"]
+taken_by: run-milestone driver
+started: 2026-11-03
+branch: main
 paths: "hosts/claude/mod/guards.ts\nhosts/claude/mod/commands.ts"
 
 ### M56 U4
@@ -15823,7 +15829,7 @@ state: planned
 brief: M56, after U4. src/plugin/instructions.ts is ~34 KB, in context in every session of every client; a skill costs one line until it fires. The plugin already starts the server with `--engine-only`; where the server is started by the plugin, the sections U4's skills now carry shrink to one line pointing at the skill. Every other client (another runtime, the .mcpb in chat, emerald-mcp in a config file) keeps the full text — the server stays what every client gets (D-494), and only Claude reads a skill. How the server tells that the plugin launched it is the unit's to settle with the smallest signal; if it needs more than a flag the plugin passes, stop and ask. MEASURE: the instructions' size in tokens before and after, for both launches, written into docs/plugin.md. Done-test: server.test.ts holds both texts; a session on the plugin still reaches each moved how-to through its skill; npm run test and typecheck pass. || Driver, 2026-11-03, from U4/U7's landing (D-543): the sections each skill now carries — read-a-file: FORMATS' 'If what they want to track is already in a spreadsheet' paragraph and 'What you are for''s ask-for-the-file line; what-looks-wrong: FORMATS' format_problems sentence and the refusal half of 'While ideas are still moving'; bring-in-a-plan: PLANNING's what-the-pack-keeps sentences and START's pack paragraph; set-up-a-project: PLANNING's 'Keep it one of two ways' sentence. || Maintainer, 2026-11-03 (M56 U1's Q1, answered (a)): a mod's $.mcp.call goes to the person's permission check, so `npx emerald-mcp init` writes permissions.allow for the plugin's start_here and show_format (M56 U1 builds init's half and the pane's Read button). This unit adds that line to hosts/claude/skills/set-up-a-project/SKILL.md: what init's allow rule is for, and that the pane asks once until it exists.
 files: src/plugin/instructions.ts, src/plugin/server.test.ts, hosts/claude/.claude-plugin/plugin.json (the server's args), docs/plugin.md
 blocks: ["M56 U4","M56 U7"]
-paths: src/plugin/instructions.ts src/plugin/server.test.ts hosts/claude/.claude-plugin/plugin.json docs/plugin.md hosts/claude/skills/set-up-a-project/
+paths: "src/plugin/instructions.ts\nsrc/plugin/server.test.ts\nhosts/claude/.claude-plugin/plugin.json\ndocs/plugin.md\nhosts/claude/skills/set-up-a-project/"
 
 ### M56 U6
 milestone: M56
