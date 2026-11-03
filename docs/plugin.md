@@ -618,7 +618,8 @@ Claude reads: the hooks and the status line, the skills a stranger gets (`skills
 same file as this repo's `.claude/skills/` copy, which `skills.test.ts` holds; and since M42 U7 the
 development pack's `run-milestone`, `closing-pass` and `review-phase`, generic copies of this repo's
 own, which stay in `.claude/skills/` — `skills.test.ts` fails when a generic one names a decision,
-unit, note, script or npm script of this repo's), and the plugin's
+unit, note, script or npm script of this repo's; since M56 U4 and U7 a newcomer's four — `read-a-file`,
+`what-looks-wrong`, `bring-in-a-plan` and `set-up-a-project` — the plugin's alone, under the same rule), and the plugin's
 manifest (M42 U4, below). A second host later is `hosts/<name>/`. A host reaches the server only through
 `src/plugin/host.ts` (and the shell's constants through `electron/bridge.ts`); nothing in `src/` or
 `electron/` imports from `hosts/`; `src/plugin/hostBoundary.test.ts` fails on either. This repo's own
@@ -1507,7 +1508,7 @@ system `node` and fails without one, so the plugin below keeps `npx`.
 **The plugin is `hosts/claude/`, and nothing builds it.** `.claude-plugin/marketplace.json` at the
 repository's root lists it, so it installs from the public repository with no review; what it ships
 is the manifest (`.claude-plugin/plugin.json`), the hook set, the `declare-a-format` skill, the
-development pack's three workflows (M42 U7), the `emerald-setup` skill (M42 F8) and a README for a stranger. **Everything it runs is the published package, through `npx`, pinned** — the
+development pack's three workflows (M42 U7), the `emerald-setup` skill (M42 F8), a newcomer's four (M56 U4, U7, D-543) and a README for a stranger. **Everything it runs is the published package, through `npx`, pinned** — the
 maintainer's *use npm for it* (D-499, amending D-498's launcher) — but one hook, below:
 
 - **The server**: `npx -y --prefer-offline emerald-mcp@<version> --engine-only`, once a session.

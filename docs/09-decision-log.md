@@ -453,6 +453,7 @@ written out here.
 | D-534 | 2026-11-03 | A milestone's units run at once wherever `dispatch_plan` allows, each in its own worktree with its own demo port, by sessions or by the `Agent` tool alike, up to four; a screen is measured by `npm run probe:screens` (`window.emeraldProbe()` in a dev build, in an offscreen Electron window) rather than in the browser pane by hand; a child is handed its files and told to batch its reads; a review writes a rule-backed finding as `fault` and only a judgement as `open`; units under ten minutes that share paths go to one child, and a unit stopped for the maintainer's pick goes on in the same child; amends D-287 and D-490's one-at-a-time for the `Agent` tool | [below](#d-534) |
 | D-535 | 2026-11-03 | M55 U1's picks for the input view, not yet the maintainer's: a page where entry/new opens, beside the list, not a tab; fields in one wrapping row with *Adds as* in entry/new's footer bar; *Just added* with *Undo* under it; made from the format's + (*New input view*, *New view*, *New chart*) with the entry's Fields list carrying *Ask* and *Default*; *Use for Add* marks the one Add opens; the rail lists input views first under the new `input` glyph; a dashboard block's Add is secondary | [below](#d-535) |
 | D-540 | 2026-11-03 | A line a read refused offers Add by hand: the format's Add opens with what the line held, the read is kept for the window's life while it is away, the Add goes back to the read, and the read counts the line added by hand; a row the mapper could not read is skipped from that read only — counted as skipped in the mapper and on Read files, never written, never kept in the reader, and taken back by Put back or by a mapping that reads it | [below](#d-540) |
+| D-543 | 2026-11-03 | A newcomer's four skills are the plugin's alone, each named for what a person does — `read-a-file`, `what-looks-wrong`, `bring-in-a-plan`, `set-up-a-project` — and setting a project up is a skill of its own beside `emerald-setup`, which fires only where a session has no Emerald tools at all | [below](#d-543) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1113,6 +1114,43 @@ total line a reader skips forever is a row it can never be told about.
 **Consequences.** A conversation needs nothing new: `read_onto_format` reports refused lines and
 `record_format_rows` adds one; `import_statement` never writes a row that does not read. A line
 added by hand is not part of the read's intake, so a header's claim over the lines does not count it.
+
+## D-543 · 2026-11-03 · A newcomer's four skills are the plugin's alone, each named for what a person does — `read-a-file`, `what-looks-wrong`, `bring-in-a-plan`, `set-up-a-project` — and setting a project up is a skill of its own beside `emerald-setup`, which fires only where a session has no Emerald tools at all <a id="d-543"></a>
+
+**Context.** M56 U4 and U7 (re-cut by audience, D-534): four skills a stranger reaches for, in the
+plugin (`hosts/claude/skills/`), generic — `skills.test.ts` fails when one names this repository's
+decisions, units, notes or scripts. The rows named placeholder folders and left two questions: what
+each is called (`format_rows term`, D-436), and whether setting a project up extends `emerald-setup`.
+
+**Decision.**
+
+- **Names say what the person does, as `declare-a-format` does**: `read-a-file` (the screen's *Read
+  a file*, and D-451's word — a file is what is read, never a *document*), `what-looks-wrong` (the
+  term row's name for `format_problems`' list, kept by D-451), `bring-in-a-plan` and
+  `set-up-a-project`. None says *mapping*, which the Reader term row rejects.
+- **`set-up-a-project` is its own skill.** `emerald-setup` fires when a session has no Emerald tools
+  under any prefix, and says how to add the server to the Claude app; setting a repository up is
+  asked where the tools are there, and is about `init`'s three choices — where the document lives,
+  the hooks, the status line. One description cannot fire on both, so each names the other.
+- **All four are the plugin's alone**, like `emerald-setup`: this repository develops with neither
+  half (its document, hooks and status line are its own), so they keep no `.claude/skills/` copy and
+  fall under the generic rule.
+- **A skill that pins `emerald-mcp` is moved by `scripts/pin-plugin.mjs`**, and `plugin.test.ts`
+  now fails when a skill holds a pin the script does not move, or one that differs.
+- **What each carries of the server's instructions** (for M56 U5 to trim): `read-a-file` the Formats
+  section's *read the file rather than retyping it* paragraph (`read_onto_format`, the reader,
+  `columns`, `fixed`, links by unique name, `files`, reading again, `supersede_reading`) and the
+  *What you are for* ask-for-the-file line; `what-looks-wrong` the Formats section's
+  `format_problems` sentence and the refusal half of its write-in-the-text-then-check paragraph;
+  `bring-in-a-plan` what the pack holds in *A project's development planning* and the pack paragraph
+  of *Where to start*; `set-up-a-project` the planning section's two ways to keep the document (text
+  and committed, or one file outside every repository).
+
+**Alternatives rejected.** Extending `emerald-setup` with `init`: its trigger is the absence of the
+tools, and a skill that fires on both presence and absence fires on neither reliably. Copies in
+`.claude/skills/`: nothing here would run them, and a copy nobody uses drifts. `import-a-file` and
+`file-onto-format` (the rows' placeholders): *import* is the ledger's statement flow, and *onto a
+format* is the tool's phrasing rather than a person's.
 
 ## Related
 

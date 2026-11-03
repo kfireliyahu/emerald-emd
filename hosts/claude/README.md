@@ -67,6 +67,12 @@ release of its own skills, hooks or README on the same package.
   units, each built by a fresh session (several at once where `dispatch_plan` says they share no
   path), `closing-pass` lands a finished unit with its commit and report, and `review-phase` walks a
   built milestone's open review entries with you, one at a time.
+- **Four skills for getting started**: `read-a-file` reads a spreadsheet, a `.json` of rows or a folder
+  of notes onto a format, with the mapping agreed before a row is written; `what-looks-wrong` goes
+  through what fails, is unchecked or repeats, and puts it right with you; `bring-in-a-plan` turns a
+  `PLAN.md`, a TODO list or a roadmap note into milestones, units and decisions; and
+  `set-up-a-project` runs `init` with you and the choices it leaves you — where the document lives,
+  the hooks, the status line.
 - **The `emerald-setup` skill**: in a session with the plugin's skills but no server, the steps
   above, so Claude can walk you through them.
 - **Three hooks.** At session start, `start_here` on the project's document; before each prompt, the

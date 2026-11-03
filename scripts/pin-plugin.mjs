@@ -75,6 +75,7 @@ const files = [
   join('hosts', 'claude', 'hooks', 'hooks.json'),
   join('hosts', 'claude', 'README.md'),
   join('hosts', 'claude', 'skills', 'emerald-setup', 'SKILL.md'),
+  join('hosts', 'claude', 'skills', 'set-up-a-project', 'SKILL.md'),
 ]
 for (const file of files) {
   const path = join(root, file)
