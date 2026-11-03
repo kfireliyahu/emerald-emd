@@ -4512,6 +4512,15 @@ question: Why did M54 take eleven hours, and what makes a driven milestone faste
 answer: Measured from M54's transcripts (2026-11-02): 22 units ran one after another, ~24 minutes each, though dispatch_plan put four fix units under At once and four more after F1; the skill said the Agent tool runs one at a time, and the reviews shared one demo port and one pane. Inside a unit the time was turns: 3,314 of them, a median 2.5 s of model time and 4.6 s of tool time each; 30% of calls were one-line shell reads, 28% browser calls (927, mostly measuring contrast, sizes and names in helpers six sessions each rewrote), 5% edits. A unit paid ~10 minutes around its work (6 to orient, 3-4 to land), so the tiny ones and the part 2s were mostly that, while five ran 140-208 turns into 300-414k context; sorting 203 open review rows took 1.5 hours. Ruled with the maintainer, 2026-11-03: run At once groups together, up to four, each in a worktree (npm ci --prefer-offline, never a junction, demo-tour-<n> on 419<n>), serial only for shared paths, no paths, or two CDP shell units; npm run probe:screens starts Vite in-process, opens an offscreen Electron window and runs window.emeraldProbe() (src/ui/probe.ts, dev builds only): AA per theme with transitions off, the type ramp, names, placeholder-only controls, round fields, selects, native dates, headings, sideways scroll, and requests the page should not make; the child's prompt carries its files, asks its scope's rules in one turn and says to batch reads; design-review writes rule breaches as fault and only questions as open; units under ten minutes sharing paths go to one child, a unit stopped for a pick goes on via SendMessage, and one past ~150 turns is split by paths.
 state: live
 
+### D-535
+date: 2026-11-03
+milestone: M55
+scope: app
+title: M55 U1's picks for the input view, not yet the maintainer's: a page where entry/new opens, not a tab; one wrapping row of fields, Adds as in entry/new's footer, Just added with Undo; made from the format's + with the entry's Fields list carrying Ask and Default; Use for Add; input views first in the rail under an input glyph; a block's Add secondary
+question: D-533 settled what an input view is; how does it look, how is it made in place, and what are its new words, when the maintainer has said U1 does not wait for him?
+answer: The unit's picks, marked with a triangle in docs/mockups/m55-u1/brief.md and judged by the maintainer after through M55 U1's open review entry. A page where entry/new opens, beside the format's list, at its own address, never a tab. Fields in one wrapping row of labelled fields; entry/new's footer bar with Add and 'Adds as account Visa · date today'; 'Just added' under it, the visit's rows newest first, each with 'Undo' (deletes it; refused at its line when another row links to it); Enter adds; the header's Add hidden while the form shows. The format's + at the end of its tab strip: New input view, New view, New chart. A new input view is a draft asking the required columns, named after the format, Fields open with Ask and Default columns; 'Use for Add' marks the one Add opens, captioned 'Add' in the rail and the bar. In the rail input views come first, glyph 'input'. A dashboard block is the form with a secondary Add, stacked at one column and wrapping wider. Quick add with a view used for Add shows its asked fields inline, labelled, crossed with Tab; a group's value wins. Rejected: a tab; per-field menus (9 clicks against 6); a one-item +; 'Form'; 'Default' as the mark; 'Remove' for undo; a filled Add on a block.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -9115,6 +9124,15 @@ scope: app
 shown_in: screen
 state: live
 
+### Adds as
+means: The line in an input view's footer bar, beside Add, naming every value the form sets but does not ask, column then value: 'Adds as account Visa · date today'. On a dashboard block it ends a sentence: 'Adds a card charge as account Visa · date today'. A set link whose row is gone is struck there and refused at Add. The unit's pick (M55 U1, D-535).
+not: Not quick add's placeholder (Add a task · values), though both name what is set silently.
+rejected: Also sets (names the mechanism, not the row); Every row gets (longer for nothing)
+named_by: D-535
+scope: app
+shown_in: screen
+state: live
+
 ### Allocation
 means: How much of the splittable amount a bucket gets, as a percentage, an amount, or the remainder.
 scope: ledger
@@ -9127,6 +9145,15 @@ means: A row two debts both claim. Comes back as a question with a debt picker, 
 scope: ledger
 shown_in: nowhere
 appears: on no screen, in no tool text, not in the tour
+state: live
+
+### Ask · Default
+means: The two columns of an input view's Fields list, in place of the entry's Shown and New entry: Ask, a tick, whether the form asks the column; Default, the value it starts from — a member, a link by name, a number, money, text, or a date or a word naming one day (today, yesterday, tomorrow). Asked with a default, the field starts holding it; a default not asked is on the Adds as line. The unit's pick (M55 U1, D-535).
+not: Not New entry (a column's mark), which is entry/new's; not keeping the last value, which D-533 rejected.
+rejected: Asked (a state, where the tick is a choice); Default value · Prefill (longer, or a word of the code)
+named_by: D-535
+scope: app
+shown_in: screen
 state: live
 
 ### Assistants
@@ -9904,6 +9931,16 @@ shown_in: nowhere
 appears: on no screen, in no tool text, not in the tour
 state: live
 
+### Input view
+means: A saved view of kind input (D-533): the fields a form asks for adding rows of one format, in their order, and the values it sets, with or without asking. Opens as a page where entry/new opens, beside the format's list; stays open after Add and lists what it added. Listed first under its format in the rail with the input glyph, made from the format's +, and a live block on a dashboard. The unit's pick (M55 U1, D-535), not yet the maintainer's.
+not: Not the entry form (entry/new), which asks every required column and opens the new entry after Add; not a tab of the format's strip, which shows rows rather than adding them.
+rejected: Form (entry/new is already the entry form); Add form (only the one used for Add is opened by Add)
+code_word: kind input in format_saved_view
+named_by: D-535
+scope: app
+shown_in: rail
+state: live
+
 ### Installments
 means: A purchase split across N monthly charges on a card statement, each charge a transaction of its own.
 printed_as: תשלומים
@@ -9941,6 +9978,15 @@ named_by: D-410
 scope: engine
 shown_in: screen
 appears: screen 3 in 3 files (formats/EntryValue 1, formats/FormulaField 1, screens/DeductionTypes 1); tools 2 in 1 file (tools/intake 2)
+state: live
+
+### Just added · Undo
+means: The rows added from an input view in this visit, listed under its form newest first, each drawn as the list draws it and ending in Undo ('Undo adding <title>'), which deletes that row; refused at its line when another row now links to it ('Kept: 2 rows link to it'). Leaving the form empties the list. On a dashboard block, as many as its height holds. The unit's pick (M55 U1, D-535).
+not: Not Re-apply's undo of a run of rules (the ledger's); not Remove from this dashboard.
+rejected: Added here · Added now (Just added covers exactly the visit); Remove · Take back for Undo (Remove reads as Remove from this dashboard)
+named_by: D-535
+scope: app
+shown_in: screen
 state: live
 
 ### Learned rule
@@ -10105,6 +10151,15 @@ named_by: D-517
 scope: engine
 shown_in: view
 appears: screen: formats/EntryView (Fields' New entry); tools: arrange_views new_entry
+state: live
+
+### New input view · New view · New chart
+means: The menu of the format's + at the end of its tab strip, after the rollups and before Dashboard: make an input view (a draft asking the required columns, with Fields open), a saved view or a chart, the last two with Add a block's forms saved without placing a block. The unit's pick (M55 U1, D-535).
+not: Not Add, which adds a row; not Add a block's menu, which also places what it makes on a dashboard.
+rejected: New input view alone (a menu of one is a wasted click); Input view… · View… · Chart… (a noun is not an action)
+named_by: D-535
+scope: app
+shown_in: screen
 state: live
 
 ### Of which saved
@@ -10711,6 +10766,16 @@ named_by: D-223
 scope: engine
 shown_in: screen
 appears: screen 10 in 5 files (formats/ColumnQuestions 4, formats/RowSheet 3, formats/ConnectionPanel 1, …); tools 38 in 14 files (tools/formats 9, tools/holdingStatement 5, tools/plan 4, …); tour 5 in 3 files (demo/tour_step.format 3, demo/project 1, demo/tour.format 1); tool name record_units; the rail lists a development-pack format titled Unit.
+state: live
+
+### Use for Add
+means: The tick that makes an input view the one a format's Add, the list's + and quick add open — one per format. The view it marks carries the caption 'Add' in the rail and in its bar. The unit's pick (M55 U1, D-535).
+not: Not a field's Default, which is a value the form starts from.
+rejected: Default (does not say of what, and names a field's value already); Opens with Add (leaves out the list's + and quick add)
+code_word: the default input view (default:true on arrange_views)
+named_by: D-535
+scope: app
+shown_in: screen
 state: live
 
 ### Value date
@@ -15363,10 +15428,10 @@ scope: app
 title: The input view on screen: a form that stays open, made in place, in the rail and behind Add
 decision: D-533
 state: planned
-brief: D-533; build U1's confirmed brief (docs/mockups/m55-u1/brief.md) with its picked words, on U2's engine and U5/U6's fields. (1) The form, at its own address under the format: asks its fields in order, the 'Adds as' line names what it sets but does not ask, Add writes through the same write as entry/new, then the fields go back to their defaults, focus goes to the first field, and the row just added joins a list under the form with an undo; a refusal is at its field, every problem at once. (2) Made in place: from the format's +, starting from the required columns; add, remove and reorder fields and give one a default where it stands; mark it the format's Add (one per format, U2's refusals said on screen). (3) In the rail under its format with its own glyph beside saved views and charts, renamed and deleted where it stands, Delete asking once (as D-526). (4) Add, the list's + and quick add open the format's default input view where there is one; otherwise Add is today's entry/new. Parity is U2's. Run Impeccable's harden and polish on these screens and the detector once at the end (D-529). Anything not settled in D-533 or the brief is the maintainer's: stop and ask. Done-test: on a synthetic card-charge format, make 'Card charge' from + on screen (merchant, amount; date today, account Visa), mark it the default, add five charges in a row from Add without leaving the form, undo one, find it in the rail, and see a conversation's record_format_rows view:'Card charge' do the same.
-files: docs/mockups/m55-u1/brief.md, src/ui/formats/EntryView.tsx, src/ui/screens/FormatRows.tsx, src/ui/RailFolder.tsx, src/ui/nav.ts, src/ui/formats/savedView.ts
+brief: "D-533; build U1's confirmed brief (docs/mockups/m55-u1/brief.md) with its picked words, on U2's engine and U5/U6's fields. (1) The form, at its own address under the format: asks its fields in order, the 'Adds as' line names what it sets but does not ask, Add writes through the same write as entry/new, then the fields go back to their defaults, focus goes to the first field, and the row just added joins a list under the form with an undo; a refusal is at its field, every problem at once. (2) Made in place: from the format's +, starting from the required columns; add, remove and reorder fields and give one a default where it stands; mark it the format's Add (one per format, U2's refusals said on screen). (3) In the rail under its format with its own glyph beside saved views and charts, renamed and deleted where it stands, Delete asking once (as D-526). (4) Add, the list's + and quick add open the format's default input view where there is one; otherwise Add is today's entry/new. Parity is U2's. Run Impeccable's harden and polish on these screens and the detector once at the end (D-529). Anything not settled in D-533 or the brief is the maintainer's: stop and ask. Done-test: on a synthetic card-charge format, make 'Card charge' from + on screen (merchant, amount; date today, account Visa), mark it the default, add five charges in a row from Add without leaving the form, undo one, find it in the rail, and see a conversation's record_format_rows view:'Card charge' do the same.\n\nSETTLED by M55 U1 (D-535; the unit's picks, judged by the maintainer after through U1's review entry, so build them as written and do not re-ask): the input view is a PAGE where entry/new opens, beside the format's list, at its own address, never a tab of the strip; its fields are entry/new's field pieces in one wrapping row of labelled fields; its footer bar is entry/new's with Add (primary) then 'Adds as account Visa · date today' (ink-secondary, values ink; absent when it sets nothing); Enter adds from a one-line field (Ctrl+Enter in a multi-line one; an open choice list takes the first Enter); no Ctrl+Z; the format header's Add is not drawn while the form is. Under it 'Just added': this visit's rows newest first, drawn as the list's lines, each ending in an IconAction 'Undo' (undo glyph, aria 'Undo adding <title>') that deletes the row, shrinking out; refused at its line 'Kept: 2 rows link to it'. The format's + is an IconAction at the end of the tab strip after the rollups, before Dashboard's hairline; its menu: 'New input view', 'New view', 'New chart' (the last two MakeBlock's ViewForm and ChartForm, saved without placing a block). New input view opens a draft: required columns asked in the format's order, the name field holding the format's title (or '<title> 2'), Fields open beside it, the bar holding the name, the 'Use for Add' tick, Save (primary until saved) and Cancel; Esc discards. Fields for an input view is the entry's Fields list with 'Ask' (tick) and 'Default' (a value cell; a date cell takes a date or today/yesterday/tomorrow, refusing a range word 'A default names one day: today, yesterday, tomorrow or a date.') in place of Shown and New entry; a required row neither asked nor defaulted says 'needed: ask it or give it a default' and Save is refused naming each. After saving, Fields and Use for Add stay in the bar and save as changed. The view used for Add is captioned 'Add' in the rail and the bar. Rail: input views first under the format (the one used for Add first), then saved views, then charts; a new ActionGlyph 'input' (a field's box with a text caret); title '<name> — an input view'; deleting the one used for Add says 'Add opens the entry form again.' States: a required column the view lacks is asked last, marked needed, with 'This view does not ask amount, which every card charge needs' and the action 'Ask it here'; a set link whose row is gone is struck and negative in the Adds as line ('No account is called \"Visa\" now') and refused at Add with the field problems; a defaulted date field shows the day as the table writes it then '· today', worked out at every reset; read-only draws the fields disabled with no Add and no New input view; a failed claim's chip shows on its Just added line. Terms that become false when this lands, to correct in the closing pass: Re-apply ('the only undoable action in the app') and Saved view (its kinds gain input)."
+files: docs/mockups/m55-u1/brief.md, src/ui/formats/EntryView.tsx (FieldsList, the footer bar), src/ui/screens/FormatRows.tsx (the tab strip, the header's Add), src/ui/RailFolder.tsx (SavedRow, RailRow), src/ui/formats/MakeBlock.tsx (ViewForm, ChartForm), src/ui/components/ActionGlyph.tsx, src/ui/nav.ts, src/ui/formats/savedView.ts
 blocks: ["M55 U1","M55 U2","M55 U6"]
-paths: "src/ui/formats/\nsrc/ui/screens/FormatRows.tsx\nsrc/ui/RailFolder.tsx\nsrc/ui/nav.ts"
+paths: "src/ui/formats/\nsrc/ui/screens/FormatRows.tsx\nsrc/ui/RailFolder.tsx\nsrc/ui/nav.ts\nsrc/ui/components/ActionGlyph.tsx"
 
 ### M55 U4
 milestone: M55
@@ -15374,7 +15439,7 @@ scope: app
 title: An input view as a live dashboard block, and quick add with the view's fields inline
 decision: D-533
 state: planned
-brief: D-533; U1's confirmed brief. (1) Add a block offers the format's input views and New input view, made in place and placed in one step, as New view is (D-525); on the document's dashboard it asks which format first. The block is the form itself, live: type and Add in the dashboard, the fields laid out for the block's size (D-527), the last few rows added shown under it. A block is a saved view (format_dashboard_block kind saved), so no migration; say if it needs one. Removing the block leaves the input view, as a chart's does. show_format view:dashboard draws it read-only. (2) Quick add, on a list and beside an entry, where the format has a default input view: after the title its line shows that view's other asked fields inline, crossed with Tab, Enter adding the row with the view's defaults; nothing is parsed from the typed text (the M54 U1 row 'Lunch spot 35'). Without a default input view, quick add is as now. Run Impeccable's harden and polish and the detector once at the end. Anything not settled in D-533 or the brief is the maintainer's: stop and ask. Tests: a block adds a row; removal leaves the view; quick add with fields writes each into its column. Done-test: on a synthetic card-charge document dashboard, add three charges from its block; on its list, quick add 'Lunch spot', Tab, 35, Enter writes merchant Lunch spot and amount 35, dated today.
+brief: "D-533; U1's confirmed brief. (1) Add a block offers the format's input views and New input view, made in place and placed in one step, as New view is (D-525); on the document's dashboard it asks which format first. The block is the form itself, live: type and Add in the dashboard, the fields laid out for the block's size (D-527), the last few rows added shown under it. A block is a saved view (format_dashboard_block kind saved), so no migration; say if it needs one. Removing the block leaves the input view, as a chart's does. show_format view:dashboard draws it read-only. (2) Quick add, on a list and beside an entry, where the format has a default input view: after the title its line shows that view's other asked fields inline, crossed with Tab, Enter adding the row with the view's defaults; nothing is parsed from the typed text (the M54 U1 row 'Lunch spot 35'). Without a default input view, quick add is as now. Run Impeccable's harden and polish and the detector once at the end. Anything not settled in D-533 or the brief is the maintainer's: stop and ask. Tests: a block adds a row; removal leaves the view; quick add with fields writes each into its column. Done-test: on a synthetic card-charge document dashboard, add three charges from its block; on its list, quick add 'Lunch spot', Tab, 35, Enter writes merchant Lunch spot and amount 35, dated today.\n\nSETTLED by M55 U1 (D-535; the unit's picks, judged by the maintainer after through U1's review entry, so build them as written and do not re-ask): the block's title is the view's name and opens the full input view; under it the sentence 'Adds a card charge as account Visa · date today' ('Adds a card charge' alone when it sets nothing); its Add is a SECONDARY button (one primary per screen across several blocks), Enter adds; at one column wide the fields stack one per 40px row with the label at the left, two to four wide they wrap in one row as on U3's page; 'Just added' rows with 'Undo' fill the height left, newest first, the rest not drawn; a block shorter than its fields scrolls inside itself with Add held at its foot. Add a block lists the format's input views with its saved views, and 'New input view' beside 'New view' and 'New chart', made in place with U3's Fields (Ask, Default) inline and placed in one step; 'Of' asks the format on the document's dashboard; 'Remove from this dashboard' leaves the view. Quick add where the format has an input view used for Add: the line is that view's asked fields in its order; the first takes the placeholder 'Add a <format> · <what it sets>', the others follow inline each with its column's name as a small label before it (never a placeholder alone); Tab crosses, Enter adds with the view's defaults, Esc clears all; in a group, the group's value wins over the view's default and a field asking the grouped column starts holding it; beside an entry the first field is the line and the others open under it one 32px row each while the line has focus or holds text; after Enter the line returns to its defaults and the row appears in the list itself (no Just added there). Terms that become false when this lands, to correct in the closing pass: Block (its kinds gain the form) and Add a task · values (it gains the view's fields)."
 files: docs/mockups/m55-u1/brief.md, src/ui/formats/Dashboard.tsx, src/ui/formats/MakeBlock.tsx, src/ui/formats/ListView.tsx, src/ui/formats/EntryList.tsx
 blocks: ["M55 U3"]
 paths: "src/ui/formats/Dashboard.tsx\nsrc/ui/formats/MakeBlock.tsx\nsrc/ui/formats/ListView.tsx\nsrc/ui/formats/EntryList.tsx\nsrc/frame/"
@@ -15664,5 +15729,5 @@ milestone: 2026-11-03
 open_question: 2026-10-22
 review_entry: 2026-11-02
 rule: 2026-11-03
-term: 2026-11-02
+term: 2026-11-03
 unit: 2026-11-03

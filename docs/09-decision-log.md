@@ -451,6 +451,7 @@ written out here.
 | D-532 | 2026-11-02 | M54's faults become thirteen fix units, M54 F1-F13, before M55: shared looks first, each unit sweeping its own files; the ledger's Home, NoLedger and #/read included; a due date only where declared; a window drop onto the open format; recovery as a three-choice notice; the page's first screen leads to Get Emerald; the tour pauses; words are drafted for the maintainer to pick | M54 |
 | D-533 | 2026-11-03 | M55's input view is a saved view of kind `input`: the fields it asks are its columns in their order and its defaults are its exact values (a member, a link, a number, or a date word that names one day), kept in `format_saved_view` and `views.md`; one per format may be its default, opened by Add, the list's + and quick add; it stays open after Add and lists what it added; it is in the rail, behind +, and a live block on a dashboard; a conversation makes it with `arrange_views` and uses it with `record_format_rows view:`; M54's fourteen engine-side *Entry:* findings come into M55 and the ledger's stay parked | [below](#d-533) |
 | D-534 | 2026-11-03 | A milestone's units run at once wherever `dispatch_plan` allows, each in its own worktree with its own demo port, by sessions or by the `Agent` tool alike, up to four; a screen is measured by `npm run probe:screens` (`window.emeraldProbe()` in a dev build, in an offscreen Electron window) rather than in the browser pane by hand; a child is handed its files and told to batch its reads; a review writes a rule-backed finding as `fault` and only a judgement as `open`; units under ten minutes that share paths go to one child, and a unit stopped for the maintainer's pick goes on in the same child; amends D-287 and D-490's one-at-a-time for the `Agent` tool | [below](#d-534) |
+| D-535 | 2026-11-03 | M55 U1's picks for the input view, not yet the maintainer's: a page where entry/new opens, beside the list, not a tab; fields in one wrapping row with *Adds as* in entry/new's footer bar; *Just added* with *Undo* under it; made from the format's + (*New input view*, *New view*, *New chart*) with the entry's Fields list carrying *Ask* and *Default*; *Use for Add* marks the one Add opens; the rail lists input views first under the new `input` glyph; a dashboard block's Add is secondary | [below](#d-535) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1038,6 +1039,46 @@ once. Asking for every review row's verdict: most break a rule the maintainer al
 **Consequences.** `.claude/launch.json` has `demo-tour-1` to `demo-tour-4`. `run-milestone`,
 `design-review` and CLAUDE.md say so. Nothing in the shipped app changes: `probe.ts` is loaded by a
 dynamic import behind `import.meta.env.DEV`.
+
+## D-535 · 2026-11-03 · M55 U1's picks for the input view, not yet the maintainer's: a page where entry/new opens, beside the list, not a tab; fields in one wrapping row with *Adds as* in entry/new's footer bar; *Just added* with *Undo* under it; made from the format's + (*New input view*, *New view*, *New chart*) with the entry's Fields list carrying *Ask* and *Default*; *Use for Add* marks the one Add opens; the rail lists input views first under the new `input` glyph; a dashboard block's Add is secondary <a id="d-535"></a>
+
+**Context.** D-533 left M55 U1 to shape the input view and draft its words, and the maintainer said
+U1 does not wait for him (2026-11-03): the unit picks the likely reading wherever shape would have
+asked, and its recommended word, and he judges them after through the unit's open review entry, as
+D-475's picks were the driver's. The brief is `docs/mockups/m55-u1/brief.md`; every pick is marked
+there with ▸.
+
+**Decision.**
+
+- **A page, not a tab.** The input view opens where entry/new opens, beside the format's list, at its
+  own address; a tab is a way of seeing rows and this is a way of adding them.
+- **The form** is entry/new's field pieces in one wrapping row of labelled fields, entry/new's footer
+  bar with Add and the *Adds as* line, and *Just added* under it: the visit's rows, newest first, each
+  with an *Undo* that deletes it (refused, at its line, when another row now links to it). Enter adds
+  from any one-line field; no Ctrl+Z. The format header's Add is not drawn while the form is.
+- **Made from the format's +** at the end of its tab strip: *New input view*, *New view*, *New chart*
+  (the last two D-525's forms, saved without a block). A new input view is a draft asking the
+  required columns, named after the format, with Fields open: the entry's Fields list with *Ask* and
+  *Default* in place of *Shown* and *New entry*. *Use for Add* marks the one Add, the list's + and quick
+  add open; the rail and the bar mark it with the caption *Add*.
+- **In the rail** input views come first under their format, with a new `input` glyph.
+- **On a dashboard** the block is the form, its Add secondary (one primary per screen); at one column
+  wide the fields stack, wider they wrap; *Just added* fills the height left.
+- **Quick add** with a view used for Add is that view's asked fields inline, each with a small label,
+  crossed with Tab; a group's value wins over the view's default.
+- **The words** are `term` rows named by this decision: *Input view*, *Adds as*, the + menu's three
+  items, *Use for Add*, *Ask* · *Default*, *Just added* and *Undo*.
+
+**Alternatives rejected.** The input view as a tab of the strip (it leaves the list behind and sits
+among views of rows). Editing fields by a menu on each field (more clicks than the Fields list the
+entry already has: six against nine for D-533's done-test). A + with *New input view* alone (a menu
+of one is a wasted click). *Form* (entry/new is already the entry form), *Default* for the mark (it
+does not say of what, and names a field's value already), *Remove* for undo (it reads as *Remove from
+this dashboard*). A filled Add on a dashboard block (several blocks would be several primaries).
+
+**Consequences.** U3 and U4 carry the picks as SETTLED. Four term rows become false when those land
+and are theirs to correct: *Re-apply* ("the only undoable action"), *Saved view*'s kinds, *Block*'s
+three kinds, *Add a task · values*. A pick the maintainer changes is a fix unit.
 
 ## Related
 
