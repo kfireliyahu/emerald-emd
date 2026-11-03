@@ -10,6 +10,7 @@
 
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 
+import { SKILLS_FLAG } from './catalog.ts'
 import { createServer } from './server.ts'
 import { claudeConfigDir, parseInitArgs, runInit } from './init.ts'
 import { parseWatchArgs, runWatch } from './watchCommand.ts'
@@ -78,8 +79,10 @@ if (argv[0] === 'init') {
   }
 } else {
   const engineOnly = argv.includes('--engine-only')
+  // Only the Claude plugin passes it: its skills say what the text then does not (M56 U5, D-552).
+  const skills = argv.includes(SKILLS_FLAG)
   // What each client advertised goes to stderr, which a host shows in its own
   // log — VS Code under Output → MCP: <server> (M41 F2).
-  await createServer({ engineOnly, log: (line) => process.stderr.write(`${line}
+  await createServer({ engineOnly, skills, log: (line) => process.stderr.write(`${line}
 `) }).connect(new StdioServerTransport())
 }

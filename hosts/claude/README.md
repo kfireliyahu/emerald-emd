@@ -86,7 +86,9 @@ release of its own skills, hooks or README on the same package.
 Everything here runs the published npm package `emerald-mcp` through `npx`, pinned to this
 plugin's version:
 
-- the server as `npx -y --prefer-offline emerald-mcp@<version> --engine-only`, once a session;
+- the server as `npx -y --prefer-offline emerald-mcp@<version> --engine-only --skills`, once a session —
+  `--skills` because Claude reads this plugin's skills, so the server says each how-to they carry in one
+  line naming the skill, and every other client keeps the full text;
 - the hooks as `npx -y --prefer-offline -p emerald-mcp@<version> emerald-hooks …`. npm's own
   start-up makes each one about two seconds on Windows, and the inbox hook runs before every
   prompt. Where Claude Code runs the plugin's hooks module, the module says the same itself and

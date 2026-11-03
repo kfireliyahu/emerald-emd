@@ -201,3 +201,10 @@ export const CATALOG_SERVER_NAME = 'emerald'
 
 /** The argument that offers the engine's half alone (M22 U0). */
 export const ENGINE_ONLY_FLAG = '--engine-only'
+
+/**
+ * The argument the Claude plugin adds, and no other launch (M56 U5, D-552): the
+ * client reads the plugin's skills, so the instructions say each how-to they
+ * carry in one line.
+ */
+export const SKILLS_FLAG = '--skills'

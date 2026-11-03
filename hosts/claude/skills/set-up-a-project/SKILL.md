@@ -28,7 +28,12 @@ npx -y emerald-mcp@0.2.0 init [path/to/document.emd]
    format with its columns — so a session knows the columns without asking. Nothing outside the
    markers is touched.
 3. **The two hooks**, merged into `.claude/settings.json` — only when the Emerald plugin is not
-   enabled, since the plugin brings the same two.
+   enabled, since the plugin brings the same two. **And, plugin or not, an allow rule** in its
+   `permissions.allow` for the plugin's own reads — `start_here`, `show_format` and `format_rows`.
+   Claude Code asks the person before a plugin's code calls a tool, so until the rule exists the
+   project pane beside the chat shows a Read button and asks once before it fills; with it the pane
+   fills by itself at session start, and the inbox reaches the session without starting `npx`. It
+   allows reads only: nothing that writes.
 4. **What a session there now sees first**: `start_here` on the document.
 
 **A second run changes nothing** that would come out the same. After a format changes, running it
