@@ -1500,9 +1500,9 @@ What a user needs, in order: Node, and `npx emerald-mcp` (below) or `npm run bui
 checkout — `dist-plugin/` is **self-contained** since M42 U2; a `.emd` at the app's current schema, or
 `create_document` to make one — with the `packs` it should keep, none by default in either mode
 (D-506, reversing D-405's ledger on the full server), and `keep_packs` for one later, which also brings a
-kept pack up to date: its new columns and renames, and its formats' notes and views' settings
+kept pack up to date: its new columns and renames, and its formats' and columns' notes and views' settings
 wherever the document still holds an earlier build's, keeping and naming what a person changed
-(D-491); and an absolute path to it, since every tool takes one.
+(D-491, D-559); and an absolute path to it, since every tool takes one.
 
 **How it ran until M42 U2** (M41 U4): `node dist-plugin/server.mjs`, with three packages resolvable
 from where it sat — `@modelcontextprotocol/sdk`, `sql.js` and `xlsx`, the imports it kept external.

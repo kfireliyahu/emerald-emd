@@ -4,8 +4,8 @@
  *
  * Keeping a pack the document keeps already adds the columns it grew (D-405)
  * and follows the ones it renamed (D-443). Until this unit it left the rest of
- * what the pack writes as the document held it: a format's notes, and the
- * settings of its views — the board's `taken_by: card`, a ready view's states.
+ * what the pack writes as the document held it: a format's notes (and, until
+ * M52 F4, its columns' notes), and the settings of its views — the board's `taken_by: card`, a ready view's states.
  * So every session that changed the development pack's `unit` or `inbox` edited
  * `docs/memory.emd` by hand to make the drift checks pass, three times in two
  * days.
@@ -14,7 +14,7 @@
  * own document — `arrange_views` on a pack's format, or notes they rewrote — and
  * a newer pack must not quietly undo that. The document records nothing about
  * where a value came from, so **the pack records what it declared before**: the
- * fingerprint of every notes text, and every setting each view held, in every
+ * fingerprint of every notes text, a format's and each column's, and every setting each view held, in every
  * build. The rule:
  *
  * - **The document holds a value an earlier build of the pack declared there**
@@ -43,6 +43,12 @@ import type { ViewKind } from '@/domain/format/view.ts'
 export interface PackPast {
   /** A format's name to the fingerprints (`fingerprint`) of every notes text the pack declared for it. */
   readonly notes: Readonly<Record<string, readonly string[]>>
+  /**
+   * `format.column` to the fingerprints of every note the pack declared for that
+   * column (M52 F4): a column's note is told from a person's the way a format's
+   * is. A column renamed (D-443) is listed under the name the pack uses now.
+   */
+  readonly columns: Readonly<Record<string, readonly string[]>>
   /**
    * `format view column` to every setting the pack declared there, `null` for a
    * build that declared the format and had no line for it. A place missing
@@ -88,6 +94,11 @@ export function wasThePacks(past: PackPast, place: SettingPlace, held: string | 
 /** Whether a document's notes for `format` are notes some build of the pack declared. */
 export function notesWereThePacks(past: PackPast, format: string, held: string): boolean {
   return past.notes[format]?.includes(fingerprint(held)) === true
+}
+
+/** Whether a document's note for `format.column` is a note some build of the pack declared there (M52 F4). */
+export function columnNoteWasThePacks(past: PackPast, format: string, column: string, held: string): boolean {
+  return past.columns[`${format}.${column}`]?.includes(fingerprint(held)) === true
 }
 
 /** A change, as the dry run and the Packs screen both say it. */

@@ -48,6 +48,7 @@ import { documentHasLedger, installLedgerPack, ledgerFormatNames, ledgerFormats 
 import {
   keptPhrase,
   notesWereThePacks,
+  columnNoteWasThePacks,
   placeKey,
   settingPhrase,
   wasThePacks,
@@ -89,7 +90,8 @@ export interface PackDescription {
   readonly renames?: readonly PackRename[]
   /**
    * **Its views and what it declared before** (M51 U9, D-491): with both, keeping
-   * it again brings a format's notes and its views' settings to this build's
+   * it again brings a format's notes, its columns' notes (M52 F4) and its views'
+   * settings to this build's
    * wherever the document still holds what an earlier build wrote, and keeps —
    * and says — whatever a person put there instead. A pack without them (the
    * ledger, which brings itself up to date on every open, D-378) is not asked.
@@ -208,6 +210,10 @@ export interface KeepPlan {
   readonly notes: readonly string[]
   /** Formats whose notes the document rewrote itself: keeping it leaves them, and says so. */
   readonly notesKept: readonly string[]
+  /** Columns, `format.column`, whose notes are an earlier build's: keeping it writes this build's (M52 F4). */
+  readonly columnNotes: readonly string[]
+  /** Columns, `format.column`, whose notes the document rewrote itself: keeping it leaves them, and says so. */
+  readonly columnNotesKept: readonly string[]
   /** View settings an earlier build wrote that this one changed: keeping it writes them (D-491). */
   readonly settings: readonly SettingChange[]
   /** View settings a person chose over the pack's: keeping it leaves them, and says so — `from` theirs, `to` the pack's. */
@@ -235,6 +241,8 @@ export function planKeep(db: Database, pack: PackDescription): Result<KeepPlan, 
   const renames: PackRename[] = []
   const notes: string[] = []
   const notesKept: string[] = []
+  const columnNotes: string[] = []
+  const columnNotesKept: string[] = []
   const settings: SettingChange[] = []
   const settingsKept: SettingChange[] = []
   const held = views === undefined ? [] : listViewSettings(db)
@@ -261,6 +269,14 @@ export function planKeep(db: Database, pack: PackDescription): Result<KeepPlan, 
     if (read.notes !== declaration.notes) {
       ;(notesWereThePacks(past, declaration.name, read.notes) ? notes : notesKept).push(declaration.name)
     }
+    // Each column's note the same way (M52 F4), by the name the pack uses; a
+    // column keeping it grows arrives with this build's note already.
+    for (const column of declaration.columns) {
+      const note = following.columns.find((each) => each.name === column.name)?.note
+      if (note === undefined || note === column.note) continue
+      const place = `${declaration.name}.${column.name}`
+      ;(columnNoteWasThePacks(past, declaration.name, column.name, note) ? columnNotes : columnNotesKept).push(place)
+    }
     const changes = settingChanges(
       declaration.name,
       views.value,
@@ -273,7 +289,21 @@ export function planKeep(db: Database, pack: PackDescription): Result<KeepPlan, 
     )
     for (const change of changes) (wasThePacks(past, change, change.from) ? settings : settingsKept).push(change)
   }
-  return ok({ pack, kept, declares, completes, renames, holds, clashes, notes, notesKept, settings, settingsKept })
+  return ok({
+    pack,
+    kept,
+    declares,
+    completes,
+    renames,
+    holds,
+    clashes,
+    notes,
+    notesKept,
+    columnNotes,
+    columnNotesKept,
+    settings,
+    settingsKept,
+  })
 }
 
 /**
@@ -329,6 +359,7 @@ export function upToDate(plan: KeepPlan): boolean {
     plan.completes.length === 0 &&
     plan.renames.length === 0 &&
     plan.notes.length === 0 &&
+    plan.columnNotes.length === 0 &&
     plan.settings.length === 0
   )
 }
@@ -345,6 +376,9 @@ export function planParts(plan: KeepPlan, done: boolean): readonly string[] {
     ...plan.renames.map((each) => `${verb('renames', 'renamed')} ${each.format}.${each.from} to ${each.to}, its values kept`),
     ...plan.completes.map((each) => `${verb('completes', 'completed')} ${each.format} with ${each.columns.join(', ')}`),
     ...(plan.notes.length > 0 ? [`${verb('brings', 'brought')} the notes of ${plan.notes.join(', ')} to this build’s`] : []),
+    ...(plan.columnNotes.length > 0
+      ? [`${verb('brings', 'brought')} the notes of the columns ${plan.columnNotes.join(', ')} to this build’s`]
+      : []),
     ...plan.settings.map((each) => settingPhrase(each, done)),
   ]
 }
@@ -357,6 +391,9 @@ export function planParts(plan: KeepPlan, done: boolean): readonly string[] {
 export function keptParts(plan: KeepPlan): readonly string[] {
   return [
     ...(plan.notesKept.length > 0 ? [`the notes of ${plan.notesKept.join(', ')}, which this document rewrote`] : []),
+    ...(plan.columnNotesKept.length > 0
+      ? [`the notes of the columns ${plan.columnNotesKept.join(', ')}, which this document rewrote`]
+      : []),
     ...plan.settingsKept.map(keptPhrase),
   ]
 }
@@ -378,11 +415,18 @@ export function keepPack(db: Database, pack: PackDescription, now: number): Resu
   // (D-491); what a person chose was left out of the plan and is not touched.
   const declarations = pack.declarations()
   if (!declarations.ok) return declarations
-  for (const name of plan.value.notes) {
+  const columnNotes = new Set(plan.value.columnNotes)
+  const touched = new Set([...plan.value.notes, ...plan.value.columnNotes.map((each) => each.split('.')[0] ?? '')])
+  for (const name of touched) {
     const held = readFormat(db, name)
-    const notes = declarations.value.find((each) => each.declaration.name === name)?.declaration.notes
-    if (held === undefined || notes === undefined) continue
-    const adopted = adoptFormat(db, { ...held, notes }, now)
+    const declaration = declarations.value.find((each) => each.declaration.name === name)?.declaration
+    if (held === undefined || declaration === undefined) continue
+    const notes = plan.value.notes.includes(name) ? declaration.notes : held.notes
+    const columns = held.columns.map((column) => {
+      const note = declaration.columns.find((each) => each.name === column.name)?.note
+      return note !== undefined && columnNotes.has(`${name}.${column.name}`) ? { ...column, note } : column
+    })
+    const adopted = adoptFormat(db, { ...held, notes, columns }, now)
     if (adopted.refusals.length > 0) return err(adopted.refusals.map((each) => each.detail).join(' '))
   }
   writeViewSettings(

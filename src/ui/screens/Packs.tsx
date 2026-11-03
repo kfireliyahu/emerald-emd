@@ -34,7 +34,7 @@ import { useKeptPacks } from '@/ui/packs.ts'
  * ones that only share a name — and the button is not offered over a clash.
  * **A kept pack a newer build changed** is offered again, *Bring it up to
  * date*, with the same phrases `keep_packs` says (`planParts`, D-491): the
- * columns it grew or renamed, its formats' notes and its views' settings — and,
+ * columns it grew or renamed, its formats' and columns' notes and its views' settings — and,
  * under it, what this document chose that keeping it leaves (`keptParts`).
  *
  * `accent` marks what you can act on and colours no figure (D-125); there are

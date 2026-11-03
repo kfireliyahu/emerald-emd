@@ -26,6 +26,9 @@ import { DEVELOPMENT_PAST } from './past.ts'
 import { startHereTool } from '@/plugin/tools/startHere.ts'
 import { developmentFormats, developmentViews, installDevelopmentPack, startHereTable } from './pack.ts'
 import { tempDirSync } from '../../../testing/tempDir'
+import { readFormat as readFormatText } from '@/domain/format/document.ts'
+import OLDER_DECISION from './older/decision.format.md?raw'
+import OLDER_OPEN_QUESTION from './older/open_question.format.md?raw'
 
 const MEMORY = fileURLToPath(new URL('../../../../docs/memory.emd', import.meta.url))
 const NOW = Date.UTC(2026, 9, 1)
@@ -280,6 +283,12 @@ describe('keeping the pack again brings its notes and view settings (M51 U9, D-4
       const print = fingerprint(declaration.notes)
       const listed = DEVELOPMENT_PAST.notes[declaration.name] ?? []
       if (!listed.includes(print)) missing.push(`notes ${declaration.name}: [${[...listed, print].map((each) => `'${each}'`).join(', ')}]`)
+      for (const column of declaration.columns) {
+        const key = `${declaration.name}.${column.name}`
+        const had = DEVELOPMENT_PAST.columns[key] ?? []
+        const note = fingerprint(column.note)
+        if (!had.includes(note)) missing.push(`columns '${key}': [${[...had, note].map((each) => `'${each}'`).join(', ')}]`)
+      }
     }
     const views = developmentViews()
     if (!views.ok) throw new Error(views.error)
@@ -320,6 +329,7 @@ describe('keeping the pack again brings its notes and view settings (M51 U9, D-4
           ),
         ),
       past: {
+        columns: DEVELOPMENT_PAST.columns,
         notes: {
           ...DEVELOPMENT_PAST.notes,
           unit: [...(DEVELOPMENT_PAST.notes['unit'] ?? []), fingerprint(`${notes} (unit)`)],
@@ -454,6 +464,105 @@ describe('keeping the pack again brings its notes and view settings (M51 U9, D-4
     if (!planned.ok) throw new Error(planned.error)
     expect(planParts(planned.value, false)).toEqual([])
     expect(keptParts(planned.value)).toEqual([])
+    db.close()
+  })
+})
+
+describe('keeping the pack again brings its columns’ notes (M52 F4)', () => {
+  const found = packById('development')
+  if (found === undefined) throw new Error('no development pack')
+  const development: PackDescription = found
+
+  /** The columns whose note `older` says differently from this build. */
+  function differing(older: string): readonly string[] {
+    const read = readFormatText(older, undefined, formats())
+    if (!read.ok) throw new Error(read.error)
+    const now = formats().find((each) => each.name === read.value.declaration.name)
+    return read.value.declaration.columns
+      .filter((column) => now?.columns.find((each) => each.name === column.name)?.note !== column.note)
+      .map((column) => `${read.value.declaration.name}.${column.name}`)
+  }
+
+  /**
+   * A document that kept the pack as its first public build declared
+   * `decision` and `open_question` (fixtures in `older/`), with `rewrite`'s
+   * column notes the person's own.
+   */
+  async function keptOlder(rewrite: Readonly<Record<string, string>> = {}) {
+    const db = await createDatabase()
+    const kept = keepPack(db, development, NOW)
+    if (!kept.ok) throw new Error(kept.error)
+    for (const text of [OLDER_DECISION, OLDER_OPEN_QUESTION]) {
+      const older = readFormatText(text, undefined, formats())
+      if (!older.ok) throw new Error(older.error)
+      const name = older.value.declaration.name
+      const held = readFormat(db, name)
+      if (held === undefined) throw new Error(`no ${name}`)
+      const columns = held.columns.map((column) => ({
+        ...column,
+        note:
+          rewrite[`${name}.${column.name}`] ??
+          older.value.declaration.columns.find((each) => each.name === column.name)?.note ??
+          column.note,
+      }))
+      adoptFormat(db, { ...held, notes: older.value.declaration.notes, columns }, NOW)
+    }
+    return db
+  }
+
+  const notesOf = (db: Awaited<ReturnType<typeof keptOlder>>, name: string) =>
+    Object.fromEntries((readFormat(db, name)?.columns ?? []).map((each) => [each.name, each.note]))
+  const thisBuilds = (name: string) =>
+    Object.fromEntries((formats().find((each) => each.name === name)?.columns ?? []).map((each) => [each.name, each.note]))
+
+  it('brings an older build’s decision and open_question column notes to this build’s, and says which', async () => {
+    const db = await keptOlder()
+    const older = [...differing(OLDER_DECISION), ...differing(OLDER_OPEN_QUESTION)]
+    expect(older.length).toBeGreaterThan(4)
+
+    const planned = planKeep(db, development)
+    if (!planned.ok) throw new Error(planned.error)
+    expect(planned.value.columnNotes).toEqual(older)
+    expect(planned.value.columnNotesKept).toEqual([])
+    expect(upToDate(planned.value)).toBe(false)
+    expect(planParts(planned.value, false)).toContain(`brings the notes of the columns ${older.join(', ')} to this build’s`)
+
+    const kept = keepPack(db, development, NOW)
+    if (!kept.ok) throw new Error(kept.error)
+    expect(planParts(kept.value, true)).toContain(`brought the notes of the columns ${older.join(', ')} to this build’s`)
+    expect(notesOf(db, 'decision')).toEqual(thisBuilds('decision'))
+    expect(notesOf(db, 'open_question')).toEqual(thisBuilds('open_question'))
+    expect(readFormat(db, 'decision')?.notes).toBe(formats().find((each) => each.name === 'decision')?.notes)
+    db.close()
+  })
+
+  it('keeps a column note the person rewrote, and names it', async () => {
+    const db = await keptOlder({ 'decision.scope': 'Which of our three apps.' })
+    const planned = planKeep(db, development)
+    if (!planned.ok) throw new Error(planned.error)
+    expect(planned.value.columnNotes).not.toContain('decision.scope')
+    expect(planned.value.columnNotesKept).toEqual(['decision.scope'])
+    expect(keptParts(planned.value)).toEqual(['the notes of the columns decision.scope, which this document rewrote'])
+
+    const kept = keepPack(db, development, NOW)
+    if (!kept.ok) throw new Error(kept.error)
+    expect(notesOf(db, 'decision')).toEqual({ ...thisBuilds('decision'), scope: 'Which of our three apps.' })
+    db.close()
+  })
+
+  it('changes nothing the second time', async () => {
+    const db = await keptOlder({ 'open_question.answer': 'Mine.' })
+    const first = keepPack(db, development, NOW)
+    if (!first.ok) throw new Error(first.error)
+    const after = listFormats(db)
+    const again = planKeep(db, development)
+    if (!again.ok) throw new Error(again.error)
+    expect(upToDate(again.value)).toBe(true)
+    expect(planParts(again.value, false)).toEqual([])
+    expect(keptParts(again.value)).toEqual(['the notes of the columns open_question.answer, which this document rewrote'])
+    const second = keepPack(db, development, NOW + 1)
+    if (!second.ok) throw new Error(second.error)
+    expect(listFormats(db)).toEqual(after)
     db.close()
   })
 })

@@ -144,7 +144,7 @@ export const keepPacksTool: PluginTool = {
       'Keep packs in an existing document (the Packs screen’s *Keep … here*): declares ' +
       'the pack’s formats it lacks, adds missing optional columns to those it holds, renames a ' +
       'column the pack renamed with its values, changes no row; a pack kept already is ' +
-      'brought up to date this way, its formats’ notes and views’ settings too wherever the document still holds an ' +
+      'brought up to date this way, its formats’ and columns’ notes and views’ settings too wherever the document still holds an ' +
       'earlier build’s — one a person changed is kept, and the dry run names it. Refused, naming the column, where a ' +
       'format of the same name is not the pack’s. Dry run until `commit: true`.',
     inputSchema: {
