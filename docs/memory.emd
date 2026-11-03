@@ -15858,6 +15858,18 @@ commit: 5401012
 paths: "src/ui/formats/Dashboard.tsx\nsrc/ui/formats/RowSheet.tsx\nsrc/ui/screens/FormatRows.tsx\nsrc/data/repositories/formatViewRepository.ts"
 report: 5401012 (work at 7fa6fd2); docs:check green but for D-558's row, which this landing writes. A saved table placed on a dashboard draws the format's stored widths (format_column_view) and wears the table's handle — drag, double-click/Delete to reset, arrows — moved into src/ui/formats/ResizeHandle.tsx and shared with RowSheet; dragged in either it is the other's, a reset clears both. The saved table tab is the format's sheet and already did. A block narrower than its columns scrolls inside itself (checked on custom.emd: 464px of table in a 346px box, page unscrolled). Read-only (frame, locked document) draws widths with no handle, on the block and now on the format's table too — amends D-432. A chart's table of figures (months, not the format's columns) keeps no width and scrolls inside its block — the maintainer picked it, 2026-11-03: "No handle there". Parity: arrange_views view:sheet width (D-403) already writes the same row. Checked in the pane: arrows in the table then the block, and the block's double-click reset, carried across both; the pane's synthetic drag moves no width handle (the table's existing one neither), so a real mouse drag in a block is unverified. Look at: custom.emd, card_charge dashboard, add a table view block, drag merchant wider, open the format's table.
 
+### M55 F2
+milestone: M55
+scope: ui
+title: CI green again: quick add's narrow label truncates on its Bidi, not on a box around it
+state: in_progress
+brief: Driver, 2026-11-03: CI on main has been red since M55 U4's landing (run 41615582864, 3e2a7fb). src/ui/bidiTruncation.test.ts > 'put the ellipsis on the Bidi span, not on a box around it' now counts one more in formats/ListView.tsx than its allowance: U4's QuickFieldsLine label, `<span className={`flex-none text-label text-ink-secondary uppercase ${narrow ? 'w-20 truncate' : ''}`}>` running into a `<Bidi>`. Move the clipping onto the Bidi (the span flex min-w-0 / w-20, `<Bidi className="min-w-0 truncate">`) as the test's comment says, so the count does not rise; never raise the allowance. Then run npx vitest run src/ui/bidiTruncation.test.ts and the related tests, typecheck, privacy, docs:check. Nothing to decide; no decision row.
+files: src/ui/formats/ListView.tsx (QuickFieldsLine's label), src/ui/bidiTruncation.test.ts
+taken_by: run-milestone driver
+started: 2026-11-03
+branch: main
+paths: src/ui/formats/ListView.tsx
+
 ### M55 U1
 milestone: M55
 scope: app
