@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState, type Ref } from 'react'
 
-import { COLUMN_TYPES, isListType, type ColumnType } from '@/domain/format/declaration.ts'
+import { isListType, type ColumnType } from '@/domain/format/declaration.ts'
 import { currencyOf } from '@/domain/format/currency.ts'
 import {
   acceptsBounds,
@@ -18,6 +18,7 @@ import { Field } from '@/ui/components/Field.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
 import { TypeGlyph } from '@/ui/formats/TypeGlyph.tsx'
 import { CurrencyField } from '@/ui/formats/TypedField.tsx'
+import { COMMON_TYPES, isCommonType, MORE_TYPES } from '@/ui/formats/typePicker.ts'
 import { formatsByPack, useKeptPacks } from '@/ui/packs.ts'
 
 /**
@@ -40,7 +41,7 @@ export interface DocumentCurrency {
  *
  * So a column is two beats rather than a row:
  *
- * 1. **What it is called, and what it holds** — the name, and the nine types as
+ * 1. **What it is called, and what it holds** — the name, and the types as
  *    tiles.
  * 2. **Only what that type needs** — a link's target, an enum's members, a
  *    number's unit and bounds. Nothing else exists.
@@ -96,6 +97,36 @@ export function ColumnQuestions({
   underived?: string | undefined
 }) {
   const wrong = problems.length > 0 || refusals.length > 0
+  // The rest of the types, one step past the common ones (M55 U8, D-539).
+  const [more, setMore] = useState(false)
+  const firstMore = useRef<HTMLButtonElement>(null)
+  const focusMore = useRef(false)
+  const openMore = (): void => {
+    focusMore.current = true
+    setMore(true)
+  }
+  // The button that opened them is gone, so the keyboard lands on the first of them.
+  useEffect(() => {
+    if (more && focusMore.current) firstMore.current?.focus()
+    focusMore.current = false
+  }, [more])
+  const tile = (each: ColumnType, ref?: Ref<HTMLButtonElement>) => (
+    <button
+      key={each}
+      ref={ref}
+      type="button"
+      data-tour={`type-${each}`}
+      title={`Stored as ${each}`}
+      onClick={() => onChoose(each)}
+      className="flex flex-col gap-1 rounded-md border border-hairline p-2 text-left transition-colors duration-[var(--duration-micro)] hover:border-hairline-strong hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
+    >
+      <span className="flex items-center gap-2">
+        <TypeGlyph type={each} className="h-4 w-4 shrink-0 text-ink-secondary" />
+        <span>{TYPE_WORDS[each].shown}</span>
+      </span>
+      <span className="text-caption text-ink-secondary">{TYPE_WORDS[each].gloss}</span>
+    </button>
+  )
   // A person's own formats first, then each pack's under its name (M33 F3).
   const grouped = formatsByPack(targets, useKeptPacks(), (each) => each)
   const pointable = [
@@ -109,7 +140,7 @@ export function ColumnQuestions({
     >
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1">
-          <span className="text-label text-ink-tertiary uppercase">Name</span>
+          <span className="text-label text-ink-secondary uppercase">Name</span>
           <input
             className={`${FIELD} w-56 font-mono`}
             value={column.name}
@@ -123,8 +154,17 @@ export function ColumnQuestions({
         {chosen && (
           <span className="flex items-center gap-2 pb-1">
             <TypeGlyph type={column.type} className="h-4 w-4 shrink-0 text-ink-secondary" />
-            <span className="font-mono">{column.type}</span>
-            <Button size="sm" variant="ghost" onClick={() => onChoose(column.type)}>
+            {/* The person's word; the word the declaration keeps is the tooltip (D-539). */}
+            <span title={`Stored as ${column.type}`}>{TYPE_WORDS[column.type].shown}</span>
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                // A rare type is changed from among the rest, where it was picked.
+                setMore(!isCommonType(column.type))
+                onChoose(column.type)
+              }}
+            >
               Change
             </Button>
           </span>
@@ -135,31 +175,36 @@ export function ColumnQuestions({
         </Button>
       </div>
 
-      {!chosen ? (
+      {!chosen && more ? (
+        <div key="more" className="fc-view-enter mt-4">
+          <div className="flex items-center gap-3">
+            <p className="text-label text-ink-secondary uppercase">More types</p>
+            <Button size="sm" variant="ghost" onClick={() => setMore(false)}>
+              ← Common types
+            </Button>
+          </div>
+          {MORE_TYPES.map((group, at) => (
+            <section key={group.heading} aria-label={group.heading} className="mt-3">
+              <h3 className="text-label text-ink-secondary uppercase">{group.heading}</h3>
+              <div className="mt-1 grid grid-cols-2 gap-1 sm:grid-cols-4">
+                {group.types.map((each, place) => tile(each, at === 0 && place === 0 ? firstMore : undefined))}
+              </div>
+            </section>
+          ))}
+        </div>
+      ) : !chosen ? (
         <div key="tiles" className="fc-view-enter mt-4">
-          <p className="text-label text-ink-tertiary uppercase">Type</p>
+          <p className="text-label text-ink-secondary uppercase">Type</p>
           {/* **U3's tiles, in the flow rather than behind a popover.** The
               picker they were in existed because a row of eight controls had no
               room for a 34rem grid, and it went with the row: a step has the
               room, and a question you have to open a menu to answer is a
-              question the walk did not really ask. The glyph, the word and the
-              gloss are untouched — `TYPE_WORDS` is still the one vocabulary. */}
-          <div className="grid grid-cols-2 gap-1 sm:grid-cols-3">
-            {COLUMN_TYPES.map((each) => (
-              <button
-                key={each}
-                type="button"
-                data-tour={`type-${each}`}
-                onClick={() => onChoose(each)}
-                className="flex flex-col gap-1 rounded-md border border-hairline p-2 text-left transition-colors duration-[var(--duration-micro)] hover:border-hairline-strong hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
-              >
-                <span className="flex items-center gap-2">
-                  <TypeGlyph type={each} className="h-4 w-4 shrink-0 text-ink-secondary" />
-                  <span className="font-mono">{each}</span>
-                </span>
-                <span className="text-caption text-ink-secondary">{TYPE_WORDS[each].gloss}</span>
-              </button>
-            ))}
+              question the walk did not really ask. Since M55 U8 (D-539) the
+              common types come first in a person's words and the rest are one
+              step away — `typePicker.ts` says which, `TYPE_WORDS` what each is
+              called. */}
+          <div className="grid grid-cols-2 gap-1 sm:grid-cols-4">
+            {COMMON_TYPES.map((each) => tile(each))}
             {(onDerive !== undefined || underived !== undefined) && (
               <button
                 type="button"
@@ -172,7 +217,7 @@ export function ColumnQuestions({
                   <span aria-hidden className="w-4 shrink-0 text-center font-mono text-ink-secondary">
                     =
                   </span>
-                  <span className="font-mono">computed</span>
+                  <span>Computed</span>
                 </span>
                 <span className="text-caption text-ink-secondary">
                   {onDerive === undefined && underived !== undefined
@@ -182,6 +227,9 @@ export function ColumnQuestions({
               </button>
             )}
           </div>
+          <Button size="sm" variant="ghost" className="mt-2" data-tour="more-types" onClick={openMore}>
+            More types…
+          </Button>
         </div>
       ) : (
         <div key="details" className="fc-view-enter mt-3 flex flex-wrap items-end gap-3">
