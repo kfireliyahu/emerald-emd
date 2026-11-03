@@ -6145,7 +6145,7 @@ position: 360
 ### M56
 title: Emerald inside Claude: a live pane, skills, and showing it
 goal: The emerald plugin stops being only an MCP server with command hooks. Claude Code's mods (plugins of function hooks, early access) let the plugin draw a live project pane beside the chat on every surface, answer the inbox and the status line without an npx call per prompt, and hold the write rules as hooks rather than prose. Skills carry the how-to a newcomer needs first (a file onto a format, a plan brought in, a project set up, what is wrong), so the server's instructions can say less where the plugin runs. Recordings of the pane and the inbox show it on getemerald.dev. Maintainer's answers, 2026-11-02: inside the emerald plugin (hosts/claude/), never a separate mod; the pane opens by itself only in a folder that means a document; the command hooks stay as the floor and the mod takes over where it runs; all four skills; the guards in this milestone; the maintainer records, desktop app first. After M55.
-state: planned
+state: closed
 position: 370
 
 <!-- emerald: open_question.format.md -->
@@ -7505,7 +7505,7 @@ state: fault
 ### In the Claude desktop app, open a folder holding a copy of the demo's project.emd (never docs/memory.emd) with the plugin from this build, and look at the project pane; then /emerald show unit.
 unit: M56 F1
 should: Each section reads as a heading at the host's heading size with its rows beneath: a ref (M2 U3, D-541) in semibold beside its title, a held unit's 'waits on …' as a small dim line under it, counts and 'None.' small and dim, a long list cut at six with 'N more'. No colour of Emerald's anywhere: text in the host's ink and dim only, in light and dark. Wrong would be: refs and titles running together, a heading the same size as its rows, a coloured word, or a row whose words were reordered or lost.
-state: open
+state: accepted
 
 ### In the desktop app, declare a format with a `file` column in a document of your own; Choose… a file under the document's folder, drop one from Explorer, and paste a path; click the name and 'show in folder'.
 unit: M37 U6
@@ -7608,7 +7608,8 @@ state: fault
 ### Load the plugin from this branch in the Claude desktop app (CLAUDE_CODE_PLUGIN_DIRS naming hosts/claude, or the marketplace once merged) and open a session in a folder holding a copy of the demo's project.emd (never docs/memory.emd), once without and once with the two allow rules init writes; then have the model record a row.
 unit: M56 U1
 should: The pane opens beside the chat by itself: without the rules it shows 'Read project.emd' and reads only after your press and the dialog; with them it shows what is ready, the inbox, open milestones and the rest at once, with no line about servers, tools or format_rows; after the write it reads again. In a folder with no .emd nothing opens. Closed, it stays closed in the next session until /emerald.
-state: open
+not_tried: Tried 2026-11-03 in the Claude desktop app on a copy of the demo's project.emd (C:/Users/Kfir/emerald-m56-try, the plugin from main, its server on the local build): the pane opened by itself and drew; the maintainer judged it good and closed M56. The pane not reading again on an outside write became M56 F1.
+state: accepted
 
 ### Look at any screen in the shell with a document open and unsaved.
 unit: M54 U6
@@ -8262,7 +8263,7 @@ state: dropped
 ### With the pane open on that copy, write a row into it from another process (another session's record_format_rows, or the app), then wait up to five seconds without prompting.
 unit: M56 F1
 should: The pane shows the change by itself, beside the toast and the status line; with the pane closed by the person, it stays closed. Wrong would be: the old reading staying until a prompt or an emerald write in this session.
-state: open
+state: accepted
 
 ### With three documents on Open Recent, open the third from Open recent in the title bar, then look at the list again.
 unit: M54 U6
