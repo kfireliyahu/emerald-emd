@@ -15828,9 +15828,12 @@ report: "LANDED d60617f. .claude/skills/design-review/SKILL.md (~110 lines), wri
 milestone: M55
 scope: app
 title: A column's width is dragged in every view that draws columns, and is one width for the format everywhere
-state: planned
+state: in_progress
 brief: Maintainer, 2026-11-03, in M55's review: "we need to be able in all views to change the width of columns in dashboard". His answers the same day: (1) ONE WIDTH PER COLUMN — the format's own store (format_column_view via columnWidths / setColumnWidth in src/data/repositories/formatViewRepository.ts), the one the format's table already drags (RowSheet's col-resize handle); dragging a column anywhere sets it for the format everywhere, so no migration and no width per view. (2) EVERY SURFACE THAT DRAWS COLUMNS: a saved table view placed as a dashboard block (the format's dashboard and the document's; Dashboard.tsx TableBody draws a table-fixed <table> today and ignores the stored widths), a saved table view opened as the format's tab, and the other dashboard blocks drawn as a table (a rollup's or a chart's table). Each draws the stored widths and has the same handle as the table: drag, a double-click to reset, keyboard on the focused handle, as RowSheet does. A block narrower than its columns scrolls inside itself, never the page. Read-only (the frame, a locked document) draws the widths with no handle. (3) Built before M55 closes. Anything not settled here (beyond layout) is the maintainer's: stop and ask; say whether D-227's parity applies to a width, and find the decision that set the table's width store before deciding. Tests: a width dragged in a block is the width in the format's table and the other way; reset clears it everywhere; read-only has no handle. Done-test: on custom.emd, widen card_charge's merchant in a dashboard table block, see it wider in the format's table and its saved table tab; narrow a block until it scrolls inside itself.
 files: src/ui/formats/Dashboard.tsx (TableBody, the rollup and chart tables), src/ui/formats/RowSheet.tsx (the col-resize handle, ~line 1025), src/ui/screens/FormatRows.tsx (columnWidths / setColumnWidth, ~409 and ~1828), src/data/repositories/formatViewRepository.ts
+taken_by: run-milestone driver
+started: 2026-11-03
+branch: main
 paths: "src/ui/formats/Dashboard.tsx\nsrc/ui/formats/RowSheet.tsx\nsrc/ui/screens/FormatRows.tsx\nsrc/data/repositories/formatViewRepository.ts"
 
 ### M55 U1
