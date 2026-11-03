@@ -7462,7 +7462,8 @@ state: accepted
 ### In a project with the emerald plugin, after npx emerald-mcp init, start a Claude Code session, then send one inbox row to its document from another session
 unit: M56 U2
 should: A toast within ~5 s and the status line reading inbox 1 new; the next prompt carries the row once, the one after a count line, then nothing; no permission dialog; your own UserPromptSubmit hooks still run; the prompt no longer waits ~2 s on npx. B (answer alone, no gate) and C (no takeover) are the alternatives in D-547 if this is wrong.
-state: open
+not_tried: Tried 2026-11-03 in the Claude desktop app on a copy of the demo's project.emd (C:/Users/Kfir/emerald-m56-try, the plugin from main with its server on the local build): toast and 'inbox 1 new' within seconds; the transcript shows the row in full on the first prompt, the count line on the second, nothing on the third, each at the prompt's own second. The pane did not redraw on that outside write: U1's, carried by M56 F1.
+state: accepted
 
 ### In an empty folder (git init), run node F:/projects/emerald/dist-plugin/server.mjs init, read the CLAUDE.md section and .claude/settings.json it wrote, then run it again
 unit: M50 U1
