@@ -457,6 +457,7 @@ written out here.
 | D-539 | 2026-11-03 | A new column's type is picked from a short list in a person's words — Text · Number · Money · Date · Yes or no · Choice · Link · Computed — with *More types…* one step away under Numbers (Whole number · Exact decimal · Percentage · Quantity), Dates and times (Month · Time of day · Date and time), Several (Several choices · Several links) and Outside this document (File · Row in another document); the picked type shows its name, the stored word is its tooltip, and the declaration's word never changes; the maintainer's pick of three drafts | [below](#d-539) |
 | D-543 | 2026-11-03 | A newcomer's four skills are the plugin's alone, each named for what a person does — `read-a-file`, `what-looks-wrong`, `bring-in-a-plan`, `set-up-a-project` — and setting a project up is a skill of its own beside `emerald-setup`, which fires only where a session has no Emerald tools at all | [below](#d-543) |
 | D-536 | 2026-11-03 | An input view's default mark is a column of `format_saved_view` with a partial unique index (066), on an input view alone; a new row's defaults are one rule, `entryDefaults` — the default input view's, over the address's exact values, over a required enum's first member — read by the table's blank row, entry/new and quick add; a money or quantity default is written `12.90 ILS`; `record_format_rows view:` fills only the keys a row leaves out; `format_rows` refuses an input view; until M55 U3's form, an input view opens a new entry with its address | [below](#d-536) |
+| D-541 | 2026-11-03 | The project pane is a hooks module in the emerald plugin (`hosts/claude/mod/`); it reads only `start_here` and `show_format`, and because Claude Code puts a plugin's `$.mcp.call` to the person's permission check and lets no module allow its own calls, it reads unasked only where `$.tool.check` says the person's rules allow it — `npx emerald-mcp init` writes those two allow rules into the project's `.claude/settings.json` — and otherwise holds a *Read* button whose press raises the dialog; it reads from a timer, never while drawing; `npm run test:mod` runs `claude plugin test` on a copy of the plugin without its Vitest files | [below](#d-541) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1238,6 +1239,43 @@ address, so the frame draws a read-only new entry starting at its defaults.
 **Rejected.** A `format_view_column` setting or a document setting naming the default view: a rename or
 delete would leave it pointing at nothing, and nothing would hold it to one. A money default as two keys
 of the address: an address holds one value per column.
+
+## D-541 · 2026-11-03 · The project pane is a hooks module in the emerald plugin (`hosts/claude/mod/`); it reads only `start_here` and `show_format`, and because Claude Code puts a plugin's `$.mcp.call` to the person's permission check and lets no module allow its own calls, it reads unasked only where `$.tool.check` says the person's rules allow it — `npx emerald-mcp init` writes those two allow rules into the project's `.claude/settings.json` — and otherwise holds a *Read* button whose press raises the dialog; it reads from a timer, never while drawing; `npm run test:mod` runs `claude plugin test` on a copy of the plugin without its Vitest files <a id="d-541"></a>
+
+**Context.** M56's brief (the maintainer's answers of 2026-11-02) rested on `$.mcp.call` asking no
+permission, as the plugin-authoring types for 2.1.309 say. On 2.1.316/317 a live session showed
+otherwise: the pane's read of `start_here` raised *Tool use · from the emerald plugin* in the default
+mode and was refused in auto mode, a read made from a `ui.render` hook was refused outright, and the
+module's own `tool.check` hook was skipped for re-entry, so it cannot allow what it calls itself.
+Separately, `claude plugin test hosts/claude` runs every `*.test.ts` under the folder in the module's
+environment, where the plugin's Vitest files cannot load. The maintainer picked from the unit's
+options (2026-11-03).
+
+**Decision.**
+
+- **Allowed by the project's rules.** `npx emerald-mcp init` adds `mcp__plugin_emerald_emerald__start_here`
+  and `…__show_format` to `permissions.allow` in the project's `.claude/settings.json` — the file it
+  already writes, plugin or not, merged and never duplicated; never `~/.claude/settings.json`. Nothing
+  that writes is ever allowed for the pane.
+- **Otherwise the person's press.** The pane asks `$.tool.check` (after `$.mcp.connect`, since at a
+  session's start the server's tools are not there yet) before every read it makes by itself. Where
+  the verdict is not *allow* it draws *Read <document>*, or, after a write, *<document> changed: read
+  it again* above what it last read; the dialog then follows the person's own press, and *don't ask
+  again* settles it.
+- **Never while drawing.** Reads run in a `$.clock.after(0)` dispatch of their own, so neither the
+  session's start nor a tool's answer waits on the server; a render hook only draws what was read.
+- **`npm run test:mod`** (`scripts/test-mod.mjs`) copies `hosts/claude` without the Vitest files
+  outside `mod/` and without what the engine lays beside a loaded mod, and runs `claude plugin test`
+  there. The Vitest files stay where they are, since U4 and U7 edit beside them.
+
+**Alternatives rejected.** A dialog at the first session start in every project (raised by nobody's
+action, at the worst moment). A `tool.check` allow in the module (the engine skips it: re-entry).
+Reading through `$.process.run` of the hooks binary (not known to be asked less, and a second way to
+the same answer). Moving the Vitest files out of `hosts/claude` (collides with the units beside it).
+
+**Consequences.** A project set up before this init asks once, on the press. The setup skill's line
+saying so is M56 U5's. The desktop app's check of the pane is still the maintainer's: it needs
+`CLAUDE_CODE_PLUGIN_DIRS`, which a session does not write.
 
 ## Related
 

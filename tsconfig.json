@@ -28,5 +28,9 @@
       "@/*": ["src/*"]
     }
   },
-  "include": ["src", "electron", "hosts", "vite.config.ts"]
+  "include": ["src", "electron", "hosts", "vite.config.ts"],
+  // The plugin's hooks module compiles against Claude Code's own declarations,
+  // which the engine lays beside it (`h` for JSX, no DOM): `tsc -p hosts/claude`
+  // once a session has loaded it, never this config (M56 U1).
+  "exclude": ["hosts/claude/mod"]
 }
