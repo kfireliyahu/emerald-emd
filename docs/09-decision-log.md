@@ -449,6 +449,7 @@ written out here.
 | D-530 | 2026-11-02 | M54 reviews every surface — the engine's screens, the parked ledger pack's, the desktop shell's chrome, Emerald's page and its tour — against the demo documents in light and dark; each finding is an open `review_entry` row the maintainer judges; a plain breach of a live ui rule row is fixed in place except in the ledger, where it is only recorded; a last unit makes the procedure a project skill | M54 |
 | D-531 | 2026-11-02 | M54's rule conflicts answered: needed text is `ink-secondary`, the ramp gains no 13px, a chip is text and a dot everywhere, a chart of several series wears category colours, the entry route replaced the detail pane, the title bar holds no primary, a command has one name in sentence case, the page and the tour keep token sets of their own, and "The database under the chat." leads everywhere | M54 |
 | D-532 | 2026-11-02 | M54's faults become thirteen fix units, M54 F1-F13, before M55: shared looks first, each unit sweeping its own files; the ledger's Home, NoLedger and #/read included; a due date only where declared; a window drop onto the open format; recovery as a three-choice notice; the page's first screen leads to Get Emerald; the tour pauses; words are drafted for the maintainer to pick | M54 |
+| D-533 | 2026-11-03 | M55's input view is a saved view of kind `input`: the fields it asks are its columns in their order and its defaults are its exact values (a member, a link, a number, or a date word that names one day), kept in `format_saved_view` and `views.md`; one per format may be its default, opened by Add, the list's + and quick add; it stays open after Add and lists what it added; it is in the rail, behind +, and a live block on a dashboard; a conversation makes it with `arrange_views` and uses it with `record_format_rows view:`; M54's fourteen engine-side *Entry:* findings come into M55 and the ledger's stay parked | [below](#d-533) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -931,6 +932,63 @@ a repository may run its own build's (this one does).
 **Consequences.** `scripts/check-package.mjs` runs `init` from the packed tarball, runs the hook it
 wrote, and checks a second run is byte-identical. `createDocumentFile` takes an encoding. The
 published package has it from 0.2.0. No schema change.
+
+## D-533 · 2026-11-03 · M55's input view is a saved view of kind `input`: the fields it asks are its columns in their order and its defaults are its exact values (a member, a link, a number, or a date word that names one day), kept in `format_saved_view` and `views.md`; one per format may be its default, opened by Add, the list's + and quick add; it stays open after Add and lists what it added; it is in the rail, behind +, and a live block on a dashboard; a conversation makes it with `arrange_views` and uses it with `record_format_rows view:`; M54's fourteen engine-side *Entry:* findings come into M55 and the ledger's stay parked <a id="d-533"></a>
+
+**Context.** Planning M55 (the maintainer's answers, 2026-11-03, asked as Impeccable's *shape*
+interview). M53 gave a format one entry view, whose Fields list orders and hides fields and ticks
+those a new entry asks for (D-517, D-518); quick add takes a title and nothing else. Adding many rows
+by hand — a card's charges, a day's tasks — means the full form each time. M54 recorded the faults
+of entering by hand as *Entry:* rows for this milestone (D-530): the table's blank row, Add and quick
+add each fill defaults their own way, a refusal lands in a footer one problem at a time, a link field
+offers no way to make what is missing, and a date reads three ways on one screen.
+
+**Decision.**
+
+- **An input view is a saved view of kind `input`** (D-514, D-520), named, per format. Its address's
+  columns are the fields it asks, in their order; its exact values are its defaults. Nothing else is
+  kept, so it is `format_saved_view` with the kind's `CHECK` widened and no new table, and a
+  `views.md` block like any saved view.
+- **A default is a fixed value or a date word**: a member, a link, a number, money, text, or a word
+  that names one day (`today`, `yesterday`, `tomorrow`), worked out the day the form is used. Not
+  *keep the last value*.
+- **A required column is always asked unless the view gives it a default**; saving one that leaves it
+  neither is refused, on screen and by tool. A value set but not asked is named on the form (*Adds as
+  account Visa*), as quick add's placeholder names what it sets (M53 U4).
+- **After Add it stays open**: the fields go back to their defaults, focus to the first, and the rows
+  just added are listed under it with an undo. A refusal is at its field, every problem at once.
+- **One input view per format may be its default**: Add, the list's + and quick add open it. With
+  none, Add is the entry form as now. The table's blank row, Add and quick add share one defaults rule
+  either way: the default input view's, then the address's exact values, then a required enum's first
+  member (D-518).
+- **Where it is**: in the rail under its format with its own glyph, renamed and deleted where it
+  stands (as a chart is, D-526); behind the format's +; and on a dashboard as a block that is the form
+  itself, live. It is a saved view, so D-514's *nothing else* holds.
+- **Quick add parses nothing.** Where the format has a default input view, its line shows the view's
+  fields inline, crossed with Tab.
+- **A link field offers *+ New "<typed>"***: it makes the row in place when the target needs nothing
+  but its name, else a small inline form asks the target's required fields. Its choices are sorted and
+  named by the target's title, never bare refs.
+- **Both halves** (D-227): `arrange_views view:saved` with kind `input` makes, renames, deletes and
+  marks the default; `record_format_rows view:"<name>"` fills each row's left-out fields from the
+  view's defaults and the dry run shows them; `show_format view:"<name>"` draws it read-only.
+- **No mockup**: M55 U1 writes the shape brief and drafts the new words; the maintainer confirms the
+  brief and picks the words before the screens are built.
+- **Scope**: M54's fourteen engine-side *Entry:* rows (M54 U1, U2 and the intake row of U3) come in.
+  The eleven on the parked ledger's screens — its editors, its platform selects, `SelectOrNew`, whose
+  every caller is the ledger's, and the paycheck reader — stay recorded only.
+
+**Alternatives rejected.** An input view in a table of its own, with per-field settings (sticky
+values, hints): room nobody asked for, at a migration and a second `views.md` shape. *Keep the last
+value*: it needs that table. Opening the new entry after Add: one row per visit is what M55 is for
+removing. Input views that never change Add, and Add replaced by one input view made from the *New
+entry* ticks: the first leaves the + where it was, the second removes a form people already use.
+Parsing quick add's text (*Lunch spot 35*): a guess at which word is which column. A mockup: the
+maintainer judges it in the app.
+
+**Consequences.** A migration widens `format_saved_view.kind` and holds the default mark. `entryDefaults`
+becomes the one rule the three ways share. New on-screen words become `term` rows once picked.
+M56 waits on M55.
 
 ## Related
 
