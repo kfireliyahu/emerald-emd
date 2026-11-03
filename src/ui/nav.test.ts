@@ -12,6 +12,8 @@ import {
   childIsActive,
   entryBack,
   entryCame,
+  readLineAdded,
+  readLineEntry,
   entryPath,
   formatPath,
   packSection,
@@ -415,5 +417,21 @@ describe('a dashboard’s row opens its entry (M53 F5)', () => {
     expect(entryCame(null)).toBeUndefined()
     expect(entryCame({ rollup: 'x' })).toBeUndefined()
     expect(entryBack(undefined, 'task', '?state=open')).toEqual({ path: tablePath('task', '?state=open'), label: undefined })
+  })
+})
+
+describe('a line a read refused, added by hand (M55 U9)', () => {
+  it('opens the format\'s Add with what the line held, and goes back to the read', () => {
+    const opened = readLineEntry('transaction', { read: 'statement', file: 'f1', line: 7, prefill: { merchant: 'משכורת' } })
+    expect(opened.to).toBe('/formats/transaction/entry/new')
+    const came = entryCame(opened.state)
+    expect(came).toEqual({ from: 'read', read: 'statement', file: 'f1', line: 7, prefill: { merchant: 'משכורת' } })
+    expect(entryBack(came, 'transaction', '')).toEqual({ path: '/formats/statement/read', label: 'Read' })
+  })
+
+  it('hands the read back the line it wrote, and nothing else', () => {
+    expect(readLineAdded({ added: { file: 'f1', line: 7 } })).toEqual({ file: 'f1', line: 7 })
+    expect(readLineAdded({ from: 'read' })).toBeUndefined()
+    expect(readLineAdded(null)).toBeUndefined()
   })
 })

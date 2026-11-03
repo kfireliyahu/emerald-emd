@@ -8,9 +8,11 @@ import { saveMapping } from '../repositories/importMappingRepository.ts'
 import { countTransactions } from '../repositories/transactionRepository.ts'
 import { computeHeaderSignature } from './signature.ts'
 import type { SheetCell, SheetTable } from './sheetTable.ts'
+import { LEFT_OUT, summarize } from './apply.ts'
 import {
   correct,
   judgeSheet,
+  sheetRows,
   monthsOf,
   readStatementWorkbook,
   sheetFrom,
@@ -148,5 +150,45 @@ describe('a statement read in a batch', () => {
     })
     expect(sheet.account.boundAccountId).toBeUndefined()
     expect(judgeSheet(db, sheet).accountId).toBeUndefined()
+  })
+})
+
+describe('a row the mapper could not read, skipped from that read (M55 U9)', () => {
+  // The printed total line, with its word where the date is.
+  const table: SheetTable = {
+    name: 'Card 7781',
+    columnCount: 3,
+    rows: [
+      [s('תאריך'), s('בית עסק'), s('סכום')],
+      [s('03/08/2026'), s('Shufersal'), n(100)],
+      [s('12/08/2026'), s('Paz'), n(0.5)],
+      [s('סה"כ'), s('Total'), n(100.5)],
+    ],
+  }
+  const of = (skipped?: ReadonlySet<number>): StatementSheet =>
+    sheetFrom({
+      id: 'f:Card 7781',
+      fileName: 'card.xlsx',
+      fileHash: 'h',
+      table,
+      mapping: MAPPING,
+      mappingId: undefined,
+      mappingName: undefined,
+      boundAccountId: undefined,
+      skipped,
+    })
+
+  it('fails as it stands', () => {
+    expect(summarize(sheetRows(of()))).toEqual({ parsed: 2, errors: 1, skipped: 0 })
+  })
+
+  it('is left out and counted as skipped, and the rest read as they did', () => {
+    const rows = sheetRows(of(new Set([3])))
+    expect(summarize(rows)).toEqual({ parsed: 2, errors: 0, skipped: 1 })
+    expect(rows[2]?.outcome).toEqual({ kind: 'skipped', reason: LEFT_OUT })
+  })
+
+  it('never leaves out a row that reads', () => {
+    expect(summarize(sheetRows(of(new Set([1]))))).toEqual({ parsed: 2, errors: 1, skipped: 0 })
   })
 })
