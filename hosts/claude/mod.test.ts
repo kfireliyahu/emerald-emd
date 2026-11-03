@@ -8,7 +8,7 @@ import { describe, expect, it } from 'vitest'
 
 import { tempDir } from '@/testing/tempDir'
 import { projectDocument as hookRule, PROJECT_FILE } from './hooks/project.ts'
-import { paneSections } from './mod/answer.ts'
+import { firstFew, paneRow, paneSections } from './mod/answer.ts'
 import { projectDocument as modRule, type ProjectDocument, type ProjectFiles } from './mod/project.ts'
 import { pluginDigest } from './release.ts'
 
@@ -154,6 +154,26 @@ describe('what the pane keeps of an answer', () => {
     expect(paneSections(shown)).toEqual([
       { notes: ['unit as its sheet — 2 rows.'], lines: [{ text: 'M1 U1 · built' }, { text: 'M2 U3 · planned' }] },
     ])
+  })
+})
+
+describe('how the pane draws a line as a row (M56 F1)', () => {
+  it('sets the ref apart from the title, and what follows a dash beneath, every word kept in order', () => {
+    expect(paneRow('M2 U3 · M2 · requests are limited')).toEqual({ ref: 'M2 U3', title: 'M2 · requests are limited' })
+    expect(paneRow('M3 U1 · M3 · reported — waits on M2 U3 · planned')).toEqual({ ref: 'M3 U1', title: 'M3 · reported', detail: 'waits on M2 U3 · planned' })
+    expect(paneRow('M2 · Public API')).toEqual({ ref: 'M2', title: 'Public API' })
+    expect(paneRow('Dry runs and concurrency · Every write dry-runs')).toEqual({ ref: 'Dry runs and concurrency', title: 'Every write dry-runs' })
+  })
+
+  it('keeps a line whole when it opens with text rather than a name', () => {
+    expect(paneRow('None of it')).toEqual({ title: 'None of it' })
+    const long = 'After a week of sessions on three documents, re-run the usage study · M56'
+    expect(paneRow(long)).toEqual({ title: long })
+  })
+
+  it('shows the first few of a list and counts the rest', () => {
+    expect(firstFew([1, 2, 3])).toEqual({ shown: [1, 2, 3], more: 0 })
+    expect(firstFew([1, 2, 3, 4, 5, 6, 7, 8, 9])).toEqual({ shown: [1, 2, 3, 4, 5, 6], more: 3 })
   })
 })
 

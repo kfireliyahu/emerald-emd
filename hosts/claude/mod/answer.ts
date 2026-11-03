@@ -93,3 +93,42 @@ function readParagraph(text: string, into: { notes: string[]; lines: PaneLine[] 
     else if (row !== '' && !row.includes('`')) under = row.replace(/:$/, '')
   }
 }
+
+/** A line as the pane draws it as a row: its ref set apart from its title, and what qualifies it beneath. */
+export interface PaneRow {
+  /** What the row is named by — `M2 U3`, `D-541`, an open question's name — when the line opens with one. */
+  readonly ref?: string
+  readonly title: string
+  /** What the line adds after a ` — `: `waits on M32 U1 · …`, a decision title's tail and its state. */
+  readonly detail?: string
+}
+
+/** Longer than this, a line's first part is its text, not a name to set apart. */
+const REF_AT_MOST = 32
+
+/**
+ * A line's ref, title and detail, every word of it kept and in its order:
+ * `M3 U1 · M3 · reported — waits on M2 U3` is ref `M3 U1`, title `M3 ·
+ * reported` and detail `waits on M2 U3`.
+ */
+export function paneRow(text: string): PaneRow {
+  const dash = text.indexOf(' — ')
+  const head = dash < 0 ? text : text.slice(0, dash)
+  const detail = dash < 0 ? undefined : text.slice(dash + 3).trim()
+  const cut = head.indexOf(' · ')
+  const ref = cut > 0 && cut <= REF_AT_MOST ? head.slice(0, cut) : undefined
+  const title = ref === undefined ? head : head.slice(cut + 3)
+  return {
+    ...(ref === undefined ? {} : { ref }),
+    title,
+    ...(detail === undefined || detail === '' ? {} : { detail }),
+  }
+}
+
+/** How many rows of one list the pane shows before it says how many more there are. */
+export const FEW = 6
+
+/** The first few of a list, and how many it leaves out. */
+export function firstFew<T>(items: readonly T[]): { readonly shown: readonly T[]; readonly more: number } {
+  return { shown: items.slice(0, FEW), more: Math.max(0, items.length - FEW) }
+}

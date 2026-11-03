@@ -17,9 +17,15 @@
  *   rules into the project's settings) it reads; where it is not, the pane holds
  *   a "Read" button, and the dialog follows the person's own press.
  * - **It redraws after an emerald write** — any tool of an emerald server the
- *   server does not call read-only — once that call has answered.
+ *   server does not call read-only — once that call has answered; and when
+ *   the document changed from outside the session, which the inbox's watch
+ *   notices and tells it through `documentChanged` (M56 F1).
  * - **`/emerald show <format> [view]`** puts one format, or one of its saved
  *   views, in the same pane; `/emerald` alone puts the project back.
+ * - **It looks like the host's own panes** (M56 F1): a heading per section in
+ *   the host's type ramp, a row per line with its ref set apart, counts and
+ *   empty states at caption size, the first few of a long list and how many
+ *   more — and no colour of Emerald's, only the host's theme (`dimColor`).
  *
  * Its words are the document's and the person's (D-493): the lines an answer
  * keeps for the model are left out by `answer.ts`, and nothing here speaks of
@@ -27,7 +33,7 @@
  */
 import type { EngineInterface, On } from 'claude-code'
 
-import { paneSections, type PaneSection } from './answer.ts'
+import { firstFew, paneRow, paneSections, type PaneLine, type PaneSection } from './answer.ts'
 import { basename, projectDocument, type ProjectDocument, type ProjectFiles } from './project.ts'
 
 /** The pane's id. */
@@ -157,6 +163,15 @@ async function open($: EngineInterface, document: string, isNew: boolean): Promi
   $.ui.invalidate('ui.render')
 }
 
+/**
+ * The document changed since it was last read, from anywhere — another
+ * session, the app, an editor: the inbox's watch saw it (`inbox.ts`, the one
+ * timer on the document). An open pane reads it again; a closed one nothing.
+ */
+export function documentChanged($: EngineInterface): void {
+  if (isOpen) refresh($)
+}
+
 /** Whether a call that answered went to an emerald server and may have changed a document. */
 export function isEmeraldWrite(tool: string, result: { readonly isReadOnly?: true | undefined; readonly deny?: string | undefined; readonly isError?: true | undefined }): boolean {
   return /^mcp__.*emerald.*__[a-z_]+$/i.test(tool) && result.isReadOnly !== true && result.deny === undefined && result.isError !== true
@@ -222,32 +237,57 @@ export function registerPane(on: On): void {
       <Button key="read" label={label} onPress={() => readNow($)} />
     )
     const now = answer
-    if (now === undefined) return waiting ? press(`Read ${name}`) : <Text dimColor>Reading {name}…</Text>
-    if ('problem' in now) return <Text dimColor>{now.problem}</Text>
-    if (now.sections.length === 0) return <Text dimColor>Nothing to show yet.</Text>
+    if (now === undefined) return waiting ? press(`Read ${name}`) : <Text size="caption" dimColor>Reading {name}…</Text>
+    if ('problem' in now) return <Text size="caption" dimColor>{now.problem}</Text>
+    if (now.sections.length === 0) return <Text size="caption" dimColor>Nothing to show yet.</Text>
+    // The host's own type ramp, spacing and theme, and no colour of Emerald's
+    // (M56 F1): a heading per section, a row per line, counts in caption.
+    const more = (count: number) => count > 0 && <Text size="caption" dimColor>{count} more</Text>
+    const rows = (lines: readonly PaneLine[]) => {
+      const { shown, more: left } = firstFew(lines)
+      return (
+        <Box flexDirection="column" gap="xs">
+          {shown.map((line) => {
+            const row = paneRow(line.text)
+            return (
+              <Box flexDirection="column">
+                <Box flexDirection="row" columnGap="sm">
+                  {row.ref !== undefined && <Text weight="semibold">{row.ref}</Text>}
+                  <Text>{row.title}</Text>
+                </Box>
+                {row.detail !== undefined && <Text size="caption" dimColor>{row.detail}</Text>}
+              </Box>
+            )
+          })}
+          {more(left)}
+        </Box>
+      )
+    }
     return (
-      <Box flexDirection="column">
+      <Box flexDirection="column" gap="lg">
         {waiting && press(`${name} changed: read it again`)}
-        {now.sections.map((section, at) => {
+        {now.sections.map((section) => {
           const loose = section.lines.filter((line) => line.under === undefined)
           const groups = [...new Set(section.lines.flatMap((line) => (line.under === undefined ? [] : [line.under])))]
           return (
-            <Box flexDirection="column" marginTop={at === 0 ? 0 : 1}>
-              {section.heading !== undefined && <Text bold>{section.heading}</Text>}
+            <Box flexDirection="column" gap="sm">
+              {section.heading !== undefined && (
+                <Text size="heading" weight="semibold">
+                  {section.heading}
+                </Text>
+              )}
               {section.notes.map((note) => (
-                <Text dimColor>{note}</Text>
+                <Text size="caption" dimColor>
+                  {note}
+                </Text>
               ))}
-              {loose.map((line) => (
-                <Text>· {line.text}</Text>
-              ))}
+              {loose.length > 0 && rows(loose)}
               {groups.map((under) => (
-                <Box flexDirection="column">
-                  <Text dimColor>{under}</Text>
-                  {section.lines
-                    .filter((line) => line.under === under)
-                    .map((line) => (
-                      <Text>· {line.text}</Text>
-                    ))}
+                <Box flexDirection="column" gap="xs" marginTop="sm">
+                  <Text size="footnote" weight="semibold" dimColor>
+                    {under}
+                  </Text>
+                  {rows(section.lines.filter((line) => line.under === under))}
                 </Box>
               ))}
             </Box>
