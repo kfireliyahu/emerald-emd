@@ -129,6 +129,17 @@ export const en: Copy = {
     recording: 'A session in a coding agent, with the development pack’s view drawn in the conversation.',
   },
 
+  // DRAFT (M56 U6): a session's words for the recordings inside Claude, the maintainer's to rewrite
+  // (docs/page-recording-claude.md has the shots they sit under).
+  claude: {
+    label: 'Inside Claude',
+    lead: 'The project beside the conversation, kept current while you work.',
+    pane: 'A session starts, and the project is already beside it: what is ready, what is open.',
+    terminal: 'The same pane in a terminal session.',
+    inbox: 'A note left by a session in another project arrives while you work, and waits in the project.',
+    format: 'Something new to keep, said in a sentence: declared as a format, and its pane filling as the rows are written.',
+  },
+
   // DRAFT (M33 F12): a session's words for the ledger's four pictures, the maintainer's to rewrite.
   shots: {
     label: 'Four of the ledger’s screens',

@@ -243,10 +243,13 @@ for (const name of readdirSync(path.join(FIXTURES, 'demo'))) {
   if (/^(receipt|timesheet)(-dark)?\.png$/.test(name)) copyFileSync(path.join(FIXTURES, 'demo', name), path.join(folder, name))
 }
 
-// The recordings for Emerald's page (M33 F11), once they are made,
-// and the ledger's pictures (M33 F12, npm run demo:shots): served beside the page.
-for (const name of readdirSync(path.join(FIXTURES, 'demo'))) {
-  if (/\.(mp4|webm)$/.test(name) || /^ledger-[a-z-]+\.png$/.test(name)) {
+// The recordings for Emerald's page (M33 F11, M56 U6), once they are made, each
+// with its poster frame (the PNG of the same name), and the ledger's pictures
+// (M33 F12, npm run demo:shots): served beside the page.
+const demoFiles = readdirSync(path.join(FIXTURES, 'demo'))
+const isPoster = (name) => name.endsWith('.png') && demoFiles.some((other) => /\.(mp4|webm)$/.test(other) && other.replace(/\.(mp4|webm)$/, '.png') === name)
+for (const name of demoFiles) {
+  if (/\.(mp4|webm)$/.test(name) || /^ledger-[a-z-]+\.png$/.test(name) || isPoster(name)) {
     copyFileSync(path.join(FIXTURES, 'demo', name), path.join(folder, name))
   }
 }

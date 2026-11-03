@@ -83,6 +83,15 @@ export interface Copy {
     readonly second: string
     readonly recording: string
   }
+  /** The recordings of the project inside Claude (M56 U6): a caption under each clip. */
+  readonly claude: {
+    readonly label: string
+    readonly lead: string
+    readonly pane: string
+    readonly terminal: string
+    readonly inbox: string
+    readonly format: string
+  }
   readonly shots: {
     readonly label: string
     readonly pause: string

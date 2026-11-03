@@ -4,9 +4,12 @@ import { CORE, FACETS, GLINTS } from '@/ui/gem.ts'
 import { currentTheme, initTheme, onThemeChange, setThemePreference, type ThemePreference } from '@/ui/theme/useTheme.ts'
 import { mountClaim } from './claim.ts'
 import { mountInbox } from './inbox.ts'
+import { mountRecording } from './recording.ts'
 import { mountReel } from './reel.ts'
 import { fill, LANGUAGES, pickLanguage, rememberLanguage, type Copy } from './copy.ts'
 import {
+  CLAUDE_RECORDINGS,
+  type ClaudeClip,
   CONTACT,
   COUNT_SCRIPT,
   DEVELOPMENT_RECORDING,
@@ -15,6 +18,7 @@ import {
   INSTALLERS,
   NPM_URL,
   PLUGIN_URL,
+  posterOf,
   README_INSTALL_URL,
   RELEASES_URL,
   SOURCE_URL,
@@ -154,27 +158,20 @@ const inbox = document.getElementById('inbox')
 if (inbox) mountInbox(inbox, copy.inbox)
 const recording = document.getElementById('recording')
 if (recording && DEVELOPMENT_RECORDING !== '') {
-  const video = document.createElement('video')
-  video.src = DEVELOPMENT_RECORDING
-  video.controls = true
-  video.muted = true
-  video.preload = 'metadata'
-  video.playsInline = true
+  const video = mountRecording(recording, DEVELOPMENT_RECORDING)
   video.width = 1920
   video.height = 1080
-  video.loop = true
-  recording.prepend(video)
-  recording.hidden = false
-  // Round and round while it is on screen, as the reel goes; still under reduced
-  // motion, where the controls start it.
-  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting) void video.play().catch(() => undefined)
-        else video.pause()
-      },
-      { threshold: 0.35 },
-    ).observe(video)
+}
+
+// The project inside Claude (M56 U6): a clip's figure only once its file is
+// named, and the slot only once one is.
+const insideClaude = document.getElementById('inside-claude')
+if (insideClaude) {
+  for (const figure of insideClaude.querySelectorAll<HTMLElement>('[data-clip]')) {
+    const file = CLAUDE_RECORDINGS[figure.dataset.clip as ClaudeClip] ?? ''
+    if (file === '') continue
+    mountRecording(figure, file, posterOf(file))
+    insideClaude.hidden = false
   }
 }
 
