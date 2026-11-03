@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from 'react'
 
 import type { ColumnDeclaration, FormatDeclaration } from '@/domain/format/declaration.ts'
 import { listGroupable, tickValue, tickWords, type ListGroup, type ListSetting, type ListShape } from '@/domain/format/view.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
+import { ChoiceField, type Choice } from '@/ui/components/ChoiceField.tsx'
 import { useDismiss } from '@/ui/components/useDismiss.ts'
-import type { LineCell, ListLine, ListPicture } from '@/ui/formats/listView.ts'
+import type { LineCell, ListLine, ListPicture, QuickField } from '@/ui/formats/listView.ts'
 import { toneOf } from '@/ui/formats/tone.ts'
 
 /**
@@ -87,10 +88,21 @@ export interface ListLinesProps {
   /** Write this value into the column that ticks a row. */
   readonly onTick: (line: ListLine, value: string) => void
   readonly onOpen: (line: ListLine) => void
-  /** Write a row with this title in this group (`undefined` for the line at the top); true when it was written. */
-  readonly onAdd: (group: ListGroup<ListLine> | undefined, title: string) => boolean
+  /**
+   * Write a row with this title in this group (`undefined` for the line at the
+   * top) — or, where quick add asks the default input view's fields, with
+   * these values, column to text; true when it was written.
+   */
+  readonly onAdd: (group: ListGroup<ListLine> | undefined, title: string, values?: Readonly<Record<string, string>>) => boolean
   /** Quick add's placeholder for a group, or the top's. */
   readonly placeholder: (group: ListGroup<ListLine> | undefined) => string
+  /** The default input view's asked fields for a group's quick add (M55 U4), or none: the title alone. */
+  readonly quickFields?: ((group: ListGroup<ListLine> | undefined) => readonly QuickChoice[]) | undefined
+}
+
+/** A field on quick add's line, with what it offers to choose: a member, a link's row by its name. */
+export interface QuickChoice extends QuickField {
+  readonly choices?: readonly Choice[] | undefined
 }
 
 export function ListLines(props: ListLinesProps) {
@@ -133,8 +145,8 @@ export function ListLines(props: ListLinesProps) {
     props.onTick(line, value)
   }
 
-  const add = (group: ListGroup<ListLine> | undefined, title: string): boolean => {
-    const written = props.onAdd(group, title)
+  const add = (group: ListGroup<ListLine> | undefined, title: string, values?: Readonly<Record<string, string>>): boolean => {
+    const written = props.onAdd(group, title, values)
     if (written) setFresh(title)
     return written
   }
@@ -177,7 +189,14 @@ export function ListLines(props: ListLinesProps) {
 
   return (
     <div className="flex flex-col" role="list" aria-label="Rows">
-      {narrow && !locked && <QuickAddLine narrow placeholder={props.placeholder(undefined)} onAdd={(title) => add(undefined, title)} />}
+      {narrow && !locked && (
+        <QuickAddLine
+          narrow
+          placeholder={props.placeholder(undefined)}
+          fields={props.quickFields?.(undefined) ?? []}
+          onAdd={(title, values) => add(undefined, title, values)}
+        />
+      )}
       {groups.map((group) => {
         const bare = shape.group === undefined
         const isShut = shut.has(group.key)
@@ -209,7 +228,11 @@ export function ListLines(props: ListLinesProps) {
             <div className="fc-fold" data-open={!isShut}>
               <div>
                 {!narrow && !locked && !group.ticked && group.implies !== undefined && (
-                  <QuickAddLine placeholder={props.placeholder(group)} onAdd={(title) => add(group, title)} />
+                  <QuickAddLine
+                    placeholder={props.placeholder(group)}
+                    fields={props.quickFields?.(group) ?? []}
+                    onAdd={(title, values) => add(group, title, values)}
+                  />
                 )}
                 {draftKey === group.key && draftRow}
                 {opened.map(row)}
@@ -405,12 +428,28 @@ export function Cell({ cell }: { cell: LineCell }) {
  */
 function QuickAddLine({
   placeholder,
+  fields,
   onAdd,
   narrow = false,
 }: {
   placeholder: string
-  onAdd: (title: string) => boolean
+  /** The default input view's asked fields; none is the title alone. */
+  fields: readonly QuickChoice[]
+  onAdd: (title: string, values?: Readonly<Record<string, string>>) => boolean
   narrow?: boolean
+}) {
+  if (fields.length > 0) return <QuickFieldsLine placeholder={placeholder} fields={fields} onAdd={onAdd} narrow={narrow} />
+  return <QuickTitleLine placeholder={placeholder} onAdd={onAdd} narrow={narrow} />
+}
+
+function QuickTitleLine({
+  placeholder,
+  onAdd,
+  narrow,
+}: {
+  placeholder: string
+  onAdd: (title: string) => boolean
+  narrow: boolean
 }) {
   const [text, setText] = useState('')
   return (
@@ -446,6 +485,140 @@ function QuickAddLine({
       />
       {!narrow && <span className="text-caption whitespace-nowrap opacity-0 group-focus-within:opacity-100">Enter adds · Esc clears</span>}
     </label>
+  )
+}
+
+/** The types whose quick field is narrow: a day, a figure, a member. */
+const QUICK_NARROW: ReadonlySet<string> = new Set(['date', 'datetime', 'time', 'month', 'number', 'integer', 'money', 'quantity', 'percent', 'duration', 'boolean', 'enum'])
+
+/**
+ * **Quick add with the view's fields** (M55 U4, D-533, U1's brief §6): where
+ * the format has an input view used for Add, the line is that view's asked
+ * fields in its order. The first takes the placeholder, which names what the
+ * row takes besides (*Add a card charge · date today*); the others follow,
+ * each with its column's name as a small label before it — never a
+ * placeholder alone. Tab crosses them, Enter adds with the view's defaults,
+ * Esc clears them all, and after Enter the line goes back to where it
+ * started. Beside an entry the first field is the line, and the others open
+ * under it, a 32px row each, while the line has focus or holds text. Nothing
+ * is parsed from what is typed.
+ */
+function QuickFieldsLine({
+  placeholder,
+  fields,
+  onAdd,
+  narrow,
+}: {
+  placeholder: string
+  fields: readonly QuickChoice[]
+  onAdd: (title: string, values?: Readonly<Record<string, string>>) => boolean
+  narrow: boolean
+}) {
+  const starts: Readonly<Record<string, string>> = Object.fromEntries(fields.map((each) => [each.column.name, each.start]))
+  const startKey = JSON.stringify(starts)
+  const [values, setValues] = useState<Readonly<Record<string, string>>>(starts)
+  const [inside, setInside] = useState(false)
+  const box = useRef<HTMLDivElement>(null)
+  // A group's value, or the view's defaults, changed: the line starts again from them.
+  useEffect(() => setValues(starts), [startKey])
+  const changed = fields.some((each) => (values[each.column.name] ?? '') !== each.start)
+  const [first, ...rest] = fields
+  if (first === undefined) return null
+  const toFirst = (): void => box.current?.querySelector<HTMLElement>('input')?.focus()
+
+  const keys = (event: KeyboardEvent<HTMLElement>): void => {
+    // What an open list took first is its: Enter picks, Escape closes it.
+    if (event.defaultPrevented) return
+    if (event.key === 'Escape' && changed) {
+      event.stopPropagation()
+      setValues(starts)
+      toFirst()
+      return
+    }
+    if (event.key !== 'Enter' || !changed) return
+    event.preventDefault()
+    const typed = Object.fromEntries(fields.map((each) => [each.column.name, (values[each.column.name] ?? '').trim()]))
+    if (onAdd(typed[first.column.name] ?? '', typed)) {
+      setValues(starts)
+      toFirst()
+    }
+  }
+
+  const control = (field: QuickChoice, at: number): ReactNode => {
+    const name = field.column.name
+    const text = values[name] ?? ''
+    const set = (next: string): void => setValues((was) => ({ ...was, [name]: next }))
+    const look =
+      at === 0
+        ? 'h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-ink outline-none placeholder:text-ink-secondary'
+        : `h-7 w-full min-w-0 border border-hairline-strong bg-background px-2 text-body text-ink outline-none focus:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent ${
+            QUICK_NARROW.has(field.column.type) ? 'tabular-nums' : ''
+          }`
+    const said = at === 0 ? placeholder : field.label
+    const shown = at === 0 ? { placeholder } : {}
+    if (field.choices !== undefined) {
+      return <ChoiceField text={text} choices={field.choices} filter onText={set} onPick={(choice) => set(choice.value)} aria-label={said} dir="auto" {...shown} className={look} />
+    }
+    return (
+      <input
+        value={text}
+        data-arrows={narrow || at > 0 ? undefined : ''}
+        onChange={(event) => set(event.target.value)}
+        aria-label={said}
+        // A Hebrew value reads right to left inside the left-to-right line (the Bidi rule).
+        dir="auto"
+        {...shown}
+        className={look}
+      />
+    )
+  }
+
+  const labelled = (field: QuickChoice, at: number): ReactNode => (
+    <label
+      key={field.column.name}
+      className={
+        narrow
+          ? 'flex h-8 items-center gap-2 border-b border-hairline'
+          : `flex flex-none items-center gap-1.5 ${QUICK_NARROW.has(field.column.type) ? 'w-40' : 'w-52'}`
+      }
+    >
+      <span className={`flex-none text-label text-ink-secondary uppercase ${narrow ? 'w-20 truncate' : ''}`}>
+        <Bidi>{field.label}</Bidi>
+      </span>
+      {control(field, at)}
+    </label>
+  )
+
+  return (
+    <div
+      ref={box}
+      onKeyDown={keys}
+      onFocus={() => setInside(true)}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setInside(false)
+      }}
+      className={
+        narrow
+          ? 'mx-3 flex flex-col'
+          : 'group flex min-h-10 flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-hairline px-1 py-1 text-ink-secondary focus-within:shadow-[inset_2px_0_0_var(--color-accent)]'
+      }
+    >
+      {narrow ? (
+        <label className="flex h-8 items-center border-b border-hairline text-body text-ink-secondary focus-within:shadow-[inset_2px_0_0_var(--color-accent)]">
+          {control(first, 0)}
+        </label>
+      ) : (
+        <label className="flex h-8 min-w-48 flex-1 items-center gap-3">
+          <span className="inline-flex w-4 justify-center" aria-hidden>
+            <ActionGlyph name="add" size={14} />
+          </span>
+          {control(first, 0)}
+        </label>
+      )}
+      {/* Beside an entry, the others open under the line while it has focus or holds text. */}
+      {(!narrow || inside || changed) && rest.map((field, at) => labelled(field, at + 1))}
+      {!narrow && <span className="text-caption whitespace-nowrap opacity-0 group-focus-within:opacity-100">Enter adds · Esc clears</span>}
+    </div>
   )
 }
 
@@ -701,6 +874,7 @@ export function ListPage({
   onTick,
   onAdd,
   placeholder,
+  quickFields,
   onOpen,
   onSetting,
 }: {
@@ -709,8 +883,10 @@ export function ListPage({
   locked: boolean
   refusal: string | undefined
   onTick: (picture: ListPicture, line: ListLine, value: string) => void
-  onAdd: (picture: ListPicture, group: ListGroup<ListLine> | undefined, title: string) => boolean
+  onAdd: (picture: ListPicture, group: ListGroup<ListLine> | undefined, title: string, values?: Readonly<Record<string, string>>) => boolean
   placeholder: (picture: ListPicture, group: ListGroup<ListLine> | undefined) => string
+  /** The default input view's asked fields on quick add's line (M55 U4), or none. */
+  quickFields?: ((picture: ListPicture, group: ListGroup<ListLine> | undefined) => readonly QuickChoice[]) | undefined
   onOpen: (line: ListLine) => void
   /** Change these columns' list settings, each from what it holds — one write. */
   onSetting: (columns: readonly string[], change: (column: string, was: ListSetting) => ListSetting) => void
@@ -762,8 +938,9 @@ export function ListPage({
             locked={locked}
             onTick={(line, value) => onTick(picture, line, value)}
             onOpen={onOpen}
-            onAdd={(group, title) => onAdd(picture, group, title)}
+            onAdd={(group, title, values) => onAdd(picture, group, title, values)}
             placeholder={(group) => placeholder(picture, group)}
+            quickFields={quickFields === undefined ? undefined : (group) => quickFields(picture, group)}
           />
         </div>
       </div>

@@ -29,9 +29,11 @@ import {
   totalNameRefusal,
   type DashboardBlock,
 } from '@/domain/format/view.ts'
-import { addressView, canonicalAddress, filterAddress } from '@/ui/formats/addressFilter.ts'
+import { INPUT_KIND } from '@/domain/format/inputView.ts'
+import { addressView, canonicalAddress, filterAddress, inputShapeOf } from '@/ui/formats/addressFilter.ts'
 import { blockGone, blockWhat, headline, ofText, summableColumns } from '@/ui/formats/dashboard.ts'
 import { valueText } from '@/ui/formats/entryList.ts'
+import { blockSentence } from '@/ui/formats/inputBlock.ts'
 import { listOrder, listPicture } from '@/ui/formats/listView.ts'
 
 import { plural } from '../format.ts'
@@ -97,6 +99,10 @@ function blockHolds(db: Database, block: DashboardBlock, declarations: readonly 
   }
   const view = savedView(db, block.format, block.name)
   if (view === undefined) return 'not drawn'
+  // An input view's block is a form (M55 U4, D-535): what it adds, and how a conversation adds through it.
+  if (view.kind === INPUT_KIND) {
+    return `a form. ${blockSentence(declaration, inputShapeOf(view.address, declaration.name))}; \`record_format_rows view:"${view.name}"\` adds through it.`
+  }
   const held = addressView(view.address)
   const read = filterQuery(db, declaration, held.filter, declarations, day)
   if (!read.ok) return `not drawn — ${read.error.kind === 'NO_COLUMN' ? `no column ${read.error.name}` : read.error.reason}`

@@ -3,8 +3,10 @@ import type { Database } from 'sql.js'
 
 import { filterQuery, filterText, type RowFilter } from '@/data/repositories/formatFilterRepository.ts'
 import { countRows } from '@/data/repositories/formatRowRepository.ts'
-import { boardSettings } from '@/data/repositories/formatViewRepository.ts'
+import { indexOf } from '@/data/repositories/formatJoinRepository.ts'
+import { boardSettings, savedViews } from '@/data/repositories/formatViewRepository.ts'
 import { labelColumn, type FormatDeclaration } from '@/domain/format/declaration.ts'
+import type { InputShape } from '@/domain/format/inputView.ts'
 import { boardOf, type DashboardBlock } from '@/domain/format/view.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
@@ -13,6 +15,10 @@ import { canonicalAddress, filterAddress, type AddressOrder, type ColumnChoice }
 import { ColumnFilter } from './FilterBand.tsx'
 import { ColumnsChoice } from './ColumnsChoice.tsx'
 import { rollupSentence, rollupWords, summableColumns } from './dashboard.ts'
+import { inputBlock, inputMadeRefusal, makeInputView } from './inputBlock.ts'
+import { draftShape, inputViewName } from './inputForm.ts'
+import { InputFields } from './InputView.tsx'
+import { linkChoices } from './linkTargets.ts'
 import { cardChoosable, type Choosable } from './lineColumns.ts'
 import {
   chartFilterColumns,
@@ -78,6 +84,22 @@ export function newChart(format: FormatDeclaration): ChartMaking {
     filter: {},
     name: '',
   }
+}
+
+/** An input view being made in the panel (M55 U4): what it asks and sets, its name, and whether Add opens it. */
+export interface InputMaking {
+  readonly what: 'input'
+  readonly format: string
+  readonly shape: InputShape
+  readonly name: string
+  readonly isDefault: boolean
+  readonly refused?: string
+}
+
+/** A new input view: every required column asked, named for its format — *Card charge 2* when that is taken. */
+export function newInput(db: Database, format: FormatDeclaration): InputMaking {
+  const taken = savedViews(db, format.name).map((each) => each.name)
+  return { what: 'input', format: format.name, shape: draftShape(format), name: inputViewName(format, taken), isDefault: false }
 }
 
 /** Write a made thing and place its block: the refusal, or nothing once it is written. */
@@ -462,6 +484,72 @@ export function ChartForm({
           )}
         </div>
         <Actions add="Add" refused={refused} onAdd={submit} onCancel={() => onMaking(undefined)} />
+      </div>
+    </>
+  )
+}
+
+/**
+ * **New input view, in Add a block** (M55 U4, D-535): of which format, what
+ * it asks and sets — U3's *Fields*, with *Ask* and *Default*, inline — its
+ * name, and whether Add opens it; saved and placed by *Add* in one step,
+ * refused by what `arrange_views` refuses.
+ */
+export function InputViewForm({
+  db,
+  formats,
+  declarations,
+  blocks,
+  document,
+  dashboard,
+  making,
+  onMaking,
+  onPlace,
+}: {
+  readonly db: Database
+  readonly formats: readonly FormatDeclaration[]
+  readonly declarations: readonly FormatDeclaration[]
+  readonly blocks: readonly DashboardBlock[]
+  readonly document: boolean
+  readonly dashboard: string | undefined
+  readonly making: InputMaking
+  readonly onMaking: (next: InputMaking | undefined) => void
+  readonly onPlace: Placing
+}) {
+  const declaration = formats.find((each) => each.name === making.format) ?? formats[0]
+  if (declaration === undefined) return null
+  const set = (next: Partial<InputMaking>): void => {
+    const { refused: _gone, ...rest } = making
+    onMaking({ ...rest, ...next })
+  }
+  const made = { dashboard, format: declaration.name, name: making.name, shape: making.shape, isDefault: making.isDefault }
+  const submit = (): void => {
+    const refused = inputMadeRefusal(db, declaration, made) ?? onPlace((database) => makeInputView(database, blocks, made), inputBlock(made))
+    if (refused !== undefined) onMaking({ ...making, refused })
+  }
+  return (
+    <>
+      <Heading>New input view</Heading>
+      <div className="flex w-[400px] max-w-[calc(100vw-48px)] flex-col gap-2.5 px-3 pt-1 pb-3">
+        {document && formats.length > 1 && (
+          <FormatChoice formats={formats} chosen={declaration} group="input-format" onChoose={(each) => onMaking(newInput(db, each))} />
+        )}
+        <Field label="Name">
+          <NameField value={making.name} placeholder="What it adds, e.g. Card charge" onChange={(name) => set({ name })} onSubmit={submit} />
+        </Field>
+        <div className="-mx-3">
+          <InputFields
+            declaration={declaration}
+            shape={making.shape}
+            links={linkChoices(db, declaration, indexOf(declarations))}
+            onChange={(shape) => set({ shape })}
+          />
+        </div>
+        <label className="flex items-center gap-1.5 text-caption text-ink-secondary">
+          <input type="checkbox" className="accent-[var(--color-ink)]" checked={making.isDefault} onChange={(event) => set({ isDefault: event.target.checked })} />
+          Use for Add
+        </label>
+        <Actions add="Add" refused={making.refused} onAdd={submit} onCancel={() => onMaking(undefined)} />
       </div>
     </>
   )

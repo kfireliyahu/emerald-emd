@@ -142,12 +142,12 @@ import {
   savedNameRefusal,
   type ListGroup,
 } from '@/domain/format/view.ts'
-import { InputView, type InputLine } from '@/ui/formats/InputView.tsx'
+import { choicesOf, InputView, type InputLine } from '@/ui/formats/InputView.tsx'
 import { draftShape, inputViewName, keptSentence } from '@/ui/formats/inputForm.ts'
 import { FormatPlus } from '@/ui/formats/FormatPlus.tsx'
 import { ChartForm, newChart, newView, ViewForm, type ChartMaking, type ViewMaking } from '@/ui/formats/MakeBlock.tsx'
-import { ListPage } from '@/ui/formats/ListView.tsx'
-import { groupKeyOf, listOrder, listPicture, quickAdd, type ListLine, type ListPicture } from '@/ui/formats/listView.ts'
+import { ListPage, type QuickChoice } from '@/ui/formats/ListView.tsx'
+import { groupKeyOf, listOrder, listPicture, quickAdd, quickFieldsOf, type ListLine, type ListPicture } from '@/ui/formats/listView.ts'
 import { entryLinked, entryLinks } from '@/data/repositories/formatLinkViewRepository.ts'
 import { figureOf, isPercentFigure } from '@/ui/formats/EntryValue.tsx'
 import { linkedRowOf, type LinkedRow } from '@/ui/formats/LinkViews.tsx'
@@ -725,6 +725,8 @@ export function FormatRows({
   const defaultInput = saved.find((each) => each.kind === INPUT_KIND && each.isDefault === true)
   const addPath =
     (defaultInput === undefined ? entryPath(declaration.name, NEW_ENTRY) : inputPath(declaration.name, defaultInput.name)) + address
+  // **Quick add asks its fields** in its order (M55 U4, D-535); without one, the title alone.
+  const quickAsked = defaultInput === undefined ? [] : inputShapeOf(defaultInput.address, declaration.name).fields
   // **A link field makes what is missing in place** (M55 U6, D-550): the row
   // checked and written as `record_format_rows` writes it, so no new write.
   const targetOf = (name: string): FormatDeclaration | undefined => data.declarations.find((each) => each.name === name)
@@ -824,7 +826,12 @@ export function FormatRows({
    * batch `record_format_rows` writes, whole or not at all. A required column
    * nothing fills opens entry/new with what it has, rather than refusing.
    */
-  const addLine = (picture: ListPicture, group: ListGroup<ListLine> | undefined, title: string): boolean => {
+  const addLine = (
+    picture: ListPicture,
+    group: ListGroup<ListLine> | undefined,
+    title: string,
+    values?: Readonly<Record<string, string>>,
+  ): boolean => {
     if (locked !== undefined) return false
     const asked = quickAdd(
       declaration,
@@ -836,10 +843,16 @@ export function FormatRows({
       data.rows[data.rows.length - 1]?.row,
       data.currency,
       inputDefaults(db, declaration, toISODate(today())),
+      quickAsked,
     )
     const named = picture.shape.name
-    const draft = named === undefined ? asked.draft : { ...asked.draft, [named.name]: title }
-    if (asked.missing.length > 0 || named === undefined) {
+    // With the view's fields (M55 U4), each typed value into its column; else the title.
+    const draft = values !== undefined ? { ...asked.draft, ...values } : named === undefined ? asked.draft : { ...asked.draft, [named.name]: title }
+    const missing =
+      values === undefined
+        ? asked.missing
+        : declaration.columns.filter((column) => column.required && (draft[column.name] ?? '').trim() === '').map((column) => column.name)
+    if (missing.length > 0 || (values === undefined && named === undefined)) {
       if (defaultInput !== undefined) {
         // What was typed rides along to the input view's first row.
         navigate(addPath, { state: { ...(list ? { from: 'list' } : (came ?? {})), prefill: draft } })
@@ -883,10 +896,23 @@ export function FormatRows({
     return undefined
   }
 
-  /** Quick add's placeholder for a group, naming every value the row will take. */
+  /** Quick add's placeholder for a group, naming every value the row will take but those its fields ask. */
   const placeholderOf = (picture: ListPicture, group: ListGroup<ListLine> | undefined): string =>
-    quickAdd(declaration, picture.shape, group?.implies ?? {}, filter, toISODate(today()), picture.names, undefined, undefined, inputDefaults(db, declaration, toISODate(today())))
+    quickAdd(declaration, picture.shape, group?.implies ?? {}, filter, toISODate(today()), picture.names, undefined, undefined, inputDefaults(db, declaration, toISODate(today())), quickAsked)
       .placeholder
+
+  /**
+   * **Quick add's fields** (M55 U4, D-535): the default input view's asked
+   * fields, each starting at its default — or the group's value, which wins.
+   */
+  const quickFields =
+    quickAsked.length === 0
+      ? undefined
+      : (picture: ListPicture, group: ListGroup<ListLine> | undefined): readonly QuickChoice[] => {
+          const day = toISODate(today())
+          const asked = quickAdd(declaration, picture.shape, group?.implies ?? {}, filter, day, picture.names, undefined, data.currency, inputDefaults(db, declaration, day), quickAsked)
+          return quickFieldsOf(declaration, quickAsked, asked.draft, picture.names).map((field) => ({ ...field, choices: choicesOf(field.column, data.links) }))
+        }
 
   // An entry the format has no row for — deleted, or a stale bookmark. A delete
   // lands here too: the router moves the address in a transition, so the
@@ -1033,8 +1059,9 @@ export function FormatRows({
           locked={locked !== undefined}
           refusal={spoken(moveRefusal, declaration)}
           onTick={(line, value) => tickLine(pictured, line, value)}
-          onAdd={(group, title) => addLine(pictured, group, title)}
+          onAdd={(group, title, values) => addLine(pictured, group, title, values)}
           placeholder={(group) => placeholderOf(pictured, group)}
+          quickFields={quickFields === undefined ? undefined : (group) => quickFields(pictured, group)}
           onNew={undefined}
           entries={data.entries}
           filter={filter}
@@ -1283,8 +1310,9 @@ export function FormatRows({
           locked={locked !== undefined}
           refusal={spoken(moveRefusal, declaration)}
           onTick={(line, value) => tickLine(pictured, line, value)}
-          onAdd={(group, title) => addLine(pictured, group, title)}
+          onAdd={(group, title, values) => addLine(pictured, group, title, values)}
           placeholder={(group) => placeholderOf(pictured, group)}
+          quickFields={quickFields === undefined ? undefined : (group) => quickFields(pictured, group)}
           onNew={locked !== undefined ? undefined : () => {
             setTyped(undefined)
             navigate(addPath, along)
@@ -1714,6 +1742,7 @@ export function FormatRows({
           onTick={tickLine}
           onAdd={addLine}
           placeholder={placeholderOf}
+          quickFields={quickFields}
           onOpen={(line) => navigate(entryPath(declaration.name, line.id) + address, { state: { from: 'list' } })}
           onSetting={(column, change) =>
             mutate((database) => {

@@ -465,6 +465,7 @@ written out here.
 | D-552 | 2026-11-03 | Where the Claude plugin starts the server it passes `--skills`, and each how-to a plugin skill carries is one line naming the skill; every other launch keeps the full instructions byte for byte | [below](#d-552) |
 | D-554 | 2026-11-03 | The recordings of the project inside Claude are four clips named in `CLAUDE_RECORDINGS` (`src/demo/page/page.ts`) — the pane opening as a session starts, the same in a terminal, a note from another project arriving, a format declared with its pane filling — each a file in `fixtures/synthetic/demo/` whose poster frame is the PNG of the same name; a clip's figure, and the slot, show only once its file is named, and a test fails when a named clip or its poster is missing | [below](#d-554) |
 | D-556 | 2026-11-03 | An input view's form is its own route, `#/formats/:name/input/:view`, drawn by the format's screen beside its list; with no name it is a new one, a draft until Save; a view or chart made from the format's + is saved and placed on no dashboard; quick add that cannot write a row opens the default input view with what was typed; the frame draws the form read-only | [below](#d-556) |
+| D-557 | 2026-11-03 | An input view's dashboard block judges and writes its row as `record_format_rows` does (`stageRows`, then `insertRows`), every refusal at its field; New input view in Add a block saves the view and its block in one transaction; quick add with the view's fields writes each into its column and opens the input view when a required one is left; the conversation's dashboard text names the block as a form | [below](#d-557) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1549,6 +1550,42 @@ view's address in the page's address (it would filter the list beside the form b
 
 **Consequences.** The rows just added are this visit's state, keyed by id while shown and by title for
 motion; a text document that renews an id on a write drops a line from *Just added*, never adds a wrong one.
+
+## D-557 · 2026-11-03 · An input view's dashboard block judges and writes its row as `record_format_rows` does (`stageRows`, then `insertRows`), every refusal at its field; New input view in Add a block saves the view and its block in one transaction; quick add with the view's fields writes each into its column and opens the input view when a required one is left; the conversation's dashboard text names the block as a form <a id="d-557"></a>
+
+**Context.** M55 U4 builds U1's confirmed brief (D-535) for the dashboard and for quick add, on U2's engine
+(D-536) and U3's page (D-556). The brief settles the screen; it leaves open how a block, which has no entry
+beside it, judges a row, and three seams below.
+
+**Decision.**
+
+- **The block is a saved view** (`format_dashboard_block` kind `saved`, naming an input view): no migration.
+  `Block` draws `InputBlock` where the saved view's kind is `input`; its line is `blockSentence` —
+  *Adds a card charge as date today · account Visa*, in the format's column order.
+- **Its row is judged by the batch the tool runs** (`stageInput` in `src/ui/formats/inputBlock.ts`:
+  `stageRows`, then `insertRows`), every refusal at once and at its column, said in a screen's words; a
+  row holding only where it started is *Nothing has been filled in yet.* The page keeps `judgeEntry`,
+  which needs the entry's state; the two refuse the same things because `stageRows` is what
+  `record_format_rows view:` runs. Undo is U3's: refused while another row names it.
+- **New input view in Add a block** is `InputViewForm` (`MakeBlock.tsx`): *Of* on the document's
+  dashboard, the name (`inputViewName`), U3's `InputFields` inline, *Use for Add*; `makeInputView` saves
+  the view and places its block in one transaction, refused first by `inputMadeRefusal` (a taken name and
+  `inputViewRefusals`). Only formats a person writes are offered one (D-269).
+- **Quick add with the view's fields**: `quickAdd` takes the default input view's asked columns — named
+  neither in the placeholder nor as missing — and `quickFieldsOf` gives each its start (the group's value
+  over the view's default, a link by its row's name). Enter writes each value into its column through the
+  same `stageRows`; a required column left empty opens the default input view with what was typed, as
+  D-556's quick add did.
+- **The conversation's dashboard text** (`show_format view:dashboard`, `arrange_views`) says an input
+  view's block is *a form* with its sentence and the `record_format_rows view:` that adds through it,
+  never the rows its defaults would filter.
+- **A block draws no *+ New* on a link field**: the link maker (D-550) is the format screen's; a name no
+  row has is refused at Add, at its field.
+
+**Alternatives rejected.** Judging the block's row with `judgeEntry` (it lives in the format screen and
+reads the entry's state); a block kind of its own (a migration for what a saved view already names).
+
+**Consequences.** `inputBlock.ts` imports nothing React touches, so the plugin can read it for its text.
 
 ## Related
 

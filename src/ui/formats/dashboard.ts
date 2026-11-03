@@ -8,6 +8,7 @@ import { nounOf, pluralOf } from '@/domain/format/connections.ts'
 import { formatDecimal } from '@/domain/format/decimal.ts'
 import type { ColumnDeclaration, FormatDeclaration } from '@/domain/format/declaration.ts'
 import { filterText as ruleText } from '@/domain/format/aggregate.ts'
+import { INPUT_KIND } from '@/domain/format/inputView.ts'
 import type { RollupDeclaration } from '@/domain/format/rollup.ts'
 import {
   BLOCK_GAP,
@@ -21,7 +22,8 @@ import {
 } from '@/domain/format/view.ts'
 import { err, ok, type Result } from '@/core/result.ts'
 
-import { addressView, canonicalAddress, filterAddress } from './addressFilter.ts'
+import { addressView, canonicalAddress, filterAddress, inputShapeOf } from './addressFilter.ts'
+import { blockSentence } from './inputBlock.ts'
 
 /**
  * **What a dashboard's blocks say** — M53 U7, D-514, D-521. Pure, and no
@@ -132,6 +134,8 @@ export function blockWhat(
   if (block.kind === 'saved') {
     const view = savedView(db, block.format, block.name)
     if (view === undefined) return `${pre}Saved view`
+    // An input view's line is what it adds, which names the format already (M55 U4, D-535).
+    if (view.kind === INPUT_KIND) return blockSentence(declaration, inputShapeOf(view.address, declaration.name))
     const kind = view.kind.charAt(0).toUpperCase() + view.kind.slice(1)
     const group = view.kind === 'list' ? listOf(declaration.columns, viewSettings(db, declaration.name, 'list')).group : undefined
     return `${pre}${kind} · ${savedWords(view)}${group === undefined ? '' : `, by ${group.name.replace(/_/g, ' ')}`}`

@@ -7,7 +7,7 @@ import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { Kbd } from '@/ui/components/Kbd.tsx'
 import { withArticle, type ListGroup } from '@/domain/format/view.ts'
 import { HeldValues } from '@/ui/formats/FilterBand.tsx'
-import { ListLines } from '@/ui/formats/ListView.tsx'
+import { ListLines, type QuickChoice } from '@/ui/formats/ListView.tsx'
 import { listOrder, type ListLine, type ListPicture } from '@/ui/formats/listView.ts'
 
 /**
@@ -52,6 +52,7 @@ export function EntryList({
   onTick,
   onAdd,
   placeholder,
+  quickFields,
   onSearch,
   onFilter,
 }: {
@@ -70,8 +71,10 @@ export function EntryList({
   /** What the last tick or quick add was refused with, or nothing. */
   refusal?: string | undefined
   onTick: (line: ListLine, value: string) => void
-  onAdd: (group: ListGroup<ListLine> | undefined, title: string) => boolean
+  onAdd: (group: ListGroup<ListLine> | undefined, title: string, values?: Readonly<Record<string, string>>) => boolean
   placeholder: (group: ListGroup<ListLine> | undefined) => string
+  /** The default input view's asked fields on quick add's line (M55 U4), or none. */
+  quickFields?: ((group: ListGroup<ListLine> | undefined) => readonly QuickChoice[]) | undefined
   /** How many entries the format holds, filter or not. */
   entries: number
   filter: RowFilter
@@ -247,6 +250,7 @@ export function EntryList({
               onOpen={(line) => onOpen(line.id)}
               onAdd={onAdd}
               placeholder={placeholder}
+              quickFields={quickFields}
             />
             {rows.length === 0 && draft === undefined && filtered && (
               <div className="p-4 text-body text-ink-secondary">Nothing in this format holds it.</div>

@@ -27,7 +27,8 @@ import {
 } from '@/data/repositories/formatViewRepository.ts'
 import { nounOf, pluralOf } from '@/domain/format/connections.ts'
 import { labelColumn, type ColumnDeclaration, type FormatDeclaration } from '@/domain/format/declaration.ts'
-import { rowWriteRefusal } from '@/domain/format/owner.ts'
+import { rowWriteRefusal, rowWriteRefusalOnScreen } from '@/domain/format/owner.ts'
+import { INPUT_KIND } from '@/domain/format/inputView.ts'
 import { brokenConstraints, type StoredRow } from '@/domain/format/row.ts'
 import {
   BLOCK_COLUMNS,
@@ -77,8 +78,20 @@ import {
 } from '@/ui/formats/dashboard.ts'
 import { valueText } from '@/ui/formats/entryList.ts'
 import { listPicture, type ListLine } from '@/ui/formats/listView.ts'
+import { InputBlock } from '@/ui/formats/InputBlock.tsx'
 import { ReadOnly } from '@/ui/formats/readOnly.ts'
-import { ChartForm, newChart, newView, ViewForm, type ChartMaking, type Placing, type ViewMaking } from '@/ui/formats/MakeBlock.tsx'
+import {
+  ChartForm,
+  InputViewForm,
+  newChart,
+  newInput,
+  newView,
+  ViewForm,
+  type ChartMaking,
+  type InputMaking,
+  type Placing,
+  type ViewMaking,
+} from '@/ui/formats/MakeBlock.tsx'
 import { rollupChart } from '@/ui/formats/rollupChart.ts'
 import { dashboardEntry, dashboardState, formatPath, listPath, savedViewPath } from '@/ui/nav.ts'
 import { today } from '@/ui/today.ts'
@@ -586,6 +599,9 @@ function Block({
     if (opened) firstItem(list.current)
   }, [opened])
   const declaration = declarations.find((each) => each.name === block.format)
+  // An input view's block is its form (M55 U4, D-535): a saved view, so no migration.
+  const input = block.kind === 'saved' ? savedView(db, block.format, block.name) : undefined
+  const form = input?.kind === INPUT_KIND ? input : undefined
   const gone = blockGone(db, block, declarations)
   const what = blockWhat(db, block, declarations, withFormat)
   const title = blockTitle(block)
@@ -674,9 +690,22 @@ function Block({
           </span>
         )}
       </div>
-      <div className={`min-w-0 px-4 pb-3 ${fill ? 'min-h-0 flex-1 overflow-y-auto' : ''}`}>
+      <div className={`min-w-0 px-4 pb-3 ${fill ? (form !== undefined ? 'flex min-h-0 flex-1 flex-col' : 'min-h-0 flex-1 overflow-y-auto') : ''}`}>
         {gone !== undefined || declaration === undefined ? (
           <Nothing>{gone}</Nothing>
+        ) : form !== undefined ? (
+          <InputBlock
+            db={db}
+            declaration={declaration}
+            declarations={declarations}
+            view={form}
+            dashboard={dashboard}
+            day={day}
+            // A pack's format is written only through the pack (D-269), here as on its screen.
+            locked={locked || rowWriteRefusalOnScreen(declaration) !== undefined}
+            fill={fill}
+            width={width}
+          />
         ) : block.kind === 'total' ? (
           <TotalBody db={db} block={block} declaration={declaration} declarations={declarations} day={day} />
         ) : block.kind === 'rollup' ? (
@@ -1285,7 +1314,7 @@ interface Adding {
 }
 
 /** What *Add a block* is making in place: a headline total, a view or a chart. */
-type Making = Adding | ViewMaking | ChartMaking
+type Making = Adding | ViewMaking | ChartMaking | InputMaking
 
 /**
  * **Add a block**: the formats' saved views and rollups — a ticked one is on
@@ -1329,6 +1358,8 @@ function AddMenu({
   }, [choosing])
   const dashboard = document ? undefined : formats[0]?.name
   const on = (format: string, name: string): boolean => blocks.some((each) => each.format === format && each.name === name)
+  // An input view adds rows, so only a format a person writes here is offered one (D-269).
+  const writable = formats.filter((each) => rowWriteRefusalOnScreen(each) === undefined)
   const offered = formats.map((each) => offeredOf(db, each)).filter((each) => !document || each.saved.length > 0 || each.rollups.length > 0)
   return (
     <div
@@ -1350,6 +1381,8 @@ function AddMenu({
         <HeadlineForm db={db} formats={formats} declarations={declarations} blocks={blocks} document={document} day={day} adding={adding} onAdding={onAdding} onAdd={onAdd} dashboard={dashboard} />
       ) : adding?.what === 'view' ? (
         <ViewForm db={db} formats={formats} declarations={declarations} blocks={blocks} document={document} dashboard={dashboard} day={day} making={adding} onMaking={onAdding} onPlace={onPlace} />
+      ) : adding?.what === 'input' ? (
+        <InputViewForm db={db} formats={writable} declarations={declarations} blocks={blocks} document={document} dashboard={dashboard} making={adding} onMaking={onAdding} onPlace={onPlace} />
       ) : adding?.what === 'chart' ? (
         <ChartForm db={db} formats={formats} declarations={declarations} blocks={blocks} document={document} dashboard={dashboard} making={adding} onMaking={onAdding} onPlace={onPlace} />
       ) : (
@@ -1368,7 +1401,7 @@ function AddMenu({
                   key={view.name}
                   disabled={on(each.format.name, view.name)}
                   check={on(each.format.name, view.name) ? <ActionGlyph name="check" size={12} /> : undefined}
-                  aside={view.kind}
+                  aside={view.kind === INPUT_KIND ? 'input view' : view.kind}
                   onClick={() => onAdd({ dashboard, format: each.format.name, kind: 'saved', name: view.name, address: '' })}
                 >
                   <Bidi>{view.name}</Bidi>
@@ -1392,6 +1425,17 @@ function AddMenu({
             </div>
           ))}
           {offered.length > 0 && <Sep />}
+          <MenuItem
+            check={<ActionGlyph name="plus" size={12} />}
+            aside="a form that stays open"
+            disabled={writable.length === 0}
+            onClick={() => {
+              const first = writable[0]
+              if (first !== undefined) onAdding(newInput(db, first))
+            }}
+          >
+            New input view
+          </MenuItem>
           <MenuItem
             check={<ActionGlyph name="plus" size={12} />}
             aside="a list, table or board"

@@ -10,6 +10,7 @@ import {
   dueBucket,
   dueText,
   entryDefaults,
+  entryLabel,
   inDueOrder,
   isTicked,
   listGroups,
@@ -190,6 +191,8 @@ export function quickAdd(
   previous?: StoredRow | undefined,
   currency?: string | undefined,
   input: Readonly<Record<string, string>> = {},
+  /** The default input view's asked fields (M55 U4): typed on the line, so neither named nor missing. */
+  asked: readonly string[] = [],
 ): QuickAdd {
   // The one defaults rule (M55 U2, D-536): the default input view's, the
   // address's exact values, a first member — and the group typed in over all.
@@ -199,9 +202,11 @@ export function quickAdd(
   })
   const set = { ...defaults, ...implies }
   const draft: Record<string, string> = { ...blankDraft(declaration, previous, currency), ...set }
+  // What the line types: the view's asked fields where it has some, else the title.
+  const typed = (column: ColumnDeclaration): boolean => (asked.length > 0 ? asked.includes(column.name) : column === shape.name)
   const words = declaration.columns.flatMap((column) => {
     const value = set[column.name]
-    if (value === undefined || value === '' || column === shape.name) return []
+    if (value === undefined || value === '' || typed(column)) return []
     const label = column.name.replace(/_/g, ' ')
     if (column.type === 'enum') return [value.replace(/_/g, ' ')]
     if (column.type === 'link') return [names.get(value) ?? value]
@@ -214,9 +219,36 @@ export function quickAdd(
     draft,
     placeholder: words.length === 0 ? `Add ${one}` : `Add ${one} · ${words.join(', ')}`,
     missing: declaration.columns
-      .filter((column) => column.required && column !== shape.name && (draft[column.name] ?? '').trim() === '')
+      .filter((column) => column.required && !typed(column) && (draft[column.name] ?? '').trim() === '')
       .map((column) => column.name),
   }
+}
+
+/** One field on quick add's line: its column, its small label, and what it starts holding. */
+export interface QuickField {
+  readonly column: ColumnDeclaration
+  readonly label: string
+  readonly start: string
+}
+
+/**
+ * **Quick add's fields** (M55 U4, D-533, U1's brief §6): the default input
+ * view's asked fields in its order, each starting at what `quickAdd`'s draft
+ * holds — the view's default, or the group's value over it — a link by its
+ * row's name, as a person types it. Nothing is parsed from the text.
+ */
+export function quickFieldsOf(
+  declaration: FormatDeclaration,
+  asked: readonly string[],
+  draft: RowDraft,
+  names: ReadonlyMap<string, string>,
+): readonly QuickField[] {
+  return asked.flatMap((name) => {
+    const column = declaration.columns.find((each) => each.name === name)
+    if (column === undefined) return []
+    const held = draft[name] ?? ''
+    return [{ column, label: entryLabel(column), start: column.type === 'link' ? (names.get(held) ?? held) : held }]
+  })
 }
 
 /**

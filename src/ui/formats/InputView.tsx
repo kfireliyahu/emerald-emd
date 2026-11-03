@@ -56,7 +56,7 @@ export interface InputSaving {
 }
 
 /** The types whose field is narrow: a day, a figure, a yes or no, a member. */
-const NARROW: ReadonlySet<string> = new Set([
+export const NARROW: ReadonlySet<string> = new Set([
   'date',
   'datetime',
   'time',
@@ -72,7 +72,7 @@ const NARROW: ReadonlySet<string> = new Set([
 ])
 
 /** What can take focus in the form: never the calendar a date field hides, nor a disabled field. */
-const FOCUSABLE =
+export const FOCUSABLE =
   'input:not([type="hidden"]):not([aria-hidden="true"]):not([tabindex="-1"]):not([disabled]), textarea:not([disabled])'
 
 /** *needed: ask it or give it a default* — a required column a view would leave empty. */
@@ -587,7 +587,7 @@ export function InputView({
 }
 
 /** Each column whose row in Fields is refused, and why: a required one left empty, a default it cannot take. */
-function rowRefusals(declaration: FormatDeclaration, shape: InputShape): ReadonlyMap<string, string> {
+export function rowRefusals(declaration: FormatDeclaration, shape: InputShape): ReadonlyMap<string, string> {
   const refused = new Map<string, string>()
   for (const column of declaration.columns) {
     const held = defaultText(shape.defaults[column.name])
@@ -619,7 +619,7 @@ function notSaved(declaration: FormatDeclaration, refusals: ReadonlyMap<string, 
  * first, in the order the form asks them, and are dragged by the grip or
  * moved a step with Alt+Up and Alt+Down; the rest follow in the format's order.
  */
-function InputFields({
+export function InputFields({
   declaration,
   shape,
   links,
@@ -745,7 +745,7 @@ function InputFields({
 }
 
 /** The choices a default cell offers: a member, a link's row by its name, yes or no — or nothing, where it is typed. */
-function choicesOf(column: ColumnDeclaration, links: ReadonlyMap<string, readonly LinkChoice[]>): readonly Choice[] | undefined {
+export function choicesOf(column: ColumnDeclaration, links: ReadonlyMap<string, readonly LinkChoice[]>): readonly Choice[] | undefined {
   if (column.type === 'enum') return (column.values ?? []).map((member) => ({ value: member, label: member }))
   if (column.type === 'boolean') return [{ value: 'true', label: 'true' }, { value: 'false', label: 'false' }]
   if (column.type === 'link' && column.target !== undefined) {
