@@ -26,6 +26,31 @@ export const COUNT_SCRIPT = ''
  */
 export const DEVELOPMENT_RECORDING: string = 'development.mp4'
 
+/** The clips of the project inside Claude, in the order the page shows them. */
+export type ClaudeClip = 'pane' | 'terminal' | 'inbox' | 'format'
+
+/**
+ * **The recordings of the project inside Claude** (M56 U6): the pane opening as
+ * a session starts (and the same in a terminal), a note from another project
+ * arriving, and a format declared with its pane filling. Each is a file in
+ * `fixtures/synthetic/demo/` with its poster frame beside it — the PNG of the
+ * same name, `posterOf` — copied beside the page by the demo build. Empty draws
+ * nothing, and the slot shows only once one clip is named; `recordings.test.ts`
+ * fails when a named clip or its poster is not in the fixtures. Recorded on the
+ * demo's made-up project, never on `docs/memory.emd` (docs/page-recording-claude.md).
+ */
+export const CLAUDE_RECORDINGS: Readonly<Record<ClaudeClip, string>> = {
+  pane: '',
+  terminal: '',
+  inbox: '',
+  format: '',
+}
+
+/** A clip's poster frame: the PNG of the same name, shown under reduced motion until it is played. */
+export function posterOf(file: string): string {
+  return file.replace(/\.(mp4|webm)$/, '.png')
+}
+
 /** Where a note goes while there is no form: the address LICENSING.md and SECURITY.md give. */
 export const CONTACT = 'me@kfireliyahu.com'
 

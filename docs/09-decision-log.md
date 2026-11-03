@@ -463,6 +463,7 @@ written out here.
 | D-549 | 2026-11-03 | The plugin's hooks module refuses two write rules at the call — an `Edit` or `Write` on any `.emd` file, and a `git commit` in a linked worktree that would carry the project document's copy — each guard refusing when it fails; `/claim <ref>` and `/land [ref]` write nothing and hand the model the call in the command's `context`, then ask for a turn; the third rule, no `commit: true` without a dry run, is dropped on the maintainer's word | [below](#d-549) |
 | D-550 | 2026-11-03 | A link field opens its rows on focus, in the target's order — the column its roadmap orders by, else its name with numbers read as numbers — each by its name with its entry's title beside it; a name no row has ends the list with *No milestone is called "M9"* and *+ New "M9"*, never the option Enter is on by itself; a target whose required columns its new-row defaults fill is made at once, else a form under the field asks them with the entry's own fields and refusals, Add makes and links it through `stageRows`, and Esc leaves the field as typed; an enum's members read as words in every field | [below](#d-550) |
 | D-552 | 2026-11-03 | Where the Claude plugin starts the server it passes `--skills`, and each how-to a plugin skill carries is one line naming the skill; every other launch keeps the full instructions byte for byte | [below](#d-552) |
+| D-554 | 2026-11-03 | The recordings of the project inside Claude are four clips named in `CLAUDE_RECORDINGS` (`src/demo/page/page.ts`) — the pane opening as a session starts, the same in a terminal, a note from another project arriving, a format declared with its pane filling — each a file in `fixtures/synthetic/demo/` whose poster frame is the PNG of the same name; a clip's figure, and the slot, show only once its file is named, and a test fails when a named clip or its poster is missing | [below](#d-554) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1489,6 +1490,35 @@ tokens; `--engine-only --skills` 12,310, ~3,420 — about 660 tokens a turn, 16%
 **Consequences.** It reaches a plugin session once a package that knows the flag is published and
 pinned; `emerald-mcp@0.2.0` ignores it, so until then the plugin gets the full text. The
 `declare-a-format` paragraph is carried by a skill too and was outside this unit's list.
+
+## D-554 · 2026-11-03 · The recordings of the project inside Claude are four clips named in `CLAUDE_RECORDINGS` (`src/demo/page/page.ts`) — the pane opening as a session starts, the same in a terminal, a note from another project arriving, a format declared with its pane filling — each a file in `fixtures/synthetic/demo/` whose poster frame is the PNG of the same name; a clip's figure, and the slot, show only once its file is named, and a test fails when a named clip or its poster is missing <a id="d-554"></a>
+
+**Context.** M56 U6's brief (the maintainer's answers of 2026-11-02): the maintainer records, the
+desktop app first and one terminal clip beside it; the session writes the script for three clips and
+the page's slot for them beside M33 F11's, every word in the copy, showing nothing until a file
+exists, served beside the page, with a poster frame under reduced motion.
+
+**Decision.**
+
+- **The script** is [`page-recording-claude.md`](./page-recording-claude.md): the three clips' shots
+  and captions, recorded on a copy of `dist-demo/project.emd` outside every repository, after `npx
+  emerald-mcp init` so no permission dialog interrupts a take (D-541).
+- **The terminal clip is the first clip again**, a slot of its own (`terminal`): the pane opening by
+  itself is what looks most different in a terminal. Four slots, each empty until named.
+- **A poster frame is the PNG of the clip's name** (`posterOf`), so naming a clip names both files, and
+  the demo build copies a PNG that shares a video's name. Under reduced motion a clip with a poster
+  loads nothing (`preload="none"`) and plays only from its controls; otherwise it plays while on screen,
+  as the development recording does — both now go through `src/demo/page/recording.ts`.
+- **`recordings.test.ts` holds the page to "names no file it does not have"**: a named clip and its
+  poster must be in the fixtures, and each slot has its figure and its caption.
+
+**Alternatives rejected.** Three slots with the terminal take replacing one desktop clip (the maintainer
+asked for the desktop app first, so none of it is given up). A poster named separately beside each clip
+(two names that can disagree). Captions burned into the video only (the copy file holds every word).
+
+**Consequences.** The pane does not redraw when an inbox row arrives (M56 U1 redraws after a write in its
+own session or on `/emerald`), so clip 2 asks for `/emerald` after the toast; if the pane learns to
+redraw from the inbox's watch first, that shot is cut.
 
 ## Related
 

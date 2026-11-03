@@ -730,6 +730,17 @@ html.js .row.seen ul.points li {
   border: 1px solid var(--color-hairline);
   background: var(--color-surface);
 }
+.recording figcaption {
+  margin-top: var(--page-space-2);
+}
+/* The recordings inside Claude (M56 U6): a label and a line, then the clips one under another. */
+.recordings {
+  margin: var(--page-space-12) 0 0;
+}
+.recordings .lead {
+  max-width: var(--page-measure);
+  margin: 0;
+}
 @media (min-width: 690px) {
   .inbox {
     grid-template-columns: repeat(3, minmax(0, 1fr));
