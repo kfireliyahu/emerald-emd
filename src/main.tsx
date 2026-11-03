@@ -13,6 +13,10 @@ initTheme()
 // animates but the initial load does not animate into place from a default.
 requestAnimationFrame(() => document.documentElement.classList.add('theme-ready'))
 
+// `window.emeraldProbe()` for a session checking a screen (D-534); a dev
+// build only, so the shipped app carries none of it.
+if (import.meta.env.DEV) void import('./ui/probe.ts').then((probe) => probe.install())
+
 const root = document.getElementById('root')
 if (!root) throw new Error('#root not found')
 

@@ -153,6 +153,58 @@
         "docs/mockups/m33-u8"
       ],
       "port": 4189
+    },
+    {
+      "name": "demo-tour-1",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:demo",
+        "--",
+        "--port",
+        "4191",
+        "--strictPort"
+      ],
+      "port": 4191
+    },
+    {
+      "name": "demo-tour-2",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:demo",
+        "--",
+        "--port",
+        "4192",
+        "--strictPort"
+      ],
+      "port": 4192
+    },
+    {
+      "name": "demo-tour-3",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:demo",
+        "--",
+        "--port",
+        "4193",
+        "--strictPort"
+      ],
+      "port": 4193
+    },
+    {
+      "name": "demo-tour-4",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:demo",
+        "--",
+        "--port",
+        "4194",
+        "--strictPort"
+      ],
+      "port": 4194
     }
   ]
 }

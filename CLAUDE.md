@@ -122,6 +122,9 @@ times a 350-turn one for the same work.
   entries in a Read column that was 22% of the bill.
 - **Screenshot only when the answer is visual.** 168 screenshots were 16% of the bill.
   `read_page` and `get_page_text` cost a tenth and answer most of what a screenshot was asked.
+- **Measure a screen with `npm run probe:screens`, not by hand** (D-534): contrast, the type ramp,
+  names, fields and headings for every route and theme in one call, with no browser pane. M54's
+  927 browser calls were mostly that, re-measured by helpers each unit wrote again.
 - **Batch probes into one call.** Five one-line commands are five full context re-reads; the
   same five in one `Bash` call are one. Bash was 51% of the bill across 7,746 calls whose
   median result was under 2k chars — volume, not size.
@@ -206,8 +209,8 @@ server, back up a file, pick between two options), and whether the next session 
 the question, and *Start <next ready unit>* as the first button.
 
 **A milestone's units can be driven** (D-287, D-490): `/run-milestone M26` hands each planned unit to a
-fresh session of the host's (a subagent where it has none), one at a time unless `dispatch_plan` says
-they share no path, and stops after each one that is the maintainer's to judge. A single session
+fresh session of the host's (a subagent where it has none), at once where `dispatch_plan` says they
+share no path, each in its own worktree (D-534), else one at a time, and stops after each one that is the maintainer's to judge. A single session
 told *"do the next unit"* still works. **Whoever takes a unit claims it** (M27 U6): `claim_units
 units:[ref] taken_by branch` — refused unless still `planned` — and the closing pass lands it with one
 `land_units` call: the unit `built` with its `commit`, its decisions and review entries, all or nothing (M47 U3, M51 U2).

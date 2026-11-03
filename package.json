@@ -16,6 +16,7 @@
     "dev:demo": "node scripts/make-demo-document.mjs && vite --mode demo",
     "check:package": "node scripts/check-package.mjs",
     "check:tours": "npm run build:demo && node scripts/check-tours.mjs",
+    "probe:screens": "node scripts/probe-screens.mjs",
     "build:electron": "tsc --noEmit && vite build --mode electron && vite build --mode electron-preload",
     "dev:desktop": "node scripts/dev-desktop.mjs",
     "desktop": "npm run build && npm run build:electron && electron .",

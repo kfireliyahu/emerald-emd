@@ -50,10 +50,14 @@ and `<select>`s.
   and names that come out of a document to `DOCUMENT_STRINGS`. The guard caught what every grep
   missed, in every unit. A new check goes in the same file, and **run it against the parent
   commit's file to see it fail** — a Python-written regex once silently matched nothing.
-- **One `javascript_tool` call per question, over every route**: headings (`h1,h2,h3`), controls
-  with no name (count a wrapping `<label>` as a name), contrast of each text token on each plane
-  with `data-theme` flipped inside the same call. A ratio of 1.00 means the variable did not
-  resolve — reuse an earlier figure.
+- **The measurable part is one command, not a helper you write** (D-534): `npm run probe:screens --
+  --document <custom|project|demo>.emd --routes <every route of the surface> --themes light,dark`
+  runs `window.emeraldProbe()` (src/ui/probe.ts) in an offscreen window — text under AA per theme,
+  type off the ramp, controls with no name or only a placeholder, round fields, `<select>`s, native
+  date inputs, `h1`s and skipped levels, a page wider than its window — and needs no pane. In M54
+  six units each wrote that helper again, about 2,000 characters, and re-sent it after every
+  reload. Extend `probe.ts` when a check is missing, rather than writing one in the page.
+  `javascript_tool` is for what it does not measure (an order, a state after a click).
 - **`web-design-guidelines`**: one WebFetch of its `command.md`, applied to the same grep output.
 
 ## 2. Verify, fix the plain, record the rest
@@ -79,9 +83,19 @@ per-edit findings start appearing after your edits, `/impeccable hooks off`.
 
 ## 4. The rows
 
-**Each finding is an open `review_entry` on the unit that found it**, written inside its `land_units`
-call (`review_entries`) with `commit: true` after checking the draft yourself — one call, no dry-run
-resend. `formats review_entry` has the columns.
+**Each finding is a `review_entry` on the unit that found it, written sorted** (D-534), inside its
+`land_units` call (`review_entries`) with `commit: true` after checking the draft yourself — one call,
+no dry-run resend. `formats review_entry` has the columns. M54's units wrote all 203 as `open`, and
+sorting them afterwards took the driver and the maintainer an hour and a half; most were plain
+faults nobody needed to judge. So the review sorts as it writes:
+
+- **`fault`** (pass `state: "fault"` in the entry; `land_units` writes `open` otherwise) — it breaks
+  a live ui rule row, named in `should`, and the fix is what the rule says. A fix unit takes it
+  without asking anyone.
+- **`open`** — the maintainer's to judge: two rules disagree, a rule and the screen do, the words
+  are a choice, or no rule covers it. `breaks` starts *Question:* and says what is to be decided.
+- A breach you fixed in place is not a row; it is in the report's list of fixes.
+- `Entry:` rows (below) are `fault` or `open` by the same test.
 
 - `do` — the document, the route and the action: *Demo, custom.emd, #/formats/card_charge/read → drop bank-statement.csv outside the box.*
 - `should` — what it should do, with the rule's name in brackets.

@@ -450,6 +450,7 @@ written out here.
 | D-531 | 2026-11-02 | M54's rule conflicts answered: needed text is `ink-secondary`, the ramp gains no 13px, a chip is text and a dot everywhere, a chart of several series wears category colours, the entry route replaced the detail pane, the title bar holds no primary, a command has one name in sentence case, the page and the tour keep token sets of their own, and "The database under the chat." leads everywhere | M54 |
 | D-532 | 2026-11-02 | M54's faults become thirteen fix units, M54 F1-F13, before M55: shared looks first, each unit sweeping its own files; the ledger's Home, NoLedger and #/read included; a due date only where declared; a window drop onto the open format; recovery as a three-choice notice; the page's first screen leads to Get Emerald; the tour pauses; words are drafted for the maintainer to pick | M54 |
 | D-533 | 2026-11-03 | M55's input view is a saved view of kind `input`: the fields it asks are its columns in their order and its defaults are its exact values (a member, a link, a number, or a date word that names one day), kept in `format_saved_view` and `views.md`; one per format may be its default, opened by Add, the list's + and quick add; it stays open after Add and lists what it added; it is in the rail, behind +, and a live block on a dashboard; a conversation makes it with `arrange_views` and uses it with `record_format_rows view:`; M54's fourteen engine-side *Entry:* findings come into M55 and the ledger's stay parked | [below](#d-533) |
+| D-534 | 2026-11-03 | A milestone's units run at once wherever `dispatch_plan` allows, each in its own worktree with its own demo port, by sessions or by the `Agent` tool alike, up to four; a screen is measured by `npm run probe:screens` (`window.emeraldProbe()` in a dev build, in an offscreen Electron window) rather than in the browser pane by hand; a child is handed its files and told to batch its reads; a review writes a rule-backed finding as `fault` and only a judgement as `open`; units under ten minutes that share paths go to one child, and a unit stopped for the maintainer's pick goes on in the same child; amends D-287 and D-490's one-at-a-time for the `Agent` tool | [below](#d-534) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -989,6 +990,54 @@ maintainer judges it in the app.
 **Consequences.** A migration widens `format_saved_view.kind` and holds the default mark. `entryDefaults`
 becomes the one rule the three ways share. New on-screen words become `term` rows once picked.
 M56 waits on M55.
+
+## D-534 · 2026-11-03 · A milestone's units run at once wherever `dispatch_plan` allows, each in its own worktree with its own demo port, by sessions or by the `Agent` tool alike, up to four; a screen is measured by `npm run probe:screens` (`window.emeraldProbe()` in a dev build, in an offscreen Electron window) rather than in the browser pane by hand; a child is handed its files and told to batch its reads; a review writes a rule-backed finding as `fault` and only a judgement as `open`; units under ten minutes that share paths go to one child, and a unit stopped for the maintainer's pick goes on in the same child; amends D-287 and D-490's one-at-a-time for the `Agent` tool <a id="d-534"></a>
+
+**Context.** M54 took from 08:49 to 19:41 on 2026-11-02. Measured from its transcripts (the driver,
+its fifteen subagents and the nine review sessions): 22 units ran **one after another**, about 24
+minutes each, and the driver's own gaps between them were 13 minutes in all. `dispatch_plan` had put
+four fix units under *At once*, and four more could start once F1 landed, but the skill said the
+`Agent` tool runs *"no worktree, one at a time"*; the review units waited on one demo port and one
+browser pane. Inside a unit the time was turns, not thinking: 3,314 turns, a median of 2.5 seconds of
+model time each and 4.6 seconds of tool time. Of the calls, 30% were one-line shell reads (about 26
+per child before its first edit), 28% browser calls (927, mostly measuring contrast, sizes and names
+by hand, in helpers six sessions each wrote again), and 5% edits. Every unit paid about ten minutes
+around its own work — six to orient, three or four to land — so F10 (1.8 minutes) and the part 2s
+of F9 and F12 (12 and 9, re-reading what part 1 had read) were mostly that, while F2, F3, F4, F7 and
+F11 ran 140-208 turns into 300-414k of context. Sorting the 203 review rows afterwards took an hour
+and a half of the driver and the maintainer.
+
+**Decision.**
+
+- **At once wherever `dispatch_plan` allows**, up to four, each in its own worktree (a session's
+  `use_worktree`, or the `Agent` tool's `isolation: "worktree"`), landing through the main document's
+  inbox as before (D-485). Serial only for a group that shares paths, a unit with none, and two
+  units that drive the shell over CDP. A worktree child runs `npm ci --prefer-offline`; never a
+  junction (2026-10-15). Its demo server, where it needs the pane, is `demo-tour-<n>` on 419<n>.
+- **A screen is measured in one command**: `npm run probe:screens -- --document … --routes … --themes
+  light,dark` starts Vite in its own process on a free port, opens the app in an offscreen Electron
+  window (`check:tours`' way, no new dependency) and runs `window.emeraldProbe()` from
+  `src/ui/probe.ts`, installed by the app's and the demo's entries in a dev build only: text under AA
+  per theme (transitions off while it measures), type off the ramp read from the tokens, controls
+  with no name or only a placeholder, round fields, platform selects, native date inputs, `h1`s and
+  skipped levels, a page wider than its window, and any request the page makes for something the
+  server did not serve. The pane is for what needs eyes. Its arithmetic is tested.
+- **A child's prompt carries its `files`**, asks for its scope's rule rows in its first turn, and
+  says a turn is the cost: batch reads into one shell call.
+- **A review writes sorted** (`design-review`): a breach of a live ui rule row is `fault`, the rule
+  named in `should`; only what needs the maintainer is `open`, its `breaks` starting *Question:*.
+- **Size**: two units that share paths and each look under ten minutes of work go to one child; a
+  unit that stops for the maintainer's pick goes on in the same child (`SendMessage`), never a fresh
+  one; a unit that would run past ~150 turns is split by paths, so its halves can run at once.
+
+**Alternatives rejected.** A browser-automation server beside the pane: the same call per probe,
+and still a shared browser. A headless browser as a new dependency: Electron is Chromium and is
+already here. Junctioning `node_modules` into worktrees to skip the install: it deleted half of it
+once. Asking for every review row's verdict: most break a rule the maintainer already wrote.
+
+**Consequences.** `.claude/launch.json` has `demo-tour-1` to `demo-tour-4`. `run-milestone`,
+`design-review` and CLAUDE.md say so. Nothing in the shipped app changes: `probe.ts` is loaded by a
+dynamic import behind `import.meta.env.DEV`.
 
 ## Related
 

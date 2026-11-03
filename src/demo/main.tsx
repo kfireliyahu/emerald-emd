@@ -49,6 +49,8 @@ function documentNamed(asked: string | null): string {
 containScrolling(window)
 initTheme()
 requestAnimationFrame(() => document.documentElement.classList.add('theme-ready'))
+// `window.emeraldProbe()` for a session checking a screen (D-534); never in the built demo.
+if (import.meta.env.DEV) void import('../ui/probe.ts').then((probe) => probe.install())
 
 const root = document.getElementById('root')
 if (!root) throw new Error('#root not found')
