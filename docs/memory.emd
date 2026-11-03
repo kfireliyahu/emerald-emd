@@ -15576,9 +15576,12 @@ paths: "hosts/claude/mod/guards.ts\nhosts/claude/mod/commands.ts"
 milestone: M56
 scope: plugin
 title: Two skills for a newcomer: a file onto a format, and what is wrong
-state: planned
+state: in_progress
 brief: M56. Maintainer's answers, 2026-11-02: all four skills, in the plugin (hosts/claude/skills/), generic for a stranger — skills.test.ts already fails when one names this repo's decisions, units, notes or scripts. Names: `format_rows term search:` before naming each (D-436); the folder names in `paths` are placeholders, so a chosen name replaces them in this row. RE-CUT 2026-11-03 (D-534): the four are two units of two, by audience, so they run side by side; this one is the engine's pair, U7 the development pack's. (1) A FILE ONTO A FORMAT: a .csv, .xlsx, .json or a folder of Markdown notes read onto a new or existing format — `readers`, `read_onto_format`, the saved mapping (docs/mapping-templates.md); kinds of file only, never a product's export (the generic-readers rule). (2) WHAT IS WRONG: `format_problems` read, explained in the person's words, and fixed through the tools — the 'won't let you be wrong quietly' half. Each description says when it fires in the words a person would use; examples use fixtures/synthetic only, never a real document's names or figures (D-390). The plugin version moves by pin-plugin --plugin (beside U7, the driver re-pins after merging both). Done-test: a fresh session given each skill's trigger phrase loads it (`claude plugin eval` where it runs); skills.test.ts and plugin.test.ts pass.
 files: hosts/claude/skills/declare-a-format/SKILL.md (the shape a skill here takes), hosts/claude/skills/skills.test.ts, docs/mapping-templates.md, src/plugin/instructions.ts (the sections the skills will carry)
+taken_by: run-milestone driver
+started: 2026-11-03
+branch: main
 paths: "hosts/claude/skills/file-onto-format/\nhosts/claude/skills/what-is-wrong/"
 
 ### M56 U5
@@ -15605,9 +15608,12 @@ paths: "docs/page-recording-claude.md\nsrc/demo/page/\ndemo-page.html"
 milestone: M56
 scope: plugin
 title: Two skills for a newcomer: a plan brought in, and a project set up
-state: planned
+state: in_progress
 brief: M56, split from U4 by audience on 2026-11-03 (D-534) so the two halves run side by side; this is the development pack's pair. Maintainer's answers, 2026-11-02: in the plugin (hosts/claude/skills/), generic for a stranger — skills.test.ts fails when one names this repo's decisions, units, notes or scripts. Names: `format_rows term search:` before naming each (D-436); the folder names in `paths` are placeholders, so a chosen name replaces them in this row. (1) A PLAN BROUGHT IN: an existing PLAN.md, TODO list or roadmap note made into the development pack's milestones, units and decisions, with what M48 (a planner migration) found. (2) A PROJECT SET UP: the choices `npx emerald-mcp init` leaves to the person — stored as text and committed, or one file outside every repository; the hooks; the status line setting (docs/plugin.md, the M50 U1 section). emerald-setup already tells a host without the server how to add it: say whether (2) extends it or is its own skill, and if its own, give it its own folder in this row's paths. Each description says when it fires in the words a person would use; examples use fixtures/synthetic only (D-390). The plugin version moves by pin-plugin --plugin (beside U4, the driver re-pins after merging both). Done-test: a fresh session given each skill's trigger phrase loads it (`claude plugin eval` where it runs); skills.test.ts and plugin.test.ts pass.
 files: hosts/claude/skills/emerald-setup/SKILL.md, hosts/claude/skills/declare-a-format/SKILL.md (the shape a skill here takes), hosts/claude/skills/skills.test.ts, docs/plugin.md (the M50 U1 section on init and the status line)
+taken_by: run-milestone driver
+started: 2026-11-03
+branch: main
 paths: "hosts/claude/skills/plan-brought-in/\nhosts/claude/skills/emerald-setup/"
 
 <!-- emerald: views.md -->
