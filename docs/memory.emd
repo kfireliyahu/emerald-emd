@@ -15673,9 +15673,12 @@ milestone: M55
 scope: app
 title: An entry field says what is wrong at the field, every problem at once, takes a date as words, and reads in a person's words
 decision: D-533
-state: planned
+state: in_progress
 brief: D-533 brings M54's engine-side Entry: rows into M55; D-534 split them by paths into U5, U7, U8 and U9. This unit takes the rows on entering a row in the table and on the entry form (format_rows review_entry search:'Entry:', unit M54 U1). First re-run each row's do on the demo with npm run probe:screens and the pane only where a click is needed: M54 F1-F13 landed after these were found, so one may already be fixed; say which, with the commit, and leave it for the maintainer to judge. Fix the rest: (1) a refusal sits at its field, outlined and named there, and every problem is said at once, in the table's blank row and on the form (card_charge: abc in amount with no date was three rounds); the form's refusal names the real problem (M9 given for milestone: 'No milestone is called M9', never 'needs a milestone'); (2) a/an from the word's sound ('a unit', withArticle in view.ts); (3) a date is typed as ISO or a date word (today, yesterday, tomorrow) in the cell and on the form alike, never a native mm/dd/yyyy input, and the entry page shows it as the table does (how dates and money read on the dashboard, rollups and the filter band is U7's); (4) the needed mark, placeholders and quick add's only label meet AA in both themes (D-531: needed text is ink-secondary), if F1 has not already. Anything here whose fix needs a choice the row does not imply is the maintainer's: stop and ask. Tests beside each fix; land each fixed row as the unit's review entry. Done-test: every row listed is fixed or named as already fixed, and probe:screens on custom.emd's card_charge entry/new and table reports no low contrast and no native date input.
 files: src/ui/formats/EntryView.tsx, src/ui/formats/RowSheet.tsx, src/ui/formats/EntryValue.tsx, src/domain/format/view.ts (withArticle)
+taken_by: run-milestone driver
+started: 2026-11-03
+branch: main
 paths: "src/ui/formats/EntryView.tsx\nsrc/ui/formats/RowSheet.tsx\nsrc/ui/formats/EntryValue.tsx\nsrc/domain/format/view.ts"
 
 ### M55 U6
