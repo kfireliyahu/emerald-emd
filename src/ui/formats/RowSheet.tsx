@@ -17,7 +17,7 @@ import {
 import { foundByText } from '@/domain/format/foundBy.ts'
 import { companionKeyOf, isList, readValue, type RowVerdict, type StoredRow } from '@/domain/format/row.ts'
 import type { RowDraft } from '@/domain/format/rowDraft.ts'
-import { boundedWidth, entryLabel, isPercentWorkedOut, noteWords } from '@/domain/format/view.ts'
+import { entryLabel, isPercentWorkedOut, noteWords } from '@/domain/format/view.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ChoiceField, type Choice } from '@/ui/components/ChoiceField.tsx'
 import { CurrencyField, TypedHint, useTyped } from '@/ui/formats/TypedField.tsx'
@@ -26,6 +26,7 @@ import { MembersField } from './MembersField.tsx'
 import { ElsewhereLink } from './ElsewhereLink.tsx'
 import { FileLink } from './FileLink.tsx'
 import { IconAction } from '@/ui/components/IconAction.tsx'
+import { defaultWidth, ResizeHandle } from './ResizeHandle.tsx'
 import { cellText, linkChoice, LinkMakerContext, memberWords, NewLinkForm, type LinkChoice, type Making } from '@/ui/formats/EntryView.tsx'
 import { useRowCursor } from '@/ui/useRowCursor.ts'
 import { Conversation, selects } from '@/ui/formats/conversation.ts'
@@ -118,7 +119,11 @@ export function RowSheet({
   /** Absent on a pack's format, whose rows are written only through the pack (D-269). */
   foot: Foot | undefined
   onSort: (order: Order) => void
-  onWidth: (column: string, width: number | undefined) => void
+  /**
+   * Absent where nothing is written — the frame's copy, a locked document —
+   * which draws the widths with no handle (M55 F1, D-558).
+   */
+  onWidth: ((column: string, width: number | undefined) => void) | undefined
   onOpen: ((row: StoredRow) => void) | undefined
   onDelete: ((row: StoredRow) => void) | undefined
   /** Open a column's name, type and checks under the sheet (M26 U3). */
@@ -439,15 +444,17 @@ export function RowSheet({
                 {columnMenu !== undefined &&
                   menuOf === column.name &&
                   columnMenu.render(column, () => setMenuOf(undefined))}
-                <ResizeHandle
-                  column={column.name}
-                  width={widthOf(column)}
-                  onDrag={(width) => setDragging({ column: column.name, width })}
-                  onDone={(width) => {
-                    setDragging(undefined)
-                    onWidth(column.name, width)
-                  }}
-                />
+                {onWidth !== undefined && (
+                  <ResizeHandle
+                    column={column.name}
+                    width={widthOf(column)}
+                    onDrag={(width) => setDragging({ column: column.name, width })}
+                    onDone={(width) => {
+                      setDragging(undefined)
+                      onWidth(column.name, width)
+                    }}
+                  />
+                )}
               </th>
             ))}
             {/* **A worked-out column is read, never typed** (M29 U3b, D-334):
@@ -486,15 +493,17 @@ export function RowSheet({
                     </span>
                   )}
                 </span>
-                <ResizeHandle
-                  column={each.name}
-                  width={widthNamed(each.name, DERIVED)}
-                  onDrag={(width) => setDragging({ column: each.name, width })}
-                  onDone={(width) => {
-                    setDragging(undefined)
-                    onWidth(each.name, width)
-                  }}
-                />
+                {onWidth !== undefined && (
+                  <ResizeHandle
+                    column={each.name}
+                    width={widthNamed(each.name, DERIVED)}
+                    onDrag={(width) => setDragging({ column: each.name, width })}
+                    onDone={(width) => {
+                      setDragging(undefined)
+                      onWidth(each.name, width)
+                    }}
+                  />
+                )}
               </th>
             ))}
             {adding !== undefined && (
@@ -1000,68 +1009,6 @@ function FootCell({
   )
 }
 
-/**
- * The drag handle on a header's trailing edge, and a separator a keyboard can
- * move: arrows by 16px, double-click or Delete back to the type's width.
- */
-function ResizeHandle({
-  column,
-  width,
-  onDrag,
-  onDone,
-}: {
-  column: string
-  width: number
-  onDrag: (width: number) => void
-  onDone: (width: number | undefined) => void
-}) {
-  return (
-    <div
-      role="separator"
-      aria-orientation="vertical"
-      aria-label={`Width of ${column}`}
-      aria-valuenow={width}
-      tabIndex={0}
-      className="absolute inset-y-0 -right-1 z-10 w-2 cursor-col-resize touch-none transition-colors duration-[var(--duration-micro)] hover:bg-accent focus-visible:bg-accent focus-visible:outline-none"
-      onPointerDown={(event) => {
-        event.preventDefault()
-        event.stopPropagation()
-        const start = event.clientX
-        const target = event.currentTarget
-        target.setPointerCapture(event.pointerId)
-        let last = width
-        const move = (each: PointerEvent): void => {
-          // Right-to-left, the trailing edge is on the left and a drag right narrows.
-          const sign = getComputedStyle(target).direction === 'rtl' ? -1 : 1
-          last = boundedWidth(width + sign * (each.clientX - start))
-          onDrag(last)
-        }
-        const up = (): void => {
-          target.removeEventListener('pointermove', move)
-          target.removeEventListener('pointerup', up)
-          target.removeEventListener('pointercancel', up)
-          onDone(last)
-        }
-        target.addEventListener('pointermove', move)
-        target.addEventListener('pointerup', up)
-        target.addEventListener('pointercancel', up)
-      }}
-      onDoubleClick={() => onDone(undefined)}
-      onClick={(event) => event.stopPropagation()}
-      onKeyDown={(event) => {
-        if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-          event.preventDefault()
-          event.stopPropagation()
-          onDone(boundedWidth(width + (event.key === 'ArrowRight' ? 16 : -16)))
-        } else if (event.key === 'Delete' || event.key === 'Backspace') {
-          event.preventDefault()
-          onDone(undefined)
-        }
-      }}
-    />
-  )
-}
-
 const GUTTER = 48
 const AGGREGATE = 120
 /** A worked-out column's width: a figure, like a total's, with room for a currency. */
@@ -1094,37 +1041,6 @@ const UNTIL_HOVER =
 /** A header's title: its whole name, so a truncated one reads in full, then its note. */
 function headed(name: string, note: string): string {
   return note === '' ? name : `${name} — ${noteWords(note)}`
-}
-
-/** A column nobody has sized, by what it holds. */
-function defaultWidth(column: ColumnDeclaration): number {
-  switch (column.type) {
-    case 'text':
-    case 'links':
-    case 'enums':
-      return 200
-    case 'link':
-    case 'elsewhere':
-    case 'file':
-    case 'instant':
-      return 180
-    case 'enum':
-    case 'money':
-      return 140
-    case 'quantity':
-    case 'date':
-      return 120
-    case 'time':
-      return 80
-    case 'integer':
-    case 'real':
-    case 'decimal':
-    case 'percent':
-    case 'month':
-      return 100
-    case 'boolean':
-      return 72
-  }
 }
 
 /** What a foot cell offers as a list: an enum's values, yes/no, a link's names. */

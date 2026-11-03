@@ -1824,7 +1824,9 @@ export function FormatRows({
                   ),
                 }
           }
-          onWidth={(column, width) =>
+          // One width per column, kept for the format and drawn by every
+          // table of it (M55 F1, D-558); the frame's copy draws them unhandled.
+          onWidth={readOnly !== undefined ? undefined : (column, width) =>
             mutate((database) => setColumnWidth(database, declaration.name, column, width))
           }
           // Every row opens as its entry (M26 U6) — a pack's too, to be read.

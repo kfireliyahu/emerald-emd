@@ -466,6 +466,7 @@ written out here.
 | D-554 | 2026-11-03 | The recordings of the project inside Claude are four clips named in `CLAUDE_RECORDINGS` (`src/demo/page/page.ts`) — the pane opening as a session starts, the same in a terminal, a note from another project arriving, a format declared with its pane filling — each a file in `fixtures/synthetic/demo/` whose poster frame is the PNG of the same name; a clip's figure, and the slot, show only once its file is named, and a test fails when a named clip or its poster is missing | [below](#d-554) |
 | D-556 | 2026-11-03 | An input view's form is its own route, `#/formats/:name/input/:view`, drawn by the format's screen beside its list; with no name it is a new one, a draft until Save; a view or chart made from the format's + is saved and placed on no dashboard; quick add that cannot write a row opens the default input view with what was typed; the frame draws the form read-only | [below](#d-556) |
 | D-557 | 2026-11-03 | An input view's dashboard block judges and writes its row as `record_format_rows` does (`stageRows`, then `insertRows`), every refusal at its field; New input view in Add a block saves the view and its block in one transaction; quick add with the view's fields writes each into its column and opens the input view when a required one is left; the conversation's dashboard text names the block as a form | [below](#d-557) |
+| D-558 | 2026-11-03 | A column's width is one width for the format, dragged in every table of its columns — the format's table, its saved table tab and a saved table placed on a dashboard — with one handle (`ResizeHandle.tsx`); a block wider in columns than its room scrolls inside itself; read-only, the frame included, draws the widths with no handle (amends D-432); a chart's table of months keeps no width | [below](#d-558) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1586,6 +1587,39 @@ beside it, judges a row, and three seams below.
 reads the entry's state); a block kind of its own (a migration for what a saved view already names).
 
 **Consequences.** `inputBlock.ts` imports nothing React touches, so the plugin can read it for its text.
+
+## D-558 · 2026-11-03 · A column's width is one width for the format, dragged in every table of its columns — the format's table, its saved table tab and a saved table placed on a dashboard — with one handle (`ResizeHandle.tsx`); a block wider in columns than its room scrolls inside itself; read-only, the frame included, draws the widths with no handle (amends D-432); a chart's table of months keeps no width <a id="d-558"></a>
+
+**Context.** M55 F1, from the maintainer in M55's review: *"we need to be able in all views to change the
+width of columns in dashboard"*. His answers the same day settle the store (one width per column, the
+format's own), the surfaces (every one that draws columns), the handle (the table's) and read-only (widths,
+no handle). The store was D-289's: `format_column_view`, presentation, per format and column, carried by a
+text document for columns that exist.
+
+**Decision.**
+
+- **One width per column, no migration.** A saved table block (`TableBody` in `Dashboard.tsx`) draws
+  `columnWidths` as a fixed `<colgroup>`, the type's width where none is kept (`defaultWidth`), and
+  writes a drag, an arrow or a reset through `setColumnWidth` with the format's name — the call the
+  format's table makes. Dragged in either, it is the other's; a reset clears it everywhere.
+- **One handle.** `ResizeHandle` and `defaultWidth` moved out of `RowSheet.tsx` into
+  `src/ui/formats/ResizeHandle.tsx`: drag, double-click or Delete to reset, arrows by 16px on the focused
+  handle. A press that starts on any separator inside a block never moves the block (the block's
+  `onPointerDownCapture` sets the ref its edges already use).
+- **A saved table opened as the format's tab is the format's sheet**, so it drew and dragged the stored
+  widths already; nothing changes there.
+- **A block narrower than its columns scrolls inside itself**: the table sits in an `overflow-x-auto` box
+  in the block's `min-w-0` body, never widening the page. The block still shows as many columns as its
+  width allows (`tableColumns`).
+- **Read-only draws the widths with no handle**, on a block and on the format's table: `RowSheet`'s
+  `onWidth` is absent there and `FormatRows` passes none under `ReadOnly`. This amends D-432's *widths
+  still work on the copy*; `readOnly.ts` says so. A pack's format, locked to rows only (D-269), keeps its
+  handle — a width is presentation.
+- **A chart's table of figures keeps no width.** Its columns are months, not the format's columns, so the
+  format's store has nowhere to keep them; it already scrolls inside its block. Asked of the maintainer;
+  this is the default until he answers otherwise.
+- **Parity (D-227) applies to a width and is already met**: `arrange_views view:sheet column width`
+  (D-403) writes the same row, so a width set in a conversation is the block's too. No tool changes.
 
 ## Related
 

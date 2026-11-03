@@ -20,8 +20,10 @@ import {
 import { withRules } from '@/data/repositories/formatRuleRepository.ts'
 import {
   boardSettings,
+  columnWidths,
   dashboardBlocks,
   savedView,
+  setColumnWidth,
   setDashboardBlocks,
   viewSettings,
 } from '@/data/repositories/formatViewRepository.ts'
@@ -80,6 +82,7 @@ import { valueText } from '@/ui/formats/entryList.ts'
 import { listPicture, type ListLine } from '@/ui/formats/listView.ts'
 import { InputBlock } from '@/ui/formats/InputBlock.tsx'
 import { ReadOnly } from '@/ui/formats/readOnly.ts'
+import { defaultWidth, ResizeHandle } from '@/ui/formats/ResizeHandle.tsx'
 import {
   ChartForm,
   InputViewForm,
@@ -618,6 +621,11 @@ function Block({
       data-block={block.name}
       data-size={`${String(width)}x${height === undefined ? 'auto' : String(height)}`}
       draggable={drag !== undefined && sizing === undefined}
+      // A column's width handle inside the block (M55 F1) is a resize too:
+      // the press that starts on one never moves the block.
+      onPointerDownCapture={(event) => {
+        resizing.current = event.target instanceof Element && event.target.closest('[role="separator"]') !== null
+      }}
       onDragStart={(event) => {
         // An edge being dragged resizes; it never moves the block.
         if (resizing.current) {
@@ -1000,7 +1008,7 @@ function SavedBody({
   const entry: Entry = (row) => dashboardEntry(declaration.name, row, view.address, dashboard)
 
   if (view.kind === 'list') return <ListBody db={db} declaration={declaration} declarations={declarations} query={query} day={day} locked={locked} onTick={onTick} entry={entry} more={more} nothing={nothing} fill={fill} />
-  if (view.kind === 'table') return <TableBody db={db} declaration={declaration} declarations={declarations} view={view} query={query} entry={entry} more={more} nothing={nothing} fill={fill} width={width} />
+  if (view.kind === 'table') return <TableBody db={db} declaration={declaration} declarations={declarations} view={view} query={query} entry={entry} more={more} nothing={nothing} fill={fill} width={width} locked={locked} />
   if (view.kind === 'board') return <BoardBody db={db} declaration={declaration} declarations={declarations} query={query} entry={entry} nothing={nothing} fill={fill} width={width} />
   // A roadmap and a ready list, compact, are the names they hold, in order.
   const label = labelColumn(declaration)
@@ -1167,7 +1175,14 @@ function ListBody({
   )
 }
 
-/** A saved table: four rows of its name and two more columns — the ones it chose, or the first two. */
+/**
+ * A saved table: four rows of its name and two more columns — the ones it
+ * chose, or the first two. **Its columns are the format's widths** (M55 F1,
+ * D-558): the one width each column keeps, dragged here as on the format's
+ * table and written to the same place, so a width set in either is the
+ * other's. Wider than its block, it scrolls inside the block, never the page;
+ * locked, it draws the widths with no handle.
+ */
 function TableBody({
   db,
   declaration,
@@ -1179,6 +1194,7 @@ function TableBody({
   nothing,
   fill,
   width,
+  locked,
 }: {
   readonly db: Database
   readonly declaration: FormatDeclaration
@@ -1190,7 +1206,11 @@ function TableBody({
   readonly nothing: ReactNode
   readonly fill: boolean
   readonly width: number
+  readonly locked: boolean
 }) {
+  const mutate = useDocumentStore((state) => state.mutate)
+  // Drawn live under a drag and written once, on release, as the table does.
+  const [dragging, setDragging] = useState<{ column: string; width: number } | undefined>()
   const total = countRows(db, declaration, query)
   if (total === 0) return <>{nothing}</>
   const rows = listRows(db, declaration, { ...query, limit: fill ? TALL : 4 })
@@ -1203,46 +1223,67 @@ function TableBody({
   ).slice(0, tableColumns(width))
   const columns = [...(label === undefined ? [] : [label]), ...others]
   const figure = (column: ColumnDeclaration): boolean => ['integer', 'real', 'decimal', 'money', 'percent', 'quantity'].includes(column.type)
+  const widths = columnWidths(db, declaration.name)
+  const widthOf = (column: ColumnDeclaration): number =>
+    dragging?.column === column.name ? dragging.width : (widths.get(column.name) ?? defaultWidth(column))
   return (
     <>
-      <table className="w-full table-fixed border-collapse text-body">
-        <thead>
-          <tr>
+      <div className="overflow-x-auto">
+        <table className="table-fixed border-collapse text-body" style={{ width: columns.reduce((sum, column) => sum + widthOf(column), 0) }}>
+          <colgroup>
             {columns.map((column) => (
-              <th
-                key={column.name}
-                className={`border-b border-hairline py-1.5 pr-3 text-label text-ink-secondary uppercase ${figure(column) ? 'text-right' : 'text-left'}`}
-              >
-                {entryLabel(column)}
-              </th>
+              <col key={column.name} style={{ width: widthOf(column) }} />
             ))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => {
-            const to = entry(row.id)
-            // Every cell opens the entry; only the first is a stop for Tab, and the one read out.
-            return (
-              <tr key={row.id} className="group/entry hover:bg-surface">
-                {columns.map((column, at) => (
-                  <td key={column.name} className={`border-b border-hairline p-0 ${figure(column) ? 'text-right tabular-nums' : ''}`}>
-                    <Link
-                      to={to.to}
-                      state={to.state}
-                      draggable={false}
-                      tabIndex={at === 0 ? undefined : -1}
-                      aria-hidden={at === 0 ? undefined : true}
-                      className="block py-2 pr-3 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
-                    >
-                      <Bidi className={at === 0 ? `block ${ENTRY_NAME}` : 'block truncate'}>{valueText(column, row, labels)}</Bidi>
-                    </Link>
-                  </td>
-                ))}
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
+          </colgroup>
+          <thead>
+            <tr>
+              {columns.map((column) => (
+                <th
+                  key={column.name}
+                  className={`relative border-b border-hairline py-1.5 pr-3 text-label text-ink-secondary uppercase ${figure(column) ? 'text-right' : 'text-left'}`}
+                >
+                  <span className="block truncate">{entryLabel(column)}</span>
+                  {!locked && (
+                    <ResizeHandle
+                      column={column.name}
+                      width={widthOf(column)}
+                      onDrag={(width) => setDragging({ column: column.name, width })}
+                      onDone={(width) => {
+                        setDragging(undefined)
+                        mutate((database) => setColumnWidth(database, declaration.name, column.name, width))
+                      }}
+                    />
+                  )}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => {
+              const to = entry(row.id)
+              // Every cell opens the entry; only the first is a stop for Tab, and the one read out.
+              return (
+                <tr key={row.id} className="group/entry hover:bg-surface">
+                  {columns.map((column, at) => (
+                    <td key={column.name} className={`border-b border-hairline p-0 ${figure(column) ? 'text-right tabular-nums' : ''}`}>
+                      <Link
+                        to={to.to}
+                        state={to.state}
+                        draggable={false}
+                        tabIndex={at === 0 ? undefined : -1}
+                        aria-hidden={at === 0 ? undefined : true}
+                        className="block py-2 pr-3 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+                      >
+                        <Bidi className={at === 0 ? `block ${ENTRY_NAME}` : 'block truncate'}>{valueText(column, row, labels)}</Bidi>
+                      </Link>
+                    </td>
+                  ))}
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
       {total > rows.length && <Foot>{more(total - rows.length)}</Foot>}
     </>
   )

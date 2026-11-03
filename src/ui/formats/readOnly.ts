@@ -9,8 +9,9 @@ import { createContext } from 'react'
  * every format page reads it as it reads a pack's lock (D-269): no add, no
  * edit, no remove, no change to the format's shape. What a person may still
  * do is look — switch views, search, sort, open a row, follow a link — and
- * arrange the copy's view (a board's lanes, a column's width), which changes
- * only what this frame shows.
+ * arrange the copy's board lanes, which changes only what this frame shows.
+ * A column's width is drawn but has no handle here (M55 F1, D-558): it is the
+ * format's one width, and the copy is not where it is set.
  *
  * Absent, everywhere in the app, nothing changes.
  */
