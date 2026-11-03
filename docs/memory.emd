@@ -4530,6 +4530,15 @@ question: How does a date, a month, an amount and a rollup's name read off the t
 answer: As the table writes them: 2026-07-27, 2026-09, ₪60.00 (valueText, rollupChart, the band's amountAsWritten). A rollup's name reads through rollupWords (landed_by_month is Landed by month) and what it counts through rollupSentence, on screen and in show_format's dashboard line; the declaration and tools keep the name. The agenda's day headings and a list's relative due stay words; the entry page is U5's.
 state: live
 
+### D-539
+date: 2026-11-03
+milestone: M55
+scope: app
+title: A new column's type is picked from a short list in a person's words, with More types… one step away under four headings; the stored word never changes; the maintainer's pick of three drafts
+question: Which types does a new column's picker offer first, what is each called on screen, and where are the rest?
+answer: First: Text (text) · Number (real) · Money · Date · Yes or no (boolean) · Choice (enum) · Link · Computed. More types… replaces them with Numbers: Whole number (integer) · Exact decimal (decimal) · Percentage (percent) · Quantity; Dates and times: Month · Time of day (time) · Date and time (instant); Several: Several choices (enums) · Several links (links); Outside this document: File · Row in another document (elsewhere). The names are TYPE_WORDS[type].shown, the groups typePicker.ts; a picked column shows its name with 'Stored as <word>' as the tooltip; Change on a rare type opens on the rest. The declaration, tools and .format.md keep the stored word.
+state: live
+
 ### D-540
 date: 2026-11-03
 milestone: M55
@@ -5634,6 +5643,15 @@ state: applied
 answered_by: D-538
 became_unit: M55 U7
 
+### M55 U8 built: land it
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-03
+body: "M55 U8 is built on worktree-agent-a7bf86895f22c42be at e890fce: a new column's type is picked from Text · Number · Money · Date · Yes or no · Choice · Link · Computed, with More types… one step away under four headings, the maintainer's draft A (D-539). After land_units, record the terms block's rows with record_format_rows term.\n\n```json\n{\"unit\":\"M55 U8\",\"files\":\"src/ui/formats/ColumnQuestions.tsx, src/ui/formats/typePicker.ts, src/ui/formats/typePicker.test.ts, src/domain/format/vocabulary.ts (TYPE_WORDS shown), docs/09-decision-log.md\",\"commit\":\"e890fce\",\"branch\":\"worktree-agent-a7bf86895f22c42be\",\"report\":\"Re-run first: the picker still drew all 18 types and computed (19 tiles) in the engine's mono words; M54 F2 had given only the sheet's headers a person's words (entryLabel). Three groupings were drafted (A: eight common, the rest under four headings; B: nine by use, the rest flat; C: A's split named as answers) and the maintainer picked 'A as drafted' (2026-11-03). Built: TYPE_WORDS gains shown; typePicker.ts holds COMMON_TYPES and MORE_TYPES; ColumnQuestions draws the short list plus Computed and More types…, which replaces it with Numbers, Dates and times, Several and Outside this document (← Common types goes back; the first rare tile takes focus); a picked column shows its name with 'Stored as <word>' as tooltip; Change on a rare type opens on the rest. Stored word unchanged; tool text unchanged (shown is not in typeBriefing). Tests: typePicker.test.ts (common first, every type once, stored word kept); related 53 files green, privacy, typecheck, check:tours (all 10 runs; the tour's type anchors are all common). probe:screens on custom.emd #/formats: two findings not this unit's (a 12px '3 columns' chip at 2.62:1, 'New format' at 13px). Left: a picked type's catch is still the tool's sentence and names real/aggregate; Month the type shares its word with Home's Month tab.\",\"decisions\":[{\"ref\":\"D-539\",\"title\":\"A new column's type is picked from a short list in a person's words, with More types… one step away under four headings; the stored word never changes; the maintainer's pick of three drafts\",\"question\":\"Which types does a new column's picker offer first, what is each called on screen, and where are the rest?\",\"answer\":\"First: Text (text) · Number (real) · Money · Date · Yes or no (boolean) · Choice (enum) · Link · Computed. More types… replaces them with Numbers: Whole number (integer) · Exact decimal (decimal) · Percentage (percent) · Quantity; Dates and times: Month · Time of day (time) · Date and time (instant); Several: Several choices (enums) · Several links (links); Outside this document: File · Row in another document (elsewhere). The names are TYPE_WORDS[type].shown, the groups typePicker.ts; a picked column shows its name with 'Stored as <word>' as the tooltip; Change on a rare type opens on the rest. The declaration, tools and .format.md keep the stored word.\"}],\"review_entries\":[{\"do\":\"Demo, #/formats → New format → Start empty → name it → Add its columns; type a column name, pick Number; add another, More types… → Whole number; then Change on it.\",\"should\":\"Eight tiles at first, in words (no integer, real, enum in sight), Number in two clicks and Whole number in three, the picked line saying Whole number with Stored as integer on hover, and Change opening on More types. Wrong would be: all nineteen at once, or the engine's word on a tile.\"}]}\n```\n\nThe term rows, for record_format_rows term:\n\n```terms\n[{\"term\":\"Number\",\"means\":\"The type picker's name for a real column: any number, fractions too. The common one; Whole number is one step away.\",\"code_word\":\"real\",\"named_by\":\"D-539\",\"scope\":\"engine\",\"shown_in\":\"screen\",\"state\":\"live\"},{\"term\":\"Whole number\",\"means\":\"The type picker's name for an integer column, under More types › Numbers.\",\"code_word\":\"integer\",\"named_by\":\"D-539\",\"scope\":\"engine\",\"shown_in\":\"screen\",\"state\":\"live\"},{\"term\":\"Exact decimal\",\"means\":\"The type picker's name for a decimal column: a number kept to a fixed count of places, never rounded.\",\"code_word\":\"decimal\",\"named_by\":\"D-539\",\"scope\":\"engine\",\"shown_in\":\"screen\",\"state\":\"live\"},{\"term\":\"Percentage\",\"means\":\"The type picker's name for a percent column.\",\"code_word\":\"percent\",\"named_by\":\"D-539\",\"scope\":\"engine\",\"shown_in\":\"screen\",\"state\":\"live\"},{\"term\":\"Yes or no\",\"means\":\"The type picker's name for a boolean column.\",\"code_word\":\"boolean\",\"named_by\":\"D-539\",\"scope\":\"engine\",\"shown_in\":\"screen\",\"state\":\"live\"},{\"term\":\"Choice\",\"means\":\"The type picker's name for an enum column: one of the values written down with it.\",\"not\":\"List, the view; a list's members.\",\"rejected\":\"One of a list (List is the view's term)\",\"code_word\":\"enum\",\"named_by\":\"D-539\",\"scope\":\"engine\",\"shown_in\":\"screen\",\"state\":\"live\"},{\"term\":\"Several choices\",\"means\":\"The type picker's name for an enums column: several of the values written down with it.\",\"code_word\":\"enums\",\"named_by\":\"D-539\",\"scope\":\"engine\",\"shown_in\":\"screen\",\"state\":\"live\"},{\"term\":\"Several links\",\"means\":\"The type picker's name for a links column: several rows of another format, in order.\",\"code_word\":\"links\",\"named_by\":\"D-539\",\"scope\":\"engine\",\"shown_in\":\"screen\",\"state\":\"live\"},{\"term\":\"Date and time\",\"means\":\"The type picker's name for an instant column: a moment, kept in UTC.\",\"code_word\":\"instant\",\"named_by\":\"D-539\",\"scope\":\"engine\",\"shown_in\":\"screen\",\"state\":\"live\"},{\"term\":\"Time of day\",\"means\":\"The type picker's name for a time column.\",\"code_word\":\"time\",\"named_by\":\"D-539\",\"scope\":\"engine\",\"shown_in\":\"screen\",\"state\":\"live\"},{\"term\":\"Row in another document\",\"means\":\"The type picker's name for an elsewhere column: a row of another .emd, by its path and name.\",\"code_word\":\"elsewhere\",\"named_by\":\"D-539\",\"scope\":\"engine\",\"shown_in\":\"screen\",\"state\":\"live\"},{\"term\":\"More types\",\"means\":\"The type picker's second step: every type not on the short list, under Numbers, Dates and times, Several and Outside this document.\",\"named_by\":\"D-539\",\"scope\":\"engine\",\"shown_in\":\"screen\",\"state\":\"live\"}]\n```\n\nText, Money, Date, Link, Computed, Quantity and File keep their words; Month the type shares its word with Home's Month tab (a ledger term), left as one_word_two_things for the maintainer."
+refs: M55 U8
+state: applied
+answered_by: D-539
+became_unit: M55 U8
+
 ### M55 U9 ready to land: a refused line is added by hand from the read, and the mapper's failed row is skipped (D-540)
 from: F:/projects/emerald/docs/memory.emd
 sent_on: 2026-11-03
@@ -6379,6 +6397,11 @@ unit: M54 U1
 should: A start that this build cannot do is shown unavailable, not offered (Nielsen: error prevention).
 breaks: From an example is an ordinary tile, while its own words say it needs the desktop app. Owned by M54 F2. Fixed in M54 F2 (de87c49).
 state: fault
+
+### Demo, #/formats → New format → Start empty → name it → Add its columns; type a column name, pick Number; add another, More types… → Whole number; then Change on it.
+unit: M55 U8
+should: Eight tiles at first, in words (no integer, real, enum in sight), Number in two clicks and Whole number in three, the picked line saying Whole number with Stored as integer on hover, and Change opening on More types. Wrong would be: all nineteen at once, or the engine's word on a tile.
+state: open
 
 ### Demo, a document with no reader: #/read/readers.
 unit: M54 U3
@@ -9444,6 +9467,16 @@ shown_in: nowhere
 appears: on no screen, in no tool text, not in the tour
 state: live
 
+### Choice
+means: The type picker's name for an enum column: one of the values written down with it.
+not: List, the view; a list's members.
+rejected: One of a list (List is the view's term)
+code_word: enum
+named_by: D-539
+scope: engine
+shown_in: screen
+state: live
+
 ### Claim
 flag: one_word_two_things
 issue: The engine's claim (checked on every row) and ledger text where a debt 'already claims these charges' (Debts › Split purchases) or a fund's fee is 'claimed'; taking a unit was renamed away from it (D-420).
@@ -9554,6 +9587,14 @@ code_word: DashboardView, DocumentDashboard, dashboardBlocks, DASHBOARD_PATH, da
 named_by: D-521
 scope: app
 shown_in: view
+state: live
+
+### Date and time
+means: The type picker's name for an instant column: a moment, kept in UTC.
+code_word: instant
+named_by: D-539
+scope: engine
+shown_in: screen
 state: live
 
 ### Date basis
@@ -9734,6 +9775,14 @@ named_by: D-401
 scope: engine
 shown_in: view
 appears: screen 19 in 13 files (formats/ShapePanel 4, plan/PlanBar 3, formats/ColumnQuestions 2, …); tools 33 in 16 files (tools/plan 5, tools/categoryEdits 4, tools/intake 4, …)
+state: live
+
+### Exact decimal
+means: The type picker's name for a decimal column: a number kept to a fixed count of places, never rounded.
+code_word: decimal
+named_by: D-539
+scope: engine
+shown_in: screen
 state: live
 
 ### Expected contribution
@@ -10147,6 +10196,13 @@ shown_in: screen
 appears: screen 1 in 1 file (fixed/FixedExpenseEditor 1)
 state: live
 
+### More types
+means: The type picker's second step: every type not on the short list, under Numbers, Dates and times, Several and Outside this document.
+named_by: D-539
+scope: engine
+shown_in: screen
+state: live
+
 ### Municipal tax
 means: The property tax paid to the municipality — usually a bill.
 printed_as: ארנונה
@@ -10212,6 +10268,14 @@ not: Not Add, which adds a row; not Add a block's menu, which also places what i
 rejected: New input view alone (a menu of one is a wasted click); Input view… · View… · Chart… (a noun is not an action)
 named_by: D-535
 scope: app
+shown_in: screen
+state: live
+
+### Number
+means: The type picker's name for a real column: any number, fractions too. The common one; Whole number is one step away.
+code_word: real
+named_by: D-539
+scope: engine
 shown_in: screen
 state: live
 
@@ -10304,6 +10368,14 @@ printed_as: קרן פנסיה
 scope: ledger
 shown_in: screen
 appears: screen 1 in 1 file (funds/labels 1)
+state: live
+
+### Percentage
+means: The type picker's name for a percent column.
+code_word: percent
+named_by: D-539
+scope: engine
+shown_in: screen
 state: live
 
 ### Plan
@@ -10516,6 +10588,14 @@ shown_in: nowhere
 appears: on no screen, in no tool text, not in the tour
 state: live
 
+### Row in another document
+means: The type picker's name for an elsewhere column: a row of another .emd, by its path and name.
+code_word: elsewhere
+named_by: D-539
+scope: engine
+shown_in: screen
+state: live
+
 ### Rule
 flag: one_word_two_things
 issue: A category rule on Categories › Rules (ledger), an engine rule set (apply_rules, extend_format rule_sets), and a row of this repo's rule format.
@@ -10606,6 +10686,22 @@ means: The rail section that is always there: Packs, Accounts, Local model, Expo
 scope: app
 shown_in: rail
 appears: screen 3 in 3 files (formats/FormatDoors 1, nav 1, screens/Export 1); tour 4 in 1 file (demo/project 4)
+state: live
+
+### Several choices
+means: The type picker's name for an enums column: several of the values written down with it.
+code_word: enums
+named_by: D-539
+scope: engine
+shown_in: screen
+state: live
+
+### Several links
+means: The type picker's name for a links column: several rows of another format, in order.
+code_word: links
+named_by: D-539
+scope: engine
+shown_in: screen
 state: live
 
 ### Severance
@@ -10743,6 +10839,14 @@ shown_in: tool
 appears: tools: the unit format's taken_by and start_here's text; not on a ledger screen (the 16 screen hits of "taken" are other senses).
 state: live
 
+### Time of day
+means: The type picker's name for a time column.
+code_word: time
+named_by: D-539
+scope: engine
+shown_in: screen
+state: live
+
 ### Tolerance
 means: How far apart a claim's two sides may be: an amount, or a percentage of the right-hand side. Zero is exact, which is what money wants; on a money column the amount is in minor units.
 named_by: D-222
@@ -10876,12 +10980,28 @@ shown_in: screen
 appears: screen 4 in 3 files (savings/DepositEditor 2, savings/GoalEditor 1, screens/GoalDetail 1); tools 4 in 4 files (catalog 1, tools/goalDeposits 1, tools/savings 1, …)
 state: live
 
+### Whole number
+means: The type picker's name for an integer column, under More types › Numbers.
+code_word: integer
+named_by: D-539
+scope: engine
+shown_in: screen
+state: live
+
 ### Year
 means: Home's tab for the twelve months together, which took in what Trends was (D-313).
 named_by: D-313
 scope: ledger
 shown_in: rail
 appears: screen 41 in 13 files (screens/FeeImpact 14, screens/Year 6, savings/HoldingEditor 4, …); tools 15 in 5 files (tools/insights 7, tools/funds 4, catalog 2, …)
+state: live
+
+### Yes or no
+means: The type picker's name for a boolean column.
+code_word: boolean
+named_by: D-539
+scope: engine
+shown_in: screen
 state: live
 
 ### agenda
@@ -15541,14 +15661,17 @@ report: M55 U7 built at 9910919 on worktree-agent-aa1b32fc3f91155ec, D-538; merg
 milestone: M55
 scope: app
 title: New format's type picker in a person's words, the common types first
-decision: D-533
-state: in_progress
+landed: 2026-11-03
+decision: D-539
+state: built
 brief: D-533, split out of U5 by paths (D-534). M54 U1's row: #/formats → New format → Start empty → add a column and reach its type shows twenty types at once (nineteen and computed) in engineering names: integer, real, enum, enums, instant. Re-run it first (M54 F2 gave the engine's names a person's words in places; say what it already did). Then: the types in a person's words, the common ones first and the rest one step away, never twenty at once; the stored type word is unchanged. Which types are common and what each is called on screen are words: draft two or three groupings with names, recommend one, and STOP for the maintainer's pick (the U1 practice: drafts, then he picks); the pick goes on in this same child. Check each name against the term rows first. Tests: the picker offers the common group first; every type is still reachable; the stored word is unchanged. Done-test: a new column's type chosen from the short list in two clicks, and a rare one in three.
-files: src/ui/formats/NewFormat.tsx, src/ui/screens/Formats.tsx
+files: src/ui/formats/ColumnQuestions.tsx, src/ui/formats/typePicker.ts, src/ui/formats/typePicker.test.ts, src/domain/format/vocabulary.ts (TYPE_WORDS shown), docs/09-decision-log.md
 taken_by: run-milestone driver
 started: 2026-11-03
-branch: main
+branch: worktree-agent-a7bf86895f22c42be
+commit: e890fce
 paths: "src/ui/formats/NewFormat.tsx\nsrc/ui/screens/Formats.tsx"
+report: Re-run first: the picker still drew all 18 types and computed (19 tiles) in the engine's mono words; M54 F2 had given only the sheet's headers a person's words (entryLabel). Three groupings were drafted (A: eight common, the rest under four headings; B: nine by use, the rest flat; C: A's split named as answers) and the maintainer picked 'A as drafted' (2026-11-03). Built: TYPE_WORDS gains shown; typePicker.ts holds COMMON_TYPES and MORE_TYPES; ColumnQuestions draws the short list plus Computed and More types…, which replaces it with Numbers, Dates and times, Several and Outside this document (← Common types goes back; the first rare tile takes focus); a picked column shows its name with 'Stored as <word>' as tooltip; Change on a rare type opens on the rest. Stored word unchanged; tool text unchanged (shown is not in typeBriefing). Tests: typePicker.test.ts (common first, every type once, stored word kept); related 53 files green, privacy, typecheck, check:tours (all 10 runs; the tour's type anchors are all common). probe:screens on custom.emd #/formats: two findings not this unit's (a 12px '3 columns' chip at 2.62:1, 'New format' at 13px). Left: a picked type's catch is still the tool's sentence and names real/aggregate; Month the type shares its word with Home's Month tab.
 
 ### M55 U9
 milestone: M55
