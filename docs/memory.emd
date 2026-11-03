@@ -15802,10 +15802,13 @@ milestone: M55
 scope: app
 title: A link field finds by name and makes what is missing in place
 decision: D-533
-state: planned
+state: in_progress
 brief: D-533. M54 U1's two link rows (format_rows review_entry search:'Entry:' unit M54 U1): on project.emd's unit form, milestone lists M2, M3, M1 and decision D-1, D-2, D-4, D-3, unsorted bare refs that open only on typing or a click, and a name no row has lists nothing, with no way to make it (only the ledger's SelectOrNew has + New, and it stays parked). Do, in every link field of a declared format (entry/new, an entry's 'Fill <column>' chip, the table's blank row and cells): (1) choices open on focus, sorted in the target's own order (its list or table order, else by its title), each named by the target's title with its ref where it has one, filtered as typed; (2) an enum's members read in words there as everywhere (state reads 'in progress', as the board's lane does); (3) a typed name no row has: one line, 'No milestone is called "M9"', and '+ New "M9"'; when the target needs nothing but its name, it is made in place and linked; else a small inline form under the field asks the target's required fields (U5's field pieces, its own refusals at its fields), Add makes and links it, Esc leaves the field as typed. Making the row is record_format_rows / the repository's add, so no new write (D-227); a conversation already names a link by its row's name. Anything not settled here (beyond layout and wording) is the maintainer's: stop and ask. Tests: sorting and naming; + New with a name-only target; the inline form for a target with required columns, refused and then made; Esc. Done-test: on project.emd, a unit's milestone typed 'M9' makes milestone M9 in place (asking its required columns) and links it, from the form and from the table's blank row.
 files: src/ui/formats/EntryView.tsx, src/ui/formats/RowSheet.tsx, src/ui/components/SelectOrNew.tsx (the ledger's, for reference only)
 blocks: ["M55 U5"]
+taken_by: run-milestone driver
+started: 2026-11-03
+branch: main
 paths: "src/ui/formats/EntryView.tsx\nsrc/ui/formats/RowSheet.tsx\nsrc/ui/components/"
 
 ### M55 U7
@@ -15926,20 +15929,26 @@ report: M56 U4 built at 3627e36 on worktree-agent-a5b080b978a04b485 with U7 (one
 milestone: M56
 scope: plugin
 title: The server says less where the plugin's skills say it
-state: planned
+state: in_progress
 brief: M56, after U4. src/plugin/instructions.ts is ~34 KB, in context in every session of every client; a skill costs one line until it fires. The plugin already starts the server with `--engine-only`; where the server is started by the plugin, the sections U4's skills now carry shrink to one line pointing at the skill. Every other client (another runtime, the .mcpb in chat, emerald-mcp in a config file) keeps the full text — the server stays what every client gets (D-494), and only Claude reads a skill. How the server tells that the plugin launched it is the unit's to settle with the smallest signal; if it needs more than a flag the plugin passes, stop and ask. MEASURE: the instructions' size in tokens before and after, for both launches, written into docs/plugin.md. Done-test: server.test.ts holds both texts; a session on the plugin still reaches each moved how-to through its skill; npm run test and typecheck pass. || Driver, 2026-11-03, from U4/U7's landing (D-543): the sections each skill now carries — read-a-file: FORMATS' 'If what they want to track is already in a spreadsheet' paragraph and 'What you are for''s ask-for-the-file line; what-looks-wrong: FORMATS' format_problems sentence and the refusal half of 'While ideas are still moving'; bring-in-a-plan: PLANNING's what-the-pack-keeps sentences and START's pack paragraph; set-up-a-project: PLANNING's 'Keep it one of two ways' sentence. || Maintainer, 2026-11-03 (M56 U1's Q1, answered (a)): a mod's $.mcp.call goes to the person's permission check, so `npx emerald-mcp init` writes permissions.allow for the plugin's start_here and show_format (M56 U1 builds init's half and the pane's Read button). This unit adds that line to hosts/claude/skills/set-up-a-project/SKILL.md: what init's allow rule is for, and that the pane asks once until it exists.
 files: src/plugin/instructions.ts, src/plugin/server.test.ts, hosts/claude/.claude-plugin/plugin.json (the server's args), docs/plugin.md
 blocks: ["M56 U4","M56 U7"]
+taken_by: run-milestone driver
+started: 2026-11-03
+branch: main
 paths: "src/plugin/instructions.ts\nsrc/plugin/server.test.ts\nhosts/claude/.claude-plugin/plugin.json\ndocs/plugin.md\nhosts/claude/skills/set-up-a-project/"
 
 ### M56 U6
 milestone: M56
 scope: demo
 title: Recordings on getemerald.dev: the pane and the inbox inside Claude
-state: planned
+state: in_progress
 brief: M56, after U1 and U2. Maintainer's answers, 2026-11-02: the maintainer records; the desktop app first, one terminal clip beside it. The hard rule first, as in M33 F11: recorded on the demo's synthetic project (dist-demo/project.emd or a copy), NEVER on docs/memory.emd or any working .emd. THE SESSION WRITES: the script, as docs/page-recording.md does for the engine's — shots, captions, what is on screen — for three short clips: the project pane opening beside the chat as a session starts; an inbox row sent from another project arriving as a toast and in the pane; a format declared in conversation and its pane filling. And the page's slot for them beside M33 F11's, every word in the page's copy file, showing nothing until a file exists (the page names no file it does not have). The video is served from dist-demo beside the page — no request leaves it (D-459) — with a poster frame under prefers-reduced-motion. Done-test: the slot is empty and clean with no file, plays a placeholder clip at 1280 and 375 wide in both schemes, is still with motion off; check:tours passes, 'nothing leaves the page' included; the script is in docs/.
 files: docs/page-recording.md and docs/page-recording-development.md (the scripts this one sits beside), src/demo/page/copy, src/demo/page/reel.ts, demo-page.html
 blocks: ["M56 U1","M56 U2"]
+taken_by: run-milestone driver
+started: 2026-11-03
+branch: main
 paths: "docs/page-recording-claude.md\nsrc/demo/page/\ndemo-page.html"
 
 ### M56 U7
