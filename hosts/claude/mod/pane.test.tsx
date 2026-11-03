@@ -3,7 +3,7 @@
  * engine is played by the test's own hooks: a folder of files in memory, a
  * server whose answers are the demo project's, and a store.
  */
-import { expect, mock, test } from 'claude-code/testing'
+import { expect, mock, test, type FoundElement } from 'claude-code/testing'
 import type { On } from 'claude-code'
 
 const PROJECT = '/work/shop'
@@ -36,6 +36,23 @@ Whole list: \`format_rows inbox match:{state:new}\`.
 ### What a row looks like
 
 - \`unit\` — **ref**: unique · **state**: planned|built`
+
+/** A Text's place on the host's type ramp, and whether it is dim: all the pane may say of its look. */
+const look = (found: FoundElement | undefined) => ({
+  text: found?.text,
+  size: found?.props['size'],
+  weight: found?.props['weight'],
+  dimColor: found?.props['dimColor'],
+})
+
+/** Nothing drawn names a colour of its own: only the host's theme, through `dimColor`. */
+async function wearsOnlyTheHostsColours(ui: { findAll: (query: { type: string }) => Promise<FoundElement[]> }) {
+  for (const type of ['Box', 'Text', 'Button']) {
+    for (const found of await ui.findAll({ type })) {
+      for (const prop of ['color', 'backgroundColor', 'borderColor']) expect(found.props[prop]).toBeUndefined()
+    }
+  }
+}
 
 const AFTER = START.replace('M2 · Public API', 'M2 · Public API, renamed')
 
@@ -145,10 +162,24 @@ test('in a folder with one document the pane opens and shows what start_here ans
 
   for (const surface of SURFACES) {
     const ui = await $.ui.mount({ ...PANE, surface })
-    expect((await ui.find({ type: 'Text', text: /^Ready to start — unit$/ }))?.text).toBe('Ready to start — unit')
-    expect((await ui.find({ type: 'Text', text: /requests are limited/ }))?.text).toBe('· M2 U3 · M2 · requests are limited per client')
-    expect((await ui.find({ type: 'Text', text: /^Held$/ }))?.text).toBe('Held')
-    expect((await ui.find({ type: 'Text', text: /12 rows in all/ }))?.text).toBe('12 rows in all.')
+    // Each section under a heading on the host's ramp.
+    for (const heading of ['Ready to start — unit', 'inbox — state is new', 'milestone — state is open']) {
+      expect(look(await ui.find({ type: 'Text', text: heading }))).toEqual({ text: heading, size: 'heading', weight: 'semibold', dimColor: undefined })
+    }
+    // A row: its ref set apart from its title.
+    expect(look(await ui.find({ type: 'Text', text: /^M2 U3$/ }))).toEqual({ text: 'M2 U3', size: undefined, weight: 'semibold', dimColor: undefined })
+    expect(look(await ui.find({ type: 'Text', text: /requests are limited/ }))).toEqual({ text: 'M2 · requests are limited per client', size: undefined, weight: undefined, dimColor: undefined })
+    expect((await ui.find({ type: 'Text', text: /^Public API$/ }))?.text).toBe('Public API')
+    // A group under its own smaller heading, and a row's secondary line in caption.
+    expect(look(await ui.find({ type: 'Text', text: /^Held$/ }))).toEqual({ text: 'Held', size: 'footnote', weight: 'semibold', dimColor: true })
+    expect((await ui.find({ type: 'Text', text: /^M3 U1$/ }))?.text).toBe('M3 U1')
+    expect((await ui.find({ type: 'Text', text: /errors are reported/ }))?.text).toBe('M3 · errors are reported')
+    expect(look(await ui.find({ type: 'Text', text: /^waits on/ }))).toEqual({ text: 'waits on M2 U3 · planned', size: 'caption', weight: undefined, dimColor: true })
+    // What a section says of itself, its count and its empty state, at caption size.
+    for (const note of ['state is planned, and nothing in blocks is still open.', '12 rows in all.', 'None.']) {
+      expect(look(await ui.find({ type: 'Text', text: note }))).toEqual({ text: note, size: 'caption', weight: undefined, dimColor: true })
+    }
+    await wearsOnlyTheHostsColours(ui)
     // Nothing meant for the model reaches the person (D-493).
     for (const said of [/For you/, /format_rows/, /Whole list/, /What a row looks like/, /\*\*ref\*\*/]) {
       expect(await ui.find({ type: 'Text', text: said })).toBeUndefined()
@@ -218,7 +249,7 @@ test('the pane is read again after an emerald write, and not after a read', asyn
 
   await $.tool.call({ tool: 'mcp__plugin_emerald_emerald__record_format_rows', path: DOCUMENT, format: 'unit', rows: [] })
   await clock.settle()
-  expect((await ui.find({ type: 'Text', text: /renamed/ }))?.text).toBe('· M2 · Public API, renamed')
+  expect((await ui.find({ type: 'Text', text: /renamed/ }))?.text).toBe('Public API, renamed')
   expect(calls).toHaveLength(2)
   await ui.unmount()
 })
@@ -232,8 +263,15 @@ test('/emerald show <format> puts one format in the same pane', async ($, on) =>
   expect(opened).toEqual(['emerald', 'emerald'])
   await clock.settle()
   const ui = await $.ui.mount({ ...PANE, surface: 'desktop' })
-  expect((await ui.find({ type: 'Text', text: /2 rows/ }))?.text).toBe('unit as its sheet — 2 rows, each with its state.')
-  expect((await ui.find({ type: 'Text', text: /M2 U3/ }))?.text).toBe('· M2 U3 · planned')
+  expect(look(await ui.find({ type: 'Text', text: /2 rows/ }))).toEqual({
+    text: 'unit as its sheet — 2 rows, each with its state.',
+    size: 'caption',
+    weight: undefined,
+    dimColor: true,
+  })
+  expect((await ui.find({ type: 'Text', text: /^M2 U3$/ }))?.props['weight']).toBe('semibold')
+  expect((await ui.find({ type: 'Text', text: /^planned$/ }))?.text).toBe('planned')
+  await wearsOnlyTheHostsColours(ui)
   expect(await ui.find({ type: 'Text', text: /format_rows/ })).toBeUndefined()
   await ui.unmount()
   expect(calls.at(-1)).toEqual({ tool: 'show_format', args: { path: DOCUMENT, format: 'unit', view: 'board' } })
@@ -263,4 +301,20 @@ test("where the person's rules would ask, the pane reads only when they press Re
   expect((await ui.find({ type: 'Button', key: 'read' }))?.props['label']).toBe('project.emd changed: read it again')
   expect(await ui.find({ type: 'Text', text: /requests are limited/ })).toBeDefined()
   await ui.unmount()
+})
+
+test('a long list shows its first few and says how many more', async ($, on) => {
+  const ready = Array.from({ length: 9 }, (_, at) => `- M4 U${at + 1} · M4 · step ${at + 1}`).join('\n')
+  const long = START.replace('- M2 U3 · M2 · requests are limited per client', ready)
+  const { clock } = world(on, { [DOCUMENT]: '' }, { start: [long] })
+  await $.session.start({ cwd: PROJECT, surface: 'desktop', isInteractive: true })
+  await clock.settle()
+  for (const surface of SURFACES) {
+    const ui = await $.ui.mount({ ...PANE, surface })
+    expect((await ui.findAll({ type: 'Text', text: /^M4 U\d$/ })).map((found) => found.text)).toEqual(['M4 U1', 'M4 U2', 'M4 U3', 'M4 U4', 'M4 U5', 'M4 U6'])
+    expect(look(await ui.find({ type: 'Text', text: /more$/ }))).toEqual({ text: '3 more', size: 'caption', weight: undefined, dimColor: true })
+    // The group beneath keeps its own row: it is a list of its own.
+    expect((await ui.find({ type: 'Text', text: /^M3 U1$/ }))?.text).toBe('M3 U1')
+    await ui.unmount()
+  }
 })
