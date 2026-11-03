@@ -17,7 +17,10 @@ format_rows unit match:{milestone:"<M>", state:"planned"} columns:[ref, title, b
 dispatch_plan units:[<every planned ref>]
 ```
 
-against `docs/memory.emd` by its absolute path, in one turn. Order by `ref`. Read nothing
+against `docs/memory.emd` by its absolute path, in one turn. **Asked for two milestones**
+(`/run-milestone M55 M56`), read both queues and give `dispatch_plan` every planned ref of both: the
+first named goes first in every group, and the second fills the slots the first leaves free — a
+milestone that is a chain after its first wave would otherwise hold three of four idle. Order by `ref`. Read nothing
 in `docs/` yourself. The child does its own orientation, and your context is the thing to keep small.
 
 **Bundle what is too small to pay its start** (D-534; the rule row *A unit is cut by its paths and its start*): a unit costs about
@@ -169,7 +172,10 @@ its own `<n>` from 1 to 4 for its demo port.
    reported: `git merge --no-edit <its branch>` for each, in `ref` order — a merge keeps the child's
    commit hash, which its proposal names; a rebase would not. A conflict that is only both sides
    appending (decision-log entries and their index rows) is resolved by keeping both, in number
-   order; any other conflict is a stop. Then `npm run docs:check`, then **one `land_units
+   order; **one only in the plugin's version pin** (`hosts/claude/.claude-plugin/plugin.json`'s
+   `version`, `hosts/claude-plugin-release.json`), where two children each cut the next version, is
+   resolved by taking either side and running `node scripts/pin-plugin.mjs --plugin` once the
+   merges are done, committed with them; any other conflict is a stop. Then `npm run docs:check`, then **one `land_units
    inbox:[{id, other_branch:true}, …]`** for every proposal (M51 U3, D-485) — dry run, then `commit:
    true` — never a landing rebuilt from a report's prose. A proposal names its worktree's branch and
    the claim names `main`, so without `other_branch` each is refused (found in M42 U7's dry run). Commit `docs/memory.emd`, push to origin main, and remove
