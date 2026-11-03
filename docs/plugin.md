@@ -1530,7 +1530,7 @@ range was `>=24` until 0.1.6, and a cloud host's Node 22 showed it at every prom
 
 | Bin | File | What runs it |
 | --- | --- | --- |
-| `emerald-mcp` | `server.mjs` | `npx -y emerald-mcp` — every tool; `--engine-only` for the engine's alone; `watch` as above |
+| `emerald-mcp` | `server.mjs` | `npx -y emerald-mcp` — every tool; `--engine-only` for the engine's alone; `--skills` (the Claude plugin's) says what its skills carry in a line; `watch` as above |
 | `emerald-hooks` | `hooks.mjs` | `npx -y -p emerald-mcp emerald-hooks start-here <folder>`, `… rows <folder> inbox --match state=new --once-per-session` |
 | `emerald-status-line` | `status-line.mjs` | `npx -y -p emerald-mcp emerald-status-line [<folder>]` |
 
@@ -1591,9 +1591,9 @@ is the manifest (`.claude-plugin/plugin.json`), the hook set, the `declare-a-for
 development pack's three workflows (M42 U7), the `emerald-setup` skill (M42 F8), a newcomer's four (M56 U4, U7, D-543) and a README for a stranger. **Everything it runs is the published package, through `npx`, pinned** — the
 maintainer's *use npm for it* (D-499, amending D-498's launcher) — but one hook, below:
 
-- **The server**: `npx -y --prefer-offline emerald-mcp@<version> --engine-only`, once a session.
-  Claude Code on Windows starts it as written. The views draw from it with nothing else to set up —
-  they ride inside the server (M41).
+- **The server**: `npx -y --prefer-offline emerald-mcp@<version> --engine-only --skills`, once a
+  session. Claude Code on Windows starts it as written. The views draw from it with nothing else to
+  set up — they ride inside the server (M41). `--skills` is below.
 - **The hooks**: `npx -y --prefer-offline -p emerald-mcp@<version> emerald-hooks …`, the same
   arguments as this repo's. npm's `npm notice run …` lines go to stderr, which a hook that exits 0
   keeps out of context.
@@ -1620,6 +1620,30 @@ release and never a new package:
   ones worked.
 
 `scripts/pin-plugin.mjs` moves the skill's `emerald-mcp@<version>` with the other pins.
+
+**The server says less where the plugin's skills say it** (M56 U5, D-552). The instructions ride on
+`initialize` and sit in context on every turn; a skill costs its one-line description until it
+fires. So the manifest adds `--skills`, which no other launch passes, and the how-tos the newcomer
+skills carry (D-543) become a line naming the skill: reading a file onto a format (`read-a-file`),
+what a text document refuses and `format_problems` (`what-looks-wrong`), what the development pack
+keeps and a pack's paragraph (`bring-in-a-plan`, and `closing-pass` for claiming and landing), and
+the two ways to keep the document (`set-up-a-project`). **Every other client keeps the full text**,
+byte for byte — the `.mcpb`, `emerald-mcp` in a config file, this repository's `.mcp.json`, another
+runtime — because the server is what every client gets (D-494) and only Claude reads a skill. A
+flag rather than anything the server could detect: an MCP client says its name, never whether it
+loaded a plugin's skills. Measured 2026-11-03 on the built text, at this repository's ~3.6
+characters a token:
+
+| Started | Characters | ~Tokens |
+| --- | --- | --- |
+| `--engine-only` (every other client) | 14,677 | ~4,080 |
+| `--engine-only --skills` (the plugin) | 12,310 | ~3,420 |
+| full, the ledger's block, unchanged | 24,249 | ~6,740 |
+
+About 660 tokens a turn, 16%. `server.test.ts` holds both texts and the budget; `plugin.test.ts`
+checks every skill a line names is shipped and says what the line left out. It reaches a session
+once the package that knows `--skills` is published and pinned: `emerald-mcp@0.2.0` ignores an
+argument it does not know, so until then the plugin gets the full text.
 
 **What npx costs, accepted** (measured 2026-10-18 on the maintainer's Windows machine, cache warm):
 the inbox hook **~1.95 s before every prompt** (against ~0.35 s for `node` on the file), `start-here`

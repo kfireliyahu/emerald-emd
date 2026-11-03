@@ -30,7 +30,7 @@ import { APP_MIME, SHEET_URI, UI_EXTENSION } from '@/frame/contract.ts'
 
 import { PLUGIN_VERSION } from './document.ts'
 import { addSubscriptions } from './subscriptions.ts'
-import { ENGINE_INSTRUCTIONS, SERVER_INSTRUCTIONS } from './instructions.ts'
+import { engineInstructions, serverInstructions } from './instructions.ts'
 import { documentInfoTool } from './tools/documentInfo.ts'
 import { categoryTreeTool, transactionsTool, uncategorizedMerchantsTool } from './tools/ledger.ts'
 import { monthSummaryTool, yearSummaryTool } from './tools/insights.ts'
@@ -396,6 +396,14 @@ export interface ServerOptions {
    */
   readonly engineOnly?: boolean
   /**
+   * The client reads the Claude plugin's skills (M56 U5, D-552): `--skills`,
+   * which the plugin's manifest passes and no other launch does. Each how-to a
+   * skill carries is then one line naming it, and every other client keeps
+   * the full text. Like `engineOnly`, a server argument: a host's skills are
+   * nothing the server can see.
+   */
+  readonly skills?: boolean
+  /**
    * Where a line about the connection goes (M41 F2): `main.ts` writes it to
    * stderr, which a host shows in its server log — VS Code under Output → MCP.
    * Said once per client, on `initialized`: who it is and what it advertised.
@@ -419,7 +427,7 @@ export function createServer(options: ServerOptions = {}): Server {
       // name (M41 U1, U2), and **a document is a resource you can subscribe
       // to** (M44 U2, D-440): `subscriptions.ts`.
       capabilities: { tools: {}, resources: { subscribe: true } },
-      instructions: options.engineOnly === true ? ENGINE_INSTRUCTIONS : SERVER_INSTRUCTIONS,
+      instructions: (options.engineOnly === true ? engineInstructions : serverInstructions)(options.skills === true),
     },
   )
 

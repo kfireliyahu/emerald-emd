@@ -12,6 +12,7 @@ import { SCHEMA_VERSION, createDatabase, exportDatabase } from '@/data/db/databa
 
 import { APP_MIME, COPY_TOOL, KEY_META, SHEET_META, SHEET_URI, UI_EXTENSION } from '@/frame/contract.ts'
 
+import { ENGINE_INSTRUCTIONS, PLUGIN_INSTRUCTIONS } from './instructions.ts'
 import { SERVER_NAME, type ServerOptions, clientLine, createServer } from './server.ts'
 import { drawnLine, FOR_THE_MODEL, NO_KEY, servedPage } from './tools/sheet.ts'
 import { tempDir } from '../testing/tempDir'
@@ -1366,5 +1367,68 @@ describe('what a host advertised, and a short answer beside the view (M41 F2)', 
     expect(text).toContain('`format_rows milestone order:position`')
     expect(text.length).toBeLessThan(1200)
     await client.close()
+  })
+})
+
+describe('started by the plugin, --skills: what its skills say is a line here (M56 U5, D-552)', () => {
+  // The instructions are in context on every turn of every client; a skill
+  // costs its description until it fires. So where the Claude plugin starts the
+  // server, each how-to a plugin skill carries is one line naming the skill —
+  // and every other launch keeps the whole text (D-494): only Claude reads a skill.
+  const MOVED: ReadonlyArray<readonly [string, string]> = [
+    // [the skill the line names, a phrase only the full text says]
+    ['read-a-file', '`supersede_reading` takes exactly those rows back'],
+    ['read-a-file', 'offer to declare a format for it'],
+    ['what-looks-wrong', 'Nothing is dropped quietly'],
+    ['what-looks-wrong', 'failed claims, links left empty, rows that repeat'],
+    ['bring-in-a-plan', 'rows: milestones, units, decisions, open questions.'],
+    ['bring-in-a-plan', 'offer one before declaring'],
+    ['set-up-a-project', 'diffs and merges in git'],
+    ['closing-pass', '`claim_units take_over`'],
+  ]
+
+  it('holds both texts: the full one for every other launch, the short one for the plugin', async () => {
+    const engine = await connected({ engineOnly: true })
+    const plugin = await connected({ engineOnly: true, skills: true })
+    const full = engine.getInstructions() ?? ''
+    const short = plugin.getInstructions() ?? ''
+    await Promise.all([engine.close(), plugin.close()])
+
+    expect(full).toBe(ENGINE_INSTRUCTIONS)
+    expect(short).toBe(PLUGIN_INSTRUCTIONS)
+    for (const [skill, phrase] of MOVED) {
+      expect(full, phrase).toContain(phrase)
+      expect(short, phrase).not.toContain(phrase)
+      expect(short, skill).toContain(`the \`${skill}\` skill`)
+      // A client that reads no skill is never sent to one.
+      expect(full, skill).not.toContain(`\`${skill}\``)
+    }
+    // Measured 2026-11-03: 14,677 characters and 12,310, ~4,080 tokens and
+    // ~3,420 at this repo's ~3.6 a token (docs/plugin.md). A paragraph growing
+    // back past the budget is the drift this catches.
+    expect(short.length).toBeLessThan(full.length - 2000)
+  })
+
+  it('still names only tools it offers, and keeps the head where a host cuts it', async () => {
+    const client = await connected({ engineOnly: true, skills: true })
+    const instructions = client.getInstructions() ?? ''
+    const names = new Set((await client.listTools()).tools.map((tool) => tool.name))
+    await client.close()
+
+    for (const [, name] of instructions.matchAll(/`([a-z]+_[a-z_]+)`/g)) expect(names).toContain(name)
+    expect(instructions.slice(0, 2000)).toMatch(/asks to \*see\* something/)
+    expect(instructions.indexOf("## A project's development planning")).toBeLessThan(2100)
+    expect(instructions).toMatch(/\*\*stored as text and\s+committed\*\*/)
+    expect(instructions).toMatch(/\*\*one file outside every repository\*\*/)
+    expect(instructions).toContain('`land_units inbox:[ids]`')
+  })
+
+  it("shortens the ledger's block the same way, should a launch pass --skills without --engine-only", async () => {
+    const full = await connected()
+    const flagged = await connected({ skills: true })
+    const [plain, skills] = [full.getInstructions(), flagged.getInstructions()]
+    await Promise.all([full.close(), flagged.close()])
+    expect(skills).not.toBe(plain)
+    expect(skills).toContain('the `read-a-file` skill')
   })
 })

@@ -8,7 +8,8 @@
  * **It is the npm package's server and nothing else.** `dist-plugin/server.mjs` is already whole —
  * every package it reaches is bundled into it (scripts/npm-package.mjs) — so the bundle holds that
  * one file, its two licence files and the icon, and needs no `node_modules`. It runs as the plugin
- * runs it, `--engine-only` (hosts/claude/.claude-plugin/plugin.json).
+ * runs it, `--engine-only` (hosts/claude/.claude-plugin/plugin.json) — but not `--skills`, which only
+ * the plugin passes: chat reads no plugin skill, so the bundle keeps the full instructions (D-552).
  *
  * **`server.type: "node"`, so the app runs it on the Node it ships** rather than on one the person
  * installed; the files target Node 20 (vite.config.ts), and `compatibility.runtimes.node` is the npm

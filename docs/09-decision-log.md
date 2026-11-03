@@ -461,6 +461,7 @@ written out here.
 | D-545 | 2026-11-03 | An entry's refusal sits at its field and says every problem at once — on the form, under each field, outlined and `aria-invalid`, the first focused; in the table's blank row, in a line under the row, each sentence in its own column — and a link left with a name no row holds keeps it, so Add names it; a date is typed as `YYYY-MM-DD` or `today`, `yesterday`, `tomorrow` in the cell and on the form alike, a text field over the platform's calendar; *a* or *an* goes by the word's sound; a placeholder is `ink-secondary` | [below](#d-545) |
 | D-547 | 2026-11-03 | Where Claude Code runs the plugin's hooks module, the module answers SessionStart and UserPromptSubmit itself (start_here; each new inbox row once per session, then the count) and always passes the event on with `emerald_mod_answered` added, and the two npx hook commands start through `hooks/unless-mod.mjs`, which exits on that mark — because a module that answers without `next` silences every settings hook beneath it, the person's own included; it marks only what it answered, watches the document every 5 s for the status line (`$.ui.status`) and a toast, and `init` allows `format_rows` beside the pane's two reads — the unit's pick, for the maintainer to review | [below](#d-547) |
 | D-549 | 2026-11-03 | The plugin's hooks module refuses two write rules at the call — an `Edit` or `Write` on any `.emd` file, and a `git commit` in a linked worktree that would carry the project document's copy — each guard refusing when it fails; `/claim <ref>` and `/land [ref]` write nothing and hand the model the call in the command's `context`, then ask for a turn; the third rule, no `commit: true` without a dry run, is dropped on the maintainer's word | [below](#d-549) |
+| D-552 | 2026-11-03 | Where the Claude plugin starts the server it passes `--skills`, and each how-to a plugin skill carries is one line naming the skill; every other launch keeps the full instructions byte for byte | [below](#d-552) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1413,6 +1414,40 @@ by the last call (the three options put to him). Classic `commands/*.md` prompts
 **Consequences.** A session in Claude Code with the plugin can no longer hand-edit any `.emd`, its
 own included; a merge conflict in `docs/memory.emd` is resolved outside the `Edit` tool. The dry-run
 question is the driver's to record.
+
+## D-552 · 2026-11-03 · Where the Claude plugin starts the server it passes `--skills`, and each how-to a plugin skill carries is one line naming the skill; every other launch keeps the full instructions byte for byte <a id="d-552"></a>
+
+**Context.** M56 U5's brief: `src/plugin/instructions.ts` is in context on every turn of every
+client, and a skill costs its description until it fires. M56 U4 and U7 (D-543) wrote four skills
+that carry how-tos the instructions also say. How the server tells that the plugin launched it was
+the unit's to settle, with the smallest signal, and the server stays what every client gets (D-494).
+
+**Decision.**
+
+- **A flag, `--skills`, in the plugin's manifest and nowhere else** (`SKILLS_FLAG` in
+  `src/plugin/catalog.ts`). `--engine-only` could not be the signal: the `.mcpb`, the setup skill's
+  config entry, the README's `claude mcp add` and this repository's `.mcp.json` pass it too, and none
+  of them reads a plugin skill. Nothing the server could detect would do: a client says its name,
+  never what it loaded.
+- **Where it is passed, five paragraphs become a line naming a skill**: the read-a-spreadsheet
+  paragraph and the ask-for-the-file line (`read-a-file`); what a text document refuses and the
+  `format_problems` sentence (`what-looks-wrong`); what the development pack keeps and the pack
+  paragraph (`bring-in-a-plan`, and `closing-pass` for claiming, landing and a manager's proposal);
+  the two ways to keep the document (`set-up-a-project`). Each line still names the tool and keeps
+  the words that answer an objection before a skill fires (*stored as text and committed*, *one
+  file outside every repository*).
+- **Without it, the text is byte for byte what it was**: each section is `{ full, skill }` and the
+  full block is built from the `full` halves. `server.test.ts` holds both texts;
+  `hosts/claude/plugin.test.ts` checks that every skill a line names ships and says what the line
+  left out.
+
+**Measured** (2026-11-03, ~3.6 characters a token): `--engine-only` 14,677 characters, ~4,080
+tokens; `--engine-only --skills` 12,310, ~3,420 — about 660 tokens a turn, 16%. The full block,
+24,249, is unchanged.
+
+**Consequences.** It reaches a plugin session once a package that knows the flag is published and
+pinned; `emerald-mcp@0.2.0` ignores it, so until then the plugin gets the full text. The
+`declare-a-format` paragraph is carried by a skill too and was outside this unit's list.
 
 ## Related
 

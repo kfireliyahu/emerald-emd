@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url'
 
 import { describe, expect, it } from 'vitest'
 
+import { PLUGIN_INSTRUCTIONS, SKILLS_FLAG } from '@/plugin/host.ts'
+
 import { pluginDigest } from './release.ts'
 
 /**
@@ -41,7 +43,7 @@ describe('the plugin', () => {
     expect(order, `${pin} is ahead of the package`).toBeLessThanOrEqual(0)
     expect(plugin.mcpServers.emerald).toEqual({
       command: 'npx',
-      args: ['-y', '--prefer-offline', `emerald-mcp@${pin}`, '--engine-only'],
+      args: ['-y', '--prefer-offline', `emerald-mcp@${pin}`, '--engine-only', SKILLS_FLAG],
     })
   })
 
@@ -112,5 +114,24 @@ describe('the plugin', () => {
       return true
     })
     expect(pinning.map((entry) => entry.name)).toEqual(expect.arrayContaining(['emerald-setup', 'set-up-a-project']))
+  })
+
+  it('ships every skill its server text sends a session to, and each says what that line left out (M56 U5, D-552)', () => {
+    // Started `--skills`, the server says a how-to in one line naming a skill;
+    // a session on the plugin reaches the rest only through that skill. So each
+    // one named is shipped here, and says what the full text said in its place.
+    const said: Record<string, readonly string[]> = {
+      'read-a-file': ['read_onto_format', '`fixed`', 'supersede_reading', 'unique'],
+      'what-looks-wrong': ['format_problems', 'refuses the whole'],
+      'bring-in-a-plan': ['keep_packs', '`milestone`', '`open_question`'],
+      'set-up-a-project': ['stored as text and committed', 'One file outside every repository', 'store_document_as'],
+      'closing-pass': ['land_units', 'inbox'],
+    }
+    const named = [...new Set([...PLUGIN_INSTRUCTIONS.matchAll(/the `([a-z-]+)` skill/g)].map((found) => found[1] ?? ''))]
+    expect(named.sort()).toEqual(Object.keys(said).sort())
+    for (const name of named) {
+      const skill = readFileSync(join(HERE, 'skills', name, 'SKILL.md'), 'utf8').replace(/\s+/g, ' ')
+      for (const phrase of said[name] ?? []) expect(skill, `${name}: ${phrase}`).toContain(phrase)
+    }
   })
 })

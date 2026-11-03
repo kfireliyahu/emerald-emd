@@ -25,6 +25,105 @@
  */
 
 /**
+ * What a plugin skill now says, and the one line that stands in for it where
+ * the plugin started the server (M56 U5, D-552).
+ *
+ * This text is in a session's context on every turn of every client; a skill
+ * costs its one-line description until it fires. So where the plugin passes
+ * `--skills`, each how-to its skills carry (M56 U4, U7, D-543) shrinks to a
+ * line naming the skill. **Every other client keeps the full text** — another
+ * runtime, the `.mcpb` in chat, `emerald-mcp` in a config file — because the
+ * server stays what every client gets (D-494) and only Claude reads a skill.
+ */
+interface Said {
+  readonly full: string
+  readonly skill: string
+}
+
+/** `read-a-file`: a spreadsheet or a folder of notes onto a format. */
+const READ_FILE: Said = {
+  full: `**If what they want to track is already in a spreadsheet, read the file rather than retyping it.**
+\`read_onto_format\` takes any \`.csv\`, \`.xlsx\` or \`.xls\` — not only a statement — or a
+**folder of Markdown notes** (a note a row: its title, file, frontmatter keys and body) onto a
+declared format: it guesses which column is which key, shows you the reader with the file's own header and first value beside
+every key, and reports the rows that would not type **and** what the format itself claims, before a row
+exists. **The user maps the columns and it only guesses**, so show them that
+reader and send \`columns\` to correct it. A key no column fills takes one value for the whole
+file with \`fixed\` — the currency an export is in, the unit it is measured in, or the one row
+every line of it belongs to. **A column fills a \`link\` only by the exact unique name of the row it
+points at**, and a line naming none is refused; a link column is guessed only from a header that
+names it. A note's \`[[name]]\` or \`[text](file.md)\` is read as the title of the note it names. Reading the same file
+twice adds to what it wrote; \`supersede_reading\` takes exactly those rows back and keeps the
+reader, which is how a corrected export replaces a first attempt rather than doubling it.
+**Files that link to each other go in one call** (\`files\`), as do the formats they need
+(\`formats\` on \`declare_format\`). A PDF or a photograph is not a
+spreadsheet — read one yourself and write it with \`record_format_rows\`.`,
+  skill: `**If what they want to track is already in a spreadsheet or a folder of notes, read the file rather
+than retyping it** with \`read_onto_format\` — the \`read-a-file\` skill says how.`,
+}
+
+/** `what-looks-wrong`: what a text document refuses. */
+const WRONG_TEXT: Said = {
+  full: `Nothing is dropped quietly: a bad date or member, a column
+the format has not got, a required one left out, a name used twice or a link to no row refuses
+the whole document with the line and the reason, until it is fixed. So after a round of edits,
+one \`format_problems\` call checks the lot.`,
+  skill: `A value it cannot take refuses the whole
+document until it is fixed — the \`what-looks-wrong\` skill says how to put it right.`,
+}
+
+/** `what-looks-wrong`: what is wrong without a rule anybody wrote. */
+const PROBLEMS: Said = {
+  full: `\`format_problems\` says what is wrong in a format's rows without a rule anybody
+wrote: failed claims, links left empty, rows that repeat.`,
+  skill: `\`format_problems\` says what is wrong (the \`what-looks-wrong\` skill).`,
+}
+
+/** `read-a-file`: what the engine-only block says it is for. */
+const ASK_FOR_THE_FILE: Said = {
+  full: `If they are describing a kind of thing they keep track of — and
+especially if they are keeping it by hand, in a spreadsheet or a folder of notes — ask for the
+file and offer to declare a format for it.`,
+  skill: `If they keep a kind of thing by hand, ask for the
+file — the \`read-a-file\` skill reads it.`,
+}
+
+/** `bring-in-a-plan`: what the development pack keeps. */
+const PACK_KEEPS: Said = {
+  full: `The \`development\` pack keeps them as
+rows: milestones, units, decisions, open questions.`,
+  skill: `The \`development\` pack keeps them as
+rows — the \`bring-in-a-plan\` skill brings a plan in.`,
+}
+
+/** `set-up-a-project`: where the document lives. */
+const TWO_WAYS: Said = {
+  full: `Keep it one of two ways: **stored as text and
+committed** (\`store_document_as\`) — it diffs and merges in git like any file, is in every worktree,
+checkout and cloud session, and reads as Markdown without Emerald; or **one file outside every
+repository**, reached by its absolute path, so every session claims from the same rows (a write
+takes a lock beside the file).`,
+  skill: `It is **stored as text and
+committed** or **one file outside every repository** — the \`set-up-a-project\` skill weighs the two.`,
+}
+
+/** `bring-in-a-plan` (and `closing-pass` for the landing): what a pack is. */
+const PACK: Said = {
+  full: `**A pack is formats somebody already worked out** — \`development\` is a project's memory:
+milestones, units, decisions, open questions, and an inbox another project's session writes to. \`create_document\` takes the \`packs\` a new document
+starts with, and \`keep_packs\` keeps one in a document that exists; offer one before declaring
+its formats by hand. In one, a unit is taken with \`claim_units\` (on a git \`branch\`) and landed with
+\`land_units\` (with its \`commit\` and the builder's \`report\`) — its decisions, review entries and the unit itself in one write;
+a claim a stopped session left in progress is taken over with \`claim_units take_over\`.
+A session run for a manager lands nothing: it proposes its landing as one \`inbox\` row, to the
+document path its hooks printed, and the manager lands them all with \`land_units inbox:[ids]\`.`,
+  skill: `**A pack is formats somebody already worked out** — \`development\` is a project's memory, which
+\`create_document\` (\`packs\`) or \`keep_packs\` adds; the \`bring-in-a-plan\` skill brings a plan into it. A
+unit is taken with \`claim_units\` and landed with \`land_units\` — the \`closing-pass\` skill says how,
+and how a session run for a manager proposes its landing instead.`,
+}
+
+/**
  * The formats half, said once.
  *
  * **Both instruction blocks interpolate this rather than each carrying a
@@ -32,7 +131,7 @@
  * is the drift D-227 was opened for, and prose is where it happens first
  * because nothing compiles it.
  */
-const FORMATS = `## Formats — what this document declares
+const formats = (skills: boolean): string => `## Formats — what this document declares
 
 A document can declare **formats**: kinds of thing the user worked out with a model and wanted
 to stay true. An ingredient, a book, a supplement, a workout — a real typed table with real
@@ -53,10 +152,7 @@ both. Show the dry run and get a yes, the same as everywhere else.
 **While ideas are still moving, write in the text, then check it once.** A document stored as
 text is Markdown: under each format's \`## rows\`, a row is \`### its name\` and a \`column: value\`
 line per field. Edit it with your own file tools — add rows, change values — and the next call
-reads it back and checks every value. Nothing is dropped quietly: a bad date or member, a column
-the format has not got, a required one left out, a name used twice or a link to no row refuses
-the whole document with the line and the reason, until it is fixed. So after a round of edits,
-one \`format_problems\` call checks the lot. A hand edit takes no copy, and the rows have no ids
+reads it back and checks every value. ${skills ? WRONG_TEXT.skill : WRONG_TEXT.full} A hand edit takes no copy, and the rows have no ids
 until read again; edit only while no session is writing to the same document.
 
 **If the user wants to track something the document has no format for, work it out with them and
@@ -80,22 +176,7 @@ its table in the app does, refused naming the rows wherever a value would be los
 is how a recipe comes to total the lines declared after it, and \`delete_format\` removes one no
 other format refers to, with every row in it.
 
-**If what they want to track is already in a spreadsheet, read the file rather than retyping it.**
-\`read_onto_format\` takes any \`.csv\`, \`.xlsx\` or \`.xls\` — not only a statement — or a
-**folder of Markdown notes** (a note a row: its title, file, frontmatter keys and body) onto a
-declared format: it guesses which column is which key, shows you the reader with the file's own header and first value beside
-every key, and reports the rows that would not type **and** what the format itself claims, before a row
-exists. **The user maps the columns and it only guesses**, so show them that
-reader and send \`columns\` to correct it. A key no column fills takes one value for the whole
-file with \`fixed\` — the currency an export is in, the unit it is measured in, or the one row
-every line of it belongs to. **A column fills a \`link\` only by the exact unique name of the row it
-points at**, and a line naming none is refused; a link column is guessed only from a header that
-names it. A note's \`[[name]]\` or \`[text](file.md)\` is read as the title of the note it names. Reading the same file
-twice adds to what it wrote; \`supersede_reading\` takes exactly those rows back and keeps the
-reader, which is how a corrected export replaces a first attempt rather than doubling it.
-**Files that link to each other go in one call** (\`files\`), as do the formats they need
-(\`formats\` on \`declare_format\`). A PDF or a photograph is not a
-spreadsheet — read one yourself and write it with \`record_format_rows\`.
+${skills ? READ_FILE.skill : READ_FILE.full}
 
 **A figure in a declared column is in something, and the document says what.** \`formats\` ends
 with the units it knows, grouped by what they measure. A claim converts with \`in\` —
@@ -107,8 +188,7 @@ asking rather than working around.
 
 **What else a document does, all from here.** \`declare_format\` takes rule sets — rows of one
 format that set a link of another when a column matches — and \`apply_rules\` runs them over rows
-already there. \`format_problems\` says what is wrong in a format's rows without a rule anybody
-wrote: failed claims, links left empty, rows that repeat. \`search_document\` finds words in every
+already there. ${skills ? PROBLEMS.skill : PROBLEMS.full} \`search_document\` finds words in every
 format at once. \`show_format\` draws a format as a table, a board or a roadmap, and the agenda of
 everything dated. A PDF or a photograph is yours to read: write what it says with
 \`record_format_rows\`.`.trim()
@@ -156,17 +236,12 @@ count or reason over**, and draws nothing.`.trim()
  * `store_document_as` (text), the lock in `write.ts`, `elsewhere.ts` and
  * `land_units inbox`. The head is full, so this is the next thing read.
  */
-const PLANNING = `## A project's development planning
+const planning = (skills: boolean): string => `## A project's development planning
 
 **A team's development planning belongs here — the part nobody owns.** Git keeps the code and an
 issue tracker the tickets; the plans between them — a \`PLAN.md\`, a roadmap in notes, a memory file
-each session rewrites — drift, because nothing checks them. The \`development\` pack keeps them as
-rows: milestones, units, decisions, open questions. **One document holds the work of several
-repositories**, never a document per repository. Keep it one of two ways: **stored as text and
-committed** (\`store_document_as\`) — it diffs and merges in git like any file, is in every worktree,
-checkout and cloud session, and reads as Markdown without Emerald; or **one file outside every
-repository**, reached by its absolute path, so every session claims from the same rows (a write
-takes a lock beside the file). **Documents talk**: a session writes a row into another document's
+each session rewrites — drift, because nothing checks them. ${skills ? PACK_KEEPS.skill : PACK_KEEPS.full} **One document holds the work of several
+repositories**, never a document per repository. ${skills ? TWO_WAYS.skill : TWO_WAYS.full} **Documents talk**: a session writes a row into another document's
 \`inbox\`, and an \`elsewhere\` column names a row in another document by its path and name and reads
 its state each time — \`unit S1 U5 · built\` — though nothing enforces it. **Parallel sessions land
 through one driver**: a session in a worktree proposes its landing as an \`inbox\` row in the main
@@ -180,7 +255,7 @@ costs: a write goes through this server, and a one-line fix may not need a unit.
  * about anything else had nowhere to begin: a stranger with a spreadsheet of
  * books read four paragraphs about card issuers first.
  */
-const START = `## Where to start
+const start = (skills: boolean): string => `## Where to start
 
 **Begin from the document.** \`start_here\` answers what this document's own views say a
 session begins from, when it declares any. Otherwise, begin with \`formats\`, which says what the
@@ -188,16 +263,9 @@ document declares; then \`read_onto_format\` for any \`.csv\` or \`.xlsx\` the u
 not only a statement — or \`declare_format\` for a kind of thing it has no format for. The Formats
 section below is the whole of that half.
 
-**A pack is formats somebody already worked out** — \`development\` is a project's memory:
-milestones, units, decisions, open questions, and an inbox another project's session writes to. \`create_document\` takes the \`packs\` a new document
-starts with, and \`keep_packs\` keeps one in a document that exists; offer one before declaring
-its formats by hand. In one, a unit is taken with \`claim_units\` (on a git \`branch\`) and landed with
-\`land_units\` (with its \`commit\` and the builder's \`report\`) — its decisions, review entries and the unit itself in one write;
-a claim a stopped session left in progress is taken over with \`claim_units take_over\`.
-A session run for a manager lands nothing: it proposes its landing as one \`inbox\` row, to the
-document path its hooks printed, and the manager lands them all with \`land_units inbox:[ids]\`.`.trim()
+${skills ? PACK.skill : PACK.full}`.trim()
 
-export const SERVER_INSTRUCTIONS = `
+export const serverInstructions = (skills = false): string => `
 # Emerald
 
 **Emerald is a document a person and a model work in** — a file on this machine; no account, no
@@ -212,7 +280,7 @@ worked out, each optional: \`development\` for a project's memory, \`ledger\` fo
 
 ${SHOW}
 
-${PLANNING}
+${planning(skills)}
 
 ## What you are for
 
@@ -231,7 +299,7 @@ only one. Free prose gains least: keep it as files, read it as a body column, or
 note. Weigh what it costs them, never whether Emerald is meant for it — it is meant for any kind of
 thing.
 
-${START}
+${start(skills)}
 
 ## How to work
 
@@ -264,7 +332,7 @@ ${START}
 - The user's own answers outrank anything you infer. If one looks wrong, say so; do not correct
   it.
 
-${FORMATS}
+${formats(skills)}
 
 ## The ledger — when the work is their finances
 
@@ -398,7 +466,7 @@ list and dry-runs until \`commit: true\`, like \`assign_category\`. Row ids come
  * **It names no tool this mode does not offer**, which is the rule the whole
  * file lives under (D-104, D-109) and what `server.test.ts` pins.
  */
-export const ENGINE_INSTRUCTIONS = `
+export const engineInstructions = (skills = false): string => `
 # Emerald
 
 **Emerald is a document a person and a model work in** — a file on this machine; no account, no
@@ -413,14 +481,12 @@ worked out, each optional: \`development\` for a project's memory, \`ledger\` fo
 
 ${SHOW}
 
-${PLANNING}
+${planning(skills)}
 
 ## What you are for
 
 **A document is worth exactly what has been put into it, and the user will not think to offer
-files you do not ask for.** If they are describing a kind of thing they keep track of — and
-especially if they are keeping it by hand, in a spreadsheet or a folder of notes — ask for the
-file and offer to declare a format for it. That is the job.
+files you do not ask for.** ${skills ? ASK_FOR_THE_FILE.skill : ASK_FOR_THE_FILE.full} That is the job.
 
 **When a person asks whether something belongs here, answer about the thing — never about
 numbers.** Whatever has a repeated shape belongs: tasks, meetings, people, projects, decisions, bugs.
@@ -431,7 +497,7 @@ only one. Free prose gains least: keep it as files, read it as a body column, or
 note. Weigh what it costs them, never whether Emerald is meant for it — it is meant for any kind of
 thing.
 
-${START}
+${start(skills)}
 
 ## How to work
 
@@ -456,7 +522,7 @@ ${START}
   machine is what you put in this conversation.
 - Money is minor units plus a currency. Dates are \`YYYY-MM-DD\`; a month is \`YYYY-MM\`.
 
-${FORMATS}
+${formats(skills)}
 
 ## Not here
 
@@ -474,3 +540,16 @@ what to open; do not improvise something else in its place.
 **The ledger pack's own tools** — statements, paychecks, funds, debts and savings — are not
 offered in this mode; the server started without \`--engine-only\` carries them.
 `.trim()
+
+/** What the server says started without `--engine-only`: every client's full text. */
+export const SERVER_INSTRUCTIONS = serverInstructions()
+
+/** What it says started `--engine-only` by any client but the plugin. */
+export const ENGINE_INSTRUCTIONS = engineInstructions()
+
+/**
+ * What it says started by the plugin, `--engine-only --skills` (M56 U5, D-552):
+ * the same block, with each how-to a plugin skill carries said as one line
+ * naming the skill.
+ */
+export const PLUGIN_INSTRUCTIONS = engineInstructions(true)
