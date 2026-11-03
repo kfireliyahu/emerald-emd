@@ -123,7 +123,7 @@ const HELD_ELSEWHERE = [
   'group/edge absolute top-0 -right-1 z-10 flex h-full w-2 cursor-ew-resize',
   'group/edge absolute -bottom-1 left-0 z-10 flex h-2 w-full cursor-ns-resize',
   // A rail folder's filter: its label turns its rule `accent` on focus-within (M54 U4).
-  'w-full min-w-0 border-0 bg-transparent p-0 text-caption text-ink outline-none placeholder:text-ink-tertiary',
+  'w-full min-w-0 border-0 bg-transparent p-0 text-caption text-ink outline-none placeholder:text-ink-secondary',
   // A rail entry being renamed: the field exists only while it has focus, and its rule is `accent` throughout.
   'h-6 w-full min-w-0 border-0 border-b border-accent bg-transparent p-0 text-caption text-ink outline-none',
   // A saved view's tab being renamed (M54 F2): as the rail's, its rule is `accent` throughout.
