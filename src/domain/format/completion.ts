@@ -17,6 +17,7 @@
  * anything else.
  */
 
+import { clockRange, parseClockWords } from './clock.ts'
 import type { ColumnType } from './declaration.ts'
 import { formatStoredPercent, readPercent } from './percent.ts'
 import { parseTime } from './span.ts'
@@ -38,10 +39,10 @@ export interface Completion {
  * field, a text that will be refused (the refusal is the sentence's, on write),
  * or a text that is already the kept form.
  */
-export function completionOf(type: ColumnType, typed: string): Completion | undefined {
+export function completionOf(type: ColumnType, typed: string, today?: string): Completion | undefined {
   const text = typed.trim()
   if (text === '') return undefined
-  const kept = keptAs(type, text)
+  const kept = keptAs(type, text, today)
   if (kept === undefined || kept === text) return undefined
   return { kept, rest: kept.startsWith(text) ? kept.slice(text.length) : undefined }
 }
@@ -51,11 +52,27 @@ export function completionOf(type: ColumnType, typed: string): Completion | unde
  * and the text as it was when it does not — a refused figure is left for its
  * sentence to name, never cleared or guessed at.
  */
-export function settledText(type: ColumnType, typed: string): string {
-  return completionOf(type, typed)?.kept ?? typed
+export function settledText(type: ColumnType, typed: string, today?: string): string {
+  return completionOf(type, typed, today)?.kept ?? typed
 }
 
-function keptAs(type: ColumnType, text: string): string | undefined {
+/**
+ * **A date typed as a word that names one day** — M55 U5, D-545: `today`,
+ * `yesterday` or `tomorrow`, worked out against `today` (`YYYY-MM-DD`), the
+ * words a date's default may already be (D-536). Nothing for any other text:
+ * a date is otherwise typed as `YYYY-MM-DD`, and anything else is refused by
+ * its sentence on write.
+ */
+export function dayOfWord(text: string, today: string): string | undefined {
+  const window = parseClockWords(text.trim())
+  if (window === undefined || !ONE_DAY.has(window.kind)) return undefined
+  return clockRange(window, today)?.from
+}
+
+const ONE_DAY: ReadonlySet<string> = new Set(['TODAY', 'YESTERDAY', 'TOMORROW'])
+
+function keptAs(type: ColumnType, text: string, today: string | undefined): string | undefined {
+  if (type === 'date') return today === undefined ? undefined : dayOfWord(text, today)
   if (type === 'percent') {
     const read = readPercent(text)
     return read.ok ? formatStoredPercent(read.value) : undefined

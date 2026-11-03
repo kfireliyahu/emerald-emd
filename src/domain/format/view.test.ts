@@ -245,6 +245,18 @@ describe('what an entry draws, and its Empty line (M53 U3, D-518)', () => {
     expect(withArticle('estimate')).toBe('an estimate')
   })
 
+  it('picks a or an by the sound, not the first letter (M55 U5)', () => {
+    expect(withArticle('unit')).toBe('a unit')
+    expect(withArticle('user')).toBe('a user')
+    expect(withArticle('one-off')).toBe('a one-off')
+    expect(withArticle('euro payment')).toBe('a euro payment')
+    expect(withArticle('hour')).toBe('an hour')
+    expect(withArticle('umbrella')).toBe('an umbrella')
+    expect(withArticle('uninvited guest')).toBe('an uninvited guest')
+    expect(withArticle('card charge')).toBe('a card charge')
+    expect(entryNeeds('Unit', columns, (name) => name === 'state')).toBe('A unit needs a title.')
+  })
+
   it('starts only a required enum at its first member, and never one something implies', () => {
     expect(entryDefaults(columns)).toEqual({ state: 'inbox' })
     expect(entryDefaults(columns, new Set(['state']))).toEqual({})

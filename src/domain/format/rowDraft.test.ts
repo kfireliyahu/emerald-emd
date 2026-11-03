@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import { column, type FormatDeclaration } from './declaration.ts'
-import { coerceRow, readValue, type StoredRow } from './row.ts'
+import { completionOf, dayOfWord, settledText } from './completion.ts'
+import { coerceProblems, coerceRow, readValue, type StoredRow } from './row.ts'
 import { blankDraft, draftOfOffered, draftOfRow, isEmpty, offeredOf, withField } from './rowDraft.ts'
 
 /**
@@ -239,5 +240,38 @@ describe('a line a read refused, opened in the Add (M55 U9)', () => {
     const draft = { ...blankDraft(THING), ...draftOfOffered(THING, { label: 'Salt', price_currency: 'ILS' }), price: '12.90' }
     const coerced = coerceRow(THING, offeredOf(THING, draft))
     expect(coerced.ok).toBe(true)
+  })
+})
+
+describe('a date typed as a word, and every problem at once (M55 U5)', () => {
+  const CHARGE: FormatDeclaration = {
+    ...declaring(column('date', 'date', { required: true }), column('merchant', 'text', { required: true }), column('amount', 'money')),
+    name: 'charge',
+    title: 'Card charge',
+  }
+
+  it('reads today, yesterday and tomorrow as the day each names, and nothing else', () => {
+    expect(dayOfWord('tomorrow', '2026-11-03')).toBe('2026-11-04')
+    expect(dayOfWord(' Yesterday ', '2026-11-01')).toBe('2026-10-31')
+    expect(dayOfWord('today', '2026-11-03')).toBe('2026-11-03')
+    expect(dayOfWord('this week', '2026-11-03')).toBeUndefined()
+    expect(dayOfWord('soon', '2026-11-03')).toBeUndefined()
+    expect(completionOf('date', 'tomorrow', '2026-11-03')).toEqual({ kept: '2026-11-04', rest: undefined })
+    expect(settledText('date', 'tomorrow')).toBe('tomorrow')
+    expect(settledText('date', '2026-09-03', '2026-11-03')).toBe('2026-09-03')
+  })
+
+  it('offers a date word as its day when today is given, and leaves every other column as typed', () => {
+    const offered = offeredOf(CHARGE, { date: 'tomorrow', merchant: 'today', amount: '' }, '2026-11-03')
+    expect(offered['date']).toBe('2026-11-04')
+    expect(offered['merchant']).toBe('today')
+    expect(offeredOf(CHARGE, { date: 'tomorrow', merchant: 'x', amount: '' })['date']).toBe('tomorrow')
+  })
+
+  it('names every column a row gets wrong, not the first', () => {
+    const problems = coerceProblems(CHARGE, { date: '', merchant: '', amount: 'abc', amount_currency: 'ILS' })
+    expect(problems.map((each) => each.column)).toEqual(['date', 'merchant', 'amount'])
+    expect(coerceProblems(CHARGE, { date: '2026-11-03', merchant: 'Shop', amount: '' })).toEqual([])
+    expect(coerceProblems(CHARGE, { nope: 'x' })).toEqual([{ column: undefined, reason: expect.any(String) }])
   })
 })

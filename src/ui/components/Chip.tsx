@@ -15,7 +15,7 @@ export function Chip({ children, problem = false }: { children: ReactNode; probl
   return (
     <span
       className={`flex items-center gap-1.5 text-caption ${
-        problem ? 'text-negative' : 'text-ink-tertiary'
+        problem ? 'text-negative' : 'text-ink-secondary'
       }`}
     >
       <span

@@ -226,7 +226,7 @@ export function CommandPalette({ onImportStatement }: { onImportStatement: () =>
           aria-autocomplete="list"
           aria-controls="command-list"
           aria-activedescendant={items[selected] === undefined ? undefined : `command-${selected}`}
-          className="shrink-0 border-b border-hairline bg-transparent px-4 py-3 text-body outline-none placeholder:text-ink-tertiary focus:border-accent"
+          className="shrink-0 border-b border-hairline bg-transparent px-4 py-3 text-body outline-none placeholder:text-ink-secondary focus:border-accent"
         />
 
         <div ref={list} className="min-h-0 flex-1 overflow-y-auto py-1">

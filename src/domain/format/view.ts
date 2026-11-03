@@ -673,9 +673,23 @@ export function entryLabel(column: { readonly name: string; readonly unit?: stri
   return bare.replace(/_/g, ' ')
 }
 
-/** A word with the article a sentence on the screen puts before it: "a task", "an ingredient". */
+/**
+ * A word with the article a sentence on the screen puts before it: "a task",
+ * "an ingredient" — **by the word's sound, not its first letter** (M55 U5,
+ * D-545): "a unit", "a user", "a one-off", "an hour", "an honest guess".
+ */
 export function withArticle(word: string): string {
-  return `${/^[aeiou]/i.test(word) ? 'an' : 'a'} ${word}`
+  return `${soundsLikeAVowel(word) ? 'an' : 'a'} ${word}`
+}
+
+/** Whether a word is said starting with a vowel sound — the English rule, with its usual exceptions. */
+function soundsLikeAVowel(word: string): boolean {
+  const said = word.trim().toLowerCase()
+  // A silent h: hour, honest, honour, heir.
+  if (/^(hour|honest|honou?r|heir)/.test(said)) return true
+  // A "you" or a "w" sound under a vowel: unit, use, usual, utility, euro, one, once.
+  if (/^(uni(?!n|mp|d)|use|usu|uti|ure|uro|eu|ewe|one(?!r)|once|uk\b|ufo)/.test(said)) return false
+  return /^[aeiou]/.test(said)
 }
 
 /**
@@ -730,10 +744,24 @@ export function entryNeeds(
   columns: readonly { readonly name: string; readonly unit?: string | undefined; readonly required: boolean }[],
   holds: (name: string) => boolean,
 ): string | undefined {
-  const missing = columns.find((column) => column.required && !holds(column.name))
-  if (missing === undefined) return undefined
+  return entryNeedsEach(one, columns, holds)[0]?.reason
+}
+
+/**
+ * **Every required column a new entry still lacks, each with its sentence** —
+ * M55 U5, D-545: a refusal sits at its field and every problem is said at
+ * once, so the form names each one rather than the first.
+ */
+export function entryNeedsEach(
+  one: string,
+  columns: readonly { readonly name: string; readonly unit?: string | undefined; readonly required: boolean }[],
+  holds: (name: string) => boolean,
+): readonly { readonly column: string; readonly reason: string }[] {
   const subject = withArticle(one.toLowerCase())
-  return `${subject.charAt(0).toUpperCase()}${subject.slice(1)} needs ${withArticle(entryLabel(missing))}.`
+  const sentence = `${subject.charAt(0).toUpperCase()}${subject.slice(1)} needs`
+  return columns
+    .filter((column) => column.required && !holds(column.name))
+    .map((column) => ({ column: column.name, reason: `${sentence} ${withArticle(entryLabel(column))}.` }))
 }
 
 /** What the entry draws of a layout, and what its foot offers — `entryShown`. */

@@ -23,9 +23,8 @@ import { newId } from '@/core/id.ts'
 import { isLinkType, type FormatDeclaration } from '@/domain/format/declaration.ts'
 import {
   brokenConstraints,
+  coerceProblems,
   coerceRow,
-  coerceValue,
-  companionKeyOf,
   selfLinks,
   type StoredValue,
 } from '@/domain/format/row.ts'
@@ -91,7 +90,9 @@ export function stageRows(
     const row = byColumns.value
     const coerced = coerceRow(declaration, row, units)
     if (coerced.ok) typed.push({ index, cells: coerced.value })
-    else refusals.push({ index, column: failingColumn(declaration, row, units), reason: coerced.error })
+    // **Every cell it refuses, at once** (M55 U5, D-545): a row with an empty
+    // date and "abc" for an amount is two refusals, never one and then another.
+    else for (const problem of coerceProblems(declaration, row, units)) refusals.push({ index, ...problem })
   })
 
   const ids = typed.map(() => newId())
@@ -176,28 +177,4 @@ export function stageRows(
 
   refusals.sort((a, b) => a.index - b.index)
   return { accepted, refusals }
-}
-
-/**
- * The column `coerceRow` stopped at, found by asking each one alone — the same
- * `coerceValue` it runs, in the same order, so the first to refuse is the one
- * its sentence is about. An unknown key refuses before any column is asked, and
- * names none.
- */
-function failingColumn(
-  declaration: FormatDeclaration,
-  row: Readonly<Record<string, unknown>>,
-  units: ReturnType<typeof listUnits>,
-): string | undefined {
-  for (const column of declaration.columns) {
-    const companion = companionKeyOf(column)
-    const one = coerceValue(
-      column,
-      row[column.name],
-      companion === undefined ? undefined : row[companion],
-      units,
-    )
-    if (!one.ok) return column.name
-  }
-  return undefined
 }

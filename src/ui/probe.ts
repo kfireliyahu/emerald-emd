@@ -253,7 +253,10 @@ function measure(root: Element, ramp: readonly number[], limit: number): Omit<Pr
     placeholderOnly: listed(placeholderOnly, limit),
     roundedFields: listed(roundedFields, limit),
     platformSelects: [...root.querySelectorAll('select')].filter(visible).length,
-    nativeDates: [...root.querySelectorAll('input[type=date], input[type=datetime-local], input[type=month]')].filter(visible).length,
+    // A field a person types in, not `NativePicker`'s hidden calendar under a
+    // text field — aria-hidden and never focused — which opens on a click (M55 U5).
+    nativeDates: [...root.querySelectorAll('input[type=date], input[type=datetime-local], input[type=month]')]
+      .filter((el) => visible(el) && el.closest('[aria-hidden="true"]') === null).length,
     pageOverflowsX: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
   }
 }

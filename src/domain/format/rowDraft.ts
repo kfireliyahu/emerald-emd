@@ -39,6 +39,7 @@ import {
   readValue,
   type StoredRow,
 } from './row.ts'
+import { dayOfWord } from './completion.ts'
 import { stringListOf } from './stringList.ts'
 
 /**
@@ -136,16 +137,21 @@ function fieldText(column: ColumnDeclaration, value: ReturnType<typeof readValue
  * is for.
  *
  * So: a companion is offered only when the figure beside it is. Nothing else is
- * touched, and in particular nothing is trimmed, normalised or guessed — what
- * goes to the engine is what is in the fields.
+ * touched but a date typed as a one-day word, given `today` (M55 U5), and in
+ * particular nothing is trimmed, normalised or guessed — what goes to the
+ * engine is what is in the fields.
  */
 export function offeredOf(
   declaration: FormatDeclaration,
   draft: RowDraft,
+  today?: string,
 ): Readonly<Record<string, string | readonly string[]>> {
   const offered: Record<string, string | readonly string[]> = {}
   for (const column of declaration.columns) {
-    const value = draft[column.name] ?? ''
+    const typed = draft[column.name] ?? ''
+    // **A date typed as a word is the day it names** (M55 U5, D-545), given
+    // today: `tomorrow` in a cell or on the form is offered as its date.
+    const value = column.type === 'date' && today !== undefined ? (dayOfWord(typed, today) ?? typed) : typed
     // A list is offered as one (M27 U2, D-300): the members a form picked, or
     // the one name typed or pasted into it, which resolves like any other.
     offered[column.name] = isListType(column.type) ? (membersOfDraft(value) ?? value) : value

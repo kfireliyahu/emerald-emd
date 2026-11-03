@@ -193,7 +193,7 @@ export function RailFolder({
                 }}
                 placeholder={`Filter ${folder.total}`}
                 aria-label={`Filter ${child.label}`}
-                className="w-full min-w-0 border-0 bg-transparent p-0 text-caption text-ink outline-none placeholder:text-ink-tertiary"
+                className="w-full min-w-0 border-0 bg-transparent p-0 text-caption text-ink outline-none placeholder:text-ink-secondary"
               />
             </label>
           )}

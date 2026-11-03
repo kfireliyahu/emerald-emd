@@ -46,7 +46,13 @@ const BLANK = Object.fromEntries(TASK.columns.map((each) => [each.name, '']))
 
 function page(
   draft: Readonly<Record<string, string>>,
-  options: { existing?: string; hidden?: readonly string[]; asked?: readonly string[]; locked?: string } = {},
+  options: {
+    existing?: string
+    hidden?: readonly string[]
+    asked?: readonly string[]
+    locked?: string
+    refused?: readonly { column: string; text: string }[]
+  } = {},
 ): string {
   return renderToStaticMarkup(
     createElement(EntryView, {
@@ -65,8 +71,8 @@ function page(
       oneUnit: new Map(),
       linked: new Map(),
       today: '2026-10-22',
-      problem: options.existing === undefined ? 'A task needs a title.' : undefined,
-      refused: undefined,
+      problems: options.existing === undefined ? [{ column: 'title', reason: 'A task needs a title.' }] : [],
+      refused: options.refused,
       inputs: undefined,
       verdicts: [],
       aggregates: [],
@@ -174,5 +180,28 @@ describe('a new entry asks for what is needed (M53 U3)', () => {
     const markup = page(fresh, { asked: ['due'], hidden: ['due'] })
     expect(fields(markup)).toEqual(['title', 'state'])
     expect(markup).toContain('>1 hidden<')
+  })
+})
+
+describe('a refusal sits at its field, and a date is typed as the table writes it (M55 U5)', () => {
+  it('says every refused field at its own, outlined, and leaves the others alone', () => {
+    const markup = page(FILLED, {
+      existing: 'r1',
+      refused: [
+        { column: 'due', text: 'due must be YYYY-MM-DD.' },
+        { column: 'estimate_h', text: 'estimate_h must be a number.' },
+      ],
+    })
+    const at = (name: string): string => markup.slice(markup.indexOf(`data-field="${name}"`), markup.indexOf('</section>', markup.indexOf(`data-field="${name}"`)))
+    expect(at('due')).toContain('due must be YYYY-MM-DD.')
+    expect(at('estimate_h')).toContain('estimate_h must be a number.')
+    expect(markup).toMatch(/class="[^"]*fc-problem[^"]*"[^>]*data-field="due"/)
+    expect(at('title')).not.toContain('text-negative')
+  })
+
+  it('draws a date as text holding the ISO day, never the platform’s mm/dd/yyyy field', () => {
+    const markup = page({ ...FILLED, started: '2026-09-03' }, { existing: 'r1' })
+    expect(markup).not.toMatch(/type="date"[^>]*aria-label="started"|aria-label="started"[^>]*type="date"/)
+    expect(markup).toMatch(/<input[^>]*aria-label="started"[^>]*value="2026-09-03"/)
   })
 })

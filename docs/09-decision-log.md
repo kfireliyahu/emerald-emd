@@ -458,6 +458,7 @@ written out here.
 | D-543 | 2026-11-03 | A newcomer's four skills are the plugin's alone, each named for what a person does — `read-a-file`, `what-looks-wrong`, `bring-in-a-plan`, `set-up-a-project` — and setting a project up is a skill of its own beside `emerald-setup`, which fires only where a session has no Emerald tools at all | [below](#d-543) |
 | D-536 | 2026-11-03 | An input view's default mark is a column of `format_saved_view` with a partial unique index (066), on an input view alone; a new row's defaults are one rule, `entryDefaults` — the default input view's, over the address's exact values, over a required enum's first member — read by the table's blank row, entry/new and quick add; a money or quantity default is written `12.90 ILS`; `record_format_rows view:` fills only the keys a row leaves out; `format_rows` refuses an input view; until M55 U3's form, an input view opens a new entry with its address | [below](#d-536) |
 | D-541 | 2026-11-03 | The project pane is a hooks module in the emerald plugin (`hosts/claude/mod/`); it reads only `start_here` and `show_format`, and because Claude Code puts a plugin's `$.mcp.call` to the person's permission check and lets no module allow its own calls, it reads unasked only where `$.tool.check` says the person's rules allow it — `npx emerald-mcp init` writes those two allow rules into the project's `.claude/settings.json` — and otherwise holds a *Read* button whose press raises the dialog; it reads from a timer, never while drawing; `npm run test:mod` runs `claude plugin test` on a copy of the plugin without its Vitest files | [below](#d-541) |
+| D-545 | 2026-11-03 | An entry's refusal sits at its field and says every problem at once — on the form, under each field, outlined and `aria-invalid`, the first focused; in the table's blank row, in a line under the row, each sentence in its own column — and a link left with a name no row holds keeps it, so Add names it; a date is typed as `YYYY-MM-DD` or `today`, `yesterday`, `tomorrow` in the cell and on the form alike, a text field over the platform's calendar; *a* or *an* goes by the word's sound; a placeholder is `ink-secondary` | [below](#d-545) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1085,6 +1086,48 @@ this dashboard*). A filled Add on a dashboard block (several blocks would be sev
 **Consequences.** U3 and U4 carry the picks as SETTLED. Four term rows become false when those land
 and are theirs to correct: *Re-apply* ("the only undoable action"), *Saved view*'s kinds, *Block*'s
 three kinds, *Add a task · values*. A pick the maintainer changes is a fix unit.
+
+## D-545 · 2026-11-03 · An entry's refusal sits at its field and says every problem at once — on the form, under each field, outlined and `aria-invalid`, the first focused; in the table's blank row, in a line under the row, each sentence in its own column — and a link left with a name no row holds keeps it, so Add names it; a date is typed as `YYYY-MM-DD` or `today`, `yesterday`, `tomorrow` in the cell and on the form alike, a text field over the platform's calendar; *a* or *an* goes by the word's sound; a placeholder is `ink-secondary` <a id="d-545"></a>
+
+**Context.** M54 U1's *Entry:* rows on entering a row (D-533 brought them into M55; D-534 put them in
+U5): `abc` in a card charge's amount with no date took three rounds — the table said one problem at
+the page's foot and outlined one cell, the form said one in its footer and marked no field; a unit
+given milestone `M9` was told *An unit needs a milestone.* — false, and with the wrong article; a date
+was a native mm/dd/yyyy field on the form and ISO-only in the cell; placeholders read at 2.6:1. M54 F2
+(de87c49) had already made the *needed* mark and quick add's label `ink-secondary`.
+
+**Decision.**
+
+- **Every problem at once.** `coerceProblems` (row.ts) names every column `coerceRow` would refuse;
+  `stageRows` returns one refusal per refused cell, so the table, a paste and `record_format_rows` say
+  them all. The form's `judgeEntry` collects every needed field (`entryNeedsEach`), every refused
+  value, every link that names no row (asked alone even when another column fails), the rules', the
+  repeats', the constraints' and the table's own word, one sentence a field.
+- **At the field.** The form draws each sentence under its field, outlines the field in `negative`
+  (`.fc-problem`), sets `aria-invalid` and `aria-describedby` on its control, and focuses the first on
+  Add; its foot says *Not added: N fields to put right.* and anything about the row as a whole. The
+  table outlines each refused cell and draws a line under the row with each sentence in its column; the
+  status line counts them. A sentence said at its field drops the field's name in front of it.
+- **A link field keeps a name typed and left**, as Enter did, so Add says *No milestone is called "M9".*
+  A value no row holds stays a field, never a link to nothing.
+- **Dates.** `dayOfWord` (completion.ts) reads `today`, `yesterday`, `tomorrow`; the cell and the
+  form show the day while it is typed and become it when left, and `offeredOf` with today offers the
+  day. The form's date and month are the time field's text field and hidden calendar, so the entry page
+  shows `2026-09-03` as the table does. `probe:screens` no longer counts that hidden calendar.
+- **Words and contrast.** `withArticle` goes by sound (*a unit*, *a one-off*, *an hour*). A placeholder is
+  `ink-secondary` in the base layer; a chip's text, the sheet's row numbers, *No readers yet*, *Claims*
+  and a new entry's draft line in the list are too.
+
+**Alternatives rejected.** The table's sentences only in its status line, each naming its row and
+column: that is the page's bottom-left the review found. A tooltip on the cell: not seen until pointed
+at, and never read by a screen reader. Dropping the calendar under a date field: M29 F2 asked for it, and
+it was never what showed mm/dd/yyyy. The engine's sentence *date is required and was not given.* in
+the cell, against *A card charge needs a date.* on the form, was left: rewording the engine's
+refusals is beyond this unit.
+
+**Consequences.** A conversation's `record_format_rows` now lists every refused cell of a row. A date
+word is the screen's; the tools still take `YYYY-MM-DD` for a date and a word only as an input view's
+default (D-536).
 
 ## D-540 · 2026-11-03 · A line a read refused offers Add by hand: the format's Add opens with what the line held, the read is kept for the window's life while it is away, the Add goes back to the read, and the read counts the line added by hand; a row the mapper could not read is skipped from that read only — counted as skipped in the mapper and on Read files, never written, never kept in the reader, and taken back by Put back or by a mapping that reads it <a id="d-540"></a>
 
