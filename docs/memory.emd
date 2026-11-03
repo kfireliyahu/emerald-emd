@@ -4521,6 +4521,15 @@ question: D-533 settled what an input view is; how does it look, how is it made 
 answer: The unit's picks, marked with a triangle in docs/mockups/m55-u1/brief.md and judged by the maintainer after through M55 U1's open review entry. A page where entry/new opens, beside the format's list, at its own address, never a tab. Fields in one wrapping row of labelled fields; entry/new's footer bar with Add and 'Adds as account Visa · date today'; 'Just added' under it, the visit's rows newest first, each with 'Undo' (deletes it; refused at its line when another row links to it); Enter adds; the header's Add hidden while the form shows. The format's + at the end of its tab strip: New input view, New view, New chart. A new input view is a draft asking the required columns, named after the format, Fields open with Ask and Default columns; 'Use for Add' marks the one Add opens, captioned 'Add' in the rail and the bar. In the rail input views come first, glyph 'input'. A dashboard block is the form with a secondary Add, stacked at one column and wrapping wider. Quick add with a view used for Add shows its asked fields inline, labelled, crossed with Tab; a group's value wins. Rejected: a tab; per-field menus (9 clicks against 6); a one-item +; 'Form'; 'Default' as the mark; 'Remove' for undo; a filled Add on a block.
 state: live
 
+### D-538
+date: 2026-11-03
+milestone: M55
+scope: app
+title: A date, a month and an amount read as the table writes them on a dashboard's blocks, a list, a rollup's table and its chart; a rollup reads in words, the declaration keeping its name
+question: How does a date, a month, an amount and a rollup's name read off the table — on a block, a list, a rollup's table and chart, the filter band?
+answer: As the table writes them: 2026-07-27, 2026-09, ₪60.00 (valueText, rollupChart, the band's amountAsWritten). A rollup's name reads through rollupWords (landed_by_month is Landed by month) and what it counts through rollupSentence, on screen and in show_format's dashboard line; the declaration and tools keep the name. The agenda's day headings and a list's relative due stay words; the entry page is U5's.
+state: live
+
 ### D-540
 date: 2026-11-03
 milestone: M55
@@ -5615,6 +5624,15 @@ refs: M53 U6
 state: applied
 answered_by: D-516
 became_unit: M53 U6
+
+### M55 U7 built: land it
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-03
+body: "M55 U7 is built on worktree-agent-aa1b32fc3f91155ec at 9910919: New chart asks once at By month of, a rollup reads in words, Add is one word, and a date, a month and money read as the table writes them (D-538).\n\n```json\n{\"unit\":\"M55 U7\",\"files\":\"src/ui/formats/MakeBlock.tsx, src/ui/formats/madeInPlace.ts (PERIOD_UNSAID), src/ui/formats/dashboard.ts (rollupWords, rollupSentence, blockTitle, blockWhat), src/ui/formats/Dashboard.tsx, src/ui/formats/RollupView.tsx, src/ui/formats/rollupChart.ts, src/ui/formats/entryList.ts (valueText), src/ui/formats/listView.ts, src/ui/formats/FilterBand.tsx (amountAsWritten), src/domain/format/figureRange.ts, src/ui/RailFolder.tsx, src/ui/screens/FormatRows.tsx, src/ui/screens/FormatLinkViews.tsx, src/ui/formats/madeInPlace.test.ts, src/ui/formats/FilterBand.test.ts, src/ui/formats/rollupChart.test.ts, src/ui/formats/listView.test.ts, src/plugin/tools/dashboard.test.ts, docs/09-decision-log.md\",\"commit\":\"9910919\",\"branch\":\"worktree-agent-aa1b32fc3f91155ec\",\"decisions\":[{\"ref\":\"D-538\",\"title\":\"A date, a month and an amount read as the table writes them on a dashboard's blocks, a list, a rollup's table and its chart; a rollup reads in words, the declaration keeping its name\",\"question\":\"How does a date, a month, an amount and a rollup's name read off the table — on a block, a list, a rollup's table and chart, the filter band?\",\"answer\":\"As the table writes them: 2026-07-27, 2026-09, ₪60.00 (valueText, rollupChart, the band's amountAsWritten). A rollup's name reads through rollupWords (landed_by_month is Landed by month) and what it counts through rollupSentence, on screen and in show_format's dashboard line; the declaration and tools keep the name. The agenda's day headings and a list's relative due stay words; the entry page is U5's.\"}],\"review_entries\":[{\"do\":\"Demo, project.emd, #/dashboard → Add a block → New chart → Of Unit, name Landed by month, Add without a date; then pick landed and Add. Read the block, Add a block, the rail, Unit's tabs and the chart's tab.\",\"should\":\"The refusal shows once, under By month of. Everywhere the chart reads Landed by month, with Count of units by month of landed under it; months read 2026-09 in the chart and its table; both menus' acts are Add. Wrong would be: landed_by_month anywhere on screen, mono rollup text, or Sep 2026 on the axis. Also the maintainer's to judge: ISO dates in list lines and dashboard blocks replace the words D-518's mockup had (Sun 26 Jul 2026).\"}]}\n```"
+refs: M55 U7
+state: applied
+answered_by: D-538
+became_unit: M55 U7
 
 ### M55 U9 ready to land: a refused line is added by hand from the read, and the mapper's failed row is skipped (D-540)
 from: F:/projects/emerald/docs/memory.emd
@@ -6877,6 +6895,11 @@ unit: M54 U2
 should: Focus moves into the menu, the arrows move through it, Esc closes it and returns focus to ⋯ (Keyboard first; WAI-ARIA menu pattern).
 breaks: Focus stays on ⋯ and Escape leaves the menu open; Tab closes it and lands on the width handle, so Open in full, Move earlier, Move later and Remove from this dashboard are out of the keyboard's reach. Add a block ignores the arrows. src/ui/formats/Dashboard.tsx:654 (role=menu with no key handling) and :1213. Owned by M54 F3. Fixed in M54 F3 (22d61aa). Opening focuses the first item; arrows, Home and End move (disabled passed); Escape closes and returns to ⋯ or Add a block; Tab closes.
 state: fault
+
+### Demo, project.emd, #/dashboard → Add a block → New chart → Of Unit, name Landed by month, Add without a date; then pick landed and Add. Read the block, Add a block, the rail, Unit's tabs and the chart's tab.
+unit: M55 U7
+should: The refusal shows once, under By month of. Everywhere the chart reads Landed by month, with Count of units by month of landed under it; months read 2026-09 in the chart and its table; both menus' acts are Add. Wrong would be: landed_by_month anywhere on screen, mono rollup text, or Sep 2026 on the axis. Also the maintainer's to judge: ISO dates in list lines and dashboard blocks replace the words D-518's mockup had (Sun 26 Jul 2026).
+state: open
 
 ### Demo, project.emd, #/dashboard → Add a block → New chart → Unit (two dates, landed and started) → name it → Declare and add without touching By month of.
 unit: M54 U2
@@ -15502,14 +15525,17 @@ paths: "src/ui/formats/EntryView.tsx\nsrc/ui/formats/RowSheet.tsx\nsrc/ui/compon
 milestone: M55
 scope: app
 title: A dashboard's New chart asks once at its field and reads in words; a date and an amount read one way on every surface
-decision: D-533
-state: in_progress
+landed: 2026-11-03
+decision: D-538
+state: built
 brief: D-533, split out of U5 by paths (D-534). M54 U2's Entry: rows (format_rows review_entry search:'Entry:', unit M54 U2). Re-run each first (npm run probe:screens, the pane where a click is needed); one already fixed by M54 F3 is named with its commit and left for the maintainer. Fix the rest: (1) New chart: 'Say which date the month is of' once, at the By month of field, never twice; (2) its name reads in words wherever it shows (landed_by_month reads 'landed by month', as M53 U3 did for labels; the name in the declaration is unchanged), and its subtitle and the rollup tab's heading read as sentences, not the rollup's text in mono; (3) one word per act within one menu (New chart's 'Declare and add' beside Headline total's 'Add'); (4) a date reads one way on the dashboard block, the rollup's table and its chart as the table writes it (2026-07-27 in the table, 'Sun 26 Jul 2026' in a block, 2026-09 and 'Sep 2026' in a rollup today), and an amount reads one way (the filter band's '50 ILS' against the table's '₪60.00'); if one way needs a choice the rows do not imply (which format wins), it is the maintainer's: stop and ask. Tests beside each fix. Done-test: on project.emd, New chart named 'Landed by month' reads so everywhere and refuses once at its field; a date and an amount read the same in the table, a block, a rollup and its chart.
-files: src/ui/formats/MakeBlock.tsx (rollupName, ~186, ~434), src/ui/formats/Dashboard.tsx, src/ui/formats/RollupView.tsx, src/ui/formats/FilterBand.tsx
+files: src/ui/formats/MakeBlock.tsx, src/ui/formats/madeInPlace.ts (PERIOD_UNSAID), src/ui/formats/dashboard.ts (rollupWords, rollupSentence, blockTitle, blockWhat), src/ui/formats/Dashboard.tsx, src/ui/formats/RollupView.tsx, src/ui/formats/rollupChart.ts, src/ui/formats/entryList.ts (valueText), src/ui/formats/listView.ts, src/ui/formats/FilterBand.tsx (amountAsWritten), src/domain/format/figureRange.ts, src/ui/RailFolder.tsx, src/ui/screens/FormatRows.tsx, src/ui/screens/FormatLinkViews.tsx, src/ui/formats/madeInPlace.test.ts, src/ui/formats/FilterBand.test.ts, src/ui/formats/rollupChart.test.ts, src/ui/formats/listView.test.ts, src/plugin/tools/dashboard.test.ts, docs/09-decision-log.md
 taken_by: run-milestone driver
 started: 2026-11-03
-branch: main
+branch: worktree-agent-aa1b32fc3f91155ec
+commit: 9910919
 paths: "src/ui/formats/MakeBlock.tsx\nsrc/ui/formats/Dashboard.tsx\nsrc/ui/formats/RollupView.tsx\nsrc/ui/formats/FilterBand.tsx\nsrc/ui/charts/"
+report: M55 U7 built at 9910919 on worktree-agent-aa1b32fc3f91155ec, D-538; merged into main by the driver. (1) New chart's 'Say which date the month is of.' shows once, under By month of, only after Add, with aria-invalid on its radios; a refusal the preview already shows is not repeated under the buttons. (2) A rollup's name reads in words (rollupWords, blockTitle in dashboard.ts): landed_by_month is Landed by month on the block title, Add a block, the rail row (rename starts from the words and folds back), the format's tabs, the rollup tab's heading and delete prompt; the declaration keeps the name. (3) Subtitles are sentences (rollupSentence): Unit · Count of units by month of landed, under the block, above the tab's chart, in New chart's preview and show_format's dashboard line; no mono rollup text. (4) New chart and New view say Add, as Headline total does. (5) Dates and amounts read as the table writes them: valueText shows 2026-07-27 and 2026-09 on blocks and lists, the rollup chart's axis 2026-09, the filter band's money range ₪10.00 to ₪60.00 (amountAsWritten, figureRangeSaid's new optional argument). Did not stop to ask which format wins: the brief says as the table writes it. Checked on its own worktree server (4197): done-test passes on project.emd. Tests: related 69 files / 743 green, privacy, typecheck, check:tours (10 runs). For the maintainer: ISO dates in list lines and dashboard blocks replace the words D-518's mockup chose (Sun 26 Jul 2026). Left: the agenda's day headings and a list's relative due stay words on purpose; the entry page is U5's. Pre-existing: probe:screens shows 13 low-contrast and 6 native date inputs on project.emd #/formats/unit (U5's area); New chart's radios are unnamed ('on') in the accessibility tree. No M54 F3 fix covered these rows.
 
 ### M55 U8
 milestone: M55
