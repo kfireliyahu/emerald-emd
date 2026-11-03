@@ -6130,7 +6130,7 @@ position: 342
 ### M52
 title: Post-release fixes
 goal: What real use found once Emerald was public (released 2026-10-18): bugs, hosts behaving in ways no test showed, words that misled a model, and the release fixes that follow. A finding from real use goes here, never into whatever milestone happens to be open; M42 keeps only the listing work. The fixes found 2026-10-18 to 2026-10-20 moved here from M42 with their refs unchanged (M42 F1 to F16), and M51 F6 from the closed M51. Stays open while fixes keep coming; the maintainer closes it, and a new one opens for the next stretch.
-state: open
+state: closed
 position: 345
 
 ### M53
@@ -8310,7 +8310,7 @@ state: accepted
 unit: M52 F2
 should: Both read sensibly to someone outside Emerald: neutral examples (D-12, Q3, M2), no docs/ path, no D-/H-/M-number of this repo, and decision's law says a decision others rely on is superseded, not changed in place, while a same-day wording fix is fine
 breaks: A document that already keeps the pack (another project's document) gets the new format notes from keep_packs but keeps the old column notes: keep_packs never brings a column's note
-state: open
+state: accepted
 
 ### format_rows with a worked-out column in columns, or more than 200 rows
 unit: M34 T1
