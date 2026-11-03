@@ -392,10 +392,50 @@ export function dashboardEntry(
 export type EntryCame =
   | { readonly from: 'list' | 'board' }
   | { readonly from: 'dashboard'; readonly dashboard: string }
+  | ReadLine
+
+/**
+ * **A line a read refused, added by hand** (M55 U9, D-540): the format's Add,
+ * opened from the read with what the line held — `read` is the format whose
+ * read it came from, `file` and `line` which line — and its back link, and the
+ * Add itself, go back to that read.
+ */
+export interface ReadLine {
+  readonly from: 'read'
+  readonly read: string
+  readonly file: string
+  readonly line: number
+  /** What the line held, as the form's fields — the Add starts from it. */
+  readonly prefill: Readonly<Record<string, string>>
+}
+
+/** Where a refused line's Add by hand opens, and the state it carries (M55 U9). */
+export function readLineEntry(format: string, line: Omit<ReadLine, 'from'>): { readonly to: string; readonly state: ReadLine } {
+  return { to: entryPath(format, NEW_ENTRY), state: { from: 'read', ...line } }
+}
+
+/** The line a read gets back once its Add by hand wrote it (M55 U9). */
+export function readLineAdded(state: unknown): { readonly file: string; readonly line: number } | undefined {
+  if (typeof state !== 'object' || state === null) return undefined
+  const added = (state as { readonly added?: unknown }).added
+  if (typeof added !== 'object' || added === null) return undefined
+  const { file, line } = added as { readonly file?: unknown; readonly line?: unknown }
+  return typeof file === 'string' && typeof line === 'number' ? { file, line } : undefined
+}
 
 export function entryCame(state: unknown): EntryCame | undefined {
   const from = typeof state === 'object' && state !== null ? (state as { from?: unknown }).from : undefined
   if (from === 'list' || from === 'board') return { from }
+  if (from === 'read') {
+    const held = state as Partial<Record<keyof ReadLine, unknown>>
+    const prefill = held.prefill
+    if (typeof held.read !== 'string' || typeof held.file !== 'string' || typeof held.line !== 'number') return undefined
+    const fields =
+      typeof prefill === 'object' && prefill !== null
+        ? Object.fromEntries(Object.entries(prefill).filter((pair): pair is [string, string] => typeof pair[1] === 'string'))
+        : {}
+    return { from: 'read', read: held.read, file: held.file, line: held.line, prefill: fields }
+  }
   if (from !== 'dashboard') return undefined
   const dashboard = (state as { dashboard?: unknown }).dashboard
   return dashboardState(typeof dashboard === 'string' ? dashboard : undefined)
@@ -404,14 +444,16 @@ export function entryCame(state: unknown): EntryCame | undefined {
 /**
  * **Where an entry's back link goes, and what it reads**: `← List` to the
  * list and `← Board` to the board, each with the address the entry kept;
- * `← Dashboard` to the dashboard it came from (M53 F5); and nothing — the
+ * `← Dashboard` to the dashboard it came from (M53 F5); `← Read` to the read
+ * a refused line was added by hand from (M55 U9); and nothing — the
  * format's own title — to the table.
  */
 export function entryBack(
   came: EntryCame | undefined,
   name: string,
   address: string,
-): { readonly path: string; readonly label: 'List' | 'Board' | 'Dashboard' | undefined } {
+): { readonly path: string; readonly label: 'List' | 'Board' | 'Dashboard' | 'Read' | undefined } {
+  if (came?.from === 'read') return { path: readPath(came.read), label: 'Read' }
   if (came?.from === 'dashboard') return { path: dashboardBack(came) ?? DASHBOARD_PATH, label: 'Dashboard' }
   if (came?.from === 'list') return { path: listPath(name) + address, label: 'List' }
   if (came?.from === 'board') return { path: boardPath(name) + address, label: 'Board' }

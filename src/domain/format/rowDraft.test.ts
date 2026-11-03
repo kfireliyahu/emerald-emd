@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { column, type FormatDeclaration } from './declaration.ts'
 import { coerceRow, readValue, type StoredRow } from './row.ts'
-import { blankDraft, draftOfRow, isEmpty, offeredOf, withField } from './rowDraft.ts'
+import { blankDraft, draftOfOffered, draftOfRow, isEmpty, offeredOf, withField } from './rowDraft.ts'
 
 /**
  * A row in a form, out of the table and back into it — M20 U1.
@@ -218,5 +218,26 @@ describe('what counts as untouched', () => {
     })
     expect(isEmpty(carried)).toBe(false)
     expect(isEmpty(offeredOf(THING, carried))).toBe(true)
+  })
+})
+
+describe('a line a read refused, opened in the Add (M55 U9)', () => {
+  it('starts every field the line held with what it held, and leaves the rest empty', () => {
+    const draft = draftOfOffered(THING, {
+      label: 'סה"כ',
+      count: 3,
+      opened: true,
+      kind: ['dry'],
+      price: '',
+      price_currency: 'ILS',
+      unknown: 'not a field',
+    })
+    expect(draft).toEqual({ label: 'סה"כ', count: '3', opened: 'true', kind: 'dry', price_currency: 'ILS' })
+  })
+
+  it('is what the form offers back, so a fixed figure coerces like one typed', () => {
+    const draft = { ...blankDraft(THING), ...draftOfOffered(THING, { label: 'Salt', price_currency: 'ILS' }), price: '12.90' }
+    const coerced = coerceRow(THING, offeredOf(THING, draft))
+    expect(coerced.ok).toBe(true)
   })
 })

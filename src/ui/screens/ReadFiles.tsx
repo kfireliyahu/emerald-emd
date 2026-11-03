@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 import type { Database } from 'sql.js'
 
 import { capitalize } from '@/core/text.ts'
@@ -50,6 +50,7 @@ import {
   proseLinkNames,
   rowLabel,
   withInferredCurrency,
+  type ReadRow,
   type ReadTable,
   type Reading,
 } from '@/domain/format/reading.ts'
@@ -75,6 +76,7 @@ import {
   type PickedFile,
 } from '@/ui/formats/noteFiles.ts'
 import { currencyKeyOf, offeredKeysOf } from '@/domain/format/row.ts'
+import { draftOfOffered } from '@/domain/format/rowDraft.ts'
 import { valueCounts } from '@/data/repositories/formatRowRepository.ts'
 import { windowDrop } from '@/ui/import/useWindowFileDrop.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
@@ -89,7 +91,7 @@ import { Fixed, Mapper, keyWords, keysInWords } from '@/ui/formats/IntakePanel.t
 import { ReadersLine } from '@/ui/formats/ReadersLine.tsx'
 import { WhatLooksWrong } from '@/ui/formats/WhatLooksWrong.tsx'
 import { tallyAccounts, type FormatAudit } from '@/domain/format/audit.ts'
-import { entryPath, formatPath } from '@/ui/nav.ts'
+import { entryPath, formatPath, readLineAdded, readLineEntry } from '@/ui/nav.ts'
 import { formatsByPack, useKeptPacks } from '@/ui/packs.ts'
 
 /**
@@ -142,18 +144,38 @@ export function ReadFiles() {
   const mutate = useDocumentStore((state) => state.mutate)
   const keepCopy = useDocumentStore((state) => state.keepCopy)
   const navigate = useNavigate()
+  const location = useLocation()
 
-  const [files, setFiles] = useState<readonly Loaded[]>([])
-  const [made, setMade] = useState<ReadonlyMap<string, Made>>(new Map())
-  const [onto, setOnto] = useState<ReadonlyMap<string, string>>(new Map())
-  const [ticks, setTicks] = useState<ReadonlyMap<string, boolean>>(new Map())
+  // **A read kept while a refused line is added by hand** (M55 U9, D-540): the
+  // format's Add is another page, and coming back finds the files as they were.
+  const [kept] = useState(() => (name === undefined || db === undefined ? undefined : keptRead(name, db)))
+  const [files, setFiles] = useState<readonly Loaded[]>(kept?.files ?? [])
+  const [made, setMade] = useState<ReadonlyMap<string, Made>>(kept?.made ?? new Map())
+  const [onto, setOnto] = useState<ReadonlyMap<string, string>>(kept?.onto ?? new Map())
+  const [ticks, setTicks] = useState<ReadonlyMap<string, boolean>>(kept?.ticks ?? new Map())
   // Per file read again, whether its gone entries are taken away (M38 U3, D-408).
-  const [removing, setRemoving] = useState<ReadonlyMap<string, boolean>>(new Map())
+  const [removing, setRemoving] = useState<ReadonlyMap<string, boolean>>(kept?.removing ?? new Map())
+  // Per file, the refused lines added by hand from here (M55 U9).
+  const [added, setAdded] = useState<ReadonlyMap<string, ReadonlySet<number>>>(kept?.added ?? new Map())
   const [editing, setEditing] = useState<Editing | undefined>(undefined)
   const [problem, setProblem] = useState<string | undefined>(undefined)
   // Files dropped on the window anywhere but a format's page: each row asks
   // which format it goes onto (M54 F4, D-532).
-  const [asking, setAsking] = useState(false)
+  const [asking, setAsking] = useState(kept?.asking ?? false)
+
+  useEffect(() => {
+    if (name === undefined || db === undefined) return
+    if (files.length === 0) keptReads.delete(name)
+    else keptReads.set(name, { db, files, made, onto, ticks, removing, added, asking })
+  }, [name, db, files, made, onto, ticks, removing, added, asking])
+
+  // The Add by hand wrote its line: the read marks it, once.
+  useEffect(() => {
+    const back = readLineAdded(location.state)
+    if (back === undefined) return
+    setAdded((current) => new Map(current).set(back.file, new Set([...(current.get(back.file) ?? []), back.line])))
+    navigate(location.pathname, { replace: true, state: null })
+  }, [location.key])
   const [written, setWritten] = useState<
     { readonly intakes: readonly Intake[]; readonly audits: readonly FormatAudit[] } | undefined
   >(undefined)
@@ -313,6 +335,7 @@ export function ReadFiles() {
     setOnto((current) => without(current, id))
     setTicks((current) => without(current, id))
     setRemoving((current) => without(current, id))
+    setAdded((current) => without(current, id))
     if (editing?.fileId === id) setEditing(undefined)
   }
 
@@ -357,6 +380,7 @@ export function ReadFiles() {
     setOnto(new Map())
     setTicks(new Map())
     setRemoving(new Map())
+    setAdded(new Map())
     setEditing(undefined)
   }
 
@@ -457,6 +481,16 @@ export function ReadFiles() {
                       setEditing(undefined)
                     }}
                     onRemove={() => drop(each.file.id)}
+                    added={added.get(each.file.id)}
+                    onAddLine={(row) => {
+                      const to = readLineEntry(each.declaration.name, {
+                        read: declaration.name,
+                        file: each.file.id,
+                        line: row.line,
+                        prefill: draftOfOffered(each.declaration, row.offered),
+                      })
+                      navigate(to.to, { state: to.state })
+                    }}
                     onUnder={(heading) => under(each.file.id, heading)}
                     removeGone={removing.get(each.file.id) === true}
                     onRemoveGone={(value) => setRemoving((current) => new Map(current).set(each.file.id, value))}
@@ -521,6 +555,30 @@ export function ReadFiles() {
 }
 
 /* ------------------------------------------------------------------- state */
+
+/** What a read is, kept by its format while a refused line is added by hand (M55 U9). */
+interface KeptRead {
+  /** The document it was read against: another document starts empty. */
+  readonly db: Database
+  readonly files: readonly Loaded[]
+  readonly made: ReadonlyMap<string, Made>
+  readonly onto: ReadonlyMap<string, string>
+  readonly ticks: ReadonlyMap<string, boolean>
+  readonly removing: ReadonlyMap<string, boolean>
+  readonly added: ReadonlyMap<string, ReadonlySet<number>>
+  readonly asking: boolean
+}
+
+/**
+ * **Every read with files on it, by format** (M55 U9, D-540) — for this
+ * window's life, nothing written: Write, or taking the last file off, lets it go.
+ */
+const keptReads = new Map<string, KeptRead>()
+
+function keptRead(name: string, db: Database): KeptRead | undefined {
+  const kept = keptReads.get(name)
+  return kept?.db === db ? kept : undefined
+}
 
 interface Loaded {
   readonly id: string
@@ -934,6 +992,8 @@ function FileRow({
   onSupersede,
   removeGone,
   onRemoveGone,
+  added,
+  onAddLine,
 }: {
   db: Database
   declarations: readonly FormatDeclaration[]
@@ -957,6 +1017,10 @@ function FileRow({
   /** A file read again: whether its gone entries are taken away (D-408). */
   removeGone: boolean
   onRemoveGone: (value: boolean) => void
+  /** The refused lines added by hand from this read (M55 U9). */
+  added: ReadonlySet<number> | undefined
+  /** Open the format's Add with what a refused line held (M55 U9, D-540). */
+  onAddLine: (row: ReadRow) => void
 }) {
   const { file, how, plan, declaration } = reviewed
   const sheets = file.sheets
@@ -1083,7 +1147,16 @@ function FileRow({
 
       {/* While the reader is changed, its draft's lines are the one list, under
           the grid — the committed reading's would be stale (M54 F4). */}
-      {plan !== undefined && editing === undefined && <PlanLines declaration={declaration} plan={plan} table={reviewed.table} />}
+      {plan !== undefined && editing === undefined && (
+        <PlanLines
+          declaration={declaration}
+          plan={plan}
+          table={reviewed.table}
+          added={added}
+          // A pack's format is written by its own code, never a hand Add (D-269).
+          onAddLine={rowWriteRefusal(declaration) === undefined ? onAddLine : undefined}
+        />
+      )}
 
       {editing !== undefined && (
         <ReaderEditor
@@ -1302,16 +1375,23 @@ function PlanLines({
   declaration,
   plan,
   table,
+  added,
+  onAddLine,
 }: {
   declaration: FormatDeclaration
   plan: ReadingPlan
   /** The file read, so a refused row of a folder is named by its note (M34 U7). */
   table?: ReadTable
+  /** The refused lines already added by hand from this read (M55 U9). */
+  added?: ReadonlySet<number> | undefined
+  /** **A refused line, added by hand** (M55 U9, D-540): the format's Add, with what it held. */
+  onAddLine?: ((row: ReadRow) => void) | undefined
 }) {
   const { typed, failed } = lineCounts(plan)
   const refusals = refusalsOf(plan)
   const proof = plan.proof
   const failedRows = (plan.read?.rows ?? []).filter((row) => row.cells === undefined)
+  const handAdded = failedRows.filter((row) => added?.has(row.line) === true).length
   // A body link naming no row is left out, the note still read (M38 U2).
   const unlinked = (plan.read?.rows ?? []).flatMap((row) =>
     row.cells === undefined ? [] : (row.unlinked ?? []).map((each) => ({ line: row.line, each })),
@@ -1332,6 +1412,7 @@ function PlanLines({
                   </span>,
                 ]
               : []),
+            ...(handAdded > 0 ? [<span key="added">{handAdded} added by hand</span>] : []),
             ...(declaration.identities.length > 0 && proof !== undefined
               ? [
                   <span key="proof">
@@ -1376,6 +1457,22 @@ function PlanLines({
           </span>{' '}
           —{' '}
           <Bidi>{keysInWords(row.problem ?? '', declaration)}</Bidi>
+          {added?.has(row.line) === true ? (
+            <span> · added by hand</span>
+          ) : (
+            onAddLine !== undefined && (
+              <>
+                {' '}
+                <button
+                  type="button"
+                  className="text-accent underline-offset-2 hover:underline"
+                  onClick={() => onAddLine(row)}
+                >
+                  Add by hand
+                </button>
+              </>
+            )
+          )}
         </p>
       ))}
       {failedRows.length > 5 && (

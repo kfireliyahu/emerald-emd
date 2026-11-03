@@ -156,6 +156,35 @@ export function offeredOf(
   return offered
 }
 
+/**
+ * **What a line of a file held, as the fields of a row being typed** (M55 U9,
+ * D-540) — a line a read refused, opened in the format's Add so it can be put
+ * right by hand. The reading's offered values are what the file said, never a
+ * value made up, so a field starts with exactly that: text as it was, a figure
+ * as its digits, several of a list as the list, and a key the format has no
+ * field for left out.
+ */
+export function draftOfOffered(
+  declaration: FormatDeclaration,
+  offered: Readonly<Record<string, unknown>>,
+): RowDraft {
+  const keys = new Set(offeredKeysOf(declaration))
+  const draft: Record<string, string> = {}
+  for (const [key, value] of Object.entries(offered)) {
+    if (!keys.has(key)) continue
+    const text =
+      typeof value === 'string'
+        ? value
+        : typeof value === 'number' || typeof value === 'boolean'
+          ? String(value)
+          : Array.isArray(value)
+            ? value.length === 1 ? String(value[0]) : draftOfMembers(value.map(String))
+            : undefined
+    if (text !== undefined && text.trim() !== '') draft[key] = text
+  }
+  return draft
+}
+
 /** One field changed, leaving the rest of the row exactly as it was. */
 export function withField(draft: RowDraft, key: string, text: string): RowDraft {
   return { ...draft, [key]: text }

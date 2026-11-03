@@ -19,12 +19,18 @@ export function PreviewStrip({
   total,
   missingRoles,
   firstError,
+  leftOut = [],
+  onSkip,
 }: {
   transactions: readonly DraftTransaction[]
   summary: ParseSummary
   total: Money
   missingRoles: readonly ColumnRole[]
   firstError: ParsedRow | undefined
+  /** The rows skipped from this read (M55 U9, D-540). */
+  leftOut?: readonly ParsedRow[]
+  /** Skip a row that did not read from this read, or take it back. */
+  onSkip?: ((rowIndex: number, skip: boolean) => void) | undefined
 }) {
   if (missingRoles.length > 0) {
     return (
@@ -98,6 +104,33 @@ export function PreviewStrip({
           <span className="text-negative">Row {firstError.rowIndex + 1}</span>{' '}
           <Bidi>{firstError.outcome.errors.map((error) => error.message).join('; ')}</Bidi>
           {summary.errors > 1 && <span> · and {summary.errors - 1} more</span>}
+          {/* **A row that does not read can be skipped from this read** (M55 U9,
+              D-540) — a printed total line, say: counted as skipped, never
+              written, and nothing kept in the reader. */}
+          {onSkip !== undefined && (
+            <>
+              {' '}
+              <TextAction onClick={() => onSkip(firstError.rowIndex, true)}>Skip</TextAction>
+            </>
+          )}
+        </p>
+      )}
+
+      {leftOut.length > 0 && (
+        <p className="mt-2 border-t border-hairline pt-2 text-ink-secondary">
+          Skipped from this read:{' '}
+          {leftOut.map((row, at) => (
+            <span key={row.rowIndex}>
+              {at > 0 && ', '}
+              <span className="tabular-nums">row {row.rowIndex + 1}</span>
+              {onSkip !== undefined && (
+                <>
+                  {' '}
+                  <TextAction onClick={() => onSkip(row.rowIndex, false)}>Put back</TextAction>
+                </>
+              )}
+            </span>
+          ))}
         </p>
       )}
     </Panel>
@@ -106,6 +139,14 @@ export function PreviewStrip({
 
 export function totalOf(transactions: readonly DraftTransaction[], currency: string): Money {
   return transactions.reduce((running, transaction) => add(running, abs(transaction.amount)), zero(currency))
+}
+
+function TextAction({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button type="button" className="text-accent underline-offset-2 hover:underline" onClick={onClick}>
+      {children}
+    </button>
+  )
 }
 
 function Panel({ children }: { children: React.ReactNode }) {

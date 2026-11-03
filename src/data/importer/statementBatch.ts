@@ -12,7 +12,7 @@ import {
 import { listMappings } from '../repositories/importMappingRepository.ts'
 import { acceptAllNew } from '../repositories/stagedRowRepository.ts'
 import { accountsHoldingRows, existingNaturalKeys, type RowsHeld } from '../repositories/transactionRepository.ts'
-import { allParsed, applyMapping, bankRowsOf, type ParsedRow } from './apply.ts'
+import { allParsed, applyMapping, bankRowsOf, leaveOut, type ParsedRow } from './apply.ts'
 import { commitSession, type CommitResult } from './commit.ts'
 import { defaultMappingName, statedCardLast4 } from './mappingName.ts'
 import { assignNaturalKeys } from './naturalKey.ts'
@@ -72,6 +72,8 @@ export interface StatementSheet {
   readonly account: AccountRequest
   /** Row index → column index → what the cell says, typed by a person. */
   readonly corrections: ReadonlyMap<number, ReadonlyMap<number, string>>
+  /** Rows a person skipped from this read, by index (M55 U9, D-540) — never the reader's. */
+  readonly skipped?: ReadonlySet<number> | undefined
 }
 
 /** What reading a workbook came to: sheets a stored reader knows, or a new layout. */
@@ -126,8 +128,9 @@ export function sheetFrom(input: {
   readonly mappingName: string | undefined
   readonly boundAccountId: string | undefined
   readonly kind?: AccountKind | undefined
+  readonly skipped?: ReadonlySet<number> | undefined
 }): StatementSheet {
-  const rows = applyMapping(input.table, input.mapping)
+  const rows = leaveOut(applyMapping(input.table, input.mapping), input.skipped)
   const last4 = cardLast4Of(rows, input.fileName, input.table, input.mapping.headerRowIndex)
   const name =
     input.mappingName ??
@@ -151,6 +154,7 @@ export function sheetFrom(input: {
       kind: input.kind ?? guessKind(rows),
     },
     corrections: new Map(),
+    ...(input.skipped === undefined || input.skipped.size === 0 ? {} : { skipped: input.skipped }),
   }
 }
 
@@ -210,7 +214,7 @@ export function correctedTable(sheet: StatementSheet): SheetTable {
 
 /** Every row the mapping makes of the sheet, corrections included. */
 export function sheetRows(sheet: StatementSheet): readonly ParsedRow[] {
-  return applyMapping(correctedTable(sheet), sheet.mapping)
+  return leaveOut(applyMapping(correctedTable(sheet), sheet.mapping), sheet.skipped)
 }
 
 /** The sheet with one cell typed over. An empty string clears the correction. */

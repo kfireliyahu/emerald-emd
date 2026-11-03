@@ -73,6 +73,24 @@ export function applyMapping(table: SheetTable, mapping: DraftMapping): readonly
   return rows
 }
 
+/** Why a row a person skipped is not read — said where the skip is counted. */
+export const LEFT_OUT = 'skipped from this read'
+
+/**
+ * **The rows a person skipped from this read** (M55 U9, D-540) — a printed
+ * total line the mapping cannot read, say — counted as skipped and never
+ * written. Only a row that did not read is left out: a mapping changed so that
+ * it reads takes it back, and nothing about the skip is kept in the reader.
+ */
+export function leaveOut(rows: readonly ParsedRow[], skipped: ReadonlySet<number> | undefined): readonly ParsedRow[] {
+  if (skipped === undefined || skipped.size === 0) return rows
+  return rows.map((row) =>
+    row.outcome.kind === 'error' && skipped.has(row.rowIndex)
+      ? { ...row, outcome: { kind: 'skipped', reason: LEFT_OUT } }
+      : row,
+  )
+}
+
 export function summarize(rows: readonly ParsedRow[]): ParseSummary {
   let parsed = 0
   let errors = 0

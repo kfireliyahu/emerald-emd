@@ -469,7 +469,12 @@ export function FormatRows({
         draft:
           typed?.key === key
             ? typed.draft
-            : { ...blankDraft(declaration, data.rows[data.rows.length - 1]?.row, data.currency), ...entryDefaults(declaration.columns) },
+            : {
+                ...blankDraft(declaration, data.rows[data.rows.length - 1]?.row, data.currency),
+                ...entryDefaults(declaration.columns),
+                // **A line a read refused starts as what it held** (M55 U9, D-540).
+                ...(came?.from === 'read' ? came.prefill : {}),
+              },
         stored: undefined,
         aggregates: [],
         derived: [],
@@ -493,7 +498,8 @@ export function FormatRows({
       // What its own links name, for a card or a list to draw (D-402).
       linked: linkedRows(db, declaration, data.declarations, row),
     }
-  }, [db, entry, data, typed])
+    // `came` is made again each render; what it prefills is the dependency.
+  }, [db, entry, data, typed, came?.from === 'read' ? JSON.stringify(came.prefill) : ''])
 
   /**
    * The draft, coerced — on every keystroke, because a refusal is useful while
@@ -981,6 +987,12 @@ export function FormatRows({
           }
           setFailure(undefined)
           setTyped(undefined)
+          // **A line a read refused goes back to that read** (M55 U9, D-540),
+          // which marks it added by hand.
+          if (came?.from === 'read') {
+            navigate(readPath(came.read), { state: { added: { file: came.file, line: came.line } } })
+            return
+          }
           // **The entry it became** — a draft until Add, and the row after.
           if (added === undefined) back()
           else navigate(entryPath(declaration.name, added) + address, { replace: true, ...along })

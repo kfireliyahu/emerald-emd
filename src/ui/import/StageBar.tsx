@@ -37,6 +37,7 @@ export function StageBar({
   mapping,
   rows,
   transactions,
+  skipped,
   onRead,
 }: {
   fileName: string
@@ -55,6 +56,8 @@ export function StageBar({
   rows: readonly ParsedRow[]
   /** The subset that parsed, for the summary line. */
   transactions: readonly DraftTransaction[]
+  /** The rows a person skipped from this read (M55 U9), which go into the batch with it. */
+  skipped?: ReadonlySet<number> | undefined
   onRead: (sheet: StatementSheet) => void
 }) {
   const db = useDocumentStore((state) => state.db)
@@ -136,6 +139,7 @@ export function StageBar({
       mappingName,
       boundAccountId,
       kind: kind ?? guessedKind,
+      skipped,
     })
     // Named from the card's last-4 where the file supplies one, as it always was.
     // An account picked here is bound for this read; the commit teaches the

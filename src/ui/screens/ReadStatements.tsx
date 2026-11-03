@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { formatMoney } from '@/core/money.ts'
+import { LEFT_OUT } from '@/data/importer/apply.ts'
 import { listFunds } from '@/data/repositories/fundRepository.ts'
 import type { FundAccount } from '@/domain/model/funds.ts'
 import {
@@ -462,10 +463,13 @@ function Tone({ tone, children }: { tone: 'positive' | 'negative' | 'warn'; chil
 function describe(verdict: SheetVerdict): string {
   if (verdict.parsed === 0) return 'no row read'
   if (verdict.state === 'same') return `all ${String(verdict.parsed)} rows already here`
+  // A row skipped from this read in the mapper is said here too (M55 U9, D-540).
+  const skipped = verdict.rows.filter((row) => row.outcome.kind === 'skipped' && row.outcome.reason === LEFT_OUT).length
   const counts =
-    verdict.duplicates === 0
+    (verdict.duplicates === 0
       ? `${String(verdict.newRows)} new`
-      : `${String(verdict.newRows)} new, ${String(verdict.duplicates)} already here`
+      : `${String(verdict.newRows)} new, ${String(verdict.duplicates)} already here`) +
+    (skipped === 0 ? '' : `, ${String(skipped)} skipped`)
   const parsed = verdict.parsedTotals.map((total) => formatMoney(total)).join(' + ')
   if (verdict.balance.kind === 'DIVERGED') return `${counts} · the running balance stops agreeing at ${verdict.balance.at.ref}`
   if (verdict.printed !== undefined) {

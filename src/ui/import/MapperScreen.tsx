@@ -3,7 +3,7 @@ import { roleRejection, type ColumnRoleId } from '@/domain/model/columnRoles.ts'
 import type { Database } from 'sql.js'
 
 import type { CurrencyCode } from '@/core/money.ts'
-import { allParsed, applyMapping, firstParsed, summarize, type ParsedRow } from '@/data/importer/apply.ts'
+import { allParsed, applyMapping, firstParsed, leaveOut, LEFT_OUT, summarize, type ParsedRow } from '@/data/importer/apply.ts'
 import { applyColumnProposal, statementContext } from '@/data/importer/columnProposal.ts'
 import { guessMapping, missingRequiredRoles, withColumnRole } from '@/data/importer/guess.ts'
 import { defaultMappingName, statedCardLast4 } from '@/data/importer/mappingName.ts'
@@ -58,6 +58,8 @@ interface SheetMapping {
   readonly editing: boolean
   /** What the user typed into the name field, if they typed anything. */
   readonly nameOverride: string | undefined
+  /** Rows the person skipped from this read (M55 U9, D-540): not the mapping's, so not dirty. */
+  readonly skipped?: ReadonlySet<number> | undefined
 }
 
 export function MapperScreen({
@@ -278,6 +280,12 @@ export function MapperScreen({
         onKeep={keep}
         onNameChange={(nameOverride) => update({ nameOverride })}
         onRead={onRead}
+        onSkip={(rowIndex, skip) => {
+          const next = new Set(state.skipped)
+          if (skip) next.add(rowIndex)
+          else next.delete(rowIndex)
+          update({ skipped: next })
+        }}
         onEdit={() => update({ editing: true })}
         onSetHeaderRow={(headerRowIndex) =>
           update({ mapping: guessMapping(table, { headerRowIndex }), dirty: true })
@@ -353,6 +361,7 @@ function SheetBody({
   onKeep,
   onNameChange,
   onRead,
+  onSkip,
   onEdit,
   onSetHeaderRow,
   onSetColumnRole,
@@ -371,6 +380,8 @@ function SheetBody({
   onKeep: (name: string) => string | undefined
   onNameChange: (name: string) => void
   onRead: (sheet: StatementSheet) => void
+  /** Skip a row that did not read from this read, or take it back (M55 U9). */
+  onSkip: (rowIndex: number, skip: boolean) => void
   onEdit: () => void
   onSetHeaderRow: (rowIndex: number) => void
   onSetColumnRole: (column: number, role: ColumnRoleId | undefined) => void
@@ -385,7 +396,7 @@ function SheetBody({
     if (mapping === undefined) return undefined
 
     const missing = missingRequiredRoles(mapping)
-    const rows = missing.length > 0 ? [] : applyMapping(table, mapping)
+    const rows = missing.length > 0 ? [] : leaveOut(applyMapping(table, mapping), state.skipped)
     const byRowIndex = new Map<number, ParsedRow>(rows.map((row) => [row.rowIndex, row]))
 
     return {
@@ -398,8 +409,10 @@ function SheetBody({
       // the user compares against the total the statement prints.
       total: totalOf(allParsed(rows), mapping.defaultCurrency),
       firstError: rows.find((row) => row.outcome.kind === 'error'),
+      // The rows skipped from this read, to take back (M55 U9).
+      leftOut: rows.filter((row) => row.outcome.kind === 'skipped' && row.outcome.reason === LEFT_OUT),
     }
-  }, [table, mapping])
+  }, [table, mapping, state.skipped])
 
   if (mapping === undefined) {
     return (
@@ -450,6 +463,8 @@ function SheetBody({
       total={parse?.total ?? totalOf([], mapping.defaultCurrency)}
       missingRoles={parse?.missing ?? []}
       firstError={parse?.firstError}
+      leftOut={parse?.leftOut ?? []}
+      onSkip={onSkip}
     />
   )
 
@@ -527,6 +542,7 @@ function SheetBody({
         mapping={mapping}
         rows={parse?.rows ?? []}
         transactions={parse?.parsed ?? []}
+        skipped={state.skipped}
         onRead={(sheet) => {
           const kept = onKeep(name.trim() === '' ? suggestedName : name.trim())
           onRead({ ...sheet, mappingId: kept ?? sheet.mappingId })

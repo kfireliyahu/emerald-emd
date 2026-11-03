@@ -451,6 +451,7 @@ written out here.
 | D-532 | 2026-11-02 | M54's faults become thirteen fix units, M54 F1-F13, before M55: shared looks first, each unit sweeping its own files; the ledger's Home, NoLedger and #/read included; a due date only where declared; a window drop onto the open format; recovery as a three-choice notice; the page's first screen leads to Get Emerald; the tour pauses; words are drafted for the maintainer to pick | M54 |
 | D-533 | 2026-11-03 | M55's input view is a saved view of kind `input`: the fields it asks are its columns in their order and its defaults are its exact values (a member, a link, a number, or a date word that names one day), kept in `format_saved_view` and `views.md`; one per format may be its default, opened by Add, the list's + and quick add; it stays open after Add and lists what it added; it is in the rail, behind +, and a live block on a dashboard; a conversation makes it with `arrange_views` and uses it with `record_format_rows view:`; M54's fourteen engine-side *Entry:* findings come into M55 and the ledger's stay parked | [below](#d-533) |
 | D-534 | 2026-11-03 | A milestone's units run at once wherever `dispatch_plan` allows, each in its own worktree with its own demo port, by sessions or by the `Agent` tool alike, up to four; a screen is measured by `npm run probe:screens` (`window.emeraldProbe()` in a dev build, in an offscreen Electron window) rather than in the browser pane by hand; a child is handed its files and told to batch its reads; a review writes a rule-backed finding as `fault` and only a judgement as `open`; units under ten minutes that share paths go to one child, and a unit stopped for the maintainer's pick goes on in the same child; amends D-287 and D-490's one-at-a-time for the `Agent` tool | [below](#d-534) |
+| D-540 | 2026-11-03 | A line a read refused offers Add by hand: the format's Add opens with what the line held, the read is kept for the window's life while it is away, the Add goes back to the read, and the read counts the line added by hand; a row the mapper could not read is skipped from that read only — counted as skipped in the mapper and on Read files, never written, never kept in the reader, and taken back by Put back or by a mapping that reads it | [below](#d-540) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1038,6 +1039,39 @@ once. Asking for every review row's verdict: most break a rule the maintainer al
 **Consequences.** `.claude/launch.json` has `demo-tour-1` to `demo-tour-4`. `run-milestone`,
 `design-review` and CLAUDE.md say so. Nothing in the shipped app changes: `probe.ts` is loaded by a
 dynamic import behind `import.meta.env.DEV`.
+
+## D-540 · 2026-11-03 · A line a read refused offers Add by hand: the format's Add opens with what the line held, the read is kept for the window's life while it is away, the Add goes back to the read, and the read counts the line added by hand; a row the mapper could not read is skipped from that read only — counted as skipped in the mapper and on Read files, never written, never kept in the reader, and taken back by Put back or by a mapping that reads it <a id="d-540"></a>
+
+**Context.** M54 U3's review (two *Entry:* rows): after Use, *Line 7 — amount is required and was
+not given* could be put right only by remapping, and the mapper's *Row 17 Could not read transaction
+date from "סה"כ"* — the printed total line — had no skip and no fix. M55 U9, split out of U5 by paths
+(D-534); D-533 brought both findings into M55.
+
+**Decision.**
+
+- **Add by hand** beside each refused line of a read (`ReadFiles`' plan lines) opens the line's format's
+  Add (`entry/new`) with `draftOfOffered` of what the reading offered: what the file said, never a
+  value made up (D-137's line), so a person fixes the field that refused and adds it. A pack's format
+  offers no Add, as before (D-269). The route carries the read (`ReadLine` in `nav.ts`): the back link
+  reads *← Read*, and Add writes and goes back to the read rather than to the new entry.
+- **The read is kept while it is away**: `ReadFiles` keeps its files, readers made, ticks and
+  choices by format for the window's life and for the same document, let go on Write or when the last
+  file is taken off. The read then says *added by hand* on the line and *N added by hand* in its count.
+  The line is still refused in the file; the file is written without it, as before.
+- **Skip** beside a row the mapper could not read leaves it out of that read: counted as skipped
+  (`LEFT_OUT`), never written, carried on the `StatementSheet` into the batch and said there (*3 new,
+  1 skipped*), never kept in the saved reader. *Put back* takes it back, and only a row that does not
+  read is left out, so a mapping changed to read it reads it.
+
+**Alternatives rejected.** An add form inside the read: a second entry form beside the format's own,
+with its own checks — the screen and the tool would drift (D-227). Fixing the line in the read so it
+is written with the file: the brief asked for the format's Add, and a fix to the reading's cells is
+remapping by another name. Keeping a skip in the reader: the brief scoped it to *that read*, and a
+total line a reader skips forever is a row it can never be told about.
+
+**Consequences.** A conversation needs nothing new: `read_onto_format` reports refused lines and
+`record_format_rows` adds one; `import_statement` never writes a row that does not read. A line
+added by hand is not part of the read's intake, so a header's claim over the lines does not count it.
 
 ## Related
 
