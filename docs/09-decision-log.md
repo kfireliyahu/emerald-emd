@@ -449,24 +449,24 @@ written out here.
 | D-530 | 2026-11-02 | M54 reviews every surface — the engine's screens, the parked ledger pack's, the desktop shell's chrome, Emerald's page and its tour — against the demo documents in light and dark; each finding is an open `review_entry` row the maintainer judges; a plain breach of a live ui rule row is fixed in place except in the ledger, where it is only recorded; a last unit makes the procedure a project skill | M54 |
 | D-531 | 2026-11-02 | M54's rule conflicts answered: needed text is `ink-secondary`, the ramp gains no 13px, a chip is text and a dot everywhere, a chart of several series wears category colours, the entry route replaced the detail pane, the title bar holds no primary, a command has one name in sentence case, the page and the tour keep token sets of their own, and "The database under the chat." leads everywhere | M54 |
 | D-532 | 2026-11-02 | M54's faults become thirteen fix units, M54 F1-F13, before M55: shared looks first, each unit sweeping its own files; the ledger's Home, NoLedger and #/read included; a due date only where declared; a window drop onto the open format; recovery as a three-choice notice; the page's first screen leads to Get Emerald; the tour pauses; words are drafted for the maintainer to pick | M54 |
-| D-533 | 2026-11-03 | M55's input view is a saved view of kind `input`: the fields it asks are its columns in their order and its defaults are its exact values (a member, a link, a number, or a date word that names one day), kept in `format_saved_view` and `views.md`; one per format may be its default, opened by Add, the list's + and quick add; it stays open after Add and lists what it added; it is in the rail, behind +, and a live block on a dashboard; a conversation makes it with `arrange_views` and uses it with `record_format_rows view:`; M54's fourteen engine-side *Entry:* findings come into M55 and the ledger's stay parked | [below](#d-533) |
-| D-534 | 2026-11-03 | A milestone's units run at once wherever `dispatch_plan` allows, each in its own worktree with its own demo port, by sessions or by the `Agent` tool alike, up to four; a screen is measured by `npm run probe:screens` (`window.emeraldProbe()` in a dev build, in an offscreen Electron window) rather than in the browser pane by hand; a child is handed its files and told to batch its reads; a review writes a rule-backed finding as `fault` and only a judgement as `open`; units under ten minutes that share paths go to one child, and a unit stopped for the maintainer's pick goes on in the same child; amends D-287 and D-490's one-at-a-time for the `Agent` tool | [below](#d-534) |
-| D-535 | 2026-11-03 | M55 U1's picks for the input view, not yet the maintainer's: a page where entry/new opens, beside the list, not a tab; fields in one wrapping row with *Adds as* in entry/new's footer bar; *Just added* with *Undo* under it; made from the format's + (*New input view*, *New view*, *New chart*) with the entry's Fields list carrying *Ask* and *Default*; *Use for Add* marks the one Add opens; the rail lists input views first under the new `input` glyph; a dashboard block's Add is secondary | [below](#d-535) |
-| D-540 | 2026-11-03 | A line a read refused offers Add by hand: the format's Add opens with what the line held, the read is kept for the window's life while it is away, the Add goes back to the read, and the read counts the line added by hand; a row the mapper could not read is skipped from that read only — counted as skipped in the mapper and on Read files, never written, never kept in the reader, and taken back by Put back or by a mapping that reads it | [below](#d-540) |
-| D-538 | 2026-11-03 | A date, a month and an amount read as the table writes them on a dashboard's blocks, a list, a rollup's table and its chart — `2026-07-27`, `2026-09`, `₪60.00` — and a rollup reads in words: its name *Landed by month*, what it counts a sentence; the declaration and every tool keep the name | [below](#d-538) |
-| D-539 | 2026-11-03 | A new column's type is picked from a short list in a person's words — Text · Number · Money · Date · Yes or no · Choice · Link · Computed — with *More types…* one step away under Numbers (Whole number · Exact decimal · Percentage · Quantity), Dates and times (Month · Time of day · Date and time), Several (Several choices · Several links) and Outside this document (File · Row in another document); the picked type shows its name, the stored word is its tooltip, and the declaration's word never changes; the maintainer's pick of three drafts | [below](#d-539) |
+| D-533 | 2026-11-03 | M55's input view is a saved view of kind `input`: the fields it asks are its columns in their order and its defaults are its exact values (a member, a link, a number, or a date word that names one day), kept in `format_saved_view` and `views.md`; one per format may be its default, opened by Add, the list's + and quick add; it stays open after Add and lists what it added; it is in the rail, behind +, and a live block on a dashboard; a conversation makes it with `arrange_views` and uses it with `record_format_rows view:`; M54's fourteen engine-side *Entry:* findings come into M55 and the ledger's stay parked | M55 |
+| D-534 | 2026-11-03 | A milestone's units run at once wherever `dispatch_plan` allows, each in its own worktree with its own demo port, by sessions or by the `Agent` tool alike, up to four; a screen is measured by `npm run probe:screens` (`window.emeraldProbe()` in a dev build, in an offscreen Electron window) rather than in the browser pane by hand; a child is handed its files and told to batch its reads; a review writes a rule-backed finding as `fault` and only a judgement as `open`; units under ten minutes that share paths go to one child, and a unit stopped for the maintainer's pick goes on in the same child; amends D-287 and D-490's one-at-a-time for the `Agent` tool | M55 |
+| D-535 | 2026-11-03 | M55 U1's picks for the input view, not yet the maintainer's: a page where entry/new opens, beside the list, not a tab; fields in one wrapping row with *Adds as* in entry/new's footer bar; *Just added* with *Undo* under it; made from the format's + (*New input view*, *New view*, *New chart*) with the entry's Fields list carrying *Ask* and *Default*; *Use for Add* marks the one Add opens; the rail lists input views first under the new `input` glyph; a dashboard block's Add is secondary | M55 |
+| D-540 | 2026-11-03 | A line a read refused offers Add by hand: the format's Add opens with what the line held, the read is kept for the window's life while it is away, the Add goes back to the read, and the read counts the line added by hand; a row the mapper could not read is skipped from that read only — counted as skipped in the mapper and on Read files, never written, never kept in the reader, and taken back by Put back or by a mapping that reads it | M55 |
+| D-538 | 2026-11-03 | A date, a month and an amount read as the table writes them on a dashboard's blocks, a list, a rollup's table and its chart — `2026-07-27`, `2026-09`, `₪60.00` — and a rollup reads in words: its name *Landed by month*, what it counts a sentence; the declaration and every tool keep the name | M55 |
+| D-539 | 2026-11-03 | A new column's type is picked from a short list in a person's words — Text · Number · Money · Date · Yes or no · Choice · Link · Computed — with *More types…* one step away under Numbers (Whole number · Exact decimal · Percentage · Quantity), Dates and times (Month · Time of day · Date and time), Several (Several choices · Several links) and Outside this document (File · Row in another document); the picked type shows its name, the stored word is its tooltip, and the declaration's word never changes; the maintainer's pick of three drafts | M55 |
 | D-543 | 2026-11-03 | A newcomer's four skills are the plugin's alone, each named for what a person does — `read-a-file`, `what-looks-wrong`, `bring-in-a-plan`, `set-up-a-project` — and setting a project up is a skill of its own beside `emerald-setup`, which fires only where a session has no Emerald tools at all | [below](#d-543) |
-| D-536 | 2026-11-03 | An input view's default mark is a column of `format_saved_view` with a partial unique index (066), on an input view alone; a new row's defaults are one rule, `entryDefaults` — the default input view's, over the address's exact values, over a required enum's first member — read by the table's blank row, entry/new and quick add; a money or quantity default is written `12.90 ILS`; `record_format_rows view:` fills only the keys a row leaves out; `format_rows` refuses an input view; until M55 U3's form, an input view opens a new entry with its address | [below](#d-536) |
+| D-536 | 2026-11-03 | An input view's default mark is a column of `format_saved_view` with a partial unique index (066), on an input view alone; a new row's defaults are one rule, `entryDefaults` — the default input view's, over the address's exact values, over a required enum's first member — read by the table's blank row, entry/new and quick add; a money or quantity default is written `12.90 ILS`; `record_format_rows view:` fills only the keys a row leaves out; `format_rows` refuses an input view; until M55 U3's form, an input view opens a new entry with its address | M55 |
 | D-541 | 2026-11-03 | The project pane is a hooks module in the emerald plugin (`hosts/claude/mod/`); it reads only `start_here` and `show_format`, and because Claude Code puts a plugin's `$.mcp.call` to the person's permission check and lets no module allow its own calls, it reads unasked only where `$.tool.check` says the person's rules allow it — `npx emerald-mcp init` writes those two allow rules into the project's `.claude/settings.json` — and otherwise holds a *Read* button whose press raises the dialog; it reads from a timer, never while drawing; `npm run test:mod` runs `claude plugin test` on a copy of the plugin without its Vitest files | [below](#d-541) |
-| D-545 | 2026-11-03 | An entry's refusal sits at its field and says every problem at once — on the form, under each field, outlined and `aria-invalid`, the first focused; in the table's blank row, in a line under the row, each sentence in its own column — and a link left with a name no row holds keeps it, so Add names it; a date is typed as `YYYY-MM-DD` or `today`, `yesterday`, `tomorrow` in the cell and on the form alike, a text field over the platform's calendar; *a* or *an* goes by the word's sound; a placeholder is `ink-secondary` | [below](#d-545) |
+| D-545 | 2026-11-03 | An entry's refusal sits at its field and says every problem at once — on the form, under each field, outlined and `aria-invalid`, the first focused; in the table's blank row, in a line under the row, each sentence in its own column — and a link left with a name no row holds keeps it, so Add names it; a date is typed as `YYYY-MM-DD` or `today`, `yesterday`, `tomorrow` in the cell and on the form alike, a text field over the platform's calendar; *a* or *an* goes by the word's sound; a placeholder is `ink-secondary` | M55 |
 | D-547 | 2026-11-03 | Where Claude Code runs the plugin's hooks module, the module answers SessionStart and UserPromptSubmit itself (start_here; each new inbox row once per session, then the count) and always passes the event on with `emerald_mod_answered` added, and the two npx hook commands start through `hooks/unless-mod.mjs`, which exits on that mark — because a module that answers without `next` silences every settings hook beneath it, the person's own included; it marks only what it answered, watches the document every 5 s for the status line (`$.ui.status`) and a toast, and `init` allows `format_rows` beside the pane's two reads — the unit's pick, for the maintainer to review | [below](#d-547) |
 | D-549 | 2026-11-03 | The plugin's hooks module refuses two write rules at the call — an `Edit` or `Write` on any `.emd` file, and a `git commit` in a linked worktree that would carry the project document's copy — each guard refusing when it fails; `/claim <ref>` and `/land [ref]` write nothing and hand the model the call in the command's `context`, then ask for a turn; the third rule, no `commit: true` without a dry run, is dropped on the maintainer's word | [below](#d-549) |
-| D-550 | 2026-11-03 | A link field opens its rows on focus, in the target's order — the column its roadmap orders by, else its name with numbers read as numbers — each by its name with its entry's title beside it; a name no row has ends the list with *No milestone is called "M9"* and *+ New "M9"*, never the option Enter is on by itself; a target whose required columns its new-row defaults fill is made at once, else a form under the field asks them with the entry's own fields and refusals, Add makes and links it through `stageRows`, and Esc leaves the field as typed; an enum's members read as words in every field | [below](#d-550) |
+| D-550 | 2026-11-03 | A link field opens its rows on focus, in the target's order — the column its roadmap orders by, else its name with numbers read as numbers — each by its name with its entry's title beside it; a name no row has ends the list with *No milestone is called "M9"* and *+ New "M9"*, never the option Enter is on by itself; a target whose required columns its new-row defaults fill is made at once, else a form under the field asks them with the entry's own fields and refusals, Add makes and links it through `stageRows`, and Esc leaves the field as typed; an enum's members read as words in every field | M55 |
 | D-552 | 2026-11-03 | Where the Claude plugin starts the server it passes `--skills`, and each how-to a plugin skill carries is one line naming the skill; every other launch keeps the full instructions byte for byte | [below](#d-552) |
 | D-554 | 2026-11-03 | The recordings of the project inside Claude are four clips named in `CLAUDE_RECORDINGS` (`src/demo/page/page.ts`) — the pane opening as a session starts, the same in a terminal, a note from another project arriving, a format declared with its pane filling — each a file in `fixtures/synthetic/demo/` whose poster frame is the PNG of the same name; a clip's figure, and the slot, show only once its file is named, and a test fails when a named clip or its poster is missing | [below](#d-554) |
-| D-556 | 2026-11-03 | An input view's form is its own route, `#/formats/:name/input/:view`, drawn by the format's screen beside its list; with no name it is a new one, a draft until Save; a view or chart made from the format's + is saved and placed on no dashboard; quick add that cannot write a row opens the default input view with what was typed; the frame draws the form read-only | [below](#d-556) |
-| D-557 | 2026-11-03 | An input view's dashboard block judges and writes its row as `record_format_rows` does (`stageRows`, then `insertRows`), every refusal at its field; New input view in Add a block saves the view and its block in one transaction; quick add with the view's fields writes each into its column and opens the input view when a required one is left; the conversation's dashboard text names the block as a form | [below](#d-557) |
-| D-558 | 2026-11-03 | A column's width is one width for the format, dragged in every table of its columns — the format's table, its saved table tab and a saved table placed on a dashboard — with one handle (`ResizeHandle.tsx`); a block wider in columns than its room scrolls inside itself; read-only, the frame included, draws the widths with no handle (amends D-432); a chart's table of months keeps no width | [below](#d-558) |
+| D-556 | 2026-11-03 | An input view's form is its own route, `#/formats/:name/input/:view`, drawn by the format's screen beside its list; with no name it is a new one, a draft until Save; a view or chart made from the format's + is saved and placed on no dashboard; quick add that cannot write a row opens the default input view with what was typed; the frame draws the form read-only | M55 |
+| D-557 | 2026-11-03 | An input view's dashboard block judges and writes its row as `record_format_rows` does (`stageRows`, then `insertRows`), every refusal at its field; New input view in Add a block saves the view and its block in one transaction; quick add with the view's fields writes each into its column and opens the input view when a required one is left; the conversation's dashboard text names the block as a form | M55 |
+| D-558 | 2026-11-03 | A column's width is one width for the format, dragged in every table of its columns — the format's table, its saved table tab and a saved table placed on a dashboard — with one handle (`ResizeHandle.tsx`); a block wider in columns than its room scrolls inside itself; read-only, the frame included, draws the widths with no handle (amends D-432); a chart's table of months keeps no width | M55 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -950,347 +950,6 @@ a repository may run its own build's (this one does).
 wrote, and checks a second run is byte-identical. `createDocumentFile` takes an encoding. The
 published package has it from 0.2.0. No schema change.
 
-## D-533 · 2026-11-03 · M55's input view is a saved view of kind `input`: the fields it asks are its columns in their order and its defaults are its exact values (a member, a link, a number, or a date word that names one day), kept in `format_saved_view` and `views.md`; one per format may be its default, opened by Add, the list's + and quick add; it stays open after Add and lists what it added; it is in the rail, behind +, and a live block on a dashboard; a conversation makes it with `arrange_views` and uses it with `record_format_rows view:`; M54's fourteen engine-side *Entry:* findings come into M55 and the ledger's stay parked <a id="d-533"></a>
-
-**Context.** Planning M55 (the maintainer's answers, 2026-11-03, asked as Impeccable's *shape*
-interview). M53 gave a format one entry view, whose Fields list orders and hides fields and ticks
-those a new entry asks for (D-517, D-518); quick add takes a title and nothing else. Adding many rows
-by hand — a card's charges, a day's tasks — means the full form each time. M54 recorded the faults
-of entering by hand as *Entry:* rows for this milestone (D-530): the table's blank row, Add and quick
-add each fill defaults their own way, a refusal lands in a footer one problem at a time, a link field
-offers no way to make what is missing, and a date reads three ways on one screen.
-
-**Decision.**
-
-- **An input view is a saved view of kind `input`** (D-514, D-520), named, per format. Its address's
-  columns are the fields it asks, in their order; its exact values are its defaults. Nothing else is
-  kept, so it is `format_saved_view` with the kind's `CHECK` widened and no new table, and a
-  `views.md` block like any saved view.
-- **A default is a fixed value or a date word**: a member, a link, a number, money, text, or a word
-  that names one day (`today`, `yesterday`, `tomorrow`), worked out the day the form is used. Not
-  *keep the last value*.
-- **A required column is always asked unless the view gives it a default**; saving one that leaves it
-  neither is refused, on screen and by tool. A value set but not asked is named on the form (*Adds as
-  account Visa*), as quick add's placeholder names what it sets (M53 U4).
-- **After Add it stays open**: the fields go back to their defaults, focus to the first, and the rows
-  just added are listed under it with an undo. A refusal is at its field, every problem at once.
-- **One input view per format may be its default**: Add, the list's + and quick add open it. With
-  none, Add is the entry form as now. The table's blank row, Add and quick add share one defaults rule
-  either way: the default input view's, then the address's exact values, then a required enum's first
-  member (D-518).
-- **Where it is**: in the rail under its format with its own glyph, renamed and deleted where it
-  stands (as a chart is, D-526); behind the format's +; and on a dashboard as a block that is the form
-  itself, live. It is a saved view, so D-514's *nothing else* holds.
-- **Quick add parses nothing.** Where the format has a default input view, its line shows the view's
-  fields inline, crossed with Tab.
-- **A link field offers *+ New "<typed>"***: it makes the row in place when the target needs nothing
-  but its name, else a small inline form asks the target's required fields. Its choices are sorted and
-  named by the target's title, never bare refs.
-- **Both halves** (D-227): `arrange_views view:saved` with kind `input` makes, renames, deletes and
-  marks the default; `record_format_rows view:"<name>"` fills each row's left-out fields from the
-  view's defaults and the dry run shows them; `show_format view:"<name>"` draws it read-only.
-- **No mockup**: M55 U1 writes the shape brief and drafts the new words; the maintainer confirms the
-  brief and picks the words before the screens are built.
-- **Scope**: M54's fourteen engine-side *Entry:* rows (M54 U1, U2 and the intake row of U3) come in.
-  The eleven on the parked ledger's screens — its editors, its platform selects, `SelectOrNew`, whose
-  every caller is the ledger's, and the paycheck reader — stay recorded only.
-
-**Alternatives rejected.** An input view in a table of its own, with per-field settings (sticky
-values, hints): room nobody asked for, at a migration and a second `views.md` shape. *Keep the last
-value*: it needs that table. Opening the new entry after Add: one row per visit is what M55 is for
-removing. Input views that never change Add, and Add replaced by one input view made from the *New
-entry* ticks: the first leaves the + where it was, the second removes a form people already use.
-Parsing quick add's text (*Lunch spot 35*): a guess at which word is which column. A mockup: the
-maintainer judges it in the app.
-
-**Consequences.** A migration widens `format_saved_view.kind` and holds the default mark. `entryDefaults`
-becomes the one rule the three ways share. New on-screen words become `term` rows once picked.
-M56 waits on M55.
-
-## D-534 · 2026-11-03 · A milestone's units run at once wherever `dispatch_plan` allows, each in its own worktree with its own demo port, by sessions or by the `Agent` tool alike, up to four; a screen is measured by `npm run probe:screens` (`window.emeraldProbe()` in a dev build, in an offscreen Electron window) rather than in the browser pane by hand; a child is handed its files and told to batch its reads; a review writes a rule-backed finding as `fault` and only a judgement as `open`; units under ten minutes that share paths go to one child, and a unit stopped for the maintainer's pick goes on in the same child; amends D-287 and D-490's one-at-a-time for the `Agent` tool <a id="d-534"></a>
-
-**Context.** M54 took from 08:49 to 19:41 on 2026-11-02. Measured from its transcripts (the driver,
-its fifteen subagents and the nine review sessions): 22 units ran **one after another**, about 24
-minutes each, and the driver's own gaps between them were 13 minutes in all. `dispatch_plan` had put
-four fix units under *At once*, and four more could start once F1 landed, but the skill said the
-`Agent` tool runs *"no worktree, one at a time"*; the review units waited on one demo port and one
-browser pane. Inside a unit the time was turns, not thinking: 3,314 turns, a median of 2.5 seconds of
-model time each and 4.6 seconds of tool time. Of the calls, 30% were one-line shell reads (about 26
-per child before its first edit), 28% browser calls (927, mostly measuring contrast, sizes and names
-by hand, in helpers six sessions each wrote again), and 5% edits. Every unit paid about ten minutes
-around its own work — six to orient, three or four to land — so F10 (1.8 minutes) and the part 2s
-of F9 and F12 (12 and 9, re-reading what part 1 had read) were mostly that, while F2, F3, F4, F7 and
-F11 ran 140-208 turns into 300-414k of context. Sorting the 203 review rows afterwards took an hour
-and a half of the driver and the maintainer.
-
-**Decision.**
-
-- **At once wherever `dispatch_plan` allows**, up to four, each in its own worktree (a session's
-  `use_worktree`, or the `Agent` tool's `isolation: "worktree"`), landing through the main document's
-  inbox as before (D-485). Serial only for a group that shares paths, a unit with none, and two
-  units that drive the shell over CDP. A worktree child runs `npm ci --prefer-offline`; never a
-  junction (2026-10-15). Its demo server, where it needs the pane, is `demo-tour-<n>` on 419<n>.
-- **A screen is measured in one command**: `npm run probe:screens -- --document … --routes … --themes
-  light,dark` starts Vite in its own process on a free port, opens the app in an offscreen Electron
-  window (`check:tours`' way, no new dependency) and runs `window.emeraldProbe()` from
-  `src/ui/probe.ts`, installed by the app's and the demo's entries in a dev build only: text under AA
-  per theme (transitions off while it measures), type off the ramp read from the tokens, controls
-  with no name or only a placeholder, round fields, platform selects, native date inputs, `h1`s and
-  skipped levels, a page wider than its window, and any request the page makes for something the
-  server did not serve. The pane is for what needs eyes. Its arithmetic is tested.
-- **A child's prompt carries its `files`**, asks for its scope's rule rows in its first turn, and
-  says a turn is the cost: batch reads into one shell call.
-- **A review writes sorted** (`design-review`): a breach of a live ui rule row is `fault`, the rule
-  named in `should`; only what needs the maintainer is `open`, its `breaks` starting *Question:*.
-- **Size**: two units that share paths and each look under ten minutes of work go to one child; a
-  unit that stops for the maintainer's pick goes on in the same child (`SendMessage`), never a fresh
-  one; a unit that would run past ~150 turns is split by paths, so its halves can run at once.
-
-**Alternatives rejected.** A browser-automation server beside the pane: the same call per probe,
-and still a shared browser. A headless browser as a new dependency: Electron is Chromium and is
-already here. Junctioning `node_modules` into worktrees to skip the install: it deleted half of it
-once. Asking for every review row's verdict: most break a rule the maintainer already wrote.
-
-**Consequences.** `.claude/launch.json` has `demo-tour-1` to `demo-tour-4`. `run-milestone`,
-`design-review` and CLAUDE.md say so. Nothing in the shipped app changes: `probe.ts` is loaded by a
-dynamic import behind `import.meta.env.DEV`.
-
-## D-535 · 2026-11-03 · M55 U1's picks for the input view, not yet the maintainer's: a page where entry/new opens, beside the list, not a tab; fields in one wrapping row with *Adds as* in entry/new's footer bar; *Just added* with *Undo* under it; made from the format's + (*New input view*, *New view*, *New chart*) with the entry's Fields list carrying *Ask* and *Default*; *Use for Add* marks the one Add opens; the rail lists input views first under the new `input` glyph; a dashboard block's Add is secondary <a id="d-535"></a>
-
-**Context.** D-533 left M55 U1 to shape the input view and draft its words, and the maintainer said
-U1 does not wait for him (2026-11-03): the unit picks the likely reading wherever shape would have
-asked, and its recommended word, and he judges them after through the unit's open review entry, as
-D-475's picks were the driver's. The brief is `docs/mockups/m55-u1/brief.md`; every pick is marked
-there with ▸.
-
-**Decision.**
-
-- **A page, not a tab.** The input view opens where entry/new opens, beside the format's list, at its
-  own address; a tab is a way of seeing rows and this is a way of adding them.
-- **The form** is entry/new's field pieces in one wrapping row of labelled fields, entry/new's footer
-  bar with Add and the *Adds as* line, and *Just added* under it: the visit's rows, newest first, each
-  with an *Undo* that deletes it (refused, at its line, when another row now links to it). Enter adds
-  from any one-line field; no Ctrl+Z. The format header's Add is not drawn while the form is.
-- **Made from the format's +** at the end of its tab strip: *New input view*, *New view*, *New chart*
-  (the last two D-525's forms, saved without a block). A new input view is a draft asking the
-  required columns, named after the format, with Fields open: the entry's Fields list with *Ask* and
-  *Default* in place of *Shown* and *New entry*. *Use for Add* marks the one Add, the list's + and quick
-  add open; the rail and the bar mark it with the caption *Add*.
-- **In the rail** input views come first under their format, with a new `input` glyph.
-- **On a dashboard** the block is the form, its Add secondary (one primary per screen); at one column
-  wide the fields stack, wider they wrap; *Just added* fills the height left.
-- **Quick add** with a view used for Add is that view's asked fields inline, each with a small label,
-  crossed with Tab; a group's value wins over the view's default.
-- **The words** are `term` rows named by this decision: *Input view*, *Adds as*, the + menu's three
-  items, *Use for Add*, *Ask* · *Default*, *Just added* and *Undo*.
-
-**Alternatives rejected.** The input view as a tab of the strip (it leaves the list behind and sits
-among views of rows). Editing fields by a menu on each field (more clicks than the Fields list the
-entry already has: six against nine for D-533's done-test). A + with *New input view* alone (a menu
-of one is a wasted click). *Form* (entry/new is already the entry form), *Default* for the mark (it
-does not say of what, and names a field's value already), *Remove* for undo (it reads as *Remove from
-this dashboard*). A filled Add on a dashboard block (several blocks would be several primaries).
-
-**Consequences.** U3 and U4 carry the picks as SETTLED. Four term rows become false when those land
-and are theirs to correct: *Re-apply* ("the only undoable action"), *Saved view*'s kinds, *Block*'s
-three kinds, *Add a task · values*. A pick the maintainer changes is a fix unit.
-
-## D-545 · 2026-11-03 · An entry's refusal sits at its field and says every problem at once — on the form, under each field, outlined and `aria-invalid`, the first focused; in the table's blank row, in a line under the row, each sentence in its own column — and a link left with a name no row holds keeps it, so Add names it; a date is typed as `YYYY-MM-DD` or `today`, `yesterday`, `tomorrow` in the cell and on the form alike, a text field over the platform's calendar; *a* or *an* goes by the word's sound; a placeholder is `ink-secondary` <a id="d-545"></a>
-
-**Context.** M54 U1's *Entry:* rows on entering a row (D-533 brought them into M55; D-534 put them in
-U5): `abc` in a card charge's amount with no date took three rounds — the table said one problem at
-the page's foot and outlined one cell, the form said one in its footer and marked no field; a unit
-given milestone `M9` was told *An unit needs a milestone.* — false, and with the wrong article; a date
-was a native mm/dd/yyyy field on the form and ISO-only in the cell; placeholders read at 2.6:1. M54 F2
-(de87c49) had already made the *needed* mark and quick add's label `ink-secondary`.
-
-**Decision.**
-
-- **Every problem at once.** `coerceProblems` (row.ts) names every column `coerceRow` would refuse;
-  `stageRows` returns one refusal per refused cell, so the table, a paste and `record_format_rows` say
-  them all. The form's `judgeEntry` collects every needed field (`entryNeedsEach`), every refused
-  value, every link that names no row (asked alone even when another column fails), the rules', the
-  repeats', the constraints' and the table's own word, one sentence a field.
-- **At the field.** The form draws each sentence under its field, outlines the field in `negative`
-  (`.fc-problem`), sets `aria-invalid` and `aria-describedby` on its control, and focuses the first on
-  Add; its foot says *Not added: N fields to put right.* and anything about the row as a whole. The
-  table outlines each refused cell and draws a line under the row with each sentence in its column; the
-  status line counts them. A sentence said at its field drops the field's name in front of it.
-- **A link field keeps a name typed and left**, as Enter did, so Add says *No milestone is called "M9".*
-  A value no row holds stays a field, never a link to nothing.
-- **Dates.** `dayOfWord` (completion.ts) reads `today`, `yesterday`, `tomorrow`; the cell and the
-  form show the day while it is typed and become it when left, and `offeredOf` with today offers the
-  day. The form's date and month are the time field's text field and hidden calendar, so the entry page
-  shows `2026-09-03` as the table does. `probe:screens` no longer counts that hidden calendar.
-- **Words and contrast.** `withArticle` goes by sound (*a unit*, *a one-off*, *an hour*). A placeholder is
-  `ink-secondary` in the base layer; a chip's text, the sheet's row numbers, *No readers yet*, *Claims*
-  and a new entry's draft line in the list are too.
-
-**Alternatives rejected.** The table's sentences only in its status line, each naming its row and
-column: that is the page's bottom-left the review found. A tooltip on the cell: not seen until pointed
-at, and never read by a screen reader. Dropping the calendar under a date field: M29 F2 asked for it, and
-it was never what showed mm/dd/yyyy. The engine's sentence *date is required and was not given.* in
-the cell, against *A card charge needs a date.* on the form, was left: rewording the engine's
-refusals is beyond this unit.
-
-**Consequences.** A conversation's `record_format_rows` now lists every refused cell of a row. A date
-word is the screen's; the tools still take `YYYY-MM-DD` for a date and a word only as an input view's
-default (D-536).
-
-## D-540 · 2026-11-03 · A line a read refused offers Add by hand: the format's Add opens with what the line held, the read is kept for the window's life while it is away, the Add goes back to the read, and the read counts the line added by hand; a row the mapper could not read is skipped from that read only — counted as skipped in the mapper and on Read files, never written, never kept in the reader, and taken back by Put back or by a mapping that reads it <a id="d-540"></a>
-
-**Context.** M54 U3's review (two *Entry:* rows): after Use, *Line 7 — amount is required and was
-not given* could be put right only by remapping, and the mapper's *Row 17 Could not read transaction
-date from "סה"כ"* — the printed total line — had no skip and no fix. M55 U9, split out of U5 by paths
-(D-534); D-533 brought both findings into M55.
-
-**Decision.**
-
-- **Add by hand** beside each refused line of a read (`ReadFiles`' plan lines) opens the line's format's
-  Add (`entry/new`) with `draftOfOffered` of what the reading offered: what the file said, never a
-  value made up (D-137's line), so a person fixes the field that refused and adds it. A pack's format
-  offers no Add, as before (D-269). The route carries the read (`ReadLine` in `nav.ts`): the back link
-  reads *← Read*, and Add writes and goes back to the read rather than to the new entry.
-- **The read is kept while it is away**: `ReadFiles` keeps its files, readers made, ticks and
-  choices by format for the window's life and for the same document, let go on Write or when the last
-  file is taken off. The read then says *added by hand* on the line and *N added by hand* in its count.
-  The line is still refused in the file; the file is written without it, as before.
-- **Skip** beside a row the mapper could not read leaves it out of that read: counted as skipped
-  (`LEFT_OUT`), never written, carried on the `StatementSheet` into the batch and said there (*3 new,
-  1 skipped*), never kept in the saved reader. *Put back* takes it back, and only a row that does not
-  read is left out, so a mapping changed to read it reads it.
-
-**Alternatives rejected.** An add form inside the read: a second entry form beside the format's own,
-with its own checks — the screen and the tool would drift (D-227). Fixing the line in the read so it
-is written with the file: the brief asked for the format's Add, and a fix to the reading's cells is
-remapping by another name. Keeping a skip in the reader: the brief scoped it to *that read*, and a
-total line a reader skips forever is a row it can never be told about.
-
-**Consequences.** A conversation needs nothing new: `read_onto_format` reports refused lines and
-`record_format_rows` adds one; `import_statement` never writes a row that does not read. A line
-added by hand is not part of the read's intake, so a header's claim over the lines does not count it.
-
-## D-538 · 2026-11-03 · A date, a month and an amount read as the table writes them on a dashboard's blocks, a list, a rollup's table and its chart — `2026-07-27`, `2026-09`, `₪60.00` — and a rollup reads in words: its name *Landed by month*, what it counts a sentence; the declaration and every tool keep the name <a id="d-538"></a>
-
-**Context.** M54 U2 found one value reading three ways on one screen: a date `2026-07-27` in the
-table and `Sun 26 Jul 2026` in a block, a month `2026-09` in a rollup's table and `Sep 2026` on its
-chart, money `₪60.00` in the table and `50 ILS` in the filter band; and a chart made from a dashboard
-reading `landed_by_month` everywhere, under a subtitle and a tab heading that were the rollup's
-own text in mono. M55 U7's brief settled which way wins: the table's.
-
-**Decision.** `valueText` (a dashboard block, the list beside an entry, a list's line and its date's
-hover) writes a date and a month as stored; `rollupChart`'s labels and ticks are the months as the
-table writes them; the band writes a money range's ends with `formatMoney`, a quantity as before. A
-rollup's name reads through `rollupWords` — the block's title, the format's tab, the rail, *Add a
-block*, its tab's table — and what it counts through `rollupSentence`, under the block, above its
-tab's chart and in `show_format view:dashboard`'s line. Left as they were: the agenda's day headings
-and a list's relative due (*in 3 days*), which say a day against today rather than a value; the entry
-page is M55 U5's. *New chart* and *New view* say *Add*, as *Headline total* does, and a chart's
-missing month is said once, at *By month of*, after an attempt.
-
-**Alternatives rejected.** The words everywhere (`Sun 26 Jul 2026`, `Sep 2026`): the table is where a
-value is checked and typed, and it writes ISO. A rollup's name kept as declared on screen: the person
-typed words. Choosing the first date for a chart by default: the brief asks once at the field instead.
-
-**Consequences.** A screen that shows a date, a month or money from a row reads it as the table does;
-a new one that wants words says why. `rollupSentence` is the screen's and the conversation's alike.
-
-## D-539 · 2026-11-03 · A new column's type is picked from a short list in a person's words — Text · Number · Money · Date · Yes or no · Choice · Link · Computed — with *More types…* one step away under Numbers (Whole number · Exact decimal · Percentage · Quantity), Dates and times (Month · Time of day · Date and time), Several (Several choices · Several links) and Outside this document (File · Row in another document); the picked type shows its name, the stored word is its tooltip, and the declaration's word never changes; the maintainer's pick of three drafts <a id="d-539"></a>
-
-**Context.** M54 U1's row (D-530): #/formats → New format → Start empty → a column's type showed every
-type at once — eighteen and *computed* — in the engine's words, `integer`, `real`, `enum`, `enums`,
-`instant`. Re-run in M55 U8, it still did: M54 F2 had given the sheet's headers a person's words
-(`entryLabel`) and left the picker alone. D-533 split the picker out of U5 by its paths (D-534), and
-its words were drafted for the maintainer to pick.
-
-**Decision.** Draft A, as drafted (2026-11-03):
-
-- **Common first.** Text · Number · Money · Date · Yes or no · Choice · Link · Computed — which are
-  common read off the packs' and the demo's declarations (text 117, link 72, enum 49, money 37,
-  date 31, integer 29, boolean 28). *Number* is `real`, because a person typing a number means any
-  number; *Whole number* is one step away.
-- **The rest one step away**, never all of them at once: *More types…* replaces the short list with
-  four headings, and *← Common types* goes back. *Change* on a rare type opens on the rest.
-- **The stored word is unchanged**: `TYPE_WORDS` gains `shown`, a name per type, read by the picker
-  and the line beside a picked column's name, whose tooltip is *Stored as integer*. A conversation,
-  a `.format.md` and the declaration keep `integer`.
-- **The words**: *Choice* rather than *One of a list*, because *List* is the view's term; *Link*,
-  *Computed* and *Quantity* keep their term rows (D-451, D-225).
-
-**Alternatives rejected.** Draft B: nine common types in the order the packs use them, and the rest
-as one flat list with no headings. Draft C: A's split with each name an answer — *Words*, *A number*,
-*A day*, *One choice*, *A row of another format* — which gives up *Link* (D-451). Renaming the
-stored words (D-227's two vocabularies).
-
-**Consequences.** Clicks: + then a common type is two, + then *More types…* then a rare type three.
-The tour's type anchors (`type-text`, `type-date`, `type-money`, `type-link`) are all on the short
-list. A type's `catch`, shown once it is picked, is still the tool's sentence and names `real` and
-`aggregate` in places.
-
-## D-543 · 2026-11-03 · A newcomer's four skills are the plugin's alone, each named for what a person does — `read-a-file`, `what-looks-wrong`, `bring-in-a-plan`, `set-up-a-project` — and setting a project up is a skill of its own beside `emerald-setup`, which fires only where a session has no Emerald tools at all <a id="d-543"></a>
-
-**Context.** M56 U4 and U7 (re-cut by audience, D-534): four skills a stranger reaches for, in the
-plugin (`hosts/claude/skills/`), generic — `skills.test.ts` fails when one names this repository's
-decisions, units, notes or scripts. The rows named placeholder folders and left two questions: what
-each is called (`format_rows term`, D-436), and whether setting a project up extends `emerald-setup`.
-
-**Decision.**
-
-- **Names say what the person does, as `declare-a-format` does**: `read-a-file` (the screen's *Read
-  a file*, and D-451's word — a file is what is read, never a *document*), `what-looks-wrong` (the
-  term row's name for `format_problems`' list, kept by D-451), `bring-in-a-plan` and
-  `set-up-a-project`. None says *mapping*, which the Reader term row rejects.
-- **`set-up-a-project` is its own skill.** `emerald-setup` fires when a session has no Emerald tools
-  under any prefix, and says how to add the server to the Claude app; setting a repository up is
-  asked where the tools are there, and is about `init`'s three choices — where the document lives,
-  the hooks, the status line. One description cannot fire on both, so each names the other.
-- **All four are the plugin's alone**, like `emerald-setup`: this repository develops with neither
-  half (its document, hooks and status line are its own), so they keep no `.claude/skills/` copy and
-  fall under the generic rule.
-- **A skill that pins `emerald-mcp` is moved by `scripts/pin-plugin.mjs`**, and `plugin.test.ts`
-  now fails when a skill holds a pin the script does not move, or one that differs.
-- **What each carries of the server's instructions** (for M56 U5 to trim): `read-a-file` the Formats
-  section's *read the file rather than retyping it* paragraph (`read_onto_format`, the reader,
-  `columns`, `fixed`, links by unique name, `files`, reading again, `supersede_reading`) and the
-  *What you are for* ask-for-the-file line; `what-looks-wrong` the Formats section's
-  `format_problems` sentence and the refusal half of its write-in-the-text-then-check paragraph;
-  `bring-in-a-plan` what the pack holds in *A project's development planning* and the pack paragraph
-  of *Where to start*; `set-up-a-project` the planning section's two ways to keep the document (text
-  and committed, or one file outside every repository).
-
-**Alternatives rejected.** Extending `emerald-setup` with `init`: its trigger is the absence of the
-tools, and a skill that fires on both presence and absence fires on neither reliably. Copies in
-`.claude/skills/`: nothing here would run them, and a copy nobody uses drifts. `import-a-file` and
-`file-onto-format` (the rows' placeholders): *import* is the ledger's statement flow, and *onto a
-format* is the tool's phrasing rather than a person's.
-
-## D-536 · 2026-11-03 · An input view's default mark is a column of `format_saved_view` with a partial unique index (066), on an input view alone; a new row's defaults are one rule, `entryDefaults` — the default input view's, over the address's exact values, over a required enum's first member — read by the table's blank row, entry/new and quick add; a money or quantity default is written `12.90 ILS`; `record_format_rows view:` fills only the keys a row leaves out; `format_rows` refuses an input view; until M55 U3's form, an input view opens a new entry with its address <a id="d-536"></a>
-
-**Context.** D-533 settled what an input view is and left M55 U2 three shapes: where the default mark
-lives, how a default that is not a word is written, and what a screen opens before U3 builds the form.
-M54 U1 had found the table's blank row refusing a task's `state` while Add and quick add filled it:
-three ways of starting a row, two rules.
-
-**Decision.** `format_saved_view` gains `is_default` (0/1), `CHECK`ed to `kind = 'input'`, and a partial
-unique index on `format_name WHERE is_default = 1` — the mark belongs to the view, follows a rename,
-goes with a delete, and the table itself holds it to one per format; `saveView` takes it from the view
-that had it, and the dry run says so. A text document writes `default: true` in the view's block.
-`inputViewRefusals` (domain, `inputView.ts`) is the one check, asked by `arrange_views` and by the screen's
-save: a required column neither asked nor defaulted, a default its column's type or checks refuse (a
-date word naming more than one day among them), a computed column asked or defaulted — every reason at
-once. A money or a quantity default is the figure and its currency or unit, `12.90 ILS`, so it is
-checked whole. `entryDefaults` takes the default input view's defaults and the address's exact values
-(`heldExactly`, which `filterImplies` now calls) and lays them input over address over a first member;
-the blank row, entry/new and quick add all read it through `newRowDefaults`, and a default drawn in a
-cell is not counted as typed (`typedOf`). `record_format_rows view:` fills a column only when the row
-names neither it nor its companion key, and refuses any other kind; `format_rows view:` refuses an
-input view (it shows no rows). Until U3, `savedViewPath` opens an input view as entry/new with its
-address, so the frame draws a read-only new entry starting at its defaults.
-
-**Rejected.** A `format_view_column` setting or a document setting naming the default view: a rename or
-delete would leave it pointing at nothing, and nothing would hold it to one. A money default as two keys
-of the address: an address holds one value per column.
-
 ## D-541 · 2026-11-03 · The project pane is a hooks module in the emerald plugin (`hosts/claude/mod/`); it reads only `start_here` and `show_format`, and because Claude Code puts a plugin's `$.mcp.call` to the person's permission check and lets no module allow its own calls, it reads unasked only where `$.tool.check` says the person's rules allow it — `npx emerald-mcp init` writes those two allow rules into the project's `.claude/settings.json` — and otherwise holds a *Read* button whose press raises the dialog; it reads from a timer, never while drawing; `npm run test:mod` runs `claude plugin test` on a copy of the plugin without its Vitest files <a id="d-541"></a>
 
 **Context.** M56's brief (the maintainer's answers of 2026-11-02) rested on `$.mcp.call` asking no
@@ -1329,6 +988,44 @@ saying so is M56 U5's. The desktop app's check of the pane is still the maintain
 `CLAUDE_CODE_PLUGIN_DIRS`, which a session does not write.
 
 ---
+
+## D-543 · 2026-11-03 · A newcomer's four skills are the plugin's alone, each named for what a person does — `read-a-file`, `what-looks-wrong`, `bring-in-a-plan`, `set-up-a-project` — and setting a project up is a skill of its own beside `emerald-setup`, which fires only where a session has no Emerald tools at all <a id="d-543"></a>
+
+**Context.** M56 U4 and U7 (re-cut by audience, D-534): four skills a stranger reaches for, in the
+plugin (`hosts/claude/skills/`), generic — `skills.test.ts` fails when one names this repository's
+decisions, units, notes or scripts. The rows named placeholder folders and left two questions: what
+each is called (`format_rows term`, D-436), and whether setting a project up extends `emerald-setup`.
+
+**Decision.**
+
+- **Names say what the person does, as `declare-a-format` does**: `read-a-file` (the screen's *Read
+  a file*, and D-451's word — a file is what is read, never a *document*), `what-looks-wrong` (the
+  term row's name for `format_problems`' list, kept by D-451), `bring-in-a-plan` and
+  `set-up-a-project`. None says *mapping*, which the Reader term row rejects.
+- **`set-up-a-project` is its own skill.** `emerald-setup` fires when a session has no Emerald tools
+  under any prefix, and says how to add the server to the Claude app; setting a repository up is
+  asked where the tools are there, and is about `init`'s three choices — where the document lives,
+  the hooks, the status line. One description cannot fire on both, so each names the other.
+- **All four are the plugin's alone**, like `emerald-setup`: this repository develops with neither
+  half (its document, hooks and status line are its own), so they keep no `.claude/skills/` copy and
+  fall under the generic rule.
+- **A skill that pins `emerald-mcp` is moved by `scripts/pin-plugin.mjs`**, and `plugin.test.ts`
+  now fails when a skill holds a pin the script does not move, or one that differs.
+- **What each carries of the server's instructions** (for M56 U5 to trim): `read-a-file` the Formats
+  section's *read the file rather than retyping it* paragraph (`read_onto_format`, the reader,
+  `columns`, `fixed`, links by unique name, `files`, reading again, `supersede_reading`) and the
+  *What you are for* ask-for-the-file line; `what-looks-wrong` the Formats section's
+  `format_problems` sentence and the refusal half of its write-in-the-text-then-check paragraph;
+  `bring-in-a-plan` what the pack holds in *A project's development planning* and the pack paragraph
+  of *Where to start*; `set-up-a-project` the planning section's two ways to keep the document (text
+  and committed, or one file outside every repository).
+
+**Alternatives rejected.** Extending `emerald-setup` with `init`: its trigger is the absence of the
+tools, and a skill that fires on both presence and absence fires on neither reliably. Copies in
+`.claude/skills/`: nothing here would run them, and a copy nobody uses drifts. `import-a-file` and
+`file-onto-format` (the rows' placeholders): *import* is the ledger's statement flow, and *onto a
+format* is the tool's phrasing rather than a person's.
+
 ## D-547 · 2026-11-03 · Where Claude Code runs the plugin's hooks module, the module answers SessionStart and UserPromptSubmit itself (start_here; each new inbox row once per session, then the count) and always passes the event on with `emerald_mod_answered` added, and the two npx hook commands start through `hooks/unless-mod.mjs`, which exits on that mark — because a module that answers without `next` silences every settings hook beneath it, the person's own included; it marks only what it answered, watches the document every 5 s for the status line (`$.ui.status`) and a toast, and `init` allows `format_rows` beside the pane's two reads — the unit's pick, for the maintainer to review <a id="d-547"></a>
 
 **Context.** M56 U2's brief: where the hooks module runs it takes over from the npx hooks (the
@@ -1420,46 +1117,6 @@ by the last call (the three options put to him). Classic `commands/*.md` prompts
 own included; a merge conflict in `docs/memory.emd` is resolved outside the `Edit` tool. The dry-run
 question is the driver's to record.
 
-## D-550 · 2026-11-03 · A link field opens its rows on focus, in the target's order — the column its roadmap orders by, else its name with numbers read as numbers — each by its name with its entry's title beside it; a name no row has ends the list with *No milestone is called "M9"* and *+ New "M9"*, never the option Enter is on by itself; a target whose required columns its new-row defaults fill is made at once, else a form under the field asks them with the entry's own fields and refusals, Add makes and links it through `stageRows`, and Esc leaves the field as typed; an enum's members read as words in every field <a id="d-550"></a>
-
-**Context.** M54 U1's two link rows (D-533 brought them into M55, U6): on project.emd's unit form
-the milestone listed M2, M3, M1 and the decision D-1, D-2, D-4, D-3 — id order, bare refs — opened
-only on typing, and a name no row had listed nothing, with no way to make it. The only *+ New…* was
-the parked ledger's `SelectOrNew`, a platform select.
-
-**Decision.**
-
-- **Order and names** (`linkTargets.ts`, `linkChoices`). A target's rows come in the order its
-  roadmap's `order` column says (a milestone's `position`), else by the column it is named by,
-  compared with numbers read as numbers (`D-2` before `D-10`). Each is its name — what a link is
-  written and kept by — with its entry's title beside it (ChoiceField's detail, now `ink-secondary`,
-  since a title is read) when the title is another column; typing finds either, and a title typed
-  whole is that row.
-- **Open on focus** (`openOnFocus`) in the entry's link field, the *Fill* chip's and the table's
-  blank row; other choice fields are unchanged.
-- **+ New** (`ChoiceField`'s `make`). A typed name no row has whole ends the list with *+ New "M9"*,
-  under *No milestone is called "M9"* when nothing else matches. It is never active by itself, so
-  Enter on a name no row has still keeps it as typed (D-545) and the table's Enter still writes the
-  row; ArrowDown or a click reaches it.
-- **Made in place** (`newLinked`, `stageLinked`). The new row is the target's new-row defaults
-  (D-536) with the name in its naming column; when no required column is left empty it is made at
-  once and linked. Else `NewLinkForm` opens under the field — in the table, in a row of its own under
-  the cell, from the cell's column on — asking the name and those columns with the entry's own `Field`
-  and each refusal at its field, in the screen's words. Add makes it through `stageRows` and
-  `insertRows`, the batch `record_format_rows` writes (D-227), so there is no new write; Esc or
-  Cancel closes the form and leaves the field as typed, back in it. The blank row is not left while
-  focus is in its form.
-- **The screen's** (`LinkMakerContext`): `FormatRows` provides it, and none where nothing may be
-  written; a pack's format is never made from a link field. A link column of the row being made lists
-  its own rows and may make one in turn.
-- **Words**: an enum's members read as words (`in progress`) in the entry's menus and chips and the
-  table's blank row, as the board's lanes do.
-
-**Alternatives rejected.** The title as the choice's label: the field, the cell and every tool name a
-link by its row's name, so a list naming it otherwise would show one thing and keep another. Making a
-name-only target on Enter: one keystroke would write a row nobody saw offered. *+ New* on a column of
-several links: not asked, and `MembersField` is a different control; left for when it is.
-
 ## D-552 · 2026-11-03 · Where the Claude plugin starts the server it passes `--skills`, and each how-to a plugin skill carries is one line naming the skill; every other launch keeps the full instructions byte for byte <a id="d-552"></a>
 
 **Context.** M56 U5's brief: `src/plugin/instructions.ts` is in context on every turn of every
@@ -1522,104 +1179,6 @@ asked for the desktop app first, so none of it is given up). A poster named sepa
 **Consequences.** The pane does not redraw when an inbox row arrives (M56 U1 redraws after a write in its
 own session or on `/emerald`), so clip 2 asks for `/emerald` after the toast; if the pane learns to
 redraw from the inbox's watch first, that shot is cut.
-
-## D-556 · 2026-11-03 · An input view's form is its own route, `#/formats/:name/input/:view`, drawn by the format's screen beside its list; with no name it is a new one, a draft until Save; a view or chart made from the format's + is saved and placed on no dashboard; quick add that cannot write a row opens the default input view with what was typed; the frame draws the form read-only <a id="d-556"></a>
-
-**Context.** M55 U3 builds U1's confirmed brief (D-535) on U2's engine (D-536): the input view as a page
-where entry/new opens, made in place from the format's +, in the rail, and opened by Add. The brief settles
-the screen; it leaves open where the page lives in the code and the three small seams below.
-
-**Decision.**
-
-- **The route.** `inputPath(format, name)` is `#/formats/card_charge/input/Card%20charge`, and
-  `#/formats/card_charge/input` is a new one. Both are `FormatRows input`, so the list beside it, the
-  link maker and `judgeEntry` are the entry's own; `judgeEntry` takes the draft's starting point, so a
-  row holding only its defaults is untouched. `savedViewPath` takes the view's name for an input view.
-- **The write is entry/new's**: `judgeEntry`, then `insertRows`; Undo is `deleteRows`, refused while
-  `rowsLinkingTo` finds a row naming it. A new row starts at `entryDefaults` with the view's own
-  defaults and no address — the list's filter carried in the address does not set a field.
-- **New view and New chart from the +** are `ViewForm` and `ChartForm` with `place={false}`:
-  `makeView`/`makeChart` save the view or declare the rollup and write no block.
-- **Quick add** (until M55 U4 draws the view's fields inline) still writes a title alone; where a required
-  column is left, it opens the default input view with what was typed as the first row's start, as it
-  opened entry/new before.
-- **The frame** draws `#/formats/:name/input/:view` read-only — fields disabled, no Add, no +;
-  a new one is in `NOT_IN_FRAME`. An input view is never a tab, on the format's strip or a link view's.
-
-**Alternatives rejected.** A route of its own outside `FormatRows` (a second list, a second judge). The
-view's address in the page's address (it would filter the list beside the form by the view's defaults).
-
-**Consequences.** The rows just added are this visit's state, keyed by id while shown and by title for
-motion; a text document that renews an id on a write drops a line from *Just added*, never adds a wrong one.
-
-## D-557 · 2026-11-03 · An input view's dashboard block judges and writes its row as `record_format_rows` does (`stageRows`, then `insertRows`), every refusal at its field; New input view in Add a block saves the view and its block in one transaction; quick add with the view's fields writes each into its column and opens the input view when a required one is left; the conversation's dashboard text names the block as a form <a id="d-557"></a>
-
-**Context.** M55 U4 builds U1's confirmed brief (D-535) for the dashboard and for quick add, on U2's engine
-(D-536) and U3's page (D-556). The brief settles the screen; it leaves open how a block, which has no entry
-beside it, judges a row, and three seams below.
-
-**Decision.**
-
-- **The block is a saved view** (`format_dashboard_block` kind `saved`, naming an input view): no migration.
-  `Block` draws `InputBlock` where the saved view's kind is `input`; its line is `blockSentence` —
-  *Adds a card charge as date today · account Visa*, in the format's column order.
-- **Its row is judged by the batch the tool runs** (`stageInput` in `src/ui/formats/inputBlock.ts`:
-  `stageRows`, then `insertRows`), every refusal at once and at its column, said in a screen's words; a
-  row holding only where it started is *Nothing has been filled in yet.* The page keeps `judgeEntry`,
-  which needs the entry's state; the two refuse the same things because `stageRows` is what
-  `record_format_rows view:` runs. Undo is U3's: refused while another row names it.
-- **New input view in Add a block** is `InputViewForm` (`MakeBlock.tsx`): *Of* on the document's
-  dashboard, the name (`inputViewName`), U3's `InputFields` inline, *Use for Add*; `makeInputView` saves
-  the view and places its block in one transaction, refused first by `inputMadeRefusal` (a taken name and
-  `inputViewRefusals`). Only formats a person writes are offered one (D-269).
-- **Quick add with the view's fields**: `quickAdd` takes the default input view's asked columns — named
-  neither in the placeholder nor as missing — and `quickFieldsOf` gives each its start (the group's value
-  over the view's default, a link by its row's name). Enter writes each value into its column through the
-  same `stageRows`; a required column left empty opens the default input view with what was typed, as
-  D-556's quick add did.
-- **The conversation's dashboard text** (`show_format view:dashboard`, `arrange_views`) says an input
-  view's block is *a form* with its sentence and the `record_format_rows view:` that adds through it,
-  never the rows its defaults would filter.
-- **A block draws no *+ New* on a link field**: the link maker (D-550) is the format screen's; a name no
-  row has is refused at Add, at its field.
-
-**Alternatives rejected.** Judging the block's row with `judgeEntry` (it lives in the format screen and
-reads the entry's state); a block kind of its own (a migration for what a saved view already names).
-
-**Consequences.** `inputBlock.ts` imports nothing React touches, so the plugin can read it for its text.
-
-## D-558 · 2026-11-03 · A column's width is one width for the format, dragged in every table of its columns — the format's table, its saved table tab and a saved table placed on a dashboard — with one handle (`ResizeHandle.tsx`); a block wider in columns than its room scrolls inside itself; read-only, the frame included, draws the widths with no handle (amends D-432); a chart's table of months keeps no width <a id="d-558"></a>
-
-**Context.** M55 F1, from the maintainer in M55's review: *"we need to be able in all views to change the
-width of columns in dashboard"*. His answers the same day settle the store (one width per column, the
-format's own), the surfaces (every one that draws columns), the handle (the table's) and read-only (widths,
-no handle). The store was D-289's: `format_column_view`, presentation, per format and column, carried by a
-text document for columns that exist.
-
-**Decision.**
-
-- **One width per column, no migration.** A saved table block (`TableBody` in `Dashboard.tsx`) draws
-  `columnWidths` as a fixed `<colgroup>`, the type's width where none is kept (`defaultWidth`), and
-  writes a drag, an arrow or a reset through `setColumnWidth` with the format's name — the call the
-  format's table makes. Dragged in either, it is the other's; a reset clears it everywhere.
-- **One handle.** `ResizeHandle` and `defaultWidth` moved out of `RowSheet.tsx` into
-  `src/ui/formats/ResizeHandle.tsx`: drag, double-click or Delete to reset, arrows by 16px on the focused
-  handle. A press that starts on any separator inside a block never moves the block (the block's
-  `onPointerDownCapture` sets the ref its edges already use).
-- **A saved table opened as the format's tab is the format's sheet**, so it drew and dragged the stored
-  widths already; nothing changes there.
-- **A block narrower than its columns scrolls inside itself**: the table sits in an `overflow-x-auto` box
-  in the block's `min-w-0` body, never widening the page. The block still shows as many columns as its
-  width allows (`tableColumns`).
-- **Read-only draws the widths with no handle**, on a block and on the format's table: `RowSheet`'s
-  `onWidth` is absent there and `FormatRows` passes none under `ReadOnly`. This amends D-432's *widths
-  still work on the copy*; `readOnly.ts` says so. A pack's format, locked to rows only (D-269), keeps its
-  handle — a width is presentation.
-- **A chart's table of figures keeps no width.** Its columns are months, not the format's columns, so the
-  format's store has nowhere to keep them; it scrolls inside its block. The maintainer's pick, 2026-11-03:
-  *"No handle there"* — no new store, no migration; only tables of the format's own columns drag widths.
-- **Parity (D-227) applies to a width and is already met**: `arrange_views view:sheet column width`
-  (D-403) writes the same row, so a width set in a conversation is the block's too. No tool changes.
 
 ## Related
 

@@ -1,6 +1,6 @@
 # M55 U1 — the input view, shaped
 
-*Impeccable's shape (D-529), with [D-533](../../09-decision-log.md#d-533) as its discovery round:
+*Impeccable's shape (D-529), with D-533 as its discovery round:
 what D-533 settles is not asked again, and where shape would have asked, the likely reading is
 asserted. No mockup (maintainer, 2026-11-03). U3 and U4 build from this.*
 

@@ -6131,7 +6131,7 @@ position: 350
 ### M55
 title: Input views: a format's own entry form, on its tab and in a dashboard
 goal: As a person can save views and arrange dashboards (M53), they can make their own input view of a format, choosing which fields it asks for, in what order and with what defaults, and open it under that format or put it in a dashboard, so adding rows by hand is quick. A conversation can make and use one too. Maintainer's answers, 2026-11-03 (D-533, asked as Impeccable's shape interview): a saved view of kind input, its columns the fields and its exact values the defaults; a default is a fixed value or a date word naming one day; it stays open after Add and lists what it added; one per format may be the format's Add; in the rail, behind +, and a live dashboard block; quick add shows the view's fields inline and parses nothing; a link field makes what is missing in place; no mockup, U1 writes the shape brief and picks its words itself, for him to judge after (maintainer, 2026-11-03: U1 does not wait for him); M54's fourteen engine-side Entry: rows come in (U5-U9, split by paths, D-534), the ledger's stay parked. Before M56, and driven beside it.
-state: planned
+state: closed
 position: 360
 
 ### M56
@@ -6618,7 +6618,7 @@ state: fault
 ### Demo, #/formats → New format → Start empty → name it → Add its columns; type a column name, pick Number; add another, More types… → Whole number; then Change on it.
 unit: M55 U8
 should: Eight tiles at first, in words (no integer, real, enum in sight), Number in two clicks and Whole number in three, the picked line saying Whole number with Stored as integer on hover, and Change opening on More types. Wrong would be: all nineteen at once, or the engine's word on a tile.
-state: open
+state: accepted
 
 ### Demo, a document with no reader: #/read/readers.
 unit: M54 U3
@@ -6701,7 +6701,7 @@ state: fault
 ### Demo, custom.emd, #/formats/card_charge → + → New input view; untick date's Ask, Default 'today', Use for Add, Save; then Add five charges (merchant, Tab, amount, Enter) and Undo one.
 unit: M55 U3
 should: Question: the picks as built — Fields beside the form only where the page is 768px wide (under it otherwise, which with the list beside is most windows); the merchant field a growing text so Enter adds from it; Just added's lines carry the list's own cells (a relative day). Wrong would be the form or Fields reading cramped beside the list, or Enter not adding where you expect.
-state: open
+state: accepted
 
 ### Demo, custom.emd, #/formats/card_charge. In the blank row type abc into amount, leave date empty, press Enter. Then open Add (card_charge/entry/new), leave date empty, press Add.
 unit: M54 U1
@@ -6712,12 +6712,12 @@ state: open
 ### Demo, custom.emd, #/formats/card_charge/dashboard → Add a block → New input view; untick date's Ask, Default 'today', Use for Add, Add; type three charges in the block (merchant, Tab, amount, Enter), Undo one, drag it to one column and short. Then #/formats/card_charge/list: 'Lunch spot', Tab, 35, Enter; open an entry and do the same beside it.
 unit: M55 U4
 should: Question: the picks as built — at one column (about 180px on a 1024px window) the label sits at the left in 80px and wraps 'needed' under it; the merchant field is the format's growing text; a block's link field has no + New (a missing name is refused at Add). Wrong would be the one-column block reading cramped, or quick add's fields reading as a second form rather than one line.
-state: open
+state: accepted
 
 ### Demo, custom.emd, #/formats/card_charge/entry/new and the table, light and dark: the needed mark, the fields' placeholders, quick add.
 unit: M55 U5
 should: All at least 4.5:1: needed and quick add's label were already ink-secondary from M54 F2 (de87c49); placeholders are now ink-secondary. (M54 U1's 54c3cdd9)
-state: open
+state: accepted
 
 ### Demo, custom.emd, #/formats/card_charge/entry/new in light and dark: the "needed" mark beside a required field, the fields' placeholders, and quick add in the list (whose only visible label is its placeholder).
 unit: M54 U1
@@ -6777,12 +6777,12 @@ state: fault
 unit: M55 U5
 should: Every bad cell or field is outlined at once with its sentence under it — date, merchant, amount — in one round; on the form the first is focused and the foot says Not added: 3 fields to put right. (M54 U1's 61b7ed02)
 breaks: The table's sentences are the engine's (date is required and was not given.) where the form says A card charge needs a date.
-state: open
+state: accepted
 
 ### Demo, custom.emd, #/formats/card_charge: type tomorrow in the blank row's date, a merchant and 12, Enter; then Add, type yesterday into date; then open an existing charge's entry.
 unit: M55 U5
 should: The row is written with tomorrow's ISO date; the form's date is a text field (YYYY-MM-DD or today) showing the day it names; the entry page shows 2026-07-27 as the table does, and a click still opens the calendar. (M54 U1's 54416480)
-state: open
+state: accepted
 
 ### Demo, custom.emd, #/settings/packs and #/settings/export; custom.emd #/year (NoLedger).
 unit: M54 U4
@@ -6823,7 +6823,7 @@ state: fault
 ### Demo, demo.emd #/read: add a card statement whose last line is the printed total with its word in the date column, Map its columns, Skip the failed row, Read it; then custom.emd #/formats/card_charge/read with a csv whose one line has no amount, Add by hand, type the amount, Add.
 unit: M55 U9
 should: The mapper says 1 skipped and Skipped from this read: row N with Put back; the batch row says 3 new, 1 skipped; Add opens with the line's date, merchant and currency filled, Add goes back to the read with its file still there, and the line says added by hand.
-state: open
+state: accepted
 
 ### Demo, demo.emd with an answer waiting, both themes: #/paychecks, #/wealth/goals, #/wealth/funds, #/categories/rules, #/plan.
 unit: M54 U5
@@ -7165,7 +7165,7 @@ state: fault
 ### Demo, project.emd, #/dashboard → Add a block → New chart → Of Unit, name Landed by month, Add without a date; then pick landed and Add. Read the block, Add a block, the rail, Unit's tabs and the chart's tab.
 unit: M55 U7
 should: The refusal shows once, under By month of. Everywhere the chart reads Landed by month, with Count of units by month of landed under it; months read 2026-09 in the chart and its table; both menus' acts are Add. Wrong would be: landed_by_month anywhere on screen, mono rollup text, or Sep 2026 on the axis. Also the maintainer's to judge: ISO dates in list lines and dashboard blocks replace the words D-518's mockup had (Sun 26 Jul 2026).
-state: open
+state: accepted
 
 ### Demo, project.emd, #/dashboard → Add a block → New chart → Unit (two dates, landed and started) → name it → Declare and add without touching By month of.
 unit: M54 U2
@@ -7242,7 +7242,7 @@ state: open
 ### Demo, project.emd, #/formats/unit/entry/new: type M9 into milestone, fill title, ref and scope, press Add.
 unit: M55 U5
 should: Under milestone: No milestone is called "M9". Pick one from the list. — never A unit needs a milestone. (M54 U1's e68ab9d0)
-state: open
+state: accepted
 
 ### Demo, project.emd, #/formats/unit: Filter by landed is this year → Save this view → "Landed this year". Read the tab strip and the band.
 unit: M54 U2
@@ -7265,12 +7265,12 @@ state: open
 ### Demo, project.emd, #/formats/unit: quick add's placeholder, the entry list's + and Add with title empty.
 unit: M55 U5
 should: Add a unit · planned, Add a unit, A unit needs a title. (M54 U1's f6689132)
-state: open
+state: accepted
 
 ### Demo, project.emd: #/formats/unit/entry/new — click milestone, type M9, ArrowDown + Enter (or click + New), press Add empty, then fill title, goal, position and Add. Then the same in the milestone cell of #/formats/unit's blank row.
 unit: M55 U6
 should: The list opens on focus in roadmap order with each milestone's title; M9 is refused at its three fields, then made and linked; in the table the form sits under the cell and the row writes with milestone M9.
-state: open
+state: accepted
 
 ### Demo, project.emd: #/formats/unit/entry/new, the milestone field; an entry's "Fill decision" chip; the milestone and decision cells of the table's blank row. Type a name no row has.
 unit: M54 U1
@@ -7980,7 +7980,7 @@ unit: M55 U1
 should: Each pick reads as what you would have answered in shape's interview. The layout picks: the input view is a page where entry/new opens beside the list, never a tab (brief §3); one wrapping row of labelled fields, entry/new's footer bar with Add then 'Adds as account Visa · date today' (§3); 'Just added' under the form, each row with 'Undo' that deletes it, refused at its line when another row links to it, no Ctrl+Z (§6); the header's Add hidden while the form shows (§6); the format's + at the end of the tab strip with 'New input view', 'New view', 'New chart' (§6); a draft named after the format with Fields open, Fields carrying 'Ask' and 'Default', 'Use for Add' as the mark, captioned 'Add' in the rail (§6); input views first in the rail under a new 'input' glyph (§6); a dashboard block's Add secondary, stacked at one column, wrapping wider, Just added filling the height (§6); quick add showing the view's fields inline with small labels, a group's value winning over the view's default (§6); the states in §5. The word picks, each a term row and in U3/U4: Input view; Adds as; New input view · New view · New chart; Use for Add; Ask · Default; Just added · Undo; and the sentence 'This view does not ask amount, which every card charge needs' with 'Ask it here'.
 breaks: The widest pick is the +'s New view and New chart: they add D-525's forms to the format's tab strip, which D-533 did not ask for and which grows U3; the narrower answer is a + that makes only an input view. Next: 'Undo' is a delete under another name, and makes the Re-apply term's 'only undoable action' false when U3 lands. Next: the page-not-tab pick, since saved views are tabs since M54 F2. Changing any pick before U3 starts is a brief edit; after, a fix unit.
 not_tried: Nothing was built, so nothing was clicked: the existing screens were measured with probe:screens only (entry/new on custom.emd's card_charge and project.emd's unit; card_charge's list, table and dashboard). The pane was not opened.
-state: open
+state: accepted
 
 ### Read en.ts:184, en.ts:143 and en.ts:88.
 unit: M54 U7
