@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -92,10 +92,17 @@ describe('the plugin', () => {
     expect([...source.matchAll(/from '([^']+)'/g)].map((found) => found[1]).every((name) => name?.startsWith('node:'))).toBe(true)
   })
 
-  it('pins the same emerald-mcp in the setup skill as everywhere else', () => {
-    const skill = readFileSync(join(HERE, 'skills', 'emerald-setup', 'SKILL.md'), 'utf8')
-    const pins = [...skill.matchAll(/emerald-mcp@(\d+\.\d+\.\d+)/g)].map((found) => found[1])
-    expect(pins.length).toBeGreaterThan(0)
-    expect(new Set(pins)).toEqual(new Set([pin]))
+  it('pins the same emerald-mcp in every skill as everywhere else, and the pin script moves each one', () => {
+    const mover = readFileSync(join(ROOT, 'scripts', 'pin-plugin.mjs'), 'utf8')
+    const skills = readdirSync(join(HERE, 'skills'), { withFileTypes: true }).filter((entry) => entry.isDirectory())
+    const pinning = skills.filter((entry) => {
+      const skill = readFileSync(join(HERE, 'skills', entry.name, 'SKILL.md'), 'utf8')
+      const pins = [...skill.matchAll(/emerald-mcp@(\d+\.\d+\.\d+)/g)].map((found) => found[1])
+      if (pins.length === 0) return false
+      expect(new Set(pins), entry.name).toEqual(new Set([pin]))
+      expect(mover, `scripts/pin-plugin.mjs leaves ${entry.name}'s pin behind`).toContain(`'skills', '${entry.name}', 'SKILL.md'`)
+      return true
+    })
+    expect(pinning.map((entry) => entry.name)).toEqual(expect.arrayContaining(['emerald-setup', 'set-up-a-project']))
   })
 })

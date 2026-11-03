@@ -20,17 +20,23 @@ import { describe, expect, it } from 'vitest'
  * **emerald-setup is the plugin's alone** (M42 F8): it tells a person whose
  * host started no plugin server how to add Emerald to the Claude app, which
  * this repository never needs, so it has no copy here and the same rule.
+ *
+ * **So are the four a newcomer reaches for** (M56 U4, U7): reading a file onto
+ * a format and going through what looks wrong — the engine's pair — and
+ * bringing a plan in and setting a project up — the development pack's. They
+ * are written for a stranger and this repository develops with neither, so
+ * they keep no copy and the same rule.
  */
 const ROOT = fileURLToPath(new URL('../../..', import.meta.url))
 const HERE = fileURLToPath(new URL('.', import.meta.url))
 
 const shipped = readdirSync(HERE, { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => entry.name)
 const GENERIC = ['run-milestone', 'closing-pass', 'review-phase']
-const PLUGIN_ONLY = ['emerald-setup']
+const PLUGIN_ONLY = ['emerald-setup', 'read-a-file', 'what-looks-wrong', 'bring-in-a-plan', 'set-up-a-project']
 const skill = (name: string) => readFileSync(join(HERE, name, 'SKILL.md'), 'utf8')
 
 describe('the skills Claude gets', () => {
-  it("ships declare-a-format, the development pack's three workflows and the setup skill", () => {
+  it("ships declare-a-format, the development pack's three workflows, the setup skill and the newcomer's four", () => {
     expect([...shipped].sort()).toEqual(['declare-a-format', ...GENERIC, ...PLUGIN_ONLY].sort())
   })
 
