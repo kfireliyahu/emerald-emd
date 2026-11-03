@@ -164,11 +164,15 @@ describe('the module', () => {
 
   it('asks the server only the read tools it names, since $.mcp.call asks the person nothing', () => {
     const calls = sources.flatMap(({ name, text }) => [...text.matchAll(/\$\.mcp\.call\(([^)]*)\)/g)].map((found) => `${name}: ${found[1]}`))
-    // One call, in pane.tsx, whose tool is typed as one of READ_TOOLS.
-    expect(calls).toEqual(['pane.tsx: connected.server, tool, args'])
+    // One call in pane.tsx, whose tool is typed as one of READ_TOOLS, and one in inbox.ts (M56 U2), one of INBOX_READS.
+    expect(calls.sort()).toEqual(['inbox.ts: connected.server, tool, args', 'pane.tsx: connected.server, tool, args'])
     const pane = sources.find((source) => source.name === 'pane.tsx')?.text ?? ''
     expect(pane).toMatch(/tool: \(typeof READ_TOOLS\)\[number\]/)
     expect(pane).toContain("export const READ_TOOLS = ['start_here', 'show_format'] as const")
+    const inbox = sources.find((source) => source.name === 'inbox.ts')?.text ?? ''
+    expect(inbox).toMatch(/type Read = \(typeof INBOX_READS\)\[number\]/)
+    expect(inbox).toMatch(/async function ask\(\$: EngineInterface, tool: Read,/)
+    expect(inbox).toContain("export const INBOX_READS = ['start_here', 'format_rows'] as const")
   })
 
   it('imports only its own files and claude-code, and never with import()', () => {

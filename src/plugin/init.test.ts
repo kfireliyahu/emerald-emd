@@ -124,7 +124,7 @@ describe('init', () => {
     const settings = JSON.parse(await read(join(folder, '.claude', 'settings.json'))) as Record<string, unknown>
     expect(settings).toEqual({ permissions: { allow: [...PANE_READS] } })
     // Only reads: the pane never writes, so nothing that writes is allowed for it.
-    expect(PANE_READS.every((tool) => /__(start_here|show_format)$/.test(tool))).toBe(true)
+    expect(PANE_READS.every((tool) => /__(start_here|show_format|format_rows)$/.test(tool))).toBe(true)
     const again = await init(folder, config)
     expect(again.out).toContain(".claude/settings.json — unchanged (no hooks written: the Claude plugin brings the same two")
     expect(again.out).toContain("the project pane's reads: already allowed")

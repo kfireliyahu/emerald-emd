@@ -89,7 +89,9 @@ plugin's version:
 - the server as `npx -y --prefer-offline emerald-mcp@<version> --engine-only`, once a session;
 - the hooks as `npx -y --prefer-offline -p emerald-mcp@<version> emerald-hooks …`. npm's own
   start-up makes each one about two seconds on Windows, and the inbox hook runs before every
-  prompt.
+  prompt. Where Claude Code runs the plugin's hooks module, the module says the same itself and
+  neither hook starts npx: each starts through `hooks/unless-mod.mjs`, which exits at once when
+  the module has answered (about 50 ms).
 
 npm downloads the package from the npm registry the first time and keeps it in its cache;
 `--prefer-offline` keeps a pinned version off the network after that. Nothing else is fetched, and
