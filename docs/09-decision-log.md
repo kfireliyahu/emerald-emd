@@ -452,6 +452,7 @@ written out here.
 | D-533 | 2026-11-03 | M55's input view is a saved view of kind `input`: the fields it asks are its columns in their order and its defaults are its exact values (a member, a link, a number, or a date word that names one day), kept in `format_saved_view` and `views.md`; one per format may be its default, opened by Add, the list's + and quick add; it stays open after Add and lists what it added; it is in the rail, behind +, and a live block on a dashboard; a conversation makes it with `arrange_views` and uses it with `record_format_rows view:`; M54's fourteen engine-side *Entry:* findings come into M55 and the ledger's stay parked | [below](#d-533) |
 | D-534 | 2026-11-03 | A milestone's units run at once wherever `dispatch_plan` allows, each in its own worktree with its own demo port, by sessions or by the `Agent` tool alike, up to four; a screen is measured by `npm run probe:screens` (`window.emeraldProbe()` in a dev build, in an offscreen Electron window) rather than in the browser pane by hand; a child is handed its files and told to batch its reads; a review writes a rule-backed finding as `fault` and only a judgement as `open`; units under ten minutes that share paths go to one child, and a unit stopped for the maintainer's pick goes on in the same child; amends D-287 and D-490's one-at-a-time for the `Agent` tool | [below](#d-534) |
 | D-535 | 2026-11-03 | M55 U1's picks for the input view, not yet the maintainer's: a page where entry/new opens, beside the list, not a tab; fields in one wrapping row with *Adds as* in entry/new's footer bar; *Just added* with *Undo* under it; made from the format's + (*New input view*, *New view*, *New chart*) with the entry's Fields list carrying *Ask* and *Default*; *Use for Add* marks the one Add opens; the rail lists input views first under the new `input` glyph; a dashboard block's Add is secondary | [below](#d-535) |
+| D-539 | 2026-11-03 | A new column's type is picked from a short list in a person's words — Text · Number · Money · Date · Yes or no · Choice · Link · Computed — with *More types…* one step away under Numbers (Whole number · Exact decimal · Percentage · Quantity), Dates and times (Month · Time of day · Date and time), Several (Several choices · Several links) and Outside this document (File · Row in another document); the picked type shows its name, the stored word is its tooltip, and the declaration's word never changes; the maintainer's pick of three drafts | [below](#d-539) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1079,6 +1080,38 @@ this dashboard*). A filled Add on a dashboard block (several blocks would be sev
 **Consequences.** U3 and U4 carry the picks as SETTLED. Four term rows become false when those land
 and are theirs to correct: *Re-apply* ("the only undoable action"), *Saved view*'s kinds, *Block*'s
 three kinds, *Add a task · values*. A pick the maintainer changes is a fix unit.
+
+## D-539 · 2026-11-03 · A new column's type is picked from a short list in a person's words — Text · Number · Money · Date · Yes or no · Choice · Link · Computed — with *More types…* one step away under Numbers (Whole number · Exact decimal · Percentage · Quantity), Dates and times (Month · Time of day · Date and time), Several (Several choices · Several links) and Outside this document (File · Row in another document); the picked type shows its name, the stored word is its tooltip, and the declaration's word never changes; the maintainer's pick of three drafts <a id="d-539"></a>
+
+**Context.** M54 U1's row (D-530): #/formats → New format → Start empty → a column's type showed every
+type at once — eighteen and *computed* — in the engine's words, `integer`, `real`, `enum`, `enums`,
+`instant`. Re-run in M55 U8, it still did: M54 F2 had given the sheet's headers a person's words
+(`entryLabel`) and left the picker alone. D-533 split the picker out of U5 by its paths (D-534), and
+its words were drafted for the maintainer to pick.
+
+**Decision.** Draft A, as drafted (2026-11-03):
+
+- **Common first.** Text · Number · Money · Date · Yes or no · Choice · Link · Computed — which are
+  common read off the packs' and the demo's declarations (text 117, link 72, enum 49, money 37,
+  date 31, integer 29, boolean 28). *Number* is `real`, because a person typing a number means any
+  number; *Whole number* is one step away.
+- **The rest one step away**, never all of them at once: *More types…* replaces the short list with
+  four headings, and *← Common types* goes back. *Change* on a rare type opens on the rest.
+- **The stored word is unchanged**: `TYPE_WORDS` gains `shown`, a name per type, read by the picker
+  and the line beside a picked column's name, whose tooltip is *Stored as integer*. A conversation,
+  a `.format.md` and the declaration keep `integer`.
+- **The words**: *Choice* rather than *One of a list*, because *List* is the view's term; *Link*,
+  *Computed* and *Quantity* keep their term rows (D-451, D-225).
+
+**Alternatives rejected.** Draft B: nine common types in the order the packs use them, and the rest
+as one flat list with no headings. Draft C: A's split with each name an answer — *Words*, *A number*,
+*A day*, *One choice*, *A row of another format* — which gives up *Link* (D-451). Renaming the
+stored words (D-227's two vocabularies).
+
+**Consequences.** Clicks: + then a common type is two, + then *More types…* then a rare type three.
+The tour's type anchors (`type-text`, `type-date`, `type-money`, `type-link`) are all on the short
+list. A type's `catch`, shown once it is picked, is still the tool's sentence and names `real` and
+`aggregate` in places.
 
 ## Related
 
