@@ -6,10 +6,11 @@ import { toISODate } from '@/core/time.ts'
 import { runRollup } from '@/data/repositories/formatRollupRepository.ts'
 import { nounOf, pluralOf } from '@/domain/format/connections.ts'
 import type { FormatDeclaration } from '@/domain/format/declaration.ts'
-import { figureText, rollupText } from '@/domain/format/rollup.ts'
+import { figureText } from '@/domain/format/rollup.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Chart } from '@/ui/charts/Chart.tsx'
 import { drawnValue, type ChartKind } from '@/ui/charts/chart.ts'
+import { rollupSentence, rollupWords } from '@/ui/formats/dashboard.ts'
 import { rollupChart } from '@/ui/formats/rollupChart.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { listFormats } from '@/data/repositories/formatRepository.ts'
@@ -59,7 +60,7 @@ export function RollupView({
         : rollupChart(result.groups, {
             names: result.labels,
             by: result.rollup.by !== undefined,
-            name: result.rollup.name,
+            name: rollupWords(result.rollup.name),
             // A count in the format's own word: `1 unit`, `2 units` (M54 F3).
             count: result.rollup.kind === 'COUNT' ? { one: nounOf(declaration.title), many: pluralOf(declaration.title) } : undefined,
           }),
@@ -69,19 +70,22 @@ export function RollupView({
 
   const moneyOf = (minor: number, currency: string): string => formatMoney(money(minor, currency))
   const by = result.rollup.by
+  // In words, as the rail and the tab say it (M55 U7): the name stays the declaration's.
+  const said = rollupWords(result.rollup.name)
+  const sentence = rollupSentence(result.rollup, declaration)
 
   return (
     <div className="fc-view-enter min-h-0 flex-1 overflow-auto">
       <div className="flex items-baseline gap-3 px-6 py-2 text-caption text-ink-secondary">
         <p className="m-0 min-w-0 flex-1">
-          <code>{rollupText(result.rollup)}</code>
-          {result.rollup.note === '' ? '' : ` — ${result.rollup.note}`}
+          {sentence}
+          {result.rollup.note === '' ? '.' : <> — <Bidi>{result.rollup.note}</Bidi></>}
         </p>
-        <DeleteChart format={declaration.name} name={result.rollup.name} />
+        <DeleteChart format={declaration.name} name={result.rollup.name} said={said} />
       </div>
       {chart !== undefined &&
         chart.series.some((each) => each.points.some((one) => drawnValue(one, chart.axis) !== undefined)) && (
-        <section className="px-6 pt-2 pb-4" aria-label={`${result.rollup.name} as a chart`}>
+        <section className="px-6 pt-2 pb-4" aria-label={`${said} as a chart`}>
           <div className="mb-1 flex items-center gap-1" role="group" aria-label="Draw as">
             {(['bars', 'line'] as const).map((each) => (
               <button
@@ -105,7 +109,7 @@ export function RollupView({
             series={chart.series}
             axis={chart.axis}
             kind={kind}
-            title={`${result.rollup.name} by month${by === undefined ? '' : ` and ${by}`}`}
+            title={sentence}
             labelHeading="month"
             // Its table is the tab's own, beneath: every figure the chart draws is a cell there.
             figures="elsewhere"
@@ -125,9 +129,9 @@ export function RollupView({
             <tr className="border-b border-hairline">
               <th className="px-3 py-2 text-label whitespace-nowrap">month</th>
               {by !== undefined && (
-                <th className="px-3 py-2 text-label whitespace-nowrap">{by}</th>
+                <th className="px-3 py-2 text-label whitespace-nowrap">{by.replace(/_/g, ' ')}</th>
               )}
-              <th className="px-3 py-2 text-right text-label whitespace-nowrap">{result.rollup.name}</th>
+              <th className="px-3 py-2 text-right text-label whitespace-nowrap">{said}</th>
               <th className="px-3 py-2 text-right text-label whitespace-nowrap">rows</th>
             </tr>
           </thead>
@@ -173,7 +177,7 @@ export function RollupView({
 }
 
 /** *Delete chart*, asking once where it stands; a refusal (a pack's own rollup) is said beside it. */
-function DeleteChart({ format, name }: { format: string; name: string }) {
+function DeleteChart({ format, name, said }: { format: string; name: string; said: string }) {
   const mutate = useDocumentStore((state) => state.mutate)
   const [asking, setAsking] = useState(false)
   const [refusal, setRefusal] = useState<string | undefined>(undefined)
@@ -186,10 +190,10 @@ function DeleteChart({ format, name }: { format: string; name: string }) {
     )
   }
   return (
-    <span className="flex flex-none items-baseline gap-2" role="group" aria-label={`Delete ${name}`}>
+    <span className="flex flex-none items-baseline gap-2" role="group" aria-label={`Delete ${said}`}>
       {refusal === undefined ? (
         <span>
-          Delete <Bidi>{name}</Bidi> and its charts on dashboards?
+          Delete <Bidi>{said}</Bidi> and its charts on dashboards?
         </span>
       ) : (
         <span className="text-negative" role="alert">

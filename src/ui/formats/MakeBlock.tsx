@@ -5,7 +5,6 @@ import { filterQuery, filterText, type RowFilter } from '@/data/repositories/for
 import { countRows } from '@/data/repositories/formatRowRepository.ts'
 import { boardSettings } from '@/data/repositories/formatViewRepository.ts'
 import { labelColumn, type FormatDeclaration } from '@/domain/format/declaration.ts'
-import { rollupText } from '@/domain/format/rollup.ts'
 import { boardOf, type DashboardBlock } from '@/domain/format/view.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
@@ -13,7 +12,7 @@ import { Button } from '@/ui/components/Button.tsx'
 import { canonicalAddress, filterAddress, type AddressOrder, type ColumnChoice } from './addressFilter.ts'
 import { ColumnFilter } from './FilterBand.tsx'
 import { ColumnsChoice } from './ColumnsChoice.tsx'
-import { summableColumns } from './dashboard.ts'
+import { rollupSentence, rollupWords, summableColumns } from './dashboard.ts'
 import { cardChoosable, type Choosable } from './lineColumns.ts'
 import {
   chartFilterColumns,
@@ -22,8 +21,8 @@ import {
   MADE_KINDS,
   makeChart,
   makeView,
+  PERIOD_UNSAID,
   periodColumns,
-  rollupName,
   viewBlock,
   viewRefusal,
   type MadeKind,
@@ -209,7 +208,7 @@ function choosableOf(db: Database, declaration: FormatDeclaration, kind: MadeKin
 /**
  * **New view**: of which format, as a list, a table or a board, holding which
  * rows in which order, drawing which columns, and its name — saved and placed
- * by *Save and add*.
+ * by *Add* (one word for the act in the menu, M55 U7).
  */
 export function ViewForm({
   db,
@@ -310,7 +309,7 @@ export function ViewForm({
               ? `${declaration.title} has no column ${read.error.name}.`
               : read.error.reason}
         </div>
-        <Actions add="Save and add" refused={making.refused} onAdd={submit} onCancel={() => onMaking(undefined)} />
+        <Actions add="Add" refused={making.refused} onAdd={submit} onCancel={() => onMaking(undefined)} />
       </div>
     </>
   )
@@ -319,7 +318,7 @@ export function ViewForm({
 /**
  * **New chart**: a count or a sum, by month of which date, per which link,
  * under which filter, and its name — declared as a rollup of its format and
- * placed by *Declare and add*.
+ * placed by *Add* (one word for the act in the menu, M55 U7).
  */
 export function ChartForm({
   db,
@@ -366,7 +365,11 @@ export function ChartForm({
     const refused = !judged.ok ? judged.error : onPlace((database) => makeChart(database, blocks, judged.value), judged.value.block)
     if (refused !== undefined) onMaking({ ...making, refused })
   }
-  const name = rollupName(making.name)
+  // A refusal is said once, where it is mended (M55 U7): a missing month at
+  // *By month of*, after an attempt; the preview's own refusal not again under the buttons.
+  const periodUnsaid = making.refused === PERIOD_UNSAID
+  const previewSays = plan !== undefined && !plan.ok && plan.error !== PERIOD_UNSAID ? plan.error : undefined
+  const refused = periodUnsaid || making.refused === previewSays ? undefined : making.refused
   return (
     <>
       <Heading>New chart</Heading>
@@ -392,10 +395,23 @@ export function ChartForm({
           ) : (
             periods.map((column) => (
               <label key={column.name} className={RADIO}>
-                <input type="radio" name="chart-period" className="accent-ink" checked={making.period === column.name} onChange={() => set({ period: column.name })} />
+                <input
+                  type="radio"
+                  name="chart-period"
+                  className="accent-ink"
+                  checked={making.period === column.name}
+                  aria-invalid={periodUnsaid || undefined}
+                  aria-describedby={periodUnsaid ? 'chart-period-unsaid' : undefined}
+                  onChange={() => set({ period: column.name })}
+                />
                 {column.name.replace(/_/g, ' ')}
               </label>
             ))
+          )}
+          {periodUnsaid && (
+            <span id="chart-period-unsaid" role="alert" className="text-caption text-negative">
+              {PERIOD_UNSAID}
+            </span>
           )}
         </Field>
         {links.length > 0 && (
@@ -431,17 +447,15 @@ export function ChartForm({
           <NameField value={making.name} placeholder="What it counts, e.g. Done by month" onChange={(each) => set({ name: each })} onSubmit={submit} />
         </Field>
         <div className="bg-surface px-2.5 py-2 text-caption text-ink-secondary">
-          {plan === undefined ? (
-            'Its name is the rollup’s, declared on the format.'
-          ) : plan.ok ? (
-            <>
-              Declares <code>{name}</code>: <code>{rollupText(plan.value.rollup)}</code>
-            </>
+          {plan !== undefined && plan.ok ? (
+            `${rollupWords(plan.value.rollup.name)}: ${rollupSentence(plan.value.rollup, declaration)}.`
+          ) : previewSays !== undefined ? (
+            <span className="text-negative">{previewSays}</span>
           ) : (
-            <span className="text-negative">{plan.error}</span>
+            'Its name is the rollup’s, declared on the format.'
           )}
         </div>
-        <Actions add="Declare and add" refused={making.refused} onAdd={submit} onCancel={() => onMaking(undefined)} />
+        <Actions add="Add" refused={refused} onAdd={submit} onCancel={() => onMaking(undefined)} />
       </div>
     </>
   )

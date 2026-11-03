@@ -267,7 +267,7 @@ describe('the task list, in the app and in a conversation (M53 U4, D-519)', () =
     ])
     expect(shed?.rows[0]?.cells).toEqual([
       { kind: 'chips', column: 'tags', members: ['call'] },
-      { kind: 'date', column: 'due', text: '21 Oct', late: false, long: 'Wed 21 Oct 2026' },
+      { kind: 'date', column: 'due', text: '21 Oct', late: false, long: '2026-10-21' },
     ])
     // Nobody said which date is the due: yesterday is only its day (M54 F2, D-532); the project is left off the line.
     expect(listOrder(picture).at(-1)?.title).toBe('Pick paint colour')
@@ -283,7 +283,7 @@ describe('the task list, in the app and in a conversation (M53 U4, D-519)', () =
     expect(notDate).toContain('`due` names the date a row is due by; `notes` is text.')
     const dated = await read(path)
     const late = listPicture(dated, task, listFormats(dated), {}, viewSettings(dated, 'task', 'list'), TODAY)
-    expect(late.groups[0]?.rows[0]?.cells.at(-1)).toEqual({ kind: 'date', column: 'due', text: 'yesterday', late: true, long: 'Wed 21 Oct 2026' })
+    expect(late.groups[0]?.rows[0]?.cells.at(-1)).toEqual({ kind: 'date', column: 'due', text: 'yesterday', late: true, long: '2026-10-21' })
     // The screen's Due moves it to another date, and the first stops saying late.
     setListSetting(dated, 'task', 'started', 'due')
     expect(viewSettings(dated, 'task', 'list').get('due')).toBeUndefined()

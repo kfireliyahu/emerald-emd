@@ -7,6 +7,10 @@
  * view then in the rail like any other (the rail lists `savedViews`).
  */
 
+import { createElement } from 'react'
+import { renderToStaticMarkup } from 'react-dom/server'
+import { MemoryRouter } from 'react-router-dom'
+import type { Database } from 'sql.js'
 import { describe, expect, it } from 'vitest'
 
 import { createDatabase } from '@/data/db/database.ts'
@@ -18,8 +22,9 @@ import { column, DECLARATION_LANGUAGE, type FormatDeclaration } from '@/domain/f
 import { rollupText } from '@/domain/format/rollup.ts'
 
 import { canonicalAddress, filterAddress } from './addressFilter.ts'
-import { blockGone } from './dashboard.ts'
-import { chartPlan, chartWhere, makeChart, makeView, rollupName, viewRefusal, type ViewMade } from './madeInPlace.ts'
+import { blockGone, blockTitle, blockWhat, rollupSentence, rollupWords } from './dashboard.ts'
+import { ChartForm, type ChartMaking } from './MakeBlock.tsx'
+import { chartPlan, chartWhere, makeChart, makeView, PERIOD_UNSAID, rollupName, viewRefusal, type ViewMade } from './madeInPlace.ts'
 
 const NOW = Date.UTC(2026, 9, 22)
 
@@ -142,5 +147,70 @@ describe('New chart, in Add a block (M53 F2)', () => {
     expect(chartWhere({ match: { state: [null, 'open'] } }).ok).toBe(false)
     expect(rollupName('Done by month')).toBe('done_by_month')
     expect(rollupName('  Hours (est.) ')).toBe('hours_est')
+  })
+})
+
+describe('New chart asks once and reads in words (M55 U7)', () => {
+  const UNSAID: ChartMaking = { what: 'chart', format: 'task', sum: undefined, period: undefined, by: undefined, filter: {}, name: 'Landed by month' }
+
+  function form(making: ChartMaking, db: Database): string {
+    const formats = listFormats(db)
+    return renderToStaticMarkup(
+      createElement(
+        MemoryRouter,
+        null,
+        createElement(ChartForm, {
+          db,
+          formats,
+          declarations: formats,
+          blocks: [],
+          document: false,
+          dashboard: 'task',
+          making,
+          onMaking: () => undefined,
+          onPlace: () => undefined,
+        }),
+      ),
+    )
+  }
+
+  it('says a missing month once, at By month of, and only after an attempt', async () => {
+    const db = await withTasks()
+    // Two dates, so none is chosen; before Add nothing says it, and after Add one place does.
+    expect(form(UNSAID, db).split(PERIOD_UNSAID)).toHaveLength(1)
+    const after = form({ ...UNSAID, refused: PERIOD_UNSAID }, db)
+    expect(after.split(PERIOD_UNSAID)).toHaveLength(2)
+    const field = after.slice(after.indexOf('By month of'), after.indexOf('Only rows where'))
+    expect(field).toContain(PERIOD_UNSAID)
+    expect(field).toContain('aria-invalid="true"')
+  })
+
+  it('names its act Add, as Headline total does, and previews the chart in words', async () => {
+    const db = await withTasks()
+    const markup = form({ ...UNSAID, period: 'done_on' }, db)
+    expect(markup).not.toMatch(/Declare and add|Save and add/)
+    expect(markup).toContain('Landed by month: Count of tasks by month of done on.')
+    expect(markup).not.toContain('<code>')
+  })
+
+  it('reads a rollup’s name and what it counts in words; the name stays the declaration’s', async () => {
+    expect(rollupWords('landed_by_month')).toBe('Landed by month')
+    expect(blockTitle({ kind: 'rollup', name: 'landed_by_month' })).toBe('Landed by month')
+    expect(blockTitle({ kind: 'saved', name: 'due_soon' })).toBe('due_soon')
+    const db = await withTasks()
+    const plan = chartPlan(db, listFormats(db), [], {
+      dashboard: 'task',
+      format: 'task',
+      sum: 'estimate',
+      period: 'due',
+      by: undefined,
+      filter: { match: { state: 'done' } },
+      name: 'Landed by month',
+    })
+    if (!plan.ok) throw new Error(plan.error)
+    expect(plan.value.rollup.name).toBe('landed_by_month')
+    expect(rollupSentence(plan.value.rollup, TASK)).toBe('Sum of estimate by month of due, where state is done')
+    makeChart(db, [], plan.value)
+    expect(blockWhat(db, plan.value.block, listFormats(db), true)).toBe('Task · Sum of estimate by month of due, where state is done')
   })
 })

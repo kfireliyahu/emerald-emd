@@ -31,6 +31,7 @@ import {
 } from '@/ui/nav.ts'
 import { SavedTab, TAB_LABEL, TAB_OFF, TAB_ON } from '@/ui/formats/SavedTab.tsx'
 import { useSavedViews, useSaving, type Saving } from '@/ui/formats/savedView.ts'
+import { rollupWords } from '@/ui/formats/dashboard.ts'
 
 /**
  * **A format's roadmap, as a screen** — M27 U4, D-302. Read on every revision
@@ -303,7 +304,7 @@ function Frame({
     ...(views.roadmap ? [{ label: 'Roadmap', on: on === 'roadmap' && savedHere === undefined, go: () => navigate(roadmapPath(format) + address) }] : []),
     ...(views.ready ? [{ label: 'Ready to start', on: on === 'ready' && savedHere === undefined, go: () => navigate(readyPath(format) + address) }] : []),
     ...(declaration.rollups ?? []).map((each) => ({
-      label: each.name,
+      label: rollupWords(each.name),
       on: false,
       go: () => navigate(formatPath(format) + address, { state: { rollup: each.name } }),
     })),

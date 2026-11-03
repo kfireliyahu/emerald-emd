@@ -451,6 +451,7 @@ written out here.
 | D-532 | 2026-11-02 | M54's faults become thirteen fix units, M54 F1-F13, before M55: shared looks first, each unit sweeping its own files; the ledger's Home, NoLedger and #/read included; a due date only where declared; a window drop onto the open format; recovery as a three-choice notice; the page's first screen leads to Get Emerald; the tour pauses; words are drafted for the maintainer to pick | M54 |
 | D-533 | 2026-11-03 | M55's input view is a saved view of kind `input`: the fields it asks are its columns in their order and its defaults are its exact values (a member, a link, a number, or a date word that names one day), kept in `format_saved_view` and `views.md`; one per format may be its default, opened by Add, the list's + and quick add; it stays open after Add and lists what it added; it is in the rail, behind +, and a live block on a dashboard; a conversation makes it with `arrange_views` and uses it with `record_format_rows view:`; M54's fourteen engine-side *Entry:* findings come into M55 and the ledger's stay parked | [below](#d-533) |
 | D-534 | 2026-11-03 | A milestone's units run at once wherever `dispatch_plan` allows, each in its own worktree with its own demo port, by sessions or by the `Agent` tool alike, up to four; a screen is measured by `npm run probe:screens` (`window.emeraldProbe()` in a dev build, in an offscreen Electron window) rather than in the browser pane by hand; a child is handed its files and told to batch its reads; a review writes a rule-backed finding as `fault` and only a judgement as `open`; units under ten minutes that share paths go to one child, and a unit stopped for the maintainer's pick goes on in the same child; amends D-287 and D-490's one-at-a-time for the `Agent` tool | [below](#d-534) |
+| D-538 | 2026-11-03 | A date, a month and an amount read as the table writes them on a dashboard's blocks, a list, a rollup's table and its chart — `2026-07-27`, `2026-09`, `₪60.00` — and a rollup reads in words: its name *Landed by month*, what it counts a sentence; the declaration and every tool keep the name | [below](#d-538) |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1038,6 +1039,31 @@ once. Asking for every review row's verdict: most break a rule the maintainer al
 **Consequences.** `.claude/launch.json` has `demo-tour-1` to `demo-tour-4`. `run-milestone`,
 `design-review` and CLAUDE.md say so. Nothing in the shipped app changes: `probe.ts` is loaded by a
 dynamic import behind `import.meta.env.DEV`.
+
+## D-538 · 2026-11-03 · A date, a month and an amount read as the table writes them on a dashboard's blocks, a list, a rollup's table and its chart — `2026-07-27`, `2026-09`, `₪60.00` — and a rollup reads in words: its name *Landed by month*, what it counts a sentence; the declaration and every tool keep the name <a id="d-538"></a>
+
+**Context.** M54 U2 found one value reading three ways on one screen: a date `2026-07-27` in the
+table and `Sun 26 Jul 2026` in a block, a month `2026-09` in a rollup's table and `Sep 2026` on its
+chart, money `₪60.00` in the table and `50 ILS` in the filter band; and a chart made from a dashboard
+reading `landed_by_month` everywhere, under a subtitle and a tab heading that were the rollup's
+own text in mono. M55 U7's brief settled which way wins: the table's.
+
+**Decision.** `valueText` (a dashboard block, the list beside an entry, a list's line and its date's
+hover) writes a date and a month as stored; `rollupChart`'s labels and ticks are the months as the
+table writes them; the band writes a money range's ends with `formatMoney`, a quantity as before. A
+rollup's name reads through `rollupWords` — the block's title, the format's tab, the rail, *Add a
+block*, its tab's table — and what it counts through `rollupSentence`, under the block, above its
+tab's chart and in `show_format view:dashboard`'s line. Left as they were: the agenda's day headings
+and a list's relative due (*in 3 days*), which say a day against today rather than a value; the entry
+page is M55 U5's. *New chart* and *New view* say *Add*, as *Headline total* does, and a chart's
+missing month is said once, at *By month of*, after an attempt.
+
+**Alternatives rejected.** The words everywhere (`Sun 26 Jul 2026`, `Sep 2026`): the table is where a
+value is checked and typed, and it writes ISO. A rollup's name kept as declared on screen: the person
+typed words. Choosing the first date for a chart by default: the brief asks once at the field instead.
+
+**Consequences.** A screen that shows a date, a month or money from a row reads it as the table does;
+a new one that wants words says why. `rollupSentence` is the screen's and the conversation's alike.
 
 ## Related
 

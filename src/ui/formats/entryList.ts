@@ -6,11 +6,9 @@ import { linkLabels, listRows, type RowQuery } from '@/data/repositories/formatR
 import type { ColumnDeclaration, FormatDeclaration } from '@/domain/format/declaration.ts'
 import { isList, readValue, type StoredRow } from '@/domain/format/row.ts'
 import {
-  dayText,
   entryLayout,
   entryOrder,
   entryWayOf,
-  monthText,
   nameColumnOf,
   type ShowAs,
 } from '@/domain/format/view.ts'
@@ -122,8 +120,9 @@ export function valueText(column: ColumnDeclaration, row: StoredRow, labels: Rea
   if (typeof value === 'boolean') return value ? column.name.replace(/_/g, ' ') : ''
   if (typeof value === 'number') return String(value)
   if (typeof value === 'string') {
-    if (column.type === 'date') return dayText(value)
-    if (column.type === 'month') return monthText(value)
+    // A date and a month read as the table writes them, `2026-07-27` and `2026-09`,
+    // on a block and in a list as in the table (M55 U7).
+    if (column.type === 'date' || column.type === 'month') return value
     if (column.type === 'enum') return value.replace(/_/g, ' ')
     if (column.type === 'link') return labels.get(value) ?? ''
     return value

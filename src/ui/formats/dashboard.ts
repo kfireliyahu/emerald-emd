@@ -7,7 +7,8 @@ import { savedView, savedViews, viewSettings } from '@/data/repositories/formatV
 import { nounOf, pluralOf } from '@/domain/format/connections.ts'
 import { formatDecimal } from '@/domain/format/decimal.ts'
 import type { ColumnDeclaration, FormatDeclaration } from '@/domain/format/declaration.ts'
-import { rollupText } from '@/domain/format/rollup.ts'
+import { filterText as ruleText } from '@/domain/format/aggregate.ts'
+import type { RollupDeclaration } from '@/domain/format/rollup.ts'
 import {
   BLOCK_GAP,
   BLOCK_HEIGHT_MAX,
@@ -137,7 +138,7 @@ export function blockWhat(
   }
   if (block.kind === 'rollup') {
     const rollup = (declaration.rollups ?? []).find((each) => each.name === block.name)
-    return `${pre}Rollup${rollup === undefined ? '' : ` · ${rollupText(rollup)}`}`
+    return `${pre}${rollup === undefined ? 'Chart' : rollupSentence(rollup, declaration)}`
   }
   const column = block.sum === undefined ? undefined : declaration.columns.find((each) => each.name === block.sum)
   const what = block.sum === undefined ? 'Count' : `Sum of ${(column?.name ?? block.sum).replace(/_/g, ' ')}`
@@ -156,9 +157,44 @@ export function blockGone(db: Database, block: DashboardBlock, declarations: rea
     return `${declaration.title} has no saved view called ${block.name} any more.`
   }
   if (block.kind === 'rollup' && !(declaration.rollups ?? []).some((each) => each.name === block.name)) {
-    return `${declaration.title} has no rollup called ${block.name} any more.`
+    return `${declaration.title} has no chart called ${rollupWords(block.name)} any more.`
   }
   return undefined
+}
+
+/**
+ * **A rollup's name, as words** — M55 U7, as M53 U3 did for a column's label:
+ * `landed_by_month` reads *Landed by month* wherever a person reads it (a
+ * block's title, the format's tab, the rail, *Add a block*). Only the words:
+ * the declaration, every tool and every key keep the name.
+ */
+export function rollupWords(name: string): string {
+  const words = name.replace(/_/g, ' ').trim()
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}
+
+/** A block's title as it reads: a chart's rollup in words, a saved view as it was named. */
+export function blockTitle(block: Pick<DashboardBlock, 'kind' | 'name'>): string {
+  return block.kind === 'rollup' ? rollupWords(block.name) : block.name
+}
+
+/**
+ * **What a rollup counts, as a sentence** — M55 U7: `count by month of landed
+ * and milestone` reads *Count of units by month of landed, per milestone*, the
+ * line under a block's title and above its tab's chart, where the rollup's own
+ * text in mono stood.
+ */
+export function rollupSentence(rollup: RollupDeclaration, declaration: Pick<FormatDeclaration, 'title'>): string {
+  const words = (name: string): string => name.replace(/_/g, ' ')
+  const what =
+    rollup.kind === 'COUNT'
+      ? `Count of ${pluralOf(declaration.title)}`
+      : `${rollup.kind.charAt(0)}${rollup.kind.slice(1).toLowerCase()} of ${words(rollup.of)}`
+  const period = `${rollup.period.truncate ? 'month of ' : ''}${words(rollup.period.column)}${
+    rollup.period.fallback === undefined ? '' : ` or ${words(rollup.period.fallback)}`
+  }`
+  const where = rollup.where.map((each) => words(ruleText(each))).join(' and ')
+  return `${what} by ${period}${rollup.by === undefined ? '' : `, per ${words(rollup.by)}`}${where === '' ? '' : `, where ${where}`}`
 }
 
 /** What *Add a block* offers of one format: its saved views and its rollups. */

@@ -132,6 +132,9 @@ export function rollupName(words: string): string {
   return folded === '' ? words.trim() : folded
 }
 
+/** The refusal when a chart has several dates its month could be of and none is chosen: said at *By month of*. */
+export const PERIOD_UNSAID = 'Say which date the month is of.'
+
 /** A member as a rollup's filter writes it: quoted when it holds a space, a comma or a quote. */
 function memberWord(value: string): string {
   return /[\s,"]/.test(value) ? `"${value.replace(/"/g, '')}"` : value
@@ -187,7 +190,7 @@ export function chartRollup(declaration: FormatDeclaration, made: ChartMade): Re
     return err(
       periodColumns(declaration).length === 0
         ? `${declaration.title} has no date or month column, so a chart of it has no months to be by.`
-        : 'Say which date the month is of.',
+        : PERIOD_UNSAID,
     )
   }
   const where = chartWhere(made.filter)

@@ -18,6 +18,7 @@ import { changeRollup, rollupDeleted, rollupRenamed, type RollupChange } from '@
 import { toneOf } from '@/ui/formats/tone.ts'
 import { entryPath, formatPath, NEW_ENTRY, savedViewPath, type NavChild } from '@/ui/nav.ts'
 import { folderIsOpen, toggleFolder, useOpenFolders } from '@/ui/railFolders.ts'
+import { rollupWords } from '@/ui/formats/dashboard.ts'
 
 /**
  * **A format in the rail, as a folder of its entries** — M37 U2 (D-475, 1B and
@@ -275,11 +276,12 @@ function RollupRow({ format, name, left }: { format: string; name: string; left:
     })
   return (
     <RailRow
-      name={name}
+      // In words (M55 U7); renaming starts from them and folds them back into a name.
+      name={rollupWords(name)}
       to={formatPath(format)}
       state={{ rollup: name }}
       glyph="chart"
-      title={`${name} — a chart`}
+      title={`${rollupWords(name)} — a chart`}
       here={false}
       left={left}
       onRename={(to) => change((db) => rollupRenamed(db, listFormats(db), format, name, to))}
