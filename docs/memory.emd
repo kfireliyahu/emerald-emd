@@ -4656,6 +4656,15 @@ question: How is a column's width set outside the format's table — where is it
 answer: One width per column in format_column_view (D-289), no migration. A saved table block (Dashboard.tsx TableBody) draws columnWidths as a fixed colgroup (defaultWidth where none is kept) and writes through setColumnWidth with the format's name, the table's own call; ResizeHandle and defaultWidth moved to src/ui/formats/ResizeHandle.tsx (drag, double-click/Delete reset, arrows by 16). A press starting on a separator in a block never moves the block (onPointerDownCapture sets the edges' resizing ref). The saved table tab is the format's sheet and already did. The table sits in an overflow-x-auto box: a narrow block scrolls inside itself. Read-only (ReadOnly: frame, locked document) draws widths with no handle on blocks and on RowSheet (onWidth absent) — amends D-432; a pack's format keeps its handle. A chart's table of figures (months) keeps no width and scrolls inside its block — the maintainer's pick, 2026-11-03: "No handle there"; no new store, no migration. Parity D-227 already met by arrange_views view:sheet width (D-403), same row.
 state: live
 
+### D-559
+date: 2026-11-03
+milestone: M52
+scope: engine
+title: Keeping a pack again brings its columns' notes as D-491 brings its formats': the pack's past lists the fingerprint of every note each column had in every build (`PackPast.columns`, under the name the pack uses now), a held note in it becomes this build's, any other is the person's, kept and named; amends D-491
+question: keep_packs brought a kept pack's format notes up to date (D-491) but never a column's note, so a document that kept an older development pack kept the old column notes. How does a column's note tell a pack's from a person's?
+answer: The same test as D-491: the document records no provenance, so the pack does. PackPast.columns maps `format.column` to the fingerprint of every note that column had in every build (src/data/packs/development/past.ts, written from both repositories' git history on 2026-11-03; a renamed column is listed under its current name with its old name's notes). planKeep compares each held column (by the pack's name, after renames) with this build's note: a held note in the past goes into KeepPlan.columnNotes and keepPack writes this build's through adoptFormat, one call per format together with its format notes; any other goes into columnNotesKept, left alone and said by keptParts. planParts says 'brings the notes of the columns decision.ref, … to this build’s', the one wording keep_packs and the Packs screen share; upToDate counts columnNotes. pack.test.ts fails and prints the line to add when a column's note changes. A column keeping it grows arrives with this build's note already. No new tool, no new write path, nothing recorded in the document.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -15304,13 +15313,17 @@ report: Updating a saved view through arrange_views merges what it is given into
 milestone: M52
 scope: engine
 title: Keeping a pack again brings its columns' notes too, as it brings its formats' notes
-state: in_progress
+landed: 2026-11-03
+decision: D-559
+state: built
 brief: From M52 F2's review entry, judged by the maintainer 2026-11-03 ('Fix unit, then close'): 'A document that already keeps the pack (another project's document) gets the new format notes from keep_packs but keeps the old column notes: keep_packs never brings a column's note.' Make keepPack (src/data/packs/packs.ts) bring a column's note the way it already brings a format's (D-491): where the document's column note is still one the pack wrote, it becomes this build's; where the person rewrote it, it is kept and said in the plan's 'leaves' list, as notesKept does for formats. The plan's phrases (the one wording keep_packs and the Packs screen share, D-227) name the columns whose notes were brought. Find how D-491 tells a pack's note from a rewritten one and use the same test for columns; if columns keep nothing that can tell, stop and ask rather than guess. No new tool and no new write path. Tests: a document that kept an older development pack gets this build's decision and open_question column notes; a column note the person rewrote is kept and named; keeping it twice changes nothing the second time. Done-test: create_document at a new path with an older pack's notes (a fixture), keep_packs [development], then formats decision shows this build's column notes. Then M52 F2's review entry is the maintainer's to accept, and M52 closes.
-files: src/data/packs/packs.ts (keepPack, the plan's phrases), src/plugin/tools/packs.ts (keepPacksMutation), src/data/packs/development/pack.ts
+files: src/data/packs/packs.ts, src/data/packs/past.ts, src/data/packs/development/past.ts, src/data/packs/development/pack.test.ts, src/data/packs/development/older/, src/plugin/tools/packs.ts, src/ui/screens/Packs.tsx, docs/plugin.md, docs/09-decision-log.md
 taken_by: run-milestone driver
 started: 2026-11-03
 branch: main
+commit: 63b70fa
 paths: "src/data/packs/packs.ts\nsrc/plugin/tools/packs.ts"
+report: M52 F4 built at 63b70fa on main. keepPack now brings a column's note the way D-491 brings a format's: PackPast.columns holds fingerprints of every column note each build declared (from git history of both repos), planKeep sorts held column notes into columnNotes (an earlier build's, written) and columnNotesKept (the person's, kept and named in keptParts); planParts names the columns brought. Decision D-559 (amends D-491). Tests in development/pack.test.ts: an older-pack document (fixtures older/decision.format.md and older/open_question.format.md from the first public build) gets this build's decision and open_question column notes; a rewritten note is kept and named; a second keep changes nothing. Done-test via the rebuilt server over stdio: create_document [development], stored as text, column notes replaced with the older build's, keep_packs dry run named 11 columns, commit brought them, formats decision shows this build's notes, a further keep_packs says nothing would change. typecheck, privacy and related tests green except hosts/claude/plugin.test.ts 'cuts a new version' which fails at HEAD already (plugin digest of hosts/claude/, untouched here: needs node scripts/pin-plugin.mjs --plugin). ask-cold not run: the only server-text change is 'formats’ and columns’ notes' in keep_packs's description. M52 F2's review entry is the maintainer's to accept; M52 not closed.
 
 ### M53 F1
 milestone: M53
