@@ -188,7 +188,9 @@ Node does. [docs/plugin.md](./docs/plugin.md) has the tool surface, the hosts tr
 
 ## Privacy
 
-Emerald collects nothing. The policy, in full, is [PRIVACY.md](./PRIVACY.md).
+The desktop app, the MCP server and the Claude plugin collect nothing. The Google Drive connector,
+once it is open, keeps five fields per Google account and nothing of your document. The policy, in
+full, is [PRIVACY.md](./PRIVACY.md).
 
 ## License
 

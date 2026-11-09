@@ -116,6 +116,8 @@ export interface Copy {
     readonly extension: Way
     readonly plugin: Way
     readonly npm: Way
+    /** The Google Drive connector (M57 U5): its card links nowhere until the address answers. */
+    readonly drive: Way
     /** The label over the installers, and each installer's name; the file name beside it is the page's. */
     readonly desktop: string
     readonly windows: string
