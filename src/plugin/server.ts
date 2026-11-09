@@ -99,6 +99,7 @@ import { showFormatTool, frameCopyTool, servedPage } from './tools/sheet.ts'
 import { guideStatusTool } from './tools/guide.ts'
 import { keepPacksTool } from './tools/packs.ts'
 import { chooseCategoriesTool, createDocumentTool, updateAccountTool } from './tools/setup.ts'
+import { withDocumentStore, type DocumentStore } from './store.ts'
 import {
   ToolInputError,
   type ElicitForm,
@@ -409,6 +410,12 @@ export interface ServerOptions {
    * Said once per client, on `initialized`: who it is and what it advertised.
    */
   readonly log?: (line: string) => void
+  /**
+   * Where every tool's document lives (M57 U1, D-560): the file at the path the
+   * tool is given unless this says otherwise. The local server never says; the
+   * Google Drive connector gives each call the person's Drive.
+   */
+  readonly store?: DocumentStore
 }
 
 export function createServer(options: ServerOptions = {}): Server {
@@ -487,15 +494,21 @@ export function createServer(options: ServerOptions = {}): Server {
     try {
       const args = request.params.arguments ?? {}
       const context = contextFor(server, options.engineOnly === true)
+      // The tool runs with this server's store, if it was given one: every open
+      // and write inside it reaches the document there (M57 U1).
+      const store = options.store
+      const run = <T,>(work: () => Promise<T>): Promise<T> =>
+        store === undefined ? work() : withDocumentStore(store, work)
       if (tool.answer !== undefined) {
-        const { text, meta, structured } = await tool.answer(args, context)
+        const answer = tool.answer
+        const { text, meta, structured } = await run(() => answer(args, context))
         return {
           content: [{ type: 'text', text }],
           ...(structured === undefined ? {} : { structuredContent: structured }),
           ...(Object.keys(meta).length === 0 ? {} : { _meta: meta }),
         }
       }
-      const text = await tool.run(args, context)
+      const text = await run(() => tool.run(args, context))
       return { content: [{ type: 'text', text }] }
     } catch (error) {
       // A bad argument is the caller's to fix and comes back as a sentence.

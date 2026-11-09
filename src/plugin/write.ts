@@ -19,9 +19,8 @@
  *   `inTransaction`, and the export happens only after it returns.
  */
 
-import { open, rename, stat, unlink, writeFile } from 'node:fs/promises'
+import { open } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import type { Database } from 'sql.js'
 
 import { err, ok, type Result } from '@/core/result.ts'
 import {
@@ -42,37 +41,49 @@ import {
   type DocumentProblem,
   type OpenDocument,
 } from './document.ts'
-import { BACKUPS_KEPT, backupDocument, backupFolderFor, keepNamedCopy, type BackupResult } from './backup.ts'
-import { NAMED_COPIES_KEPT, NAMED_COPY_ROWS, ORPHANED_COPIES_DAYS, writeAtomically } from '../../electron/bridge.ts'
+import { BACKUPS_KEPT, type BackupResult } from './backup.ts'
+import { documentStore, type DocumentStore } from './store.ts'
+import { NAMED_COPIES_KEPT, NAMED_COPY_ROWS, ORPHANED_COPIES_DAYS } from '../../electron/bridge.ts'
+
+export { LOCK_STALE_MS, lockPathFor } from './store.ts'
 
 /**
- * Write `db` over `path`, atomically, **in the shape the file already was**
- * (D-246).
+ * Put the document back through the call's store, **in the shape the file
+ * already was** (D-246), given the version it was opened at (M57 U1).
  *
- * `rename` within a directory is atomic, which is the whole reason for the temp
- * file: the alternative — truncating the real document and streaming bytes into
- * it — has a window in which a crash leaves the user with neither the old file
- * nor the new one. Byte-agnostic, so text costs it nothing.
+ * The local store replaces the file atomically — a temp file renamed over it —
+ * and the whole reason is that the alternative has a window in which a crash
+ * leaves the user with neither the old file nor the new one. Byte-agnostic, so
+ * text costs it nothing.
  *
- * The encoding is required rather than defaulted. A default would be this
- * surface having an opinion about a property of somebody else's file, and the
- * one call site that saves already knows what it opened.
+ * The encoding is the opened document's rather than an argument. A default
+ * would be this surface having an opinion about a property of somebody else's
+ * file, and the one call site that saves already knows what it opened.
+ *
+ * **What comes back is the store's refusal, if it made one** — a document
+ * changed since it was read — as a problem the caller renders, never thrown.
  */
 async function saveDocument(
-  path: string,
-  db: Database,
-  encoding: DocumentEncoding,
-): Promise<void> {
-  const encoded = await exportEncoded(db, encoding)
+  store: DocumentStore,
+  document: OpenDocument,
+): Promise<DocumentProblem | undefined> {
+  const encoded = await exportEncoded(document.db, document.encoding)
   // Thrown rather than returned: this is called from inside `writeDocument`,
   // after the work has already run and committed in memory, and a refusal there
   // must abort the save rather than be a value somebody forgets to read. The
   // document on disk is untouched either way.
   if (!encoded.ok) throw new Error(encoded.error)
+  return putBack(store, document, encoded.value)
+}
 
-  // The shell's own atomic write: a failed write or rename leaves no scratch file
-  // behind, and the original is untouched either way.
-  await writeAtomically({ pid: process.pid, writeFile, rename, unlink }, path, encoded.value)
+/** The bytes to the store, and its refusal as a problem. */
+async function putBack(
+  store: DocumentStore,
+  document: OpenDocument,
+  bytes: Uint8Array,
+): Promise<DocumentProblem | undefined> {
+  const written = await store.write(document.path, bytes, document.version)
+  return written.ok ? undefined : { code: 'WRITE_REFUSED', message: written.error }
 }
 
 /**
@@ -156,20 +167,37 @@ export async function writeDocument(
   work: (document: OpenDocument) => string,
   options: { readonly afterGate?: (document: OpenDocument) => Promise<void> } = {},
 ): Promise<string> {
-  // **One writer at a time, from read to rename** (M27 U6). Without it two
-  // plugin processes each read the file, each change their copy, and the
-  // second rename silently undoes the first — and a conditional write (`expect`)
-  // would tell both sessions the unit was theirs.
-  return holdingLock(path, () => writeHeld(path, work, options))
+  return (await writeThrough(path, work, options)).text
 }
 
-async function writeHeld(
+/** What a write said, and whether anything was written — a refusal takes no note of a copy after it. */
+interface Written {
+  readonly text: string
+  readonly written: boolean
+}
+
+function writeThrough(
   path: string,
   work: (document: OpenDocument) => string,
   options: { readonly afterGate?: (document: OpenDocument) => Promise<void> },
-): Promise<string> {
+): Promise<Written> {
+  // **One writer at a time, from read to rename** (M27 U6). Without it two
+  // plugin processes each read the file, each change their copy, and the
+  // second rename silently undoes the first — and a conditional write (`expect`)
+  // would tell both sessions the unit was theirs. The local store holds the lock
+  // beside the file; a store whose write is conditional refuses instead (M57 U1).
+  const store = documentStore()
+  return store.exclusive(path, () => writeHeld(store, path, work, options))
+}
+
+async function writeHeld(
+  store: DocumentStore,
+  path: string,
+  work: (document: OpenDocument) => string,
+  options: { readonly afterGate?: (document: OpenDocument) => Promise<void> },
+): Promise<Written> {
   const opened = await openDocumentForWriting(path)
-  if (!opened.ok) return refusalText(path, opened.error)
+  if (!opened.ok) return { text: refusalText(path, opened.error), written: false }
 
   const document = opened.value
   try {
@@ -188,71 +216,18 @@ async function writeHeld(
     // A bank account's own cash is made with the account (M36 U08), so nothing
     // is held to after the work any more.
     const answer = inTransaction(document.db, () => work(document))
-    await saveDocument(path, document.db, document.encoding)
-    return answer
+    // The work's answer is said only when the store took it: a refused write
+    // changed nothing, and an answer naming what it changed would be false.
+    const refused = await saveDocument(store, document)
+    if (refused !== undefined) return { text: refusalText(path, refused), written: false }
+    return { text: answer, written: true }
   } catch (error) {
     // Rolled back already; a ledger tool on a document with none says so (M36 U03).
     const refused = noLedgerRefusal(path, document.db, error)
-    if (refused !== undefined) return refused
+    if (refused !== undefined) return { text: refused, written: false }
     throw error
   } finally {
     document.db.close()
-  }
-}
-
-/** How long a writer waits for another to finish before refusing. */
-const LOCK_WAIT_MS = 10_000
-/**
- * A lock older than this is a writer that died holding it. A write is one
- * open, one transaction and one rename — well under a second on memory.emd —
- * so a minute is a crash and not a slow write.
- */
-export const LOCK_STALE_MS = 60_000
-
-/** The lock beside a document: `memory.emd` → `memory.emd.lock`. */
-export function lockPathFor(path: string): string {
-  return `${path}.lock`
-}
-
-/**
- * Run `work` holding `<path>.lock`, made with the `wx` flag so taking it is
- * one atomic step rather than a check and a write. **It serializes the plugin's
- * writers and nothing else**: the app does not take it, and does not need to —
- * its save checks the file's mark first (D-092) and refuses to overwrite a
- * change it has not seen.
- */
-async function holdingLock<T>(path: string, work: () => Promise<T>): Promise<T> {
-  const lock = lockPathFor(path)
-  const deadline = Date.now() + LOCK_WAIT_MS
-  for (;;) {
-    try {
-      const handle = await open(lock, 'wx')
-      try {
-        await handle.writeFile(`${String(process.pid)} ${new Date().toISOString()}\n`)
-      } finally {
-        await handle.close()
-      }
-      break
-    } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error
-      const held = await stat(lock).catch(() => undefined)
-      if (held !== undefined && Date.now() - held.mtimeMs > LOCK_STALE_MS) {
-        await unlink(lock).catch(() => undefined)
-        continue
-      }
-      if (Date.now() > deadline) {
-        throw new Error(
-          `Another writer has held ${lock} for over ${String(LOCK_WAIT_MS / 1000)} seconds. ` +
-            'Nothing was changed; try again in a moment.',
-        )
-      }
-      await new Promise((resolve) => setTimeout(resolve, 20 + Math.random() * 30))
-    }
-  }
-  try {
-    return await work()
-  } finally {
-    await unlink(lock).catch(() => undefined)
   }
 }
 
@@ -278,12 +253,14 @@ export async function writeWithBackup(
   work: (document: OpenDocument) => string,
 ): Promise<string> {
   let backup: BackupResult | undefined
+  const copies = documentStore().copies
 
-  const answer = await writeDocument(path, work, {
+  const { text: answer, written } = await writeThrough(path, work, {
     afterGate: async (document) => {
-      if (!needsBackup(document)) return
+      // A store that keeps no copies of its own takes none here (D-562).
+      if (copies === undefined || !needsBackup(document)) return
       try {
-        backup = await backupDocument(path)
+        backup = await copies.before(path)
       } catch (error) {
         throw new Error(
           'Refusing to write: the backup failed ' +
@@ -294,7 +271,7 @@ export async function writeWithBackup(
     },
   })
 
-  const note = backup === undefined ? undefined : backupNoteOnce(path, backup)
+  const note = backup === undefined || !written ? undefined : backupNoteOnce(path, backup)
   return note === undefined ? answer : [answer, '', note].join('\n')
 }
 
@@ -321,7 +298,9 @@ function backupNoteOnce(path: string, backup: BackupResult): string | undefined 
 
 /** What a refusal ends with: where this document's earlier copies are, so a failed write still says. */
 function copiesAreIn(path: string): string {
-  return ` Its earlier copies are in \`${backupFolderFor(path)}\` (File › Earlier copies of this document).`
+  const copies = documentStore().copies
+  if (copies === undefined) return ''
+  return ` Its earlier copies are in \`${copies.folder(path)}\` (File › Earlier copies of this document).`
 }
 
 function backupNote(backup: BackupResult): string {
@@ -438,8 +417,9 @@ export async function mutatingCall<T>(
 
   let backup: BackupResult | undefined
   let named: { readonly copy: BackupResult; readonly what: string } | undefined
+  const copies = documentStore().copies
 
-  const answer = await writeDocument(
+  const { text: answer, written } = await writeThrough(
     path,
     (document) => mutation.apply(document, mutation.plan(document)),
     {
@@ -448,13 +428,15 @@ export async function mutatingCall<T>(
         // recomputed inside the transaction below rather than carried over from
         // the dry run, for the reason in this function's own comment. This one
         // asks it two questions — is there going to be a write at all, and is
-        // it large enough to want a named copy before it (D-399).
+        // it large enough to want a named copy before it (D-399). A store that
+        // keeps no copies of its own takes neither (D-562).
+        if (copies === undefined) return
         const asked = mutation.refuses !== undefined || mutation.copyBefore !== undefined
         const plan = asked ? mutation.plan(document) : undefined
         if (plan !== undefined && mutation.refuses?.(plan) === true) return
 
         try {
-          backup = await backupDocument(path)
+          backup = await copies.before(path)
         } catch (error) {
           // Thrown rather than warned past. A batch with no way back is exactly
           // the thing the copy exists for, and "we could not make one, so we
@@ -475,7 +457,7 @@ export async function mutatingCall<T>(
         const first = before.rows > 0 && holdsNoRows(document)
         if (before.rows < NAMED_COPY_ROWS && !first) return
         try {
-          named = { copy: await keepNamedCopy(path, before.what), what: before.what }
+          named = { copy: await copies.named(path, before.what), what: before.what }
         } catch (error) {
           throw new Error(
             'Refusing to write: the copy from before it failed ' +
@@ -487,6 +469,8 @@ export async function mutatingCall<T>(
     },
   )
 
+  // A refused write says only that: no copy is news after nothing was written.
+  if (!written) return answer
   const note = backup === undefined ? undefined : backupNoteOnce(path, backup)
   return [
     answer,
@@ -535,25 +519,30 @@ export async function storeDocumentAs(path: string, encoding: DocumentEncoding, 
   }
   if (!commit) return readDocument(path, (document) => answer(document))
 
-  return holdingLock(path, async () => {
+  const store = documentStore()
+  return store.exclusive(path, async () => {
     const opened = await openDocumentForWriting(path)
     if (!opened.ok) return refusalText(path, opened.error)
+    const document = opened.value
     try {
-      return await answer(opened.value, async (bytes) => {
-        let backup: BackupResult
+      let refused: DocumentProblem | undefined
+      const said = await answer(document, async (bytes) => {
+        let backup: BackupResult | undefined
         try {
-          backup = await backupDocument(path)
+          backup = await store.copies?.before(path)
         } catch (error) {
           throw new Error(
             `Refusing to write: the backup failed (${error instanceof Error ? error.message : String(error)}). Nothing was changed.` +
               copiesAreIn(path),
           )
         }
-        await writeAtomically({ pid: process.pid, writeFile, rename, unlink }, path, bytes)
-        return backupNoteOnce(path, backup) ?? ''
+        refused = await putBack(store, document, bytes)
+        return backup === undefined || refused !== undefined ? '' : (backupNoteOnce(path, backup) ?? '')
       })
+      // The sentence above says it is stored that way now; a refused write did not make it so.
+      return refused === undefined ? said : refusalText(path, refused)
     } finally {
-      opened.value.db.close()
+      document.db.close()
     }
   })
 }
@@ -565,10 +554,15 @@ export async function storeDocumentAs(path: string, encoding: DocumentEncoding, 
  * somebody else's rename.
  */
 export async function keepCopyNow(path: string, what: string): Promise<string> {
-  return holdingLock(path, async () => {
+  const store = documentStore()
+  return store.exclusive(path, async () => {
     const opened = await openDocument(path)
     if (!opened.ok) return refusalText(path, opened.error)
     opened.value.db.close()
-    return namedNote(await keepNamedCopy(path, what), what)
+    // A store that keeps no copies of its own has its own earlier versions (D-562).
+    if (store.copies === undefined) {
+      return `${path} keeps its earlier versions where it is stored, so no copy was made here. Nothing was changed.`
+    }
+    return namedNote(await store.copies.named(path, what), what)
   })
 }

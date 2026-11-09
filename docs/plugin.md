@@ -103,7 +103,10 @@ it is three things rather than one:
   is the app's *Save as text* / *Save as SQLite*, dry-run gated and refused with the app's own
   sentence when the text would not carry the document (a ledger). **A rename the app's hold
   refuses is tried again for about a second** (`writeAtomically`, `EPERM`/`EACCES`/`EBUSY`) before
-  the answer says the app has the file.
+  the answer says the app has the file. **All of this is the local file store** (M57 U1, D-560):
+  every open, write, lock and copy goes through a `DocumentStore` (`src/plugin/store.ts`) — read
+  with a version, write given it, copies optional — and a store that refuses a stale write answers
+  `REFUSED — nothing was written`, code `WRITE_REFUSED`, never a tool error.
 - **Provenance, reinterpreted.** Categories still land as `categorySource = 'AI'` and rules still
   as `origin = 'AI_SUGGESTED'` — but as a **label recording how the row got there**, not as a
   pending state something is waiting to confirm. That is a real change of meaning and it is worth

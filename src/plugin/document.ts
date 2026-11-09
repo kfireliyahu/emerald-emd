@@ -26,10 +26,10 @@
  * write saves it with its own change, under the lock (`write.ts`).
  *
  * A document is opened from its bytes into memory. Nothing here writes; the
- * file on disk is not even held open past `readFile`.
+ * bytes are read through the call's store (`store.ts`, M57 U1) — the file on
+ * disk, unless the call runs with another — and nothing is held open past it.
  */
 
-import { readFile } from 'node:fs/promises'
 import type { Database } from 'sql.js'
 
 import { err, ok, type Result } from '@/core/result.ts'
@@ -42,6 +42,8 @@ import {
   openEncodedWithoutMigrating,
   type DocumentEncoding,
 } from '@/data/storage/encoding.ts'
+
+import { documentStore } from './store.ts'
 
 /** The plugin's own version, which is not the schema version. */
 export const PLUGIN_VERSION = '0.3.0'
@@ -60,6 +62,11 @@ export interface OpenDocument {
    * chose text *for* would be gone from the next commit.
    */
   readonly encoding: DocumentEncoding
+  /**
+   * The store's token for the bytes this was opened from (M57 U1): a write
+   * hands it back, and a store that keeps versions refuses one that is stale.
+   */
+  readonly version: string
 }
 
 /**
@@ -79,6 +86,8 @@ export interface DocumentProblem {
     | 'ALREADY_EXISTS'
     /** The document keeps a ledger this build's pack would not install onto (D-378). */
     | 'PACK_REFUSED'
+    /** The store would not take the write — the document changed since it was read (M57 U1). */
+    | 'WRITE_REFUSED'
   readonly message: string
   /** Absent when the file could not be read far enough to have one. */
   readonly fileSchemaVersion?: number
@@ -167,12 +176,9 @@ export async function openDocumentForWriting(
 
 /** Read the bytes, refuse the wrong schema, and leave the mode to the caller. */
 async function openGated(path: string): Promise<Result<OpenDocument, DocumentProblem>> {
-  let bytes: Uint8Array
-  try {
-    bytes = await readFile(path)
-  } catch (error) {
-    return err({ code: 'UNREADABLE', message: `Cannot read ${path}: ${describe(error)}` })
-  }
+  const read = await documentStore().read(path)
+  if (!read.ok) return err({ code: 'UNREADABLE', message: `Cannot read ${path}: ${read.error}` })
+  const { bytes, version } = read.value
 
   let db: Database
   let encoding: DocumentEncoding
@@ -234,7 +240,7 @@ async function openGated(path: string): Promise<Result<OpenDocument, DocumentPro
     })
   }
 
-  return ok({ path, schemaVersion, db, encoding })
+  return ok({ path, schemaVersion, db, encoding, version })
 }
 
 /**
@@ -245,6 +251,17 @@ async function openGated(path: string): Promise<Result<OpenDocument, DocumentPro
  * for one problem learns there are two problems.
  */
 export function refusalText(path: string, problem: DocumentProblem): string {
+  // Not a question of schema, so it says nothing of one: the document was read,
+  // the work ran, and the store would not take what came back.
+  if (problem.code === 'WRITE_REFUSED') {
+    return [
+      `REFUSED — nothing was written to ${path}.`,
+      '',
+      problem.message,
+      '',
+      `Reason code: ${problem.code}.`,
+    ].join('\n')
+  }
   const found =
     problem.fileSchemaVersion === undefined ? 'unknown' : String(problem.fileSchemaVersion)
   return [
