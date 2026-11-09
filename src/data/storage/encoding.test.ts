@@ -310,17 +310,21 @@ describe('a document the text cannot carry', () => {
     back.close()
   })
 
-  it('refuses a document with nothing declared, rather than write a file it cannot open', async () => {
-    // The empty new document, which is the first thing anybody would try the
-    // command on. Its text would be the header and no parts, and opening that
-    // is refused — so the save is what has to refuse instead.
+  it('saves a document with nothing declared as its header alone, and opens that back empty (M57 U3)', async () => {
+    // The empty new document — the Google Drive connector starts one as text
+    // (D-562). Its text is the header and no parts, and it opens.
     const db = await createDatabase()
-
     const encoded = await exportEncoded(db, 'text')
-    expect(encoded.ok).toBe(false)
-    if (encoded.ok) throw new Error('an empty document was saved as text')
-    expect(encoded.error).toContain('declares none')
     db.close()
+    if (!encoded.ok) throw new Error(encoded.error)
+    expect(new TextDecoder().decode(encoded.value)).toBe(`<!-- emerald document, schema ${String(SCHEMA_VERSION)} -->\n`)
+
+    for (const open of [openEncoded, openEncodedWithoutMigrating]) {
+      const back = await open(encoded.value)
+      expect(back.encoding).toBe('text')
+      expect(back.db.exec('SELECT count(*) FROM format')[0]?.values[0]?.[0]).toBe(0)
+      back.db.close()
+    }
   })
 
   it('saves as bytes whatever is in it, because that shape carries everything', async () => {

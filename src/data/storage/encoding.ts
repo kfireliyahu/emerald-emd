@@ -210,6 +210,11 @@ export async function openEncodedWithoutMigrating(bytes: Uint8Array): Promise<Op
  * `UNREADABLE`. A `Result` here would be a third error channel for one failure.
  */
 async function rebuild(text: string, schemaVersion: number): Promise<Database> {
+  // A header and nothing under it is an empty document (M57 U3): what the save
+  // writes for a document that declares nothing.
+  if (text.replace(/\r\n/g, '\n').split('\n').slice(1).join('\n').trim() === '') {
+    return createDatabase(schemaVersion)
+  }
   const parts = splitParts(text)
   if (!parts.ok) throw new Error(parts.error)
 
@@ -254,17 +259,13 @@ export async function exportEncoded(
   const parts = serializeDocument(db)
   if (!parts.ok) return parts
 
-  // **A document with nothing declared in it has no text**, and the empty file
-  // that would be written is one this build then refuses to open — the header
-  // alone holds no parts. Caught here rather than discovered on the next open:
-  // a save that produced an unopenable document is the worst answer available,
-  // and it is the one an empty new document would have got.
+  // **A document with nothing declared in it is its header alone** (M57 U3,
+  // D-562): the Google Drive connector's document starts empty and stored as
+  // text, and a person may remove every format they declared. The opener reads
+  // a header with nothing under it back as an empty document, so the save never
+  // writes a file it cannot open.
   if (parts.value.length === 0) {
-    return err(
-      'There is nothing in this document to write as text yet — the text holds declared ' +
-        'formats and their rows, and this document declares none. Declare a format first, or ' +
-        'save it as SQLite bytes.',
-    )
+    return ok(new TextEncoder().encode(`${textHeader(readSchemaVersion(db))}\n`))
   }
 
   const joined = joinParts(parts.value)
