@@ -4665,6 +4665,24 @@ question: keep_packs brought a kept pack's format notes up to date (D-491) but n
 answer: The same test as D-491: the document records no provenance, so the pack does. PackPast.columns maps `format.column` to the fingerprint of every note that column had in every build (src/data/packs/development/past.ts, written from both repositories' git history on 2026-11-03; a renamed column is listed under its current name with its old name's notes). planKeep compares each held column (by the pack's name, after renames) with this build's note: a held note in the past goes into KeepPlan.columnNotes and keepPack writes this build's through adoptFormat, one call per format together with its format notes; any other goes into columnNotesKept, left alone and said by keptParts. planParts says 'brings the notes of the columns decision.ref, … to this build’s', the one wording keep_packs and the Packs screen share; upToDate counts columnNotes. pack.test.ts fails and prints the line to add when a column's note changes. A column keeping it grows arrives with this build's note already. No new tool, no new write path, nothing recorded in the document.
 state: live
 
+### D-560
+date: 2026-11-09
+milestone: M57
+scope: plugin
+title: A hosted MCP endpoint that keeps no document: the person's Google Drive holds one .emd, made by default where Emerald may see it (drive.file); each call reads it, runs the tool and writes it back, and a write to a file changed since it was read is refused and says so; every tool is offered, the ledger's too, with a warning; serverless on Google Cloud, in the project that holds the Drive sign-in; the code lives in this repository
+question: How does Emerald reach a chat on the web, a phone or cloud Cowork, which add only a remote server, without a store of ours or accounts of ours?
+answer: The endpoint is stateless: the document is a file in the person's Google Drive under the drive.file scope, one made by default; a call downloads it, runs the same tool as the local server, and uploads it with a revision check, refusing and saying so when the file changed. Every tool is offered with a warning. Google Cloud serverless (Cloud Run functions or Firebase's), same project as the OAuth client; code in this repo as its own build. Rejected: a store of ours (custody), the file carried through the conversation (2.2 MB, the opposite of asking for rows), a secret-address store (a leaked link is a leaked document), a skill in the chat sandbox (nothing survives the conversation). Drive's sync client puts the same file on the desktop. Maintainer's answers 2026-11-09; where the code lives was the driver's recommendation, asked.
+state: live
+
+### D-561
+date: 2026-11-09
+milestone: M57
+scope: product
+title: The hosted endpoint launches free, with a cap and a kill criterion written before it ships; a paid plan, if one comes, is for the hosted endpoint alone, and the app and the local server stay free and offline (D-124 holds)
+question: Is the hosted endpoint paid, and does it change what the app costs?
+answer: Free at launch with a cap and a kill criterion written first; a personal-sync-style paid plan for the endpoint only if people use it, later shared documents for a team. The app and the local server stay free and offline. Rejected: billing at launch, per-call pricing. Answers the Monetization question: its objection to a hosted model was data custody, which a stateless endpoint does not have.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -5693,6 +5711,13 @@ sent_on: 2026-10-23
 body: "Seen 2026-10-23 while working in `another project's document`. The desktop extension's server had been started on a schema-64 build, and `dist-plugin` was rebuilt to 65 at 09:46 while it ran. After that:\n\n- a write at 09:50 left `another project's document` at schema 65 (its `schema_version` table holds 62, 63, 64, 65), and every later call refused it with `SCHEMA_AHEAD` (plugin understands 64);\n- `create_document` on a new path replied \"Created ... at schema version 64\", but the file's `schema_version` already held 65, and the next call (`declare_format`) refused it with `SCHEMA_AHEAD`.\n\nSo one server process wrote with the new build's code and read with the old build's. That looks like part of the code being loaded from disk lazily. Restarting the extension fixed it. The user can't recover without a restart, and `create_document` reports a version it didn't write."
 state: dropped
 
+### A six-week usage report on Emerald from a session outside this repo
+from: the maintainer, pasting a session's report from his work (summarised here; nothing of the work kept)
+sent_on: 2026-11-09
+body: About 1,000 tool calls over six weeks, one document outside every repository managing several (a supported setup), not committed anywhere. Delivers: decisions with their reasons in one query, a cheap start_here, task notes that hand work on, a work log of what git cannot hold (conversations, blockers, lessons), checked writes. Falls short: nothing ties a decision to the prose files it makes wrong; bookkeeping is heavy (about 360 updates against 175 new rows, each written twice, dry run then commit); two copies of the tools were registered; the server instructions get cut off and the hook text is mostly view-talk rules; a security plugin blocked the SessionStart hook; the planning half sat idle while tasks, the work log and decisions carried the value; teammates cannot see a file outside every repo. Verdict: it delivers structured shared state every session can query.
+state: triaged
+became: Later U-lean-start, Later U-one-server, Later U-hook-blocked; the question 'Decisions and the files they make wrong'; evidence added to 'Dry runs and concurrency'. The idle planning half and the teammates point feed M57's pitch (D-560).
+
 ### Development pack format notes describe Emerald's own repo, not the adopting project
 from: another document of the maintainer's
 sent_on: 2026-10-23
@@ -6157,6 +6182,12 @@ goal: The emerald plugin stops being only an MCP server with command hooks. Clau
 state: closed
 position: 370
 
+### M57
+title: Emerald in any chat: a hosted endpoint on the person's own Google Drive
+goal: A person pastes one address into a chat on the web, on a phone or in cloud Cowork, signs in with Google, and works in their own .emd, which lives in their Drive and syncs to the desktop app through Drive's own client. The endpoint keeps nothing (D-560), launches free with a cap and a kill criterion written first (D-561), and PRIVACY.md says what it does before Google's app review. Still the maintainer's before briefs: the cap, the kill criterion, the address (a subdomain of getemerald.dev?), the default document's name and folder, the Google Cloud project and billing account (his to create), and whether the plugin and the site point people at it.
+state: planned
+position: 341
+
 <!-- emerald: open_question.format.md -->
 ---
 format: open_question
@@ -6194,13 +6225,17 @@ question: Should an update be able to say what it expects — 'set state to in_p
 answered_by: D-304
 state: answered
 
+### Decisions and the files they make wrong
+question: Emerald keeps its own rows consistent, but nothing ties a decision to the prose files it makes wrong. The 2026-11-09 usage report found a decision landed one day and a CLAUDE.md outside every repository still wrong days later; the closing pass's grep for the claim made false only looks inside a repo. Should a decision row name the files it affects (a column), checked by the closing pass wherever they live, or should the pitch stop claiming Emerald keeps prose docs from going stale? Related: H8 (prose about a figure).
+state: open
+
 ### Declared rules across links
 question: How does a person declare a rule the engine cannot know mechanically - a project whose status is Done while a task linking to it is Not started - so that what looks wrong can report it without guessing?
 opened_by: D-396
 state: open
 
 ### Dry runs and concurrency
-question: Every emerald write dry-runs until commit: true. M56 U3 asked how a guard should tell that a commit is the same write as an earlier dry run; the maintainer answered (2026-11-03): "i think we need to soften the dry run requirements in general and handle concurrency better probably." So: when may a write commit without a dry run first (a small or reversible one, a landing whose proposal was already shown, a row a person typed), and how do parallel sessions writing one document (worktree children, a driver, a session in the app) avoid refused ids, lost writes and the text document renewing ids on every write? The third guard was dropped until this is answered.
+question: Every emerald write dry-runs until commit: true. M56 U3 asked how a guard should tell that a commit is the same write as an earlier dry run; the maintainer answered (2026-11-03): "i think we need to soften the dry run requirements in general and handle concurrency better probably." So: when may a write commit without a dry run first (a small or reversible one, a landing whose proposal was already shown, a row a person typed), and how do parallel sessions writing one document (worktree children, a driver, a session in the app) avoid refused ids, lost writes and the text document renewing ids on every write? The third guard was dropped until this is answered. Evidence, 2026-11-09: a six-week usage report outside this repo counted about 360 updates against 175 new rows, each written twice; commit: true on the first call is already allowed and still refuses a bad value, so the instructions are what make sessions dry-run first.
 opened_by: D-549
 state: open
 
@@ -6414,7 +6449,9 @@ state: answered
 ### Monetization
 question: How does Emerald earn anything without a backend, accounts or a hosted model? Ranked by fit: (1) free personal use, paid commercial/team licence; (2) a paid signed, notarised build with auto-update, since today it ships unsigned; (3) team sync — where the money usually is, and where agent trackers went for merge — but it contradicts D-115, so last; (4) supporter / pay-what-you-want. Rejected: per-call pricing or a hosted model — they reintroduce the backend and data custody that were designed out.
 opened_by: D-238
-state: open
+answered_by: D-561
+state: answered
+answer: D-561 (2026-11-09): the hosted endpoint of D-560 is what may be paid, launched free with a cap and a kill criterion first; the app and the local server stay free. The rejection of a hosted model here was about data custody, and D-560's endpoint keeps no document.
 
 ### Newer document
 question: Does an older build refuse a document written by a newer schema, rather than open it and write it back wrong? Unchecked. With a text .emd in git, two people on two builds is the ordinary case.
@@ -11368,6 +11405,30 @@ started: 2026-10-18
 branch: main
 commit: dd0d3b0b
 paths: "src/frame/host.ts\nsrc/frame/main.tsx\nsrc/frame/host.test.ts\nscripts/try-frame.mjs\ndocs/plugin.md"
+
+### Later U-hook-blocked
+milestone: Later
+scope: plugin
+title: Why a security plugin blocked the SessionStart hook
+state: planned
+brief: The 2026-11-09 usage report: a security plugin in the host blocked emerald's SessionStart hook for a session. Find what it objected to (plain Node run from the plugin folder? what the hook prints?) and whether the hook can be shaped so such plugins pass it. Investigation first; a fix only once the cause is known.
+files: hosts/claude/hooks/hooks.json, hosts/claude/hooks/main.ts, hosts/claude/hooks/unless-mod.mjs
+
+### Later U-lean-start
+milestone: Later
+scope: plugin
+title: Less text at every session's start: shorter server instructions and hook output
+state: planned
+brief: A six-week usage report from a session outside this repo (2026-11-09) found the server's instructions long enough that hosts cut them off (this repo's own sessions see them truncated too) and the SessionStart hook's text mostly rules about how to talk about views. Every session pays for both before it does anything. Measure both, cut the instructions to what a session needs before its first call, and move the view-talk rules into the tool answers that need them. Ask the maintainer before dropping any rule outright.
+files: src/plugin/instructions.ts, hosts/claude/hooks/main.ts, hosts/claude/hooks/hooks.json, hosts/claude/hooks/told.ts
+
+### Later U-one-server
+milestone: Later
+scope: plugin
+title: One set of tools: the plugin notices a second emerald server registered beside it
+state: planned
+brief: The 2026-11-09 usage report found two copies of every tool in one host: a standalone emerald server and the plugin's, and past sessions used both, so every session listed every tool twice. Find where the second registration comes from (it was in neither settings.json nor ~/.claude.json, so likely the host app's own config), then have the plugin's start say so once and the setup steps make sure only one is configured. Ask the maintainer which copy wins.
+files: hosts/claude/.claude-plugin/plugin.json, hosts/claude/skills/emerald-setup/SKILL.md, src/plugin/tools/setup.ts, hosts/claude/hooks/no-server.mjs
 
 ### Later U-template
 milestone: Later
@@ -16347,12 +16408,12 @@ title: line
 emerald: changed
 ---
 
-decision: 2026-11-03
+decision: 2026-11-09
 finding: 2026-10-22
-inbox: 2026-11-03
-milestone: 2026-11-03
-open_question: 2026-11-03
+inbox: 2026-11-09
+milestone: 2026-11-09
+open_question: 2026-11-09
 review_entry: 2026-11-03
 rule: 2026-11-03
 term: 2026-11-03
-unit: 2026-11-03
+unit: 2026-11-09

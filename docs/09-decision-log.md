@@ -468,6 +468,8 @@ written out here.
 | D-557 | 2026-11-03 | An input view's dashboard block judges and writes its row as `record_format_rows` does (`stageRows`, then `insertRows`), every refusal at its field; New input view in Add a block saves the view and its block in one transaction; quick add with the view's fields writes each into its column and opens the input view when a required one is left; the conversation's dashboard text names the block as a form | M55 |
 | D-558 | 2026-11-03 | A column's width is one width for the format, dragged in every table of its columns — the format's table, its saved table tab and a saved table placed on a dashboard — with one handle (`ResizeHandle.tsx`); a block wider in columns than its room scrolls inside itself; read-only, the frame included, draws the widths with no handle (amends D-432); a chart's table of months keeps no width | M55 |
 | D-559 | 2026-11-03 | Keeping a pack again brings its columns' notes as D-491 brings its formats': the pack's past lists the fingerprint of every note each column had in every build (`PackPast.columns`, under the name the pack uses now), a held note in it becomes this build's, any other is the person's, kept and named; amends D-491 | M52 |
+| D-560 | 2026-11-09 | A hosted MCP endpoint that keeps no document: the person's Google Drive holds one `.emd`, made by default where Emerald may see it (`drive.file`); each call reads it, runs the tool and writes it back, and a write to a file changed since it was read is refused and says so; every tool is offered, the ledger's too, with a warning; serverless on Google Cloud, in the project that holds the Drive sign-in; the code lives in this repository | M57 |
+| D-561 | 2026-11-09 | The hosted endpoint launches free, with a cap and a kill criterion written before it ships; a paid plan, if one comes, is for the hosted endpoint alone, and the app and the local server stay free and offline (D-124 holds) | M57 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -487,6 +489,63 @@ thirteen closures late: the step was remembered by hand and was not.
 **Now `npm run docs:check` fails while a closed milestone has an entry here**, and
 `node scripts/archive-decisions.mjs` is the fix — it moves the entries, repoints their index rows and
 rewrites every link to them.
+
+## D-560 · 2026-11-09 · A hosted MCP endpoint that keeps no document: the person's Google Drive holds one `.emd`, made by default where Emerald may see it (`drive.file`); each call reads it, runs the tool and writes it back, and a write to a file changed since it was read is refused and says so; every tool is offered, the ledger's too, with a warning; serverless on Google Cloud, in the project that holds the Drive sign-in; the code lives in this repository <a id="d-560"></a>
+
+**Context.** Today Emerald reaches a conversation only where the host starts a local server: the
+desktop app, Claude Code, local Cowork. A chat on the web or on a phone adds only a remote server
+by its address, and cloud Cowork starts no plugin server at all (D-508). *The database under the
+chat* (D-531) holds only where the chat is. Asked how a hosted Emerald could keep the local-first
+promise, the maintainer chose (2026-11-09) the person's own cloud storage over a store of ours.
+
+**Decision.**
+
+- **The endpoint keeps nothing.** The document is a file in the person's Google Drive; a call
+  downloads it, runs the same tool the local server runs, and uploads it when the tool wrote. There
+  is no user table and no stored document; the token the host holds can be Google's own, encrypted.
+- **One document, made by default** on first use. Emerald asks for `drive.file`, so it sees only
+  the files it made or the person opened with it, never the rest of their Drive.
+- **A changed file refuses the write and says so** — the upload is conditional on the revision it
+  read; nothing merges and nothing retries.
+- **Every tool is offered, the ledger pack's too.** What goes in is the person's choice; they are
+  warned that the document now lives in their Drive and passes through the endpoint.
+- **Serverless on Google Cloud** (Cloud Run functions, Firebase's included), in the same Google
+  Cloud project as the Drive sign-in's OAuth client — the cheapest that fits, and the platform the
+  maintainer knows.
+- **The code lives in this repository** (the driver's recommendation, asked): it is the engine and
+  the plugin's tool layer behind another transport, so it shares their tests, the parity rule and
+  the AGPL. It is its own build, beside `build:plugin`.
+
+**Rejected.** *A store of ours behind accounts* — data custody, backups and breach risk for a sole
+maintainer, and the file stops being the person's. *A stateless endpoint the file travels to and
+from on every call* — in a chat the model is the only carrier, `docs/memory.emd` is 2.2 MB, and it
+puts the whole document through the conversation, the opposite of asking for rows. *A secret-address
+store* — a leaked address is a leaked document. *Emerald as a skill in the chat's sandbox* — no
+document survives the conversation.
+
+**Consequences.** The same file syncs to the person's computer through Drive's own client, so the
+desktop app and a phone chat work in one document with no sync of ours; two writers at once meet
+the refused write above. The offline rule (D-124) stays the app's and the local server's: this is a
+separate build, and the plugin's no-network test does not cover it. `PRIVACY.md` gains the
+endpoint before Google's app review, which asks for a privacy policy and a homepage on the domain.
+Tools that take `path` take a document named in the person's Drive instead.
+
+## D-561 · 2026-11-09 · The hosted endpoint launches free, with a cap and a kill criterion written before it ships; a paid plan, if one comes, is for the hosted endpoint alone, and the app and the local server stay free and offline (D-124 holds) <a id="d-561"></a>
+
+**Context.** The *Monetization* question (opened by D-238) rejected a hosted model because it
+reintroduces a backend and data custody. D-560's endpoint keeps no document, so the objection does
+not reach it. The maintainer pointed at a personal-sync subscription as the shape.
+
+**Decision.** The endpoint ships free, capped, with its kill criterion written down before launch,
+as M33 U9 does for a listing. If people use it, a paid plan for the endpoint follows — a reach
+people pay for (the web chat, a phone, other assistants), and later shared documents for a team.
+The desktop app and the local MCP server stay free and make no network call; D-124 is unchanged.
+
+**Rejected.** Billing at launch — payments, VAT and support before anyone has shown they want it.
+Per-call pricing — a price on every question works against asking instead of reading.
+
+**Consequences.** The cap and the kill criterion are the maintainer's numbers to set before the
+endpoint ships. Selling it later wants a merchant-of-record payment service for VAT.
 
 ## Related
 
