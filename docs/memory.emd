@@ -16292,36 +16292,49 @@ report: M57 U1 built at 453f1c7. Every open, write, lock and copy now goes throu
 milestone: M57
 scope: plugin
 title: The connector's tool list: the one document, no path, no tools needing another file
-state: planned
+state: in_progress
 brief: D-562. A server option builds the Google Drive connector's list: every tool that works on the one document, its path parameter gone (the store supplies the document), and the tools that need another file left out: intake and the readers (a statement, xlsx, pdf, a folder of notes), elsewhere and inbox rows sent to another .emd, store_document_as, keep_copy, create_document, and anything watching a path. Its instructions say the document is Emerald/Emerald.emd in the person's Google Drive, that Drive's version history holds earlier copies, and nothing about local files. A test lists the connector's tools and fails when a tool taking a file path slips in. The local server's list and instructions stay byte for byte.
 files: src/plugin/server.ts, src/plugin/instructions.ts, src/plugin/tools/tool.ts, src/plugin/catalog.ts
 blocks: ["M57 U1"]
+taken_by: run-milestone driver
+started: 2026-11-09
+branch: m57-drive-connector
+paths: "src/plugin/server.ts\nsrc/plugin/instructions.ts\nsrc/plugin/tools/tool.ts\nsrc/plugin/catalog.ts\nsrc/plugin/connector.test.ts"
 
 ### M57 U3
 milestone: M57
 scope: plugin
 title: The Drive store: Emerald/Emerald.emd in the person's Drive, a changed file refused
-state: planned
+state: in_progress
 brief: D-560, D-562. In a new hosts/google-drive/, the store U1 defines, on Drive's REST API (v3) with the drive.file scope and an access token handed in. First call: find the folder Emerald and Emerald.emd the app made, or make both, the document stored as text and empty. Read returns the bytes with the file's revision; write uploads only if the revision is still the one read, and otherwise refuses saying the document changed since it was read and to ask again. First find out whether Drive offers an atomic precondition on update; if it does not, check-then-write and write the window down in the decision log. A document over 5 MB is refused at write. Tested against a fake Drive in the test suite; no network in tests. Drive's version history is the earlier copies: no copy files.
 files: hosts/google-drive/, src/plugin/write.ts
 blocks: ["M57 U1"]
+taken_by: run-milestone driver
+started: 2026-11-09
+branch: m57-drive-connector
+paths: "hosts/google-drive/\nsrc/plugin/store.ts\nsrc/plugin/write.ts"
 
 ### M57 U4
 milestone: M57
 scope: plugin
 title: The endpoint: MCP over HTTP on Google Cloud, Google sign-in, the cap and the five fields
 state: planned
-brief: D-560, D-561, D-562. The MCP server over Streamable HTTP, built as its own bundle (build:hosted, beside build:plugin) and run as a Cloud Run function. Sign-in: the endpoint is the OAuth authorization server the chat hosts expect (with the dynamic client registration they use), handing the person to Google for the drive.file scope; the token the host holds is Google's token encrypted with a key from the environment, so no token is stored. Per call: open the Drive store with the person's token and run the U2 list. The cap: 200 calls a day per person, refused over it with when it resets. Firestore keeps exactly five fields per account (hashed account id, today's date, calls today, first day used, used on a later day) and nothing else; a test fails if a write to it carries any other field. A test proves the endpoint makes no request but to Google's APIs. Local runs against the fake Drive and the Firestore emulator.
+brief: D-560, D-561, D-562. The MCP server over Streamable HTTP, built as its own bundle (build:hosted, beside build:plugin) and run as a Cloud Run function. Sign-in: the endpoint is the OAuth authorization server the chat hosts expect (with the dynamic client registration they use), handing the person to Google for the drive.file scope; the token the host holds is Google's token encrypted with a key from the environment, so no token is stored. Per call: open the Drive store with the person's token and run the U2 list. The cap: 200 calls a day per person, refused over it with when it resets. Firestore keeps exactly five fields per account (hashed account id, today's date, calls today, first day used, used on a later day) and nothing else; a test fails if a write to it carries any other field. A test proves the endpoint makes no request but to Google's APIs. Local runs against the fake Drive and the Firestore emulator. Maintainer, 2026-11-09: a record nobody used for 90 days deletes itself (a Firestore TTL on the last day used, or the equivalent), as PRIVACY.md (U5) says.
 files: hosts/google-drive/, src/plugin/main.ts, package.json, vite.config.ts
 blocks: ["M57 U2","M57 U3"]
+paths: "hosts/google-drive/\nsrc/plugin/main.ts\npackage.json\nvite.config.ts"
 
 ### M57 U5
 milestone: M57
 scope: product
 title: Privacy, the warning and the site: what the connector does, said before Google's review
-state: planned
-brief: D-560, D-562. PRIVACY.md gains the Google Drive connector: the document lives in the person's Drive and passes through the endpoint on each call, nothing of it is kept, Firestore's five fields word for word, Drive's version history for earlier copies, and how to have the record deleted (ask the maintainer which route before writing it: an email, a tool, or deletion after a period of no use). The warning a person meets on first use: their document is in their Drive and every tool is offered, the ledger's too. getemerald.dev lists the Google Drive connector as a feature with the address mcp.getemerald.dev and how to add it. Must be live before Google's review is submitted, so it can land before U4.
+state: in_progress
+brief: D-560, D-562. PRIVACY.md gains the Google Drive connector: the document lives in the person's Drive and passes through the endpoint on each call, nothing of it is kept, Firestore's five fields word for word, Drive's version history for earlier copies, and how to have the record deleted. The warning a person meets on first use: their document is in their Drive and every tool is offered, the ledger's too. getemerald.dev lists the Google Drive connector as a feature with the address mcp.getemerald.dev and how to add it. Must be live before Google's review is submitted, so it can land before U4. Maintainer, 2026-11-09: deletion — a record nobody used for 90 days deletes itself, and anyone can email to have it deleted sooner (use the contact PRIVACY.md already gives).
 files: PRIVACY.md, src/demo/page/copy/en.ts, src/demo/page/page.ts
+taken_by: run-milestone driver
+started: 2026-11-09
+branch: m57-drive-connector
+paths: "PRIVACY.md\nsrc/demo/page/"
 
 ### M57 U6
 milestone: M57
@@ -16331,6 +16344,7 @@ state: planned
 brief: D-562. The maintainer's acts first, listed for him: create the Google Cloud project and its billing account, the OAuth consent screen in testing mode with the drive.file scope, the test users, and the DNS record for mcp.getemerald.dev. Then a deploy script, the domain mapped, the encryption key and Firestore set up, and one real run from a chat on the web against his own Drive. Submit Google's review once PRIVACY.md is live. The kill criterion's count (people who used it on two different days within 30 days of going public) is something the maintainer can read from Firestore in one command, written down here; the 30 days start when the review passes and it goes public.
 files: hosts/google-drive/, scripts/
 blocks: ["M57 U4","M57 U5"]
+paths: "hosts/google-drive/\nscripts/"
 
 <!-- emerald: views.md -->
 ---
