@@ -473,6 +473,7 @@ written out here.
 | D-562 | 2026-11-09 | The Google Drive connector's settings: 200 calls a day and 5 MB per person; stopped if fewer than 5 people use it on two different days within 30 days of going public; at `mcp.getemerald.dev`; one document, `Emerald/Emerald.emd`, stored as text and starting empty; Firestore keeps five fields per Google account and nothing else; invited testers first, the clock starting at public; tools that need a file other than the document are left out; Drive's version history is the earlier copies; getemerald.dev lists it as a feature | M57 |
 | D-563 | 2026-11-09 | The Drive store checks the revision and then uploads: Drive's v3 API takes no precondition on an upload, so a write by another writer inside one round trip is replaced, and stays in Drive's version history | M57 |
 | D-564 | 2026-11-09 | The Google Drive connector offers the engine's tools alone — no pack's, the ledger's and the development pack's left out — and none that reaches another file: intake, the readers, `create_document`, `keep_copy`, `store_document_as` and `frame_copy` are left out, it draws no page, an `elsewhere` cell reads unresolved and a `file` cell is not looked for; the local server's list and instructions stay byte for byte (amends D-560 and D-562) | M57 |
+| D-565 | 2026-11-09 | What the Google Drive connector says before anyone uses it: PRIVACY.md gives it a section of its own with the five fields word for word, a record unused for 90 days deleting itself and an email deleting it sooner; a first-use warning of four sentences, written here for M57 U4 to show; and getemerald.dev lists it as coming, the address shown and linked nowhere until it answers | M57 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -643,6 +644,58 @@ HEAD in all four modes and are unchanged.
 connector by routing `frame_copy` through the store: the page is the local server's, reached by a
 `file://` subscription, and a hosted page is its own unit if people ask for it. Pinning the local
 list and text by a hash in the suite: every later change would trip it.
+
+## D-565 · 2026-11-09 · What the Google Drive connector says before anyone uses it: PRIVACY.md gives it a section of its own with the five fields word for word, a record unused for 90 days deleting itself and an email deleting it sooner; a first-use warning of four sentences, written here for M57 U4 to show; and getemerald.dev lists it as coming, the address shown and linked nowhere until it answers <a id="d-565"></a>
+
+**Context.** Google reviews an app asking for Drive access against its privacy policy, so the policy
+has to say what the connector does before the review is submitted (D-562), and M57 U5 lands before
+the endpoint (U4) exists. PRIVACY.md opened *Emerald collects nothing, because there is nowhere for
+it to go: no server* — false the day the connector answers. The maintainer answered deletion when
+the unit was briefed (2026-11-09).
+
+**Decision.**
+
+- **PRIVACY.md's first sentence names what collects nothing** — the desktop app, the MCP server and
+  the plugin — and points to **a section of its own, *The Google Drive connector***: the document in
+  the person's Drive under `drive.file`; read, run and written back on each call, nothing of it kept,
+  a changed file refused; the engine's tools only, the ledger and the development pack staying in
+  the desktop app and the plugin (D-564); Drive's version history as the earlier copies; no token stored; the five
+  Firestore fields word for word (D-562's list, with *today's date* said to be the last day used, the
+  field a 90-day expiry runs on); what else sees what; and what happens if it closes.
+- **Deletion:** a record nobody used for 90 days deletes itself; anyone can have it deleted sooner by
+  writing to the address the page and SECURITY.md give, `me@kfireliyahu.com`; and removing Emerald
+  from the Google account's third-party access stops it reaching the Drive, the document staying the
+  person's.
+- **The first-use warning**, for U4 to show the first time a person uses the connector, word for word:
+
+  > Before you start: your Emerald document is Emerald/Emerald.emd in your own Google Drive. Each
+  > call reads it from your Drive, works on it at mcp.getemerald.dev and writes it back, and nothing
+  > of it is kept there. It offers Emerald's own tools for formats and their rows; the ledger and the
+  > development pack stay in the desktop app and the plugin on your computer. Earlier copies are in
+  > Drive's version history, and what is kept about you is in Emerald's privacy policy.
+
+  It said at first that every tool is offered, the ledger's too (D-560); the maintainer narrowed the
+  connector to the engine's tools the same day (D-564), and the warning, the policy and the page say
+  so.
+
+- **The page lists it as coming, and links nowhere**, saying the packs stay on the desktop: a line in *Your AI assistant works in it*, a
+  clause in *Get Emerald*'s lead, and a way-in of its own there whose name is not a link and whose
+  card has no outline or hover — nothing to open — with `https://mcp.getemerald.dev` beside it as the
+  other ways show their command. When the connector answers, its card becomes a link like the others
+  and *Coming soon* goes.
+
+**Rejected.** Leaving the connector off the page until it answers (D-562 has the page list it, and the
+review wants the policy and the page live first); linking the address before it answers (a link to
+an address that does not answer); a bullet in PRIVACY.md's list (it is the one part that runs on a
+server, and it needs room); a deletion form or a tool to delete one's own record (the maintainer
+chose email).
+
+**Consequences.** The policy promises things U4 and U6 must make true: the endpoint logs nothing of
+a call's content, so Google Cloud's request log holds only time, address and status for its default
+30 days; the 90-day expiry runs on the last day used; and the address answers at the root, with no
+path after it. **A request by email names an email address, and the record is a hash of the Google
+account id** — so U4 has to make a record findable from what a person can send (the open question
+this leaves).
 
 ## Related
 

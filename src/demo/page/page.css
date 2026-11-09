@@ -935,6 +935,15 @@ html.js .row.seen ul.points li {
   row-gap: var(--page-space-3);
   align-items: center;
 }
+/* A way that is not open yet (M57 U5): nothing to open, so no card and no hover —
+   only the card's padding, so its words and its address line up with the rest. */
+.foot .way.soon {
+  padding: var(--page-space-3) var(--page-space-4);
+}
+.foot .tile .icon {
+  width: 20px;
+  height: 20px;
+}
 .foot .download {
   display: flex;
   align-items: center;

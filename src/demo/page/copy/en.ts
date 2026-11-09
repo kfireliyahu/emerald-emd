@@ -177,6 +177,7 @@ export const en: Copy = {
         'One project’s session leaves a note in another’s inbox, and the next session there starts with it.',
         'The server opens the file it is given, does one job, closes it, and makes no network call of its own.',
         'In the Claude desktop app it is one file to install; in any other client, one line in its MCP config: npx -y emerald-mcp.',
+        'Coming soon: the Google Drive connector, for Claude on the web and on a phone. The document is a file in your own Drive; each call reads it there and writes it back, and the connector keeps none of it. It offers formats and their rows; the ledger and the development pack stay in the desktop app and the plugin.',
       ],
     },
     packs: {
@@ -218,7 +219,7 @@ export const en: Copy = {
 
   foot: {
     heading: 'Get Emerald',
-    lead: 'All free. The desktop app for your own files; the Claude extension, the Claude plugin or the npm package to work in it with a model; or the source.',
+    lead: 'All free. The desktop app for your own files; the Claude extension, the Claude plugin or the npm package to work in it with a model; soon, the Google Drive connector for a chat on the web or a phone; or the source.',
     source: {
       name: 'The source, on GitHub',
       line: 'Read it, build it, run it from the repository.',
@@ -234,6 +235,11 @@ export const en: Copy = {
     npm: {
       name: 'The npm package',
       line: 'For any other MCP client: the server, as one line in its config.',
+    },
+    // DRAFT (M57 U5): the connector is not open yet, so its card names the address and links nowhere.
+    drive: {
+      name: 'The Google Drive connector',
+      line: 'Coming soon, for Claude on the web and on a phone: add this address as a custom connector and sign in with Google. Your document is Emerald/Emerald.emd in your own Drive, and the connector keeps none of it. Formats and their rows only: the ledger and the development pack stay in the desktop app and the plugin.',
     },
     desktop: 'The desktop app',
     windows: 'Windows',
