@@ -4683,6 +4683,15 @@ question: Is the hosted endpoint paid, and does it change what the app costs?
 answer: Free at launch with a cap and a kill criterion written first; a personal-sync-style paid plan for the endpoint only if people use it, later shared documents for a team. The app and the local server stay free and offline. Rejected: billing at launch, per-call pricing. Answers the Monetization question: its objection to a hosted model was data custody, which a stateless endpoint does not have.
 state: live
 
+### D-562
+date: 2026-11-09
+milestone: M57
+scope: plugin
+title: The Google Drive connector's settings: 200 calls a day and 5 MB per person; stopped if fewer than 5 people use it on two different days within 30 days of going public; at mcp.getemerald.dev; one document, Emerald/Emerald.emd, stored as text and starting empty; Firestore keeps five fields per Google account and nothing else; invited testers first, the clock starting at public; tools that need a file other than the document are left out; Drive's version history is the earlier copies; getemerald.dev lists it as a feature
+question: What M57 left open after D-560 and D-561: the cap, the kill criterion, the address, the document, what is kept about people, who uses it before Google's review, what tools needing other files do, earlier copies, and how people hear of it.
+answer: Maintainer's answers, 2026-11-09. Cap: 200 calls a day and a 5 MB document per person; over it is refused saying when it resets. Kill criterion: fewer than 5 people who use it on two different days within 30 days of going public. Address: mcp.getemerald.dev. Document: a folder Emerald holding Emerald.emd, stored as text (Drive previews it), starting empty with packs added on request. Kept: in Firestore, per Google account, a one-way hash of the account id, today's date, calls today, the first day used and whether it was used on a later day; never a call, its arguments, a tool name, a file name or anything from the document. Before review: Google's testing mode, up to 100 invited accounts; the 30 days start at public. Tools that need another file (a statement, a folder of notes, another .emd, store_document_as, keep_copy, create_document) are not offered on the connector: it works on the one document only. Earlier copies: Drive's own version history, nothing added. Named the Google Drive connector, a feature getemerald.dev lists with the address; the plugin does not change.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -6183,8 +6192,8 @@ state: closed
 position: 370
 
 ### M57
-title: Emerald in any chat: a hosted endpoint on the person's own Google Drive
-goal: A person pastes one address into a chat on the web, on a phone or in cloud Cowork, signs in with Google, and works in their own .emd, which lives in their Drive and syncs to the desktop app through Drive's own client. The endpoint keeps nothing (D-560), launches free with a cap and a kill criterion written first (D-561), and PRIVACY.md says what it does before Google's app review. Still the maintainer's before briefs: the cap, the kill criterion, the address (a subdomain of getemerald.dev?), the default document's name and folder, the Google Cloud project and billing account (his to create), and whether the plugin and the site point people at it.
+title: The Google Drive connector: Emerald in any chat, on the person's own Drive
+goal: A person pastes mcp.getemerald.dev into a chat on the web, on a phone or in cloud Cowork, signs in with Google, and works in Emerald/Emerald.emd, which lives in their Drive and syncs to the desktop app through Drive's own client. The endpoint keeps no document (D-560), launches free with a 200-calls-a-day cap and a kill criterion of fewer than 5 people back on a second day within 30 days of going public (D-561, D-562), and PRIVACY.md says what it keeps before Google's review. All the maintainer's decisions are answered (D-562); his own acts (the Google Cloud project, billing, consent screen, DNS) are listed in U6.
 state: planned
 position: 341
 
@@ -10256,6 +10265,13 @@ named_by: D-451
 scope: ledger
 shown_in: rail
 appears: screen 74 in 14 files (screens/Goals 19, savings/Cushion 9, savings/DepositEditor 8, …); tools 60 in 10 files (tools/wealth 16, tools/goalRhythm 15, tools/savings 10, …); tour 7 in 3 files (demo/project 4, demo/ledger 2, demo/tour_step.format 1)
+state: live
+
+### Google Drive connector
+means: Emerald's hosted MCP endpoint at mcp.getemerald.dev: a person pastes the address into a chat, signs in with Google, and works in one .emd in their own Drive (Emerald/Emerald.emd). It keeps no document (D-560).
+not: Not a sync service, not an account with Emerald, and not the local plugin or the desktop app.
+named_by: D-562
+scope: plugin
 state: live
 
 ### Group by / Ticked when / Line
@@ -16257,6 +16273,58 @@ commit: 3627e36
 paths: "hosts/claude/skills/plan-brought-in/\nhosts/claude/skills/emerald-setup/"
 report: M56 U7 built at 3627e36 on worktree-agent-a5b080b978a04b485 with U4 (one commit), D-543 (written by U4's landing). Two plugin skills: hosts/claude/skills/bring-in-a-plan (a PLAN.md, TODO list, roadmap note, notes folder or ticket export into milestone/unit/decision/open_question rows: keep_packs development, formats for the columns, one proposal mapping headings to milestones, items to units with ticked=built, 'decided' to decisions, TBD to open questions, milestones written first, hundreds of rows through a .json file and read_onto_format rather than pasted calls; a section of what the planner migration found, said generically: multi-word enum members in filters, a one-of-a-kind mark moved in one batch, batches whole or not at all, start-here questions and roadmap set by arrange_views, named copies kept out of the repository; the old file is the person's; synthetic shop PLAN.md example) and hosts/claude/skills/set-up-a-project (npx emerald-mcp init and its three choices: stored as text and committed vs one file outside every repository with the costs of each, what to commit (CLAUDE.md section, a relative .claude/emerald.json; an absolute one is the machine's), the hooks (the plugin's when enabled, else init's into .claude/settings.json), the status line as the person's own setting). Own skill rather than extending emerald-setup (D-543): emerald-setup fires where no Emerald tools exist; each names the other. set-up-a-project pins emerald-mcp@0.2.0 (init and the status line), so scripts/pin-plugin.mjs now moves it and plugin.test.ts holds it. Tests and checks as U4's report: 48 green, typecheck green, docs:check red only on D-543's missing row; claude plugin eval refused (git 2.24 < 2.31), not run. For M56 U5, instructions.ts sections now carried: bring-in-a-plan = PLANNING's what-the-pack-keeps sentences and START's pack paragraph; set-up-a-project = PLANNING's 'Keep it one of two ways' sentence (stored as text and committed, or one file outside every repository).
 
+### M57 U1
+milestone: M57
+scope: plugin
+title: The document behind a seam: opening, reading and writing go through a store
+state: planned
+brief: D-560. Every tool reaches its document by path: openDocument/readDocument (document.ts), writeDocument, writeWithBackup and mutatingCall with the lock beside the file (write.ts), backups (backup.ts). Put one interface between the tools and the bytes: read the document with a version token, write it back given that token (the store may refuse), and an optional earlier copy. The local file store is today's behaviour exactly: the lock, the backup before a write, the text and bytes encodings. No tool's answer changes; the existing suite is the proof, plus a test that a refused write from the store reaches the tool as a refusal. Nothing about Drive here.
+files: src/plugin/document.ts, src/plugin/write.ts, src/plugin/backup.ts, src/plugin/server.ts
+
+### M57 U2
+milestone: M57
+scope: plugin
+title: The connector's tool list: the one document, no path, no tools needing another file
+state: planned
+brief: D-562. A server option builds the Google Drive connector's list: every tool that works on the one document, its path parameter gone (the store supplies the document), and the tools that need another file left out: intake and the readers (a statement, xlsx, pdf, a folder of notes), elsewhere and inbox rows sent to another .emd, store_document_as, keep_copy, create_document, and anything watching a path. Its instructions say the document is Emerald/Emerald.emd in the person's Google Drive, that Drive's version history holds earlier copies, and nothing about local files. A test lists the connector's tools and fails when a tool taking a file path slips in. The local server's list and instructions stay byte for byte.
+files: src/plugin/server.ts, src/plugin/instructions.ts, src/plugin/tools/tool.ts, src/plugin/catalog.ts
+blocks: ["M57 U1"]
+
+### M57 U3
+milestone: M57
+scope: plugin
+title: The Drive store: Emerald/Emerald.emd in the person's Drive, a changed file refused
+state: planned
+brief: D-560, D-562. In a new hosts/google-drive/, the store U1 defines, on Drive's REST API (v3) with the drive.file scope and an access token handed in. First call: find the folder Emerald and Emerald.emd the app made, or make both, the document stored as text and empty. Read returns the bytes with the file's revision; write uploads only if the revision is still the one read, and otherwise refuses saying the document changed since it was read and to ask again. First find out whether Drive offers an atomic precondition on update; if it does not, check-then-write and write the window down in the decision log. A document over 5 MB is refused at write. Tested against a fake Drive in the test suite; no network in tests. Drive's version history is the earlier copies: no copy files.
+files: hosts/google-drive/, src/plugin/write.ts
+blocks: ["M57 U1"]
+
+### M57 U4
+milestone: M57
+scope: plugin
+title: The endpoint: MCP over HTTP on Google Cloud, Google sign-in, the cap and the five fields
+state: planned
+brief: D-560, D-561, D-562. The MCP server over Streamable HTTP, built as its own bundle (build:hosted, beside build:plugin) and run as a Cloud Run function. Sign-in: the endpoint is the OAuth authorization server the chat hosts expect (with the dynamic client registration they use), handing the person to Google for the drive.file scope; the token the host holds is Google's token encrypted with a key from the environment, so no token is stored. Per call: open the Drive store with the person's token and run the U2 list. The cap: 200 calls a day per person, refused over it with when it resets. Firestore keeps exactly five fields per account (hashed account id, today's date, calls today, first day used, used on a later day) and nothing else; a test fails if a write to it carries any other field. A test proves the endpoint makes no request but to Google's APIs. Local runs against the fake Drive and the Firestore emulator.
+files: hosts/google-drive/, src/plugin/main.ts, package.json, vite.config.ts
+blocks: ["M57 U2","M57 U3"]
+
+### M57 U5
+milestone: M57
+scope: product
+title: Privacy, the warning and the site: what the connector does, said before Google's review
+state: planned
+brief: D-560, D-562. PRIVACY.md gains the Google Drive connector: the document lives in the person's Drive and passes through the endpoint on each call, nothing of it is kept, Firestore's five fields word for word, Drive's version history for earlier copies, and how to have the record deleted (ask the maintainer which route before writing it: an email, a tool, or deletion after a period of no use). The warning a person meets on first use: their document is in their Drive and every tool is offered, the ledger's too. getemerald.dev lists the Google Drive connector as a feature with the address mcp.getemerald.dev and how to add it. Must be live before Google's review is submitted, so it can land before U4.
+files: PRIVACY.md, src/demo/page/copy/en.ts, src/demo/page/page.ts
+
+### M57 U6
+milestone: M57
+scope: plugin
+title: Deployed and in review: testing mode for invited people, then public
+state: planned
+brief: D-562. The maintainer's acts first, listed for him: create the Google Cloud project and its billing account, the OAuth consent screen in testing mode with the drive.file scope, the test users, and the DNS record for mcp.getemerald.dev. Then a deploy script, the domain mapped, the encryption key and Firestore set up, and one real run from a chat on the web against his own Drive. Submit Google's review once PRIVACY.md is live. The kill criterion's count (people who used it on two different days within 30 days of going public) is something the maintainer can read from Firestore in one command, written down here; the 30 days start when the review passes and it goes public.
+files: hosts/google-drive/, scripts/
+blocks: ["M57 U4","M57 U5"]
+
 <!-- emerald: views.md -->
 ---
 emerald: views
@@ -16415,5 +16483,5 @@ milestone: 2026-11-09
 open_question: 2026-11-09
 review_entry: 2026-11-03
 rule: 2026-11-03
-term: 2026-11-03
+term: 2026-11-09
 unit: 2026-11-09

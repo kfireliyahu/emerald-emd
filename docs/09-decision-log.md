@@ -470,6 +470,7 @@ written out here.
 | D-559 | 2026-11-03 | Keeping a pack again brings its columns' notes as D-491 brings its formats': the pack's past lists the fingerprint of every note each column had in every build (`PackPast.columns`, under the name the pack uses now), a held note in it becomes this build's, any other is the person's, kept and named; amends D-491 | M52 |
 | D-560 | 2026-11-09 | A hosted MCP endpoint that keeps no document: the person's Google Drive holds one `.emd`, made by default where Emerald may see it (`drive.file`); each call reads it, runs the tool and writes it back, and a write to a file changed since it was read is refused and says so; every tool is offered, the ledger's too, with a warning; serverless on Google Cloud, in the project that holds the Drive sign-in; the code lives in this repository | M57 |
 | D-561 | 2026-11-09 | The hosted endpoint launches free, with a cap and a kill criterion written before it ships; a paid plan, if one comes, is for the hosted endpoint alone, and the app and the local server stay free and offline (D-124 holds) | M57 |
+| D-562 | 2026-11-09 | The Google Drive connector's settings: 200 calls a day and 5 MB per person; stopped if fewer than 5 people use it on two different days within 30 days of going public; at `mcp.getemerald.dev`; one document, `Emerald/Emerald.emd`, stored as text and starting empty; Firestore keeps five fields per Google account and nothing else; invited testers first, the clock starting at public; tools that need a file other than the document are left out; Drive's version history is the earlier copies; getemerald.dev lists it as a feature | M57 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -545,7 +546,43 @@ The desktop app and the local MCP server stay free and make no network call; D-1
 Per-call pricing — a price on every question works against asking instead of reading.
 
 **Consequences.** The cap and the kill criterion are the maintainer's numbers to set before the
-endpoint ships. Selling it later wants a merchant-of-record payment service for VAT.
+endpoint ships (D-562 sets them). Selling it later wants a merchant-of-record payment service for VAT.
+
+## D-562 · 2026-11-09 · The Google Drive connector's settings: 200 calls a day and 5 MB per person; stopped if fewer than 5 people use it on two different days within 30 days of going public; at `mcp.getemerald.dev`; one document, `Emerald/Emerald.emd`, stored as text and starting empty; Firestore keeps five fields per Google account and nothing else; invited testers first, the clock starting at public; tools that need a file other than the document are left out; Drive's version history is the earlier copies; getemerald.dev lists it as a feature <a id="d-562"></a>
+
+**Context.** D-560 and D-561 left M57's numbers and edges to the maintainer, listed before any brief
+(the rule on planning a milestone). He answered them on 2026-11-09, and named the feature: the
+**Google Drive connector**, a feature beside the app and the local plugin.
+
+**Decision.**
+
+- **Cap:** 200 calls a day and a 5 MB document per person; a call over it is refused, saying when
+  it resets.
+- **Kill criterion:** the connector is stopped if fewer than 5 people use it on two different days
+  within 30 days of going public. It counts use, not curiosity.
+- **Address:** `mcp.getemerald.dev`, a subdomain mapped to Google Cloud; the site stays where it is.
+- **The document:** a folder `Emerald` holding `Emerald.emd`, stored as text so Drive previews it,
+  starting empty with packs added when asked.
+- **What is kept:** in Firestore, per Google account, a one-way hash of the account id, today's
+  date, calls today, the first day used and whether it was used on a later day. Never a call, its
+  arguments, a tool name, a file name or anything from the document.
+- **Before Google's review:** testing mode, up to 100 accounts the maintainer invites; the 30 days
+  start when it goes public.
+- **Tools that need another file** — a statement, a folder of notes, another `.emd`,
+  `store_document_as`, `keep_copy`, `create_document` — are not offered: the connector works on the
+  one document. This narrows D-560's *every tool*, which was about the packs, not about files.
+- **Earlier copies:** Drive's own version history; the connector adds none.
+- **How people hear of it:** getemerald.dev lists the Google Drive connector with its address. The
+  plugin does not change.
+
+**Rejected.** A higher cap or none (a runaway loop costs the free tier); a sign-in count as the kill
+criterion (curiosity, not use); `getemerald.dev/mcp` (the whole site would move to Google Cloud);
+storing the document as bytes (Drive could not preview it); counting from request logs (a per-day
+cap read from logs is slow and loose); taking a file's text in the call (more to build first).
+
+**Consequences.** PRIVACY.md lists the five fields word for word, and how to have them deleted is
+asked when M57 U5 is taken. The connector's instructions and tool list differ from the local
+server's, and a test holds the line between them (M57 U2).
 
 ## Related
 
