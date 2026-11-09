@@ -598,7 +598,8 @@ the unit was briefed (2026-11-09).
 - **PRIVACY.md's first sentence names what collects nothing** — the desktop app, the MCP server and
   the plugin — and points to **a section of its own, *The Google Drive connector***: the document in
   the person's Drive under `drive.file`; read, run and written back on each call, nothing of it kept,
-  a changed file refused; Drive's version history as the earlier copies; no token stored; the five
+  a changed file refused; the engine's tools only, the ledger and the development pack staying in
+  the desktop app and the plugin (D-564); Drive's version history as the earlier copies; no token stored; the five
   Firestore fields word for word (D-562's list, with *today's date* said to be the last day used, the
   field a 90-day expiry runs on); what else sees what; and what happens if it closes.
 - **Deletion:** a record nobody used for 90 days deletes itself; anyone can have it deleted sooner by
@@ -609,11 +610,15 @@ the unit was briefed (2026-11-09).
 
   > Before you start: your Emerald document is Emerald/Emerald.emd in your own Google Drive. Each
   > call reads it from your Drive, works on it at mcp.getemerald.dev and writes it back, and nothing
-  > of it is kept there. Every tool is offered, the ledger's too, so whatever you put in it — your
-  > money included — is as private as your Google account. Earlier copies are in Drive's version
-  > history, and what is kept about you is in Emerald's privacy policy.
+  > of it is kept there. It offers Emerald's own tools for formats and their rows; the ledger and the
+  > development pack stay in the desktop app and the plugin on your computer. Earlier copies are in
+  > Drive's version history, and what is kept about you is in Emerald's privacy policy.
 
-- **The page lists it as coming, and links nowhere**: a line in *Your AI assistant works in it*, a
+  It said at first that every tool is offered, the ledger's too (D-560); the maintainer narrowed the
+  connector to the engine's tools the same day (D-564), and the warning, the policy and the page say
+  so.
+
+- **The page lists it as coming, and links nowhere**, saying the packs stay on the desktop: a line in *Your AI assistant works in it*, a
   clause in *Get Emerald*'s lead, and a way-in of its own there whose name is not a link and whose
   card has no outline or hover — nothing to open — with `https://mcp.getemerald.dev` beside it as the
   other ways show their command. When the connector answers, its card becomes a link like the others

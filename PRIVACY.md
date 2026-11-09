@@ -60,6 +60,9 @@ own Google Drive.**
   your Drive, runs the tool, writes the document back if the tool changed it, and forgets it. If the
   document changed in your Drive since it was read, the write is refused and says so. The connector
   writes down no copy of the document, of what was asked, or of what a tool answered.
+- **It offers Emerald's own tools, and no pack.** It works on formats and their rows; the ledger and
+  the development pack are not offered there, and stay in the desktop app and the plugin on your
+  machine.
 - **Earlier copies are Drive's version history.** The connector makes no backups of its own; Drive
   keeps the earlier versions of the file, as it does for any file.
 - **Signing in is Google's.** You sign in with Google. The token Google gives is handed to your
