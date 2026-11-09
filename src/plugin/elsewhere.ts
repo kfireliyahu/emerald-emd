@@ -29,6 +29,7 @@ import { readValue, type StoredRow } from '@/domain/format/row.ts'
 import type { Database } from 'sql.js'
 
 import { openDocument } from './document.ts'
+import { documentStore, localFileStore } from './store.ts'
 
 /** The `elsewhere` values these rows hold, in the columns that hold them. */
 export function elsewhereValues(declaration: FormatDeclaration, rows: readonly StoredRow[]): readonly string[] {
@@ -71,6 +72,13 @@ export async function readElsewhere(values: Iterable<string>, holder: string): P
   for (const [path, wanted] of byPath) {
     const unresolved = (why: string): void => {
       for (const each of wanted) readings.set(each.value, { kind: 'unresolved', why })
+    }
+    // **Another document is a file on this machine** (M57 U2, D-562). A call
+    // whose document is in another store — the Google Drive connector's — reaches
+    // that one document alone, and never opens a path a row names.
+    if (documentStore() !== localFileStore) {
+      unresolved(`${documentNameOf(path)} is another document, and only this one is reachable here`)
+      continue
     }
     if (!existsSync(path)) {
       unresolved(`no file at ${path}`)
