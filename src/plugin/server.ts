@@ -30,7 +30,8 @@ import { APP_MIME, SHEET_URI, UI_EXTENSION } from '@/frame/contract.ts'
 
 import { PLUGIN_VERSION } from './document.ts'
 import { addSubscriptions } from './subscriptions.ts'
-import { engineInstructions, serverInstructions } from './instructions.ts'
+import { connectorInstructions, engineInstructions, serverInstructions } from './instructions.ts'
+import { connectorArgs, connectorDefinition, notOnTheConnector, onTheConnector } from './connector.ts'
 import { documentInfoTool } from './tools/documentInfo.ts'
 import { categoryTreeTool, transactionsTool, uncategorizedMerchantsTool } from './tools/ledger.ts'
 import { monthSummaryTool, yearSummaryTool } from './tools/insights.ts'
@@ -416,12 +417,27 @@ export interface ServerOptions {
    * Google Drive connector gives each call the person's Drive.
    */
   readonly store?: DocumentStore
+  /**
+   * The Google Drive connector's list (M57 U2, D-562, D-564): the engine's tools
+   * that work on the one document, without their `path` — the store supplies
+   * the document — and no pack's tool, nor one that needs another file
+   * (`connector.ts`). No page and no
+   * subscription either: each reads a file on this machine. Its instructions
+   * are `connectorInstructions`. A server argument, like `engineOnly`.
+   */
+  readonly connector?: boolean
 }
 
 export function createServer(options: ServerOptions = {}): Server {
   // The engine's first in both modes (M42 F5): a list that opened on 57 finance
   // tools taught a model that Emerald is a finance app with formats beside it.
-  const offered = options.engineOnly === true ? ENGINE_TOOLS : [...ENGINE_TOOLS, ...LEDGER_TOOLS]
+  const connector = options.connector === true
+  // The connector: the engine's tools alone, less those that need another file (D-564).
+  const offered = connector
+    ? ENGINE_TOOLS.filter((tool) => onTheConnector(tool.definition.name))
+    : options.engineOnly === true
+      ? ENGINE_TOOLS
+      : [...ENGINE_TOOLS, ...LEDGER_TOOLS]
   const server = new Server(
     { name: SERVER_NAME, version: PLUGIN_VERSION },
     // `instructions` rides on `initialize` and is rendered by the client once
@@ -433,8 +449,10 @@ export function createServer(options: ServerOptions = {}): Server {
       // `resources` serves one page, the frame `show_format` and `start_here`
       // name (M41 U1, U2), and **a document is a resource you can subscribe
       // to** (M44 U2, D-440): `subscriptions.ts`.
-      capabilities: { tools: {}, resources: { subscribe: true } },
-      instructions: (options.engineOnly === true ? engineInstructions : serverInstructions)(options.skills === true),
+      capabilities: connector ? { tools: {} } : { tools: {}, resources: { subscribe: true } },
+      instructions: connector
+        ? connectorInstructions()
+        : (options.engineOnly === true ? engineInstructions : serverInstructions)(options.skills === true),
     },
   )
 
@@ -443,7 +461,9 @@ export function createServer(options: ServerOptions = {}): Server {
   // anyway still gets an answer rather than "unknown tool". It cuts what a
   // session holds in context; it never makes a capability vanish.
   server.setRequestHandler(ListToolsRequestSchema, () => ({
-    tools: [...offered, ...APP_TOOLS].map((tool) => listedDefinition(tool.definition)),
+    tools: connector
+      ? offered.map((tool) => listedDefinition(connectorDefinition(tool.definition)))
+      : [...offered, ...APP_TOOLS].map((tool) => listedDefinition(tool.definition)),
   }))
 
   // **What a client advertised, said where a person can read it** (M41 F2):
@@ -461,26 +481,7 @@ export function createServer(options: ServerOptions = {}): Server {
   // carries this process's key, which is how `frame_copy` knows the page from
   // a model (M41 F3, D-447). A document is subscribed to, never listed or read
   // here (M44 U2).
-  server.setRequestHandler(ListResourcesRequestSchema, () => ({
-    resources: [{ uri: SHEET_URI, name: 'sheet', title: 'A format’s table', mimeType: APP_MIME }],
-  }))
-  server.setRequestHandler(ReadResourceRequestSchema, (request) => {
-    if (request.params.uri !== SHEET_URI) {
-      throw new Error(
-        `No resource at ${request.params.uri}. This server serves ${SHEET_URI}; ` +
-          'a document is subscribed to by its file:// URI and read with the tools.',
-      )
-    }
-    // Borderless (M41 F1): the frame wears the host's surface, so a host's own
-    // card around it would draw a box inside the conversation.
-    return {
-      contents: [{ uri: SHEET_URI, mimeType: APP_MIME, text: servedPage(FRAME_PAGE), _meta: { ui: { prefersBorder: false } } }],
-    }
-  })
-
-  // A subscription to a document (M44 U2): the one thing this server holds
-  // between calls, and it holds nothing of the document.
-  addSubscriptions(server)
+  if (!connector) addPage(server)
 
   server.setRequestHandler(CallToolRequestSchema, async (request): Promise<CallToolResult> => {
     const tool = TOOLS.find((one) => one.definition.name === request.params.name)
@@ -490,10 +491,14 @@ export function createServer(options: ServerOptions = {}): Server {
           `${offered.map((one) => one.definition.name).join(', ')}.`,
       )
     }
+    // The connector answers only what it lists (M57 U2, D-564): a tool left out
+    // is a pack's or reaches a file it has not got, so naming it is no way round.
+    if (connector && !offered.includes(tool)) return failure(notOnTheConnector(tool.definition.name))
 
     try {
-      const args = request.params.arguments ?? {}
-      const context = contextFor(server, options.engineOnly === true)
+      const given = request.params.arguments ?? {}
+      const args = connector ? connectorArgs(tool.definition.name, given) : given
+      const context = contextFor(server, options.engineOnly === true, connector)
       // The tool runs with this server's store, if it was given one: every open
       // and write inside it reaches the document there (M57 U1).
       const store = options.store
@@ -502,6 +507,9 @@ export function createServer(options: ServerOptions = {}): Server {
       if (tool.answer !== undefined) {
         const answer = tool.answer
         const { text, meta, structured } = await run(() => answer(args, context))
+        // The connector draws no page, so it hands out no copy of one: what a
+        // page reads — the document's name, path and file URI — stays here.
+        if (connector) return { content: [{ type: 'text', text }] }
         return {
           content: [{ type: 'text', text }],
           ...(structured === undefined ? {} : { structuredContent: structured }),
@@ -525,6 +533,34 @@ export function createServer(options: ServerOptions = {}): Server {
 }
 
 /**
+ * The frame's page and a document's subscriptions — the local server's, and
+ * not the connector's: the page's copy and a subscription's watch each read a
+ * file on this machine.
+ */
+function addPage(server: Server): void {
+  server.setRequestHandler(ListResourcesRequestSchema, () => ({
+    resources: [{ uri: SHEET_URI, name: 'sheet', title: 'A format’s table', mimeType: APP_MIME }],
+  }))
+  server.setRequestHandler(ReadResourceRequestSchema, (request) => {
+    if (request.params.uri !== SHEET_URI) {
+      throw new Error(
+        `No resource at ${request.params.uri}. This server serves ${SHEET_URI}; ` +
+          'a document is subscribed to by its file:// URI and read with the tools.',
+      )
+    }
+    // Borderless (M41 F1): the frame wears the host's surface, so a host's own
+    // card around it would draw a box inside the conversation.
+    return {
+      contents: [{ uri: SHEET_URI, mimeType: APP_MIME, text: servedPage(FRAME_PAGE), _meta: { ui: { prefersBorder: false } } }],
+    }
+  })
+
+  // A subscription to a document (M44 U2): the one thing this server holds
+  // between calls, and it holds nothing of the document.
+  addSubscriptions(server)
+}
+
+/**
  * What this client can do for a tool, decided per call from what it declared.
  *
  * `elicit` is present **only** when the client advertised elicitation — Claude
@@ -537,14 +573,13 @@ export function createServer(options: ServerOptions = {}): Server {
  * same next move — ask in prose — and turning a UI failure into a tool failure
  * would make the optional thing load-bearing.
  */
-function contextFor(server: Server, engineOnly: boolean): ToolContext {
+function contextFor(server: Server, engineOnly: boolean, connector = false): ToolContext {
   const capabilities = server.getClientCapabilities()
   const name = server.getClientVersion()?.name
-  // **Who asked, for the line a drawing tool opens with** (M51 F1, D-489).
-  const client =
-    name === undefined
-      ? {}
-      : { client: { name, saysItDraws: drawsMcpApps(uiExtension(capabilities as Record<string, unknown> | undefined)) } }
+  // **Who asked, for the line a drawing tool opens with** (M51 F1, D-489). On
+  // the connector nothing is drawn, whatever the client can do (M57 U2).
+  const draws = !connector && drawsMcpApps(uiExtension(capabilities as Record<string, unknown> | undefined))
+  const client = name === undefined ? {} : { client: { name, saysItDraws: draws } }
   if (capabilities?.elicitation === undefined) return { engineOnly, ...client }
 
   return {

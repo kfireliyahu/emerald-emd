@@ -471,6 +471,7 @@ written out here.
 | D-560 | 2026-11-09 | A hosted MCP endpoint that keeps no document: the person's Google Drive holds one `.emd`, made by default where Emerald may see it (`drive.file`); each call reads it, runs the tool and writes it back, and a write to a file changed since it was read is refused and says so; every tool is offered, the ledger's too, with a warning; serverless on Google Cloud, in the project that holds the Drive sign-in; the code lives in this repository | M57 |
 | D-561 | 2026-11-09 | The hosted endpoint launches free, with a cap and a kill criterion written before it ships; a paid plan, if one comes, is for the hosted endpoint alone, and the app and the local server stay free and offline (D-124 holds) | M57 |
 | D-562 | 2026-11-09 | The Google Drive connector's settings: 200 calls a day and 5 MB per person; stopped if fewer than 5 people use it on two different days within 30 days of going public; at `mcp.getemerald.dev`; one document, `Emerald/Emerald.emd`, stored as text and starting empty; Firestore keeps five fields per Google account and nothing else; invited testers first, the clock starting at public; tools that need a file other than the document are left out; Drive's version history is the earlier copies; getemerald.dev lists it as a feature | M57 |
+| D-564 | 2026-11-09 | The Google Drive connector offers the engine's tools alone — no pack's, the ledger's and the development pack's left out — and none that reaches another file: intake, the readers, `create_document`, `keep_copy`, `store_document_as` and `frame_copy` are left out, it draws no page, an `elsewhere` cell reads unresolved and a `file` cell is not looked for; the local server's list and instructions stay byte for byte (amends D-560 and D-562) | M57 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -583,6 +584,42 @@ cap read from logs is slow and loose); taking a file's text in the call (more to
 **Consequences.** PRIVACY.md lists the five fields word for word, and how to have them deleted is
 asked when M57 U5 is taken. The connector's instructions and tool list differ from the local
 server's, and a test holds the line between them (M57 U2).
+
+## D-564 · 2026-11-09 · The Google Drive connector offers the engine's tools alone — no pack's, the ledger's and the development pack's left out — and none that reaches another file: intake, the readers, `create_document`, `keep_copy`, `store_document_as` and `frame_copy` are left out, it draws no page, an `elsewhere` cell reads unresolved and a `file` cell is not looked for; the local server's list and instructions stay byte for byte (amends D-560 and D-562) <a id="d-564"></a>
+
+**Context.** D-560 offered every tool on the connector, the ledger's too, with a warning; D-562 left
+out the tools that need a file other than the one document. Building the list (M57 U2) the
+maintainer narrowed it, 2026-11-09: **no pack's tools at all**. The ledger cannot be stored as text,
+and the Drive document is text; the development pack is a project's memory and "not really related
+to chat-based". The build also found four places that reach a file without a tool's `file`
+parameter: `frame_copy`, which a drawn page calls and which reads the document off this machine's
+disk by its mark; the page's copy in a drawing tool's `_meta` (the document's path and `file://`
+URI); an `elsewhere` cell, read by opening the path it names; and a `file` cell, looked for with
+`existsSync`. On a hosted endpoint each would read the server's disk, not the person's.
+
+**Decision.** `createServer({ connector: true })` (`src/plugin/connector.ts`) lists **the engine's
+tools alone**: `formats`, `declare_format`, `connect_formats`, `extend_format`, `delete_format`,
+`format_rows`, `show_format`, `format_problems`, `search_document`, `start_here`, `format_rollup`,
+`apply_rules`, `record_format_rows`, `update_format_rows`, `delete_format_rows`, `record_units`,
+`arrange_views` — each without `path` (handed `Emerald/Emerald.emd`, which the store finds), and
+`search_document` without `denylist`. **A tool is the engine's when it works on a document that
+keeps no pack**: `start_here` is, since it answers from `formats` where no views are declared;
+`claim_units`, `land_units` and `dispatch_plan` are the development pack's, and `keep_packs` keeps a
+pack, so all four are left out with the ledger's whole list. Left out for a file: intake and the
+readers, `create_document`, `keep_copy`, `store_document_as` and `frame_copy`. A tool left out is
+refused by name. **No page and no subscription**: a drawing tool's answer carries its text only, and
+the drawn line says nothing was drawn. **Off the local file store**, an `elsewhere` cell reads
+unresolved (*another document, and only this one is reachable here*) and a `file` cell is not looked
+for. The connector's instructions are a block of their own (`connectorInstructions`): the document
+in Drive, Drive's version history for earlier copies, no pack, no tool it leaves out, nothing about
+files on a machine. `connector.test.ts` lists the tools by name, so a pack's tool or one taking a
+file path fails it. The local server's `tools/list`, resources and instructions were compared with
+HEAD in all four modes and are unchanged.
+
+**Rejected.** The ledger with a warning (D-560): it cannot be stored as text. Drawing on the
+connector by routing `frame_copy` through the store: the page is the local server's, reached by a
+`file://` subscription, and a hosted page is its own unit if people ask for it. Pinning the local
+list and text by a hash in the suite: every later change would trip it.
 
 ## Related
 

@@ -14,9 +14,15 @@ import type { FormatDeclaration } from '@/domain/format/declaration.ts'
 import { fileWhere, parseFile } from '@/domain/format/file.ts'
 import type { StoredRow } from '@/domain/format/row.ts'
 
+import { documentStore, localFileStore } from './store.ts'
+
 /** Each `file` value of these rows whose file is not there, as `missing`. */
 export function fileLabels(declaration: FormatDeclaration, rows: readonly StoredRow[], holder: string): Map<string, string> {
   const labels = new Map<string, string>()
+  // **Looked for only beside a file on this machine** (M57 U2, D-562): a
+  // document in another store — the Google Drive connector's — is read where
+  // the person's files are not, so a path in it is never looked for there.
+  if (documentStore() !== localFileStore) return labels
   const columns = declaration.columns.filter((column) => column.type === 'file')
   for (const row of rows) {
     for (const column of columns) {

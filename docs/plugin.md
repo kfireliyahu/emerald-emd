@@ -107,6 +107,15 @@ it is three things rather than one:
   every open, write, lock and copy goes through a `DocumentStore` (`src/plugin/store.ts`) — read
   with a version, write given it, copies optional — and a store that refuses a stale write answers
   `REFUSED — nothing was written`, code `WRITE_REFUSED`, never a tool error.
+  **The Google Drive connector's list** is `createServer({ connector: true })` (M57 U2, D-562,
+  D-564, `src/plugin/connector.ts`): **the engine's tools alone** — no pack's, the ledger's and the
+  development pack's (`claim_units`, `land_units`, `dispatch_plan`) left out with `keep_packs` —
+  each with its `path` gone (handed `Emerald/Emerald.emd`, which the store finds), and none that
+  needs another file (intake and the readers, `create_document`, `keep_copy`, `store_document_as`,
+  `frame_copy`, `search_document`'s `denylist`); no page, no subscription, no `_meta` copy in an
+  answer; an `elsewhere` cell reads unresolved and a `file` cell is not looked for. Its
+  instructions are `connectorInstructions`. `connector.test.ts` fails when a tool taking a file
+  path or a pack's tool slips into the list; the local server's list and instructions are unchanged.
 - **Provenance, reinterpreted.** Categories still land as `categorySource = 'AI'` and rules still
   as `origin = 'AI_SUGGESTED'` — but as a **label recording how the row got there**, not as a
   pending state something is waiting to confirm. That is a real change of meaning and it is worth
