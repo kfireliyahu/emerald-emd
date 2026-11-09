@@ -77,6 +77,8 @@ build/icons.log
 /dist-plugin
 # Its desktop extension's contents, staged by scripts/mcpb.mjs before it packs release/emerald.mcpb (M42 F9)
 /dist-mcpb
+# The Google Drive connector's endpoint (M57 U4): built, and deployed from there by U6
+/dist-hosted
 
 # The MCP App page, built by `vite build --mode frame` and embedded in the plugin (M41 U1)
 /.frame

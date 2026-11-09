@@ -24,5 +24,7 @@ export { NO_CLIENT } from './tools/tool.ts'
 // The Google Drive connector's store (M57 U3): the seam it fills, and the new document it makes.
 export { withDocumentStore, type DocumentStore } from './store.ts'
 export { newDocumentBytes } from './write.ts'
+// …and its endpoint (M57 U4): the server it makes for each request, with the connector's list.
+export { createServer } from './server.ts'
 export { SKILLS_FLAG } from './catalog.ts'
 export { PLUGIN_INSTRUCTIONS } from './instructions.ts'

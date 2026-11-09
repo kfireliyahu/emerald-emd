@@ -12,6 +12,8 @@
     "build": "tsc --noEmit && vite build && node scripts/third-party-notices.mjs dist",
     "build:plugin": "tsc --noEmit && vite build --mode frame && vite build --mode plugin && vite build --mode claude-hooks && vite build --mode claude-status-line && node scripts/third-party-notices.mjs dist-plugin && node scripts/npm-package.mjs",
     "build:mcpb": "node scripts/mcpb.mjs",
+    "build:hosted": "tsc --noEmit && vite build --mode hosted && node scripts/third-party-notices.mjs dist-hosted",
+    "hosted:local": "vite build --mode hosted && node dist-hosted/index.mjs --local",
     "build:demo": "npm run build:plugin && node scripts/make-demo-document.mjs && vite build --mode demo && node scripts/third-party-notices.mjs dist-demo",
     "dev:demo": "node scripts/make-demo-document.mjs && vite --mode demo",
     "check:package": "node scripts/check-package.mjs",

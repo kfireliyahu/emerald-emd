@@ -156,6 +156,36 @@ function escaped(text: string): string {
  * `server.mjs` and the page is served from memory. `build:plugin` builds the
  * frame first; a test run before any build gets a page that says so.
  */
+/**
+ * **The connector's folder deploys as it is** (M57 U4, D-568): a `package.json`
+ * beside `index.mjs`, so Cloud Run's Node build finds the entry and installs
+ * nothing — every package is in the bundle, as in the plugin's.
+ */
+function hostedPackage(): Plugin {
+  return {
+    name: 'fc:hosted-package',
+    generateBundle() {
+      this.emitFile({
+        type: 'asset',
+        fileName: 'package.json',
+        source: `${JSON.stringify(
+          {
+            name: 'emerald-google-drive-connector',
+            private: true,
+            type: 'module',
+            main: 'index.mjs',
+            engines: { node: '>=22' },
+            scripts: { start: 'node index.mjs' },
+          },
+          null,
+          2,
+        )}
+`,
+      })
+    },
+  }
+}
+
 function frameEmbedded(): Plugin {
   return {
     name: 'fc:frame-embedded',
@@ -170,7 +200,7 @@ function frameEmbedded(): Plugin {
   }
 }
 
-// Five build outputs, from eight modes:
+// Six build outputs, from nine modes:
 //   vite build                          -> dist/          the app: a static site, and what the
 //                                                         shell serves over app://
 //   vite build --mode plugin            -> dist-plugin/   the stdio MCP server, every client's…
@@ -184,6 +214,9 @@ function frameEmbedded(): Plugin {
 //   vite build --mode frame             -> .frame/        the MCP App's page (M41 U1): the app's
 //                                                         format page in one file, which the
 //                                                         plugin build then embeds
+//   vite build --mode hosted            -> dist-hosted/   the Google Drive connector's endpoint
+//                                                         (M57 U4): index.mjs and its package.json,
+//                                                         the folder Google Cloud deploys
 //
 // **`dist-single/` was a fourth output and is gone** (D-133). With it went the inlining, the
 // under-5MB budget, and the no-CDN rule as things this file enforced. Offline did not go with
@@ -228,7 +261,11 @@ export default defineConfig(({ mode }) => {
   // is published as it is built, so each pass bundles every package it reaches
   // and the package has no dependency to install. Node's own modules stay imports.
   const published = plugin || hooks || statusLine
-  const node = published || electron
+  // **The Google Drive connector's endpoint** (M57 U4): bundled whole like the
+  // published three, since the folder it writes is what Google Cloud runs.
+  const hosted = mode === 'hosted'
+  const bundled = published || hosted
+  const node = bundled || electron
   const demo = mode === 'demo'
   const frame = mode === 'frame'
 
@@ -239,13 +276,14 @@ export default defineConfig(({ mode }) => {
       ...(node ? [] : [react(), tailwindcss()]),
       ...(demo ? [demoPagesRenamed(), demoPagesServed()] : []),
       ...(frame ? [frameInlined()] : []),
+      ...(hosted ? [hostedPackage()] : []),
     ],
 
     // **The demo's document is beside its page and never in the repository**:
     // `scripts/make-demo-document.mjs` writes `.demo/demo.emd` with this build's
     // own plugin, and the build copies `.demo/` into `dist-demo/` (M33 U1). The
     // other outputs have no public folder.
-    publicDir: demo ? '.demo' : frame || published ? false : 'public',
+    publicDir: demo ? '.demo' : frame || bundled ? false : 'public',
 
     resolve: {
       alias: [
@@ -259,13 +297,13 @@ export default defineConfig(({ mode }) => {
         // `typeof module` check, which the bundler's CommonJS transform reads as
         // always true; the browser build has no Node branch and needs none, because
         // the wasm is handed to it as bytes (`wasmAsBytes`) and never fetched or read.
-        ...(published ? [{ find: /^sql\.js$/, replacement: 'sql.js/dist/sql-wasm-browser.js' }] : []),
+        ...(bundled ? [{ find: /^sql\.js$/, replacement: 'sql.js/dist/sql-wasm-browser.js' }] : []),
       ],
     },
 
     // The shell's main process too, since M42 U9 gave it a dependency (electron-updater): the
     // packaged app ships no node_modules (electron-builder.yml), so what it imports is inside main.cjs.
-    ...(published || electronMain ? { ssr: { noExternal: true, target: 'node' as const } } : {}),
+    ...(bundled || electronMain ? { ssr: { noExternal: true, target: 'node' as const } } : {}),
 
     // Relative base, so the built HTML works both from the root of the shell's `app://`
     // origin and from a subpath on a static host.
@@ -298,6 +336,17 @@ export default defineConfig(({ mode }) => {
               entryFileNames: 'server.mjs',
               banner: '#!/usr/bin/env node',
             },
+          },
+        }
+      : hosted
+      ? {
+          outDir: 'dist-hosted',
+          emptyOutDir: true,
+          target: 'node22',
+          ssr: 'hosts/google-drive/main.ts',
+          minify: false,
+          rollupOptions: {
+            output: { format: 'esm', entryFileNames: 'index.mjs', inlineDynamicImports: true },
           },
         }
       : hooks

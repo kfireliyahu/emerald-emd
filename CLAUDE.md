@@ -144,6 +144,8 @@ else**).
 npm run dev            # dev server
 npm run build          # the app → dist/  (also what the shell serves)
 npm run build:plugin   # the MCP server → dist-plugin/server.mjs
+npm run build:hosted   # the Google Drive connector's endpoint → dist-hosted/ (M57 U4)
+npm run hosted:local   # that endpoint on localhost:8787, against Google in memory
 npm run check:package  # the built package's handshake, hooks and npx install on this Node
 npm run build:electron # the shell's main + preload → dist-electron/ (two passes)
 npm run dev:desktop    # dev server + the shell, with hot reload in the window

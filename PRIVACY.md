@@ -69,7 +69,7 @@ own Google Drive.**
   chat app encrypted with a key only the connector holds, and the connector stores no token.
 - **What it keeps is five fields per Google account, and nothing else**, in Google Cloud Firestore,
   to hold the cap of 200 calls a day and to count whether people come back:
-  1. a one-way hash of your Google account id — not the id itself, and not your name or address;
+  1. a one-way hash of your Google email address — not the address itself, and not your name;
   2. today's date, which is the last day you used it;
   3. how many calls you made today;
   4. the first day you used it;
@@ -77,7 +77,7 @@ own Google Drive.**
 
   Never a call, its arguments, a tool's name, a file's name, or anything from your document.
 - **Deleting it.** A record nobody has used for 90 days deletes itself. To have yours deleted
-  sooner, write to me@kfireliyahu.com. To stop the connector reaching your Drive at all, remove
+  sooner, write to me@kfireliyahu.com from the Google address you use it with. To stop the connector reaching your Drive at all, remove
   Emerald from your Google account's third-party access; your document stays in your Drive, yours to
   keep, open in the desktop app, or delete.
 - **Who else sees what.** Google runs the connector (Google Cloud) and holds your Drive, under

@@ -474,6 +474,9 @@ written out here.
 | D-563 | 2026-11-09 | The Drive store checks the revision and then uploads: Drive's v3 API takes no precondition on an upload, so a write by another writer inside one round trip is replaced, and stays in Drive's version history | M57 |
 | D-564 | 2026-11-09 | The Google Drive connector offers the engine's tools alone — no pack's, the ledger's and the development pack's left out — and none that reaches another file: intake, the readers, `create_document`, `keep_copy`, `store_document_as` and `frame_copy` are left out, it draws no page, an `elsewhere` cell reads unresolved and a `file` cell is not looked for; the local server's list and instructions stay byte for byte (amends D-560 and D-562) | M57 |
 | D-565 | 2026-11-09 | What the Google Drive connector says before anyone uses it: PRIVACY.md gives it a section of its own with the five fields word for word, a record unused for 90 days deleting itself and an email deleting it sooner; a first-use warning of four sentences, written here for M57 U4 to show; and getemerald.dev lists it as coming, the address shown and linked nowhere until it answers | M57 |
+| D-566 | 2026-11-09 | The Google Drive connector's record is keyed by a SHA-256 of the person's Google email address, lowercased, so a deletion asked for by email finds it; Google is asked for `openid email` beside `drive.file`; and the 90 days are a daily sweep of records whose last day used is older, not a Firestore TTL, which would need a sixth field (amends D-562, D-565) | below |
+| D-567 | 2026-11-09 | Signing in to the connector keeps nothing: the endpoint is the OAuth server a chat app expects — metadata, dynamic registration, PKCE — Google signs the person in, and the registration, the sign-in in progress, the code and both tokens are sealed under a key from the environment; the token a chat app holds is Google's, sealed | below |
+| D-568 | 2026-11-09 | The connector's endpoint is one stateless request-to-response function answering MCP at the root, built by `build:hosted` into a folder Cloud Run deploys as a function or a server; a `tools/call` is counted before Drive is reached, the first one carries the warning, the process sends to Google's APIs alone, and it logs nothing | below |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -696,6 +699,103 @@ a call's content, so Google Cloud's request log holds only time, address and sta
 path after it. **A request by email names an email address, and the record is a hash of the Google
 account id** — so U4 has to make a record findable from what a person can send (the open question
 this leaves).
+
+## D-566 · 2026-11-09 · The Google Drive connector's record is keyed by a SHA-256 of the person's Google email address, lowercased, so a deletion asked for by email finds it; Google is asked for `openid email` beside `drive.file`; and the 90 days are a daily sweep of records whose last day used is older, not a Firestore TTL, which would need a sixth field (amends D-562, D-565) <a id="d-566"></a>
+
+**Context.** D-562 kept "a one-way hash of the account id", and D-565 promised deletion by email
+and after 90 days unused. A person writing in names an address, never Google's account id, so a
+hash of the id could not be matched from the one thing a request carries. Firestore's TTL deletes a
+document once the time in a named timestamp field has passed: it needs the expiry itself stored.
+
+**Decision.**
+
+- **`account` is SHA-256 of the email address, trimmed and lowercased, in hex** — the driver's call,
+  2026-11-09, for the maintainer's wish that deletion by email work. Google is asked for `openid email`
+  as well as `drive.file`; the address is read from the ID token Google's token endpoint returns at
+  sign-in, hashed, and dropped. It travels on only inside the sealed tokens, as the hash (D-567).
+  `node dist-hosted/index.mjs key <email>` prints the record's id, `accounts/<hash>`, to delete.
+- **The other four fields stay as D-562 has them**: `day` (today's date, the last day used), `calls`,
+  `first_day`, `later_day`. `fields()` writes those five and throws on any other; the endpoint's test
+  fails when a write Firestore takes carries a sixth.
+- **The 90 days are a sweep**: every record whose `day` is more than 90 days back is deleted by a
+  query, on each instance's first counted call of a day, and on `POST /sweep` with
+  `EMERALD_SWEEP_KEY` for Cloud Scheduler, if U6 sets one up. A record used 90 days ago is kept.
+- **The cap**: 200 counted calls a day, UTC; the 201st is refused saying it resets at midnight UTC and
+  in how many hours, reaches no Drive, and is not counted.
+
+**Rejected.** A hash of the account id (cannot be matched from an email). A keyed hash (HMAC): it
+would stop a guessed address being tested against a leaked table, but the record could then be found
+only with the key in hand; the plain hash was asked for. A TTL field: a sixth field, and PRIVACY.md
+lists five. `day` stored as the expiry instant: the field would not be what the policy says it is.
+
+**Consequences.** PRIVACY.md's first field now says *email address*, and its deletion line asks for
+the request from the address used. A sweep runs only while the endpoint runs: a Cloud Scheduler job
+on `/sweep` (U6) keeps the promise through a quiet stretch.
+
+## D-567 · 2026-11-09 · Signing in to the connector keeps nothing: the endpoint is the OAuth server a chat app expects — metadata, dynamic registration, PKCE — Google signs the person in, and the registration, the sign-in in progress, the code and both tokens are sealed under a key from the environment; the token a chat app holds is Google's, sealed <a id="d-567"></a>
+
+**Context.** A chat app adding a remote MCP server signs in by the MCP authorization spec: it reads the
+protected-resource metadata (RFC 9728) and the authorization server's (RFC 8414), registers itself
+(RFC 7591), and runs the code flow with PKCE. Google offers no dynamic registration, so Google cannot
+be that server; and D-562 keeps five fields and nothing else, so nothing of a sign-in may be stored.
+
+**Decision.** `hosts/google-drive/signIn.ts`. The endpoint is the authorization server; `/authorize`
+checks the client and its redirect URI and sends the person to Google for `openid email drive.file`,
+offline and with consent, so Google returns a refresh token; Google returns them to `/oauth/google`,
+where Google's code is traded for Google's tokens and the chat app gets a code of the endpoint's.
+**Everything that would be state is sealed** with AES-256-GCM under `EMERALD_SEAL_KEY`, bound to what
+it is and when it lapses (`seal.ts`): the client id is its redirect URIs; the sign-in in progress is
+Google's `state` (ten minutes); the code holds Google's tokens and the PKCE challenge (two minutes);
+the access token is Google's access token and the account hash, lapsing a minute before Google's; the
+refresh token is Google's, which `/token` trades with Google for a fresh one. Public clients only
+(`none`); a redirect URI is https, http on loopback, or an app's own scheme. A person who unticks Drive
+is sent back refused.
+
+**Rejected.** Google's own OAuth server directly (no dynamic registration; the token would carry no
+hash). Registrations and codes in Firestore (state, and more than five fields). Signed but unencrypted
+tokens (Google's token would be readable by anyone holding them).
+
+**Consequences.** A code can be traded more than once in its two minutes; PKCE keeps that to whoever
+holds the verifier. Changing the key signs every chat app out. Removing Emerald from a Google account's
+third-party access stops the next refresh.
+
+## D-568 · 2026-11-09 · The connector's endpoint is one stateless request-to-response function answering MCP at the root, built by `build:hosted` into a folder Cloud Run deploys as a function or a server; a `tools/call` is counted before Drive is reached, the first one carries the warning, the process sends to Google's APIs alone, and it logs nothing <a id="d-568"></a>
+
+**Context.** M57 U4: MCP over Streamable HTTP on Google Cloud (D-560), with PRIVACY.md's promises to
+keep (D-565): the root of `mcp.getemerald.dev` with no `/mcp`, nothing of a call logged, nothing of the
+document kept, no token stored. There is no Google Cloud project yet; U6 deploys.
+
+**Decision.**
+
+- **`hosts/google-drive/endpoint.ts`** is a function from a web `Request` to a `Response`. `POST /` is
+  MCP, stateless, JSON answers, one message per request: each makes `createServer({ connector: true })`
+  (U2, re-exported through `host.ts`) over the person's Drive (U3), opened only when a tool first reads
+  or writes, so `initialize` and `tools/list` never reach Drive. Without a token that opens, 401 with
+  the protected-resource address; `GET /` is 405.
+- **A `tools/call` is counted first** (D-566); `initialize` and `tools/list` are not. The call that
+  makes a person's record carries D-565's warning, word for word, above its answer.
+- **`npm run build:hosted` → `dist-hosted/`**: `index.mjs`, every package bundled as the plugin's are,
+  and a `package.json` naming it. Its `emerald` export is the Cloud Run function's entry point; run by
+  `node` it serves on `PORT`. It reads `EMERALD_GOOGLE_CLIENT_ID`, `EMERALD_GOOGLE_CLIENT_SECRET`,
+  `EMERALD_SEAL_KEY`, `EMERALD_FIRESTORE_PROJECT` (or `GOOGLE_CLOUD_PROJECT`), and optionally
+  `EMERALD_ORIGIN`, `EMERALD_SWEEP_KEY` and `FIRESTORE_EMULATOR_HOST`, and refuses to serve without
+  the first four.
+- **It sends to Google's APIs alone**: `network.ts` allows Drive, the token endpoint, Firestore and
+  Cloud Run's metadata server (Firestore's credentials), and the entry installs it as the process's
+  `fetch`. **It logs nothing**: no line per request, and a failure answers 500 with nothing of the
+  request. The test runs a whole sign-in and calls with the console and both streams watched.
+- **Local runs**: `npm run hosted:local` serves on `localhost:8787` against Google in memory
+  (`fakeGoogle.ts`: Drive, the sign-in, Firestore), or the Firestore emulator when
+  `FIRESTORE_EMULATOR_HOST` is set. The suite uses the in-memory Firestore, which answers the same five
+  REST calls.
+
+**Rejected.** An `/mcp` path (PRIVACY.md says the root). Sessions and SSE (state to keep). The
+Functions Framework or Express as a dependency (a Node handler is what it calls). The Firestore emulator
+in the suite (it needs Java; the fake answers the same requests).
+
+**Consequences.** Cloud Run's own request log records the URL as well as time, address and status;
+the sign-in's URLs carry sealed values and Google's one-use code, and nothing of a call (U6 to weigh).
+The bundle is about 8 MB, as the plugin's server is.
 
 ## Related
 
