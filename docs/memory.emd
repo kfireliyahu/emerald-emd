@@ -16277,9 +16277,16 @@ report: M56 U7 built at 3627e36 on worktree-agent-a5b080b978a04b485 with U4 (one
 milestone: M57
 scope: plugin
 title: The document behind a seam: opening, reading and writing go through a store
-state: planned
+landed: 2026-11-09
+decision: D-560
+state: built
 brief: D-560. Every tool reaches its document by path: openDocument/readDocument (document.ts), writeDocument, writeWithBackup and mutatingCall with the lock beside the file (write.ts), backups (backup.ts). Put one interface between the tools and the bytes: read the document with a version token, write it back given that token (the store may refuse), and an optional earlier copy. The local file store is today's behaviour exactly: the lock, the backup before a write, the text and bytes encodings. No tool's answer changes; the existing suite is the proof, plus a test that a refused write from the store reaches the tool as a refusal. Nothing about Drive here.
-files: src/plugin/document.ts, src/plugin/write.ts, src/plugin/backup.ts, src/plugin/server.ts
+files: src/plugin/store.ts, src/plugin/store.test.ts, src/plugin/document.ts, src/plugin/write.ts, src/plugin/server.ts, docs/plugin.md
+taken_by: Claude Code session (M57 U1)
+started: 2026-11-09
+branch: main
+commit: 453f1c7
+report: M57 U1 built at 453f1c7. Every open, write, lock and copy now goes through a DocumentStore (src/plugin/store.ts): read(path) -> bytes + version token; write(path, bytes, version) -> ok or a refusal sentence; exclusive(path, work) for one writer from read to write; optional copies {before, named, folder}. localFileStore is the old behaviour exactly: readFile, the .lock beside the file (holdingLock moved here; lockPathFor and LOCK_STALE_MS re-exported from write.ts), writeAtomically, backupDocument/keepNamedCopy in Emerald's folder; its version is mtime:size and is never compared (the lock is its guard, D-092 the app's). Which store a call uses: withDocumentStore(store, fn) via AsyncLocalStorage, documentStore() inside; createServer({store}) wraps every tool call with it, for U4. OpenDocument carries version. A refused write returns refusalText with code WRITE_REFUSED ('REFUSED — nothing was written to <path>.' + the store's sentence), not isError, and no copy note; writeDocument, writeWithBackup, mutatingCall, storeDocumentAs all route it. A store without copies takes none and keep_copy says its earlier versions are kept where it is stored. Proof: full suite 5576 green unchanged, plus store.test.ts (4 tests: default store, in-memory read/write with versions handed back, refusal through the MCP server, a stale version refused). typecheck and docs:check pass. Not done here: nothing about Drive (U3), the connector's tool list (U2).
 
 ### M57 U2
 milestone: M57
