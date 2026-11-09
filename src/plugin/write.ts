@@ -87,6 +87,30 @@ async function putBack(
 }
 
 /**
+ * **The bytes of a new document at this build's schema**, keeping `packs`, in
+ * `encoding` — written nowhere. `createDocumentFile` puts them in a file; the
+ * Google Drive connector makes `Emerald/Emerald.emd` from them, empty and as
+ * text (M57 U3, D-562), and reaches them through `host.ts`.
+ */
+export async function newDocumentBytes(
+  packs: readonly PackDescription[],
+  encoding: DocumentEncoding,
+): Promise<Result<Uint8Array, string>> {
+  const db = await createDatabase()
+  try {
+    // Each pack is kept before the first byte is made, as the Packs screen
+    // would keep it on the open document — declared, converted and seeded.
+    for (const pack of packs) {
+      const kept = keepPack(db, pack, Date.now())
+      if (!kept.ok) return err(kept.error)
+    }
+    return await exportEncoded(db, encoding)
+  } finally {
+    db.close()
+  }
+}
+
+/**
  * Create a brand-new document at this build's schema.
  *
  * **Refuses a path that already exists**, and does it with the `wx` open flag
@@ -105,18 +129,7 @@ export async function createDocumentFile(
    */
   encoding: DocumentEncoding = 'sqlite',
 ): Promise<Result<number, DocumentProblem>> {
-  const db = await createDatabase()
-  // Each pack is kept before the first byte is written, as the Packs screen
-  // would keep it on the open document — declared, converted and seeded.
-  for (const pack of packs) {
-    const kept = keepPack(db, pack, Date.now())
-    if (!kept.ok) {
-      db.close()
-      return err({ code: 'UNREADABLE', message: `Could not create ${path}: ${kept.error}` })
-    }
-  }
-  const encoded = await exportEncoded(db, encoding)
-  db.close()
+  const encoded = await newDocumentBytes(packs, encoding)
   if (!encoded.ok) return err({ code: 'UNREADABLE', message: `Could not create ${path}: ${encoded.error}` })
   const bytes = encoded.value
 

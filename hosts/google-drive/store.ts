@@ -35,10 +35,7 @@
  * `copies`, and a write takes none and says nothing of one (D-562).
  */
 
-import { err, ok, type Result } from '@/core/result.ts'
-import { createDatabase } from '@/data/db/database.ts'
-import { exportEncoded } from '@/data/storage/encoding.ts'
-import type { DocumentStore } from '@/plugin/store.ts'
+import { err, newDocumentBytes, ok, type DocumentStore, type Result } from '@/plugin/host.ts'
 
 import { DriveError, driveClient, FOLDER_MIME, quoted, type Drive, type DriveFile, type Fetch } from './drive.ts'
 
@@ -75,13 +72,8 @@ export interface DriveOptions {
 }
 
 /** The bytes of a new, empty document, stored as text (D-562). */
-export async function emptyDocument(): Promise<Result<Uint8Array, string>> {
-  const db = await createDatabase()
-  try {
-    return await exportEncoded(db, 'text')
-  } finally {
-    db.close()
-  }
+export function emptyDocument(): Promise<Result<Uint8Array, string>> {
+  return newDocumentBytes([], 'text')
 }
 
 /** A failed request to Drive, as the sentence the person reads. */

@@ -16,10 +16,13 @@
 export { err, ok, type Result } from '@/core/result.ts'
 
 export { matching, readFormat, readFormats, type RowMatch, type WatchedRow } from './formatWatch.ts'
-export { formatRowsTool, recordFormatRowsTool, updateFormatRowsTool } from './tools/formats.ts'
+export { declareFormatTool, formatRowsTool, formatsTool, recordFormatRowsTool, updateFormatRowsTool } from './tools/formats.ts'
 export { createDocumentTool } from './tools/setup.ts'
 export { FOR_THE_MODEL } from './tools/sheet.ts'
 export { startHereTool } from './tools/startHere.ts'
 export { NO_CLIENT } from './tools/tool.ts'
+// The Google Drive connector's store (M57 U3): the seam it fills, and the new document it makes.
+export { withDocumentStore, type DocumentStore } from './store.ts'
+export { newDocumentBytes } from './write.ts'
 export { SKILLS_FLAG } from './catalog.ts'
 export { PLUGIN_INSTRUCTIONS } from './instructions.ts'

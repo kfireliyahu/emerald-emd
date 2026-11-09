@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { createDatabase } from '@/data/db/database.ts'
-import { exportEncoded, openEncoded } from '@/data/storage/encoding.ts'
-import { withDocumentStore } from '@/plugin/store.ts'
-import { declareFormatTool, formatRowsTool, recordFormatRowsTool } from '@/plugin/tools/formats.ts'
-import { NO_CLIENT } from '@/plugin/tools/tool.ts'
+import {
+  declareFormatTool,
+  formatRowsTool,
+  formatsTool,
+  NO_CLIENT,
+  recordFormatRowsTool,
+  withDocumentStore,
+} from '@/plugin/host.ts'
 
 import { FOLDER_MIME } from './drive.ts'
 import { FakeDrive } from './fakeDrive.ts'
@@ -66,10 +69,9 @@ describe('the Drive store (M57 U3)', () => {
     // The bytes are an Emerald document, as text, with nothing declared in it.
     const content = drive.content(document.fileId)
     if (content === undefined) throw new Error('no content')
-    const { db, encoding } = await openEncoded(content)
-    expect(encoding).toBe('text')
-    expect(db.exec("SELECT count(*) FROM format")[0]?.values[0]?.[0]).toBe(0)
-    db.close()
+    expect(new TextDecoder().decode(content)).toMatch(/^<!-- emerald document, schema \d+ -->\n$/)
+    const formats = await withDocumentStore(document.store, () => formatsTool.run({ path: document.path }, NO_CLIENT))
+    expect(formats).toContain(`${DRIVE_DOCUMENT_PATH} declares no formats.`)
   })
 
   it('finds the folder and the document the app made, and makes neither again', async () => {
@@ -227,14 +229,12 @@ describe('the Drive store (M57 U3)', () => {
 
 describe('the fake Drive the store is tested against', () => {
   it('takes back what a multipart create sent, byte for byte', async () => {
-    const db = await createDatabase()
-    const bytes = await exportEncoded(db, 'sqlite')
-    db.close()
-    if (!bytes.ok) throw new Error(bytes.error)
+    // Every byte value, CR and LF among them, as a SQLite document's bytes would hold.
+    const bytes = Uint8Array.from({ length: 512 }, (_, at) => at % 256)
     const drive = new FakeDrive()
     const folder = drive.add(DRIVE_FOLDER, FOLDER_MIME, ['root'])
     const { driveClient } = await import('./drive.ts')
-    const made = await driveClient(drive.token, drive.fetch).createFile('x.emd', folder.id, 'application/octet-stream', bytes.value)
-    expect(drive.content(made.id)).toEqual(bytes.value)
+    const made = await driveClient(drive.token, drive.fetch).createFile('x.emd', folder.id, 'application/octet-stream', bytes)
+    expect(drive.content(made.id)).toEqual(bytes)
   })
 })
