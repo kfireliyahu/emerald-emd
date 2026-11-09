@@ -471,6 +471,7 @@ written out here.
 | D-560 | 2026-11-09 | A hosted MCP endpoint that keeps no document: the person's Google Drive holds one `.emd`, made by default where Emerald may see it (`drive.file`); each call reads it, runs the tool and writes it back, and a write to a file changed since it was read is refused and says so; every tool is offered, the ledger's too, with a warning; serverless on Google Cloud, in the project that holds the Drive sign-in; the code lives in this repository | M57 |
 | D-561 | 2026-11-09 | The hosted endpoint launches free, with a cap and a kill criterion written before it ships; a paid plan, if one comes, is for the hosted endpoint alone, and the app and the local server stay free and offline (D-124 holds) | M57 |
 | D-562 | 2026-11-09 | The Google Drive connector's settings: 200 calls a day and 5 MB per person; stopped if fewer than 5 people use it on two different days within 30 days of going public; at `mcp.getemerald.dev`; one document, `Emerald/Emerald.emd`, stored as text and starting empty; Firestore keeps five fields per Google account and nothing else; invited testers first, the clock starting at public; tools that need a file other than the document are left out; Drive's version history is the earlier copies; getemerald.dev lists it as a feature | M57 |
+| D-563 | 2026-11-09 | The Drive store checks the revision and then uploads: Drive's v3 API takes no precondition on an upload, so a write by another writer inside one round trip is replaced, and stays in Drive's version history | M57 |
 | D-564 | 2026-11-09 | The Google Drive connector offers the engine's tools alone — no pack's, the ledger's and the development pack's left out — and none that reaches another file: intake, the readers, `create_document`, `keep_copy`, `store_document_as` and `frame_copy` are left out, it draws no page, an `elsewhere` cell reads unresolved and a `file` cell is not looked for; the local server's list and instructions stay byte for byte (amends D-560 and D-562) | M57 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
@@ -584,6 +585,28 @@ cap read from logs is slow and loose); taking a file's text in the call (more to
 **Consequences.** PRIVACY.md lists the five fields word for word, and how to have them deleted is
 asked when M57 U5 is taken. The connector's instructions and tool list differ from the local
 server's, and a test holds the line between them (M57 U2).
+
+## D-563 · 2026-11-09 · The Drive store checks the revision and then uploads: Drive's v3 API takes no precondition on an upload, so a write by another writer inside one round trip is replaced, and stays in Drive's version history <a id="d-563"></a>
+
+**Context.** M57 U3's brief: the Drive store writes only if the file's revision is still the one it
+read, and asked first whether Drive offers an atomic precondition on update. Drive's v3
+`files.update` documents none — no `If-Match`, no etag on the file, no revision to name; v2's etags
+are gone from v3's file resource.
+
+**Decision.** A read asks the file's `headRevisionId` and downloads *that revision's* bytes, so the
+bytes and the version can never disagree. A write checks `headRevisionId` again and refuses when it
+moved — the document changed since it was read, ask again — and otherwise uploads. **The window** is
+the round trip between that check and the upload: another writer's upload landing inside it is
+replaced, and is still in Drive's version history, which is where the connector's earlier copies are
+(D-562). Writers in one process to one file are queued, so the window is only ever another process's
+or another device's.
+
+**Rejected.** v2's `If-Match` on v3 (undocumented; a 412 some report is not a contract); a lock file
+in the folder (one more file in the person's Drive, and a crashed call leaves it held); comparing
+`md5Checksum` (the same check with a coarser token).
+
+**Consequences.** Should Drive document a precondition, the check-then-write in
+`hosts/google-drive/store.ts` becomes one conditional upload and this window closes.
 
 ## D-564 · 2026-11-09 · The Google Drive connector offers the engine's tools alone — no pack's, the ledger's and the development pack's left out — and none that reaches another file: intake, the readers, `create_document`, `keep_copy`, `store_document_as` and `frame_copy` are left out, it draws no page, an `elsewhere` cell reads unresolved and a `file` cell is not looked for; the local server's list and instructions stay byte for byte (amends D-560 and D-562) <a id="d-564"></a>
 
