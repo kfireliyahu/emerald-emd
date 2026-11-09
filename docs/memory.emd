@@ -4690,7 +4690,7 @@ scope: plugin
 title: The Google Drive connector's settings: 200 calls a day and 5 MB per person; stopped if fewer than 5 people use it on two different days within 30 days of going public; at mcp.getemerald.dev; one document, Emerald/Emerald.emd, stored as text and starting empty; Firestore keeps five fields per Google account and nothing else; invited testers first, the clock starting at public; tools that need a file other than the document are left out; Drive's version history is the earlier copies; getemerald.dev lists it as a feature
 question: What M57 left open after D-560 and D-561: the cap, the kill criterion, the address, the document, what is kept about people, who uses it before Google's review, what tools needing other files do, earlier copies, and how people hear of it.
 answer: Maintainer's answers, 2026-11-09. Cap: 200 calls a day and a 5 MB document per person; over it is refused saying when it resets. Kill criterion: fewer than 5 people who use it on two different days within 30 days of going public. Address: mcp.getemerald.dev. Document: a folder Emerald holding Emerald.emd, stored as text (Drive previews it), starting empty with packs added on request. Kept: in Firestore, per Google account, a one-way hash of the account id, today's date, calls today, the first day used and whether it was used on a later day; never a call, its arguments, a tool name, a file name or anything from the document. Before review: Google's testing mode, up to 100 invited accounts; the 30 days start at public. Tools that need another file (a statement, a folder of notes, another .emd, store_document_as, keep_copy, create_document) are not offered on the connector: it works on the one document only. Earlier copies: Drive's own version history, nothing added. Named the Google Drive connector, a feature getemerald.dev lists with the address; the plugin does not change.
-state: live
+state: amended
 
 ### D-563
 date: 2026-11-09
@@ -4717,6 +4717,34 @@ scope: product
 title: What the Google Drive connector says before anyone uses it: PRIVACY.md gives it a section of its own with the five fields word for word, a record unused for 90 days deleting itself and an email deleting it sooner; a first-use warning of four sentences, written here for M57 U4 to show; and getemerald.dev lists it as coming, the address shown and linked nowhere until it answers
 question: What does the policy say about the connector before Google's review, what does a person read on first use, and how does the page list a connector that does not answer yet?
 answer: PRIVACY.md's first sentence names what collects nothing (app, server, plugin) and points to a section of its own: the document in the person's Drive under drive.file, read, run and written back on each call with nothing kept, a changed file refused, the engine's tools only with the ledger and the development pack staying in the desktop app and the plugin (D-564), Drive's version history as the earlier copies, no token stored, the five Firestore fields word for word (today's date said to be the last day used), deletion after 90 days unused or by email to me@kfireliyahu.com sooner, revoking third-party access, what Google and the chat app see, and what happens if it closes. First-use warning, for U4, word for word: 'Before you start: your Emerald document is Emerald/Emerald.emd in your own Google Drive. Each call reads it from your Drive, works on it at mcp.getemerald.dev and writes it back, and nothing of it is kept there. It offers Emerald's own tools for formats and their rows; the ledger and the development pack stay in the desktop app and the plugin on your computer. Earlier copies are in Drive's version history, and what is kept about you is in Emerald's privacy policy.' The page: a line under With your AI, a clause in Get Emerald's lead, and a way-in card whose name is not a link, no outline or hover, https://mcp.getemerald.dev beside it, each saying the packs stay on the desktop. Rejected: leaving it off the page, linking an address that does not answer, a bullet in the policy's list, a deletion form. Leaves U4: log nothing of a call's content, expire on the last day used, answer at the root, and make a record findable from what a person can email (it is a hash of the account id).
+state: live
+
+### D-566
+date: 2026-11-09
+milestone: M57
+scope: plugin
+title: The Google Drive connector's record is keyed by a SHA-256 of the person's Google email address, lowercased, so a deletion asked for by email finds it; Google is asked for openid email beside drive.file; and the 90 days are a daily sweep, not a Firestore TTL, which would need a sixth field
+question: D-562 kept a hash of the account id, which a deletion request by email cannot be matched to; and Firestore's TTL needs an expiry field, a sixth. What is the key, and how does a record unused for 90 days go?
+answer: account = SHA-256 hex of the email, trimmed and lowercased (the driver's call, 2026-11-09); Google is asked for openid email + drive.file, the address read once from the ID token at sign-in, hashed, dropped. `node dist-hosted/index.mjs key <email>` prints accounts/<hash>. The other four fields as D-562: day (last day used), calls, first_day, later_day; fields() throws on any other and the test fails on a sixth. The 90 days: a query deletes records whose day is more than 90 days back, on each instance's first counted call of a day and on POST /sweep with EMERALD_SWEEP_KEY (Cloud Scheduler, U6). Cap: 200 counted tools/call a day, UTC; the 201st refused saying it resets at midnight UTC, reaches no Drive, not counted. PRIVACY.md now says email address. Rejected: hash of the account id, HMAC, a TTL field.
+supersedes: D-562
+state: live
+
+### D-567
+date: 2026-11-09
+milestone: M57
+scope: plugin
+title: Signing in to the connector keeps nothing: the endpoint is the OAuth server a chat app expects, Google signs the person in, and registration, sign-in in progress, code and tokens are sealed under a key from the environment
+question: Chat apps sign in to a remote MCP server by metadata, dynamic registration and PKCE, which Google does not offer, and D-562 lets nothing of a sign-in be stored. How does a person sign in?
+answer: hosts/google-drive/signIn.ts: RFC 9728 + 8414 metadata, /register (RFC 7591), /authorize (PKCE S256, public clients) -> Google for openid email drive.file, offline + consent -> /oauth/google -> a code of ours -> /token. AES-256-GCM sealed under EMERALD_SEAL_KEY, bound to purpose and lapse (seal.ts): client id = its redirect URIs; state 10 min; code 2 min (Google's tokens + challenge); access token = Google's token + account hash, lapsing a minute before Google's; refresh = Google's refresh token, traded with Google. A person who unticks Drive goes back refused. Rejected: Google as the server directly, state in Firestore, signed-only tokens. A code is replayable within 2 minutes by the verifier's holder; changing the key signs everyone out.
+state: live
+
+### D-568
+date: 2026-11-09
+milestone: M57
+scope: plugin
+title: The connector's endpoint is one stateless request-to-response function answering MCP at the root, built by build:hosted into a folder Cloud Run deploys as a function or a server; a tools/call is counted before Drive is reached, the first carries the warning, it sends to Google's APIs alone, and it logs nothing
+question: What shape does the hosted endpoint take, and how does it keep PRIVACY.md's promises: the root, no call logged, no document kept, no token stored?
+answer: hosts/google-drive/endpoint.ts: Request -> Response. POST / is MCP, stateless, JSON, one message per request: createServer({connector:true}) (re-exported via host.ts) over a Drive store opened only on first read or write; 401 with resource_metadata without a token; GET / 405; no /mcp. tools/call counted first; the call that makes the record gets D-565's warning prepended. build:hosted -> dist-hosted/index.mjs + package.json; export `emerald` is the Cloud Run function entry, `node index.mjs` serves on PORT. Env: EMERALD_GOOGLE_CLIENT_ID, EMERALD_GOOGLE_CLIENT_SECRET, EMERALD_SEAL_KEY, EMERALD_FIRESTORE_PROJECT (or GOOGLE_CLOUD_PROJECT); optional EMERALD_ORIGIN, EMERALD_SWEEP_KEY, FIRESTORE_EMULATOR_HOST. network.ts allows Drive, oauth2, Firestore, metadata.google.internal and is installed as the process fetch; nothing is logged. hosted:local runs it against Google in memory or the Firestore emulator. Rejected: /mcp, sessions/SSE, Functions Framework or Express as a dependency, the emulator in the suite.
 state: live
 
 <!-- emerald: finding.format.md -->
@@ -16385,14 +16413,18 @@ paths: "hosts/google-drive/\nsrc/plugin/store.ts\nsrc/plugin/write.ts"
 milestone: M57
 scope: plugin
 title: The endpoint: MCP over HTTP on Google Cloud, Google sign-in, the cap and the five fields
-state: in_progress
+landed: 2026-11-09
+decision: D-566
+state: built
 brief: D-560, D-561, D-562. The MCP server over Streamable HTTP, built as its own bundle (build:hosted, beside build:plugin) and run as a Cloud Run function. Sign-in: the endpoint is the OAuth authorization server the chat hosts expect (with the dynamic client registration they use), handing the person to Google for the drive.file scope; the token the host holds is Google's token encrypted with a key from the environment, so no token is stored. Per call: open the Drive store with the person's token and run the U2 list. The cap: 200 calls a day per person, refused over it with when it resets. Firestore keeps exactly five fields per account (hashed account id, today's date, calls today, first day used, used on a later day) and nothing else; a test fails if a write to it carries any other field. A test proves the endpoint makes no request but to Google's APIs. Local runs against the fake Drive and the Firestore emulator. Maintainer, 2026-11-09: a record nobody used for 90 days deletes itself (a Firestore TTL on the last day used, or the equivalent), as PRIVACY.md (U5) says.
-files: hosts/google-drive/, src/plugin/main.ts, package.json, vite.config.ts
+files: hosts/google-drive/endpoint.ts, hosts/google-drive/signIn.ts, hosts/google-drive/usage.ts, hosts/google-drive/seal.ts, hosts/google-drive/network.ts, hosts/google-drive/main.ts, hosts/google-drive/fakeGoogle.ts, hosts/google-drive/endpoint.test.ts, src/plugin/host.ts, vite.config.ts, package.json, .gitignore, PRIVACY.md, CLAUDE.md, docs/02-architecture.md, docs/09-decision-log.md
 blocks: ["M57 U2","M57 U3"]
 taken_by: run-milestone driver
 started: 2026-11-09
 branch: m57-drive-connector
+commit: 35a1172
 paths: "hosts/google-drive/\nsrc/plugin/main.ts\npackage.json\nvite.config.ts"
+report: M57 U4 built at 35a1172 on m57-drive-connector. Full suite green (374 files, 5608 tests), typecheck green, docs:check green after landing. hosts/google-drive/: endpoint.ts (stateless MCP at POST /, cap before Drive, D-565 warning on the first call), signIn.ts (OAuth AS for chat apps, Google for openid email drive.file, all state sealed), usage.ts (200/day, five Firestore fields keyed by SHA-256 of the lowercased email, 90-day sweep), seal.ts, network.ts (Google's APIs alone, installed as the process fetch), main.ts (Cloud Run function `emerald`, node serve, --local, key <email>), fakeGoogle.ts. build:hosted -> dist-hosted/; hosted:local smoke-run over real HTTP: 17 tools, warning once. PRIVACY.md field 1 now says email address. D-566 (email-hash key, sweep not TTL), D-567 (stateless sign-in), D-568 (endpoint shape). For U6: a Google Cloud project with Firestore (Native), an OAuth client (web) with redirect https://mcp.getemerald.dev/oauth/google and scopes openid, email, drive.file; env EMERALD_GOOGLE_CLIENT_ID, EMERALD_GOOGLE_CLIENT_SECRET, EMERALD_SEAL_KEY (32 random bytes base64, in Secret Manager), EMERALD_FIRESTORE_PROJECT; the service account needs Firestore read/write; deploy dist-hosted/ as a Cloud Run function (entry point emerald, Node 22+) or a service; DNS mcp.getemerald.dev mapped to it; optional Cloud Scheduler POST /sweep with EMERALD_SWEEP_KEY. Cloud Run's request log also records URLs (sign-in URLs carry sealed values and Google's one-use code) — weigh a log exclusion against PRIVACY.md's 'time, address and status'.
 
 ### M57 U5
 milestone: M57
