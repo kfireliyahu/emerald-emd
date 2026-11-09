@@ -1,6 +1,14 @@
 /**
- * **The Google Drive connector's tool list** (M57 U2, D-562): the one document,
- * no path, and no tool that needs another file.
+ * **The Google Drive connector's tool list** (M57 U2, D-562, D-564): the
+ * engine's tools on the one document, no path, no pack's tool and no tool that
+ * needs another file.
+ *
+ * **The engine's alone** (D-564, the maintainer, 2026-11-09): the ledger cannot
+ * be stored as text, and the Drive document is text; the development pack is a
+ * project's memory, not a conversation's. So no pack's tool is offered — the
+ * ledger's list whole, and the four in the engine's list that are a pack's: a
+ * unit claimed, landed and dispatched, and a pack kept. A tool is the engine's
+ * when it works on a document that keeps no pack.
  *
  * The local server's tools each take the `path` of a `.emd` on this machine.
  * The connector has one document — `Emerald/Emerald.emd` in the person's own
@@ -48,6 +56,12 @@ export const NOT_ON_THE_CONNECTOR: ReadonlyMap<string, string> = new Map([
   ['store_document_as', 'stores the file another way'],
   // The drawn page's copy, read off this machine's disk and watched by its mark.
   ['frame_copy', 'reads the document off this machine’s disk'],
+  // The packs' tools in the engine's list (D-564): the development pack's three,
+  // and keeping a pack, which the connector offers none of.
+  ['claim_units', 'is the development pack’s'],
+  ['land_units', 'is the development pack’s'],
+  ['dispatch_plan', 'is the development pack’s'],
+  ['keep_packs', 'keeps a pack, and the connector offers the engine’s tools alone'],
 ])
 
 /**
@@ -101,7 +115,8 @@ export function connectorArgs(name: string, args: Args): Args {
 
 /** The answer to a call for a tool the connector leaves out. */
 export function notOnTheConnector(name: string): string {
-  const why = NOT_ON_THE_CONNECTOR.get(name) ?? 'needs a file other than the one document'
+  // A name off this map is the ledger's (D-564).
+  const why = NOT_ON_THE_CONNECTOR.get(name) ?? 'is the ledger pack’s, and the connector offers the engine’s tools alone'
   return (
     `${name} is not offered on the Google Drive connector: it ${why}, and this connector works on ` +
     `${CONNECTOR_DOCUMENT} in the person's Google Drive alone.`

@@ -418,9 +418,10 @@ export interface ServerOptions {
    */
   readonly store?: DocumentStore
   /**
-   * The Google Drive connector's list (M57 U2, D-562): every tool that works on
-   * the one document, without its `path` — the store supplies the document —
-   * and none that needs another file (`connector.ts`). No page and no
+   * The Google Drive connector's list (M57 U2, D-562, D-564): the engine's tools
+   * that work on the one document, without their `path` — the store supplies
+   * the document — and no pack's tool, nor one that needs another file
+   * (`connector.ts`). No page and no
    * subscription either: each reads a file on this machine. Its instructions
    * are `connectorInstructions`. A server argument, like `engineOnly`.
    */
@@ -431,8 +432,9 @@ export function createServer(options: ServerOptions = {}): Server {
   // The engine's first in both modes (M42 F5): a list that opened on 57 finance
   // tools taught a model that Emerald is a finance app with formats beside it.
   const connector = options.connector === true
+  // The connector: the engine's tools alone, less those that need another file (D-564).
   const offered = connector
-    ? [...ENGINE_TOOLS, ...LEDGER_TOOLS].filter((tool) => onTheConnector(tool.definition.name))
+    ? ENGINE_TOOLS.filter((tool) => onTheConnector(tool.definition.name))
     : options.engineOnly === true
       ? ENGINE_TOOLS
       : [...ENGINE_TOOLS, ...LEDGER_TOOLS]
@@ -489,9 +491,9 @@ export function createServer(options: ServerOptions = {}): Server {
           `${offered.map((one) => one.definition.name).join(', ')}.`,
       )
     }
-    // The connector answers only what it lists (M57 U2): a tool left out
-    // reaches a file the connector has not got, so naming it is no way round.
-    if (connector && !onTheConnector(tool.definition.name)) return failure(notOnTheConnector(tool.definition.name))
+    // The connector answers only what it lists (M57 U2, D-564): a tool left out
+    // is a pack's or reaches a file it has not got, so naming it is no way round.
+    if (connector && !offered.includes(tool)) return failure(notOnTheConnector(tool.definition.name))
 
     try {
       const given = request.params.arguments ?? {}

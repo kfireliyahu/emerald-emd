@@ -95,21 +95,42 @@ const textOf = (result: Awaited<ReturnType<Client['callTool']>>): string =>
   (result.content as { type: string; text: string }[]).map((part) => part.text).join('\n')
 
 describe('the Google Drive connector', () => {
-  it('lists every tool on the one document, and none that needs another file', async () => {
+  it('lists the engine’s tools on the one document: no pack’s, and none that needs another file', async () => {
     const client = await connected()
     const { tools } = await client.listTools()
     const names = tools.map((tool) => tool.name)
 
-    // The local server's tools, less the ones that need another file: the
-    // engine's first, as on the local server.
-    const expected = [...ENGINE_TOOLS, ...LEDGER_TOOLS]
-      .map((tool) => tool.definition.name)
-      .filter((name) => !NOT_ON_THE_CONNECTOR.has(name))
-    expect(names).toEqual(expected)
-    for (const left of ['read_onto_format', 'readers', 'import_statement', 'statement_preview', 'record_holdings_statement']) {
-      expect(names).not.toContain(left)
+    // **The list, by name** (D-564): a tool added to the engine's list does not
+    // reach the connector until it is added here, so a pack's tool or one
+    // taking a file cannot slip in unseen. Each is the engine's: it works on a
+    // document that keeps no pack — `start_here` too, which reads the views a
+    // document declares and answers from `formats` where it declares none.
+    expect(names).toEqual([
+      'formats',
+      'declare_format',
+      'connect_formats',
+      'extend_format',
+      'delete_format',
+      'format_rows',
+      'show_format',
+      'format_problems',
+      'search_document',
+      'start_here',
+      'format_rollup',
+      'apply_rules',
+      'record_format_rows',
+      'update_format_rows',
+      'delete_format_rows',
+      'record_units',
+      'arrange_views',
+    ])
+    // No pack's tool: none of the ledger's, and none of the engine list's that is a pack's.
+    for (const tool of LEDGER_TOOLS) expect(names).not.toContain(tool.definition.name)
+    for (const left of ['claim_units', 'land_units', 'dispatch_plan', 'keep_packs']) expect(names).not.toContain(left)
+    // Everything the engine's list holds is listed or left out by name.
+    for (const tool of ENGINE_TOOLS) {
+      expect(names.includes(tool.definition.name) !== NOT_ON_THE_CONNECTOR.has(tool.definition.name)).toBe(true)
     }
-    for (const left of ['store_document_as', 'keep_copy', 'create_document', 'frame_copy']) expect(names).not.toContain(left)
 
     // **The test the brief asks for**: no tool here takes a file path, whatever
     // list it came from.
@@ -190,6 +211,18 @@ describe('the Google Drive connector', () => {
     const read = await client.callTool({ name: 'read_onto_format', arguments: { file: 'C:/notes', format: 'book' } })
     expect(read.isError).toBe(true)
     expect(textOf(read)).toMatch(/not offered on the Google Drive connector/)
+    // A pack's tool, named anyway (D-564).
+    for (const name of ['month_summary', 'claim_units', 'keep_packs']) {
+      const pack = await client.callTool({ name, arguments: {} })
+      expect(pack.isError).toBe(true)
+      expect(textOf(pack)).toMatch(/not offered on the Google Drive connector/)
+    }
+
+    // `start_here` is the engine's: a document that keeps no pack still answers it.
+    const start = await client.callTool({ name: 'start_here', arguments: {} })
+    expect(start.isError).toBeFalsy()
+    expect(store.reads.length).toBeGreaterThan(0)
+    store.reads.length = 0
 
     const scan = await client.callTool({ name: 'search_document', arguments: { denylist: 'C:/deny.txt' } })
     expect(scan.isError).toBe(true)

@@ -547,9 +547,9 @@ offered in this mode; the server started without \`--engine-only\` carries them.
  * a `path` every tool takes, files read where they are, copies in Emerald's
  * folder, the app's own screens — and none of that is true of a document in
  * the person's Drive. **It names no tool the connector leaves out**, which
- * `connector.test.ts` pins as `server.test.ts` pins the others. The ledger's
- * tools are offered, so the ledger is said — without the statements, which
- * are files.
+ * `connector.test.ts` pins as `server.test.ts` pins the others. It offers the
+ * engine's tools alone (D-564), so it says nothing of a pack: what it says is
+ * formats and their rows.
  */
 export const connectorInstructions = (): string => `
 # Emerald
@@ -560,8 +560,7 @@ its work and writes it back; nothing of it is kept anywhere else between calls. 
 tasks, meetings, notes, people, money — is rows of **formats**, real tables with typed fields and
 links. So a conversation **asks instead of reading**: one call returns the matching rows; a field
 filters exactly, a link is followed, a write is checked. **No tool takes a path: every one works on
-that document.** **Packs** are formats somebody already worked out, each optional: \`development\`
-for a project's memory, \`ledger\` for personal finance; \`keep_packs\` adds one.
+that document.** Here it holds the formats the person declares, and nothing else.
 
 ## When they ask to see
 
@@ -591,10 +590,7 @@ Free prose gains least: keep it as a body column, or link a row to where it is.
 **Begin from the document.** \`start_here\` answers what this document's own views say a
 conversation begins from, when it declares any. Otherwise, begin with \`formats\`, which says what
 the document declares — and a new document declares nothing — then \`declare_format\` for a kind
-of thing it has no format for. **A pack is formats somebody already worked out**: offer one with
-\`keep_packs\` before declaring its formats by hand. In \`development\`, a unit is taken with
-\`claim_units\` and landed with \`land_units\` — its decisions, review entries and the unit itself
-in one write.
+of thing it has no format for.
 
 ## How to work
 
@@ -640,19 +636,6 @@ in a unit the document knows — \`formats\` ends with them, and \`record_units\
 \`apply_rules\` runs a format's rule sets over rows already there, \`format_problems\` says what is
 wrong without a rule anybody wrote, and \`search_document\` finds words in every format at once.
 
-## The ledger — when the work is their finances
-
-A pack like any other: the document keeps it only when asked (\`keep_packs\` with \`ledger\`), and its
-tools work once it does. **A category set by hand is never overwritten**, and **a merchant name is
-an exact string**: hand back \`merchantNormalized\` exactly as a tool printed it. Statement files
-are not read here. **Paychecks** and **pension, provident and savings fund reports** are PDFs or
-photos: read one yourself and write what it says with \`record_paychecks\` or
-\`record_fund_readings\`; \`paychecks\` and \`funds\` read them back, and together answer whether
-the employer actually deposited. \`create_goals\`, \`create_debts\`, \`record_deposits\` and
-\`record_debt_payments\` write what they are saving for and what they owe. \`assign_category\`,
-\`create_rule\`, \`month_summary\`, \`year_summary\` and \`transactions\` answer questions from what
-is in it. **Do not recommend a security, rank one, or offer an opinion on one.**
-
 ## Not here
 
 **Earlier copies are Google Drive's own.** Drive keeps \`Emerald.emd\`'s version history, and no
@@ -662,6 +645,10 @@ version history in Google Drive and restore the version before it.
 **Only the one document.** No other document, no spreadsheet, statement or folder of notes read in,
 and no copy kept on request: when a task needs one of those, say plainly that it is not offered
 here. A column that names a row in another document reads as unresolved.
+
+**No pack.** Personal finance and a project's development memory stay in Emerald's desktop app and
+its plugin, not in this document: when the work is one of those, say plainly that it is not
+offered here.
 `.trim()
 
 /** What the server says started without `--engine-only`: every client's full text. */
