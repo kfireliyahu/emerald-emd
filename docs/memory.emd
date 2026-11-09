@@ -16385,10 +16385,13 @@ paths: "hosts/google-drive/\nsrc/plugin/store.ts\nsrc/plugin/write.ts"
 milestone: M57
 scope: plugin
 title: The endpoint: MCP over HTTP on Google Cloud, Google sign-in, the cap and the five fields
-state: planned
+state: in_progress
 brief: D-560, D-561, D-562. The MCP server over Streamable HTTP, built as its own bundle (build:hosted, beside build:plugin) and run as a Cloud Run function. Sign-in: the endpoint is the OAuth authorization server the chat hosts expect (with the dynamic client registration they use), handing the person to Google for the drive.file scope; the token the host holds is Google's token encrypted with a key from the environment, so no token is stored. Per call: open the Drive store with the person's token and run the U2 list. The cap: 200 calls a day per person, refused over it with when it resets. Firestore keeps exactly five fields per account (hashed account id, today's date, calls today, first day used, used on a later day) and nothing else; a test fails if a write to it carries any other field. A test proves the endpoint makes no request but to Google's APIs. Local runs against the fake Drive and the Firestore emulator. Maintainer, 2026-11-09: a record nobody used for 90 days deletes itself (a Firestore TTL on the last day used, or the equivalent), as PRIVACY.md (U5) says.
 files: hosts/google-drive/, src/plugin/main.ts, package.json, vite.config.ts
 blocks: ["M57 U2","M57 U3"]
+taken_by: run-milestone driver
+started: 2026-11-09
+branch: m57-drive-connector
 paths: "hosts/google-drive/\nsrc/plugin/main.ts\npackage.json\nvite.config.ts"
 
 ### M57 U5
