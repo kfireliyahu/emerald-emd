@@ -471,6 +471,7 @@ written out here.
 | D-560 | 2026-11-09 | A hosted MCP endpoint that keeps no document: the person's Google Drive holds one `.emd`, made by default where Emerald may see it (`drive.file`); each call reads it, runs the tool and writes it back, and a write to a file changed since it was read is refused and says so; every tool is offered, the ledger's too, with a warning; serverless on Google Cloud, in the project that holds the Drive sign-in; the code lives in this repository | M57 |
 | D-561 | 2026-11-09 | The hosted endpoint launches free, with a cap and a kill criterion written before it ships; a paid plan, if one comes, is for the hosted endpoint alone, and the app and the local server stay free and offline (D-124 holds) | M57 |
 | D-562 | 2026-11-09 | The Google Drive connector's settings: 200 calls a day and 5 MB per person; stopped if fewer than 5 people use it on two different days within 30 days of going public; at `mcp.getemerald.dev`; one document, `Emerald/Emerald.emd`, stored as text and starting empty; Firestore keeps five fields per Google account and nothing else; invited testers first, the clock starting at public; tools that need a file other than the document are left out; Drive's version history is the earlier copies; getemerald.dev lists it as a feature | M57 |
+| D-569 | 2026-11-10 | M58's answers: when two emerald servers are registered the plugin's stays and says once how to remove the other; recording, updating, claiming and landing rows commit on the first call while deleting and changing a format's columns still dry-run first; a decision row may name the files it affects, anywhere on the machine, and the closing pass checks each; the fixes ship as emerald-mcp 0.3.1; M57 is parked on its branch | M58 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -583,6 +584,40 @@ cap read from logs is slow and loose); taking a file's text in the call (more to
 **Consequences.** PRIVACY.md lists the five fields word for word, and how to have them deleted is
 asked when M57 U5 is taken. The connector's instructions and tool list differ from the local
 server's, and a test holds the line between them (M57 U2).
+
+## D-569 · 2026-11-10 · M58's answers: when two emerald servers are registered the plugin's stays and says once how to remove the other; recording, updating, claiming and landing rows commit on the first call while deleting and changing a format's columns still dry-run first; a decision row may name the files it affects, anywhere on the machine, and the closing pass checks each; the fixes ship as emerald-mcp 0.3.1; M57 is parked on its branch <a id="d-569"></a>
+
+**Context.** A six-week usage report from a session outside this repository (2026-11-09, an inbox
+row, triaged) found Emerald delivering what it promises at a cost every session pays: two copies of
+every tool, every write made twice, long instructions and hook text, a hook a security plugin
+blocked, and a decision that left a CLAUDE.md outside any repository wrong for days. On 2026-11-10
+the maintainer parked M57 (the Google Drive connector) until he is ready to publish a hosted
+service and turned to these. Numbered after the branch's D-563 to D-568 so the two never collide.
+
+**Decision.**
+
+- **Two servers: the plugin's stays.** It brings the hooks, the skills and the pane; at its start,
+  when another emerald server is registered, it says once how to remove the other. It never edits
+  the person's configuration.
+- **Rows commit on the first call:** `record_format_rows`, `update_format_rows`, `claim_units` and
+  `land_units` apply at once, judged as before, so a wrong value is still refused with its reason.
+  `delete_format_rows`, `delete_format` and a change to a format's columns still dry-run until
+  `commit: true`. This answers the dry-run half of *Dry runs and concurrency*; the concurrency half
+  stays open.
+- **A decision names the files it affects.** The development pack's `decision` format gains an
+  optional `affects` list of paths, anywhere on the machine, and the closing pass greps each for
+  the claim the decision made false. This answers *Decisions and the files they make wrong*.
+- **They ship as emerald-mcp 0.3.1**, the maintainer running the npm publish.
+- **M57 is parked:** U1 is on main; U2 to U5 are built and landed on `m57-drive-connector`, pushed
+  and not merged; U6 waits for the maintainer.
+
+**Rejected.** The standalone server staying (it brings no hooks or skills); every write committing
+at once (a delete or a column change is the write worth previewing); narrowing the pitch instead of
+naming files (the report's case was a real file a decision made wrong).
+
+**Consequences.** The instructions, the tool descriptions, `docs/plugin.md` and the skills stop
+telling sessions to dry-run rows first (M58 U3). A pack change means the pack's past and its test
+follow (M58 U4).
 
 ## Related
 

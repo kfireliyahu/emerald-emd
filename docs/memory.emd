@@ -4692,6 +4692,15 @@ question: What M57 left open after D-560 and D-561: the cap, the kill criterion,
 answer: Maintainer's answers, 2026-11-09. Cap: 200 calls a day and a 5 MB document per person; over it is refused saying when it resets. Kill criterion: fewer than 5 people who use it on two different days within 30 days of going public. Address: mcp.getemerald.dev. Document: a folder Emerald holding Emerald.emd, stored as text (Drive previews it), starting empty with packs added on request. Kept: in Firestore, per Google account, a one-way hash of the account id, today's date, calls today, the first day used and whether it was used on a later day; never a call, its arguments, a tool name, a file name or anything from the document. Before review: Google's testing mode, up to 100 invited accounts; the 30 days start at public. Tools that need another file (a statement, a folder of notes, another .emd, store_document_as, keep_copy, create_document) are not offered on the connector: it works on the one document only. Earlier copies: Drive's own version history, nothing added. Named the Google Drive connector, a feature getemerald.dev lists with the address; the plugin does not change.
 state: live
 
+### D-569
+date: 2026-11-10
+milestone: M58
+scope: plugin
+title: M58's answers: when two emerald servers are registered the plugin's stays and says once how to remove the other; recording, updating, claiming and landing rows commit on the first call while deleting and changing a format's columns still dry-run first; a decision row may name the files it affects, anywhere on the machine, and the closing pass checks each; the fixes ship as emerald-mcp 0.3.1; M57 is parked on its branch
+question: What M58 needs settled before its briefs: which of two registered servers stays, when a write may skip its dry run, what ties a decision to the prose it makes wrong, and whether the fixes are released.
+answer: The maintainer's answers, 2026-11-10. Two servers: the plugin's stays (it brings hooks, skills and the pane); its start notices another emerald server and says once how to remove it. Dry runs: record_format_rows, update_format_rows, claim_units and land_units commit on the first call (a wrong value is still refused); delete_format_rows, delete_format and anything that changes a format's columns still dry-run until commit: true. Stale prose: the development pack's decision format gains an optional affects list of file paths, anywhere on the machine, and the closing pass greps each for the claim the decision made false. Release: a last unit cuts emerald-mcp 0.3.1 and pins the plugin; the maintainer runs the npm publish. Also 2026-11-10: M57 is parked until he is ready to publish a hosted service, its built units on the branch m57-drive-connector.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -6192,8 +6201,14 @@ state: closed
 position: 370
 
 ### M57
-title: The Google Drive connector: Emerald in any chat, on the person's own Drive
-goal: A person pastes mcp.getemerald.dev into a chat on the web, on a phone or in cloud Cowork, signs in with Google, and works in Emerald/Emerald.emd, which lives in their Drive and syncs to the desktop app through Drive's own client. The endpoint keeps no document (D-560), launches free with a 200-calls-a-day cap and a kill criterion of fewer than 5 people back on a second day within 30 days of going public (D-561, D-562), and PRIVACY.md says what it keeps before Google's review. All the maintainer's decisions are answered (D-562); his own acts (the Google Cloud project, billing, consent screen, DNS) are listed in U6.
+title: The Google Drive connector: Emerald in any chat, on the person's own Drive (parked)
+goal: PARKED by the maintainer on 2026-11-10 until he is ready to publish a hosted service: resume only when he says so. U1 is on main. U2, U3, U4 and U5 are built and landed on the branch m57-drive-connector (pushed, not merged; its memory.emd holds their rows and D-563 to D-568), which is why main shows them in progress. U6 (his Google Cloud setup, then deploy and Google's review) is not started; the setup steps are in U4's report on the branch. Resuming: merge m57-drive-connector into main, then U6. The goal itself: a person pastes mcp.getemerald.dev into a chat, signs in with Google, and works in Emerald/Emerald.emd in their own Drive; the endpoint keeps no document (D-560), launches free with a cap and a kill criterion (D-561, D-562).
+state: planned
+position: 380
+
+### M58
+title: Lighter on every session: the fixes from six weeks of real use
+goal: The 2026-11-09 usage report from outside this repo (inbox, triaged) found Emerald delivering what it promises at a cost every session pays: long instructions and hook text, tools registered twice, every write done twice, a hook a security plugin blocked, and decisions that leave prose files wrong. M58 fixes those for anyone using the plugin today, and ships them as emerald-mcp 0.3.1. The maintainer's answers are D-569. Built on main.
 state: planned
 position: 341
 
@@ -6236,7 +6251,9 @@ state: answered
 
 ### Decisions and the files they make wrong
 question: Emerald keeps its own rows consistent, but nothing ties a decision to the prose files it makes wrong. The 2026-11-09 usage report found a decision landed one day and a CLAUDE.md outside every repository still wrong days later; the closing pass's grep for the claim made false only looks inside a repo. Should a decision row name the files it affects (a column), checked by the closing pass wherever they live, or should the pitch stop claiming Emerald keeps prose docs from going stale? Related: H8 (prose about a figure).
-state: open
+answered_by: D-569
+state: answered
+answer: D-569: a decision row may name the files it affects, anywhere on the machine, and the closing pass greps each for the claim the decision made false (M58 U4).
 
 ### Declared rules across links
 question: How does a person declare a rule the engine cannot know mechanically - a project whose status is Done while a task linking to it is Not started - so that what looks wrong can report it without guessing?
@@ -6247,6 +6264,7 @@ state: open
 question: Every emerald write dry-runs until commit: true. M56 U3 asked how a guard should tell that a commit is the same write as an earlier dry run; the maintainer answered (2026-11-03): "i think we need to soften the dry run requirements in general and handle concurrency better probably." So: when may a write commit without a dry run first (a small or reversible one, a landing whose proposal was already shown, a row a person typed), and how do parallel sessions writing one document (worktree children, a driver, a session in the app) avoid refused ids, lost writes and the text document renewing ids on every write? The third guard was dropped until this is answered. Evidence, 2026-11-09: a six-week usage report outside this repo counted about 360 updates against 175 new rows, each written twice; commit: true on the first call is already allowed and still refuses a bad value, so the instructions are what make sessions dry-run first.
 opened_by: D-549
 state: open
+answer: Half answered by D-569 (2026-11-10): rows commit on the first call (record, update, claim, land); deletes and format changes still dry-run. The concurrency half (parallel writers, renewed ids) stays open.
 
 ### Engine server on its own
 question: Should the engine-only MCP server ship as its own download, as typed memory for AI sessions, and is it the development pack (M27) that sells it rather than general chat memory?
@@ -11422,30 +11440,6 @@ branch: main
 commit: dd0d3b0b
 paths: "src/frame/host.ts\nsrc/frame/main.tsx\nsrc/frame/host.test.ts\nscripts/try-frame.mjs\ndocs/plugin.md"
 
-### Later U-hook-blocked
-milestone: Later
-scope: plugin
-title: Why a security plugin blocked the SessionStart hook
-state: planned
-brief: The 2026-11-09 usage report: a security plugin in the host blocked emerald's SessionStart hook for a session. Find what it objected to (plain Node run from the plugin folder? what the hook prints?) and whether the hook can be shaped so such plugins pass it. Investigation first; a fix only once the cause is known.
-files: hosts/claude/hooks/hooks.json, hosts/claude/hooks/main.ts, hosts/claude/hooks/unless-mod.mjs
-
-### Later U-lean-start
-milestone: Later
-scope: plugin
-title: Less text at every session's start: shorter server instructions and hook output
-state: planned
-brief: A six-week usage report from a session outside this repo (2026-11-09) found the server's instructions long enough that hosts cut them off (this repo's own sessions see them truncated too) and the SessionStart hook's text mostly rules about how to talk about views. Every session pays for both before it does anything. Measure both, cut the instructions to what a session needs before its first call, and move the view-talk rules into the tool answers that need them. Ask the maintainer before dropping any rule outright.
-files: src/plugin/instructions.ts, hosts/claude/hooks/main.ts, hosts/claude/hooks/hooks.json, hosts/claude/hooks/told.ts
-
-### Later U-one-server
-milestone: Later
-scope: plugin
-title: One set of tools: the plugin notices a second emerald server registered beside it
-state: planned
-brief: The 2026-11-09 usage report found two copies of every tool in one host: a standalone emerald server and the plugin's, and past sessions used both, so every session listed every tool twice. Find where the second registration comes from (it was in neither settings.json nor ~/.claude.json, so likely the host app's own config), then have the plugin's start say so once and the setup steps make sure only one is configured. Ask the maintainer which copy wins.
-files: hosts/claude/.claude-plugin/plugin.json, hosts/claude/skills/emerald-setup/SKILL.md, src/plugin/tools/setup.ts, hosts/claude/hooks/no-server.mjs
-
 ### Later U-template
 milestone: Later
 scope: engine
@@ -16292,19 +16286,25 @@ report: M57 U1 built at 453f1c7. Every open, write, lock and copy now goes throu
 milestone: M57
 scope: plugin
 title: The connector's tool list: the one document, no path, no tools needing another file
-state: planned
+state: in_progress
 brief: D-562. A server option builds the Google Drive connector's list: every tool that works on the one document, its path parameter gone (the store supplies the document), and the tools that need another file left out: intake and the readers (a statement, xlsx, pdf, a folder of notes), elsewhere and inbox rows sent to another .emd, store_document_as, keep_copy, create_document, and anything watching a path. Its instructions say the document is Emerald/Emerald.emd in the person's Google Drive, that Drive's version history holds earlier copies, and nothing about local files. A test lists the connector's tools and fails when a tool taking a file path slips in. The local server's list and instructions stay byte for byte.
 files: src/plugin/server.ts, src/plugin/instructions.ts, src/plugin/tools/tool.ts, src/plugin/catalog.ts
 blocks: ["M57 U1"]
+taken_by: parked: built on m57-drive-connector, not merged
+started: 2026-11-10
+branch: m57-drive-connector
 
 ### M57 U3
 milestone: M57
 scope: plugin
 title: The Drive store: Emerald/Emerald.emd in the person's Drive, a changed file refused
-state: planned
+state: in_progress
 brief: D-560, D-562. In a new hosts/google-drive/, the store U1 defines, on Drive's REST API (v3) with the drive.file scope and an access token handed in. First call: find the folder Emerald and Emerald.emd the app made, or make both, the document stored as text and empty. Read returns the bytes with the file's revision; write uploads only if the revision is still the one read, and otherwise refuses saying the document changed since it was read and to ask again. First find out whether Drive offers an atomic precondition on update; if it does not, check-then-write and write the window down in the decision log. A document over 5 MB is refused at write. Tested against a fake Drive in the test suite; no network in tests. Drive's version history is the earlier copies: no copy files.
 files: hosts/google-drive/, src/plugin/write.ts
 blocks: ["M57 U1"]
+taken_by: parked: built on m57-drive-connector, not merged
+started: 2026-11-10
+branch: m57-drive-connector
 
 ### M57 U4
 milestone: M57
@@ -16319,9 +16319,12 @@ blocks: ["M57 U2","M57 U3"]
 milestone: M57
 scope: product
 title: Privacy, the warning and the site: what the connector does, said before Google's review
-state: planned
+state: in_progress
 brief: D-560, D-562. PRIVACY.md gains the Google Drive connector: the document lives in the person's Drive and passes through the endpoint on each call, nothing of it is kept, Firestore's five fields word for word, Drive's version history for earlier copies, and how to have the record deleted (ask the maintainer which route before writing it: an email, a tool, or deletion after a period of no use). The warning a person meets on first use: their document is in their Drive and every tool is offered, the ledger's too. getemerald.dev lists the Google Drive connector as a feature with the address mcp.getemerald.dev and how to add it. Must be live before Google's review is submitted, so it can land before U4.
 files: PRIVACY.md, src/demo/page/copy/en.ts, src/demo/page/page.ts
+taken_by: parked: built on m57-drive-connector, not merged
+started: 2026-11-10
+branch: m57-drive-connector
 
 ### M57 U6
 milestone: M57
@@ -16331,6 +16334,61 @@ state: planned
 brief: D-562. The maintainer's acts first, listed for him: create the Google Cloud project and its billing account, the OAuth consent screen in testing mode with the drive.file scope, the test users, and the DNS record for mcp.getemerald.dev. Then a deploy script, the domain mapped, the encryption key and Firestore set up, and one real run from a chat on the web against his own Drive. Submit Google's review once PRIVACY.md is live. The kill criterion's count (people who used it on two different days within 30 days of going public) is something the maintainer can read from Firestore in one command, written down here; the 30 days start when the review passes and it goes public.
 files: hosts/google-drive/, scripts/
 blocks: ["M57 U4","M57 U5"]
+
+### M58 U1
+milestone: M58
+scope: plugin
+title: Less text at every session's start: shorter server instructions and hook output
+state: planned
+brief: A six-week usage report from a session outside this repo (2026-11-09) found the server's instructions long enough that hosts cut them off (this repo's own sessions see them truncated too) and the SessionStart hook's text mostly rules about how to talk about views. Every session pays for both before it does anything. Measure both, cut the instructions to what a session needs before its first call, and move the view-talk rules into the tool answers that need them. Ask the maintainer before dropping any rule outright.
+files: src/plugin/instructions.ts, hosts/claude/hooks/main.ts, hosts/claude/hooks/hooks.json, hosts/claude/hooks/told.ts
+paths: "src/plugin/instructions.ts\nhosts/claude/hooks/main.ts\nhosts/claude/hooks/hooks.json\nhosts/claude/hooks/told.ts\nhosts/claude/hooks/project.ts\nsrc/plugin/tools/startHere.ts\nsrc/plugin/tools/sheet.ts"
+
+### M58 U2
+milestone: M58
+scope: plugin
+title: One set of tools: the plugin notices a second emerald server registered beside it
+state: planned
+brief: D-569. The 2026-11-09 usage report found two copies of every tool in one host: a standalone emerald server and the plugin's, and past sessions used both, so every session listed every tool twice. Find where the second registration comes from (it was in neither settings.json nor ~/.claude.json, so likely the host app's own config, such as the desktop app's MCP servers). The plugin's stays (the maintainer, D-569): at its start, when another server named emerald (or serving the same tools) is registered, it says once, in the SessionStart text, how to remove the other one, and the emerald-setup skill says the same. Never remove the person's config for them.
+files: hosts/claude/.claude-plugin/plugin.json, hosts/claude/skills/emerald-setup/SKILL.md, src/plugin/tools/setup.ts, hosts/claude/hooks/no-server.mjs
+paths: "hosts/claude/hooks/main.ts\nhosts/claude/hooks/project.ts\nhosts/claude/skills/emerald-setup/SKILL.md\nsrc/plugin/tools/setup.ts\nhosts/claude/.claude-plugin/plugin.json"
+
+### M58 U3
+milestone: M58
+scope: plugin
+title: Rows commit on the first call: no dry run for recording, updating, claiming and landing
+state: planned
+brief: D-569, and the open question 'Dry runs and concurrency' (its dry-run half). The usage report counted about 360 updates against 175 new rows, each written twice. Make record_format_rows, update_format_rows, claim_units and land_units apply on the first call: the same judging, a wrong value still refused with its reason, the answer saying what was written. delete_format_rows, delete_format and every tool that changes a format's columns (declare/extend/connect when they alter an existing format) keep the dry run until commit: true. Decide how a caller still asks for a preview (commit: false, explicitly), and keep the ledger's own write tools as they are unless they share the same switch. Update the instructions, the tool descriptions, docs/plugin.md and every test that relied on the old default; the parity rule (src/parity.test.ts) must still hold. Grep the skills (hosts/claude/skills/, .claude/skills/) for 'dry run' and fix the ones this makes false.
+files: src/plugin/tools/formats.ts, src/plugin/write.ts, src/plugin/instructions.ts, src/plugin/tools/claim.ts
+paths: "src/plugin/tools/formats.ts\nsrc/plugin/write.ts\nsrc/plugin/instructions.ts\nsrc/plugin/tools/claim.ts\nsrc/plugin/tools/land.ts\ndocs/plugin.md"
+
+### M58 U4
+milestone: M58
+scope: practice
+title: A decision names the files it affects, and the closing pass checks them
+state: planned
+brief: D-569, answering 'Decisions and the files they make wrong'. The development pack's decision format gains an optional `affects` column: a list of file paths, absolute or relative to the repository, anywhere on the machine (a ~/.claude/CLAUDE.md included). A pack change, so the pack's past and pack.test.ts follow (keeping the pack again must bring the column to a document that has the older one). The closing pass (both copies of the skill) gains a step: for each decision written this session, grep each affected file for the claim the decision made false and fix or flag it, reporting a file it cannot read. Nothing in the engine changes; this is the pack and the practice.
+files: src/data/packs/development/formats/, src/data/packs/development/pack.ts, hosts/claude/skills/closing-pass/SKILL.md, .claude/skills/closing-pass/SKILL.md
+paths: "src/data/packs/development/\nhosts/claude/skills/closing-pass/SKILL.md\n.claude/skills/closing-pass/SKILL.md\nscripts/docs-check.mjs"
+
+### M58 U5
+milestone: M58
+scope: plugin
+title: Why a security plugin blocked the SessionStart hook
+state: planned
+brief: The 2026-11-09 usage report: a security plugin in the host blocked emerald's SessionStart hook for a session. Find what it objected to (plain Node run from the plugin folder? what the hook prints?) and whether the hook can be shaped so such plugins pass it. Investigation first; a fix only once the cause is known.
+files: hosts/claude/hooks/hooks.json, hosts/claude/hooks/main.ts, hosts/claude/hooks/unless-mod.mjs
+paths: "hosts/claude/hooks/hooks.json\nhosts/claude/hooks/main.ts\nhosts/claude/hooks/unless-mod.mjs\nhosts/claude/hooks/no-server.mjs"
+
+### M58 U6
+milestone: M58
+scope: plugin
+title: emerald-mcp 0.3.1 cut and the plugin pinned
+state: planned
+brief: D-569. Cut emerald-mcp 0.3.1 with M58's fixes the way 0.3.0 was cut (git log for 'emerald-mcp 0.3.0 cut' shows the steps): the version everywhere it is written, the build, check:package, the release notes in the commit, then pin the plugin. The npm publish is the maintainer's, in a Terminal tab (2FA in the browser); stop and hand it to him with the exact command, and say that npm may take an hour to serve a new version (nothing to approve, never republish). After he publishes, check the MCP Registry listing matches server.json.
+files: package.json, scripts/npm-package.mjs, scripts/pin-plugin.mjs, hosts/claude/.claude-plugin/plugin.json
+blocks: ["M58 U1","M58 U2","M58 U3","M58 U4","M58 U5"]
+paths: "package.json\nsrc/plugin/document.ts\nhosts/claude/.claude-plugin/plugin.json\nhosts/claude-plugin-release.json\nserver.json"
 
 <!-- emerald: views.md -->
 ---
@@ -16483,12 +16541,12 @@ title: line
 emerald: changed
 ---
 
-decision: 2026-11-09
+decision: 2026-11-10
 finding: 2026-10-22
 inbox: 2026-11-09
-milestone: 2026-11-09
-open_question: 2026-11-09
+milestone: 2026-11-10
+open_question: 2026-11-10
 review_entry: 2026-11-03
 rule: 2026-11-03
 term: 2026-11-09
-unit: 2026-11-09
+unit: 2026-11-10
