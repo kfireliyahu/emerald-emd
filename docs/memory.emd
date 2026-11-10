@@ -16484,10 +16484,13 @@ report: M58 U5 built at f645acf on main. Cause NOT determined: the usage report 
 milestone: M58
 scope: plugin
 title: emerald-mcp 0.3.1 cut and the plugin pinned
-state: planned
+state: in_progress
 brief: D-569. Cut emerald-mcp 0.3.1 with M58's fixes the way 0.3.0 was cut (git log for 'emerald-mcp 0.3.0 cut' shows the steps): the version everywhere it is written, the build, check:package, the release notes in the commit, then pin the plugin. The npm publish is the maintainer's, in a Terminal tab (2FA in the browser); stop and hand it to him with the exact command, and say that npm may take an hour to serve a new version (nothing to approve, never republish). After he publishes, check the MCP Registry listing matches server.json.
 files: package.json, scripts/npm-package.mjs, scripts/pin-plugin.mjs, hosts/claude/.claude-plugin/plugin.json
 blocks: ["M58 U1","M58 U2","M58 U3","M58 U4","M58 U5"]
+taken_by: run-milestone driver
+started: 2026-11-10
+branch: main
 paths: "package.json\nsrc/plugin/document.ts\nhosts/claude/.claude-plugin/plugin.json\nhosts/claude-plugin-release.json\nserver.json"
 
 <!-- emerald: views.md -->
