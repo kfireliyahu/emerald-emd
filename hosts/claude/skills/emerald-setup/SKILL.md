@@ -1,6 +1,6 @@
 ---
 name: emerald-setup
-description: Tell the person how to make Emerald's tools available on their own computer. Use when they want to open, create or work in a .emd, declare a format, or ask Emerald for rows, and this session has no Emerald tools under any name or prefix (no start_here, formats or declare_format) even though the emerald plugin's skills are here.
+description: Tell the person how to make Emerald's tools available on their own computer. Use when they want to open, create or work in a .emd, declare a format, or ask Emerald for rows, and this session has no Emerald tools under any name or prefix (no start_here, formats or declare_format) even though the emerald plugin's skills are here. Also when Emerald's tools are here twice, under two server names.
 ---
 
 # Make Emerald available here
@@ -8,6 +8,13 @@ description: Tell the person how to make Emerald's tools available on their own 
 **First, look at your tools.** If any have `emerald` in their name, whatever the prefix (for
 example `mcp__remote-devices__emerald__start_here`, reached through the person's computer), then
 Emerald is already there: use those tools, and skip everything below.
+
+**If they are here twice** — the plugin's (`plugin_emerald_emerald` in the name) and another server's
+with emerald in its name — every tool is listed twice. Use the plugin's: it brings the hooks and
+skills too. Tell the person once how to remove the other, and never change their configuration
+yourself. In the Claude desktop app, which hands the servers in its `claude_desktop_config.json` to
+every Code session, they delete that entry under `"mcpServers"` and reopen the app; in Claude Code,
+`claude mcp remove <name>` with the scope `/mcp` shows, or the entry in the project's `.mcp.json`.
 
 Otherwise: the emerald plugin is installed, but its MCP server isn't running in this session. A
 Cowork task in the cloud starts a plugin's skills and hooks but never its MCP server. It can still

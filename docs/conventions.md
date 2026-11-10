@@ -151,11 +151,13 @@ to read `docs/` in order to audit it — the pass is scoped to what you touched.
    its `files` corrected; each new decision gets its row beside its log entry. The `milestone`
    row changes only when a *milestone* does (D-286). There is no status file to
    update — `start_here` reads the rows (D-434).
-2. **Grep for what you just made false.** One search over `docs/` for the claim you changed. This
+2. **Grep for what you just made false.** First one search over `docs/` for the claim you changed. This
    is the only item no script can do for you and it is the one that keeps costing sessions: *"the
    installer has never been run"*, *"next is the desktop shell"*, *"M9 has one unit left"* each
    outlived the commit that falsified them. A superseded claim in a note is worse than no note,
-   because it is read as current.
+   because it is read as current. **Then the files each decision you wrote names in `affects`**
+   (D-570): grep each for the claim it made false, fix it when it is yours to edit, and name in the
+   report any you could not read or fix — that is where a grep of `docs/` never looks.
 3. **End the closing message with what's next** (D-258): the next unit, what is the maintainer's to do
    or decide first, and a request to try something only when it really matters. **If the host offers a
    next-step box, end with it** (D-490): the recap is what landed and what is not verified, a

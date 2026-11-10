@@ -1,5 +1,5 @@
 {
-  "description": "Emerald: start_here at session start, and the inbox's new rows before a prompt, each in full once per session and then a count (M47 U1, M51 U6). Silent in a folder that names no document. Run from the published emerald-mcp, pinned, through npx (M42 U4); where the host starts no plugin MCP server, the emerald-setup skill, from the plugin folder (M42 F8). Where Claude Code runs the plugin's hooks module it answers both events itself and marks them, and unless-mod.mjs, which starts the npx commands, exits at once without starting them (M56 U2, D-547).",
+  "description": "Emerald: start_here at session start, and the inbox's new rows before a prompt, each in full once per session and then a count (M47 U1, M51 U6). Silent in a folder that names no document. Run from the published emerald-mcp, pinned, through npx (M42 U4); where the host starts no plugin MCP server, the emerald-setup skill, from the plugin folder (M42 F8); where it does, and another emerald server is registered beside it, one line on how to remove that one (M58 U2). Where Claude Code runs the plugin's hooks module it answers both events itself and marks them, and unless-mod.mjs, which starts the npx commands, exits at once without starting them (M56 U2, D-547).",
   "modules": ["../mod/register.tsx"],
   "hooks": {
     "SessionStart": [

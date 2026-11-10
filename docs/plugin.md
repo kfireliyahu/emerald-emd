@@ -1617,11 +1617,18 @@ release and never a new package:
   the entry (`cmd /c npx …` on Windows), quit and reopen. Its description fires on a session asked
   about a `.emd` that has no Emerald tools.
 - **A third `SessionStart` hook**, `node "${CLAUDE_PLUGIN_ROOT}/hooks/no-server.mjs"`, plain Node
-  with no imports but Node's, prints that skill when `CLAUDE_CODE_SKIP_PLUGIN_MCP_SERVERS` is set
-  and nothing otherwise. A hook can't see the session's tools, so both open by telling the model to
+  with no imports but Node's, prints that skill when `CLAUDE_CODE_SKIP_PLUGIN_MCP_SERVERS` is set. A hook can't see the session's tools, so both open by telling the model to
   check its own: any tool with `emerald` in its name, under any prefix, is the person's Emerald, and
   the steps are skipped (M42 F10). The first version said the tools were missing while the bridged
   ones worked.
+- **The same hook notices a second emerald server** (M58 U2, D-569, D-571). Where the plugin's
+  server does start, it reads where a Claude Code session takes servers from — `~/.claude.json`
+  (user and local scope), the project's `.mcp.json` unless `disabledMcpjsonServers` turns it off,
+  and, only when `CLAUDE_CODE_ENTRYPOINT` is `claude-desktop`, the desktop app's
+  `claude_desktop_config.json` (`%APPDATA%\Claude\` or `%LOCALAPPDATA%\Claude-Data\*\` on Windows),
+  whose servers the app attaches to every Code session. Any entry with `emerald` in its name,
+  command or arguments is a second set of the same tools: one line says so and how the person
+  removes it, and the plugin's stays. It never writes those files; the skill says the same.
 
 `scripts/pin-plugin.mjs` moves the skill's `emerald-mcp@<version>` with the other pins.
 
