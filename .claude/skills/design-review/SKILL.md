@@ -84,8 +84,8 @@ per-edit findings start appearing after your edits, `/impeccable hooks off`.
 ## 4. The rows
 
 **Each finding is a `review_entry` on the unit that found it, written sorted** (D-534), inside its
-`land_units` call (`review_entries`) with `commit: true` after checking the draft yourself — one call,
-no dry-run resend. `formats review_entry` has the columns. M54's units wrote all 203 as `open`, and
+`land_units` call (`review_entries`), which writes on that call, after checking the draft yourself —
+one call. `formats review_entry` has the columns. M54's units wrote all 203 as `open`, and
 sorting them afterwards took the driver and the maintainer an hour and a half; most were plain
 faults nobody needed to judge. So the review sorts as it writes:
 

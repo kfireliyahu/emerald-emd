@@ -145,6 +145,20 @@ export function booleanProp(description: string): Record<string, unknown> {
  */
 export const PATH_PROP = stringProp('Absolute path to a .emd file on this machine.')
 
+/**
+ * The `commit` of a write that applies on its first call (M58 U3, D-573): recording,
+ * updating, claiming and landing rows. It is judged exactly as before — a wrong value is
+ * refused with its reason and nothing is written — and only an explicit `commit: false`
+ * previews. Every other write (deleting rows or a format, changing a format's columns, the
+ * ledger's tools) keeps `commit === true` and its dry run.
+ */
+export const WRITES_NOW_PROP = booleanProp('Omit or true to write; false for a preview that writes nothing.')
+
+/** Whether a first-call write (`WRITES_NOW_PROP`) writes: unless it says `commit: false`. */
+export function writesNow(args: Args): boolean {
+  return args['commit'] !== false && args['commit'] !== 'false'
+}
+
 // --- what the client can do for us -----------------------------------------
 
 /**

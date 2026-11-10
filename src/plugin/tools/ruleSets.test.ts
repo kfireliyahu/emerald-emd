@@ -125,7 +125,7 @@ describe('a rule set through the tools', () => {
     )
 
     const dry = await recordFormatRowsTool.run(
-      { path, format: 'product', rows: [{ label: 'Oat milk' }, { label: 'Soy milk', shelf: 'bakery' }] },
+      { path, format: 'product', rows: [{ label: 'Oat milk' }, { label: 'Soy milk', shelf: 'bakery' }], commit: false },
       NO_CLIENT,
     )
     expect(dry).toContain('shelf_source: RULE')

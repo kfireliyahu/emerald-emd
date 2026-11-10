@@ -40,7 +40,8 @@
  * against the rows the table already holds.
  *
  * The protections are the ones every write here already has: a dry run by
- * default, a `.bak` before the commit, the whole batch or nothing.
+ * default (rows themselves write on the first call since D-573), a `.bak`
+ * before the commit, the whole batch or nothing.
  */
 
 import { toISODate } from '@/core/time.ts'
@@ -215,6 +216,8 @@ import {
   requireString,
   stringProp,
   PATH_PROP,
+  WRITES_NOW_PROP,
+  writesNow,
   type Args,
   type PluginTool,
 } from './tool.ts'
@@ -528,8 +531,8 @@ export function compactDeclarations(declarations: readonly FormatDeclaration[]):
     lines.join('\n'),
     open.length === 0
       ? undefined
-      : 'Every write — `record_format_rows`, `update_format_rows`, `delete_format_rows` — is a dry run ' +
-          'until `commit: true`. A link takes the row’s id, or its name when one row has it. ' +
+      : '`record_format_rows` and `update_format_rows` write on the first call (`commit: false` previews); ' +
+          '`delete_format_rows` is a dry run until `commit: true`. A link takes the row’s id, or its name when one row has it. ' +
           '`formats` with a `format` is the whole declaration: its notes, units and what must hold.',
     writeShapeText(open),
     ...[...packs].map(
@@ -1509,7 +1512,8 @@ export const recordFormatRowsTool: PluginTool = {
       'brand: "Fine"}`, or one unique column alone: `course: {notion_id: "a1b2"}`; a row may name another of the same batch. ' +
       'Types, bounds and enum members are ' +
       'checked before anything is written and the whole batch applies or none of it does. ' +
-      'Returns the diff and writes nothing until `commit: true`.',
+      'Writes on this call and answers with what it wrote; a refused batch writes nothing and says why. ' +
+      '`commit: false` previews instead.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -1522,7 +1526,7 @@ export const recordFormatRowsTool: PluginTool = {
           items: { type: 'object', additionalProperties: true },
         },
         view: stringProp('An input view: its defaults fill left-out fields.'),
-        commit: booleanProp('Write it. Omit or false for the dry run.'),
+        commit: WRITES_NOW_PROP,
       },
       required: ['path', 'format', 'rows'],
       additionalProperties: false,
@@ -1534,7 +1538,7 @@ export const recordFormatRowsTool: PluginTool = {
     const name = requireString(args, 'format')
     const rows = batchOf(args, 'rows', 'row')
     const view = args['view'] === undefined ? undefined : requireString(args, 'view')
-    return mutatingCall(path, args['commit'] === true, recordMutation(name, rows, view))
+    return mutatingCall(path, writesNow(args), recordMutation(name, rows, view))
   },
 }
 
@@ -1891,8 +1895,8 @@ export const updateFormatRowsTool: PluginTool = {
       'exactly as it was, which is the difference between this and the app: `#/formats/<name>` ' +
       'shows a person every column and writes every column, and this corrects three of thirty ' +
       'across a batch. A required column cannot be emptied. A `link` value may be the name of ' +
-      'the row it points at, or a unique column of it (`course: {notion_id: "a1b2"}`), as in `record_format_rows`. Returns the before-and-after and ' +
-      'writes nothing until `commit: true`.',
+      'the row it points at, or a unique column of it (`course: {notion_id: "a1b2"}`), as in `record_format_rows`. Writes on this call ' +
+      'and answers with the before-and-after; a refused batch writes nothing and says why. `commit: false` previews instead.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -1917,7 +1921,7 @@ export const updateFormatRowsTool: PluginTool = {
             additionalProperties: false,
           },
         },
-        commit: booleanProp('Write it. Omit or false for the dry run.'),
+        commit: WRITES_NOW_PROP,
       },
       required: ['path', 'format', 'edits'],
       additionalProperties: false,
@@ -1928,7 +1932,7 @@ export const updateFormatRowsTool: PluginTool = {
     const path = requireString(args, 'path')
     const name = requireString(args, 'format')
     const edits = batchOf(args, 'edits', 'edit')
-    return mutatingCall(path, args['commit'] === true, updateMutation(name, edits))
+    return mutatingCall(path, writesNow(args), updateMutation(name, edits))
   },
 }
 
@@ -3119,8 +3123,8 @@ function declareMutation(args: DeclareArgs): Mutation<DeclarePlan> {
       return paragraphs(
         `**${declaration.title}** is declared. \`${tableNameFor(declaration)}\` now exists with ` +
           `${plural(declaration.columns.length, 'column')} and no rows.`,
-        'Write the first rows with `record_format_rows` — a batch in one call, a dry run ' +
-          'first, and a key this format has not got refuses the batch rather than being dropped. ' +
+        'Write the first rows with `record_format_rows` — a batch in one call, written on ' +
+          'that call, and a key this format has not got refuses the batch rather than being dropped. ' +
           '`formats` prints the columns back at any time, and `extend_format` changes them.',
       )
     },

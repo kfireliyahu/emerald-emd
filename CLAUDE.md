@@ -86,7 +86,7 @@ there means grep, never that the answer does not exist.** It is stored as text (
 fails when you don't (M22 U5): any `## D-xxx` in the log at or above the lowest decision the
 document holds needs a row. **The columns are the document's, and `start_here` ends with them** (M47 U2,
 D-460): one line per format, generated from its declaration — required in bold, the members, what a link
-points at — and every write dry-runs until `commit: true`. `formats` with a `format` is the whole
+points at — and rows write on the first call while a delete dry-runs until `commit: true` (D-573). `formats` with a `format` is the whole
 declaration, with what each column means.
 
 **The rules moved; the arguments did not** (D-435, reversing what this paragraph said since M22): the

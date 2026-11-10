@@ -1202,8 +1202,10 @@ describe('what the plugin says it does (M34 U1)', () => {
       // its opening here, the rest in declare_format's dry run (M58 U1, D-572).
       expect(instructions).toContain('ask what **one row** is')
       expect(DECLARE_ASK).toContain('**whether any of the figures relate**')
-      // The decision owed on bulk writes: one yes is one dry run.
-      expect(instructions).toContain('**A yes covers the dry run it answered and nothing after it.**')
+      // Rows write on the first call (M58 U3, D-573); every other write keeps
+      // its dry run, and one yes is one dry run.
+      expect(instructions).toContain('**Rows write on the first call.**')
+      expect(instructions).toContain('A yes covers the dry run it answered and nothing after it.')
       expect(tools.get('start_here')).toContain('where new work ' + 'begins: `formats`, then ')
       expect(JSON.parse(tools.get('read_onto_format') ?? '{}').description).toMatch(
         /^Read what the user already keeps onto a declared format: any \.csv, \.xlsx \(or \.xls\) or \.json of rows/,

@@ -137,7 +137,7 @@ Give each worktree child its own decision refs, from the next after the highest 
    child's commit hash, which its proposal names; a rebase would not. A conflict that is only both
    sides appending to one list is resolved by keeping both, in order; any other conflict is a stop.
    Then the project's checks, then **one `land_units inbox:[{id, other_branch:true}, …]`** for every
-   proposal — dry run, then `commit: true` — never a landing rebuilt from a report's prose. A proposal
+   proposal — one call, which writes — never a landing rebuilt from a report's prose. A proposal
    names its worktree's branch and the claim names yours, so without `other_branch` each is refused;
    the merge is what made it yours. Commit the document, push if the
    project pushes, and remove each worktree once its branch is merged.

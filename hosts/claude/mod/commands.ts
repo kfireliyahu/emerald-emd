@@ -7,7 +7,7 @@
  * **The module writes nothing** (U1's read-only line): a command answers the
  * person in a line, leaves the call for the model in its `context`, which the
  * person never sees, and asks for a turn. Every write still goes through the
- * tool, dry-run first, under the person's own permission rules.
+ * tool, judged by it, under the person's own permission rules.
  *
  * - `/claim M56 U3` hands over `claim_units` for that unit, taken on this branch.
  * - `/land` hands over the landing of the unit this branch claimed (or the one
@@ -27,7 +27,7 @@ const NO_DOCUMENT = 'This folder has no Emerald document: name one in .claude/em
 /** A JSON value as the model should pass it. */
 const json = (value: unknown) => JSON.stringify(value)
 
-/** The context /claim leaves the model: one call, dry-run first. */
+/** The context /claim leaves the model: one call, which writes (D-573). */
 export function claimContext(document: string, ref: string, branch: string | undefined): string {
   const args = {
     path: document,
@@ -36,8 +36,8 @@ export function claimContext(document: string, ref: string, branch: string | und
     ...(branch === undefined ? {} : { branch }),
   }
   return (
-    `The person ran /claim ${ref}. Call \`claim_units\` with ${json(args)}. It dry-runs: when it shows ${ref} ` +
-    'going from planned to in_progress, call it again with `commit: true`. If it is refused, say why in a line and stop; ' +
+    `The person ran /claim ${ref}. Call \`claim_units\` with ${json(args)}; it writes on that call. ` +
+    'If it is refused, say why in a line and stop; ' +
     'do not claim another unit instead.'
   )
 }
@@ -76,12 +76,12 @@ export function landContext(options: {
         json({ subject: `Landing ${unit}`, from: worktreeCopy, sent_on: today, state: 'new', ...(ref === undefined ? {} : { refs: ref }) }) +
         ', its `body` one ```json block holding ONE object (not an array): ' +
         json(landing) +
-        '. It dry-runs; then the same call with `commit: true`. Say the row\'s id.',
+        '. It writes on that call. Say the row\'s id.',
     )
   } else {
     lines.push(
-      `Call \`land_units\` with ${json({ path: document, units: [landing] })}, the placeholders filled. It dry-runs; ` +
-        'read it, then the same call with `commit: true`. If it is refused, say why in a line and stop.',
+      `Call \`land_units\` with ${json({ path: document, units: [landing] })}, the placeholders filled; it writes on ` +
+        'that call. If it is refused, say why in a line and stop.',
     )
   }
   return lines.join(' ')

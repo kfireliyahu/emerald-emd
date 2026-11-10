@@ -191,8 +191,8 @@ function sectionOf(shown: string, declared: readonly FormatDeclaration[], questi
     `## The project's memory: \`${shown}\``,
     `This project's planning is rows in \`${shown}\`, an Emerald document${names === '' ? '' : ` — ${names}`}: ` +
       'ask it for rows rather than reading notes. **`start_here` is the first call**, and the SessionStart ' +
-      'hook makes it before you do. Every tool takes the document’s absolute path, and every write is a ' +
-      'dry run until `commit: true`.',
+      'hook makes it before you do. Every tool takes the document’s absolute path; recording, updating, ' +
+      'claiming and landing rows write on the first call, and deleting is a dry run until `commit: true`.',
     questions.length === 0 ? 'The document declares no start-here questions yet.' : startTableOf(questions),
     compactDeclarations(declared),
     SECTION_END,

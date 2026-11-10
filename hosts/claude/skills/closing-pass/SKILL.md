@@ -50,7 +50,7 @@ A commit cannot name itself, and a landing without its commit leaves the row poi
 2. **Commit the work**, staging only your own files by name — never `git add -A`. Leave the document
    out of this commit.
 3. **`land_units` with `commit:` that commit's short hash** (`git rev-parse --short HEAD`) and your
-   `report`: dry run, read the diff, then `commit: true`.
+   `report` — one call: it writes, and answers with the diff by format; a refusal says why.
 4. **Commit the landing**: the document alone, in a commit of its own (*"<unit> landed: built at
    <hash>"*), then push both if the project pushes. Pull first when another session may have pushed;
    a push that fails is reported, never forced.
@@ -83,11 +83,11 @@ row with `record_format_rows` to **the document path your hooks printed** (the m
 never one under the worktree's folder), `from` that same path, with `subject`, `sent_on`,
 `refs:"<your unit>"`, `state:"new"`, and a `body` of a line for a person then one fenced `json` block
 holding exactly what `land_units`' `units` would: `unit`, `files`, `commit`, `branch`, `decisions`,
-`review_entries`, `report` — no `close_milestone`. `land_units inbox:["<its id>"]` without `commit`
+`review_entries`, `report` — no `close_milestone`. `land_units inbox:["<its id>"]` with `commit: false`
 checks it; report the id. Write no other format.
 
 **Anything else** — a unit you planned, a question you opened or answered — is `record_format_rows`
-or `update_format_rows`, one call per format with every row of it in its list, dry run first:
+or `update_format_rows`, one call per format with every row of it in its list, written on that call:
 
 - **A unit you planned → a `unit` row with `files`** (the files to open first) and `paths` (the same
   files one per line, which `dispatch_plan` compares to say what can run at once). List every unit you

@@ -99,7 +99,7 @@ describe('input views (M55 U2)', () => {
       { merchant: 'Corner cafe', amount: 4.5, amount_currency: 'ILS' },
       { merchant: 'Bookshop', amount: 62, amount_currency: 'ILS' },
     ]
-    const dry = await recordFormatRowsTool.run({ path, format: 'charge', rows, view: 'Card charge' }, NO_CLIENT)
+    const dry = await recordFormatRowsTool.run({ path, format: 'charge', rows, view: 'Card charge', commit: false }, NO_CLIENT)
     expect(dry).toContain('**Row 1** — date, account and state from Card charge')
     expect(dry).toContain('- date: 2026-11-03')
     expect(await recordFormatRowsTool.run({ path, format: 'charge', rows, view: 'Card charge', commit: true }, NO_CLIENT)).toMatch(/2 rows added/)
@@ -110,7 +110,7 @@ describe('input views (M55 U2)', () => {
 
     // A day later, the word is worked out again: today is the 4th.
     pin('2026-11-04')
-    const next = await recordFormatRowsTool.run({ path, format: 'charge', rows: [{ merchant: 'Bakery', amount: 9, amount_currency: 'ILS', account: 'Mastercard' }], view: 'Card charge' }, NO_CLIENT)
+    const next = await recordFormatRowsTool.run({ path, format: 'charge', rows: [{ merchant: 'Bakery', amount: 9, amount_currency: 'ILS', account: 'Mastercard' }], view: 'Card charge', commit: false }, NO_CLIENT)
     expect(next).toContain('- date: 2026-11-04')
     expect(next).toContain('**Row 1** — date and state from Card charge')
 

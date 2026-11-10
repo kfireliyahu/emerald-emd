@@ -73,7 +73,7 @@ landing without its commit leaves the row pointing nowhere — M42 U2 and U4 did
 
 1. **Commit the work** — code, notes, the decision-log entry — staging only your own files.
 2. **`land_units` with `commit:` that commit's short hash** (`git rev-parse --short HEAD`) and your
-   `report`: dry run, then `commit: true`.
+   `report` — one call: it writes, and answers with the diff by format (D-573).
 3. **Commit the landing**: `docs/memory.emd` alone, in a commit of its own (*"<unit> landed: built at
    <hash>"*), then push both.
 
@@ -96,7 +96,7 @@ project that wants it; this one does not — the three steps above, always.
 
 Anything else — a planned unit, an open question — is `record_format_rows` or `update_format_rows`,
 one call per format. The columns are the last section of `start_here` (M47 U2), so no `formats` call
-first. Dry-run, read the diff, then `commit: true`. **Commit `docs/memory.emd`** — with the landing,
+first. Each writes on the first call and answers with the diff. **Commit `docs/memory.emd`** — with the landing,
 in the order above: a diff on it is somebody's write, never debris, and a hook refuses discarding it.
 
 ## 2b. A change to what the server says: read it cold

@@ -49,8 +49,8 @@ it means nothing the engine can see is wrong.
 
 Each problem ends one of these ways, and which one is the person's call:
 
-- **The value is wrong** → `update_format_rows`, every correction in **one** call. It dry-runs:
-  show the diff, get a yes, send it again with `commit: true`.
+- **The value is wrong** → `update_format_rows`, every correction in **one** call, after
+  the person agrees; it writes on that call and answers with the before-and-after.
 - **The row is written twice** → `delete_format_rows` the extra one, after the person agrees which.
 - **A part is missing** — the line a total is short by, the empty column a claim needs → write it
   with `record_format_rows`, or leave it and say plainly that the row stays unchecked.
@@ -83,7 +83,7 @@ Said to the person: *Order #1042 is five more than its lines and shipping — a 
 or the total was typed wrong. #1047 is three short of its lines. #1051 has no shipping, so it could
 not be checked. One line belongs to no order.* Then one proposal: find #1042's missing line, correct
 #1047's total, fill #1051's shipping, and attach line 7 to the order it came from — four writes, one
-dry run each per format, one yes.
+call each per format, one yes before them.
 
 ## What not to do
 

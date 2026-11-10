@@ -5,8 +5,8 @@
  * call through.
  *
  * 1. **An Edit or Write on a `.emd` file is refused.** The document is changed
- *    through its tools, which check a write against its formats and dry-run it
- *    first; a hand edit does neither, and can break the file without a word.
+ *    through its tools, which check a write against its formats and refuse a
+ *    wrong value; a hand edit does neither, and can break the file without a word.
  * 2. **A `git commit` in a linked worktree that would carry the worktree's own
  *    copy of the project's document is refused** — while that copy is staged,
  *    or while it has changed and `-a` or a pathspec would take it. The rule of
@@ -30,7 +30,7 @@ export function isDocumentPath(path: string): boolean {
 export function handEditRefusal(path: string): string {
   return (
     `${path} is an Emerald document, and it is changed through its tools, never by editing the file: ` +
-    'a write through them is checked against its formats and dry-run first, and a hand edit is neither, ' +
+    'a write through them is checked against its formats and a wrong value refused, and a hand edit is neither, ' +
     'so it can break the document without a word. Use record_format_rows, update_format_rows, ' +
     'declare_format or extend_format on it (create_document for a new one).'
   )

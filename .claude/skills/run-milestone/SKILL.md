@@ -176,8 +176,8 @@ its own `<n>` from 1 to 4 for its demo port.
    `version`, `hosts/claude-plugin-release.json`), where two children each cut the next version, is
    resolved by taking either side and running `node scripts/pin-plugin.mjs --plugin` once the
    merges are done, committed with them; any other conflict is a stop. Then `npm run docs:check`, then **one `land_units
-   inbox:[{id, other_branch:true}, …]`** for every proposal (M51 U3, D-485) — dry run, then `commit:
-   true` — never a landing rebuilt from a report's prose. A proposal names its worktree's branch and
+   inbox:[{id, other_branch:true}, …]`** for every proposal (M51 U3, D-485) — one call, which writes
+   (D-573) — never a landing rebuilt from a report's prose. A proposal names its worktree's branch and
    the claim names `main`, so without `other_branch` each is refused (found in M42 U7's dry run). Commit `docs/memory.emd`, push to origin main, and remove
    each worktree once its branch is merged (`git worktree remove`, with no junction inside it).
 3. Relay the report, shorter: what landed, and what to look at.

@@ -81,6 +81,17 @@ it is three things rather than one:
   **And a yes covers one dry run** (M34 U1, D-394): the next batch of
   the same shape gets its own, and fewer stops come from a bigger batch shown once, never from a
   commit nobody saw.
+  **Except rows themselves, since M58 U3** (D-573, from D-569): `record_format_rows`,
+  `update_format_rows`, `claim_units` and `land_units` write on the first call. They are judged
+  exactly as before — a wrong value, a stale id, an unmet `expect` refuses the whole batch with its
+  reason and writes nothing — and the answer says what was written; only an explicit `commit: false`
+  (or `"false"`) previews. A six-week usage report counted about 360 updates against 175 new rows,
+  each sent twice, and the second call was never the one that caught anything: the check is the
+  engine's, not the preview's. `delete_format_rows`, `delete_format`, `declare_format`,
+  `extend_format`, `connect_formats` and every other write — the ledger's included — keep the dry
+  run until `commit: true`, because those take something away or change what every row may hold.
+  The switch is `writesNow` and `WRITES_NOW_PROP` in `src/plugin/tools/tool.ts`, and only those four
+  tools use it.
 - **A backup before any mutating batch.** The plugin copies the document to a `.bak` stamped to
   the millisecond (`<name>.emd.20261009T121112.315.bak`, then `-2` if that is taken) in Emerald's
   own per-user folder of earlier copies, one folder per document, the last five kept, and names
@@ -796,7 +807,7 @@ hooks module (`hosts/claude/mod/commands.ts`). Neither writes: each answers the 
 leaves the model the call to make in the command's `context` — `claim_units` with the project's
 document, the unit and this branch; `land_units` with the commit `git rev-parse --short HEAD` names,
 or, from a linked worktree, the one `inbox` row that proposes the landing — and asks for a turn. The
-model makes the call, dry run first, under the person's own permission rules. `/land` with no ref
+model makes the call, which writes on that call (D-573), under the person's own permission rules. `/land` with no ref
 lands what `/claim` took on this branch, and says to commit first when the tree has work uncommitted.
 Beside them the module refuses, at the call, an `Edit` or `Write` on any `.emd` file: a document is
 changed through its tools, which check a write against its formats, and a hand edit can break it
@@ -844,18 +855,18 @@ fenced `json` block holding one of `land_units`' `units` — `unit`, `files`, `c
 `other_branch` (the manager's). It writes it **to the document path its hooks printed** — in a
 worktree that is the main checkout's copy (D-483), never a path built from the worktree's own folder,
 since the tools write whatever path they are handed. `land_units inbox:[ids]` (beside `units`, or
-alone) reads every proposal named and lands them as **one dry run and one commit**; each row goes
+alone) reads every proposal named and lands them **in one write**; each row goes
 `applied` with `became_unit` and `answered_by` filled, and only from `new`, so a proposal lands once.
 A row that is not there, not `new`, has no single `json` block, does not parse, carries a key a
 proposal has not got, or whose `refs` name another unit refuses the whole batch, by its id and
 subject. Its `branch` is checked against the claim like any landing's; `{id, other_branch: true}`
 lands it anyway. By id is safe here although a text document derives ids from content (D-247): a
-proposal is never edited. A child can dry-run `land_units inbox:[its id]` to check its own row, and
+proposal is never edited. A child can check its own row with `land_units inbox:[its id] commit: false`, and
 writes no other format.
 
 **A composition, not a write** — each step is `record_format_rows` or `update_format_rows`'s
 mutation, refused for the same reasons, in the order decision → unit → review_entry → milestone → inbox,
-because each may name a row the one before wrote. The dry run judges each step on what the steps
+because each may name a row the one before wrote. A preview (`commit: false`) judges each step on what the steps
 before it left by **writing them and taking them back** (`rehearse`, D-395), the commit runs the
 same steps in one transaction, and the answer is the diff by format. So the engine gains no write
 and parity (D-227) is met by the sheet; `parity.test.ts` lists both as compositions and fails if
@@ -1304,8 +1315,8 @@ rather than three decisions.
 > (M34 U1; reworded in M42 F5, D-506, so it no longer measures the work against money). **And it ends with what a row looks like** (M47 U2,
 > D-460): one line per format the document declares, generated from the declaration by
 > `compactDeclarations` — required columns in bold, types, enum members, what a link points at, the
-> key a money or quantity takes, bounds, worked-out columns — and the line that every write dry-runs
-> until `commit: true`. A pack's locked formats are named, not spelled out. A week on three documents
+> key a money or quantity takes, bounds, worked-out columns — and the line that says which writes
+> go on the first call and which dry-run until `commit: true` (D-573). A pack's locked formats are named, not spelled out. A week on three documents
 > found every session calling `formats` once per format before it could write a row; `formats` stays
 > the whole declaration, with its prose. `CLAUDE.md`'s *Ask the document* table is written from
 > the same `startQuestions`, and `pack.test.ts` fails when the two disagree.

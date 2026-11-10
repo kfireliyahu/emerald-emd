@@ -51,7 +51,8 @@ Ask about the ambiguous items together, in that proposal: whether a half-done it
 
 **A plan you read yourself**: `record_format_rows`, one call per format, up to two hundred rows a
 call — **milestones first**, because a unit names its milestone by ref and that row has to exist.
-Then units, decisions, open questions. Each call dry-runs: show it, get a yes, commit.
+Then units, decisions, open questions. Show the person the plan as rows first and get a yes; each
+call then writes on the first call, and a wrong value is refused with its reason.
 
 **A plan already in files of rows** — a ticket export, a folder of one note per task — is read, not
 retyped: `read_onto_format` (the `read-a-file` skill).

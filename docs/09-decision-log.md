@@ -475,6 +475,7 @@ written out here.
 | D-570 | 2026-11-10 | A decision's `affects` is an optional text column of the development pack, one path per line, relative to the repository or absolute anywhere on the machine, rather than a new list type; the closing pass greps each file for the claim made false and names any it cannot read, and docs:check warns on a live decision's path this machine cannot read | M58 |
 | D-571 | 2026-11-10 | The plugin notices a second emerald server from its own folder's SessionStart hook (`no-server.mjs`, plain Node, no new emerald-mcp): it reads `~/.claude.json` (user and local scope), the project's `.mcp.json` unless turned off, and — only in a session the desktop app started — the app's `claude_desktop_config.json`; any entry with emerald in its name, command or arguments gets one line on how the person removes it, and nothing is ever written | M58 |
 | D-572 | 2026-11-10 | The server's instructions say only what a session needs before its first call — what moved went to the answer that needs it, and how to speak of a view is the drawing tool's first line alone; the SessionStart hook opens with one sentence | M58 |
+| D-573 | 2026-11-10 | Recording, updating, claiming and landing rows write on the first call; `commit: false` asks for a preview; deleting and changing a format's columns keep the dry run | M58 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -655,6 +656,32 @@ any call); dropping a rule outright — each one moved or stayed.
 **Consequences.** `server.test.ts` holds a budget for each block and pins `DECLARE_ASK` to the dry
 run only. The hook's line reaches other projects when `emerald-mcp` is next published and pinned;
 the plugin's own copy (`mod/inboxText.ts`) is cut as plugin 0.3.0+1.
+
+## D-573 · 2026-11-10 · Recording, updating, claiming and landing rows write on the first call; `commit: false` asks for a preview; deleting and changing a format's columns keep the dry run <a id="d-573"></a>
+
+**Context.** D-569 settled it: a six-week usage report counted about 360 updates against 175 new
+rows, each sent twice — once to see the diff, once with `commit: true` — and the second call never
+caught anything the first did not, because the judging is the engine's: types, bounds, members,
+links, `expect`, all checked again inside the write and the whole batch refused with its reason.
+The open question *Dry runs and concurrency* (D-549) asked when a write may skip its dry run.
+
+**Decision.**
+
+- **`record_format_rows`, `update_format_rows`, `claim_units` and `land_units` write on the
+  first call** and answer with what they wrote. The judging is unchanged: a refused batch writes
+  nothing and says why, and the copy before a write is taken as before.
+- **A caller asks for a preview with `commit: false`, explicitly** (or the string `"false"`); the
+  answer is the dry run it always was. One switch, `writesNow` / `WRITES_NOW_PROP` in
+  `src/plugin/tools/tool.ts`, used by those four tools and nothing else.
+- **Every other write keeps the dry run until `commit: true`**: `delete_format_rows`,
+  `delete_format`, `declare_format`, `extend_format`, `connect_formats`, `read_onto_format`, and
+  the ledger's own tools, which share no switch with these four and are left as they are.
+- The instructions say so in two lines, `start_here`'s write line too, and the skills that said
+  "dry run, then `commit: true`" for these tools now say one call.
+
+**Consequences.** A session writes what the person said or agreed to in one round trip; a batch it
+inferred it still puts to the person first, in the conversation rather than as a second call. The
+open question's concurrency half — parallel writers, ids a text document renews — stays open.
 
 ## Related
 

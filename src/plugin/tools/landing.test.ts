@@ -96,7 +96,7 @@ describe('land_units (M47 U3)', () => {
       const path = await memoryOnDisk(encoding)
       const before = readFileSync(path)
 
-      const dry = await landUnitsTool.run({ path, units: [landing({ close_milestone: 'M47' })] }, NO_CLIENT)
+      const dry = await landUnitsTool.run({ path, units: [landing({ close_milestone: 'M47' })], commit: false }, NO_CLIENT)
       // The diff by format, in the order the steps run, and nothing on disk.
       const order = ['## decision', '## unit', '## review_entry', '## milestone'].map((heading) => dry.indexOf(heading))
       expect(order.every((at) => at >= 0)).toBe(true)
@@ -124,6 +124,21 @@ describe('land_units (M47 U3)', () => {
       expect(milestone?.cells).toMatchObject({ state: 'closed' })
     })
   }
+
+  it('claims and lands on the first call, with no commit at all (M58 U3, D-573)', async () => {
+    const path = await memoryOnDisk('text')
+    const claim = await claimUnitsTool.run({ path, units: ['M47 U4'], taken_by: 'one', branch: 'main' }, NO_CLIENT)
+    expect(claim).not.toContain('Nothing has been written')
+    expect(await unit(path, 'M47 U4')).toMatchObject({ state: 'in_progress', taken_by: 'one' })
+    const again = await claimUnitsTool.run({ path, units: ['M47 U4'], taken_by: 'two' }, NO_CLIENT)
+    expect(again).toContain('Nothing was written')
+    expect(await unit(path, 'M47 U4')).toMatchObject({ taken_by: 'one' })
+
+    const done = await landUnitsTool.run({ path, units: [landing()] }, NO_CLIENT)
+    expect(done).toContain('1 row of Unit changed')
+    expect(done).not.toContain('Nothing has been written')
+    expect(await unit(path, 'M47 U3')).toMatchObject({ state: 'built' })
+  })
 
   it('lands several units in one call, one naming a decision that exists', async () => {
     const path = await memoryOnDisk('text')
@@ -278,7 +293,7 @@ describe('a child proposes its landing as an inbox row, and the manager lands th
     ])
     const before = readFileSync(path)
 
-    const dry = await landUnitsTool.run({ path, inbox: ids }, NO_CLIENT)
+    const dry = await landUnitsTool.run({ path, inbox: ids, commit: false }, NO_CLIENT)
     expect(dry).toContain('Nothing has been written')
     expect(dry).toContain('## inbox')
     expect(readFileSync(path).equals(before)).toBe(true)

@@ -325,10 +325,10 @@ describe('update_format_rows', () => {
     return { path, id: rows[0]?.id ?? '' }
   }
 
-  it('shows the before and the after, and writes nothing until told', async () => {
+  it('previews with commit: false — the before and the after, and nothing written', async () => {
     const { path, id } = await seededWithId()
     const answer = await updateFormatRowsTool.run(
-      { path, format: 'ingredient', edits: [{ id, values: { protein_g: 13 } }] },
+      { path, format: 'ingredient', edits: [{ id, values: { protein_g: 13 } }], commit: false },
       NO_CLIENT,
     )
 
@@ -336,6 +336,21 @@ describe('update_format_rows', () => {
     expect(answer).toContain('12')
     expect(answer).toContain('13')
     expect(listRows(await reopen(path), PASTA)[0]?.cells['protein_g']).toBe(12)
+  })
+
+  it('writes on the first call, with no commit at all, and a wrong value is still refused (M58 U3, D-573)', async () => {
+    const { path, id } = await seededWithId()
+    const refused = await updateFormatRowsTool.run(
+      { path, format: 'ingredient', edits: [{ id, values: { protein_g: 'lots' } }] },
+      NO_CLIENT,
+    )
+    expect(refused).toContain('Nothing was written')
+    expect(listRows(await reopen(path), PASTA)[0]?.cells['protein_g']).toBe(12)
+
+    const answer = await updateFormatRowsTool.run({ path, format: 'ingredient', edits: [{ id, values: { protein_g: 13 } }] }, NO_CLIENT)
+    expect(answer).toContain('1 row of Ingredient changed')
+    expect(answer).not.toContain('Nothing has been written')
+    expect(listRows(await reopen(path), PASTA)[0]?.cells['protein_g']).toBe(13)
   })
 
   it('changes what it named and nothing else', async () => {
@@ -2021,7 +2036,7 @@ describe('a link written by its target’s name (M24 U5, D-256)', () => {
   it('shows the name it was given in the dry run, not the id it resolved to', async () => {
     const path = await withDecisions()
     const dry = await recordFormatRowsTool.run(
-      { path, format: 'decision', rows: [{ ref: 'D-2', supersedes: 'D-1' }, { ref: 'D-1' }] },
+      { path, format: 'decision', rows: [{ ref: 'D-2', supersedes: 'D-1' }, { ref: 'D-1' }], commit: false },
       NO_CLIENT,
     )
     expect(dry).toContain('- supersedes: D-1')
@@ -2093,7 +2108,7 @@ describe('a link written by its target’s name (M24 U5, D-256)', () => {
     const path = await withDecisions(false)
     await recordFormatRowsTool.run({ path, format: 'decision', rows: [{ ref: 'D-1' }], commit: true }, NO_CLIENT)
     const one = await recordFormatRowsTool.run(
-      { path, format: 'decision', rows: [{ ref: 'D-2', supersedes: 'D-1' }] },
+      { path, format: 'decision', rows: [{ ref: 'D-2', supersedes: 'D-1' }], commit: false },
       NO_CLIENT,
     )
     expect(one).toContain('Nothing has been written')
@@ -2635,7 +2650,7 @@ describe('a link to several rows, through the tools (M27 U2, D-300)', () => {
   it('declares, writes by name, matches by a member, and prints the members by name', async () => {
     const path = await withUnits()
     const dry = await recordFormatRowsTool.run(
-      { path, format: 'unit', rows: [{ ref: 'U1' }, { ref: 'U2' }, { ref: 'U3', blocks: ['U2', 'U1'] }] },
+      { path, format: 'unit', rows: [{ ref: 'U1' }, { ref: 'U2' }, { ref: 'U3', blocks: ['U2', 'U1'] }], commit: false },
       NO_CLIENT,
     )
     expect(dry).toContain('blocks: U2, U1')

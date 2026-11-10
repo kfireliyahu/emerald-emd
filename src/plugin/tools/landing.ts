@@ -26,7 +26,7 @@
  * whose `refs` name its unit and whose `body` holds one fenced `json` block in
  * the shape of one of `units` here (no `close_milestone`, the maintainer's word;
  * no `other_branch`, the manager's). `land_units inbox:[ids]` reads each,
- * lands them all as one dry run and one commit, and moves each row to
+ * lands them all in one commit, and moves each row to
  * `applied` with the unit it became and the decision it carried. A row that
  * is not a proposal, or not `new`, refuses the batch by its id and subject.
  * By id is safe here, though a text document derives ids from a row's
@@ -73,6 +73,8 @@ import {
   requireString,
   stringProp,
   ToolInputError,
+  WRITES_NOW_PROP,
+  writesNow,
   type Args,
   type PluginTool,
 } from './tool.ts'
@@ -619,7 +621,7 @@ export const landUnitsTool: PluginTool = {
       'one unit’s landing (no `close_milestone`), written to the document path the hooks printed ' +
       '— each landed as written and moved to `applied`. Each step is `record_format_rows` or ' +
       '`update_format_rows`, judged as they are, run in that order; all of it applies or none. ' +
-      'Diff by format; writes nothing until `commit: true`.',
+      'Writes on this call and answers with the diff by format; `commit: false` previews instead.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -660,7 +662,7 @@ export const landUnitsTool: PluginTool = {
           description: 'Inbox row ids of landing proposals, or `{id, other_branch}`.',
           items: {},
         },
-        commit: booleanProp('Write it. Omit or false for the dry run.'),
+        commit: WRITES_NOW_PROP,
       },
       required: ['path'],
       additionalProperties: false,
@@ -680,7 +682,7 @@ export const landUnitsTool: PluginTool = {
     ].join(', ')
     return mutatingCall(
       path,
-      args['commit'] === true,
+      writesNow(args),
       stepsMutation(`landing ${what}`, (document) => landingSteps(document, landings, proposed)),
     )
   },
@@ -756,7 +758,7 @@ export const claimUnitsTool: PluginTool = {
       'taken on and `started` (default today), the batch refused unless every one is still planned. ' +
       'With `take_over`, take units already `in_progress` from that taker — a session that stopped ' +
       'mid-unit — refused unless each is held by exactly that taker; `started` is reset and the taker ' +
-      'replaced is kept on `taken_over_from`. Writes nothing until `commit: true`.',
+      'replaced is kept on `taken_over_from`. Writes on this call; `commit: false` previews instead.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -770,7 +772,7 @@ export const claimUnitsTool: PluginTool = {
         branch: stringProp('The git branch they are taken on.'),
         started: stringProp('`YYYY-MM-DD`; today if left out.'),
         take_over: stringProp('The `taken_by` whose claim this replaces, for units already in progress.'),
-        commit: booleanProp('Write it. Omit or false for the dry run.'),
+        commit: WRITES_NOW_PROP,
       },
       required: ['path', 'units', 'taken_by'],
       additionalProperties: false,
@@ -791,12 +793,12 @@ export const claimUnitsTool: PluginTool = {
     if (takeOver !== undefined) {
       return mutatingCall(
         path,
-        args['commit'] === true,
+        writesNow(args),
         stepsMutation(`taking over ${refs.join(', ')}`, (document) => takeOverSteps(document, refs, takeOver, values)),
       )
     }
     const edits = refs.map((ref) => ({ where: { ref }, expect: { state: 'planned' }, values }))
     // One format, one step: `update_format_rows`'s own mutation, as it is.
-    return mutatingCall(path, args['commit'] === true, updateMutation('unit', edits))
+    return mutatingCall(path, writesNow(args), updateMutation('unit', edits))
   },
 }
