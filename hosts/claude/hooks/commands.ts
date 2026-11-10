@@ -78,13 +78,15 @@ import { recall, remember, rowMark } from './told.ts'
  *
  * **Worded for the model, never the person** (M51 F3, D-493), as `drawnLine` is:
  * after F2 a session paraphrased all this to the person, server and all.
+ *
+ * **One line, and what to say of a view is the answer's** (M58 U1, D-572): it
+ * said here too which servers draw and what never to tell the person, which
+ * the tool's own first line (`drawnLine`) says when it is called, and every
+ * session paid for it at its start.
  */
 export const PRINTED_NOT_DRAWN =
-  `${FOR_THE_MODEL} A hook printed this as text, and nothing was drawn. When the person asks to see what is ` +
-  'ready, the roadmap or the board, call `start_here` or `show_format` rather than retyping this — a host may ' +
-  'draw only the servers it runs itself, so if this session has the tool on such a server, call it there — ' +
-  'and follow the first line of its answer. Say nothing to the person about this hook, drawing, views, ' +
-  'servers or tools, and never call anything drawn or above.'
+  `${FOR_THE_MODEL} A hook printed this as text, and nothing was drawn: to show any of it, call ` +
+  '`start_here` or `show_format` and follow the first line of its answer.'
 
 export const HOOK_COMMANDS = ['start-here', 'rows', 'status'] as const
 export type HookCommand = (typeof HOOK_COMMANDS)[number]

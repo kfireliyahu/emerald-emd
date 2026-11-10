@@ -472,6 +472,7 @@ written out here.
 | D-561 | 2026-11-09 | The hosted endpoint launches free, with a cap and a kill criterion written before it ships; a paid plan, if one comes, is for the hosted endpoint alone, and the app and the local server stay free and offline (D-124 holds) | M57 |
 | D-562 | 2026-11-09 | The Google Drive connector's settings: 200 calls a day and 5 MB per person; stopped if fewer than 5 people use it on two different days within 30 days of going public; at `mcp.getemerald.dev`; one document, `Emerald/Emerald.emd`, stored as text and starting empty; Firestore keeps five fields per Google account and nothing else; invited testers first, the clock starting at public; tools that need a file other than the document are left out; Drive's version history is the earlier copies; getemerald.dev lists it as a feature | M57 |
 | D-569 | 2026-11-10 | M58's answers: when two emerald servers are registered the plugin's stays and says once how to remove the other; recording, updating, claiming and landing rows commit on the first call while deleting and changing a format's columns still dry-run first; a decision row may name the files it affects, anywhere on the machine, and the closing pass checks each; the fixes ship as emerald-mcp 0.3.1; M57 is parked on its branch | M58 |
+| D-572 | 2026-11-10 | The server's instructions say only what a session needs before its first call — what moved went to the answer that needs it, and how to speak of a view is the drawing tool's first line alone; the SessionStart hook opens with one sentence | M58 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -618,6 +619,40 @@ naming files (the report's case was a real file a decision made wrong).
 **Consequences.** The instructions, the tool descriptions, `docs/plugin.md` and the skills stop
 telling sessions to dry-run rows first (M58 U3). A pack change means the pack's past and its test
 follow (M58 U4).
+
+## D-572 · 2026-11-10 · The server's instructions say only what a session needs before its first call — what moved went to the answer that needs it, and how to speak of a view is the drawing tool's first line alone; the SessionStart hook opens with one sentence <a id="d-572"></a>
+
+**Context.** The six-week usage report D-569 answered found the instructions long enough that hosts
+cut them off — this repository's own sessions see the ledger's block end in *[truncated]* near
+2,000 characters — and the `SessionStart` hook's text mostly rules about how to speak of a view.
+Every session paid for both before its first call. Measured on the built text: the full block
+24,249 characters, `--engine-only` 14,677, the plugin's `--skills` 12,310; the hook's first line
+534 bytes, and on a small document most of what the hook prints.
+
+**Decision.**
+
+- **The instructions keep what a session needs before its first call**: what Emerald is, when to
+  draw, development planning, what it is for, where to start, how to work, the formats half's core,
+  the ledger's files to ask for, and what is app-only. Measured after: 12,412, 9,222 and 8,275.
+- **What moved went to the answer that needs it.** How to work a format out with the user is
+  `declare_format`'s dry run (`DECLARE_ASK`); the units and converting across them were already
+  `formats`' answer; how to claim and land a unit is `claim_units`' and `land_units`' descriptions;
+  each ledger tool's detail is its own description, and the ledger keeps the rules no description
+  says (a security is never recommended; `savings` before a broker statement; oldest first).
+- **How to speak of a view is the drawing tool's first line alone** (`drawnLine`, D-489, D-493),
+  which now also names hooks among what the person is never told. The instructions say to call
+  `show_format` or `start_here`, that a hook's text drew nothing, and to follow the answer's first
+  line, which is the model's.
+- **The hook's first line is one sentence** (220 bytes): it is text, nothing was drawn, and to show
+  any of it call `start_here` or `show_format` and follow its answer's first line.
+
+**Rejected.** Moving the rest into tool descriptions (those are in context every turn too); a
+hard 2,000-character block (development planning and how to work are answers a model gives before
+any call); dropping a rule outright — each one moved or stayed.
+
+**Consequences.** `server.test.ts` holds a budget for each block and pins `DECLARE_ASK` to the dry
+run only. The hook's line reaches other projects when `emerald-mcp` is next published and pinned;
+the plugin's own copy (`mod/inboxText.ts`) is cut as plugin 0.3.0+1.
 
 ## Related
 

@@ -224,7 +224,7 @@ export const FOR_THE_MODEL = '**For you, never the person — do not repeat or p
  * was not drawn.
  */
 export function drawnLine(client: ToolContext['client']): string {
-  const unsaid = 'say nothing to the person about drawing, views, servers or tools'
+  const unsaid = 'say nothing to the person about drawing, views, hooks, servers or tools'
   if (client?.saysItDraws === true) {
     return (
       `${FOR_THE_MODEL} This client draws, so the view sits beside your answer and is the answer: ${unsaid}, ` +

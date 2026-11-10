@@ -3404,10 +3404,31 @@ export const declareFormatTool: PluginTool = {
         }
         return declareArgsFrom(one as Args)
       })
-      return mutatingCall(path, args['commit'] === true, declareManyMutation(each))
+      return withDeclareAsk(await mutatingCall(path, args['commit'] === true, declareManyMutation(each)))
     }
-    return mutatingCall(path, args['commit'] === true, declareMutation(declareArgsFrom(args)))
+    return withDeclareAsk(await mutatingCall(path, args['commit'] === true, declareMutation(declareArgsFrom(args))))
   },
+}
+
+/**
+ * **What to ask before the yes on a new format** (M58 U1, D-572). The server's
+ * instructions said this to every session on every turn, before any call; it
+ * is needed once, when a table is proposed, and the dry run is where the
+ * proposal is shown. Added to a dry run only — a refusal or a write is left
+ * as it is.
+ */
+export const DECLARE_ASK =
+  '**Before the yes, ask — do not answer it for them:** what **one row** is (two answers is two formats ' +
+  'and a link between them); what they will want to **ask of it later**, since the columns fall out of ' +
+  'the questions; why each column they did not ask for is there, since their answer to *do I need that* ' +
+  'is the design; and **whether any of the figures relate** — a total against its parts, a price against ' +
+  'a quantity — which is a claim, proved or failed on every row and never refusing one. A list — books, ' +
+  'contacts, places — makes no claim, and none is the honest answer rather than a gap.'
+
+function withDeclareAsk(answer: string): string {
+  return answer.includes('**Nothing has been written.** This was a dry run') ? `${answer}
+
+${DECLARE_ASK}` : answer
 }
 
 // --- format_rollup ----------------------------------------------------------

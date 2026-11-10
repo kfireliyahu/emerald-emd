@@ -94,14 +94,14 @@ describe('start-here', () => {
     const { folder } = await aProject()
     const { out } = await run(['start-here', folder])
     const first = out.split('\n')[0] ?? ''
-    expect(first).toContain('A hook printed this as text, and nothing was drawn.')
-    expect(first).toContain('call `start_here` or `show_format` rather than retyping this')
-    expect(first).toContain('a host may draw only the servers it runs itself')
+    expect(first).toContain('A hook printed this as text, and nothing was drawn')
+    expect(first).toContain('to show any of it, call `start_here` or `show_format`')
     // For the model, never relayed to the person (M51 F3, D-493).
     expect(first.startsWith(FOR_THE_MODEL)).toBe(true)
     expect(first).toContain('follow the first line of its answer')
-    expect(first).toContain('Say nothing to the person about this hook, drawing, views, servers or tools')
-    expect(first).toContain('never call anything drawn or above')
+    // One line (M58 U1, D-572): what never to tell the person, and where to call
+    // the tool instead, is the tool's own first line (`drawnLine`), not this.
+    expect(first.length).toBeLessThan(260)
     // Host-neutral, as the server is (M42 U6): no host and no server named.
     expect(first).not.toMatch(/Claude|emerald-ledger|Code tab/)
   })

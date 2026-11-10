@@ -13,6 +13,7 @@ import { SCHEMA_VERSION, createDatabase, exportDatabase } from '@/data/db/databa
 import { APP_MIME, COPY_TOOL, KEY_META, SHEET_META, SHEET_URI, UI_EXTENSION } from '@/frame/contract.ts'
 
 import { ENGINE_INSTRUCTIONS, PLUGIN_INSTRUCTIONS } from './instructions.ts'
+import { DECLARE_ASK } from './tools/formats.ts'
 import { SERVER_NAME, type ServerOptions, clientLine, createServer } from './server.ts'
 import { drawnLine, FOR_THE_MODEL, NO_KEY, servedPage } from './tools/sheet.ts'
 import { tempDir } from '../testing/tempDir'
@@ -575,7 +576,7 @@ describe('the frame’s views, and who is handed what (M41 U2)', () => {
     const unknown = drawnLine(undefined)
     for (const line of [draws, cannot, unknown]) {
       expect(line.startsWith(FOR_THE_MODEL)).toBe(true)
-      expect(line).toContain('say nothing to the person about drawing, views, servers or tools')
+      expect(line).toContain('say nothing to the person about drawing, views, hooks, servers or tools')
       // Nothing a model would read out as a disclaimer, and no client or server named.
       expect(line).not.toMatch(/cannot see|can't check|if you see|as far as this server|claude-code|\btest\b|emerald/i)
     }
@@ -836,7 +837,6 @@ describe('the frame’s views, and who is handed what (M41 U2)', () => {
       expect(paragraph).toContain('`start_here`')
       expect(paragraph).toContain('`format_rows`')
       expect(paragraph).toMatch(/asks to \*see\*/)
-      expect(paragraph).toContain('read-only')
     }
   })
 
@@ -855,14 +855,14 @@ describe('the frame’s views, and who is handed what (M41 U2)', () => {
       expect(head).toContain('call `show_format` or `start_here`')
       expect(head).toContain('`format_rows` is for rows you will')
       // And that the answer, not the model, knows whether it was drawn (M51 F1,
-      // D-489) — and that the person is told nothing of it (M51 F3, D-493).
-      expect(head).toContain('first line is for you, never the person')
-      expect(head).toMatch(/Never tell the\s+person about drawing, views, servers or tools/)
-      expect(head).toMatch(/the view is the answer: never retype its rows/)
-      // And that a hook's text drew nothing, so a request to see still calls
-      // the tool, on a server the host runs itself where there is one (M51 F2).
-      expect(head).toContain('Call it even when a hook already printed the same answer as text')
-      expect(head).toMatch(/A host\s+may draw only the servers it runs itself/)
+      // D-489): its first line is the model's, and says how to speak of it —
+      // never to the person about drawing, never retyping a view, and on which
+      // server to call it instead (M51 F3, D-493). Said there, in `drawnLine`,
+      // and no longer here as well (M58 U1, D-572).
+      expect(head).toMatch(/follow the first line of the answer: that line is for\s+you, never the person/)
+      expect(head).not.toMatch(/Never tell the\s+person about drawing/)
+      // And that a hook's text drew nothing, so a request to see still calls the tool (M51 F2).
+      expect(head).toMatch(/Call it even when a hook already\s+printed the same answer as text/)
     }
   })
 })
@@ -1198,9 +1198,10 @@ describe('what the plugin says it does (M34 U1)', () => {
       const { instructions, tools } = await everything(engineOnly)
       expect(instructions).toContain('## Where to start')
       expect(instructions).toContain('**Begin from the document.**')
-      // The conversation the skill held, said where every model can read it.
-      expect(instructions).toContain('Ask what **one row** is')
-      expect(instructions).toContain('**whether any of the\nfigures relate**')
+      // The conversation the skill held, said where every model can read it:
+      // its opening here, the rest in declare_format's dry run (M58 U1, D-572).
+      expect(instructions).toContain('ask what **one row** is')
+      expect(DECLARE_ASK).toContain('**whether any of the figures relate**')
       // The decision owed on bulk writes: one yes is one dry run.
       expect(instructions).toContain('**A yes covers the dry run it answered and nothing after it.**')
       expect(tools.get('start_here')).toContain('where new work ' + 'begins: `formats`, then ')
@@ -1384,7 +1385,6 @@ describe('started by the plugin, --skills: what its skills say is a line here (M
     ['bring-in-a-plan', 'rows: milestones, units, decisions, open questions.'],
     ['bring-in-a-plan', 'offer one before declaring'],
     ['set-up-a-project', 'diffs and merges in git'],
-    ['closing-pass', '`claim_units take_over`'],
   ]
 
   it('holds both texts: the full one for every other launch, the short one for the plugin', async () => {
@@ -1403,10 +1403,13 @@ describe('started by the plugin, --skills: what its skills say is a line here (M
       // A client that reads no skill is never sent to one.
       expect(full, skill).not.toContain(`\`${skill}\``)
     }
-    // Measured 2026-11-03: 14,677 characters and 12,310, ~4,080 tokens and
-    // ~3,420 at this repo's ~3.6 a token (docs/plugin.md). A paragraph growing
-    // back past the budget is the drift this catches.
-    expect(short.length).toBeLessThan(full.length - 2000)
+    // Measured 2026-11-03: 14,677 characters and 12,310; cut to what a session
+    // needs before its first call on 2026-11-10 (M58 U1, D-572): 9,222 and
+    // 8,275 (docs/plugin.md). A paragraph growing back past the budget is the
+    // drift this catches.
+    expect(short.length).toBeLessThan(full.length)
+    expect(full.length).toBeLessThan(9500)
+    expect(short.length).toBeLessThan(8500)
   })
 
   it('still names only tools it offers, and keeps the head where a host cuts it', async () => {
@@ -1430,5 +1433,32 @@ describe('started by the plugin, --skills: what its skills say is a line here (M
     await Promise.all([full.close(), flagged.close()])
     expect(skills).not.toBe(plain)
     expect(skills).toContain('the `read-a-file` skill')
+  })
+})
+
+/**
+ * **Less text before the first call** (M58 U1, D-572). A six-week usage report
+ * found hosts cutting the instructions off, and every session paying for prose
+ * it needed at one call, if ever. What moved went to the answer that needs it.
+ */
+describe('what a session reads before its first call (M58 U1, D-572)', () => {
+  it('keeps every block inside its budget', async () => {
+    // Measured 2026-11-10: 24,249 → 12,412 started without --engine-only.
+    const client = await connected()
+    expect((client.getInstructions() ?? '').length).toBeLessThan(13000)
+    await client.close()
+  })
+
+  it("asks what to ask before the yes in declare_format's dry run, and not in a write", async () => {
+    const path = await writeDocument('ask.emd')
+    const client = await connected({ engineOnly: true })
+    const declaring = { path, format: 'film', title: 'Film', columns: [{ name: 'title', type: 'text', required: true }] }
+    const dry = textOf(await client.callTool({ name: 'declare_format', arguments: declaring }))
+    expect(dry).toContain(DECLARE_ASK)
+    expect(dry).toContain('**Nothing has been written.**')
+    const written = textOf(await client.callTool({ name: 'declare_format', arguments: { ...declaring, commit: true } }))
+    expect(written).not.toContain(DECLARE_ASK)
+    expect(client.getInstructions() ?? '').not.toContain('one row** is (two answers')
+    await client.close()
   })
 })

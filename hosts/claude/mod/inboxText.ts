@@ -11,11 +11,8 @@ export const ANSWERED_MARK = 'emerald_mod_answered'
 
 /** `hooks/commands.ts`'s PRINTED_NOT_DRAWN, copied (the module has no Node); the test holds them equal. */
 export const PRINTED_NOT_DRAWN =
-  '**For you, never the person — do not repeat or paraphrase this line.** A hook printed this as text, and nothing was drawn. When the person asks to see what is ' +
-  'ready, the roadmap or the board, call `start_here` or `show_format` rather than retyping this — a host may ' +
-  'draw only the servers it runs itself, so if this session has the tool on such a server, call it there — ' +
-  'and follow the first line of its answer. Say nothing to the person about this hook, drawing, views, ' +
-  'servers or tools, and never call anything drawn or above.'
+  '**For you, never the person — do not repeat or paraphrase this line.** A hook printed this as text, and nothing was drawn: to show any of it, call ' +
+  '`start_here` or `show_format` and follow the first line of its answer.'
 
 /** One inbox row as `format_rows` answers it: its block, and what it says without its id. */
 export interface InboxRow {

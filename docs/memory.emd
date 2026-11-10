@@ -5928,6 +5928,13 @@ state: applied
 answered_by: D-543
 became_unit: M56 U7
 
+### M58 U4 built at 6b17747 on worktree-agent-a40916c83cf3c3048: a decision names the files it affects (D-570)
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-10
+body: "M58 U4 is built on its worktree branch and proposes its landing: the decision format's new `affects` column, the closing pass's step for it in both skill copies, and a docs:check warning for an unreadable affects path. D-570 carries no `affects` here because this document's decision format gains the column only once the branch is merged and the pack kept again; its affects would be docs/conventions.md.\n\n```json\n{\"unit\":\"M58 U4\",\"files\":\"src/data/packs/development/formats/decision.format.md (affects column + notes paragraph), src/data/packs/development/past.ts, src/data/packs/development/pack.test.ts (column declared; keeping the pack completes an older decision format, rows kept), docs/memory.emd (decision declaration kept with the pack), .claude/skills/closing-pass/SKILL.md and hosts/claude/skills/closing-pass/SKILL.md (the affects step), scripts/docs-check.mjs (checkAffectedFiles warning), hosts/claude/.claude-plugin/plugin.json and hosts/claude-plugin-release.json (plugin cut 0.3.0+1), docs/09-decision-log.md (D-570 index row)\",\"commit\":\"6b17747\",\"branch\":\"worktree-agent-a40916c83cf3c3048\",\"decisions\":[{\"ref\":\"D-570\",\"title\":\"A decision's affects is an optional text column of the development pack, one path per line, relative to the repository or absolute anywhere on the machine, rather than a new list type; the closing pass greps each file for the claim made false and names any it cannot read, and docs:check warns on a live decision's path this machine cannot read\",\"question\":\"How does a decision row name the files it makes wrong (D-569), and what checks them: a new list type or a text column, and how much of the check is a script's?\",\"answer\":\"decision.affects is an optional text column, one path per line like unit.paths: relative to the repository, or absolute anywhere (~ is the home folder). Keeping the pack again completes an older decision format with it, rows kept. The closing pass (both skill copies), after its grep of the notes, greps each affected file of each decision written this session for the claim made false, fixes it when it is the session's to edit, flags it in the report when not, and names every file it could not read. docs:check only warns on a live decision's affects path this machine cannot read; whether the claim is gone stays the grep's.\"}],\"review_entries\":[],\"report\":\"M58 U4 built at 6b17747 on worktree-agent-a40916c83cf3c3048. decision gains an optional text column affects (one path per line, repo-relative or absolute, ~ = home); notes paragraph and column note in the pack, past.ts updated, docs/memory.emd's decision declaration kept with the pack (one notes paragraph + one column line; rows untouched). pack.test.ts: the column is declared; keeping the pack on a document holding the first public build's decision format completes it with affects, its rows kept, and a second keep completes nothing. Both closing-pass skills gain the step under 'Grep for what you just made false', and the landing bullet says affects is that list. docs:check gains checkAffectedFiles: a warning for a live decision's affects path this machine cannot read. Outside the declared paths: the plugin's skills changed, so plugin.test.ts required a cut; node scripts/pin-plugin.mjs --plugin made it 0.3.0+1 (plugin.json, claude-plugin-release.json). Another M58 unit touching the plugin's skills will conflict on those two files; re-running the script after the merge resolves it. Found and left: docs/conventions.md's closing pass step 2 still says 'One search over docs/' and does not mention the affected files; it is D-570's affects, not edited because it was outside this unit's paths. After the merge, set D-570's affects to docs/conventions.md. Tests: related suite (101 files), hosts/claude, privacy, typecheck, docs:check all green (docs:check's one warning, 04-data-model.md over budget, predates this).\"}\n```"
+refs: M58 U4
+state: new
+
 ### Text refs sort as text, so Q10 lists before Q2
 from: another document of the maintainer's
 sent_on: 2026-10-23
@@ -16339,9 +16346,12 @@ blocks: ["M57 U4","M57 U5"]
 milestone: M58
 scope: plugin
 title: Less text at every session's start: shorter server instructions and hook output
-state: planned
+state: in_progress
 brief: A six-week usage report from a session outside this repo (2026-11-09) found the server's instructions long enough that hosts cut them off (this repo's own sessions see them truncated too) and the SessionStart hook's text mostly rules about how to talk about views. Every session pays for both before it does anything. Measure both, cut the instructions to what a session needs before its first call, and move the view-talk rules into the tool answers that need them. Ask the maintainer before dropping any rule outright.
 files: src/plugin/instructions.ts, hosts/claude/hooks/main.ts, hosts/claude/hooks/hooks.json, hosts/claude/hooks/told.ts
+taken_by: run-milestone driver
+started: 2026-11-10
+branch: main
 paths: "src/plugin/instructions.ts\nhosts/claude/hooks/main.ts\nhosts/claude/hooks/hooks.json\nhosts/claude/hooks/told.ts\nhosts/claude/hooks/project.ts\nsrc/plugin/tools/startHere.ts\nsrc/plugin/tools/sheet.ts"
 
 ### M58 U2
@@ -16366,9 +16376,12 @@ paths: "src/plugin/tools/formats.ts\nsrc/plugin/write.ts\nsrc/plugin/instruction
 milestone: M58
 scope: practice
 title: A decision names the files it affects, and the closing pass checks them
-state: planned
+state: in_progress
 brief: D-569, answering 'Decisions and the files they make wrong'. The development pack's decision format gains an optional `affects` column: a list of file paths, absolute or relative to the repository, anywhere on the machine (a ~/.claude/CLAUDE.md included). A pack change, so the pack's past and pack.test.ts follow (keeping the pack again must bring the column to a document that has the older one). The closing pass (both copies of the skill) gains a step: for each decision written this session, grep each affected file for the claim the decision made false and fix or flag it, reporting a file it cannot read. Nothing in the engine changes; this is the pack and the practice.
 files: src/data/packs/development/formats/, src/data/packs/development/pack.ts, hosts/claude/skills/closing-pass/SKILL.md, .claude/skills/closing-pass/SKILL.md
+taken_by: run-milestone driver
+started: 2026-11-10
+branch: main
 paths: "src/data/packs/development/\nhosts/claude/skills/closing-pass/SKILL.md\n.claude/skills/closing-pass/SKILL.md\nscripts/docs-check.mjs"
 
 ### M58 U5
@@ -16543,7 +16556,7 @@ emerald: changed
 
 decision: 2026-11-10
 finding: 2026-10-22
-inbox: 2026-11-09
+inbox: 2026-11-10
 milestone: 2026-11-10
 open_question: 2026-11-10
 review_entry: 2026-11-03

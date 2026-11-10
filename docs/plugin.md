@@ -276,15 +276,16 @@ every row the view shows and nothing longer, which is what a client that draws n
   After F1 a new session, asked to show what is ready, retyped the `SessionStart`
   hook's `start_here` text as a table: no drawing tool ran on either server, so no `drawnLine` reached
   it. The hook's output now opens with *a hook printed this as text, and nothing was drawn*, and that a
-  request to see calls `start_here` or `show_format` instead, on a server the host runs itself where the
-  session has one; both instruction blocks say the same before 2,000 characters. Both stay
+  request to see calls `start_here` or `show_format` and follows the first line of its answer; both
+  instruction blocks say the same before 2,000 characters. Since M58 U1 (D-572) that is one sentence,
+  and which server to call and what never to tell the person is `drawnLine`'s alone. Both stay
   host-neutral; that the Claude desktop app's Code tab means `emerald-ledger` is said in `CLAUDE.md`.
 - **Both lines are the model's, and the person never hears them** (M51 F3,
   D-493). After F2 the board was drawn, and the session still told the
   person which server it had called and that the server could not check whether a view appeared: a
   line worded as a disclaimer is relayed as one. Each now opens with `FOR_THE_MODEL` — *for you, never
   the person — do not repeat or paraphrase this line* — and is an instruction: where the client draws,
-  the view is the answer — say nothing about drawing, views, servers or tools, never retype its rows
+  the view is the answer — say nothing about drawing, views, hooks, servers or tools, never retype its rows
   as a list or table (drawn, the session still gave the details as text), and reply with at most a
   line the view does not show, or nothing; the rows stay in the text for the model to reason over and
   for a client that draws nothing; where
@@ -1642,6 +1643,13 @@ characters a token:
 | `--engine-only` (every other client) | 14,677 | ~4,080 |
 | `--engine-only --skills` (the plugin) | 12,310 | ~3,420 |
 | full, the ledger's block, unchanged | 24,249 | ~6,740 |
+
+**Then cut to what a session needs before its first call** (M58 U1, D-572): hosts cut the blocks
+off near 2,000 characters, and every session paid for prose it needed at one call, if ever. How to
+work a format out with the user moved to `declare_format`'s dry run, how to speak of a view to the
+drawing tools' first line, and each ledger tool's detail to its own description. Measured
+2026-11-10: `--engine-only` 9,222 (~2,560 tokens), `--skills` 8,275 (~2,300), the ledger's block
+12,412 (~3,450); `server.test.ts` holds each under its budget.
 
 About 660 tokens a turn, 16%. `server.test.ts` holds both texts and the budget; `plugin.test.ts`
 checks every skill a line names is shipped and says what the line left out. It reaches a session
