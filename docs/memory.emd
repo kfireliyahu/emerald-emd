@@ -4743,6 +4743,15 @@ answer: record_format_rows, update_format_rows, claim_units and land_units write
 state: live
 affects: "docs/plugin.md\nCLAUDE.md\nREADME.md\nhosts/claude/README.md\nhosts/claude/skills/closing-pass/SKILL.md\nhosts/claude/skills/run-milestone/SKILL.md\nhosts/claude/skills/what-looks-wrong/SKILL.md\nhosts/claude/skills/bring-in-a-plan/SKILL.md\n.claude/skills/closing-pass/SKILL.md\n.claude/skills/run-milestone/SKILL.md\n.claude/skills/design-review/SKILL.md\nsrc/data/packs/development/formats/inbox.format.md"
 
+### D-574
+date: 2026-11-10
+milestone: M58
+scope: plugin
+title: What stopped the SessionStart hook in the usage report is not known, so the hook is unchanged; what it does that a security tool notices is written down, and the plugin and its message are an open question
+question: The 2026-11-09 usage report said a security plugin in the host blocked emerald's SessionStart hook. What did it object to, and can the hook be shaped so such tools pass it?
+answer: Not determinable here: the report names no plugin and quotes no message, and nothing on this machine reproduces it. Neither official-marketplace security plugin (security-guidance, claude-security) hooks anything that could stop another plugin's SessionStart hook, and a SessionStart command hook cannot stop another. What can: a hooks module answering classic.SessionStart without next (M56 U2), or something outside Claude Code (endpoint security, a package firewall refusing npx or node). So no hook change until the tool and its message are known (open question 'Which security tool stopped the SessionStart hook'). docs/plugin.md lists what the hooks do that such a tool notices: npx -y fetching and running a pinned package at every start (skipped where the hooks module runs); node starting a child, via cmd.exe only where npm's npx-cli.js is missing; no-server.mjs reading ~/.claude.json and the desktop app config (D-571); text telling the model what not to say to the person (D-493). None is reversed on a guess.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -5746,7 +5755,7 @@ A row written from another project while a session here is writing is the ordina
 
 **A row is for what the receiver lacks.** Before writing, the sender reads the receiver's document — `start_here`, its latest decisions — and writes only what it does not already hold. A document made before the pack changed is brought up to date by `keep_packs`, which declares what the pack added since and renames what it renamed, values kept; a kept pack does not update itself.
 
-**A session run by a driver proposes its landing here.** It lands nothing itself: it writes one row, `state: new`, whose `refs` is its unit's ref and whose `body` is a line or two for a person and then one fenced `json` block in the shape of one of `land_units`' `units` — `unit`, `files`, `commit`, `branch`, `decisions`, `review_entries` — and never `close_milestone`, which is the project owner's. It writes to the document path its hooks printed, which in a worktree is the main checkout's copy, never one under the worktree's own folder. `land_units inbox:[ids]` lands every proposal named as one dry run and one commit, refuses the batch by name for any that is not a proposal or not `new`, and moves each to `applied` with `became_unit` and `answered_by` filled. The proposing session writes no other format of this document.
+**A session run by a driver proposes its landing here.** It lands nothing itself: it writes one row, `state: new`, whose `refs` is its unit's ref and whose `body` is a line or two for a person and then one fenced `json` block in the shape of one of `land_units`' `units` — `unit`, `files`, `commit`, `branch`, `decisions`, `review_entries` — and never `close_milestone`, which is the project owner's. It writes to the document path its hooks printed, which in a worktree is the main checkout's copy, never one under the worktree's own folder. `land_units inbox:[ids]` lands every proposal named in one call, all or none (`commit: false` previews it), refuses the batch by name for any that is not a proposal or not `new`, and moves each to `applied` with `became_unit` and `answered_by` filled. The proposing session writes no other format of this document.
 
 An inbox row makes no claim.
 
@@ -6560,6 +6569,11 @@ state: open
 
 ### Stable ids
 question: Should a row's id be made once, at creation, and written into the text document — a short random id that never changes — instead of derived from the row's content (D-247) and left out of the text (D-245)? A derived id changes on every edit: on 2026-09-23 an update was refused because the ids from the call before it were already stale. A written id stays valid across edits, survives a merge (two branches cannot collide on a random short id), and answers 'M22 U6 #1'. Cost: a text row carries one more line, and D-245 and D-247 are revisited.
+state: open
+
+### Which security tool stopped the SessionStart hook
+question: The 2026-11-09 usage report said a security plugin blocked emerald's SessionStart hook. Which plugin or tool was it, and what did its message say it refused (npx fetching a package, node starting a child, a read of ~/.claude.json, the text the hook prints)? Until that is known the hook is unchanged (D-574); the answer picks the fix.
+opened_by: D-574
 state: open
 
 ### entry overview
@@ -16454,10 +16468,17 @@ report: M58 U4 built at 6b17747 on worktree-agent-a40916c83cf3c3048. decision ga
 milestone: M58
 scope: plugin
 title: Why a security plugin blocked the SessionStart hook
-state: planned
+landed: 2026-11-10
+decision: D-574
+state: built
 brief: The 2026-11-09 usage report: a security plugin in the host blocked emerald's SessionStart hook for a session. Find what it objected to (plain Node run from the plugin folder? what the hook prints?) and whether the hook can be shaped so such plugins pass it. Investigation first; a fix only once the cause is known.
-files: hosts/claude/hooks/hooks.json, hosts/claude/hooks/main.ts, hosts/claude/hooks/unless-mod.mjs
+files: "docs/plugin.md\ndocs/09-decision-log.md\nsrc/data/packs/development/formats/inbox.format.md\nsrc/data/packs/development/past.ts\ndocs/memory.emd"
+taken_by: run-milestone driver
+started: 2026-11-10
+branch: main
+commit: f645acf
 paths: "hosts/claude/hooks/hooks.json\nhosts/claude/hooks/main.ts\nhosts/claude/hooks/unless-mod.mjs\nhosts/claude/hooks/no-server.mjs"
+report: M58 U5 built at f645acf on main. Cause NOT determined: the usage report (inbox row, 2026-11-09) names no security plugin and quotes no message; neither security plugin in the official marketplace (security-guidance: its own SessionStart venv bootstrap, edit/commit/stop reviews; claude-security: menu, Bash results, a question) is installed here or hooks anything that could stop another plugin's SessionStart hook, and a SessionStart command hook has no way to stop another. Two things can: a hooks module answering classic.SessionStart without next (proved in M56 U2), or something outside Claude Code (endpoint security / package firewall refusing npx or node). No hook code changed, so no plugin cut. D-574 records it; docs/plugin.md gains 'When a security tool stops a session-start hook' listing what the hooks do that such tools notice: npx -y at every start (gated out where the hooks module runs), node spawning a child (cmd.exe only when npx-cli.js is missing), no-server.mjs reading ~/.claude.json (which holds account details) and the desktop config (D-571, landed after the report so not the cause, but the same kind of thing), and the model-addressed 'never the person' line (D-493). Open question 'Which security tool stopped the SessionStart hook' asks the maintainer for the plugin and its message. Second task done: inbox.format.md no longer says land_units inbox lands as one dry run and one commit (D-573); past.ts lists the old note (fb036da3); docs/memory.emd's development pack kept again (via a rebuilt dist-plugin/server.mjs); pack.test.ts green. Tests: vitest related (101 files, 1028 tests), privacy, typecheck green.
 
 ### M58 U6
 milestone: M58
