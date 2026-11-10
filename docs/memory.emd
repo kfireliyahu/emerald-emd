@@ -4714,6 +4714,16 @@ answer: decision.affects is an optional text column, one path per line like unit
 state: live
 affects: docs/conventions.md
 
+### D-571
+date: 2026-11-10
+milestone: M58
+scope: plugin
+title: The plugin notices a second emerald server from its own folder's SessionStart hook (no-server.mjs, plain Node, no new emerald-mcp): it reads ~/.claude.json (user and local scope), the project's .mcp.json unless turned off, and, only in a session the desktop app started, the app's claude_desktop_config.json; any entry with emerald in its name, command or arguments gets one line on how the person removes it, and nothing is ever written
+question: Where does the plugin look for a second emerald server (D-569), and from which hook, given a hook cannot see the session's tools?
+answer: From the plugin folder's own SessionStart hook, no-server.mjs, so it ships with a plugin cut and needs no emerald-mcp release. Where the plugin's server starts (CLAUDE_CODE_SKIP_PLUGIN_MCP_SERVERS unset) it reads ~/.claude.json (CLAUDE_CONFIG_DIR if set): top-level mcpServers (user scope) and projects[<project>].mcpServers (local scope); <project>/.mcp.json unless disabledMcpjsonServers in .claude/settings.local.json, .claude/settings.json or the project's ~/.claude.json entry names it; and, only when CLAUDE_CODE_ENTRYPOINT starts with claude-desktop, the desktop app's claude_desktop_config.json (macOS Application Support, Linux ~/.config/Claude, Windows %APPDATA%\Claude and %LOCALAPPDATA%\Claude-Data\*), whose servers the app attaches to every Code session. A server is emerald's when its name, command, url or args match /emerald/i. One line names each with how the person removes it (delete the entry and reopen the app; claude mcp remove -s user|local; delete it from .mcp.json or disable it). Never writes any of them. Desktop extensions (.mcpb) are not read.
+state: live
+affects: "docs/plugin.md\nhosts/claude/skills/emerald-setup/SKILL.md"
+
 ### D-572
 date: 2026-11-10
 milestone: M58
@@ -16386,10 +16396,17 @@ report: M58 U1 built at 2297d8a. Instructions cut to what a session needs before
 milestone: M58
 scope: plugin
 title: One set of tools: the plugin notices a second emerald server registered beside it
-state: planned
+landed: 2026-11-10
+decision: D-571
+state: built
 brief: D-569. The 2026-11-09 usage report found two copies of every tool in one host: a standalone emerald server and the plugin's, and past sessions used both, so every session listed every tool twice. Find where the second registration comes from (it was in neither settings.json nor ~/.claude.json, so likely the host app's own config, such as the desktop app's MCP servers). The plugin's stays (the maintainer, D-569): at its start, when another server named emerald (or serving the same tools) is registered, it says once, in the SessionStart text, how to remove the other one, and the emerald-setup skill says the same. Never remove the person's config for them.
-files: hosts/claude/.claude-plugin/plugin.json, hosts/claude/skills/emerald-setup/SKILL.md, src/plugin/tools/setup.ts, hosts/claude/hooks/no-server.mjs
+files: "hosts/claude/hooks/no-server.mjs\nhosts/claude/hooks/no-server.test.ts\nhosts/claude/hooks/hooks.json\nhosts/claude/skills/emerald-setup/SKILL.md\nhosts/claude/.claude-plugin/plugin.json\nhosts/claude-plugin-release.json\ndocs/plugin.md\ndocs/conventions.md\ndocs/09-decision-log.md"
+taken_by: run-milestone driver
+started: 2026-11-10
+branch: main
+commit: 7e5571f
 paths: "hosts/claude/hooks/main.ts\nhosts/claude/hooks/project.ts\nhosts/claude/skills/emerald-setup/SKILL.md\nsrc/plugin/tools/setup.ts\nhosts/claude/.claude-plugin/plugin.json"
+report: "M58 U2 built at 7e5571f on main; docs:check green (0 errors, the standing 04-data-model budget warning).\n\nWhat landed: hosts/claude/hooks/no-server.mjs (the plugin folder's SessionStart hook) now, where the plugin's server starts, reads ~/.claude.json (user + local scope), the project's .mcp.json unless disabledMcpjsonServers turns it off, and - only when CLAUDE_CODE_ENTRYPOINT is claude-desktop - the desktop app's claude_desktop_config.json. Any server with emerald in its name/command/args gets one line: tools are here twice, use the plugin's, tell the person once how to remove the other, never change their config. The emerald-setup skill says the same. 5 spawn tests in no-server.test.ts. Plugin cut 0.3.0+3 (no emerald-mcp release needed). docs/plugin.md and hooks.json describe it. First task: conventions.md closing-pass step 2 now names the decisions' affects files (D-570).\n\nWhere the second registration came from: the desktop app's own config at %LOCALAPPDATA%\\Claude-Data\\claude_pzs8sxrjxfjjc\\claude_desktop_config.json, entry emerald-ledger -> node F:/projects/emerald/dist-plugin/server.mjs (not %APPDATA%\\Claude, which does not exist on this machine). The app attaches it to every Code session. The repo's .mcp.json emerald is turned off in .claude/settings.local.json; the plugin itself is installed project-scope only for C:\\Users\\Kfir\\emerald-m56-try. Run on this machine, the hook prints the emerald-ledger line. Nothing was edited.\n\nFor the maintainer: removing emerald-ledger by hand is his. Caution: D-489 / docs/plugin.md say the desktop Code tab draws views only from a server the app runs itself (emerald-ledger), never from one Claude Code starts - removing it may cost drawn views in the desktop app. Decide before removing.\n\nFound along the way: emerald-setup and hosts/claude/README.md give the Windows config path as %APPDATA%\\Claude\\claude_desktop_config.json; this machine's app keeps it under %LOCALAPPDATA%\\Claude-Data\\<id>\\. Desktop extensions (.mcpb) are not checked - whether the app hands them to Code sessions is unmeasured. Decision D-571 (index row in the log, row in memory.emd)."
 
 ### M58 U3
 milestone: M58
