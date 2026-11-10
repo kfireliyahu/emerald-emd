@@ -16484,14 +16484,18 @@ report: M58 U5 built at f645acf on main. Cause NOT determined: the usage report 
 milestone: M58
 scope: plugin
 title: emerald-mcp 0.3.1 cut and the plugin pinned
-state: in_progress
+landed: 2026-11-10
+decision: D-569
+state: built
 brief: D-569. Cut emerald-mcp 0.3.1 with M58's fixes the way 0.3.0 was cut (git log for 'emerald-mcp 0.3.0 cut' shows the steps): the version everywhere it is written, the build, check:package, the release notes in the commit, then pin the plugin. The npm publish is the maintainer's, in a Terminal tab (2FA in the browser); stop and hand it to him with the exact command, and say that npm may take an hour to serve a new version (nothing to approve, never republish). After he publishes, check the MCP Registry listing matches server.json.
-files: package.json, scripts/npm-package.mjs, scripts/pin-plugin.mjs, hosts/claude/.claude-plugin/plugin.json
+files: package.json, package-lock.json, server.json, src/plugin/document.ts, hosts/claude-plugin-release.json, hosts/claude/.claude-plugin/plugin.json, hosts/claude/hooks/hooks.json, hosts/claude/README.md, hosts/claude/skills/emerald-setup/SKILL.md, hosts/claude/skills/set-up-a-project/SKILL.md
 blocks: ["M58 U1","M58 U2","M58 U3","M58 U4","M58 U5"]
 taken_by: run-milestone driver
 started: 2026-11-10
 branch: main
+commit: 2a066ca
 paths: "package.json\nsrc/plugin/document.ts\nhosts/claude/.claude-plugin/plugin.json\nhosts/claude-plugin-release.json\nserver.json"
+report: emerald-mcp 0.3.1 cut at 2a066ca: version moved in package.json, package-lock.json, server.json and PLUGIN_VERSION; build:plugin, check:package (Node 24.15.0), typecheck, docs:check, privacy and plugin tests green; release notes for M58 U1-U5 in the commit body. The maintainer published from dist-plugin/ with npm publish --access public; npm served it about 20 minutes later. Plugin pinned 0.3.0+4 -> 0.3.1 at 73244fc (node scripts/pin-plugin.mjs; hosts/claude tests 73/73). registry.yml ran green on both pushes; the MCP Registry lists io.github.kfireliyahu/emerald 0.3.1 as latest, npm package emerald-mcp 0.3.1, matching server.json. No new decision.
 
 <!-- emerald: views.md -->
 ---
