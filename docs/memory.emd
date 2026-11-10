@@ -4701,6 +4701,15 @@ question: What M58 needs settled before its briefs: which of two registered serv
 answer: The maintainer's answers, 2026-11-10. Two servers: the plugin's stays (it brings hooks, skills and the pane); its start notices another emerald server and says once how to remove it. Dry runs: record_format_rows, update_format_rows, claim_units and land_units commit on the first call (a wrong value is still refused); delete_format_rows, delete_format and anything that changes a format's columns still dry-run until commit: true. Stale prose: the development pack's decision format gains an optional affects list of file paths, anywhere on the machine, and the closing pass greps each for the claim the decision made false. Release: a last unit cuts emerald-mcp 0.3.1 and pins the plugin; the maintainer runs the npm publish. Also 2026-11-10: M57 is parked until he is ready to publish a hosted service, its built units on the branch m57-drive-connector.
 state: live
 
+### D-572
+date: 2026-11-10
+milestone: M58
+scope: plugin
+title: The server's instructions say only what a session needs before its first call — what moved went to the answer that needs it, and how to speak of a view is the drawing tool's first line alone; the SessionStart hook opens with one sentence
+question: The server's instructions were long enough that hosts cut them off near 2,000 characters, and the SessionStart hook's text was mostly rules about how to speak of a view; every session paid for both before its first call. What stays, and where does the rest go?
+answer: The instructions keep what a session needs before any call: what Emerald is, when to draw, development planning, what it is for, where to start, how to work, the formats half's core, the ledger's files to ask for, and what is app-only (24,249 -> 12,412 full, 14,677 -> 9,222 engine-only, 12,310 -> 8,275 plugin). How to work a format out with the user moved to declare_format's dry run (DECLARE_ASK); units were already the formats answer; claiming and landing are claim_units' and land_units' descriptions; each ledger tool's detail is its own description. How to speak of a view is drawnLine's alone, now naming hooks too. The hook's first line is one sentence (534 -> 220 bytes). No rule was dropped outright.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -16346,13 +16355,17 @@ blocks: ["M57 U4","M57 U5"]
 milestone: M58
 scope: plugin
 title: Less text at every session's start: shorter server instructions and hook output
-state: in_progress
+landed: 2026-11-10
+decision: D-572
+state: built
 brief: A six-week usage report from a session outside this repo (2026-11-09) found the server's instructions long enough that hosts cut them off (this repo's own sessions see them truncated too) and the SessionStart hook's text mostly rules about how to talk about views. Every session pays for both before it does anything. Measure both, cut the instructions to what a session needs before its first call, and move the view-talk rules into the tool answers that need them. Ask the maintainer before dropping any rule outright.
-files: src/plugin/instructions.ts, hosts/claude/hooks/main.ts, hosts/claude/hooks/hooks.json, hosts/claude/hooks/told.ts
+files: src/plugin/instructions.ts, src/plugin/tools/formats.ts, src/plugin/tools/sheet.ts, src/plugin/server.test.ts, hosts/claude/hooks/commands.ts, hosts/claude/hooks/commands.test.ts, hosts/claude/mod/inboxText.ts, hosts/claude/.claude-plugin/plugin.json, hosts/claude-plugin-release.json, docs/plugin.md, docs/09-decision-log.md
 taken_by: run-milestone driver
 started: 2026-11-10
 branch: main
+commit: 2297d8a44eb2d2c9daffbe3467e4b839f900245d
 paths: "src/plugin/instructions.ts\nhosts/claude/hooks/main.ts\nhosts/claude/hooks/hooks.json\nhosts/claude/hooks/told.ts\nhosts/claude/hooks/project.ts\nsrc/plugin/tools/startHere.ts\nsrc/plugin/tools/sheet.ts"
+report: M58 U1 built at 2297d8a. Instructions cut to what a session needs before its first call (D-572): full 24,249 -> 12,412 chars, --engine-only 14,677 -> 9,222, plugin --skills 12,310 -> 8,275; server.test.ts holds budgets (13,000 / 9,500 / 8,500). SHOW section 1,228 -> ~600: says call show_format/start_here, that a hook's text drew nothing, and to follow the answer's first line; the person-never rules live only in drawnLine (now names hooks). Formats section 6,322 -> ~2,300: the declaring conversation moved to declare_format's dry run (DECLARE_ASK, added only to a dry run); units/record_units already in the formats answer; read_onto_format detail trimmed (in its answer). Ledger block and finance Not-here condensed: each tool's detail is its description; kept no-security-advice, savings first, oldest first, per-deposit table, merchant exact string, hand-set category, yearly premium. SessionStart hook first line 534 -> 220 bytes; this repo's hook text 16,625 -> 16,453 (it is mostly rows). Plugin cut 0.3.0+1 (mod/inboxText.ts copy). The npx hook line reaches other projects at the next emerald-mcp publish and pin. Found: start_here's review_entry lines are not truncated as open_question lines are, so this repo's hook prints ~6KB of review entries; not changed here. No rule dropped outright; nothing for the maintainer to rule on.
 
 ### M58 U2
 milestone: M58
