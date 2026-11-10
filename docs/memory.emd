@@ -4733,6 +4733,16 @@ question: The server's instructions were long enough that hosts cut them off nea
 answer: The instructions keep what a session needs before any call: what Emerald is, when to draw, development planning, what it is for, where to start, how to work, the formats half's core, the ledger's files to ask for, and what is app-only (24,249 -> 12,412 full, 14,677 -> 9,222 engine-only, 12,310 -> 8,275 plugin). How to work a format out with the user moved to declare_format's dry run (DECLARE_ASK); units were already the formats answer; claiming and landing are claim_units' and land_units' descriptions; each ledger tool's detail is its own description. How to speak of a view is drawnLine's alone, now naming hooks too. The hook's first line is one sentence (534 -> 220 bytes). No rule was dropped outright.
 state: live
 
+### D-573
+date: 2026-11-10
+milestone: M58
+scope: plugin
+title: Recording, updating, claiming and landing rows write on the first call; commit: false asks for a preview; deleting and changing a format's columns keep the dry run
+question: How do the four row writes D-569 named commit on the first call, how does a caller still ask for a preview, and which writes keep the dry run?
+answer: record_format_rows, update_format_rows, claim_units and land_units write on the first call and answer with what they wrote; the judging is unchanged and a refused batch writes nothing and says why. A preview is an explicit commit: false (or "false"), through one switch, writesNow / WRITES_NOW_PROP in src/plugin/tools/tool.ts, used by those four alone. delete_format_rows, delete_format, declare_format, extend_format, connect_formats, read_onto_format and the ledger's tools keep the dry run until commit: true. The concurrency half of 'Dry runs and concurrency' stays open.
+state: live
+affects: "docs/plugin.md\nCLAUDE.md\nREADME.md\nhosts/claude/README.md\nhosts/claude/skills/closing-pass/SKILL.md\nhosts/claude/skills/run-milestone/SKILL.md\nhosts/claude/skills/what-looks-wrong/SKILL.md\nhosts/claude/skills/bring-in-a-plan/SKILL.md\n.claude/skills/closing-pass/SKILL.md\n.claude/skills/run-milestone/SKILL.md\n.claude/skills/design-review/SKILL.md\nsrc/data/packs/development/formats/inbox.format.md"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -6305,7 +6315,7 @@ state: open
 question: Every emerald write dry-runs until commit: true. M56 U3 asked how a guard should tell that a commit is the same write as an earlier dry run; the maintainer answered (2026-11-03): "i think we need to soften the dry run requirements in general and handle concurrency better probably." So: when may a write commit without a dry run first (a small or reversible one, a landing whose proposal was already shown, a row a person typed), and how do parallel sessions writing one document (worktree children, a driver, a session in the app) avoid refused ids, lost writes and the text document renewing ids on every write? The third guard was dropped until this is answered. Evidence, 2026-11-09: a six-week usage report outside this repo counted about 360 updates against 175 new rows, each written twice; commit: true on the first call is already allowed and still refuses a bad value, so the instructions are what make sessions dry-run first.
 opened_by: D-549
 state: open
-answer: Half answered by D-569 (2026-11-10): rows commit on the first call (record, update, claim, land); deletes and format changes still dry-run. The concurrency half (parallel writers, renewed ids) stays open.
+answer: The dry-run half is answered and built: D-569 (2026-11-10) settled it and D-573 (M58 U3) built it — record_format_rows, update_format_rows, claim_units and land_units write on the first call, commit: false previews, and deletes and format changes still dry-run until commit: true. Still open, and why this row stays open: the concurrency half (parallel writers, refused ids, lost writes, a text document renewing ids on every write).
 
 ### Engine server on its own
 question: Should the engine-only MCP server ship as its own download, as typed memory for AI sessions, and is it the development pack (M27) that sells it rather than general chat memory?
@@ -16412,10 +16422,17 @@ report: "M58 U2 built at 7e5571f on main; docs:check green (0 errors, the standi
 milestone: M58
 scope: plugin
 title: Rows commit on the first call: no dry run for recording, updating, claiming and landing
-state: planned
+landed: 2026-11-10
+decision: D-573
+state: built
 brief: D-569, and the open question 'Dry runs and concurrency' (its dry-run half). The usage report counted about 360 updates against 175 new rows, each written twice. Make record_format_rows, update_format_rows, claim_units and land_units apply on the first call: the same judging, a wrong value still refused with its reason, the answer saying what was written. delete_format_rows, delete_format and every tool that changes a format's columns (declare/extend/connect when they alter an existing format) keep the dry run until commit: true. Decide how a caller still asks for a preview (commit: false, explicitly), and keep the ledger's own write tools as they are unless they share the same switch. Update the instructions, the tool descriptions, docs/plugin.md and every test that relied on the old default; the parity rule (src/parity.test.ts) must still hold. Grep the skills (hosts/claude/skills/, .claude/skills/) for 'dry run' and fix the ones this makes false.
-files: src/plugin/tools/formats.ts, src/plugin/write.ts, src/plugin/instructions.ts, src/plugin/tools/claim.ts
+files: src/plugin/tools/tool.ts, src/plugin/tools/formats.ts, src/plugin/tools/landing.ts, src/plugin/instructions.ts, src/plugin/init.ts, hosts/claude/mod/commands.ts, hosts/claude/mod/guards.ts, hosts/claude/skills/*, .claude/skills/*, docs/plugin.md, CLAUDE.md, README.md, hosts/claude/README.md, tests
+taken_by: run-milestone driver
+started: 2026-11-10
+branch: main
+commit: e292422
 paths: "src/plugin/tools/formats.ts\nsrc/plugin/write.ts\nsrc/plugin/instructions.ts\nsrc/plugin/tools/claim.ts\nsrc/plugin/tools/land.ts\ndocs/plugin.md"
+report: Commit e292422. docs:check green after the landing (before it, only the missing D-573 row); full suite 5584/5587 before reverting one note edit, the 3 failures were that edit (pack.test.ts), green after the revert on the affected files. Landed: record_format_rows, update_format_rows, claim_units and land_units write on the first call (writesNow / WRITES_NOW_PROP in src/plugin/tools/tool.ts), judged as before; a refused batch writes nothing and says why. Preview: an explicit commit: false (or "false"). Still dry-run until commit: true: delete_format_rows, delete_format, declare_format, extend_format, connect_formats, read_onto_format, store_document_as, apply rules/found-by, and every ledger tool (they keep their own args.commit === true; no shared switch). Instructions: the two dry-run bullets became 'Rows write on the first call' + 'Every other write dry-runs by default' (same length). Tool descriptions, start_here's write line, init.ts's CLAUDE.md section, the /claim and /land command contexts and the .emd edit guard text updated; docs/plugin.md gains the paragraph; skills fixed: closing-pass, run-milestone (both copies), design-review, what-looks-wrong, bring-in-a-plan; CLAUDE.md, README.md, hosts/claude/README.md. Plugin cut 0.3.0+4. Tests: dry-run tests now pass commit: false; new tests for first-call update (and refusal), claim and land. Decision D-573. Open question 'Dry runs and concurrency' left open (its format has no partial state) with its answer text naming D-573; concurrency half still open. Left: src/data/packs/development/formats/inbox.format.md still says land_units inbox lands 'as one dry run and one commit' - changing a pack note needs past.ts and a keep_packs on memory.emd, so it was reverted; named in D-573's affects. Nothing to look at for the maintainer beyond noticing sessions no longer dry-run row writes. The emerald-ledger server in the desktop app still runs the old build until emerald-mcp 0.3.1 ships.
 
 ### M58 U4
 milestone: M58
