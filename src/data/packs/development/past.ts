@@ -11,7 +11,7 @@ import type { PackPast } from '../past.ts'
 export const DEVELOPMENT_PAST: PackPast = {
   notes: {
     decision: ['bfcb631c', '48850fbe', '56d447c8', '0b148025'],
-    inbox: ['7dec8a8d', '3e98d801', 'ebddaacc', 'cb4d2a3b', 'e46e8f35', 'e6292d58', '3ee14562', '8de904c3'],
+    inbox: ['7dec8a8d', '3e98d801', 'ebddaacc', 'cb4d2a3b', 'e46e8f35', 'e6292d58', '3ee14562', '8de904c3', 'fb036da3'],
     milestone: ['42ff3e1e', 'f66c5f53', '2efff3bf'],
     open_question: ['1cc7a401', 'e278a436', 'd592b597'],
     review_entry: ['4aa0d215', 'e6ea9366', '87c09df5', 'f2f6f4f8'],

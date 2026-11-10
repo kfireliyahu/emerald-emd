@@ -476,6 +476,7 @@ written out here.
 | D-571 | 2026-11-10 | The plugin notices a second emerald server from its own folder's SessionStart hook (`no-server.mjs`, plain Node, no new emerald-mcp): it reads `~/.claude.json` (user and local scope), the project's `.mcp.json` unless turned off, and — only in a session the desktop app started — the app's `claude_desktop_config.json`; any entry with emerald in its name, command or arguments gets one line on how the person removes it, and nothing is ever written | M58 |
 | D-572 | 2026-11-10 | The server's instructions say only what a session needs before its first call — what moved went to the answer that needs it, and how to speak of a view is the drawing tool's first line alone; the SessionStart hook opens with one sentence | M58 |
 | D-573 | 2026-11-10 | Recording, updating, claiming and landing rows write on the first call; `commit: false` asks for a preview; deleting and changing a format's columns keep the dry run | M58 |
+| D-574 | 2026-11-10 | What stopped the SessionStart hook in the usage report is not known, so the hook is unchanged; what it does that a security tool notices is written down, and the plugin and its message are an open question | M58 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -682,6 +683,29 @@ The open question *Dry runs and concurrency* (D-549) asked when a write may skip
 **Consequences.** A session writes what the person said or agreed to in one round trip; a batch it
 inferred it still puts to the person first, in the conversation rather than as a second call. The
 open question's concurrency half — parallel writers, ids a text document renews — stays open.
+
+## D-574 · 2026-11-10 · What stopped the SessionStart hook in the usage report is not known, so the hook is unchanged; what it does that a security tool notices is written down, and the plugin and its message are an open question <a id="d-574"></a>
+
+**Context.** The 2026-11-09 usage report said a security plugin in the host blocked emerald's
+SessionStart hook (M58 U5). It names no plugin and quotes no message; nothing here reproduces it.
+
+**Decision.**
+
+- **No change to the hook until the cause is known.** Neither security plugin in the official
+  marketplace (`security-guidance`, `claude-security`) hooks anything that could stop another
+  plugin's SessionStart hook, and a SessionStart command hook cannot stop another. What can is a
+  hooks module answering `classic.SessionStart` without `next` (proved in M56 U2), or something
+  outside Claude Code: endpoint security or a package firewall refusing `npx` or `node`.
+- **What the hooks do that such a tool notices is in `docs/plugin.md`**: `npx -y` fetching and
+  running a pinned package at every start (skipped where the hooks module runs); `node` starting a
+  child, through `cmd.exe` only where npm's `npx-cli.js` is missing; `no-server.mjs` reading
+  `~/.claude.json` and the desktop app's configuration (D-571); and text telling the model what not
+  to say to the person (D-493). Each was decided for its own reason, and none is reversed on a guess.
+- **The open question *Which security tool stopped the SessionStart hook*** asks the maintainer for
+  the plugin and its message.
+
+**Consequences.** A person whose security tool stops the hook loses `start_here` at the start and
+can still call it. Once the tool is known, the fix is chosen against what it actually refuses.
 
 ## Related
 

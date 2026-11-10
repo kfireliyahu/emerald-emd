@@ -757,6 +757,33 @@ The units-in-progress read (~370 ms) runs after and is never waited on. Not meas
 own shell around each hook command, which both rows pay alike, and a whole session end to end
 (`claude -p` could not sign in on the day).
 
+### When a security tool stops a session-start hook (M58 U5, D-574)
+
+A six-week usage report (2026-11-09) said a security plugin in the host blocked the SessionStart hook.
+**What stopped it was not found**: the report names no plugin and quotes no message, and nothing on
+the maintainer's machine reproduces it. Neither security plugin in the official marketplace can do
+it — `security-guidance` runs its own SessionStart hook (it prepares a Python environment) and reviews
+edits, commits and turns; `claude-security` hooks a menu, Bash results and a question — and a
+SessionStart *command* hook has no way to stop another one. Two things can: **a hooks module that
+answers `classic.SessionStart` without `next`**, which keeps every settings hook beneath it from
+running (the M56 U2 section above), and **something outside Claude Code** — endpoint security or a
+package firewall refusing a process. So the hook is unchanged until the plugin and its message are
+known (the open question *Which security tool stopped the SessionStart hook*). What these hooks do
+that such a tool is built to notice:
+
+- **Fetch and run a package at every session start**: `npx -y --prefer-offline -p
+  emerald-mcp@<pin>`, pinned to one version and from npm's cache when it has it, but `-y` installs
+  without asking. Where the plugin's hooks module runs, the gate exits on the mark and npx never
+  starts.
+- **Start a child process from `node`**: the gate runs npm's own `npx-cli.js` beside `node`, with
+  no shell; only where that file is missing does it go through `cmd.exe` on Windows.
+- **Read the host's configuration**: `no-server.mjs` reads `~/.claude.json` — which also holds the
+  person's account details — the project's `.mcp.json` and the desktop
+  app's `claude_desktop_config.json` (D-571). It reads only `mcpServers`, prints only server names,
+  and writes nothing; a tool watching credential files cannot tell that from the outside.
+- **Print text addressed to the model about what not to tell the person** — the first line of
+  `start_here` (D-493). A filter for injected instructions looks for exactly that shape.
+
 ### A repository set up by one command: `init` (M50 U1)
 
 **The study of 2026-10-13** (17 sessions on three documents) measured `formats` called up to eight
