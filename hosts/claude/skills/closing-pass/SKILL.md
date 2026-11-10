@@ -28,6 +28,15 @@ one**, and it is the step that keeps costing sessions: *"the installer has never
 the desktop shell"*, *"M9 has one unit left"* each outlived the commit that falsified it. A superseded
 claim is worse than no claim, because it reads as current. Never grep build output or dependencies.
 
+**Then the files each decision names.** Every decision you write this session says in `affects` which
+files it makes wrong, one path per line — relative to the repository, or absolute anywhere on the
+machine: a `CLAUDE.md` in the home folder, a note in another project. That is where a search of the
+project never looks. For each decision and each file it names, grep the file for the claim the decision
+made false; fix it there when it is this session's to edit, and flag it in your report when it is not.
+**A file you cannot read** — another machine's path, a folder outside your sandbox — **is named in the
+report as unchecked, never skipped in silence.** Asking which notes said the opposite is how `affects`
+gets written; a decision that makes no prose wrong leaves it empty.
+
 ## 3. Land it — the order is always the same
 
 A commit cannot name itself, and a landing without its commit leaves the row pointing nowhere. So:
@@ -55,7 +64,7 @@ land_units units:[{unit:"M3 U2", files:"…", commit:"<hash>", branch:"<branch>"
 
 - **Every decision you made → one of `decisions`.** `question` and `answer` are what a later session
   acts on without reading the argument — not a transcription of it. `date`, `milestone`, `scope` and
-  `state: live` default to the unit's. The next ref is the one after the highest the document's
+  `state: live` default to the unit's. `affects` is step 2's list of files, one path per line. The next ref is the one after the highest the document's
   `decision` rows hold, unless a driver handed you one.
 - **The unit goes `built`** with `landed` (today unless said), `files` corrected to what you actually
   changed, and `decision` — its first new decision, or `decision:"D-xxx"` for one that exists. It is

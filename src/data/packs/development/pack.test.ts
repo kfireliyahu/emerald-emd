@@ -566,3 +566,64 @@ describe('keeping the pack again brings its columns’ notes (M52 F4)', () => {
     db.close()
   })
 })
+
+describe('a decision names the files it makes wrong (M58 U4, D-569)', () => {
+  const found = packById('development')
+  if (found === undefined) throw new Error('no development pack')
+  const development: PackDescription = found
+
+  it('declares affects as an optional text column, one path per line', () => {
+    const affects = formats()
+      .find((each) => each.name === 'decision')
+      ?.columns.find((each) => each.name === 'affects')
+    expect(affects?.type).toBe('text')
+    expect(affects?.required).toBe(false)
+  })
+
+  it('brings affects to a document whose decision format is older, its rows kept', async () => {
+    // A document that declared `decision` before the column: the first public build's.
+    const db = await createDatabase()
+    const older = readFormatText(OLDER_DECISION, undefined, [])
+    if (!older.ok) throw new Error(older.error)
+    expect(older.value.declaration.columns.some((each) => each.name === 'affects')).toBe(false)
+    adoptFormat(db, older.value.declaration, NOW)
+    const held = readFormat(db, 'decision')
+    if (held === undefined) throw new Error('no decision')
+    insertRows(db, held, [
+      { ref: 'D-1', date: '2026-01-02', milestone: 'M1', scope: 'api', title: 'One', question: 'Q?', answer: 'A.', state: 'live' },
+    ])
+
+    const planned = planKeep(db, development)
+    if (!planned.ok) throw new Error(planned.error)
+    expect(planned.value.completes).toEqual([{ format: 'decision', columns: ['affects'] }])
+    expect(planParts(planned.value, false)).toContain('completes decision with affects')
+
+    const kept = keepPack(db, development, NOW)
+    if (!kept.ok) throw new Error(kept.error)
+    const after = readFormat(db, 'decision')
+    if (after === undefined) throw new Error('no decision')
+    expect(after.columns.map((each) => each.name)).toContain('affects')
+    insertRows(db, after, [
+      {
+        ref: 'D-2',
+        date: '2026-01-03',
+        milestone: 'M1',
+        scope: 'api',
+        title: 'Two',
+        question: 'Q?',
+        answer: 'A.',
+        state: 'live',
+        affects: 'guide/install.md\n~/notes/setup.md',
+      },
+    ])
+    const rows = listRows(db, after).map((row) => [String(row.cells['ref']), row.cells['affects'] ?? null] as const)
+    expect([...rows].sort(([a], [b]) => a.localeCompare(b))).toEqual([
+      ['D-1', null],
+      ['D-2', 'guide/install.md\n~/notes/setup.md'],
+    ])
+    const again = planKeep(db, development)
+    if (!again.ok) throw new Error(again.error)
+    expect(again.value.completes).toEqual([])
+    db.close()
+  })
+})

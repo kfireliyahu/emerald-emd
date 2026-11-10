@@ -13,6 +13,8 @@ One decision the project made, as a row: what was undecided, what was decided, w
 
 `ref` is the name people use for the decision — `D-12` — and is not the row's `id`, which every table already has and which a link resolves through.
 
+`affects` is the prose a decision makes wrong: the files that said the opposite until it was made, one path per line. They are named wherever they are — relative to the repository, or absolute anywhere on the machine, a note in the home folder included — because the notes that go stale are often outside every repository, where a search of the repository never looks. Whoever lands the decision greps each one for the claim it made false and corrects it, or says which file could not be read.
+
 A decision makes no claim: its rules are "not empty" and "this link resolves", which the columns already enforce.
 
 | column | type | points at | unit | per | required | unique | values | min | max | note |
@@ -26,5 +28,6 @@ A decision makes no claim: its rules are "not empty" and "this link resolves", w
 | answer | text |  |  |  | yes | no |  |  |  | What was decided. Enough on its own that a session need not read the argument to act correctly. |
 | supersedes | link | decision |  |  | no | no |  |  |  | The earlier decision this one replaces or amends — `D-7`. Empty for a decision that changes nothing before it. |
 | state | enum |  |  |  | yes | no | live, amended, superseded |  |  | Whether this is still the decision of record. `amended`: a later decision changed part of it and the rest still stands. `superseded`: a later decision replaced it. A decision others rely on is never rewritten, so this column is how to ask. |
+| affects | text |  |  |  | no | no |  |  |  | The files this decision makes wrong, one path per line — `guide/install.md`, or an absolute path anywhere on the machine such as `~/notes/setup.md`. Each is searched for the claim the decision made false when it lands. Empty for a decision that makes no prose wrong. |
 
 ## rows
