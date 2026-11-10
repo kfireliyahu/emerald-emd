@@ -29,6 +29,7 @@
  */
 
 import fs from 'node:fs'
+import os from 'node:os'
 import path from 'node:path'
 import { closedEntriesInLog } from './archive-decisions.mjs'
 
@@ -295,6 +296,29 @@ function memoryRows(format) {
     })
 }
 
+/**
+ * A live decision's `affects` naming a file this machine cannot read (M58 U4,
+ * D-569). The column is the prose a decision makes wrong, one path per line,
+ * relative to the repository or absolute anywhere — `~/.claude/CLAUDE.md` too —
+ * and the closing pass greps each for the claim made false. Whether the claim
+ * is gone is that grep's, never this script's; this only says which file
+ * nobody here could have checked. A warning, since a path in the home folder
+ * is another machine's in CI.
+ */
+function checkAffectedFiles() {
+  for (const row of memoryRows('decision') ?? []) {
+    if (row.state !== 'live' || typeof row.affects !== 'string') continue
+    for (const named of row.affects.split(/\r?\n/).map((each) => each.trim()).filter(Boolean)) {
+      const full = named === '~' || named.startsWith('~/') ? path.join(os.homedir(), named.slice(1)) : path.resolve(root, named)
+      try {
+        fs.accessSync(full, fs.constants.R_OK)
+      } catch {
+        warnings.push(`${row.label} affects ${named}, which this machine cannot read — check it where it lives, or say in the report that it went unchecked`)
+      }
+    }
+  }
+}
+
 /** A `rule` row as CLAUDE.md's rules block shows it: the statement, its decisions, what enforces it. */
 function ruleLine(rule) {
   const decisions = Array.isArray(rule.decided_by) && rule.decided_by.length > 0 ? ` (${rule.decided_by.join(', ')})` : ''
@@ -497,6 +521,7 @@ checkDecisionAnchors([...files, ...orientationFiles()])
 checkClosedMilestonesArchived()
 checkDecisionRows()
 checkUnitRows()
+checkAffectedFiles()
 checkRuleRows()
 checkTermRows()
 checkSessionHooks()

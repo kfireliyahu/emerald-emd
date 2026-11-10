@@ -10,7 +10,7 @@ import type { PackPast } from '../past.ts'
 
 export const DEVELOPMENT_PAST: PackPast = {
   notes: {
-    decision: ['bfcb631c', '48850fbe', '56d447c8'],
+    decision: ['bfcb631c', '48850fbe', '56d447c8', '0b148025'],
     inbox: ['7dec8a8d', '3e98d801', 'ebddaacc', 'cb4d2a3b', 'e46e8f35', 'e6292d58', '3ee14562', '8de904c3'],
     milestone: ['42ff3e1e', 'f66c5f53', '2efff3bf'],
     open_question: ['1cc7a401', 'e278a436', 'd592b597'],
@@ -19,6 +19,7 @@ export const DEVELOPMENT_PAST: PackPast = {
   },
   // Every column note, from the pack's git history on 2026-11-03 (M52 F4).
   columns: {
+    'decision.affects': ['b8ee2c80'],
     'decision.answer': ['8e4e7e80'],
     'decision.date': ['9e498fd9', 'b14a03d4'],
     'decision.milestone': ['7c4702d7', 'e363ce4a'],

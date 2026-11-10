@@ -30,6 +30,17 @@ step that keeps costing sessions. Real examples that outlived the commit that fa
 A superseded claim is worse than no claim, because it reads as current. Scope the grep to
 `docs/` and `src/`, never `dist/` or `node_modules/`.
 
+**Then the files each decision names** (M58 U4, D-569). Every decision you write this session
+says in `affects` which files it makes wrong, one path per line — relative to the repository, or
+absolute anywhere on the machine: `~/.claude/CLAUDE.md`, a note in another project. That is where a
+grep of `docs/` never looks, and where a decision landed one day was still contradicted days later.
+For each decision and each file it names, grep the file for the claim the decision made false; fix
+it there when it is this session's to edit, and flag it in the report when it is not. **A file you
+cannot read** — another machine's path, a folder outside your sandbox — **is named in the report as
+unchecked, never skipped in silence.** Asking which notes said the opposite is how `affects` gets
+written; a decision that makes no prose wrong leaves it empty. `npm run docs:check` warns on a live
+decision's `affects` path this machine cannot read; whether the claim is gone, it cannot tell.
+
 ## 2a. Write the rows — the other half of every entry
 
 `docs/memory.emd` is the project's memory, and it lags the moment a decision goes to markdown
@@ -44,7 +55,8 @@ land_units units:[{unit:"M47 U3", files:"…", decisions:[{ref:"D-461", title, q
 
 - **Every `## D-xxx` you added to the log → one of `decisions`.** `question` and `answer` are what
   a later session acts on without reading the argument — not a transcription of it. `date`,
-  `milestone`, `scope` and `state: live` default to the unit's.
+  `milestone`, `scope` and `state: live` default to the unit's. `affects` is step 2's list of
+  files, one path per line.
 - **The unit goes `built`** with `landed` (today unless said), `files` corrected to what you
   actually changed, and `decision` — its first new decision, or `decision:"D-xxx"` for one that
   exists. It is refused if the unit is already built or dropped, and is addressed by `ref`, never
