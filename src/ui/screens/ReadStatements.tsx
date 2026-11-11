@@ -6,6 +6,8 @@ import { LEFT_OUT } from '@/data/importer/apply.ts'
 import { listFunds } from '@/data/repositories/fundRepository.ts'
 import type { FundAccount } from '@/domain/model/funds.ts'
 import {
+  cardsOf,
+  cardsSentence,
   judgeBatch,
   keepApart,
   monthsOf,
@@ -65,6 +67,24 @@ export function ReadStatements() {
     if (db === undefined) return new Map()
     return judgeBatch(db, sheetsOf(batch), (id, verdict) => writesSheet(batch, id, verdict)).verdicts
   }, [db, revision, batch.files, batch.ticks, batch.forced])
+
+  // A file holding two cards or more says so on its first row, before anything
+  // is written: `2 cards: ••1234 · 41 rows, ••5678 · 17 rows` (M59 U2, D-578).
+  const cardLines = useMemo((): ReadonlyMap<string, string> => {
+    const byFile = new Map<string, { first: string; sheets: StatementSheet[] }>()
+    for (const file of batch.files) {
+      if (file.kind !== 'sheet') continue
+      const group = byFile.get(file.sheet.fileHash)
+      if (group === undefined) byFile.set(file.sheet.fileHash, { first: file.id, sheets: [file.sheet] })
+      else group.sheets.push(file.sheet)
+    }
+    const lines = new Map<string, string>()
+    for (const { first, sheets } of byFile.values()) {
+      const line = cardsSentence(cardsOf(sheets))
+      if (line !== undefined) lines.set(first, line)
+    }
+    return lines
+  }, [batch.files])
 
   if (db === undefined) return null
 
@@ -192,6 +212,7 @@ export function ReadStatements() {
                 key={file.id}
                 file={file}
                 verdict={verdicts.get(file.id)}
+                cards={cardLines.get(file.id)}
                 ticked={ticked(file)}
                 onTick={(on) => setTick(file.id, on)}
                 onLook={() => navigate(`/read/${encodeURIComponent(file.id)}`)}
@@ -245,6 +266,7 @@ function sheetId(files: readonly { id: string; sheet: StatementSheet }[], sheet:
 function FileRow({
   file,
   verdict,
+  cards,
   ticked,
   onTick,
   onLook,
@@ -258,6 +280,8 @@ function FileRow({
 }: {
   file: BatchFile
   verdict: SheetVerdict | undefined
+  /** The cards its file holds, on the file's first row, when there are two or more. */
+  cards: string | undefined
   ticked: boolean
   onTick: (on: boolean) => void
   onLook: () => void
@@ -439,6 +463,7 @@ function FileRow({
             </>
           )}
         </small>
+        {cards !== undefined && <small className="text-caption text-ink-secondary">{cards}</small>}
       </span>
       <span>{chip}</span>
       <span className="text-body text-ink-secondary tabular-nums">{figure}</span>

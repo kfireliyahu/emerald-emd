@@ -3,7 +3,8 @@ import { roleRejection, type ColumnRoleId } from '@/domain/model/columnRoles.ts'
 import type { Database } from 'sql.js'
 
 import type { CurrencyCode } from '@/core/money.ts'
-import { allParsed, applyMapping, firstParsed, leaveOut, LEFT_OUT, summarize, type ParsedRow } from '@/data/importer/apply.ts'
+import { allParsed, firstParsed, leaveOut, LEFT_OUT, summarize, type ParsedRow } from '@/data/importer/apply.ts'
+import { statementRows } from '@/data/importer/sections.ts'
 import { applyColumnProposal, statementContext } from '@/data/importer/columnProposal.ts'
 import { guessMapping, missingRequiredRoles, withColumnRole } from '@/data/importer/guess.ts'
 import { defaultMappingName, statedCardLast4 } from '@/data/importer/mappingName.ts'
@@ -72,7 +73,7 @@ export function MapperScreen({
   fileHash: string | undefined
   onDone: () => void
   /** The parse is in the database now, and the review screen takes it from here. */
-  onRead: (sheet: StatementSheet) => void
+  onRead: (sheets: readonly StatementSheet[]) => void
 }) {
   const [activeSheet, setActiveSheet] = useState(0)
   /**
@@ -379,7 +380,7 @@ function SheetBody({
   onDismissProposeProblem: () => void
   onKeep: (name: string) => string | undefined
   onNameChange: (name: string) => void
-  onRead: (sheet: StatementSheet) => void
+  onRead: (sheets: readonly StatementSheet[]) => void
   /** Skip a row that did not read from this read, or take it back (M55 U9). */
   onSkip: (rowIndex: number, skip: boolean) => void
   onEdit: () => void
@@ -396,7 +397,8 @@ function SheetBody({
     if (mapping === undefined) return undefined
 
     const missing = missingRequiredRoles(mapping)
-    const rows = missing.length > 0 ? [] : leaveOut(applyMapping(table, mapping), state.skipped)
+    // Section by section: a sheet holding two cards is read with each one's own header (M59 U2).
+    const rows = missing.length > 0 ? [] : leaveOut(statementRows(table, mapping), state.skipped)
     const byRowIndex = new Map<number, ParsedRow>(rows.map((row) => [row.rowIndex, row]))
 
     return {
@@ -543,9 +545,9 @@ function SheetBody({
         rows={parse?.rows ?? []}
         transactions={parse?.parsed ?? []}
         skipped={state.skipped}
-        onRead={(sheet) => {
+        onRead={(sheets) => {
           const kept = onKeep(name.trim() === '' ? suggestedName : name.trim())
-          onRead({ ...sheet, mappingId: kept ?? sheet.mappingId })
+          onRead(sheets.map((sheet) => ({ ...sheet, mappingId: kept ?? sheet.mappingId })))
         }}
       />
     </>

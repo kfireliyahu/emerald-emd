@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 
 import { SUPPORTED_EXTENSIONS } from '@/data/importer/sheetTable.ts'
-import type { StatementSheet } from '@/data/importer/statementBatch.ts'
+import { holdsTransactions, type StatementSheet } from '@/data/importer/statementBatch.ts'
 import { readSnapshot } from '@/data/storage/crashCache.ts'
 import { shellDocuments } from '@/data/storage/desktop.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
@@ -67,7 +67,7 @@ import { Goals } from '@/ui/screens/Goals.tsx'
 import { Section } from '@/ui/screens/Section.tsx'
 import { Transactions } from '@/ui/screens/Transactions.tsx'
 import { Year } from '@/ui/screens/Year.tsx'
-import { addStatementFiles, readWaitingLayouts } from '@/ui/home/statementIntake.ts'
+import { addStatementFiles, readWaitingLayouts, restOf } from '@/ui/home/statementIntake.ts'
 import { isDemo } from '@/ui/edition.ts'
 import { useAutoSave } from '@/ui/useAutoSave.ts'
 import { useDiskWatch } from '@/ui/useDiskWatch.ts'
@@ -167,16 +167,26 @@ export function App() {
    * batch on Read files and goes back there. Since onboarding went (M28 U9) the
    * batch is the only way a file reaches the mapper.
    */
-  const mapped = (sheet: StatementSheet): void => {
+  const mapped = (sheets: readonly StatementSheet[]): void => {
     const request = batch.mapping
     if (request === undefined || db === undefined) return
+    // Every card of the sheet it read, and the file's other sheets that hold
+    // transactions — read now by the reader just drawn when they share its
+    // layout, waiting for the mapper when they do not (M59 U2, D-578).
+    const read = new Set(sheets.map((sheet) => sheet.table.name))
+    const others = request.workbook.sheets.filter((table) => !read.has(table.name) && holdsTransactions(table))
     // And every file still waiting that the reader just drawn now fits (M28 F15).
     updateStatementBatch(db, (state) =>
       readWaitingLayouts(db, {
         ...state,
         mapping: undefined,
         files: state.files.flatMap((file) =>
-          file.id === request.id ? [{ kind: 'sheet' as const, id: sheet.id, fileName: file.fileName, sheet }] : [file],
+          file.id === request.id
+            ? [
+                ...sheets.map((sheet) => ({ kind: 'sheet' as const, id: sheet.id, fileName: file.fileName, sheet })),
+                ...restOf(request, others),
+              ]
+            : [file],
         ),
       }),
     )

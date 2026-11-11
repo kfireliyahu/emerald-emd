@@ -181,3 +181,47 @@ write('installments.xlsx', [
   ['תשלומים', installmentRows],
   ['תשלומים ממוספרים', numberedRows],
 ])
+
+// --- Two cards in one export (M59 U2, D-578) --------------------------------
+//
+// A card export can hold every card of an account, and it does it in one of two
+// shapes: each card a section of one sheet — a line naming the card, its header,
+// its rows, its total — or each card a sheet of its own. Made up throughout: the
+// card numbers, the merchants and the figures are nobody's.
+const cardHeader = ['תאריך עסקה', 'שם בית עסק', 'סכום חיוב', 'תאריך חיוב']
+const firstCard = [
+  [d(2026, 7, 3), 'מאפיית הדוגמה', ils(42.5), d(2026, 8, 2)],
+  [d(2026, 7, 9), 'סופר לדוגמה', ils(318.9), d(2026, 8, 2)],
+  [d(2026, 7, 15), 'תחנת דלק בדויה', ils(250), d(2026, 8, 2)],
+  [d(2026, 7, 21), 'SAMPLE BOOKS', ils(89.9), d(2026, 8, 2)],
+]
+const secondCard = [
+  [d(2026, 7, 4), 'בית קפה לדוגמה', ils(36), d(2026, 8, 2)],
+  [d(2026, 7, 12), 'חנות צעצועים בדויה', ils(149.9), d(2026, 8, 2)],
+  [d(2026, 7, 28), 'סופר לדוגמה', ils(204.4), d(2026, 8, 2)],
+]
+const totalOf = (rows) => ils(Math.round(rows.reduce((sum, row) => sum + row[2].amount, 0) * 100) / 100)
+
+write('two-cards-one-sheet.xlsx', [
+  [
+    'פירוט עסקאות',
+    [
+      ['פירוט עסקאות — דוגמה סינתטית'], //  1
+      [], //  2
+      ['כרטיס ויזה 4821'], //  3  the first card's line
+      cardHeader, //  4
+      ...firstCard, //  5-8
+      ['', '', '', '', 'סה"כ לחיוב', totalOf(firstCard)], //  9
+      [], // 10
+      ['כרטיס מסטרקארד 9356'], // 11  the second card's line
+      cardHeader, // 12
+      ...secondCard, // 13-15
+      ['', '', '', '', 'סה"כ לחיוב', totalOf(secondCard)], // 16
+    ],
+  ],
+])
+
+write('two-cards-two-sheets.xlsx', [
+  ['כרטיס 4821', [['פירוט עסקאות לכרטיס ויזה 4821'], [], cardHeader, ...firstCard, ['', '', '', '', 'סה"כ לחיוב', totalOf(firstCard)]]],
+  ['כרטיס 9356', [['פירוט עסקאות לכרטיס מסטרקארד 9356'], [], cardHeader, ...secondCard, ['', '', '', '', 'סה"כ לחיוב', totalOf(secondCard)]]],
+])

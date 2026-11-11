@@ -14,11 +14,13 @@ import { acceptAllNew } from '../repositories/stagedRowRepository.ts'
 import { accountsHoldingRows, existingNaturalKeys, type RowsHeld } from '../repositories/transactionRepository.ts'
 import { allParsed, applyMapping, bankRowsOf, leaveOut, type ParsedRow } from './apply.ts'
 import { commitSession, type CommitResult } from './commit.ts'
+import { guessMapping, missingRequiredRoles } from './guess.ts'
 import { defaultMappingName, statedCardLast4 } from './mappingName.ts'
 import { assignNaturalKeys } from './naturalKey.ts'
 import { findPrintedTotal, totalsAgree, type PrintedTotal } from './printedTotal.ts'
 import type { SheetCell, SheetTable, SheetWorkbook } from './sheetTable.ts'
-import { matchSavedMapping } from './signature.ts'
+import { statementSections } from './sections.ts'
+import { computeHeaderSignature, matchSavedMapping } from './signature.ts'
 import { stageImport } from './stage.ts'
 
 /**
@@ -74,11 +76,22 @@ export interface StatementSheet {
   readonly corrections: ReadonlyMap<number, ReadonlyMap<number, string>>
   /** Rows a person skipped from this read, by index (M55 U9, D-540) — never the reader's. */
   readonly skipped?: ReadonlySet<number> | undefined
+  /**
+   * **One card of a section whose card column holds several** (M59 U2, D-578):
+   * only the rows of `only` are this sheet's, and `rest` takes the rows with no
+   * card and the rows that did not read, so each is counted once.
+   */
+  readonly card?: { readonly only: string; readonly rest: boolean } | undefined
 }
 
-/** What reading a workbook came to: sheets a stored reader knows, or a new layout. */
+/**
+ * What reading a workbook came to: sheets a stored reader knows, or a new layout.
+ * `rest` is every other sheet of it that holds transactions in a layout no
+ * reader knows yet — never dropped, because a second card is often a second
+ * sheet (M59 U2, D-578).
+ */
 export type WorkbookRead =
-  | { readonly kind: 'sheets'; readonly sheets: readonly StatementSheet[] }
+  | { readonly kind: 'sheets'; readonly sheets: readonly StatementSheet[]; readonly rest: readonly SheetTable[] }
   | { readonly kind: 'new-layout' }
 
 /**
@@ -86,8 +99,11 @@ export type WorkbookRead =
  *
  * A close match is a new layout here — columns moved is a real question about
  * the file, and the mapper is where it is asked, with the moved columns marked.
- * A sheet nothing fits while another sheet of the same file is read is left
- * alone: a summary sheet beside the transactions is common and is not data.
+ * A sheet nothing fits while another sheet of the same file is read waits in
+ * `rest` when it holds transactions (M59 U2, D-578) — a second card is often a
+ * second sheet — and is left alone when it does not: a summary sheet beside the
+ * transactions is common and is not data. Each sheet read is cut into its
+ * cards (`sheetsFrom`).
  */
 export function readStatementWorkbook(
   db: Database,
@@ -95,11 +111,15 @@ export function readStatementWorkbook(
 ): WorkbookRead {
   const candidates = listMappings(db)
   const sheets: StatementSheet[] = []
+  const rest: SheetTable[] = []
   input.workbook.sheets.forEach((table, index) => {
     const match = candidates.length === 0 ? undefined : matchSavedMapping(table, candidates)
-    if (match === undefined || match.comparison.kind !== 'exact') return
+    if (match === undefined || match.comparison.kind !== 'exact') {
+      rest.push(table)
+      return
+    }
     sheets.push(
-      sheetFrom({
+      ...sheetsFrom({
         id: `${input.id}:${String(index)}`,
         fileName: input.fileName,
         fileHash: input.fileHash,
@@ -111,7 +131,114 @@ export function readStatementWorkbook(
       }),
     )
   })
-  return sheets.length === 0 ? { kind: 'new-layout' } : { kind: 'sheets', sheets }
+  return sheets.length === 0 ? { kind: 'new-layout' } : { kind: 'sheets', sheets, rest: rest.filter(holdsTransactions) }
+}
+
+/** The fewest rows a sheet's own guess must read for the sheet to be a statement and not a summary. */
+const STATEMENT_ROWS = 2
+
+/**
+ * Whether a sheet holds transactions: the app's own guess at its columns reads
+ * a few. A summary sheet beside the transactions — one line per card, a total —
+ * does not, and is still left alone.
+ */
+export function holdsTransactions(table: SheetTable): boolean {
+  const guessed = guessMapping(table)
+  if (guessed === undefined || missingRequiredRoles(guessed).length > 0) return false
+  return allParsed(applyMapping(table, guessed)).length >= STATEMENT_ROWS
+}
+
+/**
+ * The other sheets of a workbook in the layout one sheet was just read with,
+ * each with the mapping fitted to it — a card per sheet is a sheet per card
+ * (M59 U2, D-578).
+ */
+export function sameLayoutSheets(
+  workbook: SheetWorkbook,
+  table: SheetTable,
+  mapping: DraftMapping,
+): readonly { readonly table: SheetTable; readonly mapping: DraftMapping }[] {
+  const candidate = { headerSignature: computeHeaderSignature(table, mapping.headerRowIndex), mapping }
+  return workbook.sheets.flatMap((other) => {
+    if (other.name === table.name) return []
+    const match = matchSavedMapping(other, [candidate])
+    return match?.comparison.kind === 'exact' ? [{ table: other, mapping: match.mapping }] : []
+  })
+}
+
+/**
+ * **Every card a sheet holds, each a sheet of its own** — M59 U2, D-578.
+ *
+ * Cut at a repeated header or a card line (`statementSections`), and a section
+ * whose mapped card column holds more than one card cut again by it. Each card
+ * names its own account by its last four digits — a mapped column wins, then
+ * the number the section states — found or made on Write, one account per
+ * card. A sheet holding one card comes back as `sheetFrom` makes it.
+ */
+export function sheetsFrom(input: Parameters<typeof sheetFrom>[0]): readonly StatementSheet[] {
+  const sections = statementSections(input.table, input.mapping)
+  return sections.flatMap((section, index) =>
+    byCard(
+      sheetFrom({
+        ...input,
+        ...(sections.length === 1
+          ? {}
+          : {
+              id: `${input.id}:${String(index)}`,
+              table: section.table,
+              mapping: section.mapping,
+              statedLast4: section.statedLast4,
+            }),
+      }),
+      section.statedLast4,
+    ),
+  )
+}
+
+function byCard(sheet: StatementSheet, stated: string | undefined): readonly StatementSheet[] {
+  const cards: string[] = []
+  for (const draft of allParsed(sheetRows(sheet))) {
+    if (draft.cardLast4 !== undefined && !cards.includes(draft.cardLast4)) cards.push(draft.cardLast4)
+  }
+  if (cards.length < 2) return [sheet]
+  const home = stated !== undefined && cards.includes(stated) ? stated : cards[0]
+  return cards.map((card) => ({
+    ...sheet,
+    id: `${sheet.id}:${card}`,
+    account: { ...sheet.account, last4: card, fallbackName: accountNameFor(card, '', sheet.fileName) },
+    card: { only: card, rest: card === home },
+  }))
+}
+
+/** One card a read found, and how many of its rows read. */
+export interface CardCount {
+  readonly last4: string | undefined
+  readonly rows: number
+}
+
+/** The cards a read's sheets are for, in their order, with the rows each holds. */
+export function cardsOf(sheets: readonly StatementSheet[]): readonly CardCount[] {
+  const found: { last4: string | undefined; rows: number }[] = []
+  for (const sheet of sheets) {
+    const rows = allParsed(sheetRows(sheet)).length
+    const card = found.find((each) => each.last4 === sheet.account.last4)
+    if (card === undefined) found.push({ last4: sheet.account.last4, rows })
+    else card.rows += rows
+  }
+  return found
+}
+
+/**
+ * What a read says before anything is written, when it found more than one
+ * card: `2 cards: ••1234 · 41 rows, ••5678 · 17 rows`. Nothing for one card.
+ */
+export function cardsSentence(cards: readonly CardCount[]): string | undefined {
+  if (cards.length < 2) return undefined
+  const rows = (count: number): string => `${String(count)} ${count === 1 ? 'row' : 'rows'}`
+  return (
+    `${String(cards.length)} cards: ` +
+    cards.map((card) => `${card.last4 === undefined ? 'no card number' : `••${card.last4}`} · ${rows(card.rows)}`).join(', ')
+  )
 }
 
 /**
@@ -129,9 +256,14 @@ export function sheetFrom(input: {
   readonly boundAccountId: string | undefined
   readonly kind?: AccountKind | undefined
   readonly skipped?: ReadonlySet<number> | undefined
+  /** The number a section of a sheet states on its card line (M59 U2), ahead of the file's. */
+  readonly statedLast4?: string | undefined
 }): StatementSheet {
   const rows = leaveOut(applyMapping(input.table, input.mapping), input.skipped)
-  const last4 = cardLast4Of(rows, input.fileName, input.table, input.mapping.headerRowIndex)
+  const last4 =
+    allParsed(rows)[0]?.cardLast4 ??
+    input.statedLast4 ??
+    cardLast4Of(rows, input.fileName, input.table, input.mapping.headerRowIndex)
   const name =
     input.mappingName ??
     defaultMappingName({
@@ -212,8 +344,22 @@ export function correctedTable(sheet: StatementSheet): SheetTable {
   return { ...sheet.table, rows }
 }
 
-/** Every row the mapping makes of the sheet, corrections included. */
+/** Every row the mapping makes of the sheet, corrections included — of its own card, when it is one of several. */
 export function sheetRows(sheet: StatementSheet): readonly ParsedRow[] {
+  const rows = sectionRows(sheet)
+  const card = sheet.card
+  if (card === undefined) return rows
+  return rows.filter((row) =>
+    row.outcome.kind === 'parsed'
+      ? row.outcome.transaction.cardLast4 === undefined
+        ? card.rest
+        : row.outcome.transaction.cardLast4 === card.only
+      : card.rest,
+  )
+}
+
+/** Every row of the sheet's section, every card's: what its printed total covers. */
+function sectionRows(sheet: StatementSheet): readonly ParsedRow[] {
   return leaveOut(applyMapping(correctedTable(sheet), sheet.mapping), sheet.skipped)
 }
 
@@ -410,7 +556,8 @@ function judged(
     lastDataRowIndex,
     currency: sheet.mapping.defaultCurrency,
   })
-  const parsedTotals = totalsOf(rows)
+  // A total printed under a section speaks for every card in it.
+  const parsedTotals = totalsOf(sheet.card === undefined ? rows : sectionRows(sheet))
   const reconciles =
     printed === undefined ? undefined : parsedTotals.some((total) => totalsAgree(printed.amount, total))
   const balance = verifyRunningBalance(bankRowsOf(rows))

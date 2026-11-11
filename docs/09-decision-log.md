@@ -480,6 +480,7 @@ written out here.
 | D-575 | 2026-11-11 | The ledger is unparked: M59 fixes what a second person hit on first use — a file with two cards made one account per card, the provider's category and leaving a row out working on By merchant, 50 / 30 / 20 shown before it is made, a page that never scrolls into blank, Guide me never opening by itself, and a shape unit that decides what a new document shows; Hebrew is M60, after it | M59 |
 | D-576 | 2026-11-11 | A ledger document made before a change keeps opening with its rows: from M59 on, a change to a ledger format or an engine table reaches an existing document as a kept pack already does (D-443) or by a migration, with a test on a document made before it; amends D-276 for documents from here on. Her statement file will not be available, so M59 U2 proves the two-card split on made-up files only | M59 |
 | D-577 | 2026-11-11 | A new ledger document holds back the places it has nothing for — Year, Paychecks, Plan, Wealth, Dashboard, and in a ledger-only document Formats, Connections and Agenda — and each comes back with its first row; Home, Transactions and By merchant keep what a first-time person needs and put the rest behind Filter and More (M59 U1's picks, not yet the maintainer's) | M59 |
+| D-578 | 2026-11-11 | A statement holding two cards is one account per card: a sheet is cut into sections at a repeated header or a card line, each read with its own header, a section's card column cuts it again, every sheet of a workbook with transactions is read, and the read says how many cards it found before anything is written | M59 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -808,6 +809,48 @@ ledger's places and leaving the engine's: the narrower pick, named in the brief 
 
 **Consequences.** M59 U6 builds it (its brief carries the picks as SETTLED); the terms *Getting
 started*, *Add a paycheck* and *Filter* are rows. Nothing a conversation does changes.
+## D-578 · 2026-11-11 · A statement holding two cards is one account per card: a sheet is cut into sections at a repeated header or a card line, each read with its own header, a section's card column cuts it again, every sheet of a workbook with transactions is read, and the read says how many cards it found before anything is written <a id="d-578"></a>
+
+**Context.** Her card Excel held two cards and every row went to one account (D-575). The header was
+the first one in the top twenty rows and a repeated one was ignored on purpose; the mapping read to the
+end of the sheet, so a second card's line and header became rows that failed and its rows were read
+with the first card's columns; a sheet named one card; and the mapper handed back the open tab only,
+while a sheet no saved reader fitted was dropped as a summary. Her file is not available (D-576), so
+which shape it was is unknown: both are built and proved on made-up files.
+
+**Decision** (M59 U2):
+
+- **A sheet is cut into sections** (`statementSections`, `src/data/importer/sections.ts`) where a row
+  repeats the header — exactly, or close enough that the saved columns can be fitted by name — or where a
+  short line that does not read states a card number (`כרטיס מסטרקארד 9356`). A section is the same sheet
+  with every row outside it empty and nothing after it, so row numbers, the printed total, the printed
+  period and the card above the header are each the section's own. A card line under the last row is a
+  footer, not a section. A sheet of one section is read exactly as before.
+- **One account per card.** A section's card is its mapped card column's (that wins), then the number
+  on its card line. A section whose card column holds several cards is cut again by it; rows with no
+  card, and rows that failed, go with one card so each is counted once, and a total printed under the
+  section is checked against all of its cards. Each card's account is found by its last four digits or
+  made on Write, as a single card's always was (`resolveAccountForImport`); a reader bound to an account
+  with no number gives it the first card's.
+- **Every sheet with transactions is read.** A sheet no saved reader fits, beside sheets one does, waits
+  as a new layout of its own when the app's own guess reads at least two rows of it (a summary sheet
+  does not, and is still left alone); after the mapper reads one tab, the file's other tabs with
+  transactions are read by the reader just drawn or wait for the mapper.
+- **The read says it before anything is written**: `2 cards: ••4821 · 4 rows, ••9356 · 3 rows` — on
+  the mapper's bar (where *Into* then gives way: each card goes to its own account) and on the file's
+  first row in Read files. A conversation gets the same: `statement_preview` says it, and
+  `import_statement` reads every card — every sheet of the layout unless `sheet` names one — through the
+  screen's own `judgeBatch` and `writeSheets`, with `account_id` or `new_account` the account of the
+  card it has the digits of.
+
+**Rejected.** A per-row account in `commitSession` (one staged session per card keeps the commit,
+dedupe and the reader's account untouched); a `dataEndRowIndex` on `DraftMapping` (a saved reader
+would have carried a per-file fact); refusing `account_id` on a two-card file (the bound reader's rule
+already says which card it is).
+
+**Consequences.** No ledger format and no engine table changed, so D-576's test is not needed. The
+session a card-column split stages records the section's printed total, which speaks for every card in
+it. A section whose header has nothing in common with the first is still read with the first's columns.
 
 ## Related
 

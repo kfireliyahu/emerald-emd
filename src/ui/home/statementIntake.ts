@@ -2,6 +2,7 @@ import type { Database } from 'sql.js'
 
 import { hashBytes } from '@/data/importer/naturalKey.ts'
 import { isSupportedFileName, readWorkbook, SUPPORTED_EXTENSIONS } from '@/data/importer/sheetTable.ts'
+import type { SheetTable } from '@/data/importer/sheetTable.ts'
 import { readStatementWorkbook, type StatementSheet } from '@/data/importer/statementBatch.ts'
 import { updateStatementBatch, type BatchFile, type StatementBatchState } from '@/state/statementBatch.ts'
 
@@ -55,9 +56,34 @@ export function readWaitingLayouts(db: Database, state: StatementBatchState): St
       const found = readStatementWorkbook(db, { fileName: file.fileName, fileHash: file.fileHash, workbook: file.workbook, id: file.id })
       return found.kind === 'new-layout'
         ? [file]
-        : found.sheets.map((sheet) => sameReaderSameAccount(state, { kind: 'sheet', id: sheet.id, fileName: file.fileName, sheet }))
+        : [
+            ...found.sheets.map((sheet) => sameReaderSameAccount(state, { kind: 'sheet', id: sheet.id, fileName: file.fileName, sheet })),
+            ...restOf(file, found.rest),
+          ]
     }),
   }
+}
+
+/**
+ * **The sheets of a file no reader read yet, still waiting** (M59 U2, D-578):
+ * a workbook whose second sheet is a second card is read whole, never only the
+ * sheet a reader knew or the tab the mapper had open. They wait as a new layout
+ * of their own, holding only those sheets.
+ */
+export function restOf(
+  file: { readonly id: string; readonly fileName: string; readonly fileHash: string },
+  rest: readonly SheetTable[],
+): readonly BatchFile[] {
+  if (rest.length === 0) return []
+  return [
+    {
+      kind: 'new-layout',
+      id: `${file.id}:rest`,
+      fileName: file.fileName,
+      fileHash: file.fileHash,
+      workbook: { fileName: file.fileName, sheets: rest },
+    },
+  ]
 }
 
 /**
@@ -103,7 +129,10 @@ async function readOne(db: Database, file: File, id: string): Promise<readonly B
     const fileHash = await hashBytes(bytes).catch(() => `unhashed:${fileName}:${String(bytes.length)}`)
     const found = readStatementWorkbook(db, { fileName, fileHash, workbook, id })
     if (found.kind === 'new-layout') return [{ kind: 'new-layout', id, fileName, workbook, fileHash }]
-    return found.sheets.map((sheet): BatchFile => ({ kind: 'sheet', id: sheet.id, fileName, sheet }))
+    return [
+      ...found.sheets.map((sheet): BatchFile => ({ kind: 'sheet', id: sheet.id, fileName, sheet })),
+      ...restOf({ id, fileName, fileHash }, found.rest),
+    ]
   } catch (cause) {
     return [{ kind: 'failed', id, fileName, message: cause instanceof Error ? cause.message : String(cause) }]
   }

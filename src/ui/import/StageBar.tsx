@@ -3,7 +3,15 @@ import { useMemo, useState } from 'react'
 import { formatMoney } from '@/core/money.ts'
 import { allParsed, type ParsedRow } from '@/data/importer/apply.ts'
 import type { SheetTable } from '@/data/importer/sheetTable.ts'
-import { guessKind, judgeBatch, placeRows, sheetFrom, type StatementSheet } from '@/data/importer/statementBatch.ts'
+import {
+  cardsOf,
+  cardsSentence,
+  guessKind,
+  judgeBatch,
+  placeRows,
+  sheetsFrom,
+  type StatementSheet,
+} from '@/data/importer/statementBatch.ts'
 import { listAccounts, type AccountKind } from '@/data/repositories/accountRepository.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
@@ -58,7 +66,7 @@ export function StageBar({
   transactions: readonly DraftTransaction[]
   /** The rows a person skipped from this read (M55 U9), which go into the batch with it. */
   skipped?: ReadonlySet<number> | undefined
-  onRead: (sheet: StatementSheet) => void
+  onRead: (sheets: readonly StatementSheet[]) => void
 }) {
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
@@ -93,6 +101,30 @@ export function StageBar({
     return { accounts, making, found: placed.account, joins: placed.joins, held, fallback }
     // `revision` is the document changing under the same `db`.
   }, [db, revision, rows, boundAccountId, cardLast4, accountName, batch.files, batch.ticks, batch.forced])
+
+  /**
+   * **Every card of the sheet, each a sheet of its own** (M59 U2, D-578): cut
+   * at a repeated header or a card line, or by a card column holding several.
+   * Two or more cards each go to their own account, and the bar says so before
+   * anything is written.
+   */
+  const sheets = useMemo(
+    () =>
+      sheetsFrom({
+        id: `${fileHash ?? 'unread'}:${sheetName}`,
+        fileName,
+        fileHash: fileHash ?? '',
+        table,
+        mapping,
+        mappingId,
+        mappingName,
+        boundAccountId,
+        skipped,
+      }),
+    [fileHash, sheetName, fileName, table, mapping, mappingId, mappingName, boundAccountId, skipped],
+  )
+  const cards = useMemo(() => cardsOf(sheets), [sheets])
+  const severalCards = cardsSentence(cards)
 
   if (db === undefined) {
     return (
@@ -129,23 +161,16 @@ export function StageBar({
 
   const read = (): void => {
     if (fileHash === undefined) return
-    const sheet = sheetFrom({
-      id: `${fileHash}:${sheetName}`,
-      fileName,
-      fileHash,
-      table,
-      mapping,
-      mappingId,
-      mappingName,
-      boundAccountId,
-      kind: kind ?? guessedKind,
-      skipped,
-    })
+    // Two cards or more: each to the account its own number finds or makes.
+    if (severalCards !== undefined) {
+      onRead(sheets.map((sheet) => ({ ...sheet, account: { ...sheet.account, kind: kind ?? guessedKind } })))
+      return
+    }
     // Named from the card's last-4 where the file supplies one, as it always was.
     // An account picked here is bound for this read; the commit teaches the
     // reader it, so the next export of this layout goes there on its own. A
     // choice made beside the overlap line is the person's say: not asked again.
-    onRead({
+    onRead(sheets.map((sheet) => ({
       ...sheet,
       account:
         chosenMaking !== undefined
@@ -160,7 +185,7 @@ export function StageBar({
               kind: chosenAccount.kind,
               separate: held === undefined || held.accountId === chosenAccount.id ? undefined : true,
             },
-    })
+    })))
   }
 
   return (
@@ -181,7 +206,9 @@ export function StageBar({
       {/* Only when an account is about to be **created**. A file going into an
           account the user already bound is not the moment to ask what that
           account is (D-070). */}
-      {boundAccountId === undefined && held !== undefined && (
+      {severalCards !== undefined && <span data-cards>{severalCards}, each into its own account</span>}
+
+      {severalCards === undefined && boundAccountId === undefined && held !== undefined && (
         <span className="text-caption text-ink-secondary">
           {held.accountId === undefined && held.madeBy !== undefined ? (
             <>
@@ -195,7 +222,7 @@ export function StageBar({
         </span>
       )}
 
-      {boundAccountId === undefined && where !== undefined && (
+      {severalCards === undefined && boundAccountId === undefined && where !== undefined && (
         <label className="ml-auto flex items-center gap-2 text-caption text-ink-secondary">
           Into
           <ChoiceMenu
@@ -208,7 +235,7 @@ export function StageBar({
         </label>
       )}
 
-      {boundAccountId === undefined && chosenAccount === undefined && chosenMaking === undefined && (
+      {boundAccountId === undefined && (severalCards !== undefined || (chosenAccount === undefined && chosenMaking === undefined)) && (
         <label className="flex items-center gap-2 text-caption text-ink-secondary">
           as a
           <ChoiceMenu
@@ -224,7 +251,7 @@ export function StageBar({
       <Button
         variant="primary"
         icon="check"
-        className={boundAccountId === undefined && where !== undefined ? '' : 'ml-auto'}
+        className={severalCards === undefined && boundAccountId === undefined && where !== undefined ? '' : 'ml-auto'}
         onClick={read}
         disabled={fileHash === undefined}
       >
