@@ -4901,6 +4901,16 @@ answer: Four areas (home, reading, transactions, merchants), en/ and he/ files e
 state: live
 affects: docs/09-decision-log.md
 
+### D-590
+date: 2026-11-11
+milestone: M60
+scope: app
+title: The second half of the screens speaks through the layer: a sentence with a value in it is one word with placeholders drawn by Phrase, a word outside a render is tNow, a category path's arrow points the way its own words run, a menu opens from its control's start edge, and a test reads the source for typed English
+question: How do Categories, Plan, Settings, the guide, the rail, the dialogs and the palette go through the translation layer, and what U3 left (menus from a button's box, arrows in strings)?
+answer: A sentence with a value is one catalogue word with {name} placeholders; element parts go in via Phrase (src/ui/components/Phrase.tsx). Label tables and helpers outside a render use tNow (src/i18n/words.ts); src/data and src/domain never import the layer — the guide's steps and the plugin catalogue keep their English and the UI keys words by id, with tests that the English matches. pathArrows turns a category path's → into ← when its first strong letter is Hebrew (by the path's words, not the app's language). startEdge (src/ui/direction.ts) is where a menu opened from a control starts: ContextMenu, PointsAt and ChoiceField end at it in rtl, flyouts and their arrow keys follow arrowStep, the guide card sits on the anchor's end side. src/i18n/screensPartTwo.test.ts parses these files as TSX and fails on English JSX text or read attributes given as literals; probe:screens -- --lang he draws the words in Hebrew for the page (showLanguage) and lists Latin text outside a Bidi; the rail is found by data-rail.
+state: live
+affects: "src/i18n/he/rail.ts\nscripts/probe-screens.mjs\nsrc/ui/probe.ts"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -5960,6 +5970,15 @@ refs: M56 U3
 state: applied
 answered_by: D-549
 became_unit: M56 U3
+
+### Landing proposal: M60 U5 — Hebrew screens, part two (D-590)
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-11
+body: "M60 U5 built on branch `worktree-agent-a1e3cca0cb3702b0b` at `dbb29f3`: Categories and Rules, Plan with the 50 / 30 / 20 proposal and the cushion, Settings, the guide, the rail and title bar, the dialogs and notices, the start screen and the command palette speak Hebrew through the layer; English unchanged (tests, tours). docs:check in the worktree has one error, D-590's row, which this landing writes.\n\n```json\n{\"unit\":\"M60 U5\",\"files\":\"src/i18n/en/{plan,categories,rules,guide,chrome,palette,settings}.ts\\nsrc/i18n/he/{plan,categories,rules,guide,chrome,palette,settings,rail}.ts\\nsrc/i18n/catalogue.ts\\nsrc/i18n/words.ts\\nsrc/i18n/current.ts\\nsrc/i18n/screensPartTwo.test.ts\\nsrc/ui/components/Phrase.tsx\\nsrc/ui/direction.ts\\nsrc/ui/screens/{Categories,Rules,Plan,Packs,Accounts,LocalModel,Calendar,Export,Mcp}.tsx\\nsrc/ui/categories/{AppearancePicker,ParentPicker}.tsx\\nsrc/ui/rules/*\\nsrc/ui/plan/*\\nsrc/ui/fixed/*\\nsrc/ui/split/labels.ts\\nsrc/ui/savings/{Cushion,GoalPanels}.tsx\\nsrc/ui/guide/{Guide,GuideLine,useGuide,stepWords}.ts(x)\\nsrc/ui/mcp/words.ts\\nsrc/ui/{Sidebar,RailFolder,HistoryArrows,DocumentBar,Notices,EarlierCopies,About,CommandPalette,commands}.ts(x)\\nsrc/App.tsx (the start screen only)\\nsrc/ui/components/{CategoryPicker,ChoiceField,ContextMenu,FilterButton,PageMenu,ReadingBar,SelectOrNew,ThemeToggle,ViewTabs,NativePicker,Amount}.tsx\\nsrc/ui/probe.ts\\nscripts/probe-screens.mjs\\nsrc/ui/bidiTruncation.test.ts\\nsrc/ui/formats/surfaceRules.test.ts\\ndocs/09-decision-log.md\",\"commit\":\"dbb29f3\",\"branch\":\"worktree-agent-a1e3cca0cb3702b0b\",\"decisions\":[{\"ref\":\"D-590\",\"title\":\"The second half of the screens speaks through the layer: a sentence with a value in it is one word with placeholders drawn by Phrase, a word outside a render is tNow, a category path's arrow points the way its own words run, a menu opens from its control's start edge, and a test reads the source for typed English\",\"question\":\"How do Categories, Plan, Settings, the guide, the rail, the dialogs and the palette go through the translation layer, and what U3 left (menus from a button's box, arrows in strings)?\",\"answer\":\"A sentence with a value is one catalogue word with {name} placeholders; element parts go in via Phrase (src/ui/components/Phrase.tsx). Label tables and helpers outside a render use tNow (src/i18n/words.ts); src/data and src/domain never import the layer — the guide's steps and the plugin catalogue keep their English and the UI keys words by id, with tests that the English matches. pathArrows turns a category path's → into ← when its first strong letter is Hebrew (by the path's words, not the app's language). startEdge (src/ui/direction.ts) is where a menu opened from a control starts: ContextMenu, PointsAt and ChoiceField end at it in rtl, flyouts and their arrow keys follow arrowStep, the guide card sits on the anchor's end side. src/i18n/screensPartTwo.test.ts parses these files as TSX and fails on English JSX text or read attributes given as literals; probe:screens -- --lang he draws the words in Hebrew for the page (showLanguage) and lists Latin text outside a Bidi; the rail is found by data-rail.\",\"affects\":\"src/i18n/he/rail.ts\\nscripts/probe-screens.mjs\\nsrc/ui/probe.ts\"}],\"review_entries\":[{\"do\":\"Settings › Language → עברית, open a document and walk Plan (with the 50 / 30 / 20 proposal on a new ledger), Categories and its Rules, Settings, the guide (Guide me), the palette (Ctrl+K) and a row's right-click menu. About 220 words had no term row and are drafts that fit the glossary — the ones to read hardest: the rail's Funds קופות and Calendar לוח שנה; Plan's Net pay נטו, To split לחלוקה, Not given a job בלי ייעוד, Planned / Got מתוכנן / בפועל, Left out מחוץ לתקציב; the five category kinds הוצאה / הכנסה / העברה / חיסכון / החזר חוב (U4 should reuse categories.kinds.*); Spending / Money moved / Income הוצאות / כסף שהועבר / הכנסות; Archive העברה לארכיון; rule tiers שלך / מובנים / מהתיקונים שלך; Unchecked לא נבדק; Opening balance יתרת פתיחה; the ledger pack כספים / חבילת הכספים; Entry רשומה (palette); Dismiss סגירה, Later בהמשך, Not now לא עכשיו, Keep השארה; Earlier copies עותקים קודמים; New ledger ספר כספים חדש; the theme בהירה / לפי המערכת / כהה; Back / Forward אחורה / קדימה.\",\"should\":\"No English outside a document's own words, product names (Emerald, Claude, SQLite, Git) and keys; every word reads as Israeli app Hebrew without addressing a man or a woman; a menu opened from a button grows leftward from it; a category path's arrow points from the parent to the child as Hebrew reads. English is unchanged everywhere.\"}]}\n```"
+refs: M60 U5
+state: applied
+answered_by: D-590
+became_unit: M60 U5
 
 ### M51 F6 ready to land: test.yml on every push, demo after it, related tests in sessions
 from: F:/projects/emerald/docs/memory.emd
@@ -8584,6 +8603,11 @@ unit: M60 U4
 should: No English word outside a document's own names; counts read right ('2 כרטיסים', 'סינון · 2'); the new card is named כרטיס 1234 (the unit's pick, not yet yours). ~140 Hebrew words are drafts beyond the glossary, each listed in the unit's report; the ones to look at hardest: Saved נחסך, Write כתיבה, Dismiss סגירה, Leave out of totals השמטה מהסיכומים, Reference אסמכתא, Reader roles (תאריך חיוב, 4 ספרות אחרונות של הכרטיס), All rows כל התנועות, Waiting ממתינים. Taxes spelled מיסים as the seeded category. Still English on these screens, left to U5 or the data layer: CategoryPicker's own words and its path titles (→), PageMenu's 'More about…', Amount's aria-label 'minus', the 'N answers wait on Home' notice (Notices.tsx), the guide's step name in the Getting started line (domain/guide.ts), salaryBankWords, roleRejection, the parser's row errors, draftProblems, Why.tsx's rule text.
 state: open
 
+### Settings › Language → עברית, open a document and walk Plan (with the 50 / 30 / 20 proposal on a new ledger), Categories and its Rules, Settings, the guide (Guide me), the palette (Ctrl+K) and a row's right-click menu. About 220 words had no term row and are drafts that fit the glossary — the ones to read hardest: the rail's Funds קופות and Calendar לוח שנה; Plan's Net pay נטו, To split לחלוקה, Not given a job בלי ייעוד, Planned / Got מתוכנן / בפועל, Left out מחוץ לתקציב; the five category kinds הוצאה / הכנסה / העברה / חיסכון / החזר חוב (U4 should reuse categories.kinds.*); Spending / Money moved / Income הוצאות / כסף שהועבר / הכנסות; Archive העברה לארכיון; rule tiers שלך / מובנים / מהתיקונים שלך; Unchecked לא נבדק; Opening balance יתרת פתיחה; the ledger pack כספים / חבילת הכספים; Entry רשומה (palette); Dismiss סגירה, Later בהמשך, Not now לא עכשיו, Keep השארה; Earlier copies עותקים קודמים; New ledger ספר כספים חדש; the theme בהירה / לפי המערכת / כהה; Back / Forward אחורה / קדימה.
+unit: M60 U5
+should: No English outside a document's own words, product names (Emerald, Claude, SQLite, Git) and keys; every word reads as Israeli app Hebrew without addressing a man or a woman; a menu opened from a button grows leftward from it; a category path's arrow points from the parent to the child as Hebrew reads. English is unchanged everywhere.
+state: open
+
 ### Switch Settings › Language to עברית in the desktop app, open the menu with Alt (File, Edit, View, Help), try Help › License, and close a document with unsaved changes.
 unit: M60 U7
 should: Every menu item, the unsaved-work question and its buttons, and the License window's title are Hebrew, and still Hebrew after a restart. Drafted words (not in the glossary) to judge: קובץ, עריכה, תצוגה, עזרה, חדש, פתיחה…, מסמכים אחרונים, עדיין אין, ניקוי רשימת המסמכים האחרונים, שמירה, עותקים קודמים של המסמך…, סגירת החלון, יציאה, ביטול פעולה, ביצוע חוזר, גזירה, העתקה, הדבקה, בחירת הכול, פקודות…, הצגה או הסתרה של סרגל הצד, גודל אמיתי, הגדלה, הקטנה, מסך מלא, כלי מפתחים, רישיון, הודעות צד שלישי, קוד המקור, נפתח בדפדפן, בדיקת עדכונים עכשיו, אודות Emerald, מסמך Emerald, בלי לשמור, ביטול, 'לשמור את {name} לפני הסגירה?', the restart and crash sentences. Glossary words used: שמירה בשם (Save as), הדרכה (Guide me).
@@ -9046,8 +9070,8 @@ statement: A screen in the translated set draws every word of its own with `t()`
 why: An English word written inline in a translated screen is a word Hebrew never reaches, and nobody sees it until a person reads the screen in Hebrew. The test parses every file of the set and names the file and line, so a new string added to a translated screen fails the suite the day it is written, in English as well as in Hebrew. D-589 (M60 U4) has the rest; link it here when it lands.
 kind: non_negotiable
 scope: ui
-decided_by: ["D-583","D-584","D-589"]
-enforced_by: src/i18n/words.test.ts
+decided_by: ["D-583","D-584","D-589","D-590"]
+enforced_by: src/i18n/words.test.ts, src/i18n/screensPartTwo.test.ts
 always: false
 state: live
 
@@ -17147,15 +17171,18 @@ report: Built at e9775ca, merged into main at b613399 (catalogue.ts conflict wit
 milestone: M60
 scope: app
 title: Hebrew screens, part two: Categories, Plan, Settings, the guide, the rail, dialogs and the palette
-decision: D-583
-state: in_progress
+landed: 2026-11-11
+decision: D-590
+state: built
 brief: D-583. FIRST: if any M59 unit is planned or in_progress, stop and report (D-583 point 10). Then every on-screen word of Categories, Plan (with M59 U4's 50 / 30 / 20 proposal), Settings, the guide and its steps (src/data/packs/ledger/guide.ts), the rail and title bar, the app's shared dialogs and confirmations, and the command palette goes through the layer (U1), English unchanged, Hebrew from the glossary (U2) in this area's catalogue files only (src/i18n/he/<area>.ts) — U4 translates the intake and transaction screens beside you. Paychecks, Wealth, Dashboard, Formats, Connections and Agenda fall back to English (D-583); if a shared component you translate reaches them, that is fine. A word that is no term gets a draft that fits the glossary; list every such word in the report and on the unit's review_entry. Extend U4's rule test to these screens (if U4 has not landed yet, write the test for yours and say so). Check both languages with probe:screens (rtl) on demo.emd and a new empty ledger document. Unset: stop and ask. Done-test: in Hebrew these places show no English word outside a document's own data; in English nothing changed.
-files: "src/ui/screens/Categories.tsx\nsrc/ui/screens/Plan.tsx\nsrc/ui/plan/StarterProposal.tsx\nsrc/ui/guide/GuideLine.tsx\nsrc/data/packs/ledger/guide.ts\nsrc/ui/Sidebar.tsx"
+files: "src/i18n/en/{plan,categories,rules,guide,chrome,palette,settings}.ts\nsrc/i18n/he/{plan,categories,rules,guide,chrome,palette,settings,rail}.ts\nsrc/i18n/catalogue.ts\nsrc/i18n/words.ts\nsrc/i18n/current.ts\nsrc/i18n/screensPartTwo.test.ts\nsrc/ui/components/Phrase.tsx\nsrc/ui/direction.ts\nsrc/ui/screens/{Categories,Rules,Plan,Packs,Accounts,LocalModel,Calendar,Export,Mcp}.tsx\nsrc/ui/categories/{AppearancePicker,ParentPicker}.tsx\nsrc/ui/rules/*\nsrc/ui/plan/*\nsrc/ui/fixed/*\nsrc/ui/split/labels.ts\nsrc/ui/savings/{Cushion,GoalPanels}.tsx\nsrc/ui/guide/{Guide,GuideLine,useGuide,stepWords}.ts(x)\nsrc/ui/mcp/words.ts\nsrc/ui/{Sidebar,RailFolder,HistoryArrows,DocumentBar,Notices,EarlierCopies,About,CommandPalette,commands}.ts(x)\nsrc/App.tsx (the start screen only)\nsrc/ui/components/{CategoryPicker,ChoiceField,ContextMenu,FilterButton,PageMenu,ReadingBar,SelectOrNew,ThemeToggle,ViewTabs,NativePicker,Amount}.tsx\nsrc/ui/probe.ts\nscripts/probe-screens.mjs\nsrc/ui/bidiTruncation.test.ts\nsrc/ui/formats/surfaceRules.test.ts\ndocs/09-decision-log.md"
 blocks: ["M60 U1","M60 U2","M60 U3"]
 taken_by: run-milestone driver
 started: 2026-11-11
-branch: main
+branch: worktree-agent-a1e3cca0cb3702b0b
+commit: dbb29f3
 paths: "src/ui/screens/Categories.tsx\nsrc/ui/categories/\nsrc/ui/screens/Plan.tsx\nsrc/ui/plan/\nsrc/ui/guide/\nsrc/data/packs/ledger/guide.ts\nsrc/ui/Sidebar.tsx\nsrc/ui/palette/"
+report: M60 U5 built at dbb29f3 in its worktree (D-590) and merged at a0e9d1c beside U4 (D-589), which had built two things twice. Reconciled: probe:screens --lang he keeps U4's `english` list (stillEnglish leaves out every document value: .bidi, dir=auto, code, kbd, .font-mono, aria-hidden, and Emerald, acronyms and key names) and drops U5's `latin`, which left out less; U4's one settle after language and direction stays, U5's extra one went; U5's nav[data-rail] stays. Home's Getting started line is U5's (guide.line.*, Phrase, stepWords, which names the step in Hebrew too); U4's home.guide.* keys left en/ and he/home.ts, and stepWords' English fallback calls domain/guide.ts's asNext again so it is not dead. Phrase is now fillNodes drawn as a component. By merchant's category paths use pathArrows (by the path's own words) instead of U4's arrow by the app's language. No U4 twin of categories.kinds.*. The two source tests stay two: folding U5's 45 files into words.test.ts's TRANSLATED fails 15 of them on U4's stricter reading (literals in branches and helpers: this/last/next week, entry/entries, A new, What kind of, stepped back, Default, Del, Light/System/Dark, plan.bar.* keys passed as text, CSS strings), so screensPartTwo.test.ts was added to the rule row's enforced_by. Later: fold the two tests once those are words or allowed; move Phrase's callers to fillNodes (or the other way) so there is one name. Suite 5741 green (formatWatch alone on a rerun), typecheck, check:tours, probe --lang he on demo.emd draws Hebrew on /, /plan, /categories, /transactions; its english list still counts a document's value inside an app-written aria-label or title.
 
 ### M60 U6
 milestone: M60
