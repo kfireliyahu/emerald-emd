@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import { starterBuckets, starterShareOf, unplacedHeadings, type StarterHeading } from './starterPlan.ts'
+import {
+  starterBuckets,
+  starterProposal,
+  starterShareOf,
+  starterWhy,
+  starterWindow,
+  unplacedHeadings,
+  type StarterHeading,
+} from './starterPlan.ts'
 
 const heading = (id: string, name: string, spentMinor: number, kind = 'EXPENSE', isSystem = false): StarterHeading => ({
   id,
@@ -84,5 +92,57 @@ describe('the starter’s order (M31 U4)', () => {
     expect(buckets.map((one) => one.share)).toEqual([...buckets.map((one) => one.share)].sort(
       (a, b) => ['NEEDS', 'WANTS', 'SAVING'].indexOf(a) - ['NEEDS', 'WANTS', 'SAVING'].indexOf(b),
     ))
+  })
+})
+
+describe('the starter shown before it is made (M59 U4, D-580)', () => {
+  it('lists every heading with its share, its part and why', () => {
+    const proposal = starterProposal(seeded, new Map())
+    expect(proposal.lines.map((one) => one.heading.name)).toEqual(seeded.map((one) => one.name))
+    expect(proposal.unanswered).toEqual([])
+    const byName = new Map(proposal.lines.map((one) => [one.heading.name, one]))
+    expect(byName.get('Living')).toMatchObject({ answer: 'NEEDS', placedBy: 'DEFAULT', basisPoints: 3750, sizedBy: 'SPENT' })
+    expect(byName.get('Health & Fitness')).toMatchObject({ answer: 'NEEDS', basisPoints: 0, sizedBy: 'NOTHING_OUT' })
+    expect(byName.get('Savings')).toMatchObject({ answer: 'SAVING', placedBy: 'DEFAULT', basisPoints: 2000, sizedBy: 'WHOLE' })
+    expect(byName.get('Income')).toMatchObject({ answer: 'NONE', placedBy: 'NOT_SPLIT', basisPoints: 0 })
+    // The same arithmetic Make plan writes.
+    expect(proposal.buckets).toEqual(starterBuckets(seeded, new Map()))
+
+    const living = byName.get('Living')
+    const health = byName.get('Health & Fitness')
+    if (living === undefined || health === undefined) throw new Error('missing lines')
+    expect(starterWhy(living, 3, 'ILS', undefined)).toBe('Needs by default · ₪1,000.00 a month went out')
+    expect(starterWhy(health, 3, 'ILS', undefined)).toBe('Needs by default · Nothing went out, so no bucket')
+    expect(starterWhy(living, 3, 'ILS', 'Rent and food')).toBe('Needs by default · ₪1,000.00 a month went out · keeps its bucket Rent and food')
+  })
+
+  it('moves a heading the starter placed itself when the person says, and says so', () => {
+    const moved = starterProposal(seeded, new Map([['cat:transport', 'WANTS']]))
+    const transport = moved.lines.find((one) => one.heading.id === 'cat:transport')
+    expect(transport).toMatchObject({ answer: 'WANTS', placedBy: 'CHOSEN' })
+    if (transport === undefined) throw new Error('missing Transport')
+    expect(starterWhy(transport, 3, 'ILS', undefined)).toMatch(/^You chose · /)
+    // Living takes the whole half now; Lifestyle and Transport share the 30% by what went out.
+    expect(moved.buckets.filter((one) => one.share === 'NEEDS').map((one) => [one.name, one.basisPoints])).toEqual([['Living', 5000]])
+    expect(moved.buckets.filter((one) => one.share === 'WANTS').map((one) => [one.name, one.basisPoints])).toEqual([
+      ['Transport', 1667],
+      ['Lifestyle', 1333],
+    ])
+    // Income stays out whatever is answered.
+    expect(starterProposal(seeded, new Map([['cat:income', 'NEEDS']])).lines.find((one) => one.heading.id === 'cat:income')?.answer).toBe('NONE')
+  })
+
+  it('holds a heading of the person’s own until it is answered', () => {
+    const mine = [...seeded, heading('cat:mine', 'Hobbies', 20_000)]
+    const asked = starterProposal(mine, new Map())
+    expect(asked.unanswered.map((one) => one.name)).toEqual(['Hobbies'])
+    expect(asked.lines.at(-1)).toMatchObject({ answer: undefined, placedBy: 'ASK', basisPoints: 0 })
+  })
+
+  it('names the months once', () => {
+    expect(starterWindow([])).toBeUndefined()
+    expect(starterWindow([{ year: 2026, month: 10 }])).toBe('October 2026')
+    expect(starterWindow([{ year: 2026, month: 8 }, { year: 2026, month: 9 }, { year: 2026, month: 10 }])).toBe('Aug to Oct 2026')
+    expect(starterWindow([{ year: 2025, month: 12 }, { year: 2026, month: 1 }])).toBe('Dec 2025 to Jan 2026')
   })
 })

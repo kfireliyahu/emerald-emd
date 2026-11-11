@@ -46,6 +46,7 @@ import {
   plansTool,
   setFixedExpenseRolesTool,
   setPlanTool,
+  startPlanTool,
 } from './tools/plan.ts'
 import { paychecksTool, recordPaychecksTool } from './tools/paychecks.ts'
 import { setDeductionTypesTool } from './tools/deductionTypes.ts'
@@ -173,6 +174,7 @@ export const LEDGER_TOOLS: readonly PluginTool[] = [
   planMonthTool,
   setFixedExpenseRolesTool,
   setPlanTool,
+  startPlanTool,
   editFixedExpensesTool,
   // Payslips and funds, each a read beside the write it was missing (D-112).
   // They are a pair rather than two units: the deposit check — F13's highest

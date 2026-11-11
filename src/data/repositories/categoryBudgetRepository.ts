@@ -1,14 +1,36 @@
 import type { Database } from 'sql.js'
 
 import { money, type CurrencyCode, type Money } from '@/core/money.ts'
+import { distribute } from '@/core/percent.ts'
 import { yearMonthOf, type LocalDate, type YearMonth } from '@/core/time.ts'
 import { subtreeOf } from '@/domain/categoryTree.ts'
 import { goalMonthlyFromPlan } from '@/domain/goalPlan.ts'
-import type { StarterHeading } from '@/domain/starterPlan.ts'
+import { resolveBasis, type ResolvedBasis } from '@/domain/splitter.ts'
+import {
+  starterProposal,
+  type StarterAnswer,
+  type StarterHeading,
+  type StarterProposal,
+} from '@/domain/starterPlan.ts'
+import { inTransaction } from '../db/database.ts'
 import { listCategories } from './categoryRepository.ts'
 import { setBucketMonthly, type SetMonthlyResult } from './goalPlanRepository.ts'
+import { listPaychecks } from './paycheckRepository.ts'
 import { planMonth } from './planMonthRepository.ts'
-import { categoryTree, createSplitPlan, planOnMonth, spendUnder } from './splitPlanRepository.ts'
+import { salaryLanded } from './salaryRepository.ts'
+import {
+  categoryTree,
+  createSplitBucket,
+  createSplitPlan,
+  listSplitBuckets,
+  listSplitPlans,
+  planOnMonth,
+  reorderSplitBuckets,
+  spendUnder,
+  updateSplitBucket,
+  updateSplitPlan,
+  type NewAllocation,
+} from './splitPlanRepository.ts'
 import { categoryObservations, monthlySummaries } from './statisticsRepository.ts'
 
 /**
@@ -78,10 +100,7 @@ export function setCategoryBudget(
  * does too.
  */
 export function starterHeadings(db: Database, asOf: LocalDate, currency: CurrencyCode): readonly StarterHeading[] {
-  const months = monthlySummaries(db, asOf, { currency })
-    .filter((one) => one.transactionCount > 0)
-    .slice(-3)
-  const observations = months.flatMap((one) => categoryObservations(db, one.period, { currency }))
+  const observations = starterMonths(db, asOf, currency).flatMap((one) => categoryObservations(db, one, { currency }))
   const tree = categoryTree(db)
   return listCategories(db)
     .filter((one) => one.parentId === undefined)
@@ -92,4 +111,126 @@ export function starterHeadings(db: Database, asOf: LocalDate, currency: Currenc
       isSystem: one.isSystem,
       spentMinor: spendUnder(observations, [], subtreeOf(tree, one.id), currency)?.amount.minor ?? 0,
     }))
+}
+
+/** The months the starter reads what went out over: the last three the ledger holds transactions in. */
+export function starterMonths(db: Database, asOf: LocalDate, currency: CurrencyCode): readonly YearMonth[] {
+  return monthlySummaries(db, asOf, { currency })
+    .filter((one) => one.transactionCount > 0)
+    .slice(-3)
+    .map((one) => one.period)
+}
+
+/** The starter as the screen and `start_plan` show it, before anything is made (M59 U4, D-580). */
+export interface StarterPlanProposal extends StarterProposal {
+  readonly currency: CurrencyCode
+  /** The months what went out was read over, oldest first; empty when the ledger holds none. */
+  readonly months: readonly YearMonth[]
+  /** What the plan would split — the last paycheck, else the salary that came in; undefined with neither. */
+  readonly basis: ResolvedBasis | undefined
+  /** Each bucket's amount a month: by its category's id, or by its share for one in its own name. */
+  readonly amounts: ReadonlyMap<string, Money>
+  /** A category a bucket already points at, and that bucket's name: the plan uses it rather than another. */
+  readonly kept: ReadonlyMap<string, string>
+  /** The document has a plan already: the starter is for the first one. */
+  readonly planExists: boolean
+}
+
+/** What a new plan splits: the default basis, my last paycheck, as `planMonth` resolves it. */
+function starterBasis(db: Database, currency: CurrencyCode): ResolvedBasis | undefined {
+  const paychecks = listPaychecks(db)
+  const plan = {
+    id: '',
+    name: 'Default',
+    basisKind: 'LAST_PAYCHECK' as const,
+    basisPaycheckId: undefined,
+    basisMonths: undefined,
+    customAmount: undefined,
+    currency,
+    isDefault: true,
+  }
+  const basis = resolveBasis(plan, paychecks, paychecks.length === 0 ? salaryLanded(db, currency) : [])
+  return basis.unavailable || basis.amount.minor <= 0 ? undefined : basis
+}
+
+/**
+ * **The 50 / 30 / 20 starter, shown before it is made** (M59 U4, D-580): every top-level
+ * category with its share, its part, what that comes to a month and why. `answers` is the
+ * person's say about any of them; what is shown is exactly what `makeStarterPlan` writes.
+ */
+export function starterPlanProposal(
+  db: Database,
+  asOf: LocalDate,
+  currency: CurrencyCode,
+  answers: ReadonlyMap<string, StarterAnswer>,
+): StarterPlanProposal {
+  const proposal = starterProposal(starterHeadings(db, asOf, currency), answers)
+  const basis = starterBasis(db, currency)
+  const amounts = new Map<string, Money>()
+  if (basis !== undefined) {
+    // The splitter's own division of a plan of percentages that add up to the whole.
+    const parts = distribute(basis.amount.minor, proposal.buckets.map((one) => one.basisPoints))
+    proposal.buckets.forEach((one, index) => amounts.set(one.categoryId ?? one.share, money(parts[index] ?? 0, currency)))
+  }
+  const kept = new Map(
+    listSplitBuckets(db).flatMap((one) =>
+      one.targetKind === 'CATEGORY' && one.targetId !== undefined ? [[one.targetId, one.name] as const] : [],
+    ),
+  )
+  return {
+    ...proposal,
+    currency,
+    months: starterMonths(db, asOf, currency),
+    basis,
+    amounts,
+    kept,
+    planExists: listSplitPlans(db).length > 0,
+  }
+}
+
+/**
+ * **Make the starter**: the default plan, one bucket per part of the proposal — a bucket already
+ * on the category is the one used (M31 U3), and it takes the share it is made for — in the
+ * starter's order. Refused while a plan exists or a heading still waits for an answer. The plan's id.
+ */
+export function makeStarterPlan(
+  db: Database,
+  asOf: LocalDate,
+  currency: CurrencyCode,
+  answers: ReadonlyMap<string, StarterAnswer>,
+  now: number,
+): string {
+  const proposal = starterPlanProposal(db, asOf, currency, answers)
+  if (proposal.planExists) throw new Error('This document has a plan already; the starter makes the first one.')
+  if (proposal.unanswered.length > 0) {
+    throw new Error(`Say which share ${proposal.unanswered.map((one) => one.name).join(', ')} is first.`)
+  }
+  let planId = ''
+  inTransaction(db, () => {
+    planId = createSplitPlan(db, { name: 'Default', currency, isDefault: true }, now).id
+    const held = listSplitBuckets(db)
+    const allocations: NewAllocation[] = proposal.buckets.map((entry) => ({
+      bucketId:
+        held.find((one) => entry.categoryId !== undefined && one.targetKind === 'CATEGORY' && one.targetId === entry.categoryId)
+          ?.id ??
+        createSplitBucket(
+          db,
+          entry.categoryId === undefined
+            ? { name: entry.name, share: entry.share }
+            : { name: entry.name, targetKind: 'CATEGORY', targetId: entry.categoryId, share: entry.share },
+          now,
+        ).id,
+      mode: 'PERCENTAGE',
+      basisPoints: entry.basisPoints,
+    }))
+    updateSplitPlan(db, planId, { allocations }, now)
+    // A bucket already there takes the share it is used for now, and the starter's order (M31 U4).
+    for (const [index, entry] of allocations.entries()) {
+      const share = proposal.buckets[index]?.share
+      if (share !== undefined) updateSplitBucket(db, entry.bucketId, { share }, now)
+    }
+    const placed = allocations.map((entry) => entry.bucketId)
+    reorderSplitBuckets(db, [...placed, ...held.map((one) => one.id).filter((id) => !placed.includes(id))], now)
+  })
+  return planId
 }

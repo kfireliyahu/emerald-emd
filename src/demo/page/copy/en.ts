@@ -172,7 +172,7 @@ export const en: Copy = {
       body: [
         'Your assistant reads and writes the file directly, through MCP, the standard way assistants connect to tools, and where the app allows, draws the sheet in the chat.',
         'Every write is shown first as a dry run. Nothing changes until you say commit.',
-        'The model gets named actions, never free rein over the database: 28 for any document, 85 with the ledger.',
+        'The model gets named actions, never free rein over the database: 28 for any document, 86 with the ledger.',
         'A document answers in rows, so the model asks for what it needs instead of reading notes end to end.',
         'One project’s session leaves a note in another’s inbox, and the next session there starts with it.',
         'The server opens the file it is given, does one job, closes it, and makes no network call of its own.',

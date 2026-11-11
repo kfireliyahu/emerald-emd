@@ -196,7 +196,9 @@ to. `Ctrl+S` still works and still means the same thing.
 begin: it asks how you want to divide your money and offers no picture of an answer. The copy
 calls it a starting point rather than advice, and every number is a slider once it lands. **It lands
 on the person's top-level categories** (D-369): each share divided by what went out under each, so
-the first plan is already a budget; a heading of their own is asked about once.
+the first plan is already a budget. **And it is shown before it is made** (D-580): every category
+with its share, its part, what it comes to a month and why, each share changeable in place; a heading
+of their own is answered there, and *Make plan* writes exactly what was shown.
 
 ## Data touched
 

@@ -479,6 +479,7 @@ written out here.
 | D-574 | 2026-11-10 | What stopped the SessionStart hook in the usage report is not known, so the hook is unchanged; what it does that a security tool notices is written down, and the plugin and its message are an open question | M58 |
 | D-575 | 2026-11-11 | The ledger is unparked: M59 fixes what a second person hit on first use — a file with two cards made one account per card, the provider's category and leaving a row out working on By merchant, 50 / 30 / 20 shown before it is made, a page that never scrolls into blank, Guide me never opening by itself, and a shape unit that decides what a new document shows; Hebrew is M60, after it | M59 |
 | D-576 | 2026-11-11 | A ledger document made before a change keeps opening with its rows: from M59 on, a change to a ledger format or an engine table reaches an existing document as a kept pack already does (D-443) or by a migration, with a test on a document made before it; amends D-276 for documents from here on. Her statement file will not be available, so M59 U2 proves the two-card split on made-up files only | M59 |
+| D-580 | 2026-11-11 | 50 / 30 / 20 is shown before it is made: every top-level category with its share, its part, what it comes to a month and why, each share changeable in place, the months named once; Make plan writes exactly that and Cancel nothing, and `start_plan` is the same proposal for a conversation | M59 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -773,6 +774,44 @@ a real document of her own, and M59 changes the ledger.
 **Consequences.** The rule row *A document made before a change keeps opening* says it where a session
 reads before touching a table (CLAUDE.md's rules block). The open question *A second person's
 document* is answered. M59 U2's brief drops the step that asked for her file.
+
+## D-580 · 2026-11-11 · 50 / 30 / 20 is shown before it is made: every top-level category with its share, its part, what it comes to a month and why, each share changeable in place, the months named once; Make plan writes exactly that and Cancel nothing, and `start_plan` is the same proposal for a conversation <a id="d-580"></a>
+
+**Context.** D-575: a second person's first use of *Start with 50 / 30 / 20* made a plan whose
+placements she never saw. The starter put seven seeded headings in a fixed share, saving and
+debt-payment kinds by kind, asked only about the rest, sized each share by what went out over the last
+three months with transactions, and reused a bucket already on a category — all of it invisible until
+the buckets were there.
+
+**Decision.**
+
+- **The button opens a proposal and writes nothing** (`src/ui/plan/StarterProposal.tsx`): every
+  top-level category with the share it counts as (Needs, Wants, Saving, Left out), its part, what that
+  comes to a month of the last paycheck (else the salary that came in), and why in a few words —
+  *Needs by default*, *A saving category*, *Debt payments are needs*, *You chose*; then *₪1,200.00 a
+  month went out*, *Nothing went out, so no bucket*, *The only one in saving, so all of it* — and
+  *keeps its bucket …* where a bucket already points at it. The months are named once, above the
+  table. *Make plan* writes it; *Cancel* (and Esc) writes nothing.
+- **Any share is changeable in place, not only the ones the starter could not place.** An answer
+  overrides the starter's own placing; choosing what it would have chosen takes the answer back out.
+  Income, transfers and the app's own headings stay out and say why. A heading of the person's own
+  still has to be answered before anything is made.
+- **One arithmetic, three readers.** `starterProposal` (domain) is the lines and the buckets of the
+  same answers; `starterPlanProposal` adds the months, the basis, each bucket's amount and the buckets
+  kept; `makeStarterPlan` writes it and is the one write both halves call. The words are the domain's
+  (`starterWhy`, `starterWindow`), so the screen and the tool say the same.
+- **Parity: `start_plan`** shows the same table and dry-runs; `shares` changes any category by id or
+  name; `commit: true` makes the plan; refused once a plan exists.
+- **M54 U5's rows on #/plan where this touched them**: the no-plan state is an h1, one sentence and
+  the two ways in; the starter's rounded choices are square; Plan.tsx's five `<select>`s are
+  `ChoiceMenu`s.
+
+**Rejected.** A modal for the proposal (it is the screen's own task, with nothing behind it to
+protect); defaulting an unplaced heading to wants (a guess the person cannot see is the bug D-575
+names); sorting the rows by share (a row would jump under the pointer that moved it).
+
+**Consequences.** The tool count is 86 with the ledger. `docs/packs/ledger/f05-paycheck-splitter.md`
+and `docs/plugin.md` say it.
 
 ## Related
 

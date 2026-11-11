@@ -1,7 +1,8 @@
 /**
  * The Plan screen, reachable from a conversation (M28 U7, D-319, D-227, D-234):
  * `plans` and `plan_month` read it, `set_fixed_expense_roles`, `set_plan`,
- * `plan_month` with `commit` and `edit_fixed_expenses` write it.
+ * `plan_month` with `commit` and `edit_fixed_expenses` write it, and
+ * `start_plan` is its *Start with 50 / 30 / 20* (M59 U4, D-580).
  *
  * **Each write takes a list and dry-runs until `commit: true`**, with one
  * preview and one `.bak` — the shape every tool here has (D-092, D-110). Each
@@ -16,6 +17,7 @@
  */
 
 import { fromMajorUnits, money, type CurrencyCode } from '@/core/money.ts'
+import { listed } from '@/core/text.ts'
 import { formatYearMonth, parseISODate, parseYearMonth, toYearMonthString, type YearMonth } from '@/core/time.ts'
 import { listAccounts } from '@/data/repositories/accountRepository.ts'
 import { listCategories } from '@/data/repositories/categoryRepository.ts'
@@ -36,6 +38,17 @@ import {
 import { applySuggestions, planMonth, removePlanBuckets, type PlanMonth } from '@/data/repositories/planMonthRepository.ts'
 import { listGoals } from '@/data/repositories/savingsRepository.ts'
 import { documentCurrency } from '@/data/repositories/statisticsRepository.ts'
+import {
+  makeStarterPlan,
+  starterPlanProposal,
+  type StarterPlanProposal,
+} from '@/data/repositories/categoryBudgetRepository.ts'
+import {
+  STARTER_ANSWER_NAME,
+  starterWhy,
+  starterWindow,
+  type StarterAnswer,
+} from '@/domain/starterPlan.ts'
 import {
   createSplitBucket,
   createSplitPlan,
@@ -1301,6 +1314,136 @@ export const editFixedExpensesTool: PluginTool = {
         )
       },
       refuses: (changes) => changes.every((one) => one.problem !== undefined || one.lines.length === 0),
+    })
+  },
+}
+
+// --- start_plan: the 50 / 30 / 20 starter (M59 U4, D-580) ----------------------------------------
+
+const STARTER_ARG: Readonly<Record<string, StarterAnswer>> = {
+  needs: 'NEEDS',
+  wants: 'WANTS',
+  saving: 'SAVING',
+  none: 'NONE',
+}
+
+function readStarterShares(args: Args): ReadonlyMap<string, StarterAnswer> {
+  const raw = args['shares']
+  if (raw === undefined) return new Map()
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+    throw new ToolInputError('`shares` must be an object of {category: needs | wants | saving | none}.')
+  }
+  const shares = new Map<string, StarterAnswer>()
+  for (const [category, value] of Object.entries(raw as Record<string, unknown>)) {
+    const answer = typeof value === 'string' ? STARTER_ARG[value.toLowerCase()] : undefined
+    if (answer === undefined) {
+      throw new ToolInputError(`\`shares.${category}\` must be needs, wants, saving or none; got "${String(value)}".`)
+    }
+    shares.set(category, answer)
+  }
+  return shares
+}
+
+interface StarterPlanAsk {
+  readonly proposal: StarterPlanProposal
+  readonly answers: ReadonlyMap<string, StarterAnswer>
+  /** Names in `shares` that are no top-level category. */
+  readonly unknown: readonly string[]
+}
+
+function planStarter(document: OpenDocument, shares: ReadonlyMap<string, StarterAnswer>): StarterPlanAsk {
+  const db = document.db
+  const currency: CurrencyCode = listPaychecks(db)[0]?.net.currency ?? documentCurrency(db)
+  const asOf = today()
+  const headings = starterPlanProposal(db, asOf, currency, new Map()).lines.map((one) => one.heading)
+  const answers = new Map<string, StarterAnswer>()
+  const unknown: string[] = []
+  for (const [named, answer] of shares) {
+    const heading =
+      headings.find((one) => one.id === named) ??
+      headings.find((one) => one.name.toLocaleLowerCase() === named.trim().toLocaleLowerCase())
+    if (heading === undefined) unknown.push(named)
+    else answers.set(heading.id, answer)
+  }
+  return { proposal: starterPlanProposal(db, asOf, currency, answers), answers, unknown }
+}
+
+function describeStarter({ proposal, unknown }: StarterPlanAsk): string {
+  if (proposal.planExists) {
+    return 'This document has a plan already, and the starter makes the first one. `plans` shows it; `set_plan` changes it.'
+  }
+  const window = starterWindow(proposal.months)
+  const basis = proposal.basis
+  const amountOf = (key: string): string => {
+    const amount = proposal.amounts.get(key)
+    return amount === undefined ? '—' : showMoney(amount)
+  }
+  const rows = proposal.lines.map((line) => [
+    line.heading.name,
+    line.answer === undefined ? '—' : STARTER_ANSWER_NAME[line.answer],
+    line.basisPoints === 0 ? '—' : percent(line.basisPoints),
+    line.basisPoints === 0 ? '—' : amountOf(line.heading.id),
+    starterWhy(line, proposal.months.length, proposal.currency, proposal.kept.get(line.heading.id)),
+  ])
+  const ownName = proposal.buckets
+    .filter((one) => one.categoryId === undefined)
+    .map((one) => [`${one.name} (a bucket of its own)`, STARTER_ANSWER_NAME[one.share], percent(one.basisPoints), amountOf(one.share), `No category is ${STARTER_ANSWER_NAME[one.share].toLowerCase()}`])
+  return paragraphs(
+    `**50 / 30 / 20**: half to needs, 30% to wants, 20% to saving, each share divided among its categories by what went out under each ${window === undefined ? '— nothing has gone out yet, so evenly' : `over ${window}`}.`,
+    basis === undefined
+      ? 'There is no paycheck and no salary in the ledger yet, so the parts are percentages only.'
+      : `Of ${showMoney(basis.amount)} a month — ${basis.fromSalary === undefined ? 'the last paycheck' : 'the salary that came in'}.`,
+    table(['Category', 'Share', 'Part', 'A month', 'Why'], [...rows, ...ownName]),
+    proposal.unanswered.length === 0
+      ? undefined
+      : `**Nothing can be made yet**: say which share ${listed(proposal.unanswered.map((one) => one.name))} ${proposal.unanswered.length === 1 ? 'is' : 'are'} in — \`shares: {"${proposal.unanswered[0]?.name ?? ''}": "wants"}\`, or \`none\` to leave one out.`,
+    unknown.length === 0 ? undefined : `Refused: ${listed(unknown.map((one) => `"${one}"`))} — no top-level category is called that.`,
+  )
+}
+
+export const startPlanTool: PluginTool = {
+  definition: {
+    name: 'start_plan',
+    title: 'Start a first plan with 50 / 30 / 20',
+    description:
+      'The Plan screen’s *Start with 50 / 30 / 20*, for a document with no plan yet: half the take-home pay to ' +
+      'needs, 30% to wants and 20% to saving, each share divided among the top-level categories by what went out ' +
+      'under each over the last three months the ledger holds. Answers every category with its share, its part, ' +
+      'what that comes to a month and why. `shares` changes any of them — {category: needs | wants | saving | none}, ' +
+      'a category by id or name — and a category the starter cannot place has to be given one before anything is ' +
+      'made. **Dry-runs by default**; `commit: true` makes the plan. Once there is one, `set_plan` changes it.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: PATH_PROP,
+        shares: {
+          type: 'object',
+          description: 'A top-level category (id or name) to the share it counts as: needs, wants, saving, or none to leave it out.',
+          additionalProperties: { type: 'string', enum: ['needs', 'wants', 'saving', 'none'] },
+        },
+        commit: booleanProp('Default false. False previews; true makes the plan.'),
+      },
+      required: ['path'],
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: false },
+  },
+  run: async (args) => {
+    const path = requireString(args, 'path')
+    const shares = readStarterShares(args)
+    return mutatingCall<StarterPlanAsk>(path, args['commit'] === true, {
+      plan: (document) => planStarter(document, shares),
+      describe: describeStarter,
+      refuses: ({ proposal, unknown }) => proposal.planExists || proposal.unanswered.length > 0 || unknown.length > 0,
+      apply: (document, ask) => {
+        if (ask.unknown.length > 0) return describeStarter(ask)
+        const { proposal, answers } = ask
+        makeStarterPlan(document.db, today(), proposal.currency, answers, Date.now())
+        return paragraphs(
+          `Made the plan **Default**, ${plural(proposal.buckets.length, 'bucket')} of 50 / 30 / 20 — every number in it can be changed with \`set_plan\`.`,
+          describeStarter(ask),
+        )
+      },
     })
   },
 }

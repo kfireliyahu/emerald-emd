@@ -7,7 +7,14 @@ import { localDate, type LocalDate } from '@/core/time.ts'
 import { starterBuckets, unplacedHeadings } from '@/domain/starterPlan.ts'
 import { query } from '../db/database.ts'
 import { createAccount } from './accountRepository.ts'
-import { categoryBudgets, planInUse, setCategoryBudget, starterHeadings } from './categoryBudgetRepository.ts'
+import {
+  categoryBudgets,
+  makeStarterPlan,
+  planInUse,
+  setCategoryBudget,
+  starterHeadings,
+  starterPlanProposal,
+} from './categoryBudgetRepository.ts'
 import { createCategory, listCategories, setCategoryManually } from './categoryRepository.ts'
 import { planMonth } from './planMonthRepository.ts'
 import { findSplitPlan, createSplitBucket, createSplitPlan, listSplitPlans, setPlanMonths } from './splitPlanRepository.ts'
@@ -184,5 +191,52 @@ describe('a first plan from statements alone', () => {
     expect(budgets.get('cat:lifestyle')).toEqual(money(360_000, 'ILS'))
     expect(budgets.get(hobbies)).toEqual(money(90_000, 'ILS'))
     expect(budgets.get('cat:savings')).toEqual(money(300_000, 'ILS'))
+  })
+
+  it('shows the starter before it makes it, and makes what was shown with the person’s say (M59 U4)', async () => {
+    const db = await createLedgerDatabase()
+    createAccount(db, { name: 'Bank', kind: 'BANK', last4: '4321' }, NOW)
+    db.run("UPDATE fmt_account SET id = 'bank' WHERE last4 = '4321'")
+    const hobbies = createCategory(db, { name: 'Hobbies', kind: 'EXPENSE' }, NOW)
+    for (const month of [7, 8, 9]) {
+      row(db, 1_500_000, localDate(2026, month, 1), 'Acme payroll', 'cat:salary')
+      row(db, -300_000, localDate(2026, month, 5), 'Supermarket', 'cat:groceries')
+      row(db, -100_000, localDate(2026, month, 9), 'Fuel station', 'cat:fuel')
+      row(db, -80_000, localDate(2026, month, 12), 'Cafe', 'cat:restaurants')
+    }
+    // A bucket on Living from a plan since deleted: the starter uses it rather than another.
+    const living = createSplitBucket(db, { name: 'Home and food', targetKind: 'CATEGORY', targetId: 'cat:living' }, NOW)
+
+    const shown = starterPlanProposal(db, asOf, 'ILS', new Map())
+    expect(shown.months).toEqual([{ year: 2026, month: 7 }, { year: 2026, month: 8 }, { year: 2026, month: 9 }])
+    expect(shown.basis?.amount).toEqual(money(1_500_000, 'ILS'))
+    expect(shown.unanswered.map((one) => one.id)).toEqual([hobbies])
+    expect(shown.kept.get('cat:living')).toBe('Home and food')
+    expect(shown.amounts.get('cat:living')).toEqual(money(562_500, 'ILS'))
+    // Nothing is made while Hobbies waits, nor while it is only shown.
+    expect(() => makeStarterPlan(db, asOf, 'ILS', new Map(), NOW)).toThrow(/Hobbies/)
+    expect(listSplitPlans(db)).toEqual([])
+
+    // Transport moved to wants, Hobbies left out.
+    const answers = new Map([
+      ['cat:transport', 'WANTS'],
+      [hobbies, 'NONE'],
+    ] as const)
+    const moved = starterPlanProposal(db, asOf, 'ILS', answers)
+    const planId = makeStarterPlan(db, asOf, 'ILS', answers, NOW)
+    const plan = findSplitPlan(db, planId)
+    expect(plan?.plan.isDefault).toBe(true)
+    const budgets = categoryBudgets(db, asOf, 'ILS')
+    for (const bucket of moved.buckets) {
+      if (bucket.categoryId !== undefined) expect(budgets.get(bucket.categoryId)).toEqual(moved.amounts.get(bucket.categoryId))
+    }
+    // Living has the half alone; Transport shares the 30% with Lifestyle, 16.67% of ₪15,000.
+    expect(budgets.get('cat:living')).toEqual(money(750_000, 'ILS'))
+    expect(budgets.get('cat:transport')).toEqual(money(250_050, 'ILS'))
+    expect(budgets.get(hobbies)).toBeUndefined()
+    expect(plan?.allocations.some((one) => one.bucketId === living.id)).toBe(true)
+    // The starter is for the first plan.
+    expect(starterPlanProposal(db, asOf, 'ILS', new Map()).planExists).toBe(true)
+    expect(() => makeStarterPlan(db, asOf, 'ILS', answers, NOW)).toThrow(/plan already/)
   })
 })

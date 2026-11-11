@@ -30,6 +30,7 @@ import {
   plansTool,
   setFixedExpenseRolesTool,
   setPlanTool,
+  startPlanTool,
 } from './plan.ts'
 import { NO_CLIENT } from './tool.ts'
 import { tempDir } from '../../testing/tempDir'
@@ -402,5 +403,39 @@ describe('edit_fixed_expenses', () => {
     await expect(
       editFixedExpensesTool.run({ path: f.path, edits: [{ fixed_expense_id: f.rent.id, stop_tracking: true, name: 'y' }] }, NO_CLIENT),
     ).rejects.toThrow(/stops tracking/)
+  })
+})
+
+describe('start_plan (M59 U4, D-580)', () => {
+  it('shows every category with its share and why, takes a share changed by name, and makes the plan', async () => {
+    const db = await createLedgerDatabase()
+    const mine = listCategories(db).length
+    const path = join(await tempDir('emerald-starter-'), 'doc.emd')
+    await writeFile(path, exportDatabase(db))
+    db.close()
+
+    const dry = await startPlanTool.run({ path }, NO_CLIENT)
+    expect(dry).toContain('| Living | Needs |')
+    expect(dry).toContain('Needs by default')
+    expect(dry).toContain('Nothing has been written')
+    expect(dry).not.toContain('Nothing can be made yet')
+
+    const refused = await startPlanTool.run({ path, shares: { Nowhere: 'wants' } }, NO_CLIENT)
+    expect(refused).toContain('no top-level category is called that')
+    expect(refused).not.toContain('Nothing has been written')
+
+    const done = await startPlanTool.run({ path, shares: { transport: 'wants' }, commit: true }, NO_CLIENT)
+    expect(done).toContain('Made the plan **Default**')
+    expect(done).toContain('| Transport | Wants |')
+    expect(done).toContain('You chose')
+
+    const after = await openDatabase(await readFile(path))
+    const plans = listSplitPlans(after)
+    expect(plans.map((one) => one.name)).toEqual(['Default'])
+    const transport = listSplitBuckets(after).find((one) => one.targetId === 'cat:transport')
+    expect(transport?.share).toBe('WANTS')
+    expect(listCategories(after)).toHaveLength(mine)
+
+    expect(await startPlanTool.run({ path }, NO_CLIENT)).toContain('has a plan already')
   })
 })
