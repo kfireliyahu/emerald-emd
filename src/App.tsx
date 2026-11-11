@@ -227,7 +227,11 @@ export function App() {
     // screen's entrance, a long rail — is cut off rather than making the page
     // itself scrollable, so a wheel at the end of a list never scrolls the whole
     // app into the white below it, and a clip is no scroller for `scrollIntoView`.
-    <div className="flex h-screen flex-col overflow-clip bg-background text-ink">
+    // **And `relative`** (M59 U5, D-581): a clip only cuts what is placed inside
+    // it, and an absolute element with no positioned ancestor — a row's `sr-only`
+    // label — was placed against the page, escaped the clip and made the page
+    // scroll. The page itself never scrolls either (`html.fc-window`, tokens.css).
+    <div className="relative flex h-screen flex-col overflow-clip bg-background text-ink">
       {/* The document, across the top: the window's title bar in the shell and
           the same row without a drag region in a browser tab (D-130). */}
       <TitleBar />
@@ -692,7 +696,8 @@ function SettingsHome() {
  * **The ledger is at the front door** (M25 U8): `New ledger` is a new document
  * that keeps one, which is the only way a document gets the pack's tables
  * besides asking for them from a ledger screen (D-266). It opens on Home, where
- * the guide offers to walk an untouched ledger (M28 U9, D-330).
+ * the Getting started line waits for a press — the guide never opens by itself
+ * (M59 U5, D-581).
  */
 function EmptyDocument() {
   const createNew = useDocumentStore((state) => state.createNew)

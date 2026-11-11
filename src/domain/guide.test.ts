@@ -59,13 +59,13 @@ describe('resuming (choice c, B)', () => {
 
   it('decodes what a document stored, and nothing it should not', () => {
     expect(decodeGuideProgress(undefined)).toBeUndefined()
+    // `offered` is a key older documents stored (D-581): read past, never an error.
     expect(decodeGuideProgress({ offered: true, step: 'split', lineAway: 'yes' })).toEqual({
-      offered: true,
       started: false,
       step: 'split',
       lineAway: false,
     })
-    expect(QUIET_GUIDE).toEqual({ offered: true, started: false, step: undefined, lineAway: true })
+    expect(QUIET_GUIDE).toEqual({ started: false, step: undefined, lineAway: true })
   })
 })
 

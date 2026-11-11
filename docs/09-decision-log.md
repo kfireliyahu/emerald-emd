@@ -483,6 +483,7 @@ written out here.
 | D-578 | 2026-11-11 | A statement holding two cards is one account per card: a sheet is cut into sections at a repeated header or a card line, each read with its own header, a section's card column cuts it again, every sheet of a workbook with transactions is read, and the read says how many cards it found before anything is written | M59 |
 | D-579 | 2026-11-11 | By merchant's queue is the rows that count: a row left out of totals leaves it, its sums and its ids; the provider's category is an action on each merchant (the editor's draft, as on Transactions) and a heading the list can be grouped by, where Create rule writes one rule for the heading and applies it to rows with no category, with one Undo | M59 |
 | D-580 | 2026-11-11 | 50 / 30 / 20 is shown before it is made: every top-level category with its share, its part, what it comes to a month and why, each share changeable in place, the months named once; Make plan writes exactly that and Cancel nothing, and `start_plan` is the same proposal for a conversation | M59 |
+| D-581 | 2026-11-11 | The app is a window that never scrolls, and Guide me opens only from a press: the shell is the positioned frame and the page itself cannot scroll; the new document's offer is gone, and Home's Getting started line is dismissed per document with Dismiss | M59 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -933,6 +934,40 @@ names); sorting the rows by share (a row would jump under the pointer that moved
 
 **Consequences.** The tool count is 86 with the ledger. `docs/packs/ledger/f05-paycheck-splitter.md`
 and `docs/plugin.md` say it.
+## D-581 · 2026-11-11 · The app is a window that never scrolls, and Guide me opens only from a press: the shell is the positioned frame and the page itself cannot scroll; the new document's offer is gone, and Home's Getting started line is dismissed per document with Dismiss <a id="d-581"></a>
+
+**Context.** D-575: a second person scrolled to the end of a list and the whole app went on into
+blank, back only by scrolling up; and her first ledger document opened with Guide me's dialog over
+Home, unasked.
+
+**What escaped.** Reproduced on Transactions: one row with a note carries an `sr-only` *Has a note*,
+which is `position: absolute`. Nothing above it was positioned, so it was placed against the page,
+not the shell — out of reach of the shell's `overflow-clip`, which cuts only what is placed inside
+it — and the page grew to wherever that row sat in the list (1,524px on a 720px window). A wheel at
+the end of the list then scrolled the page. Any absolute element deep in a long list does the same,
+By merchant's included. The demo document has no notes, which is why no screen check had met it.
+
+**Decision.**
+
+- **The shell is the positioned frame** (`relative` on App's root): what is absolute inside it is
+  placed and clipped inside it. It covers the whole window, so nothing placed against it moves.
+- **The page never scrolls**: `html.fc-window` and its `body` are `height: 100%; overflow: hidden;
+  overscroll-behavior: none`. Only the app's own pages (`index.html`, `demo.html`) carry the class:
+  Emerald's public page and the conversation frame load the same tokens and do scroll.
+- **Guide me never opens by itself.** The new document's offer (*A new document. Walk through where
+  things go?*) is removed, and with it `offered` in the guide's progress; a document that stored it
+  still reads, the key ignored. It opens from Help › Guide me, the palette, the rail's compass and
+  Home's line, and `src/ui/guide/opens.test.ts` fails if anything else calls it.
+- **Home's Getting started line is the list**: its steps tick themselves as before, and **Dismiss**
+  (was *Put this away*) hides it for this document, kept in the document's `setting` row as it was
+  (no table or format changes, so D-576 asks nothing more), and now on the all-done line too.
+
+**Rejected.** Hunting down each absolute element and giving it a positioned parent: the next one
+escapes again. `overflow: clip` on the page: a viewport cannot clip, it computes to `hidden`.
+
+**Consequences.** Checked in the browser (an absolute label in the last row no longer grows the page;
+a wheel past the end of the list leaves it at 0) and in the shell (a new ledger opens on Home with no
+dialog, the line has Guide me and Dismiss, Dismiss hides it).
 
 ## Related
 

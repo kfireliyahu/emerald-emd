@@ -233,7 +233,7 @@ describe('a document that holds work keeps its categories safe, and is still rea
     // tool still fails rather than hanging the run.
   }, 30_000)
 
-  it('is never offered the guide, and guide_status still reads it', async () => {
+  it('keeps Home’s line off a document that holds work, and guide_status still reads it', async () => {
     const path = await scratch('done.emd')
     const db = await createLedgerDatabase()
     createAccount(db, { name: 'Real card', kind: 'CREDIT_CARD' }, 1)
@@ -242,7 +242,7 @@ describe('a document that holds work keeps its categories safe, and is still rea
     await writeFile(path, bytes)
 
     const reopened = await reopen(path)
-    expect(readGuideProgress(reopened).offered).toBe(true)
+    expect(readGuideProgress(reopened).lineAway).toBe(true)
     reopened.close()
     const text = await guideStatusTool.run({ path }, NO_CLIENT)
     expect(text).toContain('0 of 7 places done')

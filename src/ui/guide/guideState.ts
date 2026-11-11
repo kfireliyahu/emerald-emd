@@ -3,8 +3,9 @@ import { createStore } from '@/state/store.ts'
 /**
  * Whether the guide is open, and on which step — outside React, for the reason
  * the palette's open state is (D-130): four things open it — Home's line, the
- * offer, the palette and the shell's Help menu — and only one of them is in the
- * dialog's tree.
+ * rail's compass, the palette and the shell's Help menu — none of them in the
+ * dialog's tree, and every one of them a press: nothing opens it by itself
+ * (M59 U5, D-581; `opens.test.ts`).
  *
  * Not the document: where the guide *stopped* is written there when it is put
  * away (`saveGuideProgress`); which step is on screen right now is a view, and
@@ -48,7 +49,7 @@ export function landOn(index: number): boolean {
   return true
 }
 
-/** Help › Guide me, the palette and Home's line: open where it stopped, or on a given step. */
+/** Help › Guide me, the palette, the rail and Home's line: open where it stopped, or on a given step. */
 export function openGuide(index?: number): void {
   setGuideOpen(index === undefined ? { kind: 'resume' } : { kind: 'step', index })
 }

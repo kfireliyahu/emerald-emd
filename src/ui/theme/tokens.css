@@ -344,6 +344,22 @@ html {
   color-scheme: light;
 }
 
+/* **The app is a window, never a page** (M59 U5, D-581). A second person
+   scrolled to the end of Transactions and the whole app went on into blank,
+   back only by scrolling up: an absolutely placed element deep in a long list
+   — a row's `sr-only` "Has a note" — had no positioned ancestor, so it was
+   placed against the page rather than the shell, out of reach of the shell's
+   clip, and made the page itself taller than the window. The shell is now the
+   positioned frame (App.tsx) and the page cannot scroll at all: only the app's
+   own pages (index.html, demo.html) carry the class — Emerald's public page
+   and the conversation frame load these tokens too, and they do scroll. */
+html.fc-window,
+html.fc-window body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
 :root[data-theme="dark"] html,
 html:has(:root[data-theme="dark"]),
 :root[data-theme="dark"] {

@@ -11,7 +11,7 @@ export interface OpenGuide {
   readonly steps: readonly GuideStep[]
   readonly checks: GuideChecks
   readonly progress: GuideProgress
-  /** Where the guide stopped, written to the document. Only on put away, finish and the offer's answer. */
+  /** Where the guide stopped, written to the document. Only on put away, finish and Home's Dismiss. */
   readonly save: (next: GuideProgress) => void
 }
 

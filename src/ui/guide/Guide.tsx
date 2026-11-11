@@ -32,10 +32,7 @@ import { reopenedFrom, useGuide, type OpenGuide } from './useGuide.ts'
  */
 export function Guide({ enabled }: { readonly enabled: boolean }) {
   const open = useGuideOpen()
-  const location = useLocation()
-  const offering = enabled && open === undefined && location.pathname === '/'
   const guide = useGuide(enabled && open !== undefined)
-  const offer = useGuide(false)
   const [toast, setToast] = useState<string | undefined>()
 
   useEffect(() => {
@@ -50,18 +47,10 @@ export function Guide({ enabled }: { readonly enabled: boolean }) {
     </div>
   )
 
-  if (!enabled) return createPortal(toastNode, document.body)
-
-  if (open === undefined) {
-    if (!offering || offer === undefined || offer.progress.offered) return createPortal(toastNode, document.body)
-    return createPortal(
-      <>
-        <Offer guide={offer} onToast={setToast} />
-        {toastNode}
-      </>,
-      document.body,
-    )
-  }
+  // **It never opens by itself** (M59 U5, D-581): a new document used to be
+  // asked "Walk through where things go?" over Home, unasked. Only a press
+  // opens it now — Help › Guide me, the palette, the rail's compass, Home's line.
+  if (!enabled || open === undefined) return createPortal(toastNode, document.body)
 
   if (guide === undefined) return createPortal(toastNode, document.body)
   return createPortal(
@@ -70,49 +59,6 @@ export function Guide({ enabled }: { readonly enabled: boolean }) {
       {toastNode}
     </>,
     document.body,
-  )
-}
-
-/** A new document, asked once: walk through where things go? */
-function Offer({ guide, onToast }: { readonly guide: OpenGuide; readonly onToast: (text: string) => void }) {
-  const dialog = useRef<HTMLDivElement>(null)
-  usePlacement(dialog, undefined, 'home.title', 0)
-
-  const notNow = (): void => {
-    guide.save({ ...guide.progress, offered: true })
-    onToast('Guide me is the compass at the foot of the sidebar, and on Home’s Getting started line.')
-  }
-  const start = (): void => {
-    guide.save({ ...guide.progress, offered: true, started: true })
-    setGuideOpen({ kind: 'resume' })
-  }
-
-  return (
-    <div ref={dialog} className="fc-guide fc-pop-enter" role="dialog" aria-label="Guide me" style={HIDDEN}>
-      <div className="flex items-center gap-2.5 border-b border-hairline py-2 pr-2 pl-3.5">
-        <span className="fc-label flex flex-1 items-center gap-1.5">
-          <ActionGlyph name="guide" size={14} /> Guide me
-        </span>
-        <CloseButton label="Not now" onClick={notNow} />
-      </div>
-      <div className="flex flex-col gap-2 px-3.5 py-3">
-        <h3 className="m-0 font-medium text-balance">A new document. Walk through where things go?</h3>
-        <p className="m-0 text-ink-secondary">
-          {guide.steps.length} places on the real screens: statements and paychecks, your categories and shops, the bills, the plan, and
-          what is in the bank. Stop whenever you like; it picks up where you left it.
-        </p>
-      </div>
-      <div className="flex flex-wrap items-center gap-2 px-3.5 pt-2 pb-3">
-        <Button variant="primary" size="sm" icon="guide" onClick={start}>
-          Guide me
-        </Button>
-        <Button variant="ghost" size="sm" onClick={notNow}>
-          Not now
-        </Button>
-        <span className="flex-1" />
-        <span className="text-caption text-ink-secondary">{reopenedFrom()}, any time</span>
-      </div>
-    </div>
   )
 }
 
@@ -143,7 +89,7 @@ function Walk({ guide, onToast }: { readonly guide: OpenGuide; readonly onToast:
 
   const finish = useCallback((): void => {
     const all = doneCount(steps, checks) === count
-    guide.save({ ...progress, offered: true, started: true, step: undefined })
+    guide.save({ ...progress, started: true, step: undefined })
     setGuideOpen(undefined)
     navigate('/')
     onToast(
@@ -169,7 +115,7 @@ function Walk({ guide, onToast }: { readonly guide: OpenGuide; readonly onToast:
 
   const putAway = useCallback((): void => {
     if (step === undefined) return
-    guide.save({ ...progress, offered: true, started: true, step: step.id })
+    guide.save({ ...progress, started: true, step: step.id })
     setGuideOpen(undefined)
     // **Only the guide goes** (M28 F14): it used to take you Home as well, and
     // Esc over Read files closed the files you were reading. You stay put.
