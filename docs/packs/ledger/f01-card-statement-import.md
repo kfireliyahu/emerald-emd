@@ -209,7 +209,8 @@ string-amount shapes listed above are still worth supporting, but they are not t
 **Max's two sheets share one header.** `עסקאות במועד החיוב` and `עסקאות חו"ל ומט"ח` are separate
 sheets with byte-identical 16-column headers — not sections within a sheet, and not differing
 headers. One mapping covers both. The "detect a section by a repeated header row" approach is
-not what these files need.
+not what these files need — but a card export holding two cards on one sheet does: since M59 U2
+(D-578) a sheet is cut at a repeated header or a card line, one account per card.
 
 Also observed, and cheaper to know now than to discover in the mapper:
 
@@ -365,7 +366,7 @@ Reads: `CategoryRule`, `Category`, existing `Transaction` natural keys.
 | Amended statement | Matching natural key, different amount → `UPDATED`, before/after diff, user's category preserved. |
 | Row fails to parse | Row-scoped error; import continues; error visible in review with raw cells. |
 | User maps a column wrongly | Caught by the live preview and the total check; the mapping is editable and the file re-importable. |
-| Multi-section file | Each section gets its own mapping within one file mapping. Sections may be separate sheets sharing one header (Max) rather than repeated headers within a sheet. |
+| Multi-section file | Cut at a repeated header or a card line, each section read with its own header and its card's own account (D-578). Sections may be separate sheets sharing one header (Max): every sheet with transactions is read. |
 | Foreign currency row | ILS charge as `amount`, original in `ForeignAmount` when those columns are mapped. |
 | Installments | One transaction per slice charged; `Installment` links slices by group key, parsed from the mapped installment column(s). |
 | Refund / credit | Positive amount, `direction = INFLOW`; must not silently reduce category spend. |

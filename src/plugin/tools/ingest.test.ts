@@ -437,3 +437,45 @@ describe('the file has to add up to what it says it does', () => {
     db.close()
   })
 })
+
+/**
+ * **A file holding two cards, in a conversation** — M59 U2, D-578: the same
+ * cut the screen makes, in both shapes, and one account per card.
+ */
+describe('a statement holding two cards', () => {
+  const synthetic = (name: string) => fileURLToPath(new URL(`../../../fixtures/synthetic/${name}`, import.meta.url))
+
+  async function empty(): Promise<string> {
+    const db = await createLedgerDatabase()
+    const dir = await tempDir('emerald-ingest-')
+    const path = join(dir, 'cards.emd')
+    await writeFile(path, exportDatabase(db))
+    db.close()
+    return path
+  }
+
+  it('statement_preview says how many cards, and how many rows each', async () => {
+    const path = await empty()
+    const text = await statementPreviewTool.run({ path, file: synthetic('two-cards-one-sheet.xlsx') }, NO_CLIENT)
+    expect(text).toContain('2 cards: ••4821 · 4 rows, ••9356 · 3 rows')
+  })
+
+  for (const name of ['two-cards-one-sheet.xlsx', 'two-cards-two-sheets.xlsx']) {
+    it(`import_statement writes ${name} into one account per card`, async () => {
+      const path = await empty()
+      const dry = await importStatementTool.run({ path, file: synthetic(name) }, NO_CLIENT)
+      expect(dry).toContain('2 cards: ••4821 · 4 rows, ••9356 · 3 rows')
+      expect(dry).toContain('••9356 → Card 9356 (made on commit)')
+
+      await importStatementTool.run({ path, file: synthetic(name), commit: true }, NO_CLIENT)
+      const after = await reopen(path)
+      const { listAccounts } = await import('@/data/repositories/accountRepository.ts')
+      const accounts = listAccounts(after)
+      expect(accounts.map((one) => one.last4).sort()).toEqual(['4821', '9356'])
+      const rowsOf = (last4: string) =>
+        listTransactions(after, { accountId: accounts.find((one) => one.last4 === last4)?.id ?? '' }, 500).length
+      expect([rowsOf('4821'), rowsOf('9356')]).toEqual([4, 3])
+      after.close()
+    })
+  }
+})

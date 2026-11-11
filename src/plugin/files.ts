@@ -8,7 +8,7 @@
 import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 
-import { readWorkbook, type SheetTable } from '@/data/importer/sheetTable.ts'
+import { readWorkbook, type SheetTable, type SheetWorkbook } from '@/data/importer/sheetTable.ts'
 
 import { ToolInputError } from './tools/tool.ts'
 
@@ -49,6 +49,8 @@ export interface SheetRead {
   readonly fileName: string
   /** Of the whole file, not the sheet: the narrowest sameness asserted is the same file (D-226). */
   readonly hash: string
+  /** Every sheet, for a file whose cards are a sheet each (M59 U2). */
+  readonly workbook: SheetWorkbook
 }
 
 /** One sheet of a workbook — the named one, or the first — or a refusal naming the sheets it has. */
@@ -61,5 +63,5 @@ export async function readSheetOffered(file: string, sheetName: string | undefin
   if (sheet === undefined) {
     throw new ToolInputError(`No sheet called "${sheetName ?? ''}" in ${fileName}. It has: ${sheets.join(', ')}.`)
   }
-  return { sheet, sheets, fileName, hash }
+  return { sheet, sheets, fileName, hash, workbook }
 }

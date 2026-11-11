@@ -37,7 +37,18 @@ import {
 } from '@/data/repositories/importMappingRepository.ts'
 import { acceptAllNew } from '@/data/repositories/stagedRowRepository.ts'
 import { existingNaturalKeys, type RowsHeld } from '@/data/repositories/transactionRepository.ts'
-import { overlapElsewhere } from '@/data/importer/statementBatch.ts'
+import {
+  cardsOf,
+  cardsSentence,
+  holdsTransactions,
+  judgeBatch,
+  overlapElsewhere,
+  sameLayoutSheets,
+  sheetsFrom,
+  writeSheets,
+  type SheetVerdict,
+  type StatementSheet,
+} from '@/data/importer/statementBatch.ts'
 import { allParsed, applyMapping, summarize, type ParsedRow } from '@/data/importer/apply.ts'
 import { commitSession } from '@/data/importer/commit.ts'
 import { columnCells, guessMapping, inferColumnShape, missingRequiredRoles } from '@/data/importer/guess.ts'
@@ -52,6 +63,7 @@ import {
   isSupportedFileName,
   SUPPORTED_EXTENSIONS,
   type SheetTable,
+  type SheetWorkbook,
 } from '@/data/importer/sheetTable.ts'
 import { stageImport } from '@/data/importer/stage.ts'
 import {
@@ -94,7 +106,15 @@ const FILE_PROP = stringProp(
 async function readSheet(
   file: string,
   sheetName: string | undefined,
-): Promise<{ table: SheetTable; sheets: readonly string[]; hash: string; fileName: string }> {
+): Promise<{
+  table: SheetTable
+  sheets: readonly string[]
+  hash: string
+  fileName: string
+  workbook: SheetWorkbook
+  /** Whether the call named its sheet: then that sheet alone is read. */
+  named: boolean
+}> {
   if (!isSupportedFileName(file)) {
     throw new ToolInputError(
       `Only ${SUPPORTED_EXTENSIONS.join(', ')} files can be read; ${file} is not one.`,
@@ -103,8 +123,49 @@ async function readSheet(
 
   // The same identity the app uses: a file is one import per *sheet*, because a
   // Max export is one file whose two sheets are two separate statements.
-  const { sheet: table, sheets, hash, fileName } = await readSheetOffered(file, sheetName)
-  return { table, sheets, hash, fileName }
+  const { sheet: table, sheets, hash, fileName, workbook } = await readSheetOffered(file, sheetName)
+  return { table, sheets, hash, fileName, workbook, named: sheetName !== undefined }
+}
+
+/**
+ * **Every card the file holds, each a sheet of its own** — the screen's
+ * `sheetsFrom` (M59 U2, D-578): the sheet cut at a repeated header or a card
+ * line, or by a card column holding several, and — when the call did not name a
+ * sheet — every other sheet of the file in the same layout. One card read once
+ * is one sheet, and the import goes the way it always went.
+ */
+function statementsOf(read: Awaited<ReturnType<typeof readSheet>>, resolved: Resolved): readonly StatementSheet[] {
+  const others = read.named ? [] : sameLayoutSheets(read.workbook, read.table, resolved.mapping)
+  return [{ table: read.table, mapping: resolved.mapping }, ...others].flatMap((one, index) =>
+    sheetsFrom({
+      id: `${read.hash}:${String(index)}`,
+      fileName: read.fileName,
+      fileHash: read.hash,
+      table: one.table,
+      mapping: one.mapping,
+      mappingId: resolved.savedMappingId,
+      mappingName: undefined,
+      boundAccountId: undefined,
+    }),
+  )
+}
+
+/** The file's other sheets that hold transactions in a layout this read does not cover. */
+function otherLayouts(read: Awaited<ReturnType<typeof readSheet>>, statements: readonly StatementSheet[]): readonly string[] {
+  if (read.named) return []
+  const covered = new Set(statements.map((sheet) => sheet.table.name))
+  return read.workbook.sheets.flatMap((table) =>
+    covered.has(table.name) || table.name === read.table.name || !holdsTransactions(table) ? [] : [table.name],
+  )
+}
+
+function otherLayoutsLine(names: readonly string[]): string | undefined {
+  if (names.length === 0) return undefined
+  return (
+    `**Not read in this call:** ${names.map((name) => `"${name}"`).join(', ')} ` +
+    `${names.length === 1 ? 'holds' : 'hold'} transactions in another layout. Call again with \`sheet\` ` +
+    'naming each to read it.'
+  )
 }
 
 // --- resolving the mapping -------------------------------------------------
@@ -270,6 +331,8 @@ function renderPreview(document: OpenDocument, args: Args, read: Awaited<ReturnT
   const summary = summarize(parsed)
   const missing = missingRequiredRoles(resolved.mapping)
   const accounts = listAccounts(document.db)
+  const statements = missing.length > 0 ? [] : statementsOf(read, resolved)
+  const several = statements.length > 1
 
   return paragraphs(
     `**${read.fileName}**, sheet "${table.name}"` +
@@ -285,7 +348,11 @@ function renderPreview(document: OpenDocument, args: Args, read: Awaited<ReturnT
         'below and pass `columns` to `import_statement`.',
     describeColumns(table, resolved.mapping),
     sampleRows(table, resolved.mapping),
-    accounts.length === 0
+    several ? cardsParagraph(statements) : undefined,
+    otherLayoutsLine(missing.length > 0 ? [] : otherLayouts(read, statements)),
+    several && cardsSentence(cardsOf(statements)) !== undefined
+      ? undefined
+      : accounts.length === 0
       ? '**This document has no accounts yet.** Pass `new_account` — name, kind and last 4 ' +
         'digits — to `import_statement`, and the import makes it.'
       : `Import into one of: ${accounts.map((one) => `${one.name} (${one.id})`).join(', ')}.`,
@@ -645,6 +712,152 @@ function applyPlan(document: OpenDocument, plan: Plan): string {
   )
 }
 
+// --- a file holding more than one card (M59 U2, D-578) -----------------------
+
+/**
+ * What a file of several cards, or of one card in several parts, comes to before
+ * anything is written: the sentence the screen says, and each part's account.
+ */
+function cardsParagraph(statements: readonly StatementSheet[]): string {
+  const sentence = cardsSentence(cardsOf(statements))
+  return sentence === undefined
+    ? `**Read in ${count(statements.length)} parts** (${statements
+        .map((sheet) => `"${sheet.table.name}"`)
+        .join(', ')}), all of one card, into one account.`
+    : `**${sentence}.** Each card is imported into the account its last 4 digits find, or a new one ` +
+        'made on commit — one account per card. `import_statement` reads them all in one call; ' +
+        '`account_id` or `new_account`, when given, is the account of the card it has the digits of.'
+}
+
+interface CardsPlan {
+  readonly read: Awaited<ReturnType<typeof readSheet>>
+  readonly resolved: Resolved
+  readonly sheets: readonly StatementSheet[]
+  readonly verdicts: readonly SheetVerdict[]
+  readonly ignoreTotal: boolean
+  readonly saveAs: string | undefined
+}
+
+type AnyPlan = { readonly kind: 'one'; readonly plan: Plan } | { readonly kind: 'cards'; readonly plan: CardsPlan }
+
+function planFor(document: OpenDocument, args: Args, read: Plan['read']): AnyPlan {
+  const resolved = resolveMapping(document, read.table, args)
+  const statements = missingRequiredRoles(resolved.mapping).length > 0 ? [] : statementsOf(read, resolved)
+  if (statements.length <= 1) return { kind: 'one', plan: buildPlan(document, args, read) }
+
+  // An account named is the account of the card whose digits it has — or, when
+  // it has none, of the first card, which teaches it its digits (the screen's
+  // bound reader). Every other card finds or makes its own.
+  const givenId = optionalString(args, 'account_id')
+  const newAccount = givenId === undefined ? newAccountOf(args) : undefined
+  if (givenId !== undefined && listAccounts(document.db, { includeArchived: true }).every((one) => one.id !== givenId)) {
+    throw new ToolInputError(`No account with id ${givenId} in this document. \`document_info\` lists them.`)
+  }
+  const named = newAccount?.last4 ?? statements[0]?.account.last4
+  const sheets = statements.map((sheet): StatementSheet => ({
+    ...sheet,
+    account: {
+      ...sheet.account,
+      boundAccountId: givenId,
+      kind: newAccount?.kind ?? sheet.account.kind,
+      fallbackName: newAccount !== undefined && sheet.account.last4 === named ? newAccount.name : sheet.account.fallbackName,
+    },
+  }))
+  const judged = judgeBatch(document.db, sheets.map((sheet) => ({ id: sheet.id, sheet })), () => true).verdicts
+  return {
+    kind: 'cards',
+    plan: {
+      read,
+      resolved,
+      sheets,
+      verdicts: sheets.flatMap((sheet) => {
+        const verdict = judged.get(sheet.id)
+        return verdict === undefined ? [] : [verdict]
+      }),
+      ignoreTotal: args['ignore_printed_total'] === true,
+      saveAs: optionalString(args, 'save_mapping_as'),
+    },
+  }
+}
+
+function refuses(plan: AnyPlan): boolean {
+  return plan.kind === 'one'
+    ? plan.plan.reconciles === false && !plan.plan.ignoreTotal
+    : !plan.plan.ignoreTotal && plan.plan.verdicts.some((verdict) => verdict.reconciles === false)
+}
+
+function partLine(sheet: StatementSheet, verdict: SheetVerdict): string {
+  const card = sheet.account.last4 === undefined ? `"${sheet.table.name}"` : `••${sheet.account.last4}`
+  const total =
+    verdict.reconciles === true
+      ? 'adds up to the total it prints'
+      : verdict.reconciles === false
+        ? '**does not add up to the total it prints**'
+        : 'prints no total to check'
+  return (
+    `- ${card} → ${verdict.accountName}${verdict.accountId === undefined ? ' (made on commit)' : ''}: ` +
+    `${count(verdict.newRows)} new, ${count(verdict.duplicates)} already imported, ` +
+    `${count(verdict.failed.length)} failed to parse; ${total}.` +
+    (verdict.elsewhere === undefined
+      ? ''
+      : ` ${count(verdict.elsewhere.rows)} of its rows are already in ${verdict.elsewhere.accountName}.`)
+  )
+}
+
+function describeCards(plan: CardsPlan): string {
+  return paragraphs(
+    `**${plan.read.fileName}**, read with ${plan.resolved.source}.`,
+    cardsParagraph(plan.sheets),
+    plan.sheets.map((sheet, index) => {
+      const verdict = plan.verdicts[index]
+      return verdict === undefined ? '' : partLine(sheet, verdict)
+    }).join('\n'),
+    otherLayoutsLine(otherLayouts(plan.read, plan.sheets)),
+    plan.saveAs === undefined ? undefined : `The reader will be kept as "${plan.saveAs}".`,
+  )
+}
+
+function applyCards(document: OpenDocument, plan: CardsPlan): string {
+  if (!plan.ignoreTotal && plan.verdicts.some((verdict) => verdict.reconciles === false)) {
+    throw new ToolInputError(`Refusing to import ${plan.read.fileName}: a card of it does not add up to its printed total.`)
+  }
+  const now = Date.now()
+  let mappingId = plan.resolved.savedMappingId
+  if (plan.saveAs !== undefined) {
+    mappingId = saveMapping(
+      document.db,
+      {
+        name: plan.saveAs,
+        headerSignature: computeHeaderSignature(plan.read.table, plan.resolved.mapping.headerRowIndex),
+        mapping: plan.resolved.mapping,
+        accountId: undefined,
+      },
+      now,
+    ).id
+  }
+  // The screen's own Write: each card staged, its new rows accepted, committed.
+  const written = writeSheets(
+    document.db,
+    plan.sheets.map((sheet) => ({ sheet: { ...sheet, mappingId }, force: false })),
+    now,
+  )
+  return paragraphs(
+    written
+      .map(({ sheet, result }) => {
+        const account = peekAccountForImport(document.db, sheet.account)
+        const card = sheet.account.last4 === undefined ? `"${sheet.table.name}"` : `••${sheet.account.last4}`
+        return (
+          `- ${card}: imported **${count(result.imported)} transactions** into ${account?.name ?? sheet.account.fallbackName}` +
+          (account === undefined ? '' : `, \`account_id\` ${account.id}`) +
+          (result.duplicates === 0 ? '' : `; ${count(result.duplicates)} were already there`) +
+          '.'
+        )
+      })
+      .join('\n'),
+    'The next file of these cards finds the same accounts by their last 4 digits.',
+  )
+}
+
 export const importStatementTool: PluginTool = {
   definition: {
     name: 'import_statement',
@@ -709,10 +922,10 @@ export const importStatementTool: PluginTool = {
     const read = await readSheet(requireString(args, 'file'), optionalString(args, 'sheet'))
     const commit = args['commit'] === true
 
-    const mutation: Mutation<Plan> = {
-      plan: (document) => buildPlan(document, args, read),
-      describe: describePlan,
-      apply: applyPlan,
+    const mutation: Mutation<AnyPlan> = {
+      plan: (document) => planFor(document, args, read),
+      describe: (plan) => (plan.kind === 'one' ? describePlan(plan.plan) : describeCards(plan.plan)),
+      apply: (document, plan) => (plan.kind === 'one' ? applyPlan(document, plan.plan) : applyCards(document, plan.plan)),
     }
 
     if (commit) {
@@ -721,9 +934,7 @@ export const importStatementTool: PluginTool = {
       // refused call must not leave a `.bak` behind whose only meaning is that
       // nothing happened — the same ordering the schema gate keeps (D-098).
       const objection = await readDocument(path, (document) =>
-        buildPlan(document, args, read).reconciles === false && args['ignore_printed_total'] !== true
-          ? REFUSE
-          : '',
+        refuses(planFor(document, args, read)) ? REFUSE : '',
       )
       if (objection === REFUSE) {
         return paragraphs(

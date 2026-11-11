@@ -123,6 +123,22 @@ function firstMatch(tokens: readonly Token[], text: string): string | undefined 
   return undefined
 }
 
+/**
+ * The card number a line of text states — `כרטיס 1234`, `Visa ending 1234` —
+ * the same reading the preamble gets. A card line between two sections of one
+ * sheet is read with it (M59 U2, D-578).
+ */
+export function statedLast4In(text: string): string | undefined {
+  const clean = cleanText(text)
+  const found = findLast4(clean)
+  if (found !== undefined || !CARD_WORD.test(clean)) return found
+  // A line that names a card and ends in its number: `כרטיס מסטרקארד 9356`.
+  return [...clean.matchAll(STANDALONE_FOUR)].at(-1)?.[1]
+}
+
+/** Four digits standing alone — not a year in a date, not part of an amount. */
+const STANDALONE_FOUR = /(?<![\d/.,:-])(\d{4})(?![\d/.,:])/g
+
 function findLast4(text: string): string | undefined {
   const stated = LAST4_AFTER_CARD_WORD.exec(text)?.[1]
   if (stated !== undefined) return stated
