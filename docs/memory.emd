@@ -4891,6 +4891,16 @@ answer: The words are the catalogue area `shell` (src/i18n/en/shell.ts, he/shell
 state: live
 affects: "docs/02-architecture.md\nvite.config.ts\nsrc/i18n/catalogue.ts"
 
+### D-589
+date: 2026-11-11
+milestone: M60
+scope: app
+title: A translated screen's words are the catalogue's, and a test that parses its files fails on one written inline; a count is a one/other pair, a sentence holding a document's value is filled with elements, a record the document keeps stays as written, and a card a Hebrew ledger makes in place is כרטיס 1234
+question: How does a translated screen keep its words, and what about counts, sentences around a document's values, and words stored in the document?
+answer: Four areas (home, reading, transactions, merchants), en/ and he/ files each. src/i18n/words.test.ts parses every file in TRANSLATED and fails on an inline English word (ALLOWED lists records by file, with why); a unit translating a screen adds its files there. Counts: countKey(key, n) over a one/other pair. A sentence with a merchant, account, category path or figure: fillNodes with the value in Bidi; a category path in Hebrew joins with ←. Run notes and stored role names stay as written. The account a statement makes in place is כרטיס 1234 in a ledger made in Hebrew (ledgerLanguageOf), superseding D-587 point 4. probe:screens --lang he draws Hebrew and lists what is still English.
+state: live
+affects: docs/09-decision-log.md
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -6171,6 +6181,15 @@ refs: M60 U1
 state: applied
 answered_by: D-584
 became_unit: M60 U1
+
+### M60 U4 built at e9775ca: land it
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-11
+body: "M60 U4 (Hebrew screens, part one) is built at e9775ca on worktree-agent-a35f570e4c3cc4a7d; land it after merging that branch. The rule row 'A translated screen's words are the catalogue's' is already in this document (decided_by D-583, D-584): link D-589 to it once this lands.\n\n```json\n{\"unit\": \"M60 U4\", \"commit\": \"e9775ca\", \"branch\": \"worktree-agent-a35f570e4c3cc4a7d\", \"files\": \"src/i18n/en/home.ts\\nsrc/i18n/he/home.ts\\nsrc/i18n/en/reading.ts\\nsrc/i18n/he/reading.ts\\nsrc/i18n/en/transactions.ts\\nsrc/i18n/he/transactions.ts\\nsrc/i18n/en/merchants.ts\\nsrc/i18n/he/merchants.ts\\nsrc/i18n/catalogue.ts\\nsrc/i18n/count.ts\\nsrc/i18n/nodes.tsx\\nsrc/i18n/current.ts\\nsrc/i18n/words.test.ts\\nsrc/ui/screens/Home.tsx\\nsrc/ui/screens/Year.tsx\\nsrc/ui/home/MonthChart.tsx\\nsrc/ui/home/WaitingList.tsx\\nsrc/ui/home/parts.tsx\\nsrc/ui/guide/GuideLine.tsx\\nsrc/ui/screens/ReadStatements.tsx\\nsrc/ui/import/MapperScreen.tsx\\nsrc/ui/import/MappingBar.tsx\\nsrc/ui/import/PreviewStrip.tsx\\nsrc/ui/import/ReadFilesBar.tsx\\nsrc/ui/import/SettlementPrompt.tsx\\nsrc/ui/import/SheetGrid.tsx\\nsrc/ui/import/StageBar.tsx\\nsrc/ui/import/TransferPrompt.tsx\\nsrc/ui/import/roleLabel.ts\\nsrc/ui/import/cardsLine.tsx\\nsrc/ui/screens/Transactions.tsx\\nsrc/ui/transactions/DetailPanel.tsx\\nsrc/ui/transactions/FilterBar.tsx\\nsrc/ui/transactions/LearningOffer.tsx\\nsrc/ui/transactions/ViewSwitch.tsx\\nsrc/ui/screens/ByMerchant.tsx\\nsrc/data/importer/statementBatch.ts\\nsrc/data/importer/statementBatch.test.ts\\nsrc/ui/probe.ts\\nscripts/probe-screens.mjs\\nsrc/ui/formats/surfaceRules.test.ts\\ndocs/09-decision-log.md\", \"decisions\": [{\"ref\": \"D-589\", \"title\": \"A translated screen's words are the catalogue's, and a test that parses its files fails on one written inline; a count is a one/other pair, a sentence holding a document's value is filled with elements, a record the document keeps stays as written, and a card a Hebrew ledger makes in place is כרטיס 1234\", \"question\": \"How does a translated screen keep its words, and what about counts, sentences around a document's values, and words stored in the document?\", \"answer\": \"Four areas (home, reading, transactions, merchants), en/ and he/ files each. src/i18n/words.test.ts parses every file in TRANSLATED and fails on an inline English word (ALLOWED lists records by file, with why); a unit translating a screen adds its files there. Counts: countKey(key, n) over a one/other pair. A sentence with a merchant, account, category path or figure: fillNodes with the value in Bidi; a category path in Hebrew joins with ←. Run notes and stored role names stay as written. The account a statement makes in place is כרטיס 1234 in a ledger made in Hebrew (ledgerLanguageOf), superseding D-587 point 4. probe:screens --lang he draws Hebrew and lists what is still English.\", \"affects\": \"docs/09-decision-log.md\"}], \"review_entries\": [{\"do\": \"Set Settings › Language to עברית, open demo.emd (or a ledger made in Hebrew) and read Home, Year, #/read, Transactions (open a row's pane and its ⋯ menu) and By merchant; then read a card statement into a new Hebrew ledger.\", \"should\": \"No English word outside a document's own names; counts read right ('2 כרטיסים', 'סינון · 2'); the new card is named כרטיס 1234 (the unit's pick, not yet yours). ~140 Hebrew words are drafts beyond the glossary, each listed in the unit's report; the ones to look at hardest: Saved נחסך, Write כתיבה, Dismiss סגירה, Leave out of totals השמטה מהסיכומים, Reference אסמכתא, Reader roles (תאריך חיוב, 4 ספרות אחרונות של הכרטיס), All rows כל התנועות, Waiting ממתינים. Taxes spelled מיסים as the seeded category. Still English on these screens, left to U5 or the data layer: CategoryPicker's own words and its path titles (→), PageMenu's 'More about…', Amount's aria-label 'minus', the 'N answers wait on Home' notice (Notices.tsx), the guide's step name in the Getting started line (domain/guide.ts), salaryBankWords, roleRejection, the parser's row errors, draftProblems, Why.tsx's rule text.\"}]}\n```"
+refs: M60 U4
+state: applied
+answered_by: D-589
+became_unit: M60 U4
 
 ### M60 U6 landing: a ledger made in Hebrew gets Hebrew category names (D-587)
 from: F:/projects/emerald/docs/memory.emd
@@ -8560,6 +8579,11 @@ should: The frames follow the page's theme (Dark mode is not an inversion).
 breaks: A loaded frame keeps the theme it loaded with: a light app panel sits on the near-black page until the frame is let go and reloaded. initTheme (src/ui/theme/useTheme.ts) has no `storage` listener. Owned by M54 F8. Fixed in M54 F8 (1cf3540).
 state: fault
 
+### Set Settings › Language to עברית, open demo.emd (or a ledger made in Hebrew) and read Home, Year, #/read, Transactions (open a row's pane and its ⋯ menu) and By merchant; then read a card statement into a new Hebrew ledger.
+unit: M60 U4
+should: No English word outside a document's own names; counts read right ('2 כרטיסים', 'סינון · 2'); the new card is named כרטיס 1234 (the unit's pick, not yet yours). ~140 Hebrew words are drafts beyond the glossary, each listed in the unit's report; the ones to look at hardest: Saved נחסך, Write כתיבה, Dismiss סגירה, Leave out of totals השמטה מהסיכומים, Reference אסמכתא, Reader roles (תאריך חיוב, 4 ספרות אחרונות של הכרטיס), All rows כל התנועות, Waiting ממתינים. Taxes spelled מיסים as the seeded category. Still English on these screens, left to U5 or the data layer: CategoryPicker's own words and its path titles (→), PageMenu's 'More about…', Amount's aria-label 'minus', the 'N answers wait on Home' notice (Notices.tsx), the guide's step name in the Getting started line (domain/guide.ts), salaryBankWords, roleRejection, the parser's row errors, draftProblems, Why.tsx's rule text.
+state: open
+
 ### Switch Settings › Language to עברית in the desktop app, open the menu with Alt (File, Edit, View, Help), try Help › License, and close a document with unsaved changes.
 unit: M60 U7
 should: Every menu item, the unsaved-work question and its buttons, and the License window's title are Hebrew, and still Hebrew after a restart. Drafted words (not in the glossary) to judge: קובץ, עריכה, תצוגה, עזרה, חדש, פתיחה…, מסמכים אחרונים, עדיין אין, ניקוי רשימת המסמכים האחרונים, שמירה, עותקים קודמים של המסמך…, סגירת החלון, יציאה, ביטול פעולה, ביצוע חוזר, גזירה, העתקה, הדבקה, בחירת הכול, פקודות…, הצגה או הסתרה של סרגל הצד, גודל אמיתי, הגדלה, הקטנה, מסך מלא, כלי מפתחים, רישיון, הודעות צד שלישי, קוד המקור, נפתח בדפדפן, בדיקת עדכונים עכשיו, אודות Emerald, מסמך Emerald, בלי לשמור, ביטול, 'לשמור את {name} לפני הסגירה?', the restart and crash sentences. Glossary words used: שמירה בשם (Save as), הדרכה (Guide me).
@@ -9015,6 +9039,16 @@ why: A `:focus` ring goes out when the window does, and coming back to a 500-row
 kind: non_negotiable
 scope: ui
 decided_by: ["D-130"]
+state: live
+
+### A translated screen's words are the catalogue's
+statement: A screen in the translated set draws every word of its own with `t()` from `src/i18n/` — a count with `countKey`, a sentence around a document's value with `fillNodes` and the value in `Bidi` — and never writes one inline; what the document keeps (a run's note, a stored role) stays as written and is allowed by name.
+why: An English word written inline in a translated screen is a word Hebrew never reaches, and nobody sees it until a person reads the screen in Hebrew. The test parses every file of the set and names the file and line, so a new string added to a translated screen fails the suite the day it is written, in English as well as in Hebrew. D-589 (M60 U4) has the rest; link it here when it lands.
+kind: non_negotiable
+scope: ui
+decided_by: ["D-583","D-584","D-589"]
+enforced_by: src/i18n/words.test.ts
+always: false
 state: live
 
 ### A unit is cut by its paths and its start
@@ -17096,15 +17130,18 @@ report: M60 U3 built at 5cfd321 (D-586). 728 physical Tailwind classes in 128 fi
 milestone: M60
 scope: app
 title: Hebrew screens, part one: Home, Read files and the import screen, Transactions, By merchant
-decision: D-583
-state: in_progress
+landed: 2026-11-11
+decision: D-589
+state: built
 brief: D-583. FIRST: if any M59 unit is planned or in_progress (the maintainer's fixes from his look at M59), stop and report: those land before a screen is translated (D-583 point 10). Then every on-screen word of Home (with its Year tab and Getting started line), Read files, the import screen (src/ui/import/), Transactions with its pane and menus, and By merchant goes through the layer (U1), English unchanged, with its Hebrew from the glossary (U2, as the maintainer corrected it) in this area's catalogue files only (src/i18n/he/<area>.ts). A word that is no term gets a draft that fits the glossary; list every such word in the report and on the unit's review_entry. Plurals and counts ('2 cards: ••4821 · 4 rows', 'Filter · 2') read right in Hebrew. Write the rule row that keeps it (record_format_rows rule: a translated screen's words go through the layer, enforced_by the test) and its test: a screen in the translated set with an inline user-facing string fails (an allow-list for raw document values rendered through Bidi). Check both languages with probe:screens (U3's rtl option) on demo.emd and a new empty ledger document; the pane only for a flow clicked through in Hebrew. Unset: stop and ask. Done-test: in Hebrew these screens show no English word outside a document's own data; in English nothing changed.
-files: "src/ui/screens/Home.tsx\nsrc/ui/screens/ReadStatements.tsx\nsrc/ui/import/MapperScreen.tsx\nsrc/ui/screens/Transactions.tsx\nsrc/ui/screens/ByMerchant.tsx\nsrc/ui/transactions/DetailPanel.tsx"
+files: "src/i18n/en/home.ts\nsrc/i18n/he/home.ts\nsrc/i18n/en/reading.ts\nsrc/i18n/he/reading.ts\nsrc/i18n/en/transactions.ts\nsrc/i18n/he/transactions.ts\nsrc/i18n/en/merchants.ts\nsrc/i18n/he/merchants.ts\nsrc/i18n/catalogue.ts\nsrc/i18n/count.ts\nsrc/i18n/nodes.tsx\nsrc/i18n/current.ts\nsrc/i18n/words.test.ts\nsrc/ui/screens/Home.tsx\nsrc/ui/screens/Year.tsx\nsrc/ui/home/MonthChart.tsx\nsrc/ui/home/WaitingList.tsx\nsrc/ui/home/parts.tsx\nsrc/ui/guide/GuideLine.tsx\nsrc/ui/screens/ReadStatements.tsx\nsrc/ui/import/MapperScreen.tsx\nsrc/ui/import/MappingBar.tsx\nsrc/ui/import/PreviewStrip.tsx\nsrc/ui/import/ReadFilesBar.tsx\nsrc/ui/import/SettlementPrompt.tsx\nsrc/ui/import/SheetGrid.tsx\nsrc/ui/import/StageBar.tsx\nsrc/ui/import/TransferPrompt.tsx\nsrc/ui/import/roleLabel.ts\nsrc/ui/import/cardsLine.tsx\nsrc/ui/screens/Transactions.tsx\nsrc/ui/transactions/DetailPanel.tsx\nsrc/ui/transactions/FilterBar.tsx\nsrc/ui/transactions/LearningOffer.tsx\nsrc/ui/transactions/ViewSwitch.tsx\nsrc/ui/screens/ByMerchant.tsx\nsrc/data/importer/statementBatch.ts\nsrc/data/importer/statementBatch.test.ts\nsrc/ui/probe.ts\nscripts/probe-screens.mjs\nsrc/ui/formats/surfaceRules.test.ts\ndocs/09-decision-log.md"
 blocks: ["M60 U1","M60 U2","M60 U3"]
 taken_by: run-milestone driver
 started: 2026-11-11
-branch: main
+branch: worktree-agent-a35f570e4c3cc4a7d
+commit: e9775ca
 paths: "src/ui/screens/Home.tsx\nsrc/ui/home/\nsrc/ui/screens/ReadStatements.tsx\nsrc/ui/import/\nsrc/ui/screens/Transactions.tsx\nsrc/ui/transactions/\nsrc/ui/screens/ByMerchant.tsx"
+report: Built at e9775ca, merged into main at b613399 (catalogue.ts conflict with U7's shell area resolved by keeping both). Home (with Year and the Getting started line), Read files, the import screen, Transactions with its pane and menus, and By merchant take their words from four areas: home, reading, transactions, merchants; English unchanged except values now in Bidi and '1 transaction' on Home's waiting list. countKey (one/other) and fillNodes (a sentence with the document's value in Bidi); src/i18n/words.test.ts parses every TRANSLATED file and fails on an inline word; the rule row 'A translated screen's words are the catalogue's'. probe:screens --lang he draws Hebrew and lists what is still English: 0 on these screens in a new ledger and demo.emd, both themes. A ledger made in Hebrew names a card made in place כרטיס 1234 (ledgerLanguageOf; supersedes D-587 point 4; the unit's pick). ~140 drafted words beyond the glossary; Taxes מיסים, Dismiss סגירה, Reference אסמכתא unified. Still English: CategoryPicker's words and path titles, PageMenu's 'More about…', Amount's aria-label 'minus', Notices.tsx's 'N answers wait on Home', the guide's step name (domain/guide.ts), salaryBankWords, roleRejection, parser row errors, draftProblems, Why.tsx's rule text. Year and Transactions show 28 and 31 low-contrast hits in English too (not this unit). Full suite 5682, typecheck, privacy, check:tours green in the worktree; on main after merge the suite passed but for a timing test that passes alone (load).
 
 ### M60 U5
 milestone: M60
