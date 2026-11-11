@@ -485,6 +485,7 @@ written out here.
 | D-580 | 2026-11-11 | 50 / 30 / 20 is shown before it is made: every top-level category with its share, its part, what it comes to a month and why, each share changeable in place, the months named once; Make plan writes exactly that and Cancel nothing, and `start_plan` is the same proposal for a conversation | M59 |
 | D-581 | 2026-11-11 | The app is a window that never scrolls, and Guide me opens only from a press: the shell is the positioned frame and the page itself cannot scroll; the new document's offer is gone, and Home's Getting started line is dismissed per document with Dismiss | M59 |
 | D-582 | 2026-11-11 | A new ledger document shows what M59 U1 picked: the rail holds back each place until the document holds what it shows, Home before a read is the band and Getting started, and Transactions and By merchant put their filters behind Filter and their rarer acts behind More | M59 |
+| D-583 | 2026-11-11 | The app in Hebrew: one translation layer for the whole app, Hebrew for everything a ledger document shows after M59, a full right-to-left mirror with English unchanged, the language following the computer until Settings says otherwise and kept per machine, and M59 with M60 shipped as one desktop release after the maintainer tries both | M60 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1022,6 +1023,43 @@ nothing (`src/parity.test.ts` unchanged).
 **Consequences.** demo.emd's rail loses Dashboard (no block), Formats, Connections and Agenda
 (ledger-only, no format of its own). The picks are U1's, judged by the maintainer through M59 U1's
 and this unit's open review entries.
+
+## D-583 · 2026-11-11 · The app in Hebrew: one translation layer for the whole app, Hebrew for everything a ledger document shows after M59, a full right-to-left mirror with English unchanged, the language following the computer until Settings says otherwise and kept per machine, and M59 with M60 shipped as one desktop release after the maintainer tries both <a id="d-583"></a>
+
+**Context.** D-575 put Hebrew in its own milestone after M59: the second person to use the ledger
+asked for it. The app has no translation layer: its words are written inline across about 200 files
+in `src/ui`, which also say left and right about 400 times. The maintainer wants M59 and M60 to reach
+her together.
+
+**Decision.** Maintainer, 2026-11-11, every recommendation:
+
+1. **One translation layer for the whole app.** Hebrew for what a ledger document shows after M59:
+   the rail, Home with its Year tab, Read files and the import screen, Transactions, By merchant,
+   Categories, Plan, Settings, Getting started and the guide, dialogs, the command palette and the
+   desktop menu. Formats, Connections, Agenda, the development pack and the places M59 holds back
+   (Paychecks, Wealth, Dashboard) fall back to English for now.
+2. **The language follows the computer** on first open; Settings' Language overrides it; it is kept
+   per machine, never in the document, so two people can open one document in different languages.
+3. **A full right-to-left mirror in Hebrew**: the rail on the right, pointing glyphs flipped. Left
+   and right become start and end, so English is unchanged. Charts keep time running left to right.
+4. **Western digits, ₪ as today, Hebrew month names, Gregorian only.**
+5. **The model drafts every string.** Each term row gets its Hebrew word, one name per thing in both
+   languages, and the glossary unit stops for the maintainer's review before any screen is translated.
+6. **A document made while the app is in Hebrew gets Hebrew category names**; an existing document
+   keeps its own (D-576).
+7. **What a model reads (tool text), the docs and the public site stay English.**
+8. **A test fails** when a translated screen has a string that skips the layer, or a Hebrew word is
+   missing.
+9. **One desktop release for M59 and M60** (0.4.0), cut after the maintainer tries both on his own
+   machine. Windows is built here; a Mac build only on a Mac.
+10. **The maintainer looks at M59 first.** The layer, the glossary and the mirror start now;
+    translating screens waits for M59's fixes, since a screen fixed after it is translated is changed
+    in two languages.
+
+**Consequences.** M60 is eight units: the layer (U1), the glossary with a stop for the maintainer
+(U2), the mirror (U3), the screens in two parts that can run side by side (U4, U5), Hebrew category
+names in a new document (U6), the desktop shell (U7) and the release (U8, which starts only on the
+maintainer's go). The open question *Hebrew interface* is answered.
 
 ## Related
 

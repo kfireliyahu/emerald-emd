@@ -4832,6 +4832,16 @@ answer: For a document keeping the ledger the rail is asked of the document on e
 state: live
 affects: docs/packs/ledger/06-navigation-and-screens.md
 
+### D-583
+date: 2026-11-11
+milestone: M60
+scope: app
+title: The app in Hebrew: one translation layer for the whole app, Hebrew for everything a ledger document shows after M59, a full right-to-left mirror with English unchanged, the language following the computer until Settings says otherwise and kept per machine, and M59 with M60 shipped as one desktop release after the maintainer tries both
+question: M60: how much of the app is in Hebrew, how is the language chosen, how is it laid out, who writes the words, what happens to what a document already holds, what stays English, what keeps it true, and how does it reach her?
+answer: Maintainer, 2026-11-11, every recommendation: (1) one translation layer for the whole app; Hebrew for what a ledger document shows after M59 (the rail, Home with its Year tab, Read files and the import screen, Transactions, By merchant, Categories, Plan, Settings, Getting started and the guide, dialogs, the command palette, the desktop menu); Formats, Connections, Agenda, the development pack and the places M59 holds back (Paychecks, Wealth, Dashboard) fall back to English for now. (2) The language follows the computer's on first open; Settings' Language overrides; kept per machine (localStorage and the shell), never in the document. (3) A full right-to-left mirror in Hebrew, the rail on the right and pointing glyphs flipped; physical left/right become start/end so English is unchanged; charts keep time left to right. (4) Western digits, ₪ as today, Hebrew month names, Gregorian only. (5) The model drafts every string; each term row gets its Hebrew word, one name per thing in both languages, and the glossary unit stops for the maintainer's review before any screen is translated. (6) A document made while the app is in Hebrew gets Hebrew category names; an existing document keeps its own (D-576). (7) What a model reads (tool text), the docs and the public site stay English. (8) A test fails when a translated screen has a string that skips the layer, or a Hebrew word is missing. (9) One desktop release for M59 and M60 (0.4.0), cut after the maintainer tries both on his machine; Windows here, a Mac build only on a Mac. (10) The maintainer looks at M59 first; the layer, the glossary and the mirror start now, and translating screens waits for M59's fixes.
+state: live
+affects: "index.html\nsrc/ui/\nelectron/menu.ts\nsrc/data/packs/ledger/pack.ts"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -6543,7 +6553,8 @@ state: answered
 ### Hebrew interface
 question: A first-time person asked for the app in Hebrew: is a translated, right-to-left interface in scope, for the whole app or the ledger first? Today no translation layer exists; on-screen strings are written inline in src/ui.
 opened_by: D-575
-state: open
+answered_by: D-583
+state: answered
 
 ### Ledger first use
 question: A first-time person (the maintainer's friend, 2026-11-11) found the ledger's UI too complicated and its main workflows not intuitive: which workflows are the main ones, where did she get stuck, and does this unpark the ledger (M54 U5's 35 open findings are already recorded against it)?
@@ -16806,6 +16817,92 @@ branch: main
 commit: 3e273fa
 paths: src/ui/Sidebar.tsx src/ui/screens/Home.tsx src/ui/home/ src/ui/screens/Transactions.tsx
 report: M59 U6 built at 3e273fa (D-582). The rail holds back Year, Paychecks, Plan, Wealth, Dashboard and (ledger-only) Formats, Connections, Agenda until the document holds what each shows, asked on every draw; a held place you stand on shows its line; palette unchanged. Home before a read is header, band, Getting started (Add a paycheck; Taxes only with a paycheck); Getting started's next step is a link; guide order read, merchant, categories. Transactions: Filter button (Filter · n) with Account/Category/At least/At most/Clear as ChoiceField/ChoiceMenu, Uncategorized once; Rules + Export in More; figures in ink; strip gone; empty state with h1 and Read files. By merchant: Filter (Account, Month), Order on the list header, Skip all in More, two tiles, nothing-read state hides tiles/Filter/list header. Pane natural-key line removed. Tours: check:tours green at both sizes. The development tour's pre-existing failure (decision sheet 1110px in 920px) was fixed in the tour, not the table: fixtures/synthetic/demo/project.md gives the new `affects` column (D-570) width 48 and title 150. The timesheet tour broke on the pick (Formats held in its ledger-only document): its declare now comes before the click on Formats (rows.test.ts updated). Fence test: dashboard asked via dashboardBlocks, not raw SQL. Verified: full suite green after two fixes, typecheck, privacy, probe:screens on new-ledger.emd (only pre-existing 13px ghost-button sizes), browser on a new ledger doc and demo.emd (Filter · 1 narrows 25 to 7). Impeccable harden/polish applied by reading; detector found nothing (regex mode). Not done: By merchant's header indentation is not prettier-formatted (file was not before either).
+
+### M60 U1
+milestone: M60
+scope: app
+title: The words go through one layer, and the app opens in the computer's language
+decision: D-583
+state: planned
+brief: D-583. Today there is no translation layer: on-screen words are written inline across ~200 files in src/ui, and index.html/demo.html say <html lang="en">. Build the layer every later M60 unit uses: (1) a small hand-rolled layer in src/i18n/ (no new dependency unless the unit shows why; then stop and ask): English is the source catalogue with typed keys, so a missing or misspelled key is a type error; Hebrew catalogues are one file per area (src/i18n/he/<area>.ts, the English beside it), so U4 and U5 can translate in parallel without touching one file; a key missing in Hebrew falls back to English and a test lists the missing ones. (2) The language: on first open it follows the computer (navigator.language starting with he is Hebrew, anything else English); Settings gets Language (English / עברית) that overrides it, kept per machine in localStorage like the theme (D-115, D-320), never in the document. <html lang dir> follow the choice (dir=rtl in Hebrew; what that does to the layout is U3's). (3) Month names and dates go through the layer: Hebrew month names, Gregorian only, Western digits; ₪ and money formatting unchanged (src/core/money.ts stays as it is; src/core/time.ts's formatting takes the language or the layer formats). (4) Prove it on the smallest set: Settings' own Language row and the rail's place names. The Bidi component (src/ui/Bidi.tsx) stays the way raw document strings render. Words checked against term rows. Tests: the default follows navigator.language; the override survives a reload; <html dir> flips; the month names. Unset: stop and ask.
+files: "src/ui/Bidi.tsx\nsrc/core/time.ts\nindex.html\ndemo.html\nsrc/ui/Sidebar.tsx"
+paths: "src/i18n/\nsrc/core/time.ts\nindex.html\ndemo.html"
+
+### M60 U2
+milestone: M60
+scope: ledger
+title: The glossary in Hebrew: every term a ledger document shows gets its one Hebrew word
+decision: D-583
+state: planned
+brief: D-583. One name per thing holds in Hebrew too. Add a column to the project's term format (extend_format on docs/memory.emd; name it so it cannot be mistaken for printed_as, which is what a source document prints, not what the screen says) and fill it for every live term a ledger document shows (scope ledger, app or shell; shown_in rail, view, verdict, screen or tour), including M59's new words (Getting started, Add a paycheck, Filter) and the rail's places. Rules: no two terms share a Hebrew word; a term's Hebrew reads as a person in Israel would say it on a finance screen, matching what Israeli card and bank statements print where printed_as has it; a term with no good Hebrew gets the best draft and a note in the review sheet. Also draft the Hebrew for the ledger's seeded category names (src/data/packs/ledger/seededIds.json) for U6, in the review sheet. Write docs/mockups/m60-u2/glossary.md: a two-column sheet (English | Hebrew | note) the maintainer marks up, grouped by screen; the rows are the source, the sheet is for review. No code changes. MAINTAINER'S EYE: the driver stops after this unit; the maintainer reads the sheet and corrects the words before any screen is translated (U4, U5, U6 wait on this). Done-test: every term in scope has its Hebrew, the sheet lists them, one open review_entry asks for the maintainer's pass.
+files: "src/data/packs/ledger/seededIds.json\ndocs/mockups/m59-u1/brief.md"
+paths: docs/mockups/m60-u2/
+
+### M60 U3
+milestone: M60
+scope: ui
+title: Right to left: in Hebrew the layout mirrors, and English is unchanged
+decision: D-583
+state: planned
+brief: D-583. With <html dir=rtl> (U1) the layout must mirror: the rail on the right, panes and menus opening from the start side, pointing glyphs (chevrons, the month pager's arrows, back arrows) flipped. Today ~400 physical Tailwind classes in src/**/*.tsx (ml-/mr-, pl-/pr-, left-/right-, text-left/right, border-l/r, rounded-l/r) against ~30 logical ones: move them to logical ones (ms-/me-, ps-/pe-, start-/end-, text-start/end, border-s/e, rounded-s/e) and the same in tokens.css and any inline style, so English renders exactly as it does now. Charts keep time running left to right (dir=ltr on the chart, src/ui/charts/). A figure, an amount with ₪ or a minus, a card's ••1234 and a date read right inside Hebrew text (the Bidi component where a value sits in a sentence). The desktop shell's window controls stay where the OS puts them. Add a way for probe:screens to measure in rtl (a --lang he or --dir rtl option) and measure the ledger's routes in both themes, rtl and ltr; English's numbers must not move. A test fails on a physical direction class in src/ui (charts allow-listed). Unset: stop and ask. Done-test: in Hebrew every ledger screen mirrors with nothing overlapping or clipped; in English probe:screens reads the same as before.
+files: "src/ui/theme/tokens.css\nsrc/App.tsx\nsrc/ui/Sidebar.tsx\nsrc/ui/charts/Chart.tsx\nsrc/ui/Bidi.tsx"
+blocks: ["M60 U1"]
+paths: "src/ui/\nsrc/App.tsx\nscripts/probe-screens.mjs"
+
+### M60 U4
+milestone: M60
+scope: app
+title: Hebrew screens, part one: Home, Read files and the import screen, Transactions, By merchant
+decision: D-583
+state: planned
+brief: D-583. FIRST: if any M59 unit is planned or in_progress (the maintainer's fixes from his look at M59), stop and report: those land before a screen is translated (D-583 point 10). Then every on-screen word of Home (with its Year tab and Getting started line), Read files, the import screen (src/ui/import/), Transactions with its pane and menus, and By merchant goes through the layer (U1), English unchanged, with its Hebrew from the glossary (U2, as the maintainer corrected it) in this area's catalogue files only (src/i18n/he/<area>.ts). A word that is no term gets a draft that fits the glossary; list every such word in the report and on the unit's review_entry. Plurals and counts ('2 cards: ••4821 · 4 rows', 'Filter · 2') read right in Hebrew. Write the rule row that keeps it (record_format_rows rule: a translated screen's words go through the layer, enforced_by the test) and its test: a screen in the translated set with an inline user-facing string fails (an allow-list for raw document values rendered through Bidi). Check both languages with probe:screens (U3's rtl option) on demo.emd and a new empty ledger document; the pane only for a flow clicked through in Hebrew. Unset: stop and ask. Done-test: in Hebrew these screens show no English word outside a document's own data; in English nothing changed.
+files: "src/ui/screens/Home.tsx\nsrc/ui/screens/ReadStatements.tsx\nsrc/ui/import/MapperScreen.tsx\nsrc/ui/screens/Transactions.tsx\nsrc/ui/screens/ByMerchant.tsx\nsrc/ui/transactions/DetailPanel.tsx"
+blocks: ["M60 U1","M60 U2","M60 U3"]
+paths: "src/ui/screens/Home.tsx\nsrc/ui/home/\nsrc/ui/screens/ReadStatements.tsx\nsrc/ui/import/\nsrc/ui/screens/Transactions.tsx\nsrc/ui/transactions/\nsrc/ui/screens/ByMerchant.tsx"
+
+### M60 U5
+milestone: M60
+scope: app
+title: Hebrew screens, part two: Categories, Plan, Settings, the guide, the rail, dialogs and the palette
+decision: D-583
+state: planned
+brief: D-583. FIRST: if any M59 unit is planned or in_progress, stop and report (D-583 point 10). Then every on-screen word of Categories, Plan (with M59 U4's 50 / 30 / 20 proposal), Settings, the guide and its steps (src/data/packs/ledger/guide.ts), the rail and title bar, the app's shared dialogs and confirmations, and the command palette goes through the layer (U1), English unchanged, Hebrew from the glossary (U2) in this area's catalogue files only (src/i18n/he/<area>.ts) — U4 translates the intake and transaction screens beside you. Paychecks, Wealth, Dashboard, Formats, Connections and Agenda fall back to English (D-583); if a shared component you translate reaches them, that is fine. A word that is no term gets a draft that fits the glossary; list every such word in the report and on the unit's review_entry. Extend U4's rule test to these screens (if U4 has not landed yet, write the test for yours and say so). Check both languages with probe:screens (rtl) on demo.emd and a new empty ledger document. Unset: stop and ask. Done-test: in Hebrew these places show no English word outside a document's own data; in English nothing changed.
+files: "src/ui/screens/Categories.tsx\nsrc/ui/screens/Plan.tsx\nsrc/ui/plan/StarterProposal.tsx\nsrc/ui/guide/GuideLine.tsx\nsrc/data/packs/ledger/guide.ts\nsrc/ui/Sidebar.tsx"
+blocks: ["M60 U1","M60 U2","M60 U3"]
+paths: "src/ui/screens/Categories.tsx\nsrc/ui/categories/\nsrc/ui/screens/Plan.tsx\nsrc/ui/plan/\nsrc/ui/guide/\nsrc/data/packs/ledger/guide.ts\nsrc/ui/Sidebar.tsx\nsrc/ui/palette/"
+
+### M60 U6
+milestone: M60
+scope: ledger
+title: A ledger document made in Hebrew gets Hebrew category names, and one made before keeps its own
+decision: D-583
+state: planned
+brief: D-583, D-576. A new ledger document made while the app is in Hebrew gets the seeded categories under their Hebrew names (from U2's sheet as the maintainer corrected it); the seeded ids (cat:…, src/data/packs/ledger/seededIds.json) do not change, so rules, plans and the 50 / 30 / 20 starter (src/domain/starterPlan.ts reads ids) work the same. An existing document keeps its names whatever the app's language (D-576: a test opens a document made by the build before this unit, in Hebrew, and its names and rows are unchanged). Anything else the pack seeds that a person reads (account names made in place, the guide's sample words) follows the same rule. Parity: a conversation making a document (create_document) can ask for Hebrew names (src/parity.test.ts). Unset: stop and ask. Done-test: New ledger in Hebrew shows Hebrew categories; switching the app to English leaves them Hebrew; an older document is untouched.
+files: "src/data/packs/ledger/pack.ts\nsrc/data/packs/ledger/seededIds.json\nsrc/domain/starterPlan.ts"
+blocks: ["M60 U1","M60 U2"]
+paths: "src/data/packs/ledger/pack.ts\nsrc/data/packs/ledger/seededIds.json\nsrc/plugin/tools/document.ts"
+
+### M60 U7
+milestone: M60
+scope: shell
+title: The desktop shell in Hebrew: its menu and dialogs follow the app's language
+decision: D-583
+state: planned
+brief: D-583. The desktop menu (electron/menu.ts), the shell's own dialogs (unsaved changes, open/save titles, crash recovery, updates) and anything else the shell writes on screen go through the same English and Hebrew words (shared with src/i18n/ the way the shell already shares code, never importing src/ beyond what the bridge allows). The shell cannot read the page's localStorage (src/ui/TitleBar.tsx:35): until the page says, it follows the OS (app.getLocale()); the page tells it the choice over the bridge (src/bridge.ts) and the menu is rebuilt on a change. Menus mirror as the OS does in RTL. Verify over CDP (verify-in-shell skill): switch to Hebrew in Settings, the menu is Hebrew; restart, it is still Hebrew. Unset: stop and ask.
+files: "electron/menu.ts\nelectron/main.ts\nsrc/bridge.ts\nsrc/ui/TitleBar.tsx"
+blocks: ["M60 U1","M60 U2"]
+paths: "electron/\nsrc/bridge.ts"
+
+### M60 U8
+milestone: M60
+scope: shell
+title: M59 and M60 in one desktop release, 0.4.0, after the maintainer tries both
+decision: D-583
+state: planned
+brief: D-583. STOP FIRST: this unit starts only when the maintainer says go after trying M59 and M60 on his machine (a new Hebrew ledger document, a statement read, a merchant categorized, a plan made). Then cut 0.4.0 the way 0.3.1 was cut (find the version cut's procedure in docs and the last release commit, 2a066ca): the version, release notes in plain words (the two-card import, By merchant's provider category, 50 / 30 / 20 shown first, the calmer first screen, Hebrew), the Windows installer (npm run dist:win), the GitHub release. A Mac build only if she is on a Mac, and then only on a Mac: ask the maintainer. Whether the plugin's npm package needs a version too follows the release procedure; npm publishes run in a Terminal tab (2FA in the browser) and can sit an hour before npm serves them: wait, never republish. Done-test: the release page has the installer; installed fresh on this machine it opens a new document in the computer's language.
+files: "package.json\nhosts/claude-plugin-release.json"
+blocks: ["M60 U3","M60 U4","M60 U5","M60 U6","M60 U7"]
+paths: "package.json\nhosts/\nCHANGELOG.md"
 
 <!-- emerald: views.md -->
 ---
