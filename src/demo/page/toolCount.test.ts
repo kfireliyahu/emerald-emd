@@ -11,7 +11,7 @@ import { en } from './copy/en.ts'
 /**
  * **A figure on the public page is pinned by a test** (M54 F8). The page, the
  * npm package's README and the repository's say how many tools the server
- * offers — "28 for any document, 85 with the ledger" — and the only thing that
+ * offers — "28 for any document, 86 with the ledger" — and the only thing that
  * may say it is the server's own `tools/list`, with `--engine-only` and
  * without. A tool added or removed fails here until the three are changed.
  */

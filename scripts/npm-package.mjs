@@ -83,7 +83,7 @@ kfireliyahu/emerald-emd\`, then \`/plugin install emerald@emerald-emd\`.
 - It reads what you already keep onto your tables: a spreadsheet (\`.csv\`, \`.xlsx\`), a \`.json\` of
   rows, or a folder of Markdown notes — a note a row, its frontmatter as columns, its \`[[links]]\`
   as links — read where it is and never changed.
-- Shaped tools, never a general query: 28 for any document, 85 with the ledger.
+- Shaped tools, never a general query: 28 for any document, 86 with the ledger.
 - A document answers in rows, so the model asks for what it needs instead of reading notes end to
   end.
 - One project's session leaves a note in another's inbox, and the next session there starts with it.

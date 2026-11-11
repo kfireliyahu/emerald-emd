@@ -157,6 +157,7 @@ export const TOOL_GROUPS: readonly ToolGroup[] = [
       writes('plan_month', 'Works a plan out for a month, and uses it.'),
       writes('set_fixed_expense_roles', 'Says what each bill does to a plan.'),
       removes('set_plan', 'Makes, resizes, points and deletes plans.'),
+      writes('start_plan', 'Starts a first plan with 50 / 30 / 20, showing every category’s share first.'),
     ],
   },
   {

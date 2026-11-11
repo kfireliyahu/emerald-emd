@@ -52,7 +52,6 @@ import {
   deleteSplitPlan,
   duplicateSplitPlan,
   listPlanMonths,
-  listSplitBuckets,
   listSplitPlans,
   reorderSplitBuckets,
   setDefaultPlan,
@@ -62,9 +61,9 @@ import {
   type NewAllocation,
 } from '@/data/repositories/splitPlanRepository.ts'
 import { DEFAULT_WINDOW_MONTHS } from '@/domain/fixedExpenses.ts'
-import { starterHeadings } from '@/data/repositories/categoryBudgetRepository.ts'
+import { makeStarterPlan, starterPlanProposal } from '@/data/repositories/categoryBudgetRepository.ts'
 import { documentCurrency } from '@/data/repositories/statisticsRepository.ts'
-import { starterBuckets, unplacedHeadings, type StarterAnswer, type StarterHeading } from '@/domain/starterPlan.ts'
+import { starterPlacement, type StarterAnswer, type StarterHeading } from '@/domain/starterPlan.ts'
 import type { FixedExpense, FixedRole } from '@/domain/model/fixed.ts'
 import {
   BASIS_KINDS,
@@ -86,6 +85,7 @@ import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { ContextMenu, type MenuItem } from '@/ui/components/ContextMenu.tsx'
+import { ChoiceMenu } from '@/ui/components/ChoiceField.tsx'
 import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
 import { FixedExpenseEditor } from '@/ui/fixed/FixedExpenseEditor.tsx'
 import { Pager } from '@/ui/home/parts.tsx'
@@ -98,6 +98,7 @@ import { MonthRow } from '@/ui/plan/MonthRow.tsx'
 import { PlanBar, type Trade } from '@/ui/plan/PlanBar.tsx'
 import { usePlanView } from '@/ui/plan/usePlanView.ts'
 import { PointsAt, type NewPointable, type Pointable } from '@/ui/plan/PointsAt.tsx'
+import { StarterProposal } from '@/ui/plan/StarterProposal.tsx'
 import { bucketColour } from '@/ui/plan/planLook.ts'
 import { BASIS_LABEL } from '@/ui/split/labels.ts'
 import { today } from '@/ui/today.ts'
@@ -168,6 +169,8 @@ export function Plan() {
   const [percentText, setPercentText] = useState<Readonly<Record<string, string>>>({})
   const [customText, setCustomText] = useState<string | undefined>()
   const [newBucket, setNewBucket] = useState('')
+  /** The 50 / 30 / 20 starter's answers while its proposal is open; undefined while it is not (M59 U4). */
+  const [starterAnswers, setStarterAnswers] = useState<ReadonlyMap<string, StarterAnswer> | undefined>()
 
   const asOf = useMemo(() => today(), [])
   const plans = useMemo(() => (db === undefined ? [] : listSplitPlans(db)), [db, revision])
@@ -178,13 +181,13 @@ export function Plan() {
     () => (db === undefined ? undefined : planMonth(db, { planId, month, asOf })),
     [db, revision, planId, month, asOf],
   )
-  /** The top-level categories the 50/30/20 starter shares itself over, read only while there is no plan. */
-  const headings = useMemo(
+  /** The 50 / 30 / 20 starter, shown before it is made (M59 U4, D-580): read only while it is open and there is no plan. */
+  const proposal = useMemo(
     () =>
-      db === undefined || pm !== undefined
-        ? []
-        : starterHeadings(db, asOf, paychecks[0]?.net.currency ?? documentCurrency(db)),
-    [db, revision, pm, asOf, paychecks],
+      db === undefined || pm !== undefined || starterAnswers === undefined
+        ? undefined
+        : starterPlanProposal(db, asOf, paychecks[0]?.net.currency ?? documentCurrency(db), starterAnswers),
+    [db, revision, pm, asOf, paychecks, starterAnswers],
   )
   const compare = useMemo(
     () =>
@@ -240,42 +243,38 @@ export function Plan() {
   const currency: CurrencyCode = pm?.plan.currency ?? paychecks[0]?.net.currency ?? documentCurrency(db)
 
   if (pm === undefined) {
+    if (proposal !== undefined && starterAnswers !== undefined) {
+      const answers = starterAnswers
+      return (
+        <StarterProposal
+          proposal={proposal}
+          onChoose={(heading: StarterHeading, answer: StarterAnswer) => {
+            // Choosing what the starter would have chosen by itself takes the person's say back out.
+            const next = new Map(answers)
+            if (starterPlacement(heading, new Map()).answer === answer) next.delete(heading.id)
+            else next.set(heading.id, answer)
+            setStarterAnswers(next)
+          }}
+          onMake={() =>
+            write((database, now) => {
+              setPlanId(makeStarterPlan(database, asOf, currency, answers, now))
+              setStarterAnswers(undefined)
+            })
+          }
+          onCancel={() => {
+            setProblem(undefined)
+            setStarterAnswers(undefined)
+          }}
+          problem={problem}
+        />
+      )
+    }
     return (
       <EmptyState
-        headings={headings}
-        onCreate={(answers) =>
+        onStart={() => setStarterAnswers(new Map())}
+        onEmpty={() =>
           write((database, now) => {
-            const created = createSplitPlan(database, { name: 'Default', currency, isDefault: true }, now)
-            // Buckets are shared across plans: one already on a category is the one used (M31 U3).
-            const held = listSplitBuckets(database)
-            const starter = answers === undefined ? [] : starterBuckets(headings, answers)
-            const allocations: NewAllocation[] = starter.map(
-              (entry) => ({
-                bucketId:
-                  held.find(
-                    (one) =>
-                      entry.categoryId !== undefined && one.targetKind === 'CATEGORY' && one.targetId === entry.categoryId,
-                  )?.id ??
-                  createSplitBucket(
-                    database,
-                    entry.categoryId === undefined
-                      ? { name: entry.name, share: entry.share }
-                      : { name: entry.name, targetKind: 'CATEGORY', targetId: entry.categoryId, share: entry.share },
-                    now,
-                  ).id,
-                mode: 'PERCENTAGE',
-                basisPoints: entry.basisPoints,
-              }),
-            )
-            updateSplitPlan(database, created.id, { allocations }, now)
-            // A bucket already there takes the share it is used for now, and the starter's order (M31 U4).
-            for (const [index, entry] of allocations.entries()) {
-              const share = starter[index]?.share
-              if (share !== undefined) updateSplitBucket(database, entry.bucketId, { share }, now)
-            }
-            const placed = allocations.map((entry) => entry.bucketId)
-            reorderSplitBuckets(database, [...placed, ...held.map((one) => one.id).filter((id) => !placed.includes(id))], now)
-            setPlanId(created.id)
+            setPlanId(createSplitPlan(database, { name: 'Default', currency, isDefault: true }, now).id)
           })
         }
       />
@@ -842,22 +841,16 @@ export function Plan() {
           <div className="fc-pop-enter -mt-4 flex flex-wrap items-end gap-x-6 gap-y-3" data-testid="plan-basis">
             <label className="flex flex-col gap-1">
               <span className="text-label text-ink-tertiary uppercase">Net pay is</span>
-              <select
-                value={plan.basisKind}
-                onChange={(event) =>
+              <ChoiceMenu
+                text={BASIS_LABEL[plan.basisKind]}
+                choices={BASIS_KINDS.map((kind) => ({ value: kind, label: BASIS_LABEL[kind] }))}
+                onPick={(choice) =>
                   write((database, now) =>
-                    updateSplitPlan(database, plan.id, { basisKind: event.target.value as BasisKind }, now),
+                    updateSplitPlan(database, plan.id, { basisKind: choice.value as BasisKind }, now),
                   )
                 }
                 aria-label="Basis"
-                className={`${SELECT} w-64`}
-              >
-                {BASIS_KINDS.map((kind) => (
-                  <option key={kind} value={kind}>
-                    {BASIS_LABEL[kind]}
-                  </option>
-                ))}
-              </select>
+              />
             </label>
 
             {plan.basisKind === 'CUSTOM_AMOUNT' && (
@@ -891,50 +884,39 @@ export function Plan() {
             {plan.basisKind === 'AVERAGE_LAST_N' && (
               <label className="flex flex-col gap-1">
                 <span className="text-label text-ink-tertiary uppercase">Over</span>
-                <select
-                  value={plan.basisMonths ?? 3}
-                  onChange={(event) =>
+                <ChoiceMenu
+                  text={`${String(plan.basisMonths ?? 3)} months`}
+                  choices={[3, 6, 12].map((months) => ({ value: String(months), label: `${String(months)} months` }))}
+                  onPick={(choice) =>
                     write((database, now) =>
-                      updateSplitPlan(database, plan.id, { basisMonths: Number(event.target.value) }, now),
+                      updateSplitPlan(database, plan.id, { basisMonths: Number(choice.value) }, now),
                     )
                   }
                   aria-label="How many months to average"
-                  className={`${SELECT} w-32`}
-                >
-                  {[3, 6, 12].map((months) => (
-                    <option key={months} value={months}>
-                      {months} months
-                    </option>
-                  ))}
-                </select>
+                />
               </label>
             )}
 
             {plan.basisKind === 'SPECIFIC_PAYCHECK' && (
               <label className="flex flex-col gap-1">
                 <span className="text-label text-ink-tertiary uppercase">Which</span>
-                <select
-                  value={plan.basisPaycheckId ?? ''}
-                  onChange={(event) =>
+                <ChoiceMenu
+                  text={(() => {
+                    const chosen = paychecks.find((paycheck) => paycheck.id === plan.basisPaycheckId)
+                    return chosen === undefined ? '' : `${formatYearMonth(chosen.period)} — ${formatMoney(chosen.net)}`
+                  })()}
+                  placeholder="Choose…"
+                  choices={paychecks.map((paycheck) => ({
+                    value: paycheck.id,
+                    label: `${formatYearMonth(paycheck.period)} — ${formatMoney(paycheck.net)}`,
+                  }))}
+                  onPick={(choice) =>
                     write((database, now) =>
-                      updateSplitPlan(
-                        database,
-                        plan.id,
-                        { basisPaycheckId: event.target.value || undefined },
-                        now,
-                      ),
+                      updateSplitPlan(database, plan.id, { basisPaycheckId: choice.value || undefined }, now),
                     )
                   }
                   aria-label="Which paycheck"
-                  className={`${SELECT} w-44`}
-                >
-                  <option value="">Choose…</option>
-                  {paychecks.map((paycheck) => (
-                    <option key={paycheck.id} value={paycheck.id}>
-                      {formatYearMonth(paycheck.period)} — {formatMoney(paycheck.net)}
-                    </option>
-                  ))}
-                </select>
+                />
               </label>
             )}
           </div>
@@ -1016,21 +998,16 @@ export function Plan() {
             <div className="flex flex-wrap items-center gap-3">
               <label className="flex items-center gap-2">
                 <span className="text-label text-ink-tertiary uppercase">Against</span>
-                <select
-                  value={toYearMonthString(versus)}
-                  onChange={(event) => {
-                    const picked = offered.find((one) => toYearMonthString(one) === event.target.value)
+                <ChoiceMenu
+                  text={formatYearMonth(versus)}
+                  choices={offered.map((one) => ({ value: toYearMonthString(one), label: formatYearMonth(one) }))}
+                  onPick={(choice) => {
+                    const picked = offered.find((one) => toYearMonthString(one) === choice.value)
                     if (picked !== undefined) setVersus(picked)
                   }}
                   aria-label="Against which month"
-                  className={`${SELECT} h-7 w-auto min-w-40`}
-                >
-                  {offered.map((one) => (
-                    <option key={toYearMonthString(one)} value={toYearMonthString(one)}>
-                      {formatYearMonth(one)}
-                    </option>
-                  ))}
-                </select>
+                  className={`${SELECT} h-7`}
+                />
               </label>
               <span className="text-caption text-ink-secondary">
                 Snaps to {formatMoney(money(SNAP, currency))}
@@ -1275,33 +1252,26 @@ export function Plan() {
             )}
 
             {unusedBuckets.length > 0 && (
-              <select
-                value=""
-                onChange={(event) => {
-                  if (event.target.value === '') return
+              <ChoiceMenu
+                text=""
+                placeholder="Add one you already have…"
+                choices={unusedBuckets.map((bucket) => ({ value: bucket.id, label: bucket.name }))}
+                onPick={(choice) =>
                   saveAllocations([
                     ...allocations,
                     {
-                      id: `new:${event.target.value}`,
+                      id: `new:${choice.value}`,
                       planId: plan.id,
-                      bucketId: event.target.value,
+                      bucketId: choice.value,
                       mode: 'PERCENTAGE',
                       basisPoints: 0,
                       amount: undefined,
                       isLocked: false,
                     },
                   ])
-                }}
+                }
                 aria-label="Add a bucket this plan does not use"
-                className={`${SELECT} w-56`}
-              >
-                <option value="">Add one you already have…</option>
-                {unusedBuckets.map((bucket) => (
-                  <option key={bucket.id} value={bucket.id}>
-                    {bucket.name}
-                  </option>
-                ))}
-              </select>
+              />
             )}
           </div>
           {suggestion !== undefined && (
@@ -1584,82 +1554,37 @@ function matchedHistory(
  *
  * **It lands on the person's categories** (M31 U3): one bucket per top-level
  * category, each share divided by what went out under it, so the first plan is
- * already a budget Home can hold the month against. A heading the starter cannot
- * place is asked about here, all of them at once, before anything is made.
+ * already a budget Home can hold the month against. **And it is shown before it
+ * is made** (M59 U4, D-580): the button opens `StarterProposal`, every category
+ * with its share and why, and nothing is written until *Make plan*.
+ *
+ * One sentence and the two ways in (M54 U5's review: it was a heading-sized
+ * line, three paragraphs and two buttons).
  */
-function EmptyState({
-  headings,
-  onCreate,
-}: {
-  headings: readonly StarterHeading[]
-  /** Undefined starts empty. */
-  onCreate: (answers: ReadonlyMap<string, StarterAnswer> | undefined) => void
-}) {
-  const unplaced = unplacedHeadings(headings)
-  const [answers, setAnswers] = useState<ReadonlyMap<string, StarterAnswer>>(new Map())
-  const answered = unplaced.every((heading) => answers.has(heading.id))
+function EmptyState({ onStart, onEmpty }: { onStart: () => void; onEmpty: () => void }) {
   return (
     // **Both of the guide's Plan places, until there is a plan** (M28 U9): the
     // fixed expenses are tracked against a plan, so starting one comes first.
     <div
-      className="fc-view-enter mx-auto flex h-full max-w-md flex-col items-center justify-center gap-5 px-6 text-center"
+      className="fc-view-enter mx-auto flex h-full max-w-md flex-col items-center justify-center gap-4 px-6 text-center"
       data-guide="plan.split plan.fixed"
     >
-      <p className="text-title">Decide where the next one goes.</p>
-      <p className="text-ink-secondary">
-        A plan splits your take-home pay into buckets — percentages, fixed amounts, or whatever is left over,
-        after the bills you pick. Nothing here changes your ledger; it is a plan, not a record.
+      <h1 className="m-0 text-title">Plan</h1>
+      <p className="m-0 text-ink-secondary">
+        No plan yet: a plan splits your take-home pay into buckets, after the bills you pick, and changes nothing in
+        your ledger.
       </p>
-      {unplaced.length > 0 && (
-        <div className="flex w-full flex-col gap-1.5 text-left">
-          <span className="fc-label text-ink-secondary uppercase">Which are these?</span>
-          {unplaced.map((heading) => (
-            <div key={heading.id} className="flex h-[34px] items-center justify-between gap-3 border-b border-hairline">
-              <span className="flex min-w-0">
-                <Bidi className="min-w-0 truncate">{heading.name}</Bidi>
-              </span>
-              <span className="flex shrink-0 gap-0.5">
-                {STARTER_CHOICES.map((choice) => (
-                  <button
-                    key={choice.value}
-                    type="button"
-                    aria-pressed={answers.get(heading.id) === choice.value}
-                    onClick={() => setAnswers(new Map(answers).set(heading.id, choice.value))}
-                    className={`rounded-md px-2 py-1 text-caption ${
-                      answers.get(heading.id) === choice.value ? 'bg-elevated text-ink' : 'text-ink-tertiary hover:text-ink'
-                    }`}
-                  >
-                    {choice.label}
-                  </button>
-                ))}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
       <div className="flex flex-wrap items-center justify-center gap-3">
-        <Button variant="primary" disabled={!answered} onClick={() => onCreate(answers)}>
+        <Button variant="primary" onClick={onStart}>
           Start with 50 / 30 / 20
         </Button>
-        <Button variant="secondary" onClick={() => onCreate(undefined)}>
+        <Button variant="ghost" onClick={onEmpty}>
           Start empty
         </Button>
       </div>
-      <p className="text-caption text-ink-tertiary">
-        Half to needs, a third to wants, a fifth to saving — divided among your categories by what went out under
-        each, so each has its bucket from the start. A starting point, not advice; every number is a slider once it is
-        there.
-      </p>
     </div>
   )
 }
-
-const STARTER_CHOICES: readonly { readonly value: StarterAnswer; readonly label: string }[] = [
-  { value: 'NEEDS', label: 'Needs' },
-  { value: 'WANTS', label: 'Wants' },
-  { value: 'SAVING', label: 'Saving' },
-  { value: 'NONE', label: 'Leave out' },
-]
 
 function Centered({ children }: { children: React.ReactNode }) {
   return (

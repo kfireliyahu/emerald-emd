@@ -1397,6 +1397,8 @@ and with `months` / `back_to_default` gives months the plan or puts them back on
 `set_plan` makes, copies, resizes and deletes plans and points their buckets; `set_fixed_expense_roles`
 sets the per-plan choice (a payslip deduction is refused); `edit_fixed_expenses` edits, ends or stops
 tracking a bill. Each takes a list and dry-runs until `commit: true`; ids come from `plans`.
+`start_plan` (M59 U4, D-580) is the empty screen's *Start with 50 / 30 / 20*: every category with its
+share, its part and why, `shares` to move one, and `commit: true` to make the first plan.
 
 **Since M36 F1 (D-391) `set_deduction_types` is how a fund finds its payslip lines.** A pension
 line is a deposit into a fund only because its deduction type names the fund, and until then only the

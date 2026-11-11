@@ -22,7 +22,7 @@ Free software, AGPL-3.0. Desktop only, no server, no account. [getemerald.dev](h
   folder of them. The columns are placed once, kept as a *reader*, and checked every time. A model
   may give a mapping or a position, never a value.
 - **A model works in it through MCP.** The server reads and writes the document directly, with
-  shaped tools, never a general query: 28 for any document, 85 with the ledger. Rows write on the
+  shaped tools, never a general query: 28 for any document, 86 with the ledger. Rows write on the
   first call and a wrong value is refused with its reason; a delete or a change of columns is a dry
   run until you say commit; a copy is kept beside the document before any write; a document
   older than the server's schema is never migrated, only reported.

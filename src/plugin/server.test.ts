@@ -142,6 +142,7 @@ describe('the MCP server', () => {
       'plan_month',
       'set_fixed_expense_roles',
       'set_plan',
+      'start_plan',
       'edit_fixed_expenses',
       'paychecks',
       'record_paychecks',

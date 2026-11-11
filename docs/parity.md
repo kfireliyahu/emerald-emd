@@ -31,7 +31,7 @@ What a conversation can do and no screen can. M26 closed with these left (D-297)
 
 A screen reaches these and no tool does, which the plugin's *Not here* has said since D-109. The
 number may only fall. M25 rewrites what is under them, and M24's survey decides which the engine
-has to be able to hold first. Of the ledger's 183 writes, 18 more
+has to be able to hold first. Of the ledger's 184 writes, 18 more
 are only ever called by another write, and count with it.
 
 - **accountRepository** — `deleteAccount`, `mergeAccounts`, `setAccountArchived`, `setAccountInstitution`

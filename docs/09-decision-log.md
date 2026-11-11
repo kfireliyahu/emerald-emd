@@ -482,6 +482,7 @@ written out here.
 | D-577 | 2026-11-11 | A new ledger document holds back the places it has nothing for — Year, Paychecks, Plan, Wealth, Dashboard, and in a ledger-only document Formats, Connections and Agenda — and each comes back with its first row; Home, Transactions and By merchant keep what a first-time person needs and put the rest behind Filter and More (M59 U1's picks, not yet the maintainer's) | M59 |
 | D-578 | 2026-11-11 | A statement holding two cards is one account per card: a sheet is cut into sections at a repeated header or a card line, each read with its own header, a section's card column cuts it again, every sheet of a workbook with transactions is read, and the read says how many cards it found before anything is written | M59 |
 | D-579 | 2026-11-11 | By merchant's queue is the rows that count: a row left out of totals leaves it, its sums and its ids; the provider's category is an action on each merchant (the editor's draft, as on Transactions) and a heading the list can be grouped by, where Create rule writes one rule for the heading and applies it to rows with no category, with one Undo | M59 |
+| D-580 | 2026-11-11 | 50 / 30 / 20 is shown before it is made: every top-level category with its share, its part, what it comes to a month and why, each share changeable in place, the months named once; Make plan writes exactly that and Cancel nothing, and `start_plan` is the same proposal for a conversation | M59 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -895,6 +896,43 @@ the screen writes only through functions it already reaches. **M28 U10** (files 
 once) is covered for merchants that share a provider category, not for an arbitrary selection.
 demo.emd carries no provider category and nothing uncategorized, so the done-test is not playable on
 it as built.
+## D-580 · 2026-11-11 · 50 / 30 / 20 is shown before it is made: every top-level category with its share, its part, what it comes to a month and why, each share changeable in place, the months named once; Make plan writes exactly that and Cancel nothing, and `start_plan` is the same proposal for a conversation <a id="d-580"></a>
+
+**Context.** D-575: a second person's first use of *Start with 50 / 30 / 20* made a plan whose
+placements she never saw. The starter put seven seeded headings in a fixed share, saving and
+debt-payment kinds by kind, asked only about the rest, sized each share by what went out over the last
+three months with transactions, and reused a bucket already on a category — all of it invisible until
+the buckets were there.
+
+**Decision.**
+
+- **The button opens a proposal and writes nothing** (`src/ui/plan/StarterProposal.tsx`): every
+  top-level category with the share it counts as (Needs, Wants, Saving, Left out), its part, what that
+  comes to a month of the last paycheck (else the salary that came in), and why in a few words —
+  *Needs by default*, *A saving category*, *Debt payments are needs*, *You chose*; then *₪1,200.00 a
+  month went out*, *Nothing went out, so no bucket*, *The only one in saving, so all of it* — and
+  *keeps its bucket …* where a bucket already points at it. The months are named once, above the
+  table. *Make plan* writes it; *Cancel* (and Esc) writes nothing.
+- **Any share is changeable in place, not only the ones the starter could not place.** An answer
+  overrides the starter's own placing; choosing what it would have chosen takes the answer back out.
+  Income, transfers and the app's own headings stay out and say why. A heading of the person's own
+  still has to be answered before anything is made.
+- **One arithmetic, three readers.** `starterProposal` (domain) is the lines and the buckets of the
+  same answers; `starterPlanProposal` adds the months, the basis, each bucket's amount and the buckets
+  kept; `makeStarterPlan` writes it and is the one write both halves call. The words are the domain's
+  (`starterWhy`, `starterWindow`), so the screen and the tool say the same.
+- **Parity: `start_plan`** shows the same table and dry-runs; `shares` changes any category by id or
+  name; `commit: true` makes the plan; refused once a plan exists.
+- **M54 U5's rows on #/plan where this touched them**: the no-plan state is an h1, one sentence and
+  the two ways in; the starter's rounded choices are square; Plan.tsx's five `<select>`s are
+  `ChoiceMenu`s.
+
+**Rejected.** A modal for the proposal (it is the screen's own task, with nothing behind it to
+protect); defaulting an unplaced heading to wants (a guess the person cannot see is the bug D-575
+names); sorting the rows by share (a row would jump under the pointer that moved it).
+
+**Consequences.** The tool count is 86 with the ledger. `docs/packs/ledger/f05-paycheck-splitter.md`
+and `docs/plugin.md` say it.
 
 ## Related
 
