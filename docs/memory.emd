@@ -4871,6 +4871,16 @@ answer: Every class and CSS rule in src/ui names the start or the end (ms-, pe-,
 state: live
 affects: "src/ui/Bidi.tsx\n.claude/skills/design-review/SKILL.md"
 
+### D-587
+date: 2026-11-11
+milestone: M60
+scope: ledger
+title: A new ledger is seeded in the app's language and keeps it: the categories' Hebrew names sit beside seededIds.json under the same ids, a document's seed language is read from its own rows, and the page passes the app's language while create_document and keep_packs take language
+question: Where do the seeded categories' Hebrew names live, and how does 'made while the app is in Hebrew' reach the seeding without touching a document made before?
+answer: src/data/packs/ledger/seededIds.he.json, keyed by the same cat: ids (data the document keeps, which the plugin seeds without the app's catalogue; not src/i18n/). installLedgerPack(db, now, language) uses language only for a document with no seeded categories; ledgerLanguageOf reads an existing one's from its seed records, else its rows, so nothing new is stored and reopening in either language changes nothing. The page passes currentLanguage() at first install (new ledger, NoLedger, Packs); bringUpToDate passes none; create_document and keep_packs take language (en default, he). Only categories: institutions and deduction types stay English where D-583 keeps English, and 'Card 1234' made in place has no Hebrew word in the sheet.
+state: live
+affects: "docs/plugin.md\ndocs/mockups/m60-u2/glossary.md"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -6157,7 +6167,9 @@ from: F:/projects/emerald/docs/memory.emd
 sent_on: 2026-11-11
 body: "M60 U6 is built at 2333065 on worktree-agent-a330f3ae717c1cff6: a new ledger made in Hebrew gets the sheet's 54 category names under the same ids, and a document seeded already keeps its own.\n\n```json\n{\"unit\":\"M60 U6\",\"files\":\"src/data/packs/ledger/pack.ts\\nsrc/data/packs/ledger/seededIds.he.json\\nsrc/data/packs/ledger/language.test.ts\\nfixtures/synthetic/ledger-before-m60-u6.emd.gz\\nsrc/data/packs/packs.ts\\nsrc/plugin/tools/packs.ts\\nsrc/plugin/tools/setup.ts\\nsrc/plugin/write.ts\\nsrc/plugin/server.test.ts\\nsrc/parity.test.ts\\nsrc/App.tsx\\nsrc/ui/screens/NoLedger.tsx\\nsrc/ui/screens/Packs.tsx\\ndocs/plugin.md\\ndocs/mockups/m60-u2/glossary.md\\ndocs/09-decision-log.md\",\"commit\":\"2333065\",\"branch\":\"worktree-agent-a330f3ae717c1cff6\",\"report\":\"Built. The 54 seeded categories' Hebrew names, from the glossary sheet as passed (flagged words included), are src/data/packs/ledger/seededIds.he.json under the same cat: ids; a test holds them equal to the sheet and reads one back by code points. installLedgerPack(db, now, language) seeds a new ledger in that language; ledgerLanguageOf reads an existing document's from its seed records, else its category rows, so reopening in the other language adds and changes nothing. The page passes currentLanguage() where a ledger is first made (App.tsx new ledger, NoLedger, Packs: one line each); create_document and keep_packs take language (en default, he); parity test compares create_document he with the screen's install. D-576: a ledger made by the pre-unit build (create_document at e3f6231, gzipped SQLite bytes, 120 KB; a ledger cannot be stored as text) opens in Hebrew with every seeded row and seed record unchanged. Browser: new ledger with the app in Hebrew shows Hebrew categories; switching to English leaves them Hebrew. The engine-only definitions budget rose 57.5k to 58k for the parameter (~280 chars, trimmed first). Not done, asked: the account a statement makes in place ('Card 1234') has no Hebrew word in the sheet, so it stays English; institutions and deduction types stay English (shown where D-583 keeps English; deduction types carry hebrew_name). The guide's words are screen copy, not seeds. docs:check is green but for D-587's own row, which this landing carries.\",\"decisions\":[{\"ref\":\"D-587\",\"title\":\"A new ledger is seeded in the app's language and keeps it: the categories' Hebrew names sit beside seededIds.json under the same ids, a document's seed language is read from its own rows, and the page passes the app's language while create_document and keep_packs take language\",\"question\":\"Where do the seeded categories' Hebrew names live, and how does 'made while the app is in Hebrew' reach the seeding without touching a document made before?\",\"answer\":\"src/data/packs/ledger/seededIds.he.json, keyed by the same cat: ids (data the document keeps, which the plugin seeds without the app's catalogue; not src/i18n/). installLedgerPack(db, now, language) uses language only for a document with no seeded categories; ledgerLanguageOf reads an existing one's from its seed records, else its rows, so nothing new is stored and reopening in either language changes nothing. The page passes currentLanguage() at first install (new ledger, NoLedger, Packs); bringUpToDate passes none; create_document and keep_packs take language (en default, he). Only categories: institutions and deduction types stay English where D-583 keeps English, and 'Card 1234' made in place has no Hebrew word in the sheet.\",\"affects\":\"docs/plugin.md\\ndocs/mockups/m60-u2/glossary.md\"}],\"review_entries\":[]}\n```"
 refs: M60 U6
-state: new
+state: applied
+answered_by: D-587
+became_unit: M60 U6
 
 ### Text refs sort as text, so Q10 lists before Q2
 from: another document of the maintainer's
@@ -17091,15 +17103,18 @@ paths: "src/ui/screens/Categories.tsx\nsrc/ui/categories/\nsrc/ui/screens/Plan.t
 milestone: M60
 scope: ledger
 title: A ledger document made in Hebrew gets Hebrew category names, and one made before keeps its own
-decision: D-583
-state: in_progress
+landed: 2026-11-11
+decision: D-587
+state: built
 brief: D-583, D-576. A new ledger document made while the app is in Hebrew gets the seeded categories under their Hebrew names (from U2's sheet as the maintainer corrected it); the seeded ids (cat:…, src/data/packs/ledger/seededIds.json) do not change, so rules, plans and the 50 / 30 / 20 starter (src/domain/starterPlan.ts reads ids) work the same. An existing document keeps its names whatever the app's language (D-576: a test opens a document made by the build before this unit, in Hebrew, and its names and rows are unchanged). Anything else the pack seeds that a person reads (account names made in place, the guide's sample words) follows the same rule. Parity: a conversation making a document (create_document) can ask for Hebrew names (src/parity.test.ts). Unset: stop and ask. Done-test: New ledger in Hebrew shows Hebrew categories; switching the app to English leaves them Hebrew; an older document is untouched.
-files: "src/data/packs/ledger/pack.ts\nsrc/data/packs/ledger/seededIds.json\nsrc/domain/starterPlan.ts"
+files: "src/data/packs/ledger/pack.ts\nsrc/data/packs/ledger/seededIds.he.json\nsrc/data/packs/ledger/language.test.ts\nfixtures/synthetic/ledger-before-m60-u6.emd.gz\nsrc/data/packs/packs.ts\nsrc/plugin/tools/packs.ts\nsrc/plugin/tools/setup.ts\nsrc/plugin/write.ts\nsrc/plugin/server.test.ts\nsrc/parity.test.ts\nsrc/App.tsx\nsrc/ui/screens/NoLedger.tsx\nsrc/ui/screens/Packs.tsx\ndocs/plugin.md\ndocs/mockups/m60-u2/glossary.md\ndocs/09-decision-log.md"
 blocks: ["M60 U1","M60 U2"]
 taken_by: run-milestone driver
 started: 2026-11-11
-branch: main
+branch: worktree-agent-a330f3ae717c1cff6
+commit: 2333065
 paths: "src/data/packs/ledger/pack.ts\nsrc/data/packs/ledger/seededIds.json\nsrc/plugin/tools/document.ts"
+report: Built. The 54 seeded categories' Hebrew names, from the glossary sheet as passed (flagged words included), are src/data/packs/ledger/seededIds.he.json under the same cat: ids; a test holds them equal to the sheet and reads one back by code points. installLedgerPack(db, now, language) seeds a new ledger in that language; ledgerLanguageOf reads an existing document's from its seed records, else its category rows, so reopening in the other language adds and changes nothing. The page passes currentLanguage() where a ledger is first made (App.tsx new ledger, NoLedger, Packs: one line each); create_document and keep_packs take language (en default, he); parity test compares create_document he with the screen's install. D-576: a ledger made by the pre-unit build (create_document at e3f6231, gzipped SQLite bytes, 120 KB; a ledger cannot be stored as text) opens in Hebrew with every seeded row and seed record unchanged. Browser: new ledger with the app in Hebrew shows Hebrew categories; switching to English leaves them Hebrew. The engine-only definitions budget rose 57.5k to 58k for the parameter (~280 chars, trimmed first). Not done, asked: the account a statement makes in place ('Card 1234') has no Hebrew word in the sheet, so it stays English; institutions and deduction types stay English (shown where D-583 keeps English; deduction types carry hebrew_name). The guide's words are screen copy, not seeds. docs:check is green but for D-587's own row, which this landing carries.
 
 ### M60 U7
 milestone: M60
