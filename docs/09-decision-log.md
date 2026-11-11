@@ -478,6 +478,7 @@ written out here.
 | D-573 | 2026-11-10 | Recording, updating, claiming and landing rows write on the first call; `commit: false` asks for a preview; deleting and changing a format's columns keep the dry run | M58 |
 | D-574 | 2026-11-10 | What stopped the SessionStart hook in the usage report is not known, so the hook is unchanged; what it does that a security tool notices is written down, and the plugin and its message are an open question | M58 |
 | D-575 | 2026-11-11 | The ledger is unparked: M59 fixes what a second person hit on first use — a file with two cards made one account per card, the provider's category and leaving a row out working on By merchant, 50 / 30 / 20 shown before it is made, a page that never scrolls into blank, Guide me never opening by itself, and a shape unit that decides what a new document shows; Hebrew is M60, after it | M59 |
+| D-576 | 2026-11-11 | A ledger document made before a change keeps opening with its rows: from M59 on, a change to a ledger format or an engine table reaches an existing document as a kept pack already does (D-443) or by a migration, with a test on a document made before it; amends D-276 for documents from here on. Her statement file will not be available, so M59 U2 proves the two-card split on made-up files only | M59 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -747,6 +748,31 @@ still scroll); and 50 / 30 / 20 filled the buckets from a hard-coded map it neve
 Whether her document must keep opening across schema changes — so far the maintainer is the only
 user, and old documents are never converted — is an open question, asked before M59 changes a
 table.
+
+## D-576 · 2026-11-11 · A ledger document made before a change keeps opening with its rows: from M59 on, a change to a ledger format or an engine table reaches an existing document as a kept pack already does (D-443) or by a migration, with a test on a document made before it; amends D-276 for documents from here on. Her statement file will not be available, so M59 U2 proves the two-card split on made-up files only <a id="d-576"></a>
+
+**Context.** D-276 let old documents' data go: the maintainer was the only user, and carrying a
+document across a change was effort spent on nobody (said again 2026-10-05: compatibility with an
+existing `.emd` was never a risk, a unit or a test). D-575 brings a second person to the ledger with
+a real document of her own, and M59 changes the ledger.
+
+**Decision.** Maintainer, 2026-11-11:
+
+- **Her document must keep opening.** From M59 on, a change to a ledger format or an engine table
+  reaches a document made before it, with its rows: a declared format the way a kept pack is brought
+  up to date (D-443: keeping it again adds what it grew and renames in place), an engine table by a
+  migration.
+- **The unit that makes the change carries the test**: a document made by the build before the change
+  opens in the new one with its rows and figures intact.
+- **Not retroactive.** Documents from before M59 are not converted; this protects documents from here
+  on. A change that cannot carry a document forward stops and asks.
+- **Her statement file will not be available.** D-575's reading of it where it is falls away: M59 U2
+  proves the split on made-up files in both shapes (two card sections on one sheet; two sheets), and
+  what her file looked like is known only from what she and the maintainer saw.
+
+**Consequences.** The rule row *A document made before a change keeps opening* says it where a session
+reads before touching a table (CLAUDE.md's rules block). The open question *A second person's
+document* is answered. M59 U2's brief drops the step that asked for her file.
 
 ## Related
 

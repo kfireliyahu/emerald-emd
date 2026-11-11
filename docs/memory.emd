@@ -4762,6 +4762,16 @@ answer: Maintainer, 2026-11-11, every recommendation taken. The ledger is unpark
 state: live
 affects: "CLAUDE.md\ndocs/conventions.md\ndocs/packs/ledger/README.md"
 
+### D-576
+date: 2026-11-11
+milestone: M59
+scope: engine
+title: A ledger document made before a change keeps opening with its rows: from M59 on, a change to a ledger format or an engine table reaches an existing document as a kept pack already does (D-443) or by a migration, with a test on a document made before it; amends D-276 for documents from here on. Her statement file will not be available, so M59 U2 proves the two-card split on made-up files only
+question: Now that a second person keeps a real ledger document, must it keep opening across M59's changes, where D-276 let old documents' data go? And will her statement file be there for M59 U2?
+answer: Maintainer, 2026-11-11: yes, migrate hers. From M59 on, a change to a ledger format reaches a document made before it the way a kept pack is brought up to date (D-443), and an engine table by a migration; the unit making the change carries a test that a document made by the build before it opens with its rows and figures intact. Not retroactive: documents from before M59 are not converted; a change that cannot carry a document forward stops and asks. Her Excel will not be available: M59 U2 proves the split on made-up files in both shapes only.
+state: live
+affects: docs/09-decision-log.md
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -6323,7 +6333,8 @@ An open question makes no claim.
 ### A second person's document
 question: Now that a second person may keep a real ledger document, must her .emd keep opening across schema changes — a migration for every changed table — where until now the maintainer was the only user and old documents were never converted? Asked before any M59 unit changes a table.
 opened_by: D-575
-state: open
+answered_by: D-576
+state: answered
 
 ### Code facts
 question: Should the development pack get a format of asserted facts about code — 'module X must not import Y', 'this file is the only place outbound traffic is decided' — each linked to a path and a decision, with a check that flags a row whose file no longer exists? Recommended over a function/file index, which is derived, stale on the next edit, and already done better by ctags, language servers and repo maps. Agent issue trackers do not do this either, and the pack's difference stays 'the record types are the user's'.
@@ -8633,6 +8644,15 @@ why: It has other writers — the app, the plugin, other sessions — and a sess
 kind: trap
 scope: practice
 enforced_by: scripts/guard-memory-emd.mjs
+always: true
+state: live
+
+### A document made before a change keeps opening
+statement: A change to a ledger format or an engine table carries a document made before it forward with its rows, and the unit that makes the change carries the test.
+why: From M59 a second person keeps a real ledger document; until then the maintainer was the only user and old documents' data was let go (D-276). Not retroactive: documents from before M59 are not converted. A change that cannot carry a document forward stops and asks.
+kind: non_negotiable
+scope: engine
+decided_by: ["D-276","D-443","D-576"]
 always: true
 state: live
 
@@ -16554,9 +16574,9 @@ paths: docs/mockups/m59-u1/
 milestone: M59
 scope: app
 title: A statement holding two cards becomes one account per card, and the preview says so
-decision: D-575
+decision: D-576
 state: planned
-brief: D-575. Her card Excel held two cards and every row went to one account. Today: detectHeaderRow (src/data/importer/guess.ts:75-96) keeps the first header in the top 20 rows and deliberately ignores a repeated one (:90-91); applyMapping (apply.ts:66-74) reads to the end of the sheet, so a second section's card line and header become skipped or error rows and its rows are read with the first section's columns; sheetFrom (statementBatch.ts:134,165-172) picks one last4 per sheet and commit writes every row to session.accountId (commit.ts:150) though a per-row cardLast4 is stored (:159). Two sheets: the mapper shows tabs but hands back one sheet (src/ui/import/MapperScreen.tsx:546) and readStatementWorkbook drops a sheet with no saved-mapping match (statementBatch.ts:98-100). Build: (1) a sheet is split into sections at a repeated header row or a card-number line, each section mapped with its own header; (2) a section's or a row's card (a mapped card column wins, then the section's stated number) chooses its account, one account per card, made in place when it does not exist (as one is today for a single card); (3) every sheet of a workbook with transactions is read, never only the open tab; (4) before anything is written the preview says how many cards it found with their last digits and how many rows each ('2 cards: ••1234 · 41 rows, ••5678 · 17 rows'), words checked against term rows. A conversation gets the same (import_statement and statement_preview; src/parity.test.ts). Fixture: a MADE-UP xlsx in fixtures/synthetic/ in both shapes (two sections on one sheet; two sheets), no real names or figures (D-390, src/privacy.test.ts). Her real file: ask the maintainer for its path; read it where it is, never copy it into the repo, and use it only to check the split; if he has none, the synthetic files are enough. Tests: both shapes give two accounts with the right rows; a single-card file is unchanged. Unset: stop and ask.
+brief: D-575, D-576. Her card Excel held two cards and every row went to one account. Today: detectHeaderRow (src/data/importer/guess.ts:75-96) keeps the first header in the top 20 rows and deliberately ignores a repeated one (:90-91); applyMapping (apply.ts:66-74) reads to the end of the sheet, so a second section's card line and header become skipped or error rows and its rows are read with the first section's columns; sheetFrom (statementBatch.ts:134,165-172) picks one last4 per sheet and commit writes every row to session.accountId (commit.ts:150) though a per-row cardLast4 is stored (:159). Two sheets: the mapper shows tabs but hands back one sheet (src/ui/import/MapperScreen.tsx:546) and readStatementWorkbook drops a sheet with no saved-mapping match (statementBatch.ts:98-100). Build: (1) a sheet is split into sections at a repeated header row or a card-number line, each section mapped with its own header; (2) a section's or a row's card (a mapped card column wins, then the section's stated number) chooses its account, one account per card, made in place when it does not exist (as one is today for a single card); (3) every sheet of a workbook with transactions is read, never only the open tab; (4) before anything is written the preview says how many cards it found with their last digits and how many rows each ('2 cards: ••1234 · 41 rows, ••5678 · 17 rows'), words checked against term rows. A conversation gets the same (import_statement and statement_preview; src/parity.test.ts). Her file is NOT available (D-576): we do not know which shape it was, so build and prove both. Fixtures: MADE-UP xlsx files in fixtures/synthetic/ in both shapes (two card sections on one sheet, each with its card-number line and header; two sheets, one card each), shaped like an Israeli card export (Hebrew headers, ILS), with no real names or figures (D-390, src/privacy.test.ts). If this changes a ledger format or a table, a document made before it keeps opening with its rows (D-576, with the test). Tests: both shapes give two accounts with the right rows; a single-card file is unchanged; a saved mapping still reads a later file of the same shape. Unset: stop and ask.
 files: "src/data/importer/guess.ts\nsrc/data/importer/apply.ts\nsrc/data/importer/statementBatch.ts\nsrc/data/importer/commit.ts\nsrc/ui/import/MapperScreen.tsx\nsrc/ui/screens/ReadStatements.tsx"
 paths: src/data/importer/guess.ts src/data/importer/apply.ts src/data/importer/statementBatch.ts src/data/importer/commit.ts src/ui/import/ src/ui/screens/ReadStatements.tsx
 
@@ -16758,6 +16778,6 @@ inbox: 2026-11-10
 milestone: 2026-11-11
 open_question: 2026-11-11
 review_entry: 2026-11-03
-rule: 2026-11-03
+rule: 2026-11-11
 term: 2026-11-09
 unit: 2026-11-11

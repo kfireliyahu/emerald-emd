@@ -175,6 +175,7 @@ marked `always`. The rest are a query, and it is cheaper than a read:
 
 <!-- rules: the rule rows marked always, rendered by `npm run docs:check -- --write`; docs:check fails when they differ -->
 - **A diff on `docs/memory.emd` is somebody's write, never your debris: commit it or ask.** — `scripts/guard-memory-emd.mjs`
+- **A change to a ledger format or an engine table carries a document made before it forward with its rows, and the unit that makes the change carries the test.** (D-276, D-443, D-576)
 - **What a model may produce is a mapping, a position or a declaration — never a value, and never a program.** (D-132, D-137)
 - **Anything a person can do on a screen, a conversation can do too, and a new engine write is a failing test until both halves exist.** (D-227, D-234) — `src/parity.test.ts`
 - **Another product is described by its category, never named — except a host Emerald runs inside, a runtime it speaks to, and the maintainer's own story.** (D-450)
