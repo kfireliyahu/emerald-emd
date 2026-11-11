@@ -12,6 +12,7 @@ import {
   type PlaceKind,
 } from '@/data/packs/packs.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
+import { currentLanguage } from '@/i18n/current.ts'
 import { Button } from '@/ui/components/Button.tsx'
 import { useKeptPacks } from '@/ui/packs.ts'
 
@@ -65,7 +66,7 @@ export function Packs() {
     setProblem(undefined)
     try {
       mutate((db) => {
-        const kept = keepPack(db, pack, Date.now())
+        const kept = keepPack(db, pack, Date.now(), currentLanguage())
         if (!kept.ok) throw new Error(kept.error)
       })
     } catch (error) {

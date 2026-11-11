@@ -22,6 +22,7 @@ import {
   type KeepPlan,
   type PackDescription,
 } from '@/data/packs/packs.ts'
+import { isLanguage, LANGUAGES, type Language } from '@/i18n/language.ts'
 
 import type { OpenDocument } from '../document.ts'
 import { mutatingCall, type Mutation } from '../write.ts'
@@ -47,6 +48,25 @@ export function packsProp(description: string): Record<string, unknown> {
       .map((pack) => `\`${pack.id}\` (${PACK_PURPOSE[pack.id] ?? pack.title.toLowerCase()})`)
       .join(', ')}.`,
   }
+}
+
+/**
+ * **The language a pack's seeded names are in** (M60 U6, D-587): the ledger's
+ * categories, which a person reads. The app seeds a new ledger in the language
+ * it is in; a conversation says which, since a server has no app language of
+ * its own. A document seeded already keeps its own whatever this says.
+ */
+export const LANGUAGE_PROP: Record<string, unknown> = {
+  type: 'string',
+  enum: [...LANGUAGES],
+  description: 'The person’s language, for a new ledger’s category names (default `en`).',
+}
+
+export function languageArg(args: Args): Language | undefined {
+  const value = args['language']
+  if (value === undefined) return undefined
+  if (!isLanguage(value)) throw new ToolInputError(`\`language\` must be one of ${LANGUAGES.join(', ')}.`)
+  return value
 }
 
 /**
@@ -97,7 +117,7 @@ function describePlan(planned: Planned, done: boolean): string {
   return `- **${title}** — ${verb}: ${parts.join('; ')}.${theirs}`
 }
 
-function keepPacksMutation(packs: readonly PackDescription[]): Mutation<readonly Planned[]> {
+function keepPacksMutation(packs: readonly PackDescription[], language: Language | undefined): Mutation<readonly Planned[]> {
   return {
     // Whole or not at all, and nothing at all when every pack is kept already and up to date (D-443).
     refuses: (plans) =>
@@ -125,7 +145,7 @@ function keepPacksMutation(packs: readonly PackDescription[]): Mutation<readonly
       const now = Date.now()
       const lines: string[] = []
       for (const each of plans) {
-        const kept = keepPack(document.db, each.pack, now)
+        const kept = keepPack(document.db, each.pack, now, language)
         // Planned and refused nothing a moment ago, inside this transaction:
         // a failure now is the install's own and undoes the whole call.
         if (!kept.ok) throw new Error(kept.error)
@@ -152,6 +172,7 @@ export const keepPacksTool: PluginTool = {
       properties: {
         path: PATH_PROP,
         packs: packsProp('The packs to keep, by id.'),
+        language: LANGUAGE_PROP,
         commit: booleanProp('Keep them. Omit or false for the dry run.'),
       },
       required: ['path', 'packs'],
@@ -165,6 +186,6 @@ export const keepPacksTool: PluginTool = {
     if (packs === undefined || packs.length === 0) {
       throw new ToolInputError('`packs` is required: name at least one pack to keep, e.g. ["development"].')
     }
-    return mutatingCall(path, args['commit'] === true, keepPacksMutation(packs))
+    return mutatingCall(path, args['commit'] === true, keepPacksMutation(packs, languageArg(args)))
   },
 }

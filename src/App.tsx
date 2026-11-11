@@ -26,6 +26,7 @@ import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { formatsByPack, useKeepsLedger, useKeptPacks } from '@/ui/packs.ts'
 import { installLedgerPack } from '@/data/packs/ledger/pack.ts'
+import { currentLanguage } from '@/i18n/current.ts'
 import { NoLedger } from '@/ui/screens/NoLedger.tsx'
 import { DASHBOARD_PATH, packOf, readPath } from '@/ui/nav.ts'
 import { Guide } from '@/ui/guide/Guide.tsx'
@@ -713,7 +714,8 @@ function EmptyDocument() {
     navigate('/', { replace: true })
     try {
       mutate((db) => {
-        const installed = installLedgerPack(db, Date.now())
+        // In the language the app is in: a new ledger's categories are named in it (M60 U6, D-587).
+        const installed = installLedgerPack(db, Date.now(), currentLanguage())
         if (!installed.ok) throw new Error(installed.error)
       })
     } catch (error) {

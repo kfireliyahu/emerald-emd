@@ -488,6 +488,7 @@ written out here.
 | D-583 | 2026-11-11 | The app in Hebrew: one translation layer for the whole app, Hebrew for everything a ledger document shows after M59, a full right-to-left mirror with English unchanged, the language following the computer until Settings says otherwise and kept per machine, and M59 with M60 shipped as one desktop release after the maintainer tries both | M60 |
 | D-584 | 2026-11-11 | The translation layer is hand-rolled in `src/i18n/`: English the source with typed keys, Hebrew one file per area and held complete once it has one, the language the app's entry alone follows, Settings › Language a place of its own, and the shell given its words over the bridge | M60 |
 | D-585 | 2026-11-11 | The Hebrew screen's words are a `screen_hebrew` column on the term rows, one word per thing in both languages; a button is a verbal noun, and a word a statement prints is the screen's word | M60 |
+| D-587 | 2026-11-11 | A new ledger is seeded in the app's language and keeps it: the categories' Hebrew names sit beside `seededIds.json` under the same ids, a document's seed language is read from its own rows, and the page passes the app's language while `create_document` and `keep_packs` take `language` | M60 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1131,6 +1132,37 @@ Hebrew a payslip or statement prints, which is a different fact from what the sc
 **Rejected.** Writing the Hebrew into `printed_as` (two facts in one column, and a source document's
 word is not always the screen's); a separate glossary note (D-436: terms are rows); imperative
 buttons (*שמור*), which pick a gender or read as an order.
+## D-587 · 2026-11-11 · A new ledger is seeded in the app's language and keeps it: the categories' Hebrew names sit beside `seededIds.json` under the same ids, a document's seed language is read from its own rows, and the page passes the app's language while `create_document` and `keep_packs` take `language` <a id="d-587"></a>
+
+**Context.** D-583 point 6: a ledger document made while the app is in Hebrew gets Hebrew category
+names, and an existing one keeps its own (D-576). The pack reseeds on every open, keyed by the
+row's name (D-264), so a document reopened in the other language must not be given a second tree;
+and the plugin has no app language at all.
+
+**Decision.** (M60 U6, the unit's picks.)
+
+1. **The Hebrew names are `src/data/packs/ledger/seededIds.he.json`**, the shape of
+   `seededIds.json` and keyed by the same `cat:` ids, taken as written from the sheet the maintainer
+   passed (`docs/mockups/m60-u2/glossary.md`, the ⚑ words included). Beside the pack and not in
+   `src/i18n/`: once written they are the document's data, never translated again, and the plugin
+   seeds them without the app's catalogue. The ids do not change, so rules, plans and the
+   50 / 30 / 20 starter read the same rows.
+2. **A document's seed language is its own, read from its rows** (`ledgerLanguageOf`): the pack's
+   records of the categories it seeded, else the categories it holds. `installLedgerPack(db, now,
+   language)` uses `language` only for a document with neither — a new one. So the app's language
+   reaches nothing already made, and nothing new is stored to say so.
+3. **The page passes the app's language** (`currentLanguage()`) where a ledger is first made — the
+   new document, *Keep the ledger here*, Packs; reopening (`bringUpToDate`) passes none.
+   `create_document` and `keep_packs` take `language` (`en` default, `he`).
+4. **Only the categories.** Institutions and deduction types are shown where the app stays English
+   for now (D-583), and a deduction type carries `hebrew_name` already. The guide's words are screen
+   copy, not seeded rows. The account a statement makes in place (`Card 1234`) has no Hebrew word
+   in the sheet, so it stays English and is asked.
+
+**Rejected.** Translating names on read (a person's rename would fight it, and a name is data);
+storing the language in the document (D-583 point 2 keeps the app's language off it, and the rows
+already say); the Hebrew in `src/i18n/he/` (the plugin would carry the screen catalogue for one list).
+
 ## Related
 
 07 Roadmap · [conventions](./conventions.md) · review · `docs/memory.emd` (the `decision` rows)

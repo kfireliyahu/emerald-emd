@@ -1079,8 +1079,10 @@ describe('the server makes zero network calls', () => {
       // `record_units` and the new date words in `match` — ~200 chars, trimmed
       // first. 57.5k since M55 U2 (D-536): an input view on `arrange_views` —
       // `fields`, `defaults` and `default` — and `view` on `record_format_rows`,
-      // four parameters, ~550 chars, trimmed first.
-      expect(engineSize).toBeLessThan(57_500)
+      // four parameters, ~550 chars, trimmed first. 58k since M60 U6 (D-587):
+      // `language` on `create_document` and `keep_packs`, the names a new
+      // ledger is seeded in — ~280 chars, trimmed first.
+      expect(engineSize).toBeLessThan(58_000)
     })
   })
 })

@@ -182,7 +182,8 @@ so the rows are whole; read these last.
 ## The ledger's seeded categories — for U6
 
 *Not term rows: these are the names a new document made in Hebrew gets (D-583 point 6), from
-`src/data/packs/ledger/seededIds.json`. U6 takes them from here after your pass. Words a card
+`src/data/packs/ledger/seededIds.json`. U6 took them from here as passed, into `seededIds.he.json`
+(D-587), and a test holds the two the same. Words a card
 statement prints for its sector are used where one fits.*
 
 | English | Hebrew | note |
