@@ -479,6 +479,7 @@ written out here.
 | D-574 | 2026-11-10 | What stopped the SessionStart hook in the usage report is not known, so the hook is unchanged; what it does that a security tool notices is written down, and the plugin and its message are an open question | M58 |
 | D-575 | 2026-11-11 | The ledger is unparked: M59 fixes what a second person hit on first use — a file with two cards made one account per card, the provider's category and leaving a row out working on By merchant, 50 / 30 / 20 shown before it is made, a page that never scrolls into blank, Guide me never opening by itself, and a shape unit that decides what a new document shows; Hebrew is M60, after it | M59 |
 | D-576 | 2026-11-11 | A ledger document made before a change keeps opening with its rows: from M59 on, a change to a ledger format or an engine table reaches an existing document as a kept pack already does (D-443) or by a migration, with a test on a document made before it; amends D-276 for documents from here on. Her statement file will not be available, so M59 U2 proves the two-card split on made-up files only | M59 |
+| D-577 | 2026-11-11 | A new ledger document holds back the places it has nothing for — Year, Paychecks, Plan, Wealth, Dashboard, and in a ledger-only document Formats, Connections and Agenda — and each comes back with its first row; Home, Transactions and By merchant keep what a first-time person needs and put the rest behind Filter and More (M59 U1's picks, not yet the maintainer's) | M59 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -773,6 +774,40 @@ a real document of her own, and M59 changes the ledger.
 **Consequences.** The rule row *A document made before a change keeps opening* says it where a session
 reads before touching a table (CLAUDE.md's rules block). The open question *A second person's
 document* is answered. M59 U2's brief drops the step that asked for her file.
+
+## D-577 · 2026-11-11 · A new ledger document holds back the places it has nothing for — Year, Paychecks, Plan, Wealth, Dashboard, and in a ledger-only document Formats, Connections and Agenda — and each comes back with its first row; Home, Transactions and By merchant keep what a first-time person needs and put the rest behind Filter and More (M59 U1's picks, not yet the maintainer's) <a id="d-577"></a>
+
+**Context.** D-575: the ledger's first use by a second person found the screens too much and the
+main workflows hard to find. A new document keeping only the ledger shows twelve places in the rail,
+eight with nothing on them, and Transactions puts thirteen controls above its first row. M59 U1 ran
+Impeccable's shape with D-575 as the discovery round and, as M55 U1 did (D-535), picked wherever
+shape would have asked.
+
+**Decision.** M59 U1's picks, not yet the maintainer's; he judges them through the unit's open
+`review_entry`, and [`docs/mockups/m59-u1/brief.md`](./mockups/m59-u1/brief.md) has each with its
+reason:
+
+- **The rail holds back what the document has nothing for**, computed each time it is drawn: Home's
+  Year until two months have rows, Paychecks until a paycheck, Plan until a plan, a bill or a fully
+  categorized month, Wealth until a goal, debt, fund, holdings, place or opening balance, Dashboard
+  until a block, and — in a document whose only pack is the ledger — Formats and Connections until a
+  format of the person's own, Agenda until a dated one. A new ledger document's rail is five places.
+- **Held back is hidden, not removed**: every route opens, a held place you stand on takes its line
+  while you are there, and the palette lists every place.
+- **Home before anything is read** is the band and Getting started; the band's *Add by hand* is *Add
+  a paycheck*; Taxes waits for a paycheck. Getting started's next step is a link to its place, and
+  its order puts the shops before the list of categories.
+- **Transactions and By merchant** keep the view switch, the month, search, the figures and the
+  merchant list in sight; Account, Category and the amount bounds (By merchant: Account and Month) go
+  behind one *Filter*, Rules, Export and Skip all behind *More*; Transactions loses its category
+  strip, By merchant two of its four tiles.
+
+**Alternatives rejected.** A first-run wizard, or a *simple mode* switch: more to learn, not less.
+A switch to show every place: the palette and Getting started reach them. Holding back only the
+ledger's places and leaving the engine's: the narrower pick, named in the brief for the maintainer.
+
+**Consequences.** M59 U6 builds it (its brief carries the picks as SETTLED); the terms *Getting
+started*, *Add a paycheck* and *Filter* are rows. Nothing a conversation does changes.
 
 ## Related
 
