@@ -4842,6 +4842,15 @@ answer: Maintainer, 2026-11-11, every recommendation: (1) one translation layer 
 state: live
 affects: "index.html\nsrc/ui/\nelectron/menu.ts\nsrc/data/packs/ledger/pack.ts"
 
+### D-585
+date: 2026-11-11
+milestone: M60
+scope: ledger
+title: The Hebrew screen's words are a screen_hebrew column on the term rows, one word per thing in both languages; a button is a verbal noun, and a word a statement prints is the screen's word
+question: Where does a term's Hebrew word live, and how is it chosen?
+answer: In term.screen_hebrew (never printed_as, which is what a source document prints). Every live term of scope ledger/app/shell shown in rail/view/verdict/screen/tour has one, plus the rail's engine places (Format, Connection, agenda, Pack). No two terms share a Hebrew word; where printed_as has the word, the screen says it. Buttons and commands are verbal nouns (שמירה בשם, ייבוא קבצים, סינון), so none is gendered. The seeded categories' Hebrew is in docs/mockups/m60-u2/glossary.md for U6, not rows. The maintainer's pass over that sheet corrects the words before U4-U6.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -8321,6 +8330,11 @@ unit: M59 U1
 should: Each pick reads as what you would have answered in shape's interview. RAIL (brief §5): a new ledger document's rail is Home (Month), Transactions, Categories | Assistants, Settings; held back and what brings each back, computed each time: Year (two months of rows), Paychecks (a paycheck), Plan (a plan, a bill, or a month with nothing uncategorized), Wealth (a goal, debt, fund, holdings, place or opening balance), Dashboard (a block), and in a ledger-only document Formats and Connections (a format of your own), Agenda (a dated one of your own); a held place you stand on shows while you are there; the palette lists every place; no show-all switch. HOME (§5): before anything is read only the band and Getting started (the repeated paragraph goes); Add by hand becomes Add a paycheck; Taxes waits for a paycheck. GETTING STARTED (§5): one line under the band, its next step a link to the place, shops before the list of categories. TRANSACTIONS (§5): Account, Category, At least, At most behind one Filter (with a count); Rules and Export behind More; three ink figures plus Left out only when used; the category strip goes; empty keeps its h1 and says 'No transactions yet.' with Read files. BY MERCHANT (§5): Account and Month behind Filter, Order a menu on the list header, Skip all behind More, two tiles. A transaction's pane loses the raw natural-key line (§6). Words: Getting started, Add a paycheck, Filter.
 breaks: The widest pick: holding back Formats, Connections and Agenda in a ledger-only document hides the engine's own places in the product whose engine is the point, and demo.emd's rail changes with it; the narrower answer holds back only Year, Paychecks, Plan, Wealth and Dashboard (nine places). Next: Plan's trigger, a fully categorized month, may feel late; the looser one (any categorized row) is true right after the first read. Next: dropping Transactions' category strip. Changing a pick before U6 starts is a brief edit; after, a fix unit.
 not_tried: Nothing was built. A new ledger-only document (.demo/new-ledger.emd) was measured with probe:screens and its Home and rail read in the pane without a click; Transactions and By merchant with rows were read from the code, not opened.
+state: open
+
+### Read docs/mockups/m60-u2/glossary.md and correct the Hebrew column (or write in the note), hardest at the 26 ⚑ terms (Plan תקציב, Wealth הון, Transactions תנועה, Read files ייבוא קבצים, Came in / Went out נכנס / יצא, Provider category ענף …) and the seeded categories at its end.
+unit: M60 U2
+should: Every word reads as a person in Israel would say it on a finance screen, one word per thing. A session then writes the corrections into term.screen_hebrew (update_format_rows where:{term}) and the category names into U6's brief; U4, U5 and U6 wait on this.
 state: open
 
 ### Read en.ts:184, en.ts:143 and en.ts:88.
@@ -16982,14 +16996,17 @@ paths: "src/i18n/\nsrc/core/time.ts\nindex.html\ndemo.html"
 milestone: M60
 scope: ledger
 title: The glossary in Hebrew: every term a ledger document shows gets its one Hebrew word
-decision: D-583
-state: in_progress
+landed: 2026-11-11
+decision: D-585
+state: built
 brief: D-583. One name per thing holds in Hebrew too. Add a column to the project's term format (extend_format on docs/memory.emd; name it so it cannot be mistaken for printed_as, which is what a source document prints, not what the screen says) and fill it for every live term a ledger document shows (scope ledger, app or shell; shown_in rail, view, verdict, screen or tour), including M59's new words (Getting started, Add a paycheck, Filter) and the rail's places. Rules: no two terms share a Hebrew word; a term's Hebrew reads as a person in Israel would say it on a finance screen, matching what Israeli card and bank statements print where printed_as has it; a term with no good Hebrew gets the best draft and a note in the review sheet. Also draft the Hebrew for the ledger's seeded category names (src/data/packs/ledger/seededIds.json) for U6, in the review sheet. Write docs/mockups/m60-u2/glossary.md: a two-column sheet (English | Hebrew | note) the maintainer marks up, grouped by screen; the rows are the source, the sheet is for review. No code changes. MAINTAINER'S EYE: the driver stops after this unit; the maintainer reads the sheet and corrects the words before any screen is translated (U4, U5, U6 wait on this). Done-test: every term in scope has its Hebrew, the sheet lists them, one open review_entry asks for the maintainer's pass.
-files: "src/data/packs/ledger/seededIds.json\ndocs/mockups/m59-u1/brief.md"
+files: "docs/memory.emd (term: new column screen_hebrew, 106 terms filled, 6 new terms)\ndocs/mockups/m60-u2/glossary.md\ndocs/09-decision-log.md (D-585)"
 taken_by: run-milestone driver
 started: 2026-11-11
 branch: main
+commit: 95075d1
 paths: docs/mockups/m60-u2/
+report: M60 U2 built at 95075d1. The term format has a new column, screen_hebrew (what the screen says in Hebrew; printed_as stays what a source document prints). 106 live terms now carry a Hebrew word: every ledger/app term shown in the rail, a view, a screen or the tour, the rail's engine places (Formats, Connections, Agenda, Packs), and six new term rows for words the screens used without one (By merchant, Where it went, More, Language, Start with 50 / 30 / 20, Needs · Wants · Saving). All 106 Hebrew values are distinct and read back intact (format_rows values:screen_hebrew). docs/mockups/m60-u2/glossary.md lists them by screen (rail and Settings, Home, Read files, Transactions and By merchant, Categories, Plan with 50/30/20, app-wide; then Paychecks, Wealth, Dashboard and Formats, which stay English for now) with 26 terms flagged ⚑ as drafts to look at hardest, and drafts the 53 seeded category names for U6 (4 flagged). D-585 records the column and the wording rules (verbal-noun buttons, printed word wins, no shared word). Not done: engine-scope terms other than the rail's places (verdicts Proved/Failed/Unchecked, type-picker names) got no Hebrew, since they sit on Formats screens that stay English; 117 terms in all are empty, which is by design. Open: one review_entry asks for the maintainer's pass; U4-U6 wait on it.
 
 ### M60 U3
 milestone: M60
