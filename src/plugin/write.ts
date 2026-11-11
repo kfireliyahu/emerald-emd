@@ -44,6 +44,7 @@ import {
 import { BACKUPS_KEPT, type BackupResult } from './backup.ts'
 import { documentStore, type DocumentStore } from './store.ts'
 import { NAMED_COPIES_KEPT, NAMED_COPY_ROWS, ORPHANED_COPIES_DAYS } from '../../electron/bridge.ts'
+import type { Language } from '@/i18n/language.ts'
 
 export { LOCK_STALE_MS, lockPathFor } from './store.ts'
 
@@ -104,12 +105,14 @@ export async function createDocumentFile(
    * text when the document goes inside the repository, so it is committed and diffs (M50 U1).
    */
   encoding: DocumentEncoding = 'sqlite',
+  /** The language a pack's seeded names are in — the ledger's categories (M60 U6, D-587). */
+  language: Language = 'en',
 ): Promise<Result<number, DocumentProblem>> {
   const db = await createDatabase()
   // Each pack is kept before the first byte is written, as the Packs screen
   // would keep it on the open document — declared, converted and seeded.
   for (const pack of packs) {
-    const kept = keepPack(db, pack, Date.now())
+    const kept = keepPack(db, pack, Date.now(), language)
     if (!kept.ok) {
       db.close()
       return err({ code: 'UNREADABLE', message: `Could not create ${path}: ${kept.error}` })

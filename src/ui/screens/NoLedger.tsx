@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { installLedgerPack } from '@/data/packs/ledger/pack.ts'
+import { currentLanguage } from '@/i18n/current.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
@@ -34,7 +35,7 @@ export function NoLedger({
     setProblem(undefined)
     try {
       mutate((db) => {
-        const installed = installLedgerPack(db, Date.now())
+        const installed = installLedgerPack(db, Date.now(), currentLanguage())
         if (!installed.ok) throw new Error(installed.error)
       })
     } catch (error) {

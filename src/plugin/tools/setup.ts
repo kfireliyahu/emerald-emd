@@ -35,7 +35,7 @@ import { holdsWork } from '@/data/repositories/guideRepository.ts'
 import { count, paragraphs } from '../format.ts'
 import type { OpenDocument } from '../document.ts'
 import { createDocumentFile, writeDocument, writeWithBackup } from '../write.ts'
-import { packsArg, packsProp } from './packs.ts'
+import { LANGUAGE_PROP, languageArg, packsArg, packsProp } from './packs.ts'
 import {
   PATH_PROP,
   ToolInputError,
@@ -112,6 +112,7 @@ export const createDocumentTool: PluginTool = {
           `Full path for the new document, ending in ${DOCUMENT_EXTENSION}. Omit to ask the user.`,
         ),
         packs: packsProp('The packs the document starts with, by id; `[]` for none.'),
+        language: LANGUAGE_PROP,
       },
       required: [],
       additionalProperties: false,
@@ -126,6 +127,7 @@ export const createDocumentTool: PluginTool = {
     // ledger on the full server): a model that saw a new document arrive with
     // a personal-finance pack took Emerald for a finance app.
     const packs = named ?? []
+    const language = languageArg(args)
     const given = optionalString(args, 'path')
     const path = given ?? (await askForPath(context))
 
@@ -136,7 +138,7 @@ export const createDocumentTool: PluginTool = {
       )
     }
 
-    const created = await createDocumentFile(path, packs)
+    const created = await createDocumentFile(path, packs, 'sqlite', language)
     if (!created.ok) return `REFUSED — ${created.error.message}`
 
     const keeps = packs.length === 0 ? 'no pack' : packs.map((pack) => pack.title.toLowerCase()).join(' and ')

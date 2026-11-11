@@ -1211,3 +1211,40 @@ describe('a filter, asked by the address and by a call (M37 U3, D-476)', () => {
     }
   })
 })
+
+describe('a new ledger in the person’s language (M60 U6, D-587)', () => {
+  // The screen makes a new ledger in the language the app is in (`App.tsx`'s
+  // new document, `NoLedger`, Packs, all through `installLedgerPack`); a
+  // server has no app language, so `create_document` and `keep_packs` are told it.
+  it('gives a conversation the Hebrew names the screen gives a person', async () => {
+    const { tempDir } = await import('./testing/tempDir.ts')
+    const { createDatabase, openDatabase } = await import('./data/db/database.ts')
+    const { readFormat } = await import('./data/repositories/formatRepository.ts')
+    const { listRows } = await import('./data/repositories/formatRowRepository.ts')
+    const { installLedgerPack } = await import('./data/packs/ledger/pack.ts')
+    const path = `${await tempDir('emerald-parity-')}/hebrew.emd`
+
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
+    const client = new Client({ name: 'parity', version: '0' }, { capabilities: {} })
+    await Promise.all([createServer().connect(serverTransport), client.connect(clientTransport)])
+    try {
+      await client.callTool({ name: 'create_document', arguments: { path, packs: ['ledger'], language: 'he' } })
+    } finally {
+      await client.close()
+    }
+
+    const names = (db: Awaited<ReturnType<typeof createDatabase>>): readonly (readonly [string, unknown])[] => {
+      const category = readFormat(db, 'category')
+      if (category === undefined) throw new Error('no category')
+      return listRows(db, category)
+        .map((row) => [row.id, row.cells['name']] as const)
+        .sort(([one], [other]) => one.localeCompare(other))
+    }
+    const conversation = await openDatabase(new Uint8Array(readFileSync(path)))
+    const screen = await createDatabase()
+    const installed = installLedgerPack(screen, 0, 'he')
+    if (!installed.ok) throw new Error(installed.error)
+    expect(names(conversation)).toEqual(names(screen))
+    expect(new Map(names(conversation)).get('cat:groceries')).toBe('סופר ומכולת')
+  })
+})

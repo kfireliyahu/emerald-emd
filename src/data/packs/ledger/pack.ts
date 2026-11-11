@@ -36,7 +36,7 @@
 import type { Database } from 'sql.js'
 
 import { err, ok, type Result } from '@/core/result.ts'
-import type { FormatDeclaration } from '@/domain/format/declaration.ts'
+import { labelColumn, type FormatDeclaration } from '@/domain/format/declaration.ts'
 import { readFormat as readFormatText, readViews, type ParsedFormat } from '@/domain/format/document.ts'
 import type { ViewSetting } from '@/domain/format/view.ts'
 import { constraintKey } from '@/domain/format/constraint.ts'
@@ -56,8 +56,10 @@ import {
 } from '../../repositories/formatRepository.ts'
 import { listRows } from '../../repositories/formatRowRepository.ts'
 import { listViewSettings, restoreViewSettings } from '../../repositories/formatViewRepository.ts'
-import { seedRows, type Seeding } from '../../repositories/formatSeedRepository.ts'
+import { listSeeds, seedRows, type Seeding } from '../../repositories/formatSeedRepository.ts'
+import type { Language } from '@/i18n/language.ts'
 import SEEDED_IDS from './seededIds.json'
+import SEEDED_HEBREW from './seededIds.he.json'
 import VIEWS from './views.md?raw'
 
 const SOURCES = import.meta.glob<string>('./formats/*.format.md', {
@@ -222,8 +224,8 @@ function linkOrder(texts: ReadonlyMap<string, string>): Result<readonly string[]
  * two kinds. A seed is keyed by its name (D-264), so the name has to be the one
  * thing about a rule that is unique by construction.
  */
-export function builtInRuleSeeds(declaration: FormatDeclaration): Result<ParsedFormat, string> {
-  const names: Readonly<Record<string, string>> = SEEDED_IDS.category
+export function builtInRuleSeeds(declaration: FormatDeclaration, language: Language = 'en'): Result<ParsedFormat, string> {
+  const names = seededNames('category', language)
   const rows: ParsedFormat['rows'][number][] = []
   for (const rule of BUILT_IN_RULES) {
     const target = names[rule.targetCategoryId]
@@ -398,8 +400,15 @@ function retire(db: Database, now: number): Result<{ retired: string[]; released
  * Refuses rather than half-installing a format: a declaration the reconciler
  * will not adopt stops the install at that format, and says which. The formats
  * before it stay — each is whole on its own, and the next open carries on.
+ *
+ * **`language` is the names a new ledger is seeded in** (M60 U6, D-587): the
+ * app's language when a person makes one, a conversation's when it asks. It
+ * reaches only a document the pack has never seeded — one that has been keeps
+ * the names it was made with (`ledgerLanguageOf`), whatever the app is in
+ * now, so an English ledger opened in Hebrew is not given a second tree, nor
+ * a Hebrew one opened in English (D-576). English when nobody says.
  */
-export function installLedgerPack(db: Database, now: number): Result<Installation, string> {
+export function installLedgerPack(db: Database, now: number, language: Language = 'en'): Result<Installation, string> {
   const formats = ledgerFormats()
   if (!formats.ok) return formats
 
@@ -595,12 +604,17 @@ export function installLedgerPack(db: Database, now: number): Result<Installatio
 
   const index = new Map(listFormats(db).map((each) => [each.name, each]))
   const seeded = new Map<string, Seeding>()
+  // Asked before the first seed is written, so a new document answers with
+  // the language it is being made in and an older one with its own.
+  const names = ledgerLanguageOf(db) ?? language
   for (const format of formats.value) {
     const seeds =
-      format.declaration.name === 'category_rule' ? liveBuiltIns(db, format.declaration) : ok(format)
+      format.declaration.name === 'category_rule'
+        ? liveBuiltIns(db, format.declaration, names)
+        : ok(seedsIn(format, names))
     if (!seeds.ok) return seeds
     if (seeds.value.rows.length === 0) continue
-    const seeding = seedRows(db, seeds.value, index, (key) => seedIdOf(format.declaration.name, key))
+    const seeding = seedRows(db, seeds.value, index, (key) => seedIdOf(format.declaration.name, key, names))
     if (!seeding.ok) return err(`The ledger's ${format.declaration.name}: ${seeding.error}`)
     seeded.set(format.declaration.name, seeding.value)
   }
@@ -630,11 +644,81 @@ export function installLedgerPack(db: Database, now: number): Result<Installatio
  * migration gave it (M25 U8). Until U8 those came through U2's conversion of
  * the migration's own rows; with no old table left, the seed keeps them.
  */
-function seedIdOf(format: string, key: string): string | undefined {
+function seedIdOf(format: string, key: string, language: Language): string | undefined {
   if (format === 'category_rule') return `${BUILT_IN_PREFIX}${key}`
   if (!isSeededFormat(format)) return undefined
-  const ids: Readonly<Record<string, string>> = SEEDED_IDS[format]
+  const ids = seededNames(format, language)
   return Object.keys(ids).find((id) => ids[id] === key)
+}
+
+/**
+ * **The pack's seeded names in Hebrew** (M60 U6, D-587), by the id each keeps
+ * — the categories, from the glossary sheet M60 U2 wrote and the maintainer
+ * passed (`docs/mockups/m60-u2/glossary.md`). The ids are `seededIds.json`'s,
+ * so a rule, a plan or the 50 / 30 / 20 starter names the same row in either
+ * language. Institutions and deduction types are not here: they are shown
+ * where the app stays English for now (D-583), and a deduction type carries
+ * its `hebrew_name` already.
+ */
+const HEBREW: { readonly [F in keyof typeof SEEDED_IDS]?: Readonly<Record<string, string>> } = SEEDED_HEBREW
+
+/** A seeded format's names in a language, by id: English where it has no other. */
+function seededNames(format: keyof typeof SEEDED_IDS, language: Language): Readonly<Record<string, string>> {
+  const english: Readonly<Record<string, string>> = SEEDED_IDS[format]
+  if (language === 'en') return english
+  const theirs = HEBREW[format] ?? {}
+  return Object.fromEntries(Object.entries(english).map(([id, name]) => [id, theirs[id] ?? name]))
+}
+
+/**
+ * A format's seeds as a document in `language` gets them: each seeded row's
+ * name, and a link naming one (a category's parent), in that language. The
+ * `.format.md` writes them in English, and a row it seeds without an id is
+ * left as it is.
+ */
+function seedsIn(format: ParsedFormat, language: Language): ParsedFormat {
+  const name = format.declaration.name
+  if (language === 'en' || !isSeededFormat(name) || HEBREW[name] === undefined) return format
+  const english: Readonly<Record<string, string>> = SEEDED_IDS[name]
+  const theirs = seededNames(name, language)
+  const translate = (each: string): string => {
+    const id = Object.keys(english).find((one) => english[one] === each)
+    return id === undefined ? each : (theirs[id] ?? each)
+  }
+  const naming = labelColumn(format.declaration)?.name
+  return {
+    ...format,
+    rows: format.rows.map((row) => ({
+      ...row,
+      cells: Object.fromEntries(
+        Object.entries(row.cells).map(([column, value]) => [column, column === naming && typeof value === 'string' ? translate(value) : value]),
+      ),
+      links: Object.fromEntries(
+        Object.entries(row.links).map(([column, value]) => {
+          const target = format.declaration.columns.find((one) => one.name === column)?.target
+          if (target !== name) return [column, value]
+          return [column, typeof value === 'string' ? translate(value) : value.map(translate)]
+        }),
+      ),
+    })),
+  }
+}
+
+/**
+ * **Which language this document's seeded names are in** (M60 U6, D-587) —
+ * asked of its own rows, never of the app: the pack's record of the
+ * categories it seeded, and failing that the categories it holds. Undefined
+ * for a document with neither, which is a new one.
+ */
+export function ledgerLanguageOf(db: Database): Language | undefined {
+  const hebrew = new Set(Object.values(seededNames('category', 'he')))
+  const english = new Set(Object.values(SEEDED_IDS.category))
+  const answer = (names: readonly string[]): Language | undefined =>
+    names.some((each) => hebrew.has(each)) ? 'he' : names.some((each) => english.has(each)) ? 'en' : undefined
+  const recorded = answer(listSeeds(db).filter((each) => each.format === 'category').map((each) => each.key))
+  if (recorded !== undefined) return recorded
+  const category = readFormat(db, 'category')
+  return category === undefined ? undefined : answer(listRows(db, category).map((row) => String(row.cells['name'])))
 }
 
 function isSeededFormat(format: string): format is keyof typeof SEEDED_IDS {
@@ -647,8 +731,8 @@ function isSeededFormat(format: string): format is keyof typeof SEEDED_IDS {
  * rules were rows (D-046), and a seed linking to a name nothing answers would
  * refuse the whole format.
  */
-function liveBuiltIns(db: Database, declaration: FormatDeclaration): Result<ParsedFormat, string> {
-  const seeds = builtInRuleSeeds(declaration)
+function liveBuiltIns(db: Database, declaration: FormatDeclaration, language: Language): Result<ParsedFormat, string> {
+  const seeds = builtInRuleSeeds(declaration, language)
   if (!seeds.ok) return seeds
   const category = readFormat(db, 'category')
   const names = new Set(

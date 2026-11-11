@@ -29,6 +29,7 @@ import type { LocalDate } from '@/core/time.ts'
 import type { ParsedFormat } from '@/domain/format/document.ts'
 import { isViewKind, type ViewSetting } from '@/domain/format/view.ts'
 import type { GuideChecks, GuideProgress, GuideStep } from '@/domain/guide.ts'
+import type { Language } from '@/i18n/language.ts'
 
 import { dropStoredFeeds } from '../repositories/goalDepositRepository.ts'
 import { adoptFormat, listFormats, readFormat } from '../repositories/formatRepository.ts'
@@ -83,9 +84,11 @@ export interface PackDescription {
    * **How a document comes to keep it** (M38 U7): declare what it lacks, and
    * complete what it holds of it. Idempotent. Returns the formats it declared.
    * The Packs screen, `keep_packs` and `create_document` all go through
-   * `keepPack` below, which refuses a clash before this runs.
+   * `keepPack` below, which refuses a clash before this runs. `language` is
+   * what a pack seeding names a person reads seeds them in, where the
+   * document has none yet (M60 U6, D-587): the ledger's categories.
    */
-  readonly install: (db: Database, now: number) => Result<readonly string[], string>
+  readonly install: (db: Database, now: number, language?: Language) => Result<readonly string[], string>
   /** Columns it renamed since a document may have kept it (D-443); `install` follows them. */
   readonly renames?: readonly PackRename[]
   /**
@@ -123,8 +126,8 @@ const LEDGER: PackDescription = {
   places: () => [],
   keptBy: documentHasLedger,
   declarations: ledgerFormats,
-  install: (db, now) => {
-    const installed = installLedgerPack(db, now)
+  install: (db, now, language) => {
+    const installed = installLedgerPack(db, now, language)
     return installed.ok ? ok(installed.value.declared) : installed
   },
   guide: {
@@ -405,11 +408,17 @@ export function keptParts(plan: KeepPlan): readonly string[] {
  * this build's pack has grown or renamed a column since (D-443); a clash is
  * refused, naming the column, before anything is written.
  */
-export function keepPack(db: Database, pack: PackDescription, now: number): Result<KeepPlan, string> {
+export function keepPack(
+  db: Database,
+  pack: PackDescription,
+  now: number,
+  /** The names a pack seeds are in this language, where the document has none yet (M60 U6, D-587). */
+  language?: Language,
+): Result<KeepPlan, string> {
   const plan = planKeep(db, pack)
   if (!plan.ok || upToDate(plan.value)) return plan
   if (!plan.value.kept && plan.value.clashes.length > 0) return err(clashSentence(plan.value))
-  const installed = pack.install(db, now)
+  const installed = pack.install(db, now, language)
   if (!installed.ok) return installed
   // The notes and settings an earlier build wrote, brought to this one's
   // (D-491); what a person chose was left out of the plan and is not touched.
