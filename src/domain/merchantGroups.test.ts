@@ -4,9 +4,42 @@ import {
   dominantCategory,
   groupWeight,
   orderGroups,
+  sectionsByProvider,
   settledCount,
   type MerchantGroup,
 } from './merchantGroups.ts'
+
+describe('sectionsByProvider (M59 U3)', () => {
+  const at = (name: string, count: number, providers: readonly string[]): MerchantGroup =>
+    group({
+      merchantNormalized: name,
+      merchantRaw: name,
+      count,
+      providerCategories: providers.map((value, index) => ({ value, count: providers.length - index })),
+    })
+
+  it('puts each merchant under its commonest heading, the largest heading first', () => {
+    const sections = sectionsByProvider([
+      at('פז', 2, ['דלק']),
+      at('שופרסל', 5, ['מזון', 'דלק']),
+      at('רמי לוי', 3, ['מזון']),
+    ])
+    expect(sections.map((one) => [one.provider, one.groups.map((g) => g.merchantNormalized), one.count])).toEqual([
+      ['מזון', ['שופרסל', 'רמי לוי'], 8],
+      ['דלק', ['פז'], 2],
+    ])
+  })
+
+  it('lists the merchants the provider named nothing last', () => {
+    const sections = sectionsByProvider([at('העברה', 9, []), at('פז', 1, ['דלק'])])
+    expect(sections.map((one) => one.provider)).toEqual(['דלק', undefined])
+    expect(sections[1]?.count).toBe(9)
+  })
+
+  it('is empty for an empty queue', () => {
+    expect(sectionsByProvider([])).toEqual([])
+  })
+})
 
 function group(overrides: Partial<MerchantGroup> = {}): MerchantGroup {
   return {

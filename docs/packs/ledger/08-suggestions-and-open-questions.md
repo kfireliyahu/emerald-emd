@@ -612,7 +612,10 @@ the one queue.
   column being the thing you click**, rather than a button two panels away. That is a gesture over
   an existing path, not a feature. B9's reservation still governs where it lands: a provider
   category is broad and one rule from it can claim hundreds of rows, which is why the click opens
-  the editor's test box and never writes a rule.
+  the editor's test box and never writes a rule. **Since M59 U3 (D-579) one place does write it**:
+  By merchant grouped *By provider category*, where the heading lists every merchant the rule
+  reaches, *Create rule* applies it to rows with no category only, and one Undo takes it back. Each
+  merchant's *Rule from “…”* there still opens the editor.
 - **Select part of a merchant name and make a rule from that substring.** New, and better than B9:
   a `MERCHANT_CONTAINS` rule from a selection is *narrow*, which is the property B9 lacks. The
   selection is the draft, and the existing router-state hand-off to the rules editor takes it from

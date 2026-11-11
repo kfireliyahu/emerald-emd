@@ -8,7 +8,7 @@ import { dominantCategory, orderGroups, settledCount } from '@/domain/merchantGr
 import { createLedgerDatabase, insertTransaction } from '../packs/ledger/testing.ts'
 import { setCategoryFromRule, setCategoryManually } from './categoryRepository.ts'
 import { bankMerchants, listMerchantGroups, merchantGroupIds } from './merchantGroupRepository.ts'
-import { type InsertableTransaction } from './transactionRepository.ts'
+import { setExcludedFromStats, type InsertableTransaction } from './transactionRepository.ts'
 
 let seq = 0
 
@@ -282,5 +282,40 @@ describe('bankMerchants', () => {
     add(db, 'שופרסל', -20)
 
     expect([...bankMerchants(db)]).toEqual([normalizeMerchant('כרטיס אשראי כאל')])
+  })
+})
+
+describe('a row left out of totals (M59 U3, D-579)', () => {
+  it('leaves the queue, its sums, its ids and its provider headings', async () => {
+    const db = await ledger()
+    const kept = add(db, 'ישראכרט', -100, { providerCategory: 'כרטיסי אשראי' })
+    const out = add(db, 'ישראכרט', -900, { providerCategory: 'העברות' })
+    setExcludedFromStats(db, out, true, 2000)
+
+    const groups = listMerchantGroups(db)
+    expect(groups).toHaveLength(1)
+    expect(groups[0]?.count).toBe(1)
+    expect(groups[0]?.totals).toEqual([{ currency: 'ILS', outflowMinor: 10000, inflowMinor: 0 }])
+    expect(groups[0]?.providerCategories).toEqual([{ value: 'כרטיסי אשראי', count: 1 }])
+    expect(merchantGroupIds(db, 'ישראכרט')).toEqual([kept])
+  })
+
+  it('takes the merchant off the list once every row of it is left out', async () => {
+    const db = await ledger()
+    const only = add(db, 'ישראכרט', -900)
+    setExcludedFromStats(db, only, true, 2000)
+
+    expect(listMerchantGroups(db)).toEqual([])
+    expect(merchantGroupIds(db, 'ישראכרט')).toEqual([])
+  })
+
+  it('does not count a left-out row as a decision about the merchant', async () => {
+    const db = await ledger()
+    add(db, 'ישראכרט', -100)
+    const filed = add(db, 'ישראכרט', -100)
+    setCategoryManually(db, filed, 'cat:groceries', 2000)
+    setExcludedFromStats(db, filed, true, 2000)
+
+    expect(listMerchantGroups(db)[0]?.settled).toEqual([])
   })
 })

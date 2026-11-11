@@ -479,6 +479,7 @@ written out here.
 | D-574 | 2026-11-10 | What stopped the SessionStart hook in the usage report is not known, so the hook is unchanged; what it does that a security tool notices is written down, and the plugin and its message are an open question | M58 |
 | D-575 | 2026-11-11 | The ledger is unparked: M59 fixes what a second person hit on first use — a file with two cards made one account per card, the provider's category and leaving a row out working on By merchant, 50 / 30 / 20 shown before it is made, a page that never scrolls into blank, Guide me never opening by itself, and a shape unit that decides what a new document shows; Hebrew is M60, after it | M59 |
 | D-576 | 2026-11-11 | A ledger document made before a change keeps opening with its rows: from M59 on, a change to a ledger format or an engine table reaches an existing document as a kept pack already does (D-443) or by a migration, with a test on a document made before it; amends D-276 for documents from here on. Her statement file will not be available, so M59 U2 proves the two-card split on made-up files only | M59 |
+| D-579 | 2026-11-11 | By merchant's queue is the rows that count: a row left out of totals leaves it, its sums and its ids; the provider's category is an action on each merchant (the editor's draft, as on Transactions) and a heading the list can be grouped by, where Create rule writes one rule for the heading and applies it to rows with no category, with one Undo | M59 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -773,6 +774,50 @@ a real document of her own, and M59 changes the ledger.
 **Consequences.** The rule row *A document made before a change keeps opening* says it where a session
 reads before touching a table (CLAUDE.md's rules block). The open question *A second person's
 document* is answered. M59 U2's brief drops the step that asked for her file.
+
+## D-579 · 2026-11-11 · By merchant's queue is the rows that count: a row left out of totals leaves it, its sums and its ids; the provider's category is an action on each merchant (the editor's draft, as on Transactions) and a heading the list can be grouped by, where Create rule writes one rule for the heading and applies it to rows with no category, with one Undo <a id="d-579"></a>
+
+**Context.** D-575: a second person's first use found two things wrong on By merchant. A card payment
+left out of totals on Transactions stayed in the queue and in *Without a category* — the queue's
+`WHERE` never read `is_excluded_from_stats` or `counted_on_card` — and By merchant's own *Leave out of
+totals* left the merchant in the list. And the provider's category, which her card statement carried
+on every row, was a muted hint on By merchant while the rule from it lived only on Transactions.
+
+**Decision.** M59 U3:
+
+- **The backlog is uncategorized, in scope and counted.** `merchantGroupRepository` reads one
+  fragment, `buildTransactionWhere` plus `countsCondition` (the counterpart of `leftOutCondition`,
+  as the statistics read it), in the list, its sums, the provider tallies, the ids a filing writes
+  to, and the settled hints (a left-out row is no decision about the merchant). `merchantQueue`, the
+  guide's step, Home's count and `uncategorized_merchants` all read it, so the screen and a
+  conversation see the same queue. Leaving a merchant out on By merchant now says so with an Undo.
+- **Each merchant shows its provider category as an action**, *Rule from “…”* — Transactions' word
+  for the same thing, so one name per thing — opening the rule editor with
+  `draftFromProviderCategory`, the category the row would be filed under already in it; and in the
+  row's menu.
+- **By provider category** groups the list: one heading per provider category (each merchant under
+  its commonest, the headings largest first, the merchants with none last under a heading with
+  nothing to act on), the heading carrying its names, charges and outflow, a category picker
+  pre-filled with what most of its merchants would be filed under, and **Create rule**. That writes
+  one `PROVIDER_CATEGORY` rule (origin `USER`) and applies it through the re-apply `create_rule`
+  commits with, **to rows with no category only** and only where this rule is the winner; one *Undo
+  both* puts the rows back and deletes the rule. A second press writes no second rule.
+- **This amends D-042's reservation for the heading only.** D-042 kept a provider-category rule
+  behind the editor because it reaches rows nobody has seen; under a heading the rows it reaches are
+  the merchants listed under it, the button's title says the reach, and it touches no category
+  anyone chose. The per-merchant action still opens the editor, and the correction offer still never
+  writes one.
+
+**Alternatives rejected.** The heading opening the editor too (the done-test asks for one click, and
+the list under the heading is the preview); a per-heading confirm dialog (a modal for a task that
+needs no protected focus, and Undo already takes it back); applying the heading's rule to every
+non-manual row as `create_rule` does (By merchant only ever touches rows with no category, D-009).
+
+**Consequences.** Parity holds without a new tool: `create_rule` takes `kind: PROVIDER_CATEGORY`, and
+the screen writes only through functions it already reaches. **M28 U10** (files several merchants at
+once) is covered for merchants that share a provider category, not for an arbitrary selection.
+demo.emd carries no provider category and nothing uncategorized, so the done-test is not playable on
+it as built.
 
 ## Related
 

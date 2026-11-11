@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import type { Database } from 'sql.js'
 
 import { newId } from '@/core/id.ts'
 import { formatMoney, money } from '@/core/money.ts'
@@ -8,7 +9,6 @@ import { listAccounts, setExcludeSettlementsFromStats } from '@/data/repositorie
 import {
   correctCategories,
   undoCorrections,
-  type FiledRow,
 } from '@/data/repositories/categoryOverrideRepository.ts'
 import {
   listCategories,
@@ -40,6 +40,7 @@ import {
   setSettlementAlias,
   settlementAliasMap,
 } from '@/data/repositories/settlementAliasRepository.ts'
+import { commitReapply, listReapplyCandidates, undoReapply } from '@/data/repositories/reapplyRepository.ts'
 import { loadRules } from '@/data/repositories/ruleSetRepository.ts'
 import {
   countTransactions,
@@ -54,11 +55,14 @@ import { offerForCorrection } from '@/domain/learning.ts'
 import {
   dominantCategory,
   orderGroups,
+  sectionsByProvider,
   settledCount,
   type GroupOrder,
   type MerchantGroup,
+  type ProviderSection,
 } from '@/domain/merchantGroups.ts'
-import { asRule, draftFromMerchant } from '@/domain/ruleEditing.ts'
+import { planReapply } from '@/domain/reapply.ts'
+import { asRule, draftFromMerchant, draftFromProviderCategory } from '@/domain/ruleEditing.ts'
 import { suggestFromHistory, type MerchantSuggestion } from '@/domain/suggest.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Flip } from '@/ui/motion/Flip.tsx'
@@ -68,6 +72,7 @@ import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { CategoryMark, useCategoryPalette } from '@/ui/components/CategoryMark.tsx'
 import { CategoryPicker } from '@/ui/components/CategoryPicker.tsx'
+import { ChoiceMenu, type Choice } from '@/ui/components/ChoiceField.tsx'
 import { ContextMenu, isMenuKey, type MenuItem } from '@/ui/components/ContextMenu.tsx'
 import { SELECT } from '@/ui/components/fieldLook.ts'
 import { Kbd } from '@/ui/components/Kbd.tsx'
@@ -122,6 +127,10 @@ export function ByMerchant() {
   >()
   /** The category chosen on a row but not yet confirmed, by merchant. */
   const [picked, setPicked] = useState<Readonly<Record<string, string>>>({})
+  /** The list under the provider's headings rather than one list (M59 U3). */
+  const [byProvider, setByProvider] = useState(false)
+  /** The category chosen on a heading but not yet made a rule, by provider category. */
+  const [pickedHeading, setPickedHeading] = useState<Readonly<Record<string, string>>>({})
   const [cardMenu, setCardMenu] = useState<
     { readonly group: MerchantGroup; readonly at: { readonly x: number; readonly y: number } } | undefined
   >()
@@ -139,11 +148,18 @@ export function ByMerchant() {
     const usual = usualCategories(db, 6)
       .map((id) => categories.find((one) => one.id === id))
       .filter((one): one is Category => one !== undefined)
+    const ordered = orderGroups(queue.waiting, order)
+    // Under the provider's headings the cursor walks the list as it is drawn:
+    // heading by heading, each heading's merchants in the chosen order.
+    const sections = byProvider ? sectionsByProvider(ordered) : undefined
     return {
       // Skipped names are split off by `merchantQueue`, not in SQL: a skip is a fact
       // about the *queue*, not about the rows, and the ledger must keep showing
       // them (D-065).
-      groups: orderGroups(queue.waiting, order),
+      groups: sections === undefined ? ordered : sections.flatMap((section) => section.groups),
+      sections,
+      /** Whether the provider named any of it — a bank statement names nothing (M59 U3). */
+      providerNamed: queue.waiting.some((group) => group.providerCategories.length > 0),
       skippedGroups: orderGroups(queue.skipped, order),
       categories,
       usual,
@@ -171,7 +187,7 @@ export function ByMerchant() {
       bank: bankMerchants(db),
       aliases: settlementAliasMap(db),
     }
-  }, [db, revision, scope, order])
+  }, [db, revision, scope, order, byProvider])
 
   const palette = useCategoryPalette(data?.categories ?? [])
 
@@ -282,27 +298,111 @@ export function ByMerchant() {
       const { [group.merchantNormalized]: _gone, ...rest } = current
       return rest
     })
-    setFilings((current) => [
-      {
-        key: newId(),
-        merchantRaw: group.merchantRaw,
-        categoryId,
-        categoryPath: data.paths.get(categoryId) ?? 'a category',
-        count: done.changed,
-        filed: done.filed,
-        ruleId,
+    const made = ruleId
+    remember({
+      message: (
+        <>
+          Categorized {done.changed} <Bidi>{group.merchantRaw}</Bidi> as{' '}
+          <b className="font-medium">{data.paths.get(categoryId) ?? 'a category'}</b>
+          {made === undefined ? '.' : ', and made the rule, so next month’s are categorized on import.'}
+        </>
+      ),
+      undoLabel: made === undefined ? 'Undo' : 'Undo both',
+      undo: (database) => {
+        undoCorrections(database, done.filed, categoryId)
+        if (made !== undefined) deleteRule(database, made, Date.now())
       },
-      ...current,
-    ])
+    })
   }
 
-  /** Take one filing back — the rows, and the rule if it made one. */
+  /** Keep one write of the sitting, newest first, with what takes it back. */
+  const remember = (filing: Omit<Filing, 'key'>): void => {
+    setFilings((current) => [{ key: newId(), ...filing }, ...current])
+  }
+
+  /** Take one filing back — whatever it wrote. */
   const undo = (filing: Filing): void => {
-    mutate((database) => {
-      undoCorrections(database, filing.filed, filing.categoryId)
-      if (filing.ruleId !== undefined) deleteRule(database, filing.ruleId, Date.now())
-    })
+    mutate((database) => filing.undo(database))
     setFilings((current) => current.filter((one) => one.key !== filing.key))
+  }
+
+  /**
+   * **One rule for a whole heading** (M59 U3, D-579): every row the provider
+   * calls this goes to the category, now and on every import. Applied at once,
+   * but only to rows with no category — the backlog this screen is — through
+   * the same re-apply `create_rule` commits with, so one Undo puts the rows back
+   * where they were and takes the rule away.
+   */
+  const fileProvider = (section: ProviderSection, categoryId: string | undefined): void => {
+    const provider = section.provider
+    if (provider === undefined || categoryId === undefined || data === undefined) return
+    let ruleId: string | undefined
+    let runId: string | undefined
+    let changed = 0
+    mutate((database) => {
+      const now = Date.now()
+      const shaped = asRule(draftFromProviderCategory(provider, categoryId))
+      // A second press before the heading leaves (a double click) writes no
+      // second rule: the one the first press made already says this.
+      const rules = loadRules(database)
+      if (
+        rules.some(
+          (rule) =>
+            rule.origin !== 'BUILT_IN' &&
+            rule.kind === 'PROVIDER_CATEGORY' &&
+            rule.pattern === shaped.pattern &&
+            rule.targetCategoryId === categoryId,
+        )
+      ) {
+        return
+      }
+      ruleId = createRule(
+        database,
+        {
+          name: shaped.name,
+          kind: shaped.kind,
+          pattern: shaped.pattern,
+          targetCategoryId: shaped.targetCategoryId,
+          conditions: shaped.conditions,
+          origin: 'USER',
+        },
+        now,
+      ).id
+      const plan = planReapply(loadRules(database), listReapplyCandidates(database, { uncategorized: true }))
+      // Only what this rule decides: a row an older rule outranks it on is that
+      // rule's business, and the sentence below claims these rows for this one.
+      const mine = { ...plan, changes: plan.changes.filter((change) => change.ruleId === ruleId) }
+      const run = commitReapply(database, mine, `By merchant: ${shaped.name}`, now)
+      runId = run?.id
+      changed = run?.changedCount ?? 0
+    })
+    const made = ruleId
+    if (made === undefined) return
+    const run = runId
+    setPickedHeading((current) => {
+      const { [provider]: _gone, ...rest } = current
+      return rest
+    })
+    const path = <b className="font-medium">{data.paths.get(categoryId) ?? 'a category'}</b>
+    remember({
+      message:
+        changed === 0 ? (
+          <>
+            Made the rule “<Bidi>{provider}</Bidi>” → {path}. No row with no category was under it.
+          </>
+        ) : (
+          <>
+            Categorized {changed} the provider calls “<Bidi>{provider}</Bidi>” as {path}, and made the rule, so
+            next month’s are categorized on import.
+          </>
+        ),
+      undoLabel: 'Undo both',
+      undo: (database) => {
+        const now = Date.now()
+        if (run !== undefined) undoReapply(database, run, now)
+        deleteRule(database, made, now)
+      },
+    })
   }
 
   const skip = (group: MerchantGroup): void => {
@@ -324,12 +424,27 @@ export function ByMerchant() {
     })
   }
 
+  /** Out of every total, and so out of this queue (D-579) — with an Undo, since the row leaves. */
   const leaveOut = (group: MerchantGroup): void => {
+    let ids: readonly string[] = []
     mutate((database) => {
       const now = Date.now()
-      for (const id of merchantGroupIds(database, group.merchantNormalized, toFilter(scope))) {
-        setExcludedFromStats(database, id, true, now)
-      }
+      ids = merchantGroupIds(database, group.merchantNormalized, toFilter(scope))
+      for (const id of ids) setExcludedFromStats(database, id, true, now)
+    })
+    const left = ids
+    if (left.length === 0) return
+    remember({
+      message: (
+        <>
+          Left {left.length} <Bidi>{group.merchantRaw}</Bidi> out of totals. All rows keeps them, struck through.
+        </>
+      ),
+      undoLabel: 'Undo',
+      undo: (database) => {
+        const now = Date.now()
+        for (const id of left) setExcludedFromStats(database, id, false, now)
+      },
     })
   }
 
@@ -380,6 +495,37 @@ export function ByMerchant() {
 
   const showRows = (group: MerchantGroup): void => {
     navigate('/transactions', { state: { search: group.merchantRaw } })
+  }
+
+  /** What the provider called most of this merchant's rows, if the file said. */
+  const providerOf = (group: MerchantGroup): string | undefined => group.providerCategories[0]?.value
+
+  /**
+   * The rule draft Transactions opens from a row's provider category — the
+   * same draft, the same editor (M59 U3) — with the category this row would
+   * be filed under already in it.
+   */
+  const ruleFromProvider = (group: MerchantGroup): void => {
+    const provider = providerOf(group)
+    if (provider === undefined) return
+    navigate('/categories/rules', { state: { draft: draftFromProviderCategory(provider, choiceOf(group)) } })
+  }
+
+  /** What a heading's rule would file into unless one is picked: the category most of its merchants would go to. */
+  const headingChoice = (section: ProviderSection): string | undefined => {
+    if (section.provider !== undefined && pickedHeading[section.provider] !== undefined) {
+      return pickedHeading[section.provider]
+    }
+    const votes = new Map<string, number>()
+    for (const group of section.groups) {
+      const choice = choiceOf(group)
+      if (choice !== undefined) votes.set(choice, (votes.get(choice) ?? 0) + group.count)
+    }
+    let best: string | undefined
+    for (const [id, count] of votes) {
+      if (best === undefined || count > (votes.get(best) ?? 0) || (count === votes.get(best) && id < best)) best = id
+    }
+    return best
   }
 
   const groups = data?.groups ?? []
@@ -444,6 +590,17 @@ export function ByMerchant() {
     data.suggestions.find((one) => one.merchantNormalized === group.merchantNormalized)
 
   const openMenu = (group: MerchantGroup, at: { x: number; y: number }): void => setMenu({ group, at })
+  /** Each merchant's place in the list the cursor walks, headings or not. */
+  const indexOf = new Map(groups.map((group, index) => [group.merchantNormalized, index]))
+
+  const accountChoices: readonly Choice[] = [
+    { value: '', label: 'All accounts' },
+    ...data.accounts.map((account) => ({ value: account.id, label: accountLabel(account) })),
+  ]
+  const monthChoices: readonly Choice[] = [
+    { value: '', label: 'All months' },
+    ...data.months.map((period) => ({ value: period, label: period })),
+  ]
 
   const cards = data.accounts.filter((one) => one.kind === 'CREDIT_CARD')
   const canPayCard = (group: MerchantGroup): boolean => cards.length > 0 && data.bank.has(group.merchantNormalized)
@@ -519,7 +676,7 @@ export function ByMerchant() {
       {
         icon: 'eyeoff',
         label: `Leave all ${String(group.count)} out of totals`,
-        detail: 'They stay in the list, struck through, and leave every sum on Home',
+        detail: 'They leave this list and every sum; All rows keeps them, struck through',
         separated: true,
         onChoose: () => leaveOut(group),
       },
@@ -542,6 +699,23 @@ export function ByMerchant() {
         onChoose: () =>
           navigate('/categories/rules', { state: { draft: draftFromMerchant(group.merchantNormalized, hint) } }),
       },
+      // The broad one, as on Transactions (M59 U3): what the provider called
+      // these rows, behind the editor, where its reach is on screen before it
+      // is saved (D-042).
+      ...(providerOf(group) === undefined
+        ? []
+        : [
+            {
+              icon: 'rule' as const,
+              label: (
+                <>
+                  Rule from “<Bidi>{providerOf(group)}</Bidi>”…
+                </>
+              ),
+              detail: 'What the provider called it; reaches the most rows',
+              onChoose: () => ruleFromProvider(group),
+            },
+          ]),
       { icon: 'filter', label: 'Show its rows in All rows', onChoose: () => showRows(group) },
       {
         icon: 'cat',
@@ -561,73 +735,50 @@ export function ByMerchant() {
             <span className="fc-label text-ink-secondary uppercase">
               Transactions · one decision per shop, not per charge
             </span>
-            <h1 className="m-0 text-[24px] leading-tight font-medium tracking-[-0.01em]">Transactions</h1>
+            <h1 className="m-0 text-title font-medium">Transactions</h1>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <ViewSwitch view="merchants" waiting={groups.length} />
-            <label className="flex items-center gap-2 text-caption text-ink-secondary">
-              <span className="sr-only">Account</span>
-              <select
-                value={scope.accountId}
-                onChange={(event) => setScope({ ...scope, accountId: event.target.value })}
-                className={`${SELECT} text-body`}
+            <Menu label="Account" value={scope.accountId} choices={accountChoices} onPick={(accountId) => setScope({ ...scope, accountId })} />
+            <Menu label="Month" value={scope.period} choices={monthChoices} onPick={(period) => setScope({ ...scope, period })} />
+            <Menu label="Order" value={order} choices={ORDERS} onPick={(value) => setOrder(value as GroupOrder)} />
+            {(data.providerNamed || byProvider) && (
+              <label
+                className="flex cursor-pointer items-center gap-2 text-body text-ink-secondary select-none"
+                title="One heading per category the card or bank gave, its merchants under it — and one rule for each heading"
               >
-                <option value="">All accounts</option>
-                {data.accounts.map((account) => (
-                  <option key={account.id} value={account.id}>
-                    {accountLabel(account)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex items-center gap-2 text-caption text-ink-secondary">
-              <span className="sr-only">Month</span>
-              <select
-                value={scope.period}
-                onChange={(event) => setScope({ ...scope, period: event.target.value })}
-                className={`${SELECT} text-body`}
-              >
-                <option value="">All months</option>
-                {data.months.map((period) => (
-                  <option key={period} value={period}>
-                    {period}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex items-center gap-2 text-caption text-ink-secondary">
-              <span className="sr-only">Order</span>
-              <select
-                value={order}
-                onChange={(event) => setOrder(event.target.value as GroupOrder)}
-                className={`${SELECT} text-body`}
-              >
-                <option value="COUNT">Most charges first</option>
-                <option value="AMOUNT">Largest amount first</option>
-                <option value="NAME">Merchant name</option>
-              </select>
-            </label>
+                <input
+                  type="checkbox"
+                  checked={byProvider}
+                  onChange={() => setByProvider((current) => !current)}
+                  className={CHECK}
+                />
+                By provider category
+              </label>
+            )}
           </div>
         </header>
 
         <div className="grid grid-cols-2 divide-x divide-hairline border-y border-hairline @[48rem]:grid-cols-4">
           <Hero label="Waiting" first>
-            <b className="text-[22px] leading-tight font-medium tabular-nums">
+            <b className="text-secondary-number font-medium tabular-nums">
               {groups.length} {groups.length === 1 ? 'name' : 'names'}
             </b>
             <small className="text-caption text-ink-secondary">
               {waiting} {waiting === 1 ? 'charge' : 'charges'} with no category
             </small>
           </Hero>
+          {/* Ink, not a flow's colour: off Home a figure wears none, and nothing
+              left to do is not a warning (M54 U5's rows). */}
           <Hero label="Without a category">
-            <b className="text-[22px] leading-tight font-medium tabular-nums text-flow-out">
+            <b className="text-secondary-number font-medium tabular-nums">
               {formatMoney(money(leftMinor, data.currency))}
             </b>
             <small className="text-caption text-ink-secondary">so Home’s categories are short by this</small>
           </Hero>
           <div className="col-span-2 flex min-w-0 flex-col gap-1 px-4 py-3.5">
             <span className="fc-label text-ink-secondary uppercase">Categorized this sitting</span>
-            <b className="text-[22px] leading-tight font-medium tabular-nums">{placed}%</b>
+            <b className="text-secondary-number font-medium tabular-nums">{placed}%</b>
             <div className="h-1 bg-hairline" aria-hidden>
               <i className="block h-full bg-accent transition-[width] duration-[var(--duration-base)]" style={{ width: `${placed}%` }} />
             </div>
@@ -647,13 +798,9 @@ export function ByMerchant() {
             {filings.slice(0, 5).map((filing) => (
               <div key={filing.key} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3.5 py-2">
                 <ActionGlyph name="check" />
-                <span className="min-w-0 flex-1">
-                  Categorized {filing.count} <Bidi>{filing.merchantRaw}</Bidi> as{' '}
-                  <b className="font-medium">{filing.categoryPath}</b>
-                  {filing.ruleId === undefined ? '.' : ', and made the rule, so next month’s are categorized on import.'}
-                </span>
+                <span className="min-w-0 flex-1">{filing.message}</span>
                 <Button variant="ghost" size="sm" onClick={() => undo(filing)}>
-                  {filing.ruleId === undefined ? 'Undo' : 'Undo both'}
+                  {filing.undoLabel}
                 </Button>
               </div>
             ))}
@@ -825,29 +972,56 @@ export function ByMerchant() {
                 // A merchant filed or skipped leaves the queue, and the ones below
                 // close up (M39, src/ui/motion/). A wrapper with no box of its own,
                 // so the cursor's container and its rows are as they were.
+                // Keyed by the grouping, so turning the headings on or off is a
+                // list replaced, which snaps — never a crowd gliding (`ui` rule).
                 <Flip
+                  key={byProvider ? 'sections' : 'list'}
                   as="div"
                   className="contents"
                   flipKey={`${groups.map((group) => group.merchantNormalized).join('|')}|${expanded ?? ''}`}
                 >
-                {groups.map((group, index) => {
+                {(data.sections ?? [undefined]).map((section) => (
+                <Fragment key={section === undefined ? 'all' : `provider:${section.provider ?? ''}`}>
+                {section !== undefined && (
+                  <Heading
+                    section={section}
+                    currency={data.currency}
+                    categories={data.categories}
+                    choice={headingChoice(section)}
+                    categoryPath={categoryPath}
+                    onPick={(categoryId) => {
+                      const provider = section.provider
+                      if (provider === undefined) return
+                      setPickedHeading((current) => {
+                        const { [provider]: _gone, ...rest } = current
+                        return categoryId === undefined ? rest : { ...rest, [provider]: categoryId }
+                      })
+                    }}
+                    onFile={(categoryId) => fileProvider(section, categoryId)}
+                  />
+                )}
+                {(section?.groups ?? groups).map((group) => {
+                  const index = indexOf.get(group.merchantNormalized) ?? 0
                   const hint = dominantCategory(group)
                   const suggestion = suggestionFor(group)
                   const guess = choiceOf(group)
                   const on = cursor.index === index
+                  const provider = providerOf(group)
                   const why =
                     hint !== undefined
                       ? `${hint.count} earlier ${hint.count === 1 ? 'charge' : 'charges'} categorized there${settledCount(group) > hint.count ? `, of ${settledCount(group)}` : ''}`
                       : suggestion !== undefined
                         ? `looks like ${suggestion.neighbour}`
-                        : (group.providerCategories[0]?.value ?? 'no pattern yet')
+                        : provider === undefined
+                          ? 'no pattern yet'
+                          : undefined
                   const ruleTicked = !noRule.has(group.merchantNormalized)
                   return (
                     <div
                       key={group.merchantNormalized}
                       data-motion-key={group.merchantNormalized}
                       {...cursor.row(index)}
-                      className={`fc-cursor-row grid min-h-[52px] grid-cols-[minmax(0,1fr)_3rem_6rem] items-center gap-x-3.5 @[46rem]:grid-cols-[minmax(4rem,1.5fr)_3rem_6rem_minmax(8rem,1.5fr)_auto] border-b border-hairline px-2 transition-colors duration-[var(--duration-micro)] hover:bg-surface ${
+                      className={`fc-cursor-row grid min-h-12 ${ROW_GRID} border-b border-hairline px-2 transition-colors duration-[var(--duration-micro)] hover:bg-surface ${
                         on ? 'bg-accent-soft' : ''
                       } ${over === group.merchantNormalized ? 'outline outline-2 -outline-offset-2 outline-accent' : ''}`}
                       draggable
@@ -884,14 +1058,43 @@ export function ByMerchant() {
                         {/* "looks like" is ours and the neighbour is a document's:
                             the name is its own isolated span, so a Hebrew one
                             truncates from its own end and keeps its start (M28 F21). */}
-                        <small title={why} className="flex min-w-0 gap-x-1 text-caption text-ink-secondary">
+                        <small className="flex min-w-0 gap-x-1 text-caption text-ink-secondary">
                           {hint === undefined && suggestion !== undefined ? (
-                            <>
+                            <span title={why} className="flex min-w-0 gap-x-1">
                               <span className="shrink-0">looks like</span>
                               <Bidi className="min-w-0 truncate">{suggestion.neighbour}</Bidi>
-                            </>
+                            </span>
                           ) : (
-                            <Bidi className="min-w-0 truncate">{why}</Bidi>
+                            why !== undefined && (
+                              <span title={why} className="flex min-w-0">
+                                <Bidi className="min-w-0 truncate">{why}</Bidi>
+                              </span>
+                            )
+                          )}
+                          {/* What the provider called it, as the action it is
+                              (M59 U3) — the rule draft Transactions opens. Under
+                              the provider's headings the heading carries it. */}
+                          {provider !== undefined && !byProvider && (
+                            <>
+                              {why !== undefined && (
+                                <span aria-hidden className="shrink-0">
+                                  ·
+                                </span>
+                              )}
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation()
+                                  ruleFromProvider(group)
+                                }}
+                                title={`Open a rule for every row the provider calls ${provider}`}
+                                className="flex min-w-0 shrink text-accent hover:underline"
+                              >
+                                <span className="shrink-0">Rule from “</span>
+                                <Bidi className="min-w-0 truncate">{provider}</Bidi>
+                                <span className="shrink-0">”</span>
+                              </button>
+                            </>
                           )}
                         </small>
                       </span>
@@ -938,7 +1141,7 @@ export function ByMerchant() {
                                 return next
                               })
                             }
-                            className="size-3.5 accent-[var(--color-accent)]"
+                            className={CHECK}
                           />
                           rule
                         </label>
@@ -1001,6 +1204,8 @@ export function ByMerchant() {
                     </div>
                   )
                 })}
+                </Fragment>
+                ))}
                 </Flip>
               )}
 
@@ -1045,14 +1250,14 @@ export function ByMerchant() {
                     dragging.current = undefined
                     if (group !== undefined) file(group, category.id)
                   }}
-                  className={`flex h-[30px] items-center justify-between gap-2 border px-2 text-left text-[13px] transition-colors duration-[var(--duration-micro)] hover:border-accent hover:bg-accent-soft ${
+                  className={`flex h-8 items-center justify-between gap-2 border px-2 text-left text-body transition-colors duration-[var(--duration-micro)] hover:border-accent hover:bg-accent-soft ${
                     over === `cat:${category.id}` ? 'border-accent bg-accent-soft' : 'border-transparent'
                   }`}
                 >
                   <CategoryMark color={palette.colorOf(category.id)}>
                     {category.name}
                   </CategoryMark>
-                  <span className="font-mono text-[10px] text-ink-tertiary">{slot + 1}</span>
+                  <span className="font-mono text-label text-ink-secondary">{slot + 1}</span>
                 </button>
               ))}
               <p className="m-0 px-2 pt-3 text-caption text-ink-secondary">
@@ -1097,16 +1302,17 @@ interface Scope {
 
 const EVERYTHING: Scope = { accountId: '', period: '' }
 
-/** One filing this sitting, with what it takes to undo it. */
+/**
+ * One write of this sitting — a merchant filed, a heading made a rule, a
+ * merchant left out of totals — with what it takes to undo it.
+ */
 interface Filing {
   readonly key: string
-  readonly merchantRaw: string
-  readonly categoryId: string
-  readonly categoryPath: string
-  readonly count: number
-  readonly filed: readonly FiledRow[]
-  /** The rule it made, if it made one. */
-  readonly ruleId: string | undefined
+  /** What was done, as the sentence the notice says. */
+  readonly message: React.ReactNode
+  readonly undoLabel: string
+  /** Puts back exactly what this write changed, and nothing written since. */
+  readonly undo: (database: Database) => void
 }
 
 type Promoted =
@@ -1115,6 +1321,122 @@ type Promoted =
 
 const LINK =
   'text-accent underline underline-offset-4 transition-colors duration-[var(--duration-micro)] hover:text-accent-hover'
+
+/** A merchant's row and a heading share their columns, so a heading's figures sit over its merchants'. */
+const ROW_GRID =
+  'grid-cols-[minmax(0,1fr)_3rem_6rem] items-center gap-x-3.5 @[46rem]:grid-cols-[minmax(4rem,1.5fr)_3rem_6rem_minmax(8rem,1.5fr)_auto]'
+
+/**
+ * **A provider category's heading** (M59 U3, D-579): its name, its merchants'
+ * charges and outflow, and one rule for all of it — the category picked here,
+ * or the one most of its merchants would be filed under. The merchants the
+ * provider named nothing get a heading with nothing to act on: no rule from a
+ * heading can reach a row with no provider category.
+ */
+function Heading({
+  section,
+  currency,
+  categories,
+  choice,
+  categoryPath,
+  onPick,
+  onFile,
+}: {
+  readonly section: ProviderSection
+  readonly currency: string
+  readonly categories: readonly Category[]
+  readonly choice: string | undefined
+  readonly categoryPath: (id: string) => string | undefined
+  readonly onPick: (categoryId: string | undefined) => void
+  readonly onFile: (categoryId: string | undefined) => void
+}) {
+  const names = section.groups.length
+  const outflow = section.groups.reduce(
+    (sum, group) => sum + (group.totals.find((total) => total.currency === currency)?.outflowMinor ?? 0),
+    0,
+  )
+  const provider = section.provider
+  return (
+    <div
+      data-motion-key={`provider:${provider ?? ''}`}
+      className={`grid min-h-12 ${ROW_GRID} border-b border-hairline px-2 pt-4`}
+    >
+      <span className="flex min-w-0 flex-col py-1.5">
+        <h2 className="m-0 flex min-w-0 text-body font-medium">
+          {provider === undefined ? 'No provider category' : <Bidi className="min-w-0 truncate">{provider}</Bidi>}
+        </h2>
+        <small className="text-caption text-ink-secondary">
+          {names} {names === 1 ? 'name' : 'names'}
+          {provider === undefined ? ' · the card or bank gave them none' : ''}
+        </small>
+      </span>
+      <span className="text-right font-mono text-caption text-ink-secondary">{section.count}×</span>
+      <span className="text-right tabular-nums whitespace-nowrap">{formatMoney(money(-outflow, currency))}</span>
+      {provider !== undefined && (
+        <>
+          <span className="col-span-full min-w-0 pb-1.5 @[46rem]:col-span-1 @[46rem]:pb-0">
+            <CategoryPicker
+              categories={categories}
+              value={choice}
+              onChange={onPick}
+              label={`Category for every row the provider calls ${provider}`}
+              placeholder="Choose a category"
+              outlined
+            />
+          </span>
+          <span className="col-span-full flex items-center justify-end pb-2 @[46rem]:col-span-1 @[46rem]:pb-0">
+            <Button
+              variant="secondary"
+              size="sm"
+              icon="rule"
+              disabled={choice === undefined}
+              title={
+                choice === undefined
+                  ? 'Choose a category first'
+                  : `Every row the provider calls ${provider} goes to ${categoryPath(choice) ?? 'it'}, now and on every import`
+              }
+              onClick={() => onFile(choice)}
+            >
+              Create rule
+            </Button>
+          </span>
+        </>
+      )}
+    </div>
+  )
+}
+
+/** A checkbox is the system's, tinted ink (the `ui` rule). */
+const CHECK = 'size-3.5 accent-[var(--color-ink)]'
+
+const ORDERS: readonly Choice[] = [
+  { value: 'COUNT', label: 'Most charges first' },
+  { value: 'AMOUNT', label: 'Largest amount first' },
+  { value: 'NAME', label: 'Merchant name' },
+]
+
+/** One of the header's menus — what a platform `<select>` was (M54 U5's row, M59 U3). */
+function Menu({
+  label,
+  value,
+  choices,
+  onPick,
+}: {
+  readonly label: string
+  readonly value: string
+  readonly choices: readonly Choice[]
+  readonly onPick: (value: string) => void
+}) {
+  return (
+    <ChoiceMenu
+      className={`${SELECT} h-8 text-body`}
+      aria-label={label}
+      text={choices.find((each) => each.value === value)?.label ?? ''}
+      choices={choices}
+      onPick={(choice) => onPick(choice.value)}
+    />
+  )
+}
 
 function toFilter(scope: Scope): TransactionFilter {
   const bounds = scope.period === '' ? undefined : monthRange(scope.period)
@@ -1183,15 +1505,12 @@ function Empty({
       {scoped ? (
         <>
           <p className="m-0">Nothing in this account or month is waiting for a category.</p>
-          <Button variant="secondary" size="sm" onClick={onClear}>
+          <button type="button" onClick={onClear} className={LINK}>
             Look at everything
-          </Button>
+          </button>
         </>
       ) : imported ? (
-        <>
-          <b className="text-[16px] font-medium text-ink">Everything is categorized.</b>
-          <span>The month’s totals on Home now cover every row.</span>
-        </>
+        <p className="m-0">Everything is categorized.</p>
       ) : (
         <p className="m-0 max-w-md">
           Nothing imported yet. Read a statement on Home — whatever the rules cannot place lands here, grouped by shop.

@@ -146,3 +146,47 @@ export function orderGroups(
         : 0
   })
 }
+
+/** One heading of By merchant's list grouped by what the provider called the rows (M59 U3). */
+export interface ProviderSection {
+  /** The provider's category as printed — a rule's pattern — or nothing for the merchants with none. */
+  readonly provider: string | undefined
+  /** Its merchants, in the order they were given. */
+  readonly groups: readonly MerchantGroup[]
+  /** Their uncategorized rows, all of them. */
+  readonly count: number
+}
+
+/**
+ * **The groups under the provider's headings** (M59 U3, D-579): each merchant
+ * under the category its provider used most for its rows, the headings largest
+ * first (by rows, ties by name), and the merchants the provider named nothing
+ * last, under a heading with nothing to act on. Never mutates the input, and
+ * keeps the order the merchants came in within each heading.
+ *
+ * A merchant the provider filed under two headings goes under its commonest one
+ * only: listing it twice would make one decision look like two, and a rule from
+ * either heading reaches only the rows that carry it.
+ */
+export function sectionsByProvider(groups: readonly MerchantGroup[]): readonly ProviderSection[] {
+  const byProvider = new Map<string, MerchantGroup[]>()
+  const unnamed: MerchantGroup[] = []
+  for (const group of groups) {
+    const provider = group.providerCategories[0]?.value
+    if (provider === undefined) {
+      unnamed.push(group)
+      continue
+    }
+    const members = byProvider.get(provider) ?? []
+    members.push(group)
+    byProvider.set(provider, members)
+  }
+
+  const rows = (members: readonly MerchantGroup[]): number =>
+    members.reduce((total, group) => total + group.count, 0)
+  const sections: ProviderSection[] = [...byProvider]
+    .map(([provider, members]) => ({ provider, groups: members, count: rows(members) }))
+    .sort((a, b) => b.count - a.count || a.provider.localeCompare(b.provider))
+  if (unnamed.length > 0) sections.push({ provider: undefined, groups: unnamed, count: rows(unnamed) })
+  return sections
+}

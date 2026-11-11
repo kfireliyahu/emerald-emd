@@ -22,7 +22,27 @@ import type {
 import { settledCategory, type LabelledMerchant } from '@/domain/suggest.ts'
 import { query } from '../db/database.ts'
 import { UNCATEGORIZED_ID } from './categoryRepository.ts'
+import { countsCondition } from './movedRepository.ts'
 import { buildTransactionWhere, type TransactionFilter } from './transactionRepository.ts'
+
+/**
+ * **The backlog's rows: uncategorized, in scope, and counted** (M59 U3, D-579).
+ *
+ * A row left out of totals — by the person, or as a card settlement the card's
+ * own charges already count — is not waiting for a category: nothing it could
+ * be filed under would reach a sum. It stayed in this queue and in its figures
+ * until D-579, so a card payment left out on Transactions kept asking By
+ * merchant what it was. Every query here reads this one fragment, so the list,
+ * its sums, the provider's headings, the settled hints and the ids a filing
+ * writes to are claims about the same rows.
+ */
+function backlogWhere(scope: TransactionFilter): {
+  readonly sql: string
+  readonly params: readonly (string | number | null)[]
+} {
+  const where = buildTransactionWhere({ ...scope, categoryId: undefined, uncategorized: true })
+  return { sql: `${where.sql} AND ${countsCondition('t')}`, params: where.params }
+}
 
 /**
  * Every merchant with uncategorized rows in it, within a scope.
@@ -38,7 +58,7 @@ export function listMerchantGroups(
   db: Database,
   scope: TransactionFilter = {},
 ): readonly MerchantGroup[] {
-  const where = buildTransactionWhere({ ...scope, categoryId: undefined, uncategorized: true })
+  const where = backlogWhere(scope)
 
   // Grouped by the raw spelling as well as the normalized one, so the display
   // name can be the spelling most of the rows actually use. The alternative —
@@ -168,6 +188,7 @@ function settledByMerchant(
        FROM fmt_transaction x
       WHERE x.category IS NOT NULL
         AND x.category <> ?
+        AND ${countsCondition('x')}
         AND x.merchant_normalized IN (
               SELECT t.merchant_normalized FROM fmt_transaction t WHERE ${backlog.sql}
             )
@@ -211,7 +232,7 @@ export function merchantGroupIds(
   merchantNormalized: string,
   scope: TransactionFilter = {},
 ): readonly string[] {
-  const where = buildTransactionWhere({ ...scope, categoryId: undefined, uncategorized: true })
+  const where = backlogWhere(scope)
   return query(
     db,
     `SELECT t.id FROM fmt_transaction t
