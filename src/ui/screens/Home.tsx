@@ -4,8 +4,6 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { formatMoney, money, type CurrencyCode } from '@/core/money.ts'
 import {
   compareYearMonths,
-  formatMonthShort,
-  formatYearMonth,
   parseYearMonth,
   toISODate,
   toYearMonthString,
@@ -29,6 +27,9 @@ import { waitingCounts } from '@/domain/home.ts'
 import type { MonthSummary } from '@/domain/model/statistics.ts'
 import { statementGaps, type StatementGap } from '@/domain/statementGaps.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
+import { countKey } from '@/i18n/count.ts'
+import { useDates, useT } from '@/i18n/current.ts'
+import { fillNodes } from '@/i18n/nodes.tsx'
 import { salaryBankWords } from '@/domain/salaryBank.ts'
 import { salaryProblem } from '@/domain/statistics.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
@@ -86,6 +87,8 @@ export function Home() {
   const revision = useDocumentStore((state) => state.revision)
   const navigate = useNavigate()
   const landing = useLocation().state as Landing
+  const t = useT()
+  const dates = useDates()
 
   const asOf = today()
   const currency: CurrencyCode = useMemo(() => (db === undefined ? 'ILS' : documentCurrency(db)), [db, revision])
@@ -147,7 +150,7 @@ export function Home() {
   useHomeKeys({ page: (step) => go(step === -1 ? prev : next), readFiles: picker.open })
 
   if (db === undefined || summary === undefined) {
-    return <Centered>Open a document, or create one, to see where you stand.</Centered>
+    return <Centered>{t('home.month.noDocument')}</Centered>
   }
 
   const addByHand = (): void => void navigate('/paychecks', { state: { add: true } })
@@ -159,9 +162,9 @@ export function Home() {
     report === undefined
       ? []
       : [
-          { label: 'moved', amount: money(report.moved.reduce((total, one) => total + one.netMinor, 0), currency), any: report.moved.length > 0 },
-          { label: 'off the paycheck', amount: money(report.savedFrom.slips.reduce((total, one) => total + one.amount.minor, 0), currency), any: report.savedFrom.slips.length > 0 },
-          { label: 'into goals', amount: money(report.savedFrom.goals.reduce((total, one) => total + one.amount.minor, 0), currency), any: report.savedFrom.goals.length > 0 },
+          { label: t('home.month.partMoved'), amount: money(report.moved.reduce((total, one) => total + one.netMinor, 0), currency), any: report.moved.length > 0 },
+          { label: t('home.month.partOffPaycheck'), amount: money(report.savedFrom.slips.reduce((total, one) => total + one.amount.minor, 0), currency), any: report.savedFrom.slips.length > 0 },
+          { label: t('home.month.partIntoGoals'), amount: money(report.savedFrom.goals.reduce((total, one) => total + one.amount.minor, 0), currency), any: report.savedFrom.goals.length > 0 },
         ].filter((part) => part.any)
   const missingHere = period === undefined ? [] : gaps.filter((gap) => compareYearMonths(gap.period, period) === 0)
   const tax = period === undefined ? undefined : taxes.get(toYearMonthString(period))
@@ -182,18 +185,18 @@ export function Home() {
         <header className="flex flex-wrap items-end justify-between gap-6 border-b border-hairline pb-4">
           <div className="flex flex-col gap-1.5">
             <span className="fc-label text-ink-secondary uppercase">
-              Home · Month
-              {shown !== undefined && !shown.isComplete && ' · in progress'}
+              {t('home.month.eyebrow')}
+              {shown !== undefined && !shown.isComplete && t('home.month.inProgress')}
             </span>
             <h1 className="m-0 text-title leading-tight font-medium" data-guide="home.title">
-              {period === undefined ? 'Month' : formatYearMonth(period)}
+              {period === undefined ? t('home.month.title') : dates.yearMonth(period)}
             </h1>
           </div>
           {period !== undefined && (
             <Pager
-              label="Month"
-              prev={prev === undefined ? undefined : formatMonthShort(prev)}
-              next={next === undefined ? undefined : formatMonthShort(next)}
+              label={t('home.month.pager')}
+              prev={prev === undefined ? undefined : dates.monthShort(prev)}
+              next={next === undefined ? undefined : dates.monthShort(next)}
               onPrev={() => go(prev)}
               onNext={() => go(next)}
             />
@@ -203,14 +206,12 @@ export function Home() {
         {wrote !== undefined && (
           <div className="fc-pop-enter flex flex-wrap items-center gap-3 bg-accent-soft px-3.5 py-2.5 text-ink-secondary">
             <ActionGlyph name="check" />
-            <span className="text-ink">Written: {wrote}.</span>
+            <span className="text-ink">{t('home.month.written', { wrote })}</span>
             <span>
-              {waiting === 0
-                ? 'The new rows flash below. Nothing waits for an answer.'
-                : `${String(waiting)} ${waiting === 1 ? 'answer waits' : 'answers wait'}, below.`}
+              {waiting === 0 ? t('home.month.flash') : t(countKey('home.month.answersWait', waiting), { count: waiting })}
             </span>
             <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setWrote(undefined)}>
-              Dismiss
+              {t('home.month.dismiss')}
             </Button>
           </div>
         )}
@@ -230,48 +231,55 @@ export function Home() {
         {summary.isEmpty || period === undefined || report === undefined ? null : (
           <>
             <Figures>
-              <Figure label="Came in" flow="in" value={shown?.income}>
+              <Figure label={t('home.flows.cameIn')} flow="in" value={shown?.income}>
                 {report.detail.payroll.minor > 0
-                  ? `net pay ${formatMoney(report.detail.payroll)}${report.detail.other.minor > 0 ? ` and ${formatMoney(report.detail.other)} more` : ''}`
-                  : 'net pay and other money in'}
+                  ? t(report.detail.other.minor > 0 ? 'home.month.netPayAndMore' : 'home.month.netPay', {
+                      pay: formatMoney(report.detail.payroll),
+                      other: formatMoney(report.detail.other),
+                    })
+                  : t('home.flows.cameInNone')}
                 <Versus value={versusAverage(summaries, period, 'income')} />
               </Figure>
-              <Figure label="Went out" flow="out" value={shown?.expenses}>
+              <Figure label={t('home.flows.wentOut')} flow="out" value={shown?.expenses}>
                 {missingHere.length > 0 ? (
                   <span className="text-negative">
-                    {missingHere.length === 1 ? `${accountLabel(missingHere[0])} missing` : `${String(missingHere.length)} statements missing`}
+                    {missingHere.length === 1
+                      ? fillNodes(t('home.month.missingOne'), { account: <Bidi>{accountLabel(missingHere[0])}</Bidi> })
+                      : t('home.month.missingMany', { count: missingHere.length })}
                   </span>
                 ) : (
-                  'on the date money left the account'
+                  t('home.flows.wentOutWhen')
                 )}
                 <Versus value={versusAverage(summaries, period, 'expenses')} />
               </Figure>
-              <Figure label="Saved" flow="saved" value={shown?.saved}>
+              <Figure label={t('home.flows.saved')} flow="saved" value={shown?.saved}>
                 {savedParts.length > 0
-                  ? `${savedParts.map((part) => `${formatMoney(part.amount)} ${part.label}`).join(', ')}, listed below`
-                  : 'moved to savings, goals and funds'}
+                  ? t('home.month.savedParts', {
+                      parts: savedParts.map((part) => t('home.month.savedPart', { amount: formatMoney(part.amount), part: part.label })).join(', '),
+                    })
+                  : t('home.flows.savedNone')}
                 <Versus value={versusAverage(summaries, period, 'saved')} />
               </Figure>
               {/* Left out while the document holds no paycheck: it could only
                   say there is none (M59 U6, D-582). */}
               {paid && (
-                <Figure label="Taxes" flow="tax" value={tax}>
-                  {tax === undefined ? 'no paycheck for this month' : 'income tax, insurance and health, off the paycheck'}
+                <Figure label={t('home.flows.taxes')} flow="tax" value={tax}>
+                  {tax === undefined ? t('home.month.noPaycheck') : t('home.month.taxesWhat')}
                   <Versus value={taxVersusAverage(taxes, period, currency)} />
                 </Figure>
               )}
-              <Figure label="Left over" flow={undefined} value={shown?.balance}>
-                came in, less went out
+              <Figure label={t('home.flows.leftOver')} flow={undefined} value={shown?.balance}>
+                {t('home.flows.leftOverHow')}
               </Figure>
             </Figures>
 
             <div className="flex flex-col gap-2">
               <MonthChart months={chartMonths(summaries, gaps, period, newest ?? period)} selected={period} onPick={go} />
               <Legend>
-                <Key flow="in">Came in</Key>
-                <Key flow="out">Went out</Key>
-                <span>Saved and taxes are in the figures above and the table below</span>
-                <span className="ms-auto">A column opens its month · ← → page</span>
+                <Key flow="in">{t('home.flows.cameIn')}</Key>
+                <Key flow="out">{t('home.flows.wentOut')}</Key>
+                <span>{t('home.month.legendRest')}</span>
+                <span className="ms-auto">{t('home.month.legendPage')}</span>
               </Legend>
             </div>
 
@@ -280,7 +288,10 @@ export function Home() {
               className={`grid grid-cols-1 gap-8 @[45rem]:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] ${swap.turn === 0 ? '' : `fc-swap-${swap.side}`}`}
             >
               <section className="flex flex-col gap-3">
-                <BlockHead title="Where it went" aside={`${String(report.categories.length)} categories`} />
+                <BlockHead
+                  title={t('home.month.whereItWent')}
+                  aside={t(countKey('home.month.categories', report.categories.length), { count: report.categories.length })}
+                />
                 <div>
                   {report.categories.map((line) => {
                     const top = report.categories[0]?.outflow.minor ?? 1
@@ -297,7 +308,7 @@ export function Home() {
                           <Bidi className="min-w-0 truncate">{line.name}</Bidi>
                           {none && (
                             <span className="min-w-0 truncate text-caption text-ink-secondary">
-                              · {line.transactionCount} rows, on Transactions
+                              {t(countKey('home.month.uncategorizedRows', line.transactionCount), { count: line.transactionCount })}
                             </span>
                           )}
                         </span>
@@ -311,17 +322,17 @@ export function Home() {
                     )
                   })}
                   <SplitRow
-                    label="Bills"
-                    note={`${String(report.split.lines.filter((one) => one.status === 'CHARGED').length)} tracked, charged this month`}
+                    label={t('home.month.bills')}
+                    note={t('home.month.billsTracked', { count: report.split.lines.filter((one) => one.status === 'CHARGED').length })}
                     value={formatMoney(report.split.fixed)}
                   />
-                  <SplitRow label="Everything else" value={formatMoney(report.split.variable)} />
-                  <Total label="Went out" flow="out" value={formatMoney(report.summary?.expenses ?? report.split.expenses)} />
+                  <SplitRow label={t('home.month.everythingElse')} value={formatMoney(report.split.variable)} />
+                  <Total label={t('home.flows.wentOut')} flow="out" value={formatMoney(report.summary?.expenses ?? report.split.expenses)} />
                 </div>
 
                 {budgeted.length > 0 && (
                   <div className="mt-3 flex flex-col gap-3">
-                    <BlockHead title="Against the plan" aside="each category's bucket on Plan" />
+                    <BlockHead title={t('home.month.againstPlan')} aside={t('home.month.againstPlanAside')} />
                     <div>
                       {budgeted.map((line) => (
                         <button
@@ -350,13 +361,13 @@ export function Home() {
 
                 {savedParts.length > 0 && (
                   <div className="mt-3 flex flex-col gap-3">
-                    <BlockHead title="Saved" aside="what makes the figure above; moved is not in went out" />
+                    <BlockHead title={t('home.flows.saved')} aside={t('home.month.savedAside')} />
                     <div>
                       {report.moved.map((line) => (
                         <SavedRow
                           key={`moved-${line.categoryId ?? 'none'}`}
                           name={line.name}
-                          note={`moved · ${line.transactionCount === 1 ? '1 row' : `${String(line.transactionCount)} rows`}`}
+                          note={t(countKey('home.month.movedRows', line.transactionCount), { count: line.transactionCount })}
                           value={formatMoney(money(line.netMinor, currency))}
                           onClick={() => drillTo(line.categoryId ?? UNCATEGORIZED_OPTION)}
                         />
@@ -365,7 +376,7 @@ export function Home() {
                         <SavedRow
                           key={`slip-${line.deductionTypeId}`}
                           name={line.name}
-                          note="off the paycheck, your part"
+                          note={t('home.month.offPaycheckYours')}
                           value={formatMoney(line.amount)}
                           onClick={() => navigate('/paychecks')}
                         />
@@ -374,19 +385,19 @@ export function Home() {
                         <SavedRow
                           key={`goal-${line.goalId}`}
                           name={line.name}
-                          note={`into the goal · ${line.count === 1 ? '1 deposit' : `${String(line.count)} deposits`}`}
+                          note={t(countKey('home.month.intoGoal', line.count), { count: line.count })}
                           value={formatMoney(line.amount)}
                           onClick={() => navigate(`/wealth/goals/${line.goalId}`)}
                         />
                       ))}
-                      <Total label="Saved" flow="saved" value={formatMoney(shown?.saved ?? money(0, currency))} />
+                      <Total label={t('home.flows.saved')} flow="saved" value={formatMoney(shown?.saved ?? money(0, currency))} />
                     </div>
                   </div>
                 )}
               </section>
 
               <section className="flex flex-col gap-3">
-                <BlockHead title="What came in" />
+                <BlockHead title={t('home.month.whatCameIn')} />
                 <div>
                   {report.detail.lines.map((line) => (
                     <div key={`${line.kind}:${line.ref}`} className="grid h-8 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-hairline">
@@ -394,7 +405,11 @@ export function Home() {
                         <Bidi className="min-w-0 truncate">{line.name}</Bidi>
                         <span className="min-w-0 truncate">
                           <span className="text-caption text-ink-secondary">
-                            {line.kind === 'PAYSLIP' ? 'net pay, off the paycheck' : line.count > 1 ? `${String(line.count)} payments` : <Bidi>{line.categoryName ?? ''}</Bidi>}
+                            {line.kind === 'PAYSLIP'
+                              ? t('home.month.netPayLine')
+                              : line.count > 1
+                                ? t(countKey('home.month.payments', line.count), { count: line.count })
+                                : <Bidi>{line.categoryName ?? ''}</Bidi>}
                           </span>
                           {line.salary !== undefined && line.salary.kind !== 'UNCHECKED' && (
                             <span className={`text-caption ${salaryProblem(line.salary) ? 'text-negative' : 'text-ink-secondary'}`}>
@@ -407,7 +422,7 @@ export function Home() {
                       <span className="text-end tabular-nums">{formatMoney(line.amount)}</span>
                     </div>
                   ))}
-                  <Total label="Came in" flow="in" value={formatMoney(report.detail.total)} />
+                  <Total label={t('home.flows.cameIn')} flow="in" value={formatMoney(report.detail.total)} />
                 </div>
 
               </section>
@@ -415,7 +430,7 @@ export function Home() {
 
             {largest.length > 0 && (
               <section className="flex flex-col gap-3">
-                <BlockHead title="Biggest single charges" />
+                <BlockHead title={t('home.month.biggest')} />
                 <table className="w-full border-collapse">
                   <tbody>
                     {largest.map((one) => (
@@ -427,7 +442,7 @@ export function Home() {
                           <Bidi>{one.merchantRaw}</Bidi>
                         </td>
                         <td className="px-3 text-ink-secondary">
-                          <Bidi>{one.categoryPath ?? 'Uncategorized'}</Bidi>
+                          <Bidi>{one.categoryPath ?? t('home.flows.uncategorized')}</Bidi>
                         </td>
                         <td className="px-3 text-end tabular-nums">{formatMoney(one.amount)}</td>
                       </tr>
@@ -480,8 +495,9 @@ function accountLabel(gap: StatementGap | undefined): string {
 }
 
 function Versus({ value }: { value: number | undefined }) {
+  const t = useT()
   if (value === undefined) return null
-  return <span className="block text-ink-secondary">{signedPercent(value)} vs 3-month average</span>
+  return <span className="block text-ink-secondary">{t('home.month.versus', { percent: signedPercent(value) })}</span>
 }
 
 /** One of the two parts went out is made of: the tracked fixed bills, and the rest. */
@@ -545,14 +561,16 @@ function AllMonths({
   onOpen: (month: YearMonth) => void
   onRead: () => void
 }) {
+  const t = useT()
+  const dates = useDates()
   const newestFirst = [...summaries].reverse()
   return (
     <section className="mt-2 flex flex-col gap-3" aria-labelledby="home-all-months">
       <div className="flex flex-col gap-0.5">
         <h2 id="home-all-months" className="m-0 text-heading font-medium">
-          All months
+          {t('home.month.allMonths')}
         </h2>
-        <span className="text-caption text-ink-secondary">A row opens its month above.</span>
+        <span className="text-caption text-ink-secondary">{t('home.month.allMonthsHint')}</span>
       </div>
       {/* Its own scroll region, so the header stays while the months scroll
           under it (M54 F13). Separate borders, because a collapsed one scrolls
@@ -561,12 +579,12 @@ function AllMonths({
         <table className="w-full border-separate border-spacing-0">
           <thead>
             <tr className="text-label text-ink-secondary uppercase *:sticky *:top-0 *:z-10 *:border-b *:border-hairline *:bg-background">
-              <th className="px-3 py-2 text-start font-medium">Month</th>
-              <th className="px-3 py-2 text-end font-medium">Came in</th>
-              <th className="px-3 py-2 text-end font-medium">Went out</th>
-              <th className="px-3 py-2 text-end font-medium">Saved</th>
-              <th className="px-3 py-2 text-end font-medium">Taxes</th>
-              <th className="px-3 py-2 text-end font-medium">Left over</th>
+              <th className="px-3 py-2 text-start font-medium">{t('home.flows.month')}</th>
+              <th className="px-3 py-2 text-end font-medium">{t('home.flows.cameIn')}</th>
+              <th className="px-3 py-2 text-end font-medium">{t('home.flows.wentOut')}</th>
+              <th className="px-3 py-2 text-end font-medium">{t('home.flows.saved')}</th>
+              <th className="px-3 py-2 text-end font-medium">{t('home.flows.taxes')}</th>
+              <th className="px-3 py-2 text-end font-medium">{t('home.flows.leftOver')}</th>
             </tr>
           </thead>
           <tbody>
@@ -593,12 +611,12 @@ function AllMonths({
                       aria-current={on ? 'true' : undefined}
                       className="cursor-pointer text-start text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                     >
-                      {formatYearMonth(one.period)}
+                      {dates.yearMonth(one.period)}
                     </button>
                     {missing.length > 0 && (
                       <span className="fc-state ms-2" data-tone="negative">
                         <span className="fc-state-dot" />
-                        part
+                        {t('home.flows.part')}
                       </span>
                     )}
                   </td>
@@ -613,7 +631,7 @@ function AllMonths({
                 ...missing.map((gap) => (
                   <tr key={`${key}:${gap.accountId}`} className="h-10 text-ink-secondary *:border-b *:border-hairline">
                     <td className="py-0 pe-3 ps-7 whitespace-nowrap">
-                      <Bidi>{accountLabel(gap)}</Bidi> · {formatYearMonth(gap.period)}
+                      <Bidi>{accountLabel(gap)}</Bidi> · {dates.yearMonth(gap.period)}
                     </td>
                     {/* Read files sits in the line's own cell, never a column of
                         its own: an empty column on every month row was what
@@ -621,9 +639,9 @@ function AllMonths({
                         scrolled under the header (M54 F13 F). */}
                     <td className="px-3" colSpan={5}>
                       <span className="flex items-center justify-between gap-3">
-                        No statement read for this month
+                        {t('home.month.noStatement')}
                         <Button variant="ghost" size="sm" onClick={onRead}>
-                          Read files
+                          {t('home.month.readFiles')}
                         </Button>
                       </span>
                     </td>

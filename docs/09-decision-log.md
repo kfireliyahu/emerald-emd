@@ -490,6 +490,7 @@ written out here.
 | D-585 | 2026-11-11 | The Hebrew screen's words are a `screen_hebrew` column on the term rows, one word per thing in both languages; a button is a verbal noun, and a word a statement prints is the screen's word | M60 |
 | D-586 | 2026-11-11 | Right to left by logical sides: every class and rule that names a side names the start or the end, a chart and a bar placed by measuring stay left to right, a key steps the way its buttons are drawn, and a figure reads as written inside Hebrew | M60 |
 | D-587 | 2026-11-11 | A new ledger is seeded in the app's language and keeps it: the categories' Hebrew names sit beside `seededIds.json` under the same ids, a document's seed language is read from its own rows, and the page passes the app's language while `create_document` and `keep_packs` take `language` | M60 |
+| D-589 | 2026-11-11 | A translated screen's words are the catalogue's, and a test that parses its files fails on one written inline; a count is a `one`/`other` pair, a sentence holding a document's value is filled with elements, a record the document keeps stays as written, and a card a Hebrew ledger makes in place is `כרטיס 1234` | M60 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1198,6 +1199,47 @@ and the plugin has no app language at all.
 **Rejected.** Translating names on read (a person's rename would fight it, and a name is data);
 storing the language in the document (D-583 point 2 keeps the app's language off it, and the rows
 already say); the Hebrew in `src/i18n/he/` (the plugin would carry the screen catalogue for one list).
+
+## D-589 · 2026-11-11 · A translated screen's words are the catalogue's, and a test that parses its files fails on one written inline; a count is a `one`/`other` pair, a sentence holding a document's value is filled with elements, a record the document keeps stays as written, and a card a Hebrew ledger makes in place is `כרטיס 1234` <a id="d-589"></a>
+
+**Context.** M60 U4 translates Home (with Year and the Getting started line), Read files and the
+import screen, Transactions with its pane and menus, and By merchant (D-583). U1 gave the layer
+(`t()`, D-584) and U2 the words (D-585); what was left was how a screen keeps them, and the cases a
+key-per-string layer does not cover by itself: counts, sentences around a document's own values, and
+words that end up stored in the document.
+
+**Decision.** (M60 U4, the unit's picks.)
+
+1. **Four areas** — `home`, `reading`, `transactions`, `merchants` — one `en/` and one `he/` file
+   each, so U5's areas merge beside them.
+2. **A translated screen has no inline word, and a test says so**: `src/i18n/words.test.ts` parses
+   every file in `TRANSLATED` with the TypeScript compiler and fails on JSX text, a `title`, an
+   `aria-label` or a placeholder, a menu item's label or a sentence a helper returns, written in
+   English in the file. Class lists, key names, codes compared against and ALL-CAPS states pass;
+   `ALLOWED` lists, by file and with why, the literals that are records rather than words. A unit
+   that translates a screen adds its files to `TRANSLATED`. The rule row is *A translated screen's
+   words are the catalogue's*.
+3. **A count is two words**, `one` and `other`, and `countKey(key, n)` (`src/i18n/count.ts`) picks
+   one — never `n === 1 ? … : …` in a screen. Hebrew's dual is not used: *2 שורות* reads as well.
+4. **A sentence with a document's value in it** — a merchant, an account, a category path, a figure
+   — is a word with `{name}` placeholders filled with elements (`fillNodes`, `src/i18n/nodes.tsx`),
+   the value in `Bidi`, so each language puts it where its grammar does. A category path drawn in
+   Hebrew joins with ←.
+5. **What the document keeps is written as it was made.** A run's note (`… — from a correction`,
+   `By merchant: …`) is a record, read back later as the document's own words, so it stays English
+   and is allowed by name. The role names a mapping stores stay the English identifiers; only their
+   labels are translated.
+6. **The account a statement makes in place is `כרטיס 1234` in a ledger made in Hebrew**
+   (`ledgerLanguageOf`, D-587), `Card 1234` otherwise — this supersedes D-587 point 4, which left it
+   English and asked. A name a person typed and a saved mapping's name are left as they are.
+7. **`probe:screens -- --lang he` draws the words in Hebrew** (`showLanguage`, which keeps nothing)
+   and lists every visible word, name and title still in English outside `Bidi`, a raw cell or a key
+   cap — the done-test of a translated screen, in one call.
+
+**Rejected.** An ICU message format library (one more dependency for two plural forms); a lint rule
+in the editor (the suite is what a session runs); translating run notes (a record read back in the
+other language would be a word nobody wrote); a word for the shared components these screens draw
+(`CategoryPicker`, `PageMenu`, `Amount`, the notices) — U5's, listed on the unit's review entry.
 
 ## Related
 

@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 
 import { asNext, doneCount, firstOpen } from '@/domain/guide.ts'
+import { useT } from '@/i18n/current.ts'
+import { fillNodes } from '@/i18n/nodes.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 
 import { openGuide, useGuideOpen } from './guideState.ts'
@@ -18,6 +20,7 @@ import { useGuide } from './useGuide.ts'
  * Hidden while the guide is open — the dialog is saying the same thing.
  */
 export function GuideLine() {
+  const t = useT()
   const open = useGuideOpen()
   const guide = useGuide(open === undefined)
   if (open !== undefined || guide === undefined || guide.progress.lineAway) return null
@@ -25,7 +28,7 @@ export function GuideLine() {
   const { steps, checks, progress } = guide
   const dismiss = (
     <Button variant="ghost" size="sm" onClick={() => guide.save({ ...progress, lineAway: true })}>
-      Dismiss
+      {t('home.guide.dismiss')}
     </Button>
   )
   const count = steps.length
@@ -42,9 +45,9 @@ export function GuideLine() {
     return (
       <div className="fc-pop-enter flex flex-wrap items-center gap-3 text-ink-secondary" data-guide="home.line">
         {meter}
-        <span>Getting started: all {count} places done.</span>
+        <span>{t('home.guide.allDone', { count })}</span>
         <Button variant="ghost" size="sm" onClick={() => openGuide(0)}>
-          Walk it again
+          {t('home.guide.again')}
         </Button>
         {dismiss}
       </div>
@@ -56,27 +59,28 @@ export function GuideLine() {
     <div className="fc-pop-enter flex flex-wrap items-center gap-3 text-ink-secondary" data-guide="home.line">
       {meter}
       <span>
-        Getting started, {done} of {count} done.
+        {t('home.guide.progress', { done, count })}
         {next !== undefined && (
           <>
             {' '}
-            Next:{' '}
             {/* **The step it names is a link to its place** (M59 U6, D-582): the
                 screen, without the guide — so a place the rail holds back is
                 one click from here. Home's own step is the band just above. */}
-            {next.route === '/' ? (
-              asNext(next)
-            ) : (
-              <Link to={next.route} className="text-accent underline underline-offset-4 hover:text-accent-hover">
-                {asNext(next)}
-              </Link>
-            )}
-            .
+            {fillNodes(t('home.guide.next'), {
+              step:
+                next.route === '/' ? (
+                  asNext(next)
+                ) : (
+                  <Link to={next.route} className="text-accent underline underline-offset-4 hover:text-accent-hover">
+                    {asNext(next)}
+                  </Link>
+                ),
+            })}
           </>
         )}
       </span>
       <Button variant="ghost" size="sm" onClick={() => openGuide()}>
-        {done > 0 || progress.started ? 'Continue the guide' : 'Guide me'}
+        {done > 0 || progress.started ? t('home.guide.continue') : t('home.guide.start')}
       </Button>
       {dismiss}
     </div>

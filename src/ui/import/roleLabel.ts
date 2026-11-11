@@ -1,5 +1,9 @@
+import { useMemo } from 'react'
+
 import type { ColumnRoleId } from '@/domain/model/columnRoles.ts'
 import type { ColumnRole } from '@/domain/model/importing.ts'
+import { useT } from '@/i18n/current.ts'
+import { reading } from '@/i18n/en/reading.ts'
 
 /**
  * What each role is called on screen. The identifiers are for code; docs/f01
@@ -12,25 +16,19 @@ import type { ColumnRole } from '@/domain/model/importing.ts'
  * "installments", and the counter pair reads "installment no." / "installment
  * of" rather than as two identifiers.
  */
-export const ROLE_LABEL: Readonly<Record<ColumnRole, string>> = {
-  date: 'date',
-  amount: 'amount',
-  merchant: 'merchant',
-  debit: 'debit (out)',
-  credit: 'credit (in)',
-  chargeDate: 'charge date',
-  currency: 'currency',
-  originalAmount: 'original amount',
-  originalCurrency: 'original currency',
-  exchangeRate: 'exchange rate',
-  providerCategory: 'provider category',
-  installmentText: 'installments',
-  installmentSequence: 'installment no.',
-  installmentTotal: 'installment of',
-  cardLast4: 'card last 4',
-  reference: 'reference',
-  balance: 'running balance',
-  note: 'note',
+export const ROLE_LABEL: Readonly<Record<ColumnRole, string>> = reading.roles
+
+/**
+ * The roles' labels in the language now (M60 U4, D-589): the catalogue's
+ * `reading.roles`, which `ROLE_LABEL` is the English of.
+ */
+export function useRoleLabels(): Readonly<Record<ColumnRole, string>> {
+  const t = useT()
+  return useMemo(() => {
+    const labels: Partial<Record<ColumnRole, string>> = {}
+    for (const role of Object.keys(ROLE_LABEL) as ColumnRole[]) labels[role] = t(`reading.roles.${role}`)
+    return labels as Record<ColumnRole, string>
+  }, [t])
 }
 
 /**

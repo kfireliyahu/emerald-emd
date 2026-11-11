@@ -9,7 +9,7 @@ import { applyColumnProposal, statementContext } from '@/data/importer/columnPro
 import { guessMapping, missingRequiredRoles, withColumnRole } from '@/data/importer/guess.ts'
 import { defaultMappingName, statedCardLast4 } from '@/data/importer/mappingName.ts'
 import type { SheetTable, SheetWorkbook } from '@/data/importer/sheetTable.ts'
-import { accountNameFor, type StatementSheet } from '@/data/importer/statementBatch.ts'
+import { accountNameFor, accountNameIn, type StatementSheet } from '@/data/importer/statementBatch.ts'
 import { computeHeaderSignature, matchSavedMapping } from '@/data/importer/signature.ts'
 import { listMappings, saveMapping } from '@/data/repositories/importMappingRepository.ts'
 import {
@@ -21,6 +21,7 @@ import { deriveStatementColumns } from '@/data/runtime/derive.ts'
 import { readChosenProvider } from '@/data/runtime/provider.ts'
 import type { DraftMapping } from '@/domain/model/importing.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
+import { useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { ChoiceMenu } from '@/ui/components/ChoiceField.tsx'
@@ -89,6 +90,7 @@ export function MapperScreen({
   // the settings screen, which unmounts this one anyway (D-134).
   const provider = useMemo(() => readChosenProvider(), [])
   const db = useDocumentStore((state) => state.db)
+  const t = useT()
   const mutate = useDocumentStore((state) => state.mutate)
 
   /**
@@ -109,7 +111,7 @@ export function MapperScreen({
    * be the app lying about unsaved work.
    */
   const addRole = (role: string): string | undefined => {
-    if (db === undefined) return 'Open a document first.'
+    if (db === undefined) return t('reading.mapper.noDocument')
     const rejection = roleRejection(role, listColumnRoles(db, 'STATEMENT'))
     if (rejection !== undefined) return rejection
 
@@ -164,7 +166,7 @@ export function MapperScreen({
   }
 
   if (table === undefined || state === undefined) {
-    return <Centered>This file has no sheets.</Centered>
+    return <Centered>{t('reading.mapper.noSheets')}</Centered>
   }
 
   /**
@@ -246,7 +248,7 @@ export function MapperScreen({
             </span>
           )}
         </h1>
-        <span className="text-ink-secondary">Map its columns once, and a file like it is read on its own after.</span>
+        <span className="text-ink-secondary">{t('reading.mapper.lead')}</span>
       </header>
       <Toolbar
         workbook={workbook}
@@ -389,6 +391,8 @@ function SheetBody({
   roles: readonly ColumnRoleId[]
   onAddRole: (role: string) => string | undefined
 }) {
+  const t = useT()
+  const db = useDocumentStore((state) => state.db)
   const { mapping } = state
 
   // Re-parsing the whole sheet on every mapping change is what makes the
@@ -433,7 +437,7 @@ function SheetBody({
           />
         </div>
         <div className="shrink-0 border-t border-hairline px-6 py-3 text-ink-secondary">
-          No row in this sheet looks like a header. Click a row number to say which one it is.
+          {t('reading.mapper.noHeader')}
         </div>
       </>
     )
@@ -487,15 +491,13 @@ function SheetBody({
       {proposeProblem !== undefined && (
         <div className="fc-pop-enter flex shrink-0 items-center gap-4 border-b border-hairline bg-surface px-6 py-2">
           <span className="text-negative">{proposeProblem}</span>
-          <span className="text-caption text-ink-secondary">
-            Nothing changed. The columns below are still yours to set.
-          </span>
+          <span className="text-caption text-ink-secondary">{t('reading.mapper.unchanged')}</span>
           <button
             type="button"
             className="ms-auto text-caption text-ink-secondary hover:text-ink"
             onClick={onDismissProposeProblem}
           >
-            Dismiss
+            {t('reading.mapper.dismiss')}
           </button>
         </div>
       )}
@@ -537,7 +539,7 @@ function SheetBody({
         boundAccountId={state.saved?.accountId}
         // Named from the card's last-4 where the file supplies one, so two cards
         // in one file do not collapse into a single account.
-        accountName={accountNameFor(cardLast4, name, fileName)}
+        accountName={db === undefined ? accountNameFor(cardLast4, name, fileName) : accountNameIn(db, accountNameFor(cardLast4, name, fileName), cardLast4)}
         cardLast4={cardLast4}
         mappingName={name}
         table={table}
@@ -575,6 +577,7 @@ function Toolbar({
   onToggleTypes: (show: boolean) => void
   onDone: () => void
 }) {
+  const t = useT()
   return (
     <div className="flex shrink-0 flex-wrap items-center gap-x-6 gap-y-1 border-b border-hairline px-6 py-2 text-ink-secondary">
       {workbook.sheets.length > 1 && (
@@ -597,17 +600,15 @@ function Toolbar({
         </div>
       )}
 
-      <span className="tabular-nums">
-        {table.rows.length} rows × {table.columnCount} columns
-      </span>
+      <span className="tabular-nums">{t('reading.mapper.size', { rows: table.rows.length, columns: table.columnCount })}</span>
 
       {mapping !== undefined && (
         <>
-          <span className="tabular-nums">header row {mapping.headerRowIndex + 1}</span>
+          <span className="tabular-nums">{t('reading.mapper.headerRow', { row: mapping.headerRowIndex + 1 })}</span>
           <span>
             {mapping.amountConvention === 'POSITIVE_IS_CHARGE'
-              ? 'positive means a charge'
-              : 'amounts already signed'}
+              ? t('reading.mapper.positiveCharge')
+              : t('reading.mapper.signed')}
           </span>
           <CurrencyPicker value={mapping.defaultCurrency} onChange={onSetCurrency} />
         </>
@@ -619,11 +620,11 @@ function Toolbar({
           checked={showTypes}
           onChange={(event) => onToggleTypes(event.target.checked)}
         />
-        Show cell types
+        {t('reading.mapper.cellTypes')}
       </label>
 
       <Button variant="secondary" size="sm" onClick={onDone}>
-        Close
+        {t('reading.mapper.close')}
       </Button>
     </div>
   )
@@ -655,10 +656,11 @@ function CurrencyPicker({
   onChange: (currency: CurrencyCode) => void
 }) {
   const choices = CURRENCY_CHOICES.includes(value) ? CURRENCY_CHOICES : [value, ...CURRENCY_CHOICES]
+  const t = useT()
 
   return (
-    <label className="flex items-center gap-2" title="What amounts are in, unless a column says otherwise">
-      currency
+    <label className="flex items-center gap-2" title={t('reading.mapper.currencyTitle')}>
+      {t('reading.mapper.currency')}
       <ChoiceMenu
         text={value}
         choices={choices.map((currency) => ({ value: currency, label: currency }))}

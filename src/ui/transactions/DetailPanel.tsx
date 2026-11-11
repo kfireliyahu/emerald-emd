@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
-import { formatYearMonth, toISODate } from '@/core/time.ts'
+import { toISODate } from '@/core/time.ts'
 import type { Account } from '@/data/repositories/accountRepository.ts'
 import type { Category } from '@/data/repositories/categoryRepository.ts'
 import type { HoldingQuantity, TransactionHolding } from '@/data/repositories/savingsRepository.ts'
@@ -20,6 +20,9 @@ import { CategoryPicker } from '@/ui/components/CategoryPicker.tsx'
 import { FIELD, FIELD_MULTILINE, SELECT } from '@/ui/components/fieldLook.ts'
 import { instantDay } from '@/core/instant.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { countKey } from '@/i18n/count.ts'
+import { useDates, useT } from '@/i18n/current.ts'
+import { fillNodes } from '@/i18n/nodes.tsx'
 
 /**
  * One transaction, in full, beside the table rather than instead of it
@@ -81,6 +84,8 @@ export function DetailPanel({
   transfer?: TransferPair | undefined
   onTransfer?: (pairId: string, decision: TransferDecision) => void
 }) {
+  const t = useT()
+  const dates = useDates()
   const noteRef = useRef<HTMLTextAreaElement>(null)
 
   // Escape closes, from anywhere in the panel or the table beside it. Captured
@@ -115,7 +120,7 @@ export function DetailPanel({
 
   return (
     <aside
-      aria-label="Transaction detail"
+      aria-label={t('transactions.panel.label')}
       className="fc-pop-enter flex w-[23rem] shrink-0 flex-col overflow-y-auto border-s border-hairline bg-background"
     >
       <div className="flex items-start gap-2 border-b border-hairline px-5 py-4">
@@ -129,26 +134,26 @@ export function DetailPanel({
           variant="ghost"
           size="sm"
           onClick={onClose}
-          aria-label="Close detail"
+          aria-label={t('transactions.panel.closeLabel')}
           className="ms-auto"
         >
-          Close
+          {t('transactions.panel.close')}
         </Button>
       </div>
 
       <div className="border-b border-hairline px-5 py-3">
-        <Label>Category</Label>
+        <Label>{t('transactions.panel.category')}</Label>
         <div className="-ms-2 mt-1">
           <CategoryPicker
             categories={categories}
             value={transaction.categoryId}
             onChange={onAssign}
-            label={`Category for ${transaction.merchantRaw}`}
+            label={t('transactions.panel.categoryFor', { merchant: transaction.merchantRaw })}
           />
         </div>
         {transaction.categorySource === 'MANUAL' && (
           <p className="mt-1 text-caption text-ink-tertiary">
-            You chose this one. Nothing automatic will overwrite it.
+            {t('transactions.panel.manual')}
           </p>
         )}
 
@@ -163,9 +168,9 @@ export function DetailPanel({
             variant="secondary"
             size="sm"
             onClick={onCreateRule}
-            title="Offer a rule for this merchant above the rows"
+            title={t('transactions.panel.makeRuleTitle')}
           >
-            Make a rule for this merchant
+            {t('transactions.panel.makeRule')}
           </Button>
 
           {/* The other thing this row already knows about itself. A merchant
@@ -179,14 +184,14 @@ export function DetailPanel({
                 variant="secondary"
                 size="sm"
                 onClick={onCreateProviderRule}
-                title="Open the rules screen with a rule pre-filled from the provider's own category"
+                title={t('transactions.panel.providerRuleTitle')}
               >
-                Create a rule from the provider's category
+                {t('transactions.panel.providerRule')}
               </Button>
               <p className="text-caption text-ink-tertiary">
-                Covers every row the provider categorizes under{' '}
-                <Bidi className="text-ink-secondary">{transaction.providerCategory}</Bidi>, on this
-                statement and the next one.
+                {fillNodes(t('transactions.panel.providerCovers'), {
+                  category: <Bidi className="text-ink-secondary">{transaction.providerCategory}</Bidi>,
+                })}
               </p>
             </>
           )}
@@ -194,46 +199,48 @@ export function DetailPanel({
       </div>
 
       <dl className="grid grid-cols-[7rem_1fr] gap-x-3 gap-y-2 border-b border-hairline px-5 py-3">
-        <Fact label="Account">{transaction.accountName}</Fact>
-        <Fact label="Purchased">{toISODate(transaction.transactionDate)}</Fact>
+        <Fact label={t('transactions.panel.account')}>
+          <Bidi>{transaction.accountName}</Bidi>
+        </Fact>
+        <Fact label={t('transactions.panel.purchased')}>{toISODate(transaction.transactionDate)}</Fact>
         {transaction.chargeDate !== undefined && (
-          <Fact label="Charged">{toISODate(transaction.chargeDate)}</Fact>
+          <Fact label={t('transactions.panel.charged')}>{toISODate(transaction.chargeDate)}</Fact>
         )}
         {transaction.billingPeriod !== undefined && (
-          <Fact label="Billed in">{formatYearMonth(transaction.billingPeriod)}</Fact>
+          <Fact label={t('transactions.panel.billedIn')}>{dates.yearMonth(transaction.billingPeriod)}</Fact>
         )}
         {transaction.cardLast4 !== undefined && (
-          <Fact label="Card">···· {transaction.cardLast4}</Fact>
+          <Fact label={t('transactions.panel.card')}>···· {transaction.cardLast4}</Fact>
         )}
         {installment !== undefined && (
-          <Fact label="Installment">
-            {installment.sequence} of {installment.total}
+          <Fact label={t('transactions.panel.installment')}>
+            {t('transactions.panel.installmentOf', { sequence: installment.sequence, total: installment.total })}
             {/* D-007 makes the slice the number that counts, so the purchase it
                 came out of has to be visible somewhere or a ₪1,200 sofa looks
                 like a ₪100 one forever. */}
             {installment.originalTotal !== undefined && (
               <span className="text-ink-tertiary">
                 {' · '}
-                <Amount value={installment.originalTotal} /> in total
+                {fillNodes(t('transactions.panel.inTotal'), { amount: <Amount value={installment.originalTotal} /> })}
               </span>
             )}
           </Fact>
         )}
         {foreign !== undefined && (
-          <Fact label="Originally">
+          <Fact label={t('transactions.panel.originally')}>
             <Amount value={foreign.amount} />
             {foreign.exchangeRate !== undefined && (
-              <span className="text-ink-tertiary"> at {foreign.exchangeRate}</span>
+              <span className="text-ink-tertiary"> {t('transactions.panel.at', { rate: foreign.exchangeRate })}</span>
             )}
           </Fact>
         )}
         {transaction.providerCategory !== undefined && (
-          <Fact label="Provider said">
+          <Fact label={t('transactions.panel.providerSaid')}>
             <Bidi>{transaction.providerCategory}</Bidi>
           </Fact>
         )}
         {transaction.reference !== undefined && (
-          <Fact label="Reference">
+          <Fact label={t('transactions.panel.reference')}>
             <Bidi>{transaction.reference}</Bidi>
           </Fact>
         )}
@@ -254,31 +261,31 @@ export function DetailPanel({
       )}
 
       <div className="border-b border-hairline px-5 py-3">
-        <Label>Note</Label>
+        <Label>{t('transactions.panel.note')}</Label>
         <textarea
           ref={noteRef}
           defaultValue={transaction.note ?? ''}
           onBlur={commitNote}
           rows={2}
-          aria-label="Note"
+          aria-label={t('transactions.panel.note')}
           dir="auto"
-          placeholder="Anything worth remembering about this one…"
+          placeholder={t('transactions.panel.notePlaceholder')}
           className={`${FIELD_MULTILINE} mt-1 w-full resize-y`}
         />
       </div>
 
       {isBankOutflow && cards.length > 0 && (
         <div className="border-b border-hairline px-5 py-3">
-          <Label>This pays a card</Label>
+          <Label>{t('transactions.panel.paysCard')}</Label>
           <select
             className={`${SELECT} mt-1 w-full`}
             value={settlementAlias ?? ''}
-            aria-label="The card this merchant pays"
+            aria-label={t('transactions.panel.paysCardLabel')}
             onChange={(event) =>
               onSetSettlementAlias(event.target.value === '' ? undefined : event.target.value)
             }
           >
-            <option value="">Not a card payment</option>
+            <option value="">{t('transactions.panel.notCardPayment')}</option>
             {cards.map((account) => (
               <option key={account.id} value={account.id}>
                 {account.name}
@@ -289,10 +296,9 @@ export function DetailPanel({
 
           {aliasedCard === undefined ? (
             <p className="mt-1 text-caption text-ink-tertiary">
-              Say so when the app has not worked it out — a bank that words its card payment
-              unusually, or a row with no card number in it. The answer covers{' '}
-              <Bidi>{transaction.merchantNormalized}</Bidi> everywhere it appears, before and after
-              today.
+              {fillNodes(t('transactions.panel.paysCardHint'), {
+                merchant: <Bidi>{transaction.merchantNormalized}</Bidi>,
+              })}
             </p>
           ) : aliasedCard.excludeSettlementsFromStats === undefined ? (
             <div className="mt-2">
@@ -302,8 +308,7 @@ export function DetailPanel({
                   the row in front of them — the accounts queue asks the same
                   question of whoever gets there first. */}
               <p className="text-caption text-ink-tertiary">
-                Do this card's payments belong in your totals? They are the same money as the card
-                statement's own rows, so counting both doubles the month.
+                {t('transactions.panel.belongQuestion')}
               </p>
               <div className="mt-1 flex flex-wrap gap-2">
                 <Button
@@ -311,18 +316,19 @@ export function DetailPanel({
                   size="sm"
                   onClick={() => onDecideCard(aliasedCard.id, true)}
                 >
-                  Leave them out
+                  {t('transactions.panel.leaveThemOut')}
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => onDecideCard(aliasedCard.id, false)}>
-                  Keep them
+                  {t('transactions.panel.keepThem')}
                 </Button>
               </div>
             </div>
           ) : (
             <p className="mt-1 text-caption text-ink-tertiary">
-              {aliasedCard.excludeSettlementsFromStats
-                ? `Payments to ${aliasedCard.name} are left out of totals, so this row does not double the month.`
-                : `Payments to ${aliasedCard.name} are counted, and that card's own transactions are what to leave out instead.`}
+              {fillNodes(
+                t(aliasedCard.excludeSettlementsFromStats ? 'transactions.panel.leftOut' : 'transactions.panel.counted'),
+                { card: <Bidi>{aliasedCard.name}</Bidi> },
+              )}
             </p>
           )}
         </div>
@@ -337,40 +343,36 @@ export function DetailPanel({
             className="mt-1"
           />
           <span>
-            Leave out of totals
+            {t('transactions.panel.leaveOut')}
             <span className="mt-0.5 block text-caption text-ink-tertiary">
-              The row stays in the ledger and keeps its category — it just stops counting toward
-              any total. For a one-off; a card payment that repeats is better answered above, which
-              covers every month of it at once.
+              {t('transactions.panel.leaveOutHint')}
             </span>
           </span>
         </label>
       </div>
 
       <div className="px-5 py-3">
-        <Label>Where this came from</Label>
+        <Label>{t('transactions.panel.source')}</Label>
         {provenance === undefined ? (
           <p className="mt-1 text-ink-secondary">
-            No import recorded — this row was written directly into the document.
+            {t('transactions.panel.noImport')}
           </p>
         ) : (
           <p className="mt-1 text-ink-secondary">
-            {transaction.sourceRowRef !== undefined && <>{transaction.sourceRowRef} of </>}
-            <Bidi className="text-ink">{provenance.fileName}</Bidi>
-            {provenance.sheetName !== undefined && (
-              <>
-                {' · sheet '}
-                <Bidi>{provenance.sheetName}</Bidi>
-              </>
+            {transaction.sourceRowRef === undefined ? (
+              <Bidi className="text-ink">{provenance.fileName}</Bidi>
+            ) : (
+              fillNodes(t('transactions.panel.fileOf'), {
+                row: <Bidi>{transaction.sourceRowRef}</Bidi>,
+                file: <Bidi className="text-ink">{provenance.fileName}</Bidi>,
+              })
             )}
-            {provenance.mappingName !== undefined && (
-              <>
-                {' · read by '}
-                <Bidi>{provenance.mappingName}</Bidi>
-              </>
-            )}
+            {provenance.sheetName !== undefined &&
+              fillNodes(t('transactions.panel.sheet'), { sheet: <Bidi>{provenance.sheetName}</Bidi> })}
+            {provenance.mappingName !== undefined &&
+              fillNodes(t('transactions.panel.readBy'), { reader: <Bidi>{provenance.mappingName}</Bidi> })}
             {provenance.importedAt !== undefined && (
-              <span className="tabular-nums"> · imported {instantDay(provenance.importedAt)}</span>
+              <span className="tabular-nums">{t('transactions.panel.imported', { day: instantDay(provenance.importedAt) })}</span>
             )}
           </p>
         )}
@@ -402,6 +404,7 @@ function Explanation({
   rules: readonly CategoryRule[]
   accounts: readonly Account[]
 }) {
+  const t = useT()
   // Only a rule-assigned category has a rule to explain. A manual one says its
   // own piece just above, and D-009 keeps the engine away from it entirely.
   if (transaction.categorySource !== 'RULE') return null
@@ -425,40 +428,47 @@ function Explanation({
   return (
     <div className="mt-2 text-caption text-ink-tertiary">
       <p>
-        Categorized by{' '}
-        {ruleName === undefined ? (
-          <span className="text-ink-secondary">a rule that has since been deleted</span>
-        ) : (
-          <Bidi className="text-ink">{ruleName}</Bidi>
-        )}
+        {fillNodes(t('transactions.panel.categorizedBy'), {
+          rule:
+            ruleName === undefined ? (
+              <span className="text-ink-secondary">{t('transactions.panel.deletedRule')}</span>
+            ) : (
+              <Bidi className="text-ink">{ruleName}</Bidi>
+            ),
+        })}
       </p>
 
       {stillAgrees && today.shadowed.length > 0 && (
         <p className="mt-1">
-          It beat{' '}
-          {today.shadowed.map((rule, index) => (
-            <span key={rule.id}>
-              {index > 0 && ', '}
-              <Bidi className="text-ink-secondary">{rule.name}</Bidi> (<Why rule={rule} accounts={accounts} />)
-            </span>
-          ))}
+          {fillNodes(t('transactions.panel.beat'), {
+            rules: today.shadowed.map((rule, index) => (
+              <span key={rule.id}>
+                {index > 0 && ', '}
+                <Bidi className="text-ink-secondary">{rule.name}</Bidi> (<Why rule={rule} accounts={accounts} />)
+              </span>
+            )),
+          })}
         </p>
       )}
 
       {!stillAgrees && (
         <p className="mt-1">
-          Your rules have changed since. Today they would assign{' '}
-          <span className="text-ink-secondary">
-            {today.winner === undefined
-              ? 'nothing'
-              : (categoryNameOf(today.winner.targetCategoryId, transaction) ?? 'another category')}
-          </span>
-          {today.winner !== undefined && (
-            <>
-              , by <Bidi className="text-ink-secondary">{today.winner.name}</Bidi>
-            </>
-          )}
-          . This row keeps what it was given — nothing is recategorized behind your back.
+          {fillNodes(t('transactions.panel.changed'), {
+            category: (
+              <span className="text-ink-secondary">
+                {today.winner === undefined
+                  ? t('transactions.panel.nothing')
+                  : (categoryNameOf(today.winner.targetCategoryId, transaction) ??
+                    t('transactions.panel.anotherCategory'))}
+              </span>
+            ),
+            by:
+              today.winner === undefined
+                ? null
+                : fillNodes(t('transactions.panel.byRule'), {
+                    rule: <Bidi className="text-ink-secondary">{today.winner.name}</Bidi>,
+                  }),
+          })}
         </p>
       )}
     </div>
@@ -498,6 +508,7 @@ function HoldingField({
   problemOf: (choice: TransactionHolding) => string | undefined
   onSave: (choice: TransactionHolding | undefined) => void
 }) {
+  const t = useT()
   const [holdingId, setHoldingId] = useState(transaction.holdingId ?? '')
   const [quantity, setQuantity] = useState(
     transaction.quantityMicro === undefined ? '' : quantityText(transaction.quantityMicro),
@@ -510,7 +521,7 @@ function HoldingField({
     holdingId === ''
       ? undefined
       : parsed === undefined
-        ? 'Say how much: what was bought is positive, what was sold negative.'
+        ? t('transactions.panel.howMuchProblem')
         : !parsed.ok
           ? parsed.error
           : choice === undefined
@@ -523,15 +534,15 @@ function HoldingField({
 
   return (
     <div className="border-b border-hairline px-5 py-3">
-      <Label>Bought or sold</Label>
+      <Label>{t('transactions.panel.boughtOrSold')}</Label>
       <div className="mt-1 flex gap-2">
         <select
           className={`${SELECT} min-w-0 flex-1`}
           value={holdingId}
-          aria-label="The holding this row bought or sold"
+          aria-label={t('transactions.panel.holdingLabel')}
           onChange={(event) => setHoldingId(event.target.value)}
         >
-          <option value="">Nothing — spent or received</option>
+          <option value="">{t('transactions.panel.noHolding')}</option>
           {holdings.map((one) => (
             <option key={one.id} value={one.id}>
               {one.name}
@@ -543,8 +554,8 @@ function HoldingField({
             className={`${FIELD} w-24 text-end tabular-nums`}
             value={quantity}
             inputMode="decimal"
-            aria-label="How much of it"
-            placeholder="Quantity"
+            aria-label={t('transactions.panel.howMuch')}
+            placeholder={t('transactions.panel.quantity')}
             onChange={(event) => setQuantity(event.target.value)}
           />
         )}
@@ -552,15 +563,32 @@ function HoldingField({
       {problem !== undefined && <p className="mt-1 text-caption text-negative">{problem}</p>}
       {changed && problem === undefined && (
         <Button variant="secondary" size="sm" className="mt-2" onClick={() => onSave(choice)}>
-          {holdingId === '' ? 'Clear it' : 'Save'}
+          {t(holdingId === '' ? 'transactions.panel.clearIt' : 'transactions.panel.save')}
         </Button>
       )}
       <p className="mt-1 text-caption text-ink-tertiary">
-        {named === undefined
-          ? 'When this row is a buy or a sale inside the account, name what it bought: it then counts in neither came in nor went out.'
-          : heldNow?.kind === 'VALUE'
-            ? `Cash turned into ${named.name} inside ${transaction.accountName}, so it is neither in nor out of the month. ${named.name} holds ${quantityText(heldNow.quantityMicro)} across ${heldNow.rows} ${heldNow.rows === 1 ? 'row' : 'rows'}.`
-            : `Cash turned into ${named.name} inside ${transaction.accountName}, so it is neither in nor out of the month.${heldNow === undefined ? '' : ` What ${named.name} holds is unchecked: ${heldNow.reason}`}`}
+        {named === undefined ? (
+          t('transactions.panel.holdingHint')
+        ) : (
+          <>
+            {fillNodes(t('transactions.panel.cashInto'), {
+              holding: <Bidi>{named.name}</Bidi>,
+              account: <Bidi>{transaction.accountName}</Bidi>,
+            })}
+            {heldNow === undefined
+              ? null
+              : heldNow.kind === 'VALUE'
+                ? fillNodes(` ${t(countKey('transactions.panel.holds', heldNow.rows))}`, {
+                    holding: <Bidi>{named.name}</Bidi>,
+                    quantity: quantityText(heldNow.quantityMicro),
+                    count: heldNow.rows,
+                  })
+                : fillNodes(` ${t('transactions.panel.unchecked')}`, {
+                    holding: <Bidi>{named.name}</Bidi>,
+                    reason: heldNow.reason,
+                  })}
+          </>
+        )}
       </p>
     </div>
   )
@@ -580,29 +608,34 @@ function TransferField({
   pair: TransferPair
   onAnswer: (pairId: string, decision: TransferDecision) => void
 }) {
+  const t = useT()
   const other = pair.out.transactionId === transactionId ? pair.in : pair.out
   const leftHere = pair.out.transactionId === transactionId
   return (
     <div className="border-b border-hairline px-5 py-3">
-      <Label>Transfer</Label>
+      <Label>{t('transactions.panel.transfer')}</Label>
       <p className="mt-1 text-ink-secondary">
-        {leftHere ? 'Arrived in ' : 'Left '}
-        <Bidi>{other.accountName}</Bidi> on <span className="tabular-nums">{other.date}</span>
-        {pair.decision === 'PAIRED'
-          ? ': one transfer between your accounts, so neither income nor spending.'
-          : pair.decision === 'NOT_PAIRED'
-            ? ', the same amount — and you said it is not a transfer.'
-            : ', the same amount. Is it one transfer between your accounts?'}
+        {fillNodes(t(leftHere ? 'transactions.panel.arrivedIn' : 'transactions.panel.left'), {
+          account: <Bidi>{other.accountName}</Bidi>,
+          date: <span className="tabular-nums">{other.date}</span>,
+        })}
+        {t(
+          pair.decision === 'PAIRED'
+            ? 'transactions.panel.paired'
+            : pair.decision === 'NOT_PAIRED'
+              ? 'transactions.panel.notPaired'
+              : 'transactions.panel.ask',
+        )}
       </p>
       <div className="mt-2 flex gap-2">
         {pair.decision !== 'PAIRED' && (
           <Button variant="secondary" size="sm" onClick={() => onAnswer(pair.id, 'PAIRED')}>
-            One transfer
+            {t('transactions.panel.oneTransfer')}
           </Button>
         )}
         {pair.decision !== 'NOT_PAIRED' && (
           <Button variant="ghost" size="sm" onClick={() => onAnswer(pair.id, 'NOT_PAIRED')}>
-            Not a transfer
+            {t('transactions.panel.notTransfer')}
           </Button>
         )}
       </div>

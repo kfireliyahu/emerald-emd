@@ -1,9 +1,17 @@
 import { dates as enDates } from './en/dates.ts'
 import { rail as enRail } from './en/rail.ts'
 import { settings as enSettings } from './en/settings.ts'
+import { home as enHome } from './en/home.ts'
+import { reading as enReading } from './en/reading.ts'
+import { transactions as enTransactions } from './en/transactions.ts'
+import { merchants as enMerchants } from './en/merchants.ts'
 import { dates as heDates } from './he/dates.ts'
 import { rail as heRail } from './he/rail.ts'
 import { settings as heSettings } from './he/settings.ts'
+import { home as heHome } from './he/home.ts'
+import { reading as heReading } from './he/reading.ts'
+import { transactions as heTransactions } from './he/transactions.ts'
+import { merchants as heMerchants } from './he/merchants.ts'
 import type { Language } from './language.ts'
 
 /**
@@ -27,6 +35,10 @@ export const ENGLISH = {
   rail: enRail,
   settings: enSettings,
   dates: enDates,
+  home: enHome,
+  reading: enReading,
+  transactions: enTransactions,
+  merchants: enMerchants,
 } as const
 
 export type English = typeof ENGLISH
@@ -45,6 +57,10 @@ export const HEBREW: { readonly [A in Area]?: Translation<A> } = {
   rail: heRail,
   settings: heSettings,
   dates: heDates,
+  home: heHome,
+  reading: heReading,
+  transactions: heTransactions,
+  merchants: heMerchants,
 }
 
 const CATALOGUES: Readonly<Record<Language, unknown>> = { en: ENGLISH, he: HEBREW }

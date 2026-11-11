@@ -7,7 +7,6 @@ import { listFunds } from '@/data/repositories/fundRepository.ts'
 import type { FundAccount } from '@/domain/model/funds.ts'
 import {
   cardsOf,
-  cardsSentence,
   judgeBatch,
   keepApart,
   monthsOf,
@@ -34,6 +33,10 @@ import { SELECT } from '@/ui/components/fieldLook.ts'
 import { IconAction, removableRow } from '@/ui/components/IconAction.tsx'
 import { Working } from '@/ui/components/Working.tsx'
 import { useFilePicker, useReadFiles } from '@/ui/home/parts.tsx'
+import { cardsLine } from '@/ui/import/cardsLine.tsx'
+import { countKey } from '@/i18n/count.ts'
+import { useT, type Translate } from '@/i18n/current.ts'
+import { fillNodes } from '@/i18n/nodes.tsx'
 
 /**
  * **Read files** — `#/read`, M28 U5: statements, payslips and fund reports
@@ -59,6 +62,7 @@ export function ReadStatements() {
   const [writing, setWriting] = useState(false)
   const readFiles = useReadFiles()
   const picker = useFilePicker(readFiles)
+  const t = useT()
 
   // In the batch's order, each sheet against the ones before it (M28 F15): an
   // account a file above is about to make is where a file below can land, and
@@ -70,7 +74,7 @@ export function ReadStatements() {
 
   // A file holding two cards or more says so on its first row, before anything
   // is written: `2 cards: ••1234 · 41 rows, ••5678 · 17 rows` (M59 U2, D-578).
-  const cardLines = useMemo((): ReadonlyMap<string, string> => {
+  const cardLines = useMemo((): ReadonlyMap<string, React.ReactNode> => {
     const byFile = new Map<string, { first: string; sheets: StatementSheet[] }>()
     for (const file of batch.files) {
       if (file.kind !== 'sheet') continue
@@ -78,13 +82,13 @@ export function ReadStatements() {
       if (group === undefined) byFile.set(file.sheet.fileHash, { first: file.id, sheets: [file.sheet] })
       else group.sheets.push(file.sheet)
     }
-    const lines = new Map<string, string>()
+    const lines = new Map<string, React.ReactNode>()
     for (const { first, sheets } of byFile.values()) {
-      const line = cardsSentence(cardsOf(sheets))
+      const line = cardsLine(t, cardsOf(sheets))
       if (line !== undefined) lines.set(first, line)
     }
     return lines
-  }, [batch.files])
+  }, [batch.files, t])
 
   if (db === undefined) return null
 
@@ -135,7 +139,10 @@ export function ReadStatements() {
         state: {
           month: arrived.at(-1),
           arrived,
-          wrote: `${String(imported)} ${imported === 1 ? 'transaction' : 'transactions'} from ${String(sheets.length)} ${sheets.length === 1 ? 'file' : 'files'}`,
+          wrote: t('reading.files.wrote', {
+            transactions: t(countKey('reading.files.transactions', imported), { count: imported }),
+            files: t(countKey('reading.files.files', sheets.length), { count: sheets.length }),
+          }),
         },
       })
     } catch (cause) {
@@ -159,38 +166,34 @@ export function ReadStatements() {
     <div className="h-full overflow-auto">
       <div className="fc-view-enter flex flex-col gap-6 px-8 pt-6 pb-12">
         <header className="flex flex-col gap-1.5 border-b border-hairline pb-4">
-          <span className="fc-label text-ink-secondary uppercase">Home · read files</span>
+          <span className="fc-label text-ink-secondary uppercase">{t('reading.files.crumb')}</span>
           <h1 className="m-0 flex items-baseline gap-3 text-title leading-tight font-medium">
-            Read files
+            {t('reading.files.title')}
             <Link to="/read/readers" className="text-body font-normal text-accent hover:underline">
-              Readers
+              {t('reading.files.readers')}
             </Link>
           </h1>
-          <span className="text-ink-secondary">
-            Card and bank statements, paychecks and fund reports, each by the reader that knows it.
-          </span>
+          <span className="text-ink-secondary">{t('reading.files.lead')}</span>
         </header>
 
         {/* *An empty state is one sentence* and one text action; a file being
             read says so on its own row, with Working alone, never counting (M54 F13). */}
         {total === 0 ? (
           <p className="m-0 text-ink-secondary">
-            Nothing to read yet, and nothing is written until you press Write.{' '}
+            {t('reading.files.empty')}{' '}
             <button
               type="button"
               onClick={picker.open}
               className="text-accent hover:underline hover:underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
             >
-              Add files
+              {t('reading.files.addFiles')}
             </button>
           </p>
         ) : (
           <div className="flex flex-wrap items-center gap-4">
-            <span className="min-w-0 flex-1 text-ink-secondary">
-              A file that adds up is ticked. One that does not, or is new, waits for you and is left out until it does.
-            </span>
+            <span className="min-w-0 flex-1 text-ink-secondary">{t('reading.files.ticked')}</span>
             <Button variant="secondary" icon="add" onClick={picker.open}>
-              Add more
+              {t('reading.files.addMore')}
             </Button>
           </div>
         )}
@@ -200,7 +203,7 @@ export function ReadStatements() {
           <div className="fc-pop-enter flex items-center gap-4 bg-surface px-4 py-2">
             <span className="text-negative">{problem}</span>
             <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setProblem(undefined)}>
-              Dismiss
+              {t('reading.files.dismiss')}
             </Button>
           </div>
         )}
@@ -220,6 +223,7 @@ export function ReadStatements() {
                   file.kind === 'new-layout' && updateStatementBatch(db, (state) => ({ ...state, mapping: file }))
                 }
                 onPayslips={readPayslips}
+                t={t}
                 funds={funds}
                 onReport={(fundId) => file.kind === 'payslip' && readReport(file.id, file.file, fundId)}
                 onRemove={() => remove(new Set([file.id]))}
@@ -234,23 +238,19 @@ export function ReadStatements() {
         )}
 
         <div className="flex flex-wrap items-center justify-between gap-4 border-t border-hairline pt-4">
-          <span className="max-w-[62ch] text-ink-secondary">
-            Written in one go, as transactions. Rows a file shares with what is already here are left out on their
-            own, so there is nothing to accept. Your rules fill the categories; whatever is left waits on
-            Transactions.
-          </span>
+          <span className="max-w-[62ch] text-ink-secondary">{t('reading.files.foot')}</span>
           {/* Filled only when it is the next step: a Write that writes nothing is
               not (*One primary action per screen*, M54 F13). */}
           <Button
             variant={reading === 0 && toWrite.length > 0 ? 'primary' : 'secondary'}
             icon="write"
             count={toWrite.length}
-            busy={writing ? 'Writing' : undefined}
+            busy={writing ? t('reading.files.writing') : undefined}
             disabled={reading > 0 || toWrite.length === 0}
             onClick={write}
             data-tour="write-files"
           >
-            Write
+            {t('reading.files.write')}
           </Button>
         </div>
       </div>
@@ -277,11 +277,13 @@ function FileRow({
   onRemove,
   onInto,
   onApart,
+  t,
 }: {
+  t: Translate
   file: BatchFile
   verdict: SheetVerdict | undefined
   /** The cards its file holds, on the file's first row, when there are two or more. */
-  cards: string | undefined
+  cards: React.ReactNode | undefined
   ticked: boolean
   onTick: (on: boolean) => void
   onLook: () => void
@@ -299,15 +301,15 @@ function FileRow({
   const kind =
     file.kind === 'sheet'
       ? file.sheet.account.kind === 'BANK'
-        ? 'Bank statement'
-        : 'Card statement'
+        ? t('reading.kind.bank')
+        : t('reading.kind.card')
       : file.kind === 'payslip'
-        ? 'Paycheck or fund report'
+        ? t('reading.kind.payslip')
         : file.kind === 'new-layout'
-          ? 'Statement'
+          ? t('reading.kind.statement')
           : file.kind === 'reading'
             ? ' '
-            : 'Not read'
+            : t('reading.kind.failed')
 
   let chip: React.ReactNode
   let figure: React.ReactNode = null
@@ -317,29 +319,29 @@ function FileRow({
       chip = (
         <span className="fc-state gap-1.5" data-tone="live">
           <Working size={12} />
-          Reading
+          {t('reading.chip.reading')}
         </span>
       )
       break
     case 'payslip':
       chip = (
         <span className="fc-state" data-tone="wait">
-          Waiting
+          {t('reading.chip.waiting')}
         </span>
       )
-      figure = 'a paycheck is read on Paychecks; a fund report into its fund'
+      figure = t('reading.row.payslip')
       action = (
         <span className="flex flex-wrap items-center gap-2">
           <Button variant="secondary" size="sm" icon="arrow" onClick={onPayslips}>
-            A paycheck
+            {t('reading.row.aPaycheck')}
           </Button>
           {funds.length > 0 && (
             <ChoiceMenu
               text=""
-              placeholder="A report of…"
+              placeholder={t('reading.row.reportOf')}
               choices={funds.map((fund) => ({ value: fund.id, label: fund.name }))}
               onPick={(choice) => onReport(choice.value)}
-              aria-label={`The fund ${file.fileName} is a report of`}
+              aria-label={t('reading.row.reportOfLabel', { file: file.fileName })}
               dir="auto"
               className={`${SELECT} h-7 max-w-44`}
             />
@@ -351,63 +353,67 @@ function FileRow({
       // Not a problem: a file of a kind not read before waits to be mapped, said once (D-531).
       chip = (
         <span className="fc-state" data-tone="wait">
-          No reader yet
+          {t('reading.chip.noReader')}
         </span>
       )
-      figure = 'mapped once, then read on its own'
+      figure = t('reading.row.mapped')
       action = (
         <Button variant="secondary" size="sm" icon="arrow" onClick={onMap}>
-          Map its columns
+          {t('reading.row.map')}
         </Button>
       )
       break
     case 'failed':
-      chip = <Tone tone="negative">Not read</Tone>
+      chip = <Tone tone="negative">{t('reading.chip.notRead')}</Tone>
       figure = file.message
       break
     case 'sheet': {
       if (verdict === undefined) break
-      figure = describe(verdict)
-      if (verdict.state === 'same') chip = <span className="fc-state">Already written</span>
+      figure = describe(t, verdict)
+      if (verdict.state === 'same') chip = <span className="fc-state">{t('reading.chip.same')}</span>
       else if (verdict.state === 'elsewhere' && verdict.elsewhere !== undefined) {
         // The same bank read by a second reader, about to become a second
         // account (M28 F11): say where its rows already are, and offer that first.
-        chip = <Tone tone="warn">Already in another account</Tone>
+        chip = <Tone tone="warn">{t('reading.chip.elsewhere')}</Tone>
         figure =
           verdict.elsewhere.accountId === undefined && verdict.elsewhere.madeBy !== undefined ? (
             // An account a file above is about to make (M28 F15): its rows are
             // not written yet, so they are *in that file*, not in the account.
-            <>
-              {verdict.elsewhere.rows} of {verdict.parsed} rows are also in <Bidi>{verdict.elsewhere.madeBy}</Bidi>
-            </>
+            fillNodes(t('reading.row.alsoIn'), {
+              rows: verdict.elsewhere.rows,
+              parsed: verdict.parsed,
+              name: <Bidi>{verdict.elsewhere.madeBy}</Bidi>,
+            })
           ) : (
-            <>
-              {verdict.elsewhere.rows} of {verdict.parsed} rows are already in <Bidi>{verdict.elsewhere.accountName}</Bidi>
-            </>
+            fillNodes(t('reading.row.alreadyIn'), {
+              rows: verdict.elsewhere.rows,
+              parsed: verdict.parsed,
+              name: <Bidi>{verdict.elsewhere.accountName}</Bidi>,
+            })
           )
         action = (
           <span className="flex items-center gap-2">
             <Button variant="secondary" size="sm" onClick={onInto}>
-              Into <Bidi>{verdict.elsewhere.accountName}</Bidi>
+              {fillNodes(t('reading.row.into'), { name: <Bidi>{verdict.elsewhere.accountName}</Bidi> })}
             </Button>
             <Button variant="ghost" size="sm" onClick={onApart}>
-              Keep apart
+              {t('reading.row.apart')}
             </Button>
           </span>
         )
       } else if (verdict.state === 'gap' && !ticked) {
-        chip = <Tone tone="warn">Doesn't add up</Tone>
+        chip = <Tone tone="warn">{t('reading.chip.gap')}</Tone>
         action = (
           <Button variant="secondary" size="sm" icon="arrow" onClick={onLook}>
-            Look
+            {t('reading.row.look')}
           </Button>
         )
       } else if (verdict.reconciles === true || verdict.balance.kind === 'VERIFIED') {
-        chip = <Tone tone="positive">Adds up</Tone>
+        chip = <Tone tone="positive">{t('reading.chip.addsUp')}</Tone>
       } else if (verdict.state === 'gap') {
-        chip = <Tone tone="warn">Written anyway</Tone>
+        chip = <Tone tone="warn">{t('reading.chip.anyway')}</Tone>
       } else {
-        chip = <span className="fc-state">Nothing to check</span>
+        chip = <span className="fc-state">{t('reading.chip.nothing')}</span>
       }
       break
     }
@@ -428,7 +434,7 @@ function FileRow({
           type="button"
           role="checkbox"
           aria-checked={ticked}
-          aria-label={`Write ${file.fileName}`}
+          aria-label={t('reading.row.writeFile', { file: file.fileName })}
           onClick={() => onTick(!ticked)}
           className={`inline-flex size-4 items-center justify-center border-[1.5px] ${
             ticked ? 'border-accent bg-accent text-accent-ink' : 'border-hairline-strong'
@@ -450,16 +456,21 @@ function FileRow({
         <Bidi className="truncate">{file.fileName}</Bidi>
         <small className="text-caption text-ink-secondary">
           {kind}
-          {file.kind === 'sheet' && file.sheet.table.name !== '' ? ` · ${file.sheet.table.name}` : ''}
+          {file.kind === 'sheet' && file.sheet.table.name !== '' && (
+            <>
+              {' · '}
+              <Bidi>{file.sheet.table.name}</Bidi>
+            </>
+          )}
           {verdict !== undefined && (
             <>
-              {verdict.accountId === undefined && verdict.madeBy === undefined ? ' · into a new account, ' : ' · into '}
-              <Bidi>{verdict.accountName}</Bidi>
-              {verdict.madeBy !== undefined && (
-                <>
-                  , new with <Bidi>{verdict.madeBy}</Bidi>
-                </>
+              {fillNodes(
+                verdict.accountId === undefined && verdict.madeBy === undefined
+                  ? t('reading.row.intoNew')
+                  : t('reading.row.intoName'),
+                { name: <Bidi>{verdict.accountName}</Bidi> },
               )}
+              {verdict.madeBy !== undefined && fillNodes(t('reading.row.newWith'), { name: <Bidi>{verdict.madeBy}</Bidi> })}
             </>
           )}
         </small>
@@ -468,7 +479,7 @@ function FileRow({
       <span>{chip}</span>
       <span className="text-body text-ink-secondary tabular-nums">{figure}</span>
       <span>{action}</span>
-      <IconAction label={`Remove ${file.fileName}`} onClick={onRemove}>
+      <IconAction label={t('reading.row.remove', { file: file.fileName })} onClick={onRemove}>
         <path d="M6 6l12 12M18 6 6 18" />
       </IconAction>
     </div>
@@ -485,24 +496,24 @@ function Tone({ tone, children }: { tone: 'positive' | 'negative' | 'warn'; chil
 }
 
 /** What a sheet came to, in a line: how many are new, and what its checks said. */
-function describe(verdict: SheetVerdict): string {
-  if (verdict.parsed === 0) return 'no row read'
-  if (verdict.state === 'same') return `all ${String(verdict.parsed)} rows already here`
+function describe(t: Translate, verdict: SheetVerdict): string {
+  if (verdict.parsed === 0) return t('reading.verdict.none')
+  if (verdict.state === 'same') return t('reading.verdict.same', { count: verdict.parsed })
   // A row skipped from this read in the mapper is said here too (M55 U9, D-540).
   const skipped = verdict.rows.filter((row) => row.outcome.kind === 'skipped' && row.outcome.reason === LEFT_OUT).length
   const counts =
     (verdict.duplicates === 0
-      ? `${String(verdict.newRows)} new`
-      : `${String(verdict.newRows)} new, ${String(verdict.duplicates)} already here`) +
-    (skipped === 0 ? '' : `, ${String(skipped)} skipped`)
+      ? t('reading.verdict.fresh', { count: verdict.newRows })
+      : t('reading.verdict.freshAndHere', { fresh: verdict.newRows, here: verdict.duplicates })) +
+    (skipped === 0 ? '' : t('reading.verdict.skipped', { count: skipped }))
   const parsed = verdict.parsedTotals.map((total) => formatMoney(total)).join(' + ')
-  if (verdict.balance.kind === 'DIVERGED') return `${counts} · the running balance stops agreeing at ${verdict.balance.at.ref}`
+  if (verdict.balance.kind === 'DIVERGED') return t('reading.verdict.diverged', { counts, ref: verdict.balance.at.ref })
   if (verdict.printed !== undefined) {
     const printed = formatMoney({ minor: Math.abs(verdict.printed.amount.minor), currency: verdict.printed.amount.currency })
     return verdict.reconciles === true
-      ? `${counts} · adds up to the printed ${printed}`
-      : `rows ${parsed}, the file prints ${printed}`
+      ? t('reading.verdict.addsUp', { counts, printed })
+      : t('reading.verdict.disagrees', { parsed, printed })
   }
-  if (verdict.balance.kind === 'VERIFIED') return `${counts} · running balance agrees`
-  return `${counts} · ${parsed}, and the file prints no total`
+  if (verdict.balance.kind === 'VERIFIED') return t('reading.verdict.agrees', { counts })
+  return t('reading.verdict.noTotal', { counts, parsed })
 }

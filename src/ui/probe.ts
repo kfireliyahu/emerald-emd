@@ -12,6 +12,8 @@
  *
  * The arithmetic is exported and tested; what touches the DOM is `install`.
  */
+import { currentLanguage, showLanguage } from '@/i18n/current.ts'
+import type { Language } from '@/i18n/language.ts'
 
 export interface Rgba {
   readonly r: number
@@ -99,9 +101,15 @@ export interface ProbeOptions {
   /**
    * The page's direction while it is measured (M60 U3, D-586): `rtl` sets
    * `<html dir="rtl" lang="he">` as Hebrew does, so the mirror is measured on
-   * the demo, whose words stay English. The page's own when none.
+   * the demo, whose words stay English unless `lang` says otherwise. The page's own when none.
    */
   readonly dir?: 'ltr' | 'rtl'
+  /**
+   * The app's words while it is measured (M60 U4, D-589): `he` draws them in
+   * Hebrew, mirrored, and lists every word still in English (`english`) — a
+   * document's own values, inside `Bidi`, left out. Put back when done.
+   */
+  readonly lang?: Language
 }
 
 interface Listed<T> {
@@ -128,6 +136,8 @@ export interface ProbeResult {
   readonly railSide: 'left' | 'right' | 'none'
   /** Text and controls cut by a box that does not scroll, or past the window's edge. */
   readonly clippedX: Listed<{ text: string; by: string }>
+  /** With `lang: 'he'`: visible text, names and titles still in English, outside a document's own values. */
+  readonly english: Listed<{ text: string }>
   /**
    * Every visible element's box, hashed: equal across two builds means the
    * screen laid out identically — how M60 U3 showed English did not move.
@@ -139,6 +149,30 @@ const WHITE: Rgba = { r: 255, g: 255, b: 255, a: 1 }
 
 function listed<T>(items: T[], limit: number): Listed<T> {
   return { count: items.length, items: items.slice(0, limit) }
+}
+
+/** A document's own value, drawn as written: a `Bidi` span, a raw cell, a key cap. */
+const DOCUMENT_VALUE = '.bidi, [dir="auto"], code, kbd, .font-mono, svg, [aria-hidden="true"]'
+
+/** Visible text and names with an English word in them, outside a document's own values (M60 U4). */
+function stillEnglish(root: Element): { text: string }[] {
+  const out = new Map<string, { text: string }>()
+  const english = (text: string): boolean => /[A-Za-z]{2}/.test(text.replace(/Emerald|\b[A-Z]{2,}\b|\b(Ctrl|Shift|Alt|Cmd|Enter|Esc|Space|Tab)\b/g, ''))
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+  while (walker.nextNode()) {
+    const text = (walker.currentNode.textContent ?? '').trim()
+    const el = walker.currentNode.parentElement
+    if (!text || !el || !english(text) || !visible(el) || el.closest(DOCUMENT_VALUE)) continue
+    out.set(text, { text: text.slice(0, 80) })
+  }
+  for (const el of root.querySelectorAll('[aria-label], [title], [placeholder]')) {
+    if (!visible(el) || el.closest('svg, [aria-hidden="true"]')) continue
+    for (const name of ['aria-label', 'title', 'placeholder']) {
+      const text = el.getAttribute(name)?.trim() ?? ''
+      if (text && english(text)) out.set(`${name}:${text}`, { text: `${name}: ${text.slice(0, 80)}` })
+    }
+  }
+  return [...out.values()]
 }
 
 function visible(el: Element): boolean {
@@ -337,6 +371,7 @@ function measure(root: Element, ramp: readonly number[], limit: number): Omit<Pr
     dir: getComputedStyle(document.documentElement).direction,
     railSide: railSide(),
     clippedX: listed(clippedSideways(root), limit),
+    english: listed(document.documentElement.lang === 'he' ? stillEnglish(root) : [], limit),
     boxes: boxesHash(root),
   }
 }
@@ -382,11 +417,13 @@ export async function probe(options: ProbeOptions = {}): Promise<ProbeResult[]> 
   const routes = options.routes?.length ? options.routes : [startHash || '#/']
   const themes = options.themes?.length ? options.themes : [startTheme as 'light' | 'dark']
   const results: ProbeResult[] = []
+  const startLanguage = currentLanguage()
+  if (options.lang !== undefined) showLanguage(options.lang)
   if (options.dir !== undefined) {
     html.dir = options.dir
     html.lang = options.dir === 'rtl' ? 'he' : 'en'
-    await settled(quiet)
   }
+  if (options.dir !== undefined || options.lang !== undefined) await settled(quiet)
   try {
     for (const route of routes) {
       const hash = route.startsWith('#') ? route : `#/${route.replace(/^\//, '')}`
@@ -405,6 +442,7 @@ export async function probe(options: ProbeOptions = {}): Promise<ProbeResult[]> 
     }
   } finally {
     html.dataset.theme = startTheme
+    if (options.lang !== undefined) showLanguage(startLanguage)
     if (options.dir !== undefined) {
       if (startDir === null) html.removeAttribute('dir')
       else html.dir = startDir

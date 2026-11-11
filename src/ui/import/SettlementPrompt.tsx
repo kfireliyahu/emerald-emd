@@ -11,6 +11,9 @@ import {
   type SettlementSummary,
 } from '@/data/repositories/cardSettlementRepository.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
+import { countKey } from '@/i18n/count.ts'
+import { useT } from '@/i18n/current.ts'
+import { fillNodes } from '@/i18n/nodes.tsx'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 
@@ -35,6 +38,7 @@ export function SettlementPrompt({ cardAccountId }: { cardAccountId?: string | u
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
   const mutate = useDocumentStore((state) => state.mutate)
+  const t = useT()
 
   const data = useMemo(() => {
     if (db === undefined) return undefined
@@ -59,13 +63,9 @@ export function SettlementPrompt({ cardAccountId }: { cardAccountId?: string | u
       {pending.length > 0 && (
         <>
           <p className="text-ink">
-            {pending.length} card {pending.length === 1 ? 'payment' : 'payments'} found in your
-            bank statement
+            {t(countKey('reading.settlement.found', pending.length), { count: pending.length })}
           </p>
-          <p className="mt-0.5 text-ink-secondary">
-            These look like the monthly payments for cards whose statements you already imported.
-            Counting them as well would double your spending.
-          </p>
+          <p className="mt-0.5 text-ink-secondary">{t('reading.settlement.lead')}</p>
 
           <ul className="mt-2">
             {pending.map((group) => (
@@ -98,7 +98,7 @@ export function SettlementPrompt({ cardAccountId }: { cardAccountId?: string | u
                 })
               }
             >
-              Leave them out of totals
+              {t('reading.settlement.leaveAll')}
             </Button>
             <Button
               size="sm"
@@ -111,11 +111,9 @@ export function SettlementPrompt({ cardAccountId }: { cardAccountId?: string | u
                 })
               }
             >
-              Keep them
+              {t('reading.settlement.keepAll')}
             </Button>
-            <span className="text-ink-tertiary">
-              Either answer is remembered for these cards and can be changed here later.
-            </span>
+            <span className="text-ink-tertiary">{t('reading.settlement.remembered')}</span>
           </div>
         </>
       )}
@@ -124,10 +122,9 @@ export function SettlementPrompt({ cardAccountId }: { cardAccountId?: string | u
         <p key={entry.last4 ?? 'unknown'} className="mt-3 flex items-center gap-2 text-negative">
           <span aria-hidden className="size-1.5 shrink-0 rounded-full bg-negative" />
           <span className="tabular-nums">
-            {formatMoney(entry.chargedTotal)} paid to a card
-            {entry.last4 === undefined ? ' this document does not have' : ` ending ${entry.last4}`},
-            but no statement has been imported for it — that month of card spending is missing from
-            the ledger.
+            {entry.last4 === undefined
+              ? t('reading.settlement.unmatchedUnknown', { amount: formatMoney(entry.chargedTotal) })
+              : t('reading.settlement.unmatchedEnding', { amount: formatMoney(entry.chargedTotal), last4: entry.last4 })}
           </span>
         </p>
       ))}
@@ -143,23 +140,24 @@ export function SettlementLine({
   group: SettlementSummary
   onDecide: (decision: 'EXCLUDED' | 'KEPT') => void
 }) {
+  const t = useT()
   return (
     <li className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 border-t border-hairline py-1.5">
       <Bidi className="text-ink">{group.cardAccountName}</Bidi>
       {group.last4 !== undefined && <span className="text-ink-tertiary">···{group.last4}</span>}
       <span className="text-ink tabular-nums">{formatMoney(group.chargedTotal)}</span>
       <span className="text-ink-tertiary tabular-nums">
-        {group.rows.length === 1 ? group.rows[0]?.date : `${group.rows.length} payments`}
+        {group.rows.length === 1 ? group.rows[0]?.date : t('reading.settlement.payments', { count: group.rows.length })}
       </span>
 
       <Corroboration group={group} />
 
       <span className="ms-auto flex gap-2">
         <Button size="sm" onClick={() => onDecide('EXCLUDED')}>
-          Leave out
+          {t('reading.settlement.leaveOut')}
         </Button>
         <Button variant="ghost" size="sm" onClick={() => onDecide('KEPT')}>
-          Keep
+          {t('reading.settlement.keep')}
         </Button>
       </span>
     </li>
@@ -176,20 +174,19 @@ export function SettlementLine({
  * making.
  */
 function Corroboration({ group }: { group: SettlementSummary }) {
+  const t = useT()
   if (group.statementTotal === undefined) {
-    return (
-      <span className="text-ink-tertiary">
-        matched by the card number; no statement of ours adds up to it
-      </span>
-    )
+    return <span className="text-ink-tertiary">{t('reading.settlement.byNumber')}</span>
   }
 
   const agrees = equals(group.statementTotal, group.chargedTotal)
   return (
     <span className={agrees ? 'text-ink-secondary tabular-nums' : 'text-negative tabular-nums'}>
-      {agrees ? 'matches' : 'does not match'} {group.statementRowCount} transaction
-      {group.statementRowCount === 1 ? '' : 's'} totalling {formatMoney(group.statementTotal)}
-      {group.billingPeriod !== undefined && ` in ${group.billingPeriod}`}
+      {t(countKey(agrees ? 'reading.settlement.matches' : 'reading.settlement.differs', group.statementRowCount), {
+        count: group.statementRowCount,
+        amount: formatMoney(group.statementTotal),
+      })}
+      {group.billingPeriod !== undefined && fillNodes(t('reading.settlement.period'), { period: <Bidi>{group.billingPeriod}</Bidi> })}
     </span>
   )
 }

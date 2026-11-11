@@ -1,15 +1,18 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { Database } from 'sql.js'
 
+import { createDatabase } from '@/data/db/database.ts'
+import { installLedgerPack } from '@/data/packs/ledger/pack.ts'
 import { createLedgerDatabase } from '@/data/packs/ledger/testing.ts'
 import type { DraftMapping } from '@/domain/model/importing.ts'
-import { createAccount } from '../repositories/accountRepository.ts'
+import { createAccount, listAccounts } from '../repositories/accountRepository.ts'
 import { saveMapping } from '../repositories/importMappingRepository.ts'
 import { countTransactions } from '../repositories/transactionRepository.ts'
 import { computeHeaderSignature } from './signature.ts'
 import type { SheetCell, SheetTable } from './sheetTable.ts'
 import { LEFT_OUT, summarize } from './apply.ts'
 import {
+  accountNameIn,
   correct,
   judgeSheet,
   sheetRows,
@@ -190,5 +193,44 @@ describe('a row the mapper could not read, skipped from that read (M55 U9)', () 
 
   it('never leaves out a row that reads', () => {
     expect(summarize(sheetRows(of(new Set([1]))))).toEqual({ parsed: 2, errors: 1, skipped: 0 })
+  })
+})
+
+/** **The account a statement makes is named in the document's language** — M60 U4, D-589 (D-587). */
+describe('the card a statement makes in place', () => {
+  const made = async (language: 'en' | 'he'): Promise<Database> => {
+    const db = await createDatabase()
+    const installed = installLedgerPack(db, 1, language)
+    if (!installed.ok) throw new Error(installed.error)
+    return db
+  }
+  const sheet = (): StatementSheet => {
+    const read = sheetFrom({
+      id: 'm1',
+      fileName: 'card.xlsx',
+      fileHash: 'h3',
+      table: statement(n(80)),
+      mapping: MAPPING,
+      mappingId: undefined,
+      mappingName: undefined,
+      boundAccountId: undefined,
+      kind: 'CREDIT_CARD',
+    })
+    return { ...read, account: { ...read.account, last4: '2290', fallbackName: 'Card 2290' } }
+  }
+
+  it('is Card 1234 in a document made in English, and כרטיס 1234 in one made in Hebrew', async () => {
+    const english = await made('en')
+    const hebrew = await made('he')
+    expect(judgeSheet(english, sheet()).accountName).toBe('Card 2290')
+    expect(judgeSheet(hebrew, sheet()).accountName).toBe('כרטיס 2290')
+    writeSheets(hebrew, [{ sheet: sheet(), force: false }], 2)
+    expect(listAccounts(hebrew).map((account) => account.name)).toContain('כרטיס 2290')
+  })
+
+  it('leaves a name the person gave alone', async () => {
+    const hebrew = await made('he')
+    expect(accountNameIn(hebrew, 'Everyday card', '2290')).toBe('Everyday card')
+    expect(accountNameIn(hebrew, 'Card 2290', undefined)).toBe('Card 2290')
   })
 })

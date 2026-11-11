@@ -4,7 +4,9 @@ import type { ParsedRow, ParseSummary } from '@/data/importer/apply.ts'
 import type { ColumnRole, DraftTransaction } from '@/domain/model/importing.ts'
 import { Amount } from '@/ui/components/Amount.tsx'
 import { Bidi } from '@/ui/Bidi.tsx'
-import { labelFor, ROLE_LABEL } from './roleLabel.ts'
+import { useT } from '@/i18n/current.ts'
+import { fillNodes } from '@/i18n/nodes.tsx'
+import { labelFor, useRoleLabels } from './roleLabel.ts'
 
 /**
  * The live preview: what the mapping currently produces.
@@ -32,12 +34,13 @@ export function PreviewStrip({
   /** Skip a row that did not read from this read, or take it back. */
   onSkip?: ((rowIndex: number, skip: boolean) => void) | undefined
 }) {
+  const t = useT()
+  const labels = useRoleLabels()
   if (missingRoles.length > 0) {
     return (
       <Panel>
         <p className="text-ink-secondary">
-          Set a column as {missingRoles.map((role) => labelFor(ROLE_LABEL, role)).join(' and ')} to see the
-          transactions it reads.
+          {t('reading.preview.setAs', { roles: missingRoles.map((role) => labelFor(labels, role)).join(t('reading.preview.and')) })}
         </p>
       </Panel>
     )
@@ -47,10 +50,8 @@ export function PreviewStrip({
     return (
       <Panel>
         <p className="text-ink-secondary">
-          Nothing read with these columns.{' '}
-          {summary.errors > 0
-            ? 'Every row failed — the columns are probably assigned to the wrong roles.'
-            : 'Check that the header row is right.'}
+          {t('reading.preview.nothing')}{' '}
+          {summary.errors > 0 ? t('reading.preview.allFailed') : t('reading.preview.checkHeader')}
         </p>
       </Panel>
     )
@@ -60,13 +61,15 @@ export function PreviewStrip({
     <Panel>
       <div className="flex items-baseline justify-between gap-6">
         <span className="text-ink-secondary">
-          {summary.parsed} parsed
-          {summary.errors > 0 && <span className="text-negative"> · {summary.errors} failed</span>}
-          {summary.skipped > 0 && <span> · {summary.skipped} skipped</span>}
+          {t('reading.preview.parsed', { count: summary.parsed })}
+          {summary.errors > 0 && <span className="text-negative">{t('reading.preview.failed', { count: summary.errors })}</span>}
+          {summary.skipped > 0 && <span>{t('reading.preview.skipped', { count: summary.skipped })}</span>}
         </span>
         {/* Compare this against the total the statement prints for itself. */}
         <span className="text-ink-secondary">
-          total <span className="tabular-nums text-ink">{formatMoney(total)}</span>
+          {fillNodes(t('reading.preview.total'), {
+            amount: <span className="tabular-nums text-ink">{formatMoney(total)}</span>,
+          })}
         </span>
       </div>
 
@@ -84,7 +87,7 @@ export function PreviewStrip({
                     {transaction.installment.sequence}/{transaction.installment.total}
                   </Tag>
                 )}
-                {transaction.foreign !== undefined && <Tag>foreign</Tag>}
+                {transaction.foreign !== undefined && <Tag>{t('reading.preview.foreign')}</Tag>}
                 {transaction.providerCategory !== undefined && (
                   <span className="ms-2 text-ink-secondary">
                     <Bidi>{transaction.providerCategory}</Bidi>
@@ -101,16 +104,16 @@ export function PreviewStrip({
 
       {firstError?.outcome.kind === 'error' && (
         <p className="mt-2 border-t border-hairline pt-2 text-ink-secondary">
-          <span className="text-negative">Row {firstError.rowIndex + 1}</span>{' '}
+          <span className="text-negative">{t('reading.preview.row', { row: firstError.rowIndex + 1 })}</span>{' '}
           <Bidi>{firstError.outcome.errors.map((error) => error.message).join('; ')}</Bidi>
-          {summary.errors > 1 && <span> · and {summary.errors - 1} more</span>}
+          {summary.errors > 1 && <span>{t('reading.preview.more', { count: summary.errors - 1 })}</span>}
           {/* **A row that does not read can be skipped from this read** (M55 U9,
               D-540) — a printed total line, say: counted as skipped, never
               written, and nothing kept in the reader. */}
           {onSkip !== undefined && (
             <>
               {' '}
-              <TextAction onClick={() => onSkip(firstError.rowIndex, true)}>Skip</TextAction>
+              <TextAction onClick={() => onSkip(firstError.rowIndex, true)}>{t('reading.preview.skip')}</TextAction>
             </>
           )}
         </p>
@@ -118,15 +121,15 @@ export function PreviewStrip({
 
       {leftOut.length > 0 && (
         <p className="mt-2 border-t border-hairline pt-2 text-ink-secondary">
-          Skipped from this read:{' '}
+          {t('reading.preview.skippedFrom')}{' '}
           {leftOut.map((row, at) => (
             <span key={row.rowIndex}>
               {at > 0 && ', '}
-              <span className="tabular-nums">row {row.rowIndex + 1}</span>
+              <span className="tabular-nums">{t('reading.preview.rowAt', { row: row.rowIndex + 1 })}</span>
               {onSkip !== undefined && (
                 <>
                   {' '}
-                  <TextAction onClick={() => onSkip(row.rowIndex, false)}>Put back</TextAction>
+                  <TextAction onClick={() => onSkip(row.rowIndex, false)}>{t('reading.preview.putBack')}</TextAction>
                 </>
               )}
             </span>

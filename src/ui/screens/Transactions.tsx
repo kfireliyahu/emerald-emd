@@ -3,8 +3,6 @@ import { useLocation, useNavigate } from 'react-router-dom'
 
 import { formatMoney, fromMajorUnits, money, type Money } from '@/core/money.ts'
 import {
-  formatMonthShort,
-  formatYearMonth,
   monthRange,
   parseYearMonth,
   toISODate,
@@ -104,6 +102,10 @@ import { ViewSwitch } from '@/ui/transactions/ViewSwitch.tsx'
 import { useRowCursor } from '@/ui/useRowCursor.ts'
 import { Flip } from '@/ui/motion/Flip.tsx'
 import { Reveal } from '@/ui/motion/Reveal.tsx'
+import { countKey } from '@/i18n/count.ts'
+import { useDates, useT } from '@/i18n/current.ts'
+import type { MessageKey } from '@/i18n/catalogue.ts'
+import { fillNodes } from '@/i18n/nodes.tsx'
 
 /**
  * The ledger: what is actually in the document, where you narrow it down, and
@@ -119,6 +121,8 @@ export function Transactions() {
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
   const mutate = useDocumentStore((state) => state.mutate)
+  const t = useT()
+  const dates = useDates()
   // The empty state's one action (M59 U6): Read files, as Home's band does it.
   const picker = useFilePicker(useReadFiles())
 
@@ -279,7 +283,7 @@ export function Transactions() {
   }, [settled, newest])
 
   if (data === undefined) {
-    return <Centered>Open a document, or create one, to see what is in it.</Centered>
+    return <Centered>{t('transactions.screen.noDocument')}</Centered>
   }
 
   // **With no rows, the page keeps its header** (M59 U6, D-582; M54 U5's
@@ -288,13 +292,13 @@ export function Transactions() {
     return (
       <div className="flex h-full flex-col">
         <header className="flex shrink-0 flex-col gap-1.5 border-b border-hairline px-6 pt-6 pb-4">
-          <span className="fc-label text-ink-secondary uppercase">Transactions · every row</span>
-          <h1 className="m-0 text-title leading-tight font-medium">Transactions</h1>
+          <span className="fc-label text-ink-secondary uppercase">{t('transactions.screen.eyebrow')}</span>
+          <h1 className="m-0 text-title leading-tight font-medium">{t('transactions.screen.title')}</h1>
         </header>
         <div className="flex flex-col items-start gap-2 px-6 py-10 text-ink-secondary">
-          <p className="m-0">No transactions yet.</p>
+          <p className="m-0">{t('transactions.screen.empty')}</p>
           <button type="button" onClick={picker.open} className={READ_LINK}>
-            Read files
+            {t('transactions.screen.readFiles')}
           </button>
           {picker.input}
         </div>
@@ -551,7 +555,7 @@ export function Transactions() {
     const items: MenuItem[] = [
       {
         icon: 'cat',
-        label: 'Category',
+        label: t('transactions.menu.category'),
         submenu: [
           ...usual.map((one, slot) => ({
             label: (
@@ -562,21 +566,21 @@ export function Transactions() {
             shortcut: String(slot + 1),
             onChoose: () => assign(row.id, one.id),
           })),
-          { label: 'All categories…', shortcut: 'C', separated: usual.length > 0, onChoose: picker },
+          { label: t('transactions.menu.allCategories'), shortcut: 'C', separated: usual.length > 0, onChoose: picker },
         ],
       },
       row.isExcludedFromStats
         ? {
             icon: 'eye',
-            label: 'Count it in the totals again',
+            label: t('transactions.menu.countAgain'),
             shortcut: 'X',
             separated: true,
             onChoose: () => leaveOut([row.id], false),
           }
         : {
             icon: 'eyeoff',
-            label: 'Leave out of totals',
-            detail: 'It stays in the list, struck through, and leaves every sum on Home',
+            label: t('transactions.menu.leaveOut'),
+            detail: t('transactions.menu.leaveOutDetail'),
             shortcut: 'X',
             separated: true,
             onChoose: () => leaveOut([row.id], true),
@@ -587,27 +591,23 @@ export function Transactions() {
     if (account?.kind === 'BANK' && row.amount.minor < 0 && cards.length > 0) {
       items.push({
         icon: 'card',
-        label: 'This pays a card',
-        detail: (
-          <>
-            Every <Bidi>{row.merchantRaw}</Bidi> row, before and after today
-          </>
-        ),
+        label: t('transactions.menu.paysCard'),
+        detail: fillNodes(t('transactions.menu.everyRow'), { merchant: <Bidi>{row.merchantRaw}</Bidi> }),
         submenu: [
           ...cards.map((card) => ({
-            label: `${card.name}${card.id === alias ? ' · now' : ''}`,
+            label: card.id === alias ? t('transactions.menu.now', { card: card.name }) : card.name,
             onChoose: () => setPayer(row, card.id),
           })),
           ...(alias === undefined
             ? []
-            : [{ label: 'Not a card payment', separated: true, onChoose: () => setPayer(row, undefined) }]),
+            : [{ label: t('transactions.menu.notCardPayment'), separated: true, onChoose: () => setPayer(row, undefined) }]),
         ],
       })
     }
 
     items.push({
       icon: 'note',
-      label: row.note === undefined ? 'Add a note' : 'Edit the note',
+      label: t(row.note === undefined ? 'transactions.menu.addNote' : 'transactions.menu.editNote'),
       shortcut: 'N',
       onChoose: () => setNoteFor(row.id),
     })
@@ -620,28 +620,20 @@ export function Transactions() {
       fromSelection === undefined
         ? {
             icon: 'rule',
-            label: 'Rule from the words you highlight',
-            detail: 'Highlight part of the name, then right-click',
+            label: t('transactions.menu.ruleHighlight'),
+            detail: t('transactions.menu.ruleHighlightDetail'),
             disabled: true,
             separated: true,
           }
         : {
             icon: 'rule',
-            label: (
-              <>
-                Rule from “<Bidi>{entry.selection}</Bidi>”
-              </>
-            ),
+            label: fillNodes(t('transactions.menu.ruleFromQuoted'), { words: <Bidi>{entry.selection}</Bidi> }),
             separated: true,
             onChoose: () => offerRule(row, fromSelection),
           },
       {
         icon: 'rule',
-        label: (
-          <>
-            Rule from <Bidi>{row.merchantRaw}</Bidi>
-          </>
-        ),
+        label: fillNodes(t('transactions.menu.ruleFrom'), { merchant: <Bidi>{row.merchantRaw}</Bidi> }),
         onChoose: () => offerRule(row, draftFromMerchant(row.merchantNormalized, row.categoryId)),
       },
     )
@@ -650,12 +642,8 @@ export function Transactions() {
     if (row.providerCategory !== undefined) {
       items.push({
         icon: 'rule',
-        label: (
-          <>
-            Rule from “<Bidi>{row.providerCategory}</Bidi>”
-          </>
-        ),
-        detail: 'What the provider called it; reaches the most rows',
+        label: fillNodes(t('transactions.menu.ruleFromQuoted'), { words: <Bidi>{row.providerCategory}</Bidi> }),
+        detail: t('transactions.menu.providerDetail'),
         onChoose: () => toEditor(draftFromProviderCategory(row.providerCategory ?? '', row.categoryId)),
       })
     }
@@ -663,18 +651,14 @@ export function Transactions() {
     items.push(
       {
         icon: 'filter',
-        label: (
-          <>
-            Show every <Bidi>{row.merchantRaw}</Bidi> row
-          </>
-        ),
+        label: fillNodes(t('transactions.menu.showEvery'), { merchant: <Bidi>{row.merchantRaw}</Bidi> }),
         separated: true,
         onChoose: () => filterBy({ ...NO_FILTERS, search: row.merchantRaw }),
       },
-      { icon: 'open', label: 'Open it beside the list', shortcut: 'Enter', onChoose: () => setSelectedId(row.id) },
+      { icon: 'open', label: t('transactions.menu.open'), shortcut: 'Enter', onChoose: () => setSelectedId(row.id) },
       {
         icon: 'copy',
-        label: 'Copy the row',
+        label: t('transactions.menu.copy'),
         onChoose: () =>
           void navigator.clipboard?.writeText(
             [toISODate(row.transactionDate), row.merchantRaw, row.categoryPath ?? '', account?.name ?? '', formatMoney(row.amount)].join('\t'),
@@ -767,7 +751,7 @@ export function Transactions() {
   const newer = at > 0 ? data.months[at - 1] : undefined
   const short = (month: string | undefined): string | undefined => {
     const parsed = month === undefined ? undefined : parseYearMonth(month)
-    return parsed === undefined ? undefined : formatMonthShort(parsed)
+    return parsed === undefined ? undefined : dates.monthShort(parsed)
   }
   const pageTo = (month: string | undefined): void => {
     if (month !== undefined) filterBy({ ...fields, period: month })
@@ -788,15 +772,17 @@ export function Transactions() {
         <header className="flex shrink-0 flex-wrap items-end justify-between gap-6 border-b border-hairline px-6 pt-6 pb-4">
           <div className="flex flex-col gap-1.5">
             <span className="fc-label text-ink-secondary uppercase tabular-nums">
-              Transactions · every row{shownMonth === undefined ? ', all months' : `, ${formatYearMonth(shownMonth)}`}
+              {shownMonth === undefined
+                ? t('transactions.screen.eyebrowAll')
+                : t('transactions.screen.eyebrowMonth', { month: dates.yearMonth(shownMonth) })}
             </span>
-            <h1 className="m-0 text-[24px] leading-tight font-medium tracking-[-0.01em]">Transactions</h1>
+            <h1 className="m-0 text-[24px] leading-tight font-medium tracking-[-0.01em]">{t('transactions.screen.title')}</h1>
           </div>
           <div className="flex flex-wrap items-center gap-4">
             <ViewSwitch view="rows" waiting={data.waitingNames} />
             {shownMonth !== undefined ? (
               <Pager
-                label="Month"
+                label={t('transactions.screen.month')}
                 prev={short(older)}
                 next={short(newer)}
                 onPrev={() => pageTo(older)}
@@ -804,26 +790,28 @@ export function Transactions() {
               />
             ) : (
               <Button variant="ghost" size="sm" onClick={() => pageTo(data.months[0])}>
-                Back to the newest month
+                {t('transactions.screen.newest')}
               </Button>
             )}
             {shownMonth !== undefined && (
               <Button variant="ghost" size="sm" onClick={() => filterBy({ ...fields, period: undefined })}>
-                All months
+                {t('transactions.screen.allMonths')}
               </Button>
             )}
             {/* **Rules and the export, behind More** (M59 U6, D-582): Rules is
                 also a tab of Categories, and the export is Settings › Export. */}
             <PageMenu
-              title="Transactions"
+              title={t('transactions.screen.title')}
               items={[
-                { icon: 'rule', label: 'Rules', onChoose: () => navigate('/categories/rules') },
+                { icon: 'rule', label: t('transactions.screen.rules'), onChoose: () => navigate('/categories/rules') },
                 {
                   // Says what it will take, because the screen caps at 500 and the
                   // file does not — someone exporting a filtered ledger should not
                   // have to wonder which of the two numbers they are getting.
-                  label: filtered ? `Export these ${String(data.summary.count)} to CSV` : 'Export all to CSV',
-                  detail: 'Open this ledger in a spreadsheet',
+                  label: filtered
+                    ? t('transactions.screen.exportThese', { count: data.summary.count })
+                    : t('transactions.screen.exportAll'),
+                  detail: t('transactions.screen.exportDetail'),
                   onChoose: () => {
                     if (db === undefined) return
                     downloadCsv(exportFileName('transactions'), transactionsCsv(db, data.filter, sort))
@@ -842,35 +830,37 @@ export function Transactions() {
             data.summary.excluded > 0 ? '@[48rem]:grid-cols-4' : '@[40rem]:grid-cols-3'
           }`}
         >
-          <Figure label="Went out" flow={undefined} value={money(primary?.outflowMinor ?? 0, cur)}>
-            {data.summary.count - data.summary.excluded} {data.summary.count - data.summary.excluded === 1 ? 'row' : 'rows'} counted
+          <Figure label={t('transactions.screen.wentOut')} flow={undefined} value={money(primary?.outflowMinor ?? 0, cur)}>
+            {t(countKey('transactions.screen.counted', data.summary.count - data.summary.excluded), {
+              count: data.summary.count - data.summary.excluded,
+            })}
           </Figure>
-          <Figure label="Came in" flow={undefined} value={money(primary?.inflowMinor ?? 0, cur)}>
-            {alsoIn.length > 0 ? `and ${alsoIn.map((total) => total.currency).join(', ')}, not added` : 'in this view'}
+          <Figure label={t('transactions.screen.cameIn')} flow={undefined} value={money(primary?.inflowMinor ?? 0, cur)}>
+            {alsoIn.length > 0
+              ? t('transactions.screen.alsoIn', { currencies: alsoIn.map((total) => total.currency).join(', ') })
+              : t('transactions.screen.inView')}
           </Figure>
           {data.summary.excluded > 0 && (
-            <Figure label="Left out of totals" flow={undefined} value={money(data.summary.leftOut.find((one) => one.currency === cur)?.outflowMinor ?? 0, cur)}>
-              {data.summary.excluded} {data.summary.excluded === 1 ? 'row' : 'rows'}
-              {data.rows.some((row) => row.countedOnCard)
-                ? ' · a card payment is already in the card’s own rows'
-                : ' · left out by hand'}
+            <Figure label={t('transactions.screen.leftOutOfTotals')} flow={undefined} value={money(data.summary.leftOut.find((one) => one.currency === cur)?.outflowMinor ?? 0, cur)}>
+              {t(countKey('transactions.screen.leftRows', data.summary.excluded), { count: data.summary.excluded })}
+              {t(data.rows.some((row) => row.countedOnCard) ? 'transactions.screen.onCard' : 'transactions.screen.byHand')}
             </Figure>
           )}
           <div className="flex min-w-0 flex-col gap-1 px-4 py-3.5">
-            <span className="fc-label text-ink-secondary uppercase">No category</span>
+            <span className="fc-label text-ink-secondary uppercase">{t('transactions.screen.noCategory')}</span>
             <span className="text-[24px] leading-tight font-medium tracking-[-0.01em] tabular-nums">
               {data.uncategorizedInView}
             </span>
             <small className="text-caption text-ink-secondary">
               {data.uncategorizedInView === 0 ? (
-                'all categorized'
+                t('transactions.screen.allCategorized')
               ) : (
                 <button
                   type="button"
                   onClick={() => navigate('/transactions/merchants')}
                   className="text-accent underline underline-offset-4 hover:text-accent-hover"
                 >
-                  categorized fastest by merchant
+                  {t('transactions.screen.fastest')}
                 </button>
               )}
             </small>
@@ -880,14 +870,14 @@ export function Transactions() {
         <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-b border-hairline px-6 py-1.5 text-caption text-ink-secondary tabular-nums">
           <span>
             {filtered
-              ? `${data.summary.count} of ${data.total} transactions`
-              : `${data.total} transactions`}
+              ? t(countKey('transactions.screen.countOf', data.total), { count: data.summary.count, total: data.total })
+              : t(countKey('transactions.screen.total', data.total), { count: data.total })}
           </span>
           {data.summary.moved > 0 && (
-            <span className="text-ink-tertiary">{data.summary.moved} moved to what you own, not spent</span>
+            <span className="text-ink-tertiary">{t('transactions.screen.moved', { count: data.summary.moved })}</span>
           )}
           {data.summary.held > 0 && (
-            <span className="text-ink-tertiary">{data.summary.held} bought, sold or arrived by transfer inside an account with holdings, neither in nor out</span>
+            <span className="text-ink-tertiary">{t('transactions.screen.held', { count: data.summary.held })}</span>
           )}
         </div>
 
@@ -910,16 +900,26 @@ export function Transactions() {
             uses. */}
         {pendingHere.length > 0 && (
           <section
-            aria-label="Card payments"
+            aria-label={t('transactions.screen.cardPayments')}
             className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline bg-surface px-6 py-2.5"
           >
             {pendingHere.map((bill) => (
               <div key={`${bill.cardAccountId}|${bill.billingPeriod ?? ''}`} className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1">
                 <span className="min-w-0 flex-1">
-                  {bill.rows.length} bank {bill.rows.length === 1 ? 'row looks' : 'rows look'} like{' '}
-                  {bill.rows.length === 1 ? 'a card payment' : 'card payments'} (<Bidi>{bill.cardAccountName}</Bidi>,{' '}
-                  {formatMoney(money(bill.rows.reduce((sum, row) => sum + Math.abs(row.amount.minor), 0), bill.chargedTotal.currency))}). Leave {bill.rows.length === 1 ? 'it' : 'them'} out, so the month
-                  is not counted twice?
+                  {fillNodes(t(countKey('transactions.screen.pendingBill', bill.rows.length)), {
+                    count: bill.rows.length,
+                    card: <Bidi>{bill.cardAccountName}</Bidi>,
+                    amount: (
+                      <Bidi>
+                        {formatMoney(
+                          money(
+                            bill.rows.reduce((sum, row) => sum + Math.abs(row.amount.minor), 0),
+                            bill.chargedTotal.currency,
+                          ),
+                        )}
+                      </Bidi>
+                    ),
+                  })}
                 </span>
                 <Button
                   variant="secondary"
@@ -927,7 +927,7 @@ export function Transactions() {
                   icon="check"
                   onClick={() => leavePendingBillsOut(bill.rows.map((row) => row.linkId))}
                 >
-                  Leave {bill.rows.length === 1 ? 'it' : 'them'} out
+                  {t(countKey('transactions.screen.leavePending', bill.rows.length))}
                 </Button>
               </div>
             ))}
@@ -942,37 +942,31 @@ export function Transactions() {
             place as the offer it replaces, because it is the answer to it. */}
         {applied !== undefined && (
           <section
-            aria-label="Rule applied"
+            aria-label={t('transactions.screen.ruleApplied')}
             aria-live="polite"
             className="fc-pop-enter flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline bg-surface px-6 py-3"
           >
             <p>
-              Rule saved.{' '}
+              {t('transactions.screen.ruleSaved')}{' '}
               {applied.count === 0 ? (
-                <span className="text-ink-secondary">
-                  Nothing already in the ledger changed — every row it covers either has this
-                  category or was categorized by hand.
-                </span>
+                <span className="text-ink-secondary">{t('transactions.screen.nothingChanged')}</span>
               ) : (
-                <>
-                  <span className="tabular-nums font-medium">{applied.count}</span>
-                  {applied.count === 1 ? ' earlier transaction' : ' earlier transactions'} moved to
-                  it.
-                </>
+                fillNodes(t(countKey('transactions.screen.movedEarlier', applied.count)), {
+                  count: <span className="tabular-nums font-medium">{applied.count}</span>,
+                })
               )}
             </p>
             {applied.count > 0 && (
               <Button variant="secondary" size="sm" onClick={undoPast}>
-                Undo those
+                {t('transactions.screen.undo')}
               </Button>
             )}
             <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setApplied(undefined)}>
-              Dismiss
+              {t('transactions.screen.dismiss')}
             </Button>
             {applied.count > 0 && (
               <p className="w-full text-caption text-ink-tertiary">
-                Undoing puts those rows back; the rule stays, and the rules screen is where to
-                remove it.
+                {t('transactions.screen.undoHint')}
               </p>
             )}
           </section>
@@ -984,20 +978,20 @@ export function Transactions() {
             (D-043). */}
         {picked.size > 0 && (
           <section
-            aria-label="Selected transactions"
+            aria-label={t('transactions.screen.selectedLabel')}
             className="fc-pop-enter flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline bg-surface px-6 py-3"
           >
             <span className="tabular-nums">
-              {picked.size === 1 ? '1 transaction selected' : `${picked.size} transactions selected`}
+              {t(countKey('transactions.screen.selected', picked.size), { count: picked.size })}
             </span>
 
             <span className="flex items-center gap-2 text-caption text-ink-secondary">
-              Categorize as
+              {t('transactions.screen.categorizeAs')}
               <CategoryPicker
                 categories={data.categories}
                 value={undefined}
                 onChange={assignPicked}
-                label={`Category for the ${picked.size} selected transactions`}
+                label={t('transactions.screen.categoryForSelected', { count: picked.size })}
               />
             </span>
 
@@ -1010,7 +1004,7 @@ export function Transactions() {
                 clearPicked()
               }}
             >
-              Leave out of totals
+              {t('transactions.screen.leaveOut')}
             </Button>
 
             {allShownPicked && beyondTheCap > 0 && (
@@ -1018,9 +1012,9 @@ export function Transactions() {
                 variant="secondary"
                 size="sm"
                 onClick={selectAllMatching}
-                title="Everything this filter matches, including rows below the list"
+                title={t('transactions.screen.selectAllTitle')}
               >
-                Select all {data.summary.count}
+                {t('transactions.screen.selectAll', { count: data.summary.count })}
               </Button>
             )}
 
@@ -1028,11 +1022,11 @@ export function Transactions() {
                 permanent in the same way (D-009). Saying so beside the picker
                 is cheaper than explaining it afterwards. */}
             <span className="text-caption text-ink-tertiary">
-              Chosen by hand, so no rule or re-import will change them back.
+              {t('transactions.screen.chosenByHand')}
             </span>
 
             <Button variant="ghost" size="sm" className="ms-auto" onClick={clearPicked}>
-              Clear selection
+              {t('transactions.screen.clearSelection')}
             </Button>
           </section>
         )}
@@ -1056,9 +1050,9 @@ export function Transactions() {
         <div className="min-h-0 flex-1 overflow-auto" {...cursor.container}>
           {data.rows.length === 0 ? (
             <div className="flex flex-col items-center gap-3 px-6 py-16 text-center text-ink-secondary">
-              <p>Nothing in the ledger matches these filters.</p>
+              <p>{t('transactions.screen.noMatch')}</p>
               <Button variant="secondary" size="sm" onClick={() => filterBy(NO_FILTERS)}>
-                Clear filters
+                {t('transactions.screen.clearFilters')}
               </Button>
             </div>
           ) : (
@@ -1071,7 +1065,7 @@ export function Transactions() {
                         offers the rest. */}
                     <input
                       type="checkbox"
-                      aria-label="Select every row shown"
+                      aria-label={t('transactions.screen.selectShown')}
                       checked={allShownPicked}
                       onChange={() =>
                         allShownPicked ? clearPicked() : setPicked(new Set(data.rows.map((row) => row.id)))
@@ -1087,23 +1081,23 @@ export function Transactions() {
                     one you scan by.
                   */}
                   <SortableTh column="DATE" sort={sort} onSort={sortBy} className="text-start">
-                    Date
+                    {t('transactions.screen.columns.date')}
                   </SortableTh>
                   <SortableTh column="CHARGED" sort={sort} onSort={sortBy} className="text-start">
-                    Charged
+                    {t('transactions.screen.columns.charged')}
                   </SortableTh>
                   <SortableTh column="MERCHANT" sort={sort} onSort={sortBy} className="text-start">
-                    Merchant
+                    {t('transactions.screen.columns.merchant')}
                   </SortableTh>
                   <SortableTh column="CATEGORY" sort={sort} onSort={sortBy} className="text-start">
-                    Category
+                    {t('transactions.screen.columns.category')}
                   </SortableTh>
-                  <Th className="text-start">Provider said</Th>
+                  <Th className="text-start">{t('transactions.screen.columns.provider')}</Th>
                   <SortableTh column="AMOUNT" sort={sort} onSort={sortBy} className="text-end">
-                    Amount
+                    {t('transactions.screen.columns.amount')}
                   </SortableTh>
                   <Th className="w-0 text-start">
-                    <span className="sr-only">Actions</span>
+                    <span className="sr-only">{t('transactions.screen.columns.actions')}</span>
                   </Th>
                 </tr>
               </thead>
@@ -1142,9 +1136,11 @@ export function Transactions() {
 
           {beyondTheCap > 0 && (
             <p className="px-6 py-3 text-caption text-ink-tertiary tabular-nums">
-              Showing the first {data.rows.length} of {data.summary.count}, by{' '}
-              {COLUMN_NAME[sort.column]}. Narrow the filters to see the rest — the total above
-              already counts them all.
+              {t('transactions.screen.capped', {
+                shown: data.rows.length,
+                count: data.summary.count,
+                column: t(COLUMN_NAME[sort.column]),
+              })}
             </p>
           )}
         </div>
@@ -1168,7 +1164,7 @@ export function Transactions() {
           }}
           hint={
             hintShown
-              ? 'Highlight part of the name before you right-click, and the menu offers a rule from just those words.'
+              ? t('transactions.screen.menuHint')
               : undefined
           }
         />
@@ -1282,6 +1278,7 @@ function Row({
   onNote: (note: string) => void
   onNoteCancel: () => void
 }) {
+  const t = useT()
   // Left out by the person, or by a card settlement's answer (M36 U04).
   const left = row.isExcludedFromStats || row.countedOnCard
   return (
@@ -1319,8 +1316,8 @@ function Row({
             checked={picked}
             onClick={(event) => onPick(event.shiftKey)}
             onChange={() => undefined}
-            aria-label={`Select ${row.merchantRaw}`}
-            title="Shift-click to select everything in between"
+            aria-label={t('transactions.row.select', { merchant: row.merchantRaw })}
+            title={t('transactions.row.shiftClick')}
           />
         </td>
         <td className="px-6 py-2 tabular-nums whitespace-nowrap text-ink-secondary">
@@ -1344,12 +1341,12 @@ function Row({
           {row.note !== undefined && (
             <span title={row.note} className="ms-2 inline-flex align-middle text-ink-tertiary">
               <ActionGlyph name="note" size={12} />
-              <span className="sr-only">Has a note</span>
+              <span className="sr-only">{t('transactions.row.hasNote')}</span>
             </span>
           )}
           {left && (
             <span className="ms-2 inline-flex items-center border border-dashed border-hairline-strong px-1.5 text-[11px] leading-[18px] font-medium tracking-[0.06em] text-ink-secondary uppercase">
-              {cardBill ? 'card payment · left out' : 'left out'}
+              {t(cardBill ? 'transactions.row.cardLeftOut' : 'transactions.row.leftOut')}
             </span>
           )}
         </td>
@@ -1361,7 +1358,7 @@ function Row({
               categories={categories}
               value={row.categoryId}
               onChange={onAssign}
-              label={`Category for ${row.merchantRaw}`}
+              label={t('transactions.row.categoryFor', { merchant: row.merchantRaw })}
             />
           </div>
         </td>
@@ -1378,8 +1375,8 @@ function Row({
         <td className="py-2 pe-4">
           <button
             type="button"
-            title="Actions (right-click, or the menu key)"
-            aria-label={`Actions for ${row.merchantRaw}`}
+            title={t('transactions.row.actions')}
+            aria-label={t('transactions.row.actionsFor', { merchant: row.merchantRaw })}
             onClick={(event) => {
               const box = event.currentTarget.getBoundingClientRect()
               onMenu({ x: box.right - 4, y: box.bottom + 2 })
@@ -1412,6 +1409,7 @@ function NoteField({
   onDone: (note: string) => void
   onCancel: () => void
 }) {
+  const t = useT()
   const [value, setValue] = useState(initial)
   return (
     <form
@@ -1433,12 +1431,12 @@ function NoteField({
           }
         }}
         dir="auto"
-        placeholder="Anything worth remembering about this one…"
-        aria-label="Note"
+        placeholder={t('transactions.row.notePlaceholder')}
+        aria-label={t('transactions.row.note')}
         className="h-[30px] flex-1 border border-accent bg-background px-2.5 outline-none"
       />
       <Button type="submit" variant="ghost" size="sm">
-        Done
+        {t('transactions.row.done')}
       </Button>
     </form>
   )
@@ -1538,12 +1536,12 @@ function Th({ children, className }: { children: React.ReactNode; className: str
  * "biggest first" means here.
  */
 /** The columns as the caption under a capped list names them. */
-const COLUMN_NAME: Readonly<Record<SortColumn, string>> = {
-  DATE: 'date',
-  CHARGED: 'charge date',
-  MERCHANT: 'merchant',
-  CATEGORY: 'category',
-  AMOUNT: 'amount',
+const COLUMN_NAME: Readonly<Record<SortColumn, MessageKey>> = {
+  DATE: 'transactions.screen.columnName.date',
+  CHARGED: 'transactions.screen.columnName.charged',
+  MERCHANT: 'transactions.screen.columnName.merchant',
+  CATEGORY: 'transactions.screen.columnName.category',
+  AMOUNT: 'transactions.screen.columnName.amount',
 }
 
 const FIRST_DIRECTION: Readonly<Record<SortColumn, 'ASC' | 'DESC'>> = {

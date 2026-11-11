@@ -9,6 +9,9 @@ import { Button } from '@/ui/components/Button.tsx'
 import { CategoryPicker } from '@/ui/components/CategoryPicker.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
 import { Why } from '@/ui/rules/Why.tsx'
+import { countKey } from '@/i18n/count.ts'
+import { useT } from '@/i18n/current.ts'
+import { fillNodes } from '@/i18n/nodes.tsx'
 
 /**
  * "Always categorize this as that?" — **the one place a rule is made from a row**
@@ -45,6 +48,7 @@ export function LearningOffer({
   onDismiss: () => void
   onCreate: (draft: RuleDraft, alsoPast: boolean) => void
 }) {
+  const t = useT()
   // Local, because they belong to the question being asked rather than to the
   // row it came from — the parent is keyed on the offer, so a new one starts over.
   const [pattern, setPattern] = useState(offer.draft.pattern)
@@ -58,7 +62,7 @@ export function LearningOffer({
 
   return (
     <section
-      aria-label="Rule suggestion"
+      aria-label={t('transactions.offer.label')}
       aria-live="polite"
       className="fc-pop-enter shrink-0 border-b border-hairline bg-surface px-6 py-3"
     >
@@ -68,21 +72,23 @@ export function LearningOffer({
               done by hand, three times, what one click would have stopped. */}
           {offer.insistent && (
             <p className="text-caption text-ink-secondary">
-              You have put <Bidi className="text-ink">{merchantRaw}</Bidi> in{' '}
-              <span className="text-ink">{categoryPath ?? 'this category'}</span> by hand{' '}
-              <span className="tabular-nums">{offer.corrections}</span> times now.
+              {fillNodes(t('transactions.offer.insistent'), {
+                merchant: <Bidi className="text-ink">{merchantRaw}</Bidi>,
+                category: <span className="text-ink">{categoryPath ?? t('transactions.offer.thisCategory')}</span>,
+                count: <span className="tabular-nums">{offer.corrections}</span>,
+              })}
             </p>
           )}
           <div className="flex flex-wrap items-center gap-x-2">
             <span>
-              Always categorize <Bidi className="font-medium">{merchantRaw}</Bidi> as
+              {fillNodes(t('transactions.offer.always'), { merchant: <Bidi className="font-medium">{merchantRaw}</Bidi> })}
             </span>
             <CategoryPicker
               categories={categories}
               value={categoryId}
               onChange={setCategoryId}
-              label="The rule's category"
-              placeholder="Choose a category"
+              label={t('transactions.offer.picker')}
+              placeholder={t('transactions.offer.choose')}
               outlined
             />
           </div>
@@ -90,7 +96,7 @@ export function LearningOffer({
 
         <div className="ms-auto flex flex-wrap items-center gap-2">
           <Button variant="ghost" size="sm" onClick={onDismiss}>
-            No rule
+            {t('transactions.offer.noRule')}
           </Button>
           <Button
             variant="primary"
@@ -98,19 +104,19 @@ export function LearningOffer({
             onClick={() => onCreate(draft, past && earlier > 0)}
             disabled={problems.length > 0}
           >
-            Make the rule
+            {t('transactions.offer.make')}
           </Button>
         </div>
       </div>
 
       <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-2 text-caption text-ink-tertiary">
         <label className="flex items-center gap-2">
-          Any merchant containing
+          {t('transactions.offer.containing')}
           <input
             value={pattern}
             onChange={(event) => setPattern(event.target.value)}
             dir="auto"
-            aria-label="What the rule matches on"
+            aria-label={t('transactions.offer.matchesOn')}
             placeholder={offer.merchantNormalized}
             className={`${FIELD} w-56 text-body`}
           />
@@ -123,13 +129,13 @@ export function LearningOffer({
             <label className="flex items-center gap-2 select-none">
               <input type="checkbox" checked={past} onChange={(event) => setPast(event.target.checked)} />
               <span>
-                {'Also categorize the '}
-                <span className="tabular-nums text-ink">{earlier}</span>
-                {earlier === 1 ? ' row already here' : ' rows already here'}
+                {fillNodes(t(countKey('transactions.offer.alsoPast', earlier)), {
+                  count: <span className="tabular-nums text-ink">{earlier}</span>,
+                })}
               </span>
             </label>
           ) : (
-            <span>Nothing already here to categorize — it starts with the next import</span>
+            <span>{t('transactions.offer.nothingPast')}</span>
           ))}
 
         {/* What the button would actually write, in the words the rules screen
@@ -138,17 +144,16 @@ export function LearningOffer({
           <span className="text-negative">{problems[0]?.message}</span>
         ) : (
           <span>
-            {'Writes: '}
-            <Why rule={asRule(draft)} accounts={accounts} />
-            {' → '}
-            <span className="text-ink-secondary">{categoryPath ?? 'this category'}</span>
+            {fillNodes(t('transactions.offer.writes'), {
+              why: <Why rule={asRule(draft)} accounts={accounts} />,
+              category: <span className="text-ink-secondary">{categoryPath ?? t('transactions.offer.thisCategory')}</span>,
+            })}
           </span>
         )}
       </div>
 
       <p className="mt-1 text-caption text-ink-tertiary">
-        Never a row you categorized by hand. The rows it categorizes can be put back; the rule is edited
-        on the rules screen.
+        {t('transactions.offer.never')}
       </p>
     </section>
   )
