@@ -36,6 +36,7 @@ import type { MenuItemConstructorOptions } from 'electron'
 
 import type { BundledText } from './about.ts'
 import { recentFolders, type RecentDocument, type ShellCommand } from './bridge.ts'
+import { shellWords, type ShellWords } from './language.ts'
 
 interface MenuActions {
   send(command: ShellCommand): void
@@ -75,24 +76,30 @@ export function menuText(text: string): string {
  * the same words the palette and the title bar use, never the platform's Title
  * Case: a person who learned *Save as…* in one place finds it by that name in
  * the others. The roles carry labels for the same reason; their own are Title Case.
+ *
+ * **The words are the app's language** (M60 U7, D-588): `words` is the shell's area of the
+ * catalogue, English unless the page said Hebrew. The order is not reversed for Hebrew: an OS that
+ * lays its menus out right to left mirrors them itself, and one reversed here would be mirrored twice.
  */
 export function buildMenuTemplate(
   platform: string,
   recents: readonly RecentDocument[],
   actions: MenuActions,
   state: MenuState = NOTHING_OPEN,
+  words: ShellWords = shellWords('en'),
 ): MenuItemConstructorOptions[] {
   const mac = platform === 'darwin'
+  const w = words.menu
   const folders = recentFolders(recents)
 
   const openRecent: MenuItemConstructorOptions = {
-    label: 'Open recent',
+    label: w.openRecent,
     // Disabled rather than hidden: an empty submenu that vanishes makes the
     // menu jump, and a greyed entry says "this exists, you have not used it".
     enabled: recents.length > 0,
     submenu:
       recents.length === 0
-        ? [{ label: 'Nothing yet', enabled: false }]
+        ? [{ label: w.nothingYet, enabled: false }]
         : [
             ...recents.map(
               (entry, index): MenuItemConstructorOptions => ({
@@ -104,19 +111,19 @@ export function buildMenuTemplate(
               }),
             ),
             { type: 'separator' },
-            { label: 'Clear recent documents', click: () => actions.clearRecents() },
+            { label: w.clearRecents, click: () => actions.clearRecents() },
           ],
   }
 
   const file: MenuItemConstructorOptions = {
-    label: '&File',
+    label: w.file,
     submenu: [
-      { label: 'New', accelerator: 'CmdOrCtrl+N', click: () => actions.send({ kind: 'new' }) },
-      { label: 'Open…', accelerator: 'CmdOrCtrl+O', click: () => actions.send({ kind: 'open' }) },
+      { label: w.new, accelerator: 'CmdOrCtrl+N', click: () => actions.send({ kind: 'new' }) },
+      { label: w.open, accelerator: 'CmdOrCtrl+O', click: () => actions.send({ kind: 'open' }) },
       openRecent,
       { type: 'separator' },
       {
-        label: 'Save',
+        label: w.save,
         accelerator: 'CmdOrCtrl+S',
         enabled: state.document,
         click: () => actions.send({ kind: 'save' }),
@@ -124,7 +131,7 @@ export function buildMenuTemplate(
       // Save as (D-531): a new file, and the window carries on in it — what every
       // platform calls it, and what its dialog is titled.
       {
-        label: 'Save as…',
+        label: w.saveAs,
         accelerator: 'CmdOrCtrl+Shift+S',
         enabled: state.document,
         click: () => actions.send({ kind: 'save-as' }),
@@ -132,7 +139,7 @@ export function buildMenuTemplate(
       // M45 U4 (D-455): the copies taken before a write, in Emerald's own
       // folder, listed with Restore — what makes a copy there one a person finds.
       {
-        label: 'Earlier copies of this document…',
+        label: w.earlierCopies,
         enabled: state.document,
         click: () => actions.send({ kind: 'earlier-copies' }),
       },
@@ -140,38 +147,38 @@ export function buildMenuTemplate(
       // On macOS quitting lives in the app menu, and Close is the window verb.
       // Either way it goes through the window's `close`, which is where the
       // unsaved-work question is asked (D-128).
-      mac ? { role: 'close', label: 'Close window' } : { role: 'quit', label: 'Quit' },
+      mac ? { role: 'close', label: w.closeWindow } : { role: 'quit', label: w.quit },
     ],
   }
 
   // Copy and paste have to work in every text field, and on macOS the roles
   // are also what bind Cmd+C and Cmd+V at all.
   const edit: MenuItemConstructorOptions = {
-    label: '&Edit',
+    label: w.edit,
     submenu: [
-      { role: 'undo', label: 'Undo' },
-      { role: 'redo', label: 'Redo' },
+      { role: 'undo', label: w.undo },
+      { role: 'redo', label: w.redo },
       { type: 'separator' },
-      { role: 'cut', label: 'Cut' },
-      { role: 'copy', label: 'Copy' },
-      { role: 'paste', label: 'Paste' },
-      { role: 'selectAll', label: 'Select all' },
+      { role: 'cut', label: w.cut },
+      { role: 'copy', label: w.copy },
+      { role: 'paste', label: w.paste },
+      { role: 'selectAll', label: w.selectAll },
     ],
   }
 
   const view: MenuItemConstructorOptions = {
-    label: '&View',
+    label: w.view,
     submenu: [
       {
         // The title bar's button is *Commands* (M54 F7): one name for the palette.
-        label: 'Commands…',
+        label: w.commands,
         accelerator: 'CmdOrCtrl+K',
         // Shown, not registered — see Toggle the sidebar below.
         registerAccelerator: false,
         click: () => actions.send({ kind: 'command-palette' }),
       },
       {
-        label: 'Toggle the sidebar',
+        label: w.toggleSidebar,
         accelerator: 'CmdOrCtrl+B',
         // **Shown, not registered.** The page already binds this key — it has
         // to, because the browser build has no menu — and an accelerator
@@ -182,33 +189,33 @@ export function buildMenuTemplate(
         click: () => actions.send({ kind: 'toggle-sidebar' }),
       },
       { type: 'separator' },
-      { role: 'resetZoom', label: 'Actual size' },
-      { role: 'zoomIn', label: 'Zoom in' },
-      { role: 'zoomOut', label: 'Zoom out' },
+      { role: 'resetZoom', label: w.actualSize },
+      { role: 'zoomIn', label: w.zoomIn },
+      { role: 'zoomOut', label: w.zoomOut },
       { type: 'separator' },
-      { role: 'togglefullscreen', label: 'Toggle full screen' },
-      { role: 'toggleDevTools', label: 'Toggle developer tools' },
+      { role: 'togglefullscreen', label: w.fullScreen },
+      { role: 'toggleDevTools', label: w.developerTools },
     ],
   }
 
   const help: MenuItemConstructorOptions = {
-    label: '&Help',
+    label: w.help,
     // `role: 'help'` is what puts the search field in macOS's Help menu.
     role: 'help',
     submenu: [
       // The guide walks the ledger's screens, so it is greyed where none is kept,
       // as the palette leaves it out there.
-      { label: 'Guide me', enabled: state.guide, click: () => actions.send({ kind: 'guide' }) },
+      { label: w.guide, enabled: state.guide, click: () => actions.send({ kind: 'guide' }) },
       { type: 'separator' },
-      { label: 'License', click: () => actions.openText('license') },
-      { label: 'Third-party notices', click: () => actions.openText('notices') },
-      { label: 'Source code', toolTip: 'Opens in your browser', click: () => actions.openSource() },
+      { label: w.license, click: () => actions.openText('license') },
+      { label: w.notices, click: () => actions.openText('notices') },
+      { label: w.source, toolTip: w.sourceHint, click: () => actions.openSource() },
       { type: 'separator' },
       // M42 U8 (D-502): with the setting off too — pressing it is consent for that one check, and
       // the answer is the window's quiet notice, never a dialog.
-      { label: 'Check for updates now', click: () => actions.checkForUpdates() },
+      { label: w.checkForUpdates, click: () => actions.checkForUpdates() },
       // On macOS the About is the app menu's first item, as every Mac app has it.
-      ...(mac ? [] : ([{ label: 'About Emerald', click: () => actions.showAbout() }] as MenuItemConstructorOptions[])),
+      ...(mac ? [] : ([{ label: w.about, click: () => actions.showAbout() }] as MenuItemConstructorOptions[])),
     ],
   }
 

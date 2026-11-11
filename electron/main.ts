@@ -72,6 +72,7 @@ import {
   type DocumentWatcher,
 } from './documents.ts'
 import { openLinked, presentLinked, showLinked, type LinkedFileSystem } from './linkedFiles.ts'
+import { keptLanguage, languageFrom, shellWords, withName, withSettings, type Language, type ShellWords } from './language.ts'
 import { buildMenuTemplate, type MenuState } from './menu.ts'
 import { isAllowedDownloadRequest, isAllowedRequest, isAllowedUpdateRequest } from './network.ts'
 import { cancelGeneration, generate } from './generate.ts'
@@ -85,7 +86,6 @@ import {
   RELEASES_PAGE,
   reopenFrom,
   reopenText,
-  settingsText,
   TICK_MS,
   type Downloader,
   type Updates,
@@ -239,11 +239,11 @@ function openText(text: BundledText): void {
     open.focus()
     return
   }
-  const { file, title } = BUNDLED_TEXTS[text]
+  const { file } = BUNDLED_TEXTS[text]
   const window = new BrowserWindow({
     width: 760,
     height: 720,
-    title,
+    title: words().windows[text],
     autoHideMenuBar: true,
     backgroundColor: windowBackground(currentTheme()),
     // No preload: a page of text has no business with the bridge.
@@ -271,6 +271,64 @@ let pageTheme: 'light' | 'dark' | undefined
 
 function currentTheme(): 'light' | 'dark' {
   return pageTheme ?? (nativeTheme.shouldUseDarkColors ? 'dark' : 'light')
+}
+
+/**
+ * **`settings.json`, the shell's per-machine settings** — the updates switch (M42 U8) and the
+ * language (M60 U7, D-588) — read once and held here, so writing one keeps the other. Writes go one
+ * after another, so the file ends as the last one left it.
+ */
+let settings: { text: string | undefined } | undefined
+let settingsWrites: Promise<void> = Promise.resolve()
+
+function settingsFile(): string {
+  return join(app.getPath('userData'), 'settings.json')
+}
+
+function settingsText(): string | undefined {
+  if (settings === undefined) {
+    let text: string | undefined
+    try {
+      text = readFileSync(settingsFile(), 'utf8')
+    } catch {
+      text = undefined
+    }
+    settings = { text }
+  }
+  return settings.text
+}
+
+function saveSettings(patch: Readonly<Record<string, unknown>>): Promise<void> {
+  const text = withSettings(settingsText(), patch)
+  settings = { text }
+  const file = settingsFile()
+  settingsWrites = settingsWrites.then(async () => {
+    try {
+      await mkdir(dirname(file), { recursive: true })
+      await writeFile(file, text)
+    } catch (error) {
+      // What was set still holds for this run; the next start reads what the file last kept.
+      console.warn(`[emerald] could not write ${file}: ${String(error)}`)
+    }
+  })
+  return settingsWrites
+}
+
+/**
+ * **The language the shell writes in** (M60 U7, D-588): the page's word, kept in `settings.json`
+ * from the last time it said — so the menu is right from the first frame after a restart — and the
+ * computer's until a page ever has. `app.getLocale()` is only right once the app is ready, which
+ * everything that asks for words is after.
+ */
+let shellLanguage: Language | undefined
+
+function currentLanguage(): Language {
+  shellLanguage ??= languageFrom(settingsText(), app.getLocale())
+  return shellLanguage
+}
+
+function words(): ShellWords {
+  return shellWords(currentLanguage())
 }
 
 /**
@@ -325,14 +383,6 @@ function openSource(): void {
  * The setting is the app's, in `settings.json` beside `recents.json`, never the document's.
  */
 function serveUpdates(): Updates {
-  const settingsFile = join(app.getPath('userData'), 'settings.json')
-  let saved: string | undefined
-  try {
-    saved = readFileSync(settingsFile, 'utf8')
-  } catch {
-    saved = undefined
-  }
-
   const stub = app.isPackaged || UPDATE_ANSWER_FILE === undefined || UPDATE_ANSWER_FILE === '' ? undefined : UPDATE_ANSWER_FILE
   const asking = session.fromPartition('emerald-updates')
   // The language too: Chromium would otherwise send the system's, which says where somebody is.
@@ -343,7 +393,7 @@ function serveUpdates(): Updates {
   const downloads = serveDownloads(() => updates)
   const updates = createUpdates({
     version: app.getVersion(),
-    automatic: automaticFrom(saved),
+    automatic: automaticFrom(settingsText()),
     downloader: downloads,
     fetchLatest: async () => {
       if (stub !== undefined) return JSON.parse(await readFile(stub, 'utf8')) as unknown
@@ -354,15 +404,9 @@ function serveUpdates(): Updates {
       if (!response.ok) throw new Error(`GitHub answered ${String(response.status)}.`)
       return (await response.json()) as unknown
     },
-    saveAutomatic: async (on) => {
-      try {
-        await mkdir(app.getPath('userData'), { recursive: true })
-        await writeFile(settingsFile, settingsText(on))
-      } catch (error) {
-        // The switch still holds for this run; the next start reads off, which is the safe side.
-        console.warn(`[emerald] could not write ${settingsFile}: ${String(error)}`)
-      }
-    },
+    // The switch still holds for this run if the file cannot be written; the next start reads
+    // off, which is the safe side.
+    saveAutomatic: (on) => saveSettings({ automaticUpdates: on }),
     publish: (state) => {
       for (const window of documentWindows()) window.webContents.send(UPDATE_CHANNELS.changed, state)
     },
@@ -483,8 +527,9 @@ function serveDocuments(updates: Updates): void {
   })
   app.on('will-quit', () => watcher.close())
 
-  const filters = [
-    { name: 'Emerald document', extensions: [DOCUMENT_EXTENSION.replace(/^\./, '')] },
+  /** Asked at each dialog, so the filter's name is in the language now (D-588). */
+  const filters = () => [
+    { name: words().dialogs.documentFilter, extensions: [DOCUMENT_EXTENSION.replace(/^\./, '')] },
   ]
 
   function send(command: ShellCommand): void {
@@ -526,10 +571,24 @@ function serveDocuments(updates: Updates): void {
             checkForUpdates: () => void updates.checkNow(),
           },
           menuState(),
+          words(),
         ),
       ),
     )
   }
+
+  /**
+   * **The page's language** (M60 U7, D-588), said on every change as the theme is: kept for the
+   * next start when it differs from what is kept, and the menu and Help's windows redrawn in it.
+   */
+  ipcMain.on(WINDOW_CHANNELS.language, (_event, value: unknown) => {
+    if (value !== 'en' && value !== 'he') return
+    if (keptLanguage(settingsText()) !== value) void saveSettings({ language: value })
+    if (value === currentLanguage()) return
+    shellLanguage = value
+    refreshMenu()
+    for (const [text, window] of textWindows) if (!window.isDestroyed()) window.setTitle(words().windows[text])
+  })
 
   /** The page's word on what it holds; the menu is rebuilt only when what it greys out by moves. */
   function hold(next: ShellDocumentState): void {
@@ -580,8 +639,8 @@ function serveDocuments(updates: Updates): void {
     const window = BrowserWindow.fromWebContents(event.sender)
     const result =
       window === null
-        ? await dialog.showOpenDialog({ filters, properties: ['openFile'] })
-        : await dialog.showOpenDialog(window, { filters, properties: ['openFile'] })
+        ? await dialog.showOpenDialog({ filters: filters(), properties: ['openFile'] })
+        : await dialog.showOpenDialog(window, { filters: filters(), properties: ['openFile'] })
 
     const [picked] = result.filePaths
     if (result.canceled || picked === undefined) return undefined
@@ -595,8 +654,8 @@ function serveDocuments(updates: Updates): void {
     const options = {
       // The act's own name (D-531): Windows titles an untitled one Save As, under an item
       // that said something else.
-      title: 'Save as',
-      filters,
+      title: words().dialogs.saveAsTitle,
+      filters: filters(),
       ...(typeof suggestedName === 'string' ? { defaultPath: suggestedName } : {}),
     }
     const result =
@@ -750,18 +809,15 @@ function serveDocuments(updates: Updates): void {
 
       // **The question names the document, and says restart when it is one** (M54 F7):
       // Install and restart closes the window through here too.
-      const name = isolate(held.name ?? 'this document')
+      const said = words().dialogs
+      const name = isolate(held.name ?? said.thisDocument)
       const choice = dialog.showMessageBoxSync(window, {
         type: 'warning',
-        buttons: ['Save', "Don't save", 'Cancel'],
+        buttons: [said.save, said.dontSave, said.cancel],
         defaultId: 0,
         cancelId: 2,
-        message: installing
-          ? `Save your changes to ${name} before restarting?`
-          : `Save your changes to ${name} before closing?`,
-        detail: installing
-          ? 'Emerald restarts to install the update. Everything since the last save is lost otherwise.'
-          : 'Everything since the last save is lost otherwise.',
+        message: withName(installing ? said.unsavedRestarting : said.unsavedClosing, name),
+        detail: installing ? said.unsavedRestartingDetail : said.unsavedDetail,
       })
 
       if (choice === 1) window.destroy()
@@ -850,8 +906,8 @@ function serveDocuments(updates: Updates): void {
     if (now - reloadedAt < CRASH_AGAIN_MS) {
       void dialog.showMessageBox(window, {
         type: 'error',
-        message: 'This window stopped working again.',
-        detail: 'Close it and open Emerald again: unsaved work is offered back when it opens.',
+        message: words().dialogs.crashedAgain,
+        detail: words().dialogs.crashedAgainDetail,
       })
       return
     }

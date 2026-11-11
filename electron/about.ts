@@ -15,10 +15,14 @@
 
 import { author, repository } from '../package.json'
 
-/** The two texts the About opens inside the app, served from `dist/` over `app://`. */
+/**
+ * The two texts the About opens inside the app, served from `dist/` over `app://`. Their windows'
+ * titles are the shell's words, in the app's language (`windows` in `src/i18n/en/shell.ts`, D-588);
+ * the texts themselves are the license's and the notices' own, in English.
+ */
 export const BUNDLED_TEXTS = {
-  license: { file: 'LICENSE.txt', title: 'Emerald — License (GNU AGPL-3.0)' },
-  notices: { file: 'THIRD_PARTY_NOTICES.txt', title: 'Emerald — Third-party notices' },
+  license: { file: 'LICENSE.txt' },
+  notices: { file: 'THIRD_PARTY_NOTICES.txt' },
 } as const
 
 export type BundledText = keyof typeof BUNDLED_TEXTS

@@ -270,7 +270,9 @@ shape is:
   what counts as a document in `argv`. `recents.ts` holds the documents opened before and their
   grants (D-128); `menu.ts` the menu as a testable template (D-128); `windowChrome.ts` the title
   bar's measurements, shared by the window and the page (D-130); `about.ts` what the About says and
-  the one address the shell hands the system browser, the repository, on Help → Source code (D-452).
+  the one address the shell hands the system browser, the repository, on Help → Source code (D-452);
+  `language.ts` the shell's words in the app's language — the one file here that reaches into
+  `src/`, for `src/i18n/{en,he}/shell.ts` and `language.ts`, data that import nothing (D-588).
 - `runtimes.ts` and `generate.ts` — the only two places in the app that open a socket, to a local
   model runtime on loopback and nowhere else (D-134, D-136); `generate.ts` re-checks the origin
   because it arrives from `localStorage` (D-135).

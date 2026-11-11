@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 
 import { shellWindow } from '@/data/storage/desktop.ts'
+import { useLanguage } from '@/i18n/current.ts'
 import { CommandPaletteButton } from '@/ui/CommandPalette.tsx'
 import { DocumentBar } from '@/ui/DocumentBar.tsx'
 import { HistoryArrows } from '@/ui/HistoryArrows.tsx'
@@ -35,6 +36,9 @@ export function TitleBar() {
   // holds; the theme is in the page's localStorage and the shell cannot read
   // it. So the page says which one it settled on, whenever that changes.
   useEffect(() => shellWindow()?.setTheme(resolved), [resolved])
+  // The language is the same (M60 U7, D-588): the shell's menu and dialogs follow the page's.
+  const language = useLanguage()
+  useEffect(() => shellWindow()?.setLanguage(language), [language])
 
   return (
     <div

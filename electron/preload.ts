@@ -119,6 +119,10 @@ const emeraldWindow: EmeraldWindow = Object.freeze({
   setTheme: (theme: 'light' | 'dark'): void => {
     ipcRenderer.send(WINDOW_CHANNELS.theme, theme)
   },
+
+  setLanguage: (language: 'en' | 'he'): void => {
+    ipcRenderer.send(WINDOW_CHANNELS.language, language)
+  },
 })
 
 /**

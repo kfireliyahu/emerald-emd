@@ -197,7 +197,9 @@ function frameEmbedded(): Plugin {
 // rather than a browser and skips React and Tailwind because it renders nothing.
 //
 // The electron modes are separate in the same way, and in both directions: they bundle
-// `electron/` alone, and `src/` imports exactly one file from it (`bridge.ts`). CommonJS
+// `electron/` and, through `electron/language.ts` alone, the shell's own words from `src/i18n/` —
+// data files that import nothing (M60 U7, D-588) — and `src/` imports exactly one file from it
+// (`bridge.ts`). CommonJS
 // because a sandboxed preload must be, and because `__dirname` is how main finds `dist/`
 // beside itself.
 //

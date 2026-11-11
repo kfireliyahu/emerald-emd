@@ -17082,10 +17082,13 @@ milestone: M60
 scope: app
 title: Hebrew screens, part one: Home, Read files and the import screen, Transactions, By merchant
 decision: D-583
-state: planned
+state: in_progress
 brief: D-583. FIRST: if any M59 unit is planned or in_progress (the maintainer's fixes from his look at M59), stop and report: those land before a screen is translated (D-583 point 10). Then every on-screen word of Home (with its Year tab and Getting started line), Read files, the import screen (src/ui/import/), Transactions with its pane and menus, and By merchant goes through the layer (U1), English unchanged, with its Hebrew from the glossary (U2, as the maintainer corrected it) in this area's catalogue files only (src/i18n/he/<area>.ts). A word that is no term gets a draft that fits the glossary; list every such word in the report and on the unit's review_entry. Plurals and counts ('2 cards: ••4821 · 4 rows', 'Filter · 2') read right in Hebrew. Write the rule row that keeps it (record_format_rows rule: a translated screen's words go through the layer, enforced_by the test) and its test: a screen in the translated set with an inline user-facing string fails (an allow-list for raw document values rendered through Bidi). Check both languages with probe:screens (U3's rtl option) on demo.emd and a new empty ledger document; the pane only for a flow clicked through in Hebrew. Unset: stop and ask. Done-test: in Hebrew these screens show no English word outside a document's own data; in English nothing changed.
 files: "src/ui/screens/Home.tsx\nsrc/ui/screens/ReadStatements.tsx\nsrc/ui/import/MapperScreen.tsx\nsrc/ui/screens/Transactions.tsx\nsrc/ui/screens/ByMerchant.tsx\nsrc/ui/transactions/DetailPanel.tsx"
 blocks: ["M60 U1","M60 U2","M60 U3"]
+taken_by: run-milestone driver
+started: 2026-11-11
+branch: main
 paths: "src/ui/screens/Home.tsx\nsrc/ui/home/\nsrc/ui/screens/ReadStatements.tsx\nsrc/ui/import/\nsrc/ui/screens/Transactions.tsx\nsrc/ui/transactions/\nsrc/ui/screens/ByMerchant.tsx"
 
 ### M60 U5
@@ -17093,10 +17096,13 @@ milestone: M60
 scope: app
 title: Hebrew screens, part two: Categories, Plan, Settings, the guide, the rail, dialogs and the palette
 decision: D-583
-state: planned
+state: in_progress
 brief: D-583. FIRST: if any M59 unit is planned or in_progress, stop and report (D-583 point 10). Then every on-screen word of Categories, Plan (with M59 U4's 50 / 30 / 20 proposal), Settings, the guide and its steps (src/data/packs/ledger/guide.ts), the rail and title bar, the app's shared dialogs and confirmations, and the command palette goes through the layer (U1), English unchanged, Hebrew from the glossary (U2) in this area's catalogue files only (src/i18n/he/<area>.ts) — U4 translates the intake and transaction screens beside you. Paychecks, Wealth, Dashboard, Formats, Connections and Agenda fall back to English (D-583); if a shared component you translate reaches them, that is fine. A word that is no term gets a draft that fits the glossary; list every such word in the report and on the unit's review_entry. Extend U4's rule test to these screens (if U4 has not landed yet, write the test for yours and say so). Check both languages with probe:screens (rtl) on demo.emd and a new empty ledger document. Unset: stop and ask. Done-test: in Hebrew these places show no English word outside a document's own data; in English nothing changed.
 files: "src/ui/screens/Categories.tsx\nsrc/ui/screens/Plan.tsx\nsrc/ui/plan/StarterProposal.tsx\nsrc/ui/guide/GuideLine.tsx\nsrc/data/packs/ledger/guide.ts\nsrc/ui/Sidebar.tsx"
 blocks: ["M60 U1","M60 U2","M60 U3"]
+taken_by: run-milestone driver
+started: 2026-11-11
+branch: main
 paths: "src/ui/screens/Categories.tsx\nsrc/ui/categories/\nsrc/ui/screens/Plan.tsx\nsrc/ui/plan/\nsrc/ui/guide/\nsrc/data/packs/ledger/guide.ts\nsrc/ui/Sidebar.tsx\nsrc/ui/palette/"
 
 ### M60 U6
@@ -17121,10 +17127,13 @@ milestone: M60
 scope: shell
 title: The desktop shell in Hebrew: its menu and dialogs follow the app's language
 decision: D-583
-state: planned
+state: in_progress
 brief: D-583. The desktop menu (electron/menu.ts), the shell's own dialogs (unsaved changes, open/save titles, crash recovery, updates) and anything else the shell writes on screen go through the same English and Hebrew words (shared with src/i18n/ the way the shell already shares code, never importing src/ beyond what the bridge allows). The shell cannot read the page's localStorage (src/ui/TitleBar.tsx:35): until the page says, it follows the OS (app.getLocale()); the page tells it the choice over the bridge (src/bridge.ts) and the menu is rebuilt on a change. Menus mirror as the OS does in RTL. Verify over CDP (verify-in-shell skill): switch to Hebrew in Settings, the menu is Hebrew; restart, it is still Hebrew. Unset: stop and ask.
 files: "electron/menu.ts\nelectron/main.ts\nsrc/bridge.ts\nsrc/ui/TitleBar.tsx"
 blocks: ["M60 U1","M60 U2"]
+taken_by: run-milestone driver
+started: 2026-11-11
+branch: main
 paths: "electron/\nsrc/bridge.ts"
 
 ### M60 U8

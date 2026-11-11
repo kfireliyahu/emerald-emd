@@ -248,6 +248,12 @@ export interface EmeraldWindow {
    * system's own.
    */
   setTheme(theme: 'light' | 'dark'): void
+  /**
+   * Say which language the page settled on (M60 U7, D-588), whenever that changes. The choice is in
+   * the page's `localStorage` too, so the shell keeps the last one it was told in its own settings,
+   * draws its menu, dialogs and windows' titles in it, and opens in it next time.
+   */
+  setLanguage(language: 'en' | 'he'): void
 }
 
 /* ------------------------------------------------- the local model runtime */
@@ -637,6 +643,7 @@ export const FILE_CHANNELS = {
 /** The window's own channels. Page → main, one-way, like `unsaved` above. */
 export const WINDOW_CHANNELS = {
   theme: 'emerald:window/theme',
+  language: 'emerald:window/language',
 } as const
 
 /**

@@ -1,9 +1,11 @@
 import { dates as enDates } from './en/dates.ts'
 import { rail as enRail } from './en/rail.ts'
 import { settings as enSettings } from './en/settings.ts'
+import { shell as enShell } from './en/shell.ts'
 import { dates as heDates } from './he/dates.ts'
 import { rail as heRail } from './he/rail.ts'
 import { settings as heSettings } from './he/settings.ts'
+import { shell as heShell } from './he/shell.ts'
 import type { Language } from './language.ts'
 
 /**
@@ -21,12 +23,14 @@ import type { Language } from './language.ts'
  * A new area is an `en/<area>.ts` and a line in `ENGLISH`; its Hebrew is a
  * `he/<area>.ts` and a line in `HEBREW`. The catalogue files hold data and import
  * nothing but types, so anything that can read a TypeScript object can read
- * them — the desktop shell's menu included (M60 U7).
+ * them — and the desktop shell does, bundling `shell` into its own build (M60 U7,
+ * D-588) through `electron/language.ts`.
  */
 export const ENGLISH = {
   rail: enRail,
   settings: enSettings,
   dates: enDates,
+  shell: enShell,
 } as const
 
 export type English = typeof ENGLISH
@@ -45,6 +49,7 @@ export const HEBREW: { readonly [A in Area]?: Translation<A> } = {
   rail: heRail,
   settings: heSettings,
   dates: heDates,
+  shell: heShell,
 }
 
 const CATALOGUES: Readonly<Record<Language, unknown>> = { en: ENGLISH, he: HEBREW }

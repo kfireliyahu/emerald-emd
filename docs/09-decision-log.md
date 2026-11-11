@@ -490,6 +490,7 @@ written out here.
 | D-585 | 2026-11-11 | The Hebrew screen's words are a `screen_hebrew` column on the term rows, one word per thing in both languages; a button is a verbal noun, and a word a statement prints is the screen's word | M60 |
 | D-586 | 2026-11-11 | Right to left by logical sides: every class and rule that names a side names the start or the end, a chart and a bar placed by measuring stay left to right, a key steps the way its buttons are drawn, and a figure reads as written inside Hebrew | M60 |
 | D-587 | 2026-11-11 | A new ledger is seeded in the app's language and keeps it: the categories' Hebrew names sit beside `seededIds.json` under the same ids, a document's seed language is read from its own rows, and the page passes the app's language while `create_document` and `keep_packs` take `language` | M60 |
+| D-588 | 2026-11-11 | The shell's words are bundled, not sent: its menu, dialogs and windows' titles are the catalogue's `shell` area, read by `electron/language.ts`, and the page sends only which language — kept in `settings.json`, the computer's until a page has said | M60 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1198,6 +1199,39 @@ and the plugin has no app language at all.
 **Rejected.** Translating names on read (a person's rename would fight it, and a name is data);
 storing the language in the document (D-583 point 2 keeps the app's language off it, and the rows
 already say); the Hebrew in `src/i18n/he/` (the plugin would carry the screen catalogue for one list).
+
+## D-588 · 2026-11-11 · The shell's words are bundled, not sent: its menu, dialogs and windows' titles are the catalogue's `shell` area, read by `electron/language.ts`, and the page sends only which language — kept in `settings.json`, the computer's until a page has said <a id="d-588"></a>
+
+**Context.** D-583 asks the desktop shell's own words — the menu, the unsaved-work question, the
+Save as title, the crash notice, Help's windows — to follow the app's language, before the page
+loads too: a Hebrew computer's first run, and the first frame after a restart. D-584 point 6
+planned for the page to send the words over the bridge, with bundling as the fallback.
+
+**Decision.** (M60 U7, the unit's picks.)
+
+1. **Bundled, not sent.** The words are a catalogue area, `src/i18n/en/shell.ts` and
+   `he/shell.ts`, held complete like any other; `electron/language.ts` imports them and
+   `src/i18n/language.ts` — data that import nothing at run time — and is the only file in
+   `electron/` that reaches into `src/` (`language.test.ts` holds the list). Sending them could not
+   meet the first frame: a shell that has never been told has no Hebrew to show, so it needs its
+   own copy anyway, and sending as well would be two copies.
+2. **The page sends which language**, as it sends the theme: `EmeraldWindow.setLanguage` from the
+   title bar, on every change. The shell keeps it in `settings.json` beside the updates switch
+   (`withSettings` writes one key and keeps the other), rebuilds the menu and retitles Help's
+   windows; dialogs ask for their words when they open.
+3. **Until a page has said, the computer's**: `languageOfTag(app.getLocale())`, the page's own
+   rule for `navigator.language`. The page stays the authority — it sends its resolved language,
+   so a choice the shell kept is corrected by the page if they ever differ.
+4. **The menu's order is not reversed for Hebrew**: an OS that lays its menus out right to left
+   mirrors them itself. `&` marks each Hebrew menu's first letter, as in English.
+5. **Words that stay English**: macOS's app and Window menus (the roles' own), the license and
+   notices' texts, and the errors the shell throws into the page (a recent no longer there, a path
+   never granted, a linked file's refusals) — the page shows those, and translating them is the
+   page's area's work.
+
+**Rejected.** The page sending the words (late for the first frame, and a second copy); a separate
+shell catalogue in `electron/` (the glossary and the completeness test are the catalogue's);
+reversing the menu's order (twice mirrored on an OS that mirrors).
 
 ## Related
 
