@@ -9,6 +9,7 @@ import {
   type Account,
   type AccountKind,
 } from '../repositories/accountRepository.ts'
+import { ledgerLanguageOf } from '../packs/ledger/pack.ts'
 import { listMappings } from '../repositories/importMappingRepository.ts'
 import { acceptAllNew } from '../repositories/stagedRowRepository.ts'
 import { accountsHoldingRows, existingNaturalKeys, type RowsHeld } from '../repositories/transactionRepository.ts'
@@ -326,6 +327,27 @@ export function accountNameFor(last4: string | undefined, mappingName: string, f
   return (mappingName.trim() === '' ? stem : mappingName).slice(0, 60)
 }
 
+/**
+ * **The name in the document's language** (M60 U4, D-589): `Card 1234` in a
+ * ledger made in English, `כרטיס 1234` in one made in Hebrew (D-587's
+ * `ledgerLanguageOf`). Only the name the app made changes — a mapping's name or
+ * a file's is the person's word and stays as it was.
+ */
+export function accountNameIn(db: Database, name: string, last4: string | undefined): string {
+  if (last4 === undefined || name !== `Card ${last4}` || ledgerLanguageOf(db) !== 'he') return name
+  return `כרטיס ${last4}`
+}
+
+function namedIn<T extends { readonly last4: string | undefined; readonly fallbackName: string }>(db: Database, account: T): T {
+  const name = accountNameIn(db, account.fallbackName, account.last4)
+  return name === account.fallbackName ? account : { ...account, fallbackName: name }
+}
+
+function sheetNamedIn(db: Database, sheet: StatementSheet): StatementSheet {
+  const account = namedIn(db, sheet.account)
+  return account === sheet.account ? sheet : { ...sheet, account }
+}
+
 // --- Corrections -----------------------------------------------------------
 
 /** The sheet with every typed correction in its cells. */
@@ -533,7 +555,7 @@ export function placeRows(
 }
 
 export function judgeSheet(db: Database, sheet: StatementSheet, soFar: readonly PendingAccount[] = []): SheetVerdict {
-  return judged(db, sheet, soFar).verdict
+  return judged(db, sheetNamedIn(db, sheet), soFar).verdict
 }
 
 function judged(
@@ -607,7 +629,8 @@ export function judgeBatch(
 ): { readonly verdicts: ReadonlyMap<string, SheetVerdict>; readonly pending: readonly PendingAccount[] } {
   const verdicts = new Map<string, SheetVerdict>()
   let pending: readonly PendingAccount[] = []
-  for (const { id, sheet } of sheets) {
+  for (const { id, sheet: given } of sheets) {
+    const sheet = sheetNamedIn(db, given)
     const { verdict, placement } = judged(db, sheet, pending)
     verdicts.set(id, verdict)
     if (writes(id, verdict)) pending = sendRows(pending, placement, sheet)
@@ -708,7 +731,7 @@ export function writeSheets(
   now: number,
 ): readonly WrittenSheet[] {
   return sheets.map(({ sheet, force }) => {
-    const account = resolveAccountForImport(db, sheet.account, now)
+    const account = resolveAccountForImport(db, namedIn(db, sheet.account), now)
     const staged = stageImport(
       db,
       {

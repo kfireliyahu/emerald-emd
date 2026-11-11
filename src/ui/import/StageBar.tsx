@@ -5,7 +5,6 @@ import { allParsed, type ParsedRow } from '@/data/importer/apply.ts'
 import type { SheetTable } from '@/data/importer/sheetTable.ts'
 import {
   cardsOf,
-  cardsSentence,
   guessKind,
   judgeBatch,
   placeRows,
@@ -13,7 +12,11 @@ import {
   type StatementSheet,
 } from '@/data/importer/statementBatch.ts'
 import { listAccounts, type AccountKind } from '@/data/repositories/accountRepository.ts'
+import { countKey } from '@/i18n/count.ts'
+import { useT } from '@/i18n/current.ts'
+import { fillNodes } from '@/i18n/nodes.tsx'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { cardsLine } from './cardsLine.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { ChoiceMenu } from '@/ui/components/ChoiceField.tsx'
 import { SELECT } from '@/ui/components/fieldLook.ts'
@@ -68,6 +71,8 @@ export function StageBar({
   skipped?: ReadonlySet<number> | undefined
   onRead: (sheets: readonly StatementSheet[]) => void
 }) {
+  const t = useT()
+  const kinds = KINDS.map((each) => ({ value: each.value, label: t(each.word) }))
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
   const batch = batchFor(useStatementBatch(), db)
@@ -124,14 +129,12 @@ export function StageBar({
     [fileHash, sheetName, fileName, table, mapping, mappingId, mappingName, boundAccountId, skipped],
   )
   const cards = useMemo(() => cardsOf(sheets), [sheets])
-  const severalCards = cardsSentence(cards)
+  const severalCards = cardsLine(t, cards)
 
   if (db === undefined) {
     return (
       <Bar>
-        <span className="text-ink-secondary">
-          Open or create a document before importing, so there is somewhere to put this.
-        </span>
+        <span className="text-ink-secondary">{t('reading.stage.noDocument')}</span>
       </Bar>
     )
   }
@@ -153,9 +156,12 @@ export function StageBar({
       ? []
       : [
           ...where.accounts.map((account) => ({ value: account.id, label: account.name })),
-          ...where.making.map((each) => ({ value: each.key, label: `${each.name}, new with ${each.madeBy}` })),
+          ...where.making.map((each) => ({
+            value: each.key,
+            label: t('reading.stage.newWith', { name: each.name, file: each.madeBy }),
+          })),
           ...(where.found === undefined && where.joins === undefined
-            ? [{ value: 'new', label: `a new account, ${accountName}` }]
+            ? [{ value: 'new', label: t('reading.stage.newAccount', { name: accountName }) }]
             : []),
         ]
 
@@ -191,45 +197,43 @@ export function StageBar({
   return (
     <Bar>
       <span className="text-ink-secondary">
-        {transactions.length} transactions ·{' '}
-        {formatMoney(
-          transactions.reduce(
-            (total, transaction) => ({
-              minor: total.minor + Math.abs(transaction.amount.minor),
-              currency: total.currency,
-            }),
-            { minor: 0, currency: transactions[0]?.amount.currency ?? 'ILS' },
+        {t(countKey('reading.stage.summary', transactions.length), {
+          count: transactions.length,
+          amount: formatMoney(
+            transactions.reduce(
+              (total, transaction) => ({
+                minor: total.minor + Math.abs(transaction.amount.minor),
+                currency: total.currency,
+              }),
+              { minor: 0, currency: transactions[0]?.amount.currency ?? 'ILS' },
+            ),
           ),
-        )}
+        })}
       </span>
 
       {/* Only when an account is about to be **created**. A file going into an
           account the user already bound is not the moment to ask what that
           account is (D-070). */}
-      {severalCards !== undefined && <span data-cards>{severalCards}, each into its own account</span>}
+      {severalCards !== undefined && <span data-cards>{fillNodes(t('reading.stage.eachOwn'), { cards: severalCards })}</span>}
 
       {severalCards === undefined && boundAccountId === undefined && held !== undefined && (
         <span className="text-caption text-ink-secondary">
           {held.accountId === undefined && held.madeBy !== undefined ? (
-            <>
-              {held.rows} of its rows are also in <Bidi>{held.madeBy}</Bidi>
-            </>
+            fillNodes(t('reading.stage.alsoIn'), { rows: held.rows, name: <Bidi>{held.madeBy}</Bidi> })
           ) : (
-            <>
-              {held.rows} of its rows are already in <Bidi>{held.accountName}</Bidi>
-            </>
+            fillNodes(t('reading.stage.alreadyIn'), { rows: held.rows, name: <Bidi>{held.accountName}</Bidi> })
           )}
         </span>
       )}
 
       {severalCards === undefined && boundAccountId === undefined && where !== undefined && (
         <label className="ms-auto flex items-center gap-2 text-caption text-ink-secondary">
-          Into
+          {t('reading.stage.into')}
           <ChoiceMenu
             className={`${SELECT} h-7 max-w-60 text-body`}
             text={into.find((each) => each.value === chosen)?.label ?? ''}
             choices={into}
-            aria-label="Which account this file belongs to"
+            aria-label={t('reading.stage.intoLabel')}
             onPick={(choice) => setChoice(choice.value)}
           />
         </label>
@@ -237,12 +241,12 @@ export function StageBar({
 
       {boundAccountId === undefined && (severalCards !== undefined || (chosenAccount === undefined && chosenMaking === undefined)) && (
         <label className="flex items-center gap-2 text-caption text-ink-secondary">
-          as a
+          {t('reading.stage.asA')}
           <ChoiceMenu
             className={`${SELECT} h-7 text-body`}
-            text={KINDS.find((each) => each.value === (kind ?? guessedKind))?.label ?? ''}
-            choices={KINDS}
-            aria-label="What kind of account this file belongs to"
+            text={kinds.find((each) => each.value === (kind ?? guessedKind))?.label ?? ''}
+            choices={kinds}
+            aria-label={t('reading.stage.kindLabel')}
             onPick={(choice) => setKind(choice.value as AccountKind)}
           />
         </label>
@@ -255,7 +259,7 @@ export function StageBar({
         onClick={read}
         disabled={fileHash === undefined}
       >
-        Read it
+        {t('reading.stage.read')}
       </Button>
     </Bar>
   )
@@ -270,7 +274,7 @@ function Bar({ children }: { children: React.ReactNode }) {
 }
 
 const KINDS = [
-  { value: 'CREDIT_CARD', label: 'card' },
-  { value: 'BANK', label: 'bank account' },
-  { value: 'CASH', label: 'cash' },
-]
+  { value: 'CREDIT_CARD', word: 'reading.stage.kinds.card' },
+  { value: 'BANK', word: 'reading.stage.kinds.bank' },
+  { value: 'CASH', word: 'reading.stage.kinds.cash' },
+] as const

@@ -1,5 +1,6 @@
 import { formatMoney, type Money } from '@/core/money.ts'
-import { compareYearMonths, formatMonthName, formatYearMonth, type YearMonth } from '@/core/time.ts'
+import { compareYearMonths, type YearMonth } from '@/core/time.ts'
+import { useDates, useT } from '@/i18n/current.ts'
 import { useWidth } from '@/ui/charts/useWidth.ts'
 
 /** Written out whole, so the stylesheet sees every class it has to make. */
@@ -36,6 +37,8 @@ export function MonthChart({
   readonly onPick: (period: YearMonth) => void
   readonly height?: number
 }) {
+  const t = useT()
+  const dates = useDates()
   const width = useWidth()
   const frame = width.ref
   const W = width.value
@@ -71,7 +74,7 @@ export function MonthChart({
       <svg
         viewBox={`0 0 ${String(W)} ${String(height)}`}
         className="block h-auto w-full overflow-visible"
-        aria-label="Came in and went out by month. Choose a month to open it."
+        aria-label={t('home.chart.label')}
       >
         <path d={line((one) => one.went)} fill="none" strokeWidth={1.5} strokeLinejoin="round" className="stroke-flow-out" />
         <path d={line((one) => one.came)} fill="none" strokeWidth={1.5} strokeLinejoin="round" className="stroke-flow-in" />
@@ -80,7 +83,7 @@ export function MonthChart({
           const has = one.came !== undefined || one.went !== undefined
           const cx = x(index)
           const anchor = index === 0 ? 'start' : index === n - 1 ? 'end' : 'middle'
-          const name = formatYearMonth(one.period)
+          const name = dates.yearMonth(one.period)
           const yearShown = one.period.month === 1 || index === 0
           return (
             <g
@@ -90,7 +93,11 @@ export function MonthChart({
                 ? {
                     role: 'button',
                     tabIndex: 0,
-                    'aria-label': `${name}: came in ${one.came === undefined ? 'nothing' : formatMoney(one.came)}, went out ${one.went === undefined ? 'nothing' : formatMoney(one.went)}`,
+                    'aria-label': t('home.chart.column', {
+                      month: name,
+                      came: one.came === undefined ? t('home.chart.nothing') : formatMoney(one.came),
+                      went: one.went === undefined ? t('home.chart.nothing') : formatMoney(one.went),
+                    }),
                     'aria-pressed': on,
                     onClick: () => onPick(one.period),
                     onKeyDown: (event: React.KeyboardEvent) => {
@@ -149,11 +156,11 @@ export function MonthChart({
               )}
               {one.part && one.went !== undefined && !on && (
                 <text x={cx} y={y(one.went.minor) + 16} textAnchor="middle" className="fc-col-part">
-                  part
+                  {t('home.flows.part')}
                 </text>
               )}
               <text className="fc-col-tick" x={cx} y={height - 6} textAnchor={anchor}>
-                {formatMonthName(one.period).slice(0, 3)}
+                {dates.monthAbbrev(one.period)}
                 {yearShown && step >= 40 ? ` ${String(one.period.year).slice(2)}` : ''}
               </text>
             </g>

@@ -7,6 +7,7 @@ import { Button } from '@/ui/components/Button.tsx'
 import { ChoiceField, ChoiceMenu, type Choice } from '@/ui/components/ChoiceField.tsx'
 import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
 import { FilterButton, FilterRow } from '@/ui/components/FilterButton.tsx'
+import { useT } from '@/i18n/current.ts'
 
 /**
  * What the user has typed, as opposed to what it means.
@@ -91,6 +92,7 @@ export function FilterBar({
   currency: string
   unparseable: { readonly min: boolean; readonly max: boolean }
 }) {
+  const t = useT()
   const set = <K extends keyof FilterFields>(key: K, value: FilterFields[K]): void => {
     onChange({ ...fields, [key]: value })
   }
@@ -100,15 +102,15 @@ export function FilterBar({
   // a bank account exists in the document, these are all cards, so it says card.
   const cards = everyAccountIsACard(accounts)
   const accountChoices: readonly Choice[] = [
-    { value: '', label: cards ? 'All cards' : 'All accounts' },
+    { value: '', label: t(cards ? 'transactions.filter.allCards' : 'transactions.filter.allAccounts') },
     ...accounts.map((account) => ({ value: account.id, label: account.name })),
   ]
   // **Uncategorized once** (M54 U5's row): the option is the rows with no
   // category *and* the ones parked on the system category, so the system
   // category is not listed again beside it.
   const categoryChoices: readonly Choice[] = [
-    { value: '', label: 'All categories' },
-    { value: UNCATEGORIZED_OPTION, label: 'Uncategorized' },
+    { value: '', label: t('transactions.filter.allCategories') },
+    { value: UNCATEGORIZED_OPTION, label: t('transactions.filter.uncategorized') },
     ...categories
       .filter((category) => category.id !== UNCATEGORIZED_ID)
       .map((category) => ({ value: category.id, label: category.path })),
@@ -119,20 +121,20 @@ export function FilterBar({
       <input
         value={fields.search}
         onChange={(event) => set('search', event.target.value)}
-        placeholder="Search merchants…"
-        aria-label="Search merchants"
+        placeholder={t('transactions.filter.search')}
+        aria-label={t('transactions.filter.searchLabel')}
         // A merchant name is the thing most likely to be pasted in here, and
         // most of them are Hebrew.
         dir="auto"
         className={`${FIELD} w-64`}
       />
 
-      <FilterButton on={on}>
+      <FilterButton on={on} label={t('transactions.filter.button')}>
         {accounts.length > 1 && (
-          <FilterRow label={cards ? 'Card' : 'Account'}>
+          <FilterRow label={t(cards ? 'transactions.filter.card' : 'transactions.filter.account')}>
             <ChoiceMenu
               className={`${SELECT} w-full`}
-              aria-label={cards ? 'Card' : 'Account'}
+              aria-label={t(cards ? 'transactions.filter.card' : 'transactions.filter.account')}
               text={accountChoices.find((each) => each.value === fields.accountId)?.label ?? ''}
               choices={accountChoices}
               onPick={(choice) => set('accountId', choice.value)}
@@ -140,7 +142,7 @@ export function FilterBar({
           </FilterRow>
         )}
 
-        <FilterRow label="Category">
+        <FilterRow label={t('transactions.filter.category')}>
           <CategoryChoice
             choices={categoryChoices}
             value={fields.category}
@@ -154,17 +156,17 @@ export function FilterBar({
         {/* Magnitude, so the labels say so — "at least" reads on a refund as
             well as on a charge, where "from −₪500" would not. */}
         <div className="grid grid-cols-2 gap-3">
-          <FilterRow label={`At least, ${currencySymbol(currency)}`}>
+          <FilterRow label={t('transactions.filter.atLeast', { symbol: currencySymbol(currency) })}>
             <AmountBound
-              label={`At least, in ${currency}`}
+              label={t('transactions.filter.atLeastIn', { currency })}
               value={fields.min}
               invalid={unparseable.min}
               onChange={(value) => set('min', value)}
             />
           </FilterRow>
-          <FilterRow label={`At most, ${currencySymbol(currency)}`}>
+          <FilterRow label={t('transactions.filter.atMost', { symbol: currencySymbol(currency) })}>
             <AmountBound
-              label={`At most, in ${currency}`}
+              label={t('transactions.filter.atMostIn', { currency })}
               value={fields.max}
               invalid={unparseable.max}
               onChange={(value) => set('max', value)}
@@ -181,7 +183,7 @@ export function FilterBar({
               onChange({ ...fields, accountId: '', category: '', withSubcategories: false, min: '', max: '' })
             }
           >
-            Clear
+            {t('transactions.filter.clear')}
           </Button>
         )}
       </FilterButton>
@@ -199,6 +201,7 @@ function CategoryChoice({
   readonly value: string
   readonly onPick: (value: string) => void
 }) {
+  const t = useT()
   const labelOf = (wanted: string): string => choices.find((each) => each.value === wanted)?.label ?? ''
   const [text, setText] = useState(() => labelOf(value))
   // Text typed and not picked is put back the moment a pick, or Clear, changes
@@ -211,7 +214,7 @@ function CategoryChoice({
   return (
     <ChoiceField
       className={`${FIELD} w-full`}
-      aria-label="Category"
+      aria-label={t('transactions.filter.category')}
       dir="auto"
       filter
       openOnFocus

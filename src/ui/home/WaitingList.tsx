@@ -2,7 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { formatMoney, type CurrencyCode } from '@/core/money.ts'
-import { addMonths, formatYearMonth, yearMonthOf } from '@/core/time.ts'
+import { addMonths, yearMonthOf } from '@/core/time.ts'
 import { unmatchedSettlements } from '@/data/importer/settlementScan.ts'
 import {
   decideAllForCard,
@@ -20,6 +20,9 @@ import { confirmHolding, staleHoldings } from '@/data/repositories/savingsReposi
 import { listTransferPairs, setTransferDecisions } from '@/data/repositories/transferPairRepository.ts'
 import { DEFAULT_WINDOW_MONTHS } from '@/domain/fixedExpenses.ts'
 import { waitingCounts, type AttentionItem } from '@/domain/home.ts'
+import { countKey } from '@/i18n/count.ts'
+import { useDates, useT } from '@/i18n/current.ts'
+import { fillNodes } from '@/i18n/nodes.tsx'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
@@ -52,16 +55,20 @@ export function WaitingList({
   currency: CurrencyCode
   onRead: () => void
 }) {
+  const t = useT()
   const totals = waitingCounts(items).totals
   return (
-    <section aria-label="Waiting for an answer" className="flex flex-col">
+    <section aria-label={t('home.waiting.title')} className="flex flex-col">
       <div className="border-b border-hairline-strong pb-2">
-        <BlockHead title="Waiting for an answer" aside={totals > 0 ? `${String(totals)} ${totals === 1 ? 'changes' : 'change'} this month’s totals` : undefined} />
+        <BlockHead
+          title={t('home.waiting.title')}
+          aside={totals > 0 ? t(countKey('home.waiting.changesTotals', totals), { count: totals }) : undefined}
+        />
       </div>
       {items.length === 0 ? (
         <p className="m-0 flex items-baseline gap-2.5 border-b border-hairline py-2.5 text-ink-secondary">
           <ActionGlyph name="check" />
-          Nothing. Every row has a category, every statement and paycheck is here, and nothing the app found is waiting on you.
+          {t('home.waiting.nothing')}
         </p>
       ) : (
         items.map((item) => <Kind key={item.kind} item={item} currency={currency} onRead={onRead} />)
@@ -72,6 +79,7 @@ export function WaitingList({
 
 function Kind({ item, currency, onRead }: { item: AttentionItem; currency: CurrencyCode; onRead: () => void }) {
   const navigate = useNavigate()
+  const t = useT()
   const n = item.count
   switch (item.kind) {
     case 'PENDING_SETTLEMENTS':
@@ -85,11 +93,14 @@ function Kind({ item, currency, onRead }: { item: AttentionItem; currency: Curre
     case 'UNCATEGORIZED':
       return (
         <Head
-          title={`${String(item.rows ?? n)} ${item.rows === 1 ? 'transaction' : 'transactions'} at ${String(n)} ${n === 1 ? 'merchant needs' : 'merchants need'} a category`}
-          why="every category total depends on it"
+          title={t(countKey('home.waiting.uncategorized.merchants', n), {
+            rows: t(countKey('home.waiting.uncategorized.rows', item.rows ?? n), { count: item.rows ?? n }),
+            count: n,
+          })}
+          why={t('home.waiting.uncategorized.why')}
         >
           <Button variant="secondary" size="sm" onClick={() => navigate('/transactions/merchants')} data-tour="choose-categories">
-            Choose categories
+            {t('home.waiting.uncategorized.action')}
           </Button>
         </Head>
       )
@@ -119,12 +130,13 @@ function useLedger() {
 
 function Settlements({ count }: { count: number }) {
   const { db, revision, write } = useLedger()
+  const t = useT()
   const groups = useMemo(() => (db === undefined ? [] : listSettlementSummaries(db, { decision: 'PENDING' })), [db, revision])
   const cards = [...new Set(groups.map((group) => group.cardAccountId))]
   return (
     <Head
-      title={`${String(count)} card ${count === 1 ? 'payment' : 'payments'} in your bank statement ${count === 1 ? 'is' : 'are'} the same money as your card statement`}
-      why="the month is counted twice until you say"
+      title={t(countKey('home.waiting.settlements.title', count), { count })}
+      why={t('home.waiting.settlements.why')}
       bulk={
         groups.length > 1 && (
           // What the accounts screen's bulk answer means: about the card, so remembered for it.
@@ -134,7 +146,7 @@ function Settlements({ count }: { count: number }) {
               decideAllForCard(database, id, 'EXCLUDED', now)
             }
           })}>
-            Leave all {groups.length} out
+            {t('home.waiting.settlements.leaveAll', { count: groups.length })}
           </Button>
         )
       }
@@ -154,15 +166,16 @@ function Settlements({ count }: { count: number }) {
 
 function Transfers({ count }: { count: number }) {
   const { db, revision, write } = useLedger()
+  const t = useT()
   const pairs = useMemo(() => (db === undefined ? [] : listTransferPairs(db, { decision: 'PENDING' })), [db, revision])
   return (
     <Head
-      title={`${String(count)} ${count === 1 ? 'transfer' : 'transfers'} between your own accounts`}
-      why="counted as money in and money out until you say"
+      title={t(countKey('home.waiting.transfers.title', count), { count })}
+      why={t('home.waiting.transfers.why')}
       bulk={
         pairs.length > 1 && (
           <Button variant="ghost" size="sm" onClick={() => write((database) => setTransferDecisions(database, pairs.map((pair) => ({ pairId: pair.id, decision: 'PAIRED' }))))}>
-            {pairs.length === 2 ? 'Both are transfers' : `All ${String(pairs.length)} are transfers`}
+            {pairs.length === 2 ? t('home.waiting.transfers.both') : t('home.waiting.transfers.all', { count: pairs.length })}
           </Button>
         )
       }
@@ -177,19 +190,26 @@ function Transfers({ count }: { count: number }) {
 
 function Unmatched({ onRead }: { onRead: () => void }) {
   const { db, revision, write } = useLedger()
+  const t = useT()
   const entries = useMemo(() => (db === undefined ? [] : unmatchedSettlements(db)), [db, revision])
   return entries.map((entry) => (
     <Head
       key={entry.last4 ?? 'unknown'}
       negative
-      title={`${formatMoney(entry.chargedTotal)} paid to ${entry.last4 === undefined ? 'a card this document does not have' : `a card ending ${entry.last4}`}, and no statement of it has been read`}
-      why="that month’s card spending is missing"
+      title={t('home.waiting.unmatched.title', {
+        amount: formatMoney(entry.chargedTotal),
+        card:
+          entry.last4 === undefined
+            ? t('home.waiting.unmatched.unknownCard')
+            : t('home.waiting.unmatched.card', { last4: entry.last4 }),
+      })}
+      why={t('home.waiting.unmatched.why')}
     >
       <Button variant="secondary" size="sm" onClick={onRead}>
-        Read its statement…
+        {t('home.waiting.unmatched.read')}
       </Button>
       <Button variant="ghost" size="sm" onClick={() => write((database, now) => countCardCharges(database, entry.rows.map((row) => row.ref), true, now))}>
-        Count the payment as spending
+        {t('home.waiting.unmatched.count')}
       </Button>
     </Head>
   ))
@@ -197,16 +217,21 @@ function Unmatched({ onRead }: { onRead: () => void }) {
 
 function Statements({ onRead }: { onRead: () => void }) {
   const { db, revision } = useLedger()
+  const t = useT()
+  const dates = useDates()
   const gaps = useMemo(() => (db === undefined ? [] : waitingStatements(db)), [db, revision])
   return gaps.map((gap) => (
     <Head
       key={gap.accountId}
       negative
-      title={`No ${gap.name}${gap.last4 === undefined ? '' : ` ···${gap.last4}`} statement for ${formatYearMonth(gap.period)}`}
-      why="so Went out is short"
+      title={fillNodes(t('home.waiting.statements.title'), {
+        account: <Bidi>{gap.last4 === undefined ? gap.name : `${gap.name} ···${gap.last4}`}</Bidi>,
+        month: dates.yearMonth(gap.period),
+      })}
+      why={t('home.waiting.statements.why')}
     >
       <Button variant="secondary" size="sm" onClick={onRead}>
-        Read files
+        {t('home.waiting.statements.read')}
       </Button>
     </Head>
   ))
@@ -215,15 +240,16 @@ function Statements({ onRead }: { onRead: () => void }) {
 function Payments({ count }: { count: number }) {
   const { db, revision, write } = useLedger()
   const navigate = useNavigate()
+  const t = useT()
   const found = useMemo(() => (db === undefined ? [] : paymentReview(db).items), [db, revision])
   return (
     <Head
-      title={`${String(count)} debt ${count === 1 ? 'payment was' : 'payments were'} found rather than entered`}
-      why="the app guessed these, and they count towards the balance already"
+      title={t(countKey('home.waiting.payments.title', count), { count })}
+      why={t('home.waiting.payments.why')}
       bulk={
         found.length > 1 && (
           <Button variant="ghost" size="sm" onClick={() => write((database, now) => { for (const item of found) confirmPayment(database, item.payment.id, now) })}>
-            {found.length === 2 ? 'Accept both' : `Accept all ${String(found.length)}`}
+            {found.length === 2 ? t('home.waiting.payments.both') : t('home.waiting.payments.all', { count: found.length })}
           </Button>
         )
       }
@@ -244,19 +270,20 @@ function Payments({ count }: { count: number }) {
 function Funds({ count }: { count: number }) {
   const { db, revision } = useLedger()
   const navigate = useNavigate()
+  const t = useT()
   const funds = useMemo(
     () => (db === undefined ? [] : listFundsWithLatest(db, { includeArchived: true }).filter((entry) => entry.latest === undefined)),
     [db, revision],
   )
   return (
     <Head
-      title={`${String(count)} ${count === 1 ? 'fund has' : 'funds have'} no balance entered`}
-      why="missing from net worth"
+      title={t(countKey('home.waiting.funds.title', count), { count })}
+      why={t('home.waiting.funds.why')}
       rows={funds.map(({ fund }) => (
         <div key={fund.id} className="flex min-h-10 flex-wrap items-center gap-x-4 gap-y-1 border-t border-hairline py-1.5">
           <Bidi className="min-w-0 flex-1">{fund.name}</Bidi>
           <Button variant="secondary" size="sm" onClick={() => navigate(`/wealth/funds/${encodeURIComponent(fund.id)}`)}>
-            Enter its balance
+            {t('home.waiting.funds.enter')}
           </Button>
         </div>
       ))}
@@ -264,7 +291,7 @@ function Funds({ count }: { count: number }) {
       {/* A balance in another currency is missing from the figure too, and has a reading. */}
       {funds.length === 0 && (
         <Button variant="secondary" size="sm" onClick={() => navigate('/wealth/funds')}>
-          Enter balances
+          {t('home.waiting.funds.enterAll')}
         </Button>
       )}
     </Head>
@@ -273,6 +300,7 @@ function Funds({ count }: { count: number }) {
 
 function Bills() {
   const { db, revision, write } = useLedger()
+  const t = useT()
   const candidates = useMemo(
     () => (db === undefined ? [] : billCandidates(db, addMonths(yearMonthOf(today()), -1))),
     [db, revision],
@@ -281,8 +309,8 @@ function Bills() {
   if (n === 0) return null
   return (
     <Head
-      title={`${String(n)} ${n === 1 ? 'charge looks like a bill' : 'charges look like bills'}`}
-      why="changes what there is to split"
+      title={t(countKey('home.waiting.bills.title', n), { count: n })}
+      why={t('home.waiting.bills.why')}
       rows={candidates.map((candidate) => (
         <CandidateCard
           key={`${candidate.merchantNormalized}-${candidate.currency}`}
@@ -298,16 +326,23 @@ function Bills() {
 
 function Payslip({ item, onRead }: { item: AttentionItem; onRead: () => void }) {
   const { write } = useLedger()
+  const t = useT()
+  const dates = useDates()
   const month = item.period
   // Its Add a paycheck is the band's above, the one Home has (M54 F13, M59 U6).
   return (
-    <Head title={`No paycheck for ${month === undefined ? 'last month' : formatYearMonth(month)}`} why="the splitter is built on it">
+    <Head
+      title={t('home.waiting.payslip.title', {
+        month: month === undefined ? t('home.waiting.payslip.lastMonth') : dates.yearMonth(month),
+      })}
+      why={t('home.waiting.payslip.why')}
+    >
       <Button variant="secondary" size="sm" onClick={onRead}>
-        Read files
+        {t('home.waiting.payslip.read')}
       </Button>
       {month !== undefined && (
         <Button variant="ghost" size="sm" onClick={() => write((database, now) => setNoPayMonths(database, [month], true, now))}>
-          No pay that month
+          {t('home.waiting.payslip.noPay')}
         </Button>
       )}
     </Head>
@@ -317,30 +352,36 @@ function Payslip({ item, onRead }: { item: AttentionItem; onRead: () => void }) 
 function Holdings({ currency }: { currency: CurrencyCode }) {
   const { db, revision, write } = useLedger()
   const navigate = useNavigate()
+  const t = useT()
   const asOf = today()
   const stale = useMemo(() => (db === undefined ? [] : staleHoldings(db, asOf, currency)), [db, revision, currency])
   const n = stale.length
   return (
     <Head
-      title={`${String(n)} ${n === 1 ? 'holding has' : 'holdings have'} money nobody has counted lately`}
-      why="counted, and possibly wrong"
+      title={t(countKey('home.waiting.holdings.title', n), { count: n })}
+      why={t('home.waiting.holdings.why')}
       rows={stale.map((one) => (
         <div key={one.holdingId} className="flex min-h-10 flex-wrap items-center gap-x-4 gap-y-1 border-t border-hairline py-1.5">
           <span className="min-w-0 flex-1">
-            <Bidi>{one.holding.name}</Bidi>: is it still <span className="tabular-nums">{formatMoney(one.balance)}</span>?
+            {fillNodes(t('home.waiting.holdings.still'), {
+              name: <Bidi>{one.holding.name}</Bidi>,
+              amount: <span className="tabular-nums">{formatMoney(one.balance)}</span>,
+            })}
             <small className="block text-caption text-ink-secondary">
-              {one.monthsSince === undefined ? 'never counted' : `counted ${String(one.monthsSince)} months ago`}
+              {one.monthsSince === undefined
+                ? t('home.waiting.holdings.never')
+                : t(countKey('home.waiting.holdings.monthsAgo', one.monthsSince), { count: one.monthsSince })}
             </small>
           </span>
           <Button size="sm" onClick={() => write((database, now) => confirmHolding(database, one.holdingId, asOf, now))}>
-            Still right
+            {t('home.waiting.holdings.right')}
           </Button>
           <Button variant="ghost" size="sm" onClick={() => {
               const figure = newFigureFor(one.holdingId)
               navigate(figure.to, { state: figure.state })
             }}
           >
-            New figure
+            {t('home.waiting.holdings.newFigure')}
           </Button>
         </div>
       ))}
@@ -361,13 +402,14 @@ function Head({
   rows,
   children,
 }: {
-  title: string
+  title: ReactNode
   why: string
   negative?: boolean
   bulk?: ReactNode
   rows?: readonly ReactNode[]
   children?: ReactNode
 }) {
+  const t = useT()
   const [all, setAll] = useState(false)
   const shown = rows === undefined || all ? rows : rows.slice(0, 3)
   return (
@@ -387,7 +429,7 @@ function Head({
       {rows !== undefined && rows.length > 3 && (
         <div className="pb-2.5 ps-5">
           <Button variant="ghost" size="sm" onClick={() => setAll((current) => !current)}>
-            {all ? 'Show fewer' : `Show ${String(rows.length - 3)} more`}
+            {all ? t('home.waiting.fewer') : t('home.waiting.more', { count: rows.length - 3 })}
           </Button>
         </div>
       )}

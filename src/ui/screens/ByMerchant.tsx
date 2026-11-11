@@ -65,6 +65,9 @@ import { planReapply } from '@/domain/reapply.ts'
 import { asRule, draftFromMerchant, draftFromProviderCategory } from '@/domain/ruleEditing.ts'
 import { suggestFromHistory, type MerchantSuggestion } from '@/domain/suggest.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
+import { countKey } from '@/i18n/count.ts'
+import { useLanguage, useT, type Translate } from '@/i18n/current.ts'
+import { fillNodes } from '@/i18n/nodes.tsx'
 import { Flip } from '@/ui/motion/Flip.tsx'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { PromotionPanel, type BillPromotion } from '@/ui/categorize/PromotionPanel.tsx'
@@ -117,6 +120,7 @@ export function ByMerchant() {
   // The empty state's one action (M59 U6): Read files, as Home's band does it.
   const picker = useFilePicker(useReadFiles())
   const navigate = useNavigate()
+  const { t, path: pathText, iso } = useWords()
 
   const [scope, setScope] = useState<Scope>(EVERYTHING)
   const [order, setOrder] = useState<GroupOrder>('COUNT')
@@ -305,14 +309,16 @@ export function ByMerchant() {
     })
     const made = ruleId
     remember({
-      message: (
-        <>
-          Categorized {done.changed} <Bidi>{group.merchantRaw}</Bidi> as{' '}
-          <b className="font-medium">{data.paths.get(categoryId) ?? 'a category'}</b>
-          {made === undefined ? '.' : ', and made the rule, so next month’s are categorized on import.'}
-        </>
-      ),
-      undoLabel: made === undefined ? 'Undo' : 'Undo both',
+      message: fillNodes(t(made === undefined ? 'merchants.filings.noRule' : 'merchants.filings.withRule'), {
+        count: done.changed,
+        merchant: <Bidi>{group.merchantRaw}</Bidi>,
+        path: (
+          <b className="font-medium">
+            <Bidi>{pathText(data.paths.get(categoryId) ?? t('merchants.filings.aCategory'))}</Bidi>
+          </b>
+        ),
+      }),
+      undoLabel: t(made === undefined ? 'merchants.filings.undo' : 'merchants.filings.undoBoth'),
       undo: (database) => {
         undoCorrections(database, done.filed, categoryId)
         if (made !== undefined) deleteRule(database, made, Date.now())
@@ -388,20 +394,18 @@ export function ByMerchant() {
       const { [provider]: _gone, ...rest } = current
       return rest
     })
-    const path = <b className="font-medium">{data.paths.get(categoryId) ?? 'a category'}</b>
+    const path = (
+      <b className="font-medium">
+        <Bidi>{pathText(data.paths.get(categoryId) ?? t('merchants.filings.aCategory'))}</Bidi>
+      </b>
+    )
     remember({
-      message:
-        changed === 0 ? (
-          <>
-            Made the rule “<Bidi>{provider}</Bidi>” → {path}. No row with no category was under it.
-          </>
-        ) : (
-          <>
-            Categorized {changed} the provider calls “<Bidi>{provider}</Bidi>” as {path}, and made the rule, so
-            next month’s are categorized on import.
-          </>
-        ),
-      undoLabel: 'Undo both',
+      message: fillNodes(t(changed === 0 ? 'merchants.filings.headingRuleOnly' : 'merchants.filings.headingFiled'), {
+        count: changed,
+        provider: <Bidi>{provider}</Bidi>,
+        path,
+      }),
+      undoLabel: t('merchants.filings.undoBoth'),
       undo: (database) => {
         const now = Date.now()
         if (run !== undefined) undoReapply(database, run, now)
@@ -440,12 +444,11 @@ export function ByMerchant() {
     const left = ids
     if (left.length === 0) return
     remember({
-      message: (
-        <>
-          Left {left.length} <Bidi>{group.merchantRaw}</Bidi> out of totals. All rows keeps them, struck through.
-        </>
-      ),
-      undoLabel: 'Undo',
+      message: fillNodes(t('merchants.filings.leftOut'), {
+        count: left.length,
+        merchant: <Bidi>{group.merchantRaw}</Bidi>,
+      }),
+      undoLabel: t('merchants.filings.undo'),
       undo: (database) => {
         const now = Date.now()
         for (const id of left) setExcludedFromStats(database, id, false, now)
@@ -583,14 +586,17 @@ export function ByMerchant() {
   })
 
   if (data === undefined) {
-    return <Centered>Open a document, or create one, to categorize what is in it.</Centered>
+    return <Centered>{t('merchants.noDocument')}</Centered>
   }
 
   const waiting = groups.reduce((total, group) => total + group.count, 0)
   const placed = baseline === 0 ? 0 : Math.round((100 * (baseline - leftMinor)) / baseline)
   const confident = data.suggestions.filter((one) => one.confident)
   const promotingGroup = groups.find((group) => group.merchantNormalized === promoting)
-  const categoryPath = (id: string): string | undefined => data.paths.get(id)
+  const categoryPath = (id: string): string | undefined => {
+    const path = data.paths.get(id)
+    return path === undefined ? undefined : pathText(path)
+  }
   const suggestionFor = (group: MerchantGroup): MerchantSuggestion | undefined =>
     data.suggestions.find((one) => one.merchantNormalized === group.merchantNormalized)
 
@@ -599,11 +605,11 @@ export function ByMerchant() {
   const indexOf = new Map(groups.map((group, index) => [group.merchantNormalized, index]))
 
   const accountChoices: readonly Choice[] = [
-    { value: '', label: 'All accounts' },
+    { value: '', label: t('merchants.header.allAccounts') },
     ...data.accounts.map((account) => ({ value: account.id, label: accountLabel(account) })),
   ]
   const monthChoices: readonly Choice[] = [
-    { value: '', label: 'All months' },
+    { value: '', label: t('merchants.header.allMonths') },
     ...data.months.map((period) => ({ value: period, label: period })),
   ]
 
@@ -613,12 +619,12 @@ export function ByMerchant() {
     const alias = data.aliases.get(group.merchantNormalized)
     return [
       ...cards.map((card) => ({
-        label: `${card.name}${card.id === alias ? ' · now' : ''}`,
+        label: card.id === alias ? t('merchants.menu.cardNow', { card: iso(card.name) }) : card.name,
         onChoose: () => setPayer(group, card.id),
       })),
       ...(alias === undefined
         ? []
-        : [{ label: 'Not a card payment', separated: true, onChoose: () => setPayer(group, undefined) }]),
+        : [{ label: t('merchants.menu.notCardPayment'), separated: true, onChoose: () => setPayer(group, undefined) }]),
     ]
   }
 
@@ -628,26 +634,29 @@ export function ByMerchant() {
     if (hint !== undefined) {
       items.push({
         icon: 'check',
-        label: `Confirm all ${String(group.count)} as ${categoryPath(hint) ?? 'the guess'}`,
+        label: t('merchants.menu.confirmAllAs', {
+          count: group.count,
+          path: iso(categoryPath(hint) ?? t('merchants.menu.theGuess')),
+        }),
         shortcut: 'Enter',
         onChoose: () => file(group, hint),
       })
     }
     items.push({
       icon: 'cat',
-      label: `Categorize all ${String(group.count)} as`,
+      label: t('merchants.menu.categorizeAllAs', { count: group.count }),
       submenu: [
         ...usual.map((one, slot) => ({
           label: (
             <CategoryMark color={palette.colorOf(one.id)}>
-              {one.path}
+              {pathText(one.path)}
             </CategoryMark>
           ),
           shortcut: String(slot + 1),
           onChoose: () => file(group, one.id),
         })),
         {
-          label: 'All categories…',
+          label: t('merchants.menu.allCategories'),
           shortcut: 'C',
           separated: usual.length > 0,
           onChoose: () => {
@@ -660,8 +669,8 @@ export function ByMerchant() {
     if (canPayCard(group)) {
       items.push({
         icon: 'card',
-        label: 'This pays a card…',
-        detail: 'Every row of this name is a card payment, not spending',
+        label: t('merchants.menu.paysCard'),
+        detail: t('merchants.menu.paysCardDetail'),
         shortcut: 'P',
         onChoose: () => {
           const element = cursor.element()?.querySelector('[data-pays-card]')
@@ -672,34 +681,30 @@ export function ByMerchant() {
     }
     items.push({
       icon: 'skip',
-      label: 'Skip for now',
-      detail: 'It waits under Skipped, and its rows stay in the ledger',
+      label: t('merchants.menu.skip'),
+      detail: t('merchants.menu.skipDetail'),
       shortcut: 'S',
       onChoose: () => skip(group),
     })
     items.push(
       {
         icon: 'eyeoff',
-        label: `Leave all ${String(group.count)} out of totals`,
-        detail: 'They leave this list and every sum; All rows keeps them, struck through',
+        label: t('merchants.menu.leaveOut', { count: group.count }),
+        detail: t('merchants.menu.leaveOutDetail'),
         separated: true,
         onChoose: () => leaveOut(group),
       },
       {
         icon: 'bill',
-        label: 'It’s a bill…',
-        detail: 'Watch for it each month, with the amount it usually is',
+        label: t('merchants.menu.bill'),
+        detail: t('merchants.menu.billDetail'),
         shortcut: 'T',
         onChoose: () => openPromotion(group),
       },
-      { icon: 'debt', label: 'It pays a debt…', onChoose: () => openPromotion(group) },
+      { icon: 'debt', label: t('merchants.menu.debt'), onChoose: () => openPromotion(group) },
       {
         icon: 'rule',
-        label: (
-          <>
-            Write a rule for <Bidi>{group.merchantRaw}</Bidi>…
-          </>
-        ),
+        label: fillNodes(t('merchants.menu.writeRule'), { merchant: <Bidi>{group.merchantRaw}</Bidi> }),
         separated: true,
         onChoose: () =>
           navigate('/categories/rules', { state: { draft: draftFromMerchant(group.merchantNormalized, hint) } }),
@@ -712,19 +717,15 @@ export function ByMerchant() {
         : [
             {
               icon: 'rule' as const,
-              label: (
-                <>
-                  Rule from “<Bidi>{providerOf(group)}</Bidi>”…
-                </>
-              ),
-              detail: 'What the provider called it; reaches the most rows',
+              label: fillNodes(t('merchants.menu.ruleFrom'), { provider: <Bidi>{providerOf(group)}</Bidi> }),
+              detail: t('merchants.menu.ruleFromDetail'),
               onChoose: () => ruleFromProvider(group),
             },
           ]),
-      { icon: 'filter', label: 'Show its rows in All rows', onChoose: () => showRows(group) },
+      { icon: 'filter', label: t('merchants.menu.showRows'), onChoose: () => showRows(group) },
       {
         icon: 'cat',
-        label: 'Show its charges here',
+        label: t('merchants.menu.showCharges'),
         shortcut: 'Space',
         onChoose: () => setExpanded(group.merchantNormalized),
       },
@@ -737,29 +738,31 @@ export function ByMerchant() {
       <div className="fc-view-enter @container flex flex-col gap-5 px-8 pt-6 pb-12">
         <header className="flex flex-wrap items-end justify-between gap-6 border-b border-hairline pb-4">
           <div className="flex flex-col gap-1.5">
-            <span className="fc-label text-ink-secondary uppercase">
-              Transactions · one decision per shop, not per charge
-            </span>
-            <h1 className="m-0 text-title font-medium">Transactions</h1>
+            <span className="fc-label text-ink-secondary uppercase">{t('merchants.header.eyebrow')}</span>
+            <h1 className="m-0 text-title font-medium">{t('merchants.header.title')}</h1>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <ViewSwitch view="merchants" waiting={groups.length} />
             {/* **Account and Month behind Filter** (M59 U6, D-582), as on All
                 rows; the order is the list's, on its own header row. */}
             {data.ledger > 0 && (
-              <FilterButton align="end" on={(scope.accountId === '' ? 0 : 1) + (scope.period === '' ? 0 : 1)}>
-                <FilterRow label="Account">
-                  <Menu label="Account" value={scope.accountId} choices={accountChoices} onPick={(accountId) => setScope({ ...scope, accountId })} />
+              <FilterButton
+                align="end"
+                label={t('merchants.header.filter')}
+                on={(scope.accountId === '' ? 0 : 1) + (scope.period === '' ? 0 : 1)}
+              >
+                <FilterRow label={t('merchants.header.account')}>
+                  <Menu label={t('merchants.header.account')} value={scope.accountId} choices={accountChoices} onPick={(accountId) => setScope({ ...scope, accountId })} />
                 </FilterRow>
-                <FilterRow label="Month">
-                  <Menu label="Month" value={scope.period} choices={monthChoices} onPick={(period) => setScope({ ...scope, period })} />
+                <FilterRow label={t('merchants.header.month')}>
+                  <Menu label={t('merchants.header.month')} value={scope.period} choices={monthChoices} onPick={(period) => setScope({ ...scope, period })} />
                 </FilterRow>
               </FilterButton>
             )}
             {(data.providerNamed || byProvider) && (
               <label
                 className="flex cursor-pointer items-center gap-2 text-body text-ink-secondary select-none"
-                title="One heading per category the card or bank gave, its merchants under it — and one rule for each heading"
+                title={t('merchants.header.byProviderHint')}
               >
                 <input
                   type="checkbox"
@@ -767,7 +770,7 @@ export function ByMerchant() {
                   onChange={() => setByProvider((current) => !current)}
                   className={CHECK}
                 />
-                By provider category
+                {t('merchants.header.byProvider')}
               </label>
             )}
             {/* *Skip all n* behind More (M59 U6, D-582): one press sets every
@@ -775,11 +778,11 @@ export function ByMerchant() {
             {picker.input}
             {groups.length > 0 && (
               <PageMenu
-                title="By merchant"
+                title={t('merchants.header.pageMenu')}
                 items={[
                   {
-                    label: `Skip all ${String(groups.length)}`,
-                    detail: 'Set every name here aside. Nothing is written to the transactions.',
+                    label: t('merchants.header.skipAll', { count: groups.length }),
+                    detail: t('merchants.header.skipAllDetail'),
                     onChoose: () =>
                       mutate((database) =>
                         void skipAll(database, groups.map((group) => group.merchantNormalized), Date.now()),
@@ -797,23 +800,28 @@ export function ByMerchant() {
             nothing to count. */}
         {data.ledger > 0 && (
           <div className="grid grid-cols-2 divide-x divide-hairline border-y border-hairline">
-            <Hero label="Waiting" first>
+            <Hero label={t('merchants.tiles.waiting')} first>
               <b className="text-secondary-number font-medium tabular-nums">
-                {groups.length} {groups.length === 1 ? 'name' : 'names'}
+                {t(countKey('merchants.tiles.names', groups.length), { count: groups.length })}
               </b>
               <small className="text-caption text-ink-secondary tabular-nums">
-                {waiting} {waiting === 1 ? 'charge' : 'charges'}, {formatMoney(money(leftMinor, data.currency))} without a category
+                {t(countKey('merchants.tiles.charges', waiting), {
+                  count: waiting,
+                  amount: formatMoney(money(leftMinor, data.currency)),
+                })}
               </small>
             </Hero>
             <div className="flex min-w-0 flex-col gap-1 px-4 py-3.5">
-              <span className="fc-label text-ink-secondary uppercase">Categorized this sitting</span>
+              <span className="fc-label text-ink-secondary uppercase">{t('merchants.tiles.sitting')}</span>
               <b className="text-secondary-number font-medium tabular-nums">{placed}%</b>
               <div className="h-1 bg-hairline" aria-hidden>
                 <i className="block h-full bg-accent transition-[width] duration-[var(--duration-base)]" style={{ width: `${placed}%` }} />
               </div>
               <small className="text-caption text-ink-secondary">
-                {formatMoney(money(baseline - leftMinor, data.currency))} of{' '}
-                {formatMoney(money(baseline, data.currency))} placed
+                {t('merchants.tiles.placed', {
+                  done: formatMoney(money(baseline - leftMinor, data.currency)),
+                  total: formatMoney(money(baseline, data.currency)),
+                })}
               </small>
             </div>
           </div>
@@ -821,7 +829,7 @@ export function ByMerchant() {
 
         {filings.length > 0 && (
           <section
-            aria-label="Categorized this sitting"
+            aria-label={t('merchants.tiles.sitting')}
             aria-live="polite"
             className="fc-pop-enter flex flex-col bg-accent-soft"
           >
@@ -836,7 +844,7 @@ export function ByMerchant() {
             ))}
             {filings.length > 5 && (
               <p className="px-3.5 pb-2 text-caption text-ink-secondary">
-                and {filings.length - 5} earlier this sitting, each with its own Undo once the newer ones are gone
+                {t('merchants.filings.earlier', { count: filings.length - 5 })}
               </p>
             )}
           </section>
@@ -844,47 +852,48 @@ export function ByMerchant() {
 
         {promoted !== undefined && (
           <section
-            aria-label="Promoted"
+            aria-label={t('merchants.promoted.label')}
             aria-live="polite"
             className="fc-pop-enter flex flex-wrap items-center gap-x-4 gap-y-2 bg-surface px-3.5 py-2.5"
           >
             <p className="m-0">
               {promoted.kind === 'BILL' ? (
                 <>
-                  <span className="font-medium">{promoted.name}</span> is a bill now, and the next charge
-                  under this name is the same bill.{' '}
+                  {fillNodes(t('merchants.promoted.bill'), {
+                    name: <Bidi className="font-medium">{promoted.name}</Bidi>,
+                  })}{' '}
                   <Link to="/plan" className={LINK}>
-                    See it on Plan
+                    {t('merchants.promoted.seeOnPlan')}
                   </Link>
                 </>
               ) : (
                 <>
-                  <span className="font-medium">{promoted.name}</span> watches this name now.{' '}
+                  {fillNodes(t('merchants.promoted.watches'), {
+                    name: <Bidi className="font-medium">{promoted.name}</Bidi>,
+                  })}{' '}
                   {promoted.created === 0 ? (
-                    <span className="text-ink-secondary">
-                      Nothing was found to answer yet — the next import will look again.
-                    </span>
+                    <span className="text-ink-secondary">{t('merchants.promoted.nothingFound')}</span>
                   ) : (
-                    <>
-                      <span className="tabular-nums">{promoted.created}</span>
-                      {promoted.created === 1 ? ' charge is' : ' charges are'} waiting unconfirmed in its review queue.
-                    </>
+                    fillNodes(t(countKey('merchants.promoted.waiting', promoted.created)), {
+                      count: <span className="tabular-nums">{promoted.created}</span>,
+                    })
                   )}
                   {promoted.ambiguous > 0 && (
                     <>
                       {' '}
-                      <span className="tabular-nums">{promoted.ambiguous}</span> more{' '}
-                      {promoted.ambiguous === 1 ? 'is' : 'are'} covered by two debts and wait as questions.
+                      {fillNodes(t(countKey('merchants.promoted.ambiguous', promoted.ambiguous)), {
+                        count: <span className="tabular-nums">{promoted.ambiguous}</span>,
+                      })}
                     </>
                   )}{' '}
                   <Link to="/wealth/debts" className={LINK}>
-                    Answer them on Debts
+                    {t('merchants.promoted.answerOnDebts')}
                   </Link>
                 </>
               )}
             </p>
             <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setPromoted(undefined)}>
-              Dismiss
+              {t('merchants.promoted.dismiss')}
             </Button>
           </section>
         )}
@@ -908,12 +917,13 @@ export function ByMerchant() {
         {confident.length > 0 && (
           <section className="fc-pop-enter flex flex-wrap items-center gap-x-4 gap-y-2 bg-surface px-3.5 py-2.5">
             <p className="m-0 min-w-0 flex-1">
-              <span className="font-medium tabular-nums">{confident.length}</span>
-              {confident.length === 1 ? ' merchant identified.' : ' merchants identified.'}{' '}
-              <span className="text-ink-secondary">Save categorizes each under its category.</span>
+              {fillNodes(t(countKey('merchants.identified.found', confident.length)), {
+                count: <span className="font-medium tabular-nums">{confident.length}</span>,
+              })}{' '}
+              <span className="text-ink-secondary">{t('merchants.identified.hint')}</span>
             </p>
             <Button variant="secondary" size="sm" icon="check" onClick={() => acceptAll(confident)}>
-              {confident.length === 1 ? 'Save' : `Save ${confident.length}`}
+              {t(countKey('merchants.identified.save', confident.length), { count: confident.length })}
             </Button>
           </section>
         )}
@@ -922,7 +932,7 @@ export function ByMerchant() {
           <div className="min-w-0" data-guide="tx.merchant">
             {data.ledger > 0 && (
             <div className="flex items-center justify-between border-b border-hairline pb-2 text-caption text-ink-secondary">
-              <span className="fc-label uppercase">Merchant</span>
+              <span className="fc-label uppercase">{t('merchants.list.merchant')}</span>
               <span className="flex items-center gap-4">
                 {data.skippedGroups.length > 0 && (
                   <button
@@ -930,33 +940,31 @@ export function ByMerchant() {
                     onClick={() => setShowSkipped((current) => !current)}
                     className={`tabular-nums ${showSkipped ? 'text-ink underline underline-offset-4' : 'hover:text-ink'}`}
                   >
-                    {data.skippedGroups.length} skipped
+                    {t('merchants.list.skipped', { count: data.skippedGroups.length })}
                   </button>
                 )}
                 {/* The order is the list's, so it sits on the list (M59 U6, D-582). */}
-                <Menu label="Order" value={order} choices={ORDERS} onPick={(value) => setOrder(value as GroupOrder)} />
+                <Menu label={t('merchants.list.order')} value={order} choices={orders(t)} onPick={(value) => setOrder(value as GroupOrder)} />
               </span>
             </div>
             )}
 
             {showSkipped && data.skippedGroups.length > 0 && (
               <section className="fc-pop-enter border-b border-hairline bg-surface px-3 py-3">
-                <p className="m-0 text-ink-secondary">
-                  Set aside. These are still in the ledger and still uncategorized — they are only out of the queue.
-                </p>
+                <p className="m-0 text-ink-secondary">{t('merchants.list.skippedNote')}</p>
                 <ul className="m-0 mt-1.5 list-none p-0">
                   {data.skippedGroups.map((group) => (
                     <li key={group.merchantNormalized} className="flex flex-wrap items-baseline gap-x-3 border-t border-hairline py-1">
                       <Bidi className="text-ink">{group.merchantRaw}</Bidi>
                       <span className="text-ink-tertiary tabular-nums">
-                        {group.count} {group.count === 1 ? 'transaction' : 'transactions'}
+                        {t(countKey('merchants.list.transactions', group.count), { count: group.count })}
                       </span>
                       <button
                         type="button"
                         onClick={() => unskip(group)}
                         className="ms-auto text-caption text-ink-secondary hover:text-ink"
                       >
-                        Put it back
+                        {t('merchants.list.putBack')}
                       </button>
                     </li>
                   ))}
@@ -980,7 +988,7 @@ export function ByMerchant() {
                 cursor.container.onKeyDown(event)
               }}
               className="outline-none"
-              aria-label="Merchants waiting for a category"
+              aria-label={t('merchants.list.label')}
             >
               {groups.length === 0 ? (
                 <Empty
@@ -1030,11 +1038,11 @@ export function ByMerchant() {
                   const provider = providerOf(group)
                   const why =
                     hint !== undefined
-                      ? `${hint.count} earlier ${hint.count === 1 ? 'charge' : 'charges'} categorized there${settledCount(group) > hint.count ? `, of ${settledCount(group)}` : ''}`
+                      ? `${t(countKey('merchants.row.earlier', hint.count), { count: hint.count })}${settledCount(group) > hint.count ? t('merchants.row.ofSettled', { count: settledCount(group) }) : ''}`
                       : suggestion !== undefined
-                        ? `looks like ${suggestion.neighbour}`
+                        ? t('merchants.row.looksLike', { name: iso(suggestion.neighbour) })
                         : provider === undefined
-                          ? 'no pattern yet'
+                          ? t('merchants.row.noPattern')
                           : undefined
                   const ruleTicked = !noRule.has(group.merchantNormalized)
                   return (
@@ -1071,7 +1079,7 @@ export function ByMerchant() {
                         <button
                           type="button"
                           onClick={() => showRows(group)}
-                          title={`${group.merchantRaw} · see these in All rows`}
+                          title={t('merchants.row.seeInAllRows', { merchant: iso(group.merchantRaw) })}
                           className="flex min-w-0 text-start hover:underline"
                         >
                           <Bidi className="min-w-0 truncate">{group.merchantRaw}</Bidi>
@@ -1082,7 +1090,7 @@ export function ByMerchant() {
                         <small className="flex min-w-0 gap-x-1 text-caption text-ink-secondary">
                           {hint === undefined && suggestion !== undefined ? (
                             <span title={why} className="flex min-w-0 gap-x-1">
-                              <span className="shrink-0">looks like</span>
+                              <span className="shrink-0">{t('merchants.row.looksLikeLead')}</span>
                               <Bidi className="min-w-0 truncate">{suggestion.neighbour}</Bidi>
                             </span>
                           ) : (
@@ -1108,12 +1116,12 @@ export function ByMerchant() {
                                   event.stopPropagation()
                                   ruleFromProvider(group)
                                 }}
-                                title={`Open a rule for every row the provider calls ${provider}`}
+                                title={t('merchants.row.ruleFromTitle', { provider: iso(provider) })}
                                 className="flex min-w-0 shrink text-accent hover:underline"
                               >
-                                <span className="shrink-0">Rule from “</span>
+                                <span className="shrink-0">{t('merchants.row.ruleFromOpen')}</span>
                                 <Bidi className="min-w-0 truncate">{provider}</Bidi>
-                                <span className="shrink-0">”</span>
+                                <span className="shrink-0">{t('merchants.row.ruleFromClose')}</span>
                               </button>
                             </>
                           )}
@@ -1140,8 +1148,8 @@ export function ByMerchant() {
                               return categoryId === undefined ? rest : { ...rest, [group.merchantNormalized]: categoryId }
                             })
                           }
-                          label={`Category for all ${group.count} transactions at ${group.merchantRaw}`}
-                          placeholder="Choose a category"
+                          label={t('merchants.row.categoryFor', { count: group.count, merchant: iso(group.merchantRaw) })}
+                          placeholder={t('merchants.row.chooseCategory')}
                           outlined
                           tour="merchant-category"
                         />
@@ -1149,7 +1157,7 @@ export function ByMerchant() {
                       <span className="col-span-full flex items-center justify-end gap-1 pb-2 @[46rem]:col-span-1 @[46rem]:pb-0">
                         <label
                           className="me-1 inline-flex cursor-pointer items-center gap-1.5 text-caption text-ink-secondary select-none"
-                          title="Make a rule as you confirm, so next month’s are categorized on import"
+                          title={t('merchants.row.ruleHint')}
                         >
                           <input
                             type="checkbox"
@@ -1164,25 +1172,29 @@ export function ByMerchant() {
                             }
                             className={CHECK}
                           />
-                          rule
+                          {t('merchants.row.rule')}
                         </label>
                         <Button
                           variant="secondary"
                           size="sm"
                           icon="check"
                           disabled={guess === undefined}
-                          title={guess === undefined ? 'Choose a category first' : `Put all ${group.count} in ${categoryPath(guess) ?? ''}`}
+                          title={
+                            guess === undefined
+                              ? t('merchants.row.chooseFirst')
+                              : t('merchants.row.putAllIn', { count: group.count, path: iso(categoryPath(guess) ?? '') })
+                          }
                           onClick={() => file(group, guess)}
                           data-tour="merchant-confirm"
                         >
-                          Confirm
+                          {t('merchants.row.confirm')}
                         </Button>
                         {canPayCard(group) && (
                           <IconButton
                             label={
                               data.aliases.has(group.merchantNormalized)
-                                ? 'Pays a card (P) — change'
-                                : 'This pays a card (P)'
+                                ? t('merchants.row.paysCardChange')
+                                : t('merchants.row.paysCard')
                             }
                             dataPaysCard
                             active={data.aliases.has(group.merchantNormalized)}
@@ -1195,11 +1207,11 @@ export function ByMerchant() {
                             <ActionGlyph name="card" size={15} />
                           </IconButton>
                         )}
-                        <IconButton label="Skip for now (S)" onClick={() => skip(group)}>
+                        <IconButton label={t('merchants.row.skip')} onClick={() => skip(group)}>
                           <ActionGlyph name="skip" size={15} />
                         </IconButton>
                         <IconButton
-                          label="More (right-click)"
+                          label={t('merchants.row.more')}
                           onClick={(event) => {
                             const box = event.currentTarget.getBoundingClientRect()
                             cursor.set(index)
@@ -1218,7 +1230,7 @@ export function ByMerchant() {
                             </div>
                           ))}
                           {charges.total > charges.rows.length && (
-                            <span className="pt-1">and {charges.total - charges.rows.length} more</span>
+                            <span className="pt-1">{t('merchants.row.andMore', { count: charges.total - charges.rows.length })}</span>
                           )}
                         </div>
                       )}
@@ -1232,15 +1244,15 @@ export function ByMerchant() {
 
               {groups.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-hairline pt-3 text-caption text-ink-secondary">
-                  <span><Kbd>J</Kbd> <Kbd>K</Kbd> move</span>
-                  <span><Kbd>Enter</Kbd> confirm</span>
-                  <span><Kbd>C</Kbd> change the category</span><span><Kbd>P</Kbd> pays a card</span>
-                  <span><Kbd>S</Kbd> skip</span>
-                  <span><Kbd>Space</Kbd> show its charges</span>
-                  <span><Kbd>≡</Kbd> or right-click: everything else</span>
+                  <span><Kbd>{'J'}</Kbd> <Kbd>{'K'}</Kbd> {t('merchants.keys.move')}</span>
+                  <span><Kbd>{'Enter'}</Kbd> {t('merchants.keys.confirm')}</span>
+                  <span><Kbd>{'C'}</Kbd> {t('merchants.keys.change')}</span><span><Kbd>{'P'}</Kbd> {t('merchants.keys.paysCard')}</span>
+                  <span><Kbd>{'S'}</Kbd> {t('merchants.keys.skip')}</span>
+                  <span><Kbd>{'Space'}</Kbd> {t('merchants.keys.show')}</span>
+                  <span><Kbd>≡</Kbd> {t('merchants.keys.menu')}</span>
                   {usual.length > 0 && (
                     <span>
-                      <Kbd>1</Kbd>–<Kbd>{usual.length}</Kbd> categorize into the categories on the right
+                      <Kbd>1</Kbd>–<Kbd>{usual.length}</Kbd> {t('merchants.keys.usual')}
                     </span>
                   )}
                 </div>
@@ -1249,8 +1261,8 @@ export function ByMerchant() {
           </div>
 
           {usual.length > 0 && (
-            <aside className="flex flex-col gap-0.5 @[56rem]:sticky @[56rem]:top-0" aria-label="Your usual categories">
-              <span className="fc-label px-2 pb-1.5 text-ink-secondary uppercase">Your usual categories</span>
+            <aside className="flex flex-col gap-0.5 @[56rem]:sticky @[56rem]:top-0" aria-label={t('merchants.usual.title')}>
+              <span className="fc-label px-2 pb-1.5 text-ink-secondary uppercase">{t('merchants.usual.title')}</span>
               {usual.map((category, slot) => (
                 <button
                   key={category.id}
@@ -1282,7 +1294,7 @@ export function ByMerchant() {
                 </button>
               ))}
               <p className="m-0 px-2 pt-3 text-caption text-ink-secondary">
-                Drag a merchant onto one of these, or press its number. The six most used.
+                {t('merchants.usual.hint')}
               </p>
             </aside>
           )}
@@ -1295,7 +1307,7 @@ export function ByMerchant() {
           items={cardItems(cardMenu.group)}
           onClose={() => setCardMenu(undefined)}
           header={{
-            title: 'This pays a card',
+            title: t('merchants.menu.paysCardTitle'),
             sub: <Bidi>{cardMenu.group.merchantRaw}</Bidi>,
           }}
         />
@@ -1308,7 +1320,7 @@ export function ByMerchant() {
           onClose={() => setMenu(undefined)}
           header={{
             title: <Bidi>{menu.group.merchantRaw}</Bidi>,
-            sub: `${menu.group.count} charges with no category`,
+            sub: t('merchants.menu.chargesNoCategory', { count: menu.group.count }),
           }}
         />
       )}
@@ -1377,6 +1389,7 @@ function Heading({
     0,
   )
   const provider = section.provider
+  const { t, iso } = useWords()
   return (
     <div
       data-motion-key={`provider:${provider ?? ''}`}
@@ -1384,11 +1397,11 @@ function Heading({
     >
       <span className="flex min-w-0 flex-col py-1.5">
         <h2 className="m-0 flex min-w-0 text-body font-medium">
-          {provider === undefined ? 'No provider category' : <Bidi className="min-w-0 truncate">{provider}</Bidi>}
+          {provider === undefined ? t('merchants.heading.noProvider') : <Bidi className="min-w-0 truncate">{provider}</Bidi>}
         </h2>
         <small className="text-caption text-ink-secondary">
-          {names} {names === 1 ? 'name' : 'names'}
-          {provider === undefined ? ' · the card or bank gave them none' : ''}
+          {t(countKey('merchants.tiles.names', names), { count: names })}
+          {provider === undefined ? t('merchants.heading.noneGiven') : ''}
         </small>
       </span>
       <span className="text-end font-mono text-caption text-ink-secondary">{section.count}×</span>
@@ -1400,8 +1413,8 @@ function Heading({
               categories={categories}
               value={choice}
               onChange={onPick}
-              label={`Category for every row the provider calls ${provider}`}
-              placeholder="Choose a category"
+              label={t('merchants.heading.categoryFor', { provider: iso(provider) })}
+              placeholder={t('merchants.row.chooseCategory')}
               outlined
             />
           </span>
@@ -1413,12 +1426,15 @@ function Heading({
               disabled={choice === undefined}
               title={
                 choice === undefined
-                  ? 'Choose a category first'
-                  : `Every row the provider calls ${provider} goes to ${categoryPath(choice) ?? 'it'}, now and on every import`
+                  ? t('merchants.row.chooseFirst')
+                  : t('merchants.heading.ruleTitle', {
+                      provider: iso(provider),
+                      path: iso(categoryPath(choice) ?? t('merchants.heading.it')),
+                    })
               }
               onClick={() => onFile(choice)}
             >
-              Create rule
+              {t('merchants.heading.createRule')}
             </Button>
           </span>
         </>
@@ -1430,11 +1446,37 @@ function Heading({
 /** A checkbox is the system's, tinted ink (the `ui` rule). */
 const CHECK = 'size-3.5 accent-[var(--color-ink)]'
 
-const ORDERS: readonly Choice[] = [
-  { value: 'COUNT', label: 'Most charges first' },
-  { value: 'AMOUNT', label: 'Largest amount first' },
-  { value: 'NAME', label: 'Merchant name' },
-]
+function orders(t: Translate): readonly Choice[] {
+  return [
+    { value: 'COUNT', label: t('merchants.orders.count') },
+    { value: 'AMOUNT', label: t('merchants.orders.amount') },
+    { value: 'NAME', label: t('merchants.orders.name') },
+  ]
+}
+
+/**
+ * The screen's words (M60 U4, D-589): `t`, a category's path with its arrows
+ * the way the page reads — `Living ← Groceries` in Hebrew — and a document's
+ * value isolated inside a string the app writes (a title, a menu's line), so a
+ * Hebrew name in an English sentence or an English one in a Hebrew sentence
+ * keeps its own order. In English both are the value as it was.
+ */
+function useWords(): {
+  readonly t: Translate
+  readonly path: (path: string) => string
+  readonly iso: (text: string) => string
+} {
+  const t = useT()
+  const language = useLanguage()
+  return useMemo(
+    () => ({
+      t,
+      path: (path: string) => (language === 'he' ? path.replaceAll(' → ', ' ← ') : path),
+      iso: (text: string) => (language === 'he' ? `\u2068${text}\u2069` : text),
+    }),
+    [t, language],
+  )
+}
 
 /** One of the header's menus — what a platform `<select>` was (M54 U5's row, M59 U3). */
 function Menu({
@@ -1524,22 +1566,23 @@ function Empty({
   /** With nothing read (M59 U6, D-582): the one text action is Read files. */
   readonly onRead: () => void
 }) {
+  const t = useT()
   return (
     <div className="flex flex-col items-start gap-2 py-10 text-ink-secondary">
       {scoped ? (
         <>
-          <p className="m-0">Nothing in this account or month is waiting for a category.</p>
+          <p className="m-0">{t('merchants.empty.scoped')}</p>
           <button type="button" onClick={onClear} className={LINK}>
-            Look at everything
+            {t('merchants.empty.everything')}
           </button>
         </>
       ) : imported ? (
-        <p className="m-0">Everything is categorized.</p>
+        <p className="m-0">{t('merchants.empty.done')}</p>
       ) : (
         <>
-          <p className="m-0">No transactions yet.</p>
+          <p className="m-0">{t('merchants.empty.none')}</p>
           <button type="button" onClick={onRead} className={LINK}>
-            Read files
+            {t('merchants.empty.read')}
           </button>
         </>
       )}

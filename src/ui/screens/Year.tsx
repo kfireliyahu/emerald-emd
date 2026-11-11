@@ -6,8 +6,6 @@ import { formatPercent } from '@/core/percent.ts'
 import {
   addMonths,
   compareYearMonths,
-  formatMonthName,
-  formatYearMonth,
   toYearMonthString,
   type YearMonth,
 } from '@/core/time.ts'
@@ -26,6 +24,9 @@ import type { MonthSummary } from '@/domain/model/statistics.ts'
 import { statementGaps } from '@/domain/statementGaps.ts'
 import { categoryBreakdown } from '@/domain/statistics.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
+import { countKey } from '@/i18n/count.ts'
+import { useDates, useT } from '@/i18n/current.ts'
+import { fillNodes } from '@/i18n/nodes.tsx'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { useWidth } from '@/ui/charts/useWidth.ts'
 import { monthsOfYear, newestWithData, yearsWithData } from '@/ui/home/months.ts'
@@ -52,6 +53,8 @@ export function Year() {
   const revision = useDocumentStore((state) => state.revision)
   const navigate = useNavigate()
   const asOf = today()
+  const t = useT()
+  const dates = useDates()
 
   const currency: CurrencyCode = useMemo(() => (db === undefined ? 'ILS' : documentCurrency(db)), [db, revision])
   const summaries = useMemo(
@@ -98,7 +101,7 @@ export function Year() {
   })
 
   if (db === undefined || data === undefined) {
-    return <Centered>Open a document, or create one, to see the year.</Centered>
+    return <Centered>{t('home.year.noDocument')}</Centered>
   }
 
   const { overview, payroll } = data
@@ -115,17 +118,17 @@ export function Year() {
         <header className="flex flex-wrap items-end justify-between gap-6 border-b border-hairline pb-4">
           <div className="flex flex-col gap-1.5">
             <span className="fc-label text-ink-secondary uppercase tabular-nums">
-              Home · Year · {overview.monthsWithData} of 12 months in this document
+              {t('home.year.eyebrow', { count: overview.monthsWithData })}
             </span>
             <h1 className="m-0 text-[24px] leading-tight font-medium tracking-[-0.01em]">{year}</h1>
           </div>
           <div className="flex flex-wrap items-center gap-4">
-            <Button variant="secondary" size="sm" icon="read" onClick={picker.open} title="Read files (Ctrl+Shift+O)">
-              Read files
+            <Button variant="secondary" size="sm" icon="read" onClick={picker.open} title={t('home.year.readFilesTitle')}>
+              {t('home.year.readFiles')}
             </Button>
             {picker.input}
             <Pager
-              label="Year"
+              label={t('home.year.pager')}
               prev={prev === undefined ? undefined : String(prev)}
               next={next === undefined ? undefined : String(next)}
               onPrev={() => prev !== undefined && setWanted(prev)}
@@ -136,39 +139,44 @@ export function Year() {
 
         {overview.monthsWithData === 0 ? (
           <p className="max-w-prose text-ink-secondary">
-            Nothing in {year}. Read a statement for a month of it, or page to a year the document holds.
+            {t('home.year.nothing', { year })}
           </p>
         ) : (
           <>
             <Figures>
-              <Figure label="Came in" flow="in" value={overview.income}>
-                net pay and other money in
+              <Figure label={t('home.flows.cameIn')} flow="in" value={overview.income}>
+                {t('home.flows.cameInNone')}
               </Figure>
-              <Figure label="Went out" flow="out" value={overview.expenses}>
+              <Figure label={t('home.flows.wentOut')} flow="out" value={overview.expenses}>
                 {overview.averageExpenses === undefined
-                  ? 'on the date money left the account'
-                  : `${formatMoney(overview.averageExpenses)} a month, typically`}
+                  ? t('home.flows.wentOutWhen')
+                  : t('home.year.typically', { amount: formatMoney(overview.averageExpenses) })}
               </Figure>
-              <Figure label="Saved" flow="saved" value={overview.saved}>
+              <Figure label={t('home.flows.saved')} flow="saved" value={overview.saved}>
                 {overview.savingsRateBasisPoints === undefined
-                  ? 'moved to savings, goals and funds'
-                  : `${formatPercent(overview.savingsRateBasisPoints)} of what came in`}
+                  ? t('home.flows.savedNone')
+                  : t('home.year.rate', { percent: formatPercent(overview.savingsRateBasisPoints) })}
               </Figure>
-              <Figure label="Taxes" flow="tax" value={yearTax}>
+              <Figure label={t('home.flows.taxes')} flow="tax" value={yearTax}>
                 {payroll.slips === 0
-                  ? 'no paychecks this year'
-                  : `off ${String(payroll.slips)} ${payroll.slips === 1 ? 'paycheck' : 'paychecks'}`}
+                  ? t('home.year.noPaychecks')
+                  : t(countKey('home.year.offPaychecks', payroll.slips), { count: payroll.slips })}
               </Figure>
-              <Figure label="Left over" flow={undefined} value={overview.balance}>
-                came in, less went out
+              <Figure label={t('home.flows.leftOver')} flow={undefined} value={overview.balance}>
+                {t('home.flows.leftOverHow')}
               </Figure>
             </Figures>
 
             {payroll.slips > 0 && (
               <p className="m-0 text-ink-secondary">
-                Off the paychecks: gross {formatMoney(payroll.gross)}, of which taxes{' '}
-                <span className="text-flow-tax tabular-nums">{formatMoney(payroll.tax)}</span>
-                {payroll.taxRateBasisPoints === undefined ? '' : ` (${formatPercent(payroll.taxRateBasisPoints)})`}.
+                {fillNodes(t('home.year.payroll'), {
+                  gross: formatMoney(payroll.gross),
+                  tax: <span className="text-flow-tax tabular-nums">{formatMoney(payroll.tax)}</span>,
+                  rate:
+                    payroll.taxRateBasisPoints === undefined
+                      ? ''
+                      : t('home.year.payrollRate', { percent: formatPercent(payroll.taxRateBasisPoints) }),
+                })}
               </p>
             )}
 
@@ -176,21 +184,21 @@ export function Year() {
               <YearBars months={months} byMonth={byMonth} short={data.short} onOpen={open} />
               <Legend>
                 <Key flow="in" bar>
-                  Came in
+                  {t('home.flows.cameIn')}
                 </Key>
                 <Key flow="out" bar>
-                  Went out
+                  {t('home.flows.wentOut')}
                 </Key>
                 <Key flow="saved" bar>
-                  Saved
+                  {t('home.flows.saved')}
                 </Key>
-                <span>A dashed box is a month not in this document</span>
-                <span className="ms-auto">A month opens it in Month</span>
+                <span>{t('home.year.legendDashed')}</span>
+                <span className="ms-auto">{t('home.year.legendOpens')}</span>
               </Legend>
             </div>
 
             <section className="flex flex-col gap-3">
-              <BlockHead title="Where it went, and how it moved" aside="each category, month by month" />
+              <BlockHead title={t('home.year.moved')} aside={t('home.year.movedAside')} />
               <div>
                 {data.categories.map((line) => {
                   const key = line.categoryId ?? 'none'
@@ -209,13 +217,13 @@ export function Year() {
                         <Bidi className="min-w-0 truncate">{line.name}</Bidi>
                       </span>
                       <Spark series={series} />
-                      <span className="text-end font-mono text-caption text-ink-secondary">{count} mo</span>
+                      <span className="text-end font-mono text-caption text-ink-secondary">{t('home.year.monthsCount', { count })}</span>
                       <span className="text-end tabular-nums">{formatMoney(line.outflow)}</span>
                     </div>
                   )
                 })}
                 <div className="grid h-10 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-t border-ink font-medium">
-                  <span>Went out</span>
+                  <span>{t('home.flows.wentOut')}</span>
                   <span className={`text-end tabular-nums ${FLOW_TEXT.out}`}>{formatMoney(overview.expenses)}</span>
                 </div>
               </div>
@@ -223,14 +231,14 @@ export function Year() {
 
             <div className="grid grid-cols-1 gap-8 @[56rem]:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)]">
               <section className="flex flex-col gap-3">
-                <BlockHead title="Where it actually goes, by shop" />
+                <BlockHead title={t('home.year.byShop')} />
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="border-b border-hairline text-label text-ink-tertiary uppercase">
-                      <th className="px-3 py-2 text-start font-medium">Merchant</th>
-                      <th className="px-3 py-2 text-start font-medium">Usually</th>
-                      <th className="px-3 py-2 text-end font-medium">Months</th>
-                      <th className="px-3 py-2 text-end font-medium">All of it</th>
+                      <th className="px-3 py-2 text-start font-medium">{t('home.year.merchant')}</th>
+                      <th className="px-3 py-2 text-start font-medium">{t('home.year.usually')}</th>
+                      <th className="px-3 py-2 text-end font-medium">{t('home.year.months')}</th>
+                      <th className="px-3 py-2 text-end font-medium">{t('home.year.allOfIt')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -244,7 +252,7 @@ export function Year() {
                           <Bidi>{one.merchantRaw}</Bidi>
                         </td>
                         <td className="px-3 text-ink-secondary">
-                          <Bidi>{one.categoryName ?? 'Uncategorized'}</Bidi>
+                          <Bidi>{one.categoryName ?? t('home.flows.uncategorized')}</Bidi>
                         </td>
                         <td className="px-3 text-end tabular-nums">{one.months}</td>
                         <td className="px-3 text-end tabular-nums">{formatMoney(one.outflow)}</td>
@@ -266,17 +274,17 @@ export function Year() {
             </div>
 
             <section className="flex flex-col gap-3">
-              <h2 className="m-0 text-heading font-medium">The months</h2>
+              <h2 className="m-0 text-heading font-medium">{t('home.year.theMonths')}</h2>
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="border-b border-hairline text-label text-ink-tertiary uppercase">
-                      <th className="px-3 py-2 text-start font-medium">Month</th>
-                      <th className="px-3 py-2 text-end font-medium">Came in</th>
-                      <th className="px-3 py-2 text-end font-medium">Went out</th>
-                      <th className="px-3 py-2 text-end font-medium">Saved</th>
-                      <th className="px-3 py-2 text-end font-medium">Taxes</th>
-                      <th className="px-3 py-2 text-end font-medium">Left over</th>
+                      <th className="px-3 py-2 text-start font-medium">{t('home.flows.month')}</th>
+                      <th className="px-3 py-2 text-end font-medium">{t('home.flows.cameIn')}</th>
+                      <th className="px-3 py-2 text-end font-medium">{t('home.flows.wentOut')}</th>
+                      <th className="px-3 py-2 text-end font-medium">{t('home.flows.saved')}</th>
+                      <th className="px-3 py-2 text-end font-medium">{t('home.flows.taxes')}</th>
+                      <th className="px-3 py-2 text-end font-medium">{t('home.flows.leftOver')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -286,11 +294,11 @@ export function Year() {
                       if (one === undefined) {
                         return (
                           <tr key={key} className="h-10 border-b border-hairline text-ink-tertiary">
-                            <td className="px-3">{formatYearMonth(period)}</td>
+                            <td className="px-3">{dates.yearMonth(period)}</td>
                             <td className="px-3" colSpan={5}>
                               {compareYearMonths(period, newestWithData(summaries) ?? period) > 0
-                                ? 'Not yet'
-                                : 'Not in this document'}
+                                ? t('home.year.notYet')
+                                : t('home.year.notHeld')}
                             </td>
                           </tr>
                         )
@@ -306,7 +314,7 @@ export function Year() {
                           }}
                           className="h-10 cursor-pointer border-b border-hairline transition-colors duration-[var(--duration-micro)] hover:bg-surface"
                         >
-                          <td className="px-3 whitespace-nowrap">{formatYearMonth(period)}</td>
+                          <td className="px-3 whitespace-nowrap">{dates.yearMonth(period)}</td>
                           <td className="px-3 text-end tabular-nums text-flow-in">{formatMoney(one.income)}</td>
                           <td className="px-3 text-end tabular-nums text-flow-out">{formatMoney(one.expenses)}</td>
                           <td className="px-3 text-end tabular-nums text-flow-saved">{formatMoney(one.saved)}</td>
@@ -344,6 +352,8 @@ function YearBars({
   short: ReadonlySet<string>
   onOpen: (period: YearMonth) => void
 }) {
+  const t = useT()
+  const dates = useDates()
   const width = useWidth()
   const W = width.value
   const H = 190
@@ -363,7 +373,7 @@ function YearBars({
       <svg
         viewBox={`0 0 ${String(W)} ${String(H)}`}
         className="block h-auto w-full overflow-visible"
-        aria-label="Came in, went out and saved by month. Choose a month to open it."
+        aria-label={t('home.year.barsLabel')}
       >
         {months.map((period, index) => {
           const key = toYearMonthString(period)
@@ -382,7 +392,7 @@ function YearBars({
                   strokeDasharray="3 3"
                 />
                 <text className="fc-col-tick" x={cx} y={H - 6} textAnchor="middle">
-                  {formatMonthName(period).slice(0, 3)}
+                  {dates.monthAbbrev(period)}
                 </text>
               </g>
             )
@@ -393,7 +403,7 @@ function YearBars({
               className="fc-col"
               role="button"
               tabIndex={0}
-              aria-label={`${formatYearMonth(period)}, open it`}
+              aria-label={t('home.year.openMonth', { month: dates.yearMonth(period) })}
               onClick={() => onOpen(period)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter' || event.key === ' ') {
@@ -409,11 +419,11 @@ function YearBars({
               <rect x={cx + bar / 2 + 2} y={base - tall(one.saved.minor)} width={bar} height={tall(one.saved.minor)} className="fill-flow-saved" />
               {short.has(key) && (
                 <text x={cx} y={base - tall(one.expenses.minor) - 6} textAnchor="middle" className="fc-col-part">
-                  part
+                  {t('home.flows.part')}
                 </text>
               )}
               <text className="fc-col-tick" x={cx} y={H - 6} textAnchor="middle">
-                {formatMonthName(period).slice(0, 3)}
+                {dates.monthAbbrev(period)}
               </text>
             </g>
           )
@@ -464,28 +474,30 @@ function YearApart({
   then: MonthSummary | undefined
   taxes: ReadonlyMap<string, Money>
 }) {
+  const t = useT()
+  const dates = useDates()
   if (now === undefined || then === undefined) return null
   const rows: readonly [string, 'in' | 'out' | 'saved' | 'tax', Money | undefined, Money | undefined][] = [
-    ['Came in', 'in', then.income, now.income],
-    ['Went out', 'out', then.expenses, now.expenses],
-    ['Saved', 'saved', then.saved, now.saved],
-    ['Taxes', 'tax', taxes.get(toYearMonthString(ago)), taxes.get(toYearMonthString(latest))],
+    [t('home.flows.cameIn'), 'in', then.income, now.income],
+    [t('home.flows.wentOut'), 'out', then.expenses, now.expenses],
+    [t('home.flows.saved'), 'saved', then.saved, now.saved],
+    [t('home.flows.taxes'), 'tax', taxes.get(toYearMonthString(ago)), taxes.get(toYearMonthString(latest))],
   ]
   return (
     <section className="flex flex-col gap-3">
-      <BlockHead title="The same month, a year apart" />
+      <BlockHead title={t('home.year.yearApart')} />
       <table className="w-full border-collapse">
         <thead>
           <tr className="border-b border-hairline text-label text-ink-tertiary uppercase">
             <th className="px-3 py-2" />
-            <th className="px-3 py-2 text-end font-medium">{formatYearMonth(ago)}</th>
-            <th className="px-3 py-2 text-end font-medium">{formatYearMonth(latest)}</th>
-            <th className="px-3 py-2 text-end font-medium">Change</th>
+            <th className="px-3 py-2 text-end font-medium">{dates.yearMonth(ago)}</th>
+            <th className="px-3 py-2 text-end font-medium">{dates.yearMonth(latest)}</th>
+            <th className="px-3 py-2 text-end font-medium">{t('home.year.change')}</th>
           </tr>
         </thead>
         <tbody>
           {rows.map(([label, flow, before, after]) => (
-            <tr key={label} className="h-[34px] border-b border-hairline">
+            <tr key={flow} className="h-[34px] border-b border-hairline">
               <td className="px-3">{label}</td>
               <td className={`px-3 text-end tabular-nums ${FLOW_TEXT[flow]}`}>{before === undefined ? '—' : formatMoney(before)}</td>
               <td className={`px-3 text-end tabular-nums ${FLOW_TEXT[flow]}`}>{after === undefined ? '—' : formatMoney(after)}</td>

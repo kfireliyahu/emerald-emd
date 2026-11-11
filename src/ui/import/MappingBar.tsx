@@ -1,5 +1,8 @@
 import { Button } from '@/ui/components/Button.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
+import { countKey } from '@/i18n/count.ts'
+import { useT, type Translate } from '@/i18n/current.ts'
+import { fillNodes } from '@/i18n/nodes.tsx'
 import { Bidi } from '@/ui/Bidi.tsx'
 
 /**
@@ -53,17 +56,14 @@ export function MappingBar({
   onPropose: (() => void) | undefined
   proposing: boolean
 }) {
+  const t = useT()
   if (saved !== undefined && !dirty && !editing) {
     return (
       <Bar>
-        <span>
-          Read by your reader <Name>{saved.name}</Name>.
-        </span>
-        <span className="text-ink-secondary">
-          The columns matched exactly, so there was nothing to map.
-        </span>
+        <span>{fillNodes(t('reading.reader.readBy'), { name: <Name>{saved.name}</Name> })}</span>
+        <span className="text-ink-secondary">{t('reading.reader.matched')}</span>
         <Button size="sm" className="ms-auto" onClick={onEdit}>
-          Map this file anyway
+          {t('reading.reader.mapAnyway')}
         </Button>
       </Bar>
     )
@@ -74,15 +74,15 @@ export function MappingBar({
   // again next month. The name is still the person's to change before then.
   return (
     <Bar>
-      <span>{status(saved, dirty, changedCount)}</span>
+      <span>{status(t, saved, dirty, changedCount)}</span>
 
       <label className="ms-auto flex items-center gap-2">
-        <span className="text-ink-secondary">Reader's name</span>
+        <span className="text-ink-secondary">{t('reading.reader.name')}</span>
         <input
           type="text"
           value={name}
           onChange={(event) => onNameChange(event.target.value)}
-          placeholder="Everyday card 1234"
+          placeholder={t('reading.reader.namePlaceholder')}
           className={`${FIELD} w-64`}
         />
       </label>
@@ -95,10 +95,10 @@ export function MappingBar({
         <Button
           size="sm"
           onClick={onPropose}
-          busy={proposing ? 'Working it out…' : undefined}
-          title="Ask the local model which column is which. It replaces the roles below; every one is a select away from being corrected."
+          busy={proposing ? t('reading.reader.working') : undefined}
+          title={t('reading.reader.proposeTitle')}
         >
-          Work out the columns
+          {t('reading.reader.propose')}
         </Button>
       )}
     </Bar>
@@ -106,6 +106,7 @@ export function MappingBar({
 }
 
 function status(
+  t: Translate,
   saved: SavedMappingRef | undefined,
   dirty: boolean,
   changedCount: number,
@@ -113,13 +114,9 @@ function status(
   if (saved !== undefined && changedCount > 0 && !dirty) {
     return (
       <>
-        <span className="text-negative">
-          {changedCount === 1 ? 'One column changed' : `${changedCount} columns changed`}
-        </span>{' '}
-        since your reader <Name>{saved.name}</Name> was made.{' '}
-        <span className="text-ink-secondary">
-          Check the marked columns; Read it keeps the reader up to date.
-        </span>
+        <span className="text-negative">{t(countKey('reading.reader.changed', changedCount), { count: changedCount })}</span>{' '}
+        {fillNodes(t('reading.reader.since'), { name: <Name>{saved.name}</Name> })}{' '}
+        <span className="text-ink-secondary">{t('reading.reader.checkMarked')}</span>
       </>
     )
   }
@@ -127,8 +124,8 @@ function status(
   if (saved !== undefined && dirty) {
     return (
       <>
-        Changed from your reader <Name>{saved.name}</Name>.{' '}
-        <span className="text-ink-secondary">Read it keeps the change for the next file.</span>
+        {fillNodes(t('reading.reader.changedFrom'), { name: <Name>{saved.name}</Name> })}{' '}
+        <span className="text-ink-secondary">{t('reading.reader.keepsChange')}</span>
       </>
     )
   }
@@ -136,18 +133,14 @@ function status(
   if (saved !== undefined) {
     return (
       <>
-        Your reader <Name>{saved.name}</Name>.{' '}
-        <span className="text-ink-secondary">
-          The next file with these columns skips this screen.
-        </span>
+        {fillNodes(t('reading.reader.yours'), { name: <Name>{saved.name}</Name> })}{' '}
+        <span className="text-ink-secondary">{t('reading.reader.skips')}</span>
       </>
     )
   }
 
   return (
-    <span className="text-ink-secondary">
-      Read it keeps this reader, and the next file with these columns skips this screen.
-    </span>
+    <span className="text-ink-secondary">{t('reading.reader.keeps')}</span>
   )
 }
 

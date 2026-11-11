@@ -7,6 +7,9 @@ import {
   type TransferDecision,
   type TransferPair,
 } from '@/data/repositories/transferPairRepository.ts'
+import { countKey } from '@/i18n/count.ts'
+import { useT } from '@/i18n/current.ts'
+import { fillNodes } from '@/i18n/nodes.tsx'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
@@ -25,6 +28,7 @@ export function TransferPrompt() {
   const revision = useDocumentStore((state) => state.revision)
   const mutate = useDocumentStore((state) => state.mutate)
 
+  const t = useT()
   const pending = useMemo(
     () => (db === undefined ? [] : listTransferPairs(db, { decision: 'PENDING' })),
     [db, revision],
@@ -38,14 +42,11 @@ export function TransferPrompt() {
   }
 
   return (
-    <section aria-label="Transfers between your accounts" className="fc-pop-enter border-b border-hairline bg-surface px-6 py-3">
+    <section aria-label={t('reading.transfer.label')} className="fc-pop-enter border-b border-hairline bg-surface px-6 py-3">
       <p className="text-ink">
-        {pending.length} {pending.length === 1 ? 'transfer' : 'transfers'} between your own accounts
+        {t(countKey('reading.transfer.count', pending.length), { count: pending.length })}
       </p>
-      <p className="mt-0.5 text-ink-secondary">
-        The same amount left one account and arrived in another within a few days. Until you say,
-        the row that left counts as spending and the row that arrived as income.
-      </p>
+      <p className="mt-0.5 text-ink-secondary">{t('reading.transfer.lead')}</p>
 
       <ul className="mt-2">
         {pending.map((pair) => (
@@ -56,11 +57,9 @@ export function TransferPrompt() {
       {pending.length > 1 && (
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <Button variant="primary" size="sm" onClick={() => answer(pending, 'PAIRED')}>
-            They are all transfers
+            {t('reading.transfer.all')}
           </Button>
-          <span className="text-ink-tertiary">
-            A transfer is neither income nor spending. Any answer can be changed on the row.
-          </span>
+          <span className="text-ink-tertiary">{t('reading.transfer.neither')}</span>
         </div>
       )}
     </section>
@@ -69,21 +68,24 @@ export function TransferPrompt() {
 
 /** One pair, with its two answers — here and in Home's waiting list (M31 U1). */
 export function TransferLine({ pair, onAnswer }: { pair: TransferPair; onAnswer: (decision: TransferDecision) => void }) {
+  const t = useT()
   return (
     <li className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 border-t border-hairline py-1.5">
       <span className="text-ink tabular-nums">{formatMoney(pair.in.amount)}</span>
       <span className="text-ink-secondary">
-        from <Bidi>{pair.out.accountName}</Bidi>{' '}
-        <span className="text-ink-tertiary tabular-nums">{pair.out.date}</span> to{' '}
-        <Bidi>{pair.in.accountName}</Bidi>{' '}
-        <span className="text-ink-tertiary tabular-nums">{pair.in.date}</span>
+        {fillNodes(t('reading.transfer.fromTo'), {
+          from: <Bidi>{pair.out.accountName}</Bidi>,
+          fromDate: <span className="text-ink-tertiary tabular-nums">{pair.out.date}</span>,
+          to: <Bidi>{pair.in.accountName}</Bidi>,
+          toDate: <span className="text-ink-tertiary tabular-nums">{pair.in.date}</span>,
+        })}
       </span>
       <span className="ms-auto flex gap-2">
         <Button size="sm" onClick={() => onAnswer('PAIRED')}>
-          One transfer
+          {t('reading.transfer.one')}
         </Button>
         <Button variant="ghost" size="sm" onClick={() => onAnswer('NOT_PAIRED')}>
-          Not a transfer
+          {t('reading.transfer.not')}
         </Button>
       </span>
     </li>

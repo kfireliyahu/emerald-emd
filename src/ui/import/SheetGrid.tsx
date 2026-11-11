@@ -6,7 +6,8 @@ import type { ColumnRoleId } from '@/domain/model/columnRoles.ts'
 import type { DraftMapping } from '@/domain/model/importing.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ChoiceField } from '@/ui/components/ChoiceField.tsx'
-import { labelFor, ROLE_LABEL } from './roleLabel.ts'
+import { useT } from '@/i18n/current.ts'
+import { labelFor, useRoleLabels } from './roleLabel.ts'
 
 /**
  * The file preview as a full-width scrollable grid, and the surface the mapping
@@ -50,8 +51,9 @@ export function SheetGrid({
    */
   onAddRole: (role: string) => string | undefined
 }) {
+  const t = useT()
   if (table.rows.length === 0) {
-    return <p className="p-6 text-ink-secondary">This sheet is empty.</p>
+    return <p className="p-6 text-ink-secondary">{t('reading.grid.empty')}</p>
   }
 
   const columns = Array.from({ length: table.columnCount }, (_, index) => index)
@@ -78,7 +80,7 @@ export function SheetGrid({
                 >
                   <div className={changed ? 'text-negative' : 'text-ink-secondary'}>
                     {columnLabel(column)}
-                    {changed && ' · changed'}
+                    {changed && t('reading.grid.changed')}
                   </div>
                   <RolePicker
                     role={mapping?.columnRoles.get(column)}
@@ -124,6 +126,7 @@ function Row({
   showTypes: boolean
   onSetHeaderRow: (rowIndex: number) => void
 }) {
+  const t = useT()
   const isHeader = mapping?.headerRowIndex === rowIndex
   const isPreamble = mapping !== undefined && rowIndex < mapping.headerRowIndex
   const failed = parsed?.outcome.kind === 'error'
@@ -138,7 +141,7 @@ function Row({
         <button
           type="button"
           onClick={() => onSetHeaderRow(rowIndex)}
-          title={isHeader ? 'This is the header row' : 'Use this row as the header'}
+          title={isHeader ? t('reading.grid.isHeader') : t('reading.grid.useHeader')}
           className={`w-full px-2 py-1 text-end hover:bg-hairline ${
             isHeader ? 'text-ink' : 'text-ink-secondary'
           }`}
@@ -242,6 +245,8 @@ function RolePicker({
   onChange: (role: ColumnRoleId | undefined) => void
   onAddRole: (role: string) => string | undefined
 }) {
+  const t = useT()
+  const labels = useRoleLabels()
   const [naming, setNaming] = useState(false)
   const [draft, setDraft] = useState('')
   const [problem, setProblem] = useState<string | undefined>(undefined)
@@ -277,13 +282,13 @@ function RolePicker({
               setProblem(undefined)
             }
           }}
-          placeholder="settlementDate"
-          aria-label="New column role"
+          placeholder={t('reading.grid.rolePlaceholder')}
+          aria-label={t('reading.grid.newRole')}
           className="w-full border border-hairline bg-background px-1 py-0.5 font-mono text-caption text-ink focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
         />
         <div className="flex gap-1">
           <button type="button" onClick={add} className="text-accent text-caption hover:underline">
-            add
+            {t('reading.grid.add')}
           </button>
           <button
             type="button"
@@ -293,7 +298,7 @@ function RolePicker({
             }}
             className="text-caption text-ink-secondary hover:underline"
           >
-            cancel
+            {t('reading.grid.cancel')}
           </button>
         </div>
         {problem !== undefined && <p className="text-caption text-negative">{problem}</p>}
@@ -305,11 +310,11 @@ function RolePicker({
     <ChoiceField
       readOnly
       filter={false}
-      text={role === undefined ? 'ignore' : labelFor(ROLE_LABEL, role)}
+      text={role === undefined ? t('reading.grid.ignore') : labelFor(labels, role)}
       choices={[
-        { value: '', label: 'ignore' },
-        ...roles.map((option) => ({ value: option, label: labelFor(ROLE_LABEL, option) })),
-        { value: ADD, label: '— add a role —' },
+        { value: '', label: t('reading.grid.ignore') },
+        ...roles.map((option) => ({ value: option, label: labelFor(labels, option) })),
+        { value: ADD, label: t('reading.grid.addRole') },
       ]}
       onText={() => undefined}
       onPick={(choice) => {
@@ -319,10 +324,10 @@ function RolePicker({
         }
         onChange(choice.value === '' ? undefined : choice.value)
       }}
-      aria-label="Column role"
+      aria-label={t('reading.grid.role')}
       // `title` as a safety net for the one or two role names long enough to
       // clip even at the widened size.
-      title={role === undefined ? 'ignore' : labelFor(ROLE_LABEL, role)}
+      title={role === undefined ? t('reading.grid.ignore') : labelFor(labels, role)}
       // The width lives on the field rather than the cell: a min-width on the
       // `th` is eaten by its padding. Widening the field is what forces the
       // column open, and reading the mapping off the header is this screen's

@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
 
+import { useT } from '@/i18n/current.ts'
+
 /**
  * **By merchant · All rows**, the switch in the header of the one Transactions
  * page (M28 U6, choice 1 B). By merchant is where a pile of
@@ -16,7 +18,8 @@ export function ViewSwitch({
   /** How many merchants are waiting, or nothing while it is not known. */
   readonly waiting?: number | undefined
 }) {
-  const item = (active: boolean): string =>
+  const t = useT()
+  const item =(active: boolean): string =>
     [
       'relative -ms-px inline-flex h-8 items-center gap-2 border px-3.5 text-[13px] transition-colors duration-[var(--duration-micro)] first:ms-0',
       'focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent',
@@ -26,15 +29,15 @@ export function ViewSwitch({
     ].join(' ')
 
   return (
-    <nav aria-label="Transactions view" className="flex">
+    <nav aria-label={t('transactions.view.label')} className="flex">
       <Link to="/transactions/merchants" aria-current={view === 'merchants' ? 'page' : undefined} className={item(view === 'merchants')}>
-        By merchant
+        {t('transactions.view.merchants')}
         {waiting !== undefined && waiting > 0 && (
           <span className="font-mono text-caption text-ink-secondary">{waiting}</span>
         )}
       </Link>
       <Link to="/transactions" aria-current={view === 'rows' ? 'page' : undefined} className={item(view === 'rows')}>
-        All rows
+        {t('transactions.view.rows')}
       </Link>
     </nav>
   )

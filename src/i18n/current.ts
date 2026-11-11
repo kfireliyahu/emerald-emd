@@ -73,6 +73,15 @@ export function setLanguage(next: Language): void {
   choose(next)
 }
 
+/**
+ * Draw the app in a language for a while without choosing it on this machine —
+ * the probe's `--lang he` (M60 U4, D-589). Nothing is kept: the next start, or
+ * this called again, puts it back.
+ */
+export function showLanguage(next: Language): void {
+  choose(next)
+}
+
 /** The language now, outside a render. */
 export function currentLanguage(): Language {
   return language.get()

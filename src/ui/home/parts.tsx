@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 
 import { formatMoney, type Money } from '@/core/money.ts'
 import { SUPPORTED_EXTENSIONS } from '@/data/importer/sheetTable.ts'
+import { useLanguage, useT } from '@/i18n/current.ts'
+import { directionOf } from '@/i18n/language.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { BundledFiles } from '@/demo/BundledFiles.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
@@ -95,6 +97,7 @@ export function useFilePicker(onFiles: (files: readonly File[]) => void): {
  * dropped anywhere else — but this is the place that says so.
  */
 export function IntakeBand({ onAddByHand }: { readonly onAddByHand: () => void }) {
+  const t = useT()
   const read = useReadFiles()
   const picker = useFilePicker(read)
   const [over, setOver] = useState(false)
@@ -120,17 +123,16 @@ export function IntakeBand({ onAddByHand }: { readonly onAddByHand: () => void }
       <div className="flex min-w-0 items-center gap-3.5 text-ink-secondary">
         <ActionGlyph name="read" size={24} />
         <span>
-          <b className="block font-medium text-ink">Drop statements, paychecks and fund reports here, any number</b>
-          Card and bank exports, paycheck and fund report PDFs. Each goes to the reader that knows it, and nothing is
-          written until you press Write.
+          <b className="block font-medium text-ink">{t('home.band.drop')}</b>
+          {t('home.band.what')}
         </span>
       </div>
       <div className="flex flex-wrap gap-2">
-        <Button variant="secondary" icon="add" onClick={onAddByHand} title="A paycheck, typed in">
-          Add a paycheck
+        <Button variant="secondary" icon="add" onClick={onAddByHand} title={t('home.band.addPaycheckTitle')}>
+          {t('home.band.addPaycheck')}
         </Button>
-        <Button variant="primary" icon="read" onClick={picker.open} title="Read files (Ctrl+Shift+O)" data-tour="read-files">
-          Read files
+        <Button variant="primary" icon="read" onClick={picker.open} title={t('home.band.readFilesTitle')} data-tour="read-files">
+          {t('home.band.readFiles')}
         </Button>
       </div>
       {picker.input}
@@ -152,12 +154,13 @@ export function Pager({
   readonly onPrev: () => void
   readonly onNext: () => void
 }) {
+  const t = useT()
   return (
     <nav className="flex items-center gap-1" aria-label={label}>
       <span className="min-w-18 px-1 text-end text-caption text-ink-secondary tabular-nums">{prev ?? ''}</span>
-      <PageButton label="Previous" glyph="left" disabled={prev === undefined} onClick={onPrev} />
-      <PageButton label="Next" glyph="right" disabled={next === undefined} onClick={onNext} />
-      <span className="min-w-18 px-1 text-caption text-ink-secondary tabular-nums">{next ?? 'newest'}</span>
+      <PageButton label={t('home.pager.previous')} glyph="left" disabled={prev === undefined} onClick={onPrev} />
+      <PageButton label={t('home.pager.next')} glyph="right" disabled={next === undefined} onClick={onNext} />
+      <span className="min-w-18 px-1 text-caption text-ink-secondary tabular-nums">{next ?? t('home.pager.newest')}</span>
     </nav>
   )
 }
@@ -173,11 +176,15 @@ function PageButton({
   disabled: boolean
   onClick: () => void
 }) {
+  const t = useT()
+  // The key that pages this way (M60 U3): in Hebrew Previous is drawn on the right, and → reaches it.
+  const rtl = directionOf(useLanguage()) === 'rtl'
+  const arrow = (glyph === 'left') !== rtl ? '←' : '→'
   return (
     <button
       type="button"
       aria-label={label}
-      title={`${label} (${glyph === 'left' ? '←' : '→'})`}
+      title={t('home.pager.key', { label, arrow })}
       disabled={disabled}
       onClick={onClick}
       className="flex size-8 items-center justify-center border border-transparent text-ink-secondary transition-colors duration-[var(--duration-micro)] hover:border-hairline-strong hover:text-ink disabled:cursor-default disabled:opacity-30 disabled:hover:border-transparent"
