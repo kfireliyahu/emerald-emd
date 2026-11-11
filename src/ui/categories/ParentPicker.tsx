@@ -126,7 +126,7 @@ export function ParentPicker({
           aria-haspopup="listbox"
           aria-expanded={false}
           aria-label="Parent category"
-          className={`${FIELD} flex ${width} cursor-pointer items-center text-left`}
+          className={`${FIELD} flex ${width} cursor-pointer items-center text-start`}
         >
           <span className="min-w-0 truncate">
             {current === undefined ? 'top level' : <>under <Bidi>{current.path}</Bidi></>}
@@ -149,7 +149,7 @@ export function ParentPicker({
                   event.preventDefault()
                   choose(parent)
                 }}
-                className={`flex w-full items-center px-3 py-1.5 text-left hover:bg-surface ${
+                className={`flex w-full items-center px-3 py-1.5 text-start hover:bg-surface ${
                   index === highlighted ? 'bg-surface' : ''
                 }`}
               >

@@ -730,7 +730,7 @@ function EmptyDocument() {
       {/* **Which button keeps money, said plainly** (M31 U2). Two buttons and a
           paragraph about columns left a person with a bank statement guessing,
           and the wrong guess was a document their statement could not go into. */}
-      <div className="grid w-full grid-cols-2 gap-3 text-left">
+      <div className="grid w-full grid-cols-2 gap-3 text-start">
         <div className="flex flex-col gap-2 border border-hairline p-4">
           <Button variant="primary" onClick={() => void createNew()}>
             New document

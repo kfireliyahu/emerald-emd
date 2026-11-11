@@ -81,7 +81,7 @@ export function ReconciliationStrip({
         </Button>
       )}
 
-      <span className="ml-auto text-caption text-ink-tertiary">
+      <span className="ms-auto text-caption text-ink-tertiary">
         A gap never blocks saving. Net is what your paycheck says it is.
       </span>
     </div>

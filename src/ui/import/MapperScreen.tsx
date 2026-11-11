@@ -492,7 +492,7 @@ function SheetBody({
           </span>
           <button
             type="button"
-            className="ml-auto text-caption text-ink-secondary hover:text-ink"
+            className="ms-auto text-caption text-ink-secondary hover:text-ink"
             onClick={onDismissProposeProblem}
           >
             Dismiss
@@ -613,7 +613,7 @@ function Toolbar({
         </>
       )}
 
-      <label className="ml-auto flex items-center gap-2 select-none">
+      <label className="ms-auto flex items-center gap-2 select-none">
         <input
           type="checkbox"
           checked={showTypes}

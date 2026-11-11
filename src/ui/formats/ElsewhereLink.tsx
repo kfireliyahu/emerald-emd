@@ -38,7 +38,7 @@ export function ElsewhereLink({ value }: { readonly value: string }) {
     <button
       type="button"
       data-elsewhere={value}
-      className="block max-w-full cursor-pointer truncate border-0 bg-transparent p-0 text-left text-accent hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+      className="block max-w-full cursor-pointer truncate border-0 bg-transparent p-0 text-start text-accent hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
       title={`Open ${where} — ${name} is a row there`}
       // The row's own click opens the row; this one opens the other document.
       onClick={(event) => {

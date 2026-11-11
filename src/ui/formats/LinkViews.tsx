@@ -168,7 +168,7 @@ export function RoadmapView({
                   </div>
                   <div className="min-w-0 pb-2">
                     <div
-                      className={`-ml-3 cursor-pointer px-3 pt-2.5 pb-3 transition-colors duration-[var(--duration-micro)] hover:bg-surface ${changeClass('fc-changed', change)}`}
+                      className={`-ms-3 cursor-pointer px-3 pt-2.5 pb-3 transition-colors duration-[var(--duration-micro)] hover:bg-surface ${changeClass('fc-changed', change)}`}
                       onClick={() => toggle(key)}
                     >
                       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
@@ -190,12 +190,12 @@ export function RoadmapView({
                         <StateChip member={stateText(line)} />
                         {rest.links}
                       </div>
-                      <div className="flex flex-wrap items-center gap-4 pt-1.5 pl-6">
+                      <div className="flex flex-wrap items-center gap-4 pt-1.5 ps-6">
                         <SegmentBar lines={lines} />
                         <span className="text-caption text-ink-secondary">{countsText(folds)}</span>
                       </div>
                       {rest.texts.length > 0 && (
-                        <p className={`max-w-[720px] pt-1.5 pl-6 text-ink-secondary ${open ? '' : 'line-clamp-1'}`}>
+                        <p className={`max-w-[720px] pt-1.5 ps-6 text-ink-secondary ${open ? '' : 'line-clamp-1'}`}>
                           {rest.texts.map((each) => (
                             <span key={each.column}>
                               <Bidi>{each.text}</Bidi>{' '}
@@ -205,7 +205,7 @@ export function RoadmapView({
                       )}
                     </div>
                     <Fold open={open}>
-                      <div className="pt-1 pb-3 pl-2.5">
+                      <div className="pt-1 pb-3 ps-2.5">
                         <FoldGroups folds={folds} labels={labels} changes={changes} columns={columns} />
                       </div>
                     </Fold>
@@ -341,7 +341,7 @@ function RowLine({
       // The demo tour's anchor (M33 U6): `line-M2 U3`, a unit on the roadmap.
       data-tour={`line-${nameText(line)}`}
       aria-selected={selected}
-      className={`-ml-3 grid grid-cols-[18px_auto_minmax(0,1fr)_auto] items-center gap-x-3 border-t border-hairline px-3 py-2 ${selected === true ? 'bg-accent-soft' : ''} ${changeClass('fc-changed', change)}`}
+      className={`-ms-3 grid grid-cols-[18px_auto_minmax(0,1fr)_auto] items-center gap-x-3 border-t border-hairline px-3 py-2 ${selected === true ? 'bg-accent-soft' : ''} ${changeClass('fc-changed', change)}`}
       // Ctrl-click selects the row for the conversation (M51 U7), before the
       // name's link would open it.
       onClickCapture={(event) => {
@@ -724,7 +724,7 @@ function AgendaRow({ line, labels, today }: { line: AgendaLine; labels: Readonly
   return (
     <li
       data-agenda={`${line.format.name}-${nameText(line)}`}
-      className="-ml-3 grid grid-cols-[18px_minmax(0,8rem)_minmax(0,1fr)_auto] items-center gap-x-3 border-t border-hairline px-3 py-2"
+      className="-ms-3 grid grid-cols-[18px_minmax(0,8rem)_minmax(0,1fr)_auto] items-center gap-x-3 border-t border-hairline px-3 py-2"
     >
       <span className="fc-dot justify-self-center" data-tone={tone} aria-hidden />
       <Bidi className="block truncate text-caption text-ink-secondary">{line.format.title}</Bidi>

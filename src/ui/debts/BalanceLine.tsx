@@ -55,7 +55,7 @@ export function BalanceLine({ points }: { points: readonly BalancePoint[] }) {
     .join(' ')
 
   return (
-    <figure className="m-0 max-w-3xl">
+    <figure className="m-0 max-w-3xl" dir="ltr">
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         className="w-full"

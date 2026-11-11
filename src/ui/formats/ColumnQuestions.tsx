@@ -118,7 +118,7 @@ export function ColumnQuestions({
       data-tour={`type-${each}`}
       title={`Stored as ${each}`}
       onClick={() => onChoose(each)}
-      className="flex flex-col gap-1 rounded-md border border-hairline p-2 text-left transition-colors duration-[var(--duration-micro)] hover:border-hairline-strong hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
+      className="flex flex-col gap-1 rounded-md border border-hairline p-2 text-start transition-colors duration-[var(--duration-micro)] hover:border-hairline-strong hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
     >
       <span className="flex items-center gap-2">
         <TypeGlyph type={each} className="h-4 w-4 shrink-0 text-ink-secondary" />
@@ -170,7 +170,7 @@ export function ColumnQuestions({
           </span>
         )}
 
-        <Button size="sm" variant="ghost" className="ml-auto" onClick={onRemove}>
+        <Button size="sm" variant="ghost" className="ms-auto" onClick={onRemove}>
           Remove
         </Button>
       </div>
@@ -211,7 +211,7 @@ export function ColumnQuestions({
                 onClick={onDerive}
                 disabled={onDerive === undefined}
                 title={underived}
-                className="flex flex-col gap-1 rounded-md border border-dashed border-hairline-strong p-2 text-left transition-colors duration-[var(--duration-micro)] enabled:hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
+                className="flex flex-col gap-1 rounded-md border border-dashed border-hairline-strong p-2 text-start transition-colors duration-[var(--duration-micro)] enabled:hover:bg-surface disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
               >
                 <span className="flex items-center gap-2">
                   <span aria-hidden className="w-4 shrink-0 text-center font-mono text-ink-secondary">
@@ -300,7 +300,7 @@ export function ColumnQuestions({
             <>
               <Field label="Minimum">
                 <input
-                  className={`${FIELD} w-24 text-right tabular-nums`}
+                  className={`${FIELD} w-24 text-end tabular-nums`}
                   inputMode="decimal"
                   data-tour="column-min"
                   value={column.minimum}
@@ -309,7 +309,7 @@ export function ColumnQuestions({
               </Field>
               <Field label="Maximum">
                 <input
-                  className={`${FIELD} w-24 text-right tabular-nums`}
+                  className={`${FIELD} w-24 text-end tabular-nums`}
                   inputMode="decimal"
                   data-tour="column-max"
                   value={column.maximum}
@@ -322,7 +322,7 @@ export function ColumnQuestions({
           {column.type === 'decimal' && (
             <Field label="Places">
               <input
-                className={`${FIELD} w-16 text-right tabular-nums`}
+                className={`${FIELD} w-16 text-end tabular-nums`}
                 inputMode="numeric"
                 value={column.scale}
                 onChange={(event) => onChange({ ...column, scale: event.target.value })}

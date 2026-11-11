@@ -106,7 +106,7 @@ export function Packs() {
               </h2>
               <span className="text-caption text-ink-secondary">{places}</span>
               {offered && (
-                <span className="ml-auto">
+                <span className="ms-auto">
                   <Button variant={primary ? 'primary' : 'secondary'} size="sm" onClick={() => keep(pack)}>
                     {behind ? `Bring ${packObject(pack)} up to date` : `Keep ${packObject(pack)} here`}
                   </Button>
@@ -131,7 +131,7 @@ export function Packs() {
             )}
             {planned?.ok === false && <p className="mt-2 text-negative">{planned.error}</p>}
             {plan !== undefined && !kept.has(pack.id) && plan.clashes.length > 0 && (
-              <ul className="mt-2 list-disc pl-5 text-caption text-negative">
+              <ul className="mt-2 list-disc ps-5 text-caption text-negative">
                 {plan.clashes.map((clash) => (
                   <li key={clash}>{clash}</li>
                 ))}

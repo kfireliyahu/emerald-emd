@@ -224,7 +224,7 @@ export function FixedSection({
                 ))}
               </select>
             </label>
-            <span className="ml-auto text-caption text-ink-secondary">
+            <span className="ms-auto text-caption text-ink-secondary">
               A bill you track starts as Ignore here, until you pick.
             </span>
           </div>
@@ -328,12 +328,12 @@ function Table({
       <table className="w-full min-w-[880px]">
         <thead>
           <tr className="border-b border-hairline text-label text-ink-tertiary uppercase">
-            <th className="py-2 pr-3 text-left font-medium">Name</th>
-            <th className="px-3 py-2 text-left font-medium">How often</th>
-            <th className="px-3 py-2 text-right font-medium">Each charge</th>
-            <th className="px-3 py-2 text-right font-medium">A month</th>
-            <th className="px-3 py-2 text-left font-medium">{formatMonthShort(lastComplete)}</th>
-            <th className="px-3 py-2 text-left font-medium">What it does to the plan</th>
+            <th className="py-2 pe-3 text-start font-medium">Name</th>
+            <th className="px-3 py-2 text-start font-medium">How often</th>
+            <th className="px-3 py-2 text-end font-medium">Each charge</th>
+            <th className="px-3 py-2 text-end font-medium">A month</th>
+            <th className="px-3 py-2 text-start font-medium">{formatMonthShort(lastComplete)}</th>
+            <th className="px-3 py-2 text-start font-medium">What it does to the plan</th>
             <th className="w-9 py-2" />
           </tr>
         </thead>
@@ -351,10 +351,10 @@ function Table({
                 key={expense.id}
                 className={`h-[52px] border-b border-hairline ${(role === 'IGNORE' && !slip) || outside !== undefined ? 'text-ink-tertiary' : ''}`}
               >
-                <td className="py-2 pr-3">
+                <td className="py-2 pe-3">
                   <button
                     type="button"
-                    className="block text-left font-medium underline-offset-4 hover:underline"
+                    className="block text-start font-medium underline-offset-4 hover:underline"
                     onClick={(event) => {
                       const box = event.currentTarget.getBoundingClientRect()
                       onMenu(expense, { x: box.left, y: box.bottom })
@@ -379,10 +379,10 @@ function Table({
                     <span className="block text-caption text-ink-secondary">charged last month</span>
                   )}
                 </td>
-                <td className="px-3 py-2 text-right">
+                <td className="px-3 py-2 text-end">
                   <Amount value={expense.expectedAmount} className="text-ink-secondary" />
                 </td>
-                <td className="px-3 py-2 text-right">
+                <td className="px-3 py-2 text-end">
                   <Amount value={share} />
                   {expense.cadence !== 'MONTHLY' && expense.cadence !== 'IRREGULAR' && (
                     <span className="block text-caption text-ink-secondary">set aside each month</span>
@@ -405,7 +405,7 @@ function Table({
                     </span>
                   )}
                 </td>
-                <td className="py-2 text-right">
+                <td className="py-2 text-end">
                   <button
                     type="button"
                     aria-label={`More for ${expense.name}`}
@@ -450,7 +450,7 @@ export function RoleSwitch({
             onClick={() => onPick(each)}
             className={[
               'h-7 whitespace-nowrap border px-2.5 text-caption transition-colors duration-[var(--duration-micro)]',
-              index === 0 ? '' : '-ml-px',
+              index === 0 ? '' : '-ms-px',
               on
                 ? each === 'IGNORE'
                   ? 'relative z-[1] border-ink-tertiary bg-surface text-ink-secondary'

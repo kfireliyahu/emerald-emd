@@ -62,7 +62,7 @@ export function MappingBar({
         <span className="text-ink-secondary">
           The columns matched exactly, so there was nothing to map.
         </span>
-        <Button size="sm" className="ml-auto" onClick={onEdit}>
+        <Button size="sm" className="ms-auto" onClick={onEdit}>
           Map this file anyway
         </Button>
       </Bar>
@@ -76,7 +76,7 @@ export function MappingBar({
     <Bar>
       <span>{status(saved, dirty, changedCount)}</span>
 
-      <label className="ml-auto flex items-center gap-2">
+      <label className="ms-auto flex items-center gap-2">
         <span className="text-ink-secondary">Reader's name</span>
         <input
           type="text"

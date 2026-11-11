@@ -44,7 +44,7 @@ export function TypedHint({ completion }: { completion: Completion | undefined }
     <span
       aria-hidden
       data-completion
-      className="pointer-events-none absolute inset-y-0 right-2 flex items-center whitespace-nowrap text-ink-tertiary tabular-nums"
+      className="pointer-events-none absolute inset-y-0 end-2 flex items-center whitespace-nowrap text-ink-tertiary tabular-nums"
     >
       {shown}
     </span>

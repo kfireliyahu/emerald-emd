@@ -81,7 +81,7 @@ export function NetTrend({
   const yearShown = (index: number): boolean => points[index]?.period.month === 1 || (index === 0 && step >= 60)
 
   return (
-    <figure ref={frame} className="m-0">
+    <figure ref={frame} className="m-0" dir="ltr">
       <svg
         viewBox={`0 0 ${String(WIDTH)} ${String(HEIGHT)}`}
         className="block h-auto w-full overflow-visible"

@@ -157,7 +157,7 @@ export function FileGap() {
                 {roles.map(([column, role]) => (
                   <Bidi
                     key={column}
-                    className={`border-r border-hairline px-2.5 py-1.5 ${bad.has(role) ? 'bg-[color-mix(in_srgb,var(--color-flow-tax)_12%,transparent)] text-flow-tax' : ''}`}
+                    className={`border-e border-hairline px-2.5 py-1.5 ${bad.has(role) ? 'bg-[color-mix(in_srgb,var(--color-flow-tax)_12%,transparent)] text-flow-tax' : ''}`}
                   >
                     {sheet.table.rows[row.rowIndex]?.[column]?.text ?? ''}
                   </Bidi>

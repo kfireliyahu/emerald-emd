@@ -186,7 +186,7 @@ export function NewFormat({
         <div className="flex shrink-0 items-center gap-4 border-b border-hairline px-6 py-2">
           <span className="font-medium">A new format</span>
           <span className="text-caption text-ink-tertiary">New — not in the document yet</span>
-          <span className="ml-auto">
+          <span className="ms-auto">
             <Button variant="ghost" size="sm" onClick={onCancel}>
               Cancel
             </Button>
@@ -224,7 +224,7 @@ export function NewFormat({
         {nameField}
         <Chip>{named.length === 1 ? '1 column' : `${String(named.length)} columns`}</Chip>
         <span className="text-caption text-ink-tertiary">New — not in the document yet</span>
-        <span className="ml-auto">
+        <span className="ms-auto">
           <Button variant="ghost" size="sm" onClick={onCancel}>
             Cancel
           </Button>

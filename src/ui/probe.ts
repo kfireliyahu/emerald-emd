@@ -96,6 +96,12 @@ export interface ProbeOptions {
   readonly settleMs?: number
   /** At most this many entries per list; the count is always whole. */
   readonly limit?: number
+  /**
+   * The page's direction while it is measured (M60 U3, D-586): `rtl` sets
+   * `<html dir="rtl" lang="he">` as Hebrew does, so the mirror is measured on
+   * the demo, whose words stay English. The page's own when none.
+   */
+  readonly dir?: 'ltr' | 'rtl'
 }
 
 interface Listed<T> {
@@ -117,6 +123,16 @@ export interface ProbeResult {
   readonly platformSelects: number
   readonly nativeDates: number
   readonly pageOverflowsX: boolean
+  readonly dir: string
+  /** Which side of `main` the rail (`nav[aria-label="Sections"]`) is drawn on. */
+  readonly railSide: 'left' | 'right' | 'none'
+  /** Text and controls cut by a box that does not scroll, or past the window's edge. */
+  readonly clippedX: Listed<{ text: string; by: string }>
+  /**
+   * Every visible element's box, hashed: equal across two builds means the
+   * screen laid out identically — how M60 U3 showed English did not move.
+   */
+  readonly boxes: string
 }
 
 const WHITE: Rgba = { r: 255, g: 255, b: 255, a: 1 }
@@ -202,6 +218,66 @@ const CONTROLS =
   'button, a[href], input:not([type=hidden]), select, textarea, [role=button], [role=link], [role=checkbox], [role=tab], [role=menuitem], [role=switch], [role=option], [role=radio]'
 const FIELDS = 'input:not([type=hidden]):not([type=checkbox]):not([type=radio]):not([type=range]), select, textarea'
 
+/** The nearest box that cuts its content sideways, or the window. */
+function clipperOf(el: Element): Element | undefined {
+  for (let at = el.parentElement; at !== null; at = at.parentElement) {
+    const overflow = getComputedStyle(at).overflowX
+    if (overflow === 'visible') continue
+    return at
+  }
+  return undefined
+}
+
+/** Text and controls sticking out sideways from what clips them (M60 U3): a mirror gone wrong. */
+function clippedSideways(root: Element): { text: string; by: string }[] {
+  const out: { text: string; by: string }[] = []
+  const seen = new Set<Element>()
+  const candidates: Element[] = [...root.querySelectorAll(CONTROLS)]
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+  while (walker.nextNode()) {
+    const el = walker.currentNode.parentElement
+    if (el && (walker.currentNode.textContent ?? '').trim()) candidates.push(el)
+  }
+  for (const el of candidates) {
+    if (seen.has(el) || !visible(el) || el.closest('.sr-only, [aria-hidden="true"]')) continue
+    seen.add(el)
+    const box = el.getBoundingClientRect()
+    if (box.width === 0) continue
+    const clipper = clipperOf(el)
+    const overflow = clipper === undefined ? 'visible' : getComputedStyle(clipper).overflowX
+    // What scrolls is reachable; a truncated line is truncated on purpose.
+    if (overflow === 'auto' || overflow === 'scroll' || getComputedStyle(el).textOverflow === 'ellipsis') continue
+    const edge = clipper === undefined ? { left: 0, right: innerWidth } : clipper.getBoundingClientRect()
+    const left = Math.max(edge.left, 0)
+    const right = Math.min(edge.right, innerWidth)
+    if (box.left < left - 1 || box.right > right + 1) {
+      const text = (el.textContent ?? '').trim() || el.getAttribute('aria-label') || el.tagName.toLowerCase()
+      out.push({ text: text.slice(0, 60), by: clipper === undefined ? 'window' : `${clipper.tagName.toLowerCase()}.${String(clipper.className).split(' ').slice(0, 3).join('.')}` })
+    }
+  }
+  return out
+}
+
+function boxesHash(root: Element): string {
+  let hash = 2166136261
+  for (const el of root.querySelectorAll('*')) {
+    const box = el.getBoundingClientRect()
+    if (box.width === 0 && box.height === 0) continue
+    for (const n of [box.left, box.top, box.width, box.height]) {
+      hash ^= Math.round(n * 4)
+      hash = Math.imul(hash, 16777619) >>> 0
+    }
+  }
+  return hash.toString(16)
+}
+
+function railSide(): 'left' | 'right' | 'none' {
+  const rail = document.querySelector('nav[aria-label="Sections"]')
+  const main = document.querySelector('main')
+  if (!rail || !main || !visible(rail)) return 'none'
+  return rail.getBoundingClientRect().left < main.getBoundingClientRect().left ? 'left' : 'right'
+}
+
 function measure(root: Element, ramp: readonly number[], limit: number): Omit<ProbeResult, 'route' | 'theme' | 'width'> {
   const lowContrast: { text: string; ratio: number; needs: number; size: string }[] = []
   const offRamp: { text: string; size: string }[] = []
@@ -258,6 +334,10 @@ function measure(root: Element, ramp: readonly number[], limit: number): Omit<Pr
     nativeDates: [...root.querySelectorAll('input[type=date], input[type=datetime-local], input[type=month]')]
       .filter((el) => visible(el) && el.closest('[aria-hidden="true"]') === null).length,
     pageOverflowsX: document.documentElement.scrollWidth > document.documentElement.clientWidth + 1,
+    dir: getComputedStyle(document.documentElement).direction,
+    railSide: railSide(),
+    clippedX: listed(clippedSideways(root), limit),
+    boxes: boxesHash(root),
   }
 }
 
@@ -290,6 +370,8 @@ export async function probe(options: ProbeOptions = {}): Promise<ProbeResult[]> 
   const html = document.documentElement
   const startHash = location.hash
   const startTheme = html.dataset.theme ?? 'light'
+  const startDir = html.getAttribute('dir')
+  const startLang = html.getAttribute('lang')
   // A colour transition would be measured half-way through a theme change.
   const still = document.createElement('style')
   still.textContent = '*, *::before, *::after { transition: none !important; animation: none !important; }'
@@ -300,6 +382,11 @@ export async function probe(options: ProbeOptions = {}): Promise<ProbeResult[]> 
   const routes = options.routes?.length ? options.routes : [startHash || '#/']
   const themes = options.themes?.length ? options.themes : [startTheme as 'light' | 'dark']
   const results: ProbeResult[] = []
+  if (options.dir !== undefined) {
+    html.dir = options.dir
+    html.lang = options.dir === 'rtl' ? 'he' : 'en'
+    await settled(quiet)
+  }
   try {
     for (const route of routes) {
       const hash = route.startsWith('#') ? route : `#/${route.replace(/^\//, '')}`
@@ -318,6 +405,12 @@ export async function probe(options: ProbeOptions = {}): Promise<ProbeResult[]> 
     }
   } finally {
     html.dataset.theme = startTheme
+    if (options.dir !== undefined) {
+      if (startDir === null) html.removeAttribute('dir')
+      else html.dir = startDir
+      if (startLang === null) html.removeAttribute('lang')
+      else html.lang = startLang
+    }
     if (location.hash !== startHash) location.hash = startHash
     still.remove()
   }

@@ -177,7 +177,7 @@ export function ListLines(props: ListLinesProps) {
     props.draft === undefined ? null : (
       <div
         aria-current="page"
-        className="relative flex w-full items-start gap-2.5 bg-accent-soft px-3 py-1.5 before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:bg-accent"
+        className="relative flex w-full items-start gap-2.5 bg-accent-soft px-3 py-1.5 before:absolute before:inset-y-0 before:start-0 before:w-0.5 before:bg-accent"
       >
         {done !== undefined && <span className="mt-0.5 inline-flex size-4 flex-none border-[1.5px] border-ink-secondary" aria-hidden />}
         <Bidi className={`min-w-0 truncate text-body ${props.draft.title === '' ? 'text-ink-secondary italic' : 'text-ink'}`}>
@@ -213,8 +213,8 @@ export function ListLines(props: ListLinesProps) {
                 onClick={() => fold(group.key)}
                 className={
                   narrow
-                    ? 'mt-2 flex h-6 w-full items-center gap-1.5 px-3 text-left text-label text-ink-secondary uppercase hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent'
-                    : 'mt-3.5 flex h-8 w-full items-center gap-2 text-left text-body font-medium focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent'
+                    ? 'mt-2 flex h-6 w-full items-center gap-1.5 px-3 text-start text-label text-ink-secondary uppercase hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent'
+                    : 'mt-3.5 flex h-8 w-full items-center gap-2 text-start text-body font-medium focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent'
                 }
               >
                 <span className="fc-chev text-label" data-open={!isShut} aria-hidden>
@@ -243,8 +243,8 @@ export function ListLines(props: ListLinesProps) {
                     onClick={() => show(group.key)}
                     className={
                       narrow
-                        ? 'flex h-6 w-full items-center px-3 text-left text-caption text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent'
-                        : 'flex h-8 w-full items-center gap-2 border-t border-hairline px-1 text-left text-caption text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent'
+                        ? 'flex h-6 w-full items-center px-3 text-start text-caption text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent'
+                        : 'flex h-8 w-full items-center gap-2 border-t border-hairline px-1 text-start text-caption text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent'
                     }
                   >
                     {showing ? 'Hide ' : ''}
@@ -331,7 +331,7 @@ function WideRow(props: RowProps) {
       <button
         type="button"
         onClick={onOpen}
-        className={`flex min-w-0 flex-1 text-left decoration-hairline-strong underline-offset-[3px] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
+        className={`flex min-w-0 flex-1 text-start decoration-hairline-strong underline-offset-[3px] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${
           struck ? 'text-ink-tertiary line-through decoration-ink-tertiary' : ''
         }`}
       >
@@ -356,7 +356,7 @@ function NarrowRow(props: RowProps & { readonly current: boolean }) {
       role="listitem"
       data-line={line.title}
       className={`relative flex w-full items-start gap-2.5 px-3 py-1.5 ${
-        current ? 'bg-accent-soft before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:bg-accent' : 'hover:bg-surface'
+        current ? 'bg-accent-soft before:absolute before:inset-y-0 before:start-0 before:w-0.5 before:bg-accent' : 'hover:bg-surface'
       } ${fresh ? 'fc-fresh' : ''}`}
     >
       <Tick {...props} className="mt-0.5" />
@@ -364,7 +364,7 @@ function NarrowRow(props: RowProps & { readonly current: boolean }) {
         type="button"
         aria-current={current ? 'page' : undefined}
         onClick={onOpen}
-        className="flex min-w-0 flex-1 flex-col text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+        className="flex min-w-0 flex-1 flex-col text-start focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
       >
         <Bidi className={`min-w-0 truncate text-body ${struck ? 'text-ink-tertiary line-through' : 'text-ink'}`}>
           {line.title}
@@ -412,7 +412,7 @@ export function Cell({ cell }: { cell: LineCell }) {
       )
     case 'date':
       return (
-        <span className={`min-w-[84px] text-right tabular-nums ${cell.late ? 'text-negative' : ''}`} title={cell.long}>
+        <span className={`min-w-[84px] text-end tabular-nums ${cell.late ? 'text-negative' : ''}`} title={cell.long}>
           {cell.text}
         </span>
       )
@@ -831,7 +831,7 @@ function Menu({
         <div
           role="menu"
           aria-label={label}
-          className="fc-pop-enter absolute top-full left-0 z-30 mt-1 flex max-h-[60vh] w-60 flex-col overflow-y-auto rounded-md border border-hairline-strong bg-elevated p-1 text-body text-ink shadow-[var(--shadow-pop)]"
+          className="fc-pop-enter absolute top-full start-0 z-30 mt-1 flex max-h-[60vh] w-60 flex-col overflow-y-auto rounded-md border border-hairline-strong bg-elevated p-1 text-body text-ink shadow-[var(--shadow-pop)]"
         >
           <div className="px-2 pt-1 pb-2 text-label text-ink-secondary uppercase">{label}</div>
           {children(() => setOpen(false))}
@@ -848,7 +848,7 @@ function MenuItem({ on, hint, onPick, children }: { on: boolean; hint?: string; 
       role="menuitemcheckbox"
       aria-checked={on}
       onClick={onPick}
-      className="flex h-7 items-center gap-2 rounded px-2 text-left hover:bg-accent-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+      className="flex h-7 items-center gap-2 rounded px-2 text-start hover:bg-accent-soft focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
     >
       <span className="inline-flex w-3.5 justify-center text-ink" aria-hidden>
         {on && <ActionGlyph name="check" size={12} />}

@@ -40,7 +40,7 @@ export function FormatPlus({ input, onPick }: { readonly input: boolean; readonl
         <div
           role="menu"
           aria-label="New"
-          className="fc-pop-enter absolute top-full left-0 z-30 mt-1 flex w-48 flex-col border border-hairline-strong bg-elevated py-1 shadow-[var(--shadow-pop)]"
+          className="fc-pop-enter absolute top-full start-0 z-30 mt-1 flex w-48 flex-col border border-hairline-strong bg-elevated py-1 shadow-[var(--shadow-pop)]"
           onKeyDown={(event) => {
             if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return
             event.preventDefault()
@@ -59,7 +59,7 @@ export function FormatPlus({ input, onPick }: { readonly input: boolean; readonl
                 setOpen(false)
                 onPick(item.pick)
               }}
-              className="flex h-8 items-center px-3 text-left text-body text-ink hover:bg-surface focus-visible:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+              className="flex h-8 items-center px-3 text-start text-body text-ink hover:bg-surface focus-visible:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
             >
               {item.label}
             </button>

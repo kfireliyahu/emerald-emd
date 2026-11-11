@@ -185,7 +185,7 @@ export function Year() {
                   Saved
                 </Key>
                 <span>A dashed box is a month not in this document</span>
-                <span className="ml-auto">A month opens it in Month</span>
+                <span className="ms-auto">A month opens it in Month</span>
               </Legend>
             </div>
 
@@ -209,14 +209,14 @@ export function Year() {
                         <Bidi className="min-w-0 truncate">{line.name}</Bidi>
                       </span>
                       <Spark series={series} />
-                      <span className="text-right font-mono text-caption text-ink-secondary">{count} mo</span>
-                      <span className="text-right tabular-nums">{formatMoney(line.outflow)}</span>
+                      <span className="text-end font-mono text-caption text-ink-secondary">{count} mo</span>
+                      <span className="text-end tabular-nums">{formatMoney(line.outflow)}</span>
                     </div>
                   )
                 })}
                 <div className="grid h-10 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-t border-ink font-medium">
                   <span>Went out</span>
-                  <span className={`text-right tabular-nums ${FLOW_TEXT.out}`}>{formatMoney(overview.expenses)}</span>
+                  <span className={`text-end tabular-nums ${FLOW_TEXT.out}`}>{formatMoney(overview.expenses)}</span>
                 </div>
               </div>
             </section>
@@ -227,10 +227,10 @@ export function Year() {
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="border-b border-hairline text-label text-ink-tertiary uppercase">
-                      <th className="px-3 py-2 text-left font-medium">Merchant</th>
-                      <th className="px-3 py-2 text-left font-medium">Usually</th>
-                      <th className="px-3 py-2 text-right font-medium">Months</th>
-                      <th className="px-3 py-2 text-right font-medium">All of it</th>
+                      <th className="px-3 py-2 text-start font-medium">Merchant</th>
+                      <th className="px-3 py-2 text-start font-medium">Usually</th>
+                      <th className="px-3 py-2 text-end font-medium">Months</th>
+                      <th className="px-3 py-2 text-end font-medium">All of it</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -246,8 +246,8 @@ export function Year() {
                         <td className="px-3 text-ink-secondary">
                           <Bidi>{one.categoryName ?? 'Uncategorized'}</Bidi>
                         </td>
-                        <td className="px-3 text-right tabular-nums">{one.months}</td>
-                        <td className="px-3 text-right tabular-nums">{formatMoney(one.outflow)}</td>
+                        <td className="px-3 text-end tabular-nums">{one.months}</td>
+                        <td className="px-3 text-end tabular-nums">{formatMoney(one.outflow)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -271,12 +271,12 @@ export function Year() {
                 <table className="w-full border-collapse">
                   <thead>
                     <tr className="border-b border-hairline text-label text-ink-tertiary uppercase">
-                      <th className="px-3 py-2 text-left font-medium">Month</th>
-                      <th className="px-3 py-2 text-right font-medium">Came in</th>
-                      <th className="px-3 py-2 text-right font-medium">Went out</th>
-                      <th className="px-3 py-2 text-right font-medium">Saved</th>
-                      <th className="px-3 py-2 text-right font-medium">Taxes</th>
-                      <th className="px-3 py-2 text-right font-medium">Left over</th>
+                      <th className="px-3 py-2 text-start font-medium">Month</th>
+                      <th className="px-3 py-2 text-end font-medium">Came in</th>
+                      <th className="px-3 py-2 text-end font-medium">Went out</th>
+                      <th className="px-3 py-2 text-end font-medium">Saved</th>
+                      <th className="px-3 py-2 text-end font-medium">Taxes</th>
+                      <th className="px-3 py-2 text-end font-medium">Left over</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -307,13 +307,13 @@ export function Year() {
                           className="h-10 cursor-pointer border-b border-hairline transition-colors duration-[var(--duration-micro)] hover:bg-surface"
                         >
                           <td className="px-3 whitespace-nowrap">{formatYearMonth(period)}</td>
-                          <td className="px-3 text-right tabular-nums text-flow-in">{formatMoney(one.income)}</td>
-                          <td className="px-3 text-right tabular-nums text-flow-out">{formatMoney(one.expenses)}</td>
-                          <td className="px-3 text-right tabular-nums text-flow-saved">{formatMoney(one.saved)}</td>
-                          <td className="px-3 text-right tabular-nums text-flow-tax">
+                          <td className="px-3 text-end tabular-nums text-flow-in">{formatMoney(one.income)}</td>
+                          <td className="px-3 text-end tabular-nums text-flow-out">{formatMoney(one.expenses)}</td>
+                          <td className="px-3 text-end tabular-nums text-flow-saved">{formatMoney(one.saved)}</td>
+                          <td className="px-3 text-end tabular-nums text-flow-tax">
                             {tax === undefined ? <span className="text-ink-tertiary">—</span> : formatMoney(tax)}
                           </td>
-                          <td className="px-3 text-right tabular-nums">{formatMoney(one.balance)}</td>
+                          <td className="px-3 text-end tabular-nums">{formatMoney(one.balance)}</td>
                         </tr>
                       )
                     })}
@@ -359,7 +359,7 @@ function YearBars({
   const base = H - pad.bottom
 
   return (
-    <figure ref={width.ref} className="m-0">
+    <figure ref={width.ref} className="m-0" dir="ltr">
       <svg
         viewBox={`0 0 ${String(W)} ${String(H)}`}
         className="block h-auto w-full overflow-visible"
@@ -478,18 +478,18 @@ function YearApart({
         <thead>
           <tr className="border-b border-hairline text-label text-ink-tertiary uppercase">
             <th className="px-3 py-2" />
-            <th className="px-3 py-2 text-right font-medium">{formatYearMonth(ago)}</th>
-            <th className="px-3 py-2 text-right font-medium">{formatYearMonth(latest)}</th>
-            <th className="px-3 py-2 text-right font-medium">Change</th>
+            <th className="px-3 py-2 text-end font-medium">{formatYearMonth(ago)}</th>
+            <th className="px-3 py-2 text-end font-medium">{formatYearMonth(latest)}</th>
+            <th className="px-3 py-2 text-end font-medium">Change</th>
           </tr>
         </thead>
         <tbody>
           {rows.map(([label, flow, before, after]) => (
             <tr key={label} className="h-[34px] border-b border-hairline">
               <td className="px-3">{label}</td>
-              <td className={`px-3 text-right tabular-nums ${FLOW_TEXT[flow]}`}>{before === undefined ? '—' : formatMoney(before)}</td>
-              <td className={`px-3 text-right tabular-nums ${FLOW_TEXT[flow]}`}>{after === undefined ? '—' : formatMoney(after)}</td>
-              <td className="px-3 text-right text-ink-secondary tabular-nums">{change(before, after)}</td>
+              <td className={`px-3 text-end tabular-nums ${FLOW_TEXT[flow]}`}>{before === undefined ? '—' : formatMoney(before)}</td>
+              <td className={`px-3 text-end tabular-nums ${FLOW_TEXT[flow]}`}>{after === undefined ? '—' : formatMoney(after)}</td>
+              <td className="px-3 text-end text-ink-secondary tabular-nums">{change(before, after)}</td>
             </tr>
           ))}
         </tbody>

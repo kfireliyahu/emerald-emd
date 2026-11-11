@@ -88,8 +88,8 @@ export function BucketTable({
           <span>Bucket</span>
           <span>For</span>
           <span>How much</span>
-          <span className="text-right">Planned</span>
-          <span className="text-right">Got in {gotIn}</span>
+          <span className="text-end">Planned</span>
+          <span className="text-end">Got in {gotIn}</span>
           <span />
         </div>
         {sections.map((section, index) => (
@@ -182,7 +182,7 @@ export function BucketTable({
                         role="radio"
                         aria-checked={on}
                         onClick={() => onMode(allocation.id, mode)}
-                        className={`h-[26px] border px-2 text-[11px] whitespace-nowrap ${index === 0 ? '' : '-ml-px'} ${
+                        className={`h-[26px] border px-2 text-[11px] whitespace-nowrap ${index === 0 ? '' : '-ms-px'} ${
                           on
                             ? 'relative z-[1] border-accent bg-accent-soft text-ink'
                             : 'border-hairline-strong text-ink-secondary hover:text-ink'
@@ -213,7 +213,7 @@ export function BucketTable({
                         if (event.key === 'Escape') onPercentText(bucket.id, undefined)
                       }}
                       aria-label={`${bucket.name} percentage`}
-                      className={`${FIELD} w-20 text-right tabular-nums disabled:opacity-40`}
+                      className={`${FIELD} w-20 text-end tabular-nums disabled:opacity-40`}
                     />
                     <span className="text-ink-secondary">% of the split</span>
                   </span>
@@ -229,7 +229,7 @@ export function BucketTable({
                       }}
                       placeholder="0.00"
                       aria-label={`${bucket.name} amount`}
-                      className={`${FIELD} w-28 text-right tabular-nums disabled:opacity-40`}
+                      className={`${FIELD} w-28 text-end tabular-nums disabled:opacity-40`}
                     />
                     <span className="text-ink-secondary">a month</span>
                   </span>
@@ -240,7 +240,7 @@ export function BucketTable({
                 )}
               </div>
 
-              <div className="text-right tabular-nums">
+              <div className="text-end tabular-nums">
                 <CountingAmount value={amount} className="block text-[15px] font-medium" />
                 <small className="block text-caption text-ink-secondary">
                   {formatPercent(entry.shareBasisPoints, { digits: 1 })} of the split
@@ -296,8 +296,8 @@ function Heading({
           </span>
         )}
       </span>
-      <span className="text-right text-[13px] text-ink-secondary tabular-nums">{formatMoney(money(planned, currency))}</span>
-      <span className="text-right text-[13px] text-ink-secondary tabular-nums">{got === undefined ? '' : formatMoney(got)}</span>
+      <span className="text-end text-[13px] text-ink-secondary tabular-nums">{formatMoney(money(planned, currency))}</span>
+      <span className="text-end text-[13px] text-ink-secondary tabular-nums">{got === undefined ? '' : formatMoney(got)}</span>
       <span />
     </div>
   )
@@ -311,14 +311,14 @@ function Got({ line, bucket, measured }: { line: VarianceLine | undefined; bucke
   const actual: Money | undefined = line?.actual
   if (line === undefined || actual === undefined) {
     return (
-      <div className="text-right text-caption text-ink-tertiary">
+      <div className="text-end text-caption text-ink-tertiary">
         {bucket.targetKind === 'CATEGORY' && !measured ? 'unknown' : 'not measured'}
       </div>
     )
   }
   const variance = actual.minor - line.planned.minor
   return (
-    <div className="text-right tabular-nums">
+    <div className="text-end tabular-nums">
       <span className="block">{formatMoney(actual)}</span>
       <small className="block text-caption text-ink-secondary">
         {bucket.targetKind === 'SAVING_GOAL' && actual.minor === 0

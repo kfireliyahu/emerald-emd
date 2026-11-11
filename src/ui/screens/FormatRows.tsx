@@ -1522,7 +1522,7 @@ export function FormatRows({
           {data.total > PAGE ? `, showing ${String(PAGE)}` : ''}
         </span>
         {locked === undefined && <ReadersLine readers={data.readers} />}
-        <span className="ml-auto flex items-center gap-2">
+        <span className="ms-auto flex items-center gap-2">
           {(declaration.ruleSets ?? []).map((each) => {
             const target = data.declarations.find((format) => format.name === each.target)
             // A pack's target is sorted by the pack, on its own write (D-269).
@@ -2194,7 +2194,7 @@ function DeleteRowPanel({
           cannot be deleted while other entries link to it &mdash; they would be left naming nothing.
           Re-link or clear them first; nothing is removed on your behalf.
         </p>
-        <ul className="mb-3 max-w-prose list-disc pl-5 text-body text-ink-secondary">
+        <ul className="mb-3 max-w-prose list-disc ps-5 text-body text-ink-secondary">
           {linking.map((sentence) => (
             <li key={sentence}>
               <Bidi>{sentence}</Bidi>

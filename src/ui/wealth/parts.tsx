@@ -30,7 +30,7 @@ export function PageHead({ title, under, actions }: { title: string; under?: Rea
 export function Hero({ children, columns = 4 }: { children: ReactNode; columns?: 3 | 4 }) {
   return (
     <div
-      className={`grid grid-cols-2 border-y border-hairline ${columns === 3 ? '@3xl:grid-cols-3' : '@3xl:grid-cols-4'} [&>div+div]:border-l [&>div+div]:border-hairline [&>div+div]:pl-4`}
+      className={`grid grid-cols-2 border-y border-hairline ${columns === 3 ? '@3xl:grid-cols-3' : '@3xl:grid-cols-4'} [&>div+div]:border-s [&>div+div]:border-hairline [&>div+div]:ps-4`}
     >
       {children}
     </div>
@@ -50,7 +50,7 @@ export function HeroCell({
   children: ReactNode
 }) {
   return (
-    <div className="flex min-w-0 flex-col gap-0.5 py-3 pr-4">
+    <div className="flex min-w-0 flex-col gap-0.5 py-3 pe-4">
       <span className="text-label tracking-[0.08em] text-ink-secondary uppercase">{label}</span>
       <span
         className={`text-[22px] leading-[1.2] font-medium tracking-[-0.01em] tabular-nums ${problem ? 'text-flow-out' : ''}`}
@@ -119,7 +119,7 @@ export function Seg<T extends string | number>({
             aria-pressed={on}
             onClick={() => onChange(option)}
             className={`inline-flex h-8 items-center border px-3.5 text-[13px] transition-colors duration-[var(--duration-micro)] ${
-              index === 0 ? '' : '-ml-px'
+              index === 0 ? '' : '-ms-px'
             } ${
               on
                 ? 'relative z-[1] border-accent bg-accent-soft text-ink'
@@ -187,17 +187,17 @@ export function Src({ children, className = '' }: { children: ReactNode; classNa
 
 /** `th`, `td`, `.gtable td`: the table cells, as class strings. */
 export const TH =
-  'border-b border-hairline px-2.5 py-2 text-left text-[11px] font-medium tracking-[0.08em] whitespace-nowrap text-ink-tertiary uppercase'
-export const TH_R = `${TH} text-right`
+  'border-b border-hairline px-2.5 py-2 text-start text-[11px] font-medium tracking-[0.08em] whitespace-nowrap text-ink-tertiary uppercase'
+export const TH_R = `${TH} text-end`
 /** A plain row: 38px. */
 export const TD = 'h-[38px] border-b border-hairline px-2.5 whitespace-nowrap'
 /** A deciding row (`.gtable`): 64px, middle. */
 export const GTD = 'h-16 border-b border-hairline px-2.5 align-middle whitespace-nowrap'
-export const GTD_R = `${GTD} text-right tabular-nums`
+export const GTD_R = `${GTD} text-end tabular-nums`
 
 /** `.fld.wide`: the amount field in a deciding row. */
 export const AMOUNT_FIELD =
-  'h-[30px] w-[120px] border border-hairline-strong bg-background px-2 text-right tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
+  'h-[30px] w-[120px] border border-hairline-strong bg-background px-2 text-end tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
 
 /** `.legend`: a row of swatches and names. */
 export function Legend({ children }: { children: ReactNode }) {

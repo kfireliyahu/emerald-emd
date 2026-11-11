@@ -53,7 +53,7 @@ export function DerivedQuestions({
           />
         </label>
         <span className="pb-1 text-ink-secondary">computed: the app works it out, nobody types it</span>
-        <Button size="sm" variant="ghost" className="ml-auto" onClick={onRemove}>
+        <Button size="sm" variant="ghost" className="ms-auto" onClick={onRemove}>
           Remove
         </Button>
       </div>

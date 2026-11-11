@@ -420,9 +420,11 @@ export function ConnectionGraph({
   const worded = new Set<string>()
 
   return (
+    // The plane is placed by measuring, so it is drawn left to right in Hebrew too (M60 U3, D-586).
     <div
       ref={viewport}
       data-canvas
+      dir="ltr"
       className="relative h-full w-full touch-none select-none overflow-hidden"
       style={{ cursor: pan.current !== undefined ? 'grabbing' : undefined }}
       onPointerDown={(event) => {
@@ -498,11 +500,11 @@ export function ConnectionGraph({
       }}
     >
       <div
-        className="absolute left-0 top-0 origin-top-left"
+        className="absolute start-0 top-0 origin-top-left"
         style={{ transform: `translate(${view.x}px, ${view.y}px) scale(${view.zoom})` }}
       >
         <svg
-          className="pointer-events-none absolute left-0 top-0 overflow-visible"
+          className="pointer-events-none absolute start-0 top-0 overflow-visible"
           width={placement.width}
           height={placement.height}
           aria-hidden
@@ -640,7 +642,7 @@ export function ConnectionGraph({
                 }}
                 onKeyDown={(event) => onKey(event, () => touch(placed.node.row.port), onArm)}
                 title={placed.node.row.says}
-                className={`flex min-w-0 flex-1 items-center gap-2 pr-3 text-left ${
+                className={`flex min-w-0 flex-1 items-center gap-2 pe-3 text-start ${
                   armed !== undefined && samePort(armed, placed.node.row.port)
                     ? 'bg-accent-soft'
                     : 'hover:bg-surface'
@@ -669,7 +671,7 @@ export function ConnectionGraph({
 
       <div
         data-no-pan
-        className="absolute bottom-3 right-3 flex items-center gap-1 border border-hairline bg-elevated px-1 py-0.5"
+        className="absolute bottom-3 end-3 flex items-center gap-1 border border-hairline bg-elevated px-1 py-0.5"
         style={{ borderRadius: 'var(--radius-control)' }}
       >
         <IconAction label="Zoom out" onClick={() => zoomCentre(1 / 1.2)}>
@@ -739,7 +741,7 @@ function Group({
       <button
         type="button"
         title={`The ${group.pack} pack's formats — ${group.members.join(', ')}. Press to open, drag to move, or the arrow keys.`}
-        className="flex h-full w-full cursor-grab flex-col items-start justify-center px-3 text-left hover:bg-elevated active:cursor-grabbing"
+        className="flex h-full w-full cursor-grab flex-col items-start justify-center px-3 text-start hover:bg-elevated active:cursor-grabbing"
         {...handlers}
         onKeyDown={(event) => {
           if (event.key === 'Enter' || event.key === ' ') {
@@ -812,7 +814,7 @@ function PortButton({
       onKeyDown={(event) => onKey(event, onTouch, onLetGo)}
       style={{ height: PORT_HEIGHT }}
       title={port.says}
-      className={`flex w-full items-center gap-2 px-3 text-left text-caption ${
+      className={`flex w-full items-center gap-2 px-3 text-start text-caption ${
         armed ? 'bg-accent-soft' : 'hover:bg-surface'
       } ${proposing ? 'text-accent' : port.edges > 0 ? 'text-ink' : 'text-ink-secondary'}`}
     >
@@ -823,7 +825,7 @@ function PortButton({
         <Bidi className="min-w-0 truncate">{port.label}</Bidi>
       </span>
       {port.detail !== undefined && (
-        <span className="ml-auto flex min-w-0 shrink-0 whitespace-nowrap text-ink-secondary">
+        <span className="ms-auto flex min-w-0 shrink-0 whitespace-nowrap text-ink-secondary">
           <Bidi>{port.detail}</Bidi>
         </span>
       )}

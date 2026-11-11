@@ -212,7 +212,7 @@ export function Rules() {
         <Button
           variant="secondary"
           size="sm"
-          className="ml-auto"
+          className="ms-auto"
           onClick={() => setReapplying((open) => !open)}
           disabled={data.rules.length === 0}
           title={
@@ -492,7 +492,7 @@ function Row({
         {/* Quiet until the row is hovered or something in it has focus, and kept
             in the DOM so keyboard focus still reaches them. The arrows are the
             keyboard's way to do what dragging does. */}
-        <span className="ml-auto flex items-center gap-x-3 text-caption text-ink-secondary opacity-0 transition-opacity duration-[var(--duration-micro)] group-hover:opacity-100 focus-within:opacity-100">
+        <span className="ms-auto flex items-center gap-x-3 text-caption text-ink-secondary opacity-0 transition-opacity duration-[var(--duration-micro)] group-hover:opacity-100 focus-within:opacity-100">
           {!shipped && (
             <>
               <IconButton onClick={() => onMove(-1)} label={`Move ${rule.name} up`} disabled={isFirst}>
@@ -539,7 +539,7 @@ function Row({
             {categoryName ?? 'a category that was deleted'}
           </span>
         </span>
-        <span className="ml-auto whitespace-nowrap text-ink-tertiary tabular-nums">
+        <span className="ms-auto whitespace-nowrap text-ink-tertiary tabular-nums">
           {hits(rule)}
         </span>
       </div>

@@ -217,7 +217,7 @@ export function DeclaredFormats() {
           <span className="text-caption text-ink-secondary">
             A format is a kind of thing this document can hold. Nothing is written until you save.
           </span>
-          <span className="ml-auto">
+          <span className="ms-auto">
             <Button variant="ghost" size="sm" onClick={() => setMode(back)}>
               {mode.kind === 'DOORS'
                 ? data.formats.length === 0
@@ -290,7 +290,7 @@ export function DeclaredFormats() {
           </span>
         )}
         <ProofChip format={format} proof={proof} />
-        <span className="relative z-10 ml-auto flex items-center gap-0.5 self-center">
+        <span className="relative z-10 ms-auto flex items-center gap-0.5 self-center">
           {/* **Edit is the sheet** (M26 U3): a format is changed
               where its entries are — a column's header, the `+`
               after the last one, and its claims. */}
@@ -345,7 +345,7 @@ export function DeclaredFormats() {
             already on the screen underneath it and this button is the same
             action twice (M20 U2). */}
         {data.formats.length > 0 && (
-          <span className="ml-auto flex items-center gap-2">
+          <span className="ms-auto flex items-center gap-2">
             <Button variant="primary" size="sm" data-tour="new-format" onClick={() => setMode({ kind: 'DOORS' })}>
               New format
             </Button>
@@ -416,7 +416,7 @@ export function DeclaredFormats() {
             {grouped.packs.map((group) => (
               <section key={group.pack} aria-label={group.title} data-tour={`formats-pack-${group.pack}`}>
                 <h2 className="mb-2 text-caption font-medium text-ink-secondary">{group.title}</h2>
-                <ul className="space-y-2 border-l border-hairline pl-5">{group.formats.map(card)}</ul>
+                <ul className="space-y-2 border-s border-hairline ps-5">{group.formats.map(card)}</ul>
               </section>
             ))}
           </div>

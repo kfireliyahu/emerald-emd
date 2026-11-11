@@ -432,7 +432,7 @@ function Proof({
           />
         </label>
         <span
-          className={`ml-auto text-caption ${
+          className={`ms-auto text-caption ${
             review.proof === 'proved'
               ? 'text-positive'
               : review.proof === 'failed'
@@ -555,9 +555,9 @@ function Figures({
       <table className="w-full">
         <thead>
           <tr className="border-b border-hairline text-label text-ink-tertiary uppercase">
-            <th className="py-2 text-left font-medium">On the report</th>
-            <th className="px-3 py-2 text-right font-medium">Amount</th>
-            <th className="px-3 py-2 text-left font-medium">Checked</th>
+            <th className="py-2 text-start font-medium">On the report</th>
+            <th className="px-3 py-2 text-end font-medium">Amount</th>
+            <th className="px-3 py-2 text-start font-medium">Checked</th>
           </tr>
         </thead>
         <tbody>
@@ -575,7 +575,7 @@ function Figures({
               onClick={onShow}
             >
               <td className="py-1">{figure.label}</td>
-              <td className="px-3 py-1 text-right">
+              <td className="px-3 py-1 text-end">
                 <AmountField
                   value={figure.amount}
                   currency={currency}

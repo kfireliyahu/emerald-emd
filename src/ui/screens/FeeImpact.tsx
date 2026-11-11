@@ -118,7 +118,7 @@ export function FeeImpact({ embedded = false }: { readonly embedded?: boolean } 
         <Button
           variant="ghost"
           size="sm"
-          className="ml-auto"
+          className="ms-auto"
           onClick={() => setAttempt((count) => count + 1)}
         >
           Start over
@@ -399,7 +399,7 @@ function Illustration({
               <label className="flex items-center gap-2 text-label text-ink-tertiary uppercase">
                 <input
                   type="number"
-                  className={`${FIELD} w-20 text-right tabular-nums`}
+                  className={`${FIELD} w-20 text-end tabular-nums`}
                   value={scenario.grossReturnBasisPoints / 100}
                   min={0}
                   max={20}

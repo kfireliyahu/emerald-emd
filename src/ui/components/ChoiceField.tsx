@@ -231,8 +231,8 @@ export function ChoiceField({
               data-index={index}
               role="option"
               aria-selected={index === active}
-              className={`flex cursor-pointer items-center gap-2 py-1 pr-3 whitespace-nowrap ${
-                choice.group === undefined ? 'pl-3' : 'pl-6'
+              className={`flex cursor-pointer items-center gap-2 py-1 pe-3 whitespace-nowrap ${
+                choice.group === undefined ? 'ps-3' : 'ps-6'
               } ${index === active ? 'bg-accent-soft' : 'hover:bg-surface'}`}
               onMouseEnter={() => setActive(index)}
               // Not passed on: a list drawn inside a `<label>` would otherwise
@@ -252,7 +252,7 @@ export function ChoiceField({
                 <Bidi className="truncate text-caption text-ink-secondary">{choice.detail}</Bidi>
               )}
               {choice.label.toLocaleLowerCase() === needle && (
-                <span aria-hidden className="ml-auto pl-3 text-caption text-ink-tertiary">
+                <span aria-hidden className="ms-auto ps-3 text-caption text-ink-tertiary">
                   ✓
                 </span>
               )}

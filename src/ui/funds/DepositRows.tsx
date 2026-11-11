@@ -72,13 +72,13 @@ export function DepositRows({
         <table className="w-full">
           <thead>
             <tr className="border-b border-hairline text-label text-ink-tertiary uppercase">
-              <th className="py-2 text-left font-medium">For</th>
-              <th className="px-3 py-2 text-left font-medium">Arrived</th>
-              <th className="px-3 py-2 text-left font-medium">Employer</th>
-              <th className="px-3 py-2 text-right font-medium">Yours</th>
-              <th className="px-3 py-2 text-right font-medium">Employer’s</th>
-              <th className="px-3 py-2 text-right font-medium">Severance</th>
-              <th className="px-3 py-2 text-right font-medium">Total</th>
+              <th className="py-2 text-start font-medium">For</th>
+              <th className="px-3 py-2 text-start font-medium">Arrived</th>
+              <th className="px-3 py-2 text-start font-medium">Employer</th>
+              <th className="px-3 py-2 text-end font-medium">Yours</th>
+              <th className="px-3 py-2 text-end font-medium">Employer’s</th>
+              <th className="px-3 py-2 text-end font-medium">Severance</th>
+              <th className="px-3 py-2 text-end font-medium">Total</th>
             </tr>
           </thead>
           <tbody>
@@ -158,7 +158,7 @@ export function DepositRows({
                     where the table has one and the three parts added up where it
                     has not, so the place to correct it is whichever part is
                     wrong. */}
-                <td className="px-3 py-1 text-right">
+                <td className="px-3 py-1 text-end">
                   <Amount value={depositTotal(row, currency)} />
                 </td>
               </tr>
@@ -206,7 +206,7 @@ function Cell({
   const value = row[part]
   if (onCommit === undefined) {
     return (
-      <td className="px-3 py-1 text-right">
+      <td className="px-3 py-1 text-end">
         {value === undefined ? (
           <span className="text-ink-tertiary">—</span>
         ) : (
@@ -216,7 +216,7 @@ function Cell({
     )
   }
   return (
-    <td className="px-3 py-1 text-right">
+    <td className="px-3 py-1 text-end">
       <AmountField value={value} currency={currency} label={label} onCommit={onCommit} />
     </td>
   )

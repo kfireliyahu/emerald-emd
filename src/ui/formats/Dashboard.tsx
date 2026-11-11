@@ -338,7 +338,7 @@ const ADD = '\u0000add'
  * it, drawn by a pseudo-element — never a shadow (*No gradients, no shadows*,
  * M54 F3).
  */
-const DROP_HERE = "before:pointer-events-none before:absolute before:inset-y-0 before:-left-2.5 before:w-0.5 before:bg-accent before:content-['']"
+const DROP_HERE = "before:pointer-events-none before:absolute before:inset-y-0 before:-start-2.5 before:w-0.5 before:bg-accent before:content-['']"
 
 /**
  * **A menu's keys** (M54 F3, *Keyboard first*; the WAI-ARIA menu pattern): the
@@ -511,7 +511,7 @@ function Edges({
         tabIndex={0}
         onPointerDown={down('right')}
         onKeyDown={key('right')}
-        className="group/edge absolute top-0 -right-1 z-10 flex h-full w-2 cursor-ew-resize justify-center focus-visible:outline-none"
+        className="group/edge absolute top-0 -end-1 z-10 flex h-full w-2 cursor-ew-resize justify-center focus-visible:outline-none"
       >
         <span className={`h-full w-0.5 ${line}`} />
       </span>
@@ -523,7 +523,7 @@ function Edges({
         tabIndex={0}
         onPointerDown={down('bottom')}
         onKeyDown={key('bottom')}
-        className="group/edge absolute -bottom-1 left-0 z-10 flex h-2 w-full cursor-ns-resize items-center focus-visible:outline-none"
+        className="group/edge absolute -bottom-1 start-0 z-10 flex h-2 w-full cursor-ns-resize items-center focus-visible:outline-none"
       >
         <span className={`h-0.5 w-full ${line}`} />
       </span>
@@ -538,7 +538,7 @@ function Edges({
         onPointerDown={down('corner')}
         onKeyDown={key('corner')}
         title="Drag to resize"
-        className="absolute -right-1.5 -bottom-1.5 z-20 flex size-4 cursor-nwse-resize items-end justify-end p-0.5 text-ink-secondary opacity-0 transition-opacity duration-[var(--micro)] group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+        className="absolute -end-1.5 -bottom-1.5 z-20 flex size-4 cursor-nwse-resize items-end justify-end p-0.5 text-ink-secondary opacity-0 transition-opacity duration-[var(--micro)] group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:text-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
       >
         <svg width="8" height="8" viewBox="0 0 8 8" stroke="currentColor" strokeWidth="1.2" aria-hidden>
           <path d="M7 1 1 7M7 4.5 4.5 7" />
@@ -657,14 +657,14 @@ function Block({
       ].join(' ')}
       style={height === undefined ? undefined : { height: blockPixels(height) }}
     >
-      <div className="flex min-h-11 items-start gap-2 pt-2 pr-2 pb-2 pl-4">
+      <div className="flex min-h-11 items-start gap-2 pt-2 pe-2 pb-2 ps-4">
         <div className="flex min-w-0 flex-1 flex-col">
           <button
             type="button"
             onClick={onOpen}
             disabled={gone !== undefined}
             title={`Open ${title} in full`}
-            className="flex min-w-0 text-left text-body font-semibold decoration-hairline-strong underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:no-underline"
+            className="flex min-w-0 text-start text-body font-semibold decoration-hairline-strong underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:no-underline"
           >
             <Bidi className="min-w-0 truncate">{title}</Bidi>
           </button>
@@ -755,7 +755,7 @@ function Block({
         />
       )}
       {sizing !== undefined && (
-        <span className="pointer-events-none absolute right-3 bottom-2 z-10 border border-hairline-strong bg-elevated px-2 py-0.5 text-caption text-ink-secondary tabular-nums">
+        <span className="pointer-events-none absolute end-3 bottom-2 z-10 border border-hairline-strong bg-elevated px-2 py-0.5 text-caption text-ink-secondary tabular-nums">
           {width} {width === 1 ? 'column' : 'columns'} · {height === undefined ? 'as tall as it holds' : `${String(height)} rows`}
         </span>
       )}
@@ -778,7 +778,7 @@ function Block({
             }
             menuKeys(event)
           }}
-          className="fc-pop-enter absolute top-10 right-2 z-20 min-w-60 border border-hairline-strong bg-elevated py-1 shadow-pop"
+          className="fc-pop-enter absolute top-10 end-2 z-20 min-w-60 border border-hairline-strong bg-elevated py-1 shadow-pop"
         >
           <MenuItem onClick={onOpen} disabled={gone !== undefined}>
             Open in full
@@ -825,11 +825,11 @@ function MenuItem({
       role="menuitem"
       onClick={onClick}
       disabled={disabled}
-      className="flex w-full items-center gap-2 px-3 py-1.5 text-left text-body enabled:hover:bg-accent-soft disabled:cursor-default disabled:opacity-45 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+      className="flex w-full items-center gap-2 px-3 py-1.5 text-start text-body enabled:hover:bg-accent-soft disabled:cursor-default disabled:opacity-45 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
     >
       <span className="inline-flex w-3.5 text-accent">{check}</span>
       <span className="min-w-0 truncate">{children}</span>
-      {aside !== undefined && <span className="ml-auto pl-3 text-caption whitespace-nowrap text-ink-secondary">{aside}</span>}
+      {aside !== undefined && <span className="ms-auto ps-3 text-caption whitespace-nowrap text-ink-secondary">{aside}</span>}
     </button>
   )
 }
@@ -913,7 +913,7 @@ function Figure({ figure, unit, small = false }: { readonly figure: string; read
           </span>
         )
       })}
-      {unit !== undefined && unit !== '' && <span className={`ml-1 ${quiet}`}>{unit}</span>}
+      {unit !== undefined && unit !== '' && <span className={`ms-1 ${quiet}`}>{unit}</span>}
     </div>
   )
 }
@@ -1240,7 +1240,7 @@ function TableBody({
               {columns.map((column) => (
                 <th
                   key={column.name}
-                  className={`relative border-b border-hairline py-1.5 pr-3 text-label text-ink-secondary uppercase ${figure(column) ? 'text-right' : 'text-left'}`}
+                  className={`relative border-b border-hairline py-1.5 pe-3 text-label text-ink-secondary uppercase ${figure(column) ? 'text-end' : 'text-start'}`}
                 >
                   <span className="block truncate">{entryLabel(column)}</span>
                   {!locked && (
@@ -1265,14 +1265,14 @@ function TableBody({
               return (
                 <tr key={row.id} className="group/entry hover:bg-surface">
                   {columns.map((column, at) => (
-                    <td key={column.name} className={`border-b border-hairline p-0 ${figure(column) ? 'text-right tabular-nums' : ''}`}>
+                    <td key={column.name} className={`border-b border-hairline p-0 ${figure(column) ? 'text-end tabular-nums' : ''}`}>
                       <Link
                         to={to.to}
                         state={to.state}
                         draggable={false}
                         tabIndex={at === 0 ? undefined : -1}
                         aria-hidden={at === 0 ? undefined : true}
-                        className="block py-2 pr-3 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+                        className="block py-2 pe-3 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
                       >
                         <Bidi className={at === 0 ? `block ${ENTRY_NAME}` : 'block truncate'}>{valueText(column, row, labels)}</Bidi>
                       </Link>
@@ -1416,7 +1416,7 @@ function AddMenu({
         }
         if (choosing) menuKeys(event)
       }}
-      className="fc-pop-enter absolute top-[calc(100%+4px)] left-0 z-20 min-w-[270px] border border-hairline-strong bg-elevated py-1 shadow-pop"
+      className="fc-pop-enter absolute top-[calc(100%+4px)] start-0 z-20 min-w-[270px] border border-hairline-strong bg-elevated py-1 shadow-pop"
     >
       {adding?.what === 'total' ? (
         <HeadlineForm db={db} formats={formats} declarations={declarations} blocks={blocks} document={document} day={day} adding={adding} onAdding={onAdding} onAdd={onAdd} dashboard={dashboard} />

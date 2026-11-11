@@ -378,7 +378,7 @@ export function InputView({
             aria-pressed={!list.hidden}
             aria-label={list.hidden ? 'Show the list' : 'Hide the list'}
             title={list.hidden ? 'Show the list' : 'Hide the list'}
-            className={`-ml-2 hidden h-7 w-7 items-center justify-center text-ink-secondary hover:bg-surface hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent lg:inline-flex ${
+            className={`-ms-2 hidden h-7 w-7 items-center justify-center text-ink-secondary hover:bg-surface hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent lg:inline-flex ${
               list.hidden ? '' : 'bg-surface text-ink shadow-[inset_0_0_0_1px_var(--color-hairline-strong)]'
             }`}
           >
@@ -418,7 +418,7 @@ export function InputView({
         )}
         {locked !== undefined && <span className="max-w-prose text-caption text-ink-secondary">{locked}</span>}
         {writable && (
-          <span className="ml-auto flex items-center gap-3">
+          <span className="ms-auto flex items-center gap-3">
             <label className="flex items-center gap-1.5 text-caption text-ink-secondary">
               <input
                 type="checkbox"
@@ -508,7 +508,7 @@ export function InputView({
                       <button
                         type="button"
                         onClick={() => onOpen(id)}
-                        className="flex min-w-0 flex-1 text-left decoration-hairline-strong underline-offset-[3px] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                        className="flex min-w-0 flex-1 text-start decoration-hairline-strong underline-offset-[3px] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
                       >
                         <Bidi className="min-w-0 truncate">{line.title}</Bidi>
                       </button>
@@ -645,7 +645,7 @@ export function InputFields({
     <aside
       ref={box}
       aria-label="Fields"
-      className="fc-pop-enter border-t border-hairline px-3 pt-5 pb-8 @3xl:sticky @3xl:top-0 @3xl:border-t-0 @3xl:border-l"
+      className="fc-pop-enter border-t border-hairline px-3 pt-5 pb-8 @3xl:sticky @3xl:top-0 @3xl:border-t-0 @3xl:border-s"
     >
       <div className={`${grid} h-6 text-label text-ink-secondary uppercase`} aria-hidden>
         <span />

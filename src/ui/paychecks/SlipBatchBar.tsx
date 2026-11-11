@@ -41,7 +41,7 @@ export function SlipBatchBar() {
       <span className="text-caption text-ink-secondary" aria-live="polite">
         {working ? batch.progress : 'Not written yet.'}
       </span>
-      <span className="ml-auto flex items-center gap-2">
+      <span className="ms-auto flex items-center gap-2">
         <Button variant={working ? 'secondary' : 'primary'} size="sm" onClick={() => navigate(READ_SLIPS)}>
           {working ? 'Go back to it' : 'Check them over'}
         </Button>

@@ -20,7 +20,7 @@ export function SuggestionPanel({
     return (
       <div className="fc-pop-enter flex items-center gap-4 border border-hairline bg-surface px-4 py-2">
         <span>Nothing to suggest: no open goal has a bucket in this plan.</span>
-        <Button variant="ghost" size="sm" className="ml-auto" onClick={onClose}>
+        <Button variant="ghost" size="sm" className="ms-auto" onClick={onClose}>
           Close
         </Button>
       </div>
@@ -34,14 +34,14 @@ export function SuggestionPanel({
           Goals by nearest date, within {formatMoney(suggestion.pool)}.
         </p>
       </div>
-      <table className="w-full border-collapse text-left">
+      <table className="w-full border-collapse text-start">
         <tbody>
           {suggestion.amounts.map((one) => (
             <tr key={one.goalId} className="border-t border-hairline">
-              <td className="py-1.5 pr-3">
+              <td className="py-1.5 pe-3">
                 <Bidi>{one.name}</Bidi>
               </td>
-              <td className="py-1.5 pr-3 text-right tabular-nums">{formatMoney(one.amount)}</td>
+              <td className="py-1.5 pe-3 text-end tabular-nums">{formatMoney(one.amount)}</td>
               <td className="py-1.5 text-caption text-ink-secondary">
                 {SUGGESTION_WORDS[one.reason]}
                 {one.wanted.minor > one.amount.minor && ` (needs ${formatMoney(one.wanted)})`}

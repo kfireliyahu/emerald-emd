@@ -116,7 +116,7 @@ export function DebtDetail() {
             </div>
           </div>
 
-          <div className="text-right">
+          <div className="text-end">
             <div className="text-hero tabular-nums">
               {known === undefined
                 ? 'Unchecked'
@@ -207,14 +207,14 @@ function PaymentRow({ payment }: { payment: DebtPayment }) {
       <span className="min-w-40 flex-1">
         <Bidi>{payment.note ?? PAYMENT_SOURCE_LABEL[payment.sourceKind]}</Bidi>
         {payment.note !== undefined && payment.sourceKind === 'MANUAL' && (
-          <span className="ml-2 text-caption text-ink-tertiary">entered by hand</span>
+          <span className="ms-2 text-caption text-ink-tertiary">entered by hand</span>
         )}
       </span>
       {!payment.isConfirmed && <Chip>not confirmed</Chip>}
-      <span className="w-32 text-right text-caption text-ink-tertiary tabular-nums">
+      <span className="w-32 text-end text-caption text-ink-tertiary tabular-nums">
         {hasInterest ? (principal === undefined ? 'two currencies' : `${formatMoney(principal)} off the balance`) : ''}
       </span>
-      <span className="w-28 text-right tabular-nums">{formatMoney(payment.amount)}</span>
+      <span className="w-28 text-end tabular-nums">{formatMoney(payment.amount)}</span>
     </div>
   )
 }

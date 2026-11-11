@@ -114,7 +114,7 @@ export function NewByName<Kind extends string>({
               type="button"
               aria-pressed={kind === value}
               onClick={() => setKind(value)}
-              className={`-ml-px h-7 border px-2.5 text-caption whitespace-nowrap first:ml-0 ${
+              className={`-ms-px h-7 border px-2.5 text-caption whitespace-nowrap first:ms-0 ${
                 kind === value ? 'relative z-[1] border-accent bg-accent-soft text-ink' : 'border-hairline-strong text-ink-secondary'
               }`}
             >

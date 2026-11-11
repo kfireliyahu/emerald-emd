@@ -966,7 +966,7 @@ export function Transactions() {
                 Undo those
               </Button>
             )}
-            <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setApplied(undefined)}>
+            <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setApplied(undefined)}>
               Dismiss
             </Button>
             {applied.count > 0 && (
@@ -1031,7 +1031,7 @@ export function Transactions() {
               Chosen by hand, so no rule or re-import will change them back.
             </span>
 
-            <Button variant="ghost" size="sm" className="ml-auto" onClick={clearPicked}>
+            <Button variant="ghost" size="sm" className="ms-auto" onClick={clearPicked}>
               Clear selection
             </Button>
           </section>
@@ -1065,7 +1065,7 @@ export function Transactions() {
             <table className="w-full">
               <thead>
                 <tr className="text-ink-tertiary">
-                  <Th className="w-0 text-left">
+                  <Th className="w-0 text-start">
                     {/* Tick every row on screen — "on screen" being the cap, so
                         the bar underneath says how many that leaves out and
                         offers the rest. */}
@@ -1086,23 +1086,23 @@ export function Transactions() {
                     times. "When did I buy this" is the one that varies and the
                     one you scan by.
                   */}
-                  <SortableTh column="DATE" sort={sort} onSort={sortBy} className="text-left">
+                  <SortableTh column="DATE" sort={sort} onSort={sortBy} className="text-start">
                     Date
                   </SortableTh>
-                  <SortableTh column="CHARGED" sort={sort} onSort={sortBy} className="text-left">
+                  <SortableTh column="CHARGED" sort={sort} onSort={sortBy} className="text-start">
                     Charged
                   </SortableTh>
-                  <SortableTh column="MERCHANT" sort={sort} onSort={sortBy} className="text-left">
+                  <SortableTh column="MERCHANT" sort={sort} onSort={sortBy} className="text-start">
                     Merchant
                   </SortableTh>
-                  <SortableTh column="CATEGORY" sort={sort} onSort={sortBy} className="text-left">
+                  <SortableTh column="CATEGORY" sort={sort} onSort={sortBy} className="text-start">
                     Category
                   </SortableTh>
-                  <Th className="text-left">Provider said</Th>
-                  <SortableTh column="AMOUNT" sort={sort} onSort={sortBy} className="text-right">
+                  <Th className="text-start">Provider said</Th>
+                  <SortableTh column="AMOUNT" sort={sort} onSort={sortBy} className="text-end">
                     Amount
                   </SortableTh>
-                  <Th className="w-0 text-left">
+                  <Th className="w-0 text-start">
                     <span className="sr-only">Actions</span>
                   </Th>
                 </tr>
@@ -1313,7 +1313,7 @@ function Row({
             reads correctly to a screen reader, and Space activates it — including
             with Shift held, which is what makes range selection work without a
             mouse. */}
-        <td className="py-2 pl-6">
+        <td className="py-2 ps-6">
           <input
             type="checkbox"
             checked={picked}
@@ -1333,22 +1333,22 @@ function Row({
           {/* The merchant opens the detail rather than the whole row: the row also
               holds a category picker, and a button inside a button is neither
               clickable nor announceable. */}
-          <button type="button" onClick={onOpen} className="text-left hover:underline">
+          <button type="button" onClick={onOpen} className="text-start hover:underline">
             <Bidi>{row.merchantRaw}</Bidi>
           </button>
           {row.installment !== undefined && (
-            <span className="ml-2 text-caption text-ink-tertiary tabular-nums">
+            <span className="ms-2 text-caption text-ink-tertiary tabular-nums">
               {row.installment.sequence}/{row.installment.total}
             </span>
           )}
           {row.note !== undefined && (
-            <span title={row.note} className="ml-2 inline-flex align-middle text-ink-tertiary">
+            <span title={row.note} className="ms-2 inline-flex align-middle text-ink-tertiary">
               <ActionGlyph name="note" size={12} />
               <span className="sr-only">Has a note</span>
             </span>
           )}
           {left && (
-            <span className="ml-2 inline-flex items-center border border-dashed border-hairline-strong px-1.5 text-[11px] leading-[18px] font-medium tracking-[0.06em] text-ink-secondary uppercase">
+            <span className="ms-2 inline-flex items-center border border-dashed border-hairline-strong px-1.5 text-[11px] leading-[18px] font-medium tracking-[0.06em] text-ink-secondary uppercase">
               {cardBill ? 'card payment · left out' : 'left out'}
             </span>
           )}
@@ -1368,14 +1368,14 @@ function Row({
         <td className="px-6 py-2 whitespace-nowrap text-caption text-ink-tertiary">
           {row.providerCategory !== undefined && <Bidi>{row.providerCategory}</Bidi>}
         </td>
-        <td className="px-6 py-2 text-right whitespace-nowrap">
+        <td className="px-6 py-2 text-end whitespace-nowrap">
           {/* Struck through and quiet, the way a row that is listed and not
               counted should look (M28 U6). */}
           <span className={left ? 'text-ink-tertiary line-through decoration-ink-tertiary' : ''}>
             <Amount value={row.amount} />
           </span>
         </td>
-        <td className="py-2 pr-4">
+        <td className="py-2 pe-4">
           <button
             type="button"
             title="Actions (right-click, or the menu key)"
@@ -1581,7 +1581,7 @@ function SortableTh({
         {children}
         {/* Kept out of the accessible name — `aria-sort` already says it, and an
             arrow read aloud after every heading is noise. */}
-        <span aria-hidden className="ml-1 inline-block w-2 text-ink-tertiary">
+        <span aria-hidden className="ms-1 inline-block w-2 text-ink-tertiary">
           {active ? (sort.direction === 'ASC' ? '↑' : '↓') : ''}
         </span>
       </button>

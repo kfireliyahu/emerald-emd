@@ -37,7 +37,7 @@ export function ReadFilesBar() {
       <span className="text-caption text-ink-secondary" aria-live="polite">
         {line.detail}
       </span>
-      <span className="ml-auto flex items-center gap-2">
+      <span className="ms-auto flex items-center gap-2">
         <Button variant={line.reading ? 'secondary' : 'primary'} size="sm" onClick={() => navigate(READ_FILES)}>
           {line.reading ? 'Go back to it' : 'Check them over'}
         </Button>

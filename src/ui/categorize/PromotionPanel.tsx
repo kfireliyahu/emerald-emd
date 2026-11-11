@@ -103,7 +103,7 @@ export function PromotionPanel({
           )}
         </span>
 
-        <div className="ml-auto flex items-center gap-1">
+        <div className="ms-auto flex items-center gap-1">
           <Tab active={mode === 'BILL'} onClick={() => setMode('BILL')}>
             A bill that repeats
           </Tab>
@@ -264,7 +264,7 @@ function BillForm({
         <label className="flex flex-col gap-1">
           <span className="text-label text-ink-tertiary uppercase">Expect</span>
           <input
-            className={`${FIELD} w-28 text-right tabular-nums`}
+            className={`${FIELD} w-28 text-end tabular-nums`}
             value={amountText}
             onChange={(event) => setAmountText(event.target.value)}
             aria-label={`Expected amount in ${proposal.currency}`}

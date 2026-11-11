@@ -196,7 +196,7 @@ export function GoalEditor({
         </div>
 
         {asks && (
-          <div className="fc-pop-enter mt-2.5 flex flex-col gap-2 border-l-2 border-hairline-strong py-1 pl-4">
+          <div className="fc-pop-enter mt-2.5 flex flex-col gap-2 border-s-2 border-hairline-strong py-1 ps-4">
             <label htmlFor="already-there">How much of it is already there?</label>
             <span className="flex w-56 items-baseline gap-2 border-b border-hairline-strong pb-1 focus-within:border-b-2 focus-within:border-accent focus-within:pb-[3px]">
               <span className="text-[18px] text-ink-secondary">{currencySymbol(currency)}</span>
@@ -233,7 +233,7 @@ export function GoalEditor({
 
         <details className="group mt-5" open={initialCategoryId !== undefined}>
           <summary className="inline-flex cursor-pointer list-none items-center gap-1.5 text-[13px] text-ink-secondary [&::-webkit-details-marker]:hidden">
-            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden className="transition-transform group-open:rotate-90">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden className="transition-transform group-open:rotate-90 rtl:-scale-x-100 group-open:rtl:-rotate-90">
               <path d="M3.5 2l3 3-3 3" />
             </svg>
             Find its deposits another way
@@ -382,7 +382,7 @@ function TransfersIn({
 }) {
   const taken = account.transfersReadBy
   return (
-    <div className="mt-2.5 flex flex-col gap-1 border-l-2 border-hairline-strong py-1 pl-4">
+    <div className="mt-2.5 flex flex-col gap-1 border-s-2 border-hairline-strong py-1 ps-4">
       <label className={`flex items-center gap-2 select-none ${taken === undefined ? '' : 'text-ink-tertiary'}`}>
         <input
           type="checkbox"
@@ -417,7 +417,7 @@ function Follows({ chosen, fed }: { chosen: WhereChoice; fed: HoldingPutIn }) {
   const figure = chosen.figure
   const at = chosen.group.kind === 'HELD' ? chosen.group.placeName : undefined
   return (
-    <div className="mt-2.5 flex flex-col gap-2 border-l-2 border-hairline-strong py-1 pl-4">
+    <div className="mt-2.5 flex flex-col gap-2 border-s-2 border-hairline-strong py-1 ps-4">
       <span>
         Follows the rows that bought or sold <Bidi>{chosen.name}</Bidi>
       </span>

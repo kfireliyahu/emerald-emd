@@ -166,7 +166,7 @@ export function ContextMenu({
               onClose()
               item.onChoose?.()
             }}
-            className="grid w-full grid-cols-[1.25rem_1fr_auto] items-start gap-x-2 px-3 py-1.5 text-left text-ink transition-colors duration-[var(--duration-micro)] hover:bg-accent-soft focus-visible:bg-accent-soft focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent disabled:cursor-default disabled:text-ink-tertiary disabled:hover:bg-transparent"
+            className="grid w-full grid-cols-[1.25rem_1fr_auto] items-start gap-x-2 px-3 py-1.5 text-start text-ink transition-colors duration-[var(--duration-micro)] hover:bg-accent-soft focus-visible:bg-accent-soft focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent disabled:cursor-default disabled:text-ink-tertiary disabled:hover:bg-transparent"
           >
             <span aria-hidden className="mt-0.5 text-ink-secondary">
               {item.icon !== undefined && <ActionGlyph name={item.icon} size={14} />}
@@ -185,7 +185,7 @@ export function ContextMenu({
             <div
               role="menu"
               className={`fc-pop-enter absolute top-0 z-10 max-h-80 w-64 overflow-auto border border-hairline-strong bg-elevated py-1 shadow-lg ${
-                flip ? 'right-full' : 'left-full'
+                flip ? 'end-full' : 'start-full'
               }`}
               onKeyDown={(event) => {
                 if (event.key === 'ArrowLeft') {
@@ -218,7 +218,7 @@ export function ContextMenu({
                       onClose()
                       sub.onChoose?.()
                     }}
-                    className="grid w-full grid-cols-[1fr_auto] items-center gap-x-2 px-3 py-1.5 text-left text-ink transition-colors duration-[var(--duration-micro)] hover:bg-accent-soft focus-visible:bg-accent-soft focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent disabled:cursor-default disabled:text-ink-tertiary"
+                    className="grid w-full grid-cols-[1fr_auto] items-center gap-x-2 px-3 py-1.5 text-start text-ink transition-colors duration-[var(--duration-micro)] hover:bg-accent-soft focus-visible:bg-accent-soft focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent disabled:cursor-default disabled:text-ink-tertiary"
                   >
                     <span className="min-w-0 truncate">{sub.label}</span>
                     <span className="font-mono text-caption text-ink-tertiary">{sub.shortcut ?? ''}</span>

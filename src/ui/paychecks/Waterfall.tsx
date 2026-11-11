@@ -57,7 +57,7 @@ export function Waterfall({
               {label(step, byId)}
             </span>
 
-            <span className="relative h-3 min-w-0 flex-1" aria-hidden="true">
+            <span className="relative h-3 min-w-0 flex-1" aria-hidden="true" dir="ltr">
               <span
                 className={`absolute inset-y-0 rounded-sm ${bar(step)}`}
                 // A minimum in pixels rather than percent: a ₪12 union fee
@@ -68,7 +68,7 @@ export function Waterfall({
             </span>
 
             <span
-              className={`w-28 shrink-0 text-right tabular-nums ${
+              className={`w-28 shrink-0 text-end tabular-nums ${
                 step.kind === 'UNEXPLAINED' ? 'text-negative' : ''
               }`}
             >
@@ -78,7 +78,7 @@ export function Waterfall({
 
             {/* The running total, which is what makes it a waterfall rather than
                 a bar chart: each row says where the slip stands after it. */}
-            <span className="w-28 shrink-0 text-right text-ink-tertiary tabular-nums">
+            <span className="w-28 shrink-0 text-end text-ink-tertiary tabular-nums">
               {isEnd ? '' : formatMoney(step.runningTotal)}
             </span>
           </li>

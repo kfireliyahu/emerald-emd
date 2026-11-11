@@ -204,7 +204,7 @@ export function DebtEditor({
                 key={kind}
                 type="button"
                 onClick={() => setTrackKind(kind)}
-                className={`rounded-md border px-4 py-3 text-left transition-colors duration-[var(--duration-micro)] ${
+                className={`rounded-md border px-4 py-3 text-start transition-colors duration-[var(--duration-micro)] ${
                   chosen ? 'border-accent bg-accent-soft' : 'border-hairline hover:border-hairline-strong'
                 }`}
               >

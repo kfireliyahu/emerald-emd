@@ -18,7 +18,7 @@ export function ViewSwitch({
 }) {
   const item = (active: boolean): string =>
     [
-      'relative -ml-px inline-flex h-8 items-center gap-2 border px-3.5 text-[13px] transition-colors duration-[var(--duration-micro)] first:ml-0',
+      'relative -ms-px inline-flex h-8 items-center gap-2 border px-3.5 text-[13px] transition-colors duration-[var(--duration-micro)] first:ms-0',
       'focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent',
       active
         ? 'z-10 border-accent bg-accent-soft text-ink'

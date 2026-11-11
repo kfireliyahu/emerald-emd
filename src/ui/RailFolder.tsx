@@ -41,12 +41,12 @@ import { rollupWords } from '@/ui/formats/dashboard.ts'
 
 /**
  * **Where a folder's parts start**, as classes (M54 F5): the arrow, a 24px
- * target, ends at the name's start — 40px, as a plain page's `pl-10`, or 56px
- * under a pack's name, as its `pl-14` — and what is inside the folder (its
+ * target, ends at the name's start — 40px, as a plain page's `ps-10`, or 56px
+ * under a pack's name, as its `ps-14` — and what is inside the folder (its
  * filter, its entries, its saved views and charts) starts one step further in.
  */
-const PLAIN = { arrow: 'ml-4', entry: 'pl-12', field: 'ml-12' } as const
-const GROUPED = { arrow: 'ml-8', entry: 'pl-16', field: 'ml-16' } as const
+const PLAIN = { arrow: 'ms-4', entry: 'ps-12', field: 'ms-12' } as const
+const GROUPED = { arrow: 'ms-8', entry: 'ps-16', field: 'ms-16' } as const
 
 /** The document's declarations, read once per change for every folder in the rail. */
 export function useDeclarations(): { readonly db: Database | undefined; readonly declarations: readonly FormatDeclaration[] } {
@@ -118,7 +118,7 @@ export function RailFolder({
 
   // Under a pack's name a format sits one step further in (M33 F3). The steps
   // are classes, not pixels (M54 F5): the arrow's 24px target ends where a plain
-  // page's name starts (`pl-10`, `pl-14`), and the entries start one step past it.
+  // page's name starts (`ps-10`, `ps-14`), and the entries start one step past it.
   const step = grouped ? GROUPED : PLAIN
   const countId = useId()
   // The saved view the address is, when it is one: it carries the marker, as an entry does.
@@ -135,7 +135,7 @@ export function RailFolder({
         // The format's row: lit on its own screens, ink while one of its entries is (the entry carries the marker).
         className={`fc-row-enter relative flex h-7 items-center text-body transition-colors duration-[var(--duration-micro)] ${
           lit && current === undefined && !onSaved
-            ? 'bg-accent-soft text-ink before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:bg-accent'
+            ? 'bg-accent-soft text-ink before:absolute before:inset-y-0 before:start-0 before:w-0.5 before:bg-accent'
             : lit
               ? 'text-ink'
               : 'text-ink-secondary hover:text-ink'
@@ -151,7 +151,7 @@ export function RailFolder({
           className={`inline-flex h-7 w-6 flex-none items-center justify-center text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${step.arrow}`}
         >
           <span
-            className={`inline-flex transition-transform duration-[var(--duration-micro)] ease-[var(--ease-out)] ${open ? 'rotate-90' : ''}`}
+            className={`inline-flex transition-transform duration-[var(--duration-micro)] ease-[var(--ease-out)] ${open ? 'rotate-90 rtl:-rotate-90' : ''}`}
           >
             <ActionGlyph name="right" size={12} />
           </span>
@@ -165,11 +165,11 @@ export function RailFolder({
           aria-label={child.label}
           aria-current={lit && current === undefined && !onSaved ? 'page' : undefined}
           {...(total === undefined ? {} : { 'aria-describedby': countId })}
-          className="flex h-7 min-w-0 flex-1 items-center gap-2 pr-3.5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+          className="flex h-7 min-w-0 flex-1 items-center gap-2 pe-3.5 text-start focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
         >
           <Bidi className="truncate">{child.label}</Bidi>
           {total !== undefined && (
-            <span id={countId} className="ml-auto text-caption text-ink-secondary tabular-nums">
+            <span id={countId} className="ms-auto text-caption text-ink-secondary tabular-nums">
               {total}
               <span className="sr-only"> {total === 1 ? 'entry' : 'entries'}</span>
             </span>
@@ -193,7 +193,7 @@ export function RailFolder({
         <>
           {folder.total > FOLDER_SIZE && (
             <label
-              className={`my-0.5 mr-3 flex h-6 items-center gap-1.5 border-b border-hairline-strong text-ink-secondary focus-within:border-accent ${step.field}`}
+              className={`my-0.5 me-3 flex h-6 items-center gap-1.5 border-b border-hairline-strong text-ink-secondary focus-within:border-accent ${step.field}`}
             >
               <ActionGlyph name="search" size={12} />
               <input
@@ -212,7 +212,7 @@ export function RailFolder({
             </label>
           )}
           {folder.found === 0 && (
-            <div className={`pt-0.5 pr-2.5 pb-1 text-caption text-ink-secondary ${step.entry}`}>
+            <div className={`pt-0.5 pe-2.5 pb-1 text-caption text-ink-secondary ${step.entry}`}>
               {q === '' ? 'Nothing in it yet' : <>Nothing holds “<Bidi>{q}</Bidi>”</>}
             </div>
           )}
@@ -224,14 +224,14 @@ export function RailFolder({
                 to={entryPath(name, entry.id) + (lit ? kept : '')}
                 title={entry.title}
                 aria-current={here ? 'page' : undefined}
-                className={`fc-row-enter relative flex h-6 w-full items-center pr-2.5 text-left text-caption transition-colors duration-[var(--duration-micro)] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
+                className={`fc-row-enter relative flex h-6 w-full items-center pe-2.5 text-start text-caption transition-colors duration-[var(--duration-micro)] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
                   here
-                    ? 'bg-accent-soft text-ink before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:bg-accent'
+                    ? 'bg-accent-soft text-ink before:absolute before:inset-y-0 before:start-0 before:w-0.5 before:bg-accent'
                     : 'text-ink-secondary hover:text-ink'
                 } ${step.entry}`}
               >
                 {folder.stated && (
-                  <span className="fc-dot mr-2 flex-none" data-tone={toneOf(entry.state)} aria-hidden />
+                  <span className="fc-dot me-2 flex-none" data-tone={toneOf(entry.state)} aria-hidden />
                 )}
                 <Bidi className="min-w-0 truncate">{entry.title}</Bidi>
               </Link>
@@ -242,7 +242,7 @@ export function RailFolder({
               // The list, not the Table (M37 U2b, the mockup's `openAll`): the
               // first entry it holds, with the filter line's text as its search.
               to={entryPath(name, folder.entries[0]?.id ?? '') + filterAddress(q === '' ? {} : { search: q })}
-              className={`flex h-6 w-full items-center pr-2.5 text-left text-caption text-accent hover:underline hover:underline-offset-[3px] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${step.entry}`}
+              className={`flex h-6 w-full items-center pe-2.5 text-start text-caption text-accent hover:underline hover:underline-offset-[3px] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${step.entry}`}
             >
               All {folder.found}
               {q !== '' && ' holding it'} →
@@ -369,7 +369,7 @@ function RailRow({
       setRefusal(undefined)
     }
     return (
-      <div className={`pr-2.5 text-caption ${left}`}>
+      <div className={`pe-2.5 text-caption ${left}`}>
         <input
           autoFocus
           value={renaming}
@@ -401,7 +401,7 @@ function RailRow({
 
   if (deleting) {
     return (
-      <div className={`pr-2.5 ${left}`}>
+      <div className={`pe-2.5 ${left}`}>
         <div className="flex h-6 items-center gap-2 text-caption text-ink-secondary">
           {/* The ellipsis on the Bidi span, so a Hebrew name keeps its start (M54 F6). */}
           <span className="flex min-w-0 gap-1">
@@ -441,9 +441,9 @@ function RailRow({
 
   return (
     <div
-      className={`group relative flex h-6 items-center pr-1 text-caption transition-colors duration-[var(--duration-micro)] ${
+      className={`group relative flex h-6 items-center pe-1 text-caption transition-colors duration-[var(--duration-micro)] ${
         here
-          ? 'bg-accent-soft text-ink before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:bg-accent'
+          ? 'bg-accent-soft text-ink before:absolute before:inset-y-0 before:start-0 before:w-0.5 before:bg-accent'
           : 'text-ink-secondary hover:text-ink'
       }`}
     >
@@ -459,7 +459,7 @@ function RailRow({
         </span>
         <Bidi className="min-w-0 truncate">{name}</Bidi>
         {caption !== undefined && (
-          <span className="ml-auto pr-1 text-caption text-ink-secondary group-focus-within:hidden group-hover:hidden">{caption}</span>
+          <span className="ms-auto pe-1 text-caption text-ink-secondary group-focus-within:hidden group-hover:hidden">{caption}</span>
         )}
       </Link>
       <span className="flex flex-none items-center opacity-0 group-focus-within:opacity-100 group-hover:opacity-100">

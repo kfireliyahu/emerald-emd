@@ -65,7 +65,7 @@ export function ColumnsChoice({
         <div
           role="dialog"
           aria-label="Columns"
-          className="fc-pop-enter absolute top-full right-0 z-30 mt-1 flex max-h-[70vh] w-64 flex-col gap-3 overflow-y-auto rounded-md border border-hairline-strong bg-elevated p-2 text-left text-[13px] font-normal whitespace-normal shadow-[var(--shadow-pop)]"
+          className="fc-pop-enter absolute top-full end-0 z-30 mt-1 flex max-h-[70vh] w-64 flex-col gap-3 overflow-y-auto rounded-md border border-hairline-strong bg-elevated p-2 text-start text-[13px] font-normal whitespace-normal shadow-[var(--shadow-pop)]"
         >
           {offered.map((each) => {
             const shown = mine[each.format.name] ?? each.drawn

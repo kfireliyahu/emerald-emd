@@ -104,7 +104,7 @@ function AboutDialog() {
         className="fc-pop-enter flex max-h-[76vh] w-full max-w-lg flex-col overflow-hidden rounded-lg border border-hairline-strong bg-elevated shadow-pop outline-none"
         onKeyDown={onKeyDown}
       >
-        <div className="flex items-center gap-2.5 border-b border-hairline py-2 pr-2 pl-3.5">
+        <div className="flex items-center gap-2.5 border-b border-hairline py-2 pe-2 ps-3.5">
           <span className="fc-label flex-1">About Emerald</span>
           <button type="button" aria-label="Close" title="Close (Esc)" onClick={close} className="fc-icon-action">
             <ActionGlyph name="close" />

@@ -22,7 +22,7 @@ import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 
 const LINK =
-  'flex min-w-0 cursor-pointer border-0 bg-transparent p-0 text-left text-accent hover:underline ' +
+  'flex min-w-0 cursor-pointer border-0 bg-transparent p-0 text-start text-accent hover:underline ' +
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent'
 
 /** Whether a path names a program, which the shell shows in its folder and never runs from a cell. */

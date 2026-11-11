@@ -57,7 +57,7 @@ export function ReadingBar() {
             : 'Ready to check over.'}
       </span>
 
-      <span className="ml-auto flex items-center gap-2">
+      <span className="ms-auto flex items-center gap-2">
         <Button
           variant={done && read.problem === undefined ? 'primary' : 'secondary'}
           size="sm"

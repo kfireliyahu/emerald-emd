@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { arrowStep } from '@/ui/direction.ts'
 
 /**
  * **Keys for Home** (S5): ← → page the period, M and Y switch
@@ -40,7 +41,7 @@ export function useHomeKeys(handlers: {
       if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
         if (ref.current.page === undefined) return
         event.preventDefault()
-        ref.current.page(event.key === 'ArrowLeft' ? -1 : 1)
+        ref.current.page(arrowStep(event.key) === 1 ? 1 : -1)
       } else if (key === 'm') {
         navigate('/')
       } else if (key === 'y') {

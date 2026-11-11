@@ -146,7 +146,7 @@ export function DeductionTypes() {
       {problem !== undefined && (
         <div className="fc-pop-enter flex shrink-0 items-center gap-4 border-b border-hairline bg-surface px-6 py-2">
           <span className="text-negative">{problem}</span>
-          <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setProblem(undefined)}>
+          <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setProblem(undefined)}>
             Dismiss
           </Button>
         </div>
@@ -156,12 +156,12 @@ export function DeductionTypes() {
         <table className="w-full">
           <thead>
             <tr className="sticky top-0 z-10 border-b border-hairline bg-background/90 text-label text-ink-tertiary uppercase backdrop-blur">
-              <th className="px-6 py-2 text-left font-medium">Name</th>
-              <th className="px-3 py-2 text-left font-medium">On the paycheck</th>
-              <th className="px-3 py-2 text-left font-medium">Kind</th>
-              <th className="px-3 py-2 text-left font-medium">Counts as</th>
-              <th className="px-3 py-2 text-left font-medium">Pays into</th>
-              <th className="px-3 py-2 text-right font-medium">Used</th>
+              <th className="px-6 py-2 text-start font-medium">Name</th>
+              <th className="px-3 py-2 text-start font-medium">On the paycheck</th>
+              <th className="px-3 py-2 text-start font-medium">Kind</th>
+              <th className="px-3 py-2 text-start font-medium">Counts as</th>
+              <th className="px-3 py-2 text-start font-medium">Pays into</th>
+              <th className="px-3 py-2 text-end font-medium">Used</th>
               <th className="px-6 py-2" />
             </tr>
           </thead>
@@ -352,14 +352,14 @@ function Row({
         />
       </td>
 
-      <td className="px-3 py-1.5 text-right text-ink-secondary tabular-nums">
+      <td className="px-3 py-1.5 text-end text-ink-secondary tabular-nums">
         {usedBy === 0 ? <span className="text-ink-tertiary">—</span> : usedBy}
       </td>
 
-      <td className="px-6 py-1.5 text-right whitespace-nowrap">
+      <td className="px-6 py-1.5 text-end whitespace-nowrap">
         {confirming ? (
           <>
-            <span className="mr-2 text-caption text-ink-secondary">
+            <span className="me-2 text-caption text-ink-secondary">
               Delete <Bidi>{type.name}</Bidi>?
             </span>
             <Button
@@ -687,7 +687,7 @@ function NewDebt({ done }: { done: (id: string | undefined) => void }) {
     <div role="group" aria-label="A new debt" className="fc-pop-enter flex flex-col gap-2.5 border border-hairline bg-surface p-3">
       <input className={FIELD} autoFocus aria-label="New debt name" placeholder="Name" value={name} onChange={(event) => setName(event.target.value)} onKeyDown={keys} />
       <input
-        className={`${FIELD} text-right tabular-nums`}
+        className={`${FIELD} text-end tabular-nums`}
         aria-label="What was borrowed"
         placeholder="Borrowed"
         inputMode="decimal"
@@ -726,7 +726,7 @@ function NewTypeForm({ onCreate }: { onCreate: (name: string, kind: DeductionKin
 
   return (
     <form
-      className="ml-auto flex flex-wrap items-center gap-2"
+      className="ms-auto flex flex-wrap items-center gap-2"
       onSubmit={(event) => {
         event.preventDefault()
         const trimmed = name.trim()

@@ -63,8 +63,8 @@ export interface Opening {
 }
 
 const LABEL = 'text-label tracking-[0.08em] text-ink-secondary uppercase font-medium'
-const LINE = 'border-t border-hairline py-1.5 pr-2.5 align-baseline [tr:first-child>&]:border-t-0'
-const FIG = `${LINE} w-[1%] text-right whitespace-nowrap tabular-nums`
+const LINE = 'border-t border-hairline py-1.5 pe-2.5 align-baseline [tr:first-child>&]:border-t-0'
+const FIG = `${LINE} w-[1%] text-end whitespace-nowrap tabular-nums`
 const LINK = 'text-accent hover:underline'
 
 /**
@@ -295,7 +295,7 @@ type Mode =
 
 /** `.inside`: what an opened row holds, indented under its name. */
 function Inside({ children }: { children: ReactNode }) {
-  return <div className="fc-pop-enter flex flex-col gap-3.5 pt-1 pr-[18px] pb-4 pl-10 max-sm:px-2.5">{children}</div>
+  return <div className="fc-pop-enter flex flex-col gap-3.5 pt-1 pe-[18px] pb-4 ps-10 max-sm:px-2.5">{children}</div>
 }
 
 function Lines({ children }: { children: ReactNode }) {
@@ -477,7 +477,7 @@ function OpeningLine({ balance, opening }: { balance: AccountBalance; opening: O
             onKeyDown={(event) => {
               if (event.key === 'Enter') save(false)
             }}
-            className="h-[30px] border border-hairline-strong bg-background px-2 text-right tabular-nums"
+            className="h-[30px] border border-hairline-strong bg-background px-2 text-end tabular-nums"
           />
         </div>
         {problem !== undefined && <p className="m-0 text-negative">{problem}</p>}
@@ -583,7 +583,7 @@ function HoldingLine({
           <Bidi>{holding.name}</Bidi> {caption !== '' && <span className="text-caption text-ink-secondary">{caption}</span>}
         </td>
         <td className={FIG}>{formatMoney(held.balance)}</td>
-        <td className={`${LINE} w-[1%] pl-2 whitespace-nowrap`}>
+        <td className={`${LINE} w-[1%] ps-2 whitespace-nowrap`}>
           <span className="inline-flex gap-3">
             {checked.askable &&
               (byHand ? (

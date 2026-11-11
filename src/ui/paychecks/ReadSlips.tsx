@@ -313,7 +313,7 @@ export function ReadSlips() {
             variant="secondary"
             size="sm"
             icon="stop"
-            className="ml-auto"
+            className="ms-auto"
             onClick={() => {
               stopSlipBatch()
               cancelDerivation()
@@ -504,7 +504,7 @@ function SlipRow({
             {net !== undefined && <>net {net}</>}
           </span>
         )}
-        <span className="ml-auto flex items-center gap-1">
+        <span className="ms-auto flex items-center gap-1">
           <Button size="sm" variant="ghost" onClick={onOpenAlone}>
             Open alone
           </Button>

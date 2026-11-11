@@ -191,7 +191,7 @@ export function Overview() {
                   <th className={TH}>Account or place</th>
                   <th className={`${TH} ${NARROW}`}>In it</th>
                   <th className={`${TH} ${NARROW}`}>Reach</th>
-                  <th className={`${TH} text-right`}>Worth</th>
+                  <th className={`${TH} text-end`}>Worth</th>
                   <th className={TH} />
                 </tr>
               </thead>
@@ -223,10 +223,10 @@ export function Overview() {
                   ]
                 })}
                 <tr>
-                  <td colSpan={3} className="border-t border-ink pt-2.5 pr-2.5 font-semibold">
+                  <td colSpan={3} className="border-t border-ink pt-2.5 pe-2.5 font-semibold">
                     Net worth
                   </td>
-                  <td className="border-t border-ink pt-2.5 pr-2.5 text-right text-heading font-semibold whitespace-nowrap tabular-nums">
+                  <td className="border-t border-ink pt-2.5 pe-2.5 text-end text-heading font-semibold whitespace-nowrap tabular-nums">
                     {formatMoney(now.worth)}
                   </td>
                   <td className="border-t border-ink" />
@@ -253,8 +253,8 @@ export function Overview() {
 }
 
 const LABEL = 'text-label text-ink-secondary uppercase font-medium'
-const TH = 'border-b border-hairline-strong pr-2.5 pb-1.5 text-left text-label font-medium whitespace-nowrap text-ink-secondary uppercase'
-const TD = 'border-t border-hairline py-2.5 pr-2.5 align-middle'
+const TH = 'border-b border-hairline-strong pe-2.5 pb-1.5 text-start text-label font-medium whitespace-nowrap text-ink-secondary uppercase'
+const TD = 'border-t border-hairline py-2.5 pe-2.5 align-middle'
 const NARROW = 'max-[760px]:hidden'
 
 function Part({ label, children }: { label: string; children: ReactNode }) {
@@ -305,14 +305,14 @@ function Row({
         <span className="font-medium">
           <Bidi>{nameOf(row)}</Bidi>
           {row.kind === 'ACCOUNT' && row.account.last4 !== undefined && (
-            <small className="ml-1.5 text-caption font-normal text-ink-secondary">···{row.account.last4}</small>
+            <small className="ms-1.5 text-caption font-normal text-ink-secondary">···{row.account.last4}</small>
           )}
         </span>
         <span className="block text-caption text-ink-secondary">{subOf(row, worths)}</span>
       </td>
       <td className={`${cell} ${NARROW} text-caption text-ink-secondary`}>{inItOf(row)}</td>
       <td className={`${cell} ${NARROW} text-caption text-ink-secondary`}>{row.kind === 'ACCOUNT' || row.kind === 'PLACE' ? row.reach : row.kind === 'FUND' ? 'Locked' : ''}</td>
-      <td className={`${cell} text-right font-medium whitespace-nowrap tabular-nums ${row.figure !== undefined && row.figure.minor < 0 ? 'text-negative' : ''}`}>
+      <td className={`${cell} text-end font-medium whitespace-nowrap tabular-nums ${row.figure !== undefined && row.figure.minor < 0 ? 'text-negative' : ''}`}>
         {row.figure === undefined ? <span className="font-normal text-ink-secondary">unchecked</span> : formatMoney(row.figure)}
       </td>
       <td className={`${cell} w-7 text-center text-ink-secondary`} title={opens ? undefined : 'Opens on its own page'}>
@@ -324,7 +324,7 @@ function Row({
 
 function Chevron({ down }: { down: boolean }) {
   return (
-    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden className="inline-block">
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden className="inline-block rtl:-scale-x-100">
       <path d={down ? 'M3 4.5l3 3 3-3' : 'M4.5 3l3 3-3 3'} />
     </svg>
   )
@@ -550,7 +550,7 @@ function AddPlace({ write, onDone }: { write: Write; onDone: () => void }) {
             type="button"
             aria-pressed={draft.kind === kind}
             onClick={() => set({ kind, ...(LOCKABLE.has(kind) ? {} : { lockedUntil: undefined }) })}
-            className={`-ml-px h-7 border px-2.5 text-caption whitespace-nowrap first:ml-0 ${
+            className={`-ms-px h-7 border px-2.5 text-caption whitespace-nowrap first:ms-0 ${
               draft.kind === kind ? 'relative z-[1] border-accent bg-accent-soft text-ink' : 'border-hairline-strong text-ink-secondary'
             }`}
           >

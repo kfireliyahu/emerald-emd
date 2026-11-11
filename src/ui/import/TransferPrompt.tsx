@@ -78,7 +78,7 @@ export function TransferLine({ pair, onAnswer }: { pair: TransferPair; onAnswer:
         <Bidi>{pair.in.accountName}</Bidi>{' '}
         <span className="text-ink-tertiary tabular-nums">{pair.in.date}</span>
       </span>
-      <span className="ml-auto flex gap-2">
+      <span className="ms-auto flex gap-2">
         <Button size="sm" onClick={() => onAnswer('PAIRED')}>
           One transfer
         </Button>

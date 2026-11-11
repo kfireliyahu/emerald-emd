@@ -223,7 +223,7 @@ export function StageBar({
       )}
 
       {severalCards === undefined && boundAccountId === undefined && where !== undefined && (
-        <label className="ml-auto flex items-center gap-2 text-caption text-ink-secondary">
+        <label className="ms-auto flex items-center gap-2 text-caption text-ink-secondary">
           Into
           <ChoiceMenu
             className={`${SELECT} h-7 max-w-60 text-body`}
@@ -251,7 +251,7 @@ export function StageBar({
       <Button
         variant="primary"
         icon="check"
-        className={severalCards === undefined && boundAccountId === undefined && where !== undefined ? '' : 'ml-auto'}
+        className={severalCards === undefined && boundAccountId === undefined && where !== undefined ? '' : 'ms-auto'}
         onClick={read}
         disabled={fileHash === undefined}
       >

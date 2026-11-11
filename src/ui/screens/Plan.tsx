@@ -785,7 +785,7 @@ export function Plan() {
         {problem !== undefined && (
           <div className="fc-pop-enter flex items-center gap-4 bg-surface px-4 py-2">
             <span className="text-negative">{problem}</span>
-            <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setProblem(undefined)}>
+            <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setProblem(undefined)}>
               Dismiss
             </Button>
           </div>
@@ -876,7 +876,7 @@ export function Plan() {
                   }}
                   placeholder="0.00"
                   aria-label="Custom basis amount"
-                  className={`${FIELD} w-36 text-right tabular-nums`}
+                  className={`${FIELD} w-36 text-end tabular-nums`}
                 />
               </label>
             )}
@@ -1467,7 +1467,7 @@ function Figure({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex min-w-0 flex-col gap-1 px-4 py-3.5 first:pl-0">
+    <div className="flex min-w-0 flex-col gap-1 px-4 py-3.5 first:ps-0">
       <span className="fc-label text-ink-secondary uppercase">{label}</span>
       <span className="text-[24px] leading-tight font-medium tracking-[-0.01em] tabular-nums">
         {unavailable ? '—' : formatMoney(value)}

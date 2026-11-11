@@ -883,7 +883,7 @@ export function ByMerchant() {
                 </>
               )}
             </p>
-            <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setPromoted(undefined)}>
+            <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setPromoted(undefined)}>
               Dismiss
             </Button>
           </section>
@@ -954,7 +954,7 @@ export function ByMerchant() {
                       <button
                         type="button"
                         onClick={() => unskip(group)}
-                        className="ml-auto text-caption text-ink-secondary hover:text-ink"
+                        className="ms-auto text-caption text-ink-secondary hover:text-ink"
                       >
                         Put it back
                       </button>
@@ -1072,7 +1072,7 @@ export function ByMerchant() {
                           type="button"
                           onClick={() => showRows(group)}
                           title={`${group.merchantRaw} · see these in All rows`}
-                          className="flex min-w-0 text-left hover:underline"
+                          className="flex min-w-0 text-start hover:underline"
                         >
                           <Bidi className="min-w-0 truncate">{group.merchantRaw}</Bidi>
                         </button>
@@ -1119,8 +1119,8 @@ export function ByMerchant() {
                           )}
                         </small>
                       </span>
-                      <span className="text-right font-mono text-caption text-ink-secondary">{group.count}×</span>
-                      <span className="text-right tabular-nums whitespace-nowrap">
+                      <span className="text-end font-mono text-caption text-ink-secondary">{group.count}×</span>
+                      <span className="text-end tabular-nums whitespace-nowrap">
                         {group.totals.map((total) => (
                           <span key={total.currency} className="block">
                             {/* What went out; a name that only ever paid in shows what came in. */}
@@ -1148,7 +1148,7 @@ export function ByMerchant() {
                       </span>
                       <span className="col-span-full flex items-center justify-end gap-1 pb-2 @[46rem]:col-span-1 @[46rem]:pb-0">
                         <label
-                          className="mr-1 inline-flex cursor-pointer items-center gap-1.5 text-caption text-ink-secondary select-none"
+                          className="me-1 inline-flex cursor-pointer items-center gap-1.5 text-caption text-ink-secondary select-none"
                           title="Make a rule as you confirm, so next month’s are categorized on import"
                         >
                           <input
@@ -1210,7 +1210,7 @@ export function ByMerchant() {
                         </IconButton>
                       </span>
                       {expanded === group.merchantNormalized && charges !== undefined && (
-                        <div className="fc-pop-enter col-span-full flex flex-col pb-2 pl-1 text-caption text-ink-secondary">
+                        <div className="fc-pop-enter col-span-full flex flex-col pb-2 ps-1 text-caption text-ink-secondary">
                           {charges.rows.map((row) => (
                             <div key={row.id} className="flex max-w-md justify-between gap-6 border-t border-hairline py-1">
                               <span className="font-mono">{row.transactionDate.year}-{String(row.transactionDate.month).padStart(2, '0')}-{String(row.transactionDate.day).padStart(2, '0')}</span>
@@ -1271,7 +1271,7 @@ export function ByMerchant() {
                     dragging.current = undefined
                     if (group !== undefined) file(group, category.id)
                   }}
-                  className={`flex h-8 items-center justify-between gap-2 border px-2 text-left text-body transition-colors duration-[var(--duration-micro)] hover:border-accent hover:bg-accent-soft ${
+                  className={`flex h-8 items-center justify-between gap-2 border px-2 text-start text-body transition-colors duration-[var(--duration-micro)] hover:border-accent hover:bg-accent-soft ${
                     over === `cat:${category.id}` ? 'border-accent bg-accent-soft' : 'border-transparent'
                   }`}
                 >
@@ -1391,8 +1391,8 @@ function Heading({
           {provider === undefined ? ' · the card or bank gave them none' : ''}
         </small>
       </span>
-      <span className="text-right font-mono text-caption text-ink-secondary">{section.count}×</span>
-      <span className="text-right tabular-nums whitespace-nowrap">{formatMoney(money(-outflow, currency))}</span>
+      <span className="text-end font-mono text-caption text-ink-secondary">{section.count}×</span>
+      <span className="text-end tabular-nums whitespace-nowrap">{formatMoney(money(-outflow, currency))}</span>
       {provider !== undefined && (
         <>
           <span className="col-span-full min-w-0 pb-1.5 @[46rem]:col-span-1 @[46rem]:pb-0">
@@ -1478,7 +1478,7 @@ function Hero({
   readonly children: React.ReactNode
 }) {
   return (
-    <div className={`flex min-w-0 flex-col gap-1 px-4 py-3.5 ${first ? 'pl-0' : ''}`}>
+    <div className={`flex min-w-0 flex-col gap-1 px-4 py-3.5 ${first ? 'ps-0' : ''}`}>
       <span className="fc-label text-ink-secondary uppercase">{label}</span>
       {children}
     </div>

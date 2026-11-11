@@ -350,7 +350,7 @@ export function Funds() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="ml-auto"
+                className="ms-auto"
                 onClick={() => setProblem(undefined)}
               >
                 Dismiss

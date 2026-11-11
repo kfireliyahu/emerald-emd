@@ -141,7 +141,7 @@ function Row({ notice, leading }: { notice: Notice; leading: boolean }) {
         <span className="min-w-0">{notice.body}</span>
       )}
 
-      <div className="ml-auto flex shrink-0 items-center gap-2">
+      <div className="ms-auto flex shrink-0 items-center gap-2">
         {notice.actions.map((action) => (
           <Button
             key={action.label}

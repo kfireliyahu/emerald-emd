@@ -76,19 +76,19 @@ export function StarterProposal({
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse text-left">
+        <table className="w-full border-collapse text-start">
           <thead>
             <tr className="border-b border-hairline text-label text-ink-secondary uppercase">
-              <th scope="col" className="py-2 pr-4 font-medium">
+              <th scope="col" className="py-2 pe-4 font-medium">
                 Category
               </th>
-              <th scope="col" className="py-2 pr-4 font-medium">
+              <th scope="col" className="py-2 pe-4 font-medium">
                 Counts as
               </th>
-              <th scope="col" className="py-2 pr-4 text-right font-medium">
+              <th scope="col" className="py-2 pe-4 text-end font-medium">
                 Part
               </th>
-              <th scope="col" className="py-2 pr-4 text-right font-medium">
+              <th scope="col" className="py-2 pe-4 text-end font-medium">
                 A month
               </th>
               <th scope="col" className="py-2 font-medium">
@@ -103,12 +103,12 @@ export function StarterProposal({
               const outOfPlan = line.basisPoints === 0
               return (
                 <tr key={heading.name} className="h-10 border-b border-hairline" data-category={heading.id}>
-                  <th scope="row" className={`py-1 pr-4 font-normal ${outOfPlan ? 'text-ink-secondary' : 'text-ink'}`}>
+                  <th scope="row" className={`py-1 pe-4 font-normal ${outOfPlan ? 'text-ink-secondary' : 'text-ink'}`}>
                     <span className="flex max-w-56 min-w-0" title={heading.name}>
                       <Bidi className="min-w-0 truncate">{heading.name}</Bidi>
                     </span>
                   </th>
-                  <td className="py-1 pr-4">
+                  <td className="py-1 pe-4">
                     {fixed ? (
                       <span className="text-caption text-ink-secondary">{STARTER_ANSWER_NAME.NONE}</span>
                     ) : (
@@ -131,8 +131,8 @@ export function StarterProposal({
                       </span>
                     )}
                   </td>
-                  <td className="py-1 pr-4 text-right tabular-nums">{outOfPlan ? '—' : formatPercent(line.basisPoints)}</td>
-                  <td className="py-1 pr-4 text-right tabular-nums">{outOfPlan ? '—' : amountOf(heading.id)}</td>
+                  <td className="py-1 pe-4 text-end tabular-nums">{outOfPlan ? '—' : formatPercent(line.basisPoints)}</td>
+                  <td className="py-1 pe-4 text-end tabular-nums">{outOfPlan ? '—' : amountOf(heading.id)}</td>
                   <td className={`py-1 text-caption ${line.answer === undefined ? 'text-ink' : 'text-ink-secondary'}`}>
                     {starterWhy(line, proposal.months.length, proposal.currency, proposal.kept.get(heading.id))}
                   </td>
@@ -141,12 +141,12 @@ export function StarterProposal({
             })}
             {ownName.map((bucket) => (
               <tr key={bucket.share} className="h-10 border-b border-hairline">
-                <th scope="row" className="py-1 pr-4 font-normal text-ink">
+                <th scope="row" className="py-1 pe-4 font-normal text-ink">
                   {bucket.name}
                 </th>
-                <td className="py-1 pr-4 text-caption text-ink-secondary">{STARTER_ANSWER_NAME[bucket.share]}</td>
-                <td className="py-1 pr-4 text-right tabular-nums">{formatPercent(bucket.basisPoints)}</td>
-                <td className="py-1 pr-4 text-right tabular-nums">{amountOf(bucket.share)}</td>
+                <td className="py-1 pe-4 text-caption text-ink-secondary">{STARTER_ANSWER_NAME[bucket.share]}</td>
+                <td className="py-1 pe-4 text-end tabular-nums">{formatPercent(bucket.basisPoints)}</td>
+                <td className="py-1 pe-4 text-end tabular-nums">{amountOf(bucket.share)}</td>
                 <td className="py-1 text-caption text-ink-secondary">
                   No category is {STARTER_ANSWER_NAME[bucket.share].toLowerCase()}: a bucket of its own
                 </td>
@@ -158,12 +158,12 @@ export function StarterProposal({
 
       <div className="flex flex-wrap items-center justify-end gap-3">
         {problem !== undefined ? (
-          <p className="m-0 mr-auto text-negative" role="alert">
+          <p className="m-0 me-auto text-negative" role="alert">
             {problem}
           </p>
         ) : (
           waiting > 0 && (
-            <p className="m-0 mr-auto text-ink-secondary" role="status">
+            <p className="m-0 me-auto text-ink-secondary" role="status">
               Say what {waiting === 1 ? 'one category counts' : `${String(waiting)} categories count`} as first.
             </p>
           )

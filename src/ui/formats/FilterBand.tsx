@@ -240,7 +240,7 @@ function SaveView({ saving }: { readonly saving: Saving }) {
   const [refusal, setRefusal] = useState<string | undefined>(undefined)
   if (saving.current !== undefined) {
     return (
-      <span className="ml-auto">
+      <span className="ms-auto">
         Saved as <span className="text-ink"><Bidi>{saving.current}</Bidi></span>
       </span>
     )
@@ -249,7 +249,7 @@ function SaveView({ saving }: { readonly saving: Saving }) {
     return (
       <button
         type="button"
-        className="ml-auto text-accent hover:underline hover:underline-offset-[3px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+        className="ms-auto text-accent hover:underline hover:underline-offset-[3px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
         onClick={() => {
           setNaming('')
           setRefusal(undefined)
@@ -266,7 +266,7 @@ function SaveView({ saving }: { readonly saving: Saving }) {
     setRefusal(said)
   }
   return (
-    <span className="ml-auto inline-flex flex-wrap items-baseline gap-x-2">
+    <span className="ms-auto inline-flex flex-wrap items-baseline gap-x-2">
       <input
         autoFocus
         value={naming}
@@ -403,7 +403,7 @@ function Drop({ what, onClick }: { readonly what: string; readonly onClick: () =
       aria-label={`Stop filtering by ${what}`}
       title={`Stop filtering by ${what}`}
       // A 24px target in ink-secondary: it does what Clear does, to one value (D-531, M54 F3).
-      className="ml-1 inline-flex size-6 items-center justify-center align-middle text-ink-secondary hover:bg-surface hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+      className="ms-1 inline-flex size-6 items-center justify-center align-middle text-ink-secondary hover:bg-surface hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
       onClick={onClick}
     >
       ×
@@ -607,7 +607,7 @@ export function ColumnMenu({
       role="dialog"
       aria-label={`${entryLabel(column)}, its values`}
       onKeyDown={dismiss}
-      className={`fc-pop-enter absolute top-full ${align === 'end' ? 'right-0' : 'left-0'} z-30 mt-1 flex w-72 flex-col gap-2 border border-hairline-strong bg-elevated p-2 text-left text-body font-normal whitespace-normal shadow-pop`}
+      className={`fc-pop-enter absolute top-full ${align === 'end' ? 'end-0' : 'start-0'} z-30 mt-1 flex w-72 flex-col gap-2 border border-hairline-strong bg-elevated p-2 text-start text-body font-normal whitespace-normal shadow-pop`}
     >
       {!read.ok ? (
         <>

@@ -256,7 +256,7 @@ export function RowSheet({
     <div className="min-h-0 flex-1 overflow-auto" {...cursor.container}>
       <Flip
         as="table"
-        className="border-collapse text-left"
+        className="border-collapse text-start"
         style={{ tableLayout: 'fixed', width: total }}
         // A column moved, added or worked out: the cells glide sideways. Never a
         // width - a drag is a hand on the edge and follows it already.
@@ -291,12 +291,12 @@ export function RowSheet({
         </colgroup>
         <thead className="sticky top-0 z-10 bg-background">
           <tr className="border-b border-hairline">
-            <th className="border-r border-hairline" />
+            <th className="border-e border-hairline" />
             {columns.map((column, index) => (
               <th
                 key={column.name}
                 {...col(`head|${colKey('c', column.name)}`)}
-                className={`group/head relative border-r border-hairline py-2 pr-1 pl-3 text-label whitespace-nowrap ${marks('COLUMN', column.name) ? MARKED : ''}`}
+                className={`group/head relative border-e border-hairline py-2 pe-1 ps-3 text-label whitespace-nowrap ${marks('COLUMN', column.name) ? MARKED : ''}`}
                 data-column={column.name}
                 aria-current={marks('COLUMN', column.name) ? 'true' : undefined}
                 onDragOver={
@@ -339,7 +339,7 @@ export function RowSheet({
                     and **taking no width until then** (M29 F6), so a narrow
                     column gives its name the room. */}
                 {onMove !== undefined && (
-                  <span className={`${UNTIL_HOVER} group-hover/head:-ml-2 focus-within:-ml-2`}>
+                  <span className={`${UNTIL_HOVER} group-hover/head:-ms-2 focus-within:-ms-2`}>
                     <span
                       role="button"
                       tabIndex={0}
@@ -383,7 +383,7 @@ export function RowSheet({
                 )}
                 <button
                   type="button"
-                  className="flex min-w-0 flex-1 text-left text-label underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                  className="flex min-w-0 flex-1 text-start text-label underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                   title={headed(
                     `${entryLabel(column)}${column.unit === undefined ? '' : ` (${column.unit})`}${
                       column.foundBy === undefined
@@ -418,7 +418,7 @@ export function RowSheet({
                 {columnMenu !== undefined && (
                   <span
                     className={
-                      columnMenu.held.has(column.name) ? 'ml-1 shrink-0 text-ink' : `${UNTIL_HOVER} group-hover/head:ml-1 focus-within:ml-1`
+                      columnMenu.held.has(column.name) ? 'ms-1 shrink-0 text-ink' : `${UNTIL_HOVER} group-hover/head:ms-1 focus-within:ms-1`
                     }
                     data-held={columnMenu.held.has(column.name) ? 'true' : undefined}
                   >
@@ -434,7 +434,7 @@ export function RowSheet({
                     name, its type, its checks. Shown under a pointer or a
                     focus, so a sheet at rest reads as entries. */}
                 {onShape !== undefined && (
-                  <span className={`${UNTIL_HOVER} group-hover/head:ml-1 focus-within:ml-1`}>
+                  <span className={`${UNTIL_HOVER} group-hover/head:ms-1 focus-within:ms-1`}>
                     <IconAction label={`Edit ${entryLabel(column)}`} onClick={() => onShape(column.name)}>
                       <path d="m6 9 6 6 6-6" />
                     </IconAction>
@@ -467,14 +467,14 @@ export function RowSheet({
               <th
                 key={`derived-${each.name}`}
                 {...col(`head|${colKey('d', each.name)}`)}
-                className={`group/head relative border-r border-hairline py-2 pr-1 pl-3 text-label whitespace-nowrap ${marks('DERIVED', each.name) ? MARKED : DERIVED_LOOK}`}
+                className={`group/head relative border-e border-hairline py-2 pe-1 ps-3 text-label whitespace-nowrap ${marks('DERIVED', each.name) ? MARKED : DERIVED_LOOK}`}
                 data-derived={each.name}
                 aria-current={marks('DERIVED', each.name) ? 'true' : undefined}
               >
                 <span className="flex items-center">
                   <button
                     type="button"
-                    className="flex min-w-0 flex-1 text-left italic underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                    className="flex min-w-0 flex-1 text-start italic underline-offset-4 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                     title={headed(`${each.name} = ${each.expression}`, each.note)}
                     onClick={() =>
                       onSort({ column: each.name, descending: order?.column === each.name && !order.descending })
@@ -486,7 +486,7 @@ export function RowSheet({
                     ) : null}
                   </button>
                   {onShapeDerived !== undefined && (
-                    <span className={`${UNTIL_HOVER} group-hover/head:ml-1 focus-within:ml-1`}>
+                    <span className={`${UNTIL_HOVER} group-hover/head:ms-1 focus-within:ms-1`}>
                       <IconAction label={`Edit ${each.name}`} onClick={() => onShapeDerived(each.name)}>
                         <path d="m6 9 6 6 6-6" />
                       </IconAction>
@@ -509,7 +509,7 @@ export function RowSheet({
             {adding !== undefined && (
               <th
                 {...col(`head|${newKey}`)}
-                className={`border-r border-hairline py-2 pr-1 pl-3 text-label whitespace-nowrap ${MARKED}`}
+                className={`border-e border-hairline py-2 pe-1 ps-3 text-label whitespace-nowrap ${MARKED}`}
                 data-adding=""
                 aria-current="true"
               >
@@ -542,7 +542,7 @@ export function RowSheet({
             )}
             <th />
             {onAddColumn !== undefined && (
-              <th className="border-l border-hairline px-1">
+              <th className="border-s border-hairline px-1">
                 <IconAction label="Add a column" tour="add-column" onClick={onAddColumn}>
                   <path d="M12 5v14M5 12h14" />
                 </IconAction>
@@ -573,14 +573,14 @@ export function RowSheet({
               // `accent-soft` would put the accent behind a column of figures.
               className={`${onOpen === undefined ? '' : 'cursor-pointer '}group border-b border-hairline transition-colors duration-[var(--duration-micro)] ${selection?.has(row.id) === true ? 'bg-accent-soft' : 'hover:bg-surface'}`}
             >
-              <td className="border-r border-hairline px-2 py-1.5 text-right align-top text-caption text-ink-secondary tabular-nums">
+              <td className="border-e border-hairline px-2 py-1.5 text-end align-top text-caption text-ink-secondary tabular-nums">
                 {index + 1}
               </td>
               {columns.map((column) => (
                 <td
                   key={column.name}
                   {...col(`${keyOf(row)}|${colKey('c', column.name)}`)}
-                  className={`overflow-hidden border-r border-hairline px-3 py-1.5 align-top whitespace-nowrap ${numeric(column.type) ? 'text-right tabular-nums' : ''}`}
+                  className={`overflow-hidden border-e border-hairline px-3 py-1.5 align-top whitespace-nowrap ${numeric(column.type) ? 'text-end tabular-nums' : ''}`}
                 >
                   {/* Written by somebody else — typed here, read off a
                       receipt, or sent by a model — and half of them Hebrew. The
@@ -603,7 +603,7 @@ export function RowSheet({
                     key={`derived-${each.name}`}
                     {...col(`${keyOf(row)}|${colKey('d', each.name)}`)}
                     data-derived-cell={each.name}
-                    className={`truncate border-r border-hairline px-3 py-1.5 text-right align-top tabular-nums whitespace-nowrap text-ink-secondary ${DERIVED_LOOK}`}
+                    className={`truncate border-e border-hairline px-3 py-1.5 text-end align-top tabular-nums whitespace-nowrap text-ink-secondary ${DERIVED_LOOK}`}
                     title={
                       value === undefined || value.kind !== 'EMPTY'
                         ? `= ${each.expression}`
@@ -618,12 +618,12 @@ export function RowSheet({
                   </td>
                 )
               })}
-              {adding !== undefined && <td {...col(`${keyOf(row)}|${newKey}`)} className="border-r border-hairline" />}
+              {adding !== undefined && <td {...col(`${keyOf(row)}|${newKey}`)} className="border-e border-hairline" />}
               {aggregates.map((each) => (
                 <td
                   key={each.aggregate.name}
                   {...col(`${keyOf(row)}|a:${each.aggregate.name}`)}
-                  className="truncate px-3 py-1.5 text-right align-top tabular-nums whitespace-nowrap"
+                  className="truncate px-3 py-1.5 text-end align-top tabular-nums whitespace-nowrap"
                 >
                   {each.value.kind === 'VALUE' ? (
                     <span title={`over ${String(each.value.rows)} ${each.value.rows === 1 ? 'row' : 'rows'}`}>
@@ -644,7 +644,7 @@ export function RowSheet({
                   <RowProof verdicts={verdicts} marked={verdictChanges.get(keyOf(row))?.times} />
                 </td>
               )}
-              <td {...col(`${keyOf(row)}|act`)} className="px-1 align-top text-right whitespace-nowrap">
+              <td {...col(`${keyOf(row)}|act`)} className="px-1 align-top text-end whitespace-nowrap">
                 {/* **Every row has a door to its page** (M26 U6, D-294): the
                     sheet stays the default view, and this is the readable one. */}
                 {onOpen !== undefined && (
@@ -678,7 +678,7 @@ export function RowSheet({
                   </span>
                 )}
               </td>
-              {onAddColumn !== undefined && <td className="border-l border-hairline" />}
+              {onAddColumn !== undefined && <td className="border-s border-hairline" />}
             </tr>
           ))}
 
@@ -698,7 +698,7 @@ export function RowSheet({
               // The cursor's keys are the stored rows'; a field keeps its own.
               onKeyDown={(event) => event.stopPropagation()}
             >
-              <td className="border-r border-hairline px-2 py-1.5 text-right align-top text-caption text-ink-secondary tabular-nums">
+              <td className="border-e border-hairline px-2 py-1.5 text-end align-top text-caption text-ink-secondary tabular-nums">
                 {first + at}
               </td>
               {columns.map((column, across) => (
@@ -756,14 +756,14 @@ export function RowSheet({
               // **Why, under the cell it is about** (M55 U5, D-545): each
               // refused cell's sentence in its own column, all of them at once.
               <tr data-motion-key={`foot-${String(at)}-why`} className="border-b border-hairline">
-                <td className="border-r border-hairline" />
+                <td className="border-e border-hairline" />
                 {columns.map((column, across) => {
                   const reason = why(at, column.name)
                   return (
                     <td
                       key={column.name}
                       id={reason === undefined ? undefined : `${saidId}-${String(at)}-${String(across)}`}
-                      className="border-r border-hairline px-3 py-1 align-top text-caption text-negative"
+                      className="border-e border-hairline px-3 py-1 align-top text-caption text-negative"
                     >
                       {reason === undefined ? null : <Bidi>{reason}</Bidi>}
                     </td>
@@ -874,7 +874,7 @@ function FootCell({
   // A percent or a time shows what it will be kept as while it is typed, and
   // becomes that when the cell is left (M29 F3, D-344).
   const typed = useTyped(column.type, draft[column.name] ?? '')
-  const look = `w-full min-w-0 bg-transparent px-3 py-1.5 outline-none focus:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${numeric(column.type) ? 'text-right tabular-nums' : ''} ${wrong ? 'text-negative' : ''}`
+  const look = `w-full min-w-0 bg-transparent px-3 py-1.5 outline-none focus:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${numeric(column.type) ? 'text-end tabular-nums' : ''} ${wrong ? 'text-negative' : ''}`
   const shared = {
     'data-foot': `${String(row)}:${String(across)}`,
     // The demo tour's anchor (M33 U2): the first foot row's cells only.
@@ -898,7 +898,7 @@ function FootCell({
   return (
     <td
       {...motion}
-      className={`relative border-r p-0 align-top border-hairline ${wrong ? 'shadow-[inset_0_0_0_1px_var(--color-negative)]' : ''}`}
+      className={`relative border-e p-0 align-top border-hairline ${wrong ? 'shadow-[inset_0_0_0_1px_var(--color-negative)]' : ''}`}
     >
       <div className="flex">
         {isListType(column.type) ? (

@@ -292,7 +292,7 @@ export function CommandPalette({ onImportStatement }: { onImportStatement: () =>
             <Kbd>Esc</Kbd> to leave
           </span>
           {held > 0 && (
-            <span className="ml-auto">{held === 1 ? '1 entry holds it' : `${String(held)} entries hold it`}</span>
+            <span className="ms-auto">{held === 1 ? '1 entry holds it' : `${String(held)} entries hold it`}</span>
           )}
         </div>
       </div>
@@ -400,7 +400,7 @@ function optionProps(index: number, selected: boolean, onHover: () => void, onPi
 }
 
 function rowClass(selected: boolean): string {
-  return `flex w-full cursor-default flex-col gap-px px-4 py-1.5 text-left transition-colors duration-[var(--duration-micro)] ${
+  return `flex w-full cursor-default flex-col gap-px px-4 py-1.5 text-start transition-colors duration-[var(--duration-micro)] ${
     selected ? 'bg-accent-soft' : ''
   }`
 }
@@ -449,12 +449,12 @@ function EntryRow({
         <span className="min-w-0 truncate">
           {entry.rank < 3 ? <Snip text={entry.name} query={query} /> : <Bidi>{entry.name}</Bidi>}
         </span>
-        <Bidi className="ml-auto shrink-0 text-caption text-ink-secondary">{format.title}</Bidi>
+        <Bidi className="ms-auto shrink-0 text-caption text-ink-secondary">{format.title}</Bidi>
       </span>
       {entry.column !== undefined && entry.text !== undefined && (
         // Under the name: past the icon's 16px and the 8px gap beside it.
-        <span className="w-full truncate pl-6 text-caption text-ink-secondary">
-          <span className="mr-1.5 text-ink-secondary">{entry.column.replace(/_/g, ' ')}</span>
+        <span className="w-full truncate ps-6 text-caption text-ink-secondary">
+          <span className="me-1.5 text-ink-secondary">{entry.column.replace(/_/g, ' ')}</span>
           <Snip text={entry.text} query={query} />
         </span>
       )}
@@ -499,7 +499,7 @@ function Row({
   return (
     <div
       {...optionProps(index, selected, onHover, onPick)}
-      className={`flex w-full cursor-default items-baseline gap-3 px-4 py-1.5 text-left transition-colors duration-[var(--duration-micro)] ${
+      className={`flex w-full cursor-default items-baseline gap-3 px-4 py-1.5 text-start transition-colors duration-[var(--duration-micro)] ${
         selected ? 'bg-accent-soft text-ink' : 'text-ink-secondary'
       }`}
     >
@@ -510,7 +510,7 @@ function Row({
         </span>
       )}
       {command.hint !== undefined && (
-        <span className="ml-auto shrink-0">
+        <span className="ms-auto shrink-0">
           {command.hint.split('+').map((key, at) => (
             <span key={key}>
               {at > 0 && '+'}

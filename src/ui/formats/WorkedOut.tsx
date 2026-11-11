@@ -318,7 +318,7 @@ function ColumnQuestion({
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <code className="text-ink">{column}</code>
         <span className="text-caption text-ink-secondary">adds up {from}?</span>
-        <span className="ml-auto">
+        <span className="ms-auto">
           <YesNo
             label={`Claim that ${column} adds up ${from} of ${subject}?`}
             tour={`claim-${column}`}
@@ -508,7 +508,7 @@ function PartRow({
         </>
       )}
 
-      <span className="ml-2 flex flex-wrap items-center gap-2">
+      <span className="ms-2 flex flex-wrap items-center gap-2">
         {part.less === undefined && point === undefined && another !== undefined && (
           <Small onClick={() => onChange({ ...part, columns: [...part.columns, another] })}>
             × another column
@@ -627,7 +627,7 @@ function FreehandIdentity({
 
         <HowClose identity={identity} onChange={onChange} />
 
-        <Button variant="ghost" size="sm" className="ml-auto" onClick={onRemove}>
+        <Button variant="ghost" size="sm" className="ms-auto" onClick={onRemove}>
           Remove
         </Button>
       </div>
@@ -693,7 +693,7 @@ function YesNo({
       <button
         type="button"
         aria-pressed={yes}
-        className={`${look(yes)} border-l border-hairline-strong`}
+        className={`${look(yes)} border-s border-hairline-strong`}
         data-tour={tour}
         onClick={onYes}
       >

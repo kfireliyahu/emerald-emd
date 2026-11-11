@@ -60,7 +60,7 @@ export function AddsUpPlace({
         </span>
       )}
 
-      <span className="ml-auto flex items-center gap-3">
+      <span className="ms-auto flex items-center gap-3">
         {proof !== undefined && shown.length > 0 && <Verdicts proof={proof} />}
         {onOpen !== undefined && (
           <Button

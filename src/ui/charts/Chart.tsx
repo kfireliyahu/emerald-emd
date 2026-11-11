@@ -160,7 +160,8 @@ export function Chart({
     row[index] !== undefined && row[index - 1] === undefined && row[index + 1] === undefined
 
   return (
-    <figure className="m-0">
+    // Time runs left to right in either language (M60 U3, D-586).
+    <figure className="m-0" dir="ltr">
       <div ref={width.ref as React.RefObject<HTMLDivElement>} className="relative">
         <svg
           viewBox={`0 0 ${String(W)} ${String(H)}`}

@@ -53,7 +53,7 @@ export function Agenda() {
     <div className="fc-view-enter flex h-full flex-col">
       {/* The screen names itself once, in its h1 (M54 F3): the bar holds only its controls. */}
       <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-b border-hairline px-6 py-2">
-        <span className="ml-auto flex flex-wrap items-center gap-2">
+        <span className="ms-auto flex flex-wrap items-center gap-2">
           <span className="flex items-center" role="group" aria-label="How far ahead">
             {[undefined, ...WINDOWS].map((window) => {
               const on = window === undefined ? held === undefined : held === window
@@ -63,7 +63,7 @@ export function Agenda() {
                   type="button"
                   aria-pressed={on}
                   onClick={() => set(windowed(window))}
-                  className={`h-7 border border-hairline px-2.5 text-caption -ml-px first:ml-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${on ? 'bg-surface text-ink font-medium' : 'text-ink-secondary hover:text-ink'}`}
+                  className={`h-7 border border-hairline px-2.5 text-caption -ms-px first:ms-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${on ? 'bg-surface text-ink font-medium' : 'text-ink-secondary hover:text-ink'}`}
                 >
                   {window === undefined ? 'All ahead' : window.replace('within ', '')}
                 </button>

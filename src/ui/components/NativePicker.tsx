@@ -54,7 +54,7 @@ export const NativePicker = forwardRef<
       tabIndex={-1}
       aria-hidden
       aria-label={`${label}, picked`}
-      className="pointer-events-none absolute bottom-0 left-0 h-px w-px opacity-0"
+      className="pointer-events-none absolute bottom-0 start-0 h-px w-px opacity-0"
       value={SHAPE[kind].test(value) ? value : ''}
       onChange={(event) => {
         if (event.target.value !== '') onPick(event.target.value)

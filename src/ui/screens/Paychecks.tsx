@@ -56,6 +56,7 @@ import { PaycheckEditor } from '@/ui/paychecks/PaycheckEditor.tsx'
 import { PayslipIntake } from '@/ui/paychecks/PayslipIntake.tsx'
 import { savePaycheckDraft } from '@/ui/paychecks/savePaycheck.ts'
 import { today } from '@/ui/today.ts'
+import { arrowStep } from '@/ui/direction.ts'
 
 /**
  * The paychecks screen, in the frame M28 U4's approved mockup drew: one month
@@ -106,7 +107,7 @@ export function Paychecks() {
       const target = event.target instanceof Element ? event.target : null
       if (target?.closest('input, textarea, select, [contenteditable="true"], [role="listbox"], [role="menu"]')) return
       event.preventDefault()
-      pageRef.current?.(event.key === 'ArrowLeft' ? -1 : 1)
+      pageRef.current?.(arrowStep(event.key) === 1 ? 1 : -1)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -270,7 +271,7 @@ export function Paychecks() {
           </div>
           {shown !== undefined && (
             <nav className="flex items-center gap-1" aria-label="Month">
-              <span className="min-w-18 px-1 text-right text-caption text-ink-secondary tabular-nums">
+              <span className="min-w-18 px-1 text-end text-caption text-ink-secondary tabular-nums">
                 {prev === undefined ? '' : formatMonthShort(prev.paycheck.period)}
               </span>
               <PageButton label="Previous month" glyph="left" disabled={prev === undefined} onClick={() => go(prev)} />
@@ -285,7 +286,7 @@ export function Paychecks() {
         {problem !== undefined && (
           <div className="fc-pop-enter flex items-center gap-4 bg-surface px-4 py-2">
             <span className="text-negative">{problem}</span>
-            <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setProblem(undefined)}>
+            <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setProblem(undefined)}>
               Dismiss
             </Button>
           </div>
@@ -367,11 +368,11 @@ export function Paychecks() {
             <table className="w-full border-collapse">
               <thead>
                 <tr className="border-b border-hairline text-label text-ink-tertiary uppercase">
-                  <th className="px-3 py-2 text-left font-medium">Month</th>
-                  <th className="px-3 py-2 text-left font-medium">Paid</th>
-                  <th className="px-3 py-2 text-right font-medium">Gross</th>
-                  <th className="px-3 py-2 text-right font-medium">Net</th>
-                  <th className="px-3 py-2 text-left font-medium">Itemization</th>
+                  <th className="px-3 py-2 text-start font-medium">Month</th>
+                  <th className="px-3 py-2 text-start font-medium">Paid</th>
+                  <th className="px-3 py-2 text-end font-medium">Gross</th>
+                  <th className="px-3 py-2 text-end font-medium">Net</th>
+                  <th className="px-3 py-2 text-start font-medium">Itemization</th>
                   <th className="px-3 py-2" />
                 </tr>
               </thead>
@@ -383,7 +384,7 @@ export function Paychecks() {
                       <td className="px-3" colSpan={4}>
                         No paycheck for this month
                       </td>
-                      <td className="px-3 text-right">
+                      <td className="px-3 text-end">
                         <Button variant="ghost" size="sm" onClick={() => readSlips()}>
                           Read
                         </Button>
@@ -577,7 +578,7 @@ function Slip({
         })}
         <div className="grid h-10 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-t border-ink font-medium">
           <span>Net</span>
-          <span className="text-right tabular-nums">{formatMoney(paycheck.net)}</span>
+          <span className="text-end tabular-nums">{formatMoney(paycheck.net)}</span>
         </div>
       </div>
       <div className="flex items-center gap-2">
@@ -614,7 +615,7 @@ function Line({ label, amount, quiet = false }: { label: React.ReactNode; amount
   return (
     <div className="grid h-8 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-hairline">
       <span className="flex min-w-0 items-center gap-2">{label}</span>
-      <span className={`text-right tabular-nums ${quiet ? 'text-ink-secondary' : ''}`}>{amount}</span>
+      <span className={`text-end tabular-nums ${quiet ? 'text-ink-secondary' : ''}`}>{amount}</span>
     </div>
   )
 }
@@ -652,19 +653,19 @@ function SlipRow({
     >
       <td className="px-3 whitespace-nowrap tabular-nums">
         {formatYearMonth(paycheck.period)}
-        {paycheck.isIrregular && <span className="fc-state ml-2">Bonus</span>}
+        {paycheck.isIrregular && <span className="fc-state ms-2">Bonus</span>}
       </td>
       <td className="px-3 font-mono text-caption whitespace-nowrap text-ink-secondary">{toISODate(paycheck.paymentDate)}</td>
-      <td className="px-3 text-right text-ink-secondary">
+      <td className="px-3 text-end text-ink-secondary">
         <Amount value={paycheck.gross} />
       </td>
-      <td className="px-3 text-right">
+      <td className="px-3 text-end">
         <Amount value={paycheck.net} />
       </td>
       <td className="px-3">
         <Verdict entry={entry} types={types} />
       </td>
-      <td className="px-3 text-right">
+      <td className="px-3 text-end">
         <IconAction label={`Edit ${formatYearMonth(paycheck.period)}`} onClick={onEdit}>
           <path d="M4 20l1.5-5L15 5.5l3.5 3.5L9 18.5z" />
         </IconAction>

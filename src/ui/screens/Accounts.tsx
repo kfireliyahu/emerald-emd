@@ -124,7 +124,7 @@ export function Accounts() {
       {problem !== undefined && (
         <div className="fc-pop-enter flex shrink-0 items-center gap-4 border-b border-hairline bg-surface px-6 py-2">
           <span className="text-negative">{problem}</span>
-          <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setProblem(undefined)}>
+          <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setProblem(undefined)}>
             Dismiss
           </Button>
         </div>
@@ -364,7 +364,7 @@ function Row({
           <Chip problem>no card number</Chip>
         )}
 
-        <span className="ml-auto flex items-center gap-x-3 text-caption text-ink-secondary opacity-0 transition-opacity duration-[var(--duration-micro)] group-hover:opacity-100 focus-within:opacity-100">
+        <span className="ms-auto flex items-center gap-x-3 text-caption text-ink-secondary opacity-0 transition-opacity duration-[var(--duration-micro)] group-hover:opacity-100 focus-within:opacity-100">
           <button type="button" onClick={onMerge} className="hover:text-ink">
             Merge…
           </button>
@@ -546,7 +546,7 @@ function NewAccountForm({
 
   return (
     <form
-      className="ml-auto flex flex-wrap items-center gap-2"
+      className="ms-auto flex flex-wrap items-center gap-2"
       onSubmit={(event) => {
         event.preventDefault()
         submit()

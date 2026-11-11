@@ -105,7 +105,7 @@ export function FlowFrame({
       <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline px-6 py-2">
         <span className="text-ink-secondary">{title}</span>
 
-        <span className="ml-auto flex items-center gap-2">
+        <span className="ms-auto flex items-center gap-2">
           {actions}
           <Button variant="ghost" size="sm" onClick={onLeave}>
             {leaveLabel}

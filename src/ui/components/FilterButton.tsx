@@ -44,7 +44,7 @@ export function FilterButton({
         <div
           role="dialog"
           aria-label={label}
-          className={`fc-pop-enter absolute top-full ${align === 'end' ? 'right-0' : 'left-0'} z-40 mt-1 flex w-72 flex-col gap-3 border border-hairline bg-elevated p-4 shadow-pop`}
+          className={`fc-pop-enter absolute top-full ${align === 'end' ? 'end-0' : 'start-0'} z-40 mt-1 flex w-72 flex-col gap-3 border border-hairline bg-elevated p-4 shadow-pop`}
         >
           {children}
         </div>

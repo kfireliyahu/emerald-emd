@@ -131,7 +131,7 @@ export function HoldingReadings({
                 <button
                   type="button"
                   onClick={() => remove(reading.id)}
-                  className="ml-auto text-ink-tertiary hover:text-negative"
+                  className="ms-auto text-ink-tertiary hover:text-negative"
                   aria-label={`Remove the reading of ${reading.asOf}`}
                 >
                   Remove
@@ -160,7 +160,7 @@ export function HoldingReadings({
             inputMode="decimal"
             value={worth}
             onChange={(event) => setWorth(event.target.value)}
-            className={`${FIELD} text-right`}
+            className={`${FIELD} text-end`}
           />
           <label htmlFor="reading-cost">Cost</label>
           <input
@@ -169,7 +169,7 @@ export function HoldingReadings({
             placeholder="if printed"
             value={cost}
             onChange={(event) => setCost(event.target.value)}
-            className={`${FIELD} text-right`}
+            className={`${FIELD} text-end`}
           />
           <label htmlFor="reading-quantity">Quantity</label>
           <input
@@ -178,7 +178,7 @@ export function HoldingReadings({
             placeholder="if printed"
             value={quantity}
             onChange={(event) => setQuantity(event.target.value)}
-            className={`${FIELD} text-right`}
+            className={`${FIELD} text-end`}
           />
           <span />
           <div className="flex flex-wrap gap-3">

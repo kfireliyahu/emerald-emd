@@ -154,7 +154,7 @@ export function SettlementLine({
 
       <Corroboration group={group} />
 
-      <span className="ml-auto flex gap-2">
+      <span className="ms-auto flex gap-2">
         <Button size="sm" onClick={() => onDecide('EXCLUDED')}>
           Leave out
         </Button>

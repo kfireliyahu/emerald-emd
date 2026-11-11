@@ -199,7 +199,7 @@ export function ReadStatements() {
         {problem !== undefined && (
           <div className="fc-pop-enter flex items-center gap-4 bg-surface px-4 py-2">
             <span className="text-negative">{problem}</span>
-            <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setProblem(undefined)}>
+            <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setProblem(undefined)}>
               Dismiss
             </Button>
           </div>

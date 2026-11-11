@@ -314,7 +314,7 @@ export function ConnectionPanel({
             <p className="m-0 text-caption text-ink-secondary">
               {capitalize(counted(left.length, Many))} {left.length === 1 ? 'stays' : 'stay'} empty:
             </p>
-            <ul className="m-0 mt-1 list-disc pl-5 text-caption">
+            <ul className="m-0 mt-1 list-disc ps-5 text-caption">
               {left.slice(0, UNPLACED_SHOWN).map((each) => (
                 <li key={each.id}>
                   <Bidi>{each.name ?? (each.kind === 'NO_DATE' ? `A ${many}` : each.date)}</Bidi>
@@ -634,7 +634,7 @@ export function ConnectionPanel({
                 />
                 Each {one} adds up its {manyRows}
               </label>
-              {withTotal && <div className="fc-pop-enter flex flex-col gap-0.5 border-l-2 border-hairline-strong py-0.5 pl-3">{total}</div>}
+              {withTotal && <div className="fc-pop-enter flex flex-col gap-0.5 border-s-2 border-hairline-strong py-0.5 ps-3">{total}</div>}
             </div>
           </>
         )}
@@ -663,7 +663,7 @@ export function ConnectionPanel({
 
       <details className="group mt-3 max-w-[760px]">
         <summary className="inline-flex cursor-pointer list-none items-center gap-1 text-caption text-accent [&::-webkit-details-marker]:hidden">
-          <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden className="transition-transform duration-[var(--duration-base)] group-open:rotate-90">
+          <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden className="transition-transform duration-[var(--duration-base)] group-open:rotate-90 rtl:-scale-x-100 group-open:rtl:-rotate-90">
             <path d="M4.5 3L7.5 6L4.5 9" stroke="currentColor" strokeWidth="1.5" fill="none" />
           </svg>
           {linking ? 'Name and note' : 'Note'}
@@ -744,7 +744,7 @@ export function ConnectionPanel({
           </Button>
         )}
         {existing !== undefined && (
-          <span className="ml-auto">
+          <span className="ms-auto">
             <IconAction
               label={existing.kind === 'LINK' ? 'Delete this connection' : 'Delete this total'}
               tone="negative"
@@ -1066,7 +1066,7 @@ function ChoiceButton({
       disabled={disabled}
       title={title}
       onClick={onClick}
-      className={`-ml-px h-8 border px-3 text-body first:ml-0 disabled:cursor-default disabled:opacity-40 ${
+      className={`-ms-px h-8 border px-3 text-body first:ms-0 disabled:cursor-default disabled:opacity-40 ${
         on
           ? 'relative z-[1] border-accent bg-accent-soft text-ink'
           : 'border-hairline-strong bg-elevated text-ink-secondary'

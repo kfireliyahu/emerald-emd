@@ -154,7 +154,7 @@ export function Pager({
 }) {
   return (
     <nav className="flex items-center gap-1" aria-label={label}>
-      <span className="min-w-18 px-1 text-right text-caption text-ink-secondary tabular-nums">{prev ?? ''}</span>
+      <span className="min-w-18 px-1 text-end text-caption text-ink-secondary tabular-nums">{prev ?? ''}</span>
       <PageButton label="Previous" glyph="left" disabled={prev === undefined} onClick={onPrev} />
       <PageButton label="Next" glyph="right" disabled={next === undefined} onClick={onNext} />
       <span className="min-w-18 px-1 text-caption text-ink-secondary tabular-nums">{next ?? 'newest'}</span>
@@ -200,9 +200,9 @@ export function Figure({
   readonly children?: ReactNode
 }) {
   return (
-    <div className="flex min-w-0 flex-col gap-1 px-4 py-3.5 first:pl-0">
+    <div className="flex min-w-0 flex-col gap-1 px-4 py-3.5 first:ps-0">
       <span className="fc-label flex items-center text-ink-secondary uppercase">
-        {flow !== undefined && <span aria-hidden className={`mr-1.5 inline-block size-2 ${FLOW_BG[flow]}`} />}
+        {flow !== undefined && <span aria-hidden className={`me-1.5 inline-block size-2 ${FLOW_BG[flow]}`} />}
         {label}
       </span>
       <span
@@ -234,7 +234,7 @@ export function Legend({ children }: { readonly children: ReactNode }) {
 export function Key({ flow, children, bar = false }: { flow: Flow; children: ReactNode; bar?: boolean }) {
   return (
     <span className="inline-flex items-center">
-      <i aria-hidden className={`mr-1.5 inline-block ${bar ? 'size-2' : 'h-0.5 w-3.5'} ${FLOW_BG[flow]}`} />
+      <i aria-hidden className={`me-1.5 inline-block ${bar ? 'size-2' : 'h-0.5 w-3.5'} ${FLOW_BG[flow]}`} />
       {children}
     </span>
   )

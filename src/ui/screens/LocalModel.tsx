@@ -109,7 +109,7 @@ export function LocalModel() {
           <span className="text-caption text-negative">{state.reason}</span>
         )}
 
-        <span className="ml-auto flex items-center gap-2">
+        <span className="ms-auto flex items-center gap-2">
           {state.kind !== 'off' && (
             <Button size="sm" variant="ghost" onClick={() => choose(undefined)}>
               Turn off
@@ -223,7 +223,7 @@ function RuntimeBlock({
                     onChange={() => onChoose(provider)}
                   />
                   <span className={selected ? 'font-medium' : undefined}>{choice.model.label}</span>
-                  <span className="ml-auto text-caption text-ink-secondary tabular-nums">
+                  <span className="ms-auto text-caption text-ink-secondary tabular-nums">
                     {choice.model.sizeBytes === undefined
                       ? 'size not stated'
                       : formatBytes(choice.model.sizeBytes)}

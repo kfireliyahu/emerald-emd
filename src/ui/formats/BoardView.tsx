@@ -13,6 +13,7 @@ import { Conversation, selects } from '@/ui/formats/conversation.ts'
 import { cardChoosable, chosenCards } from '@/ui/formats/lineColumns.ts'
 import { memberText, toneOf } from '@/ui/formats/tone.ts'
 import { Flip } from '@/ui/motion/Flip.tsx'
+import { arrowStep } from '@/ui/direction.ts'
 
 /**
  * **A board** — M27 U3, D-301.
@@ -129,10 +130,10 @@ export function BoardView({
           </span>
         )}
         {movable && (
-          <span className="ml-auto">Move a card to change its state. The move is a write, and a session can make it too.</span>
+          <span className="ms-auto">Move a card to change its state. The move is a write, and a session can make it too.</span>
         )}
         {format !== undefined && onColumns !== undefined && (
-          <span className={movable ? '' : 'ml-auto'}>
+          <span className={movable ? '' : 'ms-auto'}>
             <ColumnsChoice formats={[cardChoosable(format, board)]} chosen={columns} onChange={onColumns} />
           </span>
         )}
@@ -175,7 +176,7 @@ export function BoardView({
               <header className="flex items-center gap-2 px-1 pt-1 pb-2">
                 <span className="fc-dot" data-tone={toneOf(lane.member)} aria-hidden />
                 <span className="fc-label text-ink">{lane.member === undefined ? 'No value' : memberText(lane.member)}</span>
-                <span className="ml-auto font-mono text-caption text-ink-secondary tabular-nums">
+                <span className="ms-auto font-mono text-caption text-ink-secondary tabular-nums">
                   {String(lane.rows.length)}
                 </span>
               </header>
@@ -219,7 +220,7 @@ export function BoardView({
                               <Bidi className="min-w-0 truncate">{name}</Bidi>
                             </span>
                             {movable && (
-                              <span className="relative z-10 ml-auto flex gap-1">
+                              <span className="relative z-10 ms-auto flex gap-1">
                                 <MoveButton side="left" name={name} to={step(row, -1)} onMove={(member) => onMove(row, member)} />
                                 <MoveButton side="right" name={name} to={step(row, 1)} onMove={(member) => onMove(row, member)} />
                               </span>
@@ -230,7 +231,7 @@ export function BoardView({
                             data-row={row.id}
                             // The demo tour's anchor (M33 U6): `card-M2 U3`.
                             data-tour={`card-${name}`}
-                            className="fc-card-title line-clamp-3 text-left leading-snug font-medium after:absolute after:inset-0 after:content-[''] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+                            className="fc-card-title line-clamp-3 text-start leading-snug font-medium after:absolute after:inset-0 after:content-[''] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
                             onClick={(event) => {
                               // Ctrl-click selects the card for the conversation (M51 U7).
                               if (format !== undefined && selects(event, conversation)) selection?.toggle(format, row)
@@ -238,7 +239,7 @@ export function BoardView({
                             }}
                             onKeyDown={(event) => {
                               if (!movable || (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')) return
-                              const next = step(row, event.key === 'ArrowLeft' ? -1 : 1)
+                              const next = step(row, arrowStep(event.key) === 1 ? 1 : -1)
                               if (next === undefined) return
                               event.preventDefault()
                               onMove(row, next)

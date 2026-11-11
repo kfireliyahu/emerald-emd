@@ -120,7 +120,7 @@ function NumericInput({
 }
 
 /** The look of a figure in a table cell: right-aligned, its own width. */
-export const FIGURE_FIELD = `${FIELD} w-28 text-right tabular-nums`
+export const FIGURE_FIELD = `${FIELD} w-28 text-end tabular-nums`
 
 /** The look of a word in a table cell. */
 export const WORD_FIELD = `${FIELD} w-full`

@@ -50,7 +50,7 @@ export function SplitPurchases({
             ? 'A purchase you are still paying for'
             : `${candidates.length} purchases you are still paying for`}
         </span>
-        <label className="ml-auto flex items-center gap-2 text-caption text-ink-tertiary">
+        <label className="ms-auto flex items-center gap-2 text-caption text-ink-tertiary">
           Offer purchases split into more than
           <select
             className={`${SELECT} h-6 py-0 text-caption`}
@@ -88,13 +88,13 @@ export function SplitPurchases({
 
           <span className="min-w-40 flex-1">
             <Bidi className="font-medium">{candidate.merchantRaw}</Bidi>
-            <span className="ml-2 text-caption text-ink-tertiary tabular-nums">
+            <span className="ms-2 text-caption text-ink-tertiary tabular-nums">
               {candidate.slicesSeen} of {candidate.paymentCount} charged ·{' '}
               {formatMoney(candidate.sliceAmount)} each
             </span>
           </span>
 
-          <span className="w-44 text-right">
+          <span className="w-44 text-end">
             <span className="tabular-nums">{formatMoney(candidate.principal.amount)}</span>
             <span className="block text-caption text-ink-tertiary">
               {candidate.principal.basis === 'STATED'
@@ -103,7 +103,7 @@ export function SplitPurchases({
             </span>
           </span>
 
-          <span className="w-32 text-right text-caption text-ink-tertiary tabular-nums">
+          <span className="w-32 text-end text-caption text-ink-tertiary tabular-nums">
             {formatMoney(candidate.chargedSoFar)} paid so far
           </span>
 

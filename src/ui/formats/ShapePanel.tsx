@@ -286,7 +286,7 @@ export function ShapePanel({
               : 'Nothing is written until you create it.'}
         </span>
         {onCopy !== undefined && (
-          <span className="ml-auto">
+          <span className="ms-auto">
             <Button
               variant="ghost"
               size="sm"

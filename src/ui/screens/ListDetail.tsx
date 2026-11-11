@@ -181,8 +181,8 @@ export function ListDetail({ children, overlay = false }: { children: ReactNode;
               : overlay
                 ? // Over the list rather than beside it: the list keeps its whole width, which a table of
                   // seven columns needs, and the drawer is something you look at and put away.
-                  'fc-pop-enter absolute top-0 right-0 bottom-0 z-[15] flex min-h-0 w-[30rem] max-w-full flex-col border-l border-hairline-strong bg-background shadow-pop'
-                : 'fc-view-enter flex min-h-0 w-[30rem] max-w-[45%] min-w-[20rem] shrink-0 flex-col border-l border-hairline'
+                  'fc-pop-enter absolute top-0 end-0 bottom-0 z-[15] flex min-h-0 w-[30rem] max-w-full flex-col border-s border-hairline-strong bg-background shadow-pop'
+                : 'fc-view-enter flex min-h-0 w-[30rem] max-w-[45%] min-w-[20rem] shrink-0 flex-col border-s border-hairline'
           }
           aria-label={overlay ? 'Details' : undefined}
         >
@@ -222,7 +222,7 @@ export function ClosePane() {
       type="button"
       onClick={close}
       title="Close this pane"
-      className="ml-auto shrink-0 rounded px-2 py-0.5 text-caption text-ink-tertiary transition-colors duration-[var(--duration-micro)] hover:bg-surface hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      className="ms-auto shrink-0 rounded px-2 py-0.5 text-caption text-ink-tertiary transition-colors duration-[var(--duration-micro)] hover:bg-surface hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
       Close
     </button>

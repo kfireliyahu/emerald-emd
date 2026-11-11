@@ -31,6 +31,7 @@ export function AmountHistory({ months }: { months: readonly CandidateMonth[] })
 
   return (
     <svg
+      direction="ltr"
       viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
       className="h-7 w-45 shrink-0"
       role="img"

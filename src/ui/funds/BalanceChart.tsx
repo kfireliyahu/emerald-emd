@@ -77,7 +77,7 @@ export function BalanceChart({
   const last = snapshots[snapshots.length - 1]
 
   return (
-    <figure className="m-0 max-w-3xl">
+    <figure className="m-0 max-w-3xl" dir="ltr">
       <svg
         viewBox={`0 0 ${WIDTH} ${BALANCE_HEIGHT + MOVEMENT_HEIGHT}`}
         className="w-full"

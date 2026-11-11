@@ -17,6 +17,7 @@ import { Tag } from '@/ui/wealth/parts.tsx'
 
 import { currentGuideOpen, landOn, setGuideOpen, useGuideOpen } from './guideState.ts'
 import { reopenedFrom, useGuide, type OpenGuide } from './useGuide.ts'
+import { arrowStep } from '@/ui/direction.ts'
 
 /**
  * **Guide me** — a small dialog that walks the real screens (M28 U9, D-330),
@@ -144,12 +145,9 @@ function Walk({ guide, onToast }: { readonly guide: OpenGuide; readonly onToast:
         event.preventDefault()
         event.stopImmediatePropagation()
         putAway()
-      } else if (event.key === 'ArrowRight') {
+      } else if (arrowStep(event.key) !== 0) {
         event.preventDefault()
-        go(move(steps, checks, at, 1))
-      } else if (event.key === 'ArrowLeft') {
-        event.preventDefault()
-        go(move(steps, checks, at, -1))
+        go(move(steps, checks, at, arrowStep(event.key) === 1 ? 1 : -1))
       }
     }
     window.addEventListener('keydown', onKey, true)
@@ -181,7 +179,7 @@ function Walk({ guide, onToast }: { readonly guide: OpenGuide; readonly onToast:
         style={HIDDEN}
       >
         <span ref={arrow} className="fc-guide-arrow" />
-        <div className="flex items-center gap-2.5 border-b border-hairline py-2 pr-2 pl-3.5">
+        <div className="flex items-center gap-2.5 border-b border-hairline py-2 pe-2 ps-3.5">
           <span className="fc-label flex-1">
             {step.where} · {index + 1} of {count}
           </span>

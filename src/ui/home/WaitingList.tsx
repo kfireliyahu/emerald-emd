@@ -378,14 +378,14 @@ function Head({
           {title}
           <small className="block text-caption text-ink-secondary">{why}</small>
         </span>
-        <span className="ml-auto flex flex-wrap items-center gap-2">
+        <span className="ms-auto flex flex-wrap items-center gap-2">
           {bulk}
           {children}
         </span>
       </div>
-      {shown !== undefined && shown.length > 0 && <div className="pl-5">{shown}</div>}
+      {shown !== undefined && shown.length > 0 && <div className="ps-5">{shown}</div>}
       {rows !== undefined && rows.length > 3 && (
-        <div className="pb-2.5 pl-5">
+        <div className="pb-2.5 ps-5">
           <Button variant="ghost" size="sm" onClick={() => setAll((current) => !current)}>
             {all ? 'Show fewer' : `Show ${String(rows.length - 3)} more`}
           </Button>

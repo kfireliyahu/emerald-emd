@@ -209,7 +209,7 @@ export function Home() {
                 ? 'The new rows flash below. Nothing waits for an answer.'
                 : `${String(waiting)} ${waiting === 1 ? 'answer waits' : 'answers wait'}, below.`}
             </span>
-            <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setWrote(undefined)}>
+            <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setWrote(undefined)}>
               Dismiss
             </Button>
           </div>
@@ -271,7 +271,7 @@ export function Home() {
                 <Key flow="in">Came in</Key>
                 <Key flow="out">Went out</Key>
                 <span>Saved and taxes are in the figures above and the table below</span>
-                <span className="ml-auto">A column opens its month · ← → page</span>
+                <span className="ms-auto">A column opens its month · ← → page</span>
               </Legend>
             </div>
 
@@ -291,7 +291,7 @@ export function Home() {
                         type="button"
                         onClick={() => drillTo(line.categoryId ?? UNCATEGORIZED_OPTION)}
                         data-tour={`went-${line.categoryId ?? 'none'}`}
-                        className="grid h-8 w-full grid-cols-[minmax(0,1fr)_120px_100px] items-center gap-3 border-b border-hairline text-left transition-colors duration-[var(--duration-micro)] hover:bg-surface"
+                        className="grid h-8 w-full grid-cols-[minmax(0,1fr)_120px_100px] items-center gap-3 border-b border-hairline text-start transition-colors duration-[var(--duration-micro)] hover:bg-surface"
                       >
                         <span title={line.name} className="flex min-w-0 items-baseline gap-x-1">
                           <Bidi className="min-w-0 truncate">{line.name}</Bidi>
@@ -306,7 +306,7 @@ export function Home() {
                           className={`h-1.5 ${none ? 'fc-bar-unknown' : 'bg-ink/70'}`}
                           style={{ width: `${String(Math.max(4, Math.round((120 * line.outflow.minor) / Math.max(1, top))))}px` }}
                         />
-                        <span className="text-right tabular-nums">{formatMoney(line.outflow)}</span>
+                        <span className="text-end tabular-nums">{formatMoney(line.outflow)}</span>
                       </button>
                     )
                   })}
@@ -328,7 +328,7 @@ export function Home() {
                           key={line.categoryId}
                           type="button"
                           onClick={() => drillTo(line.categoryId)}
-                          className="grid h-8 w-full grid-cols-[minmax(0,1fr)_120px_130px] items-center gap-3 border-b border-hairline text-left transition-colors duration-[var(--duration-micro)] hover:bg-surface"
+                          className="grid h-8 w-full grid-cols-[minmax(0,1fr)_120px_130px] items-center gap-3 border-b border-hairline text-start transition-colors duration-[var(--duration-micro)] hover:bg-surface"
                         >
                           <span className="flex min-w-0">
                             <Bidi className="min-w-0 truncate">{line.name}</Bidi>
@@ -339,7 +339,7 @@ export function Home() {
                               style={{ width: `${String(Math.min(100, Math.round((100 * line.spent.minor) / Math.max(1, line.budget.minor))))}%` }}
                             />
                           </span>
-                          <span className={`text-right tabular-nums ${line.over ? FLOW_TEXT.out : ''}`}>
+                          <span className={`text-end tabular-nums ${line.over ? FLOW_TEXT.out : ''}`}>
                             {formatMoney(line.spent)} / {formatMoney(line.budget)}
                           </span>
                         </button>
@@ -404,7 +404,7 @@ export function Home() {
                           )}
                         </span>
                       </span>
-                      <span className="text-right tabular-nums">{formatMoney(line.amount)}</span>
+                      <span className="text-end tabular-nums">{formatMoney(line.amount)}</span>
                     </div>
                   ))}
                   <Total label="Came in" flow="in" value={formatMoney(report.detail.total)} />
@@ -429,7 +429,7 @@ export function Home() {
                         <td className="px-3 text-ink-secondary">
                           <Bidi>{one.categoryPath ?? 'Uncategorized'}</Bidi>
                         </td>
-                        <td className="px-3 text-right tabular-nums">{formatMoney(one.amount)}</td>
+                        <td className="px-3 text-end tabular-nums">{formatMoney(one.amount)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -492,7 +492,7 @@ function SplitRow({ label, note, value }: { label: string; note?: string; value:
         {label}
         {note !== undefined && <span className="text-caption text-ink-secondary"> · {note}</span>}
       </span>
-      <span className="text-right tabular-nums">{value}</span>
+      <span className="text-end tabular-nums">{value}</span>
     </div>
   )
 }
@@ -503,13 +503,13 @@ function SavedRow({ name, note, value, onClick }: { name: string; note: string; 
     <button
       type="button"
       onClick={onClick}
-      className="grid h-8 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-hairline text-left transition-colors duration-[var(--duration-micro)] hover:bg-surface"
+      className="grid h-8 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-hairline text-start transition-colors duration-[var(--duration-micro)] hover:bg-surface"
     >
       <span title={name} className="flex min-w-0 items-baseline gap-x-1">
         <Bidi className="min-w-0 truncate">{name}</Bidi>
         <span className="shrink-0 text-caption text-ink-secondary">{note}</span>
       </span>
-      <span className="text-right tabular-nums">{value}</span>
+      <span className="text-end tabular-nums">{value}</span>
     </button>
   )
 }
@@ -518,7 +518,7 @@ function Total({ label, flow, value }: { label: string; flow: 'in' | 'out' | 'sa
   return (
     <div className="grid h-10 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-t border-ink font-medium">
       <span>{label}</span>
-      <span className={`text-right tabular-nums ${FLOW_TEXT[flow]}`}>{value}</span>
+      <span className={`text-end tabular-nums ${FLOW_TEXT[flow]}`}>{value}</span>
     </div>
   )
 }
@@ -561,12 +561,12 @@ function AllMonths({
         <table className="w-full border-separate border-spacing-0">
           <thead>
             <tr className="text-label text-ink-secondary uppercase *:sticky *:top-0 *:z-10 *:border-b *:border-hairline *:bg-background">
-              <th className="px-3 py-2 text-left font-medium">Month</th>
-              <th className="px-3 py-2 text-right font-medium">Came in</th>
-              <th className="px-3 py-2 text-right font-medium">Went out</th>
-              <th className="px-3 py-2 text-right font-medium">Saved</th>
-              <th className="px-3 py-2 text-right font-medium">Taxes</th>
-              <th className="px-3 py-2 text-right font-medium">Left over</th>
+              <th className="px-3 py-2 text-start font-medium">Month</th>
+              <th className="px-3 py-2 text-end font-medium">Came in</th>
+              <th className="px-3 py-2 text-end font-medium">Went out</th>
+              <th className="px-3 py-2 text-end font-medium">Saved</th>
+              <th className="px-3 py-2 text-end font-medium">Taxes</th>
+              <th className="px-3 py-2 text-end font-medium">Left over</th>
             </tr>
           </thead>
           <tbody>
@@ -591,28 +591,28 @@ function AllMonths({
                     <button
                       type="button"
                       aria-current={on ? 'true' : undefined}
-                      className="cursor-pointer text-left text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                      className="cursor-pointer text-start text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
                     >
                       {formatYearMonth(one.period)}
                     </button>
                     {missing.length > 0 && (
-                      <span className="fc-state ml-2" data-tone="negative">
+                      <span className="fc-state ms-2" data-tone="negative">
                         <span className="fc-state-dot" />
                         part
                       </span>
                     )}
                   </td>
-                  <td className="px-3 text-right tabular-nums">{formatMoney(one.income)}</td>
-                  <td className="px-3 text-right tabular-nums">{formatMoney(one.expenses)}</td>
-                  <td className="px-3 text-right tabular-nums">{formatMoney(one.saved)}</td>
-                  <td className="px-3 text-right tabular-nums">
+                  <td className="px-3 text-end tabular-nums">{formatMoney(one.income)}</td>
+                  <td className="px-3 text-end tabular-nums">{formatMoney(one.expenses)}</td>
+                  <td className="px-3 text-end tabular-nums">{formatMoney(one.saved)}</td>
+                  <td className="px-3 text-end tabular-nums">
                     {tax === undefined ? <span className="text-ink-secondary">—</span> : formatMoney(tax)}
                   </td>
-                  <td className="px-3 text-right tabular-nums">{formatMoney(one.balance)}</td>
+                  <td className="px-3 text-end tabular-nums">{formatMoney(one.balance)}</td>
                 </tr>,
                 ...missing.map((gap) => (
                   <tr key={`${key}:${gap.accountId}`} className="h-10 text-ink-secondary *:border-b *:border-hairline">
-                    <td className="py-0 pr-3 pl-7 whitespace-nowrap">
+                    <td className="py-0 pe-3 ps-7 whitespace-nowrap">
                       <Bidi>{accountLabel(gap)}</Bidi> · {formatYearMonth(gap.period)}
                     </td>
                     {/* Read files sits in the line's own cell, never a column of

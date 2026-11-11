@@ -217,9 +217,9 @@ export function Shown(props: ShownProps) {
       return (
         <span className="flex min-h-8 w-full items-center gap-2.5">
           <span className="relative h-1.5 min-w-[60px] flex-1 bg-hairline" aria-hidden>
-            <span className="absolute inset-y-0 left-0 bg-ink" style={{ width: `${String(share * 100)}%` }} />
+            <span className="absolute inset-y-0 start-0 bg-ink" style={{ width: `${String(share * 100)}%` }} />
           </span>
-          <span className={`min-w-[44px] text-right text-caption font-medium tabular-nums ${mark}`}>
+          <span className={`min-w-[44px] text-end text-caption font-medium tabular-nums ${mark}`}>
             {figureWords(column, value, beside)}
           </span>
         </span>
@@ -262,7 +262,7 @@ export function Shown(props: ShownProps) {
             value={figureOf(column, value) ?? column.minimum ?? 0}
             readOnly
           />
-          <span className="min-w-[44px] text-right font-medium tabular-nums">{figureWords(column, value, beside)}</span>
+          <span className="min-w-[44px] text-end font-medium tabular-nums">{figureWords(column, value, beside)}</span>
         </span>
       )
 
@@ -594,14 +594,14 @@ export function PickMenu({
         <Chevron />
       </button>
       {open && (
-        <span role="menu" className="fc-pop-enter absolute top-full left-0 z-20 flex min-w-[160px] flex-col border border-hairline-strong bg-elevated py-1 shadow-[var(--shadow-pop)]">
+        <span role="menu" className="fc-pop-enter absolute top-full start-0 z-20 flex min-w-[160px] flex-col border border-hairline-strong bg-elevated py-1 shadow-[var(--shadow-pop)]">
           {choices.map((each) => (
             <button
               key={each.value}
               type="button"
               role="menuitemradio"
               aria-checked={each.value === value}
-              className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-body hover:bg-accent-soft"
+              className="flex w-full items-center gap-2.5 px-3 py-1.5 text-start text-body hover:bg-accent-soft"
               onClick={() => {
                 setOpen(false)
                 onPick(each.value)

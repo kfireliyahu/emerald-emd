@@ -245,7 +245,7 @@ function AmountBound({
       inputMode="decimal"
       // Unparseable text is ignored rather than guessed at, so the field says
       // it is being ignored instead of leaving the list quietly wrong.
-      className={`${FIELD} w-full text-right tabular-nums ${invalid ? 'text-negative' : 'text-ink'}`}
+      className={`${FIELD} w-full text-end tabular-nums ${invalid ? 'text-negative' : 'text-ink'}`}
     />
   )
 }

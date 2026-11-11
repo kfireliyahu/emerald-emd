@@ -69,7 +69,7 @@ export function TestBox({
   const normalized = subject.merchantNormalized
 
   return (
-    <aside className="flex w-full shrink-0 flex-col gap-3 border-t border-hairline px-6 py-4 lg:w-96 lg:border-t-0 lg:border-l">
+    <aside className="flex w-full shrink-0 flex-col gap-3 border-t border-hairline px-6 py-4 lg:w-96 lg:border-t-0 lg:border-s">
       <div>
         <h2 className="text-label text-ink-tertiary uppercase">Test box</h2>
         <p className="mt-1 text-caption text-ink-tertiary">

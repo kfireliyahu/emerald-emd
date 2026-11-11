@@ -173,7 +173,7 @@ function Row({
 
         {/* *An icon is an action*, seen at rest (M54 F4): a row's actions
             are not hidden until it is hovered. */}
-        <span className="ml-auto flex items-center gap-1">
+        <span className="ms-auto flex items-center gap-1">
           <IconAction label="Duplicate" onClick={onDuplicate}>
             <path d="M8 8h11v11H8z" />
             <path d="M5 16V5h11" />
@@ -186,7 +186,7 @@ function Row({
 
       <div className="mt-1.5 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-caption">
         <ColumnSummary mapping={mapping} />
-        <span className="ml-auto whitespace-nowrap text-ink-secondary tabular-nums">{usage(mapping)}</span>
+        <span className="ms-auto whitespace-nowrap text-ink-secondary tabular-nums">{usage(mapping)}</span>
       </div>
     </li>
   )
@@ -270,7 +270,7 @@ function ColumnSummary({ mapping }: { mapping: SavedMapping }) {
 
         return (
           <span key={column} className="whitespace-nowrap">
-            {index > 0 && <span className="mr-2 text-ink-secondary">·</span>}
+            {index > 0 && <span className="me-2 text-ink-secondary">·</span>}
             {/* Header → role, the arrow the separator (M54 F4). */}
             {header !== undefined && (
               <>

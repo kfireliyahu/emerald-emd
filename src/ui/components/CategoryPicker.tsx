@@ -205,7 +205,7 @@ export function CategoryPicker({
               ? `${current.path} · change the category (C)`
               : current.path
         }
-        className={`group inline-flex max-w-full items-center gap-1.5 text-left transition-colors duration-[var(--duration-micro)] hover:bg-surface ${
+        className={`group inline-flex max-w-full items-center gap-1.5 text-start transition-colors duration-[var(--duration-micro)] hover:bg-surface ${
           outlined ? 'border border-hairline-strong px-1.5 py-0.5 hover:border-accent' : 'rounded-md px-2 py-0.5'
         } ${current === undefined ? 'text-ink-tertiary' : 'text-ink'}`}
       >
@@ -228,7 +228,7 @@ export function CategoryPicker({
       </button>
 
       {open && (
-        <div className={`fc-pop-enter absolute z-40 mt-1 w-72 rounded-lg border border-hairline bg-elevated shadow-pop ${outlined ? 'left-0' : ''}`}>
+        <div className={`fc-pop-enter absolute z-40 mt-1 w-72 rounded-lg border border-hairline bg-elevated shadow-pop ${outlined ? 'start-0' : ''}`}>
           {draft === undefined ? (
             <>
               <input
@@ -282,7 +282,7 @@ export function CategoryPicker({
                           <Bidi className="min-w-0 truncate text-ink">{wanted}</Bidi>
                           <span className="shrink-0">”</span>
                         </span>
-                        <span className="ml-auto shrink-0 text-caption text-ink-tertiary">new</span>
+                        <span className="ms-auto shrink-0 text-caption text-ink-tertiary">new</span>
                       </>
                     ) : (
                       <span className="min-w-0 truncate font-medium text-accent">+ New…</span>
@@ -489,7 +489,7 @@ function Option({
           event.preventDefault()
           onSelect()
         }}
-        className={`flex w-full items-center gap-1.5 px-3 py-1.5 text-left transition-colors duration-[var(--duration-micro)] ${
+        className={`flex w-full items-center gap-1.5 px-3 py-1.5 text-start transition-colors duration-[var(--duration-micro)] ${
           highlighted ? 'bg-surface' : ''
         } ${selected === true ? 'text-ink' : ''} hover:bg-surface`}
       >

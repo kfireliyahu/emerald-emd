@@ -1093,7 +1093,7 @@ function FileRow({
           </label>
         )}
         {reviewed.writable && plan !== undefined && reconciles(plan) && <Chip>reconciled</Chip>}
-        <span className="ml-auto flex items-center gap-1">
+        <span className="ms-auto flex items-center gap-1">
           {editing === undefined && (
             <Button size="sm" variant="ghost" onClick={() => onEdit(fresh())}>
               Change
@@ -1604,7 +1604,7 @@ function ReaderList({
             </span>
           )}
           {forgetting === reader.signature ? (
-            <span className="ml-auto flex items-center gap-2">
+            <span className="ms-auto flex items-center gap-2">
               <span className="text-ink-secondary">
                 Forget it? The entries it wrote stay.
               </span>
@@ -1624,7 +1624,7 @@ function ReaderList({
             </span>
           ) : (
             renaming?.signature !== reader.signature && (
-              <span className="ml-auto flex items-center gap-1">
+              <span className="ms-auto flex items-center gap-1">
                 <IconAction
                   label="Rename"
                   onClick={() => setRenaming({ signature: reader.signature, text: reader.name ?? '' })}

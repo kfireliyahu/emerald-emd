@@ -133,7 +133,7 @@ export function FormatDoors({
               <div
                 data-tour={`door-${door.key}`}
                 aria-disabled="true"
-                className="flex h-full w-full flex-col items-start gap-2 rounded-lg border border-dashed border-hairline-strong p-5 text-left"
+                className="flex h-full w-full flex-col items-start gap-2 rounded-lg border border-dashed border-hairline-strong p-5 text-start"
               >
                 <span className="text-ink-secondary">{door.glyph}</span>
                 <span className="font-medium text-ink-secondary">{door.title}</span>
@@ -145,7 +145,7 @@ export function FormatDoors({
                 type="button"
                 data-tour={`door-${door.key}`}
                 onClick={door.onChoose}
-                className="flex h-full w-full flex-col items-start gap-2 rounded-lg border border-hairline-strong bg-elevated p-5 text-left transition-colors duration-[var(--duration-micro)] hover:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+                className="flex h-full w-full flex-col items-start gap-2 rounded-lg border border-hairline-strong bg-elevated p-5 text-start transition-colors duration-[var(--duration-micro)] hover:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               >
                 {/* `accent` marks what you can act on, and a door is nothing but
                     something to act on (D-125). No figure is coloured here. */}

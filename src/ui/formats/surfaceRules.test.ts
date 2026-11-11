@@ -120,8 +120,8 @@ const HELD_ELSEWHERE = [
   'h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-ink outline-none',
   // A dashboard block's resize edges: the 2px `accent` rule inside them shows on focus.
   // Its corner draws the ring every other stop does (M54 F3), so it is not here.
-  'group/edge absolute top-0 -right-1 z-10 flex h-full w-2 cursor-ew-resize',
-  'group/edge absolute -bottom-1 left-0 z-10 flex h-2 w-full cursor-ns-resize',
+  'group/edge absolute top-0 -end-1 z-10 flex h-full w-2 cursor-ew-resize',
+  'group/edge absolute -bottom-1 start-0 z-10 flex h-2 w-full cursor-ns-resize',
   // A rail folder's filter: its label turns its rule `accent` on focus-within (M54 U4).
   'w-full min-w-0 border-0 bg-transparent p-0 text-caption text-ink outline-none placeholder:text-ink-secondary',
   // A rail entry being renamed: the field exists only while it has focus, and its rule is `accent` throughout.
@@ -421,7 +421,7 @@ describe('the formats and rows surface, swept (M54 F2)', () => {
     const board = readFileSync('src/ui/formats/BoardView.tsx', 'utf8')
     expect(board).toMatch(/fc-board-card relative /)
     expect(board).toMatch(/fc-card-title [^"]*after:absolute after:inset-0/)
-    expect(board).toContain('relative z-10 ml-auto flex')
+    expect(board).toContain('relative z-10 ms-auto flex')
   })
 })
 
@@ -543,7 +543,7 @@ describe('intake, swept (M54 F4)', () => {
   // *The mapper shows the raw cell* (D-531): mono, numbers right, mapped ink, unmapped ink-secondary.
   it('draws the intake grid’s cells as the raw cells they are', () => {
     const panel = readFileSync('src/ui/formats/IntakePanel.tsx', 'utf8')
-    expect(panel).toMatch(/px-2 py-1 font-mono \$\{figures\[index\] === true \? 'text-right tabular-nums'/)
+    expect(panel).toMatch(/px-2 py-1 font-mono \$\{figures\[index\] === true \? 'text-end tabular-nums'/)
     expect(panel).toContain(`bound.has(index) ? 'text-ink' : 'text-ink-secondary'`)
     expect(panel).not.toContain('${FIELD} w-full min-w-max')
   })
@@ -626,7 +626,7 @@ describe('the rail, the palette and the way back, swept (M54 F5)', () => {
     const toggle = readFileSync('src/ui/components/ThemeToggle.tsx', 'utf8')
     expect(toggle).not.toMatch(/shadow-/)
     expect(toggle).toContain('tabIndex={chosen ? 0 : -1}')
-    expect(toggle).toMatch(/event\.key === 'ArrowRight'/)
+    expect(toggle).toContain('arrowStep(event.key)')
     expect(toggle).not.toMatch(/hover:bg-surface/)
   })
 
@@ -805,6 +805,6 @@ describe('the ledger screens a stranger meets, swept (M54 F13)', () => {
     expect(grid).toContain('className={`${ROLE} ${role === undefined ?')
     expect(grid).toContain("? 'text-ink-secondary'")
     expect(grid).toContain('text-label text-ink-secondary select-none')
-    expect(readFileSync('src/ui/import/PreviewStrip.tsx', 'utf8')).toContain('<span className="fc-state ml-2 align-middle">')
+    expect(readFileSync('src/ui/import/PreviewStrip.tsx', 'utf8')).toContain('<span className="fc-state ms-2 align-middle">')
   })
 })

@@ -54,7 +54,8 @@ and `<select>`s.
   --document <custom|project|demo>.emd --routes <every route of the surface> --themes light,dark`
   runs `window.emeraldProbe()` (src/ui/probe.ts) in an offscreen window — text under AA per theme,
   type off the ramp, controls with no name or only a placeholder, round fields, `<select>`s, native
-  date inputs, `h1`s and skipped levels, a page wider than its window — and needs no pane. In M54
+  date inputs, `h1`s and skipped levels, a page wider than its window — and needs no pane; `--dir rtl`
+  measures the Hebrew mirror too (the rail's side, anything cut off sideways; M60 U3, D-586). In M54
   six units each wrote that helper again, about 2,000 characters, and re-sent it after every
   reload. Extend `probe.ts` when a check is missing, rather than writing one in the page.
   `javascript_tool` is for what it does not measure (an order, a state after a click).

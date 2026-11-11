@@ -120,7 +120,7 @@ export function Mapper({
                 const key = bound.get(index)
                 const header = table.rows[reading.headerRow]?.[index]
                 return (
-                  <th key={index} className={`p-1 align-top font-normal ${figures[index] === true ? 'text-right' : 'text-left'}`}>
+                  <th key={index} className={`p-1 align-top font-normal ${figures[index] === true ? 'text-end' : 'text-start'}`}>
                     {/* *The mapper shows the raw cell* (D-531): the role is a small
                         label at rest, a menu on focus or a click. A link takes a
                         cell naming its row exactly (D-261); a format it cannot
@@ -161,7 +161,7 @@ export function Mapper({
                 {indexes.map((index) => (
                   <td
                     key={index}
-                    className={`px-2 py-1 font-mono ${figures[index] === true ? 'text-right tabular-nums' : 'text-left'} ${
+                    className={`px-2 py-1 font-mono ${figures[index] === true ? 'text-end tabular-nums' : 'text-start'} ${
                       bound.has(index) ? 'text-ink' : 'text-ink-secondary'
                     }`}
                   >

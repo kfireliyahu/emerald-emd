@@ -67,7 +67,7 @@ export function MonthChart({
   }
 
   return (
-    <figure ref={frame} className="m-0">
+    <figure ref={frame} className="m-0" dir="ltr">
       <svg
         viewBox={`0 0 ${String(W)} ${String(height)}`}
         className="block h-auto w-full overflow-visible"

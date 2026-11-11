@@ -148,7 +148,7 @@ export function ReapplyPanel({
           Only rows with no category
         </label>
 
-        <Button variant="ghost" size="sm" className="ml-auto" onClick={onClose}>
+        <Button variant="ghost" size="sm" className="ms-auto" onClick={onClose}>
           Close
         </Button>
       </div>

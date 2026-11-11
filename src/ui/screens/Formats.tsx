@@ -160,7 +160,7 @@ function Row({
 
         {/* Quiet until the row is hovered or something in it has focus, and kept
             in the DOM so keyboard focus still reaches it. */}
-        <span className="ml-auto flex items-center gap-x-3 text-caption text-ink-secondary opacity-0 transition-opacity duration-[var(--duration-micro)] group-hover:opacity-100 focus-within:opacity-100">
+        <span className="ms-auto flex items-center gap-x-3 text-caption text-ink-secondary opacity-0 transition-opacity duration-[var(--duration-micro)] group-hover:opacity-100 focus-within:opacity-100">
           <button type="button" onClick={onDelete} className="hover:text-negative">
             Delete
           </button>
@@ -169,7 +169,7 @@ function Row({
 
       <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-caption">
         <FieldSummary template={template} />
-        <span className="ml-auto whitespace-nowrap text-ink-secondary tabular-nums">
+        <span className="ms-auto whitespace-nowrap text-ink-secondary tabular-nums">
           {usage(template)}
         </span>
       </div>
@@ -229,7 +229,7 @@ function FieldSummary({ template }: { template: DocumentTemplate }) {
     <span className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
       {anchors.map((anchor, index) => (
         <span key={anchor.field} className="whitespace-nowrap">
-          {index > 0 && <span className="mr-2 text-ink-tertiary/60">·</span>}
+          {index > 0 && <span className="me-2 text-ink-tertiary/60">·</span>}
           <Bidi className="text-ink-secondary">{anchor.label}</Bidi>{' '}
           <span className="text-ink-secondary">
             {FIELD_LABEL[anchor.field] ?? anchor.field}

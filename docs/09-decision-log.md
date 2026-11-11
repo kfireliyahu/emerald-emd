@@ -488,6 +488,7 @@ written out here.
 | D-583 | 2026-11-11 | The app in Hebrew: one translation layer for the whole app, Hebrew for everything a ledger document shows after M59, a full right-to-left mirror with English unchanged, the language following the computer until Settings says otherwise and kept per machine, and M59 with M60 shipped as one desktop release after the maintainer tries both | M60 |
 | D-584 | 2026-11-11 | The translation layer is hand-rolled in `src/i18n/`: English the source with typed keys, Hebrew one file per area and held complete once it has one, the language the app's entry alone follows, Settings › Language a place of its own, and the shell given its words over the bridge | M60 |
 | D-585 | 2026-11-11 | The Hebrew screen's words are a `screen_hebrew` column on the term rows, one word per thing in both languages; a button is a verbal noun, and a word a statement prints is the screen's word | M60 |
+| D-586 | 2026-11-11 | Right to left by logical sides: every class and rule that names a side names the start or the end, a chart and a bar placed by measuring stay left to right, a key steps the way its buttons are drawn, and a figure reads as written inside Hebrew | M60 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1131,6 +1132,41 @@ Hebrew a payslip or statement prints, which is a different fact from what the sc
 **Rejected.** Writing the Hebrew into `printed_as` (two facts in one column, and a source document's
 word is not always the screen's); a separate glossary note (D-436: terms are rows); imperative
 buttons (*שמור*), which pick a gender or read as an order.
+## D-586 · 2026-11-11 · Right to left by logical sides: every class and rule that names a side names the start or the end, a chart and a bar placed by measuring stay left to right, a key steps the way its buttons are drawn, and a figure reads as written inside Hebrew <a id="d-586"></a>
+
+**Context.** D-583 point 3 asks for a full mirror in Hebrew with English unchanged, and M60 U1 put
+`<html lang dir>` on the page. `src/ui` named sides physically: 728 classes (`ml-`, `pr-`, `left-`,
+`border-l`, `rounded-r`, `text-right`) in 128 files, against some thirty logical ones, and a handful
+of rules in `tokens.css`.
+
+**Decision.** (M60 U3.)
+
+1. **Every class and rule that names a side names the start or the end** (`ms-`, `pe-`, `start-`,
+   `border-s`, `rounded-se`, `text-end`; `inset-inline-start`, `border-inline-start`), changed by one
+   codemod over `src/ui` and `src/App.tsx`. In English they compute to the same pixels: the ledger's
+   fifteen routes in both themes laid out identically before and after, every element's box hashed
+   by `probe:screens`. `src/ui/direction.test.ts` fails on a physical class in `src/ui`.
+2. **Time and anything placed by measuring stay left to right**: `Chart`, the home, paycheck, fund,
+   debt and goal charts, the plan bar, the cushion's bar, the paycheck waterfall and the connections
+   graph's plane carry `dir="ltr"`,
+   so their inline `left:` and their axes keep agreeing; `src/ui/charts/` may name sides. A menu
+   placed at a measured box is placed where it was; it stays on screen either way.
+3. **A pointing glyph mirrors** (`ActionGlyph`'s left, right, arrow and undo; the disclosure
+   chevrons, which turn the other way to open), and the month pager's slide arrives from the side
+   the earlier month is drawn on.
+4. **A key steps the way its buttons are drawn** (`src/ui/direction.ts`): in Hebrew ← is the next
+   month, the next lane, the next guide step and the next theme, as RowSheet already did for a column.
+5. **A figure reads as it is written inside Hebrew**: `.tabular-nums` takes its direction from what
+   it holds (`unicode-bidi: plaintext`), so `−₪3,980.50` keeps its minus and ₪ in front, and a
+   column of figures still sits at the line's end; Hebrew words beside a value take `Bidi`.
+6. **`probe:screens --dir rtl`** (or `--lang he`) measures the mirror on the demo: the rail's side,
+   anything cut off sideways, and the boxes' hash that shows two builds laid out alike.
+
+**Rejected.** Translating by an rtl stylesheet over the physical classes (`[dir=rtl] .ml-2 {…}`, every
+class twice); `dir="ltr"` on every SVG (a legend or an axis written in HTML beside it would still
+flip); wrapping all 319 `formatMoney` calls (the figure rule covers the columns, and the sentences are
+U4 and U5's, which translate them); invisible isolate marks inside `formatMoney` (a copied figure
+would carry them, and `src/core` would ask the page its direction).
 ## Related
 
 07 Roadmap · [conventions](./conventions.md) · review · `docs/memory.emd` (the `decision` rows)

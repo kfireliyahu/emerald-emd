@@ -116,7 +116,7 @@ export function DetailPanel({
   return (
     <aside
       aria-label="Transaction detail"
-      className="fc-pop-enter flex w-[23rem] shrink-0 flex-col overflow-y-auto border-l border-hairline bg-background"
+      className="fc-pop-enter flex w-[23rem] shrink-0 flex-col overflow-y-auto border-s border-hairline bg-background"
     >
       <div className="flex items-start gap-2 border-b border-hairline px-5 py-4">
         <div className="min-w-0">
@@ -130,7 +130,7 @@ export function DetailPanel({
           size="sm"
           onClick={onClose}
           aria-label="Close detail"
-          className="ml-auto"
+          className="ms-auto"
         >
           Close
         </Button>
@@ -138,7 +138,7 @@ export function DetailPanel({
 
       <div className="border-b border-hairline px-5 py-3">
         <Label>Category</Label>
-        <div className="-ml-2 mt-1">
+        <div className="-ms-2 mt-1">
           <CategoryPicker
             categories={categories}
             value={transaction.categoryId}
@@ -540,7 +540,7 @@ function HoldingField({
         </select>
         {holdingId !== '' && (
           <input
-            className={`${FIELD} w-24 text-right tabular-nums`}
+            className={`${FIELD} w-24 text-end tabular-nums`}
             value={quantity}
             inputMode="decimal"
             aria-label="How much of it"

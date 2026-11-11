@@ -85,7 +85,7 @@ export function CandidateCard({
           <label className="flex items-center gap-2 text-caption text-ink-secondary">
             Amount
             <input
-              className={`${FIELD} w-28 text-right tabular-nums`}
+              className={`${FIELD} w-28 text-end tabular-nums`}
               value={amountText}
               onChange={(event) => setAmountText(event.target.value)}
               aria-label="Expected amount"
@@ -119,7 +119,7 @@ export function CandidateCard({
         </div>
       ) : (
         <div className="flex items-center gap-2">
-          <span className="w-28 text-right text-secondary-number tabular-nums">
+          <span className="w-28 text-end text-secondary-number tabular-nums">
             {formatMoney(candidate.medianAmount)}
           </span>
           <Button

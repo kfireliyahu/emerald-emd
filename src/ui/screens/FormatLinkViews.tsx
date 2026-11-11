@@ -316,7 +316,7 @@ function Frame({
         <h1 className="text-body font-medium">
           <Bidi>{declaration.title}</Bidi>
         </h1>
-        {action !== undefined && <span className="ml-auto flex items-center gap-2">{action}</span>}
+        {action !== undefined && <span className="ms-auto flex items-center gap-2">{action}</span>}
       </div>
       <nav aria-label="Views" className="flex h-8 shrink-0 items-stretch gap-4 overflow-x-auto border-b border-hairline px-6">
         {tabs.slice(0, tabs.length - (declaration.rollups ?? []).length).map((tab) => (

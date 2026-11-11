@@ -463,7 +463,7 @@ export function Categories() {
                 }`}
               >
                 {TAB_LABEL[one]}
-                <span className="ml-1.5 font-mono text-caption text-ink-tertiary">
+                <span className="ms-1.5 font-mono text-caption text-ink-tertiary">
                   {visible.filter((category) => tabOf(category.kind) === one).length}
                 </span>
               </button>
@@ -498,7 +498,7 @@ export function Categories() {
           {problem !== undefined && (
             <div className="fc-pop-enter flex items-center gap-4 bg-surface px-3.5 py-2">
               <span className="text-negative">{problem}</span>
-              <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setProblem(undefined)}>
+              <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setProblem(undefined)}>
                 Dismiss
               </Button>
             </div>
@@ -565,8 +565,8 @@ export function Categories() {
                         handlers.onMenu({ x: event.clientX, y: event.clientY })
                       }}
                       aria-current={isSelected ? 'true' : undefined}
-                      className={`group/heading relative m-0 flex h-9 items-center gap-2.5 border-b border-hairline-strong pr-1.5 outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
-                        isSelected ? 'bg-accent-soft before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:bg-accent' : ''
+                      className={`group/heading relative m-0 flex h-9 items-center gap-2.5 border-b border-hairline-strong pe-1.5 outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
+                        isSelected ? 'bg-accent-soft before:absolute before:inset-y-0 before:start-0 before:w-0.5 before:bg-accent' : ''
                       } ${section.contextOnly ? 'text-ink-tertiary' : ''}`}
                     >
                       <button
@@ -611,7 +611,7 @@ export function Categories() {
                         <button
                           type="button"
                           onClick={() => setPicked(head.id)}
-                          className="fc-label flex min-w-0 text-left text-ink uppercase"
+                          className="fc-label flex min-w-0 text-start text-ink uppercase"
                         >
                           <Bidi className="min-w-0 truncate">{head.name}</Bidi>
                         </button>
@@ -625,7 +625,7 @@ export function Categories() {
                             ? 'unused'
                             : ''}
                       </span>
-                      <span className="ml-auto text-[13px] text-ink-secondary tabular-nums">
+                      <span className="ms-auto text-[13px] text-ink-secondary tabular-nums">
                         {total > 0 ? whole(money(total, currency)) : ''}
                       </span>
                       <span className="flex w-14 shrink-0 justify-end gap-0.5 opacity-0 transition-opacity duration-[var(--duration-micro)] group-hover/heading:opacity-100 group-focus-within/heading:opacity-100">
@@ -856,9 +856,9 @@ function Row({
         handlers.onMenu({ x: event.clientX, y: event.clientY })
       }}
       aria-current={selected ? 'true' : undefined}
-      className={`group relative grid h-10 grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_6rem_3.5rem] items-center gap-x-3.5 border-b border-hairline pr-1.5 outline-none transition-colors duration-[var(--duration-micro)] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
-        nested ? 'pl-[3.75rem]' : 'pl-9'
-      } ${selected ? 'bg-accent-soft before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:bg-accent' : 'hover:bg-surface'} ${
+      className={`group relative grid h-10 grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_6rem_3.5rem] items-center gap-x-3.5 border-b border-hairline pe-1.5 outline-none transition-colors duration-[var(--duration-micro)] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
+        nested ? 'ps-[3.75rem]' : 'ps-9'
+      } ${selected ? 'bg-accent-soft before:absolute before:inset-y-0 before:start-0 before:w-0.5 before:bg-accent' : 'hover:bg-surface'} ${
         contextOnly ? 'text-ink-tertiary' : ''
       }`}
     >
@@ -907,7 +907,7 @@ function Row({
         />
       </span>
 
-      <span className="text-right tabular-nums">
+      <span className="text-end tabular-nums">
         {month > 0 ? whole(money(month, currency)) : <span className="text-ink-tertiary">—</span>}
       </span>
 
@@ -1167,7 +1167,7 @@ function CategoryPanel({
                 key={rule.id}
                 type="button"
                 onClick={onRules}
-                className="flex h-[30px] items-center justify-between gap-3 border-b border-hairline text-left text-[13px] hover:text-accent"
+                className="flex h-[30px] items-center justify-between gap-3 border-b border-hairline text-start text-[13px] hover:text-accent"
               >
                 <span className="flex min-w-0">
                   <Bidi className="min-w-0 truncate">{rule.name}</Bidi>
@@ -1347,7 +1347,7 @@ function MonthlyTarget({
         }}
         placeholder="none"
         aria-label={`Plan bucket for ${category.name}`}
-        className={`${FIELD} h-7 w-24 text-right tabular-nums`}
+        className={`${FIELD} h-7 w-24 text-end tabular-nums`}
       />
     </label>
   )
@@ -1378,7 +1378,7 @@ function NewCategoryForm({
   }
 
   return (
-    <form onSubmit={submit} className="ml-auto flex flex-wrap items-center gap-2">
+    <form onSubmit={submit} className="ms-auto flex flex-wrap items-center gap-2">
       <input
         value={name}
         onChange={(event) => setName(event.target.value)}

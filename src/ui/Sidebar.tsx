@@ -85,7 +85,7 @@ export function Sidebar({ navigable }: { navigable: boolean }) {
     <nav
       aria-label="Sections"
       // The rail's two widths are measures of the layout, not steps (M54 F5).
-      className={`flex shrink-0 flex-col border-r border-hairline bg-surface py-2 transition-[width] duration-[var(--duration-base)] ease-[var(--ease-out)] ${
+      className={`flex shrink-0 flex-col border-e border-hairline bg-surface py-2 transition-[width] duration-[var(--duration-base)] ease-[var(--ease-out)] ${
         collapsed ? 'w-[56px]' : 'w-[200px]'
       }`}
     >
@@ -126,7 +126,7 @@ export function Sidebar({ navigable }: { navigable: boolean }) {
         {collapsed ? <ThemeCycleButton /> : <ThemeToggle />}
         {/* Nothing to collapse when there is nothing in the list. */}
         {navigable && (
-          <span className={`flex items-center gap-1 ${collapsed ? 'flex-col' : 'ml-auto'}`}>
+          <span className={`flex items-center gap-1 ${collapsed ? 'flex-col' : 'ms-auto'}`}>
             {guideFor(kept) !== undefined && <GuideButton />}
             <CollapseButton collapsed={preference} />
           </span>
@@ -190,7 +190,7 @@ function Section({
         {/* Work in progress under this section (a batch of slips being read, a
             document being read), shown where the work is, wherever you are. */}
         {!collapsed && busy && (
-          <span className="ml-auto flex" title="Working">
+          <span className="ms-auto flex" title="Working">
             <Working size={14} label={`${name}: working`} />
           </span>
         )}
@@ -202,7 +202,7 @@ function Section({
             {/* **A pack's formats under the pack's name** (M33 F3): a heading
                 where a group starts, not a link — the pack is not a place. */}
             {child.group !== undefined && child.group !== pages[index - 1]?.group && (
-              <span className="fc-row-enter flex h-7 min-w-0 items-end pr-3.5 pb-1 pl-10 text-caption text-ink-secondary">
+              <span className="fc-row-enter flex h-7 min-w-0 items-end pe-3.5 pb-1 ps-10 text-caption text-ink-secondary">
                 <Bidi className="min-w-0 truncate">{child.group}</Bidi>
               </span>
             )}
@@ -291,7 +291,7 @@ function item(marked: boolean, inked: boolean, collapsed: boolean): string {
     'transition-colors duration-[var(--duration-micro)]',
     'focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent',
     marked
-      ? 'bg-accent-soft text-ink before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:bg-accent'
+      ? 'bg-accent-soft text-ink before:absolute before:inset-y-0 before:start-0 before:w-0.5 before:bg-accent'
       : inked
         ? 'text-ink'
         : 'text-ink-secondary hover:text-ink',
@@ -304,11 +304,11 @@ function item(marked: boolean, inked: boolean, collapsed: boolean): string {
  */
 function childItem(active: boolean, grouped: boolean): string {
   return [
-    `relative flex h-7 items-center pr-3.5 ${grouped ? 'pl-14' : 'pl-10'} text-body`,
+    `relative flex h-7 items-center pe-3.5 ${grouped ? 'ps-14' : 'ps-10'} text-body`,
     'transition-colors duration-[var(--duration-micro)]',
     'focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent',
     active
-      ? 'bg-accent-soft text-ink before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:bg-accent'
+      ? 'bg-accent-soft text-ink before:absolute before:inset-y-0 before:start-0 before:w-0.5 before:bg-accent'
       : 'text-ink-secondary hover:text-ink',
   ].join(' ')
 }
@@ -349,7 +349,7 @@ function CollapseButton({ collapsed }: { collapsed: boolean }) {
       <svg
         aria-hidden
         viewBox="0 0 16 16"
-        className="h-4 w-4"
+        className="h-4 w-4 rtl:-scale-x-100"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.4"

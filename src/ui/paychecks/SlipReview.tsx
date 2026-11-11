@@ -348,7 +348,7 @@ function Proved({
           </Look>
         ))}
 
-        <div className="ml-auto space-y-1">
+        <div className="ms-auto space-y-1">
           {review.checks.map((check) => (
             <div key={check.label} className="flex items-baseline gap-2 text-caption">
               <span className={check.passed ? 'text-positive' : 'text-ink-tertiary'}>
@@ -485,11 +485,11 @@ function Rows({
       <table className="w-full">
         <thead>
           <tr className="border-b border-hairline text-caption text-ink-secondary">
-            <th className="py-1 text-left font-medium">On the paycheck</th>
-            <th className="py-1 text-left font-medium">Deduction type</th>
-            <th className="py-1 text-right font-medium">From you</th>
-            <th className="py-1 text-right font-medium">From the employer</th>
-            <th className="py-1 text-right font-medium">Basis</th>
+            <th className="py-1 text-start font-medium">On the paycheck</th>
+            <th className="py-1 text-start font-medium">Deduction type</th>
+            <th className="py-1 text-end font-medium">From you</th>
+            <th className="py-1 text-end font-medium">From the employer</th>
+            <th className="py-1 text-end font-medium">Basis</th>
           </tr>
         </thead>
         <tbody>
@@ -505,7 +505,7 @@ function Rows({
               onFocus={() => onLook(row.line)}
               onBlur={() => onLook(undefined)}
             >
-              <td className="py-1 pr-3">
+              <td className="py-1 pe-3">
                 {/*
                   The document's own font says these glyphs are Latin symbols
                   when the shapes are Hebrew (D-144), so an unreadable label is
@@ -527,7 +527,7 @@ function Rows({
                   }
                 />
               </td>
-              <td className="py-1 pr-3">
+              <td className="py-1 pe-3">
                 {/*
                   The picker rather than a label, because this is the one column
                   on the slip no arithmetic can ever check and the only one whose
@@ -597,7 +597,7 @@ function Cell({
   onCommit: (value: Money | undefined) => void
 }) {
   return (
-    <td className="py-1 pl-3 text-right">
+    <td className="py-1 ps-3 text-end">
       <AmountField value={value} currency={currency} label={label} onCommit={onCommit} />
     </td>
   )

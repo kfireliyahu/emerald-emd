@@ -433,7 +433,7 @@ export function PlanBar({
         <div className="flex h-[34px] text-caption" aria-hidden>
           {netOff.minor > 0 && (
             <div
-              className="flex min-w-0 items-center overflow-hidden border border-r-0 border-hairline-strong px-2.5 whitespace-nowrap text-ink-secondary"
+              className="flex min-w-0 items-center overflow-hidden border border-e-0 border-hairline-strong px-2.5 whitespace-nowrap text-ink-secondary"
               style={{
                 width: `${String((1 - keepShare) * 100)}%`,
                 background:
@@ -666,7 +666,9 @@ export function PlanBar({
     <figure className="m-0 flex flex-col" aria-label={label ?? 'The split'}>
       {label !== undefined && <figcaption className="mb-1 text-caption text-ink-secondary">{label}</figcaption>}
 
-      <div ref={stage}>{body}</div>
+      <div ref={stage} dir="ltr">
+        {body}
+      </div>
     </figure>
   )
 }
@@ -693,11 +695,11 @@ function Fill({ amount, got, colour }: { amount: Money; got: Money | undefined; 
     <>
       <span
         aria-hidden
-        className="pointer-events-none absolute inset-y-0 left-0"
+        className="pointer-events-none absolute inset-y-0 start-0"
         style={{ width: `${(ratio * 100).toFixed(2)}%`, background: filled(colour) }}
       />
       {got.minor > amount.minor && (
-        <span aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-[3px] bg-ink" />
+        <span aria-hidden className="pointer-events-none absolute inset-y-0 end-0 w-[3px] bg-ink" />
       )}
     </>
   )

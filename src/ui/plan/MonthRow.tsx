@@ -75,7 +75,7 @@ export function MonthRow({
             <label
               key={key}
               title={locked ? `To take ${formatYearMonth(one)} off the default, tick it on another plan.` : undefined}
-              className={`flex min-w-0 cursor-pointer flex-col gap-0.5 border-l border-hairline px-2 py-2 first:border-l-0 ${
+              className={`flex min-w-0 cursor-pointer flex-col gap-0.5 border-s border-hairline px-2 py-2 first:border-s-0 ${
                 key === here ? 'shadow-[inset_0_-2px_0_var(--color-ink)]' : ''
               } ${locked ? 'cursor-default' : ''}`}
             >
@@ -90,7 +90,7 @@ export function MonthRow({
                 <span className={key === here ? 'font-medium' : ''}>
                   {formatMonthAbbrev(one)}
                   {one.month === 1 || key === toYearMonthString(months[0] ?? one) ? (
-                    <span className="ml-1 text-[10px] text-ink-tertiary">{String(one.year)}</span>
+                    <span className="ms-1 text-[10px] text-ink-tertiary">{String(one.year)}</span>
                   ) : null}
                 </span>
               </span>

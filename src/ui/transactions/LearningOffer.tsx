@@ -88,7 +88,7 @@ export function LearningOffer({
           </div>
         </div>
 
-        <div className="ml-auto flex flex-wrap items-center gap-2">
+        <div className="ms-auto flex flex-wrap items-center gap-2">
           <Button variant="ghost" size="sm" onClick={onDismiss}>
             No rule
           </Button>

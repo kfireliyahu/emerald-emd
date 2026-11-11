@@ -182,7 +182,7 @@ export function Connections() {
           Drag <em>{NEW_LINK_WORDS}</em> from one format onto another — or press one and then the
           other. Nothing is written until you say so.
         </span>
-        <span className="ml-auto flex items-baseline gap-3 text-caption">
+        <span className="ms-auto flex items-baseline gap-3 text-caption">
           <FindFormat
             declarations={data.declarations}
             query={query}
@@ -242,7 +242,7 @@ export function Connections() {
           />
         </div>
 
-        <aside className="w-72 shrink-0 overflow-auto border-l border-hairline px-4 py-3">
+        <aside className="w-72 shrink-0 overflow-auto border-s border-hairline px-4 py-3">
           <h2 className="mb-2 text-caption text-ink-secondary">Every connection, in words</h2>
           {data.edges.length === 0 ? (
             // *An empty state is one sentence* in ink-secondary and one text action (M54 F3).
@@ -271,7 +271,7 @@ export function Connections() {
                       setArmed(undefined)
                       setOpen({ proposal: proposalOf(edge), existing: edge })
                     }}
-                    className="w-full px-2 py-1 text-left text-caption hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+                    className="w-full px-2 py-1 text-start text-caption hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
                   >
                     <span className={edge.dangling ? 'text-negative' : 'text-ink'}>
                       <Bidi>{said.says}</Bidi>

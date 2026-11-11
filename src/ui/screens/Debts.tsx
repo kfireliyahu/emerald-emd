@@ -378,7 +378,7 @@ export function Debts() {
           {problem !== undefined && (
             <div className="fc-pop-enter flex items-center gap-4 border border-hairline bg-surface px-4 py-2">
               <span className="text-negative">{problem}</span>
-              <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setProblem(undefined)}>
+              <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setProblem(undefined)}>
                 Dismiss
               </Button>
             </div>
@@ -468,7 +468,7 @@ export function Debts() {
                       <circle cx="12.5" cy="8" r="1.2" />
                     </svg>
                     {waiting + candidates.length > 0 && (
-                      <span className="ml-1 text-caption text-ink-secondary tabular-nums">{waiting + candidates.length}</span>
+                      <span className="ms-1 text-caption text-ink-secondary tabular-nums">{waiting + candidates.length}</span>
                     )}
                   </button>
                 </div>

@@ -84,7 +84,7 @@ function Snippet({ label, copy: copyLabel, text }: { label: string; copy: string
     <div>
       <div className="mb-1 flex items-baseline gap-3">
         <span className="text-caption text-ink-secondary">{label}</span>
-        <Button size="sm" variant="ghost" className="ml-auto" onClick={copy}>
+        <Button size="sm" variant="ghost" className="ms-auto" onClick={copy}>
           {copied ? 'Copied' : copyLabel}
         </Button>
       </div>

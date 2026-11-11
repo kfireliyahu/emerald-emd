@@ -61,7 +61,7 @@ export function SheetGrid({
       <table className="border-separate border-spacing-0 font-mono text-caption">
         <thead>
           <tr>
-            <th className="sticky top-0 left-0 z-30 border-r border-b border-hairline bg-surface px-2 py-1 text-right align-bottom font-normal text-ink-secondary">
+            <th className="sticky top-0 start-0 z-30 border-e border-b border-hairline bg-surface px-2 py-1 text-end align-bottom font-normal text-ink-secondary">
               #
             </th>
             {columns.map((column) => {
@@ -69,7 +69,7 @@ export function SheetGrid({
               return (
                 <th
                   key={column}
-                  className={`sticky top-0 z-20 border-r border-hairline bg-surface px-2 py-1 text-left align-bottom font-normal ${
+                  className={`sticky top-0 z-20 border-e border-hairline bg-surface px-2 py-1 text-start align-bottom font-normal ${
                     // A changed column is genuine signal, which is the only
                     // thing colour is spent on here (docs/11): it is the column
                     // that would have been mis-parsed silently.
@@ -133,13 +133,13 @@ function Row({
     <tr className={isHeader ? 'bg-surface' : ''}>
       <th
         scope="row"
-        className="sticky left-0 z-10 border-r border-b border-hairline bg-surface p-0 text-right font-normal tabular-nums"
+        className="sticky start-0 z-10 border-e border-b border-hairline bg-surface p-0 text-end font-normal tabular-nums"
       >
         <button
           type="button"
           onClick={() => onSetHeaderRow(rowIndex)}
           title={isHeader ? 'This is the header row' : 'Use this row as the header'}
-          className={`w-full px-2 py-1 text-right hover:bg-hairline ${
+          className={`w-full px-2 py-1 text-end hover:bg-hairline ${
             isHeader ? 'text-ink' : 'text-ink-secondary'
           }`}
         >
@@ -204,14 +204,14 @@ function Cell({
     <td
       title={cell.text === '' ? undefined : cell.text}
       className={[
-        'max-w-[36ch] overflow-hidden border-r border-b border-hairline px-2 py-1 text-ellipsis whitespace-pre',
-        numeric ? 'text-right tabular-nums' : 'text-left',
+        'max-w-[36ch] overflow-hidden border-e border-b border-hairline px-2 py-1 text-ellipsis whitespace-pre',
+        numeric ? 'text-end tabular-nums' : 'text-start',
         header ? 'font-medium' : '',
         tone,
       ].join(' ')}
     >
       {showTypes && cell.kind !== 'empty' && (
-        <span className="mr-1 align-top text-label text-ink-secondary select-none">
+        <span className="me-1 align-top text-label text-ink-secondary select-none">
           {KIND_TAG[cell.kind]}
         </span>
       )}

@@ -160,7 +160,7 @@ export function EntryList({
 
   return (
     <div
-      className="hidden w-[288px] flex-none flex-col border-r border-hairline bg-background lg:flex"
+      className="hidden w-[288px] flex-none flex-col border-e border-hairline bg-background lg:flex"
       aria-label={`${name}, the list`}
     >
       <div className="flex flex-none flex-col gap-2 border-b border-hairline px-3 pt-2.5 pb-2">
@@ -269,9 +269,9 @@ export function EntryList({
                   type="button"
                   aria-current={on ? 'page' : undefined}
                   onClick={() => onOpen(row.id)}
-                  className={`relative flex w-full flex-col justify-center border-b border-hairline pr-3 pl-3.5 text-left focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
+                  className={`relative flex w-full flex-col justify-center border-b border-hairline pe-3 ps-3.5 text-start focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
                     on
-                      ? 'bg-accent-soft before:absolute before:inset-y-0 before:left-0 before:w-0.5 before:bg-accent'
+                      ? 'bg-accent-soft before:absolute before:inset-y-0 before:start-0 before:w-0.5 before:bg-accent'
                       : 'hover:bg-surface'
                   }`}
                   style={{ height: ROW }}
@@ -291,7 +291,7 @@ export function EntryList({
         <span className="tabular-nums">
           {at < 0 ? '–' : String(at + 1)} of {String(rows.length)}
         </span>
-        <span className="ml-auto">
+        <span className="ms-auto">
           <Kbd>↑</Kbd> <Kbd>↓</Kbd> to page
         </span>
       </div>
@@ -302,7 +302,7 @@ export function EntryList({
 /** One thing the list is held to, and the way to let go of it. */
 function HeldChip({ label, onClear, children }: { label: string; onClear: () => void; children: React.ReactNode }) {
   return (
-    <span className="inline-flex h-6 max-w-full items-center gap-1 border border-accent bg-accent-soft pr-1 pl-2 text-caption">
+    <span className="inline-flex h-6 max-w-full items-center gap-1 border border-accent bg-accent-soft pe-1 ps-2 text-caption">
       <span className="truncate">{children}</span>
       <button
         type="button"

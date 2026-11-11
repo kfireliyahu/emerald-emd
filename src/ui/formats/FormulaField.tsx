@@ -166,7 +166,7 @@ export function FormulaField({
             id={list}
             role="listbox"
             aria-label={`Names for ${label}`}
-            className="fc-pop-enter absolute top-full left-0 z-30 mt-1 min-w-56 overflow-hidden rounded-md border border-hairline-strong bg-elevated py-1 shadow-lg"
+            className="fc-pop-enter absolute top-full start-0 z-30 mt-1 min-w-56 overflow-hidden rounded-md border border-hairline-strong bg-elevated py-1 shadow-lg"
           >
             {completion.options.map((each, at) => (
               <li

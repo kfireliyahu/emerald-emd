@@ -102,7 +102,7 @@ export function WherePicker({
         aria-expanded={open}
         aria-label="Where is the money?"
         onClick={() => setOpen((was) => !was)}
-        className={`${FIELD} flex w-full min-w-0 items-center gap-2.5 text-left ${open ? 'border-accent' : ''}`}
+        className={`${FIELD} flex w-full min-w-0 items-center gap-2.5 text-start ${open ? 'border-accent' : ''}`}
       >
         {value === undefined ? (
           <span className="min-w-0 flex-1 truncate text-ink-tertiary">Pick one, or make a new place</span>
@@ -111,7 +111,7 @@ export function WherePicker({
             <span className="flex min-w-0 flex-1 items-baseline">
               <Bidi className="min-w-0 truncate">{value.place.name}</Bidi>
               {value.place.institution !== undefined && value.place.institution.trim() !== '' && (
-                <span className="ml-1.5 shrink-0 text-caption whitespace-nowrap text-ink-secondary">
+                <span className="ms-1.5 shrink-0 text-caption whitespace-nowrap text-ink-secondary">
                   at <Bidi>{value.place.institution}</Bidi>
                 </span>
               )}
@@ -123,7 +123,7 @@ export function WherePicker({
             <span className="flex min-w-0 flex-1 items-baseline">
               <Bidi className="min-w-0 truncate">{chosen?.name ?? 'A holding this document no longer has'}</Bidi>
               {chosen?.detail !== undefined && (
-                <span className="ml-1.5 text-caption text-ink-secondary">
+                <span className="ms-1.5 text-caption text-ink-secondary">
                   <Bidi>{chosen.detail}</Bidi>
                 </span>
               )}
@@ -140,7 +140,7 @@ export function WherePicker({
         <div
           role="listbox"
           aria-label="Where is the money?"
-          className="fc-pop-enter absolute top-full right-0 left-0 z-30 mt-1 max-h-[26rem] overflow-auto border border-hairline-strong bg-elevated py-1 shadow-pop"
+          className="fc-pop-enter absolute top-full end-0 start-0 z-30 mt-1 max-h-[26rem] overflow-auto border border-hairline-strong bg-elevated py-1 shadow-pop"
         >
           {groups.map((group) => (
             <div key={group.key}>
@@ -158,14 +158,14 @@ export function WherePicker({
                     aria-selected={on}
                     aria-disabled={taken}
                     onClick={() => pick(choice)}
-                    className={`flex w-full min-w-0 items-baseline gap-2.5 px-3 py-1.5 text-left ${
+                    className={`flex w-full min-w-0 items-baseline gap-2.5 px-3 py-1.5 text-start ${
                       taken ? 'cursor-default text-ink-tertiary' : on ? 'bg-accent-soft' : 'hover:bg-surface'
                     }`}
                   >
                     <span className="min-w-0 flex-1">
                       <Bidi>{choice.name}</Bidi>
                       {choice.detail !== undefined && choice.group.kind !== 'HELD' && (
-                        <span className="ml-1.5 text-caption text-ink-secondary">
+                        <span className="ms-1.5 text-caption text-ink-secondary">
                           <Bidi>{choice.detail}</Bidi>
                         </span>
                       )}
@@ -184,7 +184,7 @@ export function WherePicker({
           <button
             type="button"
             onClick={startNew}
-            className={`block w-full px-3 py-1.5 text-left font-medium text-accent ${making !== undefined ? 'bg-accent-soft' : 'hover:bg-surface'}`}
+            className={`block w-full px-3 py-1.5 text-start font-medium text-accent ${making !== undefined ? 'bg-accent-soft' : 'hover:bg-surface'}`}
           >
             + New…
           </button>
@@ -232,7 +232,7 @@ function NewPlace({
             type="button"
             aria-pressed={draft.kind === kind}
             onClick={() => set({ kind, ...(LOCKABLE.has(kind) ? {} : { lockedUntil: undefined }) })}
-            className={`-ml-px h-7 border px-2.5 text-[12px] whitespace-nowrap first:ml-0 ${
+            className={`-ms-px h-7 border px-2.5 text-[12px] whitespace-nowrap first:ms-0 ${
               draft.kind === kind
                 ? 'relative z-[1] border-accent bg-accent-soft text-ink'
                 : 'border-hairline-strong text-ink-secondary'

@@ -27,7 +27,7 @@ export function ResizeHandle({
       aria-label={`Width of ${column}`}
       aria-valuenow={width}
       tabIndex={0}
-      className="absolute inset-y-0 -right-1 z-10 w-2 cursor-col-resize touch-none transition-colors duration-[var(--duration-micro)] hover:bg-accent focus-visible:bg-accent focus-visible:outline-none"
+      className="absolute inset-y-0 -end-1 z-10 w-2 cursor-col-resize touch-none transition-colors duration-[var(--duration-micro)] hover:bg-accent focus-visible:bg-accent focus-visible:outline-none"
       onPointerDown={(event) => {
         event.preventDefault()
         event.stopPropagation()

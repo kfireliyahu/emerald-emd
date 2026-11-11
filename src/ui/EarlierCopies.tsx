@@ -144,7 +144,7 @@ function EarlierCopiesDialog() {
         className="fc-pop-enter flex max-h-[70vh] w-full max-w-lg flex-col overflow-hidden rounded-lg border border-hairline-strong bg-elevated shadow-pop outline-none"
         onKeyDown={onKeyDown}
       >
-        <div className="flex items-center gap-2.5 border-b border-hairline py-2 pr-2 pl-3.5">
+        <div className="flex items-center gap-2.5 border-b border-hairline py-2 pe-2 ps-3.5">
           {/* The heading in sentence case, so the file's name keeps its own (M54 F6). */}
           <h2 className="m-0 flex min-w-0 flex-1 gap-1 text-body font-medium">
             <span className="shrink-0">Earlier copies of</span>

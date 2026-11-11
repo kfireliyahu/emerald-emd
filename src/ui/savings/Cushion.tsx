@@ -27,7 +27,7 @@ const GOAL = 'bg-[repeating-linear-gradient(135deg,color-mix(in_srgb,var(--color
 const CASH = 'bg-[color-mix(in_srgb,var(--color-ink-secondary)_30%,var(--color-background))]'
 const OVER =
   'border border-negative bg-[repeating-linear-gradient(135deg,color-mix(in_srgb,var(--color-negative)_30%,transparent)_0_3px,transparent_3px_6px)]'
-const SEG = 'flex h-full items-center overflow-hidden px-1.5 text-[11px] whitespace-nowrap [&+div]:border-l [&+div]:border-background'
+const SEG = 'flex h-full items-center overflow-hidden px-1.5 text-[11px] whitespace-nowrap [&+div]:border-s [&+div]:border-background'
 
 /**
  * **The whole cushion, on Plan** (M36 U10): what no goal has taken in the
@@ -219,7 +219,7 @@ function LivesIn({ cushion, write }: { cushion: CushionReading; write: Write }) 
             }`}
           >
             <Bidi>{account.name}</Bidi>
-            {account.last4 !== undefined && <span className="ml-1 text-ink-secondary">···{account.last4}</span>}
+            {account.last4 !== undefined && <span className="ms-1 text-ink-secondary">···{account.last4}</span>}
           </button>
         )
       })}
@@ -241,7 +241,7 @@ export function MonthChoice({ months, write }: { months: number | undefined; wri
           type="button"
           aria-pressed={months === choice}
           onClick={() => write((database, now) => setCushionMonths(database, choice, now))}
-          className={`h-7 border px-2.5 text-caption whitespace-nowrap ${index === 0 ? '' : '-ml-px'} ${
+          className={`h-7 border px-2.5 text-caption whitespace-nowrap ${index === 0 ? '' : '-ms-px'} ${
             months === choice
               ? 'relative z-[1] border-accent bg-accent-soft text-ink'
               : 'border-hairline-strong text-ink-secondary hover:text-ink'
@@ -346,7 +346,7 @@ export function StatementBar({
 
   return (
     <div className="flex flex-col gap-1.5" data-testid="statement-bar">
-      <div className="pt-3.5">
+      <div className="pt-3.5" dir="ltr">
         <div
           className="relative flex h-[22px] w-full bg-hairline"
           role="img"
@@ -374,11 +374,11 @@ export function StatementBar({
           {over && (
             <>
               <span
-                className={`pointer-events-none absolute -top-[3px] -bottom-[3px] right-0 ${OVER}`}
+                className={`pointer-events-none absolute -top-[3px] -bottom-[3px] end-0 ${OVER}`}
                 style={{ left: pc(statement.balance.minor) }}
               />
-              <span className="absolute -top-[5px] -bottom-[5px] w-0 border-l-[1.5px] border-ink" style={{ left: pc(statement.balance.minor) }}>
-                <span className="absolute -top-[17px] -left-px -translate-x-full pr-1 text-[11px] whitespace-nowrap text-ink-secondary">
+              <span className="absolute -top-[5px] -bottom-[5px] w-0 border-s-[1.5px] border-ink" style={{ left: pc(statement.balance.minor) }}>
+                <span className="absolute -top-[17px] -start-px -translate-x-full pe-1 text-[11px] whitespace-nowrap text-ink-secondary">
                   the statement
                 </span>
               </span>

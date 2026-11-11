@@ -191,7 +191,7 @@ export function FundDetail() {
         <Button
           variant="primary"
           size="sm"
-          className="ml-auto"
+          className="ms-auto"
           onClick={() =>
             setEditing({ isNew: true, snapshot: blankSnapshot(fund.id, now, currency) })
           }
@@ -213,7 +213,7 @@ export function FundDetail() {
       {problem !== undefined && (
         <div className="fc-pop-enter flex shrink-0 items-center gap-4 border-b border-hairline bg-surface px-6 py-2">
           <span className="text-negative">{problem}</span>
-          <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setProblem(undefined)}>
+          <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setProblem(undefined)}>
             Dismiss
           </Button>
         </div>
@@ -443,37 +443,37 @@ export function FundDetail() {
             <table className="w-full max-w-3xl">
               <thead>
                 <tr className="border-b border-hairline text-label text-ink-tertiary uppercase">
-                  <th className="py-2 pr-6 text-left font-medium">As of</th>
-                  <th className="py-2 pr-6 text-right font-medium">Balance</th>
-                  <th className="py-2 pr-6 text-right font-medium">Deposits</th>
-                  <th className="py-2 pr-6 text-right font-medium">Fees</th>
-                  <th className="py-2 pr-6 text-left font-medium">Note</th>
+                  <th className="py-2 pe-6 text-start font-medium">As of</th>
+                  <th className="py-2 pe-6 text-end font-medium">Balance</th>
+                  <th className="py-2 pe-6 text-end font-medium">Deposits</th>
+                  <th className="py-2 pe-6 text-end font-medium">Fees</th>
+                  <th className="py-2 pe-6 text-start font-medium">Note</th>
                   <th className="py-2" />
                 </tr>
               </thead>
               <tbody>
                 {[...snapshots].reverse().map((snapshot) => (
                   <tr key={snapshot.id} className="border-b border-hairline">
-                    <td className="py-1.5 pr-6 whitespace-nowrap tabular-nums">
+                    <td className="py-1.5 pe-6 whitespace-nowrap tabular-nums">
                       {toISODate(snapshot.asOfDate)}
                     </td>
-                    <td className="py-1.5 pr-6 text-right tabular-nums">
+                    <td className="py-1.5 pe-6 text-end tabular-nums">
                       {formatMoney(snapshot.totalBalance)}
                     </td>
-                    <td className="py-1.5 pr-6 text-right text-ink-secondary tabular-nums">
+                    <td className="py-1.5 pe-6 text-end text-ink-secondary tabular-nums">
                       {snapshot.depositsSincePrevious === undefined
                         ? '—'
                         : formatMoney(snapshot.depositsSincePrevious)}
                     </td>
-                    <td className="py-1.5 pr-6 text-right text-ink-secondary tabular-nums">
+                    <td className="py-1.5 pe-6 text-end text-ink-secondary tabular-nums">
                       {snapshot.feesChargedSincePrevious === undefined
                         ? '—'
                         : formatMoney(snapshot.feesChargedSincePrevious)}
                     </td>
-                    <td className="py-1.5 pr-6 text-caption text-ink-tertiary">
+                    <td className="py-1.5 pe-6 text-caption text-ink-tertiary">
                       {snapshot.note ?? ''}
                     </td>
-                    <td className="py-1.5 text-right">
+                    <td className="py-1.5 text-end">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -632,36 +632,36 @@ function MonthTable({ months }: { months: readonly MonthlyDeposit[] }) {
       <table className="mt-2 w-full">
         <thead>
           <tr className="border-b border-hairline text-label text-ink-tertiary uppercase">
-            <th className="py-2 pr-6 text-left font-medium">Salary month</th>
-            <th className="py-2 pr-6 text-right font-medium">Paycheck says</th>
-            <th className="py-2 pr-6 text-right font-medium">Fund received</th>
-            <th className="py-2 pr-6 text-right font-medium">Difference</th>
+            <th className="py-2 pe-6 text-start font-medium">Salary month</th>
+            <th className="py-2 pe-6 text-end font-medium">Paycheck says</th>
+            <th className="py-2 pe-6 text-end font-medium">Fund received</th>
+            <th className="py-2 pe-6 text-end font-medium">Difference</th>
             {/* The base the two documents each say the deposit was worked out
                 on (D-169) — the payslip's `basisAmount` against the fund's own
                 salary column, and neither of them is the gross. */}
-            <th className="py-2 pr-6 text-right font-medium">Computed on</th>
-            <th className="py-2 pr-6 text-left font-medium">Arrived</th>
-            <th className="py-2 text-left font-medium">Late by</th>
+            <th className="py-2 pe-6 text-end font-medium">Computed on</th>
+            <th className="py-2 pe-6 text-start font-medium">Arrived</th>
+            <th className="py-2 text-start font-medium">Late by</th>
           </tr>
         </thead>
         <tbody>
           {[...months].reverse().map((month) => (
             <tr key={toYearMonthString(month.period)} className="border-b border-hairline">
-              <td className="py-1.5 pr-6 whitespace-nowrap tabular-nums">
+              <td className="py-1.5 pe-6 whitespace-nowrap tabular-nums">
                 {formatMonthShort(month.period)}
               </td>
               {/* An em dash, never a zero: a month with no payslip has nothing
                   to say about what was due, and a month the reports do not
                   mention is not a month nothing arrived in — it may simply be
                   outside every report this document holds. */}
-              <td className="py-1.5 pr-6 text-right tabular-nums">
+              <td className="py-1.5 pe-6 text-end tabular-nums">
                 {month.expected === undefined ? '—' : formatMoney(month.expected)}
               </td>
-              <td className="py-1.5 pr-6 text-right tabular-nums">
+              <td className="py-1.5 pe-6 text-end tabular-nums">
                 {month.received === undefined ? '—' : formatMoney(month.received)}
               </td>
               <td
-                className={`py-1.5 pr-6 text-right tabular-nums ${
+                className={`py-1.5 pe-6 text-end tabular-nums ${
                   month.status === 'MISSING' ? 'text-negative' : ''
                 }`}
               >
@@ -674,7 +674,7 @@ function MonthTable({ months }: { months: readonly MonthlyDeposit[] }) {
                   </span>
                 )}
               </td>
-              <td className="py-1.5 pr-6 text-right tabular-nums">
+              <td className="py-1.5 pe-6 text-end tabular-nums">
                 {month.fundSalary === undefined || month.slipSalary === undefined ? (
                   <span className="text-ink-tertiary">—</span>
                 ) : month.salaryStatus === 'AGREES' ? (
@@ -692,7 +692,7 @@ function MonthTable({ months }: { months: readonly MonthlyDeposit[] }) {
                   </span>
                 )}
               </td>
-              <td className="py-1.5 pr-6 whitespace-nowrap text-ink-secondary tabular-nums">
+              <td className="py-1.5 pe-6 whitespace-nowrap text-ink-secondary tabular-nums">
                 {month.arrivedOn === undefined ? '—' : toISODate(month.arrivedOn)}
               </td>
               <td className="py-1.5 whitespace-nowrap text-caption text-ink-tertiary">
@@ -786,20 +786,20 @@ function PeriodTable({ periods }: { periods: readonly DepositPeriod[] }) {
     <table className="mt-4 w-full max-w-3xl">
       <thead>
         <tr className="border-b border-hairline text-label text-ink-tertiary uppercase">
-          <th className="py-2 pr-6 text-left font-medium">Period</th>
-          <th className="py-2 pr-6 text-left font-medium">Salary months</th>
-          <th className="py-2 pr-6 text-right font-medium">Paychecks say</th>
-          <th className="py-2 pr-6 text-right font-medium">Fund says</th>
-          <th className="py-2 text-right font-medium">Difference</th>
+          <th className="py-2 pe-6 text-start font-medium">Period</th>
+          <th className="py-2 pe-6 text-start font-medium">Salary months</th>
+          <th className="py-2 pe-6 text-end font-medium">Paychecks say</th>
+          <th className="py-2 pe-6 text-end font-medium">Fund says</th>
+          <th className="py-2 text-end font-medium">Difference</th>
         </tr>
       </thead>
       <tbody>
         {[...periods].reverse().map((period) => (
           <tr key={period.closingSnapshotId} className="border-b border-hairline">
-            <td className="py-1.5 pr-6 whitespace-nowrap text-ink-secondary tabular-nums">
+            <td className="py-1.5 pe-6 whitespace-nowrap text-ink-secondary tabular-nums">
               {toISODate(period.from)} → {toISODate(period.to)}
             </td>
-            <td className="py-1.5 pr-6 whitespace-nowrap text-ink-secondary tabular-nums">
+            <td className="py-1.5 pe-6 whitespace-nowrap text-ink-secondary tabular-nums">
               {period.salaryFrom === undefined || period.salaryTo === undefined
                 ? '—'
                 : `${formatMonthShort(period.salaryFrom)} — ${formatMonthShort(period.salaryTo)}`}
@@ -808,14 +808,14 @@ function PeriodTable({ periods }: { periods: readonly DepositPeriod[] }) {
                 has nothing to say about what was due, and printing a zero there
                 would turn "I do not know" into "nothing was owed" — which then
                 makes every difference in the row look like a surplus. */}
-            <td className="py-1.5 pr-6 text-right tabular-nums">
+            <td className="py-1.5 pe-6 text-end tabular-nums">
               {hasPayslips(period) ? formatMoney(period.expected.total) : '—'}
             </td>
-            <td className="py-1.5 pr-6 text-right tabular-nums">
+            <td className="py-1.5 pe-6 text-end tabular-nums">
               {period.reported === undefined ? '—' : formatMoney(period.reported)}
             </td>
             <td
-              className={`py-1.5 text-right tabular-nums ${
+              className={`py-1.5 text-end tabular-nums ${
                 hasPayslips(period) && period.gap !== undefined && period.gap.minor > 0
                   ? 'text-negative'
                   : ''

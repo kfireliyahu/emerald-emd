@@ -206,7 +206,7 @@ export function PaycheckEditor({
               {unreadable(netText) && <span>Net is not a number</span>}
             </span>
 
-            <span className="ml-auto text-caption text-ink-tertiary">
+            <span className="ms-auto text-caption text-ink-tertiary">
               Nothing is written to your document until you save it.
             </span>
           </div>
@@ -326,22 +326,22 @@ export function PaycheckEditor({
         <table className={`mt-6 w-full ${draft.lines.length === 0 ? 'hidden' : ''}`}>
           <thead>
             <tr className="border-b border-hairline text-label text-ink-tertiary uppercase">
-              <th className="w-56 py-1 text-left font-medium">Deduction</th>
-              <th className="w-36 py-1 pr-3 text-right font-medium">Employee</th>
-              <th className="w-36 py-1 pr-3 text-right font-medium">Employer</th>
+              <th className="w-56 py-1 text-start font-medium">Deduction</th>
+              <th className="w-36 py-1 pe-3 text-end font-medium">Employee</th>
+              <th className="w-36 py-1 pe-3 text-end font-medium">Employer</th>
               {/* The base the percentages were computed on — a pensionable
                   salary, not the gross. Shown because it is stored, and stored
                   because the fund's own deposit table prints the same figure
                   and nothing could compare the two (D-169). */}
-              <th className="w-36 py-1 pr-3 text-right font-medium">Base</th>
-              <th className="py-1 text-left font-medium">Note</th>
+              <th className="w-36 py-1 pe-3 text-end font-medium">Base</th>
+              <th className="py-1 text-start font-medium">Note</th>
               <th className="w-24" />
             </tr>
           </thead>
           <tbody>
             {draft.lines.map((line) => (
               <tr key={line.key} className="border-b border-hairline">
-                <td className="py-1 pr-3">
+                <td className="py-1 pe-3">
                   <DeductionTypeSelect
                     groups={groups}
                     value={line.deductionTypeId}
@@ -349,34 +349,34 @@ export function PaycheckEditor({
                     onCreate={onCreateType}
                   />
                 </td>
-                <td className="py-1 pr-3 text-right">
+                <td className="py-1 pe-3 text-end">
                   <input
                     value={lineText[line.key]?.employee ?? ''}
                     onChange={(event) => setLineAmount(line.key, 'employee', event.target.value)}
                     placeholder="0.00"
                     aria-label="Amount deducted from the employee"
-                    className={`${FIELD} h-7 w-32 text-right tabular-nums`}
+                    className={`${FIELD} h-7 w-32 text-end tabular-nums`}
                   />
                 </td>
-                <td className="py-1 pr-3 text-right">
+                <td className="py-1 pe-3 text-end">
                   <input
                     value={lineText[line.key]?.employer ?? ''}
                     onChange={(event) => setLineAmount(line.key, 'employer', event.target.value)}
                     placeholder="—"
                     aria-label="Employer's side of this deduction"
-                    className={`${FIELD} h-7 w-32 text-right tabular-nums`}
+                    className={`${FIELD} h-7 w-32 text-end tabular-nums`}
                   />
                 </td>
-                <td className="py-1 pr-3 text-right">
+                <td className="py-1 pe-3 text-end">
                   <input
                     value={lineText[line.key]?.basis ?? ''}
                     onChange={(event) => setLineAmount(line.key, 'basis', event.target.value)}
                     placeholder="—"
                     aria-label="The salary this deduction was computed on"
-                    className={`${FIELD} h-7 w-32 text-right tabular-nums`}
+                    className={`${FIELD} h-7 w-32 text-end tabular-nums`}
                   />
                 </td>
-                <td className="py-1 pr-3">
+                <td className="py-1 pe-3">
                   <input
                     value={line.note}
                     onChange={(event) => setLine(line.key, { note: event.target.value })}
@@ -385,7 +385,7 @@ export function PaycheckEditor({
                     className={`${FIELD} h-7 w-full min-w-32`}
                   />
                 </td>
-                <td className="py-1 text-right">
+                <td className="py-1 text-end">
                   <Button variant="ghost" size="sm" onClick={() => removeLine(line.key)}>
                     Remove
                   </Button>

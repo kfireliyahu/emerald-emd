@@ -96,7 +96,7 @@ export function DepositCheck() {
       {problem !== undefined && (
         <div className="flex shrink-0 items-center gap-4 border-b border-hairline bg-surface px-6 py-2">
           <span className="text-negative">{problem}</span>
-          <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setProblem(undefined)}>
+          <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setProblem(undefined)}>
             Dismiss
           </Button>
         </div>

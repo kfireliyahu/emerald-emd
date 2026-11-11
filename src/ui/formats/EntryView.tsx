@@ -585,7 +585,7 @@ export function EntryView({
             aria-pressed={!list.hidden}
             aria-label={list.hidden ? 'Show the list' : 'Hide the list'}
             title={list.hidden ? 'Show the list' : 'Hide the list'}
-            className={`-ml-2 hidden h-7 w-7 items-center justify-center text-ink-secondary hover:bg-surface hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent lg:inline-flex ${
+            className={`-ms-2 hidden h-7 w-7 items-center justify-center text-ink-secondary hover:bg-surface hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent lg:inline-flex ${
               list.hidden ? '' : 'bg-surface text-ink shadow-[inset_0_0_0_1px_var(--color-hairline-strong)]'
             }`}
           >
@@ -628,7 +628,7 @@ export function EntryView({
         {locked !== undefined && (
           <span className="max-w-prose text-caption text-ink-secondary">{locked}</span>
         )}
-        <span className="ml-auto flex items-center gap-1.5">
+        <span className="ms-auto flex items-center gap-1.5">
           {written !== undefined && <span className="text-caption text-ink-secondary">Written {written}</span>}
           {!readOnly && ordered.some((column) => column !== layout.title) && (
             <FieldsList
@@ -1165,7 +1165,7 @@ function ShowAsMenu({
     then()
   }
   const item =
-    'flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-body hover:bg-accent-soft disabled:opacity-35 disabled:hover:bg-transparent'
+    'flex w-full items-center gap-2.5 px-3 py-1.5 text-start text-body hover:bg-accent-soft disabled:opacity-35 disabled:hover:bg-transparent'
   return (
     <span ref={box} className="relative inline-flex" onKeyDown={dismissKey}>
       <button
@@ -1185,7 +1185,7 @@ function ShowAsMenu({
       {open && (
         <span
           role="menu"
-          className="fc-pop-enter absolute top-6 left-0 z-20 flex min-w-[220px] flex-col border border-hairline-strong bg-elevated py-1 shadow-[var(--shadow-pop)]"
+          className="fc-pop-enter absolute top-6 start-0 z-20 flex min-w-[220px] flex-col border border-hairline-strong bg-elevated py-1 shadow-[var(--shadow-pop)]"
         >
           {ways && (
             <span className="fc-label px-3 pt-1.5 pb-1 text-ink-secondary">
@@ -1198,7 +1198,7 @@ function ShowAsMenu({
               type="button"
               role="menuitemradio"
               aria-checked={each === way}
-              className="flex w-full items-center gap-2.5 px-3 py-1.5 text-left text-body hover:bg-accent-soft"
+              className="flex w-full items-center gap-2.5 px-3 py-1.5 text-start text-body hover:bg-accent-soft"
               onClick={() => {
                 setOpen(false)
                 onChoose(each)
@@ -1609,7 +1609,7 @@ function FieldsList({
         <div
           role="dialog"
           aria-label="Fields"
-          className="fc-pop-enter absolute top-full right-0 z-30 mt-1 w-[340px] max-w-[calc(100vw-32px)] border border-hairline-strong bg-elevated pt-1 pb-2 shadow-[var(--shadow-pop)]"
+          className="fc-pop-enter absolute top-full end-0 z-30 mt-1 w-[340px] max-w-[calc(100vw-32px)] border border-hairline-strong bg-elevated pt-1 pb-2 shadow-[var(--shadow-pop)]"
         >
           <div className={`${grid} h-6 text-label text-ink-secondary uppercase`} aria-hidden>
             <span />
@@ -1860,7 +1860,7 @@ function Control({
         return (
           <span className="flex gap-2" onKeyDown={enter}>
             <input
-              className={`${SEAMLESS} ${way === 'large' ? 'w-44' : figure ? 'w-32' : 'w-40'} text-right tabular-nums ${big}`}
+              className={`${SEAMLESS} ${way === 'large' ? 'w-44' : figure ? 'w-32' : 'w-40'} text-end tabular-nums ${big}`}
               inputMode="decimal"
               aria-label={column.name}
               autoFocus={auto}
@@ -1881,7 +1881,7 @@ function Control({
         return (
           <span className="flex gap-1" onKeyDown={enter}>
             <input
-              className={`${SEAMLESS} ${figure ? 'w-24' : 'w-40'} text-right tabular-nums ${big}`}
+              className={`${SEAMLESS} ${figure ? 'w-24' : 'w-40'} text-end tabular-nums ${big}`}
               inputMode="decimal"
               aria-label={column.name}
               autoFocus={auto}
@@ -1965,7 +1965,7 @@ function Control({
         <button
           type="button"
           aria-label={`${column.name}: change`}
-          className="-mx-2 flex w-[calc(100%+16px)] min-w-0 border border-transparent px-2 text-left hover:border-hairline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+          className="-mx-2 flex w-[calc(100%+16px)] min-w-0 border border-transparent px-2 text-start hover:border-hairline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
           onClick={() => setOpen(true)}
         >
           {shown()}
@@ -2348,7 +2348,7 @@ function FigureField({
   return (
     <span className="relative inline-flex">
       <input
-        className={`${SEAMLESS} ${className} text-right tabular-nums`}
+        className={`${SEAMLESS} ${className} text-end tabular-nums`}
         style={typed.style}
         inputMode="decimal"
         aria-label={label}

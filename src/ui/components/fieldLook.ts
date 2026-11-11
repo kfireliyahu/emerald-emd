@@ -16,7 +16,7 @@ export const FIELD =
   'h-8 rounded-control border border-hairline-strong bg-elevated px-3 outline-none ' +
   'focus:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent'
 
-export const SELECT = `${FIELD} cursor-pointer pr-2`
+export const SELECT = `${FIELD} cursor-pointer pe-2`
 
 /**
  * The same look for something that wraps. Not `FIELD` plus an override: two

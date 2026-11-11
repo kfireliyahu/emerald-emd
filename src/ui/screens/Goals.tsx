@@ -368,7 +368,7 @@ export function Goals() {
           {problem !== undefined && (
             <div className="fc-pop-enter flex items-center gap-4 border border-hairline bg-surface px-4 py-2">
               <span className="text-negative">{problem}</span>
-              <Button variant="ghost" size="sm" className="ml-auto" onClick={() => setProblem(undefined)}>
+              <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setProblem(undefined)}>
                 Dismiss
               </Button>
             </div>
@@ -499,7 +499,7 @@ export function Goals() {
                       so Everything else is {formatMoney(left)}
                       {left.minor < 0 ? ', which is more than Plan has' : ''}
                     </span>
-                    <Link to="/plan" className="ml-auto text-caption text-accent hover:underline">
+                    <Link to="/plan" className="ms-auto text-caption text-accent hover:underline">
                       Change the split on Plan
                     </Link>
                   </div>
@@ -794,7 +794,7 @@ function ProjectionChart({
 
   return (
     <>
-      <div className="border border-hairline bg-surface px-3.5 py-3">
+      <div className="border border-hairline bg-surface px-3.5 py-3" dir="ltr">
         <svg
           viewBox={`0 0 ${String(W)} ${String(H)}`}
           role="img"
@@ -1026,7 +1026,7 @@ function DepositList({
                   <span className="min-w-32 flex-1">
                     <Bidi>{goal?.name ?? 'a goal that is gone'}</Bidi>
                     {deposit.note !== undefined && !isDefaultTransferNote(deposit) && (
-                      <span className="ml-2 text-caption text-ink-tertiary">
+                      <span className="ms-2 text-caption text-ink-tertiary">
                         <Bidi>{deposit.note}</Bidi>
                       </span>
                     )}
@@ -1040,7 +1040,7 @@ function DepositList({
                         : ` · ${SOURCE_LABEL[deposit.sourceKind]}`}
                   </span>
                   <span
-                    className={`w-28 text-right tabular-nums ${
+                    className={`w-28 text-end tabular-nums ${
                       deposit.amount.minor < 0 ? 'text-ink-secondary' : ''
                     }`}
                   >

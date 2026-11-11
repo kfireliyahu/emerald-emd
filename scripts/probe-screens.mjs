@@ -22,6 +22,8 @@
  *   node scripts/probe-screens.mjs --document custom.emd --routes '#/formats/card_charge/entry/new' --themes dark
  *   options: --themes light,dark (both by default) · --size 1280x800 · --root main
  *            --limit 10 (entries per list) · --json (everything, as JSON) · --fresh
+ *            --dir rtl (or --lang he): the page mirrored as Hebrew draws it (M60 U3, D-586),
+ *            with the rail's side and what is cut off sideways measured; --dir ltr pins it
  */
 
 import { spawn, spawnSync } from 'node:child_process'
@@ -50,6 +52,11 @@ const probeOptions = {
   themes: list(option('themes', 'light,dark')),
   root: option('root', undefined),
   limit: Number(option('limit', '10')),
+  dir: option('dir', option('lang', undefined) === undefined ? undefined : option('lang') === 'he' ? 'rtl' : 'ltr'),
+}
+if (probeOptions.dir !== undefined && probeOptions.dir !== 'rtl' && probeOptions.dir !== 'ltr') {
+  console.error(`--dir takes rtl or ltr, not ${String(probeOptions.dir)}.`)
+  process.exit(1)
 }
 const size = option('size', '1280x800')
 
@@ -108,8 +115,9 @@ for (const r of found.results) {
     `round fields ${String(r.roundedFields.count)}`,
     `selects ${String(r.platformSelects)}`,
     `date inputs ${String(r.nativeDates)}`,
+    `cut off sideways ${String(r.clippedX.count)}`,
   ].join(' · ')
-  console.log(`${r.route} · ${r.theme} · ${String(r.width)}px · h1 ${r.h1.length === 0 ? 'none' : r.h1.map((h) => `"${h}"`).join(', ')}${r.headingSkips.length ? ` · skips ${r.headingSkips.join(', ')}` : ''}${r.pageOverflowsX ? ' · PAGE SCROLLS SIDEWAYS' : ''}`)
+  console.log(`${r.route} · ${r.theme} · ${r.dir} · rail ${r.railSide} · ${String(r.width)}px · h1 ${r.h1.length === 0 ? 'none' : r.h1.map((h) => `"${h}"`).join(', ')}${r.headingSkips.length ? ` · skips ${r.headingSkips.join(', ')}` : ''}${r.pageOverflowsX ? ' · PAGE SCROLLS SIDEWAYS' : ''}`)
   console.log(`  ${counts}`)
   const detail = [
     r.lowContrast.count ? `  low contrast:${items(r.lowContrast, (i) => `${String(i.ratio)} < ${String(i.needs)} at ${i.size}: ${i.text}`)}` : '',
@@ -117,6 +125,7 @@ for (const r of found.results) {
     r.unnamed.count ? `  no name:${items(r.unnamed, (i) => i.html)}` : '',
     r.placeholderOnly.count ? `  placeholder only:${items(r.placeholderOnly, (i) => i.placeholder)}` : '',
     r.roundedFields.count ? `  round fields:${items(r.roundedFields, (i) => `${i.tag} ${i.radius} ${i.name}`)}` : '',
+    r.clippedX.count ? `  cut off sideways:${items(r.clippedX, (i) => `${i.text} (by ${i.by})`)}` : '',
   ].filter(Boolean)
   if (detail.length) console.log(detail.join('\n'))
 }

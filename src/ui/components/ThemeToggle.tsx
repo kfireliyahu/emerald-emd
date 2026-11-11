@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 
 import { setThemePreference, useTheme, type ThemePreference } from '@/ui/theme/useTheme.ts'
+import { arrowStep } from '@/ui/direction.ts'
 
 /**
  * A light/dark control that offers the honest third option: follow the system.
@@ -27,7 +28,7 @@ export function ThemeToggle() {
   // chosen option is the stop, and an arrow chooses the next one and takes focus
   // to it, wrapping at either end.
   const onKeyDown = (event: React.KeyboardEvent): void => {
-    const step = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 0
+    const step = event.key === 'ArrowDown' ? 1 : event.key === 'ArrowUp' ? -1 : arrowStep(event.key)
     if (step === 0) return
     event.preventDefault()
     const next = (index + step + OPTIONS.length) % OPTIONS.length
@@ -48,8 +49,8 @@ export function ThemeToggle() {
           It slides by its own width, so it always lands on a button. */}
       <span
         aria-hidden
-        className="absolute inset-y-0 left-0 w-8 rounded-control border border-hairline-strong bg-elevated transition-transform duration-[var(--duration-base)] ease-[var(--ease-out)]"
-        style={{ transform: `translateX(${String(index * 100)}%)` }}
+        className="absolute inset-y-0 start-0 w-8 translate-x-[calc(var(--knob)*100%)] rounded-control border border-hairline-strong bg-elevated transition-transform duration-[var(--duration-base)] ease-[var(--ease-out)] rtl:translate-x-[calc(var(--knob)*-100%)]"
+        style={{ '--knob': index } as React.CSSProperties}
       />
 
       {OPTIONS.map((option, at) => {

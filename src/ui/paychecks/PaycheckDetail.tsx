@@ -64,7 +64,7 @@ export function PaycheckDetail({
           </span>
         )}
 
-        <span className="ml-auto flex items-center gap-2">
+        <span className="ms-auto flex items-center gap-2">
           <Button variant="secondary" size="sm" onClick={onEdit}>
             Edit
           </Button>
@@ -149,10 +149,10 @@ export function PaycheckDetail({
                 const type = byId.get(line.deductionTypeId)
                 return (
                   <tr key={line.id} className="border-b border-hairline">
-                    <td className="w-48 py-1.5 pr-6 text-ink-secondary">
+                    <td className="w-48 py-1.5 pe-6 text-ink-secondary">
                       <Bidi>{type === undefined ? 'Unknown deduction' : typeLabel(type)}</Bidi>
                     </td>
-                    <td className="w-32 py-1.5 pr-6 text-right">
+                    <td className="w-32 py-1.5 pe-6 text-end">
                       {line.employerAmount !== undefined && <Amount value={line.employerAmount} />}
                     </td>
                     <td className="py-1.5 text-caption text-ink-tertiary">
@@ -162,8 +162,8 @@ export function PaycheckDetail({
                 )
               })}
               <tr>
-                <td className="py-1.5 pr-6 font-medium">Employer total</td>
-                <td className="py-1.5 pr-6 text-right font-medium">
+                <td className="py-1.5 pe-6 font-medium">Employer total</td>
+                <td className="py-1.5 pe-6 text-end font-medium">
                   <Amount value={employer} />
                 </td>
                 <td />

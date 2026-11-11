@@ -620,14 +620,16 @@ html {
 .fc-btn-ghost::after {
   content: "";
   position: absolute;
-  left: 4px;
-  right: 4px;
+  inset-inline: 4px;
   bottom: 6px;
   height: 1px;
   background: currentColor;
   transform: scaleX(0);
   transform-origin: left;
   transition: transform var(--duration-base) var(--ease-out);
+}
+[dir='rtl'] .fc-btn-ghost::after {
+  transform-origin: right;
 }
 .fc-btn-ghost:hover:not(:disabled) {
   color: var(--color-accent-hover);
@@ -1087,8 +1089,8 @@ input[type="number"] {
 .fc-tl-rail::after {
   content: "";
   position: absolute;
-  left: 19px;
-  border-left: 2px solid var(--color-ink-tertiary);
+  inset-inline-start: 19px;
+  border-inline-start: 2px solid var(--color-ink-tertiary);
 }
 .fc-tl-rail::before {
   top: 0;
@@ -1100,8 +1102,8 @@ input[type="number"] {
 }
 .fc-tl-rail[data-above="dashed"]::before,
 .fc-tl-rail[data-below="dashed"]::after {
-  border-left-style: dashed;
-  border-left-color: var(--color-hairline-strong);
+  border-inline-start-style: dashed;
+  border-inline-start-color: var(--color-hairline-strong);
 }
 .fc-tl-rail[data-above="none"]::before,
 .fc-tl-rail[data-below="none"]::after {
@@ -1110,7 +1112,7 @@ input[type="number"] {
 .fc-tl-dot {
   position: absolute;
   z-index: 1;
-  left: 11px;
+  inset-inline-start: 11px;
   top: 14px;
   width: 18px;
   height: 18px;
@@ -1434,6 +1436,30 @@ input[type="number"] {
 }
 .fc-swap-r {
   animation: fc-swap-from-right var(--duration-base) var(--ease-out);
+}
+/* **A figure reads as it is written, inside Hebrew** (M60 U3, D-586): a figure's
+   own direction comes from what it holds, so `−₪3,980.50` keeps its minus and
+   its ₪ in front where the line around it is right to left — no strong letter
+   in it reads left to right. A column of figures still sits at the end of the
+   line, the left in Hebrew, as `text-end` meant: the line's direction no longer
+   says which side that is, so it is said here. Hebrew words beside a figure
+   take the Bidi component. */
+[dir='rtl'] .tabular-nums {
+  unicode-bidi: plaintext;
+}
+[dir='rtl'] .tabular-nums.text-end {
+  text-align: left;
+}
+[dir='rtl'] .tabular-nums.text-start {
+  text-align: right;
+}
+
+/* In Hebrew the earlier month is drawn on the right, so it arrives from there (M60 U3, D-586). */
+[dir='rtl'] .fc-swap-l {
+  animation-name: fc-swap-from-right;
+}
+[dir='rtl'] .fc-swap-r {
+  animation-name: fc-swap-from-left;
 }
 
 /* The month open, in the table: the row cursor's marker on the selection. */

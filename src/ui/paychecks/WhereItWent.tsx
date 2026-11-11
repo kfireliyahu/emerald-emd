@@ -171,7 +171,7 @@ function Flow({
  * month into a screen that looks like an error.
  */
 function Arrival({ end, onGo }: { end: TraceEnd; onGo: (to: string) => void }) {
-  const link = 'text-left text-ink underline-offset-4 transition-colors duration-[var(--duration-micro)] hover:underline'
+  const link = 'text-start text-ink underline-offset-4 transition-colors duration-[var(--duration-micro)] hover:underline'
   if (end.kind === 'HOLDING') {
     return (
       <button type="button" className={link} onClick={() => onGo('/wealth')}>

@@ -124,15 +124,15 @@ export function RollupView({
       {result.groups.length === 0 ? (
         <p className="px-6 py-4 text-ink-secondary">No row falls in it yet.</p>
       ) : (
-        <table className="min-w-full border-collapse text-left">
+        <table className="min-w-full border-collapse text-start">
           <thead className="sticky top-0 z-10 bg-background">
             <tr className="border-b border-hairline">
               <th className="px-3 py-2 text-label whitespace-nowrap">month</th>
               {by !== undefined && (
                 <th className="px-3 py-2 text-label whitespace-nowrap">{by.replace(/_/g, ' ')}</th>
               )}
-              <th className="px-3 py-2 text-right text-label whitespace-nowrap">{said}</th>
-              <th className="px-3 py-2 text-right text-label whitespace-nowrap">rows</th>
+              <th className="px-3 py-2 text-end text-label whitespace-nowrap">{said}</th>
+              <th className="px-3 py-2 text-end text-label whitespace-nowrap">rows</th>
             </tr>
           </thead>
           <tbody>
@@ -155,7 +155,7 @@ export function RollupView({
                     )}
                   </td>
                 )}
-                <td className="px-3 py-1.5 text-right whitespace-nowrap tabular-nums">
+                <td className="px-3 py-1.5 text-end whitespace-nowrap tabular-nums">
                   {group.value.kind === 'VALUE' ? (
                     group.value.figures.map((figure) => figureText(figure, moneyOf)).join(' + ')
                   ) : (
@@ -164,7 +164,7 @@ export function RollupView({
                     </span>
                   )}
                 </td>
-                <td className="px-3 py-1.5 text-right whitespace-nowrap tabular-nums text-ink-secondary">
+                <td className="px-3 py-1.5 text-end whitespace-nowrap tabular-nums text-ink-secondary">
                   {group.rows}
                 </td>
               </tr>

@@ -74,10 +74,10 @@ export function PreviewStrip({
         <tbody>
           {transactions.map((transaction, index) => (
             <tr key={index} className="border-t border-hairline">
-              <td className="py-1 pr-4 tabular-nums whitespace-nowrap text-ink-secondary">
+              <td className="py-1 pe-4 tabular-nums whitespace-nowrap text-ink-secondary">
                 {toISODate(transaction.transactionDate)}
               </td>
-              <td className="w-full py-1 pr-4">
+              <td className="w-full py-1 pe-4">
                 <Bidi>{transaction.merchantRaw}</Bidi>
                 {transaction.installment !== undefined && (
                   <Tag>
@@ -86,12 +86,12 @@ export function PreviewStrip({
                 )}
                 {transaction.foreign !== undefined && <Tag>foreign</Tag>}
                 {transaction.providerCategory !== undefined && (
-                  <span className="ml-2 text-ink-secondary">
+                  <span className="ms-2 text-ink-secondary">
                     <Bidi>{transaction.providerCategory}</Bidi>
                   </span>
                 )}
               </td>
-              <td className="py-1 text-right whitespace-nowrap">
+              <td className="py-1 text-end whitespace-nowrap">
                 <Amount value={transaction.amount} />
               </td>
             </tr>
@@ -155,5 +155,5 @@ function Panel({ children }: { children: React.ReactNode }) {
 
 /** *A chip is text and a dot* (D-531): no border, no radius — the shared `.fc-state`. */
 function Tag({ children }: { children: React.ReactNode }) {
-  return <span className="fc-state ml-2 align-middle">{children}</span>
+  return <span className="fc-state ms-2 align-middle">{children}</span>
 }

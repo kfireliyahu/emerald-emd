@@ -35,7 +35,7 @@ export function Look({
   return (
     <button
       type="button"
-      className={`block text-left ${className ?? ''}`}
+      className={`block text-start ${className ?? ''}`}
       onMouseEnter={() => onLook(line)}
       onMouseLeave={() => onLook(undefined)}
       onFocus={() => onLook(line)}

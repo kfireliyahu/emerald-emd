@@ -138,7 +138,7 @@ export function PointsAt({
                 key={each.id}
                 type="button"
                 onClick={() => onPick(kind, each.id)}
-                className="grid min-h-[30px] w-full grid-cols-[minmax(0,1fr)_18px] items-center gap-2.5 px-3.5 text-left hover:bg-accent-soft focus-visible:bg-accent-soft focus-visible:outline-none"
+                className="grid min-h-[30px] w-full grid-cols-[minmax(0,1fr)_18px] items-center gap-2.5 px-3.5 text-start hover:bg-accent-soft focus-visible:bg-accent-soft focus-visible:outline-none"
               >
                 <span className="flex min-w-0">
                   <Bidi className="min-w-0 truncate">{each.name}</Bidi>
@@ -150,7 +150,7 @@ export function PointsAt({
           <button
             type="button"
             onClick={() => onPick('FREE', undefined)}
-            className="grid min-h-[30px] w-full grid-cols-[minmax(0,1fr)_18px] items-center gap-2.5 px-3.5 text-left text-ink-secondary hover:bg-accent-soft"
+            className="grid min-h-[30px] w-full grid-cols-[minmax(0,1fr)_18px] items-center gap-2.5 px-3.5 text-start text-ink-secondary hover:bg-accent-soft"
           >
             <span>Nothing in particular</span>
             {bucket.targetKind === 'FREE' && <ActionGlyph name="check" size={14} />}
@@ -234,7 +234,7 @@ function NewForm({
               inputMode="decimal"
               value={target}
               onChange={(event) => setTarget(event.target.value)}
-              className={`${FORM_FIELD} text-right tabular-nums`}
+              className={`${FORM_FIELD} text-end tabular-nums`}
             />
             {label('pa-by', 'By')}
             <input id="pa-by" type="month" value={by} onChange={(event) => setBy(event.target.value)} className={FORM_FIELD} />
@@ -257,7 +257,7 @@ function NewForm({
               inputMode="decimal"
               value={detail}
               onChange={(event) => setDetail(event.target.value)}
-              className={`${FORM_FIELD} text-right tabular-nums`}
+              className={`${FORM_FIELD} text-end tabular-nums`}
             />
           </>
         )}

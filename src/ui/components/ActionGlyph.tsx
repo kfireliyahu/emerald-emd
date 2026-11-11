@@ -124,6 +124,9 @@ const PATHS: Readonly<Record<ActionGlyphName, React.ReactNode>> = {
   ),
 }
 
+/** The glyphs that point along the line, mirrored in Hebrew (M60 U3, D-586). */
+const POINTING: ReadonlySet<ActionGlyphName> = new Set(['left', 'right', 'arrow', 'undo'])
+
 export function ActionGlyph({ name, size = 16 }: { readonly name: ActionGlyphName; readonly size?: number }) {
   return (
     <svg
@@ -135,7 +138,7 @@ export function ActionGlyph({ name, size = 16 }: { readonly name: ActionGlyphNam
       stroke="currentColor"
       strokeWidth="1.6"
       strokeLinecap="square"
-      className="shrink-0"
+      className={POINTING.has(name) ? 'shrink-0 rtl:-scale-x-100' : 'shrink-0'}
     >
       {PATHS[name]}
     </svg>

@@ -112,7 +112,7 @@ export function FixedExpenseEditor({
         <span className="text-[16px] font-medium">
           {isNew ? 'New bill' : 'Edit bill'}
         </span>
-        <span className="ml-auto text-caption text-ink-secondary">
+        <span className="ms-auto text-caption text-ink-secondary">
           Escape closes this. Nothing is written to your document until you save it.
         </span>
       </div>
@@ -139,7 +139,7 @@ export function FixedExpenseEditor({
               }}
               placeholder="0.00"
               aria-label="Expected amount"
-              className={`${FIELD} w-32 text-right tabular-nums`}
+              className={`${FIELD} w-32 text-end tabular-nums`}
             />
           </Field>
 
@@ -207,7 +207,7 @@ export function FixedExpenseEditor({
             />
             <span>
               I could cut this
-              <span className="ml-2 text-caption text-ink-tertiary">
+              <span className="ms-2 text-caption text-ink-tertiary">
                 fixed and necessary are different things
               </span>
             </span>
@@ -362,10 +362,10 @@ export function FixedExpenseEditor({
               <tbody>
                 {matchedHistory.map((charge) => (
                   <tr key={`${charge.date}-${charge.amount.minor}`} className="border-b border-hairline">
-                    <td className="w-32 py-1.5 pr-6 text-ink-secondary tabular-nums">
+                    <td className="w-32 py-1.5 pe-6 text-ink-secondary tabular-nums">
                       {charge.date}
                     </td>
-                    <td className="py-1.5 text-right tabular-nums">{formatMoney(charge.amount)}</td>
+                    <td className="py-1.5 text-end tabular-nums">{formatMoney(charge.amount)}</td>
                   </tr>
                 ))}
               </tbody>

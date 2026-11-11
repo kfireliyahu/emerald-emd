@@ -111,7 +111,7 @@ export function GoalDetail() {
 
   return (
     <div className="relative flex h-full flex-col gap-4 overflow-auto px-6 pt-5 pb-10">
-      <div className="absolute top-3 right-3 flex items-center gap-1.5">
+      <div className="absolute top-3 end-3 flex items-center gap-1.5">
         <Button variant="ghost" size="sm" onClick={edit}>
           Edit
         </Button>
@@ -255,7 +255,7 @@ function DepositRow({
           : 'Growth')
   return (
     <tr>
-      <td className="h-auto border-b border-hairline py-2 pr-2.5 align-top text-[13px] whitespace-nowrap text-ink-secondary tabular-nums">
+      <td className="h-auto border-b border-hairline py-2 pe-2.5 align-top text-[13px] whitespace-nowrap text-ink-secondary tabular-nums">
         {formatDayMonth(deposit.date)}
       </td>
       <td className="border-b border-hairline px-2.5 py-2 align-top">
@@ -270,7 +270,7 @@ function DepositRow({
       <td className="border-b border-hairline px-2.5 py-2 align-top">
         <Tag tone={tone}>{label}</Tag>
       </td>
-      <td className="border-b border-hairline py-2 pl-2.5 text-right align-top whitespace-nowrap tabular-nums">
+      <td className="border-b border-hairline py-2 ps-2.5 text-end align-top whitespace-nowrap tabular-nums">
         {formatMoney(deposit.amount)}
       </td>
     </tr>
@@ -347,7 +347,7 @@ function WherePanel({
             <b className="font-medium">
               <Bidi>{choice?.name ?? holding?.name ?? 'A holding this document no longer has'}</Bidi>
               {choice?.detail !== undefined && (
-                <span className="ml-1.5 text-caption font-normal text-ink-secondary">
+                <span className="ms-1.5 text-caption font-normal text-ink-secondary">
                   <Bidi>{choice.detail}</Bidi>
                 </span>
               )}
@@ -477,7 +477,7 @@ function AddMoney({
             inputMode="decimal"
             value={amount}
             onChange={(event) => setAmount(event.target.value)}
-            className="h-[30px] min-w-0 border border-hairline-strong bg-background px-2 text-right tabular-nums"
+            className="h-[30px] min-w-0 border border-hairline-strong bg-background px-2 text-end tabular-nums"
           />
           <label htmlFor="add-date">On</label>
           <input

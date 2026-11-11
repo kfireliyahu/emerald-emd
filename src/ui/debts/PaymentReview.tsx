@@ -147,7 +147,7 @@ export function PaymentReview({
               <span className="min-w-40 flex-1">
                 <Bidi>{describeProvenance(match.provenance)}</Bidi>
               </span>
-              <span className="w-28 text-right tabular-nums">{formatMoney(match.amount)}</span>
+              <span className="w-28 text-end tabular-nums">{formatMoney(match.amount)}</span>
               <span className="flex flex-wrap items-center gap-2">
                 {match.debts.map((debt) => (
                   <Button
@@ -189,11 +189,11 @@ export function PaymentReview({
               </span>
               <span className="min-w-40 flex-1">
                 <Bidi className="font-medium">{item.debt.name}</Bidi>
-                <span className="ml-2 text-caption text-ink-tertiary">
+                <span className="ms-2 text-caption text-ink-tertiary">
                   <Bidi>{item.payment.note ?? PAYMENT_SOURCE_LABEL[item.payment.sourceKind]}</Bidi>
                 </span>
               </span>
-              <span className="w-28 text-right tabular-nums">
+              <span className="w-28 text-end tabular-nums">
                 {formatMoney(item.payment.amount)}
               </span>
               <span className="flex gap-2">
@@ -252,11 +252,11 @@ export function PaymentLine({
       <span className="w-24 shrink-0 text-ink-tertiary tabular-nums">{toISODate(item.payment.date)}</span>
       <span className="min-w-40 flex-1">
         <Bidi className="font-medium">{item.debt.name}</Bidi>
-        <span className="ml-2 text-caption text-ink-tertiary">
+        <span className="ms-2 text-caption text-ink-tertiary">
           <Bidi>{provenanceSentence(item)}</Bidi>
         </span>
       </span>
-      <span className="w-28 text-right tabular-nums">{formatMoney(item.payment.amount)}</span>
+      <span className="w-28 text-end tabular-nums">{formatMoney(item.payment.amount)}</span>
       <span className="flex flex-wrap gap-2">
         <Button variant="secondary" size="sm" onClick={onConfirm}>
           Yes, it is
