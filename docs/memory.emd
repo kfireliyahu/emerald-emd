@@ -4842,6 +4842,16 @@ answer: Maintainer, 2026-11-11, every recommendation: (1) one translation layer 
 state: live
 affects: "index.html\nsrc/ui/\nelectron/menu.ts\nsrc/data/packs/ledger/pack.ts"
 
+### D-584
+date: 2026-11-11
+milestone: M60
+scope: app
+title: The translation layer is hand-rolled in src/i18n/: English the source with typed keys, Hebrew one file per area and held complete once it has one, the language the app's entry alone follows, Settings › Language a place of its own, and the shell given its words over the bridge
+question: How is M60's translation layer built, where is the language chosen and kept, and how do later units and the shell use it?
+answer: No dependency. src/i18n/en/<area>.ts is the source and MessageKey its typed keys; he/<area>.ts beside it, every word optional (lists whole), falling back to English per word; an area with a Hebrew file is held complete by catalogue.test.ts. A screen draws with useT() and useDates(). The language is localStorage emerald-language when Settings › Language (/settings/language) sets it, else navigator.language (he* = Hebrew); only src/main.tsx calls initLanguage(), so the demo, the host frame, tours and tests stay English. core/time.ts stays English for tool text. A place the app names carries word: MessageKey in nav.ts. The shell (U7) gets its language and menu words from the page over bridge.ts.
+state: live
+affects: "src/core/time.ts\ndocs/02-architecture.md\nsrc/ui/fixed/labels.ts\nsrc/ui/funds/labels.ts\nsrc/ui/savings/labels.ts"
+
 ### D-585
 date: 2026-11-11
 milestone: M60
@@ -6122,6 +6132,15 @@ refs: M59 U5
 state: applied
 answered_by: D-581
 became_unit: M59 U5
+
+### M60 U1 landing: the translation layer, built at dcc911c
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-11
+body: "M60 U1 is built on worktree-agent-ab89f6c8fa3bf4515 at dcc911c: src/i18n/ (typed English catalogues, Hebrew per area with fallback), the language following the computer until Settings > Language, <html lang dir>, Hebrew months, proven on the rail and Settings > Language. Land with land_units inbox:[this id].\n\n```json\n{\"unit\": \"M60 U1\", \"files\": \"src/i18n/language.ts\\nsrc/i18n/catalogue.ts\\nsrc/i18n/current.ts\\nsrc/i18n/dates.ts\\nsrc/i18n/en/rail.ts\\nsrc/i18n/en/settings.ts\\nsrc/i18n/en/dates.ts\\nsrc/i18n/he/rail.ts\\nsrc/i18n/he/settings.ts\\nsrc/i18n/he/dates.ts\\nsrc/i18n/catalogue.test.ts\\nsrc/i18n/current.test.ts\\nsrc/i18n/dates.test.ts\\nsrc/ui/screens/Language.tsx\\nsrc/ui/nav.ts\\nsrc/ui/nav.test.ts\\nsrc/ui/Sidebar.tsx\\nsrc/ui/components/ViewTabs.tsx\\nsrc/App.tsx\\nsrc/main.tsx\\nsrc/core/time.ts\\ndocs/02-architecture.md\\ndocs/09-decision-log.md\", \"commit\": \"dcc911c\", \"branch\": \"worktree-agent-ab89f6c8fa3bf4515\", \"report\": \"Built the layer in src/i18n/: en/<area>.ts is the source and MessageKey its typed dotted keys; he/<area>.ts beside it typed Translation<area>, falling back to English per word; an area with a Hebrew file is held complete by catalogue.test.ts, which names what is missing. current.ts: the language is emerald-language in localStorage when Settings sets it, else navigator.language (he* Hebrew, else English); initLanguage() in src/main.tsx alone sets <html lang dir> before first render, so the demo (public site), the host frame, tours and tests stay English. dates.ts formats the months through the catalogue (Hebrew Gregorian names, Western digits, {day} ב{month}); core/time.ts stays English for tool text and a test holds the two English outputs equal. Proof: every rail place, child and tab carries a word key (named() in nav.ts), the Sidebar, ViewTabs and the window title draw it with useT(); Settings > Language (/settings/language, new child after Calendar) offers English / עברית. Hebrew rail words are drafts for U2's glossary to replace in src/i18n/he/rail.ts. For U7: electron imports nothing from src, so the page sends the shell its language and the menu area's words over bridge.ts; the catalogue files import nothing at run time, so bundling them for the shell is the fallback. Verified in the browser: choosing Hebrew flips <html> to he/rtl and the rail and screen to Hebrew, and a reload on an en-US machine keeps it. Until U3, a Hebrew computer opens with dir=rtl on a left-to-right layout.\", \"decisions\": [{\"ref\": \"D-584\", \"title\": \"The translation layer is hand-rolled in src/i18n/: English the source with typed keys, Hebrew one file per area and held complete once it has one, the language the app's entry alone follows, Settings › Language a place of its own, and the shell given its words over the bridge\", \"question\": \"How is M60's translation layer built, where is the language chosen and kept, and how do later units and the shell use it?\", \"answer\": \"No dependency. src/i18n/en/<area>.ts is the source and MessageKey its typed keys; he/<area>.ts beside it, every word optional (lists whole), falling back to English per word; an area with a Hebrew file is held complete by catalogue.test.ts. A screen draws with useT() and useDates(). The language is localStorage emerald-language when Settings › Language (/settings/language) sets it, else navigator.language (he* = Hebrew); only src/main.tsx calls initLanguage(), so the demo, the host frame, tours and tests stay English. core/time.ts stays English for tool text. A place the app names carries word: MessageKey in nav.ts. The shell (U7) gets its language and menu words from the page over bridge.ts.\", \"affects\": \"src/core/time.ts\\ndocs/02-architecture.md\\nsrc/ui/fixed/labels.ts\\nsrc/ui/funds/labels.ts\\nsrc/ui/savings/labels.ts\"}], \"review_entries\": []}\n```"
+refs: M60 U1
+state: applied
+answered_by: D-584
+became_unit: M60 U1
 
 ### Text refs sort as text, so Q10 lists before Q2
 from: another document of the maintainer's
@@ -16983,14 +17002,17 @@ report: M59 U6 built at 3e273fa (D-582). The rail holds back Year, Paychecks, Pl
 milestone: M60
 scope: app
 title: The words go through one layer, and the app opens in the computer's language
-decision: D-583
-state: in_progress
+landed: 2026-11-11
+decision: D-584
+state: built
 brief: D-583. Today there is no translation layer: on-screen words are written inline across ~200 files in src/ui, and index.html/demo.html say <html lang="en">. Build the layer every later M60 unit uses: (1) a small hand-rolled layer in src/i18n/ (no new dependency unless the unit shows why; then stop and ask): English is the source catalogue with typed keys, so a missing or misspelled key is a type error; Hebrew catalogues are one file per area (src/i18n/he/<area>.ts, the English beside it), so U4 and U5 can translate in parallel without touching one file; a key missing in Hebrew falls back to English and a test lists the missing ones. (2) The language: on first open it follows the computer (navigator.language starting with he is Hebrew, anything else English); Settings gets Language (English / עברית) that overrides it, kept per machine in localStorage like the theme (D-115, D-320), never in the document. <html lang dir> follow the choice (dir=rtl in Hebrew; what that does to the layout is U3's). (3) Month names and dates go through the layer: Hebrew month names, Gregorian only, Western digits; ₪ and money formatting unchanged (src/core/money.ts stays as it is; src/core/time.ts's formatting takes the language or the layer formats). (4) Prove it on the smallest set: Settings' own Language row and the rail's place names. The Bidi component (src/ui/Bidi.tsx) stays the way raw document strings render. Words checked against term rows. Tests: the default follows navigator.language; the override survives a reload; <html dir> flips; the month names. Unset: stop and ask.
-files: "src/ui/Bidi.tsx\nsrc/core/time.ts\nindex.html\ndemo.html\nsrc/ui/Sidebar.tsx"
+files: "src/i18n/language.ts\nsrc/i18n/catalogue.ts\nsrc/i18n/current.ts\nsrc/i18n/dates.ts\nsrc/i18n/en/rail.ts\nsrc/i18n/en/settings.ts\nsrc/i18n/en/dates.ts\nsrc/i18n/he/rail.ts\nsrc/i18n/he/settings.ts\nsrc/i18n/he/dates.ts\nsrc/i18n/catalogue.test.ts\nsrc/i18n/current.test.ts\nsrc/i18n/dates.test.ts\nsrc/ui/screens/Language.tsx\nsrc/ui/nav.ts\nsrc/ui/nav.test.ts\nsrc/ui/Sidebar.tsx\nsrc/ui/components/ViewTabs.tsx\nsrc/App.tsx\nsrc/main.tsx\nsrc/core/time.ts\ndocs/02-architecture.md\ndocs/09-decision-log.md"
 taken_by: run-milestone driver
 started: 2026-11-11
-branch: main
+branch: worktree-agent-ab89f6c8fa3bf4515
+commit: dcc911c
 paths: "src/i18n/\nsrc/core/time.ts\nindex.html\ndemo.html"
+report: Built the layer in src/i18n/: en/<area>.ts is the source and MessageKey its typed dotted keys; he/<area>.ts beside it typed Translation<area>, falling back to English per word; an area with a Hebrew file is held complete by catalogue.test.ts, which names what is missing. current.ts: the language is emerald-language in localStorage when Settings sets it, else navigator.language (he* Hebrew, else English); initLanguage() in src/main.tsx alone sets <html lang dir> before first render, so the demo (public site), the host frame, tours and tests stay English. dates.ts formats the months through the catalogue (Hebrew Gregorian names, Western digits, {day} ב{month}); core/time.ts stays English for tool text and a test holds the two English outputs equal. Proof: every rail place, child and tab carries a word key (named() in nav.ts), the Sidebar, ViewTabs and the window title draw it with useT(); Settings > Language (/settings/language, new child after Calendar) offers English / עברית. Hebrew rail words are drafts for U2's glossary to replace in src/i18n/he/rail.ts. For U7: electron imports nothing from src, so the page sends the shell its language and the menu area's words over bridge.ts; the catalogue files import nothing at run time, so bundling them for the shell is the fallback. Verified in the browser: choosing Hebrew flips <html> to he/rtl and the rail and screen to Hebrew, and a reload on an en-US machine keeps it. Until U3, a Hebrew computer opens with dir=rtl on a left-to-right layout.
 
 ### M60 U2
 milestone: M60

@@ -486,8 +486,8 @@ written out here.
 | D-581 | 2026-11-11 | The app is a window that never scrolls, and Guide me opens only from a press: the shell is the positioned frame and the page itself cannot scroll; the new document's offer is gone, and Home's Getting started line is dismissed per document with Dismiss | M59 |
 | D-582 | 2026-11-11 | A new ledger document shows what M59 U1 picked: the rail holds back each place until the document holds what it shows, Home before a read is the band and Getting started, and Transactions and By merchant put their filters behind Filter and their rarer acts behind More | M59 |
 | D-583 | 2026-11-11 | The app in Hebrew: one translation layer for the whole app, Hebrew for everything a ledger document shows after M59, a full right-to-left mirror with English unchanged, the language following the computer until Settings says otherwise and kept per machine, and M59 with M60 shipped as one desktop release after the maintainer tries both | M60 |
-| D-585 | 2026-11-11 | The Hebrew screen's words are a `screen_hebrew` column on the term rows, one word per thing in both languages; a button is a verbal noun, and a word a statement prints is the screen's word | M60 |
 | D-584 | 2026-11-11 | The translation layer is hand-rolled in `src/i18n/`: English the source with typed keys, Hebrew one file per area and held complete once it has one, the language the app's entry alone follows, Settings › Language a place of its own, and the shell given its words over the bridge | M60 |
+| D-585 | 2026-11-11 | The Hebrew screen's words are a `screen_hebrew` column on the term rows, one word per thing in both languages; a button is a verbal noun, and a word a statement prints is the screen's word | M60 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1063,30 +1063,6 @@ her together.
 names in a new document (U6), the desktop shell (U7) and the release (U8, which starts only on the
 maintainer's go). The open question *Hebrew interface* is answered.
 
-## D-585 · 2026-11-11 · The Hebrew screen's words are a `screen_hebrew` column on the term rows, one word per thing in both languages; a button is a verbal noun, and a word a statement prints is the screen's word <a id="d-585"></a>
-
-**Context.** D-583 point 5: every term row gets its Hebrew word, and the glossary unit (M60 U2) stops
-for the maintainer before any screen is translated. The term format already had `printed_as`, the
-Hebrew a payslip or statement prints, which is a different fact from what the screen says.
-
-**Decision.** (M60 U2, the unit's pick, corrected by the maintainer's pass over
-`docs/mockups/m60-u2/glossary.md`.)
-
-1. **A column of its own, `screen_hebrew`**, on `term`: what the app's screen says in Hebrew. Not
-   `printed_as`, and named so it cannot be read as it. Filled for every live term of scope ledger,
-   app or shell shown in the rail, a view, a verdict, a screen or the tour, and the rail's engine
-   places (Formats, Connections, Agenda, Packs); six terms the screens used without a row were added
-   (By merchant, Where it went, More, Language, Start with 50 / 30 / 20, Needs · Wants · Saving).
-2. **No two terms share a Hebrew word**, and **a word a statement prints is the screen's word**
-   (`printed_as` wins), unless the sheet says why not.
-3. **A button or a command is a verbal noun** (*שמירה בשם*, *ייבוא קבצים*, *סינון*), as Israeli bank
-   and card apps write them, so nothing on a button is addressed to a man or a woman.
-4. **The seeded categories' Hebrew is drafted in the sheet**, not in rows: they are not terms, and
-   U6 writes them into a new Hebrew document.
-
-**Rejected.** Writing the Hebrew into `printed_as` (two facts in one column, and a source document's
-word is not always the screen's); a separate glossary note (D-436: terms are rows); imperative
-buttons (*שמור*), which pick a gender or read as an order.
 ## D-584 · 2026-11-11 · The translation layer is hand-rolled in `src/i18n/`: English the source with typed keys, Hebrew one file per area and held complete once it has one, the language the app's entry alone follows, Settings › Language a place of its own, and the shell given its words over the bridge <a id="d-584"></a>
 
 **Context.** M60 U1 builds the layer D-583 asked for, and proves it on the smallest set: the rail's
@@ -1131,6 +1107,30 @@ every runtime. A `Follow the computer` choice in Settings: D-583 names two.
 mirrors the layout, a Hebrew computer opens the app with `dir="rtl"` on a layout written for left to
 right.
 
+## D-585 · 2026-11-11 · The Hebrew screen's words are a `screen_hebrew` column on the term rows, one word per thing in both languages; a button is a verbal noun, and a word a statement prints is the screen's word <a id="d-585"></a>
+
+**Context.** D-583 point 5: every term row gets its Hebrew word, and the glossary unit (M60 U2) stops
+for the maintainer before any screen is translated. The term format already had `printed_as`, the
+Hebrew a payslip or statement prints, which is a different fact from what the screen says.
+
+**Decision.** (M60 U2, the unit's pick, corrected by the maintainer's pass over
+`docs/mockups/m60-u2/glossary.md`.)
+
+1. **A column of its own, `screen_hebrew`**, on `term`: what the app's screen says in Hebrew. Not
+   `printed_as`, and named so it cannot be read as it. Filled for every live term of scope ledger,
+   app or shell shown in the rail, a view, a verdict, a screen or the tour, and the rail's engine
+   places (Formats, Connections, Agenda, Packs); six terms the screens used without a row were added
+   (By merchant, Where it went, More, Language, Start with 50 / 30 / 20, Needs · Wants · Saving).
+2. **No two terms share a Hebrew word**, and **a word a statement prints is the screen's word**
+   (`printed_as` wins), unless the sheet says why not.
+3. **A button or a command is a verbal noun** (*שמירה בשם*, *ייבוא קבצים*, *סינון*), as Israeli bank
+   and card apps write them, so nothing on a button is addressed to a man or a woman.
+4. **The seeded categories' Hebrew is drafted in the sheet**, not in rows: they are not terms, and
+   U6 writes them into a new Hebrew document.
+
+**Rejected.** Writing the Hebrew into `printed_as` (two facts in one column, and a source document's
+word is not always the screen's); a separate glossary note (D-436: terms are rows); imperative
+buttons (*שמור*), which pick a gender or read as an order.
 ## Related
 
 07 Roadmap · [conventions](./conventions.md) · review · `docs/memory.emd` (the `decision` rows)
