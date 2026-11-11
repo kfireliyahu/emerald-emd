@@ -1,6 +1,7 @@
 import { useEffect, useReducer, useRef } from 'react'
 import { useLocation, useNavigate, useNavigationType } from 'react-router-dom'
 
+import { useT } from '@/i18n/current.ts'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 
 /**
@@ -48,6 +49,7 @@ function countEntry(before: { readonly at: number; readonly address: string } | 
  * here instead — a push drops everything ahead, a step back leaves it there.
  */
 export function HistoryArrows() {
+  const t = useT()
   const navigate = useNavigate()
   const type = useNavigationType()
   const location = useLocation() // drawn again on every move, which is when the index changes
@@ -76,8 +78,8 @@ export function HistoryArrows() {
     <div className="flex shrink-0 items-center">
       <button
         type="button"
-        aria-label="Back"
-        title="Back"
+        aria-label={t('chrome.rail.back')}
+        title={t('chrome.rail.back')}
         className="fc-icon-action"
         disabled={at === undefined || at === 0}
         onClick={() => navigate(-1)}
@@ -86,8 +88,8 @@ export function HistoryArrows() {
       </button>
       <button
         type="button"
-        aria-label="Forward"
-        title="Forward"
+        aria-label={t('chrome.rail.forward')}
+        title={t('chrome.rail.forward')}
         className="fc-icon-action"
         disabled={at === undefined || at >= furthest.current}
         onClick={() => navigate(1)}

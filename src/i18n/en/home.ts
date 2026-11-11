@@ -182,13 +182,4 @@ export const home = {
     fewer: 'Show fewer',
     more: 'Show {count} more',
   },
-  guide: {
-    dismiss: 'Dismiss',
-    allDone: 'Getting started: all {count} places done.',
-    again: 'Walk it again',
-    progress: 'Getting started, {done} of {count} done.',
-    next: 'Next: {step}.',
-    continue: 'Continue the guide',
-    start: 'Guide me',
-  },
 } as const

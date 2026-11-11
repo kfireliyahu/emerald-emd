@@ -1,5 +1,6 @@
 import { formatMoney } from '@/core/money.ts'
-import { SUGGESTION_WORDS, type Suggestion } from '@/domain/goalRhythm.ts'
+import type { Suggestion } from '@/domain/goalRhythm.ts'
+import { useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 
@@ -16,22 +17,23 @@ export function SuggestionPanel({
   onApply: () => void
   onClose: () => void
 }) {
+  const t = useT()
   if (suggestion === undefined) {
     return (
       <div className="fc-pop-enter flex items-center gap-4 border border-hairline bg-surface px-4 py-2">
-        <span>Nothing to suggest: no open goal has a bucket in this plan.</span>
+        <span>{t('plan.suggestion.nothing')}</span>
         <Button variant="ghost" size="sm" className="ms-auto" onClick={onClose}>
-          Close
+          {t('plan.suggestion.close')}
         </Button>
       </div>
     )
   }
   return (
-    <section aria-label="Suggested goal amounts" className="fc-pop-enter flex flex-col gap-2 border border-hairline bg-surface px-4 py-3">
+    <section aria-label={t('plan.suggestion.title')} className="fc-pop-enter flex flex-col gap-2 border border-hairline bg-surface px-4 py-3">
       <div>
-        <h2 className="m-0 text-[16px] font-medium">Suggested goal amounts</h2>
+        <h2 className="m-0 text-[16px] font-medium">{t('plan.suggestion.title')}</h2>
         <p className="m-0 mt-0.5 text-caption text-ink-secondary">
-          Goals by nearest date, within {formatMoney(suggestion.pool)}.
+          {t('plan.suggestion.within', { pool: formatMoney(suggestion.pool) })}
         </p>
       </div>
       <table className="w-full border-collapse text-start">
@@ -43,8 +45,8 @@ export function SuggestionPanel({
               </td>
               <td className="py-1.5 pe-3 text-end tabular-nums">{formatMoney(one.amount)}</td>
               <td className="py-1.5 text-caption text-ink-secondary">
-                {SUGGESTION_WORDS[one.reason]}
-                {one.wanted.minor > one.amount.minor && ` (needs ${formatMoney(one.wanted)})`}
+                {t(`plan.suggestion.reasons.${one.reason}`)}
+                {one.wanted.minor > one.amount.minor && t('plan.suggestion.needs', { amount: formatMoney(one.wanted) })}
               </td>
             </tr>
           ))}
@@ -52,12 +54,12 @@ export function SuggestionPanel({
       </table>
       <div className="flex flex-wrap items-center gap-3">
         <Button variant="primary" size="sm" icon="check" onClick={onApply}>
-          Use these amounts
+          {t('plan.suggestion.use')}
         </Button>
         <Button variant="ghost" size="sm" onClick={onClose}>
-          Not now
+          {t('plan.suggestion.notNow')}
         </Button>
-        <span className="text-caption text-ink-secondary">Leaves {formatMoney(suggestion.left)} for Everything else.</span>
+        <span className="text-caption text-ink-secondary">{t('plan.suggestion.leaves', { amount: formatMoney(suggestion.left) })}</span>
       </div>
     </section>
   )

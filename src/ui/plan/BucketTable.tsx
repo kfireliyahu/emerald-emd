@@ -2,21 +2,17 @@ import { Fragment, useState, type ReactNode } from 'react'
 
 import { formatMoney, money, type CurrencyCode, type Money } from '@/core/money.ts'
 import { basisPointsText, formatPercent } from '@/core/percent.ts'
-import { formatYearMonth } from '@/core/time.ts'
 import type { BucketReading } from '@/data/repositories/planMonthRepository.ts'
 import { ALLOCATION_MODES, type AllocationMode, type SplitBucket } from '@/domain/model/plan.ts'
 import type { ComputedAllocation, VarianceLine } from '@/domain/splitter.ts'
+import { useDates, useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { CountingAmount } from '@/ui/components/Amount.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
+import { startEdge } from '@/ui/direction.ts'
 import type { BucketSection } from '@/ui/plan/bucketGroups.ts'
 import { KIND_LABEL } from '@/ui/plan/planLook.ts'
 
-const MODE_WORDS: Readonly<Record<AllocationMode, string>> = {
-  PERCENTAGE: 'Percent',
-  FIXED_AMOUNT: 'Fixed amount',
-  REMAINDER: 'What’s left',
-}
 
 /** What one row needs from the screen. */
 export interface BucketRowProps {
@@ -81,15 +77,17 @@ export function BucketTable({
   /** Drawn right under a bucket's row: the remove confirm sits at the bucket it removes (M28 F10). */
   below?: ((bucketId: string) => ReactNode) | undefined
 }) {
+  const t = useT()
+  const dates = useDates()
   return (
     <div className="overflow-x-auto">
       <div className="min-w-[860px]">
         <div className={`grid ${COLUMNS} gap-x-3.5 py-1.5 text-label text-ink-tertiary uppercase`}>
-          <span>Bucket</span>
-          <span>For</span>
-          <span>How much</span>
-          <span className="text-end">Planned</span>
-          <span className="text-end">Got in {gotIn}</span>
+          <span>{t('plan.bucket.column.bucket')}</span>
+          <span>{t('plan.bucket.column.for')}</span>
+          <span>{t('plan.bucket.column.howMuch')}</span>
+          <span className="text-end">{t('plan.bucket.column.planned')}</span>
+          <span className="text-end">{t('plan.bucket.column.gotIn', { month: gotIn })}</span>
           <span />
         </div>
         {sections.map((section, index) => (
@@ -133,7 +131,7 @@ export function BucketTable({
                   )}
                   {(allocation.isLocked || bucket.isBuffer) && (
                     <small className="block text-caption text-ink-secondary">
-                      {[allocation.isLocked ? 'keeps this size' : '', bucket.isBuffer ? 'takes the rounding' : '']
+                      {[allocation.isLocked ? t('plan.bucket.keepsSize') : '', bucket.isBuffer ? t('plan.bucket.takesRounding') : '']
                         .filter((part) => part !== '')
                         .join(' · ')}
                     </small>
@@ -146,7 +144,7 @@ export function BucketTable({
                   type="button"
                   onClick={(event) => {
                     const box = event.currentTarget.getBoundingClientRect()
-                    onPointsAt(bucket, { x: box.left, y: box.bottom })
+                    onPointsAt(bucket, startEdge(box))
                   }}
                   className={`inline-flex h-8 max-w-full items-center gap-2 border bg-background px-2.5 hover:border-accent ${
                     pointer ? 'border-dashed border-hairline-strong text-ink-secondary' : 'border-hairline-strong'
@@ -154,25 +152,25 @@ export function BucketTable({
                 >
                   {!pointer && <span className="shrink-0 text-label text-ink-secondary uppercase">{KIND_LABEL[bucket.targetKind]}</span>}
                   <span className="truncate font-medium">
-                    {pointer ? (row.orphaned ? 'Its target is gone' : 'Nothing in particular') : <Bidi>{row.targetName ?? ''}</Bidi>}
+                    {pointer ? (row.orphaned ? t('plan.bucket.targetGone') : t('plan.kind.FREE')) : <Bidi>{row.targetName ?? ''}</Bidi>}
                   </span>
                 </button>
                 {reading?.reach !== undefined && (
                   <small className="text-caption text-ink-secondary">
                     {reading.reach.kind === 'reached'
-                      ? 'goal reached'
-                      : `reached ${formatYearMonth(reading.reach.period)} at this rate`}
+                      ? t('plan.bucket.goalReached')
+                      : t('plan.bucket.reachedAt', { month: dates.yearMonth(reading.reach.period) })}
                   </small>
                 )}
                 {reading?.noTarget === true && (
                   <small className="border border-dashed border-flow-tax px-1.5 text-caption text-flow-tax">
-                    money with no job to do
+                    {t('plan.bucket.noJob')}
                   </small>
                 )}
               </div>
 
               <div className="flex flex-col items-start gap-1.5">
-                <div role="radiogroup" aria-label={`How ${bucket.name} is sized`} className="inline-flex">
+                <div role="radiogroup" aria-label={t('plan.bucket.sizedLabel', { name: bucket.name })} className="inline-flex">
                   {ALLOCATION_MODES.map((mode, index) => {
                     const on = allocation.mode === mode
                     return (
@@ -188,7 +186,7 @@ export function BucketTable({
                             : 'border-hairline-strong text-ink-secondary hover:text-ink'
                         }`}
                       >
-                        {MODE_WORDS[mode]}
+                        {t(`plan.bucket.mode.${mode}`)}
                       </button>
                     )
                   })}
@@ -212,10 +210,10 @@ export function BucketTable({
                         if (event.key === 'Enter') event.currentTarget.blur()
                         if (event.key === 'Escape') onPercentText(bucket.id, undefined)
                       }}
-                      aria-label={`${bucket.name} percentage`}
+                      aria-label={t('plan.bucket.percentLabel', { name: bucket.name })}
                       className={`${FIELD} w-20 text-end tabular-nums disabled:opacity-40`}
                     />
-                    <span className="text-ink-secondary">% of the split</span>
+                    <span className="text-ink-secondary">{t('plan.bucket.percentOfSplit')}</span>
                   </span>
                 ) : allocation.mode === 'FIXED_AMOUNT' ? (
                   <span className="flex min-h-[30px] items-center gap-1.5">
@@ -228,14 +226,14 @@ export function BucketTable({
                         if (event.key === 'Enter') event.currentTarget.blur()
                       }}
                       placeholder="0.00"
-                      aria-label={`${bucket.name} amount`}
+                      aria-label={t('plan.bucket.amountLabel', { name: bucket.name })}
                       className={`${FIELD} w-28 text-end tabular-nums disabled:opacity-40`}
                     />
-                    <span className="text-ink-secondary">a month</span>
+                    <span className="text-ink-secondary">{t('plan.aMonth')}</span>
                   </span>
                 ) : (
                   <span className="flex min-h-[30px] items-center text-ink-secondary">
-                    {amount.minor < 0 ? 'Nothing is left for it' : 'Whatever is left over'}
+                    {amount.minor < 0 ? t('plan.bucket.nothingLeft') : t('plan.bucket.whateverLeft')}
                   </span>
                 )}
               </div>
@@ -243,7 +241,7 @@ export function BucketTable({
               <div className="text-end tabular-nums">
                 <CountingAmount value={amount} className="block text-[15px] font-medium" />
                 <small className="block text-caption text-ink-secondary">
-                  {formatPercent(entry.shareBasisPoints, { digits: 1 })} of the split
+                  {t('plan.ofTheSplit', { percent: formatPercent(entry.shareBasisPoints, { digits: 1 }) })}
                 </small>
               </div>
 
@@ -251,10 +249,10 @@ export function BucketTable({
 
               <button
                 type="button"
-                aria-label={`More for ${bucket.name}`}
+                aria-label={t('plan.moreFor', { name: bucket.name })}
                 onClick={(event) => {
                   const box = event.currentTarget.getBoundingClientRect()
-                  onMenu(bucket, { x: box.left, y: box.bottom })
+                  onMenu(bucket, startEdge(box))
                 }}
                 className="size-8 text-ink-secondary hover:text-ink"
               >
@@ -277,6 +275,7 @@ function Heading({
   section: BucketSection<BucketRowProps>
   sections: readonly BucketSection<BucketRowProps>[]
 }) {
+  const t = useT()
   const currency = section.rows[0]?.currency ?? 'ILS'
   const planned = section.rows.reduce((sum, row) => sum + row.entry.amount.minor, 0)
   const all = sections.flatMap((one) => one.rows).reduce((sum, row) => sum + row.entry.amount.minor, 0)
@@ -292,7 +291,7 @@ function Heading({
         </span>
         {all > 0 && (
           <span className="text-caption text-ink-secondary">
-            {formatPercent(Math.round((planned / all) * 10000), { digits: 0 })} of the split
+            {t('plan.ofTheSplit', { percent: formatPercent(Math.round((planned / all) * 10000), { digits: 0 }) })}
           </span>
         )}
       </span>
@@ -308,11 +307,12 @@ function Heading({
  * the plan, in words. A bucket nothing records says so instead of a zero.
  */
 function Got({ line, bucket, measured }: { line: VarianceLine | undefined; bucket: SplitBucket; measured: boolean }) {
+  const t = useT()
   const actual: Money | undefined = line?.actual
   if (line === undefined || actual === undefined) {
     return (
       <div className="text-end text-caption text-ink-tertiary">
-        {bucket.targetKind === 'CATEGORY' && !measured ? 'unknown' : 'not measured'}
+        {bucket.targetKind === 'CATEGORY' && !measured ? t('plan.bucket.unknown') : t('plan.bucket.notMeasured')}
       </div>
     )
   }
@@ -322,10 +322,10 @@ function Got({ line, bucket, measured }: { line: VarianceLine | undefined; bucke
       <span className="block">{formatMoney(actual)}</span>
       <small className="block text-caption text-ink-secondary">
         {bucket.targetKind === 'SAVING_GOAL' && actual.minor === 0
-          ? 'no deposit recorded'
+          ? t('plan.bucket.noDeposit')
           : variance === 0
-            ? 'on plan'
-            : `${formatMoney(money(Math.abs(variance), actual.currency))} ${variance > 0 ? 'over' : 'under'}`}
+            ? t('plan.bucket.onPlan')
+            : t(variance > 0 ? 'plan.bucket.over' : 'plan.bucket.under', { amount: formatMoney(money(Math.abs(variance), actual.currency)) })}
       </small>
     </div>
   )
@@ -340,6 +340,7 @@ function Rename({
   onDone: (name: string) => void
   onCancel: () => void
 }) {
+  const t = useT()
   const [text, setText] = useState(name)
   return (
     <input
@@ -351,7 +352,7 @@ function Rename({
         if (event.key === 'Enter') event.currentTarget.blur()
         if (event.key === 'Escape') onCancel()
       }}
-      aria-label="Bucket name"
+      aria-label={t('plan.bucket.nameLabel')}
       className={`${FIELD} w-full`}
     />
   )

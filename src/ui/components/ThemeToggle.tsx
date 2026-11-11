@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 
+import { useT } from '@/i18n/current.ts'
 import { setThemePreference, useTheme, type ThemePreference } from '@/ui/theme/useTheme.ts'
 import { arrowStep } from '@/ui/direction.ts'
 
@@ -20,6 +21,7 @@ const OPTIONS: readonly { readonly value: ThemePreference; readonly label: strin
 ]
 
 export function ThemeToggle() {
+  const t = useT()
   const { preference } = useTheme()
   const index = Math.max(0, OPTIONS.findIndex((option) => option.value === preference))
   const buttons = useRef<(HTMLButtonElement | null)[]>([])
@@ -41,7 +43,7 @@ export function ThemeToggle() {
   return (
     <div
       role="radiogroup"
-      aria-label="Colour theme"
+      aria-label={t('chrome.components.theme.group')}
       onKeyDown={onKeyDown}
       className="relative inline-flex items-center rounded-control border border-hairline bg-surface"
     >
@@ -64,8 +66,8 @@ export function ThemeToggle() {
             type="button"
             role="radio"
             aria-checked={chosen}
-            aria-label={option.label}
-            title={option.label}
+            aria-label={t(`chrome.components.theme.${option.value}`)}
+            title={t(`chrome.components.theme.${option.value}`)}
             tabIndex={chosen ? 0 : -1}
             onClick={() => setThemePreference(option.value)}
             className={`relative z-10 flex h-8 w-8 items-center justify-center rounded-control transition-colors duration-[var(--duration-micro)] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
@@ -87,6 +89,7 @@ export function ThemeToggle() {
  * a `hairline` plane, which shows on the rail's `surface` (M54 F5).
  */
 export function ThemeCycleButton() {
+  const t = useT()
   const { preference, resolved } = useTheme()
 
   const next: ThemePreference =
@@ -96,8 +99,8 @@ export function ThemeCycleButton() {
     <button
       type="button"
       onClick={() => setThemePreference(next)}
-      aria-label={`Theme: ${preference}. Switch to ${next}.`}
-      title={`Theme: ${preference}`}
+      aria-label={t('chrome.components.theme.switchTo', { now: t(`chrome.components.theme.short.${preference}`), next: t(`chrome.components.theme.short.${next}`) })}
+      title={t('chrome.components.theme.now', { now: t(`chrome.components.theme.short.${preference}`) })}
       className="fc-icon-action"
     >
       <Icon name={preference === 'system' ? resolved : preference} />

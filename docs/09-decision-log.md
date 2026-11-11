@@ -492,6 +492,7 @@ written out here.
 | D-587 | 2026-11-11 | A new ledger is seeded in the app's language and keeps it: the categories' Hebrew names sit beside `seededIds.json` under the same ids, a document's seed language is read from its own rows, and the page passes the app's language while `create_document` and `keep_packs` take `language` | M60 |
 | D-588 | 2026-11-11 | The shell's words are bundled, not sent: its menu, dialogs and windows' titles are the catalogue's `shell` area, read by `electron/language.ts`, and the page sends only which language — kept in `settings.json`, the computer's until a page has said | M60 |
 | D-589 | 2026-11-11 | A translated screen's words are the catalogue's, and a test that parses its files fails on one written inline; a count is a `one`/`other` pair, a sentence holding a document's value is filled with elements, a record the document keeps stays as written, and a card a Hebrew ledger makes in place is `כרטיס 1234` | M60 |
+| D-590 | 2026-11-11 | The second half of the screens speaks through the layer: a sentence with a value in it is one word with placeholders drawn by `Phrase`, a word outside a render is `tNow`, a category path's arrow points the way its own words run, a menu opens from its control's start edge, and a test reads the source for typed English | M60 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1273,6 +1274,49 @@ words that end up stored in the document.
 in the editor (the suite is what a session runs); translating run notes (a record read back in the
 other language would be a word nobody wrote); a word for the shared components these screens draw
 (`CategoryPicker`, `PageMenu`, `Amount`, the notices) — U5's, listed on the unit's review entry.
+## D-590 · 2026-11-11 · The second half of the screens speaks through the layer: a sentence with a value in it is one word with placeholders drawn by `Phrase`, a word outside a render is `tNow`, a category path's arrow points the way its own words run, a menu opens from its control's start edge, and a test reads the source for typed English <a id="d-590"></a>
+
+**Context.** D-583: Categories, Plan with the 50 / 30 / 20 proposal, Settings, the guide, the rail
+and the title bar, the shared dialogs and the command palette go through the layer (D-584), English
+unchanged and Hebrew from the glossary (D-585), while U4 does the intake and transaction screens
+beside it. U3 (D-586) left the menus that are placed from a control's measured box, and arrows inside
+strings, to this unit.
+
+**Decision.** (M60 U5, the unit's picks.)
+
+1. **One word per sentence, the values drawn into it.** A sentence holding a value is one catalogue
+   word with `{name}` placeholders; when a part is an element — a category in its `Bidi`, a figure, a
+   link — `Phrase` (`src/ui/components/Phrase.tsx`) splits the word and puts the parts where Hebrew's
+   order puts them. A plural is two words. English fragments glued round a value are gone.
+2. **Outside a render, `tNow`** (`src/i18n/words.ts`): a label table (`CADENCE_LABEL`, the command
+   list, the update failures) asks the language now, and is built again the next time its screen
+   opens; a component asks `useT()`. Nothing in `src/data` or `src/domain` imports the layer, so the
+   guide's steps, the domain's starter sentences and the plugin's tool catalogue keep their English and
+   the screen keys its own words by their ids (`src/ui/guide/stepWords.ts`, `src/ui/mcp/words.ts`),
+   each with a test that its English equals the source's.
+3. **A category path's arrow points the way its own words run** (`pathArrows`): the repositories join
+   a path with ` → `, and a path whose first strong letter is Hebrew turns it to ` ← `. Decided by the
+   words, never the app's language, so a Hebrew document's paths read right in English too and a Latin
+   path never changes.
+4. **A menu opens from its control's start edge** (`startEdge` in `src/ui/direction.ts`): the
+   point `ContextMenu`, `PointsAt` and `ChoiceField` take is their start edge — the right one in
+   right-to-left, where the menu ends at it and grows left; a flyout opens toward the end, the arrow
+   keys open and close it the way they step (`arrowStep`), and its mark turns. The guide's card sits
+   beside its anchor on the end side.
+5. **The check reads the source** (`src/i18n/screensPartTwo.test.ts`, U4 holds its own screens the
+   same way): every file of these places is parsed as TSX, and JSX text or a read attribute
+   (`aria-label`, `title`, `placeholder`, `label`, `caption`, `alt`) given as an English literal fails
+   it — a product's name, a key and text in `<code>` excepted. `probe:screens -- --lang he` draws the
+   app's words in Hebrew for the page only (`showLanguage`) and lists the Latin text left outside a
+   `Bidi`; the rail is found by `data-rail`, not by its English name.
+6. **Words with no term row were drafted to fit the glossary** and are listed on the unit's review
+   entry; the rail's U1 drafts became the glossary's (Plan תקציב, Dashboard לוח בקרה, Funds קופות).
+   The start screen (a document of your own) came with the title bar.
+
+**Rejected.** Concatenating translated fragments round values (Hebrew's order is not English's); a
+translation library (D-584); flipping every arrow by the app's language (a Latin path in a Hebrew app
+would point the wrong way); importing the catalogue into `src/data` for the guide (the plugin reads
+it in English); a render test per screen (a fixture per screen for what the parser sees in one pass).
 
 ## Related
 

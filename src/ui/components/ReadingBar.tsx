@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom'
 
+import { useT } from '@/i18n/current.ts'
 import { Button } from '@/ui/components/Button.tsx'
 import { Working } from '@/ui/components/Working.tsx'
 import { clearRead, showRead, useDocumentRead } from '@/state/reading.ts'
@@ -26,6 +27,7 @@ import { useWindowTaken } from '@/ui/useFullWindow.ts'
  * looking up from what you moved on to; the file's name is.
  */
 export function ReadingBar() {
+  const t = useT()
   const read = useDocumentRead()
   const taken = useWindowTaken()
   const navigate = useNavigate()
@@ -41,7 +43,7 @@ export function ReadingBar() {
     <div className="fc-view-enter flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-t border-hairline bg-surface px-6 py-2">
       {!done && <Working size={20} />}
       <span className="text-ink">
-        {done ? 'Read' : 'Reading'} <span className="font-medium">{read.label}</span>
+        {done ? t('chrome.components.reading.read') : t('chrome.components.reading.reading')} <span className="font-medium">{read.label}</span>
       </span>
 
       {/* What it is doing, or what came of it. `aria-live` on the sentence
@@ -49,12 +51,12 @@ export function ReadingBar() {
           re-read the file's name every four seconds. */}
       <span className="text-caption text-ink-secondary" aria-live="polite">
         {read.working
-          ? [read.note, read.tokens > 0 ? `${String(read.tokens)} tokens` : undefined]
+          ? [read.note, read.tokens > 0 ? t('chrome.components.reading.tokens', { n: read.tokens }) : undefined]
               .filter((part) => part !== undefined)
               .join(' · ')
           : read.problem !== undefined
             ? read.problem
-            : 'Ready to check over.'}
+            : t('chrome.components.reading.ready')}
       </span>
 
       <span className="ms-auto flex items-center gap-2">
@@ -69,14 +71,14 @@ export function ReadingBar() {
             navigate(read.at.replace(/^#/, ''))
           }}
         >
-          {done ? 'Check it over' : 'Go back to it'}
+          {done ? t('chrome.components.reading.check') : t('chrome.components.reading.back')}
         </Button>
         {/* Only once it has landed. Dismissing a running read would leave it
             running with nothing saying so, which is the state this exists to
             make impossible. */}
         {done && (
           <Button variant="ghost" size="sm" onClick={clearRead}>
-            Dismiss
+            {t('chrome.components.reading.dismiss')}
           </Button>
         )}
       </span>

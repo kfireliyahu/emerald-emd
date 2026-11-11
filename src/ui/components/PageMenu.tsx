@@ -1,6 +1,8 @@
 import { useState } from 'react'
 
 import { ContextMenu, type MenuItem } from './ContextMenu.tsx'
+import { useT } from '@/i18n/current.ts'
+import { startEdge } from '@/ui/direction.ts'
 
 /**
  * **A screen's own menu: the ⋯ beside its title** (M36 U11) — what Funds and Debts
@@ -9,16 +11,17 @@ import { ContextMenu, type MenuItem } from './ContextMenu.tsx'
  * and the page reads the same with it gone.
  */
 export function PageMenu({ title, items }: { title: string; items: readonly MenuItem[] }) {
+  const t = useT()
   const [at, setAt] = useState<{ x: number; y: number } | undefined>()
   return (
     <>
       <button
         type="button"
-        aria-label={`More about ${title.toLowerCase()}`}
-        title="More"
+        aria-label={t('chrome.components.moreAbout', { title: title.toLowerCase() })}
+        title={t('chrome.components.more')}
         onClick={(event) => {
           const box = event.currentTarget.getBoundingClientRect()
-          setAt({ x: box.left, y: box.bottom })
+          setAt(startEdge(box))
         }}
         className="fc-icon-action"
       >

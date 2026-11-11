@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { createCategory, type Category, type CategoryKind } from '@/data/repositories/categoryRepository.ts'
+import { useT } from '@/i18n/current.ts'
+import { pathArrows } from '@/i18n/words.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { inlineCategory, offersCreate, twinOf } from '@/ui/categories/inlineCreate.ts'
@@ -9,6 +11,7 @@ import { eligibleParents } from '@/ui/categories/parentFilter.ts'
 import { resolvePalette, type CategoryPalette } from '@/ui/charts/categoryPalette.ts'
 import { Button } from '@/ui/components/Button.tsx'
 import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { useDismiss } from '@/ui/components/useDismiss.ts'
 
 /**
@@ -40,7 +43,7 @@ export function CategoryPicker({
   value,
   onChange,
   label,
-  placeholder = 'Uncategorized',
+  placeholder,
   outlined = false,
   tour,
 }: {
@@ -48,13 +51,14 @@ export function CategoryPicker({
   value: string | undefined
   onChange: (categoryId: string | undefined) => void
   label: string
-  /** What the button says while nothing is chosen. */
+  /** What the button says while nothing is chosen: *Uncategorized* when not given. */
   placeholder?: string
   /** A bordered button, for a row where the category is the control (M28 F3). */
   outlined?: boolean
   /** The button's `data-tour` anchor, for the demo's tours (M33 U5). */
   tour?: string
 }) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
   const [highlighted, setHighlighted] = useState(0)
@@ -199,11 +203,11 @@ export function CategoryPicker({
         title={
           current === undefined
             ? outlined
-              ? 'Change the category (C)'
+              ? t('categories.picker.change')
               : undefined
             : outlined
-              ? `${current.path} · change the category (C)`
-              : current.path
+              ? t('categories.picker.pathChange', { path: pathArrows(current.path) })
+              : pathArrows(current.path)
         }
         className={`group inline-flex max-w-full items-center gap-1.5 text-start transition-colors duration-[var(--duration-micro)] hover:bg-surface ${
           outlined ? 'border border-hairline-strong px-1.5 py-0.5 hover:border-accent' : 'rounded-md px-2 py-0.5'
@@ -220,9 +224,9 @@ export function CategoryPicker({
         {/* The ellipsis is on the isolated span itself: inside an LTR span
             that truncates, a Hebrew name would lose its start, not its end. */}
         {current === undefined ? (
-          <span className="min-w-0 truncate">{placeholder}</span>
+          <span className="min-w-0 truncate">{placeholder ?? t('categories.picker.uncategorized')}</span>
         ) : (
-          <Bidi className="min-w-0 truncate">{current.path}</Bidi>
+          <Bidi className="min-w-0 truncate">{pathArrows(current.path)}</Bidi>
         )}
           </>
       </button>
@@ -236,8 +240,8 @@ export function CategoryPicker({
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 onKeyDown={onKeyDown}
-                placeholder="Search categories…"
-                aria-label="Search categories"
+                placeholder={t('categories.picker.search')}
+                aria-label={t('categories.picker.searchLabel')}
                 className="w-full rounded-t-lg border-b border-hairline bg-elevated px-3 py-2 outline-none"
               />
 
@@ -246,7 +250,7 @@ export function CategoryPicker({
                   <Option onSelect={() => choose(undefined)} highlighted={false}>
                     {/* The hollow mark, because that is the state this sets. */}
                     <Mark category={undefined} palette={palette} />
-                    <span className="text-ink-tertiary">Clear category</span>
+                    <span className="text-ink-tertiary">{t('categories.picker.clear')}</span>
                   </Option>
                 )}
 
@@ -256,10 +260,10 @@ export function CategoryPicker({
                     onSelect={() => choose(category.id)}
                     highlighted={index === highlighted}
                     selected={category.id === value}
-                    title={category.path}
+                    title={pathArrows(category.path)}
                   >
                     <Mark category={category} palette={palette} />
-                    <Bidi className="min-w-0 truncate">{category.path}</Bidi>
+                    <Bidi className="min-w-0 truncate">{pathArrows(category.path)}</Bidi>
                   </Option>
                 ))}
 
@@ -278,14 +282,14 @@ export function CategoryPicker({
                     {canCreate ? (
                       <>
                         <span className="flex min-w-0">
-                          <span className="shrink-0">Create “</span>
+                          <span className="shrink-0">{t('categories.picker.createBefore')}</span>
                           <Bidi className="min-w-0 truncate text-ink">{wanted}</Bidi>
-                          <span className="shrink-0">”</span>
+                          <span className="shrink-0">{t('categories.picker.createAfter')}</span>
                         </span>
-                        <span className="ms-auto shrink-0 text-caption text-ink-tertiary">new</span>
+                        <span className="ms-auto shrink-0 text-caption text-ink-tertiary">{t('categories.picker.new')}</span>
                       </>
                     ) : (
-                      <span className="min-w-0 truncate font-medium text-accent">+ New…</span>
+                      <span className="min-w-0 truncate font-medium text-accent">{t('categories.picker.newRow')}</span>
                     )}
                   </Option>
                 )}
@@ -341,6 +345,7 @@ function CreateForm({
   onCancel: () => void
   onCreate: () => void
 }) {
+  const t = useT()
   const nameRef = useRef<HTMLInputElement>(null)
   useEffect(() => {
     nameRef.current?.focus()
@@ -380,7 +385,7 @@ function CreateForm({
         ref={nameRef}
         value={draft.name}
         onChange={(event) => onChange({ ...draft, name: event.target.value })}
-        aria-label="New category name"
+        aria-label={t('categories.picker.name')}
         className={`${FIELD} w-full`}
       />
 
@@ -397,12 +402,12 @@ function CreateForm({
         <select
           value={draft.kind}
           onChange={(event) => onChange({ ...draft, kind: event.target.value as CategoryKind })}
-          aria-label="Category kind"
+          aria-label={t('categories.picker.kind')}
           className={`${SELECT} w-full`}
         >
           {KINDS.map((option) => (
             <option key={option} value={option}>
-              {option.toLowerCase().replace('_', ' ')}
+              {t(`categories.kinds.${option}`)}
             </option>
           ))}
         </select>
@@ -410,7 +415,10 @@ function CreateForm({
         // Said rather than shown as a control, because `createCategory` takes
         // the parent's kind whatever this form asked for.
         <p className="text-caption text-ink-tertiary">
-          {parent.kind.toLowerCase().replace('_', ' ')}, inherited from <Bidi>{parent.path}</Bidi>
+          <Phrase
+            text={t('categories.picker.inherited', { kind: t(`categories.kinds.${parent.kind}`) })}
+            parts={{ path: <Bidi>{pathArrows(parent.path)}</Bidi> }}
+          />
         </p>
       )}
 
@@ -418,10 +426,10 @@ function CreateForm({
 
       <div className="flex items-center gap-2">
         <Button variant="primary" size="sm" type="submit">
-          Create
+          {t('categories.picker.createButton')}
         </Button>
         <Button variant="ghost" size="sm" type="button" onClick={onCancel}>
-          Cancel
+          {t('categories.picker.cancel')}
         </Button>
       </div>
     </form>

@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
 import type { Category } from '@/data/repositories/categoryRepository.ts'
+import { useT } from '@/i18n/current.ts'
+import { pathArrows } from '@/i18n/words.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { matchingParents } from '@/ui/categories/parentFilter.ts'
 import { FIELD } from '@/ui/components/fieldLook.ts'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { useDismiss } from '@/ui/components/useDismiss.ts'
 
 /**
@@ -52,6 +55,7 @@ export function ParentPicker({
 
   // A press outside closes it, and so does Escape from anywhere (M45 F1); the
   // search input's own Escape still closes and hands focus back to the button.
+  const t = useT()
   const dismissKey = useDismiss(open, containerRef, () => close())
 
   const close = (refocus = false): void => {
@@ -98,8 +102,8 @@ export function ParentPicker({
           onChange={(event) => setSearch(event.target.value)}
           onKeyDown={onKeyDown}
           onBlur={() => close()}
-          placeholder="Search parent categories…"
-          aria-label="Search parent categories"
+          placeholder={t('categories.parent.search')}
+          aria-label={t('categories.parent.searchLabel')}
           dir="auto"
           className={`${FIELD} ${width}`}
         />
@@ -125,11 +129,15 @@ export function ParentPicker({
           }}
           aria-haspopup="listbox"
           aria-expanded={false}
-          aria-label="Parent category"
+          aria-label={t('categories.parent.label')}
           className={`${FIELD} flex ${width} cursor-pointer items-center text-start`}
         >
-          <span className="min-w-0 truncate">
-            {current === undefined ? 'top level' : <>under <Bidi>{current.path}</Bidi></>}
+          <span className="flex min-w-0 whitespace-pre">
+            {current === undefined ? (
+              t('categories.parent.topLevel')
+            ) : (
+              <Phrase text={t('categories.parent.under')} parts={{ path: <Bidi className="min-w-0 truncate">{pathArrows(current.path)}</Bidi> }} />
+            )}
           </span>
         </button>
       )}
@@ -154,15 +162,15 @@ export function ParentPicker({
                 }`}
               >
                 {parent === undefined ? (
-                  <span className="text-ink-secondary">top level</span>
+                  <span className="text-ink-secondary">{t('categories.parent.topLevel')}</span>
                 ) : (
-                  <Bidi className="truncate">{parent.path}</Bidi>
+                  <Bidi className="truncate">{pathArrows(parent.path)}</Bidi>
                 )}
               </button>
             </li>
           ))}
           {matches.length === 0 && (
-            <li className="px-3 py-1.5 text-caption text-ink-tertiary">No parent matches</li>
+            <li className="px-3 py-1.5 text-caption text-ink-tertiary">{t('categories.parent.noMatch')}</li>
           )}
         </ul>
       )}

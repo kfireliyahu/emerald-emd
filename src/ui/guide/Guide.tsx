@@ -4,18 +4,21 @@ import { useLocation, useNavigate } from 'react-router-dom'
 
 import {
   doneCount,
-  forwardLabel,
   isDone,
   move,
   resumeAt,
   stepState,
   type GuideStep,
 } from '@/domain/guide.ts'
+import { useT, type Translate } from '@/i18n/current.ts'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
+import { pageIsRtl } from '@/ui/direction.ts'
 import { Tag } from '@/ui/wealth/parts.tsx'
 
 import { currentGuideOpen, landOn, setGuideOpen, useGuideOpen } from './guideState.ts'
+import { doneWords, forwardWords, stepWords } from './stepWords.ts'
 import { reopenedFrom, useGuide, type OpenGuide } from './useGuide.ts'
 import { arrowStep } from '@/ui/direction.ts'
 
@@ -65,6 +68,7 @@ export function Guide({ enabled }: { readonly enabled: boolean }) {
 
 /** The walk itself: one step at a time, on the step's own screen. */
 function Walk({ guide, onToast }: { readonly guide: OpenGuide; readonly onToast: (text: string) => void }) {
+  const t = useT()
   const open = useGuideOpen()
   const navigate = useNavigate()
   const location = useLocation()
@@ -95,12 +99,12 @@ function Walk({ guide, onToast }: { readonly guide: OpenGuide; readonly onToast:
     navigate('/')
     onToast(
       all
-        ? `All ${numberWord(count)} places done.`
+        ? t('guide.toast.allDone', { count: numberWord(count), n: count })
         : progress.lineAway
-          ? `The guide is done. What you skipped stays under ${reopenedFrom()}.`
-          : 'The guide is done. What you skipped stays on Home’s Getting started line.',
+          ? t('guide.toast.doneAway', { where: reopenedFrom(t) })
+          : t('guide.toast.done'),
     )
-  }, [steps, checks, count, guide, progress, navigate, onToast])
+  }, [steps, checks, count, guide, progress, navigate, onToast, t])
 
   const go = useCallback(
     (target: number): void => {
@@ -121,11 +125,9 @@ function Walk({ guide, onToast }: { readonly guide: OpenGuide; readonly onToast:
     // **Only the guide goes** (M28 F14): it used to take you Home as well, and
     // Esc over Read files closed the files you were reading. You stay put.
     onToast(
-      progress.lineAway
-        ? `Put away. Continue from ${reopenedFrom()}.`
-        : 'Put away. Continue from the compass at the foot of the sidebar, or Home’s Getting started line.',
+      progress.lineAway ? t('guide.toast.putAwayAway', { where: reopenedFrom(t) }) : t('guide.toast.putAway'),
     )
-  }, [step, guide, progress, onToast])
+  }, [step, guide, progress, onToast, t])
 
   // S3: ← → move, Esc puts it away — at the window, ahead of a screen's own keys
   // (Home pages months on ← →), and never while something takes typing.
@@ -163,7 +165,8 @@ function Walk({ guide, onToast }: { readonly guide: OpenGuide; readonly onToast:
 
   const previous = move(steps, checks, index, -1)
   const next = move(steps, checks, index, 1)
-  const label = forwardLabel(steps, checks, index)
+  const label = forwardWords(steps, checks, index, t)
+  const words = stepWords(step, t)
   const strong = isDone(checks, step.id) || next >= count
 
   return (
@@ -174,30 +177,30 @@ function Walk({ guide, onToast }: { readonly guide: OpenGuide; readonly onToast:
         ref={dialog}
         className="fc-guide fc-pop-enter"
         role="dialog"
-        aria-label={`Guide, step ${String(index + 1)} of ${String(count)}`}
+        aria-label={t('guide.dialog.label', { n: index + 1, count })}
         data-for={step.place}
         style={HIDDEN}
       >
         <span ref={arrow} className="fc-guide-arrow" />
         <div className="flex items-center gap-2.5 border-b border-hairline py-2 pe-2 ps-3.5">
           <span className="fc-label flex-1">
-            {step.where} · {index + 1} of {count}
+            {t('guide.dialog.position', { where: words.where, n: index + 1, count })}
           </span>
-          <CloseButton label="Put the guide away" title="Put the guide away (Esc)" onClick={putAway} />
+          <CloseButton label={t('guide.dialog.putAway')} title={t('guide.dialog.putAwayTitle')} onClick={putAway} />
         </div>
         {/* A row of their own, so each step is a 24px target (WCAG 2.5.8, M54 F6). */}
         <div className="px-3.5 pt-1">
-          <Dots steps={steps} checks={checks} index={index} onPick={go} />
+          <Dots steps={steps} checks={checks} index={index} onPick={go} t={t} />
         </div>
         <div className="flex flex-col gap-2 px-3.5 py-3">
-          <h3 className="m-0 font-medium text-balance">{step.title}</h3>
-          <p className="m-0 text-ink-secondary">{step.body}</p>
-          <State step={step} checks={checks} />
+          <h3 className="m-0 font-medium text-balance">{words.title}</h3>
+          <p className="m-0 text-ink-secondary">{words.body}</p>
+          <State step={step} checks={checks} t={t} />
         </div>
         <div className="flex flex-wrap items-center gap-2 px-3.5 pt-2 pb-3">
           {previous >= 0 && (
             <Button variant="ghost" size="sm" onClick={() => go(previous)}>
-              Back
+              {t('guide.dialog.back')}
             </Button>
           )}
           <span className="flex-1" />
@@ -212,7 +215,7 @@ function Walk({ guide, onToast }: { readonly guide: OpenGuide; readonly onToast:
         </div>
         <div className="flex flex-wrap items-center gap-2.5 px-3.5 pb-3 text-caption text-ink-secondary">
           <span>
-            <Key>←</Key> <Key>→</Key> move · <Key>Esc</Key> put away
+            <Phrase text={t('guide.dialog.keys')} parts={{ left: <Key>←</Key>, right: <Key>→</Key>, esc: <Key>Esc</Key> }} />
           </span>
         </div>
       </div>
@@ -226,23 +229,26 @@ function Dots({
   checks,
   index,
   onPick,
+  t,
 }: {
   readonly steps: readonly GuideStep[]
   readonly checks: OpenGuide['checks']
   readonly index: number
   readonly onPick: (index: number) => void
+  readonly t: Translate
 }) {
   return (
-    <div className="fc-guide-dots flex flex-wrap" role="group" aria-label="Steps">
+    <div className="fc-guide-dots flex flex-wrap" role="group" aria-label={t('guide.dialog.steps')}>
       {steps.map((one, at) => {
         const done = isDone(checks, one.id)
+        const title = stepWords(one, t).title
         return (
           <button
             key={one.id}
             type="button"
             data-state={at === index ? 'now' : done ? 'done' : undefined}
-            title={`${String(at + 1)}. ${one.title}${done ? ' (done)' : ''}`}
-            aria-label={`Step ${String(at + 1)}: ${one.title}`}
+            title={t(done ? 'guide.dialog.dotTitleDone' : 'guide.dialog.dotTitle', { n: at + 1, title })}
+            aria-label={t('guide.dialog.dotLabel', { n: at + 1, title })}
             aria-current={at === index ? 'step' : undefined}
             onClick={() => onPick(at)}
           />
@@ -253,19 +259,26 @@ function Dots({
 }
 
 /** Done and what was found (S1), later and why (S5), or waiting on the screen. */
-function State({ step, checks }: { readonly step: GuideStep; readonly checks: OpenGuide['checks'] }) {
+function State({ step, checks, t }: { readonly step: GuideStep; readonly checks: OpenGuide['checks']; readonly t: Translate }) {
   const state = stepState(step, checks)
+  const words = stepWords(step, t)
   return (
     <div className="flex items-start gap-2 text-caption text-ink-secondary">
       <span className="flex-none">
-        {state.kind === 'done' ? <Tag tone="good">Done</Tag> : state.kind === 'later' ? <Tag>Later</Tag> : <Tag tone="dash">Waiting</Tag>}
+        {state.kind === 'done' ? (
+          <Tag tone="good">{t('guide.state.done')}</Tag>
+        ) : state.kind === 'later' ? (
+          <Tag>{t('guide.state.later')}</Tag>
+        ) : (
+          <Tag tone="dash">{t('guide.state.waiting')}</Tag>
+        )}
       </span>
       <span>
         {state.kind === 'done'
-          ? state.says
+          ? doneWords(step, state.says, t)
           : state.kind === 'later'
-            ? `This fills once ${state.until}. Skip it for now and it stays on the list.`
-            : `Do it on the screen; this step ticks itself when ${state.test}.`}
+            ? t('guide.state.laterText', { until: words.until ?? state.until })
+            : t('guide.state.waitingText', { test: words.test })}
       </span>
     </div>
   )
@@ -361,24 +374,30 @@ function usePlacement(
       }
 
       const r = anchor.getBoundingClientRect()
-      let side: 'right' | 'below' | 'above'
+      // Beside the anchor on its end side: to its left in right-to-left (M60 U5, D-590).
+      const rtl = pageIsRtl()
+      let side: 'right' | 'left' | 'below' | 'above'
       let x: number
       let y: number
-      if (ww - r.right >= W + 28) {
+      if (!rtl && ww - r.right >= W + 28) {
         side = 'right'
         x = r.right + 14
         y = cl(r.top + Math.min(r.height, 120) / 2 - 40, minY, wh - H - 8)
+      } else if (rtl && r.left - minX >= W + 28) {
+        side = 'left'
+        x = r.left - 14 - W
+        y = cl(r.top + Math.min(r.height, 120) / 2 - 40, minY, wh - H - 8)
       } else if (wh - r.bottom >= H + 20) {
         side = 'below'
-        x = cl(r.left + 24, minX, ww - W - 8)
+        x = rtl ? cl(r.right - 24 - W, minX, ww - W - 8) : cl(r.left + 24, minX, ww - W - 8)
         y = r.bottom + 14
       } else if (r.top - minY >= H + 16) {
         side = 'above'
-        x = cl(r.left + 24, minX, ww - W - 8)
+        x = rtl ? cl(r.right - 24 - W, minX, ww - W - 8) : cl(r.left + 24, minX, ww - W - 8)
         y = r.top - 14 - H
       } else {
         side = 'below'
-        x = cl(r.right - W, minX, ww - W - 8)
+        x = rtl ? cl(r.left, minX, ww - W - 8) : cl(r.right - W, minX, ww - W - 8)
         y = cl(r.bottom + 14, minY, wh - H - 8)
       }
       g.style.left = `${String(x)}px`
@@ -391,7 +410,7 @@ function usePlacement(
         a.dataset['side'] = side
         a.style.left = ''
         a.style.top = ''
-        if (side === 'right') a.style.top = `${String(cl(r.top + Math.min(r.height, 120) / 2 - y - 6, 14, H - 24))}px`
+        if (side === 'right' || side === 'left') a.style.top = `${String(cl(r.top + Math.min(r.height, 120) / 2 - y - 6, 14, H - 24))}px`
         else a.style.left = `${String(cl(r.left + Math.min(r.width, 200) / 2 - x - 6, 14, W - 24))}px`
       }
 

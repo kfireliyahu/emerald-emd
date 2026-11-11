@@ -132,7 +132,7 @@ export interface ProbeResult {
   readonly nativeDates: number
   readonly pageOverflowsX: boolean
   readonly dir: string
-  /** Which side of `main` the rail (`nav[aria-label="Sections"]`) is drawn on. */
+  /** Which side of `main` the rail (`nav[data-rail]`, named Sections in English) is drawn on. */
   readonly railSide: 'left' | 'right' | 'none'
   /** Text and controls cut by a box that does not scroll, or past the window's edge. */
   readonly clippedX: Listed<{ text: string; by: string }>
@@ -306,7 +306,7 @@ function boxesHash(root: Element): string {
 }
 
 function railSide(): 'left' | 'right' | 'none' {
-  const rail = document.querySelector('nav[aria-label="Sections"]')
+  const rail = document.querySelector('nav[data-rail]')
   const main = document.querySelector('main')
   if (!rail || !main || !visible(rail)) return 'none'
   return rail.getBoundingClientRect().left < main.getBoundingClientRect().left ? 'left' : 'right'

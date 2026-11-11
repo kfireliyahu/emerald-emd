@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 import { formatMoney, type Money } from '@/core/money.ts'
-import { formatMonthShort, formatYearMonth, type YearMonth } from '@/core/time.ts'
+import type { YearMonth } from '@/core/time.ts'
 import type { Category } from '@/data/repositories/categoryRepository.ts'
 import {
   isChargeMonth,
@@ -19,12 +19,15 @@ import {
   type FixedExpenseCandidate,
   type FixedRole,
 } from '@/domain/model/fixed.ts'
+import { useDates, useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Amount } from '@/ui/components/Amount.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { Chip } from '@/ui/components/Chip.tsx'
 import { ContextMenu } from '@/ui/components/ContextMenu.tsx'
 import { SELECT } from '@/ui/components/fieldLook.ts'
+import { Phrase } from '@/ui/components/Phrase.tsx'
+import { startEdge } from '@/ui/direction.ts'
 import { CandidateCard } from '@/ui/fixed/CandidateCard.tsx'
 import type { CandidateChoice } from '@/ui/fixed/candidateChoice.ts'
 import { CADENCE_LABEL } from '@/ui/fixed/labels.ts'
@@ -99,6 +102,8 @@ export function FixedSection({
   /** The add-by-hand / edit form, drawn in place above the table. */
   form?: React.ReactNode
 }) {
+  const t = useT()
+  const dates = useDates()
   const [menu, setMenu] = useState<
     { readonly expense: FixedExpense; readonly at: { readonly x: number; readonly y: number } } | undefined
   >()
@@ -109,17 +114,17 @@ export function FixedSection({
   const ended = expenses.filter((expense) => !expense.isActive)
 
   return (
-    <section className="flex flex-col gap-3" aria-label="Bills" data-guide="plan.fixed">
+    <section className="flex flex-col gap-3" aria-label={t('plan.fixed.title')} data-guide="plan.fixed">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="m-0 text-[16px] font-medium">Bills</h2>
+          <h2 className="m-0 text-[16px] font-medium">{t('plan.fixed.title')}</h2>
           <p className="m-0 mt-0.5 text-caption text-ink-secondary">
-            What leaves every month. Pick what each one does to <Bidi>{planName}</Bidi>.
+            <Phrase text={t('plan.fixed.lead')} parts={{ name: <Bidi>{planName}</Bidi> }} />
           </p>
         </div>
         {form === undefined && (
           <Button variant="primary" size="sm" icon="add" onClick={onAdd}>
-            Add a bill
+            {t('plan.fixed.add')}
           </Button>
         )}
       </div>
@@ -128,8 +133,7 @@ export function FixedSection({
 
       {live.length === 0 ? (
         <p className="m-0 border border-dashed border-hairline-strong px-4 py-6 text-center text-ink-secondary">
-          Nothing yet. Import a few months of statements and the app will offer what it thinks repeats — or add
-          the ones it cannot see, like a yearly insurance premium.
+          {t('plan.fixed.empty')}
         </p>
       ) : (
         <Table
@@ -147,7 +151,7 @@ export function FixedSection({
       {confirming !== undefined && (
         <div className="fc-pop-enter flex flex-wrap items-center gap-3 bg-surface px-4 py-2">
           <span>
-            Stop tracking <Bidi>{confirming.name}</Bidi>? Its charges stay on Transactions.
+            <Phrase text={t('plan.fixed.stopAsk')} parts={{ name: <Bidi>{confirming.name}</Bidi> }} />
           </span>
           <Button
             variant="secondary"
@@ -157,22 +161,22 @@ export function FixedSection({
               setConfirming(undefined)
             }}
           >
-            Stop tracking
+            {t('plan.fixed.stop')}
           </Button>
           <Button variant="ghost" size="sm" onClick={() => setConfirming(undefined)}>
-            Keep
+            {t('plan.fixed.keep')}
           </Button>
         </div>
       )}
 
       <div className="flex flex-wrap gap-x-7 gap-y-1 text-caption text-ink-secondary">
-        <Total label="Out of net" list={parts.netOffList} />
-        <Total label="Part of the split" list={parts.inSplitList} />
-        <Total label="Already out of your net" list={parts.alreadyOutOfNet} />
-        <Total label="Ignored" list={parts.ignored} />
+        <Total label={ROLE_LABEL.NET} list={parts.netOffList} />
+        <Total label={ROLE_LABEL.SPLIT} list={parts.inSplitList} />
+        <Total label={t('plan.fixed.total.alreadyOut')} list={parts.alreadyOutOfNet} />
+        <Total label={t('plan.fixed.total.ignored')} list={parts.ignored} />
         {parts.outsideMonth.length > 0 && (
           <span>
-            Not running in {formatYearMonth(month)}, so left out of its picture{' '}
+            {t('plan.fixed.notRunning', { month: dates.yearMonth(month) })}{' '}
             <b className="font-medium text-ink tabular-nums">{String(parts.outsideMonth.length)}</b>
           </span>
         )}
@@ -181,17 +185,17 @@ export function FixedSection({
       {ended.length > 0 && (
         <details className="text-caption text-ink-secondary">
           <summary className="cursor-pointer">
-            {ended.length === 1 ? '1 ended' : `${String(ended.length)} ended`}
+            {ended.length === 1 ? t('plan.fixed.endedOne') : t('plan.fixed.endedMany', { n: ended.length })}
           </summary>
           <ul className="m-0 mt-2 flex list-none flex-col gap-1 p-0">
             {ended.map((expense) => (
               <li key={expense.id} className="flex items-center gap-3">
                 <Bidi className="text-ink-secondary">{expense.name}</Bidi>
                 <Button variant="ghost" size="sm" onClick={() => onEdit(expense)}>
-                  Edit
+                  {t('plan.edit')}
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => setConfirming(expense)}>
-                  Stop tracking
+                  {t('plan.fixed.stop')}
                 </Button>
               </li>
             ))}
@@ -205,27 +209,27 @@ export function FixedSection({
             <BlockHead
               title={
                 candidates.length === 1
-                  ? '1 charge looks like a bill'
-                  : `${String(candidates.length)} charges look like bills`
+                  ? t('plan.fixed.candidatesOne')
+                  : t('plan.fixed.candidatesMany', { n: candidates.length })
               }
             />
             <label className="flex items-center gap-2 text-caption text-ink-secondary">
-              Looking at the last
+              {t('plan.fixed.lookingAt')}
               <select
                 className={`${SELECT} h-7`}
                 value={windowMonths}
                 onChange={(event) => onWindow(Number(event.target.value))}
-                aria-label="Detection window"
+                aria-label={t('plan.fixed.window')}
               >
                 {WINDOW_MONTH_OPTIONS.map((months) => (
                   <option key={months} value={months}>
-                    {months} months
+                    {t('plan.fixed.windowMonths', { n: months })}
                   </option>
                 ))}
               </select>
             </label>
             <span className="ms-auto text-caption text-ink-secondary">
-              A bill you track starts as Ignore here, until you pick.
+              {t('plan.fixed.startsIgnored')}
             </span>
           </div>
           {candidates.map((candidate) => (
@@ -245,8 +249,8 @@ export function FixedSection({
                 onClick={() => setShowDismissed((current) => !current)}
               >
                 {dismissed.length === 1
-                  ? '1 merchant you said was not a bill'
-                  : `${String(dismissed.length)} merchants you said were not bills`}
+                  ? t('plan.fixed.dismissedOne')
+                  : t('plan.fixed.dismissedMany', { n: dismissed.length })}
               </button>
               {showDismissed && (
                 <ul className="fc-pop-enter m-0 mt-2 flex list-none flex-col gap-1 p-0">
@@ -254,7 +258,7 @@ export function FixedSection({
                     <li key={merchant} className="flex items-center gap-3">
                       <Bidi className="text-ink-secondary">{merchant}</Bidi>
                       <Button variant="ghost" size="sm" onClick={() => onSuggestAgain(merchant)}>
-                        Suggest it again
+                        {t('plan.fixed.suggestAgain')}
                       </Button>
                     </li>
                   ))}
@@ -268,19 +272,19 @@ export function FixedSection({
       {menu !== undefined && (
         <ContextMenu
           at={menu.at}
-          header={{ title: <Bidi>{menu.expense.name}</Bidi>, sub: `${CADENCE_LABEL[menu.expense.cadence]} · ${formatMoney(monthlyShare(menu.expense))} a month` }}
+          header={{ title: <Bidi>{menu.expense.name}</Bidi>, sub: t('plan.fixed.menuSub', { cadence: CADENCE_LABEL[menu.expense.cadence], amount: formatMoney(monthlyShare(menu.expense)) }) }}
           items={[
-            { label: 'Edit, and how it is recognised', icon: 'edit', onChoose: () => onEdit(menu.expense) },
+            { label: t('plan.fixed.menu.edit'), icon: 'edit', onChoose: () => onEdit(menu.expense) },
             {
-              label: 'It ended',
+              label: t('plan.fixed.menu.ended'),
               icon: 'archive',
-              detail: 'Keeps its history, drops out of the plan',
+              detail: t('plan.fixed.menu.endedDetail'),
               onChoose: () => onEnd(menu.expense),
             },
             {
-              label: 'Stop tracking',
+              label: t('plan.fixed.stop'),
               icon: 'trash',
-              detail: 'Its charges stay on Transactions',
+              detail: t('plan.fixed.menu.stopDetail'),
               onChoose: () => setConfirming(menu.expense),
             },
           ]}
@@ -323,17 +327,19 @@ function Table({
   onRole: (expense: FixedExpense, role: FixedRole) => void
   onMenu: (expense: FixedExpense, at: { readonly x: number; readonly y: number }) => void
 }) {
+  const t = useT()
+  const dates = useDates()
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[880px]">
         <thead>
           <tr className="border-b border-hairline text-label text-ink-tertiary uppercase">
-            <th className="py-2 pe-3 text-start font-medium">Name</th>
-            <th className="px-3 py-2 text-start font-medium">How often</th>
-            <th className="px-3 py-2 text-end font-medium">Each charge</th>
-            <th className="px-3 py-2 text-end font-medium">A month</th>
-            <th className="px-3 py-2 text-start font-medium">{formatMonthShort(lastComplete)}</th>
-            <th className="px-3 py-2 text-start font-medium">What it does to the plan</th>
+            <th className="py-2 pe-3 text-start font-medium">{t('plan.fixed.column.name')}</th>
+            <th className="px-3 py-2 text-start font-medium">{t('plan.fixed.column.howOften')}</th>
+            <th className="px-3 py-2 text-end font-medium">{t('plan.fixed.column.eachCharge')}</th>
+            <th className="px-3 py-2 text-end font-medium">{t('plan.fixed.column.aMonth')}</th>
+            <th className="px-3 py-2 text-start font-medium">{dates.monthShort(lastComplete)}</th>
+            <th className="px-3 py-2 text-start font-medium">{t('plan.fixed.column.does')}</th>
             <th className="w-9 py-2" />
           </tr>
         </thead>
@@ -357,7 +363,7 @@ function Table({
                     className="block text-start font-medium underline-offset-4 hover:underline"
                     onClick={(event) => {
                       const box = event.currentTarget.getBoundingClientRect()
-                      onMenu(expense, { x: box.left, y: box.bottom })
+                      onMenu(expense, startEdge(box))
                     }}
                   >
                     <Bidi>{expense.name}</Bidi>
@@ -368,15 +374,15 @@ function Table({
                 </td>
                 <td className="px-3 py-2 text-ink-secondary">
                   {CADENCE_LABEL[expense.cadence]}
-                  {expense.amountVariability === 'VARIABLE' && expense.cadence === 'MONTHLY' ? ', varies' : ''}
+                  {expense.amountVariability === 'VARIABLE' && expense.cadence === 'MONTHLY' ? t('plan.fixed.varies') : ''}
                   {due !== undefined && (
                     <span className="block text-caption text-ink-secondary">
-                      next {formatMonthShort(due)}
+                      {t('plan.fixed.next', { month: dates.monthShort(due) })}
                       {day === undefined ? '' : ` ${String(day)}`}
                     </span>
                   )}
                   {due === undefined && isChargeMonth(expense, lastComplete) && expense.cadence !== 'MONTHLY' && (
-                    <span className="block text-caption text-ink-secondary">charged last month</span>
+                    <span className="block text-caption text-ink-secondary">{t('plan.fixed.chargedLastMonth')}</span>
                   )}
                 </td>
                 <td className="px-3 py-2 text-end">
@@ -385,7 +391,7 @@ function Table({
                 <td className="px-3 py-2 text-end">
                   <Amount value={share} />
                   {expense.cadence !== 'MONTHLY' && expense.cadence !== 'IRREGULAR' && (
-                    <span className="block text-caption text-ink-secondary">set aside each month</span>
+                    <span className="block text-caption text-ink-secondary">{t('plan.fixed.setAsideEachMonth')}</span>
                   )}
                 </td>
                 <td className="px-3 py-2">
@@ -393,26 +399,36 @@ function Table({
                 </td>
                 <td className="px-3 py-2">
                   {slip ? (
-                    <span className="text-ink-secondary">Already out of your net</span>
+                    <span className="text-ink-secondary">{t('plan.fixed.total.alreadyOut')}</span>
                   ) : (
                     <RoleSwitch name={expense.name} role={role} onPick={(next) => onRole(expense, next)} />
                   )}
                   {outside !== undefined && (
                     <span className="mt-0.5 block text-caption text-ink-secondary">
                       {outside === 'NOT_STARTED'
-                        ? `Not counted in ${formatYearMonth(month)}: it starts ${expense.startedAt === undefined ? 'later' : formatMonthShort({ year: expense.startedAt.year, month: expense.startedAt.month })}`
-                        : `Not counted in ${formatYearMonth(month)}: it ended ${expense.endedAt === undefined ? 'earlier' : formatMonthShort({ year: expense.endedAt.year, month: expense.endedAt.month })}`}
+                        ? expense.startedAt === undefined
+                          ? t('plan.fixed.startsLater', { month: dates.yearMonth(month) })
+                          : t('plan.fixed.startsAt', {
+                              month: dates.yearMonth(month),
+                              when: dates.monthShort({ year: expense.startedAt.year, month: expense.startedAt.month }),
+                            })
+                        : expense.endedAt === undefined
+                          ? t('plan.fixed.endedEarlier', { month: dates.yearMonth(month) })
+                          : t('plan.fixed.endedAt', {
+                              month: dates.yearMonth(month),
+                              when: dates.monthShort({ year: expense.endedAt.year, month: expense.endedAt.month }),
+                            })}
                     </span>
                   )}
                 </td>
                 <td className="py-2 text-end">
                   <button
                     type="button"
-                    aria-label={`More for ${expense.name}`}
+                    aria-label={t('plan.moreFor', { name: expense.name })}
                     className="size-8 text-ink-secondary hover:text-ink"
                     onClick={(event) => {
                       const box = event.currentTarget.getBoundingClientRect()
-                      onMenu(expense, { x: box.left, y: box.bottom })
+                      onMenu(expense, startEdge(box))
                     }}
                   >
                     ⋯
@@ -437,8 +453,9 @@ export function RoleSwitch({
   role: FixedRole
   onPick: (role: FixedRole) => void
 }) {
+  const t = useT()
   return (
-    <div role="radiogroup" aria-label={`What ${name} does to this plan`} className="inline-flex">
+    <div role="radiogroup" aria-label={t('plan.fixed.roleLabel', { name })} className="inline-flex">
       {FIXED_ROLES.map((each, index) => {
         const on = each === role
         return (
@@ -467,10 +484,11 @@ export function RoleSwitch({
 }
 
 function Last({ variance }: { variance: Variance }) {
+  const t = useT()
   if (variance.status === 'NOT_DUE' || variance.status === 'NOT_TRACKED') {
     return <span className="text-ink-tertiary">—</span>
   }
-  if (variance.status === 'MISSING') return <Chip problem>none yet</Chip>
+  if (variance.status === 'MISSING') return <Chip problem>{t('plan.fixed.noneYet')}</Chip>
   if (variance.actual === undefined) return <span className="text-ink-tertiary">—</span>
   return <Amount value={variance.actual} className="text-ink-secondary" />
 }

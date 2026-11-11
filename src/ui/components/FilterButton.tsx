@@ -2,6 +2,7 @@ import { useRef, useState, type ReactNode } from 'react'
 
 import { Button } from './Button.tsx'
 import { useDismiss } from './useDismiss.ts'
+import { useT } from '@/i18n/current.ts'
 
 /**
  * **Filter, one button** — M59 U6 (D-582, the pick D-577 settled; *Filter* is a
@@ -14,7 +15,7 @@ import { useDismiss } from './useDismiss.ts'
  */
 export function FilterButton({
   on,
-  label = 'Filter',
+  label: named,
   align = 'start',
   children,
 }: {
@@ -25,6 +26,8 @@ export function FilterButton({
   readonly align?: 'start' | 'end'
   readonly children: ReactNode
 }) {
+  const t = useT()
+  const label = named ?? t('chrome.components.filter')
   const [open, setOpen] = useState(false)
   const box = useRef<HTMLDivElement>(null)
   const onKeyDown = useDismiss(open, box, () => setOpen(false))

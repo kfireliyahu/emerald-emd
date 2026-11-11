@@ -1,5 +1,5 @@
 import { formatMoney } from '@/core/money.ts'
-import { formatMonthShort } from '@/core/time.ts'
+import { useDates } from '@/i18n/current.ts'
 import type { CandidateMonth } from '@/domain/model/fixed.ts'
 
 const WIDTH = 180
@@ -21,6 +21,7 @@ const PADDING = 3
  * full height answers it wrong. The proportions are the point.
  */
 export function AmountHistory({ months }: { months: readonly CandidateMonth[] }) {
+  const dates = useDates()
   if (months.length === 0) return null
 
   const top = Math.max(...months.map((month) => month.amount.minor), 1)
@@ -36,7 +37,7 @@ export function AmountHistory({ months }: { months: readonly CandidateMonth[] })
       className="h-7 w-45 shrink-0"
       role="img"
       aria-label={months
-        .map((month) => `${formatMonthShort(month.period)} ${formatMoney(month.amount)}`)
+        .map((month) => `${dates.monthShort(month.period)} ${formatMoney(month.amount)}`)
         .join(', ')}
     >
       {months.map((month, index) => {

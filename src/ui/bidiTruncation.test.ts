@@ -24,12 +24,13 @@ import { describe, expect, it } from 'vitest'
 const TRUNCATING_WRAPPER =
   /className=(?:"[^"]*\btruncate\b[^"]*"|\{`[^`]*\btruncate\b[^`]*`\})[^<]{0,300}?>(?:[^<]|<>)*<Bidi[\s>]/g
 
-/** The ledger's, parked: a category's parent, and the plan's buckets, months and pointers. */
+/**
+ * The ledger's, parked: the plan's buckets and months. A category's parent and a
+ * bucket's pointer were mended when their words moved into a sentence (M60 U5, D-590).
+ */
 const PARKED = {
-  'categories/ParentPicker.tsx': 1,
   'plan/BucketTable.tsx': 1,
   'plan/MonthRow.tsx': 1,
-  'plan/PointsAt.tsx': 1,
 }
 
 function sources(directory: string): string[] {

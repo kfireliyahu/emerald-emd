@@ -32,10 +32,14 @@ import {
   neverFires,
   type RuleDraft,
 } from '@/domain/ruleEditing.ts'
+import type { MessageKey } from '@/i18n/catalogue.ts'
+import { useT } from '@/i18n/current.ts'
+import { pathArrows, tNow } from '@/i18n/words.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { Chip } from '@/ui/components/Chip.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { instantDay } from '@/core/instant.ts'
 import { ReapplyPanel } from '@/ui/rules/ReapplyPanel.tsx'
 import { RuleEditor } from '@/ui/rules/RuleEditor.tsx'
@@ -71,6 +75,7 @@ export function Rules() {
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
   const mutate = useDocumentStore((state) => state.mutate)
+  const t = useT()
 
   // A draft carried in from elsewhere — "create rule from this merchant" opens
   // this screen with one already filled in (D-041). Read once, on mount.
@@ -108,10 +113,14 @@ export function Rules() {
   }, [db, revision])
 
   if (data === undefined) {
-    return <Centered>Open a document, or create one, to write rules in it.</Centered>
+    return <Centered>{t('rules.noDocument')}</Centered>
   }
 
-  const categoryPath = (categoryId: string): string | undefined => data.paths.get(categoryId)
+  // A path drawn the way its words run (M60 U5): a Hebrew one's arrows point left.
+  const categoryPath = (categoryId: string): string | undefined => {
+    const path = data.paths.get(categoryId)
+    return path === undefined ? undefined : pathArrows(path)
+  }
 
   const save = (draft: RuleDraft): void => {
     if (draftProblems(draft).length > 0) return
@@ -194,17 +203,14 @@ export function Rules() {
     <div className="flex h-full flex-col">
       <div className="flex shrink-0 flex-wrap items-baseline gap-x-6 gap-y-1 border-b border-hairline px-6 py-2">
         <span className="text-ink-secondary tabular-nums">
-          {ownCount === 1 ? '1 rule' : `${ownCount} rules`}
+          {ownCount === 1 ? t('rules.oneRule') : t('rules.nRules', { n: ownCount })}
           {builtInCount > 0 && (
-            <span className="text-ink-tertiary"> · {builtInCount} built in</span>
+            <span className="text-ink-tertiary">{t('rules.builtIn', { n: builtInCount })}</span>
           )}
         </span>
         <span className="text-caption text-ink-tertiary">
-          Read top to bottom on every import; the first rule that matches assigns the category and
-          the rest are not consulted. A category you pick by hand always wins.
-          {ownCount === 0 &&
-            builtInCount > 0 &&
-            ' None of these are yours yet — the built-in set is read last, so anything you write comes out above it.'}
+          {t('rules.lead')}
+          {ownCount === 0 && builtInCount > 0 && t('rules.leadNoneYours')}
         </span>
         {/* Editing a rule raises "and what about everything already imported?",
             so the answer to it lives on this screen rather than somewhere the
@@ -217,11 +223,11 @@ export function Rules() {
           disabled={data.rules.length === 0}
           title={
             data.rules.length === 0
-              ? 'Write a rule first — there is nothing to apply'
-              : 'Run these rules over transactions already in the ledger'
+              ? t('rules.applyNothing')
+              : t('rules.applyTitle')
           }
         >
-          Apply to existing…
+          {t('rules.applyExisting')}
         </Button>
         <Button
           variant="primary"
@@ -229,7 +235,7 @@ export function Rules() {
           onClick={() => setEditing({ mode: 'new', draft: BLANK_DRAFT })}
           disabled={editing?.mode === 'new'}
         >
-          New rule
+          {t('rules.newRule')}
         </Button>
       </div>
 
@@ -245,16 +251,14 @@ export function Rules() {
         <div className="min-h-0 flex-1 overflow-auto">
           {data.rules.length === 0 ? (
             <Centered>
-              No rules yet. A rule says “this merchant is that category”, and every import from
-              then on applies it before you see the rows — nothing is decided that you cannot
-              overrule. Write one, then try it in the test box.
+              {t('rules.empty')}
             </Centered>
           ) : (
             tiers.map(([origin, rules]) => (
               <section key={origin}>
                 {(tiers.length > 1 || origin !== 'USER') && (
                   <h2 className="sticky top-0 z-10 border-b border-hairline bg-background/90 px-6 py-2 text-label text-ink-tertiary uppercase backdrop-blur">
-                    {ORIGIN_LABEL[origin]}
+                    {t(ORIGIN_LABEL[origin])}
                   </h2>
                 )}
                 {/* A rule made, deleted or moved up the order: the rules below
@@ -318,7 +322,7 @@ export function Rules() {
           isNew={editing.mode === 'new' || editing.rule.origin === 'BUILT_IN'}
           note={
             editing.mode === 'edit' && editing.rule.origin === 'BUILT_IN'
-              ? 'Built-in rules ship with the app, so this saves your own copy of it — above every built-in, and yours to change from now on. The original is switched off so only one of them answers.'
+              ? t('rules.forkNote')
               : undefined
           }
           categories={data.pickable}
@@ -383,21 +387,21 @@ function arrivedDraft(state: unknown): RuleDraft | undefined {
  * corrected the same shop three times" is the whole of F03's fifth commitment,
  * and an unlabelled list reads as rules the user wrote and forgot.
  */
-const ORIGIN_LABEL: Readonly<Record<RuleOrigin, string>> = {
-  USER: 'Yours',
+const ORIGIN_LABEL: Readonly<Record<RuleOrigin, MessageKey>> = {
+  USER: 'rules.origin.USER',
   // Not "learned". The app learned nothing — the user pressed a button and a
   // rule was written, and a heading that claims otherwise oversells a mapping
   // as intelligence (D-043). What the tier actually records is where the rule
   // came from, which is worth saying plainly and no more.
-  LEARNED_FROM_CORRECTION: 'From your corrections',
+  LEARNED_FROM_CORRECTION: 'rules.origin.LEARNED_FROM_CORRECTION',
   // Was "Suggested, not yet confirmed", which described a rule parked waiting
   // for someone to approve it. Nothing was ever parked, and since D-092 the
   // plugin writes these **enabled** — so the heading sat above rules that had
   // already fired a dozen times and said they had not been confirmed. The tier
   // records where a rule came from and nothing else, exactly as the two above
   // it do (D-099).
-  AI_SUGGESTED: 'From a conversation with Claude',
-  BUILT_IN: 'Built in',
+  AI_SUGGESTED: 'rules.origin.AI_SUGGESTED',
+  BUILT_IN: 'rules.origin.BUILT_IN',
 }
 
 function Row({
@@ -435,6 +439,7 @@ function Row({
 }) {
   // A built-in has no row in the document, and three of a row's five actions
   // only mean something for one that does (D-046).
+  const t = useT()
   const shipped = rule.origin === 'BUILT_IN'
 
   return (
@@ -465,7 +470,7 @@ function Row({
             ⠿
           </span>
         ) : (
-          <span aria-hidden className="cursor-grab text-ink-tertiary select-none" title="Drag to reorder">
+          <span aria-hidden className="cursor-grab text-ink-tertiary select-none" title={t('rules.row.drag')}>
             ⠿
           </span>
         )}
@@ -473,21 +478,21 @@ function Row({
         <button
           type="button"
           onClick={onEdit}
-          title={shipped ? 'Edit a copy of this rule' : 'Edit this rule'}
+          title={shipped ? t('rules.row.editCopyTitle') : t('rules.row.editTitle')}
           className="hover:underline"
         >
           <Bidi className="font-medium">{rule.name}</Bidi>
         </button>
 
-        {!rule.isEnabled && categoryName !== undefined && <Chip>off</Chip>}
+        {!rule.isEnabled && categoryName !== undefined && <Chip>{t('rules.row.off')}</Chip>}
         {/* A built-in naming a category this document does not have is not
             broken — it is inert, and says which of the two it is. Nothing was
             deleted from under a rule the user wrote; the app shipped a rule for
             a taxonomy this document does not use. */}
         {categoryName === undefined && (
-          <Chip problem>{shipped ? 'no such category here' : 'category was deleted'}</Chip>
+          <Chip problem>{shipped ? t('rules.row.noSuchCategory') : t('rules.row.categoryDeleted')}</Chip>
         )}
-        {quiet && rule.isEnabled && <Chip>never fired</Chip>}
+        {quiet && rule.isEnabled && <Chip>{t('rules.row.neverFired')}</Chip>}
 
         {/* Quiet until the row is hovered or something in it has focus, and kept
             in the DOM so keyboard focus still reaches them. The arrows are the
@@ -495,10 +500,10 @@ function Row({
         <span className="ms-auto flex items-center gap-x-3 text-caption text-ink-secondary opacity-0 transition-opacity duration-[var(--duration-micro)] group-hover:opacity-100 focus-within:opacity-100">
           {!shipped && (
             <>
-              <IconButton onClick={() => onMove(-1)} label={`Move ${rule.name} up`} disabled={isFirst}>
+              <IconButton onClick={() => onMove(-1)} label={t('rules.row.moveUp', { name: rule.name })} disabled={isFirst}>
                 ↑
               </IconButton>
-              <IconButton onClick={() => onMove(1)} label={`Move ${rule.name} down`} disabled={isLast}>
+              <IconButton onClick={() => onMove(1)} label={t('rules.row.moveDown', { name: rule.name })} disabled={isLast}>
                 ↓
               </IconButton>
             </>
@@ -509,23 +514,23 @@ function Row({
             className="hover:text-ink"
             title={
               shipped
-                ? 'Built-in rules ship with the app. Editing one saves your own copy above it and switches this one off.'
+                ? t('rules.row.builtInTitle')
                 : undefined
             }
           >
-            {shipped ? 'Edit a copy' : 'Edit'}
+            {shipped ? t('rules.row.editCopy') : t('rules.row.edit')}
           </button>
           {/* A built-in whose category is not in this document cannot be
               switched on to any effect, so it is not offered — editing it is the
               repair, and the copy that comes out points somewhere real. */}
           {(!shipped || categoryName !== undefined) && (
             <button type="button" onClick={onToggle} className="hover:text-ink">
-              {rule.isEnabled ? 'Disable' : 'Enable'}
+              {rule.isEnabled ? t('rules.row.disable') : t('rules.row.enable')}
             </button>
           )}
           {!shipped && (
             <button type="button" onClick={onDelete} className="hover:text-negative">
-              Delete
+              {t('rules.row.delete')}
             </button>
           )}
         </span>
@@ -534,10 +539,10 @@ function Row({
       <div className="mt-1.5 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-caption">
         <span className="text-ink-tertiary">
           <Why rule={rule} accounts={accounts} />
-          {' → '}
-          <span className={categoryName === undefined ? 'text-negative' : 'text-ink-secondary'}>
-            {categoryName ?? 'a category that was deleted'}
-          </span>
+          {t('rules.arrow')}
+          <Bidi className={categoryName === undefined ? 'text-negative' : 'text-ink-secondary'}>
+            {categoryName ?? t('rules.row.deletedCategory')}
+          </Bidi>
         </span>
         <span className="ms-auto whitespace-nowrap text-ink-tertiary tabular-nums">
           {hits(rule)}
@@ -561,23 +566,23 @@ function DeletePanel({
   onCancel: () => void
   onDelete: () => void
 }) {
+  const t = useT()
   return (
     <div className="fc-pop-enter shrink-0 border-t border-hairline bg-surface px-6 py-4">
       <p>
-        Delete <Bidi className="font-medium">{rule.name}</Bidi>. Later imports stop consulting it,
-        and whatever it would have matched falls through to the rule below.
+        <Phrase text={t('rules.remove.intro')} parts={{ name: <Bidi className="font-medium">{rule.name}</Bidi> }} />
       </p>
       <p className="mt-1 text-ink-secondary">
-        Nothing already imported changes: the transactions it categorized keep their categories.
-        {rule.hitCount > 0 && ' To stop it firing without losing it, disable it instead.'}
+        {t('rules.remove.nothingChanges')}
+        {rule.hitCount > 0 && t('rules.remove.disableInstead')}
       </p>
 
       <div className="mt-3 flex items-center gap-2">
         <Button variant="primary" size="sm" onClick={onDelete}>
-          Delete rule
+          {t('rules.remove.deleteRule')}
         </Button>
         <Button variant="ghost" size="sm" onClick={onCancel}>
-          Cancel
+          {t('rules.remove.cancel')}
         </Button>
       </div>
     </div>
@@ -597,11 +602,14 @@ function DeletePanel({
  */
 function hits(rule: CategoryRule): string {
   if (rule.origin === 'BUILT_IN') return ''
-  if (rule.hitCount === 0) return 'never fired'
-  const times = rule.hitCount === 1 ? 'once' : `${rule.hitCount} times`
+  if (rule.hitCount === 0) return tNow('rules.row.neverFired')
+  const once = rule.hitCount === 1
   return rule.lastMatchedAt === undefined
-    ? `fired ${times}`
-    : `fired ${times} · last ${instantDay(rule.lastMatchedAt)}`
+    ? tNow(once ? 'rules.hits.once' : 'rules.hits.times', { n: rule.hitCount })
+    : tNow(once ? 'rules.hits.onceLast' : 'rules.hits.timesLast', {
+        n: rule.hitCount,
+        day: instantDay(rule.lastMatchedAt),
+      })
 }
 
 function IconButton({

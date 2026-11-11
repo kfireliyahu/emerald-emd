@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 
 import { firstGrapheme } from '@/core/text.ts'
+import { useT } from '@/i18n/current.ts'
 import { CATEGORY_COLOR_TOKENS, slotOf, token } from '@/ui/charts/categoryColor.ts'
 import type { CategoryPalette } from '@/ui/charts/categoryPalette.ts'
 import { useDismiss } from '@/ui/components/useDismiss.ts'
@@ -62,6 +63,7 @@ export function AppearancePicker({
   // Close on a press anywhere else, like the category picker it sits beside: a
   // popover left open behind the next row the user clicks is maddening in a
   // forty-row list. Escape closes it too, from anywhere (M45 F1).
+  const t = useT()
   const dismissKey = useDismiss(open, containerRef, () => setOpen(false))
 
   return (
@@ -71,8 +73,8 @@ export function AppearancePicker({
         onClick={() => setOpen((wasOpen) => !wasOpen)}
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-label={`Colour and icon for ${name}`}
-        title="Colour and icon"
+        aria-label={t('categories.appearance.colourAndIconFor', { name })}
+        title={t('categories.appearance.colourAndIcon')}
         className="flex size-5 items-center justify-center rounded-full text-[0.6875rem] leading-none transition-shadow duration-[var(--duration-micro)] hover:ring-1 hover:ring-hairline-strong hover:ring-offset-2 hover:ring-offset-background"
         style={{ backgroundColor: shown }}
       >
@@ -82,14 +84,14 @@ export function AppearancePicker({
       {open && (
         <div
           role="dialog"
-          aria-label={`Colour and icon for ${name}`}
+          aria-label={t('categories.appearance.colourAndIconFor', { name })}
           className="fc-pop-enter absolute z-40 mt-1 w-64 rounded-lg border border-hairline bg-elevated p-3 shadow-pop"
         >
-          <p className="text-label text-ink-tertiary uppercase">Colour</p>
+          <p className="text-label text-ink-tertiary uppercase">{t('categories.appearance.colour')}</p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             <Swatch
-              label={`Automatic colour for ${name}`}
-              title="Automatic — a stable slot, chosen from the category and moved aside when a sibling is already on it"
+              label={t('categories.appearance.automaticFor', { name })}
+              title={t('categories.appearance.automaticTitle')}
               fill={automatic}
               chosen={color === undefined}
               auto
@@ -102,10 +104,14 @@ export function AppearancePicker({
                   key={slot}
                   label={
                     worn.length === 0
-                      ? `Colour ${index + 1} for ${name}`
-                      : `Colour ${index + 1} for ${name} — also ${worn.join(', ')}`
+                      ? t('categories.appearance.slotFor', { n: index + 1, name })
+                      : t('categories.appearance.slotForAlso', { n: index + 1, name, names: worn.join(', ') })
                   }
-                  title={worn.length === 0 ? `Colour ${index + 1}` : `Also ${worn.join(', ')}`}
+                  title={
+                    worn.length === 0
+                      ? t('categories.appearance.slot', { n: index + 1 })
+                      : t('categories.appearance.also', { names: worn.join(', ') })
+                  }
                   fill={token(slot)}
                   chosen={color === slot}
                   taken={worn.length > 0}
@@ -120,17 +126,17 @@ export function AppearancePicker({
               the free colour deserves to know there is not one. */}
           <p className="mt-2 text-caption text-ink-tertiary">
             {palette.crowded(id)
-              ? `${palette.levelSize(id)} categories at this level and eleven colours — some share, and a marked swatch says which.`
-              : 'A marked swatch is one a category at this level already wears.'}
+              ? t('categories.appearance.crowded', { n: palette.levelSize(id) })
+              : t('categories.appearance.marked')}
           </p>
 
-          <p className="mt-4 text-label text-ink-tertiary uppercase">Icon</p>
+          <p className="mt-4 text-label text-ink-tertiary uppercase">{t('categories.appearance.icon')}</p>
           <div className="mt-2 flex flex-wrap gap-1">
             {SUGGESTED_ICONS.map((suggestion) => (
               <button
                 key={suggestion}
                 type="button"
-                aria-label={`Use ${suggestion} as the icon for ${name}`}
+                aria-label={t('categories.appearance.useIcon', { icon: suggestion, name })}
                 aria-pressed={icon === suggestion}
                 onClick={() => onChange({ color, icon: suggestion })}
                 className={`flex size-7 items-center justify-center rounded-md transition-colors duration-[var(--duration-micro)] hover:bg-surface ${
@@ -154,7 +160,7 @@ export function AppearancePicker({
                 onClick={() => onChange({ color, icon: undefined })}
                 className="text-caption text-ink-secondary hover:text-ink"
               >
-                Clear icon
+                {t('categories.appearance.clearIcon')}
               </button>
             )}
           </div>
@@ -181,6 +187,7 @@ function IconField({
   name: string
   onSet: (icon: string | undefined) => void
 }) {
+  const t = useT()
   const stored = icon ?? ''
   const [text, setText] = useState(stored)
 
@@ -207,8 +214,8 @@ function IconField({
         if (event.key === 'Enter') event.currentTarget.blur()
         if (event.key === 'Escape') setText(stored)
       }}
-      placeholder="Any emoji"
-      aria-label={`Icon for ${name}`}
+      placeholder={t('categories.appearance.anyEmoji')}
+      aria-label={t('categories.appearance.iconFor', { name })}
       className="h-7 w-24 rounded-md border border-hairline bg-background px-2 text-center outline-none focus:border-hairline-strong"
     />
   )

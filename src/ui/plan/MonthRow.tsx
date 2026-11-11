@@ -1,11 +1,7 @@
-import {
-  addMonths,
-  formatMonthAbbrev,
-  formatYearMonth,
-  toYearMonthString,
-  type YearMonth,
-} from '@/core/time.ts'
+import { addMonths, toYearMonthString, type YearMonth } from '@/core/time.ts'
+import { useDates, useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 
 /**
  * **Months on this plan** (M31 U4): twelve checkboxes, six months back and five ahead of the month
@@ -39,28 +35,24 @@ export function MonthRow({
   names: ReadonlyMap<string, string>
   onChange: (month: YearMonth, on: boolean) => void
 }) {
+  const t = useT()
+  const dates = useDates()
   const months = Array.from({ length: 12 }, (_, index) => addMonths(month, index - 6))
   const here = toYearMonthString(month)
   const own = [...given.values()].some((id) => id === planId)
   const hereGiven = given.get(here)
 
   return (
-    <section className="flex flex-col gap-2" aria-label="Months on this plan">
+    <section className="flex flex-col gap-2" aria-label={t('plan.months.label')}>
       <div className="flex flex-wrap items-baseline gap-x-3.5 gap-y-1">
-        <span className="fc-label text-ink-secondary uppercase">Months on this plan</span>
+        <span className="fc-label text-ink-secondary uppercase">{t('plan.months.label')}</span>
         <span className="text-caption text-ink-secondary">
           {isDefault ? (
-            <>
-              A month you have not given another plan is on <Bidi>{planName}</Bidi>, the default.
-            </>
+            <Phrase text={t('plan.months.onDefault')} parts={{ name: <Bidi>{planName}</Bidi> }} />
           ) : own ? (
-            <>
-              Tick the months this plan is for. A month you leave is on <Bidi>{defaultName}</Bidi>, the default.
-            </>
+            <Phrase text={t('plan.months.tick')} parts={{ name: <Bidi>{defaultName}</Bidi> }} />
           ) : (
-            <>
-              No month is on <Bidi>{planName}</Bidi> yet. Tick the months it is for.
-            </>
+            <Phrase text={t('plan.months.none')} parts={{ name: <Bidi>{planName}</Bidi> }} />
           )}
         </span>
       </div>
@@ -70,11 +62,11 @@ export function MonthRow({
           const owner = given.get(key)
           const on = isDefault ? owner === undefined || owner === planId : owner === planId
           const locked = isDefault && on
-          const other = on ? undefined : owner === undefined ? `${defaultName} · default` : (names.get(owner) ?? '')
+          const other = on ? undefined : owner === undefined ? t('plan.months.defaultTag', { name: defaultName }) : (names.get(owner) ?? '')
           return (
             <label
               key={key}
-              title={locked ? `To take ${formatYearMonth(one)} off the default, tick it on another plan.` : undefined}
+              title={locked ? t('plan.months.locked', { month: dates.yearMonth(one) }) : undefined}
               className={`flex min-w-0 cursor-pointer flex-col gap-0.5 border-s border-hairline px-2 py-2 first:border-s-0 ${
                 key === here ? 'shadow-[inset_0_-2px_0_var(--color-ink)]' : ''
               } ${locked ? 'cursor-default' : ''}`}
@@ -88,7 +80,7 @@ export function MonthRow({
                   className="size-3.5 accent-ink"
                 />
                 <span className={key === here ? 'font-medium' : ''}>
-                  {formatMonthAbbrev(one)}
+                  {dates.monthAbbrev(one)}
                   {one.month === 1 || key === toYearMonthString(months[0] ?? one) ? (
                     <span className="ms-1 text-[10px] text-ink-tertiary">{String(one.year)}</span>
                   ) : null}
@@ -103,7 +95,7 @@ export function MonthRow({
       </div>
       {!isDefault && hereGiven === undefined && (
         <p className="m-0 text-caption text-ink-secondary">
-          {formatYearMonth(month)} has no plan of its own, so <Bidi>{defaultName}</Bidi>, the default, is its plan.
+          <Phrase text={t('plan.months.noOwn')} parts={{ month: dates.yearMonth(month), name: <Bidi>{defaultName}</Bidi> }} />
         </p>
       )}
     </section>

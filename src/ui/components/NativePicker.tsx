@@ -1,5 +1,7 @@
 import { forwardRef, useImperativeHandle, useRef } from 'react'
 
+import { useT } from '@/i18n/current.ts'
+
 /** What a picker chooses: a calendar day, a month, or a time of day. */
 export type PickerKind = 'date' | 'month' | 'time'
 
@@ -37,6 +39,7 @@ export const NativePicker = forwardRef<
   PickerHandle,
   { kind: PickerKind; value: string; label: string; onPick: (value: string) => void }
 >(function NativePicker({ kind, value, label, onPick }, ref) {
+  const t = useT()
   const input = useRef<HTMLInputElement>(null)
   useImperativeHandle(ref, () => ({
     open() {
@@ -53,7 +56,7 @@ export const NativePicker = forwardRef<
       type={kind}
       tabIndex={-1}
       aria-hidden
-      aria-label={`${label}, picked`}
+      aria-label={t('chrome.components.picked', { label })}
       className="pointer-events-none absolute bottom-0 start-0 h-px w-px opacity-0"
       value={SHAPE[kind].test(value) ? value : ''}
       onChange={(event) => {

@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from 'react'
 import { ORPHANED_COPIES_DAYS, type AboutFacts } from '../../electron/bridge.ts'
 import { shellApp, shellBridge, shellUpdates } from '@/data/storage/desktop.ts'
 import { formatBytes } from '@/domain/provider.ts'
+import { useT } from '@/i18n/current.ts'
+import { tNow } from '@/i18n/words.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { Button } from '@/ui/components/Button.tsx'
@@ -56,6 +58,7 @@ export function About() {
 }
 
 function AboutDialog() {
+  const t = useT()
   const [facts, setFacts] = useState<Facts>({ kind: 'loading' })
   const [failure, setFailure] = useState<string | undefined>(undefined)
   const panel = useRef<HTMLDivElement>(null)
@@ -65,7 +68,7 @@ function AboutDialog() {
   useEffect(() => {
     const app = shellApp()
     if (app === undefined) {
-      setFacts({ kind: 'failed', reason: 'This window has no About of its own.' })
+      setFacts({ kind: 'failed', reason: tNow('chrome.about.noAbout') })
       return
     }
     app.about().then(
@@ -80,7 +83,7 @@ function AboutDialog() {
       await shellApp()?.openBackupsFolder()
     } catch {
       // The shell's reason is in its words; the way forward is the path above.
-      setFailure('The folder could not be opened from here. Its path is above, to open from your file manager.')
+      setFailure(tNow('chrome.about.folderFailed'))
     }
   }
   const openText = shellApp()?.openText
@@ -99,14 +102,20 @@ function AboutDialog() {
         ref={panel}
         role="dialog"
         aria-modal="true"
-        aria-label="About Emerald"
+        aria-label={t('chrome.about.title')}
         tabIndex={-1}
         className="fc-pop-enter flex max-h-[76vh] w-full max-w-lg flex-col overflow-hidden rounded-lg border border-hairline-strong bg-elevated shadow-pop outline-none"
         onKeyDown={onKeyDown}
       >
         <div className="flex items-center gap-2.5 border-b border-hairline py-2 pe-2 ps-3.5">
-          <span className="fc-label flex-1">About Emerald</span>
-          <button type="button" aria-label="Close" title="Close (Esc)" onClick={close} className="fc-icon-action">
+          <span className="fc-label flex-1">{t('chrome.about.title')}</span>
+          <button
+            type="button"
+            aria-label={t('chrome.about.close')}
+            title={t('chrome.about.closeTitle')}
+            onClick={close}
+            className="fc-icon-action"
+          >
             <ActionGlyph name="close" />
           </button>
         </div>
@@ -114,12 +123,12 @@ function AboutDialog() {
         <div className="min-h-0 flex-1 overflow-y-auto px-3.5 pt-3 pb-3.5">
           {facts.kind === 'loading' && (
             <div className="py-3">
-              <Working size={20} label="Reading what to say" />
+              <Working size={20} label={t('chrome.about.reading')} />
             </div>
           )}
           {facts.kind === 'failed' && (
             <p className="m-0 py-3 text-negative" role="alert">
-              Could not read it: {facts.reason}
+              {t('chrome.about.readFailed', { reason: facts.reason })}
             </p>
           )}
           {facts.kind === 'facts' && (
@@ -137,22 +146,22 @@ function AboutDialog() {
               {openText !== undefined && (
                 <div className="flex flex-wrap gap-2 pt-3">
                   <Button size="sm" onClick={() => void openText('license')}>
-                    License
+                    {t('chrome.about.license')}
                   </Button>
                   <Button size="sm" onClick={() => void openText('notices')}>
-                    Third-party notices
+                    {t('chrome.about.notices')}
                   </Button>
                 </div>
               )}
 
               <UpdatesSection />
 
-              <section aria-label="Earlier copies" className="mt-4 border-t border-hairline pt-3">
-                <p className="fc-label m-0">Earlier copies</p>
+              <section aria-label={t('chrome.about.copies')} className="mt-4 border-t border-hairline pt-3">
+                <p className="fc-label m-0">{t('chrome.about.copies')}</p>
                 <p className="m-0 pt-1.5 text-ink-secondary">
-                  A copy is taken before an assistant writes to a document, and the last five of each are kept here.
-                  When a document is moved or deleted, its copies go once the newest is more than{' '}
-                  {ORPHANED_COPIES_DAYS} days old{uninstaller ? '; uninstalling Emerald removes the folder.' : '.'}
+                  {t(uninstaller ? 'chrome.about.copiesLeadUninstall' : 'chrome.about.copiesLead', {
+                    days: ORPHANED_COPIES_DAYS,
+                  })}
                 </p>
                 <p className="m-0 pt-2 font-mono text-caption break-all text-ink" data-testid="backups-path">
                   <Bidi>{facts.facts.backups.path}</Bidi>
@@ -160,12 +169,14 @@ function AboutDialog() {
                 <div className="flex items-center gap-3 pt-2">
                   <span className="flex-1 text-ink-secondary" data-testid="backups-size">
                     {facts.facts.backups.documents === 0
-                      ? 'Empty.'
-                      : `${formatBytes(facts.facts.backups.bytes)}, for ${String(facts.facts.backups.documents)} ` +
-                        (facts.facts.backups.documents === 1 ? 'document.' : 'documents.')}
+                      ? t('chrome.about.empty')
+                      : t(facts.facts.backups.documents === 1 ? 'chrome.about.sizeOne' : 'chrome.about.sizeMany', {
+                          size: formatBytes(facts.facts.backups.bytes),
+                          n: facts.facts.backups.documents,
+                        })}
                   </span>
                   <Button size="sm" onClick={() => void openFolder()}>
-                    Open folder
+                    {t('chrome.about.openFolder')}
                   </Button>
                 </div>
                 {failure !== undefined && (
@@ -188,27 +199,22 @@ function AboutDialog() {
  * on macOS it only says so, until the installers are signed.
  */
 function UpdatesSection() {
+  const t = useT()
   const state = useUpdateState()
   const updates = shellUpdates()
   if (state === undefined || updates === undefined) return null
   const checking = state.notice?.kind === 'checking'
 
   return (
-    <section aria-label="Updates" className="mt-4 border-t border-hairline pt-3">
-      <p className="fc-label m-0">Updates</p>
+    <section aria-label={t('chrome.about.updates')} className="mt-4 border-t border-hairline pt-3">
+      <p className="fc-label m-0">{t('chrome.about.updates')}</p>
       {state.downloads ? (
         <p className="m-0 pt-1.5 text-ink-secondary">
-          Emerald reaches the internet for one thing only, and only if you ask: GitHub’s answer for its newest version,
-          which sees your IP address and this version number. With the box ticked, a newer version also downloads in the
-          background from that release on GitHub, is checked against the checksum published with it, and installs only
-          when you press Install and restart. Your documents are never touched. Check now with the box clear only tells
-          you.
+          {t('chrome.about.updatesDownloads')}
         </p>
       ) : (
         <p className="m-0 pt-1.5 text-ink-secondary">
-          Emerald reaches the internet for one thing only, and only if you ask: GitHub’s answer for its newest version,
-          which sees your IP address and this version number. Nothing is downloaded or installed — a newer version is a
-          note at the top of the window, and Download opens its page in your browser.
+          {t('chrome.about.updatesNotice')}
         </p>
       )}
       <div className="flex items-center gap-3 pt-2">
@@ -218,10 +224,10 @@ function UpdatesSection() {
             checked={state.automatic}
             onChange={(event) => void answer(updates.setAutomatic(event.target.checked))}
           />
-          {state.downloads ? 'Check at start and once a day, and download' : 'Check at start and once a day'}
+          {state.downloads ? t('chrome.about.automaticDownloads') : t('chrome.about.automatic')}
         </label>
         <Button size="sm" onClick={() => void answer(updates.checkNow())} disabled={checking}>
-          {checking ? 'Checking…' : 'Check now'}
+          {checking ? t('chrome.about.checking') : t('chrome.about.checkNow')}
         </Button>
       </div>
     </section>

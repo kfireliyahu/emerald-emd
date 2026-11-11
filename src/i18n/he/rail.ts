@@ -1,23 +1,23 @@
 import type { Translation } from '../catalogue.ts'
 
 /**
- * **The rail's place names, in Hebrew** (M60 U1). Drafts: the glossary (M60 U2)
- * gives every term its Hebrew word, and these are replaced by its words here.
+ * **The rail's place names, in Hebrew** (M60 U1), in the glossary's words since
+ * M60 U5 (D-590): the `term` rows' `screen_hebrew`, a place's name in the plural.
  */
 export const rail: Translation<'rail'> = {
   home: 'בית',
   month: 'חודש',
   year: 'שנה',
-  dashboard: 'לוח מחוונים',
+  dashboard: 'לוח בקרה',
   transactions: 'תנועות',
   paychecks: 'תלושי שכר',
-  deductionTypes: 'סוגי ניכויים',
-  plan: 'תכנון',
+  deductionTypes: 'סוגי ניכוי',
+  plan: 'תקציב',
   wealth: 'הון',
   netWorth: 'שווי נקי',
   goals: 'יעדים',
   debts: 'חובות',
-  funds: 'קרנות',
+  funds: 'קופות',
   categories: 'קטגוריות',
   rules: 'כללים',
   formats: 'פורמטים',

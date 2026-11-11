@@ -12,7 +12,8 @@ import {
   type PlaceKind,
 } from '@/data/packs/packs.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
-import { currentLanguage } from '@/i18n/current.ts'
+import type { MessageKey } from '@/i18n/catalogue.ts'
+import { currentLanguage, useT, type Translate } from '@/i18n/current.ts'
 import { Button } from '@/ui/components/Button.tsx'
 import { useKeptPacks } from '@/ui/packs.ts'
 
@@ -46,17 +47,33 @@ import { useKeptPacks } from '@/ui/packs.ts'
  * ledger here* rather than two alike; and the packs are sections between
  * hairlines, square and unboxed (No card borders by default).
  */
-const PLACE_LABEL: Record<PlaceKind, string> = { roadmap: 'Roadmap', board: 'Boards', ready: 'Ready to start' }
+const PLACE_LABEL: Record<PlaceKind, MessageKey> = {
+  roadmap: 'settings.packs.places.roadmap',
+  board: 'settings.packs.places.board',
+  ready: 'settings.packs.places.ready',
+}
 
 /** The ledger's places are hand-drawn in `ui/nav.ts`, from before a pack could declare a view. */
-const LEDGER_PLACES = 'Home · Transactions · Paychecks · Plan · Wealth · Categories'
+const LEDGER_PLACES: readonly MessageKey[] = ['rail.home', 'rail.transactions', 'rail.paychecks', 'rail.plan', 'rail.wealth', 'rail.categories']
 
 /** The pack in a button's words: *the ledger*, *the development pack*. */
-function packObject(pack: Pick<PackDescription, 'title'>): string {
-  return /^the /i.test(pack.title) ? pack.title.replace(/^The /, 'the ') : `the ${pack.title.toLowerCase()} pack`
+function packObject(pack: Pick<PackDescription, 'id' | 'title'>, t: Translate): string {
+  const object = /^the /i.test(pack.title) ? pack.title.replace(/^The /, 'the ') : `the ${pack.title.toLowerCase()} pack`
+  return t('settings.packs.object', { object, title: packWord(pack, 'titles', pack.title, t) })
+}
+
+/**
+ * A pack's title or summary in the language now, by its id (M60 U5, D-590);
+ * the pack's own words for one the catalogue does not name.
+ */
+function packWord(pack: Pick<PackDescription, 'id'>, part: 'titles' | 'summaries', own: string, t: Translate): string {
+  const key = `settings.packs.${part}.${pack.id}`
+  const found = t(key as MessageKey)
+  return found === key ? own : found
 }
 
 export function Packs() {
+  const t = useT()
   const kept = useKeptPacks()
   const db = useDocumentStore((state) => state.db)
   const mutate = useDocumentStore((state) => state.mutate)
@@ -79,11 +96,8 @@ export function Packs() {
 
   return (
     <div className="fc-view-enter h-full overflow-auto px-6 py-4">
-      <h1 className="m-0 text-title">Packs</h1>
-      <p className="mt-2 mb-4 max-w-prose text-ink-secondary">
-        A pack is a set of formats and the screens for one kind of work. A document keeps the packs
-        it uses: their tables are in the file, and so is everything you put in them.
-      </p>
+      <h1 className="m-0 text-title">{t('rail.packs')}</h1>
+      <p className="mt-2 mb-4 max-w-prose text-ink-secondary">{t('settings.packs.lead')}</p>
 
       {PACKS.map((pack) => {
         // Read with `kept`, which moves on every mutation.
@@ -91,8 +105,8 @@ export function Packs() {
         const plan = planned?.ok === true ? planned.value : undefined
         const places =
           pack.id === 'ledger'
-            ? LEDGER_PLACES
-            : [...new Set([...pack.places().map((place) => PLACE_LABEL[place.kind]), 'Formats'])].join(' · ')
+            ? LEDGER_PLACES.map((place) => t(place)).join(' · ')
+            : [...new Set([...pack.places().map((place) => t(PLACE_LABEL[place.kind])), t('rail.formats')])].join(' · ')
         // A kept pack is offered again when this build's has grown or renamed
         // a column since the document kept it (D-443).
         const behind = plan !== undefined && kept.has(pack.id) && !upToDate(plan)
@@ -103,23 +117,26 @@ export function Packs() {
           <section key={pack.id} aria-labelledby={`pack-${pack.id}`} className="max-w-prose border-t border-hairline py-4">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <h2 id={`pack-${pack.id}`} className="m-0 text-body font-medium">
-                {pack.title}
+                {packWord(pack, 'titles', pack.title, t)}
               </h2>
               <span className="text-caption text-ink-secondary">{places}</span>
               {offered && (
                 <span className="ms-auto">
                   <Button variant={primary ? 'primary' : 'secondary'} size="sm" onClick={() => keep(pack)}>
-                    {behind ? `Bring ${packObject(pack)} up to date` : `Keep ${packObject(pack)} here`}
+                    {behind
+                      ? t('settings.packs.bringUpToDate', { pack: packObject(pack, t) })
+                      : t('settings.packs.keepHere', { pack: packObject(pack, t) })}
                   </Button>
                 </span>
               )}
             </div>
             <p className="mt-3 max-w-prose text-caption text-ink-secondary">
-              {pack.summary}{' '}
+              {packWord(pack, 'summaries', pack.summary, t)}{' '}
               {kept.has(pack.id) ? (
                 <span className="text-ink">
-                  This document keeps it
-                  {behind && plan !== undefined ? <>, as an older build declared it: {catchingUp(plan)}</> : '.'}
+                  {t('settings.packs.keeps')}
+                  {/* What bringing it up to date does — `keep_packs`' own phrases, the pack's words. */}
+                  {behind && plan !== undefined ? t('settings.packs.keepsOlder', { parts: planParts(plan, false).join('; ') }) : '.'}
                 </span>
               ) : (
                 <WhatKeepingDoes pack={pack} plan={plan} />
@@ -127,7 +144,7 @@ export function Packs() {
             </p>
             {plan !== undefined && keptParts(plan).length > 0 && (
               <p className="mt-2 max-w-prose text-caption text-ink-secondary">
-                Kept as this document has it, over what the pack says: {keptParts(plan).join('; ')}.
+                {t('settings.packs.keptOver', { parts: keptParts(plan).join('; ') })}
               </p>
             )}
             {planned?.ok === false && <p className="mt-2 text-negative">{planned.error}</p>}
@@ -144,54 +161,49 @@ export function Packs() {
       })}
 
       <p className="max-w-prose border-t border-hairline pt-4 text-caption text-ink-secondary">
-        The engine underneath them — the formats you declare, their rows, their units and their
-        claims — is not a pack, and every document has it.
+        {t('settings.packs.engine')}
       </p>
     </div>
   )
 }
 
-/** What bringing a kept pack up to date does, in a sentence's second half — `keep_packs`' own phrases. */
-function catchingUp(plan: KeepPlan): string {
-  return `bringing it up to date ${planParts(plan, false).join('; ')}.`
-}
-
 /** The sentence under a pack the document does not keep: what pressing the button would do. */
 
 function WhatKeepingDoes({ pack, plan }: { readonly pack: PackDescription; readonly plan: KeepPlan | undefined }) {
-  if (plan === undefined) return <>No document is open.</>
+  const t = useT()
+  if (plan === undefined) return <>{t('settings.packs.noDocument')}</>
   const total = pack.formats().size
   const held = [
     ...new Set([...plan.holds, ...plan.completes.map((each) => each.format), ...plan.renames.map((each) => each.format)]),
   ].sort()
   if (plan.clashes.length > 0) {
     return (
-      <>
-        This document declares formats of the same names that are not the pack’s, so it cannot keep it
-        until they are renamed or removed:
-      </>
+      <>{t('settings.packs.clashes')}</>
     )
   }
   if (held.length === 0) {
     return pack.id === 'ledger' ? (
-      <>This document keeps none; keeping it declares its formats and starts its setup.</>
+      <>{t('settings.packs.noneLedger')}</>
     ) : (
-      <>This document keeps none; keeping it declares its {total} formats.</>
+      <>{t('settings.packs.none', { total })}</>
     )
   }
   const completing = [
-    ...plan.renames.map((each) => `${each.format} by renaming ${each.from} to ${each.to}, its values kept`),
-    ...plan.completes.map((each) => `${each.format} with ${each.columns.join(', ')}`),
+    ...plan.renames.map((each) => t('settings.packs.renaming', { format: each.format, from: each.from, to: each.to })),
+    ...plan.completes.map((each) => t('settings.packs.completing', { format: each.format, columns: each.columns.join(', ') })),
   ]
   // Notes and view settings an earlier build of the pack wrote (D-491), in `keep_packs`' words.
   const bringing = planParts({ ...plan, declares: [], renames: [], completes: [] }, false)
   return (
     <>
-      This document declares {held.length} of its {total} formats ({held.join(', ')}), so it is not shown: a
-      pack is kept whole. Keeping it declares the other {plan.declares.length}
-      {completing.length > 0 ? <> and completes {completing.join('; ')}</> : null}
-      {bringing.length > 0 ? <>, and {bringing.join('; ')}</> : null}; what those formats hold stays as it
-      is.
+      {t('settings.packs.partly', {
+        held: held.length,
+        total,
+        names: held.join(', '),
+        other: plan.declares.length,
+        completes: completing.length > 0 ? t('settings.packs.completes', { parts: completing.join('; ') }) : '',
+        bringing: bringing.length > 0 ? t('settings.packs.bringing', { parts: bringing.join('; ') }) : '',
+      })}
     </>
   )
 }

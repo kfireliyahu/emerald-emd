@@ -1,4 +1,5 @@
 import { formatMoney, isNegative, type Money } from '@/core/money.ts'
+import { useT } from '@/i18n/current.ts'
 import { useAnimatedMoney } from '@/ui/useAnimatedNumber.ts'
 
 /**
@@ -9,12 +10,13 @@ import { useAnimatedMoney } from '@/ui/useAnimatedNumber.ts'
  * not a problem, it is the content. The minus sign carries the meaning.
  */
 export function Amount({ value, className }: { value: Money; className?: string | undefined }) {
+  const t = useT()
   return (
     <span
       className={`tabular-nums ${className ?? ''}`}
       // The sign is not conveyed by styling, so it needs to survive being read
       // aloud as much as being looked at.
-      aria-label={`${isNegative(value) ? 'minus ' : ''}${formatMoney(value, { symbol: false })}`}
+      aria-label={isNegative(value) ? t('chrome.components.minus', { amount: formatMoney(value, { symbol: false }) }) : formatMoney(value, { symbol: false })}
     >
       {formatMoney(value)}
     </span>
@@ -42,11 +44,12 @@ export function CountingAmount({
   value: Money
   className?: string | undefined
 }) {
+  const t = useT()
   const shown = useAnimatedMoney(value)
   return (
     <span
       className={`tabular-nums ${className ?? ''}`}
-      aria-label={`${isNegative(value) ? 'minus ' : ''}${formatMoney(value, { symbol: false })}`}
+      aria-label={isNegative(value) ? t('chrome.components.minus', { amount: formatMoney(value, { symbol: false }) }) : formatMoney(value, { symbol: false })}
     >
       {formatMoney(shown)}
     </span>

@@ -6,20 +6,17 @@ import type { Account } from '@/data/repositories/accountRepository.ts'
 import type { Category } from '@/data/repositories/categoryRepository.ts'
 import { takesPattern } from '@/domain/categorization.ts'
 import { RULE_KINDS, type RuleKind } from '@/domain/model/rules.ts'
-import {
-  draftProblems,
-  resolvedName,
-  withKind,
-  type RuleDraft,
-} from '@/domain/ruleEditing.ts'
+import { draftProblems, withKind, type RuleDraft } from '@/domain/ruleEditing.ts'
+import { useT } from '@/i18n/current.ts'
 import { Button } from '@/ui/components/Button.tsx'
 import { CategoryPicker } from '@/ui/components/CategoryPicker.tsx'
 import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
 import {
   CURRENCY_CHOICES,
-  KIND_PHRASE,
+  KIND_WORD,
   PATTERN_PLACEHOLDER,
   accountLabel,
+  problemWords,
 } from '@/ui/rules/ruleText.ts'
 
 /**
@@ -58,6 +55,7 @@ export function RuleEditor({
   onSave: (draft: RuleDraft) => void
   onCancel: () => void
 }) {
+  const t = useT()
   const [draft, setDraft] = useState(initial)
   const [minText, setMinText] = useState(() => boundText(initial.conditions.amountMin))
   const [maxText, setMaxText] = useState(() => boundText(initial.conditions.amountMax))
@@ -66,8 +64,22 @@ export function RuleEditor({
   )
 
   const problems = draftProblems(draft)
-  const problemFor = (field: 'pattern' | 'conditions' | 'targetCategoryId'): string | undefined =>
-    problems.find((problem) => problem.field === field)?.message
+  const problemFor = (field: 'pattern' | 'conditions' | 'targetCategoryId'): string | undefined => {
+    const message = problems.find((problem) => problem.field === field)?.message
+    return message === undefined ? undefined : problemWords(message)
+  }
+
+  // The name it gets when none is typed — `resolvedName`'s, in the language now,
+  // and saved as the name when the field is left empty, so the placeholder is
+  // what the rule is called (M60 U5, D-590).
+  const pattern = draft.pattern.trim()
+  const defaultName = takesPattern(draft.kind)
+    ? pattern === ''
+      ? t('rules.editor.newRuleName')
+      : pattern
+    : draft.kind === 'ACCOUNT'
+      ? t('rules.editor.accountRule')
+      : t('rules.editor.amountRule')
 
   const setBounds = (min: string, max: string, code: CurrencyCode): void => {
     setMinText(min)
@@ -88,7 +100,7 @@ export function RuleEditor({
       className="fc-pop-enter shrink-0 border-t border-hairline bg-surface px-6 py-4"
       onSubmit={(event) => {
         event.preventDefault()
-        if (problems.length === 0) onSave(draft)
+        if (problems.length === 0) onSave(draft.name.trim() === '' ? { ...draft, name: defaultName } : draft)
       }}
       // Escape leaves the panel the same way it leaves every other transient
       // thing in the app.
@@ -105,8 +117,8 @@ export function RuleEditor({
           onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))}
           // The placeholder is the name it will actually get, not a hint: the
           // pattern is what most rules would be called anyway.
-          placeholder={resolvedName({ ...draft, name: '' })}
-          aria-label="Rule name"
+          placeholder={defaultName}
+          aria-label={t('rules.editor.ruleName')}
           dir="auto"
           className={`${FIELD} w-52`}
         />
@@ -114,12 +126,12 @@ export function RuleEditor({
         <select
           value={draft.kind}
           onChange={(event) => setDraft((current) => withKind(current, event.target.value as RuleKind))}
-          aria-label="What this rule matches on"
+          aria-label={t('rules.editor.matchesOn')}
           className={SELECT}
         >
           {RULE_KINDS.map((kind) => (
             <option key={kind} value={kind}>
-              {KIND_PHRASE[kind]}
+              {t(KIND_WORD[kind])}
             </option>
           ))}
         </select>
@@ -129,21 +141,21 @@ export function RuleEditor({
             value={draft.pattern}
             onChange={(event) => setDraft((current) => ({ ...current, pattern: event.target.value }))}
             placeholder={PATTERN_PLACEHOLDER[draft.kind]}
-            aria-label="Pattern"
+            aria-label={t('rules.editor.pattern')}
             // Almost every pattern is a Hebrew merchant name.
             dir="auto"
             className={`${FIELD} w-60`}
           />
         )}
 
-        <span className="text-ink-tertiary">→</span>
+        <span className="text-ink-tertiary">{t('rules.editor.arrow')}</span>
         <CategoryPicker
           categories={categories}
           value={draft.targetCategoryId === '' ? undefined : draft.targetCategoryId}
           onChange={(categoryId) =>
             setDraft((current) => ({ ...current, targetCategoryId: categoryId ?? '' }))
           }
-          label="Category this rule assigns"
+          label={t('rules.editor.categoryLabel')}
         />
       </div>
 
@@ -151,7 +163,7 @@ export function RuleEditor({
           above rather than being a second rule (D-037). */}
       <div className="mt-2 flex flex-wrap items-center gap-2 text-caption text-ink-secondary">
         <label className="flex items-center gap-2">
-          only on
+          {t('rules.editor.onlyOn')}
           <select
             value={draft.conditions.scopeAccountId ?? ''}
             onChange={(event) =>
@@ -163,10 +175,10 @@ export function RuleEditor({
                 },
               }))
             }
-            aria-label="Restrict this rule to one account"
+            aria-label={t('rules.editor.restrict')}
             className={`${SELECT} h-7 text-ink`}
           >
-            <option value="">any account</option>
+            <option value="">{t('rules.editor.anyAccount')}</option>
             {accounts.map((account) => (
               <option key={account.id} value={account.id}>
                 {accountLabel(account)}
@@ -176,23 +188,23 @@ export function RuleEditor({
         </label>
 
         <label className="flex items-center gap-2">
-          amount from
+          {t('rules.editor.amountFrom')}
           <input
             value={minText}
             onChange={(event) => setBounds(event.target.value, maxText, currency)}
-            placeholder="any"
-            aria-label="Smallest amount this rule matches"
+            placeholder={t('rules.editor.any')}
+            aria-label={t('rules.editor.smallest')}
             className={`${FIELD} h-7 w-24 text-ink tabular-nums`}
           />
         </label>
 
         <label className="flex items-center gap-2">
-          up to
+          {t('rules.editor.upTo')}
           <input
             value={maxText}
             onChange={(event) => setBounds(minText, event.target.value, currency)}
-            placeholder="any"
-            aria-label="Largest amount this rule matches"
+            placeholder={t('rules.editor.any')}
+            aria-label={t('rules.editor.largest')}
             className={`${FIELD} h-7 w-24 text-ink tabular-nums`}
           />
         </label>
@@ -200,7 +212,7 @@ export function RuleEditor({
         <select
           value={currency}
           onChange={(event) => setBounds(minText, maxText, event.target.value)}
-          aria-label="Currency of the amount bounds"
+          aria-label={t('rules.editor.currency')}
           className={`${SELECT} h-7 text-ink`}
         >
           {CURRENCY_CHOICES.map((code) => (
@@ -212,15 +224,15 @@ export function RuleEditor({
 
         {/* Bounds are magnitudes: a charge is negative by the importer's
             convention (D-004), so a signed bound would match nothing. */}
-        <span className="text-ink-tertiary">sizes, not signs — a ₪120 charge is inside 100–500</span>
+        <span className="text-ink-tertiary">{t('rules.editor.sizes')}</span>
       </div>
 
       <div className="mt-3 flex flex-wrap items-center gap-3">
         <Button variant="primary" size="sm" type="submit" disabled={problems.length > 0}>
-          {isNew ? 'Add rule' : 'Save'}
+          {isNew ? t('rules.editor.addRule') : t('rules.editor.save')}
         </Button>
         <Button variant="ghost" size="sm" onClick={onCancel}>
-          Cancel
+          {t('rules.editor.cancel')}
         </Button>
 
         {/* One line each, beside the button that will not fire until they are
@@ -230,8 +242,8 @@ export function RuleEditor({
           {problemFor('pattern')}
           {problemFor('conditions')}
           {problemFor('targetCategoryId')}
-          {unreadable(minText) && 'The smallest amount is not a number'}
-          {unreadable(maxText) && 'The largest amount is not a number'}
+          {unreadable(minText) && t('rules.editor.smallestNaN')}
+          {unreadable(maxText) && t('rules.editor.largestNaN')}
         </span>
       </div>
     </form>

@@ -1,12 +1,14 @@
 import { useRef, useState } from 'react'
 
 import type { SplitBucket, TargetKind } from '@/domain/model/plan.ts'
+import { useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { useDismiss } from '@/ui/components/useDismiss.ts'
-import { FUND_TYPE_LABEL } from '@/ui/funds/labels.ts'
 import { FUND_TYPES, type FundType } from '@/domain/model/funds.ts'
+import { pageIsRtl } from '@/ui/direction.ts'
 
 type Kind = Exclude<TargetKind, 'FREE'>
 
@@ -47,21 +49,7 @@ export interface NewPointable {
   readonly parentId?: string
 }
 
-const TABS: readonly (readonly [Kind, string])[] = [
-  ['SAVING_GOAL', 'Goal'],
-  ['DEBT', 'Debt'],
-  ['CATEGORY', 'Category'],
-  ['FUND', 'Fund'],
-  ['ACCOUNT', 'Account'],
-]
-
-const NOUN: Readonly<Record<Kind, string>> = {
-  SAVING_GOAL: 'goal',
-  DEBT: 'debt',
-  CATEGORY: 'category',
-  FUND: 'fund',
-  ACCOUNT: 'account',
-}
+const TABS: readonly Kind[] = ['SAVING_GOAL', 'DEBT', 'CATEGORY', 'FUND', 'ACCOUNT']
 
 const FORM_FIELD = 'h-[30px] min-w-0 border border-hairline-strong bg-background px-2'
 
@@ -86,13 +74,17 @@ export function PointsAt({
   onCreate: (kind: Kind, draft: NewPointable) => string | undefined
   onClose: () => void
 }) {
+  const t = useT()
   const holder = useRef<HTMLDivElement>(null)
   const [kind, setKind] = useState<Kind>(bucket.targetKind === 'FREE' ? 'SAVING_GOAL' : bucket.targetKind)
   const [problem, setProblem] = useState<string | undefined>()
 
   const dismissKey = useDismiss(true, holder, onClose)
 
-  const left = Math.max(8, Math.min(at.x, window.innerWidth - 400))
+  // `at` is its start edge: the right one in right-to-left, where it ends there (M60 U5, D-590).
+  const left = pageIsRtl()
+    ? Math.max(8, Math.min(at.x - 390, window.innerWidth - 398))
+    : Math.max(8, Math.min(at.x, window.innerWidth - 400))
   const top = Math.max(8, Math.min(at.y + 4, window.innerHeight - 480))
 
   return (
@@ -100,18 +92,18 @@ export function PointsAt({
       ref={holder}
       onKeyDown={dismissKey}
       role="dialog"
-      aria-label={`What ${bucket.name} is for`}
+      aria-label={t('plan.points.label', { name: bucket.name })}
       className="fc-pop-enter fixed z-50 flex max-h-[470px] w-[390px] flex-col border border-hairline-strong bg-elevated pb-3 shadow-pop"
       style={{ left, top }}
     >
       <div className="flex flex-col gap-px border-b border-hairline px-3.5 py-2.5 text-caption text-ink-secondary">
-        <b className="truncate font-medium text-ink">
-          What is <Bidi>{bucket.name}</Bidi> for?
+        <b className="flex min-w-0 font-medium whitespace-pre text-ink">
+          <Phrase text={t('plan.points.title')} parts={{ name: <Bidi className="min-w-0 truncate">{bucket.name}</Bidi> }} />
         </b>
-        <span>Pick one, or make a new one here.</span>
+        <span>{t('plan.points.lead')}</span>
       </div>
       <div className="flex border-b border-hairline" role="tablist">
-        {TABS.map(([value, label]) => (
+        {TABS.map((value) => (
           <button
             key={value}
             type="button"
@@ -125,7 +117,7 @@ export function PointsAt({
               kind === value ? 'border-accent text-ink' : 'border-transparent text-ink-secondary hover:text-ink'
             }`}
           >
-            {label}
+            {t(`plan.kind.${value}`)}
           </button>
         ))}
       </div>
@@ -152,7 +144,7 @@ export function PointsAt({
             onClick={() => onPick('FREE', undefined)}
             className="grid min-h-[30px] w-full grid-cols-[minmax(0,1fr)_18px] items-center gap-2.5 px-3.5 text-start text-ink-secondary hover:bg-accent-soft"
           >
-            <span>Nothing in particular</span>
+            <span>{t('plan.kind.FREE')}</span>
             {bucket.targetKind === 'FREE' && <ActionGlyph name="check" size={14} />}
           </button>
         </div>
@@ -170,12 +162,7 @@ export function PointsAt({
   )
 }
 
-const ACCOUNT_KINDS: readonly (readonly [string, string])[] = [
-  ['BANK', 'Bank account'],
-  ['CREDIT_CARD', 'Credit card'],
-  ['CASH', 'Cash'],
-  ['HOLDINGS', 'Account with holdings'],
-]
+const ACCOUNT_KINDS = ['BANK', 'CREDIT_CARD', 'CASH', 'HOLDINGS'] as const
 
 /** The mockup's `.newform`: the kind's fields in a label column, and one action. */
 function NewForm({
@@ -193,6 +180,7 @@ function NewForm({
   onCreate: (draft: NewPointable) => void
   onCancel: () => void
 }) {
+  const t = useT()
   const [name, setName] = useState('')
   const [detail, setDetail] = useState(
     kind === 'CATEGORY' ? 'SPENDING' : kind === 'FUND' ? 'PENSION' : kind === 'ACCOUNT' ? 'BANK' : '',
@@ -222,13 +210,13 @@ function NewForm({
   )
   return (
     <div className="flex flex-col gap-2.5 border-t border-hairline px-3.5 pt-2.5">
-      <b className="text-[13px] font-medium">New {NOUN[kind]}</b>
+      <b className="text-[13px] font-medium">{t(`plan.points.new.${kind}`)}</b>
       <div className="grid grid-cols-[110px_minmax(0,1fr)] items-center gap-x-3 gap-y-2">
-        {label('pa-name', 'Name')}
+        {label('pa-name', t('plan.editor.name'))}
         <input id="pa-name" value={name} onChange={(event) => setName(event.target.value)} className={FORM_FIELD} />
         {kind === 'SAVING_GOAL' && (
           <>
-            {label('pa-target', 'Target')}
+            {label('pa-target', t('plan.points.target'))}
             <input
               id="pa-target"
               inputMode="decimal"
@@ -236,11 +224,11 @@ function NewForm({
               onChange={(event) => setTarget(event.target.value)}
               className={`${FORM_FIELD} text-end tabular-nums`}
             />
-            {label('pa-by', 'By')}
+            {label('pa-by', t('plan.points.by'))}
             <input id="pa-by" type="month" value={by} onChange={(event) => setBy(event.target.value)} className={FORM_FIELD} />
-            {label('pa-kept', 'Where is the money?')}
+            {label('pa-kept', t('plan.points.where'))}
             <select id="pa-kept" value={holdingId} onChange={(event) => setHoldingId(event.target.value)} className={FORM_FIELD}>
-              {holdings.length === 0 && <option value="">Not said yet</option>}
+              {holdings.length === 0 && <option value="">{t('plan.points.notSaid')}</option>}
               {holdings.map((one) => (
                 <option key={one.id} value={one.id}>
                   {one.name}
@@ -251,7 +239,7 @@ function NewForm({
         )}
         {kind === 'DEBT' && (
           <>
-            {label('pa-left', 'Left')}
+            {label('pa-left', t('plan.points.left'))}
             <input
               id="pa-left"
               inputMode="decimal"
@@ -263,7 +251,7 @@ function NewForm({
         )}
         {kind === 'CATEGORY' && (
           <>
-            {label('pa-kind', 'Kind')}
+            {label('pa-kind', t('plan.points.kind'))}
             <select
               id="pa-kind"
               value={detail}
@@ -273,12 +261,12 @@ function NewForm({
               }}
               className={FORM_FIELD}
             >
-              <option value="SPENDING">Spending</option>
-              <option value="MOVED">Money moved</option>
+              <option value="SPENDING">{t('plan.points.spending')}</option>
+              <option value="MOVED">{t('plan.points.moved')}</option>
             </select>
-            {label('pa-under', 'Under')}
+            {label('pa-under', t('plan.points.under'))}
             <select id="pa-under" value={parentId} onChange={(event) => setParentId(event.target.value)} className={FORM_FIELD}>
-              <option value="">Top level</option>
+              <option value="">{t('plan.points.topLevel')}</option>
               {parents
                 .filter((one) => one.moved === (detail === 'MOVED'))
                 .map((one) => (
@@ -291,11 +279,11 @@ function NewForm({
         )}
         {kind === 'FUND' && (
           <>
-            {label('pa-kind', 'Kind')}
+            {label('pa-kind', t('plan.points.kind'))}
             <select id="pa-kind" value={detail} onChange={(event) => setDetail(event.target.value)} className={FORM_FIELD}>
               {FUND_TYPES.map((one: FundType) => (
                 <option key={one} value={one}>
-                  {FUND_TYPE_LABEL[one]}
+                  {t(`plan.points.fundType.${one}`)}
                 </option>
               ))}
             </select>
@@ -303,15 +291,15 @@ function NewForm({
         )}
         {kind === 'ACCOUNT' && (
           <>
-            {label('pa-kind', 'Kind')}
+            {label('pa-kind', t('plan.points.kind'))}
             <select id="pa-kind" value={detail} onChange={(event) => setDetail(event.target.value)} className={FORM_FIELD}>
-              {ACCOUNT_KINDS.map(([value, text]) => (
+              {ACCOUNT_KINDS.map((value) => (
                 <option key={value} value={value}>
-                  {text}
+                  {t(`plan.points.account.${value}`)}
                 </option>
               ))}
             </select>
-            {label('pa-last4', 'Last 4 digits')}
+            {label('pa-last4', t('plan.points.last4'))}
             <input
               id="pa-last4"
               inputMode="numeric"
@@ -326,10 +314,10 @@ function NewForm({
       {problem !== undefined && <span className="text-caption text-negative">{problem}</span>}
       <div className="flex items-center gap-3">
         <Button variant="primary" size="sm" icon="add" disabled={!ready} onClick={submit}>
-          Make it and point here
+          {t('plan.points.make')}
         </Button>
         <Button variant="ghost" size="sm" onClick={onCancel}>
-          Cancel
+          {t('plan.cancel')}
         </Button>
       </div>
     </div>

@@ -2,6 +2,7 @@ import type { Category } from '@/data/repositories/categoryRepository.ts'
 import type { FixedExpense, FixedRole } from '@/domain/model/fixed.ts'
 import type { SplitBucket, TargetKind } from '@/domain/model/plan.ts'
 import type { CategoryPalette } from '@/ui/charts/categoryPalette.ts'
+import { pathArrows, tNow } from '@/i18n/words.ts'
 import { MATCH_KIND_LABEL } from '@/ui/fixed/labels.ts'
 
 /**
@@ -12,18 +13,36 @@ import { MATCH_KIND_LABEL } from '@/ui/fixed/labels.ts'
  * sentence chosen, and no title-casing gets there.
  */
 export const ROLE_LABEL: Readonly<Record<FixedRole, string>> = {
-  NET: 'Out of net',
-  SPLIT: 'Part of the split',
-  IGNORE: 'Ignore',
+  get NET() {
+    return tNow('plan.role.NET')
+  },
+  get SPLIT() {
+    return tNow('plan.role.SPLIT')
+  },
+  get IGNORE() {
+    return tNow('plan.role.IGNORE')
+  },
 }
 
 export const KIND_LABEL: Readonly<Record<TargetKind, string>> = {
-  CATEGORY: 'Category',
-  SAVING_GOAL: 'Goal',
-  DEBT: 'Debt',
-  FUND: 'Fund',
-  ACCOUNT: 'Account',
-  FREE: 'Nothing in particular',
+  get CATEGORY() {
+    return tNow('plan.kind.CATEGORY')
+  },
+  get SAVING_GOAL() {
+    return tNow('plan.kind.SAVING_GOAL')
+  },
+  get DEBT() {
+    return tNow('plan.kind.DEBT')
+  },
+  get FUND() {
+    return tNow('plan.kind.FUND')
+  },
+  get ACCOUNT() {
+    return tNow('plan.kind.ACCOUNT')
+  },
+  get FREE() {
+    return tNow('plan.kind.FREE')
+  },
 }
 
 /**
@@ -51,10 +70,10 @@ export function bucketColour(
 
 /** Where a fixed expense is recognised from, in a few words. */
 export function sourceText(expense: FixedExpense, categories: readonly Category[]): string {
-  if (expense.matchKind === 'MERCHANT_PATTERN') return `Merchant: ${expense.matchRef ?? ''}`
+  if (expense.matchKind === 'MERCHANT_PATTERN') return tNow('plan.source.merchant', { name: expense.matchRef ?? '' })
   if (expense.matchKind === 'CATEGORY') {
-    return `Category: ${categories.find((one) => one.id === expense.matchRef)?.path ?? ''}`
+    return tNow('plan.source.category', { path: pathArrows(categories.find((one) => one.id === expense.matchRef)?.path ?? '') })
   }
-  if (expense.matchKind === 'PAYCHECK_DEDUCTION') return 'Taken from your paycheck'
+  if (expense.matchKind === 'PAYCHECK_DEDUCTION') return tNow('plan.source.paycheck')
   return MATCH_KIND_LABEL.MANUAL_ONLY
 }

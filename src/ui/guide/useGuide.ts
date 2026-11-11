@@ -3,6 +3,7 @@ import { useMemo } from 'react'
 import { guideFor } from '@/data/packs/packs.ts'
 import { shellDocuments } from '@/data/storage/desktop.ts'
 import type { GuideChecks, GuideProgress, GuideStep } from '@/domain/guide.ts'
+import type { Translate } from '@/i18n/current.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { useKeptPacks } from '@/ui/packs.ts'
 import { today } from '@/ui/today.ts'
@@ -50,6 +51,6 @@ export function useGuide(active: boolean): OpenGuide | undefined {
  * Where the guide can be reopened from, in this front end's words: the shell has
  * Help › Guide me; a browser tab has no menu bar, so it is the palette.
  */
-export function reopenedFrom(): string {
-  return shellDocuments() === undefined ? 'Ctrl+K › Guide me' : 'Help › Guide me'
+export function reopenedFrom(t: Translate): string {
+  return shellDocuments() === undefined ? t('guide.reopened.page') : t('guide.reopened.shell')
 }

@@ -3,6 +3,7 @@ import type {
   Cadence,
   FixedExpenseMatchKind,
 } from '@/domain/model/fixed.ts'
+import { tNow } from '@/i18n/words.ts'
 
 /**
  * What the fixed-expense vocabulary is called on screen.
@@ -15,29 +16,57 @@ import type {
  * UI copy is English even though the data is Hebrew (docs/conventions.md).
  */
 export const CADENCE_LABEL: Readonly<Record<Cadence, string>> = {
-  MONTHLY: 'Monthly',
-  BIMONTHLY: 'Every 2 months',
-  QUARTERLY: 'Quarterly',
-  YEARLY: 'Yearly',
-  IRREGULAR: 'Irregular',
+  get MONTHLY() {
+    return tNow('plan.fixed.cadence.MONTHLY')
+  },
+  get BIMONTHLY() {
+    return tNow('plan.fixed.cadence.BIMONTHLY')
+  },
+  get QUARTERLY() {
+    return tNow('plan.fixed.cadence.QUARTERLY')
+  },
+  get YEARLY() {
+    return tNow('plan.fixed.cadence.YEARLY')
+  },
+  get IRREGULAR() {
+    return tNow('plan.fixed.cadence.IRREGULAR')
+  },
 }
 
 export const MATCH_KIND_LABEL: Readonly<Record<FixedExpenseMatchKind, string>> = {
-  MERCHANT_PATTERN: 'A merchant on my statement',
-  CATEGORY: 'Everything in a category',
-  PAYCHECK_DEDUCTION: 'Taken from my paycheck',
-  MANUAL_ONLY: 'Nothing — I track it myself',
+  get MERCHANT_PATTERN() {
+    return tNow('plan.fixed.matchKind.MERCHANT_PATTERN')
+  },
+  get CATEGORY() {
+    return tNow('plan.fixed.matchKind.CATEGORY')
+  },
+  get PAYCHECK_DEDUCTION() {
+    return tNow('plan.fixed.matchKind.PAYCHECK_DEDUCTION')
+  },
+  get MANUAL_ONLY() {
+    return tNow('plan.fixed.matchKind.MANUAL_ONLY')
+  },
 }
 
 /** What each match kind asks for in `matchRef`, shown as the field's own label. */
 export const MATCH_REF_LABEL: Readonly<Record<FixedExpenseMatchKind, string>> = {
-  MERCHANT_PATTERN: 'Merchant',
-  CATEGORY: 'Category',
-  PAYCHECK_DEDUCTION: 'Deduction type',
+  get MERCHANT_PATTERN() {
+    return tNow('plan.fixed.matchRef.MERCHANT_PATTERN')
+  },
+  get CATEGORY() {
+    return tNow('plan.fixed.matchRef.CATEGORY')
+  },
+  get PAYCHECK_DEDUCTION() {
+    return tNow('plan.fixed.matchRef.PAYCHECK_DEDUCTION')
+  },
   MANUAL_ONLY: '',
 }
 
 export const VARIABILITY_LABEL: Readonly<Record<AmountVariability, string>> = {
-  FIXED: 'Same every time',
-  VARIABLE: 'Varies',
+  get FIXED() {
+    return tNow('plan.fixed.variability.FIXED')
+  },
+  get VARIABLE() {
+    return tNow('plan.fixed.variability.VARIABLE')
+  },
 }

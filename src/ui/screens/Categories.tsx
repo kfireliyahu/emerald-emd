@@ -2,14 +2,7 @@ import { Fragment, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { formatMoney, fromMajorUnits, money, type Money } from '@/core/money.ts'
-import { listed } from '@/core/text.ts'
-import {
-  addMonths,
-  formatMonthShort,
-  formatYearMonth,
-  parseYearMonth,
-  toYearMonthString,
-} from '@/core/time.ts'
+import { addMonths, parseYearMonth, toYearMonthString } from '@/core/time.ts'
 import { parseAmountText } from '@/data/importer/normalize.ts'
 import {
   categoryActivity,
@@ -19,7 +12,6 @@ import {
   categoryUsage,
   createCategory,
   deleteCategory,
-  describeCategoryUsage,
   isCategoryInUse,
   listCategories,
   mergeCategories,
@@ -31,6 +23,7 @@ import {
   type Category,
   type CategoryActivity,
   type CategoryKind,
+  type CategoryUsage,
 } from '@/data/repositories/categoryRepository.ts'
 import { categoryBudgets, setCategoryBudget } from '@/data/repositories/categoryBudgetRepository.ts'
 import { listSplitPlans } from '@/data/repositories/splitPlanRepository.ts'
@@ -40,6 +33,9 @@ import { monthlyTotals } from '@/data/repositories/transactionRepository.ts'
 import { documentCurrency } from '@/data/repositories/statisticsRepository.ts'
 import { CATEGORY_COLOR_TOKENS } from '@/domain/categoryColors.ts'
 import { isMovedKind } from '@/data/repositories/movedRepository.ts'
+import type { MessageKey } from '@/i18n/catalogue.ts'
+import { useDates, useT } from '@/i18n/current.ts'
+import { pathArrows } from '@/i18n/words.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { AppearancePicker } from '@/ui/categories/AppearancePicker.tsx'
 import { buildTaxonomy, type TaxonomyRow } from '@/ui/categories/taxonomyView.ts'
@@ -48,6 +44,7 @@ import { type CategoryPalette } from '@/ui/charts/categoryPalette.ts'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { PageMenu } from '@/ui/components/PageMenu.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { CategoryMark, useCategoryPalette } from '@/ui/components/CategoryMark.tsx'
 import { ContextMenu, isMenuKey, type MenuItem } from '@/ui/components/ContextMenu.tsx'
 import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
@@ -60,11 +57,7 @@ import { Flip } from '@/ui/motion/Flip.tsx'
 /** The three tabs, by what a category is: what you spend, what moved, what came in. */
 type Tab = 'SPENDING' | 'MOVED' | 'INCOME'
 
-const TAB_LABEL: Readonly<Record<Tab, string>> = {
-  SPENDING: 'Spending',
-  MOVED: 'Money moved',
-  INCOME: 'Income',
-}
+const TABS: readonly Tab[] = ['SPENDING', 'MOVED', 'INCOME']
 
 // The same list the totals read (D-316): a category here is moved, not spent.
 const tabOf = (kind: CategoryKind): Tab => (kind === 'INCOME' ? 'INCOME' : isMovedKind(kind) ? 'MOVED' : 'SPENDING')
@@ -106,6 +99,8 @@ export function Categories() {
   const revision = useDocumentStore((state) => state.revision)
   const mutate = useDocumentStore((state) => state.mutate)
   const navigate = useNavigate()
+  const t = useT()
+  const dates = useDates()
 
   const [showArchived, setShowArchived] = useState(false)
   const [search, setSearch] = useState('')
@@ -119,7 +114,7 @@ export function Categories() {
     { readonly category: Category; readonly using: string; readonly targets: readonly Category[] } | undefined
   >()
   const [adding, setAdding] = useState(false)
-  const [problem, setProblem] = useState<string | undefined>()
+  const [problem, setProblem] = useState<React.ReactNode>()
   const [menu, setMenu] = useState<
     { readonly category: Category; readonly at: { readonly x: number; readonly y: number } } | undefined
   >()
@@ -202,7 +197,7 @@ export function Categories() {
   }, [picked, selected])
 
   if (db === undefined) {
-    return <Centered>Open a document, or create one, to edit its categories.</Centered>
+    return <Centered>{t('categories.noDocument')}</Centered>
   }
 
   const write = (work: (database: import('sql.js').Database, now: number) => void): void => {
@@ -222,6 +217,24 @@ export function Categories() {
    * first; nowhere of its kind to move it, and it is refused by what still uses
    * it. The repository judges every one of those, so this only picks the door.
    */
+  /** What still uses a category, in words — `describeCategoryUsage`'s, in the language now. */
+  const usageWords = (usage: CategoryUsage): string => {
+    const some = (n: number, one: MessageKey, many: MessageKey): string | undefined =>
+      n === 0 ? undefined : n === 1 ? t(one) : t(many, { n: String(n) })
+    const parts = [
+      some(usage.transactions, 'categories.usage.row', 'categories.usage.rows'),
+      some(usage.rules, 'categories.usage.rule', 'categories.usage.rules'),
+      some(usage.subcategories, 'categories.usage.subcategory', 'categories.usage.subcategories'),
+      some(usage.budgets, 'categories.usage.bucket', 'categories.usage.buckets'),
+      some(usage.fixedExpenses, 'categories.usage.bill', 'categories.usage.bills'),
+      some(usage.debts, 'categories.usage.debt', 'categories.usage.debts'),
+      some(usage.goals, 'categories.usage.goal', 'categories.usage.goals'),
+    ].filter((part): part is string => part !== undefined)
+    if (parts.length === 0) return t('categories.usage.nothing')
+    if (parts.length === 1) return parts[0] ?? ''
+    return t('categories.usage.last', { rest: parts.slice(0, -1).join(', '), last: parts.at(-1) ?? '' })
+  }
+
   const remove = (category: Category): void => {
     setProblem(undefined)
     if (category.isSystem) return
@@ -230,12 +243,17 @@ export function Categories() {
       write((database, now) => deleteCategory(database, category.id, now))
       return
     }
-    const using = listed(describeCategoryUsage(usage), 'nothing')
+    const using = usageWords(usage)
     const targets = categoryDeleteTargets(db, category.id)
     if (targets.length === 0) {
       setProblem(
-        `${category.name} still has ${using}, and there is no other ${TAB_LABEL[tabOf(category.kind)].toLowerCase()} ` +
-          `category${usage.subcategories > 0 ? ' with room for its subcategories' : ''} to move them to. Make one, or archive it instead.`,
+        <Phrase
+          text={t(usage.subcategories > 0 ? 'categories.noTargetRoom' : 'categories.noTarget', {
+            using,
+            tab: t(`categories.tabsInline.${tabOf(category.kind)}`),
+          })}
+          parts={{ name: <Bidi>{category.name}</Bidi> }}
+        />,
       )
       return
     }
@@ -289,48 +307,48 @@ export function Categories() {
     const homes = parentsFor(all, category).filter((one) => one.id !== category.parentId)
     const items: MenuItem[] = []
     if (!category.isSystem) {
-      items.push({ icon: 'edit', label: 'Rename', shortcut: 'F2', onChoose: () => setEditing(category.id) })
+      items.push({ icon: 'edit', label: t('categories.menu.rename'), shortcut: 'F2', onChoose: () => setEditing(category.id) })
     }
     items.push({
       icon: 'palette',
-      label: 'Colour',
-      detail: 'In the panel beside the list',
+      label: t('categories.menu.colour'),
+      detail: t('categories.menu.colourDetail'),
       onChoose: () => setPicked(category.id),
     })
     if (!category.isSystem) {
       items.push(
         {
           icon: 'move',
-          label: 'Move under…',
+          label: t('categories.menu.moveUnder'),
           disabled: homes.length === 0 && category.parentId === undefined,
           detail:
             homes.length === 0 && category.parentId === undefined
-              ? 'What is under it already takes the three levels'
+              ? t('categories.menu.moveUnderFull')
               : undefined,
           onChoose: () => setMoving(category),
         },
         {
           icon: 'merge',
-          label: 'Merge into…',
-          detail: 'Its rows and rules go with it',
+          label: t('categories.menu.mergeInto'),
+          detail: t('categories.menu.mergeDetail'),
           onChoose: () => setMerging(category),
         },
       )
     }
     items.push(
-      { icon: 'arrow', label: 'Move up', separated: true, onChoose: () => write((d, now) => moveCategory(d, category.id, -1, now)) },
-      { icon: 'arrow', label: 'Move down', onChoose: () => write((d, now) => moveCategory(d, category.id, 1, now)) },
+      { icon: 'arrow', label: t('categories.menu.moveUp'), separated: true, onChoose: () => write((d, now) => moveCategory(d, category.id, -1, now)) },
+      { icon: 'arrow', label: t('categories.menu.moveDown'), onChoose: () => write((d, now) => moveCategory(d, category.id, 1, now)) },
       {
         icon: 'filter',
-        label: 'Show its rows',
+        label: t('categories.menu.showRows'),
         separated: true,
         onChoose: () =>
           navigate('/transactions', { state: { category: category.id, ...(period === undefined ? {} : { period }) } }),
       },
       {
         icon: 'rule',
-        label: 'Its rules',
-        detail: mine.length === 0 ? 'None of yours categorize here yet' : `${mine.length} of yours`,
+        label: t('categories.menu.itsRules'),
+        detail: mine.length === 0 ? t('categories.menu.noRulesYet') : t('categories.menu.yours', { n: mine.length }),
         onChoose: () => navigate('/categories/rules'),
       },
     )
@@ -339,16 +357,16 @@ export function Categories() {
       items.push(
         {
           icon: 'archive',
-          label: category.isArchived ? 'Restore' : 'Archive',
-          detail: category.isArchived ? undefined : 'Hidden from pickers, kept on every row it has',
+          label: category.isArchived ? t('categories.restore') : t('categories.archive'),
+          detail: category.isArchived ? undefined : t('categories.menu.archiveDetail'),
           separated: true,
           onChoose: () => write((d, now) => setCategoryArchived(d, category.id, !category.isArchived, now)),
         },
         {
           icon: 'trash',
-          label: 'Delete',
+          label: t('categories.menu.delete'),
           shortcut: 'Del',
-          detail: inUse ? 'Asks where what uses it goes first' : undefined,
+          detail: inUse ? t('categories.menu.deleteDetail') : undefined,
           onChoose: () => remove(category),
         },
       )
@@ -378,7 +396,7 @@ export function Categories() {
   const at = period === undefined ? -1 : months.indexOf(period)
   const short = (month: string | undefined): string | undefined => {
     const parsed = month === undefined ? undefined : parseYearMonth(month)
-    return parsed === undefined ? undefined : formatMonthShort(parsed)
+    return parsed === undefined ? undefined : dates.monthShort(parsed)
   }
 
   return (
@@ -388,14 +406,16 @@ export function Categories() {
           <header className="flex flex-wrap items-end justify-between gap-6 border-b border-hairline pb-4">
             <div className="flex flex-col gap-1.5">
               <span className="fc-label text-ink-secondary uppercase tabular-nums">
-                Categories · what each one holds{monthLabel === undefined ? '' : `, ${formatYearMonth(monthLabel)}`}
+                {monthLabel === undefined
+                  ? t('categories.lead')
+                  : t('categories.leadMonth', { month: dates.yearMonth(monthLabel) })}
               </span>
-              <h1 className="m-0 text-[24px] leading-tight font-medium tracking-[-0.01em]">Categories</h1>
+              <h1 className="m-0 text-[24px] leading-tight font-medium tracking-[-0.01em]">{t('categories.title')}</h1>
             </div>
             <div className="flex flex-wrap items-center gap-4">
               {monthLabel !== undefined && months.length > 1 && (
                 <Pager
-                  label="Month"
+                  label={t('categories.month')}
                   prev={short(months[at + 1])}
                   next={short(months[at - 1])}
                   onPrev={() => setWanted(months[at + 1])}
@@ -408,14 +428,14 @@ export function Categories() {
                 onKeyDown={(event) => {
                   if (event.key === 'Escape') setSearch('')
                 }}
-                placeholder="Find a category…"
-                aria-label="Find a category"
+                placeholder={t('categories.find')}
+                aria-label={t('categories.findLabel')}
                 className={`${FIELD} w-52`}
               />
               {/* What files rows into these, one press away (D-373): Rules is
                   this section's other tab since M36 U10. */}
               <Button variant="ghost" size="sm" icon="rule" onClick={() => navigate('/categories/rules')}>
-                Rules
+                {t('categories.rules')}
               </Button>
               <Button
                 variant="secondary"
@@ -424,13 +444,13 @@ export function Categories() {
                 aria-expanded={adding}
                 data-guide="categories.new"
               >
-                New category
+                {t('categories.newCategory')}
               </Button>
               <PageMenu
-                title="Categories"
+                title={t('categories.title')}
                 items={[
                   {
-                    label: showArchived ? 'Hide archived categories' : 'Show archived categories',
+                    label: showArchived ? t('categories.hideArchived') : t('categories.showArchived'),
                     onChoose: () => setShowArchived(!showArchived),
                   },
                 ]}
@@ -449,8 +469,8 @@ export function Categories() {
             </div>
           )}
 
-          <nav aria-label="Kind of category" className="flex border-b border-hairline">
-            {(Object.keys(TAB_LABEL) as Tab[]).map((one) => (
+          <nav aria-label={t('categories.kindNav')} className="flex border-b border-hairline">
+            {TABS.map((one) => (
               <button
                 key={one}
                 type="button"
@@ -462,7 +482,7 @@ export function Categories() {
                     : 'text-ink-secondary hover:text-ink'
                 }`}
               >
-                {TAB_LABEL[one]}
+                {t(`categories.tabs.${one}`)}
                 <span className="ms-1.5 font-mono text-caption text-ink-tertiary">
                   {visible.filter((category) => tabOf(category.kind) === one).length}
                 </span>
@@ -472,12 +492,14 @@ export function Categories() {
 
           {crowded && tab === 'SPENDING' && !searching && (
             <section
-              aria-label="Unused categories"
+              aria-label={t('categories.unusedLabel')}
               className="flex flex-wrap items-center gap-x-4 gap-y-2 bg-surface px-3.5 py-2.5"
             >
               <span className="min-w-0 flex-1">
-                {unused.length} of your {all.filter((category) => !category.isArchived && !category.isSystem).length}{' '}
-                categories have never held a row. Archive them together? They come back with Show archived categories, in the ⋯ menu.
+                {t('categories.unusedOffer', {
+                  unused: unused.length,
+                  all: all.filter((category) => !category.isArchived && !category.isSystem).length,
+                })}
               </span>
               <Button
                 variant="secondary"
@@ -490,7 +512,7 @@ export function Categories() {
                   })
                 }
               >
-                Archive
+                {t('categories.archive')}
               </Button>
             </section>
           )}
@@ -499,7 +521,7 @@ export function Categories() {
             <div className="fc-pop-enter flex items-center gap-4 bg-surface px-3.5 py-2">
               <span className="text-negative">{problem}</span>
               <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setProblem(undefined)}>
-                Dismiss
+                {t('categories.dismiss')}
               </Button>
             </div>
           )}
@@ -533,10 +555,10 @@ export function Categories() {
               {sections.length === 0 && (
                 <p className="m-0 py-6 text-ink-secondary">
                   {searching
-                    ? `Nothing is called anything like “${search.trim()}”.`
+                    ? t('categories.emptySearch', { search: search.trim() })
                     : tab === 'SPENDING'
-                      ? 'This document has no categories.'
-                      : `No ${TAB_LABEL[tab].toLowerCase()} categories.`}
+                      ? t('categories.emptyDocument')
+                      : t('categories.emptyTab', { tab: t(`categories.tabsInline.${tab}`) })}
                 </p>
               )}
 
@@ -581,7 +603,7 @@ export function Categories() {
                           })
                         }}
                         aria-expanded={isOpen}
-                        aria-label={`${isOpen ? 'Collapse' : 'Expand'} ${head.name}`}
+                        aria-label={t(isOpen ? 'categories.collapse' : 'categories.expand', { name: head.name })}
                         disabled={searching || section.rows.length === 0}
                         className="flex w-5 shrink-0 items-center justify-center text-ink-tertiary disabled:opacity-0"
                       >
@@ -599,7 +621,7 @@ export function Categories() {
                         <input
                           autoFocus
                           defaultValue={head.name}
-                          aria-label={`Rename ${head.name}`}
+                          aria-label={t('categories.renameName', { name: head.name })}
                           onBlur={(event) => handlers.onRename(event.target.value.trim())}
                           onKeyDown={(event) => {
                             if (event.key === 'Enter') event.currentTarget.blur()
@@ -616,13 +638,15 @@ export function Categories() {
                           <Bidi className="min-w-0 truncate">{head.name}</Bidi>
                         </button>
                       )}
-                      {head.isArchived && <Tag>archived</Tag>}
-                      {head.isSystem && <Tag>system</Tag>}
+                      {head.isArchived && <Tag>{t('categories.tagArchived')}</Tag>}
+                      {head.isSystem && <Tag>{t('categories.tagSystem')}</Tag>}
                       <span className="text-caption text-ink-tertiary tabular-nums">
                         {section.rows.length > 0
-                          ? `${String(section.shown)}${section.unused > 0 ? ` · ${String(section.unused)} unused` : ''}`
+                          ? section.unused > 0
+                            ? t('categories.shownUnused', { shown: section.shown, unused: section.unused })
+                            : String(section.shown)
                           : activity.get(head.id) === undefined && !head.isSystem
-                            ? 'unused'
+                            ? t('categories.unused')
                             : ''}
                       </span>
                       <span className="ms-auto text-[13px] text-ink-secondary tabular-nums">
@@ -632,8 +656,8 @@ export function Categories() {
                         {!head.isSystem && (
                           <button
                             type="button"
-                            title="Rename (F2)"
-                            aria-label={`Rename ${head.name}`}
+                            title={t('categories.renameTitle')}
+                            aria-label={t('categories.renameName', { name: head.name })}
                             onClick={(event) => {
                               event.stopPropagation()
                               handlers.onEdit()
@@ -645,8 +669,8 @@ export function Categories() {
                         )}
                         <button
                           type="button"
-                          title="More (right-click)"
-                          aria-label={`More for ${head.name}`}
+                          title={t('categories.moreTitle')}
+                          aria-label={t('categories.moreFor', { name: head.name })}
                           onClick={(event) => {
                             event.stopPropagation()
                             const box = event.currentTarget.getBoundingClientRect()
@@ -680,8 +704,9 @@ export function Categories() {
               })}
 
               <p className="m-0 text-caption text-ink-secondary">
-                The bar is {monthLabel === undefined ? 'the month' : formatYearMonth(monthLabel)}, in the category’s own
-                colour. Right-click a category for the rest: rename, colour, move, merge, archive, delete.
+                {t('categories.footnote', {
+                  month: monthLabel === undefined ? t('categories.theMonth') : dates.yearMonth(monthLabel),
+                })}
               </p>
             </div>
 
@@ -708,7 +733,7 @@ export function Categories() {
                   write((database, now) => {
                     const result = setCategoryBudget(database, today(), currency, selected.id, target?.minor ?? 0, now)
                     if (result === 'SEVERAL_BUCKETS') {
-                      throw new Error(`Several of Plan's buckets are for ${selected.name}; edit them on Plan.`)
+                      throw new Error(t('categories.severalBuckets', { name: selected.name }))
                     }
                   })
                 }
@@ -742,9 +767,14 @@ export function Categories() {
             title: <Bidi>{menu.category.name}</Bidi>,
             sub: (
               <>
-                <Bidi>{all.find((one) => one.id === menu.category.parentId)?.path ?? 'Top level'}</Bidi>
+                <Bidi>
+                  {pathArrows(all.find((one) => one.id === menu.category.parentId)?.path ?? t('categories.topLevel'))}
+                </Bidi>
                 {monthOf(menu.category) > 0 && monthLabel !== undefined
-                  ? ` · ${whole(money(monthOf(menu.category), currency))} in ${formatMonthShort(monthLabel)}`
+                  ? t('categories.menuFigure', {
+                      amount: whole(money(monthOf(menu.category), currency)),
+                      month: dates.monthShort(monthLabel),
+                    })
                   : ''}
               </>
             ),
@@ -844,6 +874,7 @@ function Row({
   handlers: RowHandlers
   onSelect: () => void
 }) {
+  const t = useT()
   const colour = palette.colorOf(category.id)
   return (
     <li
@@ -879,7 +910,7 @@ function Row({
           <input
             autoFocus
             defaultValue={category.name}
-            aria-label={`Rename ${category.name}`}
+            aria-label={t('categories.renameName', { name: category.name })}
             onBlur={(event) => handlers.onRename(event.target.value.trim())}
             onKeyDown={(event) => {
               if (event.key === 'Enter') event.currentTarget.blur()
@@ -893,10 +924,10 @@ function Row({
           </span>
         )}
 
-        {category.isArchived && <Tag>archived</Tag>}
-        {category.isSystem && <Tag>system</Tag>}
+        {category.isArchived && <Tag>{t('categories.tagArchived')}</Tag>}
+        {category.isSystem && <Tag>{t('categories.tagSystem')}</Tag>}
         {activity === undefined && !category.isSystem && (
-          <span className="text-caption text-ink-tertiary">unused</span>
+          <span className="text-caption text-ink-tertiary">{t('categories.unused')}</span>
         )}
       </span>
 
@@ -915,8 +946,8 @@ function Row({
         {!category.isSystem && (
           <button
             type="button"
-            title="Rename (F2)"
-            aria-label={`Rename ${category.name}`}
+            title={t('categories.renameTitle')}
+            aria-label={t('categories.renameName', { name: category.name })}
             onClick={(event) => {
               event.stopPropagation()
               handlers.onEdit()
@@ -928,8 +959,8 @@ function Row({
         )}
         <button
           type="button"
-          title="More (right-click)"
-          aria-label={`More for ${category.name}`}
+          title={t('categories.moreTitle')}
+          aria-label={t('categories.moreFor', { name: category.name })}
           onClick={(event) => {
             event.stopPropagation()
             const box = event.currentTarget.getBoundingClientRect()
@@ -998,6 +1029,8 @@ function CategoryPanel({
   onShowRows: () => void
   onRules: () => void
 }) {
+  const t = useT()
+  const dates = useDates()
   const colour = palette.colorOf(category.id)
   const bars = series ?? Array.from({ length: YEAR }, () => 0)
   const month = bars.at(-1) ?? 0
@@ -1009,15 +1042,15 @@ function CategoryPanel({
       ? undefined
       : Math.round((100 * (month - target.minor)) / target.minor)
   const parsed = period === undefined ? undefined : parseYearMonth(period)
-  const monthName = parsed === undefined ? 'The month' : formatMonthShort(parsed)
+  const monthName = parsed === undefined ? t('categories.panel.theMonth') : dates.monthShort(parsed)
 
   return (
     <aside
-      aria-label={`${category.name}, in detail`}
+      aria-label={t('categories.panel.inDetail', { name: category.name })}
       className="fc-view-enter flex flex-col gap-3.5 border border-hairline p-[18px] @[56rem]:sticky @[56rem]:top-0"
     >
       <span className="fc-label flex min-w-0 text-ink-secondary uppercase">
-        <Bidi className="min-w-0 truncate">{parentPath ?? 'Top level'}</Bidi>
+        <Bidi className="min-w-0 truncate">{parentPath === undefined ? t('categories.topLevel') : pathArrows(parentPath)}</Bidi>
       </span>
       <h3 className="m-0 text-[18px] font-medium">
         <CategoryMark color={colour}>{category.name}</CategoryMark>
@@ -1029,11 +1062,11 @@ function CategoryPanel({
           {formatMoney(money(month, currency))}
         </div>
         <small className="text-caption text-ink-secondary">
-          average {whole(money(average, currency))} a month over the year
+          {t('categories.panel.average', { amount: whole(money(average, currency)) })}
         </small>
       </div>
 
-      <div className="flex h-14 items-end gap-[3px]" role="img" aria-label="The last twelve months, oldest first">
+      <div className="flex h-14 items-end gap-[3px]" role="img" aria-label={t('categories.panel.lastTwelve')}>
         {bars.map((value, index) => (
           <i
             key={index}
@@ -1049,8 +1082,8 @@ function CategoryPanel({
       </div>
 
       <div>
-        <span className="fc-label text-ink-secondary uppercase">Colour</span>
-        <div className="mt-1.5 flex flex-wrap gap-1" role="group" aria-label={`Colour of ${category.name}`}>
+        <span className="fc-label text-ink-secondary uppercase">{t('categories.panel.colour')}</span>
+        <div className="mt-1.5 flex flex-wrap gap-1" role="group" aria-label={t('categories.panel.colourOf', { name: category.name })}>
           {CATEGORY_COLOR_TOKENS.map((slot, index) => {
             const worn = palette.peersWearing(category.id, slot)
             const chosen = category.color === slot
@@ -1058,9 +1091,17 @@ function CategoryPanel({
               <button
                 key={slot}
                 type="button"
-                aria-label={`Colour ${index + 1}${worn.length === 0 ? '' : `, also ${worn.join(', ')}`}`}
+                aria-label={
+                  worn.length === 0
+                    ? t('categories.panel.hue', { n: index + 1 })
+                    : t('categories.panel.hueAlso', { n: index + 1, names: worn.join(', ') })
+                }
                 aria-pressed={chosen}
-                title={worn.length === 0 ? `Hue ${index + 1}` : `A sibling wears this: ${worn.join(', ')}`}
+                title={
+                  worn.length === 0
+                    ? t('categories.panel.hueTitle', { n: index + 1 })
+                    : t('categories.panel.siblingWears', { names: worn.join(', ') })
+                }
                 onClick={() => onSetAppearance({ color: slot, icon: category.icon })}
                 className={`flex size-[22px] items-center justify-center rounded-full border-2 ${chosen ? 'border-ink' : 'border-transparent'}`}
               >
@@ -1076,9 +1117,9 @@ function CategoryPanel({
           })}
           <button
             type="button"
-            aria-label="Automatic colour"
+            aria-label={t('categories.panel.automatic')}
             aria-pressed={category.color === undefined}
-            title="Automatic: a stable hue, moved aside when a sibling is already on it"
+            title={t('categories.panel.automaticTitle')}
             onClick={() => onSetAppearance({ color: undefined, icon: category.icon })}
             className={`flex size-[22px] items-center justify-center rounded-full border-2 ${category.color === undefined ? 'border-ink' : 'border-transparent'}`}
           >
@@ -1089,20 +1130,20 @@ function CategoryPanel({
 
       {!category.isSystem && (
         <div>
-          <span className="fc-label text-ink-secondary uppercase">Under</span>
+          <span className="fc-label text-ink-secondary uppercase">{t('categories.panel.under')}</span>
           <div className="mt-1.5">
             {/* What the group select was (M28 F25): a heading is a top-level
                 category now, so choosing one is choosing a parent (M28 F29). */}
             <select
               value={category.parentId ?? ''}
               onChange={(event) => onSetParent(event.target.value === '' ? undefined : event.target.value)}
-              aria-label={`What ${category.name} sits under`}
+              aria-label={t('categories.panel.sitsUnder', { name: category.name })}
               className={`${SELECT} w-full`}
             >
-              <option value="">Top level</option>
+              <option value="">{t('categories.topLevel')}</option>
               {homes.map((one) => (
                 <option key={one.id} value={one.id}>
-                  {one.path}
+                  {pathArrows(one.path)}
                 </option>
               ))}
             </select>
@@ -1111,11 +1152,11 @@ function CategoryPanel({
       )}
 
       <div>
-        <span className="fc-label text-ink-secondary uppercase">Where it goes</span>
+        <span className="fc-label text-ink-secondary uppercase">{t('categories.panel.whereItGoes')}</span>
         <div className="mt-1.5 flex flex-col">
           {merchants.length === 0 ? (
             <div className="flex h-[30px] items-center border-b border-hairline text-[13px] text-ink-secondary">
-              Nothing in the last twelve months
+              {t('categories.panel.nothingYear')}
             </div>
           ) : (
             merchants.map((one) => (
@@ -1137,29 +1178,29 @@ function CategoryPanel({
 
       {!category.isSystem && (
         <div>
-          <span className="fc-label text-ink-secondary uppercase">Each month (Plan bucket)</span>
+          <span className="fc-label text-ink-secondary uppercase">{t('categories.panel.eachMonth')}</span>
           <div className="mt-1.5 flex items-center gap-3">
             <MonthlyTarget category={category} budget={budget} currency={currency} onSet={onSetTarget} />
             {over !== undefined && (
               <span className="text-caption text-ink-secondary tabular-nums">
-                {monthName} is {Math.abs(over)}% {over >= 0 ? 'over' : 'under'}
+                {t(over >= 0 ? 'categories.panel.over' : 'categories.panel.under_', { month: monthName, n: Math.abs(over) })}
               </span>
             )}
           </div>
           <p className="mt-1 mb-0 text-caption text-ink-tertiary">
             {hasPlan
-              ? 'The same figure as this category’s bucket on Plan; Home shows the month against it.'
-              : 'Setting one starts a plan, with this as its bucket.'}
+              ? t('categories.panel.sameFigure')
+              : t('categories.panel.startsPlan')}
           </p>
         </div>
       )}
 
       <div>
-        <span className="fc-label text-ink-secondary uppercase">Rules that categorize here · {rules.length}</span>
+        <span className="fc-label text-ink-secondary uppercase">{t('categories.panel.rulesHere', { n: rules.length })}</span>
         <div className="mt-1.5 flex flex-col">
           {rules.length === 0 ? (
             <div className="flex h-[30px] items-center border-b border-hairline text-[13px] text-ink-secondary">
-              None of yours yet
+              {t('categories.panel.noneYet')}
             </div>
           ) : (
             rules.slice(0, 5).map((rule) => (
@@ -1182,25 +1223,25 @@ function CategoryPanel({
       <div className="flex flex-wrap gap-2">
         {!category.isSystem && (
           <Button variant="secondary" size="sm" icon="edit" onClick={onRename}>
-            Rename
+            {t('categories.panel.rename')}
           </Button>
         )}
         {!category.isSystem && (
           <Button variant="secondary" size="sm" icon="merge" onClick={onMerge}>
-            Merge into…
+            {t('categories.panel.mergeInto')}
           </Button>
         )}
         <Button variant="secondary" size="sm" icon="filter" onClick={onShowRows}>
-          Its rows
+          {t('categories.panel.itsRows')}
         </Button>
         {!category.isSystem && (
           <Button variant="ghost" size="sm" onClick={onArchive}>
-            {category.isArchived ? 'Restore' : 'Archive'}
+            {category.isArchived ? t('categories.restore') : t('categories.archive')}
           </Button>
         )}
         {!category.isSystem && (
           <Button variant="ghost" size="sm" icon="trash" onClick={onDelete}>
-            Delete
+            {t('categories.panel.delete')}
           </Button>
         )}
       </div>
@@ -1234,27 +1275,27 @@ function MovePanel({
   onCancel: () => void
   onMove: (parentId: string | undefined) => void
 }) {
+  const t = useT()
   const eligible = parents
   const [parentId, setParentId] = useState(source.parentId ?? '')
 
   return (
     <div className="fc-pop-enter shrink-0 border-t border-hairline bg-surface px-6 py-4">
       <p>
-        Move <Bidi className="font-medium">{source.name}</Bidi> somewhere else in the tree. Its
-        transactions, rules, Plan buckets and subcategories come with it.
+        <Phrase text={t('categories.move.intro')} parts={{ name: <Bidi className="font-medium">{source.name}</Bidi> }} />
       </p>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <select
           value={parentId}
           onChange={(event) => setParentId(event.target.value)}
-          aria-label={`Parent of ${source.name}`}
+          aria-label={t('categories.move.parentOf', { name: source.name })}
           className={SELECT}
         >
-          <option value="">top level</option>
+          <option value="">{t('categories.move.topLevel')}</option>
           {eligible.map((parent) => (
             <option key={parent.id} value={parent.id}>
-              under {parent.path}
+              {t('categories.move.under', { path: pathArrows(parent.path) })}
             </option>
           ))}
         </select>
@@ -1265,17 +1306,16 @@ function MovePanel({
           disabled={parentId === (source.parentId ?? '')}
           onClick={() => onMove(parentId === '' ? undefined : parentId)}
         >
-          Move
+          {t('categories.move.move')}
         </Button>
         <Button variant="ghost" size="sm" onClick={onCancel}>
-          Cancel
+          {t('categories.move.cancel')}
         </Button>
       </div>
 
       {eligible.length === 0 && (
         <p className="mt-2 text-caption text-ink-tertiary">
-          Nothing else that is {source.kind.toLowerCase().replace('_', ' ')} has room for it within three
-          levels, so the only place this can go is the top level itself.
+          {t('categories.move.noRoom', { kind: t(`categories.kinds.${source.kind}`) })}
         </p>
       )}
     </div>
@@ -1305,6 +1345,7 @@ function MonthlyTarget({
   currency: string
   onSet: (target: Money | undefined) => void
 }) {
+  const t = useT()
   const shown = budget
   const [text, setText] = useState(
     shown === undefined ? '' : formatMoney(shown, { symbol: false }),
@@ -1335,8 +1376,8 @@ function MonthlyTarget({
 
   return (
     <label className="flex items-center gap-2 text-caption text-ink-tertiary">
-      <span className="sr-only">Plan bucket for {category.name}</span>
-      <span aria-hidden>bucket</span>
+      <span className="sr-only">{t('categories.target.bucketFor', { name: category.name })}</span>
+      <span aria-hidden>{t('categories.target.bucket')}</span>
       <input
         value={text}
         onChange={(event) => setText(event.target.value)}
@@ -1345,8 +1386,8 @@ function MonthlyTarget({
           if (event.key === 'Enter') event.currentTarget.blur()
           if (event.key === 'Escape') setText(stored)
         }}
-        placeholder="none"
-        aria-label={`Plan bucket for ${category.name}`}
+        placeholder={t('categories.target.none')}
+        aria-label={t('categories.target.bucketFor', { name: category.name })}
         className={`${FIELD} h-7 w-24 text-end tabular-nums`}
       />
     </label>
@@ -1360,6 +1401,7 @@ function NewCategoryForm({
   parents: readonly Category[]
   onCreate: (input: { name: string; kind: CategoryKind; parentId?: string | undefined }) => void
 }) {
+  const t = useT()
   const [name, setName] = useState('')
   const [kind, setKind] = useState<CategoryKind>('EXPENSE')
   const [parentId, setParentId] = useState('')
@@ -1382,8 +1424,8 @@ function NewCategoryForm({
       <input
         value={name}
         onChange={(event) => setName(event.target.value)}
-        placeholder="New category"
-        aria-label="New category name"
+        placeholder={t('categories.create.placeholder')}
+        aria-label={t('categories.create.name')}
         className={`${FIELD} w-44`}
       />
 
@@ -1393,19 +1435,19 @@ function NewCategoryForm({
         <select
           value={kind}
           onChange={(event) => setKind(event.target.value as CategoryKind)}
-          aria-label="Category kind"
+          aria-label={t('categories.create.kind')}
           className={SELECT}
         >
           {(['EXPENSE', 'INCOME', 'TRANSFER', 'SAVING', 'DEBT_PAYMENT'] as const).map((option) => (
             <option key={option} value={option}>
-              {option.toLowerCase().replace('_', ' ')}
+              {t(`categories.kinds.${option}`)}
             </option>
           ))}
         </select>
       )}
 
       <Button variant="primary" size="sm" type="submit">
-        Add
+        {t('categories.create.add')}
       </Button>
     </form>
   )
@@ -1426,35 +1468,35 @@ function MergePanel({
   onCancel: () => void
   onMerge: (intoId: string) => void
 }) {
+  const t = useT()
   const [intoId, setIntoId] = useState('')
 
   return (
     <div className="fc-pop-enter shrink-0 border-t border-hairline bg-surface px-6 py-4">
       <p>
-        Merge <Bidi className="font-medium">{source.name}</Bidi> into another category. Every
-        transaction moves across, subcategories come with it, and nothing is lost.
+        <Phrase text={t('categories.merge.intro')} parts={{ name: <Bidi className="font-medium">{source.name}</Bidi> }} />
       </p>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <select
           value={intoId}
           onChange={(event) => setIntoId(event.target.value)}
-          aria-label="Merge into"
+          aria-label={t('categories.merge.into')}
           className={SELECT}
         >
-          <option value="">Choose a category…</option>
+          <option value="">{t('categories.merge.choose')}</option>
           {targets.map((target) => (
             <option key={target.id} value={target.id}>
-              {target.path}
+              {pathArrows(target.path)}
             </option>
           ))}
         </select>
 
         <Button variant="primary" size="sm" disabled={intoId === ''} onClick={() => onMerge(intoId)}>
-          Merge
+          {t('categories.merge.merge')}
         </Button>
         <Button variant="ghost" size="sm" onClick={onCancel}>
-          Cancel
+          {t('categories.merge.cancel')}
         </Button>
       </div>
     </div>
@@ -1479,36 +1521,39 @@ function DeletePanel({
   onCancel: () => void
   onDelete: (moveTo: string) => void
 }) {
+  const t = useT()
   const [moveTo, setMoveTo] = useState('')
 
   return (
     <div className="fc-pop-enter shrink-0 border-t border-hairline bg-surface px-6 py-4">
       <p>
-        Delete <Bidi className="font-medium">{source.name}</Bidi>. It still has {using}; they move to the category
-        you choose, then it goes. Rows you categorized by hand stay categorized by hand.
+        <Phrase
+          text={t('categories.remove.intro', { using })}
+          parts={{ name: <Bidi className="font-medium">{source.name}</Bidi> }}
+        />
       </p>
 
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <select
           value={moveTo}
           onChange={(event) => setMoveTo(event.target.value)}
-          aria-label="Move them to"
+          aria-label={t('categories.remove.moveTo')}
           className={SELECT}
           autoFocus
         >
-          <option value="">Move them to…</option>
+          <option value="">{t('categories.remove.moveToChoose')}</option>
           {targets.map((target) => (
             <option key={target.id} value={target.id}>
-              {target.path}
+              {pathArrows(target.path)}
             </option>
           ))}
         </select>
 
         <Button variant="primary" size="sm" icon="trash" disabled={moveTo === ''} onClick={() => onDelete(moveTo)}>
-          Move and delete
+          {t('categories.remove.moveAndDelete')}
         </Button>
         <Button variant="ghost" size="sm" onClick={onCancel}>
-          Cancel
+          {t('categories.remove.cancel')}
         </Button>
       </div>
     </div>

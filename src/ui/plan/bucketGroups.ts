@@ -1,4 +1,5 @@
 import type { BucketShare, SplitBucket } from '@/domain/model/plan.ts'
+import { tNow } from '@/i18n/words.ts'
 
 /** One heading of Plan's bucket table, and the buckets under it in the plan's own order. */
 export interface BucketSection<T> {
@@ -9,9 +10,15 @@ export interface BucketSection<T> {
 }
 
 export const SHARE_NAME: Readonly<Record<BucketShare, string>> = {
-  NEEDS: 'Needs',
-  WANTS: 'Wants',
-  SAVING: 'Saving',
+  get NEEDS() {
+    return tNow('plan.share.NEEDS')
+  },
+  get WANTS() {
+    return tNow('plan.share.WANTS')
+  },
+  get SAVING() {
+    return tNow('plan.share.SAVING')
+  },
 }
 
 /** Everything that counts as none of the three shares. */
@@ -36,7 +43,7 @@ export function sectionBuckets<T>(rows: readonly T[], bucketOf: (row: T) => Spli
   const sections: BucketSection<T>[] = []
   for (const share of ['NEEDS', 'WANTS', 'SAVING', undefined] as const) {
     const found = rows.filter((row) => bucketOf(row).share === share)
-    if (found.length > 0) sections.push({ share, name: share === undefined ? OTHER : SHARE_NAME[share], rows: found })
+    if (found.length > 0) sections.push({ share, name: share === undefined ? tNow('plan.share.other') : SHARE_NAME[share], rows: found })
   }
   return sections
 }

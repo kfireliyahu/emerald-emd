@@ -4,6 +4,7 @@ import { recentFolders } from '../../electron/bridge.ts'
 import { canAutoSaveAtAll } from '@/data/storage/autoSave.ts'
 import { shellDocuments } from '@/data/storage/desktop.ts'
 import { wouldOverwrite } from '@/data/storage/externalChange.ts'
+import { useT } from '@/i18n/current.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
@@ -57,12 +58,13 @@ import { isMac } from '@/ui/platform.ts'
  */
 
 const BUSY_WORD = {
-  creating: 'creating…',
-  opening: 'opening…',
-  saving: 'saving…',
-  reloading: 'reloading…',
+  creating: 'chrome.documentBar.busy.creating',
+  opening: 'chrome.documentBar.busy.opening',
+  saving: 'chrome.documentBar.busy.saving',
+  reloading: 'chrome.documentBar.busy.reloading',
 } as const
 export function DocumentBar() {
+  const t = useT()
   const { db, documentName, isDirty, busy, lastSavedAt, adapter, diskState, knownMark } =
     useDocumentStore()
   const working = busy !== undefined
@@ -91,12 +93,12 @@ export function DocumentBar() {
     // Keyed both ways, so a document arriving or going fades its bar in (M39 F1).
     return (
       <div key="none" className="fc-view-enter flex items-center gap-3">
-        <span className="text-ink-secondary">No document open</span>
+        <span className="text-ink-secondary">{t('chrome.documentBar.noDocument')}</span>
         <Button size="sm" onClick={() => void createNew()} disabled={working}>
-          New
+          {t('chrome.documentBar.new')}
         </Button>
         <Button size="sm" onClick={() => void openFile()} disabled={working}>
-          Open…
+          {t('chrome.documentBar.open')}
         </Button>
         <OpenRecent />
       </div>
@@ -116,42 +118,44 @@ export function DocumentBar() {
       <span className="flex items-center gap-2 text-ink-secondary" aria-live="polite">
         <DirtyDot dirty={isDirty} busy={working} />
         {busy !== undefined ? (
-          BUSY_WORD[busy]
+          t(BUSY_WORD[busy])
         ) : blocked ? (
-          'changed on disk · answer the notice below'
+          t('chrome.documentBar.changedOnDisk')
         ) : isDirty ? (
           // The same word in both cases and a different promise behind it: under
           // auto-save "unsaved" is a state that is about to end by itself, and
           // the shortcut is offered only where pressing it is the only way out.
           automatic ? (
-            'unsaved'
+            t('chrome.documentBar.unsaved')
           ) : (
             <>
-              unsaved · <SaveKeys />
+              {t('chrome.documentBar.unsaved')} · <SaveKeys />
             </>
           )
         ) : lastSavedAt === undefined ? (
-          'no changes'
+          t('chrome.documentBar.noChanges')
         ) : (
-          `saved ${new Date(lastSavedAt).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          })}`
+          t('chrome.documentBar.saved', {
+            time: new Date(lastSavedAt).toLocaleTimeString([], {
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
+          })
         )}
       </span>
 
       <Button size="sm" onClick={() => void save()} disabled={working || !isDirty || blocked}>
-        Save
+        {t('chrome.documentBar.save')}
       </Button>
       {/* New, while a document is open (M38 F1): `requestNew`, so unsaved work
           here is asked about rather than thrown away — the same path as
           Ctrl+N, the palette and the shell's File menu. Open… asks the same
           before its picker (M38 U3). */}
       <Button size="sm" onClick={() => void requestNew()} disabled={working}>
-        New
+        {t('chrome.documentBar.new')}
       </Button>
       <Button size="sm" onClick={() => void requestOpenFile()} disabled={working}>
-        Open…
+        {t('chrome.documentBar.open')}
       </Button>
       <OpenRecent />
     </div>
@@ -167,6 +171,7 @@ export function DocumentBar() {
  * keeps no list it could open again, and the field is absent rather than empty.
  */
 function OpenRecent() {
+  const t = useT()
   const documentName = useDocumentStore((state) => state.documentName)
   const here = useDocumentStore((state) => state.adapter.location?.())
   const requestOpen = useDocumentStore((state) => state.requestOpen)
@@ -196,8 +201,8 @@ function OpenRecent() {
         void requestOpen(choice.value)
       }}
       onFocus={() => void loadRecents().then(setRecents)}
-      placeholder="Open recent…"
-      aria-label="Open a recent document"
+      placeholder={t('chrome.documentBar.openRecent')}
+      aria-label={t('chrome.documentBar.openRecentLabel')}
       className={`${FIELD} h-7 w-40`}
     />
   )

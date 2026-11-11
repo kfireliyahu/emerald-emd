@@ -6,9 +6,11 @@ import type { Result } from '@/core/result.ts'
 import { listFormats } from '@/data/repositories/formatRepository.ts'
 import { countRows } from '@/data/repositories/formatRowRepository.ts'
 import type { FormatDeclaration } from '@/domain/format/declaration.ts'
+import { useT } from '@/i18n/current.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { deleteSavedView, renameSavedView } from '@/data/repositories/formatViewRepository.ts'
 import type { SavedView } from '@/domain/format/view.ts'
 import { filterAddress, sameAddress } from '@/ui/formats/addressFilter.ts'
@@ -80,6 +82,7 @@ export function RailFolder({
   db: Database | undefined
   declarations: readonly FormatDeclaration[]
 }) {
+  const t = useT()
   const revision = useDocumentStore((state) => state.revision)
   // In the format already, an entry keeps the list's search; one the search
   // does not hold lets it go when it opens (M37 U2b).
@@ -146,8 +149,8 @@ export function RailFolder({
           onClick={() => toggleFolder(name, current !== undefined)}
           // A stable name, the state in `aria-expanded` (M54 F5).
           aria-expanded={open}
-          aria-label={`${child.label} entries`}
-          title={open ? 'Close' : 'Open'}
+          aria-label={t('chrome.rail.folder.entries', { label: child.label })}
+          title={open ? t('chrome.rail.folder.close') : t('chrome.rail.folder.open')}
           className={`inline-flex h-7 w-6 flex-none items-center justify-center text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${step.arrow}`}
         >
           <span
@@ -205,15 +208,15 @@ export function RailFolder({
                     setFilter('')
                   }
                 }}
-                placeholder={`Filter ${folder.total}`}
-                aria-label={`Filter ${child.label}`}
+                placeholder={t('chrome.rail.folder.filter', { n: folder.total })}
+                aria-label={t('chrome.rail.folder.filterLabel', { label: child.label })}
                 className="w-full min-w-0 border-0 bg-transparent p-0 text-caption text-ink outline-none placeholder:text-ink-secondary"
               />
             </label>
           )}
           {folder.found === 0 && (
             <div className={`pt-0.5 pe-2.5 pb-1 text-caption text-ink-secondary ${step.entry}`}>
-              {q === '' ? 'Nothing in it yet' : <>Nothing holds “<Bidi>{q}</Bidi>”</>}
+              {q === '' ? t('chrome.rail.folder.empty') : <Phrase text={t('chrome.rail.folder.nothingHolds')} parts={{ q: <Bidi>{q}</Bidi> }} />}
             </div>
           )}
           {folder.entries.map((entry) => {
@@ -244,8 +247,7 @@ export function RailFolder({
               to={entryPath(name, folder.entries[0]?.id ?? '') + filterAddress(q === '' ? {} : { search: q })}
               className={`flex h-6 w-full items-center pe-2.5 text-start text-caption text-accent hover:underline hover:underline-offset-[3px] focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${step.entry}`}
             >
-              All {folder.found}
-              {q !== '' && ' holding it'} →
+              {t(q === '' ? 'chrome.rail.folder.all' : 'chrome.rail.folder.allHolding', { n: folder.found })}
             </Link>
           )}
         </>
@@ -259,6 +261,7 @@ export function RailFolder({
  * pencil renames it in place and the bin deletes it, both where it stands.
  */
 function SavedRow({ view, here, left }: { view: SavedView; here: boolean; left: string }) {
+  const t = useT()
   const mutate = useDocumentStore((state) => state.mutate)
   const input = view.kind === 'input'
   const forAdd = input && view.isDefault === true
@@ -267,10 +270,10 @@ function SavedRow({ view, here, left }: { view: SavedView; here: boolean; left: 
       name={view.name}
       to={savedViewPath(view.format, view.kind, view.address, view.name)}
       glyph={input ? 'input' : 'filter'}
-      title={input ? `${view.name} — an input view` : `${view.name} — a saved ${view.kind}`}
+      title={input ? t('chrome.rail.folder.inputView', { name: view.name }) : t('chrome.rail.folder.savedView', { name: view.name, kind: view.kind })}
       // The one Add opens says so where a format's row has its count (M55 U3).
-      caption={forAdd ? 'Add' : undefined}
-      deleteNote={forAdd ? 'Add opens the entry form again.' : undefined}
+      caption={forAdd ? t('chrome.rail.folder.add') : undefined}
+      deleteNote={forAdd ? t('chrome.rail.folder.addNote') : undefined}
       here={here}
       left={left}
       onRename={(to) => mutate((db) => renameSavedView(db, view.format, view.name, to.trim()))}
@@ -286,6 +289,7 @@ function SavedRow({ view, here, left }: { view: SavedView; here: boolean; left: 
  * and a dashboard's chart of it follows the rename or goes with it.
  */
 function RollupRow({ format, name, left }: { format: string; name: string; left: string }) {
+  const t = useT()
   const mutate = useDocumentStore((state) => state.mutate)
   const change = (judge: (db: Database) => Result<RollupChange | undefined, string>): void =>
     mutate((db) => {
@@ -300,7 +304,7 @@ function RollupRow({ format, name, left }: { format: string; name: string; left:
       to={formatPath(format)}
       state={{ rollup: name }}
       glyph="chart"
-      title={`${rollupWords(name)} — a chart`}
+      title={t('chrome.rail.folder.chart', { name: rollupWords(name) })}
       here={false}
       left={left}
       onRename={(to) => change((db) => rollupRenamed(db, listFormats(db), format, name, to))}
@@ -345,6 +349,7 @@ function RailRow({
   /** Deletes it, or throws the refusal. */
   onDelete: () => void
 }) {
+  const t = useT()
   const [renaming, setRenaming] = useState<string | undefined>(undefined)
   const [deleting, setDeleting] = useState(false)
   const [refusal, setRefusal] = useState<string | undefined>(undefined)
@@ -374,7 +379,7 @@ function RailRow({
           autoFocus
           value={renaming}
           maxLength={60}
-          aria-label={`Rename ${name}`}
+          aria-label={t('chrome.rail.folder.renameName', { name })}
           onChange={(event) => {
             setRenaming(event.target.value)
             setRefusal(undefined)
@@ -405,7 +410,7 @@ function RailRow({
         <div className="flex h-6 items-center gap-2 text-caption text-ink-secondary">
           {/* The ellipsis on the Bidi span, so a Hebrew name keeps its start (M54 F6). */}
           <span className="flex min-w-0 gap-1">
-            <span className="shrink-0">Delete</span>
+            <span className="shrink-0">{t('chrome.rail.folder.delete')}</span>
             <Bidi className="min-w-0 truncate">{name}</Bidi>
             <span className="shrink-0">?</span>
           </span>
@@ -420,7 +425,7 @@ function RailRow({
               }
             }}
           >
-            Delete
+            {t('chrome.rail.folder.delete')}
           </button>
           <button
             type="button"
@@ -430,7 +435,7 @@ function RailRow({
               setRefusal(undefined)
             }}
           >
-            Keep
+            {t('chrome.rail.folder.keep')}
           </button>
         </div>
         {deleteNote !== undefined && <div className="pb-1 text-caption text-ink-secondary">{deleteNote}</div>}
@@ -465,8 +470,8 @@ function RailRow({
       <span className="flex flex-none items-center opacity-0 group-focus-within:opacity-100 group-hover:opacity-100">
         <button
           type="button"
-          aria-label={`Rename ${name}`}
-          title="Rename"
+          aria-label={t('chrome.rail.folder.renameName', { name })}
+          title={t('chrome.rail.folder.rename')}
           className={`inline-flex h-6 w-6 items-center justify-center ${quiet}`}
           onClick={() => setRenaming(name)}
         >
@@ -474,8 +479,8 @@ function RailRow({
         </button>
         <button
           type="button"
-          aria-label={`Delete ${name}`}
-          title="Delete"
+          aria-label={t('chrome.rail.folder.deleteName', { name })}
+          title={t('chrome.rail.folder.delete')}
           className={`inline-flex h-6 w-6 items-center justify-center ${quiet}`}
           onClick={() => setDeleting(true)}
         >

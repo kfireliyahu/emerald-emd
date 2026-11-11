@@ -183,13 +183,4 @@ export const home: Translation<'home'> = {
     fewer: 'הצגת פחות',
     more: 'הצגת עוד {count}',
   },
-  guide: {
-    dismiss: 'סגירה',
-    allDone: 'צעדים ראשונים: כל {count} המקומות הושלמו.',
-    again: 'מעבר נוסף',
-    progress: 'צעדים ראשונים, {done} מתוך {count} הושלמו.',
-    next: 'הבא: {step}.',
-    continue: 'המשך ההדרכה',
-    start: 'הדרכה',
-  },
 }

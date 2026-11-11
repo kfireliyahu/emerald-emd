@@ -3,10 +3,14 @@ import { useNavigate } from 'react-router-dom'
 
 import { listFormats } from '@/data/repositories/formatRepository.ts'
 import type { FormatDeclaration } from '@/domain/format/declaration.ts'
+import type { MessageKey } from '@/i18n/catalogue.ts'
+import { useT } from '@/i18n/current.ts'
+import { tNow } from '@/i18n/words.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { Kbd } from '@/ui/components/Kbd.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import {
   ENTRIES_PER_FORMAT,
   ENTRY_SEARCH_MIN,
@@ -25,6 +29,7 @@ import {
   setCommandPaletteOpen,
   useCommandPaletteOpen,
   type Command,
+  type CommandGroup,
 } from '@/ui/commands.ts'
 
 /**
@@ -53,6 +58,7 @@ import {
  * lands on the one entry view.
  */
 export function CommandPalette({ onImportStatement }: { onImportStatement: () => void }) {
+  const t = useT()
   const open = useCommandPaletteOpen()
   const [query, setQuery] = useState('')
   const [selected, setSelected] = useState(0)
@@ -206,7 +212,7 @@ export function CommandPalette({ onImportStatement }: { onImportStatement: () =>
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Search and commands"
+        aria-label={t('palette.dialog')}
         className="fc-pop-enter flex max-h-[60vh] w-full max-w-xl flex-col overflow-hidden rounded-lg border border-hairline-strong bg-elevated shadow-pop"
         onKeyDown={onKeyDown}
       >
@@ -217,8 +223,8 @@ export function CommandPalette({ onImportStatement }: { onImportStatement: () =>
             setQuery(event.target.value)
             setSelected(0)
           }}
-          placeholder={db === undefined ? 'Go to a screen, or do something…' : 'Search every entry, or go to a screen…'}
-          aria-label="Search"
+          placeholder={db === undefined ? t('palette.placeholderNoDocument') : t('palette.placeholder')}
+          aria-label={t('palette.search')}
           // The ARIA combobox (M54 F5): the field keeps focus, and the row the
           // arrows mark is its active descendant.
           role="combobox"
@@ -232,7 +238,7 @@ export function CommandPalette({ onImportStatement }: { onImportStatement: () =>
         <div ref={list} className="min-h-0 flex-1 overflow-y-auto py-1">
           {/* The list holds its groups of options and nothing else; what it says
               when it holds none is beside it (M54 F5). */}
-          <div id="command-list" role="listbox" aria-label="Results">
+          <div id="command-list" role="listbox" aria-label={t('palette.results')}>
             {segmentsOf(items).map((segment, at) => (
               // **A listbox owns options, or groups of them** (M54 F5): each
               // heading names its group, and is not an item of the list itself.
@@ -244,7 +250,7 @@ export function CommandPalette({ onImportStatement }: { onImportStatement: () =>
                   {segment.count !== undefined && (
                     <span className="text-caption text-ink-secondary">
                       {segment.count}
-                      <span className="sr-only"> {segment.count === 1 ? 'entry' : 'entries'}</span>
+                      <span className="sr-only"> {segment.count === 1 ? t('palette.entryOne') : t('palette.entryMany')}</span>
                     </span>
                   )}
                 </p>
@@ -274,25 +280,25 @@ export function CommandPalette({ onImportStatement }: { onImportStatement: () =>
           </div>
           {typed.trim().length >= ENTRY_SEARCH_MIN && db !== undefined && held === 0 ? (
             <p className="px-4 py-4 text-ink-secondary">
-              No entry holds “<Bidi>{typed.trim()}</Bidi>”.
+              <Phrase text={t('palette.noEntryHolds')} parts={{ typed: <Bidi>{typed.trim()}</Bidi> }} />
             </p>
           ) : (
-            items.length === 0 && <p className="px-4 py-6 text-center text-ink-secondary">Nothing matches that.</p>
+            items.length === 0 && <p className="px-4 py-6 text-center text-ink-secondary">{t('palette.nothing')}</p>
           )}
         </div>
 
         <div className="flex shrink-0 gap-3.5 border-t border-hairline px-4 py-1.5 text-caption text-ink-secondary">
           <span>
-            <Kbd>↑</Kbd> <Kbd>↓</Kbd> to move
+            <Kbd>↑</Kbd> <Kbd>↓</Kbd> {t('palette.toMove')}
           </span>
           <span>
-            <Kbd>Enter</Kbd> to open
+            <Kbd>Enter</Kbd> {t('palette.toOpen')}
           </span>
           <span>
-            <Kbd>Esc</Kbd> to leave
+            <Kbd>Esc</Kbd> {t('palette.toLeave')}
           </span>
           {held > 0 && (
-            <span className="ms-auto">{held === 1 ? '1 entry holds it' : `${String(held)} entries hold it`}</span>
+            <span className="ms-auto">{held === 1 ? t('palette.heldOne') : t('palette.heldMany', { n: held })}</span>
           )}
         </div>
       </div>
@@ -312,13 +318,14 @@ export function CommandPalette({ onImportStatement }: { onImportStatement: () =>
  * needs the button less.
  */
 export function CommandPaletteButton() {
+  const t = useT()
   const key = commandPaletteKey()
   return (
     <button
       type="button"
-      aria-label="Commands"
+      aria-label={t('palette.button')}
       aria-keyshortcuts={key === '⌘K' ? 'Meta+K' : 'Control+K'}
-      title={`Commands (${key})`}
+      title={t('palette.buttonTitle', { key })}
       className="fc-icon-action shrink-0"
       onClick={openCommandPalette}
     >
@@ -356,6 +363,15 @@ interface Segment {
   readonly members: readonly { readonly item: Item; readonly index: number }[]
 }
 
+/** A command group's heading in the language now (M60 U5, D-590); the group itself stays its English name. */
+const GROUP_WORD: Readonly<Record<CommandGroup, MessageKey>> = {
+  'Go to': 'palette.groups.goTo',
+  Do: 'palette.groups.do',
+  Document: 'palette.groups.document',
+  Help: 'palette.groups.help',
+  Recent: 'palette.groups.recent',
+}
+
 function segmentsOf(items: readonly Item[]): readonly Segment[] {
   const out: { key: string; title: string; count?: number; members: { item: Item; index: number }[] }[] = []
   items.forEach((item, index) => {
@@ -367,7 +383,7 @@ function segmentsOf(items: readonly Item[]): readonly Segment[] {
     }
     out.push(
       item.kind === 'command'
-        ? { key, title: item.command.group, members: [{ item, index }] }
+        ? { key, title: tNow(GROUP_WORD[item.command.group]), members: [{ item, index }] }
         : item.kind === 'entry'
           ? { key, title: item.format.title, count: item.count, members: [{ item, index }] }
           : { key, title: item.format.title, members: [{ item, index }] },
@@ -471,6 +487,7 @@ function MoreRow({
   onHover,
   onPick,
 }: RowPlace & { format: FormatDeclaration; more: number }) {
+  const t = useT()
   return (
     <div
       {...optionProps(index, selected, onHover, onPick)}
@@ -482,7 +499,7 @@ function MoreRow({
           <ActionGlyph name="arrow" size={14} />
         </span>
         <span>
-          {more} more in <Bidi>{format.title}</Bidi>, in its list
+          <Phrase text={t('palette.moreIn')} parts={{ n: more, format: <Bidi>{format.title}</Bidi> }} />
         </span>
       </span>
     </div>

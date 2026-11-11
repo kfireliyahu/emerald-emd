@@ -1,4 +1,5 @@
 import type { BasisKind } from '@/domain/model/plan.ts'
+import { tNow } from '@/i18n/words.ts'
 
 /**
  * What the splitter vocabulary is called on screen.
@@ -9,8 +10,16 @@ import type { BasisKind } from '@/domain/model/plan.ts'
  * title-casing gets there from the enum.
  */
 export const BASIS_LABEL: Readonly<Record<BasisKind, string>> = {
-  LAST_PAYCHECK: 'My last paycheck',
-  AVERAGE_LAST_N: 'Average of the last few months',
-  SPECIFIC_PAYCHECK: 'One particular paycheck',
-  CUSTOM_AMOUNT: 'An amount I type',
+  get LAST_PAYCHECK() {
+    return tNow('plan.basisKind.LAST_PAYCHECK')
+  },
+  get AVERAGE_LAST_N() {
+    return tNow('plan.basisKind.AVERAGE_LAST_N')
+  },
+  get SPECIFIC_PAYCHECK() {
+    return tNow('plan.basisKind.SPECIFIC_PAYCHECK')
+  },
+  get CUSTOM_AMOUNT() {
+    return tNow('plan.basisKind.CUSTOM_AMOUNT')
+  },
 }

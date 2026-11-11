@@ -68,6 +68,7 @@ import { useDocumentStore } from '@/state/documentStore.ts'
 import { countKey } from '@/i18n/count.ts'
 import { useLanguage, useT, type Translate } from '@/i18n/current.ts'
 import { fillNodes } from '@/i18n/nodes.tsx'
+import { pathArrows } from '@/i18n/words.ts'
 import { Flip } from '@/ui/motion/Flip.tsx'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { PromotionPanel, type BillPromotion } from '@/ui/categorize/PromotionPanel.tsx'
@@ -1456,7 +1457,7 @@ function orders(t: Translate): readonly Choice[] {
 
 /**
  * The screen's words (M60 U4, D-589): `t`, a category's path with its arrows
- * the way the page reads — `Living ← Groceries` in Hebrew — and a document's
+ * the way its own words run (`pathArrows`, D-590) — and a document's
  * value isolated inside a string the app writes (a title, a menu's line), so a
  * Hebrew name in an English sentence or an English one in a Hebrew sentence
  * keeps its own order. In English both are the value as it was.
@@ -1471,7 +1472,7 @@ function useWords(): {
   return useMemo(
     () => ({
       t,
-      path: (path: string) => (language === 'he' ? path.replaceAll(' → ', ' ← ') : path),
+      path: pathArrows,
       iso: (text: string) => (language === 'he' ? `\u2068${text}\u2069` : text),
     }),
     [t, language],

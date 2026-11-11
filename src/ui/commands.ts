@@ -1,6 +1,8 @@
 import { shellApp, shellBridge, shellDocuments, shellUpdates } from '@/data/storage/desktop.ts'
 import { canShowAbout, openAbout } from '@/ui/About.tsx'
 import { canListEarlierCopies, openEarlierCopies } from '@/ui/EarlierCopies.tsx'
+import type { MessageKey } from '@/i18n/catalogue.ts'
+import { tNow } from '@/i18n/words.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { createStore } from '@/state/store.ts'
 import { isDemo } from '@/ui/edition.ts'
@@ -68,6 +70,15 @@ export function useCommandPaletteOpen(): boolean {
 
 export type CommandGroup = 'Go to' | 'Do' | 'Document' | 'Help' | 'Recent'
 
+/** A place's name in the language now, and its English as words that still find it (M60 U5, D-590). */
+function nameOf(place: { readonly label: string; readonly word?: MessageKey }): string {
+  return place.word === undefined ? place.label : tNow(place.word)
+}
+
+function alsoEnglish(place: { readonly label: string; readonly word?: MessageKey }): string | undefined {
+  return nameOf(place) === place.label ? undefined : place.label
+}
+
 export interface Command {
   readonly id: string
   readonly label: string
@@ -115,15 +126,15 @@ export function buildCommands(context: CommandContext): readonly Command[] {
     // The declared formats are places too (M20 U1), and the palette is where
     // you reach one by name rather than by finding it in the rail.
     for (const section of railSections(showingOf(kept), formatPlacesOf(store.db), packRails(kept))) {
-      place(section.to, section.label)
-      for (const tab of section.tabs ?? []) place(tab.to, `${section.label} · ${tab.label}`, tab.label)
+      place(section.to, nameOf(section), alsoEnglish(section))
+      for (const tab of section.tabs ?? []) place(tab.to, `${nameOf(section)} · ${nameOf(tab)}`, tab.label)
       for (const child of section.children ?? []) {
         // Qualified, because "Savings" and "Funds" mean less on their own
         // than they do under Wealth — and a palette is read out of context
         // by definition.
-        place(child.to, `${section.label} · ${child.label}`, child.label)
+        place(child.to, `${nameOf(section)} · ${nameOf(child)}`, child.label)
         for (const tab of child.tabs ?? []) {
-          place(tab.to, `${section.label} · ${tab.label}`, tab.label)
+          place(tab.to, `${nameOf(section)} · ${nameOf(tab)}`, tab.label)
         }
       }
     }
@@ -137,14 +148,14 @@ export function buildCommands(context: CommandContext): readonly Command[] {
       commands.push(
         {
           id: 'do:categorize',
-          label: 'Categorize transactions',
+          label: tNow('palette.commands.categorize'),
           group: 'Do',
           keywords: 'uncategorized file rows',
           run: () => context.go('/transactions/merchants'),
         },
         {
           id: 'do:import',
-          label: 'Import a statement…',
+          label: tNow('palette.commands.import'),
           group: 'Do',
           keywords: 'card bank xlsx csv upload open file',
           run: context.importStatement,
@@ -155,7 +166,7 @@ export function buildCommands(context: CommandContext): readonly Command[] {
 
   commands.push({
     id: 'do:sidebar',
-    label: 'Toggle the sidebar',
+    label: tNow('palette.commands.sidebar'),
     group: 'Do',
     hint: 'Ctrl+B',
     keywords: 'collapse expand nav',
@@ -171,7 +182,7 @@ export function buildCommands(context: CommandContext): readonly Command[] {
     // File menu and the title bar say them; the word *document* is a keyword, not a second name.
     {
       id: 'doc:new',
-      label: 'New',
+      label: tNow('palette.commands.new'),
       group: 'Document',
       hint: 'Ctrl+N',
       keywords: 'new document file create blank',
@@ -179,7 +190,7 @@ export function buildCommands(context: CommandContext): readonly Command[] {
     },
     {
       id: 'doc:open',
-      label: 'Open…',
+      label: tNow('palette.commands.open'),
       group: 'Document',
       hint: 'Ctrl+O',
       keywords: 'open document file',
@@ -191,7 +202,7 @@ export function buildCommands(context: CommandContext): readonly Command[] {
     commands.push(
       {
         id: 'doc:save',
-        label: 'Save',
+        label: tNow('palette.commands.save'),
         group: 'Document',
         hint: 'Ctrl+S',
         run: () => void useDocumentStore.getState().save(),
@@ -199,7 +210,7 @@ export function buildCommands(context: CommandContext): readonly Command[] {
       {
         id: 'doc:save-as',
         // A new file, and the window carries on in it: Save as (D-531).
-        label: 'Save as…',
+        label: tNow('palette.commands.saveAs'),
         group: 'Document',
         hint: 'Ctrl+Shift+S',
         keywords: 'save copy new file rename elsewhere',
@@ -209,13 +220,13 @@ export function buildCommands(context: CommandContext): readonly Command[] {
       // document's earlier copies (D-470), or held in a browser page until downloaded.
       {
         id: 'doc:keep-copy',
-        label: 'Back up now',
+        label: tNow('palette.commands.backUp'),
         group: 'Document',
         keywords: 'backup snapshot before undo named copy',
         detail:
           store.adapter.backup !== undefined
-            ? 'Among its earlier copies, named for now. The last three are kept.'
-            : 'Held in this page until you download it.',
+            ? tNow('palette.commands.backUpShell')
+            : tNow('palette.commands.backUpPage'),
         run: () => void useDocumentStore.getState().keepCopy('now'),
       },
       // M45 U4 (D-455): the shell's File › Earlier copies of this document —
@@ -225,10 +236,10 @@ export function buildCommands(context: CommandContext): readonly Command[] {
         ? [
             {
               id: 'doc:earlier-copies',
-              label: 'Earlier copies of this document…',
+              label: tNow('palette.commands.earlierCopies'),
               group: 'Document' as const,
               keywords: 'backup restore undo previous version bak',
-              detail: 'The copies taken before a write, and the named ones. Restore puts one back.',
+              detail: tNow('palette.commands.earlierCopiesDetail'),
               run: openEarlierCopies,
             },
           ]
@@ -241,18 +252,18 @@ export function buildCommands(context: CommandContext): readonly Command[] {
       store.encoding === 'text'
         ? {
             id: 'doc:as-sqlite',
-            label: 'Save this document as SQLite bytes',
+            label: tNow('palette.commands.asSqlite'),
             group: 'Document',
             keywords: 'binary format encoding convert database',
-            detail: 'Smaller and faster for a large document. Git cannot diff it.',
+            detail: tNow('palette.commands.asSqliteDetail'),
             run: () => void useDocumentStore.getState().convertTo('sqlite'),
           }
         : {
             id: 'doc:as-text',
-            label: 'Save this document as text',
+            label: tNow('palette.commands.asText'),
             group: 'Document',
             keywords: 'markdown format encoding convert readable git diff',
-            detail: 'Readable and diffable. Declared formats only — not a ledger.',
+            detail: tNow('palette.commands.asTextDetail'),
             run: () => void useDocumentStore.getState().convertTo('text'),
           },
     )
@@ -278,7 +289,7 @@ export function buildCommands(context: CommandContext): readonly Command[] {
   if (context.recents.length > 0 && clearRecents !== undefined) {
     commands.push({
       id: 'recent:clear',
-      label: 'Clear recent documents',
+      label: tNow('palette.commands.clearRecents'),
       group: 'Recent',
       keywords: 'forget list history',
       run: () => void clearRecents(),
@@ -305,7 +316,7 @@ function helpCommands(guide: boolean): Command[] {
   if (guide) {
     help.push({
       id: 'help:guide',
-      label: 'Guide me',
+      label: tNow('palette.commands.guide'),
       group: 'Help',
       keywords: 'help getting started tour walk onboarding',
       run: () => openGuide(),
@@ -315,7 +326,7 @@ function helpCommands(guide: boolean): Command[] {
   if (canShowAbout()) {
     help.push({
       id: 'help:about',
-      label: 'About Emerald',
+      label: tNow('palette.commands.about'),
       group: 'Help',
       keywords: 'help version license earlier copies backups folder size',
       run: openAbout,
@@ -327,14 +338,14 @@ function helpCommands(guide: boolean): Command[] {
     help.push(
       {
         id: 'help:license',
-        label: 'License',
+        label: tNow('palette.commands.license'),
         group: 'Help',
         keywords: 'help agpl gnu terms licence',
         run: () => void openText('license'),
       },
       {
         id: 'help:notices',
-        label: 'Third-party notices',
+        label: tNow('palette.commands.notices'),
         group: 'Help',
         keywords: 'help licenses credits open source',
         run: () => void openText('notices'),
@@ -345,10 +356,10 @@ function helpCommands(guide: boolean): Command[] {
   if (openSource !== undefined) {
     help.push({
       id: 'help:source',
-      label: 'Source code',
+      label: tNow('palette.commands.source'),
       group: 'Help',
       keywords: 'help repository github agpl',
-      detail: 'Opens in your browser',
+      detail: tNow('palette.commands.sourceDetail'),
       run: () => void openSource(),
     })
   }
@@ -357,7 +368,7 @@ function helpCommands(guide: boolean): Command[] {
   if (updates !== undefined) {
     help.push({
       id: 'help:check-updates',
-      label: 'Check for updates now',
+      label: tNow('palette.commands.updates'),
       group: 'Help',
       keywords: 'help update upgrade new version release download',
       run: () => void updates.checkNow(),
