@@ -73,6 +73,14 @@ export function setLanguage(next: Language): void {
   choose(next)
 }
 
+/**
+ * The language for this page only, kept nowhere: `probe:screens -- --lang he`
+ * measures a screen in Hebrew without choosing it on the machine (M60 U5, D-590).
+ */
+export function showLanguage(next: Language): void {
+  choose(next)
+}
+
 /** The language now, outside a render. */
 export function currentLanguage(): Language {
   return language.get()

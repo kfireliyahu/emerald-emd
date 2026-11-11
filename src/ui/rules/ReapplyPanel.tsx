@@ -11,10 +11,13 @@ import {
 } from '@/data/repositories/reapplyRepository.ts'
 import { monthlyTotals, type TransactionFilter } from '@/data/repositories/transactionRepository.ts'
 import { planReapply } from '@/domain/reapply.ts'
+import { useT } from '@/i18n/current.ts'
+import { pathArrows, tNow } from '@/i18n/words.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { SELECT } from '@/ui/components/fieldLook.ts'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { accountLabel } from '@/ui/rules/ruleText.ts'
 
 /** How many of the changes the preview shows by name before it stops listing them. */
@@ -52,6 +55,7 @@ export function ReapplyPanel({
   categoryPath: (categoryId: string) => string | undefined
   onClose: () => void
 }) {
+  const t = useT()
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
   const mutate = useDocumentStore((state) => state.mutate)
@@ -101,20 +105,20 @@ export function ReapplyPanel({
 
   return (
     <section
-      aria-label="Apply rules to existing transactions"
+      aria-label={t('rules.reapply.label')}
       className="fc-pop-enter shrink-0 border-b border-hairline bg-surface px-6 py-3"
     >
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <span className="font-medium">Apply rules to transactions already imported</span>
+        <span className="font-medium">{t('rules.reapply.title')}</span>
 
         <label className="flex items-center gap-2 text-caption text-ink-secondary">
-          Account
+          {t('rules.reapply.account')}
           <select
             value={scope.accountId}
             onChange={(event) => setScope({ ...scope, accountId: event.target.value })}
             className={`${SELECT} text-body`}
           >
-            <option value="">All accounts</option>
+            <option value="">{t('rules.reapply.allAccounts')}</option>
             {accounts.map((account) => (
               <option key={account.id} value={account.id}>
                 {accountLabel(account)}
@@ -124,13 +128,13 @@ export function ReapplyPanel({
         </label>
 
         <label className="flex items-center gap-2 text-caption text-ink-secondary">
-          Month
+          {t('rules.reapply.month')}
           <select
             value={scope.period}
             onChange={(event) => setScope({ ...scope, period: event.target.value })}
             className={`${SELECT} text-body`}
           >
-            <option value="">All time</option>
+            <option value="">{t('rules.reapply.allTime')}</option>
             {data.months.map((period) => (
               <option key={period} value={period}>
                 {period}
@@ -145,11 +149,11 @@ export function ReapplyPanel({
             checked={scope.uncategorizedOnly}
             onChange={(event) => setScope({ ...scope, uncategorizedOnly: event.target.checked })}
           />
-          Only rows with no category
+          {t('rules.reapply.onlyUncategorized')}
         </label>
 
         <Button variant="ghost" size="sm" className="ms-auto" onClick={onClose}>
-          Close
+          {t('rules.reapply.close')}
         </Button>
       </div>
 
@@ -157,13 +161,15 @@ export function ReapplyPanel({
         <p className="tabular-nums">
           {plan.scanned === 0 ? (
             <span className="text-ink-secondary">
-              Nothing in this scope. Every row in it was categorized by hand, or there are none.
+              {t('rules.reapply.nothingInScope')}
             </span>
           ) : (
             <>
-              {plan.scanned} {plan.scanned === 1 ? 'transaction' : 'transactions'},{' '}
+              {t(plan.scanned === 1 ? 'rules.reapply.scannedOne' : 'rules.reapply.scannedMany', { n: plan.scanned })}{' '}
               <span className={plan.changes.length === 0 ? 'text-ink-secondary' : 'font-medium'}>
-                {plan.changes.length === 0 ? 'none would change' : `${plan.changes.length} would change`}
+                {plan.changes.length === 0
+                  ? t('rules.reapply.noneWouldChange')
+                  : t('rules.reapply.wouldChange', { n: plan.changes.length })}
               </span>
             </>
           )}
@@ -177,19 +183,23 @@ export function ReapplyPanel({
           title={label}
         >
           {plan.changes.length === 0
-            ? 'Apply'
-            : `Apply ${plan.changes.length} ${plan.changes.length === 1 ? 'change' : 'changes'}`}
+            ? t('rules.reapply.apply')
+            : t(plan.changes.length === 1 ? 'rules.reapply.applyOne' : 'rules.reapply.applyMany', {
+                n: plan.changes.length,
+              })}
         </Button>
 
         {undone !== undefined && (
           <span className="text-caption text-ink-secondary">
-            <span className="tabular-nums">{undone.restored}</span> put back.
+            <Phrase
+              text={t('rules.reapply.putBack')}
+              parts={{ n: <span className="tabular-nums">{undone.restored}</span> }}
+            />
             {undone.restored < undone.asked && (
-              <>
-                {' '}
-                The other <span className="tabular-nums">{undone.asked - undone.restored}</span> you
-                have categorized by hand since, and those are yours.
-              </>
+              <Phrase
+                text={t('rules.reapply.others')}
+                parts={{ n: <span className="tabular-nums">{undone.asked - undone.restored}</span> }}
+              />
             )}
           </span>
         )}
@@ -199,11 +209,15 @@ export function ReapplyPanel({
             wrong side of it. */}
         {undoable !== undefined && (
           <span className="flex items-center gap-2 text-caption text-ink-tertiary">
-            Last run: <Bidi>{undoable.scope}</Bidi>
-            {' · '}
-            <span className="tabular-nums">{undoable.changedCount}</span> changed
+            <Phrase
+              text={t('rules.reapply.lastRun')}
+              parts={{
+                scope: <Bidi>{undoable.scope}</Bidi>,
+                n: <span className="tabular-nums">{undoable.changedCount}</span>,
+              }}
+            />
             <Button variant="secondary" size="sm" onClick={undo}>
-              Undo it
+              {t('rules.reapply.undoIt')}
             </Button>
           </span>
         )}
@@ -217,24 +231,26 @@ export function ReapplyPanel({
           {plan.changes.slice(0, SAMPLE).map((change) => (
             <li key={change.rowId}>
               <Bidi className="text-ink-secondary">
-                {data.merchants.get(change.rowId) ?? 'a transaction'}
+                {data.merchants.get(change.rowId) ?? t('rules.reapply.aTransaction')}
               </Bidi>
               {': '}
-              {change.from === undefined ? 'uncategorized' : (categoryPath(change.from) ?? 'a deleted category')}
-              {' → '}
-              <span className="text-ink">{categoryPath(change.to) ?? 'a deleted category'}</span>
+              {change.from === undefined ? (
+                t('rules.reapply.uncategorized')
+              ) : (
+                <Bidi>{pathArrows(categoryPath(change.from) ?? t('rules.reapply.deletedCategory'))}</Bidi>
+              )}
+              {t('rules.arrow')}
+              <Bidi className="text-ink">{pathArrows(categoryPath(change.to) ?? t('rules.reapply.deletedCategory'))}</Bidi>
             </li>
           ))}
           {plan.changes.length > SAMPLE && (
-            <li className="tabular-nums">and {plan.changes.length - SAMPLE} more</li>
+            <li className="tabular-nums">{t('rules.reapply.more', { n: plan.changes.length - SAMPLE })}</li>
           )}
         </ul>
       )}
 
       <p className="mt-2 text-caption text-ink-tertiary">
-        A category you picked by hand is never touched, and nothing is ever cleared — a row whose
-        rule was deleted keeps what it was given. This is the one thing in the app you can undo,
-        and the offer stays until you run it again.
+        {t('rules.reapply.footer')}
       </p>
     </section>
   )
@@ -263,6 +279,6 @@ function describe(scope: Scope, accounts: readonly Account[]): string {
   const account = accounts.find((candidate) => candidate.id === scope.accountId)
   if (account !== undefined) parts.push(accountLabel(account))
   if (scope.period !== '') parts.push(scope.period)
-  if (scope.uncategorizedOnly) parts.push('uncategorized only')
-  return parts.length === 0 ? 'Everything' : parts.join(' · ')
+  if (scope.uncategorizedOnly) parts.push(tNow('rules.reapply.uncategorizedOnly'))
+  return parts.length === 0 ? tNow('rules.reapply.everything') : parts.join(' · ')
 }

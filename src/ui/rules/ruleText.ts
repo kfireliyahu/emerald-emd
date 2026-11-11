@@ -10,6 +10,8 @@
 import { formatMoney, type CurrencyCode } from '@/core/money.ts'
 import type { Account } from '@/data/repositories/accountRepository.ts'
 import type { RuleConditions, RuleKind } from '@/domain/model/rules.ts'
+import type { MessageKey } from '@/i18n/catalogue.ts'
+import { tNow } from '@/i18n/words.ts'
 
 /**
  * The currencies offered for an amount bound and for the test box.
@@ -20,13 +22,13 @@ import type { RuleConditions, RuleKind } from '@/domain/model/rules.ts'
  */
 export const CURRENCY_CHOICES: readonly CurrencyCode[] = ['ILS', 'USD', 'EUR', 'GBP', 'CHF', 'JPY']
 
-export const KIND_PHRASE: Readonly<Record<RuleKind, string>> = {
-  EXACT_MERCHANT: 'merchant is exactly',
-  CONTAINS: 'merchant contains',
-  REGEX: 'merchant matches',
-  PROVIDER_CATEGORY: 'provider category is',
-  AMOUNT_RANGE: 'any amount in range',
-  ACCOUNT: 'everything on one account',
+export const KIND_WORD: Readonly<Record<RuleKind, MessageKey>> = {
+  EXACT_MERCHANT: 'rules.kind.EXACT_MERCHANT',
+  CONTAINS: 'rules.kind.CONTAINS',
+  REGEX: 'rules.kind.REGEX',
+  PROVIDER_CATEGORY: 'rules.kind.PROVIDER_CATEGORY',
+  AMOUNT_RANGE: 'rules.kind.AMOUNT_RANGE',
+  ACCOUNT: 'rules.kind.ACCOUNT',
 }
 
 /** What to type, in the words of the kind that will read it. */
@@ -51,12 +53,34 @@ export function amountText(conditions: RuleConditions): string | undefined {
   if (amountMin !== undefined && amountMax !== undefined) {
     return `${formatMoney(amountMin)}–${formatMoney(amountMax)}`
   }
-  if (amountMin !== undefined) return `from ${formatMoney(amountMin)}`
-  if (amountMax !== undefined) return `up to ${formatMoney(amountMax)}`
+  if (amountMin !== undefined) return tNow('rules.amountFrom', { amount: formatMoney(amountMin) })
+  if (amountMax !== undefined) return tNow('rules.amountUpTo', { amount: formatMoney(amountMax) })
   return undefined
 }
 
 /** An account as the pickers name it: the nickname, and the card digits when it has them. */
 export function accountLabel(account: Account): string {
   return account.last4 === undefined ? account.name : `${account.name} ·${account.last4}`
+}
+
+/**
+ * **What `validateRule` refuses, in the language now** (M60 U5, D-590). The
+ * domain says it in English (`src/domain/categorization.ts`), which the plugin
+ * reads too; a screen asks for it by the message it gave. One the table does
+ * not know — the regex engine's own complaint — is shown as it came.
+ */
+const PROBLEM_WORD: Readonly<Record<string, MessageKey>> = {
+  'Pick a category to assign': 'rules.problems.pickCategory',
+  'This kind of rule needs something to match on': 'rules.problems.needsPattern',
+  'An amount rule needs a minimum or a maximum': 'rules.problems.amountNeedsBound',
+  'An account rule needs an account': 'rules.problems.accountNeedsAccount',
+  'The two bounds are in different currencies': 'rules.problems.currencies',
+  'The minimum is above the maximum': 'rules.problems.minAboveMax',
+}
+
+export function problemWords(message: string): string {
+  const key = PROBLEM_WORD[message]
+  if (key !== undefined) return tNow(key)
+  const long = /^Pattern is longer than (\d+) characters$/.exec(message)
+  return long === null ? message : tNow('rules.problems.tooLong', { n: long[1] ?? '' })
 }

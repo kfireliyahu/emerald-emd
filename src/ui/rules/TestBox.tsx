@@ -6,8 +6,11 @@ import { parseAmountText } from '@/data/importer/normalize.ts'
 import type { Account } from '@/data/repositories/accountRepository.ts'
 import { explain, matches } from '@/domain/categorization.ts'
 import type { CategoryRule, RuleSubject } from '@/domain/model/rules.ts'
+import { useT } from '@/i18n/current.ts'
+import { pathArrows } from '@/i18n/words.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { CURRENCY_CHOICES, accountLabel } from '@/ui/rules/ruleText.ts'
 import { Why } from '@/ui/rules/Why.tsx'
 
@@ -32,6 +35,7 @@ export function TestBox({
   categoryPath: (categoryId: string) => string | undefined
   accounts: readonly Account[]
 }) {
+  const t = useT()
   const [merchant, setMerchant] = useState('')
   const [amount, setAmount] = useState('')
   const [currency, setCurrency] = useState<CurrencyCode>('ILS')
@@ -71,18 +75,17 @@ export function TestBox({
   return (
     <aside className="flex w-full shrink-0 flex-col gap-3 border-t border-hairline px-6 py-4 lg:w-96 lg:border-t-0 lg:border-s">
       <div>
-        <h2 className="text-label text-ink-tertiary uppercase">Test box</h2>
+        <h2 className="text-label text-ink-tertiary uppercase">{t('rules.test.title')}</h2>
         <p className="mt-1 text-caption text-ink-tertiary">
-          A row as it would arrive from a statement. The answer here is the answer an import
-          gives — same rules, same comparison.
+          {t('rules.test.lead')}
         </p>
       </div>
 
       <input
         value={merchant}
         onChange={(event) => setMerchant(event.target.value)}
-        placeholder="Merchant, as the file writes it"
-        aria-label="Merchant name to test"
+        placeholder={t('rules.test.merchant')}
+        aria-label={t('rules.test.merchantLabel')}
         dir="auto"
         className={FIELD}
       />
@@ -91,14 +94,14 @@ export function TestBox({
         <input
           value={amount}
           onChange={(event) => setAmount(event.target.value)}
-          placeholder="Amount"
-          aria-label="Amount to test"
+          placeholder={t('rules.test.amount')}
+          aria-label={t('rules.test.amountLabel')}
           className={`${FIELD} w-28 tabular-nums`}
         />
         <select
           value={currency}
           onChange={(event) => setCurrency(event.target.value)}
-          aria-label="Currency of the test amount"
+          aria-label={t('rules.test.currency')}
           className={SELECT}
         >
           {CURRENCY_CHOICES.map((code) => (
@@ -112,8 +115,8 @@ export function TestBox({
       <input
         value={providerCategory}
         onChange={(event) => setProviderCategory(event.target.value)}
-        placeholder="Provider category, if the file states one"
-        aria-label="Provider category to test"
+        placeholder={t('rules.test.provider')}
+        aria-label={t('rules.test.providerLabel')}
         dir="auto"
         className={FIELD}
       />
@@ -122,7 +125,7 @@ export function TestBox({
         <select
           value={accountId}
           onChange={(event) => setAccountId(event.target.value)}
-          aria-label="Account the test row is on"
+          aria-label={t('rules.test.account')}
           className={SELECT}
         >
           {accounts.map((account) => (
@@ -135,8 +138,7 @@ export function TestBox({
 
       {!asked ? (
         <p className="text-caption text-ink-tertiary">
-          Nothing typed yet. Paste a merchant name off a statement — the rules see it normalized,
-          which is shown here once there is something to normalize.
+          {t('rules.test.nothingYet')}
         </p>
       ) : (
         <div className="flex flex-col gap-3">
@@ -144,25 +146,28 @@ export function TestBox({
               rules compare the normalized form, branch number stripped. */}
           {normalized !== merchant.trim() && (
             <p className="text-caption text-ink-tertiary">
-              rules see <Bidi className="text-ink-secondary">{normalized === '' ? '—' : normalized}</Bidi>
+              <Phrase
+                text={t('rules.test.rulesSee')}
+                parts={{ normalized: <Bidi className="text-ink-secondary">{normalized === '' ? '—' : normalized}</Bidi> }}
+              />
             </p>
           )}
 
           <div>
             {result.winner === undefined ? (
               <>
-                <p className="text-heading">Uncategorized</p>
+                <p className="text-heading">{t('rules.test.uncategorized')}</p>
                 <p className="mt-1 text-caption text-ink-secondary">
-                  No rule matches. An import would leave this row for you to categorize.
+                  {t('rules.test.noMatch')}
                 </p>
               </>
             ) : (
               <>
                 <p className="text-heading">
-                  {categoryPath(result.winner.targetCategoryId) ?? 'a category that was deleted'}
+                  <Bidi>{pathArrows(categoryPath(result.winner.targetCategoryId) ?? t('rules.test.deleted'))}</Bidi>
                 </p>
                 <p className="mt-1 text-caption text-ink-secondary">
-                  by <Bidi className="text-ink">{result.winner.name}</Bidi>
+                  <Phrase text={t('rules.test.by')} parts={{ name: <Bidi className="text-ink">{result.winner.name}</Bidi> }} />
                 </p>
                 <p className="text-caption text-ink-tertiary">
                   <Why rule={result.winner} accounts={accounts} />
@@ -174,14 +179,16 @@ export function TestBox({
           {result.shadowed.length > 0 && (
             <div>
               <p className="text-label text-ink-tertiary uppercase">
-                also matched, and lost
+                {t('rules.test.alsoMatched')}
               </p>
               <ul className="mt-1 flex flex-col gap-1">
                 {result.shadowed.map((rule) => (
                   <li key={rule.id} className="text-caption text-ink-tertiary">
-                    <Bidi className="text-ink-secondary">{rule.name}</Bidi> ·{' '}
-                    <Why rule={rule} accounts={accounts} /> →{' '}
-                    {categoryPath(rule.targetCategoryId) ?? 'a category that was deleted'}
+                    <Bidi className="text-ink-secondary">{rule.name}</Bidi>
+                    {' · '}
+                    <Why rule={rule} accounts={accounts} />
+                    {t('rules.arrow')}
+                    <Bidi>{pathArrows(categoryPath(rule.targetCategoryId) ?? t('rules.test.deleted'))}</Bidi>
                   </li>
                 ))}
               </ul>
@@ -190,8 +197,7 @@ export function TestBox({
 
           {suppressed > 0 && (
             <p className="text-caption text-ink-tertiary">
-              {suppressed === 1 ? '1 rule that is switched off' : `${suppressed} rules that are switched off`}{' '}
-              would have matched.
+              {suppressed === 1 ? t('rules.test.oneOff') : t('rules.test.nOff', { n: suppressed })}
             </p>
           )}
         </div>

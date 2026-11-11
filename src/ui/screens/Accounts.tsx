@@ -24,7 +24,10 @@ import {
   type InstitutionKind,
 } from '@/data/repositories/institutionRepository.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
+import type { MessageKey } from '@/i18n/catalogue.ts'
+import { useT, type Translate } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { PageMenu } from '@/ui/components/PageMenu.tsx'
 import { Chip } from '@/ui/components/Chip.tsx'
@@ -52,6 +55,7 @@ import { Flip } from '@/ui/motion/Flip.tsx'
  * so until this existed the only repair was starting a new document.
  */
 export function Accounts() {
+  const t = useT()
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
   const mutate = useDocumentStore((state) => state.mutate)
@@ -71,7 +75,7 @@ export function Accounts() {
   }, [db, revision, showArchived])
 
   if (db === undefined || data === undefined) {
-    return <Centered>Open a document, or create one, to see the accounts in it.</Centered>
+    return <Centered>{t('settings.accounts.noDocument')}</Centered>
   }
 
   const write = (work: (database: Database, now: number) => void): void => {
@@ -94,7 +98,7 @@ export function Accounts() {
     <div className="flex h-full flex-col">
       <div className="flex shrink-0 flex-wrap items-center gap-x-6 gap-y-2 border-b border-hairline px-6 py-2">
         <span className="text-ink-secondary tabular-nums">
-          {data.accounts.length === 1 ? '1 account' : `${data.accounts.length} accounts`}
+          {data.accounts.length === 1 ? t('settings.accounts.one') : t('settings.accounts.many', { n: data.accounts.length })}
         </span>
 
         <NewAccountForm
@@ -111,10 +115,10 @@ export function Accounts() {
           }
         />
         <PageMenu
-          title="Accounts"
+          title={t('rail.accounts')}
           items={[
             {
-              label: showArchived ? 'Hide archived accounts' : 'Show archived accounts',
+              label: showArchived ? t('settings.accounts.hideArchived') : t('settings.accounts.showArchived'),
               onChoose: () => setShowArchived(!showArchived),
             },
           ]}
@@ -125,7 +129,7 @@ export function Accounts() {
         <div className="fc-pop-enter flex shrink-0 items-center gap-4 border-b border-hairline bg-surface px-6 py-2">
           <span className="text-negative">{problem}</span>
           <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setProblem(undefined)}>
-            Dismiss
+            {t('settings.accounts.dismiss')}
           </Button>
         </div>
       )}
@@ -140,14 +144,13 @@ export function Accounts() {
       <div className="min-h-0 flex-1 overflow-auto">
         {data.accounts.length === 0 ? (
           <Centered>
-            No accounts yet. One is created the first time you import a statement — or add the card
-            you use above, and its last 4 digits will match the file to it.
+            {t('settings.accounts.none')}
           </Centered>
         ) : (
           groups.map((group) => (
             <section key={group.kind}>
               <h2 className="sticky top-0 z-10 border-b border-hairline bg-background/90 px-6 py-2 text-label text-ink-tertiary uppercase backdrop-blur">
-                {group.label}
+                {t(group.label)}
               </h2>
               {/* An account added, merged away or moved to another kind (M39). */}
               <Flip as="ul" flipKey={group.members.map((account) => account.id).join(',')}>
@@ -240,11 +243,11 @@ export function Accounts() {
   )
 }
 
-const GROUPS: readonly { readonly kind: AccountKind; readonly label: string }[] = [
-  { kind: 'CREDIT_CARD', label: 'Cards' },
-  { kind: 'BANK', label: 'Bank accounts' },
-  { kind: 'CASH', label: 'Cash' },
-  { kind: 'HOLDINGS', label: 'Accounts with holdings' },
+const GROUPS: readonly { readonly kind: AccountKind; readonly label: MessageKey }[] = [
+  { kind: 'CREDIT_CARD', label: 'settings.accounts.groups.cards' },
+  { kind: 'BANK', label: 'settings.accounts.groups.banks' },
+  { kind: 'CASH', label: 'settings.accounts.groups.cash' },
+  { kind: 'HOLDINGS', label: 'settings.accounts.groups.holdings' },
 ]
 
 /** Which institutions can sit behind which kind of account. Cash is with nobody. */
@@ -280,6 +283,7 @@ function Row({
   onDelete: () => void
   onSetExcludeSettlements: (exclude: boolean | undefined) => void
 }) {
+  const t = useT()
   const [name, setName] = useState(account.name)
   const [last4, setLast4] = useState(account.last4 ?? '')
 
@@ -297,7 +301,7 @@ function Row({
           onKeyDown={(event) => {
             if (event.key === 'Enter') event.currentTarget.blur()
           }}
-          aria-label={`Name of ${account.name}`}
+          aria-label={t('settings.accounts.nameOf', { name: account.name })}
           // A nickname is often Hebrew, and "ויזה 4321" scrambles unisolated.
           dir="auto"
           className={`${FIELD} h-7 w-64`}
@@ -311,13 +315,13 @@ function Row({
         <select
           value={account.kind}
           onChange={(event) => onSetKind(event.target.value as AccountKind)}
-          aria-label={`What kind of account ${account.name} is`}
+          aria-label={t('settings.accounts.kindOf', { name: account.name })}
           className={`${SELECT} h-7`}
         >
-          <option value="CREDIT_CARD">Card</option>
-          <option value="BANK">Bank account</option>
-          <option value="CASH">Cash</option>
-          <option value="HOLDINGS">Account with holdings</option>
+          <option value="CREDIT_CARD">{t('settings.accounts.kinds.card')}</option>
+          <option value="BANK">{t('settings.accounts.kinds.bankAccount')}</option>
+          <option value="CASH">{t('settings.accounts.kinds.cash')}</option>
+          <option value="HOLDINGS">{t('settings.accounts.kinds.holdings')}</option>
         </select>
 
         {account.kind === 'CREDIT_CARD' && (
@@ -332,8 +336,8 @@ function Row({
               if (event.key === 'Enter') event.currentTarget.blur()
             }}
             inputMode="numeric"
-            placeholder="last 4"
-            aria-label={`Last 4 digits of ${account.name}`}
+            placeholder={t('settings.accounts.last4')}
+            aria-label={t('settings.accounts.last4Of', { name: account.name })}
             className={`${FIELD} h-7 w-20 tabular-nums`}
           />
         )}
@@ -344,10 +348,10 @@ function Row({
             onChange={(event) =>
               onSetInstitution(event.target.value === '' ? undefined : event.target.value)
             }
-            aria-label={`Who ${account.name} is with`}
+            aria-label={t('settings.accounts.institutionOf', { name: account.name })}
             className={`${SELECT} h-7`}
           >
-            <option value="">No institution</option>
+            <option value="">{t('settings.accounts.noInstitution')}</option>
             {institutions.map((institution) => (
               <option key={institution.id} value={institution.id}>
                 {institution.name}
@@ -356,29 +360,29 @@ function Row({
           </select>
         )}
 
-        {account.isArchived && <Chip>archived</Chip>}
+        {account.isArchived && <Chip>{t('settings.accounts.archived')}</Chip>}
         {account.kind === 'CREDIT_CARD' && account.last4 === undefined && (
           // The one thing on this screen worth acting on, so the one thing
           // wearing a colour: without it, a statement for this card cannot be
           // matched to it and a settlement row cannot be matched at all.
-          <Chip problem>no card number</Chip>
+          <Chip problem>{t('settings.accounts.noCardNumber')}</Chip>
         )}
 
         <span className="ms-auto flex items-center gap-x-3 text-caption text-ink-secondary opacity-0 transition-opacity duration-[var(--duration-micro)] group-hover:opacity-100 focus-within:opacity-100">
           <button type="button" onClick={onMerge} className="hover:text-ink">
-            Merge…
+            {t('settings.accounts.merge')}
           </button>
           <button type="button" onClick={onArchive} className="hover:text-ink">
-            {account.isArchived ? 'Unarchive' : 'Archive'}
+            {account.isArchived ? t('settings.accounts.unarchive') : t('settings.accounts.archive')}
           </button>
           <button type="button" onClick={onDelete} className="hover:text-negative">
-            Remove
+            {t('settings.accounts.remove')}
           </button>
         </span>
       </div>
 
       <div className="mt-1.5 flex flex-wrap items-baseline gap-x-4 text-caption text-ink-tertiary tabular-nums">
-        <span>{describe(usage)}</span>
+        <span>{describe(usage, t)}</span>
         {account.kind === 'CREDIT_CARD' && (
           <SettlementAnswer value={account.excludeSettlementsFromStats} onChange={onSetExcludeSettlements} />
         )}
@@ -409,20 +413,21 @@ function SettlementAnswer({
   value: boolean | undefined
   onChange: (exclude: boolean | undefined) => void
 }) {
+  const t = useT()
   return (
     <label className="flex items-baseline gap-1.5">
-      This card&rsquo;s payment in the bank statement
+      {t('settings.accounts.settlement')}
       <select
         value={value === undefined ? '' : value ? 'exclude' : 'keep'}
         onChange={(event) =>
           onChange(event.target.value === '' ? undefined : event.target.value === 'exclude')
         }
-        aria-label="What to do with this card's monthly payment in the bank statement"
+        aria-label={t('settings.accounts.settlementLabel')}
         className={`${SELECT} h-6`}
       >
-        <option value="">ask me</option>
-        <option value="exclude">left out of totals</option>
-        <option value="keep">counted</option>
+        <option value="">{t('settings.accounts.askMe')}</option>
+        <option value="exclude">{t('settings.accounts.leftOut')}</option>
+        <option value="keep">{t('settings.accounts.counted')}</option>
       </select>
     </label>
   )
@@ -448,6 +453,7 @@ function MergePanel({
   onCancel: () => void
   onMerge: (intoId: string) => void
 }) {
+  const t = useT()
   const [intoId, setIntoId] = useState('')
   const preview = intoId === '' ? undefined : mergePreview(db, source.id, intoId)
   const target = targets.find((candidate) => candidate.id === intoId)
@@ -456,23 +462,22 @@ function MergePanel({
     <div className="fc-pop-enter shrink-0 border-t border-hairline bg-surface px-6 py-4">
       {targets.length === 0 ? (
         <p>
-          There is nothing to merge <Bidi className="font-medium">{source.name}</Bidi> into. Only two
-          cards, or two bank accounts, can be merged.
+          <Phrase text={t('settings.accounts.mergeNothing')} parts={{ name: <Bidi className="font-medium">{source.name}</Bidi> }} />
         </p>
       ) : (
         <>
           <div className="flex flex-wrap items-center gap-3">
             <span>
-              Merge <Bidi className="font-medium">{source.name}</Bidi> into
+              <Phrase text={t('settings.accounts.mergeInto')} parts={{ name: <Bidi className="font-medium">{source.name}</Bidi> }} />
             </span>
             <select
               autoFocus
               value={intoId}
               onChange={(event) => setIntoId(event.target.value)}
-              aria-label="Which account it becomes"
+              aria-label={t('settings.accounts.whichAccount')}
               className={SELECT}
             >
-              <option value="">Choose an account…</option>
+              <option value="">{t('settings.accounts.chooseAccount')}</option>
               {targets.map((candidate) => (
                 <option key={candidate.id} value={candidate.id}>
                   {candidate.name}
@@ -485,26 +490,26 @@ function MergePanel({
           <p className="mt-2 text-ink-secondary">
             {preview === undefined || target === undefined ? (
               <>
-                Everything moves across and <Bidi>{source.name}</Bidi> goes away. Use this when one
-                card ended up as two accounts — a second download of the same month is enough to do
-                it.
+                <Phrase text={t('settings.accounts.mergeExplain')} parts={{ name: <Bidi>{source.name}</Bidi> }} />
               </>
             ) : (
               <>
-                <span className="text-ink tabular-nums">{preview.moved}</span>{' '}
-                {preview.moved === 1 ? 'transaction moves' : 'transactions move'} into{' '}
-                <Bidi className="text-ink">{target.name}</Bidi>
+                <Phrase
+                  text={t(preview.moved === 1 ? 'settings.accounts.movesOne' : 'settings.accounts.movesMany')}
+                  parts={{
+                    n: <span className="text-ink tabular-nums">{preview.moved}</span>,
+                    name: <Bidi className="text-ink">{target.name}</Bidi>,
+                  }}
+                />
                 {preview.duplicates > 0 && (
-                  <>
-                    , and <span className="text-ink tabular-nums">{preview.duplicates}</span>{' '}
-                    {preview.duplicates === 1 ? 'row that is' : 'rows that are'} already there
-                    {preview.duplicates === 1 ? ' is' : ' are'} dropped — the same charge, recorded
-                    twice
-                  </>
+                  <Phrase
+                    text={t(preview.duplicates === 1 ? 'settings.accounts.duplicateOne' : 'settings.accounts.duplicateMany')}
+                    parts={{ n: <span className="text-ink tabular-nums">{preview.duplicates}</span> }}
+                  />
                 )}
-                . Imports and readers follow.
+                {t('settings.accounts.follow')}
                 {target.last4 === undefined && source.last4 !== undefined && (
-                  <> The card number {source.last4} comes across too.</>
+                  <>{t('settings.accounts.cardComes', { last4: source.last4 })}</>
                 )}
               </>
             )}
@@ -515,11 +520,11 @@ function MergePanel({
       <div className="mt-3 flex items-center gap-2">
         {targets.length > 0 && (
           <Button variant="primary" size="sm" disabled={intoId === ''} onClick={() => onMerge(intoId)}>
-            Merge
+            {t('settings.accounts.mergeButton')}
           </Button>
         )}
         <Button variant="ghost" size="sm" onClick={onCancel}>
-          Cancel
+          {t('settings.accounts.cancel')}
         </Button>
       </div>
     </div>
@@ -532,6 +537,7 @@ function NewAccountForm({
 }: {
   onCreate: (account: { name: string; kind: AccountKind; last4?: string | undefined }) => void
 }) {
+  const t = useT()
   const [name, setName] = useState('')
   const [kind, setKind] = useState<AccountKind>('CREDIT_CARD')
   const [last4, setLast4] = useState('')
@@ -555,50 +561,50 @@ function NewAccountForm({
       <input
         value={name}
         onChange={(event) => setName(event.target.value)}
-        placeholder="Add an account"
-        aria-label="New account name"
+        placeholder={t('settings.accounts.addAccount')}
+        aria-label={t('settings.accounts.newName')}
         dir="auto"
         className={`${FIELD} h-7 w-48`}
       />
       <select
         value={kind}
         onChange={(event) => setKind(event.target.value as AccountKind)}
-        aria-label="What kind of account"
+        aria-label={t('settings.accounts.whatKind')}
         className={`${SELECT} h-7`}
       >
-        <option value="CREDIT_CARD">Card</option>
-        <option value="BANK">Bank</option>
-        <option value="CASH">Cash</option>
-        <option value="HOLDINGS">Account with holdings</option>
+        <option value="CREDIT_CARD">{t('settings.accounts.kinds.card')}</option>
+        <option value="BANK">{t('settings.accounts.kinds.bank')}</option>
+        <option value="CASH">{t('settings.accounts.kinds.cash')}</option>
+        <option value="HOLDINGS">{t('settings.accounts.kinds.holdings')}</option>
       </select>
       {kind === 'CREDIT_CARD' && (
         <input
           value={last4}
           onChange={(event) => setLast4(event.target.value.replace(/\D/g, '').slice(0, 4))}
-          placeholder="last 4"
-          aria-label="Last 4 digits"
+          placeholder={t('settings.accounts.last4')}
+          aria-label={t('settings.accounts.last4Digits')}
           inputMode="numeric"
           className={`${FIELD} h-7 w-20 tabular-nums`}
         />
       )}
       <Button type="submit" size="sm" disabled={name.trim() === ''}>
-        Add
+        {t('settings.accounts.add')}
       </Button>
     </form>
   )
 }
 
 /** What the account holds, in the order it matters. "Nothing yet" is worth saying. */
-function describe(usage: AccountUsage | undefined): string {
+function describe(usage: AccountUsage | undefined, t: Translate): string {
   if (usage === undefined) return ''
-  if (usage.transactions === 0 && usage.importSessions === 0) return 'nothing imported yet'
+  if (usage.transactions === 0 && usage.importSessions === 0) return t('settings.accounts.nothingImported')
 
   const parts = [
-    usage.transactions === 1 ? '1 transaction' : `${usage.transactions} transactions`,
-    usage.importSessions === 1 ? '1 import' : `${usage.importSessions} imports`,
+    usage.transactions === 1 ? t('settings.accounts.transactionOne') : t('settings.accounts.transactionMany', { n: usage.transactions }),
+    usage.importSessions === 1 ? t('settings.accounts.importOne') : t('settings.accounts.importMany', { n: usage.importSessions }),
   ]
   if (usage.mappings > 0) {
-    parts.push(usage.mappings === 1 ? '1 reader' : `${usage.mappings} readers`)
+    parts.push(usage.mappings === 1 ? t('settings.accounts.readerOne') : t('settings.accounts.readerMany', { n: usage.mappings }))
   }
   return parts.join(' · ')
 }

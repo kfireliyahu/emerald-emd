@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 
 import { ActionGlyph, type ActionGlyphName } from '@/ui/components/ActionGlyph.tsx'
+import { arrowStep, pageIsRtl } from '@/ui/direction.ts'
 
 /**
  * The app's context menu (D-173), as the Transactions and Categories screens
@@ -38,6 +39,11 @@ export interface MenuItem {
   readonly submenu?: readonly MenuItem[]
   /** A hairline above this item, to group a long menu. */
   readonly separated?: boolean
+}
+
+/** The menu's width, `w-72` (18rem) in the page's own rem, which a right-to-left menu ends at its point by. */
+function menuWidth(): number {
+  return 18 * (parseFloat(getComputedStyle(document.documentElement).fontSize) || 16)
 }
 
 export function ContextMenu({
@@ -113,7 +119,7 @@ export function ContextMenu({
       buttons[(next + buttons.length) % buttons.length]?.focus()
       return
     }
-    if (item.submenu !== undefined && (event.key === 'ArrowRight' || event.key === 'Enter' || event.key === ' ')) {
+    if (item.submenu !== undefined && (arrowStep(event.key) === 1 || event.key === 'Enter' || event.key === ' ')) {
       event.preventDefault()
       event.stopPropagation()
       setOpen(index)
@@ -122,9 +128,13 @@ export function ContextMenu({
     }
   }
 
-  const left = Math.min(at.x, Math.max(0, window.innerWidth - 300))
-  // A flyout opens to the left when there is no room on the right.
-  const flip = left + 300 + 260 > window.innerWidth
+  // The point is the menu's start edge: its left, or in right-to-left its right (M60 U5, D-590).
+  const rtl = pageIsRtl()
+  const left = rtl
+    ? Math.max(0, Math.min(at.x, window.innerWidth) - menuWidth())
+    : Math.min(at.x, Math.max(0, window.innerWidth - 300))
+  // A flyout opens toward the end, and back toward the start when there is no room there.
+  const flip = rtl ? left - 260 < 0 : left + 300 + 260 > window.innerWidth
 
   return (
     <div
@@ -178,7 +188,7 @@ export function ContextMenu({
               )}
             </span>
             <span className="mt-0.5 font-mono text-caption text-ink-tertiary">
-              {item.submenu !== undefined ? '▸' : (item.shortcut ?? '')}
+              {item.submenu !== undefined ? (rtl ? '◂' : '▸') : (item.shortcut ?? '')}
             </span>
           </button>
           {item.submenu !== undefined && open === index && (
@@ -188,7 +198,7 @@ export function ContextMenu({
                 flip ? 'end-full' : 'start-full'
               }`}
               onKeyDown={(event) => {
-                if (event.key === 'ArrowLeft') {
+                if (arrowStep(event.key) === -1) {
                   event.preventDefault()
                   event.stopPropagation()
                   setOpen(undefined)

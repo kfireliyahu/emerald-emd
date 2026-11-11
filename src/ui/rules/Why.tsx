@@ -1,7 +1,8 @@
 import type { Account } from '@/data/repositories/accountRepository.ts'
 import type { CategoryRule } from '@/domain/model/rules.ts'
+import { useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
-import { KIND_PHRASE, accountLabel, amountText } from '@/ui/rules/ruleText.ts'
+import { KIND_WORD, accountLabel, amountText } from '@/ui/rules/ruleText.ts'
 
 /**
  * What a rule tested, in one line.
@@ -11,12 +12,13 @@ import { KIND_PHRASE, accountLabel, amountText } from '@/ui/rules/ruleText.ts'
  * is a rule the user has to learn three times.
  */
 export function Why({ rule, accounts }: { rule: CategoryRule; accounts: readonly Account[] }) {
+  const t = useT()
   const scoped = accounts.find((account) => account.id === rule.conditions.scopeAccountId)
   const band = amountText(rule.conditions)
 
   return (
     <>
-      {KIND_PHRASE[rule.kind]}
+      {t(KIND_WORD[rule.kind])}
       {rule.pattern !== '' && (
         <>
           {' '}
@@ -25,8 +27,8 @@ export function Why({ rule, accounts }: { rule: CategoryRule; accounts: readonly
       )}
       {rule.conditions.scopeAccountId !== undefined && (
         <>
-          {' · on '}
-          <Bidi>{scoped === undefined ? 'a deleted account' : accountLabel(scoped)}</Bidi>
+          {t('rules.why.on')}
+          <Bidi>{scoped === undefined ? t('rules.why.deletedAccount') : accountLabel(scoped)}</Bidi>
         </>
       )}
       {band !== undefined && ` · ${band}`}

@@ -1,15 +1,12 @@
 import { useEffect, useRef } from 'react'
 
-import { formatMoney } from '@/core/money.ts'
+import { formatMoney, money, type CurrencyCode } from '@/core/money.ts'
 import { formatPercent } from '@/core/percent.ts'
+import type { YearMonth } from '@/core/time.ts'
 import type { StarterPlanProposal } from '@/data/repositories/categoryBudgetRepository.ts'
-import {
-  STARTER_ANSWER_NAME,
-  starterWhy,
-  starterWindow,
-  type StarterAnswer,
-  type StarterHeading,
-} from '@/domain/starterPlan.ts'
+import type { StarterAnswer, StarterHeading, StarterLine } from '@/domain/starterPlan.ts'
+import { type Translate, useDates, useT } from '@/i18n/current.ts'
+import type { DateWords } from '@/i18n/dates.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 
@@ -44,7 +41,8 @@ export function StarterProposal({
   // The keyboard lands on the proposal it opened, not back on the page's start.
   const heading = useRef<HTMLHeadingElement>(null)
   useEffect(() => heading.current?.focus(), [])
-  const window = starterWindow(proposal.months)
+  const t = useT()
+  const dates = useDates()
   const basis = proposal.basis
   const amountOf = (key: string): string => {
     const amount = proposal.amounts.get(key)
@@ -64,14 +62,15 @@ export function StarterProposal({
     >
       <div className="flex flex-col gap-2">
         <h1 ref={heading} tabIndex={-1} className="m-0 text-title focus:outline-none">
-          Start with 50 / 30 / 20
+          {t('plan.starter.title')}
         </h1>
         <p className="m-0 max-w-2xl text-ink-secondary">
-          Half to needs, 30% to wants and 20% to saving, each share divided among its categories by what went out under
-          each {window === undefined ? '— nothing has gone out yet, so evenly' : `over ${window}`}.{' '}
+          {leadWords(t, dates, proposal.months)}{' '}
           {basis === undefined
-            ? 'With no paycheck or salary in the ledger yet, the parts are percentages only.'
-            : `Of ${formatMoney(basis.amount)} a month, ${basis.fromSalary === undefined ? 'your last paycheck' : 'the salary that came in'}.`}
+            ? t('plan.starter.noBasis')
+            : t(basis.fromSalary === undefined ? 'plan.starter.basisPaycheck' : 'plan.starter.basisSalary', {
+                amount: formatMoney(basis.amount),
+              })}
         </p>
       </div>
 
@@ -80,19 +79,19 @@ export function StarterProposal({
           <thead>
             <tr className="border-b border-hairline text-label text-ink-secondary uppercase">
               <th scope="col" className="py-2 pe-4 font-medium">
-                Category
+                {t('plan.starter.column.category')}
               </th>
               <th scope="col" className="py-2 pe-4 font-medium">
-                Counts as
+                {t('plan.starter.column.countsAs')}
               </th>
               <th scope="col" className="py-2 pe-4 text-end font-medium">
-                Part
+                {t('plan.starter.column.part')}
               </th>
               <th scope="col" className="py-2 pe-4 text-end font-medium">
-                A month
+                {t('plan.starter.column.aMonth')}
               </th>
               <th scope="col" className="py-2 font-medium">
-                Why
+                {t('plan.starter.column.why')}
               </th>
             </tr>
           </thead>
@@ -110,9 +109,9 @@ export function StarterProposal({
                   </th>
                   <td className="py-1 pe-4">
                     {fixed ? (
-                      <span className="text-caption text-ink-secondary">{STARTER_ANSWER_NAME.NONE}</span>
+                      <span className="text-caption text-ink-secondary">{t('plan.starter.answer.NONE')}</span>
                     ) : (
-                      <span role="group" aria-label={`What ${heading.name} counts as`} className="inline-flex gap-0.5">
+                      <span role="group" aria-label={t('plan.starter.countsAsLabel', { name: heading.name })} className="inline-flex gap-0.5">
                         {CHOICES.map((choice) => (
                           <button
                             key={choice}
@@ -125,7 +124,7 @@ export function StarterProposal({
                                 : 'text-ink-secondary hover:bg-surface hover:text-ink'
                             }`}
                           >
-                            {STARTER_ANSWER_NAME[choice]}
+                            {t(`plan.starter.answer.${choice}`)}
                           </button>
                         ))}
                       </span>
@@ -134,7 +133,7 @@ export function StarterProposal({
                   <td className="py-1 pe-4 text-end tabular-nums">{outOfPlan ? '—' : formatPercent(line.basisPoints)}</td>
                   <td className="py-1 pe-4 text-end tabular-nums">{outOfPlan ? '—' : amountOf(heading.id)}</td>
                   <td className={`py-1 text-caption ${line.answer === undefined ? 'text-ink' : 'text-ink-secondary'}`}>
-                    {starterWhy(line, proposal.months.length, proposal.currency, proposal.kept.get(heading.id))}
+                    {whyWords(t, line, proposal.months.length, proposal.currency, proposal.kept.get(heading.id))}
                   </td>
                 </tr>
               )
@@ -144,11 +143,11 @@ export function StarterProposal({
                 <th scope="row" className="py-1 pe-4 font-normal text-ink">
                   {bucket.name}
                 </th>
-                <td className="py-1 pe-4 text-caption text-ink-secondary">{STARTER_ANSWER_NAME[bucket.share]}</td>
+                <td className="py-1 pe-4 text-caption text-ink-secondary">{t(`plan.starter.answer.${bucket.share}`)}</td>
                 <td className="py-1 pe-4 text-end tabular-nums">{formatPercent(bucket.basisPoints)}</td>
                 <td className="py-1 pe-4 text-end tabular-nums">{amountOf(bucket.share)}</td>
                 <td className="py-1 text-caption text-ink-secondary">
-                  No category is {STARTER_ANSWER_NAME[bucket.share].toLowerCase()}: a bucket of its own
+                  {t('plan.starter.ownBucket', { share: t(`plan.starter.answer.${bucket.share}`).toLowerCase() })}
                 </td>
               </tr>
             ))}
@@ -164,17 +163,73 @@ export function StarterProposal({
         ) : (
           waiting > 0 && (
             <p className="m-0 me-auto text-ink-secondary" role="status">
-              Say what {waiting === 1 ? 'one category counts' : `${String(waiting)} categories count`} as first.
+              {waiting === 1 ? t('plan.starter.waitingOne') : t('plan.starter.waitingMany', { n: waiting })}
             </p>
           )
         )}
         <Button variant="secondary" onClick={onCancel}>
-          Cancel
+          {t('plan.starter.cancel')}
         </Button>
         <Button variant="primary" disabled={waiting > 0} onClick={onMake}>
-          Make plan
+          {t('plan.starter.make')}
         </Button>
       </div>
     </div>
   )
+}
+
+/**
+ * The months what went out was read over, said once, in the language now — the
+ * screen's own words for `starterWindow` and `starterWhy`, which stay English
+ * for `start_plan` (D-583: what a model reads stays English; M60 U5, D-590).
+ */
+function leadWords(t: Translate, dates: DateWords, months: readonly YearMonth[]): string {
+  const first = months[0]
+  const last = months.at(-1)
+  if (first === undefined || last === undefined) return t('plan.starter.leadEvenly')
+  if (months.length === 1) return t('plan.starter.leadOverOne', { window: dates.yearMonth(last) })
+  const from = first.year === last.year ? dates.monthAbbrev(first) : dates.monthShort(first)
+  return t('plan.starter.leadOverRange', { from, to: dates.monthShort(last) })
+}
+
+/** Why a heading is where it is and how its part was sized: *Needs by default · ₪1,200.00 a month went out*. */
+function whyWords(
+  t: Translate,
+  line: StarterLine,
+  months: number,
+  currency: CurrencyCode,
+  keptBucket: string | undefined,
+): string {
+  const { heading, answer, placedBy } = line
+  const share = t(`plan.starter.answer.${answer ?? 'NONE'}`)
+  const placed =
+    placedBy === 'DEFAULT'
+      ? t('plan.starter.why.byDefault', { answer: share })
+      : placedBy === 'KIND'
+        ? t(heading.kind === 'SAVING' ? 'plan.starter.why.savingCategory' : 'plan.starter.why.debtIsNeed')
+        : placedBy === 'CHOSEN'
+          ? t('plan.starter.why.chosen')
+          : placedBy === 'NOT_SPLIT'
+            ? t(
+                heading.kind === 'INCOME'
+                  ? 'plan.starter.why.income'
+                  : heading.kind === 'TRANSFER'
+                    ? 'plan.starter.why.moved'
+                    : 'plan.starter.why.unsorted',
+              )
+            : t('plan.starter.why.ask')
+  const sized =
+    line.sizedBy === 'SPENT'
+      ? t('plan.starter.why.spent', {
+          amount: formatMoney(money(Math.round(heading.spentMinor / Math.max(1, months)), currency)),
+        })
+      : line.sizedBy === 'EVENLY'
+        ? t('plan.starter.why.evenly')
+        : line.sizedBy === 'WHOLE'
+          ? t('plan.starter.why.whole', { share: share.toLowerCase() })
+          : line.sizedBy === 'NOTHING_OUT'
+            ? t('plan.starter.why.nothingOut')
+            : undefined
+  const kept = keptBucket === undefined || line.basisPoints === 0 ? undefined : t('plan.starter.why.keeps', { name: keptBucket })
+  return [placed, sized, kept].filter((part) => part !== undefined).join(' · ')
 }

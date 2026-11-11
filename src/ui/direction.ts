@@ -23,3 +23,13 @@ export function arrowStep(key: string): -1 | 0 | 1 {
   if (physical === 0) return 0
   return pageIsRtl() ? (physical === 1 ? -1 : 1) : physical
 }
+
+/**
+ * **Where a menu opened from a control starts** (M60 U5, D-590): under the
+ * control's start edge — its left in English, its right in Hebrew — so a menu
+ * grows the way the page reads. `ContextMenu` and the pickers take this point
+ * as their own start edge.
+ */
+export function startEdge(box: { readonly left: number; readonly right: number; readonly bottom: number }): { x: number; y: number } {
+  return { x: pageIsRtl() ? box.right : box.left, y: box.bottom }
+}

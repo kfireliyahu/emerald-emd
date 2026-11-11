@@ -83,7 +83,9 @@ export function Sidebar({ navigable }: { navigable: boolean }) {
 
   return (
     <nav
-      aria-label="Sections"
+      aria-label={t('chrome.rail.sections')}
+      // The probe finds the rail by this, whatever language names it (M60 U5, D-590).
+      data-rail
       // The rail's two widths are measures of the layout, not steps (M54 F5).
       className={`flex shrink-0 flex-col border-e border-hairline bg-surface py-2 transition-[width] duration-[var(--duration-base)] ease-[var(--ease-out)] ${
         collapsed ? 'w-[56px]' : 'w-[200px]'
@@ -182,7 +184,7 @@ function Section({
         className={`fc-row-enter ${item(marked, on || current, collapsed)}`}
       >
         {collapsed && busy ? (
-          <Working size={16} label={`${name}: working`} />
+          <Working size={16} label={t('chrome.rail.working', { name })} />
         ) : (
           <NavGlyph glyph={section.glyph} />
         )}
@@ -190,8 +192,8 @@ function Section({
         {/* Work in progress under this section (a batch of slips being read, a
             document being read), shown where the work is, wherever you are. */}
         {!collapsed && busy && (
-          <span className="ms-auto flex" title="Working">
-            <Working size={14} label={`${name}: working`} />
+          <span className="ms-auto flex" title={t('chrome.rail.workingTitle')}>
+            <Working size={14} label={t('chrome.rail.working', { name })} />
           </span>
         )}
       </Link>
@@ -320,22 +322,24 @@ function childItem(active: boolean, grouped: boolean): string {
  * is the collapse button's beside it. It only opens the guide, where it stopped.
  */
 function GuideButton() {
+  const t = useT()
   const open = useGuideOpen() !== undefined
   return (
     <button
       type="button"
       onClick={() => openGuide()}
       aria-pressed={open}
-      title="Guide me"
+      title={t('chrome.rail.guideMe')}
       className={`fc-icon-action ${open ? 'text-ink' : ''}`}
     >
       <ActionGlyph name="guide" />
-      <span className="sr-only">Guide me</span>
+      <span className="sr-only">{t('chrome.rail.guideMe')}</span>
     </button>
   )
 }
 
 function CollapseButton({ collapsed }: { collapsed: boolean }) {
+  const t = useT()
   return (
     <button
       type="button"
@@ -343,7 +347,7 @@ function CollapseButton({ collapsed }: { collapsed: boolean }) {
       // A stable name, the state in `aria-pressed` (M54 F5): pressed, the sidebar is collapsed.
       aria-pressed={collapsed}
       aria-keyshortcuts="Control+B"
-      title="Collapse sidebar (Ctrl+B)"
+      title={t('chrome.rail.collapseTitle')}
       className="fc-icon-action"
     >
       <svg
@@ -361,7 +365,7 @@ function CollapseButton({ collapsed }: { collapsed: boolean }) {
         {/* The chevron points where the panel is going, not where it is. */}
         <path d={collapsed ? 'M9.5 6.5 11 8l-1.5 1.5' : 'M11.5 6.5 10 8l1.5 1.5'} />
       </svg>
-      <span className="sr-only">Collapse sidebar</span>
+      <span className="sr-only">{t('chrome.rail.collapse')}</span>
     </button>
   )
 }

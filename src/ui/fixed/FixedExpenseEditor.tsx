@@ -5,7 +5,7 @@ import { normalizeMerchant } from '@/core/text.ts'
 import { parseISODate, toISODate, type LocalDate } from '@/core/time.ts'
 import { parseAmountText } from '@/data/importer/normalize.ts'
 import type { Category } from '@/data/repositories/categoryRepository.ts'
-import { monthlyShare, validateFixedExpense, type FixedExpenseProblem } from '@/domain/fixedExpenses.ts'
+import { monthlyShare, validateFixedExpense } from '@/domain/fixedExpenses.ts'
 import {
   AMOUNT_VARIABILITIES,
   CADENCES,
@@ -18,11 +18,13 @@ import {
   type FixedRole,
 } from '@/domain/model/fixed.ts'
 import type { DeductionType } from '@/domain/model/paycheck.ts'
+import { useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { CategoryPicker } from '@/ui/components/CategoryPicker.tsx'
 import { Field } from '@/ui/components/Field.tsx'
 import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { editableMoney, moneyFromText } from '@/ui/components/moneyText.ts'
 import {
   CADENCE_LABEL,
@@ -72,6 +74,7 @@ export function FixedExpenseEditor({
   onSave: (expense: FixedExpense, role: FixedRole) => void
   onCancel: () => void
 }) {
+  const t = useT()
   const [draft, setDraft] = useState(initial)
   const [role, setRole] = useState<FixedRole>(initialRole)
   const [amountText, setAmountText] = useState(() => editableMoney(initial.expectedAmount))
@@ -99,7 +102,7 @@ export function FixedExpenseEditor({
   return (
     <form
       className="fc-view-enter flex flex-col border border-hairline bg-surface"
-      aria-label={isNew ? 'New bill' : 'Edit bill'}
+      aria-label={isNew ? t('plan.editor.new') : t('plan.editor.edit')}
       onSubmit={(event) => {
         event.preventDefault()
         if (problems.length === 0) onSave(draft, role)
@@ -110,27 +113,27 @@ export function FixedExpenseEditor({
     >
       <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline px-4 py-2.5">
         <span className="text-[16px] font-medium">
-          {isNew ? 'New bill' : 'Edit bill'}
+          {isNew ? t('plan.editor.new') : t('plan.editor.edit')}
         </span>
         <span className="ms-auto text-caption text-ink-secondary">
-          Escape closes this. Nothing is written to your document until you save it.
+          {t('plan.editor.escape')}
         </span>
       </div>
 
       <div className="px-4 py-4">
         <div className="flex flex-wrap items-end gap-x-6 gap-y-4">
-          <Field label="Name">
+          <Field label={t('plan.editor.name')}>
             <input
               value={draft.name}
               onChange={(event) => set({ name: event.target.value })}
-              placeholder="Rent"
-              aria-label="Name"
+              placeholder={t('plan.editor.namePlaceholder')}
+              aria-label={t('plan.editor.name')}
               className={`${FIELD} w-56`}
               autoFocus={isNew}
             />
           </Field>
 
-          <Field label="Amount" hint="the whole charge, not a monthly share">
+          <Field label={t('plan.fixed.amount')} hint={t('plan.editor.amountHint')}>
             <input
               value={amountText}
               onChange={(event) => {
@@ -138,16 +141,16 @@ export function FixedExpenseEditor({
                 set({ expectedAmount: moneyFromText(event.target.value, currency, { magnitude: true }) ?? zero(currency) })
               }}
               placeholder="0.00"
-              aria-label="Expected amount"
+              aria-label={t('plan.fixed.expectedAmount')}
               className={`${FIELD} w-32 text-end tabular-nums`}
             />
           </Field>
 
-          <Field label="How often">
+          <Field label={t('plan.fixed.column.howOften')}>
             <select
               value={draft.cadence}
               onChange={(event) => setCadence(event.target.value as Cadence)}
-              aria-label="Cadence"
+              aria-label={t('plan.fixed.cadence.label')}
               className={`${SELECT} w-40`}
             >
               {CADENCES.map((cadence) => (
@@ -163,21 +166,26 @@ export function FixedExpenseEditor({
               average never reads as a claim about a bill. */}
           {CYCLE_MONTHS[draft.cadence] > 1 && (
             <p className="text-caption text-ink-secondary">
-              {formatMoney(draft.expectedAmount)} every {CYCLE_MONTHS[draft.cadence]} months —{' '}
-              <span className="text-ink tabular-nums">{formatMoney(share)}</span> a month in the
-              plan, with the real charge shown in its own month.
+              <Phrase
+                text={t('plan.editor.cycle')}
+                parts={{
+                  amount: formatMoney(draft.expectedAmount),
+                  n: CYCLE_MONTHS[draft.cadence],
+                  share: <span className="text-ink tabular-nums">{formatMoney(share)}</span>,
+                }}
+              />
             </p>
           )}
         </div>
 
         <div className="mt-6 flex flex-wrap items-end gap-x-6 gap-y-4">
-          <Field label="Amount behaviour" hint="decides when a change is worth flagging">
+          <Field label={t('plan.editor.behaviour')} hint={t('plan.editor.behaviourHint')}>
             <select
               value={draft.amountVariability}
               onChange={(event) =>
                 set({ amountVariability: event.target.value as AmountVariability })
               }
-              aria-label="Amount behaviour"
+              aria-label={t('plan.editor.behaviour')}
               className={`${SELECT} w-40`}
             >
               {AMOUNT_VARIABILITIES.map((variability) => (
@@ -188,13 +196,13 @@ export function FixedExpenseEditor({
             </select>
           </Field>
 
-          <Field label="Category">
+          <Field label={t('plan.kind.CATEGORY')}>
             <div className="w-56">
               <CategoryPicker
                 categories={categories}
                 value={draft.categoryId}
                 onChange={(categoryId) => set({ categoryId })}
-                label="Category"
+                label={t('plan.kind.CATEGORY')}
               />
             </div>
           </Field>
@@ -206,9 +214,9 @@ export function FixedExpenseEditor({
               onChange={(event) => set({ isDiscretionary: event.target.checked })}
             />
             <span>
-              I could cut this
+              {t('plan.editor.couldCut')}
               <span className="ms-2 text-caption text-ink-tertiary">
-                fixed and necessary are different things
+                {t('plan.editor.couldCutHint')}
               </span>
             </span>
           </label>
@@ -217,21 +225,21 @@ export function FixedExpenseEditor({
         {draft.matchKind !== 'PAYCHECK_DEDUCTION' && (
           <div className="mt-4 flex flex-col gap-1">
             <span className="text-caption text-ink-secondary">
-              What it does to <Bidi>{planName}</Bidi>
+              <Phrase text={t('plan.editor.doesTo')} parts={{ name: <Bidi>{planName}</Bidi> }} />
             </span>
-            <RoleSwitch name={draft.name === '' ? 'this expense' : draft.name} role={role} onPick={setRole} />
+            <RoleSwitch name={draft.name === '' ? t('plan.editor.thisExpense') : draft.name} role={role} onPick={setRole} />
           </div>
         )}
 
-        <h3 className="m-0 mt-6 mb-2 text-[13px] font-medium">How it is recognized</h3>
+        <h3 className="m-0 mt-6 mb-2 text-[13px] font-medium">{t('plan.editor.recognized')}</h3>
         <div className="flex flex-wrap items-end gap-x-6 gap-y-4">
-          <Field label="Matched by">
+          <Field label={t('plan.editor.matchedBy')}>
             <select
               value={draft.matchKind}
               onChange={(event) =>
                 set({ matchKind: event.target.value as FixedExpenseMatchKind, matchRef: undefined })
               }
-              aria-label="Matched by"
+              aria-label={t('plan.editor.matchedBy')}
               className={`${SELECT} w-64`}
             >
               {FIXED_EXPENSE_MATCH_KINDS.map((kind) => (
@@ -247,8 +255,8 @@ export function FixedExpenseEditor({
               label={MATCH_REF_LABEL.MERCHANT_PATTERN}
               hint={
                 normalized === '' || normalized === merchantText
-                  ? 'as it appears on the statement'
-                  : <>matched as <Bidi>{normalized}</Bidi></>
+                  ? t('plan.editor.asOnStatement')
+                  : <Phrase text={t('plan.editor.matchedAs')} parts={{ name: <Bidi>{normalized}</Bidi> }} />
               }
             >
               <input
@@ -257,7 +265,7 @@ export function FixedExpenseEditor({
                   setMerchantText(event.target.value)
                   set({ matchRef: normalizeMerchant(event.target.value) })
                 }}
-                aria-label="Merchant"
+                aria-label={MATCH_REF_LABEL.MERCHANT_PATTERN}
                 dir="auto"
                 className={`${FIELD} w-56`}
               />
@@ -271,7 +279,7 @@ export function FixedExpenseEditor({
                   categories={categories}
                   value={draft.matchRef}
                   onChange={(categoryId) => set({ matchRef: categoryId })}
-                  label="Matched category"
+                  label={t('plan.editor.matchedCategory')}
                 />
               </div>
             </Field>
@@ -280,15 +288,15 @@ export function FixedExpenseEditor({
           {draft.matchKind === 'PAYCHECK_DEDUCTION' && (
             <Field
               label={MATCH_REF_LABEL.PAYCHECK_DEDUCTION}
-              hint="already out of net — never subtracted from a plan again"
+              hint={t('plan.editor.deductionHint')}
             >
               <select
                 value={draft.matchRef ?? ''}
                 onChange={(event) => set({ matchRef: event.target.value || undefined })}
-                aria-label="Deduction type"
+                aria-label={MATCH_REF_LABEL.PAYCHECK_DEDUCTION}
                 className={`${SELECT} w-56`}
               >
-                <option value="">Choose…</option>
+                <option value="">{t('plan.editor.choose')}</option>
                 {deductionTypes.map((type) => (
                   <option key={type.id} value={type.id}>
                     {type.name}
@@ -299,36 +307,36 @@ export function FixedExpenseEditor({
           )}
         </div>
 
-        <h3 className="m-0 mt-6 mb-2 text-[13px] font-medium">When</h3>
+        <h3 className="m-0 mt-6 mb-2 text-[13px] font-medium">{t('plan.editor.when')}</h3>
         <div className="flex flex-wrap items-end gap-x-6 gap-y-4">
           <Field
-            label="Started"
+            label={t('plan.editor.started')}
             hint={
               CYCLE_MONTHS[draft.cadence] > 1
-                ? 'the months it charges in are counted from here'
-                : 'optional'
+                ? t('plan.editor.startedHint')
+                : t('plan.editor.optional')
             }
           >
             <input
               type="date"
               value={draft.startedAt === undefined ? '' : toISODate(draft.startedAt)}
               onChange={(event) => set({ startedAt: parseISODate(event.target.value) })}
-              aria-label="Started"
+              aria-label={t('plan.editor.started')}
               className={`${FIELD} w-40 tabular-nums`}
             />
           </Field>
 
-          <Field label="Ended" hint="a cancelled subscription stops being projected">
+          <Field label={t('plan.editor.ended')} hint={t('plan.editor.endedHint')}>
             <input
               type="date"
               value={draft.endedAt === undefined ? '' : toISODate(draft.endedAt)}
               onChange={(event) => set({ endedAt: parseISODate(event.target.value) })}
-              aria-label="Ended"
+              aria-label={t('plan.editor.ended')}
               className={`${FIELD} w-40 tabular-nums`}
             />
           </Field>
 
-          <Field label="Usual day" hint="optional">
+          <Field label={t('plan.editor.usualDay')} hint={t('plan.editor.optional')}>
             <input
               type="number"
               min={1}
@@ -340,7 +348,7 @@ export function FixedExpenseEditor({
                     event.target.value === '' ? undefined : Number(event.target.value),
                 })
               }
-              aria-label="Usual day of month"
+              aria-label={t('plan.editor.usualDayLabel')}
               className={`${FIELD} w-24 tabular-nums`}
             />
           </Field>
@@ -351,13 +359,13 @@ export function FixedExpenseEditor({
               checked={draft.isActive}
               onChange={(event) => set({ isActive: event.target.checked })}
             />
-            Still active
+            {t('plan.editor.stillActive')}
           </label>
         </div>
 
         {matchedHistory.length > 0 && (
           <>
-            <h3 className="m-0 mt-6 mb-2 text-[13px] font-medium">What it has matched</h3>
+            <h3 className="m-0 mt-6 mb-2 text-[13px] font-medium">{t('plan.editor.matched')}</h3>
             <table className="max-w-md">
               <tbody>
                 {matchedHistory.map((charge) => (
@@ -375,25 +383,23 @@ export function FixedExpenseEditor({
 
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <Button variant="primary" size="sm" icon={isNew ? 'add' : 'check'} type="submit" disabled={problems.length > 0}>
-            {isNew ? 'Add bill' : 'Save'}
+            {isNew ? t('plan.editor.add') : t('plan.editor.save')}
           </Button>
           <Button variant="ghost" size="sm" onClick={onCancel}>
-            Cancel
+            {t('plan.cancel')}
           </Button>
 
           <span className="flex flex-wrap items-center gap-x-4 text-caption text-negative">
             {problems.map((problem) => (
-              <span key={problem}>{PROBLEM_MESSAGE[problem]}</span>
+              <span key={problem}>{t(`plan.editor.problem.${problem}`)}</span>
             ))}
-            {unreadable(amountText) && <span>The amount is not a number</span>}
+            {unreadable(amountText) && <span>{t('plan.editor.notANumber')}</span>}
           </span>
         </div>
 
         {draft.matchKind === 'MANUAL_ONLY' && (
           <p className="mt-3 max-w-2xl text-caption text-ink-secondary">
-            Nothing in the ledger will be matched to this, so it will never show a variance or a
-            missing payment. That is the right choice for something the app cannot see — an annual
-            premium paid by direct debit from an account you have not imported.
+            {t('plan.editor.manualNote')}
           </p>
         )}
       </div>
@@ -401,13 +407,6 @@ export function FixedExpenseEditor({
   )
 }
 
-const PROBLEM_MESSAGE: Readonly<Record<FixedExpenseProblem, string>> = {
-  NO_NAME: 'Give it a name',
-  NEGATIVE_AMOUNT: 'Enter what it costs, without the minus',
-  MISSING_MATCH_REF: 'Choose what it is matched against',
-  ENDED_BEFORE_STARTED: 'It cannot end before it started',
-  ANCHOR_REQUIRED: 'A non-monthly expense needs a start date to count its months from',
-}
 
 /** The first of this month as a default anchor: a cadence is about months, not days. */
 function firstOfThisMonth(): LocalDate {

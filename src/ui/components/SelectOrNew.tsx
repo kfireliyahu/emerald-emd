@@ -1,6 +1,7 @@
 import { useState, type ReactNode, type SelectHTMLAttributes } from 'react'
 import type { Database } from 'sql.js'
 
+import { useT } from '@/i18n/current.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Button } from '@/ui/components/Button.tsx'
 import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
@@ -33,6 +34,7 @@ export function SelectOrNew({
   placeholder?: string
   children: ReactNode
 } & Omit<SelectHTMLAttributes<HTMLSelectElement>, 'value' | 'onChange' | 'children'>) {
+  const t = useT()
   const [making, setMaking] = useState(false)
   return (
     <div className="flex min-w-0 flex-col gap-2">
@@ -52,7 +54,7 @@ export function SelectOrNew({
           </option>
         )}
         {children}
-        <option value={NEW_CHOICE}>+ New…</option>
+        <option value={NEW_CHOICE}>{t('chrome.components.newChoice')}</option>
       </select>
       {making &&
         newForm((id) => {
@@ -84,6 +86,7 @@ export function NewByName<Kind extends string>({
   /** What it made and the name it was given, or nothing when cancelled. */
   done: (id: string | undefined, name?: string) => void
 }) {
+  const t = useT()
   const mutate = useDocumentStore((state) => state.mutate)
   const [name, setName] = useState('')
   const [kind, setKind] = useState<Kind | undefined>(kinds?.[0]?.[0])
@@ -126,8 +129,8 @@ export function NewByName<Kind extends string>({
       <input
         className={FIELD}
         autoFocus
-        aria-label={`New ${noun} name`}
-        placeholder="Name"
+        aria-label={t('chrome.components.newName', { noun })}
+        placeholder={t('chrome.components.name')}
         value={name}
         onChange={(event) => setName(event.target.value)}
         // Inside another form: Enter makes this thing, not the form around it.
@@ -144,10 +147,10 @@ export function NewByName<Kind extends string>({
       {problem !== undefined && <p className="m-0 text-caption text-negative">{problem}</p>}
       <div className="flex items-center gap-2">
         <Button variant="secondary" size="sm" disabled={name.trim() === ''} onClick={create}>
-          Create
+          {t('chrome.components.create')}
         </Button>
         <Button variant="ghost" size="sm" onClick={() => done(undefined)}>
-          Cancel
+          {t('chrome.components.cancel')}
         </Button>
       </div>
     </div>

@@ -1,3 +1,6 @@
+import { currentLanguage, showLanguage } from '@/i18n/current.ts'
+import type { Language } from '@/i18n/language.ts'
+
 /**
  * One call that measures what a session checking a screen used to measure by
  * hand — `window.emeraldProbe()`, in a dev build only (D-534).
@@ -99,9 +102,14 @@ export interface ProbeOptions {
   /**
    * The page's direction while it is measured (M60 U3, D-586): `rtl` sets
    * `<html dir="rtl" lang="he">` as Hebrew does, so the mirror is measured on
-   * the demo, whose words stay English. The page's own when none.
+   * the demo, whose words stay English unless `lang` says otherwise. The page's own when none.
    */
   readonly dir?: 'ltr' | 'rtl'
+  /**
+   * The app's words while it is measured (M60 U5, D-590): `he` draws them in
+   * Hebrew for this page only, and the result lists the English still on it.
+   */
+  readonly lang?: Language
 }
 
 interface Listed<T> {
@@ -124,10 +132,17 @@ export interface ProbeResult {
   readonly nativeDates: number
   readonly pageOverflowsX: boolean
   readonly dir: string
-  /** Which side of `main` the rail (`nav[aria-label="Sections"]`) is drawn on. */
+  /** Which side of `main` the rail (`nav[data-rail]`, named Sections in English) is drawn on. */
   readonly railSide: 'left' | 'right' | 'none'
   /** Text and controls cut by a box that does not scroll, or past the window's edge. */
   readonly clippedX: Listed<{ text: string; by: string }>
+  /**
+   * Latin words outside a document's own (M60 U5, D-590): text, a placeholder or
+   * an accessible name with two Latin letters running, not inside a `Bidi`
+   * (`dir="auto"`, which is how a document's words are drawn). In Hebrew it
+   * should hold only names that are names: Emerald, Ctrl, a product.
+   */
+  readonly latin: Listed<{ text: string }>
   /**
    * Every visible element's box, hashed: equal across two builds means the
    * screen laid out identically — how M60 U3 showed English did not move.
@@ -272,7 +287,7 @@ function boxesHash(root: Element): string {
 }
 
 function railSide(): 'left' | 'right' | 'none' {
-  const rail = document.querySelector('nav[aria-label="Sections"]')
+  const rail = document.querySelector('nav[data-rail]')
   const main = document.querySelector('main')
   if (!rail || !main || !visible(rail)) return 'none'
   return rail.getBoundingClientRect().left < main.getBoundingClientRect().left ? 'left' : 'right'
@@ -319,8 +334,26 @@ function measure(root: Element, ramp: readonly number[], limit: number): Omit<Pr
     if (parseFloat(radius) > 0) roundedFields.push({ tag: el.tagName.toLowerCase(), radius, name: accessibleName(el) || (el.getAttribute('placeholder') ?? '') })
   }
 
+  const latin = new Set<string>()
+  const LATIN = /[A-Za-z]{2,}/
+  const own = (el: Element): boolean => el.closest('[dir="auto"], svg, code, kbd, script, style') === null
+  const words = document.createTreeWalker(root, NodeFilter.SHOW_TEXT)
+  while (words.nextNode()) {
+    const text = (words.currentNode.textContent ?? '').trim()
+    const el = words.currentNode.parentElement
+    if (text && el && LATIN.test(text) && visible(el) && own(el) && el.closest('[aria-hidden="true"]') === null) latin.add(text.slice(0, 60))
+  }
+  for (const el of root.querySelectorAll('[placeholder], [aria-label], [title]')) {
+    if (!visible(el) || !own(el)) continue
+    for (const name of ['placeholder', 'aria-label', 'title']) {
+      const value = el.getAttribute(name)
+      if (value !== null && LATIN.test(value)) latin.add(`${name}: ${value.slice(0, 60)}`)
+    }
+  }
+
   const headings = [...root.querySelectorAll('h1, h2, h3, h4, h5, h6')].filter(visible)
   return {
+    latin: listed([...latin].map((text) => ({ text })), limit),
     h1: headings.filter((h) => h.tagName === 'H1').map((h) => (h.textContent ?? '').trim().slice(0, 60)),
     headingSkips: headingSkips(headings.map((h) => Number(h.tagName.slice(1)))),
     lowContrast: listed(lowContrast, limit),
@@ -382,6 +415,11 @@ export async function probe(options: ProbeOptions = {}): Promise<ProbeResult[]> 
   const routes = options.routes?.length ? options.routes : [startHash || '#/']
   const themes = options.themes?.length ? options.themes : [startTheme as 'light' | 'dark']
   const results: ProbeResult[] = []
+  const startLanguage = currentLanguage()
+  if (options.lang !== undefined) {
+    showLanguage(options.lang)
+    await settled(quiet)
+  }
   if (options.dir !== undefined) {
     html.dir = options.dir
     html.lang = options.dir === 'rtl' ? 'he' : 'en'
@@ -405,6 +443,7 @@ export async function probe(options: ProbeOptions = {}): Promise<ProbeResult[]> 
     }
   } finally {
     html.dataset.theme = startTheme
+    if (options.lang !== undefined) showLanguage(startLanguage)
     if (options.dir !== undefined) {
       if (startDir === null) html.removeAttribute('dir')
       else html.dir = startDir

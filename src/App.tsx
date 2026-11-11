@@ -26,7 +26,7 @@ import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { formatsByPack, useKeepsLedger, useKeptPacks } from '@/ui/packs.ts'
 import { installLedgerPack } from '@/data/packs/ledger/pack.ts'
-import { currentLanguage } from '@/i18n/current.ts'
+import { currentLanguage, useT } from '@/i18n/current.ts'
 import { NoLedger } from '@/ui/screens/NoLedger.tsx'
 import { DASHBOARD_PATH, packOf, readPath } from '@/ui/nav.ts'
 import { Guide } from '@/ui/guide/Guide.tsx'
@@ -704,6 +704,7 @@ function SettingsHome() {
  * (M59 U5, D-581).
  */
 function EmptyDocument() {
+  const t = useT()
   const createNew = useDocumentStore((state) => state.createNew)
   const mutate = useDocumentStore((state) => state.mutate)
   const navigate = useNavigate()
@@ -725,30 +726,23 @@ function EmptyDocument() {
 
   return (
     <div className="fc-view-enter mx-auto flex h-full max-w-md flex-col items-center justify-center gap-5 px-6 text-center">
-      <p className="text-title">A document of your own, in your own shapes.</p>
-      <p className="text-ink-secondary">
-        Everything happens here: nothing is uploaded, and there is no account to make.
-      </p>
+      <p className="text-title">{t('chrome.start.title')}</p>
+      <p className="text-ink-secondary">{t('chrome.start.lead')}</p>
       {/* **Which button keeps money, said plainly** (M31 U2). Two buttons and a
           paragraph about columns left a person with a bank statement guessing,
           and the wrong guess was a document their statement could not go into. */}
       <div className="grid w-full grid-cols-2 gap-3 text-start">
         <div className="flex flex-col gap-2 border border-hairline p-4">
           <Button variant="primary" onClick={() => void createNew()}>
-            New document
+            {t('chrome.start.newDocument')}
           </Button>
-          <span className="text-caption text-ink-secondary">
-            For any kind of thing but money: describe it once — its columns, what it claims — and
-            it is kept true.
-          </span>
+          <span className="text-caption text-ink-secondary">{t('chrome.start.newDocumentWhat')}</span>
         </div>
         <div className="flex flex-col gap-2 border border-hairline p-4">
           <Button variant="secondary" onClick={() => void newLedger()}>
-            New ledger
+            {t('chrome.start.newLedger')}
           </Button>
-          <span className="text-caption text-ink-secondary">
-            For your money: drop a card or bank statement and it becomes your months.
-          </span>
+          <span className="text-caption text-ink-secondary">{t('chrome.start.newLedgerWhat')}</span>
         </div>
       </div>
       <RecentDocuments />
@@ -765,6 +759,7 @@ function EmptyDocument() {
  * empty heading.
  */
 function RecentDocuments() {
+  const t = useT()
   const [recents, setRecents] = useState<readonly { path: string; name: string }[]>([])
   const requestOpen = useDocumentStore((state) => state.requestOpen)
 
@@ -785,7 +780,7 @@ function RecentDocuments() {
 
   return (
     <div className="flex w-full flex-col items-center gap-1 border-t border-hairline pt-5">
-      <p className="text-caption text-ink-secondary">Recent</p>
+      <p className="text-caption text-ink-secondary">{t('chrome.start.recent')}</p>
       {/* The name a file came with, isolated: a Hebrew one keeps its start (M54 F6). */}
       {recents.map((entry) => (
         <button

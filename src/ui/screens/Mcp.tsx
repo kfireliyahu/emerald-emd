@@ -1,9 +1,12 @@
 import { useState } from 'react'
 
+import { useT, type Translate } from '@/i18n/current.ts'
 import { TOOL_GROUPS, type CatalogTool, type ToolGroup } from '@/plugin/catalog.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Button } from '@/ui/components/Button.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { connectSnippets } from '@/ui/mcp/connect.ts'
+import { groupTitle, toolWords } from '@/ui/mcp/words.ts'
 import { useKeptPacks } from '@/ui/packs.ts'
 import { isWindows } from '@/ui/platform.ts'
 
@@ -25,6 +28,7 @@ import { isWindows } from '@/ui/platform.ts'
  * F6): *removes* is not a warning (D-531), so it is ink, not negative.
  */
 export function Mcp() {
+  const t = useT()
   const kept = useKeptPacks()
   // Read on every render; `documentName` is the reactive half, and it changes
   // whenever the path does — an open, a first save, a save-a-copy.
@@ -38,34 +42,40 @@ export function Mcp() {
     <div className="h-full overflow-auto px-6 py-4">
       <div className="max-w-4xl space-y-8">
         <section className="space-y-4">
-          <h1 className="m-0 text-title">Assistants</h1>
-          <p className="text-ink-secondary">
-            An assistant on this machine can read and write this document through the tools below.
-            Nothing goes through the app, and nothing leaves the machine but what you say in the
-            conversation.
-          </p>
+          <h1 className="m-0 text-title">{t('rail.assistants')}</h1>
+          <p className="text-ink-secondary">{t('settings.assistants.lead')}</p>
 
-          <Snippet label="Claude Code — run once in a terminal" copy="Copy the command" text={snippets.claudeCode} />
           <Snippet
-            label="A desktop assistant — add to its MCP configuration"
-            copy="Copy the configuration"
+            label={t('settings.assistants.claudeCode')}
+            copy={t('settings.assistants.copyCommand')}
+            text={snippets.claudeCode}
+          />
+          <Snippet
+            label={t('settings.assistants.desktop')}
+            copy={t('settings.assistants.copyConfiguration')}
             text={snippets.desktop}
           />
           {snippets.firstMessage === undefined ? (
             <p className="text-caption text-ink-secondary">
-              Save this document to a file and its path will be here, ready to tell the assistant.
+              {t('settings.assistants.savePath')}
             </p>
           ) : (
-            <Snippet label="Then tell it which document" copy="Copy the sentence" text={snippets.firstMessage} />
+            <Snippet
+              label={t('settings.assistants.tellIt')}
+              copy={t('settings.assistants.copySentence')}
+              text={documentPath === undefined ? snippets.firstMessage : t('settings.assistants.firstMessage', { path: documentPath })}
+            />
           )}
           <p className="text-caption text-ink-secondary">
-            The server is the npm package <code className="font-mono">emerald-mcp</code>: <code className="font-mono">npx</code>{' '}
-            fetches it the first time, and it needs Node.
+            <Phrase
+              text={t('settings.assistants.server')}
+              parts={{ pkg: <code className="font-mono">emerald-mcp</code>, npx: <code className="font-mono">npx</code> }}
+            />
           </p>
         </section>
 
         {groups.map((group) => (
-          <Group key={`${group.half}:${group.title}`} group={group} />
+          <Group key={`${group.half}:${group.title}`} group={group} t={t} />
         ))}
       </div>
     </div>
@@ -73,6 +83,7 @@ export function Mcp() {
 }
 
 function Snippet({ label, copy: copyLabel, text }: { label: string; copy: string; text: string }) {
+  const t = useT()
   const [copied, setCopied] = useState(false)
   const copy = () => {
     void navigator.clipboard?.writeText(text).then(() => {
@@ -85,11 +96,11 @@ function Snippet({ label, copy: copyLabel, text }: { label: string; copy: string
       <div className="mb-1 flex items-baseline gap-3">
         <span className="text-caption text-ink-secondary">{label}</span>
         <Button size="sm" variant="ghost" className="ms-auto" onClick={copy}>
-          {copied ? 'Copied' : copyLabel}
+          {copied ? t('settings.assistants.copied') : copyLabel}
         </Button>
       </div>
       <pre
-        dir="ltr"
+        dir="auto"
         className="overflow-x-auto whitespace-pre-wrap break-all border border-hairline bg-surface px-3 py-2 font-mono text-caption"
       >
         {text}
@@ -98,18 +109,18 @@ function Snippet({ label, copy: copyLabel, text }: { label: string; copy: string
   )
 }
 
-function Group({ group }: { group: ToolGroup }) {
+function Group({ group, t }: { group: ToolGroup; t: Translate }) {
   return (
     <section>
       <h2 className="flex items-baseline gap-3 font-medium">
-        {group.title}
+        {groupTitle(group, t)}
         {group.half === 'ledger' && (
-          <span className="text-caption font-normal text-ink-secondary">the ledger</span>
+          <span className="text-caption font-normal text-ink-secondary">{t('settings.assistants.ledger')}</span>
         )}
       </h2>
       <ul className="mt-2 divide-y divide-hairline border-y border-hairline">
         {group.tools.map((tool) => (
-          <ToolLine key={tool.name} tool={tool} />
+          <ToolLine key={tool.name} tool={tool} t={t} />
         ))}
       </ul>
     </section>
@@ -122,11 +133,13 @@ const EFFECT_LOOK: Readonly<Record<CatalogTool['effect'], string>> = {
   removes: 'text-ink',
 }
 
-function ToolLine({ tool }: { tool: CatalogTool }) {
+function ToolLine({ tool, t }: { tool: CatalogTool; t: Translate }) {
   return (
     <li className="flex items-baseline gap-4 py-1.5">
-      <span className="flex-1">{tool.plain}</span>
-      <span className={`w-16 shrink-0 text-caption ${EFFECT_LOOK[tool.effect]}`}>{tool.effect}</span>
+      <span className="flex-1">{toolWords(tool, t)}</span>
+      <span className={`w-16 shrink-0 text-caption ${EFFECT_LOOK[tool.effect]}`}>
+        {t(`settings.assistants.effects.${tool.effect}`)}
+      </span>
       <code className="w-52 shrink-0 truncate font-mono text-caption text-ink-secondary">{tool.name}</code>
     </li>
   )

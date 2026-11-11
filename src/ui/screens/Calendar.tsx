@@ -1,11 +1,14 @@
 import { useMemo } from 'react'
 
-import { toISODate } from '@/core/time.ts'
+import { parseISODate, toISODate } from '@/core/time.ts'
 import { chosenWeekStart, documentWeekStart, setDocumentWeekStart } from '@/data/repositories/unitRepository.ts'
 import { clockRange, WEEKDAYS } from '@/domain/format/clock.ts'
+import { useDates, useT, type Translate } from '@/i18n/current.ts'
+import type { DateWords } from '@/i18n/dates.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { ChoiceField } from '@/ui/components/ChoiceField.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { today } from '@/ui/today.ts'
 
 /**
@@ -20,6 +23,8 @@ import { today } from '@/ui/today.ts'
  * which days *this week* is now, so the choice is checked as it is made.
  */
 export function Calendar() {
+  const t = useT()
+  const dates = useDates()
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
   const mutate = useDocumentStore((state) => state.mutate)
@@ -35,22 +40,32 @@ export function Calendar() {
     <div className="h-full overflow-auto">
       <div className="fc-view-enter flex max-w-4xl flex-col gap-6 px-8 pt-6 pb-12">
         <header className="flex flex-col gap-1.5 border-b border-hairline pb-4">
-          <span className="fc-label text-ink-secondary uppercase">Settings · Calendar</span>
-          <h1 className="m-0 text-title">Calendar</h1>
-          <span className="text-ink-secondary">How this document counts its weeks. It is kept in the file, so every machine and every conversation counts them alike.</span>
+          <span className="fc-label text-ink-secondary uppercase">
+            {t('rail.settings')} · {t('rail.calendar')}
+          </span>
+          <h1 className="m-0 text-title">{t('rail.calendar')}</h1>
+          <span className="text-ink-secondary">{t('settings.calendar.lead')}</span>
         </header>
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-hairline py-4">
           <div>
             <label htmlFor="week-start" className="font-medium">
-              Weeks start on
+              {t('settings.calendar.weekStart')}
             </label>
             <p className="m-0 mt-0.5 max-w-[60ch] text-ink-secondary">
-              What a filter’s <code>this week</code>, <code>last week</code> and <code>next week</code> name.
+              <Phrase
+                text={t('settings.calendar.names')}
+                parts={{ this: <code>this week</code>, last: <code>last week</code>, next: <code>next week</code> }}
+              />
               {read.week?.from !== undefined && read.week.through !== undefined && (
                 <>
                   {' '}
-                  This week is <span className="text-ink tabular-nums">{dayLabel(read.week.from)}</span> to{' '}
-                  <span className="text-ink tabular-nums">{dayLabel(read.week.through)}</span>.
+                  <Phrase
+                    text={t('settings.calendar.thisWeek')}
+                    parts={{
+                      from: <span className="text-ink tabular-nums">{dayLabel(read.week.from, t, dates)}</span>,
+                      through: <span className="text-ink tabular-nums">{dayLabel(read.week.through, t, dates)}</span>,
+                    }}
+                  />
                 </>
               )}
             </p>
@@ -60,8 +75,8 @@ export function Calendar() {
             className={`${FIELD} h-7 w-32`}
             readOnly
             filter={false}
-            text={weekday(read.chosen ?? 'monday')}
-            choices={WEEKDAYS.map((day) => ({ value: day, label: weekday(day) }))}
+            text={weekday(read.chosen ?? 'monday', t)}
+            choices={WEEKDAYS.map((day) => ({ value: day, label: weekday(day, t) }))}
             onText={() => undefined}
             onPick={(choice) => mutate((database) => void setDocumentWeekStart(database, choice.value))}
           />
@@ -72,12 +87,16 @@ export function Calendar() {
 }
 
 /** `2026-10-19` as `Mon 19 Oct`, read as the calendar day it names. */
-function dayLabel(date: string): string {
-  const [year, month, day] = date.split('-').map(Number)
-  return new Date(year ?? 1970, (month ?? 1) - 1, day ?? 1).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+function dayLabel(date: string, t: Translate, dates: DateWords): string {
+  const parsed = parseISODate(date)
+  if (parsed === undefined) return date
+  const named = WEEKDAYS[(new Date(parsed.year, parsed.month - 1, parsed.day).getDay() + 6) % 7] ?? 'monday'
+  return t('settings.calendar.day', { weekday: t(`settings.calendar.short.${named}`), date: dates.dayMonth(parsed) })
 }
 
 /** `monday` as `Monday`, as the choice reads. */
-function weekday(day: string): string {
-  return `${day[0]?.toUpperCase() ?? ''}${day.slice(1)}`
+function weekday(day: string, t: Translate): string {
+  return (WEEKDAYS as readonly string[]).includes(day)
+    ? t(`settings.calendar.weekdays.${day as (typeof WEEKDAYS)[number]}`)
+    : `${day[0]?.toUpperCase() ?? ''}${day.slice(1)}`
 }

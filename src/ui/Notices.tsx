@@ -7,11 +7,14 @@ import { documentCurrency } from '@/data/repositories/statisticsRepository.ts'
 import { clearSnapshot, type Snapshot } from '@/data/storage/crashCache.ts'
 import { shellUpdates } from '@/data/storage/desktop.ts'
 import { waitingCounts } from '@/domain/home.ts'
+import { useT } from '@/i18n/current.ts'
+import { tNow } from '@/i18n/words.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { createStore } from '@/state/store.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { openEarlierCopies } from '@/ui/EarlierCopies.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { Working } from '@/ui/components/Working.tsx'
 import { useKeepsLedger } from '@/ui/packs.ts'
 import { today } from '@/ui/today.ts'
@@ -182,6 +185,7 @@ function Row({ notice, leading }: { notice: Notice; leading: boolean }) {
  *   picking whose work to throw away.
  */
 function useDiskConflictNotice(): Notice | undefined {
+  const t = useT()
   const diskState = useDocumentStore((state) => state.diskState)
   const documentName = useDocumentStore((state) => state.documentName)
   const busy = useDocumentStore((state) => state.busy) !== undefined
@@ -197,13 +201,15 @@ function useDiskConflictNotice(): Notice | undefined {
       id: 'unreadable',
       body: (
         <>
-          <strong className="font-medium"><Bidi>{documentName}</Bidi></strong> could not be read where it was —
-          it may have been moved, renamed, or deleted. {diskState.reason}
+          <Phrase
+            text={t('chrome.notices.unreadable')}
+            parts={{ name: <strong className="font-medium"><Bidi>{documentName}</Bidi></strong>, reason: diskState.reason }}
+          />
         </>
       ),
       actions: [
-        { label: 'Save as…', onClick: () => void saveCopyAs(), disabled: busy, lead: true },
-        { label: 'Dismiss', onClick: dismiss, disabled: busy, quiet: true },
+        { label: t('chrome.notices.actions.saveAs'), onClick: () => void saveCopyAs(), disabled: busy, lead: true },
+        { label: t('chrome.notices.actions.dismiss'), onClick: dismiss, disabled: busy, quiet: true },
       ],
     }
   }
@@ -213,16 +219,17 @@ function useDiskConflictNotice(): Notice | undefined {
       id: 'conflict',
       body: (
         <>
-          <strong className="font-medium"><Bidi>{documentName}</Bidi></strong> changed on disk since you opened
-          it, and you have unsaved changes here. Saving would overwrite the newer file; reloading
-          would discard your changes.
+          <Phrase
+            text={t('chrome.notices.conflictUnsaved')}
+            parts={{ name: <strong className="font-medium"><Bidi>{documentName}</Bidi></strong> }}
+          />
         </>
       ),
       actions: [
-        { label: 'Save as…', onClick: () => void saveCopyAs(), disabled: busy, lead: true },
-        { label: 'Discard mine, reload', onClick: () => void reloadFromDisk(), disabled: busy },
+        { label: t('chrome.notices.actions.saveAs'), onClick: () => void saveCopyAs(), disabled: busy, lead: true },
+        { label: t('chrome.notices.actions.discardReload'), onClick: () => void reloadFromDisk(), disabled: busy },
         {
-          label: 'Overwrite the file',
+          label: t('chrome.notices.actions.overwrite'),
           onClick: () => void save({ overwrite: true }),
           disabled: busy,
         },
@@ -234,13 +241,15 @@ function useDiskConflictNotice(): Notice | undefined {
     id: 'conflict',
     body: (
       <>
-        <strong className="font-medium"><Bidi>{documentName}</Bidi></strong> changed on disk since you opened it.
-        Nothing here is unsaved, so reloading loses nothing.
+        <Phrase
+          text={t('chrome.notices.conflict')}
+          parts={{ name: <strong className="font-medium"><Bidi>{documentName}</Bidi></strong> }}
+        />
       </>
     ),
     actions: [
-      { label: 'Reload', onClick: () => void reloadFromDisk(), disabled: busy, lead: true },
-      { label: 'Ignore', onClick: dismiss, disabled: busy, quiet: true },
+      { label: t('chrome.notices.actions.reload'), onClick: () => void reloadFromDisk(), disabled: busy, lead: true },
+      { label: t('chrome.notices.actions.ignore'), onClick: dismiss, disabled: busy, quiet: true },
     ],
   }
 }
@@ -252,6 +261,7 @@ function useDiskConflictNotice(): Notice | undefined {
  * downloading it is the one way it is kept.
  */
 function useKeptCopyNotice(): Notice | undefined {
+  const t = useT()
   const kept = useDocumentStore((state) => state.keptCopy)
   const documentName = useDocumentStore((state) => state.documentName)
   const download = useDocumentStore((state) => state.downloadKeptCopy)
@@ -263,30 +273,30 @@ function useKeptCopyNotice(): Notice | undefined {
   // one from before it (M54 F6): the sentence names which.
   const copy =
     kept.what === 'now' ? (
-      <>
-        A copy of <Bidi>{documentName}</Bidi> as it is now
-      </>
+      <Phrase text={t('chrome.notices.copyNow')} parts={{ name: <Bidi>{documentName}</Bidi> }} />
     ) : (
-      <>
-        A copy from before <Bidi>{kept.what}</Bidi>
-      </>
+      <Phrase text={t('chrome.notices.copyBefore')} parts={{ what: <Bidi>{kept.what}</Bidi> }} />
     )
 
   if (kept.where === 'earlier-copies') {
     return {
       id: 'kept-copy',
       body: (
-        <>
-          {copy} is among its earlier copies, as{' '}
-          <strong className="font-medium">
-            <Bidi>{kept.name}</Bidi>
-          </strong>
-          .
-        </>
+        <Phrase
+          text={t('chrome.notices.keptAmong')}
+          parts={{
+            copy,
+            name: (
+              <strong className="font-medium">
+                <Bidi>{kept.name}</Bidi>
+              </strong>
+            ),
+          }}
+        />
       ),
       actions: [
-        { label: 'Earlier copies', onClick: openEarlierCopies },
-        { label: 'Dismiss', onClick: dismiss, quiet: true },
+        { label: t('chrome.notices.actions.earlierCopies'), onClick: openEarlierCopies },
+        { label: t('chrome.notices.actions.dismiss'), onClick: dismiss, quiet: true },
       ],
     }
   }
@@ -294,13 +304,11 @@ function useKeptCopyNotice(): Notice | undefined {
   return {
     id: 'kept-copy',
     body: (
-      <>
-        {copy} is held in this page until it closes. Download it to keep it.
-      </>
+      <Phrase text={t('chrome.notices.keptPage')} parts={{ copy }} />
     ),
     actions: [
-      { label: 'Download it', onClick: download, lead: true },
-      { label: 'Discard it', onClick: dismiss, quiet: true },
+      { label: t('chrome.notices.actions.downloadIt'), onClick: download, lead: true },
+      { label: t('chrome.notices.actions.discardIt'), onClick: dismiss, quiet: true },
     ],
   }
 }
@@ -314,6 +322,7 @@ function useKeptCopyNotice(): Notice | undefined {
  * work the arrival becomes a question instead of an event.
  */
 function usePendingOpenNotice(): Notice | undefined {
+  const t = useT()
   const pendingOpen = useDocumentStore((state) => state.pendingOpen)
   const documentName = useDocumentStore((state) => state.documentName)
   const busy = useDocumentStore((state) => state.busy) !== undefined
@@ -334,20 +343,22 @@ function usePendingOpenNotice(): Notice | undefined {
   return {
     id: 'pending-open',
     body: (
-      <>
-        <strong className="font-medium"><Bidi>{fileName(pendingOpen)}</Bidi></strong> is waiting to open, and{' '}
-        <strong className="font-medium"><Bidi>{documentName}</Bidi></strong> has unsaved changes. Opening it
-        replaces what is in this window.
-      </>
+      <Phrase
+        text={t('chrome.notices.pendingOpen')}
+        parts={{
+          file: <strong className="font-medium"><Bidi>{fileName(pendingOpen)}</Bidi></strong>,
+          name: <strong className="font-medium"><Bidi>{documentName}</Bidi></strong>,
+        }}
+      />
     ),
     actions: [
-      { label: 'Save, then open', onClick: () => void saveThenOpen(), disabled: busy, lead: true },
+      { label: t('chrome.notices.actions.saveThenOpen'), onClick: () => void saveThenOpen(), disabled: busy, lead: true },
       {
-        label: 'Discard mine, open',
+        label: t('chrome.notices.actions.discardOpen'),
         onClick: () => void openDocumentAt(pendingOpen),
         disabled: busy,
       },
-      { label: 'Stay here', onClick: dismiss, disabled: busy, quiet: true },
+      { label: t('chrome.notices.actions.stayHere'), onClick: dismiss, disabled: busy, quiet: true },
     ],
   }
 }
@@ -358,6 +369,7 @@ function usePendingOpenNotice(): Notice | undefined {
  * document waiting to open: save first, discard, or stay.
  */
 function usePendingReplaceNotice(): Notice | undefined {
+  const t = useT()
   const pending = useDocumentStore((state) => state.pendingReplace)
   const documentName = useDocumentStore((state) => state.documentName)
   const busy = useDocumentStore((state) => state.busy) !== undefined
@@ -376,21 +388,28 @@ function usePendingReplaceNotice(): Notice | undefined {
     if (useDocumentStore.getState().isDirty) return
     await replace()
   }
-  const word = pending === 'new' ? 'new' : 'open…'
 
   return {
     id: 'pending-replace',
     body: (
-      <>
-        <strong className="font-medium"><Bidi>{documentName}</Bidi></strong> has unsaved changes.{' '}
-        {pending === 'new' ? 'A new document' : 'Opening another document'} replaces what is in this
-        window.
-      </>
+      <Phrase
+        text={t(pending === 'new' ? 'chrome.notices.replaceNew' : 'chrome.notices.replaceOpen')}
+        parts={{ name: <strong className="font-medium"><Bidi>{documentName}</Bidi></strong> }}
+      />
     ),
     actions: [
-      { label: `Save, then ${word}`, onClick: () => void saveThenReplace(), disabled: busy, lead: true },
-      { label: `Discard mine, ${word}`, onClick: () => void replace(), disabled: busy },
-      { label: 'Stay here', onClick: dismiss, disabled: busy, quiet: true },
+      {
+        label: t(pending === 'new' ? 'chrome.notices.actions.saveThenNew' : 'chrome.notices.actions.saveThenOpenFile'),
+        onClick: () => void saveThenReplace(),
+        disabled: busy,
+        lead: true,
+      },
+      {
+        label: t(pending === 'new' ? 'chrome.notices.actions.discardNew' : 'chrome.notices.actions.discardOpenFile'),
+        onClick: () => void replace(),
+        disabled: busy,
+      },
+      { label: t('chrome.notices.actions.stayHere'), onClick: dismiss, disabled: busy, quiet: true },
     ],
   }
 }
@@ -405,6 +424,7 @@ function usePendingReplaceNotice(): Notice | undefined {
  * the unsaved-work question included — and opens Emerald again on the document open now.
  */
 function useUpdateNotice(): Notice | undefined {
+  const t = useT()
   const state = useUpdateState()
   const updates = shellUpdates()
   const notice = state?.notice
@@ -415,33 +435,39 @@ function useUpdateNotice(): Notice | undefined {
 
   switch (notice.kind) {
     case 'checking':
-      return { id: 'update', body: <>Checking for a newer version of Emerald…</>, actions: [], working: true }
+      return { id: 'update', body: <>{t('chrome.notices.checking')}</>, actions: [], working: true }
     case 'available':
       return {
         id: 'update',
         body: (
           <>
-            <strong className="font-medium">Emerald {notice.version}</strong> is out. You have {state?.version}.
+            <Phrase
+              text={t('chrome.notices.available')}
+              parts={{
+                release: <strong className="font-medium">{t('chrome.notices.release', { version: notice.version })}</strong>,
+                current: state?.version ?? '',
+              }}
+            />
             {notice.unfetched !== undefined && <> {plainDownloadFailure(notice.unfetched)}</>}
           </>
         ),
         actions: [
           {
-            label: 'Download',
+            label: t('chrome.notices.actions.download'),
             onClick: () => {
               void updates.openReleasePage()
               later()
             },
             lead: true,
           },
-          { label: 'Later', onClick: later, quiet: true },
+          { label: t('chrome.notices.actions.later'), onClick: later, quiet: true },
         ],
       }
     case 'downloading':
       return {
         id: 'update',
-        body: <>Downloading Emerald {notice.version}…</>,
-        actions: [{ label: 'Later', onClick: later, quiet: true }],
+        body: <>{t('chrome.notices.downloading', { version: notice.version })}</>,
+        actions: [{ label: t('chrome.notices.actions.later'), onClick: later, quiet: true }],
         working: true,
       }
     case 'ready':
@@ -449,8 +475,12 @@ function useUpdateNotice(): Notice | undefined {
         id: 'update',
         body: (
           <>
-            <strong className="font-medium">Emerald {notice.version}</strong> is ready. Installing it restarts Emerald;
-            your documents are not touched.
+            <Phrase
+              text={t('chrome.notices.ready')}
+              parts={{
+                release: <strong className="font-medium">{t('chrome.notices.release', { version: notice.version })}</strong>,
+              }}
+            />
           </>
         ),
         actions: [
@@ -458,7 +488,7 @@ function useUpdateNotice(): Notice | undefined {
             ? []
             : [
                 {
-                  label: 'Install and restart',
+                  label: t('chrome.notices.actions.install'),
                   onClick: () => {
                     // The document open now, to open again after; the shell takes only a path it handed out.
                     const { db, adapter } = useDocumentStore.getState()
@@ -467,22 +497,22 @@ function useUpdateNotice(): Notice | undefined {
                   lead: true,
                 },
               ]),
-          { label: 'Later', onClick: later, quiet: true },
+          { label: t('chrome.notices.actions.later'), onClick: later, quiet: true },
         ],
       }
     case 'latest':
       return {
         id: 'update',
-        body: <>You have the latest — Emerald {notice.version}.</>,
-        actions: [{ label: 'Dismiss', onClick: later, quiet: true }],
+        body: <>{t('chrome.notices.latest', { version: notice.version })}</>,
+        actions: [{ label: t('chrome.notices.actions.dismiss'), onClick: later, quiet: true }],
       }
     case 'failed':
       return {
         id: 'update',
-        body: <>Could not check for updates. {plainCheckFailure(notice.reason)}</>,
+        body: <>{t('chrome.notices.failed', { reason: plainCheckFailure(notice.reason) })}</>,
         actions: [
-          { label: 'Try again', onClick: () => void answer(updates.checkNow()), lead: true },
-          { label: 'Dismiss', onClick: later, quiet: true },
+          { label: t('chrome.notices.actions.tryAgain'), onClick: () => void answer(updates.checkNow()), lead: true },
+          { label: t('chrome.notices.actions.dismiss'), onClick: later, quiet: true },
         ],
       }
   }
@@ -495,19 +525,20 @@ function useUpdateNotice(): Notice | undefined {
  */
 export function plainCheckFailure(reason: string): string {
   if (/ERR_INTERNET_DISCONNECTED|ERR_NAME_NOT_RESOLVED|ERR_NETWORK_CHANGED|ERR_CONNECTION|ERR_TIMED_OUT|ENOTFOUND|EAI_AGAIN|ECONNREFUSED|ETIMEDOUT/i.test(reason)) {
-    return 'This computer could not reach GitHub: check the connection, then try again.'
+    return tNow('chrome.notices.offline')
   }
-  return 'GitHub did not answer as expected: try again in a while.'
+  return tNow('chrome.notices.githubOdd')
 }
 
 /** Why a download failed, the same way: the checksum's sentence is already a person's (`downloadFailure`). */
 export function plainDownloadFailure(reason: string): string {
   if (/checksum/i.test(reason)) return reason
-  return 'It could not be downloaded here, so Download opens its page instead.'
+  return tNow('chrome.notices.downloadElsewhere')
 }
 
 /** Whatever the document store last failed at, until it is dismissed. */
 function useErrorNotice(): Notice | undefined {
+  const t = useT()
   const error = useDocumentStore((state) => state.error)
   const dismissError = useDocumentStore((state) => state.dismissError)
 
@@ -516,7 +547,7 @@ function useErrorNotice(): Notice | undefined {
   return {
     id: 'error',
     body: <span className="text-negative">{error}</span>,
-    actions: [{ label: 'Dismiss', onClick: dismissError, quiet: true }],
+    actions: [{ label: t('chrome.notices.actions.dismiss'), onClick: dismissError, quiet: true }],
     alert: true,
   }
 }
@@ -536,6 +567,7 @@ function useErrorNotice(): Notice | undefined {
  * thing that doubles the month is how it got missed in the first place.
  */
 function useWaitingNotice(offer: boolean): Notice | undefined {
+  const t = useT()
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
   const navigate = useNavigate()
@@ -558,11 +590,15 @@ function useWaitingNotice(offer: boolean): Notice | undefined {
     id: 'waiting',
     body: (
       <>
-        <span className="tabular-nums">{counts.all}</span> {counts.all === 1 ? 'answer waits' : 'answers wait'} on Home
+        <Phrase
+          text={t(counts.all === 1 ? 'chrome.notices.waitingOne' : 'chrome.notices.waitingMany')}
+          parts={{ n: <span className="tabular-nums">{counts.all}</span> }}
+        />
         {counts.totals > 0 ? (
-          <>
-            , and <span className="tabular-nums">{counts.totals}</span> of them {counts.totals === 1 ? 'changes' : 'change'} this month’s totals.
-          </>
+          <Phrase
+            text={t(counts.totals === 1 ? 'chrome.notices.totalsOne' : 'chrome.notices.totalsMany')}
+            parts={{ m: <span className="tabular-nums">{counts.totals}</span> }}
+          />
         ) : (
           '.'
         )}
@@ -570,8 +606,8 @@ function useWaitingNotice(offer: boolean): Notice | undefined {
     ),
     actions: [
       // It goes to the list, where each is answered: the button says so (M54 F6).
-      { label: 'Open Home', onClick: () => navigate('/'), lead: !reading },
-      { label: 'Not now', onClick: () => setDismissed(true), quiet: true },
+      { label: t('chrome.notices.actions.openHome'), onClick: () => navigate('/'), lead: !reading },
+      { label: t('chrome.notices.actions.notNow'), onClick: () => setDismissed(true), quiet: true },
     ],
   }
 }
@@ -598,6 +634,7 @@ function moment(at: number): string {
 }
 
 function useRestoreNotice(): Notice | undefined {
+  const t = useT()
   const snapshot = recovery.use()
   const busy = useDocumentStore((state) => state.busy) !== undefined
   // Restoring opens the snapshot in this window, so not over unsaved work here.
@@ -610,15 +647,22 @@ function useRestoreNotice(): Notice | undefined {
     id: 'restore',
     body: (
       <>
-        <strong className="font-medium">
-          <Bidi>{snapshot.documentName}</Bidi>
-        </strong>{' '}
-        has unsaved work from {moment(snapshot.savedAt)}, kept when Emerald closed without saving it.
+        <Phrase
+          text={t('chrome.notices.restore')}
+          parts={{
+            name: (
+              <strong className="font-medium">
+                <Bidi>{snapshot.documentName}</Bidi>
+              </strong>
+            ),
+            when: moment(snapshot.savedAt),
+          }}
+        />
       </>
     ),
     actions: [
       {
-        label: 'Restore',
+        label: t('chrome.notices.actions.restore'),
         onClick: () => {
           recovery.set(undefined)
           void openBytes(snapshot.bytes, snapshot.documentName)
@@ -627,14 +671,14 @@ function useRestoreNotice(): Notice | undefined {
         lead: true,
       },
       {
-        label: 'Discard',
+        label: t('chrome.notices.actions.discard'),
         onClick: () => {
           recovery.set(undefined)
           clearSnapshot()
         },
         disabled: busy,
       },
-      { label: 'Not now', onClick: () => recovery.set(undefined), quiet: true },
+      { label: t('chrome.notices.actions.notNow'), onClick: () => recovery.set(undefined), quiet: true },
     ],
   }
 }

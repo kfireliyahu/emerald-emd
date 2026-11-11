@@ -4,6 +4,7 @@ import { monthlySummaryCsv, transactionsCsv } from '@/data/export/csv.ts'
 import { downloadCsv, exportFileName } from '@/data/export/download.ts'
 import { documentCurrency, monthlySummaries } from '@/data/repositories/statisticsRepository.ts'
 import { countTransactions } from '@/data/repositories/transactionRepository.ts'
+import { useT } from '@/i18n/current.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Button } from '@/ui/components/Button.tsx'
 import { Kbd } from '@/ui/components/Kbd.tsx'
@@ -24,6 +25,7 @@ import { today } from '@/ui/today.ts'
  * One heading, as Packs has, and no eyebrow over it.
  */
 export function Export() {
+  const t = useT()
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
   const months = useMemo(
@@ -40,39 +42,39 @@ export function Export() {
     <div className="h-full overflow-auto">
       <div className="fc-view-enter flex max-w-4xl flex-col gap-6 px-8 pt-6 pb-12">
         <header className="flex flex-col gap-2 border-b border-hairline pb-4">
-          <h1 className="m-0 text-title">Export</h1>
-          <span className="text-ink-secondary">A spreadsheet of what this document holds.</span>
+          <h1 className="m-0 text-title">{t('rail.export')}</h1>
+          <span className="text-ink-secondary">{t('settings.export.lead')}</span>
         </header>
         <div>
           <Row
-            title="Months"
-            text="One row a month: came in, went out, left over and saved, and how many rows each came from."
+            title={t('settings.export.months')}
+            text={t('settings.export.monthsText')}
           >
             <Button
               variant="secondary"
               disabled={months.length === 0}
               onClick={() => downloadCsv(exportFileName('months'), monthlySummaryCsv(months))}
             >
-              Export {months.length} {months.length === 1 ? 'month' : 'months'}
+              {t(months.length === 1 ? 'settings.export.exportMonth' : 'settings.export.exportMonths', { n: months.length })}
             </Button>
           </Row>
           <Row
-            title="Transactions"
-            text="Every transaction in every account, with its category. Transactions keeps its own export too, of whatever it is showing."
+            title={t('rail.transactions')}
+            text={t('settings.export.transactionsText')}
           >
             <Button
               variant="secondary"
               disabled={rows === 0}
               onClick={() => downloadCsv(exportFileName('transactions'), transactionsCsv(db))}
             >
-              Export {rows.toLocaleString('en-US')} {rows === 1 ? 'transaction' : 'transactions'}
+              {t(rows === 1 ? 'settings.export.exportTransaction' : 'settings.export.exportTransactions', { n: rows.toLocaleString('en-US') })}
             </Button>
           </Row>
           <Row
-            title="The whole document"
+            title={t('settings.export.whole')}
             text={
               <>
-                Not a spreadsheet: a copy of the document keeps everything, and it opens anywhere Emerald does.
+                {t('settings.export.wholeText')}
                 {/* The keys only where they are listened for: the demo has no file to save (D-413). */}
                 {keys && (
                   <>
@@ -100,7 +102,7 @@ export function Export() {
               {...(keys ? { 'aria-keyshortcuts': mod === '⌘' ? 'Meta+Shift+S' : 'Control+Shift+S' } : {})}
               onClick={() => void saveCopyAs()}
             >
-              Save as…
+              {t('settings.export.saveAs')}
             </Button>
           </Row>
         </div>

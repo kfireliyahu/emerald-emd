@@ -1,7 +1,10 @@
 import { Fragment, useEffect, useId, useLayoutEffect, useRef, useState, type InputHTMLAttributes } from 'react'
 
+import { useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { SELECT } from '@/ui/components/fieldLook.ts'
+import { pageIsRtl } from '@/ui/direction.ts'
 
 /** One thing a field can be set to: what is stored, and what a person reads. */
 export interface Choice {
@@ -76,9 +79,10 @@ export function ChoiceField({
    */
   make?: { readonly one: string; readonly onMake: (name: string) => void } | undefined
 } & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'>) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const [active, setActive] = useState(0)
-  const [place, setPlace] = useState<{ top: number; left: number; width: number } | undefined>()
+  const [place, setPlace] = useState<{ top: number; left: number; right: number; width: number } | undefined>()
   const field = useRef<HTMLInputElement>(null)
   const list = useRef<HTMLUListElement>(null)
   const id = useId()
@@ -103,7 +107,8 @@ export function ChoiceField({
   useLayoutEffect(() => {
     if (!open || field.current === null) return
     const box = field.current.getBoundingClientRect()
-    setPlace({ top: box.bottom, left: box.left, width: box.width })
+    // Its start edge under the field's: the right edge in right-to-left (M60 U5, D-590).
+    setPlace({ top: box.bottom, left: box.left, right: document.documentElement.clientWidth - box.right, width: box.width })
   }, [open])
 
   useEffect(() => {
@@ -215,7 +220,7 @@ export function ChoiceField({
           id={id}
           role="listbox"
           className="fc-pop-enter fixed z-50 max-h-64 overflow-auto border border-hairline-strong bg-elevated py-1 text-body text-ink shadow-pop"
-          style={{ top: place.top + 2, left: place.left, minWidth: Math.max(place.width, 160) }}
+          style={{ top: place.top + 2, ...(pageIsRtl() ? { right: place.right } : { left: place.left }), minWidth: Math.max(place.width, 160) }}
           // A press on the list would blur the field first and close it.
           onMouseDown={(event) => event.preventDefault()}
         >
@@ -261,7 +266,7 @@ export function ChoiceField({
           ))}
           {maker !== undefined && shown.length === 0 && (
             <li role="presentation" className="px-3 py-1 text-caption text-ink-secondary">
-              No {maker.one} is called “<Bidi>{text.trim()}</Bidi>”
+              <Phrase text={t('chrome.components.noneCalled')} parts={{ one: maker.one, name: <Bidi>{text.trim()}</Bidi> }} />
             </li>
           )}
           {maker !== undefined && (
@@ -279,7 +284,7 @@ export function ChoiceField({
                 maker.onMake(text.trim())
               }}
             >
-              + New “<Bidi>{text.trim()}</Bidi>”
+              <Phrase text={t('chrome.components.makeNew')} parts={{ name: <Bidi>{text.trim()}</Bidi> }} />
             </li>
           )}
         </ul>

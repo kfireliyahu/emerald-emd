@@ -209,7 +209,7 @@ describe('an empty state is ink-secondary', () => {
   it.each(['src/ui/EarlierCopies.tsx'])('%s', (path) => {
     const empties = readFileSync(path, 'utf8')
       .split('\n')
-      .filter((line) => /None yet|Open a document from a file/.test(line))
+      .filter((line) => /None yet|Open a document from a file|earlierCopies\.(none|nothingOpen)/.test(line))
     expect(empties.length).toBeGreaterThan(0)
     expect(empties.filter((line) => line.includes('text-ink-tertiary'))).toEqual([])
   })
@@ -564,7 +564,7 @@ describe('intake, swept (M54 F4)', () => {
     expect(readFileSync('src/ui/documents/DocumentTextInput.tsx', 'utf8')).toContain('<Button icon="open"')
     expect(readFileSync('src/ui/screens/Mappings.tsx', 'utf8')).not.toMatch(/opacity-0/)
     expect(readFileSync('src/ui/screens/Readers.tsx', 'utf8')).not.toMatch(/variant="primary"/)
-    expect(readFileSync('src/ui/screens/LocalModel.tsx', 'utf8')).toContain('<h1 className="m-0 text-title">Local model</h1>')
+    expect(readFileSync('src/ui/screens/LocalModel.tsx', 'utf8')).toContain(`<h1 className="m-0 text-title">{t('rail.localModel')}</h1>`)
   })
 
   // D-532: the window's drop reads onto the format on screen, and its overlay says so.
@@ -613,11 +613,11 @@ describe('the rail, the palette and the way back, swept (M54 F5)', () => {
   it('names the rail’s controls stably, and gives them room', () => {
     const folder = readFileSync('src/ui/RailFolder.tsx', 'utf8')
     expect(folder).not.toMatch(/\$\{open \? 'Close' : 'Open'\} \$\{child\.label\}/)
-    expect(folder).toContain('aria-label={`${child.label} entries`}')
+    expect(folder).toContain("aria-label={t('chrome.rail.folder.entries', { label: child.label })}")
     expect(folder).toContain(`'aria-describedby': countId`)
     expect(folder).not.toMatch(/\bh-5 w-5\b|\bh-7 w-5\b/)
     const sidebar = readFileSync('src/ui/Sidebar.tsx', 'utf8')
-    expect(sidebar).toContain('<span className="sr-only">Collapse sidebar</span>')
+    expect(sidebar).toContain("<span className=\"sr-only\">{t('chrome.rail.collapse')}</span>")
     expect(sidebar).not.toMatch(/collapsed \? 'Expand sidebar'/)
   })
 
@@ -679,19 +679,24 @@ describe('the document’s own screens, notices and dialogs, swept (M54 F6)', ()
   // One h1 a screen; a button named for what it does; colour for signal only.
   it('heads #/mcp, #/settings/packs and #/settings/export once, and names their buttons', () => {
     const mcp = readFileSync('src/ui/screens/Mcp.tsx', 'utf8')
-    expect(mcp).toContain('<h1 className="m-0 text-title">Assistants</h1>')
-    expect(mcp).toContain('copy="Copy the command"')
+    // The words are the catalogue's since M60 U5 (D-590).
+    const english = readFileSync('src/i18n/en/settings.ts', 'utf8')
+    expect(mcp).toContain(`<h1 className="m-0 text-title">{t('rail.assistants')}</h1>`)
+    expect(mcp).toContain(`copy={t('settings.assistants.copyCommand')}`)
+    expect(english).toContain(`copyCommand: 'Copy the command'`)
     expect(mcp).not.toMatch(/'Copied' : 'Copy'\}/)
     expect(mcp).not.toContain('text-negative')
     expect(readFileSync('src/ui/mcp/connect.ts', 'utf8')).not.toMatch(/dist-plugin|SERVER_PLACEHOLDER/)
     const packs = readFileSync('src/ui/screens/Packs.tsx', 'utf8')
-    expect(packs).toContain('<h1 className="m-0 text-title">Packs</h1>')
+    expect(packs).toContain(`<h1 className="m-0 text-title">{t('rail.packs')}</h1>`)
     expect(packs).toContain("variant={primary ? 'primary' : 'secondary'}")
-    expect(packs).toContain('`Keep ${packObject(pack)} here`')
+    expect(packs).toContain(`t('settings.packs.keepHere', { pack: packObject(pack, t) })`)
+    expect(english).toContain(`keepHere: 'Keep {pack} here'`)
     expect(packs).not.toMatch(/rounded-lg|border-hairline-strong bg-elevated/)
     const exported = readFileSync('src/ui/screens/Export.tsx', 'utf8')
     expect(exported).not.toMatch(/Settings · Export|File ›/)
-    expect(exported).toContain('Save as…')
+    expect(exported).toContain(`t('settings.export.saveAs')`)
+    expect(english).toContain(`saveAs: 'Save as…'`)
   })
 
   // A modal traps Tab and gives focus back; one at a time; loading is Working.
@@ -716,10 +721,13 @@ describe('the document’s own screens, notices and dialogs, swept (M54 F6)', ()
     expect(notices).toContain('<span role="alert" className="min-w-0">')
     expect(notices.match(/working: true/g)?.length).toBe(2)
     expect(notices).not.toMatch(/Could not check for updates\. \{notice\.reason\}/)
-    expect(notices).toContain("label: 'Try again'")
+    // The words are the catalogue's since M60 U5 (D-590); the English is checked there.
+    expect(notices).toContain("label: t('chrome.notices.actions.tryAgain')")
+    expect(readFileSync('src/i18n/en/chrome.ts', 'utf8')).toContain("tryAgain: 'Try again'")
     expect(notices).not.toContain("'Answer them'")
     expect(notices).not.toMatch(/A copy from before <Bidi>\{kept\.what\}<\/Bidi> is among this document/)
-    expect(notices).toContain("label: 'Not now', onClick: () => recovery.set(undefined)")
+    expect(notices).toContain("label: t('chrome.notices.actions.notNow'), onClick: () => recovery.set(undefined)")
+    expect(readFileSync('src/i18n/en/chrome.ts', 'utf8')).toContain("notNow: 'Not now'")
     expect(readFileSync('src/App.tsx', 'utf8')).not.toContain('window.confirm(')
   })
 

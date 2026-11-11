@@ -2,7 +2,6 @@ import { useMemo, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 
 import { formatMoney, money, type CurrencyCode, type Money } from '@/core/money.ts'
-import { listed } from '@/core/text.ts'
 import { addMonths, yearMonthOf } from '@/core/time.ts'
 import {
   setCushionAccounts,
@@ -13,8 +12,10 @@ import {
 import { billCandidates, confirmCandidate, dismissMerchant } from '@/data/repositories/fixedExpenseRepository.ts'
 import { DEFAULT_WINDOW_MONTHS } from '@/domain/fixedExpenses.ts'
 import type { StatementPlace } from '@/domain/savings.ts'
+import { useT, type Translate } from '@/i18n/current.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { CandidateCard } from '@/ui/fixed/CandidateCard.tsx'
 import { today } from '@/ui/today.ts'
 import { Legend, LegendItem, Tag } from '@/ui/wealth/parts.tsx'
@@ -37,25 +38,30 @@ const SEG = 'flex h-full items-center overflow-hidden px-1.5 text-[11px] whitesp
  * (M31 U5); each goal's part is still a bar inside its account on Net worth.
  */
 export function CushionLine({ cushion, write }: { cushion: CushionReading; write: Write }) {
+  const t = useT()
   const { split } = cushion
-  const ofText = monthsOf(cushion)
+  const ofText = monthsOf(t, cushion)
   const left = split.check.kind === 'ADDS_UP' ? split.left : undefined
   return (
     <div className="flex flex-col gap-2 border border-hairline bg-surface px-3.5 py-3" data-testid="cushion-line" data-guide="plan.cushion">
       <div className="flex flex-wrap items-baseline gap-x-3.5 gap-y-1.5">
-        <span className="text-label tracking-[0.08em] text-ink-secondary uppercase">The cushion</span>
+        <span className="text-label tracking-[0.08em] text-ink-secondary uppercase">{t('plan.cushion.title')}</span>
         <span>
-          what no goal has taken in the accounts it lives in:{' '}
+          {t('plan.cushion.left')}{' '}
           <b className="font-medium tabular-nums">
-            {left !== undefined ? formatMoney(left) : split.check.kind === 'NO_ACCOUNTS' ? 'none ticked' : 'unchecked'}
+            {left !== undefined
+              ? formatMoney(left)
+              : split.check.kind === 'NO_ACCOUNTS'
+                ? t('plan.cushion.noneTicked')
+                : t('plan.cushion.unchecked')}
           </b>
         </span>
       </div>
       <div className="flex flex-wrap items-center gap-2 text-caption text-ink-secondary">
-        <span>Its target is</span>
+        <span>{t('plan.cushion.targetIs')}</span>
         <MonthChoice months={cushion.months} write={write} />
         <span>
-          months of {ofText}
+          {t('plan.cushion.monthsOf', { of: ofText })}
           {cushion.target === undefined ? '.' : <>, <span className="tabular-nums">{formatMoney(cushion.target)}</span>.</>}
         </span>
       </div>
@@ -64,9 +70,7 @@ export function CushionLine({ cushion, write }: { cushion: CushionReading; write
       {cushion.months !== undefined && cushion.target === undefined && <BillsHere write={write} />}
       {split.check.kind === 'NO_ACCOUNTS' && (
         <p className="m-0 text-caption text-ink-secondary">
-          {cushion.accounts.length === 0
-            ? 'No bank account yet: reading a statement makes one.'
-            : 'Tick the bank accounts the cushion lives in.'}
+          {cushion.accounts.length === 0 ? t('plan.cushion.noBank') : t('plan.cushion.tickBanks')}
         </p>
       )}
       {/* Every bank account counts until it is unticked (D-371), so a new one with no
@@ -77,7 +81,7 @@ export function CushionLine({ cushion, write }: { cushion: CushionReading; write
           .map((account) => (
             <Verdict
               key={account.accountId}
-              tag={<Tag>Unchecked</Tag>}
+              tag={<Tag>{t('plan.cushion.uncheckedTag')}</Tag>}
               action={
                 <button
                   type="button"
@@ -86,22 +90,22 @@ export function CushionLine({ cushion, write }: { cushion: CushionReading; write
                     write((database, now) => setCushionAccounts(database, [{ accountId: account.accountId, counts: false }], now))
                   }
                 >
-                  Leave it out
+                  {t('plan.cushion.leaveOut')}
                 </button>
               }
             >
-              <Bidi>{account.name}</Bidi> has no statement balance, so what is in the bank cannot be said.
+              <Phrase text={t('plan.cushion.noBalance')} parts={{ name: <Bidi>{account.name}</Bidi> }} />
             </Verdict>
           ))}
       {split.check.kind === 'OVER' && (
-        <Verdict tag={<Tag tone="bad">Unchecked</Tag>}>
+        <Verdict tag={<Tag tone="bad">{t('plan.cushion.uncheckedTag')}</Tag>}>
           {split.short.length === 0 ? (
-            'The goals hold more than the ticked accounts, so there is no cushion to measure.'
+            t('plan.cushion.goalsHoldMore')
           ) : (
-            <>
-              A goal in <Bidi>{split.short.map((one) => one.name).join(', ')}</Bidi> holds more than its statement, so there is
-              no cushion to measure.
-            </>
+            <Phrase
+              text={t('plan.cushion.goalInHoldsMore')}
+              parts={{ names: <Bidi>{split.short.map((one) => one.name).join(', ')}</Bidi> }}
+            />
           )}
         </Verdict>
       )}
@@ -111,11 +115,11 @@ export function CushionLine({ cushion, write }: { cushion: CushionReading; write
             key={short.accountId}
             tag={
               <Tag tone="bad">
-                <Bidi>{short.name}</Bidi> off by {formatMoney(short.by)}
+                <Phrase text={t('plan.cushion.offBy')} parts={{ name: <Bidi>{short.name}</Bidi>, amount: formatMoney(short.by) }} />
               </Tag>
             }
           >
-            The goals saved there hold {formatMoney(short.parts)}, and it ends at {formatMoney(short.balance)}.
+            {t('plan.cushion.goalsSavedThere', { parts: formatMoney(short.parts), balance: formatMoney(short.balance) })}
           </Verdict>
         ))}
       {left !== undefined && cushion.above !== undefined && <AboveVerdict above={cushion.above} />}
@@ -124,18 +128,22 @@ export function CushionLine({ cushion, write }: { cushion: CushionReading; write
 }
 
 /** What the months are of: bills, and Plan's buckets ticked beside them (M28 F10). */
-function monthsOf(cushion: CushionReading): string {
-  const of = ['bills', ...cushion.buckets.filter((bucket) => bucket.included).map((bucket) => bucket.name)]
-  return listed(of)
+function monthsOf(t: Translate, cushion: CushionReading): string {
+  const of = [t('plan.cushion.bills'), ...cushion.buckets.filter((bucket) => bucket.included).map((bucket) => bucket.name)]
+  if (of.length < 2) return of[0] ?? ''
+  return t('plan.listed', { rest: of.slice(0, -1).join(', '), last: of.at(-1) ?? '' })
 }
 
 /** Above or short of its target, in Plan's words — on Plan and under an account it lives in. */
 function AboveVerdict({ above }: { above: Money }) {
+  const t = useT()
   return (
-    <Verdict tag={<Tag tone={above.minor >= 0 ? 'good' : 'bad'}>{above.minor >= 0 ? 'Above the cushion' : 'Below the cushion'}</Tag>}>
+    <Verdict
+      tag={<Tag tone={above.minor >= 0 ? 'good' : 'bad'}>{above.minor >= 0 ? t('plan.cushion.above') : t('plan.cushion.below')}</Tag>}
+    >
       {above.minor >= 0
-        ? `${formatMoney(above)} above its target.`
-        : `${formatMoney(money(-above.minor, above.currency))} short of its target.`}
+        ? t('plan.cushion.aboveBy', { amount: formatMoney(above) })
+        : t('plan.cushion.shortBy', { amount: formatMoney(money(-above.minor, above.currency)) })}
     </Verdict>
   )
 }
@@ -147,34 +155,46 @@ function AboveVerdict({ above }: { above: Money }) {
  * lives in, its target and the verdict — with the way to Plan, where it is set.
  */
 export function CushionHere({ cushion, accountId }: { cushion: CushionReading; accountId: string }) {
+  const t = useT()
   const { split } = cushion
   const left = split.check.kind === 'ADDS_UP' ? split.left : undefined
   const elsewhere = cushion.accounts.filter((account) => account.counts && account.accountId !== accountId)
-  const months = cushion.months === undefined ? undefined : `${String(cushion.months)} ${cushion.months === 1 ? 'month' : 'months'}`
+  const months =
+    cushion.months === undefined
+      ? undefined
+      : t(cushion.months === 1 ? 'plan.cushion.monthOne' : 'plan.cushion.monthMany', { n: String(cushion.months) })
   return (
     <div className="flex flex-col gap-1.5" data-testid="cushion-here">
       <p className="m-0">
-        What no goal has taken in the accounts it lives in:{' '}
-        <b className="font-medium tabular-nums">{left !== undefined ? formatMoney(left) : 'unchecked'}</b>
+        {t('plan.cushion.here')}{' '}
+        <b className="font-medium tabular-nums">{left !== undefined ? formatMoney(left) : t('plan.cushion.unchecked')}</b>
         {elsewhere.length > 0 && (
           <span className="text-caption text-ink-secondary">
             {' '}
-            — here and in <Bidi>{elsewhere.map((account) => account.name).join(', ')}</Bidi>
+            <Phrase
+              text={t('plan.cushion.hereAndIn')}
+              parts={{ names: <Bidi>{elsewhere.map((account) => account.name).join(', ')}</Bidi> }}
+            />
           </span>
         )}
       </p>
       <p className="m-0 text-caption text-ink-secondary">
         {months === undefined ? (
-          'It has no target yet.'
+          t('plan.cushion.noTarget')
         ) : cushion.target === undefined ? (
-          `Its target is ${months} of ${monthsOf(cushion)}, and no bills are known yet.`
+          t('plan.cushion.targetNoBills', { months, of: monthsOf(t, cushion) })
         ) : (
-          <>
-            Its target is {months} of {monthsOf(cushion)}, <span className="tabular-nums">{formatMoney(cushion.target)}</span>.
-          </>
+          <Phrase
+            text={t('plan.cushion.targetAmount')}
+            parts={{
+              months,
+              of: monthsOf(t, cushion),
+              amount: <span className="tabular-nums">{formatMoney(cushion.target)}</span>,
+            }}
+          />
         )}{' '}
         <Link to="/plan" className="text-accent hover:underline">
-          Set it on Plan
+          {t('plan.cushion.setOnPlan')}
         </Link>
       </p>
       {left !== undefined && cushion.above !== undefined && <AboveVerdict above={cushion.above} />}
@@ -198,10 +218,11 @@ function Verdict({ tag, action, children }: { tag: ReactNode; action?: ReactNode
  * left out but not put in — the cushion is what a statement says.
  */
 function LivesIn({ cushion, write }: { cushion: CushionReading; write: Write }) {
+  const t = useT()
   if (cushion.accounts.length === 0) return null
   return (
     <div className="flex flex-wrap items-center gap-2.5">
-      <span className="text-caption text-ink-secondary">It lives in:</span>
+      <span className="text-caption text-ink-secondary">{t('plan.cushion.livesIn')}</span>
       {cushion.accounts.map((account) => {
         const blocked = !account.counts && account.balance === undefined
         return (
@@ -210,7 +231,7 @@ function LivesIn({ cushion, write }: { cushion: CushionReading; write: Write }) 
             type="button"
             aria-pressed={account.counts}
             disabled={blocked}
-            title={blocked ? 'No statement: the cushion is what a statement says' : undefined}
+            title={blocked ? t('plan.cushion.noStatement') : undefined}
             onClick={() =>
               write((database, now) => setCushionAccounts(database, [{ accountId: account.accountId, counts: !account.counts }], now))
             }
@@ -229,12 +250,13 @@ function LivesIn({ cushion, write }: { cushion: CushionReading; write: Write }) 
 
 /** The months, as buttons: Overview's card and Plan's line both set them in place (M31 U5). */
 export function MonthChoice({ months, write }: { months: number | undefined; write: Write }) {
+  const t = useT()
   const choices =
     months === undefined || (MONTH_CHOICES as readonly number[]).includes(months)
       ? MONTH_CHOICES
       : [...MONTH_CHOICES, months].sort((a, b) => a - b)
   return (
-    <span className="inline-flex" role="group" aria-label="Months of bills">
+    <span className="inline-flex" role="group" aria-label={t('plan.cushion.monthsLabel')}>
       {choices.map((choice, index) => (
         <button
           key={choice}
@@ -256,10 +278,11 @@ export function MonthChoice({ months, write }: { months: number | undefined; wri
 
 /** Plan's buckets the months count beside the bills (M28 F10), ticked in place. */
 export function CountFromPlan({ cushion, write }: { cushion: CushionReading; write: Write }) {
+  const t = useT()
   if (cushion.buckets.length === 0) return null
   return (
     <div className="flex flex-wrap items-center gap-2.5">
-      <span className="text-caption text-ink-secondary">Count from Plan too:</span>
+      <span className="text-caption text-ink-secondary">{t('plan.cushion.countFromPlan')}</span>
       {cushion.buckets.map((bucket) => (
         <button
           key={bucket.bucketId}
@@ -284,6 +307,7 @@ export function CountFromPlan({ cushion, write }: { cushion: CushionReading; wri
  * the card Home and Plan already answer them with (M31 U5, D-367).
  */
 function BillsHere({ write }: { write: Write }) {
+  const t = useT()
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
   const candidates = useMemo(
@@ -293,14 +317,10 @@ function BillsHere({ write }: { write: Write }) {
   return (
     <div className="flex flex-col gap-1.5">
       <p className="m-0 text-caption text-ink-secondary">
-        No bills are tracked yet, so there is no amount.{' '}
-        {candidates.length === 0 ? (
-          <>
-            No charge in the statements looks like one yet: add one under Bills, below.
-          </>
-        ) : (
-          `${candidates.length === 1 ? 'This charge looks like one' : 'These charges look like them'}: track ${candidates.length === 1 ? 'it' : 'them'} and the amount follows.`
-        )}
+        {t('plan.cushion.noBills')}{' '}
+        {candidates.length === 0
+          ? t('plan.cushion.noCharge')
+          : t(candidates.length === 1 ? 'plan.cushion.chargeOne' : 'plan.cushion.chargeMany')}
       </p>
       {candidates.length > 0 && (
         <div className="border-t border-hairline" data-testid="cushion-bills">
@@ -337,7 +357,8 @@ export function StatementBar({
   /** The cushion lives in this account (M36 F3): its cash is the cushion's part. */
   cushion?: boolean
 }) {
-  const cashName = cushion ? 'The cushion' : 'Cash, not for any goal'
+  const t = useT()
+  const cashName = cushion ? t('plan.cushion.bar.cushion') : t('plan.cushion.bar.cash')
   const goals = statement.parts.reduce((sum, part) => sum + part.amount.minor, 0)
   const over = statement.short !== undefined
   const cash = statement.cash?.minor ?? 0
@@ -352,11 +373,14 @@ export function StatementBar({
           role="img"
           aria-label={
             over
-              ? `Goals ${formatMoney(money(goals, currency))}, against a statement of ${formatMoney(statement.balance)}`
-              : `${formatMoney(statement.balance)} on the statement: ${statement.parts
-                  .map((part) => `${part.goalName} ${formatMoney(part.amount)}`)
-                  .concat(`${cushion ? 'the cushion' : 'cash, not for any goal'} ${formatMoney(money(cash, currency))}`)
-                  .join(', ')}`
+              ? t('plan.cushion.bar.over', { goals: formatMoney(money(goals, currency)), balance: formatMoney(statement.balance) })
+              : t('plan.cushion.bar.parts', {
+                  balance: formatMoney(statement.balance),
+                  parts: statement.parts
+                    .map((part) => `${part.goalName} ${formatMoney(part.amount)}`)
+                    .concat(`${cushion ? t('plan.cushion.bar.cushionLower') : t('plan.cushion.bar.cashLower')} ${formatMoney(money(cash, currency))}`)
+                    .join(', '),
+                })
           }
         >
           {statement.parts.map((part) => (
@@ -379,7 +403,7 @@ export function StatementBar({
               />
               <span className="absolute -top-[5px] -bottom-[5px] w-0 border-s-[1.5px] border-ink" style={{ left: pc(statement.balance.minor) }}>
                 <span className="absolute -top-[17px] -start-px -translate-x-full pe-1 text-[11px] whitespace-nowrap text-ink-secondary">
-                  the statement
+                  {t('plan.cushion.bar.statement')}
                 </span>
               </span>
             </>
@@ -387,9 +411,9 @@ export function StatementBar({
         </div>
       </div>
       <Legend>
-        {statement.parts.length > 0 && <LegendItem swatch={GOAL}>Saved for a goal</LegendItem>}
-        {!over && <LegendItem swatch={CASH}>{cushion ? 'The cushion: cash, not for any goal' : 'Cash, not for any goal'}</LegendItem>}
-        {over && <LegendItem swatch={OVER}>More than the statement</LegendItem>}
+        {statement.parts.length > 0 && <LegendItem swatch={GOAL}>{t('plan.cushion.bar.saved')}</LegendItem>}
+        {!over && <LegendItem swatch={CASH}>{cushion ? t('plan.cushion.bar.cushionCash') : t('plan.cushion.bar.cash')}</LegendItem>}
+        {over && <LegendItem swatch={OVER}>{t('plan.cushion.bar.more')}</LegendItem>}
       </Legend>
     </div>
   )

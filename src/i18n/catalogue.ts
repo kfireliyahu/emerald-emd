@@ -1,8 +1,20 @@
+import { categories as enCategories } from './en/categories.ts'
+import { chrome as enChrome } from './en/chrome.ts'
 import { dates as enDates } from './en/dates.ts'
+import { guide as enGuide } from './en/guide.ts'
+import { palette as enPalette } from './en/palette.ts'
+import { plan as enPlan } from './en/plan.ts'
 import { rail as enRail } from './en/rail.ts'
+import { rules as enRules } from './en/rules.ts'
 import { settings as enSettings } from './en/settings.ts'
+import { categories as heCategories } from './he/categories.ts'
+import { chrome as heChrome } from './he/chrome.ts'
 import { dates as heDates } from './he/dates.ts'
+import { guide as heGuide } from './he/guide.ts'
+import { palette as hePalette } from './he/palette.ts'
+import { plan as hePlan } from './he/plan.ts'
 import { rail as heRail } from './he/rail.ts'
+import { rules as heRules } from './he/rules.ts'
 import { settings as heSettings } from './he/settings.ts'
 import type { Language } from './language.ts'
 
@@ -27,6 +39,13 @@ export const ENGLISH = {
   rail: enRail,
   settings: enSettings,
   dates: enDates,
+  // M60 U5 (D-590): Categories, Plan, the guide, the chrome and the palette.
+  categories: enCategories,
+  rules: enRules,
+  plan: enPlan,
+  guide: enGuide,
+  chrome: enChrome,
+  palette: enPalette,
 } as const
 
 export type English = typeof ENGLISH
@@ -45,6 +64,13 @@ export const HEBREW: { readonly [A in Area]?: Translation<A> } = {
   rail: heRail,
   settings: heSettings,
   dates: heDates,
+  // M60 U5 (D-590): Categories, Plan, the guide, the chrome and the palette.
+  categories: heCategories,
+  rules: heRules,
+  plan: hePlan,
+  guide: heGuide,
+  chrome: heChrome,
+  palette: hePalette,
 }
 
 const CATALOGUES: Readonly<Record<Language, unknown>> = { en: ENGLISH, he: HEBREW }

@@ -1,12 +1,8 @@
 import { useMemo, useState } from 'react'
 
 import { formatMoney, fromMajorUnits, money, zero, type CurrencyCode, type Money } from '@/core/money.ts'
-import { listed } from '@/core/text.ts'
 import {
   addMonths,
-  formatMonthShort,
-  formatMonthName,
-  formatYearMonth,
   monthRange,
   parseISODate,
   toISODate,
@@ -82,11 +78,13 @@ import {
   type Suggestion,
 } from '@/domain/splitter.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
+import { type Translate, useDates, useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { ContextMenu, type MenuItem } from '@/ui/components/ContextMenu.tsx'
 import { ChoiceMenu } from '@/ui/components/ChoiceField.tsx'
 import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { FixedExpenseEditor } from '@/ui/fixed/FixedExpenseEditor.tsx'
 import { Pager } from '@/ui/home/parts.tsx'
 import { useCategoryPalette } from '@/ui/components/CategoryMark.tsx'
@@ -125,6 +123,8 @@ const SNAP = 5000
  * bar says what that means (docs/f05).
  */
 export function Plan() {
+  const t = useT()
+  const dates = useDates()
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
   const mutate = useDocumentStore((state) => state.mutate)
@@ -228,7 +228,7 @@ export function Plan() {
   )
 
   if (db === undefined) {
-    return <Centered>Open a document, or create one, to plan where your pay goes.</Centered>
+    return <Centered>{t('plan.screen.noDocument')}</Centered>
   }
 
   const write = (work: (database: import('sql.js').Database, now: number) => void): void => {
@@ -443,7 +443,7 @@ export function Plan() {
             // Name, target, date and where it is kept, as the mockup's form asks (M28 F10): a goal
             // made with no holding could take no deposit until somebody went and edited it.
             const parsed = draft.target === undefined ? undefined : parseAmountText(draft.target)
-            if (draft.target !== undefined && parsed === undefined) throw new Error('The target has to be an amount.')
+            if (draft.target !== undefined && parsed === undefined) throw new Error(t('plan.screen.targetNotAmount'))
             const by = draft.by === undefined ? undefined : parseISODate(`${draft.by}-01`)
             // The goal form's one write (M30 F3), so a holding a broker's rows buy is followed here too.
             id = saveGoalAnswer(
@@ -461,7 +461,7 @@ export function Plan() {
           }
           case 'DEBT': {
             const parsed = parseAmountText(draft.detail)
-            if (parsed === undefined) throw new Error('What is left to pay has to be an amount.')
+            if (parsed === undefined) throw new Error(t('plan.screen.leftNotAmount'))
             id = createDebt(
               database,
               {
@@ -534,20 +534,20 @@ export function Plan() {
       write((database, now) => reorderSplitBuckets(database, next, now))
     }
     const items: MenuItem[] = [
-      { label: 'Rename', icon: 'edit', onChoose: () => setRenaming(bucket.id) },
+      { label: t('plan.screen.menu.rename'), icon: 'edit', onChoose: () => setRenaming(bucket.id) },
       {
-        label: entry.allocation.isLocked ? 'Let it change size' : 'Keep this size',
-        detail: entry.allocation.isLocked ? undefined : 'Dividers will not move it',
+        label: entry.allocation.isLocked ? t('plan.screen.menu.unlock') : t('plan.screen.menu.lock'),
+        detail: entry.allocation.isLocked ? undefined : t('plan.screen.menu.lockDetail'),
         onChoose: () => setOne(entry.allocation.id, { isLocked: !entry.allocation.isLocked }),
       },
       {
-        label: 'Move up',
+        label: t('plan.screen.menu.moveUp'),
         icon: 'move',
         disabled: position <= 0,
         onChoose: () => swapWith(order[position - 1]),
       },
       {
-        label: 'Move down',
+        label: t('plan.screen.menu.moveDown'),
         disabled: position < 0 || position >= order.length - 1,
         onChoose: () => swapWith(order[position + 1]),
       },
@@ -555,19 +555,22 @@ export function Plan() {
     if (sections.some((section) => section.share !== undefined)) {
       // Which of 50 / 30 / 20 it counts as: the heading it is under (M31 U4).
       items.push({
-        label: 'Counts as',
-        detail: bucket.share === undefined ? 'None of them' : SHARE_NAME[bucket.share],
-        submenu: SHARE_CHOICES.map(([share, label]) => ({
-          label: bucket.share === share ? `${label} ✓` : label,
-          onChoose: () => write((database, now) => updateSplitBucket(database, bucket.id, { share }, now)),
-        })),
+        label: t('plan.screen.menu.countsAs'),
+        detail: bucket.share === undefined ? t('plan.screen.menu.noneOfThem') : SHARE_NAME[bucket.share],
+        submenu: SHARE_CHOICES.map((share) => {
+          const label = share === undefined ? t('plan.screen.menu.noneOfThem') : SHARE_NAME[share]
+          return {
+            label: bucket.share === share ? `${label} ✓` : label,
+            onChoose: () => write((database, now) => updateSplitBucket(database, bucket.id, { share }, now)),
+          }
+        }),
       })
     }
     if (entry.allocation.mode !== 'REMAINDER') {
       items.push({
-        label: 'Split in two',
+        label: t('plan.screen.menu.split'),
         icon: 'plus',
-        detail: 'Half stays, half goes to a new bucket',
+        detail: t('plan.screen.menu.splitDetail'),
         onChoose: () =>
           write((database, now) => {
             const created = createSplitBucket(database, { name: `${bucket.name} 2`, share: bucket.share }, now)
@@ -585,9 +588,9 @@ export function Plan() {
       })
     }
     items.push({
-      label: 'Remove this bucket',
+      label: t('plan.screen.menu.remove'),
       icon: 'trash',
-      detail: 'Its share goes to the bucket on its right',
+      detail: t('plan.screen.menu.removeDetail'),
       separated: true,
       onChoose: () => setRemovingBucket(bucket),
     })
@@ -600,16 +603,16 @@ export function Plan() {
       ? []
       : [
           {
-            label: 'Open another plan',
+            label: t('plan.screen.menu.openOther'),
             submenu: others.map((one) => ({
               label: <Bidi>{one.name}</Bidi>,
               onChoose: () => setPlanId(one.id),
             })),
           } satisfies MenuItem,
           {
-            label: 'Draw another plan beside this one',
+            label: t('plan.screen.menu.compare'),
             submenu: [
-              { label: 'No other plan', disabled: compare === undefined, onChoose: () => setCompareId(undefined) },
+              { label: t('plan.screen.menu.noCompare'), disabled: compare === undefined, onChoose: () => setCompareId(undefined) },
               ...others.map((one) => ({
                 label: <Bidi>{one.name}</Bidi>,
                 disabled: compare?.plan.id === one.id,
@@ -621,13 +624,13 @@ export function Plan() {
     ...(compare === undefined
       ? [
           {
-            label: planView === 'bar' ? 'Draw the split as a ring' : 'Draw the split as a bar',
+            label: planView === 'bar' ? t('plan.screen.menu.asRing') : t('plan.screen.menu.asBar'),
             onChoose: () => choosePlanView(planView === 'bar' ? 'ring' : 'bar'),
           } satisfies MenuItem,
         ]
       : []),
     {
-      label: 'Copy this plan',
+      label: t('plan.screen.menu.copy'),
       icon: 'copy',
       separated: true,
       onChoose: () =>
@@ -640,19 +643,19 @@ export function Plan() {
       ? []
       : [
           {
-            label: 'Use this plan by default',
+            label: t('plan.screen.menu.makeDefault'),
             onChoose: () => write((database, now) => setDefaultPlan(database, plan.id, now)),
           } satisfies MenuItem,
         ]),
     {
-      label: 'Rename this plan',
+      label: t('plan.screen.menu.renamePlan'),
       icon: 'edit',
       onChoose: () => setRenamingPlan(plan.name),
     },
     {
-      label: 'Delete this plan',
+      label: t('plan.screen.menu.deletePlan'),
       icon: 'trash',
-      detail: 'Buckets and bills stay',
+      detail: t('plan.screen.menu.deletePlanDetail'),
       separated: true,
       onChoose: () => setDeletingPlan(true),
     },
@@ -664,13 +667,13 @@ export function Plan() {
 
   const showBasis = basisOpen || basis.unavailable
   const basisLine = ((): string => {
-    if (basis.unavailable) return 'No paycheck recorded yet — type an amount instead'
+    if (basis.unavailable) return t('plan.screen.basis.unavailable')
     if (basis.fromSalary !== undefined) {
       return basis.fromSalary.months > 1
-        ? `No paycheck yet — the salary that came in, average of ${String(basis.fromSalary.months)} months`
-        : `No paycheck yet — the salary that came in, ${formatYearMonth(basis.fromSalary.newest)}`
+        ? t('plan.screen.basis.salaryAverage', { n: basis.fromSalary.months })
+        : t('plan.screen.basis.salaryOne', { month: dates.yearMonth(basis.fromSalary.newest) })
     }
-    if (basis.sampleSize > 1) return `Average of your last ${String(basis.sampleSize)} paychecks`
+    if (basis.sampleSize > 1) return t('plan.screen.basis.average', { n: basis.sampleSize })
     return BASIS_LABEL[plan.basisKind]
   })()
 
@@ -679,16 +682,16 @@ export function Plan() {
       <div className="fc-view-enter @container flex flex-col gap-7 px-8 pt-6 pb-12">
         <header className="flex flex-wrap items-end justify-between gap-6 border-b border-hairline pb-4">
           <div className="flex flex-col gap-1.5">
-            <span className="fc-label text-ink-secondary uppercase">Plan</span>
+            <span className="fc-label text-ink-secondary uppercase">{t('plan.screen.title')}</span>
             {/* **One month control in the header** (M36 U10): which plan, copying it, drawing
                 another beside it and Bar or Ring are this menu's; the basis is the Net pay figure's. */}
             <h1 className="m-0 flex items-center gap-2 text-[24px] leading-tight font-medium tracking-[-0.01em]">
               <Bidi>{plan.name}</Bidi>
-              {plan.isDefault && <span className="text-body font-normal text-ink-secondary">· default</span>}
+              {plan.isDefault && <span className="text-body font-normal text-ink-secondary">{t('plan.screen.default')}</span>}
               <button
                 type="button"
-                aria-label="More for this plan"
-                title="Other plans, copy, draw"
+                aria-label={t('plan.screen.more')}
+                title={t('plan.screen.moreTitle')}
                 onClick={(event) => {
                   const box = event.currentTarget.getBoundingClientRect()
                   setPlanMenu({ x: box.left, y: box.bottom })
@@ -700,11 +703,11 @@ export function Plan() {
             </h1>
           </div>
           <div className="flex items-center gap-3">
-            <b className="font-medium tabular-nums">{formatYearMonth(month)}</b>
+            <b className="font-medium tabular-nums">{dates.yearMonth(month)}</b>
             <Pager
-              label="Month"
-              prev={formatMonthShort(addMonths(month, -1))}
-              next={formatMonthShort(addMonths(month, 1))}
+              label={t('plan.screen.month')}
+              prev={dates.monthShort(addMonths(month, -1))}
+              next={dates.monthShort(addMonths(month, 1))}
               onPrev={() => setMonth((current) => addMonths(current, -1))}
               onNext={() => setMonth((current) => addMonths(current, 1))}
             />
@@ -744,14 +747,14 @@ export function Plan() {
               onKeyDown={(event) => {
                 if (event.key === 'Escape') setRenamingPlan(undefined)
               }}
-              aria-label="Plan name"
+              aria-label={t('plan.screen.planName')}
               className={`${FIELD} w-64`}
             />
             <Button type="submit" variant="secondary" size="sm">
-              Rename
+              {t('plan.screen.menu.rename')}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setRenamingPlan(undefined)}>
-              Cancel
+              {t('plan.cancel')}
             </Button>
           </form>
         )}
@@ -759,11 +762,11 @@ export function Plan() {
         {deletingPlan && (
           <div className="fc-pop-enter flex flex-wrap items-center gap-3 bg-surface px-4 py-2">
             <span>
-              Delete the plan <Bidi>{plan.name}</Bidi>? The plan and its sizes are gone; your bills stay.
+              <Phrase text={t('plan.screen.deleteAsk')} parts={{ name: <Bidi>{plan.name}</Bidi> }} />
               {plan.isDefault &&
                 (plans.length > 1
-                  ? ' Another plan becomes the default.'
-                  : ' It is your only plan, so Plan will offer to start a new one.')}
+                  ? t('plan.screen.deleteAnotherDefault')
+                  : t('plan.screen.deleteOnly'))}
             </span>
             <Button
               variant="secondary"
@@ -774,10 +777,10 @@ export function Plan() {
                 setDeletingPlan(false)
               }}
             >
-              Delete plan
+              {t('plan.screen.deletePlan')}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setDeletingPlan(false)}>
-              Keep
+              {t('plan.keep')}
             </Button>
           </div>
         )}
@@ -786,7 +789,7 @@ export function Plan() {
           <div className="fc-pop-enter flex items-center gap-4 bg-surface px-4 py-2">
             <span className="text-negative">{problem}</span>
             <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setProblem(undefined)}>
-              Dismiss
+              {t('plan.screen.dismiss')}
             </Button>
           </div>
         )}
@@ -808,7 +811,7 @@ export function Plan() {
         <CushionPanel />
 
         <div className="grid grid-cols-2 divide-x divide-hairline border-y border-hairline @[48rem]:grid-cols-4">
-          <Figure label="Net pay" value={basis.amount} unavailable={basis.unavailable}>
+          <Figure label={t('plan.screen.netPay')} value={basis.amount} unavailable={basis.unavailable}>
             {basisLine}{' '}
             <button
               type="button"
@@ -816,23 +819,23 @@ export function Plan() {
               onClick={() => setBasisOpen(!showBasis)}
               className="text-accent hover:underline"
             >
-              {showBasis ? 'Done' : 'Change'}
+              {showBasis ? t('plan.screen.done') : t('plan.screen.change')}
             </button>
           </Figure>
-          <Figure label="Bills, out of net" value={parts.netOff}>
-            {parts.netOffList.length === 1 ? '1 bill' : `${String(parts.netOffList.length)} bills`}
+          <Figure label={t('plan.screen.billsOutOfNet')} value={parts.netOff}>
+            {parts.netOffList.length === 1 ? t('plan.screen.billOne') : t('plan.screen.billsMany', { n: parts.netOffList.length })}
           </Figure>
-          <Figure label="To split" value={result.splittable}>
+          <Figure label={t('plan.bar.toSplit')} value={result.splittable}>
             {inSplitMinor > 0
-              ? `${formatMoney(money(inSplitMinor, currency))} of it is bills`
-              : 'before any bucket'}
+              ? t('plan.screen.ofItBills', { amount: formatMoney(money(inSplitMinor, currency)) })
+              : t('plan.screen.beforeAnyBucket')}
           </Figure>
-          <Figure label="Not given a job" value={money(free, currency)}>
+          <Figure label={t('plan.bar.free')} value={money(free, currency)}>
             {result.balance.minor < 0
-              ? `${formatMoney(money(-result.balance.minor, currency))} too much is given out`
+              ? t('plan.screen.tooMuch', { amount: formatMoney(money(-result.balance.minor, currency)) })
               : free === 0
-                ? 'Nothing left over'
-                : 'Left on the bar'}
+                ? t('plan.screen.nothingLeft')
+                : t('plan.screen.leftOnBar')}
           </Figure>
         </div>
 
@@ -840,7 +843,7 @@ export function Plan() {
         {showBasis && (
           <div className="fc-pop-enter -mt-4 flex flex-wrap items-end gap-x-6 gap-y-3" data-testid="plan-basis">
             <label className="flex flex-col gap-1">
-              <span className="text-label text-ink-tertiary uppercase">Net pay is</span>
+              <span className="text-label text-ink-tertiary uppercase">{t('plan.screen.netPayIs')}</span>
               <ChoiceMenu
                 text={BASIS_LABEL[plan.basisKind]}
                 choices={BASIS_KINDS.map((kind) => ({ value: kind, label: BASIS_LABEL[kind] }))}
@@ -849,13 +852,13 @@ export function Plan() {
                     updateSplitPlan(database, plan.id, { basisKind: choice.value as BasisKind }, now),
                   )
                 }
-                aria-label="Basis"
+                aria-label={t('plan.screen.basisLabel')}
               />
             </label>
 
             {plan.basisKind === 'CUSTOM_AMOUNT' && (
               <label className="flex flex-col gap-1">
-                <span className="text-label text-ink-tertiary uppercase">Amount</span>
+                <span className="text-label text-ink-tertiary uppercase">{t('plan.fixed.amount')}</span>
                 <input
                   value={customText ?? fixedAmountOf(plan.customAmount, currency)}
                   onChange={(event) => {
@@ -875,7 +878,7 @@ export function Plan() {
                     }
                   }}
                   placeholder="0.00"
-                  aria-label="Custom basis amount"
+                  aria-label={t('plan.screen.customAmount')}
                   className={`${FIELD} w-36 text-end tabular-nums`}
                 />
               </label>
@@ -883,39 +886,39 @@ export function Plan() {
 
             {plan.basisKind === 'AVERAGE_LAST_N' && (
               <label className="flex flex-col gap-1">
-                <span className="text-label text-ink-tertiary uppercase">Over</span>
+                <span className="text-label text-ink-tertiary uppercase">{t('plan.screen.over')}</span>
                 <ChoiceMenu
-                  text={`${String(plan.basisMonths ?? 3)} months`}
-                  choices={[3, 6, 12].map((months) => ({ value: String(months), label: `${String(months)} months` }))}
+                  text={t('plan.fixed.monthsMany', { n: plan.basisMonths ?? 3 })}
+                  choices={[3, 6, 12].map((months) => ({ value: String(months), label: t('plan.fixed.monthsMany', { n: months }) }))}
                   onPick={(choice) =>
                     write((database, now) =>
                       updateSplitPlan(database, plan.id, { basisMonths: Number(choice.value) }, now),
                     )
                   }
-                  aria-label="How many months to average"
+                  aria-label={t('plan.screen.howManyMonths')}
                 />
               </label>
             )}
 
             {plan.basisKind === 'SPECIFIC_PAYCHECK' && (
               <label className="flex flex-col gap-1">
-                <span className="text-label text-ink-tertiary uppercase">Which</span>
+                <span className="text-label text-ink-tertiary uppercase">{t('plan.screen.which')}</span>
                 <ChoiceMenu
                   text={(() => {
                     const chosen = paychecks.find((paycheck) => paycheck.id === plan.basisPaycheckId)
-                    return chosen === undefined ? '' : `${formatYearMonth(chosen.period)} — ${formatMoney(chosen.net)}`
+                    return chosen === undefined ? '' : t('plan.screen.paycheckChoice', { month: dates.yearMonth(chosen.period), amount: formatMoney(chosen.net) })
                   })()}
-                  placeholder="Choose…"
+                  placeholder={t('plan.editor.choose')}
                   choices={paychecks.map((paycheck) => ({
                     value: paycheck.id,
-                    label: `${formatYearMonth(paycheck.period)} — ${formatMoney(paycheck.net)}`,
+                    label: t('plan.screen.paycheckChoice', { month: dates.yearMonth(paycheck.period), amount: formatMoney(paycheck.net) }),
                   }))}
                   onPick={(choice) =>
                     write((database, now) =>
                       updateSplitPlan(database, plan.id, { basisPaycheckId: choice.value || undefined }, now),
                     )
                   }
-                  aria-label="Which paycheck"
+                  aria-label={t('plan.screen.whichPaycheck')}
                 />
               </label>
             )}
@@ -984,33 +987,36 @@ export function Plan() {
           onSuggestAgain={(merchant) => write((database, now) => clearDismissal(database, merchant, now))}
         />
 
-        <section className="flex flex-col gap-3" aria-label="The split" data-guide="plan.split">
+        <section className="flex flex-col gap-3" aria-label={t('plan.bar.theSplit')} data-guide="plan.split">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <h2 className="m-0 text-[16px] font-medium">The split</h2>
+              <h2 className="m-0 text-[16px] font-medium">{t('plan.bar.theSplit')}</h2>
               <p className="m-0 mt-0.5 text-caption text-ink-secondary">
-                {formatMoney(basis.amount)} net pay
-                {parts.netOff.minor > 0 && (
-                  <>, less {formatMoney(parts.netOff)} of bills,</>
-                )} leaves {formatMoney(result.splittable)} to give a job. Drag a divider to resize.
+                {parts.netOff.minor > 0
+                  ? t('plan.screen.splitLeadBills', {
+                      net: formatMoney(basis.amount),
+                      bills: formatMoney(parts.netOff),
+                      split: formatMoney(result.splittable),
+                    })
+                  : t('plan.screen.splitLead', { net: formatMoney(basis.amount), split: formatMoney(result.splittable) })}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <label className="flex items-center gap-2">
-                <span className="text-label text-ink-tertiary uppercase">Against</span>
+                <span className="text-label text-ink-tertiary uppercase">{t('plan.screen.against')}</span>
                 <ChoiceMenu
-                  text={formatYearMonth(versus)}
-                  choices={offered.map((one) => ({ value: toYearMonthString(one), label: formatYearMonth(one) }))}
+                  text={dates.yearMonth(versus)}
+                  choices={offered.map((one) => ({ value: toYearMonthString(one), label: dates.yearMonth(one) }))}
                   onPick={(choice) => {
                     const picked = offered.find((one) => toYearMonthString(one) === choice.value)
                     if (picked !== undefined) setVersus(picked)
                   }}
-                  aria-label="Against which month"
+                  aria-label={t('plan.screen.againstWhich')}
                   className={`${SELECT} h-7`}
                 />
               </label>
               <span className="text-caption text-ink-secondary">
-                Snaps to {formatMoney(money(SNAP, currency))}
+                {t('plan.screen.snaps', { amount: formatMoney(money(SNAP, currency)) })}
               </span>
             </div>
           </div>
@@ -1033,7 +1039,7 @@ export function Plan() {
               locked={new Set()}
               snap={SNAP}
               readOnly
-              label={`${compare.plan.name} · ${formatMoney(compare.basis.amount)} net pay`}
+              label={t('plan.screen.compareLabel', { name: compare.plan.name, amount: formatMoney(compare.basis.amount) })}
             />
           )}
 
@@ -1050,7 +1056,7 @@ export function Plan() {
             view={compare === undefined ? planView : 'bar'}
             tip={dragTip}
             snap={SNAP}
-            label={compare === undefined ? undefined : `${plan.name} · ${formatMoney(basis.amount)} net pay`}
+            label={compare === undefined ? undefined : t('plan.screen.compareLabel', { name: plan.name, amount: formatMoney(basis.amount) })}
             onTrade={(trade, at) => setDragging({ trade, at })}
             onCommit={(trade) => {
               setDragging(undefined)
@@ -1069,8 +1075,7 @@ export function Plan() {
                     'linear-gradient(90deg, color-mix(in srgb, var(--color-ink-secondary) 45%, var(--color-background)) 0 60%, color-mix(in srgb, var(--color-ink-secondary) 12%, var(--color-background)) 60%)',
                 }}
               />
-              The fill is what each one got in {formatMonthName(versus)}. A bar at a
-              bucket’s right end means it went over.
+              {t('plan.screen.fillNote', { month: dates.monthName(versus) })}
             </p>
           )}
 
@@ -1081,15 +1086,15 @@ export function Plan() {
           >
             {result.balance.minor === 0 ? (
               <>
-                <b className="font-medium text-positive">Every shekel has a job</b>
+                <b className="font-medium text-positive">{t('plan.screen.everyShekel')}</b>
                 <span className="text-ink-secondary">
-                  The split adds up to {formatMoney(result.splittable)}.
+                  {t('plan.screen.addsUp', { amount: formatMoney(result.splittable) })}
                 </span>
               </>
             ) : result.balance.minor > 0 ? (
               <>
                 <b className="font-medium tabular-nums">
-                  {formatMoney(result.balance)} is not given a job yet.
+                  {t('plan.screen.notGivenYet', { amount: formatMoney(result.balance) })}
                 </b>
                 {lastEntry !== undefined && lastEntry.allocation.mode !== 'REMAINDER' && (
                   <Button
@@ -1103,18 +1108,18 @@ export function Plan() {
                       })
                     }
                   >
-                    Give it to <Bidi>{lastEntry.bucket.name}</Bidi>
+                    <Phrase text={t('plan.screen.giveTo')} parts={{ name: <Bidi>{lastEntry.bucket.name}</Bidi> }} />
                   </Button>
                 )}
-                <span className="text-ink-secondary">or drag the last divider to the right edge</span>
+                <span className="text-ink-secondary">{t('plan.screen.orDrag')}</span>
               </>
             ) : (
               <>
                 <b className="font-medium text-negative tabular-nums">
-                  {formatMoney(money(-result.balance.minor, currency))} too much is given out.
+                  {t('plan.screen.tooMuchSentence', { amount: formatMoney(money(-result.balance.minor, currency)) })}
                 </b>
                 <span className="text-ink-secondary">
-                  Shrink a bucket or take one out. Planning a drawdown from savings on purpose is allowed.
+                  {t('plan.screen.shrink')}
                 </span>
               </>
             )}
@@ -1122,7 +1127,7 @@ export function Plan() {
 
           <BucketTable
             sections={sections}
-            gotIn={formatMonthName(versus)}
+            gotIn={dates.monthName(versus)}
             measured={against?.ledgerHasMonth ?? false}
             onHot={setHot}
             onPointsAt={(bucket, at) => setPointing({ bucket, at })}
@@ -1157,19 +1162,20 @@ export function Plan() {
             onCancelRename={() => setRenaming(undefined)}
             below={(bucketId) =>
               removingBucket === undefined || removingBucket.id !== bucketId ? null : (
-          <div role="alertdialog" aria-label="Remove this bucket" className="fc-pop-enter flex flex-wrap items-center gap-3 border border-negative bg-surface px-4 py-2">
+          <div role="alertdialog" aria-label={t('plan.screen.menu.remove')} className="fc-pop-enter flex flex-wrap items-center gap-3 border border-negative bg-surface px-4 py-2">
             <span>
-              Remove <Bidi>{removingBucket.name}</Bidi> from <Bidi>{plan.name}</Bidi>? Its share goes to{' '}
-              {(() => {
-                const at = result.allocations.findIndex((one) => one.bucket.id === removingBucket.id)
-                const next = result.allocations[at + 1]
-                return next === undefined ? (
-                  'the money not given a job'
-                ) : (
-                  <Bidi>{next.bucket.name}</Bidi>
-                )
-              })()}
-              .
+              <Phrase
+                text={t('plan.screen.removeAsk')}
+                parts={{
+                  name: <Bidi>{removingBucket.name}</Bidi>,
+                  plan: <Bidi>{plan.name}</Bidi>,
+                  next: (() => {
+                    const at = result.allocations.findIndex((one) => one.bucket.id === removingBucket.id)
+                    const next = result.allocations[at + 1]
+                    return next === undefined ? t('plan.screen.notGivenJob') : <Bidi>{next.bucket.name}</Bidi>
+                  })(),
+                }}
+              />
             </span>
             <Button
               variant="secondary"
@@ -1181,10 +1187,10 @@ export function Plan() {
                 setRemovingBucket(undefined)
               }}
             >
-              Remove bucket
+              {t('plan.screen.removeBucket')}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setRemovingBucket(undefined)}>
-              Keep
+              {t('plan.keep')}
             </Button>
           </div>
                       )
@@ -1230,12 +1236,12 @@ export function Plan() {
               <input
                 value={newBucket}
                 onChange={(event) => setNewBucket(event.target.value)}
-                placeholder="New bucket"
-                aria-label="New bucket name"
+                placeholder={t('plan.screen.newBucket')}
+                aria-label={t('plan.screen.newBucketName')}
                 className={`${FIELD} w-44`}
               />
               <Button type="submit" variant="secondary" size="sm" icon="add">
-                Add a bucket
+                {t('plan.screen.addBucket')}
               </Button>
             </form>
 
@@ -1247,14 +1253,14 @@ export function Plan() {
                   setSuggestion(suggestion === undefined && db !== undefined ? (suggestGoalSplit(db, asOf, currency) ?? 'NONE') : undefined)
                 }
               >
-                Suggest goal amounts
+                {t('plan.screen.suggestGoals')}
               </Button>
             )}
 
             {unusedBuckets.length > 0 && (
               <ChoiceMenu
                 text=""
-                placeholder="Add one you already have…"
+                placeholder={t('plan.screen.addExisting')}
                 choices={unusedBuckets.map((bucket) => ({ value: bucket.id, label: bucket.name }))}
                 onPick={(choice) =>
                   saveAllocations([
@@ -1270,7 +1276,7 @@ export function Plan() {
                     },
                   ])
                 }
-                aria-label="Add a bucket this plan does not use"
+                aria-label={t('plan.screen.addUnused')}
               />
             )}
           </div>
@@ -1323,12 +1329,7 @@ export function Plan() {
 }
 
 /** The 50 / 30 / 20 choices of a bucket's *Counts as*, and none of them (M31 U4). */
-const SHARE_CHOICES: readonly (readonly [BucketShare | undefined, string])[] = [
-  ['NEEDS', 'Needs'],
-  ['WANTS', 'Wants'],
-  ['SAVING', 'Saving'],
-  [undefined, 'None of them'],
-]
+const SHARE_CHOICES: readonly (BucketShare | undefined)[] = ['NEEDS', 'WANTS', 'SAVING', undefined]
 
 /**
  * **What the month on screen records** (M31 U4) — what *Use for the month* became once the month
@@ -1351,9 +1352,11 @@ function RecordLine({
   nameOf: (suggestion: Suggestion) => string
   onRecord: () => void
 }) {
-  const monthName = formatYearMonth(month)
+  const t = useT()
+  const dates = useDates()
+  const monthName = dates.yearMonth(month)
   const said = (one: Suggestion): string =>
-    `${formatMoney(one.amount)} ${one.kind === 'SAVING_DEPOSIT' ? 'into' : 'off'} ${nameOf(one)}`
+    t(one.kind === 'SAVING_DEPOSIT' ? 'plan.record.into' : 'plan.record.off', { amount: formatMoney(one.amount), name: nameOf(one) })
 
   if (changes.length === 0) {
     const recorded = suggestions.filter((one) => one.fedBy === undefined && one.unchanged)
@@ -1361,9 +1364,9 @@ function RecordLine({
     return (
       <div className="fc-pop-enter flex flex-wrap items-center gap-x-3.5 gap-y-1 bg-accent-soft px-3.5 py-2.5 text-ink-secondary">
         <span>
-          Recorded for {monthName}: {listed(recorded.map(said))}.
+          {t('plan.record.recorded', { month: monthName, list: listedIn(t, recorded.map(said)) })}
         </span>
-        <span className="text-caption">It can be changed or deleted like any other.</span>
+        <span className="text-caption">{t('plan.record.canChange')}</span>
       </div>
     )
   }
@@ -1376,32 +1379,43 @@ function RecordLine({
       <div className="min-w-0 flex-[1_1_420px]">
         {moved.length === changes.length ? (
           <span>
-            {listed(moved.map((one) => `${formatMoney(one.current ?? one.amount)} was recorded ${one.kind === 'SAVING_DEPOSIT' ? 'into' : 'off'} ${nameOf(one)}`))}{' '}
-            for {monthName}; the plan now says {listed(moved.map((one) => formatMoney(one.amount)))}.
+            {t('plan.record.moved', {
+              items: listedIn(
+                t,
+                moved.map((one) =>
+                  t(one.kind === 'SAVING_DEPOSIT' ? 'plan.record.recordedInto' : 'plan.record.recordedOff', {
+                    amount: formatMoney(one.current ?? one.amount),
+                    name: nameOf(one),
+                  }),
+                ),
+              ),
+              month: monthName,
+              amounts: listedIn(t, moved.map((one) => formatMoney(one.amount))),
+            })}
           </span>
         ) : (
           <span>
-            {monthName} is on <Bidi>{planName}</Bidi>, which puts {listed(changes.map(said))} this month.
+            <Phrase text={t('plan.record.puts')} parts={{ month: monthName, plan: <Bidi>{planName}</Bidi>, list: listedIn(t, changes.map(said)) }} />
           </span>
         )}
         <small className="block text-caption text-ink-secondary">
           {deposits && payments
-            ? 'These are records: they move the goal’s and the debt’s balance.'
+            ? t('plan.record.both')
             : deposits
-              ? 'A deposit is a record: it moves the goal’s balance.'
-              : 'A payment is a record: it moves the debt’s balance.'}
+              ? t('plan.record.deposit')
+              : t('plan.record.payment')}
           {changes.some((one) => one.alsoDiscovered) &&
-            ' The app already finds payments on this debt by itself, so this writes a second row unless it is an extra payment.'}
+            t('plan.record.alsoDiscovered')}
         </small>
       </div>
       <Button variant="secondary" size="sm" onClick={onRecord}>
         {moved.length === changes.length && changes.length === 1
-          ? `Record ${formatMoney(changes[0]?.amount ?? zero(changes[0]?.amount.currency ?? 'ILS'))} instead`
+          ? t('plan.record.instead', { amount: formatMoney(changes[0]?.amount ?? zero(changes[0]?.amount.currency ?? 'ILS')) })
           : changes.length === 1
-            ? 'Record it'
+            ? t('plan.record.it')
             : changes.length === 2
-              ? 'Record both'
-              : `Record all ${String(changes.length)}`}
+              ? t('plan.record.both2')
+              : t('plan.record.all', { n: changes.length })}
       </Button>
     </div>
   )
@@ -1412,18 +1426,19 @@ function RecordLine({
  * in words — or why there is nothing to say. What it was before was a panel behind a button.
  */
 function Against({ against }: { against: PlanActual }) {
+  const t = useT()
   const { versus, ledgerHasMonth, nothing } = against
-  const monthName = formatYearMonth(against.period)
+  const dates = useDates()
+  const monthName = dates.yearMonth(against.period)
   if (!ledgerHasMonth) {
     return (
       <p className="m-0 border-t border-hairline pt-2.5 text-caption text-ink-secondary">
-        No statement has been read for {monthName} yet, so what the buckets got is unknown, not nothing, and they
-        have no fill. Deposits and debt payments are entered by hand and still count.
+        {t('plan.against.noStatement', { month: monthName })}
       </p>
     )
   }
   if (nothing !== undefined || versus.comparable === 0) {
-    return <p className="m-0 border-t border-hairline pt-2.5 text-caption text-ink-secondary">{nothing ?? `Nothing here can be measured in ${monthName}.`}</p>
+    return <p className="m-0 border-t border-hairline pt-2.5 text-caption text-ink-secondary">{nothing ?? t('plan.against.nothing', { month: monthName })}</p>
   }
   // The split's own bills count beside the buckets; the ones out of net are before the split.
   const bills = against.fixed.filter((line) => line.role === 'SPLIT' && line.planned !== undefined)
@@ -1434,13 +1449,13 @@ function Against({ against }: { against: PlanActual }) {
   const difference = actual.minor - planned.minor
   return (
     <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1 border-t border-hairline pt-2.5">
-      <Stat label="Planned" value={planned} />
-      <Stat label="Got" value={actual} />
-      <Stat label={difference > 0 ? 'Over the plan' : 'Under the plan'} value={money(Math.abs(difference), planned.currency)} />
+      <Stat label={t('plan.bucket.column.planned')} value={planned} />
+      <Stat label={t('plan.against.got')} value={actual} />
+      <Stat label={difference > 0 ? t('plan.against.over') : t('plan.against.under')} value={money(Math.abs(difference), planned.currency)} />
       <p className="m-0 flex-[1_1_280px] self-center text-caption text-ink-secondary">
-        In {monthName} {formatMoney(actual)} of the {formatMoney(planned)} planned went out.
+        {t('plan.against.wentOut', { month: monthName, actual: formatMoney(actual), planned: formatMoney(planned) })}
         {versus.withoutBasis > 0 &&
-          ` ${String(versus.withoutBasis)} ${versus.withoutBasis === 1 ? 'bucket is' : 'buckets are'} not measured: nothing records what a fund, an account or nothing in particular got.`}
+          t(versus.withoutBasis === 1 ? 'plan.against.unmeasuredOne' : 'plan.against.unmeasuredMany', { n: versus.withoutBasis })}
       </p>
     </div>
   )
@@ -1562,6 +1577,7 @@ function matchedHistory(
  * line, three paragraphs and two buttons).
  */
 function EmptyState({ onStart, onEmpty }: { onStart: () => void; onEmpty: () => void }) {
+  const t = useT()
   return (
     // **Both of the guide's Plan places, until there is a plan** (M28 U9): the
     // fixed expenses are tracked against a plan, so starting one comes first.
@@ -1569,17 +1585,16 @@ function EmptyState({ onStart, onEmpty }: { onStart: () => void; onEmpty: () => 
       className="fc-view-enter mx-auto flex h-full max-w-md flex-col items-center justify-center gap-4 px-6 text-center"
       data-guide="plan.split plan.fixed"
     >
-      <h1 className="m-0 text-title">Plan</h1>
+      <h1 className="m-0 text-title">{t('plan.screen.title')}</h1>
       <p className="m-0 text-ink-secondary">
-        No plan yet: a plan splits your take-home pay into buckets, after the bills you pick, and changes nothing in
-        your ledger.
+        {t('plan.screen.empty')}
       </p>
       <div className="flex flex-wrap items-center justify-center gap-3">
         <Button variant="primary" onClick={onStart}>
-          Start with 50 / 30 / 20
+          {t('plan.starter.title')}
         </Button>
         <Button variant="ghost" onClick={onEmpty}>
-          Start empty
+          {t('plan.screen.startEmpty')}
         </Button>
       </div>
     </div>
@@ -1592,4 +1607,10 @@ function Centered({ children }: { children: React.ReactNode }) {
       <p className="max-w-md">{children}</p>
     </div>
   )
+}
+
+/** `a, b and c` in the language now: the list words of `core/text.ts`'s `listed`, translated (M60 U5, D-590). */
+function listedIn(t: Translate, words: readonly string[]): string {
+  if (words.length < 2) return words[0] ?? ''
+  return t('plan.listed', { rest: words.slice(0, -1).join(', '), last: words.at(-1) ?? '' })
 }

@@ -4,6 +4,7 @@ import type { EarlierCopy } from '../../electron/bridge.ts'
 import { instantDay } from '@/core/instant.ts'
 import { shellDocuments } from '@/data/storage/desktop.ts'
 import { formatBytes } from '@/domain/provider.ts'
+import { useT } from '@/i18n/current.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
@@ -70,6 +71,7 @@ export function EarlierCopies() {
 }
 
 function EarlierCopiesDialog() {
+  const t = useT()
   const documentName = useDocumentStore((state) => state.documentName)
   const isDirty = useDocumentStore((state) => state.isDirty)
   const [listing, setListing] = useState<Listing>({ kind: 'loading' })
@@ -139,7 +141,7 @@ function EarlierCopiesDialog() {
         ref={panel}
         role="dialog"
         aria-modal="true"
-        aria-label="Earlier copies of this document"
+        aria-label={t('chrome.earlierCopies.label')}
         tabIndex={-1}
         className="fc-pop-enter flex max-h-[70vh] w-full max-w-lg flex-col overflow-hidden rounded-lg border border-hairline-strong bg-elevated shadow-pop outline-none"
         onKeyDown={onKeyDown}
@@ -147,59 +149,63 @@ function EarlierCopiesDialog() {
         <div className="flex items-center gap-2.5 border-b border-hairline py-2 pe-2 ps-3.5">
           {/* The heading in sentence case, so the file's name keeps its own (M54 F6). */}
           <h2 className="m-0 flex min-w-0 flex-1 gap-1 text-body font-medium">
-            <span className="shrink-0">Earlier copies of</span>
+            <span className="shrink-0">{t('chrome.earlierCopies.heading')}</span>
             <Bidi className="min-w-0 truncate">{documentName}</Bidi>
           </h2>
-          <button type="button" aria-label="Close" title="Close (Esc)" onClick={close} className="fc-icon-action">
+          <button
+            type="button"
+            aria-label={t('chrome.earlierCopies.close')}
+            title={t('chrome.earlierCopies.closeTitle')}
+            onClick={close}
+            className="fc-icon-action"
+          >
             <ActionGlyph name="close" />
           </button>
         </div>
 
         <p className="m-0 px-3.5 pt-3 text-ink-secondary">
-          A copy is taken before an assistant writes to this document, and the last five are kept in Emerald’s own folder.
-          Named copies, kept before a large write or when asked, are kept apart, the last three. Restoring one keeps a
-          copy of the document as it is now first, so it can be undone from here.
+          {t('chrome.earlierCopies.lead')}
         </p>
         {isDirty && (
           <p className="m-0 px-3.5 pt-2 text-ink">
-            Save first — restoring replaces the file and opens it again, and the changes in this window are not in it yet.
+            {t('chrome.earlierCopies.saveFirst')}
           </p>
         )}
         {restored !== undefined && (
           <p className="m-0 px-3.5 pt-2 text-ink" role="status">
-            Restored the copy from {moment(restored.from)}. The document as it was just before is the newest copy below.
+            {t('chrome.earlierCopies.restored', { when: moment(restored.from) })}
           </p>
         )}
         {failure !== undefined && (
           <p className="m-0 px-3.5 pt-2 text-negative" role="alert">
-            Could not restore it: {failure}
+            {t('chrome.earlierCopies.restoreFailed', { reason: failure })}
           </p>
         )}
 
         <div className="min-h-0 flex-1 overflow-y-auto px-3.5 pt-2 pb-3">
           {listing.kind === 'loading' && (
             <div className="py-3">
-              <Working size={20} label="Listing the copies" />
+              <Working size={20} label={t('chrome.earlierCopies.listing')} />
             </div>
           )}
           {listing.kind === 'nothing-open' && (
-            <p className="m-0 py-3 text-ink-secondary">Open a document from a file to see its earlier copies.</p>
+            <p className="m-0 py-3 text-ink-secondary">{t('chrome.earlierCopies.nothingOpen')}</p>
           )}
           {listing.kind === 'failed' && (
             <p className="m-0 py-3 text-negative" role="alert">
-              Could not list them: {listing.reason}
+              {t('chrome.earlierCopies.listFailed', { reason: listing.reason })}
             </p>
           )}
           {listing.kind === 'copies' && listing.copies.length === 0 && (
             <p className="m-0 py-3 text-ink-secondary">
-              None yet: one is taken the first time an assistant writes to it.{' '}
+              {t('chrome.earlierCopies.none')}{' '}
               <button
                 type="button"
                 disabled={backingUp}
                 onClick={() => void backUp()}
                 className="text-accent underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:text-ink-secondary"
               >
-                Back up now
+                {t('chrome.earlierCopies.backUp')}
               </button>
             </p>
           )}
@@ -212,7 +218,7 @@ function EarlierCopiesDialog() {
                     {copy.before !== undefined && (
                       // The ellipsis on the Bidi span, so a Hebrew label keeps its start (M54 U6).
                       <span className="flex min-w-0 gap-1 text-caption text-ink-secondary">
-                        <span className="shrink-0">{copy.before === '' ? 'named' : 'named · before'}</span>
+                        <span className="shrink-0">{copy.before === '' ? t('chrome.earlierCopies.named') : t('chrome.earlierCopies.namedBefore')}</span>
                         {copy.before !== '' && <Bidi className="min-w-0 truncate">{copy.before}</Bidi>}
                       </span>
                     )}
@@ -221,10 +227,10 @@ function EarlierCopiesDialog() {
                   <Button
                     size="sm"
                     disabled={isDirty || (restoring !== undefined && restoring !== copy.name)}
-                    busy={restoring === copy.name ? 'Restoring…' : undefined}
+                    busy={restoring === copy.name ? t('chrome.earlierCopies.restoring') : undefined}
                     onClick={() => void restore(copy)}
                   >
-                    Restore
+                    {t('chrome.earlierCopies.restore')}
                   </Button>
                 </li>
               ))}

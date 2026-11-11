@@ -24,6 +24,7 @@
  *            --limit 10 (entries per list) · --json (everything, as JSON) · --fresh
  *            --dir rtl (or --lang he): the page mirrored as Hebrew draws it (M60 U3, D-586),
  *            with the rail's side and what is cut off sideways measured; --dir ltr pins it
+ *            --lang he: mirrored and in Hebrew words too, with the English left listed (M60 U5, D-590)
  */
 
 import { spawn, spawnSync } from 'node:child_process'
@@ -53,6 +54,8 @@ const probeOptions = {
   root: option('root', undefined),
   limit: Number(option('limit', '10')),
   dir: option('dir', option('lang', undefined) === undefined ? undefined : option('lang') === 'he' ? 'rtl' : 'ltr'),
+  // --lang he draws the app's words in Hebrew too, and lists the English left (M60 U5, D-590).
+  lang: option('lang', undefined),
 }
 if (probeOptions.dir !== undefined && probeOptions.dir !== 'rtl' && probeOptions.dir !== 'ltr') {
   console.error(`--dir takes rtl or ltr, not ${String(probeOptions.dir)}.`)
@@ -126,6 +129,7 @@ for (const r of found.results) {
     r.placeholderOnly.count ? `  placeholder only:${items(r.placeholderOnly, (i) => i.placeholder)}` : '',
     r.roundedFields.count ? `  round fields:${items(r.roundedFields, (i) => `${i.tag} ${i.radius} ${i.name}`)}` : '',
     r.clippedX.count ? `  cut off sideways:${items(r.clippedX, (i) => `${i.text} (by ${i.by})`)}` : '',
+    probeOptions.lang === 'he' && r.latin?.count ? `  English outside a document's words:${items(r.latin, (i) => i.text)}` : '',
   ].filter(Boolean)
   if (detail.length) console.log(detail.join('\n'))
 }

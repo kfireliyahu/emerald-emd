@@ -2,9 +2,10 @@ import { useState } from 'react'
 
 import { formatMoney } from '@/core/money.ts'
 import { formatPercent } from '@/core/percent.ts'
-import { formatMonthShort, toISODate } from '@/core/time.ts'
+import { toISODate } from '@/core/time.ts'
 import { CADENCES, type Cadence, type FixedExpenseCandidate } from '@/domain/model/fixed.ts'
 import { coverageBasisPoints } from '@/domain/fixedExpenses.ts'
+import { useDates, useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { Chip } from '@/ui/components/Chip.tsx'
@@ -39,6 +40,8 @@ export function CandidateCard({
   onConfirm: (choice: CandidateChoice) => void
   onDismiss: () => void
 }) {
+  const t = useT()
+  const dates = useDates()
   const [editing, setEditing] = useState(false)
   const [amountText, setAmountText] = useState(formatMoney(candidate.medianAmount, { symbol: false }))
   const [cadence, setCadence] = useState<Cadence>(candidate.suggestedCadence)
@@ -54,20 +57,18 @@ export function CandidateCard({
       <div className="min-w-56 flex-1">
         <Bidi className="font-medium">{candidate.merchantRaw}</Bidi>
         <div className="mt-0.5 flex flex-wrap items-center gap-x-4 gap-y-1">
-          <Chip>{CONFIDENCE_LABEL[candidate.confidence]}</Chip>
+          <Chip>{t(`plan.fixed.confidence.${candidate.confidence}`)}</Chip>
           <span className="text-caption text-ink-tertiary tabular-nums">
-            {candidate.occurrences === 1 ? '1 month' : `${candidate.occurrences} months`}
-            {coverage !== undefined && coverage < 10_000 && <> of {formatPercent(coverage, { digits: 0 })}</>}
+            {candidate.occurrences === 1 ? t('plan.fixed.monthOne') : t('plan.fixed.monthsMany', { n: candidate.occurrences })}
+            {coverage !== undefined && coverage < 10_000 && t('plan.fixed.ofCoverage', { percent: formatPercent(coverage, { digits: 0 }) })}
             {' · '}
             {CADENCE_LABEL[candidate.suggestedCadence].toLocaleLowerCase()}
-            {candidate.amountVariability === 'VARIABLE' && <> · amount moves</>}
+            {candidate.amountVariability === 'VARIABLE' && t('plan.fixed.amountMoves')}
           </span>
           <span className="text-caption text-ink-tertiary tabular-nums">
-            usually the {candidate.dayOfMonthHint}
-            {ordinal(candidate.dayOfMonthHint)}
-            {candidate.dayOfMonthSpread > 0 && <> ± {candidate.dayOfMonthSpread}d</>}
-            {' · last '}
-            {toISODate(candidate.lastSeen)}
+            {t('plan.fixed.usuallyDay', { day: candidate.dayOfMonthHint, ordinal: ordinal(candidate.dayOfMonthHint) })}
+            {candidate.dayOfMonthSpread > 0 && t('plan.fixed.spread', { n: candidate.dayOfMonthSpread })}
+            {t('plan.fixed.lastSeen', { date: toISODate(candidate.lastSeen) })}
           </span>
         </div>
       </div>
@@ -75,27 +76,27 @@ export function CandidateCard({
       <div className="flex flex-col items-end gap-1">
         <AmountHistory months={candidate.months} />
         <span className="text-caption text-ink-tertiary tabular-nums">
-          {first === undefined ? '' : formatMonthShort(first.period)}
-          {last !== undefined && last !== first && <> → {formatMonthShort(last.period)}</>}
+          {first === undefined ? '' : dates.monthShort(first.period)}
+          {last !== undefined && last !== first && <> {t('plan.forward')} {dates.monthShort(last.period)}</>}
         </span>
       </div>
 
       {editing ? (
         <div className="fc-view-enter flex flex-wrap items-center gap-2">
           <label className="flex items-center gap-2 text-caption text-ink-secondary">
-            Amount
+            {t('plan.fixed.amount')}
             <input
               className={`${FIELD} w-28 text-end tabular-nums`}
               value={amountText}
               onChange={(event) => setAmountText(event.target.value)}
-              aria-label="Expected amount"
+              aria-label={t('plan.fixed.expectedAmount')}
             />
           </label>
           <select
             className={`${SELECT} h-8`}
             value={cadence}
             onChange={(event) => setCadence(event.target.value as Cadence)}
-            aria-label="Cadence"
+            aria-label={t('plan.fixed.cadence.label')}
           >
             {CADENCES.map((option) => (
               <option key={option} value={option}>
@@ -111,10 +112,10 @@ export function CandidateCard({
               if (choice !== undefined) onConfirm(choice)
             }}
           >
-            Add it
+            {t('plan.fixed.addIt')}
           </Button>
           <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
-            Cancel
+            {t('plan.cancel')}
           </Button>
         </div>
       ) : (
@@ -129,15 +130,15 @@ export function CandidateCard({
               onConfirm({ expectedAmount: candidate.medianAmount, cadence: candidate.suggestedCadence })
             }
           >
-            Track it
+            {t('plan.fixed.trackIt')}
           </Button>
           <Button variant="secondary" size="sm" onClick={() => setEditing(true)}>
-            Change…
+            {t('plan.fixed.change')}
           </Button>
           {/* Dismissing is permanent until cleared, and the screen says so where
               the button is rather than in a dialog after the fact (D-053). */}
-          <Button variant="ghost" size="sm" onClick={onDismiss} title="Never suggest this merchant">
-            Not a bill
+          <Button variant="ghost" size="sm" onClick={onDismiss} title={t('plan.fixed.neverSuggest')}>
+            {t('plan.fixed.notABill')}
           </Button>
         </div>
       )}
@@ -145,11 +146,6 @@ export function CandidateCard({
   )
 }
 
-const CONFIDENCE_LABEL = {
-  HIGH: 'looks certain',
-  MEDIUM: 'looks likely',
-  LOW: 'a guess',
-} as const
 
 /** `1st`, `2nd`, `3rd`, `11th`. English UI copy, so English ordinals. */
 function ordinal(day: number): string {

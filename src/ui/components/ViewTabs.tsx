@@ -51,7 +51,7 @@ export function ViewTabs() {
 
   return (
     <nav
-      aria-label="Views"
+      aria-label={t('chrome.components.views')}
       className="flex shrink-0 items-center gap-1 border-b border-hairline px-6"
     >
       {tabs.map((tab) => {

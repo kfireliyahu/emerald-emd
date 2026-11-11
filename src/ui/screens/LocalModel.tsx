@@ -17,7 +17,10 @@ import {
   sameProvider,
 } from '@/domain/provider.ts'
 import { RELEASES_URL } from '@/demo/page/page.ts'
+import type { MessageKey } from '@/i18n/catalogue.ts'
+import { useT } from '@/i18n/current.ts'
 import { Button } from '@/ui/components/Button.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 
 /**
  * The local model: what is on this machine, and which of it the app will use —
@@ -49,6 +52,7 @@ import { Button } from '@/ui/components/Button.tsx'
  * carries that reasoning.
  */
 export function LocalModel() {
+  const t = useT()
   const supported = isProviderSupported()
   const [chosen, setChosen] = useState<Provider | undefined>(() => readChosenProvider())
   const [probes, setProbes] = useState<readonly RuntimeProbe[] | undefined>(undefined)
@@ -75,16 +79,16 @@ export function LocalModel() {
     return (
       // The screen's title, one sentence and one text action (M54 F4).
       <div className="px-6 py-6">
-        <h1 className="m-0 text-title">Local model</h1>
+        <h1 className="m-0 text-title">{t('rail.localModel')}</h1>
         <p className="mt-2 max-w-prose text-ink-secondary">
-          A local model runs beside the desktop app, which a page in a browser has no way to reach.{' '}
+          {t('settings.model.unsupported')}{' '}
           <a
             href={RELEASES_URL}
             target="_blank"
             rel="noreferrer"
             className="text-accent hover:underline hover:underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
           >
-            Get the desktop app
+            {t('settings.model.getApp')}
           </a>
         </p>
       </div>
@@ -96,12 +100,15 @@ export function LocalModel() {
       <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline px-6 py-2">
         <span className="text-ink-secondary">
           {state.kind === 'off' ? (
-            'No model in use'
+            t('settings.model.noModel')
           ) : (
-            <>
-              Using <span className="font-medium text-ink">{state.provider.model}</span> in{' '}
-              {RUNTIME_LABELS[state.provider.runtime]}
-            </>
+            <Phrase
+              text={t('settings.model.using')}
+              parts={{
+                model: <span className="font-medium text-ink">{state.provider.model}</span>,
+                runtime: RUNTIME_LABELS[state.provider.runtime],
+              }}
+            />
           )}
         </span>
 
@@ -112,33 +119,29 @@ export function LocalModel() {
         <span className="ms-auto flex items-center gap-2">
           {state.kind !== 'off' && (
             <Button size="sm" variant="ghost" onClick={() => choose(undefined)}>
-              Turn off
+              {t('settings.model.turnOff')}
             </Button>
           )}
-          <Button size="sm" variant={probes === undefined ? 'primary' : 'secondary'} onClick={look} busy={looking ? 'Looking…' : undefined}>
-            {probes === undefined ? 'Look for a runtime' : 'Look again'}
+          <Button size="sm" variant={probes === undefined ? 'primary' : 'secondary'} onClick={look} busy={looking ? t('settings.model.looking') : undefined}>
+            {probes === undefined ? t('settings.model.look') : t('settings.model.lookAgain')}
           </Button>
         </span>
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto px-6 py-4">
         {failed !== undefined && (
-          <p className="mb-4 text-negative">The shell could not be asked: {failed}</p>
+          <p className="mb-4 text-negative">{t('settings.model.shellFailed', { error: failed })}</p>
         )}
 
         {probes === undefined ? (
           <div className="max-w-xl space-y-3 text-ink-secondary">
             <p>
-              A local model runs on this machine and reads nothing that leaves it. The app does not
-              go looking on its own — press <span className="text-ink">Look for a runtime</span> and
-              it will ask two ports on this computer, {DEFAULT_PORTS}, whether Ollama or LM Studio
-              is listening. That is the only connection this app ever opens, and it goes nowhere
-              but here.
+              <Phrase
+                text={t('settings.model.intro')}
+                parts={{ look: <span className="text-ink">{t('settings.model.look')}</span>, ports: t('settings.model.ports') }}
+              />
             </p>
-            <p className="text-caption text-ink-secondary">
-              Nothing is downloaded, nothing is sent, and the app stays whole with no model chosen
-              at all — every screen works exactly as it does now.
-            </p>
+            <p className="text-caption text-ink-secondary">{t('settings.model.introAfter')}</p>
           </div>
         ) : (
           <div className="fc-pop-enter space-y-6">
@@ -158,8 +161,6 @@ export function LocalModel() {
   )
 }
 
-const DEFAULT_PORTS = '11434 and 1234'
-
 /** One runtime, in whichever of its three states the last look found it. */
 function RuntimeBlock({
   probe,
@@ -170,19 +171,20 @@ function RuntimeBlock({
   chosen: Provider | undefined
   onChoose: (provider: Provider) => void
 }) {
+  const t = useT()
   return (
     <section>
       <h2 className="flex flex-wrap items-baseline gap-x-3">
         <span className="font-medium">{RUNTIME_LABELS[probe.runtime]}</span>
         <span className="text-caption text-ink-secondary tabular-nums">{probe.origin}</span>
         {probe.kind === 'ready' && probe.version !== undefined && (
-          <span className="text-caption text-ink-secondary">version {probe.version}</span>
+          <span className="text-caption text-ink-secondary">{t('settings.model.version', { version: probe.version })}</span>
         )}
       </h2>
 
       {probe.kind === 'absent' && (
         <p className="mt-1 text-ink-secondary">
-          Not running. {INSTALL_HINT[probe.runtime]}
+          {t('settings.model.notRunning', { hint: t(INSTALL_HINT[probe.runtime]) })}
         </p>
       )}
 
@@ -190,16 +192,13 @@ function RuntimeBlock({
         // The distinction the detector exists for: something is there, so
         // "install it" would be the wrong thing to say.
         <p className="mt-1 text-ink-secondary">
-          Something is listening on that port and it did not answer as{' '}
-          {RUNTIME_LABELS[probe.runtime]} — {probe.reason}. Nothing to install; something else has
-          the port.
+          {t('settings.model.unusable', { runtime: RUNTIME_LABELS[probe.runtime], reason: probe.reason })}
         </p>
       )}
 
       {probe.kind === 'ready' && probe.models.length === 0 && (
         <p className="mt-1 text-ink-secondary">
-          Running, with no models installed. Pull one in {RUNTIME_LABELS[probe.runtime]} and look
-          again.
+          {t('settings.model.noModels', { runtime: RUNTIME_LABELS[probe.runtime] })}
         </p>
       )}
 
@@ -225,7 +224,7 @@ function RuntimeBlock({
                   <span className={selected ? 'font-medium' : undefined}>{choice.model.label}</span>
                   <span className="ms-auto text-caption text-ink-secondary tabular-nums">
                     {choice.model.sizeBytes === undefined
-                      ? 'size not stated'
+                      ? t('settings.model.sizeNotStated')
                       : formatBytes(choice.model.sizeBytes)}
                   </span>
                 </label>
@@ -238,9 +237,9 @@ function RuntimeBlock({
   )
 }
 
-const INSTALL_HINT: Readonly<Record<RuntimeKind, string>> = {
-  ollama: 'Install it and run `ollama serve`, then look again.',
-  lmstudio: 'Start it and turn on its local server, then look again.',
+const INSTALL_HINT: Readonly<Record<RuntimeKind, MessageKey>> = {
+  ollama: 'settings.model.hints.ollama',
+  lmstudio: 'settings.model.hints.lmstudio',
 }
 
 /**
@@ -249,13 +248,22 @@ const INSTALL_HINT: Readonly<Record<RuntimeKind, string>> = {
  * before anything does.
  */
 function DiskLine({ probes }: { probes: readonly RuntimeProbe[] }) {
+  const t = useT()
   const found = modelChoices(probes)
   if (found.length === 0) return null
   const complete = diskUsedIsComplete(probes)
   return (
     <p className="text-caption text-ink-secondary tabular-nums">
-      {found.length === 1 ? '1 model' : `${found.length} models`} on this machine,{' '}
-      {complete ? 'taking' : 'taking at least'} {formatBytes(diskUsed(probes))} of disk.
+      {t(
+        found.length === 1
+          ? complete
+            ? 'settings.model.diskOne'
+            : 'settings.model.diskOneAtLeast'
+          : complete
+            ? 'settings.model.diskMany'
+            : 'settings.model.diskManyAtLeast',
+        { n: found.length, size: formatBytes(diskUsed(probes)) },
+      )}
     </p>
   )
 }

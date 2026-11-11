@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 
 import { formatMoney, money, type CurrencyCode, type Money } from '@/core/money.ts'
 import type { SplitResult } from '@/domain/splitter.ts'
+import { useT, type Translate } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import {
   crossPath,
@@ -112,6 +113,7 @@ export function PlanBar({
   /** **The same segments, as a bar or as a ring** (D-320); changing it animates one into the other. */
   view?: PlanView
 }) {
+  const say = useT()
   const track = useRef<HTMLDivElement>(null)
   const stage = useRef<HTMLDivElement>(null)
   const ringBox = useRef<HTMLDivElement>(null)
@@ -174,9 +176,9 @@ export function PlanBar({
       <div
         className="flex h-16 items-center justify-center border border-dashed border-hairline-strong text-ink-secondary"
         role="img"
-        aria-label="Nothing to split yet"
+        aria-label={say('plan.bar.nothing')}
       >
-        Nothing to split yet
+        {say('plan.bar.nothing')}
       </div>
     )
   }
@@ -278,7 +280,7 @@ export function PlanBar({
         key={`divider-${entry.allocation.id}`}
         type="button"
         role="slider"
-        aria-label={`Divider after ${entry.bucket.name}`}
+        aria-label={say('plan.bar.divider', { name: entry.bucket.name })}
         aria-valuemin={0}
         aria-valuemax={total}
         aria-valuenow={entry.amount.minor}
@@ -322,7 +324,7 @@ export function PlanBar({
             from: 0,
             to: share.minor / total,
             colour: 'var(--color-ink-tertiary)',
-            name: 'Bills',
+            name: say('plan.fixed.title'),
             amount: share,
             got: billsGot,
           },
@@ -346,7 +348,7 @@ export function PlanBar({
             from: cursor / total,
             to: (cursor + free) / total,
             colour: 'var(--color-ink-tertiary)',
-            name: 'Not given a job',
+            name: say('plan.bar.free'),
             amount: money(free, currency),
           },
         ]
@@ -387,7 +389,7 @@ export function PlanBar({
                 strokeDasharray: piece.kind === 'free' ? '4 3' : undefined,
               }}
             >
-              <title>{titleOf(piece)}</title>
+              <title>{titleOf(piece, say)}</title>
             </path>
             {piece.got !== undefined && piece.kind !== 'free' && piece.amount.minor > 0 && (
               <path
@@ -420,10 +422,10 @@ export function PlanBar({
 
   const centre = (
     <>
-      <span className="text-caption text-ink-secondary">To split</span>
+      <span className="text-caption text-ink-secondary">{say('plan.bar.toSplit')}</span>
       <b className="text-[22px] font-medium tabular-nums">{formatMoney(result.splittable)}</b>
       {netOff.minor > 0 && (
-        <span className="text-caption text-ink-secondary tabular-nums">after {formatMoney(netOff)} of bills</span>
+        <span className="text-caption text-ink-secondary tabular-nums">{say('plan.bar.afterBills', { amount: formatMoney(netOff) })}</span>
       )}
     </>
   )
@@ -440,13 +442,13 @@ export function PlanBar({
                   'repeating-linear-gradient(135deg, var(--color-surface) 0 6px, var(--color-hairline) 6px 7px)',
               }}
             >
-              Bills, out of net · {formatMoney(netOff)}
+              {say('plan.bar.billsOutOfNet', { amount: formatMoney(netOff) })}
             </div>
           )}
           <div
             className="flex min-w-0 flex-1 items-center overflow-hidden border border-hairline-strong bg-surface px-2.5 whitespace-nowrap"
           >
-            To split · {formatMoney(result.splittable)}
+            {say('plan.bar.toSplitAmount', { amount: formatMoney(result.splittable) })}
           </div>
         </div>
         <svg className="block h-[26px] w-full" viewBox="0 0 100 26" preserveAspectRatio="none" aria-hidden>
@@ -575,7 +577,7 @@ export function PlanBar({
           className="relative flex h-16 touch-none select-none"
           role="img"
           aria-label={[
-            share === undefined ? '' : `Bills ${formatMoney(share)}`,
+            share === undefined ? '' : `${say('plan.fixed.title')} ${formatMoney(share)}`,
             ...segments.map((entry) => `${entry.bucket.name} ${formatMoney(entry.amount)}`),
           ]
             .filter((part) => part !== '')
@@ -589,10 +591,10 @@ export function PlanBar({
                 background:
                   'repeating-linear-gradient(135deg, var(--color-surface) 0 6px, var(--color-hairline) 6px 7px)',
               }}
-              title={`Bills in the split · ${formatMoney(share)}${billsGot === undefined ? '' : `, charged ${formatMoney(billsGot)}`}`}
+              title={`${say('plan.bar.billsInSplit', { amount: formatMoney(share) })}${billsGot === undefined ? '' : say('plan.bar.charged', { amount: formatMoney(billsGot) })}`}
             >
               <Fill amount={share} got={billsGot} colour="var(--color-ink-tertiary)" />
-              {share.minor / total > 0.07 && <b className="relative truncate font-medium">Bills</b>}
+              {share.minor / total > 0.07 && <b className="relative truncate font-medium">{say('plan.fixed.title')}</b>}
               {share.minor / total > 0.05 && <span className="relative truncate tabular-nums text-ink-secondary">{formatMoney(share)}</span>}
             </div>
           )}
@@ -610,7 +612,7 @@ export function PlanBar({
                   borderTopColor: colour,
                   background: `color-mix(in srgb, ${colour} ${got === undefined ? (lit ? '38%' : '22%') : lit ? '22%' : '12%'}, var(--color-background))`,
                 }}
-                title={`${entry.bucket.name} · ${formatMoney(entry.amount)}${bucketGot === undefined ? '' : `, got ${formatMoney(bucketGot)}`}`}
+                title={`${entry.bucket.name} · ${formatMoney(entry.amount)}${bucketGot === undefined ? '' : say('plan.bar.got', { amount: formatMoney(bucketGot) })}`}
                 onMouseEnter={() => onHot?.(entry.bucket.id)}
                 onMouseLeave={() => onHot?.(undefined)}
               >
@@ -623,7 +625,7 @@ export function PlanBar({
                 {entry.amount.minor / total > 0.05 && (
                   <span className="relative truncate tabular-nums text-ink-secondary">
                     {formatMoney(entry.amount)}
-                    {bucketGot === undefined ? '' : ` · got ${formatMoney(bucketGot)}`}
+                    {bucketGot === undefined ? '' : say('plan.bar.gotDot', { amount: formatMoney(bucketGot) })}
                   </span>
                 )}
               </div>
@@ -634,9 +636,9 @@ export function PlanBar({
             <div
               className="flex min-w-0 flex-col justify-center overflow-hidden border border-dashed border-ink-tertiary px-2.5 text-caption text-ink-secondary"
               style={{ width: pct(free) }}
-              title={`Not given a job · ${formatMoney(money(free, currency))}`}
+              title={`${say('plan.bar.free')} · ${formatMoney(money(free, currency))}`}
             >
-              {free / total > 0.08 && <b className="truncate font-medium">Not given a job</b>}
+              {free / total > 0.08 && <b className="truncate font-medium">{say('plan.bar.free')}</b>}
               {free / total > 0.05 && <span className="truncate tabular-nums">{formatMoney(money(free, currency))}</span>}
             </div>
           )}
@@ -663,7 +665,7 @@ export function PlanBar({
   }
 
   return (
-    <figure className="m-0 flex flex-col" aria-label={label ?? 'The split'}>
+    <figure className="m-0 flex flex-col" aria-label={label ?? say('plan.bar.theSplit')}>
       {label !== undefined && <figcaption className="mb-1 text-caption text-ink-secondary">{label}</figcaption>}
 
       <div ref={stage} dir="ltr">
@@ -678,8 +680,11 @@ function filled(colour: string): string {
   return `color-mix(in srgb, ${colour} 45%, var(--color-background))`
 }
 
-function titleOf(piece: Piece): string {
-  const got = piece.got === undefined ? '' : `, ${piece.kind === 'fixed' ? 'charged' : 'got'} ${formatMoney(piece.got)}`
+function titleOf(piece: Piece, say: Translate): string {
+  const got =
+    piece.got === undefined
+      ? ''
+      : say(piece.kind === 'fixed' ? 'plan.bar.charged' : 'plan.bar.got', { amount: formatMoney(piece.got) })
   return `${piece.name} · ${formatMoney(piece.amount)}${got}`
 }
 
