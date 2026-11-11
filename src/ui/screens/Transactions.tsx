@@ -35,7 +35,6 @@ import {
   type Correction,
 } from '@/data/repositories/categoryOverrideRepository.ts'
 import {
-  categoryTotals,
   countUncategorized,
   listCategories,
   usualCategories,
@@ -99,7 +98,8 @@ import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { CategoryMark, useCategoryPalette } from '@/ui/components/CategoryMark.tsx'
 import { ContextMenu, isMenuKey, type MenuItem } from '@/ui/components/ContextMenu.tsx'
-import { Figure, Pager } from '@/ui/home/parts.tsx'
+import { Figure, Pager, useFilePicker, useReadFiles } from '@/ui/home/parts.tsx'
+import { PageMenu } from '@/ui/components/PageMenu.tsx'
 import { ViewSwitch } from '@/ui/transactions/ViewSwitch.tsx'
 import { useRowCursor } from '@/ui/useRowCursor.ts'
 import { Flip } from '@/ui/motion/Flip.tsx'
@@ -119,6 +119,8 @@ export function Transactions() {
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
   const mutate = useDocumentStore((state) => state.mutate)
+  // The empty state's one action (M59 U6): Read files, as Home's band does it.
+  const picker = useFilePicker(useReadFiles())
 
   const location = useLocation()
   const [fields, setFields] = useState<FilterFields>(() => arrivedFilter(location.state))
@@ -213,9 +215,6 @@ export function Transactions() {
       usual: usualCategories(db, 6),
       rows: listTransactions(db, filter, 500, sort),
       summary: summarizeTransactions(db, filter),
-      // Only for a single month: the strip is a breakdown of a period, and
-      // "every category, all time" is a report rather than a strip (F10).
-      byCategory: fields.period === undefined ? [] : categoryTotals(db, fields.period),
       selected: selectedId === undefined ? undefined : findTransactionById(db, selectedId),
       // What the selected row could have bought, and what that holds now (M30 U2).
       rowHoldings: selectedId === undefined ? [] : holdingsForRow(db, selectedId),
@@ -283,12 +282,23 @@ export function Transactions() {
     return <Centered>Open a document, or create one, to see what is in it.</Centered>
   }
 
+  // **With no rows, the page keeps its header** (M59 U6, D-582; M54 U5's
+  // row): h1 Transactions, and one sentence with one text action.
   if (data.total === 0) {
     return (
-      <Centered>
-        Nothing imported yet. Drop a statement file on this window, check its columns, and read
-        it.
-      </Centered>
+      <div className="flex h-full flex-col">
+        <header className="flex shrink-0 flex-col gap-1.5 border-b border-hairline px-6 pt-6 pb-4">
+          <span className="fc-label text-ink-secondary uppercase">Transactions · every row</span>
+          <h1 className="m-0 text-title leading-tight font-medium">Transactions</h1>
+        </header>
+        <div className="flex flex-col items-start gap-2 px-6 py-10 text-ink-secondary">
+          <p className="m-0">No transactions yet.</p>
+          <button type="button" onClick={picker.open} className={READ_LINK}>
+            Read files
+          </button>
+          {picker.input}
+        </div>
+      </div>
     )
   }
 
@@ -784,9 +794,6 @@ export function Transactions() {
           </div>
           <div className="flex flex-wrap items-center gap-4">
             <ViewSwitch view="rows" waiting={data.waitingNames} />
-            <Button variant="ghost" size="sm" icon="rule" onClick={() => navigate('/categories/rules')}>
-              Rules
-            </Button>
             {shownMonth !== undefined ? (
               <Pager
                 label="Month"
@@ -805,26 +812,50 @@ export function Transactions() {
                 All months
               </Button>
             )}
+            {/* **Rules and the export, behind More** (M59 U6, D-582): Rules is
+                also a tab of Categories, and the export is Settings › Export. */}
+            <PageMenu
+              title="Transactions"
+              items={[
+                { icon: 'rule', label: 'Rules', onChoose: () => navigate('/categories/rules') },
+                {
+                  // Says what it will take, because the screen caps at 500 and the
+                  // file does not — someone exporting a filtered ledger should not
+                  // have to wonder which of the two numbers they are getting.
+                  label: filtered ? `Export these ${String(data.summary.count)} to CSV` : 'Export all to CSV',
+                  detail: 'Open this ledger in a spreadsheet',
+                  onChoose: () => {
+                    if (db === undefined) return
+                    downloadCsv(exportFileName('transactions'), transactionsCsv(db, data.filter, sort))
+                  },
+                },
+              ]}
+            />
           </div>
         </header>
 
-        {/* The four figures of what is on screen. Went out and came in carry the
-            flow colours Home gave them (D-313) — they are the sums of the view,
-            and a single row below stays ink. */}
-        <div className="grid shrink-0 grid-cols-2 divide-x divide-hairline border-b border-hairline px-6 @[48rem]:grid-cols-4">
-          <Figure label="Went out" flow="out" value={money(primary?.outflowMinor ?? 0, cur)}>
+        {/* The figures of what is on screen, in ink (M59 U6, D-582; M54 U5's
+            row): the flow colours are Home's alone. Left out of totals only
+            while a row is left out. */}
+        <div
+          className={`grid shrink-0 grid-cols-2 divide-x divide-hairline border-b border-hairline px-6 ${
+            data.summary.excluded > 0 ? '@[48rem]:grid-cols-4' : '@[40rem]:grid-cols-3'
+          }`}
+        >
+          <Figure label="Went out" flow={undefined} value={money(primary?.outflowMinor ?? 0, cur)}>
             {data.summary.count - data.summary.excluded} {data.summary.count - data.summary.excluded === 1 ? 'row' : 'rows'} counted
           </Figure>
-          <Figure label="Came in" flow="in" value={money(primary?.inflowMinor ?? 0, cur)}>
+          <Figure label="Came in" flow={undefined} value={money(primary?.inflowMinor ?? 0, cur)}>
             {alsoIn.length > 0 ? `and ${alsoIn.map((total) => total.currency).join(', ')}, not added` : 'in this view'}
           </Figure>
-          <Figure label="Left out of totals" flow={undefined} value={money(data.summary.leftOut.find((one) => one.currency === cur)?.outflowMinor ?? 0, cur)}>
-            {data.summary.excluded} {data.summary.excluded === 1 ? 'row' : 'rows'}
-            {data.summary.excluded > 0 &&
-              (data.rows.some((row) => row.countedOnCard)
+          {data.summary.excluded > 0 && (
+            <Figure label="Left out of totals" flow={undefined} value={money(data.summary.leftOut.find((one) => one.currency === cur)?.outflowMinor ?? 0, cur)}>
+              {data.summary.excluded} {data.summary.excluded === 1 ? 'row' : 'rows'}
+              {data.rows.some((row) => row.countedOnCard)
                 ? ' · a card payment is already in the card’s own rows'
-                : ' · left out by hand')}
-          </Figure>
+                : ' · left out by hand'}
+            </Figure>
+          )}
           <div className="flex min-w-0 flex-col gap-1 px-4 py-3.5">
             <span className="fc-label text-ink-secondary uppercase">No category</span>
             <span className="text-[24px] leading-tight font-medium tracking-[-0.01em] tabular-nums">
@@ -858,21 +889,6 @@ export function Transactions() {
           {data.summary.held > 0 && (
             <span className="text-ink-tertiary">{data.summary.held} bought, sold or arrived by transfer inside an account with holdings, neither in nor out</span>
           )}
-          {/* Says what it will take, because the screen caps at 500 and the
-              file does not — someone exporting a filtered ledger should not
-              have to wonder which of the two numbers above they are getting. */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="ml-auto"
-            title="Open this ledger in a spreadsheet"
-            onClick={() => {
-              if (db === undefined) return
-              downloadCsv(exportFileName('transactions'), transactionsCsv(db, data.filter, sort))
-            }}
-          >
-            Export {filtered ? `these ${data.summary.count}` : 'all'} to CSV
-          </Button>
         </div>
 
         <FilterBar
@@ -916,19 +932,6 @@ export function Transactions() {
               </div>
             ))}
           </section>
-        )}
-
-        {data.byCategory.length > 0 && (
-          <div className="flex shrink-0 flex-wrap items-center gap-x-5 gap-y-1 border-b border-hairline px-6 py-2 text-caption text-ink-secondary">
-            {data.byCategory.map((entry) => (
-              <span key={`${entry.categoryId ?? 'none'}-${entry.currency}`} className="tabular-nums">
-                <Bidi>{entry.name}</Bidi>{' '}
-                <span className="text-ink">
-                  <Amount value={money(-entry.outflowMinor, entry.currency)} />
-                </span>
-              </span>
-            ))}
-          </div>
         )}
 
         {/* Above the rows rather than under them: the correction that prompted
@@ -1625,6 +1628,9 @@ function arrivedFilter(state: unknown): FilterFields {
       : {}),
   }
 }
+
+/** A text action, as an empty state's one is. */
+const READ_LINK = 'text-accent underline underline-offset-4 hover:text-accent-hover'
 
 function Centered({ children }: { children: React.ReactNode }) {
   return (

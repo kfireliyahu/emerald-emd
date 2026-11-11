@@ -58,6 +58,7 @@ import {
 } from '@/ui/home/parts.tsx'
 import { useHomeKeys } from '@/ui/home/useHomeKeys.ts'
 import { GuideLine } from '@/ui/guide/GuideLine.tsx'
+import { holdsPaycheck as keepsPaychecks } from '@/data/repositories/railRepository.ts'
 import { WaitingList } from '@/ui/home/WaitingList.tsx'
 import { today } from '@/ui/today.ts'
 import { UNCATEGORIZED_OPTION } from '@/ui/transactions/FilterBar.tsx'
@@ -93,6 +94,7 @@ export function Home() {
     [db, revision, currency],
   )
   const taxes = useMemo(() => (db === undefined ? new Map() : monthlyTaxes(db, { currency })), [db, revision, currency])
+  const paid = useMemo(() => db !== undefined && keepsPaychecks(db), [db, revision])
   const newest = newestWithData(summaries)
 
   const [wanted, setWanted] = useState<YearMonth | undefined>(() =>
@@ -223,12 +225,9 @@ export function Home() {
             month, because the month's figures are wrong until it is answered. */}
         {!summary.isEmpty && <WaitingList items={summary.attention} currency={currency} onRead={picker.open} />}
 
-        {summary.isEmpty || period === undefined || report === undefined ? (
-          <p className="max-w-prose text-ink-secondary">
-            Nothing here yet. Read a card or bank statement — drop it on the band above, or anywhere in this
-            window — and the month is built out of it.
-          </p>
-        ) : (
+        {/* Before anything is read, the band is the empty state (M59 U6, D-582):
+            the header, the band and Getting started, nothing else. */}
+        {summary.isEmpty || period === undefined || report === undefined ? null : (
           <>
             <Figures>
               <Figure label="Came in" flow="in" value={shown?.income}>
@@ -253,10 +252,14 @@ export function Home() {
                   : 'moved to savings, goals and funds'}
                 <Versus value={versusAverage(summaries, period, 'saved')} />
               </Figure>
-              <Figure label="Taxes" flow="tax" value={tax}>
-                {tax === undefined ? 'no paycheck for this month' : 'income tax, insurance and health, off the paycheck'}
-                <Versus value={taxVersusAverage(taxes, period, currency)} />
-              </Figure>
+              {/* Left out while the document holds no paycheck: it could only
+                  say there is none (M59 U6, D-582). */}
+              {paid && (
+                <Figure label="Taxes" flow="tax" value={tax}>
+                  {tax === undefined ? 'no paycheck for this month' : 'income tax, insurance and health, off the paycheck'}
+                  <Versus value={taxVersusAverage(taxes, period, currency)} />
+                </Figure>
+              )}
               <Figure label="Left over" flow={undefined} value={shown?.balance}>
                 came in, less went out
               </Figure>

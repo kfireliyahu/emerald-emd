@@ -772,3 +772,73 @@ export function packOf(pathname: string): PackId | undefined {
   const child = (section.children ?? []).find((each) => startsAt(pathname, each.to))
   return child?.pack ?? section.pack
 }
+
+/**
+ * **What a ledger document holds, as the rail needs it** — M59 U6 (D-582, the
+ * picks D-577 settled). `railRepository.ts` asks the document; this file only
+ * reads the answers, as it reads `formats`.
+ */
+export interface Holds {
+  readonly severalMonths: boolean
+  readonly paycheck: boolean
+  readonly plan: boolean
+  readonly wealth: boolean
+  readonly dashboard: boolean
+}
+
+/** Home's Year, which a document of one month holds back. */
+export const YEAR_PATH = '/year'
+
+/**
+ * **The places a ledger document holds back until it has something for them**
+ * — M59 U6 (D-582). A new ledger document's rail is Home (Month), Transactions
+ * and Categories, then Assistants and Settings; each other place comes back
+ * with the first row it would show. In a document whose only pack is the
+ * ledger, the engine's Formats and Connections wait for a format of the
+ * person's own, and Agenda for a dated one. **Held back is hidden, not
+ * removed**: every route still opens, the palette lists every place, and a
+ * held place you stand on takes its line (`holdBack`).
+ */
+export function heldPlaces(
+  holds: Holds,
+  { ledgerOnly, own, ownDated }: { readonly ledgerOnly: boolean; readonly own: boolean; readonly ownDated: boolean },
+): ReadonlySet<string> {
+  const held = new Set<string>()
+  if (!holds.severalMonths) held.add(YEAR_PATH)
+  if (!holds.paycheck) held.add('/paychecks')
+  if (!holds.plan) held.add('/plan')
+  if (!holds.wealth) held.add('/wealth')
+  if (!holds.dashboard) held.add(DASHBOARD_PATH)
+  if (ledgerOnly && !own) {
+    held.add(FORMATS_PATH)
+    held.add(CONNECTIONS_PATH)
+  }
+  if (ledgerOnly && !ownDated) held.add(AGENDA_PATH)
+  return held
+}
+
+/**
+ * The rail with the held places left out — except the one you are standing on,
+ * which takes its line while you are there, lit as any page is (M59 U6; a
+ * hidden place took none before, M20 U0). A section's own views are held the
+ * same way: Home's Year.
+ */
+export function holdBack(
+  sections: readonly NavSection[],
+  held: ReadonlySet<string>,
+  pathname: string,
+): readonly NavSection[] {
+  if (held.size === 0) return sections
+  const here = sectionFor(pathname)
+  return sections.flatMap((section) => {
+    if (held.has(section.to) && here?.to !== section.to) return []
+    if (section.tabs === undefined) return [section]
+    const tabs = holdTabs(section.tabs, held, pathname)
+    return [tabs.length === section.tabs.length ? section : { ...section, tabs }]
+  })
+}
+
+/** A strip's views, the held ones left out unless you are on one. */
+export function holdTabs(tabs: readonly NavTab[], held: ReadonlySet<string>, pathname: string): readonly NavTab[] {
+  return tabs.filter((tab) => !held.has(tab.to) || tabHits(tab, pathname))
+}

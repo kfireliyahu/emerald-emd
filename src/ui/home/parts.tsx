@@ -89,7 +89,8 @@ export function useFilePicker(onFiles: (files: readonly File[]) => void): {
 
 /**
  * **The place to drop statements and payslips** (choice 3, A): a
- * band at the top of Month, always there, with Read files and Add by hand in it.
+ * band at the top of Month, always there, with Read files and Add a paycheck in it
+ * (M59 U6: it was *Add by hand*, which did not say what it adds).
  * Its own drop stops the window's, so a file dropped here is read like one
  * dropped anywhere else — but this is the place that says so.
  */
@@ -126,7 +127,7 @@ export function IntakeBand({ onAddByHand }: { readonly onAddByHand: () => void }
       </div>
       <div className="flex flex-wrap gap-2">
         <Button variant="secondary" icon="add" onClick={onAddByHand} title="A paycheck, typed in">
-          Add by hand
+          Add a paycheck
         </Button>
         <Button variant="primary" icon="read" onClick={picker.open} title="Read files (Ctrl+Shift+O)" data-tour="read-files">
           Read files

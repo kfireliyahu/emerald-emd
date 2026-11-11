@@ -351,20 +351,20 @@ highlight: row:September 2026
 chat: I keep a timesheet: each day's date, start, end and hour rate. Was September's paycheck right?
 from: person
 
-### nav-formats
-tour: timesheet
-position: 2
-action: click
-caption: The model writes the timesheet down as a format of its own.
-
 ###
 tour: timesheet
-position: 3
+position: 2
 action: write
 value: {"declare": {"format": "timesheet_day", "title": "Timesheet day", "notes": "One day worked, as the paper timesheet has it.", "columns": [{"name": "date", "type": "date", "required": true}, {"name": "start", "type": "time"}, {"name": "end", "type": "time"}, {"name": "rate", "type": "money", "note": "The hour rate."}, {"name": "paycheck", "type": "link", "target": "paycheck", "found_by": "date in period", "note": "The paycheck of the day's month."}], "computed": [{"name": "hours", "works_out": "end - start"}, {"name": "earned", "works_out": "hours * rate", "note": "The day's gross earning."}], "widths": {"date": 104, "start": 72, "end": 72, "rate": 120, "paycheck": 140, "hours": 80, "earned": 112}}}
-highlight: formats-card-timesheet_day
+caption: The model writes the timesheet down as a format of its own.
 chat: A timesheet day: date, start, end and rate. Its hours and its pay are worked out, never typed.
 from: model
+
+### nav-formats
+tour: timesheet
+position: 3
+action: click
+highlight: formats-card-timesheet_day
 
 ### nav-formats-timesheet_day
 tour: timesheet

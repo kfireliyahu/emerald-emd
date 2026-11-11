@@ -299,7 +299,7 @@ function Bills() {
 function Payslip({ item, onRead }: { item: AttentionItem; onRead: () => void }) {
   const { write } = useLedger()
   const month = item.period
-  // Its Add by hand is the band's above, the one Home has (M54 F13).
+  // Its Add a paycheck is the band's above, the one Home has (M54 F13, M59 U6).
   return (
     <Head title={`No paycheck for ${month === undefined ? 'last month' : formatYearMonth(month)}`} why="the splitter is built on it">
       <Button variant="secondary" size="sm" onClick={onRead}>

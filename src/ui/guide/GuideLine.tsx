@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 import { asNext, doneCount, firstOpen } from '@/domain/guide.ts'
 import { Button } from '@/ui/components/Button.tsx'
 
@@ -54,7 +56,24 @@ export function GuideLine() {
     <div className="fc-pop-enter flex flex-wrap items-center gap-3 text-ink-secondary" data-guide="home.line">
       {meter}
       <span>
-        Getting started, {done} of {count} done.{next === undefined ? '' : ` Next: ${asNext(next)}.`}
+        Getting started, {done} of {count} done.
+        {next !== undefined && (
+          <>
+            {' '}
+            Next:{' '}
+            {/* **The step it names is a link to its place** (M59 U6, D-582): the
+                screen, without the guide — so a place the rail holds back is
+                one click from here. Home's own step is the band just above. */}
+            {next.route === '/' ? (
+              asNext(next)
+            ) : (
+              <Link to={next.route} className="text-accent underline underline-offset-4 hover:text-accent-hover">
+                {asNext(next)}
+              </Link>
+            )}
+            .
+          </>
+        )}
       </span>
       <Button variant="ghost" size="sm" onClick={() => openGuide()}>
         {done > 0 || progress.started ? 'Continue the guide' : 'Guide me'}

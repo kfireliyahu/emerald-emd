@@ -93,6 +93,16 @@ child's **tabs** are views of one place, drawn as a strip above the screen (`Vie
 anything becoming unreachable: the command palette lists all three levels, so *Fee impact* is still
 found by its own name.
 
+**A new ledger document holds back what it has nothing in** (M59 U6, D-582, the picks D-577
+settled): its rail is Home (Month), Transactions and Categories, then Assistants and Settings. Year
+comes back with a second month of transactions, Paychecks with a paycheck, Plan with a plan, a bill
+or a month left with nothing uncategorized, Wealth with a goal, debt, fund, fund report, account
+with holdings, place or opening balance, Dashboard with a block — and in a ledger-only document
+Formats and Connections with a format of the person's own, Agenda with a dated one. Asked of the
+document each time the rail is drawn (`railRepository.ts`, `heldPlaces` in `nav.ts`), never stored.
+Hidden, not removed: every route opens, the place you stand on takes its line, and the palette
+lists every place.
+
 **Routing is hash-based** (D-133). The paths as built are `#/` (Home · Month), `#/year`, `#/read` and `#/read/<id>` (reading files, M28 U5),
 `#/transactions`, `#/paychecks`, `#/paychecks/deductions`, `#/categories`,
 `#/transactions/merchants` (was `#/categorize`, M28 U6),
@@ -128,7 +138,9 @@ showing an error page; it is a typo or a stale bookmark, not a failure.
 
 ### Money
 - **Transactions** — a dense table with a sticky header, sortable columns, and a filter bar:
-  date range, account, category, uncategorized-only, amount range, text search. Multi-select
+  date range, account, category, uncategorized-only, amount range, text search. Since M59 U6
+  (D-582) search and the month are in sight and the rest sits behind one **Filter** button that
+  says how many are on; Rules and the CSV export are in the header's More menu. Multi-select
   with shift-click for bulk actions. Right-aligned amounts, and the running total of the current
   filter as the screen's hero number at the top rather than in a footer — it is the answer to
   what the filter bar asks, and a total you have to scroll to is one nobody reads. A second

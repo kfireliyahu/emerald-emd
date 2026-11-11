@@ -375,12 +375,9 @@ export function DetailPanel({
           </p>
         )}
 
-        {/* Small, quiet, and last — but present, because it is the whole
-            explanation of why importing the same file twice changed nothing. */}
-        <p className="mt-2 text-caption text-ink-tertiary">
-          Recognised on re-import as{' '}
-          <Bidi className="font-mono break-all">{transaction.naturalKey}</Bidi>
-        </p>
+        {/* The natural key it is recognised by on re-import was shown here, raw,
+            separators and all; it is the first pane a new person opens, and
+            it said nothing to them (M54 U5's row, M59 U6, D-582). */}
       </div>
     </aside>
   )

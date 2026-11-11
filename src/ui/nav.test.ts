@@ -22,6 +22,8 @@ import {
   sectionFor,
   tablePath,
   tabsFor,
+  heldPlaces,
+  holdBack,
 } from './nav.ts'
 
 /**
@@ -433,5 +435,31 @@ describe('a line a read refused, added by hand (M55 U9)', () => {
     expect(readLineAdded({ added: { file: 'f1', line: 7 } })).toEqual({ file: 'f1', line: 7 })
     expect(readLineAdded({ from: 'read' })).toBeUndefined()
     expect(readLineAdded(null)).toBeUndefined()
+  })
+})
+
+/** **Held back is hidden, not removed** — M59 U6 (D-582). */
+describe('a ledger document’s held-back places', () => {
+  const nothing = { severalMonths: false, paycheck: false, plan: false, wealth: false, dashboard: false }
+  const held = heldPlaces(nothing, { ledgerOnly: true, own: false, ownDated: false })
+  const rail = railSections({ ledger: true }, [{ name: 'transaction', title: 'Transaction', dated: true }])
+
+  it('shows a new ledger document Home (Month), Transactions and Categories, then Assistants and Settings', () => {
+    const shown = holdBack(rail, held, '/')
+    expect(shown.map((section) => section.label)).toEqual(['Home', 'Transactions', 'Categories', 'Assistants', 'Settings'])
+    expect(shown[0]?.tabs?.map((tab) => tab.label)).toEqual(['Month'])
+  })
+
+  it('gives the held place you stand on its line, and its view its tab', () => {
+    expect(holdBack(rail, held, '/wealth/goals').map((section) => section.label)).toContain('Wealth')
+    expect(holdBack(rail, held, '/year')[0]?.tabs?.map((tab) => tab.label)).toEqual(['Month', 'Year'])
+    // Every route still resolves: the full list is what a path is asked of.
+    expect(sectionFor('/paychecks/deductions')?.label).toBe('Paychecks')
+  })
+
+  it('holds nothing of the engine back in a document that keeps another pack', () => {
+    const mixed = heldPlaces(nothing, { ledgerOnly: false, own: false, ownDated: false })
+    expect([...mixed]).not.toContain('/formats')
+    expect([...mixed]).not.toContain('/agenda')
   })
 })

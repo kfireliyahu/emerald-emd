@@ -75,6 +75,9 @@ import { CategoryPicker } from '@/ui/components/CategoryPicker.tsx'
 import { ChoiceMenu, type Choice } from '@/ui/components/ChoiceField.tsx'
 import { ContextMenu, isMenuKey, type MenuItem } from '@/ui/components/ContextMenu.tsx'
 import { SELECT } from '@/ui/components/fieldLook.ts'
+import { FilterButton, FilterRow } from '@/ui/components/FilterButton.tsx'
+import { PageMenu } from '@/ui/components/PageMenu.tsx'
+import { useFilePicker, useReadFiles } from '@/ui/home/parts.tsx'
 import { Kbd } from '@/ui/components/Kbd.tsx'
 import { accountLabel } from '@/ui/rules/ruleText.ts'
 import { ViewSwitch } from '@/ui/transactions/ViewSwitch.tsx'
@@ -111,6 +114,8 @@ export function ByMerchant() {
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
   const mutate = useDocumentStore((state) => state.mutate)
+  // The empty state's one action (M59 U6): Read files, as Home's band does it.
+  const picker = useFilePicker(useReadFiles())
   const navigate = useNavigate()
 
   const [scope, setScope] = useState<Scope>(EVERYTHING)
@@ -739,9 +744,18 @@ export function ByMerchant() {
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <ViewSwitch view="merchants" waiting={groups.length} />
-            <Menu label="Account" value={scope.accountId} choices={accountChoices} onPick={(accountId) => setScope({ ...scope, accountId })} />
-            <Menu label="Month" value={scope.period} choices={monthChoices} onPick={(period) => setScope({ ...scope, period })} />
-            <Menu label="Order" value={order} choices={ORDERS} onPick={(value) => setOrder(value as GroupOrder)} />
+            {/* **Account and Month behind Filter** (M59 U6, D-582), as on All
+                rows; the order is the list's, on its own header row. */}
+            {data.ledger > 0 && (
+              <FilterButton align="end" on={(scope.accountId === '' ? 0 : 1) + (scope.period === '' ? 0 : 1)}>
+                <FilterRow label="Account">
+                  <Menu label="Account" value={scope.accountId} choices={accountChoices} onPick={(accountId) => setScope({ ...scope, accountId })} />
+                </FilterRow>
+                <FilterRow label="Month">
+                  <Menu label="Month" value={scope.period} choices={monthChoices} onPick={(period) => setScope({ ...scope, period })} />
+                </FilterRow>
+              </FilterButton>
+            )}
             {(data.providerNamed || byProvider) && (
               <label
                 className="flex cursor-pointer items-center gap-2 text-body text-ink-secondary select-none"
@@ -756,38 +770,54 @@ export function ByMerchant() {
                 By provider category
               </label>
             )}
+            {/* *Skip all n* behind More (M59 U6, D-582): one press sets every
+                name aside, which a new person should not meet first. */}
+            {picker.input}
+            {groups.length > 0 && (
+              <PageMenu
+                title="By merchant"
+                items={[
+                  {
+                    label: `Skip all ${String(groups.length)}`,
+                    detail: 'Set every name here aside. Nothing is written to the transactions.',
+                    onChoose: () =>
+                      mutate((database) =>
+                        void skipAll(database, groups.map((group) => group.merchantNormalized), Date.now()),
+                      ),
+                  },
+                ]}
+              />
+            )}
           </div>
         </header>
 
-        <div className="grid grid-cols-2 divide-x divide-hairline border-y border-hairline @[48rem]:grid-cols-4">
-          <Hero label="Waiting" first>
-            <b className="text-secondary-number font-medium tabular-nums">
-              {groups.length} {groups.length === 1 ? 'name' : 'names'}
-            </b>
-            <small className="text-caption text-ink-secondary">
-              {waiting} {waiting === 1 ? 'charge' : 'charges'} with no category
-            </small>
-          </Hero>
-          {/* Ink, not a flow's colour: off Home a figure wears none, and nothing
-              left to do is not a warning (M54 U5's rows). */}
-          <Hero label="Without a category">
-            <b className="text-secondary-number font-medium tabular-nums">
-              {formatMoney(money(leftMinor, data.currency))}
-            </b>
-            <small className="text-caption text-ink-secondary">so Home’s categories are short by this</small>
-          </Hero>
-          <div className="col-span-2 flex min-w-0 flex-col gap-1 px-4 py-3.5">
-            <span className="fc-label text-ink-secondary uppercase">Categorized this sitting</span>
-            <b className="text-secondary-number font-medium tabular-nums">{placed}%</b>
-            <div className="h-1 bg-hairline" aria-hidden>
-              <i className="block h-full bg-accent transition-[width] duration-[var(--duration-base)]" style={{ width: `${placed}%` }} />
+        {/* **Two tiles** (M59 U6, D-582): what waits, and what this sitting
+            placed. The red-at-nothing *Without a category* went with its tile
+            (M54 U5's row); its sum is a line under Waiting. Nothing read yet,
+            nothing to count. */}
+        {data.ledger > 0 && (
+          <div className="grid grid-cols-2 divide-x divide-hairline border-y border-hairline">
+            <Hero label="Waiting" first>
+              <b className="text-secondary-number font-medium tabular-nums">
+                {groups.length} {groups.length === 1 ? 'name' : 'names'}
+              </b>
+              <small className="text-caption text-ink-secondary tabular-nums">
+                {waiting} {waiting === 1 ? 'charge' : 'charges'}, {formatMoney(money(leftMinor, data.currency))} without a category
+              </small>
+            </Hero>
+            <div className="flex min-w-0 flex-col gap-1 px-4 py-3.5">
+              <span className="fc-label text-ink-secondary uppercase">Categorized this sitting</span>
+              <b className="text-secondary-number font-medium tabular-nums">{placed}%</b>
+              <div className="h-1 bg-hairline" aria-hidden>
+                <i className="block h-full bg-accent transition-[width] duration-[var(--duration-base)]" style={{ width: `${placed}%` }} />
+              </div>
+              <small className="text-caption text-ink-secondary">
+                {formatMoney(money(baseline - leftMinor, data.currency))} of{' '}
+                {formatMoney(money(baseline, data.currency))} placed
+              </small>
             </div>
-            <small className="text-caption text-ink-secondary">
-              {formatMoney(money(baseline - leftMinor, data.currency))} of{' '}
-              {formatMoney(money(baseline, data.currency))} placed
-            </small>
           </div>
-        </div>
+        )}
 
         {filings.length > 0 && (
           <section
@@ -890,23 +920,10 @@ export function ByMerchant() {
 
         <div className="grid grid-cols-1 items-start gap-6 @[56rem]:grid-cols-[minmax(0,1fr)_15.5rem]">
           <div className="min-w-0" data-guide="tx.merchant">
-            <div className="flex items-center justify-between border-b border-hairline pb-2 text-caption text-ink-tertiary">
+            {data.ledger > 0 && (
+            <div className="flex items-center justify-between border-b border-hairline pb-2 text-caption text-ink-secondary">
               <span className="fc-label uppercase">Merchant</span>
               <span className="flex items-center gap-4">
-                {groups.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      mutate((database) =>
-                        void skipAll(database, groups.map((group) => group.merchantNormalized), Date.now()),
-                      )
-                    }
-                    className="hover:text-ink"
-                    title="Set every name here aside. Nothing is written to the transactions."
-                  >
-                    Skip all {groups.length}
-                  </button>
-                )}
                 {data.skippedGroups.length > 0 && (
                   <button
                     type="button"
@@ -916,8 +933,11 @@ export function ByMerchant() {
                     {data.skippedGroups.length} skipped
                   </button>
                 )}
+                {/* The order is the list's, so it sits on the list (M59 U6, D-582). */}
+                <Menu label="Order" value={order} choices={ORDERS} onPick={(value) => setOrder(value as GroupOrder)} />
               </span>
             </div>
+            )}
 
             {showSkipped && data.skippedGroups.length > 0 && (
               <section className="fc-pop-enter border-b border-hairline bg-surface px-3 py-3">
@@ -967,6 +987,7 @@ export function ByMerchant() {
                   scoped={scope.accountId !== '' || scope.period !== ''}
                   imported={data.ledger > 0}
                   onClear={() => setScope(EVERYTHING)}
+                  onRead={picker.open}
                 />
               ) : (
                 // A merchant filed or skipped leaves the queue, and the ones below
@@ -1495,10 +1516,13 @@ function Empty({
   scoped,
   imported,
   onClear,
+  onRead,
 }: {
   readonly scoped: boolean
   readonly imported: boolean
   readonly onClear: () => void
+  /** With nothing read (M59 U6, D-582): the one text action is Read files. */
+  readonly onRead: () => void
 }) {
   return (
     <div className="flex flex-col items-start gap-2 py-10 text-ink-secondary">
@@ -1512,9 +1536,12 @@ function Empty({
       ) : imported ? (
         <p className="m-0">Everything is categorized.</p>
       ) : (
-        <p className="m-0 max-w-md">
-          Nothing imported yet. Read a statement on Home — whatever the rules cannot place lands here, grouped by shop.
-        </p>
+        <>
+          <p className="m-0">No transactions yet.</p>
+          <button type="button" onClick={onRead} className={LINK}>
+            Read files
+          </button>
+        </>
       )}
     </div>
   )

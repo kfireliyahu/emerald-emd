@@ -12,10 +12,12 @@
  * screens had nothing left to do, and the checklist's questions became these
  * steps' tests.
  *
- * **Categories comes before By merchant** (M28 F13): filing a shop into a list
- * you have not looked at files it into the starter one, so the guide stops at
- * the list first. Its words are not the mockup's — it came after, from a
- * run of U9.
+ * **By merchant comes before Categories** (M59 U6, D-582, reversing M28 F13):
+ * the workflows first — read, then give each shop a category, then make the
+ * list yours. M28 F13 put the list first so a shop was not filed into a list
+ * nobody had looked at; it asked a new person to edit forty-two names before
+ * they had seen one charge of their own. The Categories step's words are not
+ * the mockup's — they came after, from a run of U9.
  */
 
 import type { GuideStep } from '@/domain/guide.ts'
@@ -35,17 +37,6 @@ export const LEDGER_GUIDE: readonly GuideStep[] = [
     test: 'a transaction or a paycheck exists',
   },
   {
-    id: 'categories',
-    route: '/categories',
-    where: 'Categories',
-    place: 'categories.new',
-    title: 'Make the list of categories yours',
-    body:
-      'Emerald starts you with a list. Add the ones you think in, and rename, recolour or archive the ' +
-      'rest: New category is at the top, and right-click a category for everything else.',
-    test: 'a category is one you made or changed',
-  },
-  {
     id: 'merchant',
     route: '/transactions/merchants',
     where: 'Transactions › By merchant',
@@ -56,6 +47,17 @@ export const LEDGER_GUIDE: readonly GuideStep[] = [
       'charge from that shop, and can become a rule so next month’s are categorized on import.',
     test: 'By merchant has nothing left to categorize, a skipped shop counting as decided',
     needs: AFTER_A_STATEMENT,
+  },
+  {
+    id: 'categories',
+    route: '/categories',
+    where: 'Categories',
+    place: 'categories.new',
+    title: 'Make the list of categories yours',
+    body:
+      'Emerald starts you with a list. Add the ones you think in, and rename, recolour or archive the ' +
+      'rest: New category is at the top, and right-click a category for everything else.',
+    test: 'a category is one you made or changed',
   },
   {
     id: 'fixed',

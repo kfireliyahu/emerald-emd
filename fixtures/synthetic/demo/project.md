@@ -141,6 +141,7 @@ blocks: ["M2 U3"]
 ## views
 
 ### decision
+affects: 48
 answer: 90
 date: 92
 milestone: 72
@@ -149,7 +150,7 @@ ref: 56
 scope: 56
 state: 54
 supersedes: 50
-title: 190
+title: 150
 
 ### milestone
 goal: 280

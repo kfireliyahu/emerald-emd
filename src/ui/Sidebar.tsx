@@ -7,7 +7,8 @@ import { EmeraldMark } from '@/ui/EmeraldMark.tsx'
 import { openGuide, useGuideOpen } from '@/ui/guide/guideState.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { NavGlyph } from '@/ui/NavGlyph.tsx'
-import { activeTab, childIsActive, railSectionFor, railSections, type NavChild, type NavSection } from '@/ui/nav.ts'
+import { activeTab, childIsActive, holdBack, railSectionFor, railSections, type NavChild, type NavSection } from '@/ui/nav.ts'
+import { useHeldBack } from '@/ui/heldBack.ts'
 import { useDocumentTitle } from '@/state/documentTitle.ts'
 import { useDocumentRead } from '@/state/reading.ts'
 import { useSlipBatch } from '@/state/slipBatch.ts'
@@ -65,7 +66,9 @@ export function Sidebar({ navigable }: { navigable: boolean }) {
   // section a path is in is asked of the rail first: `/formats/unit/board` is
   // the development pack's, not `Formats`'.
   const kept = useKeptPacks()
-  const sections = railSections(showingOf(kept), useFormatPlaces(), packRails(kept))
+  // **A ledger document holds back what it has nothing in** (M59 U6, D-582):
+  // the place you stand on keeps its line, and the palette still lists all.
+  const sections = holdBack(railSections(showingOf(kept), useFormatPlaces(), packRails(kept)), useHeldBack(), pathname)
   const current = railSectionFor(sections, pathname)
   const busy = useBusyPlaces()
   const document = useDeclarations()

@@ -357,13 +357,16 @@ describe('what is on screen while a caption says it (M54 F12)', () => {
     expect(firstOutline(custom.steps, first)).toBe(1)
   })
 
-  it('shows the timesheet being made: its card outlined as it arrives, then its sheet', () => {
+  // **Written, then walked to** (M59 U6, D-582): a ledger-only document holds
+  // Formats back until a format of its own exists, so the declare comes first
+  // and the click on Formats lands on its card, outlined.
+  it('shows the timesheet being made: its card outlined once Formats is in the rail, then its sheet', () => {
     const timesheet = named('timesheet')
     const scene = scenesOf(timesheet.steps)[1]
     expect(scene?.caption).toMatch(/format of its own/)
     const rows = timesheet.steps.slice(scene?.first, (scene?.last ?? 0) + 1)
     expect(rows.map((each) => each.highlight ?? each.anchor ?? each.action)).toEqual([
-      'nav-formats',
+      'write',
       'formats-card-timesheet_day',
       'nav-formats-timesheet_day',
       'write',

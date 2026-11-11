@@ -775,10 +775,10 @@ describe('the ledger screens a stranger meets, swept (M54 F13)', () => {
     expect(months).toContain('Read files')
   })
 
-  // One name per thing: one Read files, one Add by hand, one Keep the ledger here.
-  it('names reading, adding by hand and keeping the ledger once', () => {
-    expect(readFileSync('src/ui/home/WaitingList.tsx', 'utf8')).not.toMatch(/Read…|^\s*Add by hand\s*$/m)
-    expect(readFileSync('src/ui/home/parts.tsx', 'utf8').match(/^\s*Add by hand\s*$/gm)?.length).toBe(1)
+  // One name per thing: one Read files, one Add a paycheck, one Keep the ledger here.
+  it('names reading, adding a paycheck and keeping the ledger once', () => {
+    expect(readFileSync('src/ui/home/WaitingList.tsx', 'utf8')).not.toMatch(/Read…|^\s*Add (?:by hand|a paycheck)\s*$/m)
+    expect(readFileSync('src/ui/home/parts.tsx', 'utf8').match(/^\s*Add a paycheck\s*$/gm)?.length).toBe(1)
     const noLedger = readFileSync('src/ui/screens/NoLedger.tsx', 'utf8')
     expect(noLedger.match(/^\s*Keep the ledger here\s*$/gm)?.length).toBe(2)
     expect(noLedger).not.toMatch(/Keep a ledger/)

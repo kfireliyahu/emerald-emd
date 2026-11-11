@@ -484,6 +484,7 @@ written out here.
 | D-579 | 2026-11-11 | By merchant's queue is the rows that count: a row left out of totals leaves it, its sums and its ids; the provider's category is an action on each merchant (the editor's draft, as on Transactions) and a heading the list can be grouped by, where Create rule writes one rule for the heading and applies it to rows with no category, with one Undo | M59 |
 | D-580 | 2026-11-11 | 50 / 30 / 20 is shown before it is made: every top-level category with its share, its part, what it comes to a month and why, each share changeable in place, the months named once; Make plan writes exactly that and Cancel nothing, and `start_plan` is the same proposal for a conversation | M59 |
 | D-581 | 2026-11-11 | The app is a window that never scrolls, and Guide me opens only from a press: the shell is the positioned frame and the page itself cannot scroll; the new document's offer is gone, and Home's Getting started line is dismissed per document with Dismiss | M59 |
+| D-582 | 2026-11-11 | A new ledger document shows what M59 U1 picked: the rail holds back each place until the document holds what it shows, Home before a read is the band and Getting started, and Transactions and By merchant put their filters behind Filter and their rarer acts behind More | M59 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -968,6 +969,59 @@ escapes again. `overflow: clip` on the page: a viewport cannot clip, it computes
 **Consequences.** Checked in the browser (an absolute label in the last row no longer grows the page;
 a wheel past the end of the list leaves it at 0) and in the shell (a new ledger opens on Home with no
 dialog, the line has Guide me and Dismiss, Dismiss hides it).
+
+## D-582 · 2026-11-11 · A new ledger document shows what M59 U1 picked: the rail holds back each place until the document holds what it shows, Home before a read is the band and Getting started, and Transactions and By merchant put their filters behind Filter and their rarer acts behind More <a id="d-582"></a>
+
+**Context.** D-575: a second person's first ledger document was too much. M59 U1 shaped what a new
+one shows (D-577, `docs/mockups/m59-u1/brief.md`); this builds those picks as written.
+
+**Decision.**
+
+- **The rail holds back**, for a document keeping the ledger, computed from the document each time it
+  is drawn and never stored (`railRepository.ts` asks, `heldPlaces` and `holdBack` in `nav.ts`
+  decide): Home's Year until transactions span two calendar months (by charge date, falling back to
+  the transaction date, as the monthly totals do); Paychecks until a paycheck; Plan until a plan, a
+  bill, or a month whose counted rows have none uncategorized; Wealth until a goal, a debt, a fund
+  (a holding with a fund type) or a fund report (a holding reading), an account with holdings, a
+  holding place, or an account's opening balance; Dashboard until the document's dashboard holds a
+  block; and in a document whose only pack is the ledger, Formats and Connections until a format of
+  the person's own, Agenda until a dated one. **Held back is hidden, not removed**: every route
+  opens; the held place you stand on takes its line (it took none, M20 U0), its view its tab, in the
+  rail and in the collapsed rail's strip; the palette lists every place; no show-all switch.
+- **Home before anything is read** is the header, the intake band and Getting started: the
+  *Nothing here yet* paragraph is gone. The band's *Add by hand* is **Add a paycheck**. The *Taxes*
+  figure is left out while the document holds no paycheck.
+- **Getting started**'s next step is a link to its place (Home's own step stays text, the band being
+  just above), and the guide's order is read, *Give each shop a category, once*, *Make the list of
+  categories yours*, then the rest as before — reversing M28 F13's categories-first.
+- **Transactions**: search, the view switch, the month pager and *All months* in sight; Account,
+  Category, At least, At most and Clear behind **Filter** (`FilterButton`), which reads *Filter · 2*
+  when two are on; Category is an autocomplete listing *Uncategorized* once, Account a menu, no
+  platform `<select>`. Rules and *Export these n to CSV* are in the header's More menu (⋯). The
+  figures are Went out, Came in and No category in ink, and *Left out of totals* only while a row is
+  left out; the by-category strip is gone. With no rows the header (h1 *Transactions*) stays over
+  *No transactions yet.* and the text action *Read files*.
+- **By merchant**: Account and Month behind the same Filter; Order a menu on the list's header row;
+  *Skip all n* in More; two tiles, Waiting (with *n charges, ₪x without a category*) and
+  *Categorized this sitting*; with nothing read, no tiles, no Filter and no list header, only *No
+  transactions yet.* and *Read files*. U3's provider category and leave-out stay as built.
+- **A transaction's pane** no longer prints its natural key (M54 U5's row).
+- **The tours** (check:tours): the timesheet tour walked the rail to Formats in a ledger-only
+  document, which now holds Formats back until a format of the person's own exists, so its declare
+  is written first and the click on Formats follows. The development tour's step 2 failed on main
+  before this unit: the decision sheet was 1,110px in a 920px box since the `affects` column
+  (D-570) arrived without a width in the tour project's widths; `fixtures/synthetic/demo/project.md`
+  gives it the narrowest the sheet takes (48) and the title 150, so it fits again. Fixed in the
+  tour, not the table.
+
+**Rejected.** A show-all switch (U1: the palette and Getting started reach every place). Storing
+which places were revealed: a place would stay after its rows were deleted, and two machines could
+disagree. Holding back by tool or route: the rail is presentation, and a conversation loses
+nothing (`src/parity.test.ts` unchanged).
+
+**Consequences.** demo.emd's rail loses Dashboard (no block), Formats, Connections and Agenda
+(ledger-only, no format of its own). The picks are U1's, judged by the maintainer through M59 U1's
+and this unit's open review entries.
 
 ## Related
 

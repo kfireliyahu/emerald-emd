@@ -45,8 +45,8 @@ describe('every place a guide names is one a screen has', () => {
     }
   })
 
-  it('gives the ledger the six steps the mockup approved, and Categories before By merchant (F13)', () => {
+  it('gives the ledger the six steps the mockup approved, the workflows first: By merchant before Categories (M59 U6, D-582)', () => {
     const ledger = PACKS.find((pack) => pack.id === 'ledger')
-    expect(ledger?.guide?.steps.map((step) => step.id)).toEqual(['read', 'categories', 'merchant', 'fixed', 'split', 'opening', 'cushion'])
+    expect(ledger?.guide?.steps.map((step) => step.id)).toEqual(['read', 'merchant', 'categories', 'fixed', 'split', 'opening', 'cushion'])
   })
 })
