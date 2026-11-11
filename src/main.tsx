@@ -3,11 +3,14 @@ import { createRoot } from 'react-dom/client'
 import { HashRouter } from 'react-router-dom'
 import './ui/theme/tokens.css'
 import { App } from './App'
+import { initLanguage } from './i18n/current.ts'
 import { initTheme } from './ui/theme/useTheme.ts'
 
 // Before the first render, so the correct palette is on the root element for
-// the first paint and there is no flash of the wrong theme.
+// the first paint and there is no flash of the wrong theme — and the page is
+// in its language and runs its way (`<html lang dir>`, M60 U1) from the first.
 initTheme()
+initLanguage()
 
 // One frame later, turn on the colour transitions — so the theme *toggle*
 // animates but the initial load does not animate into place from a default.

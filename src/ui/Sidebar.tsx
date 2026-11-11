@@ -7,7 +7,8 @@ import { EmeraldMark } from '@/ui/EmeraldMark.tsx'
 import { openGuide, useGuideOpen } from '@/ui/guide/guideState.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { NavGlyph } from '@/ui/NavGlyph.tsx'
-import { activeTab, childIsActive, holdBack, railSectionFor, railSections, type NavChild, type NavSection } from '@/ui/nav.ts'
+import { useT } from '@/i18n/current.ts'
+import { activeTab, childIsActive, holdBack, placeName, railSectionFor, railSections, type NavChild, type NavSection } from '@/ui/nav.ts'
 import { useHeldBack } from '@/ui/heldBack.ts'
 import { useDocumentTitle } from '@/state/documentTitle.ts'
 import { useDocumentRead } from '@/state/reading.ts'
@@ -75,7 +76,10 @@ export function Sidebar({ navigable }: { navigable: boolean }) {
   // **The title names the document and the screen** (M54 F5, WCAG 2.4.2): the
   // page lit in the rail, else its section — the rail is what knows which it is.
   const pages = current === undefined ? [] : pagesOf(current)
-  useDocumentTitle((pages.length > 0 ? lit(pages, pathname) : undefined)?.label ?? current?.label)
+  // In the language the app is in (M60 U1): a place the app names by its word.
+  const t = useT()
+  const titled = (pages.length > 0 ? lit(pages, pathname) : undefined) ?? current
+  useDocumentTitle(titled === undefined ? undefined : placeName(titled, t))
 
   return (
     <nav
@@ -154,6 +158,8 @@ function Section({
   // above the screen. Either way no strip sits over a screen whose pages the
   // rail already lists.
   const pages = pagesOf(section)
+  const t = useT()
+  const name = placeName(section, t)
   const litPage = pages.length > 0 ? lit(pages, pathname) : undefined
   // A pack's section links to its first view, so it is lit for any of its
   // places; and `Formats` is not lit for a format a pack took.
@@ -171,21 +177,21 @@ function Section({
         aria-current={marked ? 'page' : undefined}
         // The label is the tooltip only when it is not also the text: a title
         // on every item makes a tooltip appear over the thing you just read.
-        {...(collapsed ? { title: section.label } : {})}
+        {...(collapsed ? { title: name } : {})}
         // A section arrives like a row (M39 F1): a document opening, or a pack kept.
         className={`fc-row-enter ${item(marked, on || current, collapsed)}`}
       >
         {collapsed && busy ? (
-          <Working size={16} label={`${section.label}: working`} />
+          <Working size={16} label={`${name}: working`} />
         ) : (
           <NavGlyph glyph={section.glyph} />
         )}
-        {!collapsed && <Bidi className="truncate">{section.label}</Bidi>}
+        {!collapsed && <Bidi className="truncate">{name}</Bidi>}
         {/* Work in progress under this section (a batch of slips being read, a
             document being read), shown where the work is, wherever you are. */}
         {!collapsed && busy && (
           <span className="ml-auto flex" title="Working">
-            <Working size={14} label={`${section.label}: working`} />
+            <Working size={14} label={`${name}: working`} />
           </span>
         )}
       </Link>
@@ -224,7 +230,7 @@ function Section({
               // The tour's anchor (M33 U2): `nav-formats-receipt`, as a section's is `nav-formats`.
               data-tour={`nav${child.to.replace(/\//g, '-')}`}
             >
-              <Bidi className="truncate">{child.label}</Bidi>
+              <Bidi className="truncate">{placeName(child, t)}</Bidi>
             </Link>
             )}
           </Fragment>

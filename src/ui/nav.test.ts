@@ -218,6 +218,7 @@ describe('the ledger, staged', () => {
       '/settings/packs',
       '/settings/model',
       '/settings/calendar',
+      '/settings/language',
     ])
   })
 

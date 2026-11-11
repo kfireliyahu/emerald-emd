@@ -232,10 +232,11 @@ const MONTH_NAMES = [
  * this returns `2026-07` again is the day somebody has decided a stored value
  * should be readable, which is how a display string becomes a migration.
  *
- * **English, and deliberately not the platform's locale.** Every string this
- * app prints is English (conventions); a month name that followed the machine's
- * language would be the one word on the screen that did, and the locale pack
- * (M12) is where that decision belongs rather than here.
+ * **English, and deliberately not the platform's locale.** These four are the
+ * English a model reads — tool text stays English (D-583). A screen names a
+ * month in the app's language through the translation layer instead
+ * (`src/i18n/dates.ts`, `useDates()`, M60 U1), which says the same as these in
+ * English and is tested to.
  */
 export function formatYearMonth(period: YearMonth): string {
   const name = MONTH_NAMES[period.month - 1]
