@@ -4881,6 +4881,16 @@ answer: src/data/packs/ledger/seededIds.he.json, keyed by the same cat: ids (dat
 state: live
 affects: "docs/plugin.md\ndocs/mockups/m60-u2/glossary.md"
 
+### D-588
+date: 2026-11-11
+milestone: M60
+scope: shell
+title: The shell's words are bundled, not sent: its menu, dialogs and windows' titles are the catalogue's `shell` area, read by `electron/language.ts`, and the page sends only which language — kept in `settings.json`, the computer's until a page has said
+question: How does the desktop shell's menu, dialogs and window titles follow the app's language, including before the page loads?
+answer: The words are the catalogue area `shell` (src/i18n/en/shell.ts, he/shell.ts), bundled into the shell through electron/language.ts — the only file in electron/ that imports from src/ (those two and src/i18n/language.ts, all data that import nothing; language.test.ts holds the list). The page sends only its resolved language (EmeraldWindow.setLanguage, from TitleBar, like the theme); the shell keeps it in userData/settings.json beside automaticUpdates (withSettings merges keys), rebuilds the menu and retitles Help's windows. Until a page has said: languageOfTag(app.getLocale()). Menu order is not reversed for Hebrew (the OS mirrors). Still English: macOS appMenu/windowMenu roles, the license texts, errors the shell throws into the page.
+state: live
+affects: "docs/02-architecture.md\nvite.config.ts\nsrc/i18n/catalogue.ts"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -8549,6 +8559,11 @@ unit: M54 U7
 should: The frames follow the page's theme (Dark mode is not an inversion).
 breaks: A loaded frame keeps the theme it loaded with: a light app panel sits on the near-black page until the frame is let go and reloaded. initTheme (src/ui/theme/useTheme.ts) has no `storage` listener. Owned by M54 F8. Fixed in M54 F8 (1cf3540).
 state: fault
+
+### Switch Settings › Language to עברית in the desktop app, open the menu with Alt (File, Edit, View, Help), try Help › License, and close a document with unsaved changes.
+unit: M60 U7
+should: Every menu item, the unsaved-work question and its buttons, and the License window's title are Hebrew, and still Hebrew after a restart. Drafted words (not in the glossary) to judge: קובץ, עריכה, תצוגה, עזרה, חדש, פתיחה…, מסמכים אחרונים, עדיין אין, ניקוי רשימת המסמכים האחרונים, שמירה, עותקים קודמים של המסמך…, סגירת החלון, יציאה, ביטול פעולה, ביצוע חוזר, גזירה, העתקה, הדבקה, בחירת הכול, פקודות…, הצגה או הסתרה של סרגל הצד, גודל אמיתי, הגדלה, הקטנה, מסך מלא, כלי מפתחים, רישיון, הודעות צד שלישי, קוד המקור, נפתח בדפדפן, בדיקת עדכונים עכשיו, אודות Emerald, מסמך Emerald, בלי לשמור, ביטול, 'לשמור את {name} לפני הסגירה?', the restart and crash sentences. Glossary words used: שמירה בשם (Save as), הדרכה (Guide me).
+state: open
 
 ### Tab through the strip of any tour, and read it with a screen reader.
 unit: M54 U8
@@ -17126,15 +17141,18 @@ report: Built. The 54 seeded categories' Hebrew names, from the glossary sheet a
 milestone: M60
 scope: shell
 title: The desktop shell in Hebrew: its menu and dialogs follow the app's language
-decision: D-583
-state: in_progress
+landed: 2026-11-11
+decision: D-588
+state: built
 brief: D-583. The desktop menu (electron/menu.ts), the shell's own dialogs (unsaved changes, open/save titles, crash recovery, updates) and anything else the shell writes on screen go through the same English and Hebrew words (shared with src/i18n/ the way the shell already shares code, never importing src/ beyond what the bridge allows). The shell cannot read the page's localStorage (src/ui/TitleBar.tsx:35): until the page says, it follows the OS (app.getLocale()); the page tells it the choice over the bridge (src/bridge.ts) and the menu is rebuilt on a change. Menus mirror as the OS does in RTL. Verify over CDP (verify-in-shell skill): switch to Hebrew in Settings, the menu is Hebrew; restart, it is still Hebrew. Unset: stop and ask.
-files: "electron/menu.ts\nelectron/main.ts\nsrc/bridge.ts\nsrc/ui/TitleBar.tsx"
+files: "electron/language.ts\nelectron/language.test.ts\nelectron/menu.ts\nelectron/main.ts\nelectron/about.ts\nelectron/bridge.ts\nelectron/preload.ts\nsrc/i18n/en/shell.ts\nsrc/i18n/he/shell.ts\nsrc/i18n/catalogue.ts\nsrc/ui/TitleBar.tsx\nvite.config.ts\ndocs/02-architecture.md\ndocs/09-decision-log.md"
 blocks: ["M60 U1","M60 U2"]
 taken_by: run-milestone driver
 started: 2026-11-11
 branch: main
+commit: f702829
 paths: "electron/\nsrc/bridge.ts"
+report: M60 U7 built at f702829 (D-588). The shell's menu, its dialogs (unsaved-work question and buttons, Save as title, the .emd filter name, the crash-again notice) and Help's window titles follow the app's language. Words: a catalogue area `shell` (src/i18n/en/shell.ts, he/shell.ts), bundled into the shell via electron/language.ts — picked over the page sending words because the shell needs Hebrew before any page has spoken (Hebrew OS first run, first frame after restart), so it needs its own copy regardless. The page sends only its resolved language (EmeraldWindow.setLanguage from TitleBar, like setTheme); the shell keeps it in userData/settings.json beside automaticUpdates (merged, not overwritten), rebuilds the menu, retitles open text windows. Until told: app.getLocale(). Verified over CDP (main process via --inspect): English menu on an en-US launch; Settings › Language → עברית made the menu Hebrew and settings.json {language: he}; an open License window retitled; after a clean quit and relaunch the menu was Hebrew while the page was still loading; a fresh profile with --lang=he started Hebrew with nothing kept. Not driven: the unsaved-work and crash dialogs on screen (blocking modals; their words are unit-tested). Found: a force-killed shell loses the page's localStorage choice, and the page (the authority) then tells the shell its fallback language — correct, but a test artefact to know about. Left English: macOS appMenu/windowMenu roles, license texts, errors the shell throws into the page (missing recent, ungranted path, linked-file refusals). The palette's command names are still English, so in Hebrew the menu and palette differ until the palette's area is translated. Drafted Hebrew words listed on the open review_entry.
 
 ### M60 U8
 milestone: M60
