@@ -49,8 +49,9 @@ const KEY = 'guide'
 
 /**
  * Where this document's guide is. With nothing stored the answer comes from the
- * document: an empty one is new and is asked once; one that already holds work
- * was never asked and is not now — Help › Guide me still opens it.
+ * document: an empty one is new and shows Home's line; one that already holds
+ * work shows nothing — Help › Guide me still opens either, and nothing opens the
+ * guide by itself (D-581).
  */
 export function readGuideProgress(db: Database): GuideProgress {
   const stored = decodeGuideProgress(readJsonSetting(db, KEY))

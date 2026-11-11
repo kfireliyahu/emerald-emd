@@ -479,6 +479,7 @@ written out here.
 | D-574 | 2026-11-10 | What stopped the SessionStart hook in the usage report is not known, so the hook is unchanged; what it does that a security tool notices is written down, and the plugin and its message are an open question | M58 |
 | D-575 | 2026-11-11 | The ledger is unparked: M59 fixes what a second person hit on first use — a file with two cards made one account per card, the provider's category and leaving a row out working on By merchant, 50 / 30 / 20 shown before it is made, a page that never scrolls into blank, Guide me never opening by itself, and a shape unit that decides what a new document shows; Hebrew is M60, after it | M59 |
 | D-576 | 2026-11-11 | A ledger document made before a change keeps opening with its rows: from M59 on, a change to a ledger format or an engine table reaches an existing document as a kept pack already does (D-443) or by a migration, with a test on a document made before it; amends D-276 for documents from here on. Her statement file will not be available, so M59 U2 proves the two-card split on made-up files only | M59 |
+| D-581 | 2026-11-11 | The app is a window that never scrolls, and Guide me opens only from a press: the shell is the positioned frame and the page itself cannot scroll; the new document's offer is gone, and Home's Getting started line is dismissed per document with Dismiss | M59 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -773,6 +774,41 @@ a real document of her own, and M59 changes the ledger.
 **Consequences.** The rule row *A document made before a change keeps opening* says it where a session
 reads before touching a table (CLAUDE.md's rules block). The open question *A second person's
 document* is answered. M59 U2's brief drops the step that asked for her file.
+
+## D-581 · 2026-11-11 · The app is a window that never scrolls, and Guide me opens only from a press: the shell is the positioned frame and the page itself cannot scroll; the new document's offer is gone, and Home's Getting started line is dismissed per document with Dismiss <a id="d-581"></a>
+
+**Context.** D-575: a second person scrolled to the end of a list and the whole app went on into
+blank, back only by scrolling up; and her first ledger document opened with Guide me's dialog over
+Home, unasked.
+
+**What escaped.** Reproduced on Transactions: one row with a note carries an `sr-only` *Has a note*,
+which is `position: absolute`. Nothing above it was positioned, so it was placed against the page,
+not the shell — out of reach of the shell's `overflow-clip`, which cuts only what is placed inside
+it — and the page grew to wherever that row sat in the list (1,524px on a 720px window). A wheel at
+the end of the list then scrolled the page. Any absolute element deep in a long list does the same,
+By merchant's included. The demo document has no notes, which is why no screen check had met it.
+
+**Decision.**
+
+- **The shell is the positioned frame** (`relative` on App's root): what is absolute inside it is
+  placed and clipped inside it. It covers the whole window, so nothing placed against it moves.
+- **The page never scrolls**: `html.fc-window` and its `body` are `height: 100%; overflow: hidden;
+  overscroll-behavior: none`. Only the app's own pages (`index.html`, `demo.html`) carry the class:
+  Emerald's public page and the conversation frame load the same tokens and do scroll.
+- **Guide me never opens by itself.** The new document's offer (*A new document. Walk through where
+  things go?*) is removed, and with it `offered` in the guide's progress; a document that stored it
+  still reads, the key ignored. It opens from Help › Guide me, the palette, the rail's compass and
+  Home's line, and `src/ui/guide/opens.test.ts` fails if anything else calls it.
+- **Home's Getting started line is the list**: its steps tick themselves as before, and **Dismiss**
+  (was *Put this away*) hides it for this document, kept in the document's `setting` row as it was
+  (no table or format changes, so D-576 asks nothing more), and now on the all-done line too.
+
+**Rejected.** Hunting down each absolute element and giving it a positioned parent: the next one
+escapes again. `overflow: clip` on the page: a viewport cannot clip, it computes to `hidden`.
+
+**Consequences.** Checked in the browser (an absolute label in the last row no longer grows the page;
+a wheel past the end of the list leaves it at 0) and in the shell (a new ledger opens on Home with no
+dialog, the line has Guide me and Dismiss, Dismiss hides it).
 
 ## Related
 

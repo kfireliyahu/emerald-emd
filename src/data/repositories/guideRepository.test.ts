@@ -4,11 +4,13 @@ import { fromMajorUnits } from '@/core/money.ts'
 import { localDate } from '@/core/time.ts'
 import { LEDGER_GUIDE } from '@/data/packs/ledger/guide.ts'
 import { createLedgerDatabase, insertTransaction } from '@/data/packs/ledger/testing.ts'
+import { openDatabase } from '@/data/db/database.ts'
 import { FRESH_GUIDE, QUIET_GUIDE } from '@/domain/guide.ts'
 
 import { createAccount } from './accountRepository.ts'
 import { createCategory, listCategories, setCategoryAppearance, setCategoryArchived } from './categoryRepository.ts'
 import { merchantQueue, skipMerchant } from './labelingQueueRepository.ts'
+import { writeSetting } from './settingsRepository.ts'
 import { holdsWork, ledgerGuideChecks, monthSpan, readGuideProgress, saveGuideProgress } from './guideRepository.ts'
 
 const TODAY = localDate(2026, 10, 3)
@@ -43,7 +45,7 @@ function charge(db: Db, accountId: string, id: string, month: number, merchant =
 }
 
 describe('where the guide stopped', () => {
-  it('asks a new document once, leaves one with work alone, and keeps what is saved', async () => {
+  it('shows a new document the line, leaves one with work alone, and keeps what is saved', async () => {
     const db = await createLedgerDatabase()
     expect(readGuideProgress(db)).toEqual(FRESH_GUIDE)
     expect(holdsWork(db)).toBe(false)
@@ -52,9 +54,30 @@ describe('where the guide stopped', () => {
     expect(holdsWork(db)).toBe(true)
     expect(readGuideProgress(db)).toEqual(QUIET_GUIDE)
 
-    saveGuideProgress(db, { offered: true, started: true, step: 'split', lineAway: false }, 2)
-    expect(readGuideProgress(db)).toEqual({ offered: true, started: true, step: 'split', lineAway: false })
+    saveGuideProgress(db, { started: true, step: 'split', lineAway: false }, 2)
+    expect(readGuideProgress(db)).toEqual({ started: true, step: 'split', lineAway: false })
     db.close()
+  })
+
+  it('keeps Home’s line dismissed in the document, across a reload (M59 U5, D-581)', async () => {
+    const db = await createLedgerDatabase()
+    // A new ledger document shows the line, and nothing in it opens the guide.
+    expect(readGuideProgress(db).lineAway).toBe(false)
+
+    saveGuideProgress(db, { ...readGuideProgress(db), lineAway: true }, 2)
+    const reopened = await openDatabase(db.export())
+    db.close()
+    expect(readGuideProgress(reopened)).toEqual({ ...FRESH_GUIDE, lineAway: true })
+    reopened.close()
+  })
+
+  it('reads a document that stored the old `offered` key', async () => {
+    const db = await createLedgerDatabase()
+    writeSetting(db, 'guide', JSON.stringify({ offered: true, started: true, step: 'split', lineAway: true }), 1)
+    const reopened = await openDatabase(db.export())
+    db.close()
+    expect(readGuideProgress(reopened)).toEqual({ started: true, step: 'split', lineAway: true })
+    reopened.close()
   })
 })
 

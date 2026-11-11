@@ -49,27 +49,30 @@ export type GuideChecks = Readonly<Record<string, GuideCheck>>
  * Where the guide is in this document — the place onboarding's progress kept,
  * reshaped (choice a, B).
  *
- * `step` is where it stopped when it was put away; `offered` is whether a new
- * document has been asked once; `started` is whether the walk was ever opened,
- * which turns Home's *Guide me* into *Continue the guide*; `lineAway` is Home's
- * line, put away.
+ * `step` is where it stopped when it was put away; `started` is whether the
+ * walk was ever opened, which turns Home's *Guide me* into *Continue the
+ * guide*; `lineAway` is Home's line, dismissed — kept in the document, so it
+ * holds on every machine that opens it.
+ *
+ * There is no `offered` any more (M59 U5, D-581): a new document is never asked
+ * on its own, so there is nothing to remember having asked. A document that
+ * stored one still decodes — the key is ignored.
  */
 export interface GuideProgress {
-  readonly offered: boolean
   readonly started: boolean
   readonly step: string | undefined
   readonly lineAway: boolean
 }
 
-/** A new document: ask once, and show the line on Home. */
-export const FRESH_GUIDE: GuideProgress = { offered: false, started: false, step: undefined, lineAway: false }
+/** A new document: the line on Home, and nothing opened. */
+export const FRESH_GUIDE: GuideProgress = { started: false, step: undefined, lineAway: false }
 
 /**
- * A document that already holds work and was never asked: nothing on Home and
- * no offer. Help › Guide me still opens it — the app forgetting what it can
- * plainly see is the thing onboarding's `NO_ONBOARDING` existed to prevent.
+ * A document that already holds work and stored nothing: no line on Home. Help ›
+ * Guide me still opens it — the app forgetting what it can plainly see is the
+ * thing onboarding's `NO_ONBOARDING` existed to prevent.
  */
-export const QUIET_GUIDE: GuideProgress = { offered: true, started: false, step: undefined, lineAway: true }
+export const QUIET_GUIDE: GuideProgress = { started: false, step: undefined, lineAway: true }
 
 export function isDone(checks: GuideChecks, id: string): boolean {
   return checks[id]?.done === true
@@ -153,7 +156,6 @@ export function decodeGuideProgress(value: Record<string, unknown> | undefined):
   if (value === undefined) return undefined
   const step = value['step']
   return {
-    offered: value['offered'] === true,
     started: value['started'] === true,
     step: typeof step === 'string' && step !== '' ? step : undefined,
     lineAway: value['lineAway'] === true,
