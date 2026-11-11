@@ -9752,7 +9752,7 @@ state: live
 ---
 format: term
 title: Term
-language: 22
+language: 24
 claims: none
 ---
 
@@ -9778,6 +9778,7 @@ A term makes no claim: claims are arithmetic. `named_by` is one link, and a comp
 | rejected | text |  |  |  | no | no |  |  |  | Names turned down for it, separated by semicolons, each with why in brackets if short: `Checks (reads as cheques); Enforcements (a claim never refuses a row)`. A name that belongs to another thing goes in `not`, not here. |
 | code_word | text |  |  |  | no | no |  |  |  | What the code, the tables and the tool parameters call it, when that is not the term. Kept apart on purpose: a screen's word changes without a migration (D-375, D-417). |
 | printed_as | text |  |  |  | no | no |  |  |  | What a source document prints for it — the Hebrew on a payslip, a statement or a fund report. |
+| screen_hebrew | text |  |  |  | no | no |  |  |  | What the app's screen says for this term when it is in Hebrew (M60 U2, D-583): the one Hebrew word, so one name per thing holds in both languages, and no two terms share one. Not printed_as, which is what a source document prints; where printed_as has the word, this matches it unless the review sheet says why not. Drafted by the model; the maintainer's pass corrects it (docs/mockups/m60-u2/glossary.md). |
 | named_by | link | decision |  |  | no | no |  |  |  | The decision that named it, or that it was settled in. One, not a list: the decision that settled a name is one, and the rest are in `means`. docs:check warns on a live term whose decision is superseded. |
 | scope | enum |  |  |  | yes | no | engine, ledger, app, shell, plugin, practice |  |  | Whose word it is: the engine's (every document), the ledger pack's (money), the app's (the renderer and its files), the shell's, the plugin's, or practice (how a session works in this repo). |
 | shown_in | enum |  |  |  | no | no | rail, view, verdict, screen, tool, tour, nowhere |  |  | Where a person or a model first meets it: the rail, a view's name, a verdict word, a screen's text, a tool's name or text, the tour — or nowhere outside the code and the notes. |
@@ -9789,6 +9790,7 @@ A term makes no claim: claims are arithmetic. `named_by` is one link, and a comp
 ### Account
 means: A source of money movement: a card, a bank account, or cash. Settings › Accounts is the one screen called Accounts, where they are made and set up.
 not: Balances, the section on Net worth that reads what is in them (D-375); and a holding place, which is where money sits.
+screen_hebrew: חשבון
 named_by: D-375
 scope: ledger
 shown_in: rail
@@ -9797,6 +9799,7 @@ state: live
 
 ### Accounts with holdings
 means: The section on Net worth for accounts that hold things — funds, deposits, securities — rather than a balance alone (named 2026-10-05).
+screen_hebrew: חשבונות עם החזקות
 scope: ledger
 shown_in: screen
 appears: screen 10 in 6 files (screens/Accounts 3, screens/Overview 3, plan/PointsAt 1, …); tools 7 in 3 files (tools/holdingStatement 5, tools/goalDeposits 1, tools/wealth 1)
@@ -9814,6 +9817,7 @@ state: live
 means: The tile at the end of a dashboard's grid and its menu: the format's saved views and rollups not on it yet (one on it ticked), grouped by format on the document's, then Headline total, made in place.
 not: Not where a view is saved (Save this view, on its tab) nor where a rollup is declared (with the format).
 code_word: AddMenu, HeadlineForm
+screen_hebrew: הוספת רכיב
 named_by: D-521
 scope: app
 shown_in: view
@@ -9823,6 +9827,7 @@ state: live
 means: The intake band's secondary button on Home: a paycheck typed in by hand, for a slip on paper. Was 'Add by hand', which did not say what it adds.
 rejected: Add by hand (it adds only a paycheck)
 code_word: IntakeBand onAddByHand
+screen_hebrew: הוספת תלוש שכר
 named_by: D-577
 scope: ledger
 shown_in: screen
@@ -9832,6 +9837,7 @@ state: live
 means: Quick add's placeholder on a list: 'Add a <format> · ' and every value the new row will take besides what the line asks — the group's, the address filter's exact values, a required enum's first member, the default input view's defaults — so nothing is taken silently. Without a default input view the line asks the title alone; with one it asks that view's fields in its order, the first under this placeholder and each other with its column's name before it (M55 U4, D-557). Enter writes it; Esc clears.
 not: Not the Add button, which opens a new entry with every field it asks for.
 code_word: quickAdd(...).placeholder
+screen_hebrew: הוספת <פריט> · ערכים
 named_by: D-519
 scope: app
 shown_in: screen
@@ -9841,6 +9847,7 @@ state: live
 means: The line in an input view's footer bar, beside Add, naming every value the form sets but does not ask, column then value: 'Adds as account Visa · date today'. On a dashboard block it ends a sentence: 'Adds a card charge as account Visa · date today'. A set link whose row is gone is struck there and refused at Add. The unit's pick (M55 U1, D-535).
 not: Not quick add's placeholder (Add a task · values), though both name what is set silently.
 rejected: Also sets (names the mechanism, not the row); Every row gets (longer for nothing)
+screen_hebrew: יתווסף עם
 named_by: D-535
 scope: app
 shown_in: screen
@@ -9864,6 +9871,7 @@ state: live
 means: The two columns of an input view's Fields list, in place of the entry's Shown and New entry: Ask, a tick, whether the form asks the column; Default, the value it starts from — a member, a link by name, a number, money, text, or a date or a word naming one day (today, yesterday, tomorrow). Asked with a default, the field starts holding it; a default not asked is on the Adds as line. The unit's pick (M55 U1, D-535).
 not: Not New entry (a column's mark), which is entry/new's; not keeping the last value, which D-533 rejected.
 rejected: Asked (a state, where the tick is a choice); Default value · Prefill (longer, or a word of the code)
+screen_hebrew: לשאול · ברירת מחדל
 named_by: D-535
 scope: app
 shown_in: screen
@@ -9876,6 +9884,7 @@ rename_to: Assistants (the rail's place)
 means: The rail's place for talking to this document from an assistant: the tools the server offers and the snippet that connects one (D-295).
 rejected: MCP (the rail's place until D-451: a protocol's initials)
 code_word: mcp
+screen_hebrew: עוזרים
 named_by: D-451
 scope: app
 shown_in: rail
@@ -9897,6 +9906,7 @@ rename_to: Back up now
 means: A dated copy of the document as it is now, beside it; the last three are kept. The screen half of keep_copy (D-399).
 rejected: Keep a copy (as it is now) — one line under Save a copy… and a different act (until D-451)
 code_word: keep_copy
+screen_hebrew: גיבוי עכשיו
 named_by: D-451
 scope: app
 shown_in: screen
@@ -9934,6 +9944,7 @@ state: live
 means: The section of Net worth that reads what is in each account.
 not: Account, the thing itself, made on Settings › Accounts.
 rejected: Accounts (Settings › Accounts is the one screen called that)
+screen_hebrew: יתרות בחשבונות
 named_by: D-375
 scope: ledger
 shown_in: screen
@@ -9943,6 +9954,7 @@ state: live
 ### Basis
 means: The amount a plan splits.
 not: Splittable amount, which is the basis after bills come off the top; and the contribution, date and expense bases, which are other figures.
+screen_hebrew: בסיס לחלוקה
 scope: ledger
 shown_in: screen
 appears: screen 8 in 2 files (screens/Plan 5, paychecks/SlipReview 3); tools 2 in 2 files (tools/funds 1, tools/plan 1); tour 9 in 1 file (demo/ledger 9)
@@ -9962,6 +9974,7 @@ rename_to: Bill (the form: New bill / Edit bill / Add bill)
 means: A recurring obligation, detected or made by hand. The word on every screen and in the plugin's text; the code and the tool names keep fixed expense.
 rejected: fixed expense (on screen; the bill form said New/Edit/Add fixed expense until D-451); standing commitment; monthly obligation
 code_word: fixed expense (fixed_expense, fixed_expenses)
+screen_hebrew: הוצאה קבועה
 named_by: D-451
 scope: ledger
 shown_in: screen
@@ -9980,6 +9993,7 @@ state: live
 means: One thing on a dashboard: a saved view drawn compact in its kind, a rollup's chart, a headline total — or an input view's form, live: its fields, Add, and the rows just added (M55 U4, D-557). Its title opens it in full; it names what it is under its title in the filter's own words, an input view's as the sentence 'Adds a card charge as date today'.
 not: Not a widget of any kind a person writes: only those kinds exist (D-514); an input view's form is a saved view's block, not a kind of its own.
 code_word: DashboardBlock, format_dashboard_block, setDashboardBlocks
+screen_hebrew: רכיב
 named_by: D-521
 scope: app
 shown_in: view
@@ -10013,6 +10027,7 @@ state: live
 ### Bucket
 means: A destination in a plan, and a bucket is for something: a category, a goal, a debt, a fund or an account. A category's bucket is its figure on Categories and Home.
 rejected: budget (a category's figure is its bucket); points at (format links still point at; a bucket is for)
+screen_hebrew: סעיף
 named_by: D-375
 scope: ledger
 shown_in: screen
@@ -10029,13 +10044,23 @@ state: live
 
 ### Built-in rule
 means: A rule from a rule pack. Visible in the rules list, switchable off, and forked into a person's rule when edited — never a row in the document, so it has no hit count and no place in the drag order.
+screen_hebrew: כלל מובנה
 scope: ledger
 shown_in: screen
 appears: screen 2 in 1 file (screens/Rules 2)
 state: live
 
+### By merchant
+means: Transactions' second view: the rows without a category, one line per merchant, each filed at once with Put all n in X, a guess already chosen where there is one. The way into the second of the three workflows (D-575).
+not: Merchant group, which is the code's word for one line of it.
+screen_hebrew: לפי בית עסק
+scope: ledger
+shown_in: view
+state: live
+
 ### Cadence
 means: Monthly, bimonthly, quarterly, yearly or irregular. Counted in whole cycles from the bill's start date, which is why that date doubles as the anchor.
+screen_hebrew: תדירות
 scope: ledger
 shown_in: screen
 appears: screen 2 in 2 files (fixed/CandidateCard 1, fixed/FixedExpenseEditor 1); tools 2 in 1 file (tools/fixed 2)
@@ -10044,6 +10069,7 @@ state: live
 ### Came in / Went out
 means: Home's and Year's words for money in and money out of a month; the code says credit and debit.
 code_word: credit / debit
+screen_hebrew: נכנס / יצא
 scope: ledger
 shown_in: screen
 appears: screen 40 in 7 files (screens/Home 15, screens/Year 14, screens/Transactions 4, …); tour 1 in 1 file (demo/tour.format 1)
@@ -10051,6 +10077,7 @@ state: live
 
 ### Candidate
 means: A detected bill awaiting confirmation. Never used as truth unconfirmed.
+screen_hebrew: הצעה לאישור
 scope: ledger
 shown_in: screen
 appears: screen 3 in 3 files (home/WaitingList 1, plan/FixedSection 1, savings/Cushion 1); tools 1 in 1 file (tools/fixed 1)
@@ -10063,6 +10090,7 @@ rename_to: Card payments (the aria-label 'Card bills' on Transactions)
 means: The bank row that pays a card's monthly total, matched to the card by its last-4 and grouped per card per month, so one card charged twice is one card payment (D-060). 'This pays a card' stays as the action that marks one.
 rejected: settlement (on screen; the code keeps it); card charge; card bill (and 'Card bills', the aria-label on Transactions, until D-451)
 code_word: settlement
+screen_hebrew: חיוב כרטיס אשראי
 named_by: D-451
 scope: ledger
 shown_in: screen
@@ -10076,6 +10104,7 @@ rename_to: Categorize ('Categorized this sitting', the tour's line)
 means: To put a transaction in a category, by hand or by a rule.
 rejected: file / filed (to categorize; 'Filed this sitting' and the tour's 'File it once', until D-451 — a file is what is read)
 code_word: categorize (assign_category, apply_rules)
+screen_hebrew: סיווג
 named_by: D-451
 scope: ledger
 shown_in: screen
@@ -10084,6 +10113,7 @@ state: live
 
 ### Category
 means: What a transaction was for — groceries, rent — in a tree a person shapes on Categories; rules file transactions into them.
+screen_hebrew: קטגוריה
 scope: ledger
 shown_in: rail
 appears: screen 139 in 30 files (screens/Categories 35, screens/ByMerchant 18, components/CategoryPicker 10, …); tools 57 in 12 files (tools/categoryEdits 12, tools/categorize 8, catalog 7, …); tour 22 in 2 files (demo/ledger 20, demo/tour_step.format 2)
@@ -10091,6 +10121,7 @@ state: live
 
 ### Category kind
 means: Expense, Income, Transfer, Saving or Debt payment. Drives how statistics treat a category.
+screen_hebrew: סוג קטגוריה
 scope: ledger
 shown_in: screen
 appears: screen 4 in 2 files (components/CategoryPicker 2, screens/Categories 2)
@@ -10137,6 +10168,7 @@ state: live
 
 ### Column role
 means: What a column of a statement means: date, amount, merchant, last-4, and so on.
+screen_hebrew: תפקיד עמודה
 scope: ledger
 shown_in: screen
 appears: screen 4 in 1 file (import/SheetGrid 4)
@@ -10173,6 +10205,7 @@ state: live
 
 ### Connection
 means: A link or a total, seen as the edge between two formats — and the screen they are authored on, #/connections, where each format is a bubble and its columns are endpoints around it. Not a thing the document stores: it is read out of the declarations and written back as the same column or total.
+screen_hebrew: קשר
 named_by: D-233
 scope: engine
 shown_in: rail
@@ -10212,6 +10245,7 @@ state: live
 ### Cushion
 means: The emergency money the ledger suggests keeping: so many months of spending, from the emergency multiplier.
 code_word: cushion (set_cushion)
+screen_hebrew: כרית ביטחון
 scope: ledger
 shown_in: screen
 appears: screen 10 in 2 files (savings/Cushion 9, wealth/NetWorthOpened 1); tools 4 in 2 files (tools/goalDeposits 3, catalog 1)
@@ -10221,6 +10255,7 @@ state: live
 means: An ordered set of blocks: saved views, rollups' charts and headline totals, and nothing else. A format's is the last tab of its strip (#/formats/<name>/dashboard); the document's is the rail's Dashboard (#/dashboard), whose blocks may come from any format — first and #/ in a document with no ledger, right under Home with one.
 not: Not a format and not a free page (D-514): no text, no embed, no recent changes. Not Home, which stays the ledger's month.
 code_word: DashboardView, DocumentDashboard, dashboardBlocks, DASHBOARD_PATH, dashboardPath
+screen_hebrew: לוח בקרה
 named_by: D-521
 scope: app
 shown_in: view
@@ -10244,6 +10279,7 @@ state: live
 ### Debit / Credit
 means: The two separate amount columns of an Israeli bank statement, money out and money in.
 printed_as: חובה / זכות
+screen_hebrew: חובה / זכות
 scope: ledger
 shown_in: screen
 appears: screen 3 in 3 files (categorize/PromotionPanel 1, fixed/FixedExpenseEditor 1, plan/PointsAt 1); tools 3 in 2 files (tools/rows 2, tools/ingest 1); tour 1 in 1 file (demo/ledger 1)
@@ -10251,6 +10287,7 @@ state: live
 
 ### Debt
 means: Money owed — a loan, a card purchase split into payments — with what is left and what is paid each month.
+screen_hebrew: חוב
 scope: ledger
 shown_in: rail
 appears: screen 67 in 13 files (screens/Debts 15, categorize/PromotionPanel 11, screens/DeductionTypes 8, …); tools 32 in 8 files (tools/wealth 11, catalog 6, tools/debts 5, …); tour 2 in 1 file (demo/ledger 2)
@@ -10293,6 +10330,7 @@ state: live
 
 ### Deduction type
 means: An entry in the payroll vocabulary: 'Income tax', 'Pension'. Rows in the document, ten of them seeded, editable but not deletable while lines use them (D-049); a conversation sets them with set_deduction_types.
+screen_hebrew: סוג ניכוי
 named_by: D-392
 scope: ledger
 shown_in: rail
@@ -10334,6 +10372,7 @@ issue: The .emd a person opens and saves, and also a source file read onto a for
 rename_to: Document means the .emd only; a source read onto a format is a file ('Read a file')
 means: The person's .emd file — a real SQLite database, stored as SQLite bytes or as text and chosen per file. The source of truth, opened, worked in and saved; the app keeps no state of its own.
 rejected: data file (the glossary's word; the app, the tools and the notes say document); document for a source read onto a format (it is a file: Read a file, D-451)
+screen_hebrew: מסמך
 named_by: D-451
 scope: app
 shown_in: screen
@@ -10342,6 +10381,7 @@ state: live
 
 ### Dormant fund
 means: A fund from a previous employer, receiving no deposits but still charging fees.
+screen_hebrew: קופה לא פעילה
 scope: ledger
 shown_in: screen
 appears: screen 1 in 1 file (screens/Funds 1); tools 1 in 1 file (tools/funds 1)
@@ -10349,6 +10389,7 @@ state: live
 
 ### Drawdown
 means: A plan that allocates more than the basis, on purpose — spending savings. Allowed and labelled, never corrected.
+screen_hebrew: משיכה מחסכונות
 scope: ledger
 shown_in: screen
 appears: screen 1 in 1 file (screens/Plan 1)
@@ -10372,6 +10413,7 @@ state: live
 ### Emerald
 means: The app and the engine, one name, and the green of its mark — which marks what you can act on and never colours a figure (D-125).
 rejected: financial companion (the old name; the repo folder and one config key keep it)
+screen_hebrew: Emerald
 named_by: D-117
 scope: app
 shown_in: screen
@@ -10431,6 +10473,7 @@ state: live
 
 ### Expected return
 means: What a holding is expected to earn a year, bound to whether that is CONTRACTUAL (the bank agreed) or ASSUMED (the person guessed). Only an assumed rate moves between a projection's scenarios.
+screen_hebrew: תשואה צפויה
 scope: ledger
 shown_in: screen
 appears: screen 1 in 1 file (funds/FundEditor 1); tools 1 in 1 file (tools/funds 1)
@@ -10445,6 +10488,7 @@ state: live
 
 ### Export
 means: Settings: the months as a spreadsheet (CSV); Save as is how the whole document goes elsewhere (D-313).
+screen_hebrew: ייצוא
 named_by: D-313
 scope: ledger
 shown_in: rail
@@ -10470,6 +10514,7 @@ state: live
 means: A fund's annual management fee as a percentage of the balance.
 not: Fee on deposit, charged on each contribution.
 printed_as: דמי ניהול מהצבירה
+screen_hebrew: דמי ניהול מהצבירה
 scope: ledger
 shown_in: screen
 appears: screen 2 in 1 file (funds/FundEditor 2); tools 1 in 1 file (tools/funds 1)
@@ -10479,6 +10524,7 @@ state: live
 means: A fund's management fee as a percentage of each contribution.
 not: Fee on accumulation, charged on the balance.
 printed_as: דמי ניהול מהפקדה
+screen_hebrew: דמי ניהול מהפקדה
 scope: ledger
 shown_in: screen
 appears: screen 2 in 1 file (funds/FundEditor 2); tools 1 in 1 file (tools/funds 1)
@@ -10505,6 +10551,7 @@ state: retired
 means: One button beside search on Transactions and By merchant that opens what narrows the rows: on Transactions Account, Category, At least and At most; on By merchant Account and Month; with Clear. It carries how many are on ('Filter · 2').
 not: Not the order of a list (By merchant's Order is a menu on the list's header row), and not a saved view's FilterBand on a format.
 code_word: FilterBar
+screen_hebrew: סינון
 named_by: D-577
 scope: ledger
 shown_in: screen
@@ -10521,6 +10568,7 @@ state: live
 ### Fixed deposit
 means: A time-locked bank deposit. A kind of holding, with a term and usually a contractual rate.
 printed_as: פק"מ
+screen_hebrew: פק"מ
 scope: ledger
 shown_in: screen
 appears: screen 2 in 1 file (savings/labels 2)
@@ -10531,6 +10579,7 @@ flag: newcomer_unclear
 issue: The product's central noun, but a newcomer hears a file format (.csv, .xlsx) or a date format; the screens gloss it as 'a kind of thing'.
 keep: true
 means: A kind of thing a document can hold, declared rather than hand-written. Compiles to a real table, fmt_<name>, with real types and real CHECKs.
+screen_hebrew: פורמט
 named_by: D-214
 scope: engine
 shown_in: rail
@@ -10547,6 +10596,7 @@ state: live
 
 ### Fund account
 means: A pension, study fund, provident fund or managers' insurance account.
+screen_hebrew: קופה
 scope: ledger
 shown_in: rail
 appears: screen 95 in 22 files (screens/Funds 15, screens/FeeImpact 14, screens/FundDetail 14, …); tools 40 in 6 files (tools/funds 29, tools/deductionTypes 4, catalog 3, …); tour 4 in 1 file (demo/ledger 4)
@@ -10556,6 +10606,7 @@ state: live
 means: Home's one line listing the ledger guide's steps, each ticking itself when the document holds what it asks; it names the next step as a link to that step's place, opens the guide only when Guide me is pressed (D-575), and is put away for the document by its Dismiss. Its order puts the three workflows first: read a statement, give each shop a category, then the list of categories.
 not: Not a dialog, and never opened by itself; not the guide itself, which walks the same steps on the real screens.
 code_word: GuideLine, guide.ts steps
+screen_hebrew: צעדים ראשונים
 named_by: D-577
 scope: ledger
 shown_in: screen
@@ -10568,6 +10619,7 @@ rename_to: Goal (everywhere: rows, screens, tool text; tool names only if cheap)
 means: A named target. Its balance is always derived from deposits — no function in the savings domain takes one as a parameter.
 rejected: saving goal; savings goal (until D-451); create_saving_goals (the tool, now create_goals)
 code_word: saving_goal; create_goals
+screen_hebrew: יעד
 named_by: D-451
 scope: ledger
 shown_in: rail
@@ -10585,6 +10637,7 @@ state: live
 means: The list's three settings, set in place in one row of menus above it: the column the groups come from (an enum, one link or a date's buckets), the member or yes/no that ticks a row, and the columns after the title.
 not: Not a board's Lanes by, which is the board's own setting; the list's are words in format_view_column under view 'list'.
 code_word: group, done <members>, line (one column's list setting, together)
+screen_hebrew: קיבוץ לפי / מסומן כאשר / שורה
 named_by: D-519
 scope: app
 shown_in: screen
@@ -10593,6 +10646,7 @@ state: live
 ### Guide me
 means: The rail's button that walks a newcomer through the first things to do in this document.
 code_word: guide
+screen_hebrew: הדרכה
 scope: app
 shown_in: rail
 appears: screen 12 in 5 files (guide/Guide 5, Sidebar 3, guide/useGuide 2, …)
@@ -10609,6 +10663,7 @@ state: live
 means: One figure on a dashboard: the count of a format's rows, or the sum of one of its number or money columns, under a filter as format_rows match takes it, with a name. Money is summed per currency, never across two.
 not: Not a declared total or an aggregate of the format: it lives only on its dashboard, and removing the block removes it.
 code_word: headline, kind 'total', totalNameRefusal
+screen_hebrew: נתון ראשי
 named_by: D-521
 scope: app
 shown_in: view
@@ -10634,6 +10689,7 @@ state: live
 ### Holding
 means: What the money at a place is held in — cash, a fixed deposit, a fund track, a position in one security. The thing with a rate, a liquidity and a term; a deposit lands in one, and cash is an ordinary one.
 not: Holding place, where it sits.
+screen_hebrew: החזקה
 named_by: D-175
 scope: ledger
 shown_in: screen
@@ -10643,6 +10699,7 @@ state: live
 ### Holding place
 means: Where money physically sits — a bank, a broker, a drawer — and nothing else since M15: the rate, the liquidity and the term are on the holding. One goal spreads across several places; one place holds several goals' money.
 not: Holding, what the money at a place is held in.
+screen_hebrew: מקום החזקה
 named_by: D-175
 scope: ledger
 shown_in: screen
@@ -10651,6 +10708,7 @@ state: live
 
 ### Home
 means: The ledger's first place in the rail: the month at a glance, with Month and Year as its tabs.
+screen_hebrew: בית
 scope: ledger
 shown_in: rail
 appears: screen 24 in 18 files (screens/ByMerchant 4, guide/Guide 3, screens/DeductionTypes 2, …); tools 3 in 3 files (tools/categoryEdits 1, tools/rows 1, tools/waiting 1); tour 1 in 1 file (demo/tour_step.format 1)
@@ -10700,6 +10758,7 @@ means: A saved view of kind input (D-533): the fields a form asks for adding row
 not: Not the entry form (entry/new), which asks every required column and opens the new entry after Add; not a tab of the format's strip, which shows rows rather than adding them.
 rejected: Form (entry/new is already the entry form); Add form (only the one used for Add is opened by Add)
 code_word: kind input in format_saved_view
+screen_hebrew: תצוגת הזנה
 named_by: D-535
 scope: app
 shown_in: rail
@@ -10708,6 +10767,7 @@ state: live
 ### Installments
 means: A purchase split across N monthly charges on a card statement, each charge a transaction of its own.
 printed_as: תשלומים
+screen_hebrew: תשלומים
 scope: ledger
 shown_in: screen
 appears: screen 3 in 2 files (debts/DebtEditor 2, transactions/DetailPanel 1); tools 1 in 1 file (tools/wealth 1)
@@ -10715,6 +10775,7 @@ state: live
 
 ### Institution
 means: Cal, Max, a bank, an investment platform, a fund manager. Reference data, never a constraint.
+screen_hebrew: גוף פיננסי
 scope: ledger
 shown_in: screen
 appears: screen 1 in 1 file (screens/Accounts 1); tools 1 in 1 file (tools/funds 1)
@@ -10723,6 +10784,7 @@ state: live
 ### Investment track
 means: A fund's chosen allocation; the default is rarely reviewed.
 printed_as: מסלול השקעה
+screen_hebrew: מסלול השקעה
 scope: ledger
 shown_in: screen
 appears: screen 3 in 2 files (funds/FundEditor 2, savings/labels 1); tools 1 in 1 file (tools/funds 1)
@@ -10748,7 +10810,16 @@ state: live
 means: The rows added from an input view in this visit, listed under its form newest first, each drawn as the list draws it and ending in Undo ('Undo adding <title>'), which deletes that row; refused at its line when another row now links to it ('Kept: 2 rows link to it'). Leaving the form empties the list. On a dashboard block, as many as its height holds. The unit's pick (M55 U1, D-535).
 not: Not Re-apply's undo of a run of rules (the ledger's); not Remove from this dashboard.
 rejected: Added here · Added now (Just added covers exactly the visit); Remove · Take back for Undo (Remove reads as Remove from this dashboard)
+screen_hebrew: נוסף זה עתה · ביטול
 named_by: D-535
+scope: app
+shown_in: screen
+state: live
+
+### Language
+means: Settings' choice of the app's language, English or Hebrew: it follows the computer on first open until set, and is kept per machine, never in the document, so two people open one document each in their own (D-583).
+screen_hebrew: שפה
+named_by: D-583
 scope: app
 shown_in: screen
 state: live
@@ -10765,6 +10836,7 @@ state: live
 means: A row or category the statistics do not count, and the one phrasing for it on screen; the verb is leave out.
 rejected: exclude; excluded; Exclude these from spending; never counts as spending; Excluded from statistics
 code_word: excluded (set_excluded_from_totals)
+screen_hebrew: לא נכלל בסיכומים
 named_by: D-375
 scope: ledger
 shown_in: screen
@@ -10773,6 +10845,7 @@ state: live
 
 ### Left over
 means: What came in less what went out, for a month or a year.
+screen_hebrew: נשאר
 scope: ledger
 shown_in: screen
 appears: screen 11 in 5 files (screens/Home 3, screens/Year 3, screens/Export 2, …)
@@ -10809,6 +10882,7 @@ state: live
 means: The view kind: one row per line, with a tick, the title and the line's columns, grouped by one column. Every format has one, at #/formats/<name>/list, and it sits beside Table and Board in the format's one tab strip. The list beside an open entry is the same list, narrow.
 not: Not the entry's list (EntryList) as a separate thing — since M53 U4 it is this list in its narrow width. Not a `links` column (several rows of another format), nor an `enums` column's members.
 code_word: list (VIEW_KINDS), ListLines, ListPage, listPicture
+screen_hebrew: רשימה
 named_by: D-519
 scope: app
 shown_in: view
@@ -10816,6 +10890,7 @@ state: live
 
 ### Local model
 means: Settings: a model running on this machine, which reads a file onto a format or works a declaration out from an example — never over the network.
+screen_hebrew: מודל מקומי
 scope: app
 shown_in: rail
 appears: screen 8 in 6 files (import/MappingBar 2, screens/LocalModel 2, formats/ExamplePanel 1, …)
@@ -10824,6 +10899,7 @@ state: live
 ### Managers' insurance
 means: An alternative long-term savings vehicle to a pension fund. A fund account.
 printed_as: ביטוח מנהלים
+screen_hebrew: ביטוח מנהלים
 scope: ledger
 shown_in: screen
 appears: screen 1 in 1 file (funds/labels 1); tools 1 in 1 file (tools/funds 1)
@@ -10831,6 +10907,7 @@ state: live
 
 ### Merchant
 means: Who a transaction was with, as the statement prints the name; By merchant files a merchant's transactions at once.
+screen_hebrew: בית עסק
 scope: ledger
 shown_in: screen
 appears: screen 36 in 17 files (rules/TestBox 5, screens/ByMerchant 5, transactions/DetailPanel 5, …); tools 35 in 6 files (tools/categorize 9, tools/rows 8, tools/fixed 7, …); tour 8 in 2 files (demo/card-charges 6, demo/tour_step.format 2)
@@ -10845,6 +10922,7 @@ state: live
 
 ### Month
 means: Home's tab for one financial month: what came in, what went out and what is left over (D-313).
+screen_hebrew: חודש
 named_by: D-313
 scope: ledger
 shown_in: rail
@@ -10853,9 +10931,18 @@ state: live
 
 ### Monthly share
 means: A non-monthly charge amortized into one month's projection — an annual premium of 1,200 contributes 100. The month the real charge lands in is shown beside it.
+screen_hebrew: חלק חודשי
 scope: ledger
 shown_in: screen
 appears: screen 1 in 1 file (fixed/FixedExpenseEditor 1)
+state: live
+
+### More
+means: The ⋯ menu in a screen's header that holds its rarer acts: on Transactions Rules and Export these n to CSV, on By merchant Skip all n (D-582).
+not: N more, the link under a dashboard block.
+screen_hebrew: פעולות נוספות
+scope: app
+shown_in: screen
 state: live
 
 ### More types
@@ -10876,6 +10963,7 @@ state: live
 ### N done
 means: The ticked rows of one group of a list, folded at its foot; pressing it shows them, 'Hide N done' folds them again. When the list is grouped by the column that ticks a row, done is its own last group instead.
 not: Not the state member called done itself: a list may tick on any member or a yes/no.
+screen_hebrew: N בוצעו
 named_by: D-519
 scope: app
 shown_in: screen
@@ -10885,6 +10973,7 @@ state: live
 means: The rows a compact block on a dashboard does not show, as a link that opens its view in full.
 not: Not a page or a count of every row: the rows the block left out.
 code_word: more
+screen_hebrew: עוד N
 named_by: D-521
 scope: app
 shown_in: view
@@ -10893,6 +10982,7 @@ state: live
 ### National Insurance
 means: The social security contribution deducted on a payslip.
 printed_as: ביטוח לאומי
+screen_hebrew: ביטוח לאומי
 scope: ledger
 shown_in: screen
 appears: screen 2 in 2 files (paychecks/PaycheckDetail 1, screens/DeductionTypes 1)
@@ -10906,9 +10996,18 @@ shown_in: tool
 appears: tools 1 in 1 file (tools/ingest 1)
 state: live
 
+### Needs · Wants · Saving
+means: The three parts of Plan's 50 / 30 / 20 proposal, in its table and its bar: what must be paid, what is chosen, and what is kept. Each category is put in one, or left out (Not split).
+not: The Savings category, which is one category a proposal may put under Saving.
+screen_hebrew: צרכים · רצונות · חיסכון
+scope: ledger
+shown_in: screen
+state: live
+
 ### Net worth
 means: Wealth's first tab: one table of bank accounts and cash, accounts with holdings, places kept by hand, funds and what is owed, ending on what it all comes to.
 rejected: Overview
+screen_hebrew: שווי נקי
 named_by: D-375
 scope: ledger
 shown_in: rail
@@ -10928,6 +11027,7 @@ state: live
 means: The menu of the format's + at the end of its tab strip, after the rollups and before Dashboard: make an input view (a draft asking the required columns, with Fields open), a saved view or a chart, the last two with Add a block's forms saved without placing a block. The unit's pick (M55 U1, D-535).
 not: Not Add, which adds a row; not Add a block's menu, which also places what it makes on a dashboard.
 rejected: New input view alone (a menu of one is a wasted click); Input view… · View… · Chart… (a noun is not an action)
+screen_hebrew: תצוגת הזנה חדשה · תצוגה חדשה · תרשים חדש
 named_by: D-535
 scope: app
 shown_in: screen
@@ -10966,6 +11066,7 @@ state: live
 ### Pack
 means: Formats somebody already worked out — the ledger, development — that a document keeps: create_document's packs, keep_packs and the Packs screen's Keep this pack here. A format is a pack's when the document keeps the pack and the pack declares its name, and every list puts a person's own formats first and each pack's under its title (D-422).
 not: A rule pack, one market's built-in category rules.
+screen_hebrew: חבילה
 named_by: D-405
 scope: engine
 shown_in: rail
@@ -10993,6 +11094,7 @@ rename_to: Paycheck (everywhere payslip or slip is shown: screens, Read slips, S
 means: One month's pay from one employer, as its payslip prints it: the gross, every deduction, and the net.
 rejected: payslip; slip (on screens — Read payslips, a slip's review — and in tool text, until D-451; the code keeps PAYSLIP and slip)
 code_word: paycheck (paychecks, record_paychecks); slip (ReadSlips, SlipReview)
+screen_hebrew: תלוש שכר
 named_by: D-451
 scope: ledger
 shown_in: rail
@@ -11010,6 +11112,7 @@ state: live
 means: Retirement contributions, employer and employee, as a payslip line and as the fund that receives them.
 not: Pension fund, the account the contributions land in.
 printed_as: פנסיה
+screen_hebrew: פנסיה
 scope: ledger
 shown_in: screen
 appears: screen 11 in 7 files (paychecks/PaycheckDetail 2, paychecks/WhereItWent 2, screens/DeductionTypes 2, …); tools 8 in 5 files (tools/funds 3, tools/deductionTypes 2, catalog 1, …); tour 3 in 1 file (demo/ledger 3)
@@ -11027,6 +11130,7 @@ state: live
 means: The fund account pension contributions are paid into.
 not: Pension, the contribution itself.
 printed_as: קרן פנסיה
+screen_hebrew: קרן פנסיה
 scope: ledger
 shown_in: screen
 appears: screen 1 in 1 file (funds/labels 1)
@@ -11042,6 +11146,7 @@ state: live
 
 ### Plan
 means: Where the month is planned: each category's bucket, the bills off the top, and what is put towards goals.
+screen_hebrew: תקציב
 scope: ledger
 shown_in: rail
 appears: screen 73 in 20 files (screens/Plan 25, screens/Goals 11, plan/MonthRow 7, …); tools 58 in 10 files (tools/plan 39, catalog 5, tools/wealth 4, …)
@@ -11064,6 +11169,7 @@ state: live
 
 ### Provenance
 means: How a holding's balance is known: RECORDED (movements entered), TRANSCRIBED (a statement says so) or VALUED (positions times a price). Declared, not inferred, and shown beside when it was last confirmed.
+screen_hebrew: מקור הנתון
 named_by: D-176
 scope: ledger
 shown_in: screen
@@ -11073,6 +11179,7 @@ state: live
 ### Provident fund
 means: A long-term savings vehicle. A fund account.
 printed_as: קופת גמל
+screen_hebrew: קופת גמל
 scope: ledger
 shown_in: screen
 appears: screen 2 in 1 file (funds/labels 2); tools 1 in 1 file (tools/funds 1)
@@ -11080,6 +11187,7 @@ state: live
 
 ### Provider category
 means: The category the card or bank supplied. An input to rules, never authoritative.
+screen_hebrew: ענף
 scope: ledger
 shown_in: screen
 appears: screen 4 in 1 file (rules/TestBox 4)
@@ -11110,6 +11218,7 @@ state: live
 
 ### Read files
 means: The command and the Month tab that read statements, payslips and fund reports into the ledger.
+screen_hebrew: ייבוא קבצים
 scope: ledger
 shown_in: screen
 appears: screen 15 in 7 files (screens/FileGap 4, home/parts 3, screens/Year 3, …)
@@ -11122,6 +11231,7 @@ rename_to: Reader (tool text that still says mapping says reader)
 means: A person's saved description of how one kind of file maps onto the ledger: its columns, their roles, its account. Read it keeps the reader, so a statement's columns are mapped once (D-368); a file's shape is a kind, and a reader is found for it by header signature.
 rejected: saved mapping; template; stored format; layout (as a reader); provider profile (the old idea); mapping (in tool text until D-451; save_mapping_as and import_mapping keep it)
 code_word: mapping (import_mapping)
+screen_hebrew: תבנית ייבוא
 named_by: D-451
 scope: ledger
 shown_in: screen
@@ -11135,6 +11245,7 @@ keep: true
 means: A dated figure taken from a fund's or a holding's report — a balance, its parts, a fee — kept beside the others rather than over them.
 rejected: snapshot (the code's word; its row is retired, D-451)
 code_word: snapshot (SnapshotEditor); readings (record_fund_readings, record_holding_readings)
+screen_hebrew: דיווח
 named_by: D-451
 scope: ledger
 shown_in: screen
@@ -11164,6 +11275,7 @@ state: live
 
 ### Reconciliation delta
 means: Gross minus the net-reducing deductions minus net. A warning, never a blocker.
+screen_hebrew: פער התאמה
 scope: ledger
 shown_in: screen
 appears: screen 1 in 1 file (screens/DeductionTypes 1)
@@ -11189,6 +11301,7 @@ state: live
 means: A block's menu item that takes the block off. A saved view or a rollup stays where it was kept; a headline total, which lives only on its dashboard, goes.
 not: Not Delete: nothing kept elsewhere is deleted by it.
 code_word: onRemove, arrange_views remove
+screen_hebrew: הסרה מלוח הבקרה
 named_by: D-521
 scope: app
 shown_in: view
@@ -11205,6 +11318,7 @@ state: live
 ### Return
 means: Investment return over a period. Yields no figure at all when nobody knows the contributions (see Contribution basis).
 printed_as: תשואה
+screen_hebrew: תשואה
 scope: ledger
 shown_in: screen
 appears: screen 11 in 4 files (screens/FeeImpact 4, funds/FundEditor 3, screens/FundDetail 3, …); tools 8 in 2 files (tools/funds 6, tools/formats 2)
@@ -11264,6 +11378,7 @@ issue: A category rule on Categories › Rules (ledger), an engine rule set (app
 keep: true
 means: A pattern that assigns a category to a transaction automatically.
 not: A row of the project's own `rule` format (D-435), which is a working rule of this repo; and an engine rule set, the declared form of the same idea for any format.
+screen_hebrew: כלל
 named_by: D-451
 scope: ledger
 shown_in: rail
@@ -11299,6 +11414,7 @@ state: live
 
 ### Run
 means: One re-apply, and the rows it changed — what undo undoes.
+screen_hebrew: הרצה
 scope: ledger
 shown_in: screen
 appears: screen 16 in 10 files (screens/LocalModel 3, screens/Mcp 3, funds/ReportReview 2, …); tools 25 in 9 files (tools/formats 13, tools/intake 5, catalog 1, …); tour 1 in 1 file (demo/project 1)
@@ -11312,6 +11428,7 @@ means: A bank statement's running balance column, used to prove the parse by the
 not: Balance, the engine's drawing of a claim as two pans; and an account's balance on Net worth, which is what the statement ends on rather than the column.
 rejected: balance (the import column role's label until D-451; the role's key stays balance)
 printed_as: יתרה
+screen_hebrew: יתרה
 named_by: D-451
 scope: ledger
 shown_in: screen
@@ -11322,6 +11439,7 @@ state: live
 means: Writes the open document to a new file and carries on in that one (Ctrl+Shift+S); its dialog is titled Save as.
 rejected: Save a copy — the name of a different act, given to what every platform calls Save As (M54, D-531)
 code_word: saveCopyAs
+screen_hebrew: שמירה בשם
 scope: app
 shown_in: screen
 appears: screen 5 in 4 files (screens/Export 2, commands 1, Notices 1, …)
@@ -11331,6 +11449,7 @@ state: live
 means: A format's filter, folds, columns, sort and kind of view (table, board, list, roadmap, ready, or input — an input view, M55 U2, D-536) under a name, kept in format_saved_view as the address spells it. Saved from the FilterBand (Save this view) or the format's + (New view; New input view), listed under its format in the rail, drawn by show_format view:"<name>"; what a dashboard points at, by format and name. An input view opens its own form (#/formats/<name>/input/<view>, D-556) and is never a tab.
 not: Not a format (D-514) and not a route of its own: opening one is going to its kind's address. Not the list's own settings (group, line, done), which stay the list's.
 code_word: SavedView, format_saved_view, savedViewPath, useSaving
+screen_hebrew: תצוגה שמורה
 named_by: D-520
 scope: app
 shown_in: view
@@ -11338,6 +11457,7 @@ state: live
 
 ### Set aside
 means: Money put towards a goal, a month at a time; a goal's balance is what has been set aside less what was drawn.
+screen_hebrew: חיסכון ליעד
 scope: ledger
 shown_in: screen
 appears: screen 14 in 4 files (screens/GoalDetail 7, screens/Goals 5, plan/FixedSection 1, …); tools 10 in 5 files (tools/goalRhythm 5, tools/wealth 2, catalog 1, …)
@@ -11345,6 +11465,7 @@ state: live
 
 ### Settings
 means: The rail section that is always there: Packs, Accounts, Local model, Export.
+screen_hebrew: הגדרות
 scope: app
 shown_in: rail
 appears: screen 3 in 3 files (formats/FormatDoors 1, nav 1, screens/Export 1); tour 4 in 1 file (demo/project 4)
@@ -11369,6 +11490,7 @@ state: live
 ### Severance
 means: The employer-side severance accrual, a payslip line paid into a pension fund.
 printed_as: פיצויים
+screen_hebrew: פיצויים
 scope: ledger
 shown_in: screen
 appears: screen 9 in 6 files (funds/DepositRows 2, paychecks/PaycheckDetail 2, screens/FundDetail 2, …); tools 3 in 2 files (tools/funds 2, tools/paychecks 1); tour 3 in 1 file (demo/ledger 3)
@@ -11443,6 +11565,7 @@ state: live
 ### Standing order
 means: A recurring automatic bank debit; one of the row classes a bank row is read as.
 printed_as: הוראת קבע
+screen_hebrew: הוראת קבע
 scope: ledger
 shown_in: screen
 appears: screen 1 in 1 file (debts/labels 1); tools 2 in 2 files (tools/debts 1, tools/wealth 1)
@@ -11456,8 +11579,16 @@ shown_in: tool
 appears: tools 1 in 1 file (tools/startHere 1)
 state: live
 
+### Start with 50 / 30 / 20
+means: The heading of Plan's proposal for a document with no plan yet: what comes in split 50% to needs, 30% to wants and 20% to saving, from the months already categorized (M59 U4).
+screen_hebrew: מתחילים מ־50 / 30 / 20
+scope: ledger
+shown_in: screen
+state: live
+
 ### Statement
 means: A bank or card statement: the file a month's transactions are read from.
+screen_hebrew: דף חשבון
 scope: ledger
 shown_in: screen
 appears: screen 74 in 33 files (wealth/NetWorthOpened 12, savings/Cushion 7, home/WaitingList 5, …); tools 42 in 12 files (tools/ingest 8, catalog 7, tools/accountBalances 5, …); tour 12 in 4 files (demo/ledger 4, demo/tour.format 3, demo/tour_step.format 3, …)
@@ -11473,6 +11604,7 @@ state: live
 ### Study fund
 means: A semi-liquid savings vehicle with employer and employee contributions, withdrawable after a liquidity date. A fund account.
 printed_as: קרן השתלמות
+screen_hebrew: קרן השתלמות
 scope: ledger
 shown_in: screen
 appears: screen 7 in 5 files (paychecks/PaycheckDetail 2, paychecks/WhereItWent 2, funds/labels 1, …); tools 3 in 2 files (tools/funds 2, tools/deductionTypes 1)
@@ -11529,6 +11661,7 @@ state: live
 
 ### Total compensation
 means: Gross plus the employer-side contributions.
+screen_hebrew: עלות מעביד
 scope: ledger
 shown_in: screen
 appears: screen 3 in 1 file (paychecks/PaycheckDetail 3); tools 1 in 1 file (tools/paychecks 1)
@@ -11536,6 +11669,7 @@ state: live
 
 ### Tour
 means: A workflow walked over the real app by a drawn pointer, with captions, that a visitor can take over. Its steps are rows of tours.emd, a document of their own; the demo embeds them.
+screen_hebrew: סיור
 named_by: D-413
 scope: app
 shown_in: tour
@@ -11544,6 +11678,7 @@ state: live
 
 ### Transaction
 means: One charge, refund, transfer or inflow — the atomic ledger row.
+screen_hebrew: תנועה
 scope: ledger
 shown_in: rail
 appears: screen 43 in 25 files (screens/ByMerchant 5, screens/Transactions 5, rules/ReapplyPanel 3, …); tools 32 in 9 files (catalog 7, tools/rows 7, tools/categorize 5, …)
@@ -11592,6 +11727,7 @@ means: The tick that makes an input view the one a format's Add, the list's + an
 not: Not a field's Default, which is a value the form starts from.
 rejected: Default (does not say of what, and names a field's value already); Opens with Add (leaves out the list's + and quick add)
 code_word: the default input view (default:true on arrange_views)
+screen_hebrew: לשימוש בהוספה
 named_by: D-535
 scope: app
 shown_in: screen
@@ -11616,6 +11752,7 @@ state: live
 
 ### Wealth
 means: The rail section that holds Net worth, Goals, Debts and Funds.
+screen_hebrew: הון
 scope: ledger
 shown_in: rail
 appears: screen 13 in 8 files (screens/Debts 2, screens/DepositCheck 2, screens/FeeImpact 2, …)
@@ -11633,9 +11770,17 @@ shown_in: screen
 appears: screen 8 in 4 files (formats/EntryView 3, formats/WhatLooksWrong 3, screens/FileGap 1, …); tools 3 in 3 files (catalog 1, tools/audit 1, tools/goalDeposits 1)
 state: live
 
+### Where it went
+means: Home's list of a month's spending by category, the third workflow's answer (D-575); a category in it opens its rows on Transactions.
+screen_hebrew: לאן הלך הכסף
+scope: ledger
+shown_in: screen
+state: live
+
 ### Where the money is
 means: The screen's words for where money sits — a goal's holding places and the holdings in them — in place of every older phrasing. Place and holding stay two things underneath.
 rejected: sits; held; Deposits usually go to
+screen_hebrew: איפה הכסף
 named_by: D-375
 scope: ledger
 shown_in: screen
@@ -11652,6 +11797,7 @@ state: live
 
 ### Year
 means: Home's tab for the twelve months together, which took in what Trends was (D-313).
+screen_hebrew: שנה
 named_by: D-313
 scope: ledger
 shown_in: rail
@@ -11668,6 +11814,7 @@ state: live
 
 ### agenda
 means: The view of every dated format's rows on one list of days from today, grouped by day, with what a format says it still owes above today as overdue (M49 U3, D-473). A view kind kept per column: `date`, `done <members>`, `line`. Not a calendar or a week grid.
+screen_hebrew: סדר יום
 scope: engine
 state: live
 
