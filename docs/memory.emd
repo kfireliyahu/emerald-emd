@@ -4772,6 +4772,16 @@ answer: Maintainer, 2026-11-11: yes, migrate hers. From M59 on, a change to a le
 state: live
 affects: docs/09-decision-log.md
 
+### D-577
+date: 2026-11-11
+milestone: M59
+scope: app
+title: A new ledger document holds back the places it has nothing for — Year, Paychecks, Plan, Wealth, Dashboard, and in a ledger-only document Formats, Connections and Agenda — and each comes back with its first row; Home, Transactions and By merchant keep what a first-time person needs and put the rest behind Filter and More (M59 U1's picks, not yet the maintainer's)
+question: D-575: a second person found a new ledger document too much and its three workflows (read a statement, categorize, see where the money went) hard to find. What does a new document show, what does it hold back until it has something, and what brings each back?
+answer: M59 U1's picks, as D-535's were, judged by the maintainer after through the unit's open review_entry; docs/mockups/m59-u1/brief.md has each with its reason. The rail holds back, computed each time it is drawn: Home's Year until two months have rows; Paychecks until a paycheck; Plan until a plan, a bill or a month with rows and none left uncategorized; Wealth until a goal, debt, fund or fund report, account with holdings, place kept by hand or opening balance; Dashboard until a block; and in a document whose only pack is the ledger, Formats and Connections until a format of the person's own, Agenda until a dated one. A new ledger document's rail is Home, Transactions, Categories, Assistants, Settings. Held back is hidden, not removed: every route opens, a held place you stand on takes its line while you are there, the palette lists every place, no switch to show all. Home before anything is read is the band and Getting started (the repeated paragraph goes); Add by hand is Add a paycheck; Taxes waits for a paycheck. Getting started's next step is a link to its place, and shops come before the list of categories. Transactions keeps the view switch, the month, search and three figures (ink); Account, Category, At least, At most go behind Filter; Rules and Export behind More; the category strip goes; empty, it keeps its h1 and says 'No transactions yet.' with Read files. By merchant: Account and Month behind Filter, Order in the list's header, Skip all behind More, two tiles (Waiting, Categorized this sitting). A transaction's pane loses the raw natural-key line. Rejected: a first-run wizard; a simple-mode switch; a show-every-place switch; the narrower hold-back of only the ledger's places (named for the maintainer).
+state: live
+affects: "docs/mockups/m59-u1/brief.md\nsrc/ui/nav.ts\nsrc/ui/Sidebar.tsx\nsrc/ui/screens/Home.tsx\nsrc/ui/screens/Transactions.tsx\nsrc/ui/screens/ByMerchant.tsx\nsrc/data/packs/ledger/guide.ts"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -8189,6 +8199,13 @@ breaks: The widest pick is the +'s New view and New chart: they add D-525's form
 not_tried: Nothing was built, so nothing was clicked: the existing screens were measured with probe:screens only (entry/new on custom.emd's card_charge and project.emd's unit; card_charge's list, table and dashboard). The pane was not opened.
 state: accepted
 
+### Read docs/mockups/m59-u1/brief.md: every line marked with a triangle is M59 U1's pick, not yet yours (D-577, as D-535). Then format_rows term search:'D-577' for the three word rows, and format_rows unit match:{ref:'M59 U6'} for the SETTLED paragraph at the end of its brief.
+unit: M59 U1
+should: Each pick reads as what you would have answered in shape's interview. RAIL (brief §5): a new ledger document's rail is Home (Month), Transactions, Categories | Assistants, Settings; held back and what brings each back, computed each time: Year (two months of rows), Paychecks (a paycheck), Plan (a plan, a bill, or a month with nothing uncategorized), Wealth (a goal, debt, fund, holdings, place or opening balance), Dashboard (a block), and in a ledger-only document Formats and Connections (a format of your own), Agenda (a dated one of your own); a held place you stand on shows while you are there; the palette lists every place; no show-all switch. HOME (§5): before anything is read only the band and Getting started (the repeated paragraph goes); Add by hand becomes Add a paycheck; Taxes waits for a paycheck. GETTING STARTED (§5): one line under the band, its next step a link to the place, shops before the list of categories. TRANSACTIONS (§5): Account, Category, At least, At most behind one Filter (with a count); Rules and Export behind More; three ink figures plus Left out only when used; the category strip goes; empty keeps its h1 and says 'No transactions yet.' with Read files. BY MERCHANT (§5): Account and Month behind Filter, Order a menu on the list header, Skip all behind More, two tiles. A transaction's pane loses the raw natural-key line (§6). Words: Getting started, Add a paycheck, Filter.
+breaks: The widest pick: holding back Formats, Connections and Agenda in a ledger-only document hides the engine's own places in the product whose engine is the point, and demo.emd's rail changes with it; the narrower answer holds back only Year, Paychecks, Plan, Wealth and Dashboard (nine places). Next: Plan's trigger, a fully categorized month, may feel late; the looser one (any categorized row) is true right after the first read. Next: dropping Transactions' category strip. Changing a pick before U6 starts is a brief edit; after, a fix unit.
+not_tried: Nothing was built. A new ledger-only document (.demo/new-ledger.emd) was measured with probe:screens and its Home and rail read in the pane without a click; Transactions and By merchant with rows were read from the code, not opened.
+state: open
+
 ### Read en.ts:184, en.ts:143 and en.ts:88.
 unit: M54 U7
 should: Words a stranger outside the maintainer's country and history can parse.
@@ -9685,6 +9702,15 @@ scope: app
 shown_in: view
 state: live
 
+### Add a paycheck
+means: The intake band's secondary button on Home: a paycheck typed in by hand, for a slip on paper. Was 'Add by hand', which did not say what it adds.
+rejected: Add by hand (it adds only a paycheck)
+code_word: IntakeBand onAddByHand
+named_by: D-577
+scope: ledger
+shown_in: screen
+state: live
+
 ### Add a task · values
 means: Quick add's placeholder on a list: 'Add a <format> · ' and every value the new row will take besides what the line asks — the group's, the address filter's exact values, a required enum's first member, the default input view's defaults — so nothing is taken silently. Without a default input view the line asks the title alone; with one it asks that view's fields in its order, the first under this placeholder and each other with its column's name before it (M55 U4, D-557). Enter writes it; Esc clears.
 not: Not the Add button, which opens a new entry with every field it asks for.
@@ -10358,6 +10384,15 @@ shown_in: nowhere
 appears: on no screen, in no tool text, not in the tour
 state: retired
 
+### Filter
+means: One button beside search on Transactions and By merchant that opens what narrows the rows: on Transactions Account, Category, At least and At most; on By merchant Account and Month; with Clear. It carries how many are on ('Filter · 2').
+not: Not the order of a list (By merchant's Order is a menu on the list's header row), and not a saved view's FilterBand on a format.
+code_word: FilterBar
+named_by: D-577
+scope: ledger
+shown_in: screen
+state: live
+
 ### Financial month
 means: The reporting month; calendar by default, with a configurable start day.
 not: Billing period, which is the statement a row appeared on.
@@ -10398,6 +10433,15 @@ means: A pension, study fund, provident fund or managers' insurance account.
 scope: ledger
 shown_in: rail
 appears: screen 95 in 22 files (screens/Funds 15, screens/FeeImpact 14, screens/FundDetail 14, …); tools 40 in 6 files (tools/funds 29, tools/deductionTypes 4, catalog 3, …); tour 4 in 1 file (demo/ledger 4)
+state: live
+
+### Getting started
+means: Home's one line listing the ledger guide's steps, each ticking itself when the document holds what it asks; it names the next step as a link to that step's place, opens the guide only when Guide me is pressed (D-575), and is put away for the document by its Dismiss. Its order puts the three workflows first: read a statement, give each shop a category, then the list of categories.
+not: Not a dialog, and never opened by itself; not the guide itself, which walks the same steps on the real screens.
+code_word: GuideLine, guide.ts steps
+named_by: D-577
+scope: ledger
+shown_in: screen
 state: live
 
 ### Goal
@@ -16564,14 +16608,17 @@ report: emerald-mcp 0.3.1 cut at 2a066ca: version moved in package.json, package
 milestone: M59
 scope: app
 title: Shape: what a new ledger document shows, and the three workflows it leads to
-decision: D-575
-state: in_progress
+landed: 2026-11-11
+decision: D-577
+state: built
 brief: D-575. The ledger's first use by a second person: the screens were too much for her and the maintainer; she did not find the main workflows. Run Impeccable's shape (/impeccable shape, D-529) with D-575 as the discovery round: do not re-ask what it settles. First try the app as she met it: `npm run dev:demo` and also a NEW empty ledger document (no demo rows), then `npm run probe:screens` and the pane only where a click is needed. Read M54 U5's open findings (`format_rows review_entry match:{unit:"M54 U5", state:open} columns:[do, breaks]`) and take the ones that bear on what a new person sees. Write docs/mockups/m59-u1/brief.md (Impeccable's seven parts, smallest useful) naming: the three main workflows (read a statement, categorize, see where the money went) and the path through each from a new document, counted in clicks; what the rail shows for a new document and what it holds back until the document has something (Paychecks, Wealth, Plan, Year, for instance) and what brings each back; what Home shows first; which controls on Transactions and By merchant a first-time person needs and which can move behind a menu; how Getting started (Home's GuideLine, U5) sits with this. The unit PICKS, as M55 U1 did (D-535): it takes the recommended reading wherever shape would ask, marks each pick in brief.md as the unit's and not yet the maintainer's, writes new on-screen words as term rows (check `format_rows term search:` first), and writes the picks into M59 U6's brief as SETTLED. One open review_entry on this unit lists every pick and where it is written, for the maintainer to judge after. No code changes. Stop and ask only where a pick would contradict D-575 or a live rule row. Done-test: brief.md written with picks marked, U6's brief carries them, the review row lists them.
-files: "docs/09-decision-log.md\ndocs/packs/ledger/README.md\nsrc/ui/Sidebar.tsx\nsrc/ui/screens/Home.tsx\nsrc/ui/screens/Transactions.tsx\nsrc/ui/screens/ByMerchant.tsx"
+files: "docs/mockups/m59-u1/brief.md\ndocs/09-decision-log.md\ndocs/memory.emd"
 taken_by: run-milestone driver
 started: 2026-11-11
 branch: main
+commit: fc4c624
 paths: docs/mockups/m59-u1/
+report: M59 U1 built at fc4c624 (docs:check green, privacy test green). Wrote docs/mockups/m59-u1/brief.md: Impeccable's shape, D-575 as discovery, every pick marked as the unit's (D-577). Tried a new ledger-only document: 12 places in the rail (8 empty), the Guide me dialog opened by itself (U5's), Home repeats the band's sentence, empty Transactions has no h1; with rows Transactions has 13 controls above its first row. Picks: the rail holds back Year, Paychecks, Plan, Wealth, Dashboard and (ledger-only) Formats, Connections, Agenda until the document holds what each lists, computed each draw; a new ledger document's rail is 5 places; a held place you stand on shows while you are there; the palette lists all. Home before a read is the band and Getting started; Add by hand -> Add a paycheck; Taxes waits for a paycheck. Getting started's next step links to its place; shops before the list of categories. Transactions and By merchant put filters behind one Filter and Rules/Export/Skip all behind More; Transactions loses its category strip, By merchant two tiles; empty states one sentence with Read files. M54 U5 rows taken: flow colours on Transactions' tiles, Uncategorized twice and selects in the filter bar, no h1 when empty, the raw natural key in a transaction's pane. The three paths counted in clicks: read 2 (1 by drop, 4 for a new shape), categorize 1 to arrive then 1-3 a merchant, where it went 0. Decision D-577 (row and log entry); term rows Getting started, Add a paycheck, Filter; M59 U6's brief carries the picks as SETTLED; one open review_entry lists them. No code changed. Widest pick to judge: hiding the engine's places (Formats, Connections, Agenda) in a ledger-only document, which also changes demo.emd's rail (U6 runs check:tours).
 
 ### M59 U2
 milestone: M59
@@ -16631,7 +16678,7 @@ scope: app
 title: Build what M59 U1 picked: a new ledger document that shows less and leads to its three workflows
 decision: D-575
 state: planned
-brief: D-575. Build docs/mockups/m59-u1/brief.md as M59 U1 picked it; the picks are written below as SETTLED by U1 when it lands (if this line still stands, U1 has not landed: stop). Expected: the rail holding back what a new document has nothing in and what brings each back, Home's first screen leading to the three workflows, controls moved behind a menu where U1 says. M54 U5's open rows come in where this touches their screen. Parity: nothing a person can do is lost to a conversation (src/parity.test.ts). Run Impeccable's harden and polish and the detector once at the end. Anything U1 did not settle is the maintainer's: stop and ask. Done-test: a new empty ledger document shows what U1 picked, and each held-back screen appears once its document has something in it. MAINTAINER'S EYE: the driver stops after this unit; the maintainer opens a new document, ideally with his friend, and says whether it is still too much.
+brief: "D-575. Build docs/mockups/m59-u1/brief.md as M59 U1 picked it; the picks are written below as SETTLED by U1 (landed 2026-11-11, D-577). Expected: the rail holding back what a new document has nothing in and what brings each back, Home's first screen leading to the three workflows, controls moved behind a menu where U1 says. M54 U5's open rows come in where this touches their screen. Parity: nothing a person can do is lost to a conversation (src/parity.test.ts). Run Impeccable's harden and polish and the detector once at the end. Anything U1 did not settle is the maintainer's: stop and ask. Done-test: a new empty ledger document shows what U1 picked, and each held-back place appears once its document has something in it. MAINTAINER'S EYE: the driver stops after this unit; the maintainer opens a new document, ideally with his friend, and says whether it is still too much.\n\nSETTLED by M59 U1 (D-577; the unit's picks, judged by the maintainer after through M59 U1's open review_entry; brief.md has each with its reason, §5 and §6):\n(1) RAIL, for a document keeping the ledger, computed from the document each time it is drawn, never stored: Home's Year tab shows when transactions span two or more calendar months; Paychecks when a paycheck exists; Plan when a plan, a bill, or a month with rows and none uncategorized exists; Wealth when a goal, debt, fund or fund report, account with holdings, place kept by hand, or an account's opening balance exists; Dashboard when its dashboard holds a block; and in a document whose only pack is the ledger, Formats and Connections when a format of the person's own (or another pack) exists, Agenda when a dated one does. A new ledger document's rail: Home (Month), Transactions, Categories | Assistants, Settings. Held back is hidden, not removed: every route opens; a held place you stand on takes its line in the rail while you are there (today it does not, nav.ts M20 U0); the command palette lists every place; no show-all switch. demo.emd: run check:tours, since Formats/Connections/Agenda leave a ledger-only document's rail.\n(2) HOME: before anything is read, the header, the intake band (Read files the one primary) and Getting started, nothing else (the 'Nothing here yet. Read a card or bank statement' paragraph goes). The band's 'Add by hand' becomes 'Add a paycheck' (term row). The Taxes figure is left out while the document holds no paycheck. Otherwise Home's order stays.\n(3) GETTING STARTED (GuideLine, after U5's Dismiss and no-auto-open): under the band, one line; the next step it names is a link to that step's place (the screen, without the guide); the guide's step order becomes read statements, Give each shop a category once, Make the list of categories yours, then the rest as now (src/data/packs/ledger/guide.ts).\n(4) TRANSACTIONS rows view: in sight the view switch, month pager and All months, search, the figures; Account, Category, At least, At most and Clear behind one 'Filter' button beside search showing how many are on ('Filter · 2'), each a ChoiceField, Category listing Uncategorized once; Rules and 'Export these n to CSV' behind the header's More menu (⋯); figures are Went out, Came in, No category, in ink not flow colours, plus Left out of totals only when a row is left out; the by-category sums strip goes; with no rows the header with h1 Transactions stays and the empty state is 'No transactions yet.' with the text action Read files. Card-payments question, rule-applied and selection bars, row menu and counts line stay.\n(5) BY MERCHANT: Account and Month behind the same Filter; Order a menu on the list's header row ('Most charges first'); 'Skip all n' behind More (⋯), 'n skipped' stays; two tiles, Waiting (names, with 'n charges, ₪x without a category' under it) and Categorized this sitting; with nothing read 'No transactions yet.' with Read files. Make a rule as you confirm, the row's More menu, Your usual categories and U3's provider-category action stay.\n(6) A transaction's pane: the 'Recognised on re-import as <natural key>' line goes (M54 U5's row, DetailPanel.tsx:381).\nNew words are term rows (named_by D-577): Getting started, Add a paycheck, Filter."
 files: "docs/mockups/m59-u1/brief.md\nsrc/ui/Sidebar.tsx\nsrc/ui/screens/Home.tsx"
 blocks: ["M59 U1","M59 U5"]
 paths: src/ui/Sidebar.tsx src/ui/screens/Home.tsx src/ui/home/ src/ui/screens/Transactions.tsx
@@ -16792,7 +16839,7 @@ finding: 2026-10-22
 inbox: 2026-11-10
 milestone: 2026-11-11
 open_question: 2026-11-11
-review_entry: 2026-11-03
+review_entry: 2026-11-11
 rule: 2026-11-11
-term: 2026-11-09
+term: 2026-11-11
 unit: 2026-11-11
