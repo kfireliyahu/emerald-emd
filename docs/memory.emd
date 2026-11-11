@@ -16565,9 +16565,12 @@ milestone: M59
 scope: app
 title: Shape: what a new ledger document shows, and the three workflows it leads to
 decision: D-575
-state: planned
+state: in_progress
 brief: D-575. The ledger's first use by a second person: the screens were too much for her and the maintainer; she did not find the main workflows. Run Impeccable's shape (/impeccable shape, D-529) with D-575 as the discovery round: do not re-ask what it settles. First try the app as she met it: `npm run dev:demo` and also a NEW empty ledger document (no demo rows), then `npm run probe:screens` and the pane only where a click is needed. Read M54 U5's open findings (`format_rows review_entry match:{unit:"M54 U5", state:open} columns:[do, breaks]`) and take the ones that bear on what a new person sees. Write docs/mockups/m59-u1/brief.md (Impeccable's seven parts, smallest useful) naming: the three main workflows (read a statement, categorize, see where the money went) and the path through each from a new document, counted in clicks; what the rail shows for a new document and what it holds back until the document has something (Paychecks, Wealth, Plan, Year, for instance) and what brings each back; what Home shows first; which controls on Transactions and By merchant a first-time person needs and which can move behind a menu; how Getting started (Home's GuideLine, U5) sits with this. The unit PICKS, as M55 U1 did (D-535): it takes the recommended reading wherever shape would ask, marks each pick in brief.md as the unit's and not yet the maintainer's, writes new on-screen words as term rows (check `format_rows term search:` first), and writes the picks into M59 U6's brief as SETTLED. One open review_entry on this unit lists every pick and where it is written, for the maintainer to judge after. No code changes. Stop and ask only where a pick would contradict D-575 or a live rule row. Done-test: brief.md written with picks marked, U6's brief carries them, the review row lists them.
 files: "docs/09-decision-log.md\ndocs/packs/ledger/README.md\nsrc/ui/Sidebar.tsx\nsrc/ui/screens/Home.tsx\nsrc/ui/screens/Transactions.tsx\nsrc/ui/screens/ByMerchant.tsx"
+taken_by: run-milestone driver
+started: 2026-11-11
+branch: main
 paths: docs/mockups/m59-u1/
 
 ### M59 U2
@@ -16575,9 +16578,12 @@ milestone: M59
 scope: app
 title: A statement holding two cards becomes one account per card, and the preview says so
 decision: D-576
-state: planned
+state: in_progress
 brief: D-575, D-576. Her card Excel held two cards and every row went to one account. Today: detectHeaderRow (src/data/importer/guess.ts:75-96) keeps the first header in the top 20 rows and deliberately ignores a repeated one (:90-91); applyMapping (apply.ts:66-74) reads to the end of the sheet, so a second section's card line and header become skipped or error rows and its rows are read with the first section's columns; sheetFrom (statementBatch.ts:134,165-172) picks one last4 per sheet and commit writes every row to session.accountId (commit.ts:150) though a per-row cardLast4 is stored (:159). Two sheets: the mapper shows tabs but hands back one sheet (src/ui/import/MapperScreen.tsx:546) and readStatementWorkbook drops a sheet with no saved-mapping match (statementBatch.ts:98-100). Build: (1) a sheet is split into sections at a repeated header row or a card-number line, each section mapped with its own header; (2) a section's or a row's card (a mapped card column wins, then the section's stated number) chooses its account, one account per card, made in place when it does not exist (as one is today for a single card); (3) every sheet of a workbook with transactions is read, never only the open tab; (4) before anything is written the preview says how many cards it found with their last digits and how many rows each ('2 cards: ••1234 · 41 rows, ••5678 · 17 rows'), words checked against term rows. A conversation gets the same (import_statement and statement_preview; src/parity.test.ts). Her file is NOT available (D-576): we do not know which shape it was, so build and prove both. Fixtures: MADE-UP xlsx files in fixtures/synthetic/ in both shapes (two card sections on one sheet, each with its card-number line and header; two sheets, one card each), shaped like an Israeli card export (Hebrew headers, ILS), with no real names or figures (D-390, src/privacy.test.ts). If this changes a ledger format or a table, a document made before it keeps opening with its rows (D-576, with the test). Tests: both shapes give two accounts with the right rows; a single-card file is unchanged; a saved mapping still reads a later file of the same shape. Unset: stop and ask.
 files: "src/data/importer/guess.ts\nsrc/data/importer/apply.ts\nsrc/data/importer/statementBatch.ts\nsrc/data/importer/commit.ts\nsrc/ui/import/MapperScreen.tsx\nsrc/ui/screens/ReadStatements.tsx"
+taken_by: run-milestone driver
+started: 2026-11-11
+branch: main
 paths: src/data/importer/guess.ts src/data/importer/apply.ts src/data/importer/statementBatch.ts src/data/importer/commit.ts src/ui/import/ src/ui/screens/ReadStatements.tsx
 
 ### M59 U3
@@ -16585,9 +16591,12 @@ milestone: M59
 scope: app
 title: By merchant: categorize by the provider's category, and a row left out of totals leaves the list
 decision: D-575
-state: planned
+state: in_progress
 brief: D-575. (1) Left out: merchantQueue (src/data/repositories/labelingQueueRepository.ts:90-99) calls listMerchantGroups (merchantGroupRepository.ts:37-58), whose WHERE (buildTransactionWhere, transactionRepository.ts:317-380) never reads is_excluded_from_stats, so a card payment left out of totals stays in the queue and in its sums (:53-54); By merchant's own leave-out (ByMerchant.tsx:327-333) leaves the merchant in the list too. Add countsCondition (movedRepository.ts leftOutCondition's counterpart, as statisticsRepository uses) to listMerchantGroups, providerCategoriesByMerchant, settledByMerchant and merchantGroupIds so they agree; a test fails before. (2) The provider's category: today a rule from it is offered only on Transactions (Transactions.tsx:638-651, :1193; DetailPanel.tsx:176-192, draftFromProviderCategory). By merchant loads group.providerCategories (merchantGroupRepository.ts:120-141) but shows it only as a muted fallback hint (ByMerchant.tsx:838-843). Build: each merchant group shows its provider category as an action ('Use <category>' or the term rows' word) that opens the same rule draft as Transactions; and By merchant can group its list by provider category, one heading per provider category with its merchants under it, where one action writes one rule for the whole heading. Relate to Later's M28 U10 (By merchant files several merchants at once): if this covers it, say so in the report. Parity: a conversation can write a provider-category rule (create_rule; if it cannot, add it, src/parity.test.ts) and sees the same queue. M54 U5's open rows on #/transactions/merchants come in where this touches them (the red 'WITHOUT A CATEGORY ₪0.00', the empty state's second sentence, Account/Month/Order as <select>). Run Impeccable's harden and polish on the screen and the detector once at the end. Unset: stop and ask. Done-test: on demo.emd, leave a card payment out of totals on Transactions and it is gone from By merchant with its sum; group by provider category and one click writes a rule that categorizes every merchant under it.
 files: "src/ui/screens/ByMerchant.tsx\nsrc/data/repositories/merchantGroupRepository.ts\nsrc/data/repositories/labelingQueueRepository.ts\nsrc/data/repositories/transactionRepository.ts\nsrc/data/repositories/movedRepository.ts\nsrc/ui/transactions/DetailPanel.tsx"
+taken_by: run-milestone driver
+started: 2026-11-11
+branch: main
 paths: src/ui/screens/ByMerchant.tsx src/data/repositories/merchantGroupRepository.ts src/data/repositories/labelingQueueRepository.ts src/data/repositories/transactionRepository.ts src/plugin/tools/rules.ts
 
 ### M59 U4
@@ -16595,9 +16604,12 @@ milestone: M59
 scope: app
 title: 50 / 30 / 20 shows every category's share and why before it makes the plan
 decision: D-575
-state: planned
+state: in_progress
 brief: D-575. Today 'Start with 50 / 30 / 20' (Plan.tsx:251) calls starterBuckets: starterShareOf (src/domain/starterPlan.ts:62-69) leaves out system, income and transfer headings, puts seven seeded ids in a fixed share (:33-41: living, transport, health, family, obligations are needs; lifestyle wants; savings saving), then SAVING kind to saving and DEBT_PAYMENT to needs, and asks only about the rest ('Which are these?', Plan.tsx:1613-1638); each share is divided by what went out under each heading over the last three months with transactions (categoryBudgetRepository.ts:80-94), evenly when nothing was spent; an existing bucket on the same category is reused with its old share (Plan.tsx:249-258). The person never sees the placements. Build: the button opens a proposal before anything is made: every category with its share (needs / wants / saving), its amount, and why in a few words ('needs by default' / 'you chose' / '₪1,200 a month over Aug-Oct'), each share changeable in place as the unplaced ones are now; the three-month window named once; a category kept from an existing bucket says so; Make plan writes it, Cancel writes nothing. Words checked against term rows. Parity: a conversation can ask for the same proposal and make it (find the ledger's plan tools, src/plugin/tools/; src/parity.test.ts). M54 U5's open rows on #/plan come in where this touches them (no h1, the empty state's three paragraphs, Plan.tsx's rounded-md and <select>s). Run Impeccable's harden and polish and the detector once at the end. Unset: stop and ask. Done-test: on demo.emd with no plan, Start with 50 / 30 / 20 lists every category with its share and reason, moving one to wants changes the plan Make plan writes.
 files: "src/domain/starterPlan.ts\nsrc/ui/screens/Plan.tsx\nsrc/data/repositories/categoryBudgetRepository.ts"
+taken_by: run-milestone driver
+started: 2026-11-11
+branch: main
 paths: src/domain/starterPlan.ts src/ui/screens/Plan.tsx src/ui/plan/ src/data/repositories/categoryBudgetRepository.ts
 
 ### M59 U5
@@ -16605,9 +16617,12 @@ milestone: M59
 scope: app
 title: The page never scrolls into blank, and Guide me never opens by itself
 decision: D-575
-state: planned
+state: in_progress
 brief: D-575. (1) Scrolling: she scrolled and the whole page went to blank, back by scrolling up. The shell is `flex h-screen flex-col overflow-clip` (src/App.tsx:220, its comment :216-219 names this symptom) but html and body have no height or overflow (src/ui/theme/tokens.css:335-345), so anything escaping the frame (an absolute element with no positioned ancestor — the shell is not relative; scrollIntoView in src/ui/useRowCursor.ts:82) scrolls the root. Make html and body never scroll (height 100%, overflow hidden) and the shell the positioned frame; reproduce first on Transactions and By merchant in the pane with a long list and say what escaped. Check the desktop shell too (verify-in-shell skill). (2) Guide me: it must never open by itself (D-575). Find what opens it unasked on a new or first-opened ledger document (openGuide in src/ui/guide/guideState.ts:52; GuideLine on Home, src/ui/screens/Home.tsx:219-220; anything calling it on load) and remove that; Help › Guide me, the palette and the rail's entry still open it. Home's Getting started line (GuideLine) is the list: its steps ticking themselves as now, and a Dismiss that hides it for this document (kept in the document, so it holds across machines), with the guide still under Help. Words checked against term rows. Tests: a new ledger document opens with no dialog; dismissing hides the line after a reload. Unset: stop and ask.
 files: "src/App.tsx\nsrc/ui/theme/tokens.css\nsrc/ui/useRowCursor.ts\nsrc/ui/guide/guideState.ts\nsrc/ui/guide/GuideLine.tsx\nsrc/ui/screens/Home.tsx"
+taken_by: run-milestone driver
+started: 2026-11-11
+branch: main
 paths: src/ui/theme/tokens.css src/App.tsx src/ui/guide/ src/ui/screens/Home.tsx
 
 ### M59 U6
