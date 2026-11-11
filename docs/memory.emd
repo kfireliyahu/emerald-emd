@@ -4861,6 +4861,16 @@ question: Where does a term's Hebrew word live, and how is it chosen?
 answer: In term.screen_hebrew (never printed_as, which is what a source document prints). Every live term of scope ledger/app/shell shown in rail/view/verdict/screen/tour has one, plus the rail's engine places (Format, Connection, agenda, Pack). No two terms share a Hebrew word; where printed_as has the word, the screen says it. Buttons and commands are verbal nouns (שמירה בשם, ייבוא קבצים, סינון), so none is gendered. The seeded categories' Hebrew is in docs/mockups/m60-u2/glossary.md for U6, not rows. The maintainer's pass over that sheet corrects the words before U4-U6.
 state: live
 
+### D-586
+date: 2026-11-11
+milestone: M60
+scope: ui
+title: Right to left by logical sides: every class and rule that names a side names the start or the end, a chart and a bar placed by measuring stay left to right, a key steps the way its buttons are drawn, and a figure reads as written inside Hebrew
+question: How does the app mirror in Hebrew while English stays exactly as it was?
+answer: Every class and CSS rule in src/ui names the start or the end (ms-, pe-, start-, border-s, rounded-se, text-end; inset-inline-start), never left or right — src/ui/direction.test.ts fails on a physical class (src/ui/charts/ allowed). Charts and anything placed by an inline left: (plan bar, cushion bar, waterfall, connections graph) carry dir="ltr". Pointing glyphs and disclosure chevrons mirror (rtl:-scale-x-100). Arrow keys step the drawn order via arrowStep() in src/ui/direction.ts. In rtl, .tabular-nums takes unicode-bidi: plaintext so a figure keeps its minus and ₪ in front, with text-end/text-start said physically. probe:screens --dir rtl measures the mirror; its boxes hash shows English unchanged.
+state: live
+affects: "src/ui/Bidi.tsx\n.claude/skills/design-review/SKILL.md"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -17042,15 +17052,18 @@ report: M60 U2 built at 95075d1. The term format has a new column, screen_hebrew
 milestone: M60
 scope: ui
 title: Right to left: in Hebrew the layout mirrors, and English is unchanged
-decision: D-583
-state: in_progress
+landed: 2026-11-11
+decision: D-586
+state: built
 brief: D-583. With <html dir=rtl> (U1) the layout must mirror: the rail on the right, panes and menus opening from the start side, pointing glyphs (chevrons, the month pager's arrows, back arrows) flipped. Today ~400 physical Tailwind classes in src/**/*.tsx (ml-/mr-, pl-/pr-, left-/right-, text-left/right, border-l/r, rounded-l/r) against ~30 logical ones: move them to logical ones (ms-/me-, ps-/pe-, start-/end-, text-start/end, border-s/e, rounded-s/e) and the same in tokens.css and any inline style, so English renders exactly as it does now. Charts keep time running left to right (dir=ltr on the chart, src/ui/charts/). A figure, an amount with ₪ or a minus, a card's ••1234 and a date read right inside Hebrew text (the Bidi component where a value sits in a sentence). The desktop shell's window controls stay where the OS puts them. Add a way for probe:screens to measure in rtl (a --lang he or --dir rtl option) and measure the ledger's routes in both themes, rtl and ltr; English's numbers must not move. A test fails on a physical direction class in src/ui (charts allow-listed). Unset: stop and ask. Done-test: in Hebrew every ledger screen mirrors with nothing overlapping or clipped; in English probe:screens reads the same as before.
-files: "src/ui/theme/tokens.css\nsrc/App.tsx\nsrc/ui/Sidebar.tsx\nsrc/ui/charts/Chart.tsx\nsrc/ui/Bidi.tsx"
+files: src/ui/** (128 files, class codemod), src/App.tsx, src/ui/theme/tokens.css, src/ui/direction.ts, src/ui/direction.test.ts, src/ui/probe.ts, scripts/probe-screens.mjs, src/ui/charts/Chart.tsx, src/ui/components/ActionGlyph.tsx, src/ui/components/ThemeToggle.tsx, src/ui/formats/ConnectionGraph.tsx, src/ui/formats/surfaceRules.test.ts, .claude/skills/design-review/SKILL.md, docs/09-decision-log.md
 blocks: ["M60 U1"]
 taken_by: run-milestone driver
 started: 2026-11-11
 branch: main
+commit: 5cfd321
 paths: "src/ui/\nsrc/App.tsx\nscripts/probe-screens.mjs"
+report: M60 U3 built at 5cfd321 (D-586). 728 physical Tailwind classes in 128 files under src/ui and src/App.tsx moved to logical ones by one codemod (ml/mr/pl/pr -> ms/me/ps/pe, left/right -> start/end, border-l/r -> border-s/e, rounded-l/r/tl/tr/bl/br -> s/e/ss/se/es/ee, text-left/right -> text-start/end); tokens.css's timeline rail, dot and ghost underline logical, the month pager's slide reversed in rtl. English unchanged, measured: probe:screens on demo.emd, 15 ledger routes x 2 themes, every count and a new hash of every element's box identical before and after. In rtl (probe --dir rtl): rail on the right on every route, nothing cut off sideways, no sideways page scroll. Charts (Chart, Home month chart, NetTrend, fund/debt/goal/year charts, AmountHistory), PlanBar, the cushion bar, the paycheck waterfall and the connections graph stay ltr. ActionGlyph left/right/arrow/undo and disclosure chevrons mirror (RailFolder, Overview, ConnectionPanel, GoalEditor, sidebar collapse icon). Arrow keys follow the drawn order in pagers, board lanes, the guide and the theme toggle (src/ui/direction.ts); the theme toggle's knob slides the mirrored way. In rtl a .tabular-nums figure reads as written (unicode-bidi: plaintext; −₪3,980.50 no longer shows its minus after). probe:screens gained --dir rtl / --lang he, railSide, clippedX and boxes. Test: src/ui/direction.test.ts. Full suite 5649 green, typecheck, check:tours green. Not done / seen: English words in an rtl line put their period at the wrong end and → ← arrows in strings (category paths, '← Table' links, pager titles) do not mirror — those are words, U4/U5's. Menus placed at a measured box (ContextMenu, ChoiceField, PageMenu) still anchor at the trigger's left edge and grow right; they stay on screen but do not open from the start side. Hebrew words beside a value in a sentence still need Bidi when U4/U5 translate them. The rule row 'Numbers right, text left' now means end/start in Hebrew; its words were not changed.
 
 ### M60 U4
 milestone: M60
