@@ -26,7 +26,7 @@ storage-related.
 Ships as an **unsigned desktop download** (D-115, D-124); the same `dist/` is also a static site.
 
 **A personal-finance app is the first pack**, and it is most of `src/`. It is
-[parked](./packs/ledger/README.md) — do not take work from it — and **since M25 it is a pack in the
+[unparked by M59](./packs/ledger/README.md) (D-575) — take its work from M59's units — and **since M25 it is a pack in the
 full sense**: declared formats and the code that writes them, kept per document, shown in the rail
 when the open document keeps it (D-266, D-282). It is also the
 on-ramp, the demo, and the whole evidence base.
@@ -52,8 +52,8 @@ on-ramp, the demo, and the whole evidence base.
 **The full record of earlier milestones is kept privately**; every decision is a `decision` row in
 `docs/memory.emd` (`format_rows decision search:"…"`).
 
-**`docs/packs/ledger/` is parked**, except for M25's units (D-265). Read it when you are touching
-finance code, which outside M25 you usually are not. Its notes describe a real, working, thirty-table application — they are accurate, and
+**`docs/packs/ledger/` is the ledger's notes**, unparked by M59 (D-575). Read it when you are touching
+finance code. Its notes describe a real, working, thirty-table application — they are accurate, and
 they are not the plan.
 
 **A code comment that cites `docs/fNN` or `docs/04-data-model.md` for a ledger table means

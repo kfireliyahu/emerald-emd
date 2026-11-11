@@ -4752,6 +4752,16 @@ question: The 2026-11-09 usage report said a security plugin in the host blocked
 answer: Not determinable here: the report names no plugin and quotes no message, and nothing on this machine reproduces it. Neither official-marketplace security plugin (security-guidance, claude-security) hooks anything that could stop another plugin's SessionStart hook, and a SessionStart command hook cannot stop another. What can: a hooks module answering classic.SessionStart without next (M56 U2), or something outside Claude Code (endpoint security, a package firewall refusing npx or node). So no hook change until the tool and its message are known (open question 'Which security tool stopped the SessionStart hook'). docs/plugin.md lists what the hooks do that such a tool notices: npx -y fetching and running a pinned package at every start (skipped where the hooks module runs); node starting a child, via cmd.exe only where npm's npx-cli.js is missing; no-server.mjs reading ~/.claude.json and the desktop app config (D-571); text telling the model what not to say to the person (D-493). None is reversed on a guess.
 state: live
 
+### D-575
+date: 2026-11-11
+milestone: M59
+scope: app
+title: The ledger is unparked: M59 fixes what a second person hit on first use — a file with two cards made one account per card, the provider's category and leaving a row out working on By merchant, 50 / 30 / 20 shown before it is made, a page that never scrolls into blank, Guide me never opening by itself, and a shape unit that decides what a new document shows; Hebrew is M60, after it
+question: A friend of the maintainer's, the first person other than him to use the ledger on her own finances, found the screens too much, the main workflows unclear and Guide me in the way, asked for Hebrew, and hit six concrete problems: does the ledger come back, what does each fix do, and where does Hebrew go?
+answer: Maintainer, 2026-11-11, every recommendation taken. The ledger is unparked; M59 takes it from what she hit, and M54 U5's open findings come in only where an M59 unit already reworks that screen. A file with two cards is split by card (a repeated header, a card-number line or a card column) into one account per card, the preview naming the cards found before anything is written. By merchant shows each merchant's provider category as an action that writes a rule from it, and can group its list by provider category. A row left out of totals leaves By merchant, as it leaves Year. 50 / 30 / 20 shows every category with its share and why, editable, before it makes anything. Guide me never opens by itself; its steps are Home's Getting started list, dismissable. The page never scrolls past the app's frame. A shape unit names the main workflows and what a new document holds back until it has something, picks and marks its picks for the maintainer to judge after (as D-535), and a later unit builds them. Her file is read where it is, with her consent, never entering the repository (D-390). Hebrew is M60, after M59.
+state: live
+affects: "CLAUDE.md\ndocs/conventions.md\ndocs/packs/ledger/README.md"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -6272,6 +6282,18 @@ goal: The 2026-11-09 usage report from outside this repo (inbox, triaged) found 
 state: planned
 position: 341
 
+### M59
+title: The ledger for someone who isn't its author: what a second person hit on first use
+goal: A person new to Emerald reads a card statement (two cards in one file too), categorizes from By merchant (by the provider's category too), plans with 50 / 30 / 20 and sees where the money went, without the screens being too much and without Guide me in the way (D-575).
+state: planned
+position: 334
+
+### M60
+title: The app in Hebrew: a translated, right-to-left interface
+goal: A person can use Emerald in Hebrew, laid out right to left. Its decisions (the whole app or the ledger first, who writes the words, how a language is chosen) are listed before any brief (D-575).
+state: planned
+position: 335
+
 <!-- emerald: open_question.format.md -->
 ---
 format: open_question
@@ -6297,6 +6319,11 @@ An open question makes no claim.
 | answer | text |  |  |  | no |  |  |  | The answer in words, for a question settled by a fact rather than a decision — a name turned out to be free, a vendor replied. A question a decision answered names it in `answered_by` instead, and needs no decision made up to hold a fact. |
 
 ## rows
+
+### A second person's document
+question: Now that a second person may keep a real ledger document, must her .emd keep opening across schema changes — a migration for every changed table — where until now the maintainer was the only user and old documents were never converted? Asked before any M59 unit changes a table.
+opened_by: D-575
+state: open
 
 ### Code facts
 question: Should the development pack get a format of asserted facts about code — 'module X must not import Y', 'this file is the only place outbound traffic is decided' — each linked to a path and a decision, with a check that flags a row whose file no longer exists? Recommended over a function/file index, which is derived, stale on the next edit, and already done better by ctags, language servers and repo maps. Agent issue trackers do not do this either, and the pack's difference stays 'the record types are the user's'.
@@ -6334,6 +6361,12 @@ state: open
 ### Funds as rows
 question: Should a pension, hishtalmut or provident fund become a holding fed by rows (its payslip deduction lines and the report's per-deposit table) with dated readings, like an investment since M30, instead of balance snapshots alone?
 answered_by: D-389
+state: answered
+
+### Guide me on first use
+question: The same first use found the onboarding window (Guide me, D-330) more annoying than productive: should it open uninvited, stay as a dialog, or become something a person asks for?
+opened_by: D-330
+answered_by: D-575
 state: answered
 
 ### H1
@@ -6398,6 +6431,16 @@ state: open
 question: Does editing a format migrate, and what becomes of a dropped column? (docs/engine.md, section H)
 opened_by: D-210
 answered_by: D-216
+state: answered
+
+### Hebrew interface
+question: A first-time person asked for the app in Hebrew: is a translated, right-to-left interface in scope, for the whole app or the ledger first? Today no translation layer exists; on-screen strings are written inline in src/ui.
+opened_by: D-575
+state: open
+
+### Ledger first use
+question: A first-time person (the maintainer's friend, 2026-11-11) found the ledger's UI too complicated and its main workflows not intuitive: which workflows are the main ones, where did she get stuck, and does this unpark the ledger (M54 U5's 35 open findings are already recorded against it)?
+answered_by: D-575
 state: answered
 
 ### M20 U0 #1
@@ -16497,6 +16540,67 @@ commit: 2a066ca
 paths: "package.json\nsrc/plugin/document.ts\nhosts/claude/.claude-plugin/plugin.json\nhosts/claude-plugin-release.json\nserver.json"
 report: emerald-mcp 0.3.1 cut at 2a066ca: version moved in package.json, package-lock.json, server.json and PLUGIN_VERSION; build:plugin, check:package (Node 24.15.0), typecheck, docs:check, privacy and plugin tests green; release notes for M58 U1-U5 in the commit body. The maintainer published from dist-plugin/ with npm publish --access public; npm served it about 20 minutes later. Plugin pinned 0.3.0+4 -> 0.3.1 at 73244fc (node scripts/pin-plugin.mjs; hosts/claude tests 73/73). registry.yml ran green on both pushes; the MCP Registry lists io.github.kfireliyahu/emerald 0.3.1 as latest, npm package emerald-mcp 0.3.1, matching server.json. No new decision.
 
+### M59 U1
+milestone: M59
+scope: app
+title: Shape: what a new ledger document shows, and the three workflows it leads to
+decision: D-575
+state: planned
+brief: D-575. The ledger's first use by a second person: the screens were too much for her and the maintainer; she did not find the main workflows. Run Impeccable's shape (/impeccable shape, D-529) with D-575 as the discovery round: do not re-ask what it settles. First try the app as she met it: `npm run dev:demo` and also a NEW empty ledger document (no demo rows), then `npm run probe:screens` and the pane only where a click is needed. Read M54 U5's open findings (`format_rows review_entry match:{unit:"M54 U5", state:open} columns:[do, breaks]`) and take the ones that bear on what a new person sees. Write docs/mockups/m59-u1/brief.md (Impeccable's seven parts, smallest useful) naming: the three main workflows (read a statement, categorize, see where the money went) and the path through each from a new document, counted in clicks; what the rail shows for a new document and what it holds back until the document has something (Paychecks, Wealth, Plan, Year, for instance) and what brings each back; what Home shows first; which controls on Transactions and By merchant a first-time person needs and which can move behind a menu; how Getting started (Home's GuideLine, U5) sits with this. The unit PICKS, as M55 U1 did (D-535): it takes the recommended reading wherever shape would ask, marks each pick in brief.md as the unit's and not yet the maintainer's, writes new on-screen words as term rows (check `format_rows term search:` first), and writes the picks into M59 U6's brief as SETTLED. One open review_entry on this unit lists every pick and where it is written, for the maintainer to judge after. No code changes. Stop and ask only where a pick would contradict D-575 or a live rule row. Done-test: brief.md written with picks marked, U6's brief carries them, the review row lists them.
+files: "docs/09-decision-log.md\ndocs/packs/ledger/README.md\nsrc/ui/Sidebar.tsx\nsrc/ui/screens/Home.tsx\nsrc/ui/screens/Transactions.tsx\nsrc/ui/screens/ByMerchant.tsx"
+paths: docs/mockups/m59-u1/
+
+### M59 U2
+milestone: M59
+scope: app
+title: A statement holding two cards becomes one account per card, and the preview says so
+decision: D-575
+state: planned
+brief: D-575. Her card Excel held two cards and every row went to one account. Today: detectHeaderRow (src/data/importer/guess.ts:75-96) keeps the first header in the top 20 rows and deliberately ignores a repeated one (:90-91); applyMapping (apply.ts:66-74) reads to the end of the sheet, so a second section's card line and header become skipped or error rows and its rows are read with the first section's columns; sheetFrom (statementBatch.ts:134,165-172) picks one last4 per sheet and commit writes every row to session.accountId (commit.ts:150) though a per-row cardLast4 is stored (:159). Two sheets: the mapper shows tabs but hands back one sheet (src/ui/import/MapperScreen.tsx:546) and readStatementWorkbook drops a sheet with no saved-mapping match (statementBatch.ts:98-100). Build: (1) a sheet is split into sections at a repeated header row or a card-number line, each section mapped with its own header; (2) a section's or a row's card (a mapped card column wins, then the section's stated number) chooses its account, one account per card, made in place when it does not exist (as one is today for a single card); (3) every sheet of a workbook with transactions is read, never only the open tab; (4) before anything is written the preview says how many cards it found with their last digits and how many rows each ('2 cards: ••1234 · 41 rows, ••5678 · 17 rows'), words checked against term rows. A conversation gets the same (import_statement and statement_preview; src/parity.test.ts). Fixture: a MADE-UP xlsx in fixtures/synthetic/ in both shapes (two sections on one sheet; two sheets), no real names or figures (D-390, src/privacy.test.ts). Her real file: ask the maintainer for its path; read it where it is, never copy it into the repo, and use it only to check the split; if he has none, the synthetic files are enough. Tests: both shapes give two accounts with the right rows; a single-card file is unchanged. Unset: stop and ask.
+files: "src/data/importer/guess.ts\nsrc/data/importer/apply.ts\nsrc/data/importer/statementBatch.ts\nsrc/data/importer/commit.ts\nsrc/ui/import/MapperScreen.tsx\nsrc/ui/screens/ReadStatements.tsx"
+paths: src/data/importer/guess.ts src/data/importer/apply.ts src/data/importer/statementBatch.ts src/data/importer/commit.ts src/ui/import/ src/ui/screens/ReadStatements.tsx
+
+### M59 U3
+milestone: M59
+scope: app
+title: By merchant: categorize by the provider's category, and a row left out of totals leaves the list
+decision: D-575
+state: planned
+brief: D-575. (1) Left out: merchantQueue (src/data/repositories/labelingQueueRepository.ts:90-99) calls listMerchantGroups (merchantGroupRepository.ts:37-58), whose WHERE (buildTransactionWhere, transactionRepository.ts:317-380) never reads is_excluded_from_stats, so a card payment left out of totals stays in the queue and in its sums (:53-54); By merchant's own leave-out (ByMerchant.tsx:327-333) leaves the merchant in the list too. Add countsCondition (movedRepository.ts leftOutCondition's counterpart, as statisticsRepository uses) to listMerchantGroups, providerCategoriesByMerchant, settledByMerchant and merchantGroupIds so they agree; a test fails before. (2) The provider's category: today a rule from it is offered only on Transactions (Transactions.tsx:638-651, :1193; DetailPanel.tsx:176-192, draftFromProviderCategory). By merchant loads group.providerCategories (merchantGroupRepository.ts:120-141) but shows it only as a muted fallback hint (ByMerchant.tsx:838-843). Build: each merchant group shows its provider category as an action ('Use <category>' or the term rows' word) that opens the same rule draft as Transactions; and By merchant can group its list by provider category, one heading per provider category with its merchants under it, where one action writes one rule for the whole heading. Relate to Later's M28 U10 (By merchant files several merchants at once): if this covers it, say so in the report. Parity: a conversation can write a provider-category rule (create_rule; if it cannot, add it, src/parity.test.ts) and sees the same queue. M54 U5's open rows on #/transactions/merchants come in where this touches them (the red 'WITHOUT A CATEGORY ₪0.00', the empty state's second sentence, Account/Month/Order as <select>). Run Impeccable's harden and polish on the screen and the detector once at the end. Unset: stop and ask. Done-test: on demo.emd, leave a card payment out of totals on Transactions and it is gone from By merchant with its sum; group by provider category and one click writes a rule that categorizes every merchant under it.
+files: "src/ui/screens/ByMerchant.tsx\nsrc/data/repositories/merchantGroupRepository.ts\nsrc/data/repositories/labelingQueueRepository.ts\nsrc/data/repositories/transactionRepository.ts\nsrc/data/repositories/movedRepository.ts\nsrc/ui/transactions/DetailPanel.tsx"
+paths: src/ui/screens/ByMerchant.tsx src/data/repositories/merchantGroupRepository.ts src/data/repositories/labelingQueueRepository.ts src/data/repositories/transactionRepository.ts src/plugin/tools/rules.ts
+
+### M59 U4
+milestone: M59
+scope: app
+title: 50 / 30 / 20 shows every category's share and why before it makes the plan
+decision: D-575
+state: planned
+brief: D-575. Today 'Start with 50 / 30 / 20' (Plan.tsx:251) calls starterBuckets: starterShareOf (src/domain/starterPlan.ts:62-69) leaves out system, income and transfer headings, puts seven seeded ids in a fixed share (:33-41: living, transport, health, family, obligations are needs; lifestyle wants; savings saving), then SAVING kind to saving and DEBT_PAYMENT to needs, and asks only about the rest ('Which are these?', Plan.tsx:1613-1638); each share is divided by what went out under each heading over the last three months with transactions (categoryBudgetRepository.ts:80-94), evenly when nothing was spent; an existing bucket on the same category is reused with its old share (Plan.tsx:249-258). The person never sees the placements. Build: the button opens a proposal before anything is made: every category with its share (needs / wants / saving), its amount, and why in a few words ('needs by default' / 'you chose' / '₪1,200 a month over Aug-Oct'), each share changeable in place as the unplaced ones are now; the three-month window named once; a category kept from an existing bucket says so; Make plan writes it, Cancel writes nothing. Words checked against term rows. Parity: a conversation can ask for the same proposal and make it (find the ledger's plan tools, src/plugin/tools/; src/parity.test.ts). M54 U5's open rows on #/plan come in where this touches them (no h1, the empty state's three paragraphs, Plan.tsx's rounded-md and <select>s). Run Impeccable's harden and polish and the detector once at the end. Unset: stop and ask. Done-test: on demo.emd with no plan, Start with 50 / 30 / 20 lists every category with its share and reason, moving one to wants changes the plan Make plan writes.
+files: "src/domain/starterPlan.ts\nsrc/ui/screens/Plan.tsx\nsrc/data/repositories/categoryBudgetRepository.ts"
+paths: src/domain/starterPlan.ts src/ui/screens/Plan.tsx src/ui/plan/ src/data/repositories/categoryBudgetRepository.ts
+
+### M59 U5
+milestone: M59
+scope: app
+title: The page never scrolls into blank, and Guide me never opens by itself
+decision: D-575
+state: planned
+brief: D-575. (1) Scrolling: she scrolled and the whole page went to blank, back by scrolling up. The shell is `flex h-screen flex-col overflow-clip` (src/App.tsx:220, its comment :216-219 names this symptom) but html and body have no height or overflow (src/ui/theme/tokens.css:335-345), so anything escaping the frame (an absolute element with no positioned ancestor — the shell is not relative; scrollIntoView in src/ui/useRowCursor.ts:82) scrolls the root. Make html and body never scroll (height 100%, overflow hidden) and the shell the positioned frame; reproduce first on Transactions and By merchant in the pane with a long list and say what escaped. Check the desktop shell too (verify-in-shell skill). (2) Guide me: it must never open by itself (D-575). Find what opens it unasked on a new or first-opened ledger document (openGuide in src/ui/guide/guideState.ts:52; GuideLine on Home, src/ui/screens/Home.tsx:219-220; anything calling it on load) and remove that; Help › Guide me, the palette and the rail's entry still open it. Home's Getting started line (GuideLine) is the list: its steps ticking themselves as now, and a Dismiss that hides it for this document (kept in the document, so it holds across machines), with the guide still under Help. Words checked against term rows. Tests: a new ledger document opens with no dialog; dismissing hides the line after a reload. Unset: stop and ask.
+files: "src/App.tsx\nsrc/ui/theme/tokens.css\nsrc/ui/useRowCursor.ts\nsrc/ui/guide/guideState.ts\nsrc/ui/guide/GuideLine.tsx\nsrc/ui/screens/Home.tsx"
+paths: src/ui/theme/tokens.css src/App.tsx src/ui/guide/ src/ui/screens/Home.tsx
+
+### M59 U6
+milestone: M59
+scope: app
+title: Build what M59 U1 picked: a new ledger document that shows less and leads to its three workflows
+decision: D-575
+state: planned
+brief: D-575. Build docs/mockups/m59-u1/brief.md as M59 U1 picked it; the picks are written below as SETTLED by U1 when it lands (if this line still stands, U1 has not landed: stop). Expected: the rail holding back what a new document has nothing in and what brings each back, Home's first screen leading to the three workflows, controls moved behind a menu where U1 says. M54 U5's open rows come in where this touches their screen. Parity: nothing a person can do is lost to a conversation (src/parity.test.ts). Run Impeccable's harden and polish and the detector once at the end. Anything U1 did not settle is the maintainer's: stop and ask. Done-test: a new empty ledger document shows what U1 picked, and each held-back screen appears once its document has something in it. MAINTAINER'S EYE: the driver stops after this unit; the maintainer opens a new document, ideally with his friend, and says whether it is still too much.
+files: "docs/mockups/m59-u1/brief.md\nsrc/ui/Sidebar.tsx\nsrc/ui/screens/Home.tsx"
+blocks: ["M59 U1","M59 U5"]
+paths: src/ui/Sidebar.tsx src/ui/screens/Home.tsx src/ui/home/ src/ui/screens/Transactions.tsx
+
 <!-- emerald: views.md -->
 ---
 emerald: views
@@ -16648,12 +16752,12 @@ title: line
 emerald: changed
 ---
 
-decision: 2026-11-10
+decision: 2026-11-11
 finding: 2026-10-22
 inbox: 2026-11-10
-milestone: 2026-11-10
-open_question: 2026-11-10
+milestone: 2026-11-11
+open_question: 2026-11-11
 review_entry: 2026-11-03
 rule: 2026-11-03
 term: 2026-11-09
-unit: 2026-11-10
+unit: 2026-11-11

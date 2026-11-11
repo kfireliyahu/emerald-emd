@@ -30,8 +30,9 @@ of its rules. **Since M25 it is nothing but declared formats, identities, links 
 (D-214, D-282): a document keeps the ledger by declaring its formats, and the rail shows it when the
 open document does. M20 U0's staging switch is gone.
 
-**Its notes live in [`docs/packs/ledger/`](./docs/packs/ledger/README.md) and it is parked** — except
-for M25's units, which move it onto declared formats (D-265). Take no other work from it.
+**Its notes live in [`docs/packs/ledger/`](./docs/packs/ledger/README.md), and it is unparked** (D-575):
+a second person's first use found it too hard, and M59 takes it from there. Take ledger work from
+M59's units.
 
 ## Read this first
 
@@ -107,7 +108,7 @@ argument and procedure, which markdown is right for.
 | The MCP plugin | [`docs/plugin.md`](./docs/plugin.md) |
 | Reading a document onto a table | [`docs/mapping-templates.md`](./docs/mapping-templates.md) |
 | Why something is the way it is | [`docs/09-decision-log.md`](./docs/09-decision-log.md) — every core decision indexed, the open milestones in full |
-| Anything about money, categories, payslips, funds, and the ledger's math | [`docs/packs/ledger/`](./docs/packs/ledger/README.md) — parked |
+| Anything about money, categories, payslips, funds, and the ledger's math | [`docs/packs/ledger/`](./docs/packs/ledger/README.md) |
 
 ## What a session costs
 

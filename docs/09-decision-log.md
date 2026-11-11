@@ -477,6 +477,7 @@ written out here.
 | D-572 | 2026-11-10 | The server's instructions say only what a session needs before its first call — what moved went to the answer that needs it, and how to speak of a view is the drawing tool's first line alone; the SessionStart hook opens with one sentence | M58 |
 | D-573 | 2026-11-10 | Recording, updating, claiming and landing rows write on the first call; `commit: false` asks for a preview; deleting and changing a format's columns keep the dry run | M58 |
 | D-574 | 2026-11-10 | What stopped the SessionStart hook in the usage report is not known, so the hook is unchanged; what it does that a security tool notices is written down, and the plugin and its message are an open question | M58 |
+| D-575 | 2026-11-11 | The ledger is unparked: M59 fixes what a second person hit on first use — a file with two cards made one account per card, the provider's category and leaving a row out working on By merchant, 50 / 30 / 20 shown before it is made, a page that never scrolls into blank, Guide me never opening by itself, and a shape unit that decides what a new document shows; Hebrew is M60, after it | M59 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -706,6 +707,46 @@ SessionStart hook (M58 U5). It names no plugin and quotes no message; nothing he
 
 **Consequences.** A person whose security tool stops the hook loses `start_here` at the start and
 can still call it. Once the tool is known, the fix is chosen against what it actually refuses.
+
+## D-575 · 2026-11-11 · The ledger is unparked: M59 fixes what a second person hit on first use — a file with two cards made one account per card, the provider's category and leaving a row out working on By merchant, 50 / 30 / 20 shown before it is made, a page that never scrolls into blank, Guide me never opening by itself, and a shape unit that decides what a new document shows; Hebrew is M60, after it <a id="d-575"></a>
+
+**Context.** On 2026-11-11 the maintainer tried the ledger with a friend — the first person other
+than him to use it on her own finances. The screens were too much for her and for him; the main
+workflows were not clear; Guide me got in the way; she asked for Hebrew. Six things went wrong, each
+traced to code: an Excel holding two cards gave every row to one account (one header and one account
+per sheet: `guess.ts`, `statementBatch.ts`, `commit.ts`); the provider's category could start a rule
+on Transactions but not on By merchant, where she was; a card payment she left out of totals stayed
+on By merchant (its query never reads the flag); the page scrolled into blank (`html` and `body` can
+still scroll); and 50 / 30 / 20 filled the buckets from a hard-coded map it never showed. M54 U5's
+35 open findings on the ledger's screens were already recorded and waiting.
+
+**Decision.** Maintainer, 2026-11-11, taking every recommendation:
+
+- **The ledger is unparked**, and M59 takes it from what she hit. M54 U5's open findings come in only
+  where a M59 unit is already reworking that screen. Hebrew is its own milestone, M60, after M59.
+- **A file with two cards** is split by card — a repeated header, a card-number line or a card column —
+  into one account per card, and the preview says how many cards it found, with their last digits,
+  before anything is written.
+- **By merchant** shows each merchant's provider category as an action that writes a rule from it, and
+  can group its list by provider category, so one rule covers many merchants.
+- **A row left out of totals leaves By merchant**, as it leaves the Year screen; so does a merchant
+  left out from By merchant itself.
+- **50 / 30 / 20 shows its proposal before it makes anything**: every category with its share and why
+  (a default for that category, or what went out under it a month over three months), each editable.
+- **Guide me never opens by itself.** Its steps are the Getting started list on Home, ticking
+  themselves as now, and the list can be dismissed.
+- **The page never scrolls** past the app's frame.
+- **A shape unit decides what a new document shows**: it names the main workflows (reading a
+  statement, categorizing, seeing where the money went) and what a new document leaves out until it
+  holds something (Paychecks, Wealth and Plan in the rail, for instance). It picks, marks its picks
+  for the maintainer to judge after (as D-535 did), and a later unit builds them.
+- **Her file is read where it is**, with her consent, to prove the two-card split; nothing from it
+  enters the repository (D-390), and the test's file is made up in its shape.
+
+**Consequences.** CLAUDE.md, `conventions.md` and the ledger's README stop saying it is parked.
+Whether her document must keep opening across schema changes — so far the maintainer is the only
+user, and old documents are never converted — is an open question, asked before M59 changes a
+table.
 
 ## Related
 

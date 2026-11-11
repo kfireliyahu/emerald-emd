@@ -7,7 +7,7 @@ updated: 2026-09-16
 
 # The ledger pack
 
-**A personal-finance application, parked, and since M25 nothing but declared formats and pack code
+**A personal-finance application, unparked by M59 (D-575), and since M25 nothing but declared formats and pack code
 (D-282).** It
 imports credit-card and bank statements, categorizes spending, tracks paychecks and their deductions, plans how a net
 paycheck is allocated, and tracks savings, debts and pension funds — investments left it in M28 (D-283, D-308), and a person declares their own. Israeli domain:
@@ -19,9 +19,9 @@ still works today** — nothing has been disabled or removed. What changed on 20
 
 ## Three things to know before you touch it
 
-1. **It is parked. Do not take a unit from it** — M25 is bringing it back (D-265), through M25's units only. Parked is not abandoned — it comes back when a
-   declared format, its identities and its links can express what these thirty tables express, and
-   the work in [the roadmap](./roadmap.md) is re-read against that rather than resumed as written.
+1. **It was parked from 2026-09-16 and is unparked by M59 (D-575)**, after a second person's first
+   use found it too hard. Take ledger work from M59's units; the work in [the roadmap](./roadmap.md)
+   is re-read against what she hit rather than resumed as written.
 2. **It is also the on-ramp.** *"Declare a kind of thing and connect it to other kinds of thing"*
    is a foreign idea; *"here is a working money tool, and here is how you declare your own"* is
    not. The pack is the demo that makes the engine legible, which is why it stays in the build
