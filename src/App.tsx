@@ -51,6 +51,7 @@ import { FundDetail } from '@/ui/screens/FundDetail.tsx'
 import { Funds } from '@/ui/screens/Funds.tsx'
 import { GoalDetail } from '@/ui/screens/GoalDetail.tsx'
 import { Calendar } from '@/ui/screens/Calendar.tsx'
+import { Language } from '@/ui/screens/Language.tsx'
 import { Export } from '@/ui/screens/Export.tsx'
 import { FileGap } from '@/ui/screens/FileGap.tsx'
 import { Home } from '@/ui/screens/Home.tsx'
@@ -642,6 +643,8 @@ function RoutedViews() {
           <Route path="model" element={<LocalModel />} />
           {/* The day this document's weeks start on (M53 F6, D-528). */}
           <Route path="calendar" element={<Calendar />} />
+          {/* The language of the app's words, on this machine (M60 U1, D-584). */}
+          <Route path="language" element={<Language />} />
           {/* The months' CSV left Home for here (M28 U5, D-313). */}
           <Route path="export" element={<Export />} />
         </Route>

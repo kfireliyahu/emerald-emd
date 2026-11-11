@@ -486,6 +486,7 @@ written out here.
 | D-581 | 2026-11-11 | The app is a window that never scrolls, and Guide me opens only from a press: the shell is the positioned frame and the page itself cannot scroll; the new document's offer is gone, and Home's Getting started line is dismissed per document with Dismiss | M59 |
 | D-582 | 2026-11-11 | A new ledger document shows what M59 U1 picked: the rail holds back each place until the document holds what it shows, Home before a read is the band and Getting started, and Transactions and By merchant put their filters behind Filter and their rarer acts behind More | M59 |
 | D-583 | 2026-11-11 | The app in Hebrew: one translation layer for the whole app, Hebrew for everything a ledger document shows after M59, a full right-to-left mirror with English unchanged, the language following the computer until Settings says otherwise and kept per machine, and M59 with M60 shipped as one desktop release after the maintainer tries both | M60 |
+| D-584 | 2026-11-11 | The translation layer is hand-rolled in `src/i18n/`: English the source with typed keys, Hebrew one file per area and held complete once it has one, the language the app's entry alone follows, Settings › Language a place of its own, and the shell given its words over the bridge | M60 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1060,6 +1061,50 @@ her together.
 (U2), the mirror (U3), the screens in two parts that can run side by side (U4, U5), Hebrew category
 names in a new document (U6), the desktop shell (U7) and the release (U8, which starts only on the
 maintainer's go). The open question *Hebrew interface* is answered.
+
+## D-584 · 2026-11-11 · The translation layer is hand-rolled in `src/i18n/`: English the source with typed keys, Hebrew one file per area and held complete once it has one, the language the app's entry alone follows, Settings › Language a place of its own, and the shell given its words over the bridge <a id="d-584"></a>
+
+**Context.** M60 U1 builds the layer D-583 asked for, and proves it on the smallest set: the rail's
+place names and Settings' own Language row.
+
+**Decision.**
+
+1. **Hand-rolled, no dependency.** `src/i18n/en/<area>.ts` are plain objects and the source;
+   `MessageKey` is every dotted path to a word in them, so a misspelled key is a type error.
+   `he/<area>.ts` sit beside them typed `Translation<area>`: every word optional, but a list — the
+   months — whole. `translate` falls back to English per word. **An area with a Hebrew file is held
+   complete** by `catalogue.test.ts`, which names what is missing; an area with none is English for
+   now (Formats, Agenda, the places M59 holds back). A word's parts are `{placeholders}`, so a
+   language orders them its own way (`{day} ב{month}`).
+2. **The language is a store beside the theme's** (`src/i18n/current.ts`): `emerald-language` in
+   `localStorage` when Settings sets it, else `navigator.language` (`he…` is Hebrew, anything else
+   English); `<html lang dir>` set before the first render. **Only the app's entry follows the
+   computer** — the store is English until `initLanguage()`, which `src/main.tsx` alone calls — so the
+   demo, which is the public site's and stays English (D-583 §7), the frame a host draws, the tours and
+   the tests stay English.
+3. **Months go through the layer, and `src/core/time.ts` stays English.** `src/i18n/dates.ts` has
+   its five shapes with a language and `useDates()` binds them; core's are what a model reads, and a
+   test holds the layer's English to them. Money is untouched.
+4. **Settings › Language is a place of its own** (`/settings/language`), beside Calendar and
+   unlike it this machine's, since D-583 names a row and Settings has no screen of general rows. The
+   two choices are each language's own name.
+5. **A place the app names carries its key** (`word` on `NavSection`, `NavChild`, `NavTab`, made
+   by one `named()` from the English catalogue); `label` stays the English that the palette and the
+   tests read until their units, and a place the document names has no key.
+6. **The shell gets its words from the page** (for M60 U7): `electron/` imports nothing from
+   `src/`, so the page sends the shell its language and the menu area's words over `bridge.ts` when
+   either changes, and the shell rebuilds its menu (English until it is told). The catalogue files
+   import nothing at run time, so the words can be bundled for the shell instead if U7 finds the
+   bridge too late for the first menu.
+
+**Rejected.** A library: plural rules, lazy loading and ICU messages for two languages and plain
+labels. Hebrew month names from `Intl`: the catalogue is what U2's glossary edits, and the same on
+every runtime. A `Follow the computer` choice in Settings: D-583 names two.
+
+**Consequences.** Every later M60 unit adds its area's English and Hebrew files and draws with
+`useT()`/`useDates()`. The rail's Hebrew words are drafts that M60 U2's glossary replaces. Until M60 U3
+mirrors the layout, a Hebrew computer opens the app with `dir="rtl"` on a layout written for left to
+right.
 
 ## Related
 

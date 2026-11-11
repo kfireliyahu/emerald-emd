@@ -32,6 +32,8 @@
  * about what exists.
  */
 
+import { ENGLISH, type MessageKey } from '@/i18n/catalogue.ts'
+
 /** Which of the hand-drawn glyphs a top-level item wears when collapsed. */
 export type NavGlyph =
   | 'home'
@@ -60,6 +62,12 @@ export interface NavTab {
   readonly to: string
   readonly label: string
   /**
+   * The key its name is translated by, when the app names it (M60 U1, D-584);
+   * absent for a name the document gives — a format's title, a pack's.
+   * `label` is then the English, which the palette and the tests still read.
+   */
+  readonly word?: MessageKey
+  /**
    * Paths that are this view's own screens without being views of their own —
    * reading files is the month's (M28 U5): the rail keeps Month lit while it is
    * open, and the root section owns it.
@@ -70,6 +78,12 @@ export interface NavTab {
 export interface NavChild {
   readonly to: string
   readonly label: string
+  /**
+   * The key its name is translated by, when the app names it (M60 U1, D-584);
+   * absent for a name the document gives — a format's title, a pack's.
+   * `label` is then the English, which the palette and the tests still read.
+   */
+  readonly word?: MessageKey
   /** Lit only on its own path, as Home is: Wealth's overview is `/wealth` itself. */
   readonly end?: boolean
   /** Paths that belong to a child lit with `end`, which `startsAt` would not reach. */
@@ -103,6 +117,12 @@ export type PackId = string
 export interface NavSection {
   readonly to: string
   readonly label: string
+  /**
+   * The key its name is translated by, when the app names it (M60 U1, D-584);
+   * absent for a name the document gives — a format's title, a pack's.
+   * `label` is then the English, which the palette and the tests still read.
+   */
+  readonly word?: MessageKey
   readonly glyph: NavGlyph
   /** Whose place this is. Absent means the engine's, which every document has. */
   readonly pack?: PackId
@@ -117,10 +137,18 @@ export interface NavSection {
   readonly tabs?: readonly NavTab[]
 }
 
+/**
+ * A place the app names: its English label and the key its word is found by in
+ * the catalogue (M60 U1, D-584), from the one entry, so the two cannot drift.
+ */
+function named(key: keyof typeof ENGLISH.rail): { readonly label: string; readonly word: MessageKey } {
+  return { label: ENGLISH.rail[key], word: `rail.${key}` }
+}
+
 export const NAVIGATION: readonly NavSection[] = [
   {
     to: '/',
-    label: 'Home',
+    ...named('home'),
     glyph: 'home',
     pack: 'ledger',
     end: true,
@@ -130,17 +158,17 @@ export const NAVIGATION: readonly NavSection[] = [
     // more — its three parts are the year's, and `/trends` lands there.
     // Read files and the one Readers list (M36 U10) are the month's own screens.
     tabs: [
-      { to: '/', label: 'Month', also: ['/read'] },
-      { to: '/year', label: 'Year' },
+      { to: '/', ...named('month'), also: ['/read'] },
+      { to: '/year', ...named('year') },
     ],
   },
   // **The document's dashboard** (M53 U7, D-521): its own place, right under
   // Home — first, and `#/` itself, in a document with no ledger. Blocks from any
   // format, and nothing else (D-514).
-  { to: '/dashboard', label: 'Dashboard', glyph: 'dashboard' },
+  { to: '/dashboard', ...named('dashboard'), glyph: 'dashboard' },
   {
     to: '/transactions',
-    label: 'Transactions',
+    ...named('transactions'),
     glyph: 'transactions',
     pack: 'ledger',
     // A statement's readers were a tab here (M28 U3) until the one Readers list
@@ -151,7 +179,7 @@ export const NAVIGATION: readonly NavSection[] = [
   // `#/plan/paychecks` still lands here (D-157).
   {
     to: '/paychecks',
-    label: 'Paychecks',
+    ...named('paychecks'),
     glyph: 'paychecks',
     pack: 'ledger',
     // **The payroll vocabulary is a view of payroll** (D-170). It was
@@ -163,19 +191,19 @@ export const NAVIGATION: readonly NavSection[] = [
     // (D-193), and it was asked for beside the slip it follows, so it is
     // half of the month Paychecks opens on, and `/paychecks/trace` lands there.
     tabs: [
-      { to: '/paychecks', label: 'Paychecks' },
-      { to: '/paychecks/deductions', label: 'Deduction types' },
+      { to: '/paychecks', ...named('paychecks') },
+      { to: '/paychecks/deductions', ...named('deductionTypes') },
     ],
   },
   {
     to: '/plan',
-    label: 'Plan',
+    ...named('plan'),
     glyph: 'plan',
     pack: 'ledger',
   },
   {
     to: '/wealth',
-    label: 'Wealth',
+    ...named('wealth'),
     glyph: 'wealth',
     pack: 'ledger',
     // **Four places, and a tab strip only where a place has views** (M28 U8,
@@ -185,24 +213,24 @@ export const NAVIGATION: readonly NavSection[] = [
     // names one place. Fee impact is a section of Funds and the deposit check a column of it. Every
     // old path forwards (D-031).
     children: [
-      { to: '/wealth', label: 'Net worth', end: true, also: ['/wealth/places'] },
-      { to: '/wealth/goals', label: 'Goals' },
-      { to: '/wealth/debts', label: 'Debts' },
+      { to: '/wealth', ...named('netWorth'), end: true, also: ['/wealth/places'] },
+      { to: '/wealth/goals', ...named('goals') },
+      { to: '/wealth/debts', ...named('debts') },
       // Fee impact and the deposit check are sections of Funds (D-327; M36 U10), and their paths
       // open Funds with the section open.
-      { to: '/wealth/funds', label: 'Funds', also: ['/wealth/fees', '/wealth/deposits'] },
+      { to: '/wealth/funds', ...named('funds'), also: ['/wealth/fees', '/wealth/deposits'] },
     ],
   },
   // **Rules sit beside the categories they fill** (M36 U10): they were a child
   // of Settings, and nine links on three screens sent people there.
   {
     to: '/categories',
-    label: 'Categories',
+    ...named('categories'),
     glyph: 'categories',
     pack: 'ledger',
     tabs: [
-      { to: '/categories', label: 'Categories' },
-      { to: '/categories/rules', label: 'Rules' },
+      { to: '/categories', ...named('categories') },
+      { to: '/categories/rules', ...named('rules') },
     ],
   },
   // **The engine, and it is a place rather than a setting** (M19 U1, D-216).
@@ -217,41 +245,44 @@ export const NAVIGATION: readonly NavSection[] = [
   // those are **templates**: how one issuer's actual file maps onto a format.
   // Renaming that child is the smallest honest fix; the route is untouched, so
   // every bookmarked hash still lands.
-  { to: '/formats', label: 'Formats', glyph: 'formats' },
+  { to: '/formats', ...named('formats'), glyph: 'formats' },
   // **The third arrow, as a place** (M20 U5, D-233). A `link` and an aggregate
   // are facts about *two* formats, so they are authored between two bubbles
   // rather than in a section of a form about one — and the rail said nothing
   // about connections until there was a screen for them.
-  { to: '/connections', label: 'Connections', glyph: 'connections' },
+  { to: '/connections', ...named('connections'), glyph: 'connections' },
   // **Every dated format's rows on one list of days** (M49 U3, D-473). A place
   // of the engine's, drawn only while some format has a date (`railSections`).
-  { to: '/agenda', label: 'Agenda', glyph: 'agenda' },
+  { to: '/agenda', ...named('agenda'), glyph: 'agenda' },
   // **Talking to the document from an assistant** (M26 U7, D-295): the tools
   // the MCP server offers and the snippet that connects one. In the rail and
   // not in Settings, by choice — it is a way into the document.
-  { to: '/mcp', label: 'Assistants', glyph: 'mcp' },
+  { to: '/mcp', ...named('assistants'), glyph: 'mcp' },
   {
     to: '/settings',
-    label: 'Settings',
+    ...named('settings'),
     glyph: 'settings',
     children: [
       // **Where a document takes the ledger on** (M20 U0, D-227; M25 U8). It is
       // first because a rail this short is a rail somebody is looking for
       // something in, and in Settings because that section is always there.
-      { to: '/settings/packs', label: 'Packs' },
-      { to: '/settings/accounts', label: 'Accounts', pack: 'ledger' },
+      { to: '/settings/packs', ...named('packs') },
+      { to: '/settings/accounts', ...named('accounts'), pack: 'ledger' },
       // The ledger's readers left for the screens they feed in M28, and Rules
       // for Categories in M36 U10.
       // The engine's, and the one Settings child that is: U2c asks a local
       // model to work a declaration out from an example (D-221).
-      { to: '/settings/model', label: 'Local model' },
+      { to: '/settings/model', ...named('localModel') },
       // **The day this document's weeks start on** (M53 F6, D-528): what
       // `this week` names, kept in the file beside its currency.
-      { to: '/settings/calendar', label: 'Calendar' },
+      { to: '/settings/calendar', ...named('calendar') },
+      // **The language of the app's words on this machine** (M60 U1, D-584):
+      // this computer's, never the document's, so it is no pack's.
+      { to: '/settings/language', ...named('language') },
       // **A spreadsheet of what the document holds** (M28 U5, D-313): the
       // months' CSV was a button above the month on Home, and it was asked
       // for here.
-      { to: '/settings/export', label: 'Export', pack: 'ledger' },
+      { to: '/settings/export', ...named('export'), pack: 'ledger' },
     ],
   },
 ]
@@ -841,4 +872,15 @@ export function holdBack(
 /** A strip's views, the held ones left out unless you are on one. */
 export function holdTabs(tabs: readonly NavTab[], held: ReadonlySet<string>, pathname: string): readonly NavTab[] {
   return tabs.filter((tab) => !held.has(tab.to) || tabHits(tab, pathname))
+}
+
+/**
+ * What a place is called in the language now (M60 U1, D-584): its word when
+ * the app names it, else the name the document gave it — `t` is `useT()`'s.
+ */
+export function placeName(
+  place: { readonly label: string; readonly word?: MessageKey | undefined },
+  t: (key: MessageKey) => string,
+): string {
+  return place.word === undefined ? place.label : t(place.word)
 }

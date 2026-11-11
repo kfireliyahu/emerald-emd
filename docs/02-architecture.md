@@ -68,6 +68,7 @@ which covers the case that timer existed for at a fraction of the complexity.
 | Routing | React Router with **HashRouter** | Path routing broke on `file://`, and there is nothing behind `app://` to resolve one either. Kept as a choice (D-133). |
 | Charts | **Hand-rolled SVG**, scales and paths included | Six simple chart types. Any charting library would fight the design language rather than serve it. |
 | Dates | `src/core/time.ts` — calendar parts, never `Date` (D-023) | No timezone surprises for date-only values |
+| Words | **Hand-rolled**, `src/i18n/` — English `en/<area>.ts` with typed keys, Hebrew `he/<area>.ts` beside it, `useT()` and `useDates()` (D-584) | Two languages and plain objects: a library would add plurals and loaders nothing here asks for |
 | IDs | `crypto.randomUUID()` | Available in every target browser |
 | Tests | Vitest | Same config as Vite |
 

@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 
-import { activeTab, holdTabs, isSectionTabs, tabsFor } from '@/ui/nav.ts'
+import { useT } from '@/i18n/current.ts'
+import { activeTab, holdTabs, isSectionTabs, placeName, tabsFor } from '@/ui/nav.ts'
 import { useHeldBack } from '@/ui/heldBack.ts'
 import { useSidebarCollapsed } from '@/ui/useSidebar.ts'
 import { useWindowTaken } from '@/ui/useFullWindow.ts'
@@ -39,7 +40,8 @@ export function ViewTabs() {
   const collapsed = useSidebarCollapsed()
   // A held-back view stays out of the strip as out of the rail (M59 U6, D-582).
   const held = useHeldBack()
-  const tabs = declared === undefined ? undefined : holdTabs(declared, held, pathname)
+  const t = useT()
+  const tabs =declared === undefined ? undefined : holdTabs(declared, held, pathname)
   if (taken || declared === undefined || tabs === undefined || tabs.length < 2) return null
   // A section's own views are its pages in the rail (M28 U4, navigation A);
   // the strip stands in for them only while the rail is down to its glyphs.
@@ -68,7 +70,7 @@ export function ViewTabs() {
                 : 'text-ink-tertiary hover:text-ink',
             ].join(' ')}
           >
-            {tab.label}
+            {placeName(tab, t)}
           </Link>
         )
       })}
