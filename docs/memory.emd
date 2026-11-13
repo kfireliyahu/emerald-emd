@@ -5946,6 +5946,13 @@ body: About 1,000 tool calls over six weeks, one document outside every reposito
 state: triaged
 became: Later U-lean-start, Later U-one-server, Later U-hook-blocked; the question 'Decisions and the files they make wrong'; evidence added to 'Dry runs and concurrency'. The idle planning half and the teammates point feed M57's pitch (D-560).
 
+### Close review entries a unit's report already proves, and tell built from checked
+from: maintainer — from another project (anonymous)
+sent_on: 2026-11-13
+body: "Seen in a small solo project kept with the development pack (17 units over two days): every unit was `built`, but all 10 review entries were still `open`. Some were already done. One unit's report held the very device log its review entry asked for, and another unit's report said the app had been run on the real device. Nothing linked the report to the review entry, so nobody closed it.\n\nProposals:\n- When a unit lands, or its report is written, offer to accept the review entries the report already covers. Show the report sentence next to the entry's `should` so the owner confirms with one answer.\n- `start_here` flags units that have been built for N days with review entries never touched.\n- Consider a unit state between `built` and done (`verified`/`checked`), so \"done\" means checked where it runs, not just compiled.\n\nWhy it matters: when asked whether Emerald helped that project, the honest answer was \"unproven\". The document had opened a verification loop it never closed, so its states claimed less than was actually true."
+state: triaged
+became: M61 U1 (start_here shows built units with review entries open) and M61 U2 (landing settles the entries a report covers). No 'verified' unit state: the maintainer, 2026-11-13.
+
 ### Development pack format notes describe Emerald's own repo, not the adopting project
 from: another document of the maintainer's
 sent_on: 2026-10-23
@@ -6219,11 +6226,39 @@ state: applied
 answered_by: D-587
 became_unit: M60 U6
 
+### Make the payoff visible: record what a session read, and a per-milestone retro
+from: maintainer — from another project (anonymous)
+sent_on: 2026-11-13
+body: "When asked \"would the sessions have been the same or better without Emerald?\", the document could not answer for itself. It held 21 decisions and 6 graded research findings linked to the decisions they shaped. But nothing showed that any later session read a decision before acting, or that a finding changed what got built. The value was arguable, not visible.\n\nProposals:\n- Record when a session reads a decision, finding or open question before writing a unit or a decision, or when a commit message or report cites a ref (\"D12\"). Then a row can say \"read 4 times, cited by U8, U9\".\n- A per-milestone retro (a rollup or a `start_here` section): decisions made and replaced, questions opened and answered, review entries accepted or failed, follow-ups created, rows that were consulted. That report would have answered the question directly.\n- The open question about every format being retrospective (M22 U1 #1) is related: this would add a record of the document being used, not only written."
+state: triaged
+became: M61 U4 (the retro, with 'cited by' worked out from refs). Recording reads is the open question 'Read-logging'.
+
+### Offer to close a milestone whose units are all built
+from: maintainer — from another project (anonymous)
+sent_on: 2026-11-13
+body: "In the same project, two milestones still read `open` even though every one of their units was `built`. Nothing pointed it out, so the milestone list said less than the project knew.\n\nProposal: `start_here` (or landing a unit) notices a milestone whose units are all built or dropped, and whose review entries are all settled, if review entries become part of done. It offers to close the milestone, or says what still holds it open: \"M2: all 6 units built, 4 review entries open\"."
+state: triaged
+became: M61 U1. This repo had the same gap: M58's units all built, M58 still planned.
+
+### Sessions should propose new formats and format changes without being asked
+from: maintainer — from another project (anonymous)
+sent_on: 2026-11-13
+body: "Today it is almost always the maintainer who says \"maybe this could become a format\" or \"how can we improve the current formats\". Sessions seldom raise it themselves, even when the document shows the need.\n\nExample from that project: the most reusable knowledge in its document was lessons buried in unit reports. These included a UI component that crashed the renderer on one OS version, an icon that would not draw at mixed sizes, a missing preview metadata key, and a state-capture fix. A project `lesson`/`pitfall` format (what broke, where, the workaround, the paths it touches), shown when a later unit touches the same paths, would have been the obvious move. No session suggested it.\n\nProposals:\n- Have Emerald notice repeated shapes in free text, such as the same kind of fact recurring across report/brief columns, or a text column whose values keep sharing a structure, and offer a format or a column for it.\n- At a natural pause (closing a milestone, a landing), prompt one line: \"is there a kind of thing this project keeps writing in prose?\"\n- Make proposing a format a named, low-cost step in the pack's instructions, not something only the person thinks of."
+state: triaged
+became: M61 U5 (a named step and a one-line prompt). Automatic detection is the open question 'Repeated shapes in prose'.
+
 ### Text refs sort as text, so Q10 lists before Q2
 from: another document of the maintainer's
 sent_on: 2026-10-23
 body: A saved list view of `open_question` ordered by `ref` shows Q10, Q11, Q12, Q14, Q15, Q2, Q3 and so on. Decision refs will do the same from D10. Every development-pack document numbers its rows like this (D-, Q-, M-, U-), so ordering by ref looks wrong once there are ten of anything. Natural-order sorting for text columns, or for `ref` in particular, would fix it.
 state: triaged
+
+### Turn follow-ups written in a report into rows
+from: maintainer — from another project (anonymous)
+sent_on: 2026-11-13
+body: "Unit reports in that project held real follow-up work that never became a row. One setup unit's report ended with leftovers to remove and an environment variable still pointing at the wrong JDK. Another said \"polish in M3\". As prose in a `report` column, nothing will ever bring them up again.\n\nProposal: when a unit lands, ask \"anything left over?\" and turn each answer into a row: a planned unit, an open question or a review entry. A cheaper version: flag report text with follow-up phrasing (\"to remove\", \"later\", \"polish in\", \"not yet\", \"TODO\") and offer the row. A report records what happened, and a row is how a later session finds out what is still owed."
+state: triaged
+became: M61 U3.
 
 ### arrange_views on a saved view replaces every setting it is not given
 from: another document of the maintainer's
@@ -6514,6 +6549,12 @@ title: The app in Hebrew: a translated, right-to-left interface
 goal: A person can use Emerald in Hebrew, laid out right to left. Its decisions (the whole app or the ledger first, who writes the words, how a language is chosen) are listed before any brief (D-575).
 state: planned
 position: 335
+
+### M61
+title: Closing the loop: the development pack says what is checked, owed and done
+goal: Five inbox rows from another project's use of the development pack (2026-11-13) found that its document claimed less than it knew. Every unit was built, but all its review entries were still open, though unit reports already proved some of them. Milestones whose units were all built stayed open. Follow-ups written in reports never became rows. Nothing could show that the document's rows had changed what got built. This repo has the same gap: M58's six units are all built, and M58 is still planned. The maintainer's answers (2026-11-13): this is one new milestone. No unit state is added between built and done, because an accepted review_entry is what says a thing was checked, and start_here makes the gap visible instead. A per-milestone retro is built, with 'cited by' worked out from refs the rows already mention. Logging every read is an open question, because it turns a read into a write. Proposing a format becomes a named step in the instructions plus a one-line prompt when a milestone lands; detecting repeated shapes automatically is an open question. Closing a milestone stays the maintainer's word: everything here offers, and nothing closes.
+state: planned
+position: 375
 
 <!-- emerald: open_question.format.md -->
 ---
@@ -6826,6 +6867,14 @@ state: open
 ### Pack pricing
 question: Should packs be priced — and if so, what is actually sold? Pricing the declarations contradicts the pitch: a pack's formats are a copyable .format.md and the types are the user's. What has real, ongoing value is the maintained intake — readers that survive a real issuer's export (the ledger's four documents) and break when the issuer changes it. Candidate: free packs, paid maintained readers. Only matters once there are users holding those documents.
 opened_by: D-238
+state: open
+
+### Read-logging
+question: Should a document record when a session reads a decision, finding or open question before it acts, so a row can say 'read 4 times, cited by U8, U9'? Asked by another project's use (inbox 2026-11-13, 'Make the payoff visible'), whose document could not show it had changed anything. Against it: every read becomes a write, so a read takes the document's lock, a text document diffs on every question, and 'reads the file; never modifies it' stops being true of format_rows. M61 U4 answers the cheaper half, 'cited by' from refs the rows already name. Is a record of reads worth that cost, and if so, is it kept in the document or beside it?
+state: open
+
+### Repeated shapes in prose
+question: Should Emerald notice the same kind of fact recurring in free text, such as lessons repeated across unit reports or a text column whose values keep sharing a structure, and offer a format or a column for it? Asked by another project's use (inbox 2026-11-13). M61 U5 makes proposing a format a named step for the session instead. What would detection read, when would it speak, and how does it avoid offering a format for every repeated phrase?
 state: open
 
 ### Rules on a superseded decision
@@ -17250,6 +17299,52 @@ commit: 7ba2ae8
 paths: "package.json\nhosts/\nCHANGELOG.md"
 report: Emerald 0.4.0 cut and released (M60 U8, D-583). Version 0.3.1 -> 0.4.0 in package.json, package-lock.json, server.json and PLUGIN_VERSION (7ba2ae8); typecheck, the full suite (5741 tests) and docs:check green before it. Tag v0.4.0 pushed; the release workflow built and published https://github.com/kfireliyahu/emerald-emd/releases/tag/v0.4.0 with Emerald-Setup.exe (124.6 MB), its blockmap, latest.yml, Emerald-arm64.dmg and Emerald-x64.dmg (built on CI's macOS runner, as every release), emerald.mcpb and SHA256SUMS; a plain-words 'What's new' was prepended to the workflow's notes (Hebrew, two cards, the provider's category on By merchant, 50/30/20 shown first, the calmer first screen). emerald-mcp 0.4.0 is built in dist-plugin/ but NOT published: npm publish answered 404 (not logged in); npm login is waiting in the Terminal tab 'npm publish 0.4.0' for the maintainer's browser, then `npm publish ./dist-plugin --access public` there. After npm serves it: `node scripts/pin-plugin.mjs`, commit and push (moves the plugin's pins, lists it in the registry). Not done: the fresh install on this machine (the done-test) is the maintainer's review entry.
 
+### M61 U1
+milestone: M61
+scope: plugin
+title: start_here says what a milestone still owes: ready to close, and built with review entries open
+state: planned
+brief: Inbox 2026-11-13 ('Offer to close a milestone whose units are all built', and the start_here half of 'Close review entries a unit's report already proves'). start_here gains a section for milestones that are not closed and whose units are all built or dropped. Each one is a line of what still holds it open, such as 'M58: all 6 units built, 0 review entries open', so the maintainer can close it with one word. The same section lists built units whose review entries are still open ('built, 2 review entries open'). Decided (maintainer, 2026-11-13): there is no new unit state between built and done; this line is how the gap shows. It offers, and never closes: close_milestone stays the maintainer's word. The table in CLAUDE.md is generated from views.md and pack.test.ts prints the new one; regenerate it. Before building, ask the maintainer: whether built units with open entries show only after some number of days or at once (the inbox row suggested N days), and whether a milestone with no units at all counts as ready.
+files: src/plugin/tools/startHere.ts, src/data/packs/development/views.md
+paths: src/plugin/tools/startHere.ts src/plugin/tools/startHere.test.ts src/data/packs/development/views.md src/data/packs/development/pack.test.ts
+
+### M61 U2
+milestone: M61
+scope: plugin
+title: Landing a unit shows the review entries its report already covers, and settles them in the same call
+state: planned
+brief: Inbox 2026-11-13 ('Close review entries a unit's report already proves, and tell built from checked'). In another project one unit's report held the very device log its review entry asked for, and nothing linked the two, so the entry stayed open. When land_units lands a unit that has open review entries, its answer lists each one's `should` beside the report, and the same call (or the next) can accept them by ref, so the owner confirms with one answer. It never accepts an entry by itself. The closing-pass skill says to look. Decided (maintainer, 2026-11-13): no 'verified' unit state. Before building, ask the maintainer: whether the tool picks the report sentence that matches each entry or only shows both side by side for the session to judge, and whether a child session's landing proposal may propose accepting entries or only the driver may.
+files: src/plugin/tools/landing.ts, hosts/claude/skills/closing-pass/SKILL.md
+paths: src/plugin/tools/landing.ts src/plugin/tools/landing.test.ts hosts/claude/skills/closing-pass/SKILL.md .claude/skills/closing-pass/SKILL.md
+
+### M61 U3
+milestone: M61
+scope: plugin
+title: Follow-ups in a report become rows when the unit lands
+state: planned
+brief: Inbox 2026-11-13 ('Turn follow-ups written in a report into rows'). Unit reports in another project held work still owed: leftovers to remove, an environment variable pointing at the wrong JDK, 'polish in M3'. As prose in `report`, nothing brings them up again. land_units takes the follow-ups with the landing and writes each as a row: a planned unit, an open question or a review entry, all or none with the rest. When the report has follow-up wording ('to remove', 'later', 'not yet', 'TODO', 'polish in') and no follow-ups were given, the answer quotes those lines and asks. The closing pass asks 'anything left over?'. Shares landing.ts with U2, so it waits for it. Before building, ask the maintainer: which milestone a follow-up unit goes to when none is named (Later, or the landed unit's own), and whether a follow-up unit needs a brief to be written.
+files: src/plugin/tools/landing.ts, hosts/claude/skills/closing-pass/SKILL.md
+blocks: ["M61 U2"]
+paths: src/plugin/tools/landing.ts src/plugin/tools/landing.test.ts hosts/claude/skills/closing-pass/SKILL.md .claude/skills/closing-pass/SKILL.md
+
+### M61 U4
+milestone: M61
+scope: plugin
+title: A milestone's retro: what it decided, answered, settled and left owed, and which rows were cited
+state: planned
+brief: Inbox 2026-11-13 ('Make the payoff visible'). Asked whether its sessions would have gone the same without Emerald, another project's document could not answer: nothing showed that a decision or a finding was read before something was built. One answer per milestone: decisions made and the ones they replaced, questions opened and answered, review entries accepted or failed, follow-ups created (U3), and 'cited by': which decisions, questions and findings the milestone's unit briefs, reports and decisions name by ref. That is worked out from text the rows already hold, with no new writes. Decided (maintainer, 2026-11-13): the retro is built; recording every read is not, and is the open question 'Read-logging'. Before building, ask the maintainer: where the retro lives (its own tool, a start_here section when a milestone is ready to close, or a view of the development pack), whether the app shows it too (parity), and what counts as a ref in free text in another project, whose refs may not look like D-123.
+files: src/plugin/tools/startHere.ts, src/data/packs/development/formats, src/parity.test.ts
+paths: src/plugin/tools/retro.ts src/plugin/tools/retro.test.ts src/plugin/server.ts src/parity.test.ts
+
+### M61 U5
+milestone: M61
+scope: plugin
+title: Proposing a format is a named step, and landing a milestone asks what is still kept in prose
+state: planned
+brief: Inbox 2026-11-13 ('Sessions should propose new formats and format changes without being asked'). In another project the most reusable knowledge was lessons buried in unit reports: a component that crashed on one OS version, an icon that would not draw at mixed sizes. A `lesson` format would have been the obvious move, and no session suggested it; it is almost always the maintainer who does. Decided (maintainer, 2026-11-13): proposing a format or a column becomes a named, low-cost step in the development pack's instructions. Landing a milestone (or the closing pass at the end of one) asks one line: 'is there a kind of thing this project keeps writing as prose?'. Automatic detection of repeated shapes is not built here; it is the open question 'Repeated shapes in prose'. Keep within M58 U1's budget for instruction length: measure before and after. Before building, ask the maintainer: whether the prompt fires at every unit's landing or only when a milestone is ready to close.
+files: src/plugin/instructions.ts, hosts/claude/skills/run-milestone/SKILL.md, hosts/claude/skills/closing-pass/SKILL.md
+paths: src/plugin/instructions.ts src/data/packs/development/formats hosts/claude/skills/run-milestone/SKILL.md .claude/skills/run-milestone/SKILL.md hosts/claude/skills/closing-pass/SKILL.md .claude/skills/closing-pass/SKILL.md
+
 <!-- emerald: views.md -->
 ---
 emerald: views
@@ -17403,9 +17498,9 @@ emerald: changed
 
 decision: 2026-11-11
 finding: 2026-10-22
-inbox: 2026-11-11
-milestone: 2026-11-11
-open_question: 2026-11-11
+inbox: 2026-11-13
+milestone: 2026-11-13
+open_question: 2026-11-13
 review_entry: 2026-11-13
 rule: 2026-11-11
 term: 2026-11-11
