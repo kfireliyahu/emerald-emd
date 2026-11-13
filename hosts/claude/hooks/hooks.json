@@ -8,7 +8,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/unless-mod.mjs\" npx -y --prefer-offline -p emerald-mcp@0.3.1 emerald-hooks start-here \"$CLAUDE_PROJECT_DIR\"",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/unless-mod.mjs\" npx -y --prefer-offline -p emerald-mcp@0.4.0 emerald-hooks start-here \"$CLAUDE_PROJECT_DIR\"",
             "timeout": 60
           },
           {
@@ -24,7 +24,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/unless-mod.mjs\" npx -y --prefer-offline -p emerald-mcp@0.3.1 emerald-hooks rows \"$CLAUDE_PROJECT_DIR\" inbox --match state=new --once-per-session",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/unless-mod.mjs\" npx -y --prefer-offline -p emerald-mcp@0.4.0 emerald-hooks rows \"$CLAUDE_PROJECT_DIR\" inbox --match state=new --once-per-session",
             "timeout": 15
           }
         ]
