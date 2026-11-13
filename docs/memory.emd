@@ -17233,10 +17233,13 @@ milestone: M60
 scope: shell
 title: M59 and M60 in one desktop release, 0.4.0, after the maintainer tries both
 decision: D-583
-state: planned
+state: in_progress
 brief: D-583. STOP FIRST: this unit starts only when the maintainer says go after trying M59 and M60 on his machine (a new Hebrew ledger document, a statement read, a merchant categorized, a plan made). Then cut 0.4.0 the way 0.3.1 was cut (find the version cut's procedure in docs and the last release commit, 2a066ca): the version, release notes in plain words (the two-card import, By merchant's provider category, 50 / 30 / 20 shown first, the calmer first screen, Hebrew), the Windows installer (npm run dist:win), the GitHub release. A Mac build only if she is on a Mac, and then only on a Mac: ask the maintainer. Whether the plugin's npm package needs a version too follows the release procedure; npm publishes run in a Terminal tab (2FA in the browser) and can sit an hour before npm serves them: wait, never republish. Done-test: the release page has the installer; installed fresh on this machine it opens a new document in the computer's language.
 files: "package.json\nhosts/claude-plugin-release.json"
 blocks: ["M60 U3","M60 U4","M60 U5","M60 U6","M60 U7"]
+taken_by: run-milestone driver
+started: 2026-11-13
+branch: main
 paths: "package.json\nhosts/\nCHANGELOG.md"
 
 <!-- emerald: views.md -->
@@ -17398,4 +17401,4 @@ open_question: 2026-11-11
 review_entry: 2026-11-11
 rule: 2026-11-11
 term: 2026-11-11
-unit: 2026-11-11
+unit: 2026-11-13

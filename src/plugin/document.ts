@@ -46,7 +46,7 @@ import {
 import { documentStore } from './store.ts'
 
 /** The plugin's own version, which is not the schema version. */
-export const PLUGIN_VERSION = '0.3.1'
+export const PLUGIN_VERSION = '0.4.0'
 
 export interface OpenDocument {
   readonly path: string
