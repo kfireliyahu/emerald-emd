@@ -7971,6 +7971,11 @@ should: It updates 0.1.2 → 0.1.2+1 and the session lists emerald:run-milestone
 not_tried: The skills loading in a signed-in session: the clean-profile proof checked the update and the installed files, not a session listing them.
 state: open
 
+### Install Emerald 0.4.0 fresh from https://github.com/kfireliyahu/emerald-emd/releases/tag/v0.4.0 (Emerald-Setup.exe), on a computer set to Hebrew, or send her the link; make a new document
+unit: M60 U8
+should: The installer runs past the unsigned warning; the app opens in the computer's language (Hebrew right to left on a Hebrew Windows), the new ledger's categories are in Hebrew, a two-card statement makes two accounts, and About says 0.4.0
+state: open
+
 ### Keep two documents with the same name in different folders on the recents list, and open File › Open Recent and the title bar's Open recent.
 unit: M54 U6
 should: The entries tell the two apart (Words name the rule): the folder in the menu label, the folder's distinguishing end in the field, an '&' in a name escaped as '&&'.
@@ -17232,15 +17237,18 @@ report: M60 U7 built at f702829 (D-588). The shell's menu, its dialogs (unsaved-
 milestone: M60
 scope: shell
 title: M59 and M60 in one desktop release, 0.4.0, after the maintainer tries both
+landed: 2026-11-13
 decision: D-583
-state: in_progress
+state: built
 brief: D-583. STOP FIRST: this unit starts only when the maintainer says go after trying M59 and M60 on his machine (a new Hebrew ledger document, a statement read, a merchant categorized, a plan made). Then cut 0.4.0 the way 0.3.1 was cut (find the version cut's procedure in docs and the last release commit, 2a066ca): the version, release notes in plain words (the two-card import, By merchant's provider category, 50 / 30 / 20 shown first, the calmer first screen, Hebrew), the Windows installer (npm run dist:win), the GitHub release. A Mac build only if she is on a Mac, and then only on a Mac: ask the maintainer. Whether the plugin's npm package needs a version too follows the release procedure; npm publishes run in a Terminal tab (2FA in the browser) and can sit an hour before npm serves them: wait, never republish. Done-test: the release page has the installer; installed fresh on this machine it opens a new document in the computer's language.
-files: "package.json\nhosts/claude-plugin-release.json"
+files: "package.json\npackage-lock.json\nserver.json\nsrc/plugin/document.ts"
 blocks: ["M60 U3","M60 U4","M60 U5","M60 U6","M60 U7"]
 taken_by: run-milestone driver
 started: 2026-11-13
 branch: main
+commit: 7ba2ae8
 paths: "package.json\nhosts/\nCHANGELOG.md"
+report: Emerald 0.4.0 cut and released (M60 U8, D-583). Version 0.3.1 -> 0.4.0 in package.json, package-lock.json, server.json and PLUGIN_VERSION (7ba2ae8); typecheck, the full suite (5741 tests) and docs:check green before it. Tag v0.4.0 pushed; the release workflow built and published https://github.com/kfireliyahu/emerald-emd/releases/tag/v0.4.0 with Emerald-Setup.exe (124.6 MB), its blockmap, latest.yml, Emerald-arm64.dmg and Emerald-x64.dmg (built on CI's macOS runner, as every release), emerald.mcpb and SHA256SUMS; a plain-words 'What's new' was prepended to the workflow's notes (Hebrew, two cards, the provider's category on By merchant, 50/30/20 shown first, the calmer first screen). emerald-mcp 0.4.0 is built in dist-plugin/ but NOT published: npm publish answered 404 (not logged in); npm login is waiting in the Terminal tab 'npm publish 0.4.0' for the maintainer's browser, then `npm publish ./dist-plugin --access public` there. After npm serves it: `node scripts/pin-plugin.mjs`, commit and push (moves the plugin's pins, lists it in the registry). Not done: the fresh install on this machine (the done-test) is the maintainer's review entry.
 
 <!-- emerald: views.md -->
 ---
@@ -17398,7 +17406,7 @@ finding: 2026-10-22
 inbox: 2026-11-11
 milestone: 2026-11-11
 open_question: 2026-11-11
-review_entry: 2026-11-11
+review_entry: 2026-11-13
 rule: 2026-11-11
 term: 2026-11-11
 unit: 2026-11-13
