@@ -4921,6 +4921,16 @@ answer: Under the ready answer, start_here prints Ready to close: every mileston
 state: live
 affects: "src/plugin/tools/startHere.ts\nsrc/data/repositories/formatLinkViewRepository.ts\nsrc/domain/format/view.ts\ndocs/plugin.md"
 
+### D-592
+date: 2026-11-15
+milestone: M61
+scope: plugin
+title: A landing lists the unit's open review entries beside its report and accepts in the same call the ones named by the start of their do; nothing picks which the report proves, a child's proposal never accepts, and nothing new is written on an entry
+question: How does a review entry that a unit's report already proves get closed, without the tool guessing?
+answer: After its diff, land_units lists each landed unit's open review entries (do and should, ten then a count) under the unit's report (first 1,500 characters). Nothing is picked: the session or the maintainer judges (maintainer, 2026-11-15). A landing's accept_entries takes the start of an open entry's do, case aside, matching exactly one open entry of that unit or the landing is refused whole; after landing, update_format_rows review_entry by where:{unit, do}. A child's proposal may not carry accept_entries; the driver accepts. Accepting only moves state to accepted: no new column, the report on the unit is the evidence. The shipped closing-pass skill (hosts/claude) learns accept_entries with the next emerald-mcp release, since the plugin runs the published 0.4.0.
+state: live
+affects: "src/plugin/tools/landing.ts\n.claude/skills/closing-pass/SKILL.md\nhosts/claude/skills/closing-pass/SKILL.md\ndocs/plugin.md"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -17329,17 +17339,24 @@ report: start_here now prints two more paragraphs under Ready to start, from vie
 milestone: M61
 scope: plugin
 title: Landing a unit shows the review entries its report already covers, and settles them in the same call
-state: planned
+landed: 2026-11-15
+decision: D-592
+state: built
 brief: Inbox 2026-11-13 ('Close review entries a unit's report already proves, and tell built from checked'). In another project one unit's report held the very device log its review entry asked for, and nothing linked the two, so the entry stayed open. When land_units lands a unit that has open review entries, its answer lists each one's `should` beside the report, and the same call (or the next) can accept them by ref, so the owner confirms with one answer. It never accepts an entry by itself. The closing-pass skill says to look. Decided (maintainer, 2026-11-13): no 'verified' unit state. Before building, ask the maintainer: whether the tool picks the report sentence that matches each entry or only shows both side by side for the session to judge, and whether a child session's landing proposal may propose accepting entries or only the driver may.
-files: src/plugin/tools/landing.ts, hosts/claude/skills/closing-pass/SKILL.md
+files: src/plugin/tools/landing.ts, src/plugin/tools/landing.test.ts, .claude/skills/closing-pass/SKILL.md, docs/plugin.md, docs/09-decision-log.md
+taken_by: claude-desktop session d6fe630d
+started: 2026-11-15
+branch: main
+commit: fe9a015
 paths: src/plugin/tools/landing.ts src/plugin/tools/landing.test.ts hosts/claude/skills/closing-pass/SKILL.md .claude/skills/closing-pass/SKILL.md
+report: land_units now prints, after its diff, each landed unit's open review entries (do, should) under its report, and accepts in the same call those named in accept_entries by the start of their do (exactly one open entry each, or the whole landing is refused). A child's proposal may not carry accept_entries. The maintainer chose: side by side with nothing picked, driver-only, nothing new on the entry. The repo's closing-pass skill says to use it; the shipped one (hosts/claude) does not yet, because the plugin runs emerald-mcp 0.4.0, which would refuse the key: add the same bullet when the next npm release is cut. The engine-only definitions budget (58,000) was 86 characters over after the description grew; trimmed. Closing M58 and M59 moved their 12 decisions to docs/archive (archive-decisions.mjs). dist-plugin rebuilt locally. Full suite green apart from those two, then rerun green.
 
 ### M61 U3
 milestone: M61
 scope: plugin
 title: Follow-ups in a report become rows when the unit lands
 state: planned
-brief: Inbox 2026-11-13 ('Turn follow-ups written in a report into rows'). Unit reports in another project held work still owed: leftovers to remove, an environment variable pointing at the wrong JDK, 'polish in M3'. As prose in `report`, nothing brings them up again. land_units takes the follow-ups with the landing and writes each as a row: a planned unit, an open question or a review entry, all or none with the rest. When the report has follow-up wording ('to remove', 'later', 'not yet', 'TODO', 'polish in') and no follow-ups were given, the answer quotes those lines and asks. The closing pass asks 'anything left over?'. Shares landing.ts with U2, so it waits for it. Before building, ask the maintainer: which milestone a follow-up unit goes to when none is named (Later, or the landed unit's own), and whether a follow-up unit needs a brief to be written.
+brief: Inbox 2026-11-13 ('Turn follow-ups written in a report into rows'). Unit reports in another project held work still owed: leftovers to remove, an environment variable pointing at the wrong JDK, 'polish in M3'. As prose in `report`, nothing brings them up again. land_units takes the follow-ups with the landing and writes each as a row: a planned unit, an open question or a review entry, all or none with the rest. When the report has follow-up wording ('to remove', 'later', 'not yet', 'TODO', 'polish in') and no follow-ups were given, the answer quotes those lines and asks. The closing pass asks 'anything left over?'. Shares landing.ts with U2, so it waits for it. Carried from U2 (D-592): the shipped closing-pass skill, hosts/claude/skills/closing-pass/SKILL.md, does not mention accept_entries yet, because the plugin runs the published emerald-mcp 0.4.0, which would refuse it. Add U2's bullet and U3's there only together with an emerald-mcp release that ships the server code, then pin with node scripts/pin-plugin.mjs. Before building, ask the maintainer: which milestone a follow-up unit goes to when none is named (Later, or the landed unit's own), and whether a follow-up unit needs a brief to be written.
 files: src/plugin/tools/landing.ts, hosts/claude/skills/closing-pass/SKILL.md
 blocks: ["M61 U2"]
 paths: src/plugin/tools/landing.ts src/plugin/tools/landing.test.ts hosts/claude/skills/closing-pass/SKILL.md .claude/skills/closing-pass/SKILL.md
