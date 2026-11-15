@@ -493,6 +493,7 @@ written out here.
 | D-588 | 2026-11-11 | The shell's words are bundled, not sent: its menu, dialogs and windows' titles are the catalogue's `shell` area, read by `electron/language.ts`, and the page sends only which language — kept in `settings.json`, the computer's until a page has said | M60 |
 | D-589 | 2026-11-11 | A translated screen's words are the catalogue's, and a test that parses its files fails on one written inline; a count is a `one`/`other` pair, a sentence holding a document's value is filled with elements, a record the document keeps stays as written, and a card a Hebrew ledger makes in place is `כרטיס 1234` | M60 |
 | D-590 | 2026-11-11 | The second half of the screens speaks through the layer: a sentence with a value in it is one word with placeholders drawn by `Phrase`, a word outside a render is `tNow`, a category path's arrow points the way its own words run, a menu opens from its control's start edge, and a test reads the source for typed English | M60 |
+| D-591 | 2026-11-15 | `start_here` says what a milestone still owes: the milestones nothing under them holds open, and the built units rows still point at, read from views a document already declares, with no new unit state | M61 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1317,6 +1318,35 @@ strings, to this unit.
 translation library (D-584); flipping every arrow by the app's language (a Latin path in a Hebrew app
 would point the wrong way); importing the catalogue into `src/data` for the guide (the plugin reads
 it in English); a render test per screen (a fixture per screen for what the parser sees in one pass).
+
+## D-591 · 2026-11-15 · `start_here` says what a milestone still owes: the milestones nothing under them holds open, and the built units rows still point at, read from views a document already declares, with no new unit state <a id="d-591"></a>
+
+**Context.** Another project's development document (inbox, 2026-11-13) had every unit built and
+every review entry still open, though reports already proved some, and two milestones open with
+nothing left under them; its states claimed less than it knew. This repo had the same gap: M58 and
+M59 built to the last unit and still planned.
+
+**Decision.** (M61 U1; points 1 and 2 are the maintainer's, 2026-11-13 and 2026-11-15.)
+
+1. **No state between built and done.** An accepted `review_entry` is what says a thing was checked;
+   `start_here` shows the gap instead, under the ready answer: **Still owed** lists every done unit
+   (built or dropped) that a row of another format's start question still points at — `review_entry
+   where state is open` — with how many, grouped by milestone, newest first, ten groups and a count.
+   Shown at once, however recently the unit landed.
+2. **Ready to close** lists every milestone not ticked done by its list (`done closed`) with at least
+   one unit under it and every unit done, and how many rows are still open on them. A milestone with
+   no units is still being planned, never ready. It offers; closing stays a person's word.
+3. **Read from views the document already declares, with no new word**: the roadmap the ready rows
+   fold under says what they close into, the parent's list `done` says what closed is, and each other
+   format's start view (an `is` question, no `latest`) says what is still open. So a document made
+   before it needs no `keep_packs`; one that declares none of these is answered as before. Only the
+   formats that point at a shown row are named.
+
+**Rejected.** A `verified` unit state (every document carried forward, and land_units and the views
+taught it, to say what an accepted entry already says); a day threshold before a built unit shows
+(a number to tune, and the gap is real the day it opens); a `closes` view word on the unit's link
+(the roadmap already says what a unit folds under); a separate start question per section (they read
+the ready view's own members, as **Held** and **Stalled** do).
 
 ## Related
 

@@ -33,6 +33,8 @@ import {
   readyOf,
   readyRows,
   stalledRows,
+  closingRows,
+  listOf,
   roadmapOf,
   startOf,
   startQuestions,
@@ -355,6 +357,136 @@ export function readyData(
   }
 }
 
+/** A done ready row that rows of another format's start question still point at. */
+export interface OwedLine {
+  readonly line: ViewLine
+  /** The row's name, as its line is headed. */
+  readonly name: string
+  /** How many of those rows. */
+  readonly open: number
+  /** The name of the row it folds under, or nothing when it folds under none. */
+  readonly under: string | undefined
+}
+
+/** A row the ready rows fold under that nothing of theirs holds open. */
+export interface ClosingLine {
+  readonly line: ViewLine
+  /** How many ready rows fold under it, every one done. */
+  readonly rows: number
+  /** How many rows of the owing formats still point at those. */
+  readonly open: number
+}
+
+export interface OwedData {
+  /** The ready view's done members: what *done* means for the rows owed. */
+  readonly done: readonly string[]
+  /** The format the ready rows fold under in a roadmap, and its members a list ticks as done. */
+  readonly under: { readonly format: FormatDeclaration; readonly done: readonly string[] } | undefined
+  readonly closing: readonly ClosingLine[]
+  readonly owed: readonly OwedLine[]
+  /** What makes a row of an owing format open, as its start view asks it: `review_entry` where `state is open`. */
+  readonly by: readonly string[]
+}
+
+/**
+ * **What a ready view's done rows still owe** (M61 U1) — another project's
+ * document had every unit built and every review entry still open, and two
+ * milestones open with nothing left under them, and nothing said so.
+ *
+ * Read from views the document already declares, so a document made before it
+ * needs nothing done to it: the rows that are *owed* are those of another
+ * format whose start view asks an `is` question (`review_entry`, `state is
+ * open`) and that link to a done ready row; the rows that may *close* are those
+ * of the roadmap the ready rows fold under, not ticked by that format's list
+ * `done`, with every row under them done. Nothing without those views.
+ */
+export function owedData(
+  db: Database,
+  declaration: FormatDeclaration,
+  declarations: readonly FormatDeclaration[],
+): OwedData | undefined {
+  const shape = readyOf<ColumnDeclaration>(declaration, viewSettings(db, declaration.name, 'ready'))
+  if (shape === undefined) return undefined
+  const rows = listRows(db, declaration, { limit: ROADMAP_CAP })
+  const stateOf = (row: StoredRow): string | undefined => textIn(shape.state, row) || undefined
+  const isDone = (row: StoredRow): boolean => shape.members.done.includes(stateOf(row) ?? '')
+
+  // Who owes: every format but this one whose start view asks only `is`, through each link to this one.
+  const counts = new Map<string, number>()
+  const asked: { readonly what: string; readonly ids: ReadonlySet<string> }[] = []
+  for (const owing of declarations) {
+    if (owing.name === declaration.name) continue
+    const links = owing.columns.filter((each) => (each.type === 'link' || each.type === 'links') && each.target === declaration.name)
+    const start = startOf(owing.columns, viewSettings(db, owing.name, 'start'))
+    if (links.length === 0 || start === undefined || start.is.length === 0 || start.latest !== undefined) continue
+    const ids = new Set<string>()
+    for (const row of listRows(db, owing, { match: startMatch(start), limit: ROADMAP_CAP })) {
+      for (const link of links) {
+        for (const id of idsIn(row.cells[link.name])) {
+          counts.set(id, (counts.get(id) ?? 0) + 1)
+          ids.add(id)
+        }
+      }
+    }
+    asked.push({ what: `${owing.name} where ${start.is.map((each) => `${each.column.name} is ${each.member}`).join(' and ')}`, ids })
+  }
+
+  // Where they fold: the first roadmap that folds these rows, and what its list ticks as done.
+  const fold = declarations
+    .map((each) => ({
+      format: each,
+      fold: roadmapOf<ColumnDeclaration, FormatDeclaration>(each, declarations, (name) => viewSettings(db, name, 'roadmap'))?.folds.find(
+        (folded) => folded.format.name === declaration.name,
+      ),
+    }))
+    .find((each) => each.fold !== undefined)
+  const through = fold?.fold?.through
+  const parentDone = fold === undefined ? undefined : listOf(fold.format.columns, viewSettings(db, fold.format.name, 'list')).done
+  const parents = fold === undefined ? [] : listRows(db, fold.format, { limit: ROADMAP_CAP })
+  const parentShape = fold === undefined ? undefined : entryLineShape(db, fold.format)
+  const parentName = new Map(
+    parents.map((row) => [row.id, parentShape === undefined ? row.id : nameOf(parentShape, row)] as const),
+  )
+  const underOf = (row: StoredRow): readonly string[] => (through === undefined ? [] : idsIn(row.cells[through.name]))
+  const openOn = (each: readonly StoredRow[]): number => each.reduce((sum, row) => sum + (counts.get(row.id) ?? 0), 0)
+
+  const closing =
+    fold === undefined || parentDone === undefined || parentShape === undefined
+      ? []
+      : closingRows(
+          [...parents].sort((a, b) => byName(parentName.get(a.id) ?? '', parentName.get(b.id) ?? '')),
+          rows,
+          shape.members.done,
+          (row) => row.id,
+          (row) => parentDone.members.includes(textIn(parentDone.column, row)),
+          underOf,
+          stateOf,
+        ).map((each) => ({
+          line: { format: fold.format, row: each.parent, shape: parentShape },
+          rows: each.rows.length,
+          open: openOn(each.rows),
+        }))
+
+  const owed = rows
+    .filter((row) => isDone(row) && (counts.get(row.id) ?? 0) > 0)
+    .sort((a, b) => byName(nameOf(shape, a), nameOf(shape, b)))
+    .map((row) => ({
+      line: { format: declaration, row, shape },
+      name: nameOf(shape, row),
+      open: counts.get(row.id) ?? 0,
+      under: underOf(row).map((id) => parentName.get(id)).find((name) => name !== undefined),
+    }))
+
+  return {
+    done: shape.members.done,
+    under: fold === undefined || parentDone === undefined ? undefined : { format: fold.format, done: parentDone.members },
+    closing,
+    owed,
+    // Only the formats that point at a row shown: an inbox with nothing new on a unit owes nothing.
+    by: asked.filter((each) => owed.some((line) => each.ids.has(line.line.row.id))).map((each) => each.what),
+  }
+}
+
 /**
  * The views a format has, as the tab strip on its sheet offers them (M27 U3-U5; the View menu until M53 U4):
  * the sheet always, a board with an enum, a roadmap when `roadmapOf` finds
@@ -418,6 +550,8 @@ export interface StartAnswer {
   /** A ready view's stalled rows (M51 F4), and the date they are counted from; empty for a start view. */
   readonly stalled: readonly ViewLine[]
   readonly stalls: { readonly column: ColumnDeclaration; readonly days: number } | undefined
+  /** A ready view's done rows still owed, and the rows they fold under that may close (M61 U1); nothing for a start view. */
+  readonly owed: OwedData | undefined
   /** The columns the question already says the value of — not printed again on every line. */
   readonly asked: readonly ColumnDeclaration[]
   readonly labels: ReadonlyMap<string, string>
@@ -456,6 +590,7 @@ export function startHere(db: Database, declarations: readonly FormatDeclaration
           held: ready.held,
           stalled: ready.stalled,
           stalls: ready.shape.stalls,
+          owed: owedData(db, declaration, declarations),
           asked: [ready.shape.state],
           labels: ready.labels,
         },
@@ -490,6 +625,7 @@ export function startHere(db: Database, declarations: readonly FormatDeclaration
         held: [],
         stalled: [],
         stalls: undefined,
+        owed: undefined,
         asked: shape.is.map((each) => each.column),
         labels,
       },

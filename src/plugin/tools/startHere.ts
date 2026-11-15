@@ -34,7 +34,7 @@ import { readDocument } from '../document.ts'
 import { elsewhereLabels, elsewhereValues } from '../elsewhere.ts'
 import { paragraphs, plural } from '../format.ts'
 import { clockRange } from '@/domain/format/clock.ts'
-import { dayText } from '@/domain/format/view.ts'
+import { byName, dayText } from '@/domain/format/view.ts'
 
 import { askedOn, cellText, compactDeclarations, lastChanged } from './formats.ts'
 import { drawnLine, withView } from './sheet.ts'
@@ -126,6 +126,55 @@ function stalledText(
       return `- ${lineText(line, labels, state === undefined ? [] : [state])} · ${taken === '-' ? `no ${stalls.column.name}` : `${stalls.column.name} ${taken}`}`
     }),
   ].join('\n')
+}
+
+/** How many groups of owed rows the answer names before it says how many more. */
+const OWED_SHOWN = 10
+
+/**
+ * **What a ready view's done rows still owe** (M61 U1): the rows they fold
+ * under that nothing holds open — a milestone whose units are all built — and
+ * the done rows another format's open rows still point at, grouped by what
+ * they fold under, newest first. Every one shown at once, however recently
+ * it was done (the maintainer, 2026-11-15). Nothing closes here: a person's
+ * word does that.
+ */
+function owedText(answer: StartAnswer): readonly (string | undefined)[] {
+  const owed = answer.owed
+  if (owed === undefined) return []
+  const { declaration } = answer
+  const doneText = owed.done.join(' or ')
+  const closing =
+    owed.under === undefined || owed.closing.length === 0
+      ? undefined
+      : [
+          `Ready to close — ${owed.under.format.name} not ${owed.under.done.join(' or ')}, with every ${declaration.name} under it ${doneText}. ` +
+            'Closing one is a person’s word; this says only that nothing under it is still open:',
+          ...owed.closing.map((each) => {
+            const state = each.line.shape.state
+            const open = each.open === 0 ? 'nothing open on them' : `${plural(each.open, 'row')} still open on them`
+            return `- ${lineText(each.line, answer.labels, state === undefined ? [] : [state])} · ${plural(each.rows, declaration.name)} · ${open}`
+          }),
+        ].join('\n')
+  if (owed.owed.length === 0) return [closing]
+  const groups = new Map<string, string[]>()
+  for (const each of owed.owed) {
+    const key = each.under ?? ''
+    groups.set(key, [...(groups.get(key) ?? []), `${each.name} (${String(each.open)})`])
+  }
+  const ordered = [...groups.keys()].sort((a, b) => (a === '' ? 1 : b === '' ? -1 : -byName(a, b)))
+  const total = owed.owed.reduce((sum, each) => sum + each.open, 0)
+  const shown = ordered.slice(0, OWED_SHOWN).map((key) => `- ${key === '' ? '' : `${key}: `}${(groups.get(key) ?? []).join(', ')}`)
+  const more = ordered.length - shown.length
+  return [
+    closing,
+    [
+      `Still owed — ${plural(owed.owed.length, declaration.name)} ${doneText}, with ${plural(total, 'row')} still open on them ` +
+        `(${owed.by.join('; ')}):`,
+      ...shown,
+      ...(more > 0 ? [`- and ${String(more)} more`] : []),
+    ].join('\n'),
+  ]
 }
 
 /** How far ahead `start_here` asks the agenda: a week, today and the seven days after it (D-472's `within 7 days`). */
@@ -275,6 +324,7 @@ ${text}`, path, '', 'start') : { text, meta: {} }
                   ),
                 ].join('\n')
           const stuck = stalledText(answer, labels, stalled, stalls)
+          const [closing, owing] = owedText(answer)
           const whole =
             question.call === undefined
               ? undefined
@@ -285,6 +335,8 @@ ${text}`, path, '', 'start') : { text, meta: {} }
             body,
             waiting,
             stuck,
+            closing,
+            owing,
             whole,
           )
         })

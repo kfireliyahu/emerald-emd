@@ -6,7 +6,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { column, DECLARATION_LANGUAGE, type FormatDeclaration } from '@/domain/format/declaration.ts'
 import { readViews } from '@/domain/format/document.ts'
 import { selfLinks } from '@/domain/format/row.ts'
-import { readReadyState, readStalls, readStartSetting, readyOf, startOf, startQuestions } from '@/domain/format/view.ts'
+import { closingRows, readReadyState, readStalls, readStartSetting, readyOf, startOf, startQuestions } from '@/domain/format/view.ts'
 import { recordFormatRowsTool, updateFormatRowsTool } from '@/plugin/tools/formats.ts'
 import { startHereTool } from '@/plugin/tools/startHere.ts'
 import { NO_CLIENT } from '@/plugin/tools/tool.ts'
@@ -333,5 +333,130 @@ taken_by: line
         '- J3 · by hand · no started',
     )
     expect(answer).not.toContain('- J2 · session B · started')
+  })
+})
+
+describe('what a milestone still owes (M61 U1)', () => {
+  const PHASE = format('phase', [
+    column('ref', 'text', { required: true, unique: true }),
+    column('title', 'text'),
+    column('state', 'enum', { values: ['planned', 'open', 'closed'], required: true }),
+    column('position', 'integer'),
+  ])
+  const PIECE = format('piece', [
+    column('ref', 'text', { required: true, unique: true }),
+    column('phase', 'link', { target: 'phase' }),
+    column('state', 'enum', { values: ['planned', 'in_progress', 'built', 'dropped'], required: true }),
+    column('blocks', 'links', { target: 'piece' }),
+  ])
+  const CHECK = format('check', [
+    column('piece', 'link', { target: 'piece', required: true }),
+    column('state', 'enum', { values: ['open', 'accepted', 'fault', 'dropped'], required: true }),
+  ])
+  const VIEWED = `---
+emerald: views
+---
+
+### check start
+piece: line
+state: is open
+
+### phase list
+state: done closed
+
+### phase roadmap
+position: order
+title: line
+
+### piece ready
+blocks: waits
+state: ready planned done built dropped
+
+### piece roadmap
+phase: under
+`
+
+  async function withPhases(views = VIEWED) {
+    const db = await createDatabase()
+    for (const each of [PHASE, PIECE, CHECK]) expect(adoptFormat(db, each, NOW).refusals).toEqual([])
+    const read = readViews(views)
+    if (!read.ok) throw new Error(read.error)
+    restoreViewSettings(db, read.value.views)
+    const [p1 = '', p2 = '', , p4 = ''] = insertRows(db, PHASE, [
+      { ref: 'P1', title: 'All built, one check open', state: 'planned', position: 1 },
+      { ref: 'P2', title: 'One piece still planned', state: 'open', position: 2 },
+      { ref: 'P3', title: 'Nothing under it yet', state: 'planned', position: 3 },
+      { ref: 'P4', title: 'Closed already', state: 'closed', position: 4 },
+    ])
+    const [a = '', b = '', c = '', d = '', e = ''] = insertRows(db, PIECE, [
+      { ref: 'A1', phase: p1, state: 'built' },
+      { ref: 'A2', phase: p1, state: 'dropped' },
+      { ref: 'B1', phase: p2, state: 'built' },
+      { ref: 'B2', phase: p2, state: 'planned' },
+      { ref: 'D1', phase: p4, state: 'built' },
+    ])
+    insertRows(db, CHECK, [
+      { piece: a, state: 'open' },
+      { piece: b, state: 'accepted' },
+      { piece: c, state: 'open' },
+      { piece: c, state: 'open' },
+      { piece: d, state: 'open' },
+      { piece: e, state: 'open' },
+      { piece: b, state: 'fault' },
+    ])
+    return db
+  }
+
+  it('is a phase not done whose pieces are all done, and never one with nothing under it', () => {
+    const closing = closingRows(
+      ['P1', 'P2', 'P3', 'P4'],
+      [
+        { under: 'P1', state: 'built' },
+        { under: 'P1', state: 'dropped' },
+        { under: 'P2', state: 'built' },
+        { under: 'P2', state: 'planned' },
+        { under: 'P4', state: 'built' },
+      ],
+      ['built', 'dropped'],
+      (id) => id,
+      (id) => id === 'P4',
+      (row) => [row.under],
+      (row) => row.state,
+    )
+    expect(closing.map((each) => [each.parent, each.rows.length])).toEqual([['P1', 2]])
+  })
+
+  it('says what may close and what is still owed, from the views the document already has', async () => {
+    const db = await withPhases()
+    const path = join(tempDirSync('emerald-owed-'), 'phases.emd')
+    writeFileSync(path, exportDatabase(db))
+    db.close()
+    const answer = await startHereTool.run({ path }, NO_CLIENT)
+    expect(answer).toContain(
+      'Ready to close — phase not closed, with every piece under it built or dropped. ' +
+        'Closing one is a person’s word; this says only that nothing under it is still open:\n' +
+        '- P1 · 2 pieces · 1 row still open on them',
+    )
+    expect(answer).not.toContain('- P2 ·')
+    expect(answer).not.toContain('- P3 ·')
+    expect(answer).not.toContain('- P4 ·')
+    // B2 is planned, so its open check is not owed; an accepted or a faulted check owes nothing.
+    expect(answer).toContain(
+      'Still owed — 3 pieces built or dropped, with 4 rows still open on them (check where state is open):\n' +
+        '- P4: D1 (1)\n- P2: B1 (2)\n- P1: A1 (1)',
+    )
+  })
+
+  it('still says what is owed when the phase’s list says no done, and offers nothing to close', async () => {
+    const db = await withPhases(VIEWED.replace('### phase list\nstate: done closed\n', ''))
+    const [answer] = startHere(db, [PHASE, PIECE, CHECK])
+    expect(answer?.owed?.under).toBeUndefined()
+    expect(answer?.owed?.closing).toEqual([])
+    expect(answer?.owed?.owed.map((each) => [each.name, each.open, each.under])).toEqual([
+      ['A1', 1, 'P1'],
+      ['B1', 2, 'P2'],
+      ['D1', 1, 'P4'],
+    ])
+    db.close()
   })
 })

@@ -1206,6 +1206,41 @@ export function stalledRows<R>(
     .sort((a, b) => byName(nameOf(a), nameOf(b)))
 }
 
+/** A row the ready rows fold under that nothing of theirs holds open, and those rows. */
+export interface Closing<P, R> {
+  readonly parent: P
+  readonly rows: readonly R[]
+}
+
+/**
+ * **What is ready to close** (M61 U1): the rows a ready view's rows fold
+ * under — a roadmap's milestones — that are not done themselves, have at least
+ * one row folded under them, and every one of those in a done member. A row
+ * with nothing under it is still being planned, never ready (the maintainer,
+ * 2026-11-15). In the parents' order. It says nothing holds a row open; closing
+ * it stays the owner's word.
+ */
+export function closingRows<P, R>(
+  parents: readonly P[],
+  rows: readonly R[],
+  done: readonly string[],
+  idOf: (parent: P) => string,
+  closed: (parent: P) => boolean,
+  under: (row: R) => readonly string[],
+  stateOf: (row: R) => string | undefined,
+): readonly Closing<P, R>[] {
+  const folded = new Map<string, R[]>()
+  for (const row of rows) {
+    for (const id of under(row)) folded.set(id, [...(folded.get(id) ?? []), row])
+  }
+  return parents.flatMap((parent): Closing<P, R>[] => {
+    if (closed(parent)) return []
+    const mine = folded.get(idOf(parent)) ?? []
+    if (mine.length === 0) return []
+    return mine.every((row) => done.includes(stateOf(row) ?? '')) ? [{ parent, rows: mine }] : []
+  })
+}
+
 /** A row that would be ready but for the rows it waits on that are still open. */
 export interface Held<R> {
   readonly row: R

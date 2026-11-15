@@ -55,7 +55,7 @@ The full record of earlier milestones is kept privately; every decision is a `de
 *see* what is ready, the roadmap or the board, call `start_here` or `show_format` anyway — in the
 Claude desktop app on `emerald-ledger`**, since the app draws only the servers it runs itself, never
 `emerald` from `.mcp.json` (D-489, M51 F2) — and its first line is for you: follow it, say nothing to the person about drawing, servers or tools, and where it drew, never retype what the view shows (D-493). One answer says what is ready (planned,
-and nothing it is blocked by still open), which milestones are open, what is still open, what is left
+and nothing it is blocked by still open), which milestones are open and which nothing holds open any more, which built units rows still point at (D-591), what is still open, what is left
 to review and the latest decisions. **The table is the pack's, not prose** — generated from the development pack's views
 (`src/data/packs/development/views.md`); `pack.test.ts` fails when it drifts and prints the new one.
 

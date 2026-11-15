@@ -874,6 +874,14 @@ landing takes the builder's `report`, plain text up to 4,000 characters, kept on
 `format_rows unit match:{ref:"<ref>"} columns:[report]` is the whole of it. A child's proposal
 carries its `report` like any other key.
 
+**What a milestone still owes** (M61 U1, D-591). Under the ready answer, `start_here` says two
+more things, read from views the document already declares. **Ready to close** is every milestone
+its list does not tick done (`done closed`) whose units, at least one, are all built or dropped, with
+how many rows are still open on them; it offers, and closing stays a person's word. **Still owed** is
+every built or dropped unit that rows of another format's start question still point at —
+`review_entry where state is open` — with how many, grouped by milestone, newest first. There is no
+state between built and done: an accepted review entry is what says it was checked.
+
 **A child proposes, its manager lands** (M51 U3, D-485). A session run
 for a manager — a worktree's child — does not call `land_units`: it writes **one `inbox` row**,
 `state: new`, whose `refs` is its unit's ref and whose `body` is a line for a person and then one
