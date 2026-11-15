@@ -4931,6 +4931,16 @@ answer: After its diff, land_units lists each landed unit's open review entries 
 state: live
 affects: "src/plugin/tools/landing.ts\n.claude/skills/closing-pass/SKILL.md\nhosts/claude/skills/closing-pass/SKILL.md\ndocs/plugin.md"
 
+### D-593
+date: 2026-11-15
+milestone: M61
+scope: plugin
+title: A landing takes follow_ups, each a planned unit (with a brief, under Later unless it names a milestone), an open question or a review entry, written with the rest; a report that sounds owed and names none is quoted back, never refused
+question: How does work a unit's report says is still owed become something a later session finds?
+answer: land_units takes follow_ups on each unit: {kind: unit|question|review, ...its columns}, written in the same all-or-none batch. unit: a planned unit, brief required (refused without), scope the landed unit's unless given, milestone Later when the document has a milestone Later, else the landed unit's own. question: an open question. review: a review entry on the landed unit. A landing with no follow_ups whose report has a line that sounds owed (to remove, later, not yet, TODO, polish in, leftover, follow-up, still to) lands and quotes those lines back with how to write each as a row; follow_ups: [] says nothing is owed. A child's proposal may carry follow_ups. leftOverLines in src/plugin/tools/landing.ts. The engine-only definitions budget is 58.5k (server.test.ts).
+state: live
+affects: "src/plugin/tools/landing.ts\nsrc/plugin/server.test.ts\n.claude/skills/closing-pass/SKILL.md\ndocs/plugin.md"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -12086,6 +12096,15 @@ branch: main
 commit: dd0d3b0b
 paths: "src/frame/host.ts\nsrc/frame/main.tsx\nsrc/frame/host.test.ts\nscripts/try-frame.mjs\ndocs/plugin.md"
 
+### Later U-shipped-landing-skill
+milestone: Later
+scope: plugin
+title: The shipped closing-pass skill learns accept_entries and follow_ups, with the release that ships them
+state: planned
+brief: M61 U2 (D-592) and U3 (D-593) added accept_entries and follow_ups to land_units, and the repo's own closing-pass skill (.claude/skills) tells sessions to use them. The shipped one (hosts/claude/skills/closing-pass/SKILL.md) does not, because the plugin runs the published emerald-mcp 0.4.0, which would refuse both keys. With the next emerald-mcp release that ships M61's server code, copy the two bullets (accept_entries; 'Anything left over? → follow_ups') and the proposal line ('no close_milestone or accept_entries', follow_ups allowed) from .claude/skills/closing-pass/SKILL.md into the shipped skill, then node scripts/pin-plugin.mjs (the pins, after npm serves the version). Never before the package is published: a pin or a skill ahead of the package tells installed sessions to send keys their server refuses.
+files: hosts/claude/skills/closing-pass/SKILL.md, .claude/skills/closing-pass/SKILL.md, scripts/pin-plugin.mjs
+paths: "hosts/claude/skills/closing-pass/SKILL.md\nhosts/claude-plugin-release.json"
+
 ### Later U-template
 milestone: Later
 scope: engine
@@ -17355,11 +17374,18 @@ report: land_units now prints, after its diff, each landed unit's open review en
 milestone: M61
 scope: plugin
 title: Follow-ups in a report become rows when the unit lands
-state: planned
+landed: 2026-11-15
+decision: D-593
+state: built
 brief: Inbox 2026-11-13 ('Turn follow-ups written in a report into rows'). Unit reports in another project held work still owed: leftovers to remove, an environment variable pointing at the wrong JDK, 'polish in M3'. As prose in `report`, nothing brings them up again. land_units takes the follow-ups with the landing and writes each as a row: a planned unit, an open question or a review entry, all or none with the rest. When the report has follow-up wording ('to remove', 'later', 'not yet', 'TODO', 'polish in') and no follow-ups were given, the answer quotes those lines and asks. The closing pass asks 'anything left over?'. Shares landing.ts with U2, so it waits for it. Carried from U2 (D-592): the shipped closing-pass skill, hosts/claude/skills/closing-pass/SKILL.md, does not mention accept_entries yet, because the plugin runs the published emerald-mcp 0.4.0, which would refuse it. Add U2's bullet and U3's there only together with an emerald-mcp release that ships the server code, then pin with node scripts/pin-plugin.mjs. Before building, ask the maintainer: which milestone a follow-up unit goes to when none is named (Later, or the landed unit's own), and whether a follow-up unit needs a brief to be written.
-files: src/plugin/tools/landing.ts, hosts/claude/skills/closing-pass/SKILL.md
+files: src/plugin/tools/landing.ts, src/plugin/tools/landing.test.ts, src/plugin/server.test.ts, .claude/skills/closing-pass/SKILL.md, docs/plugin.md, docs/09-decision-log.md
 blocks: ["M61 U2"]
+taken_by: claude-desktop session d6fe630d
+started: 2026-11-15
+branch: main
+commit: 27dccca
 paths: src/plugin/tools/landing.ts src/plugin/tools/landing.test.ts hosts/claude/skills/closing-pass/SKILL.md .claude/skills/closing-pass/SKILL.md
+report: land_units now takes follow_ups (unit with a required brief and Later by default, open question, or review entry on the landed unit), and quotes a report's owed-sounding lines back when none are given; the landing never refuses for that. The maintainer chose all four defaults on 2026-11-15. A child's proposal may carry follow_ups (not asked; the driver still lands it, and it is the builder's knowledge rather than a judgement). The engine-only definitions grew past 58k with U2 and U3's two parameters; the land_units description was trimmed and the budget moved to 58.5k with the reason in the test. The shipped closing-pass skill (hosts/claude) still lacks accept_entries and follow_ups: that waits for the emerald-mcp release that ships this code, and is now a parked unit under Later. Full suite 5755 passed; dist-plugin rebuilt locally.
 
 ### M61 U4
 milestone: M61
