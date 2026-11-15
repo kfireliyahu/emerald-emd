@@ -4911,6 +4911,16 @@ answer: A sentence with a value is one catalogue word with {name} placeholders; 
 state: live
 affects: "src/i18n/he/rail.ts\nscripts/probe-screens.mjs\nsrc/ui/probe.ts"
 
+### D-591
+date: 2026-11-15
+milestone: M61
+scope: plugin
+title: start_here says what a milestone still owes: the milestones nothing under them holds open, and the built units rows still point at, read from views a document already declares, with no new unit state
+question: How does a development document stop claiming less than it knows: units built with every review entry still open, and milestones open with nothing left under them?
+answer: Under the ready answer, start_here prints Ready to close: every milestone its list does not tick done (done closed) with at least one unit under it and every unit built or dropped, with how many rows are still open on them; a milestone with no units is never ready, and closing stays a person's word. And Still owed: every built or dropped unit that a row of another format's start question (review_entry where state is open) still points at, with how many, grouped by milestone, newest first, ten groups then a count, shown at once however recently it landed. No verified unit state: an accepted review entry says it was checked (maintainer, 2026-11-13). Read from views the document already declares (the roadmap fold, the parent's list done, other formats' start views), so no keep_packs and no new view word; only formats that point at a shown row are named. closingRows in src/domain/format/view.ts, owedData in src/data/repositories/formatLinkViewRepository.ts.
+state: live
+affects: "src/plugin/tools/startHere.ts\nsrc/data/repositories/formatLinkViewRepository.ts\nsrc/domain/format/view.ts\ndocs/plugin.md"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -17303,10 +17313,17 @@ report: Emerald 0.4.0 cut and released (M60 U8, D-583). Version 0.3.1 -> 0.4.0 i
 milestone: M61
 scope: plugin
 title: start_here says what a milestone still owes: ready to close, and built with review entries open
-state: planned
+landed: 2026-11-15
+decision: D-591
+state: built
 brief: Inbox 2026-11-13 ('Offer to close a milestone whose units are all built', and the start_here half of 'Close review entries a unit's report already proves'). start_here gains a section for milestones that are not closed and whose units are all built or dropped. Each one is a line of what still holds it open, such as 'M58: all 6 units built, 0 review entries open', so the maintainer can close it with one word. The same section lists built units whose review entries are still open ('built, 2 review entries open'). Decided (maintainer, 2026-11-13): there is no new unit state between built and done; this line is how the gap shows. It offers, and never closes: close_milestone stays the maintainer's word. The table in CLAUDE.md is generated from views.md and pack.test.ts prints the new one; regenerate it. Before building, ask the maintainer: whether built units with open entries show only after some number of days or at once (the inbox row suggested N days), and whether a milestone with no units at all counts as ready.
-files: src/plugin/tools/startHere.ts, src/data/packs/development/views.md
+files: src/plugin/tools/startHere.ts, src/data/repositories/formatLinkViewRepository.ts (owedData), src/domain/format/view.ts (closingRows), src/data/repositories/formatReady.test.ts, docs/plugin.md, docs/09-decision-log.md, CLAUDE.md
+taken_by: claude-desktop session d6fe630d
+started: 2026-11-15
+branch: main
+commit: e9ff655
 paths: src/plugin/tools/startHere.ts src/plugin/tools/startHere.test.ts src/data/packs/development/views.md src/data/packs/development/pack.test.ts
+report: start_here now prints two more paragraphs under Ready to start, from views a document already has (no keep_packs). Ready to close: milestones not closed whose units are all built or dropped (never one with no units), with rows still open on them. Still owed: built or dropped units that open review entries point at, grouped by milestone, newest first, capped at ten groups. On memory.emd today: M58 (6 units, nothing open) and M59 (6 units, 5 rows open) are ready to close; 46 units carry 114 open review entries, most under M54 U5 (35) and M34 T1 (18). The maintainer answered both open choices: shown at once, and a milestone with no units is not ready. Full suite 5744 passed; typecheck clean. Nothing closes a milestone: that stays the maintainer's word.
 
 ### M61 U2
 milestone: M61
@@ -17496,7 +17513,7 @@ title: line
 emerald: changed
 ---
 
-decision: 2026-11-11
+decision: 2026-11-15
 finding: 2026-10-22
 inbox: 2026-11-13
 milestone: 2026-11-13
@@ -17504,4 +17521,4 @@ open_question: 2026-11-13
 review_entry: 2026-11-13
 rule: 2026-11-11
 term: 2026-11-11
-unit: 2026-11-13
+unit: 2026-11-15
