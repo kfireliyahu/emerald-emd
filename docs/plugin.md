@@ -889,6 +889,13 @@ report proves, each by the start of its `do` (exactly one open entry, or the lan
 whole); afterwards, `update_format_rows review_entry` by `where:{unit, do}`. A child's proposal may not
 accept; its driver does.
 
+**What a landing leaves owed becomes rows** (M61 U3, D-593). `follow_ups` on a landing, each
+`{kind: unit|question|review, …its columns}`, writes a planned unit (a `brief` required; under Later
+unless it names a milestone, or under its own milestone where the document has no Later), an open
+question, or a review entry on the landed unit, in the same batch. A landing that names none, whose
+report has a line that sounds owed (*to remove*, *not yet*, *TODO*, *polish in* …), lands and quotes
+those lines back; `follow_ups: []` says nothing is owed.
+
 **A child proposes, its manager lands** (M51 U3, D-485). A session run
 for a manager — a worktree's child — does not call `land_units`: it writes **one `inbox` row**,
 `state: new`, whose `refs` is its unit's ref and whose `body` is a line for a person and then one

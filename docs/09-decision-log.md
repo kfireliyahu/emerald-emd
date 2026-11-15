@@ -495,6 +495,7 @@ written out here.
 | D-590 | 2026-11-11 | The second half of the screens speaks through the layer: a sentence with a value in it is one word with placeholders drawn by `Phrase`, a word outside a render is `tNow`, a category path's arrow points the way its own words run, a menu opens from its control's start edge, and a test reads the source for typed English | M60 |
 | D-591 | 2026-11-15 | `start_here` says what a milestone still owes: the milestones nothing under them holds open, and the built units rows still point at, read from views a document already declares, with no new unit state | M61 |
 | D-592 | 2026-11-15 | A landing lists the unit's open review entries beside its report and accepts in the same call the ones named by the start of their `do`; nothing picks which the report proves, a child's proposal never accepts, and nothing new is written on an entry | M61 |
+| D-593 | 2026-11-15 | A landing takes `follow_ups`, each a planned unit (with a brief, under Later unless it names a milestone), an open question or a review entry, written with the rest; a report that sounds owed and names none is quoted back, never refused | M61 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -951,6 +952,34 @@ nothing linked the two, so the entry stayed open (inbox, 2026-11-13). D-591 made
 proposal accept (the builder grading its own work, unseen by the driver); an `accepted_by` column (a
 pack format change for what the unit's report already says); accepting by a number from the listing
 (the number belongs to one answer, and the next write may reorder it).
+
+## D-593 · 2026-11-15 · A landing takes `follow_ups`, each a planned unit (with a brief, under Later unless it names a milestone), an open question or a review entry, written with the rest; a report that sounds owed and names none is quoted back, never refused <a id="d-593"></a>
+
+**Context.** Unit reports in another project held work still owed — leftovers to remove, an
+environment variable pointing at the wrong JDK, "polish in M3" — and as prose in `report` nothing
+would bring them up again (inbox, 2026-11-13). A report records what happened; a row is how a later
+session learns what is owed.
+
+**Decision.** (M61 U3; points 1 to 4 are the maintainer's, 2026-11-15.)
+
+1. **`follow_ups` on a landing**, each `{kind, …its columns}`, written in the same all-or-none
+   batch: `unit` a planned unit, `question` an open question, `review` a review entry on the landed
+   unit.
+2. **A follow-up unit carries a `brief`**, or the call is refused: the session that takes it starts
+   from the brief, not the report. Its scope is the landed unit's unless it says otherwise.
+3. **Under Later** when it names no milestone and the document has a milestone `Later`, so it never
+   quietly holds the open milestone open; in a document without one, under the landed unit's own.
+4. **Quoted, never refused.** A landing with no `follow_ups` whose report has a line that sounds owed
+   (*to remove*, *later*, *not yet*, *TODO*, *polish in*, *leftover*, *follow-up*, *still to*) lands,
+   and its answer quotes those lines and says how to write each as a row; `follow_ups: []` says nothing
+   is owed and quiets it.
+
+A child's proposal may carry `follow_ups`: it is the builder's knowledge of what is left, not a
+judgement of its own work, and the driver lands it.
+
+**Rejected.** Refusing the landing until it answers (a word like *later* in a report is often
+nothing); follow-up units in the landed unit's milestone by default (an open milestone that keeps
+growing); a title alone for a follow-up unit (a unit no session can start without the report).
 
 ## Related
 

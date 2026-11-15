@@ -112,6 +112,40 @@ interface Landing {
   readonly report: string | undefined
   /** Its open review entries the report proves, each by the start of its `do` (M61 U2). */
   readonly acceptEntries: readonly string[]
+  /** What it leaves owed, each a row of its kind (M61 U3) — or nothing, when the landing does not say. */
+  readonly followUps: readonly FollowUp[] | undefined
+}
+
+/** The kinds of row a follow-up becomes (M61 U3, the maintainer, 2026-11-15). */
+const FOLLOW_UP_KINDS = ['unit', 'question', 'review'] as const
+
+/** One piece of work a landing leaves owed: its kind and the row's own columns. */
+interface FollowUp {
+  readonly kind: (typeof FOLLOW_UP_KINDS)[number]
+  readonly columns: Readonly<Record<string, unknown>>
+}
+
+/**
+ * A landing's `follow_ups`, or nothing when it does not say — which is not the
+ * same as `[]`, *nothing is owed*. A follow-up unit carries a `brief`, so the
+ * session that takes it needs no report to start (the maintainer, 2026-11-15).
+ */
+function followUpsOf(entry: Record<string, unknown>, field: string): readonly FollowUp[] | undefined {
+  if (entry['follow_ups'] === undefined || entry['follow_ups'] === null) return undefined
+  return objectsOf(entry['follow_ups'], `${field}.follow_ups`).map((each, index) => {
+    const at = `${field}.follow_ups[${String(index)}]`
+    const kind = each['kind']
+    if (typeof kind !== 'string' || !(FOLLOW_UP_KINDS as readonly string[]).includes(kind)) {
+      throw new ToolInputError(
+        `\`${at}.kind\` is ${FOLLOW_UP_KINDS.map((one) => `\`${one}\``).join(', ')} — a planned unit, an open question, or a review entry on this unit.`,
+      )
+    }
+    const { kind: _kind, ...columns } = each
+    if (kind === 'unit' && (typeof columns['brief'] !== 'string' || columns['brief'].trim() === '')) {
+      throw new ToolInputError(`\`${at}\` is a unit, and a follow-up unit carries a \`brief\`: a line or two a session can start from without the report.`)
+    }
+    return { kind: kind as FollowUp['kind'], columns }
+  })
 }
 
 /** A git commit as a person or a tool prints it: 7 to 40 hex digits. */
@@ -201,6 +235,7 @@ const LANDING_KEYS = new Set([
   'other_branch',
   'report',
   'accept_entries',
+  'follow_ups',
 ])
 
 /**
@@ -249,6 +284,7 @@ function landingOf(raw: unknown, field: string, keys: ReadonlySet<string>): Land
     sameCommit,
     report: reportOf(entry, field),
     acceptEntries: textsOf(entry, 'accept_entries', field),
+    followUps: followUpsOf(entry, field),
   }
 }
 
@@ -530,6 +566,11 @@ function landingSteps(
   const entries: Record<string, unknown>[] = []
   const accepted: Record<string, unknown>[] = []
   const stillOpen: string[] = []
+  const owedUnits: Record<string, unknown>[] = []
+  const owedQuestions: Record<string, unknown>[] = []
+  // A follow-up unit with no milestone is parked under Later where the document has one (the
+  // maintainer, 2026-11-15), so it never quietly holds the open milestone open.
+  const later = milestones === undefined ? undefined : byRef(document, milestones, 'Later')
   const closing = new Map<string, string>()
   /** Each unit's ref as its row has it and the decision it names, for the inbox row it answers. */
   const landedAs = new Map<string, { readonly ref: string; readonly decision: string | undefined }>()
@@ -611,6 +652,21 @@ function landingSteps(
     }
     const left = open.filter((each) => !taken.has(each.id))
     if (left.length > 0) stillOpen.push(stillOpenText(ref, left, landing.report ?? textCell(row, 'report')))
+    // What it leaves owed (M61 U3): each follow-up a row of its kind, with the rest of the landing.
+    for (const owed of landing.followUps ?? []) {
+      if (owed.kind === 'unit') {
+        owedUnits.push({ milestone: later === undefined ? milestone : 'Later', scope, state: 'planned', ...owed.columns })
+      } else if (owed.kind === 'question') {
+        owedQuestions.push({ state: 'open', ...owed.columns })
+      } else {
+        entries.push({ unit: ref, state: 'open', ...owed.columns })
+      }
+    }
+    // A report that says work is left, and a landing that does not say: quoted, and asked.
+    if (landing.followUps === undefined) {
+      const lines = leftOverLines(landing.report)
+      if (lines.length > 0) stillOpen.push(leftOverText(ref, lines))
+    }
     if (landing.closeMilestone !== undefined) closing.set(landing.closeMilestone.toLowerCase(), landing.closeMilestone)
   }
 
@@ -632,6 +688,10 @@ function landingSteps(
   if (entries.length > 0) steps.push(stepOf('review_entry', entries.length, recordMutation('review_entry', entries)))
   if (accepted.length > 0) {
     steps.push(stepOf('review_entry accepted', accepted.length, updateMutation('review_entry', accepted)))
+  }
+  if (owedUnits.length > 0) steps.push(stepOf('unit follow-ups', owedUnits.length, recordMutation('unit', owedUnits)))
+  if (owedQuestions.length > 0) {
+    steps.push(stepOf('open_question', owedQuestions.length, recordMutation('open_question', owedQuestions)))
   }
   if (closing.size > 0) {
     const closes = [...closing.values()].map((ref) => ({ where: { ref }, expect: { state: 'open' }, values: { state: 'closed' } }))
@@ -710,6 +770,40 @@ function stillOpenText(ref: string, open: readonly OpenEntry[], report: string |
   )
 }
 
+/**
+ * Words a report uses for work it leaves owed (M61 U3): leftovers *to remove*,
+ * a fix *not yet* made, *polish in M3*. A line holding one is quoted back when
+ * the landing gives no `follow_ups`; nothing is refused for it.
+ */
+const LEFT_OVER = /\b(?:to remove|later|not yet|todo|polish in|left over|leftovers?|follow[- ]?ups?|still to)\b/i
+
+/** How many such lines an answer quotes. */
+const LEFT_OVER_SHOWN = 5
+
+/** The report's lines (or sentences, in a one-line report) that say work is left. */
+export function leftOverLines(report: string | undefined): readonly string[] {
+  if (report === undefined) return []
+  return report
+    .split(/\r?\n|(?<=[.;!?])\s+(?=[A-Z])/)
+    .map((line) => line.trim())
+    .filter((line) => line !== '' && LEFT_OVER.test(line))
+}
+
+function leftOverText(ref: string, lines: readonly string[]): string {
+  const quoted = JSON.stringify(ref)
+  return paragraphs(
+    `## Anything left over on ${ref}?`,
+    'Its report says work may be left, and the landing named no `follow_ups`. If any of it is owed, write it ' +
+      'as a row now, so a later session finds it: `record_format_rows unit` (planned, under Later, with a `brief`), ' +
+      `\`record_format_rows open_question\`, or \`record_format_rows review_entry\` with \`unit:${quoted}\`. ` +
+      'Next time, `follow_ups` on the landing writes them with it; `follow_ups: []` says nothing is owed.',
+    lines
+      .slice(0, LEFT_OVER_SHOWN)
+      .map((line) => `> ${oneLine(line)}`)
+      .join('\n>\n'),
+  )
+}
+
 /** A cell on one line of a list. */
 function oneLine(text: string): string {
   return text.replace(/\s+/g, ' ').trim()
@@ -724,13 +818,12 @@ export const landUnitsTool: PluginTool = {
       '(date, milestone, scope and `state: live` default to the unit’s), the unit to `built` with ' +
       '`landed` (default today), `files` and `decision` (default its first new one), its ' +
       '`review_entries` (`state: open` default), `close_milestone`, its git `commit` (refused without ' +
-      'one unless `same_commit: true`) and `branch` (another than the claim’s refused unless ' +
-      '`other_branch`), the `report` of the session that built it, and `accept_entries`: open review ' +
-      'entries it proves, by their `do`’s start. Or `inbox`: ids of a child’s ' +
+      'one unless `same_commit: true`) and `branch` (refused off the claim’s unless ' +
+      '`other_branch`), its builder’s `report`, `accept_entries` (open review entries it proves, by ' +
+      'their `do`’s start) and `follow_ups` (what it leaves owed). Or `inbox`: ids of a child’s ' +
       'proposals — an inbox row, `state: new`, `refs` its unit, its `body` one ```json block of ' +
-      'one unit’s landing (no `close_milestone`), written to the document path the hooks printed ' +
-      '— each landed as written and moved to `applied`. Each step is `record_format_rows` or ' +
-      '`update_format_rows`, judged as they are, run in that order; all of it applies or none. ' +
+      'one unit’s landing (no `close_milestone`) — each landed as written and moved to `applied`. ' +
+      'Each step is `record_format_rows` or `update_format_rows`; all applies or none. ' +
       'Writes on this call and answers with the diff by format; `commit: false` previews instead.',
     inputSchema: {
       type: 'object',
@@ -764,8 +857,13 @@ export const landUnitsTool: PluginTool = {
               report: stringProp(`Its builder’s closing report, plain text, up to ${String(REPORT_MAX)} characters.`),
               accept_entries: {
                 type: 'array',
-                description: 'By the start of each one’s `do`.',
+                description: 'By the start of each `do`.',
                 items: { type: 'string' },
+              },
+              follow_ups: {
+                type: 'array',
+                description: '`{kind: unit|question|review, …}`; a unit needs a `brief`.',
+                items: { type: 'object', additionalProperties: true },
               },
             },
             required: ['unit'],

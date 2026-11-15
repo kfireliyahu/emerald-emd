@@ -11,7 +11,7 @@ import { listRows } from '@/data/repositories/formatRowRepository.ts'
 import { exportEncoded, openEncoded, type DocumentEncoding } from '@/data/storage/encoding.ts'
 
 import { recordFormatRowsTool, updateFormatRowsTool } from './formats.ts'
-import { claimUnitsTool, landUnitsTool, REPORT_MAX } from './landing.ts'
+import { claimUnitsTool, landUnitsTool, leftOverLines, REPORT_MAX } from './landing.ts'
 import { NO_CLIENT } from './tool.ts'
 import { tempDir } from '../../testing/tempDir'
 
@@ -543,5 +543,72 @@ describe('a landing shows the review entries its report may prove, and accepts t
     const answer = await landUnitsTool.run({ path, inbox: [proposed?.id], commit: true }, NO_CLIENT)
     expect(answer).toContain('`accept_entries`, which a landing has not got')
     expect(await unit(path, 'M47 U3')).toMatchObject({ state: 'in_progress' })
+  })
+})
+
+describe('what a landing leaves owed becomes rows (M61 U3)', () => {
+  const OWED = [
+    { kind: 'unit', ref: 'M47 U9', title: 'Remove the old helper', brief: 'The setup left scripts/old.mjs; remove it and its test.' },
+    { kind: 'question', ref: 'Which JDK', question: 'Which JDK does the build point at, now the variable is wrong?' },
+    { kind: 'review', do: 'Run the build on a clean machine', should: 'It finds the right JDK' },
+  ]
+
+  it('writes each follow-up as a row of its kind, a unit under Later when the document has one', async () => {
+    const path = await memoryOnDisk('text')
+    await recordFormatRowsTool.run(
+      { path, format: 'milestone', rows: [{ ref: 'Later', title: 'Parked', goal: 'Later', state: 'planned', position: 9999 }], commit: true },
+      NO_CLIENT,
+    )
+    const answer = await landUnitsTool.run({ path, units: [landing({ follow_ups: OWED })], commit: true }, NO_CLIENT)
+    expect(answer).toContain('## unit follow-ups')
+    expect(answer).toContain('## open_question')
+    const owed = await unit(path, 'M47 U9')
+    expect(owed).toMatchObject({ state: 'planned', scope: 'engine', title: 'Remove the old helper' })
+    const milestones = await rowsOf(path, 'milestone')
+    expect(milestones.find((each) => each.id === owed['milestone'])?.cells['ref']).toBe('Later')
+    expect((await rowsOf(path, 'open_question')).map((each) => [each.cells['ref'], each.cells['state']])).toEqual([['Which JDK', 'open']])
+    const entries = (await rowsOf(path, 'review_entry')).map((each) => String(each.cells['do'])).sort()
+    expect(entries).toEqual(['Call land_units', 'Run the build on a clean machine'])
+  })
+
+  it('parks a follow-up unit under the landed unit’s own milestone where there is no Later', async () => {
+    const path = await memoryOnDisk('text')
+    await landUnitsTool.run({ path, units: [landing({ follow_ups: [OWED[0]] })], commit: true }, NO_CLIENT)
+    const owed = await unit(path, 'M47 U9')
+    const milestones = await rowsOf(path, 'milestone')
+    expect(milestones.find((each) => each.id === owed['milestone'])?.cells['ref']).toBe('M47')
+  })
+
+  it('refuses a follow-up unit with no brief, and a kind it has not got', async () => {
+    const path = await memoryOnDisk('text')
+    await expect(
+      landUnitsTool.run({ path, units: [landing({ follow_ups: [{ kind: 'unit', ref: 'M47 U9', title: 'x' }] })] }, NO_CLIENT),
+    ).rejects.toThrow('a follow-up unit carries a `brief`')
+    await expect(
+      landUnitsTool.run({ path, units: [landing({ follow_ups: [{ kind: 'task', ref: 'x' }] })] }, NO_CLIENT),
+    ).rejects.toThrow('`units[0].follow_ups[0].kind` is `unit`, `question`, `review`')
+  })
+
+  it('quotes a report that says work is left when the landing names none, and lands all the same', async () => {
+    const path = await memoryOnDisk('text')
+    const report = 'Built the setup.\nLeftovers to remove: scripts/old.mjs.\nJAVA_HOME still points at the old JDK, not yet fixed. Polish in M3.'
+    const answer = await landUnitsTool.run({ path, units: [landing({ report })], commit: true }, NO_CLIENT)
+    expect(answer).toContain('## Anything left over on M47 U3?')
+    expect(answer).toContain('> Leftovers to remove: scripts/old.mjs.\n>\n> JAVA_HOME still points at the old JDK, not yet fixed.\n>\n> Polish in M3.')
+    expect(answer).not.toContain('> Built the setup.')
+    expect(await unit(path, 'M47 U3')).toMatchObject({ state: 'built' })
+  })
+
+  it('says nothing more when the landing names follow-ups, or says none are owed', async () => {
+    const path = await memoryOnDisk('text')
+    const report = 'Leftovers to remove: scripts/old.mjs.'
+    const answer = await landUnitsTool.run({ path, units: [landing({ report, follow_ups: [] })], commit: true }, NO_CLIENT)
+    expect(answer).not.toContain('Anything left over')
+  })
+
+  it('reads the wording a report uses for owed work, and leaves a line without it', () => {
+    expect(leftOverLines('Done. TODO: the icon. Later, the docs.')).toEqual(['TODO: the icon.', 'Later, the docs.'])
+    expect(leftOverLines('All green; nothing else.')).toEqual([])
+    expect(leftOverLines(undefined)).toEqual([])
   })
 })

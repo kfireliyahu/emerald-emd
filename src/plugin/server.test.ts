@@ -1081,8 +1081,11 @@ describe('the server makes zero network calls', () => {
       // `fields`, `defaults` and `default` — and `view` on `record_format_rows`,
       // four parameters, ~550 chars, trimmed first. 58k since M60 U6 (D-587):
       // `language` on `create_document` and `keep_packs`, the names a new
-      // ledger is seeded in — ~280 chars, trimmed first.
-      expect(engineSize).toBeLessThan(58_000)
+      // ledger is seeded in — ~280 chars, trimmed first. 58.5k since M61 U2-U3
+      // (D-592, D-593): `accept_entries` and `follow_ups` on each of
+      // `land_units`' units — two parameters, ~400 chars, its description
+      // trimmed first.
+      expect(engineSize).toBeLessThan(58_500)
     })
   })
 })
