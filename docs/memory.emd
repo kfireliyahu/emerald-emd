@@ -6545,13 +6545,13 @@ position: 380
 ### M58
 title: Lighter on every session: the fixes from six weeks of real use
 goal: The 2026-11-09 usage report from outside this repo (inbox, triaged) found Emerald delivering what it promises at a cost every session pays: long instructions and hook text, tools registered twice, every write done twice, a hook a security plugin blocked, and decisions that leave prose files wrong. M58 fixes those for anyone using the plugin today, and ships them as emerald-mcp 0.3.1. The maintainer's answers are D-569. Built on main.
-state: planned
+state: closed
 position: 341
 
 ### M59
 title: The ledger for someone who isn't its author: what a second person hit on first use
 goal: A person new to Emerald reads a card statement (two cards in one file too), categorizes from By merchant (by the provider's category too), plans with 50 / 30 / 20 and sees where the money went, without the screens being too much and without Guide me in the way (D-575).
-state: planned
+state: closed
 position: 334
 
 ### M60
@@ -17516,7 +17516,7 @@ emerald: changed
 decision: 2026-11-15
 finding: 2026-10-22
 inbox: 2026-11-13
-milestone: 2026-11-13
+milestone: 2026-11-15
 open_question: 2026-11-13
 review_entry: 2026-11-13
 rule: 2026-11-11
