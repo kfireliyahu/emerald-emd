@@ -61,6 +61,10 @@ land_units units:[{unit:"M47 U3", files:"…", decisions:[{ref:"D-461", title, q
   actually changed, and `decision` — its first new decision, or `decision:"D-xxx"` for one that
   exists. It is refused if the unit is already built or dropped, and is addressed by `ref`, never
   an id: a text document renews every id on a write (D-247).
+- **`accept_entries`** for review entries already open on the unit that your report proves — each
+  by the start of its `do`. The answer lists the rest beside your report: accept a further one only
+  when the report really proves it (`update_format_rows review_entry` by `where:{unit, do}`), and
+  leave the others open for a person to try. A proposal from a worktree never accepts; its driver does.
 - **`review_entries`** only when there is something the maintainer should drive; `close_milestone`
   only when the maintainer closed it.
 - **`branch`** is the branch you land from, and a unit claimed on another is refused unless
@@ -85,7 +89,7 @@ project that wants it; this one does not — the three steps above, always.
   main checkout's copy, never one under the worktree's folder), `from` that same path, with `subject`,
   `sent_on`, `refs:"<your unit>"`, `state:"new"`, and a `body` of a line for a person then
   one fenced `json` block holding exactly what `land_units`' `units` would: `unit`, `files`, `commit`
-  (`git rev-parse --short HEAD`), `branch`, `decisions`, `review_entries` — no `close_milestone`.
+  (`git rev-parse --short HEAD`), `branch`, `decisions`, `review_entries` — no `close_milestone` or `accept_entries`.
   `land_units inbox:["<its id>"]` without `commit` checks it; report the id. Write no other format.
 
 - **A unit you planned → a `unit` row with `files`**, the files to open first (a column since M27 U1).

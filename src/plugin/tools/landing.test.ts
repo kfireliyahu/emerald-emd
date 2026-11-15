@@ -10,7 +10,7 @@ import { listFormats } from '@/data/repositories/formatRepository.ts'
 import { listRows } from '@/data/repositories/formatRowRepository.ts'
 import { exportEncoded, openEncoded, type DocumentEncoding } from '@/data/storage/encoding.ts'
 
-import { recordFormatRowsTool } from './formats.ts'
+import { recordFormatRowsTool, updateFormatRowsTool } from './formats.ts'
 import { claimUnitsTool, landUnitsTool, REPORT_MAX } from './landing.ts'
 import { NO_CLIENT } from './tool.ts'
 import { tempDir } from '../../testing/tempDir'
@@ -439,5 +439,109 @@ describe('a stalled claim is taken over, and a landing names its commit and keep
     await expect(
       landUnitsTool.run({ path, units: [{ unit: 'M47 U5', same_commit: true, report: 'x'.repeat(REPORT_MAX + 1) }] }, NO_CLIENT),
     ).rejects.toThrow('not the transcript')
+  })
+})
+
+describe('a landing shows the review entries its report may prove, and accepts them by their do (M61 U2)', () => {
+  const ENTRIES = [
+    { unit: 'M47 U3', do: 'Run land_units on a real memory.emd', should: 'One call writes the unit and its decision', state: 'open' },
+    { unit: 'M47 U3', do: 'Open the device log after a landing', should: 'The log shows no refused write', state: 'open' },
+    { unit: 'M47 U3', do: 'Open the roadmap', should: 'M47 U3 reads built', state: 'accepted' },
+    { unit: 'M47 U4', do: 'Run the claim twice', should: 'The second is refused', state: 'open' },
+  ]
+
+  async function withEntries(): Promise<string> {
+    const path = await memoryOnDisk('text')
+    await recordFormatRowsTool.run({ path, format: 'review_entry', rows: ENTRIES, commit: true }, NO_CLIENT)
+    return path
+  }
+
+  async function entryStates(path: string): Promise<readonly string[]> {
+    return (await rowsOf(path, 'review_entry'))
+      .map((each) => `${String(each.cells['do'])}: ${String(each.cells['state'])}`)
+      .sort()
+  }
+
+  it('lists the unit’s open entries beside its report, and accepts none by itself', async () => {
+    const path = await withEntries()
+    const report = 'Landed; the device log is attached and shows no refused write.'
+    const answer = await landUnitsTool.run({ path, units: [landing({ report })], commit: true }, NO_CLIENT)
+    expect(answer).toContain('## 2 review entries still open on M47 U3')
+    expect(answer).toContain(`> ${report}`)
+    expect(answer).toContain(
+      '1. **Do:** Open the device log after a landing\n   **Should:** The log shows no refused write\n' +
+        '2. **Do:** Run land_units on a real memory.emd\n   **Should:** One call writes the unit and its decision',
+    )
+    expect(answer).toContain('update_format_rows review_entry edits:[{where:{unit:"M47 U3", do:"…"}, values:{state:"accepted"}}]')
+    // Neither the accepted entry nor another unit's is listed, and nothing is accepted.
+    expect(answer).not.toContain('Open the roadmap')
+    expect(answer).not.toContain('Run the claim twice')
+    expect(await entryStates(path)).toEqual([
+      'Call land_units: open',
+      'Open the device log after a landing: open',
+      'Open the roadmap: accepted',
+      'Run land_units on a real memory.emd: open',
+      'Run the claim twice: open',
+    ])
+
+    // The next call accepts one by its do, as the answer says.
+    const accepted = await updateFormatRowsTool.run(
+      {
+        path,
+        format: 'review_entry',
+        edits: [{ where: { unit: 'M47 U3', do: 'Open the device log after a landing' }, values: { state: 'accepted' } }],
+      },
+      NO_CLIENT,
+    )
+    expect(accepted).toContain('1 row of Review entry changed')
+  })
+
+  it('accepts in the same call the entries named by the start of their do, and lists the rest', async () => {
+    const path = await withEntries()
+    const answer = await landUnitsTool.run(
+      { path, units: [landing({ report: 'The device log shows no refused write.', accept_entries: ['open the device'] })], commit: true },
+      NO_CLIENT,
+    )
+    expect(answer).toContain('## review_entry accepted')
+    expect(answer).toContain('## 1 review entry still open on M47 U3')
+    expect(await entryStates(path)).toEqual([
+      'Call land_units: open',
+      'Open the device log after a landing: accepted',
+      'Open the roadmap: accepted',
+      'Run land_units on a real memory.emd: open',
+      'Run the claim twice: open',
+    ])
+  })
+
+  it('refuses the landing whole when a start names no open entry, or more than one', async () => {
+    const path = await withEntries()
+    const none = await landUnitsTool.run({ path, units: [landing({ accept_entries: ['open the roadmap'] })], commit: true }, NO_CLIENT)
+    expect(none).toContain('No open review entry of it has a `do` that begins `open the roadmap`')
+    await recordFormatRowsTool.run(
+      { path, format: 'review_entry', rows: [{ unit: 'M47 U3', do: 'Open the device settings', should: 'Nothing changed', state: 'open' }], commit: true },
+      NO_CLIENT,
+    )
+    const two = await landUnitsTool.run({ path, units: [landing({ accept_entries: ['open the device'] })], commit: true }, NO_CLIENT)
+    expect(two).toContain('2 of its open review entries have a `do` that begins `open the device`; say more of it.')
+    expect(await unit(path, 'M47 U3')).toMatchObject({ state: 'in_progress' })
+  })
+
+  it('says a unit with no report has nothing proving its entries yet', async () => {
+    const path = await withEntries()
+    const answer = await landUnitsTool.run({ path, units: [landing()], commit: true }, NO_CLIENT)
+    expect(answer).toContain('It has no report, so nothing here proves any of them yet.')
+  })
+
+  it('is the driver’s to accept: a child’s proposal may not', async () => {
+    const path = await withEntries()
+    const body = `Built M47 U3.\n\n\`\`\`json\n${JSON.stringify({ unit: 'M47 U3', commit: 'aaaa111', accept_entries: ['open the device'] })}\n\`\`\`\n`
+    await recordFormatRowsTool.run(
+      { path, format: 'inbox', rows: [{ subject: 'Landing M47 U3', from: 'child', sent_on: '2026-11-15', refs: 'M47 U3', state: 'new', body }], commit: true },
+      NO_CLIENT,
+    )
+    const [proposed] = await rowsOf(path, 'inbox')
+    const answer = await landUnitsTool.run({ path, inbox: [proposed?.id], commit: true }, NO_CLIENT)
+    expect(answer).toContain('`accept_entries`, which a landing has not got')
+    expect(await unit(path, 'M47 U3')).toMatchObject({ state: 'in_progress' })
   })
 })

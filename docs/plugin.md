@@ -882,6 +882,13 @@ every built or dropped unit that rows of another format's start question still p
 `review_entry where state is open` — with how many, grouped by milestone, newest first. There is no
 state between built and done: an accepted review entry is what says it was checked.
 
+**A landing shows what its report may already prove** (M61 U2, D-592). After its diff, `land_units`
+lists each landed unit's review entries still `open`, `do` and `should`, under the unit's report, and
+picks none: the session or the maintainer judges. `accept_entries` on a landing accepts those its
+report proves, each by the start of its `do` (exactly one open entry, or the landing is refused
+whole); afterwards, `update_format_rows review_entry` by `where:{unit, do}`. A child's proposal may not
+accept; its driver does.
+
 **A child proposes, its manager lands** (M51 U3, D-485). A session run
 for a manager — a worktree's child — does not call `land_units`: it writes **one `inbox` row**,
 `state: new`, whose `refs` is its unit's ref and whose `body` is a line for a person and then one

@@ -494,6 +494,7 @@ written out here.
 | D-589 | 2026-11-11 | A translated screen's words are the catalogue's, and a test that parses its files fails on one written inline; a count is a `one`/`other` pair, a sentence holding a document's value is filled with elements, a record the document keeps stays as written, and a card a Hebrew ledger makes in place is `כרטיס 1234` | M60 |
 | D-590 | 2026-11-11 | The second half of the screens speaks through the layer: a sentence with a value in it is one word with placeholders drawn by `Phrase`, a word outside a render is `tNow`, a category path's arrow points the way its own words run, a menu opens from its control's start edge, and a test reads the source for typed English | M60 |
 | D-591 | 2026-11-15 | `start_here` says what a milestone still owes: the milestones nothing under them holds open, and the built units rows still point at, read from views a document already declares, with no new unit state | M61 |
+| D-592 | 2026-11-15 | A landing lists the unit's open review entries beside its report and accepts in the same call the ones named by the start of their `do`; nothing picks which the report proves, a child's proposal never accepts, and nothing new is written on an entry | M61 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -607,431 +608,6 @@ cap read from logs is slow and loose); taking a file's text in the call (more to
 asked when M57 U5 is taken. The connector's instructions and tool list differ from the local
 server's, and a test holds the line between them (M57 U2).
 
-## D-569 · 2026-11-10 · M58's answers: when two emerald servers are registered the plugin's stays and says once how to remove the other; recording, updating, claiming and landing rows commit on the first call while deleting and changing a format's columns still dry-run first; a decision row may name the files it affects, anywhere on the machine, and the closing pass checks each; the fixes ship as emerald-mcp 0.3.1; M57 is parked on its branch <a id="d-569"></a>
-
-**Context.** A six-week usage report from a session outside this repository (2026-11-09, an inbox
-row, triaged) found Emerald delivering what it promises at a cost every session pays: two copies of
-every tool, every write made twice, long instructions and hook text, a hook a security plugin
-blocked, and a decision that left a CLAUDE.md outside any repository wrong for days. On 2026-11-10
-the maintainer parked M57 (the Google Drive connector) until he is ready to publish a hosted
-service and turned to these. Numbered after the branch's D-563 to D-568 so the two never collide.
-
-**Decision.**
-
-- **Two servers: the plugin's stays.** It brings the hooks, the skills and the pane; at its start,
-  when another emerald server is registered, it says once how to remove the other. It never edits
-  the person's configuration.
-- **Rows commit on the first call:** `record_format_rows`, `update_format_rows`, `claim_units` and
-  `land_units` apply at once, judged as before, so a wrong value is still refused with its reason.
-  `delete_format_rows`, `delete_format` and a change to a format's columns still dry-run until
-  `commit: true`. This answers the dry-run half of *Dry runs and concurrency*; the concurrency half
-  stays open.
-- **A decision names the files it affects.** The development pack's `decision` format gains an
-  optional `affects` list of paths, anywhere on the machine, and the closing pass greps each for
-  the claim the decision made false. This answers *Decisions and the files they make wrong*.
-- **They ship as emerald-mcp 0.3.1**, the maintainer running the npm publish.
-- **M57 is parked:** U1 is on main; U2 to U5 are built and landed on `m57-drive-connector`, pushed
-  and not merged; U6 waits for the maintainer.
-
-**Rejected.** The standalone server staying (it brings no hooks or skills); every write committing
-at once (a delete or a column change is the write worth previewing); narrowing the pitch instead of
-naming files (the report's case was a real file a decision made wrong).
-
-**Consequences.** The instructions, the tool descriptions, `docs/plugin.md` and the skills stop
-telling sessions to dry-run rows first (M58 U3). A pack change means the pack's past and its test
-follow (M58 U4).
-
-## D-572 · 2026-11-10 · The server's instructions say only what a session needs before its first call — what moved went to the answer that needs it, and how to speak of a view is the drawing tool's first line alone; the SessionStart hook opens with one sentence <a id="d-572"></a>
-
-**Context.** The six-week usage report D-569 answered found the instructions long enough that hosts
-cut them off — this repository's own sessions see the ledger's block end in *[truncated]* near
-2,000 characters — and the `SessionStart` hook's text mostly rules about how to speak of a view.
-Every session paid for both before its first call. Measured on the built text: the full block
-24,249 characters, `--engine-only` 14,677, the plugin's `--skills` 12,310; the hook's first line
-534 bytes, and on a small document most of what the hook prints.
-
-**Decision.**
-
-- **The instructions keep what a session needs before its first call**: what Emerald is, when to
-  draw, development planning, what it is for, where to start, how to work, the formats half's core,
-  the ledger's files to ask for, and what is app-only. Measured after: 12,412, 9,222 and 8,275.
-- **What moved went to the answer that needs it.** How to work a format out with the user is
-  `declare_format`'s dry run (`DECLARE_ASK`); the units and converting across them were already
-  `formats`' answer; how to claim and land a unit is `claim_units`' and `land_units`' descriptions;
-  each ledger tool's detail is its own description, and the ledger keeps the rules no description
-  says (a security is never recommended; `savings` before a broker statement; oldest first).
-- **How to speak of a view is the drawing tool's first line alone** (`drawnLine`, D-489, D-493),
-  which now also names hooks among what the person is never told. The instructions say to call
-  `show_format` or `start_here`, that a hook's text drew nothing, and to follow the answer's first
-  line, which is the model's.
-- **The hook's first line is one sentence** (220 bytes): it is text, nothing was drawn, and to show
-  any of it call `start_here` or `show_format` and follow its answer's first line.
-
-**Rejected.** Moving the rest into tool descriptions (those are in context every turn too); a
-hard 2,000-character block (development planning and how to work are answers a model gives before
-any call); dropping a rule outright — each one moved or stayed.
-
-**Consequences.** `server.test.ts` holds a budget for each block and pins `DECLARE_ASK` to the dry
-run only. The hook's line reaches other projects when `emerald-mcp` is next published and pinned;
-the plugin's own copy (`mod/inboxText.ts`) is cut as plugin 0.3.0+1.
-
-## D-573 · 2026-11-10 · Recording, updating, claiming and landing rows write on the first call; `commit: false` asks for a preview; deleting and changing a format's columns keep the dry run <a id="d-573"></a>
-
-**Context.** D-569 settled it: a six-week usage report counted about 360 updates against 175 new
-rows, each sent twice — once to see the diff, once with `commit: true` — and the second call never
-caught anything the first did not, because the judging is the engine's: types, bounds, members,
-links, `expect`, all checked again inside the write and the whole batch refused with its reason.
-The open question *Dry runs and concurrency* (D-549) asked when a write may skip its dry run.
-
-**Decision.**
-
-- **`record_format_rows`, `update_format_rows`, `claim_units` and `land_units` write on the
-  first call** and answer with what they wrote. The judging is unchanged: a refused batch writes
-  nothing and says why, and the copy before a write is taken as before.
-- **A caller asks for a preview with `commit: false`, explicitly** (or the string `"false"`); the
-  answer is the dry run it always was. One switch, `writesNow` / `WRITES_NOW_PROP` in
-  `src/plugin/tools/tool.ts`, used by those four tools and nothing else.
-- **Every other write keeps the dry run until `commit: true`**: `delete_format_rows`,
-  `delete_format`, `declare_format`, `extend_format`, `connect_formats`, `read_onto_format`, and
-  the ledger's own tools, which share no switch with these four and are left as they are.
-- The instructions say so in two lines, `start_here`'s write line too, and the skills that said
-  "dry run, then `commit: true`" for these tools now say one call.
-
-**Consequences.** A session writes what the person said or agreed to in one round trip; a batch it
-inferred it still puts to the person first, in the conversation rather than as a second call. The
-open question's concurrency half — parallel writers, ids a text document renews — stays open.
-
-## D-574 · 2026-11-10 · What stopped the SessionStart hook in the usage report is not known, so the hook is unchanged; what it does that a security tool notices is written down, and the plugin and its message are an open question <a id="d-574"></a>
-
-**Context.** The 2026-11-09 usage report said a security plugin in the host blocked emerald's
-SessionStart hook (M58 U5). It names no plugin and quotes no message; nothing here reproduces it.
-
-**Decision.**
-
-- **No change to the hook until the cause is known.** Neither security plugin in the official
-  marketplace (`security-guidance`, `claude-security`) hooks anything that could stop another
-  plugin's SessionStart hook, and a SessionStart command hook cannot stop another. What can is a
-  hooks module answering `classic.SessionStart` without `next` (proved in M56 U2), or something
-  outside Claude Code: endpoint security or a package firewall refusing `npx` or `node`.
-- **What the hooks do that such a tool notices is in `docs/plugin.md`**: `npx -y` fetching and
-  running a pinned package at every start (skipped where the hooks module runs); `node` starting a
-  child, through `cmd.exe` only where npm's `npx-cli.js` is missing; `no-server.mjs` reading
-  `~/.claude.json` and the desktop app's configuration (D-571); and text telling the model what not
-  to say to the person (D-493). Each was decided for its own reason, and none is reversed on a guess.
-- **The open question *Which security tool stopped the SessionStart hook*** asks the maintainer for
-  the plugin and its message.
-
-**Consequences.** A person whose security tool stops the hook loses `start_here` at the start and
-can still call it. Once the tool is known, the fix is chosen against what it actually refuses.
-
-## D-575 · 2026-11-11 · The ledger is unparked: M59 fixes what a second person hit on first use — a file with two cards made one account per card, the provider's category and leaving a row out working on By merchant, 50 / 30 / 20 shown before it is made, a page that never scrolls into blank, Guide me never opening by itself, and a shape unit that decides what a new document shows; Hebrew is M60, after it <a id="d-575"></a>
-
-**Context.** On 2026-11-11 the maintainer tried the ledger with a friend — the first person other
-than him to use it on her own finances. The screens were too much for her and for him; the main
-workflows were not clear; Guide me got in the way; she asked for Hebrew. Six things went wrong, each
-traced to code: an Excel holding two cards gave every row to one account (one header and one account
-per sheet: `guess.ts`, `statementBatch.ts`, `commit.ts`); the provider's category could start a rule
-on Transactions but not on By merchant, where she was; a card payment she left out of totals stayed
-on By merchant (its query never reads the flag); the page scrolled into blank (`html` and `body` can
-still scroll); and 50 / 30 / 20 filled the buckets from a hard-coded map it never showed. M54 U5's
-35 open findings on the ledger's screens were already recorded and waiting.
-
-**Decision.** Maintainer, 2026-11-11, taking every recommendation:
-
-- **The ledger is unparked**, and M59 takes it from what she hit. M54 U5's open findings come in only
-  where a M59 unit is already reworking that screen. Hebrew is its own milestone, M60, after M59.
-- **A file with two cards** is split by card — a repeated header, a card-number line or a card column —
-  into one account per card, and the preview says how many cards it found, with their last digits,
-  before anything is written.
-- **By merchant** shows each merchant's provider category as an action that writes a rule from it, and
-  can group its list by provider category, so one rule covers many merchants.
-- **A row left out of totals leaves By merchant**, as it leaves the Year screen; so does a merchant
-  left out from By merchant itself.
-- **50 / 30 / 20 shows its proposal before it makes anything**: every category with its share and why
-  (a default for that category, or what went out under it a month over three months), each editable.
-- **Guide me never opens by itself.** Its steps are the Getting started list on Home, ticking
-  themselves as now, and the list can be dismissed.
-- **The page never scrolls** past the app's frame.
-- **A shape unit decides what a new document shows**: it names the main workflows (reading a
-  statement, categorizing, seeing where the money went) and what a new document leaves out until it
-  holds something (Paychecks, Wealth and Plan in the rail, for instance). It picks, marks its picks
-  for the maintainer to judge after (as D-535 did), and a later unit builds them.
-- **Her file is read where it is**, with her consent, to prove the two-card split; nothing from it
-  enters the repository (D-390), and the test's file is made up in its shape.
-
-**Consequences.** CLAUDE.md, `conventions.md` and the ledger's README stop saying it is parked.
-Whether her document must keep opening across schema changes — so far the maintainer is the only
-user, and old documents are never converted — is an open question, asked before M59 changes a
-table.
-
-## D-576 · 2026-11-11 · A ledger document made before a change keeps opening with its rows: from M59 on, a change to a ledger format or an engine table reaches an existing document as a kept pack already does (D-443) or by a migration, with a test on a document made before it; amends D-276 for documents from here on. Her statement file will not be available, so M59 U2 proves the two-card split on made-up files only <a id="d-576"></a>
-
-**Context.** D-276 let old documents' data go: the maintainer was the only user, and carrying a
-document across a change was effort spent on nobody (said again 2026-10-05: compatibility with an
-existing `.emd` was never a risk, a unit or a test). D-575 brings a second person to the ledger with
-a real document of her own, and M59 changes the ledger.
-
-**Decision.** Maintainer, 2026-11-11:
-
-- **Her document must keep opening.** From M59 on, a change to a ledger format or an engine table
-  reaches a document made before it, with its rows: a declared format the way a kept pack is brought
-  up to date (D-443: keeping it again adds what it grew and renames in place), an engine table by a
-  migration.
-- **The unit that makes the change carries the test**: a document made by the build before the change
-  opens in the new one with its rows and figures intact.
-- **Not retroactive.** Documents from before M59 are not converted; this protects documents from here
-  on. A change that cannot carry a document forward stops and asks.
-- **Her statement file will not be available.** D-575's reading of it where it is falls away: M59 U2
-  proves the split on made-up files in both shapes (two card sections on one sheet; two sheets), and
-  what her file looked like is known only from what she and the maintainer saw.
-
-**Consequences.** The rule row *A document made before a change keeps opening* says it where a session
-reads before touching a table (CLAUDE.md's rules block). The open question *A second person's
-document* is answered. M59 U2's brief drops the step that asked for her file.
-
-## D-577 · 2026-11-11 · A new ledger document holds back the places it has nothing for — Year, Paychecks, Plan, Wealth, Dashboard, and in a ledger-only document Formats, Connections and Agenda — and each comes back with its first row; Home, Transactions and By merchant keep what a first-time person needs and put the rest behind Filter and More (M59 U1's picks, not yet the maintainer's) <a id="d-577"></a>
-
-**Context.** D-575: the ledger's first use by a second person found the screens too much and the
-main workflows hard to find. A new document keeping only the ledger shows twelve places in the rail,
-eight with nothing on them, and Transactions puts thirteen controls above its first row. M59 U1 ran
-Impeccable's shape with D-575 as the discovery round and, as M55 U1 did (D-535), picked wherever
-shape would have asked.
-
-**Decision.** M59 U1's picks, not yet the maintainer's; he judges them through the unit's open
-`review_entry`, and [`docs/mockups/m59-u1/brief.md`](./mockups/m59-u1/brief.md) has each with its
-reason:
-
-- **The rail holds back what the document has nothing for**, computed each time it is drawn: Home's
-  Year until two months have rows, Paychecks until a paycheck, Plan until a plan, a bill or a fully
-  categorized month, Wealth until a goal, debt, fund, holdings, place or opening balance, Dashboard
-  until a block, and — in a document whose only pack is the ledger — Formats and Connections until a
-  format of the person's own, Agenda until a dated one. A new ledger document's rail is five places.
-- **Held back is hidden, not removed**: every route opens, a held place you stand on takes its line
-  while you are there, and the palette lists every place.
-- **Home before anything is read** is the band and Getting started; the band's *Add by hand* is *Add
-  a paycheck*; Taxes waits for a paycheck. Getting started's next step is a link to its place, and
-  its order puts the shops before the list of categories.
-- **Transactions and By merchant** keep the view switch, the month, search, the figures and the
-  merchant list in sight; Account, Category and the amount bounds (By merchant: Account and Month) go
-  behind one *Filter*, Rules, Export and Skip all behind *More*; Transactions loses its category
-  strip, By merchant two of its four tiles.
-
-**Alternatives rejected.** A first-run wizard, or a *simple mode* switch: more to learn, not less.
-A switch to show every place: the palette and Getting started reach them. Holding back only the
-ledger's places and leaving the engine's: the narrower pick, named in the brief for the maintainer.
-
-**Consequences.** M59 U6 builds it (its brief carries the picks as SETTLED); the terms *Getting
-started*, *Add a paycheck* and *Filter* are rows. Nothing a conversation does changes.
-## D-578 · 2026-11-11 · A statement holding two cards is one account per card: a sheet is cut into sections at a repeated header or a card line, each read with its own header, a section's card column cuts it again, every sheet of a workbook with transactions is read, and the read says how many cards it found before anything is written <a id="d-578"></a>
-
-**Context.** Her card Excel held two cards and every row went to one account (D-575). The header was
-the first one in the top twenty rows and a repeated one was ignored on purpose; the mapping read to the
-end of the sheet, so a second card's line and header became rows that failed and its rows were read
-with the first card's columns; a sheet named one card; and the mapper handed back the open tab only,
-while a sheet no saved reader fitted was dropped as a summary. Her file is not available (D-576), so
-which shape it was is unknown: both are built and proved on made-up files.
-
-**Decision** (M59 U2):
-
-- **A sheet is cut into sections** (`statementSections`, `src/data/importer/sections.ts`) where a row
-  repeats the header — exactly, or close enough that the saved columns can be fitted by name — or where a
-  short line that does not read states a card number (`כרטיס מסטרקארד 9356`). A section is the same sheet
-  with every row outside it empty and nothing after it, so row numbers, the printed total, the printed
-  period and the card above the header are each the section's own. A card line under the last row is a
-  footer, not a section. A sheet of one section is read exactly as before.
-- **One account per card.** A section's card is its mapped card column's (that wins), then the number
-  on its card line. A section whose card column holds several cards is cut again by it; rows with no
-  card, and rows that failed, go with one card so each is counted once, and a total printed under the
-  section is checked against all of its cards. Each card's account is found by its last four digits or
-  made on Write, as a single card's always was (`resolveAccountForImport`); a reader bound to an account
-  with no number gives it the first card's.
-- **Every sheet with transactions is read.** A sheet no saved reader fits, beside sheets one does, waits
-  as a new layout of its own when the app's own guess reads at least two rows of it (a summary sheet
-  does not, and is still left alone); after the mapper reads one tab, the file's other tabs with
-  transactions are read by the reader just drawn or wait for the mapper.
-- **The read says it before anything is written**: `2 cards: ••4821 · 4 rows, ••9356 · 3 rows` — on
-  the mapper's bar (where *Into* then gives way: each card goes to its own account) and on the file's
-  first row in Read files. A conversation gets the same: `statement_preview` says it, and
-  `import_statement` reads every card — every sheet of the layout unless `sheet` names one — through the
-  screen's own `judgeBatch` and `writeSheets`, with `account_id` or `new_account` the account of the
-  card it has the digits of.
-
-**Rejected.** A per-row account in `commitSession` (one staged session per card keeps the commit,
-dedupe and the reader's account untouched); a `dataEndRowIndex` on `DraftMapping` (a saved reader
-would have carried a per-file fact); refusing `account_id` on a two-card file (the bound reader's rule
-already says which card it is).
-
-**Consequences.** No ledger format and no engine table changed, so D-576's test is not needed. The
-session a card-column split stages records the section's printed total, which speaks for every card in
-it. A section whose header has nothing in common with the first is still read with the first's columns.
-## D-579 · 2026-11-11 · By merchant's queue is the rows that count: a row left out of totals leaves it, its sums and its ids; the provider's category is an action on each merchant (the editor's draft, as on Transactions) and a heading the list can be grouped by, where Create rule writes one rule for the heading and applies it to rows with no category, with one Undo <a id="d-579"></a>
-
-**Context.** D-575: a second person's first use found two things wrong on By merchant. A card payment
-left out of totals on Transactions stayed in the queue and in *Without a category* — the queue's
-`WHERE` never read `is_excluded_from_stats` or `counted_on_card` — and By merchant's own *Leave out of
-totals* left the merchant in the list. And the provider's category, which her card statement carried
-on every row, was a muted hint on By merchant while the rule from it lived only on Transactions.
-
-**Decision.** M59 U3:
-
-- **The backlog is uncategorized, in scope and counted.** `merchantGroupRepository` reads one
-  fragment, `buildTransactionWhere` plus `countsCondition` (the counterpart of `leftOutCondition`,
-  as the statistics read it), in the list, its sums, the provider tallies, the ids a filing writes
-  to, and the settled hints (a left-out row is no decision about the merchant). `merchantQueue`, the
-  guide's step, Home's count and `uncategorized_merchants` all read it, so the screen and a
-  conversation see the same queue. Leaving a merchant out on By merchant now says so with an Undo.
-- **Each merchant shows its provider category as an action**, *Rule from “…”* — Transactions' word
-  for the same thing, so one name per thing — opening the rule editor with
-  `draftFromProviderCategory`, the category the row would be filed under already in it; and in the
-  row's menu.
-- **By provider category** groups the list: one heading per provider category (each merchant under
-  its commonest, the headings largest first, the merchants with none last under a heading with
-  nothing to act on), the heading carrying its names, charges and outflow, a category picker
-  pre-filled with what most of its merchants would be filed under, and **Create rule**. That writes
-  one `PROVIDER_CATEGORY` rule (origin `USER`) and applies it through the re-apply `create_rule`
-  commits with, **to rows with no category only** and only where this rule is the winner; one *Undo
-  both* puts the rows back and deletes the rule. A second press writes no second rule.
-- **This amends D-042's reservation for the heading only.** D-042 kept a provider-category rule
-  behind the editor because it reaches rows nobody has seen; under a heading the rows it reaches are
-  the merchants listed under it, the button's title says the reach, and it touches no category
-  anyone chose. The per-merchant action still opens the editor, and the correction offer still never
-  writes one.
-
-**Alternatives rejected.** The heading opening the editor too (the done-test asks for one click, and
-the list under the heading is the preview); a per-heading confirm dialog (a modal for a task that
-needs no protected focus, and Undo already takes it back); applying the heading's rule to every
-non-manual row as `create_rule` does (By merchant only ever touches rows with no category, D-009).
-
-**Consequences.** Parity holds without a new tool: `create_rule` takes `kind: PROVIDER_CATEGORY`, and
-the screen writes only through functions it already reaches. **M28 U10** (files several merchants at
-once) is covered for merchants that share a provider category, not for an arbitrary selection.
-demo.emd carries no provider category and nothing uncategorized, so the done-test is not playable on
-it as built.
-## D-580 · 2026-11-11 · 50 / 30 / 20 is shown before it is made: every top-level category with its share, its part, what it comes to a month and why, each share changeable in place, the months named once; Make plan writes exactly that and Cancel nothing, and `start_plan` is the same proposal for a conversation <a id="d-580"></a>
-
-**Context.** D-575: a second person's first use of *Start with 50 / 30 / 20* made a plan whose
-placements she never saw. The starter put seven seeded headings in a fixed share, saving and
-debt-payment kinds by kind, asked only about the rest, sized each share by what went out over the last
-three months with transactions, and reused a bucket already on a category — all of it invisible until
-the buckets were there.
-
-**Decision.**
-
-- **The button opens a proposal and writes nothing** (`src/ui/plan/StarterProposal.tsx`): every
-  top-level category with the share it counts as (Needs, Wants, Saving, Left out), its part, what that
-  comes to a month of the last paycheck (else the salary that came in), and why in a few words —
-  *Needs by default*, *A saving category*, *Debt payments are needs*, *You chose*; then *₪1,200.00 a
-  month went out*, *Nothing went out, so no bucket*, *The only one in saving, so all of it* — and
-  *keeps its bucket …* where a bucket already points at it. The months are named once, above the
-  table. *Make plan* writes it; *Cancel* (and Esc) writes nothing.
-- **Any share is changeable in place, not only the ones the starter could not place.** An answer
-  overrides the starter's own placing; choosing what it would have chosen takes the answer back out.
-  Income, transfers and the app's own headings stay out and say why. A heading of the person's own
-  still has to be answered before anything is made.
-- **One arithmetic, three readers.** `starterProposal` (domain) is the lines and the buckets of the
-  same answers; `starterPlanProposal` adds the months, the basis, each bucket's amount and the buckets
-  kept; `makeStarterPlan` writes it and is the one write both halves call. The words are the domain's
-  (`starterWhy`, `starterWindow`), so the screen and the tool say the same.
-- **Parity: `start_plan`** shows the same table and dry-runs; `shares` changes any category by id or
-  name; `commit: true` makes the plan; refused once a plan exists.
-- **M54 U5's rows on #/plan where this touched them**: the no-plan state is an h1, one sentence and
-  the two ways in; the starter's rounded choices are square; Plan.tsx's five `<select>`s are
-  `ChoiceMenu`s.
-
-**Rejected.** A modal for the proposal (it is the screen's own task, with nothing behind it to
-protect); defaulting an unplaced heading to wants (a guess the person cannot see is the bug D-575
-names); sorting the rows by share (a row would jump under the pointer that moved it).
-
-**Consequences.** The tool count is 86 with the ledger. `docs/packs/ledger/f05-paycheck-splitter.md`
-and `docs/plugin.md` say it.
-## D-581 · 2026-11-11 · The app is a window that never scrolls, and Guide me opens only from a press: the shell is the positioned frame and the page itself cannot scroll; the new document's offer is gone, and Home's Getting started line is dismissed per document with Dismiss <a id="d-581"></a>
-
-**Context.** D-575: a second person scrolled to the end of a list and the whole app went on into
-blank, back only by scrolling up; and her first ledger document opened with Guide me's dialog over
-Home, unasked.
-
-**What escaped.** Reproduced on Transactions: one row with a note carries an `sr-only` *Has a note*,
-which is `position: absolute`. Nothing above it was positioned, so it was placed against the page,
-not the shell — out of reach of the shell's `overflow-clip`, which cuts only what is placed inside
-it — and the page grew to wherever that row sat in the list (1,524px on a 720px window). A wheel at
-the end of the list then scrolled the page. Any absolute element deep in a long list does the same,
-By merchant's included. The demo document has no notes, which is why no screen check had met it.
-
-**Decision.**
-
-- **The shell is the positioned frame** (`relative` on App's root): what is absolute inside it is
-  placed and clipped inside it. It covers the whole window, so nothing placed against it moves.
-- **The page never scrolls**: `html.fc-window` and its `body` are `height: 100%; overflow: hidden;
-  overscroll-behavior: none`. Only the app's own pages (`index.html`, `demo.html`) carry the class:
-  Emerald's public page and the conversation frame load the same tokens and do scroll.
-- **Guide me never opens by itself.** The new document's offer (*A new document. Walk through where
-  things go?*) is removed, and with it `offered` in the guide's progress; a document that stored it
-  still reads, the key ignored. It opens from Help › Guide me, the palette, the rail's compass and
-  Home's line, and `src/ui/guide/opens.test.ts` fails if anything else calls it.
-- **Home's Getting started line is the list**: its steps tick themselves as before, and **Dismiss**
-  (was *Put this away*) hides it for this document, kept in the document's `setting` row as it was
-  (no table or format changes, so D-576 asks nothing more), and now on the all-done line too.
-
-**Rejected.** Hunting down each absolute element and giving it a positioned parent: the next one
-escapes again. `overflow: clip` on the page: a viewport cannot clip, it computes to `hidden`.
-
-**Consequences.** Checked in the browser (an absolute label in the last row no longer grows the page;
-a wheel past the end of the list leaves it at 0) and in the shell (a new ledger opens on Home with no
-dialog, the line has Guide me and Dismiss, Dismiss hides it).
-
-## D-582 · 2026-11-11 · A new ledger document shows what M59 U1 picked: the rail holds back each place until the document holds what it shows, Home before a read is the band and Getting started, and Transactions and By merchant put their filters behind Filter and their rarer acts behind More <a id="d-582"></a>
-
-**Context.** D-575: a second person's first ledger document was too much. M59 U1 shaped what a new
-one shows (D-577, `docs/mockups/m59-u1/brief.md`); this builds those picks as written.
-
-**Decision.**
-
-- **The rail holds back**, for a document keeping the ledger, computed from the document each time it
-  is drawn and never stored (`railRepository.ts` asks, `heldPlaces` and `holdBack` in `nav.ts`
-  decide): Home's Year until transactions span two calendar months (by charge date, falling back to
-  the transaction date, as the monthly totals do); Paychecks until a paycheck; Plan until a plan, a
-  bill, or a month whose counted rows have none uncategorized; Wealth until a goal, a debt, a fund
-  (a holding with a fund type) or a fund report (a holding reading), an account with holdings, a
-  holding place, or an account's opening balance; Dashboard until the document's dashboard holds a
-  block; and in a document whose only pack is the ledger, Formats and Connections until a format of
-  the person's own, Agenda until a dated one. **Held back is hidden, not removed**: every route
-  opens; the held place you stand on takes its line (it took none, M20 U0), its view its tab, in the
-  rail and in the collapsed rail's strip; the palette lists every place; no show-all switch.
-- **Home before anything is read** is the header, the intake band and Getting started: the
-  *Nothing here yet* paragraph is gone. The band's *Add by hand* is **Add a paycheck**. The *Taxes*
-  figure is left out while the document holds no paycheck.
-- **Getting started**'s next step is a link to its place (Home's own step stays text, the band being
-  just above), and the guide's order is read, *Give each shop a category, once*, *Make the list of
-  categories yours*, then the rest as before — reversing M28 F13's categories-first.
-- **Transactions**: search, the view switch, the month pager and *All months* in sight; Account,
-  Category, At least, At most and Clear behind **Filter** (`FilterButton`), which reads *Filter · 2*
-  when two are on; Category is an autocomplete listing *Uncategorized* once, Account a menu, no
-  platform `<select>`. Rules and *Export these n to CSV* are in the header's More menu (⋯). The
-  figures are Went out, Came in and No category in ink, and *Left out of totals* only while a row is
-  left out; the by-category strip is gone. With no rows the header (h1 *Transactions*) stays over
-  *No transactions yet.* and the text action *Read files*.
-- **By merchant**: Account and Month behind the same Filter; Order a menu on the list's header row;
-  *Skip all n* in More; two tiles, Waiting (with *n charges, ₪x without a category*) and
-  *Categorized this sitting*; with nothing read, no tiles, no Filter and no list header, only *No
-  transactions yet.* and *Read files*. U3's provider category and leave-out stay as built.
-- **A transaction's pane** no longer prints its natural key (M54 U5's row).
-- **The tours** (check:tours): the timesheet tour walked the rail to Formats in a ledger-only
-  document, which now holds Formats back until a format of the person's own exists, so its declare
-  is written first and the click on Formats follows. The development tour's step 2 failed on main
-  before this unit: the decision sheet was 1,110px in a 920px box since the `affects` column
-  (D-570) arrived without a width in the tour project's widths; `fixtures/synthetic/demo/project.md`
-  gives it the narrowest the sheet takes (48) and the title 150, so it fits again. Fixed in the
-  tour, not the table.
-
-**Rejected.** A show-all switch (U1: the palette and Getting started reach every place). Storing
-which places were revealed: a place would stay after its rows were deleted, and two machines could
-disagree. Holding back by tool or route: the rail is presentation, and a conversation loses
-nothing (`src/parity.test.ts` unchanged).
-
-**Consequences.** demo.emd's rail loses Dashboard (no block), Formats, Connections and Agenda
-(ledger-only, no format of its own). The picks are U1's, judged by the maintainer through M59 U1's
-and this unit's open review entries.
-
 ## D-583 · 2026-11-11 · The app in Hebrew: one translation layer for the whole app, Hebrew for everything a ledger document shows after M59, a full right-to-left mirror with English unchanged, the language following the computer until Settings says otherwise and kept per machine, and M59 with M60 shipped as one desktop release after the maintainer tries both <a id="d-583"></a>
 
 **Context.** D-575 put Hebrew in its own milestone after M59: the second person to use the ledger
@@ -1137,6 +713,7 @@ Hebrew a payslip or statement prints, which is a different fact from what the sc
 **Rejected.** Writing the Hebrew into `printed_as` (two facts in one column, and a source document's
 word is not always the screen's); a separate glossary note (D-436: terms are rows); imperative
 buttons (*שמור*), which pick a gender or read as an order.
+
 ## D-586 · 2026-11-11 · Right to left by logical sides: every class and rule that names a side names the start or the end, a chart and a bar placed by measuring stay left to right, a key steps the way its buttons are drawn, and a figure reads as written inside Hebrew <a id="d-586"></a>
 
 **Context.** D-583 point 3 asks for a full mirror in Hebrew with English unchanged, and M60 U1 put
@@ -1172,6 +749,7 @@ class twice); `dir="ltr"` on every SVG (a legend or an axis written in HTML besi
 flip); wrapping all 319 `formatMoney` calls (the figure rule covers the columns, and the sentences are
 U4 and U5's, which translate them); invisible isolate marks inside `formatMoney` (a copied figure
 would carry them, and `src/core` would ask the page its direction).
+
 ## D-587 · 2026-11-11 · A new ledger is seeded in the app's language and keeps it: the categories' Hebrew names sit beside `seededIds.json` under the same ids, a document's seed language is read from its own rows, and the page passes the app's language while `create_document` and `keep_packs` take `language` <a id="d-587"></a>
 
 **Context.** D-583 point 6: a ledger document made while the app is in Hebrew gets Hebrew category
@@ -1235,6 +813,7 @@ planned for the page to send the words over the bridge, with bundling as the fal
 **Rejected.** The page sending the words (late for the first frame, and a second copy); a separate
 shell catalogue in `electron/` (the glossary and the completeness test are the catalogue's);
 reversing the menu's order (twice mirrored on an OS that mirrors).
+
 ## D-589 · 2026-11-11 · A translated screen's words are the catalogue's, and a test that parses its files fails on one written inline; a count is a `one`/`other` pair, a sentence holding a document's value is filled with elements, a record the document keeps stays as written, and a card a Hebrew ledger makes in place is `כרטיס 1234` <a id="d-589"></a>
 
 **Context.** M60 U4 translates Home (with Year and the Getting started line), Read files and the
@@ -1275,6 +854,7 @@ words that end up stored in the document.
 in the editor (the suite is what a session runs); translating run notes (a record read back in the
 other language would be a word nobody wrote); a word for the shared components these screens draw
 (`CategoryPicker`, `PageMenu`, `Amount`, the notices) — U5's, listed on the unit's review entry.
+
 ## D-590 · 2026-11-11 · The second half of the screens speaks through the layer: a sentence with a value in it is one word with placeholders drawn by `Phrase`, a word outside a render is `tNow`, a category path's arrow points the way its own words run, a menu opens from its control's start edge, and a test reads the source for typed English <a id="d-590"></a>
 
 **Context.** D-583: Categories, Plan with the 50 / 30 / 20 proposal, Settings, the guide, the rail
@@ -1347,6 +927,30 @@ taught it, to say what an accepted entry already says); a day threshold before a
 (a number to tune, and the gap is real the day it opens); a `closes` view word on the unit's link
 (the roadmap already says what a unit folds under); a separate start question per section (they read
 the ready view's own members, as **Held** and **Stalled** do).
+
+## D-592 · 2026-11-15 · A landing lists the unit's open review entries beside its report and accepts in the same call the ones named by the start of their `do`; nothing picks which the report proves, a child's proposal never accepts, and nothing new is written on an entry <a id="d-592"></a>
+
+**Context.** Another project's unit report held the very device log its review entry asked for, and
+nothing linked the two, so the entry stayed open (inbox, 2026-11-13). D-591 made the gap visible in
+`start_here`; this closes it where the evidence is written, at the landing.
+
+**Decision.** (M61 U2; points 1 to 3 are the maintainer's, 2026-11-15.)
+
+1. **Side by side, nothing picked.** After its diff, `land_units` lists each landed unit's review
+   entries still `open` — `do` and `should`, ten and a count — under the unit's report (the first
+   1,500 characters, and where the rest is). The session or the maintainer judges which the report
+   proves; a sentence the tool picked by shared words would be a guess the owner has to check anyway.
+2. **The driver accepts, never a child.** A landing takes `accept_entries`: each the start of an open
+   entry's `do`, case aside, which must name exactly one of that unit's open entries or the landing is
+   refused whole. A proposal from a worktree may not carry it. After the landing, one is accepted with
+   `update_format_rows review_entry` by `where:{unit, do}`, which the answer prints.
+3. **Nothing extra on the entry.** Accepting moves `state` to `accepted`; the report stays on the unit
+   as the evidence, so `review_entry` gains no column and no document needs `keep_packs`.
+
+**Rejected.** Matching a report sentence to each entry (a guess presented as evidence); letting a
+proposal accept (the builder grading its own work, unseen by the driver); an `accepted_by` column (a
+pack format change for what the unit's report already says); accepting by a number from the listing
+(the number belongs to one answer, and the next write may reorder it).
 
 ## Related
 

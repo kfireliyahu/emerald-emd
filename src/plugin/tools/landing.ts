@@ -110,6 +110,8 @@ interface Landing {
   readonly sameCommit: boolean
   /** The closing report of the session that built it. */
   readonly report: string | undefined
+  /** Its open review entries the report proves, each by the start of its `do` (M61 U2). */
+  readonly acceptEntries: readonly string[]
 }
 
 /** A git commit as a person or a tool prints it: 7 to 40 hex digits. */
@@ -165,6 +167,15 @@ function otherBranchOf(entry: Record<string, unknown>, field: string): boolean {
   return flagOf(entry, 'other_branch', field)
 }
 
+function textsOf(entry: Record<string, unknown>, key: string, field: string): readonly string[] {
+  const value = entry[key]
+  if (value === undefined || value === null) return []
+  if (!Array.isArray(value) || value.some((each) => typeof each !== 'string' || each.trim() === '')) {
+    throw new ToolInputError(`\`${field}.${key}\` must be a list of non-empty text.`)
+  }
+  return value.map((each: string) => each.trim())
+}
+
 function reportOf(entry: Record<string, unknown>, field: string): string | undefined {
   const report = textOf(entry, 'report', field)
   if (report !== undefined && report.length > REPORT_MAX) {
@@ -189,15 +200,18 @@ const LANDING_KEYS = new Set([
   'same_commit',
   'other_branch',
   'report',
+  'accept_entries',
 ])
 
 /**
  * What a child may propose (M51 U3): a landing without `close_milestone`, which
- * is the maintainer's word and never a session's, and without `other_branch`, which
- * is the manager's to say when it lands the proposal.
+ * is the maintainer's word and never a session's, without `other_branch`, which
+ * is the manager's to say when it lands the proposal, and without
+ * `accept_entries` (M61 U2): whether a report proves an entry is the driver's
+ * to judge, or the maintainer's (the maintainer, 2026-11-15).
  */
 const PROPOSAL_KEYS: ReadonlySet<string> = new Set(
-  [...LANDING_KEYS].filter((key) => key !== 'close_milestone' && key !== 'other_branch'),
+  [...LANDING_KEYS].filter((key) => key !== 'close_milestone' && key !== 'other_branch' && key !== 'accept_entries'),
 )
 
 /** One landing, from an object a caller or a child wrote; throws `ToolInputError`. */
@@ -234,6 +248,7 @@ function landingOf(raw: unknown, field: string, keys: ReadonlySet<string>): Land
     otherBranch: otherBranchOf(entry, field),
     sameCommit,
     report: reportOf(entry, field),
+    acceptEntries: textsOf(entry, 'accept_entries', field),
   }
 }
 
@@ -403,6 +418,8 @@ interface StepsPlan {
   /** A refusal before any step: a unit that is not there, or already landed. */
   readonly blocked: string | undefined
   readonly steps: readonly Step[]
+  /** What follows the diff when nothing refused: the review entries still open beside the report (M61 U2). */
+  readonly after: string | undefined
   /** Each step's diff, in order, up to and including one that refused. */
   readonly said: readonly { readonly heading: string; readonly text: string }[]
   readonly refusedAt: string | undefined
@@ -424,7 +441,7 @@ function byRef(document: OpenDocument, declaration: FormatDeclaration, ref: stri
  * Run the steps in order, each judged on the document the steps before it
  * left — rehearsed and taken back, so a dry run writes nothing (D-395).
  */
-function rehearsed(document: OpenDocument, steps: readonly Step[]): Omit<StepsPlan, 'blocked' | 'steps'> {
+function rehearsed(document: OpenDocument, steps: readonly Step[]): Omit<StepsPlan, 'blocked' | 'steps' | 'after'> {
   return rehearse(document.db, () => {
     const said: { heading: string; text: string }[] = []
     for (const step of steps) {
@@ -438,7 +455,10 @@ function rehearsed(document: OpenDocument, steps: readonly Step[]): Omit<StepsPl
 }
 
 /** The composed mutation: plan by rehearsal, apply step by step. */
-function stepsMutation(what: string, build: (document: OpenDocument) => { blocked?: string; steps: readonly Step[] }): Mutation<StepsPlan> {
+function stepsMutation(
+  what: string,
+  build: (document: OpenDocument) => { blocked?: string; steps: readonly Step[]; after?: string },
+): Mutation<StepsPlan> {
   const refuses = (plan: StepsPlan): boolean => plan.blocked !== undefined || plan.refusedAt !== undefined
   const describe = (plan: StepsPlan): string => {
     if (plan.blocked !== undefined) return plan.blocked
@@ -450,7 +470,7 @@ function stepsMutation(what: string, build: (document: OpenDocument) => { blocke
         ...body,
       )
     }
-    return paragraphs(...body)
+    return paragraphs(...body, plan.after)
   }
   return {
     refuses,
@@ -460,8 +480,10 @@ function stepsMutation(what: string, build: (document: OpenDocument) => { blocke
     },
     plan: (document) => {
       const built = build(document)
-      if (built.blocked !== undefined) return { blocked: built.blocked, steps: [], said: [], refusedAt: undefined }
-      return { blocked: undefined, steps: built.steps, ...rehearsed(document, built.steps) }
+      if (built.blocked !== undefined) {
+        return { blocked: built.blocked, steps: [], after: undefined, said: [], refusedAt: undefined }
+      }
+      return { blocked: undefined, steps: built.steps, after: built.after, ...rehearsed(document, built.steps) }
     },
     describe,
     apply: (document, plan) => {
@@ -473,7 +495,7 @@ function stepsMutation(what: string, build: (document: OpenDocument) => { blocke
         if (planned.refused) throw new Error(`The ${step.heading} step refused at commit: ${planned.said}`)
         return section(step.heading, planned.apply())
       })
-      return paragraphs(...done)
+      return paragraphs(...done, plan.after)
     },
   }
 }
@@ -484,11 +506,13 @@ function landingSteps(
   document: OpenDocument,
   written: readonly Landing[],
   proposed: readonly ProposalRef[],
-): { blocked?: string; steps: readonly Step[] } {
+): { blocked?: string; steps: readonly Step[]; after?: string } {
   const unitFormat = resolveWritable(document, 'unit')
   if ('refusal' in unitFormat) return { blocked: paragraphs(unitFormat.refusal, NO_PACK), steps: [] }
   const milestoneFormat = resolveWritable(document, 'milestone')
   const milestones = 'refusal' in milestoneFormat ? undefined : milestoneFormat.declaration
+  const entryFormat = resolveWritable(document, 'review_entry')
+  const reviews = 'refusal' in entryFormat ? undefined : entryFormat.declaration
 
   const read = proposalsIn(document, proposed)
   if (read.blocked !== undefined) return { blocked: read.blocked, steps: [] }
@@ -504,6 +528,8 @@ function landingSteps(
   const decisions: Record<string, unknown>[] = []
   const edits: Record<string, unknown>[] = []
   const entries: Record<string, unknown>[] = []
+  const accepted: Record<string, unknown>[] = []
+  const stillOpen: string[] = []
   const closing = new Map<string, string>()
   /** Each unit's ref as its row has it and the decision it names, for the inbox row it answers. */
   const landedAs = new Map<string, { readonly ref: string; readonly decision: string | undefined }>()
@@ -562,6 +588,29 @@ function landingSteps(
       },
     })
     for (const entry of landing.reviewEntries) entries.push({ unit: ref, state: 'open', ...entry })
+    // The entries already open on it (M61 U2): those its report proves accepted
+    // here, the rest listed beside the report after the diff.
+    const open = reviews === undefined ? [] : openEntries(document, reviews, row.id)
+    const taken = new Set<string>()
+    for (const start of landing.acceptEntries) {
+      const said = start.toLowerCase()
+      const found = open.filter((each) => each.do.toLowerCase().startsWith(said))
+      if (found.length !== 1) {
+        refusals.push([
+          landing.unit,
+          found.length === 0
+            ? `No open review entry of it has a \`do\` that begins \`${start}\`${open.length === 0 ? '; it has none open' : ''}.`
+            : `${String(found.length)} of its open review entries have a \`do\` that begins \`${start}\`; say more of it.`,
+        ])
+        continue
+      }
+      const [one] = found
+      if (one === undefined || taken.has(one.id)) continue
+      taken.add(one.id)
+      accepted.push({ id: one.id, expect: { state: 'open' }, values: { state: 'accepted' } })
+    }
+    const left = open.filter((each) => !taken.has(each.id))
+    if (left.length > 0) stillOpen.push(stillOpenText(ref, left, landing.report ?? textCell(row, 'report')))
     if (landing.closeMilestone !== undefined) closing.set(landing.closeMilestone.toLowerCase(), landing.closeMilestone)
   }
 
@@ -581,6 +630,9 @@ function landingSteps(
   if (decisions.length > 0) steps.push(stepOf('decision', decisions.length, recordMutation('decision', decisions)))
   steps.push(stepOf('unit', edits.length, updateMutation('unit', edits)))
   if (entries.length > 0) steps.push(stepOf('review_entry', entries.length, recordMutation('review_entry', entries)))
+  if (accepted.length > 0) {
+    steps.push(stepOf('review_entry accepted', accepted.length, updateMutation('review_entry', accepted)))
+  }
   if (closing.size > 0) {
     const closes = [...closing.values()].map((ref) => ({ where: { ref }, expect: { state: 'open' }, values: { state: 'closed' } }))
     steps.push(stepOf('milestone', closes.length, updateMutation('milestone', closes)))
@@ -603,7 +655,64 @@ function landingSteps(
     })
     steps.push(stepOf('inbox', applied.length, updateMutation('inbox', applied)))
   }
-  return { steps }
+  return { steps, ...(stillOpen.length === 0 ? {} : { after: stillOpen.join('\n\n') }) }
+}
+
+/** One open review entry: its id, what to do and what should happen. */
+interface OpenEntry {
+  readonly id: string
+  readonly do: string
+  readonly should: string
+}
+
+/** A unit's review entries in state `open`, in the order of their `do`. */
+function openEntries(document: OpenDocument, reviews: FormatDeclaration, unitId: string): readonly OpenEntry[] {
+  return listRows(document.db, reviews, { match: new Map([['unit', unitId], ['state', 'open']]), limit: 500 })
+    .map((row) => ({ id: row.id, do: textCell(row, 'do') ?? '', should: textCell(row, 'should') ?? '' }))
+    .sort((a, b) => a.do.localeCompare(b.do))
+}
+
+/** How many open entries a landing's answer lists before it says how many more. */
+const ENTRIES_SHOWN = 10
+
+/** How much of a report the answer repeats beside them. */
+const REPORT_SHOWN = 1500
+
+/**
+ * **A unit's open review entries beside its report** (M61 U2), after the
+ * diff: what each says should happen, and the report that may already prove
+ * it. Side by side, and nothing picked: the session or the maintainer judges
+ * which the report proves (the maintainer, 2026-11-15), and accepts those by
+ * their `do`. Nothing else is written on an entry, since the report is kept on
+ * the unit.
+ */
+function stillOpenText(ref: string, open: readonly OpenEntry[], report: string | undefined): string {
+  const quoted = JSON.stringify(ref)
+  const shown = open.slice(0, ENTRIES_SHOWN)
+  const cut = report !== undefined && report.length > REPORT_SHOWN
+  const said =
+    report === undefined
+      ? 'It has no report, so nothing here proves any of them yet.'
+      : `Its report${cut ? ` (the first ${String(REPORT_SHOWN)} characters; \`format_rows unit match:{ref:${quoted}} columns:[report]\` is all of it)` : ''}:\n\n` +
+        (cut ? `${report.slice(0, REPORT_SHOWN).trimEnd()}…` : report)
+          .split(/\r?\n/)
+          .map((line) => `> ${line}`)
+          .join('\n')
+  return paragraphs(
+    `## ${plural(open.length, 'review entry', 'review entries')} still open on ${ref}`,
+    'Accept only those its report already proves; the rest stay open for a person to try. ' +
+      `One by its \`do\`: \`update_format_rows review_entry edits:[{where:{unit:${quoted}, do:"…"}, values:{state:"accepted"}}]\`.`,
+    said,
+    shown.map((each, index) => `${String(index + 1)}. **Do:** ${oneLine(each.do)}\n   **Should:** ${oneLine(each.should)}`).join('\n'),
+    open.length > shown.length
+      ? `And ${String(open.length - shown.length)} more: \`format_rows review_entry match:{unit:${quoted}, state:open}\`.`
+      : undefined,
+  )
+}
+
+/** A cell on one line of a list. */
+function oneLine(text: string): string {
+  return text.replace(/\s+/g, ' ').trim()
 }
 
 export const landUnitsTool: PluginTool = {
@@ -616,7 +725,8 @@ export const landUnitsTool: PluginTool = {
       '`landed` (default today), `files` and `decision` (default its first new one), its ' +
       '`review_entries` (`state: open` default), `close_milestone`, its git `commit` (refused without ' +
       'one unless `same_commit: true`) and `branch` (another than the claim’s refused unless ' +
-      '`other_branch`), and the `report` of the session that built it. Or `inbox`: ids of a child’s ' +
+      '`other_branch`), the `report` of the session that built it, and `accept_entries`: open review ' +
+      'entries it proves, by their `do`’s start. Or `inbox`: ids of a child’s ' +
       'proposals — an inbox row, `state: new`, `refs` its unit, its `body` one ```json block of ' +
       'one unit’s landing (no `close_milestone`), written to the document path the hooks printed ' +
       '— each landed as written and moved to `applied`. Each step is `record_format_rows` or ' +
@@ -652,6 +762,11 @@ export const landUnitsTool: PluginTool = {
               branch: stringProp('The git branch it lands from.'),
               other_branch: booleanProp('Land it although claimed on another branch.'),
               report: stringProp(`Its builder’s closing report, plain text, up to ${String(REPORT_MAX)} characters.`),
+              accept_entries: {
+                type: 'array',
+                description: 'By the start of each one’s `do`.',
+                items: { type: 'string' },
+              },
             },
             required: ['unit'],
             additionalProperties: false,
