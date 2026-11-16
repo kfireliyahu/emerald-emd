@@ -14,11 +14,8 @@ import { arrowStep } from '@/ui/direction.ts'
  * SVG so nothing here needs an icon font, which would be a face to ship or a
  * request to make and the app makes none.
  */
-const OPTIONS: readonly { readonly value: ThemePreference; readonly label: string }[] = [
-  { value: 'light', label: 'Light' },
-  { value: 'system', label: 'System' },
-  { value: 'dark', label: 'Dark' },
-]
+/** The three, in order; each is named by `chrome.components.theme.<value>`. */
+const OPTIONS: readonly { readonly value: ThemePreference }[] = [{ value: 'light' }, { value: 'system' }, { value: 'dark' }]
 
 export function ThemeToggle() {
   const t = useT()

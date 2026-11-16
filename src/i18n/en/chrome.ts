@@ -168,6 +168,10 @@ export const chrome = {
     more: 'More',
     newChoice: '+ New…',
     newName: 'New {noun} name',
+    newOf: 'A new {noun}',
+    kindOf: 'What kind of {noun}',
+    // A format's count on the rail, said after its number to a screen reader (M54 F5).
+    entries: { one: 'entry', other: 'entries' },
     name: 'Name',
     create: 'Create',
     cancel: 'Cancel',

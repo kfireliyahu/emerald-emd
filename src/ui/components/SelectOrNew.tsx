@@ -108,9 +108,9 @@ export function NewByName<Kind extends string>({
   }
 
   return (
-    <div role="group" aria-label={`A new ${noun}`} className="fc-pop-enter flex flex-col gap-2.5 border border-hairline bg-surface p-3">
+    <div role="group" aria-label={t('chrome.components.newOf', { noun })} className="fc-pop-enter flex flex-col gap-2.5 border border-hairline bg-surface p-3">
       {kinds !== undefined && (
-        <div role="group" aria-label={`What kind of ${noun}`} className="flex flex-wrap">
+        <div role="group" aria-label={t('chrome.components.kindOf', { noun })} className="flex flex-wrap">
           {kinds.map(([value, label]) => (
             <button
               key={value}

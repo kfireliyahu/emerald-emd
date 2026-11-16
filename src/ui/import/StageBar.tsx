@@ -14,7 +14,6 @@ import {
 import { listAccounts, type AccountKind } from '@/data/repositories/accountRepository.ts'
 import { countKey } from '@/i18n/count.ts'
 import { useT } from '@/i18n/current.ts'
-import { fillNodes } from '@/i18n/nodes.tsx'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { cardsLine } from './cardsLine.tsx'
 import { Button } from '@/ui/components/Button.tsx'
@@ -23,6 +22,7 @@ import { SELECT } from '@/ui/components/fieldLook.ts'
 import type { DraftMapping, DraftTransaction } from '@/domain/model/importing.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { batchFor, sheetsOf, useStatementBatch, writesSheet } from '@/state/statementBatch.ts'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 
 /**
  * The end of the mapper: the file, read with the mapping on screen, handed back
@@ -214,14 +214,14 @@ export function StageBar({
       {/* Only when an account is about to be **created**. A file going into an
           account the user already bound is not the moment to ask what that
           account is (D-070). */}
-      {severalCards !== undefined && <span data-cards>{fillNodes(t('reading.stage.eachOwn'), { cards: severalCards })}</span>}
+      {severalCards !== undefined && <span data-cards><Phrase text={t('reading.stage.eachOwn')} parts={{ cards: severalCards }} /></span>}
 
       {severalCards === undefined && boundAccountId === undefined && held !== undefined && (
         <span className="text-caption text-ink-secondary">
           {held.accountId === undefined && held.madeBy !== undefined ? (
-            fillNodes(t('reading.stage.alsoIn'), { rows: held.rows, name: <Bidi>{held.madeBy}</Bidi> })
+            <Phrase text={t('reading.stage.alsoIn')} parts={{ rows: held.rows, name: <Bidi>{held.madeBy}</Bidi> }} />
           ) : (
-            fillNodes(t('reading.stage.alreadyIn'), { rows: held.rows, name: <Bidi>{held.accountName}</Bidi> })
+            <Phrase text={t('reading.stage.alreadyIn')} parts={{ rows: held.rows, name: <Bidi>{held.accountName}</Bidi> }} />
           )}
         </span>
       )}

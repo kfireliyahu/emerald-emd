@@ -493,6 +493,7 @@ written out here.
 | D-588 | 2026-11-11 | The shell's words are bundled, not sent: its menu, dialogs and windows' titles are the catalogue's `shell` area, read by `electron/language.ts`, and the page sends only which language — kept in `settings.json`, the computer's until a page has said | M60 |
 | D-589 | 2026-11-11 | A translated screen's words are the catalogue's, and a test that parses its files fails on one written inline; a count is a `one`/`other` pair, a sentence holding a document's value is filled with elements, a record the document keeps stays as written, and a card a Hebrew ledger makes in place is `כרטיס 1234` | M60 |
 | D-590 | 2026-11-11 | The second half of the screens speaks through the layer: a sentence with a value in it is one word with placeholders drawn by `Phrase`, a word outside a render is `tNow`, a category path's arrow points the way its own words run, a menu opens from its control's start edge, and a test reads the source for typed English | M60 |
+| D-595 | 2026-11-16 | One test and one name for what M60 U4 and U5 built twice: `words.test.ts` holds every translated screen, and `Phrase` is the one way to draw a sentence with things in it | M60 |
 | D-591 | 2026-11-15 | `start_here` says what a milestone still owes: the milestones nothing under them holds open, and the built units rows still point at, read from views a document already declares, with no new unit state | M61 |
 | D-592 | 2026-11-15 | A landing lists the unit's open review entries beside its report and accepts in the same call the ones named by the start of their `do`; nothing picks which the report proves, a child's proposal never accepts, and nothing new is written on an entry | M61 |
 | D-593 | 2026-11-15 | A landing takes `follow_ups`, each a planned unit (with a brief, under Later unless it names a milestone), an open question or a review entry, written with the rest; a report that sounds owed and names none is quoted back, never refused | M61 |
@@ -900,6 +901,32 @@ strings, to this unit.
 translation library (D-584); flipping every arrow by the app's language (a Latin path in a Hebrew app
 would point the wrong way); importing the catalogue into `src/data` for the guide (the plugin reads
 it in English); a render test per screen (a fixture per screen for what the parser sees in one pass).
+
+## D-595 · 2026-11-16 · One test and one name for what M60 U4 and U5 built twice: `words.test.ts` holds every translated screen, and `Phrase` is the one way to draw a sentence with things in it <a id="d-595"></a>
+
+**Context.** M60 U4 and U5 were built side by side and merged (D-589, D-590), and two pairs stayed:
+two source tests holding the same rule, and `fillNodes` beside `Phrase`, the same function as a
+component (M60 F1's brief).
+
+**Decision.** (M60 F1; mechanical, the session's calls.)
+
+1. **One test.** U5's 45 files joined `TRANSLATED` in `src/i18n/words.test.ts`, which learned what
+   U5's test knew: text in `<code>`, `<kbd>`, `<Kbd>` or `<Key>` is a key or a command; a CSS string
+   (`color-mix(`, `url(`, `translate(`) is not a word; `Emerald` is a name; `say` is a translation
+   call; a `shortcut` or `aria-keyshortcuts` property holds a key. The real words went into the
+   catalogue with Hebrew — the theme's three names (already there), *A new* / *What kind of*,
+   the rail count's *entry* / *entries*, and a first plan's name *Default* (ברירת מחדל, as the glossary
+   has it) — and two literals are allowed with why. `screensPartTwo.test.ts` is gone, and the rule
+   row names one test.
+2. **One name: `Phrase`.** Every `fillNodes(text, parts)` became `<Phrase text parts />`, which goes
+   wherever an expression does; `src/i18n/nodes.tsx` is gone.
+3. **The probe leaves a document's value out of a name it is in.** `probe:screens --lang he` takes
+   every value drawn on the page in a `Bidi` (or a key cap, or a field's content) out of an
+   `aria-label`, `title` or `placeholder` before reading it for English. With Categories' budget-line
+   name put in a `Bidi`, it lists no English on the thirteen translated routes of the demo ledger.
+
+**Rejected.** Keeping `fillNodes` (a call in a JSX child needs braces, and a component is what the
+screens already reach for most); allowing U5's real words instead of translating them.
 
 ## Related
 

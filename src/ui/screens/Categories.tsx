@@ -1376,7 +1376,9 @@ function MonthlyTarget({
 
   return (
     <label className="flex items-center gap-2 text-caption text-ink-tertiary">
-      <span className="sr-only">{t('categories.target.bucketFor', { name: category.name })}</span>
+      <span className="sr-only">
+        <Phrase text={t('categories.target.bucketFor')} parts={{ name: <Bidi>{category.name}</Bidi> }} />
+      </span>
       <span aria-hidden>{t('categories.target.bucket')}</span>
       <input
         value={text}

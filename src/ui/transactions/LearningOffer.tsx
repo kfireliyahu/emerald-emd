@@ -11,7 +11,7 @@ import { FIELD } from '@/ui/components/fieldLook.ts'
 import { Why } from '@/ui/rules/Why.tsx'
 import { countKey } from '@/i18n/count.ts'
 import { useT } from '@/i18n/current.ts'
-import { fillNodes } from '@/i18n/nodes.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 
 /**
  * "Always categorize this as that?" — **the one place a rule is made from a row**
@@ -72,16 +72,16 @@ export function LearningOffer({
               done by hand, three times, what one click would have stopped. */}
           {offer.insistent && (
             <p className="text-caption text-ink-secondary">
-              {fillNodes(t('transactions.offer.insistent'), {
+              <Phrase text={t('transactions.offer.insistent')} parts={{
                 merchant: <Bidi className="text-ink">{merchantRaw}</Bidi>,
                 category: <span className="text-ink">{categoryPath ?? t('transactions.offer.thisCategory')}</span>,
                 count: <span className="tabular-nums">{offer.corrections}</span>,
-              })}
+              }} />
             </p>
           )}
           <div className="flex flex-wrap items-center gap-x-2">
             <span>
-              {fillNodes(t('transactions.offer.always'), { merchant: <Bidi className="font-medium">{merchantRaw}</Bidi> })}
+              <Phrase text={t('transactions.offer.always')} parts={{ merchant: <Bidi className="font-medium">{merchantRaw}</Bidi> }} />
             </span>
             <CategoryPicker
               categories={categories}
@@ -129,9 +129,9 @@ export function LearningOffer({
             <label className="flex items-center gap-2 select-none">
               <input type="checkbox" checked={past} onChange={(event) => setPast(event.target.checked)} />
               <span>
-                {fillNodes(t(countKey('transactions.offer.alsoPast', earlier)), {
+                <Phrase text={t(countKey('transactions.offer.alsoPast', earlier))} parts={{
                   count: <span className="tabular-nums text-ink">{earlier}</span>,
-                })}
+                }} />
               </span>
             </label>
           ) : (
@@ -144,10 +144,10 @@ export function LearningOffer({
           <span className="text-negative">{problems[0]?.message}</span>
         ) : (
           <span>
-            {fillNodes(t('transactions.offer.writes'), {
+            <Phrase text={t('transactions.offer.writes')} parts={{
               why: <Why rule={asRule(draft)} accounts={accounts} />,
               category: <span className="text-ink-secondary">{categoryPath ?? t('transactions.offer.thisCategory')}</span>,
-            })}
+            }} />
           </span>
         )}
       </div>

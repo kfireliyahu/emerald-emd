@@ -274,7 +274,7 @@ export function Plan() {
         onStart={() => setStarterAnswers(new Map())}
         onEmpty={() =>
           write((database, now) => {
-            setPlanId(createSplitPlan(database, { name: 'Default', currency, isDefault: true }, now).id)
+            setPlanId(createSplitPlan(database, { name: t('plan.screen.defaultName'), currency, isDefault: true }, now).id)
           })
         }
       />

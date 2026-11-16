@@ -22,7 +22,7 @@ import { instantDay } from '@/core/instant.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { countKey } from '@/i18n/count.ts'
 import { useDates, useT } from '@/i18n/current.ts'
-import { fillNodes } from '@/i18n/nodes.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 
 /**
  * One transaction, in full, beside the table rather than instead of it
@@ -189,9 +189,9 @@ export function DetailPanel({
                 {t('transactions.panel.providerRule')}
               </Button>
               <p className="text-caption text-ink-tertiary">
-                {fillNodes(t('transactions.panel.providerCovers'), {
+                <Phrase text={t('transactions.panel.providerCovers')} parts={{
                   category: <Bidi className="text-ink-secondary">{transaction.providerCategory}</Bidi>,
-                })}
+                }} />
               </p>
             </>
           )}
@@ -221,7 +221,7 @@ export function DetailPanel({
             {installment.originalTotal !== undefined && (
               <span className="text-ink-tertiary">
                 {' · '}
-                {fillNodes(t('transactions.panel.inTotal'), { amount: <Amount value={installment.originalTotal} /> })}
+                <Phrase text={t('transactions.panel.inTotal')} parts={{ amount: <Amount value={installment.originalTotal} /> }} />
               </span>
             )}
           </Fact>
@@ -296,9 +296,9 @@ export function DetailPanel({
 
           {aliasedCard === undefined ? (
             <p className="mt-1 text-caption text-ink-tertiary">
-              {fillNodes(t('transactions.panel.paysCardHint'), {
+              <Phrase text={t('transactions.panel.paysCardHint')} parts={{
                 merchant: <Bidi>{transaction.merchantNormalized}</Bidi>,
-              })}
+              }} />
             </p>
           ) : aliasedCard.excludeSettlementsFromStats === undefined ? (
             <div className="mt-2">
@@ -325,10 +325,7 @@ export function DetailPanel({
             </div>
           ) : (
             <p className="mt-1 text-caption text-ink-tertiary">
-              {fillNodes(
-                t(aliasedCard.excludeSettlementsFromStats ? 'transactions.panel.leftOut' : 'transactions.panel.counted'),
-                { card: <Bidi>{aliasedCard.name}</Bidi> },
-              )}
+              <Phrase text={t(aliasedCard.excludeSettlementsFromStats ? 'transactions.panel.leftOut' : 'transactions.panel.counted')} parts={{ card: <Bidi>{aliasedCard.name}</Bidi> }} />
             </p>
           )}
         </div>
@@ -362,15 +359,15 @@ export function DetailPanel({
             {transaction.sourceRowRef === undefined ? (
               <Bidi className="text-ink">{provenance.fileName}</Bidi>
             ) : (
-              fillNodes(t('transactions.panel.fileOf'), {
+              <Phrase text={t('transactions.panel.fileOf')} parts={{
                 row: <Bidi>{transaction.sourceRowRef}</Bidi>,
                 file: <Bidi className="text-ink">{provenance.fileName}</Bidi>,
-              })
+              }} />
             )}
             {provenance.sheetName !== undefined &&
-              fillNodes(t('transactions.panel.sheet'), { sheet: <Bidi>{provenance.sheetName}</Bidi> })}
+              <Phrase text={t('transactions.panel.sheet')} parts={{ sheet: <Bidi>{provenance.sheetName}</Bidi> }} />}
             {provenance.mappingName !== undefined &&
-              fillNodes(t('transactions.panel.readBy'), { reader: <Bidi>{provenance.mappingName}</Bidi> })}
+              <Phrase text={t('transactions.panel.readBy')} parts={{ reader: <Bidi>{provenance.mappingName}</Bidi> }} />}
             {provenance.importedAt !== undefined && (
               <span className="tabular-nums">{t('transactions.panel.imported', { day: instantDay(provenance.importedAt) })}</span>
             )}
@@ -428,32 +425,32 @@ function Explanation({
   return (
     <div className="mt-2 text-caption text-ink-tertiary">
       <p>
-        {fillNodes(t('transactions.panel.categorizedBy'), {
+        <Phrase text={t('transactions.panel.categorizedBy')} parts={{
           rule:
             ruleName === undefined ? (
               <span className="text-ink-secondary">{t('transactions.panel.deletedRule')}</span>
             ) : (
               <Bidi className="text-ink">{ruleName}</Bidi>
             ),
-        })}
+        }} />
       </p>
 
       {stillAgrees && today.shadowed.length > 0 && (
         <p className="mt-1">
-          {fillNodes(t('transactions.panel.beat'), {
+          <Phrase text={t('transactions.panel.beat')} parts={{
             rules: today.shadowed.map((rule, index) => (
               <span key={rule.id}>
                 {index > 0 && ', '}
                 <Bidi className="text-ink-secondary">{rule.name}</Bidi> (<Why rule={rule} accounts={accounts} />)
               </span>
             )),
-          })}
+          }} />
         </p>
       )}
 
       {!stillAgrees && (
         <p className="mt-1">
-          {fillNodes(t('transactions.panel.changed'), {
+          <Phrase text={t('transactions.panel.changed')} parts={{
             category: (
               <span className="text-ink-secondary">
                 {today.winner === undefined
@@ -465,10 +462,10 @@ function Explanation({
             by:
               today.winner === undefined
                 ? null
-                : fillNodes(t('transactions.panel.byRule'), {
+                : <Phrase text={t('transactions.panel.byRule')} parts={{
                     rule: <Bidi className="text-ink-secondary">{today.winner.name}</Bidi>,
-                  }),
-          })}
+                  }} />,
+          }} />
         </p>
       )}
     </div>
@@ -571,22 +568,22 @@ function HoldingField({
           t('transactions.panel.holdingHint')
         ) : (
           <>
-            {fillNodes(t('transactions.panel.cashInto'), {
+            <Phrase text={t('transactions.panel.cashInto')} parts={{
               holding: <Bidi>{named.name}</Bidi>,
               account: <Bidi>{transaction.accountName}</Bidi>,
-            })}
+            }} />
             {heldNow === undefined
               ? null
               : heldNow.kind === 'VALUE'
-                ? fillNodes(` ${t(countKey('transactions.panel.holds', heldNow.rows))}`, {
+                ? <Phrase text={` ${t(countKey('transactions.panel.holds', heldNow.rows))}`} parts={{
                     holding: <Bidi>{named.name}</Bidi>,
                     quantity: quantityText(heldNow.quantityMicro),
                     count: heldNow.rows,
-                  })
-                : fillNodes(` ${t('transactions.panel.unchecked')}`, {
+                  }} />
+                : <Phrase text={` ${t('transactions.panel.unchecked')}`} parts={{
                     holding: <Bidi>{named.name}</Bidi>,
                     reason: heldNow.reason,
-                  })}
+                  }} />}
           </>
         )}
       </p>
@@ -615,10 +612,10 @@ function TransferField({
     <div className="border-b border-hairline px-5 py-3">
       <Label>{t('transactions.panel.transfer')}</Label>
       <p className="mt-1 text-ink-secondary">
-        {fillNodes(t(leftHere ? 'transactions.panel.arrivedIn' : 'transactions.panel.left'), {
+        <Phrase text={t(leftHere ? 'transactions.panel.arrivedIn' : 'transactions.panel.left')} parts={{
           account: <Bidi>{other.accountName}</Bidi>,
           date: <span className="tabular-nums">{other.date}</span>,
-        })}
+        }} />
         {t(
           pair.decision === 'PAIRED'
             ? 'transactions.panel.paired'

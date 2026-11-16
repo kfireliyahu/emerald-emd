@@ -308,6 +308,7 @@ export const plan = {
     moreTitle: 'Other plans, copy, draw',
     month: 'Month',
     planName: 'Plan name',
+    defaultName: 'Default',
     deleteAsk: 'Delete the plan {name}? The plan and its sizes are gone; your bills stay.',
     deleteAnotherDefault: ' Another plan becomes the default.',
     deleteOnly: ' It is your only plan, so Plan will offer to start a new one.',

@@ -2,8 +2,8 @@ import { Button } from '@/ui/components/Button.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
 import { countKey } from '@/i18n/count.ts'
 import { useT, type Translate } from '@/i18n/current.ts'
-import { fillNodes } from '@/i18n/nodes.tsx'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 
 /**
  * Where a reader comes from and what it is called. On screen it is a **reader**
@@ -60,7 +60,7 @@ export function MappingBar({
   if (saved !== undefined && !dirty && !editing) {
     return (
       <Bar>
-        <span>{fillNodes(t('reading.reader.readBy'), { name: <Name>{saved.name}</Name> })}</span>
+        <span><Phrase text={t('reading.reader.readBy')} parts={{ name: <Name>{saved.name}</Name> }} /></span>
         <span className="text-ink-secondary">{t('reading.reader.matched')}</span>
         <Button size="sm" className="ms-auto" onClick={onEdit}>
           {t('reading.reader.mapAnyway')}
@@ -115,7 +115,7 @@ function status(
     return (
       <>
         <span className="text-negative">{t(countKey('reading.reader.changed', changedCount), { count: changedCount })}</span>{' '}
-        {fillNodes(t('reading.reader.since'), { name: <Name>{saved.name}</Name> })}{' '}
+        <Phrase text={t('reading.reader.since')} parts={{ name: <Name>{saved.name}</Name> }} />{' '}
         <span className="text-ink-secondary">{t('reading.reader.checkMarked')}</span>
       </>
     )
@@ -124,7 +124,7 @@ function status(
   if (saved !== undefined && dirty) {
     return (
       <>
-        {fillNodes(t('reading.reader.changedFrom'), { name: <Name>{saved.name}</Name> })}{' '}
+        <Phrase text={t('reading.reader.changedFrom')} parts={{ name: <Name>{saved.name}</Name> }} />{' '}
         <span className="text-ink-secondary">{t('reading.reader.keepsChange')}</span>
       </>
     )
@@ -133,7 +133,7 @@ function status(
   if (saved !== undefined) {
     return (
       <>
-        {fillNodes(t('reading.reader.yours'), { name: <Name>{saved.name}</Name> })}{' '}
+        <Phrase text={t('reading.reader.yours')} parts={{ name: <Name>{saved.name}</Name> }} />{' '}
         <span className="text-ink-secondary">{t('reading.reader.skips')}</span>
       </>
     )

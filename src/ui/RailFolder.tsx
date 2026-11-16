@@ -6,6 +6,7 @@ import type { Result } from '@/core/result.ts'
 import { listFormats } from '@/data/repositories/formatRepository.ts'
 import { countRows } from '@/data/repositories/formatRowRepository.ts'
 import type { FormatDeclaration } from '@/domain/format/declaration.ts'
+import { countKey } from '@/i18n/count.ts'
 import { useT } from '@/i18n/current.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
@@ -174,7 +175,7 @@ export function RailFolder({
           {total !== undefined && (
             <span id={countId} className="ms-auto text-caption text-ink-secondary tabular-nums">
               {total}
-              <span className="sr-only"> {total === 1 ? 'entry' : 'entries'}</span>
+              <span className="sr-only"> {t(countKey('chrome.components.entries', total))}</span>
             </span>
           )}
         </Link>

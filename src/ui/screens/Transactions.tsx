@@ -105,7 +105,7 @@ import { Reveal } from '@/ui/motion/Reveal.tsx'
 import { countKey } from '@/i18n/count.ts'
 import { useDates, useT } from '@/i18n/current.ts'
 import type { MessageKey } from '@/i18n/catalogue.ts'
-import { fillNodes } from '@/i18n/nodes.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 
 /**
  * The ledger: what is actually in the document, where you narrow it down, and
@@ -592,7 +592,7 @@ export function Transactions() {
       items.push({
         icon: 'card',
         label: t('transactions.menu.paysCard'),
-        detail: fillNodes(t('transactions.menu.everyRow'), { merchant: <Bidi>{row.merchantRaw}</Bidi> }),
+        detail: <Phrase text={t('transactions.menu.everyRow')} parts={{ merchant: <Bidi>{row.merchantRaw}</Bidi> }} />,
         submenu: [
           ...cards.map((card) => ({
             label: card.id === alias ? t('transactions.menu.now', { card: card.name }) : card.name,
@@ -627,13 +627,13 @@ export function Transactions() {
           }
         : {
             icon: 'rule',
-            label: fillNodes(t('transactions.menu.ruleFromQuoted'), { words: <Bidi>{entry.selection}</Bidi> }),
+            label: <Phrase text={t('transactions.menu.ruleFromQuoted')} parts={{ words: <Bidi>{entry.selection}</Bidi> }} />,
             separated: true,
             onChoose: () => offerRule(row, fromSelection),
           },
       {
         icon: 'rule',
-        label: fillNodes(t('transactions.menu.ruleFrom'), { merchant: <Bidi>{row.merchantRaw}</Bidi> }),
+        label: <Phrase text={t('transactions.menu.ruleFrom')} parts={{ merchant: <Bidi>{row.merchantRaw}</Bidi> }} />,
         onChoose: () => offerRule(row, draftFromMerchant(row.merchantNormalized, row.categoryId)),
       },
     )
@@ -642,7 +642,7 @@ export function Transactions() {
     if (row.providerCategory !== undefined) {
       items.push({
         icon: 'rule',
-        label: fillNodes(t('transactions.menu.ruleFromQuoted'), { words: <Bidi>{row.providerCategory}</Bidi> }),
+        label: <Phrase text={t('transactions.menu.ruleFromQuoted')} parts={{ words: <Bidi>{row.providerCategory}</Bidi> }} />,
         detail: t('transactions.menu.providerDetail'),
         onChoose: () => toEditor(draftFromProviderCategory(row.providerCategory ?? '', row.categoryId)),
       })
@@ -651,7 +651,7 @@ export function Transactions() {
     items.push(
       {
         icon: 'filter',
-        label: fillNodes(t('transactions.menu.showEvery'), { merchant: <Bidi>{row.merchantRaw}</Bidi> }),
+        label: <Phrase text={t('transactions.menu.showEvery')} parts={{ merchant: <Bidi>{row.merchantRaw}</Bidi> }} />,
         separated: true,
         onChoose: () => filterBy({ ...NO_FILTERS, search: row.merchantRaw }),
       },
@@ -906,7 +906,7 @@ export function Transactions() {
             {pendingHere.map((bill) => (
               <div key={`${bill.cardAccountId}|${bill.billingPeriod ?? ''}`} className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1">
                 <span className="min-w-0 flex-1">
-                  {fillNodes(t(countKey('transactions.screen.pendingBill', bill.rows.length)), {
+                  <Phrase text={t(countKey('transactions.screen.pendingBill', bill.rows.length))} parts={{
                     count: bill.rows.length,
                     card: <Bidi>{bill.cardAccountName}</Bidi>,
                     amount: (
@@ -919,7 +919,7 @@ export function Transactions() {
                         )}
                       </Bidi>
                     ),
-                  })}
+                  }} />
                 </span>
                 <Button
                   variant="secondary"
@@ -951,9 +951,9 @@ export function Transactions() {
               {applied.count === 0 ? (
                 <span className="text-ink-secondary">{t('transactions.screen.nothingChanged')}</span>
               ) : (
-                fillNodes(t(countKey('transactions.screen.movedEarlier', applied.count)), {
+                <Phrase text={t(countKey('transactions.screen.movedEarlier', applied.count))} parts={{
                   count: <span className="tabular-nums font-medium">{applied.count}</span>,
-                })
+                }} />
               )}
             </p>
             {applied.count > 0 && (

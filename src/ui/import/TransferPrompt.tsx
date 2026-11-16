@@ -9,10 +9,10 @@ import {
 } from '@/data/repositories/transferPairRepository.ts'
 import { countKey } from '@/i18n/count.ts'
 import { useT } from '@/i18n/current.ts'
-import { fillNodes } from '@/i18n/nodes.tsx'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 
 /**
  * The transfers an import found between two of the person's own accounts
@@ -73,12 +73,12 @@ export function TransferLine({ pair, onAnswer }: { pair: TransferPair; onAnswer:
     <li className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 border-t border-hairline py-1.5">
       <span className="text-ink tabular-nums">{formatMoney(pair.in.amount)}</span>
       <span className="text-ink-secondary">
-        {fillNodes(t('reading.transfer.fromTo'), {
+        <Phrase text={t('reading.transfer.fromTo')} parts={{
           from: <Bidi>{pair.out.accountName}</Bidi>,
           fromDate: <span className="text-ink-tertiary tabular-nums">{pair.out.date}</span>,
           to: <Bidi>{pair.in.accountName}</Bidi>,
           toDate: <span className="text-ink-tertiary tabular-nums">{pair.in.date}</span>,
-        })}
+        }} />
       </span>
       <span className="ms-auto flex gap-2">
         <Button size="sm" onClick={() => onAnswer('PAIRED')}>

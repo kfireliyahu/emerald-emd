@@ -165,11 +165,23 @@ function stillEnglish(root: Element): { text: string }[] {
     if (!text || !el || !english(text) || !visible(el) || el.closest(DOCUMENT_VALUE)) continue
     out.set(text, { text: text.slice(0, 80) })
   }
+  // A name or title the app writes may hold a document's value — a format's
+  // name in its rail link's `aria-label`, a merchant in a title (M60 F1). The
+  // same value is drawn on the page in its `Bidi`, so every value drawn there
+  // is taken out of an attribute before it is read, longest first, the way the
+  // drawn ones are left out above.
+  // A field's content is the document's value being edited: an account's name in its own input.
+  const drawn = [...root.querySelectorAll(DOCUMENT_VALUE)].map((el) => el.textContent ?? '')
+  const typed = [...root.querySelectorAll('input, textarea')].map((el) => (el as HTMLInputElement).value)
+  const values = [...new Set([...drawn, ...typed].map((value) => value.trim()))]
+    .filter((value) => value.length >= 2)
+    .sort((a, b) => b.length - a.length)
+  const withoutValues = (text: string): string => values.reduce((left, value) => left.split(value).join(' '), text)
   for (const el of root.querySelectorAll('[aria-label], [title], [placeholder]')) {
     if (!visible(el) || el.closest('svg, [aria-hidden="true"]')) continue
     for (const name of ['aria-label', 'title', 'placeholder']) {
       const text = el.getAttribute(name)?.trim() ?? ''
-      if (text && english(text)) out.set(`${name}:${text}`, { text: `${name}: ${text.slice(0, 80)}` })
+      if (text && english(withoutValues(text))) out.set(`${name}:${text}`, { text: `${name}: ${text.slice(0, 80)}` })
     }
   }
   return [...out.values()]

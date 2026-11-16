@@ -26,7 +26,6 @@ import { categoryBreakdown } from '@/domain/statistics.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { countKey } from '@/i18n/count.ts'
 import { useDates, useT } from '@/i18n/current.ts'
-import { fillNodes } from '@/i18n/nodes.tsx'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { useWidth } from '@/ui/charts/useWidth.ts'
 import { monthsOfYear, newestWithData, yearsWithData } from '@/ui/home/months.ts'
@@ -34,6 +33,7 @@ import { BlockHead, Figure, Figures, FLOW_TEXT, Key, Legend, Pager, useFilePicke
 import { useHomeKeys } from '@/ui/home/useHomeKeys.ts'
 import { Button } from '@/ui/components/Button.tsx'
 import { today } from '@/ui/today.ts'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 
 /**
  * **Home · Year** — M28 U5, the approved mockup.
@@ -169,14 +169,14 @@ export function Year() {
 
             {payroll.slips > 0 && (
               <p className="m-0 text-ink-secondary">
-                {fillNodes(t('home.year.payroll'), {
+                <Phrase text={t('home.year.payroll')} parts={{
                   gross: formatMoney(payroll.gross),
                   tax: <span className="text-flow-tax tabular-nums">{formatMoney(payroll.tax)}</span>,
                   rate:
                     payroll.taxRateBasisPoints === undefined
                       ? ''
                       : t('home.year.payrollRate', { percent: formatPercent(payroll.taxRateBasisPoints) }),
-                })}
+                }} />
               </p>
             )}
 

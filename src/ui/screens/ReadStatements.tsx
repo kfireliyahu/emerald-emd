@@ -36,7 +36,7 @@ import { useFilePicker, useReadFiles } from '@/ui/home/parts.tsx'
 import { cardsLine } from '@/ui/import/cardsLine.tsx'
 import { countKey } from '@/i18n/count.ts'
 import { useT, type Translate } from '@/i18n/current.ts'
-import { fillNodes } from '@/i18n/nodes.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 
 /**
  * **Read files** — `#/read`, M28 U5: statements, payslips and fund reports
@@ -379,22 +379,22 @@ function FileRow({
           verdict.elsewhere.accountId === undefined && verdict.elsewhere.madeBy !== undefined ? (
             // An account a file above is about to make (M28 F15): its rows are
             // not written yet, so they are *in that file*, not in the account.
-            fillNodes(t('reading.row.alsoIn'), {
+            <Phrase text={t('reading.row.alsoIn')} parts={{
               rows: verdict.elsewhere.rows,
               parsed: verdict.parsed,
               name: <Bidi>{verdict.elsewhere.madeBy}</Bidi>,
-            })
+            }} />
           ) : (
-            fillNodes(t('reading.row.alreadyIn'), {
+            <Phrase text={t('reading.row.alreadyIn')} parts={{
               rows: verdict.elsewhere.rows,
               parsed: verdict.parsed,
               name: <Bidi>{verdict.elsewhere.accountName}</Bidi>,
-            })
+            }} />
           )
         action = (
           <span className="flex items-center gap-2">
             <Button variant="secondary" size="sm" onClick={onInto}>
-              {fillNodes(t('reading.row.into'), { name: <Bidi>{verdict.elsewhere.accountName}</Bidi> })}
+              <Phrase text={t('reading.row.into')} parts={{ name: <Bidi>{verdict.elsewhere.accountName}</Bidi> }} />
             </Button>
             <Button variant="ghost" size="sm" onClick={onApart}>
               {t('reading.row.apart')}
@@ -464,13 +464,10 @@ function FileRow({
           )}
           {verdict !== undefined && (
             <>
-              {fillNodes(
-                verdict.accountId === undefined && verdict.madeBy === undefined
+              <Phrase text={verdict.accountId === undefined && verdict.madeBy === undefined
                   ? t('reading.row.intoNew')
-                  : t('reading.row.intoName'),
-                { name: <Bidi>{verdict.accountName}</Bidi> },
-              )}
-              {verdict.madeBy !== undefined && fillNodes(t('reading.row.newWith'), { name: <Bidi>{verdict.madeBy}</Bidi> })}
+                  : t('reading.row.intoName')} parts={{ name: <Bidi>{verdict.accountName}</Bidi> }} />
+              {verdict.madeBy !== undefined && <Phrase text={t('reading.row.newWith')} parts={{ name: <Bidi>{verdict.madeBy}</Bidi> }} />}
             </>
           )}
         </small>

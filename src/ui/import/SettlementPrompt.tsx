@@ -13,9 +13,9 @@ import {
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { countKey } from '@/i18n/count.ts'
 import { useT } from '@/i18n/current.ts'
-import { fillNodes } from '@/i18n/nodes.tsx'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 
 /**
  * The card-settlement prompt — docs/f06's "3 credit-card charges found".
@@ -186,7 +186,7 @@ function Corroboration({ group }: { group: SettlementSummary }) {
         count: group.statementRowCount,
         amount: formatMoney(group.statementTotal),
       })}
-      {group.billingPeriod !== undefined && fillNodes(t('reading.settlement.period'), { period: <Bidi>{group.billingPeriod}</Bidi> })}
+      {group.billingPeriod !== undefined && <Phrase text={t('reading.settlement.period')} parts={{ period: <Bidi>{group.billingPeriod}</Bidi> }} />}
     </span>
   )
 }

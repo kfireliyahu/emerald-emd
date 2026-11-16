@@ -5,8 +5,8 @@ import type { ColumnRole, DraftTransaction } from '@/domain/model/importing.ts'
 import { Amount } from '@/ui/components/Amount.tsx'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { useT } from '@/i18n/current.ts'
-import { fillNodes } from '@/i18n/nodes.tsx'
 import { labelFor, useRoleLabels } from './roleLabel.ts'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 
 /**
  * The live preview: what the mapping currently produces.
@@ -67,9 +67,9 @@ export function PreviewStrip({
         </span>
         {/* Compare this against the total the statement prints for itself. */}
         <span className="text-ink-secondary">
-          {fillNodes(t('reading.preview.total'), {
+          <Phrase text={t('reading.preview.total')} parts={{
             amount: <span className="tabular-nums text-ink">{formatMoney(total)}</span>,
-          })}
+          }} />
         </span>
       </div>
 

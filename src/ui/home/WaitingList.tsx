@@ -22,7 +22,6 @@ import { DEFAULT_WINDOW_MONTHS } from '@/domain/fixedExpenses.ts'
 import { waitingCounts, type AttentionItem } from '@/domain/home.ts'
 import { countKey } from '@/i18n/count.ts'
 import { useDates, useT } from '@/i18n/current.ts'
-import { fillNodes } from '@/i18n/nodes.tsx'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
@@ -34,6 +33,7 @@ import { newFigureFor } from '@/ui/savings/holdingCheck.ts'
 import { SettlementLine } from '@/ui/import/SettlementPrompt.tsx'
 import { TransferLine } from '@/ui/import/TransferPrompt.tsx'
 import { today } from '@/ui/today.ts'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 
 /**
  * **Waiting for an answer** — every question the app has, at the top of Home,
@@ -224,10 +224,10 @@ function Statements({ onRead }: { onRead: () => void }) {
     <Head
       key={gap.accountId}
       negative
-      title={fillNodes(t('home.waiting.statements.title'), {
+      title={<Phrase text={t('home.waiting.statements.title')} parts={{
         account: <Bidi>{gap.last4 === undefined ? gap.name : `${gap.name} ···${gap.last4}`}</Bidi>,
         month: dates.yearMonth(gap.period),
-      })}
+      }} />}
       why={t('home.waiting.statements.why')}
     >
       <Button variant="secondary" size="sm" onClick={onRead}>
@@ -363,10 +363,10 @@ function Holdings({ currency }: { currency: CurrencyCode }) {
       rows={stale.map((one) => (
         <div key={one.holdingId} className="flex min-h-10 flex-wrap items-center gap-x-4 gap-y-1 border-t border-hairline py-1.5">
           <span className="min-w-0 flex-1">
-            {fillNodes(t('home.waiting.holdings.still'), {
+            <Phrase text={t('home.waiting.holdings.still')} parts={{
               name: <Bidi>{one.holding.name}</Bidi>,
               amount: <span className="tabular-nums">{formatMoney(one.balance)}</span>,
-            })}
+            }} />
             <small className="block text-caption text-ink-secondary">
               {one.monthsSince === undefined
                 ? t('home.waiting.holdings.never')

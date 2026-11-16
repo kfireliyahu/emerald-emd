@@ -307,6 +307,7 @@ export const plan: Translation<'plan'> = {
     moreTitle: 'תקציבים אחרים, העתקה, תצוגה',
     month: 'חודש',
     planName: 'שם התקציב',
+    defaultName: 'ברירת מחדל',
     deleteAsk: 'למחוק את התקציב {name}? התקציב והגדלים שלו יימחקו; ההוצאות הקבועות נשארות.',
     deleteAnotherDefault: ' תקציב אחר יהפוך לברירת המחדל.',
     deleteOnly: ' זה התקציב היחיד, אז מסך התקציב יציע להתחיל חדש.',

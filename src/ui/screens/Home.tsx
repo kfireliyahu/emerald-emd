@@ -29,7 +29,6 @@ import { statementGaps, type StatementGap } from '@/domain/statementGaps.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { countKey } from '@/i18n/count.ts'
 import { useDates, useT } from '@/i18n/current.ts'
-import { fillNodes } from '@/i18n/nodes.tsx'
 import { salaryBankWords } from '@/domain/salaryBank.ts'
 import { salaryProblem } from '@/domain/statistics.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
@@ -63,6 +62,7 @@ import { holdsPaycheck as keepsPaychecks } from '@/data/repositories/railReposit
 import { WaitingList } from '@/ui/home/WaitingList.tsx'
 import { today } from '@/ui/today.ts'
 import { UNCATEGORIZED_OPTION } from '@/ui/transactions/FilterBar.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 
 /**
  * **Home · Month** — M28 U5, the approved mockup (`docs/mockups/m28-u5/home.html`).
@@ -244,7 +244,7 @@ export function Home() {
                 {missingHere.length > 0 ? (
                   <span className="text-negative">
                     {missingHere.length === 1
-                      ? fillNodes(t('home.month.missingOne'), { account: <Bidi>{accountLabel(missingHere[0])}</Bidi> })
+                      ? <Phrase text={t('home.month.missingOne')} parts={{ account: <Bidi>{accountLabel(missingHere[0])}</Bidi> }} />
                       : t('home.month.missingMany', { count: missingHere.length })}
                   </span>
                 ) : (
