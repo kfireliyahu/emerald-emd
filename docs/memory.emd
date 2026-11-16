@@ -4941,6 +4941,16 @@ answer: land_units takes follow_ups on each unit: {kind: unit|question|review, .
 state: live
 affects: "src/plugin/tools/landing.ts\nsrc/plugin/server.test.ts\n.claude/skills/closing-pass/SKILL.md\ndocs/plugin.md"
 
+### D-594
+date: 2026-11-16
+milestone: M61
+scope: plugin
+title: Offering a format is a named step of the job: the server's instructions say to offer one, unasked, when one kind of fact keeps turning up as prose, and start_here asks the person once where it offers to close a milestone
+question: How do sessions come to propose a format themselves, instead of the person always being the one who does?
+answer: The server instructions' 'What you are for' says: when one kind of fact keeps turning up as prose in the document, offer a format or a column for it, unasked (OFFER_A_FORMAT in src/plugin/instructions.ts, a shorter line in the plugin's --skills text). Room was made in the engine block (two redundant sentences cut) rather than raising the 9,500/8,500 budgets, since hosts cut long instructions (D-572). start_here's Ready to close section ends with one line asking the person whether anything the milestone's units kept writing as prose should be a format; asked there rather than at every landing. Automatic detection stays the open question 'Repeated shapes in prose'.
+state: live
+affects: "src/plugin/instructions.ts\nsrc/plugin/tools/startHere.ts\ndocs/plugin.md"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -6583,7 +6593,7 @@ position: 335
 ### M61
 title: Closing the loop: the development pack says what is checked, owed and done
 goal: Five inbox rows from another project's use of the development pack (2026-11-13) found that its document claimed less than it knew. Every unit was built, but all its review entries were still open, though unit reports already proved some of them. Milestones whose units were all built stayed open. Follow-ups written in reports never became rows. Nothing could show that the document's rows had changed what got built. This repo has the same gap: M58's six units are all built, and M58 is still planned. The maintainer's answers (2026-11-13): this is one new milestone. No unit state is added between built and done, because an accepted review_entry is what says a thing was checked, and start_here makes the gap visible instead. A per-milestone retro is built, with 'cited by' worked out from refs the rows already mention. Logging every read is an open question, because it turns a read into a write. Proposing a format becomes a named step in the instructions plus a one-line prompt when a milestone lands; detecting repeated shapes automatically is an open question. Closing a milestone stays the maintainer's word: everything here offers, and nothing closes.
-state: planned
+state: closed
 position: 375
 
 <!-- emerald: open_question.format.md -->
@@ -17388,7 +17398,7 @@ paths: src/plugin/tools/landing.ts src/plugin/tools/landing.test.ts hosts/claude
 report: land_units now takes follow_ups (unit with a required brief and Later by default, open question, or review entry on the landed unit), and quotes a report's owed-sounding lines back when none are given; the landing never refuses for that. The maintainer chose all four defaults on 2026-11-15. A child's proposal may carry follow_ups (not asked; the driver still lands it, and it is the builder's knowledge rather than a judgement). The engine-only definitions grew past 58k with U2 and U3's two parameters; the land_units description was trimmed and the budget moved to 58.5k with the reason in the test. The shipped closing-pass skill (hosts/claude) still lacks accept_entries and follow_ups: that waits for the emerald-mcp release that ships this code, and is now a parked unit under Later. Full suite 5755 passed; dist-plugin rebuilt locally.
 
 ### M61 U4
-milestone: M61
+milestone: Later
 scope: plugin
 title: A milestone's retro: what it decided, answered, settled and left owed, and which rows were cited
 state: planned
@@ -17400,10 +17410,17 @@ paths: src/plugin/tools/retro.ts src/plugin/tools/retro.test.ts src/plugin/serve
 milestone: M61
 scope: plugin
 title: Proposing a format is a named step, and landing a milestone asks what is still kept in prose
-state: planned
+landed: 2026-11-16
+decision: D-594
+state: built
 brief: Inbox 2026-11-13 ('Sessions should propose new formats and format changes without being asked'). In another project the most reusable knowledge was lessons buried in unit reports: a component that crashed on one OS version, an icon that would not draw at mixed sizes. A `lesson` format would have been the obvious move, and no session suggested it; it is almost always the maintainer who does. Decided (maintainer, 2026-11-13): proposing a format or a column becomes a named, low-cost step in the development pack's instructions. Landing a milestone (or the closing pass at the end of one) asks one line: 'is there a kind of thing this project keeps writing as prose?'. Automatic detection of repeated shapes is not built here; it is the open question 'Repeated shapes in prose'. Keep within M58 U1's budget for instruction length: measure before and after. Before building, ask the maintainer: whether the prompt fires at every unit's landing or only when a milestone is ready to close.
-files: src/plugin/instructions.ts, hosts/claude/skills/run-milestone/SKILL.md, hosts/claude/skills/closing-pass/SKILL.md
+files: src/plugin/instructions.ts, src/plugin/tools/startHere.ts, src/plugin/server.test.ts, src/data/repositories/formatReady.test.ts, docs/plugin.md, docs/09-decision-log.md
+taken_by: claude-desktop session d6fe630d
+started: 2026-11-16
+branch: main
+commit: 0c3fa40
 paths: src/plugin/instructions.ts src/data/packs/development/formats hosts/claude/skills/run-milestone/SKILL.md .claude/skills/run-milestone/SKILL.md hosts/claude/skills/closing-pass/SKILL.md .claude/skills/closing-pass/SKILL.md
+report: The instructions now name offering a format as part of the job, and start_here asks once per ready-to-close milestone whether something kept as prose should be a format. Where to ask was decided in-session (the maintainer said he was lost among the fine-grained questions and asked only to do U5 and close M61): at Ready to close, not every landing. Both instruction texts stay under budget by trimming 'Collect the rows...' and 'That is the job.' from the engine block. Full suite 5755 passed; dist-plugin rebuilt. The shipped skill/plugin pin still waits for the next emerald-mcp release (Later U-shipped-landing-skill).
 
 <!-- emerald: views.md -->
 ---
@@ -17556,12 +17573,12 @@ title: line
 emerald: changed
 ---
 
-decision: 2026-11-15
+decision: 2026-11-16
 finding: 2026-10-22
 inbox: 2026-11-13
-milestone: 2026-11-15
+milestone: 2026-11-16
 open_question: 2026-11-13
 review_entry: 2026-11-13
 rule: 2026-11-11
 term: 2026-11-11
-unit: 2026-11-15
+unit: 2026-11-16
