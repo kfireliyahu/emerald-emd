@@ -1415,6 +1415,9 @@ describe('started by the plugin, --skills: what its skills say is a line here (M
     // needs before its first call on 2026-11-10 (M58 U1, D-572): 9,222 and
     // 8,275 (docs/plugin.md). A paragraph growing back past the budget is the
     // drift this catches.
+    // Proposing a format is a named step of the job (M61 U5, D-594), in both.
+    expect(full).toContain('keeps turning up as prose in it')
+    expect(short).toContain('keeps recurring as prose in it')
     expect(short.length).toBeLessThan(full.length)
     expect(full.length).toBeLessThan(9500)
     expect(short.length).toBeLessThan(8500)

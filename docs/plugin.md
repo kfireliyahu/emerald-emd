@@ -1719,7 +1719,8 @@ off near 2,000 characters, and every session paid for prose it needed at one cal
 work a format out with the user moved to `declare_format`'s dry run, how to speak of a view to the
 drawing tools' first line, and each ledger tool's detail to its own description. Measured
 2026-11-10: `--engine-only` 9,222 (~2,560 tokens), `--skills` 8,275 (~2,300), the ledger's block
-12,412 (~3,450); `server.test.ts` holds each under its budget.
+12,412 (~3,450); `server.test.ts` holds each under its budget. M61 U5 (D-594) added the line that says to offer a format
+for a fact that keeps turning up as prose, and cut as much elsewhere to keep both under their budgets.
 
 About 660 tokens a turn, 16%. `server.test.ts` holds both texts and the budget; `plugin.test.ts`
 checks every skill a line names is shipped and says what the line left out. It reaches a session

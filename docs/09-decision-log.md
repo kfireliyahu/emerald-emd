@@ -496,6 +496,7 @@ written out here.
 | D-591 | 2026-11-15 | `start_here` says what a milestone still owes: the milestones nothing under them holds open, and the built units rows still point at, read from views a document already declares, with no new unit state | M61 |
 | D-592 | 2026-11-15 | A landing lists the unit's open review entries beside its report and accepts in the same call the ones named by the start of their `do`; nothing picks which the report proves, a child's proposal never accepts, and nothing new is written on an entry | M61 |
 | D-593 | 2026-11-15 | A landing takes `follow_ups`, each a planned unit (with a brief, under Later unless it names a milestone), an open question or a review entry, written with the rest; a report that sounds owed and names none is quoted back, never refused | M61 |
+| D-594 | 2026-11-16 | Offering a format is a named step of the job: the server's instructions say to offer one, unasked, when one kind of fact keeps turning up as prose, and `start_here` asks the person once where it offers to close a milestone | M61 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -980,6 +981,26 @@ judgement of its own work, and the driver lands it.
 **Rejected.** Refusing the landing until it answers (a word like *later* in a report is often
 nothing); follow-up units in the landed unit's milestone by default (an open milestone that keeps
 growing); a title alone for a follow-up unit (a unit no session can start without the report).
+
+## D-594 · 2026-11-16 · Offering a format is a named step of the job: the server's instructions say to offer one, unasked, when one kind of fact keeps turning up as prose, and `start_here` asks the person once where it offers to close a milestone <a id="d-594"></a>
+
+**Context.** In another project the most reusable knowledge was lessons buried in unit reports — a
+component that crashed on one OS version, an icon that would not draw at mixed sizes — and no session
+suggested a format for them; it is almost always the person who does (inbox, 2026-11-13).
+
+**Decision.** (M61 U5; the shape is the maintainer's, 2026-11-13, and where the question is asked
+was the session's call, 2026-11-16.)
+
+1. **A named step in the instructions**, both blocks, under *What you are for*: when one kind of fact
+   keeps turning up as prose in the document, offer a format or a column for it, unasked. The plugin's
+   shorter text says it in a shorter line. Room was made rather than the budget raised: hosts cut long
+   instructions off (D-572).
+2. **Asked once, at the natural pause.** Under *Ready to close*, `start_here` asks the person whether
+   anything the milestone's units kept writing as prose should be a format of its own — where closing
+   is offered, not at every unit's landing, which would make it noise.
+
+**Rejected.** Detecting repeated shapes automatically (the open question *Repeated shapes in prose*);
+asking at every landing.
 
 ## Related
 

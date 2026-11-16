@@ -435,7 +435,10 @@ phase: under
     expect(answer).toContain(
       'Ready to close — phase not closed, with every piece under it built or dropped. ' +
         'Closing one is a person’s word; this says only that nothing under it is still open:\n' +
-        '- P1 · 2 pieces · 1 row still open on them',
+        '- P1 · 2 pieces · 1 row still open on them\n' +
+        // The natural pause asks whether something kept as prose wants a format (M61 U5).
+        'Before one closes, ask the person: is there a kind of thing these pieces kept writing as prose — ' +
+        'in reports, briefs or notes — that should be a format of its own?',
     )
     expect(answer).not.toContain('- P2 ·')
     expect(answer).not.toContain('- P3 ·')

@@ -76,6 +76,18 @@ file and offer to declare a format for it.`,
 file — the \`read-a-file\` skill reads it.`,
 }
 
+/**
+ * **Offer a format without being asked** (M61 U5, D-594). Another project's
+ * most reusable knowledge was lessons buried in unit reports, and no session
+ * suggested a format for them: it was always the person who did. So noticing
+ * a repeated shape in prose is a named step of the job, said in both blocks.
+ */
+const OFFER_A_FORMAT: Said = {
+  full: `**When one kind of fact keeps turning up as prose in it** — lessons in unit reports, say — offer
+a format or a column for it, unasked.`,
+  skill: `**When one kind of fact keeps recurring as prose in it**, offer a format for it, unasked.`,
+}
+
 /** `bring-in-a-plan`: what the development pack keeps. */
 const PACK_KEEPS: Said = {
   full: `The \`development\` pack keeps them as
@@ -263,6 +275,8 @@ especially if they are keeping it by hand, in a spreadsheet or a folder of notes
 file and offer to declare a format for it. When the work is their finances, the Ledger section
 below says which files to ask for.
 
+${OFFER_A_FORMAT.full}
+
 ${BELONGS}
 
 ${start(skills)}
@@ -379,7 +393,9 @@ ${planning(skills)}
 ## What you are for
 
 **A document is worth exactly what has been put into it, and the user will not think to offer
-files you do not ask for.** ${skills ? ASK_FOR_THE_FILE.skill : ASK_FOR_THE_FILE.full} That is the job.
+files you do not ask for.** ${skills ? ASK_FOR_THE_FILE.skill : ASK_FOR_THE_FILE.full}
+
+${skills ? OFFER_A_FORMAT.skill : OFFER_A_FORMAT.full}
 
 ${BELONGS}
 
@@ -389,7 +405,7 @@ ${start(skills)}
 
 - **Batch.** Every write here takes a whole list. One call that writes forty rows is right and
   forty calls is not — every round trip re-sends this entire conversation, and that is the
-  user's money. Collect the rows a conversation turns up and write them together.
+  user's money.
 - **Rows write on the first call.** \`record_format_rows\`, \`update_format_rows\`, \`claim_units\` and
   \`land_units\` judge every value and write in the same call, answering with what they wrote; a
   wrong value is refused with its reason and nothing is written. \`commit: false\` previews. Write

@@ -155,6 +155,9 @@ function owedText(answer: StartAnswer): readonly (string | undefined)[] {
             const open = each.open === 0 ? 'nothing open on them' : `${plural(each.open, 'row')} still open on them`
             return `- ${lineText(each.line, answer.labels, state === undefined ? [] : [state])} · ${plural(each.rows, declaration.name)} · ${open}`
           }),
+          // The natural pause (M61 U5, D-594): one line, asked where closing is offered.
+          `Before one closes, ask the person: is there a kind of thing these ${declaration.name}s kept writing as prose — ` +
+            'in reports, briefs or notes — that should be a format of its own?',
         ].join('\n')
   if (owed.owed.length === 0) return [closing]
   const groups = new Map<string, string[]>()
