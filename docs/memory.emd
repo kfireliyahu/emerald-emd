@@ -4951,6 +4951,16 @@ answer: The server instructions' 'What you are for' says: when one kind of fact 
 state: live
 affects: "src/plugin/instructions.ts\nsrc/plugin/tools/startHere.ts\ndocs/plugin.md"
 
+### D-595
+date: 2026-11-16
+milestone: M60
+scope: app
+title: One test and one name for what M60 U4 and U5 built twice: words.test.ts holds every translated screen, and Phrase is the one way to draw a sentence with things in it
+question: How are the two tests for 'a translated screen's words are the catalogue's' and the two names for filling a sentence with elements made one each?
+answer: src/i18n/words.test.ts holds every translated screen (U5's 45 files joined TRANSLATED); it exempts text in code/kbd/Kbd/Key, CSS strings, the product name Emerald, say() calls and shortcut/aria-keyshortcuts properties. Real words went to the catalogue: chrome.components.newOf/kindOf/entries, plan.screen.defaultName (ברירת מחדל); Packs' 'the pack' and HistoryArrows' 'stepped back' are allowed with why. screensPartTwo.test.ts deleted; the rule row names one test. Every fillNodes(text, parts) became <Phrase text parts />, and src/i18n/nodes.tsx is deleted. probe:screens --lang he removes every value drawn in a Bidi/key cap/field from an aria-label, title or placeholder before reading it; with Categories' budget-line sr-only name in a Bidi, it lists no English on 13 translated routes of the demo ledger.
+state: live
+affects: "src/i18n/words.test.ts\nsrc/ui/components/Phrase.tsx\nsrc/ui/probe.ts"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -9160,12 +9170,12 @@ decided_by: ["D-130"]
 state: live
 
 ### A translated screen's words are the catalogue's
-statement: A screen in the translated set draws every word of its own with `t()` from `src/i18n/` — a count with `countKey`, a sentence around a document's value with `fillNodes` and the value in `Bidi` — and never writes one inline; what the document keeps (a run's note, a stored role) stays as written and is allowed by name.
-why: An English word written inline in a translated screen is a word Hebrew never reaches, and nobody sees it until a person reads the screen in Hebrew. The test parses every file of the set and names the file and line, so a new string added to a translated screen fails the suite the day it is written, in English as well as in Hebrew. D-589 (M60 U4) has the rest; link it here when it lands.
+statement: A screen in the translated set draws every word of its own with `t()` from `src/i18n/` — a count with `countKey`, a sentence around a document's value with `Phrase` and the value in `Bidi` — and never writes one inline; what the document keeps (a run's note, a stored role) stays as written and is allowed by name.
+why: An English word written inline in a translated screen is a word Hebrew never reaches, and nobody sees it until a person reads the screen in Hebrew. The test parses every file of the set and names the file and line, so a new string added to a translated screen fails the suite the day it is written, in English as well as in Hebrew. D-589 (M60 U4) and D-590 (U5) built it as two tests; M60 F1 folded them into one.
 kind: non_negotiable
 scope: ui
 decided_by: ["D-583","D-584","D-589","D-590"]
-enforced_by: src/i18n/words.test.ts, src/i18n/screensPartTwo.test.ts
+enforced_by: src/i18n/words.test.ts
 always: false
 state: live
 
@@ -17208,11 +17218,17 @@ report: M59 U6 built at 3e273fa (D-582). The rail holds back Year, Paychecks, Pl
 milestone: M60
 scope: app
 title: One layer test and one sentence helper: what U4 and U5 built twice
-decision: D-590
-state: planned
+landed: 2026-11-16
+decision: D-595
+state: built
 brief: D-589, D-590. U4 and U5 were built side by side and reconciled at the merge (a0e9d1c); two pairs stayed. (1) Two tests hold the rule 'A translated screen's words are the catalogue's': src/i18n/words.test.ts (U4, stricter) and src/i18n/screensPartTwo.test.ts (U5). Adding U5's 45 files to words.test.ts's TRANSLATED fails 15 of them: this/last/next week, entry/entries, 'A new', 'What kind of', 'stepped back', Default, Del, Light/System/Dark, plan.bar.* keys passed as text, CSS strings. Move each real word into the catalogue (with its Hebrew, fitting the glossary) or allow it with why, then fold U5's files into TRANSLATED, delete screensPartTwo.test.ts and drop it from the rule row's enforced_by. (2) Phrase (src/ui/components/Phrase.tsx) is now fillNodes (src/i18n/nodes.tsx) as a component: pick one name and move the callers. Also: a document's value inside an aria-label or title the app writes still counts as English in probe:screens --lang he; leave it out the way Bidi values are. Mechanical: the words are drafted to fit the glossary, nothing to decide. Done-test: one test, one helper, probe --lang he lists no English on the translated screens.
-files: "src/i18n/words.test.ts\nsrc/i18n/screensPartTwo.test.ts\nsrc/ui/components/Phrase.tsx\nsrc/i18n/nodes.tsx\nsrc/ui/probe.ts"
+files: src/i18n/words.test.ts, src/ui/components/Phrase.tsx (fillNodes folded in; src/i18n/nodes.tsx and src/i18n/screensPartTwo.test.ts deleted), src/ui/probe.ts, src/i18n/{en,he}/{chrome,plan}.ts, src/ui/{RailFolder,components/SelectOrNew,components/ThemeToggle,screens/Plan,screens/Categories}.tsx, 19 callers moved from fillNodes to Phrase, docs/09-decision-log.md
+taken_by: claude-desktop session d6fe630d
+started: 2026-11-16
+branch: main
+commit: fbdd4f8
 paths: "src/i18n/\nsrc/ui/components/Phrase.tsx\nsrc/ui/probe.ts"
+report: Done-test met: one test (words.test.ts), one helper (Phrase), and probe:screens --lang he --themes light on demo.emd lists no English on home, plan, categories, rules, transactions, merchants, settings, packs, calendar, export, assistants, language and accounts. Found on the way: Categories drew a category's name in a screen-reader sentence without Bidi; it now uses Phrase with Bidi. English on screen is unchanged. Full suite 5754 passed (one test file fewer). Mechanical; nothing for the maintainer to decide.
 
 ### M60 U1
 milestone: M60
@@ -17579,6 +17595,6 @@ inbox: 2026-11-13
 milestone: 2026-11-16
 open_question: 2026-11-13
 review_entry: 2026-11-13
-rule: 2026-11-11
+rule: 2026-11-16
 term: 2026-11-11
 unit: 2026-11-16
