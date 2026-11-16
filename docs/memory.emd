@@ -6597,7 +6597,7 @@ position: 334
 ### M60
 title: The app in Hebrew: a translated, right-to-left interface
 goal: A person can use Emerald in Hebrew, laid out right to left. Its decisions (the whole app or the ledger first, who writes the words, how a language is chosen) are listed before any brief (D-575).
-state: planned
+state: closed
 position: 335
 
 ### M61
