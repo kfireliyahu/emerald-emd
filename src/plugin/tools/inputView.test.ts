@@ -17,10 +17,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { createDatabase, exportDatabase } from '@/data/db/database.ts'
 import { listFormats } from '@/data/repositories/formatRepository.ts'
-import { defaultInputView, savedViews, saveView } from '@/data/repositories/formatViewRepository.ts'
+import { columnWidths, defaultInputView, savedViews, saveView } from '@/data/repositories/formatViewRepository.ts'
 import { openEncoded } from '@/data/storage/encoding.ts'
 import { entryDefaults } from '@/domain/format/view.ts'
-import { inputAddress } from '@/ui/formats/addressFilter.ts'
+import { inputAddress, inputShapeOf } from '@/ui/formats/addressFilter.ts'
+import { BLOCK_FIELD } from '@/ui/formats/InputBlock.tsx'
+import { fieldWidthOf, withWidth } from '@/ui/formats/inputForm.ts'
 import { listPicture, quickAdd } from '@/ui/formats/listView.ts'
 import { inputDefaults, newRowDefaults } from '@/ui/formats/savedView.ts'
 
@@ -265,5 +267,85 @@ describe('input views (M55 U2)', () => {
     // Off the filter, a required enum the view leaves to be asked starts at its first member.
     expect(newRowDefaults(db, declaration, {}, day)).toEqual({ date: '2026-11-02', account: 'Visa', state: 'pending' })
     db.close()
+  })
+})
+
+/**
+ * **A field's width is the form's own** — Later U-input-widths, D-596. The
+ * maintainer, on his dashboard (2026-11-17): a field of an input view's block
+ * could not be made wider or narrower. Now its edge is dragged on the block or
+ * the page, and a conversation sizes it with `widths` — kept in the view's
+ * address, so a text document carries it and the format's table widths stay.
+ */
+describe('an input view’s field widths (D-596)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['Date'] })
+    pin('2026-11-17')
+  })
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  async function widthsOf(path: string): Promise<Readonly<Record<string, number>> | undefined> {
+    const { db } = await openEncoded(readFileSync(path))
+    const view = savedViews(db, 'charge').find((each) => each.name === 'Card charge')
+    db.close()
+    return view === undefined ? undefined : inputShapeOf(view.address, 'charge').widths
+  }
+
+  it('is set, kept beside a change of fields, reset with null, and leaves the table’s widths alone', async () => {
+    const path = await charges()
+    await arrange(path, CARD_CHARGE)
+    const set = await arrange(path, { name: 'Card charge', kind: 'input', widths: { merchant: 320, amount: 2000 } })
+    expect(set).not.toMatch(/refus/i)
+    expect(set).toMatch(/keeps its fields, defaults and default, and changes its kind and widths/)
+    // Pixels inside the table's own bounds: 2000 is the widest, 1200.
+    expect(await widthsOf(path)).toEqual({ merchant: 320, amount: 1200 })
+
+    // Asking one more field keeps the widths; dropping a field drops its width.
+    await arrange(path, { name: 'Card charge', kind: 'input', fields: ['merchant', 'amount', 'note'] })
+    expect(await widthsOf(path)).toEqual({ merchant: 320, amount: 1200 })
+    await arrange(path, { name: 'Card charge', kind: 'input', fields: ['merchant', 'note'], defaults: { ...CARD_CHARGE.defaults, amount: '0 ILS' } })
+    expect(await widthsOf(path)).toEqual({ merchant: 320 })
+
+    expect(await arrange(path, { name: 'Card charge', kind: 'input', widths: { merchant: null } })).not.toMatch(/refus/i)
+    expect(await widthsOf(path)).toBeUndefined()
+
+    const { db } = await openEncoded(readFileSync(path))
+    expect(columnWidths(db, 'charge').size).toBe(0)
+    db.close()
+  })
+
+  it('refuses a width for a field it does not ask, and one that is not pixels', async () => {
+    const path = await charges()
+    await arrange(path, CARD_CHARGE)
+    expect(await arrange(path, { name: 'Card charge', kind: 'input', widths: { note: 300 } })).toMatch(/A width is a field’s, and `note` is not asked/)
+    expect(await arrange(path, { name: 'Card charge', kind: 'input', widths: { merchant: 'wide' } })).toMatch(/`widths` is an object/)
+    expect(await arrange(path, { name: 'Every charge', kind: 'table', widths: { merchant: 300 } })).toMatch(/`widths` goes with an input view/)
+    expect(await widthsOf(path)).toBeUndefined()
+  })
+
+  it('travels in a text document and is read back by the block and the page alike', async () => {
+    const path = await charges()
+    await arrange(path, { ...CARD_CHARGE, widths: { merchant: 360 } })
+    expect(await storeDocumentAsTool.run({ path, as: 'text', commit: true }, NO_CLIENT)).not.toMatch(/refus/i)
+    expect(readFileSync(path, 'utf8')).toMatch(/### charge saved\nname: Card charge\nkind: input\naddress: .*width:merchant=360/)
+    expect(await widthsOf(path)).toEqual({ merchant: 360 })
+
+    const { db } = await openEncoded(readFileSync(path))
+    const declaration = listFormats(db).find((each) => each.name === 'charge')
+    const view = savedViews(db, 'charge')[0]
+    db.close()
+    if (declaration === undefined || view === undefined) throw new Error('charge and its view, declared above')
+    const shape = inputShapeOf(view.address, 'charge')
+    const merchant = declaration.columns.find((each) => each.name === 'merchant')
+    const amount = declaration.columns.find((each) => each.name === 'amount')
+    if (merchant === undefined || amount === undefined) throw new Error('declared above')
+    // A width set is the same pixels on the block and the page; one not set is each one's own.
+    expect(fieldWidthOf(merchant, shape, false, BLOCK_FIELD)).toBe(360)
+    expect(fieldWidthOf(merchant, shape, false, { narrow: 176, wide: 288 })).toBe(360)
+    expect(fieldWidthOf(amount, shape, true, BLOCK_FIELD)).toBe(BLOCK_FIELD.narrow)
+    // Taking a width back leaves no `widths` at all, so the address reads as it did before there were any.
+    expect(withWidth(shape, 'merchant', undefined)).toEqual({ fields: shape.fields, defaults: shape.defaults })
   })
 })

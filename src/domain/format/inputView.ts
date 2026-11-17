@@ -31,6 +31,11 @@ export interface InputShape {
   readonly fields: readonly string[]
   /** Column to the value its address holds it to — a string, or a list or `{not}` a default refuses. */
   readonly defaults: Readonly<Record<string, unknown>>
+  /**
+   * A field's width in pixels, by column — the view's own, never the format's
+   * table widths (Later U-input-widths, D-596). Absent is the type's.
+   */
+  readonly widths?: Readonly<Record<string, number>>
 }
 
 /** The words a date's default may be: each names one day. */

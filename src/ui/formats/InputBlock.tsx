@@ -4,11 +4,12 @@ import type { Database } from 'sql.js'
 
 import { indexOf } from '@/data/repositories/formatJoinRepository.ts'
 import { describeTableError, deleteRows, readRow } from '@/data/repositories/formatRowRepository.ts'
+import { saveView } from '@/data/repositories/formatViewRepository.ts'
 import { documentCurrency, listUnits } from '@/data/repositories/unitRepository.ts'
 import { labelColumn, type FormatDeclaration } from '@/domain/format/declaration.ts'
 import { dayOfDefault } from '@/domain/format/inputView.ts'
 import { withField, type RowDraft } from '@/domain/format/rowDraft.ts'
-import { entryWayOf, type SavedView } from '@/domain/format/view.ts'
+import { entryLabel, entryWayOf, type SavedView } from '@/domain/format/view.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
@@ -16,19 +17,23 @@ import { IconAction } from '@/ui/components/IconAction.tsx'
 import { Flip } from '@/ui/motion/Flip.tsx'
 import { dashboardEntry } from '@/ui/nav.ts'
 
-import { inputShapeOf } from './addressFilter.ts'
+import { inputAddress, inputShapeOf } from './addressFilter.ts'
 import { valueText } from './entryList.ts'
 import { Field, NO_LINKED } from './EntryView.tsx'
 import { inputStart, stageInput, undoRefusal, writeInput, type BlockProblem } from './inputBlock.ts'
-import { dayWordOf, inputFormOf } from './inputForm.ts'
+import { dayWordOf, fieldWidthOf, inputFormOf, withWidth } from './inputForm.ts'
 import { FOCUSABLE, NARROW } from './InputView.tsx'
 import { linkChoices } from './linkTargets.ts'
+import { ResizeHandle } from './ResizeHandle.tsx'
 
 /** A row of *Just added*, as a block's list draws a line. */
 const LINE = 32
 
 /** At a block's own height — no height given — the rows just added it shows. */
 const FEW = 3
+
+/** A field nobody has sized, in a block: a narrow type's and every other's (D-596). */
+export const BLOCK_FIELD = { narrow: 160, wide: 240 } as const
 
 /** One column wide, each field is a 40px row with its label at the left (U1 §6). */
 const STACKED =
@@ -49,6 +54,11 @@ const STACKED =
  * under it — *Adds a card charge as account Visa · date today* — is the
  * block's line (`blockWhat`). Read-only, its fields are drawn and nothing is
  * added.
+ *
+ * **A field is as wide as the view says** (Later U-input-widths, D-596): its
+ * trailing edge is dragged, as a table's column is, and the width is written
+ * to the input view — the form's own, so its page draws it too and the
+ * format's tables keep theirs. One column wide the fields stack, and fill it.
  */
 export function InputBlock({
   db,
@@ -78,10 +88,12 @@ export function InputBlock({
   const shape = useMemo(() => inputShapeOf(view.address, declaration.name), [view.address, declaration.name])
   const form = inputFormOf(declaration, shape)
   const drawn = [...form.asked, ...form.lacking]
+  // What a row starts at is what the view asks and sets: a width dragged never starts it again.
+  const asks = JSON.stringify([shape.fields, shape.defaults])
   const startsAt = useMemo(
     () => inputStart(declaration, shape, day, undefined, documentCurrency(db)),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [db, declaration, shape, day],
+    [db, declaration, asks, day],
   )
   const { units, links } = useMemo(
     () => ({ units: listUnits(db), links: linkChoices(db, declaration, indexOf(declarations)) }),
@@ -98,12 +110,16 @@ export function InputBlock({
   const fields = useRef<HTMLDivElement>(null)
   const room = useRef<HTMLDivElement>(null)
   const [fits, setFits] = useState(FEW)
+  // Drawn live under a drag and written once, on release, as a table's column is.
+  const [sizing, setSizing] = useState<{ readonly column: string; readonly width: number } | undefined>(undefined)
 
   // What the view asks or sets changed elsewhere — its page, a conversation: start again.
   useEffect(() => {
     setDraft(startsAt)
     setProblems([])
-  }, [startsAt])
+    // By what it holds, not by identity: a write elsewhere — a width dragged here — reads the declaration afresh.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(startsAt)])
   useEffect(() => {
     if (round === 0) return
     fields.current?.querySelector<HTMLElement>(FOCUSABLE)?.focus()
@@ -145,6 +161,13 @@ export function InputBlock({
     setDraft(startsAt)
     setProblems([])
     setRound((was) => was + 1)
+  }
+
+  const resize = (column: string, width: number | undefined): void => {
+    setSizing(undefined)
+    mutate((database) =>
+      saveView(database, { ...view, address: inputAddress(declaration.name, withWidth(shape, column, width)) }),
+    )
   }
 
   const undo = (id: string): void => {
@@ -199,10 +222,13 @@ export function InputBlock({
             const way = entryWayOf(column, undefined, false)
             const word = dayWordOf(column, shape.defaults[column.name])
             const showsWord = word !== undefined && draft[column.name] === dayOfDefault(word, day)
+            const wide = sizing?.column === column.name ? sizing.width : fieldWidthOf(column, shape, NARROW.has(column.type), BLOCK_FIELD)
             return (
               <div
                 key={column.name}
-                className={stacked ? 'flex items-center' : `flex items-end gap-2 ${NARROW.has(column.type) ? 'w-40' : 'w-60'} max-w-full`}
+                data-field={column.name}
+                className={stacked ? 'flex items-center' : 'relative flex max-w-full items-end gap-2'}
+                style={stacked ? undefined : { width: wide }}
               >
                 <div className={stacked ? `min-w-0 flex-1 ${STACKED}` : 'min-w-0 flex-1'}>
                   <Field
@@ -237,6 +263,14 @@ export function InputBlock({
                   />
                 </div>
                 {showsWord && !stacked && <span className="pb-1.5 text-caption whitespace-nowrap text-ink-secondary">· {word}</span>}
+                {!stacked && !locked && (
+                  <ResizeHandle
+                    column={entryLabel(column)}
+                    width={wide}
+                    onDrag={(width) => setSizing({ column: column.name, width })}
+                    onDone={(width) => resize(column.name, width)}
+                  />
+                )}
               </div>
             )
           })

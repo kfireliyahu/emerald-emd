@@ -498,6 +498,7 @@ written out here.
 | D-592 | 2026-11-15 | A landing lists the unit's open review entries beside its report and accepts in the same call the ones named by the start of their `do`; nothing picks which the report proves, a child's proposal never accepts, and nothing new is written on an entry | M61 |
 | D-593 | 2026-11-15 | A landing takes `follow_ups`, each a planned unit (with a brief, under Later unless it names a milestone), an open question or a review entry, written with the rest; a report that sounds owed and names none is quoted back, never refused | M61 |
 | D-594 | 2026-11-16 | Offering a format is a named step of the job: the server's instructions say to offer one, unasked, when one kind of fact keeps turning up as prose, and `start_here` asks the person once where it offers to close a milestone | M61 |
+| D-596 | 2026-11-17 | A form's field is sized by dragging its edge, and the width is the form's own: kept in the input view's address as `width:<column>=<px>`, the same on a dashboard's block and on the form's page, set in a conversation with `arrange_views` `widths`, and never the format's table widths | Later |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -610,6 +611,38 @@ cap read from logs is slow and loose); taking a file's text in the call (more to
 **Consequences.** PRIVACY.md lists the five fields word for word, and how to have them deleted is
 asked when M57 U5 is taken. The connector's instructions and tool list differ from the local
 server's, and a test holds the line between them (M57 U2).
+
+## D-596 · 2026-11-17 · A form's field is sized by dragging its edge, and the width is the form's own: kept in the input view's address as `width:<column>=<px>`, the same on a dashboard's block and on the form's page, set in a conversation with `arrange_views` `widths`, and never the format's table widths <a id="d-596"></a>
+
+**Context.** The maintainer, on his own dashboard (2026-11-17): he wanted a field of an input
+view's block wider or narrower and could not. A form drew every field at a fixed size by its type —
+on the block 160 or 240 pixels, on the page 176 or 288 — while a table's columns, on the format's
+table and on a dashboard's saved table alike, have been dragged since M55 F1 (D-558).
+
+**Decision.** (Later U-input-widths. Whose width it is, the maintainer's choice, asked in plain
+words; the rest the session's.)
+
+1. **The form's own width** (his pick, over *the same width as the table*): a field's width belongs
+   to the input view and is the same pixels wherever the view is drawn — its dashboard block and its
+   own page. The format's table widths (`format_column_view`, D-289, D-558) are untouched either way.
+2. **Kept in the view's address**, `?columns:charge=merchant,amount&width:merchant=320`, beside the
+   fields and defaults it already holds (D-536): no migration, a text document's `views.md` part
+   carries it unchanged, and a rename or delete takes it along. Whole pixels inside the table's own
+   bounds (`boundedWidth`, 48 to 1200), and only for a field it asks — one no longer asked loses its
+   width when the view is next written. Absent is the type's size, as before.
+3. **On screen, the table's handle**: `ResizeHandle` on each field's trailing edge, on the block and
+   the page — drag, arrows by 16, double-click or Delete back to the type's. A one-column block
+   stacks its fields to fill it, and draws no handle. A width dragged never clears what is typed.
+4. **In a conversation**, `arrange_views view:saved kind:input` takes `widths: {column: px | null}`;
+   a width for a field not asked is refused, and `widths` on a shown view goes with an input view.
+
+**Rejected.** One width per column shared with the table (his call: a form and a table want
+different widths); a width per dashboard block (one form on two dashboards is rare, and the page
+would not show it); a new table for widths (a migration and a document change for what one address
+key holds).
+
+**Consequences.** `InputShape` carries `widths`; `addressView` reads `width:` keys and
+`canonicalAddress` keeps them, so a shown view's address would keep one too, unread.
 
 ## Related
 

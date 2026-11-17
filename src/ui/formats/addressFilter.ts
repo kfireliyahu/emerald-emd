@@ -37,6 +37,7 @@
 
 import { heldValue, heldAs, type RowFilter } from '@/data/repositories/formatFilterRepository.ts'
 import type { InputShape } from '@/domain/format/inputView.ts'
+import { boundedWidth } from '@/domain/format/view.ts'
 
 /** The key the search rides under. */
 export const SEARCH_KEY = 'search'
@@ -52,6 +53,9 @@ export const FOLD_MARK = '.'
 
 /** The key a table's sort rides under: `order:date=descending` (M42 F14). */
 export const ORDER_KEY = 'order:'
+
+/** The key an input view's field width rides under: `width:merchant=320` (Later U-input-widths, D-596). */
+export const WIDTH_KEY = 'width:'
 
 const DESCENDING = 'descending'
 const ASCENDING = 'ascending'
@@ -73,6 +77,8 @@ export interface ViewAddress {
   readonly columns: ColumnChoice
   /** Absent is the format's default order. */
   readonly order?: AddressOrder
+  /** An input view's fields' widths in pixels, by column — absent is the type's (D-596). */
+  readonly widths: Readonly<Record<string, number>>
 }
 
 /** Whether a held key names a folded format's column rather than the format's own. */
@@ -102,11 +108,12 @@ export function filterAddress(
     readonly folds?: Readonly<Record<string, unknown>>
     readonly columns?: ColumnChoice
     readonly order?: AddressOrder
+    readonly widths?: Readonly<Record<string, number>>
   } = {},
 ): string {
   const parts: string[] = []
   for (const [name, value] of [...Object.entries(filter.match ?? {}), ...Object.entries(more.folds ?? {})]) {
-    if (name === SEARCH_KEY || name.startsWith(COLUMNS_KEY) || name.startsWith(ORDER_KEY)) continue
+    if (name === SEARCH_KEY || name.startsWith(COLUMNS_KEY) || name.startsWith(ORDER_KEY) || name.startsWith(WIDTH_KEY)) continue
     const { values, not } = heldAs(value)
     parts.push(`${escaped(name)}${not ? NOT : ''}=${escaped(values.map(memberText).join(','))}`)
   }
@@ -116,6 +123,9 @@ export function filterAddress(
   }
   if (more.order !== undefined) {
     parts.push(`${ORDER_KEY}${escaped(more.order.column)}=${more.order.descending ? DESCENDING : ASCENDING}`)
+  }
+  for (const [column, width] of Object.entries(more.widths ?? {})) {
+    parts.push(`${WIDTH_KEY}${escaped(column)}=${String(width)}`)
   }
   return parts.length === 0 ? '' : `?${parts.join('&')}`
 }
@@ -153,6 +163,7 @@ export function addressView(query: string): ViewAddress {
   const params = new URLSearchParams(query.startsWith('?') ? query.slice(1) : query)
   const held = new Map<string, { values: string[]; not: boolean }>()
   const columns: Record<string, readonly string[]> = {}
+  const widths: Record<string, number> = {}
   let search: string | undefined
   let order: AddressOrder | undefined
   for (const [key, value] of params) {
@@ -163,6 +174,13 @@ export function addressView(query: string): ViewAddress {
     if (key.startsWith(COLUMNS_KEY)) {
       // An empty list is every column let go but the name: `columns:unit=`.
       columns[key.slice(COLUMNS_KEY.length)] = value === '' ? [] : value.split(',').filter((each) => each !== '')
+      continue
+    }
+    if (key.startsWith(WIDTH_KEY)) {
+      // A width is whole pixels inside the table's bounds; anything else is the type's.
+      const column = key.slice(WIDTH_KEY.length)
+      const width = Number(value)
+      if (column !== '' && value.trim() !== '' && Number.isFinite(width)) widths[column] = boundedWidth(width)
       continue
     }
     if (key.startsWith(ORDER_KEY)) {
@@ -189,6 +207,7 @@ export function addressView(query: string): ViewAddress {
     folds,
     columns,
     ...(order === undefined ? {} : { order }),
+    widths,
   }
 }
 
@@ -225,8 +244,8 @@ export function withFold(
  * saved view's.
  */
 export function canonicalAddress(query: string): string {
-  const { filter, folds, columns, order } = addressView(query)
-  const written = filterAddress(filter, { folds, columns, ...(order === undefined ? {} : { order }) })
+  const { filter, folds, columns, order, widths } = addressView(query)
+  const written = filterAddress(filter, { folds, columns, widths, ...(order === undefined ? {} : { order }) })
   return written === '' ? '' : `?${written.slice(1).split('&').sort().join('&')}`
 }
 
@@ -235,7 +254,7 @@ export function sameAddress(a: string, b: string): boolean {
   return canonicalAddress(a) === canonicalAddress(b)
 }
 
-/** Whether an address holds anything — a filter, a fold, columns chosen or a sort: what a view can be saved with. */
+/** Whether an address holds anything — a filter, a fold, columns chosen, a sort or a field's width: what a view can be saved with. */
 export function holdsAnything(query: string): boolean {
   return canonicalAddress(query) !== ''
 }
@@ -244,14 +263,25 @@ export function holdsAnything(query: string): boolean {
  * **An input view's address, read as what it asks** (M55 U2, D-533, D-536):
  * its own format's chosen columns are the fields, in order, and its exact
  * values the defaults — `?columns:charge=merchant,amount&date=today` asks a
- * merchant and an amount and dates the row today.
+ * merchant and an amount and dates the row today. **A field's width is the
+ * view's own** (Later U-input-widths, D-596): `&width:merchant=320`, and only
+ * for a field it asks — a table's widths are the format's, and untouched.
  */
 export function inputShapeOf(address: string, format: string): InputShape {
-  const { filter, columns } = addressView(address)
-  return { fields: columns[format] ?? [], defaults: filter.match ?? {} }
+  const { filter, columns, widths } = addressView(address)
+  const fields = columns[format] ?? []
+  const own = Object.entries(widths).filter(([column]) => fields.includes(column))
+  return { fields, defaults: filter.match ?? {}, ...(own.length === 0 ? {} : { widths: Object.fromEntries(own) }) }
 }
 
-/** An input view's address written from what it asks: its fields as the format's columns, its defaults as exact values. */
+/** An input view's address written from what it asks: its fields as the format's columns, its defaults as exact values, its widths. */
 export function inputAddress(format: string, shape: InputShape): string {
-  return canonicalAddress(filterAddress(Object.keys(shape.defaults).length === 0 ? {} : { match: shape.defaults }, { columns: { [format]: shape.fields } }))
+  const widths = Object.fromEntries(
+    Object.entries(shape.widths ?? {})
+      .filter(([column]) => shape.fields.includes(column))
+      .map(([column, width]) => [column, boundedWidth(width)]),
+  )
+  return canonicalAddress(
+    filterAddress(Object.keys(shape.defaults).length === 0 ? {} : { match: shape.defaults }, { columns: { [format]: shape.fields }, widths }),
+  )
 }

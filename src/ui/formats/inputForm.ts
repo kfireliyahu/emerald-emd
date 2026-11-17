@@ -110,6 +110,24 @@ export function withMoved(shape: InputShape, name: string, to: number): InputSha
   return { ...shape, fields }
 }
 
+/**
+ * **A field's width** (Later U-input-widths, D-596): the view's own, set by
+ * dragging its edge, or the type's — `narrow` for a day, a figure, a yes or
+ * no or a member, `wide` for the rest. The page and a dashboard's block each
+ * say their own two, and a width set is the same pixels in both.
+ */
+export function fieldWidthOf(column: ColumnDeclaration, shape: InputShape, narrow: boolean, sizes: { readonly narrow: number; readonly wide: number }): number {
+  return shape.widths?.[column.name] ?? (narrow ? sizes.narrow : sizes.wide)
+}
+
+/** Give a field a width, or take it back to its type's with nothing. */
+export function withWidth(shape: InputShape, name: string, width: number | undefined): InputShape {
+  const { [name]: _gone, ...rest } = shape.widths ?? {}
+  const widths = width === undefined ? rest : { ...rest, [name]: width }
+  const { widths: _was, ...without } = shape
+  return Object.keys(widths).length === 0 ? without : { ...without, widths }
+}
+
 /** Fields' rows: the asked ones in their order, then the rest in the format's. */
 export function fieldsRows(declaration: FormatDeclaration, shape: InputShape): readonly ColumnDeclaration[] {
   const asked = shape.fields.flatMap((name) => declaration.columns.find((each) => each.name === name) ?? [])

@@ -1290,6 +1290,8 @@ rather than three decisions.
 > the dry run names them per row (*Row 1 — date and account from Card charge*), refusing a view of
 > another kind; `show_format view:"Card charge"` draws its form read-only (the frame opens its own form, its
 > fields disabled and no Add, M55 U3); `format_rows` refuses one; `formats` names a format's input views apart.
+> `widths:{merchant: 320}` sizes its fields as dragging their edges does, the form's own and never the
+> table's (`null` back to the type's; Later U-input-widths, D-596).
 > **M53 U5 added saved views** (D-520): `arrange_views view:saved name:"Due today" kind:list
 > match:{due:"today"}` keeps a format's filter, folds, columns, sort and kind under a name — the
 > address as the app spells it, so `today` stays the phrase — and `rename` and `delete: true` change

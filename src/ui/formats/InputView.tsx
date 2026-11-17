@@ -19,14 +19,17 @@ import {
   defaultCellRefusal,
   defaultText,
   fieldsRows,
+  fieldWidthOf,
   inputFormOf,
   lackingSentence,
   withAsked,
   withDefault,
   withMoved,
+  withWidth,
 } from './inputForm.ts'
 import { Cell } from './ListView.tsx'
 import type { LineCell } from './listView.ts'
+import { ResizeHandle } from './ResizeHandle.tsx'
 
 
 /** A problem with the row being added: at its field, or about the row when it names none. */
@@ -54,6 +57,9 @@ export interface InputSaving {
   readonly shape: InputShape
   readonly isDefault: boolean
 }
+
+/** A field nobody has sized, on the page: a narrow type's and every other's (D-596). */
+const PAGE_FIELD = { narrow: 176, wide: 288 } as const
 
 /** The types whose field is narrow: a day, a figure, a yes or no, a member. */
 export const NARROW: ReadonlySet<string> = new Set([
@@ -156,7 +162,8 @@ export function InputView({
   // A saved view's Fields change waits here while it leaves a required column empty.
   const [pending, setPending] = useState<InputShape | undefined>(view === undefined ? savedShape : undefined)
   const shape = pending ?? savedShape
-  const shapeKey = JSON.stringify(shape)
+  // A width dragged is not what it asks or sets: the draft is kept through it (D-596).
+  const shapeKey = JSON.stringify([shape.fields, shape.defaults])
   const form = inputFormOf(declaration, shape)
   const [name, setName] = useState(suggested)
   const [useForAdd, setUseForAdd] = useState(view?.isDefault === true)
@@ -171,6 +178,7 @@ export function InputView({
   const [round, setRound] = useState(0)
   const [focusProblem, setFocusProblem] = useState(false)
   const fields = useRef<HTMLDivElement>(null)
+  const [sizing, setSizing] = useState<{ readonly column: string; readonly width: number } | undefined>(undefined)
 
   // What it asks or sets changed: the fields start again from the new defaults.
   const first = useRef(true)
@@ -276,8 +284,9 @@ export function InputView({
     const way = entryWayOf(column, undefined, false)
     const word = dayWordOf(column, shape.defaults[column.name])
     const showsWord = word !== undefined && draft[column.name] === dayOfDefault(word, today)
+    const wide = sizing?.column === column.name ? sizing.width : fieldWidthOf(column, shape, NARROW.has(column.type), PAGE_FIELD)
     return (
-      <div key={column.name} className={`flex items-end gap-2 ${NARROW.has(column.type) ? 'w-44' : 'w-72'} max-w-full`}>
+      <div key={column.name} data-field={column.name} className="relative flex max-w-full items-end gap-2" style={{ width: wide }}>
         <div className="min-w-0 flex-1">
           <Field
             column={column}
@@ -315,6 +324,18 @@ export function InputView({
         </div>
         {/* A day's word after the day it names: `2026-11-03 · today` (U1 §5). */}
         {showsWord && <span className="pb-1.5 text-caption whitespace-nowrap text-ink-secondary">· {word}</span>}
+        {/* **Its edge sets its width** (D-596): the view's own, as on a dashboard's block. */}
+        {writable && (
+          <ResizeHandle
+            column={entryLabel(column)}
+            width={wide}
+            onDrag={(width) => setSizing({ column: column.name, width })}
+            onDone={(width) => {
+              setSizing(undefined)
+              change(withWidth(shape, column.name, width))
+            }}
+          />
+        )}
       </div>
     )
   }

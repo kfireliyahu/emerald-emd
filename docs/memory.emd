@@ -12116,6 +12116,17 @@ branch: main
 commit: dd0d3b0b
 paths: "src/frame/host.ts\nsrc/frame/main.tsx\nsrc/frame/host.test.ts\nscripts/try-frame.mjs\ndocs/plugin.md"
 
+### Later U-input-widths
+milestone: Later
+scope: app
+title: A form's fields are sized by dragging, and the form keeps the sizes
+state: in_progress
+brief: The maintainer, on his own dashboard (2026-11-17): he wants to change how wide the fields of an input view's block are, and cannot — InputBlock and the input page draw a field at a fixed w-40/w-60 (w-44/w-72), by type. His choice (asked, 2026-11-17): **the form's own width, not the table's** — a field's width belongs to the input view, the same on the dashboard block and on the form's own page, and a table's column widths (format_column_view, D-558) are untouched. Plumbing (mine): kept in the input view's address as `width:<column>=<px>`, so no migration and a text document carries it already; bounded by boundedWidth; only for fields asked. On screen: the ResizeHandle on each field's trailing edge in the block (two to four grid columns wide; a one-column block stacks and ignores widths) and on the page; drag, arrows by 16, double-click or Delete back to the type's. In a conversation: arrange_views view:saved kind:input `widths: {column: px|null}`. Done: a field made wider or narrower in the dashboard block stays after reopening, parity test, docs and a decision row.
+files: src/ui/formats/addressFilter.ts, src/domain/format/inputView.ts, src/ui/formats/InputBlock.tsx, src/ui/formats/InputView.tsx, src/plugin/tools/views.ts, src/parity.test.ts, docs/04-data-model.md
+taken_by: claude session (input widths)
+started: 2026-11-17
+branch: main
+
 ### Later U-shipped-landing-skill
 milestone: Later
 scope: plugin
@@ -17597,4 +17608,4 @@ open_question: 2026-11-13
 review_entry: 2026-11-13
 rule: 2026-11-16
 term: 2026-11-11
-unit: 2026-11-16
+unit: 2026-11-17

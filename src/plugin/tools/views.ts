@@ -67,7 +67,8 @@ import {
   isFoldKey,
   type AddressOrder,
 } from '@/ui/formats/addressFilter.ts'
-import { INPUT_KIND, inputViewRefusals } from '@/domain/format/inputView.ts'
+import { INPUT_KIND, inputViewRefusals, type InputShape } from '@/domain/format/inputView.ts'
+import { withWidth } from '@/ui/formats/inputForm.ts'
 import { today } from '../today.ts'
 import { savedViewSaid } from './saved.ts'
 import { dashboardLine, judgeDashboard, type DashboardChange } from './dashboard.ts'
@@ -147,6 +148,7 @@ const KEYS = [
   'fields',
   'defaults',
   'default',
+  'widths',
   'add',
   'size',
   'remove',
@@ -269,7 +271,7 @@ function judge(
 
   switch (view as View) {
     case 'saved': {
-      const wrong = extra(['name', 'kind', 'match', 'search', 'order', 'descending', 'columns', 'rename', 'delete', 'fields', 'defaults', 'default'])
+      const wrong = extra(['name', 'kind', 'match', 'search', 'order', 'descending', 'columns', 'rename', 'delete', 'fields', 'defaults', 'default', 'widths'])
       if (wrong !== undefined) return { reason: wrong }
       return judgeSaved(db, declaration, declared, entry)
     }
@@ -578,7 +580,7 @@ function judgeSaved(
   const was = savedView(db, format, name)
   const others = savedViews(db, format).map((each) => `\`${each.name}\``)
   const missing = `${format} has no saved view called ${name}${others.length === 0 ? '' : `; it has ${others.join(', ')}`}.`
-  const holds = ['kind', 'match', 'search', 'order', 'descending', 'columns', 'fields', 'defaults', 'default'].filter((key) => entry[key] !== undefined)
+  const holds = ['kind', 'match', 'search', 'order', 'descending', 'columns', 'fields', 'defaults', 'default', 'widths'].filter((key) => entry[key] !== undefined)
 
   if (entry['delete'] !== undefined) {
     if (entry['delete'] !== true) return { reason: '`delete` is true, or left out.' }
@@ -607,7 +609,7 @@ function judgeSaved(
   }
   // An input view (M55 U2, D-533, D-536) asks for rows: its own arguments, its own checks.
   if (offeredKind === INPUT_KIND) return judgeInput(db, declaration, entry, name, was)
-  const asking = ['fields', 'defaults', 'default'].filter((key) => entry[key] !== undefined)
+  const asking = ['fields', 'defaults', 'default', 'widths'].filter((key) => entry[key] !== undefined)
   if (asking.length > 0) return { reason: `${asking.map((key) => `\`${key}\``).join(', ')} ${asking.length === 1 ? 'goes' : 'go'} with an input view, \`kind: input\`.` }
   if (!(has as readonly string[]).includes(offeredKind)) return { reason: `${format} has no ${offeredKind}; its views are ${has.join(', ')}.` }
 
@@ -715,7 +717,9 @@ function judgeSaved(
  * makes it the format's default input view, taking the mark from the one that
  * had it; `default: false` lets it go. Refused, every reason at once, by
  * `inputViewRefusals` — the screen's check too. On one already saved, what is
- * left out stays as it was.
+ * left out stays as it was. **`widths`** (Later U-input-widths, D-596) sizes
+ * its fields as dragging their edges does — a field asked to its pixels, or
+ * `null` back to its type's — the form's own, never the format's table.
  */
 function judgeInput(
   db: Database,
@@ -741,9 +745,30 @@ function judgeInput(
   }
   const mark = entry['default']
   if (mark !== undefined && typeof mark !== 'boolean') return { reason: '`default` is true or false.' }
+  const widths = entry['widths']
+  if (
+    widths !== undefined &&
+    (widths === null ||
+      typeof widths !== 'object' ||
+      Array.isArray(widths) ||
+      Object.values(widths).some((each) => each !== null && (typeof each !== 'number' || !Number.isFinite(each))))
+  ) {
+    return { reason: '`widths` is an object of a field it asks to its width in pixels, or null for its type’s: `{merchant: 320}`.' }
+  }
   const holding = was?.kind === INPUT_KIND ? inputShapeOf(was.address, format) : undefined
-  const shape = {
-    fields: (fields as readonly string[] | undefined) ?? holding?.fields ?? [],
+  const asked = (fields as readonly string[] | undefined) ?? holding?.fields ?? []
+  const given = Object.entries((widths ?? {}) as Record<string, number | null>)
+  const unasked = given.filter(([column]) => !asked.includes(column)).map(([column]) => column)
+  if (unasked.length > 0) {
+    return { reason: `A width is a field’s, and ${listed(unasked.map((each) => `\`${each}\``))} ${unasked.length === 1 ? 'is' : 'are'} not asked.` }
+  }
+  const sized = given.reduce<InputShape>((shape, [column, width]) => withWidth(shape, column, width === null ? undefined : boundedWidth(width)), {
+    fields: asked,
+    defaults: {},
+    ...(holding?.widths === undefined ? {} : { widths: holding.widths }),
+  })
+  const shape: InputShape = {
+    ...sized,
     defaults: (defaults as Record<string, unknown> | undefined) ?? holding?.defaults ?? {},
   }
   const reasons = inputViewRefusals(declaration, shape)
@@ -764,10 +789,11 @@ function judgeInput(
     fields: (holding?.fields.length ?? 0) > 0,
     defaults: Object.keys(holding?.defaults ?? {}).length > 0,
     default: was.isDefault === true,
+    widths: Object.keys(holding?.widths ?? {}).length > 0,
   }
-  const given = ['kind', 'fields', 'defaults', 'default'].filter((key) => entry[key] !== undefined)
-  const kept = Object.keys(keeps).filter((key) => keeps[key] === true && !given.includes(key))
-  return { changes: [...unmarked, { kind: 'SAVED', format, name, was, now, kept, given }] }
+  const changed = ['kind', 'fields', 'defaults', 'default', 'widths'].filter((key) => entry[key] !== undefined)
+  const kept = Object.keys(keeps).filter((key) => keeps[key] === true && !changed.includes(key))
+  return { changes: [...unmarked, { kind: 'SAVED', format, name, was, now, kept, given: changed }] }
 }
 
 /** `a, b and c`. */
@@ -1097,7 +1123,7 @@ export const arrangeViewsTool: PluginTool = {
       '`new_entry` and the `order`; a board’s lanes; a table column’s `width`; a column’s `setting` in a list, a roadmap, a ' +
       'ready list or a start-here question; `view: saved`, a `name` and what it keeps (`today` stays that phrase) — on one saved, ' +
       'only what is given changes; `match:{}`, `search:""`, `order:""`, `columns:{}` empty one — or ' +
-      '`rename`, or `delete: true`; `kind: input` takes `fields`, `defaults`, `default`; `view: dashboard` `add`s, `size`s, `order`s and `remove`s blocks (no `format`: the document’s). ' +
+      '`rename`, or `delete: true`; `kind: input` takes `fields`, `defaults`, `default`, `widths`; `view: dashboard` `add`s, `size`s, `order`s and `remove`s blocks (no `format`: the document’s). ' +
       '`formats` with a `format` shows the ' +
       'arrangement and each column’s ways. Dry-runs until `commit: true`.',
     inputSchema: {
@@ -1138,6 +1164,7 @@ export const arrangeViewsTool: PluginTool = {
               fields: { type: 'array', items: { type: 'string' }, description: 'input: columns asked, in order.' },
               defaults: { type: 'object', description: 'input: column to start value; a date: today, yesterday, tomorrow.' },
               default: booleanProp('input: the format’s default.'),
+              widths: { type: 'object', description: 'input: field to pixels, null resets; the form’s own.' },
               rename: stringProp('saved, alone: a new name.'),
               delete: booleanProp('saved, alone.'),
               add: {
