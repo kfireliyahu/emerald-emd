@@ -4961,6 +4961,16 @@ answer: src/i18n/words.test.ts holds every translated screen (U5's 45 files join
 state: live
 affects: "src/i18n/words.test.ts\nsrc/ui/components/Phrase.tsx\nsrc/ui/probe.ts"
 
+### D-596
+date: 2026-11-17
+milestone: Later
+scope: app
+title: A form's field is sized by dragging its edge, and the width is the form's own: kept in the input view's address as `width:<column>=<px>`, the same on a dashboard's block and on the form's page, set in a conversation with `arrange_views` `widths`, and never the format's table widths
+question: How does a person make a field of an input view (its dashboard block, its page) wider or narrower, and whose width is it?
+answer: Drag the field's trailing edge (ResizeHandle: arrows by 16, double-click or Delete back to the type's). The width belongs to the input view — the maintainer's pick over sharing the table's — kept in its address as `width:<column>=<px>` (48–1200, only for a field it asks), so no migration and a text document carries it. Same pixels on the block and the page; a one-column block stacks and has no handle. `arrange_views view:saved kind:input widths:{column: px|null}`; a field not asked is refused. Table widths (format_column_view) untouched.
+state: live
+affects: "docs/04-data-model.md\ndocs/plugin.md"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -12120,12 +12130,16 @@ paths: "src/frame/host.ts\nsrc/frame/main.tsx\nsrc/frame/host.test.ts\nscripts/t
 milestone: Later
 scope: app
 title: A form's fields are sized by dragging, and the form keeps the sizes
-state: in_progress
+landed: 2026-11-17
+decision: D-596
+state: built
 brief: The maintainer, on his own dashboard (2026-11-17): he wants to change how wide the fields of an input view's block are, and cannot — InputBlock and the input page draw a field at a fixed w-40/w-60 (w-44/w-72), by type. His choice (asked, 2026-11-17): **the form's own width, not the table's** — a field's width belongs to the input view, the same on the dashboard block and on the form's own page, and a table's column widths (format_column_view, D-558) are untouched. Plumbing (mine): kept in the input view's address as `width:<column>=<px>`, so no migration and a text document carries it already; bounded by boundedWidth; only for fields asked. On screen: the ResizeHandle on each field's trailing edge in the block (two to four grid columns wide; a one-column block stacks and ignores widths) and on the page; drag, arrows by 16, double-click or Delete back to the type's. In a conversation: arrange_views view:saved kind:input `widths: {column: px|null}`. Done: a field made wider or narrower in the dashboard block stays after reopening, parity test, docs and a decision row.
-files: src/ui/formats/addressFilter.ts, src/domain/format/inputView.ts, src/ui/formats/InputBlock.tsx, src/ui/formats/InputView.tsx, src/plugin/tools/views.ts, src/parity.test.ts, docs/04-data-model.md
+files: src/ui/formats/addressFilter.ts, src/domain/format/inputView.ts, src/ui/formats/inputForm.ts, src/ui/formats/InputBlock.tsx, src/ui/formats/InputView.tsx, src/plugin/tools/views.ts, src/plugin/tools/inputView.test.ts, docs/04-data-model.md, docs/plugin.md, docs/09-decision-log.md
 taken_by: claude session (input widths)
 started: 2026-11-17
 branch: main
+commit: f1a5b08
+report: Built at f1a5b08. A field of an input view is now sized by dragging its edge on the dashboard block and on the form's page, and arrange_views kind:input takes widths. The maintainer chose the form's own width over the table's (asked 2026-11-17). Kept in the view's address (width:<column>=<px>), so no migration; a text document carries it. Fixed along the way: the block's typed draft was cleared by any write that re-read the declaration (now reset only when what a row starts at changes). Verified: 3 new tests in inputView.test.ts, full suite 5757 passing, and in the dev app on a probe document — arrows widened Merchant 240→320 and saved it in the address, Delete reset it, typed text survived a resize, the page drew the width the block set. Not tried by the maintainer on his own document.
 
 ### Later U-shipped-landing-skill
 milestone: Later
@@ -17600,7 +17614,7 @@ title: line
 emerald: changed
 ---
 
-decision: 2026-11-16
+decision: 2026-11-17
 finding: 2026-10-22
 inbox: 2026-11-13
 milestone: 2026-11-16
