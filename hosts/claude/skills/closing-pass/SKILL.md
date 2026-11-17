@@ -69,6 +69,14 @@ land_units units:[{unit:"M3 U2", files:"…", commit:"<hash>", branch:"<branch>"
 - **The unit goes `built`** with `landed` (today unless said), `files` corrected to what you actually
   changed, and `decision` — its first new decision, or `decision:"D-xxx"` for one that exists. It is
   refused if the unit is already built or dropped.
+- **`accept_entries`** for review entries already open on the unit that your report proves — each
+  by the start of its `do`. The answer lists the rest beside your report: accept a further one only
+  when the report really proves it (`update_format_rows review_entry` by `where:{unit, do}`), and
+  leave the others open for a person to try. A proposal from a worktree never accepts; its driver does.
+- **Anything left over? → `follow_ups`**, each `{kind: unit|question|review, …its columns}`: a
+  leftover to remove, a fix not yet made, "polish in M3" — anything your report says is still owed.
+  A follow-up unit needs a `brief` and goes under Later unless it names a milestone. `follow_ups: []`
+  says nothing is owed; leave it out and the answer quotes the report's lines that sound owed.
 - **`review_entries`** only when there is something the maintainer should drive; `close_milestone`
   only when the maintainer closed it.
 - **`branch`** is the branch you land from; a unit claimed on another is refused unless
@@ -83,7 +91,7 @@ row with `record_format_rows` to **the document path your hooks printed** (the m
 never one under the worktree's folder), `from` that same path, with `subject`, `sent_on`,
 `refs:"<your unit>"`, `state:"new"`, and a `body` of a line for a person then one fenced `json` block
 holding exactly what `land_units`' `units` would: `unit`, `files`, `commit`, `branch`, `decisions`,
-`review_entries`, `report` — no `close_milestone`. `land_units inbox:["<its id>"]` with `commit: false`
+`review_entries`, `follow_ups`, `report` — no `close_milestone` or `accept_entries`. `land_units inbox:["<its id>"]` with `commit: false`
 checks it; report the id. Write no other format.
 
 **Anything else** — a unit you planned, a question you opened or answered — is `record_format_rows`
