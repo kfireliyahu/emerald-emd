@@ -12145,10 +12145,17 @@ report: Built at f1a5b08. A field of an input view is now sized by dragging its 
 milestone: Later
 scope: plugin
 title: The shipped closing-pass skill learns accept_entries and follow_ups, with the release that ships them
-state: planned
+landed: 2026-11-17
+decision: D-593
+state: built
 brief: M61 U2 (D-592) and U3 (D-593) added accept_entries and follow_ups to land_units, and the repo's own closing-pass skill (.claude/skills) tells sessions to use them. The shipped one (hosts/claude/skills/closing-pass/SKILL.md) does not, because the plugin runs the published emerald-mcp 0.4.0, which would refuse both keys. With the next emerald-mcp release that ships M61's server code, copy the two bullets (accept_entries; 'Anything left over? → follow_ups') and the proposal line ('no close_milestone or accept_entries', follow_ups allowed) from .claude/skills/closing-pass/SKILL.md into the shipped skill, then node scripts/pin-plugin.mjs (the pins, after npm serves the version). Never before the package is published: a pin or a skill ahead of the package tells installed sessions to send keys their server refuses.
-files: hosts/claude/skills/closing-pass/SKILL.md, .claude/skills/closing-pass/SKILL.md, scripts/pin-plugin.mjs
+files: hosts/claude/skills/closing-pass/SKILL.md, hosts/claude-plugin-release.json, hosts/claude/.claude-plugin/plugin.json and the pins (scripts/pin-plugin.mjs)
+taken_by: claude-desktop session d6fe630d
+started: 2026-11-17
+branch: main
+commit: c9e01d0
 paths: "hosts/claude/skills/closing-pass/SKILL.md\nhosts/claude-plugin-release.json"
+report: Emerald 0.4.1 cut at 6c5e8ef and tagged v0.4.1 (installers built by the Release workflow, success); emerald-mcp 0.4.1 published by the maintainer and served by npm about 6 minutes later; the plugin pinned to it, and the shipped closing-pass skill carries the accept_entries and follow_ups bullets from the repo's own copy, in c9e01d0.
 
 ### Later U-template
 milestone: Later
