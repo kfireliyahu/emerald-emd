@@ -4971,6 +4971,15 @@ answer: Drag the field's trailing edge (ResizeHandle: arrows by 16, double-click
 state: live
 affects: "docs/04-data-model.md\ndocs/plugin.md"
 
+### D-597
+date: 2026-11-18
+milestone: M62
+scope: plugin
+title: A row's action is carried by the conversation that wrote the row, through the connectors that conversation already has; a row typed in the app waits, pending in the document, for the next conversation; Emerald holds no login of another service and starts no session of its own
+question: Who makes the call a row's action declares (M62 #1), and what carries it when no conversation is open (M62 #5), given that claude.ai connectors load only inside Claude sessions on the person's account, a direct call needs registration per provider, and the Agent SDK's overview says third-party products may not offer claude.ai login or rate limits unless Anthropic approved them?
+answer: The conversation that writes the row carries it: the write answers with the due action, its tool and the inputs Emerald filled from the row, and the conversation calls the tool through its own connector, unchanged (D-132), then reports the result back into the row. A row typed in the app stays pending in the document and the next conversation that opens it is told and carries it; nothing runs in the background. Emerald holds no other service's sign-in, has no provider-specific code, asks for no API key and starts no session; asking Anthropic for approval is a later choice if waiting proves too slow. Rejected: Emerald signing in to each server (setup per provider), a session per row (tokens per row, and the sign-in needs approval), a scheduled sweep.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -6616,6 +6625,12 @@ goal: Five inbox rows from another project's use of the development pack (2026-1
 state: closed
 position: 375
 
+### M62
+title: Rows that act: a format declares a call to another MCP server's tool, and the conversation that wrote the row makes it
+goal: A format can declare an action: when (a row added, changed, matching, leaving a state, or on demand), which server and tool, the tool's inputs filled from the row's columns (a column may come from a linked row, so a lookup table is just a small format), and which part of the result is written back into the row. The conversation that writes the row carries its action (D-597): the write answers with the due action and the inputs Emerald filled, the conversation calls the tool through the connector it already has, unchanged (D-132), and the result's id lands in the row, so a later change updates or replaces instead of duplicating. A row typed in the app stays pending in the document, and the next conversation that opens it is told and carries it. A failure stays visible with its error; the entries kept are the record of what was sent, from which row version, and what came back. Emerald holds no other service's sign-in, has no code for any one provider, asks for no API key and starts no session of its own. Actions that need judgment are carried the same way, with a prompt in place of filled inputs. Planned 2026-11-18 from a conversation and one real working environment, which found most sign-ins live inside the assistant, tools answer as text more often than as structured results, tool descriptions ask for confirmation first, and lookups, linked rows, replace-only tools and actions on delete are needed. Still the maintainer's: M62 #2, #3, #4, #6 and #7; no unit brief is written until they are answered.
+state: planned
+position: 390
+
 <!-- emerald: open_question.format.md -->
 ---
 format: open_question
@@ -6888,6 +6903,37 @@ question: How is a pack's invariant that lives in pack code held against the eng
 opened_by: D-268
 answered_by: D-269
 state: answered
+
+### M62 #1
+question: Who carries an action by default: a Claude session, sending the arguments Emerald filled through a connector the person already has signed in, or Emerald calling the other server itself, which only works for servers it can sign in to on its own? The session's recommendation is Claude first, Emerald for local servers after.
+answered_by: D-597
+state: answered
+
+### M62 #2
+question: Does every action ask the person in the conversation before it does anything outside the document, or can a format declare an action the conversation carries without asking? And when a conversation opens to several waiting, is one yes enough for all of them?
+state: open
+
+### M62 #3
+question: When a row is deleted, or moves to a state like dropped, what happens to what its action made elsewhere (the event, the ticket, the reminder): is it undone, left alone, or does each action declare which?
+state: open
+
+### M62 #4
+question: Where does a person see what is waiting and what failed: on the row itself, in a place of its own in the app, in the line a conversation opens with when the document has actions waiting, or several of these?
+state: open
+
+### M62 #5
+question: When nothing is open, does anything carry the queue: does it wait until the app or a session next opens, or does a small process that starts with the computer carry it in the background?
+answered_by: D-597
+state: answered
+
+### M62 #6
+question: What is the thing called on screen? Connection is already the edge between two formats; candidates are action, automation or something else.
+state: open
+
+### M62 #7
+question: A server that runs on the person's own computer needs no sign-in. Should Emerald call such a server itself, so a row typed in the app is carried at once instead of waiting for a conversation, or does every action go through a conversation, local servers too?
+opened_by: D-597
+state: open
 
 ### Many-valued link
 question: Should a link be able to name several rows — a unit blocked by three others, a decision amended by two? A link holds one value today, so U2 had to name a second amender in prose (see 'M22 U3 #3'). It is still one hop to many targets, which D-224 allows in principle; it is not traversal. It is what a 'ready' view (planned, and nothing blocking it open) needs.
@@ -17621,11 +17667,11 @@ title: line
 emerald: changed
 ---
 
-decision: 2026-11-17
+decision: 2026-11-18
 finding: 2026-10-22
 inbox: 2026-11-13
-milestone: 2026-11-16
-open_question: 2026-11-13
+milestone: 2026-11-18
+open_question: 2026-11-18
 review_entry: 2026-11-13
 rule: 2026-11-16
 term: 2026-11-11

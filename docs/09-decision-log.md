@@ -499,6 +499,7 @@ written out here.
 | D-593 | 2026-11-15 | A landing takes `follow_ups`, each a planned unit (with a brief, under Later unless it names a milestone), an open question or a review entry, written with the rest; a report that sounds owed and names none is quoted back, never refused | M61 |
 | D-594 | 2026-11-16 | Offering a format is a named step of the job: the server's instructions say to offer one, unasked, when one kind of fact keeps turning up as prose, and `start_here` asks the person once where it offers to close a milestone | M61 |
 | D-596 | 2026-11-17 | A form's field is sized by dragging its edge, and the width is the form's own: kept in the input view's address as `width:<column>=<px>`, the same on a dashboard's block and on the form's page, set in a conversation with `arrange_views` `widths`, and never the format's table widths | Later |
+| D-597 | 2026-11-18 | A row's action is carried by the conversation that wrote the row, through the connectors that conversation already has; a row typed in the app waits, pending in the document, for the next conversation; Emerald holds no login of another service and starts no session of its own | M62 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -643,6 +644,44 @@ key holds).
 
 **Consequences.** `InputShape` carries `widths`; `addressView` reads `width:` keys and
 `canonicalAddress` keeps them, so a shown view's address would keep one too, unread.
+
+## D-597 · 2026-11-18 · A row's action is carried by the conversation that wrote the row, through the connectors that conversation already has; a row typed in the app waits, pending in the document, for the next conversation; Emerald holds no login of another service and starts no session of its own <a id="d-597"></a>
+
+**Context.** M62 (planned the same day): a format declares an action, a call to a tool on another
+MCP server with its inputs filled from the row, and the result kept back in the row. Who makes the
+call was M62 #1. Four carriers were weighed in conversation with the maintainer: Emerald as an MCP
+client signing in to each server itself; a fresh session started per row; a scheduled sweep; and the
+conversation already open. Checked the same day: claude.ai connectors load only inside Claude
+sessions on the person's own account, and their sign-ins are not lent to another app; one large
+provider's official calendar MCP server accepts only sign-in clients registered with that provider
+as agentic, so a direct call means setup per provider; and the Agent SDK's overview says that, unless previously approved,
+Anthropic does not allow third-party developers to offer claude.ai login or rate limits in their
+products. One real working environment, asked the same question, found almost every sign-in held
+inside the assistant and preferred to carry actions itself.
+
+**Decision.** (M62 #1 and #5, the maintainer's choice.)
+
+1. **The conversation that writes the row carries its action.** A write that makes an action due
+   answers with it: the tool, and the inputs Emerald filled from the row. The conversation calls
+   the tool through its own connector, unchanged, and reports the result back. The model chooses no
+   value (D-132); it delivers what the document filled.
+2. **A row typed in the app waits.** Its entry stays pending in the document, and the next
+   conversation that opens the document is told what is waiting and carries it. Nothing is lost
+   and nothing runs in the background.
+3. **Emerald holds no other service's sign-in and starts no session.** No code specific to a
+   provider, no API key for the person to make, and nothing run on a person's subscription without
+   Anthropic's approval. Asking for that approval is a later choice, if app-typed rows waiting for a
+   chat proves too slow.
+
+**Rejected.** Emerald signing in to each server itself (generic code, but every provider needs its
+own registration and review, which is the specific-code-per-service the maintainer does not want);
+a session per row (tokens on every row, and the sign-in it needs is the one the Agent SDK note
+rules out without approval); a scheduled sweep (the same sign-in, and not smooth).
+
+**Consequences.** The queue is still written with the row, as the record and the retry for rows
+nobody carried yet; it is plumbing the person never manages. M62 #4 (where waiting and failed
+actions show) now includes the line a conversation opens with. M62 #7 keeps one door open: a
+server that runs on the person's own machine needs no sign-in, so Emerald could call it itself.
 
 ## Related
 
