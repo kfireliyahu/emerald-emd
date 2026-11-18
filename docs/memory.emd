@@ -4980,6 +4980,15 @@ question: Who makes the call a row's action declares (M62 #1), and what carries 
 answer: The conversation that writes the row carries it: the write answers with the due action, its tool and the inputs Emerald filled from the row, and the conversation calls the tool through its own connector, unchanged (D-132), then reports the result back into the row. A row typed in the app stays pending in the document and the next conversation that opens it is told and carries it; nothing runs in the background. Emerald holds no other service's sign-in, has no provider-specific code, asks for no API key and starts no session; asking Anthropic for approval is a later choice if waiting proves too slow. Rejected: Emerald signing in to each server (setup per provider), a session per row (tokens per row, and the sign-in needs approval), a scheduled sweep.
 state: live
 
+### D-598
+date: 2026-11-18
+milestone: M62
+scope: plugin
+title: A conversation asks once for everything waiting — these rows were added, act on them? — and deleting a row, or moving it to another state, leaves what its action made elsewhere alone
+question: Does every action ask before it does anything outside the document, and does one yes cover several (M62 #2)? What happens to what an action made elsewhere when its row is deleted or moves to a state like dropped (M62 #3)?
+answer: The maintainer's picks. One question for everything waiting: when a write makes actions due, or a conversation opens to actions waiting, it asks once, naming them (these rows were added: act on them?), and one yes carries them all; a no leaves them waiting rather than dropping them. A delete, or a move to any state, does nothing elsewhere: no undo and no on-delete trigger in the declaration. Rejected: a question per row, actions that go without asking, undo on delete or a per-action choice. A changed row may still update or replace what it made.
+state: live
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -6627,7 +6636,7 @@ position: 375
 
 ### M62
 title: Rows that act: a format declares a call to another MCP server's tool, and the conversation that wrote the row makes it
-goal: A format can declare an action: when (a row added, changed, matching, leaving a state, or on demand), which server and tool, the tool's inputs filled from the row's columns (a column may come from a linked row, so a lookup table is just a small format), and which part of the result is written back into the row. The conversation that writes the row carries its action (D-597): the write answers with the due action and the inputs Emerald filled, the conversation calls the tool through the connector it already has, unchanged (D-132), and the result's id lands in the row, so a later change updates or replaces instead of duplicating. A row typed in the app stays pending in the document, and the next conversation that opens it is told and carries it. A failure stays visible with its error; the entries kept are the record of what was sent, from which row version, and what came back. Emerald holds no other service's sign-in, has no code for any one provider, asks for no API key and starts no session of its own. Actions that need judgment are carried the same way, with a prompt in place of filled inputs. Planned 2026-11-18 from a conversation and one real working environment, which found most sign-ins live inside the assistant, tools answer as text more often than as structured results, tool descriptions ask for confirmation first, and lookups, linked rows, replace-only tools and actions on delete are needed. Still the maintainer's: M62 #2, #3, #4, #6 and #7; no unit brief is written until they are answered.
+goal: A format can declare an action: when (a row added, changed, matching, or on demand), which server and tool, the tool's inputs filled from the row's columns (a column may come from a linked row, so a lookup table is just a small format), and which part of the result is written back into the row. The conversation that writes the row carries its action (D-597): the write answers with the due actions and the inputs Emerald filled, the conversation asks once for all of them (D-598), calls the tool through the connector it already has, unchanged (D-132), and the result's id lands in the row, so a later change updates or replaces instead of duplicating. A row typed in the app stays pending in the document, and the next conversation that opens it is told and carries it. Deleting a row leaves what its action made alone (D-598). A failure stays visible with its error; the entries kept are the record of what was sent, from which row version, and what came back. Emerald holds no other service's sign-in, has no code for any one provider, asks for no API key and starts no session of its own. Actions that need judgment are carried the same way, with a prompt in place of filled inputs. Planned 2026-11-18 from a conversation and one real working environment, which found most sign-ins live inside the assistant, tools answer as text more often than as structured results, tool descriptions ask for confirmation first, and lookups, linked rows and replace-only tools are needed. M62 U1 is a spike against the maintainer's own weekly meals and a real calendar, by hand and then through a minimal action; the real units are written from what it finds. Still the maintainer's: M62 #4, #6 and #7.
 state: planned
 position: 390
 
@@ -6911,11 +6920,13 @@ state: answered
 
 ### M62 #2
 question: Does every action ask the person in the conversation before it does anything outside the document, or can a format declare an action the conversation carries without asking? And when a conversation opens to several waiting, is one yes enough for all of them?
-state: open
+answered_by: D-598
+state: answered
 
 ### M62 #3
 question: When a row is deleted, or moves to a state like dropped, what happens to what its action made elsewhere (the event, the ticket, the reminder): is it undone, left alone, or does each action declare which?
-state: open
+answered_by: D-598
+state: answered
 
 ### M62 #4
 question: Where does a person see what is waiting and what failed: on the row itself, in a place of its own in the app, in the line a conversation opens with when the document has actions waiting, or several of these?
@@ -17516,6 +17527,15 @@ commit: 0c3fa40
 paths: src/plugin/instructions.ts src/data/packs/development/formats hosts/claude/skills/run-milestone/SKILL.md .claude/skills/run-milestone/SKILL.md hosts/claude/skills/closing-pass/SKILL.md .claude/skills/closing-pass/SKILL.md
 report: The instructions now name offering a format as part of the job, and start_here asks once per ready-to-close milestone whether something kept as prose should be a format. Where to ask was decided in-session (the maintainer said he was lost among the fine-grained questions and asked only to do U5 and close M61): at Ready to close, not every landing. Both instruction texts stay under budget by trimming 'Collect the rows...' and 'That is the job.' from the engine block. Full suite 5755 passed; dist-plugin rebuilt. The shipped skill/plugin pin still waits for the next emerald-mcp release (Later U-shipped-landing-skill).
 
+### M62 U1
+milestone: M62
+scope: plugin
+title: Spike: the maintainer's weekly meals onto a Meals calendar, first by hand, then through a minimal action, compared
+state: planned
+brief: "**Why.** Find out against a real calendar whether a declared action (D-597, D-598) makes this flow better than a conversation doing it by hand, before M62's real units are written. What it finds becomes decisions, open questions and a corrected M62 goal; the code is thrown away.\n\n**The maintainer's answers, already given.** D-597: the conversation that wrote the row carries its action through its own connectors; an app-typed row waits for the next conversation; Emerald holds no sign-in and starts no session. D-598: one question for everything waiting (these rows were added, act on them?), and a delete does nothing elsewhere. The document is a new `meals.emd` in an `Emerald` folder under the maintainer's Documents (create_document; never in the repo, and no meal names in repo rows). Events go into a new Google calendar called Meals, made at the start with the maintainer's yes, so all the spike made can be removed together.\n\n**First.** The maintainer connects the Google Calendar connector in Claude. Check this session has its tools (claude.ai connectors appear as mcp__claude_ai_* tools); if not, stop and say so. Never delete an event or calendar without asking.\n\n**A. Without the feature (the baseline).** Declare a `meal_plan` format with the maintainer: the meal, the weekday, the time, how long, and an empty `calendar_event` text column. Add his weekly meals in the conversation. Then ask, in plain words, for them to go on the Meals calendar as weekly repeating events. Count the turns and tool calls; note whether the event ids got written back without being asked; then edit one meal's time in the app, add one in the app, and run the same ask again: does anything notice the edit, is the app-typed one carried, are events duplicated?\n\n**B. With a minimal action (branch m62-spike).** The least code that shows D-597 and D-598: an action declared on a format (any storage that is least code, not the final shape: what fires it, the server and tool, inputs as `{column}` templates plus the two conversions a weekly event needs, weekday and time to the next such date-time and a weekly repeat rule, and which result field goes into which column); a write through record_format_rows or update_format_rows adds an entry in the same transaction with the inputs filled from the row; the write's answer names everything due in one line (D-598); a tool marks entries done with their result, or failed with the error; start_here (or the first call on the document) says when entries wait. Build the plugin and reach it from the session; if that needs the emerald server restarted, it is the maintainer's to do, so say so. Run the same steps as A: add in the conversation, one in the app, edit one, delete one (nothing happens to its event). Note whether the calendar answers with a structured id or text, and what a weekly repeat needed.\n\n**Done.** A report on the unit: each way's turns and calls, what each got wrong or missed, what the action added and what it did not, and what M62's real units should be. Findings as decision rows or open questions; M62's goal corrected if it was wrong. Out of scope: screens, a name (M62 #6), local servers (M62 #7), where waiting shows (M62 #4) beyond one line."
+files: src/plugin/tools/formats.ts (what record_format_rows and update_format_rows answer), src/plugin/catalog.ts (a tool to finish entries), src/domain/format/ (where a row is written, so an entry goes in the same transaction), src/plugin/tools/startHere.ts (one line when entries wait). The spike's code lives on the branch m62-spike and is never merged.
+paths: "src/plugin/tools/formats.ts\nsrc/plugin/catalog.ts\nsrc/domain/format/\nsrc/plugin/tools/startHere.ts"
+
 <!-- emerald: views.md -->
 ---
 emerald: views
@@ -17675,4 +17695,4 @@ open_question: 2026-11-18
 review_entry: 2026-11-13
 rule: 2026-11-16
 term: 2026-11-11
-unit: 2026-11-17
+unit: 2026-11-18

@@ -500,6 +500,7 @@ written out here.
 | D-594 | 2026-11-16 | Offering a format is a named step of the job: the server's instructions say to offer one, unasked, when one kind of fact keeps turning up as prose, and `start_here` asks the person once where it offers to close a milestone | M61 |
 | D-596 | 2026-11-17 | A form's field is sized by dragging its edge, and the width is the form's own: kept in the input view's address as `width:<column>=<px>`, the same on a dashboard's block and on the form's page, set in a conversation with `arrange_views` `widths`, and never the format's table widths | Later |
 | D-597 | 2026-11-18 | A row's action is carried by the conversation that wrote the row, through the connectors that conversation already has; a row typed in the app waits, pending in the document, for the next conversation; Emerald holds no login of another service and starts no session of its own | M62 |
+| D-598 | 2026-11-18 | A conversation asks once for everything waiting — these rows were added, act on them? — and deleting a row, or moving it to another state, leaves what its action made elsewhere alone | M62 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -682,6 +683,33 @@ rules out without approval); a scheduled sweep (the same sign-in, and not smooth
 nobody carried yet; it is plumbing the person never manages. M62 #4 (where waiting and failed
 actions show) now includes the line a conversation opens with. M62 #7 keeps one door open: a
 server that runs on the person's own machine needs no sign-in, so Emerald could call it itself.
+
+## D-598 · 2026-11-18 · A conversation asks once for everything waiting — these rows were added, act on them? — and deleting a row, or moving it to another state, leaves what its action made elsewhere alone <a id="d-598"></a>
+
+**Context.** M62 #2 asked whether every action asks before it does anything outside the document,
+and whether one yes covers several; M62 #3 asked what happens to what an action made (an event, a
+ticket) when its row is deleted or moves to a state like dropped. Both the maintainer's, answered
+the same day as D-597.
+
+**Decision.** (The maintainer's words: "ask in bulk, x was added, should we act on it"; and for
+deletes, "nothing".)
+
+1. **One question for everything waiting.** When a write makes actions due, or a conversation
+   opens to actions waiting, the conversation asks once, naming them — *Shakshuka, Lentil soup and
+   Salad were added: put them on the calendar?* — and one yes carries them all. A no leaves them
+   waiting; it does not drop them.
+2. **A delete does nothing elsewhere.** Deleting a row, or moving it to any state, leaves what its
+   action made where it is. No undo, and no on-delete trigger in the declaration.
+
+**Rejected.** A question per row (the bulk is the point: a week of meals is one decision); actions
+declared to go without asking (one question is cheap, and nothing leaves the document unseen);
+undoing on delete, or a per-action choice (more to declare, and an event removed by accident is
+worse than one left behind).
+
+**Consequences.** M62 U1, the spike, asks in bulk and never touches the calendar on a delete;
+its document and calendar were the maintainer's picks too (a new meals document of his own, a
+calendar of its own).
+Replacing on change (a tool with no update) is unaffected: a changed row is not a deleted one.
 
 ## Related
 
