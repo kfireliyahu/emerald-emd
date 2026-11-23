@@ -504,6 +504,7 @@ written out here.
 | D-601 | 2026-11-23 | A format's rows go out as JSON: a subcommand of the server, a tool that writes only inside the document's folder, and saved exports as rows; money as exact text beside its currency, the same bytes every time | M63 |
 | D-602 | 2026-11-23 | The export tool is marked a write: it reads the document and never writes it, so parity counts it a read, but it writes a file, so `readOnlyHint` is false, not destructive, idempotent | M63 |
 | D-603 | 2026-11-23 | A nest is one string a person types — `keyword.card as=keywords order=position` — the same on the command line, in the tool and in a saved export's cell; its link back is read off the graph, refused when there are two, and left out of each child | M63 |
+| D-604 | 2026-11-23 | Saved exports are the exports pack's one format, `export`, named by its unique `file`; a refused row is reported and the others still written, the run exiting 2, and a document with none exits 2 naming the pack | M63 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -790,6 +791,38 @@ match does it.
 
 **Consequences.** U3's nests column is these strings, one per line, read by `parseNest`. The line an
 export prints says `2 rows of card, with 3 rows of keyword folded in`.
+
+## D-604 · 2026-11-23 · Saved exports are the exports pack's one format, `export`, named by its unique `file`; a refused row is reported and the others still written, the run exiting 2, and a document with none exits 2 naming the pack <a id="d-604"></a>
+
+**Context.** D-601 made saved exports rows of a format the document declares, written from the
+command line, a conversation and the app. M63 U3 builds the pack and `export <document.emd>` without
+`--format`; what the format is called, what a row holds and what a run says when some rows fail were
+the building session's to pick.
+
+**Decision.** A third pack, `exports` (`src/data/packs/exports/`), of one format, `export`: `file`
+(required, unique, its label), `format`, `columns`, `order`, `descending` (yes/no), `match`, `nests`,
+`note`. `columns`, `match` and `nests` hold one entry per line; a `match` line is `column: value`, two
+lines on one column are either, an empty value matches an empty cell; a `nests` line is D-603's string.
+A document keeps the pack when it declares `export` in a shape that does not clash with it, so a
+person's own `export` is never read as saved exports. Keeping a pack of declared formats is one
+function now, `installDeclared` (`src/data/packs/declared.ts`), which the development pack calls too.
+The rows are read into asks in `src/data/packs/exports/saved.ts`, which imports no Node, and
+`ExportAsk`, `NestAsk` and `parseNest` move from `src/plugin/exportCommand.ts` to
+`src/domain/format/export.ts`, so the app's button (U4) reads a saved export the way the command line
+does. A run writes, or checks, every row by file: a file outside the document's folder, a format or
+column the document has not got, or a `match` or `nests` line that cannot be read is reported on
+stderr naming its file, the others carry on, and the run exits 2; else `--check` exits 1 when any file
+is stale or missing; else 0. A document with no saved exports — no `export` format, or no rows — is
+told so in a sentence naming the pack, and exits 2, so a build asking for its exports never passes on
+nothing. The flags of one export (`--to`, `--match` and the rest) without `--format` are refused.
+
+**Rejected.** A direction enum for the order (`descending` mirrors the flag and the tool); a `search`,
+`link` or `ids` column — not asked for, and a column added later is one more optional column the pack
+completes; exit 0 when a document has none — a CI `--check` would pass while checking nothing;
+skipping a row whose format is gone — D-601 says reported, never skipped.
+
+**Consequences.** `keep_packs` and `create_document` take `exports`, and the Packs screen shows a third
+pack. U4 lists `savedExports(db)` on Settings › Export and writes them.
 
 ## Related
 

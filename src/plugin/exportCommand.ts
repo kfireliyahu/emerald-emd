@@ -30,16 +30,19 @@
  */
 
 import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises'
-import { dirname, resolve as resolvePath, sep } from 'node:path'
+import { dirname, isAbsolute, relative, resolve as resolvePath, sep } from 'node:path'
 
 import { err, ok, type Result } from '@/core/result.ts'
 import { indexOf, foldAggregate } from '@/data/repositories/formatJoinRepository.ts'
 import { derivedOf } from '@/data/repositories/formatDerivedRepository.ts'
 import { listFormats } from '@/data/repositories/formatRepository.ts'
+import { NO_SAVED_EXPORTS, savedExports } from '@/data/packs/exports/saved.ts'
 import { linkLabels, listRows, readRow } from '@/data/repositories/formatRowRepository.ts'
 import { listUnits } from '@/data/repositories/unitRepository.ts'
 import { labelColumn, type FormatDeclaration } from '@/domain/format/declaration.ts'
 import {
+  NEST_FORM,
+  NEST_ONE_LEVEL,
   cellValue,
   childrenByParent,
   computedNames,
@@ -47,9 +50,12 @@ import {
   exportValue,
   linkableColumn,
   linksBack,
+  parseNest,
   type ComputedValue,
+  type ExportAsk,
   type ExportShape,
   type JsonValue,
+  type NestAsk,
   type NestedShape,
 } from '@/domain/format/export.ts'
 import { currencyKeyOf, idsIn, unitKeyOf, type StoredRow } from '@/domain/format/row.ts'
@@ -59,39 +65,7 @@ import { readDocument, type OpenDocument } from './document.ts'
 import { askedOn, chosenColumns, filterArgs, resolve } from './tools/formats.ts'
 import { ToolInputError } from './tools/tool.ts'
 
-/** What one export asks of a document — the command line's flags and the tool's arguments alike. */
-export interface ExportAsk {
-  readonly format: string
-  readonly match?: Readonly<Record<string, unknown>>
-  readonly search?: string
-  readonly order?: string
-  readonly descending?: boolean
-  /** Stored and computed columns to hold; every stored column when absent. */
-  readonly columns?: readonly string[]
-  /** A link column to the column of the linked format it goes out as, instead of the row's label. */
-  readonly link?: Readonly<Record<string, string>>
-  readonly ids?: boolean
-  /** Child formats folded into each row (M63 U2), in the order their keys go out. */
-  readonly nest?: readonly NestAsk[]
-}
-
-/**
- * **One child format to fold in** (M63 U2): its rows whose link points at an
- * exported row, as an array under `as`. `format` is the child's name, or
- * `child.link` when it links to the parent's format through more than one
- * column. Its other links go out as their rows' labels, and `ids` is the
- * parent's.
- */
-export interface NestAsk {
-  readonly format: string
-  /** The key the array goes out under; the child format's name by default. */
-  readonly as?: string
-  /** A column of the child's; its label column by default, ties by the label column then the id. */
-  readonly order?: string
-  readonly descending?: boolean
-  /** The child's columns to hold, computed too; every stored one but the link back when absent. */
-  readonly columns?: readonly string[]
-}
+export { NEST_ONE_LEVEL, parseNest, type ExportAsk, type NestAsk }
 
 /** The file's bytes, and what they hold. */
 export interface Exported {
@@ -221,10 +195,6 @@ function keysOf(declaration: FormatDeclaration): Set<string> {
   for (const name of computedNames(declaration)) for (const key of [name, `${name}_currency`, `${name}_unit`]) keys.add(key)
   return keys
 }
-
-/** The sentence refusing a nest inside a nest. */
-export const NEST_ONE_LEVEL = (format: string): string =>
-  `A nest folds one level only: ${format}'s own children cannot be folded into it. Export ${format} with its own nest to a file of its own.`
 
 /** The link back a nest follows: the one `child` has to `parent`'s format, or the one its `child.link` names. */
 function linkBack(child: FormatDeclaration, parent: FormatDeclaration, formats: readonly FormatDeclaration[], named: string | undefined): string {
@@ -424,51 +394,24 @@ export interface ExportArgs {
   readonly check: boolean
 }
 
+/** `export <document.emd>` alone: every saved export it lists (M63 U3). */
+export interface SavedArgs {
+  readonly path: string
+  readonly check: boolean
+  readonly saved: true
+}
+
 const EXPORT_USAGE =
-  'Usage: node dist-plugin/server.mjs export <document.emd> --format <name> --to <file.json>\n' +
+  'Usage: node dist-plugin/server.mjs export <document.emd> [--check]\n' +
+  '  writes every saved export the document lists (the exports pack\'s `export` rows); or one export:\n' +
+  '       node dist-plugin/server.mjs export <document.emd> --format <name> --to <file.json>\n' +
   '  [--match <column>=<value>]... [--search <text>] [--order <column>] [--descending]\n' +
   '  [--columns a,b] [--link <link column>=<column>]... [--ids] [--check]\n' +
   '  [--nest "<child>[.<link>] [as=<key>] [order=<column>] [descending] [columns=a,b]"]...\n' +
-  'Writes every matching row of one format as a JSON array; --check writes nothing and exits 1 when the file is not current.'
-
-const NEST_FORM = '<child>[.<link>] [as=<key>] [order=<column>] [descending] [columns=a,b]'
-
-/**
- * **One nest, as a person types it** (M63 U2): the child format — `keyword`, or
- * `keyword.card` to say which link — then any of `as=`, `order=`, `descending`
- * and `columns=a,b`, separated by spaces. The command line's `--nest` takes it,
- * the tool takes it in place of an object, and a saved export holds one per line.
- */
-export function parseNest(spec: string): Result<NestAsk, string> {
-  const [format, ...words] = spec.trim().split(/\s+/)
-  if (format === undefined || format === '' || format.includes('=')) return err(`A nest starts with the format folded in: ${NEST_FORM}.`)
-  let as: string | undefined
-  let order: string | undefined
-  let columns: string[] | undefined
-  let descending = false
-  for (const word of words) {
-    const equals = word.indexOf('=')
-    const key = equals < 0 ? word : word.slice(0, equals)
-    const given = equals < 0 ? undefined : word.slice(equals + 1)
-    if (key === 'descending' && given === undefined) descending = true
-    else if (key === 'nest' || key === '--nest') return err(NEST_ONE_LEVEL(format))
-    else if ((key === 'as' || key === 'order' || key === 'columns') && given !== undefined && given !== '') {
-      if (key === 'as') as = given
-      else if (key === 'order') order = given
-      else columns = given.split(',').map((each) => each.trim()).filter((each) => each !== '')
-    } else return err(`A nest does not know ${word}. It reads ${NEST_FORM}.`)
-  }
-  return ok({
-    format,
-    ...(as === undefined ? {} : { as }),
-    ...(order === undefined ? {} : { order }),
-    ...(descending ? { descending } : {}),
-    ...(columns === undefined ? {} : { columns }),
-  })
-}
+  'Writes every matching row of one format as a JSON array; --check writes nothing and exits 1 when a file is not current.'
 
 /** Reads `export`'s arguments — everything after the word `export`. */
-export function parseExportArgs(argv: readonly string[], cwd: string): Result<ExportArgs, string> {
+export function parseExportArgs(argv: readonly string[], cwd: string): Result<ExportArgs | SavedArgs, string> {
   let path: string | undefined
   let format: string | undefined
   let to: string | undefined
@@ -530,7 +473,26 @@ export function parseExportArgs(argv: readonly string[], cwd: string): Result<Ex
     }
   }
   if (path === undefined) return err(`export needs a document.\n${EXPORT_USAGE}`)
-  if (format === undefined) return err(`export needs --format, the format whose rows it writes.\n${EXPORT_USAGE}`)
+  if (format === undefined) {
+    // **No --format: every saved export the document lists** (M63 U3, D-601).
+    const asked = [
+      to === undefined ? undefined : '--to',
+      match.size > 0 ? '--match' : undefined,
+      search === undefined ? undefined : '--search',
+      order === undefined ? undefined : '--order',
+      descending ? '--descending' : undefined,
+      columns === undefined ? undefined : '--columns',
+      Object.keys(link).length > 0 ? '--link' : undefined,
+      ids ? '--ids' : undefined,
+      nest.length > 0 ? '--nest' : undefined,
+    ].filter((each) => each !== undefined)
+    if (asked.length > 0) {
+      return err(
+        `${asked.join(', ')} ${asked.length === 1 ? 'goes' : 'go'} with --format; without it, export writes every saved export the document lists.\n${EXPORT_USAGE}`,
+      )
+    }
+    return ok({ path, check, saved: true })
+  }
   if (to === undefined) return err(`export needs --to, the file it writes.\n${EXPORT_USAGE}`)
   return ok({
     path,
@@ -557,8 +519,17 @@ interface ExportOutput {
   readonly complain: (text: string) => void
 }
 
-/** Runs one export; resolves with the exit code. */
-export async function runExport(args: ExportArgs, output: ExportOutput): Promise<number> {
+/** Runs one export, or every saved one; resolves with the exit code. */
+export async function runExport(args: ExportArgs | SavedArgs, output: ExportOutput): Promise<number> {
+  if ('saved' in args) {
+    const run = await runSaved(args.path, args.check)
+    if (!run.ok) {
+      output.complain(run.error)
+      return 2
+    }
+    for (const each of run.value.outcomes) (each.state === 'refused' ? output.complain : output.line)(each.line)
+    return run.value.code
+  }
   const exported = await exportFrom(args.path, args.ask)
   if (!exported.ok) {
     output.complain(exported.error)
@@ -573,4 +544,81 @@ export async function runExport(args: ExportArgs, output: ExportOutput): Promise
   if (state !== 'current') await writeExport(args.to, exported.value.text)
   output.line(wroteLine(state, args.to, exported.value))
   return 0
+}
+
+// --- every saved export (M63 U3) ----------------------------------------------
+
+/**
+ * `file` against the document's folder: the path to write, or `undefined` when
+ * it leaves that folder. A saved export's file is always relative to it — on
+ * the command line too, unlike `--to` — and the tool's `to` is held to it
+ * (D-601), so a document someone sends cannot make either write anywhere else.
+ */
+export function withinFolder(documentPath: string, file: string): string | undefined {
+  const folder = dirname(resolvePath(documentPath))
+  const target = resolvePath(folder, file)
+  const inside = relative(folder, target)
+  return inside === '' || inside.startsWith('..') || isAbsolute(inside) ? undefined : target
+}
+
+/** What became of one saved export, and the line that says so. */
+export interface SavedOutcome {
+  /** As the row holds it. */
+  readonly file: string
+  readonly state: 'written' | FileState | 'refused'
+  readonly line: string
+}
+
+/** Every saved export's outcome, in file order, and the exit code they make. */
+export interface SavedRun {
+  readonly outcomes: readonly SavedOutcome[]
+  /** 0 all written or current; 1 a check found one stale or missing; 2 one was refused. */
+  readonly code: number
+}
+
+/**
+ * **Writes — or, with `check`, checks — every saved export a document lists**
+ * (M63 U3, D-601): the rows of the exports pack's `export` format, each worked
+ * out as `exportRows` works out one. A file outside the document's folder, a
+ * format or column the document has not got, or a row that cannot be read is
+ * reported and the others carry on; the run then exits 2. A document with none
+ * is refused with `NO_SAVED_EXPORTS`, which names the pack.
+ */
+export async function runSaved(path: string, check: boolean): Promise<Result<SavedRun, string>> {
+  let worked: Result<readonly { readonly file: string; readonly exported: Result<Exported, string> }[], string> | undefined
+  const said = await readDocument(path, (document) => {
+    const saved = savedExports(document.db)
+    worked = saved.ok
+      ? ok(saved.value.map((each) => ({ file: each.file, exported: each.ask.ok ? exportRows(document, each.ask.value) : each.ask })))
+      : saved
+    return ''
+  })
+  if (worked === undefined) return err(said)
+  if (!worked.ok) return worked
+  if (worked.value.length === 0) return err(NO_SAVED_EXPORTS)
+
+  const folder = shownPath(dirname(resolvePath(path)))
+  const outcomes: SavedOutcome[] = []
+  for (const { file, exported } of worked.value) {
+    const refused = (why: string): SavedOutcome => ({ file, state: 'refused', line: `${file} was ${check ? 'not checked' : 'not written'}: ${why}` })
+    const to = withinFolder(path, file)
+    if (to === undefined) {
+      outcomes.push(refused(`it is outside ${folder}, and a saved export writes only inside the document's folder and the folders under it.`))
+      continue
+    }
+    if (!exported.ok) {
+      outcomes.push(refused(exported.error))
+      continue
+    }
+    const state = await fileState(to, exported.value.text)
+    if (check) {
+      outcomes.push({ file, state, line: checkAnswer(state, to, exported.value).line })
+      continue
+    }
+    if (state !== 'current') await writeExport(to, exported.value.text)
+    outcomes.push({ file, state: state === 'current' ? 'current' : 'written', line: wroteLine(state, to, exported.value) })
+  }
+  const refusedAny = outcomes.some((each) => each.state === 'refused')
+  const stale = outcomes.some((each) => each.state === 'differs' || each.state === 'missing')
+  return ok({ outcomes, code: refusedAny ? 2 : stale ? 1 : 0 })
 }

@@ -160,7 +160,7 @@ Node does. [docs/plugin.md](./docs/plugin.md) has the tool surface, the hosts tr
 - [`docs/demo.md`](./docs/demo.md): the page, the tours, and how another page embeds one.
 - `src/domain/` is the engine and imports nothing from React, SQLite or the DOM; `src/data/` is
   storage; `src/ui/` the app; `src/plugin/` the MCP server; `electron/` the desktop shell;
-  `src/data/packs/` the two packs.
+  `src/data/packs/` the three packs.
 
 **Issues and contributions**
 

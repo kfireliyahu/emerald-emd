@@ -36,6 +36,7 @@ import { booleanProp, PATH_PROP, requireString, ToolInputError, type Args, type 
 const PACK_PURPOSE: Readonly<Record<string, string>> = {
   development: 'a project’s memory: milestones, units, decisions, open questions, an inbox',
   ledger: 'personal finance, from statements, paychecks and fund reports',
+  exports: 'saved exports',
 }
 
 /** The JSON Schema for a list of packs, by id, from the packs this build has. */

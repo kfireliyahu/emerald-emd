@@ -43,6 +43,7 @@ import {
   installDevelopmentPack,
 } from './development/pack.ts'
 import { DEVELOPMENT_PAST } from './development/past.ts'
+import { documentHasExports, exportsFormatNames, exportsFormats, installExportsPack } from './exports/pack.ts'
 import { fitOf, followingRenames, type PackRename } from './fit.ts'
 import { LEDGER_GUIDE } from './ledger/guide.ts'
 import { documentHasLedger, installLedgerPack, ledgerFormatNames, ledgerFormats } from './ledger/pack.ts'
@@ -159,8 +160,28 @@ const DEVELOPMENT: PackDescription = {
   past: DEVELOPMENT_PAST,
 }
 
+/**
+ * **The exports pack** (M63 U3, D-601): saved exports as rows of one format,
+ * `export`, which `emerald-mcp export <document.emd>` writes. Kept by a document
+ * that declares `export` in the pack's shape; it has no places and no guide.
+ */
+const EXPORTS: PackDescription = {
+  id: 'exports',
+  title: 'Exports',
+  summary:
+    'Saved exports — each a file that one format’s rows are written to as JSON, the same bytes every time, from the command line, a conversation or the app.',
+  formats: exportsFormatNames,
+  places: () => [],
+  keptBy: documentHasExports,
+  declarations: exportsFormats,
+  install: (db, now) => {
+    const installed = installExportsPack(db, now)
+    return installed.ok ? ok(installed.value.declared) : installed
+  },
+}
+
 /** Every pack, in the order the rail and the Packs screen show them. */
-export const PACKS: readonly PackDescription[] = [LEDGER, DEVELOPMENT]
+export const PACKS: readonly PackDescription[] = [LEDGER, DEVELOPMENT, EXPORTS]
 
 /**
  * **Bring a document up to what this build's packs declare** (M36 U02, D-378) —

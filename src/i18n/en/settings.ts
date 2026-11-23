@@ -16,11 +16,14 @@ export const settings = {
     titles: {
       ledger: 'The ledger',
       development: 'Development',
+      exports: 'Exports',
     },
     summaries: {
       ledger: 'A complete personal-finance application — statements, paychecks, funds, savings, debts and what they add up to.',
       development:
         'A project’s own memory — milestones, units, decisions, open questions, review entries and an inbox for what another project hands it — and the roadmap, boards and ready list drawn from them.',
+      exports:
+        'Saved exports — each a file that one format’s rows are written to as JSON, the same bytes every time, from the command line, a conversation or the app.',
     },
     object: '{object}',
     places: {

@@ -15,12 +15,22 @@
  * is not what *reads* promises.
  */
 
-import { dirname, isAbsolute, relative, resolve as resolvePath } from 'node:path'
+import { dirname, resolve as resolvePath } from 'node:path'
 
 import {
   NEST_ONE_LEVEL,
   checkAnswer,
-  exportFrom, fileState, parseNest, shownPath, writeExport, wroteLine, type ExportAsk, type NestAsk } from '../exportCommand.ts'
+  exportFrom,
+  fileState,
+  parseNest,
+  runSaved,
+  shownPath,
+  withinFolder,
+  writeExport,
+  wroteLine,
+  type ExportAsk,
+  type NestAsk,
+} from '../exportCommand.ts'
 import {
   PATH_PROP,
   ToolInputError,
@@ -35,17 +45,18 @@ import {
 
 /** `to` against the document's folder, or the sentence refusing it. */
 export function exportTarget(documentPath: string, to: string): string {
-  const folder = dirname(resolvePath(documentPath))
-  const target = resolvePath(folder, to)
-  const inside = relative(folder, target)
-  if (inside === '' || inside.startsWith('..') || isAbsolute(inside)) {
+  const target = withinFolder(documentPath, to)
+  if (target === undefined) {
     throw new ToolInputError(
-      `\`to\` is ${to}, which is outside ${shownPath(folder)}. This tool writes only inside the document's folder and the folders under it; ` +
+      `\`to\` is ${to}, which is outside ${shownPath(dirname(resolvePath(documentPath)))}. This tool writes only inside the document's folder and the folders under it; ` +
         'the command line `export` writes anywhere a person tells it.',
     )
   }
   return target
 }
+
+/** The arguments that shape one export, and so go with `format`. */
+const ONE_EXPORT = ['to', 'match', 'search', 'order', 'descending', 'columns', 'link', 'ids', 'nest']
 
 const NEST_KEYS = ['format', 'as', 'order', 'descending', 'columns']
 
@@ -122,43 +133,54 @@ export const exportFormatRowsTool: PluginTool = {
     name: 'export_format_rows',
     title: 'Export a format’s rows to JSON',
     description:
-      'Writes the rows `format_rows` would match to a JSON file, the same bytes every time: keys in declaration order, ' +
-      'empty columns left out, money as text beside `<column>_currency`, a link as its row’s name. Never modifies the document.',
+      'Writes the rows `format_rows` would match to a JSON file, the same bytes every time: empty columns left out, ' +
+      'money as text beside `<column>_currency`, a link as its row’s name. No `format`: every saved export. Never modifies the document.',
     inputSchema: {
       type: 'object',
       properties: {
         path: PATH_PROP,
         format: stringProp('The declared format, by name.'),
         to: stringProp('The file, inside the document’s folder.'),
-        match: { type: 'object', description: 'As `format_rows` takes it.', additionalProperties: true },
-        search: stringProp('As `format_rows` takes it.'),
+        match: { type: 'object', description: 'As `format_rows`.', additionalProperties: true },
+        search: stringProp('As `format_rows`.'),
         order: stringProp('A column to sort by.'),
         descending: booleanProp('Sort the other way.'),
-        columns: { type: 'array', description: 'Columns to write, computed too; omit for every stored one.', items: { type: 'string' } },
+        columns: { type: 'array', description: 'Columns to write, computed too.', items: { type: 'string' } },
         link: { type: 'object', description: 'A link to the linked column it is written as: `{milestone: "ref"}`.', additionalProperties: { type: 'string' } },
         ids: booleanProp('Each row’s id as `id`.'),
         nest: {
           type: 'array',
           description:
-            'Child formats folded in: each row’s children, as an array under `as` (default the child’s name), by `order`; `descending`, `columns` too. ' +
+            'Child formats folded in: each row’s children, as an array under `as` (default its name), by `order`; `descending`, `columns` too. ' +
             '`format` is `child.link` when it links here twice. One level.',
           items: { type: 'object', properties: { format: { type: 'string' } }, required: ['format'] },
         },
-        check: booleanProp('Write nothing; say whether the file is current.'),
+        check: booleanProp('Write nothing; say if current.'),
       },
-      required: ['path', 'format', 'to'],
+      required: ['path'],
       additionalProperties: false,
     },
     annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
   run: async (args) => {
     const path = requireString(args, 'path')
+    const check = optionalBoolean(args, 'check') === true
+    if (args['format'] === undefined) {
+      // **Every saved export** (M63 U3, D-601): each row's file held to the
+      // document's folder, a refused one reported and the others written.
+      const given = ONE_EXPORT.filter((key) => args[key] !== undefined)
+      if (given.length > 0) {
+        throw new ToolInputError(`${given.map((key) => `\`${key}\``).join(', ')} ${given.length === 1 ? 'goes' : 'go'} with \`format\`; without it, every saved export is written.`)
+      }
+      const run = await runSaved(path, check)
+      return run.ok ? run.value.outcomes.map((each) => each.line).join('\n') : run.error
+    }
     const to = exportTarget(path, requireString(args, 'to'))
     const ask = askOf(args)
     const exported = await exportFrom(path, ask)
     if (!exported.ok) return exported.error
     const state = await fileState(to, exported.value.text)
-    if (optionalBoolean(args, 'check') === true) return checkAnswer(state, to, exported.value).line
+    if (check) return checkAnswer(state, to, exported.value).line
     if (state !== 'current') await writeExport(to, exported.value.text)
     return wroteLine(state, to, exported.value)
   },

@@ -36,6 +36,7 @@
  */
 
 import { minorUnitDigits } from '@/core/money.ts'
+import { err, ok, type Result } from '@/core/result.ts'
 
 import type { AggregateValue } from './aggregate.ts'
 import { edgesOf } from './connections.ts'
@@ -315,4 +316,80 @@ function spelled(value: JsonValue, indent: string): string {
 /** **The one spelling**: two-space indent, LF, a trailing newline, keys in the order they were put in. */
 export function exportText(value: JsonValue): string {
   return `${spelled(value, '')}\n`
+}
+
+// --- what one export asks (M63 U1-U3) -----------------------------------------
+
+/** What one export asks of a document — the command line's flags and the tool's arguments alike. */
+export interface ExportAsk {
+  readonly format: string
+  readonly match?: Readonly<Record<string, unknown>>
+  readonly search?: string
+  readonly order?: string
+  readonly descending?: boolean
+  /** Stored and computed columns to hold; every stored column when absent. */
+  readonly columns?: readonly string[]
+  /** A link column to the column of the linked format it goes out as, instead of the row's label. */
+  readonly link?: Readonly<Record<string, string>>
+  readonly ids?: boolean
+  /** Child formats folded into each row (M63 U2), in the order their keys go out. */
+  readonly nest?: readonly NestAsk[]
+}
+
+/**
+ * **One child format to fold in** (M63 U2): its rows whose link points at an
+ * exported row, as an array under `as`. `format` is the child's name, or
+ * `child.link` when it links to the parent's format through more than one
+ * column. Its other links go out as their rows' labels, and `ids` is the
+ * parent's.
+ */
+export interface NestAsk {
+  readonly format: string
+  /** The key the array goes out under; the child format's name by default. */
+  readonly as?: string
+  /** A column of the child's; its label column by default, ties by the label column then the id. */
+  readonly order?: string
+  readonly descending?: boolean
+  /** The child's columns to hold, computed too; every stored one but the link back when absent. */
+  readonly columns?: readonly string[]
+}
+
+/** The sentence refusing a nest inside a nest. */
+export const NEST_ONE_LEVEL = (format: string): string =>
+  `A nest folds one level only: ${format}'s own children cannot be folded into it. Export ${format} with its own nest to a file of its own.`
+
+export const NEST_FORM = '<child>[.<link>] [as=<key>] [order=<column>] [descending] [columns=a,b]'
+
+/**
+ * **One nest, as a person types it** (M63 U2), here so the renderer reads a saved export's nests too (M63 U3): the child format — `keyword`, or
+ * `keyword.card` to say which link — then any of `as=`, `order=`, `descending`
+ * and `columns=a,b`, separated by spaces. The command line's `--nest` takes it,
+ * the tool takes it in place of an object, and a saved export holds one per line.
+ */
+export function parseNest(spec: string): Result<NestAsk, string> {
+  const [format, ...words] = spec.trim().split(/\s+/)
+  if (format === undefined || format === '' || format.includes('=')) return err(`A nest starts with the format folded in: ${NEST_FORM}.`)
+  let as: string | undefined
+  let order: string | undefined
+  let columns: string[] | undefined
+  let descending = false
+  for (const word of words) {
+    const equals = word.indexOf('=')
+    const key = equals < 0 ? word : word.slice(0, equals)
+    const given = equals < 0 ? undefined : word.slice(equals + 1)
+    if (key === 'descending' && given === undefined) descending = true
+    else if (key === 'nest' || key === '--nest') return err(NEST_ONE_LEVEL(format))
+    else if ((key === 'as' || key === 'order' || key === 'columns') && given !== undefined && given !== '') {
+      if (key === 'as') as = given
+      else if (key === 'order') order = given
+      else columns = given.split(',').map((each) => each.trim()).filter((each) => each !== '')
+    } else return err(`A nest does not know ${word}. It reads ${NEST_FORM}.`)
+  }
+  return ok({
+    format,
+    ...(as === undefined ? {} : { as }),
+    ...(order === undefined ? {} : { order }),
+    ...(descending ? { descending } : {}),
+    ...(columns === undefined ? {} : { columns }),
+  })
 }

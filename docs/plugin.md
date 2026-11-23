@@ -954,7 +954,7 @@ a refusal**: a file that is not there, one at another schema, a name no row has 
 the read says which, and a write of the value is never refused for it. The development pack's inbox
 carries one, `about`, so a hand-off names the row it is about and the owner sees it is already done.
 
-## A format's rows to a JSON file: `export` (M63 U1, U2)
+## A format's rows to a JSON file: `export` (M63 U1-U3)
 
 **Rows leave a document as a file a build reads** (D-601). A third subcommand of the one server
 file, beside `init` and `watch` (`src/plugin/exportCommand.ts`):
@@ -1009,6 +1009,30 @@ subfolders is refused with a sentence** — a document someone sends cannot make
 anywhere else on the machine; the command line writes wherever a person tells it. `check: true`
 answers whether the file is current. It reads the document and never writes it, so it is a read for
 parity; it writes a file, so its hints say it writes (D-602).
+
+**Saved exports are rows** (M63 U3, D-601): **the exports pack** (`src/data/packs/exports/`) declares
+one format, `export` — `file`, `format`, `columns`, `order`, `descending`, `match`, `nests`, `note` —
+kept like any pack (`keep_packs` with `packs: ["exports"]`, or Settings › Packs) and written with the
+row tools and the sheet, so no new write tool. `columns`, `match` and `nests` hold one entry per line:
+a `match` line is `column: value` (two on one column are either, an empty value an empty cell), a
+`nests` line the string `--nest` takes. `src/data/packs/exports/saved.ts` reads the rows into the asks
+`exportRows` takes, with no Node, so the app's button (U4) reads them the same way.
+
+```
+node dist-plugin/server.mjs export docs/memory.emd [--check]
+```
+
+- **No `--format`: every saved export, by file.** Each is written, or with `--check` checked, as one
+  export is; the lines are the same. `--to` and the other flags of one export go with `--format`.
+- **`file` is relative to the document's folder, on the command line too** — unlike `--to` — and
+  one outside it is refused while the others are still written: a document someone sends cannot make
+  the command write anywhere else (D-601). `file` is unique, so two rows never write one file.
+- **A row naming a format or column the document has not got**, or one whose `match` or `nests`
+  cannot be read, is reported on stderr naming its file, never skipped. Exit 2 when any was refused;
+  else, with `--check`, 1 when any file is stale or missing; else 0.
+- **A document with no saved exports says so** in a sentence naming the pack, and exits 2.
+- **`export_format_rows` without `format`** does the same and answers with a line per file: written,
+  already current, or (with `check`) current, differs or missing.
 
 ## A file on this computer (M37 U6)
 

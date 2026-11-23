@@ -22,6 +22,10 @@ are `src/data/packs/development/formats/*.format.md` and are what `docs/memory.e
 for word (M27 U1; `pack.test.ts` holds the two together). It seeds nothing and declares no owner:
 its rows are written by the engine's own tools.
 
+The **exports pack**'s one, `export` (M63 U3) — a saved export: the file a format's rows are written
+to as JSON, and which rows and columns — is `src/data/packs/exports/formats/export.format.md`. It seeds
+nothing either; `emerald-mcp export <document.emd>` writes what its rows list.
+
 ## What `schema_version` governs, and what it does not
 
 `schema_version` governs **the built-in tables and nothing else.** A declared table is governed by

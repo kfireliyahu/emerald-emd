@@ -8,6 +8,7 @@ import { exportEncoded } from '@/data/storage/encoding.ts'
 import { parseExportArgs, runExport } from './exportCommand.ts'
 import { exportFormatRowsTool } from './tools/exportRows.ts'
 import { declareFormatTool, recordFormatRowsTool, updateFormatRowsTool } from './tools/formats.ts'
+import { keepPacksTool } from './tools/packs.ts'
 import { storeDocumentAsTool } from './tools/storeAs.ts'
 import { NO_CLIENT } from './tools/tool.ts'
 import { tempDir } from '../testing/tempDir'
@@ -410,5 +411,143 @@ describe('export --nest (M63 U2)', () => {
 
     expect(await run([path, '--format', 'card', '--to', 'p.json', '--nest', 'keyword as=price_currency'])).toBe(2)
     expect(lines.at(-1)).toContain('a key each card already has')
+  })
+})
+
+describe('every saved export (M63 U3, D-601)', () => {
+  /** The shop, keeping the exports pack, with two saved exports: items, and suppliers with their items. */
+  async function saved(root: string): Promise<string> {
+    const path = await shop(root)
+    expect(await keepPacksTool.run({ path, packs: ['exports'], commit: true }, NO_CLIENT)).toContain('export')
+    expect(
+      await call(recordFormatRowsTool, {
+        path,
+        format: 'export',
+        rows: [
+          { file: 'out/items.json', format: 'item', columns: 'name\nprice', match: 'state: kept\nstate: planned', note: 'For the site.' },
+          { file: 'suppliers.json', format: 'supplier', order: 'name', descending: true, nests: 'item.supplier as=items columns=name' },
+        ],
+      }),
+    ).toContain('2 rows added')
+    return path
+  }
+
+  function runner(root: string) {
+    const lines: string[] = []
+    const output = { line: (line: string) => lines.push(line), complain: (line: string) => lines.push(`! ${line}`) }
+    const run = async (argv: readonly string[]): Promise<number> => {
+      const args = parseExportArgs(argv, root)
+      if (!args.ok) {
+        lines.push(`! ${args.error}`)
+        return 2
+      }
+      return runExport(args.value, output)
+    }
+    return { lines, run }
+  }
+
+  it('writes two files, changes nothing the second time, and --check catches an edited one', async () => {
+    const root = (await tempDir('emerald-saved-')).replace(/\\/g, '/')
+    const path = await saved(root)
+    const { lines, run } = runner(root)
+
+    expect(await run([path])).toBe(0)
+    expect(lines).toEqual([
+      `Wrote 2 rows of item to ${root}/out/items.json.`,
+      `Wrote 2 rows of supplier, with 1 row of item folded in, to ${root}/suppliers.json.`,
+    ])
+    expect(await readFile(`${root}/out/items.json`, 'utf8')).toBe(
+      '[\n  {\n    "name": "Bread",\n    "price": "-4.00",\n    "price_currency": "USD"\n  },\n  {\n    "name": "Flour",\n    "price": "12.90",\n    "price_currency": "ILS"\n  }\n]\n',
+    )
+    expect(await readFile(`${root}/suppliers.json`, 'utf8')).toBe(
+      '[\n  {\n    "name": "South farm",\n    "code": "SF",\n    "items": []\n  },\n  {\n    "name": "North mill",\n    "code": "NM",\n    "items": [\n      {\n        "name": "Flour"\n      }\n    ]\n  }\n]\n',
+    )
+
+    lines.length = 0
+    expect(await run([path])).toBe(0)
+    expect(lines.every((line) => line.includes('nothing to write'))).toBe(true)
+    expect(await run([path, '--check'])).toBe(0)
+
+    await writeFile(`${root}/suppliers.json`, '[]\n')
+    lines.length = 0
+    expect(await run([path, '--check'])).toBe(1)
+    expect(lines).toEqual([
+      `${root}/out/items.json is current: 2 rows of item.`,
+      `${root}/suppliers.json differs from 2 rows of supplier, with 1 row of item folded in as the document holds them now.`,
+    ])
+    expect(await readFile(`${root}/suppliers.json`, 'utf8')).toBe('[]\n')
+  })
+
+  it('refuses a file outside the document’s folder and a format or column it has not got, still writing the others, and exits 2', async () => {
+    const root = (await tempDir('emerald-saved-')).replace(/\\/g, '/')
+    const path = await saved(root)
+    expect(
+      await call(recordFormatRowsTool, {
+        path,
+        format: 'export',
+        rows: [
+          { file: '../outside.json', format: 'supplier' },
+          { file: 'gone.json', format: 'nothing' },
+          { file: 'colour.json', format: 'supplier', columns: 'colour' },
+        ],
+      }),
+    ).toContain('3 rows added')
+    const { lines, run } = runner(root)
+    expect(await run([path])).toBe(2)
+    expect(lines.filter((line) => line.startsWith('! ')).map((line) => line.split(':')[0])).toEqual([
+      '! ../outside.json was not written',
+      '! colour.json was not written',
+      '! gone.json was not written',
+    ])
+    const said = lines.join('\n')
+    expect(said).toContain('outside.json was not written: it is outside')
+    expect(said).toContain('has no format called nothing')
+    expect(said).toContain('supplier has no column colour')
+    expect(await readFile(`${root}/../outside.json`, 'utf8').catch(() => 'absent')).toBe('absent')
+    expect(await readFile(`${root}/suppliers.json`, 'utf8')).toContain('North mill')
+    expect(await readFile(`${root}/out/items.json`, 'utf8')).toContain('Flour')
+    expect(await run([path, '--check'])).toBe(2)
+  })
+
+  it('writes the same bytes from a document stored as text and one stored as SQLite', async () => {
+    const root = (await tempDir('emerald-saved-')).replace(/\\/g, '/')
+    const path = await saved(root)
+    const other = (await tempDir('emerald-saved-text-')).replace(/\\/g, '/')
+    const text = `${other}/shop.emd`
+    await copyFile(path, text)
+    expect(await storeDocumentAsTool.run({ path: text, as: 'text', commit: true }, NO_CLIENT)).not.toContain('REFUSED')
+    expect((await readFile(text, 'utf8')).startsWith('SQLite format')).toBe(false)
+    const { run } = runner(root)
+    expect(await run([path])).toBe(0)
+    expect(await run([text])).toBe(0)
+    for (const file of ['out/items.json', 'suppliers.json']) {
+      expect(await readFile(`${other}/${file}`, 'utf8')).toBe(await readFile(`${root}/${file}`, 'utf8'))
+    }
+  })
+
+  it('says a document with none has none, naming the pack, and keeps one export’s flags to --format', async () => {
+    const root = (await tempDir('emerald-saved-')).replace(/\\/g, '/')
+    const path = await shop(root)
+    const { lines, run } = runner(root)
+    expect(await run([path])).toBe(2)
+    expect(lines.at(-1)).toContain('no saved exports')
+    expect(lines.at(-1)).toContain('exports pack')
+    expect(await keepPacksTool.run({ path, packs: ['exports'], commit: true }, NO_CLIENT)).toContain('export')
+    expect(await run([path, '--check'])).toBe(2)
+    expect(lines.at(-1)).toContain('no saved exports')
+    expect(await run([path, '--match', 'state=kept'])).toBe(2)
+    expect(lines.at(-1)).toContain('--match goes with --format')
+  })
+
+  it('the tool without format writes or checks every saved export, and says what each did', async () => {
+    const root = (await tempDir('emerald-saved-')).replace(/\\/g, '/')
+    const path = await saved(root)
+    expect(await exportFormatRowsTool.run({ path }, NO_CLIENT)).toBe(
+      `Wrote 2 rows of item to ${root}/out/items.json.\nWrote 2 rows of supplier, with 1 row of item folded in, to ${root}/suppliers.json.`,
+    )
+    expect(await exportFormatRowsTool.run({ path }, NO_CLIENT)).toContain('nothing to write')
+    await writeFile(`${root}/out/items.json`, '[]\n')
+    expect(await exportFormatRowsTool.run({ path, check: true }, NO_CLIENT)).toContain(`${root}/out/items.json differs`)
+    await expect(exportFormatRowsTool.run({ path, to: 'x.json' }, NO_CLIENT)).rejects.toThrow(/`to` goes with `format`/)
   })
 })

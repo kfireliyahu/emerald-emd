@@ -40,9 +40,8 @@ import { err, ok, type Result } from '@/core/result.ts'
 import { readFormat as readFormatText, readViews, type ParsedFormat } from '@/domain/format/document.ts'
 import { startQuestions, type StartQuestion, type ViewSetting } from '@/domain/format/view.ts'
 import { SEEDED_UNITS } from '@/domain/format/unit.ts'
-import { adoptFormat, readFormat } from '../../repositories/formatRepository.ts'
-import { restoreViewSettings } from '../../repositories/formatViewRepository.ts'
-import { fitOf, followingRenames, type PackRename } from '../fit.ts'
+import { installDeclared, type DeclaredInstall } from '../declared.ts'
+import type { PackRename } from '../fit.ts'
 import VIEWS from './views.md?raw'
 
 const SOURCES = import.meta.glob<string>('./formats/*.format.md', {
@@ -180,84 +179,22 @@ function linkOrder(texts: ReadonlyMap<string, string>): readonly string[] {
 export const DEVELOPMENT_RENAMES: readonly PackRename[] = [{ format: 'unit', from: 'claimed_by', to: 'taken_by' }]
 
 /** What keeping the pack did: the formats it declared, and those it completed. */
-export interface DevelopmentInstall {
-  readonly declared: readonly string[]
-  readonly completed: readonly string[]
-}
+export type DevelopmentInstall = DeclaredInstall
 
 /**
- * Give a document the pack's declarations it does not hold yet, in link order,
- * and the views of each one it declares. Idempotent.
- *
- * **A format the document already declares** (M38 U7) is completed when it is
- * the pack's — given the optional columns it lacks, and nothing else, so a
- * person's own column on it stays and so does how they chose to look at it
- * (D-265) — and refused, whole and before anything is written, when it clashes
- * (`fit.ts`): a column of another type, unit or target, or one the pack
- * requires that it has not got. **A column the pack renamed** (D-420) is renamed
- * in place first, its values kept (`DEVELOPMENT_RENAMES`, D-443).
+ * Give a document the pack's declarations it does not hold yet, completing those
+ * it holds of it and following the column it renamed (`DEVELOPMENT_RENAMES`,
+ * D-443) — `installDeclared` (`../declared.ts`) says how. Idempotent.
  */
 export function installDevelopmentPack(db: Database, now: number): Result<DevelopmentInstall, string> {
   const formats = developmentFormats()
   if (!formats.ok) return formats
   const views = developmentViews()
   if (!views.ok) return views
-
-  const heldOf = (name: string) => {
-    const held = readFormat(db, name)
-    return held === undefined ? undefined : followingRenames(held, DEVELOPMENT_RENAMES)
-  }
-  const clashes = formats.value.flatMap(({ declaration }) => {
-    const held = heldOf(declaration.name)
-    return held === undefined ? [] : fitOf(held.held, declaration).clashes
+  return installDeclared(db, now, {
+    title: 'The development pack',
+    formats: formats.value,
+    views: views.value,
+    renames: DEVELOPMENT_RENAMES,
   })
-  if (clashes.length > 0) {
-    return err(`The development pack was not kept: this document's own formats clash with it. ${clashes.join(' ')}`)
-  }
-
-  const declared: string[] = []
-  const completed: string[] = []
-  const grown: { format: string; column: string }[] = []
-  for (const { declaration } of formats.value) {
-    const following = heldOf(declaration.name)
-    const held = following?.held
-    const missing = held === undefined ? [] : fitOf(held, declaration).missing
-    const renames = new Map((following?.renames ?? []).map((each) => [each.to, each.from]))
-    if (held !== undefined && missing.length === 0 && renames.size === 0) continue
-    const plan = adoptFormat(
-      db,
-      // **The pack's language too, when it is newer** (M47 U4): a column the
-      // pack grew in a later language — `inbox.about`, an `elsewhere` at 23 —
-      // added under the held declaration's older number is a format no build
-      // can read back.
-      held === undefined
-        ? declaration
-        : {
-            ...held,
-            language: Math.max(held.language, declaration.language),
-            columns: [...held.columns, ...missing],
-          },
-      now,
-      renames,
-    )
-    if (plan.refusals.length > 0) {
-      return err(
-        `The development pack's ${declaration.name} was not declared: ${plan.refusals.map((each) => each.detail).join(' ')}`,
-      )
-    }
-    ;(held === undefined ? declared : completed).push(declaration.name)
-    grown.push(...missing.map((column) => ({ format: declaration.name, column: column.name })))
-  }
-  // A format declared here takes the pack's views whole; one completed takes
-  // them for the columns it grew and nothing else, so the document's own
-  // arrangement stands — the inbox's `about` comes with its line (M47 U4).
-  restoreViewSettings(
-    db,
-    views.value.filter(
-      (each) =>
-        declared.includes(each.format) ||
-        grown.some((one) => one.format === each.format && one.column === each.column),
-    ),
-  )
-  return ok({ declared, completed })
 }

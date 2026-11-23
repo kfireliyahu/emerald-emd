@@ -6,6 +6,8 @@ import { insertRows, listRows } from '@/data/repositories/formatRowRepository.ts
 import { viewSettings } from '@/data/repositories/formatViewRepository.ts'
 
 import { developmentFormats, installDevelopmentPack } from './development/pack.ts'
+import { exportsFormats } from './exports/pack.ts'
+import { NO_SAVED_EXPORTS, savedExports } from './exports/saved.ts'
 import { installLedgerPack, ledgerFormatNames } from './ledger/pack.ts'
 import { keepPack, PACKS, packsKeptBy, placesOf, planKeep, upToDate } from './packs.ts'
 
@@ -242,5 +244,83 @@ describe('keeping a pack (M38 U7, D-405)', () => {
     const plan = planKeep(db, pack('ledger'))
     if (!plan.ok) throw new Error(plan.error)
     expect(upToDate(plan.value)).toBe(true)
+  })
+})
+
+describe('the exports pack (M63 U3, D-601)', () => {
+  const exports = PACKS.find((each) => each.id === 'exports')
+
+  it('declares one format, export, named by its file, which is unique and required', () => {
+    const read = exportsFormats()
+    if (!read.ok) throw new Error(read.error)
+    const [only] = read.value
+    expect(read.value).toHaveLength(1)
+    expect(only?.declaration.name).toBe('export')
+    expect(only?.declaration.columns.map((each) => each.name)).toEqual(['file', 'format', 'columns', 'order', 'descending', 'match', 'nests', 'note'])
+    const file = only?.declaration.columns[0]
+    expect([file?.type, file?.required, file?.unique]).toEqual(['text', true, true])
+  })
+
+  it('is kept by keeping it, and keeping it again changes nothing', async () => {
+    if (exports === undefined) throw new Error('no exports pack')
+    const db = await createDatabase()
+    const first = keepPack(db, exports, NOW)
+    if (!first.ok) throw new Error(first.error)
+    expect(first.value.declares).toEqual(['export'])
+    expect([...packsKeptBy(db)]).toEqual(['exports'])
+    const second = planKeep(db, exports)
+    expect(second.ok && upToDate(second.value)).toBe(true)
+  })
+
+  it('is not a person’s own format called export, and is refused beside it', async () => {
+    if (exports === undefined) throw new Error('no exports pack')
+    const db = await createDatabase()
+    const read = exportsFormats()
+    if (!read.ok || read.value[0] === undefined) throw new Error('the pack does not read')
+    const theirs = { ...read.value[0].declaration, columns: read.value[0].declaration.columns.filter((each) => each.name !== 'file') }
+    expect(adoptFormat(db, theirs, NOW).refusals).toEqual([])
+    expect(packsKeptBy(db).has('exports')).toBe(false)
+    expect(keepPack(db, exports, NOW).ok).toBe(false)
+    const saved = savedExports(db)
+    expect(saved.ok ? '' : saved.error).toContain("is not the exports pack's")
+  })
+
+  it('reads its rows into what each export asks, by file, and keeps a row it cannot read with its sentence', async () => {
+    if (exports === undefined) throw new Error('no exports pack')
+    const db = await createDatabase()
+    expect(savedExports(db)).toEqual({ ok: false, error: NO_SAVED_EXPORTS })
+    expect(keepPack(db, exports, NOW).ok).toBe(true)
+    const declaration = readFormat(db, 'export')
+    if (declaration === undefined) throw new Error('export is not declared')
+    insertRows(db, declaration, [
+      {
+        file: 'site/cards.json',
+        format: 'card',
+        columns: 'name\n price \n',
+        order: 'position',
+        descending: 1,
+        match: 'state: kept\nstate: planned\nnote:',
+        nests: 'keyword.card as=keywords order=position\npair columns=name',
+      },
+      { file: 'a.json', format: 'card', nests: 'keyword nest=pair' },
+      { file: 'b.json', format: 'card', match: 'just words' },
+    ])
+    const saved = savedExports(db)
+    if (!saved.ok) throw new Error(saved.error)
+    expect(saved.value.map((each) => each.file)).toEqual(['a.json', 'b.json', 'site/cards.json'])
+    expect(saved.value[2]?.ask).toEqual({
+      ok: true,
+      value: {
+        format: 'card',
+        match: { state: ['kept', 'planned'], note: null },
+        order: 'position',
+        descending: true,
+        columns: ['name', 'price'],
+        nest: [{ format: 'keyword.card', as: 'keywords', order: 'position' }, { format: 'pair', columns: ['name'] }],
+      },
+    })
+    const [nestInNest, words] = saved.value
+    expect(nestInNest?.ask.ok === false && nestInNest.ask.error).toContain('A nest folds one level only')
+    expect(words?.ask.ok === false && words.ask.error).toContain('is not `column: value`')
   })
 })
