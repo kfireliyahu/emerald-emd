@@ -22,7 +22,11 @@
  * - **`enums` and `links`** arrays in stored order;
  * - a **link** its row's label, or another column of the linked format when
  *   asked; a row **elsewhere** the name it holds;
- * - an **empty column left out**, and a computed one only when named.
+ * - an **empty column left out**, and a computed one only when named;
+ * - a **child format's rows folded in** (M63 U2): the rows whose link points at
+ *   this one, as an array under a key of their own, each shaped the same way
+ *   with its link back left out — `[]` when it has none, so every object has
+ *   the same keys. One level only.
  *
  * **One spelling** (`exportText`): two-space indent, LF, a trailing newline,
  * keys in declaration order. A number keeps the digits it was given, which is
@@ -34,6 +38,7 @@
 import { minorUnitDigits } from '@/core/money.ts'
 
 import type { AggregateValue } from './aggregate.ts'
+import { edgesOf } from './connections.ts'
 import { ROW_ID_COLUMN, type ColumnDeclaration, type FormatDeclaration } from './declaration.ts'
 import { formatDecimal } from './decimal.ts'
 import type { DerivedValue } from './derived.ts'
@@ -187,6 +192,52 @@ export interface ExportShape {
   readonly computed?: ReadonlyMap<string, ReadonlyMap<string, ComputedValue>>
   /** The row's id as the first key, `id`. Off unless asked. */
   readonly ids?: boolean
+  /** A column held back whatever `columns` says: a child's link back to the row it is folded into (M63 U2). */
+  readonly omit?: string
+  /** Child formats folded into each row, after its own columns, in the order asked (M63 U2). */
+  readonly nested?: readonly NestedShape[]
+}
+
+/**
+ * **One child format folded into its parent's rows** (M63 U2) — the key it goes
+ * out under, the shape each child row takes (its link back as `omit`, and no
+ * `nested` of its own: one level only), and each parent's children by the
+ * parent's id, already in the order asked.
+ */
+export interface NestedShape {
+  readonly as: string
+  readonly shape: ExportShape
+  readonly children: ReadonlyMap<string, readonly StoredRow[]>
+}
+
+/**
+ * **The columns of `child` that point at a row of `parent`** — read off the
+ * graph `connections.ts` draws, so a link the formats screen shows is the link
+ * a nest follows. A link at a format the document no longer declares is not
+ * one; a `links` column is, since a row it names is a row it points at.
+ */
+export function linksBack(declarations: readonly FormatDeclaration[], child: string, parent: string): readonly string[] {
+  return edgesOf(declarations).flatMap((edge) =>
+    edge.kind === 'LINK' && edge.format === child && edge.target === parent && !edge.dangling ? [edge.column] : [],
+  )
+}
+
+/**
+ * **Child rows grouped by the parent each points at** through `column`, every
+ * group in the order the rows came — so the order a caller listed them in is
+ * the order each array holds. A `links` cell puts its row under each parent it
+ * names, once.
+ */
+export function childrenByParent(column: string, rows: readonly StoredRow[]): ReadonlyMap<string, readonly StoredRow[]> {
+  const out = new Map<string, StoredRow[]>()
+  for (const row of rows) {
+    for (const parent of new Set(idsIn(row.cells[column]))) {
+      const held = out.get(parent)
+      if (held === undefined) out.set(parent, [row])
+      else held.push(row)
+    }
+  }
+  return out
 }
 
 /** The computed columns a declaration has, in its order: derived, then totals. */
@@ -200,6 +251,7 @@ export function rowEntries(shape: ExportShape, row: StoredRow): readonly (readon
   const entries: (readonly [string, JsonValue])[] = shape.ids === true ? [[ROW_ID_COLUMN, row.id]] : []
   for (const column of shape.declaration.columns) {
     if (asked !== undefined && !asked.has(column.name)) continue
+    if (column.name === shape.omit) continue
     const value = cellValue(column, row)
     if (value === undefined) continue
     const linked = shape.linked.get(column.name)
@@ -227,6 +279,10 @@ export function rowEntries(shape: ExportShape, row: StoredRow): readonly (readon
       const value = asked.has(name) ? figures?.get(name) : undefined
       if (value !== undefined) entries.push(...computedEntries(name, value))
     }
+  }
+  for (const nest of shape.nested ?? []) {
+    const children = nest.children.get(row.id) ?? []
+    entries.push([nest.as, children.map((child): JsonValue => ({ kind: 'object', entries: rowEntries(nest.shape, child) }))])
   }
   return entries
 }

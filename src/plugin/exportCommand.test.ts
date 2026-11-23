@@ -16,7 +16,8 @@ import { tempDir } from '../testing/tempDir'
  * **A format's rows to a JSON file** (M63 U1, D-601) — every type's value, the
  * same bytes from a document stored as text and as SQLite, twice; `--check`'s
  * three answers; and the tool kept inside the document's folder. The document
- * is made here, never a real one (D-390).
+ * is made here, never a real one (D-390). And a child format folded into each
+ * row (M63 U2).
  */
 
 async function emptyDocument(path: string): Promise<void> {
@@ -255,5 +256,159 @@ describe('export (M63 U1, D-601)', () => {
     const other = (await tempDir('emerald-export-other-')).replace(/\\/g, '/')
     await expect(exportFormatRowsTool.run({ path, format: 'supplier', to: `${other}/x.json` }, NO_CLIENT)).rejects.toThrow(/outside/)
     expect(await exportFormatRowsTool.run({ path, format: 'supplier', to: 'x.json', check: true }, NO_CLIENT)).toContain('is missing')
+  })
+})
+
+/** A made-up deck: cards, their keywords by position, and a pair format linking to card twice. */
+async function deck(root: string): Promise<string> {
+  const path = `${root}/deck.emd`
+  await emptyDocument(path)
+  expect(
+    await call(declareFormatTool, {
+      path,
+      format: 'card',
+      title: 'Card',
+      columns: [
+        { name: 'name', type: 'text', required: true },
+        { name: 'price', type: 'money' },
+      ],
+    }),
+  ).toContain('is declared')
+  expect(
+    await call(declareFormatTool, {
+      path,
+      format: 'keyword',
+      title: 'Keyword',
+      columns: [
+        { name: 'word', type: 'text', required: true },
+        { name: 'position', type: 'integer' },
+        { name: 'card', type: 'link', target: 'card' },
+        { name: 'cost', type: 'money' },
+      ],
+    }),
+  ).toContain('is declared')
+  expect(
+    await call(declareFormatTool, {
+      path,
+      format: 'pair',
+      title: 'Pair',
+      columns: [
+        { name: 'name', type: 'text', required: true },
+        { name: 'left', type: 'link', target: 'card' },
+        { name: 'right', type: 'link', target: 'card' },
+      ],
+    }),
+  ).toContain('is declared')
+  expect(
+    await call(recordFormatRowsTool, {
+      path,
+      format: 'card',
+      rows: [{ name: 'Ember', price: '2.50', price_currency: 'ILS' }, { name: 'Frost' }],
+    }),
+  ).toContain('2 rows added')
+  expect(
+    await call(recordFormatRowsTool, {
+      path,
+      format: 'keyword',
+      rows: [
+        { word: 'burn', position: 2, card: 'Ember', cost: '1.00', cost_currency: 'ILS' },
+        { word: 'haste', position: 1, card: 'Ember' },
+        { word: 'ash', position: 3, card: 'Ember' },
+      ],
+    }),
+  ).toContain('3 rows added')
+  expect(await call(recordFormatRowsTool, { path, format: 'pair', rows: [{ name: 'Clash', left: 'Ember', right: 'Frost' }] })).toContain('1 row added')
+  return path
+}
+
+const NESTED =
+  '[\n' +
+  '  {\n    "name": "Ember",\n    "price": "2.50",\n    "price_currency": "ILS",\n    "keywords": [\n' +
+  '      {\n        "word": "haste",\n        "position": 1\n      },\n' +
+  '      {\n        "word": "burn",\n        "position": 2,\n        "cost": "1.00",\n        "cost_currency": "ILS"\n      },\n' +
+  '      {\n        "word": "ash",\n        "position": 3\n      }\n' +
+  '    ]\n  },\n' +
+  '  {\n    "name": "Frost",\n    "keywords": []\n  }\n' +
+  ']\n'
+
+describe('export --nest (M63 U2)', () => {
+  it('folds a child format in by position, its link back left out and [] for a row with none, the same bytes from text and SQLite', async () => {
+    const root = (await tempDir('emerald-export-nest-')).replace(/\\/g, '/')
+    const sqlite = await deck(root)
+    const text = `${root}/deck-text.emd`
+    await copyFile(sqlite, text)
+    expect(await storeDocumentAsTool.run({ path: text, as: 'text', commit: true }, NO_CLIENT)).not.toContain('REFUSED')
+
+    const lines: string[] = []
+    const output = { line: (line: string) => lines.push(line), complain: (line: string) => lines.push(`! ${line}`) }
+    const run = async (argv: readonly string[]): Promise<number> => {
+      const args = parseExportArgs(argv, root)
+      if (!args.ok) throw new Error(args.error)
+      return runExport(args.value, output)
+    }
+
+    expect(await run([sqlite, '--format', 'card', '--to', 'cards.json', '--nest', 'keyword as=keywords order=position'])).toBe(0)
+    expect(await readFile(`${root}/cards.json`, 'utf8')).toBe(NESTED)
+    expect(lines.at(-1)).toBe(`Wrote 2 rows of card, with 3 rows of keyword folded in, to ${root}/cards.json.`)
+    expect(await run([text, '--format', 'card', '--to', 'cards-text.json', '--nest', 'keyword.card as=keywords order=position'])).toBe(0)
+    expect(await readFile(`${root}/cards-text.json`, 'utf8')).toBe(NESTED)
+
+    // The tool takes the same nest as an object, and as the command line's string.
+    const tool = (nest: unknown): Promise<string> => exportFormatRowsTool.run({ path: sqlite, format: 'card', to: 'tool.json', nest: [nest] }, NO_CLIENT)
+    expect(await tool({ format: 'keyword', as: 'keywords', order: 'position' })).toContain('Wrote 2 rows of card, with 3 rows of keyword folded in')
+    expect(await readFile(`${root}/tool.json`, 'utf8')).toBe(NESTED)
+    expect(await tool('keyword as=keywords order=position')).toContain('already holds')
+
+    // By default under the child's name, in its label column's order; --check covers the nest.
+    expect(await run([sqlite, '--format', 'card', '--to', 'plain.json', '--nest', 'keyword descending columns=word', '--check'])).toBe(1)
+    expect(await run([sqlite, '--format', 'card', '--to', 'plain.json', '--nest', 'keyword descending columns=word'])).toBe(0)
+    expect(await readFile(`${root}/plain.json`, 'utf8')).toContain(
+      '"keyword": [\n      {\n        "word": "haste"\n      },\n      {\n        "word": "burn"\n      },\n      {\n        "word": "ash"\n      }\n    ]',
+    )
+    expect(await run([sqlite, '--format', 'card', '--to', 'cards.json', '--nest', 'keyword as=keywords order=position', '--check'])).toBe(0)
+    expect(await exportFormatRowsTool.run({ path: sqlite, format: 'keyword', to: 'k.json', ids: true }, NO_CLIENT)).toContain('Wrote 3 rows')
+    const id = /"id": "([^"]+)",\n {4}"word": "ash"/.exec(await readFile(`${root}/k.json`, 'utf8'))?.[1]
+    expect(await call(updateFormatRowsTool, { path: sqlite, format: 'keyword', edits: [{ id, values: { position: 0 } }] })).toContain('1 row')
+    expect(await run([sqlite, '--format', 'card', '--to', 'cards.json', '--nest', 'keyword as=keywords order=position', '--check'])).toBe(1)
+    expect(lines.at(-1)).toContain('cards.json differs from 2 rows of card, with 3 rows of keyword folded in')
+  })
+
+  it('refuses a child that links twice without its column, a nest inside a nest, and a key the row already has', async () => {
+    const root = (await tempDir('emerald-export-nest-')).replace(/\\/g, '/')
+    const path = await deck(root)
+    const lines: string[] = []
+    const output = { line: (line: string) => lines.push(line), complain: (line: string) => lines.push(`! ${line}`) }
+    const run = async (argv: readonly string[]): Promise<number> => {
+      const args = parseExportArgs(argv, root)
+      if (!args.ok) {
+        lines.push(`! ${args.error}`)
+        return 2
+      }
+      return runExport(args.value, output)
+    }
+
+    expect(await run([path, '--format', 'card', '--to', 'p.json', '--nest', 'pair'])).toBe(2)
+    expect(lines.at(-1)).toContain('pair links to card through two columns, left and right; say which its rows are folded in by: pair.left or pair.right.')
+    expect(await run([path, '--format', 'card', '--to', 'p.json', '--nest', 'pair.right as=right_of'])).toBe(0)
+    expect(await readFile(`${root}/p.json`, 'utf8')).toContain(
+      '"name": "Ember",\n    "price": "2.50",\n    "price_currency": "ILS",\n    "right_of": []\n  },\n  {\n    "name": "Frost",\n    "right_of": [\n      {\n        "name": "Clash",\n        "left": "Ember"\n      }\n    ]',
+    )
+    expect(await run([path, '--format', 'card', '--to', 'p.json', '--nest', 'pair.name'])).toBe(2)
+    expect(lines.at(-1)).toContain('which is not a link to card')
+    expect(await run([path, '--format', 'card', '--to', 'p.json', '--nest', 'keyword columns=word,card'])).toBe(2)
+    expect(lines.at(-1)).toContain('its link back to card')
+    expect(await run([path, '--format', 'keyword', '--to', 'p.json', '--nest', 'pair'])).toBe(2)
+    expect(lines.at(-1)).toContain('pair, which has no link to keyword')
+
+    expect(await run([path, '--format', 'card', '--to', 'p.json', '--nest', 'keyword nest=pair'])).toBe(2)
+    expect(lines.at(-1)).toContain('A nest folds one level only')
+    expect(await run([path, '--format', 'card', '--to', 'p.json', '--nest', 'keyword.card.pair'])).toBe(2)
+    expect(lines.at(-1)).toContain('A nest folds one level only')
+    await expect(
+      exportFormatRowsTool.run({ path, format: 'card', to: 'p.json', nest: [{ format: 'keyword', nest: [{ format: 'pair' }] }] }, NO_CLIENT),
+    ).rejects.toThrow(/one level only/)
+
+    expect(await run([path, '--format', 'card', '--to', 'p.json', '--nest', 'keyword as=price_currency'])).toBe(2)
+    expect(lines.at(-1)).toContain('a key each card already has')
   })
 })

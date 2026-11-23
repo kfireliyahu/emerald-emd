@@ -503,6 +503,7 @@ written out here.
 | D-598 | 2026-11-18 | A conversation asks once for everything waiting — these rows were added, act on them? — and deleting a row, or moving it to another state, leaves what its action made elsewhere alone | M62 |
 | D-601 | 2026-11-23 | A format's rows go out as JSON: a subcommand of the server, a tool that writes only inside the document's folder, and saved exports as rows; money as exact text beside its currency, the same bytes every time | M63 |
 | D-602 | 2026-11-23 | The export tool is marked a write: it reads the document and never writes it, so parity counts it a read, but it writes a file, so `readOnlyHint` is false, not destructive, idempotent | M63 |
+| D-603 | 2026-11-23 | A nest is one string a person types — `keyword.card as=keywords order=position` — the same on the command line, in the tool and in a saved export's cell; its link back is read off the graph, refused when there are two, and left out of each child | M63 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -765,6 +766,30 @@ document, which a person asked for by name.
 
 **Consequences.** `server.test.ts`'s list of reads leaves it out; the engine-only definitions budget
 is 60k.
+
+## D-603 · 2026-11-23 · A nest is one string a person types — `keyword.card as=keywords order=position` — the same on the command line, in the tool and in a saved export's cell; its link back is read off the graph, refused when there are two, and left out of each child <a id="d-603"></a>
+
+**Context.** M63 U2 folds a child format's rows into each exported row. The command line needs a way
+to give a nest's key, order and columns, and U3 keeps saved exports as rows whose nests column holds
+one nest per line — so whatever the command line takes has to be something a person types in one cell.
+
+**Decision.** One string per nest: the child format, or `child.link` to say which link, then any of
+`as=<key>`, `order=<column>`, `descending` and `columns=a,b`, separated by spaces (`parseNest` in
+`src/plugin/exportCommand.ts`). `--nest` takes it, repeatable; the tool's `nest` takes an array of
+`{format, as, order, descending, columns}` objects or of the same strings. The link back is
+`linksBack` over `connections.ts`' `edgesOf`, so a `links` column counts and a dangling one does not;
+two links to the parent's format are refused naming both as `child.link`. The link back is left out of
+each child, and naming it in `columns` is refused. Children take the parent's `--ids`; an `as` the
+parent's objects already have is refused; a row with none has `[]`. One level: `nest=`, a `nest` key or
+`a.b.c` is refused with a sentence.
+
+**Rejected.** Separate `--nest-as`, `--nest-order`, `--nest-columns` flags — they pair by position
+with the `--nest` before them, and a saved export's cell could not hold them; JSON in the flag — not
+something a person types; a child filter (`match`) — not asked for, and a second export with its own
+match does it.
+
+**Consequences.** U3's nests column is these strings, one per line, read by `parseNest`. The line an
+export prints says `2 rows of card, with 3 rows of keyword folded in`.
 
 ## Related
 

@@ -954,13 +954,13 @@ a refusal**: a file that is not there, one at another schema, a name no row has 
 the read says which, and a write of the value is never refused for it. The development pack's inbox
 carries one, `about`, so a hand-off names the row it is about and the owner sees it is already done.
 
-## A format's rows to a JSON file: `export` (M63 U1)
+## A format's rows to a JSON file: `export` (M63 U1, U2)
 
 **Rows leave a document as a file a build reads** (D-601). A third subcommand of the one server
 file, beside `init` and `watch` (`src/plugin/exportCommand.ts`):
 
 ```
-node dist-plugin/server.mjs export docs/memory.emd --format decision --to decisions.json   [--match state=live]... [--search text] [--order date] [--descending]   [--columns ref,title] [--link milestone=ref]... [--ids] [--check]
+node dist-plugin/server.mjs export docs/memory.emd --format decision --to decisions.json   [--match state=live]... [--search text] [--order date] [--descending]   [--columns ref,title] [--link milestone=ref]... [--ids] [--check]   [--nest "<child>[.<link>] [as=key] [order=column] [descending] [columns=a,b]"]...
 ```
 
 - **Every matching row**, filtered by `format_rows`' own `filterArgs` (a repeated `--match` on one
@@ -981,7 +981,29 @@ node dist-plugin/server.mjs export docs/memory.emd --format decision --to decisi
   is missing (naming the file), 2 for a bad argument, a refused document or a missing format.
   Stdout is one line saying what was written or found; a refusal goes to stderr.
 
-**`export_format_rows` is the same from a conversation**, its arguments as JSON (`link` an object),
+**`--nest` folds a child format in** (M63 U2, D-603): a card's keyword rows as its `keywords`, a
+milestone's units as its `units`. Repeatable, each one string a person can type in one cell —
+`--nest "keyword.card as=keywords order=position descending columns=word,weight"`:
+
+- **The child's rows whose link points at the exported row**, as an array under `as` (the child
+  format's name by default), in the child's `order` (its label column by default, ties by the label
+  column then the id, as above), each shaped as the parent's rows are, **its link back left out** —
+  and naming it in `columns` is refused, since the row it is folded into is that row. Its other links
+  go out as their rows' labels; `--ids` gives the children ids too. A `links` column counts: a row it
+  names is a row it points at.
+- **The link back is read off the graph** (`linksBack` over `connections.ts`' `edgesOf`), so the link
+  the formats screen draws is the one a nest follows. A child linking to the parent's format through
+  two columns is refused, asking for `keyword.card` or `keyword.other`; one with no link to it is
+  refused too.
+- **A row with no children has `[]`**, so every object has the same keys. An `as` the parent's
+  objects already have (a column, its `_currency`, `id`) is refused.
+- **One level only**: a nest inside a nest (`nest=` in the string, a `nest` key in the tool's object,
+  `a.b.c`) is refused with a sentence — export the child with its own nest to a file of its own.
+- `--check` covers the nested bytes the same way, and the line says `2 rows of card, with 3 rows of
+  keyword folded in`.
+
+**`export_format_rows` is the same from a conversation**, its arguments as JSON (`link` an object,
+`nest` an array of `{format, as, order, descending, columns}` or of the command line's strings),
 `to` required and read against the document's folder: **a path outside that folder or its
 subfolders is refused with a sentence** — a document someone sends cannot make a model write
 anywhere else on the machine; the command line writes wherever a person tells it. `check: true`

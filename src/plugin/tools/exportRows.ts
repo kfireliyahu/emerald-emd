@@ -17,7 +17,10 @@
 
 import { dirname, isAbsolute, relative, resolve as resolvePath } from 'node:path'
 
-import { checkAnswer, exportFrom, fileState, shownPath, writeExport, wroteLine, type ExportAsk } from '../exportCommand.ts'
+import {
+  NEST_ONE_LEVEL,
+  checkAnswer,
+  exportFrom, fileState, parseNest, shownPath, writeExport, wroteLine, type ExportAsk, type NestAsk } from '../exportCommand.ts'
 import {
   PATH_PROP,
   ToolInputError,
@@ -44,6 +47,46 @@ export function exportTarget(documentPath: string, to: string): string {
   return target
 }
 
+const NEST_KEYS = ['format', 'as', 'order', 'descending', 'columns']
+
+/**
+ * **`nest`'s items** (M63 U2): an object of `format`, `as`, `order`,
+ * `descending` and `columns`, or the command line's one string,
+ * `keyword.card as=keywords order=position`. One level only.
+ */
+function nestOf(given: unknown): NestAsk {
+  if (typeof given === 'string') {
+    const parsed = parseNest(given)
+    if (!parsed.ok) throw new ToolInputError(parsed.error)
+    return parsed.value
+  }
+  if (typeof given !== 'object' || given === null || Array.isArray(given)) {
+    throw new ToolInputError('Each `nest` is an object — `{format: "keyword", as: "keywords", order: "position"}` — or the same as one string.')
+  }
+  const item = given as Record<string, unknown>
+  const format = item['format']
+  if (typeof format !== 'string' || format === '') throw new ToolInputError('Each `nest` names the `format` folded in.')
+  if ('nest' in item) {
+    throw new ToolInputError(NEST_ONE_LEVEL(format))
+  }
+  const unknown = Object.keys(item).find((key) => !NEST_KEYS.includes(key))
+  if (unknown !== undefined) throw new ToolInputError(`A nest does not know ${unknown}; it takes ${NEST_KEYS.join(', ')}.`)
+  const columns = item['columns']
+  if (columns !== undefined && (!Array.isArray(columns) || columns.some((each) => typeof each !== 'string'))) {
+    throw new ToolInputError('A nest\'s `columns` must be an array of column names.')
+  }
+  const as = optionalString(item, 'as')
+  const order = optionalString(item, 'order')
+  if (as === '') throw new ToolInputError('A nest\'s `as` is the key its rows go out under; leave it out for the format\'s name.')
+  return {
+    format,
+    ...(as === undefined ? {} : { as }),
+    ...(order === undefined ? {} : { order }),
+    ...(optionalBoolean(item, 'descending') === true ? { descending: true } : {}),
+    ...(columns === undefined ? {} : { columns: columns as string[] }),
+  }
+}
+
 function askOf(args: Args): ExportAsk {
   const columns = args['columns']
   if (columns !== undefined && (!Array.isArray(columns) || columns.some((each) => typeof each !== 'string'))) {
@@ -59,6 +102,8 @@ function askOf(args: Args): ExportAsk {
   }
   const search = optionalString(args, 'search')
   const order = optionalString(args, 'order')
+  const nest = args['nest']
+  if (nest !== undefined && !Array.isArray(nest)) throw new ToolInputError('`nest` must be an array, one child format each.')
   return {
     format: requireString(args, 'format'),
     ...(match === undefined || match === null ? {} : { match: match as Record<string, unknown> }),
@@ -68,6 +113,7 @@ function askOf(args: Args): ExportAsk {
     ...(columns === undefined ? {} : { columns: columns as string[] }),
     ...(link === undefined ? {} : { link: link as Record<string, string> }),
     ids: optionalBoolean(args, 'ids') ?? false,
+    ...(nest === undefined || nest.length === 0 ? {} : { nest: (nest as unknown[]).map(nestOf) }),
   }
 }
 
@@ -91,6 +137,13 @@ export const exportFormatRowsTool: PluginTool = {
         columns: { type: 'array', description: 'Columns to write, computed too; omit for every stored one.', items: { type: 'string' } },
         link: { type: 'object', description: 'A link to the linked column it is written as: `{milestone: "ref"}`.', additionalProperties: { type: 'string' } },
         ids: booleanProp('Each row’s id as `id`.'),
+        nest: {
+          type: 'array',
+          description:
+            'Child formats folded in: each row’s children, as an array under `as` (default the child’s name), by `order`; `descending`, `columns` too. ' +
+            '`format` is `child.link` when it links here twice. One level.',
+          items: { type: 'object', properties: { format: { type: 'string' } }, required: ['format'] },
+        },
         check: booleanProp('Write nothing; say whether the file is current.'),
       },
       required: ['path', 'format', 'to'],

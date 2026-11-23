@@ -20,6 +20,10 @@
  * - **Written atomically**: a temporary file beside it, renamed over it.
  * - **`--check` writes nothing**: 0 when the file holds exactly these bytes, 1
  *   when it differs or is missing, 2 for an argument or a format that is wrong.
+ * - **`--nest` folds a child format in** (M63 U2): the rows whose link points at
+ *   each exported row, as an array under a key of their own. One spec string —
+ *   `keyword.card as=keywords order=position` — so a saved export can hold one
+ *   per line (U3) and the tool takes the same string.
  *
  * The tool `export_format_rows` is the same call from a conversation, and writes
  * only inside the document's folder (`tools/exportRows.ts`).
@@ -37,14 +41,18 @@ import { listUnits } from '@/data/repositories/unitRepository.ts'
 import { labelColumn, type FormatDeclaration } from '@/domain/format/declaration.ts'
 import {
   cellValue,
+  childrenByParent,
   computedNames,
   exportText,
   exportValue,
   linkableColumn,
+  linksBack,
   type ComputedValue,
+  type ExportShape,
   type JsonValue,
+  type NestedShape,
 } from '@/domain/format/export.ts'
-import { idsIn, type StoredRow } from '@/domain/format/row.ts'
+import { currencyKeyOf, idsIn, unitKeyOf, type StoredRow } from '@/domain/format/row.ts'
 import { writeAtomically } from '../../electron/bridge.ts'
 
 import { readDocument, type OpenDocument } from './document.ts'
@@ -63,6 +71,26 @@ export interface ExportAsk {
   /** A link column to the column of the linked format it goes out as, instead of the row's label. */
   readonly link?: Readonly<Record<string, string>>
   readonly ids?: boolean
+  /** Child formats folded into each row (M63 U2), in the order their keys go out. */
+  readonly nest?: readonly NestAsk[]
+}
+
+/**
+ * **One child format to fold in** (M63 U2): its rows whose link points at an
+ * exported row, as an array under `as`. `format` is the child's name, or
+ * `child.link` when it links to the parent's format through more than one
+ * column. Its other links go out as their rows' labels, and `ids` is the
+ * parent's.
+ */
+export interface NestAsk {
+  readonly format: string
+  /** The key the array goes out under; the child format's name by default. */
+  readonly as?: string
+  /** A column of the child's; its label column by default, ties by the label column then the id. */
+  readonly order?: string
+  readonly descending?: boolean
+  /** The child's columns to hold, computed too; every stored one but the link back when absent. */
+  readonly columns?: readonly string[]
 }
 
 /** The file's bytes, and what they hold. */
@@ -70,6 +98,8 @@ export interface Exported {
   readonly text: string
   readonly rows: number
   readonly format: string
+  /** How many rows of each folded-in format went into the file, in the order asked. */
+  readonly nested?: readonly { readonly format: string; readonly rows: number }[]
 }
 
 /** What a link column goes out as, for each row it names: its label, or the chosen column's value. */
@@ -128,11 +158,147 @@ function checkedLinks(declaration: FormatDeclaration, formats: readonly FormatDe
   }
 }
 
+/** `columns` and `order` held to a declaration — refused with a sentence naming what it has. */
+function checkedColumns(declaration: FormatDeclaration, columns: readonly string[] | undefined, order: string | undefined): void {
+  const computed = computedNames(declaration)
+  const stored = columns?.filter((name) => !computed.includes(name))
+  if (stored !== undefined) chosenColumns(declaration, { columns: stored }, computed)
+  if (order !== undefined && !declaration.columns.some((one) => one.name === order) && !computed.includes(order)) {
+    throw new ToolInputError(
+      `\`order\` names ${order}, which ${declaration.name} has not got. It has ${[...declaration.columns.map((one) => one.name), ...computed].join(', ')}.`,
+    )
+  }
+}
+
+interface ShapeAsk {
+  readonly columns?: readonly string[] | undefined
+  readonly link?: Readonly<Record<string, string>>
+  readonly ids?: boolean | undefined
+  readonly omit?: string
+}
+
+/** One format's rows as the shaping wants them: their links' values and the computed columns asked for. */
+function shapeOf(
+  document: OpenDocument,
+  declaration: FormatDeclaration,
+  rows: readonly StoredRow[],
+  formats: readonly FormatDeclaration[],
+  ask: ShapeAsk,
+): ExportShape {
+  const computed = computedNames(declaration)
+  const wantedComputed = (ask.columns ?? []).filter((name) => computed.includes(name))
+  const figures = new Map<string, Map<string, ComputedValue>>()
+  if (wantedComputed.length > 0) {
+    const index = indexOf(formats)
+    const units = listUnits(document.db)
+    const derived = derivedOf(document.db, declaration, rows, index, units, askedOn())
+    const totals = declaration.aggregates.filter((each) => wantedComputed.includes(each.name))
+    for (const row of rows) {
+      const mine = new Map<string, ComputedValue>()
+      for (const each of derived.get(row.id) ?? []) mine.set(each.compiled.declaration.name, each.value)
+      for (const total of totals) mine.set(total.name, foldAggregate(document.db, total, row.id, index, units))
+      figures.set(row.id, mine)
+    }
+  }
+  return {
+    declaration,
+    ...(ask.columns === undefined ? {} : { columns: ask.columns }),
+    linked: linkedValues(document, declaration, rows, formats, ask.link ?? {}),
+    computed: figures,
+    ids: ask.ids === true,
+    ...(ask.omit === undefined ? {} : { omit: ask.omit }),
+  }
+}
+
+/** Every key a parent's object can hold, so a nest's `as` cannot take one of them. */
+function keysOf(declaration: FormatDeclaration): Set<string> {
+  const keys = new Set<string>(['id'])
+  for (const column of declaration.columns) {
+    keys.add(column.name)
+    if (column.type === 'money') keys.add(currencyKeyOf(column))
+    if (column.type === 'quantity') keys.add(unitKeyOf(column))
+  }
+  for (const name of computedNames(declaration)) for (const key of [name, `${name}_currency`, `${name}_unit`]) keys.add(key)
+  return keys
+}
+
+/** The sentence refusing a nest inside a nest. */
+export const NEST_ONE_LEVEL = (format: string): string =>
+  `A nest folds one level only: ${format}'s own children cannot be folded into it. Export ${format} with its own nest to a file of its own.`
+
+/** The link back a nest follows: the one `child` has to `parent`'s format, or the one its `child.link` names. */
+function linkBack(child: FormatDeclaration, parent: FormatDeclaration, formats: readonly FormatDeclaration[], named: string | undefined): string {
+  const backs = linksBack(formats, child.name, parent.name)
+  if (named !== undefined) {
+    if (backs.includes(named)) return named
+    const column = child.columns.find((each) => each.name === named)
+    throw new ToolInputError(
+      `\`nest\` names ${child.name}.${named}, ${column === undefined ? `and ${child.name} has no column ${named}` : `which is not a link to ${parent.name}`}. ` +
+        (backs.length === 0
+          ? `${child.name} has no link to ${parent.name}.`
+          : `Its links to ${parent.name}: ${backs.map((each) => `${child.name}.${each}`).join(', ')}.`),
+    )
+  }
+  const [only, second] = backs
+  if (only === undefined) {
+    throw new ToolInputError(
+      `\`nest\` names ${child.name}, which has no link to ${parent.name}, so none of its rows point at one. ` +
+        'A nest folds in the rows of a format that links to the one exported.',
+    )
+  }
+  if (second !== undefined) {
+    throw new ToolInputError(
+      `${child.name} links to ${parent.name} through ${backs.length === 2 ? 'two' : String(backs.length)} columns, ${backs.join(' and ')}; ` +
+        `say which its rows are folded in by: ${backs.map((each) => `${child.name}.${each}`).join(' or ')}.`,
+    )
+  }
+  return only
+}
+
+/** One child format folded into the exported rows — refused with a sentence when it cannot be. */
+function nestedOf(
+  document: OpenDocument,
+  parent: FormatDeclaration,
+  parents: readonly StoredRow[],
+  formats: readonly FormatDeclaration[],
+  nest: NestAsk,
+  ids: boolean,
+): { readonly shape: NestedShape; readonly rows: number } {
+  const [name = '', named, deeper] = nest.format.split('.')
+  if (deeper !== undefined) throw new ToolInputError(NEST_ONE_LEVEL(name))
+  const resolved = resolve(document, name)
+  if ('refusal' in resolved) throw new ToolInputError(resolved.refusal)
+  const child = resolved.declaration
+  const via = linkBack(child, parent, formats, named)
+  if (nest.columns?.includes(via) === true) {
+    throw new ToolInputError(
+      `\`nest\` asks ${child.name} for ${via}, its link back to ${parent.name}; it is left out of each row folded in, since the row it is folded into is that row.`,
+    )
+  }
+  const order = nest.order ?? labelColumn(child)?.name
+  checkedColumns(child, nest.columns, order)
+  const naming = labelColumn(child)?.name
+  const wanted = new Set(parents.map((row) => row.id))
+  const rows = listRows(document.db, child, {
+    ...(order === undefined ? {} : { order }),
+    ...(naming === undefined ? {} : { thenBy: naming }),
+    descending: nest.descending ?? false,
+  }).filter((row) => idsIn(row.cells[via]).some((id) => wanted.has(id)))
+  return {
+    shape: {
+      as: nest.as ?? child.name,
+      shape: shapeOf(document, child, rows, formats, { columns: nest.columns, ids, omit: via }),
+      children: childrenByParent(via, rows),
+    },
+    rows: rows.length,
+  }
+}
+
 /**
  * **The export, worked out on an open document** — refused with a sentence when
  * the format or an argument is wrong. Every matching row, in the asked order
  * (the label column by default, as `format_rows`), ties broken by the label
- * column and then the id.
+ * column and then the id; each nest's rows folded in after the row's own keys.
  */
 export function exportRows(document: OpenDocument, ask: ExportAsk): Result<Exported, string> {
   const resolved = resolve(document, ask.format)
@@ -140,19 +306,20 @@ export function exportRows(document: OpenDocument, ask: ExportAsk): Result<Expor
   const declaration = resolved.declaration
   try {
     const formats = listFormats(document.db)
-    const computed = computedNames(declaration)
-    const stored = ask.columns?.filter((name) => !computed.includes(name))
-    if (stored !== undefined) chosenColumns(declaration, { columns: stored }, computed)
-    const wantedComputed = (ask.columns ?? []).filter((name) => computed.includes(name))
-
     const order = ask.order ?? labelColumn(declaration)?.name
-    if (order !== undefined && !declaration.columns.some((one) => one.name === order) && !computed.includes(order)) {
-      throw new ToolInputError(
-        `\`order\` names ${order}, which ${declaration.name} has not got. It has ${[...declaration.columns.map((one) => one.name), ...computed].join(', ')}.`,
-      )
-    }
+    checkedColumns(declaration, ask.columns, order)
     const chosen = ask.link ?? {}
     checkedLinks(declaration, formats, chosen)
+    const taken = keysOf(declaration)
+    for (const nest of ask.nest ?? []) {
+      const key = nest.as ?? nest.format.split('.')[0] ?? ''
+      if (taken.has(key)) {
+        throw new ToolInputError(
+          `\`nest\` would fold ${nest.format} in as ${key}, a key each ${declaration.name} already has; give it another with as.`,
+        )
+      }
+      taken.add(key)
+    }
 
     const { query } = filterArgs(
       document.db,
@@ -168,31 +335,20 @@ export function exportRows(document: OpenDocument, ask: ExportAsk): Result<Expor
       descending: ask.descending ?? false,
     })
 
-    const figures = new Map<string, Map<string, ComputedValue>>()
-    if (wantedComputed.length > 0) {
-      const index = indexOf(formats)
-      const units = listUnits(document.db)
-      const derived = derivedOf(document.db, declaration, rows, index, units, askedOn())
-      const totals = declaration.aggregates.filter((each) => wantedComputed.includes(each.name))
-      for (const row of rows) {
-        const mine = new Map<string, ComputedValue>()
-        for (const each of derived.get(row.id) ?? []) mine.set(each.compiled.declaration.name, each.value)
-        for (const total of totals) mine.set(total.name, foldAggregate(document.db, total, row.id, index, units))
-        figures.set(row.id, mine)
-      }
-    }
-
+    const nests = (ask.nest ?? []).map((nest) => nestedOf(document, declaration, rows, formats, nest, ask.ids === true))
     const value = exportValue(
       {
-        declaration,
-        ...(ask.columns === undefined ? {} : { columns: ask.columns }),
-        linked: linkedValues(document, declaration, rows, formats, chosen),
-        computed: figures,
-        ids: ask.ids === true,
+        ...shapeOf(document, declaration, rows, formats, { columns: ask.columns, link: chosen, ids: ask.ids }),
+        nested: nests.map((each) => each.shape),
       },
       rows,
     )
-    return ok({ text: exportText(value), rows: rows.length, format: declaration.name })
+    return ok({
+      text: exportText(value),
+      rows: rows.length,
+      format: declaration.name,
+      ...(nests.length === 0 ? {} : { nested: nests.map((each) => ({ format: each.shape.shape.declaration.name, rows: each.rows })) }),
+    })
   } catch (error) {
     if (error instanceof ToolInputError) return err(error.message)
     throw error
@@ -236,19 +392,27 @@ function rowsOf(count: number, format: string): string {
   return `${String(count)} ${count === 1 ? 'row' : 'rows'} of ${format}`
 }
 
+/** `3 rows of card` — and `, with 5 rows of keyword folded in` when a nest asked for them. */
+function heldIn(exported: Exported): string {
+  const folded = (exported.nested ?? []).map((each) => rowsOf(each.rows, each.format))
+  const last = folded.at(-1)
+  const said = folded.length <= 1 ? last : `${folded.slice(0, -1).join(', ')} and ${last ?? ''}`
+  return `${rowsOf(exported.rows, exported.format)}${said === undefined ? '' : `, with ${said} folded in`}`
+}
+
 /** The line a check is answered in, and its exit code. */
 export function checkAnswer(state: FileState, to: string, exported: Exported): { readonly code: number; readonly line: string } {
   const shown = shownPath(to)
-  if (state === 'current') return { code: 0, line: `${shown} is current: ${rowsOf(exported.rows, exported.format)}.` }
-  if (state === 'missing') return { code: 1, line: `${shown} is missing; the export would write ${rowsOf(exported.rows, exported.format)}.` }
-  return { code: 1, line: `${shown} differs from ${rowsOf(exported.rows, exported.format)} as the document holds them now.` }
+  if (state === 'current') return { code: 0, line: `${shown} is current: ${heldIn(exported)}.` }
+  if (state === 'missing') return { code: 1, line: `${shown} is missing; the export would write ${heldIn(exported)}.` }
+  return { code: 1, line: `${shown} differs from ${heldIn(exported)} as the document holds them now.` }
 }
 
 /** The line a write is told in. */
 export function wroteLine(state: FileState, to: string, exported: Exported): string {
   return state === 'current'
-    ? `${shownPath(to)} already holds ${rowsOf(exported.rows, exported.format)}; nothing to write.`
-    : `Wrote ${rowsOf(exported.rows, exported.format)} to ${shownPath(to)}.`
+    ? `${shownPath(to)} already holds ${heldIn(exported)}; nothing to write.`
+    : `Wrote ${heldIn(exported)}${(exported.nested ?? []).length > 0 ? ',' : ''} to ${shownPath(to)}.`
 }
 
 // --- the command line ---------------------------------------------------------
@@ -264,7 +428,44 @@ const EXPORT_USAGE =
   'Usage: node dist-plugin/server.mjs export <document.emd> --format <name> --to <file.json>\n' +
   '  [--match <column>=<value>]... [--search <text>] [--order <column>] [--descending]\n' +
   '  [--columns a,b] [--link <link column>=<column>]... [--ids] [--check]\n' +
+  '  [--nest "<child>[.<link>] [as=<key>] [order=<column>] [descending] [columns=a,b]"]...\n' +
   'Writes every matching row of one format as a JSON array; --check writes nothing and exits 1 when the file is not current.'
+
+const NEST_FORM = '<child>[.<link>] [as=<key>] [order=<column>] [descending] [columns=a,b]'
+
+/**
+ * **One nest, as a person types it** (M63 U2): the child format — `keyword`, or
+ * `keyword.card` to say which link — then any of `as=`, `order=`, `descending`
+ * and `columns=a,b`, separated by spaces. The command line's `--nest` takes it,
+ * the tool takes it in place of an object, and a saved export holds one per line.
+ */
+export function parseNest(spec: string): Result<NestAsk, string> {
+  const [format, ...words] = spec.trim().split(/\s+/)
+  if (format === undefined || format === '' || format.includes('=')) return err(`A nest starts with the format folded in: ${NEST_FORM}.`)
+  let as: string | undefined
+  let order: string | undefined
+  let columns: string[] | undefined
+  let descending = false
+  for (const word of words) {
+    const equals = word.indexOf('=')
+    const key = equals < 0 ? word : word.slice(0, equals)
+    const given = equals < 0 ? undefined : word.slice(equals + 1)
+    if (key === 'descending' && given === undefined) descending = true
+    else if (key === 'nest' || key === '--nest') return err(NEST_ONE_LEVEL(format))
+    else if ((key === 'as' || key === 'order' || key === 'columns') && given !== undefined && given !== '') {
+      if (key === 'as') as = given
+      else if (key === 'order') order = given
+      else columns = given.split(',').map((each) => each.trim()).filter((each) => each !== '')
+    } else return err(`A nest does not know ${word}. It reads ${NEST_FORM}.`)
+  }
+  return ok({
+    format,
+    ...(as === undefined ? {} : { as }),
+    ...(order === undefined ? {} : { order }),
+    ...(descending ? { descending } : {}),
+    ...(columns === undefined ? {} : { columns }),
+  })
+}
 
 /** Reads `export`'s arguments — everything after the word `export`. */
 export function parseExportArgs(argv: readonly string[], cwd: string): Result<ExportArgs, string> {
@@ -279,6 +480,7 @@ export function parseExportArgs(argv: readonly string[], cwd: string): Result<Ex
   let check = false
   const match = new Map<string, string[]>()
   const link: Record<string, string> = {}
+  const nest: NestAsk[] = []
   const pairOf = (flag: string, pair: string | undefined, example: string): Result<readonly [string, string], string> => {
     const equals = pair?.indexOf('=') ?? -1
     if (pair === undefined || equals <= 0) return err(`${flag} takes column=value, as in ${flag} ${example}.\n${EXPORT_USAGE}`)
@@ -308,6 +510,12 @@ export function parseExportArgs(argv: readonly string[], cwd: string): Result<Ex
       const pair = pairOf(flag, value(), 'milestone=ref')
       if (!pair.ok) return pair
       link[pair.value[0]] = pair.value[1]
+    } else if (flag === '--nest') {
+      const given = needed(`a nest, ${NEST_FORM}`)
+      if (!given.ok) return given
+      const parsed = parseNest(given.value)
+      if (!parsed.ok) return err(`${parsed.error}\n${EXPORT_USAGE}`)
+      nest.push(parsed.value)
     } else if (flag === '--descending' || flag === '--ids' || flag === '--check') {
       if (inline !== undefined) return err(`${flag} takes no value.\n${EXPORT_USAGE}`)
       if (flag === '--descending') descending = true
@@ -337,6 +545,7 @@ export function parseExportArgs(argv: readonly string[], cwd: string): Result<Ex
       ...(columns === undefined ? {} : { columns }),
       ...(Object.keys(link).length === 0 ? {} : { link }),
       ...(ids ? { ids } : {}),
+      ...(nest.length === 0 ? {} : { nest }),
     },
   })
 }

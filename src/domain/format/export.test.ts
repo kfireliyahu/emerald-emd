@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { column } from './declaration.ts'
-import { cellValue, exportText, moneyText } from './export.ts'
+import { cellValue, childrenByParent, exportText, moneyText } from './export.ts'
 
 /** The figures written from their digits, never through a float (M63 U1, D-601). */
 describe('export values', () => {
@@ -30,5 +30,24 @@ describe('export values', () => {
   it('spells an empty array and an empty object on one line', () => {
     expect(exportText([])).toBe('[]\n')
     expect(exportText([{ kind: 'object', entries: [] }])).toBe('[\n  {}\n]\n')
+  })
+})
+
+/** A child's rows under the parent each points at, in the order given (M63 U2). */
+describe('childrenByParent', () => {
+  it('keeps the order the rows came in, and puts a row a links cell names twice under that parent once', () => {
+    const rows = [
+      { id: 'c', cells: { card: 'one' } },
+      { id: 'a', cells: { card: 'two' } },
+      { id: 'b', cells: { card: 'one' } },
+      { id: 'd', cells: { card: '' } },
+    ]
+    const grouped = childrenByParent('card', rows)
+    expect(grouped.get('one')?.map((row) => row.id)).toEqual(['c', 'b'])
+    expect(grouped.get('two')?.map((row) => row.id)).toEqual(['a'])
+    expect([...grouped.keys()]).toEqual(['one', 'two'])
+    const many = childrenByParent('cards', [{ id: 'x', cells: { cards: ['one', 'two', 'one'] } }])
+    expect(many.get('one')?.map((row) => row.id)).toEqual(['x'])
+    expect(many.get('two')?.map((row) => row.id)).toEqual(['x'])
   })
 })
