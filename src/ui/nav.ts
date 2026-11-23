@@ -92,6 +92,14 @@ export interface NavChild {
   /** Whose place this is. Absent means the engine's, which every document has. */
   readonly pack?: PackId
   /**
+   * An engine's place offered only to a document keeping one of these packs
+   * (M63 U4, D-605): Export, which holds the ledger's spreadsheets and the
+   * exports pack's files, and has nothing to offer a document keeping neither.
+   * It stays the engine's for every other question — its route opens in any
+   * document, with no ledger guard in front of it.
+   */
+  readonly anyOf?: readonly PackId[]
+  /**
    * The heading it is drawn under, indented once more — the name of the pack a
    * format came from (M33 F3). Children that share one are drawn together.
    */
@@ -281,8 +289,9 @@ export const NAVIGATION: readonly NavSection[] = [
       { to: '/settings/language', ...named('language') },
       // **A spreadsheet of what the document holds** (M28 U5, D-313): the
       // months' CSV was a button above the month on Home, and it was asked
-      // for here.
-      { to: '/settings/export', ...named('export'), pack: 'ledger' },
+      // for here. The app's since M63 U4 (D-605): a document's saved exports
+      // are written from it too, so a document keeping either pack is offered it.
+      { to: '/settings/export', ...named('export'), anyOf: ['ledger', 'exports'] },
     ],
   },
 ]
@@ -683,7 +692,9 @@ export function railSections(
   return NAVIGATION.filter((section) => shown(section.pack) && (section.to !== AGENDA_PATH || dated)).flatMap((section) => {
     const before = section.to === FORMATS_PATH ? drawn : []
     const declared = section.to === FORMATS_PATH ? formatChildren(unclaimed, grouped) : undefined
-    const children = declared ?? section.children?.filter((child) => shown(child.pack))
+    const children =
+      declared ??
+      section.children?.filter((child) => shown(child.pack) && (child.anyOf === undefined || child.anyOf.some((pack) => showing[pack] === true)))
     if (children === undefined) return [...before, section]
     // Spread rather than a mutation, and the key is dropped when it empties:
     // `exactOptionalPropertyTypes` is on, and a section whose `children` is an

@@ -193,7 +193,8 @@ import type { Database } from 'sql.js'
 import { count, money, paragraphs, plural, section, table, verb } from '../format.ts'
 import { withFilesPlaced } from '@/domain/format/file.ts'
 import { mutatingCall, type Mutation } from '../write.ts'
-import { filterQuery, matchCells, type FilterRefusal, type RowFilter } from '@/data/repositories/formatFilterRepository.ts'
+import { matchCells, type RowFilter } from '@/data/repositories/formatFilterRepository.ts'
+import { chosenColumns, filteredQuery, filterRefusalText } from '@/data/export/formatExport.ts'
 import { columnValues } from '@/data/repositories/formatValuesRepository.ts'
 import { declarationChangeRefusal, deleteFormatRefusal, rowWriteRefusal } from '@/domain/format/owner.ts'
 import { evaluateIdentity, figureText as numberText, type IdentityInputs } from '@/domain/format/identity.ts'
@@ -838,29 +839,7 @@ export const MATCH_PROP = {
 
 export const SEARCH_PROP = stringProp('A substring, in every column as shown but yes/no.')
 
-/** The columns a caller asked to see, or every one of them. Shared with `export_format_rows` (M63 U1). */
-export function chosenColumns(
-  declaration: FormatDeclaration,
-  args: Args,
-  worked: readonly string[] = [],
-): readonly ColumnDeclaration[] {
-  const raw = args['columns']
-  if (raw === undefined || raw === null) return declaration.columns
-  if (!Array.isArray(raw)) throw new ToolInputError('`columns` must be an array of column names.')
-
-  return raw.map((name) => {
-    if (typeof name !== 'string') throw new ToolInputError('`columns` must be an array of names.')
-    const column = declaration.columns.find((one) => one.name === name)
-    if (column === undefined) {
-      throw new ToolInputError(
-        `${declaration.name} has no column ${name}. It has ` +
-          `${declaration.columns.map((one) => one.name).join(', ')}` +
-          `${worked.length === 0 ? '' : `, and works out ${worked.join(', ')}`}.`,
-      )
-    }
-    return column
-  })
-}
+// `chosenColumns` moved to `data/export/formatExport.ts` (M63 U4), where the app's export reads it too.
 
 /**
  * **A filter, read the one way every reader reads it** (M44 U6): the caller's
@@ -883,17 +862,7 @@ export function filterArgs(
     ...(raw === undefined || raw === null ? {} : { match: raw as Record<string, unknown> }),
     ...(search === undefined ? {} : { search }),
   }
-  const query = filterQuery(db, declaration, filter, declarations, askedOn())
-  if (!query.ok) throw new ToolInputError(filterRefusalText('match', declaration, query.error))
-  return { filter, query: query.value }
-}
-
-/** A refused filter, as a tool says it: which argument, and why. */
-function filterRefusalText(field: string, declaration: FormatDeclaration, refusal: FilterRefusal): string {
-  return refusal.kind === 'NO_COLUMN'
-    ? `\`${field}\` names ${refusal.name}, which ${declaration.name} has not got. It has ` +
-        `${declaration.columns.map((one) => one.name).join(', ')}.`
-    : `\`${field}\`: ${refusal.reason}`
+  return { filter, query: filteredQuery(db, declaration, filter, declarations, askedOn()) }
 }
 
 /** One value, printed the way the app prints that kind of thing. */

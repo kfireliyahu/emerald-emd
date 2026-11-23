@@ -14,9 +14,10 @@
  * - **The document is opened through `readDocument`**, the one gate every read
  *   tool goes through, so a document stored as text and one stored as SQLite
  *   bytes give the same file.
- * - **Filtered by `format_rows`' own code** — `filterArgs`, `chosenColumns` —
- *   never a copy of it, and **shaped by `src/domain/format/export.ts`**, which the
- *   app's button reuses in the renderer.
+ * - **Worked out by `src/data/export/formatExport.ts`** — filtered by
+ *   `format_rows`' own code, shaped by `src/domain/format/export.ts` — which the
+ *   app's Settings › Export runs in the renderer too (M63 U4), so the two agree
+ *   on every byte. What stays here is what needs Node: the file.
  * - **Written atomically**: a temporary file beside it, renamed over it.
  * - **`--check` writes nothing**: 0 when the file holds exactly these bytes, 1
  *   when it differs or is missing, 2 for an argument or a format that is wrong.
@@ -30,300 +31,42 @@
  */
 
 import { mkdir, readFile, rename, unlink, writeFile } from 'node:fs/promises'
-import { dirname, isAbsolute, relative, resolve as resolvePath, sep } from 'node:path'
+import * as nodePath from 'node:path'
+import { dirname, resolve as resolvePath, sep } from 'node:path'
 
 import { err, ok, type Result } from '@/core/result.ts'
-import { indexOf, foldAggregate } from '@/data/repositories/formatJoinRepository.ts'
-import { derivedOf } from '@/data/repositories/formatDerivedRepository.ts'
-import { listFormats } from '@/data/repositories/formatRepository.ts'
-import { NO_SAVED_EXPORTS, savedExports } from '@/data/packs/exports/saved.ts'
-import { linkLabels, listRows, readRow } from '@/data/repositories/formatRowRepository.ts'
-import { listUnits } from '@/data/repositories/unitRepository.ts'
-import { labelColumn, type FormatDeclaration } from '@/domain/format/declaration.ts'
-import {
-  NEST_FORM,
-  NEST_ONE_LEVEL,
-  cellValue,
-  childrenByParent,
-  computedNames,
-  exportText,
-  exportValue,
-  linkableColumn,
-  linksBack,
-  parseNest,
-  type ComputedValue,
-  type ExportAsk,
-  type ExportShape,
-  type JsonValue,
-  type NestAsk,
-  type NestedShape,
-} from '@/domain/format/export.ts'
-import { currencyKeyOf, idsIn, unitKeyOf, type StoredRow } from '@/domain/format/row.ts'
-import { writeAtomically } from '../../electron/bridge.ts'
+import { exportRows as exportFromDatabase, savedExportTexts, type Exported } from '@/data/export/formatExport.ts'
+import { NO_SAVED_EXPORTS } from '@/data/packs/exports/saved.ts'
+import { NEST_FORM, NEST_ONE_LEVEL, parseNest, type ExportAsk, type NestAsk } from '@/domain/format/export.ts'
+import { inDocumentFolder, writeAtomically } from '../../electron/bridge.ts'
 
 import { readDocument, type OpenDocument } from './document.ts'
-import { askedOn, chosenColumns, filterArgs, resolve } from './tools/formats.ts'
-import { ToolInputError } from './tools/tool.ts'
+import { askedOn, resolve } from './tools/formats.ts'
 
 export { NEST_ONE_LEVEL, parseNest, type ExportAsk, type NestAsk }
+export type { Exported }
 
-/** The file's bytes, and what they hold. */
-export interface Exported {
-  readonly text: string
-  readonly rows: number
-  readonly format: string
-  /** How many rows of each folded-in format went into the file, in the order asked. */
-  readonly nested?: readonly { readonly format: string; readonly rows: number }[]
-}
-
-/** What a link column goes out as, for each row it names: its label, or the chosen column's value. */
-function linkedValues(
-  document: OpenDocument,
-  declaration: FormatDeclaration,
-  rows: readonly StoredRow[],
-  formats: readonly FormatDeclaration[],
-  chosen: Readonly<Record<string, string>>,
-): ReadonlyMap<string, ReadonlyMap<string, JsonValue>> {
-  const labels = linkLabels(document.db, rows, declaration, formats)
-  const out = new Map<string, Map<string, JsonValue>>()
-  for (const column of declaration.columns) {
-    if (column.type !== 'link' && column.type !== 'links') continue
-    const ids = [...new Set(rows.flatMap((row) => idsIn(row.cells[column.name])))]
-    const values = new Map<string, JsonValue>()
-    const asked = chosen[column.name]
-    const target = formats.find((each) => each.name === column.target)
-    const shown = asked === undefined || target === undefined ? undefined : target.columns.find((each) => each.name === asked)
-    for (const id of ids) {
-      if (shown === undefined || target === undefined) {
-        const label = labels.get(id)
-        if (label !== undefined) values.set(id, label)
-        continue
-      }
-      const linked = readRow(document.db, target, id)
-      values.set(id, linked === undefined ? null : cellValue(shown, linked) ?? null)
-    }
-    out.set(column.name, values)
-  }
-  return out
-}
-
-/** `--link`'s pairs held to the declaration: a link column, and a column of what it links to. */
-function checkedLinks(declaration: FormatDeclaration, formats: readonly FormatDeclaration[], chosen: Readonly<Record<string, string>>): void {
-  for (const [name, wanted] of Object.entries(chosen)) {
-    const column = declaration.columns.find((each) => each.name === name)
-    if (column === undefined || (column.type !== 'link' && column.type !== 'links')) {
-      const links = declaration.columns.filter((each) => each.type === 'link' || each.type === 'links').map((each) => each.name)
-      throw new ToolInputError(
-        `\`link\` names ${name}, which is not a link of ${declaration.name}. ` +
-          (links.length === 0 ? `${declaration.name} links to nothing.` : `Its links are ${links.join(', ')}.`),
-      )
-    }
-    const target = formats.find((each) => each.name === column.target)
-    const shown = target?.columns.find((each) => each.name === wanted)
-    if (target === undefined) throw new ToolInputError(`${name} links to ${column.target ?? 'a format'}, which this document no longer declares.`)
-    if (shown === undefined) {
-      throw new ToolInputError(`\`link\` asks ${name} as ${wanted}, which ${target.name} has not got. It has ${target.columns.map((each) => each.name).join(', ')}.`)
-    }
-    if (!linkableColumn(shown)) {
-      throw new ToolInputError(
-        `\`link\` asks ${name} as ${wanted}, a ${shown.type} column; a link goes out as one value that stands alone — text, a figure, a date, a member — so not money, a quantity or another link.`,
-      )
-    }
-  }
-}
-
-/** `columns` and `order` held to a declaration — refused with a sentence naming what it has. */
-function checkedColumns(declaration: FormatDeclaration, columns: readonly string[] | undefined, order: string | undefined): void {
-  const computed = computedNames(declaration)
-  const stored = columns?.filter((name) => !computed.includes(name))
-  if (stored !== undefined) chosenColumns(declaration, { columns: stored }, computed)
-  if (order !== undefined && !declaration.columns.some((one) => one.name === order) && !computed.includes(order)) {
-    throw new ToolInputError(
-      `\`order\` names ${order}, which ${declaration.name} has not got. It has ${[...declaration.columns.map((one) => one.name), ...computed].join(', ')}.`,
-    )
-  }
-}
-
-interface ShapeAsk {
-  readonly columns?: readonly string[] | undefined
-  readonly link?: Readonly<Record<string, string>>
-  readonly ids?: boolean | undefined
-  readonly omit?: string
-}
-
-/** One format's rows as the shaping wants them: their links' values and the computed columns asked for. */
-function shapeOf(
-  document: OpenDocument,
-  declaration: FormatDeclaration,
-  rows: readonly StoredRow[],
-  formats: readonly FormatDeclaration[],
-  ask: ShapeAsk,
-): ExportShape {
-  const computed = computedNames(declaration)
-  const wantedComputed = (ask.columns ?? []).filter((name) => computed.includes(name))
-  const figures = new Map<string, Map<string, ComputedValue>>()
-  if (wantedComputed.length > 0) {
-    const index = indexOf(formats)
-    const units = listUnits(document.db)
-    const derived = derivedOf(document.db, declaration, rows, index, units, askedOn())
-    const totals = declaration.aggregates.filter((each) => wantedComputed.includes(each.name))
-    for (const row of rows) {
-      const mine = new Map<string, ComputedValue>()
-      for (const each of derived.get(row.id) ?? []) mine.set(each.compiled.declaration.name, each.value)
-      for (const total of totals) mine.set(total.name, foldAggregate(document.db, total, row.id, index, units))
-      figures.set(row.id, mine)
-    }
-  }
-  return {
-    declaration,
-    ...(ask.columns === undefined ? {} : { columns: ask.columns }),
-    linked: linkedValues(document, declaration, rows, formats, ask.link ?? {}),
-    computed: figures,
-    ids: ask.ids === true,
-    ...(ask.omit === undefined ? {} : { omit: ask.omit }),
-  }
-}
-
-/** Every key a parent's object can hold, so a nest's `as` cannot take one of them. */
-function keysOf(declaration: FormatDeclaration): Set<string> {
-  const keys = new Set<string>(['id'])
-  for (const column of declaration.columns) {
-    keys.add(column.name)
-    if (column.type === 'money') keys.add(currencyKeyOf(column))
-    if (column.type === 'quantity') keys.add(unitKeyOf(column))
-  }
-  for (const name of computedNames(declaration)) for (const key of [name, `${name}_currency`, `${name}_unit`]) keys.add(key)
-  return keys
-}
-
-/** The link back a nest follows: the one `child` has to `parent`'s format, or the one its `child.link` names. */
-function linkBack(child: FormatDeclaration, parent: FormatDeclaration, formats: readonly FormatDeclaration[], named: string | undefined): string {
-  const backs = linksBack(formats, child.name, parent.name)
-  if (named !== undefined) {
-    if (backs.includes(named)) return named
-    const column = child.columns.find((each) => each.name === named)
-    throw new ToolInputError(
-      `\`nest\` names ${child.name}.${named}, ${column === undefined ? `and ${child.name} has no column ${named}` : `which is not a link to ${parent.name}`}. ` +
-        (backs.length === 0
-          ? `${child.name} has no link to ${parent.name}.`
-          : `Its links to ${parent.name}: ${backs.map((each) => `${child.name}.${each}`).join(', ')}.`),
-    )
-  }
-  const [only, second] = backs
-  if (only === undefined) {
-    throw new ToolInputError(
-      `\`nest\` names ${child.name}, which has no link to ${parent.name}, so none of its rows point at one. ` +
-        'A nest folds in the rows of a format that links to the one exported.',
-    )
-  }
-  if (second !== undefined) {
-    throw new ToolInputError(
-      `${child.name} links to ${parent.name} through ${backs.length === 2 ? 'two' : String(backs.length)} columns, ${backs.join(' and ')}; ` +
-        `say which its rows are folded in by: ${backs.map((each) => `${child.name}.${each}`).join(' or ')}.`,
-    )
-  }
-  return only
-}
-
-/** One child format folded into the exported rows — refused with a sentence when it cannot be. */
-function nestedOf(
-  document: OpenDocument,
-  parent: FormatDeclaration,
-  parents: readonly StoredRow[],
-  formats: readonly FormatDeclaration[],
-  nest: NestAsk,
-  ids: boolean,
-): { readonly shape: NestedShape; readonly rows: number } {
-  const [name = '', named, deeper] = nest.format.split('.')
-  if (deeper !== undefined) throw new ToolInputError(NEST_ONE_LEVEL(name))
-  const resolved = resolve(document, name)
-  if ('refusal' in resolved) throw new ToolInputError(resolved.refusal)
-  const child = resolved.declaration
-  const via = linkBack(child, parent, formats, named)
-  if (nest.columns?.includes(via) === true) {
-    throw new ToolInputError(
-      `\`nest\` asks ${child.name} for ${via}, its link back to ${parent.name}; it is left out of each row folded in, since the row it is folded into is that row.`,
-    )
-  }
-  const order = nest.order ?? labelColumn(child)?.name
-  checkedColumns(child, nest.columns, order)
-  const naming = labelColumn(child)?.name
-  const wanted = new Set(parents.map((row) => row.id))
-  const rows = listRows(document.db, child, {
-    ...(order === undefined ? {} : { order }),
-    ...(naming === undefined ? {} : { thenBy: naming }),
-    descending: nest.descending ?? false,
-  }).filter((row) => idsIn(row.cells[via]).some((id) => wanted.has(id)))
-  return {
-    shape: {
-      as: nest.as ?? child.name,
-      shape: shapeOf(document, child, rows, formats, { columns: nest.columns, ids, omit: via }),
-      children: childrenByParent(via, rows),
-    },
-    rows: rows.length,
-  }
+/**
+ * `file` against the document's folder: the path to write, or `undefined` when
+ * it leaves that folder. A saved export's file is always relative to it — on
+ * the command line too, unlike `--to` — and the tool's `to` is held to it
+ * (D-601). The rule is `bridge.ts`' `inDocumentFolder`, which the shell holds
+ * the app's Settings › Export to as well (M63 U4).
+ */
+export function withinFolder(documentPath: string, file: string): string | undefined {
+  return inDocumentFolder(nodePath, documentPath, file)
 }
 
 /**
  * **The export, worked out on an open document** — refused with a sentence when
- * the format or an argument is wrong. Every matching row, in the asked order
- * (the label column by default, as `format_rows`), ties broken by the label
- * column and then the id; each nest's rows folded in after the row's own keys.
+ * the format or an argument is wrong. `data/export/formatExport.ts` does the
+ * work; the plugin hands in its clock and its own `resolve`, whose refusals tell
+ * a model what to call.
  */
 export function exportRows(document: OpenDocument, ask: ExportAsk): Result<Exported, string> {
-  const resolved = resolve(document, ask.format)
-  if ('refusal' in resolved) return err(resolved.refusal)
-  const declaration = resolved.declaration
-  try {
-    const formats = listFormats(document.db)
-    const order = ask.order ?? labelColumn(declaration)?.name
-    checkedColumns(declaration, ask.columns, order)
-    const chosen = ask.link ?? {}
-    checkedLinks(declaration, formats, chosen)
-    const taken = keysOf(declaration)
-    for (const nest of ask.nest ?? []) {
-      const key = nest.as ?? nest.format.split('.')[0] ?? ''
-      if (taken.has(key)) {
-        throw new ToolInputError(
-          `\`nest\` would fold ${nest.format} in as ${key}, a key each ${declaration.name} already has; give it another with as.`,
-        )
-      }
-      taken.add(key)
-    }
-
-    const { query } = filterArgs(
-      document.db,
-      declaration,
-      { ...(ask.match === undefined ? {} : { match: ask.match }), ...(ask.search === undefined ? {} : { search: ask.search }) },
-      formats,
-    )
-    const naming = labelColumn(declaration)?.name
-    const rows = listRows(document.db, declaration, {
-      ...query,
-      ...(order === undefined ? {} : { order }),
-      ...(naming === undefined ? {} : { thenBy: naming }),
-      descending: ask.descending ?? false,
-    })
-
-    const nests = (ask.nest ?? []).map((nest) => nestedOf(document, declaration, rows, formats, nest, ask.ids === true))
-    const value = exportValue(
-      {
-        ...shapeOf(document, declaration, rows, formats, { columns: ask.columns, link: chosen, ids: ask.ids }),
-        nested: nests.map((each) => each.shape),
-      },
-      rows,
-    )
-    return ok({
-      text: exportText(value),
-      rows: rows.length,
-      format: declaration.name,
-      ...(nests.length === 0 ? {} : { nested: nests.map((each) => ({ format: each.shape.shape.declaration.name, rows: each.rows })) }),
-    })
-  } catch (error) {
-    if (error instanceof ToolInputError) return err(error.message)
-    throw error
-  }
+  return exportFromDatabase(document.db, ask, { on: askedOn(), resolve: (name) => resolve(document, name) })
 }
+
 
 /**
  * Opens the document through `readDocument` and exports from it. A refusal —
@@ -548,19 +291,6 @@ export async function runExport(args: ExportArgs | SavedArgs, output: ExportOutp
 
 // --- every saved export (M63 U3) ----------------------------------------------
 
-/**
- * `file` against the document's folder: the path to write, or `undefined` when
- * it leaves that folder. A saved export's file is always relative to it — on
- * the command line too, unlike `--to` — and the tool's `to` is held to it
- * (D-601), so a document someone sends cannot make either write anywhere else.
- */
-export function withinFolder(documentPath: string, file: string): string | undefined {
-  const folder = dirname(resolvePath(documentPath))
-  const target = resolvePath(folder, file)
-  const inside = relative(folder, target)
-  return inside === '' || inside.startsWith('..') || isAbsolute(inside) ? undefined : target
-}
-
 /** What became of one saved export, and the line that says so. */
 export interface SavedOutcome {
   /** As the row holds it. */
@@ -587,10 +317,7 @@ export interface SavedRun {
 export async function runSaved(path: string, check: boolean): Promise<Result<SavedRun, string>> {
   let worked: Result<readonly { readonly file: string; readonly exported: Result<Exported, string> }[], string> | undefined
   const said = await readDocument(path, (document) => {
-    const saved = savedExports(document.db)
-    worked = saved.ok
-      ? ok(saved.value.map((each) => ({ file: each.file, exported: each.ask.ok ? exportRows(document, each.ask.value) : each.ask })))
-      : saved
+    worked = savedExportTexts(document.db, { on: askedOn(), resolve: (name) => resolve(document, name) })
     return ''
   })
   if (worked === undefined) return err(said)

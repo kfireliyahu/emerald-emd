@@ -45,6 +45,7 @@ import {
   APP_CHANNELS,
   DOCUMENT_CHANNELS,
   DOCUMENT_EXTENSION,
+  EXPORT_CHANNELS,
   FILE_CHANNELS,
   RUNTIME_CHANNELS,
   UPDATE_CHANNELS,
@@ -71,6 +72,7 @@ import {
   writeDocument,
   type DocumentWatcher,
 } from './documents.ts'
+import { checkExportFiles, exportFilesOf, writeExportFiles } from './exportFiles.ts'
 import { openLinked, presentLinked, showLinked, type LinkedFileSystem } from './linkedFiles.ts'
 import { keptLanguage, languageFrom, shellWords, withName, withSettings, type Language, type ShellWords } from './language.ts'
 import { buildMenuTemplate, type MenuState } from './menu.ts'
@@ -752,8 +754,27 @@ function serveDocuments(updates: Updates): void {
     if (failure !== '') throw new Error(failure)
   })
 
-  ipcMain.handle(DOCUMENT_CHANNELS.watch, (_event, path: unknown) =>
-    watcher.watch(path === undefined ? undefined : granted(path)),
+  // The document the window is working on: the one it watches, which the page
+  // points at on every open, save and Save as (`src/data/storage/desktop.ts`).
+  let openDocument: string | undefined
+  ipcMain.handle(DOCUMENT_CHANNELS.watch, (_event, path: unknown) => {
+    openDocument = path === undefined ? undefined : granted(path)
+    return watcher.watch(openDocument)
+  })
+
+  // Saved exports (M63 U4, D-605): only the open document's, and every file held
+  // to its folder here, in the main process — `exportFiles.ts` — never only in
+  // the page that sent the names.
+  const openExporting = (path: unknown): string => {
+    const file = granted(path)
+    if (file !== openDocument) throw new Error('Saved exports are written for the document open in this window.')
+    return file
+  }
+  ipcMain.handle(EXPORT_CHANNELS.check, (_event, path: unknown, files: unknown) =>
+    checkExportFiles(openExporting(path), exportFilesOf(files)),
+  )
+  ipcMain.handle(EXPORT_CHANNELS.write, (_event, path: unknown, files: unknown) =>
+    writeExportFiles(openExporting(path), exportFilesOf(files)),
   )
 
   ipcMain.handle(DOCUMENT_CHANNELS.recents, () => recents)

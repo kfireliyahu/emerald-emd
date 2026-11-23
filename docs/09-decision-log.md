@@ -505,6 +505,7 @@ written out here.
 | D-602 | 2026-11-23 | The export tool is marked a write: it reads the document and never writes it, so parity counts it a read, but it writes a file, so `readOnlyHint` is false, not destructive, idempotent | M63 |
 | D-603 | 2026-11-23 | A nest is one string a person types — `keyword.card as=keywords order=position` — the same on the command line, in the tool and in a saved export's cell; its link back is read off the graph, refused when there are two, and left out of each child | M63 |
 | D-604 | 2026-11-23 | Saved exports are the exports pack's one format, `export`, named by its unique `file`; a refused row is reported and the others still written, the run exiting 2, and a document with none exits 2 naming the pack | M63 |
+| D-605 | 2026-11-23 | The desktop app writes a document's saved exports from Settings › Export: the page works the bytes out with the command line's own code, moved out of the plugin; the main process holds each file to the open document's folder and compares it on disk without handing its bytes to the page; and Export is offered to a document keeping the ledger or the exports pack | M63 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -823,6 +824,43 @@ skipping a row whose format is gone — D-601 says reported, never skipped.
 
 **Consequences.** `keep_packs` and `create_document` take `exports`, and the Packs screen shows a third
 pack. U4 lists `savedExports(db)` on Settings › Export and writes them.
+
+## D-605 · 2026-11-23 · The desktop app writes a document's saved exports from Settings › Export: the page works the bytes out with the command line's own code, moved out of the plugin; the main process holds each file to the open document's folder and compares it on disk without handing its bytes to the page; and Export is offered to a document keeping the ledger or the exports pack <a id="d-605"></a>
+
+**Context.** D-601 put the app's button on Settings › Export, desktop shell only, and M63 U4 builds
+it. Three things were the building session's to pick: where the code that turns a saved row into
+bytes lives once the renderer needs it, what crosses the bridge, and how a document that keeps saved
+exports but no ledger reaches a screen the rail offered only to the ledger.
+
+**Decision.**
+
+- **One piece of code works an export out, in `src/data/export/formatExport.ts`** — `exportRows`,
+  `savedExportTexts`, and `format_rows`' `chosenColumns` and filter refusal with them — moved out of
+  `src/plugin/exportCommand.ts` and `tools/formats.ts`, never copied. It takes a database and an
+  `ExportContext` (the day, and the plugin's own `resolve`, whose refusals tell a model what to
+  call); the plugin keeps what needs Node. `ToolInputError` moved to `src/core/inputError.ts`, which
+  that code throws from the renderer too; `tools/tool.ts` re-exports it.
+- **The bridge carries bytes one way.** `exports.check(path, files)` and `exports.write(path, files)`
+  send each file as the row names it with the text the page worked out; the main process
+  (`electron/exportFiles.ts`) answers with a word per file — current, differs, missing, written,
+  refused — and never hands a file's contents to the page.
+- **Held in the main process**: the path must be granted and be the document this window watches,
+  and every file goes through `inDocumentFolder`, the plugin's `withinFolder` moved into `bridge.ts`
+  with Node's `path` handed in (as `writeAtomically` takes its disk), so the command line, the tool
+  and the shell hold a file to one rule and the shell still reaches into `src/` only for its words
+  (D-588).
+- **Export stays the engine's place and is offered to a document keeping either pack** (`anyOf` on
+  its rail entry): no ledger guard in front of it, the months' and transactions' CSV drawn only where
+  a ledger is kept, the saved exports only in the shell. A document with changes not saved yet is
+  exported from what is open and the section says so; one never saved says to save it first.
+
+**Rejected.** A bridge call that reads a file into the page (it would learn what else is on disk); a
+second copy of the folder check in `electron/`, or the shell importing it from `src/` (D-588); Export offered to every document (a document keeping
+neither pack would get a place holding only Save as, not asked for); the plugin's `resolve` moved to
+`data/` (its sentences are a model's instructions).
+
+**Consequences.** The term `Export` is the app's. A shell older than M63 U4 has no `exports` on its
+bridge, and the page draws no section, as in a browser tab.
 
 ## Related
 

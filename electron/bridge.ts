@@ -567,6 +567,68 @@ export const PROGRAM_EXTENSIONS: readonly string[] = [
   'wsf', 'wsh',
 ]
 
+/** Node's `path`, as much of it as `inDocumentFolder` needs — handed in, since this file imports nothing. */
+export interface FolderPaths {
+  dirname(path: string): string
+  resolve(...paths: string[]): string
+  relative(from: string, to: string): string
+  isAbsolute(path: string): boolean
+}
+
+/**
+ * **A file named relative to a document, held to the document's folder** (M63
+ * U3, D-601; here since M63 U4, D-605): the path to write, or `undefined` when
+ * it leaves that folder or the folders under it. One rule for every writer of a
+ * saved export — the command line, the tool (`src/plugin/exportCommand.ts`) and
+ * the shell's main process (`exportFiles.ts`) — so a document someone sends
+ * cannot make any of them write anywhere else. Here because both sides already
+ * read this file, and the shell reaches into `src/` only for its words (D-588).
+ */
+export function inDocumentFolder(paths: FolderPaths, documentPath: string, file: string): string | undefined {
+  const folder = paths.dirname(paths.resolve(documentPath))
+  const target = paths.resolve(folder, file)
+  const inside = paths.relative(folder, target)
+  return inside === '' || inside.startsWith('..') || paths.isAbsolute(inside) ? undefined : target
+}
+
+/**
+ * **One saved export's bytes, as the app worked them out** (M63 U4, D-605): the
+ * file as the `export` row names it, relative to the document's folder, and the
+ * text the export would write there. The page sends what it worked out; the
+ * main process decides where that is, and refuses anywhere outside the folder.
+ */
+export interface ExportFile {
+  readonly file: string
+  readonly text: string
+}
+
+/**
+ * What became of one: `current` holds exactly these bytes, `differs` holds
+ * others, `missing` is not there, `written` was just written, `refused` lies
+ * outside the document's folder and was neither read nor written.
+ */
+export type ExportFileState = 'current' | 'differs' | 'missing' | 'written' | 'refused'
+
+export interface ExportFileOutcome {
+  readonly file: string
+  readonly state: ExportFileState
+}
+
+/**
+ * **A document's saved exports, written from Settings › Export** (M63 U4,
+ * D-605). Both calls name the open document by the path the shell handed out
+ * and refuse any other; every file is held to that document's folder and the
+ * folders under it **in the main process** (`electron/exportFiles.ts`), never
+ * only here. Nothing on disk is read into the page: `check` compares in the main
+ * process and answers with a word per file.
+ */
+export interface EmeraldExports {
+  /** Each file against what is on disk, in order. Writes nothing. */
+  check(documentPath: string, files: readonly ExportFile[]): Promise<readonly ExportFileOutcome[]>
+  /** Writes each file that is missing or differs, atomically; one already current is left alone. */
+  write(documentPath: string, files: readonly ExportFile[]): Promise<readonly ExportFileOutcome[]>
+}
+
 export interface EmeraldBridge {
   /** The shell's version, which is the app's — see `package.json`. */
   readonly version: string
@@ -580,6 +642,8 @@ export interface EmeraldBridge {
   /** Missing from a shell older than M37 U6, where a `file` cell shows its path and copies it. */
   readonly files?: EmeraldFiles  /** Missing from a shell older than M42 U8, which the page treats as no updates at all. */
   readonly updates?: EmeraldUpdates
+  /** Missing from a shell older than M63 U4, which the page treats as no saved exports to write. */
+  readonly exports?: EmeraldExports
 }
 
 /** One channel per capability; `changed` and `command` run main → page. */
@@ -638,6 +702,12 @@ export const FILE_CHANNELS = {
   present: 'emerald:files/present',
   open: 'emerald:files/open',
   show: 'emerald:files/show',
+} as const
+
+/** Saved exports (M63 U4): both name the open document, and the main process holds every file to its folder. */
+export const EXPORT_CHANNELS = {
+  check: 'emerald:exports/check',
+  write: 'emerald:exports/write',
 } as const
 
 /** The window's own channels. Page → main, one-way, like `unsaved` above. */

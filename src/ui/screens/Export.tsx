@@ -4,11 +4,14 @@ import { monthlySummaryCsv, transactionsCsv } from '@/data/export/csv.ts'
 import { downloadCsv, exportFileName } from '@/data/export/download.ts'
 import { documentCurrency, monthlySummaries } from '@/data/repositories/statisticsRepository.ts'
 import { countTransactions } from '@/data/repositories/transactionRepository.ts'
+import { shellExports } from '@/data/storage/desktop.ts'
 import { useT } from '@/i18n/current.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Button } from '@/ui/components/Button.tsx'
+import { SavedExports } from '@/ui/export/SavedExports.tsx'
 import { Kbd } from '@/ui/components/Kbd.tsx'
 import { isDemo } from '@/ui/edition.ts'
+import { useKeepsLedger } from '@/ui/packs.ts'
 import { modifierKey } from '@/ui/platform.ts'
 import { today } from '@/ui/today.ts'
 
@@ -23,16 +26,25 @@ import { today } from '@/ui/today.ts'
  * **The whole document is Save as…** (M54 F6, D-531): a button that does it,
  * with the keys that do it too — never a File menu a browser tab has not got.
  * One heading, as Packs has, and no eyebrow over it.
+ *
+ * **The app's, not only the ledger's, since M63 U4** (D-605): the months' and
+ * the transactions' rows are there where the document keeps a ledger, and in
+ * the desktop shell a document's **saved exports** — the exports pack's rows —
+ * are written from here (`ui/export/SavedExports.tsx`). The rail offers the
+ * place to a document keeping either pack.
  */
 export function Export() {
   const t = useT()
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
+  const ledger = useKeepsLedger()
   const months = useMemo(
-    () => (db === undefined ? [] : monthlySummaries(db, today(), { currency: documentCurrency(db) })),
-    [db, revision],
+    () => (db === undefined || !ledger ? [] : monthlySummaries(db, today(), { currency: documentCurrency(db) })),
+    [db, revision, ledger],
   )
-  const rows = useMemo(() => (db === undefined ? 0 : countTransactions(db)), [db, revision])
+  const rows = useMemo(() => (db === undefined || !ledger ? 0 : countTransactions(db)), [db, revision, ledger])
+  // The shell's, and only the shell's: a browser tab has no folder to write a file into.
+  const exportsBridge = shellExports()
   const saveCopyAs = useDocumentStore((state) => state.saveCopyAs)
   if (db === undefined) return null
   const mod = modifierKey()
@@ -46,30 +58,35 @@ export function Export() {
           <span className="text-ink-secondary">{t('settings.export.lead')}</span>
         </header>
         <div>
-          <Row
-            title={t('settings.export.months')}
-            text={t('settings.export.monthsText')}
-          >
-            <Button
-              variant="secondary"
-              disabled={months.length === 0}
-              onClick={() => downloadCsv(exportFileName('months'), monthlySummaryCsv(months))}
-            >
-              {t(months.length === 1 ? 'settings.export.exportMonth' : 'settings.export.exportMonths', { n: months.length })}
-            </Button>
-          </Row>
-          <Row
-            title={t('rail.transactions')}
-            text={t('settings.export.transactionsText')}
-          >
-            <Button
-              variant="secondary"
-              disabled={rows === 0}
-              onClick={() => downloadCsv(exportFileName('transactions'), transactionsCsv(db))}
-            >
-              {t(rows === 1 ? 'settings.export.exportTransaction' : 'settings.export.exportTransactions', { n: rows.toLocaleString('en-US') })}
-            </Button>
-          </Row>
+          {ledger && (
+            <>
+              <Row
+                title={t('settings.export.months')}
+                text={t('settings.export.monthsText')}
+              >
+                <Button
+                  variant="secondary"
+                  disabled={months.length === 0}
+                  onClick={() => downloadCsv(exportFileName('months'), monthlySummaryCsv(months))}
+                >
+                  {t(months.length === 1 ? 'settings.export.exportMonth' : 'settings.export.exportMonths', { n: months.length })}
+                </Button>
+              </Row>
+              <Row
+                title={t('rail.transactions')}
+                text={t('settings.export.transactionsText')}
+              >
+                <Button
+                  variant="secondary"
+                  disabled={rows === 0}
+                  onClick={() => downloadCsv(exportFileName('transactions'), transactionsCsv(db))}
+                >
+                  {t(rows === 1 ? 'settings.export.exportTransaction' : 'settings.export.exportTransactions', { n: rows.toLocaleString('en-US') })}
+                </Button>
+              </Row>
+            </>
+          )}
+          {exportsBridge !== undefined && <SavedExports bridge={exportsBridge} />}
           <Row
             title={t('settings.export.whole')}
             text={

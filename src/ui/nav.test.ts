@@ -17,6 +17,7 @@ import {
   entryPath,
   formatPath,
   packSection,
+  packOf,
   railSectionFor,
   railSections,
   sectionFor,
@@ -220,6 +221,18 @@ describe('the ledger, staged', () => {
       '/settings/calendar',
       '/settings/language',
     ])
+  })
+
+  it('offers Export to a document keeping the ledger or the exports pack, and keeps it the engine’s (M63 U4)', () => {
+    const exportOf = (kept: Record<string, boolean>): boolean =>
+      railSections(kept)
+        .find((section) => section.label === 'Settings')
+        ?.children?.some((child) => child.to === '/settings/export') === true
+    expect(exportOf({ ledger: true, exports: false })).toBe(true)
+    expect(exportOf({ ledger: false, exports: true })).toBe(true)
+    expect(exportOf({ ledger: false, exports: false })).toBe(false)
+    // No ledger guard in front of it: a document keeping only saved exports opens it.
+    expect(packOf('/settings/export')).toBeUndefined()
   })
 
   it('keeps Packs out of the pack it switches, or it could not be switched back', () => {

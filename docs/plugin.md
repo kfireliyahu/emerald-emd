@@ -1016,7 +1016,11 @@ kept like any pack (`keep_packs` with `packs: ["exports"]`, or Settings › Pack
 row tools and the sheet, so no new write tool. `columns`, `match` and `nests` hold one entry per line:
 a `match` line is `column: value` (two on one column are either, an empty value an empty cell), a
 `nests` line the string `--nest` takes. `src/data/packs/exports/saved.ts` reads the rows into the asks
-`exportRows` takes, with no Node, so the app's button (U4) reads them the same way.
+`exportRows` takes, with no Node, so the app's button reads them the same way: **Settings › Export in
+the desktop shell lists them** with each file current, stale or missing and writes the stale and the
+missing (M63 U4, D-605). The bytes are worked out by `src/data/export/formatExport.ts` — where
+`exportRows` lives since U4, shared by the command line, the tool and the app — and the shell holds
+each file to the document's folder by the same rule, `inDocumentFolder` in `electron/bridge.ts`.
 
 ```
 node dist-plugin/server.mjs export docs/memory.emd [--check]

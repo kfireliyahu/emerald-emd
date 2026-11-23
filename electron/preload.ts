@@ -14,6 +14,7 @@ import {
   APP_CHANNELS,
   BRIDGE_KEY,
   DOCUMENT_CHANNELS,
+  EXPORT_CHANNELS,
   FILE_CHANNELS,
   RUNTIME_CHANNELS,
   UPDATE_CHANNELS,
@@ -25,6 +26,9 @@ import {
   type DocumentMarkReading,
   type EarlierCopy,
   type EmeraldBridge,
+  type EmeraldExports,
+  type ExportFile,
+  type ExportFileOutcome,
   type EmeraldFiles,
   type EmeraldRuntimes,
   type EmeraldUpdates,
@@ -196,6 +200,15 @@ const updates: EmeraldUpdates = Object.freeze({
   },
 })
 
+// Saved exports (M63 U4, D-605): the page sends the bytes it worked out; the main
+// process holds each file to the open document's folder and answers with a word.
+const exports: EmeraldExports = Object.freeze({
+  check: (documentPath: string, files: readonly ExportFile[]): Promise<readonly ExportFileOutcome[]> =>
+    ipcRenderer.invoke(EXPORT_CHANNELS.check, documentPath, files),
+  write: (documentPath: string, files: readonly ExportFile[]): Promise<readonly ExportFileOutcome[]> =>
+    ipcRenderer.invoke(EXPORT_CHANNELS.write, documentPath, files),
+})
+
 const bridge: EmeraldBridge = Object.freeze({
   version: versionFromArguments(process.argv),
   platform: process.platform,
@@ -205,6 +218,7 @@ const bridge: EmeraldBridge = Object.freeze({
   app: emeraldApp,
   files,
   updates,
+  exports,
 })
 
 contextBridge.exposeInMainWorld(BRIDGE_KEY, bridge)

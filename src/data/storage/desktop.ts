@@ -18,6 +18,7 @@ import {
   type EmeraldBridge,
   type EmeraldDocuments,
   type EmeraldApp,
+  type EmeraldExports,
   type EmeraldFiles,
   type EmeraldUpdates,
   type EmeraldWindow,
@@ -86,6 +87,15 @@ export function shellFiles(): EmeraldFiles | undefined {
 /** Updates, if you turn them on (M42 U8). `undefined` outside the shell, and in a shell older than it. */
 export function shellUpdates(): EmeraldUpdates | undefined {
   return shellBridge()?.updates
+}
+
+/**
+ * A document's saved exports, written from Settings › Export (M63 U4, D-605).
+ * `undefined` outside the shell — the browser build shows no such section — and
+ * in a shell older than it.
+ */
+export function shellExports(): EmeraldExports | undefined {
+  return shellBridge()?.exports
 }
 
 export function createDesktopAdapter(

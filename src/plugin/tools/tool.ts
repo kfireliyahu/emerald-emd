@@ -13,6 +13,7 @@
 import type { Tool } from '@modelcontextprotocol/sdk/types.js'
 
 import { fromMajorUnits, type Money } from '@/core/money.ts'
+import { ToolInputError } from '@/core/inputError.ts'
 import { parseISODate, parseYearMonth, type LocalDate, type YearMonth } from '@/core/time.ts'
 
 export interface PluginTool {
@@ -37,13 +38,8 @@ export interface ToolAnswer {
 
 export type Args = Record<string, unknown>
 
-/** A bad argument. Caught by the server and returned as a tool failure. */
-export class ToolInputError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = 'ToolInputError'
-  }
-}
+/** A bad argument. Caught by the server and returned as a tool failure; defined in `core/` since M63 U4, which the app's export throws it from. */
+export { ToolInputError }
 
 export function requireString(args: Args, name: string): string {
   const value = args[name]

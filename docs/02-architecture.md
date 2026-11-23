@@ -272,7 +272,10 @@ shape is:
   bar's measurements, shared by the window and the page (D-130); `about.ts` what the About says and
   the one address the shell hands the system browser, the repository, on Help → Source code (D-452);
   `language.ts` the shell's words in the app's language — the one file here that reaches into
-  `src/`, for `src/i18n/{en,he}/shell.ts` and `language.ts`, data that import nothing (D-588).
+  `src/`, for `src/i18n/{en,he}/shell.ts` and `language.ts`, data that import nothing (D-588);
+  `exportFiles.ts` checks and writes a document's saved exports for
+  Settings › Export, held to the document's folder by `bridge.ts`' `inDocumentFolder`, the rule the
+  command line holds them to as well (D-605).
 - `runtimes.ts` and `generate.ts` — the only two places in the app that open a socket, to a local
   model runtime on loopback and nowhere else (D-134, D-136); `generate.ts` re-checks the origin
   because it arrives from `localStorage` (D-135).
