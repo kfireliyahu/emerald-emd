@@ -954,6 +954,40 @@ a refusal**: a file that is not there, one at another schema, a name no row has 
 the read says which, and a write of the value is never refused for it. The development pack's inbox
 carries one, `about`, so a hand-off names the row it is about and the owner sees it is already done.
 
+## A format's rows to a JSON file: `export` (M63 U1)
+
+**Rows leave a document as a file a build reads** (D-601). A third subcommand of the one server
+file, beside `init` and `watch` (`src/plugin/exportCommand.ts`):
+
+```
+node dist-plugin/server.mjs export docs/memory.emd --format decision --to decisions.json   [--match state=live]... [--search text] [--order date] [--descending]   [--columns ref,title] [--link milestone=ref]... [--ids] [--check]
+```
+
+- **Every matching row**, filtered by `format_rows`' own `filterArgs` (a repeated `--match` on one
+  column is any of them), in the asked order — the label column by default — with ties broken by the
+  label column and then the id. No limit.
+- **The document is opened through `readDocument`**, so one stored as text and one stored as SQLite
+  bytes write the same file.
+- **The values** (`src/domain/format/export.ts`, pure, so the app reuses it): a JSON array of
+  objects, keys in declaration order, empty columns left out, no ids unless `--ids`. Money and a
+  quantity are exact text, `"12.90"`, beside `<column>_currency` / `<column>_unit`; a percent is the
+  fraction written from its stored digits (`0.125`, `0.000045`), a decimal likewise, never through a
+  float; a date ISO text; yes/no `true`/`false`; `enums` and `links` arrays in stored order; a link its
+  row's label, or the column `--link` names (one that stands alone — not money, a quantity or a
+  link); a row `elsewhere` the name it holds; a computed column only when `--columns` names it.
+- **The same bytes every time**: two-space indent, LF, a trailing newline. Written atomically (a
+  temporary file renamed over), and not at all when the file already holds them.
+- **`--check` writes nothing**: exit 0 when the file holds exactly these bytes, 1 when it differs or
+  is missing (naming the file), 2 for a bad argument, a refused document or a missing format.
+  Stdout is one line saying what was written or found; a refusal goes to stderr.
+
+**`export_format_rows` is the same from a conversation**, its arguments as JSON (`link` an object),
+`to` required and read against the document's folder: **a path outside that folder or its
+subfolders is refused with a sentence** — a document someone sends cannot make a model write
+anywhere else on the machine; the command line writes wherever a person tells it. `check: true`
+answers whether the file is current. It reads the document and never writes it, so it is a read for
+parity; it writes a file, so its hints say it writes (D-602).
+
 ## A file on this computer (M37 U6)
 
 **A `file` column holds where a file is** — `scans/receipt.pdf` beside the document, an absolute

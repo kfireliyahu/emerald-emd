@@ -214,6 +214,7 @@ export const settings = {
       delete_format: 'Removes a format and every row in it.',
       format_rows: 'Reads a format’s rows, and what its claims say about each one.',
       show_format: 'Shows a format’s rows as the app’s table, in the conversation.',
+      export_format_rows: 'Writes a format’s rows to a JSON file, the same bytes every time.',
       format_problems: 'Says what looks wrong in a format’s rows.',
       search_document: 'Finds a word anywhere in the document, or scans it before sharing.',
       start_here: 'Answers what to start from: what is ready to start, open, and latest.',

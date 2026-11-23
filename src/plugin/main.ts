@@ -14,6 +14,7 @@ import { SKILLS_FLAG } from './catalog.ts'
 import { createServer } from './server.ts'
 import { claudeConfigDir, parseInitArgs, runInit } from './init.ts'
 import { parseWatchArgs, runWatch } from './watchCommand.ts'
+import { parseExportArgs, runExport } from './exportCommand.ts'
 
 /**
  * `--engine-only` offers the engine's tools and not the ledger's (M22 U0).
@@ -31,7 +32,7 @@ import { parseWatchArgs, runWatch } from './watchCommand.ts'
 const argv = process.argv.slice(2)
 
 /**
- * **`watch` is one of two other things this file runs** (M44 U3, D-441), `init` the second (M50 U1): a
+ * **`watch` is one of three other things this file runs** (M44 U3, D-441), `init` the second (M50 U1) and `export` the third (M63 U1): a
  * subcommand rather than a second bin, because the server is one file a person
  * already has and `build:plugin` writes one server — a second entry would be a
  * second thing to build, ship and keep in step. There, and only there, stdout
@@ -49,6 +50,23 @@ if (argv[0] === 'init') {
     process.exitCode = 2
   } else {
     process.exitCode = await runInit(args.value, { configDir: claudeConfigDir() }, {
+      line: (text) => process.stdout.write(`${text}
+`),
+      complain: (text) => process.stderr.write(`${text}
+`),
+    })
+  }
+} else if (argv[0] === 'export') {
+  // **`export`, the third** (M63 U1, D-601): a format's rows to a JSON file,
+  // the same bytes every time — `exportCommand.ts`. Run by a person or a
+  // build, so stdout is one line saying what was written.
+  const args = parseExportArgs(argv.slice(1), process.cwd())
+  if (!args.ok) {
+    process.stderr.write(`${args.error}
+`)
+    process.exitCode = 2
+  } else {
+    process.exitCode = await runExport(args.value, {
       line: (text) => process.stdout.write(`${text}
 `),
       complain: (text) => process.stderr.write(`${text}

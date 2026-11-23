@@ -103,6 +103,7 @@ describe('the MCP server', () => {
       'extend_format',
       'delete_format',
       'format_rows',
+      'export_format_rows',
       'show_format',
       'format_problems',
       'search_document',
@@ -930,6 +931,7 @@ describe('the server makes zero network calls', () => {
         'extend_format',
         'delete_format',
         'format_rows',
+        'export_format_rows',
         'show_format',
         'format_problems',
         'search_document',
@@ -1084,8 +1086,10 @@ describe('the server makes zero network calls', () => {
       // ledger is seeded in — ~280 chars, trimmed first. 58.5k since M61 U2-U3
       // (D-592, D-593): `accept_entries` and `follow_ups` on each of
       // `land_units`' units — two parameters, ~400 chars, its description
-      // trimmed first.
-      expect(engineSize).toBeLessThan(58_500)
+      // trimmed first. 60k since M63 U1 (D-601): `export_format_rows`, a
+      // new tool — growth, ~1.2k chars, its `match` pointing at `format_rows`'
+      // rather than saying it again.
+      expect(engineSize).toBeLessThan(60_000)
     })
   })
 })

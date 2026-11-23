@@ -838,8 +838,8 @@ export const MATCH_PROP = {
 
 export const SEARCH_PROP = stringProp('A substring, in every column as shown but yes/no.')
 
-/** The columns a caller asked to see, or every one of them. */
-function chosenColumns(
+/** The columns a caller asked to see, or every one of them. Shared with `export_format_rows` (M63 U1). */
+export function chosenColumns(
   declaration: FormatDeclaration,
   args: Args,
   worked: readonly string[] = [],

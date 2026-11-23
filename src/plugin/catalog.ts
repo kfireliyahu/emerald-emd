@@ -61,6 +61,7 @@ export const TOOL_GROUPS: readonly ToolGroup[] = [
     tools: [
       reads('format_rows', 'Reads a format’s rows, and what its claims say about each one.'),
       reads('show_format', 'Shows a format’s rows as the app’s table, in the conversation.'),
+      writes('export_format_rows', 'Writes a format’s rows to a JSON file, the same bytes every time.'),
       reads('format_problems', 'Says what looks wrong in a format’s rows.'),
       reads('search_document', 'Finds a word anywhere in the document, or scans it before sharing.'),
       reads('start_here', 'Answers what to start from: what is ready to start, open, and latest.'),

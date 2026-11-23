@@ -97,6 +97,7 @@ import { claimUnitsTool, landUnitsTool } from './tools/landing.ts'
 import { searchDocumentTool } from './tools/searchDocument.ts'
 import { startHereTool } from './tools/startHere.ts'
 import { showFormatTool, frameCopyTool, servedPage } from './tools/sheet.ts'
+import { exportFormatRowsTool } from './tools/exportRows.ts'
 import { guideStatusTool } from './tools/guide.ts'
 import { keepPacksTool } from './tools/packs.ts'
 import { chooseCategoriesTool, createDocumentTool, updateAccountTool } from './tools/setup.ts'
@@ -289,6 +290,9 @@ export const ENGINE_TOOLS: readonly PluginTool[] = [
   extendFormatTool,
   deleteFormatTool,
   formatRowsTool,
+  // M63 U1 (D-601): the same rows, to a JSON file a build reads — the
+  // command line's `export`, inside the document's folder only.
+  exportFormatRowsTool,
   // M41 U1: the same answer, and in a client that draws MCP Apps the app's own
   // sheet of it in the conversation — the one tool here with a page.
   showFormatTool,

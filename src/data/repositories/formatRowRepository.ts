@@ -101,6 +101,12 @@ export interface RowQuery {
    */
   readonly order?: string
   readonly descending?: boolean
+  /**
+   * A stored column ties in `order` are broken by, ascending, before the id
+   * (M63 U1, D-601): an export orders its ties by the label column, so two
+   * documents holding the same rows write the same file whatever ids they drew.
+   */
+  readonly thenBy?: string
   readonly limit?: number
   readonly offset?: number
 }
@@ -1131,12 +1137,14 @@ function orderClause(declaration: FormatDeclaration, query_: RowQuery): string {
   const direction = query_.descending === true ? 'DESC' : 'ASC'
   // A computed column sorts by what its view says (M49 U1, D-471).
   const computed = column === undefined ? computedSql(declaration, query_.order, query_) : undefined
-  if (computed !== undefined) return ` ORDER BY ${computed} ${direction}, ${quoteIdentifier(ROW_ID_COLUMN)} ASC`
+  const tie = query_.thenBy === undefined ? undefined : columnOf(declaration, query_.thenBy)
+  const then = tie === undefined || isListType(tie.type) ? '' : `${quoteIdentifier(tie.type === 'money' ? moneyColumnNames(tie).minor : tie.name)} ASC, `
+  if (computed !== undefined) return ` ORDER BY ${computed} ${direction}, ${then}${quoteIdentifier(ROW_ID_COLUMN)} ASC`
   // A list has no one value to sort by (M27 U2, D-300).
-  if (column === undefined || isListType(column.type)) return identity
+  if (column === undefined || isListType(column.type)) return then === '' ? identity : ` ORDER BY ${then}${quoteIdentifier(ROW_ID_COLUMN)} ASC`
 
   const stored = column.type === 'money' ? moneyColumnNames(column).minor : column.name
-  return ` ORDER BY ${quoteIdentifier(stored)} ${direction}, ${quoteIdentifier(ROW_ID_COLUMN)} ASC`
+  return ` ORDER BY ${quoteIdentifier(stored)} ${direction}, ${then}${quoteIdentifier(ROW_ID_COLUMN)} ASC`
 }
 
 /** A computed column's value for the row being read, or nothing when it is not one that compiles. */

@@ -502,6 +502,7 @@ written out here.
 | D-597 | 2026-11-18 | A row's action is carried by the conversation that wrote the row, through the connectors that conversation already has; a row typed in the app waits, pending in the document, for the next conversation; Emerald holds no login of another service and starts no session of its own | M62 |
 | D-598 | 2026-11-18 | A conversation asks once for everything waiting — these rows were added, act on them? — and deleting a row, or moving it to another state, leaves what its action made elsewhere alone | M62 |
 | D-601 | 2026-11-23 | A format's rows go out as JSON: a subcommand of the server, a tool that writes only inside the document's folder, and saved exports as rows; money as exact text beside its currency, the same bytes every time | M63 |
+| D-602 | 2026-11-23 | The export tool is marked a write: it reads the document and never writes it, so parity counts it a read, but it writes a file, so `readOnlyHint` is false, not destructive, idempotent | M63 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -745,6 +746,25 @@ writes anywhere; saved exports kept in each format's declaration.
 
 **Consequences.** M63's four units: one format to a file (U1), child rows folded in (U2), saved
 exports as a pack's rows (U3), the app's button (U4).
+
+## D-602 · 2026-11-23 · The export tool is marked a write: it reads the document and never writes it, so parity counts it a read, but it writes a file, so `readOnlyHint` is false, not destructive, idempotent <a id="d-602"></a>
+
+**Context.** M63 U1's brief called `export_format_rows` read-only, since it only reads the document
+and gives the engine no write (D-227). But `readOnlyHint` is what a client shows a person before it
+approves a call, and `annotations.test.ts` defines it as *the call never writes*; this one puts a file
+on disk, and overwrites one already there.
+
+**Decision.** Its hints say it writes: `readOnlyHint: false`, `destructiveHint: false` (it replaces
+only the bytes of the export it is asked for, inside the document's folder — D-601), `idempotentHint:
+true` (the same call twice leaves the same file, and the second writes nothing). The catalog says
+*writes*. Parity is untouched: it reaches no engine write, so no capability row is owed.
+
+**Rejected.** `readOnlyHint: true` — a client could run it unasked and a file would appear; a
+destructive mark — it can only replace a file in the document's own folder with rows of that
+document, which a person asked for by name.
+
+**Consequences.** `server.test.ts`'s list of reads leaves it out; the engine-only definitions budget
+is 60k.
 
 ## Related
 
