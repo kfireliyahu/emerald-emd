@@ -5029,6 +5029,16 @@ answer: A third pack, `exports` (src/data/packs/exports/), of one format `export
 state: live
 affects: "docs/plugin.md\ndocs/04-data-model.md\nREADME.md"
 
+### D-605
+date: 2026-11-23
+milestone: M63
+scope: app
+title: The desktop app writes a document's saved exports from Settings › Export: the page works the bytes out with the command line's own code, moved out of the plugin; the main process holds each file to the open document's folder and compares it on disk without handing its bytes to the page; and Export is offered to a document keeping the ledger or the exports pack
+question: Where does the code that turns a saved export into bytes live once the renderer needs it, what crosses the bridge, and how does a document keeping saved exports but no ledger reach Settings › Export?
+answer: exportRows, savedExportTexts, chosenColumns and the filter refusal live in src/data/export/formatExport.ts (moved, not copied), taking a database and an ExportContext {on, resolve}; the plugin passes its clock and its own resolve. ToolInputError moved to src/core/inputError.ts (tool.ts re-exports it). The bridge's exports.check/write send {file, text}[] with the open document's path; the main process (electron/exportFiles.ts) requires a granted path equal to the watched document, holds each file with inDocumentFolder (the plugin's withinFolder moved into electron/bridge.ts with node:path handed in, so the shell still reaches into src/ only for its words, D-588), and answers current/differs/missing/written/refused, never a file's bytes. Export is the engine's place with anyOf: ['ledger', 'exports'] on its rail entry: no ledger guard, the CSV rows only where the ledger is kept, the saved exports only in the shell. Unsaved changes: exported from what is open, said so; never saved: save first. Rejected: reading files into the page, a second folder check in electron/ or the shell importing it from src/, Export offered to every document, moving the plugin's resolve to data/.
+state: live
+affects: "docs/02-architecture.md\ndocs/plugin.md"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -10847,10 +10857,10 @@ appears: on no screen, in no tool text, not in the tour
 state: live
 
 ### Export
-means: Settings: the months as a spreadsheet (CSV); Save as is how the whole document goes elsewhere (D-313).
+means: Settings: what a document holds, as files other programs open — the months and the transactions as spreadsheets (CSV) where the ledger is kept, and in the desktop app a document's saved exports (the exports pack's rows) written as JSON into its folder; Save as is how the whole document goes elsewhere (D-313, D-605).
 screen_hebrew: ייצוא
 named_by: D-313
-scope: ledger
+scope: app
 shown_in: rail
 appears: screen 9 in 4 files (screens/Export 6, home/parts 1, nav 1, …); tools 2 in 2 files (tools/ingest 1, tools/intake 1)
 state: live
@@ -17646,11 +17656,18 @@ report: M63 U3 built at 6bf8139 on main. A third pack, `exports` (src/data/packs
 milestone: M63
 scope: app
 title: The desktop app writes a document's saved exports from Settings › Export
-state: planned
+landed: 2026-11-23
+decision: D-605
+state: built
 brief: "**Why.** The maintainer picked an app button too (D-601): a person who keeps a document's exports as rows should not need a terminal to write them.\n\n**Do.** On the Settings › Export screen (`src/ui/screens/Export.tsx`, which already holds the ledger's CSV), a section that lists the document's saved exports (U3's rows) with each file's state: current, stale or missing, worked out with U1's shaping in the renderer and compared with what is on disk. One button writes every stale or missing file; the answer says what was written. Desktop shell only: the browser build shows no section, and writing goes through a new bridge call that refuses any path outside the open document's folder, checked in the main process, never only in the renderer. An unsaved document is exported from what is open, and the section says so. No saved exports: one line pointing at the pack. The term `Export` widens from the ledger to the app: update its `term` row. Follow the `ui` rule rows and `src/ui/theme/tokens.css`; measure with `npm run probe:screens`.\n\n**Tests.** The bridge refuses `../x.json` and a path in another folder; the section is absent in the browser build; stale and current are shown correctly for a fixture document."
-files: src/ui/screens/Export.tsx (the section), electron/bridge.ts and electron/main.ts (a write confined to the document's folder), the shaping from U1 reused in the renderer, the Export term row
+files: src/ui/screens/Export.tsx, src/ui/export/SavedExports.tsx, src/ui/export/savedLines.ts (+test), src/data/export/formatExport.ts, src/plugin/exportCommand.ts, src/plugin/tools/formats.ts, src/plugin/tools/tool.ts, src/core/inputError.ts, electron/bridge.ts, electron/exportFiles.ts (+test), electron/main.ts, electron/preload.ts, src/data/storage/desktop.ts, src/ui/nav.ts (+test), src/i18n/en/settings.ts, src/i18n/he/settings.ts, docs/09-decision-log.md, docs/02-architecture.md, docs/plugin.md
 blocks: ["M63 U3"]
+taken_by: run-milestone driver
+started: 2026-11-23
+branch: main
+commit: 0772efd
 paths: "src/ui/screens/Export.tsx\nelectron/bridge.ts\nelectron/main.ts"
+report: M63 U4 built at 0772efd on main; docs:check green after landing. Settings › Export in the desktop shell has a Saved exports section: each export row's file (Bidi, mono), how many rows of which format it holds, and its state as a chip (Current, Stale, Missing, Not written with the reason: the document's sentence for an unknown format/column, or 'outside this document's folder'). One secondary button 'Write n files' (just 'Write', disabled, when nothing is owed) writes the stale and missing ones; the answer line says 'Wrote 2 files: books.json, out/titles.json.'. Unsaved changes: a line says it is written from what is open; never-saved document: a line says save first and the button is disabled. No saved exports: one line, linking to Settings › Packs (pack not kept) or to the Saved export table (kept, no rows). Browser build: no section (shellExports() undefined). D-605: the shaping (exportRows + helpers, savedExportTexts, chosenColumns, filterRefusalText/filteredQuery) moved from src/plugin/exportCommand.ts and tools/formats.ts to src/data/export/formatExport.ts, with ExportContext {on, resolve} so the plugin keeps its clock and its model-voiced resolve; ToolInputError moved to src/core/inputError.ts. Bridge: exports.check/write(path, [{file,text}]) on EXPORT_CHANNELS; main requires granted(path) === the watched document and holds every file with inDocumentFolder (withinFolder moved into electron/bridge.ts, node:path handed in, because electron/language.test.ts enforces D-588: the shell reaches into src/ only for its words); nothing on disk is read into the page. Rail: the Export entry lost pack:'ledger' and got anyOf:['ledger','exports'], so a document keeping only the exports pack is offered it and opens it with no ledger guard; the ledger's CSV rows draw only when the ledger is kept. Term Export widened to the app (scope app). Tests: electron/exportFiles.test.ts (refuses ../x.json and a path in another folder, reads/writes neither, writes the rest; current/differs/missing; current left unwritten; real disk; shape check), src/ui/export/savedLines.test.ts (fixture document with the exports pack: current/stale/missing/refused lines and what the button writes; no section outside the shell), nav.test.ts (Export offered for ledger or exports, not neither; packOf undefined). related (129 files) + privacy + typecheck green. probe:screens on demo and project, light and dark: 0 low contrast, 0 off the ramp from this screen (two 13px hits are a notice's). Shell proven over CDP on a scratch document made by the built server (exports pack, 3 rows incl ../outside.json, books.json made stale, out/titles.json deleted): rail showed Export, states Not written/Stale/Missing, Write 2 files wrote both, states became Current, nothing written outside. check:tours skipped: no tour drives Settings › Export. Not done: no component render test (the repo has none; the logic is in savedLines.ts); the section's Hebrew not seen on screen.
 
 <!-- emerald: views.md -->
 ---
@@ -17810,5 +17827,5 @@ milestone: 2026-11-23
 open_question: 2026-11-18
 review_entry: 2026-11-13
 rule: 2026-11-16
-term: 2026-11-11
+term: 2026-11-23
 unit: 2026-11-23
