@@ -501,6 +501,7 @@ written out here.
 | D-596 | 2026-11-17 | A form's field is sized by dragging its edge, and the width is the form's own: kept in the input view's address as `width:<column>=<px>`, the same on a dashboard's block and on the form's page, set in a conversation with `arrange_views` `widths`, and never the format's table widths | Later |
 | D-597 | 2026-11-18 | A row's action is carried by the conversation that wrote the row, through the connectors that conversation already has; a row typed in the app waits, pending in the document, for the next conversation; Emerald holds no login of another service and starts no session of its own | M62 |
 | D-598 | 2026-11-18 | A conversation asks once for everything waiting — these rows were added, act on them? — and deleting a row, or moving it to another state, leaves what its action made elsewhere alone | M62 |
+| D-601 | 2026-11-23 | A format's rows go out as JSON: a subcommand of the server, a tool that writes only inside the document's folder, and saved exports as rows; money as exact text beside its currency, the same bytes every time | M63 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -710,6 +711,40 @@ worse than one left behind).
 its document and calendar were the maintainer's picks too (a new meals document of his own, a
 calendar of its own).
 Replacing on change (a tool with no update) is unaffected: a changed row is not a deleted one.
+
+## D-601 · 2026-11-23 · A format's rows go out as JSON: a subcommand of the server, a tool that writes only inside the document's folder, and saved exports as rows; money as exact text beside its currency, the same bytes every time <a id="d-601"></a>
+
+**Context.** D-285 named an export as the way out of a document, and none was built. A project
+that keeps its data in a `.emd` needed the rows as JSON for its build and a stale-data check, and
+the only way out without a model was its own script reading the SQLite tables, which would not
+have read a document stored as text. Its list, in order of value: a headless command, the same
+filters as `format_rows`, plain values, child rows folded in, the same bytes every time, a
+`--check`, saved exports in the document, and the same as a tool.
+
+**Decision.** The maintainer's picks:
+
+1. **Money and quantity as exact text**, `"12.90"`, beside their own `<column>_currency` and
+   `<column>_unit` keys: the shape `record_format_rows` takes, so an export reads back in.
+2. **Saved exports are rows** of a format the document declares, seen and edited in the app like
+   any table, and written from the command line, a conversation and an app button.
+3. **The tool writes only inside the document's folder** and the folders under it; the command
+   line writes wherever it is told.
+4. **M63 goes before M62.**
+
+The planning session's picks, not yet the maintainer's: `export` is a subcommand of the one server
+file beside `init` and `watch`; a file is a JSON array of objects with keys in declaration order,
+empty columns left out, two-space indent, LF and a trailing newline, rows in the asked order with
+ties broken by the label column and then the id; no ids unless asked; a link is its row's label;
+`links` and `enums` are arrays in stored order; a percent is a fraction written from its digits,
+never through a float; `--check` writes nothing and exits 1 when a file differs or is missing; a
+saved export's file outside the document's folder is refused, so a document someone sends cannot
+make the command write elsewhere; the app's button is on Settings › Export, desktop shell only.
+
+**Rejected.** A number for money (D-003); minor units (a reader has to know to divide); a tool that
+writes anywhere; saved exports kept in each format's declaration.
+
+**Consequences.** M63's four units: one format to a file (U1), child rows folded in (U2), saved
+exports as a pack's rows (U3), the app's button (U4).
 
 ## Related
 
