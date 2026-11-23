@@ -5009,6 +5009,16 @@ answer: readOnlyHint false, destructiveHint false (it replaces only the export f
 state: live
 affects: "docs/plugin.md\nsrc/plugin/server.test.ts"
 
+### D-603
+date: 2026-11-23
+milestone: M63
+scope: plugin
+title: A nest is one string a person types — `keyword.card as=keywords order=position` — the same on the command line, in the tool and in a saved export's cell; its link back is read off the graph, refused when there are two, and left out of each child
+question: M63 U2 folds a child format's rows into each exported row. How does the command line give a nest's key, order and columns, in a form U3's saved export can hold one per line in one cell, and what are the rules of the fold?
+answer: One string per nest: the child format or `child.link`, then any of `as=<key>`, `order=<column>`, `descending`, `columns=a,b`, space-separated (`parseNest` in src/plugin/exportCommand.ts). `--nest` takes it, repeatable; the tool's `nest` takes `{format, as, order, descending, columns}` objects or the same strings. The link back is `linksBack` over connections.ts' `edgesOf` (a `links` column counts, a dangling one does not); two links to the parent's format are refused naming both as child.link; the link back is left out of each child and naming it in `columns` is refused; children take the parent's ids flag; an `as` the parent's objects already have is refused; a row with none has `[]`; one level only (`nest=`, a `nest` key, `a.b.c` refused). Rejected: separate --nest-as/--nest-order flags (pair by position, cannot live in one cell), JSON in the flag, a child match.
+state: live
+affects: docs/plugin.md
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -17592,11 +17602,18 @@ report: M63 U1 built at 617e594 on main; docs:check green after landing. `emeral
 milestone: M63
 scope: plugin
 title: Rows that point at a row are folded into it: a card's keyword rows as its keywords, in position order
-state: planned
+landed: 2026-11-23
+decision: D-603
+state: built
 brief: "**Why.** The project that asked for M63 joins card-keyword rows into each card by hand: each card gets a `keywords` array sorted by `position`. A child format linked to its parent is common (a recipe's ingredients, a milestone's units), and the export should do that join.\n\n**Do.** `--nest <child format>` (repeatable) on the subcommand and `nest: [{format, as, order, descending, columns}]` on U1's tool. The child's rows whose link points at the exported row are folded into it as an array under `as` (by default the child format's name), in the child's `order` (by default its label column, ties by id as in U1), with the child's own values shaped as U1 shapes them, and the link back to the parent left out of each child object. The engine already knows which formats link to which (`src/domain/format/connections.ts`): find the link column from there. When the child has more than one link to the parent's format, refuse and ask for which (`--nest keyword.card`). A row with no children gets an empty array, so every object has the same keys. One level only; a nest inside a nest is refused with a sentence. `--check` covers nested output the same way.\n\n**Tests.** A parent with three children folds them in by position; the back link is left out; two links to the parent are refused without a column; a childless parent has `[]`; both encodings still give the same bytes.\n\n**Docs.** `docs/plugin.md`."
-files: src/domain/format/export.ts (folding), src/domain/format/connections.ts (read, to find the link back), src/plugin/exportCommand.ts and the tool from U1 (the nest argument), docs/plugin.md
+files: "src/domain/format/export.ts (NestedShape, omit, linksBack over connections.ts edgesOf, childrenByParent)\nsrc/plugin/exportCommand.ts (NestAsk, parseNest, --nest, nestedOf/linkBack, shapeOf/checkedColumns factored out, the line names what was folded in)\nsrc/plugin/tools/exportRows.ts (nest: objects or the command line's strings)\nsrc/domain/format/export.test.ts, src/plugin/exportCommand.test.ts\ndocs/plugin.md, docs/09-decision-log.md (D-603)"
 blocks: ["M63 U1"]
+taken_by: run-milestone driver
+started: 2026-11-23
+branch: main
+commit: a14a51d
 paths: "src/domain/format/export.ts\nsrc/plugin/exportCommand.ts\nsrc/plugin/tools/formats.ts\ndocs/plugin.md"
+report: M63 U2 built at a14a51d on main. `--nest "<child>[.<link>] [as=<key>] [order=<column>] [descending] [columns=a,b]"` (repeatable) on the export subcommand, and `nest` on export_format_rows as an array of {format, as, order, descending, columns} objects or the same strings (D-603: one string a person types, so U3's nests column holds one per line and reads them with parseNest). The child's rows whose link points at each exported row are folded in as an array under `as` (child format's name by default), in the child's order (label column by default, ties by the label column then the id via U1's thenBy), shaped by the same shapeOf as the parent (computed columns too when named), the link back left out (naming it in columns is refused); children take the parent's --ids; a `links` column counts. The link back is found with linksBack (export.ts) over connections.ts edgesOf; two links to the parent's format refused asking for child.link; no link refused; a key the parent already has (column, _currency/_unit, id, computed) refused as `as`; one level only (nest= in the string, a nest key in the tool's object, a.b.c refused with a sentence). A childless row has []. The stdout line says `2 rows of card, with 3 rows of keyword folded in`; --check covers the nested bytes. Pure grouping (childrenByParent) and NestedShape/omit in src/domain/format/export.ts; exportRows refactored into checkedColumns/shapeOf/nestedOf in src/plugin/exportCommand.ts. Tests: three children folded by position with the back link left out and money beside its currency, childless [], text and SQLite byte-identical, tool object and string give the same bytes, default key and label order descending, --check 0 then 1 after an edit; two links refused without a column and accepted with one, a non-link column refused, the back link in columns refused, no link refused, nest inside nest refused three ways, key clash refused; childrenByParent order and links dedupe. related (12 files, 104 tests) + privacy + typecheck green. The engine-only definitions budget (60k) is held: the nest schema's wording was trimmed to fit (items declare only `format`; as/order/descending/columns are in the description) rather than raising it. build:plugin and the real subcommand tried on a scratch document in the session scratchpad: write, --check 0, a nest inside a nest exit 2. ask-cold --only engine run: its two flags are the standing cloud/finance phrasings, nothing about export. check:tours skipped: nothing a tour drives changed. Not done, by brief: saved exports (U3), the app button (U4). No child filter (match) on a nest: a second export does it.
 
 ### M63 U3
 milestone: M63
