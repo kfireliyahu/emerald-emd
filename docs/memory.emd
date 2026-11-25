@@ -18080,10 +18080,13 @@ report: M64 U4 landed at 599fbf9 on m64-redesign. Tokens: A's greys in both them
 milestone: M64
 scope: ui
 title: Home rebuilt in the new direction, the redesign-screen skill written from it, and the maintainer's one look (STOP)
-state: planned
+state: in_progress
 brief: "**Why.** Home is the first screen a newcomer meets and the densest, at about twelve blocks today. It is also the maintainer's one look (D-608): if he likes it, everything after runs without him.\n\n**Do.** 1. Rebuild Home in the new direction around one question (what happened to my money this month), with U1's figures and U4's displays, on U16's synthetic year. Start from U2's inventory row: for every block, keep it, move it one click behind what it explains (a figure opens its breakdown, a category its rows), or cut it when another screen already shows it (All months is the Year screen); write the table in the report. The waiting questions, the place to read files and the guide become one strip that appears only when something needs the person. 2. **Taste check**: Impeccable's finish-reviewer on Home from the contact sheet against DESIGN.md; make its material fixes; design-review for the rules. 3. Write .claude/skills/redesign-screen/SKILL.md from what worked: read the inventory row and DESIGN.md; the screen's question in its title; the keep, move or cut table with a reason per block; nothing leaves without a place one click behind it, and the conversation still reaches it (parity); the displays from the kit, never a one-off; probe before and after, and the route leaves the budget's exempt list; the taste check and its fixes before landing; light, dark and Hebrew; check:tours; synthetic documents only, never the maintainer's (D-608); the report lists what moved where. Point design-review at it.\n\n**Tests.** Home's existing tests updated on purpose; probe:screens --budget passes for Home.\n\n**STOP: the maintainer's one look.** Land the unit, then ask him to open the app on the demo year (and his own document, if he wants, himself) and look at Home: does it look good, is it clear, is anything missing. If he likes it, the driver runs the rest without him. If not, his words decide what is redone: U5, or U3 and U4 with it."
 files: Home and its parts; a new project skill that every later screen unit follows.
 blocks: ["M64 U1","M64 U4"]
+taken_by: run-milestone driver
+started: 2026-11-25
+branch: m64-redesign
 paths: "src/ui/screens/Home.tsx\nsrc/ui/screens/HomeShell.tsx\nsrc/ui/home/\n.claude/skills/redesign-screen/"
 
 ### M64 U6
