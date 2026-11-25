@@ -26,6 +26,8 @@ import { home as heHome } from './he/home.ts'
 import { reading as heReading } from './he/reading.ts'
 import { transactions as heTransactions } from './he/transactions.ts'
 import { merchants as heMerchants } from './he/merchants.ts'
+import { paychecks as enPaychecks } from './en/paychecks.ts'
+import { paychecks as hePaychecks } from './he/paychecks.ts'
 import type { Language } from './language.ts'
 
 /**
@@ -62,6 +64,8 @@ export const ENGLISH = {
   guide: enGuide,
   chrome: enChrome,
   palette: enPalette,
+  // M64 U8 (D-620): Paychecks and Deduction types.
+  paychecks: enPaychecks,
 } as const
 
 export type English = typeof ENGLISH
@@ -92,6 +96,7 @@ export const HEBREW: { readonly [A in Area]?: Translation<A> } = {
   guide: heGuide,
   chrome: heChrome,
   palette: hePalette,
+  paychecks: hePaychecks,
 }
 
 const CATALOGUES: Readonly<Record<Language, unknown>> = { en: ENGLISH, he: HEBREW }

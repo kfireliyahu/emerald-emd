@@ -98,8 +98,16 @@ const U5 = [
   'src/ui/components/ViewTabs.tsx',
 ]
 
+/** M64 U8 (D-620): Paychecks with its panel and where the money went, and Deduction types. */
+const M64_U8 = [
+  'src/ui/screens/Paychecks.tsx',
+  'src/ui/paychecks/PaychecksPanel.tsx',
+  'src/ui/paychecks/WhereItWent.tsx',
+  'src/ui/screens/DeductionTypes.tsx',
+]
+
 /** The screens whose words are the catalogue's. A unit that translates a screen adds its files here. */
-export const TRANSLATED: readonly string[] = [...U4, ...U5]
+export const TRANSLATED: readonly string[] = [...U4, ...U5, ...M64_U8]
 
 /** Literals in a translated file that are not the app's words, by file, each with why. */
 const ALLOWED: Readonly<Record<string, readonly string[]>> = {

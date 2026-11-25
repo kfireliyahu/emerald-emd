@@ -517,6 +517,7 @@ written out here.
 | D-615 | 2026-11-25 | The report becomes the design language: A's tokens and two type steps, Plex in four weights, a rail of words whose sections' views are their tab strip, a kit of eight displays chosen by the shape of the data, a side panel and a waiting list, six ui rules rewritten and four added, and a density budget whose exempt list only shrinks | M64 |
 | D-616 | 2026-11-25 | Home is rebuilt as the report: the month in one sentence, left over its one figure, what waits one strip below it, four tiles that open their breakdowns beside the page, the fourteen months as the pager, and where it went beside the plan; All months and the by-month chart are the Year screen's, and a redesign-screen skill every later screen follows | M64 |
 | D-617 | 2026-11-25 | Where a screen's interactions open: reading more in the side panel, one value in place, a form of several fields in the same panel, a job of several steps on a page of its own with one way back, a choice in a popover, and a dialog only to confirm what cannot be undone | M64 |
+| D-620 | 2026-11-25 | Paychecks is rebuilt as the report: the month's paycheck in one sentence, net pay its one figure, the gross divided into taxes, funds, the rest and the net, each opening its lines beside the page (taxes by deduction type, month and year so far), what waits one strip below, net by month as the pager and every paycheck in a table; Deduction types reads as a table whose rows open their form beside it; a delete deletes at once with Undo where it happened, and the slip's form stays a page of its own | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1296,6 +1297,42 @@ left to each unit, ten screens would make ten choices. It extends *Detail opens 
 rather than adding a pattern.
 
 **Where.** `.claude/skills/redesign-screen/SKILL.md` (Where each thing opens), `DESIGN.md`.
+
+## D-620 · 2026-11-25 · Paychecks is rebuilt as the report: the month's paycheck in one sentence, net pay its one figure, the gross divided into taxes, funds, the rest and the net, each opening its lines beside the page (taxes by deduction type, month and year so far), what waits one strip below, net by month as the pager and every paycheck in a table; Deduction types reads as a table whose rows open their form beside it; a delete deletes at once with Undo where it happened, and the slip's form stays a page of its own <a id="d-620"></a>
+
+**Context.** M64 U8 redesigns Paychecks and Deduction types (D-614, D-615, D-617), with the jobs from
+U2's inventory: read a month's slip from gross to net, follow the net, see what went to the funds,
+check every month has a slip; and say what each line of a payslip is. Home's Taxes tile shows one
+figure a month (D-616), and Paychecks is where taxes are read in full by deduction type. The
+maintainer added to D-617 while the unit ran: a delete deletes at once with Undo near where it
+happened, the keys do what they do everywhere, and nothing moves under the pointer.
+
+**Decision.** Paychecks answers *what did my paycheck pay, and where did it go?* first, in words —
+one sentence, its amounts plain text so the screen keeps one display figure (net pay, against the
+three paychecks before) — then the gross divided by `MonthFlow` into taxes, funds, other deductions
+and the net. Each part opens its lines in the side panel: taxes by deduction type for the month and
+the year so far, the fund lines with the employer's side and where they pay into, the rest, where
+the net went; the gross opens the slip in full (lines, employer's side, totals, Edit and Delete), as
+does a row of *All paychecks*. What waits — a slip that does not add up, a saving line that pays into
+nothing, the bank disagreeing, a month with no slip — is one `WaitingList` below the answer. Net pay
+by month is the `MonthStrip` and pages the month; the bespoke net line, waterfall, drop box and full-page
+detail are gone. A visit can land on a month and a panel (`{ month, panel: 'tax' }`), which is
+how Home's Taxes tile can open toward it. Deduction types is a sentence and a table that reads; a row
+opens its form in the side panel (name, what the paycheck prints, kind as a `ChoiceField`, counts as,
+pays into, order, delete), and the likeliest link stays one click on the line. A paycheck or a type
+deletes at once, the note and its Undo in the panel and in the table where the row was, Ctrl+Z too;
+Delete on a focused row deletes it, Up and Down walk the rows, Enter opens. `MonthFlow` gains an
+optional `onOpen`; the domain gains `slipParts` and `totalsByType` so the screen sums nothing. Both
+routes leave the budget's `exempt` list, their words the catalogue's (`paychecks`, English and Hebrew).
+
+**Why.** The slip's form stays a page of its own rather than a panel form: a payslip is a dozen
+fields copied off paper with the reconciliation watched while they are typed, and it is the same form
+the reading flow confirms a read slip in — a job that takes over until it adds up, D-617's fourth
+place. An undo beats a confirmation wherever a paycheck can be written back, which it can.
+
+**Where.** `src/ui/screens/Paychecks.tsx`, `src/ui/paychecks/PaychecksPanel.tsx`,
+`src/ui/paychecks/WhereItWent.tsx`, `src/ui/screens/DeductionTypes.tsx`, `src/ui/charts/MonthFlow.tsx`,
+`src/domain/paycheck.ts`, `src/i18n/*/paychecks.ts`, `docs/redesign/budget.json`.
 
 ## Related
 

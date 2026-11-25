@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { Database } from 'sql.js'
 
-import { formatMoney, type CurrencyCode } from '@/core/money.ts'
+import type { CurrencyCode } from '@/core/money.ts'
 import { toYearMonthString, type YearMonth } from '@/core/time.ts'
 import { listDebts, planPayments } from '@/data/repositories/debtRepository.ts'
 import { listDeductionTypes } from '@/data/repositories/deductionTypeRepository.ts'
@@ -21,17 +21,21 @@ import { findSplitPlan, listSplitBuckets, planOnMonth } from '@/data/repositorie
 import { documentCurrency } from '@/data/repositories/statisticsRepository.ts'
 import { fixedPlanParts } from '@/domain/fixedExpenses.ts'
 import { resolveBasis, splitPlan } from '@/domain/splitter.ts'
-import { traceMonth, type MonthTrace, type TraceBreak, type TraceEnd, type TraceRow } from '@/domain/trace.ts'
+import { traceMonth, type MonthTrace, type TraceEnd, type TraceRow } from '@/domain/trace.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
+import { useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { kitMoney } from '@/ui/charts/kit.ts'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
+import { EmptyState } from '@/ui/components/WaitingList.tsx'
 
 /**
  * Where one month's money went — the payslip, the split, and the holding it is
- * sitting in today (M17's view, D-193), **as half of the month on Paychecks**
- * (M28 U4). It was a tab of its own; asked: *"where it went should not be
- * a separate tab of the paychecks"*. So it sits beside the slip it follows and
- * pages with it.
+ * sitting in today (M17's view, D-193). **Since M64 U8 (D-620) it is two halves
+ * of the side panel** rather than half of the page: what the split did with the
+ * net opens behind the net, and what payroll sent out of the gross before you
+ * saw it opens behind the funds.
  *
  * **It writes nothing and stores nothing.** Every row is a join between records
  * that already exist — D-179's test for the view, and the thing to keep true.
@@ -41,10 +45,11 @@ import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
  * **The half that stops is the half worth having.** Every row ends somewhere,
  * and where it cannot, it says which link is missing.
  */
-export function WhereItWent({ period }: { readonly period: YearMonth }) {
+export function WhereItWent({ period, half }: { readonly period: YearMonth; readonly half: 'split' | 'payroll' }) {
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
   const navigate = useNavigate()
+  const t = useT()
   const key = toYearMonthString(period)
   // `revision` is the document changing under the same `db`.
   const trace = useMemo(
@@ -52,32 +57,23 @@ export function WhereItWent({ period }: { readonly period: YearMonth }) {
     [db, revision, key],
   )
   if (trace === undefined) return null
+  const rows = half === 'split' ? trace.split : trace.payroll
+  const empty =
+    half === 'payroll'
+      ? t('paychecks.trace.payrollEmpty')
+      : trace.planName === undefined
+        ? t('paychecks.trace.noPlan')
+        : t('paychecks.trace.planEmpty')
 
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-baseline justify-between gap-3">
-        <span className="fc-label text-ink-secondary uppercase">Where it went</span>
-        {trace.stopped.minor > 0 && (
-          <span className="text-caption text-negative tabular-nums">{formatMoney(trace.stopped)} stops here</span>
-        )}
-      </div>
-
-      <Flow
-        rows={trace.split}
-        empty={
-          trace.planName === undefined
-            ? 'No split plan was applied to this month, so the net is followed no further.'
-            : 'The plan applied to this month routes nothing.'
-        }
-        onGo={(to) => navigate(to)}
-      />
-
-      <span className="fc-label mt-2 text-ink-secondary uppercase">Out of the gross, before you saw it</span>
-      <Flow
-        rows={trace.payroll}
-        empty="Nothing on this paycheck is routed anywhere. A pension, a study fund or a payroll loan becomes an arrow here once its deduction type names what it pays into."
-        onGo={(to) => navigate(to)}
-      />
+    <div className="flex flex-col gap-2">
+      {half === 'split' && trace.stopped.minor > 0 && (
+        <span className="text-caption text-ink-secondary tabular-nums">
+          <span aria-hidden className="me-1.5 inline-block size-2 rounded-full bg-negative" />
+          {t('paychecks.trace.stops', { amount: kitMoney(trace.stopped) })}
+        </span>
+      )}
+      <Flow rows={rows} empty={empty} onGo={(to) => navigate(to)} />
     </div>
   )
 }
@@ -141,15 +137,15 @@ function Flow({
   empty: string
   onGo: (to: string) => void
 }) {
-  if (rows.length === 0) return <p className="text-caption text-ink-secondary">{empty}</p>
+  if (rows.length === 0) return <EmptyState say={empty} />
   return (
-    <ul className="flex flex-col">
+    <ul className="m-0 flex list-none flex-col p-0">
       {rows.map((row) => (
         <li
           key={row.id}
-          className="grid min-h-9 grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-2.5 border-b border-hairline py-1.5"
+          className="grid min-h-10 grid-cols-[16px_minmax(0,1fr)_auto] items-center gap-2.5 border-b border-hairline py-1.5"
         >
-          <span className={row.end.kind === 'BROKEN' ? 'text-negative' : 'text-ink-tertiary'}>
+          <span className={`rtl:-scale-x-100 ${row.end.kind === 'BROKEN' ? 'text-negative' : 'text-ink-secondary'}`}>
             <ActionGlyph name="arrow" size={14} />
           </span>
           <span className="min-w-0">
@@ -158,7 +154,7 @@ function Flow({
               <Bidi>{row.via}</Bidi>
             </small>
           </span>
-          <span className="tabular-nums">{formatMoney(row.amount)}</span>
+          <span className="tabular-nums" dir="ltr">{kitMoney(row.amount)}</span>
         </li>
       ))}
     </ul>
@@ -171,13 +167,12 @@ function Flow({
  * month into a screen that looks like an error.
  */
 function Arrival({ end, onGo }: { end: TraceEnd; onGo: (to: string) => void }) {
+  const t = useT()
   const link = 'text-start text-ink underline-offset-4 transition-colors duration-[var(--duration-micro)] hover:underline'
   if (end.kind === 'HOLDING') {
     return (
       <button type="button" className={link} onClick={() => onGo('/wealth')}>
-        <Bidi>{end.holdingName}</Bidi>
-        <span className="text-ink-secondary"> at </span>
-        <Bidi>{end.placeName}</Bidi>
+        <Phrase text={t('paychecks.trace.at')} parts={{ holding: <Bidi>{end.holdingName}</Bidi>, place: <Bidi>{end.placeName}</Bidi> }} />
       </button>
     )
   }
@@ -193,26 +188,11 @@ function Arrival({ end, onGo }: { end: TraceEnd; onGo: (to: string) => void }) {
   if (end.kind === 'DEBT') {
     return (
       <button type="button" className={link} onClick={() => onGo('/wealth/debts')}>
-        <Bidi>{end.debtName}</Bidi>
-        <span className="text-ink-secondary"> paid down</span>
+        <Phrase text={t('paychecks.trace.paidDown')} parts={{ debt: <Bidi>{end.debtName}</Bidi> }} />
       </button>
     )
   }
-  if (end.kind === 'SPENT') return <span className="text-ink-secondary">Spent</span>
-  return (
-    <span>
-      <span className="text-negative">Stops here</span>
-      <span className="text-ink-secondary">: {BREAK_SENTENCE[end.reason]}</span>
-    </span>
-  )
-}
-
-/** One sentence each, and each names **the link** rather than the money. */
-const BREAK_SENTENCE: Readonly<Record<TraceBreak, string>> = {
-  DEDUCTION_NAMES_NOTHING: 'this deduction type does not say which fund, goal or debt it pays into',
-  GOAL_HAS_NO_HOLDING: 'the goal has no holding to put it in, so no deposit was written',
-  NOT_APPLIED: 'the plan proposed this and the suggestion was never accepted',
-  NO_PLAN_APPLIED: 'no split plan was applied to this month',
-  NOT_ASSIGNED: 'the plan left this unassigned',
-  TARGET_MISSING: 'what this is for is no longer in the document',
+  if (end.kind === 'SPENT') return <span className="text-ink-secondary">{t('paychecks.trace.spent')}</span>
+  // One sentence each, and each names **the link** rather than the money.
+  return <span className="text-ink-secondary">{t('paychecks.trace.stopsHere', { why: t(`paychecks.trace.breaks.${end.reason}`) })}</span>
 }
