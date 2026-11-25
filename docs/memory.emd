@@ -17843,18 +17843,25 @@ report: "M64 U16 built at d2198fe on worktree-agent-ac59d45bdee1e3b4a. Typecheck
 milestone: M64
 scope: ui
 title: A card statement with a refund imports: the total check sums signed amounts
-state: planned
+state: in_progress
 brief: Why: the import's printed-total check adds every row's magnitude (src/plugin/tools/ingest.ts totalsOf, and src/data/importer/statementBatch.ts the same), so a card statement whose printed total is net of a refund is refused as not reconciling, in the app and in a conversation. Found by M64 U16's year: both cards' refund months were refused (parse 5,260.57 vs printed 4,760.77, a 249.90 refund counted twice). Do: compare the printed total with the signed sum (charges less refunds) for a card statement, keeping magnitudes only where a file's sections need it; a test with a refund row on both card layouts; then drop the ignore_printed_total branch in scripts/demo-year.mjs. Out of scope: bank statements, which print no total.
 files: "src/plugin/tools/ingest.ts\nsrc/data/importer/statementBatch.ts\nsrc/data/importer/printedTotal.ts\nscripts/demo-year.mjs"
+taken_by: run-milestone driver
+started: 2026-11-25
+branch: m64-redesign
+paths: "src/plugin/tools/ingest.ts\nsrc/data/importer/statementBatch.ts\nsrc/data/importer/printedTotal.ts\nscripts/demo-year.mjs"
 
 ### M64 U2
 milestone: M64
 scope: ui
 title: What each screen is for: an inventory of every screen, density measured, and a contact sheet of the whole app
-state: planned
+state: in_progress
 brief: "**Why.** Nothing measures how much a screen holds or says what it is for (D-606), and nobody can see the whole app at once without driving a browser screen by screen (D-608).\n\n**Do.** 1. **probe:screens measures density** for each route and theme: visible words (in the screen, not the chrome), blocks (a heading-led section, a table, a chart, a list of 3+ rows each count one), headline figures (large figures by type step, or a `data-figure` attribute the redesign will set), actions (buttons and links, and how many are primary), distinct type sizes and colours used, and how much is above the fold at 1280x800. In text and in --json. A --budget file option reads limits per route and exits non-zero naming each breach (U4 writes the limits). 2. **--shots**: a PNG per route and theme into a folder git ignores (`.probe/shots/`), and one `index.html` contact sheet of them all, grouped by section, light and dark side by side. 3. **The inventory**, docs/redesign/screens.md, on U16's synthetic year (and custom.emd and project.emd for the engine): every ledger route (Home, Year, Transactions, By merchant, Paychecks and deduction types, Plan, Wealth overview, funds, goals, debts, Categories, Rules, reading statements and payslips, readers, Settings' pages) and every engine route (formats, a format's table, entry, input, board, list, roadmap, ready, dashboard, agenda, calendar, connections, intake, packs, the new-document start). For each: the one question it answers in a newcomer's words; the two or three jobs someone comes to do; every block it shows now; **the shape of each piece of data** (a total against its usual, a part of a whole, a trend, a ranked list, a plan against what happened, a flow from one place to others, a list of rows to act on), with the way to show it the dataviz skill recommends; its measures; what repeats another screen; and what could move one click behind what it explains. Demo documents only (D-390, D-608).\n\n**Tests.** The probe's measures on a fixed page in probe.test.ts.\n\n**Out of scope.** Changing any screen."
 files: The screen probe gains density measures and pictures; a new inventory note lists every ledger and engine screen with its question, its jobs, its blocks, its data and its measures.
 blocks: ["M64 U16"]
+taken_by: run-milestone driver
+started: 2026-11-25
+branch: m64-redesign
 paths: "src/ui/probe.ts\nsrc/ui/probe.test.ts\nscripts/probe-screens.mjs\ndocs/redesign/screens.md"
 
 ### M64 U3
