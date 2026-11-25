@@ -28,6 +28,12 @@ const U4 = [
   'src/ui/home/parts.tsx',
   'src/ui/guide/GuideLine.tsx',
   'src/ui/screens/ReadStatements.tsx',
+  // M64 U7 (D-619): the rest of reading files, translated as it was redesigned.
+  'src/ui/import/GapPanel.tsx',
+  'src/ui/screens/Readers.tsx',
+  'src/ui/paychecks/ReadSlips.tsx',
+  'src/ui/paychecks/SlipBatchBar.tsx',
+  'src/ui/components/ConfirmAtButton.tsx',
   'src/ui/import/MapperScreen.tsx',
   'src/ui/import/MappingBar.tsx',
   'src/ui/import/PreviewStrip.tsx',

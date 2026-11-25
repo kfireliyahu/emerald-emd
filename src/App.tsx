@@ -54,7 +54,6 @@ import { GoalDetail } from '@/ui/screens/GoalDetail.tsx'
 import { Calendar } from '@/ui/screens/Calendar.tsx'
 import { Language } from '@/ui/screens/Language.tsx'
 import { Export } from '@/ui/screens/Export.tsx'
-import { FileGap } from '@/ui/screens/FileGap.tsx'
 import { Home } from '@/ui/screens/Home.tsx'
 import { HomeShell } from '@/ui/screens/HomeShell.tsx'
 import { ListDetail, screenOf } from '@/ui/screens/ListDetail.tsx'
@@ -468,13 +467,14 @@ function RoutedViews() {
               apart — are Year's, and a path that ever worked keeps working. */}
           <Route path="trends" element={<Navigate to="/year" replace />} />
           {/* **Reading files is the month's** (M28 U5): statements read and
-              judged, written with Write; a file that does not add up is shown
-              its gap one level down. */}
+              judged, written with Write; a file that does not add up shows its
+              gap beside the list (M64 U7, D-619), and `read/<id>`, its page
+              once, opens the same panel. */}
           <Route path="read" element={<ReadStatements />} />
           {/* **Every reader in one list, beside the files they read** (M36 U10):
               a statement's, a payslip's and a fund report's were three places. */}
           <Route path="read/readers" element={<Readers />} />
-          <Route path="read/:id" element={<FileGap />} />
+          <Route path="read/:id" element={<ReadStatements />} />
         </Route>
         {/* Insights was a section for four milestones and every one of its
             hashes is bookmarkable. Same call D-031 made for `/settings/mappings`

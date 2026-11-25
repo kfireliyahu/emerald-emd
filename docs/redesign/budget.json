@@ -110,26 +110,26 @@
       "screens": 17.6
     },
     "#/read": {
-      "words": 75,
+      "words": 40,
       "blocks": 1,
       "figures": 0,
-      "actions": 3,
+      "actions": 4,
       "colours": 6,
       "screens": 1.0
     },
     "#/paychecks/read": {
-      "words": 46,
+      "words": 40,
       "blocks": 1,
       "figures": 0,
-      "actions": 1,
-      "colours": 4,
+      "actions": 4,
+      "colours": 5,
       "screens": 1.0
     },
     "#/read/readers": {
       "words": 100,
       "blocks": 1,
       "figures": 0,
-      "actions": 10,
+      "actions": 8,
       "colours": 5,
       "screens": 1.0
     },
@@ -321,9 +321,6 @@
     "#/wealth/debts",
     "#/categories",
     "#/categories/rules",
-    "#/read",
-    "#/paychecks/read",
-    "#/read/readers",
     "#/settings/accounts",
     "#/settings/packs",
     "#/settings/model",

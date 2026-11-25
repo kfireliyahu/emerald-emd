@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { cancelDerivation } from '@/data/runtime/derive.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { isLive, stopSlipBatch, useSlipBatch } from '@/state/slipBatch.ts'
+import { countKey } from '@/i18n/count.ts'
+import { useT } from '@/i18n/current.ts'
 import { Button } from '@/ui/components/Button.tsx'
 import { Working } from '@/ui/components/Working.tsx'
 import { useWindowTaken } from '@/ui/useFullWindow.ts'
@@ -26,6 +28,7 @@ export function SlipBatchBar() {
   const taken = useWindowTaken()
   const location = useLocation()
   const navigate = useNavigate()
+  const t = useT()
 
   if (!isLive(batch, db) || taken || location.pathname === READ_SLIPS) return null
 
@@ -36,14 +39,15 @@ export function SlipBatchBar() {
     <div className="fc-view-enter flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-t border-hairline bg-surface px-6 py-2">
       {working && <Working size={20} />}
       <span className="text-ink">
-        {working ? 'Reading paychecks' : `${count === 1 ? '1 paycheck' : `${String(count)} paychecks`} read`}
+        {working ? t('reading.bar.readingSlips') : t(countKey('reading.bar.slipsRead', count), { count })}
       </span>
       <span className="text-caption text-ink-secondary" aria-live="polite">
-        {working ? batch.progress : 'Not written yet.'}
+        {working ? batch.progress : t('reading.bar.notWritten')}
       </span>
       <span className="ms-auto flex items-center gap-2">
-        <Button variant={working ? 'secondary' : 'primary'} size="sm" onClick={() => navigate(READ_SLIPS)}>
-          {working ? 'Go back to it' : 'Check them over'}
+        {/* Never filled: the screen it sits under has its own primary (M64 U7, D-619). */}
+        <Button variant="secondary" size="sm" onClick={() => navigate(READ_SLIPS)}>
+          {working ? t('reading.bar.goBack') : t('reading.bar.check')}
         </Button>
         {working && (
           <Button
@@ -54,7 +58,7 @@ export function SlipBatchBar() {
               cancelDerivation()
             }}
           >
-            Stop
+            {t('reading.bar.stop')}
           </Button>
         )}
       </span>

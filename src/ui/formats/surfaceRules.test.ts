@@ -19,7 +19,6 @@ import { FIELD, FIELD_MULTILINE, SELECT } from '@/ui/components/fieldLook.ts'
  */
 const REVIEWED = [
   'src/ui/screens/DeclaredFormats.tsx',
-  'src/ui/screens/Formats.tsx',
   'src/ui/screens/FormatRows.tsx',
   'src/ui/screens/FormatLinkViews.tsx',
   'src/ui/formats/NewFormat.tsx',
@@ -60,7 +59,9 @@ const REVIEWED = [
   'src/ui/documents/ReadField.tsx',
   'src/ui/documents/Look.tsx',
   'src/ui/screens/Readers.tsx',
-  'src/ui/screens/Mappings.tsx',
+  'src/ui/import/GapPanel.tsx',
+  'src/ui/paychecks/ReadSlips.tsx',
+  'src/ui/components/ConfirmAtButton.tsx',
   'src/ui/screens/LocalModel.tsx',
   // M54 U4: the document's own screens — home, the rail, the document bar, the palette, notices, the guide, settings.
   'src/ui/Sidebar.tsx',
@@ -380,7 +381,6 @@ describe('the formats and rows surface, swept (M54 F2)', () => {
   // the caption — and no spacing or height between the steps. A layout width
   // (`max-w-[1120px]`, a lane's `min-w-[200px]`) is a measure, not a step.
   const SWEPT = [
-    'src/ui/screens/Formats.tsx',
     'src/ui/screens/DeclaredFormats.tsx',
     'src/ui/screens/FormatRows.tsx',
     'src/ui/formats/BoardView.tsx',
@@ -514,7 +514,6 @@ describe('intake, swept (M54 F4)', () => {
     'src/ui/documents/DocumentPane.tsx',
     'src/ui/documents/Look.tsx',
     'src/ui/screens/Readers.tsx',
-    'src/ui/screens/Mappings.tsx',
     'src/ui/screens/LocalModel.tsx',
   ]
   // As F3's: no type, tracking or leading in pixels, no spacing between the
@@ -563,7 +562,7 @@ describe('intake, swept (M54 F4)', () => {
   // button, no action hidden until hover, no empty state with a filled button.
   it('draws actions as the shared ones, seen at rest', () => {
     expect(readFileSync('src/ui/documents/DocumentTextInput.tsx', 'utf8')).toContain('<Button icon="open"')
-    expect(readFileSync('src/ui/screens/Mappings.tsx', 'utf8')).not.toMatch(/opacity-0/)
+    expect(readFileSync('src/ui/screens/Readers.tsx', 'utf8')).not.toMatch(/opacity-0/)
     expect(readFileSync('src/ui/screens/Readers.tsx', 'utf8')).not.toMatch(/variant="primary"/)
     expect(readFileSync('src/ui/screens/LocalModel.tsx', 'utf8')).toContain(`<h1 className="m-0 text-title">{t('rail.localModel')}</h1>`)
   })
@@ -804,8 +803,8 @@ describe('the ledger screens a stranger meets, swept (M54 F13)', () => {
     expect(readFileSync('src/App.tsx', 'utf8')).not.toContain('Drop statements, payslips and fund reports, any number')
   })
 
-  // #/read: one sentence and a text action when empty, no counting, a Write
-  // filled only when it writes, and a file with no reader waiting, not wrong.
+  // #/read: one sentence when empty, no counting, a Write filled only when it
+  // writes, and a file with no reader waiting, not wrong.
   it('reads files with one primary, and no reader is not a problem', () => {
     const read = readFileSync('src/ui/screens/ReadStatements.tsx', 'utf8')
     expect(read).not.toMatch(/Working size=\{56\}|Reading \$\{String/)
@@ -813,6 +812,31 @@ describe('the ledger screens a stranger meets, swept (M54 F13)', () => {
     expect(read).not.toMatch(/<Tone tone="negative">No reader yet/)
     expect(read).not.toContain('no reader knows these columns yet')
     expect(readFileSync('src/ui/Notices.tsx', 'utf8')).toContain("lead: !reading }")
+  })
+
+  // The report on reading files (M64 U7, D-619): the answer first, in words;
+  // the ticked files' Write in the list's own header row; a file's gap beside
+  // the list, never a page; a removal undone where it was; a delete that has no
+  // undo asking at its button, never in a bar at the foot; and the mapper's one
+  // way back at its head.
+  it('answers first, keeps Write in the list header, opens the gap beside the list', () => {
+    const read = readFileSync('src/ui/screens/ReadStatements.tsx', 'utf8')
+    expect(read.indexOf("t('reading.files.answer.")).toBeGreaterThan(0)
+    expect(read.indexOf('text-lede')).toBeLessThan(read.indexOf('data-tour="write-files"'))
+    expect(read).toMatch(/<GapPanel\s+id=\{panel\}\s+onClose=\{closePanel\}/)
+    expect(read).toContain("t('reading.files.undo')")
+    expect(read).not.toMatch(/navigate\(`\/read\/\$\{/)
+    expect(readFileSync('src/ui/import/GapPanel.tsx', 'utf8')).toContain('<SidePanel')
+    const slips = readFileSync('src/ui/paychecks/ReadSlips.tsx', 'utf8')
+    expect(slips.indexOf("t('reading.slips.answer.")).toBeGreaterThan(0)
+    expect(slips).toContain("t('reading.files.undo')")
+    const readers = readFileSync('src/ui/screens/Readers.tsx', 'utf8')
+    expect(readers).toContain('<ConfirmAtButton')
+    expect(readers).not.toMatch(/function DeletePanel|border-t border-hairline bg-surface/)
+    expect(readFileSync('src/ui/import/MapperScreen.tsx', 'utf8')).toContain("t('reading.mapper.back')")
+    for (const bar of ['src/ui/import/ReadFilesBar.tsx', 'src/ui/paychecks/SlipBatchBar.tsx']) {
+      expect(readFileSync(bar, 'utf8'), bar).not.toContain("'primary'")
+    }
   })
 
   // The mapper (D-531): titled by its file, the role a small label, the raw
