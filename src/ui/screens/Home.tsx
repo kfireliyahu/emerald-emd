@@ -1,14 +1,8 @@
 import { useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 
-import { formatMoney, money, type CurrencyCode } from '@/core/money.ts'
-import {
-  compareYearMonths,
-  parseYearMonth,
-  toISODate,
-  toYearMonthString,
-  type YearMonth,
-} from '@/core/time.ts'
+import { minorUnitDigits, money, type CurrencyCode, type Money } from '@/core/money.ts'
+import { compareYearMonths, parseYearMonth, toYearMonthString, yearMonthOf, type YearMonth } from '@/core/time.ts'
 import { accountMonths, homeSummary } from '@/data/repositories/homeRepository.ts'
 import {
   categoryObservations,
@@ -22,65 +16,56 @@ import { categoryBudgets } from '@/data/repositories/categoryBudgetRepository.ts
 import { listCategories } from '@/data/repositories/categoryRepository.ts'
 import { categoryTree, spendUnder } from '@/data/repositories/splitPlanRepository.ts'
 import { subtreeOf } from '@/domain/categoryTree.ts'
-import { budgetLines } from '@/ui/home/budgets.ts'
 import { waitingCounts } from '@/domain/home.ts'
+import type { ComparisonMetric } from '@/domain/statistics.ts'
+import { lastFinishedMonth } from '@/domain/statistics.ts'
 import type { MonthSummary } from '@/domain/model/statistics.ts'
-import { statementGaps, type StatementGap } from '@/domain/statementGaps.ts'
+import { statementGaps } from '@/domain/statementGaps.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { countKey } from '@/i18n/count.ts'
 import { useDates, useT } from '@/i18n/current.ts'
-import { salaryBankWords } from '@/domain/salaryBank.ts'
-import { lastFinishedMonth, salaryProblem } from '@/domain/statistics.ts'
-import { Bidi } from '@/ui/Bidi.tsx'
+import { HeadlineFigure } from '@/ui/charts/HeadlineFigure.tsx'
+import { drawn, wholeMoney } from '@/ui/charts/kit.ts'
+import { MonthStrip } from '@/ui/charts/MonthStrip.tsx'
+import { PlanAgainst } from '@/ui/charts/PlanAgainst.tsx'
+import { RankedBars } from '@/ui/charts/RankedBars.tsx'
+import { resolvePalette } from '@/ui/charts/categoryPalette.ts'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { Button } from '@/ui/components/Button.tsx'
-import { MonthChart, type ChartMonth } from '@/ui/home/MonthChart.tsx'
-import {
-  chartEnd,
-  monthsEndingAt,
-  neighbour,
-  newestWithData,
-  signedPercent,
-  taxVersusAverage,
-  versusAverage,
-} from '@/ui/home/months.ts'
-import {
-  BlockHead,
-  Figure,
-  Figures,
-  FLOW_TEXT,
-  IntakeBand,
-  Key,
-  Legend,
-  Pager,
-  useFilePicker,
-  useReadFiles,
-} from '@/ui/home/parts.tsx'
-import { useHomeKeys } from '@/ui/home/useHomeKeys.ts'
+import { Phrase } from '@/ui/components/Phrase.tsx'
+import { EmptyState, WaitingList } from '@/ui/components/WaitingList.tsx'
 import { GuideLine } from '@/ui/guide/GuideLine.tsx'
-import { holdsPaycheck as keepsPaychecks } from '@/data/repositories/railRepository.ts'
-import { WaitingList } from '@/ui/home/WaitingList.tsx'
+import { budgetLines } from '@/ui/home/budgets.ts'
+import { HomePanel, WHERE_LIMIT, type Panel } from '@/ui/home/HomePanel.tsx'
+import { chartEnd, monthsEndingAt, neighbour, newestWithData, signedPercent, taxVersusAverage, versusAverage } from '@/ui/home/months.ts'
+import { Pager, useFilePicker, useReadFiles } from '@/ui/home/parts.tsx'
+import { useHomeKeys } from '@/ui/home/useHomeKeys.ts'
+import { waitingLine } from '@/ui/home/WaitingList.tsx'
 import { today } from '@/ui/today.ts'
 import { UNCATEGORIZED_OPTION } from '@/ui/transactions/FilterBar.tsx'
-import { Phrase } from '@/ui/components/Phrase.tsx'
 
 /**
- * **Home · Month** — M28 U5, the approved mockup (`docs/mockups/m28-u5/home.html`).
+ * **Home · Month** — the report (M64 U5, D-616; the direction D-614, the
+ * language D-615). One question: *what happened to my money this month?*
  *
- * The month, paged the way Paychecks is (arrows and ← →, a column of the chart,
- * a row of *All months*), with the place to drop statements and payslips at the
- * top — asked: *"there should be a clear place to drop new statements …
- * and also an option for bulk reading"*. It opens on the newest month that has
- * data rather than the calendar's (S1).
+ * **It answers first, in words**: the month said as one sentence, then left
+ * over as the screen's one display figure. What is waiting — the questions, the
+ * guide — is one quiet strip below the answer, drawn only when something needs
+ * the person. Then the four flows as tiles, each opening its breakdown; the
+ * fourteen months as the pager; and where it went, with the plan beside it.
  *
- * **The four flows carry their colours on the headline figures, the chart and
- * the totals, and nowhere else** (choice 2, A; D-313): a list of forty charges is
- * not forty red numbers. Left over is the difference, not a flow, and stays ink.
+ * **Detail opens beside the page** (`SidePanel`), never on a page of its own: a
+ * tile its breakdown, a category its rows, a waiting line its answers — and the
+ * panel stays open while the months page. What the page used to hold is one
+ * click behind what it explains (the keep, move or cut table is D-616's):
+ * what came in behind Came in, the bills and the biggest charges behind Went
+ * out, what saved was made of behind Saved. The by-month chart and *All months*
+ * are the Year screen's, which holds both.
  *
- * **Every figure is the domain's.** The month is `monthlyReport`, the months are
- * `monthlySummaries`, taxes are `monthlyTaxes` off the slips; the screen sums
- * nothing. Left over is `balance` — came in less went out, docs/05's definition
- * — and saved sits beside it, because saving is not spending.
+ * **Every figure is the domain's and every figure is ink** (*Figures are ink,
+ * a flow is a mark*). The month is `monthlyReport`, the months
+ * `monthlySummaries`, taxes `monthlyTaxes`; the screen sums nothing. It opens
+ * on the last finished month (D-607).
  */
 export function Home() {
   const db = useDocumentStore((state) => state.db)
@@ -96,8 +81,7 @@ export function Home() {
     () => (db === undefined ? [] : monthlySummaries(db, asOf, { currency })),
     [db, revision, currency],
   )
-  const taxes = useMemo(() => (db === undefined ? new Map() : monthlyTaxes(db, { currency })), [db, revision, currency])
-  const paid = useMemo(() => db !== undefined && keepsPaychecks(db), [db, revision])
+  const taxes = useMemo(() => (db === undefined ? new Map<string, Money>() : monthlyTaxes(db, { currency })), [db, revision, currency])
   const newest = newestWithData(summaries)
   // Home opens on the last finished month, not the one still running (D-607).
   const opening = useMemo(() => lastFinishedMonth(summaries), [summaries])
@@ -107,13 +91,14 @@ export function Home() {
   )
   const period = wanted ?? opening
   const [swap, setSwap] = useState<{ side: 'l' | 'r'; turn: number }>({ side: 'r', turn: 0 })
-  const [arrived] = useState(() => new Set(landing?.arrived ?? []))
   const [wrote, setWrote] = useState(landing?.wrote)
+  const [panel, setPanel] = useState<Panel | undefined>(undefined)
 
   const report = useMemo(
     () => (db === undefined || period === undefined ? undefined : monthlyReport(db, period, asOf, { currency })),
     [db, revision, period, currency],
   )
+  const palette = useMemo(() => resolvePalette(db === undefined ? [] : listCategories(db, { includeArchived: true })), [db, revision])
   /** Each budgeted category against the month (D-327): the budget is its bucket in the plan in use. */
   const budgeted = useMemo(() => {
     if (db === undefined || period === undefined || report === undefined) return []
@@ -155,25 +140,15 @@ export function Home() {
     return <Centered>{t('home.month.noDocument')}</Centered>
   }
 
-  const addByHand = (): void => void navigate('/paychecks', { state: { add: true } })
   const waiting = waitingCounts(summary.attention).all
-
   const shown = report?.summary
-  // What saved is made of, each part once (M30 F1): the figure says where it came from.
-  // The slip's saving lines are beside saved, never in it, and what moved beyond
-  // the month's left over came from earlier savings (D-607).
-  const fromEarlier = shown?.fromEarlierSavings ?? money(0, currency)
-  const savedParts =
-    report === undefined
-      ? []
-      : [
-          { label: t('home.month.partMoved'), amount: money(report.moved.reduce((total, one) => total + one.netMinor, 0), currency), any: report.moved.length > 0 },
-          { label: t('home.month.partIntoGoals'), amount: money(report.savedFrom.goals.reduce((total, one) => total + one.amount.minor, 0), currency), any: report.savedFrom.goals.length > 0 },
-          { label: t('home.month.partFromEarlier'), amount: money(-fromEarlier.minor, currency), any: fromEarlier.minor > 0 },
-        ].filter((part) => part.any)
   const missingHere = period === undefined ? [] : gaps.filter((gap) => compareYearMonths(gap.period, period) === 0)
   const tax = period === undefined ? undefined : taxes.get(toYearMonthString(period))
-
+  const versus = (value: number | undefined): string | undefined =>
+    value === undefined ? undefined : t('home.month.versus', { percent: signedPercent(value) })
+  const trendOf = (metric: ComparisonMetric): readonly (number | undefined)[] =>
+    period === undefined ? [] : recent(summaries, period).map((one) => (one === undefined ? undefined : drawn(pick(one, metric))))
+  const open = (next: Panel) => setPanel(next)
   const drillTo = (category?: string): void => {
     if (period === undefined) return
     navigate('/transactions', {
@@ -184,19 +159,33 @@ export function Home() {
     })
   }
 
-  return (
-    <div className="h-full overflow-auto">
-      <div className="fc-view-enter @container flex flex-col gap-6 px-8 pt-6 pb-12">
-        <header className="flex flex-wrap items-end justify-between gap-6 border-b border-hairline pb-4">
-          <div className="flex flex-col gap-1.5">
-            <span className="fc-label text-ink-secondary uppercase">
-              {t('home.month.eyebrow')}
-              {shown !== undefined && !shown.isComplete && t('home.month.inProgress')}
-            </span>
-            <h1 className="m-0 text-title leading-tight font-medium" data-guide="home.title">
-              {period === undefined ? t('home.month.title') : dates.yearMonth(period)}
-            </h1>
-          </div>
+  const strip = (
+    <>
+      <WaitingList
+        label={t('home.waiting.title')}
+        items={summary.attention.map((item) => ({
+          key: item.kind,
+          ...waitingLine(item, t, dates),
+          verb: item.kind === 'UNCATEGORIZED' ? t('home.waiting.uncategorized.action') : t('home.waiting.answer'),
+          ...(item.kind === 'UNCATEGORIZED' ? { tour: 'choose-categories' } : {}),
+          onDo: () => (item.kind === 'UNCATEGORIZED' ? void navigate(item.to) : open({ kind: 'waiting', item: item.kind })),
+        }))}
+      />
+      {/* Getting started is the guide's line (M28 U9, D-330), in the same strip. */}
+      <GuideLine />
+    </>
+  )
+
+  const page = (
+    <div className="fc-view-enter @container flex flex-col gap-8 px-8 pt-6 pb-12">
+      <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <h1 className="m-0 text-title leading-tight font-medium" data-guide="home.title" aria-live="polite">
+            {period === undefined ? t('home.month.title') : dates.yearMonth(period)}
+            {shown !== undefined && !shown.isComplete && (
+              <span className="text-heading font-normal text-ink-secondary">{t('home.month.inProgress')}</span>
+            )}
+          </h1>
           {period !== undefined && (
             <Pager
               label={t('home.month.pager')}
@@ -206,280 +195,194 @@ export function Home() {
               onNext={() => go(next)}
             />
           )}
-        </header>
-
-        {wrote !== undefined && (
-          <div className="fc-pop-enter flex flex-wrap items-center gap-3 bg-accent-soft px-3.5 py-2.5 text-ink-secondary">
-            <ActionGlyph name="check" />
-            <span className="text-ink">{t('home.month.written', { wrote })}</span>
-            <span>
-              {waiting === 0 ? t('home.month.flash') : t(countKey('home.month.answersWait', waiting), { count: waiting })}
-            </span>
-            <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setWrote(undefined)}>
-              {t('home.month.dismiss')}
-            </Button>
-          </div>
-        )}
-
-        <IntakeBand onAddByHand={addByHand} />
+        </div>
+        {/* Drop a file anywhere and it is read the same way (the window's drop). */}
+        <Button variant="primary" icon="read" onClick={picker.open} title={t('home.month.readFilesTitle')} data-tour="read-files" data-guide="home.read">
+          {t('home.month.readFiles')}
+        </Button>
         {picker.input}
+      </header>
 
-        {/* Getting started is the guide's line now, and where it resumes (M28 U9, D-330). */}
-        <GuideLine />
+      {wrote !== undefined && (
+        <div className="fc-pop-enter flex flex-wrap items-center gap-3 bg-accent-soft px-4 py-2 text-ink-secondary">
+          <ActionGlyph name="check" />
+          <span className="text-ink">{t('home.month.written', { wrote })}</span>
+          <span>
+            {waiting === 0 ? t('home.month.flash') : t(countKey('home.month.answersWait', waiting), { count: waiting })}
+          </span>
+          <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setWrote(undefined)}>
+            {t('home.month.dismiss')}
+          </Button>
+        </div>
+      )}
 
-        {/* Every question the app has, answered here (M31 U1, D-367): above the
-            month, because the month's figures are wrong until it is answered. */}
-        {!summary.isEmpty && <WaitingList items={summary.attention} currency={currency} onRead={picker.open} />}
+      {/* Before anything is read: one sentence, the strip, and Read files above (M59 U6, D-582). */}
+      {summary.isEmpty || period === undefined || report === undefined || shown === undefined ? (
+        <>
+          <EmptyState say={t('home.month.empty')} />
+          {strip}
+        </>
+      ) : (
+        <>
+          <div
+            key={`${toYearMonthString(period)}:${String(swap.turn)}`}
+            className={`flex flex-col gap-6 ${swap.turn === 0 ? '' : `fc-swap-${swap.side}`}`}
+          >
+            {/* The two amounts carry the sentence's weight, and never break (the comp's). */}
+            <p className="m-0 max-w-[26ch] text-lede [text-wrap:balance]">
+              <Phrase
+                text={
+                  shown.income.minor === 0
+                    ? t('home.month.sentenceNothingIn', { month: dates.monthName(period) })
+                    : t('home.month.sentence', { month: dates.monthName(period) })
+                }
+                parts={{
+                  came: <SaidAmount value={shown.income} />,
+                  went: <SaidAmount value={shown.expenses} />,
+                }}
+              />
+            </p>
+            <HeadlineFigure
+              size="display"
+              label={t('home.flows.leftOver')}
+              value={shown.balance}
+              change={versus(versusAverage(summaries, period, 'balance')) ?? t('home.flows.leftOverHow')}
+              empty={t('home.flows.leftOverHow')}
+            />
+          </div>
 
-        {/* Before anything is read, the band is the empty state (M59 U6, D-582):
-            the header, the band and Getting started, nothing else. */}
-        {summary.isEmpty || period === undefined || report === undefined ? null : (
-          <>
-            <Figures>
-              <Figure label={t('home.flows.cameIn')} flow="in" value={shown?.income}>
-                {report.detail.payroll.minor > 0
-                  ? t(report.detail.other.minor > 0 ? 'home.month.netPayAndMore' : 'home.month.netPay', {
-                      pay: formatMoney(report.detail.payroll),
-                      other: formatMoney(report.detail.other),
-                    })
-                  : t('home.flows.cameInNone')}
-                <Versus value={versusAverage(summaries, period, 'income')} />
-              </Figure>
-              <Figure label={t('home.flows.wentOut')} flow="out" value={shown?.expenses}>
-                {missingHere.length > 0 ? (
-                  <span className="text-negative">
-                    {missingHere.length === 1
-                      ? <Phrase text={t('home.month.missingOne')} parts={{ account: <Bidi>{accountLabel(missingHere[0])}</Bidi> }} />
-                      : t('home.month.missingMany', { count: missingHere.length })}
-                  </span>
-                ) : (
-                  t('home.flows.wentOutWhen')
-                )}
-                <Versus value={versusAverage(summaries, period, 'expenses')} />
-              </Figure>
-              <Figure label={t('home.flows.saved')} flow="saved" value={shown?.saved}>
-                {savedParts.length > 0
-                  ? t('home.month.savedParts', {
-                      parts: savedParts.map((part) => t('home.month.savedPart', { amount: formatMoney(part.amount), part: part.label })).join(', '),
-                    })
-                  : t('home.flows.savedNone')}
-                <Versus value={versusAverage(summaries, period, 'saved')} />
-              </Figure>
-              {/* Left out while the document holds no paycheck: it could only
-                  say there is none (M59 U6, D-582). */}
-              {paid && (
-                <Figure label={t('home.flows.taxes')} flow="tax" value={tax}>
-                  {tax === undefined ? t('home.month.noPaycheck') : t('home.month.taxesWhat')}
-                  <Versus value={taxVersusAverage(taxes, period, currency)} />
-                </Figure>
-              )}
-              <Figure label={t('home.flows.leftOver')} flow={undefined} value={shown?.balance}>
-                {t('home.flows.leftOverHow')}
-              </Figure>
-            </Figures>
+          {strip}
 
-            <div className="flex flex-col gap-2">
-              <MonthChart months={chartMonths(summaries, gaps, period, newest ?? period)} selected={period} onPick={go} />
-              <Legend>
-                <Key flow="in">{t('home.flows.cameIn')}</Key>
-                <Key flow="out">{t('home.flows.wentOut')}</Key>
-                <span>{t('home.month.legendRest')}</span>
-                <span className="ms-auto">{t('home.month.legendPage')}</span>
-              </Legend>
-            </div>
+          <div className="grid grid-cols-1 gap-x-8 gap-y-6 border-t border-hairline pt-6 @[40rem]:grid-cols-2 @[64rem]:grid-cols-4" data-block>
+            <HeadlineFigure
+              label={t('home.flows.cameIn')}
+              value={shown.income}
+              change={versus(versusAverage(summaries, period, 'income'))}
+              trend={trendOf('income')}
+              empty={t('home.month.cameInEmpty')}
+              onOpen={() => open({ kind: 'in' })}
+            />
+            <HeadlineFigure
+              label={t('home.flows.wentOut')}
+              value={shown.expenses}
+              change={
+                missingHere.length > 0
+                  ? t(countKey('home.month.missing', missingHere.length), { count: missingHere.length })
+                  : versus(versusAverage(summaries, period, 'expenses'))
+              }
+              trend={trendOf('expenses')}
+              empty={t('home.month.whereEmpty')}
+              onOpen={() => open({ kind: 'out' })}
+            />
+            <HeadlineFigure
+              label={t('home.flows.saved')}
+              value={shown.saved}
+              change={versus(versusAverage(summaries, period, 'saved'))}
+              trend={trendOf('saved')}
+              empty={t('home.month.savedEmpty')}
+              onOpen={() => open({ kind: 'saved' })}
+            />
+            <HeadlineFigure
+              label={t('home.flows.taxes')}
+              value={tax}
+              change={versus(taxVersusAverage(taxes, period, currency))}
+              trend={monthsEndingAt(period, TREND_MONTHS).map((month) => {
+                const one = taxes.get(toYearMonthString(month))
+                return one === undefined ? undefined : drawn(one)
+              })}
+              empty={t('home.month.noPaycheck')}
+              onOpen={() => open({ kind: 'tax' })}
+            />
+          </div>
 
-            <div
-              key={`${toYearMonthString(period)}:${String(swap.turn)}`}
-              className={`grid grid-cols-1 gap-8 @[45rem]:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)] ${swap.turn === 0 ? '' : `fc-swap-${swap.side}`}`}
-            >
-              <section className="flex flex-col gap-3">
-                <BlockHead
-                  title={t('home.month.whereItWent')}
-                  aside={t(countKey('home.month.categories', report.categories.length), { count: report.categories.length })}
+          <section className="flex flex-col gap-3" aria-labelledby="home-months">
+            <h2 id="home-months" className="m-0 text-heading font-medium">
+              {t('home.month.stripLabel')}
+            </h2>
+            <MonthStrip
+              months={monthsEndingAt(chartEnd(period, newest ?? period)).map((month) => {
+                const key = toYearMonthString(month)
+                const one = summaries.find((each) => toYearMonthString(each.period) === key)
+                return {
+                  key,
+                  label: dates.monthAbbrev(month),
+                  long: dates.yearMonth(month),
+                  value: one === undefined ? undefined : drawn(one.balance),
+                  // Hollow is the month still running, never a past month with a statement missing.
+                  running: compareYearMonths(month, yearMonthOf(asOf)) === 0,
+                  note: gaps.some((gap) => toYearMonthString(gap.period) === key) ? t('home.month.stripMissing') : undefined,
+                }
+              })}
+              open={monthsEndingAt(chartEnd(period, newest ?? period)).findIndex((month) => compareYearMonths(month, period) === 0)}
+              label={t('home.month.stripLabel')}
+              empty={t('home.month.stripEmpty')}
+              format={(value) => wholeMoney(money(Math.round(value * 10 ** minorUnitDigits(currency)), currency))}
+              onOpen={(index) => go(monthsEndingAt(chartEnd(period, newest ?? period))[index])}
+            />
+          </section>
+
+          <div
+            key={`cols:${toYearMonthString(period)}:${String(swap.turn)}`}
+            className={`grid grid-cols-1 gap-x-12 gap-y-8 @[52rem]:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)] ${swap.turn === 0 ? '' : `fc-swap-${swap.side}`}`}
+          >
+            <section className="flex flex-col gap-3" aria-labelledby="home-where">
+              <h2 id="home-where" className="m-0 text-heading font-medium">
+                {t('home.month.whereItWent')}
+              </h2>
+              <RankedBars
+                rows={report.categories.map((line) => ({
+                  key: line.categoryId ?? UNCATEGORIZED_OPTION,
+                  name: line.name,
+                  value: line.outflow,
+                  tour: `went-${line.categoryId ?? 'none'}`,
+                  ...(line.categoryId === undefined
+                    ? { note: t(countKey('home.month.uncategorizedRows', line.transactionCount), { count: line.transactionCount }) }
+                    : {}),
+                }))}
+                limit={WHERE_LIMIT}
+                empty={t('home.month.whereEmpty')}
+                total={{ label: t('home.flows.wentOut'), value: shown.expenses }}
+                onOpen={(key) => open({ kind: 'category', id: key })}
+                onMore={() => open({ kind: 'rest' })}
+              />
+            </section>
+            {budgeted.length > 0 && (
+              <section className="flex flex-col gap-3" aria-labelledby="home-plan">
+                <h2 id="home-plan" className="m-0 text-heading font-medium">
+                  {t('home.month.againstPlan')}
+                </h2>
+                <PlanAgainst
+                  lines={budgeted.map((line) => ({ key: line.categoryId, name: line.name, actual: line.spent, planned: line.budget }))}
+                  empty={t('home.month.planEmpty')}
+                  onOpen={(key) => open({ kind: 'category', id: key })}
                 />
-                <div>
-                  {report.categories.map((line) => {
-                    const top = report.categories[0]?.outflow.minor ?? 1
-                    const none = line.categoryId === undefined
-                    return (
-                      <button
-                        key={line.categoryId ?? 'none'}
-                        type="button"
-                        onClick={() => drillTo(line.categoryId ?? UNCATEGORIZED_OPTION)}
-                        data-tour={`went-${line.categoryId ?? 'none'}`}
-                        className="grid h-8 w-full grid-cols-[minmax(0,1fr)_120px_100px] items-center gap-3 border-b border-hairline text-start transition-colors duration-[var(--duration-micro)] hover:bg-surface"
-                      >
-                        <span title={line.name} className="flex min-w-0 items-baseline gap-x-1">
-                          <Bidi className="min-w-0 truncate">{line.name}</Bidi>
-                          {none && (
-                            <span className="min-w-0 truncate text-caption text-ink-secondary">
-                              {t(countKey('home.month.uncategorizedRows', line.transactionCount), { count: line.transactionCount })}
-                            </span>
-                          )}
-                        </span>
-                        <span
-                          aria-hidden
-                          className={`h-1.5 ${none ? 'fc-bar-unknown' : 'bg-ink/70'}`}
-                          style={{ width: `${String(Math.max(4, Math.round((120 * line.outflow.minor) / Math.max(1, top))))}px` }}
-                        />
-                        <span className="text-end tabular-nums">{formatMoney(line.outflow)}</span>
-                      </button>
-                    )
-                  })}
-                  <SplitRow
-                    label={t('home.month.bills')}
-                    note={t('home.month.billsTracked', { count: report.split.lines.filter((one) => one.status === 'CHARGED').length })}
-                    value={formatMoney(report.split.fixed)}
-                  />
-                  <SplitRow label={t('home.month.everythingElse')} value={formatMoney(report.split.variable)} />
-                  <Total label={t('home.flows.wentOut')} flow="out" value={formatMoney(report.summary?.expenses ?? report.split.expenses)} />
-                </div>
-
-                {budgeted.length > 0 && (
-                  <div className="mt-3 flex flex-col gap-3">
-                    <BlockHead title={t('home.month.againstPlan')} aside={t('home.month.againstPlanAside')} />
-                    <div>
-                      {budgeted.map((line) => (
-                        <button
-                          key={line.categoryId}
-                          type="button"
-                          onClick={() => drillTo(line.categoryId)}
-                          className="grid h-8 w-full grid-cols-[minmax(0,1fr)_120px_130px] items-center gap-3 border-b border-hairline text-start transition-colors duration-[var(--duration-micro)] hover:bg-surface"
-                        >
-                          <span className="flex min-w-0">
-                            <Bidi className="min-w-0 truncate">{line.name}</Bidi>
-                          </span>
-                          <span aria-hidden className="h-1.5 w-[120px] bg-hairline">
-                            <span
-                              className={`block h-full ${line.over ? 'bg-flow-out' : 'bg-ink/70'}`}
-                              style={{ width: `${String(Math.min(100, Math.round((100 * line.spent.minor) / Math.max(1, line.budget.minor))))}%` }}
-                            />
-                          </span>
-                          <span className={`text-end tabular-nums ${line.over ? FLOW_TEXT.out : ''}`}>
-                            {formatMoney(line.spent)} / {formatMoney(line.budget)}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {(savedParts.length > 0 || report.savedFrom.slips.length > 0) && (
-                  <div className="mt-3 flex flex-col gap-3">
-                    <BlockHead title={t('home.flows.saved')} aside={t('home.month.savedAside')} />
-                    <div>
-                      {report.moved.map((line) => (
-                        <SavedRow
-                          key={`moved-${line.categoryId ?? 'none'}`}
-                          name={line.name}
-                          note={t(countKey('home.month.movedRows', line.transactionCount), { count: line.transactionCount })}
-                          value={formatMoney(money(line.netMinor, currency))}
-                          onClick={() => drillTo(line.categoryId ?? UNCATEGORIZED_OPTION)}
-                        />
-                      ))}
-                      {report.savedFrom.goals.map((line) => (
-                        <SavedRow
-                          key={`goal-${line.goalId}`}
-                          name={line.name}
-                          note={t(countKey('home.month.intoGoal', line.count), { count: line.count })}
-                          value={formatMoney(line.amount)}
-                          onClick={() => navigate(`/wealth/goals/${line.goalId}`)}
-                        />
-                      ))}
-                      {fromEarlier.minor > 0 && (
-                        <SavedRow
-                          name={t('home.month.fromEarlier')}
-                          note={t('home.month.fromEarlierWhy')}
-                          value={formatMoney(money(-fromEarlier.minor, currency))}
-                          onClick={() => drillTo()}
-                        />
-                      )}
-                      <Total label={t('home.flows.saved')} flow="saved" value={formatMoney(shown?.saved ?? money(0, currency))} />
-                      {report.savedFrom.slips.map((line) => (
-                        <SavedRow
-                          key={`slip-${line.deductionTypeId}`}
-                          name={line.name}
-                          note={t('home.month.offPaycheckYours')}
-                          value={formatMoney(line.amount)}
-                          onClick={() => navigate('/paychecks')}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </section>
-
-              <section className="flex flex-col gap-3">
-                <BlockHead title={t('home.month.whatCameIn')} />
-                <div>
-                  {report.detail.lines.map((line) => (
-                    <div key={`${line.kind}:${line.ref}`} className="grid h-8 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-hairline">
-                      <span title={line.name} className="flex min-w-0 items-baseline gap-x-1">
-                        <Bidi className="min-w-0 truncate">{line.name}</Bidi>
-                        <span className="min-w-0 truncate">
-                          <span className="text-caption text-ink-secondary">
-                            {line.kind === 'PAYSLIP'
-                              ? t('home.month.netPayLine')
-                              : line.count > 1
-                                ? t(countKey('home.month.payments', line.count), { count: line.count })
-                                : <Bidi>{line.categoryName ?? ''}</Bidi>}
-                          </span>
-                          {line.salary !== undefined && line.salary.kind !== 'UNCHECKED' && (
-                            <span className={`text-caption ${salaryProblem(line.salary) ? 'text-negative' : 'text-ink-secondary'}`}>
-                              {' · '}
-                              {salaryBankWords(line.salary, { money: formatMoney, date: (day) => toISODate(day) })}
-                            </span>
-                          )}
-                        </span>
-                      </span>
-                      <span className="text-end tabular-nums">{formatMoney(line.amount)}</span>
-                    </div>
-                  ))}
-                  <Total label={t('home.flows.cameIn')} flow="in" value={formatMoney(report.detail.total)} />
-                </div>
-
-              </section>
-            </div>
-
-            {largest.length > 0 && (
-              <section className="flex flex-col gap-3">
-                <BlockHead title={t('home.month.biggest')} />
-                <table className="w-full border-collapse">
-                  <tbody>
-                    {largest.map((one) => (
-                      <tr key={one.id} className="h-10 border-b border-hairline">
-                        <td className="w-28 px-3 font-mono text-caption text-ink-secondary">
-                          {toISODate(one.chargeDate ?? one.transactionDate)}
-                        </td>
-                        <td className="px-3">
-                          <Bidi>{one.merchantRaw}</Bidi>
-                        </td>
-                        <td className="px-3 text-ink-secondary">
-                          <Bidi>{one.categoryPath ?? t('home.flows.uncategorized')}</Bidi>
-                        </td>
-                        <td className="px-3 text-end tabular-nums">{formatMoney(one.amount)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
               </section>
             )}
+          </div>
+        </>
+      )}
+    </div>
+  )
 
-            <AllMonths
-              summaries={summaries}
-              taxes={taxes}
-              gaps={gaps}
-              open={period}
-              arrived={arrived}
-              onOpen={(month) => {
-                go(month)
-                document.querySelector('main .overflow-auto')?.scrollTo?.({ top: 0 })
-              }}
-              onRead={picker.open}
-            />
-          </>
-        )}
-      </div>
+  return (
+    <div className="flex h-full">
+      <div className="h-full min-w-0 flex-1 overflow-auto">{page}</div>
+      {panel !== undefined && period !== undefined && report !== undefined && (
+        <HomePanel
+          panel={panel}
+          period={period}
+          report={report}
+          largest={largest}
+          tax={tax}
+          attention={summary.attention}
+          currency={currency}
+          palette={palette}
+          onPanel={setPanel}
+          onRead={picker.open}
+          onDrill={drillTo}
+          onClose={() => setPanel(undefined)}
+        />
+      )}
     </div>
   )
 }
@@ -487,185 +390,34 @@ export function Home() {
 /** What a Write asked Home to open on, and what it wrote. */
 type Landing = { readonly month?: string; readonly arrived?: readonly string[]; readonly wrote?: string } | null
 
-/** The chart's months, from the summaries: a gap is a month the document does not hold. */
-function chartMonths(
-  summaries: readonly MonthSummary[],
-  gaps: readonly StatementGap[],
-  shown: YearMonth,
-  newest: YearMonth,
-): readonly ChartMonth[] {
+/** How many months a tile's trend draws, the open one last. */
+const TREND_MONTHS = 6
+
+/** The months a tile's trend draws, oldest first, the open one last; a month with no data is nothing. */
+function recent(summaries: readonly MonthSummary[], period: YearMonth): readonly (MonthSummary | undefined)[] {
   const byMonth = new Map(summaries.map((one) => [toYearMonthString(one.period), one]))
-  const short = new Set(gaps.map((gap) => toYearMonthString(gap.period)))
-  return monthsEndingAt(chartEnd(shown, newest)).map((period) => {
-    const one = byMonth.get(toYearMonthString(period))
-    return { period, came: one?.income, went: one?.expenses, part: short.has(toYearMonthString(period)) }
-  })
+  return monthsEndingAt(period, TREND_MONTHS).map((month) => byMonth.get(toYearMonthString(month)))
 }
 
-function accountLabel(gap: StatementGap | undefined): string {
-  if (gap === undefined) return ''
-  return gap.last4 === undefined ? gap.name : `${gap.name.replace(/\s*\d{4}$/, '')} ···${gap.last4}`
+function pick(summary: MonthSummary, metric: ComparisonMetric): Money {
+  switch (metric) {
+    case 'income':
+      return summary.income
+    case 'expenses':
+      return summary.expenses
+    case 'saved':
+      return summary.saved
+    case 'balance':
+      return summary.balance
+  }
 }
 
-function Versus({ value }: { value: number | undefined }) {
-  const t = useT()
-  if (value === undefined) return null
-  return <span className="block text-ink-secondary">{t('home.month.versus', { percent: signedPercent(value) })}</span>
-}
-
-/** One of the two parts went out is made of: the tracked fixed bills, and the rest. */
-function SplitRow({ label, note, value }: { label: string; note?: string; value: string }) {
+/** An amount inside the month's sentence: whole units, medium, kept on one line. */
+function SaidAmount({ value }: { readonly value: Money }) {
   return (
-    <div className="grid h-8 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-t border-hairline">
-      <span>
-        {label}
-        {note !== undefined && <span className="text-caption text-ink-secondary"> · {note}</span>}
-      </span>
-      <span className="text-end tabular-nums">{value}</span>
-    </div>
-  )
-}
-
-/** One part of the month's saved, opening the rows, the slips or the goal behind it. */
-function SavedRow({ name, note, value, onClick }: { name: string; note: string; value: string; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="grid h-8 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 border-b border-hairline text-start transition-colors duration-[var(--duration-micro)] hover:bg-surface"
-    >
-      <span title={name} className="flex min-w-0 items-baseline gap-x-1">
-        <Bidi className="min-w-0 truncate">{name}</Bidi>
-        <span className="shrink-0 text-caption text-ink-secondary">{note}</span>
-      </span>
-      <span className="text-end tabular-nums">{value}</span>
-    </button>
-  )
-}
-
-function Total({ label, flow, value }: { label: string; flow: 'in' | 'out' | 'saved'; value: string }) {
-  return (
-    <div className="grid h-10 grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-t border-ink font-medium">
-      <span>{label}</span>
-      <span className={`text-end tabular-nums ${FLOW_TEXT[flow]}`}>{value}</span>
-    </div>
-  )
-}
-
-/**
- * Every month, newest first — a row opens it above. **A missing statement is a
- * row of its own, with Read files** (S2), the way a missing payslip
- * is a row of Paychecks.
- */
-function AllMonths({
-  summaries,
-  taxes,
-  gaps,
-  open,
-  arrived,
-  onOpen,
-  onRead,
-}: {
-  summaries: readonly MonthSummary[]
-  taxes: ReadonlyMap<string, { minor: number; currency: string }>
-  gaps: readonly StatementGap[]
-  open: YearMonth
-  arrived: ReadonlySet<string>
-  onOpen: (month: YearMonth) => void
-  onRead: () => void
-}) {
-  const t = useT()
-  const dates = useDates()
-  const newestFirst = [...summaries].reverse()
-  return (
-    <section className="mt-2 flex flex-col gap-3" aria-labelledby="home-all-months">
-      <div className="flex flex-col gap-0.5">
-        <h2 id="home-all-months" className="m-0 text-heading font-medium">
-          {t('home.month.allMonths')}
-        </h2>
-        <span className="text-caption text-ink-secondary">{t('home.month.allMonthsHint')}</span>
-      </div>
-      {/* Its own scroll region, so the header stays while the months scroll
-          under it (M54 F13). Separate borders, because a collapsed one scrolls
-          away from a sticky cell. */}
-      <div className="max-h-[70vh] overflow-auto">
-        <table className="w-full border-separate border-spacing-0">
-          <thead>
-            <tr className="text-label text-ink-secondary uppercase *:sticky *:top-0 *:z-10 *:border-b *:border-hairline *:bg-background">
-              <th className="px-3 py-2 text-start font-medium">{t('home.flows.month')}</th>
-              <th className="px-3 py-2 text-end font-medium">{t('home.flows.cameIn')}</th>
-              <th className="px-3 py-2 text-end font-medium">{t('home.flows.wentOut')}</th>
-              <th className="px-3 py-2 text-end font-medium">{t('home.flows.saved')}</th>
-              <th className="px-3 py-2 text-end font-medium">{t('home.flows.taxes')}</th>
-              <th className="px-3 py-2 text-end font-medium">{t('home.flows.leftOver')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {newestFirst.map((one) => {
-              const key = toYearMonthString(one.period)
-              const missing = gaps.filter((gap) => toYearMonthString(gap.period) === key)
-              const on = compareYearMonths(one.period, open) === 0
-              const tax = taxes.get(key)
-              return [
-                // A month row is a single row, so its figures stay ink (D-531);
-                // the flows' colours are the headline's and the chart's. The
-                // month's name is the button — Enter and Space — and a click
-                // anywhere on the row is the same press.
-                <tr
-                  key={key}
-                  onClick={() => onOpen(one.period)}
-                  className={`h-10 cursor-pointer transition-colors duration-[var(--duration-micro)] *:border-b *:border-hairline ${
-                    on ? 'fc-row-on' : 'hover:bg-surface'
-                  } ${arrived.has(key) ? 'fc-arrived' : ''}`}
-                >
-                  <td className="px-3 whitespace-nowrap">
-                    <button
-                      type="button"
-                      aria-current={on ? 'true' : undefined}
-                      className="cursor-pointer text-start text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                    >
-                      {dates.yearMonth(one.period)}
-                    </button>
-                    {missing.length > 0 && (
-                      <span className="fc-state ms-2" data-tone="negative">
-                        <span className="fc-state-dot" />
-                        {t('home.flows.part')}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-3 text-end tabular-nums">{formatMoney(one.income)}</td>
-                  <td className="px-3 text-end tabular-nums">{formatMoney(one.expenses)}</td>
-                  <td className="px-3 text-end tabular-nums">{formatMoney(one.saved)}</td>
-                  <td className="px-3 text-end tabular-nums">
-                    {tax === undefined ? <span className="text-ink-secondary">—</span> : formatMoney(tax)}
-                  </td>
-                  <td className="px-3 text-end tabular-nums">{formatMoney(one.balance)}</td>
-                </tr>,
-                ...missing.map((gap) => (
-                  <tr key={`${key}:${gap.accountId}`} className="h-10 text-ink-secondary *:border-b *:border-hairline">
-                    <td className="py-0 pe-3 ps-7 whitespace-nowrap">
-                      <Bidi>{accountLabel(gap)}</Bidi> · {dates.yearMonth(gap.period)}
-                    </td>
-                    {/* Read files sits in the line's own cell, never a column of
-                        its own: an empty column on every month row was what
-                        pushed the table past its region once the months
-                        scrolled under the header (M54 F13 F). */}
-                    <td className="px-3" colSpan={5}>
-                      <span className="flex items-center justify-between gap-3">
-                        {t('home.month.noStatement')}
-                        <Button variant="ghost" size="sm" onClick={onRead}>
-                          {t('home.month.readFiles')}
-                        </Button>
-                      </span>
-                    </td>
-                  </tr>
-                )),
-              ]
-            })}
-          </tbody>
-        </table>
-      </div>
-    </section>
+    <span className="font-medium whitespace-nowrap" dir="ltr">
+      {wholeMoney(value)}
+    </span>
   )
 }
 

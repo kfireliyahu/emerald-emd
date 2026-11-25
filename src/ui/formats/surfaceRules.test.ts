@@ -84,6 +84,7 @@ const REVIEWED = [
   'src/ui/screens/Export.tsx',
   'src/ui/screens/Section.tsx',
   'src/ui/home/WaitingList.tsx',
+  'src/ui/home/HomePanel.tsx',
   'src/demo/tour/Frame.tsx',
   'src/ui/home/parts.tsx',
   // M54 F13: the ledger's read screen (D-532 lets this one fix unit touch it).
@@ -751,6 +752,7 @@ describe('the document’s own screens, notices and dialogs, swept (M54 F6)', ()
 describe('the ledger screens a stranger meets, swept (M54 F13)', () => {
   const SWEPT = [
     'src/ui/screens/Home.tsx',
+    'src/ui/home/HomePanel.tsx',
     'src/ui/home/parts.tsx',
     'src/ui/screens/NoLedger.tsx',
     'src/ui/screens/ReadStatements.tsx',
@@ -771,23 +773,30 @@ describe('the ledger screens a stranger meets, swept (M54 F13)', () => {
     expect(source.match(/(?<![\w:-])text-ink-tertiary/g) ?? []).toEqual([])
   })
 
-  // Home's All months (D-531): a row opens by a button, the header holds while
-  // the months scroll, and a month row is a single row, so its figures are ink.
-  it('opens a month by a button, under a header that stays', () => {
+  // Home is the report (M64 U5, D-616; it replaced D-531's All months, which
+  // is the Year screen's): the sentence, then the one display figure, then what
+  // is waiting below them; the months paged by the strip; every detail in the
+  // side panel; and every figure ink, the kit's and nothing hand-drawn.
+  it('answers first, keeps what waits below the answer, and opens detail beside the page', () => {
     const home = readFileSync('src/ui/screens/Home.tsx', 'utf8')
-    const months = home.slice(home.indexOf('function AllMonths('))
-    expect(months).not.toContain('tabIndex={0}')
-    expect(months).toMatch(/<button\s+type="button"\s+aria-current=/)
-    expect(months).toContain('*:sticky *:top-0')
-    expect(months).not.toMatch(/text-flow-(?:in|out|saved|tax)/)
-    expect(months).toContain('Read files')
+    expect(home.match(/size="display"/g)?.length).toBe(1)
+    expect(home.indexOf("t('home.month.sentence'")).toBeGreaterThan(0)
+    expect(home.indexOf("t('home.month.sentence'")).toBeLessThan(home.indexOf('size="display"'))
+    expect(home.indexOf('{strip}', home.indexOf('size="display"'))).toBeGreaterThan(home.indexOf('size="display"'))
+    expect(home).toContain('<MonthStrip')
+    expect(home).toContain('<HomePanel')
+    expect(home).not.toMatch(/function AllMonths\(|MonthChart|FLOW_TEXT|text-flow-(?:in|out|saved|tax)|<svg/)
+    const panel = readFileSync('src/ui/home/HomePanel.tsx', 'utf8')
+    expect(panel).toContain('<SidePanel')
+    expect(panel).not.toMatch(/text-flow-(?:in|out|saved|tax)|<svg/)
   })
 
   // One name per thing: one Read files, one Add a paycheck, one Keep the ledger here.
   it('names reading, adding a paycheck and keeping the ledger once', () => {
     expect(readFileSync('src/ui/home/WaitingList.tsx', 'utf8')).not.toMatch(/Read…|^\s*Add (?:by hand|a paycheck)\s*$/m)
-    // The words are the catalogue's since M60 U4 (D-589): one Add a paycheck among Home's.
-    expect(readFileSync('src/i18n/en/home.ts', 'utf8').match(/: 'Add a paycheck',$/gm)?.length).toBe(1)
+    // The words are the catalogue's since M60 U4 (D-589). Home adds no paycheck
+    // since M64 U5 (D-616): Paychecks does, and Home names none.
+    expect(readFileSync('src/i18n/en/home.ts', 'utf8').match(/: 'Add a paycheck',$/gm) ?? []).toEqual([])
     const noLedger = readFileSync('src/ui/screens/NoLedger.tsx', 'utf8')
     expect(noLedger.match(/^\s*Keep the ledger here\s*$/gm)?.length).toBe(2)
     expect(noLedger).not.toMatch(/Keep a ledger/)

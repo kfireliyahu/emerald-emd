@@ -99,5 +99,7 @@ export function taxVersusAverage(
 
 /** `+4%` or `−3%`, the way a figure's comparison is written under it. */
 export function signedPercent(value: number): string {
-  return `${value >= 0 ? '+' : '−'}${String(Math.abs(value))}%`
+  // Isolated left to right (U+2066 … U+2069), so a Hebrew line keeps the sign
+  // before the number (M64 U5).
+  return `\u2066${value >= 0 ? '+' : '−'}${String(Math.abs(value))}%\u2069`
 }

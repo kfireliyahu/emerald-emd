@@ -25,11 +25,14 @@ export function PartOfWhole({
   parts,
   label,
   empty,
+  onOpen,
 }: {
   readonly parts: readonly Part[]
   /** What the whole is, for the bar's accessible name: `Saved`. */
   readonly label: string
   readonly empty: string
+  /** Each part opens what it is made of — its rows, its goal — when given. */
+  readonly onOpen?: ((key: string) => void) | undefined
 }) {
   const positive = parts.filter((part) => part.value.minor > 0)
   if (positive.length === 0 && parts.every((part) => part.value.minor === 0)) {
@@ -54,8 +57,9 @@ export function PartOfWhole({
         </div>
       )}
       <ul className="m-0 list-none p-0" data-block>
-        {parts.map((part) => (
-          <li key={part.key} className="flex h-8 items-center gap-2 border-b border-hairline">
+        {parts.map((part) => {
+          const row = (
+          <>
             <span aria-hidden className="size-2 shrink-0 rounded-full" style={{ backgroundColor: `var(--color-${part.hue})` }} />
             <Bidi className="min-w-0 truncate">{part.name}</Bidi>
             {part.note !== undefined && <span className="shrink-0 text-caption text-ink-secondary">{part.note}</span>}
@@ -65,8 +69,25 @@ export function PartOfWhole({
             <span className="w-24 shrink-0 text-end tabular-nums" dir="ltr">
               {kitMoney(part.value)}
             </span>
-          </li>
-        ))}
+          </>
+          )
+          const line = 'flex h-8 w-full items-center gap-2 border-b border-hairline text-start'
+          return (
+            <li key={part.key}>
+              {onOpen === undefined ? (
+                <div className={line}>{row}</div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => onOpen(part.key)}
+                  className={`${line} hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent`}
+                >
+                  {row}
+                </button>
+              )}
+            </li>
+          )
+        })}
       </ul>
     </div>
   )

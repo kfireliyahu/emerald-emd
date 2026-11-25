@@ -8,7 +8,6 @@ import { directionOf } from '@/i18n/language.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { BundledFiles } from '@/demo/BundledFiles.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
-import { Button } from '@/ui/components/Button.tsx'
 import { isDemo } from '@/ui/edition.ts'
 import { addStatementFiles } from '@/ui/home/statementIntake.ts'
 
@@ -87,57 +86,6 @@ export function useFilePicker(onFiles: (files: readonly File[]) => void): {
       />
     ),
   }
-}
-
-/**
- * **The place to drop statements and payslips** (choice 3, A): a
- * band at the top of Month, always there, with Read files and Add a paycheck in it
- * (M59 U6: it was *Add by hand*, which did not say what it adds).
- * Its own drop stops the window's, so a file dropped here is read like one
- * dropped anywhere else — but this is the place that says so.
- */
-export function IntakeBand({ onAddByHand }: { readonly onAddByHand: () => void }) {
-  const t = useT()
-  const read = useReadFiles()
-  const picker = useFilePicker(read)
-  const [over, setOver] = useState(false)
-  return (
-    <div
-      data-guide="home.read"
-      className={`grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border border-dashed px-5 py-4 transition-colors duration-[var(--duration-micro)] ${
-        over ? 'border-accent bg-accent-soft' : 'border-hairline-strong hover:border-accent hover:bg-accent-soft'
-      }`}
-      onDragOver={(event) => {
-        event.preventDefault()
-        event.stopPropagation()
-        setOver(true)
-      }}
-      onDragLeave={() => setOver(false)}
-      onDrop={(event) => {
-        event.preventDefault()
-        event.stopPropagation()
-        setOver(false)
-        read(Array.from(event.dataTransfer.files))
-      }}
-    >
-      <div className="flex min-w-0 items-center gap-3.5 text-ink-secondary">
-        <ActionGlyph name="read" size={24} />
-        <span>
-          <b className="block font-medium text-ink">{t('home.band.drop')}</b>
-          {t('home.band.what')}
-        </span>
-      </div>
-      <div className="flex flex-wrap gap-2">
-        <Button variant="secondary" icon="add" onClick={onAddByHand} title={t('home.band.addPaycheckTitle')}>
-          {t('home.band.addPaycheck')}
-        </Button>
-        <Button variant="primary" icon="read" onClick={picker.open} title={t('home.band.readFilesTitle')} data-tour="read-files">
-          {t('home.band.readFiles')}
-        </Button>
-      </div>
-      {picker.input}
-    </div>
-  )
 }
 
 /** The way between periods: arrows, with the neighbours named beside them. */

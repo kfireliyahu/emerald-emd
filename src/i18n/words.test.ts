@@ -23,8 +23,8 @@ import { describe, expect, it } from 'vitest'
 const U4 = [
   'src/ui/screens/Home.tsx',
   'src/ui/screens/Year.tsx',
-  'src/ui/home/MonthChart.tsx',
   'src/ui/home/WaitingList.tsx',
+  'src/ui/home/HomePanel.tsx',
   'src/ui/home/parts.tsx',
   'src/ui/guide/GuideLine.tsx',
   'src/ui/screens/ReadStatements.tsx',

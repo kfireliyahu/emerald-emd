@@ -57,8 +57,8 @@ describe('Home’s months', () => {
   it('compares a figure with the average of the three complete months before it', () => {
     expect(versusAverage(SUMMARIES, ym(2026, 3), 'expenses')).toBe(10)
     expect(versusAverage(SUMMARIES, ym(2026, 2), 'expenses')).toBeUndefined()
-    expect(signedPercent(10)).toBe('+10%')
-    expect(signedPercent(-3)).toBe('−3%')
+    expect(signedPercent(10)).toBe('\u2066+10%\u2069')
+    expect(signedPercent(-3)).toBe('\u2066−3%\u2069')
   })
 
   it('compares taxes with the three slips before, and says nothing without three', () => {

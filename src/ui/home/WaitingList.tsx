@@ -19,16 +19,14 @@ import { setNoPayMonths } from '@/data/repositories/paycheckRepository.ts'
 import { confirmHolding, staleHoldings } from '@/data/repositories/savingsRepository.ts'
 import { listTransferPairs, setTransferDecisions } from '@/data/repositories/transferPairRepository.ts'
 import { DEFAULT_WINDOW_MONTHS } from '@/domain/fixedExpenses.ts'
-import { waitingCounts, type AttentionItem } from '@/domain/home.ts'
+import type { AttentionItem } from '@/domain/home.ts'
 import { countKey } from '@/i18n/count.ts'
 import { useDates, useT } from '@/i18n/current.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
-import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { PaymentLine } from '@/ui/debts/PaymentReview.tsx'
 import { CandidateCard } from '@/ui/fixed/CandidateCard.tsx'
-import { BlockHead } from '@/ui/home/parts.tsx'
 import { newFigureFor } from '@/ui/savings/holdingCheck.ts'
 import { SettlementLine } from '@/ui/import/SettlementPrompt.tsx'
 import { TransferLine } from '@/ui/import/TransferPrompt.tsx'
@@ -36,45 +34,67 @@ import { today } from '@/ui/today.ts'
 import { Phrase } from '@/ui/components/Phrase.tsx'
 
 /**
- * **Waiting for an answer** — every question the app has, at the top of Home,
- * each answered where it is asked (M31 U1, D-367; the mockup is
- * `docs/mockups/m31-u1/waiting-list.html`).
+ * **What is waiting, and its answers** (M31 U1, D-367; M64 U5, D-616).
  *
- * One plain switch over the ten kinds `attention()` ranks. A kind whose answer is
- * a click or two is answered in its row, through the row component its own screen
- * already draws; a kind that needs more — a category per merchant, a figure typed —
- * is one button to the screen that asks it. The queues where each is answered
- * today stay where they are. Nothing here is stored: the rows are read fresh.
+ * Home says each kind as one line of its waiting strip (`waitingLine`), below
+ * the answer; its verb opens the kind's answers in the side panel
+ * (`WaitingAnswer`), where each is answered as it was on Home before — through
+ * the row component its own screen already draws. A kind whose answer needs
+ * more (a category per merchant, a figure typed) is a button to the screen that
+ * asks it. Nothing here is stored: the rows are read fresh.
  */
-export function WaitingList({
-  items,
+export function waitingLine(
+  item: AttentionItem,
+  t: ReturnType<typeof useT>,
+  dates: ReturnType<typeof useDates>,
+): { readonly say: string; readonly why: string } {
+  const n = item.count
+  switch (item.kind) {
+    case 'PENDING_SETTLEMENTS':
+      return { say: t(countKey('home.waiting.settlements.title', n), { count: n }), why: t('home.waiting.settlements.why') }
+    case 'PENDING_TRANSFERS':
+      return { say: t(countKey('home.waiting.transfers.title', n), { count: n }), why: t('home.waiting.transfers.why') }
+    case 'UNMATCHED_CHARGES':
+      return { say: t(countKey('home.waiting.unmatched.line', n), { count: n }), why: t('home.waiting.unmatched.why') }
+    case 'MISSING_STATEMENT':
+      return { say: t(countKey('home.waiting.statements.line', n), { count: n }), why: t('home.waiting.statements.why') }
+    case 'UNCATEGORIZED':
+      return {
+        say: t(countKey('home.waiting.uncategorized.merchants', n), {
+          rows: t(countKey('home.waiting.uncategorized.rows', item.rows ?? n), { count: item.rows ?? n }),
+          count: n,
+        }),
+        why: t('home.waiting.uncategorized.why'),
+      }
+    case 'UNCONFIRMED_PAYMENTS':
+      return { say: t(countKey('home.waiting.payments.title', n), { count: n }), why: t('home.waiting.payments.why') }
+    case 'FIXED_EXPENSE_CANDIDATES':
+      return { say: t(countKey('home.waiting.bills.title', n), { count: n }), why: t('home.waiting.bills.why') }
+    case 'MISSING_PAYSLIP':
+      return {
+        say: t('home.waiting.payslip.title', {
+          month: item.period === undefined ? t('home.waiting.payslip.lastMonth') : dates.yearMonth(item.period),
+        }),
+        why: t('home.waiting.payslip.why'),
+      }
+    case 'FUND_WITHOUT_BALANCE':
+      return { say: t(countKey('home.waiting.funds.title', n), { count: n }), why: t('home.waiting.funds.why') }
+    case 'UNCONFIRMED_HOLDING':
+      return { say: t(countKey('home.waiting.holdings.title', n), { count: n }), why: t('home.waiting.holdings.why') }
+  }
+}
+
+/** One kind's answers, in the side panel its waiting line opened. */
+export function WaitingAnswer({
+  item,
   currency,
   onRead,
 }: {
-  items: readonly AttentionItem[]
+  item: AttentionItem
   currency: CurrencyCode
   onRead: () => void
 }) {
-  const t = useT()
-  const totals = waitingCounts(items).totals
-  return (
-    <section aria-label={t('home.waiting.title')} className="flex flex-col">
-      <div className="border-b border-hairline-strong pb-2">
-        <BlockHead
-          title={t('home.waiting.title')}
-          aside={totals > 0 ? t(countKey('home.waiting.changesTotals', totals), { count: totals }) : undefined}
-        />
-      </div>
-      {items.length === 0 ? (
-        <p className="m-0 flex items-baseline gap-2.5 border-b border-hairline py-2.5 text-ink-secondary">
-          <ActionGlyph name="check" />
-          {t('home.waiting.nothing')}
-        </p>
-      ) : (
-        items.map((item) => <Kind key={item.kind} item={item} currency={currency} onRead={onRead} />)
-      )}
-    </section>
-  )
+  return <Kind item={item} currency={currency} onRead={onRead} />
 }
 
 function Kind({ item, currency, onRead }: { item: AttentionItem; currency: CurrencyCode; onRead: () => void }) {
@@ -99,7 +119,7 @@ function Kind({ item, currency, onRead }: { item: AttentionItem; currency: Curre
           })}
           why={t('home.waiting.uncategorized.why')}
         >
-          <Button variant="secondary" size="sm" onClick={() => navigate('/transactions/merchants')} data-tour="choose-categories">
+          <Button variant="secondary" size="sm" onClick={() => navigate('/transactions/merchants')}>
             {t('home.waiting.uncategorized.action')}
           </Button>
         </Head>

@@ -9,6 +9,8 @@ export interface Waiting {
   /** The one verb that deals with it: `Answer them`. */
   readonly verb: string
   readonly onDo: () => void
+  /** A tour's anchor on the verb (`choose-categories`), for the demo's tours. */
+  readonly tour?: string | undefined
 }
 
 /**
@@ -30,7 +32,7 @@ export function WaitingList({ items, label }: { readonly items: readonly Waiting
               <Bidi className="font-medium">{item.say}</Bidi>
               {item.why !== undefined && <span className="text-ink-secondary">{item.why}</span>}
             </span>
-            <button type="button" onClick={item.onDo} className="fc-text-action">
+            <button type="button" onClick={item.onDo} className="fc-text-action" data-tour={item.tour}>
               {item.verb}
             </button>
           </li>

@@ -6,12 +6,12 @@
       "typeSizes": 7
     },
     "#/": {
-      "words": 622,
-      "blocks": 10,
-      "figures": 8,
-      "actions": 70,
-      "colours": 15,
-      "screens": 4.0
+      "words": 180,
+      "blocks": 8,
+      "figures": 7,
+      "actions": 40,
+      "colours": 11,
+      "screens": 1.8
     },
     "#/year": {
       "words": 355,
@@ -311,7 +311,6 @@
     }
   },
   "exempt": [
-    "#/",
     "#/year",
     "#/transactions",
     "#/transactions/merchants",

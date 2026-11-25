@@ -515,6 +515,7 @@ written out here.
 | D-613 | 2026-11-25 | A card statement's printed total is compared with its rows' signed sum, charges less refunds, and every row's magnitude stays only as the second reading | M64 |
 | D-614 | 2026-11-25 | Home and the rail take direction A, the report: the month said as one sentence with left over its one figure, a typographic rail, detail in a side panel; with B's month strip as the pager and C's waiting list and palette; the flows leave Home's figures and Plex gains a light weight for the hero | M64 |
 | D-615 | 2026-11-25 | The report becomes the design language: A's tokens and two type steps, Plex in four weights, a rail of words whose sections' views are their tab strip, a kit of eight displays chosen by the shape of the data, a side panel and a waiting list, six ui rules rewritten and four added, and a density budget whose exempt list only shrinks | M64 |
+| D-616 | 2026-11-25 | Home is rebuilt as the report: the month in one sentence, left over its one figure, what waits one strip below it, four tiles that open their breakdowns beside the page, the fourteen months as the pager, and where it went beside the plan; All months and the by-month chart are the Year screen's, and a redesign-screen skill every later screen follows | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1228,6 +1229,51 @@ in U5) — both are review entries.
 **Rejected.** A fully flat rail (loses the format folders); limits invented below U2's measures
 before a screen is redesigned (a ceiling each unit tightens is a decision it makes with the screen
 in hand); the comp's 36px symbol (off the ramp; the hero step is 40); a chart library.
+
+## D-616 · 2026-11-25 · Home is rebuilt as the report: the month in one sentence, left over its one figure, what waits one strip below it, four tiles that open their breakdowns beside the page, the fourteen months as the pager, and where it went beside the plan; All months and the by-month chart are the Year screen's, and a redesign-screen skill every later screen follows <a id="d-616"></a>
+
+**Context.** M64 U5: Home, the first screen a newcomer meets and the densest (U2 measured 622
+words, 10 blocks, 70 actions, 4 primaries, 8 type sizes, 4 windows tall on the synthetic year),
+rebuilt in D-614's direction with D-615's kit, and the maintainer's one look (D-608).
+
+**Decision.** Home answers one question, *what happened to my money this month?*
+
+| Block before | Now | Why |
+|---|---|---|
+| The drop band (Read files, Add a paycheck) | **kept** Read files as the one primary in the header; **cut** Add a paycheck | a file dropped anywhere is still read; Paychecks adds a paycheck, and the palette reaches it |
+| Getting started line | **moved** into the waiting strip | it asks something of the person |
+| Waiting for an answer, answered in its rows | **moved**: one line and one verb each, in a strip below the answer; *Answer* opens the kind's answers in the side panel, *Choose categories* goes to By merchant | the answer comes first; a category per merchant needs its screen (and the ledger tour walks it) |
+| Five flow tiles | **kept**: left over as the display figure after the sentence; came in, went out, saved, taxes as tiles with a trend, each opening its breakdown | the answer, then what made it |
+| Came in and went out by month (a chart) | **cut**; the fourteen months are a `MonthStrip` of left over that pages them | Year draws the by-month chart |
+| Where it went | **kept** as `RankedBars`, six and the rest folded; a category opens its rows in the panel | the month's main detail |
+| Bills and everything else | **moved** behind Went out | it explains went out |
+| What came in | **moved** behind Came in | it explains came in |
+| Against the plan | **kept** as `PlanAgainst`, beside Where it went | the plan is half the month's story |
+| Saved | **moved** behind Saved, as `PartOfWhole` (each part opens its rows or its goal) with what came off the paycheck beside it | it explains saved |
+| Biggest single charges | **moved** behind Went out | it explains went out |
+| All months | **cut** | Year's *The months*; the strip pages months, and a missing statement is in the strip's note and the waiting strip |
+
+Every figure is ink. The probe after: 164 words, 8 blocks, 7 figures, 36 actions, one primary,
+7 type sizes, 10 colours (11 dark), 1.7 windows, nothing under AA, in light, dark and Hebrew. `#/`
+leaves the budget's exempt list with limits of 180 words, 8 blocks, 7 figures, 40 actions, 11
+colours and 1.8 windows. The kit gains what Home needed and nothing else: a row's tour anchor
+(`RankedBars`, `WaitingList`), a part that opens (`PartOfWhole`), the display figure's name and
+change beside it rather than above, and a `MonthStrip` scaled by finished months, 80px tall, its
+labels at the caption step. A signed percentage is isolated left to right, so Hebrew keeps the sign
+before the number. `.claude/skills/redesign-screen/SKILL.md` is how every later screen unit works,
+and design-review points at it.
+
+**Taste check.** Impeccable's finish-reviewer on the contact sheet against `DESIGN.md` and comp A.
+Made: the display figure named beside it, the sentence's amounts weighted and unbroken, the Hebrew
+sign, the budget, the strip's scale and hollow (only the running month), a figure and what it counts
+at the head of each panel. Not made: a filled Read files (the comp's hairline box; *One primary
+action per screen* says filled, as D-615 found), *Choose categories* opening a panel (answering it
+needs By merchant, and the tour clicks through), and a tax breakdown by deduction (the domain gives
+Home a month's taxes as one figure; Paychecks has the lines).
+
+**Rejected.** Keeping All months under a fold (it is Year's, and a second table of months is the
+density U2 measured); a two-line chart beside the strip (two displays of one trend); category dots
+on Where it went (six colours against an 11-colour budget, for names the rows already say).
 
 ## Related
 

@@ -12,6 +12,8 @@ export interface RankedRow {
   readonly hue?: string | undefined
   /** A few words after the name: `· 4 rows`. */
   readonly note?: string | undefined
+  /** A tour's anchor on the row (`went-cat:groceries`), for the demo's tours. */
+  readonly tour?: string | undefined
 }
 
 /**
@@ -108,10 +110,11 @@ function Line({
   )
   const grid = 'grid h-10 w-full grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)_minmax(6rem,auto)] items-center gap-3 border-b border-hairline text-start'
   return onOpen === undefined ? (
-    <div className={grid}>{inner}</div>
+    <div className={grid} data-tour={row.tour}>{inner}</div>
   ) : (
     <button
       type="button"
+      data-tour={row.tour}
       onClick={onOpen}
       className={`${grid} hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent`}
     >

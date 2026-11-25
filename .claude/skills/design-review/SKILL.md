@@ -8,6 +8,10 @@ description: Review one of Emerald's screens for design — its look, layout, ty
 How M54 (D-530) reviewed every surface, kept to what its eight units found worked. **The rules
 themselves are rows, not this file** (D-437): read them, never restate them.
 
+**A screen being rebuilt in M64's direction follows [redesign-screen](../redesign-screen/SKILL.md)**
+(D-616): its taste check runs this skill's hand audit (section 1) once, before landing, and a
+finding on a redesigned route is judged against `DESIGN.md` and the route's budget as well as the rows.
+
 ## 0. Start the walk first, then read
 
 The walk is the slow part (7-21 minutes); everything else fits inside it. So, before reading anything:

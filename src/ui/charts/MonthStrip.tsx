@@ -51,8 +51,14 @@ export function MonthStrip({
   const values = months.flatMap((month) => (month.value === undefined || !Number.isFinite(month.value) ? [] : [month.value]))
   if (months.length === 0 || values.length === 0) return <p className="m-0 text-ink-secondary">{empty}</p>
 
-  const high = Math.max(0, ...values)
-  const low = Math.min(0, ...values)
+  // The scale is the finished months': a running month's partial figure would
+  // flatten them (M64 U5). Its column is clipped to the scale, and drawn short
+  // on a side the finished months leave empty.
+  const finished = months.flatMap((month) => (month.running === true || month.value === undefined || !Number.isFinite(month.value) ? [] : [month.value]))
+  const scaled = finished.length > 0 ? finished : values
+  const high = Math.max(0, ...scaled)
+  const running = months.find((month) => month.running === true)?.value
+  const low = Math.min(0, ...scaled, running !== undefined && running < 0 && Math.min(0, ...scaled) === 0 ? -high / 5 : 0)
   const stop = focus ?? open
   const tip = hover ?? focus
   // A month's label needs about 28px; narrower, every second one is said (the
@@ -81,7 +87,7 @@ export function MonthStrip({
         const value = month.value
         // In percent of its side of the baseline, so the strip has no pixel of its own.
         const side = value === undefined ? 1 : value > 0 ? high : -low
-        const height = value === undefined || value === 0 ? 0 : Math.max(4, (100 * Math.abs(value)) / (side || 1))
+        const height = value === undefined || value === 0 ? 0 : Math.min(100, Math.max(4, (100 * Math.abs(value)) / (side || 1)))
         const on = index === open
         const colour = on ? 'bg-bar' : 'bg-bar-quiet'
         const said = `${month.long}: ${value === undefined ? '—' : format(value)}${month.note === undefined ? '' : `, ${month.note}`}`
@@ -104,14 +110,16 @@ export function MonthStrip({
             className="group relative flex min-w-0 flex-1 flex-col items-center gap-1 pt-5 focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
           >
             {on && value !== undefined && (
-              <span className="absolute top-0 flex gap-1.5 text-caption whitespace-nowrap">
+              // Held inside the strip: at either end it is anchored to that end,
+              // or the last month's value runs past the screen (M64 U5's tour).
+              <span className={`absolute top-0 flex gap-1.5 text-caption whitespace-nowrap ${index < 2 ? 'start-0' : index >= months.length - 2 ? 'end-0' : ''}`}>
                 <span className="font-semibold tabular-nums" dir="ltr">
                   {format(value)}
                 </span>
                 {month.note !== undefined && <span className="text-negative">· {month.note}</span>}
               </span>
             )}
-            <span aria-hidden className="flex h-14 w-full flex-col items-center">
+            <span aria-hidden className="flex h-20 w-full flex-col items-center">
               <span className="flex w-full min-h-0 flex-col items-center justify-end" style={{ flexGrow: high, flexBasis: 0 }}>
                 {value !== undefined && value > 0 && (
                   <span
@@ -130,7 +138,7 @@ export function MonthStrip({
                 )}
               </span>
             </span>
-            <span aria-hidden className={`text-label tracking-normal ${on ? 'font-semibold text-ink' : 'font-normal text-ink-secondary'} ${on || index % every === (months.length - 1) % every ? '' : 'invisible'}`}>
+            <span aria-hidden className={`text-caption ${on ? 'font-semibold text-ink' : 'font-normal text-ink-secondary'} ${on || index % every === (months.length - 1) % every ? '' : 'invisible'}`}>
               {month.label}
             </span>
             {month.note !== undefined && <span aria-hidden className="size-1.5 rounded-full bg-negative" />}

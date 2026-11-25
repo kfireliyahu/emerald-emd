@@ -69,7 +69,18 @@ export function HeadlineFigure({
       )}
     </span>
   )
-  const body = (
+  // The display figure says what it is beside it, never above (D-614 dropped
+  // Home's eyebrow; M64 U5's taste check): the figure first, then its name at
+  // the heading step and its change under the name.
+  const body = display ? (
+    <span className="flex flex-wrap items-end gap-x-6 gap-y-2">
+      {figure}
+      <span className="flex flex-col gap-1 pb-4">
+        <span className="text-heading font-semibold">{label}</span>
+        <span className="text-ink-secondary">{parts === undefined ? empty : change}</span>
+      </span>
+    </span>
+  ) : (
     <>
       <span className="flex items-center gap-1.5 text-caption text-ink-secondary group-hover:text-ink">
         {mark !== undefined && (
