@@ -5128,6 +5128,16 @@ answer: Tokens: A's greys both themes (ink-secondary #5f5f5c, 6.4:1), bar / bar-
 state: live
 affects: "DESIGN.md\ndocs/11-ui-design-language.md\ndocs/redesign/budget.json\nsrc/ui/theme/tokens.css\nsrc/ui/charts/kit.ts\nscripts/budget.mjs"
 
+### D-616
+date: 2026-11-25
+milestone: M64
+scope: ui
+title: Home is rebuilt as the report: the month in one sentence, left over its one figure, what waits one strip below it, four tiles that open their breakdowns beside the page, the fourteen months as the pager, and where it went beside the plan; All months and the by-month chart are the Year screen's, and a redesign-screen skill every later screen follows
+question: How does Home answer what happened to my money this month in D-614's direction with D-615's kit, and how does every later screen unit work without asking?
+answer: One question. The month as one sentence (amounts medium, unbroken), left over as the one display figure named beside it, what waits as one strip below the answer (shared WaitingList, a sentence and a verb a kind, the guide's line under it, drawn only when something needs the person; Answer opens the kind's answers in the SidePanel, Choose categories still goes to By merchant), four tiles with trends that open their breakdowns in the SidePanel, left over by month as a MonthStrip pager, Where it went (RankedBars, six then folded; a category opens its rows beside the page) beside Against the plan (PlanAgainst). Moved behind their figure: what came in, bills and the biggest charges, what saved was made of (PartOfWhole, each part opens). Cut: All months and the by-month chart (Year's), Add a paycheck (Paychecks'). Every figure ink. Probe 622 to 164 words, 10 to 8 blocks, 70 to 36 actions, 4 to 1 primary, 8 to 7 sizes, 15 to 10 colours, 4.0 to 1.7 windows; #/ off exempt at 180/8/7/40/11/1.8. Kit: tour anchors, a part that opens, the display figure named beside it, a strip scaled by finished months whose open value stays inside it; signedPercent isolated LTR. .claude/skills/redesign-screen is how later screen units work; design-review points at it. Not made from the taste check: a hairline Read files (one primary is filled), Choose categories as a panel, a tax breakdown by deduction. Rejected: All months under a fold, a two-line chart beside the strip, category dots on Where it went.
+state: live
+affects: "src/ui/screens/Home.tsx\nsrc/ui/home/HomePanel.tsx\ndocs/redesign/budget.json\n.claude/skills/redesign-screen/SKILL.md"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -7630,6 +7640,12 @@ should: Text a person needs is at least 4.5:1 and ink-tertiary is for non-essent
 breaks: All in ink-tertiary: 2.45-2.62:1 in light (fails even 3:1), 3.18-3.65:1 in dark. Home.tsx:555, :601; CommandPalette.tsx:385-386; RailFolder.tsx:139; Packs.tsx; Export.tsx; Mcp.tsx:40,47,121; Guide.tsx:113. Verdict 2026-11-02 (D-531): move to ink-secondary; ink-tertiary itself is not raised. Owned by M54 F13. Part fixed in M54 F5 (CommandPalette, RailFolder). Part fixed in M54 F6 (Packs, Export, Mcp, Guide). Fixed in M54 F13 (368d722).
 state: fault
 
+### Demo, demo.emd, #/ with the guide open at its first step (Read files)
+unit: M64 U5
+should: The step's words say what the place is now: a Read files button, and a file dropped anywhere in the window
+breaks: Question: the step still says 'Drop statements, paychecks and fund reports here' and points at the header's Read files button since the drop band left Home (D-616); src/data/packs/ledger/guide.ts and src/i18n/en|he/guide.ts, and the plugin's guide test quotes it
+state: open
+
 ### Demo, demo.emd, #/: Home's All months table — Tab to a month, press Space, scroll; and read its rows' colours.
 unit: M54 U4
 should: A data table: sticky header on its own scroll region; a row you open behaves as a link or button. QUESTION for the maintainer: The four flows colour Home's figures says a single row stays ink — is a month row a single row?
@@ -8998,6 +9014,12 @@ state: open
 ### Switch Settings › Language to עברית in the desktop app, open the menu with Alt (File, Edit, View, Help), try Help › License, and close a document with unsaved changes.
 unit: M60 U7
 should: Every menu item, the unsaved-work question and its buttons, and the License window's title are Hebrew, and still Hebrew after a restart. Drafted words (not in the glossary) to judge: קובץ, עריכה, תצוגה, עזרה, חדש, פתיחה…, מסמכים אחרונים, עדיין אין, ניקוי רשימת המסמכים האחרונים, שמירה, עותקים קודמים של המסמך…, סגירת החלון, יציאה, ביטול פעולה, ביצוע חוזר, גזירה, העתקה, הדבקה, בחירת הכול, פקודות…, הצגה או הסתרה של סרגל הצד, גודל אמיתי, הגדלה, הקטנה, מסך מלא, כלי מפתחים, רישיון, הודעות צד שלישי, קוד המקור, נפתח בדפדפן, בדיקת עדכונים עכשיו, אודות Emerald, מסמך Emerald, בלי לשמור, ביטול, 'לשמור את {name} לפני הסגירה?', the restart and crash sentences. Glossary words used: שמירה בשם (Save as), הדרכה (Guide me).
+state: open
+
+### Synthetic, year.emd, #/ → Taxes tile
+unit: M64 U5
+should: Open the month's tax lines by deduction (income tax, national insurance, health) with a total, as the comp's tax panel did
+breaks: Question: the panel shows the month's taxes as one figure and a link to Paychecks, because monthlyTaxes gives Home one sum; worth a domain read of the slip's tax lines for Home? src/ui/home/HomePanel.tsx (Taxes)
 state: open
 
 ### Tab through the strip of any tour, and read it with a screen reader.
@@ -18080,14 +18102,18 @@ report: M64 U4 landed at 599fbf9 on m64-redesign. Tokens: A's greys in both them
 milestone: M64
 scope: ui
 title: Home rebuilt in the new direction, the redesign-screen skill written from it, and the maintainer's one look (STOP)
-state: in_progress
+landed: 2026-11-25
+decision: D-616
+state: built
 brief: "**Why.** Home is the first screen a newcomer meets and the densest, at about twelve blocks today. It is also the maintainer's one look (D-608): if he likes it, everything after runs without him.\n\n**Do.** 1. Rebuild Home in the new direction around one question (what happened to my money this month), with U1's figures and U4's displays, on U16's synthetic year. Start from U2's inventory row: for every block, keep it, move it one click behind what it explains (a figure opens its breakdown, a category its rows), or cut it when another screen already shows it (All months is the Year screen); write the table in the report. The waiting questions, the place to read files and the guide become one strip that appears only when something needs the person. 2. **Taste check**: Impeccable's finish-reviewer on Home from the contact sheet against DESIGN.md; make its material fixes; design-review for the rules. 3. Write .claude/skills/redesign-screen/SKILL.md from what worked: read the inventory row and DESIGN.md; the screen's question in its title; the keep, move or cut table with a reason per block; nothing leaves without a place one click behind it, and the conversation still reaches it (parity); the displays from the kit, never a one-off; probe before and after, and the route leaves the budget's exempt list; the taste check and its fixes before landing; light, dark and Hebrew; check:tours; synthetic documents only, never the maintainer's (D-608); the report lists what moved where. Point design-review at it.\n\n**Tests.** Home's existing tests updated on purpose; probe:screens --budget passes for Home.\n\n**STOP: the maintainer's one look.** Land the unit, then ask him to open the app on the demo year (and his own document, if he wants, himself) and look at Home: does it look good, is it clear, is anything missing. If he likes it, the driver runs the rest without him. If not, his words decide what is redone: U5, or U3 and U4 with it."
-files: Home and its parts; a new project skill that every later screen unit follows.
+files: "src/ui/screens/Home.tsx\nsrc/ui/home/HomePanel.tsx\nsrc/ui/home/WaitingList.tsx\nsrc/ui/home/parts.tsx\nsrc/ui/home/months.ts\nsrc/ui/charts/HeadlineFigure.tsx\nsrc/ui/charts/MonthStrip.tsx\nsrc/ui/charts/PartOfWhole.tsx\nsrc/ui/charts/RankedBars.tsx\nsrc/ui/components/WaitingList.tsx\nsrc/i18n/en/home.ts\nsrc/i18n/he/home.ts\ndocs/redesign/budget.json\n.claude/skills/redesign-screen/SKILL.md\n.claude/skills/design-review/SKILL.md"
 blocks: ["M64 U1","M64 U4"]
 taken_by: run-milestone driver
 started: 2026-11-25
 branch: m64-redesign
+commit: adef2ef
 paths: "src/ui/screens/Home.tsx\nsrc/ui/screens/HomeShell.tsx\nsrc/ui/home/\n.claude/skills/redesign-screen/"
+report: "M64 U5 built (D-616). Home is the report: one question, what happened to my money this month. The month as one sentence (In October, 17,482 came in and 14,403 went out), left over as the one display figure named beside it, what waits as one strip below the answer (the shared WaitingList: one sentence and one verb a kind, the guide's line under it, drawn only when something needs the person), four tiles (came in, went out, saved, taxes) each with a six-month trend that open their breakdowns in the SidePanel, the fourteen months of left over as a MonthStrip that pages them, and Where it went (RankedBars, six and the rest folded, a category opening its rows beside the page) with Against the plan (PlanAgainst) beside it. Every figure ink.\n\nKeep, move or cut: drop band - Read files kept as the header's one primary, Add a paycheck cut (Paychecks has it; a file dropped anywhere is still read). Getting started - moved into the strip. Waiting for an answer - moved: a line and a verb each, Answer opens the kind's answers in the panel, Choose categories still goes to By merchant (it needs that screen; the ledger tour walks it). Five flow tiles - kept: left over the display figure, four tiles that open. Came in/went out chart - cut (Year's), the strip pages months. Where it went - kept. Bills and everything else, Biggest single charges - moved behind Went out. What came in - behind Came in. Against the plan - kept. Saved - behind Saved, as PartOfWhole whose parts open their rows or goal, with what came off the paycheck beside it. All months - cut (Year's The months).\n\nProbe on year.emd, before -> after: 622 -> 164 words, 10 -> 8 blocks, 70 -> 36 actions, 4 -> 1 primary, 8 -> 7 type sizes, 15 -> 10 colours (11 dark), 4.0 -> 1.7 windows, low AA 9 -> 0; Hebrew clean. #/ off the budget's exempt list: words 180, blocks 8, figures 7, actions 40, colours 11, screens 1.8; probe --budget exits 0.\n\nKit: RankedRow and Waiting take a tour anchor; PartOfWhole parts can open; HeadlineFigure's display names itself beside the figure; MonthStrip scales by finished months (a running month is clipped), is 80px tall, labels at caption. signedPercent isolates LTR so Hebrew keeps the sign before the number. Deleted MonthChart and IntakeBand, and Home's dead words in en and he.\n\nTaste check (impeccable finish-reviewer, contact sheet vs DESIGN.md and comp A). Made: display figure's name beside it, the sentence's amounts medium and unbroken, the Hebrew sign, the budget, the strip's scale and hollow only for the running month, each panel headed by its figure and what it counts. Not made: Read files as a hairline box (One primary action per screen says filled, as D-615 found); Choose categories as a panel (needs By merchant; tour clicks through); a tax breakdown by deduction (Home gets a month's taxes as one figure; Paychecks has the lines).\n\nSkill: .claude/skills/redesign-screen/SKILL.md, and design-review points at it.\n\nTests: surfaceRules' All months test rewritten to pin the report's shape; the one-Add-a-paycheck test now expects none on Home; months.test's signedPercent; HomePanel on the words and surface guard lists. Full suite green but one flaky timeout (formatWatch, passes alone); check:tours green at both sizes (its first run caught the strip's open value running past the screen when the open month is last; it is anchored to the strip's end now).\n\nFor the maintainer: open the app on the demo year (year.emd) at Home. Wrong would be: the sentence or left over not matching what he believes the month was by D-607's rules, a panel that is hard to find or close, or something he used on Home (All months, the chart, Add a paycheck) he now cannot reach in one click."
 
 ### M64 U6
 milestone: M64
