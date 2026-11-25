@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>M64 U3 directions</title>
+<link rel="stylesheet" href="shared/fonts.css">
+<style>
+  :root { --ground:#ffffff; --ink:#121212; --ink-2:#5f5f5c; --rule:#e4e4e0; --accent:#07805f; --soft:#f6f6f4; --pick:#eef7f3; color-scheme: light }
+  @media (prefers-color-scheme: dark) { :root { --ground:#0c0c0d; --ink:#f1f1ef; --ink-2:#a4a4a1; --rule:#26262a; --accent:#34d399; --soft:#141416; --pick:#10302a; color-scheme: dark } }
+  * { box-sizing: border-box }
+  body { margin: 0; background: var(--ground); color: var(--ink); font: 400 0.9375rem/1.6 "IBM Plex Sans", "IBM Plex Sans Hebrew", system-ui, sans-serif }
+  main { max-width: 1120px; margin: 0 auto; padding: 48px 24px 96px }
+  h1 { font-size: 2rem; font-weight: 600; letter-spacing: -0.015em; margin: 0 0 8px }
+  h2 { font-size: 1.25rem; font-weight: 600; margin: 56px 0 12px; padding-top: 16px; border-top: 1px solid var(--rule) }
+  h3 { font-size: 1rem; font-weight: 600; margin: 0 0 4px }
+  p, li { max-width: 72ch }
+  .lead { font-size: 1.125rem; color: var(--ink-2); margin: 0 }
+  a { color: var(--accent); text-underline-offset: 3px }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+  .dirs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; margin-top: 16px }
+  .dir { display: flex; flex-direction: column; gap: 8px }
+  .dir.pick { background: var(--pick); outline: 8px solid var(--pick) }
+  .thumb { position: relative; width: 100%; aspect-ratio: 1280 / 800; overflow: hidden; border: 1px solid var(--rule); background: var(--soft) }
+  .thumb iframe { position: absolute; top: 0; left: 0; width: 1280px; height: 800px; border: 0; transform-origin: 0 0; pointer-events: none }
+  .links { display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.875rem }
+  .dir dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px; font-size: 0.875rem }
+  .dir dt { color: var(--ink-2) }
+  .dir dd { margin: 0 }
+  table { border-collapse: collapse; width: 100%; font-size: 0.875rem; font-variant-numeric: tabular-nums }
+  th { text-align: start; font-weight: 500; color: var(--ink-2); border-bottom: 1px solid var(--ink); padding: 8px 8px 8px 0 }
+  td { border-bottom: 1px solid var(--rule); padding: 8px 8px 8px 0; vertical-align: top }
+  td.n, th.n { text-align: end }
+  .qa dt { font-weight: 600; margin-top: 12px }
+  .qa dd { margin: 2px 0 0; color: var(--ink) }
+  code { font-family: "IBM Plex Mono", monospace; font-size: 0.875em }
+  @media (max-width: 860px) { .dirs { grid-template-columns: 1fr } }
+</style>
+</head>
+<body>
+<main>
+<h1>M64 U3: Home and the rail, three ways</h1>
+<p class="lead">Three working directions for Home and the navigation, each on U16's synthetic year, each in light, dark and Hebrew. They were judged with Impeccable's critique, and one was picked: <strong>A, with parts of B and C</strong>. The decision is D-614 in <a href="../../09-decision-log.md#d-614">the decision log</a>. Every figure here is made up.</p>
+
+<h2>The shape questions, answered without an interview</h2>
+<p>Impeccable's redesign path asks its shape questions before it builds. D-608 says the session answers them itself, so the answers are written here, taken from D-606, D-608 and U2's inventory (<a href="../../redesign/screens.md">docs/redesign/screens.md</a>).</p>
+<dl class="qa">
+  <dt>Mode</dt><dd>Operate. Someone opens a personal-finance tool once a month to see how the month went and answer what is waiting. The old look is evidence, not the rule (D-606).</dd>
+  <dt>The task</dt><dd>Home answers <em>“How did last month go, and is anything waiting for me?”</em> It shows came in, went out, saved, taxes and left over. It answers the waiting items: 85 transactions with no category, 4 charges that look like bills, and 2 holdings nobody counted. It takes in the month's files. You page through months, open a figure's breakdown, and open a category's rows.</dd>
+  <dt>Who, and how often</dt><dd>A newcomer opening the ledger for the first time (D-606) should know in three seconds what the screen says and what to do next. A returning monthly user wants last month, which Home opens on (D-607).</dd>
+  <dt>States that matter</dt><dd>A finished month, the running month, a month with a statement missing (September, the second card), a month that saved more than it left over (July), and a month with no paycheck.</dd>
+  <dt>What must not change</dt><dd>Every figure stays the domain's (D-606); money is never a float in shipped code; nothing is fetched from the network; Hebrew reads right to left with every string from a document isolated; everything works from the keyboard; text contrast is AA.</dd>
+  <dt>What would make a polished result wrong</dt><dd>Generic dashboard filler: a row of KPI tiles, a chart that decorates, and the answer below the fold, which is where today's Home has it (1 of its 10 blocks is above the fold).</dd>
+  <dt>How each piece of data is shown</dt><dd>As U2's inventory and the dataviz skill say. The five flows are a total against its usual, with one hero (left over). Came in and went out by month is a trend with one axis. Where it went is a ranked list in one hue, with the tail folded in. Against the plan is a meter list with “over” as a word. Saved is a thin segmented bar above the list that names its parts. Category rows are a table.</dd>
+</dl>
+
+<h2>The roll</h2>
+<p>For the directions, <code>impeccable concept-seed --scope direction --mode operate</code> was run (seed reference <code>3f9df0c5e87345aa</code>). It assigned candidate 4 of the session's own grounded list and dealt six challengers. The grounded list, from most to least resonant:</p>
+<ol>
+  <li>a bank's monthly statement</li>
+  <li>a utility bill's twelve-month history</li>
+  <li>a kitchen wall calendar</li>
+  <li><strong>an annual report's highlights page, in the international typographic style (assigned)</strong></li>
+  <li>a till receipt</li>
+  <li>a rail line's map</li>
+  <li>a newspaper's weather page</li>
+</ol>
+<p>Each challenger was given one verdict:</p>
+<ul>
+  <li><em>Airport wayfinding signage</em>: competitive on product clarity. It became direction C.</li>
+  <li><em>A design annual's plate section</em>: declined. Its gift: one face carries display and caption, hierarchy by scale alone.</li>
+  <li><em>A reference page ruled by an engine</em>: declined. Its gift: every rule is one hairline.</li>
+  <li><em>A timetable's slide rack</em>: declined.</li>
+  <li><em>A full-bleed vertical feed</em>: declined. Its gift: one thing owns the first screen.</li>
+  <li><em>A variable-font specimen</em>: declined.</li>
+</ul>
+<p>The session's own top candidate, the statement, joined with the bill's history strip, became direction B (Impeccable's pick). The roll's decision page was not served: this unit ran unattended, and D-608 makes the pick the session's.</p>
+
+<h2>The three</h2>
+<div class="dirs">
+  <section class="dir pick">
+    <div class="thumb"><iframe src="a/index.html?theme=light&amp;lang=en&amp;still" title="A, Home" loading="lazy" tabindex="-1"></iframe></div>
+    <h3>A · The report (picked)</h3>
+    <p>The month is said as a sentence, with one monumental figure, left over, and the rest sits in columns of exact type on a 12-column grid. One face, with hierarchy from scale and weight.</p>
+    <dl><dt>Moving</dt><dd>a typographic rail with two groups, no icons</dd><dt>Leads with</dt><dd>the sentence and left over</dd><dt>Detail</dt><dd>a side panel at the end edge</dd><dt>Type</dt><dd>Plex 300 at 88px for the hero, 28px for the lede</dd><dt>Colour</dt><dd>ink on white, with the flows on the figures</dd><dt>Density</dt><dd>generous</dd><dt>Motion</dt><dd>lines draw once; the month slides as it pages; the panel grows its room</dd></dl>
+    <div class="links"><a href="a/index.html?theme=light&amp;lang=en">Light</a><a href="a/index.html?theme=dark&amp;lang=en">Dark</a><a href="a/index.html?theme=light&amp;lang=he">Hebrew</a><a href="a/index.html?theme=dark&amp;lang=he">Hebrew, dark</a></div>
+  </section>
+  <section class="dir">
+    <div class="thumb"><iframe src="b/index.html?theme=light&amp;lang=en&amp;still" title="B, Home" loading="lazy" tabindex="-1"></iframe></div>
+    <h3>B · The statement</h3>
+    <p>The month is a bank statement: one sheet on a tinted desk, read as a reconciliation, every line opening in place. A utility bill's fourteen-month strip is how you move through time.</p>
+    <dl><dt>Moving</dt><dd>tabs across the top, no rail</dd><dt>Leads with</dt><dd>the month strip, then the statement</dd><dt>Detail</dt><dd>opens in place, nested to the rows</dd><dt>Type</dt><dd>Plex at small sizes, tabular columns</dd><dt>Colour</dt><dd>a green-grey desk with a white sheet</dd><dt>Density</dt><dd>compact, 32px rows</dd><dt>Motion</dt><dd>rows grow by grid rows</dd></dl>
+    <div class="links"><a href="b/index.html?theme=light&amp;lang=en">Light</a><a href="b/index.html?theme=dark&amp;lang=en">Dark</a><a href="b/index.html?theme=light&amp;lang=he">Hebrew</a><a href="b/index.html?theme=dark&amp;lang=he">Hebrew, dark</a></div>
+  </section>
+  <section class="dir">
+    <div class="thumb"><iframe src="c/index.html?theme=light&amp;lang=en&amp;still" title="C, Home" loading="lazy" tabindex="-1"></iframe></div>
+    <h3>C · The signpost</h3>
+    <p>An airport's sign system on a working screen. The next step sits on a yellow band used for nothing else, left over is at gate-number scale, and every figure is a sign with an arrow to its own page.</p>
+    <dl><dt>Moving</dt><dd>command-led (Ctrl+K, “Go to, or ask…”), with a black icon rail</dd><dt>Leads with</dt><dd>the next step, then left over</dd><dt>Detail</dt><dd>a page, with a link back</dd><dt>Type</dt><dd>Plex 300 at 128px, large sentence case</dd><dt>Colour</dt><dd>white, with a black frame and the signal yellow</dd><dt>Density</dt><dd>low, one thing per band</dd><dt>Motion</dt><dd>the band flaps to its next message</dd></dl>
+    <div class="links"><a href="c/index.html?theme=light&amp;lang=en">Light</a><a href="c/index.html?theme=dark&amp;lang=en">Dark</a><a href="c/index.html?theme=light&amp;lang=he">Hebrew</a><a href="c/index.html?theme=dark&amp;lang=he">Hebrew, dark</a></div>
+  </section>
+</div>
+<script>
+  // Scale each live thumbnail to its box.
+  function fit() { document.querySelectorAll('.thumb').forEach((t) => { t.querySelector('iframe').style.transform = `scale(${t.clientWidth / 1280})` }) }
+  addEventListener('resize', fit); fit()
+</script>
+
+<h2>The critique</h2>
+<p>Each direction was reviewed by an isolated reviewer that had not seen the others or this page. The reviewers followed Impeccable's critique Assessment A: Nielsen's ten heuristics, cognitive load, and the emotional journey. They also scored each direction against the brief's five tests of “impressive”. Impeccable's detector (Assessment B) then ran over each folder. Its one finding, in A and C, is the diagonal hatch on the <em>Uncategorized</em> bar, which it reads as decoration. That is a false positive: the hatch is the texture that says “unknown” without relying on colour, as today's <code>fc-bar-unknown</code> does. B was clean. One departure from the method: the detector ran in this session rather than in a separate one, and with no browser overlay.</p>
+<table>
+  <thead><tr><th>Direction</th><th class="n">Heuristics /40</th><th class="n">Nice to the eye</th><th class="n">Calm type</th><th class="n">Figures at a glance</th><th class="n">Three seconds</th><th class="n">Not filler</th><th>The reviewer's first issue</th></tr></thead>
+  <tbody>
+    <tr><td>A · The report</td><td class="n">23</td><td class="n">7</td><td class="n">7</td><td class="n">5</td><td class="n">6</td><td class="n">6</td><td>Opening the panel at 1024px squeezed the 12-column page until its figures overlapped. It is fixed in the prototype: below 1360px the panel floats over the page.</td></tr>
+    <tr><td>B · The statement</td><td class="n">25</td><td class="n">6</td><td class="n">7</td><td class="n">5</td><td class="n">4</td><td class="n">8</td><td>The answer is below the fold: Went out opens by default, so Left over sits at about 911px on a 768px screen.</td></tr>
+    <tr><td>C · The signpost</td><td class="n">26</td><td class="n">7</td><td class="n">7</td><td class="n">5</td><td class="n">5</td><td class="n">6</td><td>The yellow band takes Home's first question. An alarm comes before the answer, and 2 of the 3 waiting items hide behind a carousel.</td></tr>
+  </tbody>
+</table>
+<p>All three reviewers found the same three faults:</p>
+<ul>
+  <li>Saved (₪4,493) is larger than Left over (₪4,088) and sits beside it as a peer, so nobody can tell how they relate. The prototypes drew <code>month_summary</code>'s saved, which counts the slip's pension and study fund. Home's own saved (D-607, D-609) does not, and is never above a positive left over.</li>
+  <li>The months chart decorates more than it explains: grey columns under 3:1, no scale, and months the keyboard cannot reach.</li>
+  <li>Nothing on screen says where a file is dropped.</li>
+</ul>
+
+<h2>The pick: A, with parts of B and C</h2>
+<p><strong>From A, the whole frame.</strong></p>
+<ul>
+  <li>The month said as one sentence, and left over as the one monumental figure. This is the three-second answer, and the one part every reviewer called a point of view.</li>
+  <li>The typographic rail, where words are recognised rather than recalled.</li>
+  <li>The side panel, which opens a figure's breakdown or a category's rows while the month stays in view.</li>
+  <li>One face, hierarchy by scale, hairlines.</li>
+</ul>
+<p><strong>From B:</strong></p>
+<ul>
+  <li>The fourteen-month strip as the pager, in place of A's flat line chart. It needs columns at 3:1, values in the tooltip and on the open month, and months reachable from the keyboard.</li>
+  <li>Opening in place where a list is the breakdown (the panel's categories open their rows), with what is open kept while you page months.</li>
+</ul>
+<p><strong>From C:</strong></p>
+<ul>
+  <li>The next step visible on Home: all three waiting items as one quiet list with a verb each. Not a carousel, not a colour of alarm, and never above the answer.</li>
+  <li>The palette, <em>Go to, or ask…</em> on Ctrl+K, as the second way around.</li>
+  <li>Every figure a door, with its affordance visible at rest.</li>
+</ul>
+<p>What the pick overrides, what it keeps, its fonts and icons, and what B and C taught are in D-614.</p>
+</main>
+</body>
+</html>

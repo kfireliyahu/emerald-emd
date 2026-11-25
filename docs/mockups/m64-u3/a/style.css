@@ -1,0 +1,185 @@
+/* A · The report. A financial report's highlights page set on a strict grid: the month said
+   as a sentence, one monumental figure, the rest in columns of exact type. One face (Plex),
+   hierarchy by scale and weight only; every rule one hairline. Detail opens in a side panel. */
+:root {
+  --ground: #ffffff;
+  --rail: #fafaf8;
+  --ink: #121212;
+  --ink-2: #5f5f5c;      /* 6.4:1 on ground */
+  --ink-3: #8a8a86;      /* never text that reports */
+  --rule: #e4e4e0;
+  --rule-strong: #cfcfca;
+  --accent: #07805f;     /* what you act on */
+  --accent-soft: #eef7f3;
+  --in: #1f7a4d; --out: #c4342b; --saved: #0b4f35; --tax: #a34a07;
+  --bar: #2b2b2b;
+  --track: #ececea;
+  --over: #c4342b;
+  --pop: 0 1px 2px rgb(0 0 0 / .04), 0 12px 32px rgb(0 0 0 / .10);
+  --cat-1:#3f74c9;--cat-2:#cf7f22;--cat-3:#21918c;--cat-4:#c4497e;--cat-5:#7b5cc9;--cat-6:#7f8f26;--cat-7:#2b97cc;--cat-8:#d4664a;--cat-9:#9a52a0;--cat-10:#5f7590;--cat-11:#a88a3e;--cat-0:#b5b5b0;
+  --ease: cubic-bezier(.22, 1, .36, 1);
+  --t: 200ms;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --ground:#0c0c0d;--rail:#121214;--ink:#f1f1ef;--ink-2:#a4a4a1;--ink-3:#6e6e70;--rule:#232326;--rule-strong:#34343a;--accent:#34d399;--accent-soft:#10302a;--in:#5cc98c;--out:#ef7b72;--saved:#3fb57f;--tax:#f2a03d;--bar:#d6d6d3;--track:#26262a;--over:#ef7b72;--pop:0 12px 32px rgb(0 0 0 / .5);--cat-1:#7aa5ee;--cat-2:#f0a554;--cat-3:#4cc2bb;--cat-4:#ec7fae;--cat-5:#a78bf0;--cat-6:#b2c25a;--cat-7:#62bfee;--cat-8:#f08f74;--cat-9:#c98bd0;--cat-10:#9aaec8;--cat-11:#d4b46a;--cat-0:#5c5c61; color-scheme: dark } }
+:root[data-theme="dark"] { --ground:#0c0c0d;--rail:#121214;--ink:#f1f1ef;--ink-2:#a4a4a1;--ink-3:#6e6e70;--rule:#232326;--rule-strong:#34343a;--accent:#34d399;--accent-soft:#10302a;--in:#5cc98c;--out:#ef7b72;--saved:#3fb57f;--tax:#f2a03d;--bar:#d6d6d3;--track:#26262a;--over:#ef7b72;--pop:0 12px 32px rgb(0 0 0 / .5);--cat-1:#7aa5ee;--cat-2:#f0a554;--cat-3:#4cc2bb;--cat-4:#ec7fae;--cat-5:#a78bf0;--cat-6:#b2c25a;--cat-7:#62bfee;--cat-8:#f08f74;--cat-9:#c98bd0;--cat-10:#9aaec8;--cat-11:#d4b46a;--cat-0:#5c5c61; color-scheme: dark }
+
+* { box-sizing: border-box }
+html, body { margin: 0; height: 100% }
+body { background: var(--ground); color: var(--ink); font: 400 0.875rem/1.5 "IBM Plex Sans", "IBM Plex Sans Hebrew", system-ui, sans-serif; -webkit-font-smoothing: antialiased }
+::selection { background: var(--accent-soft); color: var(--ink) }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: start }
+.ico { flex: none }
+.num { font-variant-numeric: tabular-nums }
+* { scrollbar-width: thin; scrollbar-color: var(--rule-strong) transparent }
+
+.frame { display: grid; grid-template-columns: 216px minmax(0, 1fr) 0; height: 100%; transition: grid-template-columns var(--t) var(--ease) }
+.frame.open { grid-template-columns: 216px minmax(0, 1fr) 420px }
+
+/* The rail: a typographic index, no icons, no plane but a hair lighter. */
+.rail { background: var(--rail); border-inline-end: 1px solid var(--rule); display: flex; flex-direction: column; padding: 20px 0 16px; overflow: auto }
+.rail .doc { padding: 0 20px 24px; display: flex; flex-direction: column; gap: 2px }
+.rail .doc b { font-weight: 600; font-size: 0.9375rem; letter-spacing: -0.01em }
+.rail .doc span { color: var(--ink-2); font-size: 0.75rem }
+.rail h2 { margin: 16px 20px 4px; font-size: 0.75rem; font-weight: 500; color: var(--ink-2) }
+.rail a { display: flex; align-items: center; height: 32px; padding: 0 20px; color: var(--ink-2); text-decoration: none; font-size: 0.875rem }
+.rail a:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 4%, transparent) }
+.rail a[aria-current="page"] { color: var(--ink); font-weight: 600 }
+.rail a[aria-current="page"]::after { content: ""; width: 6px; height: 6px; background: var(--accent); margin-inline-start: auto }
+.rail .foot { margin-top: auto; display: flex; gap: 4px; padding: 0 12px }
+.rail .foot button { display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 8px; color: var(--ink-2); font-size: 0.8125rem }
+.rail .foot button:hover { color: var(--ink) }
+
+/* The page: a 12-column grid at a fixed measure, generous margins. */
+.main { overflow: auto; outline: none }
+.page { max-width: 1120px; padding: 32px 48px 64px; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: 24px }
+.top { grid-column: 1 / -1; display: flex; align-items: center; gap: 16px; padding-bottom: 16px; border-bottom: 1px solid var(--rule) }
+.pager { display: flex; align-items: center; gap: 4px }
+.pager button { width: 32px; height: 32px; display: grid; place-items: center; color: var(--ink-2) }
+.pager button:hover:not(:disabled) { color: var(--ink); background: color-mix(in srgb, var(--ink) 5%, transparent) }
+.pager button:disabled { color: var(--ink-3); cursor: default }
+[dir="rtl"] .pager .ico, [dir="rtl"] .flip { transform: scaleX(-1) }
+h1 { margin: 0; font-size: 1.5rem; font-weight: 600; letter-spacing: -0.01em; min-width: 11ch }
+.state { color: var(--ink-2); font-size: 0.8125rem }
+.btn { margin-inline-start: auto; display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; border: 1px solid var(--rule-strong); color: var(--ink); font-size: 0.8125rem; font-weight: 500 }
+.btn:hover { border-color: var(--ink) }
+
+.lead { grid-column: 1 / span 8; padding-top: 40px }
+.sentence { margin: 0; font-size: 1.75rem; line-height: 1.3; font-weight: 400; letter-spacing: -0.015em; max-width: 26ch }
+.sentence .f { font-weight: 500; white-space: nowrap }
+.f-in { color: var(--in) } .f-out { color: var(--out) } .f-saved { color: var(--saved) } .f-tax { color: var(--tax) }
+.hero { display: flex; align-items: baseline; gap: 16px; margin-top: 32px; flex-wrap: wrap }
+.hero .big { font-size: 5.5rem; line-height: 1; font-weight: 300; letter-spacing: -0.035em }
+.hero .big .sym, .hero .big .dec { font-size: 2.25rem; color: var(--ink-2); font-weight: 400; letter-spacing: 0 }
+.hero .what { display: flex; flex-direction: column; gap: 2px }
+.hero .what b { font-size: 1rem; font-weight: 600 }
+.hero .what span { color: var(--ink-2) }
+.asks { grid-column: 9 / -1; padding-top: 48px; align-self: start }
+.ask { display: flex; flex-direction: column; gap: 8px; padding: 16px 0; border-top: 1px solid var(--ink) }
+.ask b { font-size: 0.9375rem; font-weight: 600 }
+.ask p { margin: 0; color: var(--ink-2) }
+.link { color: var(--accent); font-weight: 500; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; display: inline-flex; align-items: center; gap: 6px }
+.link:hover { text-decoration-thickness: 2px }
+.ask .link { align-self: flex-start }
+
+.figs { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; margin-top: 48px; border-top: 1px solid var(--rule) }
+.fig { padding-top: 16px; display: flex; flex-direction: column; gap: 4px; min-width: 0 }
+.fig .label { font-size: 0.8125rem; color: var(--ink-2); display: flex; align-items: center; gap: 6px }
+.fig .val { font-size: 1.5rem; font-weight: 500; letter-spacing: -0.01em }
+.fig .val .dec { font-size: 0.9375rem; color: var(--ink-2); font-weight: 400 }
+.fig .vs { font-size: 0.8125rem; color: var(--ink-2) }
+.fig:hover .label, .fig:focus-visible .label { color: var(--ink) }
+.fig .label .ico { opacity: 0; transition: opacity var(--t) }
+.fig:hover .label .ico, .fig:focus-visible .label .ico { opacity: 1 }
+
+.block { grid-column: 1 / -1; margin-top: 56px }
+.block > header { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding-bottom: 8px; border-bottom: 1px solid var(--rule) }
+.block h2 { margin: 0; font-size: 1rem; font-weight: 600 }
+.block header span { color: var(--ink-2); font-size: 0.8125rem }
+.chart { position: relative; margin-top: 8px }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible }
+.chart text { font: 400 11px "IBM Plex Sans", "IBM Plex Sans Hebrew", sans-serif; fill: var(--ink-2); font-variant-numeric: tabular-nums }
+.chart .grid { stroke: var(--rule); stroke-width: 1 }
+.chart .l-in { stroke: var(--in); stroke-width: 2; fill: none; stroke-linejoin: round; stroke-linecap: round }
+.chart .l-out { stroke: var(--out); stroke-width: 2; fill: none; stroke-linejoin: round; stroke-linecap: round }
+.chart .sel { stroke: var(--ink); stroke-width: 1 }
+.chart .hit { fill: transparent; cursor: pointer }
+.chart .hit:hover { fill: color-mix(in srgb, var(--ink) 4%, transparent) }
+.chart .dot { stroke: var(--ground); stroke-width: 2 }
+.chart text.end { font-weight: 500; fill: var(--ink) }
+.chart text.on { fill: var(--ink); font-weight: 600 }
+.chart .run { stroke-dasharray: 3 3 }
+.drawn path.l-in, .drawn path.l-out { stroke-dasharray: 1; animation: draw 700ms var(--ease) }
+@keyframes draw { from { stroke-dashoffset: 1 } to { stroke-dashoffset: 0 } }
+
+.cols { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 48px; margin-top: 56px }
+.cols .block { margin-top: 0; grid-column: auto }
+.rank { list-style: none; margin: 0; padding: 0 }
+.rank li button { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr) 92px; align-items: center; gap: 12px; height: 40px; border-bottom: 1px solid var(--rule) }
+.rank li button:hover { background: color-mix(in srgb, var(--ink) 3%, transparent) }
+.rank .nm { display: flex; align-items: center; gap: 8px; min-width: 0 }
+.rank .nm bdi { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.dotc { width: 8px; height: 8px; border-radius: 50%; flex: none }
+.rank .bar { height: 8px; background: var(--bar); border-radius: 0 4px 4px 0; justify-self: start }
+[dir="rtl"] .rank .bar { border-radius: 4px 0 0 4px }
+.rank .bar.unknown { background: repeating-linear-gradient(135deg, var(--ink-2) 0 2px, transparent 2px 5px) }
+.rank .amt { text-align: end; font-variant-numeric: tabular-nums }
+.rank .sub { color: var(--ink-2); font-size: 0.75rem; white-space: nowrap }
+.rank .more button { color: var(--ink-2) }
+.total { display: flex; justify-content: space-between; padding: 12px 0 0; font-weight: 600 }
+.total .num { font-weight: 600 }
+
+.meters { list-style: none; margin: 0; padding: 0 }
+.meters li button { width: 100%; display: grid; grid-template-columns: minmax(0, 1fr) auto; row-gap: 6px; padding: 12px 0; border-bottom: 1px solid var(--rule) }
+.meters li button:hover { background: color-mix(in srgb, var(--ink) 3%, transparent) }
+.meters .m-amt { text-align: end; font-variant-numeric: tabular-nums }
+.meters .m-amt span { color: var(--ink-2) }
+.meters .track { grid-column: 1 / -1; height: 8px; background: var(--track); border-radius: 4px; position: relative; overflow: hidden }
+.meters .fill { position: absolute; inset-block: 0; inset-inline-start: 0; background: var(--bar); border-radius: 4px }
+.meters .fill.over { background: var(--over) }
+.meters .note { grid-column: 1 / -1; font-size: 0.8125rem; color: var(--ink-2) }
+.meters .note.over { color: var(--over); font-weight: 500 }
+.seg { display: flex; gap: 2px; height: 8px; margin: 16px 0 8px }
+.seg span { border-radius: 4px; height: 100% }
+.saved-list { list-style: none; margin: 0; padding: 0 }
+.saved-list li { display: flex; align-items: center; gap: 8px; height: 32px; border-bottom: 1px solid var(--rule) }
+.saved-list li .num { margin-inline-start: auto }
+.saved-list .src { color: var(--ink-2); font-size: 0.75rem }
+
+.keys { grid-column: 1 / -1; margin-top: 48px; color: var(--ink-2); font-size: 0.75rem }
+
+/* The panel: grows its room at the inline end; the month stays where it was. Below 1360px
+   there is no room to give, so it floats over the page instead of squeezing it (critique, issue 1). */
+@media (max-width: 1359px) {
+  .frame.open { grid-template-columns: 216px minmax(0, 1fr) 0 }
+  .frame.open .panel { position: fixed; inset-block: 0; inset-inline-end: 0; width: 420px; z-index: 4; box-shadow: var(--pop) }
+}
+.panel { background: var(--ground); border-inline-start: 1px solid var(--rule); overflow: auto; min-width: 0 }
+.panel .in { width: 420px; padding: 24px 28px 48px; opacity: 0; transition: opacity var(--t) var(--ease) }
+.frame.open .panel .in { opacity: 1 }
+.panel header { display: flex; align-items: flex-start; gap: 12px }
+.panel header > div { flex: 1; min-width: 0 }
+.panel h2 { margin: 0; font-size: 1rem; font-weight: 600 }
+.panel .kicker { color: var(--ink-2); font-size: 0.8125rem }
+.panel .x { width: 32px; height: 32px; display: grid; place-items: center; color: var(--ink-2) }
+.panel .x:hover { color: var(--ink) }
+.panel .pbig { font-size: 2.5rem; font-weight: 300; letter-spacing: -0.03em; margin: 16px 0 4px }
+.panel .pbig .sym, .panel .pbig .dec { font-size: 1.25rem; color: var(--ink-2); font-weight: 400 }
+.panel .lead2 { color: var(--ink-2); margin: 0 0 16px }
+table.rows { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums }
+table.rows th { text-align: start; font-weight: 500; color: var(--ink-2); font-size: 0.75rem; height: 32px; border-bottom: 1px solid var(--rule-strong); position: sticky; top: 0; background: var(--ground) }
+table.rows td { height: 40px; border-bottom: 1px solid var(--rule) }
+table.rows .r { text-align: end }
+table.rows td.d { color: var(--ink-2); width: 72px }
+table.rows tr.t td { font-weight: 600; border-bottom: 0 }
+.panel .foot { margin-top: 16px }
+
+.tip { position: fixed; z-index: 10; pointer-events: none; background: var(--ground); border: 1px solid var(--rule-strong); box-shadow: var(--pop); padding: 8px 12px; font-size: 0.8125rem; min-width: 160px; font-variant-numeric: tabular-nums }
+.tip b { display: block; margin-bottom: 4px; font-weight: 600 }
+.tip div { display: flex; justify-content: space-between; gap: 16px }
+.tip i { display: inline-block; width: 10px; height: 2px; vertical-align: middle; margin-inline-end: 6px }
+
+.swap { animation: swap 260ms var(--ease) }
+@keyframes swap { from { opacity: 0; transform: translateX(calc(var(--dir, 1) * 12px)) } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important } }

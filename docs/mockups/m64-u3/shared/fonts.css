@@ -1,0 +1,14 @@
+/* The faces every direction uses, served from beside the page (offline: no font link).
+   Copied from the @fontsource packages the app already bundles; nothing new is installed. */
+@font-face { font-family: "IBM Plex Sans"; font-weight: 300; font-display: swap; src: url("../fonts/ibm-plex-sans-latin-300-normal.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Sans"; font-weight: 400; font-display: swap; src: url("../fonts/ibm-plex-sans-latin-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Sans"; font-weight: 500; font-display: swap; src: url("../fonts/ibm-plex-sans-latin-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Sans"; font-weight: 600; font-display: swap; src: url("../fonts/ibm-plex-sans-latin-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Sans Hebrew"; font-weight: 300; font-display: swap; src: url("../fonts/ibm-plex-sans-hebrew-hebrew-300-normal.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Sans Hebrew"; font-weight: 400; font-display: swap; src: url("../fonts/ibm-plex-sans-hebrew-hebrew-400-normal.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Sans Hebrew"; font-weight: 500; font-display: swap; src: url("../fonts/ibm-plex-sans-hebrew-hebrew-500-normal.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Sans Hebrew"; font-weight: 600; font-display: swap; src: url("../fonts/ibm-plex-sans-hebrew-hebrew-600-normal.woff2") format("woff2"); }
+@font-face { font-family: "IBM Plex Mono"; font-weight: 400; font-display: swap; src: url("../fonts/ibm-plex-mono-latin-400-normal.woff2") format("woff2"); }
+
+/* ?still: every animation off, for a picture taken in a background tab (which never runs them). */
+.still *, .still *::before, .still *::after { animation: none !important; transition: none !important }

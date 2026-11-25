@@ -1,0 +1,140 @@
+/* B · The statement. The month is a bank statement: one sheet on a tinted desk, read top to
+   bottom as a reconciliation (came in, went out, left over), every line opening in place to
+   what it is made of. Above it, a utility bill's fourteen-month history strip is how you move
+   through time. Sections are tabs across the top; there is no side rail. Dense, exact, quiet. */
+:root {
+  --desk: #e8eeea;
+  --sheet: #ffffff;
+  --ink: #13201a;
+  --ink-2: #536059;   /* 6.6:1 on the sheet */
+  --ink-3: #8b968f;
+  --rule: #e1e7e3;
+  --rule-strong: #c6d0ca;
+  --accent: #07805f;
+  --accent-ink: #ffffff;
+  --accent-soft: #e9f5ef;
+  --in: #1f7a4d; --out: #b8322a; --saved: #0b4f35; --tax: #a34a07;
+  --col: #c3cdc7;     /* the strip's other months */
+  --col-on: #13201a;  /* the open month */
+  --over: #b8322a;
+  --pop: 0 1px 2px rgb(0 0 0 / .05), 0 10px 28px rgb(19 32 26 / .12);
+  --cat-1:#3f74c9;--cat-2:#cf7f22;--cat-3:#21918c;--cat-4:#c4497e;--cat-5:#7b5cc9;--cat-6:#7f8f26;--cat-7:#2b97cc;--cat-8:#d4664a;--cat-9:#9a52a0;--cat-10:#5f7590;--cat-11:#a88a3e;--cat-0:#b5b5b0;
+  --ease: cubic-bezier(.22, 1, .36, 1);
+  --t: 180ms;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --desk:#090d0b;--sheet:#111815;--ink:#e6eee9;--ink-2:#99a79f;--ink-3:#5f6d66;--rule:#1f2a25;--rule-strong:#2e3b35;--accent:#34d399;--accent-ink:#05241a;--accent-soft:#103027;--in:#5cc98c;--out:#ef7b72;--saved:#3fb57f;--tax:#f2a03d;--col:#2f3d37;--col-on:#e6eee9;--over:#ef7b72;--pop:0 12px 32px rgb(0 0 0 / .55);--cat-1:#7aa5ee;--cat-2:#f0a554;--cat-3:#4cc2bb;--cat-4:#ec7fae;--cat-5:#a78bf0;--cat-6:#b2c25a;--cat-7:#62bfee;--cat-8:#f08f74;--cat-9:#c98bd0;--cat-10:#9aaec8;--cat-11:#d4b46a;--cat-0:#5c5c61; color-scheme: dark } }
+:root[data-theme="dark"] { --desk:#090d0b;--sheet:#111815;--ink:#e6eee9;--ink-2:#99a79f;--ink-3:#5f6d66;--rule:#1f2a25;--rule-strong:#2e3b35;--accent:#34d399;--accent-ink:#05241a;--accent-soft:#103027;--in:#5cc98c;--out:#ef7b72;--saved:#3fb57f;--tax:#f2a03d;--col:#2f3d37;--col-on:#e6eee9;--over:#ef7b72;--pop:0 12px 32px rgb(0 0 0 / .55);--cat-1:#7aa5ee;--cat-2:#f0a554;--cat-3:#4cc2bb;--cat-4:#ec7fae;--cat-5:#a78bf0;--cat-6:#b2c25a;--cat-7:#62bfee;--cat-8:#f08f74;--cat-9:#c98bd0;--cat-10:#9aaec8;--cat-11:#d4b46a;--cat-0:#5c5c61; color-scheme: dark }
+
+* { box-sizing: border-box }
+html, body { margin: 0; height: 100% }
+body { background: var(--desk); color: var(--ink); font: 400 0.875rem/1.45 "IBM Plex Sans", "IBM Plex Sans Hebrew", system-ui, sans-serif; display: grid; grid-template-rows: 40px 40px minmax(0, 1fr); -webkit-font-smoothing: antialiased }
+::selection { background: var(--accent-soft) }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; text-align: start }
+.ico { flex: none }
+* { scrollbar-width: thin; scrollbar-color: var(--rule-strong) transparent }
+
+/* The title bar and the tab strip: one plane, the desk's own colour. */
+.bar { display: flex; align-items: center; gap: 12px; padding: 0 16px; font-size: 0.8125rem }
+.bar b { font-weight: 600 }
+.bar .doc { color: var(--ink-2) }
+.bar .tools { margin-inline-start: auto; display: flex; gap: 4px }
+.bar .tools button { display: inline-flex; align-items: center; gap: 6px; height: 28px; padding: 0 8px; color: var(--ink-2) }
+.bar .tools button:hover { color: var(--ink) }
+.tabs { display: flex; align-items: stretch; gap: 4px; padding: 0 12px; border-bottom: 1px solid var(--rule-strong) }
+.tabs a { display: flex; align-items: center; padding: 0 12px; color: var(--ink-2); text-decoration: none; font-weight: 500; font-size: 0.875rem; border-bottom: 2px solid transparent; margin-bottom: -1px }
+.tabs a:hover { color: var(--ink) }
+.tabs a[aria-current="page"] { color: var(--ink); border-bottom-color: var(--accent) }
+.tabs .sp { flex: 1 }
+.tabs .more { display: flex; align-items: center; gap: 4px; padding: 0 12px; color: var(--ink-2); font-weight: 500 }
+.tabs .more[aria-expanded="true"] { color: var(--ink) }
+.menu { position: absolute; z-index: 5; background: var(--sheet); box-shadow: var(--pop); border: 1px solid var(--rule); padding: 4px 0; min-width: 180px }
+.menu a { display: flex; align-items: center; height: 32px; padding: 0 12px; color: var(--ink); text-decoration: none }
+.menu a:hover, .menu a:focus-visible { background: var(--accent-soft) }
+
+.desk { overflow: auto; outline: none; padding: 24px 24px 48px }
+.sheet { max-width: 1080px; margin: 0 auto; background: var(--sheet); border: 1px solid var(--rule) }
+
+.head { display: flex; align-items: flex-end; gap: 16px; padding: 20px 24px 12px }
+.head h1 { margin: 0; font-size: 1.25rem; font-weight: 600; letter-spacing: -0.005em }
+.head .span { color: var(--ink-2); font-size: 0.8125rem; padding-bottom: 2px }
+.head .span.warn { color: var(--out); font-weight: 500 }
+.primary { margin-inline-start: auto; display: inline-flex; align-items: center; gap: 8px; height: 32px; padding: 0 12px; background: var(--accent); color: var(--accent-ink); font-weight: 500; font-size: 0.8125rem }
+.primary:hover { filter: brightness(1.08) }
+
+/* The strip: fourteen months as a bill prints them, the open one dark. */
+.strip { padding: 4px 24px 0; position: relative }
+.strip svg { display: block; width: 100%; height: auto; overflow: visible }
+.strip text { font: 400 11px "IBM Plex Sans", "IBM Plex Sans Hebrew", sans-serif; fill: var(--ink-2); font-variant-numeric: tabular-nums }
+.strip text.on { fill: var(--ink); font-weight: 600 }
+.strip .c { fill: var(--col) }
+.strip .c.on { fill: var(--col-on) }
+.strip .c.run { fill: url(#hatch) }
+.strip .tick { stroke: var(--in); stroke-width: 2 }
+.strip .base { stroke: var(--rule-strong) }
+.strip .hit { fill: transparent; cursor: pointer }
+.strip .hit:focus-visible { outline: none; stroke: var(--accent); stroke-width: 2 }
+.strip .miss { fill: var(--out) }
+.strip .key { display: flex; gap: 16px; justify-content: flex-end; color: var(--ink-2); font-size: 0.75rem; padding: 4px 0 0 }
+.strip .key i { display: inline-block; width: 10px; height: 10px; vertical-align: -1px; margin-inline-end: 6px }
+
+.body { display: grid; grid-template-columns: minmax(0, 1fr) 320px; border-top: 1px solid var(--rule-strong); margin-top: 12px }
+.stmt { padding: 8px 24px 24px; border-inline-end: 1px solid var(--rule) }
+.cols-h, .line > .row, .sub > .row, .leaf { display: grid; grid-template-columns: 20px minmax(0, 1fr) 124px 124px 64px; align-items: center; column-gap: 12px }
+.cols-h { height: 32px; color: var(--ink-2); font-size: 0.75rem; border-bottom: 1px solid var(--rule-strong) }
+.cols-h span:nth-child(n+3), .r { text-align: end; font-variant-numeric: tabular-nums }
+.row { width: 100%; height: 40px; border-bottom: 1px solid var(--rule) }
+button.row:hover { background: color-mix(in srgb, var(--accent-soft) 60%, transparent) }
+.row .lab { display: flex; align-items: center; gap: 8px; min-width: 0 }
+.row .lab bdi { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.row .lab .why { color: var(--ink-2); font-size: 0.75rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+.line > .row { font-weight: 500 }
+.line > .row .amt { font-weight: 600 }
+.chev { color: var(--ink-2); transition: transform var(--t) var(--ease); display: grid; place-items: center }
+[aria-expanded="true"] > .chev { transform: rotate(90deg) }
+[dir="rtl"] [aria-expanded="false"] > .chev { transform: scaleX(-1) }
+.avg { color: var(--ink-2) }
+.chg { color: var(--ink-2); font-size: 0.8125rem }
+.f-in { color: var(--in) } .f-out { color: var(--out) } .f-saved { color: var(--saved) } .f-tax { color: var(--tax) }
+.equals > .row { border-bottom: 3px double var(--ink); border-top: 1px solid var(--ink); height: 48px; font-size: 1rem }
+.equals .amt { font-size: 1.125rem }
+
+/* Opening in place: the row's room grows by grid rows, never a measured height. */
+.more-rows { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--t) var(--ease) }
+.more-rows.open { grid-template-rows: 1fr }
+.more-rows > div { overflow: hidden; min-height: 0 }
+.sub > .row { height: 32px; font-size: 0.8125rem }
+.sub > .row .lab { padding-inline-start: 16px }
+.leaf { height: 32px; font-size: 0.8125rem; border-bottom: 1px dotted var(--rule); color: var(--ink-2) }
+.leaf .lab { padding-inline-start: 40px; display: flex; gap: 12px; min-width: 0 }
+.leaf .lab .d { width: 64px; flex: none; white-space: nowrap }
+.leaf .lab bdi { color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.leaf .r { color: var(--ink) }
+.leaf.all a { color: var(--accent); font-weight: 500; text-decoration: underline; text-underline-offset: 3px }
+.dotc { width: 8px; height: 8px; border-radius: 50%; flex: none; display: inline-block }
+.share { height: 6px; background: var(--ink); opacity: .55; border-radius: 0 3px 3px 0; justify-self: end }
+
+.notes { padding: 12px 20px 24px; display: flex; flex-direction: column; gap: 24px }
+.notes h2 { margin: 0 0 4px; font-size: 0.8125rem; font-weight: 600; display: flex; justify-content: space-between }
+.notes h2 span { color: var(--ink-2); font-weight: 400 }
+.item { padding: 10px 0; border-bottom: 1px solid var(--rule); display: grid; grid-template-columns: 16px minmax(0, 1fr); column-gap: 8px }
+.item .n { width: 16px; height: 16px; display: grid; place-items: center; font-size: 0.6875rem; font-weight: 600; background: var(--ink); color: var(--sheet); margin-top: 2px }
+.item p { margin: 0 }
+.item .why { color: var(--ink-2); font-size: 0.8125rem }
+.item a { color: var(--accent); font-weight: 500; font-size: 0.8125rem; text-decoration: underline; text-underline-offset: 3px; grid-column: 2 }
+.meter { padding: 8px 0; border-bottom: 1px solid var(--rule); display: grid; grid-template-columns: minmax(0, 1fr) auto; row-gap: 6px; font-size: 0.8125rem }
+.meter .r span { color: var(--ink-2) }
+.meter .track { grid-column: 1 / -1; height: 6px; background: var(--rule); border-radius: 3px; overflow: hidden; position: relative }
+.meter .fill { position: absolute; inset-block: 0; inset-inline-start: 0; background: var(--ink); border-radius: 3px; opacity: .8 }
+.meter .fill.over { background: var(--over); opacity: 1 }
+.meter .note { grid-column: 1 / -1; color: var(--ink-2); font-size: 0.75rem }
+.meter .note.over { color: var(--over); font-weight: 500 }
+.foot { padding: 12px 24px; border-top: 1px solid var(--rule); color: var(--ink-2); font-size: 0.75rem; display: flex; justify-content: space-between }
+
+.tip { position: fixed; z-index: 10; pointer-events: none; background: var(--sheet); border: 1px solid var(--rule-strong); box-shadow: var(--pop); padding: 8px 12px; font-size: 0.8125rem; min-width: 170px; font-variant-numeric: tabular-nums }
+.tip b { display: block; margin-bottom: 4px }
+.tip div { display: flex; justify-content: space-between; gap: 16px }
+.swap { animation: swap 220ms var(--ease) }
+@keyframes swap { from { opacity: .2 } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important } }
