@@ -54,12 +54,12 @@
       "screens": 1.1
     },
     "#/plan": {
-      "words": 779,
-      "blocks": 4,
-      "figures": 8,
-      "actions": 117,
-      "colours": 17,
-      "screens": 3.5
+      "words": 300,
+      "blocks": 8,
+      "figures": 6,
+      "actions": 36,
+      "colours": 16,
+      "screens": 2.7
     },
     "#/wealth": {
       "words": 122,
@@ -314,7 +314,6 @@
     "#/year",
     "#/paychecks",
     "#/paychecks/deductions",
-    "#/plan",
     "#/wealth",
     "#/wealth/funds",
     "#/wealth/goals",

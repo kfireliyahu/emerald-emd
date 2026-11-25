@@ -519,6 +519,7 @@ written out here.
 | D-617 | 2026-11-25 | Where a screen's interactions open: reading more in the side panel, one value in place, a form of several fields in the same panel, a job of several steps on a page of its own with one way back, a choice in a popover, and a dialog only to confirm what cannot be undone | M64 |
 | D-618 | 2026-11-25 | Transactions is rebuilt as the report: each tab answers first in one sentence, its views are one tab strip, a row, a rule from a fix and what is left out open beside the rows, a selection acts from the table's own header row, and what was just done keeps its place with its Undo | M64 |
 | D-619 | 2026-11-25 | Reading files is the report: the batch said first in one sentence, Write in the list's own header row, a statement's gap beside the list rather than on a page, a removal undone where it was, a reader's delete asked at its button, the mapper's one way back at its head, and Readers one translated list | M64 |
+| D-621 | 2026-11-25 | Plan is rebuilt as the report: net pay and what the bills take first said as one sentence with whether every shekel has a job, to split its one figure, what waits one strip below it, the split's bar with each bucket held against a month, and the bills one row each with its one choice in place; a bucket, a bill, net pay, the cushion and the plan's months open beside the page | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1381,6 +1382,63 @@ name needs `Bidi`. A select-all box in the header — a judgement left for the r
 **Where.** `src/ui/screens/ReadStatements.tsx`, `src/ui/import/GapPanel.tsx`, `src/ui/screens/Readers.tsx`,
 `src/ui/paychecks/ReadSlips.tsx`, `src/ui/components/ConfirmAtButton.tsx`, `src/ui/import/MapperScreen.tsx`,
 the two foot bars, `docs/redesign/budget.json`.
+
+## D-621 · 2026-11-25 · Plan is rebuilt as the report: net pay and what the bills take first said as one sentence with whether every shekel has a job, to split its one figure, what waits one strip below it, the split's bar with each bucket held against a month, and the bills one row each with its one choice in place; a bucket, a bill, net pay, the cushion and the plan's months open beside the page <a id="d-621"></a>
+
+**Context.** M64 U9: Plan, the densest ledger screen U2 measured (779 words, 117 actions, 5
+primaries, 10 type sizes, 3.5 windows on the synthetic year), rebuilt in D-614's direction with
+D-615's kit, D-616's Home as the pattern and D-617's places for each interaction, with the
+maintainer's addition that interactions behave as ordinary desktop apps have taught people.
+
+**Decision.** Plan answers one question, *where should next month's money go?*
+
+| Block before | Now | Why |
+|---|---|---|
+| The plan's name and month | **kept**: the name as `h1`, *Default* beside it, the month pager | the plan is what the page is about |
+| Months on this plan (twelve boxes) | **moved** behind *Choose its months* by the name, in the side panel | it says which months the plan covers, not where the money goes |
+| What the month records (deposit, payment) | **moved** into the waiting strip, one verb (*Record it*); the *recorded* confirmation **cut** | it asks something of the person; Goals and Debts show what was recorded |
+| The cushion | **moved** behind its tile, which says what it holds against its target | it explains the cushion figure |
+| Four tiles (net pay, bills out of net, to split, not given a job) | **kept** to split as the display figure after the sentence; net pay and the cushion as tiles that open; bills out of net and *not given a job* **cut** | the sentence says both, and the bills' totals line says what is out of net |
+| Net pay's basis (Change) | **moved** behind the Net pay tile | it explains net pay |
+| Bills (seven columns, a three-way switch on each row) | **kept** as a data table of name, a month, the month held against and what it does; the choice one popover in place; how often, each charge, how it is recognised, *It ended* and *Stop tracking* **moved** into the bill's form, opened by its name | the row says what the bill does to the plan; the rest edits it |
+| *4 charges look like bills* | **moved** into the waiting strip, their cards behind *Look at them* | it asks something of the person |
+| The split's bar | **kept**, its dividers, Bar or Ring; the bills-in-split hatch and the band's hatch **cut** (no gradients); a segment's label whole units, what it got said in the list | the split is a part of a whole |
+| Planned, got, over the plan (three figures) | **cut** into one sentence under *The split*, with the gap in words | a sentence carries it |
+| *Every shekel has a job* box, *Give it to …* | **moved**: the state into the answer, *Give it* into the waiting strip | the answer comes first |
+| The buckets table | **kept** as `PlanAgainst`, each bucket's planned against what it got, in two columns; its name, what it is for, how much, keep this size, counts as, up and down, split and remove **moved** into the bucket's panel | the bar and the planned and got figures stay; the editor explains a bucket |
+| New bucket, add one this plan does not use, suggest goal amounts | **moved** behind *Add a bucket* | making a thing is a form beside the page |
+| The plan's menu | **kept** as a popover; delete asks in a popover at the same button, naming the plan | a choice is a popover; a confirmation sits where it was asked |
+
+Where each interaction opens: a bucket's line, a bill's name, net pay, the cushion, the charges
+that look like bills and the plan's months open in the `SidePanel`; a bill's role and the month
+held against are popovers in place; the plan's name is renamed in place from the menu; a bucket's
+and a bill's fields are a form in the panel (Enter saves, Esc puts back); removing a bucket, stopping
+tracking a bill and deleting the plan ask at the button that asked, naming the thing, *Keep*
+focused, and Esc takes back the question and never the panel; Esc while a divider is held puts it
+back and writes nothing. No delete here has an undo, so each asks.
+
+Every figure is ink. The probe after: 272 words, 7 blocks, 5 figures, 31 actions, no primary, 7
+type sizes, 15 colours (16 dark), 2.4 windows, nothing under AA, in light, dark and Hebrew. `#/plan`
+leaves the budget's exempt list with limits of 300 words, 8 blocks, 6 figures, 36 actions, 16
+colours and 2.7 windows. The kit gains two optional fields on `PlanAgainst`'s line and nothing else:
+a `mark` before the name (the bucket's colour on the bar, *A bucket wears what it points at*) and an
+`unknown` sentence said instead of left or over when what happened is not known, or is a deposit
+over its plan, which is not bad news.
+
+**Taste check.** Impeccable's finish-reviewer on the light, dark and Hebrew shots. Made: *Keep*
+focused in a removal's question and Esc scoped to it, Esc cancelling a drag, the last gradient on the
+bar, the bar's labels in whole units, the midpoint axis label, the gap said in words, the role choice
+as text at rest, the merchant line hidden where it repeats the name, *Choose its months* as a verb,
+the menu's glyph. Not made: mirroring the bar in Hebrew (it was left to right before this unit and
+its drag reads the pointer's x; a follow-up), the band from net pay into the split (the inventory's
+*flow from net pay* shape), naming each unmeasured bucket (a follow-up).
+
+**Found, not changed.** The shell's waiting notice draws its buttons at 13px, off the ramp, on every
+screen but Home, and spends one of a route's seven type sizes; `Button size="sm"` is 13px too.
+
+**Where.** `src/ui/screens/Plan.tsx`, `src/ui/plan/BucketEditor.tsx`, `src/ui/plan/FixedSection.tsx`,
+`src/ui/plan/PlanBar.tsx`, `src/ui/charts/PlanAgainst.tsx`, `src/i18n/{en,he}/plan.ts`,
+`docs/redesign/budget.json`.
 
 ## Related
 

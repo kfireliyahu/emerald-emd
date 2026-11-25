@@ -4,6 +4,7 @@ import { formatMoney, money, type CurrencyCode, type Money } from '@/core/money.
 import type { SplitResult } from '@/domain/splitter.ts'
 import { useT, type Translate } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { wholeMoney } from '@/ui/charts/kit.ts'
 import {
   crossPath,
   easeInOut,
@@ -80,6 +81,7 @@ export function PlanBar({
   tip,
   onTrade,
   onCommit,
+  onCancel,
   onNudge,
   snap,
   label,
@@ -105,6 +107,8 @@ export function PlanBar({
   tip?: { readonly text: string; readonly at: number } | undefined
   onTrade?: ((trade: Trade, at: number) => void) | undefined
   onCommit?: ((trade: Trade) => void) | undefined
+  /** Esc while a divider is held: the drag is dropped and nothing is written (M64 U9). */
+  onCancel?: (() => void) | undefined
   onNudge?: ((trade: Trade) => void) | undefined
   snap: number
   /** Names the bar when more than one is on screen (S2). */
@@ -233,12 +237,26 @@ export function PlanBar({
       last = { leftId: here.entry.allocation.id, leftMinor: edge - here.start }
       onTrade(last, box === undefined ? 0 : moved.clientX - box.left)
     }
-    const stop = (): void => {
+    const release = (): void => {
       handle.removeEventListener('pointermove', move)
       handle.removeEventListener('pointerup', stop)
       handle.removeEventListener('pointercancel', stop)
+      window.removeEventListener('keydown', cancel, true)
+    }
+    const stop = (): void => {
+      release()
       if (last !== undefined) onCommit?.(last)
     }
+    // Esc while the divider is held puts it back, as a drag does everywhere.
+    const cancel = (key: KeyboardEvent): void => {
+      if (key.key !== 'Escape') return
+      key.preventDefault()
+      key.stopPropagation()
+      release()
+      if (handle.hasPointerCapture(event.pointerId)) handle.releasePointerCapture(event.pointerId)
+      onCancel?.()
+    }
+    window.addEventListener('keydown', cancel, true)
     handle.addEventListener('pointermove', move)
     handle.addEventListener('pointerup', stop)
     handle.addEventListener('pointercancel', stop)
@@ -423,7 +441,7 @@ export function PlanBar({
   const centre = (
     <>
       <span className="text-caption text-ink-secondary">{say('plan.bar.toSplit')}</span>
-      <b className="text-[22px] font-medium tabular-nums">{formatMoney(result.splittable)}</b>
+      <b className="text-title font-medium tabular-nums">{formatMoney(result.splittable)}</b>
       {netOff.minor > 0 && (
         <span className="text-caption text-ink-secondary tabular-nums">{say('plan.bar.afterBills', { amount: formatMoney(netOff) })}</span>
       )}
@@ -435,12 +453,8 @@ export function PlanBar({
         <div className="flex h-[34px] text-caption" aria-hidden>
           {netOff.minor > 0 && (
             <div
-              className="flex min-w-0 items-center overflow-hidden border border-e-0 border-hairline-strong px-2.5 whitespace-nowrap text-ink-secondary"
-              style={{
-                width: `${String((1 - keepShare) * 100)}%`,
-                background:
-                  'repeating-linear-gradient(135deg, var(--color-surface) 0 6px, var(--color-hairline) 6px 7px)',
-              }}
+              className="flex min-w-0 items-center overflow-hidden border border-e-0 border-dashed border-hairline-strong px-2.5 whitespace-nowrap text-ink-secondary"
+              style={{ width: `${String((1 - keepShare) * 100)}%` }}
             >
               {say('plan.bar.billsOutOfNet', { amount: formatMoney(netOff) })}
             </div>
@@ -460,9 +474,8 @@ export function PlanBar({
     </>
   )
   const axisRow = (
-        <div className="mt-2 flex justify-between text-[11px] text-ink-tertiary tabular-nums" aria-hidden>
+        <div className="mt-2 flex justify-between text-caption text-ink-secondary tabular-nums" aria-hidden>
           <span>{formatMoney(money(0, currency))}</span>
-          <span>{formatMoney(money(Math.round(total / 2), currency))}</span>
           <span>{formatMoney(money(total, currency))}</span>
         </div>
   )
@@ -554,7 +567,7 @@ export function PlanBar({
                   borderTopColor: piece.colour,
                   background:
                     piece.kind === 'fixed'
-                      ? 'repeating-linear-gradient(135deg, var(--color-surface) 0 3px, var(--color-hairline) 3px 4px)'
+                      ? 'var(--color-surface)'
                       : piece.kind === 'free'
                         ? 'transparent'
                         : `color-mix(in srgb, ${piece.colour} 22%, var(--color-background))`,
@@ -588,8 +601,7 @@ export function PlanBar({
               className="relative flex min-w-0 flex-col justify-center overflow-hidden border-t-[3px] border-t-ink-tertiary px-2.5 text-caption"
               style={{
                 width: pct(share.minor),
-                background:
-                  'repeating-linear-gradient(135deg, var(--color-surface) 0 6px, var(--color-hairline) 6px 7px)',
+                background: 'var(--color-surface)',
               }}
               title={`${say('plan.bar.billsInSplit', { amount: formatMoney(share) })}${billsGot === undefined ? '' : say('plan.bar.charged', { amount: formatMoney(billsGot) })}`}
             >
@@ -624,8 +636,7 @@ export function PlanBar({
                 )}
                 {entry.amount.minor / total > 0.05 && (
                   <span className="relative truncate tabular-nums text-ink-secondary">
-                    {formatMoney(entry.amount)}
-                    {bucketGot === undefined ? '' : say('plan.bar.gotDot', { amount: formatMoney(bucketGot) })}
+                    {wholeMoney(entry.amount)}
                   </span>
                 )}
               </div>
