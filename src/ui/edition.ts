@@ -16,3 +16,14 @@
 export function isDemo(): boolean {
   return import.meta.env.MODE === 'demo'
 }
+
+/**
+ * **Whether this build opens the specimen page** (M64 U16, D-611): `#/specimen`,
+ * every component and every way of showing data in every state, light and dark
+ * side by side. The dev server and the demo build open it; the desktop
+ * release (`vite build`, mode `production`) never does, and since both halves
+ * are constants there, the page's chunk is never emitted into `dist/`.
+ */
+export function specimenOpens(): boolean {
+  return import.meta.env.DEV || import.meta.env.MODE === 'demo'
+}
