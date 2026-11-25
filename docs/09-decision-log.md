@@ -513,6 +513,7 @@ written out here.
 | D-611 | 2026-11-25 | The synthetic year is made at build time, ending in the build's own month, its statements written per month from one JSON source and read through the ledger's own import; the specimen page opens in the dev and demo builds only, its panes themed by a class | M64 |
 | D-612 | 2026-11-25 | Density is read off one snapshot of `main` by tested arithmetic: a block is a heading-led section, a table, a chart, a list of three rows or a `data-block`, a figure is the secondary-number step or a `data-figure`, a budget is a maximum per route; `--shots` paints each screen at its whole length into `.probe/shots/` beside one contact sheet, and the inventory is `docs/redesign/screens.md` | M64 |
 | D-613 | 2026-11-25 | A card statement's printed total is compared with its rows' signed sum, charges less refunds, and every row's magnitude stays only as the second reading | M64 |
+| D-614 | 2026-11-25 | Home and the rail take direction A, the report: the month said as one sentence with left over its one figure, a typographic rail, detail in a side panel; with B's month strip as the pager and C's waiting list and palette; the flows leave Home's figures and Plex gains a light weight for the hero | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1087,6 +1088,87 @@ are untouched.
 **Rejected.** Net only (a gross-printing file nobody has seen would start being refused, for no
 gain); reading a refunds section's own total apart (no file at hand prints one); keeping the year's
 exemption (it hid exactly the bug it found).
+
+## D-614 · 2026-11-25 · Home and the rail take direction A, the report: the month said as one sentence with left over its one figure, a typographic rail, detail in a side panel; with B's month strip as the pager and C's waiting list and palette; the flows leave Home's figures and Plex gains a light weight for the hero <a id="d-614"></a>
+
+**Context.** M64 U3, under D-606 as D-608 amended it: the session explores three directions for
+Home and the rail and picks one itself; the maintainer's one look is the real Home at U5. Impeccable's
+redesign path ran in Operate mode with its shape questions answered from D-606, D-608 and U2's
+inventory rather than by interview; its direction roll (`concept-seed`, seed reference
+`3f9df0c5e87345aa`) assigned the fourth of seven grounded candidates. Three working prototypes were
+built on U16's synthetic year, in light, dark and Hebrew, and kept with the answers, the roll, the
+critique and this pick in [`docs/mockups/m64-u3/`](./mockups/m64-u3/index.html):
+
+- **A, the report** (the assigned candidate, an annual report's highlights page): the month as a
+  sentence, left over as one figure at 88px in Plex 300, the rest in columns on a 12-column grid; a
+  typographic rail; detail in a side panel.
+- **B, the statement** (the session's own top candidate, with a utility bill's history strip): one
+  sheet on a tinted desk read as a reconciliation, every line opening in place; a fourteen-month
+  strip as the pager; tabs across the top and no rail.
+- **C, the signpost** (a challenger, airport wayfinding, fused): the next step on a yellow band
+  used for nothing else, left over at 128px, every figure a sign with an arrow to its own page;
+  command-led (Ctrl+K) with a black icon rail.
+
+Each was judged by an isolated reviewer with Impeccable's critique (Assessment A): A 23/40, B 25,
+C 26 on Nielsen's heuristics; against the brief's five tests of "impressive", A 31/50, B 30, C 30.
+The detector (Assessment B, run in this session without the browser overlay) found only the
+uncategorized bar's hatch, a false positive.
+
+**Decision.** **A, with parts of B and C.** Scores close; the pick goes to what each did that the
+others could not be raised to. A owns the frame: the sentence and one monumental figure are the
+three-second answer and the one part every reviewer called a point of view; a rail of words is
+recognised where C's icons had to be recalled and where B's tabs could not hold the engine's places,
+which are the document's and many; and a side panel opens a figure's breakdown or a category's rows
+while the month stays beside it, which C's pages lost. Taken in: from **B**, the fourteen-month
+strip as the pager in place of A's flat lines (columns at 3:1, values in a tooltip and on the open
+month, months reachable from the keyboard) and opening in place where a list is the breakdown, what
+is open kept as months page; from **C**, every waiting item on Home as one quiet list with a verb
+each (never a carousel, never an alarm colour, never above the answer), the palette *Go to, or
+ask…* on Ctrl+K as the second way around, and a figure's affordance visible at rest. Below 1360px
+the panel floats over the page instead of squeezing it (the critique's first issue on A).
+
+**What it overrides among the `ui` rule rows** — U4 rewrites each, with its test:
+
+- *The four flows colour Home's figures*: overridden. Figures are ink; a flow's colour is a mark (a
+  line, a dot) beside its word in a chart or a key. Two reviewers read red "went out" as an error,
+  and red goes back to meaning a problem (*Colour carries meaning*).
+- *One family, two scripts, bundled*: amended. A fourth weight, 300, for the hero figure alone.
+- *Tabular figures everywhere*: amended. A standalone hero figure takes proportional figures;
+  columns, axes and figures in rows stay tabular.
+- *Every value is a token*: amended in its ramp. The type ramp gains a display step (88px, 300) and
+  a lede (28px, 400), and U4 rebuilds the ramp around them; sizes off it still move onto a step.
+- *Charts are ink, labelled directly*: amended to the dataviz marks. Lines 2px, columns 24px at most
+  with 4px rounded data-ends, every mark 3:1 against its plane, and a tooltip and keyboard reach on
+  every chart (*Contrast 4.5:1 for text* gains its 3:1 for marks).
+- *The sidebar is a tree, and chrome is one plane*: amended in its first half. The rail is a flat
+  index of words in two groups, the document's places and the engine's; a section's pages are its
+  one level of tabs (*One level of tabs*), not children in the rail. Chrome stays one plane.
+
+Kept as they are: *Accent is for acting*, *No gradients, no shadows* (the floating panel is a room
+that floats), square cards and controls, chips, *One primary action per screen* (Read files is
+Home's), *A data table*, the motion rows (the panel grows its room), *Category colours are dots*,
+*Keyboard first*, *Hebrew needs bidi isolation*. Home's eyebrow goes: Impeccable bans a label above
+a heading, and the month is the heading.
+
+**Fonts and icons.** IBM Plex Sans, Plex Sans Hebrew and Plex Mono, self-hosted as woff2 from the
+`@fontsource` packages already in the dependencies; the only addition is the 300 face per script
+(about 24 KB Latin, 5 KB Hebrew). No new runtime dependency. Icons stay authored SVG on a 24 grid
+at a 1.75 stroke, `ActionGlyph`'s set extended; no icon library.
+
+**What the other two taught.** B: a statement opened by default buries the answer (left over fell
+to 911px on a 768px screen); opening in place is the right way to compare a category month to month;
+a tinted desk with a sheet reads as official but adds a plane. C: the next step belongs on Home but
+below the answer; a pager of waiting items hides two of three; an icon-only rail fails recognition;
+a page per figure loses the month. All three: saved beside left over as a peer confused every
+reviewer. The prototypes drew `month_summary`'s saved, which counts the slip's pension and study
+fund; Home's saved (D-607, D-609) does not and is never above a positive left over, so U5 shows the
+slip's part beside saved, as D-607 decided. All three also lacked a visible place to drop a file.
+
+**Rejected.** B whole (the answer below the fold; tabs that cannot hold the engine's places). C
+whole (an alarm before the answer; icons to recall). A unchanged (its lines decorated, its waiting
+list hid two of three, its flows coloured figures). A fourth direction (the faults the critique
+found were shared and fixable, not one direction's). Serving the roll's decision page (the unit
+ran unattended, and the pick is the session's by D-608).
 
 ## Related
 

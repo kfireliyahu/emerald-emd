@@ -5108,6 +5108,16 @@ answer: reconcileRows in src/data/importer/printedTotal.ts, used by import_state
 state: live
 affects: "docs/packs/ledger/f01-card-statement-import.md\nscripts/demo-year.mjs"
 
+### D-614
+date: 2026-11-25
+milestone: M64
+scope: ui
+title: Home and the rail take direction A, the report: the month said as one sentence with left over its one figure, a typographic rail, detail in a side panel; with B's month strip as the pager and C's waiting list and palette; the flows leave Home's figures and Plex gains a light weight for the hero
+question: Which of the three directions explored for Home and the rail does the redesign take, what does it override among the ui rule rows, and with which fonts and icons?
+answer: A, the report, with parts of B and C (docs/mockups/m64-u3/). From A: the month said as one sentence with left over as the one monumental figure (Plex 300, 88px), a flat typographic rail in two groups (the document's places, the engine's), a side panel for a figure's breakdown or a category's rows that floats over the page below 1360px. From B: the fourteen-month strip as the pager (marks 3:1, values in a tooltip and on the open month, months reachable by keyboard) and opening in place where a list is the breakdown, kept open as months page. From C: every waiting item on Home as one quiet list with a verb each, below the answer, never a carousel or an alarm colour; the palette Go to, or ask on Ctrl+K; a figure's affordance visible at rest. Overrides, rewritten by U4 with their tests: The four flows colour Home's figures (figures ink, a flow's colour only as a mark beside its word); One family, two scripts, bundled (adds weight 300 for the hero); Tabular figures everywhere (a hero takes proportional figures); Every value is a token (the ramp gains display 88px and lede 28px); Charts are ink, labelled directly (2px lines, columns at most 24px with 4px rounded data-ends, marks 3:1, tooltip and keyboard on every chart); The sidebar is a tree (a flat index; a section's pages are its tabs). Home's eyebrow goes. Fonts: Plex Sans, Plex Sans Hebrew, Plex Mono from the @fontsource packages already in the dependencies, plus the 300 face per script; no new dependency. Icons: authored SVG, 24 grid, 1.75 stroke (ActionGlyph extended). Taught: a statement opened by default buries the answer; the next step belongs below the answer, not in a pager; icon-only rails fail recognition; a page per figure loses the month; saved beside left over as a peer confuses, so U5 shows the slip's part beside saved (D-607). Rejected: B or C whole, A unchanged, a fourth direction.
+state: live
+affects: "DESIGN.md\ndocs/11-ui-design-language.md"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -7187,6 +7197,10 @@ question: Does a format need a view for looking over its entries, a dashboard of
 answered_by: D-514
 state: answered
 answer: Yes, and it is more than a feeling (2026-10-22): what was missed was charts, a filtered list (which is 'due soon' too) and recent changes. D-514 answers it with saved views and a dashboard per format and one for the document, built only of saved views, rollup charts and headline totals; M53 builds it. Recent changes wait on D-462.
+
+### month_summary saved and the slip
+question: month_summary's Saved for October 2026 on year.emd is 4,493, made of the goals' 2,300 and the slip's pension 1,548 and study fund 645, and is above that month's left over (4,088). D-607 and D-609 say Home's saved excludes the slip's part and is never above a positive left over. Is the tool's figure the old definition, and should month_summary (and the year's Saved column) follow D-607 before U5 draws saved beside left over?
+state: open
 
 ### parity gap #11
 question: A tool must be able to make a connection. `#/connections` can write a `link` and an aggregate by dragging between two endpoints, and no tool can: what is the conversation's half of that, and does it write the link and the fold together the way the drag does?
@@ -17913,14 +17927,18 @@ report: "M64 U2 built at 37539f5 on worktree-agent-ad467fb113e1379bf. docs:check
 milestone: M64
 scope: ui
 title: The direction chosen: three explored on Home and the rail, judged, and one picked with its reasons
-state: in_progress
+landed: 2026-11-25
+decision: D-614
+state: built
 brief: "**Why.** The maintainer wants the screens to look impressive: minimal but nice to the eye, with well-thought ways to show data, never confusing. He gives one look, at the real Home in the app (U5), so the session picks the direction itself (D-608).\n\n**Do.** Run Impeccable's redesign path in Operate mode: the old look is evidence, not the rule. Answer its shape questions yourself from D-606, D-608 and U2's inventory, and write the answers down; do not interview the maintainer. Explore **three directions that differ in feel as well as look**: how you move around (the rail, tabs, command-led), what a screen leads with, how detail opens (a side panel, a page, expanding in place), and type, colour, shape, density and motion. Each builds Home and the rail as a working prototype on U16's synthetic year, in light and dark, with Home checked right to left in Hebrew: page months, open a figure's breakdown, open a category's rows. Show each piece of data the way U2's inventory and the dataviz skill say. Judge the three with Impeccable's critique against the brief, and pick one, or one with parts of another. Write a decision: the pick, why, what it overrides among the ui rule rows, its fonts and icons (self-hosted, offline, no new runtime dependency without saying so), and what the other two taught. Keep the three under docs/mockups/m64-u3/ for reference.\n\n**Out of scope.** Changing src/. Asking the maintainer: his look is U5."
-files: Three working explorations and the chosen direction's write-up under docs/mockups/m64-u3/.
+files: "docs/mockups/m64-u3/index.html\ndocs/mockups/m64-u3/a/\ndocs/mockups/m64-u3/b/\ndocs/mockups/m64-u3/c/\ndocs/mockups/m64-u3/shared/\ndocs/mockups/m64-u3/fonts/\ndocs/09-decision-log.md"
 blocks: ["M64 U2"]
 taken_by: run-milestone driver
 started: 2026-11-25
 branch: m64-redesign
+commit: 1c9f824
 paths: docs/mockups/m64-u3/
+report: M64 U3 built. Three working prototypes of Home and the rail on U16's synthetic year, light, dark and Hebrew, in docs/mockups/m64-u3/{a,b,c}/ with index.html comparing them. A, the report: the month as a sentence, left over as one figure in Plex 300, a typographic rail, detail in a side panel. B, the statement: a reconciliation opening in place, a fourteen-month strip as the pager, tabs and no rail, a tinted desk. C, the signpost: the next step on a yellow band, left over at gate scale, command-led with an icon rail, detail as a page. Impeccable's shape questions answered from D-606, D-608 and U2's inventory (written in index.html); its roll (seed 3f9df0c5e87345aa) assigned A, C is the fused wayfinding challenger, B the session's top candidate. Critique by three isolated reviewers: heuristics A 23/40, B 25, C 26; brief's five tests A 31/50, B 30, C 30; the detector found only the uncategorized hatch (a false positive). Pick: A with B's strip as pager and in-place opening, and C's quiet waiting list and Ctrl+K palette (D-614). A's panel now floats below 1360px and its column bug is fixed; the other reviewer findings stay in the prototypes as evidence and are carried into U4/U5 by D-614. The roll's decision page was not served (unattended, D-608). Out of scope kept: no src/ change, the maintainer not asked. Note: month_summary's Saved for 2026-10 (4,493) counts the slip's pension and study fund and is above left over (4,088), against D-609's saved never above a positive left over; raised as a follow-up question.
 
 ### M64 U4
 milestone: M64
@@ -18137,7 +18155,7 @@ decision: 2026-11-25
 finding: 2026-10-22
 inbox: 2026-11-25
 milestone: 2026-11-25
-open_question: 2026-11-18
+open_question: 2026-11-25
 review_entry: 2026-11-25
 rule: 2026-11-25
 term: 2026-11-23
