@@ -18107,40 +18107,52 @@ report: "M64 U1 built at 7c3861a on worktree-agent-af85014a0d4836431. Typecheck,
 milestone: M64
 scope: ui
 title: Wealth redesigned: the overview, funds, goals and debts
-state: planned
+state: in_progress
 brief: Follow the redesign-screen skill (U5) and DESIGN.md, with the jobs from U2's inventory. The routes leave the budget's exempt list.
 files: Wealth's overview, funds and a fund, goals and a goal, debts and a debt, and the list-beside-detail layout.
 blocks: ["M64 U5"]
+taken_by: run-milestone driver
+started: 2026-11-25
+branch: m64-redesign
 paths: "src/ui/screens/Overview.tsx\nsrc/ui/screens/Funds.tsx\nsrc/ui/screens/FundDetail.tsx\nsrc/ui/screens/Goals.tsx\nsrc/ui/screens/GoalDetail.tsx\nsrc/ui/screens/Debts.tsx\nsrc/ui/screens/DebtDetail.tsx\nsrc/ui/screens/FeeImpact.tsx\nsrc/ui/screens/DepositCheck.tsx\nsrc/ui/screens/ListDetail.tsx\nsrc/ui/funds/\nsrc/ui/debts/"
 
 ### M64 U11
 milestone: M64
 scope: ui
 title: Categories, rules and the Year redesigned
-state: planned
+state: in_progress
 brief: Follow the redesign-screen skill (U5) and DESIGN.md, with the jobs from U2's inventory. If U5 moved All months off Home, the Year screen is where every month is read and opened. The routes leave the budget's exempt list.
 files: Categories and its pickers, rules, and the Year screen (which holds every month once Home lets them go).
 blocks: ["M64 U5"]
+taken_by: run-milestone driver
+started: 2026-11-25
+branch: m64-redesign
 paths: "src/ui/screens/Categories.tsx\nsrc/ui/screens/Rules.tsx\nsrc/ui/screens/Year.tsx\nsrc/ui/categories/"
 
 ### M64 U12
 milestone: M64
 scope: ui
 title: The way in and around: a new document's start, the guide, notices, Settings and the command palette
-state: planned
+state: in_progress
 brief: Follow the redesign-screen skill (U5) and DESIGN.md, with the jobs from U2's inventory. A newcomer's first minute: open or make a document, read a first file, and know where things are. The routes leave the budget's exempt list.
 files: The front door and a document with no ledger, the guide, notices, every Settings page and the command palette.
 blocks: ["M64 U5"]
+taken_by: run-milestone driver
+started: 2026-11-25
+branch: m64-redesign
 paths: "src/ui/screens/NoLedger.tsx\nsrc/ui/guide/\nsrc/ui/Notices.tsx\nsrc/ui/CommandPalette.tsx\nsrc/ui/screens/Accounts.tsx\nsrc/ui/screens/Mappings.tsx\nsrc/ui/screens/Language.tsx\nsrc/ui/screens/Export.tsx\nsrc/ui/screens/Packs.tsx\nsrc/ui/screens/Mcp.tsx\nsrc/ui/screens/LocalModel.tsx"
 
 ### M64 U13
 milestone: M64
 scope: ui
 title: The engine's formats redesigned: the formats list, a format's table, a row's entry and input views
-state: planned
+state: in_progress
 brief: "Follow the redesign-screen skill (U5) and DESIGN.md, with the jobs from U2's inventory, on custom.emd and project.emd. The engine is in better shape, so keep what works and change what the direction changes. The routes leave the budget's exempt list.\n\nMaintainer, 2026-11-25: deleting a row from its entry, when the row was selected inside a filter, opens a confirmation at the bottom of the screen, and that is weird. Per D-617 a delete deletes at once with an undo near where it happened; where no undo is possible, the question is anchored to the button and names the row. Start from FormatRows.tsx (the entry's delete question, around \"Asked about one entry's delete from its own view\") and EntryView.tsx's Delete action, and check every delete and bulk action on the engine's screens the same way."
 files: Formats and declared formats, a format's rows, its entry page, input views and the panels around them.
 blocks: ["M64 U5"]
+taken_by: run-milestone driver
+started: 2026-11-25
+branch: m64-redesign
 paths: "src/ui/screens/Formats.tsx\nsrc/ui/screens/DeclaredFormats.tsx\nsrc/ui/screens/FormatRows.tsx\nsrc/ui/formats/EntryList.tsx\nsrc/ui/formats/EntryValue.tsx\nsrc/ui/formats/EntryView.tsx\nsrc/ui/formats/InputView.tsx\nsrc/ui/formats/InputBlock.tsx\nsrc/ui/formats/RowSheet.tsx\nsrc/ui/formats/TypedField.tsx\nsrc/ui/formats/FilterBand.tsx\nsrc/ui/formats/NewFormat.tsx\nsrc/ui/formats/ShapePanel.tsx\nsrc/ui/formats/FormatDoors.tsx\nsrc/ui/formats/FormatPlus.tsx"
 
 ### M64 U14
