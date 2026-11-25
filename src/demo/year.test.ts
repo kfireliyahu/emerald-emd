@@ -7,9 +7,10 @@
  * demo builder makes over stdio — on a fixed day, so the running month is
  * always November 2026.
  *
- * The card's bill is asserted under **today's rule** (D-006: a card purchase
- * counts in the month its bill is charged). M64 U1 moves spending to the month
- * of purchase (D-607), and the assertion marked below flips with it.
+ * Under the month rule of D-607 and D-609 (`src/data/repositories/monthBasis.ts`):
+ * a card purchase counts in the month it was bought, a month is partial until
+ * every card's statement covering it is read, and saved is capped at what the
+ * month left over, the rest said to come from earlier savings.
  */
 
 import { readFileSync } from 'node:fs'
@@ -49,6 +50,9 @@ function figure(summary: string, label: string): number {
 
 let target = ''
 const month = (period: string) => ask('month_summary', { path: target, month: period })
+const PARTIAL = 'figures are partial)'
+/** Whether month_summary calls the month unfinished, on its first line. */
+const partial = (summary: string) => (summary.split('\n')[0] ?? '').includes(PARTIAL)
 
 beforeAll(async () => {
   vi.useFakeTimers({ toFake: ['Date'] })
@@ -72,30 +76,38 @@ describe('the synthetic year', () => {
   })
 
   it('has a running month, its figures partial', async () => {
-    expect(await month('2026-11')).toContain('(still running — figures are partial)')
-    expect(await month('2026-10')).not.toContain('still running')
+    expect(partial(await month('2026-11'))).toBe(true)
+    expect(partial(await month('2026-07'))).toBe(false)
   })
 
-  it('misses the second card’s statement for August, which the bank still paid in September', async () => {
+  it('misses the second card’s statement for August, so August is partial and short of it', async () => {
     // The gym is billed on the second card alone, every month: its absence is the statement's.
-    expect(await month('2026-08')).toContain('| Fitness |')
-    expect(await month('2026-09')).not.toContain('| Fitness |')
-    expect(await month('2026-10')).toContain('| Fitness |')
+    const august = await month('2026-08')
+    expect(partial(august)).toBe(true)
+    expect(august).not.toContain('| Fitness |')
+    expect(await month('2026-07')).toContain('| Fitness |')
+    expect(await month('2026-09')).toContain('| Fitness |')
   })
 
-  it('counts a card purchase in the month its bill is charged — today’s rule (D-006)', async () => {
-    // No card statement covers November, yet October's purchases are in it,
-    // billed on the 2nd and the 10th. U1 (D-607) flips this: November's
-    // restaurants are nothing until November's statement is read.
+  it('counts a card purchase in the month it was bought (D-607)', async () => {
+    // October's purchases are billed on 2 and 10 November, and count in October.
+    // No card statement covers November yet, so November has no card spending.
+    const october = await month('2026-10')
+    expect(october).toContain('| Restaurants & Cafes |')
+    expect(october).toContain('| Groceries |')
     const november = await month('2026-11')
-    expect(november).toContain('| Restaurants & Cafes |')
-    expect(november).toContain('| Groceries |')
+    expect(november).not.toContain('| Restaurants & Cafes |')
+    expect(november).not.toContain('| Groceries |')
   })
 
-  it('moves more to investments in July than July left over', async () => {
+  it('moves more to investments in July than July left over, the rest from earlier savings', async () => {
     const july = await month('2026-07')
     expect(july).toContain('| Investments | moved, 1 row | ₪30,000.00 |')
-    expect(figure(july, 'Saved')).toBeGreaterThan(figure(july, 'Balance'))
+    const saved = figure(july, 'Saved')
+    const earlier = figure(july, '  of which from earlier savings')
+    expect(saved).toBe(figure(july, 'Balance'))
+    expect(earlier).toBeGreaterThan(0)
+    expect(saved + earlier).toBe(figure(july, '  moved into savings and goals'))
   })
 
   it('has a bonus month among its slips, and Hebrew rows left uncategorized', async () => {
