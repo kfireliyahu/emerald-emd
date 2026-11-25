@@ -17913,10 +17913,13 @@ report: "M64 U2 built at 37539f5 on worktree-agent-ad467fb113e1379bf. docs:check
 milestone: M64
 scope: ui
 title: The direction chosen: three explored on Home and the rail, judged, and one picked with its reasons
-state: planned
+state: in_progress
 brief: "**Why.** The maintainer wants the screens to look impressive: minimal but nice to the eye, with well-thought ways to show data, never confusing. He gives one look, at the real Home in the app (U5), so the session picks the direction itself (D-608).\n\n**Do.** Run Impeccable's redesign path in Operate mode: the old look is evidence, not the rule. Answer its shape questions yourself from D-606, D-608 and U2's inventory, and write the answers down; do not interview the maintainer. Explore **three directions that differ in feel as well as look**: how you move around (the rail, tabs, command-led), what a screen leads with, how detail opens (a side panel, a page, expanding in place), and type, colour, shape, density and motion. Each builds Home and the rail as a working prototype on U16's synthetic year, in light and dark, with Home checked right to left in Hebrew: page months, open a figure's breakdown, open a category's rows. Show each piece of data the way U2's inventory and the dataviz skill say. Judge the three with Impeccable's critique against the brief, and pick one, or one with parts of another. Write a decision: the pick, why, what it overrides among the ui rule rows, its fonts and icons (self-hosted, offline, no new runtime dependency without saying so), and what the other two taught. Keep the three under docs/mockups/m64-u3/ for reference.\n\n**Out of scope.** Changing src/. Asking the maintainer: his look is U5."
 files: Three working explorations and the chosen direction's write-up under docs/mockups/m64-u3/.
 blocks: ["M64 U2"]
+taken_by: run-milestone driver
+started: 2026-11-25
+branch: m64-redesign
 paths: docs/mockups/m64-u3/
 
 ### M64 U4
