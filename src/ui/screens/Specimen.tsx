@@ -1,4 +1,9 @@
 import type { ReactNode } from 'react'
+import { useLocation } from 'react-router-dom'
+
+import { DISPLAYS } from '@/ui/charts/kit.ts'
+
+import { SPECIMENS } from './specimens.tsx'
 
 /**
  * **The specimen page** (M64 U16, D-611): `#/specimen`, one place where every
@@ -6,8 +11,7 @@ import type { ReactNode } from 'react'
  * dark side by side — so the redesign (M64) judges the look on one page rather
  * than on twenty screens, and the contact sheet (U2) has one picture of it.
  *
- * **U16 builds the frame; U4 fills it.** Until then `SPECIMENS` is empty and
- * the page says so. A specimen is a name, a line on what it is for, and its
+ * **U16 built the frame; U4 filled it** (`specimens.tsx`, D-615). A specimen is a name, a line on what it is for, and its
  * states; each state is drawn twice, in a `.fc-theme-light` pane and a
  * `.fc-theme-dark` one (`tokens.css`), whichever theme the app is in.
  *
@@ -27,9 +31,6 @@ export interface Specimen {
   readonly about: string
   readonly states: readonly SpecimenState[]
 }
-
-/** Every specimen, in the order the page draws them. U4 fills this. */
-const SPECIMENS: readonly Specimen[] = []
 
 const PANES = [
   { theme: 'light', label: 'Light' },
@@ -68,7 +69,21 @@ export function SpecimenFrame({ specimen }: { readonly specimen: Specimen }) {
   )
 }
 
+/**
+ * `?part=kit` draws the kit's displays alone and `?part=pieces` the rest, so
+ * each half fits one picture of the contact sheet (whose pictures stop at
+ * 8000px, D-612); no part draws everything.
+ */
+function partOf(search: string): readonly Specimen[] {
+  const part = new URLSearchParams(search).get('part')
+  const kit = new Set(DISPLAYS.map((display) => display.name))
+  if (part === 'kit') return SPECIMENS.filter((specimen) => kit.has(specimen.name))
+  if (part === 'pieces') return SPECIMENS.filter((specimen) => !kit.has(specimen.name))
+  return SPECIMENS
+}
+
 export default function SpecimenPage() {
+  const shown = partOf(useLocation().search)
   return (
     <div className="h-full overflow-auto">
       <div className="fc-view-enter flex max-w-6xl flex-col gap-8 px-8 pt-6 pb-12">
@@ -79,11 +94,9 @@ export default function SpecimenPage() {
             Each component and each way of showing data, in every state it has, light and dark side by side.
           </span>
         </header>
-        {SPECIMENS.length === 0 ? (
-          <p className="m-0 text-ink-secondary">No specimens yet: M64 U4 draws the first.</p>
-        ) : (
-          SPECIMENS.map((specimen) => <SpecimenFrame key={specimen.name} specimen={specimen} />)
-        )}
+        {shown.map((specimen) => (
+          <SpecimenFrame key={specimen.name} specimen={specimen} />
+        ))}
       </div>
     </div>
   )

@@ -5,56 +5,66 @@ project: Emerald
 
 # 11 — UI Design Language
 
-Minimal. Black on white. Motion that is smooth and simple but never decorative. **The numbers are
-the interface**: everything else — chrome, colour, borders, shadows — is removed until only
-typography, spacing and one accent remain.
+**A report, not a dashboard** ([D-614](./09-decision-log.md), made the language by
+[D-615](./09-decision-log.md), M64 U4). A screen answers first, in words — one sentence, then the
+one figure that is the answer — and everything else is exact type in columns below it, every rule
+one hairline. Black on white; one accent, for what you can act on. **The numbers are the
+interface**, and since M64 they are also budgeted: how much a screen holds is measured and has a
+ceiling.
 
-This note used to be 568 lines. Since M40 U4 (D-437) it says where
-things are and nothing else, because everything it held was one of two kinds:
+This note says where things are and why the language is this one. It holds no value and no rule,
+because both drift when copied (D-437).
 
-## The values are the stylesheet's
+## Where things are
 
-Every colour (both themes), the type ramp, the spacing scale, the radii, the one shadow, the motion
-durations and easings are tokens in [`src/ui/theme/tokens.css`](../src/ui/theme/tokens.css), with
-the reason for each beside it. **They are not copied anywhere** — a copy drifts, and this note's did:
-its colour table said `hairline` was `#E8E8E8` and its motion table said 200 and 250 ms while the
-tokens said otherwise. The mark is [`src/ui/emerald.svg`](../src/ui/emerald.svg) (its facets are
-the identity greens) and [`emerald-basic.svg`](../src/ui/emerald-basic.svg) its flat silhouette for
-the sizes where the facets turn to mush.
-
-## The rules are rows
-
-Every rule a person or a model has to follow when drawing a screen — the accent and the two greens
-(D-125), bidi isolation, the window and its chrome, density, layout, the four motions of M39, the
-views' theme, charts, components, actions as verbs and icons, desktop affordances, dark mode,
-what is ruled out, accessibility, *words name the rule* and *make it in place* —
-is a `rule` row in [`docs/memory.emd`](./memory.emd) with `scope: ui`, its `why`, the decisions
-behind it and, where one exists, the test that fails when it breaks:
+| What | Where |
+|---|---|
+| Every value: colours in both themes, the type ramp, spacing, radii, the one shadow, motion | [`src/ui/theme/tokens.css`](../src/ui/theme/tokens.css), each with its reason |
+| Every rule, with its why, its decisions and the test that fails when it breaks | the `rule` rows with `scope: ui` in [`memory.emd`](./memory.emd) |
+| A summary for a design tool, and the kit by shape of data | [`DESIGN.md`](../DESIGN.md) |
+| Every component and display in every state, light and dark | `#/specimen`, from [`specimens.tsx`](../src/ui/screens/specimens.tsx) |
+| The data display kit, and when each display is right | [`src/ui/charts/kit.ts`](../src/ui/charts/kit.ts) (`DISPLAYS`) |
+| What each screen is for, measured | [`redesign/screens.md`](./redesign/screens.md) |
+| How dense each screen may be | [`redesign/budget.json`](./redesign/budget.json), checked by `probe:screens --budget` |
+| The prototypes the language was picked from | [`mockups/m64-u3/`](./mockups/m64-u3/index.html) |
+| The mark | [`src/ui/emerald.svg`](../src/ui/emerald.svg), and [`emerald-basic.svg`](../src/ui/emerald-basic.svg) where facets turn to mush |
 
 ```
-format_rows rule match:{scope:ui, state:live} columns:[name, statement]   # all of them, ~70
-format_rows rule search:"motion"                                            # or "accent", "chart", "tab"…
-format_rows rule match:{name:"Accent is for acting"}                        # one, with its why
+format_rows rule match:{scope:ui, state:live} columns:[name, statement]
+format_rows rule search:"chart"        # or "motion", "accent", "rail", "density"…
 ```
 
-**A code comment that cites `docs/11` for a rule** — *charts draw once*, *colour carries meaning*, *a
-stagger caps at three* — **means these rows**; some forty comments in `src/ui/` were left alone, as
-conventions.md's were (D-435).
+**A code comment that cites `docs/11` for a rule means these rows** (D-437).
+
+## Why this language
+
+M54 reviewed every screen against the rules and every screen still read as dense: nothing checked
+how much a screen held or whether a newcomer could tell what it was for (D-606). Three directions
+were built as working screens on a synthetic year (U3, D-608), and **A, the report**, was picked
+with two parts of the others (D-614):
+
+- **From A** — the month said in one sentence, left over as one monumental figure, a rail of words
+  in two groups, and detail opening in a side panel without leaving the month.
+- **From B** — the fourteen-month strip as the way to page months, and lines that open in place
+  and stay open as months page.
+- **From C** — what is waiting, as one quiet list below the answer; `Ctrl+K` to go to, or ask; a
+  figure's affordance visible at rest.
+
+What the three taught, kept as the reasons behind the rows: a statement opened by default buries
+the answer; the next step belongs below the answer, not in a pager; icon-only rails fail
+recognition; a page per figure loses the month; saved beside left over as a peer confuses.
+
+## What U4 changed, and what it left to the screens
+
+U4 changed what every screen shares: the tokens (A's quieter greys, which lift most of U2's
+low-contrast text over AA; the display and lede steps; the light and semibold faces; the kit's
+mark colours), the rail (words, two groups, a section's views moved to its tab strip), the tab
+strip, the general chart (2px lines, 24px bars, the keyboard), and the kit, the side panel, the
+waiting list and the empty state. **It rearranged no screen** (U5 onward does, one at a time, each
+taking its route off the budget's `exempt` list as it lands).
 
 Two rules that read as UI are `shell` rows because the shell is where they bite: *A button in a
-drag region* (`.app-drag`, `.app-no-drag`) and *Accelerators are shown, not registered*.
-
-### The four motions (M39, D-421, D-423)
-
-Are rows now — `format_rows rule search:"motion"` — from *Motion says what changed* to *Reduced
-motion runs none of it*. The audit of what enters and what does not is still
-[`mockups/m39-u1/motion.md`](./mockups/m39-u1/motion.md).
-
-## Left in prose, on purpose
-
-Nothing that is a rule. What did not become a row was a value (above), a ledger screen's own
-detail (the category picker's `C` key — [`packs/ledger/`](./packs/ledger/README.md)), or history:
-the pre-M39 motion table and D-154's button highlight, both superseded, are in the decision log.
+drag region* and *Accelerators are shown, not registered*.
 
 ## Related
 

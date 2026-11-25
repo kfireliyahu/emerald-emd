@@ -28,7 +28,9 @@
  *            --lang he also draws the app's words in Hebrew and lists what is still
  *            English outside a document's own values (M60 U4, D-589)
  *            --screen main: what the density measures read, the screen and not the chrome
- *            --budget limits.json: limits per route, exits 1 naming each one a screen is over
+ *            --budget docs/redesign/budget.json: limits per route, exits 1 naming each one a
+ *            screen is over; a route on its `exempt` list (not redesigned yet) is reported and
+ *            does not fail, and its `tools` (the specimen page) are not budgeted (M64 U4, D-615)
  *            --shots: a picture of every route and theme into .probe/shots/ (git ignores it),
  *            and .probe/shots/index.html, a contact sheet of every picture there (M64 U2, D-612)
  *
@@ -51,6 +53,8 @@ import { fileURLToPath } from 'node:url'
 
 import electron from 'electron'
 import { createServer } from 'vite'
+
+import { judgeBudget, readBudget } from './budget.mjs'
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const args = process.argv.slice(2)
@@ -76,9 +80,12 @@ const probeOptions = {
   budget: undefined,
 }
 const budgetFile = option('budget', undefined)
+/** `{ limits, exempt, tools }` (M64 U4, D-615): an exempt route's breaches are reported and do not fail. */
+let budget = { limits: {}, exempt: new Set(), tools: new Set() }
 if (budgetFile !== undefined) {
   try {
-    probeOptions.budget = JSON.parse(readFileSync(path.resolve(budgetFile), 'utf8'))
+    budget = readBudget(JSON.parse(readFileSync(path.resolve(budgetFile), 'utf8')))
+    probeOptions.budget = budget.limits
   } catch (error) {
     console.error(`--budget could not read ${budgetFile}: ${String(error?.message ?? error)}`)
     process.exit(1)
@@ -133,7 +140,7 @@ if (code !== 0 || !line) {
   process.exit(1)
 }
 const found = JSON.parse(line)
-const breaches = found.results.flatMap((r) => r.breaches.map((breach) => `${r.route} · ${r.theme}: ${breach}`))
+const { failing: breaches, exempted } = judgeBudget(found.results, budget)
 if (shots) contactSheet(found)
 if (args.includes('--json')) {
   console.log(JSON.stringify(found, null, 1))
@@ -174,6 +181,9 @@ for (const r of found.results) {
 if (found.refused.length) console.log(`Requests refused (nothing leaves the page): ${found.refused.join(', ')}`)
 console.log(`${String(found.results.length)} measurement(s) in ${seconds} s.`)
 if (shots) console.log(`${String(found.shots.length)} picture(s) in .probe/shots/, and the contact sheet: .probe/shots/index.html`)
+if (exempted.length) {
+  console.log(`Over budget on a route not redesigned yet, so not failing (${String(exempted.length)}):\n  ${exempted.join('\n  ')}`)
+}
 if (breaches.length) {
   console.log(`Over budget (${String(breaches.length)}):\n  ${breaches.join('\n  ')}`)
   process.exit(1)

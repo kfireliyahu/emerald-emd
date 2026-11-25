@@ -356,7 +356,7 @@ describe('the shared looks every screen spends (M54 F1)', () => {
   // row's plane, in both themes (accent 4.43:1 light, flow-saved 4.16:1 dark before).
   it('keeps every tone that sits on a selected row at AA', () => {
     const value = (token: string, theme: 'light' | 'dark') => {
-      const blocks = theme === 'light' ? [tokens.slice(tokens.indexOf('@theme {'))] : tokens.split(':root[data-theme="dark"] {').slice(1)
+      const blocks = theme === 'light' ? [tokens.slice(tokens.indexOf('@theme {'))] : tokens.split(/:root\[data-theme="dark"\](?:,\s*\.fc-theme-dark)? \{/).slice(1)
       for (const block of blocks) {
         const found = new RegExp(`${token}:\\s*(#[0-9a-fA-F]+);`).exec(block.slice(0, block.indexOf('\n}')))?.[1]
         if (found !== undefined) return parseColour(found)!

@@ -18,14 +18,52 @@
    involved. 69 KB of woff2 in total, emitted into `dist/assets/` and served
    from beside the page.
 
-   Two weights, not the three D-022 guessed at before the UI existed: the app
-   uses 400 and 500 and nothing else. A third is one face away.
+   Four weights per script since M64 U4 (D-614, D-615): 400 and 500 for text,
+   600 for a heading and the open place in the rail (drawn synthesised before,
+   which smeared Hebrew), and 300 for the one display figure a screen leads
+   with — at 88px a regular weight reads heavy, and the light face is what
+   lets one figure be large without shouting. Every face is a file already in
+   the @fontsource packages; no dependency was added.
 
    The faces are declared here rather than by importing Fontsource's own CSS,
    which offers a legacy `.woff` beside every `.woff2`. This app already
    requires WebAssembly; a browser that cannot read woff2 cannot run it at all,
    so that fallback is 65 KB nobody will ever fetch.
    --------------------------------------------------------------------------- */
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-300-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Sans";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("@fontsource/ibm-plex-sans/files/ibm-plex-sans-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Sans Hebrew";
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url("@fontsource/ibm-plex-sans-hebrew/files/ibm-plex-sans-hebrew-hebrew-300-normal.woff2")
+    format("woff2");
+}
+
+@font-face {
+  font-family: "IBM Plex Sans Hebrew";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("@fontsource/ibm-plex-sans-hebrew/files/ibm-plex-sans-hebrew-hebrew-600-normal.woff2")
+    format("woff2");
+}
+
 @font-face {
   font-family: "IBM Plex Sans";
   font-style: normal;
@@ -88,6 +126,21 @@
   /* The type ramp of docs/11, as real tokens so nothing hardcodes a size.
      `text-title`, `text-hero` etc. become Tailwind utilities. Line-heights and
      tracking travel with the size, since they are part of the same decision. */
+  /* **Two steps from the redesign** (M64 U4, D-614): `display` is the one
+     figure a screen leads with — Home's left over — set in the light face with
+     proportional figures, its symbol and decimals at `text-hero` in
+     `ink-secondary`; `lede` is the sentence that says the month above it.
+     Each screen spends at most one of either. */
+  --text-display: 88px;
+  --text-display--line-height: 1;
+  --text-display--letter-spacing: -0.035em;
+  --text-display--font-weight: 300;
+
+  --text-lede: 28px;
+  --text-lede--line-height: 1.3;
+  --text-lede--letter-spacing: -0.015em;
+  --text-lede--font-weight: 400;
+
   --text-hero: 40px;
   --text-hero--line-height: 1.05;
   --text-hero--letter-spacing: -0.02em;
@@ -122,13 +175,13 @@
      the things that float over the page (menus, the theme toggle's popover).
      A hair of warmth keeps the light theme from feeling clinical. */
   --color-background: #ffffff;
-  --color-surface: #f7f7f6;
+  --color-surface: #fafaf8;
   --color-elevated: #ffffff;
-  --color-ink: #111111;
-  --color-ink-secondary: #6b6b6b;
-  --color-ink-tertiary: #a0a09c;
-  --color-hairline: #ececea;
-  --color-hairline-strong: #d9d9d6;
+  --color-ink: #121212;
+  --color-ink-secondary: #5f5f5c;
+  --color-ink-tertiary: #8a8a86;
+  --color-hairline: #e4e4e0;
+  --color-hairline-strong: #cfcfca;
 
   /* The page a document is drawn on (M54 U3): paper in both themes, since the
      renderer draws a PDF page white whatever the window's theme. On it, where
@@ -192,8 +245,17 @@
   --color-flow-in: #1f7a4d;
   --color-flow-out: #c4342b;
   --color-flow-saved: #0b4f35;
-  --color-flow-tax: #b45309;
+  --color-flow-tax: #a34a07;
 
+  /* **The data display kit's marks** (M64 U4, D-615; src/ui/charts/). `bar`
+     is a mark that is the answer — the open month, a ranked bar, a meter's
+     fill; `bar-quiet` a mark beside it, the other months of a strip, at 3:1
+     on both planes so it reads without competing (D-614); `track` the
+     unfilled part of a meter. Ink, not a hue: the shape of the data is the
+     content, and colour stays for meaning. */
+  --color-bar: #2b2b2b;
+  --color-bar-quiet: #8a8a86;
+  --color-track: #ececea;
 
   /* Spacing — 8px scale. The odd steps exist because Tailwind's `p-3`/`gap-3`
      otherwise fall through to its own 4px multiplier and land off-grid. */
@@ -222,6 +284,11 @@
      press as a whole. */
   --radius-card: 0px;
   --radius-control: 0px;
+
+  /* A data mark's end (M64 U4, D-615): a bar's or a column's data end is
+     rounded 4px and its baseline end square, so the eye reads where the
+     value stops; a thin part-of-a-whole bar is rounded at both ends. */
+  --radius-mark: 4px;
 
   /* Elevation — one soft shadow for the things that float, and nothing else.
      Rooms, not layers. Tuned per theme below. */
@@ -295,18 +362,18 @@
 
 :root[data-theme="dark"],
 .fc-theme-dark {
-  --color-background: #0b0b0c;
-  --color-surface: #151517;
+  --color-background: #0c0c0d;
+  --color-surface: #121214;
   --color-elevated: #1b1b1e;
-  --color-ink: #f2f2f0;
-  --color-ink-secondary: #a1a1a0;
-  --color-ink-tertiary: #6a6a6c;
-  --color-hairline: #262629;
+  --color-ink: #f1f1ef;
+  --color-ink-secondary: #a4a4a1;
+  --color-ink-tertiary: #6e6e70;
+  --color-hairline: #232326;
   --color-hairline-strong: #34343a;
 
   /* On a near-black page the mark's own bright face carries the accent, with
      dark ink on top. `accent-soft` is a low-lit emerald plane, not the light
-     tint darkened — that one turns to mud on #0b0b0c. */
+     tint darkened — that one turns to mud on #0c0c0d. */
   --color-accent: #34d399;
   --color-accent-ink: #06231a;
   --color-accent-hover: #5ee0b0;
@@ -324,9 +391,13 @@
   --color-positive: #4caf7d;
 
   --color-flow-in: #5cc98c;
-  --color-flow-out: #ea736a;
-  --color-flow-saved: #37a874;
-  --color-flow-tax: #f59e0b;
+  --color-flow-out: #ef7b72;
+  --color-flow-saved: #3fb57f;
+  --color-flow-tax: #f2a03d;
+
+  --color-bar: #d6d6d3;
+  --color-bar-quiet: #6e6e70;
+  --color-track: #26262a;
 
 
   --shadow-pop: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 28px rgba(0, 0, 0, 0.55);
@@ -392,13 +463,13 @@ html:has(:root[data-theme="dark"]),
   --color-category-11: #a88a3e;
   --color-category-none: #b5b5b0;
   --color-background: #ffffff;
-  --color-surface: #f7f7f6;
+  --color-surface: #fafaf8;
   --color-elevated: #ffffff;
-  --color-ink: #111111;
-  --color-ink-secondary: #6b6b6b;
-  --color-ink-tertiary: #a0a09c;
-  --color-hairline: #ececea;
-  --color-hairline-strong: #d9d9d6;
+  --color-ink: #121212;
+  --color-ink-secondary: #5f5f5c;
+  --color-ink-tertiary: #8a8a86;
+  --color-hairline: #e4e4e0;
+  --color-hairline-strong: #cfcfca;
   --color-accent: #07805f;
   --color-accent-ink: #ffffff;
   --color-accent-hover: #05664b;
@@ -412,7 +483,10 @@ html:has(:root[data-theme="dark"]),
   --color-flow-in: #1f7a4d;
   --color-flow-out: #c4342b;
   --color-flow-saved: #0b4f35;
-  --color-flow-tax: #b45309;
+  --color-flow-tax: #a34a07;
+  --color-bar: #2b2b2b;
+  --color-bar-quiet: #8a8a86;
+  --color-track: #ececea;
   --shadow-pop: 0 1px 2px rgba(17, 17, 17, 0.04), 0 8px 24px rgba(17, 17, 17, 0.08);
 }
 
@@ -1697,4 +1771,58 @@ input[type="number"] {
   .fc-guide-ring.fc-pulse {
     animation: none;
   }
+}
+
+/* ---------------------------------------------------------------------------
+   The redesign's shared pieces (M64 U4, D-614, D-615).
+   --------------------------------------------------------------------------- */
+
+/* A text action: the verb of a waiting row, an empty state's one way on. An
+   underlined `accent` word, thicker on hover — a link's look, a button's job. */
+.fc-text-action {
+  color: var(--color-accent);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  white-space: nowrap;
+}
+.fc-text-action:hover {
+  color: var(--color-accent-hover);
+  text-decoration-thickness: 2px;
+}
+.fc-text-action:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* The side panel (`SidePanel`): a column of the page's grid where the window
+   has room for one, floating over the page where it has not (A's critique:
+   squeezing the month to make room lost it). 420px is a measure of the layout,
+   like the rail's widths, not a step. */
+.fc-side-panel {
+  width: 420px;
+  max-width: 100%;
+  min-height: 100%;
+  overflow: auto;
+  padding: var(--spacing-6) var(--spacing-6) var(--spacing-12);
+  background: var(--color-background);
+  border-inline-start: 1px solid var(--color-hairline);
+}
+@media (max-width: 1359px) {
+  .fc-side-panel {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-end: 0;
+    z-index: 30;
+    box-shadow: var(--shadow-pop);
+  }
+}
+
+/* The specimen page shows a side panel where it stands, not floating. */
+.fc-side-panel-docked .fc-side-panel {
+  position: static;
+  width: auto;
+  min-height: 0;
+  box-shadow: none;
 }

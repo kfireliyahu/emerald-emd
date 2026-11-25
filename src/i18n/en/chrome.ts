@@ -130,6 +130,8 @@ export const chrome = {
     recent: 'Recent',
   },
   rail: {
+    money: 'Money',
+    document: 'Document',
     sections: 'Sections',
     working: '{name}: working',
     workingTitle: 'Working',
@@ -197,5 +199,15 @@ export const chrome = {
       back: 'Go back to it',
       dismiss: 'Dismiss',
     },
+  },
+  /** The data display kit's own words (M64 U4, D-615): only what a display adds to the caller's. */
+  kit: {
+    close: 'Close',
+    closeTitle: 'Close (Esc)',
+    left: '{amount} left',
+    over: '{amount} over',
+    noPlan: 'Nothing planned',
+    more: '{n} more',
+    share: '{n}% of the whole',
   },
 } as const

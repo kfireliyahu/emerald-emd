@@ -8,6 +8,7 @@ import { openGuide, useGuideOpen } from '@/ui/guide/guideState.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { NavGlyph } from '@/ui/NavGlyph.tsx'
 import { useT } from '@/i18n/current.ts'
+import type { MessageKey } from '@/i18n/catalogue.ts'
 import { activeTab, childIsActive, holdBack, placeName, railSectionFor, railSections, type NavChild, type NavSection } from '@/ui/nav.ts'
 import { useHeldBack } from '@/ui/heldBack.ts'
 import { useDocumentTitle } from '@/state/documentTitle.ts'
@@ -92,7 +93,7 @@ export function Sidebar({ navigable }: { navigable: boolean }) {
       }`}
     >
       <span
-        className="mb-2 flex h-8 items-center gap-2 overflow-hidden px-3.5 font-medium tracking-tight"
+        className={`mb-3 flex h-8 items-center gap-2 overflow-hidden font-semibold tracking-tight ${collapsed ? 'px-3.5' : 'px-5'}`}
         title="Emerald"
       >
         <EmeraldMark />
@@ -103,10 +104,17 @@ export function Sidebar({ navigable }: { navigable: boolean }) {
         {navigable &&
           sections.map((section, index) => (
             <Fragment key={section.to}>
-              {/* The engine's places after the ones a pack draws, past a hairline. */}
-              {section.pack === undefined && index > 0 && sections[index - 1]?.pack !== undefined && (
-                <div className="mx-3.5 my-2 h-px bg-hairline" aria-hidden />
-              )}
+              {/* **Two groups, each under its word** (M64 U4, D-614): the
+                  ledger's places under *Money*, the engine's under *Document*
+                  once a pack's places come before them; collapsed, a hairline. */}
+              {groupStart(sections, index) !== undefined &&
+                (collapsed ? (
+                  index > 0 && <div className="mx-3.5 my-2 h-px bg-hairline" aria-hidden />
+                ) : (
+                  <span className={`mb-1 flex h-6 items-end px-5 text-caption font-medium text-ink-secondary ${index > 0 ? 'mt-4' : ''}`}>
+                    {t(groupStart(sections, index)!)}
+                  </span>
+                ))}
               <Section
                 section={section}
                 pathname={pathname}
@@ -183,11 +191,8 @@ function Section({
         // A section arrives like a row (M39 F1): a document opening, or a pack kept.
         className={`fc-row-enter ${item(marked, on || current, collapsed)}`}
       >
-        {collapsed && busy ? (
-          <Working size={16} label={t('chrome.rail.working', { name })} />
-        ) : (
-          <NavGlyph glyph={section.glyph} />
-        )}
+        {/* A rail of words (D-614): the glyph only where the words do not fit. */}
+        {collapsed && (busy ? <Working size={16} label={t('chrome.rail.working', { name })} /> : <NavGlyph glyph={section.glyph} />)}
         {!collapsed && <Bidi className="truncate">{name}</Bidi>}
         {/* Work in progress under this section (a batch of slips being read, a
             document being read), shown where the work is, wherever you are. */}
@@ -204,7 +209,7 @@ function Section({
             {/* **A pack's formats under the pack's name** (M33 F3): a heading
                 where a group starts, not a link — the pack is not a place. */}
             {child.group !== undefined && child.group !== pages[index - 1]?.group && (
-              <span className="fc-row-enter flex h-7 min-w-0 items-end pe-3.5 pb-1 ps-10 text-caption text-ink-secondary">
+              <span className="fc-row-enter flex h-7 min-w-0 items-end pe-5 pb-1 ps-8 text-caption text-ink-secondary">
                 <Bidi className="min-w-0 truncate">{child.group}</Bidi>
               </span>
             )}
@@ -253,9 +258,28 @@ function linkActive(section: NavSection, pathname: string): boolean {
   return path === own || (section.end !== true && own !== '/' && path.startsWith(`${own.replace(/\/$/, '')}/`))
 }
 
-/** A section's pages: its children, or its own views when it has none. */
+/**
+ * A section's places beneath it: its children only. **A section's views are
+ * its tab strip, never rows in the rail** (M64 U4, D-614, D-615): Home's month
+ * and year, Paychecks' deduction types, Categories' rules are `ViewTabs` above
+ * the screen, so the rail stays an index of places.
+ */
 function pagesOf(section: NavSection): readonly NavChild[] {
-  return section.children ?? (section.tabs !== undefined && section.tabs.length > 1 ? section.tabs : [])
+  return section.children ?? []
+}
+
+/**
+ * The word a group of the rail starts under at this section, if one starts:
+ * *Money* before the ledger's first place, *Document* before the engine's
+ * first place when a pack's places came before it.
+ */
+function groupStart(sections: readonly NavSection[], index: number): MessageKey | undefined {
+  const section = sections[index]
+  const before = sections[index - 1]
+  if (section === undefined) return undefined
+  if (section.pack === 'ledger' && before?.pack !== 'ledger') return 'chrome.rail.money'
+  if (section.pack === undefined && before !== undefined && before.pack !== undefined) return 'chrome.rail.document'
+  return undefined
 }
 
 /**
@@ -282,18 +306,20 @@ function lit(pages: readonly NavChild[], pathname: string): NavChild | undefined
 }
 
 /**
- * The active marker: a 2px `accent` bar at the inline start over an
- * `accent-soft` plane, square and full width (M28 U4), the sidebar's form of
- * the underline the top nav used (D-125: `accent` marks what you can act on).
+ * **The place you are on is its word in ink and semibold, with a small
+ * `accent` square at the row's end** (M64 U4, D-614 from A): a rail of words
+ * marks its place typographically, and the square is the one `accent` in it
+ * (D-125: it marks where you can act). No plane, no bar.
  */
 function item(marked: boolean, inked: boolean, collapsed: boolean): string {
   return [
-    'relative flex h-8 shrink-0 items-center gap-2.5 px-3.5 text-body',
-    collapsed ? 'justify-center' : '',
+    'relative flex h-8 shrink-0 items-center gap-2.5 text-body',
+    collapsed ? 'justify-center px-3.5' : 'px-5',
     'transition-colors duration-[var(--duration-micro)]',
     'focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent',
+    'hover:bg-[color-mix(in_srgb,var(--color-ink)_4%,transparent)]',
     marked
-      ? 'bg-accent-soft text-ink before:absolute before:inset-y-0 before:start-0 before:w-0.5 before:bg-accent'
+      ? `font-semibold text-ink after:size-1.5 after:shrink-0 after:bg-accent ${collapsed ? 'after:absolute after:end-1' : 'after:ms-auto'}`
       : inked
         ? 'text-ink'
         : 'text-ink-secondary hover:text-ink',
@@ -306,12 +332,11 @@ function item(marked: boolean, inked: boolean, collapsed: boolean): string {
  */
 function childItem(active: boolean, grouped: boolean): string {
   return [
-    `relative flex h-7 items-center pe-3.5 ${grouped ? 'ps-14' : 'ps-10'} text-body`,
+    `relative flex h-7 items-center pe-5 ${grouped ? 'ps-12' : 'ps-8'} text-body`,
     'transition-colors duration-[var(--duration-micro)]',
     'focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent',
-    active
-      ? 'bg-accent-soft text-ink before:absolute before:inset-y-0 before:start-0 before:w-0.5 before:bg-accent'
-      : 'text-ink-secondary hover:text-ink',
+    'hover:bg-[color-mix(in_srgb,var(--color-ink)_4%,transparent)]',
+    active ? 'font-semibold text-ink after:ms-auto after:size-1.5 after:shrink-0 after:bg-accent' : 'text-ink-secondary hover:text-ink',
   ].join(' ')
 }
 

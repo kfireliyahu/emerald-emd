@@ -24,7 +24,7 @@ import HOST_THEMES from './hostThemes.json'
 /** Emerald's own value of a token in a theme, read from tokens.css rather than copied. */
 function emerald(token: string, theme: 'light' | 'dark'): Rgba {
   const css = readFileSync(new URL('../ui/theme/tokens.css', import.meta.url), 'utf8')
-  const blocks = theme === 'light' ? [css.slice(css.indexOf('@theme {'))] : css.split(':root[data-theme="dark"] {').slice(1)
+  const blocks = theme === 'light' ? [css.slice(css.indexOf('@theme {'))] : css.split(/:root\[data-theme="dark"\](?:,\s*\.fc-theme-dark)? \{/).slice(1)
   for (const block of blocks) {
     const value = new RegExp(`${token}:\\s*(#[0-9a-fA-F]+);`).exec(block.slice(0, block.indexOf('\n}')))?.[1]
     if (value !== undefined) return parseColour(value)!

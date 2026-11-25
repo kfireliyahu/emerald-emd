@@ -23,7 +23,7 @@ const TOP = 18
 const BOTTOM = 22
 const RIGHT = 4
 /** A bar is never wider than this, however few there are. */
-const MAX_BAR = 28
+const MAX_BAR = 24
 /** Two series' names at a line's end are kept at least this far apart. */
 const NAME_GAP = 13
 
@@ -162,7 +162,24 @@ export function Chart({
   return (
     // Time runs left to right in either language (M60 U3, D-586).
     <figure className="m-0" dir="ltr">
-      <div ref={width.ref as React.RefObject<HTMLDivElement>} className="relative">
+      {/* **A tooltip and the keyboard on every chart** (M64 U4, D-614): the
+          chart is one stop, ← → move the readout along its labels as the
+          pointer does, Escape clears it. */}
+      <div
+        ref={width.ref as React.RefObject<HTMLDivElement>}
+        className="relative focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+        tabIndex={0}
+        role="group"
+        aria-label={title}
+        onKeyDown={(event) => {
+          const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0
+          if (step !== 0) {
+            event.preventDefault()
+            setHovered((at) => Math.max(0, Math.min(n - 1, (at ?? (step > 0 ? -1 : n)) + step)))
+          } else if (event.key === 'Escape') setHovered(undefined)
+        }}
+        onBlur={() => setHovered(undefined)}
+      >
         <svg
           viewBox={`0 0 ${String(W)} ${String(H)}`}
           className="block h-auto w-full overflow-visible"
@@ -236,7 +253,7 @@ export function Chart({
                       d={linePath(row)}
                       fill="none"
                       stroke={colors[which]}
-                      strokeWidth={1.5}
+                      strokeWidth={2}
                       strokeLinejoin="round"
                       strokeLinecap="round"
                       className="fc-draw"

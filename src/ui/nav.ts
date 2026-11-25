@@ -766,8 +766,8 @@ export function tabsFor(pathname: string): readonly NavTab[] | undefined {
 
 /**
  * True when a strip is a section's own views rather than a child's (M28 U4).
- * The rail lists those under the section, so the strip is drawn only while the
- * rail is collapsed to its glyphs and cannot.
+ * Since M64 U4 (D-615) the strip draws both and the rail neither, so nothing
+ * on screen asks this any more; the tests still say which strip is which.
  */
 export function isSectionTabs(tabs: readonly NavTab[]): boolean {
   return NAVIGATION.some((section) => section.tabs === tabs)

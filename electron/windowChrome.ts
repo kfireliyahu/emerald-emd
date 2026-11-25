@@ -86,8 +86,8 @@ export function titleBarOverlay(theme: 'light' | 'dark'): {
   height: number
 } {
   return theme === 'dark'
-    ? { color: '#151517', symbolColor: '#f2f2f0', height: TITLE_BAR_HEIGHT }
-    : { color: '#f7f7f6', symbolColor: '#111111', height: TITLE_BAR_HEIGHT }
+    ? { color: '#121214', symbolColor: '#f1f1ef', height: TITLE_BAR_HEIGHT }
+    : { color: '#fafaf8', symbolColor: '#121212', height: TITLE_BAR_HEIGHT }
 }
 
 /**
@@ -97,5 +97,5 @@ export function titleBarOverlay(theme: 'light' | 'dark'): {
  * for the reason the overlay's pair is, and held to the tokens by the same test.
  */
 export function windowBackground(theme: 'light' | 'dark'): string {
-  return theme === 'dark' ? '#0b0b0c' : '#ffffff'
+  return theme === 'dark' ? '#0c0c0d' : '#ffffff'
 }

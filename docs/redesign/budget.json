@@ -1,0 +1,356 @@
+{
+  "about": "The density budget (M64 U4, D-615; measures D-612). Each route's limits are its measures before the redesign (docs/redesign/screens.md), a ceiling a redesign may not exceed; every route takes at most one primary action and seven type sizes. A route on `exempt` is not redesigned yet: its breaches are reported and do not fail. The unit that redesigns a route takes it off `exempt` and tightens its limits in the same commit, and `exempt` only shrinks (src/ui/budget.test.ts). `tools` are never budgeted. Run: npm run probe:screens -- --document year.emd --budget docs/redesign/budget.json --routes <a,b>",
+  "limits": {
+    "*": {
+      "primary": 1,
+      "typeSizes": 7
+    },
+    "#/": {
+      "words": 622,
+      "blocks": 10,
+      "figures": 8,
+      "actions": 70,
+      "colours": 15,
+      "screens": 4.0
+    },
+    "#/year": {
+      "words": 355,
+      "blocks": 8,
+      "figures": 5,
+      "actions": 14,
+      "colours": 12,
+      "screens": 2.8
+    },
+    "#/transactions": {
+      "words": 133,
+      "blocks": 1,
+      "figures": 4,
+      "actions": 37,
+      "colours": 11,
+      "screens": 1.0
+    },
+    "#/transactions/merchants": {
+      "words": 204,
+      "blocks": 1,
+      "figures": 1,
+      "actions": 48,
+      "colours": 13,
+      "screens": 1.1
+    },
+    "#/paychecks": {
+      "words": 272,
+      "blocks": 5,
+      "figures": 1,
+      "actions": 39,
+      "colours": 12,
+      "screens": 2.2
+    },
+    "#/paychecks/deductions": {
+      "words": 321,
+      "blocks": 1,
+      "figures": 0,
+      "actions": 37,
+      "colours": 6,
+      "screens": 1.1
+    },
+    "#/plan": {
+      "words": 779,
+      "blocks": 4,
+      "figures": 8,
+      "actions": 117,
+      "colours": 17,
+      "screens": 3.5
+    },
+    "#/wealth": {
+      "words": 122,
+      "blocks": 1,
+      "figures": 1,
+      "actions": 3,
+      "colours": 6,
+      "screens": 1.2
+    },
+    "#/wealth/funds": {
+      "words": 530,
+      "blocks": 5,
+      "figures": 9,
+      "actions": 12,
+      "colours": 9,
+      "screens": 2.1
+    },
+    "#/wealth/goals": {
+      "words": 236,
+      "blocks": 4,
+      "figures": 4,
+      "actions": 13,
+      "colours": 13,
+      "screens": 1.5
+    },
+    "#/wealth/debts": {
+      "words": 74,
+      "blocks": 2,
+      "figures": 0,
+      "actions": 7,
+      "colours": 7,
+      "screens": 1.0
+    },
+    "#/categories": {
+      "words": 226,
+      "blocks": 15,
+      "figures": 1,
+      "actions": 168,
+      "colours": 20,
+      "screens": 2.8
+    },
+    "#/categories/rules": {
+      "words": 2573,
+      "blocks": 5,
+      "figures": 0,
+      "actions": 680,
+      "colours": 7,
+      "screens": 17.6
+    },
+    "#/read": {
+      "words": 75,
+      "blocks": 1,
+      "figures": 0,
+      "actions": 3,
+      "colours": 6,
+      "screens": 1.0
+    },
+    "#/paychecks/read": {
+      "words": 46,
+      "blocks": 1,
+      "figures": 0,
+      "actions": 1,
+      "colours": 4,
+      "screens": 1.0
+    },
+    "#/read/readers": {
+      "words": 100,
+      "blocks": 1,
+      "figures": 0,
+      "actions": 10,
+      "colours": 5,
+      "screens": 1.0
+    },
+    "#/settings/accounts": {
+      "words": 54,
+      "blocks": 2,
+      "figures": 0,
+      "actions": 14,
+      "colours": 5,
+      "screens": 1.0
+    },
+    "#/settings/packs": {
+      "words": 185,
+      "blocks": 3,
+      "figures": 0,
+      "actions": 2,
+      "colours": 5,
+      "screens": 1.0
+    },
+    "#/settings/model": {
+      "words": 25,
+      "blocks": 1,
+      "figures": 0,
+      "actions": 1,
+      "colours": 3,
+      "screens": 1.0
+    },
+    "#/settings/calendar": {
+      "words": 48,
+      "blocks": 1,
+      "figures": 0,
+      "actions": 1,
+      "colours": 3,
+      "screens": 1.0
+    },
+    "#/settings/language": {
+      "words": 55,
+      "blocks": 1,
+      "figures": 0,
+      "actions": 1,
+      "colours": 3,
+      "screens": 1.0
+    },
+    "#/settings/export": {
+      "words": 77,
+      "blocks": 1,
+      "figures": 0,
+      "actions": 3,
+      "colours": 3,
+      "screens": 1.0
+    },
+    "#/mcp": {
+      "words": 1081,
+      "blocks": 21,
+      "figures": 0,
+      "actions": 2,
+      "colours": 4,
+      "screens": 5.1
+    },
+    "#/formats": {
+      "words": 76,
+      "blocks": 2,
+      "figures": 0,
+      "actions": 25,
+      "colours": 6,
+      "screens": 1.0
+    },
+    "#/formats/card_charge": {
+      "words": 63,
+      "blocks": 1,
+      "figures": 0,
+      "actions": 30,
+      "colours": 9,
+      "screens": 1.0
+    },
+    "#/formats/unit": {
+      "words": 240,
+      "blocks": 1,
+      "figures": 0,
+      "actions": 99,
+      "colours": 10,
+      "screens": 1.0
+    },
+    "#/formats/card_charge/entry/new": {
+      "words": 46,
+      "blocks": 1,
+      "figures": 0,
+      "actions": 13,
+      "colours": 10,
+      "screens": 1.0
+    },
+    "#/formats/card_charge/input": {
+      "words": 72,
+      "blocks": 1,
+      "figures": 0,
+      "actions": 10,
+      "colours": 9,
+      "screens": 1.0
+    },
+    "#/formats/unit/board": {
+      "words": 183,
+      "blocks": 1,
+      "figures": 0,
+      "actions": 34,
+      "colours": 9,
+      "screens": 1.1
+    },
+    "#/formats/card_charge/list": {
+      "words": 64,
+      "blocks": 1,
+      "figures": 0,
+      "actions": 15,
+      "colours": 8,
+      "screens": 1.0
+    },
+    "#/formats/unit/list": {
+      "words": 82,
+      "blocks": 1,
+      "figures": 0,
+      "actions": 23,
+      "colours": 9,
+      "screens": 1.0
+    },
+    "#/formats/milestone/roadmap": {
+      "words": 183,
+      "blocks": 1,
+      "figures": 0,
+      "actions": 27,
+      "colours": 8,
+      "screens": 1.1
+    },
+    "#/formats/unit/ready": {
+      "words": 81,
+      "blocks": 2,
+      "figures": 0,
+      "actions": 13,
+      "colours": 5,
+      "screens": 1.0
+    },
+    "#/formats/card_charge/dashboard": {
+      "words": 24,
+      "blocks": 1,
+      "figures": 0,
+      "actions": 8,
+      "colours": 6,
+      "screens": 1.0
+    },
+    "#/dashboard": {
+      "words": 17,
+      "blocks": 1,
+      "figures": 0,
+      "actions": 2,
+      "colours": 3,
+      "screens": 1.0
+    },
+    "#/agenda": {
+      "words": 47,
+      "blocks": 1,
+      "figures": 0,
+      "actions": 5,
+      "colours": 5,
+      "screens": 1.0
+    },
+    "#/connections": {
+      "words": 290,
+      "blocks": 3,
+      "figures": 0,
+      "actions": 94,
+      "colours": 7,
+      "screens": 1.0
+    },
+    "#/formats/card_charge/read": {
+      "words": 65,
+      "blocks": 1,
+      "figures": 0,
+      "actions": 1,
+      "colours": 3,
+      "screens": 1.0
+    }
+  },
+  "exempt": [
+    "#/",
+    "#/year",
+    "#/transactions",
+    "#/transactions/merchants",
+    "#/paychecks",
+    "#/paychecks/deductions",
+    "#/plan",
+    "#/wealth",
+    "#/wealth/funds",
+    "#/wealth/goals",
+    "#/wealth/debts",
+    "#/categories",
+    "#/categories/rules",
+    "#/read",
+    "#/paychecks/read",
+    "#/read/readers",
+    "#/settings/accounts",
+    "#/settings/packs",
+    "#/settings/model",
+    "#/settings/calendar",
+    "#/settings/language",
+    "#/settings/export",
+    "#/mcp",
+    "#/formats",
+    "#/formats/card_charge",
+    "#/formats/unit",
+    "#/formats/card_charge/entry/new",
+    "#/formats/card_charge/input",
+    "#/formats/unit/board",
+    "#/formats/card_charge/list",
+    "#/formats/unit/list",
+    "#/formats/milestone/roadmap",
+    "#/formats/unit/ready",
+    "#/formats/card_charge/dashboard",
+    "#/dashboard",
+    "#/agenda",
+    "#/connections",
+    "#/formats/card_charge/read"
+  ],
+  "tools": [
+    "#/specimen"
+  ]
+}

@@ -132,6 +132,8 @@ export const chrome: Translation<'chrome'> = {
     recent: 'אחרונים',
   },
   rail: {
+    money: 'כסף',
+    document: 'המסמך',
     sections: 'אזורים',
     working: '{name}: בעבודה',
     workingTitle: 'בעבודה',
@@ -198,5 +200,14 @@ export const chrome: Translation<'chrome'> = {
       back: 'חזרה אליו',
       dismiss: 'סגירה',
     },
+  },
+  kit: {
+    close: 'סגירה',
+    closeTitle: 'סגירה (Esc)',
+    left: 'נשארו {amount}',
+    over: 'חריגה של {amount}',
+    noPlan: 'לא תוכנן',
+    more: 'עוד {n}',
+    share: '{n}% מהכול',
   },
 }
