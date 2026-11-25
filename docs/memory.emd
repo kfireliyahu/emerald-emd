@@ -18129,40 +18129,52 @@ report: "M64 U5 built (D-616). Home is the report: one question, what happened t
 milestone: M64
 scope: ui
 title: Transactions and By merchant redesigned: find a row, fix its category, make a rule from it
-state: planned
+state: in_progress
 brief: Follow the redesign-screen skill (U5) and DESIGN.md. The screen's jobs, from U2's inventory: find a row, fix its category, file many by merchant, make a rule from a fix. The route leaves the budget's exempt list. Keep the desktop affordances (shift-click, copy as TSV, J/K) and the keyboard.
 files: The transactions table, its filter bar and detail panel, By merchant and the categorizing flow.
 blocks: ["M64 U5"]
+taken_by: run-milestone driver
+started: 2026-11-25
+branch: m64-redesign
 paths: "src/ui/screens/Transactions.tsx\nsrc/ui/screens/ByMerchant.tsx\nsrc/ui/transactions/\nsrc/ui/categorize/"
 
 ### M64 U7
 milestone: M64
 scope: ui
 title: Reading files in redesigned: statements and payslips, readers, the mapper and a missing statement
-state: planned
+state: in_progress
 brief: Follow the redesign-screen skill (U5) and DESIGN.md. This is the first thing a newcomer does, so drop a file, see what was read, fix what looks wrong and be done, with nothing in the way. The routes leave the budget's exempt list. Test with the synthetic fixtures; never a real file in the repo (D-390).
 files: The read screens for statements and payslips, readers, the file gap and the import mapper.
 blocks: ["M64 U5"]
+taken_by: run-milestone driver
+started: 2026-11-25
+branch: m64-redesign
 paths: "src/ui/screens/ReadStatements.tsx\nsrc/ui/screens/Readers.tsx\nsrc/ui/screens/FileGap.tsx\nsrc/ui/import/\nsrc/ui/paychecks/ReadSlips.tsx\nsrc/ui/paychecks/ReadSlip.tsx\nsrc/ui/paychecks/SlipReview.tsx\nsrc/ui/paychecks/PayslipIntake.tsx\nsrc/ui/paychecks/SlipBatchBar.tsx"
 
 ### M64 U8
 milestone: M64
 scope: ui
 title: Paychecks redesigned: a slip, what it paid and kept, and its deduction types
-state: planned
+state: in_progress
 brief: Follow the redesign-screen skill (U5) and DESIGN.md, with the jobs from U2's inventory. Taxes, which leave Home's headline in U5 if U5 moved them, are shown here. The routes leave the budget's exempt list.
 files: Paychecks, a paycheck's detail and editor, its charts, and deduction types.
 blocks: ["M64 U5"]
+taken_by: run-milestone driver
+started: 2026-11-25
+branch: m64-redesign
 paths: "src/ui/screens/Paychecks.tsx\nsrc/ui/screens/DeductionTypes.tsx\nsrc/ui/paychecks/PaycheckDetail.tsx\nsrc/ui/paychecks/PaycheckEditor.tsx\nsrc/ui/paychecks/Waterfall.tsx\nsrc/ui/paychecks/NetTrend.tsx\nsrc/ui/paychecks/WhereItWent.tsx\nsrc/ui/paychecks/ReconciliationStrip.tsx\nsrc/ui/paychecks/DeductionTypeSelect.tsx"
 
 ### M64 U9
 milestone: M64
 scope: ui
 title: Plan redesigned: where the month's money is meant to go, and the bills
-state: planned
+state: in_progress
 brief: Follow the redesign-screen skill (U5) and DESIGN.md, with the jobs from U2's inventory. The route leaves the budget's exempt list.
 files: Plan, its buckets, month rows and the fixed bills.
 blocks: ["M64 U5"]
+taken_by: run-milestone driver
+started: 2026-11-25
+branch: m64-redesign
 paths: "src/ui/screens/Plan.tsx\nsrc/ui/plan/\nsrc/ui/fixed/"
 
 <!-- emerald: views.md -->
