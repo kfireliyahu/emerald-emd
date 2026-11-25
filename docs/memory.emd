@@ -7200,7 +7200,8 @@ answer: Yes, and it is more than a feeling (2026-10-22): what was missed was cha
 
 ### month_summary saved and the slip
 question: month_summary's Saved for October 2026 on year.emd is 4,493, made of the goals' 2,300 and the slip's pension 1,548 and study fund 645, and is above that month's left over (4,088). D-607 and D-609 say Home's saved excludes the slip's part and is never above a positive left over. Is the tool's figure the old definition, and should month_summary (and the year's Saved column) follow D-607 before U5 draws saved beside left over?
-state: open
+state: answered
+answer: A stale server, not the rule. 4,493 is exactly the definition before D-607: goals plus the slip's pension and study fund. The figure came from the emerald-ledger MCP server the desktop app runs, which is the installed build, older than M64 U1. The branch's own code caps saved at left over and keeps the slip's lines apart (src/domain/statistics.ts putAside, offPaycheck), and src/demo/year.test.ts asserts it on the year. Units on m64-redesign take figures from the branch's tests or probe:screens, never from that server.
 
 ### parity gap #11
 question: A tool must be able to make a connection. `#/connections` can write a `link` and an aggregate by dragging between two endpoints, and no tool can: what is the conversation's half of that, and does it write the link and the fold together the way the drag does?
