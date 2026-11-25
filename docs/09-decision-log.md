@@ -506,6 +506,7 @@ written out here.
 | D-603 | 2026-11-23 | A nest is one string a person types — `keyword.card as=keywords order=position` — the same on the command line, in the tool and in a saved export's cell; its link back is read off the graph, refused when there are two, and left out of each child | M63 |
 | D-604 | 2026-11-23 | Saved exports are the exports pack's one format, `export`, named by its unique `file`; a refused row is reported and the others still written, the run exiting 2, and a document with none exits 2 naming the pack | M63 |
 | D-605 | 2026-11-23 | The desktop app writes a document's saved exports from Settings › Export: the page works the bytes out with the command line's own code, moved out of the plugin; the main process holds each file to the open document's folder and compares it on disk without handing its bytes to the page; and Export is offered to a document keeping the ledger or the exports pack | M63 |
+| D-606 | 2026-11-25 | The UI is redesigned, not reviewed again: three working directions for the maintainer to pick one, screens built for a newcomer, density measured and budgeted, what leaves a screen kept one click behind, the ledger first and then the engine | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -861,6 +862,44 @@ neither pack would get a place holding only Save as, not asked for); the plugin'
 
 **Consequences.** The term `Export` is the app's. A shell older than M63 U4 has no `exports` on its
 bridge, and the page draws no section, as in a browser tab.
+
+## D-606 · 2026-11-25 · The UI is redesigned, not reviewed again: three working directions for the maintainer to pick one, screens built for a newcomer, density measured and budgeted, what leaves a screen kept one click behind, the ledger first and then the engine <a id="d-606"></a>
+
+**Context.** The maintainer, 2026-11-25: every screen is dense and hard to follow, the ledger is
+really hard to use, the engine needs the same treatment though it is in better shape, and he has
+little time to give input. Budgets alone are not enough; he wants the look and feel improved in a
+major way. Checked the same day: the build has 73 `ui` rule rows, `design-review` and
+`probe:screens`, and every one of them is about how a screen *looks*. Nothing checks how much a
+screen holds or whether a newcomer can tell what it is for. M54 reviewed every surface against
+those rules, fixed what broke them, and recorded the ledger's findings without acting on them.
+Meanwhile every unit added the block it was asked for (Home's code cites a request for nearly
+every one of its twelve blocks), and nothing ever took one away.
+
+**Decision.** M64, a redesign.
+
+- **What each screen is for comes first** (U2): an inventory of every route, with the one
+  question it answers, the jobs someone comes to it to do and the blocks it shows, and density
+  measures added to `probe:screens`.
+- **Three directions, built to click through** (U3): Impeccable's redesign path, where the old
+  look is evidence and not the rule. They differ in feel as well as look. **The maintainer picks
+  one (STOP)**; his input is that pick and judging finished screens, never a brief and no
+  sign-off between units.
+- **The pick becomes the design language** (U4): DESIGN.md, the tokens, the shared components,
+  `ui` rule rows that replace the ones it overrides, and a density budget per route that
+  `probe:screens --budget` fails on. The list of routes exempt from it only shrinks.
+- **Home first, and the skill from it** (U5): `redesign-screen` is written from the first rebuilt
+  screen. Then one screen or group per unit, ledger first (U6-U12), then the engine (U13-U14),
+  then the tour and the page (U15).
+- **For a newcomer** (the second person of M59). **A block leaving a screen moves one click behind
+  what it explains**, and the conversation still reaches it. The figures stay the domain's, except
+  the month (U1): card spending, saved and the month Home opens on, asked of the maintainer first.
+
+**Rejected.** A skill alone: nothing walks the screens, and density comes back. Another review
+against the current rules: M54 did that. Budgets alone: he asked for a major change of look and
+feel.
+
+**Consequences.** Rule rows retired by U4 point at its decision. `design-review` stays as the
+compliance pass after a screen is rebuilt.
 
 ## Related
 

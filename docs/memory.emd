@@ -5039,6 +5039,16 @@ answer: exportRows, savedExportTexts, chosenColumns and the filter refusal live 
 state: live
 affects: "docs/02-architecture.md\ndocs/plugin.md"
 
+### D-606
+date: 2026-11-25
+milestone: M64
+scope: ui
+title: The UI is redesigned, not reviewed again: three working directions for the maintainer to pick one, screens built for a newcomer, density measured and budgeted, what leaves a screen kept one click behind, the ledger first and then the engine
+question: Every screen is dense and hard to follow, the ledger worst, and the maintainer has little time to give input. Is the fix new skills, a redesign or another pass, and how is it different from M54?
+answer: A redesign (M64). Nothing in the build checked how much a screen holds or whether a newcomer can tell what it is for: the ui rule rows, design-review and probe:screens all check how it looks, M54 reviewed against those rules, and every unit added the block it was asked for. So M64 first writes down what each screen is for and adds density measures to probe:screens (U2). Then three directions are built as working screens, using Impeccable's redesign path, where the old look is evidence, not the rule (U3, STOP: the maintainer picks). The pick becomes the new design language: DESIGN.md, the tokens, ui rule rows that replace the ones it overrides, and a density budget with a failing test (U4). Home is rebuilt first, and the redesign-screen skill is written from it (U5). Then one screen or one group of screens per unit, ledger first, then engine. Designed for someone opening the ledger for the first time. A block leaving a screen moves one click behind the thing it explains, and the conversation still reaches it. Figures stay the domain's, except the month (U1). The maintainer picks a direction and judges finished screens; no sign-off between units. Rejected: a skill alone (nothing walks the screens and density returns); another review against the old rules (M54 did that); budgets alone (he asked for a major change of look and feel).
+state: live
+affects: "DESIGN.md\ndocs/11-ui-design-language.md\n.claude/skills/design-review/SKILL.md"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -6702,6 +6712,12 @@ title: A way out: a format's rows written to a JSON file, from a command, a conv
 goal: A format's rows can be written to a JSON file without a model in the loop: `emerald-mcp export doc.emd --format card --to data/cards.json` works the same on a document stored as text or as SQLite, takes `format_rows`'s filters, writes plain values (a link as its row's name, a percent as a fraction, money as exact text beside its currency) in the same bytes every time, and `--check` fails when the file on disk is stale. Rows that point at a row can be folded into it. A document can keep its exports as rows, so one `emerald-mcp export doc.emd` writes every file, and so can a conversation (inside the document's folder) and the desktop app. Nothing reads a `.emd`'s tables directly any more to get its rows out (D-285, D-601).
 state: planned
 position: 385
+
+### M64
+title: A redesign: every screen easy to read and to use, the ledger first, then the engine
+goal: Every screen tells a newcomer what it is for and lets them do its main jobs without explanation, in a new look and feel the maintainer picks from three working directions. The ledger goes first and is no longer parked: its month adds up the way a person reads it (U1), and each of its screens is rebuilt in the chosen direction. The engine's screens follow in the same direction. The figures behind the screens stay; only how they are shown changes, apart from U1. Maintainer's answers, 2026-11-25 (D-606): a redesign, not a review against the old rules, so the old look is evidence and may be replaced; screens are designed for someone opening the ledger for the first time (the second person of M59); what leaves a screen moves one click behind the thing it explains, so nothing is lost; the engine follows the ledger in this milestone. His part is picking one of U3's directions (STOP) and judging finished screens on his own document; no sign-off between units. Unlike M54, which reviewed against the 73 ui rules and parked the ledger's findings: this starts from what each screen is for, can remove, is measured for density, and writes its skill from the first rebuilt screen.
+state: planned
+position: 376
 
 <!-- emerald: open_question.format.md -->
 ---
@@ -17669,6 +17685,154 @@ commit: 0772efd
 paths: "src/ui/screens/Export.tsx\nelectron/bridge.ts\nelectron/main.ts"
 report: M63 U4 built at 0772efd on main; docs:check green after landing. Settings › Export in the desktop shell has a Saved exports section: each export row's file (Bidi, mono), how many rows of which format it holds, and its state as a chip (Current, Stale, Missing, Not written with the reason: the document's sentence for an unknown format/column, or 'outside this document's folder'). One secondary button 'Write n files' (just 'Write', disabled, when nothing is owed) writes the stale and missing ones; the answer line says 'Wrote 2 files: books.json, out/titles.json.'. Unsaved changes: a line says it is written from what is open; never-saved document: a line says save first and the button is disabled. No saved exports: one line, linking to Settings › Packs (pack not kept) or to the Saved export table (kept, no rows). Browser build: no section (shellExports() undefined). D-605: the shaping (exportRows + helpers, savedExportTexts, chosenColumns, filterRefusalText/filteredQuery) moved from src/plugin/exportCommand.ts and tools/formats.ts to src/data/export/formatExport.ts, with ExportContext {on, resolve} so the plugin keeps its clock and its model-voiced resolve; ToolInputError moved to src/core/inputError.ts. Bridge: exports.check/write(path, [{file,text}]) on EXPORT_CHANNELS; main requires granted(path) === the watched document and holds every file with inDocumentFolder (withinFolder moved into electron/bridge.ts, node:path handed in, because electron/language.test.ts enforces D-588: the shell reaches into src/ only for its words); nothing on disk is read into the page. Rail: the Export entry lost pack:'ledger' and got anyOf:['ledger','exports'], so a document keeping only the exports pack is offered it and opens it with no ledger guard; the ledger's CSV rows draw only when the ledger is kept. Term Export widened to the app (scope app). Tests: electron/exportFiles.test.ts (refuses ../x.json and a path in another folder, reads/writes neither, writes the rest; current/differs/missing; current left unwritten; real disk; shape check), src/ui/export/savedLines.test.ts (fixture document with the exports pack: current/stale/missing/refused lines and what the button writes; no section outside the shell), nav.test.ts (Export offered for ledger or exports, not neither; packOf undefined). related (129 files) + privacy + typecheck green. probe:screens on demo and project, light and dark: 0 low contrast, 0 off the ramp from this screen (two 13px hits are a notice's). Shell proven over CDP on a scratch document made by the built server (exports pack, 3 rows incl ../outside.json, books.json made stale, out/titles.json deleted): rail showed Export, states Not written/Stale/Missing, Write 2 files wrote both, states became Current, nothing written outside. check:tours skipped: no tour drives Settings › Export. Not done: no component render test (the repo has none; the logic is in savedLines.ts); the section's Hebrew not seen on screen.
 
+### M64 U1
+milestone: M64
+scope: app
+title: The month adds up the way a person reads it: card spending, saved and the month Home opens on (STOP)
+state: planned
+brief: "**Why.** Checked on 2026-11-25 against a real document (outside the repo): the arithmetic is right, but three rules make a month read wrong. (1) A card row counts in the month its bill is charged (D-006), so 'October' shows September's card purchases next to October's rent and October's payslip. (2) Saved holds money that never came in that month: the slip's pension and study fund (Came in is net pay) and a transfer to investments larger than the month's left over, so saved can be above left over and the savings rate above 100%. (3) Home opens on the month still running: nothing came in yet, left over is negative, and the comparison says -100%.\n\n**STOP first.** Ask the maintainer these three in plain words, each with a small example from the demo document, and build only what he answers (recommendation first): (a) card spending counts in the month of the purchase, and a month stays partial until the card statement covering it is read; or it keeps the charge date and Home says 'charged in'. (b) Saved is the part of this month's money that was put aside: paycheck savings is a line of its own beside it, and a move larger than left over says how much came from earlier savings; or saved stays as it is with its parts explained. (c) Home opens on the last finished month, and the running month is one step forward. Record each answer as a decision.\n\n**Do.** What he picks, in the statistics repository, one date basis in one place (BASIS), so Home, Year, Paychecks' comparison, month_summary and year_summary change together and cannot disagree. A document made before this opens and reads with the new rule, and nothing is stored, so there is nothing to carry forward; say so in the decision. The figures on screen stay where they are: U5 redesigns Home.\n\n**Tests.** A synthetic document with a card bill charged on the 2nd of the next month: the purchase lands in its own month (or the label says charged, per the answer); a month whose transfer is larger than its left over; a running month is not where Home opens. Every existing statistics test changed by the new rule is changed on purpose and named in the report.\n\n**Docs.** docs/packs/ledger/05-domain-rules-and-calculations.md, the month_summary and year_summary descriptions.\n\n**Out of scope.** Home's layout (U5). Recategorizing anyone's rows."
+files: The month's figures in the statistics repository and domain, Home's opening month, the month and year summary tools, and the ledger's notes on how a month is counted.
+paths: "src/data/repositories/statisticsRepository.ts\nsrc/domain/statistics.ts\nsrc/domain/model/statistics.ts\nsrc/ui/home/months.ts\nsrc/plugin/tools/\ndocs/packs/ledger/05-domain-rules-and-calculations.md"
+
+### M64 U10
+milestone: M64
+scope: ui
+title: Wealth redesigned: the overview, funds, goals and debts
+state: planned
+brief: Follow the redesign-screen skill (U5) and DESIGN.md, with the jobs from U2's inventory. The routes leave the budget's exempt list.
+files: Wealth's overview, funds and a fund, goals and a goal, debts and a debt, and the list-beside-detail layout.
+blocks: ["M64 U5"]
+paths: "src/ui/screens/Overview.tsx\nsrc/ui/screens/Funds.tsx\nsrc/ui/screens/FundDetail.tsx\nsrc/ui/screens/Goals.tsx\nsrc/ui/screens/GoalDetail.tsx\nsrc/ui/screens/Debts.tsx\nsrc/ui/screens/DebtDetail.tsx\nsrc/ui/screens/FeeImpact.tsx\nsrc/ui/screens/DepositCheck.tsx\nsrc/ui/screens/ListDetail.tsx\nsrc/ui/funds/\nsrc/ui/debts/"
+
+### M64 U11
+milestone: M64
+scope: ui
+title: Categories, rules and the Year redesigned
+state: planned
+brief: Follow the redesign-screen skill (U5) and DESIGN.md, with the jobs from U2's inventory. If U5 moved All months off Home, the Year screen is where every month is read and opened. The routes leave the budget's exempt list.
+files: Categories and its pickers, rules, and the Year screen (which holds every month once Home lets them go).
+blocks: ["M64 U5"]
+paths: "src/ui/screens/Categories.tsx\nsrc/ui/screens/Rules.tsx\nsrc/ui/screens/Year.tsx\nsrc/ui/categories/"
+
+### M64 U12
+milestone: M64
+scope: ui
+title: The way in and around: a new document's start, the guide, notices, Settings and the command palette
+state: planned
+brief: Follow the redesign-screen skill (U5) and DESIGN.md, with the jobs from U2's inventory. A newcomer's first minute: open or make a document, read a first file, and know where things are. The routes leave the budget's exempt list.
+files: The front door and a document with no ledger, the guide, notices, every Settings page and the command palette.
+blocks: ["M64 U5"]
+paths: "src/ui/screens/NoLedger.tsx\nsrc/ui/guide/\nsrc/ui/Notices.tsx\nsrc/ui/CommandPalette.tsx\nsrc/ui/screens/Accounts.tsx\nsrc/ui/screens/Mappings.tsx\nsrc/ui/screens/Language.tsx\nsrc/ui/screens/Export.tsx\nsrc/ui/screens/Packs.tsx\nsrc/ui/screens/Mcp.tsx\nsrc/ui/screens/LocalModel.tsx"
+
+### M64 U13
+milestone: M64
+scope: ui
+title: The engine's formats redesigned: the formats list, a format's table, a row's entry and input views
+state: planned
+brief: Follow the redesign-screen skill (U5) and DESIGN.md, with the jobs from U2's inventory, on custom.emd and project.emd. The engine is in better shape, so keep what works and change what the direction changes. The routes leave the budget's exempt list.
+files: Formats and declared formats, a format's rows, its entry page, input views and the panels around them.
+blocks: ["M64 U5"]
+paths: "src/ui/screens/Formats.tsx\nsrc/ui/screens/DeclaredFormats.tsx\nsrc/ui/screens/FormatRows.tsx\nsrc/ui/formats/EntryList.tsx\nsrc/ui/formats/EntryValue.tsx\nsrc/ui/formats/EntryView.tsx\nsrc/ui/formats/InputView.tsx\nsrc/ui/formats/InputBlock.tsx\nsrc/ui/formats/RowSheet.tsx\nsrc/ui/formats/TypedField.tsx\nsrc/ui/formats/FilterBand.tsx\nsrc/ui/formats/NewFormat.tsx\nsrc/ui/formats/ShapePanel.tsx\nsrc/ui/formats/FormatDoors.tsx\nsrc/ui/formats/FormatPlus.tsx"
+
+### M64 U14
+milestone: M64
+scope: ui
+title: The engine's views redesigned: board, list, roadmap, ready, dashboards, agenda, calendar and connections
+state: planned
+brief: Follow the redesign-screen skill (U5) and DESIGN.md, with the jobs from U2's inventory. The routes leave the budget's exempt list. The frame that draws views inside a conversation (src/frame/) wears a host's look (its rule stays), so check it still reads there.
+files: Every view of a format beyond its table, and the document's dashboard and connections.
+blocks: ["M64 U13"]
+paths: "src/ui/screens/Dashboard.tsx\nsrc/ui/screens/Agenda.tsx\nsrc/ui/screens/Calendar.tsx\nsrc/ui/screens/Connections.tsx\nsrc/ui/screens/FormatLinkViews.tsx\nsrc/ui/formats/BoardView.tsx\nsrc/ui/formats/ListView.tsx\nsrc/ui/formats/RollupView.tsx\nsrc/ui/formats/Dashboard.tsx\nsrc/ui/formats/ConnectionGraph.tsx\nsrc/ui/formats/ConnectionPanel.tsx\nsrc/ui/formats/LinkViews.tsx"
+
+### M64 U15
+milestone: M64
+scope: ui
+title: The tour and the page catch up, and every route is inside its budget
+state: planned
+brief: **Do.** Replay every tour on the redesigned screens and fix what moved (check:tours green); the page's pictures of the app show the new look. probe:screens --budget passes on every route with nothing exempt. Write one review_entry for the maintainer: open his own document and use the ledger for a real month (read a statement, fix categories, read the month), saying what to look for.
+files: The tour's scenes and captions, the public page's pictures of the app, and the budget's exempt list emptied.
+blocks: ["M64 U6","M64 U7","M64 U8","M64 U9","M64 U10","M64 U11","M64 U12","M64 U14"]
+paths: "src/demo/tour/\nsrc/demo/page/\ndocs/redesign/budget.json"
+
+### M64 U2
+milestone: M64
+scope: ui
+title: What each screen is for: an inventory of every screen, and density measured by probe:screens
+state: planned
+brief: "**Why.** Nothing measures how much a screen holds or says what it is for (D-606). The redesign needs both before a direction is drawn, and every later unit needs a before-and-after.\n\n**Do.** 1. **probe:screens measures density** for each route and theme: visible words (in the screen, not the chrome), blocks (a heading-led section, a table, a chart, a list of 3+ rows each count one), headline figures (large figures by type step, or a data attribute the redesign will set), actions (buttons and links, and how many are primary), distinct type sizes and colours used, and how much of it is above the fold at 1280x800. In text and in --json. A --budget file option reads limits per route and exits non-zero naming each breach (U4 writes the limits). 2. **The inventory**, docs/redesign/screens.md: every ledger route (Home, Year, Transactions, By merchant, Paychecks and deduction types, Plan, Wealth overview, funds, goals, debts, Categories, Rules, reading statements and payslips, readers, Settings' pages) and every engine route (formats, a format's table, entry, input, board, list, roadmap, ready, dashboard, agenda, calendar, connections, intake, packs, the new-document start). For each: the one question it answers in a newcomer's words, the two or three jobs someone comes to it to do, every block it shows now, its measures, what repeats another screen, and what could move one click behind what it explains. On the demo documents only (D-390).\n\n**Tests.** The probe's measures on a fixed page in probe.test.ts.\n\n**Out of scope.** Changing any screen."
+files: The screen probe gains density measures; a new inventory note lists every ledger and engine screen with its question, its jobs, its blocks and its measures.
+paths: "src/ui/probe.ts\nsrc/ui/probe.test.ts\nscripts/probe-screens.mjs\ndocs/redesign/screens.md"
+
+### M64 U3
+milestone: M64
+scope: ui
+title: Three directions, built to click through: Home, Transactions and the rail, for the maintainer to pick one (STOP)
+state: planned
+brief: "**Why.** The maintainer wants the look and feel improved in a major way and has little time: his input is one pick between things he can click, never a brief (D-606).\n\n**Do.** Run Impeccable's redesign path (the old look is evidence, not the rule; Operate mode). Answer its shape questions yourself from D-606 and U2's inventory and write the answers down; do not interview the maintainer. Build **three directions that differ in feel as well as look**: how you move around (the rail, tabs, a command-led layout), what a screen leads with, how detail opens (a side panel, a page, expanding in place), and type, colour, shape, density and motion. Each direction builds Home, Transactions (find a row, fix its category) and the rail, on synthetic figures shaped like the demo document's, in light and dark, with one screen checked in Hebrew right to left. They are working prototypes: page months, open a category, categorize a row. One comparison page links the three, and under each, five lines: what it feels like, what it changes, which current ui rule rows it breaks, and what it costs to build. Publish the comparison as a private Artifact so he can open it anywhere.\n\n**STOP.** The maintainer picks one, or one with parts of another. Write his pick as a decision with what it overrides.\n\n**Rules.** Keep each direction to what one person maintains: no new runtime dependency without saying so; fonts self-hosted; offline. No real names or figures.\n\n**Out of scope.** Changing src/."
+files: Three working prototypes and one page that sets them side by side, under docs/mockups/m64-u3/.
+blocks: ["M64 U2"]
+paths: docs/mockups/m64-u3/
+
+### M64 U4
+milestone: M64
+scope: ui
+title: The chosen direction becomes the design language: DESIGN.md, the tokens, the shared components, the ui rules and a density budget
+state: planned
+brief: "**Why.** A direction picked in U3 has to be what every later unit builds with, without asking the maintainer again.\n\n**Do.** 1. Replace DESIGN.md and docs/11 with the picked direction. 2. Tokens, theme and fonts in src/ui/theme/ (self-hosted, offline). 3. Restyle the shared pieces so every screen moves at once: the components in src/ui/components/, the rail, the title bar and document bar, tabs, tables, figures and empty states. 4. **The ui rule rows**: retire each one the direction overrides (with this unit's decision), keep the ones it keeps, add the new ones, including the density budget as a rule that names its check. 5. **The budget**: docs/redesign/budget.json gives each redesigned route its limits from U2's measures (words, blocks, headline figures, primary actions, above the fold), and lists the routes not yet redesigned as exempt; probe:screens --budget fails on a breach, and the exempt list only shrinks as units land. 6. Every screen still works in light, dark and Hebrew; npm run check:tours stays green or the tour's breaks are listed for U15.\n\n**Tests.** The existing component and probe tests, updated on purpose; the budget check against a breaching and a passing fixture.\n\n**Out of scope.** Rearranging any one screen's content (U5 onward)."
+files: DESIGN.md and docs/11 replaced; tokens, theme and fonts; the shared components, rail, title bar, tabs and tables restyled; ui rule rows replaced; the budget file and its check.
+blocks: ["M64 U3"]
+paths: "DESIGN.md\ndocs/11-ui-design-language.md\nsrc/ui/theme/\nsrc/ui/components/\nsrc/ui/Sidebar.tsx\nsrc/ui/TitleBar.tsx\nsrc/ui/DocumentBar.tsx\nsrc/ui/RailFolder.tsx\nsrc/ui/screens/Section.tsx\ndocs/redesign/budget.json"
+
+### M64 U5
+milestone: M64
+scope: ui
+title: Home rebuilt in the new direction, and the redesign-screen skill written from it
+state: planned
+brief: "**Why.** Home is the first screen a newcomer meets and the densest: about twelve blocks today. It is also where the method gets proven before seven more units use it.\n\n**Do.** 1. Rebuild Home in the new direction around one question (what happened to my money this month), with U1's figures. Start from U2's inventory row: for every block, keep it, move it one click behind what it explains (a figure opens its breakdown, a category its rows), or cut it when another screen already shows it (All months is the Year screen); write the table in the report. The waiting questions, the place to read files and the guide become one strip that appears only when something needs the person. 2. Write .claude/skills/redesign-screen/SKILL.md from what worked: read the inventory row and DESIGN.md; the screen's question in its title; the keep, move or cut table with a reason per block; nothing leaves without a place one click behind it, and the conversation still reaches it (parity); probe before and after, and the route leaves the budget's exempt list; light, dark and Hebrew; check:tours; demo documents only; the report lists what moved where. Point design-review at it for the compliance pass.\n\n**Tests.** Home's existing tests updated on purpose; probe:screens --budget passes for Home.\n\n**Ask the maintainer** to open his own document and read the last finished month: does it say what happened, and is anything he needs gone?"
+files: Home and its parts; a new project skill that every later screen unit follows.
+blocks: ["M64 U1","M64 U4"]
+paths: "src/ui/screens/Home.tsx\nsrc/ui/screens/HomeShell.tsx\nsrc/ui/home/\n.claude/skills/redesign-screen/"
+
+### M64 U6
+milestone: M64
+scope: ui
+title: Transactions and By merchant redesigned: find a row, fix its category, make a rule from it
+state: planned
+brief: Follow the redesign-screen skill (U5) and DESIGN.md. The screen's jobs, from U2's inventory: find a row, fix its category, file many by merchant, make a rule from a fix. The route leaves the budget's exempt list. Keep the desktop affordances (shift-click, copy as TSV, J/K) and the keyboard.
+files: The transactions table, its filter bar and detail panel, By merchant and the categorizing flow.
+blocks: ["M64 U5"]
+paths: "src/ui/screens/Transactions.tsx\nsrc/ui/screens/ByMerchant.tsx\nsrc/ui/transactions/\nsrc/ui/categorize/"
+
+### M64 U7
+milestone: M64
+scope: ui
+title: Reading files in redesigned: statements and payslips, readers, the mapper and a missing statement
+state: planned
+brief: Follow the redesign-screen skill (U5) and DESIGN.md. This is the first thing a newcomer does, so drop a file, see what was read, fix what looks wrong and be done, with nothing in the way. The routes leave the budget's exempt list. Test with the synthetic fixtures; never a real file in the repo (D-390).
+files: The read screens for statements and payslips, readers, the file gap and the import mapper.
+blocks: ["M64 U5"]
+paths: "src/ui/screens/ReadStatements.tsx\nsrc/ui/screens/Readers.tsx\nsrc/ui/screens/FileGap.tsx\nsrc/ui/import/\nsrc/ui/paychecks/ReadSlips.tsx\nsrc/ui/paychecks/ReadSlip.tsx\nsrc/ui/paychecks/SlipReview.tsx\nsrc/ui/paychecks/PayslipIntake.tsx\nsrc/ui/paychecks/SlipBatchBar.tsx"
+
+### M64 U8
+milestone: M64
+scope: ui
+title: Paychecks redesigned: a slip, what it paid and kept, and its deduction types
+state: planned
+brief: Follow the redesign-screen skill (U5) and DESIGN.md, with the jobs from U2's inventory. Taxes, which leave Home's headline in U5 if U5 moved them, are shown here. The routes leave the budget's exempt list.
+files: Paychecks, a paycheck's detail and editor, its charts, and deduction types.
+blocks: ["M64 U5"]
+paths: "src/ui/screens/Paychecks.tsx\nsrc/ui/screens/DeductionTypes.tsx\nsrc/ui/paychecks/PaycheckDetail.tsx\nsrc/ui/paychecks/PaycheckEditor.tsx\nsrc/ui/paychecks/Waterfall.tsx\nsrc/ui/paychecks/NetTrend.tsx\nsrc/ui/paychecks/WhereItWent.tsx\nsrc/ui/paychecks/ReconciliationStrip.tsx\nsrc/ui/paychecks/DeductionTypeSelect.tsx"
+
+### M64 U9
+milestone: M64
+scope: ui
+title: Plan redesigned: where the month's money is meant to go, and the bills
+state: planned
+brief: Follow the redesign-screen skill (U5) and DESIGN.md, with the jobs from U2's inventory. The route leaves the budget's exempt list.
+files: Plan, its buckets, month rows and the fixed bills.
+blocks: ["M64 U5"]
+paths: "src/ui/screens/Plan.tsx\nsrc/ui/plan/\nsrc/ui/fixed/"
+
 <!-- emerald: views.md -->
 ---
 emerald: views
@@ -17820,12 +17984,12 @@ title: line
 emerald: changed
 ---
 
-decision: 2026-11-23
+decision: 2026-11-25
 finding: 2026-10-22
 inbox: 2026-11-18
-milestone: 2026-11-23
+milestone: 2026-11-25
 open_question: 2026-11-18
 review_entry: 2026-11-13
 rule: 2026-11-16
 term: 2026-11-23
-unit: 2026-11-23
+unit: 2026-11-25
