@@ -17,13 +17,16 @@ the reconciliation delta and every derived figure below as pure functions, teste
 that reconciles to the agora. One line carries both sides of a deduction, so pension is one type
 rather than an `– employee` / `– employer` pair (D-048).
 
-**And the screens below**, at `#/paychecks`: the list with its net trend, the entry form with the
-pinned reconciliation strip — the one-tap "add the difference", "copy from last month", and a
-deduction picker that leads with recents and can add a type inline (D-050) — and the paycheck
-detail with the **gross→net waterfall**, the employer's side in its own block, and the derived
-figures beside them (D-051). The form's own logic is `src/domain/paycheckEntry.ts` and the two
-charts' arithmetic is `grossToNetSteps` and `netTrend`; all of it is tested there rather than
-through the screens.
+**And the screens below**, at `#/paychecks`: since M64 U8 (D-620) the month's paycheck said in one
+sentence, net pay its figure, the gross divided into taxes, funds, the rest and the net, each
+opening its lines beside the page (taxes by deduction type for the month and the year so far), net
+pay by month as the pager and every paycheck in a table; the slip in full — gross to net line by
+line (`grossToNetSteps`, which always reaches net, D-051), the employer's side in its own block and
+the derived figures — is the side panel. The entry form keeps its page, with the pinned
+reconciliation strip — the one-tap "add the difference", "copy from last month", and a deduction
+picker that leads with recents and can add a type inline (D-050). The form's own logic is
+`src/domain/paycheckEntry.ts`, the parts `slipParts` and `totalsByType`; all of it is tested there
+rather than through the screens.
 
 And the **deduction types screen** at `#/paychecks/deductions` — a **tab of Paychecks** since D-170, not a setting — where the two flags are said in words on every row
 — guessed from the kind, *Change* to correct (D-388) — a built-in is editable but never deletable, and a type a paycheck still names is
@@ -123,9 +126,8 @@ Per [05 Domain Rules and Calculations](./05-domain-rules-and-calculations.md):
   run, Accept and Discard are pinned rather than drawn at both ends of a scroll, and **Escape no
   longer discards a half-entered slip from inside a field** — which it did, from any field, for
   three milestones.
-- **Paycheck detail** — waterfall from gross to net showing each deduction as a step, plus the
-  employer-side block shown separately. The waterfall is the clearest possible presentation of
-  this data and worth the implementation effort.
+- **Paycheck detail** — gross to net with each deduction as a step, plus the employer-side block
+  shown separately; since D-620 a side panel beside the month rather than a page.
 - **Deduction types** (Settings) — manage built-ins and custom types, set flags, and point a type
   at a fund or a saving goal. *Built; a debt is the third destination and waits for M6.*
 

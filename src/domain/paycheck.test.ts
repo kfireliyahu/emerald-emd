@@ -16,9 +16,12 @@ import {
   payrollSavings,
   reconciliationDelta,
   savingsRateBasisPoints,
+  slipParts,
   sortByPeriodDescending,
   taxTotal,
+  isTaxType,
   totalCompensation,
+  totalsByType,
   unlinkedSavingTypes,
   unresolvedLineIds,
   validatePaycheck,
@@ -603,5 +606,37 @@ describe('unlinkedSavingTypes', () => {
     // D-085 keeps off the screen in the first place.
     const found = unlinkedSavingTypes(TYPES, [realisticSlip()])
     expect(found.map((one) => one.id)).not.toContain('ded:income-tax')
+  })
+})
+
+describe('slipParts (M64 U8, D-620)', () => {
+  it('splits the gross into taxes, funds, the rest and the net, which come back to the gross', () => {
+    const parts = slipParts(realisticSlip(), TYPES)
+    expect(parts).toEqual({
+      gross: money(2_500_000, ILS),
+      tax: money(525_950, ILS),
+      saved: money(212_500, ILS),
+      other: money(8_250, ILS),
+      net: money(1_753_300, ILS),
+    })
+    expect(parts.tax.minor + parts.saved.minor + parts.other.minor + parts.net.minor).toBe(parts.gross.minor)
+  })
+})
+
+describe('totalsByType (M64 U8, D-620)', () => {
+  it('reads the taxes by deduction type, in the order of the types', () => {
+    const second: PaycheckWithLines = { ...realisticSlip(), paycheck: paycheck({ id: 'pay-2', period: { year: 2026, month: 7 } }) }
+    expect(totalsByType([realisticSlip(), second], TYPES, isTaxType, ILS)).toEqual([
+      { deductionTypeId: 'ded:income-tax', employee: money(682_500, ILS), employer: money(0, ILS) },
+      { deductionTypeId: 'ded:national-insurance', employee: money(212_400, ILS), employer: money(0, ILS) },
+      { deductionTypeId: 'ded:health-tax', employee: money(157_000, ILS), employer: money(0, ILS) },
+    ])
+  })
+
+  it('keeps the employer side beside a fund line, and leaves out a type no slip carries', () => {
+    const funds = totalsByType([realisticSlip()], TYPES, (type) => type.countsAsSaving, ILS)
+    expect(funds.map((one) => one.deductionTypeId)).toEqual(['ded:pension', 'ded:study-fund', 'ded:severance'])
+    expect(funds[0]?.employer).toEqual(money(162_500, ILS))
+    expect(totalsByType([], TYPES, isTaxType, ILS)).toEqual([])
   })
 })

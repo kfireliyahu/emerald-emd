@@ -183,9 +183,9 @@ showing an error page; it is a typo or a stale bookmark, not a failure.
 - **Paychecks** — list by period, net trend sparkline, add/edit.
 - **Paycheck entry** — gross, net, payment date, employer, then deduction lines with a
   built-in picker and inline add-new; live reconciliation delta.
-- **Built: `#/paychecks`** — top level since D-157, and `#/plan/paychecks` redirects here. The
-  list with its **net trend**, the entry form, and the **paycheck
-  detail with the gross→net waterfall**, as three views behind one route. The list is month, what
+- **Built: `#/paychecks`** — top level since D-157, and `#/plan/paychecks` redirects here. Since
+  M64 U8 (D-620) the month's paycheck answered first, its parts and the slip in full in a side panel,
+  net pay by month as the pager and every paycheck in a table; the paragraph below is the history. The list is month, what
   it paid, and whether the itemization adds up; the month opens the detail. The trend spans up to
   twelve salary months, breaks where a month has no slip and names those months (D-051).
   Entry **replaces** the list rather than sitting beside it (D-050): a payslip is a dozen fields

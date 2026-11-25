@@ -1,3 +1,5 @@
+import type { ReactNode } from 'react'
+
 import { type Money } from '@/core/money.ts'
 import { useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
@@ -27,12 +29,19 @@ export function MonthFlow({
   parts,
   left,
   empty,
+  onOpen,
 }: {
   readonly whole: { readonly label: string; readonly value: Money }
   readonly parts: readonly FlowPart[]
   /** What the difference is called: `Left over`. */
   readonly left: string
   readonly empty: string
+  /**
+   * Each figure opens what it is made of, when given (M64 U8): a part by its
+   * key, the whole as `whole` and the difference as `left` — a payslip's taxes
+   * open their lines, its net where the net went. Without it nothing opens.
+   */
+  readonly onOpen?: ((key: string) => void) | undefined
 }) {
   const t = useT()
   const currency = whole.value.currency
@@ -70,35 +79,69 @@ export function MonthFlow({
         )}
       </div>
       <ul className="m-0 grid list-none grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-x-6 gap-y-2 p-0 pt-1" data-block>
-        <li className="flex flex-col">
-          <span className="text-caption text-ink-secondary">{whole.label}</span>
-          <span className="tabular-nums" dir="ltr">{kitMoney(whole.value)}</span>
+        <li className="flex">
+          <Opens id="whole" onOpen={onOpen}>
+            <span className="flex items-center gap-1.5 text-caption text-ink-secondary group-hover:text-ink">
+              {whole.label}
+              {onOpen !== undefined && <OpenArrow />}
+            </span>
+            <span className="tabular-nums" dir="ltr">{kitMoney(whole.value)}</span>
+          </Opens>
         </li>
         {parts.map((part) => (
-          <li key={part.key} className="flex flex-col">
-            <span className="flex items-center gap-1.5 text-caption text-ink-secondary">
-              <span aria-hidden className="size-2 rounded-full" style={{ backgroundColor: `var(--color-${part.hue ?? 'bar-quiet'})` }} />
-              <Bidi>{part.label}</Bidi>
-              {came > 0 && part.value.minor > 0 && <span className="tabular-nums">{`${String(share(drawn(part.value), came))}%`}</span>}
-            </span>
-            <span className="tabular-nums" dir="ltr">{kitMoney(part.value)}</span>
+          <li key={part.key} className="flex">
+            <Opens id={part.key} onOpen={onOpen}>
+              <span className="flex items-center gap-1.5 text-caption text-ink-secondary group-hover:text-ink">
+                <span aria-hidden className="size-2 rounded-full" style={{ backgroundColor: `var(--color-${part.hue ?? 'bar-quiet'})` }} />
+                <Bidi>{part.label}</Bidi>
+                {came > 0 && part.value.minor > 0 && <span className="tabular-nums">{`${String(share(drawn(part.value), came))}%`}</span>}
+                {onOpen !== undefined && <OpenArrow />}
+              </span>
+              <span className="tabular-nums" dir="ltr">{kitMoney(part.value)}</span>
+            </Opens>
           </li>
         ))}
-        <li className="flex flex-col">
-          <span className="flex items-center gap-1.5 text-caption text-ink-secondary">
-            <span aria-hidden className={`size-2 rounded-full ${over ? 'bg-negative' : 'bg-bar'}`} />
-            {left}
-          </span>
-          <span className="font-semibold tabular-nums" dir="ltr">
-            {kitMoney(rest)}
-          </span>
-          {over && (
-            <span className="text-caption font-medium text-negative">
-              {t('chrome.kit.over', { amount: wholeMoney({ minor: -rest.minor, currency }) })}
+        <li className="flex">
+          <Opens id="left" onOpen={onOpen}>
+            <span className="flex items-center gap-1.5 text-caption text-ink-secondary group-hover:text-ink">
+              <span aria-hidden className={`size-2 rounded-full ${over ? 'bg-negative' : 'bg-bar'}`} />
+              {left}
+              {onOpen !== undefined && <OpenArrow />}
             </span>
-          )}
+            <span className="font-semibold tabular-nums" dir="ltr">
+              {kitMoney(rest)}
+            </span>
+            {over && (
+              <span className="text-caption font-medium text-negative">
+                {t('chrome.kit.over', { amount: wholeMoney({ minor: -rest.minor, currency }) })}
+              </span>
+            )}
+          </Opens>
         </li>
       </ul>
     </div>
+  )
+}
+
+/** One figure of the flow: a button that opens it when the caller asked, else the figure as it is. */
+function Opens({ id, onOpen, children }: { readonly id: string; readonly onOpen: ((key: string) => void) | undefined; readonly children: ReactNode }) {
+  if (onOpen === undefined) return <span className="flex flex-col">{children}</span>
+  return (
+    <button
+      type="button"
+      onClick={() => onOpen(id)}
+      className="group flex flex-col text-start focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+    >
+      {children}
+    </button>
+  )
+}
+
+/** The arrow a figure that opens carries beside its name, as `HeadlineFigure`'s tile does. */
+function OpenArrow() {
+  return (
+    <svg aria-hidden viewBox="0 0 16 16" className="size-3 shrink-0 rtl:-scale-x-100" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 8h10M9 4l4 4-4 4" />
+    </svg>
   )
 }

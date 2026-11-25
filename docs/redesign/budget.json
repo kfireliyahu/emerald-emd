@@ -38,18 +38,18 @@
       "screens": 1.1
     },
     "#/paychecks": {
-      "words": 272,
+      "words": 215,
       "blocks": 5,
       "figures": 1,
-      "actions": 39,
+      "actions": 30,
       "colours": 12,
-      "screens": 2.2
+      "screens": 1.9
     },
     "#/paychecks/deductions": {
-      "words": 321,
+      "words": 145,
       "blocks": 1,
       "figures": 0,
-      "actions": 37,
+      "actions": 8,
       "colours": 6,
       "screens": 1.1
     },
@@ -312,8 +312,6 @@
   },
   "exempt": [
     "#/year",
-    "#/paychecks",
-    "#/paychecks/deductions",
     "#/wealth",
     "#/wealth/funds",
     "#/wealth/goals",

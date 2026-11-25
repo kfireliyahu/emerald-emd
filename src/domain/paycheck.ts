@@ -615,3 +615,67 @@ export function unlinkedSavingTypes(
       type.linkedDebtId === undefined,
   )
 }
+
+/**
+ * **A slip in four parts** (M64 U8, D-620): the gross, what went to taxes, what
+ * went to funds, everything else, and the net — so a screen can say where the
+ * gross went without summing a thing. Taxes are `taxTotal`, funds the employee
+ * side of `payrollSavings`, and *other* is what is left between them and the
+ * net, so the four always come back to the gross exactly (an addition or an
+ * unexplained gap lands in *other*, and may make it negative).
+ */
+export interface SlipParts {
+  readonly gross: Money
+  readonly tax: Money
+  readonly saved: Money
+  readonly other: Money
+  readonly net: Money
+}
+
+export function slipParts(entry: PaycheckWithLines, types: readonly DeductionType[]): SlipParts {
+  const { gross, net } = entry.paycheck
+  const tax = taxTotal(entry, types)
+  const saved = payrollSavings(entry, types).employee
+  const other = money(gross.minor - net.minor - tax.minor - saved.minor, gross.currency)
+  return { gross, tax, saved, other, net }
+}
+
+/** One deduction type's total over some slips: the employee's side, and the employer's beside it. */
+export interface TypeTotal {
+  readonly deductionTypeId: string
+  readonly employee: Money
+  readonly employer: Money
+}
+
+/** Which lines are taxes: income tax, national insurance and health (docs/05). */
+export function isTaxType(type: Pick<DeductionType, 'kind'>): boolean {
+  return TAX_KINDS.includes(type.kind)
+}
+
+/**
+ * **Each deduction type's total over the slips given** (M64 U8, D-620), in the
+ * order of the types, for the types `pick` keeps — the taxes read by deduction
+ * type (income tax, national insurance, health) for a month or a year. A type
+ * no slip carries is left out; a line whose type is gone is not counted.
+ */
+export function totalsByType(
+  entries: readonly PaycheckWithLines[],
+  types: readonly DeductionType[],
+  pick: (type: DeductionType) => boolean,
+  currency: CurrencyCode,
+): readonly TypeTotal[] {
+  const totals: TypeTotal[] = []
+  for (const type of types) {
+    if (!pick(type)) continue
+    const lines = entries
+      .filter((entry) => entry.paycheck.gross.currency === currency)
+      .flatMap((entry) => entry.lines.filter((line) => line.deductionTypeId === type.id))
+    if (lines.length === 0) continue
+    totals.push({
+      deductionTypeId: type.id,
+      employee: sum(lines.map((line) => line.employeeAmount), currency),
+      employer: sum(lines.flatMap((line) => (line.employerAmount === undefined ? [] : [line.employerAmount])), currency),
+    })
+  }
+  return totals
+}
