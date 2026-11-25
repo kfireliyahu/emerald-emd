@@ -17945,10 +17945,13 @@ report: M64 U3 built. Three working prototypes of Home and the rail on U16's syn
 milestone: M64
 scope: ui
 title: The chosen direction becomes the design language: DESIGN.md, the tokens, the shared components, a data display kit on the specimen page, the ui rules and a density budget
-state: planned
+state: in_progress
 brief: "**Why.** The direction picked in U3 has to be what every later unit builds with, without asking the maintainer, and the screens must show data in well-thought ways that read at a glance (D-608).\n\n**Do.** 1. Replace DESIGN.md and docs/11 with the direction. 2. Tokens, theme, fonts and icons (self-hosted, offline). 3. Restyle the shared pieces so every screen moves at once: src/ui/components/, the rail, the title bar and document bar, tabs, tables, figures and empty states. 4. **A data display kit** in src/ui/charts/, hand-drawn SVG as now, one per shape of data U2 found, designed with the dataviz skill: a headline figure with its change and a small trend, a ranked bar list, a part of a whole, a plan against what happened, a trend over months, a month's flow (came in to spent, put aside and left over), and whatever else the inventory needs. Each states when to use it. 5. **The specimen page** (U16's route) shows every component and display in every state: empty, partial, negative, long Hebrew labels, light and dark. 6. **The ui rule rows**: retire each one the direction overrides (with U3's decision), keep the rest, add the new ones, including the density budget as a rule that names its check. 7. **The budget**: docs/redesign/budget.json gives each route its limits from U2's measures, and lists the routes not yet redesigned as exempt; probe:screens --budget fails on a breach, and the exempt list only shrinks. 8. **Taste check**: run Impeccable's finish-reviewer on the specimen page and the contact sheet against DESIGN.md, and make its material fixes. Every screen still works in light, dark and Hebrew; npm run check:tours stays green, or its breaks are listed for U15.\n\n**Tests.** The existing component and probe tests, updated on purpose; the budget check against a breaching and a passing fixture; each display renders its empty and negative states.\n\n**Out of scope.** Rearranging any one screen's content (U5 onward)."
 files: DESIGN.md and docs/11 replaced; tokens, theme and fonts; the shared components, rail, title bar, tabs and tables restyled; a set of data displays; the specimen page filled; ui rule rows replaced; the budget file.
 blocks: ["M64 U3"]
+taken_by: run-milestone driver
+started: 2026-11-25
+branch: m64-redesign
 paths: "DESIGN.md\ndocs/11-ui-design-language.md\nsrc/ui/theme/\nsrc/ui/components/\nsrc/ui/charts/\nsrc/ui/Sidebar.tsx\nsrc/ui/TitleBar.tsx\nsrc/ui/DocumentBar.tsx\nsrc/ui/RailFolder.tsx\nsrc/ui/NavGlyph.tsx\nsrc/ui/screens/Section.tsx\nsrc/ui/screens/Specimen.tsx\ndocs/redesign/budget.json"
 
 ### M64 U5
