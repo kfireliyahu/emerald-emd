@@ -103,7 +103,7 @@ document each time the rail is drawn (`railRepository.ts`, `heldPlaces` in `nav.
 Hidden, not removed: every route opens, the place you stand on takes its line, and the palette
 lists every place.
 
-**Routing is hash-based** (D-133). The paths as built are `#/` (Home · Month), `#/year`, `#/read` and `#/read/<id>` (reading files, M28 U5),
+**Routing is hash-based** (D-133). The paths as built are `#/` (Home · Month), `#/year`, `#/read` (reading files, M28 U5; `#/read/<id>` opens a file's gap beside it since M64 U7, D-619),
 `#/transactions`, `#/paychecks`, `#/paychecks/deductions`, `#/categories`,
 `#/transactions/merchants` (was `#/categorize`, M28 U6),
 `#/plan/{fixed,splitter}`, `#/wealth/{savings,debts,places,funds,fees,deposits,worth}` and

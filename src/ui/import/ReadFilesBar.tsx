@@ -47,7 +47,8 @@ export function ReadFilesBar() {
         {detail}
       </span>
       <span className="ms-auto flex items-center gap-2">
-        <Button variant={line.reading ? 'secondary' : 'primary'} size="sm" onClick={() => navigate(READ_FILES)}>
+        {/* Never filled: the screen it sits under has its own primary (M64 U7, D-619). */}
+        <Button variant="secondary" size="sm" onClick={() => navigate(READ_FILES)}>
           {line.reading ? t('reading.bar.goBack') : t('reading.bar.check')}
         </Button>
       </span>

@@ -517,6 +517,7 @@ written out here.
 | D-615 | 2026-11-25 | The report becomes the design language: A's tokens and two type steps, Plex in four weights, a rail of words whose sections' views are their tab strip, a kit of eight displays chosen by the shape of the data, a side panel and a waiting list, six ui rules rewritten and four added, and a density budget whose exempt list only shrinks | M64 |
 | D-616 | 2026-11-25 | Home is rebuilt as the report: the month in one sentence, left over its one figure, what waits one strip below it, four tiles that open their breakdowns beside the page, the fourteen months as the pager, and where it went beside the plan; All months and the by-month chart are the Year screen's, and a redesign-screen skill every later screen follows | M64 |
 | D-617 | 2026-11-25 | Where a screen's interactions open: reading more in the side panel, one value in place, a form of several fields in the same panel, a job of several steps on a page of its own with one way back, a choice in a popover, and a dialog only to confirm what cannot be undone | M64 |
+| D-619 | 2026-11-25 | Reading files is the report: the batch said first in one sentence, Write in the list's own header row, a statement's gap beside the list rather than on a page, a removal undone where it was, a reader's delete asked at its button, the mapper's one way back at its head, and Readers one translated list | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1296,6 +1297,46 @@ left to each unit, ten screens would make ten choices. It extends *Detail opens 
 rather than adding a pattern.
 
 **Where.** `.claude/skills/redesign-screen/SKILL.md` (Where each thing opens), `DESIGN.md`.
+
+## D-619 · 2026-11-25 · Reading files is the report: the batch said first in one sentence, Write in the list's own header row, a statement's gap beside the list rather than on a page, a removal undone where it was, a reader's delete asked at its button, the mapper's one way back at its head, and Readers one translated list <a id="d-619"></a>
+
+**Context.** M64 U7 redesigns the first thing a newcomer does — `#/read`, `#/paychecks/read`,
+`#/read/readers`, the file gap and the mapper — after D-616 (Home) and D-617 (where interactions
+open), with the maintainer's addition to D-617 arriving mid-unit: deleting is at once with an
+undo near where it happened, a confirmation where there is no undo is anchored to its button and
+names the thing, a selection's actions are in the list's own header row, and nothing is ever a
+bar at the foot of the screen.
+
+**Decision.** Read files and Read paychecks **answer first**: one sentence at the lede step says
+what the batch came to (*3 files read: 2 ready to write, 1 waits for you*), two lines high so a
+tick never moves the list. The files are one list in the order dropped; its header row holds the
+ticked count and **Write**, the screen's one primary (filled only when it writes); Add is filled
+only on the empty screen. **A statement that does not add up opens its gap beside the list**
+(`GapPanel`, the `SidePanel`): the three figures from the kit's `HeadlineFigure`, each unread row
+with its raw cells and a field per cell corrected in place, *Write anyway* and *Leave it out*;
+`#/read/<id>`, its page since M28 U5, opens the same panel. **Removing a file or a slip is at once**,
+with *<file> removed · Undo* in the row's place and Ctrl+Z; *Leave it out* is that removal. On
+Readers a delete has no undo (a statement reader's delete is a hard one), so **it asks at the
+button that asked** (`ConfirmAtButton`, a popover naming the reader) instead of the bar at the foot
+it was; a name is renamed in place by double-click, F2 or its row menu, which also holds Duplicate;
+the account a statement reader files into is a popover on its line. Readers is **one list**, its two
+halves (`Mappings.tsx`, `Formats.tsx`) folded into `Readers.tsx`, and with Read paychecks, the gap and
+the payslip foot bar, its words are the catalogue's. The **mapper keeps its page** — the one job of
+several steps here — with one way back, *← Read files*, at its head instead of Close at the end of
+its toolbar. The foot bars that name a batch read elsewhere stay (they are background work's
+status, not a selection's actions), but **never filled**: the screen above them has its own primary.
+
+**Why.** The person's question is *did my files get in, and what needs me?*; a sentence answers it
+before a list does. Every move is an ordinary app's: a mail client's selection header, a file
+manager's rename, an undo where something was removed, a question asked where it was asked.
+
+**Alternatives rejected.** The waiting files as Home's `WaitingList` above the list — a file would
+jump between two places as its state changed, and the strip's `say` is plain text where a file's
+name needs `Bidi`. A select-all box in the header — a judgement left for the review.
+
+**Where.** `src/ui/screens/ReadStatements.tsx`, `src/ui/import/GapPanel.tsx`, `src/ui/screens/Readers.tsx`,
+`src/ui/paychecks/ReadSlips.tsx`, `src/ui/components/ConfirmAtButton.tsx`, `src/ui/import/MapperScreen.tsx`,
+the two foot bars, `docs/redesign/budget.json`.
 
 ## Related
 

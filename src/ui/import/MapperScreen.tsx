@@ -23,7 +23,7 @@ import type { DraftMapping } from '@/domain/model/importing.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
-import { Button } from '@/ui/components/Button.tsx'
+import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { ChoiceMenu } from '@/ui/components/ChoiceField.tsx'
 import { SELECT } from '@/ui/components/fieldLook.ts'
 import { MappingBar, type SavedMappingRef } from './MappingBar.tsx'
@@ -240,6 +240,17 @@ export function MapperScreen({
       {/* The mapper names what it maps — the file, and its sheet when it has
           more than one — as its title (M54 F13). */}
       <header className="flex shrink-0 flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-hairline px-6 pt-4 pb-3">
+        {/* A job of several steps takes the page, with one way back to where it
+            started (D-617): the file waits on Read files, unmapped. */}
+        <button
+          type="button"
+          onClick={onDone}
+          title={t('reading.mapper.backTitle')}
+          className="fc-text-action inline-flex basis-full items-center gap-1 self-start"
+        >
+          <ActionGlyph name="left" size={14} />
+          {t('reading.mapper.back')}
+        </button>
         <h1 className="m-0 flex min-w-0 items-baseline gap-2 text-title leading-tight font-medium">
           <Bidi className="min-w-0 truncate">{workbook.fileName}</Bidi>
           {workbook.sheets.length > 1 && (
@@ -264,7 +275,6 @@ export function MapperScreen({
         }
         showTypes={showTypes}
         onToggleTypes={setShowTypes}
-        onDone={onDone}
       />
 
       <SheetBody
@@ -565,7 +575,6 @@ function Toolbar({
   onSetCurrency,
   showTypes,
   onToggleTypes,
-  onDone,
 }: {
   workbook: SheetWorkbook
   activeSheet: number
@@ -575,7 +584,6 @@ function Toolbar({
   onSetCurrency: (currency: CurrencyCode) => void
   showTypes: boolean
   onToggleTypes: (show: boolean) => void
-  onDone: () => void
 }) {
   const t = useT()
   return (
@@ -622,10 +630,6 @@ function Toolbar({
         />
         {t('reading.mapper.cellTypes')}
       </label>
-
-      <Button variant="secondary" size="sm" onClick={onDone}>
-        {t('reading.mapper.close')}
-      </Button>
     </div>
   )
 }

@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useMemo, useState } from 'react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import { formatMoney } from '@/core/money.ts'
 import { LEFT_OUT } from '@/data/importer/apply.ts'
@@ -31,26 +31,38 @@ import { Button } from '@/ui/components/Button.tsx'
 import { ChoiceMenu } from '@/ui/components/ChoiceField.tsx'
 import { SELECT } from '@/ui/components/fieldLook.ts'
 import { IconAction, removableRow } from '@/ui/components/IconAction.tsx'
+import { EmptyState } from '@/ui/components/WaitingList.tsx'
 import { Working } from '@/ui/components/Working.tsx'
 import { useFilePicker, useReadFiles } from '@/ui/home/parts.tsx'
 import { cardsLine } from '@/ui/import/cardsLine.tsx'
+import { GapPanel } from '@/ui/import/GapPanel.tsx'
 import { countKey } from '@/i18n/count.ts'
 import { useT, type Translate } from '@/i18n/current.ts'
 import { Phrase } from '@/ui/components/Phrase.tsx'
 
 /**
- * **Read files** — `#/read`, M28 U5: statements, payslips and fund reports
- * dropped on Home, any number, on the payslip batch's pattern (M28 U3).
+ * **Read files** — `#/read`, M28 U5; the report since M64 U7 (D-619). One
+ * question: *how do I get my statements and payslips in?* Drop a file, see
+ * what it was read as, fix what looks wrong, and be done.
  *
- * Each statement is read by the saved mapping it fits and **ticked when it adds
- * up**; a row already in the document is left out on its own, so there is
- * nothing to accept. **Only a file whose printed total or running balance
- * disagrees waits**, and *Look* shows it the gap and the rows that cause it
- * (`#/read/<id>`). A new layout goes to the column mapper. A PDF is a payslip
- * or a fund report (M36 U10): payslips go to Paychecks, which reads them, and a
- * fund report to the fund it is about, chosen on its row. Write writes every ticked file in one go and
- * lands on the month, with what was written in one line — the review screen and
- * the "N imported" notice after it are gone (M28 U5).
+ * **It answers first, in words**: what the batch came to — how many files,
+ * how many are ready to write and how many wait for you — then the files as
+ * one list, in the order they were dropped. Each statement is read by the
+ * reader it fits and **ticked when it adds up**; a row already in the document
+ * is left out on its own, so there is nothing to accept. The ticked files'
+ * action, Write, is in the list's own header row, as a mail client keeps a
+ * selection's actions (D-617's addition), and it is the screen's one primary.
+ *
+ * **Where each thing opens (D-617)**: a file that does not add up opens its gap
+ * and the rows that cause it **beside the list** (`GapPanel`; it was a page,
+ * `#/read/<id>`, which now opens the same panel); a new layout goes to the
+ * column mapper, the one job here that takes a page of its own, with one way
+ * back; which account a file goes into, and which fund a PDF reports on, are
+ * answered on the file's own line. Removing a file is at once, with
+ * *Removed · Undo* where it was (and Ctrl+Z) — never a confirmation.
+ *
+ * Write writes every ticked file in one go and lands on the month, with what
+ * was written in one line.
  */
 export function ReadStatements() {
   const db = useDocumentStore((state) => state.db)
@@ -60,6 +72,10 @@ export function ReadStatements() {
   const batch = batchFor(useStatementBatch(), db)
   const [problem, setProblem] = useState<string | undefined>()
   const [writing, setWriting] = useState(false)
+  // `#/read/<id>` was the gap's own page; the address still opens it, beside the list.
+  const { id: opened } = useParams<{ id?: string }>()
+  const [panel, setPanel] = useState<string | undefined>(opened)
+  const [removed, setRemoved] = useState<Removed | undefined>()
   const readFiles = useReadFiles()
   const picker = useFilePicker(readFiles)
   const t = useT()
@@ -90,17 +106,38 @@ export function ReadStatements() {
     return lines
   }, [batch.files, t])
 
+  // Ctrl+Z puts back the file just removed, as it does everywhere (D-617's addition).
+  useEffect(() => {
+    if (removed === undefined || db === undefined) return
+    const onKey = (event: KeyboardEvent): void => {
+      if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'z' || event.shiftKey) return
+      const target = event.target as HTMLElement | null
+      if (target !== null && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return
+      event.preventDefault()
+      putBack(db, removed)
+      setRemoved(undefined)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [removed, db])
+
   if (db === undefined) return null
 
   const ticked = (file: BatchFile): boolean => file.kind === 'sheet' && writesSheet(batch, file.id, verdicts.get(file.id))
   const reading = batch.files.filter((file) => file.kind === 'reading').length
   const total = batch.files.length
   const toWrite = batch.files.filter(ticked)
+  const waiting = batch.files.filter((file) => waits(file, verdicts.get(file.id), ticked(file))).length
   const payslips = batch.files.flatMap((file) => (file.kind === 'payslip' ? [file] : []))
   const funds = listFunds(db)
 
+  // Unticking a file written anyway takes back the *Write anyway* too.
   const setTick = (id: string, on: boolean): void =>
-    updateStatementBatch(db, (state) => ({ ...state, ticks: new Map(state.ticks).set(id, on) }))
+    updateStatementBatch(db, (state) => {
+      const forced = new Set(state.forced)
+      if (!on) forced.delete(id)
+      return { ...state, ticks: new Map(state.ticks).set(id, on), forced }
+    })
   const reshape = (id: string, change: (sheet: StatementSheet) => StatementSheet): void =>
     updateStatementBatch(db, (state) => ({
       ...state,
@@ -108,6 +145,21 @@ export function ReadStatements() {
     }))
   const remove = (ids: ReadonlySet<string>): void =>
     updateStatementBatch(db, (state) => withoutFiles(state, ids))
+  const closePanel = (): void => {
+    setPanel(undefined)
+    if (opened !== undefined) navigate('/read', { replace: true })
+  }
+  // At once, with *Removed · Undo* in the row's place, so nothing below it moves (D-617's addition).
+  const removeOne = (file: BatchFile): void => {
+    setRemoved({
+      file,
+      index: batch.files.indexOf(file),
+      tick: batch.ticks.get(file.id),
+      forced: batch.forced.has(file.id),
+    })
+    if (panel === file.id) closePanel()
+    remove(new Set([file.id]))
+  }
 
   const write = (): void => {
     const sheets = toWrite.flatMap((file) => (file.kind === 'sheet' ? [file] : []))
@@ -162,100 +214,179 @@ export function ReadStatements() {
     navigate(`/wealth/funds/${encodeURIComponent(fundId)}`, { state: { files: [file] } })
   }
 
-  return (
-    <div className="h-full overflow-auto">
-      <div className="fc-view-enter flex flex-col gap-6 px-8 pt-6 pb-12">
-        <header className="flex flex-col gap-1.5 border-b border-hairline pb-4">
-          <span className="fc-label text-ink-secondary uppercase">{t('reading.files.crumb')}</span>
-          <h1 className="m-0 flex items-baseline gap-3 text-title leading-tight font-medium">
-            {t('reading.files.title')}
-            <Link to="/read/readers" className="text-body font-normal text-accent hover:underline">
-              {t('reading.files.readers')}
-            </Link>
-          </h1>
-          <span className="text-ink-secondary">{t('reading.files.lead')}</span>
-        </header>
+  const files = t(countKey('reading.files.files', total), { count: total })
+  const ready = t(countKey('reading.files.ready', toWrite.length), { count: toWrite.length })
+  const waitingWords = t(countKey('reading.files.waiting', waiting), { count: waiting })
+  const answer =
+    reading > 0
+      ? t('reading.files.answer.reading', { files })
+      : toWrite.length === total
+        ? t(countKey('reading.files.answer.allReady', total), { count: total })
+        : toWrite.length === 0 && waiting === 0
+          ? t('reading.files.answer.nothingNew', { files })
+          : toWrite.length === 0
+            ? t('reading.files.answer.noneReady', { files, waiting: waitingWords })
+            : waiting === 0
+              ? t('reading.files.answer.readyOnly', { files, ready })
+              : t('reading.files.answer.some', { files, ready, waiting: waitingWords })
 
-        {/* *An empty state is one sentence* and one text action; a file being
-            read says so on its own row, with Working alone, never counting (M54 F13). */}
-        {total === 0 ? (
-          <p className="m-0 text-ink-secondary">
-            {t('reading.files.empty')}{' '}
-            <button
-              type="button"
-              onClick={picker.open}
-              className="text-accent hover:underline hover:underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
-            >
-              {t('reading.files.addFiles')}
-            </button>
-          </p>
-        ) : (
-          <div className="flex flex-wrap items-center gap-4">
-            <span className="min-w-0 flex-1 text-ink-secondary">{t('reading.files.ticked')}</span>
-            <Button variant="secondary" icon="add" onClick={picker.open}>
-              {t('reading.files.addMore')}
-            </Button>
-          </div>
-        )}
-        {picker.input}
+  const note = removed !== undefined && !batch.files.some((file) => file.id === removed.file.id) ? removed : undefined
+  const rows: React.ReactNode[] = batch.files.map((file) => (
+    <FileRow
+      key={file.id}
+      file={file}
+      verdict={verdicts.get(file.id)}
+      cards={cardLines.get(file.id)}
+      ticked={ticked(file)}
+      open={panel === file.id}
+      onTick={(on) => setTick(file.id, on)}
+      onLook={() => setPanel(file.id)}
+      onMap={() => file.kind === 'new-layout' && updateStatementBatch(db, (state) => ({ ...state, mapping: file }))}
+      onPayslips={readPayslips}
+      t={t}
+      funds={funds}
+      onReport={(fundId) => file.kind === 'payslip' && readReport(file.id, file.file, fundId)}
+      onRemove={() => removeOne(file)}
+      onInto={() => {
+        const held = verdicts.get(file.id)?.elsewhere
+        if (held !== undefined) reshape(file.id, (sheet) => pointAt(sheet, held))
+      }}
+      onApart={() => reshape(file.id, keepApart)}
+    />
+  ))
+  if (note !== undefined) {
+    rows.splice(
+      Math.min(note.index, rows.length),
+      0,
+      <div key="removed" className="fc-pop-enter flex min-h-14 items-center gap-4 border-b border-hairline px-1 text-ink-secondary" aria-live="polite">
+        <span className="min-w-0 flex-1 truncate">
+          <Phrase text={t('reading.files.removed')} parts={{ file: <Bidi>{note.file.fileName}</Bidi> }} />
+        </span>
+        <button
+          type="button"
+          className="fc-text-action"
+          onClick={() => {
+            putBack(db, note)
+            setRemoved(undefined)
+          }}
+        >
+          {t('reading.files.undo')}
+        </button>
+      </div>,
+    )
+  }
 
-        {problem !== undefined && (
-          <div className="fc-pop-enter flex items-center gap-4 bg-surface px-4 py-2">
-            <span className="text-negative">{problem}</span>
-            <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setProblem(undefined)}>
-              {t('reading.files.dismiss')}
-            </Button>
-          </div>
-        )}
-
-        {total > 0 && (
-          <div className="flex flex-col">
-            {batch.files.map((file) => (
-              <FileRow
-                key={file.id}
-                file={file}
-                verdict={verdicts.get(file.id)}
-                cards={cardLines.get(file.id)}
-                ticked={ticked(file)}
-                onTick={(on) => setTick(file.id, on)}
-                onLook={() => navigate(`/read/${encodeURIComponent(file.id)}`)}
-                onMap={() =>
-                  file.kind === 'new-layout' && updateStatementBatch(db, (state) => ({ ...state, mapping: file }))
-                }
-                onPayslips={readPayslips}
-                t={t}
-                funds={funds}
-                onReport={(fundId) => file.kind === 'payslip' && readReport(file.id, file.file, fundId)}
-                onRemove={() => remove(new Set([file.id]))}
-                onInto={() => {
-                  const held = verdicts.get(file.id)?.elsewhere
-                  if (held !== undefined) reshape(file.id, (sheet) => pointAt(sheet, held))
-                }}
-                onApart={() => reshape(file.id, keepApart)}
-              />
-            ))}
-          </div>
-        )}
-
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-hairline pt-4">
-          <span className="max-w-[62ch] text-ink-secondary">{t('reading.files.foot')}</span>
-          {/* Filled only when it is the next step: a Write that writes nothing is
-              not (*One primary action per screen*, M54 F13). */}
-          <Button
-            variant={reading === 0 && toWrite.length > 0 ? 'primary' : 'secondary'}
-            icon="write"
-            count={toWrite.length}
-            busy={writing ? t('reading.files.writing') : undefined}
-            disabled={reading > 0 || toWrite.length === 0}
-            onClick={write}
-            data-tour="write-files"
-          >
-            {t('reading.files.write')}
+  const page = (
+    <div className="fc-view-enter flex flex-col gap-6 px-8 pt-6 pb-12">
+      <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+        <h1 className="m-0 text-title leading-tight font-medium">{t('reading.files.title')}</h1>
+        <span className="flex items-center gap-4">
+          <Link to="/read/readers" className="fc-text-action">
+            {t('reading.files.readers')}
+          </Link>
+          {/* The next step when nothing is read yet, and only then filled. */}
+          <Button variant={total === 0 ? 'primary' : 'secondary'} icon="add" onClick={picker.open}>
+            {t('reading.files.addFiles')}
           </Button>
-        </div>
-      </div>
+        </span>
+        {picker.input}
+      </header>
+
+      {total === 0 && note === undefined ? (
+        // *An empty state is one sentence*; its action is the header's Add files.
+        <EmptyState say={t('reading.files.empty')} />
+      ) : (
+        <>
+          {total > 0 && (
+            // Two lines high whatever it says, so a tick never moves the list under the pointer.
+            <p className="m-0 flex min-h-[2lh] max-w-[34ch] items-center gap-3 text-lede [text-wrap:balance]" aria-live="polite">
+              {reading > 0 && <Working size={24} />}
+              <span>{answer}</span>
+            </p>
+          )}
+
+          <section className="flex flex-col" aria-label={t('reading.files.title')} data-block>
+            {/* The list's header row holds what the ticked files do (D-617's addition). */}
+            <div className="flex min-h-10 items-center gap-4 border-b border-hairline-strong px-1">
+              <span className="min-w-0 flex-1 text-ink-secondary tabular-nums">
+                {toWrite.length === 0
+                  ? t('reading.files.noneTicked')
+                  : t(countKey('reading.files.ticked', toWrite.length), { count: toWrite.length })}
+              </span>
+              {/* Filled only when it writes something (*One primary action per screen*, M54 F13). */}
+              <Button
+                variant={reading === 0 && toWrite.length > 0 ? 'primary' : 'secondary'}
+                size="sm"
+                icon="write"
+                count={toWrite.length}
+                busy={writing ? t('reading.files.writing') : undefined}
+                disabled={reading > 0 || toWrite.length === 0}
+                onClick={write}
+                data-tour="write-files"
+              >
+                {t('reading.files.write')}
+              </Button>
+            </div>
+            {problem !== undefined && (
+              <div className="fc-pop-enter flex items-center gap-4 border-b border-hairline py-2">
+                <span className="text-negative">{problem}</span>
+                <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setProblem(undefined)}>
+                  {t('reading.files.dismiss')}
+                </Button>
+              </div>
+            )}
+            {rows}
+            <span className="pt-3 text-caption text-ink-secondary">{t('reading.files.foot')}</span>
+          </section>
+        </>
+      )}
     </div>
   )
+
+  return (
+    <div className="flex h-full">
+      <div className="h-full min-w-0 flex-1 overflow-auto">{page}</div>
+      {panel !== undefined && (
+        <GapPanel
+          id={panel}
+          onClose={closePanel}
+          onLeaveOut={() => {
+            const file = batch.files.find((each) => each.id === panel)
+            if (file !== undefined) removeOne(file)
+          }}
+        />
+      )}
+    </div>
+  )
+}
+
+/** A file just taken out of the batch, kept for its Undo: where it was, and the say it had. */
+interface Removed {
+  readonly file: BatchFile
+  readonly index: number
+  readonly tick: boolean | undefined
+  readonly forced: boolean
+}
+
+/** Puts a removed file back where it was, with its tick and its *Write anyway*. */
+function putBack(db: Parameters<typeof updateStatementBatch>[0], removed: Removed): void {
+  updateStatementBatch(db, (state) => {
+    if (state.files.some((file) => file.id === removed.file.id)) return state
+    const files = [...state.files]
+    files.splice(Math.min(removed.index, files.length), 0, removed.file)
+    const ticks = new Map(state.ticks)
+    if (removed.tick !== undefined) ticks.set(removed.file.id, removed.tick)
+    const forced = new Set(state.forced)
+    if (removed.forced) forced.add(removed.file.id)
+    return { ...state, files, ticks, forced }
+  })
+}
+
+/** Whether a file waits on the person: a gap, a new layout, a PDF to place, an account to choose, or a failure. */
+function waits(file: BatchFile, verdict: SheetVerdict | undefined, ticked: boolean): boolean {
+  if (file.kind === 'new-layout' || file.kind === 'payslip' || file.kind === 'failed') return true
+  if (file.kind !== 'sheet' || verdict === undefined) return false
+  return verdict.state === 'elsewhere' || (verdict.state === 'gap' && !ticked)
 }
 
 function sheetId(files: readonly { id: string; sheet: StatementSheet }[], sheet: StatementSheet): string {
@@ -268,6 +399,7 @@ function FileRow({
   verdict,
   cards,
   ticked,
+  open,
   onTick,
   onLook,
   onMap,
@@ -285,6 +417,8 @@ function FileRow({
   /** The cards its file holds, on the file's first row, when there are two or more. */
   cards: React.ReactNode | undefined
   ticked: boolean
+  /** Its gap is open beside the list. */
+  open: boolean
   onTick: (on: boolean) => void
   onLook: () => void
   onMap: () => void
@@ -404,7 +538,7 @@ function FileRow({
       } else if (verdict.state === 'gap' && !ticked) {
         chip = <Tone tone="warn">{t('reading.chip.gap')}</Tone>
         action = (
-          <Button variant="secondary" size="sm" icon="arrow" onClick={onLook}>
+          <Button variant="secondary" size="sm" onClick={onLook}>
             {t('reading.row.look')}
           </Button>
         )
@@ -419,7 +553,8 @@ function FileRow({
     }
   }
 
-  const tickable = file.kind === 'sheet' && verdict !== undefined && verdict.state === 'ok'
+  // A file written anyway is ticked, and can be unticked like any other.
+  const tickable = file.kind === 'sheet' && verdict !== undefined && (verdict.state === 'ok' || ticked)
   // Every row comes out before Write, whatever it came to (M28 F12): its ×, or
   // Delete with the row focused.
   const removable = removableRow(onRemove)
@@ -427,7 +562,8 @@ function FileRow({
     <div
       {...removable}
       data-tour="read-file"
-      className={`grid min-h-12 grid-cols-[20px_minmax(0,1.5fr)_minmax(0,0.9fr)_minmax(0,1.5fr)_auto_auto] items-center gap-4 border-b border-hairline px-1 ${removable.className}`}
+      aria-current={open || undefined}
+      className={`grid min-h-12 ${open ? 'bg-surface' : ''} grid-cols-[20px_minmax(0,1.5fr)_minmax(0,0.9fr)_minmax(0,1.5fr)_auto_auto] items-center gap-4 border-b border-hairline px-1 ${removable.className}`}
     >
       {tickable ? (
         <button
