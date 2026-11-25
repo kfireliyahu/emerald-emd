@@ -4,7 +4,7 @@ import type { Database } from 'sql.js'
 
 import { newId } from '@/core/id.ts'
 import { formatMoney, money } from '@/core/money.ts'
-import { monthRange } from '@/core/time.ts'
+import { monthRange, toISODate } from '@/core/time.ts'
 import { listAccounts, setExcludeSettlementsFromStats } from '@/data/repositories/accountRepository.ts'
 import {
   correctCategories,
@@ -83,7 +83,10 @@ import { PageMenu } from '@/ui/components/PageMenu.tsx'
 import { useFilePicker, useReadFiles } from '@/ui/home/parts.tsx'
 import { Kbd } from '@/ui/components/Kbd.tsx'
 import { accountLabel } from '@/ui/rules/ruleText.ts'
-import { ViewSwitch } from '@/ui/transactions/ViewSwitch.tsx'
+import { SidePanel } from '@/ui/components/SidePanel.tsx'
+import { EmptyState, WaitingList } from '@/ui/components/WaitingList.tsx'
+import { PlanAgainst } from '@/ui/charts/PlanAgainst.tsx'
+import { wholeMoney } from '@/ui/charts/kit.ts'
 import { useRowCursor } from '@/ui/useRowCursor.ts'
 import { Phrase } from '@/ui/components/Phrase.tsx'
 
@@ -128,9 +131,25 @@ export function ByMerchant() {
   const [filings, setFilings] = useState<readonly Filing[]>([])
   /** Merchants whose rule is un-ticked, for the sitting. */
   const [noRule, setNoRule] = useState<ReadonlySet<string>>(() => new Set())
-  const [showSkipped, setShowSkipped] = useState(false)
-  const [expanded, setExpanded] = useState<string | undefined>()
-  const [promoting, setPromoting] = useState<string | undefined>()
+  /**
+   * **What is open beside the list** (M64 U6, D-617, D-618): a merchant's
+   * charges, the form that makes it a bill or a debt, or the names set aside.
+   * One at a time; opening another replaces it.
+   */
+  const [panel, setPanel] = useState<MerchantPanel | undefined>()
+  const expanded = panel?.kind === 'charges' ? panel.merchant : undefined
+  const promoting = panel?.kind === 'promote' ? panel.merchant : undefined
+  /** Open a merchant's charges or form, close it when it is what is open — or, with no merchant, close that kind. */
+  const toggle = (kind: 'charges' | 'promote', merchant: string | undefined): void =>
+    setPanel((current) =>
+      merchant === undefined
+        ? current?.kind === kind
+          ? undefined
+          : current
+        : current?.kind === kind && current.merchant === merchant
+          ? undefined
+          : { kind, merchant },
+    )
   const [promoted, setPromoted] = useState<Promoted | undefined>()
   const [menu, setMenu] = useState<
     { readonly group: MerchantGroup; readonly at: { readonly x: number; readonly y: number } } | undefined
@@ -303,7 +322,7 @@ export function ByMerchant() {
     })
     const done = result as ReturnType<typeof correctCategories> | undefined
     if (done === undefined || done.changed === 0) return
-    setExpanded(undefined)
+    toggle('charges', undefined)
     setPicked((current) => {
       const { [group.merchantNormalized]: _gone, ...rest } = current
       return rest
@@ -337,6 +356,24 @@ export function ByMerchant() {
     mutate((database) => filing.undo(database))
     setFilings((current) => current.filter((one) => one.key !== filing.key))
   }
+
+  // **Ctrl+Z (Cmd+Z) undoes the newest filing** (M64 U6, D-618), what the
+  // key does in every other app — never while a field is being typed in,
+  // where it undoes the typing.
+  const newest = filings[0]
+  useEffect(() => {
+    if (newest === undefined) return
+    const onKey = (event: KeyboardEvent): void => {
+      if (!(event.ctrlKey || event.metaKey) || event.shiftKey || event.key.toLowerCase() !== 'z') return
+      const target = event.target as HTMLElement | null
+      if (target !== null && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return
+      event.preventDefault()
+      mutate((database) => newest.undo(database))
+      setFilings((current) => current.filter((one) => one.key !== newest.key))
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [newest, mutate])
 
   /**
    * **One rule for a whole heading** (M59 U3, D-579): every row the provider
@@ -459,7 +496,7 @@ export function ByMerchant() {
 
   const openPromotion = (group: MerchantGroup): void => {
     setPromoted(undefined)
-    setPromoting((current) => (current === group.merchantNormalized ? undefined : group.merchantNormalized))
+    toggle('promote', group.merchantNormalized)
   }
 
   /** A bill: a `FixedExpense` matched on this merchant. `USER_DEFINED`, because the detector never offered it. */
@@ -482,7 +519,7 @@ export function ByMerchant() {
         Date.now(),
       ),
     )
-    setPromoting(undefined)
+    toggle('promote', undefined)
     setPromoted({ kind: 'BILL', name: promotion.name })
     if (promotion.categoryId !== undefined) file(group, promotion.categoryId)
   }
@@ -498,7 +535,7 @@ export function ByMerchant() {
       const result = syncDiscoveredPayments(database, now)
       outcome = { created: result.created, ambiguous: result.ambiguous }
     })
-    setPromoting(undefined)
+    toggle('promote', undefined)
     setPromoted({ kind: 'DEBT', name: debt.name, ...outcome })
   }
 
@@ -570,7 +607,7 @@ export function ByMerchant() {
       ' ': (index) => {
         const group = groups[index]
         if (group !== undefined) {
-          setExpanded((current) => (current === group.merchantNormalized ? undefined : group.merchantNormalized))
+          toggle('charges', group.merchantNormalized)
         }
       },
       ...Object.fromEntries(
@@ -590,10 +627,9 @@ export function ByMerchant() {
     return <Centered>{t('merchants.noDocument')}</Centered>
   }
 
-  const waiting = groups.reduce((total, group) => total + group.count, 0)
-  const placed = baseline === 0 ? 0 : Math.round((100 * (baseline - leftMinor)) / baseline)
   const confident = data.suggestions.filter((one) => one.confident)
   const promotingGroup = groups.find((group) => group.merchantNormalized === promoting)
+  const expandedGroup = groups.find((group) => group.merchantNormalized === expanded)
   const categoryPath = (id: string): string | undefined => {
     const path = data.paths.get(id)
     return path === undefined ? undefined : pathText(path)
@@ -728,22 +764,19 @@ export function ByMerchant() {
         icon: 'cat',
         label: t('merchants.menu.showCharges'),
         shortcut: 'Space',
-        onChoose: () => setExpanded(group.merchantNormalized),
+        onChoose: () => setPanel({ kind: 'charges', merchant: group.merchantNormalized }),
       },
     )
     return items
   }
 
   return (
-    <div className="h-full overflow-auto">
-      <div className="fc-view-enter @container flex flex-col gap-5 px-8 pt-6 pb-12">
-        <header className="flex flex-wrap items-end justify-between gap-6 border-b border-hairline pb-4">
-          <div className="flex flex-col gap-1.5">
-            <span className="fc-label text-ink-secondary uppercase">{t('merchants.header.eyebrow')}</span>
-            <h1 className="m-0 text-title font-medium">{t('merchants.header.title')}</h1>
-          </div>
+    <div className="flex h-full">
+      <div className="h-full min-w-0 flex-1 overflow-auto">
+      <div className="fc-view-enter @container flex flex-col gap-5 px-6 pt-6 pb-12">
+        <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+          <h1 className="m-0 text-title leading-tight font-medium">{t('merchants.header.title')}</h1>
           <div className="flex flex-wrap items-center gap-3">
-            <ViewSwitch view="merchants" waiting={groups.length} />
             {/* **Account and Month behind Filter** (M59 U6, D-582), as on All
                 rows; the order is the list's, on its own header row. */}
             {data.ledger > 0 && (
@@ -795,151 +828,129 @@ export function ByMerchant() {
           </div>
         </header>
 
-        {/* **Two tiles** (M59 U6, D-582): what waits, and what this sitting
-            placed. The red-at-nothing *Without a category* went with its tile
-            (M54 U5's row); its sum is a line under Waiting. Nothing read yet,
-            nothing to count. */}
+        {/* **The answer first, in words** (M64 U6, D-618, after Home's
+            D-616): how many shops still need a category, and what they come
+            to; under it, what this sitting has placed as a meter against what
+            it started with. The two tiles said the same in boxes. */}
         {data.ledger > 0 && (
-          <div className="grid grid-cols-2 divide-x divide-hairline border-y border-hairline">
-            <Hero label={t('merchants.tiles.waiting')} first>
-              <b className="text-secondary-number font-medium tabular-nums">
-                {t(countKey('merchants.tiles.names', groups.length), { count: groups.length })}
-              </b>
-              <small className="text-caption text-ink-secondary tabular-nums">
-                {t(countKey('merchants.tiles.charges', waiting), {
-                  count: waiting,
-                  amount: formatMoney(money(leftMinor, data.currency)),
-                })}
-              </small>
-            </Hero>
-            <div className="flex min-w-0 flex-col gap-1 px-4 py-3.5">
-              <span className="fc-label text-ink-secondary uppercase">{t('merchants.tiles.sitting')}</span>
-              <b className="text-secondary-number font-medium tabular-nums">{placed}%</b>
-              <div className="h-1 bg-hairline" aria-hidden>
-                <i className="block h-full bg-accent transition-[width] duration-[var(--duration-base)]" style={{ width: `${placed}%` }} />
-              </div>
-              <small className="text-caption text-ink-secondary">
-                {t('merchants.tiles.placed', {
-                  done: formatMoney(money(baseline - leftMinor, data.currency)),
-                  total: formatMoney(money(baseline, data.currency)),
-                })}
-              </small>
+          // The meter sits beside the sentence, at the inline end, in a slot
+          // held from the start: its arriving pushes nothing down (D-618).
+          <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-3">
+            <p className="m-0 max-w-[44ch] text-lede [text-wrap:balance]">
+              {groups.length === 0 ? (
+                t('merchants.answer.done')
+              ) : (
+                <Phrase
+                  text={t(countKey('merchants.answer.waiting', groups.length))}
+                  parts={{
+                    count: groups.length,
+                    amount: (
+                      <span className="font-medium whitespace-nowrap" dir="ltr">
+                        {wholeMoney(money(leftMinor, data.currency))}
+                      </span>
+                    ),
+                  }}
+                />
+              )}
+            </p>
+            {/* The slot is held from the start, empty until something is
+                filed, so the meter's arriving moves nothing at any width. */}
+            <div className="min-h-20 w-72 max-w-full">
+              {baseline > leftMinor && (
+                <PlanAgainst
+                  lines={[
+                    {
+                      key: 'sitting',
+                      name: t('merchants.answer.sitting'),
+                      actual: money(baseline - leftMinor, data.currency),
+                      planned: money(baseline, data.currency),
+                    },
+                  ]}
+                  empty={t('merchants.answer.done')}
+                />
+              )}
             </div>
           </div>
         )}
 
-        {filings.length > 0 && (
-          <section
-            aria-label={t('merchants.tiles.sitting')}
-            aria-live="polite"
-            className="fc-pop-enter flex flex-col bg-accent-soft"
-          >
-            {filings.slice(0, 5).map((filing) => (
-              <div key={filing.key} className="flex flex-wrap items-center gap-x-3 gap-y-1 px-3.5 py-2">
-                <ActionGlyph name="check" />
-                <span className="min-w-0 flex-1">{filing.message}</span>
-                <Button variant="ghost" size="sm" onClick={() => undo(filing)}>
-                  {filing.undoLabel}
-                </Button>
-              </div>
-            ))}
-            {filings.length > 5 && (
-              <p className="px-3.5 pb-2 text-caption text-ink-secondary">
-                {t('merchants.filings.earlier', { count: filings.length - 5 })}
-              </p>
-            )}
-          </section>
-        )}
-
-        {promoted !== undefined && (
-          <section
-            aria-label={t('merchants.promoted.label')}
-            aria-live="polite"
-            className="fc-pop-enter flex flex-wrap items-center gap-x-4 gap-y-2 bg-surface px-3.5 py-2.5"
-          >
-            <p className="m-0">
-              {promoted.kind === 'BILL' ? (
-                <>
-                  <Phrase text={t('merchants.promoted.bill')} parts={{
-                    name: <Bidi className="font-medium">{promoted.name}</Bidi>,
-                  }} />{' '}
-                  <Link to="/plan" className={LINK}>
-                    {t('merchants.promoted.seeOnPlan')}
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Phrase text={t('merchants.promoted.watches')} parts={{
-                    name: <Bidi className="font-medium">{promoted.name}</Bidi>,
-                  }} />{' '}
-                  {promoted.created === 0 ? (
-                    <span className="text-ink-secondary">{t('merchants.promoted.nothingFound')}</span>
-                  ) : (
-                    <Phrase text={t(countKey('merchants.promoted.waiting', promoted.created))} parts={{
-                      count: <span className="tabular-nums">{promoted.created}</span>,
-                    }} />
-                  )}
-                  {promoted.ambiguous > 0 && (
-                    <>
-                      {' '}
-                      <Phrase text={t(countKey('merchants.promoted.ambiguous', promoted.ambiguous))} parts={{
-                        count: <span className="tabular-nums">{promoted.ambiguous}</span>,
-                      }} />
-                    </>
-                  )}{' '}
-                  <Link to="/wealth/debts" className={LINK}>
-                    {t('merchants.promoted.answerOnDebts')}
-                  </Link>
-                </>
-              )}
-            </p>
-            <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setPromoted(undefined)}>
-              {t('merchants.promoted.dismiss')}
-            </Button>
-          </section>
-        )}
-
-        {promoting !== undefined && promotingGroup !== undefined && (
-          <PromotionPanel
-            key={promoting}
-            group={promotingGroup}
-            proposal={proposal}
-            categories={data.categories}
-            categoryPath={categoryPath}
-            debts={data.debts}
-            trackedByExpense={data.bills.get(promoting)}
-            suggestedCategoryId={hintOf(promotingGroup)}
-            onBill={(promotion) => promoteToBill(promotingGroup, promotion)}
-            onDebt={(debtId) => promoteToDebt(promotingGroup, debtId)}
-            onDismiss={() => setPromoting(undefined)}
-          />
-        )}
-
-        {confident.length > 0 && (
-          <section className="fc-pop-enter flex flex-wrap items-center gap-x-4 gap-y-2 bg-surface px-3.5 py-2.5">
-            <p className="m-0 min-w-0 flex-1">
-              <Phrase text={t(countKey('merchants.identified.found', confident.length))} parts={{
-                count: <span className="font-medium tabular-nums">{confident.length}</span>,
-              }} />{' '}
-              <span className="text-ink-secondary">{t('merchants.identified.hint')}</span>
-            </p>
-            <Button variant="secondary" size="sm" icon="check" onClick={() => acceptAll(confident)}>
-              {t(countKey('merchants.identified.save', confident.length), { count: confident.length })}
-            </Button>
-          </section>
-        )}
+        {/* What waits on the person: the merchants the app recognised from
+            what was filed before, saved in one verb (D-151). */}
+        <WaitingList
+          label={t('merchants.identified.label')}
+          items={
+            confident.length === 0
+              ? []
+              : [
+                  {
+                    key: 'identified',
+                    say: t(countKey('merchants.identified.found', confident.length), { count: confident.length }),
+                    why: t('merchants.identified.hint'),
+                    verb: t(countKey('merchants.identified.save', confident.length), { count: confident.length }),
+                    onDo: () => acceptAll(confident),
+                  },
+                ]
+          }
+        />
 
         <div className="grid grid-cols-1 items-start gap-6 @[56rem]:grid-cols-[minmax(0,1fr)_15.5rem]">
           <div className="min-w-0" data-guide="tx.merchant">
             {data.ledger > 0 && (
-            <div className="flex items-center justify-between border-b border-hairline pb-2 text-caption text-ink-secondary">
-              <span className="fc-label uppercase">{t('merchants.list.merchant')}</span>
+            <div className="flex min-h-8 items-center justify-between gap-4 border-b border-hairline pb-2 text-caption text-ink-secondary">
+              {/* **What was just done, in the list's own header row** (M64 U6,
+                  D-618): the newest filing and its Undo (Ctrl+Z too), or the
+                  bill or debt just made, where the word Merchant stands. It
+                  swaps its words; nothing grows above the merchants and pushes
+                  them down under the pointer. */}
+              <span aria-live="polite" className="flex min-w-0 items-baseline gap-x-3">
+                  {filings[0] !== undefined ? (
+                    <>
+                      <span className="min-w-0 truncate text-ink">{filings[0].message}</span>
+                      <button type="button" className="fc-text-action shrink-0" onClick={() => filings[0] !== undefined && undo(filings[0])} title={t('merchants.filings.undoKey')}>
+                        {filings[0].undoLabel}
+                      </button>
+                      {filings.length > 1 && (
+                        <span className="text-caption">{t('merchants.filings.earlier', { count: filings.length - 1 })}</span>
+                      )}
+                    </>
+                  ) : promoted !== undefined ? (
+                    <>
+                      <span className="text-ink">
+                        {promoted.kind === 'BILL' ? (
+                          <Phrase text={t('merchants.promoted.bill')} parts={{ name: <Bidi className="font-medium">{promoted.name}</Bidi> }} />
+                        ) : (
+                          <>
+                            <Phrase text={t('merchants.promoted.watches')} parts={{ name: <Bidi className="font-medium">{promoted.name}</Bidi> }} />{' '}
+                            {promoted.created === 0 ? (
+                              t('merchants.promoted.nothingFound')
+                            ) : (
+                              <Phrase text={t(countKey('merchants.promoted.waiting', promoted.created))} parts={{ count: promoted.created }} />
+                            )}
+                            {promoted.ambiguous > 0 && (
+                              <>
+                                {' '}
+                                <Phrase text={t(countKey('merchants.promoted.ambiguous', promoted.ambiguous))} parts={{ count: promoted.ambiguous }} />
+                              </>
+                            )}
+                          </>
+                        )}
+                      </span>
+                      <Link to={promoted.kind === 'BILL' ? '/plan' : '/wealth/debts'} className="fc-text-action">
+                        {promoted.kind === 'BILL' ? t('merchants.promoted.seeOnPlan') : t('merchants.promoted.answerOnDebts')}
+                      </Link>
+                      <button type="button" className="fc-text-action" onClick={() => setPromoted(undefined)}>
+                        {t('merchants.promoted.dismiss')}
+                      </button>
+                    </>
+                  ) : (
+                  <span className="font-medium text-ink">{t('merchants.list.merchant')}</span>
+                )}
+              </span>
               <span className="flex items-center gap-4">
                 {data.skippedGroups.length > 0 && (
                   <button
                     type="button"
-                    onClick={() => setShowSkipped((current) => !current)}
-                    className={`tabular-nums ${showSkipped ? 'text-ink underline underline-offset-4' : 'hover:text-ink'}`}
+                    onClick={() => setPanel((current) => (current?.kind === 'skipped' ? undefined : { kind: 'skipped' }))}
+                    className="fc-text-action tabular-nums"
                   >
                     {t('merchants.list.skipped', { count: data.skippedGroups.length })}
                   </button>
@@ -948,29 +959,6 @@ export function ByMerchant() {
                 <Menu label={t('merchants.list.order')} value={order} choices={orders(t)} onPick={(value) => setOrder(value as GroupOrder)} />
               </span>
             </div>
-            )}
-
-            {showSkipped && data.skippedGroups.length > 0 && (
-              <section className="fc-pop-enter border-b border-hairline bg-surface px-3 py-3">
-                <p className="m-0 text-ink-secondary">{t('merchants.list.skippedNote')}</p>
-                <ul className="m-0 mt-1.5 list-none p-0">
-                  {data.skippedGroups.map((group) => (
-                    <li key={group.merchantNormalized} className="flex flex-wrap items-baseline gap-x-3 border-t border-hairline py-1">
-                      <Bidi className="text-ink">{group.merchantRaw}</Bidi>
-                      <span className="text-ink-tertiary tabular-nums">
-                        {t(countKey('merchants.list.transactions', group.count), { count: group.count })}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => unskip(group)}
-                        className="ms-auto text-caption text-ink-secondary hover:text-ink"
-                      >
-                        {t('merchants.list.putBack')}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </section>
             )}
 
             <div
@@ -1128,8 +1116,8 @@ export function ByMerchant() {
                           )}
                         </small>
                       </span>
-                      <span className="text-end font-mono text-caption text-ink-secondary">{group.count}×</span>
-                      <span className="text-end tabular-nums whitespace-nowrap">
+                      <span className="text-end font-mono text-caption text-ink-secondary" dir="ltr">{group.count}×</span>
+                      <span className="text-end tabular-nums whitespace-nowrap" dir="ltr">
                         {group.totals.map((total) => (
                           <span key={total.currency} className="block">
                             {/* What went out; a name that only ever paid in shows what came in. */}
@@ -1208,6 +1196,7 @@ export function ByMerchant() {
                             <ActionGlyph name="card" size={15} />
                           </IconButton>
                         )}
+                        {!canPayCard(group) && <span aria-hidden className="size-7 shrink-0" />}
                         <IconButton label={t('merchants.row.skip')} onClick={() => skip(group)}>
                           <ActionGlyph name="skip" size={15} />
                         </IconButton>
@@ -1222,19 +1211,6 @@ export function ByMerchant() {
                           <ActionGlyph name="more" size={15} />
                         </IconButton>
                       </span>
-                      {expanded === group.merchantNormalized && charges !== undefined && (
-                        <div className="fc-pop-enter col-span-full flex flex-col pb-2 ps-1 text-caption text-ink-secondary">
-                          {charges.rows.map((row) => (
-                            <div key={row.id} className="flex max-w-md justify-between gap-6 border-t border-hairline py-1">
-                              <span className="font-mono">{row.transactionDate.year}-{String(row.transactionDate.month).padStart(2, '0')}-{String(row.transactionDate.day).padStart(2, '0')}</span>
-                              <b className="font-medium tabular-nums text-ink">{formatMoney(row.amount)}</b>
-                            </div>
-                          ))}
-                          {charges.total > charges.rows.length && (
-                            <span className="pt-1">{t('merchants.row.andMore', { count: charges.total - charges.rows.length })}</span>
-                          )}
-                        </div>
-                      )}
                     </div>
                   )
                 })}
@@ -1250,6 +1226,7 @@ export function ByMerchant() {
                   <span><Kbd>{'C'}</Kbd> {t('merchants.keys.change')}</span><span><Kbd>{'P'}</Kbd> {t('merchants.keys.paysCard')}</span>
                   <span><Kbd>{'S'}</Kbd> {t('merchants.keys.skip')}</span>
                   <span><Kbd>{'Space'}</Kbd> {t('merchants.keys.show')}</span>
+                  <span><Kbd>{'Ctrl'}</Kbd> <Kbd>{'Z'}</Kbd> {t('merchants.keys.undo')}</span>
                   <span><Kbd>≡</Kbd> {t('merchants.keys.menu')}</span>
                   {usual.length > 0 && (
                     <span>
@@ -1263,11 +1240,16 @@ export function ByMerchant() {
 
           {usual.length > 0 && (
             <aside className="flex flex-col gap-0.5 @[56rem]:sticky @[56rem]:top-0" aria-label={t('merchants.usual.title')}>
-              <span className="fc-label px-2 pb-1.5 text-ink-secondary uppercase">{t('merchants.usual.title')}</span>
+              <span className="px-2 pb-1.5 text-caption font-medium text-ink">{t('merchants.usual.title')}</span>
               {usual.map((category, slot) => (
                 <button
                   key={category.id}
                   type="button"
+                  title={
+                    groups[cursor.index] === undefined
+                      ? undefined
+                      : t('merchants.usual.fileAs', { merchant: iso(groups[cursor.index]?.merchantRaw ?? ''), category: category.name })
+                  }
                   onClick={() => {
                     const group = groups[cursor.index]
                     if (group !== undefined) file(group, category.id)
@@ -1301,6 +1283,76 @@ export function ByMerchant() {
           )}
         </div>
       </div>
+      </div>
+
+      {/* **Detail beside the list** (M64 U6, D-617, D-618): a merchant's
+          charges, what a name is when it is a bill or a debt (a form), and the
+          names set aside — one panel, replaced rather than stacked. */}
+      {expandedGroup !== undefined && charges !== undefined && (
+        <SidePanel
+          title={<Bidi>{expandedGroup.merchantRaw}</Bidi>}
+          kicker={t(countKey('merchants.charges.kicker', charges.total), { count: charges.total })}
+          onClose={() => setPanel(undefined)}
+        >
+          <ul className="m-0 list-none p-0" data-block>
+            {charges.rows.map((row) => (
+              <li key={row.id} className="flex justify-between gap-6 border-t border-hairline py-2">
+                <span className="tabular-nums text-ink-secondary">{toISODate(row.transactionDate)}</span>
+                <span className="tabular-nums" dir="ltr">{formatMoney(row.amount)}</span>
+              </li>
+            ))}
+          </ul>
+          {charges.total > charges.rows.length && (
+            <p className="m-0 text-caption text-ink-secondary">{t('merchants.row.andMore', { count: charges.total - charges.rows.length })}</p>
+          )}
+          <button type="button" className="fc-text-action self-start" onClick={() => showRows(expandedGroup)}>
+            {t('merchants.charges.allRows')}
+          </button>
+        </SidePanel>
+      )}
+
+      {promoting !== undefined && promotingGroup !== undefined && (
+        <PromotionPanel
+          key={promoting}
+          group={promotingGroup}
+          proposal={proposal}
+          categories={data.categories}
+          categoryPath={categoryPath}
+          debts={data.debts}
+          trackedByExpense={data.bills.get(promoting)}
+          suggestedCategoryId={hintOf(promotingGroup)}
+          onBill={(promotion) => promoteToBill(promotingGroup, promotion)}
+          onDebt={(debtId) => promoteToDebt(promotingGroup, debtId)}
+          onDismiss={() => setPanel(undefined)}
+        />
+      )}
+
+      {panel?.kind === 'skipped' && (
+        <SidePanel
+          title={t('merchants.list.skippedTitle')}
+          kicker={t('merchants.list.skipped', { count: data.skippedGroups.length })}
+          onClose={() => setPanel(undefined)}
+        >
+          <p className="m-0 text-ink-secondary">{t('merchants.list.skippedNote')}</p>
+          {data.skippedGroups.length === 0 ? (
+            <EmptyState say={t('merchants.list.skippedNone')} />
+          ) : (
+            <ul className="m-0 list-none p-0" data-block>
+              {data.skippedGroups.map((group) => (
+                <li key={group.merchantNormalized} className="flex flex-wrap items-baseline gap-x-3 border-t border-hairline py-2">
+                  <Bidi className="min-w-0 flex-1">{group.merchantRaw}</Bidi>
+                  <span className="text-caption text-ink-secondary tabular-nums">
+                    {t(countKey('merchants.list.transactions', group.count), { count: group.count })}
+                  </span>
+                  <button type="button" onClick={() => unskip(group)} className="fc-text-action">
+                    {t('merchants.list.putBack')}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </SidePanel>
+      )}
 
       {cardMenu !== undefined && (
         <ContextMenu
@@ -1328,6 +1380,11 @@ export function ByMerchant() {
     </div>
   )
 }
+
+/** What the panel beside the list holds (D-617). */
+type MerchantPanel =
+  | { readonly kind: 'charges' | 'promote'; readonly merchant: string }
+  | { readonly kind: 'skipped' }
 
 interface Scope {
   readonly accountId: string
@@ -1401,12 +1458,12 @@ function Heading({
           {provider === undefined ? t('merchants.heading.noProvider') : <Bidi className="min-w-0 truncate">{provider}</Bidi>}
         </h2>
         <small className="text-caption text-ink-secondary">
-          {t(countKey('merchants.tiles.names', names), { count: names })}
+          {t(countKey('merchants.heading.names', names), { count: names })}
           {provider === undefined ? t('merchants.heading.noneGiven') : ''}
         </small>
       </span>
-      <span className="text-end font-mono text-caption text-ink-secondary">{section.count}×</span>
-      <span className="text-end tabular-nums whitespace-nowrap">{formatMoney(money(-outflow, currency))}</span>
+      <span className="text-end font-mono text-caption text-ink-secondary" dir="ltr">{section.count}×</span>
+      <span className="text-end tabular-nums whitespace-nowrap" dir="ltr">{formatMoney(money(-outflow, currency))}</span>
       {provider !== undefined && (
         <>
           <span className="col-span-full min-w-0 pb-1.5 @[46rem]:col-span-1 @[46rem]:pb-0">
@@ -1509,23 +1566,6 @@ function toFilter(scope: Scope): TransactionFilter {
     from: bounds?.from,
     to: bounds?.to,
   }
-}
-
-function Hero({
-  label,
-  first = false,
-  children,
-}: {
-  readonly label: string
-  readonly first?: boolean
-  readonly children: React.ReactNode
-}) {
-  return (
-    <div className={`flex min-w-0 flex-col gap-1 px-4 py-3.5 ${first ? 'ps-0' : ''}`}>
-      <span className="fc-label text-ink-secondary uppercase">{label}</span>
-      {children}
-    </div>
-  )
 }
 
 function IconButton({

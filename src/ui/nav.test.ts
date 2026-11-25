@@ -109,7 +109,9 @@ describe('the navigation model', () => {
     expect(activeTab(tabsFor('/read') ?? [], '/read')?.label).toBe('Month')
     expect(tabsFor('/wealth/worth')).toBeUndefined()
     expect(tabsFor('/settings/model')).toBeUndefined()
-    expect(tabsFor('/transactions')).toBeUndefined()
+    // All rows and By merchant are Transactions' strip (M64 U6, D-618), no longer a switch in each header.
+    expect(tabsFor('/transactions/merchants')?.map((tab) => tab.label)).toEqual(['All rows', 'By merchant'])
+    expect(activeTab(tabsFor('/transactions') ?? [], '/transactions/merchants')?.label).toBe('By merchant')
   })
 
   it('marks the tab a detail route is under, not the one that merely starts the strip', () => {

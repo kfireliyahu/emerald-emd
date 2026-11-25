@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 
 import { toISODate } from '@/core/time.ts'
 import type { Account } from '@/data/repositories/accountRepository.ts'
@@ -20,6 +20,7 @@ import { CategoryPicker } from '@/ui/components/CategoryPicker.tsx'
 import { FIELD, FIELD_MULTILINE, SELECT } from '@/ui/components/fieldLook.ts'
 import { instantDay } from '@/core/instant.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { SidePanel } from '@/ui/components/SidePanel.tsx'
 import { countKey } from '@/i18n/count.ts'
 import { useDates, useT } from '@/i18n/current.ts'
 import { Phrase } from '@/ui/components/Phrase.tsx'
@@ -88,16 +89,7 @@ export function DetailPanel({
   const dates = useDates()
   const noteRef = useRef<HTMLTextAreaElement>(null)
 
-  // Escape closes, from anywhere in the panel or the table beside it. Captured
-  // on the document rather than the panel because the point is to close it
-  // without having to reach for it first.
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent): void => {
-      if (event.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKeyDown)
-    return () => document.removeEventListener('keydown', onKeyDown)
-  }, [onClose])
+  // Escape closes, from anywhere: the side panel's own (M64 U6, D-617).
 
   // The note is uncontrolled and committed on blur, so typing in it does not
   // re-run the ledger's queries on every keystroke. Keyed on the id by the
@@ -106,6 +98,11 @@ export function DetailPanel({
     const value = noteRef.current?.value ?? ''
     if (value.trim() !== (transaction.note ?? '')) onNote(value)
   }
+  // Esc closes the panel before the field can blur (M64 U6, D-618): what was
+  // typed is committed as the panel goes, never lost to the key that closed it.
+  const commitLatest = useRef(commitNote)
+  commitLatest.current = commitNote
+  useLayoutEffect(() => () => commitLatest.current(), [])
 
   const { installment, foreign, provenance } = transaction
 
@@ -119,29 +116,18 @@ export function DetailPanel({
   const aliasedCard = cards.find((account) => account.id === settlementAlias)
 
   return (
-    <aside
-      aria-label={t('transactions.panel.label')}
-      className="fc-pop-enter flex w-[23rem] shrink-0 flex-col overflow-y-auto border-s border-hairline bg-background"
+    // **Beside the rows, in the side panel** (M64 U6, D-617, D-618): the
+    // merchant is its title, the day under it, and Close or Esc the way out.
+    <SidePanel
+      title={<Bidi>{transaction.merchantRaw}</Bidi>}
+      kicker={toISODate(transaction.transactionDate)}
+      onClose={onClose}
     >
-      <div className="flex items-start gap-2 border-b border-hairline px-5 py-4">
-        <div className="min-w-0">
-          <Bidi className="text-heading">{transaction.merchantRaw}</Bidi>
-          <div className="mt-1 text-secondary-number">
-            <Amount value={transaction.amount} />
-          </div>
-        </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          aria-label={t('transactions.panel.closeLabel')}
-          className="ms-auto"
-        >
-          {t('transactions.panel.close')}
-        </Button>
+      <div className="text-secondary-number tabular-nums">
+        <Amount value={transaction.amount} />
       </div>
 
-      <div className="border-b border-hairline px-5 py-3">
+      <div className="border-b border-hairline pb-4">
         <Label>{t('transactions.panel.category')}</Label>
         <div className="-ms-2 mt-1">
           <CategoryPicker
@@ -152,7 +138,7 @@ export function DetailPanel({
           />
         </div>
         {transaction.categorySource === 'MANUAL' && (
-          <p className="mt-1 text-caption text-ink-tertiary">
+          <p className="mt-1 text-caption text-ink-secondary">
             {t('transactions.panel.manual')}
           </p>
         )}
@@ -188,7 +174,7 @@ export function DetailPanel({
               >
                 {t('transactions.panel.providerRule')}
               </Button>
-              <p className="text-caption text-ink-tertiary">
+              <p className="text-caption text-ink-secondary">
                 <Phrase text={t('transactions.panel.providerCovers')} parts={{
                   category: <Bidi className="text-ink-secondary">{transaction.providerCategory}</Bidi>,
                 }} />
@@ -198,7 +184,7 @@ export function DetailPanel({
         </div>
       </div>
 
-      <dl className="grid grid-cols-[7rem_1fr] gap-x-3 gap-y-2 border-b border-hairline px-5 py-3">
+      <dl className="grid grid-cols-[7rem_1fr] gap-x-3 gap-y-2 border-b border-hairline pb-4">
         <Fact label={t('transactions.panel.account')}>
           <Bidi>{transaction.accountName}</Bidi>
         </Fact>
@@ -219,7 +205,7 @@ export function DetailPanel({
                 came out of has to be visible somewhere or a ₪1,200 sofa looks
                 like a ₪100 one forever. */}
             {installment.originalTotal !== undefined && (
-              <span className="text-ink-tertiary">
+              <span className="text-ink-secondary">
                 {' · '}
                 <Phrase text={t('transactions.panel.inTotal')} parts={{ amount: <Amount value={installment.originalTotal} /> }} />
               </span>
@@ -230,7 +216,7 @@ export function DetailPanel({
           <Fact label={t('transactions.panel.originally')}>
             <Amount value={foreign.amount} />
             {foreign.exchangeRate !== undefined && (
-              <span className="text-ink-tertiary"> {t('transactions.panel.at', { rate: foreign.exchangeRate })}</span>
+              <span className="text-ink-secondary"> {t('transactions.panel.at', { rate: foreign.exchangeRate })}</span>
             )}
           </Fact>
         )}
@@ -260,7 +246,7 @@ export function DetailPanel({
         <TransferField transactionId={transaction.id} pair={transfer} onAnswer={onTransfer} />
       )}
 
-      <div className="border-b border-hairline px-5 py-3">
+      <div className="border-b border-hairline pb-4">
         <Label>{t('transactions.panel.note')}</Label>
         <textarea
           ref={noteRef}
@@ -275,7 +261,7 @@ export function DetailPanel({
       </div>
 
       {isBankOutflow && cards.length > 0 && (
-        <div className="border-b border-hairline px-5 py-3">
+        <div className="border-b border-hairline pb-4">
           <Label>{t('transactions.panel.paysCard')}</Label>
           <select
             className={`${SELECT} mt-1 w-full`}
@@ -295,7 +281,7 @@ export function DetailPanel({
           </select>
 
           {aliasedCard === undefined ? (
-            <p className="mt-1 text-caption text-ink-tertiary">
+            <p className="mt-1 text-caption text-ink-secondary">
               <Phrase text={t('transactions.panel.paysCardHint')} parts={{
                 merchant: <Bidi>{transaction.merchantNormalized}</Bidi>,
               }} />
@@ -307,7 +293,7 @@ export function DetailPanel({
                   behalf (D-061). Asked here because this is the moment they have
                   the row in front of them — the accounts queue asks the same
                   question of whoever gets there first. */}
-              <p className="text-caption text-ink-tertiary">
+              <p className="text-caption text-ink-secondary">
                 {t('transactions.panel.belongQuestion')}
               </p>
               <div className="mt-1 flex flex-wrap gap-2">
@@ -324,14 +310,14 @@ export function DetailPanel({
               </div>
             </div>
           ) : (
-            <p className="mt-1 text-caption text-ink-tertiary">
+            <p className="mt-1 text-caption text-ink-secondary">
               <Phrase text={t(aliasedCard.excludeSettlementsFromStats ? 'transactions.panel.leftOut' : 'transactions.panel.counted')} parts={{ card: <Bidi>{aliasedCard.name}</Bidi> }} />
             </p>
           )}
         </div>
       )}
 
-      <div className="border-b border-hairline px-5 py-3">
+      <div className="border-b border-hairline pb-4">
         <label className="flex items-start gap-2 select-none">
           <input
             type="checkbox"
@@ -341,14 +327,14 @@ export function DetailPanel({
           />
           <span>
             {t('transactions.panel.leaveOut')}
-            <span className="mt-0.5 block text-caption text-ink-tertiary">
+            <span className="mt-0.5 block text-caption text-ink-secondary">
               {t('transactions.panel.leaveOutHint')}
             </span>
           </span>
         </label>
       </div>
 
-      <div className="px-5 py-3">
+      <div>
         <Label>{t('transactions.panel.source')}</Label>
         {provenance === undefined ? (
           <p className="mt-1 text-ink-secondary">
@@ -378,7 +364,7 @@ export function DetailPanel({
             separators and all; it is the first pane a new person opens, and
             it said nothing to them (M54 U5's row, M59 U6, D-582). */}
       </div>
-    </aside>
+    </SidePanel>
   )
 }
 
@@ -423,7 +409,7 @@ function Explanation({
     rules.find((rule) => rule.id === transaction.matchedRuleId)?.name
 
   return (
-    <div className="mt-2 text-caption text-ink-tertiary">
+    <div className="mt-2 text-caption text-ink-secondary">
       <p>
         <Phrase text={t('transactions.panel.categorizedBy')} parts={{
           rule:
@@ -530,7 +516,7 @@ function HoldingField({
   const named = holdings.find((one) => one.id === transaction.holdingId)
 
   return (
-    <div className="border-b border-hairline px-5 py-3">
+    <div className="border-b border-hairline pb-4">
       <Label>{t('transactions.panel.boughtOrSold')}</Label>
       <div className="mt-1 flex gap-2">
         <select
@@ -563,7 +549,7 @@ function HoldingField({
           {t(holdingId === '' ? 'transactions.panel.clearIt' : 'transactions.panel.save')}
         </Button>
       )}
-      <p className="mt-1 text-caption text-ink-tertiary">
+      <p className="mt-1 text-caption text-ink-secondary">
         {named === undefined ? (
           t('transactions.panel.holdingHint')
         ) : (
@@ -609,7 +595,7 @@ function TransferField({
   const other = pair.out.transactionId === transactionId ? pair.in : pair.out
   const leftHere = pair.out.transactionId === transactionId
   return (
-    <div className="border-b border-hairline px-5 py-3">
+    <div className="border-b border-hairline pb-4">
       <Label>{t('transactions.panel.transfer')}</Label>
       <p className="mt-1 text-ink-secondary">
         <Phrase text={t(leftHere ? 'transactions.panel.arrivedIn' : 'transactions.panel.left')} parts={{
@@ -643,12 +629,12 @@ function TransferField({
 function Fact({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <>
-      <dt className="text-label uppercase text-ink-tertiary">{label}</dt>
+      <dt className="text-label uppercase text-ink-secondary">{label}</dt>
       <dd className="tabular-nums">{children}</dd>
     </>
   )
 }
 
 function Label({ children }: { children: React.ReactNode }) {
-  return <span className="text-label uppercase text-ink-tertiary">{children}</span>
+  return <span className="text-label uppercase text-ink-secondary">{children}</span>
 }

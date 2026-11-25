@@ -15,12 +15,14 @@ import { Phrase } from '@/ui/components/Phrase.tsx'
 
 /**
  * "Always categorize this as that?" — **the one place a rule is made from a row**
- * (D-373): after a correction, and from the row menu or the detail panel when
- * somebody asks for one. By merchant's tick writes the same rule without asking.
+ * (D-373): from the suggestion a correction leaves on the line under the
+ * sentence, and from the row menu or the detail panel when somebody asks for
+ * one. By merchant's tick writes the same rule without asking.
  *
- * Sits above the ledger, under the filters: the row that prompted it is a row or
- * two down, and a question parked at the bottom of a tall screen is a question
- * nobody answers (D-043). It is non-modal — ignoring it costs nothing.
+ * **A form in the side panel** (M64 U6, D-617, D-618): a rule has several
+ * fields, so it opens beside the rows, never above them where it pushed the row
+ * that prompted it down. The panel's Close is the way out; nothing is written
+ * until Make the rule.
  *
  * **One kind of match: the field is contained in the merchant.** The full name
  * by default; shortened to the part that stays the same when the rest does not.
@@ -36,7 +38,6 @@ export function LearningOffer({
   categories,
   accounts,
   pastFor,
-  onDismiss,
   onCreate,
 }: {
   offer: Offer
@@ -45,7 +46,6 @@ export function LearningOffer({
   accounts: readonly Account[]
   /** How many rows already here the draft would file, as `pastRows` counts them. */
   pastFor: (draft: RuleDraft) => number
-  onDismiss: () => void
   onCreate: (draft: RuleDraft, alsoPast: boolean) => void
 }) {
   const t = useT()
@@ -61,100 +61,86 @@ export function LearningOffer({
   const categoryPath = categories.find((one) => one.id === categoryId)?.path
 
   return (
-    <section
+    <form
       aria-label={t('transactions.offer.label')}
-      aria-live="polite"
-      className="fc-pop-enter shrink-0 border-b border-hairline bg-surface px-6 py-3"
+      className="flex flex-col gap-4"
+      onSubmit={(event) => {
+        event.preventDefault()
+        if (problems.length === 0) onCreate(draft, past && earlier > 0)
+      }}
     >
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <div className="min-w-0">
-          {/* The third time is the one worth saying out loud: the user has now
-              done by hand, three times, what one click would have stopped. */}
-          {offer.insistent && (
-            <p className="text-caption text-ink-secondary">
-              <Phrase text={t('transactions.offer.insistent')} parts={{
-                merchant: <Bidi className="text-ink">{merchantRaw}</Bidi>,
-                category: <span className="text-ink">{categoryPath ?? t('transactions.offer.thisCategory')}</span>,
-                count: <span className="tabular-nums">{offer.corrections}</span>,
-              }} />
-            </p>
-          )}
-          <div className="flex flex-wrap items-center gap-x-2">
+      {/* The third time is the one worth saying out loud: the user has now
+          done by hand, three times, what one click would have stopped. */}
+      {offer.insistent && (
+        <p className="m-0 text-ink-secondary">
+          <Phrase text={t('transactions.offer.insistent')} parts={{
+            merchant: <Bidi className="text-ink">{merchantRaw}</Bidi>,
+            category: <span className="text-ink">{categoryPath ?? t('transactions.offer.thisCategory')}</span>,
+            count: <span className="tabular-nums">{offer.corrections}</span>,
+          }} />
+        </p>
+      )}
+
+      <label className="flex flex-col gap-1">
+        <span className="text-caption text-ink-secondary">{t('transactions.offer.containing')}</span>
+        <input
+          value={pattern}
+          onChange={(event) => setPattern(event.target.value)}
+          dir="auto"
+          aria-label={t('transactions.offer.matchesOn')}
+          placeholder={offer.merchantNormalized}
+          className={`${FIELD} w-full text-body`}
+        />
+      </label>
+
+      <div className="flex flex-col gap-1">
+        <span className="text-caption text-ink-secondary">{t('transactions.offer.categoryLabel')}</span>
+        <CategoryPicker
+          categories={categories}
+          value={categoryId}
+          onChange={setCategoryId}
+          label={t('transactions.offer.picker')}
+          placeholder={t('transactions.offer.choose')}
+          outlined
+        />
+      </div>
+
+      {/* Said even when it is nothing, so the button is known to be about the
+          next import only before it is pressed rather than after. */}
+      {problems.length === 0 &&
+        (earlier > 0 ? (
+          <label className="flex items-center gap-2 select-none">
+            <input type="checkbox" checked={past} onChange={(event) => setPast(event.target.checked)} />
             <span>
-              <Phrase text={t('transactions.offer.always')} parts={{ merchant: <Bidi className="font-medium">{merchantRaw}</Bidi> }} />
+              <Phrase text={t(countKey('transactions.offer.alsoPast', earlier))} parts={{
+                count: <span className="tabular-nums">{earlier}</span>,
+              }} />
             </span>
-            <CategoryPicker
-              categories={categories}
-              value={categoryId}
-              onChange={setCategoryId}
-              label={t('transactions.offer.picker')}
-              placeholder={t('transactions.offer.choose')}
-              outlined
-            />
-          </div>
-        </div>
-
-        <div className="ms-auto flex flex-wrap items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={onDismiss}>
-            {t('transactions.offer.noRule')}
-          </Button>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => onCreate(draft, past && earlier > 0)}
-            disabled={problems.length > 0}
-          >
-            {t('transactions.offer.make')}
-          </Button>
-        </div>
-      </div>
-
-      <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-2 text-caption text-ink-tertiary">
-        <label className="flex items-center gap-2">
-          {t('transactions.offer.containing')}
-          <input
-            value={pattern}
-            onChange={(event) => setPattern(event.target.value)}
-            dir="auto"
-            aria-label={t('transactions.offer.matchesOn')}
-            placeholder={offer.merchantNormalized}
-            className={`${FIELD} w-56 text-body`}
-          />
-        </label>
-
-        {/* Said even when it is nothing, so the button is known to be about the
-            next import only before it is pressed rather than after. */}
-        {problems.length === 0 &&
-          (earlier > 0 ? (
-            <label className="flex items-center gap-2 select-none">
-              <input type="checkbox" checked={past} onChange={(event) => setPast(event.target.checked)} />
-              <span>
-                <Phrase text={t(countKey('transactions.offer.alsoPast', earlier))} parts={{
-                  count: <span className="tabular-nums text-ink">{earlier}</span>,
-                }} />
-              </span>
-            </label>
-          ) : (
-            <span>{t('transactions.offer.nothingPast')}</span>
-          ))}
-
-        {/* What the button would actually write, in the words the rules screen
-            will list it with. */}
-        {problems.length > 0 ? (
-          <span className="text-negative">{problems[0]?.message}</span>
+          </label>
         ) : (
-          <span>
-            <Phrase text={t('transactions.offer.writes')} parts={{
-              why: <Why rule={asRule(draft)} accounts={accounts} />,
-              category: <span className="text-ink-secondary">{categoryPath ?? t('transactions.offer.thisCategory')}</span>,
-            }} />
-          </span>
-        )}
-      </div>
+          <p className="m-0 text-ink-secondary">{t('transactions.offer.nothingPast')}</p>
+        ))}
 
-      <p className="mt-1 text-caption text-ink-tertiary">
-        {t('transactions.offer.never')}
-      </p>
-    </section>
+      {/* What the button would actually write, in the words the rules screen
+          will list it with. */}
+      {problems.length > 0 ? (
+        <p className="m-0 text-negative">{problems[0]?.message}</p>
+      ) : (
+        <p className="m-0 text-caption text-ink-secondary">
+          <Phrase text={t('transactions.offer.writes')} parts={{
+            why: <Why rule={asRule(draft)} accounts={accounts} />,
+            category: <span className="text-ink">{categoryPath ?? t('transactions.offer.thisCategory')}</span>,
+          }} />
+        </p>
+      )}
+
+      <p className="m-0 text-caption text-ink-secondary">{t('transactions.offer.never')}</p>
+
+      <div>
+        <Button type="submit" variant="primary" disabled={problems.length > 0}>
+          {t('transactions.offer.make')}
+        </Button>
+      </div>
+    </form>
   )
 }

@@ -33,14 +33,11 @@ import {
   type Correction,
 } from '@/data/repositories/categoryOverrideRepository.ts'
 import {
-  countUncategorized,
   listCategories,
   usualCategories,
   type Category,
 } from '@/data/repositories/categoryRepository.ts'
 import { createRule } from '@/data/repositories/categoryRuleRepository.ts'
-import { readSkipped } from '@/data/repositories/labelingQueueRepository.ts'
-import { listMerchantGroups } from '@/data/repositories/merchantGroupRepository.ts'
 import { loadRules } from '@/data/repositories/ruleSetRepository.ts'
 import {
   commitReapply,
@@ -96,12 +93,13 @@ import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { CategoryMark, useCategoryPalette } from '@/ui/components/CategoryMark.tsx'
 import { ContextMenu, isMenuKey, type MenuItem } from '@/ui/components/ContextMenu.tsx'
-import { Figure, Pager, useFilePicker, useReadFiles } from '@/ui/home/parts.tsx'
+import { Pager, useFilePicker, useReadFiles } from '@/ui/home/parts.tsx'
+import { SidePanel } from '@/ui/components/SidePanel.tsx'
+import { EmptyState, WaitingList, type Waiting } from '@/ui/components/WaitingList.tsx'
+import { wholeMoney } from '@/ui/charts/kit.ts'
 import { PageMenu } from '@/ui/components/PageMenu.tsx'
-import { ViewSwitch } from '@/ui/transactions/ViewSwitch.tsx'
 import { useRowCursor } from '@/ui/useRowCursor.ts'
 import { Flip } from '@/ui/motion/Flip.tsx'
-import { Reveal } from '@/ui/motion/Reveal.tsx'
 import { countKey } from '@/i18n/count.ts'
 import { useDates, useT } from '@/i18n/current.ts'
 import type { MessageKey } from '@/i18n/catalogue.ts'
@@ -129,7 +127,14 @@ export function Transactions() {
   const location = useLocation()
   const [fields, setFields] = useState<FilterFields>(() => arrivedFilter(location.state))
   const [sort, setSort] = useState<TransactionSort>(DEFAULT_SORT)
-  const [selectedId, setSelectedId] = useState<string | undefined>()
+  /**
+   * **What is open beside the page** (M64 U6, D-617, D-618): a row in full, the
+   * form that makes a rule, or what is left out of the totals. One at a time —
+   * opening another replaces it.
+   */
+  const [panel, setPanel] = useState<TxPanel | undefined>()
+  const selectedId = panel?.kind === 'row' ? panel.id : undefined
+  const setSelectedId = (id: string | undefined): void => setPanel(id === undefined ? undefined : { kind: 'row', id })
   /**
    * The row menu: where it was asked for, which row, and what was selected at
    * the moment it was asked for (D-173).
@@ -152,9 +157,10 @@ export function Transactions() {
   // index into a list that has just changed is a selection of the wrong rows.
   const [picked, setPicked] = useState<ReadonlySet<string>>(() => new Set())
   const [anchor, setAnchor] = useState<string | undefined>()
-  // The rule being offered after a correction, if any. The merchant travels
-  // with it because the offer is about a row that may have scrolled away, and
-  // the raw name is what the user read when they corrected it.
+  // The rule a correction suggests, said on the line under the sentence until
+  // it is taken (into the panel) or let go. The merchant travels with it
+  // because the row may have scrolled away, and the raw name is what the user
+  // read when they corrected it.
   const [offered, setOffered] = useState<
     { readonly offer: Offer; readonly merchantRaw: string } | undefined
   >()
@@ -206,11 +212,6 @@ export function Transactions() {
       // built-ins come with it, so a row categorized by one is named rather
       // than reported as categorized by a rule that no longer exists.
       rules: loadRules(db),
-      uncategorized: countUncategorized(db),
-      // What is waiting in the view, and the names it is waiting under (the
-      // switch's count): the rows filed fastest by merchant.
-      uncategorizedInView: summarizeTransactions(db, { ...filter, uncategorized: true }).count,
-      waitingNames: waitingNames(db),
       // Which bank rows are the same money as a card's rows (D-062), so a row
       // left out for that reason says so, and the card bills nobody has been
       // asked about yet (S2).
@@ -231,8 +232,8 @@ export function Transactions() {
   // The rows nobody chose by hand, read once an offer is open: what the offer's
   // "also file the rows already here" is counted over (D-373).
   const candidates = useMemo(
-    () => (db === undefined || offered === undefined ? [] : listReapplyCandidates(db)),
-    [db, revision, offered],
+    () => (db === undefined || panel?.kind !== 'rule' ? [] : listReapplyCandidates(db)),
+    [db, revision, panel],
   )
 
   /**
@@ -291,15 +292,11 @@ export function Transactions() {
   if (data.total === 0) {
     return (
       <div className="flex h-full flex-col">
-        <header className="flex shrink-0 flex-col gap-1.5 border-b border-hairline px-6 pt-6 pb-4">
-          <span className="fc-label text-ink-secondary uppercase">{t('transactions.screen.eyebrow')}</span>
+        <header className="flex shrink-0 flex-col gap-1.5 px-6 pt-6 pb-4">
           <h1 className="m-0 text-title leading-tight font-medium">{t('transactions.screen.title')}</h1>
         </header>
-        <div className="flex flex-col items-start gap-2 px-6 py-10 text-ink-secondary">
-          <p className="m-0">{t('transactions.screen.empty')}</p>
-          <button type="button" onClick={picker.open} className={READ_LINK}>
-            {t('transactions.screen.readFiles')}
-          </button>
+        <div className="px-6 py-4">
+          <EmptyState say={t('transactions.screen.empty')} verb={t('transactions.screen.readFiles')} onDo={picker.open} />
           {picker.input}
         </div>
       </div>
@@ -386,6 +383,7 @@ export function Transactions() {
     })
 
     setOffered(undefined)
+    setPanel(undefined)
     setApplied(alsoPast ? (outcome ?? { runId: '', count: 0 }) : undefined)
   }
 
@@ -394,8 +392,14 @@ export function Transactions() {
    * same offer a correction makes, not a trip to the editor (D-373).
    */
   const offerRule = (row: { readonly merchantNormalized: string; readonly merchantRaw: string }, draft: RuleDraft): void => {
+    openRule({ offer: offerForDraft(row.merchantNormalized, draft), merchantRaw: row.merchantRaw })
+  }
+
+  /** The rule's form, in the panel: a thing with several fields (D-617). */
+  const openRule = (suggestion: { readonly offer: Offer; readonly merchantRaw: string }): void => {
+    setOffered(undefined)
     setApplied(undefined)
-    setOffered({ offer: offerForDraft(row.merchantNormalized, draft), merchantRaw: row.merchantRaw })
+    setPanel({ kind: 'rule', ...suggestion })
   }
 
   /** Take back the rows the offer filed. The rule itself stays. */
@@ -763,41 +767,67 @@ export function Transactions() {
     }))
     .filter((bill) => bill.rows.length > 0)
   const cur = primary?.currency ?? data.currency
+  const leftOutMoney = money(data.summary.leftOut.find((one) => one.currency === cur)?.outflowMinor ?? 0, cur)
+  // Narrowed past the month: the sentence is then about the rows that match, not the month.
+  const narrowed =
+    fields.search !== '' || fields.accountId !== '' || fields.category !== '' || fields.min !== '' || fields.max !== ''
+  const went = money(primary?.outflowMinor ?? 0, cur)
+  const came = money(primary?.inflowMinor ?? 0, cur)
+
+  // **What waits, one strip below the answer** (M64 U6, D-618): the bank rows
+  // that look like a card's bill. The rows with no category are By merchant's
+  // whole job, the tab beside this one, and Home's first waiting line — the
+  // inventory's repeat, so they are not said a third time here.
+  const waiting: Waiting[] = [
+    ...pendingHere.map((bill) => ({
+      key: `${bill.cardAccountId}|${bill.billingPeriod ?? ''}`,
+      say: t(countKey('transactions.waiting.cardBill', bill.rows.length), {
+        count: bill.rows.length,
+        card: bill.cardAccountName,
+        amount: formatMoney(money(bill.rows.reduce((sum, row) => sum + Math.abs(row.amount.minor), 0), bill.chargedTotal.currency)),
+      }),
+      why: t('transactions.waiting.cardBillWhy'),
+      verb: t(countKey('transactions.screen.leavePending', bill.rows.length)),
+      onDo: () => leavePendingBillsOut(bill.rows.map((row) => row.linkId)),
+    })),
+  ]
+  const leftRows = data.rows.filter((row) => row.isExcludedFromStats || row.countedOnCard)
+  // The two quiet columns, drawn only when a row on screen has something in them.
+  const shown = columnsShown(data.rows)
 
   return (
     <div className="flex h-full">
       <div className="@container flex min-w-0 flex-1 flex-col">
-        {/* The page header (M28 U6, D-315): where you are, the switch between
-            the two views of this place, and the way between months. */}
-        <header className="flex shrink-0 flex-wrap items-end justify-between gap-6 border-b border-hairline px-6 pt-6 pb-4">
-          <div className="flex flex-col gap-1.5">
-            <span className="fc-label text-ink-secondary uppercase tabular-nums">
-              {shownMonth === undefined
-                ? t('transactions.screen.eyebrowAll')
-                : t('transactions.screen.eyebrowMonth', { month: dates.yearMonth(shownMonth) })}
-            </span>
-            <h1 className="m-0 text-[24px] leading-tight font-medium tracking-[-0.01em]">{t('transactions.screen.title')}</h1>
-          </div>
-          <div className="flex flex-wrap items-center gap-4">
-            <ViewSwitch view="rows" waiting={data.waitingNames} />
-            {shownMonth !== undefined ? (
-              <Pager
-                label={t('transactions.screen.month')}
-                prev={short(older)}
-                next={short(newer)}
-                onPrev={() => pageTo(older)}
-                onNext={() => pageTo(newer)}
-              />
-            ) : (
-              <Button variant="ghost" size="sm" onClick={() => pageTo(data.months[0])}>
-                {t('transactions.screen.newest')}
-              </Button>
-            )}
-            {shownMonth !== undefined && (
-              <Button variant="ghost" size="sm" onClick={() => filterBy({ ...fields, period: undefined })}>
-                {t('transactions.screen.allMonths')}
-              </Button>
-            )}
+        {/* **The answer first, in words** (M64 U6, D-618, after Home's D-616):
+            the month in one sentence, the line of what it counts under it,
+            and what waits below that. The four tiles it replaced said the same
+            figures in boxes; *left out of totals* is one click behind its words. */}
+        <header className="flex shrink-0 flex-col gap-3 px-6 pt-6 pb-3">
+          <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              {/* The open month is the heading, as on Home; the tab and the rail already say Transactions. */}
+              <h1 className="m-0 text-title leading-tight font-medium" aria-live="polite">
+                {shownMonth === undefined ? t('transactions.screen.allMonths') : dates.yearMonth(shownMonth)}
+              </h1>
+              {shownMonth !== undefined ? (
+                <Pager
+                  label={t('transactions.screen.month')}
+                  prev={short(older)}
+                  next={short(newer)}
+                  onPrev={() => pageTo(older)}
+                  onNext={() => pageTo(newer)}
+                />
+              ) : (
+                <button type="button" className="fc-text-action" onClick={() => pageTo(data.months[0])}>
+                  {t('transactions.screen.newest')}
+                </button>
+              )}
+              {shownMonth !== undefined && (
+                <button type="button" className="fc-text-action" onClick={() => filterBy({ ...fields, period: undefined })}>
+                  {t('transactions.screen.allMonths')}
+                </button>
+              )}
+            </div>
             {/* **Rules and the export, behind More** (M59 U6, D-582): Rules is
                 also a tab of Categories, and the export is Settings › Export. */}
             <PageMenu
@@ -806,8 +836,7 @@ export function Transactions() {
                 { icon: 'rule', label: t('transactions.screen.rules'), onChoose: () => navigate('/categories/rules') },
                 {
                   // Says what it will take, because the screen caps at 500 and the
-                  // file does not — someone exporting a filtered ledger should not
-                  // have to wonder which of the two numbers they are getting.
+                  // file does not.
                   label: filtered
                     ? t('transactions.screen.exportThese', { count: data.summary.count })
                     : t('transactions.screen.exportAll'),
@@ -820,66 +849,92 @@ export function Transactions() {
               ]}
             />
           </div>
-        </header>
 
-        {/* The figures of what is on screen, in ink (M59 U6, D-582; M54 U5's
-            row): the flow colours are Home's alone. Left out of totals only
-            while a row is left out. */}
-        <div
-          className={`grid shrink-0 grid-cols-2 divide-x divide-hairline border-b border-hairline px-6 ${
-            data.summary.excluded > 0 ? '@[48rem]:grid-cols-4' : '@[40rem]:grid-cols-3'
-          }`}
-        >
-          <Figure label={t('transactions.screen.wentOut')} flow={undefined} value={money(primary?.outflowMinor ?? 0, cur)}>
-            {t(countKey('transactions.screen.counted', data.summary.count - data.summary.excluded), {
-              count: data.summary.count - data.summary.excluded,
-            })}
-          </Figure>
-          <Figure label={t('transactions.screen.cameIn')} flow={undefined} value={money(primary?.inflowMinor ?? 0, cur)}>
-            {alsoIn.length > 0
-              ? t('transactions.screen.alsoIn', { currencies: alsoIn.map((total) => total.currency).join(', ') })
-              : t('transactions.screen.inView')}
-          </Figure>
-          {data.summary.excluded > 0 && (
-            <Figure label={t('transactions.screen.leftOutOfTotals')} flow={undefined} value={money(data.summary.leftOut.find((one) => one.currency === cur)?.outflowMinor ?? 0, cur)}>
-              {t(countKey('transactions.screen.leftRows', data.summary.excluded), { count: data.summary.excluded })}
-              {t(data.rows.some((row) => row.countedOnCard) ? 'transactions.screen.onCard' : 'transactions.screen.byHand')}
-            </Figure>
-          )}
-          <div className="flex min-w-0 flex-col gap-1 px-4 py-3.5">
-            <span className="fc-label text-ink-secondary uppercase">{t('transactions.screen.noCategory')}</span>
-            <span className="text-[24px] leading-tight font-medium tracking-[-0.01em] tabular-nums">
-              {data.uncategorizedInView}
-            </span>
-            <small className="text-caption text-ink-secondary">
-              {data.uncategorizedInView === 0 ? (
-                t('transactions.screen.allCategorized')
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => navigate('/transactions/merchants')}
-                  className="text-accent underline underline-offset-4 hover:text-accent-hover"
-                >
-                  {t('transactions.screen.fastest')}
+          <p className="m-0 max-w-[44ch] text-lede [text-wrap:balance]">
+            <Phrase
+              text={
+                // Nothing came in: the sentence says what went out and stops.
+                narrowed
+                  ? t(came.minor === 0 ? 'transactions.screen.sentenceMatchingOut' : 'transactions.screen.sentenceMatching')
+                  : shownMonth === undefined
+                    ? t(came.minor === 0 ? 'transactions.screen.sentenceAllOut' : 'transactions.screen.sentenceAll')
+                    : t(came.minor === 0 ? 'transactions.screen.sentenceMonthOut' : 'transactions.screen.sentenceMonth', {
+                        month: dates.monthName(shownMonth),
+                      })
+              }
+              parts={{ went: <SaidAmount value={went} />, came: <SaidAmount value={came} /> }}
+            />
+          </p>
+
+          {/* **One line that keeps its place** (M64 U6, D-618): what the view
+              counts, or — after a fix — the rule it suggests, or what a rule
+              just filed and its Undo. It swaps its words and never pushes the
+              rows down under the pointer. */}
+          <p aria-live="polite" className="m-0 flex min-h-6 flex-wrap items-baseline gap-x-4 gap-y-1 text-caption text-ink-secondary tabular-nums">
+            {applied !== undefined ? (
+              <>
+                <span className="text-ink">
+                  {t('transactions.screen.ruleSaved')}{' '}
+                  {applied.count === 0 ? (
+                    t('transactions.screen.nothingChanged')
+                  ) : (
+                    <Phrase text={t(countKey('transactions.screen.movedEarlier', applied.count))} parts={{ count: applied.count }} />
+                  )}
+                </span>
+                {applied.count > 0 && (
+                  <button type="button" className="fc-text-action" onClick={undoPast} title={t('transactions.screen.undoHint')}>
+                    {t('transactions.screen.undo')}
+                  </button>
+                )}
+                <button type="button" className="fc-text-action" onClick={() => setApplied(undefined)}>
+                  {t('transactions.screen.dismiss')}
                 </button>
-              )}
-            </small>
-          </div>
-        </div>
+              </>
+            ) : offered !== undefined ? (
+              <>
+                <span className="text-ink">
+                  <Phrase
+                    text={t('transactions.screen.suggest')}
+                    parts={{
+                      merchant: <Bidi>{offered.merchantRaw}</Bidi>,
+                      category: (
+                        <Bidi>
+                          {data.categories.find((one) => one.id === offered.offer.categoryId)?.path ?? t('transactions.offer.thisCategory')}
+                        </Bidi>
+                      ),
+                    }}
+                  />
+                </span>
+                <button type="button" className="fc-text-action" onClick={() => openRule(offered)}>
+                  {t('transactions.screen.makeRule')}
+                </button>
+                <button type="button" className="fc-text-action" onClick={() => setOffered(undefined)}>
+                  {t('transactions.screen.notNow')}
+                </button>
+              </>
+            ) : (
+              <>
+                <span>
+                  {filtered
+                    ? t(countKey('transactions.screen.countOf', data.total), { count: data.summary.count, total: data.total })
+                    : t(countKey('transactions.screen.total', data.total), { count: data.total })}
+                </span>
+                {alsoIn.length > 0 && (
+                  <span>{t('transactions.screen.alsoIn', { currencies: alsoIn.map((total) => total.currency).join(', ') })}</span>
+                )}
+                {data.summary.excluded > 0 && (
+                  <button type="button" className="fc-text-action" onClick={() => setPanel({ kind: 'leftOut' })}>
+                    {t(countKey('transactions.screen.leftOutLink', data.summary.excluded), { count: data.summary.excluded })}
+                  </button>
+                )}
+                {data.summary.moved > 0 && <span>{t('transactions.screen.moved', { count: data.summary.moved })}</span>}
+                {data.summary.held > 0 && <span>{t('transactions.screen.held', { count: data.summary.held })}</span>}
+              </>
+            )}
+          </p>
 
-        <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-1 border-b border-hairline px-6 py-1.5 text-caption text-ink-secondary tabular-nums">
-          <span>
-            {filtered
-              ? t(countKey('transactions.screen.countOf', data.total), { count: data.summary.count, total: data.total })
-              : t(countKey('transactions.screen.total', data.total), { count: data.total })}
-          </span>
-          {data.summary.moved > 0 && (
-            <span className="text-ink-tertiary">{t('transactions.screen.moved', { count: data.summary.moved })}</span>
-          )}
-          {data.summary.held > 0 && (
-            <span className="text-ink-tertiary">{t('transactions.screen.held', { count: data.summary.held })}</span>
-          )}
-        </div>
+          <WaitingList label={t('transactions.waiting.label')} items={waiting} />
+        </header>
 
         <FilterBar
           fields={fields}
@@ -893,176 +948,33 @@ export function Transactions() {
           }}
         />
 
-        {/* **S2: card payments nobody has said anything about** (M28 U6). A bank row
-            the settlement scan matched to a card statement's total, still
-            unanswered — counting both would double the month. One click leaves
-            them out, with the same `setSettlementDecision` the import prompt
-            uses. */}
-        {pendingHere.length > 0 && (
-          <section
-            aria-label={t('transactions.screen.cardPayments')}
-            className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline bg-surface px-6 py-2.5"
-          >
-            {pendingHere.map((bill) => (
-              <div key={`${bill.cardAccountId}|${bill.billingPeriod ?? ''}`} className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1">
-                <span className="min-w-0 flex-1">
-                  <Phrase text={t(countKey('transactions.screen.pendingBill', bill.rows.length))} parts={{
-                    count: bill.rows.length,
-                    card: <Bidi>{bill.cardAccountName}</Bidi>,
-                    amount: (
-                      <Bidi>
-                        {formatMoney(
-                          money(
-                            bill.rows.reduce((sum, row) => sum + Math.abs(row.amount.minor), 0),
-                            bill.chargedTotal.currency,
-                          ),
-                        )}
-                      </Bidi>
-                    ),
-                  }} />
-                </span>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  icon="check"
-                  onClick={() => leavePendingBillsOut(bill.rows.map((row) => row.linkId))}
-                >
-                  {t(countKey('transactions.screen.leavePending', bill.rows.length))}
-                </Button>
-              </div>
-            ))}
-          </section>
-        )}
-
-        {/* Above the rows rather than under them: the correction that prompted
-            this is a row or two below, and a question parked at the bottom of a
-            tall screen is a question nobody answers (D-043). Still non-modal —
-            the ledger stays visible and usable behind it. */}
-        {/* What filing the rows already here did, and the way back out of it. Same
-            place as the offer it replaces, because it is the answer to it. */}
-        {applied !== undefined && (
-          <section
-            aria-label={t('transactions.screen.ruleApplied')}
-            aria-live="polite"
-            className="fc-pop-enter flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline bg-surface px-6 py-3"
-          >
-            <p>
-              {t('transactions.screen.ruleSaved')}{' '}
-              {applied.count === 0 ? (
-                <span className="text-ink-secondary">{t('transactions.screen.nothingChanged')}</span>
-              ) : (
-                <Phrase text={t(countKey('transactions.screen.movedEarlier', applied.count))} parts={{
-                  count: <span className="tabular-nums font-medium">{applied.count}</span>,
-                }} />
-              )}
-            </p>
-            {applied.count > 0 && (
-              <Button variant="secondary" size="sm" onClick={undoPast}>
-                {t('transactions.screen.undo')}
-              </Button>
-            )}
-            <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setApplied(undefined)}>
-              {t('transactions.screen.dismiss')}
-            </Button>
-            {applied.count > 0 && (
-              <p className="w-full text-caption text-ink-tertiary">
-                {t('transactions.screen.undoHint')}
-              </p>
-            )}
-          </section>
-        )}
-
-        {/* Only while something is ticked, and it takes the place of nothing:
-            the ledger reads exactly as it did until there is a selection to act
-            on. Above the rows, like every other question this screen asks
-            (D-043). */}
-        {picked.size > 0 && (
-          <section
-            aria-label={t('transactions.screen.selectedLabel')}
-            className="fc-pop-enter flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline bg-surface px-6 py-3"
-          >
-            <span className="tabular-nums">
-              {t(countKey('transactions.screen.selected', picked.size), { count: picked.size })}
-            </span>
-
-            <span className="flex items-center gap-2 text-caption text-ink-secondary">
-              {t('transactions.screen.categorizeAs')}
-              <CategoryPicker
-                categories={data.categories}
-                value={undefined}
-                onChange={assignPicked}
-                label={t('transactions.screen.categoryForSelected', { count: picked.size })}
-              />
-            </span>
-
-            <Button
-              variant="secondary"
-              size="sm"
-              icon="eyeoff"
-              onClick={() => {
-                leaveOut([...picked], true)
-                clearPicked()
-              }}
-            >
-              {t('transactions.screen.leaveOut')}
-            </Button>
-
-            {allShownPicked && beyondTheCap > 0 && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={selectAllMatching}
-                title={t('transactions.screen.selectAllTitle')}
-              >
-                {t('transactions.screen.selectAll', { count: data.summary.count })}
-              </Button>
-            )}
-
-            {/* A bulk assignment is `MANUAL` like any other choice by hand, and
-                permanent in the same way (D-009). Saying so beside the picker
-                is cheaper than explaining it afterwards. */}
-            <span className="text-caption text-ink-tertiary">
-              {t('transactions.screen.chosenByHand')}
-            </span>
-
-            <Button variant="ghost" size="sm" className="ms-auto" onClick={clearPicked}>
-              {t('transactions.screen.clearSelection')}
-            </Button>
-          </section>
-        )}
-
-        {/* The offer makes its room above the list (M39, src/ui/motion/). */}
-        <Reveal>
-        {offered !== undefined && (
-          <LearningOffer
-            key={`${offered.offer.merchantNormalized}|${offered.offer.categoryId}|${offered.offer.draft.pattern}`}
-            offer={offered.offer}
-            merchantRaw={offered.merchantRaw}
-            categories={data.categories}
-            accounts={data.accounts}
-            pastFor={(draft) => pastRows(draft, data.rules, candidates)}
-            onDismiss={() => setOffered(undefined)}
-            onCreate={learn}
-          />
-        )}
-        </Reveal>
-
-        <div className="min-h-0 flex-1 overflow-auto" {...cursor.container}>
+        <div
+          className="min-h-0 flex-1 overflow-auto"
+          {...cursor.container}
+          onKeyDown={(event) => {
+            // Esc lets go of a selection, as a list does everywhere — after the
+            // panel, which closes first because it is on top.
+            if (event.key === 'Escape' && picked.size > 0 && panel === undefined) {
+              event.preventDefault()
+              clearPicked()
+              return
+            }
+            cursor.container.onKeyDown(event)
+          }}
+        >
           {data.rows.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 px-6 py-16 text-center text-ink-secondary">
-              <p>{t('transactions.screen.noMatch')}</p>
-              <Button variant="secondary" size="sm" onClick={() => filterBy(NO_FILTERS)}>
-                {t('transactions.screen.clearFilters')}
-              </Button>
+            <div className="px-6 py-10">
+              <EmptyState say={t('transactions.screen.noMatch')} verb={t('transactions.screen.clearFilters')} onDo={() => filterBy(NO_FILTERS)} />
             </div>
           ) : (
             <table className="w-full">
               <thead>
-                <tr className="text-ink-tertiary">
+                {/* **A selection's actions are the list's own header row**
+                    (M64 U6, D-618), as a mail client draws them: the headings
+                    give way to what the ticked rows can do, in the same row,
+                    and come back when the selection is let go. */}
+                <tr className="text-ink-secondary">
                   <Th className="w-0 text-start">
-                    {/* Tick every row on screen — "on screen" being the cap, so
-                        the bar underneath says how many that leaves out and
-                        offers the rest. */}
                     <input
                       type="checkbox"
                       aria-label={t('transactions.screen.selectShown')}
@@ -1072,33 +984,74 @@ export function Transactions() {
                       }
                     />
                   </Th>
-                  {/*
-                    Two date columns, because docs/05 is emphatic that these are
-                    not interchangeable — and a card statement proves it: every
-                    row of a Max file is charged on the same day, so a list
-                    showing only the charge date shows the same date eleven
-                    times. "When did I buy this" is the one that varies and the
-                    one you scan by.
-                  */}
-                  <SortableTh column="DATE" sort={sort} onSort={sortBy} className="text-start">
-                    {t('transactions.screen.columns.date')}
-                  </SortableTh>
-                  <SortableTh column="CHARGED" sort={sort} onSort={sortBy} className="text-start">
-                    {t('transactions.screen.columns.charged')}
-                  </SortableTh>
-                  <SortableTh column="MERCHANT" sort={sort} onSort={sortBy} className="text-start">
-                    {t('transactions.screen.columns.merchant')}
-                  </SortableTh>
-                  <SortableTh column="CATEGORY" sort={sort} onSort={sortBy} className="text-start">
-                    {t('transactions.screen.columns.category')}
-                  </SortableTh>
-                  <Th className="text-start">{t('transactions.screen.columns.provider')}</Th>
-                  <SortableTh column="AMOUNT" sort={sort} onSort={sortBy} className="text-end">
-                    {t('transactions.screen.columns.amount')}
-                  </SortableTh>
-                  <Th className="w-0 text-start">
-                    <span className="sr-only">{t('transactions.screen.columns.actions')}</span>
-                  </Th>
+                  {picked.size > 0 ? (
+                    <Th className="text-start" colSpan={shown.span}>
+                      <span
+                        role="group"
+                        aria-label={t('transactions.screen.selectedLabel')}
+                        className="flex flex-wrap items-center gap-x-4 gap-y-1 text-body text-ink"
+                      >
+                        <span className="tabular-nums">
+                          {t(countKey('transactions.screen.selected', picked.size), { count: picked.size })}
+                        </span>
+                        <span className="flex items-center gap-2 text-ink-secondary" title={t('transactions.screen.chosenByHand')}>
+                          {t('transactions.screen.categorizeAs')}
+                          <CategoryPicker
+                            categories={data.categories}
+                            value={undefined}
+                            onChange={assignPicked}
+                            label={t('transactions.screen.categoryForSelected', { count: picked.size })}
+                          />
+                        </span>
+                        <button
+                          type="button"
+                          className="fc-text-action"
+                          onClick={() => {
+                            leaveOut([...picked], true)
+                            clearPicked()
+                          }}
+                        >
+                          {t('transactions.screen.leaveOut')}
+                        </button>
+                        {allShownPicked && beyondTheCap > 0 && (
+                          <button type="button" className="fc-text-action" onClick={selectAllMatching} title={t('transactions.screen.selectAllTitle')}>
+                            {t('transactions.screen.selectAll', { count: data.summary.count })}
+                          </button>
+                        )}
+                        <button type="button" className="fc-text-action ms-auto" onClick={clearPicked}>
+                          {t('transactions.screen.clearSelection')}
+                        </button>
+                      </span>
+                    </Th>
+                  ) : (
+                    <>
+                      {/* Two date columns, because docs/05 is emphatic that these
+                          are not interchangeable: every row of a card statement
+                          is charged on one day, and the day you bought it is the
+                          one you scan by. */}
+                      <SortableTh column="DATE" sort={sort} onSort={sortBy} className="text-start">
+                        {t('transactions.screen.columns.date')}
+                      </SortableTh>
+                      {shown.charged && (
+                        <SortableTh column="CHARGED" sort={sort} onSort={sortBy} className="text-start">
+                          {t('transactions.screen.columns.charged')}
+                        </SortableTh>
+                      )}
+                      <SortableTh column="MERCHANT" sort={sort} onSort={sortBy} className="text-start">
+                        {t('transactions.screen.columns.merchant')}
+                      </SortableTh>
+                      <SortableTh column="CATEGORY" sort={sort} onSort={sortBy} className="text-start">
+                        {t('transactions.screen.columns.category')}
+                      </SortableTh>
+                      {shown.provider && <Th className="text-start">{t('transactions.screen.columns.provider')}</Th>}
+                      <SortableTh column="AMOUNT" sort={sort} onSort={sortBy} className="text-end">
+                        {t('transactions.screen.columns.amount')}
+                      </SortableTh>
+                      <Th className="w-0 text-start">
+                        <span className="sr-only">{t('transactions.screen.columns.actions')}</span>
+                      </Th>
+                    </>
+                  )}
                 </tr>
               </thead>
               <Flip
@@ -1125,6 +1078,7 @@ export function Transactions() {
                     onAssign={(categoryId) => assign(row.id, categoryId)}
                     onMenu={(at) => openMenu(row, at)}
                     cardBill={data.settlementRows.has(row.id)}
+                    shown={shown}
                     noteOpen={noteFor === row.id}
                     onNote={(note) => saveNote(row.id, note)}
                     onNoteCancel={() => setNoteFor(undefined)}
@@ -1135,7 +1089,7 @@ export function Transactions() {
           )}
 
           {beyondTheCap > 0 && (
-            <p className="px-6 py-3 text-caption text-ink-tertiary tabular-nums">
+            <p className="px-6 py-3 text-caption text-ink-secondary tabular-nums">
               {t('transactions.screen.capped', {
                 shown: data.rows.length,
                 count: data.summary.count,
@@ -1144,7 +1098,6 @@ export function Transactions() {
             </p>
           )}
         </div>
-
       </div>
 
       {menu !== undefined && (
@@ -1162,12 +1115,68 @@ export function Transactions() {
               </>
             ),
           }}
-          hint={
-            hintShown
-              ? t('transactions.screen.menuHint')
-              : undefined
-          }
+          hint={hintShown ? t('transactions.screen.menuHint') : undefined}
         />
+      )}
+
+      {/* **Detail beside the page** (M64 U6, D-617, D-618): a row in full, the
+          form that makes a rule from a fix, and what is left out of the
+          totals — one panel, replaced rather than stacked. */}
+      {panel?.kind === 'rule' && (
+        <SidePanel title={t('transactions.offer.title')} kicker={panel.merchantRaw} onClose={() => setPanel(undefined)}>
+          <LearningOffer
+            key={`${panel.offer.merchantNormalized}|${panel.offer.categoryId}|${panel.offer.draft.pattern}`}
+            offer={panel.offer}
+            merchantRaw={panel.merchantRaw}
+            categories={data.categories}
+            accounts={data.accounts}
+            pastFor={(draft) => pastRows(draft, data.rules, candidates)}
+            onCreate={learn}
+          />
+        </SidePanel>
+      )}
+
+      {panel?.kind === 'leftOut' && (
+        <SidePanel
+          title={t('transactions.leftOut.title')}
+          kicker={shownMonth === undefined ? t('transactions.screen.allMonths') : dates.yearMonth(shownMonth)}
+          onClose={() => setPanel(undefined)}
+        >
+          <p className="m-0">
+            <Phrase
+              text={t(countKey('transactions.leftOut.say', data.summary.excluded))}
+              parts={{ count: data.summary.excluded, amount: <SaidAmount value={leftOutMoney} /> }}
+            />
+          </p>
+          <p className="m-0 text-ink-secondary">{t('transactions.leftOut.why')}</p>
+          {leftRows.length === 0 ? (
+            <EmptyState say={t('transactions.leftOut.none')} />
+          ) : (
+            <ul className="m-0 list-none p-0" data-block>
+              {leftRows.map((row) => (
+                <li key={row.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 border-t border-hairline py-2">
+                  <button type="button" className="min-w-0 flex-1 text-start hover:underline" onClick={() => setSelectedId(row.id)}>
+                    <Bidi>{row.merchantRaw}</Bidi>
+                  </button>
+                  <span className="tabular-nums" dir="ltr">
+                    <Amount value={row.amount} />
+                  </span>
+                  <span className="flex w-full items-baseline justify-between gap-3 text-caption text-ink-secondary">
+                    <span className="tabular-nums">
+                      {toISODate(row.transactionDate)} ·{' '}
+                      {t(row.countedOnCard ? 'transactions.leftOut.onCard' : 'transactions.leftOut.byHand')}
+                    </span>
+                    {row.isExcludedFromStats && (
+                      <button type="button" className="fc-text-action" onClick={() => leaveOut([row.id], false)}>
+                        {t('transactions.leftOut.countAgain')}
+                      </button>
+                    )}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </SidePanel>
       )}
 
       {selected !== undefined && (
@@ -1177,8 +1186,8 @@ export function Transactions() {
           categories={data.categories}
           rules={data.rules}
           accounts={data.accounts}
-          onClose={() => setSelectedId(undefined)}
-          // The same offer a correction makes, above the rows (D-373).
+          onClose={() => setPanel(undefined)}
+          // The same form a correction's suggestion opens, in this panel (D-373, D-617).
           onCreateRule={() =>
             offerRule(selected, draftFromMerchant(selected.merchantNormalized, selected.categoryId))
           }
@@ -1217,9 +1226,7 @@ export function Transactions() {
           }
           settlementAlias={data.settlementAliases.get(selected.merchantNormalized)}
           // Setting the alias changes what the app *makes* of a row, so the
-          // links have to be re-derived before anything reads them — the same
-          // rescan a commit runs, for the same reason (D-062). Outside a
-          // transaction because `syncSettlementLinks` opens its own.
+          // links have to be re-derived before anything reads them (D-062).
           onSetSettlementAlias={(cardAccountId) =>
             mutate((database) => {
               const now = Date.now()
@@ -1231,8 +1238,7 @@ export function Transactions() {
               rescanSettlements(database, now)
             })
           }
-          // Both halves, as the accounts screen learned to do (D-064): the
-          // memory on the card, and the charges it describes.
+          // Both halves, as the accounts screen learned to do (D-064).
           onDecideCard={(cardAccountId, exclude) =>
             mutate((database) => {
               const now = Date.now()
@@ -1246,6 +1252,35 @@ export function Transactions() {
   )
 }
 
+/** An amount inside the sentence: whole units, medium, kept on one line (Home's). */
+function SaidAmount({ value }: { readonly value: Money }) {
+  return (
+    <span className="font-medium whitespace-nowrap" dir="ltr">
+      {wholeMoney(value)}
+    </span>
+  )
+}
+
+/** The table's quiet columns, and how many columns follow the checkbox. */
+interface Columns {
+  readonly charged: boolean
+  readonly provider: boolean
+  readonly span: number
+}
+
+/** Charged and Provider said are drawn only when a row on screen fills them (M64 U6, D-618). */
+function columnsShown(rows: readonly StoredTransaction[]): Columns {
+  const charged = rows.some((row) => row.chargeDate !== undefined)
+  const provider = rows.some((row) => row.providerCategory !== undefined)
+  return { charged, provider, span: 5 + (charged ? 1 : 0) + (provider ? 1 : 0) }
+}
+
+/** What the panel beside the page holds (D-617). */
+type TxPanel =
+  | { readonly kind: 'row'; readonly id: string }
+  | { readonly kind: 'rule'; readonly offer: Offer; readonly merchantRaw: string }
+  | { readonly kind: 'leftOut' }
+
 function Row({
   row,
   categories,
@@ -1257,6 +1292,7 @@ function Row({
   onAssign,
   onMenu,
   cardBill,
+  shown,
   noteOpen,
   onNote,
   onNoteCancel,
@@ -1274,6 +1310,8 @@ function Row({
   onMenu: (at: { readonly x: number; readonly y: number }) => void
   /** Whether the bank's row is the same money as a card's rows (D-062). */
   cardBill: boolean
+  /** Which of the quiet columns the table draws. */
+  shown: Columns
   noteOpen: boolean
   onNote: (note: string) => void
   onNoteCancel: () => void
@@ -1323,9 +1361,11 @@ function Row({
         <td className="px-6 py-2 tabular-nums whitespace-nowrap text-ink-secondary">
           {toISODate(row.transactionDate)}
         </td>
-        <td className="px-6 py-2 tabular-nums whitespace-nowrap text-ink-tertiary">
-          {row.chargeDate === undefined ? '' : toISODate(row.chargeDate)}
-        </td>
+        {shown.charged && (
+          <td className="px-6 py-2 tabular-nums whitespace-nowrap text-ink-secondary">
+            {row.chargeDate === undefined ? '' : toISODate(row.chargeDate)}
+          </td>
+        )}
         <td className={`w-full px-6 py-2 ${left ? 'text-ink-secondary' : ''}`}>
           {/* The merchant opens the detail rather than the whole row: the row also
               holds a category picker, and a button inside a button is neither
@@ -1334,18 +1374,19 @@ function Row({
             <Bidi>{row.merchantRaw}</Bidi>
           </button>
           {row.installment !== undefined && (
-            <span className="ms-2 text-caption text-ink-tertiary tabular-nums">
+            <span className="ms-2 text-caption text-ink-secondary tabular-nums">
               {row.installment.sequence}/{row.installment.total}
             </span>
           )}
           {row.note !== undefined && (
-            <span title={row.note} className="ms-2 inline-flex align-middle text-ink-tertiary">
+            <span title={row.note} className="ms-2 inline-flex align-middle text-ink-secondary">
               <ActionGlyph name="note" size={12} />
               <span className="sr-only">{t('transactions.row.hasNote')}</span>
             </span>
           )}
           {left && (
-            <span className="ms-2 inline-flex items-center border border-dashed border-hairline-strong px-1.5 text-[11px] leading-[18px] font-medium tracking-[0.06em] text-ink-secondary uppercase">
+            <span className="ms-2 inline-flex items-center gap-1.5 text-label font-medium tracking-[0.06em] text-ink-secondary uppercase">
+              <span aria-hidden className="size-1.5 rounded-full border border-dashed border-ink-secondary" />
               {t(cardBill ? 'transactions.row.cardLeftOut' : 'transactions.row.leftOut')}
             </span>
           )}
@@ -1362,13 +1403,15 @@ function Row({
             />
           </div>
         </td>
-        <td className="px-6 py-2 whitespace-nowrap text-caption text-ink-tertiary">
-          {row.providerCategory !== undefined && <Bidi>{row.providerCategory}</Bidi>}
-        </td>
+        {shown.provider && (
+          <td className="px-6 py-2 whitespace-nowrap text-caption text-ink-secondary">
+            {row.providerCategory !== undefined && <Bidi>{row.providerCategory}</Bidi>}
+          </td>
+        )}
         <td className="px-6 py-2 text-end whitespace-nowrap">
           {/* Struck through and quiet, the way a row that is listed and not
               counted should look (M28 U6). */}
-          <span className={left ? 'text-ink-tertiary line-through decoration-ink-tertiary' : ''}>
+          <span dir="ltr" className={left ? 'text-ink-secondary line-through decoration-ink-secondary' : ''}>
             <Amount value={row.amount} />
           </span>
         </td>
@@ -1390,7 +1433,7 @@ function Row({
       {noteOpen && (
         <tr className="bg-surface" data-motion-key={`${row.id}|note`}>
           <td />
-          <td colSpan={7} className="px-6 pb-3">
+          <td colSpan={shown.span} className="px-6 pb-3">
             <NoteField initial={row.note ?? ''} onDone={onNote} onCancel={onNoteCancel} />
           </td>
         </tr>
@@ -1442,7 +1485,6 @@ function NoteField({
   )
 }
 
-/** The merchants still waiting for a category, as the switch's count: names, not rows. */
 /** What the holding the selected row names adds up to, across all its rows. */
 function heldNowOf(
   db: NonNullable<ReturnType<typeof useDocumentStore.getState>['db']>,
@@ -1450,11 +1492,6 @@ function heldNowOf(
 ): HoldingQuantity | undefined {
   const holdingId = selectedId === undefined ? undefined : findTransactionById(db, selectedId)?.holdingId
   return holdingId === undefined ? undefined : holdingQuantity(db, holdingId)
-}
-
-function waitingNames(db: NonNullable<ReturnType<typeof useDocumentStore.getState>['db']>): number {
-  const skipped = readSkipped(db)
-  return listMerchantGroups(db, {}).filter((group) => !skipped.has(group.merchantNormalized)).length
 }
 
 const HINT_KEY = 'emerald.rowMenuHint'
@@ -1517,10 +1554,11 @@ function distinctPeriods(totals: readonly { readonly period: string }[]): readon
   return [...new Set(totals.map((total) => total.period))]
 }
 
-function Th({ children, className }: { children: React.ReactNode; className: string }) {
+function Th({ children, className, colSpan }: { children: React.ReactNode; className: string; colSpan?: number }) {
   return (
     <th
-      className={`sticky top-0 z-10 border-b border-hairline bg-background px-6 py-2 text-caption font-normal text-ink-tertiary ${className}`}
+      colSpan={colSpan}
+      className={`sticky top-0 z-10 h-10 border-b border-hairline bg-background px-6 py-1 text-caption font-normal whitespace-nowrap text-ink-secondary ${className}`}
     >
       {children}
     </th>
@@ -1579,7 +1617,7 @@ function SortableTh({
         {children}
         {/* Kept out of the accessible name — `aria-sort` already says it, and an
             arrow read aloud after every heading is noise. */}
-        <span aria-hidden className="ms-1 inline-block w-2 text-ink-tertiary">
+        <span aria-hidden className="ms-1 inline-block w-2 text-ink-secondary">
           {active ? (sort.direction === 'ASC' ? '↑' : '↓') : ''}
         </span>
       </button>
@@ -1626,9 +1664,6 @@ function arrivedFilter(state: unknown): FilterFields {
       : {}),
   }
 }
-
-/** A text action, as an empty state's one is. */
-const READ_LINK = 'text-accent underline underline-offset-4 hover:text-accent-hover'
 
 function Centered({ children }: { children: React.ReactNode }) {
   return (

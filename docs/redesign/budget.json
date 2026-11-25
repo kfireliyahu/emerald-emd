@@ -22,15 +22,15 @@
       "screens": 2.8
     },
     "#/transactions": {
-      "words": 133,
+      "words": 115,
       "blocks": 1,
-      "figures": 4,
+      "figures": 2,
       "actions": 37,
       "colours": 11,
       "screens": 1.0
     },
     "#/transactions/merchants": {
-      "words": 204,
+      "words": 200,
       "blocks": 1,
       "figures": 1,
       "actions": 48,
@@ -312,8 +312,6 @@
   },
   "exempt": [
     "#/year",
-    "#/transactions",
-    "#/transactions/merchants",
     "#/paychecks",
     "#/paychecks/deductions",
     "#/plan",

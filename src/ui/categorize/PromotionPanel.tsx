@@ -13,6 +13,7 @@ import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { CategoryPicker } from '@/ui/components/CategoryPicker.tsx'
 import { Chip } from '@/ui/components/Chip.tsx'
+import { SidePanel } from '@/ui/components/SidePanel.tsx'
 import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
 import { TRACK_KIND_LABEL } from '@/ui/debts/labels.ts'
 import { CADENCE_LABEL } from '@/ui/fixed/labels.ts'
@@ -85,35 +86,23 @@ export function PromotionPanel({
 }) {
   const [mode, setMode] = useState<'BILL' | 'DEBT'>('BILL')
 
+  // **A form beside the list** (M64 U6, D-617, D-618): several fields, so it
+  // opens in the side panel, the merchant its title and the panel's Close
+  // (or Esc) the way out; it used to push the list down from above it.
+  const kicker = `${String(group.count)} ${group.count === 1 ? 'charge waiting' : 'charges waiting'}${
+    proposal !== undefined && proposal.months.length > 0
+      ? ` · ${formatMonthShort(proposal.firstSeen)}${proposal.months.length > 1 ? ` → ${formatMonthShort(proposal.lastSeen)}` : ''}`
+      : ''
+  }`
   return (
-    <section
-      aria-label={`What is ${group.merchantRaw}`}
-      className="fc-pop-enter shrink-0 border-b border-hairline bg-surface px-6 py-3"
-    >
-      <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-        <Bidi className="font-medium">{group.merchantRaw}</Bidi>
-        <span className="text-caption text-ink-tertiary tabular-nums">
-          {group.count} {group.count === 1 ? 'charge waiting' : 'charges waiting'}
-          {proposal !== undefined && proposal.months.length > 0 && (
-            <>
-              {' · '}
-              {formatMonthShort(proposal.firstSeen)}
-              {proposal.months.length > 1 && <> → {formatMonthShort(proposal.lastSeen)}</>}
-            </>
-          )}
-        </span>
-
-        <div className="ms-auto flex items-center gap-1">
-          <Tab active={mode === 'BILL'} onClick={() => setMode('BILL')}>
-            A bill that repeats
-          </Tab>
-          <Tab active={mode === 'DEBT'} onClick={() => setMode('DEBT')}>
-            A payment on a debt
-          </Tab>
-          <Button variant="ghost" size="sm" onClick={onDismiss}>
-            Close
-          </Button>
-        </div>
+    <SidePanel title={<Bidi>{group.merchantRaw}</Bidi>} kicker={kicker} onClose={onDismiss}>
+      <div className="flex items-center gap-1" role="group" aria-label={`What is ${group.merchantRaw}`}>
+        <Tab active={mode === 'BILL'} onClick={() => setMode('BILL')}>
+          A bill that repeats
+        </Tab>
+        <Tab active={mode === 'DEBT'} onClick={() => setMode('DEBT')}>
+          A payment on a debt
+        </Tab>
       </div>
 
       {mode === 'BILL' ? (
@@ -130,7 +119,7 @@ export function PromotionPanel({
       ) : (
         <DebtForm group={group} debts={debts} onSubmit={onDebt} />
       )}
-    </section>
+    </SidePanel>
   )
 }
 
@@ -206,7 +195,7 @@ function BillForm({
 
   return (
     <>
-      <p className="mt-1.5 text-caption text-ink-tertiary tabular-nums">
+      <p className="mt-1.5 text-caption text-ink-secondary tabular-nums">
         {proposal.months.length === 1 ? (
           <>
             Seen once, in {formatMonthShort(proposal.firstSeen)} — so{' '}
@@ -234,7 +223,7 @@ function BillForm({
       </p>
 
       {claimedByDebts.length > 0 && (
-        <p className="mt-1 text-caption text-ink-tertiary">
+        <p className="mt-1 text-caption text-ink-secondary">
           {claimedByDebts.map((debt) => debt.name).join(', ')} already counts these charges as
           repayments. Tracking them as a bill as well subtracts the same money twice — the debts
           screen leaves such a debt out of its monthly figure and says why, and this is the same
@@ -243,7 +232,7 @@ function BillForm({
       )}
 
       {proposal.otherCurrencies.length > 0 && (
-        <p className="mt-1 text-caption text-ink-tertiary">
+        <p className="mt-1 text-caption text-ink-secondary">
           Only the {proposal.currency} charges are counted. This name also bills in{' '}
           {proposal.otherCurrencies.join(', ')}, and there is no rate in this document to add them
           together with.
@@ -252,7 +241,7 @@ function BillForm({
 
       <div className="mt-3 flex flex-wrap items-end gap-x-4 gap-y-3">
         <label className="flex flex-col gap-1">
-          <span className="text-label text-ink-tertiary uppercase">Call it</span>
+          <span className="text-label text-ink-secondary uppercase">Call it</span>
           <input
             className={`${FIELD} w-56`}
             dir="auto"
@@ -262,7 +251,7 @@ function BillForm({
         </label>
 
         <label className="flex flex-col gap-1">
-          <span className="text-label text-ink-tertiary uppercase">Expect</span>
+          <span className="text-label text-ink-secondary uppercase">Expect</span>
           <input
             className={`${FIELD} w-28 text-end tabular-nums`}
             value={amountText}
@@ -272,7 +261,7 @@ function BillForm({
         </label>
 
         <label className="flex flex-col gap-1">
-          <span className="text-label text-ink-tertiary uppercase">How often</span>
+          <span className="text-label text-ink-secondary uppercase">How often</span>
           <select
             className={`${SELECT} text-body`}
             value={cadence}
@@ -287,7 +276,7 @@ function BillForm({
         </label>
 
         <div className="flex flex-col gap-1">
-          <span className="text-label text-ink-tertiary uppercase">
+          <span className="text-label text-ink-secondary uppercase">
             Category <span className="normal-case">(optional)</span>
           </span>
           <CategoryPicker
@@ -319,7 +308,7 @@ function BillForm({
         </Button>
       </div>
 
-      <p className="mt-2 text-caption text-ink-tertiary">
+      <p className="mt-2 text-caption text-ink-secondary">
         It joins the bills, matched on this merchant, and the plan counts it against net.
         {categoryId === undefined ? (
           <>
@@ -383,7 +372,7 @@ function DebtForm({
     <>
       <div className="mt-3 flex flex-wrap items-end gap-x-4 gap-y-3">
         <label className="flex flex-col gap-1">
-          <span className="text-label text-ink-tertiary uppercase">Pays</span>
+          <span className="text-label text-ink-secondary uppercase">Pays</span>
           <select
             className={`${SELECT} max-w-xs text-body`}
             value={debtId}
@@ -414,14 +403,14 @@ function DebtForm({
       {chosen !== undefined && <p className="mt-2 text-ink-secondary">{sentence(chosen.offer)}</p>}
 
       {claiming.length > 0 && chosen?.offer.kind !== 'ALREADY' && (
-        <p className="mt-1 text-caption text-ink-tertiary">
+        <p className="mt-1 text-caption text-ink-secondary">
           {claiming.map((one) => one.debt.name).join(', ')} already covers these charges. A second
           debt pointed at the same name turns every one of them into a question rather than a
           payment — the app will not guess between two debts.
         </p>
       )}
 
-      <p className="mt-2 text-caption text-ink-tertiary">
+      <p className="mt-2 text-caption text-ink-secondary">
         Nothing is paid off by this. It sets what the debt watches for; discovery then runs now and
         at every import, and what it finds waits{' '}
         <span className="text-ink-secondary">unconfirmed</span> in the review queue on Debts —
@@ -475,8 +464,8 @@ function Tab({
       type="button"
       aria-pressed={active}
       onClick={onClick}
-      className={`rounded-md px-2 py-1 text-caption ${
-        active ? 'bg-elevated text-ink' : 'text-ink-tertiary hover:text-ink'
+      className={`border-b-2 px-2 py-1 text-caption ${
+        active ? 'border-accent text-ink' : 'border-transparent text-ink-secondary hover:text-ink'
       }`}
     >
       {children}

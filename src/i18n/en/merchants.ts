@@ -2,7 +2,6 @@
 export const merchants = {
   noDocument: 'Open a document, or create one, to categorize what is in it.',
   header: {
-    eyebrow: 'Transactions · one decision per shop, not per charge',
     title: 'Transactions',
     filter: 'Filter',
     account: 'Account',
@@ -15,15 +14,16 @@ export const merchants = {
     skipAll: 'Skip all {count}',
     skipAllDetail: 'Set every name here aside. Nothing is written to the transactions.',
   },
-  tiles: {
-    waiting: 'Waiting',
-    names: { one: '{count} name', other: '{count} names' },
-    charges: {
-      one: '{count} charge, {amount} without a category',
-      other: '{count} charges, {amount} without a category',
-    },
+  /** The answer, first (M64 U6, D-618). */
+  answer: {
+    waiting: { one: 'One shop still needs a category: {amount} waiting.', other: '{count} shops still need a category: {amount} waiting.' },
+    done: 'Every shop has a category.',
     sitting: 'Categorized this sitting',
-    placed: '{done} of {total} placed',
+  },
+  /** One merchant's charges, beside the list (M64 U6, D-618). */
+  charges: {
+    kicker: { one: '{count} charge with no category', other: '{count} charges with no category' },
+    allRows: 'Show in All rows',
   },
   filings: {
     earlier: 'and {count} earlier this sitting, each with its own Undo once the newer ones are gone',
@@ -36,9 +36,9 @@ export const merchants = {
     headingFiled:
       'Categorized {count} the provider calls “{provider}” as {path}, and made the rule, so next month’s are categorized on import.',
     leftOut: 'Left {count} {merchant} out of totals. All rows keeps them, struck through.',
+    undoKey: 'Ctrl+Z undoes it too',
   },
   promoted: {
-    label: 'Promoted',
     bill: '{name} is a bill now, and the next charge under this name is the same bill.',
     seeOnPlan: 'See it on Plan',
     watches: '{name} watches this name now.',
@@ -58,6 +58,7 @@ export const merchants = {
     found: { one: '{count} merchant identified.', other: '{count} merchants identified.' },
     hint: 'Save categorizes each under its category.',
     save: { one: 'Save', other: 'Save {count}' },
+    label: 'Merchants identified',
   },
   list: {
     merchant: 'Merchant',
@@ -67,6 +68,8 @@ export const merchants = {
     transactions: { one: '{count} transaction', other: '{count} transactions' },
     putBack: 'Put it back',
     label: 'Merchants waiting for a category',
+    skippedTitle: 'Set aside',
+    skippedNone: 'Nothing is set aside.',
   },
   row: {
     earlier: { one: '{count} earlier charge categorized there', other: '{count} earlier charges categorized there' },
@@ -100,8 +103,10 @@ export const merchants = {
     show: 'show its charges',
     menu: 'or right-click: everything else',
     usual: 'categorize into the categories on the right',
+    undo: 'undo the newest',
   },
   usual: {
+    fileAs: 'File {merchant} as {category}',
     title: 'Your usual categories',
     hint: 'Drag a merchant onto one of these, or press its number. The six most used.',
   },
@@ -130,6 +135,7 @@ export const merchants = {
     notCardPayment: 'Not a card payment',
   },
   heading: {
+    names: { one: '{count} name', other: '{count} names' },
     noProvider: 'No provider category',
     noneGiven: ' · the card or bank gave them none',
     categoryFor: 'Category for every row the provider calls {provider}',

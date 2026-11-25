@@ -1,16 +1,7 @@
 /** **Transactions' words, with its pane and menus, in English** (M60 U4, D-589). The source `../he/transactions.ts` translates. */
 export const transactions = {
-  /** The switch between the two views of Transactions, drawn on By merchant too. */
-  view: {
-    label: 'Transactions view',
-    merchants: 'By merchant',
-    rows: 'All rows',
-  },
   screen: {
     noDocument: 'Open a document, or create one, to see what is in it.',
-    eyebrow: 'Transactions · every row',
-    eyebrowAll: 'Transactions · every row, all months',
-    eyebrowMonth: 'Transactions · every row, {month}',
     title: 'Transactions',
     empty: 'No transactions yet.',
     readFiles: 'Read files',
@@ -22,29 +13,12 @@ export const transactions = {
     exportThese: 'Export these {count} to CSV',
     exportAll: 'Export all to CSV',
     exportDetail: 'Open this ledger in a spreadsheet',
-    wentOut: 'Went out',
-    cameIn: 'Came in',
-    counted: { one: '{count} row counted', other: '{count} rows counted' },
     alsoIn: 'and {currencies}, not added',
-    inView: 'in this view',
-    leftOutOfTotals: 'Left out of totals',
-    leftRows: { one: '{count} row', other: '{count} rows' },
-    onCard: ' · a card payment is already in the card’s own rows',
-    byHand: ' · left out by hand',
-    noCategory: 'No category',
-    allCategorized: 'all categorized',
-    fastest: 'categorized fastest by merchant',
     countOf: { one: '{count} of {total} transactions', other: '{count} of {total} transactions' },
     total: { one: '{count} transactions', other: '{count} transactions' },
     moved: '{count} moved to what you own, not spent',
     held: '{count} bought, sold or arrived by transfer inside an account with holdings, neither in nor out',
-    cardPayments: 'Card payments',
-    pendingBill: {
-      one: '{count} bank row looks like a card payment ({card}, {amount}). Leave it out, so the month is not counted twice?',
-      other: '{count} bank rows look like card payments ({card}, {amount}). Leave them out, so the month is not counted twice?',
-    },
     leavePending: { one: 'Leave it out', other: 'Leave them out' },
-    ruleApplied: 'Rule applied',
     ruleSaved: 'Rule saved.',
     nothingChanged:
       'Nothing already in the ledger changed — every row it covers either has this category or was categorized by hand.',
@@ -84,6 +58,36 @@ export const transactions = {
     capped:
       'Showing the first {shown} of {count}, by {column}. Narrow the filters to see the rest — the total above already counts them all.',
     menuHint: 'Highlight part of the name before you right-click, and the menu offers a rule from just those words.',
+    /** The answer, first (M64 U6, D-618): what went out and came in, in words. */
+    sentenceMonth: 'In {month}, {went} went out and {came} came in.',
+    sentenceAll: 'Across every month, {went} went out and {came} came in.',
+    sentenceMatching: 'In the rows that match, {went} went out and {came} came in.',
+    sentenceMonthOut: 'In {month}, {went} went out.',
+    sentenceAllOut: 'Across every month, {went} went out.',
+    sentenceMatchingOut: 'In the rows that match, {went} went out.',
+    leftOutLink: { one: '{count} left out of the totals', other: '{count} left out of the totals' },
+    suggest: 'Always file {merchant} as {category}?',
+    makeRule: 'Make a rule',
+    notNow: 'Not now',
+  },
+  /** What waits on the person, below the answer (M64 U6, D-618). */
+  waiting: {
+    label: 'What is waiting',
+    cardBill: {
+      one: '{count} bank row looks like a payment of {card} ({amount})',
+      other: '{count} bank rows look like payments of {card} ({amount})',
+    },
+    cardBillWhy: 'Counting it and the card’s own rows would count the month twice.',
+  },
+  /** What is left out of the totals, beside the rows (M64 U6, D-618). */
+  leftOut: {
+    title: 'Left out of the totals',
+    say: { one: '{count} row, {amount}, is listed and not counted.', other: '{count} rows, {amount}, are listed and not counted.' },
+    why: 'A card payment is left out because the card’s own rows already count it; anything else was left out by hand.',
+    onCard: 'a card payment',
+    byHand: 'left out by hand',
+    countAgain: 'Count it again',
+    none: 'None of the rows shown here is left out.',
   },
   /** One row of the list. */
   row: {
@@ -144,10 +148,8 @@ export const transactions = {
     label: 'Rule suggestion',
     insistent: 'You have put {merchant} in {category} by hand {count} times now.',
     thisCategory: 'this category',
-    always: 'Always categorize {merchant} as',
     picker: "The rule's category",
     choose: 'Choose a category',
-    noRule: 'No rule',
     make: 'Make the rule',
     containing: 'Any merchant containing',
     matchesOn: 'What the rule matches on',
@@ -156,17 +158,16 @@ export const transactions = {
     writes: 'Writes: {why} → {category}',
     never:
       'Never a row you categorized by hand. The rows it categorizes can be put back; the rule is edited on the rules screen.',
+    title: 'Make a rule',
+    categoryLabel: 'Category',
   },
   /** The pane beside the list: one transaction in full. */
   panel: {
-    label: 'Transaction detail',
-    close: 'Close',
-    closeLabel: 'Close detail',
     category: 'Category',
     categoryFor: 'Category for {merchant}',
     manual: 'You chose this one. Nothing automatic will overwrite it.',
     makeRule: 'Make a rule for this merchant',
-    makeRuleTitle: 'Offer a rule for this merchant above the rows',
+    makeRuleTitle: 'Opens the rule’s form in this panel',
     providerRule: "Create a rule from the provider's category",
     providerRuleTitle: "Open the rules screen with a rule pre-filled from the provider's own category",
     providerCovers: 'Covers every row the provider categorizes under {category}, on this statement and the next one.',
