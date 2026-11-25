@@ -11,6 +11,10 @@ export interface PlanLine {
   readonly actual: Money
   /** What was planned; nothing when the line has no plan. */
   readonly planned: Money | undefined
+  /** A colour token or value for a small mark before the name — what the line is drawn in elsewhere (a plan's bucket on its bar). */
+  readonly mark?: string | undefined
+  /** Said instead of what is left or over when what happened is not known yet: no fill is drawn and only the plan is printed. */
+  readonly unknown?: string | undefined
 }
 
 /**
@@ -37,16 +41,25 @@ export function PlanAgainst({
       {lines.map((line) => {
         const actual = drawn(line.actual)
         const planned = line.planned === undefined ? undefined : drawn(line.planned)
-        const over = planned !== undefined && actual > planned
+        const known = line.unknown === undefined
+        const over = known && planned !== undefined && actual > planned
         const gap = planned === undefined ? undefined : { minor: Math.abs((line.planned?.minor ?? 0) - line.actual.minor), currency: line.actual.currency }
         const body = (
           <>
-            <Bidi className="min-w-0 truncate">{line.name}</Bidi>
-            <span className="text-end tabular-nums" dir="ltr">
-              {wholeMoney(line.actual)}
-              {line.planned !== undefined && <span className="text-ink-secondary"> / {wholeMoney(line.planned)}</span>}
+            <span className="flex min-w-0 items-center gap-2">
+              {line.mark !== undefined && <span aria-hidden className="size-2 shrink-0 rounded-full" style={{ backgroundColor: line.mark }} />}
+              <Bidi className="min-w-0 truncate">{line.name}</Bidi>
             </span>
-            {planned !== undefined && planned > 0 && (
+            <span className="text-end tabular-nums" dir="ltr">
+              {known ? wholeMoney(line.actual) : null}
+              {line.planned !== undefined && (
+                <span className={known ? 'text-ink-secondary' : ''}>
+                  {known ? ' / ' : ''}
+                  {wholeMoney(line.planned)}
+                </span>
+              )}
+            </span>
+            {known && planned !== undefined && planned > 0 && (
               <span aria-hidden className="relative col-span-2 h-2 overflow-hidden rounded-full bg-track">
                 <span
                   className={`absolute inset-y-0 start-0 rounded-full ${over ? 'bg-negative' : 'bg-bar'}`}
@@ -55,7 +68,9 @@ export function PlanAgainst({
               </span>
             )}
             <span className={`col-span-2 text-caption ${over ? 'font-medium text-negative' : 'text-ink-secondary'}`}>
-              {gap === undefined
+              {!known
+                ? line.unknown
+                : gap === undefined
                 ? t('chrome.kit.noPlan')
                 : over
                   ? t('chrome.kit.over', { amount: wholeMoney(gap) })

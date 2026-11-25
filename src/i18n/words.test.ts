@@ -60,7 +60,7 @@ const U5 = [
   'src/ui/rules/TestBox.tsx',
   'src/ui/rules/Why.tsx',
   'src/ui/screens/Plan.tsx',
-  'src/ui/plan/BucketTable.tsx',
+  'src/ui/plan/BucketEditor.tsx',
   'src/ui/plan/FixedSection.tsx',
   'src/ui/plan/MonthRow.tsx',
   'src/ui/plan/PlanBar.tsx',

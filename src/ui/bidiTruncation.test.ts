@@ -29,7 +29,6 @@ const TRUNCATING_WRAPPER =
  * bucket's pointer were mended when their words moved into a sentence (M60 U5, D-590).
  */
 const PARKED = {
-  'plan/BucketTable.tsx': 1,
   'plan/MonthRow.tsx': 1,
 }
 
