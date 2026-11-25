@@ -507,6 +507,8 @@ written out here.
 | D-604 | 2026-11-23 | Saved exports are the exports pack's one format, `export`, named by its unique `file`; a refused row is reported and the others still written, the run exiting 2, and a document with none exits 2 naming the pack | M63 |
 | D-605 | 2026-11-23 | The desktop app writes a document's saved exports from Settings › Export: the page works the bytes out with the command line's own code, moved out of the plugin; the main process holds each file to the open document's folder and compares it on disk without handing its bytes to the page; and Export is offered to a document keeping the ledger or the exports pack | M63 |
 | D-606 | 2026-11-25 | The UI is redesigned, not reviewed again: three working directions for the maintainer to pick one, screens built for a newcomer, density measured and budgeted, what leaves a screen kept one click behind, the ledger first and then the engine | M64 |
+| D-607 | 2026-11-25 | A month counts a card purchase in the month it was bought, saved is what was put aside from that month's money, and Home opens on the last finished month | M64 |
+| D-608 | 2026-11-25 | No session reads the maintainer's own documents any more: a synthetic year stands in, the session picks the design direction, his one look is the real Home in the app, and an Impeccable finish review checks taste in his place | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -900,6 +902,60 @@ feel.
 
 **Consequences.** Rule rows retired by U4 point at its decision. `design-review` stays as the
 compliance pass after a screen is rebuilt.
+
+## D-607 · 2026-11-25 · A month counts a card purchase in the month it was bought, saved is what was put aside from that month's money, and Home opens on the last finished month <a id="d-607"></a>
+
+**Context.** M64 U1. The arithmetic was right, but three rules made a month read wrong. A card row
+counted in the month its bill was charged (D-006), so a month showed the previous month's card
+purchases beside its own rent and payslip. Saved held money that never came in that month: the
+slip's saving lines (Came in is net pay), and transfers larger than the month's left over. And
+Home opened on the month still running, with nothing in yet.
+
+**Decision.** The maintainer, 2026-11-25, the recommendation each time.
+
+- **Spending counts a card purchase in the month it was bought**, which reverses D-006 for
+  spending. A month is partial until the card statement covering it has been read, so a finished
+  month is one the calendar has left *and* whose card statements are read. Installments were not
+  asked: by default each payment counts in its own month, one a month from the purchase, named in
+  U1's report for him to overrule.
+- **Saved is what was put aside from this month's money**: net money moved into savings and
+  goals that nothing else counts. The slip's saving lines are a line of their own beside it, never
+  part of it. When what moved is more than the month's left over, saved is the left over and the
+  rest is said to come from earlier savings. The savings rate is saved over came in.
+- **Home opens on the last finished month**; the running month is one step forward.
+
+One basis in one place, so Home, Year, the comparisons, `month_summary` and `year_summary` change
+together. Nothing is stored, so a document made before reads with the new rule.
+
+**Rejected.** Keeping the charge date with a label; keeping saved whole with its parts explained;
+opening on the running month.
+
+## D-608 · 2026-11-25 · No session reads the maintainer's own documents any more: a synthetic year stands in, the session picks the design direction, his one look is the real Home in the app, and an Impeccable finish review checks taste in his place <a id="d-608"></a>
+
+**Context.** The maintainer, after M64 was planned: the screens must look impressive, minimal
+but nice to the eye, with well-thought ways to show data and nothing confusing. The tools for
+that come before the units. His personal data is shared nowhere, and his file is not read
+again: only demos.
+
+**Decision.**
+
+- **No session opens, reads, copies or queries his own statements, payslips, reports or `.emd`
+  files**, through the MCP tools or as a scratch copy. This reverses the standing offer of
+  2026-08-28. He may try something on his own document himself. What a real document taught
+  becomes a synthetic case (the rule *Real documents find the bugs* now says so).
+- **Tools first.**
+  - A synthetic year, `year.emd` (U16): fourteen months with every case a real ledger shows.
+  - A specimen page (U16 builds the route, U4 fills it).
+  - A contact sheet of every route as pictures, in a folder git ignores (U2).
+  - The dataviz skill for how each shape of data is shown, with charts kept as hand-drawn SVG.
+  - Impeccable's finish-reviewer as the taste check in each unit, with `design-review` still the
+    rules pass.
+- **His one look** (he chose it over picking from three, amending D-606): the session picks the
+  direction in U3 after exploring three, and he judges the real Home in the app at U5 (STOP). If
+  he likes it, the rest runs without him. If not, his words decide what is redone.
+
+**Rejected.** Figma: a sign-in, and another place he would have to look. A chart library: a
+dependency, and against offline.
 
 ## Related
 
