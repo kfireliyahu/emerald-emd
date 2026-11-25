@@ -199,3 +199,51 @@ export function totalsAgree(printed: Money, parsed: Money): boolean {
   if (printed.currency !== parsed.currency) return false
   return Math.abs(printed.minor) === Math.abs(parsed.minor)
 }
+
+/** What the parsed rows came to beside the file's own figure. */
+export interface Reconciliation {
+  /** One per currency: the figure the printed total was compared with. */
+  readonly totals: readonly Money[]
+  /** `undefined` when the file prints no total: unchecked, not agreed (D-149). */
+  readonly reconciles: boolean | undefined
+}
+
+/**
+ * **The printed total against the rows, charges less refunds** (M64 U17, D-613).
+ *
+ * A card statement prints what it will charge, which is net of a refund on it:
+ * the signed sum of its rows, compared on magnitude as {@link totalsAgree} says.
+ * Summing every row's magnitude, as this did until a synthetic year's refund
+ * months were refused, counts a refund twice. The magnitudes stay as the second
+ * reading only — a file that prints its charges and its refunds as one gross
+ * figure still agrees, so nothing that reconciled before this stops reconciling.
+ *
+ * Per currency, because a file with a dollar and a shekel section prints one
+ * total for each; the figure shown per currency is the one that agreed, else
+ * the net one.
+ */
+export function reconcileRows(printed: PrintedTotal | undefined, amounts: readonly Money[]): Reconciliation {
+  const byCurrency = new Map<string, { net: number; gross: number }>()
+  for (const amount of amounts) {
+    const sums = byCurrency.get(amount.currency) ?? { net: 0, gross: 0 }
+    sums.net += amount.minor
+    sums.gross += Math.abs(amount.minor)
+    byCurrency.set(amount.currency, sums)
+  }
+  let reconciles = false
+  const totals = [...byCurrency].map(([currency, sums]): Money => {
+    const net: Money = { minor: Math.abs(sums.net), currency }
+    const gross: Money = { minor: sums.gross, currency }
+    if (printed === undefined) return net
+    if (totalsAgree(printed.amount, net)) {
+      reconciles = true
+      return net
+    }
+    if (totalsAgree(printed.amount, gross)) {
+      reconciles = true
+      return gross
+    }
+    return net
+  })
+  return { totals, reconciles: printed === undefined ? undefined : reconciles }
+}

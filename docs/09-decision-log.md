@@ -511,6 +511,7 @@ written out here.
 | D-608 | 2026-11-25 | No session reads the maintainer's own documents any more: a synthetic year stands in, the session picks the design direction, his one look is the real Home in the app, and an Impeccable finish review checks taste in his place | M64 |
 | D-609 | 2026-11-25 | How D-607 is built: one basis file every month's figure reads, a card holds a month open until its next statement is read, saved never above a positive left over, and what stays on the charge date | M64 |
 | D-611 | 2026-11-25 | The synthetic year is made at build time, ending in the build's own month, its statements written per month from one JSON source and read through the ledger's own import; the specimen page opens in the dev and demo builds only, its panes themed by a class | M64 |
+| D-613 | 2026-11-25 | A card statement's printed total is compared with its rows' signed sum, charges less refunds, and every row's magnitude stays only as the second reading | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1027,6 +1028,27 @@ the first of the next one, and the tours' documents must not change under their 
 `showcase.emd` (the page's pictures are taken from it); a specimen route in every build behind a
 setting (the release would ship a page nobody there asked for); theming a pane by redefining the
 root's theme while the page is open (it fights the person's own theme).
+
+## D-613 · 2026-11-25 · A card statement's printed total is compared with its rows' signed sum, charges less refunds, and every row's magnitude stays only as the second reading <a id="d-613"></a>
+
+**Context.** M64 U17. The import's printed-total check added every row's magnitude, in the
+conversation (`import_statement`) and on the screen (`statementBatch.ts`) alike, so a card
+statement whose total is net of a refund was refused as not reconciling: M64 U16's synthetic year
+had both cards' refund months refused, a refund counted twice, and read them past the check.
+Magnitudes were summed because the sign is the app's convention and not the file's (D-004); that
+is a reason to compare one total on magnitude, not to add the rows on it.
+
+**Decision.** `reconcileRows` in `printedTotal.ts`, which both callers use: per currency, the rows'
+signed sum — charges less refunds, what a card will charge — compared on magnitude with the printed
+figure; and where that disagrees, the sum of every row's magnitude, so a file that prints its
+charges and refunds as one gross figure still agrees and nothing that reconciled before stops
+reconciling. The figure shown beside the printed one is whichever agreed, else the net one. The
+synthetic year reads every statement through the check again. Bank statements print no total and
+are untouched.
+
+**Rejected.** Net only (a gross-printing file nobody has seen would start being refused, for no
+gain); reading a refunds section's own total apart (no file at hand prints one); keeping the year's
+exemption (it hid exactly the bug it found).
 
 ## Related
 

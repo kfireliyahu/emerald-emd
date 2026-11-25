@@ -113,6 +113,15 @@ describe('a statement read in a batch', () => {
     expect(countTransactions(db)).toBe(0)
   })
 
+  it('a refund on the statement is taken off, as the total it prints is (D-613)', () => {
+    // 100 + 0.50 charged, 20.50 refunded: the card prints 80.00, and adding
+    // every row's magnitude came to 121.00 and left a true file in a gap.
+    const verdict = judgeSheet(db, read(statement(n(-20.5), 80)))
+    expect(verdict.reconciles).toBe(true)
+    expect(verdict.state).toBe('ok')
+    expect(verdict.parsedTotals.map((total) => total.minor)).toEqual([8000])
+  })
+
   it('a row that did not read leaves a gap, and typing what its cell says closes it', () => {
     const sheet = read(statement(s('#VALUE?')))
     const before = judgeSheet(db, sheet)

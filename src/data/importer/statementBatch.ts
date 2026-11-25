@@ -18,7 +18,7 @@ import { commitSession, type CommitResult } from './commit.ts'
 import { guessMapping, missingRequiredRoles } from './guess.ts'
 import { defaultMappingName, statedCardLast4 } from './mappingName.ts'
 import { assignNaturalKeys } from './naturalKey.ts'
-import { findPrintedTotal, totalsAgree, type PrintedTotal } from './printedTotal.ts'
+import { findPrintedTotal, reconcileRows, type PrintedTotal } from './printedTotal.ts'
 import type { SheetCell, SheetTable, SheetWorkbook } from './sheetTable.ts'
 import { statementSections } from './sections.ts'
 import { computeHeaderSignature, matchSavedMapping } from './signature.ts'
@@ -420,7 +420,7 @@ export interface SheetVerdict {
   readonly duplicates: number
   readonly failed: readonly ParsedRow[]
   readonly printed: PrintedTotal | undefined
-  /** One per currency, as magnitudes — a file with two sections prints two totals. */
+  /** One per currency, charges less refunds — a file with two sections prints two totals (D-613). */
   readonly parsedTotals: readonly Money[]
   /** `undefined` when the file prints no total: unchecked, not agreed (D-149). */
   readonly reconciles: boolean | undefined
@@ -579,9 +579,8 @@ function judged(
     currency: sheet.mapping.defaultCurrency,
   })
   // A total printed under a section speaks for every card in it.
-  const parsedTotals = totalsOf(sheet.card === undefined ? rows : sectionRows(sheet))
-  const reconciles =
-    printed === undefined ? undefined : parsedTotals.some((total) => totalsAgree(printed.amount, total))
+  const covered = allParsed(sheet.card === undefined ? rows : sectionRows(sheet))
+  const { totals: parsedTotals, reconciles } = reconcileRows(printed, covered.map((draft) => draft.amount))
   const balance = verifyRunningBalance(bankRowsOf(rows))
 
   const newRows = drafts.length - duplicates
@@ -695,15 +694,6 @@ export function pointAt(
 /** The sheet kept where it was going, overlap and all — *Keep apart*. */
 export function keepApart(sheet: StatementSheet): StatementSheet {
   return { ...sheet, account: { ...sheet.account, separate: true } }
-}
-
-/** Magnitudes per currency, the shape the printed total is compared with. */
-function totalsOf(rows: readonly ParsedRow[]): readonly Money[] {
-  const byCurrency = new Map<string, number>()
-  for (const draft of allParsed(rows)) {
-    byCurrency.set(draft.amount.currency, (byCurrency.get(draft.amount.currency) ?? 0) + Math.abs(draft.amount.minor))
-  }
-  return [...byCurrency].map(([currency, minor]) => ({ minor, currency }))
 }
 
 // --- Write -----------------------------------------------------------------
