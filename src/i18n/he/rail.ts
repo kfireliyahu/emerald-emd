@@ -10,6 +10,8 @@ export const rail: Translation<'rail'> = {
   year: 'שנה',
   dashboard: 'לוח בקרה',
   transactions: 'תנועות',
+  allRows: 'כל התנועות',
+  byMerchant: 'לפי בית עסק',
   paychecks: 'תלושי שכר',
   deductionTypes: 'סוגי ניכוי',
   plan: 'תקציב',

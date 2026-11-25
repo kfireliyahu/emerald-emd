@@ -517,6 +517,7 @@ written out here.
 | D-615 | 2026-11-25 | The report becomes the design language: A's tokens and two type steps, Plex in four weights, a rail of words whose sections' views are their tab strip, a kit of eight displays chosen by the shape of the data, a side panel and a waiting list, six ui rules rewritten and four added, and a density budget whose exempt list only shrinks | M64 |
 | D-616 | 2026-11-25 | Home is rebuilt as the report: the month in one sentence, left over its one figure, what waits one strip below it, four tiles that open their breakdowns beside the page, the fourteen months as the pager, and where it went beside the plan; All months and the by-month chart are the Year screen's, and a redesign-screen skill every later screen follows | M64 |
 | D-617 | 2026-11-25 | Where a screen's interactions open: reading more in the side panel, one value in place, a form of several fields in the same panel, a job of several steps on a page of its own with one way back, a choice in a popover, and a dialog only to confirm what cannot be undone | M64 |
+| D-618 | 2026-11-25 | Transactions is rebuilt as the report: each tab answers first in one sentence, its views are one tab strip, a row, a rule from a fix and what is left out open beside the rows, a selection acts from the table's own header row, and what was just done keeps its place with its Undo | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1305,6 +1306,40 @@ left to each unit, ten screens would make ten choices. It extends *Detail opens 
 rather than adding a pattern.
 
 **Where.** `.claude/skills/redesign-screen/SKILL.md` (Where each thing opens), `DESIGN.md`.
+
+## D-618 · 2026-11-25 · Transactions is rebuilt as the report: each tab answers first in one sentence, its views are one tab strip, a row, a rule from a fix and what is left out open beside the rows, a selection acts from the table's own header row, and what was just done keeps its place with its Undo <a id="d-618"></a>
+
+**Context.** M64 U6 redesigned Transactions (All rows) and By merchant after Home (D-616), with
+D-617's five places and the maintainer's addition to it: interactions behave as ordinary desktop
+apps taught people — nothing moves under the pointer, selected rows act from the list's header,
+Esc, Enter and Ctrl+Z do what they do everywhere, every panel has one way out.
+
+**Decision.** *All rows* answers *what did I spend money on* in one sentence (what went out and
+came in, for the month, every month or the rows that match), the open month is its heading, and
+under it one line keeps its place: the count and *n left out of the totals* (which opens those
+rows beside the page), or — after a fix — *Always file X as Y? Make a rule*, or what the rule just
+filed and its Undo. The four tiles are cut (their figures are the sentence); the uncategorized
+count is cut as a repeat (By merchant's whole job, Home's first waiting line); card bills nobody
+answered are the waiting strip. A row's detail, the rule form (formerly a strip above the rows)
+and the left-out rows open in the `SidePanel`. Ticked rows' actions take the table's own header
+row, Esc lets go of them, and Charged and Provider said are drawn only when a row on screen has
+them. *By merchant* answers *which shops still need a category* in one sentence, the sitting's
+meter beside it once something is filed; the newest filing and its Undo stand in the list's own
+header row (Ctrl+Z undoes it too) instead of a growing list above the merchants; recognised
+merchants are the waiting strip; a merchant's charges, its bill-or-debt form and the skipped
+names open in the `SidePanel`. The two views are Transactions' tab strip (`nav.ts`), not a switch
+drawn in each header.
+
+**Why.** The answer first and the detail beside the page is Home's approved pattern (D-616); a
+line that swaps its words instead of strips that grow above the rows is what keeps the row a
+person just touched under their pointer.
+
+**Rejected.** A display figure on All rows: the table is the screen, and a second monumental
+number would push it under the fold. Keeping the waiting count on the tab: `ViewTabs` draws words.
+
+**Where.** `src/ui/screens/Transactions.tsx`, `src/ui/screens/ByMerchant.tsx`,
+`src/ui/transactions/`, `src/ui/categorize/PromotionPanel.tsx`, `src/ui/nav.ts`,
+`docs/redesign/budget.json`.
 
 ## Related
 

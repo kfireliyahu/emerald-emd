@@ -10,6 +10,8 @@ export const rail = {
   year: 'Year',
   dashboard: 'Dashboard',
   transactions: 'Transactions',
+  allRows: 'All rows',
+  byMerchant: 'By merchant',
   paychecks: 'Paychecks',
   deductionTypes: 'Deduction types',
   plan: 'Plan',

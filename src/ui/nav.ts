@@ -180,7 +180,13 @@ export const NAVIGATION: readonly NavSection[] = [
     glyph: 'transactions',
     pack: 'ledger',
     // A statement's readers were a tab here (M28 U3) until the one Readers list
-    // beside Read files took them (M36 U10); By merchant is a view on the page.
+    // beside Read files took them (M36 U10). **All rows and By merchant are its
+    // tab strip** (M64 U6, D-618): they were a switch in each page's header,
+    // which was a second way of drawing a section's views.
+    tabs: [
+      { to: '/transactions', ...named('allRows') },
+      { to: '/transactions/merchants', ...named('byMerchant') },
+    ],
   },
   // Intake, not planning: a payslip is a document you bring in, and Plan is
   // what you do once it is in. It was Plan's first tab for three milestones and

@@ -41,7 +41,6 @@ const U4 = [
   'src/ui/transactions/DetailPanel.tsx',
   'src/ui/transactions/FilterBar.tsx',
   'src/ui/transactions/LearningOffer.tsx',
-  'src/ui/transactions/ViewSwitch.tsx',
   'src/ui/screens/ByMerchant.tsx',
 ]
 
@@ -117,7 +116,7 @@ const ALLOWED: Readonly<Record<string, readonly string[]>> = {
 /** Names a keyboard gives its keys, which are compared against and never shown. */
 const KEY_NAMES = new Set([
   'Enter', 'Escape', 'Tab', 'Backspace', 'Delete', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
-  'Home', 'End', 'PageUp', 'PageDown', 'Shift', 'Control', 'Meta', 'Alt', 'ContextMenu', 'F10', 'Space',
+  'Home', 'End', 'PageUp', 'PageDown', 'Shift', 'Control', 'Ctrl', 'Meta', 'Alt', 'ContextMenu', 'F10', 'Space',
 ])
 
 /** Names that are names in every language: the product. A key's name is in `<Kbd>` or `<Key>`. */

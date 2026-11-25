@@ -4,7 +4,6 @@ import type { Translation } from '../catalogue.ts'
 export const merchants: Translation<'merchants'> = {
   noDocument: 'יש לפתוח מסמך, או ליצור מסמך חדש, כדי לסווג את מה שבו.',
   header: {
-    eyebrow: 'תנועות · החלטה אחת לכל בית עסק, לא לכל חיוב',
     title: 'תנועות',
     filter: 'סינון',
     account: 'חשבון',
@@ -17,15 +16,14 @@ export const merchants: Translation<'merchants'> = {
     skipAll: 'דילוג על כולם ({count})',
     skipAllDetail: 'כל השמות כאן מועברים הצידה. שום דבר לא נכתב בתנועות.',
   },
-  tiles: {
-    waiting: 'ממתינים',
-    names: { one: 'שם אחד', other: '{count} שמות' },
-    charges: {
-      one: 'חיוב אחד, {amount} ללא קטגוריה',
-      other: '{count} חיובים, {amount} ללא קטגוריה',
-    },
+  answer: {
+    waiting: { one: 'בית עסק אחד עוד מחכה לקטגוריה: {amount}.', other: '{count} בתי עסק עוד מחכים לקטגוריה: {amount}.' },
+    done: 'לכל בית עסק יש קטגוריה.',
     sitting: 'סווגו בסבב הזה',
-    placed: '{done} מתוך {total} סווגו',
+  },
+  charges: {
+    kicker: { one: 'חיוב אחד בלי קטגוריה', other: '{count} חיובים בלי קטגוריה' },
+    allRows: 'הצגה בכל התנועות',
   },
   filings: {
     earlier: 'ועוד {count} מוקדם יותר בסבב הזה, לכל אחד ביטול משלו אחרי שהחדשים יותר כבר אינם',
@@ -37,9 +35,9 @@ export const merchants: Translation<'merchants'> = {
     headingRuleOnly: 'נוצר הכלל "{provider}" ← {path}. לא הייתה תחתיו שורה ללא קטגוריה.',
     headingFiled: 'סווגו {count} חיובים מהענף "{provider}" תחת {path}, ונוצר כלל, כך שבחודש הבא הם יסווגו כבר בייבוא.',
     leftOut: '{count} חיובים של {merchant} לא נכללים עוד בסיכומים. בכל התנועות הם נשארים, מחוקים בקו.',
+    undoKey: 'גם Ctrl+Z מבטל',
   },
   promoted: {
-    label: 'סומן',
     bill: '{name} היא עכשיו הוצאה קבועה, והחיוב הבא בשם הזה הוא אותה הוצאה.',
     seeOnPlan: 'הצגה בתקציב',
     watches: 'החוב {name} עוקב עכשיו אחרי השם הזה.',
@@ -59,6 +57,7 @@ export const merchants: Translation<'merchants'> = {
     found: { one: 'זוהה בית עסק אחד.', other: 'זוהו {count} בתי עסק.' },
     hint: 'שמירה מסווגת כל אחד תחת הקטגוריה שלו.',
     save: { one: 'שמירה', other: 'שמירת {count}' },
+    label: 'בתי עסק שזוהו',
   },
   list: {
     merchant: 'בית עסק',
@@ -68,6 +67,8 @@ export const merchants: Translation<'merchants'> = {
     transactions: { one: 'תנועה אחת', other: '{count} תנועות' },
     putBack: 'החזרה לתור',
     label: 'בתי עסק שממתינים לקטגוריה',
+    skippedTitle: 'בצד',
+    skippedNone: 'שום דבר לא הונח בצד.',
   },
   row: {
     earlier: { one: 'חיוב קודם אחד סווג שם', other: '{count} חיובים קודמים סווגו שם' },
@@ -101,8 +102,10 @@ export const merchants: Translation<'merchants'> = {
     show: 'הצגת החיובים',
     menu: 'או לחיצה ימנית: כל השאר',
     usual: 'סיווג לאחת הקטגוריות הקבועות',
+    undo: 'ביטול האחרון',
   },
   usual: {
+    fileAs: 'סיווג {merchant} תחת {category}',
     title: 'הקטגוריות הקבועות',
     hint: 'אפשר לגרור בית עסק אל אחת מהן, או ללחוץ על המספר שלה. שש הנפוצות ביותר.',
   },
@@ -131,6 +134,7 @@ export const merchants: Translation<'merchants'> = {
     notCardPayment: 'לא חיוב כרטיס אשראי',
   },
   heading: {
+    names: { one: 'שם אחד', other: '{count} שמות' },
     noProvider: 'ללא ענף',
     noneGiven: ' · הכרטיס או הבנק לא נתנו להם ענף',
     categoryFor: 'קטגוריה לכל שורה מהענף {provider}',
