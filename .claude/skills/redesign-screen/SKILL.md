@@ -50,6 +50,24 @@ drawn only when something needs them: the shared `WaitingList`, one sentence and
 A verb opens the answers beside the page; it leaves the page only when answering needs a screen of
 its own (Home's *Choose categories* goes to By merchant, and a tour walks it).
 
+### Where each thing opens (D-617)
+
+The table also has **one line per interaction** on the screen, saying where it opens. Five places,
+chosen by what the person is doing, and no sixth:
+
+| The person is… | It opens… | e.g. |
+|---|---|---|
+| reading more about something on the screen | the `SidePanel`, the page stays | a figure's breakdown, a row's detail, a category's rows |
+| changing one value of one thing | **in place**, on the line itself | a category, a name, an amount, a date |
+| making or editing a thing with several fields | a form in the `SidePanel`, the page behind it | a rule from a row, a goal, a debt, an account, a plan line |
+| doing a job of several steps that takes over until done | a page of its own, with one way back to where it started | reading a file through the mapper, a new document's start |
+| choosing from a list, or a menu | a popover anchored to what opened it | a category picker, a row's menu |
+
+**A dialog is only for confirming what cannot be undone** (a delete, a replace), and an undo
+beats a dialog wherever one can be offered. A form never floats in a dialog, and a detail never
+takes the page. A screen whose interaction fits none of the five stops and asks, rather than
+inventing a sixth.
+
 ## 3. Build from the kit
 
 - **The displays from the kit, never a one-off.** A shape the kit lacks gets a display in

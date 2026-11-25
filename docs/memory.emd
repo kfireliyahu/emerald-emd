@@ -5138,6 +5138,16 @@ answer: One question. The month as one sentence (amounts medium, unbroken), left
 state: live
 affects: "src/ui/screens/Home.tsx\nsrc/ui/home/HomePanel.tsx\ndocs/redesign/budget.json\n.claude/skills/redesign-screen/SKILL.md"
 
+### D-617
+date: 2026-11-25
+milestone: M64
+scope: ui
+title: Where a screen's interactions open: reading more in the side panel, one value in place, a form of several fields in the same panel, a job of several steps on a page of its own with one way back, a choice in a popover, and a dialog only to confirm what cannot be undone
+question: D-614 and D-615 said only that detail opens beside the page. Where do editing, making, picking and confirming open on the screens U6-U14 redesign: side panel, dialog, in place or a page?
+answer: Each redesigned screen lists every interaction and where it opens, from five places: reading more → SidePanel; one value of one thing → in place on its line; a thing of several fields → a form in the SidePanel; a job of several steps that takes over (the mapper, a new document's start) → its own page with one way back; a choice from a list or menu → a popover anchored to what opened it. A dialog only confirms what cannot be undone, and an undo beats it where possible. An interaction that fits none stops the unit and asks. Written into the redesign-screen skill and DESIGN.md.
+state: live
+affects: ".claude/skills/redesign-screen/SKILL.md\nDESIGN.md"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding

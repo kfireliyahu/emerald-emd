@@ -516,6 +516,7 @@ written out here.
 | D-614 | 2026-11-25 | Home and the rail take direction A, the report: the month said as one sentence with left over its one figure, a typographic rail, detail in a side panel; with B's month strip as the pager and C's waiting list and palette; the flows leave Home's figures and Plex gains a light weight for the hero | M64 |
 | D-615 | 2026-11-25 | The report becomes the design language: A's tokens and two type steps, Plex in four weights, a rail of words whose sections' views are their tab strip, a kit of eight displays chosen by the shape of the data, a side panel and a waiting list, six ui rules rewritten and four added, and a density budget whose exempt list only shrinks | M64 |
 | D-616 | 2026-11-25 | Home is rebuilt as the report: the month in one sentence, left over its one figure, what waits one strip below it, four tiles that open their breakdowns beside the page, the fourteen months as the pager, and where it went beside the plan; All months and the by-month chart are the Year screen's, and a redesign-screen skill every later screen follows | M64 |
+| D-617 | 2026-11-25 | Where a screen's interactions open: reading more in the side panel, one value in place, a form of several fields in the same panel, a job of several steps on a page of its own with one way back, a choice in a popover, and a dialog only to confirm what cannot be undone | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1274,6 +1275,27 @@ Home a month's taxes as one figure; Paychecks has the lines).
 **Rejected.** Keeping All months under a fold (it is Year's, and a second table of months is the
 density U2 measured); a two-line chart beside the strip (two displays of one trend); category dots
 on Where it went (six colours against an 11-colour budget, for names the rows already say).
+
+## D-617 · 2026-11-25 · Where a screen's interactions open: reading more in the side panel, one value in place, a form of several fields in the same panel, a job of several steps on a page of its own with one way back, a choice in a popover, and a dialog only to confirm what cannot be undone <a id="d-617"></a>
+
+**Context.** The maintainer approved M64 U5's Home (D-608's one look) and asked whether the redesign
+also settles which interactions are side panels, dialogs or pages. D-614 and D-615 said only that
+detail opens beside the page; editing, making, picking and confirming were left to each screen,
+and they are most of what U6-U14 redesign.
+
+**Decision.** Every redesigned screen lists each interaction and where it opens, from five places:
+reading more about something, the `SidePanel`; changing one value of one thing, in place on its
+line; making or editing a thing of several fields, a form in the `SidePanel` with the page behind
+it; a job of several steps that takes over until done (the mapper, a new document's start), a page
+of its own with one way back; choosing from a list or a menu, a popover anchored to what opened
+it. A dialog is only for confirming what cannot be undone, and an undo beats it where one can be
+offered. An interaction that fits none stops the unit and asks.
+
+**Why.** One place per kind of act is what makes a screen learnable once and the rest predictable;
+left to each unit, ten screens would make ten choices. It extends *Detail opens beside the page*
+rather than adding a pattern.
+
+**Where.** `.claude/skills/redesign-screen/SKILL.md` (Where each thing opens), `DESIGN.md`.
 
 ## Related
 

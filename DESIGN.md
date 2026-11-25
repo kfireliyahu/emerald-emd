@@ -27,7 +27,10 @@ answer, monumental (`text-display`, Plex 300, proportional figures, its symbol a
 and `ink-secondary`). Everything else is columns of exact type below it, every rule one hairline,
 hierarchy by size and weight alone. What is waiting sits **below the answer** as one quiet list,
 a verb each. Detail opens **beside the page** in a side panel, never on a page of its own, so the
-month stays where it was. The rail is **words**, not icons, in two groups.
+month stays where it was. A change to one value happens in place, a form with several fields
+opens in the same panel, a job of several steps (the mapper) takes a page with one way back, a
+choice is a popover, and a dialog is only for confirming what cannot be undone (D-617). The rail
+is **words**, not icons, in two groups.
 
 The prototype is [`docs/mockups/m64-u3/a/`](./docs/mockups/m64-u3/a/), with
 [`b/`](./docs/mockups/m64-u3/b/)'s month strip as the pager and lines that open in place, and
