@@ -511,6 +511,7 @@ written out here.
 | D-608 | 2026-11-25 | No session reads the maintainer's own documents any more: a synthetic year stands in, the session picks the design direction, his one look is the real Home in the app, and an Impeccable finish review checks taste in his place | M64 |
 | D-609 | 2026-11-25 | How D-607 is built: one basis file every month's figure reads, a card holds a month open until its next statement is read, saved never above a positive left over, and what stays on the charge date | M64 |
 | D-611 | 2026-11-25 | The synthetic year is made at build time, ending in the build's own month, its statements written per month from one JSON source and read through the ledger's own import; the specimen page opens in the dev and demo builds only, its panes themed by a class | M64 |
+| D-612 | 2026-11-25 | Density is read off one snapshot of `main` by tested arithmetic: a block is a heading-led section, a table, a chart, a list of three rows or a `data-block`, a figure is the secondary-number step or a `data-figure`, a budget is a maximum per route; `--shots` paints each screen at its whole length into `.probe/shots/` beside one contact sheet, and the inventory is `docs/redesign/screens.md` | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1027,6 +1028,43 @@ the first of the next one, and the tours' documents must not change under their 
 `showcase.emd` (the page's pictures are taken from it); a specimen route in every build behind a
 setting (the release would ship a page nobody there asked for); theming a pane by redefining the
 root's theme while the page is open (it fights the person's own theme).
+
+## D-612 · 2026-11-25 · Density is read off one snapshot of `main` by tested arithmetic: a block is a heading-led section, a table, a chart, a list of three rows or a `data-block`, a figure is the secondary-number step or a `data-figure`, a budget is a maximum per route; `--shots` paints each screen at its whole length into `.probe/shots/` beside one contact sheet, and the inventory is `docs/redesign/screens.md` <a id="d-612"></a>
+
+**Context.** M64 U2. D-606 asks for density measured and budgeted, D-608 for a contact sheet of
+the whole app. `probe:screens` measured only how a screen looks, and the test environment is node,
+so nothing that needs a browser's layout can be tested.
+
+**Decision.**
+
+- **The page is read once and measured by arithmetic.** `snapshot(main)` turns what is drawn into a
+  tree of plain nodes (tag, role, own text, box, font size, colours, `data-figure`, `data-block`, a
+  primary button); `density(tree, fold)` is pure and `probe.test.ts` runs it on a fixed page. The
+  screen is `main`, not the title bar or the rail (`--screen` changes it).
+- **What counts.** Words: tokens with a letter or digit in drawn text, and those whose box starts
+  above the fold (the window's height, 800 at 1280x800). A block: each `h2`-`h6`; outside another
+  block, each table or grid, each SVG of at least 80x40, each list with three or more items, each
+  `data-block`. A figure: a `data-figure`, or digit-only text at the ramp's `--text-secondary-number`
+  step or larger, never a heading; a figure drawn in parts (the magnitude large, its symbol and
+  decimals a step down) is one. Actions: buttons, links, tabs, menu items; primary is
+  `fc-btn-primary`. Type sizes and colours: the distinct ones spent on text, backgrounds and a
+  chart's marks. Screens: the last box's bottom over the fold.
+- **A budget is JSON keyed by route hash, `*` for every route, each limit a maximum named as the
+  measures are**; the route's own limits win over `*`, an unknown name is itself a breach, and
+  `--budget` exits 1 naming every breach. U4 writes the limits.
+- **`--shots` measures each route and theme on its own (`stay` leaves it on screen), stretches the
+  window to the screen's whole length (8000 px at most), and keeps a frame painted on request** —
+  an offscreen window's `capturePage` handed back its first frame. Pictures go only to
+  `.probe/shots/`, which git ignores. Each run writes `<document>.json` beside its pictures and
+  makes `index.html` again from every such list: grouped by document and section, light and dark
+  side by side, the fold marked, density under each.
+- **The inventory, `docs/redesign/screens.md`, is measured on the demo documents only**: `year.emd`
+  for the ledger, `custom.emd` and `project.emd` for the engine.
+
+**Rejected.** A browser DOM in the test environment (a dependency, and its layout is zeros anyway);
+viewport-only pictures (the fold is a line on a whole picture, and a contact sheet of folds hides
+what a screen holds); counting every `div` of rows as a list (the markup cannot say which are rows;
+`data-block` lets the redesign say so); a budget with minimums (nothing yet asks for one).
 
 ## Related
 

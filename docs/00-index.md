@@ -31,6 +31,7 @@ page exists so you can find a note when a task needs one.
 | [04 Data Model](./04-data-model.md) | The engine's tables — declarations and reading vocabularies |
 | `term` rows in `memory.emd` | The glossary, as rows (D-436): one name per thing, what it means, what it is not, the names turned down — `format_rows term search:"<word>"` |
 | [11 UI Design Language](./11-ui-design-language.md) | Visual style: where the values (`tokens.css`) and the rules (`rule` rows, `scope: ui`) are |
+| [redesign/screens](./redesign/screens.md) | What each screen is for, its blocks, the shape of its data and its density, measured before M64's redesign (D-612) |
 | [plugin](./plugin.md) | The MCP server: what it exposes and the rules it keeps |
 | [mapping-templates](./mapping-templates.md) | Reading a document onto a table, and the stored template that remembers how |
 | [parity](./parity.md) | What a screen can do and no tool can, and the reverse — written by `src/parity.test.ts`, never by hand |

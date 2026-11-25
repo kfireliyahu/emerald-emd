@@ -58,6 +58,12 @@ and `<select>`s.
   measures the Hebrew mirror too (the rail's side, anything cut off sideways; M60 U3, D-586). In M54
   six units each wrote that helper again, about 2,000 characters, and re-sent it after every
   reload. Extend `probe.ts` when a check is missing, rather than writing one in the page.
+  **Every run measures density too** (M64 U2, D-612) — words and how many sit above the fold,
+  blocks, headline figures, actions and primaries, type sizes, colours, windows tall — `--budget
+  <file>` exits 1 naming each limit a screen is over, and `--shots` writes a picture of every route
+  and theme into the git-ignored `.probe/shots/` with `index.html`, a contact sheet of them all: look
+  at that page rather than taking screenshots one by one. `year.emd` is the ledger's document
+  (D-608); what each screen is for is `docs/redesign/screens.md`.
   `javascript_tool` is for what it does not measure (an order, a state after a click).
 - **`web-design-guidelines`**: one WebFetch of its `command.md`, applied to the same grep output.
 

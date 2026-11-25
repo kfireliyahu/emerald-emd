@@ -87,6 +87,215 @@ export function headingSkips(levels: readonly number[]): string[] {
   return skips
 }
 
+/**
+ * **How much a screen holds** (M64 U2, D-612): one element of the screen as the
+ * density measures see it — what the page draws, read once by `snapshot`, so
+ * the arithmetic below runs on a fixed page in a test with no browser.
+ */
+export interface PageNode {
+  /** The tag, lower case: `div`, `h2`, `svg`. */
+  readonly tag: string
+  /** Its `role`, or `link` for an `a` with an `href`. */
+  readonly role?: string | undefined
+  /** The text directly inside it, not its children's. */
+  readonly text?: string | undefined
+  /** Its box against the window, in px. */
+  readonly top: number
+  readonly bottom: number
+  readonly width: number
+  readonly height: number
+  /** Its computed font size in px, and the colours it paints. */
+  readonly size?: number | undefined
+  readonly color?: string | undefined
+  readonly background?: string | undefined
+  /** An SVG mark's fill and stroke, as computed. */
+  readonly paint?: readonly string[] | undefined
+  /** `data-figure`: a headline figure, whatever its size. */
+  readonly figure?: boolean | undefined
+  /** `data-block`: a block the markup names, with this label. */
+  readonly block?: string | undefined
+  /** A filled primary button (`fc-btn-primary`). */
+  readonly primary?: boolean | undefined
+  /** Its `aria-label`. */
+  readonly label?: string | undefined
+  readonly children: readonly PageNode[]
+}
+
+export interface Block {
+  readonly kind: 'section' | 'table' | 'chart' | 'list' | 'block'
+  readonly label: string
+  readonly aboveFold: boolean
+}
+
+export interface Density {
+  /** Words drawn in the screen, and how many of them are above the fold. */
+  readonly words: number
+  readonly wordsAboveFold: number
+  /** A heading-led section, a table, a chart, a list of 3+ rows, a `data-block`: one each. */
+  readonly blocks: Listed<Block>
+  readonly blocksAboveFold: number
+  /** Large figures (the secondary-number step or bigger) and `data-figure`s. */
+  readonly figures: Listed<{ text: string; size: number }>
+  /** Buttons and links, and how many of them are filled primary buttons. */
+  readonly actions: number
+  readonly primary: number
+  /** The distinct font sizes text is drawn in, in px. */
+  readonly typeSizes: readonly number[]
+  /** The distinct colours painted: text, backgrounds, a chart's marks. */
+  readonly colours: readonly string[]
+  /** How many windows tall the screen is: its last thing's bottom over the fold. */
+  readonly screens: number
+}
+
+const ACTION_ROLES = new Set(['button', 'link', 'tab', 'menuitem'])
+const TABLE_ROLES = new Set(['table', 'grid', 'treegrid'])
+/** Text that is a figure: a digit, and no letter in either script. */
+const FIGURE_TEXT = /^[^A-Za-z֐-׿]*\d[^A-Za-z֐-׿]*$/
+
+/** A computed colour, one spelling per colour; null for none or transparent. */
+export function colourKey(css: string | undefined): string | null {
+  const c = css === undefined ? null : parseColor(css)
+  if (!c || c.a === 0) return null
+  const [r, g, b] = [c.r, c.g, c.b].map(Math.round)
+  return c.a >= 1 ? `rgb(${String(r)}, ${String(g)}, ${String(b)})` : `rgba(${String(r)}, ${String(g)}, ${String(b)}, ${String(Math.round(c.a * 100) / 100)})`
+}
+
+function wordsIn(text: string): number {
+  return text.split(/\s+/).filter((word) => /[\p{L}\p{N}]/u.test(word)).length
+}
+
+function textOf(node: PageNode): string {
+  return [node.text ?? '', ...node.children.map(textOf)].join(' ').replace(/\s+/g, ' ').trim()
+}
+
+/**
+ * The density measures of a screen read by `snapshot` (M64 U2, D-612). `fold`
+ * is the window's height; `figureMin` the smallest size a figure is headline at.
+ */
+export function density(page: PageNode, fold: number, figureMin = 20, limit = 25): Density {
+  let words = 0
+  let wordsAboveFold = 0
+  let actions = 0
+  let primary = 0
+  let bottom = 0
+  const blocks: Block[] = []
+  const figures: { text: string; size: number }[] = []
+  const sizes = new Set<number>()
+  const colours = new Set<string>()
+  const paint = (css: string | undefined) => {
+    const key = colourKey(css)
+    if (key) colours.add(key)
+  }
+  const walk = (node: PageNode, inBlock: boolean, inFigure: boolean) => {
+    const drawn = node.width * node.height > 1
+    if (drawn) bottom = Math.max(bottom, node.bottom)
+    const above = node.top < fold && node.bottom > 0
+    const text = drawn ? (node.text ?? '').trim() : ''
+    const count = text ? wordsIn(text) : 0
+    words += count
+    if (above) wordsAboveFold += count
+    if (count > 0) {
+      if (node.size !== undefined) sizes.add(node.size)
+      paint(node.color)
+    }
+    if (drawn) {
+      paint(node.background)
+      for (const each of node.paint ?? []) paint(each)
+    }
+    if (drawn && (node.tag === 'button' || (node.role !== undefined && ACTION_ROLES.has(node.role)))) {
+      actions++
+      if (node.primary) primary++
+    }
+    const heading = /^h[2-6]$/.test(node.tag) || node.role === 'heading'
+    let kind: Block['kind'] | null = null
+    if (drawn && heading) kind = 'section'
+    else if (drawn && !inBlock) {
+      if (node.block !== undefined) kind = 'block'
+      else if (node.tag === 'table' || (node.role !== undefined && TABLE_ROLES.has(node.role))) kind = 'table'
+      else if (node.tag === 'svg' && node.width >= 80 && node.height >= 40) kind = 'chart'
+      else if (
+        (node.tag === 'ul' || node.tag === 'ol' || node.role === 'list') &&
+        node.children.filter((child) => child.tag === 'li' || child.role === 'listitem').length >= 3
+      )
+        kind = 'list'
+    }
+    if (kind !== null) {
+      const label = (node.block ?? node.label ?? textOf(node)).slice(0, 60)
+      blocks.push({ kind, label, aboveFold: above })
+    }
+    let figure = inFigure
+    if (drawn && !inFigure) {
+      // A figure drawn in parts — the magnitude large, its symbol and decimals a
+      // step down (*the magnitude leads*) — is one figure.
+      const parts = node.children.filter((child) => child.text !== undefined)
+      const glued =
+        !text &&
+        parts.length > 1 &&
+        parts.length === node.children.length &&
+        parts.every((part) => part.children.length === 0 && !/[A-Za-z֐-׿]/.test(part.text ?? '')) &&
+        parts.some((part) => (part.size ?? 0) >= figureMin && /\d/.test(part.text ?? ''))
+      if (node.figure) {
+        figures.push({ text: textOf(node).slice(0, 40), size: node.size ?? 0 })
+        figure = true
+      } else if (glued) {
+        figures.push({ text: parts.map((part) => (part.text ?? '').trim()).join('').slice(0, 40), size: Math.max(...parts.map((part) => part.size ?? 0)) })
+        figure = true
+      } else if (text && !/^h[1-6]$/.test(node.tag) && (node.size ?? 0) >= figureMin && FIGURE_TEXT.test(text)) {
+        figures.push({ text: text.slice(0, 40), size: node.size ?? 0 })
+      }
+    }
+    const nowInBlock = inBlock || (kind !== null && kind !== 'section')
+    for (const child of node.children) walk(child, nowInBlock, figure)
+  }
+  walk(page, false, false)
+  return {
+    words,
+    wordsAboveFold,
+    blocks: listed(blocks, limit),
+    blocksAboveFold: blocks.filter((block) => block.aboveFold).length,
+    figures: listed(figures, limit),
+    actions,
+    primary,
+    typeSizes: [...sizes].sort((a, b) => a - b),
+    colours: [...colours].sort(),
+    screens: fold > 0 ? Math.round((bottom / fold) * 10) / 10 : 0,
+  }
+}
+
+/** What a budget can limit, each read off a screen's density; every limit is a maximum. */
+export const BUDGET_MEASURES = {
+  words: (d: Density) => d.words,
+  wordsAboveFold: (d: Density) => d.wordsAboveFold,
+  blocks: (d: Density) => d.blocks.count,
+  blocksAboveFold: (d: Density) => d.blocksAboveFold,
+  figures: (d: Density) => d.figures.count,
+  actions: (d: Density) => d.actions,
+  primary: (d: Density) => d.primary,
+  typeSizes: (d: Density) => d.typeSizes.length,
+  colours: (d: Density) => d.colours.length,
+  screens: (d: Density) => d.screens,
+} as const
+
+export type Limits = Partial<Record<keyof typeof BUDGET_MEASURES, number>>
+/** Limits by route hash (`#/year`), with `*` for every route; a route's own win. */
+export type Budget = Readonly<Record<string, Limits>>
+
+/** The limits a budget sets on one route: `*`'s, then the route's own over them. */
+export function limitsFor(budget: Budget, route: string): Limits {
+  return { ...budget['*'], ...budget[route] }
+}
+
+/** Each limit a screen is over, named — `words 512 > 400` — and any limit no measure has. */
+export function overBudget(d: Density, limits: Limits): string[] {
+  const breaches: string[] = []
+  for (const [name, max] of Object.entries(limits)) {
+    const measure = (BUDGET_MEASURES as Record<string, ((d: Density) => number) | undefined>)[name]
+    if (measure === undefined) breaches.push(`${name} is not a measure (${Object.keys(BUDGET_MEASURES).join(', ')})`)
+    else if (typeof max === 'number' && measure(d) > max) breaches.push(`${name} ${String(measure(d))} > ${String(max)}`)
+  }
+  return breaches
+}
+
 export interface ProbeOptions {
   /** Hashes to visit, `#/formats` or `formats`; the current route when none. */
   readonly routes?: readonly string[]
@@ -110,9 +319,18 @@ export interface ProbeOptions {
    * document's own values, inside `Bidi`, left out. Put back when done.
    */
   readonly lang?: Language
+  /** What the density measures read: the screen, not the chrome — `main` by default (M64 U2). */
+  readonly screen?: string
+  /** Limits per route; each result names what it is over in `breaches` (M64 U2, D-612). */
+  readonly budget?: Budget
+  /**
+   * Leave the last route, theme, direction and words in place when done, so the
+   * caller can take a picture of what was measured (`--shots`, M64 U2).
+   */
+  readonly stay?: boolean
 }
 
-interface Listed<T> {
+export interface Listed<T> {
   readonly count: number
   readonly items: readonly T[]
 }
@@ -143,6 +361,10 @@ export interface ProbeResult {
    * screen laid out identically — how M60 U3 showed English did not move.
    */
   readonly boxes: string
+  /** How much the screen holds (M64 U2, D-612), measured inside `screen`. */
+  readonly density: Density
+  /** Each limit of the budget this screen is over; empty with no budget. */
+  readonly breaches: readonly string[]
 }
 
 const WHITE: Rgba = { r: 255, g: 255, b: 255, a: 1 }
@@ -324,7 +546,7 @@ function railSide(): 'left' | 'right' | 'none' {
   return rail.getBoundingClientRect().left < main.getBoundingClientRect().left ? 'left' : 'right'
 }
 
-function measure(root: Element, ramp: readonly number[], limit: number): Omit<ProbeResult, 'route' | 'theme' | 'width'> {
+function measure(root: Element, ramp: readonly number[], limit: number): Omit<ProbeResult, 'route' | 'theme' | 'width' | 'density' | 'breaches'> {
   const lowContrast: { text: string; ratio: number; needs: number; size: string }[] = []
   const offRamp: { text: string; size: string }[] = []
   const seen = new Set<Element>()
@@ -388,6 +610,46 @@ function measure(root: Element, ramp: readonly number[], limit: number): Omit<Pr
   }
 }
 
+/** The screen as `density` reads it: every element drawn, with its box, type and colours (M64 U2). */
+export function snapshot(el: Element): PageNode | null {
+  const cs = getComputedStyle(el)
+  if (cs.display === 'none' || cs.visibility === 'hidden' || el.classList.contains('sr-only')) return null
+  const box = el.getBoundingClientRect()
+  const tag = el.tagName.toLowerCase()
+  const text = [...el.childNodes]
+    .filter((node) => node.nodeType === Node.TEXT_NODE)
+    .map((node) => node.textContent ?? '')
+    .join(' ')
+    .trim()
+  const role = el.getAttribute('role') ?? (tag === 'a' && el.hasAttribute('href') ? 'link' : undefined)
+  const svgMark = el instanceof SVGElement && tag !== 'svg'
+  return {
+    tag,
+    role,
+    text: text || undefined,
+    top: box.top,
+    bottom: box.bottom,
+    width: box.width,
+    height: box.height,
+    size: parseFloat(cs.fontSize) || undefined,
+    color: cs.color,
+    background: cs.backgroundColor,
+    paint: svgMark ? [cs.fill, cs.stroke].filter((value) => value !== 'none' && !value.startsWith('url')) : undefined,
+    figure: el.hasAttribute('data-figure') || undefined,
+    block: el.getAttribute('data-block') ?? undefined,
+    primary: el.classList.contains('fc-btn-primary') || undefined,
+    label: el.getAttribute('aria-label') ?? undefined,
+    children: [...el.children].map(snapshot).filter((node): node is PageNode => node !== null),
+  }
+}
+
+/** The ramp's secondary-number step, the smallest a headline figure is drawn at; 20 px without one. */
+function figureMin(properties: readonly (readonly [string, string])[]): number {
+  const step = properties.find(([name]) => name === '--text-secondary-number')
+  const px = step ? /^\s*([\d.]+)px\s*$/.exec(step[1]) : null
+  return px?.[1] ? Number(px[1]) : 20
+}
+
 /** Resolves once nothing in the page has changed for `quietMs`, or after four seconds. */
 function settled(quietMs: number): Promise<void> {
   return new Promise((done) => {
@@ -425,7 +687,9 @@ export async function probe(options: ProbeOptions = {}): Promise<ProbeResult[]> 
   document.head.append(still)
   const quiet = options.settleMs ?? 250
   const limit = options.limit ?? 25
-  const ramp = rampSizes(cssProperties())
+  const properties = cssProperties()
+  const ramp = rampSizes(properties)
+  const headline = figureMin(properties)
   const routes = options.routes?.length ? options.routes : [startHash || '#/']
   const themes = options.themes?.length ? options.themes : [startTheme as 'light' | 'dark']
   const results: ProbeResult[] = []
@@ -449,19 +713,32 @@ export async function probe(options: ProbeOptions = {}): Promise<ProbeResult[]> 
           await settled(quiet)
         }
         const root = (options.root ? document.querySelector(options.root) : null) ?? document.body
-        results.push({ route: hash, theme, width: innerWidth, ...measure(root, ramp, limit) })
+        const screen = document.querySelector(options.screen ?? 'main') ?? document.body
+        const page = snapshot(screen)
+        const measured = page === null ? density({ tag: 'main', top: 0, bottom: 0, width: 0, height: 0, children: [] }, innerHeight) : density(page, innerHeight, headline, limit)
+        results.push({
+          route: hash,
+          theme,
+          width: innerWidth,
+          ...measure(root, ramp, limit),
+          density: measured,
+          breaches: options.budget ? overBudget(measured, limitsFor(options.budget, hash)) : [],
+        })
       }
     }
   } finally {
-    html.dataset.theme = startTheme
-    if (options.lang !== undefined) showLanguage(startLanguage)
-    if (options.dir !== undefined) {
-      if (startDir === null) html.removeAttribute('dir')
-      else html.dir = startDir
-      if (startLang === null) html.removeAttribute('lang')
-      else html.lang = startLang
+    // With `stay`, what was measured stays on screen for its picture.
+    if (options.stay !== true) {
+      html.dataset.theme = startTheme
+      if (options.lang !== undefined) showLanguage(startLanguage)
+      if (options.dir !== undefined) {
+        if (startDir === null) html.removeAttribute('dir')
+        else html.dir = startDir
+        if (startLang === null) html.removeAttribute('lang')
+        else html.lang = startLang
+      }
+      if (location.hash !== startHash) location.hash = startHash
     }
-    if (location.hash !== startHash) location.hash = startHash
     still.remove()
   }
   return results

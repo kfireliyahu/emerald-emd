@@ -64,6 +64,10 @@ Thumbs.db
 /dist-demo
 /.demo
 
+# `probe:screens --shots`' pictures of every screen and their contact sheet (M64 U2,
+# D-612): made from the demo documents, looked at, and never committed (D-608).
+/.probe
+
 # The desktop shell (M9). Built, not committed, like the other outputs.
 /dist-electron
 
