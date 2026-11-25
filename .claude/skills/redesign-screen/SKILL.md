@@ -68,6 +68,30 @@ beats a dialog wherever one can be offered. A form never floats in a dialog, and
 takes the page. A screen whose interaction fits none of the five stops and asks, rather than
 inventing a sixth.
 
+**And it behaves the way ordinary desktop apps have taught people to expect** (the maintainer,
+2026-11-25). The five places say *where*; these say *how*, and the taste check walks every
+interaction against them:
+
+- **Deleting deletes, with an undo.** Select, press Delete or the row's action, and it is gone
+  at once, with a small *Deleted · Undo* note near where it happened that fades after a few
+  seconds. No question first. Where an undo is truly impossible, the question is a small
+  confirmation **anchored to the button that asked**, with the thing named ("Delete 3
+  entries?"), never a bar at the bottom of the screen or a box far from the click. The
+  maintainer's own example of what is wrong: a row selected inside a filter, deleted from its
+  entry, opened a confirmation at the bottom of the screen.
+- **Selection acts where it is.** Selected rows show their few actions in the list's own header
+  row, in place of its column names, the way a mail client does; not in a bar that appears
+  elsewhere on the screen.
+- **The keys do what they do everywhere.** Esc closes the panel or popover on top and nothing
+  else; Enter saves a form; Delete deletes the selection; Ctrl+Z undoes; arrows move in a list;
+  Tab walks a form in reading order.
+- **Nothing moves under the pointer.** Saving, deleting or filtering keeps the person's place,
+  scroll and selection; a panel opens without shifting the page beneath it.
+- **One way out.** Every panel, popover and step page has one visible close or back, top corner
+  for a panel, and clicking outside a popover closes it.
+- **Ask: would someone who uses ordinary desktop apps be surprised?** If yes, it is wrong even
+  when it fits a rule here. Write each surprise found and its fix in the report.
+
 ## 3. Build from the kit
 
 - **The displays from the kit, never a one-off.** A shape the kit lacks gets a display in

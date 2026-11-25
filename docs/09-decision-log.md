@@ -1291,6 +1291,15 @@ of its own with one way back; choosing from a list or a menu, a popover anchored
 it. A dialog is only for confirming what cannot be undone, and an undo beats it where one can be
 offered. An interaction that fits none stops the unit and asks.
 
+**And it behaves as ordinary desktop apps have taught people to expect** (the maintainer, the same
+day): deleting deletes at once with an undo near where it happened, and where no undo is possible
+the confirmation is anchored to the button that asked and names the thing, never a bar at the
+bottom of the screen (his example: a row selected inside a filter, deleted from its entry, asked
+at the bottom of the screen). Selected rows act in the list's own header; Esc, Enter, Delete,
+Ctrl+Z, the arrows and Tab do what they do everywhere; nothing moves under the pointer; every
+panel has one visible way out. The taste check asks of each interaction whether someone who uses
+ordinary apps would be surprised, and a surprise is wrong even where it fits a rule.
+
 **Why.** One place per kind of act is what makes a screen learnable once and the rest predictable;
 left to each unit, ten screens would make ten choices. It extends *Detail opens beside the page*
 rather than adding a pattern.
