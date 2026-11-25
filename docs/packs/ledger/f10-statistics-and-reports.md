@@ -19,8 +19,9 @@ not about redefining the math.
   these apps quietly lie.
 - **Partial months are labeled** and excluded from averages.
 - **Aggregation happens in SQL.** With 60k transactions, folding in memory is not an option.
-- **One date basis, applied consistently.** Charge date by default; the setting applies
-  everywhere at once, and the current basis is shown on the screen.
+- **One date basis, applied consistently.** A card purchase in the month it was bought, an
+  installment one payment a month (D-607); written once, so every screen changes at once. A month
+  is partial until the card statements covering it are read (docs/05).
 
 ## Monthly summary
 

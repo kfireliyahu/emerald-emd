@@ -177,34 +177,38 @@ function ids(db: Database, filter: Parameters<typeof listTransactions>[1]): stri
 }
 
 describe('listTransactions', () => {
-  it('returns the whole ledger, most recently charged first', async () => {
+  /**
+   * Changed on purpose (D-607): the list is ordered by the day a row counts on,
+   * the statistics' own basis — a card purchase the day it was bought, and the
+   * second slice of an installment bought 14 July a month later, 14 August.
+   * Was: by the charge date, the refund first.
+   */
+  it('returns the whole ledger, the day a row counts on newest first', async () => {
     const db = await seeded()
-    // Five rows share the 2 August charge date, which is the normal shape of a
-    // card statement rather than an edge case — so the purchase date is what
-    // actually orders them, and it is the column the eye scans.
     expect(ids(db, {})).toEqual([
+      'tx-abroad',
       'tx-refund',
       'tx-electric',
-      'tx-abroad',
       'tx-amazon',
       'tx-groceries',
       'tx-steam',
     ])
   })
 
-  it('ranges over the charge date, falling back to the transaction date', async () => {
+  it('ranges over the day a card purchase was bought, not the day it was charged (D-607)', async () => {
     const db = await seeded()
-    // Bought 15 June, charged 2 July: an August range must not contain it, and
-    // a July one must — the charge date is what the filter reads.
-    expect(ids(db, { from: localDate(2026, 8, 1), to: localDate(2026, 8, 31) })).not.toContain(
+    // Bought 15 June, charged 2 July: a July range must not contain it, and a
+    // June one must — so a month opened from Home lists what Home counted.
+    // Changed on purpose: it read the charge date.
+    expect(ids(db, { from: localDate(2026, 7, 1), to: localDate(2026, 7, 31) })).not.toContain(
       'tx-steam',
     )
-    expect(ids(db, { from: localDate(2026, 7, 1), to: localDate(2026, 7, 31) })).toEqual(['tx-steam'])
+    expect(ids(db, { from: localDate(2026, 6, 1), to: localDate(2026, 6, 30) })).toEqual(['tx-steam'])
   })
 
   it('includes the bounds themselves', async () => {
     const db = await seeded()
-    expect(ids(db, { from: localDate(2026, 7, 2), to: localDate(2026, 7, 2) })).toEqual(['tx-steam'])
+    expect(ids(db, { from: localDate(2026, 6, 15), to: localDate(2026, 6, 15) })).toEqual(['tx-steam'])
   })
 
   it('filters by account', async () => {
@@ -278,8 +282,8 @@ describe('listTransactions', () => {
     expect(
       ids(db, {
         accountId: ACCOUNT_A,
-        from: localDate(2026, 8, 1),
-        to: localDate(2026, 8, 31),
+        from: localDate(2026, 7, 1),
+        to: localDate(2026, 7, 31),
         min: fromMajorUnits(300, 'ILS'),
       }).sort(),
     ).toEqual(['tx-electric', 'tx-groceries'])
@@ -501,11 +505,11 @@ describe('setTransactionNote', () => {
 describe('setExcludedFromStats', () => {
   it('takes a row out of the monthly totals without removing it from the ledger', async () => {
     const db = await seeded()
-    const before = monthlyTotals(db).find((month) => month.period === '2026-08' && month.currency === 'ILS')
+    const before = monthlyTotals(db).find((month) => month.period === '2026-07' && month.currency === 'ILS')
 
     setExcludedFromStats(db, 'tx-electric', true, 2)
 
-    const after = monthlyTotals(db).find((month) => month.period === '2026-08' && month.currency === 'ILS')
+    const after = monthlyTotals(db).find((month) => month.period === '2026-07' && month.currency === 'ILS')
     expect(before!.outflowMinor - after!.outflowMinor).toBe(120000)
     expect(ids(db, {})).toContain('tx-electric')
     expect(findTransactionById(db, 'tx-electric')?.isExcludedFromStats).toBe(true)

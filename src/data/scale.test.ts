@@ -217,8 +217,10 @@ describe('ten years of transactions', () => {
 
     const month = measure('ledger, one month', () =>
       listTransactions(db, {
-        from: localDate(2026, 6, 1),
-        to: monthEnd({ year: 2026, month: 6 }),
+        // May, not June: a row counts the day it was bought (D-607), and the
+        // ledger's last month holds fewer than a page of them.
+        from: localDate(2026, 5, 1),
+        to: monthEnd({ year: 2026, month: 5 }),
       }),
     )
     expect(month).toHaveLength(500)

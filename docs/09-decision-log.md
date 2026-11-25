@@ -509,6 +509,7 @@ written out here.
 | D-606 | 2026-11-25 | The UI is redesigned, not reviewed again: three working directions for the maintainer to pick one, screens built for a newcomer, density measured and budgeted, what leaves a screen kept one click behind, the ledger first and then the engine | M64 |
 | D-607 | 2026-11-25 | A month counts a card purchase in the month it was bought, saved is what was put aside from that month's money, and Home opens on the last finished month | M64 |
 | D-608 | 2026-11-25 | No session reads the maintainer's own documents any more: a synthetic year stands in, the session picks the design direction, his one look is the real Home in the app, and an Impeccable finish review checks taste in his place | M64 |
+| D-609 | 2026-11-25 | How D-607 is built: one basis file every month's figure reads, a card holds a month open until its next statement is read, saved never above a positive left over, and what stays on the charge date | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -956,6 +957,43 @@ again: only demos.
 
 **Rejected.** Figma: a sign-in, and another place he would have to look. A chart library: a
 dependency, and against offline.
+
+## D-609 · 2026-11-25 · How D-607 is built: one basis file every month's figure reads, a card holds a month open until its next statement is read, saved never above a positive left over, and what stays on the charge date <a id="d-609"></a>
+
+**Context.** M64 U1 builds D-607, which left the mechanics to the unit: where the basis lives,
+how a month knows its card statement is read, what saved is when nothing was left over, and which
+readers of the old basis are about a month and which about an account.
+
+**Decision.**
+
+- **The basis is one file**, `src/data/repositories/monthBasis.ts`: `spentOn` (the purchase's day,
+  an installment's slice *k* shifted *k − 1* months, clamped to the month's last day) for every
+  figure about a month — statistics, the category totals, the ledger's month totals and its date
+  range and order, the rail; and `chargedOn` / `billedIn` for what is about the account — a
+  statement's months (missing statements), a debt's paid slices, the bill detector's cadence, the
+  rule re-apply order. Every `COALESCE(charge_date, transaction_date)` in the repositories is one of
+  them now. **The Transactions list ranges and sorts on `spentOn`**, so a month opened from Home
+  lists what Home counted; an installment's later slice sorts in the month it counts in.
+- **A card blocks a month** when it is a `CREDIT_CARD` account, not archived, its first statement
+  month (`billing_period`, else the charge month) is at or before the month, and its statement of
+  the month after is missing — inside its run, or past its last while that last is no more than
+  `RECENT` (two) months before the month the report is read in. Older than that is a card put away,
+  `statementGaps`' own rule, so a closed card does not hold every month open for ever.
+- **Saved is `min(moved, max(left over, 0))`** when moved is positive: a month that left nothing saved
+  nothing of its own and all it moved came from earlier savings; a negative moved (money taken back
+  out) stays a negative saved (D-309). `MonthSummary` and `YearOverview` carry `moved`,
+  `fromEarlierSavings` and `offPaycheck` for U5 to show.
+- **The ledger's declared `spending` rollup is reworded to `by month of transaction_date`**; the
+  pack's rewording reaches an existing document on open (M36 U04). A rollup cannot shift a slice,
+  so there an installment's slices sit in the purchase's month — the one place they differ.
+- **`month_summary` opens on the last finished month** too, as Home does; `year_summary` stays on
+  the current year.
+
+**Rejected.** A setting for the basis (docs/05 promised one; nobody asked, and two bases are two
+answers).
+Reading the card's billing cycle off the account to know which statement covers a month: the rows
+already say which months a card was billed in. Counting an installment's whole price in the
+purchase month: D-607's default is one a month, and it is one line in `monthBasis.ts` to change.
 
 ## Related
 

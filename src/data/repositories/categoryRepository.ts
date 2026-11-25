@@ -9,6 +9,7 @@ import { deleteRows, insertRows, updateRow } from './formatRowRepository.ts'
 import { refileFixedExpenses } from './fixedExpenseRepository.ts'
 import { countsCondition, isMovedKind } from './movedRepository.ts'
 import { reaimBuckets } from './splitPlanRepository.ts'
+import { spentIn, spentOn } from './monthBasis.ts'
 
 export type CategoryKind = 'EXPENSE' | 'INCOME' | 'TRANSFER' | 'SAVING' | 'DEBT_PAYMENT'
 
@@ -770,7 +771,7 @@ export function categoryTotals(db: Database, period: string): readonly CategoryT
        LEFT JOIN fmt_category p ON p.id = c.parent
        LEFT JOIN fmt_category g ON g.id = p.parent
       WHERE ${countsCondition('t')}
-        AND substr(COALESCE(t.charge_date, t.transaction_date), 1, 7) = ?
+        AND ${spentIn('t')} = ?
       GROUP BY t.category, t.amount_currency
       ORDER BY outflow DESC`,
     [period],
@@ -821,7 +822,7 @@ export function categoryActivity(
     db,
     `SELECT category AS category_id,
             COUNT(*) AS n,
-            MAX(COALESCE(charge_date, transaction_date)) AS last_used
+            MAX(${spentOn()}) AS last_used
        FROM fmt_transaction
       WHERE category IS NOT NULL
       GROUP BY category`,
@@ -834,7 +835,7 @@ export function categoryActivity(
        FROM fmt_transaction
       WHERE category IS NOT NULL
         AND ${countsCondition()}
-        AND COALESCE(charge_date, transaction_date) >= ?
+        AND ${spentOn()} >= ?
       GROUP BY category, amount_currency
       HAVING outflow > 0`,
     [since],
@@ -912,11 +913,11 @@ export function categorySeries(
 
   const rows = query(
     db,
-    `SELECT category AS id, substr(COALESCE(charge_date, transaction_date), 1, 7) AS period,
+    `SELECT category AS id, ${spentIn()} AS period,
             SUM(CASE WHEN ${flow === 'OUT' ? 'amount_minor < 0 THEN -amount_minor' : 'amount_minor > 0 THEN amount_minor'} ELSE 0 END) AS outflow
        FROM fmt_transaction
       WHERE category IS NOT NULL AND ${countsCondition()} AND amount_currency = ?
-        AND substr(COALESCE(charge_date, transaction_date), 1, 7) BETWEEN ? AND ?
+        AND ${spentIn()} BETWEEN ? AND ?
       GROUP BY category, period`,
     [currency, periods[0] ?? end, end],
   )
@@ -957,7 +958,7 @@ export function categoryMerchants(
             SUM(CASE WHEN amount_minor < 0 THEN -amount_minor ELSE 0 END) AS outflow
        FROM fmt_transaction
       WHERE category = ? AND ${countsCondition()} AND amount_currency = ?
-        AND substr(COALESCE(charge_date, transaction_date), 1, 7) BETWEEN ? AND ?
+        AND ${spentIn()} BETWEEN ? AND ?
       GROUP BY merchant_normalized
       ORDER BY outflow DESC
       LIMIT ?`,

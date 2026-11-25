@@ -56,10 +56,24 @@ Three different dates exist and they are not interchangeable:
 | `chargeDate` | when money left the account | cash-flow, bank reconciliation |
 | `billingPeriod` | which statement it appeared on | matching the card's monthly charge |
 
-**Default statistics basis: `chargeDate`, falling back to `transactionDate` when null.**
-Rationale: the monthly summary should match what left the bank account. A global setting can
-switch to `transactionDate`; every stats query takes the basis as a parameter rather than
-hardcoding it.
+**Statistics basis: the purchase — a card purchase counts in the month it was bought** (D-607,
+reversing D-006 for spending). A month read as *October* holds October's shopping beside October's
+rent and payslip, not September's card bill. **An installment counts one payment a month from the
+purchase**: slice *k* of *n* in the purchase's month plus *k − 1*, on the same day or the month's
+last (D-607's default, not yet asked — D-609). The basis is written once, in
+`src/data/repositories/monthBasis.ts`, and Home, Year, the comparisons, the category breakdown,
+the ledger's month totals, `month_summary` and `year_summary` all read it, so they change together.
+**What is about the account rather than the month reads the charge date**: a statement's months
+(the missing-statement rows), a debt's paid slices and a recurring charge's cadence. There is no
+setting for the basis.
+
+**A month is finished when the calendar has left it and its card statements are read** (D-607).
+A card bills a month's purchases the month after, so each card in use needs its statement of the
+next month: a card blocks a month when its first statement is at or before it and the next month's
+is missing — inside its run, or after its last while it is still recent. A card quiet for longer
+than two months is a card put away and blocks nothing after its last statement (`statementGaps`'
+rule), and an archived card blocks nothing. Nothing is stored: a document made before reads with
+this rule.
 
 ### Financial month
 
@@ -224,8 +238,9 @@ fixture is a list of transactions in a test rather than a spreadsheet.
   but still a candidate.
 - Date stability: the spread of day-of-month below three days raises confidence, measured with
   wraparound so the 31st and the 1st are one day apart rather than thirty. **The day is the
-  purchase's, not the statement's** (M37 F2): the month a row counts in is its charge date (D-006),
-  but a card charges every line on one day, so reading the day from it made every shop keep one.
+  purchase's, not the statement's** (M37 F2): detection still buckets a row by its charge date
+  (a bill is about the account, D-609), but a card charges every line on one day, so reading the
+  day from it made every shop keep one.
 - **The two signals are evidence, not only score** (M37 F2). Every candidate keeps one of them — a
   figure inside the 10% band, or a steady day — so a shop visited every month with neither is never
   offered. **Two months need both, and the figure to the agora**: two statements hold two of every
@@ -430,11 +445,22 @@ Precise definitions so charts and tables never disagree:
   ledger's `transaction.spending` rollup, and the Statistics screen reads its filters (M36 U04,
   D-380): not left out by the person or a card settlement, not held,
   not Money moved — plus what only code says, a row a person's format links or a paired transfer.
-- **Balance (month)** = Income − Expenses. Savings deposits are *not* subtracted here; they are
-  shown as a separate "of which saved" figure, because saving is not spending.
+- **Balance (month)** = Income − Expenses — on screen, *left over*. Savings deposits are *not*
+  subtracted here; they are shown as a separate "of which saved" figure, because saving is not
+  spending.
+- **Saved (month)** = what was put aside from this month's money (D-607): the net money moved into
+  savings and goals that nothing else counts (money moved, and goal deposits that are not a slip's,
+  an opening balance or growth), **but never more than the month left over**. What moved beyond it
+  is *from earlier savings*, said beside it; a month that left nothing saved nothing of its own,
+  and money that came back out of savings is a negative saved (D-309). **The slip's saving lines
+  (pension, study fund) are a line of their own, never part of saved** — came in is net pay, so
+  that money never came in. **Savings rate** = saved ÷ income, so never above 100%. The paycheck
+  screen's *effective savings rate* above is a different question, against total compensation.
 - **Category totals** roll subcategories into their parent, with a toggle for the flat view.
-- **Year totals** sum monthly figures on the same basis. A partial current month is labeled as
-  such and excluded from averages.
+- **Year totals** sum monthly figures on the same basis. A partial month — still running, or
+  waiting for a card statement — is labeled as such and excluded from averages.
+- **Home and `month_summary` open on the last finished month**, not the month still running; the
+  running month is one step forward (D-607).
 - **Uncategorized** always appears as its own visible slice. Never hide it — hidden
   uncategorized spending is how these apps lose trust.
 

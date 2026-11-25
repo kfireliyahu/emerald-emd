@@ -1,9 +1,17 @@
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { gunzipSync } from 'node:zlib'
+
 import { createLedgerDatabase, insertTransaction } from '@/data/packs/ledger/testing.ts'
 import type { Database } from 'sql.js'
 import { describe, expect, it } from 'vitest'
 
 import { money } from '@/core/money.ts'
-import { localDate } from '@/core/time.ts'
+import { localDate, type LocalDate } from '@/core/time.ts'
+import { openDatabase } from '@/data/db/database.ts'
+import { bringUpToDate } from '@/data/packs/packs.ts'
+import { rollupText } from '@/domain/format/rollup.ts'
+import { readFormat } from './formatRepository.ts'
 import { createAccount } from './accountRepository.ts'
 import { createCategory, setCategoryManually } from './categoryRepository.ts'
 import { isMovedKind, movedLines } from './movedRepository.ts'
@@ -28,7 +36,7 @@ import {
   yearCategoryObservations,
   yearlyReport,
 } from './statisticsRepository.ts'
-import { incomeDetail, monthSummary } from '@/domain/statistics.ts'
+import { incomeDetail, lastFinishedMonth, monthSummary } from '@/domain/statistics.ts'
 import { read } from '@/domain/format/artefact.ts'
 import type { FormatDeclaration } from '@/domain/format/declaration.ts'
 import { adoptFormat, listFormats } from './formatRepository.ts'
@@ -77,9 +85,10 @@ async function withAccount(): Promise<Database> {
 }
 
 describe('monthObservations', () => {
-  it('groups on the charge date, falling back to the transaction date', async () => {
+  /** Changed on purpose (D-607): was July, the month it was charged (D-006). */
+  it('groups on the day a purchase was bought, not the day it was charged', async () => {
     const db = await withAccount()
-    // Bought in June, charged in July: it belongs to July (D-006).
+    // Bought in June, charged in July: it belongs to June.
     insertTransaction(
       db,
       row({ id: 'a', transactionDate: localDate(2026, 6, 28), chargeDate: localDate(2026, 7, 2) }),
@@ -89,8 +98,8 @@ describe('monthObservations', () => {
 
     const months = monthObservations(db, AS_OF)
 
-    expect(months.map((one) => one.period.month)).toEqual([6, 7])
-    expect(months[0]?.outflow).toEqual(ils(100_00))
+    expect(months.map((one) => one.period.month)).toEqual([6])
+    expect(months[0]?.outflow).toEqual(ils(200_00))
   })
 
   it('reports spending as a magnitude and keeps refunds out of it', async () => {
@@ -202,7 +211,9 @@ describe('what counts as saved', () => {
     expect(june?.payrollSaved).toEqual(ils(1_200_00))
     // The deposit the payslip generated is already in `payrollSaved`.
     expect(june?.deposited).toEqual(ils(0))
-    expect(monthlySummaries(db, AS_OF)[0]?.saved).toEqual(ils(1_200_00))
+    // Changed on purpose (D-607): the slip's line is beside saved, not in it. Was saved 1,200.
+    expect(monthlySummaries(db, AS_OF)[0]?.saved).toEqual(ils(0))
+    expect(monthlySummaries(db, AS_OF)[0]?.offPaycheck).toEqual(ils(1_200_00))
   })
 
   /**
@@ -214,8 +225,10 @@ describe('what counts as saved', () => {
 
     const summary = monthlySummaries(db, AS_OF)[0]
 
-    // 1,200 of 14,000 net.
-    expect(summary?.savingsRateBasisPoints).toBe(857)
+    // The employee's 1,200, never the employer's 1,300 — and beside saved, so
+    // the rate is nothing (D-607; was 1,200 of 14,000 net, 857).
+    expect(summary?.offPaycheck).toEqual(ils(1_200_00))
+    expect(summary?.savingsRateBasisPoints).toBe(0)
   })
 
   it('counts a deposit the user made by hand', async () => {
@@ -345,7 +358,8 @@ describe('categoryObservations', () => {
 })
 
 describe('dayObservations', () => {
-  it('groups by the day money left, on the same basis as everything else', async () => {
+  /** Changed on purpose (D-607): was the day money left, so 'c' was on 9 June. */
+  it('groups by the day it was bought, on the same basis as everything else', async () => {
     const db = await withAccount()
     insertTransaction(db, row({ id: 'a', transactionDate: localDate(2026, 6, 3) }), NOW)
     insertTransaction(db, row({ id: 'b', transactionDate: localDate(2026, 6, 3) }), NOW)
@@ -357,9 +371,8 @@ describe('dayObservations', () => {
 
     const days = dayObservations(db, { year: 2026, month: 6 })
 
-    expect(days).toHaveLength(2)
-    expect(days[0]).toEqual({ date: localDate(2026, 6, 3), outflow: ils(200_00) })
-    expect(days[1]?.date).toEqual(localDate(2026, 6, 9))
+    expect(days).toEqual([{ date: localDate(2026, 6, 3), outflow: ils(200_00) }])
+    expect(dayObservations(db, { year: 2026, month: 5 })).toEqual([{ date: localDate(2026, 5, 30), outflow: ils(100_00) }])
   })
 })
 
@@ -461,7 +474,8 @@ describe('monthlyReport', () => {
 describe('yearCategoryObservations', () => {
   it('sums a category across the whole year, on the same basis as a month does', async () => {
     const { db } = await withCategories()
-    // Charged in January of the next year, so it belongs to that year (D-006).
+    // Charged in January of the next year, but bought in December: it belongs
+    // to the year it was bought (D-607; was the next year's, D-006).
     insertTransaction(
       db,
       row({
@@ -481,9 +495,9 @@ describe('yearCategoryObservations', () => {
     const year = yearCategoryObservations(db, 2026)
     const uncategorized = year.find((one) => one.categoryId === undefined)
 
-    // June's 90 plus March's 110. December's row is charged in 2027.
-    expect(uncategorized?.outflow).toEqual(ils(200_00))
-    expect(yearCategoryObservations(db, 2027).length).toBe(1)
+    // June's 90, March's 110 and December's 70, though it was charged in 2027.
+    expect(uncategorized?.outflow).toEqual(ils(270_00))
+    expect(yearCategoryObservations(db, 2027)).toEqual([])
   })
 
   /** The month and the year read the same rows, because they share one query. */
@@ -895,7 +909,11 @@ Several transfers into one thing.
     // Net: 3,000 went in and 500 came back out.
     expect(june.moved).toEqual(ils(2_500_00))
     expect(summary.expenses).toEqual(ils(100_00))
-    expect(summary.saved).toEqual(ils(2_500_00))
+    // Nothing came in, so none of it was this month's money (D-607): it all came
+    // from earlier savings. Changed on purpose: saved was 2,500.
+    expect(summary.moved).toEqual(ils(2_500_00))
+    expect(summary.saved).toEqual(ils(0))
+    expect(summary.fromEarlierSavings).toEqual(ils(2_500_00))
     expect(categoryObservations(db, JUNE).map((one) => one.name)).toEqual(['Uncategorized'])
   })
 
@@ -952,7 +970,9 @@ describe('a Money moved category is moved (M28 F4, D-316)', () => {
 
     expect(june.outflow).toEqual(ils(100_00))
     expect(june.moved).toEqual(ils(3_000_00))
-    expect(monthSummary(june).saved).toEqual(ils(3_000_00))
+    // What moved; saved is none of it, as nothing came in (D-607, changed on purpose: was 3,000).
+    expect(monthSummary(june).moved).toEqual(ils(3_000_00))
+    expect(monthSummary(june).saved).toEqual(ils(0))
     expect(categoryObservations(db, { year: 2026, month: 6 }).map((one) => one.name)).toEqual(['Eating'])
     expect(movedLines(db, '2026-06', 'ILS')).toEqual([
       { categoryId: ids.investments, name: 'Brokerage', netMinor: 3_000_00, transactionCount: 1 },
@@ -1051,7 +1071,8 @@ A thing I own.
  * which Saved has always counted and nothing on the page listed.
  */
 describe('where saved came from (M30 F1)', () => {
-  it('lists what moved, the slip lines and the goal deposits, and they add to saved', async () => {
+  /** Changed on purpose (D-607): the slip lines are listed beside saved and no longer add to it. */
+  it('lists what moved, the goal deposits and the slip lines, and the first two add to saved', async () => {
     const db = await withAccount()
     const transfer = createCategory(db, { name: 'To the broker', kind: 'TRANSFER' }, NOW)
     insertTransaction(db, row({ id: 'move', amount: ils(-5_000_00) }), NOW)
@@ -1092,9 +1113,10 @@ describe('where saved came from (M30 F1)', () => {
     expect(report.savedFrom.goals).toEqual([{ goalId: goal.id, name: 'Trip', amount: ils(300_00), count: 1 }])
     const parts =
       report.moved.reduce((total, one) => total + one.netMinor, 0) +
-      report.savedFrom.slips.reduce((total, one) => total + one.amount.minor, 0) +
       report.savedFrom.goals.reduce((total, one) => total + one.amount.minor, 0)
-    expect(report.summary?.saved).toEqual(ils(parts))
+    expect(report.summary?.moved).toEqual(ils(parts))
+    expect(report.summary?.saved).toEqual(ils(parts - (report.summary?.fromEarlierSavings.minor ?? 0)))
+    expect(report.summary?.offPaycheck).toEqual(ils(800_00))
   })
 
   it('does not list a deposit a payslip made, as saved does not count it twice', async () => {
@@ -1127,7 +1149,9 @@ describe('where saved came from (M30 F1)', () => {
 
     expect(report.savedFrom.goals).toEqual([])
     expect(report.savedFrom.slips.map((one) => one.amount)).toEqual([ils(1_200_00)])
-    expect(report.summary?.saved).toEqual(ils(1_200_00))
+    // Beside saved, not in it (D-607; was saved 1,200).
+    expect(report.summary?.offPaycheck).toEqual(ils(1_200_00))
+    expect(report.summary?.saved).toEqual(ils(0))
   })
 })
 
@@ -1151,3 +1175,133 @@ describe('largestCharges (M30 F1)', () => {
     expect(largestCharges(db, { year: 2026, month: 6 }, 1).map((one) => one.id)).toEqual(['rent'])
   })
 })
+
+/**
+ * **The month as a person reads it** (M64 U1, D-607): a card purchase in the
+ * month it was bought, a month partial until the card statement covering it is
+ * read, an installment one payment a month, and saved what was put aside from
+ * the month's own money. Synthetic rows only (D-608).
+ */
+describe('the month as a person reads it (D-607)', () => {
+  const CARD = 'card-1'
+
+  async function withCard(ready?: Database): Promise<Database> {
+    const db = ready ?? (await withAccount())
+    createAccount(db, { name: 'Visa', kind: 'CREDIT_CARD', last4: '9999' }, NOW)
+    db.run("UPDATE fmt_account SET id = ? WHERE last4 = '9999'", [CARD])
+    return db
+  }
+
+  /** A card row bought on `bought` and charged on the 2nd of the month after. */
+  function onCard(id: string, bought: LocalDate, minor: number, extra: Partial<InsertableTransaction> = {}): InsertableTransaction {
+    const charged = bought.month === 12 ? localDate(bought.year + 1, 1, 2) : localDate(bought.year, bought.month + 1, 2)
+    return row({ id, accountId: CARD, transactionDate: bought, chargeDate: charged, amount: ils(-minor), ...extra })
+  }
+
+  it('lands a card bill charged on the 2nd of the next month in the month its purchases were bought', async () => {
+    const db = await withCard()
+    insertTransaction(db, onCard('may', localDate(2026, 5, 20), 300_00), NOW)
+    insertTransaction(db, onCard('june', localDate(2026, 6, 14), 450_00), NOW)
+    insertTransaction(db, row({ id: 'rent', transactionDate: localDate(2026, 6, 1), amount: ils(-4_000_00) }), NOW)
+
+    const months = monthObservations(db, AS_OF)
+
+    // June's rent beside June's shopping, and nothing in July, when June's bill was charged.
+    expect(months.map((one) => one.period.month)).toEqual([5, 6])
+    expect(months[1]?.outflow).toEqual(ils(4_450_00))
+    expect(largestCharges(db, JUNE_MONTH, 5).map((one) => one.id)).toEqual(['rent', 'june'])
+  })
+
+  it('leaves a month partial until the card statement covering it is read, and Home opens on the last finished one', async () => {
+    const db = await withCard()
+    insertTransaction(db, onCard('may', localDate(2026, 5, 20), 300_00), NOW)
+    insertTransaction(db, onCard('june', localDate(2026, 6, 14), 450_00), NOW)
+    insertTransaction(db, row({ id: 'salary', transactionDate: localDate(2026, 7, 10), amount: ils(9_000_00), direction: 'INFLOW' }), NOW)
+    insertTransaction(db, row({ id: 'august', transactionDate: localDate(2026, 8, 3) }), NOW)
+
+    const before = monthlySummaries(db, AS_OF)
+    // July has left the calendar, but its purchases come on the bill of 2 August, not read.
+    expect(before.find((one) => one.period.month === 6)?.isComplete).toBe(true)
+    expect(before.find((one) => one.period.month === 7)?.isComplete).toBe(false)
+    // Read in August: Home opens on June, not on July nor on the running August.
+    expect(lastFinishedMonth(before)).toEqual(JUNE_MONTH)
+
+    insertTransaction(db, onCard('july', localDate(2026, 7, 22), 120_00), NOW)
+    const after = monthlySummaries(db, AS_OF)
+    expect(after.find((one) => one.period.month === 7)?.isComplete).toBe(true)
+    expect(lastFinishedMonth(after)).toEqual({ year: 2026, month: 7 })
+  })
+
+  it('counts an installment of three one payment a month from the purchase', async () => {
+    const db = await withCard()
+    // Bought 31 March in three; the card repeats the purchase day on every slice.
+    for (const sequence of [1, 2, 3]) {
+      insertTransaction(
+        db,
+        onCard(`slice-${String(sequence)}`, localDate(2026, 3, 31), 100_00, {
+          chargeDate: localDate(2026, 3 + sequence, 2),
+          installment: { sequence, total: 3, groupKey: 'sofa', originalTotal: ils(300_00) },
+        }),
+        NOW,
+      )
+    }
+
+    const months = monthObservations(db, AS_OF)
+
+    expect(months.map((one) => [one.period.month, one.outflow.minor])).toEqual([
+      [3, 100_00],
+      [4, 100_00],
+      [5, 100_00],
+    ])
+    // April has thirty days, so its payment is on the 30th.
+    expect(dayObservations(db, { year: 2026, month: 4 })).toEqual([{ date: localDate(2026, 4, 30), outflow: ils(100_00) }])
+  })
+
+  it('splits a transfer larger than the month left over into saved and from earlier savings', async () => {
+    const db = await withAccount()
+    const broker = createCategory(db, { name: 'To the broker', kind: 'TRANSFER' }, NOW)
+    createPaycheck(
+      db,
+      { period: { year: 2026, month: 6 }, paymentDate: localDate(2026, 7, 1), gross: ils(14_000_00), net: ils(10_000_00), lines: [] },
+      NOW,
+    )
+    insertTransaction(db, row({ id: 'shop', amount: ils(-4_000_00) }), NOW)
+    insertTransaction(db, row({ id: 'move', amount: ils(-9_000_00) }), NOW)
+    setCategoryManually(db, 'move', broker, NOW)
+
+    const june = monthlySummaries(db, AS_OF)[0]
+
+    expect(june?.balance).toEqual(ils(6_000_00))
+    expect(june?.moved).toEqual(ils(9_000_00))
+    expect(june?.saved).toEqual(ils(6_000_00))
+    expect(june?.fromEarlierSavings).toEqual(ils(3_000_00))
+    // Saved over came in: never above 100%.
+    expect(june?.savingsRateBasisPoints).toBe(6000)
+    expect(yearlyReport(db, 2026, AS_OF)).toMatchObject({ saved: ils(6_000_00), fromEarlierSavings: ils(3_000_00) })
+  })
+
+  it('reads a document made before M60 U6 with the new rule, and stores nothing for it', async () => {
+    // Made by `create_document` with the ledger on the build at e3f6231 (D-576).
+    const fixture = gunzipSync(
+      readFileSync(fileURLToPath(new URL('../../../fixtures/synthetic/ledger-before-m60-u6.emd.gz', import.meta.url))),
+    )
+    const db = await openDatabase(fixture)
+    expect(bringUpToDate(db, NOW).ok).toBe(true)
+    createAccount(db, { name: 'Hapoalim', kind: 'BANK', last4: '4321' }, NOW)
+    db.run("UPDATE fmt_account SET id = ? WHERE last4 = '4321'", [ACCOUNT])
+    await withCard(db)
+    insertTransaction(db, onCard('june', localDate(2026, 6, 28), 450_00), NOW)
+    const schema = (): unknown => db.exec('SELECT name, sql FROM sqlite_master ORDER BY name')
+    const before = schema()
+
+    const months = monthObservations(db, AS_OF)
+
+    expect(months.map((one) => [one.period.month, one.outflow.minor, one.isComplete])).toEqual([[6, 450_00, true]])
+    expect(schema()).toEqual(before)
+    // Its declared spending is by the month bought too: the pack's reworded rule reached it on open.
+    const spending = readFormat(db, 'transaction')?.rollups?.find((one) => one.name === 'spending')
+    expect(spending === undefined ? '' : rollupText(spending)).toContain('by month of transaction_date and')
+  })
+})
+
+const JUNE_MONTH = { year: 2026, month: 6 }

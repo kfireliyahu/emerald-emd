@@ -303,12 +303,13 @@ describe('staging and committing a real parse', () => {
       expect(row?.installment?.groupKey).toBeTruthy()
     })
 
-    it('totals the month on the charge date', () => {
+    it('totals the month the purchases were bought, not the month they were charged (D-607)', () => {
       stageAndCommit()
       const months = monthlyTotals(db)
-      // Every charge date in the fixture is 2026-08-02, so one bucket.
+      // Every charge date in the fixture is 2026-08-02 and every purchase is in
+      // July, so one bucket, July's. Changed on purpose: it was August (D-006).
       expect(months).toHaveLength(1)
-      expect(months[0]?.period).toBe('2026-08')
+      expect(months[0]?.period).toBe('2026-07')
       // Outflows only; the refund lands in inflow. Note AMAZON's charge is the
       // 158.30 in `סכום חיוב`, not the 42.99 in `סכום עסקה` — mapping `amount` to
       // the charge column rather than the transaction column is exactly what that

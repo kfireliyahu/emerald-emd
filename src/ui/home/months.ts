@@ -13,9 +13,9 @@ import { versusRecentAverage, type ComparisonMetric } from '@/domain/statistics.
 export const CHART_MONTHS = 14
 
 /**
- * **Home opens on the newest month that has data** (S1): on
- * 2 October a document whose newest statement is August opens on August, not on
- * an empty October.
+ * **The newest month that has data** (S1) — where the Year tab opens and the
+ * statement gaps are read up to. Home itself opens on the last finished month,
+ * `lastFinishedMonth` (D-607): the running month is one step forward.
  */
 export function newestWithData(summaries: readonly MonthSummary[]): YearMonth | undefined {
   return summaries.at(-1)?.period

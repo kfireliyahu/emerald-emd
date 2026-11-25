@@ -27,6 +27,7 @@ import { UNCATEGORIZED_ID } from './categoryRepository.ts'
 import { insertRows, updateRow } from './formatRowRepository.ts'
 import { recordHits, unrecordHits } from './categoryRuleRepository.ts'
 import { buildTransactionWhere, type TransactionFilter } from './transactionRepository.ts'
+import { chargedOn } from './monthBasis.ts'
 
 export interface ReapplyRun {
   readonly id: string
@@ -66,7 +67,7 @@ export function listReapplyCandidates(
             t.category AS category_id
        FROM fmt_transaction t
       WHERE ${where.sql} AND t.category_source <> 'MANUAL'
-      ORDER BY COALESCE(t.charge_date, t.transaction_date) DESC, t.rowid DESC`,
+      ORDER BY ${chargedOn('t')} DESC, t.rowid DESC`,
     where.params,
   ).map((row) => ({
     id: String(row['id']),

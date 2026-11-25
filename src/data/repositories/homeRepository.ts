@@ -25,6 +25,7 @@ import { netWorth } from './netWorthRepository.ts'
 import { listPaychecks, readNoPayMonths } from './paycheckRepository.ts'
 import { staleHoldings } from './savingsRepository.ts'
 import { countTransactions } from './transactionRepository.ts'
+import { billedIn } from './monthBasis.ts'
 
 /**
  * Everything the home screen shows, from one load of the document.
@@ -169,7 +170,7 @@ export function accountMonths(db: Database): readonly AccountMonths[] {
   if (accounts.length === 0) return []
   const rows = query(
     db,
-    `SELECT DISTINCT account, substr(COALESCE(charge_date, transaction_date), 1, 7) AS period
+    `SELECT DISTINCT account, ${billedIn()} AS period
        FROM fmt_transaction`,
   )
   const byAccount = new Map<string, YearMonth[]>()

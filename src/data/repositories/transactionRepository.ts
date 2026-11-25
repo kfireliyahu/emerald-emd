@@ -26,6 +26,7 @@ import { query } from '../db/database.ts'
 import { declared, millisOf } from '../packs/ledger/tables.ts'
 import { UNCATEGORIZED_ID, type CategorySource } from './categoryRepository.ts'
 import { insertRows } from './formatRowRepository.ts'
+import { spentIn, spentOn } from './monthBasis.ts'
 import {
   countsCondition,
   heldCondition,
@@ -298,8 +299,8 @@ export interface TransactionFilter {
   readonly ids?: readonly string[] | undefined
 }
 
-/** The month/date basis, repeated in every query so they cannot drift apart. */
-const DATE_BASIS = 'COALESCE(t.charge_date, t.transaction_date)'
+/** The month/date basis, the statistics' own (D-607), so a month opened from Home lists what Home counted. */
+const DATE_BASIS = spentOn('t')
 
 interface Where {
   readonly sql: string
@@ -573,7 +574,7 @@ export function monthlyTotals(db: Database): readonly MonthlyTotal[] {
   const spent = `${spendingRuleSql(db)} AND NOT ${pointedAtCondition(db)}`
   const rows = query(
     db,
-    `SELECT substr(COALESCE(charge_date, transaction_date), 1, 7) AS period,
+    `SELECT ${spentIn()} AS period,
             amount_currency AS currency,
             COUNT(*) AS n,
             SUM(CASE WHEN amount_minor < 0 AND ${spent} THEN -amount_minor ELSE 0 END) AS outflow,

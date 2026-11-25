@@ -79,6 +79,7 @@ import type {
   SpendingSplit,
   YearOverview,
 } from '@/domain/model/statistics.ts'
+import { RECENT } from '@/domain/statementGaps.ts'
 
 /** docs/f10's comparison window: this month against the last three. */
 export const AVERAGE_MONTHS = 3
@@ -104,18 +105,86 @@ export const MONTHS_IN_YEAR = 12
 export function monthSummary(observation: MonthObservation): MonthSummary {
   const income = add(observation.payrollNet, observation.inflow)
   const expenses = observation.outflow
-  const saved = add(add(observation.payrollSaved, observation.deposited), observation.moved)
+  const balance = subtract(income, expenses)
+  const { saved, fromEarlierSavings, moved } = putAside(
+    add(observation.deposited, observation.moved),
+    balance,
+  )
 
   return {
     period: observation.period,
     income,
     expenses,
-    balance: subtract(income, expenses),
+    balance,
     saved,
     savingsRateBasisPoints: ratioBasisPoints(saved, income),
+    moved,
+    fromEarlierSavings,
+    offPaycheck: observation.payrollSaved,
     transactionCount: observation.transactionCount,
     isComplete: observation.isComplete,
   }
+}
+
+/**
+ * **Saved is what was put aside from this month's money** (D-607).
+ *
+ * What moved into savings and goals, but never more than the month left over:
+ * 12,000 moved to a broker in a month that left 4,000 is 4,000 saved and 8,000
+ * from earlier savings, so saved is never above left over and the rate never
+ * above 100%. A month that left nothing, or less than nothing, saved nothing of
+ * its own — a negative left over is not a negative saving. What moved back out
+ * (a negative `moved`) stays what it is: the month saved less than nothing, a
+ * smaller figure rather than a hidden one (D-309).
+ */
+export function putAside(
+  moved: Money,
+  leftOver: Money,
+): { readonly saved: Money; readonly fromEarlierSavings: Money; readonly moved: Money } {
+  const room = leftOver.minor > 0 ? leftOver : zero(moved.currency)
+  if (moved.minor <= room.minor) return { saved: moved, fromEarlierSavings: zero(moved.currency), moved }
+  return { saved: room, fromEarlierSavings: subtract(moved, room), moved }
+}
+
+/**
+ * **Whether the card statements covering a month are read** (D-607).
+ *
+ * A purchase counts in the month it was bought and a card bills it the month
+ * after, so a month is finished only once each card's statement of the next
+ * month is in. `cards` is each card's statement months (`billedIn`). A card
+ * blocks the month when it was in use by then — its first statement at or
+ * before the month — and its next month's statement is missing: inside its run
+ * (a statement never read), or past its last one while the card is still
+ * recent. A card quiet longer than `RECENT` months is a card put away and
+ * blocks nothing after its last statement — `statementGaps`' own rule, so a
+ * closed card does not hold every month open for ever.
+ */
+export function cardStatementsRead(
+  period: YearMonth,
+  current: YearMonth,
+  cards: readonly (readonly YearMonth[])[],
+): boolean {
+  const next = addMonths(period, 1)
+  return cards.every((months) => {
+    if (months.some((one) => compareYearMonths(one, next) === 0)) return true
+    const sorted = [...months].sort(compareYearMonths)
+    const first = sorted[0]
+    const last = sorted.at(-1)
+    if (first === undefined || last === undefined) return true
+    if (compareYearMonths(first, period) > 0) return true
+    if (compareYearMonths(next, last) < 0) return false
+    return compareYearMonths(last, addMonths(current, -RECENT)) < 0
+  })
+}
+
+/**
+ * **The newest finished month** (D-607): Home and `month_summary` open on it,
+ * not on the month still running, where nothing has come in yet. The newest
+ * month with data when none is finished, so a document read for the first time
+ * this month still opens on something.
+ */
+export function lastFinishedMonth(summaries: readonly MonthSummary[]): YearMonth | undefined {
+  return [...summaries].reverse().find((one) => one.isComplete)?.period ?? summaries.at(-1)?.period
 }
 
 /** Every month the document holds, oldest first. */
@@ -512,6 +581,7 @@ export function yearOverview(
     present.map((one) => one.saved),
     currency,
   )
+  const total = (pick: (one: MonthSummary) => Money): Money => sum(present.map(pick), currency)
 
   return {
     year,
@@ -525,6 +595,9 @@ export function yearOverview(
     balance: subtract(income, expenses),
     saved,
     savingsRateBasisPoints: ratioBasisPoints(saved, income),
+    moved: total((one) => one.moved),
+    fromEarlierSavings: total((one) => one.fromEarlierSavings),
+    offPaycheck: total((one) => one.offPaycheck),
     monthsWithData: present.length,
     completeMonths: complete.length,
     averageIncome: complete.length === 0 ? undefined : average(complete.map((one) => one.income)),

@@ -12,19 +12,21 @@
  *
  * Three things worth knowing before reading further:
  *
- * - **One date basis, in one place.** Charge date falling back to transaction
- *   date (D-006), spelled once as `BASIS` and used by every query here. docs/f10
- *   requires that switching the basis changes every screen together; a second
- *   spelling of it in one query is how that promise breaks.
- * - **"Saved" is assembled from two sources that overlap.** docs/05's savings
- *   rate is payslip saving lines plus saving deposits, and since D-077 a payslip
- *   line linked to a goal produces *both*. `payrollSaved` comes from the
- *   payslips and `deposited` excludes the deposits those payslips generated, so
- *   the money is counted once. That is the one figure on these screens that
- *   could be double the truth. A third source, `moved` (D-309), overlaps
+ * - **One date basis, in one place.** A card purchase in the month it was
+ *   bought, an installment one payment a month (D-607), written once in
+ *   `monthBasis.ts` and spelled here as `BASIS`. docs/f10 requires that
+ *   changing the basis changes every screen together; a second spelling of it
+ *   in one query is how that promise breaks.
+ * - **"Saved" is assembled from sources that overlap.** Saved is what was put
+ *   aside from the month's own money (D-607): `deposited` and `moved`, never
+ *   more than the month left over. Since D-077 a payslip line linked to a goal
+ *   produces both a saving line and a deposit; `deposited` excludes the
+ *   deposits payslips generated, and the slip's line, `payrollSaved`, is a
+ *   figure of its own beside saved, never in it. `moved` (D-309) overlaps
  *   neither: transactions a declared format links, which no deposit names.
- * - **A month in progress is marked, not hidden.** `isComplete` is decided
- *   against a date the caller passes rather than a clock, so a report is a
+ * - **A month in progress is marked, not hidden.** `isComplete` — the calendar
+ *   has left it and its card statements are read (D-607) — is decided against
+ *   a date the caller passes rather than a clock, so a report is a
  *   function of the document and reads the same on any day — D-062's rule,
  *   arriving in the last feature that counts months.
  */
@@ -58,6 +60,7 @@ import type {
 } from '@/domain/model/statistics.ts'
 import { payrollSavingLines, payrollSavings, taxTotal } from '@/domain/paycheck.ts'
 import {
+  cardStatementsRead,
   categoryBreakdown,
   compareMonth,
   cumulativeSpend,
@@ -90,14 +93,14 @@ import { listFixedExpenses } from './fixedExpenseRepository.ts'
 import { findPaychecksForPeriod, listPaychecksWithLines } from './paycheckRepository.ts'
 import { salaryCoveredRefs, salaryWithoutSlipRefs, slipBankStatus } from './salaryRepository.ts'
 import { listTransactions, type StoredTransaction } from './transactionRepository.ts'
+import { billedIn, spentOn } from './monthBasis.ts'
 
 /**
- * The statistics date basis (D-006), written once.
- *
- * The monthly summary should match what left the bank account, so the charge
- * date leads and the transaction date is the fallback for a row that has none.
+ * The statistics date basis, from the one place it is written (D-607): a card
+ * purchase counts in the month it was bought, an installment one payment a
+ * month from the purchase. `monthBasis.ts` says why.
  */
-const BASIS = 'COALESCE(charge_date, transaction_date)'
+const BASIS = spentOn()
 
 /**
  * The rows a spending total is allowed to see, per docs/05 — **the ledger's
@@ -172,6 +175,7 @@ export function monthObservations(
   const payroll = payrollMonths(db, currency)
   const deposits = depositMonths(db, currency)
   const moved = movedMonths(db, currency)
+  const cards = cardStatementMonths(db)
 
   const periods = new Set<string>([
     ...flows.keys(),
@@ -199,13 +203,34 @@ export function monthObservations(
       moved: moved.get(key) ?? zero(currency),
       transactionCount: flow?.count ?? 0,
       // A month is finished when the month the report is being read in has moved
-      // past it. Not a clock: the same document read on any day of July gives
-      // the same answer about June.
-      isComplete: compareYearMonths(period, current) < 0,
+      // past it and its card statements are read (D-607). Not a clock: the same
+      // document read on any day of July gives the same answer about June.
+      isComplete: compareYearMonths(period, current) < 0 && cardStatementsRead(period, current, cards),
     })
   }
 
   return observations.sort((a, b) => compareYearMonths(a.period, b.period))
+}
+
+/**
+ * Each card's statement months, for `cardStatementsRead` (D-607): cards in use,
+ * not one put away, read off the rows on the month their statement came on.
+ */
+function cardStatementMonths(db: Database): readonly (readonly YearMonth[])[] {
+  const byCard = new Map<string, YearMonth[]>()
+  for (const row of query(
+    db,
+    `SELECT DISTINCT t.account AS account, ${billedIn('t')} AS period
+       FROM fmt_transaction t
+       JOIN fmt_account a ON a.id = t.account
+      WHERE a.kind = 'CREDIT_CARD' AND a.is_archived = 0`,
+  )) {
+    const period = parseYearMonth(String(row['period']))
+    if (period === undefined) continue
+    const id = String(row['account'])
+    byCard.set(id, [...(byCard.get(id) ?? []), period])
+  }
+  return [...byCard.values()]
 }
 
 interface FlowMonth {
@@ -332,7 +357,8 @@ export interface SavedIntoGoal {
  * (`movedLines`); Home showed only the last, so a month that moved ₪12,000 said
  * it saved more and could not say why. Asked: *"from where is this
  * number?"*. Read with the same gates `payrollMonths` and `depositMonths` use, so
- * the three parts add to `MonthSummary.saved` exactly.
+ * the goals and what moved add to `MonthSummary.moved` exactly, and the slips to
+ * `offPaycheck` — beside saved, never in it (D-607).
  */
 export interface SavedFrom {
   readonly slips: readonly SavedFromSlip[]
@@ -544,7 +570,7 @@ export interface MonthlyReport {
    * shrinking what went out.
    */
   readonly moved: readonly MovedLine[]
-  /** The rest of saved: the slips' saving lines and the goal deposits (M30 F1). With `moved`, they add to `summary.saved`. */
+  /** The goal deposits, which with `moved` add to `summary.moved`, and the slips' saving lines, `summary.offPaycheck` (M30 F1, D-607). */
   readonly savedFrom: SavedFrom
 }
 
@@ -968,7 +994,7 @@ export function merchantTotals(
             SUM(-t.amount_minor) AS outflow,
             (SELECT t2.merchant_raw FROM fmt_transaction t2
               WHERE t2.merchant_normalized = t.merchant_normalized
-              ORDER BY COALESCE(t2.charge_date, t2.transaction_date) DESC
+              ORDER BY ${spentOn('t2')} DESC
               LIMIT 1) AS raw,
             (SELECT COALESCE(c.name, NULL) FROM fmt_transaction t3
                LEFT JOIN fmt_category c ON c.id = t3.category

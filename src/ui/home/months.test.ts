@@ -24,6 +24,9 @@ function month(year: number, m: number, expenses: number): MonthSummary {
     balance: ils(1_000_000 - expenses),
     saved: ils(0),
     savingsRateBasisPoints: 0,
+    moved: ils(0),
+    fromEarlierSavings: ils(0),
+    offPaycheck: ils(0),
     transactionCount: 10,
     isComplete: true,
   }

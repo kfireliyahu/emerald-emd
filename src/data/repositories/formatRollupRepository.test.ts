@@ -276,7 +276,8 @@ describe('the ledger’s month by category, as a declaration', () => {
       ).toEqual(ledger.map((each) => [each.categoryId, each.outflow.minor]).sort())
       compared += ledger.length
     }
-    expect(compared).toBeGreaterThan(20)
+    // Six months, not seven: a row charged in July was bought in June, and counts there (D-607). Was 20.
+    expect(compared).toBeGreaterThan(12)
     // The declaration says `direction is OUTFLOW` where the ledger's SQL says
     // `amount < 0`. Under the sign rule the two differ only on a transfer out
     // that nobody excluded, which is U3's question to answer (D-271).

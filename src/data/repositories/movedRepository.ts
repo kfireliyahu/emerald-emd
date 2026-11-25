@@ -42,6 +42,7 @@ import { query } from '../db/database.ts'
 import { declared } from '../packs/ledger/tables.ts'
 import type { CategoryKind } from './categoryRepository.ts'
 import { listFormats } from './formatRepository.ts'
+import { spentOn } from './monthBasis.ts'
 
 /**
  * **A category on the Money moved tab is moved, not spent** (M28 F4, D-316).
@@ -216,7 +217,7 @@ export function movedLines(db: Database, prefix: string, currency: string): read
        FROM fmt_transaction t
        LEFT JOIN fmt_category c ON c.id = t.category
       WHERE ${countsCondition('t')} AND t.amount_currency = ?
-        AND substr(COALESCE(t.charge_date, t.transaction_date), 1, ?) = ? AND ${movedCondition(db, 't')}
+        AND substr(${spentOn('t')}, 1, ?) = ? AND ${movedCondition(db, 't')}
       GROUP BY t.category
       ORDER BY ABS(net) DESC`,
     [currency, prefix.length, prefix],

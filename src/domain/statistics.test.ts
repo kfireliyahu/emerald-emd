@@ -23,6 +23,8 @@ import {
   versusRecentAverage,
   versusYearAgo,
   yearOverview,
+  cardStatementsRead,
+  lastFinishedMonth,
 } from './statistics.ts'
 
 const ILS = 'ILS'
@@ -66,7 +68,8 @@ describe('monthSummary', () => {
    */
   it('never subtracts what was saved from the balance', () => {
     const none = monthSummary(observation({ payrollSaved: ils(0), deposited: ils(0) }))
-    const plenty = monthSummary(observation({ payrollSaved: ils(5_000_00), deposited: ils(0) }))
+    // Changed on purpose (D-607): what moved is saved, the slip's line is not.
+    const plenty = monthSummary(observation({ payrollSaved: ils(0), deposited: ils(5_000_00) }))
 
     expect(plenty.balance).toEqual(none.balance)
     expect(plenty.saved).toEqual(ils(5_000_00))
@@ -78,14 +81,20 @@ describe('monthSummary', () => {
    * The two halves are separate fields so the one place they are added is here,
    * and `deposited` is the deposits the payslip did not already account for.
    */
-  it('adds the two halves of saving exactly once', () => {
+  /**
+   * Changed on purpose (D-607): the slip's saving lines never came in — came in
+   * is net pay — so they are a line of their own beside saved, never in it.
+   * Was: saved 2,000, the slip's 1,500 and the deposit's 500.
+   */
+  it('keeps the slip’s saving lines beside saved, never in it', () => {
     const summary = monthSummary(
       observation({ payrollSaved: ils(1_500_00), deposited: ils(500_00) }),
     )
 
-    expect(summary.saved).toEqual(ils(2_000_00))
-    // 2,000 of 14,000 income.
-    expect(summary.savingsRateBasisPoints).toBe(1429)
+    expect(summary.saved).toEqual(ils(500_00))
+    expect(summary.offPaycheck).toEqual(ils(1_500_00))
+    // 500 of 14,000 income.
+    expect(summary.savingsRateBasisPoints).toBe(357)
   })
 
   it('saves money moved to something owned, and never spends it (M28 U2, D-309)', () => {
@@ -93,9 +102,41 @@ describe('monthSummary', () => {
       observation({ payrollSaved: ils(1_500_00), deposited: ils(500_00), moved: ils(3_000_00) }),
     )
 
-    expect(summary.saved).toEqual(ils(5_000_00))
+    // Changed on purpose (D-607): was 5,000, with the slip's 1,500 in it.
+    expect(summary.saved).toEqual(ils(3_500_00))
+    expect(summary.moved).toEqual(ils(3_500_00))
     expect(summary.expenses).toEqual(ils(8_000_00))
     expect(summary.balance).toEqual(ils(6_000_00))
+  })
+
+  /**
+   * D-607: what moved beyond the month's left over came from earlier savings.
+   * 14,000 in, 8,000 out leaves 6,000; 10,000 moved to a broker is 6,000 saved
+   * and 4,000 from earlier savings, and the rate stops at 100% of what was left.
+   */
+  it('splits a transfer larger than left over into saved and from earlier savings', () => {
+    const summary = monthSummary(observation({ deposited: ils(0), moved: ils(10_000_00) }))
+
+    expect(summary.balance).toEqual(ils(6_000_00))
+    expect(summary.moved).toEqual(ils(10_000_00))
+    expect(summary.saved).toEqual(ils(6_000_00))
+    expect(summary.fromEarlierSavings).toEqual(ils(4_000_00))
+    expect(summary.savingsRateBasisPoints).toBe(4286)
+  })
+
+  it('saves nothing of its own in a month that left nothing, and says all of it came from earlier', () => {
+    const summary = monthSummary(observation({ payrollNet: ils(5_000_00), deposited: ils(2_000_00) }))
+
+    expect(summary.balance).toEqual(ils(-3_000_00))
+    expect(summary.saved).toEqual(ils(0))
+    expect(summary.fromEarlierSavings).toEqual(ils(2_000_00))
+  })
+
+  it('keeps money that came back out of savings as less than nothing saved (D-309)', () => {
+    const summary = monthSummary(observation({ deposited: ils(0), moved: ils(-1_000_00) }))
+
+    expect(summary.saved).toEqual(ils(-1_000_00))
+    expect(summary.fromEarlierSavings).toEqual(ils(0))
   })
 
   it('has no savings rate at all in a month with no income', () => {
@@ -108,6 +149,55 @@ describe('monthSummary', () => {
     const summary = monthSummary(observation({ payrollNet: ils(5_000_00) }))
 
     expect(summary.balance).toEqual(ils(-3_000_00))
+  })
+})
+
+describe('cardStatementsRead (D-607)', () => {
+  const NOVEMBER = month(2026, 11)
+  // A card billed on the 2nd of every month from January to October.
+  const card = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((m) => month(2026, m))
+
+  it('finishes a month once the statement billed the month after it is read', () => {
+    expect(cardStatementsRead(month(2026, 9), NOVEMBER, [card])).toBe(true)
+  })
+
+  it('leaves a month partial while the card statement covering it is not read', () => {
+    // October's purchases come on the bill of 2 November, not read yet.
+    expect(cardStatementsRead(month(2026, 10), NOVEMBER, [card])).toBe(false)
+  })
+
+  it('leaves a month partial when a statement inside the card’s run was never read', () => {
+    const gap = card.filter((one) => one.month !== 6)
+    expect(cardStatementsRead(month(2026, 5), NOVEMBER, [gap])).toBe(false)
+    expect(cardStatementsRead(month(2026, 6), NOVEMBER, [gap])).toBe(true)
+  })
+
+  it('asks nothing of a card before its first statement or long after its last', () => {
+    expect(cardStatementsRead(month(2025, 11), NOVEMBER, [card])).toBe(true)
+    const putAway = [1, 2, 3].map((m) => month(2026, m))
+    expect(cardStatementsRead(month(2026, 8), NOVEMBER, [putAway])).toBe(true)
+  })
+
+  it('needs every card', () => {
+    const other = [...card, month(2026, 11)]
+    expect(cardStatementsRead(month(2026, 10), NOVEMBER, [other])).toBe(true)
+    expect(cardStatementsRead(month(2026, 10), NOVEMBER, [other, card])).toBe(false)
+  })
+})
+
+describe('lastFinishedMonth (D-607)', () => {
+  it('chooses the newest finished month over the one still running', () => {
+    const summaries = summarizeMonths([
+      observation({ period: month(2026, 9) }),
+      observation({ period: month(2026, 10), isComplete: false }),
+      observation({ period: month(2026, 11), isComplete: false }),
+    ])
+    expect(lastFinishedMonth(summaries)).toEqual(month(2026, 9))
+  })
+
+  it('opens on the newest month when none is finished, and on nothing in an empty document', () => {
+    expect(lastFinishedMonth(summarizeMonths([observation({ isComplete: false })]))).toEqual(month(2026, 6))
+    expect(lastFinishedMonth([])).toBeUndefined()
   })
 })
 

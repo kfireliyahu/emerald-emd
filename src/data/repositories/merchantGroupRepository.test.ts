@@ -227,8 +227,8 @@ describe("the provider's own heading", () => {
     // Unlike "already filed under", which is a question about the merchant:
     // this is a fact about the very rows the caller is looking at.
     const db = await ledger()
-    add(db, 'דלק', -100, { providerCategory: 'דלק', chargeDate: localDate(2026, 7, 3) })
-    add(db, 'דלק', -100, { providerCategory: 'תחבורה', chargeDate: localDate(2026, 8, 3) })
+    add(db, 'דלק', -100, { providerCategory: 'דלק', transactionDate: localDate(2026, 7, 1), chargeDate: localDate(2026, 7, 3) })
+    add(db, 'דלק', -100, { providerCategory: 'תחבורה', transactionDate: localDate(2026, 8, 1), chargeDate: localDate(2026, 8, 3) })
 
     const july = listMerchantGroups(db, { from: localDate(2026, 7, 1), to: localDate(2026, 7, 31) })
     expect(july[0]?.providerCategories).toEqual([{ value: 'דלק', count: 1 }])

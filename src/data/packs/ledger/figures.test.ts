@@ -24,7 +24,7 @@ import {
 } from '../../repositories/savingsRepository.ts'
 import { priceCheck } from '../../repositories/holdingReadingRepository.ts'
 import { adoptFormat, readFormat } from '../../repositories/formatRepository.ts'
-import { parseRollup } from '@/domain/format/rollup.ts'
+import { parseRollup, rollupText } from '@/domain/format/rollup.ts'
 import { installLedgerPack } from './pack.ts'
 import { createLedgerDatabase } from './testing.ts'
 
@@ -266,5 +266,7 @@ describe('a document made before the pack declared these figures', () => {
     const now = readFormat(db, 'transaction')
     expect(now?.columns.some((one) => one.name === 'counted_on_card')).toBe(true)
     expect(now?.rollups?.[0]?.where.map((one) => one.column)).toContain('category.kind')
+    // And by the month a card purchase was bought, not the month it was charged (D-607).
+    expect(rollupText(now?.rollups?.[0] ?? older.value)).toContain('by month of transaction_date and category')
   })
 })

@@ -93,6 +93,7 @@ import { listFixedExpenses } from './fixedExpenseRepository.ts'
 import { unaimBuckets } from './splitPlanRepository.ts'
 import { listPaychecksWithLines } from './paycheckRepository.ts'
 import { readSetting, writeSetting } from './settingsRepository.ts'
+import { chargedOn } from './monthBasis.ts'
 
 // --- Debts ------------------------------------------------------------------
 
@@ -392,7 +393,7 @@ export function listPaymentObservations(
 ): readonly PaymentObservation[] {
   const rows = query(
     db,
-    `SELECT id, COALESCE(charge_date, transaction_date) AS basis_date,
+    `SELECT id, ${chargedOn()} AS basis_date,
             merchant_normalized, merchant_raw, amount_minor, amount_currency AS currency,
             category AS category_id, installment_sequence, installment_total, installment_group_key,
             original_total_minor

@@ -17,6 +17,7 @@ import { query } from '@/data/db/database.ts'
 import { UNCATEGORIZED_ID } from './categoryRepository.ts'
 import { dashboardBlocks } from './formatViewRepository.ts'
 import { countsCondition } from './movedRepository.ts'
+import { spentIn } from './monthBasis.ts'
 
 export interface LedgerHolds {
   /** Transactions in two or more calendar months: Home's Year. */
@@ -34,8 +35,8 @@ export interface LedgerHolds {
   readonly dashboard: boolean
 }
 
-/** The month a row is in, on the basis the monthly totals use (D-006). */
-const MONTH = 'substr(COALESCE(t.charge_date, t.transaction_date), 1, 7)'
+/** The month a row is in, on the basis the monthly totals use (D-607). */
+const MONTH = spentIn('t')
 
 export function ledgerHolds(db: Database): LedgerHolds {
   const [row] = query(

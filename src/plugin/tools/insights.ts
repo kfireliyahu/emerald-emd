@@ -15,10 +15,10 @@
  * comparisons do not already say.
  */
 
-import { documentCurrency, monthlyReport, payrollYear, yearlyReport, type MonthlyReport } from '@/data/repositories/statisticsRepository.ts'
+import { documentCurrency, monthlyReport, monthlySummaries, payrollYear, yearlyReport, type MonthlyReport } from '@/data/repositories/statisticsRepository.ts'
 import type { CategoryLine, Comparison, IncomeLine, MonthSummary } from '@/domain/model/statistics.ts'
 import { salaryBankWords } from '@/domain/salaryBank.ts'
-import { salaryProblem } from '@/domain/statistics.ts'
+import { lastFinishedMonth, salaryProblem } from '@/domain/statistics.ts'
 import type { CurrencyCode } from '@/core/money.ts'
 import { yearMonthOf, type YearMonth } from '@/core/time.ts'
 
@@ -87,12 +87,20 @@ function salaryLines(lines: readonly IncomeLine[]): string | undefined {
 
 const times = (n: number, noun: string): string => `${count(n)} ${n === 1 ? noun : `${noun}s`}`
 
-/** What the month's saved is made of (M30 F1): what moved, the slips' saving lines and the goal deposits. */
+/**
+ * What the month's saved is made of (M30 F1, D-607): what moved and the goal
+ * deposits, less what came from earlier savings; then the slips' saving lines,
+ * which sit beside saved and are never in it.
+ */
 function savedSection(report: MonthlyReport, currency: CurrencyCode): string | undefined {
+  const earlier = report.summary?.fromEarlierSavings
   const rows: string[][] = [
     ...report.moved.map((line) => [line.name, `moved, ${times(line.transactionCount, 'row')}`, money({ minor: line.netMinor, currency })]),
-    ...report.savedFrom.slips.map((line) => [line.name, 'off the paycheck, the employee part', money(line.amount)]),
     ...report.savedFrom.goals.map((line) => [line.name, `into the goal, ${times(line.count, 'deposit')}`, money(line.amount)]),
+    ...(earlier !== undefined && earlier.minor > 0
+      ? [['From earlier savings', 'moved beyond what the month left over', money({ minor: -earlier.minor, currency })]]
+      : []),
+    ...report.savedFrom.slips.map((line) => [line.name, 'off the paycheck, the employee part — beside saved, not in it', money(line.amount)]),
   ]
   if (rows.length === 0) return undefined
   return section('What saved is made of', table(['Part', 'From', 'Amount'], rows))
@@ -100,7 +108,12 @@ function savedSection(report: MonthlyReport, currency: CurrencyCode): string | u
 
 function renderMonth(document: OpenDocument, requested: YearMonth | undefined): string {
   const asOf = today()
-  const report = monthlyReport(document.db, requested ?? yearMonthOf(asOf), asOf)
+  // The last finished month unless one is asked for (D-607), as Home opens on it.
+  const report = monthlyReport(
+    document.db,
+    requested ?? lastFinishedMonth(monthlySummaries(document.db, asOf)) ?? yearMonthOf(asOf),
+    asOf,
+  )
   const known = report.months.map((one) => period(one.period))
 
   if (report.summary === undefined) {
@@ -115,7 +128,10 @@ function renderMonth(document: OpenDocument, requested: YearMonth | undefined): 
   const summary: MonthSummary = report.summary
 
   return paragraphs(
-    `# ${period(report.period)}` + (summary.isComplete ? '' : ' (still running — figures are partial)'),
+    `# ${period(report.period)}` +
+      (summary.isComplete
+        ? ''
+        : ' (not finished — still running, or a card statement covering it is not read; figures are partial)'),
     table(
       ['Figure', 'Amount'],
       [
@@ -125,7 +141,10 @@ function renderMonth(document: OpenDocument, requested: YearMonth | undefined): 
         ['  of which everything else', money(report.split.variable)],
         ['Balance', money(summary.balance)],
         ['Saved', money(summary.saved)],
-        ['Savings rate', percent(summary.savingsRateBasisPoints)],
+        ['  moved into savings and goals', money(summary.moved)],
+        ['  of which from earlier savings', money(summary.fromEarlierSavings)],
+        ['Savings rate (saved ÷ income)', percent(summary.savingsRateBasisPoints)],
+        ['Off the paycheck (pension, study fund; beside saved)', money(summary.offPaycheck)],
         ['Transactions', count(summary.transactionCount)],
       ],
     ),
@@ -194,13 +213,16 @@ export const monthSummaryTool: PluginTool = {
       'One month already added up: income, expenses, balance, savings rate; how each compares ' +
       'with last month, the three-month average and the same month last year; the category ' +
       'breakdown rolled up to parents; the fixed-versus-variable split; and where the income ' +
-      'came from. Defaults to the current month. Every figure comes from the same call the app ' +
-      'own Insights screen makes, so they cannot disagree.',
+      'came from. A card purchase counts in the month it was bought, and a month is partial until ' +
+      'the card statements covering it are read. Saved is what was put aside from the month\'s own ' +
+      'money, never more than it left over; the paycheck\'s pension and study fund are a line beside ' +
+      'it. Defaults to the last finished month. Every figure comes from the same call the app\'s ' +
+      'Home makes, so they cannot disagree.',
     inputSchema: {
       type: 'object',
       properties: {
         path: PATH_PROP,
-        month: stringProp('The month as YYYY-MM. Defaults to the current month.'),
+        month: stringProp('The month as YYYY-MM. Defaults to the last finished month.'),
       },
       required: ['path'],
       additionalProperties: false,
@@ -243,7 +265,9 @@ function renderYear(document: OpenDocument, args: Args): string {
         ['Expenses', money(overview.expenses)],
         ['Balance', money(overview.balance)],
         ['Saved', money(overview.saved)],
-        ['Savings rate', percent(overview.savingsRateBasisPoints)],
+        ['  of which moved beyond a month\'s left over, from earlier savings', money(overview.fromEarlierSavings)],
+        ['Savings rate (saved ÷ income)', percent(overview.savingsRateBasisPoints)],
+        ['Off the paycheck (pension, study fund; beside saved)', money(overview.offPaycheck)],
         ['Months with data', count(overview.monthsWithData)],
         ['Complete months', count(overview.completeMonths)],
         ['Average income, complete months', money(overview.averageIncome)],
@@ -298,7 +322,9 @@ export const yearSummaryTool: PluginTool = {
       'One year already added up: income, expenses, balance and savings rate; averages over the ' +
       'complete months only; the best and worst month by balance; a month-by-month table where a ' +
       'month with no data reads as nothing rather than as zero; and what the paychecks say about ' +
-      'gross, tax and payroll savings. Defaults to the current year.',
+      'gross, tax and payroll savings. On the same basis as month_summary: a card purchase in the ' +
+      'month it was bought, saved what each month put aside from its own money. Defaults to the ' +
+      'current year.',
     inputSchema: {
       type: 'object',
       properties: {

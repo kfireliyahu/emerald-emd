@@ -52,6 +52,7 @@ import { deleteRows, insertRows, updateRow } from './formatRowRepository.ts'
 import { UNCATEGORIZED_ID } from './categoryRepository.ts'
 import { removeExpenseRoles } from './planFixedRepository.ts'
 import { readJsonSetting, writeSetting } from './settingsRepository.ts'
+import { chargedOn } from './monthBasis.ts'
 
 export interface NewFixedExpense {
   readonly name: string
@@ -380,8 +381,8 @@ export function listExpenseObservations(
     query(
       db,
       `${OBSERVATION_SELECT}
-        AND COALESCE(t.charge_date, t.transaction_date) >= ?
-        AND COALESCE(t.charge_date, t.transaction_date) <= ?
+        AND ${chargedOn('t')} >= ?
+        AND ${chargedOn('t')} <= ?
       ORDER BY basis_date`,
       [toISODate(from), toISODate(to)],
     ),
@@ -410,7 +411,7 @@ export function merchantObservations(
   )
 }
 
-const OBSERVATION_SELECT = `SELECT COALESCE(t.charge_date, t.transaction_date) AS basis_date,
+const OBSERVATION_SELECT = `SELECT ${chargedOn('t')} AS basis_date,
             t.transaction_date,
             t.merchant_normalized, t.merchant_raw, t.amount_minor, t.amount_currency AS currency,
             t.category AS category_id
@@ -466,8 +467,8 @@ export function actualsByMerchant(
        FROM fmt_transaction t
       WHERE ${countsCondition('t')}
         AND t.amount_minor < 0
-        AND COALESCE(t.charge_date, t.transaction_date) >= ?
-        AND COALESCE(t.charge_date, t.transaction_date) <= ?
+        AND ${chargedOn('t')} >= ?
+        AND ${chargedOn('t')} <= ?
       GROUP BY t.merchant_normalized, t.amount_currency`,
     [toISODate(from), toISODate(to)],
   )) {

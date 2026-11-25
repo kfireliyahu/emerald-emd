@@ -58,6 +58,6 @@ One line of a statement. The one table with sixty thousand rows in a real docume
 
 | rollup | works out | note |
 | --- | --- | --- |
-| spending | sum of amount by month of charge_date or transaction_date and category where direction is OUTFLOW and is_excluded_from_stats is false and counted_on_card is not true and holding is empty and account.kind is not HOLDINGS and category.kind is not one of TRANSFER, SAVING | What was spent, per month and category: the rule the Statistics screen reads |
+| spending | sum of amount by month of transaction_date and category where direction is OUTFLOW and is_excluded_from_stats is false and counted_on_card is not true and holding is empty and account.kind is not HOLDINGS and category.kind is not one of TRANSFER, SAVING | What was spent, per month it was bought and category: the rule the Statistics screen reads (D-607). The screens count an installment one payment a month from the purchase; here every slice is in the purchase's month |
 
 ## rows

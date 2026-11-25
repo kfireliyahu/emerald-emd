@@ -158,7 +158,7 @@ describe('categoryTotals', () => {
     // docs/08 is emphatic: hidden uncategorized spending is how these apps lose
     // trust. It must never be silently folded into anything else.
     const { db } = await seeded()
-    const totals = categoryTotals(db, '2026-08')
+    const totals = categoryTotals(db, '2026-07')
 
     expect(totals).toHaveLength(1)
     expect(totals[0]?.name).toBe('Uncategorized')
@@ -170,7 +170,7 @@ describe('categoryTotals', () => {
     const { db, transactionId } = await seeded()
     setCategoryManually(db, transactionId, 'cat:groceries', Date.now())
 
-    const totals = categoryTotals(db, '2026-08')
+    const totals = categoryTotals(db, '2026-07')
     expect(totals).toHaveLength(1)
     expect(totals[0]?.name).toBe('Living → Groceries')
     expect(totals[0]?.outflowMinor).toBe(42105)

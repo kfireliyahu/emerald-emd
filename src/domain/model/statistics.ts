@@ -92,8 +92,10 @@ export interface MonthObservation {
   readonly moved: Money
   readonly transactionCount: number
   /**
-   * False while the month is still running. Every average excludes it, and the
-   * screen labels it "month in progress" (docs/f10).
+   * False while the month is unfinished: the calendar has not left it, or a card
+   * statement covering it has not been read (D-607) — its purchases are not in
+   * yet. Every average excludes it, and the screen labels it "month in
+   * progress" (docs/f10).
    */
   readonly isComplete: boolean
 }
@@ -113,10 +115,25 @@ export interface MonthSummary {
   readonly expenses: Money
   /** `income − expenses`. Negative is a real answer, never clamped. */
   readonly balance: Money
-  /** `payrollSaved + deposited + moved`, each counted once. */
+  /**
+   * **What was put aside from this month's money** (D-607): `moved`, but never
+   * more than the month left over — the rest is `fromEarlierSavings`. The slip's
+   * saving lines are not in it (`offPaycheck`): they never came in, since came in
+   * is net pay.
+   */
   readonly saved: Money
-  /** `saved ÷ income`. Undefined when nothing came in — not a zero rate. */
+  /** `saved ÷ income`, so never above 100%. Undefined when nothing came in — not a zero rate. */
   readonly savingsRateBasisPoints: number | undefined
+  /**
+   * Net money that moved into savings and goals this month and nothing else
+   * counts: the observation's `deposited + moved`. Negative when more came back
+   * out than went in.
+   */
+  readonly moved: Money
+  /** The part of `moved` above what the month left over: it came from earlier savings, not this month's money. */
+  readonly fromEarlierSavings: Money
+  /** The slip's saving lines, the employee's part: a line of its own beside saved, never in it (D-607). */
+  readonly offPaycheck: Money
   readonly transactionCount: number
   readonly isComplete: boolean
 }
@@ -237,6 +254,10 @@ export interface YearOverview {
   readonly balance: Money
   readonly saved: Money
   readonly savingsRateBasisPoints: number | undefined
+  /** The months' `moved`, `fromEarlierSavings` and `offPaycheck`, summed like the rest. */
+  readonly moved: Money
+  readonly fromEarlierSavings: Money
+  readonly offPaycheck: Money
   /** How many of the twelve carry data, and how many of those are finished. */
   readonly monthsWithData: number
   readonly completeMonths: number

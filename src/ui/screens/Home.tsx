@@ -30,7 +30,7 @@ import { useDocumentStore } from '@/state/documentStore.ts'
 import { countKey } from '@/i18n/count.ts'
 import { useDates, useT } from '@/i18n/current.ts'
 import { salaryBankWords } from '@/domain/salaryBank.ts'
-import { salaryProblem } from '@/domain/statistics.ts'
+import { lastFinishedMonth, salaryProblem } from '@/domain/statistics.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { Button } from '@/ui/components/Button.tsx'
@@ -99,11 +99,13 @@ export function Home() {
   const taxes = useMemo(() => (db === undefined ? new Map() : monthlyTaxes(db, { currency })), [db, revision, currency])
   const paid = useMemo(() => db !== undefined && keepsPaychecks(db), [db, revision])
   const newest = newestWithData(summaries)
+  // Home opens on the last finished month, not the one still running (D-607).
+  const opening = useMemo(() => lastFinishedMonth(summaries), [summaries])
 
   const [wanted, setWanted] = useState<YearMonth | undefined>(() =>
     landing?.month === undefined ? undefined : parseYearMonth(landing.month),
   )
-  const period = wanted ?? newest
+  const period = wanted ?? opening
   const [swap, setSwap] = useState<{ side: 'l' | 'r'; turn: number }>({ side: 'r', turn: 0 })
   const [arrived] = useState(() => new Set(landing?.arrived ?? []))
   const [wrote, setWrote] = useState(landing?.wrote)
@@ -158,13 +160,16 @@ export function Home() {
 
   const shown = report?.summary
   // What saved is made of, each part once (M30 F1): the figure says where it came from.
+  // The slip's saving lines are beside saved, never in it, and what moved beyond
+  // the month's left over came from earlier savings (D-607).
+  const fromEarlier = shown?.fromEarlierSavings ?? money(0, currency)
   const savedParts =
     report === undefined
       ? []
       : [
           { label: t('home.month.partMoved'), amount: money(report.moved.reduce((total, one) => total + one.netMinor, 0), currency), any: report.moved.length > 0 },
-          { label: t('home.month.partOffPaycheck'), amount: money(report.savedFrom.slips.reduce((total, one) => total + one.amount.minor, 0), currency), any: report.savedFrom.slips.length > 0 },
           { label: t('home.month.partIntoGoals'), amount: money(report.savedFrom.goals.reduce((total, one) => total + one.amount.minor, 0), currency), any: report.savedFrom.goals.length > 0 },
+          { label: t('home.month.partFromEarlier'), amount: money(-fromEarlier.minor, currency), any: fromEarlier.minor > 0 },
         ].filter((part) => part.any)
   const missingHere = period === undefined ? [] : gaps.filter((gap) => compareYearMonths(gap.period, period) === 0)
   const tax = period === undefined ? undefined : taxes.get(toYearMonthString(period))
@@ -359,7 +364,7 @@ export function Home() {
                   </div>
                 )}
 
-                {savedParts.length > 0 && (
+                {(savedParts.length > 0 || report.savedFrom.slips.length > 0) && (
                   <div className="mt-3 flex flex-col gap-3">
                     <BlockHead title={t('home.flows.saved')} aside={t('home.month.savedAside')} />
                     <div>
@@ -372,15 +377,6 @@ export function Home() {
                           onClick={() => drillTo(line.categoryId ?? UNCATEGORIZED_OPTION)}
                         />
                       ))}
-                      {report.savedFrom.slips.map((line) => (
-                        <SavedRow
-                          key={`slip-${line.deductionTypeId}`}
-                          name={line.name}
-                          note={t('home.month.offPaycheckYours')}
-                          value={formatMoney(line.amount)}
-                          onClick={() => navigate('/paychecks')}
-                        />
-                      ))}
                       {report.savedFrom.goals.map((line) => (
                         <SavedRow
                           key={`goal-${line.goalId}`}
@@ -390,7 +386,24 @@ export function Home() {
                           onClick={() => navigate(`/wealth/goals/${line.goalId}`)}
                         />
                       ))}
+                      {fromEarlier.minor > 0 && (
+                        <SavedRow
+                          name={t('home.month.fromEarlier')}
+                          note={t('home.month.fromEarlierWhy')}
+                          value={formatMoney(money(-fromEarlier.minor, currency))}
+                          onClick={() => drillTo()}
+                        />
+                      )}
                       <Total label={t('home.flows.saved')} flow="saved" value={formatMoney(shown?.saved ?? money(0, currency))} />
+                      {report.savedFrom.slips.map((line) => (
+                        <SavedRow
+                          key={`slip-${line.deductionTypeId}`}
+                          name={line.name}
+                          note={t('home.month.offPaycheckYours')}
+                          value={formatMoney(line.amount)}
+                          onClick={() => navigate('/paychecks')}
+                        />
+                      ))}
                     </div>
                   </div>
                 )}
