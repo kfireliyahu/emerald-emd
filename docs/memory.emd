@@ -5088,6 +5088,26 @@ question: How is year.emd made so it always has a running month and is what inta
 answer: scripts/demo-year.mjs, called by make-demo-document.mjs, writes .demo/year.emd from fixtures/synthetic/demo/year/year.json: 14 months ending in the build's month (running; bank rows stop at today, no card statement covers it), figures drawn by month index with a seeded generator. Each month's English card xlsx, Hebrew card xlsx, bank csv and savings csv is written to a scratch folder and read with import_statement; slips, fund readings, goals, the debt, bills and the plan go in through the conversation's tools. A statement holding a refund is imported with ignore_printed_total, and only such a file, because the import's total check adds magnitudes (a bug, handed on). #/specimen is routed only where specimenOpens() (import.meta.env.DEV or MODE demo) and lazily imported, so the release build has no route and no chunk. Panes take .fc-theme-light / .fc-theme-dark: the dark class joins the dark token blocks, the light one restates @theme's light values, and themePanes.test.ts fails on drift. Rejected: committed statement files; growing showcase.emd; a specimen route in every build; flipping the root theme while the page is open.
 state: live
 
+### D-612
+date: 2026-11-25
+milestone: M64
+scope: ui
+title: Density is read off one snapshot of main by tested arithmetic: a block is a heading-led section, a table, a chart, a list of three rows or a data-block, a figure is the secondary-number step or a data-figure, a budget is a maximum per route; --shots paints each screen at its whole length into .probe/shots/ beside one contact sheet, and the inventory is docs/redesign/screens.md
+question: How does probe:screens measure how much a screen holds, how is a budget written, and how are the pictures of every screen taken and shown?
+answer: snapshot(main) reads the drawn page once into plain nodes and density() counts, tested on a fixed page in probe.test.ts: words (and those above the fold, the window's height); blocks (each h2-h6, and outside another block each table or grid, SVG of 80x40 or more, list of 3+ items, data-block); figures (data-figure, or digit-only text at --text-secondary-number or larger, never a heading, one figure however many parts); actions (buttons, links, tabs, menu items) and primaries (fc-btn-primary); distinct type sizes and colours (text, backgrounds, chart marks); screens (last box's bottom over the fold). --screen changes the root. A budget is JSON keyed by route hash with * for every route, each limit a maximum named as the measures are (words, wordsAboveFold, blocks, blocksAboveFold, figures, actions, primary, typeSizes, colours, screens); the route's own win over *, an unknown name is a breach, and --budget exits 1 naming each. --shots measures each route and theme alone (stay), stretches the window to the screen's whole length (8000 px at most), keeps a frame painted on request (an offscreen capturePage returned its first frame), writes PNGs and <document>.json into the git-ignored .probe/shots/, and makes index.html from every list there: by document and section, light and dark side by side, the fold marked. Rejected: a browser DOM in the test environment, viewport-only pictures, counting every div of rows as a list, budget minimums.
+state: live
+affects: ".claude/skills/design-review/SKILL.md\nscripts/probe-screens.mjs"
+
+### D-613
+date: 2026-11-25
+milestone: M64
+scope: app
+title: A card statement's printed total is compared with its rows' signed sum, charges less refunds, and every row's magnitude stays only as the second reading
+question: What does the import compare a statement's printed total with, now that a card's total is net of its refunds?
+answer: reconcileRows in src/data/importer/printedTotal.ts, used by import_statement and the screen's statementBatch: per currency, the rows' signed sum compared on magnitude with the printed figure; where that disagrees, the sum of every row's magnitude (a file printing one gross figure), so nothing that reconciled before stops. The figure shown is whichever agreed, else the net one. Bank statements print no total and are untouched.
+state: live
+affects: "docs/packs/ledger/f01-card-statement-import.md\nscripts/demo-year.mjs"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -6427,6 +6447,24 @@ refs: M64 U16
 state: applied
 answered_by: D-611
 became_unit: M64 U16
+
+### M64 U17 built: a card statement with a refund imports
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-25
+body: "M64 U17 is built at 487b75f on worktree-agent-a00a3980a3605e3b0: the printed-total check compares the rows' signed sum (charges less refunds), magnitudes kept only as the fallback reading; the synthetic year's ignore_printed_total branch is gone.\n\n```json\n{\"unit\":\"M64 U17\",\"files\":\"src/data/importer/printedTotal.ts\\nsrc/data/importer/statementBatch.ts\\nsrc/plugin/tools/ingest.ts\\nsrc/data/importer/printedTotal.test.ts\\nsrc/data/importer/statementBatch.test.ts\\nsrc/plugin/tools/ingest.test.ts\\nscripts/demo-year.mjs\\ndocs/09-decision-log.md\\ndocs/packs/ledger/f01-card-statement-import.md\",\"commit\":\"487b75f\",\"branch\":\"worktree-agent-a00a3980a3605e3b0\",\"decisions\":[{\"ref\":\"D-613\",\"title\":\"A card statement's printed total is compared with its rows' signed sum, charges less refunds, and every row's magnitude stays only as the second reading\",\"question\":\"What does the import compare a statement's printed total with, now that a card's total is net of its refunds?\",\"answer\":\"reconcileRows in src/data/importer/printedTotal.ts, used by import_statement and the screen's statementBatch: per currency, the rows' signed sum compared on magnitude with the printed figure; where that disagrees, the sum of every row's magnitude (a file printing one gross figure), so nothing that reconciled before stops. The figure shown is whichever agreed, else the net one. Bank statements print no total and are untouched.\",\"affects\":\"docs/packs/ledger/f01-card-statement-import.md\\nscripts/demo-year.mjs\"}],\"review_entries\":[],\"follow_ups\":[]}\n```"
+refs: M64 U17
+state: applied
+answered_by: D-613
+became_unit: M64 U17
+
+### M64 U2 landing proposed: density measured, a contact sheet of every screen, and the inventory (D-612)
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-25
+body: "M64 U2 is built at 37539f5 on worktree-agent-ad467fb113e1379bf: probe:screens measures density with --budget and --shots, and docs/redesign/screens.md says what every screen is for. Land it with land_units inbox:[this row].\n\n```json\n{\"unit\":\"M64 U2\",\"files\":\"src/ui/probe.ts\\nsrc/ui/probe.test.ts\\nscripts/probe-screens.mjs\\nscripts/probe-screens-window.cjs\\n.gitignore\\ndocs/redesign/screens.md\\ndocs/00-index.md\\ndocs/09-decision-log.md\\n.claude/skills/design-review/SKILL.md\",\"commit\":\"37539f5\",\"branch\":\"worktree-agent-ad467fb113e1379bf\",\"decisions\":[{\"ref\":\"D-612\",\"title\":\"Density is read off one snapshot of main by tested arithmetic: a block is a heading-led section, a table, a chart, a list of three rows or a data-block, a figure is the secondary-number step or a data-figure, a budget is a maximum per route; --shots paints each screen at its whole length into .probe/shots/ beside one contact sheet, and the inventory is docs/redesign/screens.md\",\"question\":\"How does probe:screens measure how much a screen holds, how is a budget written, and how are the pictures of every screen taken and shown?\",\"answer\":\"snapshot(main) reads the drawn page once into plain nodes and density() counts, tested on a fixed page in probe.test.ts: words (and those above the fold, the window's height); blocks (each h2-h6, and outside another block each table or grid, SVG of 80x40 or more, list of 3+ items, data-block); figures (data-figure, or digit-only text at --text-secondary-number or larger, never a heading, one figure however many parts); actions (buttons, links, tabs, menu items) and primaries (fc-btn-primary); distinct type sizes and colours (text, backgrounds, chart marks); screens (last box's bottom over the fold). --screen changes the root. A budget is JSON keyed by route hash with * for every route, each limit a maximum named as the measures are (words, wordsAboveFold, blocks, blocksAboveFold, figures, actions, primary, typeSizes, colours, screens); the route's own win over *, an unknown name is a breach, and --budget exits 1 naming each. --shots measures each route and theme alone (stay), stretches the window to the screen's whole length (8000 px at most), keeps a frame painted on request (an offscreen capturePage returned its first frame), writes PNGs and <document>.json into the git-ignored .probe/shots/, and makes index.html from every list there: by document and section, light and dark side by side, the fold marked. Rejected: a browser DOM in the test environment, viewport-only pictures, counting every div of rows as a list, budget minimums.\",\"affects\":\".claude/skills/design-review/SKILL.md\\nscripts/probe-screens.mjs\"}],\"review_entries\":[],\"follow_ups\":[],\"report\":\"M64 U2 built at 37539f5 on worktree-agent-ad467fb113e1379bf. docs:check green but for one error the landing clears: D-612 has no row in memory.emd yet. Tests: probe.test.ts (6 new on a fixed page), privacy, hosts/claude, typecheck green; check:tours skipped (no screen changed; probe.ts is dev-only).\\n\\nWhat landed: probe:screens measures density on every run, in text and --json: words and words above the fold, blocks, headline figures, actions and primaries, type sizes, colours, windows tall. --budget <file> exits 1 naming each breach (U4 writes the limits; the format is in the script's header and D-612). --shots writes a PNG per route and theme at full length into .probe/shots/ (git ignores it) and index.html, a contact sheet by document and section, light and dark side by side, the fold marked. docs/redesign/screens.md covers every ledger route on year.emd and every engine route on custom.emd and project.emd: question, jobs, blocks, data shapes with the dataviz form, measures, repeats, and what could move one click behind.\\n\\nDensest by words: Rules (2,573 words, 680 actions, 17.6 screens, 233 low AA), Assistants (1,081 words, 21 blocks, 5.1 screens), Plan (779 words, 117 actions, 5 primaries, 10 type sizes). Home: 622 words, 4 primaries, 1 of its 10 blocks above the fold.\\n\\nFound: one primary per screen broken on Home (4) and Plan (5, a filled Track it per bill candidate); Plan draws 10 type sizes and a platform select; 8 screens have no h1, and Plan's h1 is the plan's name; Transactions measures 13 low-contrast texts on the current month (53 on U16's view, the card-payment rows in ink-tertiary); board and roadmap tabs land on the sheet when a format has no enum or roadmap; Home's bill candidates repeat Plan's block for block.\\n\\nNot done: the new-document start is written from code, not measured (the demo always opens a document); fund, goal and debt detail routes not measured; rows drawn as divs are not blocks until the redesign marks them data-block.\"}\n```"
+refs: M64 U2
+state: applied
+answered_by: D-612
+became_unit: M64 U2
 
 ### Make the payoff visible: record what a session read, and a per-milestone retro
 from: maintainer — from another project (anonymous)
@@ -17843,26 +17881,33 @@ report: "M64 U16 built at d2198fe on worktree-agent-ac59d45bdee1e3b4a. Typecheck
 milestone: M64
 scope: ui
 title: A card statement with a refund imports: the total check sums signed amounts
-state: in_progress
+landed: 2026-11-25
+decision: D-613
+state: built
 brief: Why: the import's printed-total check adds every row's magnitude (src/plugin/tools/ingest.ts totalsOf, and src/data/importer/statementBatch.ts the same), so a card statement whose printed total is net of a refund is refused as not reconciling, in the app and in a conversation. Found by M64 U16's year: both cards' refund months were refused (parse 5,260.57 vs printed 4,760.77, a 249.90 refund counted twice). Do: compare the printed total with the signed sum (charges less refunds) for a card statement, keeping magnitudes only where a file's sections need it; a test with a refund row on both card layouts; then drop the ignore_printed_total branch in scripts/demo-year.mjs. Out of scope: bank statements, which print no total.
-files: "src/plugin/tools/ingest.ts\nsrc/data/importer/statementBatch.ts\nsrc/data/importer/printedTotal.ts\nscripts/demo-year.mjs"
+files: "src/data/importer/printedTotal.ts\nsrc/data/importer/statementBatch.ts\nsrc/plugin/tools/ingest.ts\nsrc/data/importer/printedTotal.test.ts\nsrc/data/importer/statementBatch.test.ts\nsrc/plugin/tools/ingest.test.ts\nscripts/demo-year.mjs\ndocs/09-decision-log.md\ndocs/packs/ledger/f01-card-statement-import.md"
 taken_by: run-milestone driver
 started: 2026-11-25
-branch: m64-redesign
+branch: worktree-agent-a00a3980a3605e3b0
+commit: 487b75f
 paths: "src/plugin/tools/ingest.ts\nsrc/data/importer/statementBatch.ts\nsrc/data/importer/printedTotal.ts\nscripts/demo-year.mjs"
 
 ### M64 U2
 milestone: M64
 scope: ui
 title: What each screen is for: an inventory of every screen, density measured, and a contact sheet of the whole app
-state: in_progress
+landed: 2026-11-25
+decision: D-612
+state: built
 brief: "**Why.** Nothing measures how much a screen holds or says what it is for (D-606), and nobody can see the whole app at once without driving a browser screen by screen (D-608).\n\n**Do.** 1. **probe:screens measures density** for each route and theme: visible words (in the screen, not the chrome), blocks (a heading-led section, a table, a chart, a list of 3+ rows each count one), headline figures (large figures by type step, or a `data-figure` attribute the redesign will set), actions (buttons and links, and how many are primary), distinct type sizes and colours used, and how much is above the fold at 1280x800. In text and in --json. A --budget file option reads limits per route and exits non-zero naming each breach (U4 writes the limits). 2. **--shots**: a PNG per route and theme into a folder git ignores (`.probe/shots/`), and one `index.html` contact sheet of them all, grouped by section, light and dark side by side. 3. **The inventory**, docs/redesign/screens.md, on U16's synthetic year (and custom.emd and project.emd for the engine): every ledger route (Home, Year, Transactions, By merchant, Paychecks and deduction types, Plan, Wealth overview, funds, goals, debts, Categories, Rules, reading statements and payslips, readers, Settings' pages) and every engine route (formats, a format's table, entry, input, board, list, roadmap, ready, dashboard, agenda, calendar, connections, intake, packs, the new-document start). For each: the one question it answers in a newcomer's words; the two or three jobs someone comes to do; every block it shows now; **the shape of each piece of data** (a total against its usual, a part of a whole, a trend, a ranked list, a plan against what happened, a flow from one place to others, a list of rows to act on), with the way to show it the dataviz skill recommends; its measures; what repeats another screen; and what could move one click behind what it explains. Demo documents only (D-390, D-608).\n\n**Tests.** The probe's measures on a fixed page in probe.test.ts.\n\n**Out of scope.** Changing any screen."
-files: The screen probe gains density measures and pictures; a new inventory note lists every ledger and engine screen with its question, its jobs, its blocks, its data and its measures.
+files: "src/ui/probe.ts\nsrc/ui/probe.test.ts\nscripts/probe-screens.mjs\nscripts/probe-screens-window.cjs\n.gitignore\ndocs/redesign/screens.md\ndocs/00-index.md\ndocs/09-decision-log.md\n.claude/skills/design-review/SKILL.md"
 blocks: ["M64 U16"]
 taken_by: run-milestone driver
 started: 2026-11-25
-branch: m64-redesign
+branch: worktree-agent-ad467fb113e1379bf
+commit: 37539f5
 paths: "src/ui/probe.ts\nsrc/ui/probe.test.ts\nscripts/probe-screens.mjs\ndocs/redesign/screens.md"
+report: "M64 U2 built at 37539f5 on worktree-agent-ad467fb113e1379bf. docs:check green but for one error the landing clears: D-612 has no row in memory.emd yet. Tests: probe.test.ts (6 new on a fixed page), privacy, hosts/claude, typecheck green; check:tours skipped (no screen changed; probe.ts is dev-only).\n\nWhat landed: probe:screens measures density on every run, in text and --json: words and words above the fold, blocks, headline figures, actions and primaries, type sizes, colours, windows tall. --budget <file> exits 1 naming each breach (U4 writes the limits; the format is in the script's header and D-612). --shots writes a PNG per route and theme at full length into .probe/shots/ (git ignores it) and index.html, a contact sheet by document and section, light and dark side by side, the fold marked. docs/redesign/screens.md covers every ledger route on year.emd and every engine route on custom.emd and project.emd: question, jobs, blocks, data shapes with the dataviz form, measures, repeats, and what could move one click behind.\n\nDensest by words: Rules (2,573 words, 680 actions, 17.6 screens, 233 low AA), Assistants (1,081 words, 21 blocks, 5.1 screens), Plan (779 words, 117 actions, 5 primaries, 10 type sizes). Home: 622 words, 4 primaries, 1 of its 10 blocks above the fold.\n\nFound: one primary per screen broken on Home (4) and Plan (5, a filled Track it per bill candidate); Plan draws 10 type sizes and a platform select; 8 screens have no h1, and Plan's h1 is the plan's name; Transactions measures 13 low-contrast texts on the current month (53 on U16's view, the card-payment rows in ink-tertiary); board and roadmap tabs land on the sheet when a format has no enum or roadmap; Home's bill candidates repeat Plan's block for block.\n\nNot done: the new-document start is written from code, not measured (the demo always opens a document); fund, goal and debt detail routes not measured; rows drawn as divs are not blocks until the redesign marks them data-block."
 
 ### M64 U3
 milestone: M64
