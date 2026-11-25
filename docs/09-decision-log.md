@@ -514,6 +514,7 @@ written out here.
 | D-612 | 2026-11-25 | Density is read off one snapshot of `main` by tested arithmetic: a block is a heading-led section, a table, a chart, a list of three rows or a `data-block`, a figure is the secondary-number step or a `data-figure`, a budget is a maximum per route; `--shots` paints each screen at its whole length into `.probe/shots/` beside one contact sheet, and the inventory is `docs/redesign/screens.md` | M64 |
 | D-613 | 2026-11-25 | A card statement's printed total is compared with its rows' signed sum, charges less refunds, and every row's magnitude stays only as the second reading | M64 |
 | D-614 | 2026-11-25 | Home and the rail take direction A, the report: the month said as one sentence with left over its one figure, a typographic rail, detail in a side panel; with B's month strip as the pager and C's waiting list and palette; the flows leave Home's figures and Plex gains a light weight for the hero | M64 |
+| D-615 | 2026-11-25 | The report becomes the design language: A's tokens and two type steps, Plex in four weights, a rail of words whose sections' views are their tab strip, a kit of eight displays chosen by the shape of the data, a side panel and a waiting list, six ui rules rewritten and four added, and a density budget whose exempt list only shrinks | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1169,6 +1170,64 @@ whole (an alarm before the answer; icons to recall). A unchanged (its lines deco
 list hid two of three, its flows coloured figures). A fourth direction (the faults the critique
 found were shared and fixable, not one direction's). Serving the roll's decision page (the unit
 ran unattended, and the pick is the session's by D-608).
+
+
+## D-615 · 2026-11-25 · The report becomes the design language: A's tokens and two type steps, Plex in four weights, a rail of words whose sections' views are their tab strip, a kit of eight displays chosen by the shape of the data, a side panel and a waiting list, six ui rules rewritten and four added, and a density budget whose exempt list only shrinks <a id="d-615"></a>
+
+**Context.** M64 U4: D-614 picked direction A, *the report*, with parts of B and C, and named the
+six `ui` rule rows it overrides. Every later unit of the redesign builds a screen without asking
+the maintainer (D-608), so the pick has to be the code they build with and the rules they are held
+to, and how much a screen holds has to be a check that fails (D-606, D-612).
+
+**Decision.**
+
+- **Tokens** (`tokens.css`): A's greys in both themes (ink `#121212`, ink-secondary `#5f5f5c`, which
+  reads 6.4:1, ink-tertiary `#8a8a86`, hairlines `#e4e4e0`/`#cfcfca`, surface `#fafaf8`; dark
+  `#0c0c0d` and `#121214`), the kit's three mark colours (`bar`, `bar-quiet` at 3:1 on both planes,
+  `track`), `--radius-mark` (4px), and two steps on the ramp: `display` 88px in the 300 face and
+  `lede` 28px. Plex Sans and Plex Sans Hebrew gain their 300 and 600 faces from the `@fontsource`
+  packages already installed; no dependency.
+- **The rail** is words in two groups — *Money* (the ledger's places) and *Document* (the
+  engine's) — 200px as before (216 overflowed the development tour's board), the place you are on semibold ink with a 6px `accent` square at the row's end,
+  glyphs only when collapsed. **A section's views are its tab strip, never rows in the rail**:
+  Home's month and year, Paychecks' deduction types and Categories' rules moved to `ViewTabs`,
+  which now draws whatever the rail's width, labels in `ink-secondary`, and carries the tour's
+  `nav-…` anchors. **Sections of places keep their places beneath them** — Wealth, Settings,
+  Formats and a pack's formats — because D-475's format folders and a pack's unbounded formats have
+  no tab form that keeps them; this is the one part of D-614's flat rail not taken.
+- **The data display kit** (`src/ui/charts/`): one display per shape U2 found — `HeadlineFigure`
+  (with `Sparkline`), `RankedBars`, `PartOfWhole`, `PlanAgainst`, `MonthTrend`, `MonthStrip` (B's
+  pager), `MonthFlow` — each saying in `DISPLAYS` when it is right and when not, each taking the
+  caller's empty sentence, keeping a negative's true minus and saying *over* in words. Figures are
+  ink; a flow's colour is a mark beside its word. The general `Chart` takes 2px lines, 24px bars,
+  and the keyboard.
+- **Shared pieces**: `SidePanel` (detail beside the page; floats over it below 1360px),
+  `WaitingList` (what is waiting, below the answer, a verb each), `EmptyState`, `.fc-text-action`.
+- **The specimen page** draws every display and piece in every state, light and dark, in two
+  halves (`?part=kit`, `?part=pieces`) so each fits one picture of the contact sheet.
+- **Rules**: the six D-614 names are retired and rewritten (*Figures are ink, a flow is a mark*;
+  *One family, four weights*; *Tabular figures, but the display figure*; *Every value is a token*
+  with the two steps; *Charts: thin marks, named, reachable*; *The rail is an index of words*),
+  and four are added: *Density is budgeted*, *The answer comes first, in words*, *Detail opens
+  beside the page*, *A display is chosen by the shape of the data*.
+- **The budget** (`docs/redesign/budget.json`): every route's limits are its U2 measures, a
+  ceiling; every route takes one primary and seven type sizes; every route is `exempt` until its
+  unit redesigns it, reported and not failing; the specimen page is a tool and never budgeted.
+  `probe:screens --budget` fails on a breach of a route not exempt, and `src/ui/budget.test.ts`
+  holds `exempt` to U4's list, so it only shrinks.
+
+**Taste check.** Impeccable's finish-reviewer judged the specimen page and the contact sheet
+against `DESIGN.md` and comp A. Made: MonthFlow's over figure back to ink, its whole drawn as a 3:1
+rule, one minus sign (U+2212) across the kit, the strip's open month saying its note in words and
+its labels thinned when they would touch, the panel's month under its title rather than above it,
+a Hebrew button kept at its own width. Not made, as decisions the maintainer has not listed: the
+filled primary button (the comp drew a hairline box; *The button is a split tile* and *One primary
+action per screen* stand) and the notice bar's filled *Open Home* (Home's waiting list replaces it
+in U5) — both are review entries.
+
+**Rejected.** A fully flat rail (loses the format folders); limits invented below U2's measures
+before a screen is redesigned (a ceiling each unit tightens is a decision it makes with the screen
+in hand); the comp's 36px symbol (off the ramp; the hero step is 40); a chart library.
 
 ## Related
 

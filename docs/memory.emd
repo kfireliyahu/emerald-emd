@@ -5118,6 +5118,16 @@ answer: A, the report, with parts of B and C (docs/mockups/m64-u3/). From A: the
 state: live
 affects: "DESIGN.md\ndocs/11-ui-design-language.md"
 
+### D-615
+date: 2026-11-25
+milestone: M64
+scope: ui
+title: The report becomes the design language: A's tokens and two type steps, Plex in four weights, a rail of words whose sections' views are their tab strip, a kit of eight displays chosen by the shape of the data, a side panel and a waiting list, six ui rules rewritten and four added, and a density budget whose exempt list only shrinks
+question: How does D-614's direction become what every later M64 unit builds with and is held to, without asking the maintainer?
+answer: Tokens: A's greys both themes (ink-secondary #5f5f5c, 6.4:1), bar / bar-quiet (3:1) / track and --radius-mark 4px for the kit, display 88px (300) and lede 28px on the ramp; Plex Sans and Hebrew gain 300 and 600 from the installed @fontsource packages. Rail: words in two groups (Money, Document), 200px (216 overflowed the development tour), the open place semibold ink with a 6px accent square; a section's views are its ViewTabs strip, never rows in the rail; sections of places (Wealth, Settings, Formats, a pack) keep their places beneath them, since format folders (D-475) have no tab form. Kit in src/ui/charts/: HeadlineFigure (+Sparkline), RankedBars, PartOfWhole, PlanAgainst, MonthTrend, MonthStrip, MonthFlow, each with when to use and when not in DISPLAYS, the caller's empty sentence, a true minus and 'over' in words; figures ink, a flow's colour a mark beside its word; Chart gets 2px lines, 24px bars, the keyboard. Shared: SidePanel, WaitingList, EmptyState. The specimen page draws them all in every state, in two halves (?part=kit, ?part=pieces) to fit the contact sheet's 8000px. Rules: the six D-614 names retired and rewritten, four added. Budget: docs/redesign/budget.json, each route's U2 measures as its ceiling, one primary and seven type sizes everywhere, every route exempt until its unit redesigns it (exempt only shrinks, src/ui/budget.test.ts), the specimen a tool; probe:screens --budget fails a breach off the exempt list. Finish review fixes made; the filled primary button and the notice bar's filled Open Home left as review entries. Rejected: a fully flat rail, limits below U2's before a screen is redesigned, the comp's 36px symbol, a chart library.
+state: live
+affects: "DESIGN.md\ndocs/11-ui-design-language.md\ndocs/redesign/budget.json\nsrc/ui/theme/tokens.css\nsrc/ui/charts/kit.ts\nscripts/budget.mjs"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -8545,6 +8555,12 @@ should: The text window follows the app's theme and type (The theme is light, da
 breaks: Driven: the window follows the OS scheme (prefers-color-scheme dark while fc-theme was light) in the plain-text viewer's system mono; per code, the application menu's Ctrl+N/Ctrl+O still fire and send to the document window behind it. Owned by M54 F7. Fixed in M54 F7 (2f07b5d).
 state: fault
 
+### Open Home on year.emd and read the notice bar above it (13 answers wait on Home, with a filled Open Home)
+unit: M64 U4
+should: U5 replaces it with Home's WaitingList below the answer; until then the bar is a second filled primary on every screen and waiting sits above the answer, which D-614 rules out
+breaks: One primary per screen, and the answer first
+state: open
+
 ### Open a NEW empty ledger document in the app, ideally with your friend: the rail, Home, Transactions and By merchant before and after reading one statement, then categorize a few merchants.
 unit: M59 U6
 should: MAINTAINER'S EYE (M59 U6, D-582): is it still too much? The rail should be Home, Transactions, Categories | Assistants, Settings until there is something more; each held place should appear once its first row exists (Year after a second month, Plan after a month is fully categorized, Paychecks after a paycheck). Wrong if a place the person needs is missing with no way to it, if Filter hides something she reached for, or if the timesheet tour now reads oddly (its declare happens before Formats is opened).
@@ -8638,6 +8654,12 @@ state: accepted
 ### Open the page's last section, Get Emerald, at desktop and phone width in both themes (built locally, not pushed: pushing deploys getemerald.dev)
 unit: M42 F2
 should: Read every word; the five marks look neat as one set (the Claude mark is a drawn spark, not the official asset); the installers download v0.1.0's files. When a newer release is out, RELEASE in src/demo/page/page.ts moves to it.
+state: open
+
+### Open the specimen page (#/specimen) in the dev server and look at the Button rows in light and dark
+unit: M64 U4
+should: Decide whether the primary button stays a filled emerald split tile or becomes comp A's 32px hairline box with ink text; the finish-reviewer called the filled tile the loudest mark on a near-monochrome page, and The button is a split tile and One primary action per screen still stand
+breaks: A primary that outweighs the answer on every redesigned screen
 state: open
 
 ### Open two documents at schema 60 once in the rebuilt app, run keep_packs on the first, set one of its inbox rows' about to the second's S1 U5 by path, then ask start_here on the first.
@@ -9272,6 +9294,16 @@ enforced_by: scripts/guard-memory-emd.mjs
 always: true
 state: live
 
+### A display is chosen by the shape of the data
+statement: Data is shown with the kit in `src/ui/charts/`, picked by its shape — a headline (`HeadlineFigure`, `Sparkline`), a ranked part of a whole (`RankedBars`), a part of a whole (`PartOfWhole`), a plan against what happened (`PlanAgainst`), a trend over months (`MonthTrend`), months as a pager (`MonthStrip`), a flow from one whole (`MonthFlow`), rows to act on (a data table); a new shape gets a display in `DISPLAYS` with when to use it and when not, and a specimen, before a screen draws it. Every display takes the caller's empty sentence, keeps a negative's true minus and says *over* in words.
+why: The screens must show data in ways that read at a glance (D-608), and a screen that hand-draws its own chart drifts from the rest. The kit is hand-drawn SVG, offline, with no library.
+kind: style
+scope: ui
+decided_by: ["D-608","D-615"]
+enforced_by: src/ui/charts/kit.test.ts
+always: false
+state: live
+
 ### A document made before a change keeps opening
 statement: A change to a ledger format or an engine table carries a document made before it forward with its rows, and the unit that makes the change carries the test.
 why: From M59 a second person keeps a real ledger document; until then the maintainer was the only user and old documents' data was let go (D-276). Not retroactive: documents from before M59 are not converted. A change that cannot carry a document forward stops and asks.
@@ -9541,6 +9573,16 @@ why: Charts follow the same discipline as everything else: a comparison series i
 kind: style
 scope: ui
 decided_by: ["D-531"]
+state: retired
+
+### Charts are thin marks, named, and reachable
+statement: A chart is ink on nothing: lines 2px with no fill, columns and bars 24px at most with their data end rounded `--radius-mark` and their baseline square, every mark at least 3:1 against its plane, gridlines hairline, axes only the labels needed in `ink-secondary`; two or more series have a key and are named at their ends where the names do not touch; every chart has a tooltip and is one keyboard stop whose arrows move along it in the reading order.
+why: The dataviz marks (D-614): a 1.5pt line and unlabelled pale columns failed at a glance on the synthetic year, and a chart reachable only by a pointer leaves its numbers to a hover. Hand-drawn SVG, so the marks are ours to set.
+kind: style
+scope: ui
+decided_by: ["D-531","D-614","D-615"]
+enforced_by: src/ui/charts/kit.test.ts
+always: false
 state: live
 
 ### Charts draw once
@@ -9588,6 +9630,16 @@ kind: non_negotiable
 scope: engine
 state: live
 
+### Density is budgeted
+statement: A redesigned screen stays inside its limits in `docs/redesign/budget.json`: at most one primary action and seven type sizes, and its own ceilings on words, blocks, figures, actions, colours and screens; `npm run probe:screens -- --document year.emd --budget docs/redesign/budget.json --routes …` fails on a breach. The unit that redesigns a route takes it off `exempt` and tightens its limits in the same commit, and `exempt` only shrinks.
+why: Nothing before M64 checked how much a screen holds, and every unit added the block it was asked for (D-606). A budget with a failing check is what keeps a redesigned screen from filling up again; measured off one snapshot by tested arithmetic (D-612).
+kind: law
+scope: ui
+decided_by: ["D-606","D-612","D-615"]
+enforced_by: src/ui/budget.test.ts, scripts/probe-screens.mjs
+always: false
+state: live
+
 ### Density is what a row is
 statement: Density is an 8px ladder with three rungs and it is a rule about what a row is, not a setting: 40px for a row of data you read, 32px for a row of chrome you operate, 24px for a nested chrome row.
 why: Measured, not aspired to. There is no comfortable/compact preference and there should not be one: a finance table has a right density and it is the dense one — a 400-row import review should show 20 rows at a time, not 6.
@@ -9600,6 +9652,15 @@ statement: A desktop window earns what a page could not, and those matter more t
 why: So anything can go back to a spreadsheet, and a review of hundreds of rows is a keyboard-and-selection task.
 kind: style
 scope: ui
+state: live
+
+### Detail opens beside the page
+statement: A figure's breakdown or a category's rows open in a `SidePanel` at the inline end, never on a page of their own, so the screen it came from stays where it was: a column of the page's grid at 1360px and wider, floating over the page with `--shadow-pop` below that; its title first and what it is a detail of under it, Close and Esc to leave, focus back to what opened it.
+why: A page per figure loses the month (D-614, from C's failure); squeezing the page to make room lost it too (A's critique), so the panel floats where the window is narrow.
+kind: style
+scope: ui
+decided_by: ["D-614","D-615"]
+always: false
 state: live
 
 ### Document-based on purpose
@@ -9630,6 +9691,16 @@ why: Tailwind v4 with a CSS-variable layer: the palette, the type ramp (`text-he
 kind: non_negotiable
 scope: ui
 decided_by: ["D-531"]
+state: retired
+
+### Every value is a token, on one ramp
+statement: Every colour, size, space, radius, shadow and duration is a token in `src/ui/theme/tokens.css` — never a hex, an inline pixel size or a hardcoded duration in a component. The type ramp is display 88 · hero 40 · lede 28 · title 24 · secondary-number 20 · heading 16 · body 14 · caption 12 · label 11; a size it has no step for moves onto a step, and the ramp gains a step only by a decision. The public page's and the tour's sheets (`page.css`, `frame.css`) keep a token set of their own and spend it, never a literal.
+why: One `@theme` block holds the palette, the ramp, the spacing and the motion, and dark mode overrides the same variables, so a component never knows its theme. The two steps D-614 added (display, lede) are the redesign's whole hierarchy: one sentence, one figure. A copy of the values drifts, so they are stated there only.
+kind: non_negotiable
+scope: ui
+decided_by: ["D-531","D-614","D-615"]
+enforced_by: src/ui/formats/surfaceRules.test.ts
+always: false
 state: live
 
 ### Few dependencies
@@ -9637,6 +9708,16 @@ statement: Keep the dependency list short.
 why: Every addition is bundle weight in a file somebody downloads, and it has to work with the network off, so nothing can be a link to somewhere else. Rejected on purpose: any charting library (it fights the design language; charts are hand-rolled SVG over d3-scale and d3-shape), any component library, any state library heavier than Zustand, any date library with a timezone model. `@modelcontextprotocol/sdk` is the plugin's alone and never reaches the app's bundle; `electron` and `electron-builder` never reach `dist/`.
 kind: style
 scope: practice
+state: live
+
+### Figures are ink, a flow is a mark
+statement: Every figure is ink, Home's included — came in, went out, saved, taxes and left over alike; a flow's colour (`flow-in`, `flow-out`, `flow-saved`, `flow-tax`) is only a mark beside the word that names it: a dot by a label, a line in a chart and its key. Red on a figure means a problem and nothing else.
+why: Two reviewers of the U3 prototypes read a red *went out* as an error (D-614). Colour carries meaning, and on a figure the only meaning it may carry is a problem; the flow's identity survives as a mark, never as the number's ink.
+kind: non_negotiable
+scope: ui
+decided_by: ["D-614","D-615"]
+enforced_by: src/ui/charts/kit.test.ts
+always: false
 state: live
 
 ### Figures count, and never their first value
@@ -9841,13 +9922,22 @@ scope: ui
 decided_by: ["D-421","D-531"]
 state: live
 
+### One family, four weights, bundled
+statement: Type is IBM Plex Sans with IBM Plex Sans Hebrew (and Plex Mono for raw cells), self-hosted as subsetted woff2 from the installed @fontsource packages in four weights — 300 for the one display figure only, 400 and 500 for text, 600 for headings and the open place in the rail — never a font link.
+why: The only pairing with a real Hebrew companion, a tabular-figures set (Hebrew has no digits of its own), the Open Font License and a neutral voice. 300 lets one figure be 88px without shouting (D-614); 600 was drawn synthesised before, which smeared Hebrew. A CDN font fails rather than degrades: the shell blocks the request.
+kind: non_negotiable
+scope: ui
+decided_by: ["D-124","D-614","D-615"]
+always: false
+state: live
+
 ### One family, two scripts, bundled
 statement: Type is IBM Plex Sans with IBM Plex Sans Hebrew (and Plex Mono for raw cells), self-hosted as subsetted woff2 in three weights, 400, 500 and 600 — never a font link.
 why: The only pairing that meets all four needs at once: a real Hebrew companion rather than a clashing fallback, a proper tabular-figures set (Hebrew has no digits of its own, so the Latin figures carry every number), the Open Font License to ship it inside the app, and neutral without being characterless. A CDN font fails rather than degrades: the shell blocks the request.
 kind: non_negotiable
 scope: ui
 decided_by: ["D-124"]
-state: live
+state: retired
 
 ### One hop, and no traversal
 statement: One hop out, one hop back, and no traversal.
@@ -9976,6 +10066,15 @@ statement: Tabular figures wherever a number appears (`font-variant-numeric: tab
 why: Proportional digits make columns of money visibly ragged and the whole app feel amateur — the single highest-leverage typographic decision in a finance app, and what keeps an animated figure from jittering in width.
 kind: style
 scope: ui
+state: retired
+
+### Tabular figures, but the display figure
+statement: Tabular figures wherever a number appears (`font-variant-numeric: tabular-nums`) — in every column, axis, row and tile — except the one display figure a screen leads with, which takes proportional figures.
+why: Proportional digits make columns of money ragged and an animated figure jitter. At 88px the reverse holds: tabular gives every digit a 0's width and a figure like 1,111 reads loose, so the single standalone figure is set proportional (D-614).
+kind: style
+scope: ui
+decided_by: ["D-614","D-615"]
+always: false
 state: live
 
 ### Tests sit where correctness lives
@@ -10007,6 +10106,15 @@ statement: An amount input has no box: large tabular figures, the currency symbo
 why: The number is the hero, so the field is drawn around it rather than it inside a field.
 kind: style
 scope: ui
+state: live
+
+### The answer comes first, in words
+statement: A screen that answers a question says the answer first: one sentence at the lede step and at most one display figure, above everything else; what is waiting comes below the answer as one quiet list (`WaitingList`), a verb each, never a carousel, a count badge or an alarm colour, and never above it.
+why: U3's three directions taught it: a statement opened by default buries the answer, and the next step belongs below the answer, not in a pager in front of it (D-614).
+kind: style
+scope: ui
+decided_by: ["D-614","D-615"]
+always: false
 state: live
 
 ### The app draws the title bar
@@ -10058,7 +10166,7 @@ why: The one amendment to *outflows are ink* (M28 U5). Where red means a flow, a
 kind: non_negotiable
 scope: ui
 decided_by: ["D-313","D-531"]
-state: live
+state: retired
 
 ### The log holds open milestones only
 statement: The decision log holds the index and the open milestones’ entries; when a milestone closes, `node scripts/archive-decisions.mjs` moves its entries out of the log in the same commit, into `docs/archive/`, which is kept privately and is not in the repository (D-495), and the index and every link name the plain D-ref.
@@ -10098,6 +10206,16 @@ why: `openDatabase` migrates unconditionally, which is correct in the app and de
 kind: trap
 scope: plugin
 decided_by: ["D-094","D-378"]
+state: live
+
+### The rail is an index of words, and chrome is one plane
+statement: The rail lists places in words, in two groups under their word — *Money* for the ledger's, *Document* for the engine's — the place you are on in semibold ink with a 6px `accent` square at the row's end; glyphs only when it is collapsed. A section's views are its tab strip (`ViewTabs`), never rows in the rail; a section of places (Wealth, Settings, Formats, a pack) lists its places beneath it while you are in it. The rail and the title bar are `surface`, content is `background`, and the hairline between them is the whole separation.
+why: Icon-only rails failed recognition in U3 and a tree of views beneath sections made the rail a second navigation (D-614). The format folders of D-475 have no tab form, so sections of places keep them. 200px expanded, 56px collapsed.
+kind: style
+scope: ui
+decided_by: ["D-125","D-614","D-615"]
+enforced_by: src/ui/formats/surfaceRules.test.ts
+always: false
 state: live
 
 ### The reconciler refuses four things
@@ -10140,7 +10258,7 @@ why: Navigation A (D-312). 200px expanded, 56px collapsed to its glyphs, a prefe
 kind: style
 scope: ui
 decided_by: ["D-125","D-312"]
-state: live
+state: retired
 
 ### The theme is applied before first paint
 statement: The theme is light, dark or system (the default) — the public page's toggle too — kept in `localStorage` and applied to `:root[data-theme]` before the first paint; the colour transition is enabled a frame later, so toggling animates and loading does not.
@@ -17945,14 +18063,18 @@ report: M64 U3 built. Three working prototypes of Home and the rail on U16's syn
 milestone: M64
 scope: ui
 title: The chosen direction becomes the design language: DESIGN.md, the tokens, the shared components, a data display kit on the specimen page, the ui rules and a density budget
-state: in_progress
+landed: 2026-11-25
+decision: D-615
+state: built
 brief: "**Why.** The direction picked in U3 has to be what every later unit builds with, without asking the maintainer, and the screens must show data in well-thought ways that read at a glance (D-608).\n\n**Do.** 1. Replace DESIGN.md and docs/11 with the direction. 2. Tokens, theme, fonts and icons (self-hosted, offline). 3. Restyle the shared pieces so every screen moves at once: src/ui/components/, the rail, the title bar and document bar, tabs, tables, figures and empty states. 4. **A data display kit** in src/ui/charts/, hand-drawn SVG as now, one per shape of data U2 found, designed with the dataviz skill: a headline figure with its change and a small trend, a ranked bar list, a part of a whole, a plan against what happened, a trend over months, a month's flow (came in to spent, put aside and left over), and whatever else the inventory needs. Each states when to use it. 5. **The specimen page** (U16's route) shows every component and display in every state: empty, partial, negative, long Hebrew labels, light and dark. 6. **The ui rule rows**: retire each one the direction overrides (with U3's decision), keep the rest, add the new ones, including the density budget as a rule that names its check. 7. **The budget**: docs/redesign/budget.json gives each route its limits from U2's measures, and lists the routes not yet redesigned as exempt; probe:screens --budget fails on a breach, and the exempt list only shrinks. 8. **Taste check**: run Impeccable's finish-reviewer on the specimen page and the contact sheet against DESIGN.md, and make its material fixes. Every screen still works in light, dark and Hebrew; npm run check:tours stays green, or its breaks are listed for U15.\n\n**Tests.** The existing component and probe tests, updated on purpose; the budget check against a breaching and a passing fixture; each display renders its empty and negative states.\n\n**Out of scope.** Rearranging any one screen's content (U5 onward)."
-files: DESIGN.md and docs/11 replaced; tokens, theme and fonts; the shared components, rail, title bar, tabs and tables restyled; a set of data displays; the specimen page filled; ui rule rows replaced; the budget file.
+files: "DESIGN.md\ndocs/11-ui-design-language.md\ndocs/redesign/budget.json\nsrc/ui/theme/tokens.css\nsrc/ui/charts/kit.ts\nsrc/ui/charts/HeadlineFigure.tsx\nsrc/ui/charts/Sparkline.tsx\nsrc/ui/charts/RankedBars.tsx\nsrc/ui/charts/PartOfWhole.tsx\nsrc/ui/charts/PlanAgainst.tsx\nsrc/ui/charts/MonthTrend.tsx\nsrc/ui/charts/MonthStrip.tsx\nsrc/ui/charts/MonthFlow.tsx\nsrc/ui/charts/Chart.tsx\nsrc/ui/components/SidePanel.tsx\nsrc/ui/components/WaitingList.tsx\nsrc/ui/components/ViewTabs.tsx\nsrc/ui/Sidebar.tsx\nsrc/ui/screens/Specimen.tsx\nsrc/ui/screens/specimens.tsx\nscripts/budget.mjs\nscripts/probe-screens.mjs\nsrc/ui/budget.test.ts\nsrc/ui/charts/kit.test.ts\nsrc/i18n/en/chrome.ts\nsrc/i18n/he/chrome.ts\nelectron/windowChrome.ts"
 blocks: ["M64 U3"]
 taken_by: run-milestone driver
 started: 2026-11-25
 branch: m64-redesign
+commit: 599fbf9
 paths: "DESIGN.md\ndocs/11-ui-design-language.md\nsrc/ui/theme/\nsrc/ui/components/\nsrc/ui/charts/\nsrc/ui/Sidebar.tsx\nsrc/ui/TitleBar.tsx\nsrc/ui/DocumentBar.tsx\nsrc/ui/RailFolder.tsx\nsrc/ui/NavGlyph.tsx\nsrc/ui/screens/Section.tsx\nsrc/ui/screens/Specimen.tsx\ndocs/redesign/budget.json"
+report: M64 U4 landed at 599fbf9 on m64-redesign. Tokens: A's greys in both themes, display 88/lede 28 steps, Plex 300 and 600 faces (installed @fontsource, no dependency), kit mark colours and --radius-mark. Rail: words in two groups (Money, Document), open place semibold with an accent square; a section's views moved to the ViewTabs strip (which carries the tour anchors); Wealth, Settings, Formats and packs keep their places beneath them (format folders, D-475). Rail stays 200px: 216 made the development tour scroll sideways. Kit (src/ui/charts/): HeadlineFigure, Sparkline, RankedBars, PartOfWhole, PlanAgainst, MonthTrend, MonthStrip, MonthFlow, with DISPLAYS saying when to use each; SidePanel, WaitingList, EmptyState in components; Chart at 2px, 24px bars, keyboard. Specimen page filled in every state, light and dark, split ?part=kit / ?part=pieces for the 8000px contact sheet. Budget: docs/redesign/budget.json (U2 measures as ceilings, primary 1 and typeSizes 7 everywhere, every route exempt, specimen a tool), judged by scripts/budget.mjs in probe:screens --budget; exempt only shrinks (src/ui/budget.test.ts). Rules: six retired and rewritten, four added. Finish review: made MonthFlow's over figure ink, its whole a 3:1 rule, one U+2212 minus across the kit, the strip's note in words and thinned labels, the panel's month under its title, a Hebrew button's width; left the filled primary and the notice bar's Open Home as review entries. Also fixed two tests that had failed at HEAD since U16 (dark-block parsing in hostStyle and surfaceRules). Full suite green but formatWatch's real-process test, which flaked under load and passed alone; typecheck, privacy, docs:check and check:tours green. Left for U5: Home's figures still wear flow colours (the retired rule) until Home is rebuilt; Ctrl+K still says Search every entry, or go to a screen (asking is not built); ActionGlyph stays on its 16 grid, not D-614's 24; low contrast from ink-tertiary text is unchanged per screen.
 
 ### M64 U5
 milestone: M64
