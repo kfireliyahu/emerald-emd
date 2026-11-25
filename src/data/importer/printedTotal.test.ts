@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { formatMoney, fromMajorUnits } from '@/core/money.ts'
-import { findPrintedTotal, numberIn, totalsAgree } from './printedTotal.ts'
+import { findPrintedTotal, numberIn, reconcileRows, totalsAgree, type PrintedTotal } from './printedTotal.ts'
 import type { SheetCell, SheetTable } from './sheetTable.ts'
 
 /**
@@ -149,5 +149,40 @@ describe('totalsAgree', () => {
     const sum = fromMajorUnits(0.1, 'ILS').minor + fromMajorUnits(0.2, 'ILS').minor
     expect(formatMoney({ minor: sum, currency: 'ILS' })).toBe('₪0.30')
     expect(totalsAgree(fromMajorUnits(0.3, 'ILS'), { minor: sum, currency: 'ILS' })).toBe(true)
+  })
+})
+
+describe('reconcileRows', () => {
+  const printed = (major: number, currency = 'ILS'): PrintedTotal => ({
+    amount: fromMajorUnits(major, currency),
+    sourceRowRef: 'Sheet1!9',
+    text: String(major),
+  })
+  // Two charges and a refund, as the importer signs them: charges negative.
+  const rows = [fromMajorUnits(-300, 'ILS'), fromMajorUnits(-120.5, 'ILS'), fromMajorUnits(49.9, 'ILS')]
+
+  it('agrees with a card statement that prints its total net of a refund (D-613)', () => {
+    // Every row's magnitude would be 470.40 — the refund counted twice.
+    const found = reconcileRows(printed(370.6), rows)
+    expect(found.reconciles).toBe(true)
+    expect(found.totals.map((total) => formatMoney(total))).toEqual(['₪370.60'])
+  })
+
+  it('still agrees with a file that prints its rows as one gross figure', () => {
+    const found = reconcileRows(printed(470.4), rows)
+    expect(found.reconciles).toBe(true)
+    expect(found.totals.map((total) => formatMoney(total))).toEqual(['₪470.40'])
+  })
+
+  it('disagrees with anything else, showing the net figure', () => {
+    const found = reconcileRows(printed(420.5), rows)
+    expect(found.reconciles).toBe(false)
+    expect(found.totals.map((total) => formatMoney(total))).toEqual(['₪370.60'])
+  })
+
+  it('is unchecked when the file prints nothing, and totals each currency apart', () => {
+    const found = reconcileRows(undefined, [...rows, fromMajorUnits(-12, 'USD')])
+    expect(found.reconciles).toBeUndefined()
+    expect(found.totals).toEqual([fromMajorUnits(370.6, 'ILS'), fromMajorUnits(12, 'USD')])
   })
 })

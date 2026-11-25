@@ -53,7 +53,7 @@ import { allParsed, applyMapping, summarize, type ParsedRow } from '@/data/impor
 import { commitSession } from '@/data/importer/commit.ts'
 import { columnCells, guessMapping, inferColumnShape, missingRequiredRoles } from '@/data/importer/guess.ts'
 import { assignNaturalKeys } from '@/data/importer/naturalKey.ts'
-import { findPrintedTotal, totalsAgree, type PrintedTotal } from '@/data/importer/printedTotal.ts'
+import { findPrintedTotal, reconcileRows, type PrintedTotal } from '@/data/importer/printedTotal.ts'
 import {
   computeHeaderSignature,
   headerCellsOf,
@@ -426,21 +426,6 @@ interface Plan {
 }
 
 /**
- * Totals per currency of everything that parsed, as magnitudes.
- *
- * The same shape the review screen compares against the printed figure — a file
- * with a dollar section and a shekel section prints one total for each.
- */
-function totalsOf(parsed: readonly ParsedRow[]): readonly Money[] {
-  const byCurrency = new Map<string, number>()
-  for (const draft of allParsed(parsed)) {
-    const current = byCurrency.get(draft.amount.currency) ?? 0
-    byCurrency.set(draft.amount.currency, current + Math.abs(draft.amount.minor))
-  }
-  return [...byCurrency].map(([currency, minor]) => ({ minor, currency }))
-}
-
-/**
  * **A statement makes its account** (D-313, and M28 U9 for the conversation):
  * the screen has resolved a file's account by its last four digits since the
  * statement batch, and `add_institutions` went with onboarding's institution
@@ -533,7 +518,8 @@ function buildPlan(document: OpenDocument, args: Args, read: Plan['read']): Plan
     lastDataRowIndex,
     currency: resolved.mapping.defaultCurrency,
   })
-  const parsedTotals = totalsOf(parsed)
+  // Charges less refunds, as the file prints it (D-613) — the screen's own check.
+  const { totals: parsedTotals, reconciles } = reconcileRows(printed, drafts.map((draft) => draft.amount))
 
   return {
     read,
@@ -549,10 +535,7 @@ function buildPlan(document: OpenDocument, args: Args, read: Plan['read']): Plan
     skipped: summary.skipped,
     parsedTotals,
     printed,
-    reconciles:
-      printed === undefined
-        ? undefined
-        : parsedTotals.some((total) => totalsAgree(printed.amount, total)),
+    reconciles,
     ignoreTotal: args['ignore_printed_total'] === true,
     saveAs: optionalString(args, 'save_mapping_as'),
   }

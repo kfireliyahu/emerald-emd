@@ -289,7 +289,10 @@ number wins, because a total is the big number on its line by construction.
 
 The comparison is on **magnitude**, since the sign is the app's convention rather than the
 file's — both files print charges as positive and the importer is what makes them negative
-(D-004). Comparing signed values would report every correct import as a mismatch.
+(D-004). Comparing signed values would report every correct import as a mismatch. **What is
+compared is the rows' signed sum** — charges less refunds, which is what a card prints as its
+total — and only where that disagrees, the sum of every row's magnitude, for a file that prints
+one gross figure (D-613, `reconcileRows`).
 
 The figure is scanned once, when the rows are staged, and stored on the `ImportSession`. By the
 time the review screen asks, the sheet is gone: a resumed import has rows in the document and no

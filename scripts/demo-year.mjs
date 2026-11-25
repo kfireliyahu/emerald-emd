@@ -301,17 +301,11 @@ export async function makeYear(target, source, ask, today) {
     let checking = cents(bank.opening)
     let saved = cents(savings.opening)
     const accounts = new Set()
-    const read = async (file, account, reader, refunds = false) => {
+    const read = async (file, account, reader) => {
       const known = accounts.has(account.name)
       await call('import_statement', {
         path: target,
         file,
-        // A statement holding a refund prints its total net of it, and the
-        // import's check adds every row's magnitude (src/plugin/tools/ingest.ts
-        // `totalsOf`, and the app's statementBatch.ts), so it refuses a true
-        // file. Found by this year (M64 U16) and handed on; until it is fixed,
-        // only such a file is read past its total, and every other is checked.
-        ...(refunds ? { ignore_printed_total: true } : {}),
         new_account: { name: account.name, kind: account.kind, last4: account.last4 },
         ...(known || reader === undefined ? {} : { save_mapping_as: reader, ...(account.columns === undefined ? {} : { columns: account.columns }) }),
         commit: true,
@@ -328,8 +322,7 @@ export async function makeYear(target, source, ask, today) {
         const total = writeCardStatement(file, card, purchases.get(card.key), months, index)
         billed.set(`${card.key}:${index}`, total)
         if (card.missing === index) continue
-        const refunds = purchases.get(card.key).some((row) => row.minor < 0)
-        await read(file, { name: card.name, kind: 'CREDIT_CARD', last4: card.last4, columns: card.columns }, card.reader, refunds)
+        await read(file, { name: card.name, kind: 'CREDIT_CARD', last4: card.last4, columns: card.columns }, card.reader)
       }
 
       // The bank: salary, the cards' bills for last month, rent and bills, the

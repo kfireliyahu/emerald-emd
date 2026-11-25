@@ -439,6 +439,65 @@ describe('the file has to add up to what it says it does', () => {
 })
 
 /**
+ * **A card statement with a refund on it** (M64 U17, D-613): the total a card
+ * prints is what it will charge, net of the refund, and both layouts of the
+ * synthetic year's cards print it so. Made up here, like the card above.
+ */
+const REFUND_CARDS = {
+  hebrew: {
+    text: [
+      'כרטיס אשראי לדוגמה,,',
+      'פירוט עסקאות,,',
+      ',,',
+      'תאריך עסקה,שם בית עסק,סכום חיוב',
+      '03/07/2026,שופרסל דיל,120.50',
+      '05/07/2026,פז יעלים,300.00',
+      '09/07/2026,זיכוי חנות לדוגמה,-49.90',
+      '11/07/2026,ארומה תל אביב,29.50',
+      ',,',
+      'סך הכל,,400.10',
+    ].join('\n'),
+    printed: '₪400.10',
+  },
+  english: {
+    text: [
+      'A made-up card,,',
+      'Card number,****4417,',
+      ',,',
+      'Transaction date,Merchant,Charge amount',
+      '02/07/2026,Corner grocer,88.40',
+      '06/07/2026,Fuel station,210.00',
+      '08/07/2026,Shoe shop refund,-35.00',
+      ',,',
+      'Total,,263.40',
+    ].join('\n'),
+    printed: '₪263.40',
+  },
+} as const
+
+describe('a card statement with a refund on it', () => {
+  for (const [layout, card] of Object.entries(REFUND_CARDS)) {
+    it(`reconciles the ${layout} layout to the total it prints, charges less refunds`, async () => {
+      const { path, accountId } = await fixture()
+      const dir = await tempDir('emerald-refund-')
+      const file = join(dir, `${layout}-card.csv`)
+      await writeFile(file, card.text, 'utf8')
+
+      const text = await importStatementTool.run(
+        { path, file, account_id: accountId, columns: CARD_COLUMNS, commit: true },
+        NO_CLIENT,
+      )
+      expect(text).toContain('**Reconciles.**')
+      expect(text).toContain(card.printed)
+
+      const db = await reopen(path)
+      expect(listTransactions(db).some((row) => row.amount.minor > 0)).toBe(true)
+      db.close()
+    })
+  }
+})
+
+/**
  * **A file holding two cards, in a conversation** — M59 U2, D-578: the same
  * cut the screen makes, in both shapes, and one account per card.
  */
