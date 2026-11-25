@@ -1,0 +1,136 @@
+{
+  "about": "The synthetic year (M64 U16, D-611): fourteen months of one made-up person's money, ending in the month the build runs in, which is still running. Made up from end to end, and plainly: every shop, name, account number and figure here is invented, and every Hebrew one says so in its name (לדוגמה, בדוי). scripts/demo-year.mjs writes a statement file per card and per bank account per month from this, with a seeded generator so every build draws the same figures, and reads each one through the ledger's own import, as a person would; the slips, funds, goals, debt and plan go in through the tools a conversation uses. Months are counted from the first: index 0 is thirteen months before the build's month, index 13 is the build's month. scripts/make-demo-document.mjs writes it into .demo/year.emd.",
+  "currency": "ILS",
+  "seed": 20261125,
+  "months": 14,
+  "cards": [
+    {
+      "key": "everyday",
+      "name": "Everyday Card 1234",
+      "last4": "1234",
+      "reader": "Everyday Card",
+      "layout": "en",
+      "holder": "Alex Sample",
+      "charge_day": 2,
+      "bank_label": "כרטיס אשראי 1234"
+    },
+    {
+      "key": "second",
+      "name": "כרטיס לדוגמה 5678",
+      "last4": "5678",
+      "reader": "כרטיס לדוגמה",
+      "layout": "he",
+      "charge_day": 10,
+      "bank_label": "כרטיס אשראי 5678",
+      "missing": 10
+    }
+  ],
+  "shops": [
+    { "name": "Greenleaf Market", "card": "everyday", "category": "cat:groceries", "visits": [3, 5], "amount": [180, 520] },
+    { "name": "Harbor Foods", "card": "everyday", "category": "cat:groceries", "visits": [1, 2], "amount": [600, 1100] },
+    { "name": "Little Bean Cafe", "card": "everyday", "category": "cat:restaurants", "visits": [3, 6], "amount": [24, 52] },
+    { "name": "Copper Kettle", "card": "everyday", "category": "cat:restaurants", "visits": [1, 3], "amount": [90, 210] },
+    { "name": "Northway Fuel", "card": "everyday", "category": "cat:fuel", "visits": [2, 3], "amount": [230, 310] },
+    { "name": "Maple Outfitters", "card": "everyday", "category": "cat:shopping", "visits": [0, 1], "amount": [120, 480] },
+    { "name": "Pixel Arcade", "card": "everyday", "category": null, "visits": [0, 2], "amount": [35, 90] },
+    { "name": "סופר השכונה לדוגמה", "card": "second", "category": "cat:groceries", "visits": [2, 4], "amount": [90, 340] },
+    { "name": "מאפיית הדוגמה", "card": "second", "category": "cat:groceries", "visits": [2, 4], "amount": [18, 64] },
+    { "name": "בית מרקחת בדוי", "card": "second", "category": "cat:pharmacy", "visits": [0, 2], "amount": [35, 150] },
+    { "name": "מסעדת הגן הבדויה", "card": "second", "category": "cat:restaurants", "visits": [0, 2], "amount": [140, 320] },
+    { "name": "חנות הפינה הבדויה", "card": "second", "category": null, "visits": [1, 3], "amount": [12, 75] }
+  ],
+  "card_bills": [
+    { "name": "Fastline Internet", "card": "everyday", "category": "cat:connectivity", "day": 3, "fixed": 99.9, "changes": { "from": 8, "fixed": 119.9 }, "cadence": "MONTHLY" },
+    { "name": "Parrot Mobile", "card": "everyday", "category": "cat:connectivity", "day": 4, "fixed": 59.9, "cadence": "MONTHLY" },
+    { "name": "StreamBox", "card": "everyday", "category": "cat:subscriptions", "day": 6, "fixed": 54.9, "cadence": "MONTHLY", "discretionary": true },
+    { "name": "חדר כושר לדוגמה", "card": "second", "category": "cat:fitness", "day": 1, "fixed": 189, "cadence": "MONTHLY", "discretionary": true, "by_name": true }
+  ],
+  "installments": [
+    { "name": "Cosy Home Appliances", "card": "everyday", "category": "cat:shopping", "total": 3600, "payments": 3, "first": 4, "day": 16 },
+    { "name": "רהיטי הדוגמה", "card": "second", "category": "cat:shopping", "total": 7200, "payments": 12, "first": 1, "day": 21 }
+  ],
+  "refunds": [
+    { "name": "Maple Outfitters", "card": "everyday", "month": 7, "day": 19, "amount": 249.9 },
+    { "name": "בית מרקחת בדוי", "card": "second", "month": 11, "day": 8, "amount": 64.5 }
+  ],
+  "bank": {
+    "name": "Everyday Bank checking",
+    "last4": "0001",
+    "number": "99-001-0000001",
+    "reader": "Everyday Bank",
+    "title": "בנק לדוגמה",
+    "opening": 41000,
+    "salary_label": "משכורת - חברת הדוגמה בע\"מ",
+    "bills": [
+      { "name": "שכר דירה הוראת קבע", "category": "cat:rent", "day": 3, "fixed": 5200, "cadence": "MONTHLY" },
+      { "name": "ארנונה עיריית הדוגמה", "category": "cat:municipal", "day": 15, "fixed": 610, "cadence": "MONTHLY" },
+      { "name": "חשמל לדוגמה", "category": "cat:electricity", "day": 18, "every": 2, "amount": [380, 690], "cadence": "BIMONTHLY" },
+      { "name": "מים לדוגמה", "category": "cat:water", "day": 18, "every": 2, "offset": 1, "amount": [150, 230], "cadence": "BIMONTHLY" },
+      { "name": "הלוואה לרכב לדוגמה", "category": "cat:loans", "day": 12, "fixed": 1000, "cadence": "MONTHLY" },
+      { "name": "עמלת ניהול חשבון", "category": "cat:bankfees", "day": 28, "fixed": 21.9 }
+    ],
+    "others": [
+      { "name": "העברה לחבר בדוי", "category": null, "months": [2, 6, 9, 12], "day": 22, "amount": [100, 400] }
+    ],
+    "savings_transfer": { "name": "העברה לחיסכון", "day": 5, "amount": 1500 },
+    "investment": { "name": "העברה לתיק השקעות לדוגמה", "category": "cat:investments", "month": 9, "day": 20, "amount": 30000 }
+  },
+  "savings": {
+    "name": "Everyday Bank savings",
+    "last4": "0002",
+    "number": "99-001-0000002",
+    "opening": 12000,
+    "label": "העברה מעו\"ש",
+    "interest": { "label": "ריבית זכות", "every": 3, "amount": 38 }
+  },
+  "pay": {
+    "employer": "Sample Works Ltd",
+    "day": 28,
+    "gross": [[0, 24500], [8, 25800]],
+    "income_tax": 0.1625,
+    "national_insurance": 0.0433,
+    "health_tax": 0.0316,
+    "pension": { "employee": 0.06, "employer": 0.065 },
+    "study_fund": { "employee": 0.025, "employer": 0.075 },
+    "severance": 0.0833,
+    "bonus": { "calendar_month": 12, "amount": 9000, "note": "A made-up year-end bonus" }
+  },
+  "goals": [
+    {
+      "name": "Emergency fund",
+      "kind": "EMERGENCY",
+      "target_amount": 50000,
+      "years_ahead": 2,
+      "already_there": 12000,
+      "default_holding": { "name": "Everyday Bank savings", "kind": "DEPOSIT", "is_liquid": true, "provenance": "RECORDED", "place": { "name": "Everyday Bank", "kind": "CHECKING" } }
+    },
+    {
+      "name": "Trip to the coast",
+      "kind": "SHORT_TERM",
+      "target_amount": 8000,
+      "years_ahead": 1,
+      "already_there": 500,
+      "default_holding": { "name": "Trip jar", "kind": "CASH", "is_liquid": true, "provenance": "RECORDED", "place": { "name": "At home", "kind": "CASH" } },
+      "deposits": { "months": [1, 3, 5, 7, 9, 11, 12], "day": 25, "amount": 400 }
+    }
+  ],
+  "debts": [
+    { "name": "Car loan", "kind": "BANK_LOAN", "principal_amount": 36000, "years_before": 1, "years_ahead": 3, "monthly_payment": 1000, "tracking_kind": "NONE" }
+  ],
+  "funds": [
+    { "name": "Pension fund", "fund_type": "PENSION", "opened": "2019-03-01", "fee_on_accumulation_basis_points": 22, "fee_on_deposit_basis_points": 150, "start": 171000, "per_quarter": 6200 },
+    { "name": "Study fund", "fund_type": "STUDY_FUND", "opened": "2021-01-01", "fee_on_accumulation_basis_points": 50, "start": 54000, "per_quarter": 3400 }
+  ],
+  "plan": {
+    "name": "Everyday",
+    "buckets": [
+      { "name": "Emergency fund", "mode": "amount", "amount": 1500, "points_at": { "kind": "goal", "id": "Emergency fund" } },
+      { "name": "Trip to the coast", "mode": "amount", "amount": 400, "points_at": { "kind": "goal", "id": "Trip to the coast" } },
+      { "name": "Car loan", "mode": "amount", "amount": 1000, "points_at": { "kind": "debt", "id": "Car loan" } },
+      { "name": "Groceries", "mode": "amount", "amount": 3200, "points_at": { "kind": "category", "id": "cat:groceries" } },
+      { "name": "Restaurants", "mode": "amount", "amount": 350, "points_at": { "kind": "category", "id": "cat:restaurants" } },
+      { "name": "Fuel", "mode": "amount", "amount": 900, "points_at": { "kind": "category", "id": "cat:fuel" } },
+      { "name": "Spending", "mode": "rest", "points_at": { "kind": "none" } }
+    ]
+  }
+}

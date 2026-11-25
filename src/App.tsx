@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 
 import { SUPPORTED_EXTENSIONS } from '@/data/importer/sheetTable.ts'
@@ -70,7 +70,7 @@ import { Section } from '@/ui/screens/Section.tsx'
 import { Transactions } from '@/ui/screens/Transactions.tsx'
 import { Year } from '@/ui/screens/Year.tsx'
 import { addStatementFiles, readWaitingLayouts, restOf } from '@/ui/home/statementIntake.ts'
-import { isDemo } from '@/ui/edition.ts'
+import { isDemo, specimenOpens } from '@/ui/edition.ts'
 import { useAutoSave } from '@/ui/useAutoSave.ts'
 import { useDiskWatch } from '@/ui/useDiskWatch.ts'
 import { useSaveShortcuts } from '@/ui/useSaveShortcuts.ts'
@@ -417,6 +417,13 @@ function useCrashRecovery(): void {
 }
 
 /**
+ * **The specimen page** (M64 U16, D-611): loaded on demand, and only where the
+ * build opens it — the dev server and the demo. In the desktop release the
+ * condition is a constant `false`, so there is no route and no chunk.
+ */
+const Specimen = specimenOpens() ? lazy(() => import('@/ui/screens/Specimen.tsx')) : undefined
+
+/**
  * The routed screens, each keyed on its screen so switching tabs replays the
  * view fade rather than diffing one screen into the next. **A screen, not an
  * address** (M39 U3): a list's detail pane has an address of its own
@@ -620,6 +627,16 @@ function RoutedViews() {
         {/* What an assistant can do here, and the snippet to connect one
             (M26 U7, D-295). In the rail, not under Settings. */}
         <Route path="/mcp" element={<Mcp />} />
+        {Specimen !== undefined && (
+          <Route
+            path="/specimen"
+            element={
+              <Suspense fallback={null}>
+                <Specimen />
+              </Suspense>
+            }
+          />
+        )}
         {/* A shell with a sub-nav, now that F12 has given settings a second
             section. `/settings/mappings` was the statement readers for a year
             (D-031) and redirects to where they went in M28 U3; `/settings` lands

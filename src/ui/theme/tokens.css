@@ -277,7 +277,8 @@
 
 /* Lifted, not the light values on a dark page. Same order, so a category keeps
    its identity across a theme switch. */
-:root[data-theme="dark"] {
+:root[data-theme="dark"],
+.fc-theme-dark {
   --color-category-1: #7aa5ee;
   --color-category-2: #f0a554;
   --color-category-3: #4cc2bb;
@@ -292,7 +293,8 @@
   --color-category-none: #55555a;
 }
 
-:root[data-theme="dark"] {
+:root[data-theme="dark"],
+.fc-theme-dark {
   --color-background: #0b0b0c;
   --color-surface: #151517;
   --color-elevated: #1b1b1e;
@@ -364,6 +366,54 @@ html.fc-window body {
 html:has(:root[data-theme="dark"]),
 :root[data-theme="dark"] {
   color-scheme: dark;
+}
+
+/* **A theme for one pane** (M64 U16, D-611): the specimen page draws each
+   component in light and dark side by side, whichever theme the page is in.
+   `.fc-theme-dark` shares the dark blocks above; `.fc-theme-light` restates
+   the light values of every token they override (`@theme` cannot take a
+   class), and `src/ui/theme/themePanes.test.ts` fails the day the two drift. */
+.fc-theme-dark {
+  color-scheme: dark;
+}
+
+.fc-theme-light {
+  color-scheme: light;
+  --color-category-1: #3f74c9;
+  --color-category-2: #cf7f22;
+  --color-category-3: #21918c;
+  --color-category-4: #c4497e;
+  --color-category-5: #7b5cc9;
+  --color-category-6: #7f8f26;
+  --color-category-7: #2b97cc;
+  --color-category-8: #d4664a;
+  --color-category-9: #9a52a0;
+  --color-category-10: #5f7590;
+  --color-category-11: #a88a3e;
+  --color-category-none: #b5b5b0;
+  --color-background: #ffffff;
+  --color-surface: #f7f7f6;
+  --color-elevated: #ffffff;
+  --color-ink: #111111;
+  --color-ink-secondary: #6b6b6b;
+  --color-ink-tertiary: #a0a09c;
+  --color-hairline: #ececea;
+  --color-hairline-strong: #d9d9d6;
+  --color-accent: #07805f;
+  --color-accent-ink: #ffffff;
+  --color-accent-hover: #05664b;
+  --color-accent-soft: #eef9f5;
+  --color-action: #07805f;
+  --color-action-ink: #ffffff;
+  --color-action-hover: #05664b;
+  --color-action-deep: #055a43;
+  --color-negative: #c4342b;
+  --color-positive: #1f7a4d;
+  --color-flow-in: #1f7a4d;
+  --color-flow-out: #c4342b;
+  --color-flow-saved: #0b4f35;
+  --color-flow-tax: #b45309;
+  --shadow-pop: 0 1px 2px rgba(17, 17, 17, 0.04), 0 8px 24px rgba(17, 17, 17, 0.08);
 }
 
 /* The theme fade. Only these properties, only once the page has painted — the

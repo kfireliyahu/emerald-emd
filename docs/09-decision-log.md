@@ -509,6 +509,7 @@ written out here.
 | D-606 | 2026-11-25 | The UI is redesigned, not reviewed again: three working directions for the maintainer to pick one, screens built for a newcomer, density measured and budgeted, what leaves a screen kept one click behind, the ledger first and then the engine | M64 |
 | D-607 | 2026-11-25 | A month counts a card purchase in the month it was bought, saved is what was put aside from that month's money, and Home opens on the last finished month | M64 |
 | D-608 | 2026-11-25 | No session reads the maintainer's own documents any more: a synthetic year stands in, the session picks the design direction, his one look is the real Home in the app, and an Impeccable finish review checks taste in his place | M64 |
+| D-611 | 2026-11-25 | The synthetic year is made at build time, ending in the build's own month, its statements written per month from one JSON source and read through the ledger's own import; the specimen page opens in the dev and demo builds only, its panes themed by a class | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -956,6 +957,38 @@ again: only demos.
 
 **Rejected.** Figma: a sign-in, and another place he would have to look. A chart library: a
 dependency, and against offline.
+
+## D-611 · 2026-11-25 · The synthetic year is made at build time, ending in the build's own month, its statements written per month from one JSON source and read through the ledger's own import; the specimen page opens in the dev and demo builds only, its panes themed by a class <a id="d-611"></a>
+
+**Context.** M64 U16, the tools D-608 put before the redesign. The year has to stand in for a real
+ledger: a running month, a missing statement, a card billed the month after, and the rest of the
+brief's list, every figure made up. A year of committed files would stop having a running month on
+the first of the next one, and the tours' documents must not change under their tours.
+
+**Decision.**
+
+- **`year.emd` is made by `make-demo-document.mjs` at build time, beside the others**, by
+  `scripts/demo-year.mjs`, from `fixtures/synthetic/demo/year/year.json`. Its fourteen months end
+  in the month the build runs in, still running: bank rows stop at today and no card statement
+  covers it. Figures are drawn by month index with a seeded generator, so every build draws the
+  same ones on its own calendar.
+- **Intake makes it.** Each card's and bank account's month is written as the file its issuer
+  would send (an English xlsx, a Hebrew xlsx, two csv) and read through `import_statement`;
+  slips, fund readings, goals, the debt and the plan go in through the tools a conversation uses,
+  since none of them has a reader there.
+- **A statement holding a refund is read past its printed total**, and only such a file: the
+  import's check adds every row's magnitude, so it refuses a true statement with a refund (found
+  here, handed on; the fix is in `src/plugin/tools/ingest.ts` and `statementBatch.ts`).
+- **`#/specimen` opens where `specimenOpens()` is true**, the dev server and the demo build, and
+  is lazily imported, so the desktop release has neither the route nor the chunk. Each state is
+  drawn in a `.fc-theme-light` and a `.fc-theme-dark` pane: the dark class shares the dark token
+  blocks, the light one restates the light values `@theme` cannot attach to a class, and a test
+  fails when the copy drifts.
+
+**Rejected.** Committed statement files (stale in a month, and a frozen running month); growing
+`showcase.emd` (the page's pictures are taken from it); a specimen route in every build behind a
+setting (the release would ship a page nobody there asked for); theming a pane by redefining the
+root's theme while the page is open (it fights the person's own theme).
 
 ## Related
 

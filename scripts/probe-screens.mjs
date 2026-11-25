@@ -19,6 +19,7 @@
  *
  * Usage:
  *   node scripts/probe-screens.mjs --document project.emd --routes formats,dashboard
+ *   node scripts/probe-screens.mjs --document year.emd --routes '#/,#/year,#/specimen'   (the synthetic year, M64 U16)
  *   node scripts/probe-screens.mjs --document custom.emd --routes '#/formats/card_charge/entry/new' --themes dark
  *   options: --themes light,dark (both by default) · --size 1280x800 · --root main
  *            --limit 10 (entries per list) · --json (everything, as JSON) · --fresh

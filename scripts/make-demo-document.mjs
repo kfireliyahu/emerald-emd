@@ -33,6 +33,12 @@
  *   - `timesheet.emd`, the timesheet tour's (U7): the ledger pack, one
  *     paycheck and the plan its net goes to, from `fixtures/synthetic/demo/timesheet.json`, and nothing of a
  *     timesheet — the tour declares it, connects it and types its days
+ *   - `year.emd`, the synthetic year (M64 U16, D-611): fourteen made-up months
+ *     ending in the build's own, every case a real ledger shows, its statements
+ *     written per month from `fixtures/synthetic/demo/year/year.json` and read
+ *     through the ledger's own import (`scripts/demo-year.mjs`). No tour plays
+ *     it; the redesign draws and checks on it (`npm run probe:screens --
+ *     --document year.emd`, `npm run dev:demo` then `app.html?document=year.emd`)
  *   - `tours.emd`, every tour (U3): `tour.format.md` and `tour_step.format.md`
  *     from `fixtures/synthetic/demo/`, declarations and rows, as the two parts
  *     of a text document at this build's schema — the file a text document
@@ -63,6 +69,7 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 
 import { makeShowcase } from './demo-showcase.mjs'
+import { makeYear } from './demo-year.mjs'
 
 const REPO = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const SERVER = path.join(REPO, 'dist-plugin', 'server.mjs')
@@ -71,6 +78,7 @@ const SOURCES = JSON.parse(readFileSync(path.join(FIXTURES, 'demo', 'ledger.json
 const CHARGES = JSON.parse(readFileSync(path.join(FIXTURES, 'demo', 'card-charges.json'), 'utf8'))
 const TIMESHEET = JSON.parse(readFileSync(path.join(FIXTURES, 'demo', 'timesheet.json'), 'utf8'))
 const SHOWCASE = JSON.parse(readFileSync(path.join(FIXTURES, 'demo', 'showcase.json'), 'utf8'))
+const YEAR = JSON.parse(readFileSync(path.join(FIXTURES, 'demo', 'year', 'year.json'), 'utf8'))
 
 const folder = path.resolve(process.argv[2] ?? path.join(REPO, '.demo'))
 
@@ -162,6 +170,13 @@ await call('set_plan', { path: timesheet, plans: TIMESHEET.plans, commit: true }
 // its own, so no tour's document changes under its tour.
 const showcase = await fresh('showcase.emd', ['ledger'])
 await makeShowcase(showcase, SHOWCASE, call)
+
+// The synthetic year (M64 U16, D-611): fourteen made-up months ending in this
+// one, every case a real ledger shows, for the redesign to be drawn and checked
+// on now that no session reads the maintainer's own (D-608).
+const year = await fresh('year.emd', ['ledger'])
+const now = new Date()
+await makeYear(year, YEAR, call, { year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate() })
 
 // The development tour's (U6): the pack's declarations and views, each format
 // under its rows from `project.md`, as the parts of a text document — the
@@ -262,6 +277,6 @@ for (const name of bundled) copyFileSync(path.join(FIXTURES, 'demo', name), path
 writeFileSync(path.join(folder, 'bundled.json'), `${JSON.stringify(bundled)}
 `)
 
-for (const each of [ledger, custom, timesheet, showcase, project, tours]) {
+for (const each of [ledger, custom, timesheet, showcase, year, project, tours]) {
   console.log(`Made ${path.relative(REPO, each)} (${Math.round(statSync(each).size / 1024)} KB)`)
 }
