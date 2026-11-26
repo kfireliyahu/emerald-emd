@@ -237,13 +237,14 @@ export function Home() {
                     : t('home.month.sentence', { month: dates.monthName(period) })
                 }
                 parts={{
-                  came: <SaidAmount value={shown.income} />,
-                  went: <SaidAmount value={shown.expenses} />,
+                  came: <SaidAmount value={shown.income} tone="positive" />,
+                  went: <SaidAmount value={shown.expenses} tone="negative" />,
                 }}
               />
             </p>
             <HeadlineFigure
               size="display"
+              tone="sign"
               label={t('home.flows.leftOver')}
               value={shown.balance}
               change={versus(versusAverage(summaries, period, 'balance')) ?? t('home.flows.leftOverHow')}
@@ -343,7 +344,6 @@ export function Home() {
                 empty={t('home.month.whereEmpty')}
                 total={{ label: t('home.flows.wentOut'), value: shown.expenses }}
                 onOpen={(key) => open({ kind: 'category', id: key })}
-                onMore={() => open({ kind: 'rest' })}
               />
             </section>
             {budgeted.length > 0 && (
@@ -377,7 +377,6 @@ export function Home() {
           attention={summary.attention}
           currency={currency}
           palette={palette}
-          onPanel={setPanel}
           onRead={picker.open}
           onDrill={drillTo}
           onClose={() => setPanel(undefined)}
@@ -413,9 +412,14 @@ function pick(summary: MonthSummary, metric: ComparisonMetric): Money {
 }
 
 /** An amount inside the month's sentence: whole units, medium, kept on one line. */
-function SaidAmount({ value }: { readonly value: Money }) {
+/**
+ * An amount in the sentence that sums the month up (D-633): what came in is
+ * `positive` and what went out `negative` — the sign each gives the month —
+ * and the words *came in* and *went out* beside them still say which.
+ */
+function SaidAmount({ value, tone }: { readonly value: Money; readonly tone: 'positive' | 'negative' }) {
   return (
-    <span className="font-medium whitespace-nowrap" dir="ltr">
+    <span className={`font-medium whitespace-nowrap ${value.minor === 0 ? '' : tone === 'positive' ? 'text-positive' : 'text-negative'}`} dir="ltr" data-tone={value.minor === 0 ? undefined : tone}>
       {wholeMoney(value)}
     </span>
   )

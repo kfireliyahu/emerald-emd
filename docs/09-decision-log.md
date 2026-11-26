@@ -532,6 +532,7 @@ written out here.
 | D-630 | 2026-11-26 | The kit catches up with the screens: a small button is the 32px chrome row on the body step, a choice wears a chevron and is never the platform's select, a value-shaped `ValueChoice` replaces Rules' `PickField`, the side panel's first Esc leaves a field and focus returns to the latest opener, a figure keeps its sign in Hebrew, the waiting notice is never filled; and a paycheck by hand is a `PanelForm` in Paychecks' side panel — month, employer, gross and net first, whether it adds up said in words, the slip's lines only if wanted | M64 |
 | D-631 | 2026-11-26 | Plan has a Year beside its month, as Home has: each bucket's year is the sum of its months — what each month's plan gave it against what it got, January through the last month that is over, on the plan each month is on and Home's month basis — said first in words with the categories apart from the goals and debts, each bucket a meter whose months open beside the page, a month nobody could measure left out of both sums, and `plan_month` with a `year` answering the same; Plan's bar runs from the inline start, so in Hebrew it mirrors with its drag and arrow keys while the ring stays a clock | M64 |
 | D-632 | 2026-11-26 | The engine's other views keep the format's one Add and one strip of controls, and say every word through the catalogue: Roadmap and Ready to start carry the table's Add behind the same refusal; the board's Lanes by, the roadmap's fold filters, In the order of, Columns and Fold all, and the ready list's Columns sit in one strip of the same classes under the tabs; a line or card left at its view's columns drops a state its group already says and a link its name already says; and a sentence the engine builds for a screen is a key and its parts, said by the screen | M64 |
+| D-633 | 2026-11-26 | A figure that sums a period up carries its sign's colour — Home's left over and its sentence's two amounts, the Year's left over, Plan's to split, net worth, and a statement's gap in `negative` unless it is nothing — while every other figure stays ink; a list cut short grows in place and never opens the side panel; a plan's meter past its plan draws the plan as a tick and says the share in words; and the probe lays every line out afresh after stretching a page for its picture | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -2016,6 +2017,57 @@ the dashboard's helpers in `src/ui/formats/dashboard.ts` and the refusals of `ma
 **Rejected.** Keeping the Add on the table alone (switching views lost the one action the format
 asks for). A per-view toolbar of its own (three looks for one job). Importing `MessageKey` into the
 domain (the boundary forbids it, and a literal key type checks the same at the call).
+
+## D-633 · 2026-11-26 · A figure that sums a period up carries its sign's colour — Home's left over and its sentence's two amounts, the Year's left over, Plan's to split, net worth, and a statement's gap in `negative` unless it is nothing — while every other figure stays ink; a list cut short grows in place and never opens the side panel; a plan's meter past its plan draws the plan as a tick and says the share in words; and the probe lays every line out afresh after stretching a page for its picture <a id="d-633"></a>
+
+**Context.** M64 F11, F13, F32 and F33. The maintainer, 2026-11-26: *"some numbers could use their
+colors (the negative/positive), not everywhere but for example the line that sums up the month"*,
+and *"like the home clicking on the 'more' of what went out opening a side bar for the rest."* U4
+(D-615) had made every figure ink (*Figures are ink, a flow is a mark*), Home included; D-617 already
+said a list cut short expands in place, but Home's and the Year's *Where it went* still opened their
+rest in the side panel. M64 F12's taste check found `PlanAgainst` capping its fill at the plan, so a
+category at 105% and one at 213% drew the same full red bar. And probe:screens' long Hebrew pictures
+of `#/plan` twice drew Hebrew with its letters in reverse order.
+
+**Decision.**
+
+1. **A figure that sums a period up is drawn in `positive` or `negative` by its sign** — an
+   amendment of *Figures are ink*, not a reversal. The list, and nothing else: Home's left over (the
+   display figure), and the two amounts of the sentence above it, came in `positive` and went out
+   `negative`, the sign each gives the month; the Year's left over; Plan's *to split*; Wealth's net
+   worth; and a statement's gap (the reading panel's *apart*), `negative` whenever it is not nothing,
+   since a gap either way is the problem. Nothing is ink. `HeadlineFigure` takes it as `tone: 'sign'
+   | 'gap'` (`figureTone`); the sentence's `SaidAmount` takes its tone. The tiles, the panels, the
+   tables and every other figure stay ink, and the minus sign or the word stays beside the colour.
+   The tokens' `positive` and `negative` hold AA on `background` in both themes (the probe measured
+   no low contrast on `#/`, `#/year`, `#/plan`, `#/plan/year` and `#/wealth`, light, dark and Hebrew),
+   and the colour each spends raises `#/`, `#/plan` and `#/wealth`'s colour ceiling by one.
+2. **A list cut short grows in place** (`RankedBars`): its folded line (*8 more*, with what they
+   come to) grows the rest where it stands, under a *Fewer* that folds them again; focus moves to
+   the first grown row and back to the line. Home's and the Year's *rest* panels are gone, and with
+   them `home.month.theRest`. The audit of every redesigned screen found no other *more* that opens
+   the side panel: the waiting list's *Show n more* already grew in place; a dashboard block's *n
+   more* opens the format's own view (a page, not the panel); the agenda's, the filter's, the
+   reading verdict's and the gap panel's *more* are sentences, not actions.
+3. **A plan's meter past its plan says how far** (`PlanAgainst`): under its plan a line draws as
+   before; past it, the track is what happened and the plan a 2px ink tick across it, the part
+   within the plan the usual fill and the part past it `negative` when it is over (the usual fill
+   when going past is no problem, a goal reached); and the caption says the share,
+   *₪271 over · 177% of the plan*. The kit's specimen draws 105%, 213% and a debt paid twice.
+4. **The probe lays every line out afresh after a stretch** (`relaid` in
+   `scripts/probe-screens-window.cjs`): once the window has grown to the page's length, it waits for
+   the fonts and turns the document's direction over and back with a layout between, before the
+   picture. The reversal was seen twice in about a dozen stretched pictures and never at the
+   window's own height, never in the browser, and never in a small page stretched the same way; the
+   probe is the one place the language changes on a page already drawn in English, so what the fix
+   removes is any line ordered before that. Nine stretched Hebrew pictures after it read correctly.
+
+**Rejected.** Colouring every figure by its sign (the maintainer: *not everywhere*). The flows'
+colours on the sentence (a flow is a mark, D-615; the sentence's colour is the sign). A gap coloured
+by its sign (a gap above the statement would look like good news). The rest in the panel with a
+better title (the panel is for detail about a thing, not more of the same list). A meter drawn on a
+fixed 200% scale (it would shrink every line under its plan). Stitching the long picture from
+window-high slices (the rail and sticky headers repeat in every slice).
 
 ## Related
 

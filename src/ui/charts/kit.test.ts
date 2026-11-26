@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import { money } from '@/core/money.ts'
 import { SPECIMENS } from '@/ui/screens/specimens.tsx'
 
-import { HeadlineFigure } from './HeadlineFigure.tsx'
+import { figureTone, HeadlineFigure } from './HeadlineFigure.tsx'
 import { barPercent, DISPLAYS, moneyParts, share, wholeMoney } from './kit.ts'
 import { MonthFlow } from './MonthFlow.tsx'
 import { MonthStrip } from './MonthStrip.tsx'
@@ -104,6 +104,35 @@ describe('every display of the kit (M64 U4, D-615)', () => {
     const over = html(createElement(PlanAgainst, { lines: [{ key: 'a', name: 'Eating out', actual: ils(960), planned: ils(700) }], empty: EMPTY }))
     expect(over).toContain('₪260 over')
     expect(over).toContain('text-negative')
+  })
+
+  it('says how far past the plan a line went, and draws the plan as a tick (M64 F32)', () => {
+    const line = (actual: number) =>
+      html(createElement(PlanAgainst, { lines: [{ key: 'a', name: 'Eating out', actual: ils(actual), planned: ils(700) }], empty: EMPTY }))
+    expect(line(735)).toContain('105% of the plan')
+    expect(line(1491)).toContain('213% of the plan')
+    // The plan's tick sits where the plan ends on a track as long as what happened.
+    expect(line(1400)).toMatch(/data-plan-tick[^>]*inset-inline-start:calc\(50% - 1px\)/)
+    // Under the plan, nothing changes: no tick, no share.
+    expect(line(600)).not.toContain('data-plan-tick')
+    expect(line(600)).toContain('₪100 left')
+    // A goal past its target is no problem: the tick, and no red.
+    const reached = html(createElement(PlanAgainst, { lines: [{ key: 'b', name: 'Car loan', actual: ils(2400), planned: ils(1200), note: 'Paid twice' }], empty: EMPTY }))
+    expect(reached).toContain('data-plan-tick')
+    expect(reached).not.toContain('negative')
+  })
+
+  it('draws a figure that sums a period up in its sign’s colour, and every other figure in ink (D-633)', () => {
+    expect(figureTone('sign', ils(5))).toBe('positive')
+    expect(figureTone('sign', ils(-5))).toBe('negative')
+    expect(figureTone('sign', ils(0))).toBeUndefined()
+    expect(figureTone('gap', ils(5))).toBe('negative')
+    expect(figureTone('gap', ils(-5))).toBe('negative')
+    expect(figureTone(undefined, ils(-5))).toBeUndefined()
+    const negative = html(createElement(HeadlineFigure, { label: 'Left over', value: ils(-12), size: 'display', tone: 'sign', empty: EMPTY }))
+    expect(negative).toContain('text-negative')
+    expect(negative).toContain('−')
+    expect(html(createElement(HeadlineFigure, { label: 'Went out', value: ils(-12), empty: EMPTY }))).not.toMatch(/text-(negative|positive)/)
   })
 
   it('draws every specimen state of the page without throwing', () => {

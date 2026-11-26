@@ -674,6 +674,7 @@ export function Plan() {
         <p className="m-0 max-w-[34ch] text-lede [text-wrap:balance]">{answer}</p>
         <HeadlineFigure
           size="display"
+          tone="sign"
           label={t('plan.bar.toSplit')}
           value={noPay ? undefined : result.splittable}
           change={result.allocations.length === 1 ? t('plan.page.bucketsOne') : t('plan.page.bucketsMany', { n: result.allocations.length })}

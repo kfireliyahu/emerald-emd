@@ -15,6 +15,10 @@ import { Sparkline } from './Sparkline.tsx'
  *
  * The figure is ink whatever it reports (D-614 retires the flows on figures);
  * a flow's colour, when a screen wants one, is the `mark` beside the label.
+ * The one exception is `tone` (M64 F11, D-633): a figure that sums a period
+ * up — left over, to split, net worth — is drawn in `positive` or `negative`
+ * by its sign, and a statement's gap in `negative` whenever it is not nothing.
+ * The minus sign and the label still say it; colour is never the only signal.
  * A negative figure keeps its minus sign; no figure at all is a dash and the
  * caller's one sentence in place of the change. With `onOpen` the whole tile
  * is a button and its arrow is visible at rest (D-614, from C).
@@ -28,6 +32,7 @@ export function HeadlineFigure({
   mark,
   empty,
   onOpen,
+  tone,
 }: {
   readonly label: string
   readonly value: Money | undefined
@@ -40,18 +45,26 @@ export function HeadlineFigure({
   /** What to say when there is no figure: `No paycheck this month`. */
   readonly empty: string
   readonly onOpen?: (() => void) | undefined
+  /**
+   * Only for a figure that sums a period up (D-633): `sign` draws it in
+   * `positive` above nothing and `negative` below; `gap` draws a difference
+   * that should be nothing in `negative` whenever it is not. Nothing is ink.
+   */
+  readonly tone?: 'sign' | 'gap' | undefined
 }) {
   const parts = value === undefined ? undefined : moneyParts(value)
   const display = size === 'display'
+  const toned = figureTone(tone, value)
   const figure = (
     <span
       dir="ltr"
       data-figure
-      className={
+      data-tone={toned}
+      className={`${
         display
           ? 'text-display [font-variant-numeric:proportional-nums]'
           : 'text-title font-medium tabular-nums'
-      }
+      }${toned === 'positive' ? ' text-positive' : toned === 'negative' ? ' text-negative' : ''}`}
     >
       {parts === undefined ? (
         '—'
@@ -112,4 +125,14 @@ export function HeadlineFigure({
       {body}
     </button>
   )
+}
+
+/**
+ * The colour a summing figure is drawn in (D-633): `positive` or `negative` by
+ * its sign, a gap `negative` unless it is nothing, and ink (nothing) otherwise.
+ */
+export function figureTone(tone: 'sign' | 'gap' | undefined, value: Money | undefined): 'positive' | 'negative' | undefined {
+  if (tone === undefined || value === undefined || value.minor === 0) return undefined
+  if (tone === 'gap') return 'negative'
+  return value.minor > 0 ? 'positive' : 'negative'
 }

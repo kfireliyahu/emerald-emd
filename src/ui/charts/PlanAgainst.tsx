@@ -64,14 +64,7 @@ export function PlanAgainst({
                 </span>
               )}
             </span>
-            {known && planned !== undefined && planned > 0 && (
-              <span aria-hidden className="relative col-span-2 h-2 overflow-hidden rounded-full bg-track">
-                <span
-                  className={`absolute inset-y-0 start-0 rounded-full ${over ? 'bg-negative' : 'bg-bar'}`}
-                  style={{ width: `${String(actual <= 0 ? 0 : barPercent(Math.min(actual, planned), planned))}%` }}
-                />
-              </span>
-            )}
+            {known && planned !== undefined && planned > 0 && <Meter actual={actual} planned={planned} over={over} />}
             <span className={`col-span-2 text-caption ${over ? 'font-medium text-negative' : 'text-ink-secondary'}`}>
               {!known
                 ? line.unknown
@@ -80,7 +73,7 @@ export function PlanAgainst({
                 : gap === undefined
                 ? t('chrome.kit.noPlan')
                 : over
-                  ? t('chrome.kit.over', { amount: wholeMoney(gap) })
+                  ? t('chrome.kit.overShare', { amount: wholeMoney(gap), percent: String(Math.round((100 * actual) / (planned ?? actual))) })
                   : t('chrome.kit.left', { amount: wholeMoney(gap) })}
             </span>
           </>
@@ -103,5 +96,37 @@ export function PlanAgainst({
         )
       })}
     </ul>
+  )
+}
+
+/**
+ * **The meter, and how far past its plan** (M64 F32): under the plan, the
+ * track is the plan and the fill what happened. Past it, the track is what
+ * happened and the plan a tick across it, so 105% and 213% no longer draw the
+ * same full bar: the part within the plan is the usual fill, the part past it
+ * red when it is over (and the usual fill when going past is no problem, a
+ * goal reached), and the caption says the share in words.
+ */
+function Meter({ actual, planned, over }: { readonly actual: number; readonly planned: number; readonly over: boolean }) {
+  const past = actual > planned
+  if (!past) {
+    return (
+      <span aria-hidden className="relative col-span-2 h-2 overflow-hidden rounded-full bg-track">
+        <span
+          className="absolute inset-y-0 start-0 rounded-full bg-bar"
+          style={{ width: `${String(actual <= 0 ? 0 : barPercent(actual, planned))}%` }}
+        />
+      </span>
+    )
+  }
+  const plan = (100 * planned) / actual
+  return (
+    <span aria-hidden className="relative col-span-2 h-2" data-past>
+      <span className="absolute inset-0 overflow-hidden rounded-full bg-track">
+        <span className="absolute inset-y-0 start-0 bg-bar" style={{ width: `${String(plan)}%` }} />
+        <span className={`absolute inset-y-0 end-0 ${over ? 'bg-negative' : 'bg-bar'}`} style={{ width: `${String(100 - plan)}%` }} />
+      </span>
+      <span className="absolute -inset-y-1 w-0.5 bg-ink" data-plan-tick style={{ insetInlineStart: `calc(${String(plan)}% - 1px)` }} />
+    </span>
   )
 }

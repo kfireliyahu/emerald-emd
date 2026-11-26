@@ -83,6 +83,12 @@ async function run() {
       if (height !== HEIGHT) {
         window.setContentSize(WIDTH, height)
         await still(window)
+        // A stretched page has twice painted its Hebrew with the letters in
+        // reverse order (M64 F33) — never at the window's own height, and never
+        // in the browser, where the language is set before anything is drawn.
+        // The probe switches the language on a page already drawn in English,
+        // so after the stretch every line is laid out afresh before the picture.
+        await relaid(window)
       }
       // An offscreen window's `capturePage` can hand back a stale frame; a frame
       // painted on request is the page as it is now.
@@ -105,6 +111,18 @@ async function run() {
 /** `#/formats/card_charge/entry/new` as a file's name, `formats-card_charge-entry-new`; `#/` is `home`. */
 function slug(route) {
   return route.replace(/^#\/?/, '').replace(/[^a-z0-9_]+/gi, '-').replace(/^-|-$/g, '') || 'home'
+}
+
+/**
+ * Every line of text laid out afresh (M64 F33): the fonts loaded, the
+ * document's direction turned over and back with a layout between, so no line
+ * keeps an ordering worked out before the language changed or the window grew.
+ */
+async function relaid(window) {
+  await window.webContents.executeJavaScript(
+    "(async () => { await document.fonts.ready; const html = document.documentElement; const dir = html.getAttribute('dir'); html.setAttribute('dir', dir === 'rtl' ? 'ltr' : 'rtl'); void document.body.offsetHeight; if (dir === null) html.removeAttribute('dir'); else html.setAttribute('dir', dir); void document.body.offsetHeight })()",
+  )
+  await still(window)
 }
 
 /** The page laid out again at its new size, and painted. */

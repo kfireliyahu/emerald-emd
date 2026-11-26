@@ -87,6 +87,9 @@ export const SPECIMENS: readonly Specimen[] = [
       },
       { name: 'Empty', render: () => <HeadlineFigure label="Taxes" value={undefined} empty="No paycheck this month" /> },
       { name: 'Negative', render: () => <HeadlineFigure size="display" label="Left over" value={ils(-1240.75)} change="₪1,241 more went out than came in" empty="" /> },
+      { name: 'Summing a period up, by its sign (D-633)', render: () => <HeadlineFigure size="display" tone="sign" label="Left over" value={ils(2840.4)} change="+18% on the three months before" empty="" /> },
+      { name: 'Summing a period up, below nothing', render: () => <HeadlineFigure size="display" tone="sign" label="Left over" value={ils(-1240.75)} change="₪1,241 more went out than came in" empty="" /> },
+      { name: 'A gap', render: () => <HeadlineFigure tone="gap" label="Apart" value={ils(118.2)} empty="" /> },
       { name: 'Long Hebrew', render: () => <HeadlineFigure label="נשאר אחרי כל ההוצאות, החיסכון והתשלומים הקבועים" value={ils(912)} change="+4% לעומת שלושת החודשים הקודמים" empty="" /> },
     ],
   },
@@ -104,7 +107,7 @@ export const SPECIMENS: readonly Specimen[] = [
     name: DISPLAYS[2]!.name,
     about: `${DISPLAYS[2]!.shape}. ${DISPLAYS[2]!.use}`,
     states: [
-      { name: 'Rest, the rest folded', render: () => <RankedBars rows={RANKED} empty="" total={{ label: 'Went out', value: ils(9769.8) }} onOpen={noop} onMore={noop} /> },
+      { name: 'Rest, the rest folded (it grows in place)', render: () => <RankedBars rows={RANKED} empty="" total={{ label: 'Went out', value: ils(9769.8) }} onOpen={noop} /> },
       { name: 'Empty', render: () => <RankedBars rows={[]} empty="Nothing went out this month." /> },
       {
         name: 'Negative',
@@ -180,6 +183,20 @@ export const SPECIMENS: readonly Specimen[] = [
             lines={[
               { key: 'gifts', name: 'Gifts', actual: ils(210), planned: undefined },
               { key: 'back', name: 'Clothes', actual: ils(-120), planned: ils(400) },
+            ]}
+          />
+        ),
+      },
+      {
+        name: 'Past the plan, a little and twice over (M64 F32)',
+        render: () => (
+          <PlanAgainst
+            empty=""
+            lines={[
+              { key: 'groceries', name: 'Groceries', actual: ils(3675), planned: ils(3500) },
+              { key: 'eating', name: 'Eating out', actual: ils(1490), planned: ils(700) },
+              { key: 'loan', name: 'Car loan', actual: ils(2400), planned: ils(1200), note: 'Paid twice its month' },
+              { key: 'trip', name: 'Trip', actual: ils(5000), planned: ils(5000), note: 'Reached' },
             ]}
           />
         ),
