@@ -22,6 +22,7 @@ import { useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { CategoryPicker } from '@/ui/components/CategoryPicker.tsx'
+import { MENU_MOST, ValueChoice } from '@/ui/components/ChoiceField.tsx'
 import { Field } from '@/ui/components/Field.tsx'
 import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
 import { Phrase } from '@/ui/components/Phrase.tsx'
@@ -112,7 +113,7 @@ export function FixedExpenseEditor({
       }}
     >
       <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline px-4 py-2.5">
-        <span className="text-[16px] font-medium">
+        <span className="text-heading font-medium">
           {isNew ? t('plan.editor.new') : t('plan.editor.edit')}
         </span>
         <span className="ms-auto text-caption text-ink-secondary">
@@ -147,18 +148,13 @@ export function FixedExpenseEditor({
           </Field>
 
           <Field label={t('plan.fixed.column.howOften')}>
-            <select
+            <ValueChoice
               value={draft.cadence}
-              onChange={(event) => setCadence(event.target.value as Cadence)}
+              choices={CADENCES.map((cadence) => ({ value: cadence, label: CADENCE_LABEL[cadence] }))}
+              onChange={(cadence) => setCadence(cadence as Cadence)}
               aria-label={t('plan.fixed.cadence.label')}
               className={`${SELECT} w-40`}
-            >
-              {CADENCES.map((cadence) => (
-                <option key={cadence} value={cadence}>
-                  {CADENCE_LABEL[cadence]}
-                </option>
-              ))}
-            </select>
+            />
           </Field>
 
           {/* The amortized figure, shown the moment the two fields that make it
@@ -180,20 +176,16 @@ export function FixedExpenseEditor({
 
         <div className="mt-6 flex flex-wrap items-end gap-x-6 gap-y-4">
           <Field label={t('plan.editor.behaviour')} hint={t('plan.editor.behaviourHint')}>
-            <select
+            <ValueChoice
               value={draft.amountVariability}
-              onChange={(event) =>
-                set({ amountVariability: event.target.value as AmountVariability })
-              }
+              choices={AMOUNT_VARIABILITIES.map((variability) => ({
+                value: variability,
+                label: VARIABILITY_LABEL[variability],
+              }))}
+              onChange={(variability) => set({ amountVariability: variability as AmountVariability })}
               aria-label={t('plan.editor.behaviour')}
               className={`${SELECT} w-40`}
-            >
-              {AMOUNT_VARIABILITIES.map((variability) => (
-                <option key={variability} value={variability}>
-                  {VARIABILITY_LABEL[variability]}
-                </option>
-              ))}
-            </select>
+            />
           </Field>
 
           <Field label={t('plan.kind.CATEGORY')}>
@@ -234,20 +226,13 @@ export function FixedExpenseEditor({
         <h3 className="m-0 mt-6 mb-2 text-[13px] font-medium">{t('plan.editor.recognized')}</h3>
         <div className="flex flex-wrap items-end gap-x-6 gap-y-4">
           <Field label={t('plan.editor.matchedBy')}>
-            <select
+            <ValueChoice
               value={draft.matchKind}
-              onChange={(event) =>
-                set({ matchKind: event.target.value as FixedExpenseMatchKind, matchRef: undefined })
-              }
+              choices={FIXED_EXPENSE_MATCH_KINDS.map((kind) => ({ value: kind, label: MATCH_KIND_LABEL[kind] }))}
+              onChange={(kind) => set({ matchKind: kind as FixedExpenseMatchKind, matchRef: undefined })}
               aria-label={t('plan.editor.matchedBy')}
               className={`${SELECT} w-64`}
-            >
-              {FIXED_EXPENSE_MATCH_KINDS.map((kind) => (
-                <option key={kind} value={kind}>
-                  {MATCH_KIND_LABEL[kind]}
-                </option>
-              ))}
-            </select>
+            />
           </Field>
 
           {draft.matchKind === 'MERCHANT_PATTERN' && (
@@ -290,19 +275,15 @@ export function FixedExpenseEditor({
               label={MATCH_REF_LABEL.PAYCHECK_DEDUCTION}
               hint={t('plan.editor.deductionHint')}
             >
-              <select
+              <ValueChoice
                 value={draft.matchRef ?? ''}
-                onChange={(event) => set({ matchRef: event.target.value || undefined })}
+                placeholder={t('plan.editor.choose')}
+                choices={deductionTypes.map((type) => ({ value: type.id, label: type.name }))}
+                filter={deductionTypes.length > MENU_MOST}
+                onChange={(id) => set({ matchRef: id === '' ? undefined : id })}
                 aria-label={MATCH_REF_LABEL.PAYCHECK_DEDUCTION}
                 className={`${SELECT} w-56`}
-              >
-                <option value="">{t('plan.editor.choose')}</option>
-                {deductionTypes.map((type) => (
-                  <option key={type.id} value={type.id}>
-                    {type.name}
-                  </option>
-                ))}
-              </select>
+              />
             </Field>
           )}
         </div>

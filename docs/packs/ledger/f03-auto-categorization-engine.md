@@ -182,7 +182,8 @@ notice it before they can fix it.
    underneath changes as it is typed, and the button is refused while the draft has a problem.
 4. **The rows already here are filed too, by default**: *Also file the N rows already here*,
    ticked whenever N > 0, is a re-apply scoped to the new rule (D-045), counted from the same
-   plan, never over a row chosen by hand, and undone by *Undo those*.
+   plan, never over a row chosen by hand. The note that says the rule was made offers *Undo* —
+   the rule and the rows it filed, together — and *Open in Rules* (M64 F15, D-634).
 
 If the same merchant has been corrected to the same category three times, the bar says so
 before it asks. The count is of distinct transactions, so one row changed repeatedly is one
@@ -278,9 +279,10 @@ you work through row by row is a backlog you abandon.
 
 Rules are usually created from context, not from the rules screen:
 
-- From a transaction: "Create rule from this merchant" pre-fills everything. **Built** (D-041) —
-  the detail panel hands the rules screen a draft through router state and goes there, rather
-  than growing a second editor in a 23rem side panel. `CONTAINS` over the **normalized**
+- From a transaction: "Create rule from this merchant" pre-fills everything. **Built** (D-041);
+  since D-373 it opens the correction's offer in the side panel, and since M64 F15 (D-634) every
+  rule asked for outside Rules is made where it was asked for — the paths that went to Rules open
+  Rules' whole editor in the screen's own side panel, and the person stays. `CONTAINS` over the **normalized**
   merchant, so the rule matches the row it was made from; the row's own category comes with it.
 - From a transaction, the other fact it carries: "Create a rule from the provider's category"
   pre-fills a `PROVIDER_CATEGORY` rule with the issuer's own heading. **Built** (D-080), beside the

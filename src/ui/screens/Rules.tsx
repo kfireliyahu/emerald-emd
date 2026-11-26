@@ -35,6 +35,7 @@ import { EmptyState } from '@/ui/components/WaitingList.tsx'
 import { Flip } from '@/ui/motion/Flip.tsx'
 import { ReapplyPanel } from '@/ui/rules/ReapplyPanel.tsx'
 import { RuleEditor } from '@/ui/rules/RuleEditor.tsx'
+import { arrivedRuleId } from '@/ui/rules/madeHere.ts'
 import { TestBox } from '@/ui/rules/TestBox.tsx'
 import { Why } from '@/ui/rules/Why.tsx'
 
@@ -100,9 +101,13 @@ export function Rules() {
 
   // Consumed once. Without this the draft comes back when the user navigates
   // away and presses Back, re-opening an editor they already dealt with.
+  // *Open in Rules* from where a rule was made (M64 F15, D-634): that rule, in its editor.
+  const [asked, setAsked] = useState(() => arrivedRuleId(location.state))
   useEffect(() => {
-    if (arrived !== undefined) navigate(location.pathname, { replace: true, state: null })
-  }, [arrived, navigate, location.pathname])
+    if (arrived !== undefined || arrivedRuleId(location.state) !== undefined) {
+      navigate(location.pathname, { replace: true, state: null })
+    }
+  }, [arrived, navigate, location.pathname, location.state])
 
   const data = useMemo(() => {
     if (db === undefined) return undefined
@@ -116,6 +121,13 @@ export function Rules() {
       accounts: listAccounts(db, { includeArchived: true }),
     }
   }, [db, revision])
+
+  useEffect(() => {
+    if (asked === undefined || data === undefined) return
+    const rule = data.rules.find((one) => one.id === asked)
+    if (rule !== undefined) setPanel({ kind: 'edit', rule })
+    setAsked(undefined)
+  }, [asked, data])
 
   // The note fades after a few seconds; Ctrl+Z undoes while it is there.
   const undoRef = useRef<(() => void) | undefined>(undefined)

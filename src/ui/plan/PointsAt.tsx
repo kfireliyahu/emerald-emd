@@ -5,6 +5,7 @@ import { useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { MENU_MOST, ValueChoice } from '@/ui/components/ChoiceField.tsx'
 import { Phrase } from '@/ui/components/Phrase.tsx'
 import { useDismiss } from '@/ui/components/useDismiss.ts'
 import { FUND_TYPES, type FundType } from '@/domain/model/funds.ts'
@@ -52,6 +53,8 @@ export interface NewPointable {
 const TABS: readonly Kind[] = ['SAVING_GOAL', 'DEBT', 'CATEGORY', 'FUND', 'ACCOUNT']
 
 const FORM_FIELD = 'h-[30px] min-w-0 border border-hairline-strong bg-background px-2'
+/** A choice in this form: the field's look with the kit's chevron (M64 F29). */
+const FORM_CHOICE = `${FORM_FIELD} fc-select cursor-pointer`
 
 /**
  * What a bucket points at (M28 U7, D-319), drawn as the Wealth mockup's popover
@@ -227,14 +230,17 @@ function NewForm({
             {label('pa-by', t('plan.points.by'))}
             <input id="pa-by" type="month" value={by} onChange={(event) => setBy(event.target.value)} className={FORM_FIELD} />
             {label('pa-kept', t('plan.points.where'))}
-            <select id="pa-kept" value={holdingId} onChange={(event) => setHoldingId(event.target.value)} className={FORM_FIELD}>
-              {holdings.length === 0 && <option value="">{t('plan.points.notSaid')}</option>}
-              {holdings.map((one) => (
-                <option key={one.id} value={one.id}>
-                  {one.name}
-                </option>
-              ))}
-            </select>
+            <ValueChoice
+              id="pa-kept"
+              value={holdingId}
+              choices={[
+                ...(holdings.length === 0 ? [{ value: '', label: t('plan.points.notSaid') }] : []),
+                ...holdings.map((one) => ({ value: one.id, label: one.name })),
+              ]}
+              filter={holdings.length > MENU_MOST}
+              onChange={setHoldingId}
+              className={FORM_CHOICE}
+            />
           </>
         )}
         {kind === 'DEBT' && (
@@ -252,53 +258,57 @@ function NewForm({
         {kind === 'CATEGORY' && (
           <>
             {label('pa-kind', t('plan.points.kind'))}
-            <select
+            <ValueChoice
               id="pa-kind"
               value={detail}
-              onChange={(event) => {
-                setDetail(event.target.value)
+              choices={[
+                { value: 'SPENDING', label: t('plan.points.spending') },
+                { value: 'MOVED', label: t('plan.points.moved') },
+              ]}
+              onChange={(next) => {
+                setDetail(next)
                 setParentId('')
               }}
-              className={FORM_FIELD}
-            >
-              <option value="SPENDING">{t('plan.points.spending')}</option>
-              <option value="MOVED">{t('plan.points.moved')}</option>
-            </select>
+              className={FORM_CHOICE}
+            />
             {label('pa-under', t('plan.points.under'))}
-            <select id="pa-under" value={parentId} onChange={(event) => setParentId(event.target.value)} className={FORM_FIELD}>
-              <option value="">{t('plan.points.topLevel')}</option>
-              {parents
-                .filter((one) => one.moved === (detail === 'MOVED'))
-                .map((one) => (
-                  <option key={one.id} value={one.id}>
-                    {one.name}
-                  </option>
-                ))}
-            </select>
+            <ValueChoice
+              id="pa-under"
+              value={parentId}
+              choices={[
+                { value: '', label: t('plan.points.topLevel') },
+                ...parents
+                  .filter((one) => one.moved === (detail === 'MOVED'))
+                  .map((one) => ({ value: one.id, label: one.name })),
+              ]}
+              filter={parents.length > MENU_MOST}
+              onChange={setParentId}
+              className={FORM_CHOICE}
+            />
           </>
         )}
         {kind === 'FUND' && (
           <>
             {label('pa-kind', t('plan.points.kind'))}
-            <select id="pa-kind" value={detail} onChange={(event) => setDetail(event.target.value)} className={FORM_FIELD}>
-              {FUND_TYPES.map((one: FundType) => (
-                <option key={one} value={one}>
-                  {t(`plan.points.fundType.${one}`)}
-                </option>
-              ))}
-            </select>
+            <ValueChoice
+              id="pa-kind"
+              value={detail}
+              choices={FUND_TYPES.map((one: FundType) => ({ value: one, label: t(`plan.points.fundType.${one}`) }))}
+              onChange={setDetail}
+              className={FORM_CHOICE}
+            />
           </>
         )}
         {kind === 'ACCOUNT' && (
           <>
             {label('pa-kind', t('plan.points.kind'))}
-            <select id="pa-kind" value={detail} onChange={(event) => setDetail(event.target.value)} className={FORM_FIELD}>
-              {ACCOUNT_KINDS.map((value) => (
-                <option key={value} value={value}>
-                  {t(`plan.points.account.${value}`)}
-                </option>
-              ))}
-            </select>
+            <ValueChoice
+              id="pa-kind"
+              value={detail}
+              choices={ACCOUNT_KINDS.map((value) => ({ value, label: t(`plan.points.account.${value}`) }))}
+              onChange={setDetail}
+              className={FORM_CHOICE}
+            />
             {label('pa-last4', t('plan.points.last4'))}
             <input
               id="pa-last4"

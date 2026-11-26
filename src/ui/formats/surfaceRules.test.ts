@@ -104,6 +104,17 @@ const REVIEWED = [
   'src/ui/paychecks/PaycheckEditor.tsx',
   'src/ui/paychecks/ReconciliationStrip.tsx',
   'src/ui/paychecks/DeductionTypeSelect.tsx',
+  // M64 F29 (D-634): the platform selects left outside the kit.
+  'src/ui/savings/PlaceEditor.tsx',
+  'src/ui/savings/HoldingEditor.tsx',
+  'src/ui/fixed/FixedExpenseEditor.tsx',
+  'src/ui/fixed/CandidateCard.tsx',
+  'src/ui/debts/SplitPurchases.tsx',
+  'src/ui/formats/WorkedOut.tsx',
+  'src/ui/paychecks/FormatPicker.tsx',
+  'src/ui/plan/PointsAt.tsx',
+  'src/ui/screens/FeeImpact.tsx',
+  'src/ui/transactions/DetailPanel.tsx',
 ]
 
 /**

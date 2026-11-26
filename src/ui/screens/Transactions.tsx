@@ -37,7 +37,7 @@ import {
   usualCategories,
   type Category,
 } from '@/data/repositories/categoryRepository.ts'
-import { createRule } from '@/data/repositories/categoryRuleRepository.ts'
+import { createRule, deleteRule } from '@/data/repositories/categoryRuleRepository.ts'
 import { loadRules } from '@/data/repositories/ruleSetRepository.ts'
 import {
   commitReapply,
@@ -95,6 +95,8 @@ import { CategoryMark, useCategoryPalette } from '@/ui/components/CategoryMark.t
 import { ContextMenu, isMenuKey, type MenuItem } from '@/ui/components/ContextMenu.tsx'
 import { Pager, useFilePicker, useReadFiles } from '@/ui/home/parts.tsx'
 import { SidePanel } from '@/ui/components/SidePanel.tsx'
+import { OpenInRules, RuleFormPanel } from '@/ui/rules/RuleFromHere.tsx'
+import { makeRule } from '@/ui/rules/madeHere.ts'
 import { EmptyState, WaitingList, type Waiting } from '@/ui/components/WaitingList.tsx'
 import { wholeMoney } from '@/ui/charts/kit.ts'
 import { PageMenu } from '@/ui/components/PageMenu.tsx'
@@ -164,9 +166,10 @@ export function Transactions() {
   const [offered, setOffered] = useState<
     { readonly offer: Offer; readonly merchantRaw: string } | undefined
   >()
-  // What the offer's "also file the rows already here" did, and the run that can take it back.
+  // The rule just made here (M64 F15, D-634), what its "also file the rows
+  // already here" did when it was asked to, and the run that can take that back.
   const [applied, setApplied] = useState<
-    { readonly runId: string; readonly count: number } | undefined
+    { readonly ruleId: string; readonly runId: string; readonly count: number | undefined } | undefined
   >()
   /** The row whose note is being typed, inline under it (M28 U6). */
   const [noteFor, setNoteFor] = useState<string | undefined>()
@@ -355,6 +358,7 @@ export function Transactions() {
     const shaped = asRule(draft)
     const now = Date.now()
     let outcome: { readonly runId: string; readonly count: number } | undefined
+    let ruleId: string | undefined
 
     mutate((database) => {
       const created = createRule(
@@ -369,6 +373,7 @@ export function Transactions() {
         },
         now,
       )
+      ruleId = created.id
       if (!alsoPast) return
 
       // Rules re-read after the insert, so the plan is made against the set the
@@ -384,7 +389,31 @@ export function Transactions() {
 
     setOffered(undefined)
     setPanel(undefined)
-    setApplied(alsoPast ? (outcome ?? { runId: '', count: 0 }) : undefined)
+    const made = ruleId as string | undefined
+    const filed = outcome as { readonly runId: string; readonly count: number } | undefined
+    setApplied(
+      made === undefined
+        ? undefined
+        : { ruleId: made, runId: filed?.runId ?? '', count: alsoPast ? (filed?.count ?? 0) : undefined },
+    )
+  }
+
+  /**
+   * **A rule from the whole editor, made here and kept here** (M64 F15, D-634):
+   * the provider's heading from a row, which needs its reach on screen before
+   * it is saved (D-042). The person stays on Transactions; the note offers
+   * *Open in Rules*.
+   */
+  const saveRule = (draft: RuleDraft): void => {
+    let made: string | undefined
+    mutate((database) => {
+      made = makeRule(database, draft, Date.now())?.id
+    })
+    const ruleId = made as string | undefined
+    if (ruleId === undefined) return
+    setOffered(undefined)
+    setPanel(undefined)
+    setApplied({ ruleId, runId: '', count: undefined })
   }
 
   /**
@@ -402,10 +431,15 @@ export function Transactions() {
     setPanel({ kind: 'rule', ...suggestion })
   }
 
-  /** Take back the rows the offer filed. The rule itself stays. */
-  const undoPast = (): void => {
-    if (applied === undefined || applied.runId === '') return
-    mutate((database) => undoReapply(database, applied.runId, Date.now()))
+  /** Take the rule back, and the rows it filed when it was made (M64 F15). */
+  const undoRule = (): void => {
+    if (applied === undefined) return
+    const { ruleId, runId } = applied
+    mutate((database) => {
+      const now = Date.now()
+      if (runId !== '') undoReapply(database, runId, now)
+      deleteRule(database, ruleId, now)
+    })
     setApplied(undefined)
   }
 
@@ -539,8 +573,9 @@ export function Transactions() {
    */
   const menuItems = (entry: NonNullable<typeof menu>): readonly MenuItem[] => {
     const row = entry.row
-    const toEditor = (draft: unknown): void => {
-      navigate('/categories/rules', { state: { draft } })
+    // The editor opens here, in the panel, and the rule is made here (M64 F15, D-634).
+    const toEditor = (draft: RuleDraft): void => {
+      setPanel({ kind: 'ruleForm', draft })
     }
     const usual = (data.usual)
       .map((id) => data.categories.find((one) => one.id === id))
@@ -875,17 +910,16 @@ export function Transactions() {
               <>
                 <span className="text-ink">
                   {t('transactions.screen.ruleSaved')}{' '}
-                  {applied.count === 0 ? (
+                  {applied.count === undefined ? null : applied.count === 0 ? (
                     t('transactions.screen.nothingChanged')
                   ) : (
                     <Phrase text={t(countKey('transactions.screen.movedEarlier', applied.count))} parts={{ count: applied.count }} />
                   )}
                 </span>
-                {applied.count > 0 && (
-                  <button type="button" className="fc-text-action" onClick={undoPast} title={t('transactions.screen.undoHint')}>
-                    {t('transactions.screen.undo')}
-                  </button>
-                )}
+                <button type="button" className="fc-text-action" onClick={undoRule} title={t('transactions.screen.undoHint')}>
+                  {t('transactions.screen.undo')}
+                </button>
+                <OpenInRules ruleId={applied.ruleId} />
                 <button type="button" className="fc-text-action" onClick={() => setApplied(undefined)}>
                   {t('transactions.screen.dismiss')}
                 </button>
@@ -1136,6 +1170,16 @@ export function Transactions() {
         </SidePanel>
       )}
 
+      {panel?.kind === 'ruleForm' && (
+        <RuleFormPanel
+          draft={panel.draft}
+          categories={data.categories}
+          accounts={data.accounts}
+          onSave={saveRule}
+          onClose={() => setPanel(undefined)}
+        />
+      )}
+
       {panel?.kind === 'leftOut' && (
         <SidePanel
           title={t('transactions.leftOut.title')}
@@ -1191,18 +1235,13 @@ export function Transactions() {
           onCreateRule={() =>
             offerRule(selected, draftFromMerchant(selected.merchantNormalized, selected.categoryId))
           }
-          // The broad one stays behind the editor, where the pattern, the
+          // The broad one opens the whole editor, where the pattern, the
           // category and the conditions are all on screen before it is saved
-          // (D-042). Router state, not the URL: a Hebrew name in a hash is a
-          // worse address, and the draft is not worth a bookmark.
+          // (D-042) — in this panel, so the person stays here (M64 F15, D-634).
           onCreateProviderRule={() =>
-            navigate('/categories/rules', {
-              state: {
-                draft: draftFromProviderCategory(
-                  selected.providerCategory ?? '',
-                  selected.categoryId,
-                ),
-              },
+            setPanel({
+              kind: 'ruleForm',
+              draft: draftFromProviderCategory(selected.providerCategory ?? '', selected.categoryId),
             })
           }
           onAssign={(categoryId) => assign(selected.id, categoryId)}
@@ -1279,6 +1318,7 @@ function columnsShown(rows: readonly StoredTransaction[]): Columns {
 type TxPanel =
   | { readonly kind: 'row'; readonly id: string }
   | { readonly kind: 'rule'; readonly offer: Offer; readonly merchantRaw: string }
+  | { readonly kind: 'ruleForm'; readonly draft: RuleDraft }
   | { readonly kind: 'leftOut' }
 
 function Row({

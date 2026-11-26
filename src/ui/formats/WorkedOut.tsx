@@ -25,6 +25,7 @@ import {
 } from '@/domain/format/workedOut.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { MENU_MOST, ValueChoice } from '@/ui/components/ChoiceField.tsx'
 import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
 import { FormulaField } from '@/ui/formats/FormulaField.tsx'
 
@@ -536,16 +537,17 @@ function HowClose({
   return (
     <span className="flex flex-wrap items-center gap-1">
       <span className="text-caption text-ink-secondary">how close</span>
-      <select
+      <ValueChoice
         className={`${SELECT} h-7 text-caption`}
         value={closeness}
+        choices={[
+          { value: 'EXACT', label: 'exactly' },
+          { value: 'AMOUNT', label: '± an amount' },
+          { value: 'PERCENT', label: '± a percent' },
+        ]}
         aria-label="how close it has to come"
-        onChange={(event) => onChange(withCloseness(identity, event.target.value as Closeness))}
-      >
-        <option value="EXACT">exactly</option>
-        <option value="AMOUNT">± an amount</option>
-        <option value="PERCENT">± a percent</option>
-      </select>
+        onChange={(next) => onChange(withCloseness(identity, next as Closeness))}
+      />
       {closeness !== 'EXACT' && (
         <>
           <input
@@ -750,20 +752,21 @@ function ColumnSelect({
   const totals = useContext(Totals)
 
   return (
-    <select
+    <ValueChoice
       className={`${SELECT} h-7 max-w-52 font-mono text-caption`}
       value={value}
+      placeholder={`${label}…`}
+      choices={[
+        ...(clearable && value !== '' ? [{ value: '', label: 'nothing' }] : []),
+        ...offered.map((each) => ({
+          value: each,
+          label: totals.has(each) ? `${each} — total of ${totals.get(each) ?? ''}` : each,
+        })),
+      ]}
+      filter={offered.length > MENU_MOST}
       aria-label={label}
-      onChange={(event) => onChange(event.target.value)}
-    >
-      {value === '' && <option value="">{label}…</option>}
-      {clearable && value !== '' && <option value="">nothing</option>}
-      {offered.map((each) => (
-        <option key={each} value={each}>
-          {totals.has(each) ? `${each} — total of ${totals.get(each) ?? ''}` : each}
-        </option>
-      ))}
-    </select>
+      onChange={onChange}
+    />
   )
 }
 

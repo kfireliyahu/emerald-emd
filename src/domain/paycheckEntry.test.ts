@@ -84,6 +84,25 @@ describe('blankDraft', () => {
   it('steps back over a year boundary', () => {
     expect(blankDraft(localDate(2026, 1, 9), ILS).period).toEqual({ year: 2025, month: 12 })
   })
+
+  // M64 F30 (D-634): on the synthetic year, last month already had a slip, so
+  // the form opened saying so.
+  it('opens on the month after the newest slip when last month already has one', () => {
+    const taken = [
+      { year: 2026, month: 4 },
+      { year: 2026, month: 6 },
+      { year: 2026, month: 5 },
+    ]
+    expect(blankDraft(TODAY, ILS, taken).period).toEqual({ year: 2026, month: 7 })
+  })
+
+  it('still opens on last month when only other months have slips', () => {
+    expect(blankDraft(TODAY, ILS, [{ year: 2026, month: 4 }]).period).toEqual({ year: 2026, month: 6 })
+  })
+
+  it('steps past the newest slip over a year boundary', () => {
+    expect(blankDraft(localDate(2026, 1, 9), ILS, [{ year: 2025, month: 12 }]).period).toEqual({ year: 2026, month: 1 })
+  })
 })
 
 describe('draftEntry', () => {

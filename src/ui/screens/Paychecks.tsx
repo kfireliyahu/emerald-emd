@@ -123,7 +123,10 @@ export function Paychecks() {
   // **Add by hand, from Home's band** (M28 U5): it arrives asking for the form.
   useEffect(() => {
     if (landing?.add !== true) return
-    setEditing({ kind: 'new', draft: blankDraft(today(), entries[0]?.paycheck.gross.currency ?? 'ILS') })
+    setEditing({
+      kind: 'new',
+      draft: blankDraft(today(), entries[0]?.paycheck.gross.currency ?? 'ILS', entries.map((entry) => entry.paycheck.period)),
+    })
     navigate('.', { replace: true, state: null })
     // Once, on the render that landed here.
   }, [])
@@ -203,7 +206,8 @@ export function Paychecks() {
   const next = shown === undefined ? undefined : neighbour(ordered, shown.paycheck.id, 1)
   const readSlips = (files?: readonly File[]): void =>
     void navigate('/paychecks/read', files === undefined ? undefined : { state: { files } })
-  const addByHand = (): void => edit({ kind: 'new', draft: blankDraft(today(), currency) })
+  const addByHand = (): void =>
+    edit({ kind: 'new', draft: blankDraft(today(), currency, paychecks.map((paycheck) => paycheck.period)) })
 
   /** Deletes at once — the paycheck and what it set off — and keeps it for Undo. */
   const remove = (entry: PaycheckWithLines): void => {

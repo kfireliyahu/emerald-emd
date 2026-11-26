@@ -4,6 +4,7 @@ import { MIN_PROMOTION_THRESHOLD } from '@/data/repositories/debtRepository.ts'
 import type { InstallmentDebtCandidate } from '@/domain/debt.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { ValueChoice } from '@/ui/components/ChoiceField.tsx'
 import { SELECT } from '@/ui/components/fieldLook.ts'
 
 /**
@@ -52,18 +53,15 @@ export function SplitPurchases({
         </span>
         <label className="ms-auto flex items-center gap-2 text-caption text-ink-tertiary">
           Offer purchases split into more than
-          <select
+          <ValueChoice
             className={`${SELECT} h-6 py-0 text-caption`}
-            value={threshold}
-            onChange={(event) => onThreshold(Number(event.target.value))}
+            value={String(threshold)}
+            choices={[...new Set([MIN_PROMOTION_THRESHOLD, 3, 4, 6, 12, threshold])]
+              .sort((a, b) => a - b)
+              .map((option) => ({ value: String(option), label: String(option) }))}
+            onChange={(option) => onThreshold(Number(option))}
             aria-label="How many payments a purchase must be split into to be offered"
-          >
-            {[MIN_PROMOTION_THRESHOLD, 3, 4, 6, 12].map((option) => (
-              <option key={option} value={option}>
-                {option}
-              </option>
-            ))}
-          </select>
+          />
           payments
         </label>
         <Button variant="ghost" size="sm" onClick={onStopOffering}>

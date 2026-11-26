@@ -13,6 +13,8 @@ export const rules: Translation<'rules'> = {
   applyTitle: 'הרצת הכללים האלה על תנועות שכבר נמצאות במסמך',
   applyExisting: 'החלה על הקיים…',
   newRule: 'כלל חדש',
+  openInRules: 'פתיחה בכללים',
+  made: 'נוצר הכלל {name}.',
   find: 'חיפוש כלל, או בדיקת בית עסק',
   findLabel: 'חיפוש כלל, או בדיקת בית עסק כפי שהוא כתוב בדף החשבון',
   verdict: '{shop} משויך ל{category}, לפי {rule}.',

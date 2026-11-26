@@ -1,4 +1,5 @@
 import type { DocumentTemplate } from '@/domain/model/templates.ts'
+import { MENU_MOST, ValueChoice } from '@/ui/components/ChoiceField.tsx'
 import { SELECT } from '@/ui/components/fieldLook.ts'
 
 /**
@@ -32,23 +33,21 @@ export function FormatPicker({
   return (
     <label className="flex items-center gap-2 text-caption text-ink-tertiary">
       Read with
-      <select
+      <ValueChoice
         value={current ?? ''}
-        onChange={(event) => {
-          if (event.target.value !== '') onPick(event.target.value)
+        choices={[
+          // Only while nothing stored answered: a placeholder that can be
+          // chosen back to is a choice that undoes nothing.
+          ...(current === undefined ? [{ value: '', label: 'no reader' }] : []),
+          ...formats.map((format) => ({ value: format.id, label: format.name })),
+        ]}
+        filter={formats.length > MENU_MOST}
+        onChange={(id) => {
+          if (id !== '') onPick(id)
         }}
         aria-label="Which reader reads this"
         className={`${SELECT} h-7 max-w-56 border-transparent bg-transparent text-caption text-ink-tertiary hover:border-hairline-strong`}
-      >
-        {/* Only while nothing stored answered: a placeholder that can be
-            selected back to is an option that undoes nothing. */}
-        {current === undefined && <option value="">no reader</option>}
-        {formats.map((format) => (
-          <option key={format.id} value={format.id}>
-            {format.name}
-          </option>
-        ))}
-      </select>
+      />
     </label>
   )
 }

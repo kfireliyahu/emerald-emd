@@ -15,6 +15,8 @@ export const rules = {
   applyTitle: 'Run these rules over transactions already in the ledger',
   applyExisting: 'Apply to existing…',
   newRule: 'New rule',
+  openInRules: 'Open in Rules',
+  made: 'Made the rule {name}.',
   find: 'Find a rule, or try a shop',
   findLabel: 'Find a rule, or try a shop as a statement writes it',
   verdict: '{shop} goes to {category}, by {rule}.',

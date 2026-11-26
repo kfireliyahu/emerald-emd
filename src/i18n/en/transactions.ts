@@ -23,9 +23,9 @@ export const transactions = {
     nothingChanged:
       'Nothing already in the ledger changed — every row it covers either has this category or was categorized by hand.',
     movedEarlier: { one: '{count} earlier transaction moved to it.', other: '{count} earlier transactions moved to it.' },
-    undo: 'Undo those',
+    undo: 'Undo',
     dismiss: 'Dismiss',
-    undoHint: 'Undoing puts those rows back; the rule stays, and the rules screen is where to remove it.',
+    undoHint: 'Takes the rule away, and puts back any rows it moved.',
     selectedLabel: 'Selected transactions',
     selected: { one: '{count} transaction selected', other: '{count} transactions selected' },
     categorizeAs: 'Categorize as',
