@@ -522,6 +522,7 @@ written out here.
 | D-620 | 2026-11-25 | Paychecks is rebuilt as the report: the month's paycheck in one sentence, net pay its one figure, the gross divided into taxes, funds, the rest and the net, each opening its lines beside the page (taxes by deduction type, month and year so far), what waits one strip below, net by month as the pager and every paycheck in a table; Deduction types reads as a table whose rows open their form beside it; a delete deletes at once with Undo where it happened, and the slip's form stays a page of its own | M64 |
 | D-621 | 2026-11-25 | Plan is rebuilt as the report: net pay and what the bills take first said as one sentence with whether every shekel has a job, to split its one figure, what waits one strip below it, the split's bar with each bucket held against a month, and the bills one row each with its one choice in place; a bucket, a bill, net pay, the cushion and the plan's months open beside the page | M64 |
 | D-622 | 2026-11-26 | Wealth is rebuilt as the report: net worth, funds, goals and debts each answer in one sentence with one display figure and the kit's display for their shape, what waits one list below, then one table whose rows open beside the page; fee impact, the deposit check, a net worth row and the goals' projection move into the side panel, and a removal asks in the row's own menu where no undo is honest | M64 |
+| D-623 | 2026-11-26 | Categories, Rules and the Year are rebuilt as the report: each answers its question in a sentence first; the Year is where every month is read and opened (a month opens on Home); a category, a rule, a total and the built-in rules open beside the page; a rename is in place; merging and a delete that moves rows ask at their button; deleting an unused category or a rule and archiving happen at once with Undo where it happened | M64 |
 | D-624 | 2026-11-26 | The way in and around is the report: every Settings page and Assistants answer first in one sentence on a shared frame, Accounts reads as rows that open their form beside the page with a delete asked at its button, Assistants' tools open by group beside it, the front door and a document with no ledger say what to do in words with Open… added, the guide's first step names Read files and leaves its note where it stood, the waiting notice speaks only of what changes the month, and the palette says what it can do offline | M64 |
 | D-625 | 2026-11-26 | The engine's formats are the report: the formats list and a format's table each answer first in one sentence (how many kinds of things, how many rows and whether they are right), what waits is one strip below, the shape, a rule set's preview and a new view or chart open beside the rows, and a row deletes at once with Undo near it (the next entry opening after a delete from its entry) while a format's delete, which cannot be undone, asks at its button | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
@@ -1538,6 +1539,58 @@ has the moved figure per goal but no on-track verdict from it; a question).
 **Where.** `src/ui/screens/{Overview,Funds,Goals,Debts,FeeImpact}.tsx`, `src/ui/savings/Movements.tsx`,
 `src/ui/wealth/{words.ts,rowMenu.tsx,parts.tsx,NetWorthOpened.tsx}`, `src/ui/charts/PlanAgainst.tsx`,
 `src/i18n/{en,he}/wealth.ts`, `docs/redesign/budget.json`.
+
+## D-623 · 2026-11-26 · Categories, Rules and the Year are rebuilt as the report: each answers its question in a sentence first; the Year is where every month is read and opened (a month opens on Home); a category, a rule, a total and the built-in rules open beside the page; a rename is in place; merging and a delete that moves rows ask at their button; deleting an unused category or a rule and archiving happen at once with Undo where it happened <a id="d-623"></a>
+
+**Context.** M64 U11: the last three ledger screens of the first wave, rebuilt in D-614's direction
+with D-615's kit, D-616's Home as the pattern and D-617's places and ordinary desktop behaviour.
+Home had moved *All months* and its by-month chart here (D-616). Before, on the synthetic year:
+Year 357 words, 16 actions; Categories 228 words, 170 actions, 2.9 windows; Rules 2,575 words, 682
+actions, 17.6 windows, the densest screen in the app.
+
+**Decision.**
+
+| Screen · block before | Now | Why |
+|---|---|---|
+| Year · the eyebrow, the year and *Read files* | **kept** the year as `h1` with its pager; *Read files* **moved** into the waiting line a month missing a statement draws | Read files is Home's; here it answers what the year is missing |
+| Year · five totals | **kept** as the answer: a sentence (*So far in 2026, more has come in than gone out*), left over the one display figure, then came in, went out, saved and taxes as tiles, each against last year when the two years hold as many months, each with its months as a sparkline | the answer comes first; the tiles carry the amounts |
+| Year · the payslips' sentence | **moved** behind the Taxes tile | it explains taxes |
+| Year · came in, went out and saved by month (a chart) | **cut** to the tiles' sparklines and the months table; a `MonthTrend` or `MonthStrip` here broke the budget (an eighth type size, twelve more actions) | every chart has its numbers, and the table is them |
+| Year · *The months* | **kept** as the one table of every month, a row opening that month on Home (Enter too, arrows walk), a month missing a statement marked *part*, the running one *so far* | Home's All months moved here (D-616) |
+| Year · *The same month, a year apart* | **cut** into the table's last column, what went out in the same month a year before, drawn when last year holds any | the comparison sits on the month it compares |
+| Year · *Where it went, and how it moved* | **kept** as `RankedBars`, each category with its months as a sparkline (an optional `trend` on a ranked row), six then the rest behind one line; a category **opens** its months and its shops beside the page | a ranked part of a whole |
+| Year · *by shop* | **moved** behind the Went out tile | it explains went out |
+| Categories · eyebrow, tabs of kind | **cut** the eyebrow into the answer (*You have 42 categories of spending; 13 held something in October 2026*); the three kinds are three parts of one list, since the section's own tabs (Categories, Rules) are its one level | one level of tabs |
+| Categories · *Rules* button | **cut** | it is the section's other tab |
+| Categories · the starter-set offer | **moved** into the waiting strip, *Archive them*, at once with Undo | it asks something of the person |
+| Categories · groups and rows | **kept**: a group's heading its total, a row a dot (the colour popover), its name, the month's bar in its own colour and its figure; a parent's figure is everything under it; the unused **moved** behind *n unused* in each group; the pencil **cut** (F2, a double click, the menu) | the tree is the subject; the eleven hues are its one place |
+| Categories · the detail pane, always open | **moved** into the `SidePanel`, opened by a row: the month against its year (a tile and sparkline), where it sits (in place), where it goes, its bucket, its rules, its colour, and its actions | detail opens beside the page |
+| Categories · Move, Merge and Delete bars at the foot | **cut**: where it sits changes in place; Merge into… and a delete that moves rows ask in a popover at their button in the panel, with the category the rows go to; an unused category deletes at once | D-617 |
+| Categories · New category inline | **moved** to a form in the panel | a thing with several fields |
+| Rules · counts and the long lead | **kept** as the answer: *23 rules of yours file shops into categories*, how they are read, and *180 more come with the app* | the answer comes first |
+| Rules · *Built in* (180 rows on the page) | **moved** behind its count, in the panel; each opens its copy's form or its menu | the app's rules, rarely edited |
+| Rules · the test box beside the list | **moved**: its first field is the list's search, answered in a sentence (*Harbor Foods goes to Living → Groceries, by Harbor Foods*) while the list narrows; the whole box behind *Test with an amount…* | the search that opens the list |
+| Rules · five buttons a row | **cut** to one menu (⋯, right-click, Shift+F10): Edit, Move up, Move down, Turn off, Delete; the grip and ⋯ show on hover | a row's menu is one menu |
+| Rules · the editor and re-apply bars | **moved** into the `SidePanel` (the editor's fields one under another) | forms beside the page |
+| Rules · the delete bar | **cut**: a rule deletes at once, Undo where it was in the order (Ctrl+Z too) | D-617 |
+
+The probe after, light, dark and Hebrew: Year 195 words, 6 blocks, 5 figures, 14 actions, 7 type
+sizes; Categories 106 words, 7 blocks, 67 actions, 16 colours (17 dark), 2.2 windows; Rules 301
+words, 2 blocks, 28 actions, 1.8 windows; nothing under AA. All three leave the budget's exempt
+list. Undo puts a rule back at its place in the order with its count starting over, and a category
+back with its name, kind, parent and colour but at the end of its siblings — `createRule` and
+`createCategory`, so no new engine write. Categories opens on the last finished month, as Home does
+(D-607).
+
+**Taste check.** Made: a parent's figure is everything under it and is never *unused* when its
+children held rows; the running month marked *so far*; arrows walk the months; the rule's grip is
+drawn, and it and ⋯ show on hover; rule names at body weight; one header treatment for the tables.
+Not made: the bars in ink (the inventory makes Categories the one place the hues are the subject);
+a sticky header (*a sticky header belongs to a table that is its own scroll region*, and these
+scroll with the page); dropping *When* where it repeats the rule's name (a question).
+
+**Consequences.** Year, Categories and Rules are in `docs/redesign/budget.json` with limits.
+`AskAtButton` (src/ui/categories/) is `ConfirmAtButton` with a choice in it.
 
 ## D-624 · 2026-11-26 · The way in and around is the report: every Settings page and Assistants answer first in one sentence on a shared frame, Accounts reads as rows that open their form beside the page with a delete asked at its button, Assistants' tools open by group beside it, the front door and a document with no ledger say what to do in words with Open… added, the guide's first step names Read files and leaves its note where it stood, the waiting notice speaks only of what changes the month, and the palette says what it can do offline <a id="d-624"></a>
 

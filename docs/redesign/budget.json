@@ -14,12 +14,12 @@
       "screens": 1.8
     },
     "#/year": {
-      "words": 355,
-      "blocks": 8,
+      "words": 230,
+      "blocks": 7,
       "figures": 5,
       "actions": 14,
-      "colours": 12,
-      "screens": 2.8
+      "colours": 8,
+      "screens": 2.3
     },
     "#/transactions": {
       "words": 115,
@@ -94,20 +94,20 @@
       "screens": 1.1
     },
     "#/categories": {
-      "words": 226,
-      "blocks": 15,
+      "words": 140,
+      "blocks": 8,
       "figures": 1,
-      "actions": 168,
-      "colours": 20,
-      "screens": 2.8
+      "actions": 80,
+      "colours": 18,
+      "screens": 2.5
     },
     "#/categories/rules": {
-      "words": 2573,
-      "blocks": 5,
+      "words": 360,
+      "blocks": 3,
       "figures": 0,
-      "actions": 680,
-      "colours": 7,
-      "screens": 17.6
+      "actions": 40,
+      "colours": 8,
+      "screens": 2.2
     },
     "#/read": {
       "words": 40,
@@ -311,9 +311,6 @@
     }
   },
   "exempt": [
-    "#/year",
-    "#/categories",
-    "#/categories/rules",
     "#/formats/unit/board",
     "#/formats/card_charge/list",
     "#/formats/unit/list",

@@ -3,6 +3,7 @@ import { useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 
 import { barPercent, drawn, kitMoney } from './kit.ts'
+import { Sparkline } from './Sparkline.tsx'
 
 export interface RankedRow {
   readonly key: string
@@ -14,6 +15,8 @@ export interface RankedRow {
   readonly note?: string | undefined
   /** A tour's anchor on the row (`went-cat:groceries`), for the demo's tours. */
   readonly tour?: string | undefined
+  /** The months behind the row, as a `Sparkline` at the end of its name: how it moved (Year, M64 U11). */
+  readonly trend?: readonly (number | undefined)[] | undefined
 }
 
 /**
@@ -96,6 +99,11 @@ function Line({
         )}
         <Bidi className={`truncate ${quiet ? 'text-ink-secondary' : ''}`}>{row.name}</Bidi>
         {row.note !== undefined && <span className="shrink-0 text-caption text-ink-secondary">{row.note}</span>}
+        {row.trend !== undefined && (
+          <span className="ms-auto flex shrink-0">
+            <Sparkline values={row.trend} width={72} height={20} />
+          </span>
+        )}
       </span>
       <span aria-hidden className="flex h-2 items-center">
         <span

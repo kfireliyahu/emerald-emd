@@ -86,7 +86,7 @@ look alike.
 
 ## Trends and comparisons
 
-**Built** at `#/trends` (D-090; `#/insights/trends` until D-157), and **part of Home · Year since M28 U5** (D-313): each category's line beside its total, the merchants, the same month a year apart. **Net worth over time is built too, and lives on its own
+**Built** at `#/trends` (D-090; `#/insights/trends` until D-157), and **part of Home · Year since M28 U5** (D-313): each category's line beside its total, the merchants, the same month a year apart — since M64 U11 (D-623) a sparkline on each category's bar, the shops behind Went out, and what went out a year before as the months table's last column. **Net worth over time is built too, and lives on its own
 screen** — `#/wealth/worth` (D-107) — rather than as a row here: every other trend on this screen
 reads the ledger and net worth reads none of it, so it belongs beside the savings and debts it is
 made of. The window is twelve or twenty-four months and is *filled in*, so a span the document only
