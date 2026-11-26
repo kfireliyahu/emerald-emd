@@ -19,6 +19,7 @@ import {
 } from '@/domain/format/connections.ts'
 import type { GraphPlace } from '@/domain/format/view.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { spoken } from '@/ui/formats/spoken.ts'
 import { IconAction } from '@/ui/components/IconAction.tsx'
 import { TypeGlyph } from '@/ui/formats/TypeGlyph.tsx'
 import {
@@ -819,7 +820,8 @@ function PortButton({
       ? t('connections.graph.belongsToHint', { each: nounOf(owner), title: owner })
       : port.port.kind === 'NEW_FIGURE'
         ? t('connections.graph.hasManyHint', { each: nounOf(owner), title: owner })
-        : port.says
+        : spoken(t, port.said.says)
+  const detail = port.said.detail === undefined ? undefined : spoken(t, port.said.detail)
   return (
     <button
       type="button"
@@ -848,9 +850,9 @@ function PortButton({
       <span className="flex min-w-0">
         <Bidi className="min-w-0 truncate">{label}</Bidi>
       </span>
-      {port.detail !== undefined && (
+      {detail !== undefined && (
         <span className="ms-auto flex min-w-0 shrink-0 whitespace-nowrap text-ink-secondary">
-          <Bidi>{port.detail}</Bidi>
+          <Bidi>{detail}</Bidi>
         </span>
       )}
     </button>

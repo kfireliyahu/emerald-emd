@@ -18,7 +18,13 @@ import { declarationChangeRefusal } from '@/domain/format/owner.ts'
 import { parseRollup, type RollupDeclaration } from '@/domain/format/rollup.ts'
 import { sameBlock, savedAddress, savedNameRefusal, SAVED_ADDRESS_LONGEST, type DashboardBlock } from '@/domain/format/view.ts'
 
+import { translate } from '@/i18n/catalogue.ts'
+import type { Translate } from '@/i18n/current.ts'
+
 import { summableColumns } from './dashboard.ts'
+
+/** The refusals say their words with a `t` (M64 F36); left out, English — what a conversation reads. */
+const english: Translate = (key, parts) => translate('en', key, parts)
 
 /**
  * **A dashboard makes the view or the chart it needs in place** — M53 F2,
@@ -55,17 +61,18 @@ export function viewRefusal(
   declaration: FormatDeclaration,
   blocks: readonly DashboardBlock[],
   made: ViewMade,
+  t: Translate = english,
 ): string | undefined {
   const refused = savedNameRefusal(made.name)
   if (refused !== undefined) return refused
   // A name taken is refused here, never written over: *Save this view* offers
   // the replace, and a view picked from the list is placed as it stands.
   if (savedView(db, made.format, made.name) !== undefined) {
-    return `${declaration.title} has a saved view called ${made.name} already — pick it from the list, or call this one something else.`
+    return t('dashboards.refuse.viewTaken', { format: declaration.title, name: made.name })
   }
-  if (blocks.some((each) => sameBlock(each, made))) return `A block here is called ${made.name} already.`
+  if (blocks.some((each) => sameBlock(each, made))) return t('dashboards.make.taken', { name: made.name })
   if (savedAddress(made.address).length > SAVED_ADDRESS_LONGEST) {
-    return `A saved view keeps at most ${String(SAVED_ADDRESS_LONGEST)} characters of address.`
+    return t('dashboards.refuse.addressLong', { count: SAVED_ADDRESS_LONGEST })
   }
   return undefined
 }
@@ -134,7 +141,12 @@ export function rollupName(words: string): string {
 }
 
 /** The refusal when a chart has several dates its month could be of and none is chosen: said at *By month of*. */
-export const PERIOD_UNSAID = 'Say which date the month is of.'
+export const PERIOD_UNSAID = english('dashboards.refuse.period')
+
+/** `PERIOD_UNSAID` in the language `t` says. */
+export function periodUnsaid(t: Translate = english): string {
+  return t('dashboards.refuse.period')
+}
 
 /** A member as a rollup's filter writes it: quoted when it holds a space, a comma or a quote. */
 function memberWord(value: string): string {
@@ -152,9 +164,9 @@ function isEmptyHeld(value: unknown): boolean {
  * its members, a yes-or-no, a cell empty or not, and a date to a window around
  * today (D-472); it searches nothing and holds no range.
  */
-export function chartWhere(filter: RowFilter): Result<string, string> {
+export function chartWhere(filter: RowFilter, t: Translate = english): Result<string, string> {
   if ((filter.search?.trim() ?? '') !== '') {
-    return err('A chart’s filter does not search: hold a column to its values instead.')
+    return err(t('dashboards.refuse.search'))
   }
   const parts: string[] = []
   for (const [column, value] of Object.entries(filter.match ?? {})) {
@@ -163,7 +175,7 @@ export function chartWhere(filter: RowFilter): Result<string, string> {
       continue
     }
     if (typeof value === 'string' && parseFigureRange(value) !== undefined) {
-      return err(`A chart’s filter holds no range, and ${column} is held to one.`)
+      return err(t('dashboards.refuse.range', { column }))
     }
     const { values, not } = heldAs(value)
     const turned = not ? 'not ' : ''
@@ -172,7 +184,7 @@ export function chartWhere(filter: RowFilter): Result<string, string> {
       .filter((each) => !isEmptyHeld(each))
       .map((each) => (each === true || each === 1 || each === '1' ? 'true' : each === false || each === 0 || each === '0' ? 'false' : String(each)))
     if (empties.length > 0 && members.length > 0) {
-      return err(`A chart’s filter holds ${column} empty or to its values, not both at once.`)
+      return err(t('dashboards.refuse.emptyAndValues', { column }))
     }
     if (empties.length > 0) parts.push(`${column} is ${turned}empty`)
     else if (members.length === 1) parts.push(`${column} is ${turned}${memberWord(members[0] ?? '')}`)
@@ -182,19 +194,15 @@ export function chartWhere(filter: RowFilter): Result<string, string> {
 }
 
 /** The rollup a chart declares — `count by month of done_on where state is done` — or why none. */
-export function chartRollup(declaration: FormatDeclaration, made: ChartMade): Result<RollupDeclaration, string> {
+export function chartRollup(declaration: FormatDeclaration, made: ChartMade, t: Translate = english): Result<RollupDeclaration, string> {
   if (made.sum !== undefined && !summableColumns(declaration).some((each) => each.name === made.sum)) {
-    return err(`${declaration.title} has no number or money column called ${made.sum}.`)
+    return err(t('dashboards.refuse.noSum', { format: declaration.title, column: made.sum }))
   }
   const period = periodColumns(declaration).find((each) => each.name === made.period)
   if (period === undefined) {
-    return err(
-      periodColumns(declaration).length === 0
-        ? `${declaration.title} has no date or month column, so a chart of it has no months to be by.`
-        : PERIOD_UNSAID,
-    )
+    return err(periodColumns(declaration).length === 0 ? t('dashboards.refuse.noPeriod', { format: declaration.title }) : periodUnsaid(t))
   }
-  const where = chartWhere(made.filter)
+  const where = chartWhere(made.filter, t)
   if (!where.ok) return where
   const text = [
     made.sum === undefined ? 'count' : `sum of ${made.sum}`,
@@ -223,13 +231,14 @@ export function chartPlan(
   declarations: readonly FormatDeclaration[],
   blocks: readonly DashboardBlock[],
   made: ChartMade,
+  t: Translate = english,
 ): Result<ChartPlan, string> {
   const before = declarations.find((each) => each.name === made.format)
-  if (before === undefined) return err(`${made.format} is not declared here any more.`)
-  const rollup = chartRollup(before, made)
+  if (before === undefined) return err(t('dashboards.said.notDeclared', { format: made.format }))
+  const rollup = chartRollup(before, made, t)
   if (!rollup.ok) return rollup
   if (blocks.some((each) => each.format === before.name && each.name === rollup.value.name)) {
-    return err(`A block here is called ${rollup.value.name} already.`)
+    return err(t('dashboards.make.taken', { name: rollup.value.name }))
   }
   const after: FormatDeclaration = {
     ...before,

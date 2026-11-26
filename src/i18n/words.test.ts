@@ -200,8 +200,17 @@ const M64_F18 = [
   'src/ui/formats/ColumnsChoice.tsx',
 ]
 
+/** M64 F35-F37: the helpers that build a dashboard's, a connection's and a list's sentences for the screen. */
+const M64_F35 = [
+  'src/ui/formats/dashboard.ts',
+  'src/ui/formats/madeInPlace.ts',
+  'src/ui/formats/inputBlock.ts',
+  'src/ui/formats/spoken.ts',
+  'src/ui/formats/InputBlock.tsx',
+]
+
 /** The screens whose words are the catalogue's. A unit that translates a screen adds its files here. */
-export const TRANSLATED: readonly string[] = [...U4, ...U5, ...M64_U8, ...M64_U10, ...M64_U13, ...M64_F9, ...M64_F3, ...M64_F26, ...M64_F2, ...M64_F18]
+export const TRANSLATED: readonly string[] = [...U4, ...U5, ...M64_U8, ...M64_U10, ...M64_U13, ...M64_F9, ...M64_F3, ...M64_F26, ...M64_F2, ...M64_F18, ...M64_F35]
 
 /** Literals in a translated file that are not the app's words, by file, each with why. */
 const ALLOWED: Readonly<Record<string, readonly string[]>> = {
@@ -214,6 +223,10 @@ const ALLOWED: Readonly<Record<string, readonly string[]>> = {
   // shown later as the document's own words — never a word of this screen.
   'src/ui/screens/Transactions.tsx': ['— from a correction'],
   'src/ui/screens/ByMerchant.tsx': ['By merchant:'],
+  // M64 F36: the windows a headline total offers, as a filter's address holds them — values, said as written.
+  'src/ui/formats/dashboard.ts': ['before today', 'within 7 days'],
+  // M64 F36: a rollup's own declaration language, which `parseRollup` reads — never shown as the screen's words.
+  'src/ui/formats/madeInPlace.ts': ['is empty', 'is one of', 'sum of', 'month of'],
 }
 
 /** Names a keyboard gives its keys, which are compared against and never shown. */

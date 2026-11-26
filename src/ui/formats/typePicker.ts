@@ -18,12 +18,15 @@ import type { ColumnType } from '@/domain/format/declaration.ts'
 export const COMMON_TYPES: readonly ColumnType[] = ['text', 'real', 'money', 'date', 'boolean', 'enum', 'link']
 
 /** The rest, one step away: each heading with its types, in the order drawn. */
-export const MORE_TYPES: readonly { readonly heading: string; readonly types: readonly ColumnType[] }[] = [
-  { heading: 'Numbers', types: ['integer', 'decimal', 'percent', 'quantity'] },
-  { heading: 'Dates and times', types: ['month', 'time', 'instant'] },
-  { heading: 'Several', types: ['enums', 'links'] },
-  { heading: 'Outside this document', types: ['file', 'elsewhere'] },
+export const MORE_TYPES: readonly { readonly group: TypeGroup; readonly heading: string; readonly types: readonly ColumnType[] }[] = [
+  { group: 'numbers', heading: 'Numbers', types: ['integer', 'decimal', 'percent', 'quantity'] },
+  { group: 'dates', heading: 'Dates and times', types: ['month', 'time', 'instant'] },
+  { group: 'several', heading: 'Several', types: ['enums', 'links'] },
+  { group: 'outside', heading: 'Outside this document', types: ['file', 'elsewhere'] },
 ]
+
+/** A heading's catalogue word (`formats.typeGroup.*`, M64 F37); `heading` stays the English. */
+export type TypeGroup = 'numbers' | 'dates' | 'several' | 'outside'
 
 /** Whether a type is on the short list — a rare one opens the picker on the rest. */
 export function isCommonType(type: ColumnType): boolean {

@@ -95,6 +95,17 @@ export const views = {
     line: 'Line',
     lineMenu: 'Line: after the title',
     /** The groups a date makes, and the group of rows with nothing in the column. */
+    /** Quick add's placeholder (`quickAddWords`): `Add a task · inbox, due today, Garden shed`. `{article}` is the format's title with its article (`withArticle`), `{title}` as declared. */
+    quick: {
+      one: '{article}',
+      add: 'Add {one}',
+      addWith: 'Add {one} · {words}',
+      joiner: ', ',
+      /** A date named: `due today`. */
+      date: '{column} {due}',
+      /** A yes-or-no column that starts at no. */
+      not: 'not {column}',
+    },
     groups: {
       late: 'Late',
       beforeToday: 'Before today',

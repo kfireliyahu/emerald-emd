@@ -1,7 +1,7 @@
 import type { Database } from 'sql.js'
 
 import { formatMoney, money } from '@/core/money.ts'
-import { filterQuery, filterText, heldText, type RowFilter } from '@/data/repositories/formatFilterRepository.ts'
+import { filterQuery, heldAs, heldText, type RowFilter } from '@/data/repositories/formatFilterRepository.ts'
 import { countRows, sumColumn, type RowQuery } from '@/data/repositories/formatRowRepository.ts'
 import { savedView, savedViews, viewSettings } from '@/data/repositories/formatViewRepository.ts'
 import { nounOf, pluralOf } from '@/domain/format/connections.ts'
@@ -21,6 +21,11 @@ import {
   type SavedView,
 } from '@/domain/format/view.ts'
 import { err, ok, type Result } from '@/core/result.ts'
+import { parseClockWords } from '@/domain/format/clock.ts'
+import { figureRangeSaying, parseFigureRange } from '@/domain/format/figureRange.ts'
+import { translate, type MessageKey } from '@/i18n/catalogue.ts'
+import { countKey } from '@/i18n/count.ts'
+import type { Translate } from '@/i18n/current.ts'
 
 import { addressView, canonicalAddress, filterAddress, inputShapeOf } from './addressFilter.ts'
 import { blockSentence } from './inputBlock.ts'
@@ -36,6 +41,12 @@ import { blockSentence } from './inputBlock.ts'
  * or money columns, under a filter held as an address spells it (a window
  * around today stays the phrase, as a saved view's does).
  */
+
+/**
+ * The helpers say their words with a `t` (M64 F36): the screen's, in the
+ * language now; left out, English — what `show_format view:dashboard` reads.
+ */
+const english: Translate = (key, parts) => translate('en', key, parts)
 
 /** The column types a headline total sums: a number or money. */
 const SUMMED: ReadonlySet<string> = new Set(['money', 'integer', 'real', 'decimal'])
@@ -73,14 +84,15 @@ export function headline(
   block: Pick<DashboardBlock, 'format' | 'sum' | 'address'>,
   declarations: readonly FormatDeclaration[],
   today: string,
+  t: Translate = english,
 ): Result<Headline, string> {
   const declaration = declarations.find((each) => each.name === block.format)
-  if (declaration === undefined) return err(`${block.format} is not declared here any more.`)
+  if (declaration === undefined) return err(t('dashboards.said.notDeclared', { format: block.format }))
   const read = filterQuery(db, declaration, totalFilter(block), declarations, today)
   if (!read.ok) {
     return err(
       read.error.kind === 'NO_COLUMN'
-        ? `${declaration.title} has no column ${read.error.name} any more.`
+        ? t('dashboards.body.noColumn', { format: declaration.title, name: read.error.name })
         : read.error.reason,
     )
   }
@@ -89,8 +101,8 @@ export function headline(
   const rows = countRows(db, declaration, query)
   if (block.sum === undefined) return ok({ figure: String(rows), rows, of })
   const column = declaration.columns.find((each) => each.name === block.sum)
-  if (column === undefined) return err(`${declaration.title} has no column ${block.sum} any more.`)
-  if (!SUMMED.has(column.type)) return err(`${column.name} is not a number or money, so it is not summed.`)
+  if (column === undefined) return err(t('dashboards.body.noColumn', { format: declaration.title, name: block.sum }))
+  if (!SUMMED.has(column.type)) return err(t('dashboards.said.notSummed', { column: column.name }))
   const sums = sumColumn(db, declaration, column.name, query)
   if (column.type === 'money') {
     const figures = sums.flatMap((each) => (each.currency === undefined ? [] : [formatMoney(money(each.total, each.currency))]))
@@ -107,13 +119,66 @@ export function headline(
 }
 
 /** `of 16 tasks` — under a headline total's figure. */
-export function ofText(declaration: FormatDeclaration, of: number): string {
-  return `of ${String(of)} ${of === 1 ? nounOf(declaration.title) : pluralOf(declaration.title)}`
+export function ofText(declaration: FormatDeclaration, of: number, t: Translate = english): string {
+  return t(countKey('dashboards.said.of', of), { count: of, ...formatWords(declaration.title) })
+}
+
+/** A format's title in a sentence: `{Format}` as declared, `{format}` its noun, `{formats}` its plural (English endings). */
+function formatWords(title: string): Record<string, string> {
+  return { Format: title, format: nounOf(title), formats: pluralOf(title) }
 }
 
 /** What a saved view's filter holds, in the filter's own words, or `every row`. */
-export function savedWords(view: SavedView): string {
-  return filterText(addressView(view.address).filter) || 'every row'
+export function savedWords(view: SavedView, t: Translate = english): string {
+  return filterWords(addressView(view.address).filter, t) || t('dashboards.said.everyRow')
+}
+
+/**
+ * **What a filter holds, in a line, in the language now** (M64 F36) — the
+ * repository's `filterText` (`state is not done, search “bidi”`) with its
+ * own words the catalogue's; the columns and the values held stay as the
+ * document writes them.
+ */
+export function filterWords(filter: RowFilter, t: Translate = english): string {
+  const held = Object.entries(filter.match ?? {}).map(([name, value]) => heldWords(name, value, t))
+  const search = filter.search?.trim() ?? ''
+  return [...held, ...(search === '' ? [] : [t('dashboards.filter.search', { search })])].join(t('dashboards.filter.joiner'))
+}
+
+/** One column held, as `heldText` says it, in the language now. */
+export function heldWords(column: string, value: unknown, t: Translate = english): string {
+  if (t === english) return heldText(column, value)
+  const clock = typeof value === 'string' ? parseClockWords(value) : undefined
+  if (clock !== undefined) return t('dashboards.filter.is', { column, values: String(value).trim().replace(/\s+/g, ' ').toLowerCase() })
+  const range = typeof value === 'string' ? parseFigureRange(value) : undefined
+  if (range !== undefined) {
+    const said = figureRangeSaying(range)
+    return t('dashboards.filter.is', { column, values: t(said.key, said.parts) })
+  }
+  const { values, not } = heldAs(value)
+  const words = values.map((each) => heldMember(each, t)).join(t('dashboards.filter.joiner'))
+  if (!not && values.length === 1) return t('dashboards.filter.equals', { column, values: words })
+  const key: MessageKey =
+    values.length > 1
+      ? not
+        ? 'dashboards.filter.isNotOneOf'
+        : 'dashboards.filter.isOneOf'
+      : not
+        ? 'dashboards.filter.isNot'
+        : 'dashboards.filter.is'
+  return t(key, { column, values: words })
+}
+
+/** One value held: `empty` for nothing, else as the document writes it. */
+function heldMember(value: unknown, t: Translate): string {
+  return value === null || value === undefined || (typeof value === 'string' && value.trim() === '') ? t('dashboards.filter.empty') : String(value)
+}
+
+/** A saved view's kind in a sentence, capitalised where the language has capitals: `List`. */
+function kindWords(kind: string, t: Translate): string {
+  const known = ['list', 'table', 'board', 'roadmap', 'page', 'ready', 'start', 'agenda', 'entry', 'input'].includes(kind)
+  const word = known ? t(`dashboards.kinds.${kind}` as MessageKey) : kind
+  return word.charAt(0).toUpperCase() + word.slice(1)
 }
 
 /**
@@ -127,26 +192,33 @@ export function blockWhat(
   block: DashboardBlock,
   declarations: readonly FormatDeclaration[],
   withFormat: boolean,
+  t: Translate = english,
 ): string {
   const declaration = declarations.find((each) => each.name === block.format)
-  const pre = withFormat ? `${declaration?.title ?? block.format} · ` : ''
-  if (declaration === undefined) return pre
+  const pre = (what: string): string => (withFormat ? t('dashboards.said.withFormat', { format: declaration?.title ?? block.format, what }) : what)
+  if (declaration === undefined) return pre('')
   if (block.kind === 'saved') {
     const view = savedView(db, block.format, block.name)
-    if (view === undefined) return `${pre}Saved view`
+    if (view === undefined) return pre(t('dashboards.said.savedView'))
     // An input view's line is what it adds, which names the format already (M55 U4, D-535).
-    if (view.kind === INPUT_KIND) return blockSentence(declaration, inputShapeOf(view.address, declaration.name))
-    const kind = view.kind.charAt(0).toUpperCase() + view.kind.slice(1)
+    if (view.kind === INPUT_KIND) return blockSentence(declaration, inputShapeOf(view.address, declaration.name), t)
+    const kind = kindWords(view.kind, t)
     const group = view.kind === 'list' ? listOf(declaration.columns, viewSettings(db, declaration.name, 'list')).group : undefined
-    return `${pre}${kind} · ${savedWords(view)}${group === undefined ? '' : `, by ${group.name.replace(/_/g, ' ')}`}`
+    const words = savedWords(view, t)
+    return pre(
+      group === undefined
+        ? t('dashboards.said.what', { kind, words })
+        : t('dashboards.said.whatBy', { kind, words, group: group.name.replace(/_/g, ' ') }),
+    )
   }
   if (block.kind === 'rollup') {
     const rollup = (declaration.rollups ?? []).find((each) => each.name === block.name)
-    return `${pre}${rollup === undefined ? 'Chart' : rollupSentence(rollup, declaration)}`
+    return pre(rollup === undefined ? t('dashboards.said.chart') : rollupSentence(rollup, declaration, t))
   }
   const column = block.sum === undefined ? undefined : declaration.columns.find((each) => each.name === block.sum)
-  const what = block.sum === undefined ? 'Count' : `Sum of ${(column?.name ?? block.sum).replace(/_/g, ' ')}`
-  return `${pre}${what} · ${filterText(totalFilter(block)) || `every ${nounOf(declaration.title)}`}`
+  const kind = block.sum === undefined ? t('dashboards.said.count') : t('dashboards.make.sumOf', { column: (column?.name ?? block.sum).replace(/_/g, ' ') })
+  const words = filterWords(totalFilter(block), t) || t('dashboards.make.every', { format: nounOf(declaration.title) })
+  return pre(t('dashboards.said.what', { kind, words }))
 }
 
 /**
@@ -154,14 +226,19 @@ export function blockWhat(
  * names is gone. Said on the block, which can still be removed — a block
  * never vanishes without a word.
  */
-export function blockGone(db: Database, block: DashboardBlock, declarations: readonly FormatDeclaration[]): string | undefined {
+export function blockGone(
+  db: Database,
+  block: DashboardBlock,
+  declarations: readonly FormatDeclaration[],
+  t: Translate = english,
+): string | undefined {
   const declaration = declarations.find((each) => each.name === block.format)
-  if (declaration === undefined) return `${block.format} is not declared here any more.`
+  if (declaration === undefined) return t('dashboards.said.notDeclared', { format: block.format })
   if (block.kind === 'saved' && savedView(db, block.format, block.name) === undefined) {
-    return `${declaration.title} has no saved view called ${block.name} any more.`
+    return t('dashboards.body.noView', { format: declaration.title, name: block.name })
   }
   if (block.kind === 'rollup' && !(declaration.rollups ?? []).some((each) => each.name === block.name)) {
-    return `${declaration.title} has no chart called ${rollupWords(block.name)} any more.`
+    return t('dashboards.body.noChart', { format: declaration.title, name: rollupWords(block.name) })
   }
   return undefined
 }
@@ -188,17 +265,25 @@ export function blockTitle(block: Pick<DashboardBlock, 'kind' | 'name'>): string
  * line under a block's title and above its tab's chart, where the rollup's own
  * text in mono stood.
  */
-export function rollupSentence(rollup: RollupDeclaration, declaration: Pick<FormatDeclaration, 'title'>): string {
+export function rollupSentence(
+  rollup: RollupDeclaration,
+  declaration: Pick<FormatDeclaration, 'title'>,
+  t: Translate = english,
+): string {
   const words = (name: string): string => name.replace(/_/g, ' ')
   const what =
     rollup.kind === 'COUNT'
-      ? `Count of ${pluralOf(declaration.title)}`
-      : `${rollup.kind.charAt(0)}${rollup.kind.slice(1).toLowerCase()} of ${words(rollup.of)}`
-  const period = `${rollup.period.truncate ? 'month of ' : ''}${words(rollup.period.column)}${
-    rollup.period.fallback === undefined ? '' : ` or ${words(rollup.period.fallback)}`
-  }`
-  const where = rollup.where.map((each) => words(ruleText(each))).join(' and ')
-  return `${what} by ${period}${rollup.by === undefined ? '' : `, per ${words(rollup.by)}`}${where === '' ? '' : `, where ${where}`}`
+      ? t('dashboards.rollupSaid.count', formatWords(declaration.title))
+      : t('dashboards.rollupSaid.of', { kind: t(`dashboards.rollupSaid.kinds.${rollup.kind}`), column: words(rollup.of) })
+  const column = rollup.period.truncate
+    ? t('dashboards.rollupSaid.monthOf', { column: words(rollup.period.column) })
+    : words(rollup.period.column)
+  const period =
+    rollup.period.fallback === undefined ? column : t('dashboards.rollupSaid.or', { column, fallback: words(rollup.period.fallback) })
+  const where = rollup.where.map((each) => words(ruleText(each))).join(t('dashboards.rollupSaid.and'))
+  const by = t('dashboards.rollupSaid.by', { what, period })
+  const per = rollup.by === undefined ? by : t('dashboards.rollupSaid.per', { sentence: by, by: words(rollup.by) })
+  return where === '' ? per : t('dashboards.rollupSaid.where', { sentence: per, where })
 }
 
 /** What *Add a block* offers of one format: its saved views and its rollups. */

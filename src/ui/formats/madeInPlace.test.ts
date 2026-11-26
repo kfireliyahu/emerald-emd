@@ -22,7 +22,10 @@ import { column, DECLARATION_LANGUAGE, type FormatDeclaration } from '@/domain/f
 import { rollupText } from '@/domain/format/rollup.ts'
 
 import { canonicalAddress, filterAddress } from './addressFilter.ts'
-import { blockGone, blockTitle, blockWhat, rollupSentence, rollupWords } from './dashboard.ts'
+import { translate } from '@/i18n/catalogue.ts'
+import type { Translate } from '@/i18n/current.ts'
+
+import { blockGone, blockTitle, blockWhat, filterWords, rollupSentence, rollupWords } from './dashboard.ts'
 import { ChartForm, type ChartMaking } from './MakeBlock.tsx'
 import { chartPlan, chartWhere, makeChart, makeView, PERIOD_UNSAID, rollupName, viewRefusal, type ViewMade } from './madeInPlace.ts'
 
@@ -212,5 +215,10 @@ describe('New chart asks once and reads in words (M55 U7)', () => {
     expect(rollupSentence(plan.value.rollup, TASK)).toBe('Sum of estimate by month of due, where state is done')
     makeChart(db, [], plan.value)
     expect(blockWhat(db, plan.value.block, listFormats(db), true)).toBe('Task · Sum of estimate by month of due, where state is done')
+    // The screen says it in the language now (M64 F36); the column and the rule are the document's.
+    const hebrew: Translate = (key, parts) => translate('he', key, parts)
+    expect(rollupSentence(plan.value.rollup, TASK, hebrew)).toBe('סכום של estimate לפי החודש של due, כאשר state is done')
+    expect(filterWords({ match: { state: { not: ['done'] } }, search: 'shed' }, hebrew)).toBe('state אינו done, חיפוש ״shed״')
+    expect(chartWhere({ search: 'x' }, hebrew)).toEqual({ ok: false, error: 'מסנן של תרשים לא מחפש: הגבילו עמודה לערכים שלה במקום.' })
   })
 })

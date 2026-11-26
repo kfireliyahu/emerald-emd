@@ -10,6 +10,7 @@ import { labelColumn, type FormatDeclaration } from '@/domain/format/declaration
 import { dayOfDefault } from '@/domain/format/inputView.ts'
 import { withField, type RowDraft } from '@/domain/format/rowDraft.ts'
 import { entryLabel, entryWayOf, type SavedView } from '@/domain/format/view.ts'
+import { countKey } from '@/i18n/count.ts'
 import { useT } from '@/i18n/current.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
@@ -146,7 +147,7 @@ export function InputBlock({
 
   const add = (): void => {
     if (locked) return
-    const staged = stageInput(db, declaration, draft, startsAt, day, declarations)
+    const staged = stageInput(db, declaration, draft, startsAt, day, declarations, t)
     if ('problems' in staged) {
       setProblems(staged.problems)
       // Focus goes to the first refused field, once it is drawn as refused.
@@ -204,7 +205,7 @@ export function InputBlock({
       <div
         ref={fields}
         role="group"
-        aria-label={`Add ${one === '' ? 'a row' : `a ${one}`}`}
+        aria-label={one === '' ? t('dashboards.input.addRow') : t('dashboards.input.addOne', { one, title: declaration.title })}
         className={stacked ? 'flex shrink-0 flex-col' : 'flex shrink-0 flex-wrap items-start gap-x-4 gap-y-3 pt-1'}
         onKeyDown={(event) => {
           // **Enter adds** from a one-line field, Ctrl+Enter from any (U1 §6): what a list took first is its.
@@ -218,7 +219,7 @@ export function InputBlock({
         }}
       >
         {drawn.length === 0 ? (
-          <p className="text-caption text-ink-secondary">It asks nothing.</p>
+          <p className="text-caption text-ink-secondary">{t('dashboards.input.asksNothing')}</p>
         ) : (
           drawn.map((column) => {
             const way = entryWayOf(column, undefined, false)
@@ -281,7 +282,7 @@ export function InputBlock({
       {!locked && (
         <section
           ref={room}
-          aria-label="Just added"
+          aria-label={t('formats.input.justAdded')}
           className={fill ? 'mt-3 min-h-0 flex-1 overflow-hidden' : shown.length > 0 ? 'mt-3' : ''}
         >
           {shown.length > 0 && (
@@ -303,7 +304,7 @@ export function InputBlock({
                         {kept[id]}
                       </span>
                     )}
-                    <IconAction label={`Undo adding ${title}`} onClick={() => undo(id)}>
+                    <IconAction label={t('formats.input.undoAdding', { title })} onClick={() => undo(id)}>
                       <path d="M7.5 4.5 3.75 8.25 7.5 12" />
                       <path d="M3.75 8.25h10.5a5.25 5.25 0 0 1 0 10.5H9" />
                     </IconAction>
@@ -323,12 +324,12 @@ export function InputBlock({
       {!locked && (
         <div className="mt-3 flex shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-t border-hairline pt-2.5">
           <Button variant="secondary" size="sm" icon="add" onClick={add}>
-            Add
+            {t('dashboards.make.add')}
           </Button>
           {problems.length > 0 && (
             <span className="text-caption text-negative" role="alert">
               {[
-                ...(atFields === 0 ? [] : [`Not added: ${atFields === 1 ? 'one field to put right' : `${String(atFields)} fields to put right`}.`]),
+                ...(atFields === 0 ? [] : [t(countKey('formats.input.notAdded', atFields), { count: atFields })]),
                 ...aboutRow.map((each) => each.reason),
               ].join(' ')}
             </span>

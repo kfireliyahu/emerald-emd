@@ -11,7 +11,7 @@ import {
 } from '@/data/repositories/formatViewRepository.ts'
 import {
   edgesOf,
-  edgeWords,
+  edgeSaid,
   graphOf,
   proposalFor,
   type Edge,
@@ -26,6 +26,7 @@ import { declarationChangeRefusal, rowWriteRefusal } from '@/domain/format/owner
 import type { ReconcilePlan } from '@/domain/format/reconcile.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { spoken } from '@/ui/formats/spoken.ts'
 import { ChoiceField } from '@/ui/components/ChoiceField.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
 import { ConnectionGraph } from '@/ui/formats/ConnectionGraph.tsx'
@@ -276,12 +277,12 @@ export function Connections() {
           ) : (
             <ul className="space-y-1">
               {data.edges.map((edge) => {
-                const said = edgeWords(edge, data.declarations)
+                const said = edgeSaid(edge, data.declarations)
                 return (
                 <li key={keyOf(edge)}>
                   <button
                     type="button"
-                    title={said.under}
+                    title={spoken(t, said.under)}
                     onClick={() => {
                       setArmed(undefined)
                       setOpen({ proposal: proposalOf(edge), existing: edge })
@@ -289,7 +290,7 @@ export function Connections() {
                     className="w-full px-2 py-1 text-start text-caption hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
                   >
                     <span className={edge.dangling ? 'text-negative' : 'text-ink'}>
-                      <Bidi>{said.says}</Bidi>
+                      <Bidi>{spoken(t, said.says)}</Bidi>
                     </span>
                     {/* Which column it is, on the row's hover (M64 U14): the sentence already names it. */}
                   </button>

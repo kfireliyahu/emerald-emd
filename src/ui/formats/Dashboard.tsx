@@ -648,8 +648,8 @@ function Block({
   // An input view's block is its form (M55 U4, D-535): a saved view, so no migration.
   const input = block.kind === 'saved' ? savedView(db, block.format, block.name) : undefined
   const form = input?.kind === INPUT_KIND ? input : undefined
-  const gone = blockGone(db, block, declarations)
-  const what = blockWhat(db, block, declarations, withFormat)
+  const gone = blockGone(db, block, declarations, t)
+  const what = blockWhat(db, block, declarations, withFormat, t)
   const title = blockTitle(block)
   // While an edge is dragged, the size it snaps to; written when it is let go.
   const [sizing, setSizing] = useState<BlockSize | undefined>(undefined)
@@ -919,12 +919,13 @@ function TotalBody({
   readonly declarations: readonly FormatDeclaration[]
   readonly day: string
 }) {
-  const read = headline(db, block, declarations, day)
+  const t = useT()
+  const read = headline(db, block, declarations, day, t)
   if (!read.ok) return <Nothing>{read.error}</Nothing>
   return (
     <>
       <Figure figure={read.value.figure} unit={read.value.unit} />
-      <div className="text-caption text-ink-secondary">{ofText(declaration, read.value.of)}</div>
+      <div className="text-caption text-ink-secondary">{ofText(declaration, read.value.of, t)}</div>
     </>
   )
 }
@@ -1003,7 +1004,7 @@ function RollupBody({
       series={chart.series}
       axis={chart.axis}
       kind="bars"
-      title={rollupSentence(result.rollup, declaration)}
+      title={rollupSentence(result.rollup, declaration, t)}
       labelHeading={t('dashboards.rollup.month')}
       height={height ?? 150}
     />
@@ -1075,7 +1076,7 @@ function SavedBody({
     ) : null
   const nothing = (
     <Nothing>
-      <Phrase text={t('dashboards.body.nothing')} parts={{ words: <Bidi>{savedWords(view)}</Bidi> }} />
+      <Phrase text={t('dashboards.body.nothing')} parts={{ words: <Bidi>{savedWords(view, t)}</Bidi> }} />
     </Nothing>
   )
   const entry: Entry = (row) => dashboardEntry(declaration.name, row, view.address, dashboard)
@@ -1635,7 +1636,7 @@ function HeadlineForm({
     ...(adding.sum === undefined ? {} : { sum: adding.sum }),
     address,
   }
-  const preview = headline(db, block, declarations, day)
+  const preview = headline(db, block, declarations, day, t)
   const submit = (): void => {
     const name = adding.name.trim()
     const refusal = totalNameRefusal(name)

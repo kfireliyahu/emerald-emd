@@ -1963,24 +1963,35 @@ export function dueText(
   return { text: short, late: false }
 }
 
-/** The keys `dueSaidOf` says a due with. */
+/** The keys `dueSaid` says a due with. */
 export type DueKey = `views.due.${'today' | 'tomorrow' | 'yesterday' | 'late' | 'soon' | 'date' | 'dateYear'}`
 
 /**
- * **A due as a screen says it** (M64 F18, D-632): which of `dueText`'s words
- * it was, by key, with its count. The list's picture keeps `dueText`'s English
- * and the day itself (`ListLine`'s date cell, read with no today beside it), so
- * this reads back the few shapes `dueText` writes — the screen says the
- * weekday, the date and the year from the day in its own words. Anything else
- * is the date, as `dueText` falls back to it.
+ * **A due as a screen says it** (M64 F18, D-632; M64 F37): `dueText`'s words
+ * by key, with the count — the screen fills the weekday, the date and the year
+ * from the day in its own words. `dueText` keeps the English a conversation
+ * reads; the list's date cell carries both.
  */
-export function dueSaidOf(text: string): Said<DueKey> {
-  if (text === 'today' || text === 'tomorrow' || text === 'yesterday') return { key: `views.due.${text}` }
-  const late = /^(\d+) days late$/.exec(text)?.[1]
-  if (late !== undefined) return { key: 'views.due.late', parts: { count: Number(late) } }
-  const soon = /^[A-Z][a-z]{2}, in (\d+) days$/.exec(text)?.[1]
-  if (soon !== undefined) return { key: 'views.due.soon', parts: { count: Number(soon) } }
-  return { key: /\s\d{4}$/.test(text) ? 'views.due.dateYear' : 'views.due.date' }
+export function dueSaid(
+  date: string,
+  today: string,
+  ticked: boolean,
+): { readonly said: Said<DueKey>; readonly late: boolean } | undefined {
+  const then = dayCount(date)
+  const now = dayCount(today)
+  const day = parseISODate(date)
+  const year = parseISODate(today)?.year
+  if (then === undefined || now === undefined || day === undefined) return undefined
+  const days = then - now
+  const short: Said<DueKey> = { key: day.year === year ? 'views.due.date' : 'views.due.dateYear' }
+  if (days < 0) {
+    if (ticked) return { said: short, late: false }
+    return { said: days === -1 ? { key: 'views.due.yesterday' } : { key: 'views.due.late', parts: { count: -days } }, late: true }
+  }
+  if (days === 0) return { said: { key: 'views.due.today' }, late: false }
+  if (days === 1) return { said: { key: 'views.due.tomorrow' }, late: false }
+  if (days < 7) return { said: { key: 'views.due.soon', parts: { count: days } }, late: false }
+  return { said: short, late: false }
 }
 
 /** One group of a list: its head, its rows, and the values a row added in it takes. */

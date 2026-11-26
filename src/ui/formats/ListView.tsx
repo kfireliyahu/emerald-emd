@@ -3,9 +3,11 @@ import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent, 
 import { parseISODate } from '@/core/time.ts'
 import type { ColumnDeclaration, FormatDeclaration } from '@/domain/format/declaration.ts'
 import {
-  dueSaidOf,
   listGroupable,
   relativeDaySaid,
+  withArticle,
+  type DueKey,
+  type Said,
   tickSaid,
   tickValue,
   weekdayOf,
@@ -20,7 +22,7 @@ import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { ChoiceField, type Choice } from '@/ui/components/ChoiceField.tsx'
 import { useDismiss } from '@/ui/components/useDismiss.ts'
-import type { LineCell, ListLine, ListPicture, QuickField } from '@/ui/formats/listView.ts'
+import type { LineCell, ListLine, ListPicture, QuickAdd, QuickField } from '@/ui/formats/listView.ts'
 import { toneOf } from '@/ui/formats/tone.ts'
 
 /**
@@ -79,12 +81,32 @@ export function whenWords(t: Translate, date: string, today: string): string | u
   return said === undefined ? undefined : t(said.key, said.parts)
 }
 
-/** A due on a list's line in the language now: `dueText`'s words, said again from the day itself. */
-function dueWords(t: Translate, dates: DateWords, cell: { readonly text: string; readonly long: string }): string {
+/** A due on a list's line in the language now: `dueSaid`'s key, with the weekday, the date and the year from the day itself. */
+function dueWords(t: Translate, dates: DateWords, cell: { readonly said: Said<DueKey>; readonly long: string }): string {
   const day = parseISODate(cell.long)
-  if (day === undefined) return cell.text
-  const said = dueSaidOf(cell.text)
-  return t(said.key, { ...said.parts, weekday: weekdayWord(t, cell.long), date: dates.dayMonth(day), year: day.year })
+  if (day === undefined) return cell.long
+  return t(cell.said.key, { ...cell.said.parts, weekday: weekdayWord(t, cell.long), date: dates.dayMonth(day), year: day.year })
+}
+
+/**
+ * **Quick add's placeholder in the language now** (M64 F37): *Add a task ·
+ * inbox, due today, Garden shed* — the format's title and the values named are
+ * the document's, the rest the catalogue's.
+ */
+export function quickAddWords(t: Translate, dates: DateWords, title: string, add: Pick<QuickAdd, 'words'>): string {
+  const one = t('views.list.quick.one', { article: withArticle(title.toLowerCase()), title })
+  const words = add.words.map((word) =>
+    word.kind === 'value'
+      ? word.text
+      : word.kind === 'date'
+        ? t('views.list.quick.date', { column: word.column, due: dueWords(t, dates, word) })
+        : word.kind === 'yes'
+          ? word.column
+          : t('views.list.quick.not', { column: word.column }),
+  )
+  return words.length === 0
+    ? t('views.list.quick.add', { one })
+    : t('views.list.quick.addWith', { one, words: words.join(t('views.list.quick.joiner')) })
 }
 
 /** A group's head: a date's buckets and *No …* are the catalogue's words, a member or a link's row the document's. */
@@ -473,7 +495,7 @@ function NarrowRow(props: RowProps & { readonly current: boolean }) {
 
 /** One value on the wide line: chips with a dot, a member with its tone, a due right-aligned. */
 /** A due on a line, in the language now. */
-function DueText({ cell }: { cell: { readonly text: string; readonly long: string } }) {
+function DueText({ cell }: { cell: { readonly said: Said<DueKey>; readonly long: string } }) {
   const t = useT()
   const dates = useDates()
   return <>{dueWords(t, dates, cell)}</>

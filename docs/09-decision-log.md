@@ -533,6 +533,7 @@ written out here.
 | D-631 | 2026-11-26 | Plan has a Year beside its month, as Home has: each bucket's year is the sum of its months — what each month's plan gave it against what it got, January through the last month that is over, on the plan each month is on and Home's month basis — said first in words with the categories apart from the goals and debts, each bucket a meter whose months open beside the page, a month nobody could measure left out of both sums, and `plan_month` with a `year` answering the same; Plan's bar runs from the inline start, so in Hebrew it mirrors with its drag and arrow keys while the ring stays a clock | M64 |
 | D-632 | 2026-11-26 | The engine's other views keep the format's one Add and one strip of controls, and say every word through the catalogue: Roadmap and Ready to start carry the table's Add behind the same refusal; the board's Lanes by, the roadmap's fold filters, In the order of, Columns and Fold all, and the ready list's Columns sit in one strip of the same classes under the tabs; a line or card left at its view's columns drops a state its group already says and a link its name already says; and a sentence the engine builds for a screen is a key and its parts, said by the screen | M64 |
 | D-636 | 2026-11-26 | A file is read through a door named for its kind and drawn with its glyph: Home's header carries *Read bank and card statements* (filled) with *Read paychecks* beside it — one button per kind, not one *Read files* that asks the kind; a fund report is read from its fund as *Read a fund report*; the palette names all three; a waiting line opens its own kind's reader; and a file picked or dropped anywhere is still read as what it is | M64 |
+| D-637 | 2026-11-26 | A sentence the engine builds whose parts are sentences of their own is a `Spoken` — a key and parts that may be `Spoken` too — whose English the engine renders from a table the catalogue's English must equal; a helper in `src/ui/formats/` takes a `t` that defaults to English instead; and a sentence says a format by its title in Hebrew, never by an English plural | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -2061,3 +2062,39 @@ The guide's first step (`LEDGER_GUIDE`, so `guide_status` too) names both doors.
 **The budget** for `#/` rises from 11 to 13 colours, which is what the second door's split tile
 costs (its `hairline` tile and `hairline-strong` edge; measured 10 → 12 light, 11 → 13 dark): the
 brief asked for a button per kind with its glyph, and *The button is a split tile* draws it so.
+
+## D-637 · 2026-11-26 · A sentence the engine builds whose parts are sentences of their own is a `Spoken` — a key and parts that may be `Spoken` too — whose English the engine renders from a table the catalogue's English must equal; a helper in `src/ui/formats/` takes a `t` that defaults to English instead; and a sentence says a format by its title in Hebrew, never by an English plural <a id="d-637"></a>
+
+**Context.** M64 F35-F37. After D-632 three places still built English for a screen: the
+connections' sentences in `src/domain/format/connections.ts` (about 42 on `#/connections` in
+Hebrew), a dashboard's own lines in `dashboard.ts`, `madeInPlace.ts` and `inputBlock.ts`, and the
+list's quick add and date cell, with the type tiles. D-632's `Said` is a key and flat parts; the
+connections' sentences nest — *Each {one} {adds}*, where *adds* is *counts {rows}* or *shows the
+{kind} {name} of {rows}*, and the panel's headline wraps a link's sentence in *{head}, through
+{column}*.
+
+**Decision.**
+
+1. **A nested sentence is a `Spoken`** (`connections.ts`): `Said`'s key and parts, where a part may
+   be a `Spoken` itself. The key is a literal type (`ConnectionKey`), so the engine still imports
+   nothing from `src/i18n/` (`boundary.test.ts`); the screen says it with `spoken(t, …)`
+   (`src/ui/formats/spoken.ts`), which says each part first.
+2. **One English, rendered twice.** `english(spoken)` renders the plugin's English from
+   `SAID_ENGLISH` in the engine, and `headlineOf`, `edgeHeadline`, `edgeWords`, `linkSaid` and
+   `graphOf`'s `says` and `detail` are that rendering, unchanged word for word.
+   `src/i18n/connectionsSaid.test.ts` fails when `connections.said` in the English catalogue and
+   `SAID_ENGLISH` differ, so the conversation and the English screen cannot drift. A refusal
+   (`NOTHING`) carries its `said` beside its `reason`.
+3. **A helper outside the domain takes a `t`** (`dashboard.ts`, `madeInPlace.ts`,
+   `inputBlock.ts`), defaulting to English, as `linkedRowOf` and `keptSentence` already did — the
+   plugin's `show_format view:dashboard` calls them without one and reads what it read.
+   `filterWords` says a filter as `filterText` does, its own words the catalogue's and the columns
+   and values the document's.
+4. **A format is named by its title, never inflected in Hebrew.** English says *each work day* and
+   *its work days* from `nounOf` and `pluralOf`; those endings are English, so every sentence gets
+   the title in four shapes (`{Many}`, `{many}`, `{manyRows}`, `{ManyRows}`) and Hebrew says
+   *כל שורה ב־{Many}* around the title as written.
+5. **The list's date cell carries a `Said`** (`dueSaid`) beside `dueText`'s English, and quick add's
+   placeholder its `words`, so `dueSaidOf` — which read `dueText`'s English back into a key — is
+   gone. The type tiles, their headings and the units' kinds are `formats.type`,
+   `formats.typeGroup` and `formats.dimension`; `TYPE_WORDS` stays the plugin's.
