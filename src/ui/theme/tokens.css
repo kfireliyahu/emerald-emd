@@ -1303,12 +1303,15 @@ input[type="number"] {
 }
 
 /* A segment per folded row, coloured by its tone. Many rows drop the gaps, so a
-   milestone with sixty units is still a bar and not a row of hairlines. */
+   milestone with sixty units is still a bar and not a row of hairlines. It grows
+   with its row, as a chart grows with its column (M64 F70): 220px is where it
+   starts, and below that the counts beside it wrap under it. */
 .fc-bar {
   display: flex;
   gap: 2px;
   height: 6px;
-  width: 220px;
+  flex: 1 1 220px;
+  min-width: 0;
   max-width: 100%;
 }
 .fc-bar[data-dense="true"] {

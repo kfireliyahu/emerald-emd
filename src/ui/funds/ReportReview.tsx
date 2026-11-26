@@ -198,7 +198,7 @@ export function ReportReview({
       // things a person has to *correct* here are in the middle. A footer that
       // does not scroll is the same answer with half the buttons.
       footer={
-        <div className="mx-auto flex max-w-[900px] flex-wrap items-center gap-3 px-6 py-3">
+        <div className="flex flex-wrap items-center gap-3 px-6 py-3">
           <Button variant="primary" onClick={onAccept}>
             {accept}
           </Button>
@@ -223,8 +223,8 @@ export function ReportReview({
         <div
           className={
             showing && source !== undefined
-              ? 'mx-auto grid max-w-[1600px] items-start gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,34rem)]'
-              : 'mx-auto max-w-[900px]'
+              ? 'grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,34rem)]'
+              : ''
           }
         >
           <div className="space-y-6">

@@ -106,7 +106,7 @@ export function NoLedger({
 function Page({ title, answer, children }: { readonly title: React.ReactNode; readonly answer: string; readonly children: React.ReactNode }) {
   return (
     <div className="h-full overflow-auto">
-      <div className="fc-view-enter flex max-w-4xl flex-col gap-6 px-8 pt-6 pb-12">
+      <div className="fc-view-enter flex flex-col gap-6 px-8 pt-6 pb-12">
         <h1 className="m-0 text-title leading-tight font-medium">{title}</h1>
         <p className="m-0 max-w-[40ch] text-lede [text-wrap:balance]">{answer}</p>
         {children}

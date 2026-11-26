@@ -120,7 +120,7 @@ export function FormatDoors({
         </p>
       </div>
 
-      <ul className="grid w-full max-w-[64rem] gap-3 sm:grid-cols-3">
+      <ul className="grid w-full gap-3 sm:grid-cols-3">
         {doors.map((door, index) => (
           <li
             key={door.key}

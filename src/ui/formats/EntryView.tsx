@@ -670,7 +670,7 @@ export function EntryView({
       </div>
 
       <div ref={page} className="@container min-h-0 flex-1 overflow-auto">
-        <div className="mx-auto flex max-w-[1120px] flex-col gap-7 px-6 pt-7 pb-16">
+        <div className="flex flex-col gap-7 px-6 pt-7 pb-16">
           <header className="flex flex-col gap-2.5 border-b border-hairline pb-5">
             {/* No label naming the format: the bar's way back and the list beside already do (M64 U13). */}
             {layout.title !== undefined && field(layout.title, 'title')}
@@ -682,7 +682,7 @@ export function EntryView({
           </header>
 
           <div className={`grid items-start gap-11 ${aside ? '@3xl:grid-cols-[minmax(0,1fr)_280px]' : ''}`}>
-            <div className="flex min-w-0 max-w-[700px] flex-col gap-7">
+            <div className="flex min-w-0 flex-col gap-7">
               {findings.length > 0 && existing !== undefined && (
                 <Concerns findings={findings} id={existing} onOpen={(id) => onOpen(declaration.name, id)} />
               )}

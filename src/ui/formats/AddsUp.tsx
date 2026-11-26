@@ -91,7 +91,7 @@ export function AddsUp({
           claim naming one names a column already on the sheet. */}
       <section className="mt-8" data-computed>
       <h2 className="mb-1 font-medium">Computed</h2>
-      <div className="mb-3 flex max-w-4xl flex-wrap items-start gap-x-6 gap-y-2">
+      <div className="mb-3 flex flex-wrap items-start gap-x-6 gap-y-2">
         <p className="max-w-prose text-caption text-ink-secondary">
           The app works the value out, and nobody types it.{' '}
           <code className="text-ink">hours = end − start</code> — type start and end; hours fills

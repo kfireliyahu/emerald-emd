@@ -457,7 +457,7 @@ export function ReadReport({
         {/* What is left in the stack, named. Under the input rather than beside
             it, because on the first document of a batch the input is what the
             eye needs and on the sixth this is. */}
-        <div className="mx-auto mt-6 max-w-[820px]">
+        <div className="mt-6">
           <BatchStack batch={batch} />
         </div>
       </div>

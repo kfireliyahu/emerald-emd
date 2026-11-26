@@ -116,7 +116,7 @@ export function PlaceEditor({
         <h1 className="text-title">{isNew ? t('wealth.placeForm.addTitle') : t('wealth.placeForm.editTitle')}</h1>
         <p className="mt-1 mb-6 max-w-2xl text-caption text-ink-tertiary">{t('wealth.placeForm.lead')}</p>
 
-        <div className="grid max-w-3xl grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
           <Field label={t('wealth.holdingForm.name')}>
             <input
               className={FIELD}
@@ -205,7 +205,7 @@ export function PlaceEditor({
           )}
         </div>
 
-        <div className="mt-8 grid max-w-3xl grid-cols-1 gap-4">
+        <div className="mt-8 grid grid-cols-1 gap-4">
           <Field label={t('wealth.holdingForm.note')}>
             <textarea
               className={`${FIELD_MULTILINE} min-h-8`}

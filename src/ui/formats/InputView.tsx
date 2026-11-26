@@ -495,7 +495,7 @@ export function InputView({
 
       <div className="@container min-h-0 flex-1 overflow-auto">
         <div>
-          <div className="mx-auto flex w-full max-w-[1120px] min-w-0 flex-col gap-7 px-6 pt-7 pb-16">
+          <div className="flex w-full min-w-0 flex-col gap-7 px-6 pt-7 pb-16">
             {/* No label naming the format: the bar's way back already does (M64 F10, as U13 did on the entry). */}
             {view !== undefined &&
               form.lacking.map((column) => (
@@ -521,7 +521,7 @@ export function InputView({
               ref={fields}
               role="group"
               aria-label={view === undefined ? t('formats.input.asked') : t('formats.input.addOne', { one })}
-              className="flex max-w-[700px] flex-wrap items-start gap-x-6 gap-y-4"
+              className="flex flex-wrap items-start gap-x-6 gap-y-4"
               onKeyDown={(event) => {
                 // **Enter adds** from a one-line field, Ctrl+Enter from any (U1 §6):
                 // what a field or an open list took first is theirs.
@@ -543,7 +543,7 @@ export function InputView({
             {/* **Add under the fields** (M64 F10, D-627), where the eye already
                 is, and what it just added under Add. */}
             {(writable || addsAs !== null) && (
-              <div className="flex max-w-[700px] flex-wrap items-center gap-x-3 gap-y-2">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
                 {writable && view !== undefined && (
                   <Button variant="primary" icon="add" onClick={add}>
                     {t('formats.input.add')}
@@ -580,7 +580,7 @@ export function InputView({
             )}
 
             {keyed.length > 0 && (
-              <section aria-label={t('formats.input.justAdded')} className="flex max-w-[860px] flex-col">
+              <section aria-label={t('formats.input.justAdded')} className="flex flex-col">
                 <h2 className="fc-label pb-2">{t('formats.input.justAdded')}</h2>
                 <Flip as="div" role="list" flipKey={keyed.map((each) => each.key).join('|')}>
                   {keyed.map(({ id, line, key }) => (

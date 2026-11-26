@@ -86,7 +86,7 @@ export default function SpecimenPage() {
   const shown = partOf(useLocation().search)
   return (
     <div className="h-full overflow-auto">
-      <div className="fc-view-enter flex max-w-6xl flex-col gap-8 px-8 pt-6 pb-12">
+      <div className="fc-view-enter flex flex-col gap-8 px-8 pt-6 pb-12">
         <header className="flex flex-col gap-1.5 border-b border-hairline pb-4">
           <span className="fc-label text-ink-secondary uppercase">Specimen</span>
           <h1 className="m-0 text-title">Every component, every state</h1>

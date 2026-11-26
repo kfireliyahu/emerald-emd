@@ -153,7 +153,7 @@ export function RoadmapView({
         </div>
       )}
     <div className="min-h-0 flex-1 overflow-y-auto">
-      <div className={`flex w-full max-w-[1040px] flex-col px-6 pb-24 ${titled ? 'pt-8' : 'pt-2'}`}>
+      <div className={`flex w-full flex-col px-6 pb-24 ${titled ? 'pt-8' : 'pt-2'}`}>
         {titled && (
         <header className="flex flex-wrap items-end justify-between gap-6 border-b border-hairline pb-6">
           <div className="flex flex-col gap-2">
@@ -520,7 +520,7 @@ export function ReadyView({
         </div>
       )}
     <div className="min-h-0 flex-1 overflow-y-auto">
-      <div className={`flex w-full max-w-[1040px] flex-col gap-8 px-6 pb-24 ${titled ? 'pt-8' : 'pt-4'}`}>
+      <div className={`flex w-full flex-col gap-8 px-6 pb-24 ${titled ? 'pt-8' : 'pt-4'}`}>
         {titled && (
         <header className="flex flex-col gap-2 border-b border-hairline pb-6">
           <div className="flex flex-wrap items-end justify-between gap-6">
@@ -665,7 +665,7 @@ export function AgendaView({
   const choosable = onDate !== undefined && data.formats.some(({ declaration }) => declaration.columns.filter((column) => column.type === 'date').length > 1)
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
-      <div className="flex w-full max-w-[1040px] flex-col gap-8 px-6 pt-5 pb-24">
+      <div className="flex w-full flex-col gap-8 px-6 pt-5 pb-24">
         {/* **The answer first** (M64 U14, D-626): what is late and what is
             coming, in one sentence at the lede step under the title; the day
             and which dates put each format here, a caption under it. */}

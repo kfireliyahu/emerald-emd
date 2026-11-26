@@ -90,7 +90,7 @@ export function HoldingEditor({
           <Phrase text={t('wealth.holdingForm.lead')} parts={{ place: <Bidi>{placeName}</Bidi> }} />
         </p>
 
-        <div className="grid max-w-3xl grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
           <Field label={t('wealth.holdingForm.name')}>
             <input
               className={FIELD}
@@ -140,7 +140,7 @@ export function HoldingEditor({
         </div>
 
         {initial.note !== undefined && (
-          <div className="mt-6 grid max-w-3xl grid-cols-1 gap-4">
+          <div className="mt-6 grid grid-cols-1 gap-4">
             <Field label={t('wealth.holdingForm.note')}>
               <textarea
                 className={`${FIELD_MULTILINE} min-h-8`}

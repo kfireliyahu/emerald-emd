@@ -138,7 +138,7 @@ export function SnapshotEditor({
         </div>
       }
     >
-      <div className="@container max-w-3xl px-6 py-6">
+      <div className="@container px-6 py-6">
         <div className="flex flex-col gap-5">
           <SnapshotFields
             state={state}

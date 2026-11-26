@@ -53,7 +53,7 @@ export function StarterProposal({
 
   return (
     <div
-      className="fc-view-enter mx-auto flex w-full max-w-4xl flex-col gap-5 px-6 py-8"
+      className="fc-view-enter flex w-full flex-col gap-5 px-6 py-8"
       data-guide="plan.split plan.fixed"
       data-testid="starter-proposal"
       onKeyDown={(event) => {

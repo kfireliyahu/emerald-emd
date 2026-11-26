@@ -3,9 +3,10 @@ import { toISODate } from '@/core/time.ts'
 import type { FundBalanceSnapshot } from '@/domain/model/funds.ts'
 import type { PeriodReturn } from '@/domain/funds.ts'
 import { countKey } from '@/i18n/count.ts'
+import type { RefObject } from 'react'
 import { useT } from '@/i18n/current.ts'
+import { useWidth } from '@/ui/charts/useWidth.ts'
 
-const WIDTH = 720
 const BALANCE_HEIGHT = 96
 const MOVEMENT_HEIGHT = 56
 const PADDING = { top: 12, bottom: 14, left: 4, right: 4 } as const
@@ -31,9 +32,9 @@ const BAR = 7
  * split a movement it cannot account for, and drawing it as pure gain would be
  * the flattering lie.
  *
- * Fixed geometry inside a `viewBox` that scales uniformly, as `NetTrend` does —
- * stretching to the container would give the strokes two different weights
- * depending on the window.
+ * Drawn at the width it is shown (`useWidth`, M64 F70), so it grows with its
+ * column and the strokes keep their weight — a `viewBox` stretched to the
+ * container would give them two different weights depending on the window.
  */
 export function BalanceChart({
   snapshots,
@@ -45,6 +46,8 @@ export function BalanceChart({
   periods: readonly PeriodReturn[]
 }) {
   const t = useT()
+  const width = useWidth()
+  const WIDTH = width.value
   const first = snapshots[0]
   const last = snapshots[snapshots.length - 1]
   if (snapshots.length < 2 || first === undefined || last === undefined) return null
@@ -80,7 +83,7 @@ export function BalanceChart({
   const unknown = periods.filter((period) => period.kind === 'CONTRIBUTIONS_UNKNOWN').length
 
   return (
-    <figure className="m-0 max-w-3xl" dir="ltr">
+    <figure ref={width.ref as RefObject<HTMLElement>} className="m-0" dir="ltr">
       <svg
         viewBox={`0 0 ${WIDTH} ${BALANCE_HEIGHT + MOVEMENT_HEIGHT}`}
         className="w-full"

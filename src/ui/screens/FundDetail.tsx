@@ -475,7 +475,7 @@ export function FundDetail() {
           {snapshots.length === 0 ? (
             <Empty>{t('wealth.fundDetail.readings.empty')}</Empty>
           ) : (
-            <table className="w-full max-w-3xl">
+            <table className="w-full">
               <thead>
                 <tr className="border-b border-hairline text-caption font-medium text-ink-secondary uppercase">
                   <th className="py-2 pe-3 text-start font-medium">{t('wealth.fundDetail.readings.asOf')}</th>
@@ -683,7 +683,7 @@ function MonthTable({ months }: { months: readonly MonthlyDeposit[] }) {
   const t = useT()
   const dates = useDates()
   return (
-    <div className="mt-4 max-w-3xl">
+    <div className="mt-4">
       <p className="text-caption font-medium text-ink-secondary uppercase">{t('wealth.fundDetail.months.title')}</p>
       <table className="mt-2 w-full">
         <thead>
@@ -820,7 +820,7 @@ function PeriodTable({ periods }: { periods: readonly DepositPeriod[] }) {
   const t = useT()
   const dates = useDates()
   return (
-    <table className="mt-4 w-full max-w-3xl">
+    <table className="mt-4 w-full">
       <thead>
         <tr className="border-b border-hairline text-caption font-medium text-ink-secondary uppercase">
           <th className="py-2 pe-3 text-end font-medium">{t('wealth.fundDetail.periods.paychecksSay')}</th>

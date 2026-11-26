@@ -1048,7 +1048,7 @@ export function ListPage({
         </p>
       )}
       <div className="min-h-0 flex-1 overflow-auto">
-        <div className="max-w-[980px] px-6 pt-2 pb-16">
+        <div className="px-6 pt-2 pb-16">
           <ListLines
             format={declaration.name}
             shape={shape}

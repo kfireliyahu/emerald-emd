@@ -154,7 +154,7 @@ export function WhatAddsUp({
         `AddsUp`'s second section. */}
     <section data-claims>
       <h2 className="mb-1 font-medium">{t('formats.workedOut.title')}</h2>
-      <div className="mb-5 flex max-w-4xl flex-wrap items-start gap-x-6 gap-y-2">
+      <div className="mb-5 flex flex-wrap items-start gap-x-6 gap-y-2">
         <p className="max-w-prose text-caption text-ink-secondary">
           <Phrase
             text={t('formats.workedOut.intro')}

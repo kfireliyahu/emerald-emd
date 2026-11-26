@@ -30,7 +30,7 @@ export function SettingsPage({
   return (
     <div className="flex h-full">
       <div className="h-full min-w-0 flex-1 overflow-auto">
-        <div className="fc-view-enter flex max-w-4xl flex-col gap-6 px-8 pt-6 pb-12">
+        <div className="fc-view-enter flex flex-col gap-6 px-8 pt-6 pb-12">
           {/* As tall as a button whether or not one is there: the title stays put from page to page. */}
           <header className="flex min-h-9 flex-wrap items-center justify-between gap-x-6 gap-y-3">
             <h1 className="m-0 text-title leading-tight font-medium">{title}</h1>

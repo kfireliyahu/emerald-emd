@@ -197,7 +197,7 @@ export function SlipReview({
       leaveLabel={leaveLabel}
       onLeave={onLeave}
       footer={
-        <div className="mx-auto flex max-w-[1100px] flex-wrap items-center gap-3 px-6 py-3">
+        <div className="flex flex-wrap items-center gap-3 px-6 py-3">
           <Button variant="primary" onClick={onAccept}>
             {accept}
           </Button>
@@ -217,8 +217,8 @@ export function SlipReview({
         <div
           className={
             showing && source !== undefined
-              ? 'mx-auto grid max-w-[1600px] items-start gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,34rem)]'
-              : 'mx-auto max-w-[1100px]'
+              ? 'grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(0,34rem)]'
+              : ''
           }
         >
           <div className="space-y-6">

@@ -1,9 +1,10 @@
 import { formatMoney } from '@/core/money.ts'
 import { toISODate } from '@/core/time.ts'
 import type { BalancePoint } from '@/domain/debt.ts'
+import type { RefObject } from 'react'
 import { useT } from '@/i18n/current.ts'
+import { useWidth } from '@/ui/charts/useWidth.ts'
 
-const WIDTH = 720
 const HEIGHT = 96
 /** Room for the line's width at its ends; the value and the dates are words outside the drawing (M64 F46). */
 const PADDING = { top: 4, bottom: 4, left: 2, right: 2 } as const
@@ -23,11 +24,14 @@ const PADDING = { top: 4, bottom: 4, left: 2, right: 2 } as const
  * this come" is the question and a chart that started at the minimum would show
  * a debt 2% repaid as almost cleared.
  *
- * Fixed geometry inside a `viewBox`, like `NetTrend`: stretching it to the
- * container would give the stroke two different weights depending on the window.
+ * Drawn at the width it is shown (`useWidth`, M64 F70), so it grows with its
+ * column and the stroke stays 2px: a `viewBox` stretched to the container would
+ * give the stroke two different weights depending on the window.
  */
 export function BalanceLine({ points }: { points: readonly BalancePoint[] }) {
   const t = useT()
+  const width = useWidth()
+  const WIDTH = width.value
   if (points.length < 2) return null
 
   const first = points[0]
@@ -57,7 +61,7 @@ export function BalanceLine({ points }: { points: readonly BalancePoint[] }) {
     .join(' ')
 
   return (
-    <figure className="m-0 flex max-w-3xl flex-col gap-1 text-caption text-ink-secondary tabular-nums" dir="ltr">
+    <figure ref={width.ref as RefObject<HTMLElement>} className="m-0 flex flex-col gap-1 text-caption text-ink-secondary tabular-nums" dir="ltr">
       <span>{formatMoney(first.outstanding)}</span>
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}

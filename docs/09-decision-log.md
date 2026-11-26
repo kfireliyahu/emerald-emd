@@ -542,6 +542,7 @@ written out here.
 | D-643 | 2026-11-26 | Emerald's page is laid out as a report: an index of words in place of the timeline, the section you are reading in semibold ink with a 6px accent square; what it is answered first at the display step in the light face; and every section one sheet on twelve columns, its question small, its answer as the heading, what backs it beside them and the evidence across the width beneath; no claim, tour, reel or picture is lost and none is retaken | M64 |
 | D-644 | 2026-11-26 | A side panel's width is the reader's: its inner edge drags, steps with ← and → and goes back to its default on a double-click; the width is a preference of the machine (`localStorage`, never the document), one for every side panel and one for the wealth lists' pane; between a floor of 360px and a ceiling of half the window | M64 |
 | D-645 | 2026-11-26 | Closing a goal that still holds money asks, at its Close, whether the money was spent: spent, `closeGoal` records the withdrawal of what it holds in each holding (a typed money-out row whose why is *spent on the goal*) and closes it in one write, undoable; not spent, it closes and the money stays held; a goal's panel takes money out beside money in; `close_goals` is the conversation's half | M64 |
+| D-646 | 2026-11-26 | A screen fills the window's width: no page frame, board, roadmap, table, form grid or chart is held narrow by a fixed cap; prose alone keeps its measure, and a chart is drawn at the width it is shown | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -2435,3 +2436,30 @@ counts closed goals), so the cushion stayed short by money that was gone.
 **Checked** on the synthetic year: a goal saved in the checking account's Cash, ₪4,000, spent and
 closed — the cushion's left grows by ₪4,000, its split still adds up, and the account's own Cash is
 its whole statement again.
+
+## D-646 · 2026-11-26 · A screen fills the window's width: no page frame, board, roadmap, table, form grid or chart is held narrow by a fixed cap; prose alone keeps its measure, and a chart is drawn at the width it is shown <a id="d-646"></a>
+
+**Context.** M64 F70. The maintainer, 2026-11-26: *"make sure everything take up full dynamic width in
+general (old fault ive found is the roadmap)"*. The roadmap, the ready view and the agenda stopped at
+1040px, a format's list at 980px, a row's entry and a format's input at 1120px (the entry's body at
+700px), the settings pages and the ledger-less start at `max-w-4xl`, the fund and debt charts at
+`max-w-3xl`, and the payslip and fund-report reviews at 900 to 1600px — so at 1920 most of the window
+was empty to one side.
+
+**Decision.**
+
+1. **Nothing that holds a screen's content is capped**: a page's frame, a board, the roadmap, a list,
+   a table, a form's grid of fields, a review beside its document. They take the width the rail and
+   any side panel leave. The roadmap's segment bar grows with its row from 220px.
+2. **Prose keeps its measure while its screen fills**: a paragraph, a lede or a caption keeps its
+   `max-w-prose` or `ch` width, where a line would otherwise run unreadably long.
+3. **A chart is drawn at its measured width** (`useWidth`), never a fixed `viewBox` scaled into a
+   capped figure: the fund's balance and the debt's step line now grow with their column, their
+   strokes still 2px.
+4. **Kept, on purpose**: what floats (dialogs, menus, popovers, the guide), the side panel and the
+   wealth pane between D-644's floor and ceiling, a centred empty or error state, a single text field's
+   width, a list cell's truncation, and the connection panel's form disclosure (a measure for a form of
+   questions and answers, not a screen).
+
+**Checked** with `probe:screens` on year, project and custom at 1280x800 and 1920x1080, light and
+dark, with the budget.

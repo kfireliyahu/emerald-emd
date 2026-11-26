@@ -308,7 +308,7 @@ function Illustration({
           </p>
         )}
 
-        <div className="grid max-w-4xl grid-cols-1 gap-x-12 gap-y-5 @lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-x-12 gap-y-5 @lg:grid-cols-2">
           <RateSlider
             label={t('wealth.feeImpact.todayBalance')}
             hint={t('wealth.feeImpact.todayBalanceHint')}
@@ -370,7 +370,7 @@ function Illustration({
       </Section>
 
       <Section title={t('wealth.feeImpact.against')}>
-        <div className="grid max-w-4xl grid-cols-1 gap-x-12 gap-y-5 @lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-x-12 gap-y-5 @lg:grid-cols-2">
           <AmountSlider
             label={t('wealth.feeImpact.start')}
             hint={
@@ -416,7 +416,7 @@ function Illustration({
       </Section>
 
       <Section title={t('wealth.feeImpact.differenceTitle')}>
-        <div className="grid max-w-4xl grid-cols-1 gap-x-12 gap-y-6 @lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-x-12 gap-y-6 @lg:grid-cols-3">
           {result.scenarios.map((scenario, index) => (
             <div key={index} className="flex flex-col gap-2">
               <label className="flex items-center gap-2 text-caption font-medium text-ink-secondary uppercase">
@@ -486,7 +486,7 @@ function Illustration({
         </div>
 
         {agreed !== undefined && agreedBasisPoints !== undefined && (
-          <div className="mt-6 flex max-w-4xl flex-col gap-2 border-t border-hairline pt-4">
+          <div className="mt-6 flex flex-col gap-2 border-t border-hairline pt-4">
             <span className="text-caption font-medium text-ink-secondary uppercase">
               {t('wealth.feeImpact.agreed', { percent: formatPercent(agreedBasisPoints, { digits: 2 }) })}
             </span>

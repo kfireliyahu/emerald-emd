@@ -245,13 +245,13 @@ export function DeclaredFormats() {
           )}
 
           {mode.kind === 'EXAMPLE' && (
-            <div className="fc-view-enter mx-auto max-w-[56rem] px-6 py-4">
+            <div className="fc-view-enter px-6 py-4">
               <ExamplePanel onOpen={open} />
             </div>
           )}
 
           {mode.kind === 'IMPORT' && (
-            <div className="fc-view-enter mx-auto max-w-[56rem] px-6 py-4">
+            <div className="fc-view-enter px-6 py-4">
               <ImportPanel
                 existingNames={data.names}
                 declared={data.declared}
@@ -456,7 +456,7 @@ export function DeclaredFormats() {
           /* **A table of the kinds of things** (M64 U13, D-625): their own first,
              then each pack's under its name (M33 F3), so a person's two formats
              are not found by reading past the ledger's twenty. */
-          <table className="w-full max-w-[960px] border-collapse text-body" data-block>
+          <table className="w-full border-collapse text-body" data-block>
             {head}
             {grouped.own.length > 0 && <tbody>{grouped.own.map(line)}</tbody>}
             {grouped.packs.map((group) => (

@@ -92,8 +92,8 @@ export function DocumentTextInput({
   }, [onOpen, openNow])
 
   return (
-    <div className="mx-auto max-w-4xl space-y-4">
-      <p className="text-ink-secondary">{intro}</p>
+    <div className="space-y-4">
+      <p className="max-w-prose text-ink-secondary">{intro}</p>
 
       <textarea
         className={`${FIELD_MULTILINE} h-72 w-full font-mono text-caption`}
