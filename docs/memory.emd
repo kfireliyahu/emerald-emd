@@ -5297,6 +5297,16 @@ answer: Roadmap and Ready carry the table's Add (rowWriteRefusalOnScreen, read-o
 state: live
 affects: "src/ui/formats/lineColumns.ts\nsrc/domain/format/view.ts\ndocs/redesign/budget.json"
 
+### D-633
+date: 2026-11-26
+milestone: M64
+scope: ui
+title: A figure that sums a period up carries its sign's colour — Home's left over and its sentence's two amounts, the Year's left over, Plan's to split, net worth, and a statement's gap in `negative` unless it is nothing — while every other figure stays ink; a list cut short grows in place and never opens the side panel; a plan's meter past its plan draws the plan as a tick and says the share in words; and the probe lays every line out afresh after stretching a page for its picture
+question: Which figures may carry positive or negative after U4 made every figure ink; how does a list cut short show the rest; how does a plan's meter show a line far past its plan; and why did the probe's long Hebrew pictures draw letters reversed?
+answer: HeadlineFigure's tone: 'sign' draws positive above zero and negative below, 'gap' draws negative unless zero, zero is ink. Only these: Home's left over and its sentence's amounts (came in positive, went out negative), the Year's left over, Plan's to split, Wealth's net worth, and the reading panel's apart (gap). Every other figure is ink; the minus or the word stays. The routes #/, #/plan and #/wealth's colour ceilings rose by one. RankedBars' folded rest grows in place under a Fewer, focus to the first grown row; Home's and the Year's rest panels are gone. PlanAgainst past its plan scales the track to what happened, draws the plan as a 2px ink tick, the overflow negative when over (the usual fill under a note), and the caption says '{amount} over · {percent}% of the plan' (chrome.kit.overShare). The probe window, after stretching a page, waits for the fonts and turns html dir over and back with a layout between (relaid) before the picture.
+state: live
+affects: "DESIGN.md\ndocs/redesign/budget.json\nsrc/ui/charts/HeadlineFigure.tsx\nsrc/ui/charts/RankedBars.tsx\nsrc/ui/charts/PlanAgainst.tsx\nscripts/probe-screens-window.cjs"
+
 ### D-634
 date: 2026-11-26
 milestone: M64
@@ -6656,6 +6666,15 @@ state: applied
 answered_by: D-627
 became_unit: M64 F10
 
+### M64 F11 landing proposal: the figures that sum something up carry their sign's colour (D-633)
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-26
+body: "M64 F11 built on branch worktree-agent-ae133fe9eaffdbd70 at 4200fc5: Home's left over and its sentence's two amounts, the Year's left over, Plan's to split, net worth and a statement's gap are drawn in positive or negative by their sign; every other figure stays ink. docs:check is green but for D-633's row, which this landing writes. The rule row 'Figures are ink, a flow is a mark' already carries the amended statement and why in the main memory.emd; its decided_by could not take D-633 before the decision row exists, so add D-633 to it after landing.\n\n```json\n{\"unit\": \"M64 F11\", \"commit\": \"4200fc5\", \"branch\": \"worktree-agent-ae133fe9eaffdbd70\", \"files\": \"src/ui/charts/HeadlineFigure.tsx\\nsrc/ui/screens/Home.tsx\\nsrc/ui/screens/Year.tsx\\nsrc/ui/screens/Plan.tsx\\nsrc/ui/screens/Overview.tsx\\nsrc/ui/import/GapPanel.tsx\\nsrc/ui/screens/specimens.tsx\\nsrc/ui/charts/kit.test.ts\\ndocs/redesign/budget.json\\nDESIGN.md\\ndocs/09-decision-log.md\", \"decisions\": [{\"ref\": \"D-633\", \"title\": \"A figure that sums a period up carries its sign's colour — Home's left over and its sentence's two amounts, the Year's left over, Plan's to split, net worth, and a statement's gap in `negative` unless it is nothing — while every other figure stays ink; a list cut short grows in place and never opens the side panel; a plan's meter past its plan draws the plan as a tick and says the share in words; and the probe lays every line out afresh after stretching a page for its picture\", \"question\": \"Which figures may carry positive or negative after U4 made every figure ink; how does a list cut short show the rest; how does a plan's meter show a line far past its plan; and why did the probe's long Hebrew pictures draw letters reversed?\", \"answer\": \"HeadlineFigure's tone: 'sign' draws positive above zero and negative below, 'gap' draws negative unless zero, zero is ink. Only these: Home's left over and its sentence's amounts (came in positive, went out negative), the Year's left over, Plan's to split, Wealth's net worth, and the reading panel's apart (gap). Every other figure is ink; the minus or the word stays. The routes #/, #/plan and #/wealth's colour ceilings rose by one. RankedBars' folded rest grows in place under a Fewer, focus to the first grown row; Home's and the Year's rest panels are gone. PlanAgainst past its plan scales the track to what happened, draws the plan as a 2px ink tick, the overflow negative when over (the usual fill under a note), and the caption says '{amount} over · {percent}% of the plan' (chrome.kit.overShare). The probe window, after stretching a page, waits for the fonts and turns html dir over and back with a layout between (relaid) before the picture.\", \"affects\": \"DESIGN.md\\ndocs/redesign/budget.json\\nsrc/ui/charts/HeadlineFigure.tsx\\nsrc/ui/charts/RankedBars.tsx\\nsrc/ui/charts/PlanAgainst.tsx\\nscripts/probe-screens-window.cjs\"}], \"review_entries\": [{\"do\": \"On the demo year (year.emd) open Home, page a month or two, then the Year, Plan and Wealth, in light and dark.\", \"should\": \"Home's sentence says what came in in green and what went out in red, and left over is green above nothing and red with its minus below; the Year's left over, Plan's to split and net worth the same; the four tiles, the panels and every other figure stay ink. Wrong would be a red went out reading as a problem every month (then say so: Q54), or a colour on a figure that is not one of these.\"}], \"report\": \"HeadlineFigure gains tone ('sign' | 'gap') and figureTone; Home's display figure and its sentence's SaidAmount (came positive, went negative), the Year's left over, Plan's to split, Overview's net worth take 'sign'; GapPanel's two apart figures take 'gap' (a one-word change in a file of the reading screens; merge carefully). Contrast: probe:screens year.emd on #/, #/year, #/plan, #/plan/year, #/wealth, light and dark, low contrast 0; --lang he english 0. Budget: the sign colour costs one colour on #/ (dark 12), #/plan (dark 17), #/wealth (8), so their colour ceilings rose by one; every route exits 0. Specimen: three new HeadlineFigure states. Rule row amended in the main memory.emd (statement, why); decided_by needs D-633 after landing. DESIGN.md lists the figures. Tests: kit.test (new tone test), related 87 files green, typecheck, privacy, direction, i18n, budget green. check:tours skipped: no tour step clicks what changed (the groceries highlight is in the top six). Shares the commit and D-633 with F13, F32, F33.\", \"follow_ups\": [{\"kind\": \"question\", \"ref\": \"M64 Q54\", \"state\": \"open\", \"question\": \"Home's sentence now draws what went out in red every month (the sign it gives the month, per F11's brief). Keep it, or should only left over carry its sign and the sentence's amounts stay ink?\"}]}\n```"
+refs: M64 F11
+state: applied
+answered_by: D-633
+became_unit: M64 F11
+
 ### M64 F12 built: Plan's Year, each bucket's year against what its months planned (D-631), to land
 from: F:/projects/emerald/docs/memory.emd
 sent_on: 2026-11-26
@@ -6664,6 +6683,15 @@ refs: M64 F12
 state: applied
 answered_by: D-631
 became_unit: M64 F12
+
+### M64 F13 landing proposal: "More" grows in place, Home's and the Year's rest first (D-633)
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-26
+body: "M64 F13 built on branch worktree-agent-ae133fe9eaffdbd70 at 4200fc5: RankedBars' folded line grows the rest in place under a Fewer; Home's and the Year's rest side panels are gone. The audit found no other more that opens the panel.\n\n```json\n{\"unit\": \"M64 F13\", \"commit\": \"4200fc5\", \"branch\": \"worktree-agent-ae133fe9eaffdbd70\", \"files\": \"src/ui/charts/RankedBars.tsx\\nsrc/ui/home/HomePanel.tsx\\nsrc/ui/screens/Home.tsx\\nsrc/ui/screens/Year.tsx\\nsrc/ui/screens/specimens.tsx\\nsrc/i18n/en/chrome.ts\\nsrc/i18n/he/chrome.ts\\nsrc/i18n/en/home.ts\\nsrc/i18n/he/home.ts\", \"decision\": \"D-633\", \"review_entries\": [{\"do\": \"On year.emd open Home, and under Where it went click the last line, 'n more'; then the same on the Year.\", \"should\": \"The other categories grow right there under the six, with Fewer below them to fold them again, and no side panel opens; a grown category opens its rows beside the page as the first six do. Wrong would be the page jumping or a panel opening.\"}], \"report\": \"RankedBars loses onMore: its folded line (n more, with what they come to, aria-expanded false) grows the rest in place through Reveal, under a Fewer text action (aria-expanded true); focus moves to the first grown row, and back to the folded line on Fewer. Verified in this worktree's Vite on year.emd #/: 8 more grew Municipal tax..Bank fees, focus on Municipal tax, no panel; Fewer folded and returned focus. Home's Panel loses kind 'rest' and HomePanel its onPanel prop; the Year's Panel loses 'rest'; home.month.theRest deleted in en and he; chrome.kit.fewer added. Audit of every redesigned screen for a more, the rest or + n that opens a panel: Home's and the Year's Where it went (fixed here); the waiting list's Show n more (already in place); a dashboard block's n more (opens the format's own view, a page: Q55); the agenda's per-format more, the filter's n more, the reading verdict's and the gap panel's more, the deleted note's and the audit's more (sentences, not actions); ReadFiles' onMore (reads more files, not a list). Shares the commit and D-633 with F11, F32, F33.\", \"follow_ups\": [{\"kind\": \"question\", \"ref\": \"M64 Q55\", \"state\": \"open\", \"question\": \"A dashboard's saved-view block ends with 'n more', which opens the format's whole view on its own page (not the side panel). Should it grow the block in place instead, as Where it went now does, or is leaving for the view right for a dashboard?\"}]}\n```"
+refs: M64 F13
+state: applied
+answered_by: D-633
+became_unit: M64 F13
 
 ### M64 F14 built: adding a paycheck by hand is easy, in the new design, to land
 from: F:/projects/emerald/.claude/worktrees/agent-af5bb55dd3b8408c1/docs/memory.emd
@@ -6778,6 +6806,24 @@ refs: M64 F30
 state: applied
 answered_by: D-634
 became_unit: M64 F30
+
+### M64 F32 landing proposal: PlanAgainst says how far past the plan a line went (D-633)
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-26
+body: "M64 F32 built on branch worktree-agent-ae133fe9eaffdbd70 at 4200fc5: past its plan, a meter's track is what happened, the plan a tick across it, the overflow red when over, and the caption says the share.\n\n```json\n{\"unit\": \"M64 F32\", \"commit\": \"4200fc5\", \"branch\": \"worktree-agent-ae133fe9eaffdbd70\", \"files\": \"src/ui/charts/PlanAgainst.tsx\\nsrc/ui/charts/kit.test.ts\\nsrc/ui/screens/specimens.tsx\\nsrc/i18n/en/chrome.ts\\nsrc/i18n/he/chrome.ts\", \"decision\": \"D-633\", \"review_entries\": [], \"report\": \"PlanAgainst draws its meter in a Meter part: under the plan unchanged (track is the plan, fill what happened, rounded). Past it, the track is what happened: the part within the plan bg-bar, the part past it bg-negative when over and bg-bar under a note (a goal reached, a debt paid ahead), and a 2px ink tick at the plan (inset-inline-start, so it mirrors in Hebrew; drawn outside the clipped track, 4px taller). The over caption is chrome.kit.overShare, '{amount} over · {percent}% of the plan' (he: 'חריגה של {amount} · {percent}% מהתכנון'); a note line keeps its note. Specimen: 'Past the plan, a little and twice over' (105%, 213%, a loan paid twice, a goal reached exactly). Seen on year.emd: #/plan/year Restaurants 214% and Groceries 105% draw different overflow, Trip and Car loan show their ticks with no red; Home's Against the plan the same, light, dark, Hebrew. kit.test pins 105% and 213% in words, the tick at 50% for 1400 of 700, nothing changed under the plan, no red under a note. Shares the commit and D-633 with F11, F13, F33.\", \"follow_ups\": []}\n```"
+refs: M64 F32
+state: applied
+answered_by: D-633
+became_unit: M64 F32
+
+### M64 F33 landing proposal: the probe's long Hebrew shots lay every line out afresh (D-633)
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-26
+body: "M64 F33 built on branch worktree-agent-ae133fe9eaffdbd70 at 4200fc5: after stretching a page for its picture, the probe window waits for the fonts and turns the document's direction over and back before the capture. The reversal was intermittent and its root was not pinned; a sturdier fix is F40.\n\n```json\n{\"unit\": \"M64 F33\", \"commit\": \"4200fc5\", \"branch\": \"worktree-agent-ae133fe9eaffdbd70\", \"files\": \"scripts/probe-screens-window.cjs\", \"decision\": \"D-633\", \"review_entries\": [], \"report\": \"Reproduced: the first two --lang he --shots runs of #/plan (year.emd, stretched 800 to 1876 and 1080 to 2696) drew every Hebrew word with its letters reversed, the rail included; #/plan/year at the window's own height was right. Then not again: forced stretches to 1000, 1400, 1876, and natural runs, all read correctly with the old code, and a small page with the same Plex fonts, Hebrew put in at runtime and stretched to 4000, never reversed. So it is intermittent, tied to the stretch (never seen at the window's own height, never in the browser), and the probe is the one place the language changes on a page already drawn in English. Fix (relaid in scripts/probe-screens-window.cjs): after setContentSize, await document.fonts.ready, flip html dir and back with a forced layout between, then wait for paint. Nine stretched Hebrew shots after it (#/, #/year, #/plan, #/wealth, light and dark) all read correctly. src/ui/probe.ts was not changed. Shares the commit and D-633 with F11, F13, F32.\", \"follow_ups\": [{\"kind\": \"unit\", \"ref\": \"M64 F40\", \"title\": \"The probe draws the app in the language it measures from the first paint\", \"brief\": \"M64 F33 found the long Hebrew pictures reversing letters intermittently after a stretch, and fixed it by laying every line out afresh (relaid); the root was not pinned. The probe is the one place the language changes on a page already drawn in English (showLanguage in src/ui/probe.ts). If a reversed shot is seen again, have --lang he open the window with the language set before the first paint (the setting the app reads at load, or a query parameter the demo build honours) instead of switching it, and keep relaid. Files: scripts/probe-screens.mjs, scripts/probe-screens-window.cjs, src/ui/probe.ts.\"}]}\n```"
+refs: M64 F33
+state: applied
+answered_by: D-633
+became_unit: M64 F33
 
 ### M64 F5 landing proposal: Undo brings a deleted rule or category back whole (D-628)
 from: F:/projects/emerald/docs/memory.emd
@@ -7686,6 +7732,14 @@ state: open
 
 ### M64 Q51
 question: The debt detail (#/wealth/debts/<id>) draws 9 type sizes against the budget's 7, as it did before M64 F26. Is a debt's, fund's and goal's detail its own route to redesign (and budget), or does it inherit its list's limits?
+state: open
+
+### M64 Q54
+question: Home's sentence now draws what went out in red every month (the sign it gives the month, per F11's brief). Keep it, or should only left over carry its sign and the sentence's amounts stay ink?
+state: open
+
+### M64 Q55
+question: A dashboard's saved-view block ends with 'n more', which opens the format's whole view on its own page (not the side panel). Should it grow the block in place instead, as Where it went now does, or is leaving for the view right for a dashboard?
 state: open
 
 ### M64 Q57
@@ -9130,6 +9184,11 @@ unit: M64 U14
 should: Each screen says its answer in one sentence under its title before anything else; the tab strip stays where it was between Board, Roadmap and Ready; a moved card says Moved ... Undo above the lanes and Ctrl+Z moves it back; a connection opens beside the graph, not across its foot. Wrong would be an answer that does not answer the screen's question, or a sentence you relied on that is gone.
 state: open
 
+### On the demo year (year.emd) open Home, page a month or two, then the Year, Plan and Wealth, in light and dark.
+unit: M64 F11
+should: Home's sentence says what came in in green and what went out in red, and left over is green above nothing and red with its minus below; the Year's left over, Plan's to split and net worth the same; the four tiles, the panels and every other figure stay ink. Wrong would be a red went out reading as a problem every month (then say so: Q54), or a colour on a figure that is not one of these.
+state: open
+
 ### On the demo year open Year (#/year), Categories and Rules: on Year click a month row and the Went out tile; on Categories click a category, then Merge into… and Esc, and delete an unused one; on Rules type a shop in the search, then delete a rule and press Ctrl+Z.
 unit: M64 U11
 should: Each screen says its answer before anything else; a month opens on Home; detail opens beside the page and the page stays put; the merge question sits under its own button; a delete happens at once with Undo where it was and Ctrl+Z brings it back. Wrong would be a block you used and cannot find any more, or a question far from the click.
@@ -9138,6 +9197,11 @@ state: open
 ### On the synthetic year.emd open Transactions, click a row, press Make a rule for this merchant, then Make the rule; then press Open in Rules. On By merchant, open a merchant's menu (right-click) and choose Write a rule for...
 unit: M64 F15
 should: You stay on Transactions; the line above the rows says Rule saved with Undo and Open in Rules, and Undo takes the rule away. Open in Rules lands on Rules with that rule open in its editor. On By merchant the rule's editor opens in the side panel beside the list, not on Rules. Wrong would be any path that still jumps to Rules before you asked.
+state: open
+
+### On year.emd open Home, and under Where it went click the last line, 'n more'; then the same on the Year.
+unit: M64 F13
+should: The other categories grow right there under the six, with Fewer below them to fold them again, and no side panel opens; a grown category opens its rows beside the page as the first six do. Wrong would be the page jumping or a panel opening.
 state: open
 
 ### Once a clip is recorded: name it in CLAUDE_RECORDINGS in src/demo/page/page.ts, put the .mp4 and its .png poster in fixtures/synthetic/demo/, and open the page's development section (getemerald.dev or npm run dev:demo).
@@ -10395,7 +10459,7 @@ statement: Every figure is ink, Home's included — came in, went out, saved and
 why: Two reviewers of the U3 prototypes read a red *went out* as an error (D-614). Colour carries meaning, and on a figure the only meanings it may carry are a problem and, on the one line that sums a period up, which way it went: the maintainer asked for the sign's colour there and not everywhere (D-633). The flow's identity survives as a mark, never as the number's ink.
 kind: non_negotiable
 scope: ui
-decided_by: ["D-614","D-615"]
+decided_by: ["D-614","D-615","D-633"]
 enforced_by: src/ui/charts/kit.test.ts
 always: false
 state: live
@@ -18632,12 +18696,17 @@ report: Fields wear a hairline at rest (SEAMLESS, local to EntryView; the kit's 
 milestone: M64
 scope: ui
 title: The figures that sum something up carry their sign's colour
-state: in_progress
+landed: 2026-11-26
+decision: D-633
+state: built
 brief: Maintainer, 2026-11-26: "some numbers could use their colors (the negative/positive), not everywhere but for example the line that sums up the month." U4 retired 'The four flows colour Home's figures' for 'Figures are ink, a flow is a mark'. Amend it, not reverse it: a figure that sums a period up (Home's left over and its sentence, the Year's left over, Plan's to split, net worth, a statement's gap) is drawn in the positive or negative token by its sign; every other figure stays ink. Write the list of which figures in the rule row and DESIGN.md, give it a decision, and keep contrast at AA in light and dark (the tokens' 'positive' and 'negative' text steps). Colour is never the only signal: the sign or the word stays.
+files: "src/ui/charts/HeadlineFigure.tsx\nsrc/ui/screens/Home.tsx\nsrc/ui/screens/Year.tsx\nsrc/ui/screens/Plan.tsx\nsrc/ui/screens/Overview.tsx\nsrc/ui/import/GapPanel.tsx\nsrc/ui/screens/specimens.tsx\nsrc/ui/charts/kit.test.ts\ndocs/redesign/budget.json\nDESIGN.md\ndocs/09-decision-log.md"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-ae133fe9eaffdbd70
+commit: 4200fc5
 paths: src/ui/charts/HeadlineFigure.tsx src/ui/screens/Home.tsx src/ui/screens/Year.tsx src/ui/screens/Plan.tsx src/ui/screens/Overview.tsx DESIGN.md docs/11-ui-design-language.md
+report: HeadlineFigure gains tone ('sign' | 'gap') and figureTone; Home's display figure and its sentence's SaidAmount (came positive, went negative), the Year's left over, Plan's to split, Overview's net worth take 'sign'; GapPanel's two apart figures take 'gap' (a one-word change in a file of the reading screens; merge carefully). Contrast: probe:screens year.emd on #/, #/year, #/plan, #/plan/year, #/wealth, light and dark, low contrast 0; --lang he english 0. Budget: the sign colour costs one colour on #/ (dark 12), #/plan (dark 17), #/wealth (8), so their colour ceilings rose by one; every route exits 0. Specimen: three new HeadlineFigure states. Rule row amended in the main memory.emd (statement, why); decided_by needs D-633 after landing. DESIGN.md lists the figures. Tests: kit.test (new tone test), related 87 files green, typecheck, privacy, direction, i18n, budget green. check:tours skipped: no tour step clicks what changed (the groceries highlight is in the top six). Shares the commit and D-633 with F13, F32, F33.
 
 ### M64 F12
 milestone: M64
@@ -18659,12 +18728,17 @@ report: Plan gains a tab strip from nav.ts, Month (#/plan) and Year (#/plan/year
 milestone: M64
 scope: ui
 title: "\"More\" expands in place everywhere, and Home's \"the rest\" first"
-state: in_progress
+landed: 2026-11-26
+decision: D-633
+state: built
 brief: Maintainer, 2026-11-26: "some of the usage of the side bar is still weird. like the home clicking on the 'more' of what went out opening a side bar for the rest." D-617 now says a list cut short expands in place and never opens the side panel. Fix Home's Where it went 'the rest' (HomePanel's theRest), then audit every redesigned screen for a 'more', 'the rest' or '+ n' that opens a panel, and make each expand where it stands. Report each one found.
+files: "src/ui/charts/RankedBars.tsx\nsrc/ui/home/HomePanel.tsx\nsrc/ui/screens/Home.tsx\nsrc/ui/screens/Year.tsx\nsrc/ui/screens/specimens.tsx\nsrc/i18n/en/chrome.ts\nsrc/i18n/he/chrome.ts\nsrc/i18n/en/home.ts\nsrc/i18n/he/home.ts"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-ae133fe9eaffdbd70
+commit: 4200fc5
 paths: src/ui/home/ src/ui/screens/Home.tsx src/ui/charts/RankedBars.tsx
+report: RankedBars loses onMore: its folded line (n more, with what they come to, aria-expanded false) grows the rest in place through Reveal, under a Fewer text action (aria-expanded true); focus moves to the first grown row, and back to the folded line on Fewer. Verified in this worktree's Vite on year.emd #/: 8 more grew Municipal tax..Bank fees, focus on Municipal tax, no panel; Fewer folded and returned focus. Home's Panel loses kind 'rest' and HomePanel its onPanel prop; the Year's Panel loses 'rest'; home.month.theRest deleted in en and he; chrome.kit.fewer added. Audit of every redesigned screen for a more, the rest or + n that opens a panel: Home's and the Year's Where it went (fixed here); the waiting list's Show n more (already in place); a dashboard block's n more (opens the format's own view, a page: Q55); the agenda's per-format more, the filter's n more, the reading verdict's and the gap panel's more, the deleted note's and the audit's more (sentences, not actions); ReadFiles' onMore (reads more files, not a list). Shares the commit and D-633 with F11, F32, F33.
 
 ### M64 F14
 milestone: M64
@@ -18871,21 +18945,31 @@ report: blankDraft takes the slips' months: last month (F04), unless it already 
 milestone: Later
 scope: app
 title: PlanAgainst says how far past the plan a line went, not only that it did
-state: in_progress
+landed: 2026-11-26
+decision: D-633
+state: built
 brief: Found in M64 F12's taste check: PlanAgainst caps its fill at the plan, so a category at 105% and one at 213% draw the same full red bar, and a debt paid at 200% looks like a goal at 100%. Give the display a mark for past the plan (a tick at 100% and the overflow drawn, or the share in words) without changing what a line under its plan shows, in the kit's specimen first. Files: src/ui/charts/PlanAgainst.tsx, src/ui/charts/kit.ts. After M64 F2 (the kit rewrite).
+files: "src/ui/charts/PlanAgainst.tsx\nsrc/ui/charts/kit.test.ts\nsrc/ui/screens/specimens.tsx\nsrc/i18n/en/chrome.ts\nsrc/i18n/he/chrome.ts"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-ae133fe9eaffdbd70
+commit: 4200fc5
+report: PlanAgainst draws its meter in a Meter part: under the plan unchanged (track is the plan, fill what happened, rounded). Past it, the track is what happened: the part within the plan bg-bar, the part past it bg-negative when over and bg-bar under a note (a goal reached, a debt paid ahead), and a 2px ink tick at the plan (inset-inline-start, so it mirrors in Hebrew; drawn outside the clipped track, 4px taller). The over caption is chrome.kit.overShare, '{amount} over · {percent}% of the plan' (he: 'חריגה של {amount} · {percent}% מהתכנון'); a note line keeps its note. Specimen: 'Past the plan, a little and twice over' (105%, 213%, a loan paid twice, a goal reached exactly). Seen on year.emd: #/plan/year Restaurants 214% and Groceries 105% draw different overflow, Trip and Car loan show their ticks with no red; Home's Against the plan the same, light, dark, Hebrew. kit.test pins 105% and 213% in words, the tick at 50% for 1400 of 700, nothing changed under the plan, no red under a note. Shares the commit and D-633 with F11, F13, F33.
 
 ### M64 F33
 milestone: Later
 scope: app
 title: The probe's long Hebrew shots draw Hebrew reversed
-state: in_progress
+landed: 2026-11-26
+decision: D-633
+state: built
 brief: probe:screens --lang he --shots on #/plan (year.emd) paints Hebrew with its letters in reverse order in the long page shot (the rail reads backwards), while #/plan/year's shot and the browser read correctly. Find what in scripts/probe-screens.mjs's full-length capture loses the bidi shaping (likely the stitched or resized capture of a page taller than the window) and fix it, so a taste check can judge a Hebrew screen from its shot. Files: scripts/probe-screens.mjs, src/ui/probe.ts.
+files: scripts/probe-screens-window.cjs
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-ae133fe9eaffdbd70
+commit: 4200fc5
+report: Reproduced: the first two --lang he --shots runs of #/plan (year.emd, stretched 800 to 1876 and 1080 to 2696) drew every Hebrew word with its letters reversed, the rail included; #/plan/year at the window's own height was right. Then not again: forced stretches to 1000, 1400, 1876, and natural runs, all read correctly with the old code, and a small page with the same Plex fonts, Hebrew put in at runtime and stretched to 4000, never reversed. So it is intermittent, tied to the stretch (never seen at the window's own height, never in the browser), and the probe is the one place the language changes on a page already drawn in English. Fix (relaid in scripts/probe-screens-window.cjs): after setContentSize, await document.fonts.ready, flip html dir and back with a forced layout between, then wait for paint. Nine stretched Hebrew shots after it (#/, #/year, #/plan, #/wealth, light and dark) all read correctly. src/ui/probe.ts was not changed. Shares the commit and D-633 with F11, F13, F32.
 
 ### M64 F35
 milestone: M64
@@ -18942,6 +19026,13 @@ brief: year.emd (scripts/demo-year.mjs) holds goals and a car loan but no pensio
 taken_by: run-milestone driver
 started: 2026-11-26
 branch: m64-redesign
+
+### M64 F40
+milestone: Later
+scope: app
+title: The probe draws the app in the language it measures from the first paint
+state: planned
+brief: M64 F33 found the long Hebrew pictures reversing letters intermittently after a stretch, and fixed it by laying every line out afresh (relaid); the root was not pinned. The probe is the one place the language changes on a page already drawn in English (showLanguage in src/ui/probe.ts). If a reversed shot is seen again, have --lang he open the window with the language set before the first paint (the setting the app reads at load, or a query parameter the demo build honours) instead of switching it, and keep relaid. Files: scripts/probe-screens.mjs, scripts/probe-screens-window.cjs, src/ui/probe.ts.
 
 ### M64 F43
 milestone: Later
