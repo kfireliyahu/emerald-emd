@@ -128,8 +128,19 @@ const M64_U10 = [
 /** M64 U13 (D-625): the engine's delete at once and its Undo; the rest of the formats screens is M64 F9's. */
 const M64_U13 = ['src/ui/formats/DeleteAtOnce.tsx']
 
+/** M64 F3 (D-629): Wealth's forms, in the side panel, and the form they are built from. */
+const M64_F3 = [
+  'src/ui/components/PanelForm.tsx',
+  'src/ui/funds/SnapshotEditor.tsx',
+  'src/ui/funds/FundEditor.tsx',
+  'src/ui/savings/GoalEditor.tsx',
+  'src/ui/savings/DepositEditor.tsx',
+  'src/ui/debts/DebtEditor.tsx',
+  'src/ui/debts/PaymentEditor.tsx',
+]
+
 /** The screens whose words are the catalogue's. A unit that translates a screen adds its files here. */
-export const TRANSLATED: readonly string[] = [...U4, ...U5, ...M64_U8, ...M64_U10, ...M64_U13]
+export const TRANSLATED: readonly string[] = [...U4, ...U5, ...M64_U8, ...M64_U10, ...M64_U13, ...M64_F3]
 
 /** Literals in a translated file that are not the app's words, by file, each with why. */
 const ALLOWED: Readonly<Record<string, readonly string[]>> = {

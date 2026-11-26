@@ -34,7 +34,9 @@ import { Chip } from '@/ui/components/Chip.tsx'
 import { BalanceChart } from '@/ui/funds/BalanceChart.tsx'
 import { DEPOSIT_STATUS_LABEL, FUND_TYPE_LABEL } from '@/ui/funds/labels.ts'
 import { ReportIntake } from '@/ui/funds/ReportIntake.tsx'
-import { blankSnapshot, SnapshotEditor } from '@/ui/funds/SnapshotEditor.tsx'
+import { blankSnapshot, SnapshotForm } from '@/ui/funds/SnapshotEditor.tsx'
+import { SidePanel } from '@/ui/components/SidePanel.tsx'
+import { useT } from '@/i18n/current.ts'
 import { today } from '@/ui/today.ts'
 import { useClosePane } from '@/ui/screens/ListDetail.tsx'
 
@@ -61,6 +63,7 @@ export function FundDetail() {
   const revision = useDocumentStore((state) => state.revision)
   const mutate = useDocumentStore((state) => state.mutate)
   const closePane = useClosePane()
+  const t = useT()
   const { fundId } = useParams<{ fundId: string }>()
 
   const [editing, setEditing] = useState<Editing | undefined>()
@@ -136,44 +139,55 @@ export function FundDetail() {
     )
   }
 
-  if (editing !== undefined) {
-    return (
-      <SnapshotEditor
-        key={editing.snapshot.id}
-        initial={editing.snapshot}
-        isNew={editing.isNew}
-        currency={currency}
-        existing={snapshots}
-        fundName={fund.name}
-        onSave={(snapshot) => {
-          const saved = write((database, at) => {
-            if (editing.isNew) {
-              addSnapshot(
-                database,
-                {
-                  fundAccountId: snapshot.fundAccountId,
-                  asOfDate: snapshot.asOfDate,
-                  totalBalance: snapshot.totalBalance,
-                  employeeComponent: snapshot.employeeComponent,
-                  employerComponent: snapshot.employerComponent,
-                  severanceComponent: snapshot.severanceComponent,
-                  depositsSincePrevious: snapshot.depositsSincePrevious,
-                  feesChargedSincePrevious: snapshot.feesChargedSincePrevious,
-                  returnSincePrevious: snapshot.returnSincePrevious,
-                  note: snapshot.note,
-                },
-                at,
-              )
-            } else {
-              updateSnapshot(database, snapshot.id, snapshot, at)
-            }
-          })
-          if (saved) setEditing(undefined)
-        }}
-        onCancel={() => setEditing(undefined)}
-      />
+  // A reading typed by hand is a form beside the page (D-617, M64 F3): it opens in the
+  // fund's own pane, and saving or leaving puts the fund back where it was.
+  // Over the fund pane, the fund still mounted behind it, so leaving puts
+  // focus back on what opened it.
+  const form =
+    editing === undefined ? undefined : (
+      <div className="absolute inset-y-0 end-0 z-20 flex">
+        <SidePanel
+          title={editing.isNew ? t('wealth.reading.addTitle') : t('wealth.reading.editTitle')}
+          kicker={fund.name}
+          onClose={() => setEditing(undefined)}
+        >
+        <SnapshotForm
+          key={editing.snapshot.id}
+          initial={editing.snapshot}
+          isNew={editing.isNew}
+          currency={currency}
+          existing={snapshots}
+          fundName={fund.name}
+          onSave={(snapshot) => {
+            const saved = write((database, at) => {
+              if (editing.isNew) {
+                addSnapshot(
+                  database,
+                  {
+                    fundAccountId: snapshot.fundAccountId,
+                    asOfDate: snapshot.asOfDate,
+                    totalBalance: snapshot.totalBalance,
+                    employeeComponent: snapshot.employeeComponent,
+                    employerComponent: snapshot.employerComponent,
+                    severanceComponent: snapshot.severanceComponent,
+                    depositsSincePrevious: snapshot.depositsSincePrevious,
+                    feesChargedSincePrevious: snapshot.feesChargedSincePrevious,
+                    returnSincePrevious: snapshot.returnSincePrevious,
+                    note: snapshot.note,
+                  },
+                  at,
+                )
+              } else {
+                updateSnapshot(database, snapshot.id, snapshot, at)
+              }
+            })
+            if (saved) setEditing(undefined)
+          }}
+          onCancel={() => setEditing(undefined)}
+        />
+        </SidePanel>
+      </div>
     )
-  }
 
   const agreement = feeAgreementStatus(fund, now)
   const benchmark = feeBenchmark(fund, DEFAULT_FEE_REFERENCES)
@@ -182,6 +196,8 @@ export function FundDetail() {
   const annualCost = latest === undefined ? undefined : annualFeeCost(latest.totalBalance, fund.fees)
 
   return (
+    <>
+    {form}
     <div className="fc-view-enter flex h-full flex-col">
       <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline px-6 py-2">
         {/* No breadcrumb: the list it belongs to is the pane on the left
@@ -309,7 +325,7 @@ export function FundDetail() {
                   would fix it exist on paper, so the sentence that says the
                   window is short is also the way into reading them. */}
               {returns.cumulative !== undefined && trackedMonths(snapshots) < SHORT_HISTORY && (
-                <p className="mt-3 flex max-w-2xl flex-wrap items-center gap-x-3 gap-y-1 text-caption text-ink-tertiary">
+                <p className="mt-3 flex max-w-2xl flex-wrap items-center gap-x-3 gap-y-1 text-caption text-ink-secondary">
                   <span>
                     Everything above covers the {trackedMonths(snapshots)} months your readings
                     span, not the fund's life. If it is older than that, its past quarterlies say
@@ -322,7 +338,7 @@ export function FundDetail() {
               )}
 
               {returns.cumulative === undefined && (
-                <p className="mt-3 max-w-2xl text-caption text-ink-tertiary">
+                <p className="mt-3 max-w-2xl text-caption text-ink-secondary">
                   No total for the whole history: {returns.unknownPeriods}{' '}
                   {returns.unknownPeriods === 1 ? 'period has' : 'periods have'} nothing to say what
                   was paid in, and a total over the rest would cover a different span than the chart
@@ -359,14 +375,14 @@ export function FundDetail() {
                     ? 'Report this gap again'
                     : 'I chased this and it is explained'}
                 </Button>
-                <span className="text-caption text-ink-tertiary">
+                <span className="text-caption text-ink-secondary">
                   The figures do not change — only whether the app keeps raising it.
                 </span>
               </div>
             )}
 
           {linkedTypes.length === 0 ? (
-            <p className="mt-3 max-w-2xl text-caption text-ink-tertiary">
+            <p className="mt-3 max-w-2xl text-caption text-ink-secondary">
               No paycheck deduction type feeds this fund yet, so there is nothing to compare the
               fund's own figures against. Link one on the{' '}
               <Link to="/paychecks/deductions" className="text-accent underline underline-offset-4 transition-colors duration-[var(--duration-micro)] hover:text-accent-hover">
@@ -375,7 +391,7 @@ export function FundDetail() {
               screen.
             </p>
           ) : (
-            <p className="mt-3 text-caption text-ink-tertiary">
+            <p className="mt-3 text-caption text-ink-secondary">
               Fed by {linkedTypes.map((type) => type.name).join(', ')}.
             </p>
           )}
@@ -424,7 +440,7 @@ export function FundDetail() {
           </div>
 
           {benchmark.reference !== undefined && benchmark.onAccumulation !== undefined && (
-            <p className="mt-3 max-w-2xl text-caption text-ink-tertiary">
+            <p className="mt-3 max-w-2xl text-caption text-ink-secondary">
               The ceiling for a {FUND_TYPE_LABEL[fund.fundType].toLowerCase()} is{' '}
               {formatPercent(benchmark.onAccumulation.capBasisPoints, { digits: 2 })} on the balance
               and {formatPercent(benchmark.onDeposit?.capBasisPoints, { digits: 2 })} on deposits;
@@ -442,7 +458,7 @@ export function FundDetail() {
           ) : (
             <table className="w-full max-w-3xl">
               <thead>
-                <tr className="border-b border-hairline text-label text-ink-tertiary uppercase">
+                <tr className="border-b border-hairline text-label text-ink-secondary uppercase">
                   <th className="py-2 pe-6 text-start font-medium">As of</th>
                   <th className="py-2 pe-6 text-end font-medium">Balance</th>
                   <th className="py-2 pe-6 text-end font-medium">Deposits</th>
@@ -470,7 +486,7 @@ export function FundDetail() {
                         ? '—'
                         : formatMoney(snapshot.feesChargedSincePrevious)}
                     </td>
-                    <td className="py-1.5 pe-6 text-caption text-ink-tertiary">
+                    <td className="py-1.5 pe-6 text-caption text-ink-secondary">
                       {snapshot.note ?? ''}
                     </td>
                     <td className="py-1.5 text-end">
@@ -497,6 +513,7 @@ export function FundDetail() {
         </Section>
       </div>
     </div>
+    </>
   )
 }
 
@@ -594,7 +611,7 @@ function Verdict({
                 `${formatMoney(abs(gap))} more arrived than the paychecks account for — usually a month of an earlier period landing inside this one.`
               : `The difference is ${formatMoney(gap)}.`}
       </p>
-      <p className="mt-1 text-caption text-ink-tertiary">
+      <p className="mt-1 text-caption text-ink-secondary">
         {DEPOSIT_STATUS_LABEL[status]} · {expected.paycheckCount}{' '}
         {expected.paycheckCount === 1 ? 'paycheck' : 'paychecks'}, compared with a{' '}
         {window.lagMonths}-month lag and a tolerance of {formatMoney(reconciliation.tolerance)}.
@@ -628,10 +645,10 @@ function hasPayslips(
 function MonthTable({ months }: { months: readonly MonthlyDeposit[] }) {
   return (
     <div className="mt-4 max-w-3xl overflow-x-auto">
-      <p className="text-label text-ink-tertiary uppercase">Month by month, from the reports</p>
+      <p className="text-label text-ink-secondary uppercase">Month by month, from the reports</p>
       <table className="mt-2 w-full">
         <thead>
-          <tr className="border-b border-hairline text-label text-ink-tertiary uppercase">
+          <tr className="border-b border-hairline text-label text-ink-secondary uppercase">
             <th className="py-2 pe-6 text-start font-medium">Salary month</th>
             <th className="py-2 pe-6 text-end font-medium">Paycheck says</th>
             <th className="py-2 pe-6 text-end font-medium">Fund received</th>
@@ -676,7 +693,7 @@ function MonthTable({ months }: { months: readonly MonthlyDeposit[] }) {
               </td>
               <td className="py-1.5 pe-6 text-end tabular-nums">
                 {month.fundSalary === undefined || month.slipSalary === undefined ? (
-                  <span className="text-ink-tertiary">—</span>
+                  <span className="text-ink-secondary">—</span>
                 ) : month.salaryStatus === 'AGREES' ? (
                   <span className="text-ink-secondary">{formatMoney(month.fundSalary)}</span>
                 ) : (
@@ -685,7 +702,7 @@ function MonthTable({ months }: { months: readonly MonthlyDeposit[] }) {
                   // actually computed from.
                   <span className="whitespace-nowrap">
                     <span className="text-negative">{formatMoney(month.fundSalary)}</span>
-                    <span className="text-caption text-ink-tertiary">
+                    <span className="text-caption text-ink-secondary">
                       {' '}
                       vs {formatMoney(month.slipSalary)}
                     </span>
@@ -695,7 +712,7 @@ function MonthTable({ months }: { months: readonly MonthlyDeposit[] }) {
               <td className="py-1.5 pe-6 whitespace-nowrap text-ink-secondary tabular-nums">
                 {month.arrivedOn === undefined ? '—' : toISODate(month.arrivedOn)}
               </td>
-              <td className="py-1.5 whitespace-nowrap text-caption text-ink-tertiary">
+              <td className="py-1.5 whitespace-nowrap text-caption text-ink-secondary">
                 {month.lagMonths === undefined
                   ? MONTH_STATUS_HINT[month.status]
                   : month.lagMonths <= 1
@@ -730,7 +747,7 @@ function BaseNote({ months }: { months: readonly MonthlyDeposit[] }) {
 
   if (known.length === 0) {
     return (
-      <p className="mt-2 max-w-prose text-caption text-ink-tertiary">
+      <p className="mt-2 max-w-prose text-caption text-ink-secondary">
         Nothing in <em>Computed on</em> yet: it needs both a report that prints a salary column and
         paychecks whose pension line prints its base. Neither is universal, and the app only began
         keeping the paycheck’s base recently — so paychecks saved before that have none.
@@ -740,7 +757,7 @@ function BaseNote({ months }: { months: readonly MonthlyDeposit[] }) {
 
   if (differs.length === 0) {
     return (
-      <p className="mt-2 max-w-prose text-caption text-ink-tertiary">
+      <p className="mt-2 max-w-prose text-caption text-ink-secondary">
         Where the report and the paycheck both print a base, they agree — the fund worked from the same salary your
         paycheck says it should have.
       </p>
@@ -785,7 +802,7 @@ function PeriodTable({ periods }: { periods: readonly DepositPeriod[] }) {
   return (
     <table className="mt-4 w-full max-w-3xl">
       <thead>
-        <tr className="border-b border-hairline text-label text-ink-tertiary uppercase">
+        <tr className="border-b border-hairline text-label text-ink-secondary uppercase">
           <th className="py-2 pe-6 text-start font-medium">Period</th>
           <th className="py-2 pe-6 text-start font-medium">Salary months</th>
           <th className="py-2 pe-6 text-end font-medium">Paychecks say</th>
@@ -850,7 +867,7 @@ function feeHint(fee: EffectiveFee): string {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mt-8">
-      <h2 className="mb-3 border-b border-hairline pb-2 text-label text-ink-tertiary uppercase">
+      <h2 className="mb-3 border-b border-hairline pb-2 text-label text-ink-secondary uppercase">
         {title}
       </h2>
       {children}
@@ -869,10 +886,10 @@ function Figure({
 }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-label text-ink-tertiary uppercase">{label}</span>
+      <span className="text-label text-ink-secondary uppercase">{label}</span>
       {children}
       {hint !== undefined && hint !== '' && (
-        <span className="text-caption text-ink-tertiary">{hint}</span>
+        <span className="text-caption text-ink-secondary">{hint}</span>
       )}
     </div>
   )

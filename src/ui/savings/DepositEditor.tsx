@@ -1,31 +1,24 @@
 import { useState, type ReactNode } from 'react'
 
 import { money, type CurrencyCode, type Money } from '@/core/money.ts'
-import { parseISODate, toISODate, type LocalDate } from '@/core/time.ts'
+import type { LocalDate } from '@/core/time.ts'
 import { makePlace, NEW_PLACE_KINDS } from '@/data/repositories/goalWhereRepository.ts'
 import type { Holding, HoldingPlace, SavingDeposit, SavingGoal } from '@/domain/model/savings.ts'
-import {
-  DEPOSIT_MODES,
-  modeOf,
-  signedAmount,
-  sourceKindFor,
-  type DepositMode,
-} from '@/domain/depositEntry.ts'
-import {
-  depositWarnings,
-  validateDeposit,
-  type DepositProblem,
-  type DepositWarning,
-} from '@/domain/savings.ts'
-import { Button } from '@/ui/components/Button.tsx'
-import { Field } from '@/ui/components/Field.tsx'
+import { DEPOSIT_MODES, modeOf, signedAmount, sourceKindFor, type DepositMode } from '@/domain/depositEntry.ts'
+import { depositWarnings, validateDeposit, type DepositProblem, type DepositWarning } from '@/domain/savings.ts'
+import { useT } from '@/i18n/current.ts'
+import { ChoiceMenu } from '@/ui/components/ChoiceField.tsx'
+import { AmountInput, DateInput, FormField, FormGrid, MoreFields, PanelForm, Said } from '@/ui/components/PanelForm.tsx'
 import { editableMoney, moneyFromText } from '@/ui/components/moneyText.ts'
-import { NewByName, SelectOrNew } from '@/ui/components/SelectOrNew.tsx'
-import { FIELD, FIELD_MULTILINE, SELECT } from '@/ui/components/fieldLook.ts'
-import { NEW_KIND_LABEL } from '@/ui/savings/WherePicker.tsx'
+import { NEW_CHOICE, NewByName } from '@/ui/components/SelectOrNew.tsx'
+import { FIELD, FIELD_MULTILINE } from '@/ui/components/fieldLook.ts'
+import { useWealthWords } from '@/ui/wealth/words.ts'
 
 /**
- * Every way a savings balance can change, as one form with six modes.
+ * Every way a savings balance can change, as one form with six modes — a
+ * `PanelForm` beside the goals (M64 F3, D-629): the kind, the amount, the goal
+ * and where the money is first, what the kind means said under them, and the
+ * date and a note only if wanted (a withdrawal asks why up front).
  *
  * **The sign is a mode, not a minus the user types.** A withdrawal is stored as
  * a negative deposit, which is what keeps a balance a single sum (docs/f07), but
@@ -35,8 +28,7 @@ import { NEW_KIND_LABEL } from '@/ui/savings/WherePicker.tsx'
  *
  * **A withdrawal has to say why**, which is the price of modelling it as a
  * negative: without the note there is nothing on the row to distinguish a
- * withdrawal from a correction, and a balance that dropped for no recorded
- * reason is the kind of thing that makes people stop trusting the number.
+ * withdrawal from a correction.
  *
  * **Taking out more than the balance is allowed, and says so.** docs/f07 is
  * explicit: the user's records may simply be incomplete, and an app that argues
@@ -45,16 +37,12 @@ import { NEW_KIND_LABEL } from '@/ui/savings/WherePicker.tsx'
  * **Moving between holdings is not a contribution**, and the third mode exists
  * so it cannot be recorded as one. It writes two legs that net to zero, so the
  * goal's balance is untouched and only the liquid/locked split moves — which
- * since D-175 can happen *inside* one place, when cash goes into the deposit at
- * the same bank.
+ * since D-175 can happen *inside* one place.
  *
- * **The last three modes are the same argument again** (D-081). Money that was
- * already there when tracking started, and money the market added or took away,
- * are both really in the balance and neither is money the user set aside. As
- * `MANUAL` rows — which is all this form could offer before — a ₪200,000 opening
- * balance would report as the best savings month of someone's life. So the mode
- * picks the `sourceKind`, the same way it picks the sign, and a gain and a loss
- * are two modes rather than one field where a minus decides which.
+ * **The last three modes are the same argument again** (D-081). Money already
+ * there when tracking started, and money the market added or took away, are
+ * really in the balance and neither is money the user set aside, so the mode
+ * picks the `sourceKind`, the same way it picks the sign.
  */
 export type DepositDraft =
   | { readonly kind: 'ENTRY'; readonly deposit: SavingDeposit }
@@ -67,7 +55,6 @@ export type DepositDraft =
       readonly toHoldingId: string
       readonly note: string | undefined
     }
-
 
 export function DepositEditor({
   initial,
@@ -93,11 +80,12 @@ export function DepositEditor({
   onSave: (draft: DepositDraft) => void
   onCancel: () => void
 }) {
+  const t = useT()
+  const words = useWealthWords()
   const [mode, setMode] = useState<DepositMode>(() => modeOf(initial))
   const [draft, setDraft] = useState(initial)
   const [toHoldingId, setToHoldingId] = useState<string>(
-    () =>
-      holdings.find((holding) => holding.id !== initial.holdingId)?.id ?? initial.holdingId,
+    () => holdings.find((holding) => holding.id !== initial.holdingId)?.id ?? initial.holdingId,
   )
 
   // "Bank Hapoalim · Fixed deposit". The place alone stopped being an answer to
@@ -107,26 +95,18 @@ export function DepositEditor({
     const place = places.find((one) => one.id === holding.holdingPlaceId)
     return place === undefined ? holding.name : `${place.name} · ${holding.name}`
   }
-  const holdingOptions = holdings.map((holding) => (
-    <option key={holding.id} value={holding.id}>
-      {holdingLabel(holding)}
-    </option>
-  ))
   // A holding is a place holding one thing, as the goal form's *+ New…* makes it (M31 U6).
   const newHolding = (done: (id: string | undefined) => void): ReactNode => (
     <NewByName
-      noun="holding"
-      kinds={NEW_PLACE_KINDS.map((kind) => [kind, NEW_KIND_LABEL[kind]] as const)}
+      noun={t('wealth.movementForm.holdingNoun')}
+      kinds={NEW_PLACE_KINDS.map((kind) => [kind, words.newPlace[kind]] as const)}
       make={(db, name, kind, now) => makePlace(db, { kind: kind ?? 'CASH_AT_HOME', name }, now)}
       done={done}
     />
   )
-  const [amountText, setAmountText] = useState(() =>
-    editableMoney(initial.amount, { unsigned: true }),
-  )
+  const [amountText, setAmountText] = useState(() => editableMoney(initial.amount, { unsigned: true }))
 
-  const set = (change: Partial<SavingDeposit>): void =>
-    setDraft((current) => ({ ...current, ...change }))
+  const set = (change: Partial<SavingDeposit>): void => setDraft((current) => ({ ...current, ...change }))
 
   const magnitude = Math.abs(moneyFromText(amountText, currency)?.minor ?? 0)
   const signed = signedAmount(mode, magnitude, currency)
@@ -140,22 +120,22 @@ export function DepositEditor({
   }
 
   const goal = goals.find((one) => one.id === candidate.goalId)
-  const problems =
-    mode === 'TRANSFER'
-      ? transferProblems(candidate, toHoldingId, magnitude)
-      : validateDeposit(candidate, { goal, holdings })
-  // Only a withdrawal can overdraw a goal in a way worth mentioning. A loss that
-  // takes the balance negative is a records problem of a different kind, and the
-  // withdrawal wording ("your records may just be missing a deposit") would be
-  // the wrong sentence about it.
+  const problems = mode === 'TRANSFER' ? transferProblems(candidate, toHoldingId, magnitude) : validateDeposit(candidate, { goal, holdings })
+  // Only a withdrawal can overdraw a goal in a way worth mentioning; a loss that
+  // takes the balance negative is a records problem of a different kind.
   const warnings = mode === 'WITHDRAWAL' ? depositWarnings(candidate, existing) : []
+  // An untouched form only waits: the amount and the why are asked for once something is typed.
+  const shown =
+    amountText.trim() === '' ? problems.filter((problem) => problem !== 'ZERO_AMOUNT' && problem !== 'WITHDRAWAL_WITHOUT_REASON') : problems
+  const goalName = (one: SavingGoal): string => (one.isClosed ? t('wealth.movementForm.closedGoal', { name: one.name }) : one.name)
+  const why = mode === 'WITHDRAWAL'
+  const setNote = (text: string): void => set({ note: text.trim() === '' ? undefined : text })
 
   return (
-    <form
-      className="fc-view-enter h-full overflow-auto"
-      onSubmit={(event) => {
-        event.preventDefault()
-        if (problems.length > 0) return
+    <PanelForm
+      save={isNew ? t(ACTION[mode]) : t('wealth.reading.save')}
+      canSave={problems.length === 0}
+      onSave={() =>
         onSave(
           mode === 'TRANSFER'
             ? {
@@ -164,149 +144,140 @@ export function DepositEditor({
                 date: candidate.date,
                 amount: money(magnitude, currency),
                 fromHoldingId: candidate.holdingId,
-                toHoldingId: toHoldingId,
+                toHoldingId,
                 note: candidate.note,
               }
             : { kind: 'ENTRY', deposit: candidate },
         )
-      }}
+      }
+      onCancel={onCancel}
+      problems={shown.map((problem) => t(PROBLEM[problem]))}
     >
-      <div className="px-6 py-6">
-        <h1 className="text-title">{isNew ? 'Record a movement' : 'Edit deposit'}</h1>
+      {isNew && (
+        <div role="group" aria-label={t('wealth.movementForm.kind')} className="flex flex-wrap gap-2">
+          {DEPOSIT_MODES.map((one) => (
+            <button
+              key={one}
+              type="button"
+              aria-pressed={mode === one}
+              onClick={() => setMode(one)}
+              className={`h-8 border px-3 text-caption transition-colors duration-[var(--duration-micro)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+                mode === one ? 'border-accent bg-accent-soft text-ink' : 'border-hairline-strong text-ink-secondary hover:text-ink'
+              }`}
+            >
+              {t(LABEL[one])}
+            </button>
+          ))}
+        </div>
+      )}
 
-        {isNew && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {DEPOSIT_MODES.map((one) => (
-              <button
-                key={one}
-                type="button"
-                onClick={() => setMode(one)}
-                className={`rounded-md border px-3 py-1 transition-colors duration-[var(--duration-micro)] ${
-                  mode === one
-                    ? 'border-accent bg-accent-soft'
-                    : 'border-hairline text-ink-secondary hover:border-hairline-strong'
-                }`}
-              >
-                {MODE_LABEL[one]}
-              </button>
-            ))}
-          </div>
+      <FormGrid>
+        <AmountInput
+          label={t('wealth.movementForm.amount')}
+          currency={currency}
+          placeholder="0"
+          value={amountText}
+          onChange={(event) => setAmountText(event.target.value)}
+        />
+        <FormField label={t('wealth.movementForm.goal')}>
+          <ChoiceMenu
+            className={`${FIELD} w-full`}
+            text={goal === undefined ? '' : goalName(goal)}
+            choices={goals.map((one) => ({ value: one.id, label: goalName(one) }))}
+            onPick={(choice) => {
+              const picked = goals.find((one) => one.id === choice.value)
+              // Following the goal's own default is the whole point of the field;
+              // a holding picked by hand is left alone only because this fires on
+              // a deliberate goal change.
+              set({ goalId: choice.value, holdingId: picked?.defaultHoldingId ?? candidate.holdingId })
+            }}
+          />
+        </FormField>
+        <FormField label={mode === 'TRANSFER' ? t('wealth.movementForm.outOf') : t('wealth.movementForm.where')}>
+          <HoldingChoice label={mode === 'TRANSFER' ? t('wealth.movementForm.outOf') : t('wealth.movementForm.where')} value={candidate.holdingId} onChange={(holdingId) => set({ holdingId })} holdings={holdings} labelOf={holdingLabel} newHolding={newHolding} />
+        </FormField>
+        {mode === 'TRANSFER' && (
+          <FormField label={t('wealth.movementForm.into')}>
+            <HoldingChoice label={t('wealth.movementForm.into')} value={toHoldingId} onChange={setToHoldingId} holdings={holdings} labelOf={holdingLabel} newHolding={newHolding} />
+          </FormField>
         )}
+        {why && (
+          <FormField label={t('wealth.movementForm.why')} hint={t('wealth.movementForm.whyHint')} wide>
+            <textarea className={`${FIELD_MULTILINE} min-h-16`} value={candidate.note ?? ''} onChange={(event) => setNote(event.target.value)} />
+          </FormField>
+        )}
+      </FormGrid>
 
-        <p className="mt-2 mb-6 max-w-2xl text-caption text-ink-tertiary">{MODE_HINT[mode]}</p>
+      <Said>
+        {t(HINT[mode])}
+        {warnings.length > 0 && ` ${warnings.map((warning) => t(WARNING[warning])).join(' ')}`}
+      </Said>
 
-        <div className="grid max-w-3xl grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
-          <Field label="Goal">
-            <select
-              className={SELECT}
-              value={candidate.goalId}
-              onChange={(event) => {
-                const picked = goals.find((one) => one.id === event.target.value)
-                set({
-                  goalId: event.target.value,
-                  // Following the goal's own default is the whole point of the
-                  // field; a holding the user has already picked by hand is left
-                  // alone only because this fires on a deliberate goal change.
-                  holdingId: picked?.defaultHoldingId ?? candidate.holdingId,
-                })
-              }}
-            >
-              {goals.map((one) => (
-                <option key={one.id} value={one.id}>
-                  {one.name}
-                  {one.isClosed ? ' (closed)' : ''}
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          <Field label="Amount">
-            <input
-              className={FIELD}
-              inputMode="decimal"
-              autoFocus
-              value={amountText}
-              onChange={(event) => setAmountText(event.target.value)}
-            />
-          </Field>
-
-          <Field label="Date">
-            <input
-              type="date"
-              className={FIELD}
-              value={toISODate(candidate.date)}
-              onChange={(event) => set({ date: parseISODate(event.target.value) ?? candidate.date })}
-            />
-          </Field>
-
-          <Field label={mode === 'TRANSFER' ? 'Out of' : 'Where the money is'}>
-            <SelectOrNew
-              aria-label={mode === 'TRANSFER' ? 'Out of' : 'Where the money is'}
-              value={candidate.holdingId}
-              onChange={(holdingId) => set({ holdingId })}
-              placeholder="Pick one"
-              newForm={newHolding}
-            >
-              {holdingOptions}
-            </SelectOrNew>
-          </Field>
-
-          {mode === 'TRANSFER' && (
-            <Field label="Into">
-              <SelectOrNew
-                aria-label="Into"
-                value={toHoldingId}
-                onChange={setToHoldingId}
-                placeholder="Pick one"
-                newForm={newHolding}
-              >
-                {holdingOptions}
-              </SelectOrNew>
-            </Field>
+      <MoreFields
+        label={why ? t('wealth.movementForm.moreDate') : t('wealth.movementForm.more')}
+        summary={t('wealth.movementForm.moreSummary', { date: words.dates.dayMonth(candidate.date) })}
+        initiallyOpen={!isNew}
+      >
+        <FormGrid>
+          <FormField label={t('wealth.movementForm.date')}>
+            <DateInput value={candidate.date} onChange={(date) => set({ date: date ?? candidate.date })} />
+          </FormField>
+          {!why && (
+            <FormField label={t('wealth.movementForm.note')} hint={mode === 'LOSS' ? t('wealth.movementForm.lossNoteHint') : undefined} wide>
+              <textarea className={`${FIELD_MULTILINE} min-h-16`} value={candidate.note ?? ''} onChange={(event) => setNote(event.target.value)} />
+            </FormField>
           )}
+        </FormGrid>
+      </MoreFields>
+    </PanelForm>
+  )
+}
 
-          <Field
-            label={mode === 'WITHDRAWAL' ? 'Why' : 'Note'}
-            hint={
-              mode === 'WITHDRAWAL'
-                ? 'required — what the money went on'
-                : mode === 'LOSS'
-                  ? 'optional — a loss says why by being one'
-                  : 'optional'
-            }
-          >
-            <textarea
-              className={`${FIELD_MULTILINE} min-h-8`}
-              value={candidate.note ?? ''}
-              onChange={(event) =>
-                set({ note: event.target.value.trim() === '' ? undefined : event.target.value })
-              }
-            />
-          </Field>
-        </div>
-
-        {warnings.length > 0 && (
-          <p className="mt-4 max-w-2xl text-caption text-ink-secondary">
-            {warnings.map((warning) => WARNING_MESSAGE[warning]).join(' ')}
-          </p>
-        )}
-
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          <Button variant="primary" size="sm" type="submit" disabled={problems.length > 0}>
-            {isNew ? MODE_ACTION[mode] : 'Save'}
-          </Button>
-          <Button variant="ghost" size="sm" onClick={onCancel}>
-            Cancel
-          </Button>
-
-          <span className="flex flex-wrap items-center gap-x-4 text-caption text-negative">
-            {problems.map((problem) => (
-              <span key={problem}>{PROBLEM_MESSAGE[problem]}</span>
-            ))}
-          </span>
-        </div>
-      </div>
-    </form>
+/**
+ * Where the money is, chosen from the holdings — the app's menu, never the
+ * platform's select — and **+ New…** at its end making a holding in place
+ * (*Make it in place*), which comes back chosen.
+ */
+function HoldingChoice({
+  label,
+  value,
+  onChange,
+  holdings,
+  labelOf,
+  newHolding,
+}: {
+  label: string
+  value: string
+  onChange: (id: string) => void
+  holdings: readonly Holding[]
+  labelOf: (holding: Holding) => string
+  newHolding: (done: (id: string | undefined) => void) => ReactNode
+}) {
+  const t = useT()
+  const [making, setMaking] = useState(false)
+  const chosen = holdings.find((holding) => holding.id === value)
+  return (
+    <span className="flex min-w-0 flex-col gap-2">
+      <ChoiceMenu
+        className={`${FIELD} w-full`}
+        aria-label={label}
+        text={chosen === undefined ? t('wealth.movementForm.pick') : labelOf(chosen)}
+        choices={[...holdings.map((holding) => ({ value: holding.id, label: labelOf(holding) })), { value: NEW_CHOICE, label: t('chrome.components.newChoice') }]}
+        onPick={(choice) => {
+          if (choice.value === NEW_CHOICE) {
+            setMaking(true)
+            return
+          }
+          setMaking(false)
+          onChange(choice.value)
+        }}
+      />
+      {making &&
+        newHolding((id) => {
+          setMaking(false)
+          if (id !== undefined) onChange(id)
+        })}
+    </span>
   )
 }
 
@@ -338,11 +309,7 @@ export function blankDeposit(
  * `validateTransfer`'s and is guaranteed here by construction: one magnitude
  * produces both legs.
  */
-function transferProblems(
-  deposit: SavingDeposit,
-  toHoldingId: string,
-  magnitude: number,
-): readonly FormProblem[] {
+function transferProblems(deposit: SavingDeposit, toHoldingId: string, magnitude: number): readonly FormProblem[] {
   const problems: FormProblem[] = []
   if (deposit.goalId === '') problems.push('UNKNOWN_GOAL')
   if (magnitude === 0) problems.push('ZERO_AMOUNT')
@@ -352,49 +319,43 @@ function transferProblems(
 
 type FormProblem = DepositProblem | 'SAME_HOLDING'
 
-const PROBLEM_MESSAGE: Readonly<Record<FormProblem, string>> = {
-  UNKNOWN_GOAL: 'Pick a goal',
-  ZERO_AMOUNT: 'Enter an amount',
-  CLOSED_GOAL: 'That goal is closed. Reopen it first, or pick another.',
-  UNKNOWN_HOLDING: 'Pick what the money is held in',
-  WITHDRAWAL_WITHOUT_REASON: 'Say what the money went on',
-  MIXED_CURRENCY: "That is not the currency the goal's target is in",
-  SAME_HOLDING: 'Moving money to where it already is would change nothing',
-}
+const PROBLEM = {
+  UNKNOWN_GOAL: 'wealth.movementForm.problem.UNKNOWN_GOAL',
+  ZERO_AMOUNT: 'wealth.movementForm.problem.ZERO_AMOUNT',
+  CLOSED_GOAL: 'wealth.movementForm.problem.CLOSED_GOAL',
+  UNKNOWN_HOLDING: 'wealth.movementForm.problem.UNKNOWN_HOLDING',
+  WITHDRAWAL_WITHOUT_REASON: 'wealth.movementForm.problem.WITHDRAWAL_WITHOUT_REASON',
+  MIXED_CURRENCY: 'wealth.movementForm.problem.MIXED_CURRENCY',
+  SAME_HOLDING: 'wealth.movementForm.problem.SAME_HOLDING',
+} as const satisfies Record<FormProblem, string>
 
-const WARNING_MESSAGE: Readonly<Record<DepositWarning, string>> = {
-  WITHDRAWAL_EXCEEDS_BALANCE:
-    'That is more than this goal has recorded, which will leave it negative. Saved anyway — your records may just be missing a deposit.',
-}
+const WARNING = {
+  WITHDRAWAL_EXCEEDS_BALANCE: 'wealth.movementForm.warning.WITHDRAWAL_EXCEEDS_BALANCE',
+} as const satisfies Record<DepositWarning, string>
 
-const MODE_LABEL: Readonly<Record<DepositMode, string>> = {
-  DEPOSIT: 'Money in',
-  WITHDRAWAL: 'Money out',
-  TRANSFER: 'Moved between holdings',
-  OPENING: 'Already there',
-  GAIN: 'It grew',
-  LOSS: 'It fell',
-}
+const LABEL = {
+  DEPOSIT: 'wealth.movementForm.mode.DEPOSIT',
+  WITHDRAWAL: 'wealth.movementForm.mode.WITHDRAWAL',
+  TRANSFER: 'wealth.movementForm.mode.TRANSFER',
+  OPENING: 'wealth.movementForm.mode.OPENING',
+  GAIN: 'wealth.movementForm.mode.GAIN',
+  LOSS: 'wealth.movementForm.mode.LOSS',
+} as const satisfies Record<DepositMode, string>
 
-const MODE_ACTION: Readonly<Record<DepositMode, string>> = {
-  DEPOSIT: 'Add deposit',
-  WITHDRAWAL: 'Record withdrawal',
-  TRANSFER: 'Record the move',
-  OPENING: 'Record the opening balance',
-  GAIN: 'Record the gain',
-  LOSS: 'Record the loss',
-}
+const ACTION = {
+  DEPOSIT: 'wealth.movementForm.action.DEPOSIT',
+  WITHDRAWAL: 'wealth.movementForm.action.WITHDRAWAL',
+  TRANSFER: 'wealth.movementForm.action.TRANSFER',
+  OPENING: 'wealth.movementForm.action.OPENING',
+  GAIN: 'wealth.movementForm.action.GAIN',
+  LOSS: 'wealth.movementForm.action.LOSS',
+} as const satisfies Record<DepositMode, string>
 
-const MODE_HINT: Readonly<Record<DepositMode, string>> = {
-  DEPOSIT: 'Money added to a goal.',
-  WITHDRAWAL: 'Money taken out. Stored as a negative deposit, so the balance stays one sum.',
-  TRANSFER:
-    'The same money in a different form — out of one holding, into another. Two entries that cancel out, so the goal keeps its balance and only what you can reach changes.',
-  OPENING:
-    'What was already sitting there on the day you started tracking. It counts towards the balance and towards the goal, and it is never counted as money you saved that month — date it when you began.',
-  GAIN:
-    'Interest, dividends or a rise in what the holding is worth. In the balance, out of the savings rate: the market did this, not you.',
-  LOSS:
-    'A fall in what the holding is worth. Recorded as its own thing rather than as a withdrawal, because nothing was spent.',
-}
-
+const HINT = {
+  DEPOSIT: 'wealth.movementForm.hint.DEPOSIT',
+  WITHDRAWAL: 'wealth.movementForm.hint.WITHDRAWAL',
+  TRANSFER: 'wealth.movementForm.hint.TRANSFER',
+  OPENING: 'wealth.movementForm.hint.OPENING',
+  GAIN: 'wealth.movementForm.hint.GAIN',
+  LOSS: 'wealth.movementForm.hint.LOSS',
+} as const satisfies Record<DepositMode, string>

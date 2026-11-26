@@ -1,6 +1,7 @@
 import { useEffect, useRef, type ReactNode } from 'react'
 
 import { useT } from '@/i18n/current.ts'
+import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 
 /**
@@ -55,7 +56,11 @@ export function SidePanel({
             {title}
           </h2>
           {/* Under the title, never a label above it (D-614 dropped Home's eyebrow). */}
-          {kicker !== undefined && <span className="text-caption text-ink-secondary">{kicker}</span>}
+          {kicker !== undefined && (
+            <span className="text-caption text-ink-secondary">
+              <Bidi>{kicker}</Bidi>
+            </span>
+          )}
         </div>
         <button ref={close} type="button" onClick={onClose} aria-label={t('chrome.kit.close')} title={t('chrome.kit.closeTitle')} className="fc-icon-action">
           <ActionGlyph name="close" />

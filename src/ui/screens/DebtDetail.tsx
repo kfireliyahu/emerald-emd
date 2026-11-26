@@ -76,7 +76,7 @@ export function DebtDetail() {
     <div className="fc-view-enter h-full overflow-auto">
       <div className="border-b border-hairline px-6 py-4">
         <div className="flex items-center gap-2">
-          <span className="text-caption text-ink-tertiary">Debts</span>
+          <span className="text-caption text-ink-secondary">Debts</span>
           <ClosePane />
         </div>
 
@@ -87,7 +87,7 @@ export function DebtDetail() {
             <h1 className="text-title">
               <Bidi>{debt.name}</Bidi>
             </h1>
-            <p className="mt-0.5 text-caption text-ink-tertiary">
+            <p className="mt-0.5 text-caption text-ink-secondary">
               {DEBT_KIND_LABEL[debt.kind]}
               <> · taken out {toISODate(debt.openedDate)}</>
               {debt.expectedEndDate !== undefined && <> · due by {toISODate(debt.expectedEndDate)}</>}
@@ -122,7 +122,7 @@ export function DebtDetail() {
                 ? 'Unchecked'
                 : formatMoney(known.isSettled ? known.principal : known.outstanding)}
             </div>
-            <p className="text-caption text-ink-tertiary tabular-nums">
+            <p className="text-caption text-ink-secondary tabular-nums">
               {known === undefined
                 ? `of ${formatMoney(balance.principal)} borrowed`
                 : known.isSettled
@@ -140,13 +140,13 @@ export function DebtDetail() {
       </div>
 
       <section className="border-b border-hairline px-6 py-4">
-        <h2 className="text-label text-ink-tertiary uppercase">When it runs out</h2>
+        <h2 className="text-label text-ink-secondary uppercase">When it runs out</h2>
         <p className="mt-1 text-heading">{payoffSentence(projection)}</p>
         {payoffBasisNote(projection) !== undefined && (
-          <p className="mt-1 text-caption text-ink-tertiary">{payoffBasisNote(projection)}</p>
+          <p className="mt-1 text-caption text-ink-secondary">{payoffBasisNote(projection)}</p>
         )}
         {debt.monthlyPaymentAmount !== undefined && (
-          <p className="mt-1 text-caption text-ink-tertiary">
+          <p className="mt-1 text-caption text-ink-secondary">
             You entered {formatMoney(debt.monthlyPaymentAmount)} a month as the expected payment.
           </p>
         )}
@@ -154,8 +154,8 @@ export function DebtDetail() {
 
       {points.length > 1 && (
         <section className="border-b border-hairline px-6 py-4">
-          <h2 className="text-label text-ink-tertiary uppercase">What was owed</h2>
-          <p className="mt-1 mb-3 max-w-2xl text-caption text-ink-tertiary">
+          <h2 className="text-label text-ink-secondary uppercase">What was owed</h2>
+          <p className="mt-1 mb-3 max-w-2xl text-caption text-ink-secondary">
             It steps down by the principal of each payment. A payment that was mostly interest
             barely moves it, which is the point of drawing this rather than a line between two
             numbers.
@@ -165,7 +165,7 @@ export function DebtDetail() {
       )}
 
       <section className="px-6 py-4">
-        <h2 className="flex flex-wrap items-baseline justify-between gap-x-6 text-label text-ink-tertiary uppercase">
+        <h2 className="flex flex-wrap items-baseline justify-between gap-x-6 text-label text-ink-secondary uppercase">
           <span>Payments</span>
           {known !== undefined && (
             <span className="tabular-nums">
@@ -201,17 +201,17 @@ function PaymentRow({ payment }: { payment: DebtPayment }) {
 
   return (
     <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1 border-b border-hairline px-6 py-2">
-      <span className="w-24 shrink-0 text-ink-tertiary tabular-nums">
+      <span className="w-24 shrink-0 text-ink-secondary tabular-nums">
         {toISODate(payment.date)}
       </span>
       <span className="min-w-40 flex-1">
         <Bidi>{payment.note ?? PAYMENT_SOURCE_LABEL[payment.sourceKind]}</Bidi>
         {payment.note !== undefined && payment.sourceKind === 'MANUAL' && (
-          <span className="ms-2 text-caption text-ink-tertiary">entered by hand</span>
+          <span className="ms-2 text-caption text-ink-secondary">entered by hand</span>
         )}
       </span>
       {!payment.isConfirmed && <Chip>not confirmed</Chip>}
-      <span className="w-32 text-end text-caption text-ink-tertiary tabular-nums">
+      <span className="w-32 text-end text-caption text-ink-secondary tabular-nums">
         {hasInterest ? (principal === undefined ? 'two currencies' : `${formatMoney(principal)} off the balance`) : ''}
       </span>
       <span className="w-28 text-end tabular-nums">{formatMoney(payment.amount)}</span>

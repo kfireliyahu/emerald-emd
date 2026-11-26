@@ -39,6 +39,7 @@ import { countKey } from '@/i18n/count.ts'
 import { useT } from '@/i18n/current.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { SidePanel } from '@/ui/components/SidePanel.tsx'
 import { HeadlineFigure } from '@/ui/charts/HeadlineFigure.tsx'
 import { kitMoney, wholeMoney } from '@/ui/charts/kit.ts'
 import { PlanAgainst } from '@/ui/charts/PlanAgainst.tsx'
@@ -121,68 +122,81 @@ export function Debts() {
     }
   }
 
-  if (editingDebt !== undefined) {
-    return (
-      <DebtEditor
-        key={editingDebt.debt.id}
-        initial={editingDebt.debt}
-        isNew={editingDebt.isNew}
-        accounts={accounts}
-        categories={categories}
-        others={debts}
-        expenses={expenses}
-        currency={currency}
-        onSave={(debt) => {
-          const saved = write((database, now) => {
-            const fields = {
-              name: debt.name,
-              kind: debt.kind,
-              principalAmount: debt.principalAmount,
-              openedDate: debt.openedDate,
-              expectedEndDate: debt.expectedEndDate,
-              monthlyPaymentAmount: debt.monthlyPaymentAmount,
-              linkedAccountId: debt.linkedAccountId,
-              tracking: debt.tracking,
-              note: debt.note,
-            }
-            if (editingDebt.isNew) createDebt(database, fields, now)
-            else updateDebt(database, debt.id, fields, now)
-          })
-          if (saved) setEditingDebt(undefined)
-        }}
-        onCancel={() => setEditingDebt(undefined)}
-      />
-    )
-  }
+  const debtForm =
+    editingDebt === undefined
+      ? undefined
+      : ((): ReactNode => {
+        return (
+          <SidePanel title={editingDebt.isNew ? t('wealth.debtForm.addTitle') : t('wealth.debtForm.editTitle')} kicker={editingDebt.isNew ? t('wealth.debts.title') : editingDebt.debt.name} onClose={() => setEditingDebt(undefined)}>
+          <DebtEditor
+            key={editingDebt.debt.id}
+            initial={editingDebt.debt}
+            isNew={editingDebt.isNew}
+            accounts={accounts}
+            categories={categories}
+            others={debts}
+            expenses={expenses}
+            currency={currency}
+            onSave={(debt) => {
+              const saved = write((database, now) => {
+                const fields = {
+                  name: debt.name,
+                  kind: debt.kind,
+                  principalAmount: debt.principalAmount,
+                  openedDate: debt.openedDate,
+                  expectedEndDate: debt.expectedEndDate,
+                  monthlyPaymentAmount: debt.monthlyPaymentAmount,
+                  linkedAccountId: debt.linkedAccountId,
+                  tracking: debt.tracking,
+                  note: debt.note,
+                }
+                if (editingDebt.isNew) createDebt(database, fields, now)
+                else updateDebt(database, debt.id, fields, now)
+              })
+              if (saved) setEditingDebt(undefined)
+            }}
+            onCancel={() => setEditingDebt(undefined)}
+          />
+          </SidePanel>
+        )
+      })()
 
-  if (editingPayment !== undefined) {
-    return (
-      <PaymentEditor
-        key={editingPayment.payment.id}
-        initial={editingPayment.payment}
-        isNew={editingPayment.isNew}
-        debts={debts}
-        existing={payments}
-        currency={currency}
-        onSave={(payment) => {
-          const saved = write((database, now) => {
-            if (editingPayment.isNew) {
-              addPayment(database, { debtId: payment.debtId, date: payment.date, amount: payment.amount, interestPortion: payment.interestPortion, note: payment.note }, now)
-              return
-            }
-            updatePayment(
-              database,
-              payment.id,
-              { debtId: payment.debtId, date: payment.date, amount: payment.amount, interestPortion: payment.interestPortion, isConfirmed: true, note: payment.note },
-              now,
-            )
-          })
-          if (saved) setEditingPayment(undefined)
-        }}
-        onCancel={() => setEditingPayment(undefined)}
-      />
-    )
-  }
+  const paymentForm =
+    editingPayment === undefined
+      ? undefined
+      : ((): ReactNode => {
+        return (
+          <SidePanel title={editingPayment.isNew ? t('wealth.paymentForm.addTitle') : t('wealth.paymentForm.editTitle')} kicker={debts.find((one) => one.id === editingPayment.payment.debtId)?.name} onClose={() => setEditingPayment(undefined)}>
+          <PaymentEditor
+            key={editingPayment.payment.id}
+            initial={editingPayment.payment}
+            isNew={editingPayment.isNew}
+            debts={debts}
+            existing={payments}
+            currency={currency}
+            onSave={(payment) => {
+              const saved = write((database, now) => {
+                if (editingPayment.isNew) {
+                  addPayment(database, { debtId: payment.debtId, date: payment.date, amount: payment.amount, interestPortion: payment.interestPortion, note: payment.note }, now)
+                  return
+                }
+                updatePayment(
+                  database,
+                  payment.id,
+                  { debtId: payment.debtId, date: payment.date, amount: payment.amount, interestPortion: payment.interestPortion, isConfirmed: true, note: payment.note },
+                  now,
+                )
+              })
+              if (saved) setEditingPayment(undefined)
+            }}
+            onCancel={() => setEditingPayment(undefined)}
+          />
+          </SidePanel>
+        )
+      })()
+
+  // A form with several fields opens beside the page (D-617, M64 F3); one at a time.
+  const form = debtForm ?? paymentForm
 
   const toReview = review.items.length + review.ambiguities.length + review.orphaned.length
   const { rows, plan } = read
@@ -260,62 +274,65 @@ export function Debts() {
 
   if (view !== 'DEBTS') {
     return (
-      <div className="h-full overflow-auto">
-        <div className="fc-view-enter flex flex-col gap-6 px-8 pt-6 pb-12">
-          <header className="flex flex-col gap-1">
-            <button type="button" className="fc-text-action self-start" onClick={() => setView('DEBTS')}>
-              {t('wealth.debts.back')}
-            </button>
-            <h1 className="m-0 text-title leading-tight font-medium">{view === 'REVIEW' ? t('wealth.debts.review') : t('wealth.debts.split')}</h1>
-          </header>
-          {problem !== undefined && <Problem text={problem} onDismiss={() => setProblem(undefined)} />}
-          {view === 'REVIEW' ? (
-            <PaymentReview
-              review={review}
-              onConfirm={(item) => write((database, now) => confirmPayment(database, item.payment.id, now))}
-              onConfirmAll={() =>
-                write((database, now) => {
-                  for (const item of review.items) confirmPayment(database, item.payment.id, now)
-                })
-              }
-              onDismiss={(item) => write((database, now) => dismissPayment(database, item.payment.id, now))}
-              onEdit={(item) => setEditingPayment({ isNew: false, payment: item.payment })}
-              onResolve={(index, debtId) =>
-                write((database, now) => {
-                  const match = review.ambiguities[index]
-                  if (match !== undefined) resolveAmbiguity(database, match, debtId, now)
-                })
-              }
-              onDismissAmbiguity={(index) =>
-                write((database, now) => {
-                  const match = review.ambiguities[index]
-                  if (match !== undefined) dismissAmbiguity(database, match.sourceRefId, now)
-                })
-              }
-              onTighten={(debt) => setEditingDebt({ isNew: false, debt })}
-              onDeleteOrphan={(item) => write((database, now) => deletePayment(database, item.payment.id, now))}
-            />
-          ) : (
-            <>
-              <SplitPurchases
-                candidates={candidates}
-                threshold={promotion.threshold}
-                onPromote={(candidate) => write((database, now) => promoteInstallmentGroup(database, candidate, now))}
-                onDecline={(candidate) => write((database, now) => declineInstallmentGroup(database, candidate.groupKey, now))}
-                onThreshold={(value) => write((database, now) => setInstallmentThreshold(database, value, now))}
-                onStopOffering={() => write((database, now) => setInstallmentOffers(database, false, now))}
+      <div className="flex h-full">
+        <div className="h-full min-w-0 flex-1 overflow-auto">
+          <div className="fc-view-enter flex flex-col gap-6 px-8 pt-6 pb-12">
+            <header className="flex flex-col gap-1">
+              <button type="button" className="fc-text-action self-start" onClick={() => setView('DEBTS')}>
+                {t('wealth.debts.back')}
+              </button>
+              <h1 className="m-0 text-title leading-tight font-medium">{view === 'REVIEW' ? t('wealth.debts.review') : t('wealth.debts.split')}</h1>
+            </header>
+            {problem !== undefined && <Problem text={problem} onDismiss={() => setProblem(undefined)} />}
+            {view === 'REVIEW' ? (
+              <PaymentReview
+                review={review}
+                onConfirm={(item) => write((database, now) => confirmPayment(database, item.payment.id, now))}
+                onConfirmAll={() =>
+                  write((database, now) => {
+                    for (const item of review.items) confirmPayment(database, item.payment.id, now)
+                  })
+                }
+                onDismiss={(item) => write((database, now) => dismissPayment(database, item.payment.id, now))}
+                onEdit={(item) => setEditingPayment({ isNew: false, payment: item.payment })}
+                onResolve={(index, debtId) =>
+                  write((database, now) => {
+                    const match = review.ambiguities[index]
+                    if (match !== undefined) resolveAmbiguity(database, match, debtId, now)
+                  })
+                }
+                onDismissAmbiguity={(index) =>
+                  write((database, now) => {
+                    const match = review.ambiguities[index]
+                    if (match !== undefined) dismissAmbiguity(database, match.sourceRefId, now)
+                  })
+                }
+                onTighten={(debt) => setEditingDebt({ isNew: false, debt })}
+                onDeleteOrphan={(item) => write((database, now) => deletePayment(database, item.payment.id, now))}
               />
-              {candidates.length === 0 && <EmptyState say={t('wealth.debts.splitNone')} />}
-              {!promotion.isOffered && (
-                <EmptyState
-                  say={t('wealth.debts.splitOff')}
-                  verb={t('wealth.debts.splitOn')}
-                  onDo={() => write((database, now) => setInstallmentOffers(database, true, now))}
+            ) : (
+              <>
+                <SplitPurchases
+                  candidates={candidates}
+                  threshold={promotion.threshold}
+                  onPromote={(candidate) => write((database, now) => promoteInstallmentGroup(database, candidate, now))}
+                  onDecline={(candidate) => write((database, now) => declineInstallmentGroup(database, candidate.groupKey, now))}
+                  onThreshold={(value) => write((database, now) => setInstallmentThreshold(database, value, now))}
+                  onStopOffering={() => write((database, now) => setInstallmentOffers(database, false, now))}
                 />
-              )}
-            </>
-          )}
+                {candidates.length === 0 && <EmptyState say={t('wealth.debts.splitNone')} />}
+                {!promotion.isOffered && (
+                  <EmptyState
+                    say={t('wealth.debts.splitOff')}
+                    verb={t('wealth.debts.splitOn')}
+                    onDo={() => write((database, now) => setInstallmentOffers(database, true, now))}
+                  />
+                )}
+              </>
+            )}
+          </div>
         </div>
+        {form}
       </div>
     )
   }
@@ -500,6 +517,7 @@ export function Debts() {
   return (
     <div className="flex h-full">
       <div className="h-full min-w-0 flex-1 overflow-auto">{page}</div>
+      {form}
       {menu !== undefined && (
         <ContextMenu
           key={String(menu.title)}

@@ -269,7 +269,7 @@ function Illustration({
         </Figure>
       </div>
 
-      <p className="mt-3 max-w-2xl text-caption text-ink-tertiary">
+      <p className="mt-3 max-w-2xl text-caption text-ink-secondary">
         An illustration, not a prediction. Nothing here forecasts what this fund will earn — it
         compounds the assumptions below and shows what the difference between two fees does to
         them. Every one of those assumptions is yours to change.
@@ -283,7 +283,7 @@ function Illustration({
 
       <Section title="The two fees">
         {fund.fees.onAccumulationBasisPoints === undefined && (
-          <p className="mb-3 max-w-2xl text-caption text-ink-tertiary">
+          <p className="mb-3 max-w-2xl text-caption text-ink-secondary">
             This fund has no fee recorded, so the "today" figures below start from what is usually
             negotiated rather than from yours.{' '}
             <Link
@@ -346,7 +346,7 @@ function Illustration({
         </div>
 
         {reference !== undefined && (
-          <p className="mt-4 max-w-2xl text-caption text-ink-tertiary">
+          <p className="mt-4 max-w-2xl text-caption text-ink-secondary">
             The ceiling for a {FUND_TYPE_LABEL[fund.fundType].toLowerCase()} is{' '}
             {formatPercent(reference.capOnAccumulationBasisPoints, { digits: 2 })} on the balance and{' '}
             {formatPercent(reference.capOnDepositBasisPoints, { digits: 2 })} on deposits. Those are
@@ -380,7 +380,7 @@ function Illustration({
           />
           <div className="flex flex-col gap-1">
             <div className="flex items-baseline justify-between gap-4">
-              <span className="text-label text-ink-tertiary uppercase">For how long</span>
+              <span className="text-label text-ink-secondary uppercase">For how long</span>
               <span className="tabular-nums">
                 {assumptions.years} {assumptions.years === 1 ? 'year' : 'years'}
               </span>
@@ -395,7 +395,7 @@ function Illustration({
               aria-label="Years"
               className="w-full accent-[var(--color-ink)]"
             />
-            <span className="text-caption text-ink-tertiary">
+            <span className="text-caption text-ink-secondary">
               until you draw on it — a pension is decades, a study fund is years
             </span>
           </div>
@@ -406,7 +406,7 @@ function Illustration({
         <div className="grid max-w-4xl grid-cols-1 gap-x-12 gap-y-6 @lg:grid-cols-3">
           {result.scenarios.map((scenario, index) => (
             <div key={index} className="flex flex-col gap-2">
-              <label className="flex items-center gap-2 text-label text-ink-tertiary uppercase">
+              <label className="flex items-center gap-2 text-label text-ink-secondary uppercase">
                 <input
                   type="number"
                   className={`${FIELD} w-20 text-end tabular-nums`}
@@ -451,7 +451,7 @@ function Illustration({
                   a pixel — every figure beside it is integer minor units. */}
               <FeeBar reached={scenario.atCurrentFees} could={scenario.atTargetFees} />
 
-              <span className="text-caption text-ink-tertiary tabular-nums">
+              <span className="text-caption text-ink-secondary tabular-nums">
                 {formatMoney(scenario.atCurrentFees)} → {formatMoney(scenario.atTargetFees)}
               </span>
 
@@ -460,7 +460,7 @@ function Illustration({
                   nobody can decompose is a number to take on trust — and the
                   three parts here are an identity, not three estimates
                   (D-082). */}
-              <dl className="mt-2 flex flex-col gap-0.5 border-t border-hairline pt-2 text-caption text-ink-tertiary">
+              <dl className="mt-2 flex flex-col gap-0.5 border-t border-hairline pt-2 text-caption text-ink-secondary">
                 <Part label="you pay in" amount={scenario.paidIn} />
                 <Part label="it earns" amount={scenario.grossGrowth} />
                 <Part
@@ -474,7 +474,7 @@ function Illustration({
 
         {agreed !== undefined && agreedBasisPoints !== undefined && (
           <div className="mt-6 flex max-w-4xl flex-col gap-2 border-t border-hairline pt-4">
-            <span className="text-label text-ink-tertiary uppercase">
+            <span className="text-label text-ink-secondary uppercase">
               At the return the provider agreed: {formatPercent(agreedBasisPoints, { digits: 2 })} a year,
               before fees
             </span>
@@ -485,20 +485,20 @@ function Illustration({
               value={agreed.difference}
               className={`text-secondary-number ${agreed.difference.minor < 0 ? 'text-negative' : ''}`}
             />
-            <span className="text-caption text-ink-tertiary tabular-nums">
+            <span className="text-caption text-ink-secondary tabular-nums">
               {formatMoney(agreed.atCurrentFees)} → {formatMoney(agreed.atTargetFees)}
             </span>
           </div>
         )}
 
-        <p className="mt-5 max-w-2xl text-caption text-ink-tertiary">
+        <p className="mt-5 max-w-2xl text-caption text-ink-secondary">
           The three lines under each figure add up to it. What the fee takes is measured against
           the same projection with no fee at all, not against the fee charged — a charge on the
           balance is taken out of money that would have gone on compounding, so what it costs over{' '}
           {assumptions.years} years is a multiple of what appears on any one statement.
         </p>
 
-        <p className="mt-5 max-w-2xl text-caption text-ink-tertiary">
+        <p className="mt-5 max-w-2xl text-caption text-ink-secondary">
           Read as: with {formatMoney(assumptions.openingBalance)} today and{' '}
           {formatMoney(assumptions.annualContribution)} paid in a year for {assumptions.years}{' '}
           years, moving the fee from{' '}
@@ -658,7 +658,7 @@ function AmountSlider({
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-baseline justify-between gap-4">
-        <span className="text-label text-ink-tertiary uppercase">{label}</span>
+        <span className="text-label text-ink-secondary uppercase">{label}</span>
         <span className="tabular-nums">{formatMoney(amount)}</span>
       </div>
       <input
@@ -673,7 +673,7 @@ function AmountSlider({
         aria-label={label}
         className="w-full accent-[var(--color-ink)]"
       />
-      <span className="text-caption text-ink-tertiary">{hint}</span>
+      <span className="text-caption text-ink-secondary">{hint}</span>
     </div>
   )
 }
@@ -702,7 +702,7 @@ function RateSlider({
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-baseline justify-between gap-4">
-        <span className="text-label text-ink-tertiary uppercase">{label}</span>
+        <span className="text-label text-ink-secondary uppercase">{label}</span>
         <span className="tabular-nums">{formatPercent(basisPoints, { digits: 2 })}</span>
       </div>
       <input
@@ -715,7 +715,7 @@ function RateSlider({
         aria-label={label}
         className="w-full accent-[var(--color-ink)]"
       />
-      <span className="text-caption text-ink-tertiary">{hint}</span>
+      <span className="text-caption text-ink-secondary">{hint}</span>
     </div>
   )
 }
@@ -734,7 +734,7 @@ function FeeBar({ reached, could }: { reached: Money; could: Money }) {
 
   return (
     <div
-      className="flex h-2 w-full overflow-hidden rounded-full bg-surface"
+      className="flex h-2 w-full overflow-hidden bg-surface"
       role="img"
       aria-label={`${formatMoney(reached)} against ${formatMoney(could)}`}
     >
@@ -746,7 +746,7 @@ function FeeBar({ reached, could }: { reached: Money; could: Money }) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mt-8">
-      <h2 className="mb-4 border-b border-hairline pb-2 text-label text-ink-tertiary uppercase">
+      <h2 className="mb-4 border-b border-hairline pb-2 text-label text-ink-secondary uppercase">
         {title}
       </h2>
       {children}
@@ -765,10 +765,10 @@ function Figure({
 }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-label text-ink-tertiary uppercase">{label}</span>
+      <span className="text-label text-ink-secondary uppercase">{label}</span>
       {children}
       {hint !== undefined && hint !== '' && (
-        <span className="text-caption text-ink-tertiary">{hint}</span>
+        <span className="text-caption text-ink-secondary">{hint}</span>
       )}
     </div>
   )

@@ -1,41 +1,38 @@
 import { useState } from 'react'
 
 import { basisPointsText, formatPercent } from '@/core/percent.ts'
-import { parseISODate, toISODate } from '@/core/time.ts'
 import type { Institution } from '@/data/repositories/institutionRepository.ts'
 import { feeBenchmark, type FeeComparison } from '@/domain/funds.ts'
-import {
-  FUND_STATUSES,
-  FUND_TYPES,
-  type FeeReference,
-  type FundAccount,
-  type FundStatus,
-  type FundType,
-} from '@/domain/model/funds.ts'
-import { Button } from '@/ui/components/Button.tsx'
-import { Field } from '@/ui/components/Field.tsx'
-import { FIELD, FIELD_MULTILINE, SELECT } from '@/ui/components/fieldLook.ts'
-import { FUND_STATUS_LABEL, FUND_TYPE_HEBREW, FUND_TYPE_LABEL } from '@/ui/funds/labels.ts'
+import { FUND_STATUSES, FUND_TYPES, type FeeReference, type FundAccount, type FundStatus, type FundType } from '@/domain/model/funds.ts'
+import { countKey } from '@/i18n/count.ts'
+import { useT, type Translate } from '@/i18n/current.ts'
+import { ChoiceField, ChoiceMenu } from '@/ui/components/ChoiceField.tsx'
+import { DateInput, FormField, FormGrid, MoreFields, PanelForm, Said } from '@/ui/components/PanelForm.tsx'
+import { FIELD, FIELD_MULTILINE } from '@/ui/components/fieldLook.ts'
+import { useWealthWords } from '@/ui/wealth/words.ts'
 
 /**
- * One fund account, added or edited.
+ * One fund account, added or edited — a `PanelForm` beside the funds (M64 F3,
+ * D-629): its name, its kind, who manages it and its two fees first, because
+ * the fee is what the Funds screen is for; the rest of what a policy says
+ * (status, policy number, track, dates, beneficiaries) only if wanted.
  *
  * **The fee fields are in percent and the model is in basis points.** 0.5 typed
  * here is `50` stored (D-066), and the conversion happens on the way in and out
  * of this form and nowhere else. Text lives in component state and the parsed
- * value lives in the draft, the split D-050 made in the paycheck editor — so a
- * half-typed "0." is not repeatedly parsed into 0.
+ * value lives in the draft (D-050), so a half-typed "0." is not parsed into 0.
  *
- * **The benchmark is shown while the fee is being typed**, not after saving.
- * That is the whole point of shipping reference data: a user entering 1.05% on a
- * pension fund should see "at the ceiling" as they type it, because the number
- * they are copying off a statement is exactly the thing they have never
- * compared against anything.
+ * **The benchmark is said while the fee is typed**, not after saving: a person
+ * entering 1.05% on a pension fund should read "above the ceiling" as they type
+ * it, because the number copied off a statement is exactly the thing they have
+ * never compared against anything.
  *
- * `firstDepositDate` sits apart from `openedDate` with its own hint, because
- * the two look interchangeable and are not: a study fund's liquidity date counts
- * from the first deposit, and inferring it from the opening date would be wrong
- * by however long that took.
+ * **A manager not in the list is made in place** (*Make it in place*): the
+ * field is an autocomplete whose last choice is *+ New "Menora"*.
+ *
+ * `firstDepositDate` sits apart from `openedDate` with its own hint: a study
+ * fund's liquidity date counts from the first deposit, and inferring it from the
+ * opening date would be wrong by however long that took.
  */
 export function FundEditor({
   initial,
@@ -55,279 +52,198 @@ export function FundEditor({
   onCreateInstitution: (name: string) => string | undefined
   onCancel: () => void
 }) {
+  const t = useT()
+  const words = useWealthWords()
   const [draft, setDraft] = useState(initial)
-  const [accumulationText, setAccumulationText] = useState(() =>
-    percentText(initial.fees.onAccumulationBasisPoints),
-  )
-  const [depositText, setDepositText] = useState(() =>
-    percentText(initial.fees.onDepositBasisPoints),
-  )
+  const [accumulationText, setAccumulationText] = useState(() => percentText(initial.fees.onAccumulationBasisPoints))
+  const [depositText, setDepositText] = useState(() => percentText(initial.fees.onDepositBasisPoints))
   const [agreedText, setAgreedText] = useState(() => percentText(initial.agreedReturnBasisPoints))
-  const [newInstitution, setNewInstitution] = useState('')
+  const [managerText, setManagerText] = useState(() => institutions.find((one) => one.id === initial.institutionId)?.name ?? '')
 
-  const set = (change: Partial<FundAccount>): void =>
-    setDraft((current) => ({ ...current, ...change }))
-
+  const set = (change: Partial<FundAccount>): void => setDraft((current) => ({ ...current, ...change }))
   const setFee = (change: Partial<FundAccount['fees']>): void =>
     setDraft((current) => ({ ...current, fees: { ...current.fees, ...change } }))
 
   const benchmark = feeBenchmark(draft, feeReferences)
   const nameIsEmpty = draft.name.trim() === ''
+  const status = (value: FundStatus): string => t(STATUS[value])
+  const more = [
+    draft.policyNumber,
+    draft.investmentTrack,
+    draft.employerName,
+    draft.openedDate,
+    draft.firstDepositDate,
+    draft.feeNegotiatedUntil,
+    draft.agreedReturnBasisPoints,
+    draft.beneficiaries,
+    draft.notes,
+  ].filter((value) => value !== undefined).length
 
   return (
-    <form
-      className="fc-view-enter h-full overflow-auto"
-      onSubmit={(event) => {
-        event.preventDefault()
-        if (nameIsEmpty) return
-        onSave({ ...draft, name: draft.name.trim() })
-      }}
+    <PanelForm
+      save={isNew ? t('wealth.fundForm.add') : t('wealth.reading.save')}
+      canSave={!nameIsEmpty}
+      onSave={() => onSave({ ...draft, name: draft.name.trim() })}
+      onCancel={onCancel}
+      problems={nameIsEmpty && draft.name !== initial.name ? [t('wealth.fundForm.nameIt')] : []}
     >
-      <div className="px-6 py-6">
-        <h1 className="mb-6 text-title">{isNew ? 'Add a fund' : draft.name}</h1>
+      <FormGrid>
+        <FormField label={t('wealth.fundForm.name')} hint={t('wealth.fundForm.nameHint')} wide>
+          <input className={FIELD} value={draft.name} onChange={(event) => set({ name: event.target.value })} />
+        </FormField>
+        <FormField label={t('wealth.fundForm.type')}>
+          <ChoiceMenu
+            className={`${FIELD} w-full`}
+            text={words.fund[draft.fundType]}
+            choices={FUND_TYPES.map((type) => ({ value: type, label: words.fund[type] }))}
+            onPick={(choice) => set({ fundType: choice.value as FundType })}
+          />
+        </FormField>
+        <FormField label={t('wealth.fundForm.manager')} hint={t('wealth.fundForm.managerHint')}>
+          <ChoiceField
+            className={`${FIELD} w-full`}
+            filter
+            openOnFocus
+            text={managerText}
+            choices={institutions.map((one) => ({ value: one.id, label: one.name }))}
+            onText={(text) => {
+              setManagerText(text)
+              if (text.trim() === '') set({ institutionId: undefined })
+            }}
+            onPick={(choice) => {
+              setManagerText(choice.label)
+              set({ institutionId: choice.value })
+            }}
+            make={{
+              one: t('wealth.fundForm.managerOne'),
+              onMake: (name) => {
+                const id = onCreateInstitution(name.trim())
+                if (id === undefined) return
+                setManagerText(name.trim())
+                set({ institutionId: id })
+              },
+            }}
+          />
+        </FormField>
+        <FormField label={t('wealth.fundForm.feeAccumulation')}>
+          <PercentInput
+            text={accumulationText}
+            placeholder="0.5"
+            onText={(text) => {
+              setAccumulationText(text)
+              setFee({ onAccumulationBasisPoints: toBasisPoints(text) })
+            }}
+          />
+        </FormField>
+        <FormField label={t('wealth.fundForm.feeDeposit')}>
+          <PercentInput
+            text={depositText}
+            placeholder="6"
+            onText={(text) => {
+              setDepositText(text)
+              setFee({ onDepositBasisPoints: toBasisPoints(text) })
+            }}
+          />
+        </FormField>
+      </FormGrid>
 
-        <div className="grid max-w-3xl grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
-          <Field label="Name" hint="what you call it, not what the policy calls it">
-            <input
-              className={FIELD}
-              value={draft.name}
-              autoFocus
-              onChange={(event) => set({ name: event.target.value })}
-            />
-          </Field>
+      <Said>{feeSaid(benchmark.onAccumulation, benchmark.onDeposit, t)}</Said>
+      {benchmark.reference !== undefined && (
+        <p className="m-0 text-caption text-ink-secondary">
+          {t('wealth.fundForm.ceilings', {
+            accumulation: formatPercent(benchmark.reference.capOnAccumulationBasisPoints),
+            deposit: formatPercent(benchmark.reference.capOnDepositBasisPoints),
+            asOf: `${words.dates.dayMonth(benchmark.reference.asOf)} ${String(benchmark.reference.asOf.year)}`,
+          })}
+        </p>
+      )}
 
-          <Field label="Type" hint={FUND_TYPE_HEBREW[draft.fundType]}>
-            <select
-              className={SELECT}
-              value={draft.fundType}
-              onChange={(event) => set({ fundType: event.target.value as FundType })}
-            >
-              {FUND_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {FUND_TYPE_LABEL[type]}
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          <Field
-            label="Managed by"
-            hint={
-              institutions.length === 0
-                ? 'no fund managers yet — type one below'
-                : 'the company that sends the report'
-            }
+      <MoreFields
+        label={t('wealth.fundForm.more')}
+        summary={more === 0 ? t('wealth.fundForm.moreSummary') : t(countKey('wealth.fundForm.moreStated', more), { count: more })}
+        initiallyOpen={!isNew && more > 0}
+      >
+        <FormGrid>
+          <FormField
+            label={t('wealth.fundForm.status')}
+            hint={draft.status === 'DORMANT' ? t('wealth.fundForm.dormantHint') : t('wealth.fundForm.statusHint')}
           >
-            <select
-              className={SELECT}
-              value={draft.institutionId ?? ''}
-              onChange={(event) =>
-                set({ institutionId: event.target.value === '' ? undefined : event.target.value })
-              }
-            >
-              <option value="">Not set</option>
-              {institutions.map((institution) => (
-                <option key={institution.id} value={institution.id}>
-                  {institution.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          <Field label="Add a manager" hint="only if it is not in the list">
-            <div className="flex gap-2">
-              <input
-                className={`${FIELD} min-w-0 flex-1`}
-                value={newInstitution}
-                placeholder="Menora, Altshuler…"
-                onChange={(event) => setNewInstitution(event.target.value)}
-              />
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={newInstitution.trim() === ''}
-                onClick={() => {
-                  const id = onCreateInstitution(newInstitution.trim())
-                  if (id !== undefined) set({ institutionId: id })
-                  setNewInstitution('')
-                }}
-              >
-                Add
-              </Button>
-            </div>
-          </Field>
-
-          <Field label="Policy number" hint="what the report is headed with">
-            <input
-              className={FIELD}
-              value={draft.policyNumber ?? ''}
-              onChange={(event) =>
-                set({ policyNumber: blankToUndefined(event.target.value) })
-              }
+            <ChoiceMenu
+              className={`${FIELD} w-full`}
+              text={status(draft.status)}
+              choices={FUND_STATUSES.map((value) => ({ value, label: status(value) }))}
+              onPick={(choice) => set({ status: choice.value as FundStatus })}
             />
-          </Field>
-
-          <Field label="Investment track" hint="e.g. up to 50 / general / stocks">
-            <input
-              className={FIELD}
-              value={draft.investmentTrack ?? ''}
-              onChange={(event) =>
-                set({ investmentTrack: blankToUndefined(event.target.value) })
-              }
-            />
-          </Field>
-
-          <Field
-            label="Status"
-            hint={
-              draft.status === 'DORMANT'
-                ? 'no new deposits — and still charging fees'
-                : 'dormant means an old job you no longer pay into'
-            }
+          </FormField>
+          <FormField label={t('wealth.fundForm.policy')} hint={t('wealth.fundForm.policyHint')}>
+            <input className={FIELD} value={draft.policyNumber ?? ''} onChange={(event) => set({ policyNumber: blankToUndefined(event.target.value) })} />
+          </FormField>
+          <FormField label={t('wealth.fundForm.track')} hint={t('wealth.fundForm.trackHint')}>
+            <input className={FIELD} value={draft.investmentTrack ?? ''} onChange={(event) => set({ investmentTrack: blankToUndefined(event.target.value) })} />
+          </FormField>
+          <FormField label={t('wealth.fundForm.employer')} hint={t('wealth.fundForm.employerHint')}>
+            <input className={FIELD} value={draft.employerName ?? ''} onChange={(event) => set({ employerName: blankToUndefined(event.target.value) })} />
+          </FormField>
+          <FormField label={t('wealth.fundForm.opened')} hint={t('wealth.fundForm.openedHint')}>
+            <DateInput value={draft.openedDate} onChange={(date) => set({ openedDate: date })} />
+          </FormField>
+          <FormField
+            label={t('wealth.fundForm.firstDeposit')}
+            hint={draft.fundType === 'STUDY_FUND' ? t('wealth.fundForm.firstDepositStudy') : t('wealth.fundForm.firstDepositHint')}
           >
-            <select
-              className={SELECT}
-              value={draft.status}
-              onChange={(event) => set({ status: event.target.value as FundStatus })}
-            >
-              {FUND_STATUSES.map((status) => (
-                <option key={status} value={status}>
-                  {FUND_STATUS_LABEL[status]}
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          <Field label="Employer" hint="which job it belongs to">
-            <input
-              className={FIELD}
-              value={draft.employerName ?? ''}
-              onChange={(event) => set({ employerName: blankToUndefined(event.target.value) })}
-            />
-          </Field>
-
-          <Field label="Opened" hint="when the account was opened">
-            <input
-              type="date"
-              className={FIELD}
-              value={draft.openedDate === undefined ? '' : toISODate(draft.openedDate)}
-              onChange={(event) => set({ openedDate: parseISODate(event.target.value) })}
-            />
-          </Field>
-
-          <Field
-            label="First deposit"
-            hint={
-              draft.fundType === 'STUDY_FUND'
-                ? 'the liquidity date counts from here, not from the opening date'
-                : 'not the same as the opening date'
-            }
-          >
-            <input
-              type="date"
-              className={FIELD}
-              value={
-                draft.firstDepositDate === undefined ? '' : toISODate(draft.firstDepositDate)
-              }
-              onChange={(event) => set({ firstDepositDate: parseISODate(event.target.value) })}
-            />
-          </Field>
-
-          <Field label="Fee on accumulation %" hint={standingHint(benchmark.onAccumulation)}>
-            <input
-              className={FIELD}
-              inputMode="decimal"
-              placeholder="0.5"
-              value={accumulationText}
-              onChange={(event) => {
-                setAccumulationText(event.target.value)
-                setFee({ onAccumulationBasisPoints: toBasisPoints(event.target.value) })
-              }}
-            />
-          </Field>
-
-          <Field label="Fee on deposit %" hint={standingHint(benchmark.onDeposit)}>
-            <input
-              className={FIELD}
-              inputMode="decimal"
-              placeholder="6"
-              value={depositText}
-              onChange={(event) => {
-                setDepositText(event.target.value)
-                setFee({ onDepositBasisPoints: toBasisPoints(event.target.value) })
-              }}
-            />
-          </Field>
-
-          <Field label="Fee agreed until" hint="agreements expire and revert without telling you">
-            <input
-              type="date"
-              className={FIELD}
-              value={
-                draft.feeNegotiatedUntil === undefined ? '' : toISODate(draft.feeNegotiatedUntil)
-              }
-              onChange={(event) => set({ feeNegotiatedUntil: parseISODate(event.target.value) })}
-            />
-          </Field>
-
-          <Field
-            label="Return agreed in writing %"
-            hint="only a rate the provider agreed to; an expected return is an assumption and goes in Fee impact"
-          >
-            <input
-              className={FIELD}
-              inputMode="decimal"
+            <DateInput value={draft.firstDepositDate} onChange={(date) => set({ firstDepositDate: date })} />
+          </FormField>
+          <FormField label={t('wealth.fundForm.feeUntil')} hint={t('wealth.fundForm.feeUntilHint')}>
+            <DateInput value={draft.feeNegotiatedUntil} onChange={(date) => set({ feeNegotiatedUntil: date })} />
+          </FormField>
+          <FormField label={t('wealth.fundForm.agreedReturn')} hint={t('wealth.fundForm.agreedReturnHint')}>
+            <PercentInput
+              text={agreedText}
               placeholder="4"
-              value={agreedText}
-              onChange={(event) => {
-                setAgreedText(event.target.value)
-                set({ agreedReturnBasisPoints: toBasisPoints(event.target.value) })
+              onText={(text) => {
+                setAgreedText(text)
+                set({ agreedReturnBasisPoints: toBasisPoints(text) })
               }}
             />
-          </Field>
-
-          <Field label="Beneficiaries" hint="rarely updated after a marriage or a child">
-            <input
-              className={FIELD}
-              value={draft.beneficiaries ?? ''}
-              onChange={(event) => set({ beneficiaries: blankToUndefined(event.target.value) })}
-            />
-          </Field>
-        </div>
-
-        <div className="mt-4 max-w-3xl">
-          <Field label="Notes">
+          </FormField>
+          <FormField label={t('wealth.fundForm.beneficiaries')} hint={t('wealth.fundForm.beneficiariesHint')} wide>
+            <input className={FIELD} value={draft.beneficiaries ?? ''} onChange={(event) => set({ beneficiaries: blankToUndefined(event.target.value) })} />
+          </FormField>
+          <FormField label={t('wealth.fundForm.notes')} wide>
             <textarea
               className={`${FIELD_MULTILINE} min-h-16`}
               value={draft.notes ?? ''}
               onChange={(event) => set({ notes: blankToUndefined(event.target.value) })}
             />
-          </Field>
-        </div>
-
-        {benchmark.reference !== undefined && (
-          <p className="mt-3 max-w-2xl text-caption text-ink-tertiary">
-            Compared against a ceiling of{' '}
-            {formatPercent(benchmark.reference.capOnAccumulationBasisPoints)} on accumulation
-            and {formatPercent(benchmark.reference.capOnDepositBasisPoints)} on deposits, as of{' '}
-            {toISODate(benchmark.reference.asOf)}. These are the app's shipped figures — check them
-            against your fund's own statement before acting on them.
-          </p>
-        )}
-
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          <Button variant="primary" size="sm" type="submit" disabled={nameIsEmpty}>
-            {isNew ? 'Add fund' : 'Save'}
-          </Button>
-          <Button variant="ghost" size="sm" onClick={onCancel}>
-            Cancel
-          </Button>
-          {nameIsEmpty && <span className="text-caption text-negative">Give it a name</span>}
-        </div>
-      </div>
-    </form>
+          </FormField>
+        </FormGrid>
+      </MoreFields>
+    </PanelForm>
   )
 }
+
+/** A percent, typed: its text kept, the sign after it. */
+function PercentInput({ text, placeholder, onText }: { text: string; placeholder: string; onText: (text: string) => void }) {
+  return (
+    <span className="flex items-center gap-2">
+      <input
+        className={`${FIELD} min-w-0 flex-1 text-end tabular-nums`}
+        inputMode="decimal"
+        dir="ltr"
+        placeholder={placeholder}
+        value={text}
+        onChange={(event) => onText(event.target.value)}
+      />
+      <span className="text-ink-secondary">%</span>
+    </span>
+  )
+}
+
+const STATUS = {
+  ACTIVE: 'wealth.fundForm.statusOf.ACTIVE',
+  DORMANT: 'wealth.fundForm.statusOf.DORMANT',
+  CLOSED: 'wealth.fundForm.statusOf.CLOSED',
+} as const satisfies Record<FundStatus, string>
 
 /** A blank fund to open the editor on. */
 export function blankFund(): FundAccount {
@@ -352,25 +268,35 @@ export function blankFund(): FundAccount {
 }
 
 /**
- * What the fee the user is typing looks like against the shipped reference.
- *
+ * **The two fees, said against the shipped reference while they are typed.**
  * Deliberately not coloured red: a fee above the ceiling is far more often a
- * transcription slip or an old policy than a scandal, and docs/11 reserves
- * colour for the one thing on a screen worth acting on.
+ * transcription slip or an old policy than a scandal, and colour is kept for
+ * the one thing on a screen worth acting on.
  */
-function standingHint(comparison: FeeComparison | undefined): string {
-  if (comparison === undefined || comparison.standing === 'NOT_STATED') {
-    return 'from your fund statement'
+function feeSaid(accumulation: FeeComparison | undefined, deposit: FeeComparison | undefined, t: Translate): string {
+  const one = (comparison: FeeComparison | undefined, which: 'accumulation' | 'deposit'): string | undefined => {
+    if (comparison === undefined || comparison.standing === 'NOT_STATED') return undefined
+    const fee = which === 'accumulation' ? FEE.accumulation : FEE.deposit
+    if (comparison.standing === 'ABOVE_CAP') return t(fee.aboveCap, { cap: formatPercent(comparison.capBasisPoints) })
+    if (comparison.standing === 'ABOVE_TYPICAL') return t(fee.aboveTypical, { typical: formatPercent(comparison.typicalBasisPoints) })
+    return t(fee.typical, { typical: formatPercent(comparison.typicalBasisPoints) })
   }
-  if (comparison.standing === 'ABOVE_CAP') {
-    return `above the ${formatPercent(comparison.capBasisPoints)} ceiling — worth re-reading the statement`
-  }
-  if (comparison.standing === 'ABOVE_TYPICAL') {
-    return `higher than the ${formatPercent(comparison.typicalBasisPoints)} usually negotiated`
-  }
-  return `at or below the ${formatPercent(comparison.typicalBasisPoints)} usually negotiated`
+  const said = [one(accumulation, 'accumulation'), one(deposit, 'deposit')].filter((each) => each !== undefined)
+  return said.length === 0 ? t('wealth.fundForm.fee.none') : said.join(' ')
 }
 
+const FEE = {
+  accumulation: {
+    aboveCap: 'wealth.fundForm.fee.accumulation.aboveCap',
+    aboveTypical: 'wealth.fundForm.fee.accumulation.aboveTypical',
+    typical: 'wealth.fundForm.fee.accumulation.typical',
+  },
+  deposit: {
+    aboveCap: 'wealth.fundForm.fee.deposit.aboveCap',
+    aboveTypical: 'wealth.fundForm.fee.deposit.aboveTypical',
+    typical: 'wealth.fundForm.fee.deposit.typical',
+  },
+} as const
 
 /**
  * A typed percentage as basis points, or nothing.
@@ -392,4 +318,3 @@ function percentText(basisPoints: number | undefined): string {
 function blankToUndefined(text: string): string | undefined {
   return text.trim() === '' ? undefined : text
 }
-

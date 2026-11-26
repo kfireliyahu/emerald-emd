@@ -126,71 +126,84 @@ export function Goals() {
     }
   }
 
-  if (editingGoal !== undefined) {
-    const editing = editingGoal.goal
-    const feeds = goalFeeds(db)
-    const current = feeds.get(editing.id)
-    const names = new Map(goals.map((goal) => [goal.id, goal.name]))
-    const readers = new Map([...feeds].filter(([id, feed]) => feed.kind === 'CATEGORY' && id !== editing.id).map(([id, feed]) => [feed.id, names.get(id)]))
-    // Back to the drawer it came from takes the drawer's own entry back (M31 U9):
-    // its Edit replaced it with this form, so history reads as it did before.
-    const close = (goalId: string | undefined): void => {
-      setEditingGoal(undefined)
-      setGoalProblem(undefined)
-      if (goalId !== undefined) navigate(`/wealth/goals/${goalId}`, { replace: editingGoal.fromDrawer === true })
-    }
-    return (
-      <GoalEditor
-        key={editing.id}
-        initial={editing}
-        isNew={editingGoal.isNew}
-        choices={whereChoices(db, currency, editingGoal.isNew ? undefined : editing.id)}
-        categories={listCategories(db, { includeArchived: false })
-          .filter((one) => isMovedKind(one.kind))
-          .map((one) => ({ id: one.id, path: one.path, takenBy: readers.get(one.id) }))}
-        initialCategoryId={current?.kind === 'CATEGORY' ? current.id : undefined}
-        initialTransfers={current?.kind === 'TRANSFERS'}
-        putInOf={(holdingId) => holdingPutIn(db, holdingId, currency)}
-        currency={currency}
-        asOf={asOf}
-        problem={goalProblem}
-        onSave={(answer) => {
-          let savedId: string | undefined
+  const goalForm =
+    editingGoal === undefined
+      ? undefined
+      : ((): ReactNode => {
+        const editing = editingGoal.goal
+        const feeds = goalFeeds(db)
+        const current = feeds.get(editing.id)
+        const names = new Map(goals.map((goal) => [goal.id, goal.name]))
+        const readers = new Map([...feeds].filter(([id, feed]) => feed.kind === 'CATEGORY' && id !== editing.id).map(([id, feed]) => [feed.id, names.get(id)]))
+        // Back to the drawer it came from takes the drawer's own entry back (M31 U9):
+        // its Edit replaced it with this form, so history reads as it did before.
+        const close = (goalId: string | undefined): void => {
+          setEditingGoal(undefined)
           setGoalProblem(undefined)
-          try {
-            mutate((database) => {
-              savedId = saveGoalAnswer(database, answer, Date.now()).id
-            })
-          } catch (error) {
-            setGoalProblem(error instanceof Error ? error.message : String(error))
-            return
-          }
-          close(savedId)
-        }}
-        onCancel={() => close(editingGoal.fromDrawer === true ? editing.id : undefined)}
-      />
-    )
-  }
+          if (goalId !== undefined) navigate(`/wealth/goals/${goalId}`, { replace: editingGoal.fromDrawer === true })
+        }
+        return (
+          <SidePanel title={editingGoal.isNew ? t('wealth.goalForm.addTitle') : t('wealth.goalForm.editTitle')} kicker={editingGoal.isNew ? t('wealth.goals.title') : editingGoal.goal.name} onClose={() => close(editingGoal.fromDrawer === true ? editingGoal.goal.id : undefined)}>
+          <GoalEditor
+            key={editing.id}
+            initial={editing}
+            isNew={editingGoal.isNew}
+            choices={whereChoices(db, currency, editingGoal.isNew ? undefined : editing.id)}
+            categories={listCategories(db, { includeArchived: false })
+              .filter((one) => isMovedKind(one.kind))
+              .map((one) => ({ id: one.id, path: one.path, takenBy: readers.get(one.id) }))}
+            initialCategoryId={current?.kind === 'CATEGORY' ? current.id : undefined}
+            initialTransfers={current?.kind === 'TRANSFERS'}
+            putInOf={(holdingId) => holdingPutIn(db, holdingId, currency)}
+            currency={currency}
+            asOf={asOf}
+            problem={goalProblem}
+            onSave={(answer) => {
+              let savedId: string | undefined
+              setGoalProblem(undefined)
+              try {
+                mutate((database) => {
+                  savedId = saveGoalAnswer(database, answer, Date.now()).id
+                })
+              } catch (error) {
+                setGoalProblem(error instanceof Error ? error.message : String(error))
+                return
+              }
+              close(savedId)
+            }}
+            onCancel={() => close(editingGoal.fromDrawer === true ? editing.id : undefined)}
+          />
+          </SidePanel>
+        )
+      })()
 
-  if (editingDeposit !== undefined) {
-    return (
-      <DepositEditor
-        key={editingDeposit.deposit.id}
-        initial={editingDeposit.deposit}
-        isNew={editingDeposit.isNew}
-        goals={goals}
-        holdings={holdings.filter((holding) => !holding.isArchived)}
-        places={places}
-        existing={deposits.filter((one) => one.goalId === editingDeposit.deposit.goalId)}
-        currency={currency}
-        onSave={(draft) => {
-          const saved = write((database, now) => applyDraft(database, draft, now))
-          if (saved) setEditingDeposit(undefined)
-        }}
-        onCancel={() => setEditingDeposit(undefined)}
-      />
-    )
-  }
+  const depositForm =
+    editingDeposit === undefined
+      ? undefined
+      : ((): ReactNode => {
+        return (
+          <SidePanel title={editingDeposit.isNew ? t('wealth.movementForm.addTitle') : t('wealth.movementForm.editTitle')} kicker={goals.find((one) => one.id === editingDeposit.deposit.goalId)?.name} onClose={() => setEditingDeposit(undefined)}>
+          <DepositEditor
+            key={editingDeposit.deposit.id}
+            initial={editingDeposit.deposit}
+            isNew={editingDeposit.isNew}
+            goals={goals}
+            holdings={holdings.filter((holding) => !holding.isArchived)}
+            places={places}
+            existing={deposits.filter((one) => one.goalId === editingDeposit.deposit.goalId)}
+            currency={currency}
+            onSave={(draft) => {
+              const saved = write((database, now) => applyDraft(database, draft, now))
+              if (saved) setEditingDeposit(undefined)
+            }}
+            onCancel={() => setEditingDeposit(undefined)}
+          />
+          </SidePanel>
+        )
+      })()
+
+  // A form with several fields opens beside the page (D-617, M64 F3); one at a time.
+  const form = goalForm ?? depositForm
 
   const { rows, plan, month } = read
   const canRecord = goals.length > 0 && holdings.length > 0
@@ -199,32 +212,35 @@ export function Goals() {
 
   if (view === 'DEPOSITS') {
     return (
-      <div className="h-full overflow-auto">
-        <div className="fc-view-enter flex flex-col gap-6 px-8 pt-6 pb-12">
-          <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
-            <div className="flex flex-col gap-1">
-              <button type="button" className="fc-text-action self-start" onClick={() => setView('GOALS')}>
-                {t('wealth.goals.movements.back')}
-              </button>
-              <h1 className="m-0 text-title leading-tight font-medium">{t('wealth.goals.movements.title')}</h1>
-            </div>
-            {canRecord && (
-              <Button variant="primary" icon="add" onClick={recordMovement}>
-                {t('wealth.goals.movements.record')}
-              </Button>
-            )}
-          </header>
-          {problem !== undefined && <Problem text={problem} onDismiss={() => setProblem(undefined)} />}
-          <Movements
-            deposits={deposits}
-            goals={goals}
-            holdings={holdings}
-            places={places}
-            currency={currency}
-            write={write}
-            onEdit={(deposit) => setEditingDeposit({ isNew: false, deposit })}
-          />
+      <div className="flex h-full">
+        <div className="h-full min-w-0 flex-1 overflow-auto">
+          <div className="fc-view-enter flex flex-col gap-6 px-8 pt-6 pb-12">
+            <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+              <div className="flex flex-col gap-1">
+                <button type="button" className="fc-text-action self-start" onClick={() => setView('GOALS')}>
+                  {t('wealth.goals.movements.back')}
+                </button>
+                <h1 className="m-0 text-title leading-tight font-medium">{t('wealth.goals.movements.title')}</h1>
+              </div>
+              {canRecord && (
+                <Button variant="primary" icon="add" onClick={recordMovement}>
+                  {t('wealth.goals.movements.record')}
+                </Button>
+              )}
+            </header>
+            {problem !== undefined && <Problem text={problem} onDismiss={() => setProblem(undefined)} />}
+            <Movements
+              deposits={deposits}
+              goals={goals}
+              holdings={holdings}
+              places={places}
+              currency={currency}
+              write={write}
+              onEdit={(deposit) => setEditingDeposit({ isNew: false, deposit })}
+            />
+          </div>
         </div>
+        {form}
       </div>
     )
   }
@@ -475,7 +491,8 @@ export function Goals() {
   return (
     <div className="flex h-full">
       <div className="h-full min-w-0 flex-1 overflow-auto">{page}</div>
-      {projection && rows.length > 0 && (
+      {form}
+      {form === undefined && projection && rows.length > 0 && (
         <SidePanel title={t('wealth.goals.projection.title')} kicker={t(countKey('wealth.goals.projection.kicker', months), { count: months })} onClose={() => setProjection(false)}>
           <p className="m-0">{t(countKey('wealth.goals.projection.sentence', months), { count: months, amount: wholeMoney(inAfter) })}</p>
           <Projection rows={rows} months={months} from={month} currency={currency} words={words} />

@@ -119,7 +119,7 @@ export function GoalDetail() {
           type="button"
           aria-label="Close"
           onClick={closePane}
-          className="inline-flex size-7 items-center justify-center border border-transparent text-ink-tertiary hover:border-hairline-strong hover:text-ink"
+          className="inline-flex size-7 items-center justify-center border border-transparent text-ink-secondary hover:border-hairline-strong hover:text-ink"
         >
           <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.6" aria-hidden>
             <path d="M4 4l8 8M12 4l-8 8" />
@@ -128,8 +128,8 @@ export function GoalDetail() {
       </div>
 
       <div>
-        <span className="text-label tracking-[0.08em] text-ink-secondary uppercase">Goal</span>
-        <h2 className="m-0 text-[20px] font-medium">
+        <span className="text-label text-ink-secondary uppercase">Goal</span>
+        <h2 className="m-0 text-secondary-number font-medium">
           <Bidi>{goal.name}</Bidi>
         </h2>
         <Src>
@@ -149,7 +149,7 @@ export function GoalDetail() {
       <WherePanel goal={goal} deposits={detail.deposits} currency={currency} onEdit={edit} />
 
       <div>
-        <span className="text-label tracking-[0.08em] text-ink-secondary uppercase">How the balance is made</span>
+        <span className="text-label text-ink-secondary uppercase">How the balance is made</span>
         <div className="mt-2 flex flex-col gap-2">
           {parts.map(([origin, label, swatch]) => (
             <div key={origin} className="flex items-center justify-between gap-2">
@@ -174,7 +174,7 @@ export function GoalDetail() {
       </div>
 
       <div>
-        <span className="text-label tracking-[0.08em] text-ink-secondary uppercase">Deposits</span>
+        <span className="text-label text-ink-secondary uppercase">Deposits</span>
         {staleTotal > 0 && (
           <div className="mt-2 flex flex-wrap items-center gap-2.5 border border-dashed border-flow-tax px-3 py-2">
             <span className="text-caption">
@@ -255,7 +255,7 @@ function DepositRow({
           : 'Growth')
   return (
     <tr>
-      <td className="h-auto border-b border-hairline py-2 pe-2.5 align-top text-[13px] whitespace-nowrap text-ink-secondary tabular-nums">
+      <td className="h-auto border-b border-hairline py-2 pe-2.5 align-top text-caption whitespace-nowrap text-ink-secondary tabular-nums">
         {formatDayMonth(deposit.date)}
       </td>
       <td className="border-b border-hairline px-2.5 py-2 align-top">
@@ -330,7 +330,7 @@ function WherePanel({
 
   return (
     <div>
-      <span className="text-label tracking-[0.08em] text-ink-secondary uppercase">Where the money is</span>
+      <span className="text-label text-ink-secondary uppercase">Where the money is</span>
       <div className="mt-2 flex flex-col gap-1.5 border border-hairline-strong bg-background px-3.5 py-3">
         {goal.defaultHoldingId === undefined ? (
           <>
@@ -379,7 +379,7 @@ function WherePanel({
               </p>
             )}
             {current !== undefined && (
-              <p className="m-0 font-mono text-[12px]">
+              <p className="m-0 font-mono text-caption">
                 {String(derived.length)} {derived.length === 1 ? 'deposit' : 'deposits'} · {formatMoney(derivedTotal)}
               </p>
             )}
@@ -477,21 +477,21 @@ function AddMoney({
             inputMode="decimal"
             value={amount}
             onChange={(event) => setAmount(event.target.value)}
-            className="h-[30px] min-w-0 border border-hairline-strong bg-background px-2 text-end tabular-nums"
+            className="h-8 min-w-0 border border-hairline-strong bg-background px-2 text-end tabular-nums"
           />
           <label htmlFor="add-date">On</label>
           <input
             id="add-date"
             value={date}
             onChange={(event) => setDate(event.target.value)}
-            className="h-[30px] min-w-0 border border-hairline-strong bg-background px-2 tabular-nums"
+            className="h-8 min-w-0 border border-hairline-strong bg-background px-2 tabular-nums"
           />
           <label htmlFor="add-note">Note</label>
           <input
             id="add-note"
             value={note}
             onChange={(event) => setNote(event.target.value)}
-            className="h-[30px] min-w-0 border border-hairline-strong bg-background px-2"
+            className="h-8 min-w-0 border border-hairline-strong bg-background px-2"
           />
           <span />
           <div className="flex flex-wrap gap-3">

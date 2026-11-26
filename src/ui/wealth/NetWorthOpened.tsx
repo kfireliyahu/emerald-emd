@@ -62,7 +62,7 @@ export interface Opening {
   readonly onReading: (holdingId: string) => void
 }
 
-const LABEL = 'text-label tracking-[0.08em] text-ink-secondary uppercase font-medium'
+const LABEL = 'text-label text-ink-secondary uppercase font-medium'
 const LINE = 'border-t border-hairline py-1.5 pe-2.5 align-baseline [tr:first-child>&]:border-t-0'
 const FIG = `${LINE} w-[1%] text-end whitespace-nowrap tabular-nums`
 const LINK = 'text-accent hover:underline'
@@ -466,7 +466,7 @@ function OpeningLine({ balance, opening }: { balance: AccountBalance; opening: O
             type="date"
             value={dateText}
             onChange={(event) => setDateText(event.target.value)}
-            className="h-[30px] border border-hairline-strong bg-background px-2"
+            className="h-8 border border-hairline-strong bg-background px-2"
           />
           <label htmlFor="opening-amount">You had</label>
           <input
@@ -477,7 +477,7 @@ function OpeningLine({ balance, opening }: { balance: AccountBalance; opening: O
             onKeyDown={(event) => {
               if (event.key === 'Enter') save(false)
             }}
-            className="h-[30px] border border-hairline-strong bg-background px-2 text-end tabular-nums"
+            className="h-8 border border-hairline-strong bg-background px-2 text-end tabular-nums"
           />
         </div>
         {problem !== undefined && <p className="m-0 text-negative">{problem}</p>}
@@ -657,7 +657,7 @@ function MergePanel({
               aria-label="Which account it becomes"
               onText={() => undefined}
               onPick={(choice) => setIntoId(choice.value)}
-              className={`${FIELD} h-[30px] w-[190px]`}
+              className={`${FIELD} h-8 w-[190px]`}
             />
           </div>
           <p className="m-0 text-caption text-ink-secondary">
@@ -723,7 +723,7 @@ function RenamePanel({ account, write, onDone }: { account: Account; write: Writ
           if (event.key === 'Enter') save()
           if (event.key === 'Escape') onDone()
         }}
-        className={`${FIELD} h-[30px] w-[220px]`}
+        className={`${FIELD} h-8 w-[220px]`}
       />
       <Button variant="primary" size="sm" onClick={save}>
         Save
