@@ -5367,6 +5367,16 @@ answer: #/formats/:name/read says Read onto <format> as its h1 with its readers 
 state: live
 affects: "src/ui/screens/ReadFiles.tsx\nsrc/ui/components/useDismiss.ts\nsrc/ui/formats/SavedTab.tsx\nsrc/ui/formats/RollupView.tsx\nsrc/ui/RailFolder.tsx\nsrc/ui/wealth/NetWorthOpened.tsx\nscripts/make-demo-shots.cjs\ndocs/redesign/budget.json"
 
+### D-644
+date: 2026-11-26
+milestone: M64
+scope: ui
+title: A side panel's width is the reader's: its inner edge drags, steps with ← and → and goes back to its default on a double-click; the width is a preference of the machine (`localStorage`, never the document), one for every side panel and one for the wealth lists' pane; between a floor of 360px and a ceiling of half the window
+question: How does a reader widen a panel that opened beside a page, and where is the width kept?
+answer: A handle on the panel's inner edge (PanelEdge): drag it, or focus it and use ← → (Shift for more, Home/End for the ends); a double-click resets it. Mirrored in Hebrew. The width is kept in localStorage across restarts, one width for every SidePanel and one for the funds/goals/debts pane, never in the document. SidePanel 360px to half the window; the pane 20rem to 55% of its room (60% over the goals list). No transition on a dragged width.
+state: live
+affects: "src/ui/components/PanelEdge.tsx\nsrc/ui/usePanelWidth.ts\nsrc/ui/components/SidePanel.tsx\nsrc/ui/screens/ListDetail.tsx\nsrc/ui/theme/tokens.css"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -6986,6 +6996,15 @@ refs: M64 F60
 state: applied
 became_unit: M64 F60
 
+### M64 F69 built: a side panel's width is the reader's to drag (D-644), to land
+from: F:/projects/emerald/.claude/worktrees/agent-af7db49e10f3a75f2
+sent_on: 2026-11-26
+body: "M64 F69 is built on worktree-agent-af7db49e10f3a75f2 at 2dddfe0: every SidePanel and the wealth lists' pane (funds, goals, debts) have a handle on their inner edge that drags, steps with the arrows and resets on a double-click; the width is kept in localStorage across restarts. docs:check is green but for D-644's row, which this landing writes.\n\n```json\n{\"unit\": \"M64 F69\", \"commit\": \"2dddfe0\", \"branch\": \"worktree-agent-af7db49e10f3a75f2\", \"files\": \"src/ui/components/PanelEdge.tsx\\nsrc/ui/usePanelWidth.ts\\nsrc/ui/usePanelWidth.test.ts\\nsrc/ui/components/SidePanel.tsx\\nsrc/ui/components/PanelForm.tsx\\nsrc/ui/screens/ListDetail.tsx\\nsrc/ui/theme/tokens.css\\nsrc/i18n/en/chrome.ts\\nsrc/i18n/he/chrome.ts\\ndocs/09-decision-log.md\", \"report\": \"A new kit piece, PanelEdge (src/ui/components/), sits on a panel's inline-start edge: an 8px strip whose hairline turns accent on hover, focus or drag. Mouse drag writes --fc-panel-width straight onto the panel (no render, no transition: a dragged width never animates) and keeps the width on release; focused it is a separator (aria-valuenow/min/max, 'N pixels wide', en and he in chrome.kit.*) that ← and → move 16px the way they point (64px with Shift), Home/End to floor/ceiling; a double-click forgets the width. In Hebrew the mirrored edge drags (verified: rightward widens, ← narrows). usePanelWidth.ts keeps the width through readPreference/writePreference (localStorage, like the theme and sidebar), one per kind: fc-panel-width.side for every SidePanel, fc-panel-width.pane for ListDetail's pane. SidePanel: floor 360px (a PanelForm still works in one column), ceiling half the window; its body now scrolls (.fc-side-panel-body) so the edge stays put; tokens.css guards min/max for a narrowed window. ListDetail pane (frame only, no GoalDetail/Goals/savings edit): floor 20rem, default 30rem, ceiling raised from 45% to 55% of its room beside the list (at 1280px the 45% cap left no room to widen), the goals overlay up to 60%. Bounds re-measured after paint and on resize. Connections' sentences column is a permanent column, not a panel that opens, so it has no handle. Tests: usePanelWidth.test.ts (drag direction both ways, clamp, keys, persistence, blocked storage), direction, i18n, privacy, typecheck green; the related run's two plugin timeouts (formatWatch, landing) pass alone. probe:screens year.emd #/, #/year, #/wealth/funds inside budget light and dark; #/specimen's primary 4 > 1 is the tools route's own and unchanged. Dragged in this worktree's demo server on year.emd: Home's Came in panel 420 -> 620, arrows, End stops at 640 (half of 1280), double-click back to 420, width survives a reload; mirrored drag under dir=rtl; a fund's pane 420 -> 532.\", \"decisions\": [{\"ref\": \"D-644\", \"title\": \"A side panel's width is the reader's: its inner edge drags, steps with ← and → and goes back to its default on a double-click; the width is a preference of the machine (`localStorage`, never the document), one for every side panel and one for the wealth lists' pane; between a floor of 360px and a ceiling of half the window\", \"question\": \"How does a reader widen a panel that opened beside a page, and where is the width kept?\", \"answer\": \"A handle on the panel's inner edge (PanelEdge): drag it, or focus it and use ← → (Shift for more, Home/End for the ends); a double-click resets it. Mirrored in Hebrew. The width is kept in localStorage across restarts, one width for every SidePanel and one for the funds/goals/debts pane, never in the document. SidePanel 360px to half the window; the pane 20rem to 55% of its room (60% over the goals list). No transition on a dragged width.\", \"affects\": \"src/ui/components/PanelEdge.tsx\\nsrc/ui/usePanelWidth.ts\\nsrc/ui/components/SidePanel.tsx\\nsrc/ui/screens/ListDetail.tsx\\nsrc/ui/theme/tokens.css\"}], \"review_entries\": [{\"do\": \"On the demo year.emd open Home and click Came in; drag the panel's left edge (it turns green under the pointer) toward the page, then close the panel, open Went out, and restart the app. Double-click the edge. Then open a fund on Wealth › Funds and drag its pane's edge.\", \"should\": \"The panel widens as you drag and stops at half the window; the next panel and the app after a restart open at the width you left; a double-click puts it back to its usual width; the fund's pane widens too. Wrong would be one width for every panel when you wanted each its own, a floor or ceiling that surprises you, or the edge being hard to find.\"}], \"follow_ups\": [{\"kind\": \"question\", \"ref\": \"M64 Q87\", \"state\": \"open\", \"question\": \"A dragged side-panel width is one width for every side panel (and one for the funds/goals/debts pane), so the reader sets it once (M64 F69, D-644). Should each panel keep its own width instead (Home's month figures, a transaction's detail, a form), at the cost of setting each?\"}]}\n```"
+refs: M64 F69
+state: applied
+answered_by: D-644
+became_unit: M64 F69
+
 ### M64 F9 landing proposal: the formats screens say every word through the catalogue, en and he (D-627)
 from: F:/projects/emerald/docs/memory.emd
 sent_on: 2026-11-26
@@ -7920,6 +7939,10 @@ state: open
 
 ### M64 Q8
 question: Kit and theme findings left for a kit unit: SidePanel captures the element that opened it only once, so after a second row opens it, Close returns focus to the first; .fc-row-on's 2px marker is inset-left in RTL too (tokens.css), drawing between the first two columns in Hebrew; MonthStrip's open-month value label overflows the page's end edge when the open month is the last column; SelectOrNew draws a platform select, against 'Choices are ChoiceField' (Deduction types' Pays into uses it).
+state: open
+
+### M64 Q87
+question: A dragged side-panel width is one width for every side panel (and one for the funds/goals/debts pane), so the reader sets it once (M64 F69, D-644). Should each panel keep its own width instead (Home's month figures, a transaction's detail, a form), at the cost of setting each?
 state: open
 
 ### M64 Q9
@@ -9362,6 +9385,11 @@ state: open
 ### On the demo year open Year (#/year), Categories and Rules: on Year click a month row and the Went out tile; on Categories click a category, then Merge into… and Esc, and delete an unused one; on Rules type a shop in the search, then delete a rule and press Ctrl+Z.
 unit: M64 U11
 should: Each screen says its answer before anything else; a month opens on Home; detail opens beside the page and the page stays put; the merge question sits under its own button; a delete happens at once with Undo where it was and Ctrl+Z brings it back. Wrong would be a block you used and cannot find any more, or a question far from the click.
+state: open
+
+### On the demo year.emd open Home and click Came in; drag the panel's left edge (it turns green under the pointer) toward the page, then close the panel, open Went out, and restart the app. Double-click the edge. Then open a fund on Wealth › Funds and drag its pane's edge.
+unit: M64 F69
+should: The panel widens as you drag and stops at half the window; the next panel and the app after a restart open at the width you left; a double-click puts it back to its usual width; the fund's pane widens too. Wrong would be one width for every panel when you wanted each its own, a floor or ceiling that surprises you, or the edge being hard to find.
 state: open
 
 ### On the synthetic year.emd open Transactions, click a row, press Make a rule for this merchant, then Make the rule; then press Open in Rules. On By merchant, open a merchant's menu (right-click) and choose Write a rule for...
@@ -19434,13 +19462,17 @@ brief: M64 U15's budget run passes every route on the document it was measured o
 milestone: M64
 scope: ui
 title: A side panel's width is the reader's to drag
-state: in_progress
+landed: 2026-11-26
+decision: D-644
+state: built
 brief: **Do.** Maintainer, 2026-11-26: "i wanna make the sidebars that opened able to change width by the user to read easily." Every panel that opens beside a page (SidePanel, and anything that hand-rolls one) gets a handle on its inner edge: dragged with the mouse, or moved with the arrow keys when focused (a separator with its value said), and a double-click puts it back to its default width. Defaults the driver set, to change if they surprise him: the width is remembered for every panel and across restarts (a per-viewer convenience, not the document); a floor where its form still works and a ceiling that leaves the page behind it readable; in Hebrew the mirrored edge drags. No physical sides (direction.test).
-files: src/ui/components/SidePanel.tsx src/ui/components/PanelForm.tsx
+files: "src/ui/components/PanelEdge.tsx\nsrc/ui/usePanelWidth.ts\nsrc/ui/usePanelWidth.test.ts\nsrc/ui/components/SidePanel.tsx\nsrc/ui/components/PanelForm.tsx\nsrc/ui/screens/ListDetail.tsx\nsrc/ui/theme/tokens.css\nsrc/i18n/en/chrome.ts\nsrc/i18n/he/chrome.ts\ndocs/09-decision-log.md"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-af7db49e10f3a75f2
+commit: 2dddfe0
 paths: src/ui/components/SidePanel.tsx src/ui/components/PanelForm.tsx
+report: A new kit piece, PanelEdge (src/ui/components/), sits on a panel's inline-start edge: an 8px strip whose hairline turns accent on hover, focus or drag. Mouse drag writes --fc-panel-width straight onto the panel (no render, no transition: a dragged width never animates) and keeps the width on release; focused it is a separator (aria-valuenow/min/max, 'N pixels wide', en and he in chrome.kit.*) that ← and → move 16px the way they point (64px with Shift), Home/End to floor/ceiling; a double-click forgets the width. In Hebrew the mirrored edge drags (verified: rightward widens, ← narrows). usePanelWidth.ts keeps the width through readPreference/writePreference (localStorage, like the theme and sidebar), one per kind: fc-panel-width.side for every SidePanel, fc-panel-width.pane for ListDetail's pane. SidePanel: floor 360px (a PanelForm still works in one column), ceiling half the window; its body now scrolls (.fc-side-panel-body) so the edge stays put; tokens.css guards min/max for a narrowed window. ListDetail pane (frame only, no GoalDetail/Goals/savings edit): floor 20rem, default 30rem, ceiling raised from 45% to 55% of its room beside the list (at 1280px the 45% cap left no room to widen), the goals overlay up to 60%. Bounds re-measured after paint and on resize. Connections' sentences column is a permanent column, not a panel that opens, so it has no handle. Tests: usePanelWidth.test.ts (drag direction both ways, clamp, keys, persistence, blocked storage), direction, i18n, privacy, typecheck green; the related run's two plugin timeouts (formatWatch, landing) pass alone. probe:screens year.emd #/, #/year, #/wealth/funds inside budget light and dark; #/specimen's primary 4 > 1 is the tools route's own and unchanged. Dragged in this worktree's demo server on year.emd: Home's Came in panel 420 -> 620, arrows, End stops at 640 (half of 1280), double-click back to 420, width survives a reload; mirrored drag under dir=rtl; a fund's pane 420 -> 532.
 
 ### M64 F70
 milestone: M64
