@@ -27,11 +27,11 @@ What a conversation can do and no screen can. M26 closed with these left (D-297)
 
 - **Move a bubble, or a pack’s folded group, on the connections canvas — or put them all back.** (refused by D-291) · `setGraphPlaces`, `clearGraphPlaces`
 
-### The ledger — 65, a ratchet rather than a list to work through
+### The ledger — 64, a ratchet rather than a list to work through
 
 A screen reaches these and no tool does, which the plugin's *Not here* has said since D-109. The
 number may only fall. M25 rewrites what is under them, and M24's survey decides which the engine
-has to be able to hold first. Of the ledger's 184 writes, 18 more
+has to be able to hold first. Of the ledger's 185 writes, 18 more
 are only ever called by another write, and count with it.
 
 - **accountRepository** — `deleteAccount`, `mergeAccounts`, `setAccountArchived`, `setAccountInstitution`
@@ -51,5 +51,5 @@ are only ever called by another write, and count with it.
 - **reapplyRepository** — `undoReapply`
 - **ruleSetRepository** — `forkBuiltIn`, `setBuiltInEnabled`
 - **salaryRepository** — `setSalaryDecision`
-- **savingsRepository** — `confirmHolding`, `deleteDeposit`, `deleteGoal`, `deleteHolding`, `deleteHoldingPlace`, `setGoalClosed`, `setHoldingArchived`, `setHoldingPlaceArchived`, `updateDeposit`, `updateHolding`, `updateHoldingPlace`
+- **savingsRepository** — `confirmHolding`, `deleteDeposit`, `deleteGoal`, `deleteHolding`, `deleteHoldingPlace`, `setHoldingArchived`, `setHoldingPlaceArchived`, `updateDeposit`, `updateHolding`, `updateHoldingPlace`
 - **splitPlanRepository** — `reorderSplitBuckets`

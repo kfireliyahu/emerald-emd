@@ -59,7 +59,7 @@ import { answerTransfersTool, transfersTool } from './tools/transfers.ts'
 import { countCardChargesTool, setNoPayMonthsTool } from './tools/waiting.ts'
 import { setOpeningBalancesTool } from './tools/accountBalances.ts'
 import { setCushionTool, setGoalDepositCategoriesTool } from './tools/goalDeposits.ts'
-import { pauseGoalsTool, setGoalAmountsTool, settleSetAsideTool, suggestGoalAmountsTool } from './tools/goalRhythm.ts'
+import { closeGoalsTool, pauseGoalsTool, setGoalAmountsTool, settleSetAsideTool, suggestGoalAmountsTool } from './tools/goalRhythm.ts'
 import { createDebtsTool, recordDebtPaymentsTool } from './tools/debts.ts'
 import { assignCategoryTool, noteMerchantSuggestionsTool } from './tools/categorize.ts'
 import { createRuleTool } from './tools/rules.ts'
@@ -201,6 +201,8 @@ export const LEDGER_TOOLS: readonly PluginTool[] = [
   setCushionTool,
   // Pausing, the set-aside check and the suggested split (M28 U8, S7, S5, S3).
   pauseGoalsTool,
+  // Closing a goal, and whether its money was spent (M64 F72, D-645).
+  closeGoalsTool,
   settleSetAsideTool,
   suggestGoalAmountsTool,
   setGoalAmountsTool,

@@ -26,7 +26,8 @@ import {
   staleSetAside,
 } from '@/data/repositories/goalRhythmRepository.ts'
 import { documentCurrency } from '@/data/repositories/statisticsRepository.ts'
-import { listGoals } from '@/data/repositories/savingsRepository.ts'
+import { closeGoal, goalHeld, listGoals, setGoalClosed } from '@/data/repositories/savingsRepository.ts'
+import { goalFeeds } from '@/data/repositories/goalDepositRepository.ts'
 import { SUGGESTION_WORDS, type Suggestion } from '@/domain/goalRhythm.ts'
 
 import { type OpenDocument } from '../document.ts'
@@ -259,6 +260,121 @@ export const settleSetAsideTool: PluginTool = {
           done += 1
         }
         return `Settled ${plural(done, 'goal')}.`
+      },
+    }
+    return mutatingCall(path, args['commit'] === true, mutation)
+  },
+}
+
+// --- close_goals (M64 F72) -----------------------------------------------------
+
+interface ClosePlan {
+  readonly goalId: string | undefined
+  readonly goalName: string
+  readonly change: 'SPENT' | 'KEPT' | 'REOPEN'
+  readonly held: string
+  readonly note: string | undefined
+}
+
+export const closeGoalsTool: PluginTool = {
+  definition: {
+    name: 'close_goals',
+    title: 'Close goals',
+    description:
+      'Close goals, or reopen them, **several in one call** — the screen\'s *Close this goal* and ' +
+      'its question. A closed goal keeps its history and takes nothing more. **A goal that still ' +
+      'holds money needs `spent`**: `true` when the money was spent on what it was for — the ' +
+      'withdrawal of everything it holds is recorded, its why *spent on the goal*, and it closes ' +
+      'in the same write, so the bank stops counting that money as the goal\'s; `false` closes it ' +
+      'and the money stays held. A goal that follows its holding\'s rows cannot be closed as spent ' +
+      'while it holds money: a sale there is its money out. `reopen: true` opens a closed goal again. ' +
+      '**Dry-runs by default**; the document is copied to a timestamped .bak first.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        path: PATH_PROP,
+        goals: {
+          type: 'array',
+          description: `One entry per goal. Up to ${String(BATCH_MAX)} in a call.`,
+          items: {
+            type: 'object',
+            properties: {
+              goal: stringProp('The goal, by id or by name.'),
+              spent: booleanProp('Whether the money it holds was spent. Needed when it holds any.'),
+              reopen: booleanProp('True opens a closed goal again; nothing else changes.'),
+            },
+            required: ['goal'],
+            additionalProperties: false,
+          },
+        },
+        commit: booleanProp('Default false. False previews; true writes.'),
+      },
+      required: ['path', 'goals'],
+      additionalProperties: false,
+    },
+    annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+  },
+  run: async (args) => {
+    const path = requireString(args, 'path')
+    const batch = readList(args, 'goals').map((record, index) => {
+      const goal = optionalString(record, 'goal')
+      if (goal === undefined) throw new ToolInputError(`\`goals[${index}]\` needs a \`goal\`.`)
+      const spent = record['spent']
+      if (spent !== undefined && typeof spent !== 'boolean') throw new ToolInputError(`\`goals[${index}].spent\` is true or false.`)
+      return { goal, spent: spent as boolean | undefined, reopen: record['reopen'] === true }
+    })
+
+    const mutation: Mutation<readonly ClosePlan[]> = {
+      plan: (document) => {
+        const feeds = goalFeeds(document.db)
+        return batch.map((one): ClosePlan => {
+          const goal = findGoal(document, one.goal)
+          const change = one.reopen ? 'REOPEN' : one.spent === true ? 'SPENT' : 'KEPT'
+          if (goal === undefined) {
+            return { goalId: undefined, goalName: one.goal, change, held: '—', note: 'no such goal; `savings` lists them' }
+          }
+          const amounts = goalHeld(document.db, goal.id)
+          const held = amounts.length === 0 ? 'nothing' : amounts.map((each) => money(each.amount)).join(' + ')
+          const base = { goalId: goal.id, goalName: goal.name, change, held } as const
+          if (one.reopen) return { ...base, note: goal.isClosed ? undefined : 'it is open' }
+          if (goal.isClosed) return { ...base, note: 'it is closed already; `reopen: true` opens it' }
+          if (amounts.length > 0 && one.spent === undefined) {
+            return { ...base, note: `it holds ${held}: say \`spent\` true (taken out, spent on the goal) or false (it stays held)` }
+          }
+          if (amounts.length > 0 && one.spent === true && feeds.get(goal.id)?.kind === 'HOLDING') {
+            return { ...base, note: 'it follows its holding’s rows, so a sale there is its money out; close it with `spent: false`' }
+          }
+          return { ...base, note: undefined }
+        })
+      },
+      refuses: (entries) => entries.every((entry) => entry.note !== undefined),
+      describe: (entries) =>
+        table(
+          ['Goal', 'Holds', 'Change', 'Note'],
+          entries.map((entry) => [
+            entry.goalName,
+            entry.held,
+            entry.note !== undefined
+              ? '—'
+              : entry.change === 'REOPEN'
+                ? 'reopens'
+                : entry.change === 'SPENT' && entry.held !== 'nothing'
+                  ? `takes out ${entry.held}, spent on the goal, and closes`
+                  : entry.held === 'nothing'
+                    ? 'closes'
+                    : 'closes; the money stays held',
+            entry.note ?? '',
+          ]),
+        ),
+      apply: (document, entries) => {
+        let done = 0
+        for (const entry of entries) {
+          if (entry.note !== undefined || entry.goalId === undefined) continue
+          if (entry.change === 'REOPEN') setGoalClosed(document.db, entry.goalId, false, Date.now())
+          else closeGoal(document.db, entry.goalId, { spent: entry.change === 'SPENT', asOf: today() }, Date.now())
+          done += 1
+        }
+        return `Changed ${plural(done, 'goal')}. \`savings\` shows what they hold.`
       },
     }
     return mutatingCall(path, args['commit'] === true, mutation)

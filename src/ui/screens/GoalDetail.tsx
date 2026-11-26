@@ -9,7 +9,7 @@ import { goalsPlan, type GoalRow } from '@/data/repositories/goalPlanRepository.
 import { whereChoices } from '@/data/repositories/goalWhereRepository.ts'
 import { settleSetAside, staleSetAside } from '@/data/repositories/goalRhythmRepository.ts'
 import { listCategories } from '@/data/repositories/categoryRepository.ts'
-import { addDeposit, findHolding, goalDetail, listHoldings } from '@/data/repositories/savingsRepository.ts'
+import { addDeposit, findHolding, goalDetail, listHoldings, setGoalClosed } from '@/data/repositories/savingsRepository.ts'
 import { documentCurrency } from '@/data/repositories/statisticsRepository.ts'
 import { originOf, originSplit, sourceKindForOrigin, type DepositOrigin } from '@/domain/goalDeposits.ts'
 import type { SavingDeposit, SavingGoal } from '@/domain/model/savings.ts'
@@ -24,6 +24,7 @@ import { Button } from '@/ui/components/Button.tsx'
 import { wholeMoney } from '@/ui/charts/kit.ts'
 import { Phrase } from '@/ui/components/Phrase.tsx'
 import { CostBasis } from '@/ui/savings/CostBasis.tsx'
+import { ClosedNote, CloseGoalButton, spentQuestionFor, useGoalClose, type GoalWrite } from '@/ui/savings/GoalClose.tsx'
 import { HoldingReadings } from '@/ui/savings/HoldingReadings.tsx'
 import { dayMonth } from '@/ui/savings/WherePicker.tsx'
 import { useClosePane } from '@/ui/screens/ListDetail.tsx'
@@ -79,6 +80,23 @@ export function GoalDetail() {
     [db, revision, goalId, currency],
   )
 
+  const write: GoalWrite = (work) => {
+    setProblem(undefined)
+    try {
+      mutate((database) => work(database, Date.now()))
+      return true
+    } catch (error) {
+      setProblem(error instanceof Error ? error.message : String(error))
+      return false
+    }
+  }
+  // Close goal asks whether its money was spent, and says what it did with an Undo (M64 F72).
+  const closing = useGoalClose(write)
+  const held = useMemo(
+    () => (db === undefined || detail === undefined ? undefined : spentQuestionFor(db, detail.goal, currency)),
+    [db, revision, detail, currency],
+  )
+
   if (db === undefined) return null
   if (detail === undefined) {
     return (
@@ -91,20 +109,18 @@ export function GoalDetail() {
     )
   }
 
-  const write = (work: (database: import('sql.js').Database, now: number) => void): void => {
-    setProblem(undefined)
-    try {
-      mutate((database) => work(database, Date.now()))
-    } catch (error) {
-      setProblem(error instanceof Error ? error.message : String(error))
-    }
-  }
-
   const { goal } = detail
   // The goal form is the list's, and comes back here when it is done (M30 F3).
   const edit = (): void => void navigate(`/wealth/goals?edit=${goal.id}`, { replace: true })
   const target = targetAmountOf(detail.target)
   const split = originSplit(detail.deposits, currency)
+  // Money out is said as what it is (M64 F72): a typed withdrawal is a set-aside
+  // row with a minus, so the set-aside part is shown without it and it gets a line.
+  const takenOut = money(
+    detail.deposits.reduce((sum, one) => (isMoneyOut(one) && one.amount.currency === currency ? sum + one.amount.minor : sum), 0),
+    currency,
+  )
+  const shownSplit = { ...split, SET_ASIDE: money(split.SET_ASIDE.minor - takenOut.minor, currency), OUT: takenOut }
   const parts = (
     [
       // A buy is read from the account's own statement, which is not always a bank's.
@@ -112,8 +128,9 @@ export function GoalDetail() {
       ['SET_ASIDE', t('wealth.goalDetail.origin.setAsideInside'), SWATCH.setAside],
       ['ALREADY_THERE', t('wealth.goalDetail.origin.alreadyThere'), SWATCH.already],
       ['GROWTH', t('wealth.goalDetail.origin.growth'), 'bg-transparent outline outline-1 outline-ink-tertiary'],
+      ['OUT', t('wealth.goalDetail.origin.takenOut'), 'bg-transparent outline outline-1 outline-ink-secondary'],
     ] as const
-  ).filter(([origin]) => split[origin].minor !== 0)
+  ).filter(([origin]) => shownSplit[origin].minor !== 0)
   const newest = [...detail.deposits].sort((a, b) => toISODate(b.date).localeCompare(toISODate(a.date)))
   // The newest five; the rest grow in place (M64 F60), never another place to look.
   const shown = allDeposits ? newest : newest.slice(0, SHOWN_DEPOSITS)
@@ -126,6 +143,15 @@ export function GoalDetail() {
         <Button variant="ghost" size="sm" onClick={edit}>
           {t('wealth.common.edit')}
         </Button>
+        {goal.isClosed ? (
+          closing.closed?.goalId !== goal.id && (
+            <Button variant="ghost" size="sm" onClick={() => write((database, now) => setGoalClosed(database, goal.id, false, now))}>
+              {t('wealth.goals.reopen')}
+            </Button>
+          )
+        ) : (
+          <CloseGoalButton goal={goal} held={held} onClose={(spent) => closing.close(goal, spent, held)} />
+        )}
         <button
           type="button"
           aria-label={t('wealth.goalDetail.close')}
@@ -163,6 +189,11 @@ export function GoalDetail() {
             })}
           </Src>
         )}
+        {closing.closed?.goalId === goal.id && (
+          <div className="mt-2">
+            <ClosedNote closed={closing.closed} onUndo={closing.undo} />
+          </div>
+        )}
       </div>
 
       <WherePanel goal={goal} deposits={detail.deposits} currency={currency} onEdit={edit} />
@@ -175,7 +206,7 @@ export function GoalDetail() {
               <Legend>
                 <LegendItem swatch={swatch}>{label}</LegendItem>
               </Legend>
-              <b className="font-medium tabular-nums">{formatMoney(split[origin])}</b>
+              <b className="font-medium tabular-nums">{formatMoney(shownSplit[origin])}</b>
             </div>
           ))}
           <div className="flex items-center justify-between border-t border-hairline pt-1.5">
@@ -185,7 +216,7 @@ export function GoalDetail() {
             </b>
           </div>
         </div>
-        {split.SET_ASIDE.minor > 0 && (
+        {shownSplit.SET_ASIDE.minor > 0 && (
           <p className="m-0 mt-2 text-caption text-ink-secondary">{t('wealth.goalDetail.setAsideWhy')}</p>
         )}
       </div>
@@ -232,11 +263,16 @@ export function GoalDetail() {
             {t('wealth.goalDetail.earlier', { count: newest.length - shown.length })}
           </button>
         )}
-        <AddMoney goal={goal} currency={currency} asOf={asOf} write={write} followed={byHolding} onEdit={edit} />
+        <AddMoney goal={goal} currency={currency} asOf={asOf} write={write} followed={byHolding} onEdit={edit} balance={detail.balance} />
         {problem !== undefined && <p className="m-0 mt-2 text-negative">{problem}</p>}
       </div>
     </div>
   )
+}
+
+/** A typed withdrawal — money out with its why — never half of a move between holdings. */
+function isMoneyOut(deposit: SavingDeposit): boolean {
+  return deposit.sourceKind === 'MANUAL' && deposit.amount.minor < 0 && deposit.transferGroupKey === undefined
 }
 
 /** How many deposits the drawer lists before *and N earlier* grows the rest in place. */
@@ -265,6 +301,7 @@ function DepositRow({
   // A buy is read from the account's own statement, which is not always a bank's.
   const [tone, label] = bought && origin === 'DERIVED' ? (['derived', 'wealth.goalDetail.origin.derivedStatement'] as const) : KIND[origin]
   const out = deposit.amount.minor < 0
+  const moneyOut = isMoneyOut(deposit)
   const said: MessageKey =
     origin === 'DERIVED'
       ? bought
@@ -294,12 +331,12 @@ function DepositRow({
           {holdingName !== undefined && (
             <span>
               <Phrase
-                text={t(origin === 'SET_ASIDE' ? 'wealth.goalDetail.inside' : 'wealth.goalDetail.in')}
+                text={t(origin === 'SET_ASIDE' && !moneyOut ? 'wealth.goalDetail.inside' : 'wealth.goalDetail.in')}
                 parts={{ name: <Bidi>{holdingName}</Bidi> }}
               />
             </span>
           )}
-          <Tag tone={tone}>{t(label)}</Tag>
+          <Tag tone={moneyOut ? 'plain' : tone}>{t(moneyOut ? 'wealth.goalDetail.origin.out' : label)}</Tag>
         </Src>
       </td>
       <td className="border-b border-hairline py-2 ps-2.5 text-end align-top whitespace-nowrap tabular-nums">
@@ -427,7 +464,11 @@ function WherePanel({
   )
 }
 
-/** Set money aside, or say it was already there: the two deposits typed by hand. */
+/**
+ * Set money aside, say it was already there, or take money out (M64 F72): the
+ * movements typed by hand, where the goal is. Money out asks why up front, as the
+ * movement form does — the why is all that tells a withdrawal from a correction.
+ */
 function AddMoney({
   goal,
   currency,
@@ -435,16 +476,19 @@ function AddMoney({
   write,
   followed,
   onEdit,
+  balance,
 }: {
   goal: SavingGoal
   currency: CurrencyCode
   asOf: LocalDate
-  write: (work: (database: import('sql.js').Database, now: number) => void) => void
+  write: GoalWrite
+  /** What it holds now, which money out is said against. */
+  balance: Money
   /** Its holding's rows are its deposits (D-357), so nothing is typed here. */
   followed: boolean
   onEdit: () => void
 }) {
-  const [kind, setKind] = useState<'SET_ASIDE' | 'ALREADY_THERE' | undefined>()
+  const [kind, setKind] = useState<'SET_ASIDE' | 'ALREADY_THERE' | 'OUT' | undefined>()
   const [amount, setAmount] = useState('')
   const [date, setDate] = useState(toISODate(asOf))
   const [note, setNote] = useState('')
@@ -460,25 +504,32 @@ function AddMoney({
     const when = parseISODate(date)
     if (parsed === undefined || parsed <= 0) return setProblem(t('wealth.goalDetail.add.amountPositive'))
     if (when === undefined) return setProblem(t('wealth.goalDetail.add.dateFormat'))
+    if (kind === 'OUT' && note.trim() === '') return setProblem(t('wealth.goalDetail.add.whyNeeded'))
     setProblem(undefined)
-    write((database, now) =>
-      addDeposit(
-        database,
-        {
-          goalId: goal.id,
-          date: when,
-          amount: fromMajorUnits(parsed, currency),
-          holdingId,
-          sourceKind: sourceKindForOrigin(kind),
-          ...(note.trim() === '' ? {} : { note: note.trim() }),
-        },
-        now,
-      ),
+    const size = fromMajorUnits(parsed, currency)
+    write(
+      (database, now) =>
+        void addDeposit(
+          database,
+          {
+            goalId: goal.id,
+            date: when,
+            amount: kind === 'OUT' ? money(-size.minor, currency) : size,
+            holdingId,
+            // Money out is a typed movement with a minus, as the movement form writes it.
+            sourceKind: sourceKindForOrigin(kind === 'OUT' ? 'SET_ASIDE' : kind),
+            ...(note.trim() === '' ? {} : { note: note.trim() }),
+          },
+          now,
+        ),
     )
     setKind(undefined)
     setAmount('')
     setNote('')
   }
+
+  const typedOut = kind === 'OUT' ? parseAmountText(amount) : undefined
+  const over = typedOut !== undefined && fromMajorUnits(Math.abs(typedOut), currency).minor > balance.minor
 
   // No place yet: the card above asks for one, so the buttons say nothing twice.
   if (holdingId === undefined) return null
@@ -509,10 +560,15 @@ function AddMoney({
         <Button variant="ghost" size="sm" onClick={() => setKind('ALREADY_THERE')}>
           {t('wealth.goalDetail.add.already')}
         </Button>
+        <Button variant="ghost" size="sm" onClick={() => setKind('OUT')}>
+          {t('wealth.goalDetail.add.out')}
+        </Button>
       </div>
       {kind !== undefined && (
         <div className="fc-pop-enter mt-3 grid grid-cols-[110px_minmax(0,1fr)] items-center gap-x-3 gap-y-2">
-          <label htmlFor="add-amount">{kind === 'SET_ASIDE' ? t('wealth.goalDetail.add.setAsideLabel') : t('wealth.goalDetail.add.wasThere')}</label>
+          <label htmlFor="add-amount">
+            {kind === 'SET_ASIDE' ? t('wealth.goalDetail.add.setAsideLabel') : kind === 'OUT' ? t('wealth.goalDetail.add.outLabel') : t('wealth.goalDetail.add.wasThere')}
+          </label>
           <input
             id="add-amount"
             inputMode="decimal"
@@ -527,13 +583,23 @@ function AddMoney({
             onChange={(event) => setDate(event.target.value)}
             className="h-8 min-w-0 border border-hairline-strong bg-background px-2 tabular-nums"
           />
-          <label htmlFor="add-note">{t('wealth.goalDetail.add.note')}</label>
+          <label htmlFor="add-note">{kind === 'OUT' ? t('wealth.goalDetail.add.why') : t('wealth.goalDetail.add.note')}</label>
           <input
             id="add-note"
             value={note}
             onChange={(event) => setNote(event.target.value)}
+            aria-describedby={kind === 'OUT' ? 'add-why' : undefined}
             className="h-8 min-w-0 border border-hairline-strong bg-background px-2"
           />
+          {kind === 'OUT' && (
+            <>
+              <span />
+              <p id="add-why" className="m-0 text-caption text-ink-secondary">
+                {t('wealth.goalDetail.add.whyHint')}
+                {over && ` ${t('wealth.goalDetail.add.over')}`}
+              </p>
+            </>
+          )}
           <span />
           <div className="flex flex-wrap gap-3">
             <Button variant="primary" size="sm" icon="check" onClick={save}>

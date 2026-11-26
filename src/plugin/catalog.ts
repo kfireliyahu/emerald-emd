@@ -186,6 +186,7 @@ export const TOOL_GROUPS: readonly ToolGroup[] = [
       writes('set_goal_deposit_categories', 'Says which Money moved category feeds each goal, and where it lands.'),
       writes('set_cushion', 'Sets the cushion: which bank accounts count, its months and its buckets.'),
       writes('pause_goals', 'Skips a goal for a few months, or starts it again.'),
+      writes('close_goals', 'Closes a goal, and takes its money out when it was spent.'),
       writes('settle_set_aside', 'Says whether money set aside for a goal is still there.'),
       writes('suggest_goal_amounts', 'Suggests the monthly amount for each goal, by nearest date.'),
       writes('set_goal_amounts', 'Sets the monthly amount toward a goal or extra on a debt, from Everything else.'),

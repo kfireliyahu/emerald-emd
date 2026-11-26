@@ -92,7 +92,7 @@ import {
 } from './accountRepository.ts'
 import { accountBalances } from './accountBalanceRepository.ts'
 import { holdingValuations, holdingWorths } from './holdingReadingRepository.ts'
-import { fedDeposits } from './goalDepositRepository.ts'
+import { fedDeposits, goalFeeds } from './goalDepositRepository.ts'
 import { declaredFigures } from '../packs/ledger/figures.ts'
 import { allDeclared, declared } from '../packs/ledger/tables.ts'
 import { deleteRows, insertRows, updateRow } from './formatRowRepository.ts'
@@ -927,6 +927,85 @@ export function updateGoal(db: Database, id: string, edit: SavingGoalEdit, _now:
 
 export function setGoalClosed(db: Database, id: string, isClosed: boolean, _now: number): void {
   updateRow(db, declared(db, 'saving_goal'), id, { is_closed: isClosed ? 1 : 0 })
+}
+
+/** What a goal still holds in one holding: the net of its movements there, above zero. */
+export interface GoalHeld {
+  readonly holdingId: string
+  readonly amount: Money
+}
+
+/**
+ * **What a goal still holds, holding by holding** (M64 F72, D-645): the net of
+ * every movement into each — typed and fed alike — keeping only what is above
+ * zero, one line per holding and currency. What *I spent it* takes out.
+ */
+export function goalHeld(db: Database, goalId: string): readonly GoalHeld[] {
+  const sums = new Map<string, GoalHeld>()
+  for (const deposit of listDeposits(db, { goalId })) {
+    const key = `${deposit.holdingId}\u0000${deposit.amount.currency}`
+    const was = sums.get(key)
+    sums.set(key, {
+      holdingId: deposit.holdingId,
+      amount: money((was?.amount.minor ?? 0) + deposit.amount.minor, deposit.amount.currency),
+    })
+  }
+  return [...sums.values()].filter((one) => one.amount.minor > 0)
+}
+
+export class GoalFollowsItsHoldingError extends Error {
+  constructor(readonly goalName: string) {
+    super(
+      `${goalName} follows its holding's own rows, so a sale there is its money out; nothing can be typed against it. Close it without saying it was spent.`,
+    )
+    this.name = 'GoalFollowsItsHoldingError'
+  }
+}
+
+export interface GoalClose {
+  /** The money it holds was spent: take it out, then close. False closes it and the money stays held. */
+  readonly spent: boolean
+  /** The day the withdrawal is dated. */
+  readonly asOf: LocalDate
+  /** The withdrawal's why, in the person's language; `Spent on <goal>` when not given. */
+  readonly note?: string | undefined
+}
+
+/**
+ * **Close a goal, and say whether its money was spent** (M64 F72, D-645) — one
+ * write. Asked by the maintainer of a goal saved in the bank, reached and spent:
+ * a closed goal's deposits still count in the bank's split (`goalParts`), so the
+ * cushion stayed short by money that was gone. Spent, it records the withdrawal
+ * of what the goal holds in each holding — a typed negative deposit whose why is
+ * that it was spent on the goal, the same row a person types as *Money out* — and
+ * closes it, all or nothing; not spent, it only closes, and the money stays held.
+ *
+ * A goal that follows its holding's rows (D-357) has no typed movements: its
+ * sale is its money out, so a spent close of one that still holds money is
+ * refused rather than written beside the rows that are its truth.
+ *
+ * Returns the withdrawals written, so a screen can undo them.
+ */
+export function closeGoal(db: Database, goalId: string, input: GoalClose, now: number): readonly SavingDeposit[] {
+  const goal = findGoal(db, goalId)
+  if (goal === undefined) throw new Error('That goal is not in this document.')
+  const held = input.spent ? goalHeld(db, goalId) : []
+  if (held.length > 0 && goalFeeds(db).get(goalId)?.kind === 'HOLDING') throw new GoalFollowsItsHoldingError(goal.name)
+  return inTransaction(db, () => {
+    const ids = insertDeposits(
+      db,
+      held.map((one) => ({
+        goalId,
+        date: input.asOf,
+        amount: money(-one.amount.minor, one.amount.currency),
+        holdingId: one.holdingId,
+        sourceKind: 'MANUAL' as const,
+        note: input.note ?? `Spent on ${goal.name}`,
+      })),
+    )
+    setGoalClosed(db, goalId, true, now)
+    return ids.flatMap((id) => findDeposit(db, id) ?? [])
+  })
 }
 
 export class GoalHasDepositsError extends Error {

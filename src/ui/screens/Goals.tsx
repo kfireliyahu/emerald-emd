@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
-import { fromMajorUnits, minorUnitDigits, money, type CurrencyCode } from '@/core/money.ts'
+import { formatMoney, fromMajorUnits, minorUnitDigits, money, type CurrencyCode } from '@/core/money.ts'
 import { formatPercent } from '@/core/percent.ts'
 import { addMonths, compareYearMonths, monthsBetween, toYearMonthString, yearMonthOf, type YearMonth } from '@/core/time.ts'
 import { parseAmountText } from '@/data/importer/normalize.ts'
@@ -39,9 +39,11 @@ import { Button } from '@/ui/components/Button.tsx'
 import { ContextMenu, type MenuItem } from '@/ui/components/ContextMenu.tsx'
 import { editableMoney } from '@/ui/components/moneyText.ts'
 import { PageMenu } from '@/ui/components/PageMenu.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { SidePanel } from '@/ui/components/SidePanel.tsx'
 import { EmptyState, WaitingList, type Waiting } from '@/ui/components/WaitingList.tsx'
 import { blankDeposit, DepositEditor, type DepositDraft } from '@/ui/savings/DepositEditor.tsx'
+import { ClosedNote, spentQuestionFor, useGoalClose } from '@/ui/savings/GoalClose.tsx'
 import { blankGoal, GoalEditor } from '@/ui/savings/GoalEditor.tsx'
 import { Movements } from '@/ui/savings/Movements.tsx'
 import { rowKeys } from '@/ui/screens/Funds.tsx'
@@ -111,10 +113,6 @@ export function Goals() {
     setSearch({}, { replace: true })
   }, [editId, goals, setSearch])
 
-  if (db === undefined || read === undefined) {
-    return <Centered>{t('wealth.goals.noDocument')}</Centered>
-  }
-
   const write = (work: (database: import('sql.js').Database, now: number) => void): boolean => {
     setProblem(undefined)
     try {
@@ -124,6 +122,12 @@ export function Goals() {
       setProblem(error instanceof Error ? error.message : String(error))
       return false
     }
+  }
+  // Closing from a row's menu, with what it did and its Undo said above the list (M64 F72).
+  const closing = useGoalClose(write)
+
+  if (db === undefined || read === undefined) {
+    return <Centered>{t('wealth.goals.noDocument')}</Centered>
   }
 
   const goalForm =
@@ -280,9 +284,18 @@ export function Goals() {
 
   const menuItems = (row: GoalRow, at: Menu['at']): MenuItem[] => {
     const goal = row.progress.goal
+    const held = spentQuestionFor(db, goal, currency)
     return [
       ...(canRecord
-        ? [{ label: t('wealth.goals.menu.addDeposit'), icon: 'add', onChoose: () => setEditingDeposit({ isNew: true, deposit: blankDeposit(goal, holdings, asOf, currency) }) } satisfies MenuItem]
+        ? [
+            {
+              // Named for what it opens (M64 F72): a movement, in or out, not only a deposit.
+              label: t('wealth.goals.menu.movement'),
+              detail: t('wealth.goals.menu.movementWhy'),
+              icon: 'add',
+              onChoose: () => setEditingDeposit({ isNew: true, deposit: blankDeposit(goal, holdings, asOf, currency) }),
+            } satisfies MenuItem,
+          ]
         : []),
       row.pausedUntil === undefined
         ? { label: t('wealth.goals.menu.pause'), detail: t('wealth.goals.menu.pauseWhy'), onChoose: () => write((database) => void pauseGoal(database, goal.id, 1, asOf)) }
@@ -292,7 +305,25 @@ export function Goals() {
             onChoose: () => write((database) => void pauseGoal(database, goal.id, 0, asOf)),
           },
       { label: t('wealth.common.edit'), icon: 'edit', onChoose: () => setEditingGoal({ isNew: false, goal }) },
-      { label: t('wealth.goals.menu.close'), detail: t('wealth.goals.menu.closeWhy'), onChoose: () => write((database, now) => setGoalClosed(database, goal.id, true, now)) },
+      {
+        label: t('wealth.goals.menu.close'),
+        detail: held === undefined ? t('wealth.goals.menu.closeWhy') : t('wealth.goals.menu.closeAsks'),
+        // A goal that still holds money asks, at the same point, whether it was spent (M64 F72):
+        // the same menu again, never a bar at the bottom. One that holds nothing closes at once.
+        onChoose: () =>
+          held === undefined
+            ? closing.close(goal, false, undefined)
+            : setMenu({
+                at,
+                title: <Phrase text={t('wealth.goals.menu.spentQuestion', { amount: formatMoney(held) })} parts={{ name: <Bidi>{goal.name}</Bidi> }} />,
+                sub: t('wealth.goals.menu.spentWhy'),
+                items: [
+                  { label: t('wealth.goals.menu.spent'), onChoose: () => closing.close(goal, true, held) },
+                  { label: t('wealth.goals.menu.notSpent'), onChoose: () => closing.close(goal, false, held) },
+                  { label: t('wealth.common.cancel'), separated: true, onChoose: () => undefined },
+                ],
+              }),
+      },
       {
         label: t('wealth.common.delete'),
         icon: 'trash',
@@ -414,6 +445,8 @@ export function Goals() {
           )}
 
           <WaitingList label={t('wealth.common.waiting')} items={waiting} />
+
+          <ClosedNote closed={closing.closed} onUndo={closing.undo} />
 
           {rows.length > 0 && (
             <section className="flex flex-col gap-3" aria-labelledby="goals-month">
