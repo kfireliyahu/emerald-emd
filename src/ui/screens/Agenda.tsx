@@ -10,9 +10,16 @@ import { FilterBand, useAddressFilter } from '@/ui/formats/FilterBand.tsx'
 import { AgendaView } from '@/ui/formats/LinkViews.tsx'
 import type { RowFilter } from '@/data/repositories/formatFilterRepository.ts'
 import { today } from '@/ui/today.ts'
+import { countKey } from '@/i18n/count.ts'
+import { useT } from '@/i18n/current.ts'
 
-/** The windows the bar offers, in the filter's own words (D-472) — and none, everything ahead. */
-const WINDOWS = ['within 7 days', 'within 14 days', 'within 30 days'] as const
+/** The windows the bar offers, in days — and none, everything ahead. */
+const WINDOWS = [7, 14, 30] as const
+
+/** A window in the filter's own words (D-472), `within 7 days`: the address's code, never shown. */
+function windowCode(days: number): string {
+  return ['within', String(days), 'days'].join(' ')
+}
 
 /**
  * **The agenda, as a screen** — M49 U3, D-473. Every dated format's rows from
@@ -25,6 +32,7 @@ const WINDOWS = ['within 7 days', 'within 14 days', 'within 30 days'] as const
  * same rows. The bar's windows and the search write the same address.
  */
 export function Agenda() {
+  const t = useT()
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
   const mutate = useDocumentStore((state) => state.mutate)
@@ -42,7 +50,7 @@ export function Agenda() {
     // `revision` is the dependency that matters: every write bumps it.
   }, [db, revision, filter])
 
-  if (db === undefined || data === undefined) return <Centered>Open a document to see what it holds.</Centered>
+  if (db === undefined || data === undefined) return <Centered>{t('formats.rows.noDocument')}</Centered>
   const held = filter.match?.[AGENDA_DATE]
   const windowed = (window: string | undefined): RowFilter => {
     const { [AGENDA_DATE]: _was, ...rest } = filter.match ?? {}
@@ -61,8 +69,9 @@ export function Agenda() {
         band={<FilterBand filter={filter} shown={data.shown} total={data.total} onClear={clear} onChange={set} />}
         action={
         <span className="flex flex-wrap items-center gap-2">
-          <span className="flex items-center" role="group" aria-label="How far ahead">
-            {[undefined, ...WINDOWS].map((window) => {
+          <span className="flex items-center" role="group" aria-label={t('views.agenda.howFar')}>
+            {[undefined, ...WINDOWS].map((days) => {
+              const window = days === undefined ? undefined : windowCode(days)
               const on = window === undefined ? held === undefined : held === window
               return (
                 <button
@@ -72,7 +81,7 @@ export function Agenda() {
                   onClick={() => set(windowed(window))}
                   className={`h-7 border border-hairline px-2.5 text-caption -ms-px first:ms-0 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${on ? 'bg-surface text-ink font-medium' : 'text-ink-secondary hover:text-ink'}`}
                 >
-                  {window === undefined ? 'All ahead' : window.replace('within ', '')}
+                  {days === undefined ? t('views.agenda.allAhead') : t(countKey('views.agenda.days', days), { count: days })}
                 </button>
               )
             })}
@@ -82,9 +91,9 @@ export function Agenda() {
             type="search"
             value={filter.search ?? ''}
             onChange={(event) => set({ ...filter, search: event.target.value }, true)}
-            placeholder="Search"
-            aria-label="Search"
-            title="Every column, as it is shown"
+            placeholder={t('formats.rows.search')}
+            aria-label={t('formats.rows.search')}
+            title={t('views.agenda.searchHint')}
           />
         </span>
         }

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { column, DECLARATION_LANGUAGE, type FormatDeclaration } from '@/domain/format/declaration.ts'
 import { boardOf, lineShapeOf } from '@/domain/format/view.ts'
 
-import { cardChoosable, chosenCards, chosenLines, lineChoosable } from './lineColumns.ts'
+import { cardChoosable, chosenCards, chosenLines, lineChoosable, namedByRow } from './lineColumns.ts'
 
 const format = (name: string, columns: FormatDeclaration['columns']): FormatDeclaration => ({
   language: DECLARATION_LANGUAGE,
@@ -52,5 +52,19 @@ describe('which columns a line draws (M37 U5)', () => {
     expect(named(cardChoosable(UNIT, board).columns)).toEqual(['title', 'brief', 'milestone'])
     expect(cardChoosable(UNIT, board).drawn).toEqual(['title', 'milestone'])
     expect(named(chosenCards(UNIT, board, ['title', 'state']))).toEqual(['title'])
+  })
+
+  it('leaves out what the group or the name already says, and keeps what was chosen (M64 F19)', () => {
+    const shape = lineShapeOf(UNIT.columns, LINES)
+    expect(chosenLines(UNIT, shape, undefined, true).state).toBe(false)
+    expect(chosenLines(UNIT, shape, ['state'], true).state).toBe(true)
+    const milestone = UNIT.columns.find((each) => each.name === 'milestone')
+    const title = UNIT.columns.find((each) => each.name === 'title')
+    if (milestone === undefined || title === undefined) throw new Error('no columns')
+    expect(namedByRow(milestone, 'M2', 'M2 U3')).toBe(true)
+    expect(namedByRow(milestone, 'M2', 'M20 U1')).toBe(false)
+    expect(namedByRow(milestone, 'M2', 'Plan the year')).toBe(false)
+    // Text is never left out for being in the name: only a link repeats it.
+    expect(namedByRow(title, 'M2', 'M2 U3')).toBe(false)
   })
 })

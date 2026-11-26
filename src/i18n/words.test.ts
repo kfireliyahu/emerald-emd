@@ -179,8 +179,29 @@ const M64_F2 = [
   'src/ui/components/WaitingList.tsx',
 ]
 
+/** M64 F17-F20 (D-632): the engine's other views and the words its sentences say — board, list, roadmap, ready, agenda, dashboards, connections, making a format. */
+const M64_F18 = [
+  'src/ui/screens/FormatLinkViews.tsx',
+  'src/ui/formats/BoardView.tsx',
+  'src/ui/formats/ListView.tsx',
+  'src/ui/formats/LinkViews.tsx',
+  'src/ui/screens/Agenda.tsx',
+  'src/ui/screens/Connections.tsx',
+  'src/ui/formats/ConnectionPanel.tsx',
+  'src/ui/formats/ConnectionGraph.tsx',
+  'src/ui/formats/Dashboard.tsx',
+  'src/ui/formats/RollupView.tsx',
+  'src/ui/formats/MakeBlock.tsx',
+  'src/ui/formats/IntakePanel.tsx',
+  'src/ui/formats/NewFormat.tsx',
+  'src/ui/formats/ColumnQuestions.tsx',
+  'src/ui/formats/inputForm.ts',
+  'src/ui/formats/shape.ts',
+  'src/ui/formats/ColumnsChoice.tsx',
+]
+
 /** The screens whose words are the catalogue's. A unit that translates a screen adds its files here. */
-export const TRANSLATED: readonly string[] = [...U4, ...U5, ...M64_U8, ...M64_U10, ...M64_U13, ...M64_F9, ...M64_F3, ...M64_F26, ...M64_F2]
+export const TRANSLATED: readonly string[] = [...U4, ...U5, ...M64_U8, ...M64_U10, ...M64_U13, ...M64_F9, ...M64_F3, ...M64_F26, ...M64_F2, ...M64_F18]
 
 /** Literals in a translated file that are not the app's words, by file, each with why. */
 const ALLOWED: Readonly<Record<string, readonly string[]>> = {

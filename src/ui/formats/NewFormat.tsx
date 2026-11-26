@@ -20,6 +20,8 @@ import type { DocumentCurrency } from '@/ui/formats/ColumnQuestions.tsx'
 import { ShapePanel } from '@/ui/formats/ShapePanel.tsx'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { openingShape, sheetMark, type Shape } from '@/ui/formats/shape.ts'
+import { countKey } from '@/i18n/count.ts'
+import { useT } from '@/i18n/current.ts'
 
 const NOTHING = new Map<string, never>()
 
@@ -76,6 +78,7 @@ export function NewFormat({
   onCancel: () => void
   onCopy: () => void
 }) {
+  const t = useT()
   const { draft, focus } = shape
   const [naming, setNaming] = useState(() => draft.title.trim() === '')
   // A column removed from under the panel leaves it open on nothing; the
@@ -141,8 +144,8 @@ export function NewFormat({
       dir="auto"
       autoFocus={first}
       data-tour={first ? 'format-title' : undefined}
-      aria-label="What one of them is called"
-      placeholder="What one is: a book, a workout…"
+      aria-label={t('formats.make.titleLabel')}
+      placeholder={t('formats.make.titlePlaceholder')}
       onChange={(event) => {
         const title = event.target.value
         // The name follows the title only while nobody has touched it.
@@ -167,9 +170,9 @@ export function NewFormat({
       className={`${FIELD} w-48 font-mono text-caption`}
       value={draft.name}
       spellCheck={false}
-      aria-label="Its table"
-      placeholder="its_table_name"
-      title="Lower-case letters, digits and underscores — this one cannot be read off the title."
+      aria-label={t('formats.make.tableLabel')}
+      placeholder={t('formats.make.tablePlaceholder')}
+      title={t('formats.make.tableHint')}
       onChange={(event) => onShape({ draft: { ...draft, name: event.target.value }, focus })}
     />
   ) : (
@@ -184,20 +187,17 @@ export function NewFormat({
     return (
       <div key="naming" className="fc-view-enter flex h-full flex-col">
         <div className="flex shrink-0 items-center gap-4 border-b border-hairline px-6 py-2">
-          <span className="font-medium">A new format</span>
-          <span className="text-caption text-ink-tertiary">New — not in the document yet</span>
+          <span className="font-medium">{t('formats.make.title')}</span>
+          <span className="text-caption text-ink-tertiary">{t('formats.make.notYet')}</span>
           <span className="ms-auto">
             <Button variant="ghost" size="sm" onClick={onCancel}>
-              Cancel
+              {t('formats.make.cancel')}
             </Button>
           </span>
         </div>
-        <section aria-label="Its name" className="mx-auto flex w-full max-w-2xl flex-col gap-3 px-6 py-12">
-          <h2 className="font-medium">What is one of them called?</h2>
-          <p className="text-caption text-ink-tertiary">
-            One of the things this format will hold — a book, a workout, a recipe. Its columns come
-            next.
-          </p>
+        <section aria-label={t('formats.make.nameSection')} className="mx-auto flex w-full max-w-2xl flex-col gap-3 px-6 py-12">
+          <h2 className="font-medium">{t('formats.make.ask')}</h2>
+          <p className="text-caption text-ink-tertiary">{t('formats.make.askSay')}</p>
           <div className="flex flex-wrap items-center gap-3">
             {titleField(true)}
             {nameField}
@@ -209,7 +209,7 @@ export function NewFormat({
           ))}
           <div>
             <Button variant="primary" size="sm" disabled={!ready} data-tour="add-columns" onClick={() => setNaming(false)}>
-              Add its columns
+              {t('formats.make.addColumns')}
             </Button>
           </div>
         </section>
@@ -222,11 +222,11 @@ export function NewFormat({
       <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline px-6 py-2">
         {titleField(false)}
         {nameField}
-        <Chip>{named.length === 1 ? '1 column' : `${String(named.length)} columns`}</Chip>
-        <span className="text-caption text-ink-tertiary">New — not in the document yet</span>
+        <Chip>{t(countKey('formats.make.columns', named.length), { count: named.length })}</Chip>
+        <span className="text-caption text-ink-tertiary">{t('formats.make.notYet')}</span>
         <span className="ms-auto">
           <Button variant="ghost" size="sm" onClick={onCancel}>
-            Cancel
+            {t('formats.make.cancel')}
           </Button>
         </span>
       </div>

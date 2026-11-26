@@ -21,6 +21,7 @@ import { INPUT_KIND, inputDraft, inputViewRefusals, type InputShape } from '@/do
 import { screenWords, type StoredRow } from '@/domain/format/row.ts'
 import { blankDraft, offeredOf, type RowDraft } from '@/domain/format/rowDraft.ts'
 import { entryDefaults, savedNameRefusal, withArticle, type DashboardBlock } from '@/domain/format/view.ts'
+import type { Translate } from '@/i18n/current.ts'
 
 import { inputAddress } from './addressFilter.ts'
 import { addsAsWords, inputFormOf, keptSentence } from './inputForm.ts'
@@ -103,10 +104,11 @@ export function undoRefusal(
   declaration: FormatDeclaration,
   id: string,
   declarations: readonly FormatDeclaration[],
+  t?: Translate,
 ): string | undefined {
   const linking = rowsLinkingTo(db, declaration, [id], declarations)
   const count = linking.reduce((sum, each) => sum + [...each.counts.values()].reduce((a, b) => a + b, 0), 0)
-  return count > 0 ? keptSentence(count) : undefined
+  return count > 0 ? keptSentence(count, t) : undefined
 }
 
 /** A new input view made in *Add a block*: its name, what it asks and sets, whether Add opens it, and where it goes. */

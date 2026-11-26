@@ -262,19 +262,19 @@
       "screens": 1.0
     },
     "#/formats/milestone/roadmap": {
-      "words": 183,
+      "words": 185,
       "blocks": 1,
       "figures": 0,
-      "actions": 27,
-      "colours": 8,
+      "actions": 28,
+      "colours": 9,
       "screens": 1.1
     },
     "#/formats/unit/ready": {
-      "words": 78,
+      "words": 70,
       "blocks": 2,
       "figures": 0,
-      "actions": 13,
-      "colours": 5,
+      "actions": 12,
+      "colours": 7,
       "screens": 1.0
     },
     "#/formats/card_charge/dashboard": {

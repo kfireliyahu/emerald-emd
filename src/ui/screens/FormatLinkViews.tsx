@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react'
+import { useContext, useMemo, type ReactNode } from 'react'
 import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { readyData, roadmapData } from '@/data/repositories/formatLinkViewRepository.ts'
@@ -24,7 +24,9 @@ import {
   dashboardPath,
   entryPath,
   formatPath,
+  inputPath,
   listPath,
+  NEW_ENTRY,
   readyPath,
   roadmapPath,
   savedViewPath,
@@ -34,6 +36,10 @@ import { useSavedViews, useSaving, type Saving } from '@/ui/formats/savedView.ts
 import { rollupWords } from '@/ui/formats/dashboard.ts'
 import { memberText } from '@/ui/formats/tone.ts'
 import { useT } from '@/i18n/current.ts'
+import { Button } from '@/ui/components/Button.tsx'
+import { rowWriteRefusalOnScreen } from '@/domain/format/owner.ts'
+import { INPUT_KIND } from '@/domain/format/inputView.ts'
+import { ReadOnly } from '@/ui/formats/readOnly.ts'
 import { readyAnswer, roadmapAnswer } from '@/ui/formats/viewAnswers.ts'
 
 /**
@@ -82,7 +88,7 @@ export function FormatRoadmap() {
     // `revision` is the dependency that matters: every write bumps it.
   }, [db, name, revision, filter, folds])
 
-  if (db === undefined || data === undefined) return <Centered>Open a document to see what it holds.</Centered>
+  if (db === undefined || data === undefined) return <Centered>{t('formats.rows.noDocument')}</Centered>
   if (data.declaration === undefined) return <Navigate to="/formats" replace />
   if (data.roadmap === undefined) return <Navigate to={formatPath(data.declaration.name) + address} replace />
   const format = data.declaration.name
@@ -102,27 +108,12 @@ export function FormatRoadmap() {
       on="roadmap"
       views={data.views}
       answer={roadmapAnswer(t, data.roadmap)}
-      caption={`In the order of ${memberText(shape.order.name)}`}
+      caption={t('views.roadmap.order', { column: memberText(shape.order.name) })}
       saving={saving}
       // The table is not the milestones' units: the other tabs keep the
       // milestones' filter and let the folds' go.
       address={filterAddress(filter)}
-      action={
-        <>
-          <Filtering db={db} declaration={data.declaration} declarations={data.declarations} filter={filter} set={set} />
-          {foldsOf(shape).map((fold) => (
-            <ColumnFilter
-              key={fold.name}
-              db={db}
-              declaration={fold}
-              declarations={data.declarations}
-              filter={foldFilter(folds, fold.name)}
-              onChange={(next, replace) => setFolds(withFold(folds, fold.name, next), replace)}
-              rows={fold.title.toLowerCase()}
-            />
-          ))}
-        </>
-      }
+      action={<Filtering db={db} declaration={data.declaration} declarations={data.declarations} filter={filter} set={set} />}
     >
       <FilterBand
         filter={both}
@@ -131,7 +122,7 @@ export function FormatRoadmap() {
         onChange={fromBand}
         declaration={data.declaration}
         saving={saving}
-        back={back(fromDashboard, navigate)}
+        back={back(fromDashboard, navigate, t('formats.rows.tabs.dashboard'))}
       />
       <RoadmapView
         data={data.roadmap}
@@ -140,6 +131,19 @@ export function FormatRoadmap() {
         columns={columns}
         onColumns={setColumns}
         titled={false}
+        // **What it folds is filtered in the views' strip** (M64 F17, D-632),
+        // off the title row, where its field had no room to say its name.
+        filters={foldsOf(shape).map((fold) => (
+          <ColumnFilter
+            key={fold.name}
+            db={db}
+            declaration={fold}
+            declarations={data.declarations}
+            filter={foldFilter(folds, fold.name)}
+            onChange={(next, replace) => setFolds(withFold(folds, fold.name, next), replace)}
+            rows={fold.title.toLowerCase()}
+          />
+        ))}
       />
     </Frame>
   )
@@ -182,7 +186,7 @@ export function FormatReady() {
     // `revision` is the dependency that matters: every write bumps it.
   }, [db, name, revision, filter])
 
-  if (db === undefined || data === undefined) return <Centered>Open a document to see what it holds.</Centered>
+  if (db === undefined || data === undefined) return <Centered>{t('formats.rows.noDocument')}</Centered>
   if (data.declaration === undefined) return <Navigate to="/formats" replace />
   if (data.ready === undefined) return <Navigate to={formatPath(data.declaration.name) + address} replace />
   return (
@@ -191,7 +195,7 @@ export function FormatReady() {
       on="ready"
       views={data.views}
       answer={readyAnswer(t, data.ready)}
-      answerTitle={readyRule(data.ready.shape)}
+      answerTitle={readyRule(t, data.ready.shape)}
       saving={saving}
       address={address}
       action={<Filtering db={db} declaration={data.declaration} declarations={data.declarations} filter={filter} set={set} />}
@@ -203,7 +207,7 @@ export function FormatReady() {
         onChange={set}
         declaration={data.declaration}
         saving={saving}
-        back={back(fromDashboard, navigate)}
+        back={back(fromDashboard, navigate, t('formats.rows.tabs.dashboard'))}
       />
       <ReadyView data={data.ready} columns={columns} choosing={{ format: data.declaration, onChange: setColumns }} titled={false} />
     </Frame>
@@ -253,6 +257,7 @@ function Filtering({
   readonly filter: RowFilter
   readonly set: (next: RowFilter, replace?: boolean) => void
 }) {
+  const t = useT()
   return (
     <>
       <ColumnFilter db={db} declaration={declaration} declarations={declarations} filter={filter} onChange={set} />
@@ -261,9 +266,9 @@ function Filtering({
         type="search"
         value={filter.search ?? ''}
         onChange={(event) => set({ ...filter, search: event.target.value }, true)}
-        placeholder="Search"
-        aria-label="Search"
-        title="Every column, as it is shown"
+        placeholder={t('formats.rows.search')}
+        aria-label={t('formats.rows.search')}
+        title={t('formats.rows.searchHint')}
       />
     </>
   )
@@ -273,8 +278,9 @@ function Filtering({
 function back(
   fromDashboard: string | undefined,
   navigate: ReturnType<typeof useNavigate>,
+  label: string,
 ): { readonly label: string; readonly go: () => void } | undefined {
-  return fromDashboard === undefined ? undefined : { label: 'Dashboard', go: () => navigate(fromDashboard) }
+  return fromDashboard === undefined ? undefined : { label, go: () => navigate(fromDashboard) }
 }
 
 /**
@@ -312,16 +318,25 @@ function Frame({
   children: ReactNode
 }) {
   const navigate = useNavigate()
+  const t = useT()
+  const readOnly = useContext(ReadOnly)
+  const every = useSavedViews(declaration.name)
   // An input view adds rows rather than showing them, so it is no tab (M55 U3, D-535).
-  const saved = useSavedViews(declaration.name).filter((each) => each.kind !== 'input')
+  const saved = every.filter((each) => each.kind !== INPUT_KIND)
   const savedHere = saving?.current
   const format = declaration.name
+  // **The format's one Add, on every view of it** (M64 F17, D-632): behind the
+  // table's refusal (a pack's format, a copy nothing is saved from), opening
+  // what the table's opens: the default input view, or a new entry.
+  const locked = rowWriteRefusalOnScreen(declaration) ?? readOnly
+  const defaultInput = every.find((each) => each.kind === INPUT_KIND && each.isDefault === true)
+  const addPath = (defaultInput === undefined ? entryPath(format, NEW_ENTRY) : inputPath(format, defaultInput.name)) + address
   const tabs = [
-    { label: 'Table', on: false, go: () => navigate(formatPath(format) + address) },
-    ...(declaration.columns.some((each) => each.type === 'enum') ? [{ label: 'Board', on: false, go: () => navigate(boardPath(format) + address) }] : []),
-    { label: 'List', on: false, go: () => navigate(listPath(format) + address) },
-    ...(views.roadmap ? [{ label: 'Roadmap', on: on === 'roadmap' && savedHere === undefined, go: () => navigate(roadmapPath(format) + address) }] : []),
-    ...(views.ready ? [{ label: 'Ready to start', on: on === 'ready' && savedHere === undefined, go: () => navigate(readyPath(format) + address) }] : []),
+    { label: t('formats.rows.tabs.table'), on: false, go: () => navigate(formatPath(format) + address) },
+    ...(declaration.columns.some((each) => each.type === 'enum') ? [{ label: t('formats.rows.tabs.board'), on: false, go: () => navigate(boardPath(format) + address) }] : []),
+    { label: t('formats.rows.tabs.list'), on: false, go: () => navigate(listPath(format) + address) },
+    ...(views.roadmap ? [{ label: t('formats.rows.tabs.roadmap'), on: on === 'roadmap' && savedHere === undefined, go: () => navigate(roadmapPath(format) + address) }] : []),
+    ...(views.ready ? [{ label: t('formats.rows.tabs.ready'), on: on === 'ready' && savedHere === undefined, go: () => navigate(readyPath(format) + address) }] : []),
     ...(declaration.rollups ?? []).map((each) => ({
       label: rollupWords(each.name),
       on: false,
@@ -337,14 +352,21 @@ function Frame({
           <h1 className="m-0 text-title leading-tight font-medium">
             <Bidi>{declaration.title}</Bidi>
           </h1>
-          {action !== undefined && <span className="flex flex-wrap items-center gap-2">{action}</span>}
+          <span className="flex flex-wrap items-center gap-2">
+            {action}
+            {locked === undefined && (
+              <Button variant="primary" icon="add" onClick={() => navigate(addPath)}>
+                {t('formats.rows.add')}
+              </Button>
+            )}
+          </span>
         </div>
         <p className="m-0 text-lede tabular-nums" aria-live="polite" title={answerTitle}>
           {answer}
         </p>
         <p className="m-0 flex min-h-6 items-baseline text-caption text-ink-secondary">{caption}</p>
       </header>
-      <nav aria-label="Views" className="flex h-8 shrink-0 items-stretch gap-4 overflow-x-auto border-b border-hairline px-6">
+      <nav aria-label={t('formats.rows.views')} className="flex h-8 shrink-0 items-stretch gap-4 overflow-x-auto border-b border-hairline px-6">
         {tabs.slice(0, tabs.length - (declaration.rollups ?? []).length).map((tab) => (
           <Tab key={tab.label} {...tab} />
         ))}
@@ -355,7 +377,7 @@ function Frame({
           <Tab key={`rollup ${tab.label}`} {...tab} />
         ))}
         <span aria-hidden className="my-2 w-px shrink-0 bg-hairline" />
-        <Tab label="Dashboard" on={false} go={() => navigate(dashboardPath(format))} />
+        <Tab label={t('formats.rows.tabs.dashboard')} on={false} go={() => navigate(dashboardPath(format))} />
       </nav>
       {children}
     </div>

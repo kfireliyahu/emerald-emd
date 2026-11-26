@@ -7,7 +7,9 @@ import { runRollup } from '@/data/repositories/formatRollupRepository.ts'
 import { nounOf, pluralOf } from '@/domain/format/connections.ts'
 import type { FormatDeclaration } from '@/domain/format/declaration.ts'
 import { figureText } from '@/domain/format/rollup.ts'
+import { useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { Chart } from '@/ui/charts/Chart.tsx'
 import { drawnValue, type ChartKind } from '@/ui/charts/chart.ts'
 import { rollupSentence, rollupWords } from '@/ui/formats/dashboard.ts'
@@ -47,6 +49,7 @@ export function RollupView({
   name: string
   revision: number
 }) {
+  const t = useT()
   const result = useMemo(
     () => runRollup(db, declaration, name, formats, { today: toISODate(today()) }),
     // `revision` is what says the rows moved underneath.
@@ -85,8 +88,8 @@ export function RollupView({
       </div>
       {chart !== undefined &&
         chart.series.some((each) => each.points.some((one) => drawnValue(one, chart.axis) !== undefined)) && (
-        <section className="px-6 pt-2 pb-4" aria-label={`${said} as a chart`}>
-          <div className="mb-1 flex items-center gap-1" role="group" aria-label="Draw as">
+        <section className="px-6 pt-2 pb-4" aria-label={t('dashboards.rollup.asChart', { name: said })}>
+          <div className="mb-1 flex items-center gap-1" role="group" aria-label={t('dashboards.rollup.drawAs')}>
             {(['bars', 'line'] as const).map((each) => (
               <button
                 key={each}
@@ -99,7 +102,7 @@ export function RollupView({
                   kind === each ? 'bg-surface text-ink' : 'text-ink-secondary hover:text-ink',
                 ].join(' ')}
               >
-                {each === 'bars' ? 'Bars' : 'Line'}
+                {t(each === 'bars' ? 'dashboards.rollup.bars' : 'dashboards.rollup.line')}
               </button>
             ))}
           </div>
@@ -110,7 +113,7 @@ export function RollupView({
             axis={chart.axis}
             kind={kind}
             title={sentence}
-            labelHeading="month"
+            labelHeading={t('dashboards.rollup.month')}
             // Its table is the tab's own, beneath: every figure the chart draws is a cell there.
             figures="elsewhere"
           />
@@ -122,17 +125,17 @@ export function RollupView({
         </section>
       )}
       {result.groups.length === 0 ? (
-        <p className="px-6 py-4 text-ink-secondary">No row falls in it yet.</p>
+        <p className="px-6 py-4 text-ink-secondary">{t('dashboards.body.empty')}</p>
       ) : (
         <table className="min-w-full border-collapse text-start">
           <thead className="sticky top-0 z-10 bg-background">
             <tr className="border-b border-hairline">
-              <th className="px-3 py-2 text-label whitespace-nowrap">month</th>
+              <th className="px-3 py-2 text-label whitespace-nowrap">{t('dashboards.rollup.month')}</th>
               {by !== undefined && (
-                <th className="px-3 py-2 text-label whitespace-nowrap">{by.replace(/_/g, ' ')}</th>
+                <th className="px-3 py-2 text-label whitespace-nowrap"><Bidi>{by.replace(/_/g, ' ')}</Bidi></th>
               )}
-              <th className="px-3 py-2 text-end text-label whitespace-nowrap">{said}</th>
-              <th className="px-3 py-2 text-end text-label whitespace-nowrap">rows</th>
+              <th className="px-3 py-2 text-end text-label whitespace-nowrap"><Bidi>{said}</Bidi></th>
+              <th className="px-3 py-2 text-end text-label whitespace-nowrap">{t('dashboards.rollup.rows')}</th>
             </tr>
           </thead>
           <tbody>
@@ -142,12 +145,12 @@ export function RollupView({
                 className="border-b border-hairline"
               >
                 <td className="px-3 py-1.5 whitespace-nowrap tabular-nums">
-                  {group.period ?? <span className="text-ink-secondary">no month</span>}
+                  {group.period ?? <span className="text-ink-secondary">{t('dashboards.rollup.noMonth')}</span>}
                 </td>
                 {by !== undefined && (
                   <td className="px-3 py-1.5 whitespace-nowrap">
                     {group.by === undefined ? (
-                      <span className="text-ink-secondary">none</span>
+                      <span className="text-ink-secondary">{t('dashboards.rollup.none')}</span>
                     ) : (
                       // A linked row's name came from a document, and half of
                       // them are Hebrew.
@@ -160,7 +163,7 @@ export function RollupView({
                     group.value.figures.map((figure) => figureText(figure, moneyOf)).join(' + ')
                   ) : (
                     <span className="text-ink-secondary" title={group.value.reason}>
-                      unchecked
+                      {t('dashboards.rollup.unchecked')}
                     </span>
                   )}
                 </td>
@@ -178,6 +181,7 @@ export function RollupView({
 
 /** *Delete chart*, asking once where it stands; a refusal (a pack's own rollup) is said beside it. */
 function DeleteChart({ format, name, said }: { format: string; name: string; said: string }) {
+  const t = useT()
   const mutate = useDocumentStore((state) => state.mutate)
   const [asking, setAsking] = useState(false)
   const [refusal, setRefusal] = useState<string | undefined>(undefined)
@@ -185,15 +189,15 @@ function DeleteChart({ format, name, said }: { format: string; name: string; sai
   if (!asking) {
     return (
       <button type="button" className={`flex-none ${quiet}`} onClick={() => setAsking(true)}>
-        Delete chart
+        {t('dashboards.rollup.delete')}
       </button>
     )
   }
   return (
-    <span className="flex flex-none items-baseline gap-2" role="group" aria-label={`Delete ${said}`}>
+    <span className="flex flex-none items-baseline gap-2" role="group" aria-label={t('dashboards.rollup.deleteOf', { name: said })}>
       {refusal === undefined ? (
         <span>
-          Delete <Bidi>{said}</Bidi> and its charts on dashboards?
+          <Phrase text={t('dashboards.rollup.question')} parts={{ name: <Bidi>{said}</Bidi> }} />
         </span>
       ) : (
         <span className="text-negative" role="alert">
@@ -216,7 +220,7 @@ function DeleteChart({ format, name, said }: { format: string; name: string; sai
             }
           }}
         >
-          Delete
+          {t('dashboards.rollup.confirm')}
         </button>
       )}
       <button
@@ -227,7 +231,7 @@ function DeleteChart({ format, name, said }: { format: string; name: string; sai
           setRefusal(undefined)
         }}
       >
-        Keep
+        {t('dashboards.rollup.keep')}
       </button>
     </span>
   )

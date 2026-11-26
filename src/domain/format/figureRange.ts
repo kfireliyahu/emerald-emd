@@ -13,6 +13,8 @@
  * menu, read by `filterQuery` on a column it fits. Pure.
  */
 
+import type { Said } from './view.ts'
+
 /** A range as written: each end as typed, and what it is in. */
 export interface FigureRangeWords {
   readonly from: string | undefined
@@ -50,4 +52,34 @@ export function figureRangeSaid(range: FigureRangeWords, written?: (figure: stri
   }
   if (range.from !== undefined && range.to !== undefined) return `${range.from} to ${range.to} ${range.unit}`
   return range.from !== undefined ? `at least ${range.from} ${range.unit}` : `at most ${range.to ?? ''} ${range.unit}`
+}
+
+/** The keys `figureRangeSaying` says a range with; the `In` ones end with its unit. */
+export type FigureRangeKey = `formats.range.${'between' | 'betweenIn' | 'atLeast' | 'atLeastIn' | 'atMost' | 'atMostIn'}`
+
+/**
+ * `figureRangeSaid` as a screen says it (M64 F20): the catalogue's key and the
+ * ends — each written with its unit when `written` is given, else the unit once
+ * at the end — so another language puts *to* and *at least* where it does.
+ */
+export function figureRangeSaying(
+  range: FigureRangeWords,
+  written?: (figure: string, unit: string) => string,
+): Said<FigureRangeKey> {
+  if (written !== undefined) {
+    const end = (figure: string | undefined): string => written(figure ?? '', range.unit)
+    if (range.from !== undefined && range.to !== undefined) {
+      return { key: 'formats.range.between', parts: { from: end(range.from), to: end(range.to) } }
+    }
+    return range.from !== undefined
+      ? { key: 'formats.range.atLeast', parts: { from: end(range.from) } }
+      : { key: 'formats.range.atMost', parts: { to: end(range.to) } }
+  }
+  const unit = range.unit
+  if (range.from !== undefined && range.to !== undefined) {
+    return { key: 'formats.range.betweenIn', parts: { from: range.from, to: range.to, unit } }
+  }
+  return range.from !== undefined
+    ? { key: 'formats.range.atLeastIn', parts: { from: range.from, unit } }
+    : { key: 'formats.range.atMostIn', parts: { to: range.to ?? '', unit } }
 }

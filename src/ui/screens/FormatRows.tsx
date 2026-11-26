@@ -1084,7 +1084,7 @@ export function FormatRows({
             // Refused while another row names it, as a delete is (M27 U2, D-300).
             const linking = rowsLinkingTo(db, declaration, [id], data.declarations)
             const count = linking.reduce((sum, each) => sum + [...each.counts.values()].reduce((a, b) => a + b, 0), 0)
-            if (count > 0) return keptSentence(count)
+            if (count > 0) return keptSentence(count, t)
             try {
               mutate((database) => deleteRows(database, declaration, [id], data.declarations))
             } catch (error) {

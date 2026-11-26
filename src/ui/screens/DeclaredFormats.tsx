@@ -159,8 +159,8 @@ export function DeclaredFormats() {
     const draft = pruned(mode.shape.draft)
     const problems = draftProblems(draft, data?.declared ?? [], data?.units)
     const plan = problems.length > 0 ? undefined : planFor(db, declarationOf(draft))
-    return { ...creationOf(draft, problems), plan, declaration: declarationOf(draft) }
-  }, [db, mode, data?.declared, data?.units, revision])
+    return { ...creationOf(draft, problems, t), plan, declaration: declarationOf(draft) }
+  }, [db, mode, data?.declared, data?.units, revision, t])
 
   /** Where a door lands: the editor on its draft, or on the format it names. */
   const open = (draft: FormatDraft): void => {

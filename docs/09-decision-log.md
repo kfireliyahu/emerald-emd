@@ -531,6 +531,7 @@ written out here.
 | D-629 | 2026-11-26 | Wealth's forms open beside the page and ask the few fields a person types first: the balance and its date for a fund's reading, said back in words against the last reading as it is typed, with the rest of the report one verb further and grown in place; the fund, goal, movement, debt and payment forms take the same shape (`PanelForm`), and the details take the report's ink and ramp | M64 |
 | D-630 | 2026-11-26 | The kit catches up with the screens: a small button is the 32px chrome row on the body step, a choice wears a chevron and is never the platform's select, a value-shaped `ValueChoice` replaces Rules' `PickField`, the side panel's first Esc leaves a field and focus returns to the latest opener, a figure keeps its sign in Hebrew, the waiting notice is never filled; and a paycheck by hand is a `PanelForm` in Paychecks' side panel — month, employer, gross and net first, whether it adds up said in words, the slip's lines only if wanted | M64 |
 | D-631 | 2026-11-26 | Plan has a Year beside its month, as Home has: each bucket's year is the sum of its months — what each month's plan gave it against what it got, January through the last month that is over, on the plan each month is on and Home's month basis — said first in words with the categories apart from the goals and debts, each bucket a meter whose months open beside the page, a month nobody could measure left out of both sums, and `plan_month` with a `year` answering the same; Plan's bar runs from the inline start, so in Hebrew it mirrors with its drag and arrow keys while the ring stays a clock | M64 |
+| D-632 | 2026-11-26 | The engine's other views keep the format's one Add and one strip of controls, and say every word through the catalogue: Roadmap and Ready to start carry the table's Add behind the same refusal; the board's Lanes by, the roadmap's fold filters, In the order of, Columns and Fold all, and the ready list's Columns sit in one strip of the same classes under the tabs; a line or card left at its view's columns drops a state its group already says and a link its name already says; and a sentence the engine builds for a screen is a key and its parts, said by the screen | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1965,6 +1966,56 @@ left to right while every column beside it mirrored (F1).
 against a split it never had. *The current month in the sum*: a month half over reads as under its
 plan by the half not yet spent. *A month with no statement counted as nothing got*: it would report
 the bucket under its plan by exactly the months nobody could check.
+## D-632 · 2026-11-26 · The engine's other views keep the format's one Add and one strip of controls, and say every word through the catalogue: Roadmap and Ready to start carry the table's Add behind the same refusal; the board's Lanes by, the roadmap's fold filters, In the order of, Columns and Fold all, and the ready list's Columns sit in one strip of the same classes under the tabs; a line or card left at its view's columns drops a state its group already says and a link its name already says; and a sentence the engine builds for a screen is a key and its parts, said by the screen <a id="d-632"></a>
+
+**Context.** M64 F17-F20, after U14 (D-626) and F9 (D-627). Switching from Table or Board to
+Roadmap or Ready to start lost the format's one primary Add; the roadmap's title row held three
+fields and cut the fold's filter to *Filter unit b*; the board, the roadmap and the ready list each
+drew their controls their own way. The taste check found the ready list's rows each saying PLANNED
+under *Ready to start* and a unit's milestone `M2` beside its ref `M2 U3`, on the board too. And
+probe:screens in Hebrew still found English on the board (47), the roadmap (24), ready (18), the
+agenda (19) and the connections (73), and in sentences `src/domain/format` builds for a screen.
+
+**Decision.**
+
+1. **Roadmap and Ready to start carry the table's Add** (`FormatLinkViews`' frame): hidden behind
+   the same refusal (`rowWriteRefusalOnScreen`, a read-only copy), and opening what the table's opens
+   — the default input view, or a new entry. One primary on every view of a format.
+2. **The views' controls are one strip under the tabs** (`VIEW_STRIP` in `BoardView.tsx`): the
+   board's *Lanes by* and *Columns*; the roadmap's filters for what it folds (moved off the title row
+   and wide enough to say whose rows), *In the order of*, *Columns* and *Fold all*; the ready list's
+   *Columns*. *Columns* is a text action like *Fold all* beside it. A roadmap row's dot still folds it
+   for the pointer, but the chevron is its one keyboard stop.
+3. **A line or a card at its view's own columns says nothing its group or its name says**
+   (`lineColumns.ts`): no state chip on the ready list when its ready state is one member
+   (`chosenLines(…, grouped)`), and no link whose words are whole words of the row's name
+   (`namedByRow`: `M2` in `M2 U3`, never in `M20 U1`). A column chosen under *Columns* is drawn
+   regardless.
+4. **The words are the catalogue's, in English and Hebrew**: `views` (board, list, roadmap, ready,
+   agenda, day words, *Columns*), two new areas `connections` (the graph, *Every connection, in
+   words*, the connection form) and `dashboards` (blocks, making one, a rollup), and `formats` (making
+   a format, a column's questions, Show as, a range, the input view's kept and lacking sentences).
+   Every file is on `words.test.ts`' translated list.
+5. **A sentence the engine builds for a screen returns a key and its parts** (`Said<K>` in
+   `view.ts`: `showAsKey`, `tickSaid`, `relativeDaySaid`, `dueSaidOf`, `figureRangeSaying`), and the
+   screen says it with `t()`. `src/domain/format` imports nothing from `src/i18n`, not even a type
+   (`boundary.test.ts`), so the keys are literal types `t()` checks where it is called. The English
+   functions stay for the plugin, which answers a model in English; a function the screen also calls
+   takes an optional `t` that defaults to English (`cellText`, `keptSentence`, `lackingSentence`,
+   `creationOf`).
+
+**The budget** for `#/formats/milestone/roadmap` and `#/formats/unit/ready` rises by what the Add
+costs (an action, a word, the filled colour) — the brief asked for the Add, and the table's route
+already pays it.
+
+**Still English** (follow-ups M64 F35-F37): the connections' sentences built in
+`src/domain/format/connections.ts` (`edgeWords`, the panel's headline, a column's endpoint hover),
+the dashboard's helpers in `src/ui/formats/dashboard.ts` and the refusals of `madeInPlace.ts` and
+`inputBlock.ts`, and quick add's placeholder in `listView.ts`; and type tiles (`TYPE_WORDS`).
+
+**Rejected.** Keeping the Add on the table alone (switching views lost the one action the format
+asks for). A per-view toolbar of its own (three looks for one job). Importing `MessageKey` into the
+domain (the boundary forbids it, and a literal key type checks the same at the call).
 
 ## Related
 

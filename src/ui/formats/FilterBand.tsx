@@ -14,7 +14,7 @@ import {
 import type { RowQuery } from '@/data/repositories/formatRowRepository.ts'
 import { columnValues, otherHolds, type ColumnUnit, type ColumnValue } from '@/data/repositories/formatValuesRepository.ts'
 import type { ColumnDeclaration, FormatDeclaration } from '@/domain/format/declaration.ts'
-import { figureRangeSaid, figureRangeText, parseFigureRange } from '@/domain/format/figureRange.ts'
+import { figureRangeSaying, figureRangeText, parseFigureRange } from '@/domain/format/figureRange.ts'
 import { useT, type Translate } from '@/i18n/current.ts'
 import { countKey } from '@/i18n/count.ts'
 import { tNow } from '@/i18n/words.ts'
@@ -375,7 +375,8 @@ export function HeldValues({
   // money as the table writes it, `₪10.00 to ₪50.00` (M55 U7).
   const range = typeof value === 'string' && (column?.type === 'money' || column?.type === 'quantity') ? parseFigureRange(value) : undefined
   if (range !== undefined) {
-    return <span className={className}><Bidi>{figureRangeSaid(range, column?.type === 'money' ? amountAsWritten : undefined)}</Bidi></span>
+    const said = figureRangeSaying(range, column?.type === 'money' ? amountAsWritten : undefined)
+    return <span className={className}><Bidi>{t(said.key, said.parts)}</Bidi></span>
   }
   const { values, not } = heldAs(value)
   return (
@@ -492,7 +493,8 @@ export function ColumnFilter({
       </span>
       <ChoiceField
         key="column"
-        className={`${FIELD} w-32 border-transparent bg-transparent ps-7 hover:border-hairline-strong`}
+        // A fold's filter names whose rows it holds, so it is wide enough to say it (M64 F17, D-632).
+        className={`${FIELD} ${rows === undefined ? 'w-32' : 'w-48'} border-transparent bg-transparent ps-7 hover:border-hairline-strong`}
         type="search"
         text={text}
         placeholder={rows === undefined ? t('formats.filter.by') : t('formats.filter.rowsBy', { rows })}

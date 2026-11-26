@@ -43,14 +43,29 @@ export function chosenLines(
   format: FormatDeclaration,
   shape: LineShape<ColumnDeclaration>,
   chosen: readonly string[] | undefined,
+  grouped = false,
 ): { readonly lines: readonly ColumnDeclaration[]; readonly state: boolean } {
-  if (chosen === undefined) return { lines: shape.lines, state: true }
+  // **A line grouped by its state does not say it again** (M64 F19, D-632):
+  // under *Ready to start* every row is planned. What a person chose stays.
+  if (chosen === undefined) return { lines: shape.lines, state: !grouped }
   return {
     lines: format.columns.filter(
       (column) => column !== shape.name && column !== shape.state && chosen.includes(column.name),
     ),
     state: shape.state !== undefined && chosen.includes(shape.state.name),
   }
+}
+
+/**
+ * **Whether a link's words are already in the row's name** (M64 F19, D-632): a
+ * unit's milestone `M2` under its ref `M2 U3` says nothing new, so a line or a
+ * card left at its view's own columns leaves it out. Whole words only: `M2` is
+ * not in `M20 U1`. A column a person chose under *Columns* is drawn regardless.
+ */
+export function namedByRow(column: ColumnDeclaration, text: string, name: string): boolean {
+  if (column.type !== 'link' && column.type !== 'links') return false
+  const said = text.trim()
+  return said !== '' && ` ${name.trim()} `.includes(` ${said} `)
 }
 
 /** A board's cards under a choice, in the order declared. */

@@ -1,7 +1,21 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type KeyboardEvent, type ReactNode } from 'react'
 
+import { parseISODate } from '@/core/time.ts'
 import type { ColumnDeclaration, FormatDeclaration } from '@/domain/format/declaration.ts'
-import { listGroupable, tickValue, tickWords, type ListGroup, type ListSetting, type ListShape } from '@/domain/format/view.ts'
+import {
+  dueSaidOf,
+  listGroupable,
+  relativeDaySaid,
+  tickSaid,
+  tickValue,
+  weekdayOf,
+  type ListGroup,
+  type ListSetting,
+  type ListShape,
+} from '@/domain/format/view.ts'
+import { countKey } from '@/i18n/count.ts'
+import { useDates, useT, type Translate } from '@/i18n/current.ts'
+import type { DateWords } from '@/i18n/dates.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { ChoiceField, type Choice } from '@/ui/components/ChoiceField.tsx'
@@ -39,6 +53,64 @@ import { toneOf } from '@/ui/formats/tone.ts'
 
 /** How long a ticked row stays in place, struck and with its *Undo*, before it sinks into *N done*. */
 const SINK_MS = 4000
+
+// ---------------------------------------------------------------- days, in the language now
+
+/** `weekdayOf`'s numbers, Sunday first, as `settings.calendar.short` names them. */
+const WEEKDAYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'] as const
+
+/** A date's weekday, short, in the language now: `Fri` · `יום ו׳`. */
+export function weekdayWord(t: Translate, date: string): string {
+  const day = weekdayOf(date)
+  const name = day === undefined ? undefined : WEEKDAYS[day]
+  return name === undefined ? '' : t(`settings.calendar.short.${name}`)
+}
+
+/** A day as the views read it — `Fri 9 Oct 2026` (the engine's `dayText`) — or the text as it came. */
+export function dayWords(t: Translate, dates: DateWords, date: string): string {
+  const day = parseISODate(date)
+  if (day === undefined || weekdayOf(date) === undefined) return date
+  return t('views.day', { weekday: weekdayWord(t, date), date: dates.dayMonth(day), year: day.year })
+}
+
+/** A date against today in the language now — `in 3 days` (the engine's `relativeDay`) — or nothing. */
+export function whenWords(t: Translate, date: string, today: string): string | undefined {
+  const said = relativeDaySaid(date, today)
+  return said === undefined ? undefined : t(said.key, said.parts)
+}
+
+/** A due on a list's line in the language now: `dueText`'s words, said again from the day itself. */
+function dueWords(t: Translate, dates: DateWords, cell: { readonly text: string; readonly long: string }): string {
+  const day = parseISODate(cell.long)
+  if (day === undefined) return cell.text
+  const said = dueSaidOf(cell.text)
+  return t(said.key, { ...said.parts, weekday: weekdayWord(t, cell.long), date: dates.dayMonth(day), year: day.year })
+}
+
+/** A group's head: a date's buckets and *No …* are the catalogue's words, a member or a link's row the document's. */
+function groupWords(t: Translate, shape: ListShape<ColumnDeclaration>, group: ListGroup<ListLine>): string {
+  const column = shape.group
+  if (column === undefined) return group.name
+  const label = column.name.replace(/_/g, ' ')
+  if (group.key === 'link:' || group.key === 'member:') return t('views.list.groups.none', { column: label })
+  if (group.key === 'date:none') return t(/date$/i.test(label) ? 'views.list.groups.none' : 'views.list.groups.noDate', { column: label })
+  if (group.key === 'date:late') return t(shape.due === column ? 'views.list.groups.late' : 'views.list.groups.beforeToday')
+  if (group.key === 'date:today') return t('views.list.groups.today')
+  if (group.key === 'date:tomorrow') return t('views.list.groups.tomorrow')
+  if (group.key === 'date:week') return t('views.list.groups.week')
+  if (group.key === 'date:later') return t('views.list.groups.later')
+  return group.name
+}
+
+/** What a tick sets and an untick puts back, in the language now (`tickSaid`). */
+function tickSentences(
+  t: Translate,
+  done: NonNullable<ListShape<ColumnDeclaration>['done']>,
+  before?: string,
+): { readonly header: string; readonly mark: string; readonly undo: string } {
+  const said = tickSaid(done, before)
+  return { header: t(said.header.key, said.header.parts), mark: t(said.mark.key, said.mark.parts), undo: t(said.undo.key, said.undo.parts) }
+}
 
 // ---------------------------------------------------------------- kept for the session
 
@@ -112,6 +184,7 @@ export interface QuickChoice extends QuickField {
 
 export function ListLines(props: ListLinesProps) {
   const { format, shape, groups, width, locked } = props
+  const t = useT()
   const narrow = width === 'narrow'
   const { shut, open, fold, show } = useFolds(format)
   // Ticked a moment ago, and still drawn in place, struck (the mockup's (d)).
@@ -158,7 +231,7 @@ export function ListLines(props: ListLinesProps) {
 
   const row = (line: ListLine): ReactNode => {
     const struck = line.ticked || sinking.has(line.key)
-    const said = done === undefined ? undefined : tickWords(done, before.get(memoryOf(line)))
+    const said = done === undefined ? undefined : tickSentences(t, done, before.get(memoryOf(line)))
     const common = {
       line,
       struck,
@@ -186,14 +259,14 @@ export function ListLines(props: ListLinesProps) {
       >
         {done !== undefined && <span className="mt-0.5 inline-flex size-4 flex-none border-[1.5px] border-ink-secondary" aria-hidden />}
         <Bidi className={`min-w-0 truncate text-body ${props.draft.title === '' ? 'text-ink-secondary italic' : 'text-ink'}`}>
-          {props.draft.title === '' ? `A new ${props.draft.one}` : props.draft.title}
+          {props.draft.title === '' ? t('views.list.draft', { one: props.draft.one }) : props.draft.title}
         </Bidi>
       </div>
     )
   const draftKey = props.draft === undefined ? undefined : groups.some((group) => group.key === props.draft?.group) ? props.draft.group : groups[0]?.key
 
   return (
-    <div className="flex flex-col" role="list" aria-label="Rows">
+    <div className="flex flex-col" role="list" aria-label={t('views.list.label')}>
       {narrow && !locked && props.quickAdd !== false && (
         <QuickAddLine
           narrow
@@ -209,8 +282,9 @@ export function ListLines(props: ListLinesProps) {
         const ticked = group.ticked ? [] : group.rows.filter((line) => line.ticked && !sinking.has(line.key))
         const showing = open.has(group.key)
         const count = group.ticked ? group.rows.length : opened.filter((line) => !line.ticked).length
+        const head = groupWords(t, shape, group)
         return (
-          <section key={group.key} className="flex flex-col" aria-label={bare ? undefined : group.name}>
+          <section key={group.key} className="flex flex-col" aria-label={bare ? undefined : head}>
             {!bare && (
               <button
                 type="button"
@@ -226,7 +300,7 @@ export function ListLines(props: ListLinesProps) {
                   ▸
                 </span>
                 {group.member !== undefined && !narrow && <span className="fc-dot" data-tone={toneOf(group.member)} aria-hidden />}
-                <Bidi className="min-w-0 truncate">{group.name}</Bidi>
+                <Bidi className="min-w-0 truncate">{head}</Bidi>
                 <span className="font-normal text-ink-secondary tabular-nums">{String(count)}</span>
               </button>
             )}
@@ -252,8 +326,7 @@ export function ListLines(props: ListLinesProps) {
                         : 'flex h-8 w-full items-center gap-2 border-t border-hairline px-1 text-start text-caption text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent'
                     }
                   >
-                    {showing ? 'Hide ' : ''}
-                    {String(ticked.length)} done
+                    {t(countKey(showing ? 'views.list.hideDone' : 'views.list.done', ticked.length), { count: ticked.length })}
                   </button>
                 )}
                 {showing && ticked.map(row)}
@@ -282,6 +355,7 @@ interface RowProps {
 
 /** The *Undo* a tick leaves in place for a moment: the untick, said as what it puts back. */
 function Undo({ line, words, undoable, onTick }: RowProps) {
+  const t = useT()
   if (!undoable || words === undefined) return null
   return (
     <button
@@ -291,20 +365,21 @@ function Undo({ line, words, undoable, onTick }: RowProps) {
       title={words.undo}
       className="fc-pop-enter flex-none px-1 text-caption text-accent underline-offset-[3px] hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
     >
-      Undo
+      {t('views.undo')}
     </button>
   )
 }
 
 /** The tick: a 16px square, filled ink when ticked. */
 function Tick({ line, struck, done, locked, words, onTick, className = '' }: RowProps & { readonly className?: string }) {
+  const t = useT()
   if (!done || words === undefined) return null
   const look = `inline-flex size-4 flex-none items-center justify-center border-[1.5px] ${
     struck ? 'border-ink bg-ink text-background' : 'border-ink-secondary'
   } ${className}`
   if (locked) {
     return (
-      <span className={look} aria-label={struck ? 'Done' : 'Not done'} role="img">
+      <span className={look} aria-label={t(struck ? 'views.list.ticked' : 'views.list.unticked')} role="img">
         {struck && <ActionGlyph name="check" size={12} />}
       </span>
     )
@@ -380,7 +455,9 @@ function NarrowRow(props: RowProps & { readonly current: boolean }) {
               <span key={cell.column} className="inline-flex items-center gap-1.5">
                 {index > 0 && <span className="text-ink-tertiary">·</span>}
                 {cell.kind === 'date' ? (
-                  <span className={cell.late ? 'text-negative' : ''}>{cell.text}</span>
+                  <span className={cell.late ? 'text-negative' : ''}>
+                    <DueText cell={cell} />
+                  </span>
                 ) : (
                   cell.kind === 'text' && <Bidi>{cell.text}</Bidi>
                 )}
@@ -395,6 +472,13 @@ function NarrowRow(props: RowProps & { readonly current: boolean }) {
 }
 
 /** One value on the wide line: chips with a dot, a member with its tone, a due right-aligned. */
+/** A due on a line, in the language now. */
+function DueText({ cell }: { cell: { readonly text: string; readonly long: string } }) {
+  const t = useT()
+  const dates = useDates()
+  return <>{dueWords(t, dates, cell)}</>
+}
+
 export function Cell({ cell }: { cell: LineCell }) {
   switch (cell.kind) {
     case 'chips':
@@ -418,7 +502,7 @@ export function Cell({ cell }: { cell: LineCell }) {
     case 'date':
       return (
         <span className={`min-w-[84px] text-end tabular-nums ${cell.late ? 'text-negative' : ''}`} title={cell.long}>
-          {cell.text}
+          <DueText cell={cell} />
         </span>
       )
     case 'text':
@@ -456,6 +540,7 @@ function QuickTitleLine({
   onAdd: (title: string) => boolean
   narrow: boolean
 }) {
+  const t = useT()
   const [text, setText] = useState('')
   return (
     <label
@@ -488,7 +573,7 @@ function QuickTitleLine({
         aria-label={placeholder}
         className="h-full min-w-0 flex-1 border-0 bg-transparent p-0 text-ink outline-none placeholder:text-ink-secondary"
       />
-      {!narrow && <span className="text-caption whitespace-nowrap opacity-0 group-focus-within:opacity-100">Enter adds · Esc clears</span>}
+      {!narrow && <span className="text-caption whitespace-nowrap opacity-0 group-focus-within:opacity-100">{t('views.list.keys')}</span>}
     </label>
   )
 }
@@ -519,6 +604,7 @@ function QuickFieldsLine({
   onAdd: (title: string, values?: Readonly<Record<string, string>>) => boolean
   narrow: boolean
 }) {
+  const t = useT()
   const starts: Readonly<Record<string, string>> = Object.fromEntries(fields.map((each) => [each.column.name, each.start]))
   const startKey = JSON.stringify(starts)
   const [values, setValues] = useState<Readonly<Record<string, string>>>(starts)
@@ -622,7 +708,7 @@ function QuickFieldsLine({
       )}
       {/* Beside an entry, the others open under the line while it has focus or holds text. */}
       {(!narrow || inside || changed) && rest.map((field, at) => labelled(field, at + 1))}
-      {!narrow && <span className="text-caption whitespace-nowrap opacity-0 group-focus-within:opacity-100">Enter adds · Esc clears</span>}
+      {!narrow && <span className="text-caption whitespace-nowrap opacity-0 group-focus-within:opacity-100">{t('views.list.keys')}</span>}
     </div>
   )
 }
@@ -660,6 +746,8 @@ export function ListSettings({
   onDue: (column: string | undefined) => void
   onLine: (columns: readonly string[]) => void
 }) {
+  const t = useT()
+  const nothing = t('views.list.nothing')
   const dated = columns.filter((column) => column.type === 'date')
   const groupable = columns.filter(listGroupable)
   const lineable = columns.filter((column) => column !== shape.name)
@@ -671,14 +759,16 @@ export function ListSettings({
         : [],
   )
   const doneText = (column: string, member: string): string =>
-    `${column.replace(/_/g, ' ')} ${member === 'true' ? 'yes' : member.replace(/_/g, ' ')}`
-  const ticking = shape.done === undefined ? 'No ticks' : tickWords(shape.done).header
+    member === 'true'
+      ? t('views.list.doneYes', { column: column.replace(/_/g, ' ') })
+      : t('views.list.doneText', { column: column.replace(/_/g, ' '), member: member.replace(/_/g, ' ') })
+  const ticking = shape.done === undefined ? t('views.list.noTicks') : tickSentences(t, shape.done).header
   const lines = shape.lines.map((column) => column.name)
   return (
     <div className="flex min-h-8 shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline px-6 py-1 text-caption text-ink-secondary">
       <span className="inline-flex items-center gap-1">
-        Group by
-        <Menu label="Group by" said={shape.group === undefined ? 'nothing' : shape.group.name.replace(/_/g, ' ')} locked={locked}>
+        {t('views.list.groupBy')}
+        <Menu label={t('views.list.groupBy')} said={shape.group === undefined ? nothing : shape.group.name.replace(/_/g, ' ')} locked={locked}>
           {(close) => (
             <>
               {groupable.map((column) => (
@@ -686,13 +776,15 @@ export function ListSettings({
                   key={column.name}
                   on={shape.group === column}
                   hint={
-                    column.type === 'date'
-                      ? shape.due === column
-                        ? 'late, today, tomorrow…'
-                        : 'before today, today…'
-                      : column.type === 'link'
-                        ? 'a link'
-                        : 'an enum'
+                    t(
+                      column.type === 'date'
+                        ? shape.due === column
+                          ? 'views.list.hintDue'
+                          : 'views.list.hintDate'
+                        : column.type === 'link'
+                          ? 'views.list.hintLink'
+                          : 'views.list.hintEnum',
+                    )
                   }
                   onPick={() => {
                     onGroup(column.name)
@@ -709,7 +801,7 @@ export function ListSettings({
                   close()
                 }}
               >
-                Nothing
+                {t('views.list.nothingItem')}
               </MenuItem>
             </>
           )}
@@ -717,7 +809,7 @@ export function ListSettings({
       </span>
       {(doneable.length > 0 || shape.done !== undefined) && !(locked && shape.done === undefined) && (
         <span className="inline-flex items-center gap-1">
-          <Menu label="Tick to mark…" said={ticking} locked={locked}>
+          <Menu label={t('views.list.tickTo')} said={ticking} locked={locked}>
             {(close) => (
               <>
                 {doneable.map((each) => (
@@ -739,7 +831,7 @@ export function ListSettings({
                     close()
                   }}
                 >
-                  No ticks
+                  {t('views.list.noTicks')}
                 </MenuItem>
               </>
             )}
@@ -748,8 +840,8 @@ export function ListSettings({
       )}
       {dated.length > 0 && !(locked && shape.due === undefined) && (
         <span className="inline-flex items-center gap-1">
-          Due by
-          <Menu label="Due by" said={shape.due === undefined ? 'nothing' : shape.due.name.replace(/_/g, ' ')} locked={locked}>
+          {t('views.list.dueBy')}
+          <Menu label={t('views.list.dueBy')} said={shape.due === undefined ? nothing : shape.due.name.replace(/_/g, ' ')} locked={locked}>
             {(close) => (
               <>
                 {dated.map((column) => (
@@ -771,7 +863,7 @@ export function ListSettings({
                     close()
                   }}
                 >
-                  Nothing
+                  {t('views.list.nothingItem')}
                 </MenuItem>
               </>
             )}
@@ -779,8 +871,8 @@ export function ListSettings({
         </span>
       )}
       <span className="inline-flex items-center gap-1">
-        Line
-        <Menu label="Line: after the title" said={lines.length === 0 ? 'nothing' : lines.map((name) => name.replace(/_/g, ' ')).join(', ')} locked={locked}>
+        {t('views.list.line')}
+        <Menu label={t('views.list.lineMenu')} said={lines.length === 0 ? nothing : lines.map((name) => name.replace(/_/g, ' ')).join(', ')} locked={locked}>
           {() =>
             lineable.map((column) => {
               const on = lines.includes(column.name)

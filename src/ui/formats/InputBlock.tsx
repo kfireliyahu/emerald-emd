@@ -10,6 +10,7 @@ import { labelColumn, type FormatDeclaration } from '@/domain/format/declaration
 import { dayOfDefault } from '@/domain/format/inputView.ts'
 import { withField, type RowDraft } from '@/domain/format/rowDraft.ts'
 import { entryLabel, entryWayOf, type SavedView } from '@/domain/format/view.ts'
+import { useT } from '@/i18n/current.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
@@ -83,6 +84,7 @@ export function InputBlock({
   readonly fill: boolean
   readonly width: number
 }) {
+  const t = useT()
   const mutate = useDocumentStore((state) => state.mutate)
   const revision = useDocumentStore((state) => state.revision)
   const shape = useMemo(() => inputShapeOf(view.address, declaration.name), [view.address, declaration.name])
@@ -171,7 +173,7 @@ export function InputBlock({
   }
 
   const undo = (id: string): void => {
-    const refused = undoRefusal(db, declaration, id, declarations)
+    const refused = undoRefusal(db, declaration, id, declarations, t)
     if (refused !== undefined) {
       setKept((was) => ({ ...was, [id]: refused }))
       return

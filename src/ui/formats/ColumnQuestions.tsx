@@ -20,6 +20,7 @@ import { TypeGlyph } from '@/ui/formats/TypeGlyph.tsx'
 import { CurrencyField } from '@/ui/formats/TypedField.tsx'
 import { COMMON_TYPES, isCommonType, MORE_TYPES } from '@/ui/formats/typePicker.ts'
 import { formatsByPack, useKeptPacks } from '@/ui/packs.ts'
+import { useT } from '@/i18n/current.ts'
 
 /**
  * The document's currency and the way to choose it (M29 F3, D-344): asked on a
@@ -96,6 +97,7 @@ export function ColumnQuestions({
    */
   underived?: string | undefined
 }) {
+  const t = useT()
   const wrong = problems.length > 0 || refusals.length > 0
   // The rest of the types, one step past the common ones (M55 U8, D-539).
   const [more, setMore] = useState(false)
@@ -116,7 +118,7 @@ export function ColumnQuestions({
       ref={ref}
       type="button"
       data-tour={`type-${each}`}
-      title={`Stored as ${each}`}
+      title={t('formats.column.storedAs', { type: each })}
       onClick={() => onChoose(each)}
       className="flex flex-col gap-1 rounded-md border border-hairline p-2 text-start transition-colors duration-[var(--duration-micro)] hover:border-hairline-strong hover:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
     >
@@ -140,7 +142,7 @@ export function ColumnQuestions({
     >
       <div className="flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1">
-          <span className="text-label text-ink-secondary uppercase">Name</span>
+          <span className="text-label text-ink-secondary uppercase">{t('formats.column.name')}</span>
           <input
             className={`${FIELD} w-56 font-mono`}
             value={column.name}
@@ -155,7 +157,7 @@ export function ColumnQuestions({
           <span className="flex items-center gap-2 pb-1">
             <TypeGlyph type={column.type} className="h-4 w-4 shrink-0 text-ink-secondary" />
             {/* The person's word; the word the declaration keeps is the tooltip (D-539). */}
-            <span title={`Stored as ${column.type}`}>{TYPE_WORDS[column.type].shown}</span>
+            <span title={t('formats.column.storedAs', { type: column.type })}>{TYPE_WORDS[column.type].shown}</span>
             <Button
               size="sm"
               variant="ghost"
@@ -165,22 +167,22 @@ export function ColumnQuestions({
                 onChoose(column.type)
               }}
             >
-              Change
+              {t('formats.column.change')}
             </Button>
           </span>
         )}
 
         <Button size="sm" variant="ghost" className="ms-auto" onClick={onRemove}>
-          Remove
+          {t('formats.column.remove')}
         </Button>
       </div>
 
       {!chosen && more ? (
         <div key="more" className="fc-view-enter mt-4">
           <div className="flex items-center gap-3">
-            <p className="text-label text-ink-secondary uppercase">More types</p>
+            <p className="text-label text-ink-secondary uppercase">{t('formats.column.moreTypes')}</p>
             <Button size="sm" variant="ghost" onClick={() => setMore(false)}>
-              ← Common types
+              {t('formats.column.commonTypes')}
             </Button>
           </div>
           {MORE_TYPES.map((group, at) => (
@@ -194,7 +196,7 @@ export function ColumnQuestions({
         </div>
       ) : !chosen ? (
         <div key="tiles" className="fc-view-enter mt-4">
-          <p className="text-label text-ink-secondary uppercase">Type</p>
+          <p className="text-label text-ink-secondary uppercase">{t('formats.column.type')}</p>
           {/* **U3's tiles, in the flow rather than behind a popover.** The
               picker they were in existed because a row of eight controls had no
               room for a 34rem grid, and it went with the row: a step has the
@@ -217,18 +219,18 @@ export function ColumnQuestions({
                   <span aria-hidden className="w-4 shrink-0 text-center font-mono text-ink-secondary">
                     =
                   </span>
-                  <span>Computed</span>
+                  <span>{t('formats.column.computed')}</span>
                 </span>
                 <span className="text-caption text-ink-secondary">
                   {onDerive === undefined && underived !== undefined
                     ? underived
-                    : 'From other columns, like a formula — never typed'}
+                    : t('formats.column.computedHint')}
                 </span>
               </button>
             )}
           </div>
           <Button size="sm" variant="ghost" className="mt-2" data-tour="more-types" onClick={openMore}>
-            More types…
+            {t('formats.column.moreTypesOpen')}
           </Button>
         </div>
       ) : (
@@ -238,7 +240,7 @@ export function ColumnQuestions({
           )}
 
           {column.type === 'link' && (
-            <Field label="Links to">
+            <Field label={t('formats.column.linksTo')}>
               {/* Blank until somebody picks: a link that defaulted to whichever
                   format was listed first would point somewhere nobody chose,
                   and every id in it would resolve. */}
@@ -257,7 +259,7 @@ export function ColumnQuestions({
           )}
 
           {(column.type === 'enum' || column.type === 'enums') && (
-            <Field label="Values" hint="Separated by commas.">
+            <Field label={t('formats.column.values')} hint={t('formats.column.valuesHint')}>
               <input
                 className={`${FIELD} w-96 max-w-full`}
                 value={column.values}
@@ -268,7 +270,7 @@ export function ColumnQuestions({
           )}
 
           {acceptsUnit(column.type) && (
-            <Field label="Unit" hint="What it is measured in, if anything.">
+            <Field label={t('formats.column.unit')} hint={t('formats.column.unitHint')}>
               <ChoiceField
                 className={`${FIELD} w-24`}
                 filter
@@ -286,7 +288,7 @@ export function ColumnQuestions({
           {column.type === 'money' && currency !== undefined && <CurrencyQuestion currency={currency} />}
 
           {acceptsRatio(column.type) && column.unit.trim() !== '' && (
-            <Field label="Per" hint="Only if it is a rate — one unit per another.">
+            <Field label={t('formats.column.per')} hint={t('formats.column.perHint')}>
               <input
                 className={`${FIELD} w-24`}
                 value={column.per}
@@ -298,7 +300,7 @@ export function ColumnQuestions({
 
           {acceptsBounds(column.type) && (
             <>
-              <Field label="Minimum">
+              <Field label={t('formats.column.minimum')}>
                 <input
                   className={`${FIELD} w-24 text-end tabular-nums`}
                   inputMode="decimal"
@@ -307,7 +309,7 @@ export function ColumnQuestions({
                   onChange={(event) => onChange({ ...column, minimum: event.target.value })}
                 />
               </Field>
-              <Field label="Maximum">
+              <Field label={t('formats.column.maximum')}>
                 <input
                   className={`${FIELD} w-24 text-end tabular-nums`}
                   inputMode="decimal"
@@ -320,7 +322,7 @@ export function ColumnQuestions({
           )}
 
           {column.type === 'decimal' && (
-            <Field label="Places">
+            <Field label={t('formats.column.places')}>
               <input
                 className={`${FIELD} w-16 text-end tabular-nums`}
                 inputMode="numeric"
@@ -338,7 +340,7 @@ export function ColumnQuestions({
                 checked={column.required}
                 onChange={(event) => onChange({ ...column, required: event.target.checked })}
               />
-              <span className="text-caption">Required</span>
+              <span className="text-caption">{t('formats.column.required')}</span>
             </label>
           )}
 
@@ -351,11 +353,11 @@ export function ColumnQuestions({
                 checked={column.unique}
                 onChange={(event) => onChange({ ...column, unique: event.target.checked })}
               />
-              <span className="text-caption">No two the same</span>
+              <span className="text-caption">{t('formats.column.unique')}</span>
             </label>
           )}
 
-          <Field label="Note" hint="In your words. Kept with the declaration.">
+          <Field label={t('formats.column.note')} hint={t('formats.column.noteHint')}>
             <input
               className={`${FIELD} w-full max-w-prose`}
               value={column.note}
@@ -388,17 +390,14 @@ export function ColumnQuestions({
  * ones this document can convert between — inside a line, never across one.
  */
 function UnitsKnown({ units }: { units: UnitTable }) {
+  const t = useT()
   const groups = DIMENSIONS.map((dimension) => ({
     dimension,
     symbols: units.filter((unit) => unit.dimension === dimension).map((unit) => unit.symbol),
   })).filter((group) => group.symbols.length > 0)
   return (
     <div className="fc-pop-enter w-full text-caption text-ink-secondary">
-      <p className="max-w-prose">
-        Each entry says its own unit &mdash; 150 g on one, 2 kg on the next &mdash; and a total
-        converts between units of one kind. Across kinds, ml to g, it needs a column saying how
-        much one weighs.
-      </p>
+      <p className="max-w-prose">{t('formats.column.unitsKnown')}</p>
       <dl className="mt-1 grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5">
         {groups.map((group) => (
           <div key={group.dimension} className="contents">
@@ -419,6 +418,7 @@ function UnitsKnown({ units }: { units: UnitTable }) {
  * moment it is picked: it belongs to the document, not to this column's draft.
  */
 function CurrencyQuestion({ currency }: { currency: DocumentCurrency }) {
+  const t = useT()
   const [text, setText] = useState(currency.code ?? '')
   useEffect(() => setText(currency.code ?? ''), [currency.code])
   const choose = (code: string): void => {
@@ -426,17 +426,13 @@ function CurrencyQuestion({ currency }: { currency: DocumentCurrency }) {
   }
   return (
     <Field
-      label="Currency"
-      hint={
-        currency.code === undefined
-          ? 'The document’s: what a new amount starts in. Each entry can still say its own.'
-          : 'The document’s: what a new amount starts in. Changing it moves no amount already kept.'
-      }
+      label={t('formats.column.currency')}
+      hint={currency.code === undefined ? t('formats.column.currencyFirst') : t('formats.column.currencyChange')}
     >
       <CurrencyField
         className={`${FIELD} w-28 font-mono`}
         value={text}
-        label="The document’s currency"
+        label={t('formats.column.currencyLabel')}
         placeholder="—"
         onChange={setText}
         // A pick is chosen at once; a code typed is chosen on Enter, or on

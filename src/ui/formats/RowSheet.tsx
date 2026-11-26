@@ -35,7 +35,7 @@ import type { SheetMark } from '@/ui/formats/shape.ts'
 import { Flip } from '@/ui/motion/Flip.tsx'
 import { useMark, type MarkTone } from '@/ui/motion/useMark.ts'
 import { useChanges } from '@/ui/useChanges.ts'
-import { useT } from '@/i18n/current.ts'
+import { useT, type Translate } from '@/i18n/current.ts'
 import { countKey } from '@/i18n/count.ts'
 import { Phrase } from '@/ui/components/Phrase.tsx'
 
@@ -617,7 +617,7 @@ export function RowSheet({
                   ) : column.type === 'file' && typeof row.cells[column.name] === 'string' ? (
                     <FileLink value={String(row.cells[column.name])} />
                   ) : (
-                    <Bidi className="block truncate">{cellFor(column, row, labels)}</Bidi>
+                    <Bidi className="block truncate">{cellFor(column, row, labels, t)}</Bidi>
                   )}
                 </td>
               ))}
@@ -1168,12 +1168,13 @@ function cellFor(
   column: ColumnDeclaration,
   row: StoredRow,
   labels: ReadonlyMap<string, string>,
+  t: Translate,
 ): string {
   const value = readValue(column, row)
   if (column.type === 'link' && typeof value === 'string') return labels.get(value) ?? value
   // Several rows, each by its name (M27 U2, D-300).
   if (isList(value)) return value.map((id) => labels.get(id) ?? id).join(', ')
-  return cellText(value)
+  return cellText(value, t)
 }
 
 /** The numeric types, which line up on the right. */
