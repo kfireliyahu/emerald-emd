@@ -657,6 +657,12 @@ describe('the document’s own screens, notices and dialogs, swept (M54 F6)', ()
     'src/ui/screens/Packs.tsx',
     'src/ui/screens/Export.tsx',
     'src/ui/screens/Overview.tsx',
+    // M64 U10 (D-622): the rest of Wealth, as it was redesigned.
+    'src/ui/screens/Funds.tsx',
+    'src/ui/screens/Goals.tsx',
+    'src/ui/screens/Debts.tsx',
+    'src/ui/savings/Movements.tsx',
+    'src/ui/wealth/rowMenu.tsx',
     'src/ui/About.tsx',
     'src/ui/EarlierCopies.tsx',
     'src/ui/Notices.tsx',

@@ -111,8 +111,19 @@ const M64_U8 = [
   'src/ui/screens/DeductionTypes.tsx',
 ]
 
+/** M64 U10 (D-622): Wealth — net worth, funds, goals with their movements, and debts. */
+const M64_U10 = [
+  'src/ui/screens/Overview.tsx',
+  'src/ui/screens/Funds.tsx',
+  'src/ui/screens/Goals.tsx',
+  'src/ui/screens/Debts.tsx',
+  'src/ui/savings/Movements.tsx',
+  'src/ui/wealth/rowMenu.tsx',
+  'src/ui/wealth/words.ts',
+]
+
 /** The screens whose words are the catalogue's. A unit that translates a screen adds its files here. */
-export const TRANSLATED: readonly string[] = [...U4, ...U5, ...M64_U8]
+export const TRANSLATED: readonly string[] = [...U4, ...U5, ...M64_U8, ...M64_U10]
 
 /** Literals in a translated file that are not the app's words, by file, each with why. */
 const ALLOWED: Readonly<Record<string, readonly string[]>> = {

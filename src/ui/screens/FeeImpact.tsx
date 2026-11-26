@@ -54,12 +54,22 @@ import { FUND_TYPE_LABEL } from '@/ui/funds/labels.ts'
  * policy says. Each figure names its source underneath, so a wrong answer can be
  * traced to the wrong input rather than doubted whole.
  */
-export function FeeImpact({ embedded = false }: { readonly embedded?: boolean } = {}) {
+export function FeeImpact({
+  embedded = false,
+  fundId,
+  panel = false,
+}: {
+  readonly embedded?: boolean
+  /** The fund it opens on (M64 U10): the one whose fee was clicked. */
+  readonly fundId?: string | undefined
+  /** Inside the side panel: no padding of its own, and its columns by the panel's width, not the window's. */
+  readonly panel?: boolean
+} = {}) {
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
 
   const entries = useMemo(() => (db === undefined ? [] : listFundsWithLatest(db)), [db, revision])
-  const [chosenId, setChosenId] = useState<string | undefined>()
+  const [chosenId, setChosenId] = useState<string | undefined>(fundId)
   // Bumped by "Start over", which is a remount rather than a reset: the sliders
   // hold their own state and re-deriving the defaults is exactly what mounting
   // does.
@@ -91,8 +101,8 @@ export function FeeImpact({ embedded = false }: { readonly embedded?: boolean } 
   }
 
   return (
-    <div className={embedded ? 'flex flex-col' : 'flex h-full flex-col'}>
-      <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline px-6 py-2">
+    <div className={`@container ${embedded || panel ? 'flex flex-col' : 'flex h-full flex-col'}`}>
+      <div className={`flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline py-2 ${panel ? '' : 'px-6'}`}>
         <label className="flex items-center gap-2 text-ink-secondary">
           Fund
           <select
@@ -125,7 +135,7 @@ export function FeeImpact({ embedded = false }: { readonly embedded?: boolean } 
         </Button>
       </div>
 
-      <div className={embedded ? 'px-6 py-4' : 'min-h-0 flex-1 overflow-auto px-6 py-4'}>
+      <div className={panel ? 'py-4' : embedded ? 'px-6 py-4' : 'min-h-0 flex-1 overflow-auto px-6 py-4'}>
         <Illustration
           key={`${selected.fund.id}:${String(attempt)}`}
           fund={selected.fund}
@@ -286,7 +296,7 @@ function Illustration({
           </p>
         )}
 
-        <div className="grid max-w-4xl grid-cols-1 gap-x-12 gap-y-5 sm:grid-cols-2">
+        <div className="grid max-w-4xl grid-cols-1 gap-x-12 gap-y-5 @lg:grid-cols-2">
           <RateSlider
             label="Today, on the balance"
             hint="דמי ניהול מהצבירה — taken every year on everything you hold"
@@ -347,7 +357,7 @@ function Illustration({
       </Section>
 
       <Section title="What it is projected against">
-        <div className="grid max-w-4xl grid-cols-1 gap-x-12 gap-y-5 sm:grid-cols-2">
+        <div className="grid max-w-4xl grid-cols-1 gap-x-12 gap-y-5 @lg:grid-cols-2">
           <AmountSlider
             label="Starting balance"
             hint={
@@ -393,7 +403,7 @@ function Illustration({
       </Section>
 
       <Section title="What the difference is worth">
-        <div className="grid max-w-4xl grid-cols-1 gap-x-12 gap-y-6 sm:grid-cols-3">
+        <div className="grid max-w-4xl grid-cols-1 gap-x-12 gap-y-6 @lg:grid-cols-3">
           {result.scenarios.map((scenario, index) => (
             <div key={index} className="flex flex-col gap-2">
               <label className="flex items-center gap-2 text-label text-ink-tertiary uppercase">

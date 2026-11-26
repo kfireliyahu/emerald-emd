@@ -244,7 +244,7 @@ cost. Anything beyond that is investment advice the app has no business giving.
   goes: accepting the first report stores its format and the rest are read by it with no model
   asked anything. Anchored at **one fund**, because a report names none and filing one to the wrong
   fund makes both halves of the deposit check look wrong.
-- **Fee impact** — **built** at `#/wealth/fees` (D-072). Current fee versus a target fee across
+- **Fee impact** — **built** (D-072); since M64 U10 (D-622) it opens in the side panel beside Funds, from a fund's fee a year, and `#/wealth/fees` opens Funds with it open. Current fee versus a target fee across
   three assumed returns, with every assumption a slider: balance, yearly contribution, horizon, and
   all four fees. Each starting figure is read off the document and names its source — the fund's
   latest reading, a year of payslips annualized, the fee as transcribed. A fund with no fee recorded
@@ -258,7 +258,7 @@ cost. Anything beyond that is investment advice the app has no business giving.
   over a career is a multiple of what any one statement shows. The screen was answering "what is the
   fee worth" without ever answering "what am I projected to have", which is the question a reader
   has first.*
-- **Deposit check** — **built** at `#/wealth/deposits` (D-072). Every fund's payslips against every
+- **Deposit check** — **built** (D-072); since M64 U10 (D-622) it opens in the side panel beside Funds, from a fund's deposits or a line of what waits, and `#/wealth/deposits` opens Funds with it open. Every fund's payslips against every
   fund's report in one list, with the gap as the headline and the acknowledgement offered where the
   gap is found. It computes nothing of its own: `fundDepositChecks` is the same call the funds
   screen's chip reads. Funds that **cannot** be checked are listed under their own heading with the

@@ -118,7 +118,7 @@ export function Seg<T extends string | number>({
             type="button"
             aria-pressed={on}
             onClick={() => onChange(option)}
-            className={`inline-flex h-8 items-center border px-3.5 text-[13px] transition-colors duration-[var(--duration-micro)] ${
+            className={`inline-flex h-8 items-center border px-3.5 text-caption transition-colors duration-[var(--duration-micro)] ${
               index === 0 ? '' : '-ms-px'
             } ${
               on
