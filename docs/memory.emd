@@ -18830,27 +18830,36 @@ branch: m64-redesign
 milestone: M64
 scope: ui
 title: The connections' sentences say their words in Hebrew: what src/domain/format/connections.ts builds for the screen
-state: planned
+state: in_progress
 brief: After M64 F18/F20 (D-632) #/connections still shows about 42 English sentences in Hebrew, all built in src/domain/format/connections.ts: the rows under 'Every connection, in words' (edgeWords), the panel's headline (headlineOf, edgeHeadline) and its NOTHING reason, and each column's or total's endpoint detail and hover from graphOf ('ref — text. Drag onto a format to make it a connection.'). Return a Said<K> (view.ts's pattern: literal key types, no import from src/i18n, boundary.test.ts) beside the English functions the plugin keeps, put the words in the connections area (src/i18n/en/connections.ts, he/connections.ts), and have Connections, ConnectionPanel and ConnectionGraph say them. Check with probe:screens --lang he --document project.emd --routes '#/connections'.
 files: "src/domain/format/connections.ts\nsrc/ui/formats/ConnectionPanel.tsx\nsrc/ui/formats/ConnectionGraph.tsx\nsrc/i18n/en/connections.ts"
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 paths: "src/domain/format/connections.ts\nsrc/ui/screens/Connections.tsx\nsrc/ui/formats/ConnectionPanel.tsx\nsrc/ui/formats/ConnectionGraph.tsx\nsrc/i18n/en/connections.ts\nsrc/i18n/he/connections.ts"
 
 ### M64 F36
 milestone: M64
 scope: ui
 title: A dashboard's and an input block's own sentences say their words in Hebrew: the helpers in dashboard.ts, madeInPlace.ts and inputBlock.ts
-state: planned
+state: in_progress
 brief: After M64 F18/F20 (D-632) a dashboard still says English built outside its screens: rollupSentence, rollupWords, blockWhat, ofText, savedWords and blockTitle in src/ui/formats/dashboard.ts, the filterText words, PERIOD_UNSAID and the refusal reasons in src/ui/formats/madeInPlace.ts and inputBlock.ts, and read.error.reason. Give each a t parameter (or a Said where a test or the plugin needs the English), put the words in the dashboards area (src/i18n/en/dashboards.ts, he/dashboards.ts), add the helper files to words.test.ts, and check with probe:screens --lang he on project.emd's #/dashboard and custom.emd's #/formats/card_charge/dashboard.
 files: "src/ui/formats/dashboard.ts\nsrc/ui/formats/madeInPlace.ts\nsrc/ui/formats/inputBlock.ts\nsrc/i18n/en/dashboards.ts"
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 paths: "src/ui/formats/dashboard.ts\nsrc/ui/formats/madeInPlace.ts\nsrc/ui/formats/inputBlock.ts\nsrc/ui/formats/Dashboard.tsx\nsrc/ui/formats/MakeBlock.tsx\nsrc/ui/formats/InputBlock.tsx\nsrc/i18n/en/dashboards.ts\nsrc/i18n/he/dashboards.ts\nsrc/i18n/words.test.ts"
 
 ### M64 F37
 milestone: M64
 scope: ui
 title: The list's quick add and date cells, and the type tiles, say their words in Hebrew
-state: planned
+state: in_progress
 brief: After M64 F18/F20 (D-632) the list's quick add placeholder ('Add a unit · planned', 'not done') is still built in English in src/ui/formats/listView.ts, and the list's date cell holds dueText's English, which ListView reads back into a key (dueSaidOf in view.ts) because listView.test.ts pins the cells with toEqual. Put a Said on the date cell and the placeholder in listView.ts (updating its test on purpose), drop dueSaidOf, pass t to linkedRowOf in FormatRows' linkedRows, and translate the type tiles and their group headings (vocabulary.ts TYPE_WORDS, typePicker.ts MORE_TYPES) and DIMENSIONS' names. Check with probe:screens --lang he on project.emd #/formats/unit/list and custom.emd's new-format screen.
 files: "src/ui/formats/listView.ts\nsrc/ui/formats/listView.test.ts\nsrc/domain/format/view.ts\nsrc/ui/formats/vocabulary.ts\nsrc/ui/formats/typePicker.ts"
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 paths: "src/ui/formats/listView.ts\nsrc/ui/formats/listView.test.ts\nsrc/ui/formats/ListView.tsx\nsrc/domain/format/view.ts\nsrc/ui/formats/vocabulary.ts\nsrc/ui/formats/typePicker.ts\nsrc/ui/screens/FormatRows.tsx\nsrc/i18n/en/views.ts\nsrc/i18n/he/views.ts"
 
 ### M64 F38
