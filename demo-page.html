@@ -17,12 +17,14 @@
   <body>
     <a class="skip" href="#main" data-t="rail.skip"></a>
     <div class="app">
+      <!-- The rail (M64 F71, D-643): the page's sections as an index of words, as the app's rail
+           is (D-615): the one you are reading in semibold ink with a 6px accent square at its
+           end. From 960 px it runs down the start side; below, it is a bar across the top whose
+           middle names the section you are in and opens the index in place. -->
       <nav class="rail" data-t-attr="aria-label:rail.roadmap">
         <div class="rail-head">
-          <img class="mark" src="/src/ui/emerald.svg" alt="" width="20" height="20" />
-          <span class="name" data-t="hero.name"></span>
-          <span class="now" id="now"></span>
-          <ol class="strip" id="strip"></ol>
+          <a class="home" href="#story"><img class="mark" src="/src/ui/emerald.svg" alt="" width="20" height="20" /><span class="name" data-t="hero.name"></span></a>
+          <button type="button" class="now" id="now" aria-expanded="false" aria-controls="index"></button>
           <div class="controls">
             <div class="languages" id="languages" hidden></div>
             <button type="button" class="icon-button" id="theme">
@@ -30,10 +32,7 @@
             </button>
           </div>
         </div>
-        <div class="tl" id="tl">
-          <div class="solid" id="solid"></div>
-          <ol class="tl-rows" id="tl-rows"></ol>
-        </div>
+        <ol class="index" id="index"></ol>
         <div class="rail-foot">
           <p><span data-t="rail.free"></span> <a data-source href="#" data-t="rail.source"></a> · <a data-privacy href="#" data-t="rail.privacy"></a></p>
         </div>
@@ -41,22 +40,11 @@
 
       <div class="content">
       <main id="main" tabindex="-1">
-        <!-- The icons: one line icon per section, drawn as the app draws an icon — 24-unit box,
-             1.75 stroke, round caps (IconAction) — and never accent at rest. Two more for the
-             theme toggle: light and dark. -->
-        <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-          <symbol id="i-receipt" viewBox="0 0 24 24"><path d="M6 3h12v18l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5L6 21z"/><path d="M9 8h6M9 12h6M9 16h3"/></symbol>
-          <symbol id="i-ledger-tour" viewBox="0 0 24 24"><path d="M4 6h16v12H4z"/><path d="M4 10h16M8 14h4"/></symbol>
-          <symbol id="i-development-tour" viewBox="0 0 24 24"><circle cx="6" cy="5" r="2"/><circle cx="6" cy="19" r="2"/><circle cx="18" cy="9" r="2"/><path d="M6 7v10M18 11a6 6 0 0 1-6 6h-2"/></symbol>
-          <symbol id="i-timesheet-tour" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 8v4l3 2"/></symbol>
-          <symbol id="i-engine" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16"/><path d="M4 10h16M10 10v10"/></symbol>
-          <symbol id="i-mcp" viewBox="0 0 24 24"><path d="M4 5h16v11H10l-4 4v-4H4z"/><path d="M8 10.5h8"/></symbol>
-          <symbol id="i-packs" viewBox="0 0 24 24"><path d="M3 7.5l9-4.5 9 4.5v9l-9 4.5-9-4.5z"/><path d="M3 7.5l9 4.5 9-4.5M12 12v9"/></symbol>
-          <symbol id="i-ledger" viewBox="0 0 24 24"><ellipse cx="12" cy="7" rx="7" ry="3"/><path d="M5 7v5c0 1.7 3.1 3 7 3s7-1.3 7-3V7M5 12v5c0 1.7 3.1 3 7 3s7-1.3 7-3v-5"/></symbol>
-          <symbol id="i-development" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></symbol>
-          <symbol id="i-local" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+        <!-- The icons, drawn as the app draws an icon (24-unit box, 1.75 stroke, round caps) and
+             never accent at rest: the download, and the theme toggle's three. A section has no
+             icon since M64 F71: the page is words, as the app's rail is (D-643).
+             The ways in keep their own marks, filled in the ink. -->        <svg width="0" height="0" style="position:absolute" aria-hidden="true">
           <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></symbol>
-          <!-- The ways in (M42 F2): each one's own mark, filled in the ink, so they read as one set. -->
           <symbol id="m-github" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></symbol>
           <symbol id="m-claude" viewBox="0 0 24 24"><path d="M12.47 12.06L13.93 7.25L13.86 1.14L12.77 1.01L11.25 6.92L11.53 11.94zM12.38 12.28L15.56 9.5L17.96 4.97L17.08 4.31L13.4 7.88L11.62 11.72zM12.19 12.43L16.83 11.4L21.78 8.42L21.35 7.41L15.77 8.92L11.81 11.57zM11.94 12.47L15.68 13.8L20.47 13.58L20.6 12.48L16 11.12L12.06 11.53zM11.72 12.38L15.15 16.05L20.47 19.04L21.13 18.16L16.77 13.89L12.28 11.62zM11.57 12.19L12.46 16.5L15.26 21.04L16.28 20.61L14.94 15.44L12.43 11.81zM11.53 11.94L10.11 16.4L10.23 22.06L11.32 22.19L12.79 16.72L12.47 12.06zM11.62 11.72L8.54 14.36L6.28 18.71L7.16 19.37L10.7 15.98L12.38 12.28zM11.81 11.57L7 12.67L1.85 15.74L2.28 16.75L8.06 15.15L12.19 12.43zM12.06 11.53L7.96 10.15L2.73 10.33L2.6 11.42L7.64 12.83L11.94 12.47zM12.28 11.62L9.21 8.22L4.33 5.56L3.67 6.44L7.59 10.38L11.72 12.38zM12.43 11.81L11.65 7.75L8.97 3.51L7.96 3.94L9.17 8.81L11.57 12.19z"/></symbol>
           <symbol id="m-npm" viewBox="0 0 24 24"><path d="M1.76 0C.79 0 0 .79 0 1.76v20.48C0 23.21.79 24 1.76 24h20.48c.97 0 1.76-.79 1.76-1.76V1.76C24 .79 23.21 0 22.24 0zM5.13 5.32l13.84.02-.01 13.84H15.5l.01-10.38h-3.46l-.01 10.38H5.11z"/></symbol>
@@ -67,14 +55,14 @@
           <symbol id="i-system" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor" stroke="none"/></symbol>
         </svg>
 
+        <!-- What it is, answered first (M64 F71): the line the README opens with at the display
+             step, the story under it, and the page's one primary (M54 F8, D-531), Get Emerald,
+             filled, on the first screen, scrolling to the ways in. -->
         <section class="row hero" id="story" data-row>
           <div class="wide">
-            <span class="mark" id="gem"><img src="/src/ui/emerald.svg" alt="" width="64" height="64" /></span>
-            <h1 data-t="hero.name"></h1>
-            <p class="tagline" data-t="hero.tagline"></p>
+            <p class="brand"><span class="mark" id="gem"><img src="/src/ui/emerald.svg" alt="" width="40" height="40" /></span><span data-t="hero.name"></span></p>
+            <h1 data-t="hero.tagline"></h1>
             <div class="story" data-t="hero.story"></div>
-            <!-- The page's one primary (M54 F8, D-531): Get Emerald, filled, on the first screen,
-                 scrolling to the ways in. -->
             <a class="fc-btn fc-btn-primary fc-btn-tiled get" href="#download">
               <span class="fc-btn-tile" aria-hidden="true"><svg class="icon"><use href="#i-download"/></svg></span>
               <span data-t="foot.heading"></span>
@@ -82,178 +70,222 @@
           </div>
         </section>
 
+        <!-- Every section below is one sheet of a report (M64 F71, D-643): its question small at the
+             start, its answer as the heading under it, what backs the answer beside them, and the
+             evidence (a tour, the screens, a diagram) across the whole width beneath. -->
         <section class="row" id="local" data-row>
-          <div class="wide">
-            <svg class="icon head" aria-hidden="true"><use href="#i-local"/></svg>
-            <h2 data-t="words.local.heading"></h2>
-            <div data-t="words.local.body" data-list></div>
+          <div class="wide sheet">
+            <div class="sheet-head">
+              <p class="ask" data-t="asks.local"></p>
+              <h2 data-t="words.local.heading"></h2>
+            </div>
+            <div class="sheet-body" data-t="words.local.body" data-list></div>
           </div>
         </section>
 
         <section class="row tour" id="receipt" data-row>
-          <div class="wide">
-            <svg class="icon head" aria-hidden="true"><use href="#i-receipt"/></svg>
-            <h2 class="try" data-t="tours.try"></h2>
-            <p class="lead" data-t="tours.lead"></p>
-            <h3 class="label" data-t="tours.receipt.label"></h3>
-            <p class="lead" data-t="tours.receipt.lead"></p>
-            <iframe data-tour="custom" data-t-attr="title:tours.receipt.title" referrerpolicy="no-referrer" allow="" tabindex="-1" aria-hidden="true"></iframe>
+          <div class="wide sheet">
+            <div class="sheet-head">
+              <p class="ask" data-t="tours.receipt.label"></p>
+              <h2 class="try" data-t="tours.try"></h2>
+            </div>
+            <div class="sheet-body">
+              <p class="answer" data-t="tours.lead"></p>
+              <p class="answer" data-t="tours.receipt.lead"></p>
+            </div>
+            <div class="sheet-wide">
+              <iframe data-tour="custom" data-t-attr="title:tours.receipt.title" referrerpolicy="no-referrer" allow="" tabindex="-1" aria-hidden="true"></iframe>
+            </div>
           </div>
         </section>
 
         <section class="row tour" id="ledger-tour" data-row>
-          <div class="wide">
-            <svg class="icon head" aria-hidden="true"><use href="#i-ledger-tour"/></svg>
-            <h3 class="label" data-t="tours.ledger.label"></h3>
-            <p class="lead" data-t="tours.ledger.lead"></p>
-            <iframe data-tour="ledger" data-t-attr="title:tours.ledger.title" referrerpolicy="no-referrer" allow="" tabindex="-1" aria-hidden="true"></iframe>
+          <div class="wide sheet">
+            <div class="sheet-head">
+              <h3 class="ask" data-t="tours.ledger.label"></h3>
+            </div>
+            <div class="sheet-body">
+              <p class="answer" data-t="tours.ledger.lead"></p>
+            </div>
+            <div class="sheet-wide">
+              <iframe data-tour="ledger" data-t-attr="title:tours.ledger.title" referrerpolicy="no-referrer" allow="" tabindex="-1" aria-hidden="true"></iframe>
+            </div>
           </div>
         </section>
 
         <section class="row tour" id="timesheet-tour" data-row>
-          <div class="wide">
-            <svg class="icon head" aria-hidden="true"><use href="#i-timesheet-tour"/></svg>
-            <h3 class="label" data-t="tours.timesheet.label"></h3>
-            <p class="lead" data-t="tours.timesheet.lead"></p>
-            <iframe data-tour="timesheet" data-t-attr="title:tours.timesheet.title" referrerpolicy="no-referrer" allow="" tabindex="-1" aria-hidden="true"></iframe>
+          <div class="wide sheet">
+            <div class="sheet-head">
+              <h3 class="ask" data-t="tours.timesheet.label"></h3>
+            </div>
+            <div class="sheet-body">
+              <p class="answer" data-t="tours.timesheet.lead"></p>
+            </div>
+            <div class="sheet-wide">
+              <iframe data-tour="timesheet" data-t-attr="title:tours.timesheet.title" referrerpolicy="no-referrer" allow="" tabindex="-1" aria-hidden="true"></iframe>
+            </div>
           </div>
         </section>
 
         <section class="row" id="ledger" data-row>
-          <div class="wide">
-            <svg class="icon head" aria-hidden="true"><use href="#i-ledger"/></svg>
-            <h2 data-t="words.ledger.heading"></h2>
-            <div data-t="words.ledger.body" data-list></div>
-            <!-- The ledger's screens (M33 F12), taken from a made-up year by npm run demo:shots,
-                 as a reel after the author's site's: each a pair, light and dark, the one
-                 matching the page's theme shown; numbered steps under the frame (reel.ts). -->
-            <figure class="reel" id="shots">
-              <div class="reel-frame">
-                <div class="reel-slide is-current" data-slide="0">
-                  <img class="light" src="ledger-split.png" loading="lazy" decoding="async" data-t-attr="alt:shots.split.alt" />
-                  <img class="dark" src="ledger-split-dark.png" loading="lazy" decoding="async" data-t-attr="alt:shots.split.alt" />
+          <div class="wide sheet">
+            <div class="sheet-head">
+              <p class="ask" data-t="asks.ledger"></p>
+              <h2 data-t="words.ledger.heading"></h2>
+            </div>
+            <div class="sheet-body" data-t="words.ledger.body" data-list></div>
+            <div class="sheet-wide">
+              <!-- The ledger's screens (M33 F12), taken from a made-up year by npm run demo:shots,
+                   as a reel after the author's site's: each a pair, light and dark, the one
+                   matching the page's theme shown; numbered steps under the frame (reel.ts). -->
+              <figure class="reel" id="shots">
+                <div class="reel-frame">
+                  <div class="reel-slide is-current" data-slide="0">
+                    <img class="light" src="ledger-split.png" loading="lazy" decoding="async" data-t-attr="alt:shots.split.alt" />
+                    <img class="dark" src="ledger-split-dark.png" loading="lazy" decoding="async" data-t-attr="alt:shots.split.alt" />
+                  </div>
+                  <div class="reel-slide" data-slide="1">
+                    <img class="light" src="ledger-paycheck.png" loading="lazy" decoding="async" data-t-attr="alt:shots.paycheck.alt" />
+                    <img class="dark" src="ledger-paycheck-dark.png" loading="lazy" decoding="async" data-t-attr="alt:shots.paycheck.alt" />
+                  </div>
+                  <div class="reel-slide" data-slide="2">
+                    <img class="light" src="ledger-wealth.png" loading="lazy" decoding="async" data-t-attr="alt:shots.wealth.alt" />
+                    <img class="dark" src="ledger-wealth-dark.png" loading="lazy" decoding="async" data-t-attr="alt:shots.wealth.alt" />
+                  </div>
+                  <div class="reel-slide" data-slide="3">
+                    <img class="light" src="ledger-year.png" loading="lazy" decoding="async" data-t-attr="alt:shots.year.alt" />
+                    <img class="dark" src="ledger-year-dark.png" loading="lazy" decoding="async" data-t-attr="alt:shots.year.alt" />
+                  </div>
+                  <button type="button" class="reel-toggle" data-reel-toggle aria-pressed="false"></button>
                 </div>
-                <div class="reel-slide" data-slide="1">
-                  <img class="light" src="ledger-paycheck.png" loading="lazy" decoding="async" data-t-attr="alt:shots.paycheck.alt" />
-                  <img class="dark" src="ledger-paycheck-dark.png" loading="lazy" decoding="async" data-t-attr="alt:shots.paycheck.alt" />
+                <div class="reel-steps" role="group" data-t-attr="aria-label:shots.label">
+                  <button type="button" class="reel-step" data-step-to="0" aria-pressed="true">
+                    <span class="reel-bar" aria-hidden="true"></span>
+                    <span class="reel-num" aria-hidden="true">1</span>
+                    <span class="reel-label" data-t="shots.split.label"></span>
+                  </button>
+                  <button type="button" class="reel-step" data-step-to="1" aria-pressed="false">
+                    <span class="reel-bar" aria-hidden="true"></span>
+                    <span class="reel-num" aria-hidden="true">2</span>
+                    <span class="reel-label" data-t="shots.paycheck.label"></span>
+                  </button>
+                  <button type="button" class="reel-step" data-step-to="2" aria-pressed="false">
+                    <span class="reel-bar" aria-hidden="true"></span>
+                    <span class="reel-num" aria-hidden="true">3</span>
+                    <span class="reel-label" data-t="shots.wealth.label"></span>
+                  </button>
+                  <button type="button" class="reel-step" data-step-to="3" aria-pressed="false">
+                    <span class="reel-bar" aria-hidden="true"></span>
+                    <span class="reel-num" aria-hidden="true">4</span>
+                    <span class="reel-label" data-t="shots.year.label"></span>
+                  </button>
                 </div>
-                <div class="reel-slide" data-slide="2">
-                  <img class="light" src="ledger-wealth.png" loading="lazy" decoding="async" data-t-attr="alt:shots.wealth.alt" />
-                  <img class="dark" src="ledger-wealth-dark.png" loading="lazy" decoding="async" data-t-attr="alt:shots.wealth.alt" />
-                </div>
-                <div class="reel-slide" data-slide="3">
-                  <img class="light" src="ledger-year.png" loading="lazy" decoding="async" data-t-attr="alt:shots.year.alt" />
-                  <img class="dark" src="ledger-year-dark.png" loading="lazy" decoding="async" data-t-attr="alt:shots.year.alt" />
-                </div>
-                <button type="button" class="reel-toggle" data-reel-toggle aria-pressed="false"></button>
-              </div>
-              <div class="reel-steps" role="group" data-t-attr="aria-label:shots.label">
-                <button type="button" class="reel-step" data-step-to="0" aria-pressed="true">
-                  <span class="reel-bar" aria-hidden="true"></span>
-                  <span class="reel-num" aria-hidden="true">1</span>
-                  <span class="reel-label" data-t="shots.split.label"></span>
-                </button>
-                <button type="button" class="reel-step" data-step-to="1" aria-pressed="false">
-                  <span class="reel-bar" aria-hidden="true"></span>
-                  <span class="reel-num" aria-hidden="true">2</span>
-                  <span class="reel-label" data-t="shots.paycheck.label"></span>
-                </button>
-                <button type="button" class="reel-step" data-step-to="2" aria-pressed="false">
-                  <span class="reel-bar" aria-hidden="true"></span>
-                  <span class="reel-num" aria-hidden="true">3</span>
-                  <span class="reel-label" data-t="shots.wealth.label"></span>
-                </button>
-                <button type="button" class="reel-step" data-step-to="3" aria-pressed="false">
-                  <span class="reel-bar" aria-hidden="true"></span>
-                  <span class="reel-num" aria-hidden="true">4</span>
-                  <span class="reel-label" data-t="shots.year.label"></span>
-                </button>
-              </div>
-              <figcaption class="caption" data-reel-caption aria-live="polite" data-t="shots.split.caption"></figcaption>
-            </figure>
+                <figcaption class="caption" data-reel-caption aria-live="polite" data-t="shots.split.caption"></figcaption>
+              </figure>
+            </div>
           </div>
         </section>
 
         <section class="row tour" id="development-tour" data-row>
-          <div class="wide">
-            <svg class="icon head" aria-hidden="true"><use href="#i-development-tour"/></svg>
-            <h3 class="label" data-t="tours.development.label"></h3>
-            <p class="lead" data-t="tours.development.lead"></p>
-            <iframe data-tour="development" data-t-attr="title:tours.development.title" referrerpolicy="no-referrer" allow="" tabindex="-1" aria-hidden="true"></iframe>
+          <div class="wide sheet">
+            <div class="sheet-head">
+              <h3 class="ask" data-t="tours.development.label"></h3>
+            </div>
+            <div class="sheet-body">
+              <p class="answer" data-t="tours.development.lead"></p>
+            </div>
+            <div class="sheet-wide">
+              <iframe data-tour="development" data-t-attr="title:tours.development.title" referrerpolicy="no-referrer" allow="" tabindex="-1" aria-hidden="true"></iframe>
+            </div>
           </div>
         </section>
 
         <section class="row" id="development" data-row>
-          <div class="wide">
-            <svg class="icon head" aria-hidden="true"><use href="#i-development"/></svg>
-            <h2 data-t="words.development.heading"></h2>
-            <div data-t="words.development.body" data-list></div>
-            <div class="inbox" id="inbox" data-t-attr="aria-label:inbox.summary" role="img">
-              <noscript data-t="inbox.summary"></noscript>
+          <div class="wide sheet">
+            <div class="sheet-head">
+              <p class="ask" data-t="asks.development"></p>
+              <h2 data-t="words.development.heading"></h2>
             </div>
-            <p class="caption" data-t="inbox.caption"></p>
-            <figure class="recording" id="recording" hidden>
-              <figcaption class="caption" data-t="inbox.recording"></figcaption>
-            </figure>
-            <!-- The project inside Claude (M56 U6, docs/page-recording-claude.md): one figure a
-                 clip, each shown only once page.ts's CLAUDE_RECORDINGS names its file, and the
-                 whole slot only once one is. -->
-            <div class="recordings" id="inside-claude" hidden>
-              <h3 class="label" data-t="claude.label"></h3>
-              <p class="lead" data-t="claude.lead"></p>
-              <figure class="recording" data-clip="pane" hidden>
-                <figcaption class="caption" data-t="claude.pane"></figcaption>
+            <div class="sheet-body" data-t="words.development.body" data-list></div>
+            <div class="sheet-wide">
+              <div class="inbox" id="inbox" data-t-attr="aria-label:inbox.summary" role="img">
+                <noscript data-t="inbox.summary"></noscript>
+              </div>
+              <p class="caption" data-t="inbox.caption"></p>
+              <figure class="recording" id="recording" hidden>
+                <figcaption class="caption" data-t="inbox.recording"></figcaption>
               </figure>
-              <figure class="recording" data-clip="terminal" hidden>
-                <figcaption class="caption" data-t="claude.terminal"></figcaption>
-              </figure>
-              <figure class="recording" data-clip="inbox" hidden>
-                <figcaption class="caption" data-t="claude.inbox"></figcaption>
-              </figure>
-              <figure class="recording" data-clip="format" hidden>
-                <figcaption class="caption" data-t="claude.format"></figcaption>
-              </figure>
+              <!-- The project inside Claude (M56 U6, docs/page-recording-claude.md): one figure a
+                   clip, each shown only once page.ts's CLAUDE_RECORDINGS names its file, and the
+                   whole slot only once one is. -->
+              <div class="recordings" id="inside-claude" hidden>
+                <h3 class="label" data-t="claude.label"></h3>
+                <p class="lead" data-t="claude.lead"></p>
+                <figure class="recording" data-clip="pane" hidden>
+                  <figcaption class="caption" data-t="claude.pane"></figcaption>
+                </figure>
+                <figure class="recording" data-clip="terminal" hidden>
+                  <figcaption class="caption" data-t="claude.terminal"></figcaption>
+                </figure>
+                <figure class="recording" data-clip="inbox" hidden>
+                  <figcaption class="caption" data-t="claude.inbox"></figcaption>
+                </figure>
+                <figure class="recording" data-clip="format" hidden>
+                  <figcaption class="caption" data-t="claude.format"></figcaption>
+                </figure>
+              </div>
             </div>
           </div>
         </section>
 
         <section class="row ai" id="engine" data-row>
-          <div class="wide">
-            <svg class="icon head" aria-hidden="true"><use href="#i-engine"/></svg>
-            <h2 data-t="engine.heading"></h2>
-            <div data-t="engine.body" data-list></div>
-            <div class="claim" id="claim" role="img" data-t-attr="aria-label:engine.claim.summary">
-              <noscript data-t="engine.claim.summary"></noscript>
+          <div class="wide sheet">
+            <div class="sheet-head">
+              <p class="ask" data-t="asks.engine"></p>
+              <h2 data-t="engine.heading"></h2>
             </div>
-            <p class="caption" data-t="engine.caption"></p>
+            <div class="sheet-body" data-t="engine.body" data-list></div>
+            <div class="sheet-wide">
+              <div class="claim" id="claim" role="img" data-t-attr="aria-label:engine.claim.summary">
+                <noscript data-t="engine.claim.summary"></noscript>
+              </div>
+              <p class="caption" data-t="engine.caption"></p>
+            </div>
           </div>
         </section>
 
         <section class="row" id="mcp" data-row>
-          <div class="wide">
-            <svg class="icon head" aria-hidden="true"><use href="#i-mcp"/></svg>
-            <h2 data-t="words.mcp.heading"></h2>
-            <div data-t="words.mcp.body" data-list></div>
+          <div class="wide sheet">
+            <div class="sheet-head">
+              <p class="ask" data-t="asks.mcp"></p>
+              <h2 data-t="words.mcp.heading"></h2>
+            </div>
+            <div class="sheet-body" data-t="words.mcp.body" data-list></div>
           </div>
         </section>
 
         <section class="row" id="packs" data-row>
-          <div class="wide">
-            <svg class="icon head" aria-hidden="true"><use href="#i-packs"/></svg>
-            <h2 data-t="words.packs.heading"></h2>
-            <div data-t="words.packs.body" data-list></div>
+          <div class="wide sheet">
+            <div class="sheet-head">
+              <p class="ask" data-t="asks.packs"></p>
+              <h2 data-t="words.packs.heading"></h2>
+            </div>
+            <div class="sheet-body" data-t="words.packs.body" data-list></div>
           </div>
         </section>
 
-        <!-- Where to get Emerald (M42 F2): the installers first, one card a download, then the ways
+        <!-- Where to get Emerald (M42 F2), the last sheet: the installers first, one card a download, then the ways
              to work in it with a model, each a card with its mark, its link and the one line it takes
              (for the Claude extension, the one file, M42 F13), and the source last (M54 F9). The commands are
              code, not words, so they are here and not in the copy; the addresses are page.ts's. -->
         <section class="row foot" id="download" data-row>
-          <div class="wide">
-            <svg class="icon head" aria-hidden="true"><use href="#i-download"/></svg>
-            <h2 data-t="foot.heading"></h2>
-            <p class="measure" data-t="foot.lead"></p>
+          <div class="wide sheet">
+            <div class="sheet-head">
+              <p class="ask" data-t="asks.download"></p>
+              <h2 data-t="foot.heading"></h2>
+            </div>
+            <div class="sheet-body">
+            <p class="answer" data-t="foot.lead"></p>
             <span class="label" data-t="foot.desktop"></span>
             <ul class="downloads">
               <li class="fc-card download">
@@ -270,6 +302,8 @@
               </li>
             </ul>
             <p class="caption measure" data-t="foot.unsigned"><a data-readme href="#" data-slot="readme" data-t="foot.readme"></a><a data-installer="sums" href="#" data-slot="sums" data-t="foot.sums"></a><a data-releases href="#" data-slot="releases" data-t="foot.releases"></a></p>
+            </div>
+            <div class="sheet-wide">
             <ul class="ways">
               <li class="fc-card way">
                 <span class="tile" aria-hidden="true"><svg class="mark-icon"><use href="#m-claude"/></svg></span>
@@ -316,12 +350,12 @@
             </form>
             <p class="instead" hidden data-t="foot.instead"><a href="#" data-slot="address"></a></p>
             <p class="caption address" data-t="foot.address"></p>
+            </div>
           </div>
         </section>
-
       </main>
         <footer>
-          <div class="prose">
+          <div class="wide">
             <p class="caption" data-t="footer.line"><a href="https://kfireliyahu.com/" data-slot="author">Kfir Raphael Eliyahu</a><a data-source href="#" data-slot="source" data-t="footer.source"></a></p>
           </div>
         </footer>

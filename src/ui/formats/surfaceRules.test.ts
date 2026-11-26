@@ -284,7 +284,7 @@ describe('Emerald’s page spends a token set of its own (M54 F8)', () => {
     expect(html).toContain('<main id="main"')
     expect(html.indexOf('<footer>')).toBeGreaterThan(html.indexOf('</main>'))
     // An ol holds only its rows; the claim card is announced by its summary.
-    expect(html).toMatch(/<ol class="tl-rows" id="tl-rows"><\/ol>/)
+    expect(html).toMatch(/<ol class="index" id="index"><\/ol>/)
     expect(html).toMatch(/id="claim" role="img"/)
     // An empty frame is no tab stop until main.ts loads it.
     const frames = html.match(/<iframe [^>]*>/g) ?? []

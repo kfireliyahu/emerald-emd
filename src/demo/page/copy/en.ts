@@ -44,6 +44,19 @@ export const en: Copy = {
     download: 'Get Emerald',
   },
 
+  // DRAFT (M64 F71): a session's questions, one a section, the maintainer's to rewrite. The
+  // heading under each is its answer; the four that were names (The ledger, The development
+  // pack, How it works, Packs) still name their rows in the rail.
+  asks: {
+    local: 'Where does my data go?',
+    ledger: 'What does it do with my money?',
+    development: 'What does a project remember?',
+    engine: 'How does it keep me from being wrong?',
+    mcp: 'Can my AI assistant use it?',
+    packs: 'Do I start from nothing?',
+    download: 'How do I get it?',
+  },
+
   hero: {
     name: 'Emerald',
     tagline: 'The database under the chat.',
@@ -80,7 +93,7 @@ export const en: Copy = {
   // DRAFT (M33 F10): a session's words for The engine, MCP and Packs, every
   // figure checked against the code on 2026-10-13 — the maintainer's to rewrite.
   engine: {
-    heading: 'How it works',
+    heading: 'What you keep is a real table, and it checks itself.',
     body: [
       'Declare a format for anything you keep (a charge, a paycheck, a book, a milestone): its fields, stored as a real table with real types, not a template.',
       'A value that does not fit is refused the moment it is written, not found later.',
@@ -181,14 +194,14 @@ export const en: Copy = {
       ],
     },
     packs: {
-      heading: 'Packs',
+      heading: 'Start from formats somebody already worked out.',
       body: [
         'A pack is formats somebody already worked out, with their views, ready to keep in a document.',
         'Two come with Emerald: the ledger and the development pack. Making and sharing your own is next.',
       ],
     },
     ledger: {
-      heading: 'The ledger',
+      heading: 'Your money, from the files you already get.',
       body: [
         'For people who want to manage their money, not be managed by it: everything they have, in one place that is theirs.',
         'Reads what you already get: card statements, bank exports, payslips, fund reports.',
@@ -199,7 +212,7 @@ export const en: Copy = {
       ],
     },
     development: {
-      heading: 'The development pack',
+      heading: 'A project’s memory, kept as rows.',
       body: [
         'A project’s memory as rows: milestones, units, decisions, open questions, an inbox.',
         'A session starts from the rows, not from a summary of a chat.',

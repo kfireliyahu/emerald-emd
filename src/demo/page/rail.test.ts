@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
-import { rowAt, tones } from './rail.ts'
+import { rowAt } from './rail.ts'
 import { installerLink, INSTALLERS, LATEST_RELEASE, SOURCE_URL } from './page.ts'
 
-describe('the page as a roadmap (M33 U8)', () => {
+describe('the page’s index (M33 U8, M64 F71)', () => {
   it('the row under the eye is the last whose top has passed the mark', () => {
     expect(rowAt([0, 500, 1000], 400, false)).toBe(0)
     expect(rowAt([0, 500, 1000], 600, false)).toBe(1)
@@ -17,11 +17,6 @@ describe('the page as a roadmap (M33 U8)', () => {
   it('the first row when none has passed, and nothing when there are no rows', () => {
     expect(rowAt([100, 500], 0, false)).toBe(0)
     expect(rowAt([], 0, false)).toBe(-1)
-  })
-
-  it('what was read is done, the row under the eye is live, the rest wait', () => {
-    expect(tones(4, 1)).toEqual(['done', 'live', 'waiting', 'waiting'])
-    expect(tones(2, 0)).toEqual(['live', 'waiting'])
   })
 
   it('the source address is the one package.json names (D-452)', () => {

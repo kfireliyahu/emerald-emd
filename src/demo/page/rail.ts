@@ -1,12 +1,7 @@
-import type { Tone } from '@/ui/formats/tone.ts'
-
 /**
- * **The page as a roadmap** (M33 U8, D-459): Emerald's page is laid out as the
- * app — the timeline down the left in the sidebar's plane, every section a
- * row of it. Where the reader is decides the tones, exactly as `liveIndex`
- * decides them for a pack's roadmap: what was read is `done`, the row under
- * the eye is `live`, what is ahead is `waiting`. The two functions here are
- * pure so the choice is tested without a window.
+ * **Where the reader is on the page** (M33 U8, D-459; M64 F71, D-643): the
+ * index of words marks the section under the eye, as the app's rail marks the
+ * place you are on. The choice is pure so it is tested without a window.
  */
 
 /**
@@ -23,9 +18,4 @@ export function rowAt(tops: readonly number[], mark: number, atEnd: boolean): nu
     if (top <= mark) at = index
   })
   return at
-}
-
-/** The tone of each of `count` rows when the reader is at `at`. */
-export function tones(count: number, at: number): Tone[] {
-  return Array.from({ length: count }, (_, index) => (index < at ? 'done' : index === at ? 'live' : 'waiting'))
 }
