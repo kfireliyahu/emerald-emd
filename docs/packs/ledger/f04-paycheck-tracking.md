@@ -118,7 +118,8 @@ Per [05 Domain Rules and Calculations](./05-domain-rules-and-calculations.md):
 
 - **Paychecks list** — by period descending, net amount, sparkline of net over 12 months,
   badges for months with no paycheck recorded (a gap is information).
-- **Paycheck entry/edit** — as above; reconciliation strip pinned.
+- **Paycheck entry/edit** — as above; reconciliation strip pinned. Since M64 F14 (D-630) a form in
+  Paychecks' side panel, the strip a sentence under gross and net, said as they are typed.
 - **Read paychecks** — a stack of PDFs, each ticked when it reconciles, written on Write (D-310); its
   readers are the *Readers* tab.
 - **Read a payslip** — the confirm surface (D-140), reached by *Open alone*. A PDF in, one accept out, into the form above.

@@ -11,7 +11,7 @@ import { useT } from '@/i18n/current.ts'
 import { Button } from '@/ui/components/Button.tsx'
 import { CategoryPicker } from '@/ui/components/CategoryPicker.tsx'
 import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
-import { MENU_MOST, PickField } from '@/ui/rules/PickField.tsx'
+import { MENU_MOST, ValueChoice } from '@/ui/components/ChoiceField.tsx'
 import {
   CURRENCY_CHOICES,
   KIND_WORD,
@@ -120,7 +120,7 @@ export function RuleEditor({
           className={`${FIELD} w-full`}
         />
 
-        <PickField
+        <ValueChoice
           value={draft.kind}
           choices={RULE_KINDS.map((kind) => ({ value: kind, label: t(KIND_WORD[kind]) }))}
           onChange={(kind) => setDraft((current) => withKind(current, kind as RuleKind))}
@@ -154,7 +154,7 @@ export function RuleEditor({
       <div className="flex flex-wrap items-center gap-2 text-caption text-ink-secondary">
         <label className="flex items-center gap-2">
           {t('rules.editor.onlyOn')}
-          <PickField
+          <ValueChoice
             value={draft.conditions.scopeAccountId ?? ''}
             choices={[
               { value: '', label: t('rules.editor.anyAccount') },
@@ -194,7 +194,7 @@ export function RuleEditor({
           />
         </label>
 
-        <PickField
+        <ValueChoice
           value={currency}
           choices={CURRENCY_CHOICES.map((code) => ({ value: code, label: code }))}
           onChange={(code) => setBounds(minText, maxText, code)}

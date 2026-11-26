@@ -9,6 +9,7 @@ import {
 } from '@/domain/model/savings.ts'
 import { validateHoldingPlace, type HoldingPlaceProblem } from '@/domain/savings.ts'
 import { Button } from '@/ui/components/Button.tsx'
+import { MENU_MOST, ValueChoice } from '@/ui/components/ChoiceField.tsx'
 import { NewByName, SelectOrNew } from '@/ui/components/SelectOrNew.tsx'
 import { FIELD, FIELD_MULTILINE, SELECT } from '@/ui/components/fieldLook.ts'
 import { PLACE_KIND_HEBREW, PLACE_KIND_LABEL } from './labels.ts'
@@ -84,17 +85,14 @@ export function PlaceEditor({
     set({ accountId })
     setCashId(holdings.find((held) => held.accountId !== undefined && held.accountId === accountId)?.id)
   }
-  const accountOptions = (
-    <>
-      <option value="">None</option>
-      {accounts.map((account) => (
-        <option key={account.id} value={account.id}>
-          {account.name}
-          {account.kind === 'HOLDINGS' ? ' · with holdings' : account.kind === 'CASH' ? ' · cash' : ''}
-        </option>
-      ))}
-    </>
-  )
+  const accountChoices = [
+    { value: '', label: 'None' },
+    ...accounts.map((account) => ({
+      value: account.id,
+      label: account.name,
+      detail: account.kind === 'HOLDINGS' ? 'with holdings' : account.kind === 'CASH' ? 'cash' : undefined,
+    })),
+  ]
 
   const problems = validateHoldingPlace(draft)
 
@@ -179,18 +177,16 @@ export function PlaceEditor({
                     done={done}
                   />
                 )}
-              >
-                {accountOptions}
-              </SelectOrNew>
+                choices={accountChoices}
+              />
             ) : (
-              <select
-                className={SELECT}
+              <ValueChoice
                 aria-label="The account this place is"
                 value={draft.accountId ?? ''}
-                onChange={(event) => pickAccount(event.target.value)}
-              >
-                {accountOptions}
-              </select>
+                choices={accountChoices}
+                filter={accountChoices.length > MENU_MOST}
+                onChange={pickAccount}
+              />
             )}
           </Field>
 

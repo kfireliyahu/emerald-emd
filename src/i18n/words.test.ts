@@ -64,7 +64,6 @@ const U5 = [
   'src/ui/rules/RuleEditor.tsx',
   'src/ui/rules/TestBox.tsx',
   'src/ui/rules/Why.tsx',
-  'src/ui/rules/PickField.tsx',
   'src/ui/screens/Plan.tsx',
   'src/ui/plan/BucketEditor.tsx',
   'src/ui/plan/FixedSection.tsx',
@@ -156,8 +155,18 @@ const M64_F3 = [
   'src/ui/debts/PaymentEditor.tsx',
 ]
 
+/** M64 F2 and F14 (D-630): the promotion panel, and a paycheck typed by hand or confirmed, with its deduction choice and its sentence. */
+const M64_F2 = [
+  'src/ui/categorize/PromotionPanel.tsx',
+  'src/ui/paychecks/PaycheckEditor.tsx',
+  'src/ui/paychecks/ReconciliationStrip.tsx',
+  'src/ui/paychecks/DeductionTypeSelect.tsx',
+  'src/ui/components/SidePanel.tsx',
+  'src/ui/components/WaitingList.tsx',
+]
+
 /** The screens whose words are the catalogue's. A unit that translates a screen adds its files here. */
-export const TRANSLATED: readonly string[] = [...U4, ...U5, ...M64_U8, ...M64_U10, ...M64_U13, ...M64_F9, ...M64_F3]
+export const TRANSLATED: readonly string[] = [...U4, ...U5, ...M64_U8, ...M64_U10, ...M64_U13, ...M64_F9, ...M64_F3, ...M64_F2]
 
 /** Literals in a translated file that are not the app's words, by file, each with why. */
 const ALLOWED: Readonly<Record<string, readonly string[]>> = {

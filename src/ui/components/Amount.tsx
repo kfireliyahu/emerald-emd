@@ -8,11 +8,15 @@ import { useAnimatedMoney } from '@/ui/useAnimatedNumber.ts'
  * Outflows are rendered in plain ink, not red (D-017). Red is reserved for
  * problems — a reconciliation gap, an over-allocated split — and spending is
  * not a problem, it is the content. The minus sign carries the meaning.
+ *
+ * **Its sign stays before its figure in a Hebrew window** (M64 F2): the figure
+ * is isolated left-to-right (`dir="ltr"`), so `-₪120.00` never reads `₪120.00-`.
  */
 export function Amount({ value, className }: { value: Money; className?: string | undefined }) {
   const t = useT()
   return (
     <span
+      dir="ltr"
       className={`tabular-nums ${className ?? ''}`}
       // The sign is not conveyed by styling, so it needs to survive being read
       // aloud as much as being looked at.
@@ -48,6 +52,7 @@ export function CountingAmount({
   const shown = useAnimatedMoney(value)
   return (
     <span
+      dir="ltr"
       className={`tabular-nums ${className ?? ''}`}
       aria-label={isNegative(value) ? t('chrome.components.minus', { amount: formatMoney(value, { symbol: false }) }) : formatMoney(value, { symbol: false })}
     >

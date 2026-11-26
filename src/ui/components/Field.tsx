@@ -24,12 +24,12 @@ export function Field({
 }) {
   return (
     <label className="flex flex-col gap-1">
-      <span className="text-label text-ink-tertiary uppercase">
+      <span className="text-label text-ink-secondary uppercase">
         <Bidi>{label}</Bidi>
       </span>
       {children}
       {hint !== undefined && hint !== null && hint !== '' && (
-        <span className="text-caption text-ink-tertiary">
+        <span className="text-caption text-ink-secondary">
           <Bidi>{hint}</Bidi>
         </span>
       )}

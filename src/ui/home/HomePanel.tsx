@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { money, type CurrencyCode, type Money } from '@/core/money.ts'
-import { monthEnd, monthStart, toISODate, type YearMonth } from '@/core/time.ts'
+import { monthEnd, monthStart, toISODate, toYearMonthString, type YearMonth } from '@/core/time.ts'
 import type { StoredTransaction } from '@/data/repositories/transactionRepository.ts'
 import { listTransactions } from '@/data/repositories/transactionRepository.ts'
 import type { MonthlyReport } from '@/data/repositories/statisticsRepository.ts'
@@ -94,7 +94,7 @@ export function HomePanel({
     case 'tax':
       return (
         <SidePanel kicker={kicker} title={t('home.flows.taxes')} onClose={onClose}>
-          <Taxes tax={tax} />
+          <Taxes tax={tax} period={period} />
         </SidePanel>
       )
     case 'rest': {
@@ -281,14 +281,19 @@ function Saved({
   )
 }
 
-function Taxes({ tax }: { readonly tax: Money | undefined }) {
+function Taxes({ tax, period }: { readonly tax: Money | undefined; readonly period: YearMonth }) {
   const t = useT()
   const navigate = useNavigate()
   return (
     <>
       <HeadlineFigure label={t('home.flows.taxes')} value={tax} change={t('home.month.taxesWhat')} empty={t('home.month.noPaycheck')} />
       <p className="m-0">
-        <button type="button" className="fc-text-action" onClick={() => void navigate('/paychecks')}>
+        {/* Onto the same month's paycheck with its taxes open beside it (M64 F2; U8 built the landing). */}
+        <button
+          type="button"
+          className="fc-text-action"
+          onClick={() => void navigate('/paychecks', { state: { month: toYearMonthString(period), panel: 'tax' } })}
+        >
           {t('home.month.openPaychecks')}
         </button>
       </p>

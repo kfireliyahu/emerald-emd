@@ -10,7 +10,8 @@ import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
  * it came from stays where it was. Wide enough (1360px and over) it is a
  * column of the page's own grid that grows its room; narrower, it floats over
  * the page with the one soft shadow (`.fc-side-panel`, tokens.css). The way
- * out is its Close or Esc, and focus goes back to what opened it. Opening
+ * out is its Close or Esc (from inside a field, the first Esc leaves the
+ * field), and focus goes back to what opened it. Opening
  * another panel replaces this one's content (*a panel replaced by another is
  * not a close*). A screen keeps what is open in its own state, so a panel can
  * stay open while the month it explains pages.
@@ -29,27 +30,43 @@ export function SidePanel({
 }) {
   const t = useT()
   const close = useRef<HTMLButtonElement>(null)
+  const panel = useRef<HTMLElement>(null)
   const opener = useRef<Element | null>(null)
   useEffect(() => {
     opener.current = document.activeElement
     close.current?.focus({ preventScroll: true })
+    // **Focus goes back to what opened what is shown now** (M64 F2): a panel
+    // replaced by another stays mounted, so the opener is the last thing
+    // outside it that had the focus, not only the first.
+    const outside = (event: FocusEvent): void => {
+      if (event.target instanceof Element && panel.current !== null && !panel.current.contains(event.target)) opener.current = event.target
+    }
+    document.addEventListener('focusin', outside)
     return () => {
+      document.removeEventListener('focusin', outside)
       const back = opener.current
       if (back instanceof HTMLElement && document.contains(back)) back.focus({ preventScroll: true })
     }
   }, [])
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && !event.defaultPrevented) {
-        event.preventDefault()
-        onClose()
+      if (event.key !== 'Escape' || event.defaultPrevented) return
+      event.preventDefault()
+      // **Esc in a field leaves the field first** (M64 F2), the way a desktop
+      // app's does: the panel keeps what was typed and the focus, and the
+      // next Esc closes it.
+      const at = document.activeElement
+      if (at instanceof HTMLElement && panel.current?.contains(at) === true && isField(at)) {
+        panel.current.focus({ preventScroll: true })
+        return
       }
+      onClose()
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
   return (
-    <aside aria-labelledby="fc-side-panel-title" className="fc-side-panel fc-pop-enter">
+    <aside ref={panel} tabIndex={-1} aria-labelledby="fc-side-panel-title" className="fc-side-panel fc-pop-enter outline-none">
       <header className="flex items-start gap-3">
         <div className="flex min-w-0 flex-1 flex-col">
           <h2 id="fc-side-panel-title" className="m-0 text-heading">
@@ -69,4 +86,13 @@ export function SidePanel({
       <div className="mt-4 flex flex-col gap-4">{children}</div>
     </aside>
   )
+}
+
+/** Buttons and boxes are pressed, not typed in: Esc on one closes the panel. */
+const PRESSED = new Set(['button', 'checkbox', 'radio', 'submit', 'reset', 'range', 'color', 'file'])
+
+/** A place text is typed or a value chosen in: where the first Esc only leaves it. */
+function isField(element: HTMLElement): boolean {
+  if (element.isContentEditable || element instanceof HTMLTextAreaElement || element instanceof HTMLSelectElement) return true
+  return element instanceof HTMLInputElement && !PRESSED.has(element.type)
 }

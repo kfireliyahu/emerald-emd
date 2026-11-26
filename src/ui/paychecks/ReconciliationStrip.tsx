@@ -1,26 +1,29 @@
 import { abs, formatMoney, type Money } from '@/core/money.ts'
-import { Button } from '@/ui/components/Button.tsx'
+import { useT } from '@/i18n/current.ts'
+import { Said } from '@/ui/components/PanelForm.tsx'
 
 /**
- * The reconciliation strip — F04's live `gross − Σ(net-reducing lines) − net`,
- * pinned to the foot of the entry form.
+ * **Whether the slip adds up, said in words as it is typed** — F04's live
+ * `gross − Σ(net-reducing lines) − net`, which was a strip pinned to the foot
+ * of a page and is now the form's `Said` sentence under the figures it reads
+ * (M64 F14, D-630; the maintainer: "the reconciliation said in words as you
+ * type").
  *
- * It is the one number that tells the user the app has understood their payslip,
- * and it is **never a blocker**. Save stays enabled beside it at any value: a
- * real slip contains items nobody wants to itemize, and an app that refuses the
- * slip is an app arguing with the payroll department.
- *
- * Zero is `positive`, anything else is `negative` — F04's word was "amber", but
- * the palette has no amber and its own comment names "a reconciliation gap" as
- * what `--color-negative` is reserved for (docs/11). The copy carries the rest:
- * the sentence beside a gap says what to do about it, not that something is
- * wrong.
+ * It is the one sentence that tells the user the app has understood their
+ * payslip, and it is **never a blocker**: Save stays enabled beside it at any
+ * value — a real slip contains items nobody wants to itemize, and an app that
+ * refuses the slip is an app arguing with the payroll department. So it is a
+ * sentence in `ink-secondary` and no colour: a gap is said, not flagged
+ * (*Figures are ink*; the problems that do stop a save are `PanelForm`'s).
+ * Over, the gap is said as a magnitude: "−₪100 more than" reads as two minus
+ * signs for one fact.
  */
-export function ReconciliationStrip({
+export function ReconciliationSaid({
   delta,
   grossToNet,
   itemized,
   idle,
+  lines,
   onAddDifference,
 }: {
   delta: Money
@@ -28,62 +31,33 @@ export function ReconciliationStrip({
   grossToNet: Money
   /** What the lines currently account for. Named so the two can be compared on sight. */
   itemized: Money
-  /** Nothing has been typed yet. A green zero over an empty form is a lie. */
+  /** Nothing has been typed yet. "Adds up" over an empty form is a lie. */
   idle: boolean
+  /** How many lines the slip has: with none, the gap is the slip not itemized, not a mistake. */
+  lines: number
   /**
    * Fills the gap with one "Other deduction" line. Absent when there is no
    * "Other deduction" type in the document to write it against.
    */
   onAddDifference: (() => void) | undefined
 }) {
-  const reconciled = delta.minor === 0
-  const over = delta.minor < 0
-
-  if (idle) {
-    return (
-      <p className="text-ink-tertiary">
-        Enter gross and net, and this line will say whether the deductions between them add up.
-      </p>
-    )
-  }
-
+  const t = useT()
+  if (idle) return <Said>{t('paychecks.entry.saidIdle')}</Said>
+  const between = formatMoney(grossToNet)
+  if (delta.minor === 0) return <Said>{t('paychecks.entry.saidExact', { between })}</Said>
+  if (lines === 0) return <Said>{t('paychecks.entry.saidNoLines', { between })}</Said>
+  if (delta.minor < 0) return <Said>{t('paychecks.entry.saidOver', { gap: formatMoney(abs(delta)), between })}</Said>
   return (
-    <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-      <span
-        className={`text-secondary-number tabular-nums ${reconciled ? 'text-positive' : 'text-negative'}`}
-        aria-live="polite"
-      >
-        {/* The magnitude when over: "−₪100.00 more than allowed" reads as two
-            minus signs for one fact. The sentence beside it carries the
-            direction. */}
-        {formatMoney(over ? abs(delta) : delta)}
-      </span>
-
-      <span className="text-ink-secondary">
-        {reconciled ? (
-          <>Reconciled — the lines account for every agora between gross and net.</>
-        ) : over ? (
-          <>
-            more than the {formatMoney(grossToNet)} between gross and net. An employer share typed
-            into the employee column is the usual cause.
-          </>
-        ) : (
-          <>
-            of the {formatMoney(grossToNet)} between gross and net is not itemized — the lines
-            account for {formatMoney(itemized)}.
-          </>
-        )}
-      </span>
-
-      {!reconciled && !over && onAddDifference !== undefined && (
-        <Button variant="secondary" size="sm" onClick={onAddDifference}>
-          Add the difference as Other deduction
-        </Button>
+    <Said>
+      {t('paychecks.entry.saidUnder', { gap: formatMoney(delta), between, itemized: formatMoney(itemized) })}
+      {onAddDifference !== undefined && (
+        <>
+          {' '}
+          <button type="button" className="fc-text-action" onClick={onAddDifference}>
+            {t('paychecks.entry.addDifference', { gap: formatMoney(delta) })}
+          </button>
+        </>
       )}
-
-      <span className="ms-auto text-caption text-ink-tertiary">
-        A gap never blocks saving. Net is what your paycheck says it is.
-      </span>
-    </div>
+    </Said>
   )
 }
