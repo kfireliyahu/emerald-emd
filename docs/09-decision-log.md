@@ -539,6 +539,7 @@ written out here.
 | D-639 | 2026-11-26 | Wealth's details spend only the list's seven type steps — a label is a caption, a figure that does not answer its section is the heading step, the one that does is the kit's tile step — and one primary: the fund detail's Add reading is secondary beside the list's; a detail route is budgeted by `:id`, whichever row it opens; a wealth tag is text and a dot; and a holding reading's refusal is a code and its parts, said by the screen | M64 |
 | D-640 | 2026-11-26 | A debt's payoff month is one calculation, `payoffMonth` in `src/domain/debt.ts`, which the debt's detail and the Debts list both read: the payments still to make start in the month after the newest one already recorded, or this month while this month's has not landed | M64 |
 | D-642 | 2026-11-26 | Every route is inside its density budget and none is exempt: the last, reading files onto a format, is redesigned with its question as its title and choosing files as its action, and its ceiling counts the two pickers the old measure missed; a question asked where its button was behaves as a popover (`useAskHere`); the page's pictures of the ledger are retaken on the redesigned screens | M64 |
+| D-643 | 2026-11-26 | Emerald's page is laid out as a report: an index of words in place of the timeline, the section you are reading in semibold ink with a 6px accent square; what it is answered first at the display step in the light face; and every section one sheet on twelve columns, its question small, its answer as the heading, what backs it beside them and the evidence across the width beneath; no claim, tour, reel or picture is lost and none is retaken | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -2312,3 +2313,46 @@ at the icon (Q32, already asked). The rest of the intake page is still English (
 measured on year.emd when another document fills them: Packs on custom.emd, which keeps no ledger
 (209 words, 3 actions, 5 colours against 200, 2 and 4), and a fund's detail on showcase.emd (22
 actions against 20) — F68.
+
+## D-643 · 2026-11-26 · Emerald's page is laid out as a report: an index of words in place of the timeline, the section you are reading in semibold ink with a 6px accent square; what it is answered first at the display step in the light face; and every section one sheet on twelve columns, its question small, its answer as the heading, what backs it beside them and the evidence across the width beneath; no claim, tour, reel or picture is lost and none is retaken <a id="d-643"></a>
+
+**Context.** M64 F71. The maintainer, 2026-11-26: "is the website included in the redesign? if not
+it should be", and asked whether to restyle it or rethink it, "rethink the layout too." The page
+(`demo-page.html`, `src/demo/page/`) was still M33 U8's (D-459): laid out as the app's roadmap — a
+dashed timeline down the start side with a numbered dot per section, an icon over every section, a
+heading that was often a name (*The ledger*, *Packs*, *How it works*), numbered points, and the
+evidence under them in one column. The redesign's language (D-614, D-615) says the opposite: the
+answer first, in words; a rail of words; type, space, hairlines and one accent.
+
+**Decision.**
+
+1. **The rail is an index of words.** The timeline, its dots, numbers and growing line are gone; the
+   sections are listed by name, the one under the eye in semibold ink with a 6px `accent` square at
+   the row's end, as the app's rail marks the place you are on. Below 960 px the rail is a bar whose
+   middle names the section you are in; pressing it opens the same list *over* the page (so nothing
+   beneath moves), and a pick, Esc or a press outside closes it. The dot strip is gone with it.
+2. **What it is is answered first.** The hero's heading is the README's first line, *The database
+   under the chat.*, at the display step (88px, Plex 300, proportional) on a wide sheet and the hero
+   step on a phone; the name and the assembling mark sit small above it; the story follows in
+   `ink-secondary`, then the page's one primary, Get Emerald, still on the first screen.
+3. **Every other section is one sheet of a report.** Its question small at the start, its answer as
+   the heading at the lede step, what backs the answer (the points, a tour's lead) beside them on
+   twelve columns (five and seven, the head held in view while the points scroll past), and the
+   evidence (a tour's frame, the reel, the inbox diagram, the claim, the ways in) across all twelve
+   beneath. Stacked below 44rem. The section icons and the points' numerals are cut: nothing on them
+   was read, and the app's rail has no glyphs either.
+4. **One question per section, written as a draft.** `asks` in the copy holds a question for the
+   seven sections that are not tours (*Where does my data go?*, *How do I get it?*, …); a tour's
+   question is its own lead. The four headings that were names became answers (*Your money, from the
+   files you already get.*, *A project's memory, kept as rows.*, *What you keep is a real table, and
+   it checks itself.*, *Start from formats somebody already worked out.*), and the names still name
+   their rows in the index. All of it is marked DRAFT, the maintainer's to rewrite, as the page's
+   other session-written words are.
+5. **Nothing the page claims or shows is lost.** Every point stays, word for word; the four tours,
+   the reel, the claim and the inbox diagram keep their markup and code; the frame and the reel keep
+   their shapes (16:10, 1000:675), so **no picture is retaken** — M64 U15 already retook them on the
+   redesigned screens. The development recording stays the maintainer's to record again.
+
+**Left as it is.** The page has one language, English, so Hebrew was checked as right to left only
+(`dir="rtl"` on the root): the sheet and the index mirror. Whether the page gets a Hebrew copy is the
+maintainer's (Q84).

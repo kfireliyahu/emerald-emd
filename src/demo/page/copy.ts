@@ -38,6 +38,19 @@ export interface Copy {
   }
   /** The rows of the roadmap, by section id. */
   readonly rows: Readonly<Record<string, string>>
+  /**
+   * **The question a section answers** (M64 F71, D-643), drawn small above its heading, which
+   * is the answer: one question per section, by section id. A tour's question is its lead.
+   */
+  readonly asks: {
+    readonly local: string
+    readonly ledger: string
+    readonly development: string
+    readonly engine: string
+    readonly mcp: string
+    readonly packs: string
+    readonly download: string
+  }
   readonly hero: { readonly name: string; readonly tagline: string; readonly story: readonly string[] }
   readonly tours: {
     readonly try: string

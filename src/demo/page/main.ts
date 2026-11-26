@@ -23,7 +23,7 @@ import {
   RELEASES_URL,
   SOURCE_URL,
 } from './page.ts'
-import { rowAt, tones } from './rail.ts'
+import { rowAt } from './rail.ts'
 
 /**
  * **Emerald's page** (M33 U8, D-459): `demo-page.html`, which the demo build
@@ -33,13 +33,12 @@ import { rowAt, tones } from './rail.ts'
  * `?autoplay=1`, no referrer, an empty allow list), and nothing on this page
  * explains the engine: the frames' captions do the talking.
  *
- * The page is laid out as the app (2026-10-12, on the mockup
- * M33 U8a): the timeline down the left in the sidebar's plane, every section a
- * row of it, solid to the row under the eye and dashed after, that row's dot
- * live in accent and pulsing once on arrival, and the address following the
- * row. The dots are the app's own (`.fc-tl-dot` and `.fc-dot` from tokens.css,
- * the tones of `src/ui/formats/tone.ts`); the growing line is the page's. Below
- * 960 px the rail is a strip across the top.
+ * The page is laid out as a report (M64 F71, D-643, after the app's D-614 and
+ * D-615): an index of words down the start side, the section you are reading
+ * marked in it; the answer to "what is it" first, at the display step; then one
+ * sheet a section, its question small, its answer as the heading, what backs it
+ * beside them and the evidence (a tour, the screens, a diagram) across the whole
+ * width beneath. Below 960 px the index is a bar across the top.
  *
  * **The words are `copy/<language>.ts`** (M33 F9): the markup names keys, and
  * `fill` puts the words in, in the language `pickLanguage` chose.
@@ -229,45 +228,49 @@ window.addEventListener('message', (event) => {
   publish()
 })
 
-// The roadmap: one row per section, named by the copy, drawn into the rail and the strip.
+// The index: one row per section, named by the copy, in words (M64 F71, D-643), as the
+// app's rail is since D-615, which lists places in words and marks the one you are on in
+// semibold ink with a 6px accent square at the row's end. Below 960 px the rail is a bar
+// whose middle names the section you are in and opens the same list in place.
 const rows = [...document.querySelectorAll<HTMLElement>('.row[data-row]')]
-// The rows are the list; the line and its solid part are drawn in the box round it
-// (`#tl`), which the solid one is placed against — an `ol` holds only its rows (M54 F8).
-const line = document.getElementById('tl')
-const rail = document.getElementById('tl-rows')
-const strip = document.getElementById('strip')
-const solid = document.getElementById('solid')
+const nav = document.querySelector<HTMLElement>('nav.rail')
+const index = document.getElementById('index')
 const now = document.getElementById('now')
-if (!line || !rail || !strip || !solid || !now) throw new Error('the rail is missing from the page')
+if (!nav || !index || !now) throw new Error('the rail is missing from the page')
 const nameOf = (row: HTMLElement): string => copy.rows[row.id] ?? row.id
-const items = rows.map((row, index) => {
+const links = rows.map((row) => {
   const item = document.createElement('li')
-  item.dataset.tone = 'waiting'
-  item.style.setProperty('--i', String(index))
-  const ref = String(index + 1).padStart(2, '0')
-  item.innerHTML =
-    `<a href="#${row.id}"><span class="cell"><span class="fc-tl-dot fc-pulse" aria-hidden="true"></span></span>` +
-    // The space keeps the number and the name two words to a screen reader ("01 What it is").
-    `<span class="name"><span class="ref">${ref}</span> </span></a>`
-  item.querySelector('.name')?.append(nameOf(row))
-  rail.append(item)
-  const small = document.createElement('li')
-  small.dataset.tone = 'waiting'
-  small.innerHTML = `<a href="#${row.id}"><span class="fc-dot"></span></a>`
-  const link = small.querySelector('a')
-  link?.setAttribute('title', nameOf(row))
-  link?.setAttribute('aria-label', nameOf(row))
-  strip.append(small)
-  return { item, small, dot: item.querySelector<HTMLElement>('.fc-tl-dot') }
+  const link = document.createElement('a')
+  link.href = `#${row.id}`
+  link.textContent = nameOf(row)
+  item.append(link)
+  index.append(item)
+  return link
 })
 
-// Where the reader is, and what follows from it: the tones, the solid line to
-// the live dot, one pulse of that dot, and the address — replaced, never
-// pushed, so Back still leaves the page rather than walking the rows. The
-// class alternates so a second arrival at a row replays the pulse, as a
-// changed row's does on the roadmap.
+// The bar's index opens in place and closes on a pick, on Esc and on a click outside it.
+function openIndex(open: boolean): void {
+  nav?.toggleAttribute('data-open', open)
+  now?.setAttribute('aria-expanded', String(open))
+}
+now.addEventListener('click', () => openIndex(!nav.hasAttribute('data-open')))
+index.addEventListener('click', (event) => {
+  if ((event.target as HTMLElement).closest('a')) openIndex(false)
+})
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && nav.hasAttribute('data-open')) {
+    openIndex(false)
+    now.focus()
+  }
+})
+document.addEventListener('click', (event) => {
+  if (nav.hasAttribute('data-open') && !nav.contains(event.target as Node)) openIndex(false)
+})
+
+// Where the reader is, and what follows from it: the row marked in the index, its name in
+// the bar, and the address, replaced and never pushed, so Back still leaves the page rather
+// than walking the rows.
 let at = -1
-let pulse: 'a' | 'b' = 'b'
 function place(): void {
   const atEnd = window.innerHeight + window.scrollY >= document.body.scrollHeight - 2
   const current = rowAt(
@@ -275,24 +278,15 @@ function place(): void {
     window.innerHeight * 0.4,
     atEnd,
   )
-  if (current === at || current === -1 || !line || !solid || !now) return
+  if (current === at || current === -1 || !now) return
   const first = at === -1
   at = current
-  tones(items.length, at).forEach((tone, index) => {
-    const { item, small, dot } = items[index] as (typeof items)[number]
-    item.dataset.tone = tone
-    small.dataset.tone = tone
-    if (dot) dot.dataset.tone = tone
-    dot?.classList.remove('fc-pulse-a', 'fc-pulse-b')
+  links.forEach((link, k) => {
+    if (k === at) link.setAttribute('aria-current', 'location')
+    else link.removeAttribute('aria-current')
   })
-  pulse = pulse === 'a' ? 'b' : 'a'
-  items[at]?.dot?.classList.add(`fc-pulse-${pulse}`)
-  const origin = line.getBoundingClientRect().top
-  const centre = (index: number): number => (items[index]?.dot?.getBoundingClientRect().top ?? origin) - origin + 9
-  solid.style.top = `${String(centre(0))}px`
-  solid.style.height = `${String(centre(at) - centre(0))}px`
   const row = rows[at]
-  now.textContent = row ? `· ${nameOf(row)}` : ''
+  now.textContent = row ? nameOf(row) : ''
   if (!first && row) {
     const address = at === 0 ? `${location.pathname}${location.search}` : `#${row.id}`
     history.replaceState(null, '', address)
