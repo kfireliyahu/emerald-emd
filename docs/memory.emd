@@ -6825,6 +6825,23 @@ state: applied
 answered_by: D-633
 became_unit: M64 F33
 
+### M64 F38 built: Wealth's details say every word through the catalogue, the data layer hands back codes and parts, to land
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-26
+body: "M64 F38 is built on worktree-agent-a2daee32c38b44656 at c1cd085 (on top of F39's ad94afd). docs:check green.\n\n```json\n{\"unit\": \"M64 F38\", \"commit\": \"c1cd085\", \"branch\": \"worktree-agent-a2daee32c38b44656\", \"files\": \"src/domain/unchecked.ts\\nsrc/domain/goalDeposits.ts\\nsrc/domain/holdingReadings.ts\\nsrc/data/repositories/holdingReadingRepository.ts\\nsrc/data/importer/holdingStatement.ts\\nsrc/data/repositories/goalWhereRepository.ts\\nsrc/data/repositories/goalWhereRepository.test.ts\\nsrc/data/repositories/goalHoldingFeed.test.ts\\nsrc/plugin/tools/holdingReadings.ts\\nsrc/plugin/tools/wealth.ts\\nsrc/ui/wealth/words.ts\\nsrc/ui/screens/ListDetail.tsx\\nsrc/ui/debts/BalanceLine.tsx\\nsrc/ui/funds/BalanceChart.tsx\\nsrc/ui/savings/HoldingReadings.tsx\\nsrc/ui/savings/holdingCheck.ts\\nsrc/ui/savings/holdingCheck.test.ts\\nsrc/ui/savings/labels.ts\\nsrc/ui/funds/ReportIntake.tsx\\nsrc/ui/savings/HoldingEditor.tsx\\nsrc/ui/savings/PlaceEditor.tsx\\nsrc/ui/savings/CostBasis.tsx\\nsrc/ui/savings/WherePicker.tsx\\nsrc/ui/savings/GoalEditor.tsx\\nsrc/ui/screens/GoalDetail.tsx\\nsrc/ui/screens/Plan.tsx\\nsrc/ui/wealth/NetWorthOpened.tsx\\nsrc/i18n/en/wealth.ts\\nsrc/i18n/he/wealth.ts\\nsrc/i18n/words.test.ts\", \"report\": \"Words through t() (wealth.pane, charts, checked, holdingReadings, reportIntake, holdingForm, placeForm, unchecked, where.cash/anotherGoal, en and he): ListDetail's Close, its title and the overlay's Details; the debt line's and fund chart's aria-labels, the chart's key (paid in, earned) and its periods-not-drawn line; HoldingReadings whole (title, empty line, form labels, problems, the check tags and their hover reasons); holdingCheck now returns LastChecked ({NEVER} | {ON, day, months}) and checkedSaid says it, NEVER_CONFIRMED gone from labels.ts; ReportIntake's stack labels and the default 'Fund report' name; the holding and place forms (titles, leads through Phrase, labels, hints, buttons, problems, the account choices and the new-account kinds). Data layer, D-632's 'a key and its parts, said by the screen': a check that could not run carries why: Unchecked (src/domain/unchecked.ts), a code shared by CostBasisCheck and ReadingCheck (cost, quantity, price, cash; OTHER passes the engine's own reason through) — the screen says it with uncheckedSaid, the plugin with uncheckedText in its unchanged English. whereChoices returns cash: boolean and detail: {last4} | {at} instead of 'Cash' and 'at X', and '' for a goal the document lacks instead of 'another goal'; whereName, whereDetail and otherGoal say them (WherePicker, GoalDetail, GoalEditor, Plan's goal-form holdings — one line in Plan.tsx). Contrast: the fund chart's key and the pane's Close moved from ink-tertiary to ink-secondary (both were 3.47:1). The selects in HoldingEditor and PlaceEditor were left alone for the selects unit: their kind options still read PLACE_KIND_LABEL / HOLDING_KIND_LABEL, and the place form's 'Its cash' select keeps two literals, allowed by name in words.test.ts until that merge (M64 F47). Probe on year.emd --lang he, light and dark: the fund, both goals, the debt and #/wealth all english 0, low contrast 0. Checked in the browser (English, the demo stays English): a net-worth row's 'never checked' then 'checked 2026-11-26' after Checked today, and the holding and place forms render. Tests: related (180 files) green but for three plugin formats tests timing out under load, green alone; i18n, privacy, direction, parity, typecheck green. No new decision: it follows D-632.\", \"decision\": \"D-632\", \"review_entries\": [{\"do\": \"Open the synthetic year in Hebrew, then Wealth: a fund, a goal and the car loan from their lists, and a net-worth row with its Edit for the holding and for the place.\", \"should\": \"Every word is Hebrew but the document's own names; the fund chart's key reads הופקד and הרוויחה, a holding's line says when it was last checked in Hebrew, and the forms' labels and hints read naturally. Wrong would be an English word, or a Hebrew phrase that reads as a translation (the check tags read '<name>: תואם').\"}], \"follow_ups\": [{\"kind\": \"unit\", \"ref\": \"M64 F47\", \"title\": \"The holding and place forms' selects say their words in the language on screen\", \"brief\": \"After the selects unit turns HoldingEditor's and PlaceEditor's selects into ValueChoice and M64 F38's words merge beside them: the kind options still read the English PLACE_KIND_LABEL and HOLDING_KIND_LABEL (say them through useWealthWords().place and t('wealth.kinds.holdingKind.<KIND>')), the Hebrew bank term beside Kind repeats itself on a Hebrew screen (show it only in English), and the place form's 'Its cash' choice keeps 'The holding that is the account’s cash' and 'A new holding, Cash' inline — put them through t() and take them off ALLOWED in src/i18n/words.test.ts. Files: src/ui/savings/HoldingEditor.tsx, src/ui/savings/PlaceEditor.tsx, src/ui/savings/labels.ts, src/i18n/en/wealth.ts, src/i18n/he/wealth.ts, src/i18n/words.test.ts.\"}, {\"kind\": \"unit\", \"ref\": \"M64 F48\", \"title\": \"A holding reading's refusals are codes the screen says\", \"brief\": \"Found in M64 F38: HoldingReadings shows error.message from recordHoldingReading and deleteHoldingReading (HoldingReadingError, src/data/repositories/holdingReadingRepository.ts), English sentences made in the data layer, and decides a clash by message.startsWith('There is already a reading'). Give HoldingReadingError a code and its parts (a clash with its day and figure, the other refusals), say them through wealth.holdingReadings in en and he, keep the plugin's English, and decide the clash by its code. Files: src/data/repositories/holdingReadingRepository.ts, src/ui/savings/HoldingReadings.tsx, src/plugin/tools/holdingReadings.ts, src/i18n/en/wealth.ts, src/i18n/he/wealth.ts.\"}]}\n```"
+refs: M64 F38
+state: applied
+answered_by: D-632
+became_unit: M64 F38
+
+### M64 F39 built: the synthetic year's funds say what they received, so the deposit check and a fund's paid-in bars draw, to land
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-26
+body: "M64 F39 is built on worktree-agent-a2daee32c38b44656 at ad94afd. docs:check green. No decision.\n\n```json\n{\"unit\": \"M64 F39\", \"commit\": \"ad94afd\", \"branch\": \"worktree-agent-a2daee32c38b44656\", \"files\": \"fixtures/synthetic/demo/year/year.json\\nscripts/demo-year.mjs\", \"report\": \"The brief's premise was half right: year.emd already held two funds (Pension fund, Study fund) with quarterly readings, fed by the slips' pension, severance and study-fund lines since M64 U16, so #/wealth/funds/<id> drew. What it lacked was what a report says the fund received: no reading carried deposits_since_previous, so the deposit check said no fund could be checked and the fund chart drew no paid-in bars. Now each quarter's reading after the first carries deposits_since_previous, worked out in demo-year.mjs from the slips' lines that feed that fund (employee + employer, a month's lag, the check's default), and the balance is the previous one plus what arrived plus a made-up quarterly return (fixture: growth_per_quarter replaces per_quarter; fed_by names the deduction types, and set_deduction_types is derived from it). Probed on year.emd: #/wealth/deposits checks 2 funds, gap 0.00; the fund detail draws its balance with paid-in and earned bars, the deposit table per salary month, fees and readings; --lang he english 0 after F38. --budget: the fund detail is over (primary 2 > 1, type sizes 9 > 7), as are #/wealth/fees and #/wealth/deposits (9 > 7) and the goal and debt details (9 > 7) — pre-existing, not words; follow-up M64 F46. src/demo/year.test.ts green (6).\", \"review_entries\": [], \"follow_ups\": [{\"kind\": \"unit\", \"ref\": \"M64 F46\", \"title\": \"Wealth's details and its fee and deposit sections inside the density budget\", \"brief\": \"Found in M64 F39's probe of year.emd with --budget docs/redesign/budget.json: #/wealth/funds/<id> draws two primary actions (the list's and the detail's Add reading) and 9 type sizes; #/wealth/goals/<id>, #/wealth/debts/<id>, #/wealth/fees and #/wealth/deposits draw 9 type sizes against the limit of 7. Bring each to one primary and seven sizes on the ramp (the redesign-screen skill), probe light, dark and --lang he, and give the detail routes budget entries. Files: src/ui/screens/FundDetail.tsx, GoalDetail.tsx, DebtDetail.tsx, FeeImpact.tsx, DepositCheck.tsx, docs/redesign/budget.json.\"}]}\n```"
+refs: M64 F39
+state: applied
+became_unit: M64 F39
+
 ### M64 F5 landing proposal: Undo brings a deleted rule or category back whole (D-628)
 from: F:/projects/emerald/docs/memory.emd
 sent_on: 2026-11-26
@@ -9379,6 +9396,11 @@ unit: M64 U4
 should: Decide whether the primary button stays a filled emerald split tile or becomes comp A's 32px hairline box with ink text; the finish-reviewer called the filled tile the loudest mark on a near-monochrome page, and The button is a split tile and One primary action per screen still stand
 breaks: A primary that outweighs the answer on every redesigned screen
 state: accepted
+
+### Open the synthetic year in Hebrew, then Wealth: a fund, a goal and the car loan from their lists, and a net-worth row with its Edit for the holding and for the place.
+unit: M64 F38
+should: Every word is Hebrew but the document's own names; the fund chart's key reads הופקד and הרוויחה, a holding's line says when it was last checked in Hebrew, and the forms' labels and hints read naturally. Wrong would be an English word, or a Hebrew phrase that reads as a translation (the check tags read '<name>: תואם').
+state: open
 
 ### Open two documents at schema 60 once in the rebuilt app, run keep_packs on the first, set one of its inbox rows' about to the second's S1 U5 by path, then ask start_here on the first.
 unit: M47 U4
@@ -19011,21 +19033,30 @@ paths: "src/ui/formats/listView.ts\nsrc/ui/formats/listView.test.ts\nsrc/ui/form
 milestone: Later
 scope: ui
 title: The rest of Wealth's details' words: the pane frame, the charts, holding readings, the report reader and the English that comes from the data layer
-state: in_progress
+landed: 2026-11-26
+decision: D-632
+state: built
 brief: After M64 F26 Hebrew Wealth details still show English from files outside its paths: ListDetail.tsx's ClosePane ('Close', 'Close this pane') and overlay aria-label 'Details'; debts/BalanceLine.tsx and funds/BalanceChart.tsx aria-labels; savings/HoldingReadings.tsx; funds/ReportIntake.tsx's labels; savings/HoldingEditor.tsx and PlaceEditor.tsx opened from a net-worth row; savings/holdingCheck.ts's phrase ('never checked', 'checked ... ago'); and strings made in data/domain: costBasisCheck's UNCHECKED reason (domain/goalDeposits.ts), whereChoices' detail 'at X', 'Cash' and 'another goal' (data/repositories/goalWhereRepository.ts). Give the data layer codes or parts instead of sentences, say them through the wealth area, add the UI files to src/i18n/words.test.ts, and probe #/wealth/goals/<id> and #/wealth/debts/<id> on year.emd with --lang he until English is the document's own words only.
+files: "src/domain/unchecked.ts\nsrc/domain/goalDeposits.ts\nsrc/domain/holdingReadings.ts\nsrc/data/repositories/holdingReadingRepository.ts\nsrc/data/importer/holdingStatement.ts\nsrc/data/repositories/goalWhereRepository.ts\nsrc/data/repositories/goalWhereRepository.test.ts\nsrc/data/repositories/goalHoldingFeed.test.ts\nsrc/plugin/tools/holdingReadings.ts\nsrc/plugin/tools/wealth.ts\nsrc/ui/wealth/words.ts\nsrc/ui/screens/ListDetail.tsx\nsrc/ui/debts/BalanceLine.tsx\nsrc/ui/funds/BalanceChart.tsx\nsrc/ui/savings/HoldingReadings.tsx\nsrc/ui/savings/holdingCheck.ts\nsrc/ui/savings/holdingCheck.test.ts\nsrc/ui/savings/labels.ts\nsrc/ui/funds/ReportIntake.tsx\nsrc/ui/savings/HoldingEditor.tsx\nsrc/ui/savings/PlaceEditor.tsx\nsrc/ui/savings/CostBasis.tsx\nsrc/ui/savings/WherePicker.tsx\nsrc/ui/savings/GoalEditor.tsx\nsrc/ui/screens/GoalDetail.tsx\nsrc/ui/screens/Plan.tsx\nsrc/ui/wealth/NetWorthOpened.tsx\nsrc/i18n/en/wealth.ts\nsrc/i18n/he/wealth.ts\nsrc/i18n/words.test.ts"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-a2daee32c38b44656
+commit: c1cd085
+report: Words through t() (wealth.pane, charts, checked, holdingReadings, reportIntake, holdingForm, placeForm, unchecked, where.cash/anotherGoal, en and he): ListDetail's Close, its title and the overlay's Details; the debt line's and fund chart's aria-labels, the chart's key (paid in, earned) and its periods-not-drawn line; HoldingReadings whole (title, empty line, form labels, problems, the check tags and their hover reasons); holdingCheck now returns LastChecked ({NEVER} | {ON, day, months}) and checkedSaid says it, NEVER_CONFIRMED gone from labels.ts; ReportIntake's stack labels and the default 'Fund report' name; the holding and place forms (titles, leads through Phrase, labels, hints, buttons, problems, the account choices and the new-account kinds). Data layer, D-632's 'a key and its parts, said by the screen': a check that could not run carries why: Unchecked (src/domain/unchecked.ts), a code shared by CostBasisCheck and ReadingCheck (cost, quantity, price, cash; OTHER passes the engine's own reason through) — the screen says it with uncheckedSaid, the plugin with uncheckedText in its unchanged English. whereChoices returns cash: boolean and detail: {last4} | {at} instead of 'Cash' and 'at X', and '' for a goal the document lacks instead of 'another goal'; whereName, whereDetail and otherGoal say them (WherePicker, GoalDetail, GoalEditor, Plan's goal-form holdings — one line in Plan.tsx). Contrast: the fund chart's key and the pane's Close moved from ink-tertiary to ink-secondary (both were 3.47:1). The selects in HoldingEditor and PlaceEditor were left alone for the selects unit: their kind options still read PLACE_KIND_LABEL / HOLDING_KIND_LABEL, and the place form's 'Its cash' select keeps two literals, allowed by name in words.test.ts until that merge (M64 F47). Probe on year.emd --lang he, light and dark: the fund, both goals, the debt and #/wealth all english 0, low contrast 0. Checked in the browser (English, the demo stays English): a net-worth row's 'never checked' then 'checked 2026-11-26' after Checked today, and the holding and place forms render. Tests: related (180 files) green but for three plugin formats tests timing out under load, green alone; i18n, privacy, direction, parity, typecheck green. No new decision: it follows D-632.
 
 ### M64 F39
 milestone: Later
 scope: ui
 title: A fund in the synthetic year, so a fund's detail can be probed
-state: in_progress
+landed: 2026-11-26
+state: built
 brief: year.emd (scripts/demo-year.mjs) holds goals and a car loan but no pension or study fund, so probe:screens cannot draw #/wealth/funds/<id>, the fee illustration or the deposit check against paychecks. Add one fund with a few readings fed by a paycheck deduction type to fixtures/synthetic/demo/year/year.json through the tools a conversation uses, and check the fund's detail with --lang he and --budget.
+files: "fixtures/synthetic/demo/year/year.json\nscripts/demo-year.mjs"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-a2daee32c38b44656
+commit: ad94afd
+report: The brief's premise was half right: year.emd already held two funds (Pension fund, Study fund) with quarterly readings, fed by the slips' pension, severance and study-fund lines since M64 U16, so #/wealth/funds/<id> drew. What it lacked was what a report says the fund received: no reading carried deposits_since_previous, so the deposit check said no fund could be checked and the fund chart drew no paid-in bars. Now each quarter's reading after the first carries deposits_since_previous, worked out in demo-year.mjs from the slips' lines that feed that fund (employee + employer, a month's lag, the check's default), and the balance is the previous one plus what arrived plus a made-up quarterly return (fixture: growth_per_quarter replaces per_quarter; fed_by names the deduction types, and set_deduction_types is derived from it). Probed on year.emd: #/wealth/deposits checks 2 funds, gap 0.00; the fund detail draws its balance with paid-in and earned bars, the deposit table per salary month, fees and readings; --lang he english 0 after F38. --budget: the fund detail is over (primary 2 > 1, type sizes 9 > 7), as are #/wealth/fees and #/wealth/deposits (9 > 7) and the goal and debt details (9 > 7) — pre-existing, not words; follow-up M64 F46. src/demo/year.test.ts green (6).
 
 ### M64 F40
 milestone: Later
@@ -19040,6 +19071,41 @@ scope: ui
 title: WorkedOut, FormatPicker and SplitPurchases say their words through the catalogue
 state: in_progress
 brief: M64 F29 (D-634) turned their selects into ValueChoice, but their words are still inline English: WorkedOut's how close (exactly, ± an amount, ± a percent, nothing, total of), FormatPicker's Read with / no reader / Which reader reads this, and SplitPurchases' Offer purchases split into more than ... payments and its heading. Move them into the catalogue (en, he), add the files to src/i18n/words.test.ts's translated set, and check probe:screens --lang he on the routes that draw them. Files: src/ui/formats/WorkedOut.tsx, src/ui/paychecks/FormatPicker.tsx, src/ui/debts/SplitPurchases.tsx.
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
+
+### M64 F46
+milestone: Later
+scope: ui
+title: Wealth's details and its fee and deposit sections inside the density budget
+state: in_progress
+brief: Found in M64 F39's probe of year.emd with --budget docs/redesign/budget.json: #/wealth/funds/<id> draws two primary actions (the list's and the detail's Add reading) and 9 type sizes; #/wealth/goals/<id>, #/wealth/debts/<id>, #/wealth/fees and #/wealth/deposits draw 9 type sizes against the limit of 7. Bring each to one primary and seven sizes on the ramp (the redesign-screen skill), probe light, dark and --lang he, and give the detail routes budget entries. Files: src/ui/screens/FundDetail.tsx, GoalDetail.tsx, DebtDetail.tsx, FeeImpact.tsx, DepositCheck.tsx, docs/redesign/budget.json.
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
+
+### M64 F47
+milestone: Later
+scope: ui
+title: The holding and place forms' selects say their words in the language on screen
+landed: 2026-11-26
+decision: D-632
+state: built
+brief: After the selects unit turns HoldingEditor's and PlaceEditor's selects into ValueChoice and M64 F38's words merge beside them: the kind options still read the English PLACE_KIND_LABEL and HOLDING_KIND_LABEL (say them through useWealthWords().place and t('wealth.kinds.holdingKind.<KIND>')), the Hebrew bank term beside Kind repeats itself on a Hebrew screen (show it only in English), and the place form's 'Its cash' choice keeps 'The holding that is the account’s cash' and 'A new holding, Cash' inline — put them through t() and take them off ALLOWED in src/i18n/words.test.ts. Files: src/ui/savings/HoldingEditor.tsx, src/ui/savings/PlaceEditor.tsx, src/ui/savings/labels.ts, src/i18n/en/wealth.ts, src/i18n/he/wealth.ts, src/i18n/words.test.ts.
+files: "src/ui/savings/HoldingEditor.tsx\nsrc/ui/savings/PlaceEditor.tsx\nsrc/ui/savings/labels.ts\nsrc/i18n/en/wealth.ts\nsrc/i18n/he/wealth.ts\nsrc/i18n/words.test.ts"
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
+commit: f75725f
+report: Done by the F38/F39 child while resolving its merge with F29 (the merge was committed on m64-redesign by the driver, since the worktree guard refuses a commit with docs/memory.emd staged). The holding and place forms' select options say t('wealth.kinds.holdingKind.<KIND>') and t('wealth.kinds.place.<KIND>'); the bank's Hebrew word beside Kind shows only on an English screen; the 'Its cash' choice's label and 'A new holding, Cash' go through t() (wealth.placeForm.cashLabel, newCash, en and he) and are off ALLOWED in words.test.ts; PLACE_KIND_LABEL, unused, is removed (HOLDING_KIND_LABEL stays for NetWorthOpened). F29's ValueChoice kept. Typecheck clean; src/i18n, src/ui/savings, privacy, direction and surfaceRules tests green (833).
+
+### M64 F48
+milestone: Later
+scope: ui
+title: A holding reading's refusals are codes the screen says
+state: in_progress
+brief: Found in M64 F38: HoldingReadings shows error.message from recordHoldingReading and deleteHoldingReading (HoldingReadingError, src/data/repositories/holdingReadingRepository.ts), English sentences made in the data layer, and decides a clash by message.startsWith('There is already a reading'). Give HoldingReadingError a code and its parts (a clash with its day and figure, the other refusals), say them through wealth.holdingReadings in en and he, keep the plugin's English, and decide the clash by its code. Files: src/data/repositories/holdingReadingRepository.ts, src/ui/savings/HoldingReadings.tsx, src/plugin/tools/holdingReadings.ts, src/i18n/en/wealth.ts, src/i18n/he/wealth.ts.
 taken_by: run-milestone driver
 started: 2026-11-26
 branch: m64-redesign
