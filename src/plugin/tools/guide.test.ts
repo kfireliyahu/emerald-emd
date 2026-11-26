@@ -18,7 +18,7 @@ describe('guide_status (S7)', () => {
     db.close()
 
     const text = await guideStatusTool.run({ path }, NO_CLIENT)
-    expect(text).toContain('0 of 7 places done. Next: **Drop statements, paychecks and fund reports here**')
+    expect(text).toContain('0 of 7 places done. Next: **Read statements, paychecks and fund reports**')
     expect(text).toContain('`import_statement`')
     expect(text).toContain('`create_category` and `edit_categories`')
     expect(text).toContain('fills once a statement is read')

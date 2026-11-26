@@ -2,10 +2,12 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { installLedgerPack } from '@/data/packs/ledger/pack.ts'
-import { currentLanguage } from '@/i18n/current.ts'
+import { countKey } from '@/i18n/count.ts'
+import { currentLanguage, useT } from '@/i18n/current.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 
 /**
  * **What a ledger screen shows in a document that keeps no ledger** — M25 U2.
@@ -21,6 +23,11 @@ import { Button } from '@/ui/components/Button.tsx'
  * **And what a statement dropped on such a document is shown** (M31 U2): the
  * same offer, naming the files that are waiting, and keeping the ledger reads
  * them — rather than the drop doing nothing at all.
+ *
+ * **The report** (M64 U12, D-624): the answer first — that this document keeps
+ * no ledger, and what keeping it does — in the catalogue's words, set where
+ * every screen sets its title rather than centred in the window, with the one
+ * primary beside the title.
  */
 export function NoLedger({
   waiting,
@@ -28,6 +35,7 @@ export function NoLedger({
   /** Files dropped on this document, held until it keeps a ledger or is told not to. */
   waiting?: { readonly files: readonly File[]; readonly read: () => void; readonly leave: () => void }
 } = {}) {
+  const t = useT()
   const mutate = useDocumentStore((state) => state.mutate)
   const [problem, setProblem] = useState<string | undefined>(undefined)
 
@@ -46,61 +54,63 @@ export function NoLedger({
   }
 
   // One name for the act, as Packs says it (M54 F13): Keep the ledger here.
+  const keepButton = (
+    <Button variant="primary" onClick={keep}>
+      {t('chrome.noLedger.keep')}
+    </Button>
+  )
+  const failed = problem !== undefined && (
+    <p role="alert" className="m-0 text-negative">
+      {problem}
+    </p>
+  )
+
   if (waiting !== undefined) {
     const first = waiting.files[0]?.name ?? ''
     return (
-      <div className="fc-view-enter mx-auto flex h-full max-w-md flex-col items-center justify-center gap-5 px-6 text-center">
-        <h1 className="m-0 text-title">
-          {waiting.files.length === 1 ? (
-            <>
-              No format here to read <Bidi>{first}</Bidi> onto
-            </>
+      <Page
+        title={
+          waiting.files.length === 1 ? (
+            <Phrase text={t('chrome.noLedger.waitingOne')} parts={{ file: <Bidi>{first}</Bidi> }} />
           ) : (
-            `No format here to read these ${String(waiting.files.length)} files onto`
-          )}
-        </h1>
-        <p className="m-0 text-ink-secondary">
-          The ledger reads card and bank statements, paychecks and fund reports into accounts, months and
-          categories, kept as tables in this document. Keep it here and{' '}
-          {waiting.files.length === 1 ? 'the file is' : 'the files are'} read into it.
-        </p>
+            t('chrome.noLedger.waitingMany', { n: waiting.files.length })
+          )
+        }
+        answer={t(countKey('chrome.noLedger.waitingAnswer', waiting.files.length), { count: waiting.files.length })}
+      >
         <div className="flex items-center gap-3">
-          <Button variant="primary" onClick={keep}>
-            Keep the ledger here
-          </Button>
+          {keepButton}
           <Button variant="ghost" onClick={waiting.leave}>
-            Not now
+            {t('chrome.noLedger.notNow')}
           </Button>
         </div>
-        {problem !== undefined && (
-          <p role="alert" className="m-0 text-negative">
-            {problem}
-          </p>
-        )}
-      </div>
+        {failed}
+      </Page>
     )
   }
 
   return (
-    <div className="fc-view-enter mx-auto flex h-full max-w-md flex-col items-center justify-center gap-5 px-6 text-center">
-      <h1 className="m-0 text-title">This document keeps no ledger</h1>
-      <p className="m-0 text-ink-secondary">
-        The ledger is a pack: its accounts, categories and rules are tables in the document that
-        keeps it. Keep it in this one, or go back to its formats.
-      </p>
+    <Page title={t('chrome.noLedger.title')} answer={t('chrome.noLedger.answer')}>
       <div className="flex items-center gap-3">
-        <Button variant="primary" onClick={keep}>
-          Keep the ledger here
-        </Button>
-        <Link to="/formats" className="text-ink-secondary hover:text-ink">
-          Formats
+        {keepButton}
+        <Link to="/formats" className="fc-text-action">
+          {t('chrome.noLedger.formats')}
         </Link>
       </div>
-      {problem !== undefined && (
-        <p role="alert" className="m-0 text-negative">
-          {problem}
-        </p>
-      )}
+      {failed}
+    </Page>
+  )
+}
+
+/** The page: its title, the answer in one sentence at the lede step, and what to do. */
+function Page({ title, answer, children }: { readonly title: React.ReactNode; readonly answer: string; readonly children: React.ReactNode }) {
+  return (
+    <div className="h-full overflow-auto">
+      <div className="fc-view-enter flex max-w-4xl flex-col gap-6 px-8 pt-6 pb-12">
+        <h1 className="m-0 text-title leading-tight font-medium">{title}</h1>
+        <p className="m-0 max-w-[40ch] text-lede [text-wrap:balance]">{answer}</p>
+        {children}
+      </div>
     </div>
   )
 }

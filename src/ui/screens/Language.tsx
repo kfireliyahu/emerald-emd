@@ -2,6 +2,7 @@ import { setLanguage, useLanguage, useT } from '@/i18n/current.ts'
 import { isLanguage, LANGUAGE_NAMES, LANGUAGES } from '@/i18n/language.ts'
 import { ChoiceField } from '@/ui/components/ChoiceField.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
+import { SettingRow, SettingsPage } from '@/ui/settings/SettingsPage.tsx'
 
 /**
  * **Settings › Language** — M60 U1 (D-583, D-584). The language of the app's
@@ -13,28 +14,17 @@ import { FIELD } from '@/ui/components/fieldLook.ts'
  * each is offered by its own name, so a person finds theirs whichever the app
  * is in. What a document holds is not translated, and the line under the row
  * says so.
+ *
+ * **The report** (M64 U12, D-624): the answer first — which language the app's
+ * words are in here — and the one choice under it.
  */
 export function Language() {
   const t = useT()
   const language = useLanguage()
 
   return (
-    <div className="h-full overflow-auto">
-      <div className="fc-view-enter flex max-w-4xl flex-col gap-6 px-8 pt-6 pb-12">
-        <header className="flex flex-col gap-1.5 border-b border-hairline pb-4">
-          <span className="fc-label text-ink-secondary uppercase">
-            {t('rail.settings')} · {t('rail.language')}
-          </span>
-          <h1 className="m-0 text-title">{t('rail.language')}</h1>
-          <span className="text-ink-secondary">{t('settings.language.lead')}</span>
-        </header>
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-hairline py-4">
-          <div>
-            <label htmlFor="app-language" className="font-medium">
-              {t('settings.language.row')}
-            </label>
-            <p className="m-0 mt-0.5 max-w-[60ch] text-ink-secondary">{t('settings.language.hint')}</p>
-          </div>
+    <SettingsPage title={t('rail.language')} answer={t('settings.language.answer', { language: LANGUAGE_NAMES[language] })}>
+      <SettingRow label={t('settings.language.row')} htmlFor="app-language" hint={t('settings.language.hint')}>
           <ChoiceField
             id="app-language"
             className={`${FIELD} h-7 w-32`}
@@ -47,8 +37,7 @@ export function Language() {
               if (isLanguage(choice.value)) setLanguage(choice.value)
             }}
           />
-        </div>
-      </div>
-    </div>
+      </SettingRow>
+    </SettingsPage>
   )
 }

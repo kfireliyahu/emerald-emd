@@ -43,7 +43,7 @@ import { toggleSidebar } from '@/ui/useSidebar.ts'
  * **A pack the open document does not keep has its places and operations
  * absent too** (M20 U0, D-227; M25 U8), for the same reason and off the same
  * filter the sidebar uses. A palette that
- * still offered *Import a statement…* while the rail had no finance in it would
+ * still offered *Read files…* while the rail had no finance in it would
  * be the second list this file exists to prevent.
  */
 
@@ -157,7 +157,7 @@ export function buildCommands(context: CommandContext): readonly Command[] {
           id: 'do:import',
           label: tNow('palette.commands.import'),
           group: 'Do',
-          keywords: 'card bank xlsx csv upload open file',
+          keywords: 'import statement card bank xlsx csv pdf paycheck upload open file',
           run: context.importStatement,
         },
       )

@@ -33,11 +33,15 @@ import { arrowStep } from '@/ui/direction.ts'
  *
  * `enabled` is the window's own rule: nothing floats over an import or a flow
  * that has the window.
+ *
+ * **Put away, it leaves a note where it stood** (M64 U12, D-624): *Put away.
+ * Continue from…* is said near where it happened and fades, the way an
+ * ordinary app answers — never a bar at the foot of the window (D-617).
  */
 export function Guide({ enabled }: { readonly enabled: boolean }) {
   const open = useGuideOpen()
   const guide = useGuide(enabled && open !== undefined)
-  const [toast, setToast] = useState<string | undefined>()
+  const [toast, setToast] = useState<Toast | undefined>()
 
   useEffect(() => {
     if (toast === undefined) return
@@ -46,8 +50,8 @@ export function Guide({ enabled }: { readonly enabled: boolean }) {
   }, [toast])
 
   const toastNode = toast === undefined ? null : (
-    <div data-motion-close className="fc-view-enter fc-guide-toast" role="status">
-      {toast}
+    <div data-motion-close className="fc-view-enter fc-guide-toast" role="status" style={{ left: toast.left, top: toast.top }}>
+      {toast.text}
     </div>
   )
 
@@ -66,14 +70,33 @@ export function Guide({ enabled }: { readonly enabled: boolean }) {
   )
 }
 
+/** What the guide said as it went, and where: the corner it stood at. */
+interface Toast {
+  readonly text: string
+  readonly left: number
+  readonly top: number
+}
+
 /** The walk itself: one step at a time, on the step's own screen. */
-function Walk({ guide, onToast }: { readonly guide: OpenGuide; readonly onToast: (text: string) => void }) {
+function Walk({ guide, onToast: say }: { readonly guide: OpenGuide; readonly onToast: (toast: Toast) => void }) {
   const t = useT()
   const open = useGuideOpen()
   const navigate = useNavigate()
   const location = useLocation()
   const { steps, checks, progress } = guide
   const count = steps.length
+  const dialog = useRef<HTMLDivElement>(null)
+  // The note goes where the dialog stood, or near the top of the screen when it was never placed.
+  const onToast = useCallback((text: string): void => {
+    const box = dialog.current?.getBoundingClientRect()
+    const main = document.querySelector('main')?.getBoundingClientRect()
+    const placed = box !== undefined && box.width > 0 && dialog.current?.style.visibility !== 'hidden'
+    say({
+      text,
+      left: placed ? box.left : (main?.left ?? 0) + 24,
+      top: placed ? box.top : (main?.top ?? 0) + 24,
+    })
+  }, [say])
 
   // Resolve "where it stopped" once, into a step: from here on the guide moves by index.
   useEffect(() => {
@@ -156,7 +179,6 @@ function Walk({ guide, onToast }: { readonly guide: OpenGuide; readonly onToast:
     return () => window.removeEventListener('keydown', onKey, true)
   }, [index, steps, checks, go, putAway])
 
-  const dialog = useRef<HTMLDivElement>(null)
   const ring = useRef<HTMLDivElement>(null)
   const arrow = useRef<HTMLSpanElement>(null)
   usePlacement(dialog, ring, step?.place, index ?? -1, arrow)
@@ -204,8 +226,9 @@ function Walk({ guide, onToast }: { readonly guide: OpenGuide; readonly onToast:
             </Button>
           )}
           <span className="flex-1" />
+          {/* Never filled: the screen under the guide has its own one primary (M64 U12). */}
           <Button
-            variant={strong ? 'primary' : 'secondary'}
+            variant={strong ? 'secondary' : 'ghost'}
             size="sm"
             icon={next >= count ? 'check' : 'right'}
             onClick={() => go(next)}

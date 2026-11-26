@@ -13,9 +13,11 @@ import {
 } from '@/data/packs/packs.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import type { MessageKey } from '@/i18n/catalogue.ts'
+import { countKey } from '@/i18n/count.ts'
 import { currentLanguage, useT, type Translate } from '@/i18n/current.ts'
 import { Button } from '@/ui/components/Button.tsx'
 import { useKeptPacks } from '@/ui/packs.ts'
+import { SettingsPage } from '@/ui/settings/SettingsPage.tsx'
 
 /**
  * **Which packs this document keeps** — M20 U0 (D-227), per document since M25
@@ -46,6 +48,9 @@ import { useKeptPacks } from '@/ui/packs.ts'
  * first pack offered is the filled one and the rest are secondary, *Keep the
  * ledger here* rather than two alike; and the packs are sections between
  * hairlines, square and unboxed (No card borders by default).
+ *
+ * **The report** (M64 U12, D-624): the answer first — which packs this
+ * document keeps — and then each pack, its button at its own heading.
  */
 const PLACE_LABEL: Record<PlaceKind, MessageKey> = {
   roadmap: 'settings.packs.places.roadmap',
@@ -91,13 +96,20 @@ export function Packs() {
     }
   }
 
-  // The first pack offered is this screen's one primary (M54 F6).
+  // The first pack offered is this screen's one primary (M54 F6) — a pack to
+  // bring up to date, or any while the document keeps none: a document that
+  // keeps one is not asked to keep another as if it were the next step (M64 U12).
   let primaryTaken = false
 
+  const keeps = PACKS.filter((pack) => kept.has(pack.id)).map((pack) => packObject(pack, t))
+  const answer =
+    keeps.length === 0
+      ? t('settings.packs.answerNone')
+      : t('settings.packs.answer', { packs: listWords(keeps, t) })
+
   return (
-    <div className="fc-view-enter h-full overflow-auto px-6 py-4">
-      <h1 className="m-0 text-title">{t('rail.packs')}</h1>
-      <p className="mt-2 mb-4 max-w-prose text-ink-secondary">{t('settings.packs.lead')}</p>
+    <SettingsPage title={t('rail.packs')} answer={answer}>
+      <p className="m-0 mb-4 max-w-[60ch] text-ink-secondary">{t('settings.packs.lead')}</p>
 
       {PACKS.map((pack) => {
         // Read with `kept`, which moves on every mutation.
@@ -111,26 +123,22 @@ export function Packs() {
         // a column since the document kept it (D-443).
         const behind = plan !== undefined && kept.has(pack.id) && !upToDate(plan)
         const offered = plan !== undefined && (behind || (!kept.has(pack.id) && plan.clashes.length === 0))
-        const primary = offered && !primaryTaken
-        if (offered) primaryTaken = true
+        const primary = offered && !primaryTaken && (behind || kept.size === 0)
+        if (primary) primaryTaken = true
         return (
-          <section key={pack.id} aria-labelledby={`pack-${pack.id}`} className="max-w-prose border-t border-hairline py-4">
+          <section
+            key={pack.id}
+            aria-labelledby={`pack-${pack.id}`}
+            className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-6 border-t border-hairline py-4"
+          >
+            <div className="min-w-0">
             <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
               <h2 id={`pack-${pack.id}`} className="m-0 text-body font-medium">
                 {packWord(pack, 'titles', pack.title, t)}
               </h2>
               <span className="text-caption text-ink-secondary">{places}</span>
-              {offered && (
-                <span className="ms-auto">
-                  <Button variant={primary ? 'primary' : 'secondary'} size="sm" onClick={() => keep(pack)}>
-                    {behind
-                      ? t('settings.packs.bringUpToDate', { pack: packObject(pack, t) })
-                      : t('settings.packs.keepHere', { pack: packObject(pack, t) })}
-                  </Button>
-                </span>
-              )}
             </div>
-            <p className="mt-3 max-w-prose text-caption text-ink-secondary">
+            <p className="m-0 mt-1 max-w-[60ch] text-ink-secondary">
               {packWord(pack, 'summaries', pack.summary, t)}{' '}
               {kept.has(pack.id) ? (
                 <span className="text-ink">
@@ -143,7 +151,7 @@ export function Packs() {
               )}
             </p>
             {plan !== undefined && keptParts(plan).length > 0 && (
-              <p className="mt-2 max-w-prose text-caption text-ink-secondary">
+              <p className="mt-2 max-w-[60ch] text-ink-secondary">
                 {t('settings.packs.keptOver', { parts: keptParts(plan).join('; ') })}
               </p>
             )}
@@ -156,15 +164,31 @@ export function Packs() {
               </ul>
             )}
             {problem?.pack === pack.id && <p className="mt-2 text-negative">{problem.text}</p>}
+            </div>
+            {offered ? (
+              <Button variant={primary ? 'primary' : 'secondary'} onClick={() => keep(pack)}>
+                {behind
+                  ? t('settings.packs.bringUpToDate', { pack: packObject(pack, t) })
+                  : t('settings.packs.keepHere', { pack: packObject(pack, t) })}
+              </Button>
+            ) : (
+              <span />
+            )}
           </section>
         )
       })}
 
-      <p className="max-w-prose border-t border-hairline pt-4 text-caption text-ink-secondary">
+      <p className="m-0 border-t border-hairline pt-4 text-caption text-ink-secondary">
         {t('settings.packs.engine')}
       </p>
-    </div>
+    </SettingsPage>
   )
+}
+
+/** `the ledger`, `the ledger and the development pack`, `a, b and c`. */
+function listWords(items: readonly string[], t: Translate): string {
+  if (items.length <= 1) return items[0] ?? ''
+  return t('settings.packs.and', { first: items.slice(0, -1).join(', '), last: items[items.length - 1] ?? '' })
 }
 
 /** The sentence under a pack the document does not keep: what pressing the button would do. */
@@ -185,7 +209,7 @@ function WhatKeepingDoes({ pack, plan }: { readonly pack: PackDescription; reado
     return pack.id === 'ledger' ? (
       <>{t('settings.packs.noneLedger')}</>
     ) : (
-      <>{t('settings.packs.none', { total })}</>
+      <>{t(countKey('settings.packs.none', total), { count: total })}</>
     )
   }
   const completing = [
