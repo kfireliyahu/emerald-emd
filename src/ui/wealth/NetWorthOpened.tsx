@@ -295,7 +295,7 @@ type Mode =
 
 /** `.inside`: what an opened row holds, indented under its name. */
 function Inside({ children }: { children: ReactNode }) {
-  return <div className="fc-pop-enter flex flex-col gap-3.5 pt-1 pe-[18px] pb-4 ps-10 max-sm:px-2.5">{children}</div>
+  return <div className="fc-pop-enter flex flex-col gap-4">{children}</div>
 }
 
 function Lines({ children }: { children: ReactNode }) {

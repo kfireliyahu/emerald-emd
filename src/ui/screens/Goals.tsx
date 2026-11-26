@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
-import { formatMoney, fromMajorUnits, money, type CurrencyCode, type Money } from '@/core/money.ts'
+import { fromMajorUnits, minorUnitDigits, money, type CurrencyCode } from '@/core/money.ts'
 import { formatPercent } from '@/core/percent.ts'
-import { plural } from '@/core/text.ts'
-import { addMonths, formatMonthName, formatMonthShort, monthsBetween, toISODate, toYearMonthString, yearMonthOf, type YearMonth } from '@/core/time.ts'
+import { addMonths, compareYearMonths, monthsBetween, toYearMonthString, yearMonthOf, type YearMonth } from '@/core/time.ts'
 import { parseAmountText } from '@/data/importer/normalize.ts'
 import { goalsAfter, goalsPlan, setGoalMonthly, type GoalRow } from '@/data/repositories/goalPlanRepository.ts'
 import { pauseGoal } from '@/data/repositories/goalRhythmRepository.ts'
@@ -14,7 +13,6 @@ import { saveGoalAnswer, whereChoices } from '@/data/repositories/goalWhereRepos
 import { isMovedKind } from '@/data/repositories/movedRepository.ts'
 import {
   addDeposit,
-  deleteDeposit,
   deleteGoal,
   listDeposits,
   listGoals,
@@ -27,56 +25,48 @@ import {
 import { documentCurrency } from '@/data/repositories/statisticsRepository.ts'
 import { agreedGrowthAfter, balanceAfter, type GoalStatus } from '@/domain/goalPlan.ts'
 import { MOVED_MONTHS, type VersusPlan } from '@/domain/goalRhythm.ts'
-import { originSplit } from '@/domain/goalDeposits.ts'
-import type { Holding, HoldingPlace, SavingDeposit } from '@/domain/model/savings.ts'
-import { isContribution } from '@/domain/savings.ts'
+import type { SavingDeposit } from '@/domain/model/savings.ts'
+import { countKey } from '@/i18n/count.ts'
+import { useT } from '@/i18n/current.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { shortText } from '@/ui/charts/chart.ts'
+import { HeadlineFigure } from '@/ui/charts/HeadlineFigure.tsx'
+import { kitMoney, wholeMoney } from '@/ui/charts/kit.ts'
+import { MonthTrend } from '@/ui/charts/MonthTrend.tsx'
+import { PlanAgainst } from '@/ui/charts/PlanAgainst.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { ContextMenu, type MenuItem } from '@/ui/components/ContextMenu.tsx'
 import { editableMoney } from '@/ui/components/moneyText.ts'
 import { PageMenu } from '@/ui/components/PageMenu.tsx'
-import { ContextMenu, type MenuItem } from '@/ui/components/ContextMenu.tsx'
+import { SidePanel } from '@/ui/components/SidePanel.tsx'
+import { EmptyState, WaitingList, type Waiting } from '@/ui/components/WaitingList.tsx'
 import { blankDeposit, DepositEditor, type DepositDraft } from '@/ui/savings/DepositEditor.tsx'
 import { blankGoal, GoalEditor } from '@/ui/savings/GoalEditor.tsx'
-import { isDefaultTransferNote, SOURCE_LABEL } from '@/ui/savings/labels.ts'
+import { Movements } from '@/ui/savings/Movements.tsx'
+import { rowKeys } from '@/ui/screens/Funds.tsx'
+import { Problem } from '@/ui/screens/Overview.tsx'
 import { today } from '@/ui/today.ts'
-import {
-  AMOUNT_FIELD,
-  GTD,
-  GTD_R,
-  Hero,
-  HeroCell,
-  Legend,
-  LegendItem,
-  Need,
-  NeedButton,
-  PageHead,
-  Screen,
-  Section,
-  Seg,
-  Src,
-  SWATCH,
-  Tag,
-  TH,
-  TH_R,
-} from '@/ui/wealth/parts.tsx'
+import { AMOUNT_FIELD, Seg } from '@/ui/wealth/parts.tsx'
+import { MoreButton, removeQuestion, type Menu } from '@/ui/wealth/rowMenu.tsx'
+import { useWealthWords, type WealthWords } from '@/ui/wealth/words.ts'
 
 /**
- * Goals — the page that decides the month (M28 U8).
+ * **Goals, answered first** (M64 U10, D-622; M28 U8 made it the page that
+ * decides the month): *am I on track for what I am saving for?*
  *
- * **One row per goal: what goes toward it each month, and what that leaves you
- * with in the time you pick.** The amount is **Plan's bucket** that points at the
- * goal (choice 3 A), so typing here and typing on Plan write the same number —
- * `changedTo` is what both call, and what a typed figure does to the rest of the
- * split is therefore one rule.
+ * One sentence says what the goals hold and what goes toward them each month;
+ * what they hold is the one display figure; each goal against its target is a
+ * meter (`PlanAgainst`). What waits — a goal late at its rate, one nothing goes
+ * toward, money set aside long ago, a split that is over — is one list below
+ * that, a verb each. Then this month's amounts, one row a goal, typed in place:
+ * **the amount is Plan's bucket that points at the goal** (choice 3 A), so typing
+ * here and typing on Plan write the same number through `setGoalMonthly`.
  *
- * **The projection is plain addition and says so** (the three return scenarios
- * went): the balance plus the amount, month by month, stopping at the target. An
- * assumed return is a figure somebody typed that reads as a fact; a rate the bank
- * agreed to returns as its own column.
- *
- * The goal's own page is a drawer over this list (D-326), and the flat
- * list of movements is a view of it, as it was.
+ * **The projection is plain addition and says so**: the balance plus the amount,
+ * month by month, stopping at the target. It sits one click behind the table, in
+ * the side panel. A goal's own page is the drawer over this list (D-326), and
+ * the flat list of movements is a view of it, as it was.
  */
 type View = 'GOALS' | 'DEPOSITS'
 type Horizon = 6 | 12 | 24 | 'DUE'
@@ -85,46 +75,28 @@ export function Goals() {
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
   const mutate = useDocumentStore((state) => state.mutate)
+  const t = useT()
+  const words = useWealthWords()
 
   const [view, setView] = useState<View>('GOALS')
   const [horizon, setHorizon] = useState<Horizon>(12)
-  const [editingGoal, setEditingGoal] = useState<
-    { isNew: boolean; goal: SavingGoalDraft; fromDrawer?: boolean } | undefined
-  >()
+  const [editingGoal, setEditingGoal] = useState<{ isNew: boolean; goal: SavingGoalDraft; fromDrawer?: boolean } | undefined>()
   const [goalProblem, setGoalProblem] = useState<string | undefined>()
   const navigate = useNavigate()
   const [search, setSearch] = useSearchParams()
-  const [editingDeposit, setEditingDeposit] = useState<
-    { isNew: boolean; deposit: SavingDeposit } | undefined
-  >()
-  const [confirming, setConfirming] = useState<string | undefined>()
+  const [editingDeposit, setEditingDeposit] = useState<{ isNew: boolean; deposit: SavingDeposit } | undefined>()
   const [problem, setProblem] = useState<string | undefined>()
   const [showClosed, setShowClosed] = useState(false)
   const [typed, setTyped] = useState<Readonly<Record<string, string>>>({})
-  const [menu, setMenu] = useState<{ at: { x: number; y: number }; row: GoalRow } | undefined>()
+  const [menu, setMenu] = useState<Menu | undefined>()
+  const [projection, setProjection] = useState(false)
 
   const asOf = today()
-  const currency: CurrencyCode = useMemo(
-    () => (db === undefined ? 'ILS' : documentCurrency(db)),
-    [db, revision],
-  )
-
-  const read = useMemo(
-    () => (db === undefined ? undefined : goalsPlan(db, asOf, currency, { includeClosed: showClosed })),
-    [db, revision, showClosed],
-  )
-  const places = useMemo(
-    () => (db === undefined ? [] : listHoldingPlaces(db, { includeArchived: true })),
-    [db, revision],
-  )
-  const holdings = useMemo(
-    () => (db === undefined ? [] : listHoldings(db, { includeArchived: true })),
-    [db, revision],
-  )
-  const goals = useMemo(
-    () => (db === undefined ? [] : listGoals(db, { includeClosed: true })),
-    [db, revision],
-  )
+  const currency: CurrencyCode = useMemo(() => (db === undefined ? 'ILS' : documentCurrency(db)), [db, revision])
+  const read = useMemo(() => (db === undefined ? undefined : goalsPlan(db, asOf, currency, { includeClosed: showClosed })), [db, revision, showClosed])
+  const places = useMemo(() => (db === undefined ? [] : listHoldingPlaces(db, { includeArchived: true })), [db, revision])
+  const holdings = useMemo(() => (db === undefined ? [] : listHoldings(db, { includeArchived: true })), [db, revision])
+  const goals = useMemo(() => (db === undefined ? [] : listGoals(db, { includeClosed: true })), [db, revision])
   const deposits = useMemo(() => (db === undefined ? [] : listDeposits(db)), [db, revision])
 
   // Which goal the drawer over this list is showing, if any (D-130).
@@ -140,7 +112,7 @@ export function Goals() {
   }, [editId, goals, setSearch])
 
   if (db === undefined || read === undefined) {
-    return <Centered>Open a document, or create one, to track what you are saving.</Centered>
+    return <Centered>{t('wealth.goals.noDocument')}</Centered>
   }
 
   const write = (work: (database: import('sql.js').Database, now: number) => void): boolean => {
@@ -159,9 +131,7 @@ export function Goals() {
     const feeds = goalFeeds(db)
     const current = feeds.get(editing.id)
     const names = new Map(goals.map((goal) => [goal.id, goal.name]))
-    const readers = new Map(
-      [...feeds].filter(([id, feed]) => feed.kind === 'CATEGORY' && id !== editing.id).map(([id, feed]) => [feed.id, names.get(id)]),
-    )
+    const readers = new Map([...feeds].filter(([id, feed]) => feed.kind === 'CATEGORY' && id !== editing.id).map(([id, feed]) => [feed.id, names.get(id)]))
     // Back to the drawer it came from takes the drawer's own entry back (M31 U9):
     // its Edit replaced it with this form, so history reads as it did before.
     const close = (goalId: string | undefined): void => {
@@ -224,30 +194,56 @@ export function Goals() {
 
   const { rows, plan, month } = read
   const canRecord = goals.length > 0 && holdings.length > 0
+  const newGoal = (): void => setEditingGoal({ isNew: true, goal: blankGoal() })
+  const recordMovement = (): void => setEditingDeposit({ isNew: true, deposit: blankDeposit(goals[0], holdings, asOf, currency) })
+
+  if (view === 'DEPOSITS') {
+    return (
+      <div className="h-full overflow-auto">
+        <div className="fc-view-enter flex flex-col gap-6 px-8 pt-6 pb-12">
+          <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+            <div className="flex flex-col gap-1">
+              <button type="button" className="fc-text-action self-start" onClick={() => setView('GOALS')}>
+                {t('wealth.goals.movements.back')}
+              </button>
+              <h1 className="m-0 text-title leading-tight font-medium">{t('wealth.goals.movements.title')}</h1>
+            </div>
+            {canRecord && (
+              <Button variant="primary" icon="add" onClick={recordMovement}>
+                {t('wealth.goals.movements.record')}
+              </Button>
+            )}
+          </header>
+          {problem !== undefined && <Problem text={problem} onDismiss={() => setProblem(undefined)} />}
+          <Movements
+            deposits={deposits}
+            goals={goals}
+            holdings={holdings}
+            places={places}
+            currency={currency}
+            write={write}
+            onEdit={(deposit) => setEditingDeposit({ isNew: false, deposit })}
+          />
+        </div>
+      </div>
+    )
+  }
 
   // The time you pick. "Until the last date" is the latest date a goal has.
   const lastDue = rows.reduce<YearMonth | undefined>(
-    (latest, row) =>
-      row.line.due !== undefined && (latest === undefined || monthsBetween(latest, row.line.due) > 0)
-        ? row.line.due
-        : latest,
+    (latest, row) => (row.line.due !== undefined && (latest === undefined || monthsBetween(latest, row.line.due) > 0) ? row.line.due : latest),
     undefined,
   )
-  const months =
-    horizon === 'DUE' ? Math.max(1, monthsBetween(month, lastDue ?? addMonths(month, 12))) : horizon
+  const months = horizon === 'DUE' ? Math.max(1, monthsBetween(month, lastDue ?? addMonths(month, 12))) : horizon
 
-  /** Plan's own write: one function for a typed figure here and a typed figure there. */
-  /** Plan's own write, the one the tools use (D-323, M28 F10). */
+  /** Plan's own write, the one the tools use (D-323, M28 F10): one function for a figure typed here and one typed on Plan. */
   const setMonthly = (row: GoalRow, minor: number): void => {
     if (plan === undefined) return
     write((database, now) => {
       const result = setGoalMonthly(database, asOf, currency, row.line.goalId, minor, now)
-      if (result === 'SEVERAL_BUCKETS') {
-        throw new Error(`Several of Plan's buckets are for ${row.line.name}. Edit them on Plan: the figure here is their sum.`)
-      }
+      if (result === 'SEVERAL_BUCKETS') throw new Error(t('wealth.goals.severalBuckets', { name: row.line.name }))
     })
   }
-
 
   const commit = (row: GoalRow): void => {
     const text = typed[row.line.goalId]
@@ -266,292 +262,233 @@ export function Goals() {
   const inAfter = goalsAfter(rows, months, currency)
   const left = read.left
 
-  const menuItems = (row: GoalRow): MenuItem[] => {
+  const menuItems = (row: GoalRow, at: Menu['at']): MenuItem[] => {
     const goal = row.progress.goal
     return [
       ...(canRecord
-        ? [
-            {
-              label: 'Add a deposit',
-              icon: 'add',
-              onChoose: () =>
-                setEditingDeposit({ isNew: true, deposit: blankDeposit(goal, holdings, asOf, currency) }),
-            } satisfies MenuItem,
-          ]
+        ? [{ label: t('wealth.goals.menu.addDeposit'), icon: 'add', onChoose: () => setEditingDeposit({ isNew: true, deposit: blankDeposit(goal, holdings, asOf, currency) }) } satisfies MenuItem]
         : []),
       row.pausedUntil === undefined
-        ? {
-            label: 'Pause for a month',
-            detail: 'Its amount goes back to what is left; nothing is deleted',
-            onChoose: () => write((database) => void pauseGoal(database, goal.id, 1, asOf)),
-          }
+        ? { label: t('wealth.goals.menu.pause'), detail: t('wealth.goals.menu.pauseWhy'), onChoose: () => write((database) => void pauseGoal(database, goal.id, 1, asOf)) }
         : {
-            label: 'Start again',
-            detail: `Paused until ${formatMonthShort(row.pausedUntil)}`,
+            label: t('wealth.goals.menu.resume'),
+            detail: t('wealth.goals.menu.pausedUntil', { month: words.dates.monthShort(row.pausedUntil) }),
             onChoose: () => write((database) => void pauseGoal(database, goal.id, 0, asOf)),
           },
-      { label: 'Edit', icon: 'edit', onChoose: () => setEditingGoal({ isNew: false, goal }) },
+      { label: t('wealth.common.edit'), icon: 'edit', onChoose: () => setEditingGoal({ isNew: false, goal }) },
+      { label: t('wealth.goals.menu.close'), detail: t('wealth.goals.menu.closeWhy'), onChoose: () => write((database, now) => setGoalClosed(database, goal.id, true, now)) },
       {
-        label: 'Close this goal',
-        detail: 'History is kept; nothing more goes in',
-        onChoose: () => write((database, now) => setGoalClosed(database, goal.id, true, now)),
-      },
-      {
-        label: 'Delete',
+        label: t('wealth.common.delete'),
         icon: 'trash',
         separated: true,
-        onChoose: () => setConfirming(goal.id),
+        onChoose: () =>
+          setMenu(
+            removeQuestion(at, t('wealth.goals.menu.deleteQuestion', { name: row.line.name }), t('wealth.goals.menu.deleteCost'), words, () =>
+              write((database, now) => deleteGoal(database, goal.id, now)),
+            ),
+          ),
       },
     ]
   }
 
-  const confirmingRow = rows.find((row) => row.progress.goal.id === confirming)
   const noGoals = rows.length === 0 && read.closed.length === 0
   const horizons: readonly (readonly [Horizon, string])[] = [
-    [6, '6 months'],
-    [12, '12 months'],
-    [24, '24 months'],
-    ...(lastDue === undefined ? [] : ([['DUE', `Until ${formatMonthShort(lastDue)}`]] as const)),
+    [6, t(countKey('wealth.goals.months', 6), { count: 6 })],
+    [12, t(countKey('wealth.goals.months', 12), { count: 12 })],
+    [24, t(countKey('wealth.goals.months', 24), { count: 24 })],
+    ...(lastDue === undefined ? [] : ([['DUE', t('wealth.goals.until', { month: words.dates.monthShort(lastDue) })]] as const)),
   ]
 
-  return (
-    <div className="flex h-full flex-col">
-      <div className="min-h-0 flex-1 overflow-auto">
-        <Screen>
-          <PageHead
-            title={view === 'DEPOSITS' ? 'All movements' : 'Goals'}
-            under={
-              view === 'GOALS' && rows.length > 0 ? (
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="text-caption text-ink-secondary">What will I have in</span>
-                  <Seg options={horizons} value={horizon} onChange={setHorizon} label="Time" />
-                </div>
-              ) : undefined
-            }
-            actions={
-              view === 'DEPOSITS' ? (
-                <>
-                  <Button variant="ghost" onClick={() => setView('GOALS')}>
-                    Back to goals
-                  </Button>
-                  {canRecord && (
-                    <Button
-                      variant="primary"
-                      icon="add"
-                      onClick={() =>
-                        setEditingDeposit({ isNew: true, deposit: blankDeposit(goals[0], holdings, asOf, currency) })
-                      }
-                    >
-                      Record a movement
-                    </Button>
-                  )}
-                </>
-              ) : (
-                <>
-                  <Button variant="primary" icon="add" onClick={() => setEditingGoal({ isNew: true, goal: blankGoal() })}>
-                    New goal
-                  </Button>
-                  <PageMenu
-                    title="Goals"
-                    items={[
-                      {
-                        label: showClosed ? 'Hide closed goals' : 'Show closed goals',
-                        onChoose: () => setShowClosed(!showClosed),
-                      },
-                    ]}
-                  />
-                </>
-              )
-            }
+  // What waits on the person, a line each, below the answer.
+  const waiting: Waiting[] = rows.flatMap((row): Waiting[] => {
+    const lines: Waiting[] = []
+    const name = row.line.name
+    if (row.pausedUntil === undefined && row.status.kind === 'LATE' && row.needed !== undefined && plan !== undefined && row.bucketIds.length <= 1) {
+      const needed = row.needed
+      lines.push({
+        key: `${row.line.goalId}:late`,
+        say: t(countKey('wealth.goals.waiting.late', row.status.monthsLate), { name, count: row.status.monthsLate }),
+        why: t('wealth.goals.waiting.lateWhy', { amount: wholeMoney(needed) }),
+        verb: t('wealth.goals.waiting.use', { amount: wholeMoney(needed) }),
+        onDo: () => setMonthly(row, needed.minor),
+      })
+    } else if (row.pausedUntil === undefined && row.status.kind === 'NO_MONEY') {
+      lines.push({
+        key: `${row.line.goalId}:none`,
+        say: t('wealth.goals.waiting.noMoney', { name }),
+        why: t('wealth.goals.waiting.noMoneyWhy'),
+        verb: t('wealth.goals.waiting.open'),
+        onDo: () => navigate(`/wealth/goals/${row.line.goalId}`),
+      })
+    }
+    const stale = row.stale.reduce((sum, one) => sum + one.amount.minor, 0)
+    if (stale > 0) {
+      lines.push({
+        key: `${row.line.goalId}:stale`,
+        say: t('wealth.goals.waiting.stale', { name, amount: wholeMoney(money(stale, currency)) }),
+        why: t('wealth.goals.waiting.staleWhy'),
+        verb: t('wealth.goals.waiting.check'),
+        onDo: () => navigate(`/wealth/goals/${row.line.goalId}`),
+      })
+    }
+    return lines
+  })
+  if (left !== undefined && left.minor < 0) {
+    waiting.push({
+      key: 'over',
+      say: t('wealth.goals.waiting.over', { amount: wholeMoney(money(-left.minor, currency)) }),
+      why: t('wealth.goals.waiting.overWhy'),
+      verb: t('wealth.goals.waiting.plan'),
+      onDo: () => navigate('/plan'),
+    })
+  }
+
+  const page = (
+    <div className="fc-view-enter flex flex-col gap-8 px-8 pt-6 pb-12">
+      <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+        <h1 className="m-0 text-title leading-tight font-medium">{t('wealth.goals.title')}</h1>
+        <div className="flex items-center gap-2">
+          <Button variant="primary" icon="add" onClick={newGoal}>
+            {t('wealth.goals.add')}
+          </Button>
+          <PageMenu
+            title={t('wealth.goals.title')}
+            items={[
+              { label: t('wealth.goals.menu.movements'), detail: t('wealth.goals.menu.movementsWhy'), onChoose: () => setView('DEPOSITS') },
+              { label: showClosed ? t('wealth.goals.menu.hideClosed') : t('wealth.goals.menu.showClosed'), separated: true, onChoose: () => setShowClosed(!showClosed) },
+            ]}
           />
+        </div>
+      </header>
 
-          {problem !== undefined && (
-            <div className="fc-pop-enter flex items-center gap-4 border border-hairline bg-surface px-4 py-2">
-              <span className="text-negative">{problem}</span>
-              <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setProblem(undefined)}>
-                Dismiss
-              </Button>
+      {problem !== undefined && <Problem text={problem} onDismiss={() => setProblem(undefined)} />}
+
+      {noGoals ? (
+        <EmptyState say={t('wealth.goals.empty')} verb={t('wealth.goals.add')} onDo={newGoal} />
+      ) : (
+        <>
+          {rows.length > 0 && (
+            <div className="flex flex-col gap-6">
+              <p className="m-0 max-w-[40ch] text-lede [text-wrap:balance]">
+                {plan === undefined || read.monthly.minor === 0
+                  ? t(countKey('wealth.goals.sentenceNoMonthly', rows.length), { count: rows.length, saved: wholeMoney(read.inGoals) })
+                  : t(countKey('wealth.goals.sentence', rows.length), { count: rows.length, saved: wholeMoney(read.inGoals), monthly: wholeMoney(read.monthly) })}
+              </p>
+              <HeadlineFigure
+                size="display"
+                label={t('wealth.goals.figure')}
+                value={read.inGoals}
+                change={plan === undefined ? t('wealth.goals.figureNoPlan') : t('wealth.goals.figureHow', { amount: wholeMoney(read.monthly) })}
+                empty={t('wealth.goals.empty')}
+              />
+              {/* One hairline between the meters and what waits under them: the last meter draws none. */}
+              <div className="[&_li:last-child>*]:border-b-0">
+              <PlanAgainst
+                lines={rows.map((row) => {
+                  const target = row.line.target
+                  // A goal at or past its target is reached, never *over*: a full meter that says so.
+                  const reached = target !== undefined && row.line.balance.minor >= target.minor
+                  return { key: row.line.goalId, name: row.line.name, actual: row.line.balance, planned: target, ...(reached ? { note: t('wealth.goals.status.reached') } : {}) }
+                })}
+                empty={t('wealth.goals.empty')}
+                onOpen={(key) => navigate(`/wealth/goals/${key}`)}
+              />
+              </div>
             </div>
           )}
 
-          {view === 'DEPOSITS' ? (
-            <DepositList
-              deposits={deposits}
-              goals={goals}
-              holdings={holdings}
-              places={places}
-              currency={currency}
-              onEdit={(deposit) => setEditingDeposit({ isNew: false, deposit })}
-              onDelete={(deposit) => write((database, now) => deleteDeposit(database, deposit.id, now))}
-            />
-          ) : noGoals ? (
-            <Centered>No goals yet. New goal makes one.</Centered>
-          ) : (
-            <>
-              <Hero>
-                <HeroCell label="In goals now" small={`${String(rows.length)} ${rows.length === 1 ? 'goal' : 'goals'}`}>
-                  {formatMoney(read.inGoals)}
-                </HeroCell>
-                <HeroCell label="Put toward them each month" small={plan === undefined ? 'No plan yet' : 'From Plan’s split'}>
-                  {formatMoney(read.monthly)}
-                </HeroCell>
-                <HeroCell label={`In ${String(months)} months, at this rate`} small="No interest counted">
-                  {formatMoney(inAfter)}
-                </HeroCell>
-                <HeroCell
-                  label="Plan’s Everything else"
-                  small={
-                    left === undefined
-                      ? 'Make a plan to see this'
-                      : left.minor < 0
-                        ? `Over by ${formatMoney(money(-left.minor, currency))}`
-                        : 'What is left after these'
-                  }
-                  problem={left !== undefined && left.minor < 0}
-                >
-                  {left === undefined ? '—' : formatMoney(left)}
-                </HeroCell>
-              </Hero>
+          <WaitingList label={t('wealth.common.waiting')} items={waiting} />
 
-              <Section
-                title="Decide this month"
-                sub={
-                  plan === undefined ? (
-                    <>
-                      A goal’s amount is its Plan bucket, and there is no plan yet.{' '}
-                      <Link to="/plan" className="text-accent hover:underline">
-                        Make one on Plan
-                      </Link>
-                    </>
-                  ) : (
-                    'Each amount is the goal’s Plan bucket. Change it here or on Plan; it is one number.'
-                  )
-                }
-              >
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
-                    <thead>
-                      <tr>
-                        <th className={TH}>Goal</th>
-                        <th className={TH}>Where it stands</th>
-                        <th className={TH_R}>Target</th>
-                        <th className={TH_R}>Each month (Plan bucket)</th>
-                        <th className={TH_R}>Moved, last 3 months</th>
-                        <th className={TH_R}>
-                          In {String(months)} {months === 1 ? 'month' : 'months'}
-                        </th>
-                        <th className={TH}>At this rate</th>
-                        <th className={`${TH} w-9`} aria-label="More" />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rows.map((row) => (
-                        <GoalTableRow
-                          key={row.line.goalId}
-                          row={row}
-                          deposits={deposits}
-                          months={months}
-                          open={row.line.goalId === openId}
-                          editable={plan !== undefined}
-                          text={typed[row.line.goalId]}
-                          currency={currency}
-                          onText={(text) => setTyped((current) => ({ ...current, [row.line.goalId]: text }))}
-                          onCommit={() => commit(row)}
-                          onUse={(amount) => setMonthly(row, amount.minor)}
-                          onMenu={(at) => setMenu({ at, row })}
-                        />
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <Legend>
-                  <LegendItem swatch={SWATCH.derived}>Read from the bank</LegendItem>
-                  <LegendItem swatch={SWATCH.setAside}>Set aside inside the bank</LegendItem>
-                  <LegendItem swatch={SWATCH.already}>Was already there</LegendItem>
-                </Legend>
-                {confirmingRow !== undefined && (
-                  <div className="fc-pop-enter flex flex-wrap items-center gap-3 border border-hairline bg-surface px-4 py-2">
-                    <span>
-                      Delete <Bidi>{confirmingRow.line.name}</Bidi> and its history?
-                    </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setConfirming(undefined)
-                        write((database, now) => deleteGoal(database, confirmingRow.progress.goal.id, now))
-                      }}
-                    >
-                      Delete it
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => setConfirming(undefined)}>
-                      Keep it
-                    </Button>
-                  </div>
-                )}
-                {left !== undefined && (
-                  <div
-                    className={`flex flex-wrap items-center gap-3.5 border bg-surface px-3.5 py-2.5 ${left.minor < 0 ? 'border-negative' : 'border-hairline'}`}
-                  >
-                    <span>The goals take</span>
-                    <b className="font-medium tabular-nums">{formatMoney(read.monthly)}</b>
-                    <span className="text-caption text-ink-secondary">
-                      so Everything else is {formatMoney(left)}
-                      {left.minor < 0 ? ', which is more than Plan has' : ''}
-                    </span>
-                    <Link to="/plan" className="ms-auto text-caption text-accent hover:underline">
-                      Change the split on Plan
-                    </Link>
-                  </div>
-                )}
-              </Section>
-
-              {rows.some((row) => row.line.balance.minor > 0 || row.line.monthly.minor > 0) && (
-                <Section
-                  title="What you will have"
-                  sub="Each goal stops growing when it reaches its target. Money that would go past it is left for Everything else."
-                >
-                  <ProjectionChart rows={rows} months={months} from={month} currency={currency} />
-                </Section>
-              )}
-
-              {read.closed.length > 0 && (
-                <Section title="Closed">
-                  {read.closed.map((progress) => (
-                    <div key={progress.goal.id} className="flex flex-wrap items-center gap-4 border-b border-hairline py-2">
-                      <Link to={`/wealth/goals/${progress.goal.id}`} className="hover:text-accent">
-                        <Bidi>{progress.goal.name}</Bidi>
-                      </Link>
-                      <span className="text-ink-secondary tabular-nums">{formatMoney(progress.balance)}</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => write((database, now) => setGoalClosed(database, progress.goal.id, false, now))}
-                      >
-                        Reopen
-                      </Button>
-                    </div>
-                  ))}
-                </Section>
-              )}
-            </>
+          {rows.length > 0 && (
+            <section className="flex flex-col gap-3" aria-labelledby="goals-month">
+              <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
+                <h2 id="goals-month" className="m-0 text-heading font-medium">
+                  {t('wealth.goals.list.title')}
+                </h2>
+                <span className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                  <Seg options={horizons} value={horizon} onChange={setHorizon} label={t('wealth.goals.list.horizon')} />
+                  <button type="button" className="fc-text-action" onClick={() => setProjection(true)}>
+                    {t('wealth.goals.list.projection')}
+                  </button>
+                </span>
+              </div>
+              <p className="m-0 text-caption text-ink-secondary">
+                {plan === undefined ? t('wealth.goals.list.noPlan') : t('wealth.goals.list.how')}
+              </p>
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse">
+                  <thead>
+                    <tr className="border-b border-hairline text-caption text-ink-secondary uppercase">
+                      <th className="h-8 pe-3 text-start font-medium">{t('wealth.goals.list.goal')}</th>
+                      <th className="h-8 pe-3 text-end font-medium">{t('wealth.goals.list.monthly')}</th>
+                      <th className="h-8 pe-3 text-end font-medium">{t('wealth.goals.list.moved')}</th>
+                      <th className="h-8 pe-3 text-end font-medium">{t(countKey('wealth.goals.list.after', months), { count: months })}</th>
+                      <th className="h-8 ps-6 pe-3 text-start font-medium">{t('wealth.goals.list.rate')}</th>
+                      <th className="h-8 w-9" aria-label={t('wealth.common.more')} />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((row) => (
+                      <GoalTableRow
+                        key={row.line.goalId}
+                        row={row}
+                        months={months}
+                        on={row.line.goalId === openId}
+                        editable={plan !== undefined}
+                        text={typed[row.line.goalId]}
+                        words={words}
+                        onOpen={() => navigate(`/wealth/goals/${row.line.goalId}`)}
+                        onText={(text) => setTyped((current) => ({ ...current, [row.line.goalId]: text }))}
+                        onCommit={() => commit(row)}
+                        onMenu={(at) => setMenu({ at, items: menuItems(row, at), title: row.line.name })}
+                      />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
           )}
 
-          {view === 'GOALS' && (
-            <div className="flex flex-wrap items-center gap-5 text-caption text-ink-secondary">
-              <Button variant="ghost" size="sm" onClick={() => setView('DEPOSITS')}>
-                All movements
-              </Button>
-            </div>
+          {read.closed.length > 0 && (
+            <section className="flex flex-col gap-2" aria-labelledby="goals-closed">
+              <h2 id="goals-closed" className="m-0 text-heading font-medium">
+                {t('wealth.goals.closed')}
+              </h2>
+              {read.closed.map((progress) => (
+                <p key={progress.goal.id} className="m-0 flex flex-wrap items-baseline gap-x-4 border-b border-hairline py-2">
+                  <button type="button" className="text-start hover:text-accent" onClick={() => navigate(`/wealth/goals/${progress.goal.id}`)}>
+                    <Bidi>{progress.goal.name}</Bidi>
+                  </button>
+                  <span className="text-ink-secondary tabular-nums">{kitMoney(progress.balance)}</span>
+                  <button type="button" className="fc-text-action" onClick={() => write((database, now) => setGoalClosed(database, progress.goal.id, false, now))}>
+                    {t('wealth.goals.reopen')}
+                  </button>
+                </p>
+              ))}
+            </section>
           )}
-        </Screen>
-      </div>
+        </>
+      )}
+    </div>
+  )
+
+  return (
+    <div className="flex h-full">
+      <div className="h-full min-w-0 flex-1 overflow-auto">{page}</div>
+      {projection && rows.length > 0 && (
+        <SidePanel title={t('wealth.goals.projection.title')} kicker={t(countKey('wealth.goals.projection.kicker', months), { count: months })} onClose={() => setProjection(false)}>
+          <p className="m-0">{t(countKey('wealth.goals.projection.sentence', months), { count: months, amount: wholeMoney(inAfter) })}</p>
+          <Projection rows={rows} months={months} from={month} currency={currency} words={words} />
+          <p className="m-0 text-caption text-ink-secondary">{t('wealth.goals.projection.how')}</p>
+        </SidePanel>
+      )}
       {menu !== undefined && (
         <ContextMenu
+          key={String(menu.title)}
           at={menu.at}
-          items={menuItems(menu.row)}
+          items={menu.items}
           onClose={() => setMenu(undefined)}
-          header={{ title: <Bidi>{menu.row.line.name}</Bidi> }}
+          header={{ title: <Bidi>{menu.title}</Bidi>, ...(menu.sub === undefined ? {} : { sub: menu.sub }) }}
         />
       )}
     </div>
@@ -561,317 +498,174 @@ export function Goals() {
 type SavingGoalDraft = Parameters<typeof GoalEditor>[0]['initial']
 
 /** Moved against planned, only over the months the goal was taking money (U9's first task). */
-export function versusPlanWords(versus: VersusPlan): string {
-  if (versus.kind === 'PAUSED') return 'paused, not compared'
-  if (versus.kind === 'NOTHING_YET') return 'nothing to compare yet'
-  const figure = `${versus.difference.minor > 0 ? '+' : ''}${formatMoney(versus.difference)}`
-  return versus.months === MOVED_MONTHS ? `${figure} vs plan` : `${figure} vs plan, ${plural(versus.months, 'month')}`
+export function versusPlanWords(versus: VersusPlan, words: WealthWords): string {
+  const { t } = words
+  if (versus.kind === 'PAUSED') return t('wealth.goals.versus.paused')
+  if (versus.kind === 'NOTHING_YET') return t('wealth.goals.versus.nothing')
+  const figure = `${versus.difference.minor > 0 ? '+' : ''}${kitMoney(versus.difference)}`
+  return versus.months === MOVED_MONTHS ? t('wealth.goals.versus.plan', { figure }) : t(countKey('wealth.goals.versus.planMonths', versus.months), { figure, count: versus.months })
 }
 
-function statusWords(status: GoalStatus): {
-  readonly chip: string
-  readonly line: string
-  readonly tone: 'good' | 'warn' | 'bad' | 'plain'
-} {
-  const at = (month: YearMonth): string => formatMonthShort(month)
+/** When a goal lands at its rate, in a few words; `problem` only for what is worth acting on. */
+function statusWords(status: GoalStatus, words: WealthWords): { readonly line: string; readonly problem: boolean } {
+  const { t, dates } = words
   switch (status.kind) {
     case 'REACHED':
-      return { chip: 'Reached', line: 'Already there', tone: 'good' }
+      return { line: t('wealth.goals.status.reached'), problem: false }
     case 'ON_TIME':
-      return { chip: 'On time', line: `Reached ${at(status.at)}`, tone: 'good' }
+      return { line: t('wealth.goals.status.onTime', { month: dates.monthShort(status.at) }), problem: false }
     case 'LATE':
-      return {
-        chip: 'Late',
-        line: `Reached ${at(status.at)}, ${String(status.monthsLate)} ${status.monthsLate === 1 ? 'month' : 'months'} after the date`,
-        tone: 'warn',
-      }
+      return { line: t(countKey('wealth.goals.status.late', status.monthsLate), { month: dates.monthShort(status.at), count: status.monthsLate }), problem: true }
     case 'NO_DATE':
-      return { chip: 'No date', line: `Reached ${at(status.at)}`, tone: 'plain' }
+      return { line: t('wealth.goals.status.noDate', { month: dates.monthShort(status.at) }), problem: false }
     case 'NO_MONEY':
-      return { chip: 'No money yet', line: 'Nothing is set aside each month', tone: 'bad' }
+      return { line: t('wealth.goals.status.noMoney'), problem: true }
     case 'NO_TARGET':
-      return { chip: 'Running total', line: 'No target to reach', tone: 'plain' }
+      return { line: t('wealth.goals.status.noTarget'), problem: false }
   }
 }
 
+/** One goal this month: the row opens its drawer; the amount is typed in place. */
 function GoalTableRow({
   row,
-  deposits,
   months,
-  open,
+  on,
   editable,
   text,
-  currency,
+  words,
+  onOpen,
   onText,
   onCommit,
-  onUse,
   onMenu,
 }: {
-  row: GoalRow
-  deposits: readonly SavingDeposit[]
-  months: number
-  open: boolean
-  editable: boolean
-  text: string | undefined
-  currency: CurrencyCode
-  onText: (text: string) => void
-  onCommit: () => void
-  onUse: (amount: Money) => void
-  onMenu: (at: { x: number; y: number }) => void
+  readonly row: GoalRow
+  readonly months: number
+  readonly on: boolean
+  readonly editable: boolean
+  readonly text: string | undefined
+  readonly words: WealthWords
+  readonly onOpen: () => void
+  readonly onText: (text: string) => void
+  readonly onCommit: () => void
+  readonly onMenu: (at: { x: number; y: number }) => void
 }) {
+  const { t, dates } = words
   const { line, progress } = row
   const after = balanceAfter(line, months)
-  const percent = (value: Money): string | undefined =>
-    line.target === undefined || line.target.minor <= 0
-      ? undefined
-      : `${String(Math.min(100, Math.round((value.minor / line.target.minor) * 100)))}% of target`
-  const words = statusWords(row.status)
+  const status = statusWords(row.status, words)
   const targetDate = progress.goal.targetDate
-  const split = originSplit(
-    deposits.filter((deposit) => deposit.goalId === line.goalId),
-    currency,
-  )
-  const whole = Math.max(1, split.DERIVED.minor + split.SET_ASIDE.minor + split.ALREADY_THERE.minor)
-  const width = (value: Money): string => `${String(Math.max(0, (value.minor / whole) * 100))}%`
-  const staleTotal = row.stale.reduce((sum, one) => sum + one.amount.minor, 0)
+  const growth = line.agreedRateBasisPoints === undefined ? undefined : agreedGrowthAfter(line, months)
+  const cell = `h-10 border-t border-hairline pe-3 align-middle ${on ? 'bg-surface' : 'group-hover:bg-surface'}`
 
   return (
-    <tr className={open ? 'bg-accent-soft' : ''}>
-      <td className={`${GTD} min-w-[170px]`}>
-        <Link
-          to={`/wealth/goals/${line.goalId}`}
-          className="border-b border-hairline-strong font-medium text-ink hover:border-accent hover:text-accent"
-        >
-          <Bidi>{line.name}</Bidi>
-        </Link>
-        <Src>
-          {targetDate === undefined ? 'no date' : `by ${formatMonthShort(yearMonthOf(targetDate))}`}
-        </Src>
-        {staleTotal > 0 && (
-          <Src className="text-flow-tax">{formatMoney(money(staleTotal, currency))} set aside 90+ days: check it</Src>
-        )}
+    <tr
+      className="group cursor-pointer focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+      tabIndex={0}
+      aria-current={on ? 'true' : undefined}
+      onClick={onOpen}
+      onKeyDown={(event) => rowKeys(event, onOpen)}
+    >
+      <td className={`${cell} min-w-40 py-2`}>
+        <Bidi className="font-medium">{line.name}</Bidi>
+        <span className="block text-caption text-ink-secondary">
+          {targetDate === undefined ? t('wealth.goals.list.noDate') : t('wealth.goals.list.by', { month: dates.monthShort(yearMonthOf(targetDate)) })}
+        </span>
       </td>
-      <td className={GTD}>
-        <div className="flex flex-col gap-[5px]">
-          <span className="tabular-nums">
-            <b className="font-medium">{formatMoney(line.balance)}</b>{' '}
-            {percent(line.balance) !== undefined && <span className="text-caption text-ink-secondary">{percent(line.balance)}</span>}
-          </span>
-          {split.GROWTH.minor !== 0 && (
-            <span className="text-caption text-ink-secondary tabular-nums">
-              put in {formatMoney(money(line.balance.minor - split.GROWTH.minor, currency))}
-            </span>
-          )}
-          <span
-            className="flex h-2 w-[150px] bg-hairline"
-            title="Read from the bank, set aside inside the bank, was already there"
-          >
-            {split.DERIVED.minor > 0 && <i className={`block h-full ${SWATCH.derived}`} style={{ width: width(split.DERIVED) }} />}
-            {split.SET_ASIDE.minor > 0 && <i className={`block h-full ${SWATCH.setAside}`} style={{ width: width(split.SET_ASIDE) }} />}
-            {split.ALREADY_THERE.minor > 0 && (
-              <i className={`block h-full ${SWATCH.already}`} style={{ width: width(split.ALREADY_THERE) }} />
-            )}
-          </span>
-        </div>
-      </td>
-      <td className={GTD_R}>{line.target === undefined ? '—' : formatMoney(line.target)}</td>
-      <td className={GTD_R}>
+      <td className={`${cell} py-2 text-end tabular-nums`} onClick={(event) => event.stopPropagation()}>
         {editable && row.bucketIds.length <= 1 ? (
           <input
             inputMode="decimal"
-            aria-label={`Each month toward ${line.name}`}
+            aria-label={t('wealth.goals.list.monthlyFor', { name: line.name })}
             value={text ?? editableMoney(line.monthly)}
             placeholder="0"
             onChange={(event) => onText(event.target.value)}
             onBlur={onCommit}
             onKeyDown={(event) => {
+              event.stopPropagation()
               if (event.key === 'Enter') event.currentTarget.blur()
             }}
             className={AMOUNT_FIELD}
           />
         ) : (
-          <span>{formatMoney(line.monthly)}</span>
+          <span>{kitMoney(line.monthly)}</span>
         )}
-        {row.bucketIds.length > 1 ? (
-          <Need>{row.bucketIds.length} buckets, edit on Plan</Need>
-        ) : row.pausedUntil !== undefined ? (
-          <Need>paused until {formatMonthShort(row.pausedUntil)}</Need>
-        ) : row.needed !== undefined && editable ? (
-          <Need>
-            needs {formatMoney(row.needed)} to be on time
-            <NeedButton onClick={() => onUse(row.needed ?? money(0, currency))}>Use it</NeedButton>
-          </Need>
-        ) : (
-          <Need>{line.due === undefined ? 'no date to hit' : 'on time'}</Need>
-        )}
+        <span className="block text-caption text-ink-secondary">
+          {row.bucketIds.length > 1
+            ? t('wealth.goals.list.severalBuckets', { count: row.bucketIds.length })
+            : row.pausedUntil !== undefined
+              ? t('wealth.goals.list.pausedUntil', { month: dates.monthShort(row.pausedUntil) })
+              : t('wealth.goals.list.planBucket')}
+        </span>
       </td>
-      <td className={GTD_R}>
-        {formatMoney(row.moved)}
-        <Need>{versusPlanWords(row.versusPlan)}</Need>
+      <td className={`${cell} py-2 text-end whitespace-nowrap tabular-nums`}>
+        {kitMoney(row.moved)}
+        <span className="block text-caption text-ink-secondary">{versusPlanWords(row.versusPlan, words)}</span>
       </td>
-      <td className={GTD_R}>
-        <b className="font-medium">{formatMoney(after)}</b>
-        {percent(after) !== undefined && <Need>{percent(after)}</Need>}
-        {line.agreedRateBasisPoints !== undefined && agreedGrowthAfter(line, months).minor > 0 && (
-          <Need>
-            + {formatMoney(agreedGrowthAfter(line, months))} at the agreed {formatPercent(line.agreedRateBasisPoints)}
-          </Need>
+      <td className={`${cell} py-2 text-end whitespace-nowrap tabular-nums`}>
+        {kitMoney(after)}
+        {growth !== undefined && growth.minor > 0 && line.agreedRateBasisPoints !== undefined && (
+          <span className="block text-caption text-ink-secondary">
+            {t('wealth.goals.list.agreed', { amount: wholeMoney(growth), rate: formatPercent(line.agreedRateBasisPoints) })}
+          </span>
         )}
       </td>
-      <td className={GTD}>
-        <Tag tone={row.pausedUntil !== undefined ? 'plain' : words.tone}>{row.pausedUntil === undefined ? words.chip : 'Paused'}</Tag>
-        <Src className="mt-[3px] max-w-[190px] whitespace-normal">
-          {row.pausedUntil === undefined ? words.line : `Takes money again ${formatMonthShort(row.pausedUntil)}`}
-        </Src>
+      <td className={`${cell} py-2 ps-6 text-caption ${status.problem && row.pausedUntil === undefined ? 'text-negative' : 'text-ink-secondary'}`}>
+        {row.pausedUntil === undefined ? status.line : t('wealth.goals.status.paused', { month: dates.monthShort(row.pausedUntil) })}
       </td>
-      <td className={`${GTD} w-9 px-0`}>
-        <button
-          type="button"
-          aria-label={`More for ${line.name}`}
-          title="More"
-          onClick={(event) => {
-            const box = event.currentTarget.getBoundingClientRect()
-            onMenu({ x: box.left, y: box.bottom })
-          }}
-          className="fc-icon-action"
-        >
-          <svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor" aria-hidden>
-            <circle cx="3.5" cy="8" r="1.2" />
-            <circle cx="8" cy="8" r="1.2" />
-            <circle cx="12.5" cy="8" r="1.2" />
-          </svg>
-        </button>
+      <td className={`${cell} w-9 pe-0`}>
+        <MoreButton label={t('wealth.common.moreFor', { name: line.name })} onMenu={onMenu} />
       </td>
     </tr>
   )
 }
 
-/** The three greens of the mockup's chart: saved, and two steps of it toward the page. */
-const GOAL_SHADES = [
-  'var(--color-flow-saved)',
-  'color-mix(in srgb, var(--color-flow-saved) 58%, var(--color-background))',
-  'color-mix(in srgb, var(--color-flow-saved) 30%, var(--color-background))',
-  'color-mix(in srgb, var(--color-flow-saved) 16%, var(--color-background))',
-]
-
 /**
- * The goals stacked, month by month, by plain addition: the mockup's chart, in
- * saved's greens (D-313), with the total at the last bar.
+ * What the goals will hold, month by month, by plain addition — each goal stops
+ * at its target — as one line, the total: the figure at its end is the table's
+ * *In N months*, added up.
  */
-function ProjectionChart({
+function Projection({
   rows,
   months,
   from,
   currency,
+  words,
 }: {
-  rows: readonly GoalRow[]
-  months: number
-  from: YearMonth
-  currency: CurrencyCode
+  readonly rows: readonly GoalRow[]
+  readonly months: number
+  readonly from: YearMonth
+  readonly currency: CurrencyCode
+  readonly words: WealthWords
 }) {
-  const series = rows.map((row) => Array.from({ length: months + 1 }, (_, index) => balanceAfter(row.line, index).minor))
-  const total = (index: number): number => series.reduce((running, one) => running + (one[index] ?? 0), 0)
-  let peak = 0
-  for (let index = 0; index <= months; index += 1) peak = Math.max(peak, total(index))
-  const steps = [100_000, 250_000, 500_000, 1_000_000, 2_500_000, 5_000_000, 10_000_000, 25_000_000, 50_000_000, 100_000_000]
-  const step = steps.find((one) => peak / one <= 5) ?? 100_000_000
-  const top = Math.max(step, Math.ceil(peak / step) * step)
-  const W = 720
-  const H = 240
-  const L = 58
-  const R = 12
-  const T = 18
-  const B = 30
-  const iw = W - L - R
-  const ih = H - T - B
-  const bw = iw / (months + 1)
-  const y = (value: number): number => T + ih - (value / top) * ih
-  const every = months <= 9 ? 1 : months <= 12 ? 2 : months <= 24 ? 3 : 6
-  const gridlines: number[] = []
-  for (let value = 0; value <= top; value += step) gridlines.push(value)
-  const shade = (k: number): string => GOAL_SHADES[k % GOAL_SHADES.length] ?? GOAL_SHADES[0] ?? ''
-  const last = total(months)
-
+  const { t, dates } = words
+  const scale = 10 ** minorUnitDigits(currency)
+  const points = Array.from({ length: months + 1 }, (_, index) => addMonths(from, index))
+  const values = points.map((_, index) => rows.reduce((sum, row) => sum + balanceAfter(row.line, index).minor, 0) / scale)
+  const now = yearMonthOf(today())
   return (
-    <>
-      <div className="border border-hairline bg-surface px-3.5 py-3" dir="ltr">
-        <svg
-          viewBox={`0 0 ${String(W)} ${String(H)}`}
-          role="img"
-          aria-label={`Stacked balance of the goals over ${String(months)} months`}
-          className="block h-auto w-full text-[11px]"
-        >
-          {gridlines.map((value) => (
-            <g key={value}>
-              <line x1={L} x2={W - R} y1={y(value)} y2={y(value)} className="stroke-hairline" strokeWidth={1} />
-              <text x={L - 8} y={y(value) + 4} textAnchor="end" className="fill-ink-secondary">
-                {formatMoney(money(value, currency)).replace(/\.\d+$/, '')}
-              </text>
-            </g>
-          ))}
-          {Array.from({ length: months + 1 }, (_, index) => {
-            let accumulated = 0
-            const bars = series.map((one, k) => {
-              const value = one[index] ?? 0
-              const bar = (
-                <rect
-                  key={rows[k]?.line.goalId}
-                  x={L + index * bw + bw * 0.12}
-                  y={y(accumulated + value)}
-                  width={bw * 0.76}
-                  height={Math.max(0, (value / top) * ih)}
-                  style={{ fill: shade(k) }}
-                />
-              )
-              accumulated += value
-              return bar
-            })
-            const at = addMonths(from, index)
-            return (
-              <g key={index}>
-                {bars}
-                {index % every === 0 && (
-                  <text x={L + index * bw + bw / 2} y={H - 10} textAnchor="middle" className="fill-ink-secondary">
-                    {index === 0 ? 'Now' : `${formatMonthName(at).slice(0, 3)} ’${String(at.year).slice(2)}`}
-                  </text>
-                )}
-              </g>
-            )
-          })}
-          <text x={L + months * bw + bw} y={y(last) - 6} textAnchor="end" className="fill-ink font-medium">
-            {formatMoney(money(last, currency)).replace(/\.\d+$/, '')}
-          </text>
-        </svg>
-      </div>
-      <Legend>
-        {rows.map((row, k) => (
-          <span key={row.line.goalId} className="inline-flex items-center gap-1.5">
-            <i className="inline-block h-2 w-3.5" style={{ background: shade(k) }} />
-            <Bidi>{row.line.name}</Bidi>
-          </span>
-        ))}
-      </Legend>
-    </>
+    <MonthTrend
+      months={points.map((period) => ({
+        key: toYearMonthString(period),
+        label: dates.monthAbbrev(period),
+        long: dates.yearMonth(period),
+        running: compareYearMonths(period, now) === 0,
+      }))}
+      series={[{ key: 'goals', name: t('wealth.goals.projection.series'), values, hue: 'bar' }]}
+      open={0}
+      label={t('wealth.goals.projection.title')}
+      empty={t('wealth.goals.projection.empty')}
+      format={(value) => wholeMoney(money(Math.round(value * scale), currency))}
+      tick={(value) => shortText(value, { currency })}
+    />
   )
 }
 
 /** One `DepositDraft` written, whichever of the three shapes it is. */
-export function applyDraft(
-  db: import('sql.js').Database,
-  draft: DepositDraft,
-  now: number,
-): void {
+export function applyDraft(db: import('sql.js').Database, draft: DepositDraft, now: number): void {
   if (draft.kind === 'TRANSFER') {
     recordTransfer(
       db,
-      {
-        goalId: draft.goalId,
-        date: draft.date,
-        amount: draft.amount,
-        fromHoldingId: draft.fromHoldingId,
-        toHoldingId: draft.toHoldingId,
-        note: draft.note,
-      },
+      { goalId: draft.goalId, date: draft.date, amount: draft.amount, fromHoldingId: draft.fromHoldingId, toHoldingId: draft.toHoldingId, note: draft.note },
       now,
     )
     return
@@ -899,176 +693,10 @@ export function applyDraft(
 
   // `source_kind` is deliberately not among what an edit writes: correcting the
   // amount of a growth row must not turn it into a manual deposit.
-  updateDeposit(
-    db,
-    deposit.id,
-    {
-      goalId: deposit.goalId,
-      date: deposit.date,
-      amount: deposit.amount,
-      holdingId: deposit.holdingId,
-      note: deposit.note,
-    },
-    now,
-  )
+  updateDeposit(db, deposit.id, { goalId: deposit.goalId, date: deposit.date, amount: deposit.amount, holdingId: deposit.holdingId, note: deposit.note }, now)
 }
 
-/**
- * Every movement, newest first, with a subtotal per month.
- *
- * The subtotal is the month's **net**: a withdrawal shows against the deposits
- * beside it, because "what did I actually put away in June" is the question, and
- * a gross figure would answer a different one.
- */
-function DepositList({
-  deposits,
-  goals,
-  holdings,
-  places,
-  currency,
-  onEdit,
-  onDelete,
-}: {
-  deposits: readonly SavingDeposit[]
-  goals: readonly { readonly id: string; readonly name: string }[]
-  holdings: readonly Holding[]
-  places: readonly HoldingPlace[]
-  currency: CurrencyCode
-  onEdit: (deposit: SavingDeposit) => void
-  onDelete: (deposit: SavingDeposit) => void
-}) {
-  const [goalFilter, setGoalFilter] = useState<string>('')
-  // Filters on the **place**, not the holding: "show me what is at the bank" is
-  // the question people ask of a movement list, and a picker with three rows
-  // called "Cash" answers a different one.
-  const [placeFilter, setPlaceFilter] = useState<string>('')
-
-  const placeOf = new Map(holdings.map((holding) => [holding.id, holding.holdingPlaceId]))
-  const shown = deposits.filter(
-    (deposit) =>
-      (goalFilter === '' || deposit.goalId === goalFilter) &&
-      (placeFilter === '' || placeOf.get(deposit.holdingId) === placeFilter),
-  )
-
-  if (deposits.length === 0) {
-    return <Centered>No movements recorded yet.</Centered>
-  }
-
-  const months = new Map<string, SavingDeposit[]>()
-  for (const deposit of shown) {
-    const key = toYearMonthString(yearMonthOf(deposit.date))
-    months.set(key, [...(months.get(key) ?? []), deposit])
-  }
-
-  return (
-    <div>
-      <div className="fc-view-enter flex flex-wrap items-center gap-3 border-b border-hairline px-6 py-2 text-caption">
-        <select
-          className="rounded border border-hairline-strong bg-elevated px-2 py-0.5"
-          value={goalFilter}
-          onChange={(event) => setGoalFilter(event.target.value)}
-        >
-          <option value="">Every goal</option>
-          {goals.map((goal) => (
-            <option key={goal.id} value={goal.id}>
-              {goal.name}
-            </option>
-          ))}
-        </select>
-        <select
-          className="rounded border border-hairline-strong bg-elevated px-2 py-0.5"
-          value={placeFilter}
-          onChange={(event) => setPlaceFilter(event.target.value)}
-        >
-          <option value="">Everywhere</option>
-          {places.map((place) => (
-            <option key={place.id} value={place.id}>
-              {place.name}
-            </option>
-          ))}
-        </select>
-        <span className="text-ink-tertiary tabular-nums">{plural(shown.length, 'movement')}</span>
-      </div>
-
-      {[...months.entries()].map(([period, rows]) => {
-        const net = rows.reduce((running, row) => running + row.amount.minor, 0)
-        // The net is the sum of the rows printed underneath it and stays so —
-        // a subtotal that quietly left one of them out would be a header
-        // disagreeing with its own list. But once an opening balance or a
-        // market gain is among them the net stops answering "what did I put
-        // away", so the month says both figures rather than one under the
-        // wrong name (D-081).
-        const paidIn = rows
-          .filter(isContribution)
-          .reduce((running, row) => running + row.amount.minor, 0)
-        return (
-          <div key={period}>
-            <h3 className="flex items-baseline justify-between border-b border-hairline bg-surface px-6 py-1 text-label text-ink-tertiary uppercase">
-              <span>{period}</span>
-              <span className="tabular-nums">
-                {formatMoney(money(net, currency))} net
-                {paidIn !== net && <> · {formatMoney(money(paidIn, currency))} paid in</>}
-              </span>
-            </h3>
-            {rows.map((deposit) => {
-              const goal = goals.find((one) => one.id === deposit.goalId)
-              const holding = holdings.find((one) => one.id === deposit.holdingId)
-              const place = places.find((one) => one.id === holding?.holdingPlaceId)
-              const isTransfer = deposit.transferGroupKey !== undefined
-              return (
-                <div
-                  key={deposit.id}
-                  className="flex flex-wrap items-baseline gap-x-6 gap-y-1 border-b border-hairline px-6 py-2"
-                >
-                  <span className="w-24 shrink-0 text-ink-tertiary tabular-nums">
-                    {toISODate(deposit.date)}
-                  </span>
-                  <span className="min-w-32 flex-1">
-                    <Bidi>{goal?.name ?? 'a goal that is gone'}</Bidi>
-                    {deposit.note !== undefined && !isDefaultTransferNote(deposit) && (
-                      <span className="ms-2 text-caption text-ink-tertiary">
-                        <Bidi>{deposit.note}</Bidi>
-                      </span>
-                    )}
-                  </span>
-                  <span className="w-40 text-caption text-ink-tertiary">
-                    <Bidi>{place?.name ?? 'somewhere unknown'}</Bidi>
-                    {isTransfer
-                      ? ' · moved'
-                      : deposit.sourceKind === 'MANUAL'
-                        ? ''
-                        : ` · ${SOURCE_LABEL[deposit.sourceKind]}`}
-                  </span>
-                  <span
-                    className={`w-28 text-end tabular-nums ${
-                      deposit.amount.minor < 0 ? 'text-ink-secondary' : ''
-                    }`}
-                  >
-                    {formatMoney(deposit.amount)}
-                  </span>
-                  <span className="flex gap-2">
-                    {/* A generated deposit is not editable here: it is what a
-                        payslip says, and the payslip is where it changes. */}
-                    {deposit.sourceKind === 'MANUAL' && !isTransfer && (
-                      <Button variant="ghost" size="sm" onClick={() => onEdit(deposit)}>
-                        Edit
-                      </Button>
-                    )}
-                    <Button variant="ghost" size="sm" onClick={() => onDelete(deposit)}>
-                      {isTransfer ? 'Delete both' : 'Delete'}
-                    </Button>
-                  </span>
-                </div>
-              )
-            })}
-          </div>
-        )
-      })}
-    </div>
-  )
-}
-
-function Centered({ children }: { children: React.ReactNode }) {
+function Centered({ children }: { readonly children: ReactNode }) {
   return (
     <div className="flex h-full items-center justify-center px-6 text-center text-ink-secondary">
       <p className="max-w-md">{children}</p>

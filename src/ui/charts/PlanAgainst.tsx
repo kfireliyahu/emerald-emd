@@ -15,6 +15,11 @@ export interface PlanLine {
   readonly mark?: string | undefined
   /** Said instead of what is left or over when what happened is not known yet: no fill is drawn and only the plan is printed. */
   readonly unknown?: string | undefined
+  /**
+   * Said instead of what is left or over when going past the plan is no problem —
+   * a goal that has reached its target (M64 U10): the meter is full and never red.
+   */
+  readonly note?: string | undefined
 }
 
 /**
@@ -42,7 +47,7 @@ export function PlanAgainst({
         const actual = drawn(line.actual)
         const planned = line.planned === undefined ? undefined : drawn(line.planned)
         const known = line.unknown === undefined
-        const over = known && planned !== undefined && actual > planned
+        const over = known && line.note === undefined && planned !== undefined && actual > planned
         const gap = planned === undefined ? undefined : { minor: Math.abs((line.planned?.minor ?? 0) - line.actual.minor), currency: line.actual.currency }
         const body = (
           <>
@@ -70,6 +75,8 @@ export function PlanAgainst({
             <span className={`col-span-2 text-caption ${over ? 'font-medium text-negative' : 'text-ink-secondary'}`}>
               {!known
                 ? line.unknown
+                : line.note !== undefined
+                ? line.note
                 : gap === undefined
                 ? t('chrome.kit.noPlan')
                 : over

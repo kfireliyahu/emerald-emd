@@ -245,6 +245,15 @@ path for one commit, forwards to `#/wealth/funds/<id>`. **Net worth follows savi
 rather than leading: it is the section's answer, and the two halves are where the work happens
 (D-107).
 
+**Since M64 U10 (D-622) each Wealth screen answers first** (D-614): a sentence, one display figure,
+and the kit's display for its shape — net worth split by reach, each goal and each debt as a meter
+against its target or what was borrowed — then what waits as one list, a verb each, then the table.
+A net worth row opens in the side panel; fee impact and the deposit check open in the side panel
+beside Funds (their paths still open Funds with them open); the goals' projection is one click
+behind *This month*. Delete from a row's menu asks in the same menu, where it was asked; a
+movement's Delete deletes at once with Undo. What the bullets below describe of cards, rings and
+heroes is the screens before M64.
+
 - **Savings** — *built* (D-076), at `#/wealth/goals` (it was `#/wealth/savings` until M28 U8). Goal cards with a progress ring, balance,
   target and required monthly figure; the liquid total beside the saved total on the hero. An
   emergency goal's ring is measured against **reachable** money, the same figure its panel uses.

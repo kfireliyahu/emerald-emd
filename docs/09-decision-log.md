@@ -521,6 +521,7 @@ written out here.
 | D-618 | 2026-11-25 | Transactions is rebuilt as the report: each tab answers first in one sentence, its views are one tab strip, a row, a rule from a fix and what is left out open beside the rows, a selection acts from the table's own header row, and what was just done keeps its place with its Undo | M64 |
 | D-619 | 2026-11-25 | Reading files is the report: the batch said first in one sentence, Write in the list's own header row, a statement's gap beside the list rather than on a page, a removal undone where it was, a reader's delete asked at its button, the mapper's one way back at its head, and Readers one translated list | M64 |
 | D-621 | 2026-11-25 | Plan is rebuilt as the report: net pay and what the bills take first said as one sentence with whether every shekel has a job, to split its one figure, what waits one strip below it, the split's bar with each bucket held against a month, and the bills one row each with its one choice in place; a bucket, a bill, net pay, the cushion and the plan's months open beside the page | M64 |
+| D-622 | 2026-11-26 | Wealth is rebuilt as the report: net worth, funds, goals and debts each answer in one sentence with one display figure and the kit's display for their shape, what waits one list below, then one table whose rows open beside the page; fee impact, the deposit check, a net worth row and the goals' projection move into the side panel, and a removal asks in the row's own menu where no undo is honest | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1476,6 +1477,65 @@ screen but Home, and spends one of a route's seven type sizes; `Button size="sm"
 **Where.** `src/ui/screens/Plan.tsx`, `src/ui/plan/BucketEditor.tsx`, `src/ui/plan/FixedSection.tsx`,
 `src/ui/plan/PlanBar.tsx`, `src/ui/charts/PlanAgainst.tsx`, `src/i18n/{en,he}/plan.ts`,
 `docs/redesign/budget.json`.
+
+## D-622 · 2026-11-26 · Wealth is rebuilt as the report: net worth, funds, goals and debts each answer in one sentence with one display figure and the kit's display for their shape, what waits one list below, then one table whose rows open beside the page; fee impact, the deposit check, a net worth row and the goals' projection move into the side panel, and a removal asks in the row's own menu where no undo is honest <a id="d-622"></a>
+
+**Context.** M64 U10: Wealth's four routes, rebuilt in D-614's direction with D-615's kit, D-616's
+Home as the pattern and D-617's places for each interaction. U2 measured them on the synthetic year:
+`#/wealth` 122 words, 1 block, 1 figure; `#/wealth/funds` 530 words, 5 blocks, 9 figures, 8 type
+sizes; `#/wealth/goals` 236 words, 4 figures, 13 actions; `#/wealth/debts` 74 words, no figure.
+
+**Decision.** Each screen answers its inventory question first.
+
+| Block before | Now | Why |
+|---|---|---|
+| Net worth hero and its four parts (in the bank, in accounts with holdings, locked, owed) | **kept** as the sentence (*you own X all together, and owe Y: you are worth Z*), net worth the display figure, and one `PartOfWhole` by reach (*Reachable*, *Locked*, the table's own column) | the parts are a part of a whole; *in the bank* also covered cash at home, so the words now name the reach |
+| Net worth table, a row expanding in place | **kept** as the table; a row **moved** into the side panel (its statement, opening balance, goals' parts, holdings); a fund or debt row opens its own pane, as before | detail opens beside the page |
+| A stale statement, goals an account cannot cover (red inside a row) | **moved** to one waiting list below the answer, *Open* each | what waits sits below the answer, never inside a row in red |
+| Add an account, add a place (forms under the table) | **moved** into the side panel as forms | a form with several fields opens beside the page |
+| Funds' three hero cells (in funds, fees a year, needs a call) | **kept** as the sentence (*your funds hold X, and their fees take about Y a year*) and in funds the display figure; *needs a call* **moved** into the waiting list, a line per fund (a short month, missing deposits, dormant and still charging, no reading, a fee agreement that ended, deposits nothing can check yet) | the count said nothing about which fund or why |
+| The funds table with chips | **kept**; chips are text and a dot, red only for a missing deposit | a chip is text and a dot |
+| *What the fee costs over the years* and *Did every deposit arrive* (two folded sections) | **moved** into the side panel, opened by a fund's fee a year, a fund's deposits, a waiting line or the two text actions; `#/wealth/fees` and `#/wealth/deposits` still open Funds with the panel open | they explain a fund's fee and deposits |
+| Goals' four hero cells | **kept** as the sentence (what the goals hold and what goes toward them each month) and in goals now the display figure; *Plan's Everything else* **moved** into the waiting list when it is over | the answer comes first |
+| *Decide this month*: seven columns, a where-it-stands bar and its legend | **kept** as *This month*: each month typed in place (it is Plan's bucket, D-323), moved in the last three months, in N months, and the rate column, headed *If the plan holds*; where it stands and the target **moved** to a `PlanAgainst` meter per goal under the answer, a reached goal full and never red; the origin bar and legend **cut** (the goal's drawer shows them) | the meter is the shape the inventory named; the projection assumes the plan, and the column now says so |
+| *What you will have* (a stacked bar chart) | **moved** behind *What you will have* into the side panel, as one `MonthTrend` line of all goals | a projection explains the *In N months* column |
+| All movements | **kept** as a view with one way back; its filters `ChoiceField`; Delete deletes at once with *Deleted · Undo* where the movement was, and Ctrl+Z | a movement can be written again, so an undo is honest |
+| Debts' table and its *More* menu (review, split purchases) | **kept**, with the sentence (*you owe X on N debts and pay Y a month; at this rate the last is paid off in M*), left to pay the display figure and a meter per debt, paid of what was borrowed; payments found and purchases split into payments **moved** into the waiting list, their views one verb away | the review queue and split purchases ask something of the person |
+
+Where each interaction opens: a net worth row, a fund's fee, a fund's deposits and the goals'
+projection open in the `SidePanel`; a fund, goal or debt opens its own pane beside its list (D-130);
+an amount a month is typed in place; add an account or a place is a form in the panel; a fund, goal
+or debt's own fields stay the full-page editors they were (as Paychecks' slip form did, D-620); a row's
+actions are one menu from its *More*. **Deleting a fund, a goal or a debt asks in that same menu at
+the same point**, naming the thing and what it costs, *Delete* and *Keep it*: the delete also unaims
+Plan's buckets and unlinks deduction types, so no undo is honest. The confirmation bar under each
+table is gone.
+
+The probe after, on the synthetic year (light and dark; Hebrew within a few words): `#/wealth` 156
+words, 4 blocks, 1 figure, 3 actions, 7 colours, 1.6 windows; `#/wealth/funds` 98, 3, 1, 11, 5, 1.0;
+`#/wealth/goals` 173, 4, 1, 13, 8, 1.3; `#/wealth/debts` 107, 4, 1, 8, 8, 1.0; seven type sizes and
+nothing under AA on each. All four leave the budget's exempt list. **Two ceilings rise**: `#/wealth`
+and `#/wealth/debts` were sparse before (one block and no figure on Debts), and the answer the
+inventory asks for — a sentence, a figure, the shape's display and what waits — is more than they
+had; their limits are the measures after with a little room, as Plan's blocks rose (D-621). Funds and
+Goals fall. The kit gains one optional field, `PlanAgainst`'s `note`, said instead of left or over
+when going past the plan is no problem (a goal that reached its target), with a full meter that is
+never red. Words are the new `wealth` catalogue area, English and Hebrew.
+
+**Taste check.** Impeccable's finish-reviewer on the light, dark and Hebrew shots and the panels.
+Made: the rate column headed *If the plan holds*, since it is the plan's arithmetic while the table
+beside it shows what actually moved; the stale-statement and short-goals lines into a waiting list;
+net worth's figures on one edge with their header and total; a fund's fee a year in ink, never
+accent; Locked and the projection in ink marks rather than saved's green, which reads as the accent
+in dark; the row panel's own inset; room between the 12-month and rate columns; one hairline between
+the meters and the waiting list; Funds' deposits that cannot be checked as a waiting line. Not made:
+the net worth panel's words into the catalogue (`NetWorthOpened` is a detail, with the other
+details, a follow-up); the goals' sentence from what actually moved rather than the plan (the domain
+has the moved figure per goal but no on-track verdict from it; a question).
+
+**Where.** `src/ui/screens/{Overview,Funds,Goals,Debts,FeeImpact}.tsx`, `src/ui/savings/Movements.tsx`,
+`src/ui/wealth/{words.ts,rowMenu.tsx,parts.tsx,NetWorthOpened.tsx}`, `src/ui/charts/PlanAgainst.tsx`,
+`src/i18n/{en,he}/wealth.ts`, `docs/redesign/budget.json`.
 
 ## Related
 
