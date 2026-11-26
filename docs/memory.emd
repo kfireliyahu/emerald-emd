@@ -18947,15 +18947,21 @@ branch: m64-redesign
 milestone: Later
 scope: ui
 title: WorkedOut, FormatPicker and SplitPurchases say their words through the catalogue
-state: planned
+state: in_progress
 brief: M64 F29 (D-634) turned their selects into ValueChoice, but their words are still inline English: WorkedOut's how close (exactly, ± an amount, ± a percent, nothing, total of), FormatPicker's Read with / no reader / Which reader reads this, and SplitPurchases' Offer purchases split into more than ... payments and its heading. Move them into the catalogue (en, he), add the files to src/i18n/words.test.ts's translated set, and check probe:screens --lang he on the routes that draw them. Files: src/ui/formats/WorkedOut.tsx, src/ui/paychecks/FormatPicker.tsx, src/ui/debts/SplitPurchases.tsx.
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 
 ### M64 F49
 milestone: Later
 scope: ui
 title: The palette's commands carry their glyph
-state: planned
+state: in_progress
 brief: Found in M64 F16: the palette's command rows draw no glyph (only entries and More do), so Read bank and card statements…, Read paychecks… and Read a fund report… are told apart in the palette by words alone. Give a Command an optional glyph, drawn in the row's 16px leading slot where an entry draws its note, and set READ_GLYPH's three on the read commands. Files: src/ui/commands.ts, src/ui/CommandPalette.tsx.
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 
 ### M64 F5
 milestone: M64
