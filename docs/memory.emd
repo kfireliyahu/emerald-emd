@@ -6598,6 +6598,14 @@ state: applied
 answered_by: D-627
 became_unit: M64 F10
 
+### M64 F26 built: Wealth's details say every word through the catalogue, en and he, to land
+from: F:/projects/emerald/.claude/worktrees/agent-af2772dad25f4785c
+sent_on: 2026-11-26
+body: "M64 F26 is built on worktree-agent-af2772dad25f4785c at d004672: FundDetail, GoalDetail, DebtDetail, FeeImpact, DepositCheck, NetWorthOpened, WherePicker, CostBasis and DepositRows draw every word of their own with t() from the wealth area (en and he). docs:check is green. No decision.\n\n```json\n{\"unit\": \"M64 F26\", \"commit\": \"d004672\", \"branch\": \"worktree-agent-af2772dad25f4785c\", \"files\": \"src/i18n/en/wealth.ts\\nsrc/i18n/he/wealth.ts\\nsrc/i18n/words.test.ts\\nsrc/ui/debts/labels.ts\\nsrc/ui/funds/DepositRows.tsx\\nsrc/ui/funds/labels.ts\\nsrc/ui/savings/CostBasis.tsx\\nsrc/ui/savings/WherePicker.tsx\\nsrc/ui/savings/labels.ts\\nsrc/ui/screens/DebtDetail.tsx\\nsrc/ui/screens/DepositCheck.tsx\\nsrc/ui/screens/FeeImpact.tsx\\nsrc/ui/screens/FundDetail.tsx\\nsrc/ui/screens/GoalDetail.tsx\\nsrc/ui/wealth/NetWorthOpened.tsx\\nsrc/ui/wealth/words.ts\", \"report\": \"Wealth's details translated, following F3 (D-629): new wealth areas debtDetail, fundDetail, depositCheck, feeImpact, goalDetail, where, costBasis, depositRows, opened, and kinds.fundStatus, holdingKind, paymentSource, depositPart, in en and he. Counts by countKey, a document's name (fund, goal, account, holding, deduction types, beneficiaries) in Bidi inside a Phrase, months and days through useDates; ISO dates stay as they were. The goal's mixed-currency and the debt's unchecked balance now say catalogue words instead of the domain's English constants. payoffSentence and payoffBasisNote moved from debts/labels.ts into DebtDetail. funds/labels.ts is deleted; debts/labels.ts keeps only TRACK_KIND_LABEL (PromotionPanel) and PAYMENT_SOURCE_LABEL (PaymentReview), which are outside these details. The nine files join src/i18n/words.test.ts (M64_F26). probe:screens --lang he on year.emd: goals and debt detail English is only ListDetail's frame (Close, 'Close this pane', aria 'Details'), outside this unit's paths; year.emd has no pension fund, so #/wealth/funds/<id> could not be probed there. --budget: the debt detail is 9 type sizes > 7, unchanged by this unit (no classes touched). Tests: typecheck green, i18n + privacy + budget green, vitest related (31 files) green.\", \"follow_ups\": [{\"kind\": \"unit\", \"ref\": \"M64 F38\", \"title\": \"The rest of Wealth's details' words: the pane frame, the charts, holding readings, the report reader and the English that comes from the data layer\", \"brief\": \"After M64 F26 Hebrew Wealth details still show English from files outside its paths: ListDetail.tsx's ClosePane ('Close', 'Close this pane') and overlay aria-label 'Details'; debts/BalanceLine.tsx and funds/BalanceChart.tsx aria-labels; savings/HoldingReadings.tsx; funds/ReportIntake.tsx's labels; savings/HoldingEditor.tsx and PlaceEditor.tsx opened from a net-worth row; savings/holdingCheck.ts's phrase ('never checked', 'checked ... ago'); and strings made in data/domain: costBasisCheck's UNCHECKED reason (domain/goalDeposits.ts), whereChoices' detail 'at X', 'Cash' and 'another goal' (data/repositories/goalWhereRepository.ts). Give the data layer codes or parts instead of sentences, say them through the wealth area, add the UI files to src/i18n/words.test.ts, and probe #/wealth/goals/<id> and #/wealth/debts/<id> on year.emd with --lang he until English is the document's own words only.\"}, {\"kind\": \"unit\", \"ref\": \"M64 F39\", \"title\": \"A fund in the synthetic year, so a fund's detail can be probed\", \"brief\": \"year.emd (scripts/demo-year.mjs) holds goals and a car loan but no pension or study fund, so probe:screens cannot draw #/wealth/funds/<id>, the fee illustration or the deposit check against paychecks. Add one fund with a few readings fed by a paycheck deduction type to fixtures/synthetic/demo/year/year.json through the tools a conversation uses, and check the fund's detail with --lang he and --budget.\"}, {\"kind\": \"question\", \"ref\": \"M64 Q51\", \"state\": \"open\", \"question\": \"The debt detail (#/wealth/debts/<id>) draws 9 type sizes against the budget's 7, as it did before M64 F26. Is a debt's, fund's and goal's detail its own route to redesign (and budget), or does it inherit its list's limits?\"}]}\n```"
+about: F:/projects/emerald/docs/memory.emd M64 F26
+state: applied
+became_unit: M64 F26
+
 ### M64 F3 landing proposal: Wealth's forms open beside the page and ask the few fields first (D-629)
 from: F:/projects/emerald/docs/memory.emd
 sent_on: 2026-11-26
@@ -7486,6 +7494,10 @@ state: open
 
 ### M64 Q5
 question: Rows on Read files, Read paychecks and Readers do not move with the arrow keys, and Read files has no select-all box in its header row. Wanted?
+state: open
+
+### M64 Q51
+question: The debt detail (#/wealth/debts/<id>) draws 9 type sizes against the budget's 7, as it did before M64 F26. Is a debt's, fund's and goal's detail its own route to redesign (and budget), or does it inherit its list's limits?
 state: open
 
 ### M64 Q6
@@ -18498,13 +18510,16 @@ paths: "src/ui/rules/PickField.tsx\nsrc/ui/components/ChoiceField.tsx\nsrc/ui/ru
 milestone: M64
 scope: ui
 title: Wealth's details say every word through the catalogue, en and he
-state: in_progress
+landed: 2026-11-26
+state: built
 brief: F3 (D-629) moved Wealth's six forms to PanelForms with their words in the wealth catalogue, and gave the details the report's ink and ramp, but the details' own words are still English inline: FundDetail.tsx, GoalDetail.tsx, DebtDetail.tsx, FeeImpact.tsx, DepositCheck.tsx, wealth/NetWorthOpened.tsx, and inside the goal form savings/WherePicker.tsx and savings/CostBasis.tsx, and the report-read deposit rows funds/DepositRows.tsx; funds/labels.ts and debts/labels.ts keep English maps the details still use. Move them to the wealth area with t() (counts by countKey, a document's name in Bidi inside a Phrase), delete the English maps nothing uses, add the files to src/i18n/words.test.ts, and check with probe:screens --lang he on year.emd (#/wealth/funds/<id>, #/wealth/goals/<id>, #/wealth/debts/<id>).
-files: "src/ui/screens/FundDetail.tsx\nsrc/ui/screens/GoalDetail.tsx\nsrc/ui/screens/FeeImpact.tsx\nsrc/i18n/en/wealth.ts"
+files: "src/i18n/en/wealth.ts\nsrc/i18n/he/wealth.ts\nsrc/i18n/words.test.ts\nsrc/ui/debts/labels.ts\nsrc/ui/funds/DepositRows.tsx\nsrc/ui/funds/labels.ts\nsrc/ui/savings/CostBasis.tsx\nsrc/ui/savings/WherePicker.tsx\nsrc/ui/savings/labels.ts\nsrc/ui/screens/DebtDetail.tsx\nsrc/ui/screens/DepositCheck.tsx\nsrc/ui/screens/FeeImpact.tsx\nsrc/ui/screens/FundDetail.tsx\nsrc/ui/screens/GoalDetail.tsx\nsrc/ui/wealth/NetWorthOpened.tsx\nsrc/ui/wealth/words.ts"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-af2772dad25f4785c
+commit: d004672
 paths: "src/ui/screens/FundDetail.tsx\nsrc/ui/screens/GoalDetail.tsx\nsrc/ui/screens/DebtDetail.tsx\nsrc/ui/screens/FeeImpact.tsx\nsrc/ui/screens/DepositCheck.tsx\nsrc/ui/wealth/NetWorthOpened.tsx\nsrc/ui/savings/WherePicker.tsx\nsrc/ui/savings/CostBasis.tsx\nsrc/ui/funds/DepositRows.tsx\nsrc/ui/funds/labels.ts\nsrc/ui/debts/labels.ts\nsrc/i18n/en/wealth.ts\nsrc/i18n/he/wealth.ts\nsrc/i18n/words.test.ts"
+report: Wealth's details translated, following F3 (D-629): new wealth areas debtDetail, fundDetail, depositCheck, feeImpact, goalDetail, where, costBasis, depositRows, opened, and kinds.fundStatus, holdingKind, paymentSource, depositPart, in en and he. Counts by countKey, a document's name (fund, goal, account, holding, deduction types, beneficiaries) in Bidi inside a Phrase, months and days through useDates; ISO dates stay as they were. The goal's mixed-currency and the debt's unchecked balance now say catalogue words instead of the domain's English constants. payoffSentence and payoffBasisNote moved from debts/labels.ts into DebtDetail. funds/labels.ts is deleted; debts/labels.ts keeps only TRACK_KIND_LABEL (PromotionPanel) and PAYMENT_SOURCE_LABEL (PaymentReview), which are outside these details. The nine files join src/i18n/words.test.ts (M64_F26). probe:screens --lang he on year.emd: goals and debt detail English is only ListDetail's frame (Close, 'Close this pane', aria 'Details'), outside this unit's paths; year.emd has no pension fund, so #/wealth/funds/<id> could not be probed there. --budget: the debt detail is 9 type sizes > 7, unchanged by this unit (no classes touched). Tests: typecheck green, i18n + privacy + budget green, vitest related (31 files) green.
 
 ### M64 F3
 milestone: M64
@@ -18520,6 +18535,20 @@ started: 2026-11-26
 branch: worktree-agent-af23a2be174c2d1fa
 commit: a2e48f2
 report: New kit file src/ui/components/PanelForm.tsx: PanelForm (form, secondary Save + Cancel, problems, focuses the first field after SidePanel records its opener), FormField, FormGrid (@container), Said (aria-live sentence), MoreFields (expands in place by grid rows, folded content inert), FormGroup, AmountInput (no box, symbol at start, underline focus), DateInput (ISO or d/m/yyyy text, NativePicker calendar). The six editors rewritten on it, words in wealth.reading/fundForm/movementForm/goalForm/debtForm/paymentForm (en, he); platform selects and date boxes gone from them (manager made in place by ChoiceField make; holdings by ChoiceMenu + New). Funds, Goals and Debts render the forms as SidePanels beside the page (one panel at a time; a fund's pane closes when a form opens from the list); FundDetail's reading form sits over the fund pane with the fund mounted, so Esc returns focus to Add reading. SnapshotEditor (FlowFrame) kept for reports read from a stack, same fields. Details: ink-tertiary text to ink-secondary, px sizes onto the ramp, h-[30px]/h-[38px] onto steps in FundDetail, GoalDetail, DebtDetail, FeeImpact, DepositCheck, NetWorthOpened, parts.tsx; all on the surface sweep. Kit change: SidePanel wraps its kicker in Bidi. Taste check (impeccable finish reviewer) fixes made: page kept behind on FundDetail, autoFocus removed so focus returns to the opener, amount input box removed (outline-none!), a reading refuses an empty or non-number balance, holdings via ChoiceMenu, kicker Bidi, goal's monthly net of already-there, plural counts, d/m/yyyy dates. Browser-checked on year.emd: reading form opens with focus in the balance, says 'up 3,800 since 30 Sep 2026', Enter saves and the row updates; fund fee sentence; debt and payment forms. probe:screens on #/wealth, funds, goals, debts light/dark within budget, --lang he english 0 (pages; the forms are not probed). Typecheck, i18n, surface rules, privacy and the full suite (5915) green. check:tours skipped: no tour passes through Wealth's forms. docs:check red only on D-629's missing decision row, which this landing writes. Hebrew of the forms not seen on screen (the demo build ignored the language preference in the pane).
+
+### M64 F38
+milestone: Later
+scope: ui
+title: The rest of Wealth's details' words: the pane frame, the charts, holding readings, the report reader and the English that comes from the data layer
+state: planned
+brief: After M64 F26 Hebrew Wealth details still show English from files outside its paths: ListDetail.tsx's ClosePane ('Close', 'Close this pane') and overlay aria-label 'Details'; debts/BalanceLine.tsx and funds/BalanceChart.tsx aria-labels; savings/HoldingReadings.tsx; funds/ReportIntake.tsx's labels; savings/HoldingEditor.tsx and PlaceEditor.tsx opened from a net-worth row; savings/holdingCheck.ts's phrase ('never checked', 'checked ... ago'); and strings made in data/domain: costBasisCheck's UNCHECKED reason (domain/goalDeposits.ts), whereChoices' detail 'at X', 'Cash' and 'another goal' (data/repositories/goalWhereRepository.ts). Give the data layer codes or parts instead of sentences, say them through the wealth area, add the UI files to src/i18n/words.test.ts, and probe #/wealth/goals/<id> and #/wealth/debts/<id> on year.emd with --lang he until English is the document's own words only.
+
+### M64 F39
+milestone: Later
+scope: ui
+title: A fund in the synthetic year, so a fund's detail can be probed
+state: planned
+brief: year.emd (scripts/demo-year.mjs) holds goals and a car loan but no pension or study fund, so probe:screens cannot draw #/wealth/funds/<id>, the fee illustration or the deposit check against paychecks. Add one fund with a few readings fed by a paycheck deduction type to fixtures/synthetic/demo/year/year.json through the tools a conversation uses, and check the fund's detail with --lang he and --budget.
 
 ### M64 F5
 milestone: M64
