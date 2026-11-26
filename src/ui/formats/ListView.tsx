@@ -94,6 +94,11 @@ export interface ListLinesProps {
    * these values, column to text; true when it was written.
    */
   readonly onAdd: (group: ListGroup<ListLine> | undefined, title: string, values?: Readonly<Record<string, string>>) => boolean
+  /**
+   * Whether the narrow list draws its quick add line. An entry's list does not:
+   * the list's + is the one way into a new entry there (M64 F10, D-627).
+   */
+  readonly quickAdd?: boolean | undefined
   /** Quick add's placeholder for a group, or the top's. */
   readonly placeholder: (group: ListGroup<ListLine> | undefined) => string
   /** The default input view's asked fields for a group's quick add (M55 U4), or none: the title alone. */
@@ -189,7 +194,7 @@ export function ListLines(props: ListLinesProps) {
 
   return (
     <div className="flex flex-col" role="list" aria-label="Rows">
-      {narrow && !locked && (
+      {narrow && !locked && props.quickAdd !== false && (
         <QuickAddLine
           narrow
           placeholder={props.placeholder(undefined)}

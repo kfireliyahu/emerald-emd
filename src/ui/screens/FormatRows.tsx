@@ -100,6 +100,7 @@ import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { rowWriteRefusal, rowWriteRefusalOnScreen } from '@/domain/format/owner.ts'
 import { IconAction } from '@/ui/components/IconAction.tsx'
+import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
 import { cellText, EntryView, LinkMakerContext, type LinkMaker } from '@/ui/formats/EntryView.tsx'
 import { linkChoices, linkChoicesOf, newLinked, stageLinked } from '@/ui/formats/linkTargets.ts'
@@ -159,7 +160,7 @@ import type { Database } from 'sql.js'
 import { ReadersLine } from '@/ui/formats/ReadersLine.tsx'
 import { DeletedNote, type DeleteRefusal } from '@/ui/formats/DeleteAtOnce.tsx'
 import { useJustDeleted, type JustDeleted } from '@/ui/formats/justDeleted.ts'
-import { useT } from '@/i18n/current.ts'
+import { useT, type Translate } from '@/i18n/current.ts'
 import { countKey } from '@/i18n/count.ts'
 import { Phrase } from '@/ui/components/Phrase.tsx'
 import { SidePanel } from '@/ui/components/SidePanel.tsx'
@@ -747,7 +748,7 @@ export function FormatRows({
   }, [db, shaping, data?.declaration, data?.declarations, data?.units, revision])
 
   if (db === undefined || data === undefined) {
-    return <Centered>Open a document to see what it holds.</Centered>
+    return <Centered>{t('formats.rows.noDocument')}</Centered>
   }
 
   // A hash naming a format this document has not got — a stale bookmark, or one
@@ -940,7 +941,7 @@ export function FormatRows({
     const batch = stageRows(db, declaration, [offeredOf(declaration, draft, toISODate(today()))], data.declarations)
     const [first] = batch.refusals
     if (first !== undefined) {
-      setMoveRefusal(`Not added: ${first.reason}`)
+      setMoveRefusal(t('formats.rows.notAdded', { reason: first.reason }))
       return false
     }
     try {
@@ -953,7 +954,7 @@ export function FormatRows({
         )
       })
     } catch (error) {
-      setMoveRefusal(`Not added: ${describeTableError(declaration, error).reason}`)
+      setMoveRefusal(t('formats.rows.notAdded', { reason: describeTableError(declaration, error).reason }))
       return false
     }
     setMoveRefusal(undefined)
@@ -1072,7 +1073,7 @@ export function FormatRows({
                       } catch (error) {
                         return { refusal: describeTableError(declaration, error).reason }
                       }
-                      return added === undefined ? { refusal: 'Not added.' } : { id: added }
+                      return added === undefined ? { refusal: t('formats.rows.notAddedBare') } : { id: added }
                     },
             }
           }}
@@ -1094,7 +1095,7 @@ export function FormatRows({
             const refusal = savedNameRefusal(named)
             if (refusal !== undefined) return refusal
             if (was === undefined && saved.some((each) => each.name.toLowerCase() === named.toLowerCase())) {
-              return `${declaration.title} already has a view called ${named}.`
+              return t('formats.rows.viewTaken', { title: declaration.title, name: named })
             }
             const reasons = inputViewRefusals(declaration, next.shape)
             if (reasons.length > 0) return reasons.join(' ')
@@ -1182,7 +1183,7 @@ export function FormatRows({
         setTyped({ key, draft })
         // Each at its own field, and one about the row at the field that was
         // left (M55 U5, D-545).
-        const said = verdict.problems.length > 0 ? verdict.problems : [{ column: undefined, reason: 'Nothing has been filled in yet.' }]
+        const said = verdict.problems.length > 0 ? verdict.problems : [{ column: undefined, reason: t('formats.rows.nothingFilled') }]
         setRefused(said.map((each) => ({ column: each.column ?? column, text: each.reason })))
         return
       }
@@ -1644,19 +1645,24 @@ export function FormatRows({
             />
           )}
           {shownRollup === undefined && !dashboard && (
+          // **The search is the box with the glass** (M64 F10, D-627), as the
+          // entry list's is; the filter beside it is not boxed.
+          <label className={`${FIELD} flex w-48 items-center gap-2 px-2 text-ink-secondary focus-within:border-accent has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-accent`}>
+          <ActionGlyph name="search" size={14} />
           <input
             ref={searchField}
-            className={`${FIELD} w-48`}
+            className="w-full min-w-0 border-0 bg-transparent p-0 text-body text-ink outline-none placeholder:text-ink-secondary"
             type="search"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search"
-            aria-label="Search"
-            title="Every column, as it is shown (Ctrl+F)"
+            placeholder={t('formats.rows.search')}
+            aria-label={t('formats.rows.search')}
+            title={t('formats.rows.searchHint')}
           />
+          </label>
           )}
           {locked === undefined && (
-            <IconAction label="Read" onClick={() => navigate(readPath(declaration.name))}>
+            <IconAction label={t('formats.rows.read')} onClick={() => navigate(readPath(declaration.name))}>
               <path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8Z" />
               <path d="M14 3v5h5" />
               <path d="M12 11v6" />
@@ -1669,7 +1675,7 @@ export function FormatRows({
             icon="add"
             onClick={() => navigate(addPath)}
           >
-            Add
+            {t('formats.rows.add')}
           </Button>
           )}
         </span>
@@ -1711,20 +1717,20 @@ export function FormatRows({
           can be bookmarked; a rollup is a choice on the table's. */}
       {/* **A saved view is one of its tabs** (M54 F2): marked current while
           the address is the one it saved, and then no other tab is. */}
-      <nav aria-label="Views" className="flex h-8 shrink-0 items-stretch gap-4 overflow-x-auto border-b border-hairline px-6">
+      <nav aria-label={t('formats.rows.views')} className="flex h-8 shrink-0 items-stretch gap-4 overflow-x-auto border-b border-hairline px-6">
         {[
           {
-            label: 'Table',
+            label: t('formats.rows.tabs.table'),
             on: !board && !list && !dashboard && shownRollup === undefined && savedHere === undefined,
             go: () => {
               setView(undefined)
               if (board || list || dashboard) navigate(formatPath(declaration.name) + address)
             },
           },
-          ...(hasBoard ? [{ label: 'Board', on: board && savedHere === undefined, go: () => navigate(boardPath(declaration.name) + address) }] : []),
-          { label: 'List', on: list && savedHere === undefined, go: () => navigate(listPath(declaration.name) + address) },
-          ...(data.hasRoadmap ? [{ label: 'Roadmap', on: false, go: () => navigate(roadmapPath(declaration.name) + address) }] : []),
-          ...(data.hasReady ? [{ label: 'Ready to start', on: false, go: () => navigate(readyPath(declaration.name) + address) }] : []),
+          ...(hasBoard ? [{ label: t('formats.rows.tabs.board'), on: board && savedHere === undefined, go: () => navigate(boardPath(declaration.name) + address) }] : []),
+          { label: t('formats.rows.tabs.list'), on: list && savedHere === undefined, go: () => navigate(listPath(declaration.name) + address) },
+          ...(data.hasRoadmap ? [{ label: t('formats.rows.tabs.roadmap'), on: false, go: () => navigate(roadmapPath(declaration.name) + address) }] : []),
+          ...(data.hasReady ? [{ label: t('formats.rows.tabs.ready'), on: false, go: () => navigate(readyPath(declaration.name) + address) }] : []),
           // An input view adds rows rather than showing them: the rail's, never a tab (D-535).
           ...saved
             .filter((each) => each.kind !== INPUT_KIND)
@@ -1741,8 +1747,8 @@ export function FormatRows({
           })),
           // **Its dashboard, last** (M53 U7, D-521): the format still opens on Table.
           // **The format's +** (M55 U3, D-535): one place to make its views, before Dashboard's hairline.
-          ...(readOnly === undefined ? [{ label: 'New', on: false, go: () => undefined, plus: true }] : []),
-          { label: 'Dashboard', on: dashboard, go: () => navigate(dashboardPath(declaration.name)), apart: true },
+          ...(readOnly === undefined ? [{ label: t('formats.rows.tabs.new'), on: false, go: () => undefined, plus: true }] : []),
+          { label: t('formats.rows.tabs.dashboard'), on: dashboard, go: () => navigate(dashboardPath(declaration.name)), apart: true },
         ].map((tab) => (
           <Fragment key={`${'apart' in tab ? 'apart ' : 'saved' in tab ? 'saved ' : ''}${tab.label}`}>
             {'apart' in tab && <span aria-hidden className="my-2 w-px shrink-0 bg-hairline" />}
@@ -1784,7 +1790,7 @@ export function FormatRows({
         onChange={setFilter}
         declaration={declaration}
         saving={entry === undefined ? saving : undefined}
-        back={fromDashboard === undefined ? undefined : { label: 'Dashboard', go: () => navigate(fromDashboard) }}
+        back={fromDashboard === undefined ? undefined : { label: t('formats.rows.tabs.dashboard'), go: () => navigate(fromDashboard) }}
       />
       )}
 
@@ -1853,15 +1859,11 @@ export function FormatRows({
       ) : data.rows.length === 0 && ((filtered && data.refusal === undefined) || locked !== undefined) ? (
         <Centered>
           {!filtered || data.refusal !== undefined ? (
-            <>
-              No <Bidi>{declaration.title}</Bidi> yet.
-            </>
+            <Phrase text={t('formats.rows.none')} parts={{ title: <Bidi>{declaration.title}</Bidi> }} />
           ) : search.trim() !== '' && filter.match === undefined ? (
-            <>
-              Nothing matches “<Bidi>{search}</Bidi>”.
-            </>
+            <Phrase text={t('formats.rows.nothingMatches')} parts={{ search: <Bidi>{search}</Bidi> }} />
           ) : (
-            <>Nothing matches this filter.</>
+            <>{t('formats.rows.nothingMatchesFilter')}</>
           )}
         </Centered>
       ) : (
@@ -1978,22 +1980,27 @@ export function FormatRows({
             // Each cell's sentence is under the cell (M55 U5, D-545); this line
             // counts them, and says in full what is about a row as a whole.
             <p className="text-negative" data-tour="refusal">
-              <span className="font-medium">Nothing was written.</span>
-              {cellsToPutRight(foot.refusals)}
+              <span className="font-medium">{t('formats.rows.nothingWritten')}</span>
+              {cellsToPutRight(foot.refusals, t)}
               {foot.refusals
                 .filter((each) => each.column === undefined)
                 .map((each, at) => (
                   <span key={at}>
-                    {' '}Row {String(data.rows.length + 1 + each.row)}: <Bidi>{screenWords(each.reason, declaration)}</Bidi>
+                    {' '}
+                    <Phrase
+                      text={t('formats.rows.footRow')}
+                      parts={{
+                        row: String(data.rows.length + 1 + each.row),
+                        reason: <Bidi>{screenWords(each.reason, declaration)}</Bidi>,
+                      }}
+                    />
                   </span>
                 ))}
             </p>
           )}
           {foot.dropped > 0 && (
             <p className="text-ink-secondary">
-              {foot.dropped === 1
-                ? '1 pasted cell was past the last column and was left out.'
-                : `${String(foot.dropped)} pasted cells were past the last column and were left out.`}
+              {t(countKey('formats.rows.dropped', foot.dropped), { count: foot.dropped })}
             </p>
           )}
         </div>
@@ -2185,10 +2192,10 @@ function sortOf(declaration: FormatDeclaration, order: Order | undefined): Order
 type FootProblem = FootRefusal & { readonly reason: string }
 
 /** " Two cells to put right, each said under it." — or nothing when every problem is a row's. */
-function cellsToPutRight(refusals: readonly FootProblem[]): string {
+function cellsToPutRight(refusals: readonly FootProblem[], t: Translate): string {
   const cells = refusals.filter((each) => each.column !== undefined).length
   if (cells === 0) return ''
-  return ` ${cells === 1 ? 'One cell' : `${String(cells)} cells`} to put right, each said under it.`
+  return ` ${t(countKey('formats.rows.cellsToPutRight', cells), { count: cells })}`
 }
 
 /** The foot's drafts, the batch each belongs to, and every refusal. */
@@ -2244,16 +2251,26 @@ function ApplyRulesPlan({
   onApply: () => void
 }) {
   const t = useT()
-  const rows = (count: number): string => (count === 1 ? '1 row' : `${String(count)} rows`)
+  const rows = (count: number): string => t(countKey('formats.rows.applyRows', count), { count })
   return (
     <div className="flex flex-col gap-4">
       <p className="m-0 text-body">
-        <span className="font-medium">{plan.set.name}</span> over {rows(plan.rows)} of{' '}
-        <Bidi>{plan.target.title}</Bidi>: {rows(plan.changes.length)} would be set,{' '}
-        {rows(plan.unmatched)} no rule matches, and {rows(plan.kept)} somebody else set, which
-        stay as they are.
-        {plan.ties.length > 0 &&
-          ` ${rows(plan.ties.length)} two rules tie on, naming different rows — left as they are until one of the rules comes first.`}
+        <Phrase
+          text={t('formats.rows.applyPlan')}
+          parts={{
+            set: (
+              <span className="font-medium">
+                <Bidi>{plan.set.name}</Bidi>
+              </span>
+            ),
+            rows: rows(plan.rows),
+            target: <Bidi>{plan.target.title}</Bidi>,
+            changes: rows(plan.changes.length),
+            unmatched: rows(plan.unmatched),
+            kept: rows(plan.kept),
+          }}
+        />
+        {plan.ties.length > 0 && <> {t('formats.rows.applyTies', { ties: rows(plan.ties.length) })}</>}
       </p>
       <div className="flex gap-2">
         <Button variant="secondary" onClick={onApply} disabled={plan.changes.length === 0}>

@@ -1,5 +1,6 @@
 import type { ColumnDeclaration } from '@/domain/format/declaration.ts'
 import { boundedWidth } from '@/domain/format/view.ts'
+import { useT } from '@/i18n/current.ts'
 
 /**
  * **A column's width is dragged wherever its columns are drawn** (M55 F1,
@@ -20,11 +21,12 @@ export function ResizeHandle({
   onDrag: (width: number) => void
   onDone: (width: number | undefined) => void
 }) {
+  const t = useT()
   return (
     <div
       role="separator"
       aria-orientation="vertical"
-      aria-label={`Width of ${column}`}
+      aria-label={t('formats.table.widthOf', { name: column })}
       aria-valuenow={width}
       tabIndex={0}
       className="absolute inset-y-0 -end-1 z-10 w-2 cursor-col-resize touch-none transition-colors duration-[var(--duration-micro)] hover:bg-accent focus-visible:bg-accent focus-visible:outline-none"

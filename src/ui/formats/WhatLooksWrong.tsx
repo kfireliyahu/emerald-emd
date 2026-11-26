@@ -1,5 +1,8 @@
 import type { AuditRow, FormatAudit, Finding } from '@/domain/format/audit.ts'
+import { useT } from '@/i18n/current.ts'
+import { countKey } from '@/i18n/count.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 
 /**
  * **What looks wrong, said without being asked** — M34 U3, D-396.
@@ -30,19 +33,20 @@ export function WhatLooksWrong({
       .filter((finding) => finding.kind !== 'UNCHECKED')
       .map((finding) => ({ audit, finding })),
   )
+  const t = useT()
   if (shown.length === 0) return null
   const several = new Set(shown.map((each) => each.audit.format)).size > 1
 
   return (
     <section
-      aria-label="What looks wrong"
+      aria-label={t('formats.audit.title')}
       className={
         framed
           ? 'fc-pop-enter flex shrink-0 flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-hairline px-6 py-2'
           : 'fc-pop-enter mb-3 space-y-1'
       }
     >
-      <span className="text-label text-negative uppercase">What looks wrong</span>
+      <span className="text-label text-negative uppercase">{t('formats.audit.title')}</span>
       <ul className="min-w-0 space-y-0.5 text-caption text-ink">
         {shown.map(({ audit, finding }, at) => (
           <li key={at}>
@@ -62,33 +66,49 @@ export function WhatLooksWrong({
 /** Entries a sentence names before it says how many more. */
 const NAMED = 5
 
-function entries(n: number): string {
-  return n === 1 ? '1 entry' : `${String(n)} entries`
-}
-
 type Open = ((row: string) => void) | undefined
 
 function Sentence({ finding, open }: { finding: Finding; open: Open }) {
+  const t = useT()
   switch (finding.kind) {
     case 'LINK_GAP':
       return (
-        <>
-          <code>{finding.column}</code> is empty on {entries(finding.empty.length)} where{' '}
-          {finding.filled} name a <Bidi>{finding.target}</Bidi>: <Names rows={finding.empty} open={open} />
-        </>
+        <Phrase
+          text={t(countKey('formats.audit.linkGap', finding.empty.length), {
+            count: finding.empty.length,
+            filled: finding.filled,
+          })}
+          parts={{
+            column: (
+              <Bidi>
+                <code>{finding.column}</code>
+              </Bidi>
+            ),
+            target: <Bidi>{finding.target}</Bidi>,
+            names: <Names rows={finding.empty} open={open} />,
+          }}
+        />
       )
     case 'DUPLICATE':
       return (
-        <>
-          {entries(finding.rows.length)} the same in every column: <Names rows={finding.rows} open={open} />
-        </>
+        <Phrase
+          text={t(countKey('formats.audit.duplicate', finding.rows.length), { count: finding.rows.length })}
+          parts={{ names: <Names rows={finding.rows} open={open} /> }}
+        />
       )
     case 'FAILED':
       return (
-        <>
-          <code>{finding.identity}</code> fails on {entries(finding.rows.length)}:{' '}
-          <Names rows={finding.rows} open={open} />
-        </>
+        <Phrase
+          text={t(countKey('formats.audit.failed', finding.rows.length), { count: finding.rows.length })}
+          parts={{
+            identity: (
+              <Bidi>
+                <code>{finding.identity}</code>
+              </Bidi>
+            ),
+            names: <Names rows={finding.rows} open={open} />,
+          }}
+        />
       )
     case 'UNCHECKED':
       return null
@@ -96,6 +116,8 @@ function Sentence({ finding, open }: { finding: Finding; open: Open }) {
 }
 
 function Names({ rows, open }: { rows: readonly AuditRow[]; open: Open }) {
+  const t = useT()
+  const more = rows.length - NAMED
   return (
     <>
       {rows.slice(0, NAMED).map((row, at) => (
@@ -112,7 +134,7 @@ function Names({ rows, open }: { rows: readonly AuditRow[]; open: Open }) {
           {row.says !== undefined && <span className="text-ink-secondary"> ({row.says})</span>}
         </span>
       ))}
-      {rows.length > NAMED && ` and ${String(rows.length - NAMED)} more`}
+      {more > 0 && <> {t(countKey('formats.audit.more', more), { count: more })}</>}
     </>
   )
 }

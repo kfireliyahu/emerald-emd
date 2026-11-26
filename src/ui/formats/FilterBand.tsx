@@ -15,9 +15,14 @@ import type { RowQuery } from '@/data/repositories/formatRowRepository.ts'
 import { columnValues, otherHolds, type ColumnUnit, type ColumnValue } from '@/data/repositories/formatValuesRepository.ts'
 import type { ColumnDeclaration, FormatDeclaration } from '@/domain/format/declaration.ts'
 import { figureRangeSaid, figureRangeText, parseFigureRange } from '@/domain/format/figureRange.ts'
+import { useT, type Translate } from '@/i18n/current.ts'
+import { countKey } from '@/i18n/count.ts'
+import { tNow } from '@/i18n/words.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { ChoiceField } from '@/ui/components/ChoiceField.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { useDismiss } from '@/ui/components/useDismiss.ts'
 
 import { addressView, filterAddress, type AddressOrder, type ColumnChoice } from './addressFilter.ts'
@@ -104,18 +109,20 @@ export function filteredQuery(
   declaration: FormatDeclaration,
   filter: RowFilter,
   declarations: readonly FormatDeclaration[],
+  /** The words of the refusal; the language now where a caller gives none. */
+  t: Translate = tNow,
 ): { readonly query: RowQuery; readonly refusal?: string } {
   // The app's clock, read at the edge (D-472): a window around today is the
   // same rows here as in a conversation asked on the same day.
   const day = toISODate(today())
   const read = filterQuery(db, declaration, filter, declarations, day)
-  return read.ok ? { query: read.value } : { query: { today: day }, refusal: refusalSaid(declaration, read.error) }
+  return read.ok ? { query: read.value } : { query: { today: day }, refusal: refusalSaid(declaration, read.error, t) }
 }
 
-function refusalSaid(declaration: FormatDeclaration, refusal: FilterRefusal): string {
+function refusalSaid(declaration: FormatDeclaration, refusal: FilterRefusal, t: Translate): string {
   return refusal.kind === 'NO_COLUMN'
-    ? `${declaration.title} has no column ${refusal.name}, so this filter holds nothing back.`
-    : `${refusal.reason} This filter holds nothing back.`
+    ? t('formats.filter.noColumn', { title: declaration.title, name: refusal.name })
+    : t('formats.filter.refused', { reason: refusal.reason })
 }
 
 /**
@@ -158,6 +165,7 @@ export function FilterBand({
    */
   readonly back?: { readonly label: string; readonly go: () => void } | undefined
 }) {
+  const t = useT()
   const filtered = isFiltered(filter)
   if (!filtered && saving?.held !== true && back === undefined) return null
   const held = Object.entries(filter.match ?? {})
@@ -167,7 +175,7 @@ export function FilterBand({
   return (
     <div
       role="status"
-      aria-label="Filter"
+      aria-label={t('formats.filter.band')}
       className="flex shrink-0 flex-wrap items-baseline gap-x-3 gap-y-1 border-b border-hairline px-6 py-1.5 text-caption text-ink-secondary"
     >
       {back !== undefined && (
@@ -181,15 +189,15 @@ export function FilterBand({
       )}
       {!bare && (
       <span>
-        {!filtered && 'Every row'}
-        {filtered && 'Filtered by '}
+        {!filtered && t('formats.filter.everyRow')}
+        {filtered && <>{t('formats.filter.filteredBy')} </>}
         {held.map(([name, value], at) => (
           <span key={name}>
             {at > 0 && ', '}
             <HeldSaid name={name} value={value} column={declaration?.columns.find((each) => each.name === name)} />
             {onChange !== undefined && (
               <Drop
-                what={name}
+                label={t('formats.filter.dropColumn', { name })}
                 onClick={() => {
                   const rest = Object.fromEntries(held.filter(([other]) => other !== name))
                   onChange({ ...(Object.keys(rest).length === 0 ? {} : { match: rest }), ...(search === '' ? {} : { search }) })
@@ -201,9 +209,9 @@ export function FilterBand({
         {search !== '' && (
           <>
             {held.length > 0 && ', '}
-            search “<span className="text-ink"><Bidi>{search}</Bidi></span>”
+            <Phrase text={t('formats.filter.searchSaid')} parts={{ text: <span className="text-ink"><Bidi>{search}</Bidi></span> }} />
             {onChange !== undefined && (
-              <Drop what="the search" onClick={() => onChange(filter.match === undefined ? {} : { match: filter.match })} />
+              <Drop label={t('formats.filter.dropSearch')} onClick={() => onChange(filter.match === undefined ? {} : { match: filter.match })} />
             )}
           </>
         )}
@@ -212,7 +220,7 @@ export function FilterBand({
       {!bare && (
       <span className="tabular-nums">
         {/* A format holds rows; an entry is one row's page (the term rows, M54 F2/F3). */}
-        {refusal === undefined ? `${String(shown)} of ${String(total)} ${total === 1 ? 'row' : 'rows'}` : refusal}
+        {refusal === undefined ? t(countKey('formats.filter.shownOf', total), { shown, count: total }) : refusal}
       </span>
       )}
       {filtered && (
@@ -221,7 +229,7 @@ export function FilterBand({
           className="text-ink-secondary underline decoration-hairline underline-offset-2 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
           onClick={onClear}
         >
-          Clear
+          {t('formats.filter.clear')}
         </button>
       )}
       {saving !== undefined && saving.held && <SaveView saving={saving} />}
@@ -236,12 +244,13 @@ export function FilterBand({
  * a saved view is saving it again under its name.
  */
 function SaveView({ saving }: { readonly saving: Saving }) {
+  const t = useT()
   const [naming, setNaming] = useState<string | undefined>(undefined)
   const [refusal, setRefusal] = useState<string | undefined>(undefined)
   if (saving.current !== undefined) {
     return (
       <span className="ms-auto">
-        Saved as <span className="text-ink"><Bidi>{saving.current}</Bidi></span>
+        <Phrase text={t('formats.filter.savedAs')} parts={{ name: <span className="text-ink"><Bidi>{saving.current}</Bidi></span> }} />
       </span>
     )
   }
@@ -255,7 +264,7 @@ function SaveView({ saving }: { readonly saving: Saving }) {
           setRefusal(undefined)
         }}
       >
-        Save this view
+        {t('formats.filter.saveView')}
       </button>
     )
   }
@@ -284,8 +293,8 @@ function SaveView({ saving }: { readonly saving: Saving }) {
             setRefusal(undefined)
           }
         }}
-        placeholder="Name this view"
-        aria-label="Name this view"
+        placeholder={t('formats.filter.nameView')}
+        aria-label={t('formats.filter.nameView')}
         maxLength={60}
         className="w-44 border-0 border-b border-hairline-strong bg-transparent px-0 py-0 text-caption text-ink outline-none placeholder:text-ink-secondary focus:border-accent"
       />
@@ -294,7 +303,7 @@ function SaveView({ saving }: { readonly saving: Saving }) {
         className="text-accent hover:underline hover:underline-offset-[3px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
         onClick={save}
       >
-        {replaces ? 'Replace' : 'Save'}
+        {replaces ? t('formats.filter.replace') : t('formats.filter.save')}
       </button>
       <button
         type="button"
@@ -304,7 +313,7 @@ function SaveView({ saving }: { readonly saving: Saving }) {
           setRefusal(undefined)
         }}
       >
-        Cancel
+        {t('formats.table.cancel')}
       </button>
       {refusal !== undefined && (
         <span className="text-negative" role="alert">
@@ -330,11 +339,13 @@ function HeldSaid({
   readonly value: unknown
   readonly column: ColumnDeclaration | undefined
 }) {
+  const t = useT()
   if (isClockWords(value)) {
     return (
-      <>
-        <Bidi>{name}</Bidi> is <span className="text-ink"><Bidi>{String(value)}</Bidi></span>
-      </>
+      <Phrase
+        text={t('formats.filter.heldIs')}
+        parts={{ name: <Bidi>{name}</Bidi>, value: <span className="text-ink"><Bidi>{String(value)}</Bidi></span> }}
+      />
     )
   }
   return (
@@ -358,6 +369,7 @@ export function HeldValues({
   readonly column: ColumnDeclaration | undefined
   readonly className?: string
 }) {
+  const t = useT()
   if (isClockWords(value)) return <span className={className}><Bidi>{String(value)}</Bidi></span>
   // An amount held to a range says it in words: `10 to 50 ILS` (M37 U4), and
   // money as the table writes it, `₪10.00 to ₪50.00` (M55 U7).
@@ -368,11 +380,11 @@ export function HeldValues({
   const { values, not } = heldAs(value)
   return (
     <>
-      {not && 'anything but '}
+      {not && <>{t('formats.filter.anythingBut')} </>}
       {values.map((each, at) => (
         <span key={at} className={className}>
           {at > 0 && ', '}
-          {isEmptyValue(each) ? 'empty' : <Bidi>{memberSaid(column, String(each))}</Bidi>}
+          {isEmptyValue(each) ? t('formats.filter.empty') : <Bidi>{memberSaid(column, String(each))}</Bidi>}
         </span>
       ))}
     </>
@@ -396,12 +408,12 @@ function memberSaid(column: ColumnDeclaration | undefined, value: string): strin
 }
 
 /** The × after one held value: drops it alone. */
-function Drop({ what, onClick }: { readonly what: string; readonly onClick: () => void }) {
+function Drop({ label, onClick }: { readonly label: string; readonly onClick: () => void }) {
   return (
     <button
       type="button"
-      aria-label={`Stop filtering by ${what}`}
-      title={`Stop filtering by ${what}`}
+      aria-label={label}
+      title={label}
       // A 24px target in ink-secondary: it does what Clear does, to one value (D-531, M54 F3).
       className="ms-1 inline-flex size-6 items-center justify-center align-middle text-ink-secondary hover:bg-surface hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
       onClick={onClick}
@@ -454,13 +466,13 @@ export function ColumnFilter({
   readonly order?: { readonly column: string; readonly descending: boolean } | undefined
   readonly onSort?: ((order: { readonly column: string; readonly descending: boolean }) => void) | undefined
 }) {
+  const t = useT()
   const [column, setColumn] = useState<ColumnDeclaration | undefined>(undefined)
   const [text, setText] = useState('')
   const holder = useRef<HTMLSpanElement>(null)
   const held = filter.match ?? {}
   const columns = offered ?? filterableColumns(declaration)
   if (columns.length === 0) return null
-  const by = onSort === undefined ? 'Filter' : 'Filter or sort'
   // **Escape comes back here** (M54 F3, *Keyboard first*): the menu closed from
   // inside it gives the keyboard back to the field that opened it, never the page.
   const closed = (): void => {
@@ -470,22 +482,33 @@ export function ColumnFilter({
   }
 
   return (
-    <span ref={holder} className="relative inline-flex">
+    <span ref={holder} className="relative inline-flex items-center">
       {/* **It narrows as it is typed** (M54 F3, *Choices are ChoiceField*): a
-          field that looks typeable is, and Enter picks the first column left. */}
+          field that looks typeable is, and Enter picks the first column left.
+          **Not a second search box** (M64 F10, D-627): a funnel and no edge at
+          rest, so it reads as the filter it is beside the boxed search. */}
+      <span className="pointer-events-none absolute start-2 z-10 inline-flex text-ink-secondary" aria-hidden>
+        <ActionGlyph name="filter" size={14} />
+      </span>
       <ChoiceField
         key="column"
-        className={`${FIELD} w-32`}
+        className={`${FIELD} w-32 border-transparent bg-transparent ps-7 hover:border-hairline-strong`}
         type="search"
         text={text}
-        placeholder={rows === undefined ? 'Filter by…' : `Filter ${rows} by…`}
-        aria-label={rows === undefined ? `${by} by` : `Filter ${rows} by`}
-        title={rows === undefined ? 'Hold a column to some of its values' : `Hold the ${rows} under each row to some of their values`}
+        placeholder={rows === undefined ? t('formats.filter.by') : t('formats.filter.rowsBy', { rows })}
+        aria-label={
+          rows !== undefined
+            ? t('formats.filter.rowsByLabel', { rows })
+            : onSort === undefined
+              ? t('formats.filter.filterBy')
+              : t('formats.filter.filterOrSortBy')
+        }
+        title={rows === undefined ? t('formats.filter.holdColumn') : t('formats.filter.holdRows', { rows })}
         choices={columns.map((each) => ({
           value: each.name,
           label: entryLabel(each),
           search: each.name,
-          ...(each.name in held ? { detail: 'held' } : {}),
+          ...(each.name in held ? { detail: t('formats.filter.held') } : {}),
         }))}
         filter
         onText={setText}
@@ -562,6 +585,7 @@ export function ColumnMenu({
   /** Which edge of its anchor the menu hangs from. */
   readonly align?: 'start' | 'end'
 }) {
+  const t = useT()
   const box = useRef<HTMLDivElement>(null)
   const changed = useRef(false)
   const [text, setText] = useState('')
@@ -581,7 +605,7 @@ export function ColumnMenu({
   }
 
   const sorts = onSort === undefined ? null : (
-    <div role="group" aria-label={`Sort by ${column.name}`} className="flex gap-1">
+    <div role="group" aria-label={t('formats.filter.sortBy', { name: column.name })} className="flex gap-1">
       {([false, true] as const).map((descending) => {
         const on = order?.column === column.name && order.descending === descending
         return (
@@ -594,7 +618,7 @@ export function ColumnMenu({
             }`}
             onClick={() => onSort({ column: column.name, descending })}
           >
-            {descending ? 'Sort ↓' : 'Sort ↑'}
+            {descending ? t('formats.filter.sortDown') : t('formats.filter.sortUp')}
           </button>
         )
       })}
@@ -605,7 +629,7 @@ export function ColumnMenu({
     <div
       ref={box}
       role="dialog"
-      aria-label={`${entryLabel(column)}, its values`}
+      aria-label={t('formats.filter.itsValues', { name: entryLabel(column) })}
       onKeyDown={dismiss}
       className={`fc-pop-enter absolute top-full ${align === 'end' ? 'end-0' : 'start-0'} z-30 mt-1 flex w-72 flex-col gap-2 border border-hairline-strong bg-elevated p-2 text-start text-body font-normal whitespace-normal shadow-pop`}
     >
@@ -613,7 +637,7 @@ export function ColumnMenu({
         <>
           <Bidi className="min-w-0 truncate font-medium">{entryLabel(column)}</Bidi>
           {sorts}
-          <p className="text-caption text-ink-secondary">{refusalSaid(declaration, read.error)}</p>
+          <p className="text-caption text-ink-secondary">{refusalSaid(declaration, read.error, t)}</p>
         </>
       ) : read.value.kind === 'RANGE' ? (
         <RangeBody column={column} units={read.value.units} empty={read.value.empty} held={held[column.name]} sorts={sorts} onWrite={write} />
@@ -626,16 +650,16 @@ export function ColumnMenu({
             className={`${FIELD} h-7 w-full`}
             type="search"
             value={filter.search ?? ''}
-            placeholder="Search…"
-            aria-label="Search"
-            title="A passage is found by searching — in every column, as shown"
+            placeholder={t('formats.filter.searchPlaceholder')}
+            aria-label={t('formats.filter.search')}
+            title={t('formats.filter.passageHint')}
             onChange={(event) => {
               const search = event.target.value
               onChange({ ...(filter.match === undefined ? {} : { match: filter.match }), ...(search === '' ? {} : { search }) }, true)
             }}
           />
           <p className="text-caption text-ink-secondary">
-            <Bidi>{entryLabel(column)}</Bidi> holds passages, so it is searched rather than listed.
+            <Phrase text={t('formats.filter.passages')} parts={{ name: <Bidi>{entryLabel(column)}</Bidi> }} />
           </p>
         </>
       ) : (
@@ -657,7 +681,7 @@ export function ColumnMenu({
           className="text-caption text-ink-secondary underline decoration-hairline underline-offset-2 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
           onClick={onClose}
         >
-          Done
+          {t('formats.filter.done')}
         </button>
       </div>
     </div>
@@ -687,6 +711,7 @@ function ValuesBody({
   readonly sorts: React.ReactNode
   readonly onWrite: (value: unknown) => void
 }) {
+  const t = useT()
   const holding = held === undefined ? { values: [] as readonly unknown[], not: false } : heldAs(held)
   // A window around today, or a range, is not a tick: it is shown as held, and a tick replaces it.
   const ticked = holding.values.filter((each) => !isClockWords(each)).map((each) => (isEmptyValue(each) ? '' : String(each)))
@@ -718,7 +743,7 @@ function ValuesBody({
     <>
       <div className="flex items-center gap-2">
         <Bidi className="min-w-0 flex-1 truncate font-medium">{entryLabel(column)}</Bidi>
-        <div role="group" aria-label="Held as" className="flex overflow-hidden border border-hairline-strong">
+        <div role="group" aria-label={t('formats.filter.heldAs')} className="flex overflow-hidden border border-hairline-strong">
           {([false, true] as const).map((turned) => (
             <button
               key={String(turned)}
@@ -732,7 +757,7 @@ function ValuesBody({
                 if (not !== turned && ticked.length > 0) writeTicks(ticked, turned)
               }}
             >
-              {turned ? 'is not' : 'is'}
+              {turned ? t('formats.filter.isNot') : t('formats.filter.is')}
             </button>
           ))}
         </div>
@@ -744,9 +769,9 @@ function ValuesBody({
         className={`${FIELD} h-7 w-full`}
         type="search"
         value={text}
-        placeholder="Find a value…"
-        aria-label={`Find a value of ${column.name}`}
-        title="Narrow the values; Enter ticks what is typed"
+        placeholder={t('formats.filter.findValue')}
+        aria-label={t('formats.filter.findValueOf', { name: column.name })}
+        title={t('formats.filter.findHint')}
         onChange={(event) => onText(event.target.value)}
         onKeyDown={(event) => {
           if (event.key !== 'Enter' || text.trim() === '') return
@@ -764,15 +789,15 @@ function ValuesBody({
         }}
       />
       {(wordsShown.length > 0 || heldExtra !== undefined) && (
-        <ul className="flex max-h-48 flex-col overflow-y-auto border-b border-hairline pb-1" aria-label={`Around today, for ${column.name}`}>
+        <ul className="flex max-h-48 flex-col overflow-y-auto border-b border-hairline pb-1" aria-label={t('formats.filter.aroundToday', { name: column.name })}>
           {heldExtra !== undefined && <Word value={heldExtra} column={column.name} checked onPick={() => pickWords(heldExtra)} />}
           {wordsShown.map((each) => (
             <Word key={each.value} value={each.value} count={each.count} column={column.name} checked={heldWords === each.value} onPick={() => pickWords(each.value)} />
           ))}
         </ul>
       )}
-      <ul className="flex max-h-64 flex-col overflow-y-auto" aria-label={`Values of ${column.name}`}>
-        <Tick label={<i>(empty)</i>} count={empty} checked={tickedKeys.has('')} onToggle={() => toggle('')} />
+      <ul className="flex max-h-64 flex-col overflow-y-auto" aria-label={t('formats.filter.valuesOf', { name: column.name })}>
+        <Tick label={<i>{t('formats.filter.emptyValue')}</i>} count={empty} checked={tickedKeys.has('')} onToggle={() => toggle('')} />
         {extra.map((value) => (
           <Tick key={`typed-${value}`} label={<Bidi>{memberSaid(column, value)}</Bidi>} checked onToggle={() => toggle(value)} />
         ))}
@@ -788,7 +813,7 @@ function ValuesBody({
       </ul>
       {narrowed.length > drawn.length && (
         <p className="text-caption text-ink-secondary">
-          {counted(narrowed.length - drawn.length)} more — type to narrow them.
+          {t(countKey('formats.filter.more', narrowed.length - drawn.length), { count: counted(narrowed.length - drawn.length) })}
         </p>
       )}
     </>
@@ -816,11 +841,11 @@ function RangeBody({
   readonly sorts: React.ReactNode
   readonly onWrite: (value: unknown) => void
 }) {
+  const t = useT()
   const was = typeof held === 'string' ? parseFigureRange(held) : undefined
   const [unit, setUnit] = useState(was?.unit ?? units[0]?.unit ?? '')
   const [from, setFrom] = useState(was?.from ?? '')
   const [to, setTo] = useState(was?.to ?? '')
-  const kind = column.type === 'money' ? 'currency' : 'unit'
   const apply = (next: { unit?: string; from?: string; to?: string } = {}): void => {
     const words = { unit: next.unit ?? unit, from: (next.from ?? from).trim(), to: (next.to ?? to).trim() }
     if (words.from === '' && words.to === '') {
@@ -830,14 +855,14 @@ function RangeBody({
     const written = figureRangeText({ unit: words.unit, from: words.from === '' ? undefined : words.from, to: words.to === '' ? undefined : words.to })
     if (written !== held) onWrite(written)
   }
-  const end = (label: string, value: string, set: (text: string) => void, key: 'from' | 'to') => (
+  const end = (label: string, named: string, value: string, set: (text: string) => void, key: 'from' | 'to') => (
     <label className="flex min-w-0 flex-1 flex-col gap-0.5 text-caption text-ink-secondary">
       {label}
       <input
         className={`${FIELD} h-7 w-full tabular-nums`}
         inputMode="decimal"
         value={value}
-        aria-label={`${column.name} ${label.toLowerCase()}`}
+        aria-label={named}
         onChange={(event) => set(event.target.value)}
         onBlur={() => apply({ [key]: value })}
         onKeyDown={(event) => {
@@ -854,10 +879,10 @@ function RangeBody({
       <Bidi className="min-w-0 truncate font-medium">{entryLabel(column)}</Bidi>
       {sorts}
       {units.length === 0 ? (
-        <p className="text-caption text-ink-secondary">No row holds an amount here yet.</p>
+        <p className="text-caption text-ink-secondary">{t('formats.filter.noAmount')}</p>
       ) : (
         <>
-          <ul className="flex flex-col" aria-label={`The ${kind} it is in`}>
+          <ul className="flex flex-col" aria-label={column.type === 'money' ? t('formats.filter.currencyIn') : t('formats.filter.unitIn')}>
             {units.map((each) => (
               <li key={each.unit}>
                 <label className="flex h-7 cursor-pointer items-center gap-2 px-1 select-none hover:bg-accent-soft">
@@ -874,7 +899,7 @@ function RangeBody({
                     <Bidi>{each.unit}</Bidi>
                     <span className="text-ink-secondary tabular-nums">
                       {' '}
-                      · {each.least} to {each.most}
+                      · {t('formats.filter.range', { least: each.least, most: each.most })}
                     </span>
                   </span>
                   <span className="text-ink-secondary tabular-nums">{counted(each.count)}</span>
@@ -883,12 +908,12 @@ function RangeBody({
             ))}
           </ul>
           <div className="flex gap-2">
-            {end('From', from, setFrom, 'from')}
-            {end('To', to, setTo, 'to')}
+            {end(t('formats.filter.from'), t('formats.filter.fromOf', { name: column.name }), from, setFrom, 'from')}
+            {end(t('formats.filter.to'), t('formats.filter.toOf', { name: column.name }), to, setTo, 'to')}
           </div>
         </>
       )}
-      {empty > 0 && <p className="text-caption text-ink-secondary">{counted(empty)} with none.</p>}
+      {empty > 0 && <p className="text-caption text-ink-secondary">{t(countKey('formats.filter.withNone', empty), { count: counted(empty) })}</p>}
     </>
   )
 }

@@ -39,7 +39,10 @@ import {
   workedOutType,
   type ShowAs,
 } from '@/domain/format/view.ts'
+import { useT, type Translate } from '@/i18n/current.ts'
+import { countKey } from '@/i18n/count.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { membersOfDraft } from '@/domain/format/rowDraft.ts'
 import { AddMember, isPercentFigure, Markdown, MARKED, PickMenu, Shown, type Part, type ShownColumn } from './EntryValue.tsx'
 import { FileField, FileLink } from './FileLink.tsx'
@@ -115,6 +118,7 @@ export function NewLinkForm({
   onAdd: () => void
   onCancel: () => void
 }) {
+  const t = useT()
   const { made, refusals } = making
   const one = made.format.title.toLowerCase()
   const fields = [...(made.named === undefined ? [] : [made.named]), ...made.asks]
@@ -123,7 +127,7 @@ export function NewLinkForm({
     <div
       data-new-link
       role="group"
-      aria-label={`New ${one}`}
+      aria-label={t('formats.entry.newOne', { one })}
       className="flex min-w-72 flex-col gap-3 border-t border-hairline pt-3"
       onKeyDown={(event) => {
         if (event.key !== 'Escape') return
@@ -133,7 +137,7 @@ export function NewLinkForm({
       }}
     >
       <p className="fc-label">
-        New <Bidi>{one}</Bidi>
+        <Phrase text={t('formats.entry.newOne')} parts={{ one: <Bidi>{one}</Bidi> }} />
       </p>
       {fields.map((column, at) => {
         const way = entryWayOf(column, undefined, false)
@@ -178,10 +182,10 @@ export function NewLinkForm({
       ))}
       <span className="flex gap-2">
         <Button size="sm" onClick={onAdd}>
-          Add
+          {t('formats.rows.add')}
         </Button>
         <Button size="sm" variant="ghost" onClick={onCancel}>
-          Cancel
+          {t('formats.table.cancel')}
         </Button>
       </span>
     </div>
@@ -363,6 +367,7 @@ export function EntryView({
   /** Open a row of a format in this same view. */
   onOpen: (format: string, id: string) => void
 }) {
+  const t = useT()
   // The Fields list (M53 U2): this view's order, what it shows, and what a new
   // entry asks for — where the Arrange mode was.
   const [fieldsOpen, setFieldsOpen] = useState(false)
@@ -395,11 +400,11 @@ export function EntryView({
     setFocusing(undefined)
     // The first field a problem is said at, in the page's order (M55 U5).
     const at = page.current?.querySelector(focusing === FIRST_PROBLEM ? '.fc-problem' : `[data-field="${CSS.escape(focusing)}"]`)
-    const control = at?.querySelector<HTMLElement>('input, textarea, select, button:not([aria-label$=": more"]), [tabindex="0"]')
+    const control = at?.querySelector<HTMLElement>('input, textarea, select, button:not([data-more]), [tabindex="0"]')
     if (control === null || control === undefined) return
     control.focus()
     // A menu, or a way drawn until pressed, opens as the mockup's field does.
-    if (control instanceof HTMLButtonElement && (control.getAttribute('aria-haspopup') === 'menu' || control.getAttribute('aria-label')?.endsWith(': change') === true)) {
+    if (control instanceof HTMLButtonElement && (control.getAttribute('aria-haspopup') === 'menu' || control.hasAttribute('data-change'))) {
       control.click()
     }
   }, [focusing])
@@ -590,8 +595,8 @@ export function EntryView({
             type="button"
             onClick={list.onToggle}
             aria-pressed={!list.hidden}
-            aria-label={list.hidden ? 'Show the list' : 'Hide the list'}
-            title={list.hidden ? 'Show the list' : 'Hide the list'}
+            aria-label={t(list.hidden ? 'formats.entry.showList' : 'formats.entry.hideList')}
+            title={t(list.hidden ? 'formats.entry.showList' : 'formats.entry.hideList')}
             className={`-ms-2 hidden h-7 w-7 items-center justify-center text-ink-secondary hover:bg-surface hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent lg:inline-flex ${
               list.hidden ? '' : 'bg-surface text-ink shadow-[inset_0_0_0_1px_var(--color-hairline-strong)]'
             }`}
@@ -611,7 +616,7 @@ export function EntryView({
         </button>
         {fresh ? (
           <h1 className="m-0 text-body font-medium">
-            A new <Bidi>{one}</Bidi>
+            <Phrase text={t('formats.entry.newTitle')} parts={{ one: <Bidi>{one}</Bidi> }} />
           </h1>
         ) : (
           pager !== undefined && (
@@ -620,13 +625,13 @@ export function EntryView({
                 list !== undefined && !list.hidden ? 'lg:hidden' : ''
               }`}
             >
-              <PagerStep label="Previous" to={pager.previous} onOpen={(id) => onOpen(declaration.name, id)}>
+              <PagerStep label={t('formats.entry.previous')} to={pager.previous} onOpen={(id) => onOpen(declaration.name, id)}>
                 <path d="m15 18-6-6 6-6" />
               </PagerStep>
               <span className="tabular-nums">
-                {pager.at} of {pager.of}
+                {t('formats.entry.of', { at: pager.at, count: pager.of })}
               </span>
-              <PagerStep label="Next" to={pager.next} onOpen={(id) => onOpen(declaration.name, id)}>
+              <PagerStep label={t('formats.entry.next')} to={pager.next} onOpen={(id) => onOpen(declaration.name, id)}>
                 <path d="m9 18 6-6-6-6" />
               </PagerStep>
             </span>
@@ -636,16 +641,16 @@ export function EntryView({
           <span className="max-w-prose text-caption text-ink-secondary">{locked}</span>
         )}
         <span className="ms-auto flex items-center gap-1.5">
-          {deleted ?? (written !== undefined && <span className="text-caption text-ink-secondary">Written {written}</span>)}
+          {deleted ?? (written !== undefined && <span className="text-caption text-ink-secondary">{t('formats.entry.written', { time: written })}</span>)}
           {!readOnly && ordered.some((column) => column !== layout.title) && (
             <FieldsList
               open={fieldsOpen}
               setOpen={setFieldsOpen}
               sections={[
-                { label: 'Line under the title', columns: layout.header },
-                { label: 'Figures', columns: layout.figures },
-                { label: 'Text', columns: layout.texts },
-                { label: 'Links', columns: layout.links },
+                { label: t('formats.entry.sections.header'), columns: layout.header },
+                { label: t('formats.entry.sections.figures'), columns: layout.figures },
+                { label: t('formats.entry.sections.text'), columns: layout.texts },
+                { label: t('formats.entry.sections.links'), columns: layout.links },
               ]}
               isHidden={isHidden}
               hideable={hideable}
@@ -659,7 +664,7 @@ export function EntryView({
               onReset={() => onOrder(undefined)}
             />
           )}
-          {onDelete !== undefined && <DeleteAtOnce label={deleteLabel ?? 'Delete'} onDelete={onDelete} />}
+          {onDelete !== undefined && <DeleteAtOnce label={deleteLabel ?? t('formats.deleteFormat.confirm')} onDelete={onDelete} />}
         </span>
       </div>
 
@@ -681,7 +686,7 @@ export function EntryView({
                 <Concerns findings={findings} id={existing} onOpen={(id) => onOpen(declaration.name, id)} />
               )}
               {hasFigures && (
-                <section className="flex flex-col gap-3.5" aria-label="Figures">
+                <section className="flex flex-col gap-3.5" aria-label={t('formats.entry.sections.figures')}>
                   {(figures.length > 0 || workedOut.length > 0 || folded.length > 0) && (
                     <div className="grid grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-x-6 gap-y-4">
                       {figures.map((column) => field(column, 'figure'))}
@@ -716,17 +721,17 @@ export function EntryView({
                 // **The Empty line** (M53 U3, U1's choice a): one line of names at
                 // the foot, after a hairline — each opens its field where it
                 // belongs, focused — and "N hidden" at its end (U2).
-                <div className="flex flex-wrap items-center gap-1 border-t border-hairline pt-3.5" aria-label="Empty">
+                <div className="flex flex-wrap items-center gap-1 border-t border-hairline pt-3.5" aria-label={t('formats.entry.emptyLine')}>
                   {!readOnly && shown.empty.length > 0 && (
                     <>
-                      <span className="fc-label me-2 text-ink-secondary">Empty</span>
+                      <span className="fc-label me-2 text-ink-secondary">{t('formats.entry.emptyLine')}</span>
                       {shown.empty.map((column) => (
                         <button
                           key={column.name}
                           type="button"
                           data-tour={`empty-${column.name}`}
-                          aria-label={`Fill ${entryLabel(column)}`}
-                          title={describe(column)}
+                          aria-label={t('formats.entry.fill', { name: entryLabel(column) })}
+                          title={describe(column, t)}
                           className="inline-flex h-6 items-center gap-1 px-2 text-caption text-ink-secondary hover:bg-surface hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
                           onClick={() => open(column.name, true)}
                         >
@@ -745,15 +750,39 @@ export function EntryView({
                       aria-pressed={revealed}
                       onClick={() => setRevealed(!revealed)}
                     >
-                      {revealed ? 'Hide again' : `${String(shown.hidden)} hidden`}
+                      {revealed ? t('formats.entry.hideAgain') : t(countKey('formats.entry.hidden', shown.hidden), { count: shown.hidden })}
                     </button>
+                  )}
+                </div>
+              )}
+              {/* **Add under the fields** (M64 F10, D-627): where the eye already is,
+                  never a band at the foot of the window. */}
+              {fresh && !readOnly && (
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                  <Button variant="primary" icon="add" onClick={add}>
+                    {t('formats.rows.add')}
+                  </Button>
+                  <Button variant="ghost" onClick={onBack}>
+                    {t('formats.table.cancel')}
+                  </Button>
+                  {tried && problems.length > 0 && (
+                    // The fields say their own; the foot counts them and says what is
+                    // about the row as a whole (M55 U5, D-545).
+                    <span className="text-caption text-negative" role="alert" data-tour="refusal">
+                      {[
+                        ...(fieldProblems === 0
+                          ? []
+                          : [t(countKey('formats.entry.notAdded', fieldProblems), { count: fieldProblems })]),
+                        ...problems.filter((each) => each.column === undefined).map((each) => each.reason),
+                      ].join(' ')}
+                    </span>
                   )}
                 </div>
               )}
             </div>
 
             {aside && (
-              <aside className="flex flex-col gap-6" aria-label="Links">
+              <aside className="flex flex-col gap-6" aria-label={t('formats.entry.sections.links')}>
                 {linkColumns.map((column) => field(column, 'links'))}
                 {/* A new entry has no "Links here": nothing names it yet (U1's choice d). */}
                 {!fresh && (
@@ -765,7 +794,7 @@ export function EntryView({
                       labels={named?.labels ?? labels}
                     />
                     <p className="border-t border-hairline pt-2.5 text-caption text-ink-secondary" role="note">
-                      One hop each way. A name opens that row here.
+                      {t('formats.entry.oneHop')}
                     </p>
                   </>
                 )}
@@ -775,28 +804,6 @@ export function EntryView({
         </div>
       </div>
 
-      {fresh && !readOnly && (
-        <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-t border-hairline bg-elevated px-6 py-2.5">
-          <Button variant="primary" icon="add" onClick={add}>
-            Add
-          </Button>
-          <Button variant="ghost" onClick={onBack}>
-            Cancel
-          </Button>
-          {tried && problems.length > 0 && (
-            // The fields say their own; the foot counts them and says what is
-            // about the row as a whole (M55 U5, D-545).
-            <span className="text-caption text-negative" role="alert" data-tour="refusal">
-              {[
-                ...(fieldProblems === 0
-                  ? []
-                  : [`Not added: ${fieldProblems === 1 ? 'one field to put right' : `${String(fieldProblems)} fields to put right`}.`]),
-                ...problems.filter((each) => each.column === undefined).map((each) => each.reason),
-              ].join(' ')}
-            </span>
-          )}
-        </div>
-      )}
     </div>
   )
 }
@@ -831,22 +838,30 @@ function PagerStep({
   )
 }
 
-/**
- * The look of a field on the page: no box until it is pointed at or typed in,
- * so a filled entry reads as text. The sheet's `FIELD` with its border and
- * plane taken away, rather than a second look of its own.
- */
 /** What `focusing` holds to focus the first refused field on the page, wherever it is. */
-const FIRST_PROBLEM = ' first problem'
+const FIRST_PROBLEM = ' first-problem'
 
+/**
+ * The look of a field on the page: **a hairline under it at rest**, the box
+ * drawn when it is pointed at and the accent when it is typed in — the amount
+ * input's treatment, so a filled entry still reads as text and an empty one
+ * reads as a form (M64 F10, D-627; it was no edge at all until pointed at,
+ * D-294, and a new entry's fields could not be found).
+ */
 const SEAMLESS =
-  'min-h-8 -mx-2 border border-transparent bg-transparent px-2 py-0.5 outline-none ' +
-  'hover:border-hairline focus:border-accent focus:bg-elevated ' +
+  'min-h-8 -mx-2 border border-transparent border-b-hairline-strong bg-transparent px-2 py-0.5 outline-none ' +
+  'hover:border-hairline-strong focus:border-accent focus:bg-elevated ' +
   'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent'
 
 /**
+ * A figure's field as wide as what is in it (or its placeholder), so the figure
+ * sits by its name rather than at the far end of a wide box (M64 F10).
+ */
+const HUG = 'min-w-16 [field-sizing:content]'
+
+/**
  * **One column on the entry**: its name over its value — or beside it, in the
- * header line — with no box until the value is pointed at (D-294). The glyph
+ * header line — a hairline under it at rest and the box when pointed at (D-294, D-627). The glyph
  * beside the name, on hover, is how the column is shown (M35 U2's pick: on the
  * field, not in Arrange; M35 U3, D-402: Show as).
  */
@@ -917,6 +932,7 @@ export function Field({
   onChoose: (way: ShowAs) => void
   onOpen: (format: string, id: string) => void
 }) {
+  const t = useT()
   const [focused, setFocused] = useState(false)
   // **A refused field is outlined and named there** (M55 U5, D-545): every
   // control in it is `aria-invalid` and described by the sentence under it —
@@ -979,7 +995,7 @@ export function Field({
     )
   const hiddenTag = dimmed && (
     <span className="border border-dashed border-hairline-strong px-1 text-label text-ink-secondary uppercase">
-      hidden
+      {t('formats.entry.hiddenTag')}
     </span>
   )
   const name = (
@@ -987,10 +1003,10 @@ export function Field({
       {grabbed(
         <span
           className={`fc-label ${part === 'header' ? 'text-ink-secondary' : ''}`}
-          title={describe(column)}
+          title={describe(column, t)}
         >
           <Bidi>{label}</Bidi>
-          {column.required && empty && <span className="ms-1 text-ink-secondary normal-case">needed</span>}
+          {column.required && empty && <span className="ms-1 text-ink-secondary normal-case">{t('formats.entry.needed')}</span>}
         </span>,
       )}
       {hiddenTag}
@@ -1033,7 +1049,7 @@ export function Field({
   const hint =
     hinted && focused && !readOnly && TYPED.has(way) && column.type !== 'boolean' ? (
       <span className="text-label text-ink-secondary">
-        {fresh ? 'Kept as typed until Add' : 'Enter or leaving the field writes it · Esc puts it back'}
+        {t(fresh ? 'formats.entry.hintFresh' : 'formats.entry.hintWrites')}
       </span>
     ) : null
 
@@ -1155,9 +1171,10 @@ function ShowAsMenu({
   onChoose: (way: ShowAs) => void
   mover?: Mover | undefined
 }) {
+  const t = useT()
   const box = useRef<HTMLSpanElement>(null)
   const dismissKey = useDismiss(open, box, () => setOpen(false))
-  const label = mover === undefined ? `Show ${name} as` : `${name}: more`
+  const label = mover === undefined ? t('formats.entry.showAs', { name }) : t('formats.entry.more', { name })
   const ways = offered.length > 1
   const act = (then: () => void) => () => {
     setOpen(false)
@@ -1172,6 +1189,7 @@ function ShowAsMenu({
         aria-label={label}
         title={label}
         aria-expanded={open}
+        data-more={mover === undefined ? undefined : ''}
         className={`inline-flex h-5 w-5 items-center justify-center text-ink-tertiary hover:text-ink focus-visible:opacity-100 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent ${open ? 'opacity-100' : 'opacity-0 group-hover/field:opacity-100 group-hover/worked:opacity-100'}`}
         onClick={() => setOpen(!open)}
       >
@@ -1188,7 +1206,7 @@ function ShowAsMenu({
         >
           {ways && (
             <span className="fc-label px-3 pt-1.5 pb-1 text-ink-secondary">
-              Show <Bidi>{name}</Bidi> as
+              <Phrase text={t('formats.entry.showAs')} parts={{ name: <Bidi>{name}</Bidi> }} />
             </span>
           )}
           {ways && offered.map((each) => (
@@ -1212,7 +1230,7 @@ function ShowAsMenu({
           ))}
           {ways && (
             <span className="mt-1 max-w-[260px] border-t border-hairline px-3 pt-2 pb-1 text-caption text-ink-secondary">
-              For every <Bidi>{one}</Bidi>, in this view. Kept beside the declaration.
+              <Phrase text={t('formats.entry.forEvery')} parts={{ one: <Bidi>{one}</Bidi> }} />
             </span>
           )}
           {mover !== undefined && (
@@ -1220,17 +1238,17 @@ function ShowAsMenu({
               {ways && <span className="my-1 h-px bg-hairline" role="separator" />}
               <button type="button" role="menuitem" className={item} disabled={mover.first} onClick={act(mover.onUp)}>
                 <span className="w-3.5" />
-                Move up
+                {t('formats.entry.moveUp')}
               </button>
               <button type="button" role="menuitem" className={item} disabled={mover.last} onClick={act(mover.onDown)}>
                 <span className="w-3.5" />
-                Move down
+                {t('formats.entry.moveDown')}
               </button>
               {mover.hideable && (
                 <button type="button" role="menuitem" className={item} onClick={act(mover.onHide)}>
                   <span className="inline-flex w-3.5 text-accent">{mover.hidden ? <EyeGlyph /> : <EyeGlyph off />}</span>
-                  {mover.hidden ? 'Show' : 'Hide'}
-                  <span className="ms-auto ps-3 text-caption text-ink-secondary">on this entry view</span>
+                  {t(mover.hidden ? 'formats.entry.show' : 'formats.entry.hide')}
+                  <span className="ms-auto ps-3 text-caption text-ink-secondary">{t('formats.entry.onThisView')}</span>
                 </button>
               )}
             </>
@@ -1268,6 +1286,7 @@ function WorkedOut({
   marked: boolean
   onChoose: (way: ShowAs, offered: readonly ShowAs[]) => void
 }) {
+  const t = useT()
   const [menu, setMenu] = useState(false)
   const { name, expression } = each.compiled.declaration
   const percent = isPercentFigure(each, columns)
@@ -1302,9 +1321,9 @@ function WorkedOut({
         )}
       </span>
       {value.kind === 'EMPTY' ? (
-        <span className="flex min-h-8 items-baseline" title={`Empty: ${value.reason}`}>
+        <span className="flex min-h-8 items-baseline" title={t('formats.sheet.empty', { reason: value.reason })}>
           <span className="text-secondary-number font-medium text-ink-tertiary">—</span>
-          <span className="ms-1 text-label text-ink-secondary normal-case">computed</span>
+          <span className="ms-1 text-label text-ink-secondary normal-case">{t('formats.entry.computed')}</span>
         </span>
       ) : (
         <span className={`flex min-w-0 ${figureWay ? 'items-baseline' : 'items-center gap-1'}`} title={`= ${expression}`}>
@@ -1319,7 +1338,7 @@ function WorkedOut({
             marked={marked}
             worked={figureWay ? expression : undefined}
           />
-          {!figureWay && <span className="text-label text-ink-secondary normal-case">computed</span>}
+          {!figureWay && <span className="text-label text-ink-secondary normal-case">{t('formats.entry.computed')}</span>}
         </span>
       )}
     </section>
@@ -1340,6 +1359,7 @@ function workedOutText(value: DerivedValue, percent: boolean): { readonly value:
 
 /** A total over the rows naming this one (D-397): worked out too, with its sentence on hover. */
 function Folded({ each, marked }: { each: RowAggregate; marked: boolean }) {
+  const t = useT()
   const { aggregate, value } = each
   return (
     <section className="flex min-w-0 flex-col gap-1" aria-label={aggregate.name}>
@@ -1350,7 +1370,7 @@ function Folded({ each, marked }: { each: RowAggregate; marked: boolean }) {
         <span className={`text-secondary-number font-medium tabular-nums ${marked ? MARKED : ''}`}>
           {value.kind === 'UNCHECKED' ? <span className="text-ink-tertiary">—</span> : aggregateFigure(value)}
         </span>
-        <span className="ms-1 text-label text-ink-secondary normal-case">computed</span>
+        <span className="ms-1 text-label text-ink-secondary normal-case">{t('formats.entry.computed')}</span>
       </span>
     </section>
   )
@@ -1372,13 +1392,14 @@ function Verdicts({
   units: UnitTable
   columns: readonly ColumnDeclaration[]
 }) {
+  const t = useT()
   // M39: a claim whose verdict changed while this entry is open is marked
   // once, keyed by the claim's name (src/ui/motion/useMark.ts).
   const changes = useChanges(
     verdicts.map((each) => [each.identity.name, each.verdict.kind] as const),
   )
   return (
-    <div className="flex flex-col gap-2.5" aria-label="Claims">
+    <div className="flex flex-col gap-2.5" aria-label={t('formats.list.head.claims')}>
       {verdicts.map((each) => {
         const weighed = inputs === undefined ? undefined : weighIdentity(each.identity, inputs, units)
         // A check over percents alone is said in percents (D-402): the row
@@ -1431,10 +1452,11 @@ function Verdicts({
 
 /** A claim's verdict, as a chip — marked once when it changes (M39). */
 function VerdictChip({ kind, tone, marked }: { kind: RowVerdict['verdict']['kind']; tone: string; marked: number | undefined }) {
+  const t = useT()
   const mark = useMark<HTMLSpanElement>(marked, kind === 'FAILED' ? 'negative' : kind === 'PROVED' ? 'positive' : 'neutral')
   return (
     <span ref={mark} className={`inline-flex h-5 items-center border px-2 text-label font-medium ${tone}`}>
-      {kind === 'PROVED' ? 'proved' : kind === 'FAILED' ? 'failed' : 'unchecked'}
+      {t(kind === 'PROVED' ? 'formats.sheet.proved' : kind === 'FAILED' ? 'formats.sheet.failed' : 'formats.sheet.unchecked')}
     </span>
   )
 }
@@ -1453,29 +1475,35 @@ function Concerns({
   id: string
   onOpen: (id: string) => void
 }) {
+  const t = useT()
   const lines = findings.flatMap((finding, at): ReactNode[] => {
     switch (finding.kind) {
       case 'LINK_GAP':
         return [
           <li key={at}>
-            <Bidi>{entryLabel({ name: finding.column })}</Bidi> is empty here, where {finding.filled}{' '}
-            {finding.filled === 1 ? 'row names' : 'rows name'} a <Bidi>{finding.target}</Bidi>.
+            <Phrase
+              text={t(countKey('formats.entry.linkGap', finding.filled), { count: finding.filled })}
+              parts={{ column: <Bidi>{entryLabel({ name: finding.column })}</Bidi>, target: <Bidi>{finding.target}</Bidi> }}
+            />
           </li>,
         ]
       case 'DUPLICATE': {
         const others = finding.rows.filter((row) => row.id !== id)
         return [
           <li key={at}>
-            The same in every column as{' '}
-            {others.map((row, index) => (
-              <span key={row.id}>
-                {index > 0 && ', '}
-                <button type="button" className="text-accent hover:underline" onClick={() => onOpen(row.id)}>
-                  <Bidi>{row.name}</Bidi>
-                </button>
-              </span>
-            ))}
-            .
+            <Phrase
+              text={t('formats.entry.sameAs')}
+              parts={{
+                rows: others.map((row, index) => (
+                  <span key={row.id}>
+                    {index > 0 && ', '}
+                    <button type="button" className="text-accent hover:underline" onClick={() => onOpen(row.id)}>
+                      <Bidi>{row.name}</Bidi>
+                    </button>
+                  </span>
+                )),
+              }}
+            />
           </li>,
         ]
       }
@@ -1485,8 +1513,8 @@ function Concerns({
   })
   if (lines.length === 0) return null
   return (
-    <section aria-label="What looks wrong" className="fc-pop-enter flex flex-col gap-1">
-      <span className="text-label text-negative uppercase">What looks wrong</span>
+    <section aria-label={t('formats.audit.title')} className="fc-pop-enter flex flex-col gap-1">
+      <span className="text-label text-negative uppercase">{t('formats.audit.title')}</span>
       <ul className="space-y-0.5 text-caption text-ink">{lines}</ul>
     </section>
   )
@@ -1577,6 +1605,7 @@ function FieldsList({
   onAsk: (column: ColumnDeclaration) => void
   onReset: () => void
 }) {
+  const t = useT()
   const box = useRef<HTMLSpanElement>(null)
   const dismissKey = useDismiss(open, box, () => setOpen(false))
   // The row Alt+Up or Alt+Down just moved, focused again once it is drawn in its new place.
@@ -1586,7 +1615,7 @@ function FieldsList({
     box.current?.querySelector<HTMLElement>(`[data-field-row="${CSS.escape(stepped)}"]`)?.focus()
     setStepped(undefined)
   })
-  const label = 'Fields: order, shown, new entry'
+  const label = t('formats.entry.fieldsLabel')
   const grid = 'grid grid-cols-[20px_minmax(0,1fr)_28px_56px] items-center gap-1.5 px-2.5'
   return (
     <span ref={box} className="relative inline-flex" onKeyDown={dismissKey}>
@@ -1607,14 +1636,14 @@ function FieldsList({
       {open && (
         <div
           role="dialog"
-          aria-label="Fields"
+          aria-label={t('formats.entry.fields')}
           className="fc-pop-enter absolute top-full end-0 z-30 mt-1 w-[340px] max-w-[calc(100vw-32px)] border border-hairline-strong bg-elevated pt-1 pb-2 shadow-[var(--shadow-pop)]"
         >
           <div className={`${grid} h-6 text-label text-ink-secondary uppercase`} aria-hidden>
             <span />
-            <span>Field</span>
-            <span>Shown</span>
-            <span className="text-center">New entry</span>
+            <span>{t('formats.entry.head.field')}</span>
+            <span>{t('formats.entry.head.shown')}</span>
+            <span className="text-center">{t('formats.entry.head.newEntry')}</span>
           </div>
           {sections
             .filter((section) => section.columns.length > 0)
@@ -1631,7 +1660,7 @@ function FieldsList({
                       data-field-row={column.name}
                       draggable
                       tabIndex={0}
-                      aria-label={`${words}, Alt+Up or Alt+Down moves it`}
+                      aria-label={t('formats.entry.moveKeys', { name: words })}
                       className={`${grid} relative h-8 text-body hover:bg-surface focus-visible:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
                         drag.over === column.name && drag.accepts(column.name) ? 'shadow-[inset_0_2px_0_var(--color-accent)]' : ''
                       } ${drag.dragging === column.name ? 'opacity-40' : ''}`}
@@ -1671,23 +1700,25 @@ function FieldsList({
                       <span className={`flex min-w-0 items-baseline ${off ? 'text-ink-secondary' : ''}`}>
                         <Bidi className="min-w-0 truncate">{words}</Bidi>
                         {needed ? (
-                          <span className="ms-1.5 shrink-0 text-label text-ink-secondary">needed</span>
+                          <span className="ms-1.5 shrink-0 text-label text-ink-secondary">{t('formats.entry.needed')}</span>
                         ) : (
-                          holds(column) && <span className="ms-1.5 shrink-0 text-label text-ink-secondary">holds a value</span>
+                          holds(column) && <span className="ms-1.5 shrink-0 text-label text-ink-secondary">{t('formats.entry.holdsValue')}</span>
                         )}
                       </span>
                       <button
                         type="button"
                         disabled={!hideable(column)}
-                        aria-label={`${off ? 'Show' : 'Hide'} ${words}`}
+                        aria-label={t(off ? 'formats.entry.showName' : 'formats.entry.hideName', { name: words })}
                         title={
-                          !hideable(column)
-                            ? needed
-                              ? 'A needed field is always shown'
-                              : 'The title is always shown'
-                            : off
-                              ? 'Hidden: click to show'
-                              : 'Shown: click to hide'
+                          t(
+                            !hideable(column)
+                              ? needed
+                                ? 'formats.entry.neededShown'
+                                : 'formats.entry.titleShown'
+                              : off
+                                ? 'formats.entry.hiddenClick'
+                                : 'formats.entry.shownClick',
+                          )
                         }
                         className="inline-flex h-7 w-7 items-center justify-center text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent disabled:cursor-default disabled:opacity-35"
                         onClick={() => onHide(column)}
@@ -1700,7 +1731,7 @@ function FieldsList({
                           className="accent-[var(--color-ink)]"
                           checked={needed || asked.has(column.name)}
                           disabled={needed}
-                          aria-label={`Ask for ${words} on a new entry`}
+                          aria-label={t('formats.entry.askFor', { name: words })}
                           onChange={() => onAsk(column)}
                         />
                       </span>
@@ -1711,11 +1742,11 @@ function FieldsList({
             ))}
           <div className="mt-1.5 flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t border-hairline px-3 pt-2 text-label text-ink-secondary">
             <span className="min-w-0 flex-1">
-              Drag a field within its part to move it. A hidden field stays in the table and every tool.
+              {t('formats.entry.dragHow')}
             </span>
             {arranged && (
               <button type="button" className="text-accent hover:underline" onClick={onReset}>
-                The declaration’s order
+                {t('formats.entry.declaredOrder')}
               </button>
             )}
           </div>
@@ -1726,12 +1757,12 @@ function FieldsList({
 }
 
 /** What a column is, said when its name is pointed at rather than printed beside every field. */
-function describe(column: ColumnDeclaration): string {
+function describe(column: ColumnDeclaration, t: Translate): string {
   return [
     column.type,
     column.unit === undefined ? '' : ` · ${column.unit}`,
-    column.per === undefined ? '' : ` per ${column.per}`,
-    column.required ? ' · required' : '',
+    column.per === undefined ? '' : ` ${t('formats.entry.per', { per: column.per })}`,
+    column.required ? ` · ${t('formats.entry.required')}` : '',
     column.note === '' ? '' : ` — ${noteWords(column.note)}`,
   ].join('')
 }
@@ -1788,6 +1819,7 @@ function Control({
   onEnter: () => void
   onOpen: (format: string, id: string) => void
 }) {
+  const t = useT()
   // A way drawn until it is pressed, open on its field.
   const [open, setOpen] = useState(false)
   const value = draft[column.name] ?? ''
@@ -1859,7 +1891,7 @@ function Control({
         return (
           <span className="flex gap-2" onKeyDown={enter}>
             <input
-              className={`${SEAMLESS} ${way === 'large' ? 'w-44' : figure ? 'w-32' : 'w-40'} text-end tabular-nums ${big}`}
+              className={`${SEAMLESS} ${way === 'large' ? 'w-44' : `${HUG} ${figure ? 'max-w-32' : 'max-w-40'}`} text-end tabular-nums ${big}`}
               inputMode="decimal"
               aria-label={column.name}
               autoFocus={auto}
@@ -1880,7 +1912,7 @@ function Control({
         return (
           <span className="flex gap-1" onKeyDown={enter}>
             <input
-              className={`${SEAMLESS} ${figure ? 'w-24' : 'w-40'} text-end tabular-nums ${big}`}
+              className={`${SEAMLESS} ${HUG} ${figure ? 'max-w-24' : 'max-w-40'} text-end tabular-nums ${big}`}
               inputMode="decimal"
               aria-label={column.name}
               autoFocus={auto}
@@ -1945,9 +1977,9 @@ function Control({
               label={column.name}
               type={column.type}
               value={value}
-              placeholder={bounds(column)}
+              placeholder={bounds(column, t)}
               autoFocus={auto}
-              className={`${figure ? 'w-32' : 'w-40'} ${big}`}
+              className={`${HUG} ${figure ? 'max-w-32' : 'max-w-40'} ${big}`}
               onChange={set}
             />
             {column.unit !== undefined && <span className="text-caption text-ink-secondary">{column.unit}</span>}
@@ -1963,7 +1995,8 @@ function Control({
       return (
         <button
           type="button"
-          aria-label={`${column.name}: change`}
+          aria-label={t('formats.entry.change', { name: column.name })}
+          data-change=""
           className="-mx-2 flex w-[calc(100%+16px)] min-w-0 border border-transparent px-2 text-start hover:border-hairline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
           onClick={() => setOpen(true)}
         >
@@ -2026,8 +2059,8 @@ function Control({
           readOnly
           filter={false}
           aria-label={column.name}
-          text={labelOf(menuOf(column), value)}
-          choices={menuOf(column)}
+          text={labelOf(menuOf(column, t), value)}
+          choices={menuOf(column, t)}
           onText={() => undefined}
           onPick={(choice) => pick(choice.value)}
         />
@@ -2036,14 +2069,18 @@ function Control({
       // **The state as its chip, pressed for the members** — the header
       // line's look, and a pick that writes as it is made.
       return (
-        <PickMenu label={column.name} value={value} choices={menuOf(column)} tour={`field-${column.name}`} onPick={pick}>
-          {value === '' ? <span className="text-ink-secondary">Empty</span> : <StateChip member={value} />}
+        <PickMenu label={column.name} value={value} choices={menuOf(column, t)} tour={`field-${column.name}`} onPick={pick}>
+          {value === '' ? <span className="text-ink-secondary">{t('formats.entry.emptyValue')}</span> : <StateChip member={value} />}
         </PickMenu>
       )
     case 'word':
       return (
-        <PickMenu label={column.name} value={value} choices={menuOf(column)} onPick={pick}>
-          {value === '' ? <span className="text-ink-secondary">Empty</span> : <span>{value === 'true' ? 'Yes' : 'No'}</span>}
+        <PickMenu label={column.name} value={value} choices={menuOf(column, t)} onPick={pick}>
+          {value === '' ? (
+            <span className="text-ink-secondary">{t('formats.entry.emptyValue')}</span>
+          ) : (
+            <span>{t(value === 'true' ? 'formats.entry.yes' : 'formats.entry.no')}</span>
+          )}
         </PickMenu>
       )
     case 'buttons':
@@ -2134,6 +2171,7 @@ function LinkField({
   onPick: (text: string) => void
   onOpen: (format: string, id: string) => void
 }) {
+  const t = useT()
   const [changing, setChanging] = useState(false)
   const [typed, setTyped] = useState<string | undefined>(undefined)
   const [making, setMaking] = useState<Making | undefined>(undefined)
@@ -2181,7 +2219,7 @@ function LinkField({
   const resolved = choices.some((each) => each.id === value) || named(value) !== value
   if (value !== '' && !changing && target !== undefined && resolved) {
     const pencil = (
-      <IconAction label={`Change ${column.name}`} onClick={() => setChanging(true)}>
+      <IconAction label={t('formats.entry.changeLink', { name: column.name })} onClick={() => setChanging(true)}>
         <path d="M4 20h4L19 9l-4-4L4 16v4Z" />
       </IconAction>
     )
@@ -2219,7 +2257,7 @@ function LinkField({
       autoFocus={changing}
       aria-label={column.name}
       data-tour={`field-${column.name}`}
-      placeholder="Type to find one"
+      placeholder={t('formats.entry.typeToFind')}
       text={typed ?? (value === '' ? '' : named(value))}
       choices={all}
       onText={setTyped}
@@ -2291,6 +2329,7 @@ function TimeField({
   autoFocus?: boolean
   onKeyDown?: (event: React.KeyboardEvent<HTMLInputElement>) => void
 }) {
+  const t = useT()
   const picker = useRef<PickerHandle>(null)
   // `1430`, `2:30pm` — shown as `14:30` while typed, and that once left (D-344);
   // `tomorrow` shown as the day it names, and that once left.
@@ -2298,7 +2337,7 @@ function TimeField({
   return (
     <span className="relative inline-flex">
       <input
-        className={`${SEAMLESS} ${kind === 'time' ? 'w-32' : 'w-44'} tabular-nums`}
+        className={`${SEAMLESS} ${kind === 'time' ? 'w-32' : 'w-56'} tabular-nums`}
         autoFocus={autoFocus}
         onKeyDown={onKeyDown}
         style={typed.style}
@@ -2313,7 +2352,7 @@ function TimeField({
           if (settled !== event.target.value) onChange(settled)
         }}
         onClick={() => picker.current?.open()}
-        placeholder={kind === 'time' ? '09:00' : kind === 'date' ? 'YYYY-MM-DD or today' : 'YYYY-MM'}
+        placeholder={kind === 'time' ? '09:00' : t(kind === 'date' ? 'formats.entry.datePlaceholder' : 'formats.entry.monthPlaceholder')}
       />
       <TypedHint completion={typed.completion} />
       <NativePicker ref={picker} kind={kind} value={value} label={label} onPick={onChange} />
@@ -2378,6 +2417,7 @@ function Slider({
   value: string
   onChange: (text: string) => void
 }) {
+  const t = useT()
   const minimum = column.minimum ?? 0
   const maximum = column.maximum ?? 100
   const step =
@@ -2407,7 +2447,7 @@ function Slider({
         onChange={(event) => onChange(column.type === 'percent' ? `${event.target.value}%` : event.target.value)}
       />
       <FigureField
-        label={`${column.name}, typed`}
+        label={t('formats.entry.typed', { name: column.name })}
         type={column.type}
         value={value}
         placeholder="—"
@@ -2481,6 +2521,7 @@ function MarkdownField({
   label: string
   onChange: (text: string) => void
 }) {
+  const t = useT()
   const [writing, setWriting] = useState(false)
   const blocks = parseMarkdown(value)
   // A pack's entry, or a field put back to nothing by an undo elsewhere.
@@ -2493,7 +2534,7 @@ function MarkdownField({
       <GrowingText
         className={`${SEAMLESS} w-full resize-none font-mono text-caption leading-relaxed`}
         label={label}
-        placeholder="Markdown: # a heading, - a list, **bold**"
+        placeholder={t('formats.entry.markdownPlaceholder')}
         value={value}
         autoFocus
         onChange={onChange}
@@ -2506,7 +2547,7 @@ function MarkdownField({
     <div
       role={readOnly ? undefined : 'button'}
       tabIndex={readOnly ? undefined : 0}
-      aria-label={readOnly ? undefined : `Write ${label}`}
+      aria-label={readOnly ? undefined : t('formats.entry.write', { name: label })}
       className={`rounded-md border border-transparent px-2 py-1 ${readOnly ? '' : 'cursor-text hover:border-hairline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent'}`}
       onClick={() => setWriting(true)}
       onKeyDown={(event) => {
@@ -2517,7 +2558,7 @@ function MarkdownField({
       }}
     >
       {blocks.length === 0 ? (
-        <p className="text-ink-secondary">{readOnly ? '—' : 'Nothing written yet.'}</p>
+        <p className="text-ink-secondary">{readOnly ? '—' : t('formats.entry.nothingWritten')}</p>
       ) : (
         <Markdown blocks={blocks} />
       )}
@@ -2526,12 +2567,12 @@ function MarkdownField({
 }
 
 /** What a bounded number may be, as the placeholder rather than as a warning. */
-function bounds(column: ColumnDeclaration): string {
+function bounds(column: ColumnDeclaration, t: Translate): string {
   if (column.minimum !== undefined && column.maximum !== undefined) {
-    return `${String(column.minimum)} to ${String(column.maximum)}`
+    return t('formats.filter.range', { least: column.minimum, most: column.maximum })
   }
-  if (column.minimum !== undefined) return `${String(column.minimum)} or more`
-  if (column.maximum !== undefined) return `${String(column.maximum)} or less`
+  if (column.minimum !== undefined) return t('formats.entry.orMore', { bound: column.minimum })
+  if (column.maximum !== undefined) return t('formats.entry.orLess', { bound: column.maximum })
   return '—'
 }
 
@@ -2555,10 +2596,10 @@ export function cellText(value: ReadValue): string {
 }
 
 /** An enum's members or yes/no, with a way back to nothing. */
-function menuOf(column: ColumnDeclaration): readonly Choice[] {
+function menuOf(column: ColumnDeclaration, t: Translate): readonly Choice[] {
   const none = { value: '', label: '—' }
   if (column.type === 'boolean') {
-    return [none, { value: 'true', label: 'Yes' }, { value: 'false', label: 'No' }]
+    return [none, { value: 'true', label: t('formats.entry.yes') }, { value: 'false', label: t('formats.entry.no') }]
   }
   return [none, ...column.values.map((each) => ({ value: each, label: memberWords(each) }))]
 }

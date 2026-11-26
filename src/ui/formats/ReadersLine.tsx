@@ -1,5 +1,7 @@
 import { readerName, type Reader } from '@/domain/format/reader.ts'
+import { useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 
 /**
  * What this format is read from — its readers, by the file each last read.
@@ -9,18 +11,19 @@ import { Bidi } from '@/ui/Bidi.tsx'
  * screen — half a megabyte of a reader the frame never runs.
  */
 export function ReadersLine({ readers }: { readers: readonly Reader[] }) {
+  const t = useT()
   if (readers.length === 0) {
-    return <span className="text-caption text-ink-secondary">No readers yet</span>
+    return <span className="text-caption text-ink-secondary">{t('formats.table.noReaders')}</span>
   }
+  const names = readers.map((reader, index) => (
+    <span key={reader.signature}>
+      {index > 0 && ', '}
+      <Bidi className="text-ink-secondary">{readerName(reader)}</Bidi>
+    </span>
+  ))
   return (
     <span className="text-caption text-ink-secondary">
-      Read from{' '}
-      {readers.map((reader, index) => (
-        <span key={reader.signature}>
-          {index > 0 && ', '}
-          <Bidi className="text-ink-secondary">{readerName(reader)}</Bidi>
-        </span>
-      ))}
+      <Phrase text={t('formats.table.readFrom')} parts={{ readers: names }} />
     </span>
   )
 }
