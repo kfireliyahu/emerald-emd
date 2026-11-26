@@ -5387,6 +5387,16 @@ answer: A handle on the panel's inner edge (PanelEdge): drag it, or focus it and
 state: live
 affects: "src/ui/components/PanelEdge.tsx\nsrc/ui/usePanelWidth.ts\nsrc/ui/components/SidePanel.tsx\nsrc/ui/screens/ListDetail.tsx\nsrc/ui/theme/tokens.css"
 
+### D-645
+date: 2026-11-26
+milestone: M64
+scope: ui
+title: Closing a goal that still holds money asks, at its Close, whether the money was spent: spent, `closeGoal` records the withdrawal of what it holds in each holding (a typed money-out row whose why is *spent on the goal*) and closes it in one write, undoable; not spent, it closes and the money stays held; a goal's panel takes money out beside money in; `close_goals` is the conversation's half
+question: Once a goal's money is reached and spent, how does a person free it, and where?
+answer: On the goal: its panel takes money out (Money out, with a required why) beside money in, and its Close (the panel's Close goal or the row menu's Close this goal) asks, at that button, whether the money it holds was spent. Spent: one write records the withdrawal of what it holds in each holding, note 'Spent on {goal}', and closes it, with an Undo note where it was done. Not spent: it closes and the money stays held. A goal that follows its holding closes without the question. No table change. The row menu's Add a deposit is Record a movement. close_goals does the same in a conversation.
+state: live
+affects: "src/data/repositories/savingsRepository.ts\nsrc/ui/savings/GoalClose.tsx\nsrc/ui/screens/GoalDetail.tsx\nsrc/ui/screens/Goals.tsx\nsrc/plugin/tools/goalRhythm.ts"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -7024,6 +7034,15 @@ state: applied
 answered_by: D-643
 became_unit: M64 F71
 
+### M64 F72 built: a goal's panel takes money out, and closing a spent goal frees its money (D-645), to land
+from: F:/projects/emerald/.claude/worktrees/agent-a6d8dac0dfcaa2f17
+sent_on: 2026-11-26
+body: "M64 F72 is built on worktree-agent-a6d8dac0dfcaa2f17 at 9e0ec3f: the goal's panel has Money out (a required why) and Close goal; closing a goal that still holds money asks at its Close (the row menu's question in place, the panel's a popover at the button) whether it was spent; spent, closeGoal takes out what it holds and closes it in one write, with an Undo where it was done; the row menu's Add a deposit is Record a movement; close_goals is the conversation's half. docs:check is green but for D-645's row, which this landing writes.\n\n```json\n{\"unit\": \"M64 F72\", \"commit\": \"9e0ec3f\", \"branch\": \"worktree-agent-a6d8dac0dfcaa2f17\", \"files\": \"src/ui/savings/GoalClose.tsx\\nsrc/ui/screens/GoalDetail.tsx\\nsrc/ui/screens/Goals.tsx\\nsrc/data/repositories/savingsRepository.ts\\nsrc/plugin/tools/goalRhythm.ts\\nsrc/plugin/server.ts\\nsrc/plugin/catalog.ts\\nsrc/i18n/en/wealth.ts\\nsrc/i18n/he/wealth.ts\\nsrc/i18n/en/settings.ts\\nsrc/i18n/he/settings.ts\\nsrc/parity.test.ts\\ndocs/parity.md\\ndocs/redesign/budget.json\\ndocs/09-decision-log.md\\nREADME.md\\nscripts/npm-package.mjs\\nsrc/demo/page/copy/en.ts\", \"report\": \"Engine: closeGoal(db, goalId, {spent, asOf, note}) in savingsRepository is one write: spent, a typed MANUAL negative deposit per holding where the goal's movements (typed and fed) net above zero, note 'Spent on {goal}' in the person's language, then setGoalClosed, in one transaction; it refuses a spent close of a goal that follows its holding (D-357) while it holds money. goalHeld(db, goalId) is what it holds per holding. No table change: the deposit rows carry the withdrawal. Screen: GoalClose.tsx holds spentQuestionFor, useGoalClose (the close, and an Undo note with Ctrl+Z for 8 s that deletes exactly the withdrawals written and reopens) and CloseGoalButton (the panel's question at its button through useAskHere, D-642: Spent has the focus, Esc takes it back and the panel stays). GoalDetail: Close goal / Reopen beside Edit; Money out beside Set money aside and Was already there, labelled Took out with a required Why, saying when it is more than the goal holds; money-out rows wear a Money out tag and How the balance is made shows Taken out instead of a negative Set aside. Goals: the row menu's Close asks the same question in place of the menu (Spent / Not spent / Cancel), a goal holding nothing closes at once; the note sits under the waiting list; Add a deposit is Record a movement, 'Money in or out of it'. Conversation: close_goals (goalRhythm.ts), several goals a call, spent required when a goal holds money, reopen, dry-run first; the tool count is 88 (README, npm-package, the page's copy en.ts line 176, which is F71's path: one number). parity: setGoalClosed has its tool, LEDGER_WITHOUT_A_TOOL 65 -> 64, docs/parity.md regenerated. Budget: #/wealth/goals/:id actions 20 -> 22 (the two asked for). Tests: cushionRepository.test.ts (spent: the withdrawal, goalHeld empty, the cushion's left grows by the goal's money, the split ADDS_UP; not spent: nothing written, still a part), goalRhythm.test.ts (close_goals asks, takes out and closes, closes kept, reopens); vitest related on the changed files 176 files / 2038 tests green, parity, i18n, privacy, direction, surfaceRules, budget, toolCount green; typecheck green. year.emd: its own two goals sit in a hand-kept place, not a bank account's Cash, so the check added a goal of 4,000 to the checking account's Cash: before, the cushion's left 56,731.66 with Laptop 4,000 a part, ADDS_UP; spent and closed, left 60,731.66, no part, ADDS_UP, and the checking's own Cash is its whole statement again (26,579.66 -> 30,579.66). In the browser on year.emd (this worktree's server): the menu's question, Spent closing Trip to the coast with its note, the panel's Money out writing -2,000 'Car repair', Close goal -> Not spent ('stays held'), and Undo reopening, all as above. Taste: the question's why first said 'the bank stops keeping it', wrong for a goal kept at home; it now says 'taken out of the goal and no longer kept for it' (Words name the rule). Not done: no impeccable taste-review pass (a feature on an already redesigned screen); amounts in the question and note are exact (formatMoney), not the kit's whole figures.\", \"decisions\": [{\"ref\": \"D-645\", \"title\": \"Closing a goal that still holds money asks, at its Close, whether the money was spent: spent, `closeGoal` records the withdrawal of what it holds in each holding (a typed money-out row whose why is *spent on the goal*) and closes it in one write, undoable; not spent, it closes and the money stays held; a goal's panel takes money out beside money in; `close_goals` is the conversation's half\", \"question\": \"Once a goal's money is reached and spent, how does a person free it, and where?\", \"answer\": \"On the goal: its panel takes money out (Money out, with a required why) beside money in, and its Close (the panel's Close goal or the row menu's Close this goal) asks, at that button, whether the money it holds was spent. Spent: one write records the withdrawal of what it holds in each holding, note 'Spent on {goal}', and closes it, with an Undo note where it was done. Not spent: it closes and the money stays held. A goal that follows its holding closes without the question. No table change. The row menu's Add a deposit is Record a movement. close_goals does the same in a conversation.\", \"affects\": \"src/data/repositories/savingsRepository.ts\\nsrc/ui/savings/GoalClose.tsx\\nsrc/ui/screens/GoalDetail.tsx\\nsrc/ui/screens/Goals.tsx\\nsrc/plugin/tools/goalRhythm.ts\"}], \"review_entries\": [{\"do\": \"On the demo year.emd open Wealth > Goals, open Trip to the coast, press Money out and take out 500 with a why; then press Close goal and answer Spent. Open Emergency fund's row menu (the three dots) and choose Close this goal.\", \"should\": \"Money out sits beside Set money aside, asks why, and the row reads Money out; Close goal asks under the button whether the money was spent, and Spent closes it saying how much was taken out, with an Undo that brings it back; the row menu asks the same question in place of the menu. Wrong would be the question appearing anywhere but where you pressed, words that do not fit a goal kept at home, or Undo leaving a withdrawal behind.\"}], \"follow_ups\": [{\"kind\": \"unit\", \"ref\": \"M64 F79\", \"milestone\": \"M64\", \"state\": \"planned\", \"title\": \"The synthetic year saves one goal in a bank account\", \"brief\": \"year.emd's two goals (Emergency fund, Trip to the coast) sit in hand-kept places, never a bank account's Cash, so the cushion's split on the synthetic year has no goal in it and a spent goal freeing its money cannot be seen there (M64 F72 had to add one to check). Have scripts/demo-year.mjs save one goal in the checking account's Cash through the tools a conversation uses, and keep every tour and probe ceiling passing.\"}, {\"kind\": \"question\", \"ref\": \"M64 Q90\", \"state\": \"open\", \"question\": \"Closing a goal as spent dates its withdrawal today (M64 F72, D-645). Should the question also ask the day it was bought, so a goal closed weeks after the purchase takes its money out in the right month?\"}]}\n```"
+refs: M64 F72
+state: applied
+answered_by: D-645
+became_unit: M64 F72
+
 ### M64 F9 landing proposal: the formats screens say every word through the catalogue, en and he (D-627)
 from: F:/projects/emerald/docs/memory.emd
 sent_on: 2026-11-26
@@ -7970,6 +7989,10 @@ state: open
 
 ### M64 Q9
 question: PaycheckEditor, ReconciliationStrip and DeductionTypeSelect (the slip's form, shared with U7's reading flow) still carry inline English and are not in the translated set; they need a unit of their own, coordinated with whoever owns the reading flow.
+state: open
+
+### M64 Q90
+question: Closing a goal as spent dates its withdrawal today (M64 F72, D-645). Should the question also ask the day it was bought, so a goal closed weeks after the purchase takes its money out in the right month?
 state: open
 
 ### Many-valued link
@@ -9413,6 +9436,11 @@ state: open
 ### On the demo year.emd open Home and click Came in; drag the panel's left edge (it turns green under the pointer) toward the page, then close the panel, open Went out, and restart the app. Double-click the edge. Then open a fund on Wealth › Funds and drag its pane's edge.
 unit: M64 F69
 should: The panel widens as you drag and stops at half the window; the next panel and the app after a restart open at the width you left; a double-click puts it back to its usual width; the fund's pane widens too. Wrong would be one width for every panel when you wanted each its own, a floor or ceiling that surprises you, or the edge being hard to find.
+state: open
+
+### On the demo year.emd open Wealth > Goals, open Trip to the coast, press Money out and take out 500 with a why; then press Close goal and answer Spent. Open Emergency fund's row menu (the three dots) and choose Close this goal.
+unit: M64 F72
+should: Money out sits beside Set money aside, asks why, and the row reads Money out; Close goal asks under the button whether the money was spent, and Spent closes it saying how much was taken out, with an Undo that brings it back; the row menu asks the same question in place of the menu. Wrong would be the question appearing anywhere but where you pressed, words that do not fit a goal kept at home, or Undo leaving a withdrawal behind.
 state: open
 
 ### On the synthetic year.emd open Transactions, click a row, press Make a rule for this merchant, then Make the rule; then press Open in Rules. On By merchant, open a merchant's menu (right-click) and choose Write a rule for...
@@ -19506,9 +19534,12 @@ report: A new kit piece, PanelEdge (src/ui/components/), sits on a panel's inlin
 milestone: M64
 scope: ui
 title: Every screen fills the window's width
-state: planned
+state: in_progress
 brief: **Do.** Maintainer, 2026-11-26: "make sure everything take up full dynamic width in general (old fault ive found is the roadmap)". Every route fills the window as it widens and narrows: no fixed cap holds a page's frame, a board, a roadmap or a table narrow, and a chart grows with its column. Find every cap (max-w-*, maxWidth, fixed widths on frames) and remove the ones that hold a screen narrow; where a line of prose would grow unreadably long, the prose alone keeps its measure while its screen fills. The roadmap (project.emd, #/formats/milestone/roadmap) first. Check with probe:screens on year, custom and project at 1280 and at a wide window (1920), light and dark, and that the budget still passes.
 files: src/ui/formats/
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 paths: src/ui/
 
 ### M64 F71
@@ -19531,13 +19562,24 @@ report: Layout, section by section: rail = index of words (was the app's roadmap
 milestone: M64
 scope: ui
 title: A goal's panel takes money out, and closing a spent goal frees its money
-state: in_progress
+landed: 2026-11-26
+decision: D-645
+state: built
 brief: **Do.** Maintainer, 2026-11-26, asking what to do once a goal saved in the bank is reached and spent ("i saved up for x, and bought it. what am i meant to do with that goal, how can i free that money"), then: "where am i meant to do that? i dont see add a movement or record withdrawal when im on the goal side bar". Today the goal's panel (GoalDetail) offers only Set aside and Already there; money out is reached from the Goals row menu's "Add a deposit" then "Money out", and Close leaves the goal's deposits held in the bank's split (goalParts counts closed goals), so the cushion stays short until a withdrawal is recorded. Build: (1) the panel takes money out where it takes money in, said as what it is (money out, with its why), for a goal whose money is typed; a followed goal keeps its sentence that its holding's transfers are its movements. (2) "I spent it": closing a goal that still holds money asks, at the Close button and never in a bar at the bottom, whether that money was spent, and on yes records the withdrawal of what it holds (why: spent on the goal) and closes it in one write, undoable; on no it closes and the money stays held, said so. (3) The row menu's "Add a deposit" is named for what it opens (a movement, in or out). Follow .claude/skills/redesign-screen/SKILL.md (D-617). Check on .demo/year.emd: a goal saved in the bank, spent and closed, leaves the cushion with its money back and the bank's split adding up.
-files: src/ui/screens/GoalDetail.tsx src/ui/screens/Goals.tsx src/ui/savings/DepositEditor.tsx src/data/repositories/savingsRepository.ts
+files: "src/ui/savings/GoalClose.tsx\nsrc/ui/screens/GoalDetail.tsx\nsrc/ui/screens/Goals.tsx\nsrc/data/repositories/savingsRepository.ts\nsrc/plugin/tools/goalRhythm.ts\nsrc/plugin/server.ts\nsrc/plugin/catalog.ts\nsrc/i18n/en/wealth.ts\nsrc/i18n/he/wealth.ts\nsrc/i18n/en/settings.ts\nsrc/i18n/he/settings.ts\nsrc/parity.test.ts\ndocs/parity.md\ndocs/redesign/budget.json\ndocs/09-decision-log.md\nREADME.md\nscripts/npm-package.mjs\nsrc/demo/page/copy/en.ts"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-a6d8dac0dfcaa2f17
+commit: 9e0ec3f
 paths: src/ui/screens/GoalDetail.tsx src/ui/screens/Goals.tsx src/ui/savings/ src/i18n/
+report: Engine: closeGoal(db, goalId, {spent, asOf, note}) in savingsRepository is one write: spent, a typed MANUAL negative deposit per holding where the goal's movements (typed and fed) net above zero, note 'Spent on {goal}' in the person's language, then setGoalClosed, in one transaction; it refuses a spent close of a goal that follows its holding (D-357) while it holds money. goalHeld(db, goalId) is what it holds per holding. No table change: the deposit rows carry the withdrawal. Screen: GoalClose.tsx holds spentQuestionFor, useGoalClose (the close, and an Undo note with Ctrl+Z for 8 s that deletes exactly the withdrawals written and reopens) and CloseGoalButton (the panel's question at its button through useAskHere, D-642: Spent has the focus, Esc takes it back and the panel stays). GoalDetail: Close goal / Reopen beside Edit; Money out beside Set money aside and Was already there, labelled Took out with a required Why, saying when it is more than the goal holds; money-out rows wear a Money out tag and How the balance is made shows Taken out instead of a negative Set aside. Goals: the row menu's Close asks the same question in place of the menu (Spent / Not spent / Cancel), a goal holding nothing closes at once; the note sits under the waiting list; Add a deposit is Record a movement, 'Money in or out of it'. Conversation: close_goals (goalRhythm.ts), several goals a call, spent required when a goal holds money, reopen, dry-run first; the tool count is 88 (README, npm-package, the page's copy en.ts line 176, which is F71's path: one number). parity: setGoalClosed has its tool, LEDGER_WITHOUT_A_TOOL 65 -> 64, docs/parity.md regenerated. Budget: #/wealth/goals/:id actions 20 -> 22 (the two asked for). Tests: cushionRepository.test.ts (spent: the withdrawal, goalHeld empty, the cushion's left grows by the goal's money, the split ADDS_UP; not spent: nothing written, still a part), goalRhythm.test.ts (close_goals asks, takes out and closes, closes kept, reopens); vitest related on the changed files 176 files / 2038 tests green, parity, i18n, privacy, direction, surfaceRules, budget, toolCount green; typecheck green. year.emd: its own two goals sit in a hand-kept place, not a bank account's Cash, so the check added a goal of 4,000 to the checking account's Cash: before, the cushion's left 56,731.66 with Laptop 4,000 a part, ADDS_UP; spent and closed, left 60,731.66, no part, ADDS_UP, and the checking's own Cash is its whole statement again (26,579.66 -> 30,579.66). In the browser on year.emd (this worktree's server): the menu's question, Spent closing Trip to the coast with its note, the panel's Money out writing -2,000 'Car repair', Close goal -> Not spent ('stays held'), and Undo reopening, all as above. Taste: the question's why first said 'the bank stops keeping it', wrong for a goal kept at home; it now says 'taken out of the goal and no longer kept for it' (Words name the rule). Not done: no impeccable taste-review pass (a feature on an already redesigned screen); amounts in the question and note are exact (formatMoney), not the kit's whole figures.
+
+### M64 F79
+milestone: Later
+scope: ui
+title: The synthetic year saves one goal in a bank account
+state: planned
+brief: year.emd's two goals (Emergency fund, Trip to the coast) sit in hand-kept places, never a bank account's Cash, so the cushion's split on the synthetic year has no goal in it and a spent goal freeing its money cannot be seen there (M64 F72 had to add one to check). Have scripts/demo-year.mjs save one goal in the checking account's Cash through the tools a conversation uses, and keep every tour and probe ceiling passing.
 
 ### M64 F9
 milestone: M64
