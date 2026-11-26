@@ -230,7 +230,7 @@
       "screens": 1.0
     },
     "#/formats/unit/board": {
-      "words": 183,
+      "words": 170,
       "blocks": 1,
       "figures": 0,
       "actions": 34,
@@ -238,7 +238,7 @@
       "screens": 1.1
     },
     "#/formats/card_charge/list": {
-      "words": 64,
+      "words": 60,
       "blocks": 1,
       "figures": 0,
       "actions": 15,
@@ -250,7 +250,7 @@
       "blocks": 1,
       "figures": 0,
       "actions": 23,
-      "colours": 9,
+      "colours": 8,
       "screens": 1.0
     },
     "#/formats/milestone/roadmap": {
@@ -262,7 +262,7 @@
       "screens": 1.1
     },
     "#/formats/unit/ready": {
-      "words": 81,
+      "words": 78,
       "blocks": 2,
       "figures": 0,
       "actions": 13,
@@ -278,7 +278,7 @@
       "screens": 1.0
     },
     "#/dashboard": {
-      "words": 17,
+      "words": 14,
       "blocks": 1,
       "figures": 0,
       "actions": 2,
@@ -294,7 +294,7 @@
       "screens": 1.0
     },
     "#/connections": {
-      "words": 290,
+      "words": 265,
       "blocks": 3,
       "figures": 0,
       "actions": 94,
@@ -311,15 +311,6 @@
     }
   },
   "exempt": [
-    "#/formats/unit/board",
-    "#/formats/card_charge/list",
-    "#/formats/unit/list",
-    "#/formats/milestone/roadmap",
-    "#/formats/unit/ready",
-    "#/formats/card_charge/dashboard",
-    "#/dashboard",
-    "#/agenda",
-    "#/connections",
     "#/formats/card_charge/read"
   ],
   "tools": [

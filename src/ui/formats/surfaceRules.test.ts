@@ -498,12 +498,14 @@ describe('the views and dashboards, swept (M54 F3)', () => {
     expect(field).toMatch(/\n\s*filter\n/)
   })
 
-  // *A screen names itself*: one h1, on the title step.
-  it('heads each screen with one h1 on the title step', () => {
-    for (const path of ['src/ui/screens/Dashboard.tsx', 'src/ui/screens/Connections.tsx']) {
+  // *A screen names itself*: one h1, on the title step — and since M64 U14
+  // (D-626) its answer under it, one sentence at the lede step.
+  it('heads each screen with one h1 on the title step, and its answer under it', () => {
+    for (const path of ['src/ui/screens/Dashboard.tsx', 'src/ui/screens/Connections.tsx', 'src/ui/screens/FormatLinkViews.tsx']) {
       const source = readFileSync(path, 'utf8')
       expect(source.match(/<h1 /g)).toHaveLength(1)
-      expect(source).toMatch(/<h1 className="m-0 text-title">/)
+      expect(source).toMatch(/<h1 className="m-0 text-title leading-tight font-medium">/)
+      expect(source.match(/text-lede/g)).toHaveLength(1)
     }
     // Calendar is a Settings page since M64 U12 (D-624): its one h1 is the shared frame's.
     expect(readFileSync('src/ui/screens/Calendar.tsx', 'utf8')).toContain("<SettingsPage title={t('rail.calendar')}")

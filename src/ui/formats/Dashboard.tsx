@@ -51,6 +51,8 @@ import {
 } from '@/domain/format/view.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
+import { useT } from '@/i18n/current.ts'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { useDismiss } from '@/ui/components/useDismiss.ts'
@@ -118,7 +120,15 @@ import { today } from '@/ui/today.ts'
  * it alone) and the document's (`dashboard` absent — any format's, each saying
  * which under its title).
  */
-export function DashboardView({ dashboard }: { readonly dashboard: string | undefined }) {
+export function DashboardView({
+  dashboard,
+  answered = false,
+}: {
+  readonly dashboard: string | undefined
+  /** The screen already said there is nothing on it, as its answer: the empty state is the *Add a block* tile alone (M64 U14). */
+  readonly answered?: boolean
+}) {
+  const t = useT()
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
   const mutate = useDocumentStore((state) => state.mutate)
@@ -130,6 +140,12 @@ export function DashboardView({ dashboard }: { readonly dashboard: string | unde
   const [dragging, setDragging] = useState<string | undefined>(undefined)
   const [over, setOver] = useState<string | undefined>(undefined)
   const [refusal, setRefusal] = useState<string | undefined>(undefined)
+  /**
+   * **A block removed at once, with an Undo** (M64 U14, D-626, after D-617): the
+   * blocks as they were, and what the one that went is called. Removing a block
+   * loses nothing stored — the view or chart it drew stays — so it never asks.
+   */
+  const [removed, setRemoved] = useState<{ readonly before: readonly DashboardBlock[]; readonly name: string } | undefined>(undefined)
   const grid = useRef<HTMLDivElement>(null)
   const addButton = useRef<HTMLButtonElement>(null)
 
@@ -191,11 +207,27 @@ export function DashboardView({ dashboard }: { readonly dashboard: string | unde
     return undefined
   }
 
+  const undoRemove = (): void => {
+    if (removed === undefined) return
+    if (write(removed.before)) setRemoved(undefined)
+  }
+
   return (
     <div className="min-h-0 flex-1 overflow-auto">
+      {/* One line that keeps its place (M64 U6's, D-618): *Removed X · Undo*, near the blocks. */}
+      {removed !== undefined && (
+        <p className="m-0 flex items-baseline gap-3 px-6 pt-3 text-caption" role="status">
+          <span className="text-ink">
+            <Phrase text={t('views.dashboard.removed')} parts={{ name: <Bidi>{removed.name}</Bidi> }} />
+          </span>
+          <button type="button" className="fc-text-action" onClick={undoRemove} title={t('views.undoHint')}>
+            {t('views.undo')}
+          </button>
+        </p>
+      )}
       <div ref={grid} className="grid grid-cols-4 items-start gap-4 px-6 pt-5 pb-16 max-[720px]:grid-cols-2">
         {/* *An empty state is one sentence* and one text action (M54 F3). */}
-        {blocks.length === 0 && (
+        {blocks.length === 0 && !answered && (
           <p className="col-span-full pt-6 pb-2 text-ink-secondary">
             Nothing on this dashboard yet.
             {readOnly === undefined && (
@@ -239,7 +271,7 @@ export function DashboardView({ dashboard }: { readonly dashboard: string | unde
                 close()
               }}
               onRemove={() => {
-                write(blocks.filter((each) => !sameBlock(each, block)))
+                if (write(blocks.filter((each) => !sameBlock(each, block)))) setRemoved({ before: blocks, name: blockTitle(block) })
                 close()
               }}
               grid={grid}

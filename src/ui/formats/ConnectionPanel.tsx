@@ -1477,8 +1477,8 @@ function figureEdge(format: string, figure: string, over: AggregateSource): Edge
 /* -------------------------------------------------------------- the frame */
 
 const HEADLINE = 'm-0 mb-3.5 max-w-[60ch] text-heading'
-const ROWS = 'grid max-w-[760px] grid-cols-[132px_minmax(0,1fr)] items-start gap-x-4 gap-y-3 max-[620px]:grid-cols-1 max-[620px]:gap-y-1'
-const Q = 'pt-1.5 text-caption text-ink-secondary max-[620px]:pt-2'
+const ROWS = 'grid grid-cols-1 items-start gap-y-1'
+const Q = 'pt-2 text-caption text-ink-secondary'
 const A = 'flex min-w-0 flex-col gap-1.5'
 const SAY = 'm-0 max-w-[62ch] text-body leading-loose'
 const CAPTION = 'max-w-[56ch] text-caption text-ink-secondary'
@@ -1523,18 +1523,15 @@ function Relation({ many, one }: { many: string; one: string }) {
 }
 
 /**
- * The window's plane. It never takes the graph's whole height: past a little
- * over half it scrolls inside itself, so the bubbles it is about stay on the
- * screen (M29 F10 — at 600 pixels tall it pushed the bottom one out of view).
- * Each state passes its own `key`, so a confirm arriving in place of the window
- * pops in as the window itself did (M39 F1).
+ * The form's plane, inside the screen's side panel (M64 U14, D-626, after
+ * D-617): it was a band across the foot of the graph (M29 F10), and is now the
+ * panel's body, beside the bubbles it is about. Each state passes its own
+ * `key`, so a confirm arriving in place of the form pops in as the form itself
+ * did (M39 F1) — in the same panel, where its Delete was pressed.
  */
 function Frame({ children }: { children: ReactNode }) {
   return (
-    <div
-      data-connection-window
-      className="fc-pop-enter max-h-[55%] shrink-0 overflow-y-auto border-t border-hairline bg-elevated px-6 pt-4 pb-4 max-[620px]:px-4 max-[620px]:pt-3.5 max-[620px]:pb-4"
-    >
+    <div data-connection-window className="fc-pop-enter">
       {children}
     </div>
   )

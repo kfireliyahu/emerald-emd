@@ -50,6 +50,7 @@ import {
   setEntryInput,
   setEntryOrder,
   saveView,
+  dashboardBlocks,
 } from '@/data/repositories/formatViewRepository.ts'
 import { INPUT_KIND, inputDraft, inputViewRefusals, type InputShape } from '@/domain/format/inputView.ts'
 import {
@@ -126,7 +127,8 @@ import {
   inputPath,
 } from '@/ui/nav.ts'
 import { DashboardView } from '@/ui/formats/Dashboard.tsx'
-import { BoardView } from '@/ui/formats/BoardView.tsx'
+import { BoardView, boardAnswerOf } from '@/ui/formats/BoardView.tsx'
+import { dashboardAnswer, listAnswer } from '@/ui/formats/viewAnswers.ts'
 import {
   boardOf,
   entryNeedsEach,
@@ -1585,16 +1587,24 @@ export function FormatRows({
   // The claims' band is drawn once there is a claim to list (M64 U13).
   const hasClaims = declaration.identities.some((each) => each.expression.trim() !== '')
   const answer = [
-    filtered && data.refusal === undefined
+    // A board and a list answer their own question first (M64 U14, D-626):
+    // where each thing stands, and what is open and what is done.
+    dashboard
+      ? dashboardAnswer(t, dashboardBlocks(db, declaration.name).length)
+      : board && data.board !== undefined
+      ? boardAnswerOf(t, data.board.shape, data.board.rows)
+      : list && data.list !== undefined
+        ? listAnswer(t, data.list)
+        : filtered && data.refusal === undefined
       ? t(countKey('formats.table.matching', data.total), { count: data.total, total: data.entries })
       : data.entries === 0
         ? t('formats.table.answerNone')
         : t(countKey('formats.table.answer', data.entries), { count: data.entries }),
     // What looks wrong without being asked (D-396) is part of *are they right?*
-    ...(data.audit.findings.length === 0
+    ...(dashboard || data.audit.findings.length === 0
       ? []
       : [t(countKey('formats.table.lookWrong', data.audit.findings.length), { count: data.audit.findings.length })]),
-    ...(data.entries === 0
+    ...(data.entries === 0 || board || list || dashboard
       ? []
       : proof === undefined
         ? [t('formats.table.noClaims')]
@@ -1801,7 +1811,7 @@ export function FormatRows({
       {!dashboard && <WhatLooksWrong audits={[data.audit]} onOpen={(format, row) => navigate(entryPath(format, row))} />}
 
       {dashboard ? (
-        <DashboardView dashboard={declaration.name} />
+        <DashboardView dashboard={declaration.name} answered />
       ) : board && data.board !== undefined ? (
         <BoardView
           board={data.board.shape}

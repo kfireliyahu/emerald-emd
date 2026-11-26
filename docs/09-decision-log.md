@@ -525,6 +525,7 @@ written out here.
 | D-623 | 2026-11-26 | Categories, Rules and the Year are rebuilt as the report: each answers its question in a sentence first; the Year is where every month is read and opened (a month opens on Home); a category, a rule, a total and the built-in rules open beside the page; a rename is in place; merging and a delete that moves rows ask at their button; deleting an unused category or a rule and archiving happen at once with Undo where it happened | M64 |
 | D-624 | 2026-11-26 | The way in and around is the report: every Settings page and Assistants answer first in one sentence on a shared frame, Accounts reads as rows that open their form beside the page with a delete asked at its button, Assistants' tools open by group beside it, the front door and a document with no ledger say what to do in words with Open… added, the guide's first step names Read files and leaves its note where it stood, the waiting notice speaks only of what changes the month, and the palette says what it can do offline | M64 |
 | D-625 | 2026-11-26 | The engine's formats are the report: the formats list and a format's table each answer first in one sentence (how many kinds of things, how many rows and whether they are right), what waits is one strip below, the shape, a rule set's preview and a new view or chart open beside the rows, and a row deletes at once with Undo near it (the next entry opening after a delete from its entry) while a format's delete, which cannot be undone, asks at its button | M64 |
+| D-626 | 2026-11-26 | The engine's views are the report: the board, the list, the roadmap, ready, the agenda, the dashboards and the connections each answer their question first in one sentence at the lede step under the title; a card moves at once with Undo in the bar above the lanes, a dashboard's block is removed at once with Undo, and a connection opens as a form in the side panel beside the graph instead of a band across its foot | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1695,6 +1696,38 @@ of the screen is what the maintainer found strange.
 new engine write to restore a row (re-inserting with its id is the write the screen and the tools
 already share, so parity holds); turning the table's cursor Delete off (the sheet's stored rows are
 not edited in their cells, so Delete on a row means the row, as in a mail list).
+
+## D-626 · 2026-11-26 · The engine's views are the report: the board, the list, the roadmap, ready, the agenda, the dashboards and the connections each answer their question first in one sentence at the lede step under the title; a card moves at once with Undo in the bar above the lanes, a dashboard's block is removed at once with Undo, and a connection opens as a form in the side panel beside the graph instead of a band across its foot <a id="d-626"></a>
+
+**Context.** M64 U14 redesigned every view of a format beyond its table (board, list, roadmap, ready
+to start, its dashboard) and the document's dashboard, agenda and connections, on `project.emd` and
+`custom.emd`, after the formats and the table (D-625). The maintainer's words for this unit
+(2026-11-25): every view's delete, move and bulk action behaves as ordinary apps do — at once with an
+undo, a question only where no undo is possible and then at the button, never a bar at the foot of the
+screen. The connection window was exactly that bar.
+
+**Decision.** Each view says its answer first, at the lede step under the title, in the catalogue's
+words (`views.*`, `src/ui/formats/viewAnswers.ts`): the board how many cards in each lane (*3 planned
+and 4 built.*), the list how many are open and done, the roadmap its rows by state and each fold's rows
+done, ready how many can start and how many are held (what *ready* means on the answer's hover), the
+agenda what is overdue and how many rows lie ahead, a dashboard how many blocks it holds, connections
+how many formats and connections. On a board, a list and a dashboard the table's claim verdict leaves
+the sentence (a failing claim still shows in the table's own answer, one tab away); what looks wrong
+stays on the board and the list. Roadmap and ready carry the table's header (title, answer, one caption
+line), so a format's tab strip stays put between tabs; their in-view counts, kicker and the board's
+explanatory sentence are cut. **A card moves at once** and *Moved X to Y · Undo* (Ctrl+Z too) stands in
+the bar above the lanes, where a refused move says why instead of a band that pushed the lanes down. **A
+dashboard block is removed at once** with *Removed X · Undo* above the blocks. **A connection opens in the
+side panel** beside the graph, its delete asking inside that panel where its Delete was pressed; each
+connection in words is one line, its column on hover. The nine routes leave the budget's exempt list.
+
+**Why.** The answer first and the detail beside the page is the approved pattern (D-616, D-625); a move
+or a removal that can be put back needs no question, and a band across the foot of the screen is what
+the maintainer found strange.
+
+**Rejected.** Keeping the table's claim verdict in every view's sentence (it answers the table's
+question, not the board's); showing ready's rule as a caption (over the route's word budget, and the
+answer's hover says it); a confirmation before removing a dashboard block (nothing stored is lost).
 
 ## Related
 
