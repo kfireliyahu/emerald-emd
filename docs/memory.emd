@@ -5267,6 +5267,36 @@ answer: Each is a PanelForm in the SidePanel with the page behind it (replacing 
 state: live
 affects: "src/ui/components/PanelForm.tsx\nsrc/ui/components/SidePanel.tsx\nsrc/ui/funds/SnapshotEditor.tsx\nsrc/ui/funds/FundEditor.tsx\nsrc/ui/savings/GoalEditor.tsx\nsrc/ui/savings/DepositEditor.tsx\nsrc/ui/debts/DebtEditor.tsx\nsrc/ui/debts/PaymentEditor.tsx\nsrc/ui/screens/Funds.tsx\nsrc/ui/screens/FundDetail.tsx\nsrc/ui/screens/Goals.tsx\nsrc/ui/screens/Debts.tsx"
 
+### D-630
+date: 2026-11-26
+milestone: M64
+scope: ui
+title: The kit catches up with the screens: a small button is the 32px chrome row on the body step, a choice wears a chevron and is never the platform's select, a value-shaped ValueChoice replaces Rules' PickField, the side panel's first Esc leaves a field and focus returns to the latest opener, a figure keeps its sign in Hebrew, the waiting notice is never filled; and a paycheck by hand is a PanelForm in Paychecks' side panel: month, employer, gross and net first, whether it adds up said in words, the slip's lines only if wanted
+question: What do the kit and chrome owe every screen that U4-U9 found and left (13px small buttons, Esc and focus in the side panel, a choice that reads as a text field, platform selects, Hebrew signs and markers, ink-tertiary text, inline English), how are U4's two review entries on the filled buttons settled, where does PickField go, and how does adding a paycheck by hand become easy?
+answer: Button sm is 32px with its label on the body step, and Button forwards its ref. The waiting notice's Open Home is never filled; the primary stays the filled split tile (the rows win over comp A's hairline box). SELECT carries .fc-select, a chevron in ink-secondary drawn by two hard-edged halves; ValueChoice (PickField made the kit's, with MENU_MOST and make) is a ChoiceField over a stored value, and Rules, the test box, re-applying, New category, SelectOrNew (now taking choices with group headings), CategoryPicker's kind, PromotionPanel's cadence and debt and the deduction picker use the kit's choices; PickField is deleted. SidePanel: the first Esc in a field leaves the field, the next closes; focus returns to the last thing outside the panel that had it. WaitingList.say is a node. Amount is isolated LTR; .fc-row-on's marker is at the start edge in RTL. The kit's text leaves ink-tertiary. PromotionPanel's words are merchants.promotion (en, he), and its forms save on Enter; Home's Taxes opens Paychecks on that month with the tax panel. A paycheck by hand is a PanelForm in Paychecks' side panel (replacing D-620's page): month (MonthInput), employer (an autocomplete of known employers), gross and net (AmountInput); then ReconciliationSaid, whether it adds up said in words as typed, never blocking; the slip's lines only if wanted, one block each (deduction autocomplete grouped by kind with + New made in place, You, Employer, Base, a note on asking), a removed line gone at once with Undo; More about this paycheck (paid on, bonus, note). Saving closes it on the screen. A read slip is confirmed in the same fields on the reading flow's page (PaycheckEditor in FlowFrame).
+state: live
+affects: "src/ui/components/Button.tsx\nsrc/ui/components/SidePanel.tsx\nsrc/ui/components/ChoiceField.tsx\nsrc/ui/components/SelectOrNew.tsx\nsrc/ui/components/fieldLook.ts\nsrc/ui/components/PanelForm.tsx\nsrc/ui/theme/tokens.css\nsrc/ui/Notices.tsx\nsrc/ui/paychecks/PaycheckEditor.tsx\nsrc/ui/paychecks/ReconciliationStrip.tsx\nsrc/ui/paychecks/DeductionTypeSelect.tsx\nsrc/ui/screens/Paychecks.tsx\nsrc/ui/categorize/PromotionPanel.tsx"
+
+### D-631
+date: 2026-11-26
+milestone: M64
+scope: app
+title: Plan has a Year beside its month, as Home has: each bucket's year is the sum of its months — what each month's plan gave it against what it got, January through the last month that is over, on the plan each month is on and Home's month basis — said first in words with the categories apart from the goals and debts, each bucket a meter whose months open beside the page, a month nobody could measure left out of both sums, and `plan_month` with a `year` answering the same; Plan's bar runs from the inline start, so in Hebrew it mirrors with its drag and arrow keys while the ring stays a clock
+question: How does Plan show the year against the plan, and how does its bar read in Hebrew?
+answer: A Year tab beside Month: each month January through the last one over is worked out on the plan it is on and measured as one month (D-607); a bucket's year is the sum of its measurable months, an unmeasurable month out of both sums. The answer says the categories (over or under) apart from goals and debts (more or less), the categories' gap is the one display figure, each bucket is a PlanAgainst meter, red only for a category over its plan, and its months with a total open in the SidePanel. plan_month with year reads the same. The split bar runs from the inline start in Hebrew, drag and arrows mirrored; the ring keeps left to right.
+state: live
+affects: "src/ui/plan/PlanYear.tsx\nsrc/domain/planYear.ts\nsrc/data/repositories/planMonthRepository.ts\nsrc/plugin/tools/plan.ts\nsrc/ui/nav.ts\nsrc/ui/plan/PlanBar.tsx\ndocs/plugin.md\ndocs/redesign/budget.json"
+
+### D-632
+date: 2026-11-26
+milestone: Later
+scope: ui
+title: The engine's other views keep the format's one Add and one strip of controls, and say every word through the catalogue: Roadmap and Ready to start carry the table's Add behind the same refusal; the board's Lanes by, the roadmap's fold filters, In the order of, Columns and Fold all, and the ready list's Columns sit in one strip of the same classes under the tabs; a line or card left at its view's columns drops a state its group already says and a link its name already says; and a sentence the engine builds for a screen is a key and its parts, said by the screen
+question: How do a format's views other than the table keep its Add and controls, what does a line leave out, and how does an engine sentence reach Hebrew?
+answer: Roadmap and Ready carry the table's Add (rowWriteRefusalOnScreen, read-only copy), opening the default input view or a new entry. Controls are one VIEW_STRIP (BoardView.tsx) under the tabs on board, roadmap and ready; Columns is a text action like Fold all; the roadmap's fold filters live there. lineColumns.ts: chosenLines(..., grouped) drops the state chip when the ready state is one member; namedByRow drops a link whose words are whole words of the row's name (M2 in M2 U3); a chosen column is drawn regardless. Words: views, connections, dashboards, formats areas, en and he. A domain sentence returns Said<K> {key, parts} (view.ts) with literal key types, since src/domain/format imports nothing from src/i18n; English functions stay for the plugin, optional t defaults to English.
+state: live
+affects: "src/ui/formats/lineColumns.ts\nsrc/domain/format/view.ts\ndocs/redesign/budget.json"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -6589,6 +6619,14 @@ body: "M62 U1 spike done on claude/m62-spike-5ceb51 at b49cb49, never to be merg
 refs: M62 U1
 state: new
 
+### M64 F1 built: Plan's bar mirrors in Hebrew (D-631), to land
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-26
+body: "M64 F1 is built on worktree-agent-abb1633a690d0827d at 18f00c2: Plan's bar runs from the inline start, so in Hebrew it mirrors with its drag and arrow keys; the ring keeps dir=ltr. D-631 (written with F12's landing) covers it. docs:check is green but for D-631's row, which F12's landing writes.\n\n```json\n{\"unit\": \"M64 F1\", \"files\": \"src/ui/plan/PlanBar.tsx\", \"commit\": \"18f00c2\", \"branch\": \"worktree-agent-abb1633a690d0827d\", \"report\": \"PlanBar no longer forces dir=ltr in bar mode: segments flow from the inline start, the dividers' left is mirrored (total - end), a drag is measured from the track's right edge in RTL, the header band's connector polygon mirrors, and the arrow keys go through arrowStep (in Hebrew the left arrow grows the bucket, the right shrinks it; up/down stay grow/shrink). A segment's amount was drawn at the segment's left in Hebrew (tabular-nums is unicode-bidi plaintext in RTL), so it takes rtl:text-right to sit under its name. The ring and the bar-to-ring morph keep dir=ltr, so the morph starts from the unmirrored bar in Hebrew (Q47). Verified in this worktree's demo server in Hebrew on year.emd: ArrowLeft 150000->155000 with the divider moving left, ArrowRight back, ArrowDown shrinks; a 60px drag left grew Emergency fund 1,450->2,250 and the divider followed the pointer; axis reads 0 at the right. probe:screens --lang he on #/plan: english 0, budget passes. No kit file touched. Tests: related (190 files) green, typecheck, privacy, parity green; check:tours skipped, no tour passes Plan.\", \"review_entries\": [{\"do\": \"Switch the app to Hebrew, open Plan, drag a divider on the split's bar and press the left arrow on a focused divider.\", \"should\": \"The first bucket sits at the right edge and the money not given a job at the left; dragging a divider left grows the bucket to its right, and the left arrow does the same. Wrong would be a divider moving opposite the pointer, or the amounts drawn far from their names.\"}], \"follow_ups\": [{\"kind\": \"question\", \"ref\": \"M64 Q47\", \"state\": \"open\", \"question\": \"Plan's ring is a clock and stays left-to-right in Hebrew (M64 F1), so switching bar to ring in Hebrew morphs from an unmirrored bar: the segments jump sides for the length of the animation. Mirror the morph's starting bar (and so the ring's direction), or leave the ring a clock and accept the jump?\"}]}\n```"
+refs: M64 F1
+state: applied
+became_unit: M64 F1
+
 ### M64 F10 landing proposal: an entry and an input view read as a form (D-627)
 from: F:/projects/emerald/docs/memory.emd
 sent_on: 2026-11-26
@@ -6597,6 +6635,76 @@ refs: M64 F10
 state: applied
 answered_by: D-627
 became_unit: M64 F10
+
+### M64 F12 built: Plan's Year, each bucket's year against what its months planned (D-631), to land
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-26
+body: "M64 F12 is built on worktree-agent-abb1633a690d0827d at 1dcad6d: Plan has Month and Year tabs; the Year says the categories apart from the goals and debts, then each bucket as a meter of its year against the sum of its months' plans, its months beside the page; plan_month with a year answers the same. docs:check is green but for D-631's row, which this landing writes.\n\n```json\n{\"unit\": \"M64 F12\", \"files\": \"src/ui/plan/PlanYear.tsx\\nsrc/domain/planYear.ts\\nsrc/data/repositories/planMonthRepository.ts\\nsrc/data/repositories/planYear.test.ts\\nsrc/plugin/tools/plan.ts\\nsrc/plugin/tools/plan.test.ts\\nsrc/ui/nav.ts\\nsrc/ui/nav.test.ts\\nsrc/App.tsx\\nsrc/ui/plan/bucketGroups.ts\\nsrc/ui/screens/Plan.tsx\\nsrc/i18n/en/plan.ts\\nsrc/i18n/he/plan.ts\\nsrc/i18n/words.test.ts\\ndocs/redesign/budget.json\\ndocs/redesign/screens.md\\ndocs/plugin.md\\ndocs/09-decision-log.md\", \"commit\": \"1dcad6d\", \"branch\": \"worktree-agent-abb1633a690d0827d\", \"report\": \"Plan gains a tab strip from nav.ts, Month (#/plan) and Year (#/plan/year), as Home has; /plan is now a Section route. Domain: planYear (src/domain/planYear.ts, pure) sums months of PlanVersusActual bucket by bucket, a month a bucket cannot be measured in out of both sums and counted, a month in another currency left out; planYearByKind splits the totals into categories (spent) and goals and debts (into). Repository: planYearAgainstActual(db, year, asOf) works out each month January..min(last month over, December) on planOnMonth's plan and measures it with planAgainstActual (Home's month basis, D-607). Screen (src/ui/plan/PlanYear.tsx): the year in one or two sentences at the lede step (categories over/under what their months planned; goals and debts more/less than planned), the categories' gap as the one display figure, then each bucket as a PlanAgainst meter in the month's two columns (columnsOf moved to bucketGroups.ts and shared). Only a category over its plan is red; under/on is a note; a goal or debt says more/less; a bucket nothing measures shows its planned sum with 'Planned; nothing records what it got'. A bucket opens a SidePanel kickered with the span: one line of how many months over and under, then a table of month, planned, got, over or under, and a total row. The year pages back, forward only to the newest year with a month over. Keep/move/cut: nothing moved off Month; the Year is new. Interactions: a bucket opens its months in the SidePanel (Esc closes, verified); the pager pages years in place. Parity: plan_month gains year (a read, writes nothing) returning the same sentence split by kind and a row per bucket with its over/under months. Words in en and he (plan.year.*); PlanYear.tsx on the translated list. Probe on year.emd: #/plan/year 110 words, 3 blocks, 3 figures, 11 actions, 0 primary, 7 sizes, 10 colours, 1.1 screens, light and dark; --lang he english 0; new budget entry #/plan/year (130 words, 4 blocks, 4 figures, 14 actions, 11 colours, 1.5 screens), exit 0. Taste check (impeccable finish reviewer) fixes made: the answer no longer adds goal and debt over-deposits into overspending; 'left' replaced by under/on plan for a finished year; the unmeasured bucket's figure named as planned; the panel says more/less for goals and debts and has a total row; the panel's kicker is the span; the open year in ink beside the pager; one display figure; two columns instead of a 40rem column; Hebrew over word made chariga as the meters say it. Declined: none. Noted: PlanAgainst caps its fill at 100% so 105% and 213% look alike (F32, the kit's); the probe's long Hebrew shot of #/plan draws Hebrew letters reversed while the browser shows them right (F33). Tests: related (190 files, 2173 tests) green, typecheck, privacy, parity green; check:tours skipped, no tour passes Plan. ask-cold run with --question made 0 runs (the flag did not select a run); not judged.\", \"decisions\": [{\"ref\": \"D-631\", \"title\": \"Plan has a Year beside its month, as Home has: each bucket's year is the sum of its months — what each month's plan gave it against what it got, January through the last month that is over, on the plan each month is on and Home's month basis — said first in words with the categories apart from the goals and debts, each bucket a meter whose months open beside the page, a month nobody could measure left out of both sums, and `plan_month` with a `year` answering the same; Plan's bar runs from the inline start, so in Hebrew it mirrors with its drag and arrow keys while the ring stays a clock\", \"question\": \"How does Plan show the year against the plan, and how does its bar read in Hebrew?\", \"answer\": \"A Year tab beside Month: each month January through the last one over is worked out on the plan it is on and measured as one month (D-607); a bucket's year is the sum of its measurable months, an unmeasurable month out of both sums. The answer says the categories (over or under) apart from goals and debts (more or less), the categories' gap is the one display figure, each bucket is a PlanAgainst meter, red only for a category over its plan, and its months with a total open in the SidePanel. plan_month with year reads the same. The split bar runs from the inline start in Hebrew, drag and arrows mirrored; the ring keeps left to right.\", \"affects\": \"src/ui/plan/PlanYear.tsx\\nsrc/domain/planYear.ts\\nsrc/data/repositories/planMonthRepository.ts\\nsrc/plugin/tools/plan.ts\\nsrc/ui/nav.ts\\nsrc/ui/plan/PlanBar.tsx\\ndocs/plugin.md\\ndocs/redesign/budget.json\"}], \"review_entries\": [{\"do\": \"Open Plan and its Year tab on your own document, then open Groceries (or any category bucket) and a goal or debt bucket.\", \"should\": \"The first sentence says how far the categories went over or under what their months planned, and separately what went into goals and debts; each bucket's figure is its year so far against the sum of its months' plans, and its panel lists each month that adds up to that. Wrong would be a month counted that is not over yet, a bucket's year that does not match its months, or a goal reported as overspending.\"}], \"follow_ups\": [{\"kind\": \"unit\", \"ref\": \"M64 F32\", \"title\": \"PlanAgainst says how far past the plan a line went, not only that it did\", \"brief\": \"Found in M64 F12's taste check: PlanAgainst caps its fill at the plan, so a category at 105% and one at 213% draw the same full red bar, and a debt paid at 200% looks like a goal at 100%. Give the display a mark for past the plan (a tick at 100% and the overflow drawn, or the share in words) without changing what a line under its plan shows, in the kit's specimen first. Files: src/ui/charts/PlanAgainst.tsx, src/ui/charts/kit.ts. After M64 F2 (the kit rewrite).\"}, {\"kind\": \"unit\", \"ref\": \"M64 F33\", \"title\": \"The probe's long Hebrew shots draw Hebrew reversed\", \"brief\": \"probe:screens --lang he --shots on #/plan (year.emd) paints Hebrew with its letters in reverse order in the long page shot (the rail reads backwards), while #/plan/year's shot and the browser read correctly. Find what in scripts/probe-screens.mjs's full-length capture loses the bidi shaping (likely the stitched or resized capture of a page taller than the window) and fix it, so a taste check can judge a Hebrew screen from its shot. Files: scripts/probe-screens.mjs, src/ui/probe.ts.\"}, {\"kind\": \"question\", \"ref\": \"M64 Q45\", \"state\": \"open\", \"question\": \"Plan's Year adds each month on the plan that month is on (M64 F12), so a month given another plan is held against that plan's split. Should the Year instead follow the plan open on the Month tab, holding every month against it?\"}, {\"kind\": \"question\", \"ref\": \"M64 Q46\", \"state\": \"open\", \"question\": \"Plan's Year stops at the last month that is over (M64 F12): the month running now is left out so its half-spent buckets do not read as under. Should the running month be shown too, marked as so far?\"}]}\n```"
+refs: M64 F12
+state: applied
+answered_by: D-631
+became_unit: M64 F12
+
+### M64 F14 built: adding a paycheck by hand is easy, in the new design, to land
+from: F:/projects/emerald/.claude/worktrees/agent-af5bb55dd3b8408c1/docs/memory.emd
+sent_on: 2026-11-26
+body: "M64 F14 is built on worktree-agent-af5bb55dd3b8408c1 at e713d24: a paycheck by hand is a PanelForm in Paychecks' side panel. Decision D-630 (landed with M64 F2).\n\n```json\n{\"unit\": \"M64 F14\", \"commit\": \"e713d24\", \"branch\": \"worktree-agent-af5bb55dd3b8408c1\", \"decision\": \"D-630\", \"files\": \"src/ui/paychecks/PaycheckEditor.tsx\\nsrc/ui/paychecks/ReconciliationStrip.tsx\\nsrc/ui/paychecks/DeductionTypeSelect.tsx\\nsrc/ui/screens/Paychecks.tsx\\nsrc/ui/components/PanelForm.tsx\\nsrc/i18n/en/paychecks.ts\\nsrc/i18n/he/paychecks.ts\\ndocs/packs/ledger/06-navigation-and-screens.md\\ndocs/packs/ledger/f04-paycheck-tracking.md\", \"review_entries\": [{\"do\": \"Desktop app on this branch, year.emd, #/paychecks: All paychecks > Add by hand. Type gross and net, add a line from the slip (type 'pens' in Deduction), then Enter.\", \"should\": \"The form opens beside the page (the month stays): month, employer, gross and net first; one sentence under them says whether it adds up and changes as you type; lines appear only when added, with + New for a deduction the list lacks; More about this paycheck holds the paid-on day, bonus and note; Enter saves and the panel closes on November's paycheck.\", \"breaks\": \"Anything that still looks like the old page, a sentence that is wrong about the gap, or Esc closing the panel from inside a field (the first Esc only leaves the field).\", \"state\": \"open\"}], \"report\": \"PaycheckForm (PanelForm in Paychecks' SidePanel) and PaycheckEditor (the same PaycheckFields in FlowFrame for the reading flow, PayslipIntake unchanged) share usePaycheckDraft. ReconciliationSaid replaces the strip. DeductionTypeSelect is a ValueChoice autocomplete grouped by kind (translated headings, the slip's Hebrew as detail and search) with make -> kind asked in place; ReadSlips and SlipReview get it too. MonthInput added to PanelForm.tsx. Paychecks.tsx: the form takes the panel's place, saving returns to what was open, the page-scroll keeping is gone. Words paychecks.entry en/he; files on the translated and REVIEWED lists. Verified in the browser on year.emd: typing says '₪5,000.00 between gross and net…', a line typed 'pens' + Enter picks Pension and the sentence moves to ₪2,000 not itemized with 'Add ₪2,000.00 as Other deduction'; Esc in a field leaves it, the next Esc closes; Enter in Net saves, the page opens November 2026 and focus returns to Add by hand.\"}\n```"
+refs: M64 F14
+state: applied
+answered_by: D-630
+became_unit: M64 F14
+
+### M64 F17 landing proposal: Roadmap and Ready to start keep the format's Add, and the views' controls sit in one strip (D-632)
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-26
+body: "M64 F17 built on branch worktree-agent-aa49991c1bb6f79c6 at 1cc1a16: Roadmap and Ready to start carry the table's Add behind the same refusal, and the board's, roadmap's and ready list's controls sit in one strip under the tabs.\n\n```json\n{\"unit\": \"M64 F17\", \"commit\": \"1cc1a16\", \"branch\": \"worktree-agent-aa49991c1bb6f79c6\", \"files\": \"src/ui/screens/FormatLinkViews.tsx\\nsrc/ui/formats/LinkViews.tsx\\nsrc/ui/formats/BoardView.tsx\\nsrc/ui/formats/ColumnsChoice.tsx\\nsrc/ui/formats/FilterBand.tsx\\ndocs/redesign/budget.json\\ndocs/09-decision-log.md\", \"decisions\": [{\"ref\": \"D-632\", \"title\": \"The engine's other views keep the format's one Add and one strip of controls, and say every word through the catalogue: Roadmap and Ready to start carry the table's Add behind the same refusal; the board's Lanes by, the roadmap's fold filters, In the order of, Columns and Fold all, and the ready list's Columns sit in one strip of the same classes under the tabs; a line or card left at its view's columns drops a state its group already says and a link its name already says; and a sentence the engine builds for a screen is a key and its parts, said by the screen\", \"question\": \"How do a format's views other than the table keep its Add and controls, what does a line leave out, and how does an engine sentence reach Hebrew?\", \"answer\": \"Roadmap and Ready carry the table's Add (rowWriteRefusalOnScreen, read-only copy), opening the default input view or a new entry. Controls are one VIEW_STRIP (BoardView.tsx) under the tabs on board, roadmap and ready; Columns is a text action like Fold all; the roadmap's fold filters live there. lineColumns.ts: chosenLines(..., grouped) drops the state chip when the ready state is one member; namedByRow drops a link whose words are whole words of the row's name (M2 in M2 U3); a chosen column is drawn regardless. Words: views, connections, dashboards, formats areas, en and he. A domain sentence returns Said<K> {key, parts} (view.ts) with literal key types, since src/domain/format imports nothing from src/i18n; English functions stay for the plugin, optional t defaults to English.\", \"affects\": \"src/ui/formats/lineColumns.ts\\nsrc/domain/format/view.ts\\ndocs/redesign/budget.json\"}], \"review_entries\": [{\"do\": \"On project.emd open Milestone > Roadmap, then Unit > Board and Unit > Ready to start; switch between them and press Add on the roadmap.\", \"should\": \"Add is top right on every view and opens the unit's new entry; the strip under the tabs holds the same kind of controls in the same place on all three (Filter unit by… in full, In the order of, Columns, Fold all), and nothing jumps when switching.\"}], \"follow_ups\": [{\"ref\": \"M64 Q48\", \"kind\": \"question\", \"question\": \"The Add on Roadmap and Ready to start costs an action, a word and the filled colour, so their budget ceilings rose (roadmap actions 27 to 28, words 183 to 185, colours 8 to 9; ready colours 5 to 7, words and actions tightened to 70 and 12). Keep the raised ceilings, or should the roadmap give up something else to stay at 27 actions?\"}], \"report\": \"Roadmap and Ready to start now carry the format's primary Add (FormatLinkViews' Frame) behind the table's refusal, opening the default input view or entry/new. The board, roadmap and ready list draw their controls in one VIEW_STRIP under the tabs; the roadmap's fold ColumnFilter moved off the title row into it and is w-48 so 'Filter unit by…' is whole; Columns (ColumnsChoice) is a text action like Fold all and its popover is on the ramp (no 13px). A roadmap row's dot folds for the pointer only; the chevron is the one keyboard stop. probe:screens project.emd: roadmap 184 words / 28 actions / 1 primary, ready 66 / 11 / 1, board 149 / 34 / 1; budget raised for the Add on roadmap and ready (Q48). Tours: every tour played (10 runs). Shares the commit and D-632 with F18, F19, F20.\"}\n```"
+refs: M64 F17
+state: applied
+answered_by: D-632
+became_unit: M64 F17
+
+### M64 F18 landing proposal: the engine's views translated (D-632)
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-26
+body: "M64 F18 built on branch worktree-agent-aa49991c1bb6f79c6 at 1cc1a16: the board, list, roadmap, ready, agenda, dashboards and connections say their words through the catalogue, en and he.\n\n```json\n{\"unit\": \"M64 F18\", \"commit\": \"1cc1a16\", \"branch\": \"worktree-agent-aa49991c1bb6f79c6\", \"decision\": \"D-632\", \"files\": \"src/i18n/en/views.ts\\nsrc/i18n/he/views.ts\\nsrc/i18n/en/connections.ts\\nsrc/i18n/he/connections.ts\\nsrc/i18n/en/dashboards.ts\\nsrc/i18n/he/dashboards.ts\\nsrc/i18n/catalogue.ts\\nsrc/i18n/words.test.ts\\nsrc/ui/formats/BoardView.tsx\\nsrc/ui/formats/ListView.tsx\\nsrc/ui/formats/LinkViews.tsx\\nsrc/ui/screens/Agenda.tsx\\nsrc/ui/screens/Connections.tsx\\nsrc/ui/formats/ConnectionPanel.tsx\\nsrc/ui/formats/ConnectionGraph.tsx\\nsrc/ui/formats/Dashboard.tsx\\nsrc/ui/formats/RollupView.tsx\\nsrc/ui/formats/MakeBlock.tsx\\nsrc/ui/screens/FormatLinkViews.tsx\", \"review_entries\": [], \"follow_ups\": [{\"ref\": \"M64 F37\", \"kind\": \"unit\", \"milestone\": \"M64\", \"title\": \"The list's quick add and date cells, and the type tiles, say their words in Hebrew\", \"brief\": \"After M64 F18/F20 (D-632) the list's quick add placeholder ('Add a unit · planned', 'not done') is still built in English in src/ui/formats/listView.ts, and the list's date cell holds dueText's English, which ListView reads back into a key (dueSaidOf in view.ts) because listView.test.ts pins the cells with toEqual. Put a Said on the date cell and the placeholder in listView.ts (updating its test on purpose), drop dueSaidOf, pass t to linkedRowOf in FormatRows' linkedRows, and translate the type tiles and their group headings (vocabulary.ts TYPE_WORDS, typePicker.ts MORE_TYPES) and DIMENSIONS' names. Check with probe:screens --lang he on project.emd #/formats/unit/list and custom.emd's new-format screen.\", \"files\": \"src/ui/formats/listView.ts\\nsrc/ui/formats/listView.test.ts\\nsrc/domain/format/view.ts\\nsrc/ui/formats/vocabulary.ts\\nsrc/ui/formats/typePicker.ts\", \"paths\": \"src/ui/formats/listView.ts\\nsrc/ui/formats/listView.test.ts\\nsrc/ui/formats/ListView.tsx\\nsrc/domain/format/view.ts\\nsrc/ui/formats/vocabulary.ts\\nsrc/ui/formats/typePicker.ts\\nsrc/ui/screens/FormatRows.tsx\\nsrc/i18n/en/views.ts\\nsrc/i18n/he/views.ts\"}], \"report\": \"Every word of BoardView, ListView, LinkViews, Agenda, FormatLinkViews, ColumnsChoice (views area), Connections, ConnectionPanel, ConnectionGraph (new connections area) and Dashboard, RollupView, MakeBlock (new dashboards area) is t() in en and he; all are on words.test.ts's translated list and it passes; catalogue.test holds the Hebrew complete. probe:screens --lang he project.emd: board, roadmap and ready leave only the document's own words (members, column names, format titles); agenda only column names; dashboard 0; connections still 42, the sentences src/domain/format/connections.ts builds (F35). The list's quick add placeholder stays English (F37). English is unchanged but a block's height now counts '1 row'. Shares the commit and D-632 with F17, F19, F20.\"}\n```"
+refs: M64 F18
+state: applied
+answered_by: D-632
+became_unit: M64 F18
+
+### M64 F19 landing proposal: a view's rows stop repeating what their group says (D-632)
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-26
+body: "M64 F19 built on branch worktree-agent-aa49991c1bb6f79c6 at 1cc1a16: the ready list's rows drop the state their heading says, and a board card or a line drops a link its ref already names.\n\n```json\n{\"unit\": \"M64 F19\", \"commit\": \"1cc1a16\", \"branch\": \"worktree-agent-aa49991c1bb6f79c6\", \"decision\": \"D-632\", \"files\": \"src/ui/formats/lineColumns.ts\\nsrc/ui/formats/lineColumns.test.ts\\nsrc/ui/formats/LinkViews.tsx\\nsrc/ui/formats/BoardView.tsx\", \"review_entries\": [{\"do\": \"On project.emd open Unit > Ready to start and Unit > Board; then choose Columns and tick milestone and state.\", \"should\": \"Ready's rows show no PLANNED chip and no M2 beside M2 U3, a board card no M2 under its ref; once chosen under Columns, the milestone and state are drawn again.\"}], \"follow_ups\": [{\"ref\": \"M64 Q49\", \"kind\": \"question\", \"question\": \"A link is left out when its words are whole words of the row's name (M2 in M2 U3, never in M20 U1), and the ready list's state when its ready state is one member (with planned or in progress both ready, the chip stays). Is name-containment the right test for 'already said', or should a format declare which link its ref spells?\"}], \"report\": \"lineColumns.ts gains chosenLines(..., grouped) and namedByRow(column, text, name), with a test. ReadyView passes grouped when shape.members.ready has one member; RowLine's splitLines drops a link id whose label is whole words of the row's name when no Columns choice is made; BoardView's card drops such a link column the same way. What a person chose under Columns is drawn regardless. Seen in the probe's shot of project.emd's board: cards say only their session, not M2. Shares the commit and D-632 with F17, F18, F20.\"}\n```"
+refs: M64 F19
+state: applied
+answered_by: D-632
+became_unit: M64 F19
+
+### M64 F2 built: the kit and chrome catch up, to land
+from: F:/projects/emerald/.claude/worktrees/agent-af5bb55dd3b8408c1/docs/memory.emd
+sent_on: 2026-11-26
+body: "M64 F2 is built on worktree-agent-af5bb55dd3b8408c1 at e713d24, with F14 and F23 in the same commit. Decision D-630 (its row is in the landing). docs:check is green but for D-630's row, which this landing writes.\n\n```json\n{\"unit\": \"M64 F2\", \"commit\": \"e713d24\", \"branch\": \"worktree-agent-af5bb55dd3b8408c1\", \"files\": \"src/ui/components/Button.tsx\\nsrc/ui/components/SidePanel.tsx\\nsrc/ui/components/WaitingList.tsx\\nsrc/ui/components/Amount.tsx\\nsrc/ui/components/fieldLook.ts\\nsrc/ui/components/ChoiceField.tsx\\nsrc/ui/components/SelectOrNew.tsx\\nsrc/ui/components/CategoryPicker.tsx\\nsrc/ui/components/Field.tsx\\nsrc/ui/components/ContextMenu.tsx\\nsrc/ui/theme/tokens.css\\nsrc/ui/Notices.tsx\\nsrc/ui/categorize/PromotionPanel.tsx\\nsrc/ui/home/HomePanel.tsx\\nsrc/ui/savings/PlaceEditor.tsx\\nsrc/ui/screens/DeductionTypes.tsx\\nsrc/i18n/en/merchants.ts\\nsrc/i18n/he/merchants.ts\\nsrc/i18n/words.test.ts\\nsrc/ui/formats/surfaceRules.test.ts\\ndocs/09-decision-log.md\", \"decisions\": [{\"ref\": \"D-630\", \"date\": \"2026-11-26\", \"milestone\": \"M64\", \"scope\": \"ui\", \"state\": \"live\", \"title\": \"The kit catches up with the screens: a small button is the 32px chrome row on the body step, a choice wears a chevron and is never the platform's select, a value-shaped ValueChoice replaces Rules' PickField, the side panel's first Esc leaves a field and focus returns to the latest opener, a figure keeps its sign in Hebrew, the waiting notice is never filled; and a paycheck by hand is a PanelForm in Paychecks' side panel: month, employer, gross and net first, whether it adds up said in words, the slip's lines only if wanted\", \"question\": \"What do the kit and chrome owe every screen that U4-U9 found and left (13px small buttons, Esc and focus in the side panel, a choice that reads as a text field, platform selects, Hebrew signs and markers, ink-tertiary text, inline English), how are U4's two review entries on the filled buttons settled, where does PickField go, and how does adding a paycheck by hand become easy?\", \"answer\": \"Button sm is 32px with its label on the body step, and Button forwards its ref. The waiting notice's Open Home is never filled; the primary stays the filled split tile (the rows win over comp A's hairline box). SELECT carries .fc-select, a chevron in ink-secondary drawn by two hard-edged halves; ValueChoice (PickField made the kit's, with MENU_MOST and make) is a ChoiceField over a stored value, and Rules, the test box, re-applying, New category, SelectOrNew (now taking choices with group headings), CategoryPicker's kind, PromotionPanel's cadence and debt and the deduction picker use the kit's choices; PickField is deleted. SidePanel: the first Esc in a field leaves the field, the next closes; focus returns to the last thing outside the panel that had it. WaitingList.say is a node. Amount is isolated LTR; .fc-row-on's marker is at the start edge in RTL. The kit's text leaves ink-tertiary. PromotionPanel's words are merchants.promotion (en, he), and its forms save on Enter; Home's Taxes opens Paychecks on that month with the tax panel. A paycheck by hand is a PanelForm in Paychecks' side panel (replacing D-620's page): month (MonthInput), employer (an autocomplete of known employers), gross and net (AmountInput); then ReconciliationSaid, whether it adds up said in words as typed, never blocking; the slip's lines only if wanted, one block each (deduction autocomplete grouped by kind with + New made in place, You, Employer, Base, a note on asking), a removed line gone at once with Undo; More about this paycheck (paid on, bonus, note). Saving closes it on the screen. A read slip is confirmed in the same fields on the reading flow's page (PaycheckEditor in FlowFrame).\", \"affects\": \"src/ui/components/Button.tsx\\nsrc/ui/components/SidePanel.tsx\\nsrc/ui/components/ChoiceField.tsx\\nsrc/ui/components/SelectOrNew.tsx\\nsrc/ui/components/fieldLook.ts\\nsrc/ui/components/PanelForm.tsx\\nsrc/ui/theme/tokens.css\\nsrc/ui/Notices.tsx\\nsrc/ui/paychecks/PaycheckEditor.tsx\\nsrc/ui/paychecks/ReconciliationStrip.tsx\\nsrc/ui/paychecks/DeductionTypeSelect.tsx\\nsrc/ui/screens/Paychecks.tsx\\nsrc/ui/categorize/PromotionPanel.tsx\"}], \"accept_entries\": [\"Open Home on year.emd and read the notice bar\", \"Open the specimen page (#/specimen)\"], \"report\": \"Kit: sm button 32px on the body step (13px gone), Button forwardRef; .fc-select chevron on SELECT; ValueChoice in ChoiceField.tsx; SelectOrNew on ValueChoice with choices (PlaceEditor and DeductionTypes updated); SidePanel Esc-leaves-field-first and latest-opener focus; WaitingList.say ReactNode; Amount dir=ltr; .fc-row-on RTL marker; kit text off ink-tertiary; CategoryPicker kind as ChoiceMenu. Notices: Open Home never filled (U4's two entries settled: no fill on the bar, the filled split tile stays by the rows). PromotionPanel translated (merchants.promotion en/he), forms submit on Enter, names isolated with Phrase/Bidi. HomePanel Taxes -> /paychecks {month, panel:'tax'}. MonthStrip's open-month label measured on Paychecks (LTR and RTL, 1280 and 1400 with the panel): it stays inside the strip, so MonthStrip was not changed. Checks: typecheck; full suite 6000/6001 under load, the one a 15s timeout in src/plugin/tools/formats.test.ts that passes alone; probe:screens --budget on every budgeted route (year, project, custom) exit 0 with 0 low-contrast and 0 off-ramp; --lang he on paychecks, merchants, rules exit 0; check:tours 10 runs green. No taste-check subagent was run; the hand audit is in D-630.\", \"follow_ups\": [{\"kind\": \"unit\", \"ref\": \"M64 F29\", \"title\": \"The platform selects left outside the kit become ValueChoice\", \"brief\": \"After M64 F2 (D-630) the kit draws every choice, but ten files still draw the platform's <select> (now with the kit's chevron through .fc-select): src/ui/savings/PlaceEditor.tsx (kind, its cash), savings/HoldingEditor.tsx, fixed/FixedExpenseEditor.tsx (4), fixed/CandidateCard.tsx, debts/SplitPurchases.tsx, formats/WorkedOut.tsx (2), paychecks/FormatPicker.tsx, plan/PointsAt.tsx, screens/FeeImpact.tsx, transactions/DetailPanel.tsx (2). Move each to ValueChoice (filter past MENU_MOST, make for + New where the form makes one in place), keep a paste landing, and add the files to the REVIEWED list in src/ui/formats/surfaceRules.test.ts.\"}, {\"kind\": \"unit\", \"ref\": \"M64 F30\", \"title\": \"A new paycheck opens on the month that has none\", \"brief\": \"Paychecks' Add by hand (M64 F14, D-630) opens on blankDraft's previous month, and on the synthetic year that month (October) already has a slip, so the form opens saying 'October 2026 already has a paycheck'. Open it on the month after the newest slip when the previous month is taken (blankDraft in src/domain/paycheckEntry.ts or the caller in src/ui/screens/Paychecks.tsx), keep the note for a second slip typed on purpose, and test it.\"}]}\n```"
+refs: M64 F2
+state: applied
+
+### M64 F20 landing proposal: the formats' other views and the engine's sentences translated (D-632)
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-26
+body: "M64 F20 built on branch worktree-agent-aa49991c1bb6f79c6 at 1cc1a16: making a format, a column's questions, Show as, a range, the input view's sentences and the list's day words say their words through the catalogue; an engine sentence returns a key and its parts.\n\n```json\n{\"unit\": \"M64 F20\", \"commit\": \"1cc1a16\", \"branch\": \"worktree-agent-aa49991c1bb6f79c6\", \"decision\": \"D-632\", \"files\": \"src/domain/format/view.ts\\nsrc/domain/format/figureRange.ts\\nsrc/ui/formats/inputForm.ts\\nsrc/ui/formats/shape.ts\\nsrc/ui/formats/inputBlock.ts\\nsrc/ui/formats/InputBlock.tsx\\nsrc/ui/formats/IntakePanel.tsx\\nsrc/ui/formats/NewFormat.tsx\\nsrc/ui/formats/ColumnQuestions.tsx\\nsrc/ui/formats/EntryView.tsx\\nsrc/ui/formats/FilterBand.tsx\\nsrc/ui/formats/RowSheet.tsx\\nsrc/ui/screens/FormatRows.tsx\\nsrc/ui/screens/DeclaredFormats.tsx\\nsrc/i18n/en/formats.ts\\nsrc/i18n/he/formats.ts\\nsrc/i18n/words.test.ts\", \"review_entries\": [{\"do\": \"Settings > Language > Hebrew, then on project.emd open Unit's Board, List, Ready to start, Milestone's Roadmap, Agenda, Connections (open a connection) and a dashboard; on custom.emd make a new format.\", \"should\": \"Every word of the app is Hebrew and reads right to left; a member, a column's name or a format's title sits inside its Hebrew sentence without jumbling it. Still English on purpose: the document's own words, and the connections' sentences (F35).\"}], \"follow_ups\": [{\"ref\": \"M64 F35\", \"kind\": \"unit\", \"milestone\": \"M64\", \"title\": \"The connections' sentences say their words in Hebrew: what src/domain/format/connections.ts builds for the screen\", \"brief\": \"After M64 F18/F20 (D-632) #/connections still shows about 42 English sentences in Hebrew, all built in src/domain/format/connections.ts: the rows under 'Every connection, in words' (edgeWords), the panel's headline (headlineOf, edgeHeadline) and its NOTHING reason, and each column's or total's endpoint detail and hover from graphOf ('ref — text. Drag onto a format to make it a connection.'). Return a Said<K> (view.ts's pattern: literal key types, no import from src/i18n, boundary.test.ts) beside the English functions the plugin keeps, put the words in the connections area (src/i18n/en/connections.ts, he/connections.ts), and have Connections, ConnectionPanel and ConnectionGraph say them. Check with probe:screens --lang he --document project.emd --routes '#/connections'.\", \"files\": \"src/domain/format/connections.ts\\nsrc/ui/formats/ConnectionPanel.tsx\\nsrc/ui/formats/ConnectionGraph.tsx\\nsrc/i18n/en/connections.ts\", \"paths\": \"src/domain/format/connections.ts\\nsrc/ui/screens/Connections.tsx\\nsrc/ui/formats/ConnectionPanel.tsx\\nsrc/ui/formats/ConnectionGraph.tsx\\nsrc/i18n/en/connections.ts\\nsrc/i18n/he/connections.ts\"}, {\"ref\": \"M64 F36\", \"kind\": \"unit\", \"milestone\": \"M64\", \"title\": \"A dashboard's and an input block's own sentences say their words in Hebrew: the helpers in dashboard.ts, madeInPlace.ts and inputBlock.ts\", \"brief\": \"After M64 F18/F20 (D-632) a dashboard still says English built outside its screens: rollupSentence, rollupWords, blockWhat, ofText, savedWords and blockTitle in src/ui/formats/dashboard.ts, the filterText words, PERIOD_UNSAID and the refusal reasons in src/ui/formats/madeInPlace.ts and inputBlock.ts, and read.error.reason. Give each a t parameter (or a Said where a test or the plugin needs the English), put the words in the dashboards area (src/i18n/en/dashboards.ts, he/dashboards.ts), add the helper files to words.test.ts, and check with probe:screens --lang he on project.emd's #/dashboard and custom.emd's #/formats/card_charge/dashboard.\", \"files\": \"src/ui/formats/dashboard.ts\\nsrc/ui/formats/madeInPlace.ts\\nsrc/ui/formats/inputBlock.ts\\nsrc/i18n/en/dashboards.ts\", \"paths\": \"src/ui/formats/dashboard.ts\\nsrc/ui/formats/madeInPlace.ts\\nsrc/ui/formats/inputBlock.ts\\nsrc/ui/formats/Dashboard.tsx\\nsrc/ui/formats/MakeBlock.tsx\\nsrc/ui/formats/InputBlock.tsx\\nsrc/i18n/en/dashboards.ts\\nsrc/i18n/he/dashboards.ts\\nsrc/i18n/words.test.ts\"}, {\"ref\": \"M64 Q50\", \"kind\": \"question\", \"question\": \"The Hebrew for these views was written by sessions from the term rows, not a native reader: a connection is קשר, a dashboard's block is רכיב and Add a block הוספת רכיב, a headline total נתון ראשי, the agenda סדר היום, Lanes by קיבוץ לפי, Columns עמודות, rows of a format שורות ב־{format}. Read the board, the roadmap, a dashboard and the connections in Hebrew and say which words are wrong?\"}], \"report\": \"Domain sentences now return a key and its parts: view.ts exports Said<K> and showAsKey, showAsHintKey, tickSaid, relativeDaySaid, dueSaidOf, weekdayOf; figureRange.ts figureRangeSaying. src/domain/format imports nothing from src/i18n (boundary.test.ts forbids even import type), so keys are literal types t() checks at the call. English functions (SHOW_AS_LABEL, figureRangeSaid, tickWords, ...) are unchanged for the plugin; cellText, keptSentence, lackingSentence and creationOf take an optional t defaulting to English. IntakePanel, NewFormat, ColumnQuestions, inputForm.ts and shape.ts are on words.test.ts; F9's callers (EntryView, FilterBand, RowSheet, FormatRows, DeclaredFormats) pass t. Still English: connections.ts sentences (F35), dashboard.ts / madeInPlace.ts / inputBlock.ts helpers (F36), quick add, type tiles and DIMENSIONS (F37), IntakePanel's keyWords (surfaceRules.test pins them). Tests: typecheck, i18n, boundary, privacy, budget green; full suite 395 files / 5990 tests green; check:tours every tour played. docs:check red only on D-632's memory.emd row, which this landing writes. Shares the commit and D-632 with F17, F18, F19.\"}\n```"
+refs: M64 F20
+state: applied
+answered_by: D-632
+became_unit: M64 F20
+
+### M64 F23 built: PickField folds into the kit's ValueChoice, to land
+from: F:/projects/emerald/.claude/worktrees/agent-af5bb55dd3b8408c1/docs/memory.emd
+sent_on: 2026-11-26
+body: "M64 F23 is built on worktree-agent-af5bb55dd3b8408c1 at e713d24: PickField is the kit's ValueChoice. Decision D-630 (landed with M64 F2).\n\n```json\n{\"unit\": \"M64 F23\", \"commit\": \"e713d24\", \"branch\": \"worktree-agent-af5bb55dd3b8408c1\", \"decision\": \"D-630\", \"files\": \"src/ui/components/ChoiceField.tsx\\nsrc/ui/rules/PickField.tsx\\nsrc/ui/rules/RuleEditor.tsx\\nsrc/ui/rules/TestBox.tsx\\nsrc/ui/rules/ReapplyPanel.tsx\\nsrc/ui/screens/Categories.tsx\\nsrc/i18n/words.test.ts\\nsrc/ui/formats/surfaceRules.test.ts\", \"report\": \"PickField moved into ChoiceField.tsx as ValueChoice (with MENU_MOST, and make passed through); RuleEditor, TestBox, ReapplyPanel and Categories' New category import it; PickField.tsx deleted and taken off src/i18n/words.test.ts and src/ui/formats/surfaceRules.test.ts. D-628's affects still names PickField.tsx (docs:check warns that it is gone).\"}\n```"
+refs: M64 F23
+state: applied
+answered_by: D-630
+became_unit: M64 F23
 
 ### M64 F26 built: Wealth's details say every word through the catalogue, en and he, to land
 from: F:/projects/emerald/.claude/worktrees/agent-af2772dad25f4785c
@@ -7492,8 +7600,32 @@ state: open
 question: The forms' Hebrew (reading, fund, movement, goal, debt, payment) was written by a session, not a native reader: for example the fee lines 'דמי ניהול מצבירה' and 'מהפקדה', 'הועבר בין החזקות' for a move, 'אזין תשלומים בעצמי' for entering payments by hand, and the reading's 'עלייה של ₪X מאז'. Read a form or two in Hebrew and say which words are wrong?
 state: open
 
+### M64 Q45
+question: Plan's Year adds each month on the plan that month is on (M64 F12), so a month given another plan is held against that plan's split. Should the Year instead follow the plan open on the Month tab, holding every month against it?
+state: open
+
+### M64 Q46
+question: Plan's Year stops at the last month that is over (M64 F12): the month running now is left out so its half-spent buckets do not read as under. Should the running month be shown too, marked as so far?
+state: open
+
+### M64 Q47
+question: Plan's ring is a clock and stays left-to-right in Hebrew (M64 F1), so switching bar to ring in Hebrew morphs from an unmirrored bar: the segments jump sides for the length of the animation. Mirror the morph's starting bar (and so the ring's direction), or leave the ring a clock and accept the jump?
+state: open
+
+### M64 Q48
+question: The Add on Roadmap and Ready to start costs an action, a word and the filled colour, so their budget ceilings rose (roadmap actions 27 to 28, words 183 to 185, colours 8 to 9; ready colours 5 to 7, words and actions tightened to 70 and 12). Keep the raised ceilings, or should the roadmap give up something else to stay at 27 actions?
+state: open
+
+### M64 Q49
+question: A link is left out when its words are whole words of the row's name (M2 in M2 U3, never in M20 U1), and the ready list's state when its ready state is one member (with planned or in progress both ready, the chip stays). Is name-containment the right test for 'already said', or should a format declare which link its ref spells?
+state: open
+
 ### M64 Q5
 question: Rows on Read files, Read paychecks and Readers do not move with the arrow keys, and Read files has no select-all box in its header row. Wanted?
+state: open
+
+### M64 Q50
+question: The Hebrew for these views was written by sessions from the term rows, not a native reader: a connection is קשר, a dashboard's block is רכיב and Add a block הוספת רכיב, a headline total נתון ראשי, the agenda סדר היום, Lanes by קיבוץ לפי, Columns עמודות, rows of a format שורות ב־{format}. Read the board, the roadmap, a dashboard and the connections in Hebrew and say which words are wrong?
 state: open
 
 ### M64 Q51
@@ -8513,6 +8645,12 @@ should: One name per thing (Make it in place; An action is a verb).
 breaks: Keeping the ledger is "Keep a ledger in this document" on NoLedger and "Keep this pack here" on Packs; Home says Read files, Read… and Read for one act, and has two buttons both named Add by hand. Owned by M54 F13. Part fixed in M54 F6 (Packs says Keep the ledger here). Fixed in M54 F13 (368d722).
 state: fault
 
+### Desktop app on this branch, year.emd, #/paychecks: All paychecks > Add by hand. Type gross and net, add a line from the slip (type 'pens' in Deduction), then Enter.
+unit: M64 F14
+should: The form opens beside the page (the month stays): month, employer, gross and net first; one sentence under them says whether it adds up and changes as you type; lines appear only when added, with + New for a deduction the list lacks; More about this paycheck holds the paid-on day, bonus and note; Enter saves and the panel closes on November's paycheck.
+breaks: Anything that still looks like the old page, a sentence that is wrong about the gap, or Esc closing the panel from inside a field (the first Esc only leaves the field).
+state: open
+
 ### Desktop shell: Help › About, and the document bar's Earlier copies; Tab through each and close it.
 unit: M54 U4
 should: A modal traps Tab and returns focus to what opened it; loading is Working.tsx (One progress indicator).
@@ -8908,6 +9046,16 @@ unit: M64 F10
 should: Every field has a thin line under it and is plainly a place to type; the amount sits beside its name; Add is right under the fields; the list beside it has only its + to start a new one; the input view's Fields opens in the panel at the side and Esc closes it. On the table, the filter (funnel) and the search (boxed, with a glass) no longer look alike, and the empty rows at the foot show no ILS.
 state: open
 
+### On project.emd open Milestone > Roadmap, then Unit > Board and Unit > Ready to start; switch between them and press Add on the roadmap.
+unit: M64 F17
+should: Add is top right on every view and opens the unit's new entry; the strip under the tabs holds the same kind of controls in the same place on all three (Filter unit by… in full, In the order of, Columns, Fold all), and nothing jumps when switching.
+state: open
+
+### On project.emd open Unit > Ready to start and Unit > Board; then choose Columns and tick milestone and state.
+unit: M64 F19
+should: Ready's rows show no PLANNED chip and no M2 beside M2 U3, a board card no M2 under its ref; once chosen under Columns, the milestone and state are drawn again.
+state: open
+
 ### On the demo or the synthetic year, Rules: delete a rule that has fired (its row menu, Delete), then Undo (or Ctrl+Z). Categories: delete a category nothing uses, then Undo.
 unit: M64 F5
 should: The rule is back at the same place with the same Fired count, and a transaction it filed says which rule again; the category is back in the same place among its siblings with its colour, and any built-in rule that pointed at it is back on Rules.
@@ -8971,6 +9119,11 @@ state: fault
 unit: M64 U4
 should: U5 replaces it with Home's WaitingList below the answer; until then the bar is a second filled primary on every screen and waiting sits above the answer, which D-614 rules out
 breaks: One primary per screen, and the answer first
+state: accepted
+
+### Open Plan and its Year tab on your own document, then open Groceries (or any category bucket) and a goal or debt bucket.
+unit: M64 F12
+should: The first sentence says how far the categories went over or under what their months planned, and separately what went into goals and debts; each bucket's figure is its year so far against the sum of its months' plans, and its panel lists each month that adds up to that. Wrong would be a month counted that is not over yet, a bucket's year that does not match its months, or a goal reported as overspending.
 state: open
 
 ### Open Plan on the demo year (#/plan): read the sentence, then click a bucket's line, a bill's name, Net pay, the cushion and Look at them, and remove a bucket and press Esc at its question.
@@ -9087,7 +9240,7 @@ state: open
 unit: M64 U4
 should: Decide whether the primary button stays a filled emerald split tile or becomes comp A's 32px hairline box with ink text; the finish-reviewer called the filled tile the loudest mark on a near-monochrome page, and The button is a split tile and One primary action per screen still stand
 breaks: A primary that outweighs the answer on every redesigned screen
-state: open
+state: accepted
 
 ### Open two documents at schema 60 once in the rebuilt app, run keep_packs on the first, set one of its inbox rows' about to the second's S1 U5 by path, then ask start_here on the first.
 unit: M47 U4
@@ -9417,6 +9570,11 @@ unit: M60 U4
 should: No English word outside a document's own names; counts read right ('2 כרטיסים', 'סינון · 2'); the new card is named כרטיס 1234 (the unit's pick, not yet yours). ~140 Hebrew words are drafts beyond the glossary, each listed in the unit's report; the ones to look at hardest: Saved נחסך, Write כתיבה, Dismiss סגירה, Leave out of totals השמטה מהסיכומים, Reference אסמכתא, Reader roles (תאריך חיוב, 4 ספרות אחרונות של הכרטיס), All rows כל התנועות, Waiting ממתינים. Taxes spelled מיסים as the seeded category. Still English on these screens, left to U5 or the data layer: CategoryPicker's own words and its path titles (→), PageMenu's 'More about…', Amount's aria-label 'minus', the 'N answers wait on Home' notice (Notices.tsx), the guide's step name in the Getting started line (domain/guide.ts), salaryBankWords, roleRejection, the parser's row errors, draftProblems, Why.tsx's rule text.
 state: open
 
+### Settings > Language > Hebrew, then on project.emd open Unit's Board, List, Ready to start, Milestone's Roadmap, Agenda, Connections (open a connection) and a dashboard; on custom.emd make a new format.
+unit: M64 F20
+should: Every word of the app is Hebrew and reads right to left; a member, a column's name or a format's title sits inside its Hebrew sentence without jumbling it. Still English on purpose: the document's own words, and the connections' sentences (F35).
+state: open
+
 ### Settings > Language > Hebrew, then open Formats, a format's table (filter it, open a column's menu), a row's entry, a new entry and an input view on custom.emd or project.emd.
 unit: M64 F9
 should: Every word of the app is Hebrew and reads right to left in order; a column name, a ref or a format's title sits inside its Hebrew sentence without jumbling it. What stays English is the document's own (column names, titles, values) and the list's dates.
@@ -9430,6 +9588,11 @@ state: open
 ### Switch Settings › Language to עברית in the desktop app, open the menu with Alt (File, Edit, View, Help), try Help › License, and close a document with unsaved changes.
 unit: M60 U7
 should: Every menu item, the unsaved-work question and its buttons, and the License window's title are Hebrew, and still Hebrew after a restart. Drafted words (not in the glossary) to judge: קובץ, עריכה, תצוגה, עזרה, חדש, פתיחה…, מסמכים אחרונים, עדיין אין, ניקוי רשימת המסמכים האחרונים, שמירה, עותקים קודמים של המסמך…, סגירת החלון, יציאה, ביטול פעולה, ביצוע חוזר, גזירה, העתקה, הדבקה, בחירת הכול, פקודות…, הצגה או הסתרה של סרגל הצד, גודל אמיתי, הגדלה, הקטנה, מסך מלא, כלי מפתחים, רישיון, הודעות צד שלישי, קוד המקור, נפתח בדפדפן, בדיקת עדכונים עכשיו, אודות Emerald, מסמך Emerald, בלי לשמור, ביטול, 'לשמור את {name} לפני הסגירה?', the restart and crash sentences. Glossary words used: שמירה בשם (Save as), הדרכה (Guide me).
+state: open
+
+### Switch the app to Hebrew, open Plan, drag a divider on the split's bar and press the left arrow on a focused divider.
+unit: M64 F1
+should: The first bucket sits at the right edge and the money not given a job at the left; dragging a divider left grows the bucket to its right, and the left arrow does the same. Wrong would be a divider moving opposite the pointer, or the amounts drawn far from their names.
 state: open
 
 ### Synthetic, year.emd, #/ → Taxes tile
@@ -18365,11 +18528,15 @@ report: M63 U4 built at 0772efd on main; docs:check green after landing. Setting
 milestone: M64
 scope: ui
 title: Plan's bar mirrors in Hebrew
-state: in_progress
+landed: 2026-11-26
+state: built
 brief: PlanBar forces dir=ltr, so in Hebrew the split runs left to right while every column beside it mirrors. Draw its segments from the inline start and flip the drag's and the arrow keys' direction in RTL; the ring is unaffected. Files: src/ui/plan/PlanBar.tsx.
+files: src/ui/plan/PlanBar.tsx
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-abb1633a690d0827d
+commit: 18f00c2
+report: PlanBar no longer forces dir=ltr in bar mode: segments flow from the inline start, the dividers' left is mirrored (total - end), a drag is measured from the track's right edge in RTL, the header band's connector polygon mirrors, and the arrow keys go through arrowStep (in Hebrew the left arrow grows the bucket, the right shrinks it; up/down stay grow/shrink). A segment's amount was drawn at the segment's left in Hebrew (tabular-nums is unicode-bidi plaintext in RTL), so it takes rtl:text-right to sit under its name. The ring and the bar-to-ring morph keep dir=ltr, so the morph starts from the unmirrored bar in Hebrew (Q47). Verified in this worktree's demo server in Hebrew on year.emd: ArrowLeft 150000->155000 with the divider moving left, ArrowRight back, ArrowDown shrinks; a 60px drag left grew Emergency fund 1,450->2,250 and the divider followed the pointer; axis reads 0 at the right. probe:screens --lang he on #/plan: english 0, budget passes. No kit file touched. Tests: related (190 files) green, typecheck, privacy, parity green; check:tours skipped, no tour passes Plan.
 
 ### M64 F10
 milestone: M64
@@ -18391,120 +18558,170 @@ report: Fields wear a hairline at rest (SEAMLESS, local to EntryView; the kit's 
 milestone: M64
 scope: ui
 title: The figures that sum something up carry their sign's colour
-state: planned
+state: in_progress
 brief: Maintainer, 2026-11-26: "some numbers could use their colors (the negative/positive), not everywhere but for example the line that sums up the month." U4 retired 'The four flows colour Home's figures' for 'Figures are ink, a flow is a mark'. Amend it, not reverse it: a figure that sums a period up (Home's left over and its sentence, the Year's left over, Plan's to split, net worth, a statement's gap) is drawn in the positive or negative token by its sign; every other figure stays ink. Write the list of which figures in the rule row and DESIGN.md, give it a decision, and keep contrast at AA in light and dark (the tokens' 'positive' and 'negative' text steps). Colour is never the only signal: the sign or the word stays.
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 paths: src/ui/charts/HeadlineFigure.tsx src/ui/screens/Home.tsx src/ui/screens/Year.tsx src/ui/screens/Plan.tsx src/ui/screens/Overview.tsx DESIGN.md docs/11-ui-design-language.md
 
 ### M64 F12
 milestone: M64
 scope: app
 title: Plan's year: how much went to each bucket this year, out of what was planned
-state: in_progress
+landed: 2026-11-26
+decision: D-631
+state: built
 brief: Maintainer, 2026-11-26: "in the plan i'd like a view that sums up the buckets of the year (meaning if i had a monthly bucket id like to see how much total in the year went to the bucket out of planned)." Add a Year view to Plan (a tab beside the month, as Home has): one sentence answering how the year went against the plan, then each bucket as a PlanAgainst meter of the year's actual against the sum of its monthly plan for the months so far, with the months a bucket was over or under one click behind it in the side panel. Use the same month basis as Home (D-607). Parity (D-227): the plugin's plans or plan_month tool answers the same year figures. Synthetic year only.
+files: "src/ui/plan/PlanYear.tsx\nsrc/domain/planYear.ts\nsrc/data/repositories/planMonthRepository.ts\nsrc/data/repositories/planYear.test.ts\nsrc/plugin/tools/plan.ts\nsrc/plugin/tools/plan.test.ts\nsrc/ui/nav.ts\nsrc/ui/nav.test.ts\nsrc/App.tsx\nsrc/ui/plan/bucketGroups.ts\nsrc/ui/screens/Plan.tsx\nsrc/i18n/en/plan.ts\nsrc/i18n/he/plan.ts\nsrc/i18n/words.test.ts\ndocs/redesign/budget.json\ndocs/redesign/screens.md\ndocs/plugin.md\ndocs/09-decision-log.md"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-abb1633a690d0827d
+commit: 1dcad6d
 paths: src/ui/screens/Plan.tsx src/ui/plan/ src/domain/ src/plugin/tools/
+report: Plan gains a tab strip from nav.ts, Month (#/plan) and Year (#/plan/year), as Home has; /plan is now a Section route. Domain: planYear (src/domain/planYear.ts, pure) sums months of PlanVersusActual bucket by bucket, a month a bucket cannot be measured in out of both sums and counted, a month in another currency left out; planYearByKind splits the totals into categories (spent) and goals and debts (into). Repository: planYearAgainstActual(db, year, asOf) works out each month January..min(last month over, December) on planOnMonth's plan and measures it with planAgainstActual (Home's month basis, D-607). Screen (src/ui/plan/PlanYear.tsx): the year in one or two sentences at the lede step (categories over/under what their months planned; goals and debts more/less than planned), the categories' gap as the one display figure, then each bucket as a PlanAgainst meter in the month's two columns (columnsOf moved to bucketGroups.ts and shared). Only a category over its plan is red; under/on is a note; a goal or debt says more/less; a bucket nothing measures shows its planned sum with 'Planned; nothing records what it got'. A bucket opens a SidePanel kickered with the span: one line of how many months over and under, then a table of month, planned, got, over or under, and a total row. The year pages back, forward only to the newest year with a month over. Keep/move/cut: nothing moved off Month; the Year is new. Interactions: a bucket opens its months in the SidePanel (Esc closes, verified); the pager pages years in place. Parity: plan_month gains year (a read, writes nothing) returning the same sentence split by kind and a row per bucket with its over/under months. Words in en and he (plan.year.*); PlanYear.tsx on the translated list. Probe on year.emd: #/plan/year 110 words, 3 blocks, 3 figures, 11 actions, 0 primary, 7 sizes, 10 colours, 1.1 screens, light and dark; --lang he english 0; new budget entry #/plan/year (130 words, 4 blocks, 4 figures, 14 actions, 11 colours, 1.5 screens), exit 0. Taste check (impeccable finish reviewer) fixes made: the answer no longer adds goal and debt over-deposits into overspending; 'left' replaced by under/on plan for a finished year; the unmeasured bucket's figure named as planned; the panel says more/less for goals and debts and has a total row; the panel's kicker is the span; the open year in ink beside the pager; one display figure; two columns instead of a 40rem column; Hebrew over word made chariga as the meters say it. Declined: none. Noted: PlanAgainst caps its fill at 100% so 105% and 213% look alike (F32, the kit's); the probe's long Hebrew shot of #/plan draws Hebrew letters reversed while the browser shows them right (F33). Tests: related (190 files, 2173 tests) green, typecheck, privacy, parity green; check:tours skipped, no tour passes Plan. ask-cold run with --question made 0 runs (the flag did not select a run); not judged.
 
 ### M64 F13
 milestone: M64
 scope: ui
 title: "\"More\" expands in place everywhere, and Home's \"the rest\" first"
-state: planned
+state: in_progress
 brief: Maintainer, 2026-11-26: "some of the usage of the side bar is still weird. like the home clicking on the 'more' of what went out opening a side bar for the rest." D-617 now says a list cut short expands in place and never opens the side panel. Fix Home's Where it went 'the rest' (HomePanel's theRest), then audit every redesigned screen for a 'more', 'the rest' or '+ n' that opens a panel, and make each expand where it stands. Report each one found.
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 paths: src/ui/home/ src/ui/screens/Home.tsx src/ui/charts/RankedBars.tsx
 
 ### M64 F14
 milestone: M64
 scope: ui
 title: Adding a paycheck by hand is easy, in the new design
-state: in_progress
+landed: 2026-11-26
+decision: D-630
+state: built
 brief: Maintainer, 2026-11-26: "adding paychecks by hand is still the old ui? could it be maybe easier?" PaycheckEditor stayed a page of its own in U8 (D-620). Redesign it: the few fields a person must type first (month, employer, gross, net), the rest of the slip's lines added only if wanted, the reconciliation said in words as you type, its words in the paychecks catalogue en and he (this takes F2's PaycheckEditor, ReconciliationStrip and DeductionTypeSelect translation), ChoiceField not the platform select, D-617's places and conventions. Keep it the same form the reading flow confirms in (U7).
+files: "src/ui/paychecks/PaycheckEditor.tsx\nsrc/ui/paychecks/ReconciliationStrip.tsx\nsrc/ui/paychecks/DeductionTypeSelect.tsx\nsrc/ui/screens/Paychecks.tsx\nsrc/ui/components/PanelForm.tsx\nsrc/i18n/en/paychecks.ts\nsrc/i18n/he/paychecks.ts\ndocs/packs/ledger/06-navigation-and-screens.md\ndocs/packs/ledger/f04-paycheck-tracking.md"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-af5bb55dd3b8408c1
+commit: e713d24
 paths: src/ui/paychecks/PaycheckEditor.tsx src/ui/paychecks/ReconciliationStrip.tsx src/ui/paychecks/DeductionTypeSelect.tsx src/i18n/en/paychecks.ts src/i18n/he/paychecks.ts
+report: PaycheckForm (PanelForm in Paychecks' SidePanel) and PaycheckEditor (the same PaycheckFields in FlowFrame for the reading flow, PayslipIntake unchanged) share usePaycheckDraft. ReconciliationSaid replaces the strip. DeductionTypeSelect is a ValueChoice autocomplete grouped by kind (translated headings, the slip's Hebrew as detail and search) with make -> kind asked in place; ReadSlips and SlipReview get it too. MonthInput added to PanelForm.tsx. Paychecks.tsx: the form takes the panel's place, saving returns to what was open, the page-scroll keeping is gone. Words paychecks.entry en/he; files on the translated and REVIEWED lists. Verified in the browser on year.emd: typing says '₪5,000.00 between gross and net…', a line typed 'pens' + Enter picks Pension and the sentence moves to ₪2,000 not itemized with 'Add ₪2,000.00 as Other deduction'; Esc in a field leaves it, the next Esc closes; Enter in Net saves, the page opens November 2026 and focus returns to Add by hand.
 
 ### M64 F15
 milestone: M64
 scope: ui
 title: Making a rule from a transaction stays on the transaction
-state: planned
+state: in_progress
 brief: Maintainer, 2026-11-26: "when creating a rule can we stay at the screen where we wanted to create it? e.g im at transactions creating a rule for a transaction. i dont wanna go to rules. maybe a popup should ask me if i want to." D-617 now says an action finishes where it was started. Wherever a rule is made outside Rules (Transactions' make-a-rule, By merchant, a row's menu, the learning offer), it is made there and the person stays; the note that says it was made offers 'Open in Rules' as a link, with Undo. Check every such path.
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 paths: src/ui/screens/Transactions.tsx src/ui/screens/ByMerchant.tsx src/ui/transactions/ src/ui/categorize/
 
 ### M64 F16
 milestone: M64
 scope: ui
 title: Reading a statement, a paycheck and a fund report are told apart at a glance
-state: planned
+state: in_progress
 brief: Maintainer, 2026-11-26: "i think there should be distinguishable buttons between reading paychecks, transactions and such cause it can confuse users." Wherever the app offers to read a file (the header's Read files, Read paychecks, a fund's report, the guide, the palette, the front door), the button names the kind it reads and carries that kind's glyph, so 'Read bank and card statements', 'Read paychecks' and 'Read a fund report' never look alike; a file dropped anywhere is still read whatever it is. Decide with a decision row whether the header keeps one Read files door that asks the kind, or one button per kind, and say why.
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 paths: src/ui/screens/ReadStatements.tsx src/ui/paychecks/ReadSlips.tsx src/ui/import/ src/ui/components/ActionGlyph.tsx src/ui/commands.ts
 
 ### M64 F17
 milestone: Later
 scope: ui
 title: Roadmap and Ready to start keep the format's Add, and the views' controls sit in one strip
-state: in_progress
+landed: 2026-11-26
+decision: D-632
+state: built
 brief: After M64 U14 (D-626) switching from Table or Board to Roadmap or Ready to start drops the format's one primary Add, and the roadmap's title row holds three fields, the fold filter cut to 'Filter unit b'. Give Roadmap and Ready the table's Add (behind the same write refusal), move each fold's ColumnFilter off the title row into a quiet strip, and put the view controls (Lanes by, Columns, In the order of, Fold all) in one strip of the same classes on board, roadmap and ready. Check the budget's words and actions for the three routes. Files: src/ui/screens/FormatLinkViews.tsx, src/ui/formats/LinkViews.tsx, src/ui/formats/BoardView.tsx.
+files: "src/ui/screens/FormatLinkViews.tsx\nsrc/ui/formats/LinkViews.tsx\nsrc/ui/formats/BoardView.tsx\nsrc/ui/formats/ColumnsChoice.tsx\nsrc/ui/formats/FilterBand.tsx\ndocs/redesign/budget.json\ndocs/09-decision-log.md"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-aa49991c1bb6f79c6
+commit: 1cc1a16
+report: Roadmap and Ready to start now carry the format's primary Add (FormatLinkViews' Frame) behind the table's refusal, opening the default input view or entry/new. The board, roadmap and ready list draw their controls in one VIEW_STRIP under the tabs; the roadmap's fold ColumnFilter moved off the title row into it and is w-48 so 'Filter unit by…' is whole; Columns (ColumnsChoice) is a text action like Fold all and its popover is on the ramp (no 13px). A roadmap row's dot folds for the pointer only; the chevron is the one keyboard stop. probe:screens project.emd: roadmap 184 words / 28 actions / 1 primary, ready 66 / 11 / 1, board 149 / 34 / 1; budget raised for the Add on roadmap and ready (Q48). Tours: every tour played (10 runs). Shares the commit and D-632 with F18, F19, F20.
 
 ### M64 F18
 milestone: Later
 scope: ui
 title: The engine's views translated: every word of the board, list, roadmap, ready, agenda, dashboards and connections in the catalogue
-state: in_progress
+landed: 2026-11-26
+decision: D-632
+state: built
 brief: M64 U14 put only the views' answers in the catalogue (views.*); probe:screens --lang he still finds English on board (47), roadmap (24), ready (18), agenda (19) and connections (73): lane and toolbar words, 'Every connection, in words', the agenda's ahead words and captions, the connection form. Move them into src/i18n/en/views.ts and he/views.ts, add the files to src/i18n/words.test.ts's translated set. Files: src/ui/formats/BoardView.tsx, src/ui/formats/ListView.tsx, src/ui/formats/LinkViews.tsx, src/ui/screens/Agenda.tsx, src/ui/screens/Connections.tsx, src/ui/formats/ConnectionPanel.tsx, src/ui/formats/Dashboard.tsx.
+files: "src/i18n/en/views.ts\nsrc/i18n/he/views.ts\nsrc/i18n/en/connections.ts\nsrc/i18n/he/connections.ts\nsrc/i18n/en/dashboards.ts\nsrc/i18n/he/dashboards.ts\nsrc/i18n/catalogue.ts\nsrc/i18n/words.test.ts\nsrc/ui/formats/BoardView.tsx\nsrc/ui/formats/ListView.tsx\nsrc/ui/formats/LinkViews.tsx\nsrc/ui/screens/Agenda.tsx\nsrc/ui/screens/Connections.tsx\nsrc/ui/formats/ConnectionPanel.tsx\nsrc/ui/formats/ConnectionGraph.tsx\nsrc/ui/formats/Dashboard.tsx\nsrc/ui/formats/RollupView.tsx\nsrc/ui/formats/MakeBlock.tsx\nsrc/ui/screens/FormatLinkViews.tsx"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-aa49991c1bb6f79c6
+commit: 1cc1a16
+report: Every word of BoardView, ListView, LinkViews, Agenda, FormatLinkViews, ColumnsChoice (views area), Connections, ConnectionPanel, ConnectionGraph (new connections area) and Dashboard, RollupView, MakeBlock (new dashboards area) is t() in en and he; all are on words.test.ts's translated list and it passes; catalogue.test holds the Hebrew complete. probe:screens --lang he project.emd: board, roadmap and ready leave only the document's own words (members, column names, format titles); agenda only column names; dashboard 0; connections still 42, the sentences src/domain/format/connections.ts builds (F35). The list's quick add placeholder stays English (F37). English is unchanged but a block's height now counts '1 row'. Shares the commit and D-632 with F17, F19, F20.
 
 ### M64 F19
 milestone: Later
 scope: ui
 title: A view's rows stop repeating what their group already says
-state: in_progress
+landed: 2026-11-26
+decision: D-632
+state: built
 brief: The taste check of M64 U14 found the ready list's rows each repeat their state (PLANNED under the Ready heading) and their milestone (M2, already in the ref), and a board card repeats its milestone under its ref. These are the default chosen columns in src/ui/formats/lineColumns.ts. Leave out a state column on a line already grouped by that state, and a link already named in the row's ref, keeping what a person chose under Columns. Files: src/ui/formats/lineColumns.ts, src/ui/formats/LinkViews.tsx, src/ui/formats/BoardView.tsx.
+files: "src/ui/formats/lineColumns.ts\nsrc/ui/formats/lineColumns.test.ts\nsrc/ui/formats/LinkViews.tsx\nsrc/ui/formats/BoardView.tsx"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-aa49991c1bb6f79c6
+commit: 1cc1a16
+report: lineColumns.ts gains chosenLines(..., grouped) and namedByRow(column, text, name), with a test. ReadyView passes grouped when shape.members.ready has one member; RowLine's splitLines drops a link id whose label is whole words of the row's name when no Columns choice is made; BoardView's card drops such a link column the same way. What a person chose under Columns is drawn regardless. Seen in the probe's shot of project.emd's board: cards say only their session, not M2. Shares the commit and D-632 with F17, F18, F20.
 
 ### M64 F2
 milestone: M64
 scope: ui
 title: The kit and chrome catch up: what the screen units found and left for everyone
-state: in_progress
+landed: 2026-11-26
+decision: D-630
+state: built
 brief: "Kit findings from U4-U9 that each screen unit left because a shared piece was not theirs to change. Fix each, for everyone, with a specimen state and a test where it can fail:\n- Button size sm and the shell's waiting notice (Open Home, Not now) draw 13px, off the type ramp, and cost every non-Home route one of its seven type sizes; move sm onto the caption or body step. The notice bar's filled Open Home and the filled primary are U4's two open review entries: settle them by DESIGN.md.\n- SidePanel: Esc closes it even from inside a field (Esc in a field should leave the field first); it captures the element that opened it only once, so focus returns to the first opener.\n- Button forwards no ref; WaitingList.say is a plain string, so a document's name cannot be wrapped in Bidi.\n- SELECT in fieldLook.ts has no chevron, so a ChoiceMenu at rest reads as a text field; SelectOrNew draws a platform select, against 'Choices are ChoiceField'.\n- Amount does not hold its sign left-to-right in a Hebrew window; .fc-row-on's marker is inset-left in RTL too (tokens.css); MonthStrip's open-month label overflows the end edge when it is the last column (check on Paychecks).\n- CategoryPicker's empty value reads under 4.5:1; text in ink-tertiary failing contrast anywhere it is still used.\n- PromotionPanel, PaycheckEditor, ReconciliationStrip and DeductionTypeSelect still carry inline English: move them into the catalogue, he included; PromotionPanel's forms save on Enter.\n- Home's Taxes panel links to Paychecks: navigate('/paychecks', {state:{month, panel:'tax'}}) (U8 built the landing).\nFollow the redesign-screen skill's conventions (D-617). probe:screens --budget on every route already off exempt still passes; check:tours green."
+files: "src/ui/components/Button.tsx\nsrc/ui/components/SidePanel.tsx\nsrc/ui/components/WaitingList.tsx\nsrc/ui/components/Amount.tsx\nsrc/ui/components/fieldLook.ts\nsrc/ui/components/ChoiceField.tsx\nsrc/ui/components/SelectOrNew.tsx\nsrc/ui/components/CategoryPicker.tsx\nsrc/ui/components/Field.tsx\nsrc/ui/components/ContextMenu.tsx\nsrc/ui/theme/tokens.css\nsrc/ui/Notices.tsx\nsrc/ui/categorize/PromotionPanel.tsx\nsrc/ui/home/HomePanel.tsx\nsrc/ui/savings/PlaceEditor.tsx\nsrc/ui/screens/DeductionTypes.tsx\nsrc/i18n/en/merchants.ts\nsrc/i18n/he/merchants.ts\nsrc/i18n/words.test.ts\nsrc/ui/formats/surfaceRules.test.ts\ndocs/09-decision-log.md"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-af5bb55dd3b8408c1
+commit: e713d24
 paths: src/ui/components/ src/ui/charts/ src/ui/Notices.tsx src/ui/theme/tokens.css src/ui/categorize/PromotionPanel.tsx src/ui/paychecks/PaycheckEditor.tsx src/ui/paychecks/ReconciliationStrip.tsx src/ui/paychecks/DeductionTypeSelect.tsx src/ui/home/HomePanel.tsx src/ui/formats/fieldLook.ts
+report: Kit: sm button 32px on the body step (13px gone), Button forwardRef; .fc-select chevron on SELECT; ValueChoice in ChoiceField.tsx; SelectOrNew on ValueChoice with choices (PlaceEditor and DeductionTypes updated); SidePanel Esc-leaves-field-first and latest-opener focus; WaitingList.say ReactNode; Amount dir=ltr; .fc-row-on RTL marker; kit text off ink-tertiary; CategoryPicker kind as ChoiceMenu. Notices: Open Home never filled (U4's two entries settled: no fill on the bar, the filled split tile stays by the rows). PromotionPanel translated (merchants.promotion en/he), forms submit on Enter, names isolated with Phrase/Bidi. HomePanel Taxes -> /paychecks {month, panel:'tax'}. MonthStrip's open-month label measured on Paychecks (LTR and RTL, 1280 and 1400 with the panel): it stays inside the strip, so MonthStrip was not changed. Checks: typecheck; full suite 6000/6001 under load, the one a 15s timeout in src/plugin/tools/formats.test.ts that passes alone; probe:screens --budget on every budgeted route (year, project, custom) exit 0 with 0 low-contrast and 0 off-ramp; --lang he on paychecks, merchants, rules exit 0; check:tours 10 runs green. No taste-check subagent was run; the hand audit is in D-630.
 
 ### M64 F20
 milestone: M64
 scope: ui
 title: The formats' other views and the engine's sentences translated: list, board, roadmap, dashboard, connections, and the words src/domain/format writes for a screen
-state: in_progress
+landed: 2026-11-26
+decision: D-632
+state: built
 brief: F9 (D-627) translated the table, entry, input view, sheet, filter band and shape panel. Still English in Hebrew: ListView.tsx (the list's dates such as 27 Jul, its aria-label Rows, 'A new {one}' on the draft line), BoardView, LinkViews, Dashboard, ConnectionPanel/ConnectionGraph, RollupView, MakeBlock, IntakePanel, NewFormat, ColumnQuestions; and sentences built in src/domain/format: Show as labels and hints (view.ts SHOW_AS_LABEL/SHOW_AS_HINT), figureRangeSaid (figureRange.ts), keptSentence and lackingSentence (inputForm.ts), creationOf's waiting items (shape.ts), cellText's yes/no. Move them to the formats area with t() (a domain sentence returns a key and its parts, the screen says it), add the files to src/i18n/words.test.ts, check with probe:screens --lang he on custom.emd and project.emd.
-files: "src/ui/formats/ListView.tsx\nsrc/ui/formats/BoardView.tsx\nsrc/domain/format/view.ts\nsrc/i18n/en/formats.ts"
+files: "src/domain/format/view.ts\nsrc/domain/format/figureRange.ts\nsrc/ui/formats/inputForm.ts\nsrc/ui/formats/shape.ts\nsrc/ui/formats/inputBlock.ts\nsrc/ui/formats/InputBlock.tsx\nsrc/ui/formats/IntakePanel.tsx\nsrc/ui/formats/NewFormat.tsx\nsrc/ui/formats/ColumnQuestions.tsx\nsrc/ui/formats/EntryView.tsx\nsrc/ui/formats/FilterBand.tsx\nsrc/ui/formats/RowSheet.tsx\nsrc/ui/screens/FormatRows.tsx\nsrc/ui/screens/DeclaredFormats.tsx\nsrc/i18n/en/formats.ts\nsrc/i18n/he/formats.ts\nsrc/i18n/words.test.ts"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-aa49991c1bb6f79c6
+commit: 1cc1a16
 paths: "src/ui/formats/ListView.tsx\nsrc/ui/formats/BoardView.tsx\nsrc/ui/formats/LinkViews.tsx\nsrc/ui/formats/Dashboard.tsx\nsrc/ui/formats/ConnectionPanel.tsx\nsrc/ui/formats/ConnectionGraph.tsx\nsrc/ui/formats/RollupView.tsx\nsrc/ui/formats/MakeBlock.tsx\nsrc/ui/formats/IntakePanel.tsx\nsrc/ui/formats/NewFormat.tsx\nsrc/ui/formats/ColumnQuestions.tsx\nsrc/domain/format/view.ts\nsrc/domain/format/figureRange.ts\nsrc/ui/formats/inputForm.ts\nsrc/ui/formats/shape.ts\nsrc/i18n/en/formats.ts\nsrc/i18n/he/formats.ts\nsrc/i18n/words.test.ts"
+report: Domain sentences now return a key and its parts: view.ts exports Said<K> and showAsKey, showAsHintKey, tickSaid, relativeDaySaid, dueSaidOf, weekdayOf; figureRange.ts figureRangeSaying. src/domain/format imports nothing from src/i18n (boundary.test.ts forbids even import type), so keys are literal types t() checks at the call. English functions (SHOW_AS_LABEL, figureRangeSaid, tickWords, ...) are unchanged for the plugin; cellText, keptSentence, lackingSentence and creationOf take an optional t defaulting to English. IntakePanel, NewFormat, ColumnQuestions, inputForm.ts and shape.ts are on words.test.ts; F9's callers (EntryView, FilterBand, RowSheet, FormatRows, DeclaredFormats) pass t. Still English: connections.ts sentences (F35), dashboard.ts / madeInPlace.ts / inputBlock.ts helpers (F36), quick add, type tiles and DIMENSIONS (F37), IntakePanel's keyWords (surfaceRules.test pins them). Tests: typecheck, i18n, boundary, privacy, budget green; full suite 395 files / 5990 tests green; check:tours every tour played. docs:check red only on D-632's memory.emd row, which this landing writes. Shares the commit and D-632 with F17, F18, F19.
 
 ### M64 F23
 milestone: M64
 scope: ui
 title: PickField folds into the kit's ChoiceField when F2 rewrites it
-state: in_progress
+landed: 2026-11-26
+decision: D-630
+state: built
 brief: M64 F6 (D-628) added src/ui/rules/PickField.tsx, a ChoiceField over a stored value (shows the chosen label, picks the choice a typed or pasted label or value names, an autocomplete past eight choices) instead of touching the shared kit, which F2 rewrites. When F2 lands, make it the kit's own value-shaped ChoiceField (or ChoiceMenu without readOnly) and point RuleEditor, TestBox, ReapplyPanel and Categories' New category at it; delete PickField and take it off src/i18n/words.test.ts and src/ui/formats/surfaceRules.test.ts.
-files: "src/ui/rules/PickField.tsx\nsrc/ui/components/ChoiceField.tsx"
+files: "src/ui/components/ChoiceField.tsx\nsrc/ui/rules/PickField.tsx\nsrc/ui/rules/RuleEditor.tsx\nsrc/ui/rules/TestBox.tsx\nsrc/ui/rules/ReapplyPanel.tsx\nsrc/ui/screens/Categories.tsx\nsrc/i18n/words.test.ts\nsrc/ui/formats/surfaceRules.test.ts"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-af5bb55dd3b8408c1
+commit: e713d24
 paths: "src/ui/rules/PickField.tsx\nsrc/ui/components/ChoiceField.tsx\nsrc/ui/rules/RuleEditor.tsx\nsrc/ui/rules/TestBox.tsx\nsrc/ui/rules/ReapplyPanel.tsx\nsrc/ui/screens/Categories.tsx"
+report: PickField moved into ChoiceField.tsx as ValueChoice (with MENU_MOST, and make passed through); RuleEditor, TestBox, ReapplyPanel and Categories' New category import it; PickField.tsx deleted and taken off src/i18n/words.test.ts and src/ui/formats/surfaceRules.test.ts. D-628's affects still names PickField.tsx (docs:check warns that it is gone).
 
 ### M64 F26
 milestone: M64
@@ -18521,6 +18738,16 @@ commit: d004672
 paths: "src/ui/screens/FundDetail.tsx\nsrc/ui/screens/GoalDetail.tsx\nsrc/ui/screens/DebtDetail.tsx\nsrc/ui/screens/FeeImpact.tsx\nsrc/ui/screens/DepositCheck.tsx\nsrc/ui/wealth/NetWorthOpened.tsx\nsrc/ui/savings/WherePicker.tsx\nsrc/ui/savings/CostBasis.tsx\nsrc/ui/funds/DepositRows.tsx\nsrc/ui/funds/labels.ts\nsrc/ui/debts/labels.ts\nsrc/i18n/en/wealth.ts\nsrc/i18n/he/wealth.ts\nsrc/i18n/words.test.ts"
 report: Wealth's details translated, following F3 (D-629): new wealth areas debtDetail, fundDetail, depositCheck, feeImpact, goalDetail, where, costBasis, depositRows, opened, and kinds.fundStatus, holdingKind, paymentSource, depositPart, in en and he. Counts by countKey, a document's name (fund, goal, account, holding, deduction types, beneficiaries) in Bidi inside a Phrase, months and days through useDates; ISO dates stay as they were. The goal's mixed-currency and the debt's unchecked balance now say catalogue words instead of the domain's English constants. payoffSentence and payoffBasisNote moved from debts/labels.ts into DebtDetail. funds/labels.ts is deleted; debts/labels.ts keeps only TRACK_KIND_LABEL (PromotionPanel) and PAYMENT_SOURCE_LABEL (PaymentReview), which are outside these details. The nine files join src/i18n/words.test.ts (M64_F26). probe:screens --lang he on year.emd: goals and debt detail English is only ListDetail's frame (Close, 'Close this pane', aria 'Details'), outside this unit's paths; year.emd has no pension fund, so #/wealth/funds/<id> could not be probed there. --budget: the debt detail is 9 type sizes > 7, unchanged by this unit (no classes touched). Tests: typecheck green, i18n + privacy + budget green, vitest related (31 files) green.
 
+### M64 F29
+milestone: Later
+scope: ui
+title: The platform selects left outside the kit become ValueChoice
+state: in_progress
+brief: After M64 F2 (D-630) the kit draws every choice, but ten files still draw the platform's <select> (now with the kit's chevron through .fc-select): src/ui/savings/PlaceEditor.tsx (kind, its cash), savings/HoldingEditor.tsx, fixed/FixedExpenseEditor.tsx (4), fixed/CandidateCard.tsx, debts/SplitPurchases.tsx, formats/WorkedOut.tsx (2), paychecks/FormatPicker.tsx, plan/PointsAt.tsx, screens/FeeImpact.tsx, transactions/DetailPanel.tsx (2). Move each to ValueChoice (filter past MENU_MOST, make for + New where the form makes one in place), keep a paste landing, and add the files to the REVIEWED list in src/ui/formats/surfaceRules.test.ts.
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
+
 ### M64 F3
 milestone: M64
 scope: ui
@@ -18536,19 +18763,82 @@ branch: worktree-agent-af23a2be174c2d1fa
 commit: a2e48f2
 report: New kit file src/ui/components/PanelForm.tsx: PanelForm (form, secondary Save + Cancel, problems, focuses the first field after SidePanel records its opener), FormField, FormGrid (@container), Said (aria-live sentence), MoreFields (expands in place by grid rows, folded content inert), FormGroup, AmountInput (no box, symbol at start, underline focus), DateInput (ISO or d/m/yyyy text, NativePicker calendar). The six editors rewritten on it, words in wealth.reading/fundForm/movementForm/goalForm/debtForm/paymentForm (en, he); platform selects and date boxes gone from them (manager made in place by ChoiceField make; holdings by ChoiceMenu + New). Funds, Goals and Debts render the forms as SidePanels beside the page (one panel at a time; a fund's pane closes when a form opens from the list); FundDetail's reading form sits over the fund pane with the fund mounted, so Esc returns focus to Add reading. SnapshotEditor (FlowFrame) kept for reports read from a stack, same fields. Details: ink-tertiary text to ink-secondary, px sizes onto the ramp, h-[30px]/h-[38px] onto steps in FundDetail, GoalDetail, DebtDetail, FeeImpact, DepositCheck, NetWorthOpened, parts.tsx; all on the surface sweep. Kit change: SidePanel wraps its kicker in Bidi. Taste check (impeccable finish reviewer) fixes made: page kept behind on FundDetail, autoFocus removed so focus returns to the opener, amount input box removed (outline-none!), a reading refuses an empty or non-number balance, holdings via ChoiceMenu, kicker Bidi, goal's monthly net of already-there, plural counts, d/m/yyyy dates. Browser-checked on year.emd: reading form opens with focus in the balance, says 'up 3,800 since 30 Sep 2026', Enter saves and the row updates; fund fee sentence; debt and payment forms. probe:screens on #/wealth, funds, goals, debts light/dark within budget, --lang he english 0 (pages; the forms are not probed). Typecheck, i18n, surface rules, privacy and the full suite (5915) green. check:tours skipped: no tour passes through Wealth's forms. docs:check red only on D-629's missing decision row, which this landing writes. Hebrew of the forms not seen on screen (the demo build ignored the language preference in the pane).
 
+### M64 F30
+milestone: Later
+scope: ui
+title: A new paycheck opens on the month that has none
+state: in_progress
+brief: Paychecks' Add by hand (M64 F14, D-630) opens on blankDraft's previous month, and on the synthetic year that month (October) already has a slip, so the form opens saying 'October 2026 already has a paycheck'. Open it on the month after the newest slip when the previous month is taken (blankDraft in src/domain/paycheckEntry.ts or the caller in src/ui/screens/Paychecks.tsx), keep the note for a second slip typed on purpose, and test it.
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
+
+### M64 F32
+milestone: Later
+scope: app
+title: PlanAgainst says how far past the plan a line went, not only that it did
+state: in_progress
+brief: Found in M64 F12's taste check: PlanAgainst caps its fill at the plan, so a category at 105% and one at 213% draw the same full red bar, and a debt paid at 200% looks like a goal at 100%. Give the display a mark for past the plan (a tick at 100% and the overflow drawn, or the share in words) without changing what a line under its plan shows, in the kit's specimen first. Files: src/ui/charts/PlanAgainst.tsx, src/ui/charts/kit.ts. After M64 F2 (the kit rewrite).
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
+
+### M64 F33
+milestone: Later
+scope: app
+title: The probe's long Hebrew shots draw Hebrew reversed
+state: in_progress
+brief: probe:screens --lang he --shots on #/plan (year.emd) paints Hebrew with its letters in reverse order in the long page shot (the rail reads backwards), while #/plan/year's shot and the browser read correctly. Find what in scripts/probe-screens.mjs's full-length capture loses the bidi shaping (likely the stitched or resized capture of a page taller than the window) and fix it, so a taste check can judge a Hebrew screen from its shot. Files: scripts/probe-screens.mjs, src/ui/probe.ts.
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
+
+### M64 F35
+milestone: M64
+scope: ui
+title: The connections' sentences say their words in Hebrew: what src/domain/format/connections.ts builds for the screen
+state: planned
+brief: After M64 F18/F20 (D-632) #/connections still shows about 42 English sentences in Hebrew, all built in src/domain/format/connections.ts: the rows under 'Every connection, in words' (edgeWords), the panel's headline (headlineOf, edgeHeadline) and its NOTHING reason, and each column's or total's endpoint detail and hover from graphOf ('ref — text. Drag onto a format to make it a connection.'). Return a Said<K> (view.ts's pattern: literal key types, no import from src/i18n, boundary.test.ts) beside the English functions the plugin keeps, put the words in the connections area (src/i18n/en/connections.ts, he/connections.ts), and have Connections, ConnectionPanel and ConnectionGraph say them. Check with probe:screens --lang he --document project.emd --routes '#/connections'.
+files: "src/domain/format/connections.ts\nsrc/ui/formats/ConnectionPanel.tsx\nsrc/ui/formats/ConnectionGraph.tsx\nsrc/i18n/en/connections.ts"
+paths: "src/domain/format/connections.ts\nsrc/ui/screens/Connections.tsx\nsrc/ui/formats/ConnectionPanel.tsx\nsrc/ui/formats/ConnectionGraph.tsx\nsrc/i18n/en/connections.ts\nsrc/i18n/he/connections.ts"
+
+### M64 F36
+milestone: M64
+scope: ui
+title: A dashboard's and an input block's own sentences say their words in Hebrew: the helpers in dashboard.ts, madeInPlace.ts and inputBlock.ts
+state: planned
+brief: After M64 F18/F20 (D-632) a dashboard still says English built outside its screens: rollupSentence, rollupWords, blockWhat, ofText, savedWords and blockTitle in src/ui/formats/dashboard.ts, the filterText words, PERIOD_UNSAID and the refusal reasons in src/ui/formats/madeInPlace.ts and inputBlock.ts, and read.error.reason. Give each a t parameter (or a Said where a test or the plugin needs the English), put the words in the dashboards area (src/i18n/en/dashboards.ts, he/dashboards.ts), add the helper files to words.test.ts, and check with probe:screens --lang he on project.emd's #/dashboard and custom.emd's #/formats/card_charge/dashboard.
+files: "src/ui/formats/dashboard.ts\nsrc/ui/formats/madeInPlace.ts\nsrc/ui/formats/inputBlock.ts\nsrc/i18n/en/dashboards.ts"
+paths: "src/ui/formats/dashboard.ts\nsrc/ui/formats/madeInPlace.ts\nsrc/ui/formats/inputBlock.ts\nsrc/ui/formats/Dashboard.tsx\nsrc/ui/formats/MakeBlock.tsx\nsrc/ui/formats/InputBlock.tsx\nsrc/i18n/en/dashboards.ts\nsrc/i18n/he/dashboards.ts\nsrc/i18n/words.test.ts"
+
+### M64 F37
+milestone: M64
+scope: ui
+title: The list's quick add and date cells, and the type tiles, say their words in Hebrew
+state: planned
+brief: After M64 F18/F20 (D-632) the list's quick add placeholder ('Add a unit · planned', 'not done') is still built in English in src/ui/formats/listView.ts, and the list's date cell holds dueText's English, which ListView reads back into a key (dueSaidOf in view.ts) because listView.test.ts pins the cells with toEqual. Put a Said on the date cell and the placeholder in listView.ts (updating its test on purpose), drop dueSaidOf, pass t to linkedRowOf in FormatRows' linkedRows, and translate the type tiles and their group headings (vocabulary.ts TYPE_WORDS, typePicker.ts MORE_TYPES) and DIMENSIONS' names. Check with probe:screens --lang he on project.emd #/formats/unit/list and custom.emd's new-format screen.
+files: "src/ui/formats/listView.ts\nsrc/ui/formats/listView.test.ts\nsrc/domain/format/view.ts\nsrc/ui/formats/vocabulary.ts\nsrc/ui/formats/typePicker.ts"
+paths: "src/ui/formats/listView.ts\nsrc/ui/formats/listView.test.ts\nsrc/ui/formats/ListView.tsx\nsrc/domain/format/view.ts\nsrc/ui/formats/vocabulary.ts\nsrc/ui/formats/typePicker.ts\nsrc/ui/screens/FormatRows.tsx\nsrc/i18n/en/views.ts\nsrc/i18n/he/views.ts"
+
 ### M64 F38
 milestone: Later
 scope: ui
 title: The rest of Wealth's details' words: the pane frame, the charts, holding readings, the report reader and the English that comes from the data layer
-state: planned
+state: in_progress
 brief: After M64 F26 Hebrew Wealth details still show English from files outside its paths: ListDetail.tsx's ClosePane ('Close', 'Close this pane') and overlay aria-label 'Details'; debts/BalanceLine.tsx and funds/BalanceChart.tsx aria-labels; savings/HoldingReadings.tsx; funds/ReportIntake.tsx's labels; savings/HoldingEditor.tsx and PlaceEditor.tsx opened from a net-worth row; savings/holdingCheck.ts's phrase ('never checked', 'checked ... ago'); and strings made in data/domain: costBasisCheck's UNCHECKED reason (domain/goalDeposits.ts), whereChoices' detail 'at X', 'Cash' and 'another goal' (data/repositories/goalWhereRepository.ts). Give the data layer codes or parts instead of sentences, say them through the wealth area, add the UI files to src/i18n/words.test.ts, and probe #/wealth/goals/<id> and #/wealth/debts/<id> on year.emd with --lang he until English is the document's own words only.
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 
 ### M64 F39
 milestone: Later
 scope: ui
 title: A fund in the synthetic year, so a fund's detail can be probed
-state: planned
+state: in_progress
 brief: year.emd (scripts/demo-year.mjs) holds goals and a car loan but no pension or study fund, so probe:screens cannot draw #/wealth/funds/<id>, the fee illustration or the deposit check against paychecks. Add one fund with a few readings fed by a paycheck deduction type to fixtures/synthetic/demo/year/year.json through the tools a conversation uses, and check the fund's detail with --lang he and --budget.
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 
 ### M64 F5
 milestone: M64
