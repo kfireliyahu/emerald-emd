@@ -1,8 +1,8 @@
-import { Fragment, useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { formatMoney, fromMajorUnits, money, type Money } from '@/core/money.ts'
-import { addMonths, parseYearMonth, toYearMonthString } from '@/core/time.ts'
+import { addMonths, parseYearMonth, toYearMonthString, yearMonthOf } from '@/core/time.ts'
 import { parseAmountText } from '@/data/importer/normalize.ts'
 import {
   categoryActivity,
@@ -34,65 +34,82 @@ import { documentCurrency } from '@/data/repositories/statisticsRepository.ts'
 import { CATEGORY_COLOR_TOKENS } from '@/domain/categoryColors.ts'
 import { isMovedKind } from '@/data/repositories/movedRepository.ts'
 import type { MessageKey } from '@/i18n/catalogue.ts'
+import { countKey } from '@/i18n/count.ts'
 import { useDates, useT } from '@/i18n/current.ts'
 import { pathArrows } from '@/i18n/words.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { AppearancePicker } from '@/ui/categories/AppearancePicker.tsx'
-import { buildTaxonomy, type TaxonomyRow } from '@/ui/categories/taxonomyView.ts'
+import { AskAtButton } from '@/ui/categories/AskAtButton.tsx'
+import { buildTaxonomy, type TaxonomySection } from '@/ui/categories/taxonomyView.ts'
 import { token } from '@/ui/charts/categoryColor.ts'
 import { type CategoryPalette } from '@/ui/charts/categoryPalette.ts'
-import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
+import { HeadlineFigure } from '@/ui/charts/HeadlineFigure.tsx'
+import { RankedBars } from '@/ui/charts/RankedBars.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { CategoryPicker } from '@/ui/components/CategoryPicker.tsx'
 import { PageMenu } from '@/ui/components/PageMenu.tsx'
 import { Phrase } from '@/ui/components/Phrase.tsx'
 import { CategoryMark, useCategoryPalette } from '@/ui/components/CategoryMark.tsx'
 import { ContextMenu, isMenuKey, type MenuItem } from '@/ui/components/ContextMenu.tsx'
 import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
+import { IconAction } from '@/ui/components/IconAction.tsx'
+import { SidePanel } from '@/ui/components/SidePanel.tsx'
+import { WaitingList } from '@/ui/components/WaitingList.tsx'
 import { Pager } from '@/ui/home/parts.tsx'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ParentPicker } from '@/ui/categories/ParentPicker.tsx'
 import { eligibleParents, parentsFor } from '@/ui/categories/parentFilter.ts'
 import { Flip } from '@/ui/motion/Flip.tsx'
 
-/** The three tabs, by what a category is: what you spend, what moved, what came in. */
-type Tab = 'SPENDING' | 'MOVED' | 'INCOME'
+/** The three parts of the list, by what a category is: what you spend, what moved, what came in. */
+type Part = 'SPENDING' | 'MOVED' | 'INCOME'
 
-const TABS: readonly Tab[] = ['SPENDING', 'MOVED', 'INCOME']
+const PARTS: readonly Part[] = ['SPENDING', 'MOVED', 'INCOME']
 
 // The same list the totals read (D-316): a category here is moved, not spent.
-const tabOf = (kind: CategoryKind): Tab => (kind === 'INCOME' ? 'INCOME' : isMovedKind(kind) ? 'MOVED' : 'SPENDING')
+const partOf = (kind: CategoryKind): Part => (kind === 'INCOME' ? 'INCOME' : isMovedKind(kind) ? 'MOVED' : 'SPENDING')
 
-/** A year of months, for the panel's bars. */
+/** A year of months, for the panel's trend. */
 const YEAR = 12
 
+/** How long an Undo stays where the thing happened. */
+const UNDO_MS = 8000
+
+/** What the panel asks first when it opens from the menu: a merge, a delete that moves rows, or where it sits. */
+type Asking = 'merge' | 'delete' | 'under'
+
+/** A thing just done that one press takes back: what is said, which group it happened in, and how. */
+interface Undoable {
+  readonly say: string
+  readonly group: string | undefined
+  readonly undo: () => void
+}
+
 /**
- * The taxonomy, and the operations of docs/f02 on it: create, rename, reparent,
- * merge, archive, delete, reorder — in the design approved for M28 U6
- * (D-315): **the list, and a panel for the one you pick** (choice 3 B).
+ * **Categories** — the report (M64 U11, D-623; the direction D-614, the
+ * language D-615). One question: *what kinds of spending do I have, and what
+ * is in each?*
  *
- * The shape of the screen follows the shape of the rule that governs it —
- * **Delete moves first** (M28 F18, D-340). A category nothing uses goes; one
- * that rows, rules, budgets or children still use asks which category of its
- * kind takes them, moves them, then goes — and with nowhere to move them it is
- * refused by what still uses it. The panel, the menu and the Delete key.
+ * **It answers first, in words** — how many categories of spending there are
+ * and how many held something in the month shown — and what waits on the
+ * person (a starter set nobody uses) is one line below it. Then the tree:
+ * spending, money moved and income as three parts of one list (one level of
+ * tabs is the section's own, Categories and Rules), each group a heading with
+ * its total and each category a dot, its name, the month's bar in its own
+ * colour and its figure. **The unused are behind *n unused*** in each group.
  *
- * What changed with U6, and what did not:
+ * **Where each thing opens (D-617)**: a category opens beside the list
+ * (`SidePanel`) with its year, its shops, its rules, its bucket, where it sits
+ * and its colour; a rename is in place on the line (F2, or the menu); a colour
+ * is the dot's popover; a new category is a form in the panel. Merge into… and
+ * a delete of a category still in use move rows for good, so each asks at its
+ * button in the panel, with the category the rows go to. **Deleting an unused
+ * one, and archiving, happen at once** with Undo where it happened (Ctrl+Z
+ * too). The row's menu (right-click, ⋯, Shift+F10) holds the rest.
  *
- * - **A row is a dot, a name, the month's bar and its figure.** The seven
- *   buttons it carried (↑ ↓ Move Merge Archive Delete, and a target field) are
- *   in the right-click menu and in the panel, so forty-six rows read as names
- *   and not as a wall of controls.
- * - **The panel says what a category holds**: twelve months, the merchants the
- *   money goes to, the rules that file here, the monthly target, and the colour.
- * - **Colours are eleven hues, dots beside the name** (D-314), resolved over the
- *   whole taxonomy (`resolvePalette`) so the dot on a row is the wedge in the
- *   donut and a hue a sibling already wears is marked as taken.
- * - **The starter set can go in one go** (S4): when most of it has never held a
- *   row, one line offers to archive those together. Archiving keeps whatever is
- *   filed, and *Show archived* brings them back.
- *
- * **Unchanged**: *unused* is still the word the screen exists to say, a system
- * category cannot be renamed, moved or deleted, and the refusals read the same.
+ * **Unchanged**: a system category cannot be renamed, moved or deleted, a
+ * delete moves what uses a category first (M28 F18, D-340), and the refusals
+ * read the same.
  */
 export function Categories() {
   const db = useDocumentStore((state) => state.db)
@@ -104,36 +121,28 @@ export function Categories() {
 
   const [showArchived, setShowArchived] = useState(false)
   const [search, setSearch] = useState('')
-  const [tab, setTab] = useState<Tab>('SPENDING')
   const [picked, setPicked] = useState<string | undefined>()
-  const [collapsed, setCollapsed] = useState<ReadonlySet<string>>(new Set())
-  const [editing, setEditing] = useState<string | undefined>()
-  const [merging, setMerging] = useState<Category | undefined>()
-  const [moving, setMoving] = useState<Category | undefined>()
-  const [deleting, setDeleting] = useState<
-    { readonly category: Category; readonly using: string; readonly targets: readonly Category[] } | undefined
-  >()
+  const [asking, setAsking] = useState<Asking | undefined>()
   const [adding, setAdding] = useState(false)
+  const [showUnused, setShowUnused] = useState<ReadonlySet<string>>(new Set())
+  const [editing, setEditing] = useState<string | undefined>()
   const [problem, setProblem] = useState<React.ReactNode>()
+  const [done, setDone] = useState<Undoable | undefined>()
   const [menu, setMenu] = useState<
     { readonly category: Category; readonly at: { readonly x: number; readonly y: number } } | undefined
   >()
   const [wanted, setWanted] = useState<string | undefined>()
 
-  // One read, archived included, and the two consumers take what they need:
-  // the palette resolves over the live ones only (an archived category must not
-  // push a live one onto another hue), and the list below shows what the
-  // checkbox asks for.
+  // One read, archived included: the palette resolves over the live ones only,
+  // and the list shows what Show archived asks for.
   const all = useMemo(
     () => (db === undefined ? [] : listCategories(db, { includeArchived: true })),
     [db, revision],
   )
-
   const activity = useMemo(
     () => (db === undefined ? new Map<string, CategoryActivity>() : categoryActivity(db, '0000-01-01')),
     [db, revision],
   )
-
   const palette = useCategoryPalette(all)
 
   /** The months the document has rows in, newest first — what the pager walks. */
@@ -141,7 +150,10 @@ export function Categories() {
     () => (db === undefined ? [] : [...new Set(monthlyTotals(db).map((total) => total.period))]),
     [db, revision],
   )
-  const period = wanted !== undefined && months.includes(wanted) ? wanted : months[0]
+  // It opens on the last finished month, as Home does (D-607): the month still running is mostly dashes.
+  const running = toYearMonthString(yearMonthOf(today()))
+  const opening = months[0] === running && months[1] !== undefined ? months[1] : months[0]
+  const period = wanted !== undefined && months.includes(wanted) ? wanted : opening
   const currency = useMemo(() => (db === undefined ? 'ILS' : documentCurrency(db)), [db, revision])
 
   /** Twelve months ending at the one shown, for every category at once. */
@@ -169,54 +181,79 @@ export function Categories() {
     () => (showArchived ? all : all.filter((category) => !category.isArchived)),
     [all, showArchived],
   )
-  const inTab = useMemo(() => visible.filter((category) => tabOf(category.kind) === tab), [visible, tab])
-
-  const sections = useMemo(
-    () => buildTaxonomy(inTab, { search, used: (id) => activity.has(id) }),
-    [inTab, search, activity],
+  const parts = useMemo(
+    () =>
+      PARTS.map((part) => {
+        const here = visible.filter((category) => partOf(category.kind) === part)
+        return { part, here, sections: buildTaxonomy(here, { search, used: (id) => activity.has(id) }) }
+      }),
+    [visible, search, activity],
   )
 
-  // The panel is about one category, and there is always one: the one picked if
-  // it is still on this tab, otherwise the first that holds anything.
-  const selected = useMemo(() => {
-    const here = sections.flatMap((section) => [
-      section.category,
-      ...section.rows.flatMap((row) => [row.category, ...row.children]),
-    ])
-    return (
-      here.find((category) => category.id === picked) ??
-      here.find((category) => (series.out.get(category.id) ?? series.in.get(category.id))?.at(-1) !== undefined && monthOf(category) > 0) ??
-      here[0]
-    )
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sections, picked, series])
+  /**
+   * **S4: the starter set, put away in one go.** A category nothing has ever
+   * been filed under, that nothing points at and that holds no target. A
+   * parent goes only when every child of it does too; archived is not deleted.
+   */
+  const unused = useMemo(() => {
+    const live = all.filter((category) => !category.isArchived && !category.isSystem)
+    const targeted = new Set(rules.filter((rule) => rule.origin !== 'BUILT_IN').map((rule) => rule.targetCategoryId))
+    const free = (category: Category): boolean =>
+      !activity.has(category.id) && !targeted.has(category.id) && !budgets.has(category.id)
+    const kids = (id: string): Category[] => live.filter((category) => category.parentId === id)
+    return live.filter((category) => free(category) && kids(category.id).every(free))
+  }, [all, activity, rules, budgets])
 
+  // The note fades after a few seconds; Ctrl+Z takes it back while it is there.
+  const undoRef = useRef<(() => void) | undefined>(undefined)
   useEffect(() => {
-    // Leaving a tab for one the picked category is not on lets the default take over.
-    if (picked !== undefined && selected !== undefined && selected.id !== picked) setPicked(undefined)
-  }, [picked, selected])
+    if (done === undefined) return
+    const timer = window.setTimeout(() => setDone(undefined), UNDO_MS)
+    return () => window.clearTimeout(timer)
+  }, [done])
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (!(event.ctrlKey || event.metaKey) || event.shiftKey || event.key.toLowerCase() !== 'z') return
+      const target = event.target
+      if (target instanceof Element && target.closest('input, textarea, [contenteditable="true"]') !== null) return
+      if (undoRef.current === undefined) return
+      event.preventDefault()
+      undoRef.current()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   if (db === undefined) {
     return <Centered>{t('categories.noDocument')}</Centered>
   }
 
-  const write = (work: (database: import('sql.js').Database, now: number) => void): void => {
+  const write = (work: (database: import('sql.js').Database, now: number) => void, keepUndo = false): void => {
     setProblem(undefined)
+    // Undo is for the last thing done: any other write takes it away.
+    if (!keepUndo) setDone(undefined)
     try {
       mutate((database) => work(database, Date.now()))
     } catch (error) {
-      // A refusal is information, not a crash: it is how the user finds out
-      // that the thing they wanted needs a merge instead.
+      // A refusal is information, not a crash.
       setProblem(error instanceof Error ? error.message : String(error))
     }
   }
+  const undo = (): void => {
+    if (done === undefined) return
+    const back = done
+    setDone(undefined)
+    back.undo()
+  }
+  undoRef.current = done === undefined ? undefined : undo
 
-  /**
-   * **Delete, the chosen way** (M28 F18, D-340): nothing uses it, it goes;
-   * something does, and the panel at the foot asks where all of it moves
-   * first; nowhere of its kind to move it, and it is refused by what still uses
-   * it. The repository judges every one of those, so this only picks the door.
-   */
+  /** The group a category is drawn in: its top-level ancestor. */
+  const groupOf = (category: Category): string | undefined => {
+    let at: Category | undefined = category
+    while (at?.parentId !== undefined) at = all.find((one) => one.id === at?.parentId)
+    return at?.id
+  }
+
   /** What still uses a category, in words — `describeCategoryUsage`'s, in the language now. */
   const usageWords = (usage: CategoryUsage): string => {
     const some = (n: number, one: MessageKey, many: MessageKey): string | undefined =>
@@ -235,103 +272,93 @@ export function Categories() {
     return t('categories.usage.last', { rest: parts.slice(0, -1).join(', '), last: parts.at(-1) ?? '' })
   }
 
+  const open = (category: Category, ask?: Asking): void => {
+    setAdding(false)
+    setPicked(category.id)
+    setAsking(ask)
+  }
+
+  /**
+   * **Delete, the chosen way** (M28 F18, D-340; D-617): nothing uses it, it
+   * goes at once, with Undo; something does, and the panel asks at its Delete
+   * where all of it moves; nowhere of its kind to move it, and it is refused by
+   * what still uses it.
+   */
   const remove = (category: Category): void => {
     setProblem(undefined)
     if (category.isSystem) return
     const usage = categoryUsage(db, category.id)
     if (!isCategoryInUse(usage)) {
+      const { name, kind, parentId, color, icon } = category
       write((database, now) => deleteCategory(database, category.id, now))
+      if (picked === category.id) setPicked(undefined)
+      setDone({
+        say: t('categories.deleted', { name }),
+        group: parentId === undefined ? undefined : groupOf(category),
+        undo: () =>
+          write((database, now) => {
+            const id = createCategory(database, { name, kind, parentId }, now)
+            if (color !== undefined || icon !== undefined) setCategoryAppearance(database, id, { color, icon }, now)
+          }),
+      })
       return
     }
-    const using = usageWords(usage)
-    const targets = categoryDeleteTargets(db, category.id)
-    if (targets.length === 0) {
+    if (categoryDeleteTargets(db, category.id).length === 0) {
       setProblem(
         <Phrase
           text={t(usage.subcategories > 0 ? 'categories.noTargetRoom' : 'categories.noTarget', {
-            using,
-            tab: t(`categories.tabsInline.${tabOf(category.kind)}`),
+            using: usageWords(usage),
+            tab: t(`categories.tabsInline.${partOf(category.kind)}`),
           })}
           parts={{ name: <Bidi>{category.name}</Bidi> }}
         />,
       )
       return
     }
-    setMerging(undefined)
-    setMoving(undefined)
-    setDeleting({ category, using, targets })
+    open(category, 'delete')
   }
 
-  // What a new category can go under: anything with room below it, three levels
-  // deep (M28 F29), that is not built in or archived.
-  const parents = eligibleParents(all)
+  /** Archiving puts it away and keeps every row it has, so it happens at once and Undo brings it back. */
+  const archive = (category: Category): void => {
+    const restoring = category.isArchived
+    write((database, now) => setCategoryArchived(database, category.id, !restoring, now))
+    if (restoring) return
+    setDone({
+      say: t('categories.archived', { name: category.name }),
+      group: category.parentId === undefined ? undefined : groupOf(category),
+      undo: () => write((database, now) => setCategoryArchived(database, category.id, false, now)),
+    })
+  }
 
-  /**
-   * **S4: the starter set, put away in one go.** A category nothing has ever
-   * been filed under, that nothing points at and that holds no target, is the
-   * thing a taxonomy that grew wrong is made of. A parent goes only when every
-   * child of it does too. Archived is not deleted: what is filed stays filed,
-   * and *Show archived* brings them back.
-   */
-  const unused = useMemo(() => {
-    const live = all.filter((category) => !category.isArchived && !category.isSystem)
-    const targeted = new Set(rules.filter((rule) => rule.origin !== 'BUILT_IN').map((rule) => rule.targetCategoryId))
-    const free = (category: Category): boolean =>
-      !activity.has(category.id) && !targeted.has(category.id) && !budgets.has(category.id)
-    const kids = (id: string): Category[] => live.filter((category) => category.parentId === id)
-    return live.filter((category) => free(category) && kids(category.id).every(free))
-  }, [all, activity, rules, budgets])
-  const crowded = unused.length >= 5 && unused.length * 2 >= all.filter((category) => !category.isArchived && !category.isSystem).length
+  // What a new category can go under: anything with room below it, three levels deep (M28 F29).
+  const parents = eligibleParents(all)
+  const liveOwn = all.filter((category) => !category.isArchived && !category.isSystem)
+  const crowded = unused.length >= 5 && unused.length * 2 >= liveOwn.length
 
   const searching = search.trim() !== ''
-  const top = Math.max(1, ...inTab.map((category) => monthOf(category)))
-
-  const rowProps = (category: Category): RowHandlers => ({
-    onEdit: () => setEditing(category.id),
-    onRename: (name) => {
-      setEditing(undefined)
-      if (name !== '' && name !== category.name) {
-        write((database, now) => renameCategory(database, category.id, name, now))
-      }
-    },
-    onSetAppearance: (appearance) =>
-      write((database, now) => setCategoryAppearance(database, category.id, appearance, now)),
-    onMenu: (at) => {
-      setPicked(category.id)
-      setMenu({ category, at })
-    },
-  })
+  const selected = picked === undefined ? undefined : all.find((category) => category.id === picked)
 
   const menuItems = (category: Category): readonly MenuItem[] => {
     const mine = rules.filter((rule) => rule.targetCategoryId === category.id && rule.origin !== 'BUILT_IN')
     const homes = parentsFor(all, category).filter((one) => one.id !== category.parentId)
-    const items: MenuItem[] = []
+    const items: MenuItem[] = [{ icon: 'right', label: t('categories.menu.open'), shortcut: 'Enter', onChoose: () => open(category) }]
     if (!category.isSystem) {
       items.push({ icon: 'edit', label: t('categories.menu.rename'), shortcut: 'F2', onChoose: () => setEditing(category.id) })
     }
-    items.push({
-      icon: 'palette',
-      label: t('categories.menu.colour'),
-      detail: t('categories.menu.colourDetail'),
-      onChoose: () => setPicked(category.id),
-    })
     if (!category.isSystem) {
       items.push(
         {
           icon: 'move',
           label: t('categories.menu.moveUnder'),
           disabled: homes.length === 0 && category.parentId === undefined,
-          detail:
-            homes.length === 0 && category.parentId === undefined
-              ? t('categories.menu.moveUnderFull')
-              : undefined,
-          onChoose: () => setMoving(category),
+          detail: homes.length === 0 && category.parentId === undefined ? t('categories.menu.moveUnderFull') : undefined,
+          onChoose: () => open(category, 'under'),
         },
         {
           icon: 'merge',
           label: t('categories.menu.mergeInto'),
           detail: t('categories.menu.mergeDetail'),
-          onChoose: () => setMerging(category),
+          onChoose: () => open(category, 'merge'),
         },
       )
     }
@@ -360,7 +387,7 @@ export function Categories() {
           label: category.isArchived ? t('categories.restore') : t('categories.archive'),
           detail: category.isArchived ? undefined : t('categories.menu.archiveDetail'),
           separated: true,
-          onChoose: () => write((d, now) => setCategoryArchived(d, category.id, !category.isArchived, now)),
+          onChoose: () => archive(category),
         },
         {
           icon: 'trash',
@@ -374,23 +401,124 @@ export function Categories() {
     return items
   }
 
-  const renderRow = (category: Category, contextOnly = false, nested = false) => (
+  /** The list's keys, as everywhere: arrows walk, Enter opens, F2 renames, Delete deletes, the menu key opens the menu. */
+  const rowKeys = (category: Category, event: React.KeyboardEvent<HTMLElement>): void => {
+    if (event.target !== event.currentTarget) return
+    if (isMenuKey(event)) {
+      event.preventDefault()
+      const box = event.currentTarget.getBoundingClientRect()
+      setMenu({ category, at: { x: box.left + 160, y: box.bottom } })
+    } else if (event.key === 'Enter') {
+      event.preventDefault()
+      open(category)
+    } else if (event.key === 'F2' && !category.isSystem) {
+      event.preventDefault()
+      setEditing(category.id)
+    } else if (event.key === 'Delete' && !category.isSystem) {
+      event.preventDefault()
+      remove(category)
+    } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault()
+      const rows = [...document.querySelectorAll<HTMLElement>('[data-category-row]')]
+      const at = rows.indexOf(event.currentTarget)
+      rows[at + (event.key === 'ArrowDown' ? 1 : -1)]?.focus()
+    }
+  }
+
+  const rowFor = (category: Category, level: Level, figure: number, top: number, extra?: React.ReactNode, contextOnly = false) => (
     <Row
       key={category.id}
       category={category}
-      nested={nested}
+      level={level}
       palette={palette}
-      month={monthOf(category)}
+      figure={figure}
       top={top}
       currency={currency}
-      activity={activity.get(category.id)}
+      used={activity.has(category.id) || all.some((one) => one.parentId === category.id && activity.has(one.id))}
       contextOnly={contextOnly}
       isEditing={editing === category.id}
       selected={selected?.id === category.id}
-      handlers={rowProps(category)}
-      onSelect={() => setPicked(category.id)}
+      extra={extra}
+      onOpen={() => open(category)}
+      onEdit={() => setEditing(category.id)}
+      onRename={(name) => {
+        setEditing(undefined)
+        if (name !== '' && name !== category.name) write((database, now) => renameCategory(database, category.id, name, now))
+      }}
+      onSetAppearance={(appearance) => write((database, now) => setCategoryAppearance(database, category.id, appearance, now))}
+      onMenu={(at) => setMenu({ category, at })}
+      onKeyDown={(event) => rowKeys(category, event)}
     />
   )
+
+  /** The note a thing just done leaves where it happened, with its Undo. */
+  const note = (
+    <li key="done" className="fc-pop-enter flex h-10 items-center gap-3 border-b border-hairline ps-9 text-ink-secondary">
+      <Bidi>{done?.say ?? ''}</Bidi>
+      <button type="button" className="fc-text-action" onClick={undo} title={t('categories.undoTitle')}>
+        {t('categories.undo')}
+      </button>
+    </li>
+  )
+
+  const isUnused = (category: Category): boolean => !activity.has(category.id) && !category.isSystem
+  const group = (section: TaxonomySection, top: number) => {
+    const head = section.category
+    const total =
+      monthOf(head) +
+      section.rows.reduce(
+        (sum, row) => sum + monthOf(row.category) + row.children.reduce((s, child) => s + monthOf(child), 0),
+        0,
+      )
+    // A search hides nothing: hiding the answer behind a closed group is the one thing a search must never do.
+    const showing = searching || showUnused.has(head.id)
+    const rows = section.rows
+      .map((row) => ({ ...row, children: row.children.filter((child) => showing || !isUnused(child)) }))
+      .filter((row) => showing || !isUnused(row.category) || row.children.length > 0)
+    const hidden = section.rows.length + section.rows.reduce((n, row) => n + row.children.length, 0) -
+      rows.length - rows.reduce((n, row) => n + row.children.length, 0)
+    const toggle = section.unused > 0 && !searching && (
+      <button
+        type="button"
+        className="fc-text-action text-caption"
+        aria-expanded={showing}
+        onClick={(event) => {
+          event.stopPropagation()
+          setShowUnused((current) => {
+            const next = new Set(current)
+            if (next.has(head.id)) next.delete(head.id)
+            else next.add(head.id)
+            return next
+          })
+        }}
+      >
+        {showing ? t('categories.hideUnused') : t(countKey('categories.nUnused', hidden || section.unused), { count: hidden || section.unused })}
+      </button>
+    )
+    return (
+      <section key={head.id} className="flex flex-col">
+        <ul className="m-0 list-none p-0">
+          {rowFor(head, 'head', total, top, toggle, section.contextOnly)}
+        </ul>
+        {(rows.length > 0 || done?.group === head.id) && (
+          // A category made, merged, archived or moved under another (M39).
+          <Flip
+            as="ul"
+            className="m-0 list-none p-0"
+            flipKey={rows.flatMap((row) => [row.category.id, ...row.children.map((child) => child.id)]).join(',')}
+          >
+            {rows.map((row) => (
+              <Fragment key={row.category.id}>
+                {rowFor(row.category, 'row', monthOf(row.category) + row.children.reduce((sum, child) => sum + monthOf(child), 0), top, undefined, row.contextOnly)}
+                {row.children.map((child) => rowFor(child, 'nested', monthOf(child), top))}
+              </Fragment>
+            ))}
+            {done !== undefined && done.group === head.id && note}
+          </Flip>
+        )}
+      </section>
+    )
+  }
 
   const monthLabel = period === undefined ? undefined : parseYearMonth(period)
   const at = period === undefined ? -1 : months.indexOf(period)
@@ -398,365 +526,216 @@ export function Categories() {
     const parsed = month === undefined ? undefined : parseYearMonth(month)
     return parsed === undefined ? undefined : dates.monthShort(parsed)
   }
+  const spending = parts.find((one) => one.part === 'SPENDING')?.here ?? []
+  const spendingUsed = spending.filter((category) => monthOf(category) > 0).length
+  const anything = parts.some((one) => one.sections.length > 0)
+
+  const page = (
+    <div className="fc-view-enter @container flex flex-col gap-6 px-8 pt-6 pb-12">
+      <header className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+          <h1 className="m-0 text-title leading-tight font-medium">{t('categories.title')}</h1>
+          {monthLabel !== undefined && months.length > 1 && (
+            <Pager
+              label={t('categories.month')}
+              prev={short(months[at + 1])}
+              next={short(months[at - 1])}
+              onPrev={() => setWanted(months[at + 1])}
+              onNext={() => setWanted(months[at - 1])}
+            />
+          )}
+        </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape' && search !== '') {
+                event.preventDefault()
+                setSearch('')
+              }
+            }}
+            placeholder={t('categories.find')}
+            aria-label={t('categories.findLabel')}
+            className={`${FIELD} w-52`}
+          />
+          <PageMenu
+            title={t('categories.title')}
+            items={[
+              {
+                label: showArchived ? t('categories.hideArchived') : t('categories.showArchived'),
+                onChoose: () => setShowArchived(!showArchived),
+              },
+            ]}
+          />
+          <Button
+            variant="primary"
+            icon="add"
+            onClick={() => {
+              setPicked(undefined)
+              setAdding(true)
+            }}
+            aria-expanded={adding}
+            data-guide="categories.new"
+          >
+            {t('categories.newCategory')}
+          </Button>
+        </div>
+      </header>
+
+      <p className="m-0 max-w-[40ch] text-lede [text-wrap:balance]">
+        {spending.length === 0
+          ? t('categories.answerNone')
+          : monthLabel === undefined
+            ? t(countKey('categories.answerNoMonth', spending.length), { count: spending.length })
+            : t(countKey('categories.answer', spending.length), {
+                count: spending.length,
+                used: spendingUsed,
+                month: dates.yearMonth(monthLabel),
+              })}
+      </p>
+
+      {problem !== undefined && (
+        <p role="alert" className="fc-pop-enter m-0 flex flex-wrap items-baseline gap-x-3">
+          <span className="text-negative">{problem}</span>
+          <button type="button" className="fc-text-action" onClick={() => setProblem(undefined)}>
+            {t('categories.dismiss')}
+          </button>
+        </p>
+      )}
+
+      <WaitingList
+        label={t('categories.unusedLabel')}
+        items={
+          crowded && !searching
+            ? [
+                {
+                  key: 'unused',
+                  say: t('categories.unusedOffer', { unused: unused.length, all: liveOwn.length }),
+                  why: t('categories.unusedWhy'),
+                  verb: t('categories.archiveThem'),
+                  onDo: () => {
+                    const ids = unused.map((category) => category.id)
+                    write((database, now) => {
+                      for (const id of ids) setCategoryArchived(database, id, true, now)
+                    })
+                    setDone({
+                      say: t(countKey('categories.archivedMany', ids.length), { count: ids.length }),
+                      group: 'unused',
+                      undo: () =>
+                        write((database, now) => {
+                          for (const id of ids) setCategoryArchived(database, id, false, now)
+                        }),
+                    })
+                  },
+                },
+              ]
+            : []
+        }
+      />
+      {done !== undefined && (done.group === 'unused' || done.group === undefined) && (
+        <ul className="m-0 -mt-3 list-none border-t border-hairline p-0">{note}</ul>
+      )}
+
+      {!anything && (
+        <p className="m-0 text-ink-secondary">
+          {searching ? t('categories.emptySearch', { search: search.trim() }) : t('categories.emptyDocument')}
+        </p>
+      )}
+
+      {parts.map(({ part, here, sections }) => {
+        if (sections.length === 0) return null
+        const top = Math.max(1, ...here.map((category) => monthOf(category)))
+        return (
+          <section key={part} className="flex flex-col gap-2" aria-labelledby={`categories-${part}`} data-block>
+            <h2 id={`categories-${part}`} className="m-0 text-heading font-medium">
+              {t(`categories.parts.${part}`)}
+            </h2>
+            <div className="flex flex-col gap-4">{sections.map((section) => group(section, top))}</div>
+          </section>
+        )
+      })}
+    </div>
+  )
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="min-h-0 flex-1 overflow-auto">
-        <div className="fc-view-enter @container flex flex-col gap-5 px-8 pt-6 pb-12">
-          <header className="flex flex-wrap items-end justify-between gap-6 border-b border-hairline pb-4">
-            <div className="flex flex-col gap-1.5">
-              <span className="fc-label text-ink-secondary uppercase tabular-nums">
-                {monthLabel === undefined
-                  ? t('categories.lead')
-                  : t('categories.leadMonth', { month: dates.yearMonth(monthLabel) })}
-              </span>
-              <h1 className="m-0 text-[24px] leading-tight font-medium tracking-[-0.01em]">{t('categories.title')}</h1>
-            </div>
-            <div className="flex flex-wrap items-center gap-4">
-              {monthLabel !== undefined && months.length > 1 && (
-                <Pager
-                  label={t('categories.month')}
-                  prev={short(months[at + 1])}
-                  next={short(months[at - 1])}
-                  onPrev={() => setWanted(months[at + 1])}
-                  onNext={() => setWanted(months[at - 1])}
-                />
-              )}
-              <input
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === 'Escape') setSearch('')
-                }}
-                placeholder={t('categories.find')}
-                aria-label={t('categories.findLabel')}
-                className={`${FIELD} w-52`}
-              />
-              {/* What files rows into these, one press away (D-373): Rules is
-                  this section's other tab since M36 U10. */}
-              <Button variant="ghost" size="sm" icon="rule" onClick={() => navigate('/categories/rules')}>
-                {t('categories.rules')}
-              </Button>
-              <Button
-                variant="secondary"
-                icon="add"
-                onClick={() => setAdding((current) => !current)}
-                aria-expanded={adding}
-                data-guide="categories.new"
-              >
-                {t('categories.newCategory')}
-              </Button>
-              <PageMenu
-                title={t('categories.title')}
-                items={[
-                  {
-                    label: showArchived ? t('categories.hideArchived') : t('categories.showArchived'),
-                    onChoose: () => setShowArchived(!showArchived),
-                  },
-                ]}
-              />
-            </div>
-          </header>
+    <div className="flex h-full">
+      <div className="h-full min-w-0 flex-1 overflow-auto">{page}</div>
 
-          {adding && (
-            <div className="fc-pop-enter border-b border-hairline pb-4">
-              <NewCategoryForm
-                parents={parents}
-                onCreate={(input) => {
-                  write((database, now) => createCategory(database, input, now))
-                }}
-              />
-            </div>
-          )}
-
-          <nav aria-label={t('categories.kindNav')} className="flex border-b border-hairline">
-            {TABS.map((one) => (
-              <button
-                key={one}
-                type="button"
-                onClick={() => setTab(one)}
-                aria-current={tab === one ? 'page' : undefined}
-                className={`relative h-9 px-3.5 text-[13px] transition-colors duration-[var(--duration-micro)] ${
-                  tab === one
-                    ? 'text-ink after:absolute after:inset-x-3.5 after:-bottom-px after:h-0.5 after:bg-accent'
-                    : 'text-ink-secondary hover:text-ink'
-                }`}
-              >
-                {t(`categories.tabs.${one}`)}
-                <span className="ms-1.5 font-mono text-caption text-ink-tertiary">
-                  {visible.filter((category) => tabOf(category.kind) === one).length}
-                </span>
-              </button>
-            ))}
-          </nav>
-
-          {crowded && tab === 'SPENDING' && !searching && (
-            <section
-              aria-label={t('categories.unusedLabel')}
-              className="flex flex-wrap items-center gap-x-4 gap-y-2 bg-surface px-3.5 py-2.5"
-            >
-              <span className="min-w-0 flex-1">
-                {t('categories.unusedOffer', {
-                  unused: unused.length,
-                  all: all.filter((category) => !category.isArchived && !category.isSystem).length,
-                })}
-              </span>
-              <Button
-                variant="secondary"
-                size="sm"
-                icon="archive"
-                count={unused.length}
-                onClick={() =>
-                  write((database, now) => {
-                    for (const category of unused) setCategoryArchived(database, category.id, true, now)
-                  })
+      {adding ? (
+        <SidePanel title={t('categories.newCategory')} onClose={() => setAdding(false)}>
+          <NewCategoryForm
+            parents={parents}
+            onCreate={(input) => {
+              write((database, now) => {
+                const id = createCategory(database, input, now)
+                setPicked(id)
+              })
+              setAdding(false)
+            }}
+          />
+        </SidePanel>
+      ) : selected !== undefined ? (
+        <SidePanel
+          key={selected.id}
+          kicker={selected.parentId === undefined ? t('categories.topLevel') : pathArrows(all.find((one) => one.id === selected.parentId)?.path ?? '')}
+          title={<CategoryMark color={palette.colorOf(selected.id)}>{selected.name}</CategoryMark>}
+          onClose={() => {
+            setPicked(undefined)
+            setAsking(undefined)
+          }}
+        >
+          <CategoryPanel
+            category={selected}
+            palette={palette}
+            currency={currency}
+            period={period}
+            series={seriesOf(selected)}
+            asking={asking}
+            rules={rules.filter((rule) => rule.targetCategoryId === selected.id && rule.origin !== 'BUILT_IN')}
+            merchants={
+              period === undefined ? [] : categoryMerchants(db, selected.id, monthsAgo(period, YEAR - 1), period, currency, 5)
+            }
+            onSetAppearance={(appearance) =>
+              write((database, now) => setCategoryAppearance(database, selected.id, appearance, now))
+            }
+            budget={budgets.get(selected.id)}
+            hasPlan={hasPlan}
+            onSetTarget={(target) =>
+              write((database, now) => {
+                const result = setCategoryBudget(database, today(), currency, selected.id, target?.minor ?? 0, now)
+                if (result === 'SEVERAL_BUCKETS') {
+                  throw new Error(t('categories.severalBuckets', { name: selected.name }))
                 }
-              >
-                {t('categories.archive')}
-              </Button>
-            </section>
-          )}
-
-          {problem !== undefined && (
-            <div className="fc-pop-enter flex items-center gap-4 bg-surface px-3.5 py-2">
-              <span className="text-negative">{problem}</span>
-              <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setProblem(undefined)}>
-                {t('categories.dismiss')}
-              </Button>
-            </div>
-          )}
-
-          <div className="grid grid-cols-1 items-start gap-6 @[56rem]:grid-cols-[minmax(0,1fr)_23.75rem]">
-            <div
-              className="flex min-w-0 flex-col gap-5"
-              onKeyDown={(event) => {
-                if (isMenuKey(event) && selected !== undefined) {
-                  const box = (event.target as HTMLElement).getBoundingClientRect()
-                  setMenu({ category: selected, at: { x: box.left + 120, y: box.bottom } })
-                  event.preventDefault()
-                }
-                if (event.key === 'F2' && selected !== undefined && !selected.isSystem) {
-                  event.preventDefault()
-                  setEditing(selected.id)
-                }
-                // Delete on the selected category — never from inside a field,
-                // where it is the key that deletes a character.
-                if (
-                  event.key === 'Delete' &&
-                  selected !== undefined &&
-                  !selected.isSystem &&
-                  (event.target as HTMLElement).closest('input, textarea, select, [contenteditable="true"]') === null
-                ) {
-                  event.preventDefault()
-                  remove(selected)
-                }
-              }}
-            >
-              {sections.length === 0 && (
-                <p className="m-0 py-6 text-ink-secondary">
-                  {searching
-                    ? t('categories.emptySearch', { search: search.trim() })
-                    : tab === 'SPENDING'
-                      ? t('categories.emptyDocument')
-                      : t('categories.emptyTab', { tab: t(`categories.tabsInline.${tab}`) })}
-                </p>
-              )}
-
-              {sections.map((section) => {
-                // A heading is a category (M28 F29): picked, renamed and opened
-                // from the menu like a row, and its figure is everything under it.
-                const head = section.category
-                // A search collapses nothing: hiding the answer behind a closed
-                // section is the one thing a search must never do.
-                const isOpen = searching || !collapsed.has(head.id)
-                const total =
-                  monthOf(head) +
-                  section.rows.reduce(
-                    (sum, row) => sum + monthOf(row.category) + row.children.reduce((s, child) => s + monthOf(child), 0),
-                    0,
-                  )
-                const isSelected = selected?.id === head.id
-                const handlers = rowProps(head)
-                return (
-                  <section key={head.id} className="flex flex-col">
-                    <h2
-                      tabIndex={0}
-                      onFocus={() => setPicked(head.id)}
-                      onContextMenu={(event) => {
-                        event.preventDefault()
-                        handlers.onMenu({ x: event.clientX, y: event.clientY })
-                      }}
-                      aria-current={isSelected ? 'true' : undefined}
-                      className={`group/heading relative m-0 flex h-9 items-center gap-2.5 border-b border-hairline-strong pe-1.5 outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
-                        isSelected ? 'bg-accent-soft before:absolute before:inset-y-0 before:start-0 before:w-0.5 before:bg-accent' : ''
-                      } ${section.contextOnly ? 'text-ink-tertiary' : ''}`}
-                    >
-                      <button
-                        type="button"
-                        onClick={(event) => {
-                          event.stopPropagation()
-                          setCollapsed((current) => {
-                            const next = new Set(current)
-                            if (next.has(head.id)) next.delete(head.id)
-                            else next.add(head.id)
-                            return next
-                          })
-                        }}
-                        aria-expanded={isOpen}
-                        aria-label={t(isOpen ? 'categories.collapse' : 'categories.expand', { name: head.name })}
-                        disabled={searching || section.rows.length === 0}
-                        className="flex w-5 shrink-0 items-center justify-center text-ink-tertiary disabled:opacity-0"
-                      >
-                        <span aria-hidden>{isOpen ? '▾' : '▸'}</span>
-                      </button>
-                      <AppearancePicker
-                        id={head.id}
-                        name={head.name}
-                        color={head.color}
-                        icon={head.icon}
-                        palette={palette}
-                        onChange={handlers.onSetAppearance}
-                      />
-                      {editing === head.id ? (
-                        <input
-                          autoFocus
-                          defaultValue={head.name}
-                          aria-label={t('categories.renameName', { name: head.name })}
-                          onBlur={(event) => handlers.onRename(event.target.value.trim())}
-                          onKeyDown={(event) => {
-                            if (event.key === 'Enter') event.currentTarget.blur()
-                            if (event.key === 'Escape') handlers.onRename(head.name)
-                          }}
-                          className={`${FIELD} h-7 w-48`}
-                        />
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setPicked(head.id)}
-                          className="fc-label flex min-w-0 text-start text-ink uppercase"
-                        >
-                          <Bidi className="min-w-0 truncate">{head.name}</Bidi>
-                        </button>
-                      )}
-                      {head.isArchived && <Tag>{t('categories.tagArchived')}</Tag>}
-                      {head.isSystem && <Tag>{t('categories.tagSystem')}</Tag>}
-                      <span className="text-caption text-ink-tertiary tabular-nums">
-                        {section.rows.length > 0
-                          ? section.unused > 0
-                            ? t('categories.shownUnused', { shown: section.shown, unused: section.unused })
-                            : String(section.shown)
-                          : activity.get(head.id) === undefined && !head.isSystem
-                            ? t('categories.unused')
-                            : ''}
-                      </span>
-                      <span className="ms-auto text-[13px] text-ink-secondary tabular-nums">
-                        {total > 0 ? whole(money(total, currency)) : ''}
-                      </span>
-                      <span className="flex w-14 shrink-0 justify-end gap-0.5 opacity-0 transition-opacity duration-[var(--duration-micro)] group-hover/heading:opacity-100 group-focus-within/heading:opacity-100">
-                        {!head.isSystem && (
-                          <button
-                            type="button"
-                            title={t('categories.renameTitle')}
-                            aria-label={t('categories.renameName', { name: head.name })}
-                            onClick={(event) => {
-                              event.stopPropagation()
-                              handlers.onEdit()
-                            }}
-                            className="flex size-7 items-center justify-center text-ink-secondary hover:text-ink"
-                          >
-                            <ActionGlyph name="edit" size={14} />
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          title={t('categories.moreTitle')}
-                          aria-label={t('categories.moreFor', { name: head.name })}
-                          onClick={(event) => {
-                            event.stopPropagation()
-                            const box = event.currentTarget.getBoundingClientRect()
-                            handlers.onMenu({ x: box.right - 4, y: box.bottom + 2 })
-                          }}
-                          className="flex size-7 items-center justify-center text-ink-secondary hover:text-ink"
-                        >
-                          <ActionGlyph name="more" size={14} />
-                        </button>
-                      </span>
-                    </h2>
-                    {isOpen && section.rows.length > 0 && (
-                      // A category made, merged, archived or moved under another (M39).
-                      <Flip
-                        as="ul"
-                        className="m-0 list-none p-0"
-                        flipKey={section.rows
-                          .flatMap((row: TaxonomyRow) => [row.category.id, ...row.children.map((child) => child.id)])
-                          .join(',')}
-                      >
-                        {section.rows.map((row: TaxonomyRow) => (
-                          <Fragment key={row.category.id}>
-                            {renderRow(row.category, row.contextOnly)}
-                            {row.children.map((child) => renderRow(child, false, true))}
-                          </Fragment>
-                        ))}
-                      </Flip>
-                    )}
-                  </section>
-                )
-              })}
-
-              <p className="m-0 text-caption text-ink-secondary">
-                {t('categories.footnote', {
-                  month: monthLabel === undefined ? t('categories.theMonth') : dates.yearMonth(monthLabel),
-                })}
-              </p>
-            </div>
-
-            {selected !== undefined && (
-              <CategoryPanel
-                key={selected.id}
-                category={selected}
-                palette={palette}
-                currency={currency}
-                period={period}
-                series={seriesOf(selected)}
-                rules={rules.filter((rule) => rule.targetCategoryId === selected.id && rule.origin !== 'BUILT_IN')}
-                merchants={
-                  period === undefined
-                    ? []
-                    : categoryMerchants(db, selected.id, monthsAgo(period, YEAR - 1), period, currency, 5)
-                }
-                onSetAppearance={(appearance) =>
-                  write((database, now) => setCategoryAppearance(database, selected.id, appearance, now))
-                }
-                budget={budgets.get(selected.id)}
-                hasPlan={hasPlan}
-                onSetTarget={(target) =>
-                  write((database, now) => {
-                    const result = setCategoryBudget(database, today(), currency, selected.id, target?.minor ?? 0, now)
-                    if (result === 'SEVERAL_BUCKETS') {
-                      throw new Error(t('categories.severalBuckets', { name: selected.name }))
-                    }
-                  })
-                }
-                parentPath={all.find((one) => one.id === selected.parentId)?.path}
-                homes={parentsFor(all, selected)}
-                onSetParent={(parentId) => write((database, now) => reparentCategory(database, selected.id, parentId, now))}
-                onRename={() => setEditing(selected.id)}
-                onMerge={() => setMerging(selected)}
-                onDelete={() => remove(selected)}
-                onArchive={() =>
-                  write((database, now) => setCategoryArchived(database, selected.id, !selected.isArchived, now))
-                }
-                onShowRows={() =>
-                  navigate('/transactions', {
-                    state: { category: selected.id, ...(period === undefined ? {} : { period }) },
-                  })
-                }
-                onRules={() => navigate('/categories/rules')}
-              />
-            )}
-          </div>
-        </div>
-      </div>
+              })
+            }
+            homes={parentsFor(all, selected)}
+            onSetParent={(parentId) => write((database, now) => reparentCategory(database, selected.id, parentId, now))}
+            mergeTargets={visible.filter((candidate) => candidate.id !== selected.id && !candidate.isArchived)}
+            onMerge={(intoId) => {
+              setPicked(intoId)
+              write((database, now) => mergeCategories(database, selected.id, intoId, now))
+            }}
+            deleteTargets={isCategoryInUse(categoryUsage(db, selected.id)) ? categoryDeleteTargets(db, selected.id) : []}
+            using={usageWords(categoryUsage(db, selected.id))}
+            onDelete={(moveTo) => {
+              if (moveTo === undefined) {
+                remove(selected)
+                return
+              }
+              setPicked(undefined)
+              write((database, now) => deleteCategory(database, selected.id, now, moveTo))
+            }}
+            onRename={() => setEditing(selected.id)}
+            onArchive={() => archive(selected)}
+            onShowRows={() =>
+              navigate('/transactions', { state: { category: selected.id, ...(period === undefined ? {} : { period }) } })
+            }
+            onRules={() => navigate('/categories/rules')}
+          />
+        </SidePanel>
+      ) : null}
 
       {menu !== undefined && (
         <ContextMenu
@@ -781,53 +760,13 @@ export function Categories() {
           }}
         />
       )}
-
-      {moving !== undefined && (
-        <MovePanel
-          key={moving.id}
-          source={moving}
-          parents={parentsFor(all, moving)}
-          onCancel={() => setMoving(undefined)}
-          onMove={(parentId) => {
-            setMoving(undefined)
-            write((database, now) => reparentCategory(database, moving.id, parentId, now))
-          }}
-        />
-      )}
-
-      {deleting !== undefined && (
-        <DeletePanel
-          key={deleting.category.id}
-          source={deleting.category}
-          using={deleting.using}
-          targets={deleting.targets}
-          onCancel={() => setDeleting(undefined)}
-          onDelete={(moveTo) => {
-            setDeleting(undefined)
-            write((database, now) => deleteCategory(database, deleting.category.id, now, moveTo))
-          }}
-        />
-      )}
-
-      {merging !== undefined && (
-        <MergePanel
-          key={merging.id}
-          source={merging}
-          targets={visible.filter((candidate) => candidate.id !== merging.id && !candidate.isArchived)}
-          onCancel={() => setMerging(undefined)}
-          onMerge={(intoId) => {
-            setMerging(undefined)
-            write((database, now) => mergeCategories(database, merging.id, intoId, now))
-          }}
-        />
-      )}
     </div>
   )
 }
 
 /** Whole shekels, for a list: the agorot are the panel's. */
 function whole(amount: Money): string {
-  return formatMoney(amount).replace(/.d+$/, '')
+  return formatMoney(amount).replace(/\.\d+$/, '')
 }
 
 /** `YYYY-MM` this many months before `period`. */
@@ -836,153 +775,145 @@ function monthsAgo(period: string, count: number): string {
   return parsed === undefined ? period : toYearMonthString(addMonths(parsed, -count))
 }
 
-interface RowHandlers {
-  onEdit: () => void
-  onRename: (name: string) => void
-  onSetAppearance: (appearance: { color: string | undefined; icon: string | undefined }) => void
-  onMenu: (at: { x: number; y: number }) => void
-}
+/** A group's heading, a category under it, or one a level further down. */
+type Level = 'head' | 'row' | 'nested'
 
 function Row({
   category,
-  nested,
+  level,
   palette,
-  month,
+  figure,
   top,
   currency,
-  activity,
+  used,
   contextOnly,
   isEditing,
   selected,
-  handlers,
-  onSelect,
+  extra,
+  onOpen,
+  onEdit,
+  onRename,
+  onSetAppearance,
+  onMenu,
+  onKeyDown,
 }: {
   category: Category
-  /** A third-level category, drawn under the second-level one it belongs to. */
-  nested: boolean
+  level: Level
   palette: CategoryPalette
-  /** What this category holds in the month shown, in the document's currency. */
-  month: number
-  /** The largest figure on this tab, which is what a full bar is. */
+  /** What it holds in the month shown — a heading, everything under it — in the document's currency. */
+  figure: number
+  /** The largest figure in its part, which is what a full bar is. */
   top: number
   currency: string
-  activity: CategoryActivity | undefined
+  used: boolean
   /** Shown only to hold up a matching child, so it is drawn as scaffolding. */
   contextOnly: boolean
   isEditing: boolean
   selected: boolean
-  handlers: RowHandlers
-  onSelect: () => void
+  /** After the name: a heading's *n unused*. */
+  extra?: React.ReactNode
+  onOpen: () => void
+  onEdit: () => void
+  onRename: (name: string) => void
+  onSetAppearance: (appearance: { color: string | undefined; icon: string | undefined }) => void
+  onMenu: (at: { x: number; y: number }) => void
+  onKeyDown: (event: React.KeyboardEvent<HTMLElement>) => void
 }) {
   const t = useT()
   const colour = palette.colorOf(category.id)
+  const head = level === 'head'
   return (
     <li
       data-motion-key={category.id}
+      data-category-row
       tabIndex={0}
-      onClick={onSelect}
-      onFocus={onSelect}
+      onClick={onOpen}
+      onDoubleClick={() => !category.isSystem && onEdit()}
+      onKeyDown={onKeyDown}
       onContextMenu={(event) => {
         event.preventDefault()
-        handlers.onMenu({ x: event.clientX, y: event.clientY })
+        onMenu({ x: event.clientX, y: event.clientY })
       }}
       aria-current={selected ? 'true' : undefined}
-      className={`group relative grid h-10 grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_6rem_3.5rem] items-center gap-x-3.5 border-b border-hairline pe-1.5 outline-none transition-colors duration-[var(--duration-micro)] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
-        nested ? 'ps-[3.75rem]' : 'ps-9'
-      } ${selected ? 'bg-accent-soft before:absolute before:inset-y-0 before:start-0 before:w-0.5 before:bg-accent' : 'hover:bg-surface'} ${
-        contextOnly ? 'text-ink-tertiary' : ''
-      }`}
+      className={`group relative grid h-10 cursor-pointer grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)_6rem_2rem] items-center gap-x-3 pe-1 outline-none transition-colors duration-[var(--duration-micro)] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
+        head ? 'border-b border-hairline-strong' : 'border-b border-hairline'
+      } ${level === 'nested' ? 'ps-12' : level === 'row' ? 'ps-6' : ''} ${
+        selected ? 'bg-accent-soft before:absolute before:inset-y-0 before:start-0 before:w-0.5 before:bg-accent' : 'hover:bg-surface'
+      } ${contextOnly ? 'text-ink-secondary' : ''}`}
     >
-      <span className="flex min-w-0 items-center gap-2">
-        {/* The dot is the colour control, as it was: what a category is drawn in
-            is changed where it is drawn. The panel has the same choice, in the
-            open. */}
-        <AppearancePicker
-          id={category.id}
-          name={category.name}
-          color={category.color}
-          icon={category.icon}
-          palette={palette}
-          onChange={handlers.onSetAppearance}
-        />
-
+      <span className="flex min-w-0 items-center gap-2" onClick={(event) => isEditing && event.stopPropagation()}>
+        {/* The dot is the colour control: what a category is drawn in is changed where it is drawn. */}
+        <span onClick={(event) => event.stopPropagation()} className="flex">
+          <AppearancePicker
+            id={category.id}
+            name={category.name}
+            color={category.color}
+            icon={category.icon}
+            palette={palette}
+            onChange={onSetAppearance}
+          />
+        </span>
         {isEditing ? (
           <input
             autoFocus
             defaultValue={category.name}
             aria-label={t('categories.renameName', { name: category.name })}
-            onBlur={(event) => handlers.onRename(event.target.value.trim())}
+            onBlur={(event) => onRename(event.target.value.trim())}
             onKeyDown={(event) => {
+              event.stopPropagation()
               if (event.key === 'Enter') event.currentTarget.blur()
-              if (event.key === 'Escape') handlers.onRename(category.name)
+              if (event.key === 'Escape') onRename(category.name)
             }}
             className={`${FIELD} h-7`}
           />
         ) : (
-          <span className="flex min-w-0" style={{ color: category.isSystem ? undefined : undefined }}>
-            <Bidi className="min-w-0 truncate">{category.name}</Bidi>
-          </span>
+          <Bidi className={`min-w-0 truncate ${head ? 'font-medium' : ''}`}>{category.name}</Bidi>
         )}
-
         {category.isArchived && <Tag>{t('categories.tagArchived')}</Tag>}
         {category.isSystem && <Tag>{t('categories.tagSystem')}</Tag>}
-        {activity === undefined && !category.isSystem && (
-          <span className="text-caption text-ink-tertiary">{t('categories.unused')}</span>
-        )}
+        {!head && !used && !category.isSystem && <Tag>{t('categories.unused')}</Tag>}
+        {extra}
       </span>
 
       <span aria-hidden className="block">
-        <span
-          className="block h-1.5 transition-[width] duration-[var(--duration-base)]"
-          style={{ width: `${month > 0 ? Math.max(3, Math.round((100 * month) / top)) : 0}%`, backgroundColor: colour }}
-        />
-      </span>
-
-      <span className="text-end tabular-nums">
-        {month > 0 ? whole(money(month, currency)) : <span className="text-ink-tertiary">—</span>}
-      </span>
-
-      <span className="flex justify-end gap-0.5 opacity-0 transition-opacity duration-[var(--duration-micro)] group-hover:opacity-100 group-focus-within:opacity-100">
-        {!category.isSystem && (
-          <button
-            type="button"
-            title={t('categories.renameTitle')}
-            aria-label={t('categories.renameName', { name: category.name })}
-            onClick={(event) => {
-              event.stopPropagation()
-              handlers.onEdit()
-            }}
-            className="flex size-7 items-center justify-center text-ink-secondary hover:text-ink"
-          >
-            <ActionGlyph name="edit" size={14} />
-          </button>
+        {!head && (
+          <span
+            className="block h-1.5 rounded-e-mark transition-[width] duration-[var(--duration-base)]"
+            style={{ width: `${figure > 0 ? Math.max(3, Math.round((100 * figure) / top)) : 0}%`, backgroundColor: colour }}
+          />
         )}
-        <button
-          type="button"
-          title={t('categories.moreTitle')}
-          aria-label={t('categories.moreFor', { name: category.name })}
+      </span>
+
+      <span className={`text-end tabular-nums ${head ? 'font-medium' : ''}`}>
+        {figure > 0 ? whole(money(figure, currency)) : <span className="text-ink-secondary">—</span>}
+      </span>
+
+      <span className="flex justify-end opacity-0 transition-opacity duration-[var(--duration-micro)] group-hover:opacity-100 group-focus-within:opacity-100" onClick={(event) => event.stopPropagation()}>
+        <IconAction
+          label={t('categories.moreFor', { name: category.name })}
           onClick={(event) => {
-            event.stopPropagation()
-            const box = event.currentTarget.getBoundingClientRect()
-            handlers.onMenu({ x: box.right - 4, y: box.bottom + 2 })
+            const box = (event.currentTarget as HTMLElement).getBoundingClientRect()
+            onMenu({ x: box.right - 4, y: box.bottom + 2 })
           }}
-          className="flex size-7 items-center justify-center text-ink-secondary hover:text-ink"
         >
-          <ActionGlyph name="more" size={14} />
-        </button>
+          <circle cx="6" cy="12" r="1.25" />
+          <circle cx="12" cy="12" r="1.25" />
+          <circle cx="18" cy="12" r="1.25" />
+        </IconAction>
       </span>
     </li>
   )
 }
 
 /**
- * **What one category holds** (choice 3 B): its year, the shops its money goes
- * to, the rules that file into it, its target and its colour — the facts that
- * decide whether it is worth keeping, in one place beside the list.
+ * **What one category holds**, beside the list: its month against its year,
+ * the shops its money goes to, the rules that file into it, its bucket, where
+ * it sits and its colour — the facts that decide whether it is worth keeping —
+ * and what can be done to it. Merge and a delete that moves rows ask at their
+ * buttons (D-617); where it sits is changed in place.
  *
- * The twelve bars end at the month shown, in the category's own colour, and the
- * last is full strength. The figures are the document's currency only and leave
- * out every row left out of the totals, so the panel and Home agree.
+ * The figures are the document's currency only and leave out every row left
+ * out of the totals, so the panel and Home agree.
  */
 function CategoryPanel({
   category,
@@ -990,100 +921,135 @@ function CategoryPanel({
   currency,
   period,
   series,
+  asking,
   rules,
   merchants,
   onSetAppearance,
   budget,
   hasPlan,
   onSetTarget,
-  parentPath,
   homes,
   onSetParent,
-  onRename,
+  mergeTargets,
   onMerge,
+  deleteTargets,
+  using,
   onDelete,
+  onRename,
   onArchive,
   onShowRows,
   onRules,
 }: {
   category: Category
-  /** Its parent's path, when it has one. */
-  parentPath: string | undefined
-  /** Where it can go (`parentsFor`): its own kind, with room for what it carries. */
-  homes: readonly Category[]
-  onSetParent: (parentId: string | undefined) => void
   palette: CategoryPalette
   currency: string
   period: string | undefined
   series: readonly number[] | undefined
+  /** What the menu asked the panel to open on. */
+  asking: Asking | undefined
   rules: readonly { readonly id: string; readonly name: string }[]
   merchants: readonly { readonly merchantRaw: string; readonly count: number; readonly outflowMinor: number }[]
   onSetAppearance: (appearance: { color: string | undefined; icon: string | undefined }) => void
   budget: Money | undefined
   hasPlan: boolean
   onSetTarget: (target: Money | undefined) => void
+  /** Where it can go (`parentsFor`): its own kind, with room for what it carries. */
+  homes: readonly Category[]
+  onSetParent: (parentId: string | undefined) => void
+  mergeTargets: readonly Category[]
+  onMerge: (intoId: string) => void
+  /** Where what uses it can move; nothing when nothing uses it, and it goes at once. */
+  deleteTargets: readonly Category[]
+  using: string
+  onDelete: (moveTo: string | undefined) => void
   onRename: () => void
-  onMerge: () => void
-  onDelete: () => void
   onArchive: () => void
   onShowRows: () => void
   onRules: () => void
 }) {
   const t = useT()
   const dates = useDates()
-  const colour = palette.colorOf(category.id)
+  const [into, setInto] = useState<string | undefined>()
+  const [moveTo, setMoveTo] = useState<string | undefined>()
   const bars = series ?? Array.from({ length: YEAR }, () => 0)
   const month = bars.at(-1) ?? 0
-  const peak = Math.max(1, ...bars)
   const average = Math.round(bars.reduce((sum, value) => sum + value, 0) / YEAR)
-  const target = budget
   const over =
-    target === undefined || target.minor === 0 || month === 0
+    budget === undefined || budget.minor === 0 || month === 0
       ? undefined
-      : Math.round((100 * (month - target.minor)) / target.minor)
+      : Math.round((100 * (month - budget.minor)) / budget.minor)
   const parsed = period === undefined ? undefined : parseYearMonth(period)
   const monthName = parsed === undefined ? t('categories.panel.theMonth') : dates.monthShort(parsed)
+  const named = <Bidi className="font-medium">{category.name}</Bidi>
 
   return (
-    <aside
-      aria-label={t('categories.panel.inDetail', { name: category.name })}
-      className="fc-view-enter flex flex-col gap-3.5 border border-hairline p-[18px] @[56rem]:sticky @[56rem]:top-0"
-    >
-      <span className="fc-label flex min-w-0 text-ink-secondary uppercase">
-        <Bidi className="min-w-0 truncate">{parentPath === undefined ? t('categories.topLevel') : pathArrows(parentPath)}</Bidi>
-      </span>
-      <h3 className="m-0 text-[18px] font-medium">
-        <CategoryMark color={colour}>{category.name}</CategoryMark>
-      </h3>
+    <>
+      <HeadlineFigure
+        label={parsed === undefined ? t('categories.panel.theMonth') : dates.yearMonth(parsed)}
+        value={money(month, currency)}
+        change={t('categories.panel.average', { amount: whole(money(average, currency)) })}
+        trend={bars}
+        empty={t('categories.panel.nothingYear')}
+      />
 
-      <div>
-        <span className="fc-label text-ink-secondary uppercase">{monthName}</span>
-        <div className="text-[26px] leading-tight font-medium tracking-[-0.01em] tabular-nums">
-          {formatMoney(money(month, currency))}
+      {!category.isSystem && (
+        <div className="flex flex-col gap-1.5">
+          <span className="text-label text-ink-secondary uppercase">{t('categories.panel.under')}</span>
+          {/* Where it sits is one value of one thing, so it changes in place (D-617). */}
+          <ParentPicker parents={homes} value={category.parentId ?? ''} onChange={(id) => onSetParent(id === '' ? undefined : id)} fill />
+          {asking === 'under' && homes.length === 0 && (
+            <span className="text-caption text-ink-secondary">{t('categories.move.noRoom', { kind: t(`categories.kinds.${category.kind}`) })}</span>
+          )}
         </div>
-        <small className="text-caption text-ink-secondary">
-          {t('categories.panel.average', { amount: whole(money(average, currency)) })}
-        </small>
+      )}
+
+      <div className="flex flex-col gap-1.5">
+        <span className="text-label text-ink-secondary uppercase">{t('categories.panel.whereItGoes')}</span>
+        <RankedBars
+          rows={merchants.map((one) => ({ key: one.merchantRaw, name: one.merchantRaw, value: money(one.outflowMinor, currency) }))}
+          limit={merchants.length}
+          empty={t('categories.panel.nothingYear')}
+        />
       </div>
 
-      <div className="flex h-14 items-end gap-[3px]" role="img" aria-label={t('categories.panel.lastTwelve')}>
-        {bars.map((value, index) => (
-          <i
-            key={index}
-            className="block flex-1"
-            title={formatMoney(money(value, currency))}
-            style={{
-              height: `${value > 0 ? Math.max(4, Math.round((56 * value) / peak)) : 2}px`,
-              backgroundColor: colour,
-              opacity: index === bars.length - 1 ? 1 : 0.45,
-            }}
-          />
-        ))}
+      {!category.isSystem && (
+        <div className="flex flex-col gap-1.5">
+          <span className="text-label text-ink-secondary uppercase">{t('categories.panel.eachMonth')}</span>
+          <div className="flex items-center gap-3">
+            <MonthlyTarget category={category} budget={budget} currency={currency} onSet={onSetTarget} />
+            {over !== undefined && (
+              <span className="text-caption text-ink-secondary tabular-nums">
+                {t(over >= 0 ? 'categories.panel.over' : 'categories.panel.under_', { month: monthName, n: Math.abs(over) })}
+              </span>
+            )}
+          </div>
+          <span className="text-caption text-ink-secondary">
+            {hasPlan ? t('categories.panel.sameFigure') : t('categories.panel.startsPlan')}
+          </span>
+        </div>
+      )}
+
+      <div className="flex flex-col gap-1.5">
+        <span className="text-label text-ink-secondary uppercase">{t('categories.panel.rulesHere', { n: rules.length })}</span>
+        {rules.length === 0 ? (
+          <span className="text-ink-secondary">{t('categories.panel.noneYet')}</span>
+        ) : (
+          <ul className="m-0 list-none p-0">
+            {rules.slice(0, 5).map((rule) => (
+              <li key={rule.id} className="flex h-8 items-center border-b border-hairline">
+                <Bidi className="min-w-0 truncate">{rule.name}</Bidi>
+              </li>
+            ))}
+          </ul>
+        )}
+        <button type="button" className="fc-text-action self-start" onClick={onRules}>
+          {t('categories.panel.openRules')}
+        </button>
       </div>
 
-      <div>
-        <span className="fc-label text-ink-secondary uppercase">{t('categories.panel.colour')}</span>
-        <div className="mt-1.5 flex flex-wrap gap-1" role="group" aria-label={t('categories.panel.colourOf', { name: category.name })}>
+      <div className="flex flex-col gap-1.5">
+        <span className="text-label text-ink-secondary uppercase">{t('categories.panel.colour')}</span>
+        <div className="flex flex-wrap gap-1" role="group" aria-label={t('categories.panel.colourOf', { name: category.name })}>
           {CATEGORY_COLOR_TOKENS.map((slot, index) => {
             const worn = palette.peersWearing(category.id, slot)
             const chosen = category.color === slot
@@ -1097,13 +1063,9 @@ function CategoryPanel({
                     : t('categories.panel.hueAlso', { n: index + 1, names: worn.join(', ') })
                 }
                 aria-pressed={chosen}
-                title={
-                  worn.length === 0
-                    ? t('categories.panel.hueTitle', { n: index + 1 })
-                    : t('categories.panel.siblingWears', { names: worn.join(', ') })
-                }
+                title={worn.length === 0 ? t('categories.panel.hueTitle', { n: index + 1 }) : t('categories.panel.siblingWears', { names: worn.join(', ') })}
                 onClick={() => onSetAppearance({ color: slot, icon: category.icon })}
-                className={`flex size-[22px] items-center justify-center rounded-full border-2 ${chosen ? 'border-ink' : 'border-transparent'}`}
+                className={`flex size-6 items-center justify-center rounded-full border-2 ${chosen ? 'border-ink' : 'border-transparent'}`}
               >
                 <i
                   className="block size-3.5 rounded-full"
@@ -1121,204 +1083,64 @@ function CategoryPanel({
             aria-pressed={category.color === undefined}
             title={t('categories.panel.automaticTitle')}
             onClick={() => onSetAppearance({ color: undefined, icon: category.icon })}
-            className={`flex size-[22px] items-center justify-center rounded-full border-2 ${category.color === undefined ? 'border-ink' : 'border-transparent'}`}
+            className={`flex size-6 items-center justify-center rounded-full border-2 ${category.color === undefined ? 'border-ink' : 'border-transparent'}`}
           >
-            <i className="block size-3.5 rounded-full border border-dashed border-ink-tertiary" />
+            <i className="block size-3.5 rounded-full border border-dashed border-ink-secondary" />
           </button>
         </div>
       </div>
 
-      {!category.isSystem && (
-        <div>
-          <span className="fc-label text-ink-secondary uppercase">{t('categories.panel.under')}</span>
-          <div className="mt-1.5">
-            {/* What the group select was (M28 F25): a heading is a top-level
-                category now, so choosing one is choosing a parent (M28 F29). */}
-            <select
-              value={category.parentId ?? ''}
-              onChange={(event) => onSetParent(event.target.value === '' ? undefined : event.target.value)}
-              aria-label={t('categories.panel.sitsUnder', { name: category.name })}
-              className={`${SELECT} w-full`}
-            >
-              <option value="">{t('categories.topLevel')}</option>
-              {homes.map((one) => (
-                <option key={one.id} value={one.id}>
-                  {pathArrows(one.path)}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-      )}
-
-      <div>
-        <span className="fc-label text-ink-secondary uppercase">{t('categories.panel.whereItGoes')}</span>
-        <div className="mt-1.5 flex flex-col">
-          {merchants.length === 0 ? (
-            <div className="flex h-[30px] items-center border-b border-hairline text-[13px] text-ink-secondary">
-              {t('categories.panel.nothingYear')}
-            </div>
-          ) : (
-            merchants.map((one) => (
-              <div
-                key={one.merchantRaw}
-                className="flex h-[30px] items-center justify-between gap-3 border-b border-hairline text-[13px]"
-              >
-                <span className="flex min-w-0">
-                  <Bidi className="min-w-0 truncate">{one.merchantRaw}</Bidi>
-                </span>
-                <span className="text-ink-secondary tabular-nums">
-                  {whole(money(one.outflowMinor, currency))}
-                </span>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      {!category.isSystem && (
-        <div>
-          <span className="fc-label text-ink-secondary uppercase">{t('categories.panel.eachMonth')}</span>
-          <div className="mt-1.5 flex items-center gap-3">
-            <MonthlyTarget category={category} budget={budget} currency={currency} onSet={onSetTarget} />
-            {over !== undefined && (
-              <span className="text-caption text-ink-secondary tabular-nums">
-                {t(over >= 0 ? 'categories.panel.over' : 'categories.panel.under_', { month: monthName, n: Math.abs(over) })}
-              </span>
-            )}
-          </div>
-          <p className="mt-1 mb-0 text-caption text-ink-tertiary">
-            {hasPlan
-              ? t('categories.panel.sameFigure')
-              : t('categories.panel.startsPlan')}
-          </p>
-        </div>
-      )}
-
-      <div>
-        <span className="fc-label text-ink-secondary uppercase">{t('categories.panel.rulesHere', { n: rules.length })}</span>
-        <div className="mt-1.5 flex flex-col">
-          {rules.length === 0 ? (
-            <div className="flex h-[30px] items-center border-b border-hairline text-[13px] text-ink-secondary">
-              {t('categories.panel.noneYet')}
-            </div>
-          ) : (
-            rules.slice(0, 5).map((rule) => (
-              <button
-                key={rule.id}
-                type="button"
-                onClick={onRules}
-                className="flex h-[30px] items-center justify-between gap-3 border-b border-hairline text-start text-[13px] hover:text-accent"
-              >
-                <span className="flex min-w-0">
-                  <Bidi className="min-w-0 truncate">{rule.name}</Bidi>
-                </span>
-                <ActionGlyph name="right" size={12} />
-              </button>
-            ))
-          )}
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2 border-t border-hairline pt-4">
+        <Button variant="secondary" size="sm" icon="filter" onClick={onShowRows}>
+          {t('categories.panel.itsRows')}
+        </Button>
         {!category.isSystem && (
           <Button variant="secondary" size="sm" icon="edit" onClick={onRename}>
             {t('categories.panel.rename')}
           </Button>
         )}
         {!category.isSystem && (
-          <Button variant="secondary" size="sm" icon="merge" onClick={onMerge}>
-            {t('categories.panel.mergeInto')}
-          </Button>
+          <AskAtButton
+            key={`merge-${asking ?? ''}`}
+            label={t('categories.panel.mergeInto')}
+            icon="merge"
+            startOpen={asking === 'merge'}
+            question={<Phrase text={t('categories.merge.intro')} parts={{ name: named }} />}
+            confirm={t('categories.merge.merge')}
+            cancel={t('categories.merge.cancel')}
+            canConfirm={into !== undefined}
+            onConfirm={() => into !== undefined && onMerge(into)}
+          >
+            <CategoryPicker categories={mergeTargets} value={into} onChange={setInto} label={t('categories.merge.into')} placeholder={t('categories.merge.choose')} />
+          </AskAtButton>
         )}
-        <Button variant="secondary" size="sm" icon="filter" onClick={onShowRows}>
-          {t('categories.panel.itsRows')}
-        </Button>
         {!category.isSystem && (
-          <Button variant="ghost" size="sm" onClick={onArchive}>
+          <Button variant="ghost" size="sm" icon="archive" onClick={onArchive}>
             {category.isArchived ? t('categories.restore') : t('categories.archive')}
           </Button>
         )}
-        {!category.isSystem && (
-          <Button variant="ghost" size="sm" icon="trash" onClick={onDelete}>
-            {t('categories.panel.delete')}
-          </Button>
-        )}
-      </div>
-    </aside>
-  )
-}
-
-/**
- * Where this category sits — the reparent docs/f02 has listed as an operation
- * since M1 and which no screen has ever offered.
- *
- * **Same kind only, and within three levels** (M28 F29). `reparentCategory`
- * sets the parent and never the kind, and refuses one of another kind: an
- * INCOME category filed under an EXPENSE parent would roll up into a parent
- * that means the opposite. The list is `parentsFor`: its own kind, not itself
- * or anything under it, with room for what it carries.
- *
- * A panel rather than a select on the row, which is not only a DOM budget: a
- * reparent moves history as surely as a merge does, and the two operations
- * being told in the same voice, in the same place, is what stops one of them
- * looking like a setting.
- */
-function MovePanel({
-  source,
-  parents,
-  onCancel,
-  onMove,
-}: {
-  source: Category
-  parents: readonly Category[]
-  onCancel: () => void
-  onMove: (parentId: string | undefined) => void
-}) {
-  const t = useT()
-  const eligible = parents
-  const [parentId, setParentId] = useState(source.parentId ?? '')
-
-  return (
-    <div className="fc-pop-enter shrink-0 border-t border-hairline bg-surface px-6 py-4">
-      <p>
-        <Phrase text={t('categories.move.intro')} parts={{ name: <Bidi className="font-medium">{source.name}</Bidi> }} />
-      </p>
-
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <select
-          value={parentId}
-          onChange={(event) => setParentId(event.target.value)}
-          aria-label={t('categories.move.parentOf', { name: source.name })}
-          className={SELECT}
-        >
-          <option value="">{t('categories.move.topLevel')}</option>
-          {eligible.map((parent) => (
-            <option key={parent.id} value={parent.id}>
-              {t('categories.move.under', { path: pathArrows(parent.path) })}
-            </option>
+        {!category.isSystem &&
+          (deleteTargets.length === 0 ? (
+            <Button variant="ghost" size="sm" icon="trash" onClick={() => onDelete(undefined)}>
+              {t('categories.panel.delete')}
+            </Button>
+          ) : (
+            <AskAtButton
+              key={`delete-${asking ?? ''}`}
+              label={t('categories.panel.delete')}
+              icon="trash"
+              startOpen={asking === 'delete'}
+              question={<Phrase text={t('categories.remove.intro', { using })} parts={{ name: named }} />}
+              confirm={t('categories.remove.moveAndDelete')}
+              cancel={t('categories.remove.cancel')}
+              canConfirm={moveTo !== undefined}
+              onConfirm={() => moveTo !== undefined && onDelete(moveTo)}
+            >
+              <CategoryPicker categories={deleteTargets} value={moveTo} onChange={setMoveTo} label={t('categories.remove.moveTo')} placeholder={t('categories.remove.moveToChoose')} />
+            </AskAtButton>
           ))}
-        </select>
-
-        <Button
-          variant="primary"
-          size="sm"
-          disabled={parentId === (source.parentId ?? '')}
-          onClick={() => onMove(parentId === '' ? undefined : parentId)}
-        >
-          {t('categories.move.move')}
-        </Button>
-        <Button variant="ghost" size="sm" onClick={onCancel}>
-          {t('categories.move.cancel')}
-        </Button>
       </div>
-
-      {eligible.length === 0 && (
-        <p className="mt-2 text-caption text-ink-tertiary">
-          {t('categories.move.noRoom', { kind: t(`categories.kinds.${source.kind}`) })}
-        </p>
-      )}
-    </div>
+    </>
   )
 }
 
@@ -1375,7 +1197,7 @@ function MonthlyTarget({
   }
 
   return (
-    <label className="flex items-center gap-2 text-caption text-ink-tertiary">
+    <label className="flex items-center gap-2 text-caption text-ink-secondary">
       <span className="sr-only">
         <Phrase text={t('categories.target.bucketFor')} parts={{ name: <Bidi>{category.name}</Bidi> }} />
       </span>
@@ -1422,16 +1244,17 @@ function NewCategoryForm({
   }
 
   return (
-    <form onSubmit={submit} className="ms-auto flex flex-wrap items-center gap-2">
+    <form onSubmit={submit} className="flex flex-col gap-3">
       <input
         value={name}
         onChange={(event) => setName(event.target.value)}
         placeholder={t('categories.create.placeholder')}
         aria-label={t('categories.create.name')}
-        className={`${FIELD} w-44`}
+        className={`${FIELD} w-full`}
+        autoFocus
       />
 
-      <ParentPicker parents={parents} value={parentId} onChange={setParentId} />
+      <ParentPicker parents={parents} value={parentId} onChange={setParentId} fill />
 
       {parentId === '' && (
         <select
@@ -1448,123 +1271,16 @@ function NewCategoryForm({
         </select>
       )}
 
-      <Button variant="primary" size="sm" type="submit">
+      <Button variant="primary" type="submit" className="self-start">
         {t('categories.create.add')}
       </Button>
     </form>
   )
 }
 
-/**
- * Merge is the answer to most reasons someone wanted delete, so it says plainly
- * what it is about to do before it does it.
- */
-function MergePanel({
-  source,
-  targets,
-  onCancel,
-  onMerge,
-}: {
-  source: Category
-  targets: readonly Category[]
-  onCancel: () => void
-  onMerge: (intoId: string) => void
-}) {
-  const t = useT()
-  const [intoId, setIntoId] = useState('')
-
-  return (
-    <div className="fc-pop-enter shrink-0 border-t border-hairline bg-surface px-6 py-4">
-      <p>
-        <Phrase text={t('categories.merge.intro')} parts={{ name: <Bidi className="font-medium">{source.name}</Bidi> }} />
-      </p>
-
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <select
-          value={intoId}
-          onChange={(event) => setIntoId(event.target.value)}
-          aria-label={t('categories.merge.into')}
-          className={SELECT}
-        >
-          <option value="">{t('categories.merge.choose')}</option>
-          {targets.map((target) => (
-            <option key={target.id} value={target.id}>
-              {pathArrows(target.path)}
-            </option>
-          ))}
-        </select>
-
-        <Button variant="primary" size="sm" disabled={intoId === ''} onClick={() => onMerge(intoId)}>
-          {t('categories.merge.merge')}
-        </Button>
-        <Button variant="ghost" size="sm" onClick={onCancel}>
-          {t('categories.merge.cancel')}
-        </Button>
-      </div>
-    </div>
-  )
-}
-
-/**
- * A delete of a category something still uses (M28 F18, D-340): it says what
- * moves, and to where, before it does it. The targets are the repository's —
- * the same kind, live, with room for any subcategories it carries (M28 F29).
- */
-function DeletePanel({
-  source,
-  using,
-  targets,
-  onCancel,
-  onDelete,
-}: {
-  source: Category
-  using: string
-  targets: readonly Category[]
-  onCancel: () => void
-  onDelete: (moveTo: string) => void
-}) {
-  const t = useT()
-  const [moveTo, setMoveTo] = useState('')
-
-  return (
-    <div className="fc-pop-enter shrink-0 border-t border-hairline bg-surface px-6 py-4">
-      <p>
-        <Phrase
-          text={t('categories.remove.intro', { using })}
-          parts={{ name: <Bidi className="font-medium">{source.name}</Bidi> }}
-        />
-      </p>
-
-      <div className="mt-3 flex flex-wrap items-center gap-2">
-        <select
-          value={moveTo}
-          onChange={(event) => setMoveTo(event.target.value)}
-          aria-label={t('categories.remove.moveTo')}
-          className={SELECT}
-          autoFocus
-        >
-          <option value="">{t('categories.remove.moveToChoose')}</option>
-          {targets.map((target) => (
-            <option key={target.id} value={target.id}>
-              {pathArrows(target.path)}
-            </option>
-          ))}
-        </select>
-
-        <Button variant="primary" size="sm" icon="trash" disabled={moveTo === ''} onClick={() => onDelete(moveTo)}>
-          {t('categories.remove.moveAndDelete')}
-        </Button>
-        <Button variant="ghost" size="sm" onClick={onCancel}>
-          {t('categories.remove.cancel')}
-        </Button>
-      </div>
-    </div>
-  )
-}
-
 /** Metadata, not a badge (docs/11): a quiet caption, no pill and no border. */
 function Tag({ children }: { children: React.ReactNode }) {
-  return <span className="text-caption tracking-wide text-ink-tertiary uppercase">{children}</span>
+  return <span className="shrink-0 text-caption tracking-wide text-ink-secondary uppercase">{children}</span>
 }
 
 function Centered({ children }: { children: React.ReactNode }) {

@@ -97,20 +97,16 @@ export function RuleEditor({
 
   return (
     <form
-      className="fc-pop-enter shrink-0 border-t border-hairline bg-surface px-6 py-4"
+      className="flex flex-col gap-4"
       onSubmit={(event) => {
         event.preventDefault()
         if (problems.length === 0) onSave(draft.name.trim() === '' ? { ...draft, name: defaultName } : draft)
       }}
-      // Escape leaves the panel the same way it leaves every other transient
-      // thing in the app.
-      onKeyDown={(event) => {
-        if (event.key === 'Escape') onCancel()
-      }}
     >
-      {note !== undefined && <p className="mb-3 text-caption text-ink-tertiary">{note}</p>}
+      {note !== undefined && <p className="m-0 text-ink-secondary">{note}</p>}
 
-      <div className="flex flex-wrap items-center gap-2">
+      {/* A form in the side panel (D-617): the fields one under another, in reading order. */}
+      <div className="flex flex-col gap-3">
         <input
           autoFocus
           value={draft.name}
@@ -120,7 +116,7 @@ export function RuleEditor({
           placeholder={defaultName}
           aria-label={t('rules.editor.ruleName')}
           dir="auto"
-          className={`${FIELD} w-52`}
+          className={`${FIELD} w-full`}
         />
 
         <select
@@ -144,11 +140,10 @@ export function RuleEditor({
             aria-label={t('rules.editor.pattern')}
             // Almost every pattern is a Hebrew merchant name.
             dir="auto"
-            className={`${FIELD} w-60`}
+            className={`${FIELD} w-full`}
           />
         )}
 
-        <span className="text-ink-tertiary">{t('rules.editor.arrow')}</span>
         <CategoryPicker
           categories={categories}
           value={draft.targetCategoryId === '' ? undefined : draft.targetCategoryId}
@@ -161,7 +156,7 @@ export function RuleEditor({
 
       {/* The conditions, quieter than the rule itself: they narrow what is
           above rather than being a second rule (D-037). */}
-      <div className="mt-2 flex flex-wrap items-center gap-2 text-caption text-ink-secondary">
+      <div className="flex flex-wrap items-center gap-2 text-caption text-ink-secondary">
         <label className="flex items-center gap-2">
           {t('rules.editor.onlyOn')}
           <select
@@ -224,10 +219,10 @@ export function RuleEditor({
 
         {/* Bounds are magnitudes: a charge is negative by the importer's
             convention (D-004), so a signed bound would match nothing. */}
-        <span className="text-ink-tertiary">{t('rules.editor.sizes')}</span>
+        <span>{t('rules.editor.sizes')}</span>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Button variant="primary" size="sm" type="submit" disabled={problems.length > 0}>
           {isNew ? t('rules.editor.addRule') : t('rules.editor.save')}
         </Button>

@@ -49,11 +49,9 @@ const EVERYTHING: Scope = { accountId: '', period: '', uncategorizedOnly: false 
 export function ReapplyPanel({
   accounts,
   categoryPath,
-  onClose,
 }: {
   accounts: readonly Account[]
   categoryPath: (categoryId: string) => string | undefined
-  onClose: () => void
 }) {
   const t = useT()
   const db = useDocumentStore((state) => state.db)
@@ -106,10 +104,9 @@ export function ReapplyPanel({
   return (
     <section
       aria-label={t('rules.reapply.label')}
-      className="fc-pop-enter shrink-0 border-b border-hairline bg-surface px-6 py-3"
+      className="flex flex-col"
     >
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <span className="font-medium">{t('rules.reapply.title')}</span>
 
         <label className="flex items-center gap-2 text-caption text-ink-secondary">
           {t('rules.reapply.account')}
@@ -151,10 +148,6 @@ export function ReapplyPanel({
           />
           {t('rules.reapply.onlyUncategorized')}
         </label>
-
-        <Button variant="ghost" size="sm" className="ms-auto" onClick={onClose}>
-          {t('rules.reapply.close')}
-        </Button>
       </div>
 
       <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -208,7 +201,7 @@ export function ReapplyPanel({
             RTL account name, and punctuation immediately after one lands on the
             wrong side of it. */}
         {undoable !== undefined && (
-          <span className="flex items-center gap-2 text-caption text-ink-tertiary">
+          <span className="flex items-center gap-2 text-caption text-ink-secondary">
             <Phrase
               text={t('rules.reapply.lastRun')}
               parts={{
@@ -227,7 +220,7 @@ export function ReapplyPanel({
           own is a number to trust or not; three merchant names is a number to
           check. */}
       {plan.changes.length > 0 && (
-        <ul className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-caption text-ink-tertiary">
+        <ul className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-caption text-ink-secondary">
           {plan.changes.slice(0, SAMPLE).map((change) => (
             <li key={change.rowId}>
               <Bidi className="text-ink-secondary">
@@ -249,7 +242,7 @@ export function ReapplyPanel({
         </ul>
       )}
 
-      <p className="mt-2 text-caption text-ink-tertiary">
+      <p className="mt-2 text-caption text-ink-secondary">
         {t('rules.reapply.footer')}
       </p>
     </section>

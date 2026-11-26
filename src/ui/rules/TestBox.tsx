@@ -30,13 +30,16 @@ export function TestBox({
   rules,
   categoryPath,
   accounts,
+  merchant: initialMerchant = '',
 }: {
   rules: readonly CategoryRule[]
   categoryPath: (categoryId: string) => string | undefined
   accounts: readonly Account[]
+  /** What the list's search had typed, so the box opens on it (M64 U11). */
+  merchant?: string
 }) {
   const t = useT()
-  const [merchant, setMerchant] = useState('')
+  const [merchant, setMerchant] = useState(initialMerchant)
   const [amount, setAmount] = useState('')
   const [currency, setCurrency] = useState<CurrencyCode>('ILS')
   const [providerCategory, setProviderCategory] = useState('')
@@ -73,13 +76,8 @@ export function TestBox({
   const normalized = subject.merchantNormalized
 
   return (
-    <aside className="flex w-full shrink-0 flex-col gap-3 border-t border-hairline px-6 py-4 lg:w-96 lg:border-t-0 lg:border-s">
-      <div>
-        <h2 className="text-label text-ink-tertiary uppercase">{t('rules.test.title')}</h2>
-        <p className="mt-1 text-caption text-ink-tertiary">
-          {t('rules.test.lead')}
-        </p>
-      </div>
+    <div className="flex flex-col gap-3">
+      <p className="m-0 text-ink-secondary">{t('rules.test.lead')}</p>
 
       <input
         value={merchant}
@@ -137,7 +135,7 @@ export function TestBox({
       )}
 
       {!asked ? (
-        <p className="text-caption text-ink-tertiary">
+        <p className="text-caption text-ink-secondary">
           {t('rules.test.nothingYet')}
         </p>
       ) : (
@@ -145,7 +143,7 @@ export function TestBox({
           {/* Why an obvious-looking pattern misses is almost always this: the
               rules compare the normalized form, branch number stripped. */}
           {normalized !== merchant.trim() && (
-            <p className="text-caption text-ink-tertiary">
+            <p className="text-caption text-ink-secondary">
               <Phrase
                 text={t('rules.test.rulesSee')}
                 parts={{ normalized: <Bidi className="text-ink-secondary">{normalized === '' ? '—' : normalized}</Bidi> }}
@@ -169,7 +167,7 @@ export function TestBox({
                 <p className="mt-1 text-caption text-ink-secondary">
                   <Phrase text={t('rules.test.by')} parts={{ name: <Bidi className="text-ink">{result.winner.name}</Bidi> }} />
                 </p>
-                <p className="text-caption text-ink-tertiary">
+                <p className="text-caption text-ink-secondary">
                   <Why rule={result.winner} accounts={accounts} />
                 </p>
               </>
@@ -178,12 +176,12 @@ export function TestBox({
 
           {result.shadowed.length > 0 && (
             <div>
-              <p className="text-label text-ink-tertiary uppercase">
+              <p className="text-label text-ink-secondary uppercase">
                 {t('rules.test.alsoMatched')}
               </p>
               <ul className="mt-1 flex flex-col gap-1">
                 {result.shadowed.map((rule) => (
-                  <li key={rule.id} className="text-caption text-ink-tertiary">
+                  <li key={rule.id} className="text-caption text-ink-secondary">
                     <Bidi className="text-ink-secondary">{rule.name}</Bidi>
                     {' · '}
                     <Why rule={rule} accounts={accounts} />
@@ -196,13 +194,13 @@ export function TestBox({
           )}
 
           {suppressed > 0 && (
-            <p className="text-caption text-ink-tertiary">
+            <p className="text-caption text-ink-secondary">
               {suppressed === 1 ? t('rules.test.oneOff') : t('rules.test.nOff', { n: suppressed })}
             </p>
           )}
         </div>
       )}
-    </aside>
+    </div>
   )
 }
 
