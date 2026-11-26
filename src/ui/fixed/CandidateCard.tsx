@@ -8,6 +8,7 @@ import { coverageBasisPoints } from '@/domain/fixedExpenses.ts'
 import { useDates, useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { ValueChoice } from '@/ui/components/ChoiceField.tsx'
 import { Chip } from '@/ui/components/Chip.tsx'
 import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
 import { AmountHistory } from '@/ui/fixed/AmountHistory.tsx'
@@ -92,18 +93,13 @@ export function CandidateCard({
               aria-label={t('plan.fixed.expectedAmount')}
             />
           </label>
-          <select
+          <ValueChoice
             className={`${SELECT} h-8`}
             value={cadence}
-            onChange={(event) => setCadence(event.target.value as Cadence)}
+            choices={CADENCES.map((option) => ({ value: option, label: CADENCE_LABEL[option] }))}
+            onChange={(option) => setCadence(option as Cadence)}
             aria-label={t('plan.fixed.cadence.label')}
-          >
-            {CADENCES.map((option) => (
-              <option key={option} value={option}>
-                {CADENCE_LABEL[option]}
-              </option>
-            ))}
-          </select>
+          />
           <Button
             variant="primary"
             size="sm"

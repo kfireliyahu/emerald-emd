@@ -532,6 +532,7 @@ written out here.
 | D-630 | 2026-11-26 | The kit catches up with the screens: a small button is the 32px chrome row on the body step, a choice wears a chevron and is never the platform's select, a value-shaped `ValueChoice` replaces Rules' `PickField`, the side panel's first Esc leaves a field and focus returns to the latest opener, a figure keeps its sign in Hebrew, the waiting notice is never filled; and a paycheck by hand is a `PanelForm` in Paychecks' side panel — month, employer, gross and net first, whether it adds up said in words, the slip's lines only if wanted | M64 |
 | D-631 | 2026-11-26 | Plan has a Year beside its month, as Home has: each bucket's year is the sum of its months — what each month's plan gave it against what it got, January through the last month that is over, on the plan each month is on and Home's month basis — said first in words with the categories apart from the goals and debts, each bucket a meter whose months open beside the page, a month nobody could measure left out of both sums, and `plan_month` with a `year` answering the same; Plan's bar runs from the inline start, so in Hebrew it mirrors with its drag and arrow keys while the ring stays a clock | M64 |
 | D-632 | 2026-11-26 | The engine's other views keep the format's one Add and one strip of controls, and say every word through the catalogue: Roadmap and Ready to start carry the table's Add behind the same refusal; the board's Lanes by, the roadmap's fold filters, In the order of, Columns and Fold all, and the ready list's Columns sit in one strip of the same classes under the tabs; a line or card left at its view's columns drops a state its group already says and a link its name already says; and a sentence the engine builds for a screen is a key and its parts, said by the screen | M64 |
+| D-634 | 2026-11-26 | A rule made outside Rules is made where it was asked for — Transactions and By merchant open Rules' whole editor in their side panel, save it there, and the note says it was made with Undo and *Open in Rules*, which opens that rule in its editor; the platform selects left outside the kit become `ValueChoice`; and a new paycheck opens on the month after the newest slip when last month already has one | M64 |
 | D-636 | 2026-11-26 | A file is read through a door named for its kind and drawn with its glyph: Home's header carries *Read bank and card statements* (filled) with *Read paychecks* beside it — one button per kind, not one *Read files* that asks the kind; a fund report is read from its fund as *Read a fund report*; the palette names all three; a waiting line opens its own kind's reader; and a file picked or dropped anywhere is still read as what it is | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
@@ -2017,6 +2018,45 @@ the dashboard's helpers in `src/ui/formats/dashboard.ts` and the refusals of `ma
 **Rejected.** Keeping the Add on the table alone (switching views lost the one action the format
 asks for). A per-view toolbar of its own (three looks for one job). Importing `MessageKey` into the
 domain (the boundary forbids it, and a literal key type checks the same at the call).
+
+## D-634 · 2026-11-26 · A rule made outside Rules is made where it was asked for — Transactions and By merchant open Rules' whole editor in their side panel, save it there, and the note says it was made with Undo and *Open in Rules*, which opens that rule in its editor; the platform selects left outside the kit become `ValueChoice`; and a new paycheck opens on the month after the newest slip when last month already has one <a id="d-634"></a>
+
+**Context.** M64 F15, F29 and F30. The maintainer, 2026-11-26: *"when creating a rule can we stay
+at the screen where we wanted to create it? e.g im at transactions creating a rule for a
+transaction. i dont wanna go to rules."* D-617 already said an action finishes where it was
+started. Transactions made a merchant rule in place (the learning offer, a row's menu, the detail
+panel's Make a rule), but its note appeared only when past rows were filed, its Undo took back the
+rows and left the rule, and a provider heading's rule — from a row's menu or the detail panel — still
+went to Rules; By merchant's *Write a rule for…* and a heading's rule from the editor did too. After
+F2 (D-630) ten files still drew the platform's select. And Paychecks' Add by hand opened on last
+month, which on the synthetic year already had a slip, so the form opened saying so.
+
+**Decision.**
+
+1. **A rule asked for outside Rules is made there** (`src/ui/rules/RuleFromHere.tsx`): the paths
+   that went to Rules open Rules' own `RuleEditor` in the screen's side panel with the draft in it
+   (`RuleFormPanel`), and save it there as Rules' save does (`makeRule`, origin USER, nothing
+   re-applied). The whole editor, so a provider's broad rule still has its pattern, category and
+   conditions on screen before it is saved (D-042) — the reason it used to go to Rules.
+2. **The note that says it was made offers Undo and *Open in Rules***: on Transactions after every
+   rule made there, the learning offer's included, whether or not it filed past rows; on By merchant
+   on every filing that made a rule. Undo takes the rule away and the rows it filed with it.
+   *Open in Rules* is offered, never done, and opens that rule in Rules' editor (router state
+   `{ rule: id }`, checked by `arrivedRuleId`).
+3. **The platform selects left outside the kit are `ValueChoice`** — PlaceEditor (kind, its cash),
+   HoldingEditor, FixedExpenseEditor (4), CandidateCard, SplitPurchases, WorkedOut (2),
+   FormatPicker, PointsAt (6), FeeImpact and DetailPanel (2): a filter past `MENU_MOST`, a paste
+   landing kept, a select's empty first option a choice or a placeholder. None made a thing in
+   place, so none gained *+ New*. The files are on `surfaceRules.test.ts`' `REVIEWED` list.
+4. **A new paycheck opens on the month that has none** (`blankDraft` in `paycheckEntry.ts` takes
+   the slips' months): last month, as F04 says, unless it already has a slip — then the month after
+   the newest slip. The note about a second slip in a month stays for one typed on purpose.
+
+**Rejected.** Asking first whether to go to Rules (the maintainer's *"maybe a popup"*): D-617 says a
+dialog is only for what cannot be undone, and going elsewhere is offered as a link. Re-applying a
+rule made from the editor to past rows (Rules' own save does not; the learning offer keeps its
+ticked box). Opening a new slip on the month after the newest slip always (a gap before it would
+then be skipped; last month stays the default).
 
 ## Related
 

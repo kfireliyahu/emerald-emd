@@ -62,7 +62,7 @@ import {
   type ProviderSection,
 } from '@/domain/merchantGroups.ts'
 import { planReapply } from '@/domain/reapply.ts'
-import { asRule, draftFromMerchant, draftFromProviderCategory } from '@/domain/ruleEditing.ts'
+import { asRule, draftFromMerchant, draftFromProviderCategory, type RuleDraft } from '@/domain/ruleEditing.ts'
 import { suggestFromHistory, type MerchantSuggestion } from '@/domain/suggest.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { countKey } from '@/i18n/count.ts'
@@ -84,6 +84,8 @@ import { useFilePicker, useReadFiles } from '@/ui/home/parts.tsx'
 import { Kbd } from '@/ui/components/Kbd.tsx'
 import { accountLabel } from '@/ui/rules/ruleText.ts'
 import { SidePanel } from '@/ui/components/SidePanel.tsx'
+import { OpenInRules, RuleFormPanel } from '@/ui/rules/RuleFromHere.tsx'
+import { makeRule } from '@/ui/rules/madeHere.ts'
 import { EmptyState, WaitingList } from '@/ui/components/WaitingList.tsx'
 import { PlanAgainst } from '@/ui/charts/PlanAgainst.tsx'
 import { wholeMoney } from '@/ui/charts/kit.ts'
@@ -343,6 +345,7 @@ export function ByMerchant() {
         undoCorrections(database, done.filed, categoryId)
         if (made !== undefined) deleteRule(database, made, Date.now())
       },
+      rule: made,
     })
   }
 
@@ -449,6 +452,31 @@ export function ByMerchant() {
         if (run !== undefined) undoReapply(database, run, now)
         deleteRule(database, made, now)
       },
+      rule: made,
+    })
+  }
+
+  /**
+   * **A rule from the whole editor, made here and kept here** (M64 F15, D-634):
+   * a merchant's or a provider's heading, opened in the panel with its draft.
+   * The person stays on By merchant; the note says it was made, with its Undo
+   * and *Open in Rules*.
+   */
+  const saveRule = (draft: RuleDraft): void => {
+    let made: { readonly id: string; readonly name: string } | undefined
+    mutate((database) => {
+      made = makeRule(database, draft, Date.now())
+    })
+    const rule = made as { readonly id: string; readonly name: string } | undefined
+    if (rule === undefined) return
+    setPanel(undefined)
+    remember({
+      message: <Phrase text={t('rules.made')} parts={{ name: <Bidi>{rule.name}</Bidi> }} />,
+      undoLabel: t('merchants.filings.undo'),
+      undo: (database) => {
+        deleteRule(database, rule.id, Date.now())
+      },
+      rule: rule.id,
     })
   }
 
@@ -554,7 +582,7 @@ export function ByMerchant() {
   const ruleFromProvider = (group: MerchantGroup): void => {
     const provider = providerOf(group)
     if (provider === undefined) return
-    navigate('/categories/rules', { state: { draft: draftFromProviderCategory(provider, choiceOf(group)) } })
+    setPanel({ kind: 'rule', draft: draftFromProviderCategory(provider, choiceOf(group)) })
   }
 
   /** What a heading's rule would file into unless one is picked: the category most of its merchants would go to. */
@@ -743,8 +771,7 @@ export function ByMerchant() {
         icon: 'rule',
         label: <Phrase text={t('merchants.menu.writeRule')} parts={{ merchant: <Bidi>{group.merchantRaw}</Bidi> }} />,
         separated: true,
-        onChoose: () =>
-          navigate('/categories/rules', { state: { draft: draftFromMerchant(group.merchantNormalized, hint) } }),
+        onChoose: () => setPanel({ kind: 'rule', draft: draftFromMerchant(group.merchantNormalized, hint) }),
       },
       // The broad one, as on Transactions (M59 U3): what the provider called
       // these rows, behind the editor, where its reach is on screen before it
@@ -908,6 +935,7 @@ export function ByMerchant() {
                       <button type="button" className="fc-text-action shrink-0" onClick={() => filings[0] !== undefined && undo(filings[0])} title={t('merchants.filings.undoKey')}>
                         {filings[0].undoLabel}
                       </button>
+                      {filings[0].rule !== undefined && <OpenInRules ruleId={filings[0].rule} />}
                       {filings.length > 1 && (
                         <span className="text-caption">{t('merchants.filings.earlier', { count: filings.length - 1 })}</span>
                       )}
@@ -1327,6 +1355,16 @@ export function ByMerchant() {
         />
       )}
 
+      {panel?.kind === 'rule' && (
+        <RuleFormPanel
+          draft={panel.draft}
+          categories={data.categories}
+          accounts={data.accounts}
+          onSave={saveRule}
+          onClose={() => setPanel(undefined)}
+        />
+      )}
+
       {panel?.kind === 'skipped' && (
         <SidePanel
           title={t('merchants.list.skippedTitle')}
@@ -1385,6 +1423,7 @@ export function ByMerchant() {
 type MerchantPanel =
   | { readonly kind: 'charges' | 'promote'; readonly merchant: string }
   | { readonly kind: 'skipped' }
+  | { readonly kind: 'rule'; readonly draft: RuleDraft }
 
 interface Scope {
   readonly accountId: string
@@ -1404,6 +1443,8 @@ interface Filing {
   readonly undoLabel: string
   /** Puts back exactly what this write changed, and nothing written since. */
   readonly undo: (database: Database) => void
+  /** The rule this write made, which the notice offers to open in Rules (M64 F15). */
+  readonly rule?: string | undefined
 }
 
 type Promoted =

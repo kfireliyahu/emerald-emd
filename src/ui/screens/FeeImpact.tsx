@@ -23,6 +23,7 @@ import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { CountingAmount } from '@/ui/components/Amount.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { MENU_MOST, ValueChoice } from '@/ui/components/ChoiceField.tsx'
 import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
 import { Phrase } from '@/ui/components/Phrase.tsx'
 
@@ -116,17 +117,13 @@ export function FeeImpact({
       <div className={`flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline py-2 ${panel ? '' : 'px-6'}`}>
         <label className="flex items-center gap-2 text-ink-secondary">
           {t('wealth.feeImpact.fund')}
-          <select
+          <ValueChoice
             className={`${SELECT} max-w-72`}
             value={selected.fund.id}
-            onChange={(event) => setChosenId(event.target.value)}
-          >
-            {entries.map((entry) => (
-              <option key={entry.fund.id} value={entry.fund.id}>
-                {entry.fund.name}
-              </option>
-            ))}
-          </select>
+            choices={entries.map((entry) => ({ value: entry.fund.id, label: entry.fund.name }))}
+            filter={entries.length > MENU_MOST}
+            onChange={setChosenId}
+          />
         </label>
 
         <Link

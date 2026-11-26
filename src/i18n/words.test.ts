@@ -62,6 +62,7 @@ const U5 = [
   'src/ui/screens/Rules.tsx',
   'src/ui/rules/ReapplyPanel.tsx',
   'src/ui/rules/RuleEditor.tsx',
+  'src/ui/rules/RuleFromHere.tsx',
   'src/ui/rules/TestBox.tsx',
   'src/ui/rules/Why.tsx',
   'src/ui/screens/Plan.tsx',

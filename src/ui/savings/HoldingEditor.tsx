@@ -6,6 +6,7 @@ import { HOLDING_KINDS, type Holding, type HoldingKind } from '@/domain/model/sa
 import { reachableOf, validateHolding, type HoldingProblem } from '@/domain/savings.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { ValueChoice } from '@/ui/components/ChoiceField.tsx'
 import { FIELD, FIELD_MULTILINE, SELECT } from '@/ui/components/fieldLook.ts'
 import { HOLDING_KIND_HEBREW, HOLDING_KIND_LABEL } from './labels.ts'
 
@@ -97,17 +98,12 @@ export function HoldingEditor({
           </Field>
 
           <Field label="Kind" hint={HOLDING_KIND_HEBREW[draft.kind]}>
-            <select
+            <ValueChoice
               className={SELECT}
               value={draft.kind}
-              onChange={(event) => set({ kind: event.target.value as HoldingKind })}
-            >
-              {HOLDING_KINDS.map((kind) => (
-                <option key={kind} value={kind}>
-                  {HOLDING_KIND_LABEL[kind]}
-                </option>
-              ))}
-            </select>
+              choices={HOLDING_KINDS.map((kind) => ({ value: kind, label: HOLDING_KIND_LABEL[kind] }))}
+              onChange={(kind) => set({ kind: kind as HoldingKind })}
+            />
           </Field>
 
           {asksTerm && (

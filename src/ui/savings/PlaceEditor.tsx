@@ -127,17 +127,12 @@ export function PlaceEditor({
           </Field>
 
           <Field label="Kind" hint={PLACE_KIND_HEBREW[draft.kind]}>
-            <select
+            <ValueChoice
               className={SELECT}
               value={draft.kind}
-              onChange={(event) => set({ kind: event.target.value as HoldingPlaceKind })}
-            >
-              {HOLDING_PLACE_KINDS.map((kind) => (
-                <option key={kind} value={kind}>
-                  {PLACE_KIND_LABEL[kind]}
-                </option>
-              ))}
-            </select>
+              choices={HOLDING_PLACE_KINDS.map((kind) => ({ value: kind, label: PLACE_KIND_LABEL[kind] }))}
+              onChange={(kind) => set({ kind: kind as HoldingPlaceKind })}
+            />
           </Field>
 
           <Field label="Bank or broker" hint="optional — whose it is">
@@ -192,21 +187,19 @@ export function PlaceEditor({
 
           {draft.accountId !== undefined && (
             <Field label="Its cash" hint="the holding that is the account’s own cash">
-              <select
+              <ValueChoice
                 className={SELECT}
                 aria-label="The holding that is the account’s cash"
                 value={cashId ?? ''}
-                onChange={(event) => setCashId(event.target.value === '' ? undefined : event.target.value)}
-              >
-                {!cashChoices.some((held) => held.accountId === draft.accountId) && (
-                  <option value="">A new holding, Cash</option>
-                )}
-                {cashChoices.map((held) => (
-                  <option key={held.id} value={held.id}>
-                    {held.name}
-                  </option>
-                ))}
-              </select>
+                choices={[
+                  ...(cashChoices.some((held) => held.accountId === draft.accountId)
+                    ? []
+                    : [{ value: '', label: 'A new holding, Cash' }]),
+                  ...cashChoices.map((held) => ({ value: held.id, label: held.name })),
+                ]}
+                filter={cashChoices.length > MENU_MOST}
+                onChange={(id) => setCashId(id === '' ? undefined : id)}
+              />
             </Field>
           )}
         </div>

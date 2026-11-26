@@ -16,6 +16,7 @@ import type { CategoryRule } from '@/domain/model/rules.ts'
 import { Why } from '@/ui/rules/Why.tsx'
 import { Amount } from '@/ui/components/Amount.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { MENU_MOST, ValueChoice } from '@/ui/components/ChoiceField.tsx'
 import { CategoryPicker } from '@/ui/components/CategoryPicker.tsx'
 import { FIELD, FIELD_MULTILINE, SELECT } from '@/ui/components/fieldLook.ts'
 import { instantDay } from '@/core/instant.ts'
@@ -263,22 +264,20 @@ export function DetailPanel({
       {isBankOutflow && cards.length > 0 && (
         <div className="border-b border-hairline pb-4">
           <Label>{t('transactions.panel.paysCard')}</Label>
-          <select
+          <ValueChoice
             className={`${SELECT} mt-1 w-full`}
             value={settlementAlias ?? ''}
+            choices={[
+              { value: '', label: t('transactions.panel.notCardPayment') },
+              ...cards.map((account) => ({
+                value: account.id,
+                label: account.last4 === undefined ? account.name : `${account.name} ····${account.last4}`,
+              })),
+            ]}
+            filter={cards.length > MENU_MOST}
             aria-label={t('transactions.panel.paysCardLabel')}
-            onChange={(event) =>
-              onSetSettlementAlias(event.target.value === '' ? undefined : event.target.value)
-            }
-          >
-            <option value="">{t('transactions.panel.notCardPayment')}</option>
-            {cards.map((account) => (
-              <option key={account.id} value={account.id}>
-                {account.name}
-                {account.last4 !== undefined && ` ····${account.last4}`}
-              </option>
-            ))}
-          </select>
+            onChange={(id) => onSetSettlementAlias(id === '' ? undefined : id)}
+          />
 
           {aliasedCard === undefined ? (
             <p className="mt-1 text-caption text-ink-secondary">
@@ -519,19 +518,17 @@ function HoldingField({
     <div className="border-b border-hairline pb-4">
       <Label>{t('transactions.panel.boughtOrSold')}</Label>
       <div className="mt-1 flex gap-2">
-        <select
+        <ValueChoice
           className={`${SELECT} min-w-0 flex-1`}
           value={holdingId}
+          choices={[
+            { value: '', label: t('transactions.panel.noHolding') },
+            ...holdings.map((one) => ({ value: one.id, label: one.name })),
+          ]}
+          filter={holdings.length > MENU_MOST}
           aria-label={t('transactions.panel.holdingLabel')}
-          onChange={(event) => setHoldingId(event.target.value)}
-        >
-          <option value="">{t('transactions.panel.noHolding')}</option>
-          {holdings.map((one) => (
-            <option key={one.id} value={one.id}>
-              {one.name}
-            </option>
-          ))}
-        </select>
+          onChange={setHoldingId}
+        />
         {holdingId !== '' && (
           <input
             className={`${FIELD} w-24 text-end tabular-nums`}

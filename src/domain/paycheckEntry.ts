@@ -16,7 +16,7 @@
 
 import { newId } from '@/core/id.ts'
 import { abs, subtract, zero, type CurrencyCode, type Money } from '@/core/money.ts'
-import { addMonths, yearMonthOf, type LocalDate, type YearMonth } from '@/core/time.ts'
+import { addMonths, compareYearMonths, yearMonthOf, type LocalDate, type YearMonth } from '@/core/time.ts'
 import type {
   DeductionKind,
   DeductionType,
@@ -76,10 +76,19 @@ export interface PaycheckDraft {
  * has just arrived: salaries are paid in arrears, and a user opening this form
  * on 9 July is holding June's payslip. The payment date defaults to today for
  * the same reason — they are entering it because it landed.
+ *
+ * **Unless that month already has a slip** (M64 F30, D-634): then it opens on
+ * the month after the newest slip, the one that is missing, rather than on a
+ * month the form would at once call taken. The note about a second slip stays
+ * for one typed on purpose.
  */
-export function blankDraft(today: LocalDate, currency: CurrencyCode): PaycheckDraft {
+export function blankDraft(
+  today: LocalDate,
+  currency: CurrencyCode,
+  taken: readonly YearMonth[] = [],
+): PaycheckDraft {
   return {
-    period: addMonths(yearMonthOf(today), -1),
+    period: openingPeriod(today, taken),
     paymentDate: today,
     employerName: '',
     gross: zero(currency),
@@ -88,6 +97,14 @@ export function blankDraft(today: LocalDate, currency: CurrencyCode): PaycheckDr
     isIrregular: false,
     lines: [],
   }
+}
+
+/** The month a new slip opens on: last month, or the month after the newest slip when last month has one. */
+function openingPeriod(today: LocalDate, taken: readonly YearMonth[]): YearMonth {
+  const last = addMonths(yearMonthOf(today), -1)
+  if (!taken.some((period) => compareYearMonths(period, last) === 0)) return last
+  const newest = taken.reduce((latest, period) => (compareYearMonths(period, latest) > 0 ? period : latest), last)
+  return addMonths(newest, 1)
 }
 
 export function blankLine(currency: CurrencyCode, deductionTypeId = ''): DraftLine {
