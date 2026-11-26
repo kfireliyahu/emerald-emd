@@ -5397,6 +5397,16 @@ answer: On the goal: its panel takes money out (Money out, with a required why) 
 state: live
 affects: "src/data/repositories/savingsRepository.ts\nsrc/ui/savings/GoalClose.tsx\nsrc/ui/screens/GoalDetail.tsx\nsrc/ui/screens/Goals.tsx\nsrc/plugin/tools/goalRhythm.ts"
 
+### D-646
+date: 2026-11-26
+milestone: M64
+scope: ui
+title: A screen fills the window's width: no page frame, board, roadmap, table, form grid or chart is held narrow by a fixed cap; prose alone keeps its measure, and a chart is drawn at the width it is shown
+question: How wide does a screen draw when the window widens?
+answer: As wide as the window leaves it beside the rail and any side panel: page frames, boards, the roadmap, lists, tables, form grids and reviews have no max width. A paragraph, lede or caption keeps its max-w-prose or ch measure. A chart measures its width (useWidth) and draws at it. Floating rooms, the side panel and pane (D-644), centred empty states and single fields keep their widths.
+state: live
+affects: "src/ui/formats/LinkViews.tsx\nsrc/ui/formats/EntryView.tsx\nsrc/ui/formats/InputView.tsx\nsrc/ui/formats/ListView.tsx\nsrc/ui/debts/BalanceLine.tsx\nsrc/ui/funds/BalanceChart.tsx\nsrc/ui/theme/tokens.css"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -7025,6 +7035,15 @@ state: applied
 answered_by: D-644
 became_unit: M64 F69
 
+### M64 F70 built: every screen fills the window's width (D-646), to land
+from: F:/projects/emerald/.claude/worktrees/agent-ab530afb50d2b849f
+sent_on: 2026-11-26
+body: "M64 F70 is built on worktree-agent-ab530afb50d2b849f at c45b052: no page frame, board, roadmap, list, table, form grid or chart is held narrow by a fixed cap any more; prose keeps its measure. docs:check is green but for D-646's row, which this landing writes.\n\n```json\n{\"unit\": \"M64 F70\", \"commit\": \"c45b052\", \"branch\": \"worktree-agent-ab530afb50d2b849f\", \"files\": \"src/ui/formats/LinkViews.tsx\\nsrc/ui/formats/ListView.tsx\\nsrc/ui/formats/EntryView.tsx\\nsrc/ui/formats/InputView.tsx\\nsrc/ui/formats/FormatDoors.tsx\\nsrc/ui/formats/AddsUp.tsx\\nsrc/ui/formats/WorkedOut.tsx\\nsrc/ui/screens/DeclaredFormats.tsx\\nsrc/ui/screens/FeeImpact.tsx\\nsrc/ui/screens/FundDetail.tsx\\nsrc/ui/screens/NoLedger.tsx\\nsrc/ui/screens/Specimen.tsx\\nsrc/ui/settings/SettingsPage.tsx\\nsrc/ui/debts/BalanceLine.tsx\\nsrc/ui/funds/BalanceChart.tsx\\nsrc/ui/funds/ReadReport.tsx\\nsrc/ui/funds/ReportReview.tsx\\nsrc/ui/funds/SnapshotEditor.tsx\\nsrc/ui/paychecks/PaycheckEditor.tsx\\nsrc/ui/paychecks/SlipReview.tsx\\nsrc/ui/plan/StarterProposal.tsx\\nsrc/ui/savings/HoldingEditor.tsx\\nsrc/ui/savings/PlaceEditor.tsx\\nsrc/ui/documents/DocumentTextInput.tsx\\nsrc/ui/theme/tokens.css\\ndocs/09-decision-log.md\", \"report\": \"Removed: roadmap, ready view and agenda frames (1040px), a format's list (980px), a row's entry (1120px frame, 700px body) and input (1120px frame, 700px field rows, 860px just-added list), the formats index's example/import panels (56rem) and its table (960px), the format doors grid (64rem), AddsUp/WorkedOut header rows, Settings, NoLedger and Specimen frames (4xl/6xl), FeeImpact's grids, FundDetail's tables, the four wealth/paycheck editors' frames and form grids (3xl), StarterProposal (4xl), DocumentTextInput (4xl, its intro now max-w-prose), and the payslip and fund-report reviews (900/1100/1600px). The fund balance chart and the debt step line now draw at their measured width with the kit's useWidth instead of a 720-unit viewBox scaled into max-w-3xl, so they grow with the column and keep 2px strokes. The roadmap's segment bar grows with its row from 220px (tokens.css .fc-bar). Kept on purpose: every prose measure (max-w-prose, ch widths, the roadmap row's 720px description), dialogs, menus, popovers and the guide, the side panel and wealth pane (D-644's floor and ceiling untouched), centred empty/error states, NewFormat's naming start, single text fields' widths, a list cell's 16rem truncation, the connection panel's 760px form disclosure. Checked: probe:screens with the budget on year (27 routes), project (9) and custom (7) at 1280x800 and 1920x1080, light and dark: no page scrolls sideways; the only breach is #/formats on year.emd (words 201 > 45, actions 35 > 22, screens 1.9 > 1), identical at base 4237af8 with my files set aside, so not this unit's. In this worktree's Vite at 1920 the roadmap on project.emd fills 1816 of 1864px. check:tours green (10 runs); full suite 6139 of 6140, the one failure src/plugin/formatWatch.test.ts timing out under the probes' load and passing alone; typecheck, direction and privacy green.\", \"decisions\": [{\"ref\": \"D-646\", \"title\": \"A screen fills the window's width: no page frame, board, roadmap, table, form grid or chart is held narrow by a fixed cap; prose alone keeps its measure, and a chart is drawn at the width it is shown\", \"question\": \"How wide does a screen draw when the window widens?\", \"answer\": \"As wide as the window leaves it beside the rail and any side panel: page frames, boards, the roadmap, lists, tables, form grids and reviews have no max width. A paragraph, lede or caption keeps its max-w-prose or ch measure. A chart measures its width (useWidth) and draws at it. Floating rooms, the side panel and pane (D-644), centred empty states and single fields keep their widths.\", \"affects\": \"src/ui/formats/LinkViews.tsx\\nsrc/ui/formats/EntryView.tsx\\nsrc/ui/formats/InputView.tsx\\nsrc/ui/formats/ListView.tsx\\nsrc/ui/debts/BalanceLine.tsx\\nsrc/ui/funds/BalanceChart.tsx\\nsrc/ui/theme/tokens.css\"}], \"review_entries\": [{\"do\": \"On the demo project.emd open Milestone > Roadmap in a maximised window, then narrow the window. Then open a unit's entry, and on the demo year.emd a fund on Wealth > Funds and Settings.\", \"should\": \"Each screen runs to the window's edge as it widens and narrows, with no empty band at one side; the roadmap's progress bars run the width of their row with the counts at the end; paragraphs still wrap at a readable length. Wrong would be a screen still stopping short, a bar so long it reads as noise, or a line of prose running across the whole window.\"}], \"follow_ups\": [{\"kind\": \"question\", \"ref\": \"M64 Q93\", \"state\": \"open\", \"question\": \"The formats index (#/formats) on the synthetic year is over its density budget at base and after M64 F70 alike: words 201 > 45, actions 35 > 22, screens 1.9 > 1 (its limits look measured on a document with few formats). Should its limits be re-measured per document, or the index redesigned to fit them?\"}]}\n```"
+refs: M64 F70
+state: applied
+answered_by: D-646
+became_unit: M64 F70
+
 ### M64 F71 built: the website laid out as a report, an index of words, what it is first, a sheet per section (D-643), to land
 from: F:/projects/emerald/docs/memory.emd
 sent_on: 2026-11-26
@@ -7993,6 +8012,10 @@ state: open
 
 ### M64 Q90
 question: Closing a goal as spent dates its withdrawal today (M64 F72, D-645). Should the question also ask the day it was bought, so a goal closed weeks after the purchase takes its money out in the right month?
+state: open
+
+### M64 Q93
+question: The formats index (#/formats) on the synthetic year is over its density budget at base and after M64 F70 alike: words 201 > 45, actions 35 > 22, screens 1.9 > 1 (its limits look measured on a document with few formats). Should its limits be re-measured per document, or the index redesigned to fit them?
 state: open
 
 ### Many-valued link
@@ -9416,6 +9439,11 @@ state: open
 ### On the demo or the synthetic year, Rules: delete a rule that has fired (its row menu, Delete), then Undo (or Ctrl+Z). Categories: delete a category nothing uses, then Undo.
 unit: M64 F5
 should: The rule is back at the same place with the same Fired count, and a transaction it filed says which rule again; the category is back in the same place among its siblings with its colour, and any built-in rule that pointed at it is back on Rules.
+state: open
+
+### On the demo project.emd open Milestone > Roadmap in a maximised window, then narrow the window. Then open a unit's entry, and on the demo year.emd a fund on Wealth > Funds and Settings.
+unit: M64 F70
+should: Each screen runs to the window's edge as it widens and narrows, with no empty band at one side; the roadmap's progress bars run the width of their row with the counts at the end; paragraphs still wrap at a readable length. Wrong would be a screen still stopping short, a bar so long it reads as noise, or a line of prose running across the whole window.
 state: open
 
 ### On the demo project.emd open a format's Board, Roadmap and Ready to start (Development in the rail), then Agenda, Dashboard and Connections: on the board press a card's arrow and then Ctrl+Z; on Connections click a connection in the list, then Esc.
@@ -19534,13 +19562,17 @@ report: A new kit piece, PanelEdge (src/ui/components/), sits on a panel's inlin
 milestone: M64
 scope: ui
 title: Every screen fills the window's width
-state: in_progress
+landed: 2026-11-26
+decision: D-646
+state: built
 brief: **Do.** Maintainer, 2026-11-26: "make sure everything take up full dynamic width in general (old fault ive found is the roadmap)". Every route fills the window as it widens and narrows: no fixed cap holds a page's frame, a board, a roadmap or a table narrow, and a chart grows with its column. Find every cap (max-w-*, maxWidth, fixed widths on frames) and remove the ones that hold a screen narrow; where a line of prose would grow unreadably long, the prose alone keeps its measure while its screen fills. The roadmap (project.emd, #/formats/milestone/roadmap) first. Check with probe:screens on year, custom and project at 1280 and at a wide window (1920), light and dark, and that the budget still passes.
-files: src/ui/formats/
+files: "src/ui/formats/LinkViews.tsx\nsrc/ui/formats/ListView.tsx\nsrc/ui/formats/EntryView.tsx\nsrc/ui/formats/InputView.tsx\nsrc/ui/formats/FormatDoors.tsx\nsrc/ui/formats/AddsUp.tsx\nsrc/ui/formats/WorkedOut.tsx\nsrc/ui/screens/DeclaredFormats.tsx\nsrc/ui/screens/FeeImpact.tsx\nsrc/ui/screens/FundDetail.tsx\nsrc/ui/screens/NoLedger.tsx\nsrc/ui/screens/Specimen.tsx\nsrc/ui/settings/SettingsPage.tsx\nsrc/ui/debts/BalanceLine.tsx\nsrc/ui/funds/BalanceChart.tsx\nsrc/ui/funds/ReadReport.tsx\nsrc/ui/funds/ReportReview.tsx\nsrc/ui/funds/SnapshotEditor.tsx\nsrc/ui/paychecks/PaycheckEditor.tsx\nsrc/ui/paychecks/SlipReview.tsx\nsrc/ui/plan/StarterProposal.tsx\nsrc/ui/savings/HoldingEditor.tsx\nsrc/ui/savings/PlaceEditor.tsx\nsrc/ui/documents/DocumentTextInput.tsx\nsrc/ui/theme/tokens.css\ndocs/09-decision-log.md"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-ab530afb50d2b849f
+commit: c45b052
 paths: src/ui/
+report: Removed: roadmap, ready view and agenda frames (1040px), a format's list (980px), a row's entry (1120px frame, 700px body) and input (1120px frame, 700px field rows, 860px just-added list), the formats index's example/import panels (56rem) and its table (960px), the format doors grid (64rem), AddsUp/WorkedOut header rows, Settings, NoLedger and Specimen frames (4xl/6xl), FeeImpact's grids, FundDetail's tables, the four wealth/paycheck editors' frames and form grids (3xl), StarterProposal (4xl), DocumentTextInput (4xl, its intro now max-w-prose), and the payslip and fund-report reviews (900/1100/1600px). The fund balance chart and the debt step line now draw at their measured width with the kit's useWidth instead of a 720-unit viewBox scaled into max-w-3xl, so they grow with the column and keep 2px strokes. The roadmap's segment bar grows with its row from 220px (tokens.css .fc-bar). Kept on purpose: every prose measure (max-w-prose, ch widths, the roadmap row's 720px description), dialogs, menus, popovers and the guide, the side panel and wealth pane (D-644's floor and ceiling untouched), centred empty/error states, NewFormat's naming start, single text fields' widths, a list cell's 16rem truncation, the connection panel's 760px form disclosure. Checked: probe:screens with the budget on year (27 routes), project (9) and custom (7) at 1280x800 and 1920x1080, light and dark: no page scrolls sideways; the only breach is #/formats on year.emd (words 201 > 45, actions 35 > 22, screens 1.9 > 1), identical at base 4237af8 with my files set aside, so not this unit's. In this worktree's Vite at 1920 the roadmap on project.emd fills 1816 of 1864px. check:tours green (10 runs); full suite 6139 of 6140, the one failure src/plugin/formatWatch.test.ts timing out under the probes' load and passing alone; typecheck, direction and privacy green.
 
 ### M64 F71
 milestone: M64
