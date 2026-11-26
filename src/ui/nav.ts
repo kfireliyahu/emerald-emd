@@ -214,6 +214,12 @@ export const NAVIGATION: readonly NavSection[] = [
     ...named('plan'),
     glyph: 'plan',
     pack: 'ledger',
+    // **Month and Year, as Home has** (M64 F12, D-631): the year is each bucket's total against
+    // what its months planned — the same plan over a longer window, so a view and not a place.
+    tabs: [
+      { to: '/plan', ...named('month') },
+      { to: '/plan/year', ...named('year') },
+    ],
   },
   {
     to: '/wealth',

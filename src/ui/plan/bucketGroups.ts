@@ -47,3 +47,18 @@ export function sectionBuckets<T>(rows: readonly T[], bucketOf: (row: T) => Spli
   }
   return sections
 }
+
+/**
+ * The bucket lists as the page's two columns: one per share when the plan has
+ * Needs, Wants and Saving, and one list cut in two, in order, when it has none
+ * (Plan's month, and its year since M64 F12).
+ */
+export function columnsOf<S extends { readonly name: string; readonly rows: readonly unknown[] }>(sections: readonly S[]): readonly S[] {
+  const only = sections[0]
+  if (sections.length !== 1 || only === undefined || only.name !== '' || only.rows.length < 4) return sections
+  const half = Math.ceil(only.rows.length / 2)
+  return [
+    { ...only, rows: only.rows.slice(0, half) },
+    { ...only, rows: only.rows.slice(half) },
+  ]
+}

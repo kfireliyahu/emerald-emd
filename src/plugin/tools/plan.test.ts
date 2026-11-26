@@ -349,6 +349,16 @@ describe('plan_month', () => {
     db.close()
   })
 
+  it('reads a year against the plan, and writes nothing (M64 F12)', async () => {
+    const f = await fixture()
+    // A free bucket is never measured, so a whole past year has nothing to add up — and says why.
+    const text = await planMonthTool.run({ path: f.path, year: 2025 }, NO_CLIENT)
+    expect(text).toContain('Nothing to add up for')
+    expect(text).toContain('December 2025')
+    expect(await listBackups(f.path)).toHaveLength(0)
+    await expect(planMonthTool.run({ path: f.path, year: 26.5 }, NO_CLIENT)).rejects.toThrow('must be a year')
+  })
+
   it('says so for a plan that is not there', async () => {
     const f = await fixture()
     const text = await planMonthTool.run({ path: f.path, plan_id: 'ghost' }, NO_CLIENT)

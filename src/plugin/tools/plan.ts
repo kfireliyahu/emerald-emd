@@ -35,7 +35,15 @@ import {
   setRoles,
   type RoleEntry,
 } from '@/data/repositories/planFixedRepository.ts'
-import { applySuggestions, planMonth, removePlanBuckets, type PlanMonth } from '@/data/repositories/planMonthRepository.ts'
+import {
+  applySuggestions,
+  planMonth,
+  planYearAgainstActual,
+  removePlanBuckets,
+  type PlanMonth,
+  type PlanYearReading,
+} from '@/data/repositories/planMonthRepository.ts'
+import { planYearByKind, type PlanYearTotal } from '@/domain/planYear.ts'
 import { listGoals } from '@/data/repositories/savingsRepository.ts'
 import { documentCurrency } from '@/data/repositories/statisticsRepository.ts'
 import {
@@ -400,12 +408,16 @@ export const planMonthTool: PluginTool = {
       'nothing else, and `back_to_default` puts months of this plan back on the default — the Plan ' +
       'screen’s month checkboxes. A month nobody gave a plan is on the default. ' +
       '`only_buckets` writes just those buckets’ suggestions. A fund or an account is pointed at ' +
-      'and writes nothing. The document is copied to a timestamped .bak first.',
+      'and writes nothing. The document is copied to a timestamped .bak first. ' +
+      '`year` reads a year instead and writes nothing: each bucket’s total against the sum of what ' +
+      'each month’s plan gave it, January through the last month that is over, and the months it ' +
+      'went over or under — the Plan screen’s Year view.',
     inputSchema: {
       type: 'object',
       properties: {
         path: PATH_PROP,
         plan_id: stringProp('Ids come from `plans`. Default: the default plan.'),
+        year: numberProp('A year, e.g. 2026: read the year against the plan instead. Each month counts on the plan it is on.'),
         month: stringProp('The month as YYYY-MM. Default this month.'),
         only_buckets: { type: 'array', items: { type: 'string' }, description: 'Bucket ids from `plans`. Default: all.' },
         months: { type: 'array', items: { type: 'string' }, description: 'Months as YYYY-MM to give this plan. Records nothing.' },
@@ -423,6 +435,11 @@ export const planMonthTool: PluginTool = {
   },
   run: async (args) => {
     const path = requireString(args, 'path')
+    const year = optionalNumber(args, 'year')
+    if (year !== undefined) {
+      if (!Number.isInteger(year) || year < 1900 || year > 9999) throw new ToolInputError('`year` must be a year, like 2026.')
+      return readDocument(path, (document) => yearPicture(planYearAgainstActual(document.db, year, today()), year))
+    }
     const planId = optionalString(args, 'plan_id')
     const month: YearMonth = optionalPeriod(args, 'month') ?? { year: today().year, month: today().month }
     const only = Array.isArray(args['only_buckets'])
@@ -475,6 +492,59 @@ export const planMonthTool: PluginTool = {
       refuses: (plan) => plan.month === undefined,
     })
   },
+}
+
+/**
+ * **The year against the plan** (M64 F12, D-631): the Plan screen's Year view, in words — the
+ * sentence it leads with, then each bucket's year and the months it went over or under.
+ */
+function yearPicture(found: PlanYearReading | undefined, year: number): string {
+  if (found === undefined) return 'The document has no plan yet. `start_plan` makes one.'
+  const { reading, through } = found
+  if (through === undefined || reading.months.length === 0) {
+    return `No month of ${String(year)} is over yet, so there is nothing to add up.`
+  }
+  const span = `${formatYearMonth({ year, month: 1 })} to ${formatYearMonth(through)}`
+  if (reading.comparable === 0) {
+    return `Nothing to add up for ${span}: no bucket could be measured in any of those months (a bucket for a category needs that month's statement; a free bucket is never measured).`
+  }
+  // Spending past a category's plan is a problem and more into a goal or onto a debt is not, so
+  // the two are said apart, as the screen says them (D-631).
+  const { spent, into } = planYearByKind(reading, reading.planned.currency)
+  const said = (total: PlanYearTotal, over: string, under: string): string => {
+    const gap = total.variance.minor
+    const amount = showMoney(money(Math.abs(gap), total.variance.currency))
+    return gap === 0 ? 'exactly what their months planned' : `${amount} ${gap > 0 ? over : under} (${showMoney(total.actual)} of ${showMoney(total.planned)} planned)`
+  }
+  return paragraphs(
+    [
+      spent === undefined ? undefined : `the categories spent ${said(spent, 'over what their months planned', 'less than their months planned')}`,
+      into === undefined ? undefined : `goals and debts got ${said(into, 'more than their months planned', 'less than their months planned')}`,
+    ]
+      .filter((one) => one !== undefined)
+      .reduce((text, part, index) => `${text}${index === 0 ? '' : '; '}${part}`, `From ${span}, `) + '.',
+    table(
+      ['Bucket', 'Planned', 'Got', 'Over or under', 'Months over', 'Months under', 'Not measured'],
+      reading.lines.map((line) => [
+        line.bucket.name,
+        line.months.length === line.unmeasured ? '—' : showMoney(line.planned),
+        line.months.length === line.unmeasured ? '—' : showMoney(line.actual),
+        line.months.length === line.unmeasured
+          ? 'not measured'
+          : line.variance.minor === 0
+            ? 'on plan'
+            : `${showMoney(money(Math.abs(line.variance.minor), line.variance.currency))} ${line.variance.minor > 0 ? 'over' : 'under'}`,
+        monthsWhere(line.months, 'OVER'),
+        monthsWhere(line.months, 'UNDER'),
+        line.unmeasured === 0 ? '—' : String(line.unmeasured),
+      ]),
+    ),
+  )
+}
+
+function monthsWhere(months: PlanYearReading['reading']['lines'][number]['months'], verdict: 'OVER' | 'UNDER'): string {
+  const hit = months.filter((one) => one.verdict === verdict).map((one) => toYearMonthString(one.period))
+  return hit.length === 0 ? '—' : hit.join(', ')
 }
 
 /** What giving months a plan, or taking them back, would do — the dry run of `months`. */

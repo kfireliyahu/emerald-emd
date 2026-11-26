@@ -70,6 +70,7 @@ const U5 = [
   'src/ui/plan/MonthRow.tsx',
   'src/ui/plan/PlanBar.tsx',
   'src/ui/plan/PointsAt.tsx',
+  'src/ui/plan/PlanYear.tsx',
   'src/ui/plan/StarterProposal.tsx',
   'src/ui/fixed/AmountHistory.tsx',
   'src/ui/fixed/CandidateCard.tsx',

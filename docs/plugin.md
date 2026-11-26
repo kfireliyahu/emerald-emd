@@ -1501,7 +1501,7 @@ overlapping file adds only what is new. No screen reads a broker PDF, on purpose
 **Since M28 U7 (D-319) the Plan screen is here whole**: `plans` reads each plan with what every fixed
 expense does to it (out of net, part of the split, ignored) and its buckets; `plan_month` works one plan
 out for a month and, with `commit`, records its planned deposits and payments and gives the month the plan,
-and with `months` / `back_to_default` gives months the plan or puts them back on the default (M31 U4);
+and with `months` / `back_to_default` gives months the plan or puts them back on the default (M31 U4), and with `year` reads Plan's Year — each bucket's total against what its months planned — and writes nothing (M64 F12, D-631);
 `set_plan` makes, copies, resizes and deletes plans and points their buckets; `set_fixed_expense_roles`
 sets the per-plan choice (a payslip deduction is refused); `edit_fixed_expenses` edits, ends or stops
 tracking a bill. Each takes a list and dry-runs until `commit: true`; ids come from `plans`.

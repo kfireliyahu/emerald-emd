@@ -14,9 +14,10 @@
 import type { Database } from 'sql.js'
 
 import { money, type Money } from '@/core/money.ts'
-import { addMonths, toYearMonthString, type LocalDate, type YearMonth } from '@/core/time.ts'
+import { addMonths, compareYearMonths, toYearMonthString, yearMonthOf, type LocalDate, type YearMonth } from '@/core/time.ts'
 import { selfDiscoveringDebts } from '@/domain/debt.ts'
 import { fixedPlanParts, type FixedPlanParts } from '@/domain/fixedExpenses.ts'
+import { planYear, type PlanYear } from '@/domain/planYear.ts'
 import type { FixedExpense, FixedRole } from '@/domain/model/fixed.ts'
 import type { FixedLineStatus } from '@/domain/model/statistics.ts'
 import type { Allocation, SplitBucket, SplitPlan } from '@/domain/model/plan.ts'
@@ -53,6 +54,8 @@ import {
   defaultSplitPlan,
   findSplitPlan,
   listSplitBuckets,
+  listSplitPlans,
+  planOnMonth,
   setPlanMonths,
   updateSplitPlan,
 } from './splitPlanRepository.ts'
@@ -181,6 +184,40 @@ export function planAgainstActual(
     nothing = `Nothing to compare for ${month}: ${reasons.join('; ')}.`
   }
   return { period, versus, ledgerHasMonth: measured.ledgerHasMonth, fixed, fixedPlanned, fixedActual, nothing }
+}
+
+/** A year of the plan against what happened, and the months it read. */
+export interface PlanYearReading {
+  readonly year: number
+  readonly reading: PlanYear
+  /** The last month read, or undefined when no month of the year is over yet. */
+  readonly through: YearMonth | undefined
+}
+
+/**
+ * **The plan over a year** (M64 F12, D-631): each month from January through the last month that
+ * is over — as of `asOf`, and never past December — worked out on the plan that month is on and
+ * measured the way one month is (`planAgainstActual`, on Home's month basis, D-607), then summed
+ * bucket by bucket by `planYear`. What the Plan screen's Year view draws and what `plan_month`
+ * answers with a `year`, so the two cannot disagree about a figure.
+ */
+export function planYearAgainstActual(db: Database, year: number, asOf: LocalDate): PlanYearReading | undefined {
+  const first = listSplitPlans(db)[0]
+  if (first === undefined) return undefined
+  const lastOver = addMonths(yearMonthOf(asOf), -1)
+  const december: YearMonth = { year, month: 12 }
+  const through = compareYearMonths(lastOver, december) < 0 ? lastOver : december
+  const measured: PlanVersusActual[] = []
+  for (let period: YearMonth = { year, month: 1 }; compareYearMonths(period, through) <= 0; period = addMonths(period, 1)) {
+    const pm = planMonth(db, { planId: planOnMonth(db, period), month: period, asOf, readings: false })
+    if (pm === undefined) continue
+    measured.push(planAgainstActual(db, pm, period, asOf).versus)
+  }
+  return {
+    year,
+    reading: planYear(measured, first.currency),
+    through: compareYearMonths(through, { year, month: 1 }) < 0 ? undefined : through,
+  }
 }
 
 /**

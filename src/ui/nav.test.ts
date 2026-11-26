@@ -125,7 +125,9 @@ describe('the navigation model', () => {
    * to match exactly or the period control claims the whole app.
    */
   it('does not let the root tab claim every path', () => {
-    expect(tabsFor('/plan/splitter')).toBeUndefined()
+    // Was `/plan/splitter`, until Plan took Month and Year as its own strip (M64 F12): a place with none.
+    expect(tabsFor('/dashboard')).toBeUndefined()
+    expect(activeTab(tabsFor('/plan/year') ?? [], '/plan/year')?.label).toBe('Year')
     expect(activeTab(NAVIGATION[0]?.tabs ?? [], '/')?.label).toBe('Month')
     expect(activeTab(NAVIGATION[0]?.tabs ?? [], '/year')?.label).toBe('Year')
   })
