@@ -19278,15 +19278,21 @@ brief: Found in M64 F36: no demo document (project.emd, custom.emd, year.emd) ha
 milestone: Later
 scope: ui
 title: A debt's payoff month is one calculation on its detail and its list
-state: planned
+state: in_progress
 brief: Found in M64 F46's taste check on year.emd: #/wealth/debts/<id> (Car loan) says it is cleared by February 2027 ('When it runs out'), while the Debts list's sentence beside it says paid off in March 2027 at the same 2,000 a month. Find which of payoffSentence (DebtDetail.tsx) and the list's sentence (Debts.tsx) is right, make both read one domain function, and pin it with a test. Files: src/ui/screens/DebtDetail.tsx, src/ui/screens/Debts.tsx, src/domain/debt.ts.
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 
 ### M64 F59
 milestone: Later
 scope: ui
 title: The fund detail's tables fit the detail's column
-state: planned
+state: in_progress
 brief: Found in M64 F46's taste check: on #/wealth/funds/<id> (year.emd, beside the Funds list) the month and period tables and, on a goal, HoldingReadings' readings are wider than the detail's column, cut columns and scroll sideways, in English and Hebrew. Drop or stack columns so every figure column fits, keeping the budget (one primary, seven sizes). Files: src/ui/screens/FundDetail.tsx, src/ui/savings/HoldingReadings.tsx, docs/redesign/budget.json.
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 
 ### M64 F6
 milestone: M64
@@ -19307,8 +19313,11 @@ report: F6 built on worktree-agent-a3ad69956ee955c44 at 2b4aabe and bbd724b. The
 milestone: Later
 scope: ui
 title: The fund and goal details say their answer first
-state: planned
+state: in_progress
 brief: Found in M64 F46's taste check: #/wealth/funds/<id> opens on a BALANCE label, its figure and a status, with the deposits' verdict ~800px down and a month table of dashes when there is nothing to check; #/wealth/goals/<id> gives its standing as a 12px caption with no verdict. Follow the redesign-screen skill: one sentence first (the fund's worth, whether its deposits arrived, what its fee costs; the goal's left to save and whether it is on track), the table collapsed to its note when empty, inside the routes' budget entries. Files: src/ui/screens/FundDetail.tsx, src/ui/screens/GoalDetail.tsx, src/i18n/en/wealth.ts, src/i18n/he/wealth.ts, docs/redesign/budget.json.
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 
 ### M64 F9
 milestone: M64
