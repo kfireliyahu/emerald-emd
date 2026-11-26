@@ -7541,7 +7541,7 @@ position: 385
 ### M64
 title: A redesign: every screen easy to read and to use, the ledger first, then the engine
 goal: Every screen tells a newcomer what it is for and lets them do its main jobs without explanation. The look is impressive: minimal but nice to the eye, with well-thought ways of showing data, never confusing. The ledger goes first and is no longer parked: its month adds up the way a person reads it (U1, D-607), and each of its screens is rebuilt in the new direction. The engine's screens follow in the same direction. The figures behind the screens stay; only how they are shown changes, apart from U1. Maintainer's answers, 2026-11-25 (D-606, D-608): a redesign, not a review against the old rules, so the old look is evidence and may be replaced; screens are designed for someone opening the ledger for the first time (the second person of M59); what leaves a screen moves one click behind the thing it explains, so nothing is lost; the engine follows the ledger in this milestone. Tools come first: a synthetic year in place of any real document, because no session reads his own files any more (U16, D-608); a contact sheet and density measures (U2); a data display kit and a specimen page (U4); and an Impeccable finish review checking taste in each unit. The session picks the direction (U3). His one look is the real Home in the app (U5, STOP): if he likes it, the rest runs without him. Unlike M54, which reviewed against the 73 ui rules and parked the ledger's findings: this starts from what each screen is for, can remove, is measured for density, and writes its skill from the first rebuilt screen.
-state: planned
+state: closed
 position: 376
 
 <!-- emerald: open_question.format.md -->
@@ -20067,7 +20067,7 @@ emerald: changed
 decision: 2026-11-26
 finding: 2026-10-22
 inbox: 2026-11-26
-milestone: 2026-11-25
+milestone: 2026-11-26
 open_question: 2026-11-26
 review_entry: 2026-11-26
 rule: 2026-11-26
