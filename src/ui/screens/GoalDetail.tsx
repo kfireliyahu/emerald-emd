@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
-import { formatMoney, fromMajorUnits, money, type CurrencyCode } from '@/core/money.ts'
+import { formatMoney, fromMajorUnits, money, type CurrencyCode, type Money } from '@/core/money.ts'
 import { type LocalDate, parseISODate, toISODate, yearMonthOf } from '@/core/time.ts'
 import { parseAmountText } from '@/data/importer/normalize.ts'
 import { goalFeeds, goalWorth, holdingPutIn } from '@/data/repositories/goalDepositRepository.ts'
+import { goalsPlan, type GoalRow } from '@/data/repositories/goalPlanRepository.ts'
 import { whereChoices } from '@/data/repositories/goalWhereRepository.ts'
 import { settleSetAside, staleSetAside } from '@/data/repositories/goalRhythmRepository.ts'
 import { listCategories } from '@/data/repositories/categoryRepository.ts'
@@ -15,10 +16,12 @@ import type { SavingDeposit, SavingGoal } from '@/domain/model/savings.ts'
 import { targetAmountOf } from '@/domain/savings.ts'
 import { countKey } from '@/i18n/count.ts'
 import type { MessageKey } from '@/i18n/catalogue.ts'
-import { useDates, useT } from '@/i18n/current.ts'
+import type { DateWords } from '@/i18n/dates.ts'
+import { useDates, useT, type Translate } from '@/i18n/current.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { wholeMoney } from '@/ui/charts/kit.ts'
 import { Phrase } from '@/ui/components/Phrase.tsx'
 import { CostBasis } from '@/ui/savings/CostBasis.tsx'
 import { HoldingReadings } from '@/ui/savings/HoldingReadings.tsx'
@@ -44,6 +47,7 @@ export function GoalDetail() {
   const t = useT()
   const dates = useDates()
   const [problem, setProblem] = useState<string | undefined>()
+  const [allDeposits, setAllDeposits] = useState(false)
 
   const asOf = today()
   const currency: CurrencyCode = useMemo(() => (db === undefined ? 'ILS' : documentCurrency(db)), [db, revision])
@@ -67,6 +71,11 @@ export function GoalDetail() {
   )
   const worth = useMemo(
     () => (db === undefined || goalId === undefined ? undefined : goalWorth(db, goalId, currency)),
+    [db, revision, goalId, currency],
+  )
+  // Its line on Goals (M64 F60): the same standing the list says, from the same plan.
+  const row = useMemo(
+    () => (db === undefined || goalId === undefined ? undefined : goalsPlan(db, asOf, currency).rows.find((one) => one.line.goalId === goalId)),
     [db, revision, goalId, currency],
   )
 
@@ -106,16 +115,10 @@ export function GoalDetail() {
     ] as const
   ).filter(([origin]) => split[origin].minor !== 0)
   const newest = [...detail.deposits].sort((a, b) => toISODate(b.date).localeCompare(toISODate(a.date)))
-  const shown = newest.slice(0, 8)
+  // The newest five; the rest grow in place (M64 F60), never another place to look.
+  const shown = allDeposits ? newest : newest.slice(0, SHOWN_DEPOSITS)
   const staleTotal = stale.reduce((sum, one) => sum + one.amount.minor, 0)
   const unchecked = detail.unchecked !== undefined
-  const summary = [
-    unchecked ? t('wealth.goalDetail.unchecked') : formatMoney(detail.balance),
-    target === undefined ? undefined : t('wealth.goalDetail.ofTarget', { amount: formatMoney(target) }),
-    goal.targetDate === undefined ? undefined : t('wealth.goalDetail.byMonth', { month: dates.monthShort(yearMonthOf(goal.targetDate)) }),
-  ]
-    .filter((one) => one !== undefined)
-    .join(' ')
 
   return (
     <div className="relative flex h-full flex-col gap-4 overflow-auto px-6 pt-5 pb-10">
@@ -140,11 +143,17 @@ export function GoalDetail() {
         <h2 className="m-0 text-title font-medium">
           <Bidi>{goal.name}</Bidi>
         </h2>
-        <Src>
-          {summary}
-          {goal.isClosed ? ` · ${t('wealth.goalDetail.closed')}` : ''}
-        </Src>
-        {unchecked && <Src>{t('wealth.goalDetail.mixed')}</Src>}
+        {/* The answer first, in words (M64 F60): what is left to save, and whether it lands on time. */}
+        <p className="m-0 mt-3 max-w-[40ch] text-lede [text-wrap:balance]" data-answer="goal">
+          {unchecked ? t('wealth.goalDetail.mixed') : goalAnswer({ row, balance: detail.balance, target, closed: goal.isClosed, t, dates })}
+        </p>
+        {!unchecked && target !== undefined && (
+          <Src>
+            {goal.targetDate === undefined
+              ? t('wealth.goalDetail.target', { amount: formatMoney(target) })
+              : t('wealth.goalDetail.targetBy', { amount: formatMoney(target), month: dates.monthShort(yearMonthOf(goal.targetDate)) })}
+          </Src>
+        )}
         {worth !== undefined && (
           <Src>
             {t('wealth.goalDetail.worth', {
@@ -199,7 +208,7 @@ export function GoalDetail() {
         {shown.length === 0 ? (
           <p className="m-0 mt-2 text-ink-secondary">{t('wealth.goalDetail.empty')}</p>
         ) : (
-          <div className="overflow-x-auto">
+          <div>
             <table className="mt-1.5 w-full border-collapse">
               <tbody>
                 {shown.map((deposit) => (
@@ -215,7 +224,13 @@ export function GoalDetail() {
           </div>
         )}
         {newest.length > shown.length && (
-          <p className="m-0 mt-1 text-caption text-ink-secondary">{t('wealth.goalDetail.earlier', { count: newest.length - shown.length })}</p>
+          <button
+            type="button"
+            onClick={() => setAllDeposits(true)}
+            className="mt-1 text-caption text-accent hover:text-accent-hover hover:underline"
+          >
+            {t('wealth.goalDetail.earlier', { count: newest.length - shown.length })}
+          </button>
         )}
         <AddMoney goal={goal} currency={currency} asOf={asOf} write={write} followed={byHolding} onEdit={edit} />
         {problem !== undefined && <p className="m-0 mt-2 text-negative">{problem}</p>}
@@ -223,6 +238,9 @@ export function GoalDetail() {
     </div>
   )
 }
+
+/** How many deposits the drawer lists before *and N earlier* grows the rest in place. */
+const SHOWN_DEPOSITS = 5
 
 const KIND: Readonly<Record<DepositOrigin, readonly [TagTone, MessageKey]>> = {
   DERIVED: ['derived', 'wealth.goalDetail.origin.derivedBank'],
@@ -270,17 +288,19 @@ function DepositRow({
       </td>
       <td className="border-b border-hairline px-2.5 py-2 align-top">
         {deposit.note === undefined ? t(said) : <Bidi>{deposit.note}</Bidi>}
-        {holdingName !== undefined && (
-          <Src>
-            <Phrase
-              text={t(origin === 'SET_ASIDE' ? 'wealth.goalDetail.inside' : 'wealth.goalDetail.in')}
-              parts={{ name: <Bidi>{holdingName}</Bidi> }}
-            />
-          </Src>
-        )}
-      </td>
-      <td className="border-b border-hairline px-2.5 py-2 align-top">
-        <Tag tone={tone}>{t(label)}</Tag>
+        {/* The kind sits on the line under what it was, beside where (M64 F59): a
+            column of its own pushed the amount out of the drawer. */}
+        <Src className="flex flex-wrap items-center gap-x-2.5">
+          {holdingName !== undefined && (
+            <span>
+              <Phrase
+                text={t(origin === 'SET_ASIDE' ? 'wealth.goalDetail.inside' : 'wealth.goalDetail.in')}
+                parts={{ name: <Bidi>{holdingName}</Bidi> }}
+              />
+            </span>
+          )}
+          <Tag tone={tone}>{t(label)}</Tag>
+        </Src>
       </td>
       <td className="border-b border-hairline py-2 ps-2.5 text-end align-top whitespace-nowrap tabular-nums">
         {formatMoney(deposit.amount)}
@@ -528,4 +548,44 @@ function AddMoney({
       {problem !== undefined && <p className="m-0 mt-2 text-negative">{problem}</p>}
     </>
   )
+}
+
+/**
+ * The goal's standing in one plain sentence (M64 F60): what is left to save toward
+ * its target, and — at what Plan puts toward it each month — when it lands and
+ * whether that is on time. The same `GoalStatus` the Goals list says, never a
+ * second reckoning of it.
+ */
+function goalAnswer({
+  row,
+  balance,
+  target,
+  closed,
+  t,
+  dates,
+}: {
+  row: GoalRow | undefined
+  balance: Money
+  target: Money | undefined
+  closed: boolean
+  t: Translate
+  dates: DateWords
+}): string {
+  if (closed || row === undefined) return t('wealth.goalDetail.answer.closed', { balance: wholeMoney(balance) })
+  const status = row.status
+  if (status.kind === 'NO_TARGET' || target === undefined) return t('wealth.goalDetail.answer.noTarget', { balance: wholeMoney(balance) })
+  if (status.kind === 'REACHED') return t('wealth.goalDetail.answer.reached', { balance: wholeMoney(balance), target: wholeMoney(target) })
+  const left = wholeMoney(money(Math.max(0, target.minor - row.line.balance.minor), target.currency))
+  const monthly = wholeMoney(row.line.monthly)
+  if (row.pausedUntil !== undefined) return t('wealth.goalDetail.answer.paused', { left, month: dates.monthShort(row.pausedUntil) })
+  switch (status.kind) {
+    case 'ON_TIME':
+      return t('wealth.goalDetail.answer.onTime', { left, monthly, month: dates.monthShort(status.at) })
+    case 'LATE':
+      return t(countKey('wealth.goalDetail.answer.late', status.monthsLate), { left, monthly, month: dates.monthShort(status.at), count: status.monthsLate })
+    case 'NO_DATE':
+      return t('wealth.goalDetail.answer.noDate', { left, monthly, month: dates.monthShort(status.at) })
+    case 'NO_MONEY':
+      return t('wealth.goalDetail.answer.noMoney', { left })
+  }
 }

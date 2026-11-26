@@ -156,8 +156,8 @@ the one that always works. Where both run they appear together, the month table 
 and the two agreeing is itself worth something.
 
 **And the base the deposit was worked out on** (D-169). Where the report prints a salary column and
-the payslip prints a base on the line feeding this fund, the two are compared — the *Computed on*
-column. It is **not** the gross on either side: a pensionable base routinely excludes overtime, a
+the payslip prints a base on the line feeding this fund, the two are compared — both figures under
+the month's difference where they disagree, and one note under the table otherwise (M64 F59). It is **not** the gross on either side: a pensionable base routinely excludes overtime, a
 car allowance and a one-off bonus, so comparing against the gross would report a difference on every
 correct slip in the country. The state is `AGREES`, `DIFFERS` or **`UNKNOWN`**, and the third is not
 collapsed into the first for the reason a reading's proof has three states (D-149): most reports

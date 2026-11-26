@@ -117,29 +117,35 @@ export function HoldingReadings({
           {readings.slice(0, SHOWN).map((reading) => {
             const checks = readingChecks(db, reading)
             return (
-              <li key={reading.id} className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-caption">
-                <span className="font-mono text-[12px] text-ink-secondary">{reading.asOf}</span>
-                <b className="font-medium tabular-nums">{formatMoney(reading.value)}</b>
-                {reading.quantityMicro !== undefined && (
-                  <span className="text-ink-secondary tabular-nums">× {quantityText(reading.quantityMicro)}</span>
-                )}
-                {checks.cash !== undefined ? (
-                  <Check name={t('wealth.holdingReadings.check.account')} check={checks.cash} t={t} />
-                ) : (
-                  <>
-                    <Check name={t('wealth.holdingReadings.check.cost')} check={checks.cost} t={t} />
-                    <Check name={t('wealth.holdingReadings.check.quantity')} check={checks.quantity} t={t} />
-                    <Check name={t('wealth.holdingReadings.check.price')} check={checks.price} t={t} />
-                  </>
-                )}
-                <button
-                  type="button"
-                  onClick={() => remove(reading.id)}
-                  className="ms-auto text-ink-tertiary hover:text-negative"
-                  aria-label={t('wealth.holdingReadings.removeOf', { day: reading.asOf })}
-                >
-                  {t('wealth.holdingReadings.remove')}
-                </button>
+              // Two lines (M64 F59): the day, the figure and Remove on the first, the
+              // checks under them, so a reading fits the goal's column in either language.
+              <li key={reading.id} className="flex flex-col gap-1 text-caption">
+                <span className="flex items-center gap-x-2.5">
+                  <span className="font-mono text-caption whitespace-nowrap text-ink-secondary">{reading.asOf}</span>
+                  <b className="font-medium whitespace-nowrap tabular-nums">{formatMoney(reading.value)}</b>
+                  {reading.quantityMicro !== undefined && (
+                    <span className="whitespace-nowrap text-ink-secondary tabular-nums">× {quantityText(reading.quantityMicro)}</span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => remove(reading.id)}
+                    className="ms-auto text-ink-secondary hover:text-negative"
+                    aria-label={t('wealth.holdingReadings.removeOf', { day: reading.asOf })}
+                  >
+                    {t('wealth.holdingReadings.remove')}
+                  </button>
+                </span>
+                <span className="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+                  {checks.cash !== undefined ? (
+                    <Check name={t('wealth.holdingReadings.check.account')} check={checks.cash} t={t} />
+                  ) : (
+                    <>
+                      <Check name={t('wealth.holdingReadings.check.cost')} check={checks.cost} t={t} />
+                      <Check name={t('wealth.holdingReadings.check.quantity')} check={checks.quantity} t={t} />
+                      <Check name={t('wealth.holdingReadings.check.price')} check={checks.price} t={t} />
+                    </>
+                  )}
+                </span>
               </li>
             )
           })}
@@ -157,7 +163,7 @@ export function HoldingReadings({
           </Button>
         </div>
       ) : (
-        <div className="fc-pop-enter grid grid-cols-[90px_minmax(0,1fr)] items-center gap-x-3 gap-y-2">
+        <div className="fc-pop-enter grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-2">
           <label htmlFor="reading-day">{t('wealth.holdingReadings.on')}</label>
           <input id="reading-day" value={day} onChange={(event) => setDay(event.target.value)} className={FIELD} />
           <label htmlFor="reading-worth">{t('wealth.holdingReadings.worth')}</label>
