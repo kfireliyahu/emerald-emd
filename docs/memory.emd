@@ -5367,6 +5367,16 @@ answer: #/formats/:name/read says Read onto <format> as its h1 with its readers 
 state: live
 affects: "src/ui/screens/ReadFiles.tsx\nsrc/ui/components/useDismiss.ts\nsrc/ui/formats/SavedTab.tsx\nsrc/ui/formats/RollupView.tsx\nsrc/ui/RailFolder.tsx\nsrc/ui/wealth/NetWorthOpened.tsx\nscripts/make-demo-shots.cjs\ndocs/redesign/budget.json"
 
+### D-643
+date: 2026-11-26
+milestone: M64
+scope: ui
+title: Emerald's page is laid out as a report: an index of words in place of the timeline, the section you are reading in semibold ink with a 6px accent square; what it is answered first at the display step in the light face; and every section one sheet on twelve columns, its question small, its answer as the heading, what backs it beside them and the evidence across the width beneath; no claim, tour, reel or picture is lost and none is retaken
+question: The maintainer asked for the website to join the redesign and to rethink its layout, not only restyle it: what is the page's layout in the report's language?
+answer: The rail's timeline, dots, numbers and growing line are gone: the sections are an index of words, the one under the eye semibold ink with a 6px accent square at the row's end; below 960px a bar names the current section and opens the same list over the page (Esc, a pick or a press outside closes it). The hero says what it is first: the README's line at 88px Plex 300 (40px on a phone), the name and mark small above, the story in ink-secondary, Get Emerald still the one primary on the first screen. Every other section is a sheet on 12 columns from 44rem: its question small and its answer as the heading (lede step) in the first five, sticky; the points or a tour's lead in the other seven; the evidence (tour frame, reel, inbox diagram, claim, ways in) across all twelve. Section icons and the points' numerals cut. New copy, DRAFT: asks.* (one question for each of the seven non-tour sections) and four headings that were names now answers, the names kept as the index's rows. Every point, tour, the reel and the claim kept; the frame and reel keep their shapes, so no picture is retaken.
+state: live
+affects: "demo-page.html\nsrc/demo/page/page.css\nsrc/demo/page/main.ts\nsrc/demo/page/copy/en.ts"
+
 ### D-644
 date: 2026-11-26
 milestone: M64
@@ -7005,6 +7015,15 @@ state: applied
 answered_by: D-644
 became_unit: M64 F69
 
+### M64 F71 built: the website laid out as a report, an index of words, what it is first, a sheet per section (D-643), to land
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-26
+body: "M64 F71 is built on worktree-agent-a83f9fc74348e89eb at ea4a647: the page (demo-page.html, src/demo/page/) rethought in the redesign's direction, its layout included. check:tours green (four tours at 1280x800 and 375x440, the page, nothing leaves the page); docs:check green but for D-643's row, which this landing writes.\n\n```json\n{\"unit\": \"M64 F71\", \"commit\": \"ea4a647\", \"branch\": \"worktree-agent-a83f9fc74348e89eb\", \"files\": \"demo-page.html\\nsrc/demo/page/page.css\\nsrc/demo/page/main.ts\\nsrc/demo/page/rail.ts\\nsrc/demo/page/rail.test.ts\\nsrc/demo/page/copy.ts\\nsrc/demo/page/copy/en.ts\\nsrc/ui/formats/surfaceRules.test.ts\\ndocs/09-decision-log.md\", \"decisions\": [{\"ref\": \"D-643\", \"title\": \"Emerald's page is laid out as a report: an index of words in place of the timeline, the section you are reading in semibold ink with a 6px accent square; what it is answered first at the display step in the light face; and every section one sheet on twelve columns, its question small, its answer as the heading, what backs it beside them and the evidence across the width beneath; no claim, tour, reel or picture is lost and none is retaken\", \"question\": \"The maintainer asked for the website to join the redesign and to rethink its layout, not only restyle it: what is the page's layout in the report's language?\", \"answer\": \"The rail's timeline, dots, numbers and growing line are gone: the sections are an index of words, the one under the eye semibold ink with a 6px accent square at the row's end; below 960px a bar names the current section and opens the same list over the page (Esc, a pick or a press outside closes it). The hero says what it is first: the README's line at 88px Plex 300 (40px on a phone), the name and mark small above, the story in ink-secondary, Get Emerald still the one primary on the first screen. Every other section is a sheet on 12 columns from 44rem: its question small and its answer as the heading (lede step) in the first five, sticky; the points or a tour's lead in the other seven; the evidence (tour frame, reel, inbox diagram, claim, ways in) across all twelve. Section icons and the points' numerals cut. New copy, DRAFT: asks.* (one question for each of the seven non-tour sections) and four headings that were names now answers, the names kept as the index's rows. Every point, tour, the reel and the claim kept; the frame and reel keep their shapes, so no picture is retaken.\", \"affects\": \"demo-page.html\\nsrc/demo/page/page.css\\nsrc/demo/page/main.ts\\nsrc/demo/page/copy/en.ts\"}], \"review_entries\": [{\"do\": \"Open getemerald.dev's build of this branch (npm run build:demo, then serve dist-demo, or vite --mode demo) at a desktop width, in light and dark, then at a phone's width; read it top to bottom and press the section name in the phone's bar.\", \"should\": \"The first screen says what Emerald is in one large line with Get Emerald under it; each section asks one question small and answers it in the heading, with what backs it beside and the tour or picture under it; the index on the start side marks where you are. Wrong: a question or heading that does not say what you mean (they are a session's drafts in src/demo/page/copy/en.ts, yours to rewrite), a section that reads emptier than before, or anything in the phone's index that moves the page.\"}], \"report\": \"Layout, section by section: rail = index of words (was the app's roadmap timeline); What it is = the tagline at the display step, story, Get Emerald; Runs on your machine, The ledger (+ reel), The development pack (+ inbox diagram, recording slots), How it works (+ claim), With your AI, Packs = sheets with asks.* above an answer heading and the points beside; the four tours = sheets with the tour's label at the start, its lead beside, the frame across; Get Emerald = sheet with the lead and installers beside, the ways in across. Checked in the browser pane: 1280 and 1440 light and dark, 1024 (two columns from 44rem of row width), 375 with the index open, and dir=rtl at 375 (mirrors; the chevron given its RTL turn). The page has one language, so Hebrew is RTL only (Q84). Pictures: none retaken, the frame (16:10) and reel (1000:675) keep their shapes and U15 retook them on the redesigned screens; development.mp4 stays the maintainer's. Tests: surfaceRules (the index's ol), src/demo/page, privacy, direction green; typecheck green; check:tours green.\", \"follow_ups\": [{\"kind\": \"question\", \"ref\": \"M64 Q84\", \"title\": \"Should Emerald's page have a Hebrew copy?\", \"body\": \"The page's words are copy/en.ts only (LANGUAGES = [en]); M64 F71 checked its layout right to left with dir=rtl but there is no Hebrew to read. A Hebrew copy is a translated copy/he.ts added to LANGUAGES, and the language switch then appears in the bar. Yours to say whether the page speaks Hebrew.\"}]}\n```"
+refs: M64 F71
+state: applied
+answered_by: D-643
+became_unit: M64 F71
+
 ### M64 F9 landing proposal: the formats screens say every word through the catalogue, en and he (D-627)
 from: F:/projects/emerald/docs/memory.emd
 sent_on: 2026-11-26
@@ -7939,6 +7958,10 @@ state: open
 
 ### M64 Q8
 question: Kit and theme findings left for a kit unit: SidePanel captures the element that opened it only once, so after a second row opens it, Close returns focus to the first; .fc-row-on's 2px marker is inset-left in RTL too (tokens.css), drawing between the first two columns in Hebrew; MonthStrip's open-month value label overflows the page's end edge when the open month is the last column; SelectOrNew draws a platform select, against 'Choices are ChoiceField' (Deduction types' Pays into uses it).
+state: open
+
+### M64 Q84
+question: Should Emerald's page have a Hebrew copy? The page's words are copy/en.ts only (LANGUAGES = [en]); M64 F71 checked its layout right to left with dir=rtl but there is no Hebrew to read. A Hebrew copy is a translated copy/he.ts added to LANGUAGES, and the language switch then appears in the bar.
 state: open
 
 ### M64 Q87
@@ -9543,6 +9566,11 @@ unit: M54 U7
 should: A stranger sees what to do next on the first screen, before they scroll: a way to get it, or the source (Impeccable persuade: the action above the fold).
 breaks: The first screen holds the h1, the tagline, the story, the twelve-row rail and the top of tour 1. It has no download and no repo action. The only ways onward are the rail row '12 Get Emerald' and a 12px 'Source' link in the rail foot. Get Emerald starts about 9,300px down a 10,659px page. Verdict 2026-11-02 (D-531): the desktop download, filled, on the first screen. Owned by M54 F8. Fixed in M54 F8 (1cf3540).
 state: fault
+
+### Open getemerald.dev's build of this branch (npm run build:demo, then serve dist-demo, or vite --mode demo) at a desktop width, in light and dark, then at a phone's width; read it top to bottom and press the section name in the phone's bar.
+unit: M64 F71
+should: The first screen says what Emerald is in one large line with Get Emerald under it; each section asks one question small and answers it in the heading, with what backs it beside and the tour or picture under it; the index on the start side marks where you are. Wrong: a question or heading that does not say what you mean (they are a session's drafts in src/demo/page/copy/en.ts, yours to rewrite), a section that reads emptier than before, or anything in the phone's index that moves the page.
+state: open
 
 ### Open site.emd in the app once (it is at schema 60 anyway), look at #/formats, then ask start_here on it in a session
 unit: M47 U5
@@ -19487,13 +19515,17 @@ paths: src/ui/
 milestone: M64
 scope: ui
 title: The website in the redesign's direction, its layout rethought
-state: in_progress
+landed: 2026-11-26
+decision: D-643
+state: built
 brief: **Do.** Rethink the website (the page, src/demo/page/) in the redesign's direction (D-614 the report, D-615 the language), its layout included and not only its colours and type: the answer first, one question per section, the kit's quiet look, light, dark, Hebrew and phone width. Keep every claim the page makes, its reels and posters (retake what the new layout frames differently), and the page's tour: check:tours green on the page. Maintainer, 2026-11-26: "is the website included in the redesign? if not it should be." Asked whether to restyle it or rethink it: "rethink the layout too." The development.mp4 recording stays his to record again.
-files: src/demo/page/page.ts src/demo/page/page.css src/demo/page/copy/en.ts src/demo/page/reel.ts
+files: "demo-page.html\nsrc/demo/page/page.css\nsrc/demo/page/main.ts\nsrc/demo/page/rail.ts\nsrc/demo/page/rail.test.ts\nsrc/demo/page/copy.ts\nsrc/demo/page/copy/en.ts\nsrc/ui/formats/surfaceRules.test.ts\ndocs/09-decision-log.md"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-a83f9fc74348e89eb
+commit: ea4a647
 paths: src/demo/page/
+report: Layout, section by section: rail = index of words (was the app's roadmap timeline); What it is = the tagline at the display step, story, Get Emerald; Runs on your machine, The ledger (+ reel), The development pack (+ inbox diagram, recording slots), How it works (+ claim), With your AI, Packs = sheets with asks.* above an answer heading and the points beside; the four tours = sheets with the tour's label at the start, its lead beside, the frame across; Get Emerald = sheet with the lead and installers beside, the ways in across. Checked in the browser pane: 1280 and 1440 light and dark, 1024 (two columns from 44rem of row width), 375 with the index open, and dir=rtl at 375 (mirrors; the chevron given its RTL turn). The page has one language, so Hebrew is RTL only (Q84). Pictures: none retaken, the frame (16:10) and reel (1000:675) keep their shapes and U15 retook them on the redesigned screens; development.mp4 stays the maintainer's. Tests: surfaceRules (the index's ol), src/demo/page, privacy, direction green; typecheck green; check:tours green.
 
 ### M64 F72
 milestone: M64
