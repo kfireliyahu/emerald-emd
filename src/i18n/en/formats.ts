@@ -586,6 +586,14 @@ export const formats = {
   },
   /** M64 F20: a file's columns pointed at a format's keys (`IntakePanel`). */
   intake: {
+    /** Reading files onto a format (M64 U15): the screen's title, its pickers and its empty sentence. */
+    readOnto: 'Read onto {title}',
+    chooseFiles: 'Choose files',
+    addFiles: 'Add files',
+    chooseFolder: 'Choose a folder',
+    addFolder: 'Add a folder',
+    kinds: '{extensions}, a .json file of rows, or Markdown notes — a folder of them is a table, a note a row.',
+    empty: 'Drop a spreadsheet, a .json file of rows or a folder of Markdown notes here, or choose them. Nothing is written until you press Write.',
     headerRow: 'Header row',
     rowEmpty: 'Row {row}, empty',
     rowCells: 'Row {row}: {cells}',

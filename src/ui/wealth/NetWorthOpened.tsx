@@ -39,6 +39,7 @@ import { useDates, useT, type Translate } from '@/i18n/current.ts'
 import type { DateWords } from '@/i18n/dates.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { useAskHere } from '@/ui/components/useDismiss.ts'
 import { ChoiceField } from '@/ui/components/ChoiceField.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
 import { Phrase } from '@/ui/components/Phrase.tsx'
@@ -81,6 +82,8 @@ const LINK = 'text-accent hover:underline'
 export function OpenedRow({ row, opening }: { row: Extract<NetWorthRow, { kind: 'ACCOUNT' | 'PLACE' }>; opening: Opening }) {
   const [mode, setMode] = useState<Mode>({ kind: 'LINES' })
   const [confirming, setConfirming] = useState<string | undefined>()
+  // Delete asks where it was pressed; Esc takes the question back, never the panel (D-617).
+  const ask = useAskHere<HTMLSpanElement>(confirming !== undefined, () => setConfirming(undefined))
   const t = useT()
   const place = row.place
   const placeName = row.kind === 'ACCOUNT' ? row.account.name : (place?.place?.name ?? '')
@@ -130,14 +133,14 @@ export function OpenedRow({ row, opening }: { row: Extract<NetWorthRow, { kind: 
               {holding.isArchived ? t('wealth.opened.unarchiveHolding') : t('wealth.opened.archiveHolding')}
             </Button>
             {confirming === holding.id ? (
-              <>
-                <Button variant="ghost" size="sm" onClick={() => write((database, now) => deleteHolding(database, holding.id, now)) && close()}>
+              <span ref={ask.box} role="alertdialog" aria-label={t('wealth.opened.deleteHolding')} onKeyDown={ask.onKeyDown} className="flex items-center gap-2">
+                <Button autoFocus variant="ghost" size="sm" onClick={() => write((database, now) => deleteHolding(database, holding.id, now)) && close()}>
                   {t('wealth.opened.reallyDelete')}
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => setConfirming(undefined)}>
+                <Button variant="ghost" size="sm" onClick={ask.takeBack}>
                   {t('wealth.opened.keep')}
                 </Button>
-              </>
+              </span>
             ) : (
               <Button variant="ghost" size="sm" onClick={() => setConfirming(holding.id)}>
                 {t('wealth.opened.deleteHolding')}
@@ -260,14 +263,14 @@ export function OpenedRow({ row, opening }: { row: Extract<NetWorthRow, { kind: 
               {t('wealth.common.edit')}
             </Button>
             {confirming === place.holdingPlaceId ? (
-              <>
-                <Button variant="ghost" size="sm" onClick={() => write((database, now) => deleteHoldingPlace(database, place.holdingPlaceId, now))}>
+              <span ref={ask.box} role="alertdialog" aria-label={t('wealth.common.delete')} onKeyDown={ask.onKeyDown} className="flex items-center gap-2">
+                <Button autoFocus variant="ghost" size="sm" onClick={() => write((database, now) => deleteHoldingPlace(database, place.holdingPlaceId, now))}>
                   {t('wealth.opened.reallyDelete')}
                 </Button>
-                <Button variant="ghost" size="sm" onClick={() => setConfirming(undefined)}>
+                <Button variant="ghost" size="sm" onClick={ask.takeBack}>
                   {t('wealth.opened.keep')}
                 </Button>
-              </>
+              </span>
             ) : (
               <>
                 <Button

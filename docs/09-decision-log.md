@@ -538,6 +538,7 @@ written out here.
 | D-637 | 2026-11-26 | A sentence the engine builds whose parts are sentences of their own is a `Spoken` — a key and parts that may be `Spoken` too — whose English the engine renders from a table the catalogue's English must equal; a helper in `src/ui/formats/` takes a `t` that defaults to English instead; and a sentence says a format by its title in Hebrew, never by an English plural | M64 |
 | D-639 | 2026-11-26 | Wealth's details spend only the list's seven type steps — a label is a caption, a figure that does not answer its section is the heading step, the one that does is the kit's tile step — and one primary: the fund detail's Add reading is secondary beside the list's; a detail route is budgeted by `:id`, whichever row it opens; a wealth tag is text and a dot; and a holding reading's refusal is a code and its parts, said by the screen | M64 |
 | D-640 | 2026-11-26 | A debt's payoff month is one calculation, `payoffMonth` in `src/domain/debt.ts`, which the debt's detail and the Debts list both read: the payments still to make start in the month after the newest one already recorded, or this month while this month's has not landed | M64 |
+| D-642 | 2026-11-26 | Every route is inside its density budget and none is exempt: the last, reading files onto a format, is redesigned with its question as its title and choosing files as its action, and its ceiling counts the two pickers the old measure missed; a question asked where its button was behaves as a popover (`useAskHere`); the page's pictures of the ledger are retaken on the redesigned screens | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -2265,3 +2266,49 @@ late.
 was paid lately and falls back to the debt's expected payment; the list prefers the standing order
 and adds Plan's extra. On year.emd they agree (₪2,000 each way); where the observed rate and standing
 order plus extra differ, the months still can (Q75).
+
+## D-642 · 2026-11-26 · Every route is inside its density budget and none is exempt: the last, reading files onto a format, is redesigned with its question as its title and choosing files as its action, and its ceiling counts the two pickers the old measure missed; a question asked where its button was behaves as a popover (`useAskHere`); the page's pictures of the ledger are retaken on the redesigned screens <a id="d-642"></a>
+
+**Context.** M64 U15, the milestone's last unit: the tours replayed on the redesigned screens, the
+page's pictures of the app retaken, `probe:screens --budget` passing on every route with nothing
+exempt, and — the maintainer, 2026-11-25 — every screen's interactions walked once against D-617's
+conventions. `docs/redesign/budget.json` still exempted one route, `#/formats/:name/read`.
+
+**Decision.**
+
+1. **Reading files onto a format is redesigned, and `exempt` is empty.** Its question — *how do I get
+   a file into this format?* — is its title, *Read onto Card charge* (an `h1`, the format a link back
+   to its table), with its readers under it. Choosing files is the header's action, filled while
+   nothing is read (*One primary action per screen*), with *Choose a folder* beside it; the dashed
+   drop zone and its three-line explanation became one empty sentence, the kinds of file moved to
+   the pickers' title, and the whole page takes a drop (a dropped folder is still walked). Its words
+   are the catalogue's (`formats.intake.*`, English and Hebrew); the rest of the screen is not yet.
+2. **Its ceiling rises, and only its own.** The route was measured at 1 action and 3 colours because
+   its two pickers were `<label>`s, which the probe does not count as actions; drawn as real buttons
+   it measures 3 actions and 5 colours (the filled button's two). The limits are set to that, words
+   are cut from 65 to 45, and no other route's ceiling moves. Hiding the pickers back in labels to
+   pass would have been passing the probe, not the budget.
+3. **A question asked where its button was behaves as a popover** (`useAskHere` in
+   `src/ui/components/useDismiss.ts`): the confirming button has the focus, so Enter answers; Esc
+   takes back the question and nothing else, so the side panel it was asked in stays open; a press
+   outside takes it back too; and focus returns to the button that asked. The walk found five such
+   questions that ignored every key — deleting a saved view (its tab), a dashboard's chart, a rail
+   folder, a reader on the intake page, and a holding or a place in Net worth's panel, where Esc
+   closed the whole panel under the question.
+4. **The page's pictures are the redesigned screens.** `make-demo-shots.cjs` finds each region by
+   the new screens' words: the split from *The split* to its sentence under the bar (September, the
+   month a statement covers), Wealth and the Year from their answer sentences, and **the paycheck in
+   place of *Where it went*** — the redesign cut that Sankey, so the reel's second picture is the
+   paycheck's sentence, its net pay and the gross divided into its parts (`ledger-paycheck.png`).
+   The posters are retaken too. The development recording is the maintainer's to record again.
+
+5. **Every route passes on the document its ceiling was measured on**, light, dark and Hebrew: the
+   ledger's and Settings' on year.emd, the card charge's on custom.emd, the project's views
+   on project.emd. Agenda in Hebrew was one word over (48 of 47); its *Open formats* is *פתיחת
+   הפורמטים* now, as the catalogue's other actions are said.
+
+**Left as it is.** Connections deletes by replacing its panel with the question rather than asking
+at the icon (Q32, already asked). The rest of the intake page is still English (F67). Two routes go over a ceiling
+measured on year.emd when another document fills them: Packs on custom.emd, which keeps no ledger
+(209 words, 3 actions, 5 colours against 200, 2 and 4), and a fund's detail on showcase.emd (22
+actions against 20) — F68.

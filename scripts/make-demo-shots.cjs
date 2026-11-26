@@ -1,6 +1,6 @@
 /**
- * **The ledger's pictures** (M33 F12): four of its screens — the split, where a
- * paycheck went, wealth and the year — taken from the made-up year in
+ * **The ledger's pictures** (M33 F12): four of its screens — the split, a
+ * paycheck, wealth and the year — taken from the made-up year in
  * `showcase.emd`, in the light scheme and the dark, for the ledger's section of
  * Emerald's page, which shows the pair matching its own theme:
  *
@@ -48,36 +48,41 @@ const SCALE = 2
  * cropping the wrong thing.
  */
 const VIEWS = [
+  // Retaken on the redesigned screens (M64 U15): each from its answer to the end of the block that answers it.
   {
     name: 'split',
     route: '#/plan',
-    ready: 'Every shekel has a job',
+    ready: 'Every shekel of the rest has a job',
+    // The month before the newest: its plan is measured against September, which a statement covers.
+    prepare: `if (document.querySelector('input[aria-label="Against which month"]')?.value !== 'September 2026') document.querySelector('nav[aria-label="Month"] button[aria-label="Previous"]').click()`,
+    after: 'in september 2026',
     from: `heading('The split')`,
-    to: `containing('Every shekel has a job')`,
+    to: `containing('Drag a divider')`,
   },
   {
-    name: 'where-it-went',
+    name: 'paycheck',
     route: '#/paychecks',
-    ready: 'Out of the gross, before you saw it',
-    from: `containing('Where it went')`,
-    to: `last(containing('Severance'))`,
+    ready: 'paycheck paid',
+    from: `containing('September’s paycheck')`,
+    // The part of the whole's list of parts, figures and all.
+    to: `last(containing('Other deductions')).map((label) => label.closest('ul'))`,
   },
   {
     name: 'wealth',
     route: '#/wealth',
-    ready: 'Everything you own, each once',
-    from: `heading('Net worth')`,
+    ready: 'everything you own, each once',
+    from: `containing('You own')`,
     to: `last(containing('Net worth'))`,
   },
   {
     name: 'year',
     route: '#/year',
-    ready: 'months in this document',
-    // The whole of 2025 is in the showcase; the newest year is not.
-    prepare: `document.querySelector('nav[aria-label="Year"] button[aria-label="Previous"]').click()`,
-    after: '12 of 12 months',
-    from: `heading('2025')`,
-    to: `containing('A month opens it in Month')`,
+    ready: 'came in, less went out',
+    // The whole of 2025 is in the showcase; the newest year is not. Year may open on either.
+    prepare: `if (!document.querySelector('main').innerText.includes('In 2025')) document.querySelector('nav[aria-label="Year"] button[aria-label="Previous"]').click()`,
+    after: 'in 2025, more came in',
+    from: `containing('In 2025')`,
+    to: `containing('December 2025')`,
   },
 ]
 

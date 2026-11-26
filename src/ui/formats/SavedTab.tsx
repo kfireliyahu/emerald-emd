@@ -5,6 +5,7 @@ import type { SavedView } from '@/domain/format/view.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
+import { useAskHere } from '@/ui/components/useDismiss.ts'
 
 /** A tab's label, as the format's tab strip draws every one of them (One level of tabs). */
 export const TAB_LABEL =
@@ -29,6 +30,10 @@ export function SavedTab({ view, on, onGo }: { view: SavedView; on: boolean; onG
   const [renaming, setRenaming] = useState<string | undefined>(undefined)
   const [deleting, setDeleting] = useState(false)
   const [refusal, setRefusal] = useState<string | undefined>(undefined)
+  const ask = useAskHere<HTMLSpanElement>(deleting, () => {
+    setDeleting(false)
+    setRefusal(undefined)
+  })
 
   const attempt = (write: () => void): boolean => {
     try {
@@ -82,12 +87,19 @@ export function SavedTab({ view, on, onGo }: { view: SavedView; on: boolean; onG
 
   if (deleting) {
     return (
-      <span className="flex items-center gap-2 text-caption whitespace-nowrap text-ink-secondary">
+      <span
+        ref={ask.box}
+        role="alertdialog"
+        aria-label={`Delete ${view.name}`}
+        onKeyDown={ask.onKeyDown}
+        className="flex items-center gap-2 text-caption whitespace-nowrap text-ink-secondary"
+      >
         <span>
           Delete <Bidi>{view.name}</Bidi>? Its filter stays on screen.
         </span>
         <button
           type="button"
+          autoFocus
           className="text-negative hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
           onClick={() => {
             if (attempt(() => mutate((db) => deleteSavedView(db, view.format, view.name)))) setDeleting(false)
@@ -98,10 +110,7 @@ export function SavedTab({ view, on, onGo }: { view: SavedView; on: boolean; onG
         <button
           type="button"
           className="text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
-          onClick={() => {
-            setDeleting(false)
-            setRefusal(undefined)
-          }}
+          onClick={ask.takeBack}
         >
           Keep
         </button>
@@ -130,7 +139,7 @@ export function SavedTab({ view, on, onGo }: { view: SavedView; on: boolean; onG
           <button type="button" aria-label={`Rename ${view.name}`} title="Rename" className={QUIET} onClick={() => setRenaming(view.name)}>
             <ActionGlyph name="edit" size={12} />
           </button>
-          <button type="button" aria-label={`Delete ${view.name}`} title="Delete" className={QUIET} onClick={() => setDeleting(true)}>
+          <button ref={ask.back} type="button" aria-label={`Delete ${view.name}`} title="Delete" className={QUIET} onClick={() => setDeleting(true)}>
             <ActionGlyph name="trash" size={12} />
           </button>
         </>

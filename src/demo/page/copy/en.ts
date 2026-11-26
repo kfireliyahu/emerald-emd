@@ -144,24 +144,25 @@ export const en: Copy = {
   shots: {
     label: 'Four of the ledger’s screens',
     pause: 'Pause',
+    // M64 U15: retaken on the redesigned screens; the paycheck replaces the Sankey the redesign cut.
     split: {
       label: 'The split',
-      alt: 'The split: September’s net pay, less the bills, divided into buckets for two goals, a car loan, groceries and spending, each filled to what it actually got.',
+      alt: 'The split: net pay, less the bills, divided into buckets for two goals, a car loan, groceries and spending, and a sentence saying how September went against the plan.',
       caption: 'The split: what is left after the bills gets a job, and each job shows what it actually got.',
     },
-    whereitwent: {
-      label: 'Where it went',
-      alt: 'Where a paycheck went: the paycheck’s lines on the left, and on the right every part of it followed to the goal, the loan, the spending or the fund it landed in.',
-      caption: 'Where a paycheck went: all of it followed, from gross to where it landed.',
+    paycheck: {
+      label: 'The paycheck',
+      alt: 'A paycheck in one sentence: how much of the gross was paid, how much went to taxes and how much to the funds, with the gross divided into those parts.',
+      caption: 'The paycheck: what was paid out of the gross, and where the rest went.',
     },
     wealth: {
       label: 'Wealth',
-      alt: 'Net worth: what is in the bank, in the funds and kept by hand, less the car loan, each counted once.',
+      alt: 'Net worth in one sentence: what is in the bank, in the funds and kept by hand, less the car loan, each counted once, and a table of where it is.',
       caption: 'Wealth: everything owned, each once, less what is owed.',
     },
     year: {
       label: 'The year',
-      alt: 'A year at a glance: what came in, went out and was saved, and the taxes, with a bar for each month of 2025.',
+      alt: 'A year at a glance: what came in, went out and was saved, and the taxes, in 2025 and in each of its months.',
       caption: 'The year: what came in, went out and was saved, month by month.',
     },
   },

@@ -61,7 +61,8 @@ low-contrast text over AA; the display and lede steps; the light and semibold fa
 mark colours), the rail (words, two groups, a section's views moved to its tab strip), the tab
 strip, the general chart (2px lines, 24px bars, the keyboard), and the kit, the side panel, the
 waiting list and the empty state. **It rearranged no screen** (U5 onward does, one at a time, each
-taking its route off the budget's `exempt` list as it lands).
+taking its route off the budget's `exempt` list as it lands; U15 took the last, and the list is
+empty — every route is held to its limits, D-642).
 
 Two rules that read as UI are `shell` rows because the shell is where they bite: *A button in a
 drag region* and *Accelerators are shown, not registered*.

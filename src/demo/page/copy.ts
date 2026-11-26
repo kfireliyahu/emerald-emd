@@ -96,7 +96,7 @@ export interface Copy {
     readonly label: string
     readonly pause: string
     readonly split: Shot
-    readonly whereitwent: Shot
+    readonly paycheck: Shot
     readonly wealth: Shot
     readonly year: Shot
   }

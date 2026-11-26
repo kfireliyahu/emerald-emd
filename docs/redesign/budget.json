@@ -350,17 +350,15 @@
       "screens": 1.0
     },
     "#/formats/card_charge/read": {
-      "words": 65,
+      "words": 45,
       "blocks": 1,
       "figures": 0,
-      "actions": 1,
-      "colours": 3,
+      "actions": 3,
+      "colours": 5,
       "screens": 1.0
     }
   },
-  "exempt": [
-    "#/formats/card_charge/read"
-  ],
+  "exempt": [],
   "tools": [
     "#/specimen"
   ]

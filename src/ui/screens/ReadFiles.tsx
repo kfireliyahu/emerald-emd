@@ -90,6 +90,10 @@ import { FIELD } from '@/ui/components/fieldLook.ts'
 import { Fixed, Mapper, keyWords, keysInWords } from '@/ui/formats/IntakePanel.tsx'
 import { ReadersLine } from '@/ui/formats/ReadersLine.tsx'
 import { WhatLooksWrong } from '@/ui/formats/WhatLooksWrong.tsx'
+import { EmptyState } from '@/ui/components/WaitingList.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
+import { useT } from '@/i18n/current.ts'
+import { useAskHere } from '@/ui/components/useDismiss.ts'
 import { tallyAccounts, type FormatAudit } from '@/domain/format/audit.ts'
 import { entryPath, formatPath, readLineAdded, readLineEntry } from '@/ui/nav.ts'
 import { formatsByPack, useKeptPacks } from '@/ui/packs.ts'
@@ -158,6 +162,9 @@ export function ReadFiles() {
   // Per file, the refused lines added by hand from here (M55 U9).
   const [added, setAdded] = useState<ReadonlyMap<string, ReadonlySet<number>>>(kept?.added ?? new Map())
   const [editing, setEditing] = useState<Editing | undefined>(undefined)
+  const t = useT()
+  // A file dragged over the page (M64 U15: the whole page takes a drop, as the drop zone did).
+  const [over, setOver] = useState(false)
   const [problem, setProblem] = useState<string | undefined>(undefined)
   // Files dropped on the window anywhere but a format's page: each row asks
   // which format it goes onto (M54 F4, D-532).
@@ -402,22 +409,59 @@ export function ReadFiles() {
 
   return (
     <div className="fc-view-enter flex h-full flex-col">
-      <div className="flex shrink-0 flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-hairline px-6 py-2">
-        <span className="font-medium">
-          Read onto{' '}
-          <Link to={formatPath(declaration.name)} className="hover:underline">
-            <Bidi>{declaration.title}</Bidi>
-          </Link>
-          {titles.length > 1 && (
-            <span className="font-normal text-ink-secondary">
-              , <Bidi>{titles.slice(1).join(', ')}</Bidi>
-            </span>
-          )}
-        </span>
-        <ReadersLine readers={readers} />
-      </div>
+      {/* The screen's question as its title (M64 U15): *Read onto Card charge*,
+          with what reads it under it, and choosing files the header's action. */}
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-x-6 gap-y-3 px-8 pt-6 pb-4">
+        <div className="flex min-w-0 flex-col gap-1">
+          <h1 className="m-0 text-title leading-tight font-medium">
+            <Phrase
+              text={t('formats.intake.readOnto')}
+              parts={{
+                title: (
+                  <Link to={formatPath(declaration.name)} className="hover:underline">
+                    <Bidi>{declaration.title}</Bidi>
+                  </Link>
+                ),
+              }}
+            />
+            {titles.length > 1 && (
+              <span className="font-normal text-ink-secondary">
+                , <Bidi>{titles.slice(1).join(', ')}</Bidi>
+              </span>
+            )}
+          </h1>
+          <ReadersLine readers={readers} />
+        </div>
+        {locked === undefined && written === undefined && (
+          // The next step when nothing is read yet, and only then filled (*One primary action per screen*).
+          <Picker onFiles={add} empty={files.length === 0} />
+        )}
+      </header>
 
-      <div className="min-h-0 flex-1 overflow-auto px-6 py-4">
+      <div
+        className={`min-h-0 flex-1 overflow-auto px-8 pb-12 transition-colors duration-[var(--duration-micro)] ${over ? 'bg-surface' : ''}`}
+        // A drop on the window reads onto this format too (D-532); a drop here
+        // is this screen's, and walks a dropped folder, which the window's cannot.
+        {...(locked === undefined && written === undefined
+          ? {
+              onDragOver: (event: React.DragEvent) => {
+                event.preventDefault()
+                event.stopPropagation()
+                setOver(true)
+              },
+              onDragLeave: (event: React.DragEvent) => {
+                if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOver(false)
+              },
+              onDrop: (event: React.DragEvent) => {
+                event.preventDefault()
+                event.stopPropagation()
+                setOver(false)
+                // A dropped folder is walked into its folders of notes (M34 U7).
+                void droppedFiles(event.dataTransfer).then(add)
+              },
+            }
+          : {})}
+      >
         {locked !== undefined ? (
           <p className="max-w-prose text-ink-secondary">{locked}</p>
         ) : written !== undefined ? (
@@ -441,7 +485,10 @@ export function ReadFiles() {
                 mutate((database) => forgetReader(database, declaration.name, reader.signature))
               }
             />
-            <Picker onFiles={add} empty={files.length === 0} />
+            {files.length === 0 && (
+              // *An empty state is one sentence*; its action is the header's Choose files.
+              <EmptyState say={t('formats.intake.empty')} />
+            )}
             {problem !== undefined && <p className="mt-2 text-caption text-negative">{problem}</p>}
             {asking && reviewed.length > 0 && writable.length > 1 && (
               <p className="mt-4 text-caption text-ink-secondary">
@@ -913,63 +960,49 @@ function without<T>(map: ReadonlyMap<string, T>, key: string): ReadonlyMap<strin
 /* ------------------------------------------------------------------- parts */
 
 function Picker({ onFiles, empty }: { onFiles: (files: readonly PickedFile[]) => void; empty: boolean }) {
-  const [over, setOver] = useState(false)
+  const t = useT()
+  const filesInput = useRef<HTMLInputElement | null>(null)
+  const folderInput = useRef<HTMLInputElement | null>(null)
   const take = (input: HTMLInputElement): void => {
     const chosen = Array.from(input.files ?? [])
     input.value = ''
     if (chosen.length > 0) onFiles(inputFiles(chosen))
   }
   return (
-    <div
-      className={`flex flex-col items-start gap-1 border border-dashed px-4 py-3 text-caption transition-colors duration-[var(--duration-micro)] ${
-        over ? 'border-ink-tertiary bg-surface' : 'border-hairline-strong'
-      }`}
-      // A drop on the window reads onto this format too (D-532); a drop here
-      // is this screen's, and walks a dropped folder, which the window's cannot.
-      onDragOver={(event) => {
-        event.preventDefault()
-        event.stopPropagation()
-        setOver(true)
-      }}
-      onDragLeave={() => setOver(false)}
-      onDrop={(event) => {
-        event.preventDefault()
-        event.stopPropagation()
-        setOver(false)
-        // A dropped folder is walked into its folders of notes (M34 U7).
-        void droppedFiles(event.dataTransfer).then(onFiles)
-      }}
+    <span
+      className="flex items-center gap-4"
+      title={t('formats.intake.kinds', { extensions: SUPPORTED_EXTENSIONS.join(', ') })}
     >
-      <span className="flex flex-wrap items-baseline gap-x-3 text-ink">
-        <label className="cursor-pointer text-accent underline-offset-2 hover:underline focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent">
-          {empty ? 'Choose files' : 'Add files'}
-          <input
-            type="file"
-            multiple
-            accept={[...SUPPORTED_EXTENSIONS, '.json', '.md'].join(',')}
-            className="sr-only"
-            onChange={(event) => take(event.target)}
-          />
-        </label>
-        <label className="cursor-pointer text-accent underline-offset-2 hover:underline focus-within:outline focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent">
-          {empty ? 'Choose a folder of notes' : 'Add a folder'}
-          <input
-            type="file"
-            multiple
-            // A folder pick: each file comes with its path under the folder.
-            ref={(input) => input?.setAttribute('webkitdirectory', '')}
-            className="sr-only"
-            onChange={(event) => take(event.target)}
-          />
-        </label>
-        <span className="text-ink-secondary">{empty ? 'or drop them here' : 'or drop more here'}</span>
-      </span>
-      <span className="text-ink-secondary">
-        {SUPPORTED_EXTENSIONS.join(', ')}, a .json file of rows, or Markdown notes — a folder of them is a table, a note a row.
-        Each file is read by the reader that fits it, or by a guess you can check, and nothing is
-        written until you press Write.
-      </span>
-    </div>
+      <button type="button" className="fc-text-action" onClick={() => folderInput.current?.click()}>
+        {empty ? t('formats.intake.chooseFolder') : t('formats.intake.addFolder')}
+      </button>
+      <Button variant={empty ? 'primary' : 'secondary'} icon="add" onClick={() => filesInput.current?.click()}>
+        {empty ? t('formats.intake.chooseFiles') : t('formats.intake.addFiles')}
+      </Button>
+      <input
+        ref={filesInput}
+        type="file"
+        multiple
+        accept={[...SUPPORTED_EXTENSIONS, '.json', '.md'].join(',')}
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden
+        onChange={(event) => take(event.target)}
+      />
+      <input
+        ref={(input) => {
+          folderInput.current = input
+          // A folder pick: each file comes with its path under the folder.
+          input?.setAttribute('webkitdirectory', '')
+        }}
+        type="file"
+        multiple
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden
+        onChange={(event) => take(event.target)}
+      />
+    </span>
   )
 }
 
@@ -1555,6 +1588,7 @@ function ReaderList({
 }) {
   const [renaming, setRenaming] = useState<{ signature: string; text: string } | undefined>(undefined)
   const [forgetting, setForgetting] = useState<string | undefined>(undefined)
+  const ask = useAskHere<HTMLSpanElement>(forgetting !== undefined, () => setForgetting(undefined))
   if (readers.length === 0) return null
 
   return (
@@ -1604,13 +1638,14 @@ function ReaderList({
             </span>
           )}
           {forgetting === reader.signature ? (
-            <span className="ms-auto flex items-center gap-2">
+            <span ref={ask.box} role="alertdialog" aria-label="Forget" onKeyDown={ask.onKeyDown} className="ms-auto flex items-center gap-2">
               <span className="text-ink-secondary">
                 Forget it? The entries it wrote stay.
               </span>
               <Button
                 size="sm"
-                variant="primary"
+                variant="secondary"
+                autoFocus
                 onClick={() => {
                   onForget(reader)
                   setForgetting(undefined)
@@ -1618,7 +1653,7 @@ function ReaderList({
               >
                 Forget
               </Button>
-              <Button size="sm" variant="ghost" onClick={() => setForgetting(undefined)}>
+              <Button size="sm" variant="ghost" onClick={ask.takeBack}>
                 Cancel
               </Button>
             </span>

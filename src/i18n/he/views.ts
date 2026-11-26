@@ -147,7 +147,7 @@ export const views: Translation<'views'> = {
     onBy: '{format} בסדר היום לפי',
     left: 'נשארו בחוץ: {reasons}',
     showAll: 'להציג את כל מה שלפנינו',
-    openFormats: 'לפתוח את הפורמטים',
+    openFormats: 'פתיחת הפורמטים',
     overdueLabel: 'באיחור',
     overdueHead: 'באיחור · {count}',
     today: 'היום · {day}',

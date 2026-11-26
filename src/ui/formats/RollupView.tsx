@@ -10,6 +10,7 @@ import { figureText } from '@/domain/format/rollup.ts'
 import { useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Phrase } from '@/ui/components/Phrase.tsx'
+import { useAskHere } from '@/ui/components/useDismiss.ts'
 import { Chart } from '@/ui/charts/Chart.tsx'
 import { drawnValue, type ChartKind } from '@/ui/charts/chart.ts'
 import { rollupSentence, rollupWords } from '@/ui/formats/dashboard.ts'
@@ -185,16 +186,26 @@ function DeleteChart({ format, name, said }: { format: string; name: string; sai
   const mutate = useDocumentStore((state) => state.mutate)
   const [asking, setAsking] = useState(false)
   const [refusal, setRefusal] = useState<string | undefined>(undefined)
+  const ask = useAskHere<HTMLSpanElement>(asking, () => {
+    setAsking(false)
+    setRefusal(undefined)
+  })
   const quiet = 'text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent'
   if (!asking) {
     return (
-      <button type="button" className={`flex-none ${quiet}`} onClick={() => setAsking(true)}>
+      <button ref={ask.back} type="button" className={`flex-none ${quiet}`} onClick={() => setAsking(true)}>
         {t('dashboards.rollup.delete')}
       </button>
     )
   }
   return (
-    <span className="flex flex-none items-baseline gap-2" role="group" aria-label={t('dashboards.rollup.deleteOf', { name: said })}>
+    <span
+      ref={ask.box}
+      className="flex flex-none items-baseline gap-2"
+      role="alertdialog"
+      aria-label={t('dashboards.rollup.deleteOf', { name: said })}
+      onKeyDown={ask.onKeyDown}
+    >
       {refusal === undefined ? (
         <span>
           <Phrase text={t('dashboards.rollup.question')} parts={{ name: <Bidi>{said}</Bidi> }} />
@@ -207,6 +218,7 @@ function DeleteChart({ format, name, said }: { format: string; name: string; sai
       {refusal === undefined && (
         <button
           type="button"
+          autoFocus
           className="text-negative hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
           onClick={() => {
             try {
@@ -223,14 +235,7 @@ function DeleteChart({ format, name, said }: { format: string; name: string; sai
           {t('dashboards.rollup.confirm')}
         </button>
       )}
-      <button
-        type="button"
-        className={quiet}
-        onClick={() => {
-          setAsking(false)
-          setRefusal(undefined)
-        }}
-      >
+      <button type="button" className={quiet} onClick={ask.takeBack}>
         {t('dashboards.rollup.keep')}
       </button>
     </span>

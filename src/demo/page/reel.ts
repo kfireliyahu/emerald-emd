@@ -23,7 +23,7 @@ export function mountReel(reel: HTMLElement, words: Copy['shots']): void {
   const frame = reel.querySelector<HTMLElement>('.reel-frame')
   const caption = reel.querySelector<HTMLElement>('[data-reel-caption]')
   if (slides.length === 0 || toggle === null || frame === null) return
-  const captions = [words.split, words.whereitwent, words.wealth, words.year].map((shot) => shot.caption)
+  const captions = [words.split, words.paycheck, words.wealth, words.year].map((shot) => shot.caption)
 
   let at = 0
   /** Paused by the reader, or not yet started under reduced motion. */

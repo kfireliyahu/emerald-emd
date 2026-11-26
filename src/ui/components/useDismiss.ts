@@ -57,3 +57,32 @@ export function useDismiss(
     latest.current()
   }
 }
+
+/**
+ * **A question asked where its button was** (M64 U15, the walk of D-617's
+ * conventions): *Delete Groceries? Delete · Keep* standing in the place of the
+ * button that asked. It behaves as every popover does — its confirming button
+ * has the focus, so Enter answers; Escape takes the question back and nothing
+ * else, so the panel it was asked in stays open; a press outside takes it back
+ * too — and focus returns to the button that asked. Spread `onKeyDown` and
+ * `box` on the question, `back` on the button, and call `takeBack` for Keep.
+ */
+export function useAskHere<Box extends HTMLElement>(
+  asking: boolean,
+  cancel: () => void,
+): {
+  readonly box: RefObject<Box>
+  readonly back: RefObject<HTMLButtonElement>
+  readonly onKeyDown: (event: ReactKeyboardEvent) => void
+  readonly takeBack: () => void
+} {
+  const box = useRef<Box>(null)
+  const back = useRef<HTMLButtonElement>(null)
+  const takeBack = (): void => {
+    cancel()
+    // The button is drawn again once the question has gone.
+    requestAnimationFrame(() => back.current?.focus({ preventScroll: true }))
+  }
+  const onKeyDown = useDismiss(asking, box, takeBack)
+  return { box, back, onKeyDown, takeBack }
+}

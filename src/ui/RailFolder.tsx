@@ -12,6 +12,7 @@ import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { Phrase } from '@/ui/components/Phrase.tsx'
+import { useAskHere } from '@/ui/components/useDismiss.ts'
 import { deleteSavedView, renameSavedView } from '@/data/repositories/formatViewRepository.ts'
 import type { SavedView } from '@/domain/format/view.ts'
 import { filterAddress, sameAddress } from '@/ui/formats/addressFilter.ts'
@@ -354,6 +355,10 @@ function RailRow({
   const [renaming, setRenaming] = useState<string | undefined>(undefined)
   const [deleting, setDeleting] = useState(false)
   const [refusal, setRefusal] = useState<string | undefined>(undefined)
+  const ask = useAskHere<HTMLDivElement>(deleting, () => {
+    setDeleting(false)
+    setRefusal(undefined)
+  })
   const quiet =
     'text-ink-secondary hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent'
   const said =
@@ -407,7 +412,7 @@ function RailRow({
 
   if (deleting) {
     return (
-      <div className={`pe-2.5 ${left}`}>
+      <div ref={ask.box} role="alertdialog" aria-label={t('chrome.rail.folder.deleteName', { name })} onKeyDown={ask.onKeyDown} className={`pe-2.5 ${left}`}>
         <div className="flex h-6 items-center gap-2 text-caption text-ink-secondary">
           {/* The ellipsis on the Bidi span, so a Hebrew name keeps its start (M54 F6). */}
           <span className="flex min-w-0 gap-1">
@@ -417,6 +422,7 @@ function RailRow({
           </span>
           <button
             type="button"
+            autoFocus
             className="text-negative hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
             onClick={() => {
               try {
@@ -428,14 +434,7 @@ function RailRow({
           >
             {t('chrome.rail.folder.delete')}
           </button>
-          <button
-            type="button"
-            className={quiet}
-            onClick={() => {
-              setDeleting(false)
-              setRefusal(undefined)
-            }}
-          >
+          <button type="button" className={quiet} onClick={ask.takeBack}>
             {t('chrome.rail.folder.keep')}
           </button>
         </div>
@@ -479,6 +478,7 @@ function RailRow({
           <ActionGlyph name="edit" size={11} />
         </button>
         <button
+          ref={ask.back}
           type="button"
           aria-label={t('chrome.rail.folder.deleteName', { name })}
           title={t('chrome.rail.folder.delete')}

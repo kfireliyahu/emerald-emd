@@ -566,6 +566,13 @@ export const formats: Translation<'formats'> = {
     currencyLabel: 'המטבע של המסמך',
   },
   intake: {
+    readOnto: 'קריאה אל {title}',
+    chooseFiles: 'בחירת קבצים',
+    addFiles: 'הוספת קבצים',
+    chooseFolder: 'בחירת תיקייה',
+    addFolder: 'הוספת תיקייה',
+    kinds: '{extensions}, קובץ .json של שורות, או פתקי Markdown — תיקייה שלהם היא טבלה, ופתק הוא שורה.',
+    empty: 'אפשר לגרור לכאן גיליון, קובץ .json של שורות או תיקיית פתקי Markdown, או לבחור אותם. שום דבר לא נכתב עד שלוחצים על כתיבה.',
     headerRow: 'שורת כותרות',
     rowEmpty: 'שורה {row}, ריקה',
     rowCells: 'שורה {row}: {cells}',
