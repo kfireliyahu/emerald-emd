@@ -5297,6 +5297,16 @@ answer: Roadmap and Ready carry the table's Add (rowWriteRefusalOnScreen, read-o
 state: live
 affects: "src/ui/formats/lineColumns.ts\nsrc/domain/format/view.ts\ndocs/redesign/budget.json"
 
+### D-636
+date: 2026-11-26
+milestone: M64
+scope: ui
+title: A file is read through a door named for its kind and drawn with its glyph: Home's header carries *Read bank and card statements* (filled) with *Read paychecks* beside it — one button per kind, not one *Read files* that asks the kind; a fund report is read from its fund as *Read a fund report*; the palette names all three; a waiting line opens its own kind's reader; and a file picked or dropped anywhere is still read as what it is
+question: Does the header keep one Read files door that asks the kind, or one button per kind, and how are reading a statement, a paycheck and a fund report told apart?
+answer: One button per kind. Asking would add a click to the commonest path and keep the confusing word files. Home's header gets Read bank and card statements (the one primary) and Read paychecks beside it, which goes straight to #/paychecks/read. A fund report is read from its fund (Read a fund report). The palette names all three, and a waiting line opens its own kind's reader. Each kind has its own glyph (READ_GLYPH: statement, paycheck, report). A button's word promises the kind but filters nothing: a file of another kind, picked or dropped anywhere, is read as what it is, and #/read keeps the name Read files because every dropped file lands there. Home's colour budget rises from 11 to 13 for the second door's split tile.
+state: live
+affects: "src/ui/components/ActionGlyph.tsx\nsrc/ui/screens/Home.tsx\nsrc/ui/home/parts.tsx\nsrc/ui/home/WaitingList.tsx\nsrc/ui/commands.ts\nsrc/ui/screens/FundDetail.tsx\nsrc/ui/screens/Paychecks.tsx\nsrc/data/packs/ledger/guide.ts\ndocs/redesign/budget.json"
+
 <!-- emerald: finding.format.md -->
 ---
 format: finding
@@ -6654,6 +6664,15 @@ state: applied
 answered_by: D-630
 became_unit: M64 F14
 
+### M64 F16 built: a file is read through a door named for its kind, with its glyph (D-636), to land
+from: F:/projects/emerald/docs/memory.emd
+sent_on: 2026-11-26
+body: "M64 F16 is built on worktree-agent-aae8e23d8a7e50d5b at 0f14628. Home's header now has one button per kind: Read bank and card statements (filled) and Read paychecks beside it. A fund report is read from its fund (Read a fund report), the palette lists all three, and three new glyphs mark every door. docs:check is green except for D-636's row, which this landing writes.\n\n```json\n{\"unit\": \"M64 F16\", \"commit\": \"0f14628\", \"branch\": \"worktree-agent-aae8e23d8a7e50d5b\", \"files\": \"src/ui/components/ActionGlyph.tsx\\nsrc/ui/commands.ts\\nsrc/ui/home/parts.tsx\\nsrc/ui/home/WaitingList.tsx\\nsrc/ui/screens/Home.tsx\\nsrc/ui/screens/Paychecks.tsx\\nsrc/ui/screens/ReadStatements.tsx\\nsrc/ui/screens/FundDetail.tsx\\nsrc/ui/paychecks/ReadSlips.tsx\\nsrc/data/packs/ledger/guide.ts\\nsrc/i18n/en/home.ts\\nsrc/i18n/he/home.ts\\nsrc/i18n/en/palette.ts\\nsrc/i18n/he/palette.ts\\nsrc/i18n/en/guide.ts\\nsrc/i18n/he/guide.ts\\nsrc/i18n/en/merchants.ts\\nsrc/i18n/he/merchants.ts\\nsrc/i18n/en/transactions.ts\\nsrc/i18n/he/transactions.ts\\nsrc/i18n/en/wealth.ts\\nsrc/i18n/he/wealth.ts\\ndocs/redesign/budget.json\\ndocs/packs/ledger/06-navigation-and-screens.md\\ndocs/09-decision-log.md\", \"report\": \"Decided: one button per kind, not one Read files door that asks the kind. Asking would add a click to the commonest path (a statement, every month), put a menu in front of the ledger tour's first click, and keep the word files, which was the confusing one. Home's month is made of both statements and paychecks, so its header carries both: Read bank and card statements is the one primary (it keeps data-tour read-files, data-guide home.read and Ctrl+Shift+O), and Read paychecks sits beside it as a secondary button. Read paychecks uses a new hook, useReadPaychecks, to send the picked files straight to #/paychecks/read. A fund report is read into one fund and Home has no fund to name, so it is read from the fund (Read a fund report, report glyph). Palette: Read bank and card statements… (the picker), Read paychecks… (#/paychecks/read), Read a fund report… (the picker, whose batch hands a report to the fund it names). Waiting lines: a missing statement says Read its statement… (statement glyph); a missing paycheck says Read paychecks and opens its own picker straight to Read paychecks, where it used to go through the statements' batch. Three new glyphs in READ_GLYPH: statement (a sheet of rows with an amounts column), paycheck (a banknote), report (a page with a rising line), replacing the generic read arrow on the doors. They also mark Paychecks' Read paychecks, Add paychecks on Read paychecks, and a batch row's A paycheck. A button's word promises the kind and does not filter: a file of another kind, picked through any door or dropped anywhere, is still read as what it is (the statements' button tooltip says so). #/read keeps the name Read files because every dropped file lands there. Empty-state verbs on Year, Transactions and By merchant now say Read bank and card statements (catalogue values only; Year.tsx, Transactions.tsx and ByMerchant.tsx are untouched). The guide's first step (LEDGER_GUIDE, so guide_status too) names both doors. English and Hebrew both updated. Probe on year.emd: #/ 169 words, 37 actions, 1 primary; colours 12 light and 13 dark, against 10 and 11 at base. The second door's split tile costs the two extra colours, so budget #/ colours rises from 11 to 13, written down in D-636. #/paychecks and #/read are within budget. --lang he on #/: no English left, and the shot shows the primary at the inline end and the two glyphs distinct. Tests: related tests green (two timing tests failed under load and passed alone: hosts/claude/hooks/commands.test.ts status line, src/plugin/tools/formats.test.ts aggregate), typecheck green, privacy, direction, words and budget tests green, check:tours green (10 runs). No taste-check subagent: the change is buttons and words, not a screen rebuild. A rule row is proposed for the driver to write if it agrees (scope ui): A door that reads a file names the kind it reads and carries that kind's glyph (READ_GLYPH); only a place every kind lands says files, and a file picked or dropped anywhere is read as what it is.\", \"decisions\": [{\"ref\": \"D-636\", \"title\": \"A file is read through a door named for its kind and drawn with its glyph: Home's header carries *Read bank and card statements* (filled) with *Read paychecks* beside it — one button per kind, not one *Read files* that asks the kind; a fund report is read from its fund as *Read a fund report*; the palette names all three; a waiting line opens its own kind's reader; and a file picked or dropped anywhere is still read as what it is\", \"question\": \"Does the header keep one Read files door that asks the kind, or one button per kind, and how are reading a statement, a paycheck and a fund report told apart?\", \"answer\": \"One button per kind. Asking would add a click to the commonest path and keep the confusing word files. Home's header gets Read bank and card statements (the one primary) and Read paychecks beside it, which goes straight to #/paychecks/read. A fund report is read from its fund (Read a fund report). The palette names all three, and a waiting line opens its own kind's reader. Each kind has its own glyph (READ_GLYPH: statement, paycheck, report). A button's word promises the kind but filters nothing: a file of another kind, picked or dropped anywhere, is read as what it is, and #/read keeps the name Read files because every dropped file lands there. Home's colour budget rises from 11 to 13 for the second door's split tile.\", \"affects\": \"src/ui/components/ActionGlyph.tsx\\nsrc/ui/screens/Home.tsx\\nsrc/ui/home/parts.tsx\\nsrc/ui/home/WaitingList.tsx\\nsrc/ui/commands.ts\\nsrc/ui/screens/FundDetail.tsx\\nsrc/ui/screens/Paychecks.tsx\\nsrc/data/packs/ledger/guide.ts\\ndocs/redesign/budget.json\"}], \"review_entries\": [{\"do\": \"Open Home on the synthetic year (year.emd), then Paychecks, then a fund under Wealth, and press Ctrl+K and type read.\", \"should\": \"Home shows Read bank and card statements (filled, a ruled-sheet glyph) and Read paychecks beside it (a banknote glyph). Paychecks' Read paychecks has the same banknote, and the fund's button says Read a fund report with a page-and-rising-line glyph. The palette lists all three by name. Read paychecks from Home opens the paycheck reader with the picked files. It would be wrong if two of these looked alike, if Read paychecks landed on Read files, or if a paycheck picked through the statements' button were not still read as a paycheck.\"}], \"follow_ups\": [{\"kind\": \"unit\", \"ref\": \"M64 F49\", \"title\": \"The palette's commands carry their glyph\", \"brief\": \"Found in M64 F16: the palette's command rows draw no glyph (only entries and More do), so Read bank and card statements…, Read paychecks… and Read a fund report… are told apart in the palette by words alone. Give a Command an optional glyph, drawn in the row's 16px leading slot where an entry draws its note, and set READ_GLYPH's three on the read commands. Files: src/ui/commands.ts, src/ui/CommandPalette.tsx.\"}, {\"kind\": \"question\", \"ref\": \"M64 Q63\", \"state\": \"open\", \"question\": \"Home's door now says Read bank and card statements, but the screen it opens (#/read) is still called Read files, because every dropped file lands there whatever its kind (M64 F16, D-636). Should that screen be renamed to match the door, and paychecks or fund reports dropped there be sent on without being listed?\"}]}\n```"
+refs: M64 F16
+state: applied
+answered_by: D-636
+became_unit: M64 F16
+
 ### M64 F17 landing proposal: Roadmap and Ready to start keep the format's Add, and the views' controls sit in one strip (D-632)
 from: F:/projects/emerald/docs/memory.emd
 sent_on: 2026-11-26
@@ -7634,6 +7653,10 @@ state: open
 
 ### M64 Q6
 question: Budget: #/read's actions rose 3 to 4 and #/paychecks/read's 1 to 4 and colours 4 to 5, because Add is now a real button (filled when empty) and the measures now count the notice above the screen; words fell 75 to 23 and 46 to 24. Accept the new ceilings?
+state: open
+
+### M64 Q63
+question: Home's door now says Read bank and card statements, but the screen it opens (#/read) is still called Read files, because every dropped file lands there whatever its kind (M64 F16, D-636). Should that screen be renamed to match the door, and paychecks or fund reports dropped there be sent on without being listed?
 state: open
 
 ### M64 Q7
@@ -9115,6 +9138,11 @@ should: The text window follows the app's theme and type (The theme is light, da
 breaks: Driven: the window follows the OS scheme (prefers-color-scheme dark while fc-theme was light) in the plain-text viewer's system mono; per code, the application menu's Ctrl+N/Ctrl+O still fire and send to the document window behind it. Owned by M54 F7. Fixed in M54 F7 (2f07b5d).
 state: fault
 
+### Open Home on the synthetic year (year.emd), then Paychecks, then a fund under Wealth, and press Ctrl+K and type read.
+unit: M64 F16
+should: Home shows Read bank and card statements (filled, a ruled-sheet glyph) and Read paychecks beside it (a banknote glyph). Paychecks' Read paychecks has the same banknote, and the fund's button says Read a fund report with a page-and-rising-line glyph. The palette lists all three by name. Read paychecks from Home opens the paycheck reader with the picked files. It would be wrong if two of these looked alike, if Read paychecks landed on Read files, or if a paycheck picked through the statements' button were not still read as a paycheck.
+state: open
+
 ### Open Home on year.emd and read the notice bar above it (13 answers wait on Home, with a filled Open Home)
 unit: M64 U4
 should: U5 replaces it with Home's WaitingList below the answer; until then the bar is a second filled primary on every screen and waiting sits above the answer, which D-614 rules out
@@ -10317,8 +10345,8 @@ scope: practice
 state: live
 
 ### Figures are ink, a flow is a mark
-statement: Every figure is ink, Home's included — came in, went out, saved, taxes and left over alike; a flow's colour (`flow-in`, `flow-out`, `flow-saved`, `flow-tax`) is only a mark beside the word that names it: a dot by a label, a line in a chart and its key. Red on a figure means a problem and nothing else.
-why: Two reviewers of the U3 prototypes read a red *went out* as an error (D-614). Colour carries meaning, and on a figure the only meaning it may carry is a problem; the flow's identity survives as a mark, never as the number's ink.
+statement: Every figure is ink, Home's included — came in, went out, saved and taxes alike; a flow's colour (`flow-in`, `flow-out`, `flow-saved`, `flow-tax`) is only a mark beside the word that names it: a dot by a label, a line in a chart and its key. The one exception is a figure that sums a period up, drawn in `positive` or `negative` by its sign (`HeadlineFigure`'s `tone`), and only these: Home's left over and its sentence's two amounts (came in `positive`, went out `negative`), the Year's left over, Plan's to split, Wealth's net worth, and a statement's gap, `negative` whenever it is not nothing. Otherwise red on a figure means a problem and nothing else, and the minus sign or the word always stays beside the colour.
+why: Two reviewers of the U3 prototypes read a red *went out* as an error (D-614). Colour carries meaning, and on a figure the only meanings it may carry are a problem and, on the one line that sums a period up, which way it went: the maintainer asked for the sign's colour there and not everywhere (D-633). The flow's identity survives as a mark, never as the number's ink.
 kind: non_negotiable
 scope: ui
 decided_by: ["D-614","D-615"]
@@ -18623,12 +18651,17 @@ paths: src/ui/screens/Transactions.tsx src/ui/screens/ByMerchant.tsx src/ui/tran
 milestone: M64
 scope: ui
 title: Reading a statement, a paycheck and a fund report are told apart at a glance
-state: in_progress
+landed: 2026-11-26
+decision: D-636
+state: built
 brief: Maintainer, 2026-11-26: "i think there should be distinguishable buttons between reading paychecks, transactions and such cause it can confuse users." Wherever the app offers to read a file (the header's Read files, Read paychecks, a fund's report, the guide, the palette, the front door), the button names the kind it reads and carries that kind's glyph, so 'Read bank and card statements', 'Read paychecks' and 'Read a fund report' never look alike; a file dropped anywhere is still read whatever it is. Decide with a decision row whether the header keeps one Read files door that asks the kind, or one button per kind, and say why.
+files: "src/ui/components/ActionGlyph.tsx\nsrc/ui/commands.ts\nsrc/ui/home/parts.tsx\nsrc/ui/home/WaitingList.tsx\nsrc/ui/screens/Home.tsx\nsrc/ui/screens/Paychecks.tsx\nsrc/ui/screens/ReadStatements.tsx\nsrc/ui/screens/FundDetail.tsx\nsrc/ui/paychecks/ReadSlips.tsx\nsrc/data/packs/ledger/guide.ts\nsrc/i18n/en/home.ts\nsrc/i18n/he/home.ts\nsrc/i18n/en/palette.ts\nsrc/i18n/he/palette.ts\nsrc/i18n/en/guide.ts\nsrc/i18n/he/guide.ts\nsrc/i18n/en/merchants.ts\nsrc/i18n/he/merchants.ts\nsrc/i18n/en/transactions.ts\nsrc/i18n/he/transactions.ts\nsrc/i18n/en/wealth.ts\nsrc/i18n/he/wealth.ts\ndocs/redesign/budget.json\ndocs/packs/ledger/06-navigation-and-screens.md\ndocs/09-decision-log.md"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-aae8e23d8a7e50d5b
+commit: 0f14628
 paths: src/ui/screens/ReadStatements.tsx src/ui/paychecks/ReadSlips.tsx src/ui/import/ src/ui/components/ActionGlyph.tsx src/ui/commands.ts
+report: Decided: one button per kind, not one Read files door that asks the kind. Asking would add a click to the commonest path (a statement, every month), put a menu in front of the ledger tour's first click, and keep the word files, which was the confusing one. Home's month is made of both statements and paychecks, so its header carries both: Read bank and card statements is the one primary (it keeps data-tour read-files, data-guide home.read and Ctrl+Shift+O), and Read paychecks sits beside it as a secondary button. Read paychecks uses a new hook, useReadPaychecks, to send the picked files straight to #/paychecks/read. A fund report is read into one fund and Home has no fund to name, so it is read from the fund (Read a fund report, report glyph). Palette: Read bank and card statements… (the picker), Read paychecks… (#/paychecks/read), Read a fund report… (the picker, whose batch hands a report to the fund it names). Waiting lines: a missing statement says Read its statement… (statement glyph); a missing paycheck says Read paychecks and opens its own picker straight to Read paychecks, where it used to go through the statements' batch. Three new glyphs in READ_GLYPH: statement (a sheet of rows with an amounts column), paycheck (a banknote), report (a page with a rising line), replacing the generic read arrow on the doors. They also mark Paychecks' Read paychecks, Add paychecks on Read paychecks, and a batch row's A paycheck. A button's word promises the kind and does not filter: a file of another kind, picked through any door or dropped anywhere, is still read as what it is (the statements' button tooltip says so). #/read keeps the name Read files because every dropped file lands there. Empty-state verbs on Year, Transactions and By merchant now say Read bank and card statements (catalogue values only; Year.tsx, Transactions.tsx and ByMerchant.tsx are untouched). The guide's first step (LEDGER_GUIDE, so guide_status too) names both doors. English and Hebrew both updated. Probe on year.emd: #/ 169 words, 37 actions, 1 primary; colours 12 light and 13 dark, against 10 and 11 at base. The second door's split tile costs the two extra colours, so budget #/ colours rises from 11 to 13, written down in D-636. #/paychecks and #/read are within budget. --lang he on #/: no English left, and the shot shows the primary at the inline end and the two glyphs distinct. Tests: related tests green (two timing tests failed under load and passed alone: hosts/claude/hooks/commands.test.ts status line, src/plugin/tools/formats.test.ts aggregate), typecheck green, privacy, direction, words and budget tests green, check:tours green (10 runs). No taste-check subagent: the change is buttons and words, not a screen rebuild. A rule row is proposed for the driver to write if it agrees (scope ui): A door that reads a file names the kind it reads and carries that kind's glyph (READ_GLYPH); only a place every kind lands says files, and a file picked or dropped anywhere is read as what it is.
 
 ### M64 F17
 milestone: Later
@@ -18839,6 +18872,13 @@ brief: year.emd (scripts/demo-year.mjs) holds goals and a car loan but no pensio
 taken_by: run-milestone driver
 started: 2026-11-26
 branch: m64-redesign
+
+### M64 F49
+milestone: Later
+scope: ui
+title: The palette's commands carry their glyph
+state: planned
+brief: Found in M64 F16: the palette's command rows draw no glyph (only entries and More do), so Read bank and card statements…, Read paychecks… and Read a fund report… are told apart in the palette by words alone. Give a Command an optional glyph, drawn in the row's 16px leading slot where an entry draws its note, and set READ_GLYPH's three on the read commands. Files: src/ui/commands.ts, src/ui/CommandPalette.tsx.
 
 ### M64 F5
 milestone: M64
@@ -19320,6 +19360,6 @@ inbox: 2026-11-26
 milestone: 2026-11-25
 open_question: 2026-11-26
 review_entry: 2026-11-26
-rule: 2026-11-25
+rule: 2026-11-26
 term: 2026-11-23
 unit: 2026-11-26
