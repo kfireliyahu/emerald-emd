@@ -26,6 +26,7 @@ import { dayMonth } from '@/ui/savings/WherePicker.tsx'
 import { useClosePane } from '@/ui/screens/ListDetail.tsx'
 import { today } from '@/ui/today.ts'
 import { Legend, LegendItem, Src, SWATCH, Tag, type TagTone } from '@/ui/wealth/parts.tsx'
+import { whereDetail, whereName } from '@/ui/wealth/words.ts'
 
 /**
  * A goal's drawer, as the approved mockup draws it (M28 U8, rebuilt in F10): what
@@ -53,8 +54,8 @@ export function GoalDetail() {
   const holdings = useMemo(() => (db === undefined ? [] : listHoldings(db, { includeArchived: true })), [db, revision])
   // One name per holding (M30 F3): an account's own Cash is called by the account's name.
   const named = useMemo(
-    () => new Map(db === undefined ? [] : whereChoices(db, currency).map((one) => [one.holdingId, one.name] as const)),
-    [db, revision, currency],
+    () => new Map(db === undefined ? [] : whereChoices(db, currency).map((one) => [one.holdingId, whereName(one, t)] as const)),
+    [db, revision, currency, t],
   )
   const byHolding = useMemo(
     () => db !== undefined && goalId !== undefined && goalFeeds(db).get(goalId)?.kind === 'HOLDING',
@@ -357,10 +358,10 @@ function WherePanel({
         ) : (
           <>
             <b className="font-medium">
-              <Bidi>{choice?.name ?? holding?.name ?? t('wealth.where.gone')}</Bidi>
+              <Bidi>{choice === undefined ? (holding?.name ?? t('wealth.where.gone')) : whereName(choice, t)}</Bidi>
               {choice?.detail !== undefined && (
                 <span className="ms-1.5 text-caption font-normal text-ink-secondary">
-                  <Bidi>{choice.detail}</Bidi>
+                  <Bidi>{whereDetail(choice, t)}</Bidi>
                 </span>
               )}
             </b>

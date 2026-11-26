@@ -200,8 +200,20 @@ const M64_F18 = [
   'src/ui/formats/ColumnsChoice.tsx',
 ]
 
+/** M64 F38: the rest of Wealth's details — the pane's frame, the two charts, a holding's readings, a fund's report reader, and the holding and place forms a net-worth row opens. */
+const M64_F38 = [
+  'src/ui/screens/ListDetail.tsx',
+  'src/ui/debts/BalanceLine.tsx',
+  'src/ui/funds/BalanceChart.tsx',
+  'src/ui/savings/HoldingReadings.tsx',
+  'src/ui/savings/holdingCheck.ts',
+  'src/ui/funds/ReportIntake.tsx',
+  'src/ui/savings/HoldingEditor.tsx',
+  'src/ui/savings/PlaceEditor.tsx',
+]
+
 /** The screens whose words are the catalogue's. A unit that translates a screen adds its files here. */
-export const TRANSLATED: readonly string[] = [...U4, ...U5, ...M64_U8, ...M64_U10, ...M64_U13, ...M64_F9, ...M64_F3, ...M64_F26, ...M64_F2, ...M64_F18]
+export const TRANSLATED: readonly string[] = [...U4, ...U5, ...M64_U8, ...M64_U10, ...M64_U13, ...M64_F9, ...M64_F3, ...M64_F26, ...M64_F2, ...M64_F18, ...M64_F38]
 
 /** Literals in a translated file that are not the app's words, by file, each with why. */
 const ALLOWED: Readonly<Record<string, readonly string[]>> = {
@@ -214,6 +226,10 @@ const ALLOWED: Readonly<Record<string, readonly string[]>> = {
   // shown later as the document's own words — never a word of this screen.
   'src/ui/screens/Transactions.tsx': ['— from a correction'],
   'src/ui/screens/ByMerchant.tsx': ['By merchant:'],
+  // Inside the place form's last `<select>`, whose lines M64's selects unit turns into a
+  // ValueChoice while F38 translated the rest of the form beside it; the two merge, and
+  // these go through `t()` then (M64 F47). Not a word the screen may keep.
+  'src/ui/savings/PlaceEditor.tsx': ['The holding that is the account’s cash', 'A new holding, Cash'],
 }
 
 /** Names a keyboard gives its keys, which are compared against and never shown. */

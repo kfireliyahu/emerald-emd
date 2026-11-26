@@ -5,7 +5,8 @@ import type { DepositStatus } from '@/domain/funds.ts'
 import type { DebtKind } from '@/domain/model/debt.ts'
 import type { FundType } from '@/domain/model/funds.ts'
 import type { HoldingPlaceKind } from '@/domain/model/savings.ts'
-import type { NewPlaceKind } from '@/data/repositories/goalWhereRepository.ts'
+import type { NewPlaceKind, WhereChoice } from '@/data/repositories/goalWhereRepository.ts'
+import type { Unchecked } from '@/domain/unchecked.ts'
 import { countKey } from '@/i18n/count.ts'
 import { useDates, useT, type Translate } from '@/i18n/current.ts'
 import type { DateWords } from '@/i18n/dates.ts'
@@ -111,4 +112,36 @@ export function useWealthWords(): WealthWords {
     }),
     [t, dates],
   )
+}
+
+/** Why a holding's check could not run, in the language on screen — the domain hands back a code (M64 F38). */
+export function uncheckedSaid(why: Unchecked, t: Translate): string {
+  switch (why.code) {
+    case 'OTHER_CURRENCY_ROWS':
+      return t(countKey('wealth.unchecked.OTHER_CURRENCY_ROWS', why.rows), { count: why.rows })
+    case 'CURRENCY_MISMATCH':
+      return t('wealth.unchecked.CURRENCY_MISMATCH', { printed: why.printed, rows: why.rows })
+    case 'OTHER':
+      // The engine's own reason, as it gave it: a declared sum or identity that could not be judged.
+      return why.reason
+    default:
+      return t(`wealth.unchecked.${why.code}`)
+  }
+}
+
+/** A choice of where a goal's money is, by its one name: an account's own cash is the screen's word for cash. */
+export function whereName(choice: WhereChoice, t: Translate): string {
+  return choice.cash ? t('wealth.where.cash') : choice.name
+}
+
+/** Beside a choice's name: `···1234`, or `at Broker` in the language on screen. */
+export function whereDetail(choice: WhereChoice, t: Translate): string | undefined {
+  const detail = choice.detail
+  if (detail === undefined) return undefined
+  return 'last4' in detail ? `···${detail.last4}` : t('wealth.where.at', { place: detail.at })
+}
+
+/** The goal another goal is, by name — or *another goal* when it is not among the document's. */
+export function otherGoal(name: string, t: Translate): string {
+  return name === '' ? t('wealth.where.anotherGoal') : name
 }

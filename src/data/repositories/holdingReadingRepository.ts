@@ -4,6 +4,7 @@ import { money, type CurrencyCode, type Money } from '@/core/money.ts'
 import { toISODate, type LocalDate } from '@/core/time.ts'
 import { costBasisCheck, type CostBasisCheck } from '@/domain/goalDeposits.ts'
 import { cashCheck, quantityCheck, type HoldingWorth, type ReadingCheck } from '@/domain/holdingReadings.ts'
+import type { Unchecked } from '@/domain/unchecked.ts'
 import { evaluateIdentity } from '@/domain/format/identity.ts'
 import { identityInputsOf } from '@/domain/format/row.ts'
 import { query } from '../db/database.ts'
@@ -345,7 +346,7 @@ export function rowsPutIn(db: Database, holdingId: string, currency: CurrencyCod
 /** The holding's rows by the reading's day, against the cost basis it printed. */
 export function readingCostCheck(db: Database, reading: HoldingReading): CostBasisCheck {
   const by = rowsPutIn(db, reading.holdingId, reading.value.currency, reading.asOf)
-  if (reading.costBasis === undefined) return { kind: 'UNCHECKED', reason: 'The reading printed no cost.' }
+  if (reading.costBasis === undefined) return { kind: 'UNCHECKED', why: { code: 'NO_COST_PRINTED' } }
   return costBasisCheck(by.putIn, reading.costBasis, by.otherCurrencies)
 }
 
@@ -401,19 +402,19 @@ export function priceCheck(
   priceMicro: number | undefined,
   value: Money,
 ): ReadingCheck<Money> {
-  if (priceMicro === undefined) return { kind: 'UNCHECKED', reason: 'The reading printed no price.' }
-  if (quantityMicro === undefined) return { kind: 'UNCHECKED', reason: 'The reading printed a price and no quantity.' }
+  if (priceMicro === undefined) return { kind: 'UNCHECKED', why: { code: 'NO_PRICE_PRINTED' } }
+  if (quantityMicro === undefined) return { kind: 'UNCHECKED', why: { code: 'PRICE_WITHOUT_QUANTITY' } }
   const declaration = declared(db, 'holding_reading')
   const identity = declaration.identities.find((one) => one.name === 'price')
   if (identity === undefined) {
-    return { kind: 'UNCHECKED', reason: 'This document declares no price check on a reading.' }
+    return { kind: 'UNCHECKED', why: { code: 'NO_PRICE_CHECK' } }
   }
   const row = {
     id: 'reading',
     cells: { value_minor: value.minor, value_currency: value.currency, quantity: quantityMicro, price: priceMicro },
   }
   const verdict = evaluateIdentity(identity, identityInputsOf(declaration, row))
-  if (verdict.kind === 'UNCHECKED') return verdict
+  if (verdict.kind === 'UNCHECKED') return { kind: 'UNCHECKED', why: { code: 'OTHER', reason: verdict.reason } }
   if (verdict.kind === 'PROVED') return { kind: 'PROVED' }
   return { kind: 'FAILED', ours: money(Math.round(verdict.right), value.currency), printed: value }
 }
@@ -431,9 +432,9 @@ export function readingChecks(db: Database, reading: HoldingReading): ReadingChe
   const holding = findHolding(db, reading.holdingId)
   if (holding?.accountId !== undefined) {
     const running = runningBalance(db, holding.accountId, reading.asOf, reading.value.currency)
-    const none: ReadingCheck<never> = { kind: 'UNCHECKED', reason: 'Cash has no quantity, cost or price.' }
+    const none: ReadingCheck<never> = { kind: 'UNCHECKED', why: { code: 'CASH_HAS_NONE' } }
     return {
-      cost: { kind: 'UNCHECKED', reason: 'Cash has no cost.' },
+      cost: none,
       quantity: none,
       price: none,
       cash: cashCheck(running, reading.value),
@@ -454,9 +455,9 @@ export function readingChecks(db: Database, reading: HoldingReading): ReadingChe
  * never smaller, as the declared sum does (D-224).
  */
 /** The quantity a holding's rows add up to by a day — or why they cannot say. */
-export function holdingQuantityBy(db: Database, holdingId: string, by: string): { quantityMicro: number } | { reason: string } {
+export function holdingQuantityBy(db: Database, holdingId: string, by: string): { quantityMicro: number } | { why: Unchecked } {
   const all = holdingQuantity(db, holdingId)
-  if (all.kind === 'UNCHECKED') return { reason: all.reason }
+  if (all.kind === 'UNCHECKED') return { why: { code: 'OTHER', reason: all.reason } }
   const row = query(
     db,
     `SELECT COUNT(*) AS n, COUNT(quantity) AS counted, COALESCE(SUM(quantity), 0) AS total
@@ -464,6 +465,6 @@ export function holdingQuantityBy(db: Database, holdingId: string, by: string): 
     [holdingId, by],
   )[0]
   const n = Number(row?.['n'] ?? 0)
-  if (n !== Number(row?.['counted'] ?? 0)) return { reason: 'A row that names it has no quantity.' }
+  if (n !== Number(row?.['counted'] ?? 0)) return { why: { code: 'ROW_WITHOUT_QUANTITY' } }
   return { quantityMicro: Number(row?.['total'] ?? 0) }
 }

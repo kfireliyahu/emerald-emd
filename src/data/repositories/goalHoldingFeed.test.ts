@@ -189,7 +189,7 @@ describe('a goal fed by its holding (M30 U4)', () => {
     const fed = holdingPutIn(db, world.id, 'ILS')
     expect(fed.rows).toBe(2)
     expect(fed.putIn).toEqual(ils(2_502_50))
-    expect(fed.check).toEqual({ kind: 'UNCHECKED', reason: 'No reading of what it cost has been recorded yet.' })
+    expect(fed.check).toEqual({ kind: 'UNCHECKED', why: { code: 'NO_COST_RECORDED' } })
 
     expect(costBasisCheck(fed.putIn, ils(2_502_50))).toEqual({ kind: 'PROVED' })
     expect(costBasisCheck(fed.putIn, ils(2_500_00))).toEqual({

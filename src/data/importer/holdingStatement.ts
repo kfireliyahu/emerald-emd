@@ -384,7 +384,7 @@ export function planHoldingStatement(db: Database, input: HoldingStatementInput)
     const putIn = (putInHeld?.putIn.minor ?? 0) - mine.reduce((sum, row) => sum + row.input.amount.minor, 0)
     const heldQuantity = ref.kind === 'EXISTING' ? holdingQuantityBy(db, ref.holding.id, asOf) : { quantityMicro: 0 }
     const quantity =
-      'reason' in heldQuantity
+      'why' in heldQuantity
         ? heldQuantity
         : { quantityMicro: heldQuantity.quantityMicro + mine.reduce((sum, row) => sum + (row.input.quantityMicro ?? 0), 0) }
     return {
@@ -395,7 +395,7 @@ export function planHoldingStatement(db: Database, input: HoldingStatementInput)
       checks: {
         cost:
           line.costBasis === undefined
-            ? { kind: 'UNCHECKED', reason: 'The table printed no cost.' }
+            ? { kind: 'UNCHECKED', why: { code: 'NO_COST_PRINTED' } }
             : costBasisCheck(money(putIn, input.currency), line.costBasis, putInHeld?.otherCurrencies ?? 0),
         quantity: quantityCheck(quantity, line.quantityMicro),
         price: priceCheck(db, line.quantityMicro, line.priceMicro, line.value),

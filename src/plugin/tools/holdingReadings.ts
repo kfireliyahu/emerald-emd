@@ -31,6 +31,7 @@ import { documentCurrency } from '@/data/repositories/statisticsRepository.ts'
 import { parseQuantity, quantityText } from '@/data/repositories/transactionRepository.ts'
 import type { CostBasisCheck } from '@/domain/goalDeposits.ts'
 import type { ReadingCheck } from '@/domain/holdingReadings.ts'
+import type { Unchecked } from '@/domain/unchecked.ts'
 import type { Holding } from '@/domain/model/savings.ts'
 
 import { type OpenDocument } from '../document.ts'
@@ -227,12 +228,42 @@ function describeEntries(entries: readonly EntryPlan[]): string {
   )
 }
 
+/** Why a check could not run, in the conversation's English — the domain hands back a code (M64 F38). */
+export function uncheckedText(why: Unchecked): string {
+  switch (why.code) {
+    case 'NO_COST_RECORDED':
+      return 'No reading of what it cost has been recorded yet.'
+    case 'NO_COST_PRINTED':
+      return 'The reading printed no cost.'
+    case 'OTHER_CURRENCY_ROWS':
+      return `${String(why.rows)} of its rows are in another currency, and a cost basis is one figure.`
+    case 'CURRENCY_MISMATCH':
+      return `The reading printed it in ${why.printed}, and the rows are in ${why.rows}.`
+    case 'NO_QUANTITY_PRINTED':
+      return 'The reading printed no quantity.'
+    case 'ROW_WITHOUT_QUANTITY':
+      return 'A row that names it has no quantity.'
+    case 'NO_PRICE_PRINTED':
+      return 'The reading printed no price.'
+    case 'PRICE_WITHOUT_QUANTITY':
+      return 'The reading printed a price and no quantity.'
+    case 'NO_PRICE_CHECK':
+      return 'This document declares no price check on a reading.'
+    case 'NO_ACCOUNT_ROWS':
+      return 'Its account has no rows to run a balance over.'
+    case 'CASH_HAS_NONE':
+      return 'Cash has no quantity, cost or price.'
+    case 'OTHER':
+      return why.reason
+  }
+}
+
 export function costText(check: CostBasisCheck): string {
   return check.kind === 'PROVED'
     ? 'proved'
     : check.kind === 'FAILED'
       ? `failed: printed ${money(check.printed)}, the rows ${money({ ...check.printed, minor: check.printed.minor + check.difference.minor })}`
-      : `unchecked: ${check.reason}`
+      : `unchecked: ${uncheckedText(check.why)}`
 }
 
 export function moneyCheckText(check: ReadingCheck<Money> | undefined, ours: string): string {
@@ -241,7 +272,7 @@ export function moneyCheckText(check: ReadingCheck<Money> | undefined, ours: str
     ? 'proved'
     : check.kind === 'FAILED'
       ? `failed: printed ${money(check.printed)}, ${ours} ${money(check.ours)}`
-      : `unchecked: ${check.reason}`
+      : `unchecked: ${uncheckedText(check.why)}`
 }
 
 export function quantityCheckText(check: ReadingCheck<number>): string {
@@ -249,7 +280,7 @@ export function quantityCheckText(check: ReadingCheck<number>): string {
     ? 'proved'
     : check.kind === 'FAILED'
       ? `failed: printed ${quantityText(check.printed)}, the rows ${quantityText(check.ours)}`
-      : `unchecked: ${check.reason}`
+      : `unchecked: ${uncheckedText(check.why)}`
 }
 
 /** What each reading proves — the four checks, each its own column, none left unsaid. */

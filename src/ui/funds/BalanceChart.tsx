@@ -2,6 +2,8 @@ import { formatMoney } from '@/core/money.ts'
 import { toISODate } from '@/core/time.ts'
 import type { FundBalanceSnapshot } from '@/domain/model/funds.ts'
 import type { PeriodReturn } from '@/domain/funds.ts'
+import { countKey } from '@/i18n/count.ts'
+import { useT } from '@/i18n/current.ts'
 
 const WIDTH = 720
 const BALANCE_HEIGHT = 96
@@ -42,7 +44,10 @@ export function BalanceChart({
   /** One per consecutive pair, so `periods[i]` ends at `snapshots[i + 1]`. */
   periods: readonly PeriodReturn[]
 }) {
-  if (snapshots.length < 2) return null
+  const t = useT()
+  const first = snapshots[0]
+  const last = snapshots[snapshots.length - 1]
+  if (snapshots.length < 2 || first === undefined || last === undefined) return null
 
   const balances = snapshots.map((snapshot) => snapshot.totalBalance.minor)
   const top = Math.max(...balances)
@@ -73,8 +78,6 @@ export function BalanceChart({
     (Math.abs(minor) / reach) * (MOVEMENT_HEIGHT / 2 - 4)
 
   const unknown = periods.filter((period) => period.kind === 'CONTRIBUTIONS_UNKNOWN').length
-  const first = snapshots[0]
-  const last = snapshots[snapshots.length - 1]
 
   return (
     <figure className="m-0 max-w-3xl" dir="ltr">
@@ -82,11 +85,12 @@ export function BalanceChart({
         viewBox={`0 0 ${WIDTH} ${BALANCE_HEIGHT + MOVEMENT_HEIGHT}`}
         className="w-full"
         role="img"
-        aria-label={`Balance from ${formatMoney(first?.totalBalance ?? { minor: 0, currency: 'ILS' })} on ${
-          first === undefined ? '' : toISODate(first.asOfDate)
-        } to ${formatMoney(last?.totalBalance ?? { minor: 0, currency: 'ILS' })} on ${
-          last === undefined ? '' : toISODate(last.asOfDate)
-        }, with deposits and investment gains shown separately`}
+        aria-label={t('wealth.charts.balance', {
+          from: formatMoney(first.totalBalance),
+          fromDay: toISODate(first.asOfDate),
+          to: formatMoney(last.totalBalance),
+          toDay: toISODate(last.asOfDate),
+        })}
       >
         <path d={line} fill="none" stroke="currentColor" strokeWidth={1.5} className="text-ink" />
 
@@ -142,26 +146,20 @@ export function BalanceChart({
         </g>
       </svg>
 
-      <figcaption className="mt-1 flex flex-wrap items-center gap-x-4 text-caption text-ink-tertiary">
+      {/* Its key and its window report something, so they read at 4.5:1 (ink-secondary), never tertiary. */}
+      <figcaption className="mt-1 flex flex-wrap items-center gap-x-4 text-caption text-ink-secondary">
         <span className="flex items-center gap-1.5">
           <span aria-hidden className="inline-block size-2 rounded-xs bg-ink-tertiary" />
-          paid in
+          {t('wealth.charts.paidIn')}
         </span>
         <span className="flex items-center gap-1.5">
           <span aria-hidden className="inline-block size-2 rounded-xs bg-ink" />
-          earned
+          {t('wealth.charts.earned')}
         </span>
         <span>
-          {first === undefined ? '' : toISODate(first.asOfDate)} —{' '}
-          {last === undefined ? '' : toISODate(last.asOfDate)}
+          {toISODate(first.asOfDate)} — {toISODate(last.asOfDate)}
         </span>
-        {unknown > 0 && (
-          <span>
-            {unknown === 1
-              ? '1 period is not drawn: nothing says what was paid into it'
-              : `${String(unknown)} periods are not drawn: nothing says what was paid into them`}
-          </span>
-        )}
+        {unknown > 0 && <span>{t(countKey('wealth.charts.notDrawn', unknown), { count: unknown })}</span>}
       </figcaption>
     </figure>
   )

@@ -16,6 +16,7 @@
 
 import { money, type CurrencyCode, type Money } from '@/core/money.ts'
 import type { DepositSourceKind, SavingDeposit } from './model/savings.ts'
+import type { Unchecked } from './unchecked.ts'
 
 export const DEPOSIT_ORIGINS = ['DERIVED', 'SET_ASIDE', 'ALREADY_THERE', 'GROWTH'] as const
 export type DepositOrigin = (typeof DEPOSIT_ORIGINS)[number]
@@ -102,21 +103,15 @@ export function wantedDeposit(transaction: FiledTransaction): WantedDeposit {
 export type CostBasisCheck =
   | { readonly kind: 'PROVED' }
   | { readonly kind: 'FAILED'; readonly printed: Money; readonly difference: Money }
-  | { readonly kind: 'UNCHECKED'; readonly reason: string }
+  | { readonly kind: 'UNCHECKED'; readonly why: Unchecked }
 
 export function costBasisCheck(putIn: Money, printed: Money | undefined, otherCurrencies = 0): CostBasisCheck {
   if (otherCurrencies > 0) {
-    return {
-      kind: 'UNCHECKED',
-      reason: `${String(otherCurrencies)} of its rows are in another currency, and a cost basis is one figure.`,
-    }
+    return { kind: 'UNCHECKED', why: { code: 'OTHER_CURRENCY_ROWS', rows: otherCurrencies } }
   }
-  if (printed === undefined) return { kind: 'UNCHECKED', reason: 'No reading of what it cost has been recorded yet.' }
+  if (printed === undefined) return { kind: 'UNCHECKED', why: { code: 'NO_COST_RECORDED' } }
   if (printed.currency !== putIn.currency) {
-    return {
-      kind: 'UNCHECKED',
-      reason: `The reading printed its cost in ${printed.currency}, and the rows are in ${putIn.currency}.`,
-    }
+    return { kind: 'UNCHECKED', why: { code: 'CURRENCY_MISMATCH', printed: printed.currency, rows: putIn.currency } }
   }
   if (printed.minor === putIn.minor) return { kind: 'PROVED' }
   return { kind: 'FAILED', printed, difference: money(putIn.minor - printed.minor, putIn.currency) }

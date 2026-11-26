@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, type ReactNode } from 'react'
 import { useLocation, useNavigate, useOutlet, useOutletContext, useResolvedPath } from 'react-router-dom'
 
+import { useT } from '@/i18n/current.ts'
 import { historyIndex } from '@/ui/HistoryArrows.tsx'
 import { EASING, MOTION_MS, motionOn } from '@/ui/motion/motion.ts'
 import { LAYOUT_MOTION } from '@/ui/motion/settle.ts'
@@ -90,6 +91,7 @@ export function ListDetail({ children, overlay = false }: { children: ReactNode;
    * (`useNavigationType` cannot say which: inside the app's `<Routes>`, which
    * are handed a location, every change reads as a pop.)
    */
+  const t = useT()
   const list = useResolvedPath('.').pathname
   const close = (): void => {
     const here = historyIndex()
@@ -184,7 +186,7 @@ export function ListDetail({ children, overlay = false }: { children: ReactNode;
                   'fc-pop-enter absolute top-0 end-0 bottom-0 z-[15] flex min-h-0 w-[30rem] max-w-full flex-col border-s border-hairline-strong bg-background shadow-pop'
                 : 'fc-view-enter flex min-h-0 w-[30rem] max-w-[45%] min-w-[20rem] shrink-0 flex-col border-s border-hairline'
           }
-          aria-label={overlay ? 'Details' : undefined}
+          aria-label={overlay ? t('wealth.pane.details') : undefined}
         >
           {/* Keyed by its address: another fund is another detail, arriving with
               its own fade and none of the last one's half-typed state — which is
@@ -217,14 +219,15 @@ export function useClosePane(): () => void {
  */
 export function ClosePane() {
   const close = useClosePane()
+  const t = useT()
   return (
     <button
       type="button"
       onClick={close}
-      title="Close this pane"
-      className="ms-auto shrink-0 rounded px-2 py-0.5 text-caption text-ink-tertiary transition-colors duration-[var(--duration-micro)] hover:bg-surface hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      title={t('wealth.pane.closeTitle')}
+      className="ms-auto shrink-0 rounded px-2 py-0.5 text-caption text-ink-secondary transition-colors duration-[var(--duration-micro)] hover:bg-surface hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
-      Close
+      {t('wealth.pane.close')}
     </button>
   )
 }

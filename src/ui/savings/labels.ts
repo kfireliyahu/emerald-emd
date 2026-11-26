@@ -62,9 +62,6 @@ export const HOLDING_KIND_HEBREW: Readonly<Record<HoldingKind, string>> = {
  * kind of account, because that is the distinction that decides whether the app
  * can ever tell the user their figure is out of date.
  */
-/** The map's third column when nobody has ever confirmed the figure. */
-export const NEVER_CONFIRMED = 'never checked'
-
 export const SOURCE_LABEL: Readonly<Record<DepositSourceKind, string>> = {
   MANUAL: 'Entered by hand',
   FROM_TRANSACTION: 'From a transaction',

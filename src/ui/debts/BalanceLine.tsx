@@ -1,6 +1,7 @@
 import { formatMoney } from '@/core/money.ts'
 import { toISODate } from '@/core/time.ts'
 import type { BalancePoint } from '@/domain/debt.ts'
+import { useT } from '@/i18n/current.ts'
 
 const WIDTH = 720
 const HEIGHT = 96
@@ -26,6 +27,7 @@ const PADDING = { top: 14, bottom: 16, left: 2, right: 2 } as const
  * container would give the stroke two different weights depending on the window.
  */
 export function BalanceLine({ points }: { points: readonly BalancePoint[] }) {
+  const t = useT()
   if (points.length < 2) return null
 
   const first = points[0]
@@ -60,7 +62,12 @@ export function BalanceLine({ points }: { points: readonly BalancePoint[] }) {
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         className="w-full"
         role="img"
-        aria-label={`Owed, from ${formatMoney(first.outstanding)} on ${toISODate(first.date)} to ${formatMoney(last.outstanding)} on ${toISODate(last.date)}`}
+        aria-label={t('wealth.charts.owed', {
+          from: formatMoney(first.outstanding),
+          fromDay: toISODate(first.date),
+          to: formatMoney(last.outstanding),
+          toDay: toISODate(last.date),
+        })}
       >
         <path d={path} fill="none" strokeWidth={1.5} className="stroke-ink" />
         <circle cx={x(points.length - 1)} cy={y(last.outstanding.minor)} r={2.5} className="fill-ink" />
