@@ -1,6 +1,8 @@
 import type { DocumentTemplate } from '@/domain/model/templates.ts'
+import { useT } from '@/i18n/current.ts'
 import { MENU_MOST, ValueChoice } from '@/ui/components/ChoiceField.tsx'
 import { SELECT } from '@/ui/components/fieldLook.ts'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 
 /**
  * “Not that one, use this one” — the stored formats, and the one this slip was
@@ -28,26 +30,32 @@ export function FormatPicker({
   current: string | undefined
   onPick: (id: string) => void
 }) {
+  const t = useT()
   if (formats.length === 0) return null
+
+  const choice = (
+    <ValueChoice
+      value={current ?? ''}
+      choices={[
+        // Only while nothing stored answered: a placeholder that can be
+        // chosen back to is a choice that undoes nothing.
+        ...(current === undefined
+          ? [{ value: '', label: t('paychecks.formatPicker.noReader') }]
+          : []),
+        ...formats.map((format) => ({ value: format.id, label: format.name })),
+      ]}
+      filter={formats.length > MENU_MOST}
+      onChange={(id) => {
+        if (id !== '') onPick(id)
+      }}
+      aria-label={t('paychecks.formatPicker.label')}
+      className={`${SELECT} h-7 max-w-56 border-transparent bg-transparent text-caption text-ink-tertiary hover:border-hairline-strong`}
+    />
+  )
 
   return (
     <label className="flex items-center gap-2 text-caption text-ink-tertiary">
-      Read with
-      <ValueChoice
-        value={current ?? ''}
-        choices={[
-          // Only while nothing stored answered: a placeholder that can be
-          // chosen back to is a choice that undoes nothing.
-          ...(current === undefined ? [{ value: '', label: 'no reader' }] : []),
-          ...formats.map((format) => ({ value: format.id, label: format.name })),
-        ]}
-        filter={formats.length > MENU_MOST}
-        onChange={(id) => {
-          if (id !== '') onPick(id)
-        }}
-        aria-label="Which reader reads this"
-        className={`${SELECT} h-7 max-w-56 border-transparent bg-transparent text-caption text-ink-tertiary hover:border-hairline-strong`}
-      />
+      <Phrase text={t('paychecks.formatPicker.readWith')} parts={{ choice }} />
     </label>
   )
 }

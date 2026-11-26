@@ -192,6 +192,12 @@ export const paychecks: Translation<'paychecks'> = {
       TARGET_MISSING: 'מה שזה נועד לו כבר לא במסמך',
     },
   },
+  /** M64 F43: באיזו תבנית ייבוא נקרא. */
+  formatPicker: {
+    readWith: 'נקרא עם {choice}',
+    noReader: 'בלי תבנית ייבוא',
+    label: 'איזו תבנית ייבוא קוראת את זה',
+  },
   types: {
     noDocument: 'פותחים מסמך, או יוצרים אחד, כדי לנהל את סוגי הניכוי שלו.',
     title: 'סוגי ניכוי',

@@ -516,10 +516,14 @@ function Row({
   return (
     <div
       {...optionProps(index, selected, onHover, onPick)}
-      className={`flex w-full cursor-default items-baseline gap-3 px-4 py-1.5 text-start transition-colors duration-[var(--duration-micro)] ${
+      className={`flex w-full cursor-default items-baseline gap-2 px-4 py-1.5 text-start transition-colors duration-[var(--duration-micro)] ${
         selected ? 'bg-accent-soft text-ink' : 'text-ink-secondary'
       }`}
     >
+      {/* The leading slot every row keeps, so a label lines up with an entry's name (M64 F49). */}
+      <span className="inline-flex w-4 flex-none justify-center self-center">
+        {command.glyph !== undefined && <ActionGlyph name={command.glyph} size={14} />}
+      </span>
       <Bidi className="min-w-0 truncate">{command.label}</Bidi>
       {command.detail !== undefined && (
         <span className="min-w-0 shrink truncate text-caption text-ink-secondary">

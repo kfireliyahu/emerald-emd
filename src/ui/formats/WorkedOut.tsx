@@ -23,10 +23,12 @@ import {
   type Part,
   type WorkedOut,
 } from '@/domain/format/workedOut.ts'
+import { useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { MENU_MOST, ValueChoice } from '@/ui/components/ChoiceField.tsx'
 import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { FormulaField } from '@/ui/formats/FormulaField.tsx'
 
 /**
@@ -117,7 +119,8 @@ export function WhatAddsUp({
   problems: readonly DraftProblem[]
   onChange: (draft: FormatDraft) => void
 }) {
-  const subject = draft.title.trim() || draft.name.trim() || 'one of these'
+  const t = useT()
+  const subject = draft.title.trim() || draft.name.trim() || t('formats.workedOut.subject')
   // **A check being written stays where it is being written.** Typing
   // `hours = end - start` would otherwise jump, mid-word, into hours'
   // question card the moment it read as one.
@@ -150,12 +153,13 @@ export function WhatAddsUp({
         until the verdict that it was confusing. Computed is
         `AddsUp`'s second section. */}
     <section data-claims>
-      <h2 className="mb-1 font-medium">Claims</h2>
+      <h2 className="mb-1 font-medium">{t('formats.workedOut.title')}</h2>
       <div className="mb-5 flex max-w-4xl flex-wrap items-start gap-x-6 gap-y-2">
         <p className="max-w-prose text-caption text-ink-secondary">
-          You type every figure, and the app proves the claim — or says which entry it fails on.{' '}
-          <code className="text-ink">hours = end − start</code> — type all three; an hours that is
-          off is reported, never refused.
+          <Phrase
+            text={t('formats.workedOut.intro')}
+            parts={{ example: <code className="text-ink">hours = end − start</code> }}
+          />
         </p>
         <Button
           size="sm"
@@ -166,13 +170,13 @@ export function WhatAddsUp({
             addIdentity(fresh)
           }}
         >
-          + A claim
+          {t('formats.workedOut.add')}
         </Button>
       </div>
 
       {answerable.length > 0 && numbers.length >= 2 && (
         <>
-          <h3 className="mb-1 text-caption font-medium">Column by column</h3>
+          <h3 className="mb-1 text-caption font-medium">{t('formats.workedOut.byColumn')}</h3>
           <ul className="space-y-2">
             {answerable.map((column) => (
               <ColumnQuestion
@@ -194,10 +198,12 @@ export function WhatAddsUp({
 
       {freehand.length > 0 && (
         <div className="fc-pop-enter mt-6">
-          <h3 className="mb-1 text-caption font-medium">Written out</h3>
+          <h3 className="mb-1 text-caption font-medium">{t('formats.workedOut.writtenOut')}</h3>
           <p className="mb-2 max-w-prose text-caption text-ink-secondary">
-            Any line with an <span className="font-mono">=</span> — a span of two times, a divisor,
-            a conversion, a bracket. It is read and checked exactly the same way.
+            <Phrase
+              text={t('formats.workedOut.writtenWhy')}
+              parts={{ equals: <span className="font-mono">=</span> }}
+            />
           </p>
           <ul className="space-y-2">
             {freehand.map((each) => (
@@ -216,7 +222,7 @@ export function WhatAddsUp({
 
       {draft.identities.length === 0 && (
         <p className="mt-4 text-caption text-ink-tertiary">
-          Optional: with none, {subject} makes no claim.
+          <Phrase text={t('formats.workedOut.optional')} parts={{ subject: <Bidi>{subject}</Bidi> }} />
         </p>
       )}
     </section>
@@ -294,7 +300,8 @@ function ColumnQuestion({
   const named = [
     ...new Set((worked?.parts ?? []).flatMap((each) => [...each.columns, each.less ?? ''])),
   ].filter((each) => totals.has(each))
-  const from = totals.size === 0 ? 'from the other columns' : 'from the other columns, or a total'
+  const t = useT()
+  const from = t(totals.size === 0 ? 'formats.workedOut.from' : 'formats.workedOut.fromOrTotal')
 
   const write = (next: WorkedOut): void => {
     if (identity === undefined) return
@@ -318,10 +325,10 @@ function ColumnQuestion({
     >
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <code className="text-ink">{column}</code>
-        <span className="text-caption text-ink-secondary">adds up {from}?</span>
+        <span className="text-caption text-ink-secondary">{t('formats.workedOut.addsUp', { from })}</span>
         <span className="ms-auto">
           <YesNo
-            label={`Claim that ${column} adds up ${from} of ${subject}?`}
+            label={t('formats.workedOut.claimThat', { column, from, subject })}
             tour={`claim-${column}`}
             yes={worked !== undefined}
             onYes={onStart}
@@ -341,16 +348,20 @@ function ColumnQuestion({
 
           {named.map((each) => (
             <p key={each} className="text-caption text-ink-secondary" data-total-part={each}>
-              <code className="text-ink">{each}</code> is a total of{' '}
-              <Bidi>{totals.get(each) ?? ''}</Bidi> rows, added up on every read — not a column
-              anybody types.
+              <Phrase
+                text={t('formats.workedOut.totalPart')}
+                parts={{
+                  column: <code className="text-ink">{each}</code>,
+                  format: <Bidi>{totals.get(each) ?? ''}</Bidi>,
+                }}
+              />
             </p>
           ))}
 
           <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
             <HowClose identity={identity} onChange={(next) => onChange(identity.key, next)} />
             <span className="text-caption text-ink-tertiary">
-              reported as <code>{identity.name}</code>
+              <Phrase text={t('formats.workedOut.reportedAs')} parts={{ name: <code>{identity.name}</code> }} />
             </span>
           </div>
 
@@ -377,6 +388,7 @@ function Parts({
   points: ReadonlyMap<string, string>
   onChange: (worked: WorkedOut) => void
 }) {
+  const t = useT()
   const replace = (at: number, part: Part): void =>
     onChange({ ...worked, parts: worked.parts.map((each, index) => (index === at ? part : each)) })
 
@@ -410,7 +422,7 @@ function Parts({
         size="sm"
         onClick={() => onChange({ ...worked, parts: [...worked.parts, partOf(next)] })}
       >
-        + another part
+        {t('formats.workedOut.anotherPart')}
       </Button>
     </div>
   )
@@ -440,6 +452,7 @@ function PartRow({
   onChange: (part: Part) => void
   onRemove: () => void
 }) {
+  const t = useT()
   const single = part.columns.length === 1
   // **A time is one side of `end − start` and nothing else** (D-335): what is
   // taken off it is another point of its kind, and it is never multiplied.
@@ -487,7 +500,7 @@ function PartRow({
           <ColumnSelect
             value={column}
             columns={numbers}
-            label="a column"
+            label={t('formats.workedOut.aColumn')}
             clearable={at > 0}
             onChange={(next) => setColumn(at, next)}
           />
@@ -502,7 +515,7 @@ function PartRow({
           <ColumnSelect
             value={part.less}
             columns={numbers}
-            label="taken off"
+            label={t('formats.workedOut.takenOff')}
             clearable
             onChange={(next) => onChange({ ...part, less: next === '' ? undefined : next })}
           />
@@ -512,13 +525,15 @@ function PartRow({
       <span className="ms-2 flex flex-wrap items-center gap-2">
         {part.less === undefined && point === undefined && another !== undefined && (
           <Small onClick={() => onChange({ ...part, columns: [...part.columns, another] })}>
-            × another column
+            {t('formats.workedOut.timesAnother')}
           </Small>
         )}
         {single && part.less === undefined && another !== undefined && (
-          <Small onClick={() => onChange({ ...part, less: another })}>− a column</Small>
+          <Small onClick={() => onChange({ ...part, less: another })}>
+            {t('formats.workedOut.lessAColumn')}
+          </Small>
         )}
-        <Small onClick={onRemove}>remove</Small>
+        <Small onClick={onRemove}>{t('formats.workedOut.remove')}</Small>
       </span>
     </div>
   )
@@ -532,20 +547,21 @@ function HowClose({
   identity: IdentityDraft
   onChange: (identity: IdentityDraft) => void
 }) {
+  const t = useT()
   const closeness = closenessOf(identity)
 
   return (
     <span className="flex flex-wrap items-center gap-1">
-      <span className="text-caption text-ink-secondary">how close</span>
+      <span className="text-caption text-ink-secondary">{t('formats.workedOut.howClose')}</span>
       <ValueChoice
         className={`${SELECT} h-7 text-caption`}
         value={closeness}
         choices={[
-          { value: 'EXACT', label: 'exactly' },
-          { value: 'AMOUNT', label: '± an amount' },
-          { value: 'PERCENT', label: '± a percent' },
+          { value: 'EXACT', label: t('formats.workedOut.exact') },
+          { value: 'AMOUNT', label: t('formats.workedOut.amount') },
+          { value: 'PERCENT', label: t('formats.workedOut.percent') },
         ]}
-        aria-label="how close it has to come"
+        aria-label={t('formats.workedOut.howCloseLabel')}
         onChange={(next) => onChange(withCloseness(identity, next as Closeness))}
       />
       {closeness !== 'EXACT' && (
@@ -554,7 +570,7 @@ function HowClose({
             className={`${FIELD} h-7 w-16 text-center tabular-nums`}
             value={identity.amount}
             inputMode="decimal"
-            aria-label="how far apart they may be"
+            aria-label={t('formats.workedOut.howFar')}
             onChange={(event) => onChange({ ...identity, amount: event.target.value })}
           />
           {closeness === 'PERCENT' && (
@@ -592,6 +608,7 @@ function FreehandIdentity({
   onChange: (identity: IdentityDraft) => void
   onRemove: () => void
 }) {
+  const t = useT()
   return (
     <li
       className={`fc-pop-enter rounded-lg border bg-elevated p-3 ${
@@ -599,7 +616,7 @@ function FreehandIdentity({
       }`}
     >
       <div className="flex flex-wrap items-end gap-3">
-        <Field label="Called">
+        <Field label={t('formats.workedOut.called')}>
           <input
             className={`${FIELD} w-40`}
             value={identity.name}
@@ -610,11 +627,11 @@ function FreehandIdentity({
         </Field>
 
         <label className="flex w-[28rem] max-w-full flex-col gap-1">
-          <span className="text-label uppercase text-ink-tertiary">Holds</span>
+          <span className="text-label uppercase text-ink-tertiary">{t('formats.workedOut.holds')}</span>
           <FormulaField
             value={identity.expression}
             names={names}
-            label="Holds"
+            label={t('formats.workedOut.holds')}
             tour="claim-holds"
             autoFocus={identityIsBlank(identity)}
             placeholder="hours = end - start"
@@ -630,18 +647,18 @@ function FreehandIdentity({
         <HowClose identity={identity} onChange={onChange} />
 
         <Button variant="ghost" size="sm" className="ms-auto" onClick={onRemove}>
-          Remove
+          {t('formats.workedOut.removeClaim')}
         </Button>
       </div>
 
       <div className="mt-3">
-        <Field label="Why">
+        <Field label={t('formats.workedOut.why')}>
           <input
             className={`${FIELD} w-[28rem] max-w-full`}
             value={identity.note}
             dir="auto"
             onChange={(event) => onChange({ ...identity, note: event.target.value })}
-            placeholder="what makes this true, in your words"
+            placeholder={t('formats.workedOut.whyPlaceholder')}
           />
         </Field>
       </div>
@@ -678,6 +695,7 @@ function YesNo({
   onYes: () => void
   onNo: () => void
 }) {
+  const t = useT()
   const look = (on: boolean): string =>
     `h-7 px-3 text-caption transition-colors duration-[var(--duration-micro)] ` +
     `focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ` +
@@ -690,7 +708,7 @@ function YesNo({
       className="inline-flex overflow-hidden rounded-md border border-hairline-strong"
     >
       <button type="button" aria-pressed={!yes} className={look(!yes)} onClick={onNo}>
-        No
+        {t('formats.workedOut.no')}
       </button>
       <button
         type="button"
@@ -699,7 +717,7 @@ function YesNo({
         data-tour={tour}
         onClick={onYes}
       >
-        Yes
+        {t('formats.workedOut.yes')}
       </button>
     </span>
   )
@@ -715,6 +733,7 @@ function YesNo({
  * and *remove* beside it is how that is said.
  */
 function Multiplier({ value, onChange }: { value: number; onChange: (value: number) => void }) {
+  const t = useT()
   const [typing, setTyping] = useState<string | undefined>(undefined)
 
   return (
@@ -722,7 +741,7 @@ function Multiplier({ value, onChange }: { value: number; onChange: (value: numb
       className={`${FIELD} h-7 w-14 text-center tabular-nums`}
       value={typing ?? figureText(value)}
       inputMode="decimal"
-      aria-label="how much of it"
+      aria-label={t('formats.workedOut.howMuch')}
       onChange={(event) => {
         setTyping(event.target.value)
         const size = Number(event.target.value)
@@ -750,6 +769,7 @@ function ColumnSelect({
   // select would silently re-point the identity at whatever is first.
   const offered = columns.includes(value) || value === '' ? columns : [value, ...columns]
   const totals = useContext(Totals)
+  const t = useT()
 
   return (
     <ValueChoice
@@ -757,10 +777,12 @@ function ColumnSelect({
       value={value}
       placeholder={`${label}…`}
       choices={[
-        ...(clearable && value !== '' ? [{ value: '', label: 'nothing' }] : []),
+        ...(clearable && value !== '' ? [{ value: '', label: t('formats.workedOut.nothing') }] : []),
         ...offered.map((each) => ({
           value: each,
-          label: totals.has(each) ? `${each} — total of ${totals.get(each) ?? ''}` : each,
+          label: totals.has(each)
+            ? t('formats.workedOut.totalOf', { column: each, format: totals.get(each) ?? '' })
+            : each,
         })),
       ]}
       filter={offered.length > MENU_MOST}
