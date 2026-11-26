@@ -5297,6 +5297,16 @@ answer: Roadmap and Ready carry the table's Add (rowWriteRefusalOnScreen, read-o
 state: live
 affects: "src/ui/formats/lineColumns.ts\nsrc/domain/format/view.ts\ndocs/redesign/budget.json"
 
+### D-634
+date: 2026-11-26
+milestone: M64
+scope: ui
+title: A rule made outside Rules is made where it was asked for — Transactions and By merchant open Rules' whole editor in their side panel, save it there, and the note says it was made with Undo and *Open in Rules*, which opens that rule in its editor; the platform selects left outside the kit become `ValueChoice`; and a new paycheck opens on the month after the newest slip when last month already has one
+question: Where is a rule asked for outside Rules made, what does the note after it offer, what replaces the last platform selects, and which month does a new paycheck open on?
+answer: Every path that went to Rules with a draft (Transactions: a row's provider-heading rule from its menu and the detail panel; By merchant: Write a rule for..., a heading's rule from the editor) opens Rules' whole RuleEditor in the screen's own SidePanel (RuleFormPanel) and saves there as Rules does (makeRule, origin USER, nothing re-applied); the whole editor keeps D-042's reach on screen. The note offers Undo (the rule and the rows it filed) and Open in Rules, which opens that rule in Rules' editor (router state {rule:id}, arrivedRuleId); on Transactions after every rule made there, the learning offer's included, whether or not it filed past rows; on By merchant on every filing that made a rule. Asking first (a popup) rejected: D-617 keeps dialogs for what cannot be undone. Ten files' platform selects are ValueChoice (filter past MENU_MOST, paste kept, empty option a choice or a placeholder) and join REVIEWED. blankDraft takes the slips' months: last month, unless taken, then the month after the newest slip; the second-slip note stays for one typed on purpose.
+state: live
+affects: "src/ui/rules/RuleFromHere.tsx\nsrc/ui/rules/madeHere.ts\nsrc/ui/screens/Transactions.tsx\nsrc/ui/screens/ByMerchant.tsx\nsrc/ui/screens/Rules.tsx\nsrc/domain/paycheckEntry.ts\nsrc/ui/formats/surfaceRules.test.ts"
+
 ### D-636
 date: 2026-11-26
 milestone: M64
@@ -6664,6 +6674,15 @@ state: applied
 answered_by: D-630
 became_unit: M64 F14
 
+### M64 F15 built: a rule made outside Rules stays where it was made (D-634), to land
+from: F:/projects/emerald/.claude/worktrees/agent-a6c06a9697bceccf4
+sent_on: 2026-11-26
+body: "M64 F15 is built on worktree-agent-a6c06a9697bceccf4 at 4d33cb7: Transactions and By merchant make a rule in their own side panel, and the note offers Undo and Open in Rules. docs:check is green but for D-634's row, which this landing writes.\n\n```json\n{\"unit\": \"M64 F15\", \"commit\": \"4d33cb7\", \"branch\": \"worktree-agent-a6c06a9697bceccf4\", \"files\": \"src/ui/rules/RuleFromHere.tsx\\nsrc/ui/rules/madeHere.ts\\nsrc/ui/rules/madeHere.test.ts\\nsrc/ui/screens/Transactions.tsx\\nsrc/ui/screens/ByMerchant.tsx\\nsrc/ui/screens/Rules.tsx\\nsrc/i18n/en/rules.ts\\nsrc/i18n/he/rules.ts\\nsrc/i18n/en/transactions.ts\\nsrc/i18n/he/transactions.ts\\nsrc/i18n/words.test.ts\\ndocs/packs/ledger/f03-auto-categorization-engine.md\\ndocs/09-decision-log.md\", \"decisions\": [{\"ref\": \"D-634\", \"scope\": \"ui\", \"title\": \"A rule made outside Rules is made where it was asked for — Transactions and By merchant open Rules' whole editor in their side panel, save it there, and the note says it was made with Undo and *Open in Rules*, which opens that rule in its editor; the platform selects left outside the kit become `ValueChoice`; and a new paycheck opens on the month after the newest slip when last month already has one\", \"question\": \"Where is a rule asked for outside Rules made, what does the note after it offer, what replaces the last platform selects, and which month does a new paycheck open on?\", \"answer\": \"Every path that went to Rules with a draft (Transactions: a row's provider-heading rule from its menu and the detail panel; By merchant: Write a rule for..., a heading's rule from the editor) opens Rules' whole RuleEditor in the screen's own SidePanel (RuleFormPanel) and saves there as Rules does (makeRule, origin USER, nothing re-applied); the whole editor keeps D-042's reach on screen. The note offers Undo (the rule and the rows it filed) and Open in Rules, which opens that rule in Rules' editor (router state {rule:id}, arrivedRuleId); on Transactions after every rule made there, the learning offer's included, whether or not it filed past rows; on By merchant on every filing that made a rule. Asking first (a popup) rejected: D-617 keeps dialogs for what cannot be undone. Ten files' platform selects are ValueChoice (filter past MENU_MOST, paste kept, empty option a choice or a placeholder) and join REVIEWED. blankDraft takes the slips' months: last month, unless taken, then the month after the newest slip; the second-slip note stays for one typed on purpose.\", \"affects\": \"src/ui/rules/RuleFromHere.tsx\\nsrc/ui/rules/madeHere.ts\\nsrc/ui/screens/Transactions.tsx\\nsrc/ui/screens/ByMerchant.tsx\\nsrc/ui/screens/Rules.tsx\\nsrc/domain/paycheckEntry.ts\\nsrc/ui/formats/surfaceRules.test.ts\"}], \"review_entries\": [{\"do\": \"On the synthetic year.emd open Transactions, click a row, press Make a rule for this merchant, then Make the rule; then press Open in Rules. On By merchant, open a merchant's menu (right-click) and choose Write a rule for...\", \"should\": \"You stay on Transactions; the line above the rows says Rule saved with Undo and Open in Rules, and Undo takes the rule away. Open in Rules lands on Rules with that rule open in its editor. On By merchant the rule's editor opens in the side panel beside the list, not on Rules. Wrong would be any path that still jumps to Rules before you asked.\"}], \"report\": \"A rule asked for outside Rules is made where it was asked for (D-634). New src/ui/rules/RuleFromHere.tsx (RuleFormPanel: Rules' own RuleEditor in a SidePanel; OpenInRules) and madeHere.ts (makeRule, arrivedRuleId). Paths checked: Transactions' learning offer, a row's menu merchant rule and the detail panel's Make a rule were already in place (D-373) - their note now always appears, Undo takes the rule and its rows (it used to leave the rule), and it offers Open in Rules; Transactions' provider-heading rule (row menu and detail panel) and By merchant's Write a rule for... and a heading's rule from the editor went to Rules - they now open the editor in the screen's panel. By merchant's filings that made a rule (a category with its learned rule, a heading's rule) offer Open in Rules beside their Undo. The Rules item in Transactions' menu and Categories' Rules link stay: going there is what they are for. Rules opens a rule handed to it as {rule:id} in its editor. Verified in this worktree's demo server on year.emd: Make the rule on Transactions stays, the note reads Rule saved / Undo / Open in Rules, Open in Rules opens that rule's editor; By merchant's Write a rule for... opens the editor in its panel. madeHere.test.ts: the write, its refusal, its Undo, the hand-over, and that neither screen sends a draft to Rules. No change to src/ui/components or src/ui/charts. No redesign taste check run: a fix unit, no route redesigned. Port 4192 was held by a leftover Vite from worktree agent-abb1633a690d0827d (PID 21820), so this check ran on 4292; that process was left alone.\", \"follow_ups\": [{\"kind\": \"question\", \"ref\": \"M64 Q57\", \"state\": \"open\", \"question\": \"A rule made from By merchant's Write a rule for... (M64 F15) is saved as Rules saves one: it files next month's rows but not this merchant's rows already here, while a heading's rule and a category's learned rule file them at once. Should a rule made from By merchant also file the merchant's uncategorized rows when it is made, with the same Undo?\"}]}\n```"
+refs: M64 F15
+state: applied
+answered_by: D-634
+became_unit: M64 F15
+
 ### M64 F16 built: a file is read through a door named for its kind, with its glyph (D-636), to land
 from: F:/projects/emerald/docs/memory.emd
 sent_on: 2026-11-26
@@ -6733,6 +6752,15 @@ about: F:/projects/emerald/docs/memory.emd M64 F26
 state: applied
 became_unit: M64 F26
 
+### M64 F29 built: the last platform selects are ValueChoice (D-634), to land
+from: F:/projects/emerald/.claude/worktrees/agent-a6c06a9697bceccf4
+sent_on: 2026-11-26
+body: "M64 F29 is built on worktree-agent-a6c06a9697bceccf4 at 4d33cb7: ten files' selects are ValueChoice and on REVIEWED. Its decision is D-634, written by F15's landing.\n\n```json\n{\"unit\": \"M64 F29\", \"commit\": \"4d33cb7\", \"branch\": \"worktree-agent-a6c06a9697bceccf4\", \"decision\": \"D-634\", \"files\": \"src/ui/savings/PlaceEditor.tsx\\nsrc/ui/savings/HoldingEditor.tsx\\nsrc/ui/fixed/FixedExpenseEditor.tsx\\nsrc/ui/fixed/CandidateCard.tsx\\nsrc/ui/debts/SplitPurchases.tsx\\nsrc/ui/formats/WorkedOut.tsx\\nsrc/ui/paychecks/FormatPicker.tsx\\nsrc/ui/plan/PointsAt.tsx\\nsrc/ui/screens/FeeImpact.tsx\\nsrc/ui/transactions/DetailPanel.tsx\\nsrc/ui/formats/surfaceRules.test.ts\", \"review_entries\": [], \"report\": \"Every platform select left outside the kit is ValueChoice: PlaceEditor (kind, its cash), HoldingEditor (kind), FixedExpenseEditor (how often, behaviour, matched by, deduction), CandidateCard (cadence), SplitPurchases (threshold, which keeps a value outside its list), WorkedOut (how close, a column - its empty option became a placeholder), FormatPicker, PointsAt (6, with FORM_CHOICE = its field look plus the kit's chevron), FeeImpact (fund) and DetailPanel (pays a card, bought or sold). Long lists filter past MENU_MOST; a paste still lands. None made a thing in place, so none gained + New. In PlaceEditor and HoldingEditor only the select lines and one import line changed, for the Wealth child's merge. All ten files join REVIEWED in surfaceRules.test.ts, which made FixedExpenseEditor's 16px literal text-heading. No src/ui/components change. probe:screens on year.emd (transactions, merchants, paychecks) reports selects 0 and the budget passes.\", \"follow_ups\": [{\"kind\": \"unit\", \"ref\": \"M64 F43\", \"title\": \"WorkedOut, FormatPicker and SplitPurchases say their words through the catalogue\", \"brief\": \"M64 F29 (D-634) turned their selects into ValueChoice, but their words are still inline English: WorkedOut's how close (exactly, ± an amount, ± a percent, nothing, total of), FormatPicker's Read with / no reader / Which reader reads this, and SplitPurchases' Offer purchases split into more than ... payments and its heading. Move them into the catalogue (en, he), add the files to src/i18n/words.test.ts's translated set, and check probe:screens --lang he on the routes that draw them. Files: src/ui/formats/WorkedOut.tsx, src/ui/paychecks/FormatPicker.tsx, src/ui/debts/SplitPurchases.tsx.\"}]}\n```"
+refs: M64 F29
+state: applied
+answered_by: D-634
+became_unit: M64 F29
+
 ### M64 F3 landing proposal: Wealth's forms open beside the page and ask the few fields first (D-629)
 from: F:/projects/emerald/docs/memory.emd
 sent_on: 2026-11-26
@@ -6741,6 +6769,15 @@ refs: M64 F3
 state: applied
 answered_by: D-629
 became_unit: M64 F3
+
+### M64 F30 built: a new paycheck opens on the month that has none (D-634), to land
+from: F:/projects/emerald/.claude/worktrees/agent-a6c06a9697bceccf4
+sent_on: 2026-11-26
+body: "M64 F30 is built on worktree-agent-a6c06a9697bceccf4 at 4d33cb7: Add by hand opens on the month after the newest slip when last month already has one. Its decision is D-634, written by F15's landing.\n\n```json\n{\"unit\": \"M64 F30\", \"commit\": \"4d33cb7\", \"branch\": \"worktree-agent-a6c06a9697bceccf4\", \"decision\": \"D-634\", \"files\": \"src/domain/paycheckEntry.ts\\nsrc/domain/paycheckEntry.test.ts\\nsrc/ui/screens/Paychecks.tsx\", \"review_entries\": [], \"report\": \"blankDraft takes the slips' months: last month (F04), unless it already has a slip - then the month after the newest slip. Both callers in Paychecks.tsx (Add by hand, and Home's band arriving with add) pass them. The note about a second slip in a month is untouched. Three tests: the month after the newest when last month is taken, last month when only others are, across a year boundary. Verified on year.emd in this worktree's demo server: Add by hand opens on November 2026 with no 'already has a paycheck' note.\", \"follow_ups\": []}\n```"
+refs: M64 F30
+state: applied
+answered_by: D-634
+became_unit: M64 F30
 
 ### M64 F5 landing proposal: Undo brings a deleted rule or category back whole (D-628)
 from: F:/projects/emerald/docs/memory.emd
@@ -7649,6 +7686,10 @@ state: open
 
 ### M64 Q51
 question: The debt detail (#/wealth/debts/<id>) draws 9 type sizes against the budget's 7, as it did before M64 F26. Is a debt's, fund's and goal's detail its own route to redesign (and budget), or does it inherit its list's limits?
+state: open
+
+### M64 Q57
+question: A rule made from By merchant's Write a rule for... (M64 F15) is saved as Rules saves one: it files next month's rows but not this merchant's rows already here, while a heading's rule and a category's learned rule file them at once. Should a rule made from By merchant also file the merchant's uncategorized rows when it is made, with the same Undo?
 state: open
 
 ### M64 Q6
@@ -9092,6 +9133,11 @@ state: open
 ### On the demo year open Year (#/year), Categories and Rules: on Year click a month row and the Went out tile; on Categories click a category, then Merge into… and Esc, and delete an unused one; on Rules type a shop in the search, then delete a rule and press Ctrl+Z.
 unit: M64 U11
 should: Each screen says its answer before anything else; a month opens on Home; detail opens beside the page and the page stays put; the merge question sits under its own button; a delete happens at once with Undo where it was and Ctrl+Z brings it back. Wrong would be a block you used and cannot find any more, or a question far from the click.
+state: open
+
+### On the synthetic year.emd open Transactions, click a row, press Make a rule for this merchant, then Make the rule; then press Open in Rules. On By merchant, open a merchant's menu (right-click) and choose Write a rule for...
+unit: M64 F15
+should: You stay on Transactions; the line above the rows says Rule saved with Undo and Open in Rules, and Undo takes the rule away. Open in Rules lands on Rules with that rule open in its editor. On By merchant the rule's editor opens in the side panel beside the list, not on Rules. Wrong would be any path that still jumps to Rules before you asked.
 state: open
 
 ### Once a clip is recorded: name it in CLAUDE_RECORDINGS in src/demo/page/page.ts, put the .mp4 and its .png poster in fixtures/synthetic/demo/, and open the page's development section (getemerald.dev or npm run dev:demo).
@@ -18640,12 +18686,17 @@ report: PaycheckForm (PanelForm in Paychecks' SidePanel) and PaycheckEditor (the
 milestone: M64
 scope: ui
 title: Making a rule from a transaction stays on the transaction
-state: in_progress
+landed: 2026-11-26
+decision: D-634
+state: built
 brief: Maintainer, 2026-11-26: "when creating a rule can we stay at the screen where we wanted to create it? e.g im at transactions creating a rule for a transaction. i dont wanna go to rules. maybe a popup should ask me if i want to." D-617 now says an action finishes where it was started. Wherever a rule is made outside Rules (Transactions' make-a-rule, By merchant, a row's menu, the learning offer), it is made there and the person stays; the note that says it was made offers 'Open in Rules' as a link, with Undo. Check every such path.
+files: "src/ui/rules/RuleFromHere.tsx\nsrc/ui/rules/madeHere.ts\nsrc/ui/rules/madeHere.test.ts\nsrc/ui/screens/Transactions.tsx\nsrc/ui/screens/ByMerchant.tsx\nsrc/ui/screens/Rules.tsx\nsrc/i18n/en/rules.ts\nsrc/i18n/he/rules.ts\nsrc/i18n/en/transactions.ts\nsrc/i18n/he/transactions.ts\nsrc/i18n/words.test.ts\ndocs/packs/ledger/f03-auto-categorization-engine.md\ndocs/09-decision-log.md"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-a6c06a9697bceccf4
+commit: 4d33cb7
 paths: src/ui/screens/Transactions.tsx src/ui/screens/ByMerchant.tsx src/ui/transactions/ src/ui/categorize/
+report: A rule asked for outside Rules is made where it was asked for (D-634). New src/ui/rules/RuleFromHere.tsx (RuleFormPanel: Rules' own RuleEditor in a SidePanel; OpenInRules) and madeHere.ts (makeRule, arrivedRuleId). Paths checked: Transactions' learning offer, a row's menu merchant rule and the detail panel's Make a rule were already in place (D-373) - their note now always appears, Undo takes the rule and its rows (it used to leave the rule), and it offers Open in Rules; Transactions' provider-heading rule (row menu and detail panel) and By merchant's Write a rule for... and a heading's rule from the editor went to Rules - they now open the editor in the screen's panel. By merchant's filings that made a rule (a category with its learned rule, a heading's rule) offer Open in Rules beside their Undo. The Rules item in Transactions' menu and Categories' Rules link stay: going there is what they are for. Rules opens a rule handed to it as {rule:id} in its editor. Verified in this worktree's demo server on year.emd: Make the rule on Transactions stays, the note reads Rule saved / Undo / Open in Rules, Open in Rules opens that rule's editor; By merchant's Write a rule for... opens the editor in its panel. madeHere.test.ts: the write, its refusal, its Undo, the hand-over, and that neither screen sends a draft to Rules. No change to src/ui/components or src/ui/charts. No redesign taste check run: a fix unit, no route redesigned. Port 4192 was held by a leftover Vite from worktree agent-abb1633a690d0827d (PID 21820), so this check ran on 4292; that process was left alone.
 
 ### M64 F16
 milestone: M64
@@ -18775,11 +18826,16 @@ report: Wealth's details translated, following F3 (D-629): new wealth areas debt
 milestone: Later
 scope: ui
 title: The platform selects left outside the kit become ValueChoice
-state: in_progress
+landed: 2026-11-26
+decision: D-634
+state: built
 brief: After M64 F2 (D-630) the kit draws every choice, but ten files still draw the platform's <select> (now with the kit's chevron through .fc-select): src/ui/savings/PlaceEditor.tsx (kind, its cash), savings/HoldingEditor.tsx, fixed/FixedExpenseEditor.tsx (4), fixed/CandidateCard.tsx, debts/SplitPurchases.tsx, formats/WorkedOut.tsx (2), paychecks/FormatPicker.tsx, plan/PointsAt.tsx, screens/FeeImpact.tsx, transactions/DetailPanel.tsx (2). Move each to ValueChoice (filter past MENU_MOST, make for + New where the form makes one in place), keep a paste landing, and add the files to the REVIEWED list in src/ui/formats/surfaceRules.test.ts.
+files: "src/ui/savings/PlaceEditor.tsx\nsrc/ui/savings/HoldingEditor.tsx\nsrc/ui/fixed/FixedExpenseEditor.tsx\nsrc/ui/fixed/CandidateCard.tsx\nsrc/ui/debts/SplitPurchases.tsx\nsrc/ui/formats/WorkedOut.tsx\nsrc/ui/paychecks/FormatPicker.tsx\nsrc/ui/plan/PointsAt.tsx\nsrc/ui/screens/FeeImpact.tsx\nsrc/ui/transactions/DetailPanel.tsx\nsrc/ui/formats/surfaceRules.test.ts"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-a6c06a9697bceccf4
+commit: 4d33cb7
+report: Every platform select left outside the kit is ValueChoice: PlaceEditor (kind, its cash), HoldingEditor (kind), FixedExpenseEditor (how often, behaviour, matched by, deduction), CandidateCard (cadence), SplitPurchases (threshold, which keeps a value outside its list), WorkedOut (how close, a column - its empty option became a placeholder), FormatPicker, PointsAt (6, with FORM_CHOICE = its field look plus the kit's chevron), FeeImpact (fund) and DetailPanel (pays a card, bought or sold). Long lists filter past MENU_MOST; a paste still lands. None made a thing in place, so none gained + New. In PlaceEditor and HoldingEditor only the select lines and one import line changed, for the Wealth child's merge. All ten files join REVIEWED in surfaceRules.test.ts, which made FixedExpenseEditor's 16px literal text-heading. No src/ui/components change. probe:screens on year.emd (transactions, merchants, paychecks) reports selects 0 and the budget passes.
 
 ### M64 F3
 milestone: M64
@@ -18800,11 +18856,16 @@ report: New kit file src/ui/components/PanelForm.tsx: PanelForm (form, secondary
 milestone: Later
 scope: ui
 title: A new paycheck opens on the month that has none
-state: in_progress
+landed: 2026-11-26
+decision: D-634
+state: built
 brief: Paychecks' Add by hand (M64 F14, D-630) opens on blankDraft's previous month, and on the synthetic year that month (October) already has a slip, so the form opens saying 'October 2026 already has a paycheck'. Open it on the month after the newest slip when the previous month is taken (blankDraft in src/domain/paycheckEntry.ts or the caller in src/ui/screens/Paychecks.tsx), keep the note for a second slip typed on purpose, and test it.
+files: "src/domain/paycheckEntry.ts\nsrc/domain/paycheckEntry.test.ts\nsrc/ui/screens/Paychecks.tsx"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-a6c06a9697bceccf4
+commit: 4d33cb7
+report: blankDraft takes the slips' months: last month (F04), unless it already has a slip - then the month after the newest slip. Both callers in Paychecks.tsx (Add by hand, and Home's band arriving with add) pass them. The note about a second slip in a month is untouched. Three tests: the month after the newest when last month is taken, last month when only others are, across a year boundary. Verified on year.emd in this worktree's demo server: Add by hand opens on November 2026 with no 'already has a paycheck' note.
 
 ### M64 F32
 milestone: Later
@@ -18881,6 +18942,13 @@ brief: year.emd (scripts/demo-year.mjs) holds goals and a car loan but no pensio
 taken_by: run-milestone driver
 started: 2026-11-26
 branch: m64-redesign
+
+### M64 F43
+milestone: Later
+scope: ui
+title: WorkedOut, FormatPicker and SplitPurchases say their words through the catalogue
+state: planned
+brief: M64 F29 (D-634) turned their selects into ValueChoice, but their words are still inline English: WorkedOut's how close (exactly, ± an amount, ± a percent, nothing, total of), FormatPicker's Read with / no reader / Which reader reads this, and SplitPurchases' Offer purchases split into more than ... payments and its heading. Move them into the catalogue (en, he), add the files to src/i18n/words.test.ts's translated set, and check probe:screens --lang he on the routes that draw them. Files: src/ui/formats/WorkedOut.tsx, src/ui/paychecks/FormatPicker.tsx, src/ui/debts/SplitPurchases.tsx.
 
 ### M64 F49
 milestone: Later
