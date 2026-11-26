@@ -1313,42 +1313,6 @@ rather than adding a pattern.
 
 **Where.** `.claude/skills/redesign-screen/SKILL.md` (Where each thing opens), `DESIGN.md`.
 
-## D-620 · 2026-11-25 · Paychecks is rebuilt as the report: the month's paycheck in one sentence, net pay its one figure, the gross divided into taxes, funds, the rest and the net, each opening its lines beside the page (taxes by deduction type, month and year so far), what waits one strip below, net by month as the pager and every paycheck in a table; Deduction types reads as a table whose rows open their form beside it; a delete deletes at once with Undo where it happened, and the slip's form stays a page of its own <a id="d-620"></a>
-
-**Context.** M64 U8 redesigns Paychecks and Deduction types (D-614, D-615, D-617), with the jobs from
-U2's inventory: read a month's slip from gross to net, follow the net, see what went to the funds,
-check every month has a slip; and say what each line of a payslip is. Home's Taxes tile shows one
-figure a month (D-616), and Paychecks is where taxes are read in full by deduction type. The
-maintainer added to D-617 while the unit ran: a delete deletes at once with Undo near where it
-happened, the keys do what they do everywhere, and nothing moves under the pointer.
-
-**Decision.** Paychecks answers *what did my paycheck pay, and where did it go?* first, in words —
-one sentence, its amounts plain text so the screen keeps one display figure (net pay, against the
-three paychecks before) — then the gross divided by `MonthFlow` into taxes, funds, other deductions
-and the net. Each part opens its lines in the side panel: taxes by deduction type for the month and
-the year so far, the fund lines with the employer's side and where they pay into, the rest, where
-the net went; the gross opens the slip in full (lines, employer's side, totals, Edit and Delete), as
-does a row of *All paychecks*. What waits — a slip that does not add up, a saving line that pays into
-nothing, the bank disagreeing, a month with no slip — is one `WaitingList` below the answer. Net pay
-by month is the `MonthStrip` and pages the month; the bespoke net line, waterfall, drop box and full-page
-detail are gone. A visit can land on a month and a panel (`{ month, panel: 'tax' }`), which is
-how Home's Taxes tile can open toward it. Deduction types is a sentence and a table that reads; a row
-opens its form in the side panel (name, what the paycheck prints, kind as a `ChoiceField`, counts as,
-pays into, order, delete), and the likeliest link stays one click on the line. A paycheck or a type
-deletes at once, the note and its Undo in the panel and in the table where the row was, Ctrl+Z too;
-Delete on a focused row deletes it, Up and Down walk the rows, Enter opens. `MonthFlow` gains an
-optional `onOpen`; the domain gains `slipParts` and `totalsByType` so the screen sums nothing. Both
-routes leave the budget's `exempt` list, their words the catalogue's (`paychecks`, English and Hebrew).
-
-**Why.** The slip's form stays a page of its own rather than a panel form: a payslip is a dozen
-fields copied off paper with the reconciliation watched while they are typed, and it is the same form
-the reading flow confirms a read slip in — a job that takes over until it adds up, D-617's fourth
-place. An undo beats a confirmation wherever a paycheck can be written back, which it can.
-
-**Where.** `src/ui/screens/Paychecks.tsx`, `src/ui/paychecks/PaychecksPanel.tsx`,
-`src/ui/paychecks/WhereItWent.tsx`, `src/ui/screens/DeductionTypes.tsx`, `src/ui/charts/MonthFlow.tsx`,
-`src/domain/paycheck.ts`, `src/i18n/*/paychecks.ts`, `docs/redesign/budget.json`.
-
 ## D-618 · 2026-11-25 · Transactions is rebuilt as the report: each tab answers first in one sentence, its views are one tab strip, a row, a rule from a fix and what is left out open beside the rows, a selection acts from the table's own header row, and what was just done keeps its place with its Undo <a id="d-618"></a>
 
 **Context.** M64 U6 redesigned Transactions (All rows) and By merchant after Home (D-616), with
@@ -1422,6 +1386,42 @@ name needs `Bidi`. A select-all box in the header — a judgement left for the r
 **Where.** `src/ui/screens/ReadStatements.tsx`, `src/ui/import/GapPanel.tsx`, `src/ui/screens/Readers.tsx`,
 `src/ui/paychecks/ReadSlips.tsx`, `src/ui/components/ConfirmAtButton.tsx`, `src/ui/import/MapperScreen.tsx`,
 the two foot bars, `docs/redesign/budget.json`.
+
+## D-620 · 2026-11-25 · Paychecks is rebuilt as the report: the month's paycheck in one sentence, net pay its one figure, the gross divided into taxes, funds, the rest and the net, each opening its lines beside the page (taxes by deduction type, month and year so far), what waits one strip below, net by month as the pager and every paycheck in a table; Deduction types reads as a table whose rows open their form beside it; a delete deletes at once with Undo where it happened, and the slip's form stays a page of its own <a id="d-620"></a>
+
+**Context.** M64 U8 redesigns Paychecks and Deduction types (D-614, D-615, D-617), with the jobs from
+U2's inventory: read a month's slip from gross to net, follow the net, see what went to the funds,
+check every month has a slip; and say what each line of a payslip is. Home's Taxes tile shows one
+figure a month (D-616), and Paychecks is where taxes are read in full by deduction type. The
+maintainer added to D-617 while the unit ran: a delete deletes at once with Undo near where it
+happened, the keys do what they do everywhere, and nothing moves under the pointer.
+
+**Decision.** Paychecks answers *what did my paycheck pay, and where did it go?* first, in words —
+one sentence, its amounts plain text so the screen keeps one display figure (net pay, against the
+three paychecks before) — then the gross divided by `MonthFlow` into taxes, funds, other deductions
+and the net. Each part opens its lines in the side panel: taxes by deduction type for the month and
+the year so far, the fund lines with the employer's side and where they pay into, the rest, where
+the net went; the gross opens the slip in full (lines, employer's side, totals, Edit and Delete), as
+does a row of *All paychecks*. What waits — a slip that does not add up, a saving line that pays into
+nothing, the bank disagreeing, a month with no slip — is one `WaitingList` below the answer. Net pay
+by month is the `MonthStrip` and pages the month; the bespoke net line, waterfall, drop box and full-page
+detail are gone. A visit can land on a month and a panel (`{ month, panel: 'tax' }`), which is
+how Home's Taxes tile can open toward it. Deduction types is a sentence and a table that reads; a row
+opens its form in the side panel (name, what the paycheck prints, kind as a `ChoiceField`, counts as,
+pays into, order, delete), and the likeliest link stays one click on the line. A paycheck or a type
+deletes at once, the note and its Undo in the panel and in the table where the row was, Ctrl+Z too;
+Delete on a focused row deletes it, Up and Down walk the rows, Enter opens. `MonthFlow` gains an
+optional `onOpen`; the domain gains `slipParts` and `totalsByType` so the screen sums nothing. Both
+routes leave the budget's `exempt` list, their words the catalogue's (`paychecks`, English and Hebrew).
+
+**Why.** The slip's form stays a page of its own rather than a panel form: a payslip is a dozen
+fields copied off paper with the reconciliation watched while they are typed, and it is the same form
+the reading flow confirms a read slip in — a job that takes over until it adds up, D-617's fourth
+place. An undo beats a confirmation wherever a paycheck can be written back, which it can.
+
+**Where.** `src/ui/screens/Paychecks.tsx`, `src/ui/paychecks/PaychecksPanel.tsx`,
+`src/ui/paychecks/WhereItWent.tsx`, `src/ui/screens/DeductionTypes.tsx`, `src/ui/charts/MonthFlow.tsx`,
+`src/domain/paycheck.ts`, `src/i18n/*/paychecks.ts`, `docs/redesign/budget.json`.
 
 ## D-621 · 2026-11-25 · Plan is rebuilt as the report: net pay and what the bills take first said as one sentence with whether every shekel has a job, to split its one figure, what waits one strip below it, the split's bar with each bucket held against a month, and the bills one row each with its one choice in place; a bucket, a bill, net pay, the cushion and the plan's months open beside the page <a id="d-621"></a>
 
