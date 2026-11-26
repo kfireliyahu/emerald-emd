@@ -537,6 +537,7 @@ written out here.
 | D-636 | 2026-11-26 | A file is read through a door named for its kind and drawn with its glyph: Home's header carries *Read bank and card statements* (filled) with *Read paychecks* beside it — one button per kind, not one *Read files* that asks the kind; a fund report is read from its fund as *Read a fund report*; the palette names all three; a waiting line opens its own kind's reader; and a file picked or dropped anywhere is still read as what it is | M64 |
 | D-637 | 2026-11-26 | A sentence the engine builds whose parts are sentences of their own is a `Spoken` — a key and parts that may be `Spoken` too — whose English the engine renders from a table the catalogue's English must equal; a helper in `src/ui/formats/` takes a `t` that defaults to English instead; and a sentence says a format by its title in Hebrew, never by an English plural | M64 |
 | D-639 | 2026-11-26 | Wealth's details spend only the list's seven type steps — a label is a caption, a figure that does not answer its section is the heading step, the one that does is the kit's tile step — and one primary: the fund detail's Add reading is secondary beside the list's; a detail route is budgeted by `:id`, whichever row it opens; a wealth tag is text and a dot; and a holding reading's refusal is a code and its parts, said by the screen | M64 |
+| D-640 | 2026-11-26 | A debt's payoff month is one calculation, `payoffMonth` in `src/domain/debt.ts`, which the debt's detail and the Debts list both read: the payments still to make start in the month after the newest one already recorded, or this month while this month's has not landed | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -2230,3 +2231,37 @@ English sentences made in the data layer, the screen deciding a clash by
 list says disagree (M64 F58); the fund detail's month and period tables and the readings table are
 wider than the detail's column (M64 F59); the fund and goal details do not yet say their answer
 first in words (M64 F60).
+
+## D-640 · 2026-11-26 · A debt's payoff month is one calculation, `payoffMonth` in `src/domain/debt.ts`, which the debt's detail and the Debts list both read: the payments still to make start in the month after the newest one already recorded, or this month while this month's has not landed <a id="d-640"></a>
+
+**Context.** M64 F58, found in M64 F46's taste check on year.emd: the Car loan's detail said *Clear by
+February 2027* while the Debts list beside it said *Paid off Mar 2027*, both at ₪2,000 a month. Each
+counted the month itself. `projectPayoff` (the detail, the `debts` and `debt_projection` tools) took
+`from + months − 1`, its comment saying a debt with one month to go finishes this month; `debtStatus`
+(the list) took `from + months`.
+
+**Which was right.** On year.emd, built on 25 November, the loan is ₪36,000 and has been paid ₪2,000 a
+month for fourteen months — the standing ₪1,000 on the 12th and Plan's ₪1,000 extra on the 1st — so
+₪8,000 is left: four more payments. The balance already has November's two in it, so the four are
+December, January, February and March. The list was right; the detail named November as a payment
+month though November's payment was already subtracted. Neither rule is right always: on 5 November,
+with October's payment the newest, the four are November to February, and the list would be a month
+late.
+
+**Decision.**
+
+1. **One calculation.** `paymentsToClear(left, each)` counts the payments (ceiling division on minor
+   units; 0 when nothing is left, nothing when nothing goes in or past the 600-month horizon), and
+   `payoffMonth(from, payments, lastPaid)` names the month the last lands in. `projectPayoff` and
+   `debtStatus` both call them; `DebtLine` carries `lastPaid`, from `lastPaymentMonth`.
+2. **The count starts after what is already in the balance**: the month after the newest payment in
+   the debt's currency when that month is this one (or later), otherwise this month. A debt with no
+   payments, on its expected figure, starts this month.
+3. **Pinned twice**: the domain cases in `src/domain/debt.test.ts` and
+   `src/data/repositories/debtPlanRepository.test.ts`, and `src/demo/year.test.ts`, which builds the
+   synthetic year and checks the detail's month and the list's month are both March 2027.
+
+**Left as it is.** The two screens still choose their monthly figure apart: the detail prefers what
+was paid lately and falls back to the debt's expected payment; the list prefers the standing order
+and adds Plan's extra. On year.emd they agree (₪2,000 each way); where the observed rate and standing
+order plus extra differ, the months still can (Q75).

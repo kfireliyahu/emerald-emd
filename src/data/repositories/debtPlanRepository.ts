@@ -2,6 +2,7 @@ import type { Database } from 'sql.js'
 
 import { money, type CurrencyCode, type Money } from '@/core/money.ts'
 import { yearMonthOf, type LocalDate, type YearMonth } from '@/core/time.ts'
+import { lastPaymentMonth } from '@/domain/debt.ts'
 import { debtStatus, leftAfter, type DebtLine, type DebtStatus } from '@/domain/debtPlan.ts'
 import { goalMonthlyFromPlan } from '@/domain/goalPlan.ts'
 import { debtsSummary, type DebtRow } from './debtRepository.ts'
@@ -67,6 +68,7 @@ export function debtsPlan(db: Database, asOf: LocalDate, currency: CurrencyCode)
       paymentSource:
         standing !== undefined ? 'STANDING_ORDER' : observed !== undefined ? 'OBSERVED' : 'NONE',
       extra: amount,
+      lastPaid: lastPaymentMonth(row.payments, currency),
     }
     return { row, line, bucketIds, status: debtStatus(line, month) }
   })

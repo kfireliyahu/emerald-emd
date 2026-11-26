@@ -50,6 +50,7 @@ import { normalizeMerchant } from '@/core/text.ts'
 import {
   addMonths,
   compareDates,
+  compareYearMonths,
   monthsBetween,
   toYearMonthString,
   yearMonthOf,
@@ -257,6 +258,58 @@ export const RECENT_PAYMENT_MONTHS = 3
 export const PAYOFF_HORIZON_MONTHS = 600
 
 /**
+ * How many monthly payments of `each` clear `left`: 0 when nothing is left,
+ * `undefined` when nothing goes in or it would take past the horizon.
+ *
+ * Ceiling division on minor units — a last, smaller payment is still a month.
+ */
+export function paymentsToClear(left: Money, each: Money): number | undefined {
+  if (left.minor <= 0) return 0
+  if (each.minor <= 0) return undefined
+  const months = Math.ceil(left.minor / each.minor)
+  return months > PAYOFF_HORIZON_MONTHS ? undefined : months
+}
+
+/** The newest month a payment in `currency` landed in, if any did. */
+export function lastPaymentMonth(
+  payments: readonly DebtPayment[],
+  currency: CurrencyCode,
+): YearMonth | undefined {
+  let newest: YearMonth | undefined
+  for (const payment of payments) {
+    if (payment.amount.currency !== currency) continue
+    const month = yearMonthOf(payment.date)
+    if (newest === undefined || compareYearMonths(month, newest) > 0) newest = month
+  }
+  return newest
+}
+
+/**
+ * The month the last of `payments` monthly payments lands in (M64 F58, D-640) —
+ * the one month the debt's detail ("Clear by") and the Debts list ("Paid off")
+ * both print. They counted it apart and were a month apart.
+ *
+ * **What is left is after every payment recorded**, so the payments still to make
+ * start in the first month nothing has been paid in yet: this month while its
+ * payment has not landed, the month after the newest payment once it has.
+ * Counting from this month regardless names, as the month it clears, one whose
+ * payment is already in the balance; counting from next month regardless puts a
+ * debt whose payment is still due a month late.
+ *
+ * `from` is the month to count from, passed in rather than read off a clock
+ * (D-062). `payments` is at least 1 — `paymentsToClear` says when it is 0.
+ */
+export function payoffMonth(
+  from: YearMonth,
+  payments: number,
+  lastPaid: YearMonth | undefined,
+): YearMonth {
+  const first =
+    lastPaid !== undefined && compareYearMonths(lastPaid, from) >= 0 ? addMonths(lastPaid, 1) : from
+  return addMonths(first, Math.max(1, payments) - 1)
+}
+
+/**
  * Where the monthly figure a projection divides by came from.
  *
  * `OBSERVED` is measured from what has actually been paid and wins when there is
@@ -384,19 +437,16 @@ export function projectPayoff(
 
   if (monthlyPrincipal.minor <= 0) return { kind: 'NOT_REDUCING', basis }
 
-  const months = Math.ceil(balance.outstanding.minor / monthlyPrincipal.minor)
-  if (months > PAYOFF_HORIZON_MONTHS) {
-    return { kind: 'BEYOND_HORIZON', basis, monthlyPrincipal }
-  }
+  const months = paymentsToClear(balance.outstanding, monthlyPrincipal)
+  if (months === undefined) return { kind: 'BEYOND_HORIZON', basis, monthlyPrincipal }
+  if (months === 0) return { kind: 'SETTLED' }
 
   return {
     kind: 'PROJECTED',
     basis,
     monthlyPrincipal,
     months,
-    // The last payment lands at the end of the run, so a debt with one month to
-    // go finishes this month rather than next.
-    period: addMonths(from, months - 1),
+    period: payoffMonth(from, months, lastPaymentMonth(payments, currency)),
   }
 }
 

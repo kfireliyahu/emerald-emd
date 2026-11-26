@@ -19,8 +19,8 @@
  */
 
 import { money, type Money } from '@/core/money.ts'
-import { addMonths, type YearMonth } from '@/core/time.ts'
-import { PROJECTION_LIMIT_MONTHS } from '@/domain/goalPlan.ts'
+import type { YearMonth } from '@/core/time.ts'
+import { paymentsToClear, payoffMonth } from '@/domain/debt.ts'
 
 export interface DebtLine {
   readonly debtId: string
@@ -33,6 +33,8 @@ export interface DebtLine {
   readonly paymentSource: 'STANDING_ORDER' | 'OBSERVED' | 'NONE'
   /** What Plan puts toward it each month, on top. */
   readonly extra: Money
+  /** The newest month a payment already landed in, so the count starts after it (D-640). */
+  readonly lastPaid?: YearMonth | undefined
 }
 
 /** What is left after `months`, with the extra or without it. Never below zero. */
@@ -43,11 +45,8 @@ export function leftAfter(line: DebtLine, months: number, withExtra = true): Mon
 
 /** Months until nothing is left. 0 when it is paid already; `undefined` when never. */
 export function monthsToPayOff(line: DebtLine, withExtra = true): number | undefined {
-  if (line.left.minor <= 0) return 0
   const each = Math.max(0, line.payment.minor) + (withExtra ? Math.max(0, line.extra.minor) : 0)
-  if (each <= 0) return undefined
-  const months = Math.ceil(line.left.minor / each)
-  return months > PROJECTION_LIMIT_MONTHS ? undefined : months
+  return paymentsToClear(line.left, money(each, line.left.currency))
 }
 
 export type DebtStatus =
@@ -63,7 +62,8 @@ export function debtStatus(line: DebtLine, from: YearMonth): DebtStatus {
   const without = line.extra.minor > 0 ? monthsToPayOff(line, false) : months
   return {
     kind: 'PAID_OFF',
-    at: addMonths(from, months),
+    // The detail's month too: one calculation, so the two screens cannot be a month apart (D-640).
+    at: payoffMonth(from, months, line.lastPaid),
     sooner: without === undefined ? undefined : without > months ? without - months : undefined,
   }
 }

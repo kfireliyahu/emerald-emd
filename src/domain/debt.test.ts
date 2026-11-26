@@ -34,6 +34,9 @@ import {
   paymentWarnings,
   payrollPaymentRef,
   draftPrincipalPart,
+  lastPaymentMonth,
+  paymentsToClear,
+  payoffMonth,
   projectPayoff,
   trackingOffer,
   validateDebt,
@@ -454,6 +457,53 @@ describe('projectPayoff', () => {
 
     expect(fromAugust).toMatchObject({ months: 3, period: { year: 2026, month: 10 } })
     expect(fromJanuary).toMatchObject({ months: 3, period: { year: 2027, month: 3 } })
+  })
+})
+
+describe('the payoff month (D-640)', () => {
+  const NOVEMBER: YearMonth = { year: 2026, month: 11 }
+
+  it('counts payments by ceiling division, and says never rather than a number', () => {
+    expect(paymentsToClear(ils(8_000_00), ils(2_000_00))).toBe(4)
+    expect(paymentsToClear(ils(8_000_01), ils(2_000_00))).toBe(5)
+    expect(paymentsToClear(ils(0), ils(2_000_00))).toBe(0)
+    expect(paymentsToClear(ils(8_000_00), ils(0))).toBeUndefined()
+    expect(paymentsToClear(ils(2_000_000_00), ils(100_00))).toBeUndefined()
+  })
+
+  it('starts after a month whose payment is already in the balance', () => {
+    // ₪8,000 left at ₪2,000 a month, November's payment made: December, January,
+    // February, March.
+    expect(payoffMonth(NOVEMBER, 4, NOVEMBER)).toEqual({ year: 2027, month: 3 })
+    expect(payoffMonth(NOVEMBER, 1, NOVEMBER)).toEqual({ year: 2026, month: 12 })
+  })
+
+  it('starts this month while its payment has not landed', () => {
+    expect(payoffMonth(NOVEMBER, 4, { year: 2026, month: 10 })).toEqual({ year: 2027, month: 2 })
+    expect(payoffMonth(NOVEMBER, 4, undefined)).toEqual({ year: 2027, month: 2 })
+    expect(payoffMonth(NOVEMBER, 1, undefined)).toEqual(NOVEMBER)
+  })
+
+  it('reads the newest payment month in the debt’s currency', () => {
+    const payments = [
+      payment({ date: localDate(2026, 9, 12), amount: ils(1_000_00) }),
+      payment({ date: localDate(2026, 11, 1), amount: money(300_00, 'USD') }),
+      payment({ date: localDate(2026, 10, 12), amount: ils(1_000_00) }),
+    ]
+    expect(lastPaymentMonth(payments, ILS)).toEqual({ year: 2026, month: 10 })
+    expect(lastPaymentMonth([], ILS)).toBeUndefined()
+  })
+
+  it('projects from the month after this month’s payment', () => {
+    const paid = [9, 10, 11].map((month) =>
+      payment({ date: localDate(2026, month, 12), amount: ils(2_000_00) }),
+    )
+    // ₪14,000 less ₪6,000 is ₪8,000: four more at ₪2,000, the first in December.
+    expect(project(debt({ principalAmount: ils(14_000_00) }), paid, NOVEMBER)).toMatchObject({
+      kind: 'PROJECTED',
+      months: 4,
+      period: { year: 2027, month: 3 },
+    })
   })
 })
 

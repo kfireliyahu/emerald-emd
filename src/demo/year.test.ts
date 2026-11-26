@@ -18,6 +18,9 @@ import { join } from 'node:path'
 
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
+import { debtsPlan } from '@/data/repositories/debtPlanRepository.ts'
+import { debtDetail } from '@/data/repositories/debtRepository.ts'
+import { openDocument } from '@/plugin/document.ts'
 import { ENGINE_TOOLS, LEDGER_TOOLS } from '@/plugin/server.ts'
 import { NO_CLIENT } from '@/plugin/tools/tool.ts'
 import { tempDir } from '@/testing/tempDir.ts'
@@ -115,5 +118,30 @@ describe('the synthetic year', () => {
     const backlog = await ask('uncategorized_merchants', { path: target })
     expect(backlog).toContain('חנות הפינה הבדויה')
     expect(backlog).toContain('Pixel Arcade')
+  })
+
+  it('names one payoff month for the car loan on its detail and on the Debts list (D-640)', async () => {
+    const opened = await openDocument(target)
+    if (!opened.ok) throw new Error('year.emd did not open')
+    const { db } = opened.value
+    try {
+      const from = { year: TODAY.year, month: TODAY.month }
+      const [row] = debtsPlan(db, TODAY, 'ILS').rows
+      if (row === undefined) throw new Error('no debt on the Debts list')
+      const detail = debtDetail(db, row.line.debtId, from)
+      if (detail?.projection.kind !== 'PROJECTED' || row.status.kind !== 'PAID_OFF') {
+        throw new Error(`no projection: ${JSON.stringify([detail?.projection, row.status])}`)
+      }
+      // ₪36,000 less ₪2,000 a month for fourteen months (the standing ₪1,000 on the
+      // 12th and Plan's ₪1,000 extra on the 1st) leaves ₪8,000: four more months at
+      // ₪2,000. November's two are already in the balance, so the four are December
+      // to March — not November to February, which the detail used to say.
+      expect(row.line.left.minor).toBe(8_000_00)
+      expect(detail.projection.monthlyPrincipal.minor).toBe(row.line.payment.minor + row.line.extra.minor)
+      expect(detail.projection.period).toEqual({ year: 2027, month: 3 })
+      expect(row.status.at).toEqual(detail.projection.period)
+    } finally {
+      db.close()
+    }
   })
 })

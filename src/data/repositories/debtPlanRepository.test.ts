@@ -66,10 +66,15 @@ describe('plain addition over a debt', () => {
   })
 
   it('says how many months the extra saves', () => {
+    // Nothing paid yet this month: the seven are October to April.
     expect(debtStatus(line, { year: 2026, month: 10 })).toEqual({
       kind: 'PAID_OFF',
-      at: { year: 2027, month: 5 },
+      at: { year: 2027, month: 4 },
       sooner: 3,
+    })
+    // October's payment already in the balance: the seven start in November (D-640).
+    expect(debtStatus({ ...line, lastPaid: { year: 2026, month: 10 } }, { year: 2026, month: 10 })).toMatchObject({
+      at: { year: 2027, month: 5 },
     })
     expect(debtStatus({ ...line, left: ils(0) }, { year: 2026, month: 10 })).toEqual({ kind: 'PAID' })
     expect(debtStatus({ ...line, payment: ils(0), extra: ils(0) }, { year: 2026, month: 10 }).kind).toBe(
