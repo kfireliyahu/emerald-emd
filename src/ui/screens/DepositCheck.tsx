@@ -2,18 +2,20 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { formatMoney, sum, type CurrencyCode } from '@/core/money.ts'
-import { formatMonthShort, formatYearMonth, toISODate } from '@/core/time.ts'
+import { toISODate } from '@/core/time.ts'
 import {
   acknowledgeDepositGap,
   fundDepositChecks,
   listFundsWithLatest,
 } from '@/data/repositories/fundRepository.ts'
 import type { DepositReconciliation, FundWithLatest } from '@/domain/funds.ts'
+import { countKey } from '@/i18n/count.ts'
+import { useDates, useT, type Translate } from '@/i18n/current.ts'
+import type { DateWords } from '@/i18n/dates.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { Chip } from '@/ui/components/Chip.tsx'
-import { DEPOSIT_STATUS_LABEL, FUND_TYPE_LABEL } from '@/ui/funds/labels.ts'
 
 /**
  * Every fund's deposits against every payslip — docs/f13's cross-fund check, and
@@ -44,6 +46,8 @@ export function DepositCheck() {
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
   const mutate = useDocumentStore((state) => state.mutate)
+  const t = useT()
+  const dates = useDates()
 
   const [problem, setProblem] = useState<string | undefined>()
 
@@ -64,7 +68,7 @@ export function DepositCheck() {
   )
 
   if (db === undefined) {
-    return <Centered>Open a document to check what reached your funds.</Centered>
+    return <Centered>{t('wealth.depositCheck.noDocument')}</Centered>
   }
 
   // Funds says *no funds yet* itself, above where this section would be.
@@ -97,7 +101,7 @@ export function DepositCheck() {
         <div className="flex shrink-0 items-center gap-4 border-b border-hairline bg-surface px-6 py-2">
           <span className="text-negative">{problem}</span>
           <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setProblem(undefined)}>
-            Dismiss
+            {t('wealth.common.dismiss')}
           </Button>
         </div>
       )}
@@ -109,8 +113,8 @@ export function DepositCheck() {
               the app has never been able to look at — the misleading zero
               docs/f13 forbids and docs/08 keeps as a standing rule. */}
           <Figure
-            label="Unaccounted for"
-            hint={headlineHint(checked.length, missing.length, unchecked.length)}
+            label={t('wealth.depositCheck.unaccounted')}
+            hint={headlineHint(checked.length, missing.length, unchecked.length, t)}
           >
             {checked.length === 0 ? (
               <span className="text-hero text-ink-secondary">—</span>
@@ -121,7 +125,7 @@ export function DepositCheck() {
             )}
           </Figure>
 
-          <Figure label="Funds checked" hint={`of ${String(rows.length)} in this document`}>
+          <Figure label={t('wealth.depositCheck.checked')} hint={t('wealth.depositCheck.checkedOf', { count: rows.length })}>
             <span className="text-secondary-number tabular-nums">{checked.length}</span>
           </Figure>
         </div>
@@ -138,22 +142,17 @@ export function DepositCheck() {
                 }
               />
             ))}
-            <p className="max-w-3xl px-6 py-4 text-caption text-ink-secondary">
-              Each fund is compared cumulatively over the longest run of readings that state what
-              arrived, with the salary months shifted back by the employer's lag. A single month
-              never looks right on its own — that is what the lag is for — so the comparison is
-              always of totals. The per-window working is on each fund's own screen.
-            </p>
+            <p className="max-w-3xl px-6 py-4 text-caption text-ink-secondary">{t('wealth.depositCheck.how')}</p>
           </>
         )}
 
         {unchecked.length > 0 && (
           <>
             <h2 className="border-b border-hairline px-6 pt-6 pb-2 text-label text-ink-secondary uppercase">
-              Not checkable yet — and what each one needs
+              {t('wealth.depositCheck.notYet')}
             </h2>
             {unchecked.map(({ entry, check }) => (
-              <UncheckedRow key={entry.fund.id} entry={entry} check={check} />
+              <UncheckedRow key={entry.fund.id} entry={entry} check={check} t={t} dates={dates} />
             ))}
           </>
         )}
@@ -165,17 +164,13 @@ export function DepositCheck() {
 /** The one variant this screen can actually judge. */
 type Checked = Extract<DepositReconciliation, { kind: 'CHECKED' }>
 
-function headlineHint(checked: number, missing: number, unchecked: number): string {
+function headlineHint(checked: number, missing: number, unchecked: number, t: Translate): string {
   if (checked === 0) {
-    return unchecked === 1
-      ? 'no fund can be checked yet — see below for what it needs'
-      : 'no fund can be checked yet — see below for what each one needs'
+    return unchecked === 1 ? t('wealth.depositCheck.noneOne') : t('wealth.depositCheck.noneMany')
   }
-  const tail = unchecked === 0 ? '' : `, and ${String(unchecked)} could not be checked`
-  if (missing === 0) {
-    return `every fund that could be checked adds up${tail}`
-  }
-  return missing === 1 ? `on one fund${tail}` : `across ${String(missing)} funds${tail}`
+  const tail = unchecked === 0 ? '' : t(countKey('wealth.depositCheck.tail', unchecked), { count: unchecked })
+  if (missing === 0) return t('wealth.depositCheck.allAdd', { tail })
+  return missing === 1 ? t('wealth.depositCheck.oneFund', { tail }) : t('wealth.depositCheck.manyFunds', { count: missing, tail })
 }
 
 function CheckedRow({
@@ -189,6 +184,8 @@ function CheckedRow({
 }) {
   const { fund } = entry
   const missing = check.status === 'DEPOSITS_MISSING'
+  const t = useT()
+  const dates = useDates()
 
   return (
     <section className="border-b border-hairline px-6 py-4">
@@ -201,27 +198,30 @@ function CheckedRow({
             <Bidi>{fund.name}</Bidi>
           </Link>
           <p className="mt-0.5 text-caption text-ink-secondary tabular-nums">
-            {FUND_TYPE_LABEL[fund.fundType]} · {formatMonthShort(check.window.salaryFrom)} to{' '}
-            {formatMonthShort(check.window.salaryTo)} · {check.expected.paycheckCount}{' '}
-            {check.expected.paycheckCount === 1 ? 'paycheck' : 'paychecks'}
+            {t(countKey('wealth.depositCheck.window', check.expected.paycheckCount), {
+              type: t(`wealth.kinds.fund.${fund.fundType}`),
+              from: dates.monthShort(check.window.salaryFrom),
+              to: dates.monthShort(check.window.salaryTo),
+              count: check.expected.paycheckCount,
+            })}
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-1">
-            <Chip problem={missing}>{DEPOSIT_STATUS_LABEL[check.status]}</Chip>
-            {fund.isArchived && <Chip>Archived</Chip>}
+            <Chip problem={missing}>{t(`wealth.kinds.deposit.${check.status}`)}</Chip>
+            {fund.isArchived && <Chip>{t('wealth.depositCheck.archived')}</Chip>}
           </div>
         </div>
 
-        <Figure label="Paychecks say" hint="due over the window">
+        <Figure label={t('wealth.depositCheck.paychecksSay')} hint={t('wealth.depositCheck.paychecksSayHint')}>
           <span className="text-secondary-number tabular-nums">
             {formatMoney(check.expected.total)}
           </span>
         </Figure>
 
-        <Figure label="Fund says" hint={`through ${toISODate(check.window.to)}`}>
+        <Figure label={t('wealth.depositCheck.fundSays')} hint={t('wealth.depositCheck.through', { date: toISODate(check.window.to) })}>
           <span className="text-secondary-number tabular-nums">{formatMoney(check.reported)}</span>
         </Figure>
 
-        <Figure label="Difference" hint={`tolerance ${formatMoney(check.tolerance)}`}>
+        <Figure label={t('wealth.depositCheck.difference')} hint={t('wealth.depositCheck.tolerance', { amount: formatMoney(check.tolerance) })}>
           <span className={`text-secondary-number tabular-nums ${missing ? 'text-negative' : ''}`}>
             {formatMoney(check.gap)}
           </span>
@@ -238,18 +238,14 @@ function CheckedRow({
               size="sm"
               onClick={() => onAcknowledge(check.status !== 'ACKNOWLEDGED')}
             >
-              {check.status === 'ACKNOWLEDGED' ? 'Report this again' : 'Chased and explained'}
+              {check.status === 'ACKNOWLEDGED' ? t('wealth.depositCheck.again') : t('wealth.depositCheck.chased')}
             </Button>
           </div>
         )}
       </div>
 
       {missing && (
-        <p className="mt-3 max-w-3xl text-caption text-ink-secondary">
-          Ask the fund for a deposit statement for these months and compare it against your
-          paychecks. If the employer paid late rather than not at all, the next reading absorbs it —
-          mark it chased so this stops asking.
-        </p>
+        <p className="mt-3 max-w-3xl text-caption text-ink-secondary">{t('wealth.depositCheck.missingHow')}</p>
       )}
     </section>
   )
@@ -265,9 +261,13 @@ function CheckedRow({
 function UncheckedRow({
   entry,
   check,
+  t,
+  dates,
 }: {
   entry: FundWithLatest
   check: DepositReconciliation | undefined
+  t: Translate
+  dates: DateWords
 }) {
   const { fund } = entry
 
@@ -279,29 +279,25 @@ function UncheckedRow({
       >
         <Bidi>{fund.name}</Bidi>
       </Link>
-      <span className="max-w-2xl flex-[2] text-ink-secondary">{reason(check)}</span>
+      <span className="max-w-2xl flex-[2] text-ink-secondary">{reason(check, t, dates)}</span>
     </section>
   )
 }
 
-function reason(check: DepositReconciliation | undefined): string {
-  if (check === undefined) return 'Not checked.'
+function reason(check: DepositReconciliation | undefined, t: Translate, dates: DateWords): string {
+  if (check === undefined) return t('wealth.depositCheck.reason.none')
   if (check.kind === 'NEEDS_TWO_POINTS') {
-    return check.snapshotCount === 0
-      ? 'No readings yet. Two are what a deposit check compares between.'
-      : 'One reading. A second is what makes a comparison possible.'
+    return check.snapshotCount === 0 ? t('wealth.depositCheck.reason.noReadings') : t('wealth.depositCheck.reason.oneReading')
   }
-  if (check.kind === 'NO_FUND_REPORT') {
-    return 'No reading says what the fund received — the "הפקדות" figure on the report. Add it to a reading and this fund starts being checked.'
-  }
+  if (check.kind === 'NO_FUND_REPORT') return t('wealth.depositCheck.reason.noReport')
   if (check.kind === 'WINDOW_TOO_SHORT') {
-    return `Two readings inside one month (${toISODate(check.from)} to ${toISODate(check.to)}) is too short a window to compare against a monthly payroll.`
+    return t('wealth.depositCheck.reason.tooShort', { from: toISODate(check.from), to: toISODate(check.to) })
   }
-  return `The fund reports ${formatMoney(check.reported)} arriving between ${formatYearMonth(
-    check.window.salaryFrom,
-  )} and ${formatYearMonth(
-    check.window.salaryTo,
-  )}, and there are no paychecks covering those months to compare it against.`
+  return t('wealth.depositCheck.reason.noPayslips', {
+    amount: formatMoney(check.reported),
+    from: dates.yearMonth(check.window.salaryFrom),
+    to: dates.yearMonth(check.window.salaryTo),
+  })
 }
 
 function Figure({

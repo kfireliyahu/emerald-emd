@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import type { Database } from 'sql.js'
 
 import { formatMoney, fromMajorUnits, money, toDecimalString, type CurrencyCode, type Money } from '@/core/money.ts'
-import { formatDayMonth, parseISODate, toISODate, type LocalDate } from '@/core/time.ts'
+import { parseISODate, toISODate, type LocalDate } from '@/core/time.ts'
 import { parseAmountText } from '@/data/importer/normalize.ts'
 import { setOpeningBalance, type AccountBalance } from '@/data/repositories/accountBalanceRepository.ts'
 import type { CushionReading } from '@/data/repositories/cushionRepository.ts'
@@ -34,10 +34,14 @@ import {
 import type { HoldingWorth } from '@/domain/holdingReadings.ts'
 import type { Holding } from '@/domain/model/savings.ts'
 import { provenanceOf, type HoldingBalance } from '@/domain/savings.ts'
+import { countKey } from '@/i18n/count.ts'
+import { useDates, useT, type Translate } from '@/i18n/current.ts'
+import type { DateWords } from '@/i18n/dates.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { ChoiceField } from '@/ui/components/ChoiceField.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { CushionHere, StatementBar, type Write } from '@/ui/savings/Cushion.tsx'
 import { blankHolding, HoldingEditor } from '@/ui/savings/HoldingEditor.tsx'
 import { checkedOf } from '@/ui/savings/holdingCheck.ts'
@@ -77,6 +81,7 @@ const LINK = 'text-accent hover:underline'
 export function OpenedRow({ row, opening }: { row: Extract<NetWorthRow, { kind: 'ACCOUNT' | 'PLACE' }>; opening: Opening }) {
   const [mode, setMode] = useState<Mode>({ kind: 'LINES' })
   const [confirming, setConfirming] = useState<string | undefined>()
+  const t = useT()
   const place = row.place
   const placeName = row.kind === 'ACCOUNT' ? row.account.name : (place?.place?.name ?? '')
   const close = (): void => setMode({ kind: 'LINES' })
@@ -122,20 +127,20 @@ export function OpenedRow({ row, opening }: { row: Extract<NetWorthRow, { kind: 
         {!isNew && (
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="ghost" size="sm" onClick={() => write((database, now) => setHoldingArchived(database, holding.id, !holding.isArchived, now)) && close()}>
-              {holding.isArchived ? 'Unarchive this holding' : 'Archive this holding'}
+              {holding.isArchived ? t('wealth.opened.unarchiveHolding') : t('wealth.opened.archiveHolding')}
             </Button>
             {confirming === holding.id ? (
               <>
                 <Button variant="ghost" size="sm" onClick={() => write((database, now) => deleteHolding(database, holding.id, now)) && close()}>
-                  Really delete
+                  {t('wealth.opened.reallyDelete')}
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => setConfirming(undefined)}>
-                  Keep
+                  {t('wealth.opened.keep')}
                 </Button>
               </>
             ) : (
               <Button variant="ghost" size="sm" onClick={() => setConfirming(holding.id)}>
-                Delete this holding
+                {t('wealth.opened.deleteHolding')}
               </Button>
             )}
           </div>
@@ -204,12 +209,10 @@ export function OpenedRow({ row, opening }: { row: Extract<NetWorthRow, { kind: 
         <BankInside row={row} opening={opening} onEdit={editHolding} />
       ) : (
         <div className="flex flex-col gap-1">
-          <span className={LABEL}>{row.kind === 'ACCOUNT' ? 'What it holds' : 'What is here'}</span>
+          <span className={LABEL}>{row.kind === 'ACCOUNT' ? t('wealth.opened.holds') : t('wealth.opened.here')}</span>
           {place === undefined || place.holdings.length === 0 ? (
             <p className="m-0 text-caption text-ink-secondary">
-              {row.kind === 'ACCOUNT'
-                ? 'Nothing is held here yet. A statement of it lists what it holds.'
-                : 'Nothing is held here yet. Add what it is: the cash, the deposit, the fund.'}
+              {row.kind === 'ACCOUNT' ? t('wealth.opened.emptyAccount') : t('wealth.opened.emptyPlace')}
             </p>
           ) : (
             <Lines>
@@ -235,34 +238,34 @@ export function OpenedRow({ row, opening }: { row: Extract<NetWorthRow, { kind: 
       ) : row.kind === 'ACCOUNT' ? (
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
           <Button variant="secondary" size="sm" onClick={addHolding}>
-            {row.group === 'BANK' ? 'Add a holding here' : 'Add a holding'}
+            {row.group === 'BANK' ? t('wealth.opened.addHere') : t('wealth.opened.add')}
           </Button>
           <Button variant="ghost" size="sm" onClick={() => setMode({ kind: 'MERGE' })}>
-            Merge into…
+            {t('wealth.opened.merge')}
           </Button>
           <Button variant="ghost" size="sm" onClick={() => setMode({ kind: 'RENAME' })}>
-            Rename
+            {t('wealth.opened.rename')}
           </Button>
           <Button variant="ghost" size="sm" onClick={() => write((database, now) => setAccountArchived(database, row.account.id, !row.account.isArchived, now))}>
-            {row.account.isArchived ? 'Unarchive' : 'Archive'}
+            {row.account.isArchived ? t('wealth.opened.unarchive') : t('wealth.opened.archive')}
           </Button>
         </div>
       ) : (
         place?.place !== undefined && (
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
             <Button variant="secondary" size="sm" onClick={addHolding}>
-              Add a holding
+              {t('wealth.opened.add')}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setMode({ kind: 'PLACE' })}>
-              Edit
+              {t('wealth.common.edit')}
             </Button>
             {confirming === place.holdingPlaceId ? (
               <>
                 <Button variant="ghost" size="sm" onClick={() => write((database, now) => deleteHoldingPlace(database, place.holdingPlaceId, now))}>
-                  Really delete
+                  {t('wealth.opened.reallyDelete')}
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => setConfirming(undefined)}>
-                  Keep
+                  {t('wealth.opened.keep')}
                 </Button>
               </>
             ) : (
@@ -272,10 +275,10 @@ export function OpenedRow({ row, opening }: { row: Extract<NetWorthRow, { kind: 
                   size="sm"
                   onClick={() => write((database, now) => setHoldingPlaceArchived(database, place.holdingPlaceId, place.place?.isArchived !== true, now))}
                 >
-                  {place.place.isArchived ? 'Unarchive' : 'Archive'}
+                  {place.place.isArchived ? t('wealth.opened.unarchive') : t('wealth.opened.archive')}
                 </Button>
                 <Button variant="ghost" size="sm" onClick={() => setConfirming(place.holdingPlaceId)}>
-                  Delete
+                  {t('wealth.common.delete')}
                 </Button>
               </>
             )}
@@ -324,7 +327,9 @@ function BankInside({
   const parts = statement?.parts ?? []
   const held = parts.reduce((sum, part) => sum + part.amount.minor, 0)
   const cashFigure: Money | undefined = statement !== undefined ? statement.cash : cash?.balance
-  const day = balance?.balanceTo === undefined ? 'last' : formatDayMonth(balance.balanceTo)
+  const t = useT()
+  const dates = useDates()
+  const day = balance?.balanceTo === undefined ? undefined : dates.dayMonth(balance.balanceTo)
   // The cushion is every ticked account's Cash, not for any goal (D-360), so this
   // account's is its part here; the whole is said once, below (M36 F3, D-393).
   const cushionHere = opening.cushion.accounts.some((one) => one.accountId === account.id && one.counts)
@@ -332,30 +337,36 @@ function BankInside({
   return (
     <>
       <div className="flex flex-col gap-1">
-        <span className={LABEL}>Statement</span>
+        <span className={LABEL}>{t('wealth.opened.statement')}</span>
         {balance !== undefined && ends !== undefined ? (
           <>
             <div className="flex flex-wrap items-baseline gap-2.5">
               <p className="m-0 flex-[1_1_320px]">
-                {day} statement, ends at <b className="font-medium tabular-nums">{formatMoney(ends)}</b>.
+                <Phrase
+                  text={day === undefined ? t('wealth.opened.endsLast') : t('wealth.opened.endsOn', { day })}
+                  parts={{ amount: <b className="font-medium tabular-nums">{formatMoney(ends)}</b> }}
+                />
               </p>
-              {balance.check.kind === 'ADDS_UP' && <Tag tone="good">Proved</Tag>}
+              {balance.check.kind === 'ADDS_UP' && <Tag tone="good">{t('wealth.opened.proved')}</Tag>}
               {balance.check.kind === 'OFF' && (
-                <Tag tone="bad">Off by {formatMoney(money(Math.abs(balance.check.missing.minor), balance.check.missing.currency))}</Tag>
+                <Tag tone="bad">
+                  {t('wealth.opened.offBy', {
+                    amount: formatMoney(money(Math.abs(balance.check.missing.minor), balance.check.missing.currency)),
+                  })}
+                </Tag>
               )}
-              {balance.check.kind === 'UNCHECKED' && <Tag>Unchecked</Tag>}
+              {balance.check.kind === 'UNCHECKED' && <Tag>{t('wealth.opened.unchecked')}</Tag>}
             </div>
             {balance.newerWithoutBalance !== undefined && (
               <p className="m-0 text-caption text-negative">
-                Older than the {formatDayMonth(balance.newerWithoutBalance.to)} statement, which has no balance that adds up.
+                {t('wealth.opened.older', { day: dates.dayMonth(balance.newerWithoutBalance.to) })}
               </p>
             )}
             <OpeningLine balance={balance} opening={opening} />
           </>
         ) : (
           <p className="m-0 text-caption text-ink-secondary">
-            No statement read yet, so what is here is what was written down by hand. Reading a statement for <Bidi>{account.name}</Bidi>{' '}
-            replaces it with what the statement ends at.
+            <Phrase text={t('wealth.opened.noStatement')} parts={{ account: <Bidi>{account.name}</Bidi> }} />
           </p>
         )}
       </div>
@@ -363,7 +374,7 @@ function BankInside({
       {statement !== undefined && <StatementBar statement={statement} currency={opening.currency} cushion={cushionHere} />}
 
       <div className="flex flex-col gap-1">
-        <span className={LABEL}>What is in it</span>
+        <span className={LABEL}>{t('wealth.opened.inIt')}</span>
         <Lines>
           {parts.map((part) => (
             <tr key={part.goalId}>
@@ -371,7 +382,7 @@ function BankInside({
                 <Link to={`/wealth/goals/${part.goalId}`} className={LINK}>
                   <Bidi>{part.goalName}</Bidi>
                 </Link>{' '}
-                <span className="text-caption text-ink-secondary">goal saved here</span>
+                <span className="text-caption text-ink-secondary">{t('wealth.opened.goalHere')}</span>
               </td>
               <td className={FIG}>{formatMoney(part.amount)}</td>
               <td className={`${LINE} w-[1%]`} />
@@ -379,18 +390,18 @@ function BankInside({
           ))}
           <tr>
             <td className={`${LINE} ${parts.length > 0 ? 'border-hairline-strong font-medium' : ''}`}>
-              Cash, not for any goal{' '}
+              {t('wealth.opened.cash')}{' '}
               <span className="text-caption font-normal text-ink-secondary">
-                {cushionHere ? "the cushion's part here: " : ''}
+                {cushionHere ? t('wealth.opened.cushionPart') : ''}
                 {statement !== undefined
                   ? parts.length > 0
-                    ? 'the statement, less the goals here'
-                    : 'the statement; no goal is saved here'
-                  : 'written down by hand'}
+                    ? t('wealth.opened.lessGoals')
+                    : t('wealth.opened.noGoal')
+                  : t('wealth.opened.byHand')}
               </span>
             </td>
             <td className={`${FIG} ${parts.length > 0 ? 'border-hairline-strong' : ''}`}>
-              {statement?.short !== undefined ? <span className="text-negative">none</span> : formatMoney(cashFigure ?? money(0, opening.currency))}
+              {statement?.short !== undefined ? <span className="text-negative">{t('wealth.opened.none')}</span> : formatMoney(cashFigure ?? money(0, opening.currency))}
             </td>
             <td className={`${LINE} w-[1%] ${parts.length > 0 ? 'border-hairline-strong' : ''}`} />
           </tr>
@@ -400,16 +411,20 @@ function BankInside({
         </Lines>
         {statement?.short !== undefined && (
           <div className="mt-1.5 flex flex-wrap items-baseline gap-2.5">
-            <Tag tone="bad">Off by {formatMoney(statement.short)}</Tag>
+            <Tag tone="bad">{t('wealth.opened.offBy', { amount: formatMoney(statement.short) })}</Tag>
             <p className="m-0 flex-[1_1_320px] text-caption text-ink-secondary">
-              The goals saved here hold <span className="tabular-nums">{formatMoney(money(held, opening.currency))}</span>, and the {day}{' '}
-              statement ends at <span className="tabular-nums">{formatMoney(statement.balance)}</span>. Usually money was spent from a
-              goal that the goal still counts, or a deposit was recorded that never reached the bank.{' '}
+              <Phrase
+                text={day === undefined ? t('wealth.opened.shortLast') : t('wealth.opened.short', { day })}
+                parts={{
+                  held: <span className="tabular-nums">{formatMoney(money(held, opening.currency))}</span>,
+                  balance: <span className="tabular-nums">{formatMoney(statement.balance)}</span>,
+                }}
+              />{' '}
               {parts.map((part, index) => (
                 <span key={part.goalId}>
                   {index === 0 ? '' : ' · '}
                   <Link to={`/wealth/goals/${part.goalId}`} className={LINK}>
-                    <Bidi>{part.goalName}</Bidi>'s deposits
+                    <Phrase text={t('wealth.opened.goalDeposits')} parts={{ goal: <Bidi>{part.goalName}</Bidi> }} />
                   </Link>
                 </span>
               ))}
@@ -420,7 +435,7 @@ function BankInside({
 
       {cushionHere && (
         <div className="flex flex-col gap-1">
-          <span className={LABEL}>The cushion</span>
+          <span className={LABEL}>{t('wealth.opened.cushion')}</span>
           <CushionHere cushion={opening.cushion} accountId={account.id} />
         </div>
       )}
@@ -434,6 +449,8 @@ function OpeningLine({ balance, opening }: { balance: AccountBalance; opening: O
   const [amountText, setAmountText] = useState('')
   const [dateText, setDateText] = useState('')
   const [problem, setProblem] = useState<string | undefined>()
+  const t = useT()
+  const dates = useDates()
 
   const start = (): void => {
     setEditing(true)
@@ -446,8 +463,8 @@ function OpeningLine({ balance, opening }: { balance: AccountBalance; opening: O
     if (!clear) {
       const parsed = parseAmountText(amountText)
       const date = parseISODate(dateText)
-      if (parsed === undefined) return setProblem('That is not an amount.')
-      if (date === undefined) return setProblem('Give the date as 2026-01-01.')
+      if (parsed === undefined) return setProblem(t('wealth.opened.opening.notAmount'))
+      if (date === undefined) return setProblem(t('wealth.opened.opening.dateFormat'))
       set = { amount: fromMajorUnits(parsed, opening.currency), date }
     }
     if (opening.write((database, now) => setOpeningBalance(database, balance.accountId, set, now))) setEditing(false)
@@ -455,12 +472,12 @@ function OpeningLine({ balance, opening }: { balance: AccountBalance; opening: O
 
   if (editing) {
     return (
-      <div className="fc-pop-enter mt-1 flex flex-col gap-2.5 border border-hairline-strong bg-elevated px-3.5 py-3" role="group" aria-label={`Opening balance of ${balance.name}`}>
+      <div className="fc-pop-enter mt-1 flex flex-col gap-2.5 border border-hairline-strong bg-elevated px-3.5 py-3" role="group" aria-label={t('wealth.opened.opening.label', { account: balance.name })}>
         <b className="font-medium">
-          <Bidi>{balance.name}</Bidi>, before the statements start
+          <Phrase text={t('wealth.opened.opening.title')} parts={{ account: <Bidi>{balance.name}</Bidi> }} />
         </b>
         <div className="grid max-w-md grid-cols-[110px_minmax(0,1fr)] items-center gap-x-3 gap-y-2">
-          <label htmlFor="opening-date">As of</label>
+          <label htmlFor="opening-date">{t('wealth.opened.opening.asOf')}</label>
           <input
             id="opening-date"
             type="date"
@@ -468,7 +485,7 @@ function OpeningLine({ balance, opening }: { balance: AccountBalance; opening: O
             onChange={(event) => setDateText(event.target.value)}
             className="h-8 border border-hairline-strong bg-background px-2"
           />
-          <label htmlFor="opening-amount">You had</label>
+          <label htmlFor="opening-amount">{t('wealth.opened.opening.had')}</label>
           <input
             id="opening-amount"
             inputMode="decimal"
@@ -483,14 +500,14 @@ function OpeningLine({ balance, opening }: { balance: AccountBalance; opening: O
         {problem !== undefined && <p className="m-0 text-negative">{problem}</p>}
         <div className="flex flex-wrap gap-3">
           <Button variant="primary" size="sm" icon="check" onClick={() => save(false)}>
-            Save
+            {t('wealth.opened.opening.save')}
           </Button>
           <Button variant="ghost" size="sm" onClick={() => setEditing(false)}>
-            Cancel
+            {t('wealth.common.cancel')}
           </Button>
           {balance.opening !== undefined && (
             <Button variant="ghost" size="sm" onClick={() => save(true)}>
-              Forget it
+              {t('wealth.opened.opening.forget')}
             </Button>
           )}
         </div>
@@ -501,31 +518,35 @@ function OpeningLine({ balance, opening }: { balance: AccountBalance; opening: O
   if (balance.opening === undefined || balance.openingDate === undefined) {
     return (
       <p className="m-0 text-caption text-ink-secondary">
-        Opening balance not set. Say what the account held before its first statement, and the statements are checked against it.{' '}
+        {t('wealth.opened.opening.notSet')}{' '}
         <button type="button" className={LINK} onClick={start}>
-          Set
+          {t('wealth.opened.opening.set')}
         </button>
       </p>
     )
   }
   return (
     <p className="m-0 text-caption text-ink-secondary">
-      Opening balance <span className="tabular-nums">{formatMoney(balance.opening)}</span> on {formatDayMonth(balance.openingDate)}{' '}
-      {String(balance.openingDate.year)}, and the statements moved{' '}
-      <span className="tabular-nums">
-        {balance.moved.minor >= 0 ? '+' : ''}
-        {formatMoney(balance.moved)}
-      </span>{' '}
-      since.{' '}
+      <Phrase
+        text={t('wealth.opened.opening.is')}
+        parts={{
+          amount: <span className="tabular-nums">{formatMoney(balance.opening)}</span>,
+          day: longDay(balance.openingDate, dates),
+          moved: (
+            <span className="tabular-nums">
+              {balance.moved.minor >= 0 ? '+' : ''}
+              {formatMoney(balance.moved)}
+            </span>
+          ),
+        }}
+      />{' '}
       {balance.check.kind === 'UNCHECKED' && balance.check.reason !== 'NO_OPENING' && (
         <>
-          {balance.check.reason === 'MIXED_CURRENCY'
-            ? 'The opening balance and the statements are in different currencies. '
-            : 'No statement printed a running balance to check against. '}
+          {balance.check.reason === 'MIXED_CURRENCY' ? t('wealth.opened.opening.mixed') : t('wealth.opened.opening.noRunning')}{' '}
         </>
       )}
       <button type="button" className={LINK} onClick={start}>
-        Change
+        {t('wealth.opened.opening.change')}
       </button>
     </p>
   )
@@ -550,6 +571,8 @@ function HoldingLine({
   const holding = held.holding
   const worth = opening.worths.get(held.holdingId)
   const isReading = opening.reading === held.holdingId
+  const t = useT()
+  const dates = useDates()
   useEffect(() => {
     if (isReading) document.getElementById(`holding-${held.holdingId}`)?.scrollIntoView({ block: 'center' })
   }, [isReading, held.holdingId])
@@ -558,7 +581,7 @@ function HoldingLine({
     return (
       <tr>
         <td className={LINE}>
-          <span className="text-ink-secondary">A holding this document no longer has</span>
+          <span className="text-ink-secondary">{t('wealth.where.gone')}</span>
         </td>
         <td className={FIG}>{formatMoney(held.balance)}</td>
         <td className={`${LINE} w-[1%]`} />
@@ -566,12 +589,22 @@ function HoldingLine({
     )
   }
   const checked = checkedOf(holding, opening.asOf, worth, false)
+  const kindName = t(`wealth.kinds.holdingKind.${holding.kind}`)
   const caption = [
-    ownCashOf ? 'its own cash' : holding.name === HOLDING_KIND_LABEL[holding.kind] ? undefined : HOLDING_KIND_LABEL[holding.kind].toLowerCase(),
-    holding.isLiquid ? undefined : holding.termEndDate === undefined ? 'locked' : `locked until ${longDay(holding.termEndDate)}`,
+    // A holding named after its kind — in English as made before M64, or in the language on screen — says it once.
+    ownCashOf
+      ? t('wealth.opened.caption.ownCash')
+      : holding.name === HOLDING_KIND_LABEL[holding.kind] || holding.name === kindName
+        ? undefined
+        : kindName.toLowerCase(),
+    holding.isLiquid
+      ? undefined
+      : holding.termEndDate === undefined
+        ? t('wealth.opened.caption.locked')
+        : t('wealth.opened.caption.lockedUntil', { day: longDay(holding.termEndDate, dates) }),
     // Where the figure comes from is not said: by hand with no reading, it is what was written down (M36 U11).
-    worth === undefined ? checked.phrase : worthPhrase(worth),
-    holding.isArchived ? 'archived' : undefined,
+    worth === undefined ? checked.phrase : worthPhrase(worth, t, dates),
+    holding.isArchived ? t('wealth.opened.caption.archived') : undefined,
   ]
     .filter((one): one is string => one !== undefined)
     .join(' · ')
@@ -592,15 +625,15 @@ function HoldingLine({
                   className={LINK}
                   onClick={() => opening.write((database, now) => confirmHolding(database, holding.id, opening.asOf, now))}
                 >
-                  Checked today
+                  {t('wealth.opened.checkedToday')}
                 </button>
               ) : (
                 <button type="button" className={LINK} onClick={() => opening.onReading(holding.id)}>
-                  New figure
+                  {t('wealth.opened.newFigure')}
                 </button>
               ))}
             <button type="button" className="text-ink-secondary hover:text-ink" onClick={() => onEdit(holding)}>
-              Edit
+              {t('wealth.common.edit')}
             </button>
           </span>
         </td>
@@ -632,6 +665,7 @@ function MergePanel({
 }) {
   const targets = accounts.filter((one) => one.id !== source.id && one.kind === source.kind && !one.isArchived)
   const [intoId, setIntoId] = useState('')
+  const t = useT()
   const target = targets.find((one) => one.id === intoId)
   const preview = target === undefined ? undefined : mergePreview(db, source.id, target.id)
   const labelOf = (one: Account): string => (one.last4 === undefined ? one.name : `${one.name} ·${one.last4}`)
@@ -640,21 +674,21 @@ function MergePanel({
     <div className="fc-pop-enter flex flex-col gap-2 border border-hairline-strong bg-elevated px-3.5 py-3">
       {targets.length === 0 ? (
         <p className="m-0">
-          There is nothing to merge <Bidi className="font-medium">{source.name}</Bidi> into: only two accounts of one kind can be merged.
+          <Phrase text={t('wealth.opened.mergeNothing')} parts={{ account: <Bidi className="font-medium">{source.name}</Bidi> }} />
         </p>
       ) : (
         <>
           <div className="flex flex-wrap items-center gap-2">
             <span>
-              Merge <Bidi className="font-medium">{source.name}</Bidi> into
+              <Phrase text={t('wealth.opened.mergeInto')} parts={{ account: <Bidi className="font-medium">{source.name}</Bidi> }} />
             </span>
             <ChoiceField
               text={target === undefined ? '' : labelOf(target)}
               choices={targets.map((one) => ({ value: one.id, label: labelOf(one) }))}
               filter={false}
               readOnly
-              placeholder="Choose an account…"
-              aria-label="Which account it becomes"
+              placeholder={t('wealth.opened.choose')}
+              aria-label={t('wealth.opened.which')}
               onText={() => undefined}
               onPick={(choice) => setIntoId(choice.value)}
               className={`${FIELD} h-8 w-[190px]`}
@@ -663,21 +697,24 @@ function MergePanel({
           <p className="m-0 text-caption text-ink-secondary">
             {preview === undefined || target === undefined ? (
               <>
-                Everything moves across and <Bidi>{source.name}</Bidi> goes away. Use this when one account was read twice, under two
-                names.
+                <Phrase text={t('wealth.opened.mergeWhy')} parts={{ account: <Bidi>{source.name}</Bidi> }} />
               </>
             ) : (
               <>
-                <span className="text-ink tabular-nums">{preview.moved}</span> {preview.moved === 1 ? 'transaction moves' : 'transactions move'}{' '}
-                into <Bidi className="text-ink">{target.name}</Bidi>
+                <Phrase
+                  text={t(countKey('wealth.opened.moves', preview.moved))}
+                  parts={{
+                    count: <span className="text-ink tabular-nums">{preview.moved}</span>,
+                    account: <Bidi className="text-ink">{target.name}</Bidi>,
+                  }}
+                />
                 {preview.duplicates > 0 && (
-                  <>
-                    , and <span className="text-ink tabular-nums">{preview.duplicates}</span>{' '}
-                    {preview.duplicates === 1 ? 'row that is already there is' : 'rows that are already there are'} dropped — the same
-                    charge, recorded twice
-                  </>
+                  <Phrase
+                    text={t(countKey('wealth.opened.dropped', preview.duplicates))}
+                    parts={{ count: <span className="text-ink tabular-nums">{preview.duplicates}</span> }}
+                  />
                 )}
-                . Its goal money and anything held there go with them. Imports and readers follow.
+                {t('wealth.opened.goWith')}
               </>
             )}
           </p>
@@ -693,11 +730,11 @@ function MergePanel({
               if (target !== undefined && write((database, now) => mergeAccounts(database, source.id, target.id, now))) onDone()
             }}
           >
-            Merge
+            {t('wealth.opened.mergeButton')}
           </Button>
         )}
         <Button variant="ghost" size="sm" onClick={onDone}>
-          Cancel
+          {t('wealth.common.cancel')}
         </Button>
       </div>
     </div>
@@ -706,6 +743,7 @@ function MergePanel({
 
 function RenamePanel({ account, write, onDone }: { account: Account; write: Write; onDone: () => void }) {
   const [name, setName] = useState(account.name)
+  const t = useT()
   const save = (): void => {
     const trimmed = name.trim()
     if (trimmed === '' || trimmed === account.name) return onDone()
@@ -717,7 +755,7 @@ function RenamePanel({ account, write, onDone }: { account: Account; write: Writ
         autoFocus
         dir="auto"
         value={name}
-        aria-label="The account's name"
+        aria-label={t('wealth.opened.accountName')}
         onChange={(event) => setName(event.target.value)}
         onKeyDown={(event) => {
           if (event.key === 'Enter') save()
@@ -726,29 +764,30 @@ function RenamePanel({ account, write, onDone }: { account: Account; write: Writ
         className={`${FIELD} h-8 w-[220px]`}
       />
       <Button variant="primary" size="sm" onClick={save}>
-        Save
+        {t('wealth.opened.opening.save')}
       </Button>
       <Button variant="ghost" size="sm" onClick={onDone}>
-        Cancel
+        {t('wealth.common.cancel')}
       </Button>
     </div>
   )
 }
 
 /** 3 Mar 2027. */
-function longDay(date: LocalDate): string {
-  return `${formatDayMonth(date)} ${String(date.year)}`
+function longDay(date: LocalDate, dates: DateWords): string {
+  return `${dates.dayMonth(date)} ${String(date.year)}`
 }
 
 /**
  * Where a holding's figure came from, when a reading says (M30 F5): the reading's
  * day, and the growth on what went in — or that what moved since is counted on it.
  */
-export function worthPhrase(worth: HoldingWorth): string {
+export function worthPhrase(worth: HoldingWorth, t: Translate, dates: DateWords): string {
   const day = parseISODate(worth.asOf)
-  const read = day === undefined ? worth.asOf : formatDayMonth(day)
-  const since = worth.worth.minor === worth.reading.minor ? '' : ', and what moved since'
-  if (worth.growth === undefined) return `read ${read}${since}`
+  const shown = day === undefined ? worth.asOf : dates.dayMonth(day)
+  const read =
+    worth.worth.minor === worth.reading.minor ? t('wealth.opened.read', { day: shown }) : t('wealth.opened.readSince', { day: shown })
+  if (worth.growth === undefined) return read
   const sign = worth.growth.minor > 0 ? '+' : worth.growth.minor < 0 ? '−' : ''
-  return `read ${read}${since} · ${sign}${formatMoney(money(Math.abs(worth.growth.minor), worth.growth.currency))} growth`
+  return t('wealth.opened.growth', { read, amount: `${sign}${formatMoney(money(Math.abs(worth.growth.minor), worth.growth.currency))}` })
 }

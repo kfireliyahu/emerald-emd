@@ -2,14 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 
 import { formatMoney, fromMajorUnits, money, type CurrencyCode } from '@/core/money.ts'
-import {
-  formatDayMonth,
-  formatMonthShort,
-  type LocalDate,
-  parseISODate,
-  toISODate,
-  yearMonthOf,
-} from '@/core/time.ts'
+import { type LocalDate, parseISODate, toISODate, yearMonthOf } from '@/core/time.ts'
 import { parseAmountText } from '@/data/importer/normalize.ts'
 import { goalFeeds, goalWorth, holdingPutIn } from '@/data/repositories/goalDepositRepository.ts'
 import { whereChoices } from '@/data/repositories/goalWhereRepository.ts'
@@ -20,9 +13,13 @@ import { documentCurrency } from '@/data/repositories/statisticsRepository.ts'
 import { originOf, originSplit, sourceKindForOrigin, type DepositOrigin } from '@/domain/goalDeposits.ts'
 import type { SavingDeposit, SavingGoal } from '@/domain/model/savings.ts'
 import { targetAmountOf } from '@/domain/savings.ts'
+import { countKey } from '@/i18n/count.ts'
+import type { MessageKey } from '@/i18n/catalogue.ts'
+import { useDates, useT } from '@/i18n/current.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { CostBasis } from '@/ui/savings/CostBasis.tsx'
 import { HoldingReadings } from '@/ui/savings/HoldingReadings.tsx'
 import { dayMonth } from '@/ui/savings/WherePicker.tsx'
@@ -43,6 +40,8 @@ export function GoalDetail() {
   const mutate = useDocumentStore((state) => state.mutate)
   const navigate = useNavigate()
   const closePane = useClosePane()
+  const t = useT()
+  const dates = useDates()
   const [problem, setProblem] = useState<string | undefined>()
 
   const asOf = today()
@@ -74,9 +73,9 @@ export function GoalDetail() {
   if (detail === undefined) {
     return (
       <div className="px-6 py-6 text-ink-secondary">
-        That goal is not in this document.{' '}
+        {t('wealth.goalDetail.missing')}{' '}
         <Link to="/wealth/goals" className="text-accent hover:underline">
-          Close
+          {t('wealth.goalDetail.close')}
         </Link>
       </div>
     )
@@ -99,25 +98,33 @@ export function GoalDetail() {
   const parts = (
     [
       // A buy is read from the account's own statement, which is not always a bank's.
-      ['DERIVED', byHolding ? 'Read from a statement' : 'Read from the bank', SWATCH.derived],
-      ['SET_ASIDE', 'Set aside inside the bank', SWATCH.setAside],
-      ['ALREADY_THERE', 'Was already there', SWATCH.already],
-      ['GROWTH', 'Growth', 'bg-transparent outline outline-1 outline-ink-tertiary'],
+      ['DERIVED', t(byHolding ? 'wealth.goalDetail.origin.derivedStatement' : 'wealth.goalDetail.origin.derivedBank'), SWATCH.derived],
+      ['SET_ASIDE', t('wealth.goalDetail.origin.setAsideInside'), SWATCH.setAside],
+      ['ALREADY_THERE', t('wealth.goalDetail.origin.alreadyThere'), SWATCH.already],
+      ['GROWTH', t('wealth.goalDetail.origin.growth'), 'bg-transparent outline outline-1 outline-ink-tertiary'],
     ] as const
   ).filter(([origin]) => split[origin].minor !== 0)
   const newest = [...detail.deposits].sort((a, b) => toISODate(b.date).localeCompare(toISODate(a.date)))
   const shown = newest.slice(0, 8)
   const staleTotal = stale.reduce((sum, one) => sum + one.amount.minor, 0)
+  const unchecked = detail.unchecked !== undefined
+  const summary = [
+    unchecked ? t('wealth.goalDetail.unchecked') : formatMoney(detail.balance),
+    target === undefined ? undefined : t('wealth.goalDetail.ofTarget', { amount: formatMoney(target) }),
+    goal.targetDate === undefined ? undefined : t('wealth.goalDetail.byMonth', { month: dates.monthShort(yearMonthOf(goal.targetDate)) }),
+  ]
+    .filter((one) => one !== undefined)
+    .join(' ')
 
   return (
     <div className="relative flex h-full flex-col gap-4 overflow-auto px-6 pt-5 pb-10">
       <div className="absolute top-3 end-3 flex items-center gap-1.5">
         <Button variant="ghost" size="sm" onClick={edit}>
-          Edit
+          {t('wealth.common.edit')}
         </Button>
         <button
           type="button"
-          aria-label="Close"
+          aria-label={t('wealth.goalDetail.close')}
           onClick={closePane}
           className="inline-flex size-7 items-center justify-center border border-transparent text-ink-secondary hover:border-hairline-strong hover:text-ink"
         >
@@ -128,20 +135,22 @@ export function GoalDetail() {
       </div>
 
       <div>
-        <span className="text-label text-ink-secondary uppercase">Goal</span>
+        <span className="text-label text-ink-secondary uppercase">{t('wealth.goalDetail.kicker')}</span>
         <h2 className="m-0 text-secondary-number font-medium">
           <Bidi>{goal.name}</Bidi>
         </h2>
         <Src>
-          {detail.unchecked === undefined ? formatMoney(detail.balance) : 'Unchecked'}
-          {target === undefined ? '' : ` of ${formatMoney(target)}`}
-          {goal.targetDate === undefined ? '' : ` by ${formatMonthShort(yearMonthOf(goal.targetDate))}`}
-          {goal.isClosed ? ' · closed' : ''}
+          {summary}
+          {goal.isClosed ? ` · ${t('wealth.goalDetail.closed')}` : ''}
         </Src>
-        {detail.unchecked !== undefined && <Src>{detail.unchecked}</Src>}
+        {unchecked && <Src>{t('wealth.goalDetail.mixed')}</Src>}
         {worth !== undefined && (
           <Src>
-            Worth {formatMoney(worth.worth)} by its reading of {dayMonth(worth.asOf)} · put in {formatMoney(worth.putIn)}
+            {t('wealth.goalDetail.worth', {
+              worth: formatMoney(worth.worth),
+              day: dayMonth(worth.asOf, dates),
+              putIn: formatMoney(worth.putIn),
+            })}
           </Src>
         )}
       </div>
@@ -149,7 +158,7 @@ export function GoalDetail() {
       <WherePanel goal={goal} deposits={detail.deposits} currency={currency} onEdit={edit} />
 
       <div>
-        <span className="text-label text-ink-secondary uppercase">How the balance is made</span>
+        <span className="text-label text-ink-secondary uppercase">{t('wealth.goalDetail.made')}</span>
         <div className="mt-2 flex flex-col gap-2">
           {parts.map(([origin, label, swatch]) => (
             <div key={origin} className="flex items-center justify-between gap-2">
@@ -160,36 +169,34 @@ export function GoalDetail() {
             </div>
           ))}
           <div className="flex items-center justify-between border-t border-hairline pt-1.5">
-            <span>Balance</span>
+            <span>{t('wealth.goalDetail.balance')}</span>
             <b className="font-medium tabular-nums">
-              {detail.unchecked === undefined ? formatMoney(detail.balance) : 'Unchecked'}
+              {unchecked ? t('wealth.goalDetail.unchecked') : formatMoney(detail.balance)}
             </b>
           </div>
         </div>
         {split.SET_ASIDE.minor > 0 && (
-          <p className="m-0 mt-2 text-caption text-ink-secondary">
-            Set aside is still inside the bank balance. It moves nothing; it only stops that money counting as free.
-          </p>
+          <p className="m-0 mt-2 text-caption text-ink-secondary">{t('wealth.goalDetail.setAsideWhy')}</p>
         )}
       </div>
 
       <div>
-        <span className="text-label text-ink-secondary uppercase">Deposits</span>
+        <span className="text-label text-ink-secondary uppercase">{t('wealth.goalDetail.deposits')}</span>
         {staleTotal > 0 && (
           <div className="mt-2 flex flex-wrap items-center gap-2.5 border border-dashed border-flow-tax px-3 py-2">
             <span className="text-caption">
-              {formatMoney(money(staleTotal, currency))} set aside more than 90 days ago. Still in the balance?
+              {t('wealth.goalDetail.stale', { amount: formatMoney(money(staleTotal, currency)) })}
             </span>
             <Button variant="secondary" size="sm" onClick={() => write((database, now) => void settleSetAside(database, goal.id, 'STILL_THERE', asOf, now))}>
-              Still there
+              {t('wealth.goalDetail.stillThere')}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => write((database, now) => void settleSetAside(database, goal.id, 'GONE', asOf, now))}>
-              It is gone
+              {t('wealth.goalDetail.gone')}
             </Button>
           </div>
         )}
         {shown.length === 0 ? (
-          <p className="m-0 mt-2 text-ink-secondary">Nothing in it yet.</p>
+          <p className="m-0 mt-2 text-ink-secondary">{t('wealth.goalDetail.empty')}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="mt-1.5 w-full border-collapse">
@@ -207,7 +214,7 @@ export function GoalDetail() {
           </div>
         )}
         {newest.length > shown.length && (
-          <p className="m-0 mt-1 text-caption text-ink-secondary">and {String(newest.length - shown.length)} earlier</p>
+          <p className="m-0 mt-1 text-caption text-ink-secondary">{t('wealth.goalDetail.earlier', { count: newest.length - shown.length })}</p>
         )}
         <AddMoney goal={goal} currency={currency} asOf={asOf} write={write} followed={byHolding} onEdit={edit} />
         {problem !== undefined && <p className="m-0 mt-2 text-negative">{problem}</p>}
@@ -216,11 +223,11 @@ export function GoalDetail() {
   )
 }
 
-const KIND: Readonly<Record<DepositOrigin, readonly [TagTone, string]>> = {
-  DERIVED: ['derived', 'Read from the bank'],
-  SET_ASIDE: ['setAside', 'Set aside'],
-  ALREADY_THERE: ['already', 'Was already there'],
-  GROWTH: ['plain', 'Growth'],
+const KIND: Readonly<Record<DepositOrigin, readonly [TagTone, MessageKey]>> = {
+  DERIVED: ['derived', 'wealth.goalDetail.origin.derivedBank'],
+  SET_ASIDE: ['setAside', 'wealth.goalDetail.origin.setAside'],
+  ALREADY_THERE: ['already', 'wealth.goalDetail.origin.alreadyThere'],
+  GROWTH: ['plain', 'wealth.goalDetail.origin.growth'],
 }
 
 function DepositRow({
@@ -233,42 +240,46 @@ function DepositRow({
   /** The goal is fed by its holding's rows, so a derived deposit is a buy or a sale (D-357). */
   bought: boolean
 }) {
+  const t = useT()
+  const dates = useDates()
   const origin = originOf(deposit.sourceKind)
   // A buy is read from the account's own statement, which is not always a bank's.
-  const [tone, label] = bought && origin === 'DERIVED' ? (['derived', 'Read from a statement'] as const) : KIND[origin]
-  const what =
-    deposit.note ??
-    (origin === 'DERIVED'
+  const [tone, label] = bought && origin === 'DERIVED' ? (['derived', 'wealth.goalDetail.origin.derivedStatement'] as const) : KIND[origin]
+  const out = deposit.amount.minor < 0
+  const said: MessageKey =
+    origin === 'DERIVED'
       ? bought
-        ? deposit.amount.minor < 0
-          ? 'Sold'
-          : 'Bought'
-        : deposit.amount.minor < 0
-          ? 'Back from the goal'
-          : 'Transfer read from the bank'
+        ? out
+          ? 'wealth.goalDetail.what.sold'
+          : 'wealth.goalDetail.what.bought'
+        : out
+          ? 'wealth.goalDetail.what.back'
+          : 'wealth.goalDetail.what.transfer'
       : origin === 'SET_ASIDE'
-        ? deposit.amount.minor < 0
-          ? 'No longer set aside'
-          : 'Set aside'
+        ? out
+          ? 'wealth.goalDetail.what.unset'
+          : 'wealth.goalDetail.what.setAside'
         : origin === 'ALREADY_THERE'
-          ? 'Was already there'
-          : 'Growth')
+          ? 'wealth.goalDetail.what.already'
+          : 'wealth.goalDetail.what.growth'
   return (
     <tr>
       <td className="h-auto border-b border-hairline py-2 pe-2.5 align-top text-caption whitespace-nowrap text-ink-secondary tabular-nums">
-        {formatDayMonth(deposit.date)}
+        {dates.dayMonth(deposit.date)}
       </td>
       <td className="border-b border-hairline px-2.5 py-2 align-top">
-        <Bidi>{what}</Bidi>
+        {deposit.note === undefined ? t(said) : <Bidi>{deposit.note}</Bidi>}
         {holdingName !== undefined && (
           <Src>
-            {origin === 'SET_ASIDE' ? 'inside ' : 'in '}
-            <Bidi>{holdingName}</Bidi>
+            <Phrase
+              text={t(origin === 'SET_ASIDE' ? 'wealth.goalDetail.inside' : 'wealth.goalDetail.in')}
+              parts={{ name: <Bidi>{holdingName}</Bidi> }}
+            />
           </Src>
         )}
       </td>
       <td className="border-b border-hairline px-2.5 py-2 align-top">
-        <Tag tone={tone}>{label}</Tag>
+        <Tag tone={tone}>{t(label)}</Tag>
       </td>
       <td className="border-b border-hairline py-2 ps-2.5 text-end align-top whitespace-nowrap tabular-nums">
         {formatMoney(deposit.amount)}
@@ -297,6 +308,7 @@ function WherePanel({
 }) {
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
+  const t = useT()
   const current = useMemo(() => (db === undefined ? undefined : goalFeeds(db).get(goal.id)), [db, revision, goal.id])
   const choice = useMemo(
     () =>
@@ -330,22 +342,22 @@ function WherePanel({
 
   return (
     <div>
-      <span className="text-label text-ink-secondary uppercase">Where the money is</span>
+      <span className="text-label text-ink-secondary uppercase">{t('wealth.goalDetail.where.title')}</span>
       <div className="mt-2 flex flex-col gap-1.5 border border-hairline-strong bg-background px-3.5 py-3">
         {goal.defaultHoldingId === undefined ? (
           <>
-            <b className="font-medium">Where is the money? Not said yet</b>
-            <p className="m-0 text-caption text-ink-secondary">Say where, and you can add to it here.</p>
+            <b className="font-medium">{t('wealth.goalDetail.where.notSaid')}</b>
+            <p className="m-0 text-caption text-ink-secondary">{t('wealth.goalDetail.where.sayWhy')}</p>
             <div>
               <Button variant="secondary" size="sm" onClick={onEdit}>
-                Say where
+                {t('wealth.goalDetail.where.say')}
               </Button>
             </div>
           </>
         ) : (
           <>
             <b className="font-medium">
-              <Bidi>{choice?.name ?? holding?.name ?? 'A holding this document no longer has'}</Bidi>
+              <Bidi>{choice?.name ?? holding?.name ?? t('wealth.where.gone')}</Bidi>
               {choice?.detail !== undefined && (
                 <span className="ms-1.5 text-caption font-normal text-ink-secondary">
                   <Bidi>{choice.detail}</Bidi>
@@ -354,33 +366,35 @@ function WherePanel({
             </b>
             {current?.kind === 'HOLDING' ? (
               <p className="m-0 text-caption text-ink-secondary">
-                Follows the rows that bought or sold it. Every buy or sale is a deposit into <Bidi>{goal.name}</Bidi>.
+                <Phrase text={t('wealth.goalDetail.where.follows')} parts={{ goal: <Bidi>{goal.name}</Bidi> }} />
               </p>
             ) : choice?.group.kind === 'BANK' ? (
-              <p className="m-0 text-caption text-ink-secondary">
-                Inside the account’s balance. Adding to it here moves nothing; it only stops that money counting as free.
-              </p>
+              <p className="m-0 text-caption text-ink-secondary">{t('wealth.goalDetail.where.bank')}</p>
             ) : choice?.group.kind === 'BY_HAND' ? (
-              <p className="m-0 text-caption text-ink-secondary">No statement says what is in it, so you add to it here.</p>
+              <p className="m-0 text-caption text-ink-secondary">{t('wealth.goalDetail.where.byHand')}</p>
             ) : null}
             {current?.kind === 'TRANSFERS' && (
               <p className="m-0 text-caption text-ink-secondary">
-                Every transfer you confirm into <Bidi>{current.name}</Bidi> is a deposit into <Bidi>{goal.name}</Bidi>,
-                and one out of it a withdrawal.
+                <Phrase
+                  text={t('wealth.goalDetail.where.transfers')}
+                  parts={{ account: <Bidi>{current.name}</Bidi>, goal: <Bidi>{goal.name}</Bidi> }}
+                />
               </p>
             )}
             {current?.kind === 'CATEGORY' && (
               <p className="m-0 flex flex-wrap items-center gap-1.5 text-caption text-ink-secondary">
-                <Tag>Money moved</Tag>
+                <Tag>{t('wealth.goalDetail.where.moneyMoved')}</Tag>
                 <span>
-                  Every transaction you categorize under <Bidi>{categoryPath ?? current.name}</Bidi> is a deposit into{' '}
-                  <Bidi>{goal.name}</Bidi>, read from the bank.
+                  <Phrase
+                    text={t('wealth.goalDetail.where.category')}
+                    parts={{ category: <Bidi>{categoryPath ?? current.name}</Bidi>, goal: <Bidi>{goal.name}</Bidi> }}
+                  />
                 </span>
               </p>
             )}
             {current !== undefined && (
               <p className="m-0 font-mono text-caption">
-                {String(derived.length)} {derived.length === 1 ? 'deposit' : 'deposits'} · {formatMoney(derivedTotal)}
+                {t(countKey('wealth.goalDetail.where.count', derived.length), { count: derived.length, amount: formatMoney(derivedTotal) })}
               </p>
             )}
             {fed !== undefined && <CostBasis fed={fed} />}
@@ -415,6 +429,7 @@ function AddMoney({
   const [note, setNote] = useState('')
   const [problem, setProblem] = useState<string | undefined>()
   const db = useDocumentStore((state) => state.db)
+  const t = useT()
   if (goal.isClosed) return null
   const holdingId = goal.defaultHoldingId
 
@@ -422,8 +437,8 @@ function AddMoney({
     if (kind === undefined || holdingId === undefined) return
     const parsed = parseAmountText(amount)
     const when = parseISODate(date)
-    if (parsed === undefined || parsed <= 0) return setProblem('Type an amount above zero.')
-    if (when === undefined) return setProblem('Give the date as 2026-10-03.')
+    if (parsed === undefined || parsed <= 0) return setProblem(t('wealth.goalDetail.add.amountPositive'))
+    if (when === undefined) return setProblem(t('wealth.goalDetail.add.dateFormat'))
     setProblem(undefined)
     write((database, now) =>
       addDeposit(
@@ -450,12 +465,17 @@ function AddMoney({
     const holdingName = db === undefined ? undefined : findHolding(db, holdingId)?.name
     return (
       <p className="m-0 mt-2.5 max-w-[52ch] text-caption text-ink-secondary">
-        Its deposits are the rows that bought or sold <Bidi>{holdingName ?? 'its holding'}</Bidi>, so there is nothing
-        to type here.{' '}
-        <button type="button" onClick={onEdit} className="text-accent hover:underline">
-          Edit
-        </button>{' '}
-        to find them another way.
+        <Phrase
+          text={t('wealth.goalDetail.add.followed')}
+          parts={{
+            holding: <Bidi>{holdingName ?? t('wealth.goalDetail.add.itsHolding')}</Bidi>,
+            edit: (
+              <button type="button" onClick={onEdit} className="text-accent hover:underline">
+                {t('wealth.common.edit')}
+              </button>
+            ),
+          }}
+        />
       </p>
     )
   }
@@ -463,15 +483,15 @@ function AddMoney({
     <>
       <div className="mt-2.5 flex flex-wrap gap-3">
         <Button variant="secondary" size="sm" icon="add" onClick={() => setKind('SET_ASIDE')}>
-          Set money aside
+          {t('wealth.goalDetail.add.setAside')}
         </Button>
         <Button variant="ghost" size="sm" onClick={() => setKind('ALREADY_THERE')}>
-          Was already there
+          {t('wealth.goalDetail.add.already')}
         </Button>
       </div>
       {kind !== undefined && (
         <div className="fc-pop-enter mt-3 grid grid-cols-[110px_minmax(0,1fr)] items-center gap-x-3 gap-y-2">
-          <label htmlFor="add-amount">{kind === 'SET_ASIDE' ? 'Set aside' : 'Was there'}</label>
+          <label htmlFor="add-amount">{kind === 'SET_ASIDE' ? t('wealth.goalDetail.add.setAsideLabel') : t('wealth.goalDetail.add.wasThere')}</label>
           <input
             id="add-amount"
             inputMode="decimal"
@@ -479,14 +499,14 @@ function AddMoney({
             onChange={(event) => setAmount(event.target.value)}
             className="h-8 min-w-0 border border-hairline-strong bg-background px-2 text-end tabular-nums"
           />
-          <label htmlFor="add-date">On</label>
+          <label htmlFor="add-date">{t('wealth.goalDetail.add.on')}</label>
           <input
             id="add-date"
             value={date}
             onChange={(event) => setDate(event.target.value)}
             className="h-8 min-w-0 border border-hairline-strong bg-background px-2 tabular-nums"
           />
-          <label htmlFor="add-note">Note</label>
+          <label htmlFor="add-note">{t('wealth.goalDetail.add.note')}</label>
           <input
             id="add-note"
             value={note}
@@ -496,10 +516,10 @@ function AddMoney({
           <span />
           <div className="flex flex-wrap gap-3">
             <Button variant="primary" size="sm" icon="check" onClick={save}>
-              Save
+              {t('wealth.goalDetail.add.save')}
             </Button>
             <Button variant="ghost" size="sm" onClick={() => setKind(undefined)}>
-              Cancel
+              {t('wealth.common.cancel')}
             </Button>
           </div>
         </div>

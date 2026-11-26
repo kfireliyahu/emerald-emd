@@ -1,7 +1,8 @@
-import { formatMonthShort, toISODate } from '@/core/time.ts'
+import { toISODate } from '@/core/time.ts'
 import { depositTotal } from '@/data/importer/fundReportTemplate.ts'
 import type { CurrencyCode, Money } from '@/core/money.ts'
 import type { ReadDeposit } from '@/domain/model/funds.ts'
+import { useDates, useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Amount } from '@/ui/components/Amount.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
@@ -49,6 +50,8 @@ export function DepositRows({
   /** Given only where the page is beside the table: the rows, as typed over. */
   onRows?: ((rows: readonly ReadDeposit[]) => void) | undefined
 }) {
+  const t = useT()
+  const dates = useDates()
   if (rows.length === 0) return null
 
   /** One row's one field, set or cleared. A blank cell is not a zero. */
@@ -65,20 +68,20 @@ export function DepositRows({
   return (
     <div>
       <p className="text-label text-ink-tertiary uppercase">
-        The deposits this report lists ({rows.length})
+        {t('wealth.depositRows.title', { count: rows.length })}
       </p>
 
       <div className="mt-2 overflow-x-auto">
         <table className="w-full">
           <thead>
             <tr className="border-b border-hairline text-label text-ink-tertiary uppercase">
-              <th className="py-2 text-start font-medium">For</th>
-              <th className="px-3 py-2 text-start font-medium">Arrived</th>
-              <th className="px-3 py-2 text-start font-medium">Employer</th>
-              <th className="px-3 py-2 text-end font-medium">Yours</th>
-              <th className="px-3 py-2 text-end font-medium">Employer’s</th>
-              <th className="px-3 py-2 text-end font-medium">Severance</th>
-              <th className="px-3 py-2 text-end font-medium">Total</th>
+              <th className="py-2 text-start font-medium">{t('wealth.depositRows.for')}</th>
+              <th className="px-3 py-2 text-start font-medium">{t('wealth.depositRows.arrived')}</th>
+              <th className="px-3 py-2 text-start font-medium">{t('wealth.depositRows.employer')}</th>
+              <th className="px-3 py-2 text-end font-medium">{t('wealth.depositRows.yours')}</th>
+              <th className="px-3 py-2 text-end font-medium">{t('wealth.depositRows.employers')}</th>
+              <th className="px-3 py-2 text-end font-medium">{t('wealth.depositRows.severance')}</th>
+              <th className="px-3 py-2 text-end font-medium">{t('wealth.depositRows.total')}</th>
             </tr>
           </thead>
           <tbody>
@@ -92,14 +95,14 @@ export function DepositRows({
                 <td className="py-1 tabular-nums">
                   {onRows === undefined ? (
                     row.salaryMonth === undefined ? (
-                      <span className="text-ink-tertiary">not read</span>
+                      <span className="text-ink-tertiary">{t('wealth.depositRows.notRead')}</span>
                     ) : (
-                      formatMonthShort(row.salaryMonth)
+                      dates.monthShort(row.salaryMonth)
                     )
                   ) : (
                     <MonthField
                       value={row.salaryMonth}
-                      label={`Deposit ${index + 1}, salary month`}
+                      label={t('wealth.depositRows.monthOf', { n: index + 1 })}
                       className={`${FIELD} h-7`}
                       onCommit={(salaryMonth) => edit(index, (entry) => ({ ...entry, salaryMonth }))}
                     />
@@ -115,7 +118,7 @@ export function DepositRows({
                   ) : (
                     <DateField
                       value={row.depositDate}
-                      label={`Deposit ${index + 1}, date`}
+                      label={t('wealth.depositRows.dateOf', { n: index + 1 })}
                       className={`${FIELD} h-7`}
                       onCommit={(depositDate) => edit(index, (entry) => ({ ...entry, depositDate }))}
                     />
@@ -127,7 +130,7 @@ export function DepositRows({
                   ) : (
                     <WordField
                       value={row.employerName}
-                      label={`Deposit ${index + 1}, employer`}
+                      label={t('wealth.depositRows.employerOf', { n: index + 1 })}
                       className={`${FIELD} h-7 w-40`}
                       onCommit={(employerName) => edit(index, (entry) => ({ ...entry, employerName }))}
                     />
@@ -137,21 +140,21 @@ export function DepositRows({
                   row={row}
                   part="employee"
                   currency={currency}
-                  label={`Deposit ${index + 1}, yours`}
+                  label={t('wealth.depositRows.yoursOf', { n: index + 1 })}
                   onCommit={onRows && ((amount) => setAmount(index, 'employee', amount))}
                 />
                 <Cell
                   row={row}
                   part="employer"
                   currency={currency}
-                  label={`Deposit ${index + 1}, employer’s`}
+                  label={t('wealth.depositRows.employersOf', { n: index + 1 })}
                   onCommit={onRows && ((amount) => setAmount(index, 'employer', amount))}
                 />
                 <Cell
                   row={row}
                   part="severance"
                   currency={currency}
-                  label={`Deposit ${index + 1}, severance`}
+                  label={t('wealth.depositRows.severanceOf', { n: index + 1 })}
                   onCommit={onRows && ((amount) => setAmount(index, 'severance', amount))}
                 />
                 {/* Derived and never a field: it is the row's own printed total
@@ -169,14 +172,12 @@ export function DepositRows({
 
       <p className="mt-2 text-caption text-ink-tertiary">
         {addUp === undefined
-          ? 'Nothing on the report checks these amounts against a total. '
+          ? t('wealth.depositRows.unchecked')
           : addUp
-            ? 'These amounts add up to what the report says was paid in. '
-            : 'These amounts do not add up to what the report says was paid in — a row was misread, or one was missed. '}
+            ? t('wealth.depositRows.addsUp')
+            : t('wealth.depositRows.off')}{' '}
         <span className="text-ink-secondary">
-          The month in the first column is checked by nothing on the page, and it is what every
-          later deposit check is keyed on. Read it against the report
-          {onRows === undefined ? '.' : ', and type over whatever is wrong.'}
+          {onRows === undefined ? t('wealth.depositRows.month') : t('wealth.depositRows.monthEdit')}
         </span>
       </p>
     </div>

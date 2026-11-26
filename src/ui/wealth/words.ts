@@ -13,9 +13,9 @@ import type { NetWorthGroup, Reach } from '@/ui/wealth/netWorthRows.ts'
 
 /**
  * **Wealth's names for the kinds it shows, in the language on screen** (M64 U10,
- * D-622). The maps in `funds/labels.ts`, `debts/labels.ts` and `savings/labels.ts`
- * stay English for the forms and details that have not moved to the catalogue
- * yet; a redesigned Wealth screen reads its kinds from here, so a Hebrew screen
+ * D-622). What is left of `debts/labels.ts` and `savings/labels.ts` stays English
+ * for the screens that have not moved to the catalogue yet (`funds/labels.ts` went
+ * with M64 F26); a redesigned Wealth screen reads its kinds from here, so a Hebrew screen
  * never shows an English kind beside a Hebrew sentence.
  */
 export interface WealthWords {

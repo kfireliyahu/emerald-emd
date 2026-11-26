@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 
 import { formatMoney } from '@/core/money.ts'
-import { formatDayMonth, parseISODate, toISODate } from '@/core/time.ts'
+import { parseISODate, toISODate } from '@/core/time.ts'
 import {
   NEW_PLACE_KINDS,
   type NewPlaceAnswer,
@@ -9,33 +9,31 @@ import {
   type WhereAnswer,
   type WhereChoice,
 } from '@/data/repositories/goalWhereRepository.ts'
+import { useDates, useT, type Translate } from '@/i18n/current.ts'
+import type { DateWords } from '@/i18n/dates.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
 import { useDismiss } from '@/ui/components/useDismiss.ts'
 import { Tag } from '@/ui/wealth/parts.tsx'
 
-/** `2026-09-30` → `30 Sep`: the day a figure is from, as the list says it. */
-export function dayMonth(iso: string): string {
+/** `2026-09-30` → `30 Sep`: the day a figure is from, as the list says it, in the language on screen. */
+export function dayMonth(iso: string, dates: DateWords): string {
   const date = parseISODate(iso)
   if (date === undefined) return iso
-  return formatDayMonth(date)
+  return dates.dayMonth(date)
 }
 
 /** What a choice holds now, as the list says it beside the name. */
-export function figureText(choice: WhereChoice): string | undefined {
-  if (choice.followedBy !== undefined) return `${choice.followedBy} follows it`
+function figureText(choice: WhereChoice, t: Translate, dates: DateWords): string | undefined {
+  if (choice.followedBy !== undefined) return t('wealth.where.followedBy', { goal: choice.followedBy })
   const figure = choice.figure
   if (figure === undefined) return undefined
-  if (figure.kind === 'RECORDED') return `${formatMoney(figure.amount)} recorded`
-  return figure.on === '' ? formatMoney(figure.amount) : `${formatMoney(figure.amount)} on ${dayMonth(figure.on)}`
-}
-
-export const NEW_KIND_LABEL: Readonly<Record<NewPlaceKind, string>> = {
-  CASH_AT_HOME: 'Cash at home',
-  DEPOSIT: 'A deposit',
-  FUND: 'A fund',
-  OTHER: 'Something else',
+  if (figure.kind === 'RECORDED') return t('wealth.where.recorded', { amount: formatMoney(figure.amount) })
+  return figure.on === ''
+    ? formatMoney(figure.amount)
+    : t('wealth.where.on', { amount: formatMoney(figure.amount), day: dayMonth(figure.on, dates) })
 }
 
 /** Only what can be locked asks until when. */
@@ -68,6 +66,9 @@ export function WherePicker({
   /** The form's own button — Add goal, or Save — which is when a new place is written. */
   saveWord: string
 }) {
+  const t = useT()
+  const dates = useDates()
+  const said = (choice: WhereChoice): string | undefined => figureText(choice, t, dates)
   const [open, setOpen] = useState(false)
   const [making, setMaking] = useState<NewPlaceAnswer | undefined>()
   const box = useRef<HTMLDivElement>(null)
@@ -79,7 +80,7 @@ export function WherePicker({
   for (const choice of choices) {
     const key = choice.group.kind === 'HELD' ? `held:${choice.group.placeId}` : choice.group.kind
     const label =
-      choice.group.kind === 'BANK' ? 'Bank accounts' : choice.group.kind === 'HELD' ? choice.group.placeName : 'Kept by hand'
+      choice.group.kind === 'BANK' ? t('wealth.where.bank') : choice.group.kind === 'HELD' ? choice.group.placeName : t('wealth.where.byHand')
     const group = groups.find((one) => one.key === key)
     if (group === undefined) groups.push({ key, label, items: [choice] })
     else group.items.push(choice)
@@ -100,36 +101,36 @@ export function WherePicker({
         type="button"
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label="Where is the money?"
+        aria-label={t('wealth.where.label')}
         onClick={() => setOpen((was) => !was)}
         className={`${FIELD} flex w-full min-w-0 items-center gap-2.5 text-start ${open ? 'border-accent' : ''}`}
       >
         {value === undefined ? (
-          <span className="min-w-0 flex-1 truncate text-ink-tertiary">Pick one, or make a new place</span>
+          <span className="min-w-0 flex-1 truncate text-ink-tertiary">{t('wealth.where.pick')}</span>
         ) : value.kind === 'NEW' ? (
           <>
             <span className="flex min-w-0 flex-1 items-baseline">
               <Bidi className="min-w-0 truncate">{value.place.name}</Bidi>
               {value.place.institution !== undefined && value.place.institution.trim() !== '' && (
                 <span className="ms-1.5 shrink-0 text-caption whitespace-nowrap text-ink-secondary">
-                  at <Bidi>{value.place.institution}</Bidi>
+                  <Phrase text={t('wealth.where.at')} parts={{ place: <Bidi>{value.place.institution}</Bidi> }} />
                 </span>
               )}
             </span>
-            <Tag tone="dash">New</Tag>
+            <Tag tone="dash">{t('wealth.where.new')}</Tag>
           </>
         ) : (
           <>
             <span className="flex min-w-0 flex-1 items-baseline">
-              <Bidi className="min-w-0 truncate">{chosen?.name ?? 'A holding this document no longer has'}</Bidi>
+              <Bidi className="min-w-0 truncate">{chosen?.name ?? t('wealth.where.gone')}</Bidi>
               {chosen?.detail !== undefined && (
                 <span className="ms-1.5 text-caption text-ink-secondary">
                   <Bidi>{chosen.detail}</Bidi>
                 </span>
               )}
             </span>
-            {chosen !== undefined && figureText(chosen) !== undefined && (
-              <span className="text-caption whitespace-nowrap text-ink-secondary tabular-nums">{figureText(chosen)}</span>
+            {chosen !== undefined && said(chosen) !== undefined && (
+              <span className="text-caption whitespace-nowrap text-ink-secondary tabular-nums">{said(chosen)}</span>
             )}
           </>
         )}
@@ -139,7 +140,7 @@ export function WherePicker({
       {open && (
         <div
           role="listbox"
-          aria-label="Where is the money?"
+          aria-label={t('wealth.where.label')}
           className="fc-pop-enter absolute top-full end-0 start-0 z-30 mt-1 max-h-[26rem] overflow-auto border border-hairline-strong bg-elevated py-1 shadow-pop"
         >
           {groups.map((group) => (
@@ -170,9 +171,9 @@ export function WherePicker({
                         </span>
                       )}
                     </span>
-                    {figureText(choice) !== undefined && (
+                    {said(choice) !== undefined && (
                       <span className={`text-caption whitespace-nowrap tabular-nums ${taken ? 'text-ink-tertiary' : 'text-ink-secondary'}`}>
-                        <Bidi>{figureText(choice) ?? ''}</Bidi>
+                        <Bidi>{said(choice) ?? ''}</Bidi>
                       </span>
                     )}
                   </button>
@@ -186,7 +187,7 @@ export function WherePicker({
             onClick={startNew}
             className={`block w-full px-3 py-1.5 text-start font-medium text-accent ${making !== undefined ? 'bg-accent-soft' : 'hover:bg-surface'}`}
           >
-            + New…
+            {t('wealth.where.newItem')}
           </button>
           {making !== undefined && (
             <NewPlace
@@ -220,12 +221,13 @@ function NewPlace({
   onUse: () => void
   onCancel: () => void
 }) {
+  const t = useT()
   const set = (change: Partial<NewPlaceAnswer>): void => onDraft({ ...draft, ...change })
   const lockable = LOCKABLE.has(draft.kind)
   return (
     <div className="mx-2 mt-1 mb-2 flex flex-col gap-3 border border-hairline bg-surface p-3">
-      <span className="text-[13px] font-medium">A place without statements</span>
-      <div role="group" aria-label="What is it" className="flex flex-wrap">
+      <span className="text-[13px] font-medium">{t('wealth.where.newTitle')}</span>
+      <div role="group" aria-label={t('wealth.where.what')} className="flex flex-wrap">
         {NEW_PLACE_KINDS.map((kind) => (
           <button
             key={kind}
@@ -238,13 +240,13 @@ function NewPlace({
                 : 'border-hairline-strong text-ink-secondary'
             }`}
           >
-            {NEW_KIND_LABEL[kind]}
+            {t(`wealth.kinds.newPlace.${kind}`)}
           </button>
         ))}
       </div>
       <div className="grid grid-cols-1 gap-x-4 gap-y-2.5 sm:grid-cols-2">
         <label className="flex flex-col gap-1">
-          <span className="text-label text-ink-tertiary uppercase">Name</span>
+          <span className="text-label text-ink-tertiary uppercase">{t('wealth.where.name')}</span>
           <input
             className={FIELD}
             autoFocus
@@ -260,38 +262,38 @@ function NewPlace({
         </label>
         {draft.kind !== 'CASH_AT_HOME' && (
           <label className="flex flex-col gap-1">
-            <span className="text-label text-ink-tertiary uppercase">At</span>
+            <span className="text-label text-ink-tertiary uppercase">{t('wealth.where.atLabel')}</span>
             <input
               className={FIELD}
               value={draft.institution ?? ''}
               onChange={(event) => set({ institution: event.target.value === '' ? undefined : event.target.value })}
             />
-            <span className="text-caption text-ink-tertiary">optional — the bank or company</span>
+            <span className="text-caption text-ink-tertiary">{t('wealth.where.atHint')}</span>
           </label>
         )}
         {lockable && (
           <label className="flex flex-col gap-1">
-            <span className="text-label text-ink-tertiary uppercase">Locked until</span>
+            <span className="text-label text-ink-tertiary uppercase">{t('wealth.where.locked')}</span>
             <input
               type="date"
               className={FIELD}
               value={draft.lockedUntil === undefined ? '' : toISODate(draft.lockedUntil)}
               onChange={(event) => set({ lockedUntil: parseISODate(event.target.value) ?? undefined })}
             />
-            <span className="text-caption text-ink-tertiary">optional</span>
+            <span className="text-caption text-ink-tertiary">{t('wealth.where.optional')}</span>
           </label>
         )}
       </div>
       <div className="flex items-center gap-3">
         <Button variant="secondary" size="sm" disabled={draft.name.trim() === ''} onClick={onUse}>
-          Use it
+          {t('wealth.where.use')}
         </Button>
         <Button variant="ghost" size="sm" onClick={onCancel}>
-          Cancel
+          {t('wealth.common.cancel')}
         </Button>
       </div>
       <p className="m-0 text-caption text-ink-secondary">
-        Nothing is written until {saveWord}. Cancel the goal and no empty place is left behind.
+        {t('wealth.where.nothingUntil', { save: saveWord })}
       </p>
     </div>
   )

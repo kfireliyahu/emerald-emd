@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 
 import { formatMoney, fromMajorUnits, money, type CurrencyCode, type Money } from '@/core/money.ts'
 import { formatPercent } from '@/core/percent.ts'
-import { formatMonthShort, toISODate } from '@/core/time.ts'
+import { toISODate } from '@/core/time.ts'
 import { DEFAULT_FEE_REFERENCES } from '@/data/reference/fundFeeReference.ts'
 import {
   expectedContributionsFor,
@@ -16,12 +16,15 @@ import {
   type ContributionRate,
 } from '@/domain/funds.ts'
 import type { FeeReference, FundAccount, FundFees } from '@/domain/model/funds.ts'
+import { countKey } from '@/i18n/count.ts'
+import { useDates, useT, type Translate } from '@/i18n/current.ts'
+import type { DateWords } from '@/i18n/dates.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { CountingAmount } from '@/ui/components/Amount.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
-import { FUND_TYPE_LABEL } from '@/ui/funds/labels.ts'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 
 /**
  * What the management fee costs over a working life — docs/f13's fee-impact
@@ -67,6 +70,7 @@ export function FeeImpact({
 } = {}) {
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
+  const t = useT()
 
   const entries = useMemo(() => (db === undefined ? [] : listFundsWithLatest(db)), [db, revision])
   const [chosenId, setChosenId] = useState<string | undefined>(fundId)
@@ -87,15 +91,22 @@ export function FeeImpact({
   )
 
   if (db === undefined) {
-    return <Centered>Open a document to see what a fund's fees cost.</Centered>
+    return <Centered>{t('wealth.feeImpact.noDocument')}</Centered>
   }
 
   if (selected === undefined) {
     return (
       <Centered>
-        No funds yet. <Link to="/wealth/funds" className="text-accent underline underline-offset-4 transition-colors duration-[var(--duration-micro)] hover:text-accent-hover">Add one</Link>{' '}
-        with its management fee, and this screen will show what that fee costs over the years you
-        hold it.
+        <Phrase
+          text={t('wealth.feeImpact.noFunds')}
+          parts={{
+            link: (
+              <Link to="/wealth/funds" className="text-accent underline underline-offset-4 transition-colors duration-[var(--duration-micro)] hover:text-accent-hover">
+                {t('wealth.feeImpact.addOne')}
+              </Link>
+            ),
+          }}
+        />
       </Centered>
     )
   }
@@ -104,7 +115,7 @@ export function FeeImpact({
     <div className={`@container ${embedded || panel ? 'flex flex-col' : 'flex h-full flex-col'}`}>
       <div className={`flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline py-2 ${panel ? '' : 'px-6'}`}>
         <label className="flex items-center gap-2 text-ink-secondary">
-          Fund
+          {t('wealth.feeImpact.fund')}
           <select
             className={`${SELECT} max-w-72`}
             value={selected.fund.id}
@@ -122,7 +133,7 @@ export function FeeImpact({
           to={`/wealth/funds/${selected.fund.id}`}
           className="text-ink-secondary underline-offset-4 hover:underline"
         >
-          Open the fund
+          {t('wealth.feeImpact.open')}
         </Link>
 
         <Button
@@ -131,7 +142,7 @@ export function FeeImpact({
           className="ms-auto"
           onClick={() => setAttempt((count) => count + 1)}
         >
-          Start over
+          {t('wealth.feeImpact.startOver')}
         </Button>
       </div>
 
@@ -191,6 +202,8 @@ function Illustration({
   rate: ContributionRate | undefined
   reference: FeeReference | undefined
 }) {
+  const t = useT()
+  const dates = useDates()
   const [assumptions, setAssumptions] = useState<Assumptions>(() =>
     defaults(fund, currency, balance, rate, reference),
   )
@@ -246,8 +259,8 @@ function Illustration({
     <>
       <div className="flex flex-wrap items-end gap-x-10 gap-y-4">
         <Figure
-          label="What the fee difference is worth"
-          hint={`over ${String(assumptions.years)} years, across the three returns below`}
+          label={t('wealth.feeImpact.worth')}
+          hint={t(countKey('wealth.feeImpact.worthHint', assumptions.years), { count: assumptions.years })}
         >
           {/* Every slider on this screen moves these two, so they count
               (docs/11). The two ends of the range animate independently and
@@ -264,42 +277,44 @@ function Illustration({
           </span>
         </Figure>
 
-        <Figure label={FUND_TYPE_LABEL[fund.fundType]} hint={fund.employerName ?? ''}>
+        <Figure label={t(`wealth.kinds.fund.${fund.fundType}`)} hint={fund.employerName ?? ''}>
           <Bidi className="text-secondary-number text-ink-secondary">{fund.name}</Bidi>
         </Figure>
       </div>
 
       <p className="mt-3 max-w-2xl text-caption text-ink-secondary">
-        An illustration, not a prediction. Nothing here forecasts what this fund will earn — it
-        compounds the assumptions below and shows what the difference between two fees does to
-        them. Every one of those assumptions is yours to change.
+        {t('wealth.feeImpact.illustration')}
         {/* A zero here has three different meanings and none of them is "your
             fee costs nothing". Each says which one it is — the same rule the
             rest of F13 follows about a figure with nothing behind it. */}
-        {whyThatFigure(assumptions, fund, costly) !== undefined && (
-          <> {whyThatFigure(assumptions, fund, costly)}</>
+        {whyThatFigure(assumptions, fund, costly, t) !== undefined && (
+          <> {whyThatFigure(assumptions, fund, costly, t)}</>
         )}
       </p>
 
-      <Section title="The two fees">
+      <Section title={t('wealth.feeImpact.twoFees')}>
         {fund.fees.onAccumulationBasisPoints === undefined && (
           <p className="mb-3 max-w-2xl text-caption text-ink-secondary">
-            This fund has no fee recorded, so the "today" figures below start from what is usually
-            negotiated rather than from yours.{' '}
-            <Link
-              to={`/wealth/funds/${fund.id}`}
-              className="text-accent underline underline-offset-4 transition-colors duration-[var(--duration-micro)] hover:text-accent-hover"
-            >
-              Add the fee from your report
-            </Link>{' '}
-            and this becomes about your own money.
+            <Phrase
+              text={t('wealth.feeImpact.noFee')}
+              parts={{
+                link: (
+                  <Link
+                    to={`/wealth/funds/${fund.id}`}
+                    className="text-accent underline underline-offset-4 transition-colors duration-[var(--duration-micro)] hover:text-accent-hover"
+                  >
+                    {t('wealth.feeImpact.addFee')}
+                  </Link>
+                ),
+              }}
+            />
           </p>
         )}
 
         <div className="grid max-w-4xl grid-cols-1 gap-x-12 gap-y-5 @lg:grid-cols-2">
           <RateSlider
-            label="Today, on the balance"
-            hint="דמי ניהול מהצבירה — taken every year on everything you hold"
+            label={t('wealth.feeImpact.todayBalance')}
+            hint={t('wealth.feeImpact.todayBalanceHint')}
             basisPoints={assumptions.current.onAccumulationBasisPoints ?? 0}
             max={bounds.accumulationFee}
             onChange={(value) =>
@@ -307,11 +322,11 @@ function Illustration({
             }
           />
           <RateSlider
-            label="If you negotiated it, on the balance"
+            label={t('wealth.feeImpact.targetBalance')}
             hint={
               reference === undefined
-                ? 'the fee you think you could get'
-                : `usually negotiated: ${formatPercent(reference.typicalOnAccumulationBasisPoints, { digits: 2 })}`
+                ? t('wealth.feeImpact.guess')
+                : t('wealth.feeImpact.usually', { percent: formatPercent(reference.typicalOnAccumulationBasisPoints, { digits: 2 }) })
             }
             basisPoints={assumptions.target.onAccumulationBasisPoints ?? 0}
             max={bounds.accumulationFee}
@@ -320,8 +335,8 @@ function Illustration({
             }
           />
           <RateSlider
-            label="Today, on each deposit"
-            hint="דמי ניהול מהפקדה — taken before the money is ever invested"
+            label={t('wealth.feeImpact.todayDeposit')}
+            hint={t('wealth.feeImpact.todayDepositHint')}
             basisPoints={assumptions.current.onDepositBasisPoints ?? 0}
             max={bounds.depositFee}
             step={5}
@@ -330,11 +345,11 @@ function Illustration({
             }
           />
           <RateSlider
-            label="If you negotiated it, on each deposit"
+            label={t('wealth.feeImpact.targetDeposit')}
             hint={
               reference === undefined
-                ? 'the fee you think you could get'
-                : `usually negotiated: ${formatPercent(reference.typicalOnDepositBasisPoints, { digits: 2 })}`
+                ? t('wealth.feeImpact.guess')
+                : t('wealth.feeImpact.usually', { percent: formatPercent(reference.typicalOnDepositBasisPoints, { digits: 2 }) })
             }
             basisPoints={assumptions.target.onDepositBasisPoints ?? 0}
             max={bounds.depositFee}
@@ -347,23 +362,24 @@ function Illustration({
 
         {reference !== undefined && (
           <p className="mt-4 max-w-2xl text-caption text-ink-secondary">
-            The ceiling for a {FUND_TYPE_LABEL[fund.fundType].toLowerCase()} is{' '}
-            {formatPercent(reference.capOnAccumulationBasisPoints, { digits: 2 })} on the balance and{' '}
-            {formatPercent(reference.capOnDepositBasisPoints, { digits: 2 })} on deposits. Those are
-            the app's shipped figures as of {toISODate(reference.asOf)} — check them against the
-            regulator before acting on them.
+            {t('wealth.feeImpact.ceiling', {
+              type: t(`wealth.kinds.fund.${fund.fundType}`).toLowerCase(),
+              balanceCap: formatPercent(reference.capOnAccumulationBasisPoints, { digits: 2 }),
+              depositCap: formatPercent(reference.capOnDepositBasisPoints, { digits: 2 }),
+              date: toISODate(reference.asOf),
+            })}
           </p>
         )}
       </Section>
 
-      <Section title="What it is projected against">
+      <Section title={t('wealth.feeImpact.against')}>
         <div className="grid max-w-4xl grid-cols-1 gap-x-12 gap-y-5 @lg:grid-cols-2">
           <AmountSlider
-            label="Starting balance"
+            label={t('wealth.feeImpact.start')}
             hint={
               balance === undefined
-                ? 'no reading yet — this fund has no balance on record, so it starts at nothing'
-                : `your reading of ${balanceAsOf ?? ''}`
+                ? t('wealth.feeImpact.startNone')
+                : t('wealth.feeImpact.startReading', { date: balanceAsOf ?? '' })
             }
             amount={assumptions.openingBalance}
             max={bounds.balance}
@@ -371,8 +387,8 @@ function Illustration({
             onChange={(value) => set({ openingBalance: value })}
           />
           <AmountSlider
-            label="Paid in each year"
-            hint={contributionHint(rate)}
+            label={t('wealth.feeImpact.paidYear')}
+            hint={contributionHint(rate, t, dates)}
             amount={assumptions.annualContribution}
             max={bounds.contribution}
             step={step(1_000)}
@@ -380,9 +396,9 @@ function Illustration({
           />
           <div className="flex flex-col gap-1">
             <div className="flex items-baseline justify-between gap-4">
-              <span className="text-label text-ink-secondary uppercase">For how long</span>
+              <span className="text-label text-ink-secondary uppercase">{t('wealth.feeImpact.howLong')}</span>
               <span className="tabular-nums">
-                {assumptions.years} {assumptions.years === 1 ? 'year' : 'years'}
+                {t(countKey('wealth.feeImpact.years', assumptions.years), { count: assumptions.years })}
               </span>
             </div>
             <input
@@ -392,17 +408,17 @@ function Illustration({
               step={1}
               value={assumptions.years}
               onChange={(event) => set({ years: Number(event.target.value) })}
-              aria-label="Years"
+              aria-label={t('wealth.feeImpact.yearsLabel')}
               className="w-full accent-[var(--color-ink)]"
             />
             <span className="text-caption text-ink-secondary">
-              until you draw on it — a pension is decades, a study fund is years
+              {t('wealth.feeImpact.howLongHint')}
             </span>
           </div>
         </div>
       </Section>
 
-      <Section title="What the difference is worth">
+      <Section title={t('wealth.feeImpact.differenceTitle')}>
         <div className="grid max-w-4xl grid-cols-1 gap-x-12 gap-y-6 @lg:grid-cols-3">
           {result.scenarios.map((scenario, index) => (
             <div key={index} className="flex flex-col gap-2">
@@ -428,9 +444,9 @@ function Illustration({
                       ),
                     })
                   }}
-                  aria-label={`Assumed gross return ${String(index + 1)}`}
+                  aria-label={t('wealth.feeImpact.returnLabel', { n: index + 1 })}
                 />
-                a year, before fees
+                {t('wealth.feeImpact.returnSuffix')}
               </label>
 
               {/* This column's own answer, and the third figure a slider moves.
@@ -461,10 +477,10 @@ function Illustration({
                   three parts here are an identity, not three estimates
                   (D-082). */}
               <dl className="mt-2 flex flex-col gap-0.5 border-t border-hairline pt-2 text-caption text-ink-secondary">
-                <Part label="you pay in" amount={scenario.paidIn} />
-                <Part label="it earns" amount={scenario.grossGrowth} />
+                <Part label={t('wealth.feeImpact.youPay')} amount={scenario.paidIn} />
+                <Part label={t('wealth.feeImpact.earns')} amount={scenario.grossGrowth} />
                 <Part
-                  label="the fee takes"
+                  label={t('wealth.feeImpact.feeTakes')}
                   amount={money(-scenario.feesTaken.minor, scenario.feesTaken.currency)}
                 />
               </dl>
@@ -475,12 +491,9 @@ function Illustration({
         {agreed !== undefined && agreedBasisPoints !== undefined && (
           <div className="mt-6 flex max-w-4xl flex-col gap-2 border-t border-hairline pt-4">
             <span className="text-label text-ink-secondary uppercase">
-              At the return the provider agreed: {formatPercent(agreedBasisPoints, { digits: 2 })} a year,
-              before fees
+              {t('wealth.feeImpact.agreed', { percent: formatPercent(agreedBasisPoints, { digits: 2 }) })}
             </span>
-            <span className="text-caption text-ink-secondary">
-              Written in the contract, not assumed, so it is shown apart from the three above.
-            </span>
+            <span className="text-caption text-ink-secondary">{t('wealth.feeImpact.agreedWhy')}</span>
             <CountingAmount
               value={agreed.difference}
               className={`text-secondary-number ${agreed.difference.minor < 0 ? 'text-negative' : ''}`}
@@ -492,23 +505,19 @@ function Illustration({
         )}
 
         <p className="mt-5 max-w-2xl text-caption text-ink-secondary">
-          The three lines under each figure add up to it. What the fee takes is measured against
-          the same projection with no fee at all, not against the fee charged — a charge on the
-          balance is taken out of money that would have gone on compounding, so what it costs over{' '}
-          {assumptions.years} years is a multiple of what appears on any one statement.
+          {t(countKey('wealth.feeImpact.addsUp', assumptions.years), { count: assumptions.years })}
         </p>
 
         <p className="mt-5 max-w-2xl text-caption text-ink-secondary">
-          Read as: with {formatMoney(assumptions.openingBalance)} today and{' '}
-          {formatMoney(assumptions.annualContribution)} paid in a year for {assumptions.years}{' '}
-          years, moving the fee from{' '}
-          {formatPercent(assumptions.current.onAccumulationBasisPoints, { digits: 2 })} to{' '}
-          {formatPercent(assumptions.target.onAccumulationBasisPoints, { digits: 2 })} on the
-          balance and from{' '}
-          {formatPercent(assumptions.current.onDepositBasisPoints, { digits: 2 })} to{' '}
-          {formatPercent(assumptions.target.onDepositBasisPoints, { digits: 2 })} on each deposit
-          is worth the figures above. Returns are assumed to arrive evenly and are the same in
-          every year, which no real fund manages.
+          {t(countKey('wealth.feeImpact.readAs', assumptions.years), {
+            count: assumptions.years,
+            balance: formatMoney(assumptions.openingBalance),
+            paid: formatMoney(assumptions.annualContribution),
+            fromBalance: formatPercent(assumptions.current.onAccumulationBasisPoints, { digits: 2 }),
+            toBalance: formatPercent(assumptions.target.onAccumulationBasisPoints, { digits: 2 }),
+            fromDeposit: formatPercent(assumptions.current.onDepositBasisPoints, { digits: 2 }),
+            toDeposit: formatPercent(assumptions.target.onDepositBasisPoints, { digits: 2 }),
+          })}
         </p>
       </Section>
     </>
@@ -538,9 +547,11 @@ function whyThatFigure(
   assumptions: Assumptions,
   fund: FundAccount,
   costly: boolean,
+  t: Translate,
 ): string | undefined {
+  const zero = formatMoney(money(0, assumptions.openingBalance.currency))
   if (assumptions.openingBalance.minor === 0 && assumptions.annualContribution.minor === 0) {
-    return 'It is ₪0.00 because there is nothing to project against yet: no balance and nothing paid in a year. Set either one below, or add a reading to the fund.'
+    return t('wealth.feeImpact.whyNothing', { zero })
   }
 
   const identical =
@@ -549,13 +560,11 @@ function whyThatFigure(
     assumptions.current.onDepositBasisPoints === assumptions.target.onDepositBasisPoints
   if (identical) {
     return fund.fees.onAccumulationBasisPoints === undefined
-      ? 'It is ₪0.00 because both fees below start from the same figure, this fund having none recorded. Move one to see what a difference would be worth.'
-      : 'It is ₪0.00 because both fees below are the same: this fund is already at or under what is usually negotiated, so there is nothing to compare it against until you move one.'
+      ? t('wealth.feeImpact.whySameNone', { zero })
+      : t('wealth.feeImpact.whySame', { zero })
   }
 
-  if (costly) {
-    return 'The figure is negative because the fee you are comparing against is higher than the one you pay today: this is what letting it rise would cost.'
-  }
+  if (costly) return t('wealth.feeImpact.whyCostly')
 
   return undefined
 }
@@ -607,14 +616,13 @@ function defaults(
  * than at a plausible-looking number nobody entered (the mistake D-071 found on
  * the fund detail screen, in its other form).
  */
-function contributionHint(rate: ContributionRate | undefined): string {
-  if (rate === undefined) {
-    return 'no paychecks feed this fund, so nothing is assumed — set what you pay in'
-  }
-  const span = `${formatMonthShort(rate.from)} to ${formatMonthShort(rate.to)}`
+function contributionHint(rate: ContributionRate | undefined, t: Translate, dates: DateWords): string {
+  if (rate === undefined) return t('wealth.feeImpact.contributionNone')
+  const from = dates.monthShort(rate.from)
+  const to = dates.monthShort(rate.to)
   return rate.monthsCounted >= 12
-    ? `your paychecks for ${span}`
-    : `${String(rate.monthsCounted)} months of paychecks (${span}), scaled to a year`
+    ? t('wealth.feeImpact.contributionYear', { from, to })
+    : t(countKey('wealth.feeImpact.contributionScaled', rate.monthsCounted), { count: rate.monthsCounted, from, to })
 }
 
 /**
@@ -729,6 +737,7 @@ function RateSlider({
  * written as a percentage.
  */
 function FeeBar({ reached, could }: { reached: Money; could: Money }) {
+  const t = useT()
   const whole = Math.max(Math.abs(reached.minor), Math.abs(could.minor), 1)
   const filled = Math.max(0, Math.min(100, (Math.min(reached.minor, could.minor) / whole) * 100))
 
@@ -736,7 +745,7 @@ function FeeBar({ reached, could }: { reached: Money; could: Money }) {
     <div
       className="flex h-2 w-full overflow-hidden bg-surface"
       role="img"
-      aria-label={`${formatMoney(reached)} against ${formatMoney(could)}`}
+      aria-label={t('wealth.feeImpact.bar', { reached: formatMoney(reached), could: formatMoney(could) })}
     >
       <div className="h-full bg-ink-tertiary" style={{ width: `${String(filled)}%` }} />
     </div>

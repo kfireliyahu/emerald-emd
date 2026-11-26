@@ -2,7 +2,7 @@
  * What the savings vocabulary is called on screen.
  *
  * Here rather than title-cased from the identifier, for the reason
- * `funds/labels.ts` exists: `EARMARKED` is "for something specific" and
+ * `funds/labels.ts` did (gone with M64 F26): `EARMARKED` is "for something specific" and
  * `FROM_PAYCHECK_DEDUCTION` is "from a payslip", and neither survives a
  * mechanical transformation of its enum name.
  *

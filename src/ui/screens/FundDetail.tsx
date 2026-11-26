@@ -3,7 +3,7 @@ import { Link, useLocation, useParams } from 'react-router-dom'
 
 import { abs, formatMoney } from '@/core/money.ts'
 import { formatPercent } from '@/core/percent.ts'
-import { formatMonthShort, formatYearMonth, monthsBetween, toISODate, toYearMonthString, yearMonthOf } from '@/core/time.ts'
+import { monthsBetween, toISODate, toYearMonthString, yearMonthOf } from '@/core/time.ts'
 import { DEFAULT_FEE_REFERENCES } from '@/data/reference/fundFeeReference.ts'
 import {
   acknowledgeDepositGap,
@@ -32,11 +32,12 @@ import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { Chip } from '@/ui/components/Chip.tsx'
 import { BalanceChart } from '@/ui/funds/BalanceChart.tsx'
-import { DEPOSIT_STATUS_LABEL, FUND_TYPE_LABEL } from '@/ui/funds/labels.ts'
 import { ReportIntake } from '@/ui/funds/ReportIntake.tsx'
 import { blankSnapshot, SnapshotForm } from '@/ui/funds/SnapshotEditor.tsx'
 import { SidePanel } from '@/ui/components/SidePanel.tsx'
-import { useT } from '@/i18n/current.ts'
+import { countKey } from '@/i18n/count.ts'
+import { useDates, useT, type Translate } from '@/i18n/current.ts'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { today } from '@/ui/today.ts'
 import { useClosePane } from '@/ui/screens/ListDetail.tsx'
 
@@ -82,15 +83,15 @@ export function FundDetail() {
   )
 
   if (db === undefined) {
-    return <Centered>Open a document to see a fund.</Centered>
+    return <Centered>{t('wealth.fundDetail.noDocument')}</Centered>
   }
 
   if (analysis === undefined) {
     return (
       <Centered>
-        No such fund — it may have been deleted.{' '}
+        {t('wealth.fundDetail.missing')}{' '}
         <Link to="/wealth/funds" className="text-accent underline underline-offset-4 transition-colors duration-[var(--duration-micro)] hover:text-accent-hover">
-          Close this pane
+          {t('wealth.fundDetail.closePane')}
         </Link>
         .
       </Centered>
@@ -212,17 +213,17 @@ export function FundDetail() {
             setEditing({ isNew: true, snapshot: blankSnapshot(fund.id, now, currency) })
           }
         >
-          Add reading
+          {t('wealth.reading.add')}
         </Button>
 
         {/* Says what it does rather than what is behind it: on a machine with no
             model this reads a report in a format the document already knows, and
             otherwise it is the way to teach it one. */}
         <Button variant="secondary" size="sm" onClick={() => setReading(true)}>
-          Read a report
+          {t('wealth.fundDetail.readReport')}
         </Button>
         <Button variant="ghost" size="sm" onClick={closePane}>
-          Close
+          {t('wealth.fundDetail.close')}
         </Button>
       </div>
 
@@ -230,7 +231,7 @@ export function FundDetail() {
         <div className="fc-pop-enter flex shrink-0 items-center gap-4 border-b border-hairline bg-surface px-6 py-2">
           <span className="text-negative">{problem}</span>
           <Button variant="ghost" size="sm" className="ms-auto" onClick={() => setProblem(undefined)}>
-            Dismiss
+            {t('wealth.common.dismiss')}
           </Button>
         </div>
       )}
@@ -238,8 +239,8 @@ export function FundDetail() {
       <div className="min-h-0 flex-1 overflow-auto px-6 py-4">
         <div className="flex flex-wrap items-end gap-x-10 gap-y-4">
           <Figure
-            label="Balance"
-            hint={latest === undefined ? 'no reading yet' : `as of ${toISODate(latest.asOfDate)}`}
+            label={t('wealth.fundDetail.balance')}
+            hint={latest === undefined ? t('wealth.fundDetail.noReading') : t('wealth.fundDetail.asOf', { date: toISODate(latest.asOfDate) })}
           >
             <span className="text-hero tabular-nums">
               {latest === undefined ? '—' : formatMoney(latest.totalBalance)}
@@ -247,7 +248,7 @@ export function FundDetail() {
           </Figure>
 
           {split !== undefined && split.severance.minor !== 0 && (
-            <Figure label="Of which severance" hint="different withdrawal terms and tax">
+            <Figure label={t('wealth.fundDetail.severance')} hint={t('wealth.fundDetail.severanceHint')}>
               <span className="text-secondary-number text-ink-secondary tabular-nums">
                 {formatMoney(split.severance)}
               </span>
@@ -255,39 +256,43 @@ export function FundDetail() {
           )}
 
           <Figure
-            label={FUND_TYPE_LABEL[fund.fundType]}
+            label={t(`wealth.kinds.fund.${fund.fundType}`)}
             hint={[fund.employerName, fund.investmentTrack, fund.policyNumber]
               .filter((value) => value !== undefined)
               .join(' · ')}
           >
             <span className="text-secondary-number text-ink-secondary">
-              {fund.status === 'ACTIVE' ? 'Active' : fund.status === 'DORMANT' ? 'Dormant' : 'Closed'}
+              {t(`wealth.kinds.fundStatus.${fund.status}`)}
             </span>
           </Figure>
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1">
           {agreement.kind === 'LAPSED' && (
-            <Chip problem>Fee agreement ended {toISODate(agreement.since)}</Chip>
+            <Chip problem>{t('wealth.fundDetail.lapsed', { date: toISODate(agreement.since) })}</Chip>
           )}
           {agreement.kind === 'EXPIRING_SOON' && (
-            <Chip>Fee agreement ends {toISODate(agreement.until)}</Chip>
+            <Chip>{t('wealth.fundDetail.expiring', { date: toISODate(agreement.until) })}</Chip>
           )}
           {liquidity !== undefined && (
             <Chip>
-              Withdrawable {toISODate(liquidity.liquidAt)} · six years from{' '}
-              {toISODate(liquidity.firstDepositDate)}
+              {t('wealth.fundDetail.withdrawable', {
+                date: toISODate(liquidity.liquidAt),
+                first: toISODate(liquidity.firstDepositDate),
+              })}
             </Chip>
           )}
-          {fund.beneficiaries !== undefined && <Chip>Beneficiaries: {fund.beneficiaries}</Chip>}
+          {fund.beneficiaries !== undefined && (
+            <Chip>
+              <Phrase text={t('wealth.fundDetail.beneficiaries')} parts={{ names: <Bidi>{fund.beneficiaries}</Bidi> }} />
+            </Chip>
+          )}
         </div>
 
-        <Section title="What it is worth, and why it moved">
+        <Section title={t('wealth.fundDetail.worthTitle')}>
           {returns.kind === 'NEEDS_TWO_POINTS' ? (
             <Empty>
-              {returns.snapshotCount === 0
-                ? 'No readings yet. One gives you a balance.'
-                : 'One reading gives a balance and nothing else. A second is what every return and fee figure is computed from.'}
+              {returns.snapshotCount === 0 ? t('wealth.fundDetail.noReadings') : t('wealth.fundDetail.oneReading')}
             </Empty>
           ) : (
             <>
@@ -295,12 +300,12 @@ export function FundDetail() {
 
               {returns.cumulative !== undefined && (
                 <div className="mt-4 flex flex-wrap items-end gap-x-10 gap-y-4">
-                  <Figure label="Paid in" hint={trackedSpan(snapshots)}>
+                  <Figure label={t('wealth.fundDetail.paidIn')} hint={trackedSpan(snapshots, t)}>
                     <span className="text-secondary-number tabular-nums">
                       {formatMoney(returns.cumulative.contributions)}
                     </span>
                   </Figure>
-                  <Figure label="Earned" hint="net of the fees the fund took out of it">
+                  <Figure label={t('wealth.fundDetail.earned')} hint={t('wealth.fundDetail.earnedHint')}>
                     <span
                       className={`text-secondary-number tabular-nums ${
                         returns.cumulative.gain.minor < 0 ? 'text-negative' : ''
@@ -309,7 +314,7 @@ export function FundDetail() {
                       {formatMoney(returns.cumulative.gain)}
                     </span>
                   </Figure>
-                  <Figure label="Return" hint="approximate — contributions assumed to arrive evenly">
+                  <Figure label={t('wealth.fundDetail.return')} hint={t('wealth.fundDetail.returnHint')}>
                     <span className="text-secondary-number tabular-nums">
                       {formatPercent(returns.cumulative.basisPoints)}
                     </span>
@@ -327,30 +332,24 @@ export function FundDetail() {
               {returns.cumulative !== undefined && trackedMonths(snapshots) < SHORT_HISTORY && (
                 <p className="mt-3 flex max-w-2xl flex-wrap items-center gap-x-3 gap-y-1 text-caption text-ink-secondary">
                   <span>
-                    Everything above covers the {trackedMonths(snapshots)} months your readings
-                    span, not the fund's life. If it is older than that, its past quarterlies say
-                    what happened before you started transcribing.
+                    {t(countKey('wealth.fundDetail.short', trackedMonths(snapshots)), { count: trackedMonths(snapshots) })}
                   </span>
                   <Button variant="ghost" size="sm" onClick={() => setReading(true)}>
-                    Read the old ones
+                    {t('wealth.fundDetail.readOld')}
                   </Button>
                 </p>
               )}
 
               {returns.cumulative === undefined && (
                 <p className="mt-3 max-w-2xl text-caption text-ink-secondary">
-                  No total for the whole history: {returns.unknownPeriods}{' '}
-                  {returns.unknownPeriods === 1 ? 'period has' : 'periods have'} nothing to say what
-                  was paid in, and a total over the rest would cover a different span than the chart
-                  above. Record the deposits on those readings, or link a paycheck deduction type to
-                  this fund.
+                  {t(countKey('wealth.fundDetail.noTotal', returns.unknownPeriods), { count: returns.unknownPeriods })}
                 </p>
               )}
             </>
           )}
         </Section>
 
-        <Section title="Did the deposits arrive">
+        <Section title={t('wealth.fundDetail.depositsTitle')}>
           <Verdict reconciliation={reconciliation} fundName={fund.name} />
 
           {reconciliation.kind === 'CHECKED' &&
@@ -371,28 +370,31 @@ export function FundDetail() {
                     )
                   }
                 >
-                  {reconciliation.status === 'ACKNOWLEDGED'
-                    ? 'Report this gap again'
-                    : 'I chased this and it is explained'}
+                  {reconciliation.status === 'ACKNOWLEDGED' ? t('wealth.fundDetail.reportAgain') : t('wealth.fundDetail.chased')}
                 </Button>
-                <span className="text-caption text-ink-secondary">
-                  The figures do not change — only whether the app keeps raising it.
-                </span>
+                <span className="text-caption text-ink-secondary">{t('wealth.fundDetail.chasedWhy')}</span>
               </div>
             )}
 
           {linkedTypes.length === 0 ? (
             <p className="mt-3 max-w-2xl text-caption text-ink-secondary">
-              No paycheck deduction type feeds this fund yet, so there is nothing to compare the
-              fund's own figures against. Link one on the{' '}
-              <Link to="/paychecks/deductions" className="text-accent underline underline-offset-4 transition-colors duration-[var(--duration-micro)] hover:text-accent-hover">
-                deduction types
-              </Link>{' '}
-              screen.
+              <Phrase
+                text={t('wealth.fundDetail.noLink')}
+                parts={{
+                  link: (
+                    <Link to="/paychecks/deductions" className="text-accent underline underline-offset-4 transition-colors duration-[var(--duration-micro)] hover:text-accent-hover">
+                      {t('wealth.fundDetail.noLinkLink')}
+                    </Link>
+                  ),
+                }}
+              />
             </p>
           ) : (
             <p className="mt-3 text-caption text-ink-secondary">
-              Fed by {linkedTypes.map((type) => type.name).join(', ')}.
+              <Phrase
+                text={t('wealth.fundDetail.fedBy')}
+                parts={{ names: <Bidi>{linkedTypes.map((type) => type.name).join(t('wealth.common.listSeparator'))}</Bidi> }}
+              />
             </p>
           )}
 
@@ -400,9 +402,9 @@ export function FundDetail() {
           {periods.length > 0 && <PeriodTable periods={periods} />}
         </Section>
 
-        <Section title="What the fee costs">
+        <Section title={t('wealth.fundDetail.fee.title')}>
           <div className="flex flex-wrap items-end gap-x-10 gap-y-4">
-            <Figure label="Stated" hint="what you told the app the policy says">
+            <Figure label={t('wealth.fundDetail.fee.stated')} hint={t('wealth.fundDetail.fee.statedHint')}>
               <span className="text-secondary-number tabular-nums">
                 {fund.fees.onAccumulationBasisPoints === undefined
                   ? '—'
@@ -410,7 +412,7 @@ export function FundDetail() {
               </span>
             </Figure>
 
-            <Figure label="Actually paid" hint={feeHint(fee)}>
+            <Figure label={t('wealth.fundDetail.fee.paid')} hint={feeHint(fee, t)}>
               <span
                 className={`text-secondary-number tabular-nums ${
                   feeDiffersMaterially(fee) ? 'text-negative' : ''
@@ -423,14 +425,14 @@ export function FundDetail() {
             </Figure>
 
             {annualCost !== undefined && (
-              <Figure label="A year, at this balance" hint="at the stated fee">
+              <Figure label={t('wealth.fundDetail.fee.year')} hint={t('wealth.fundDetail.fee.yearHint')}>
                 <span className="text-secondary-number tabular-nums">
                   {formatMoney(annualCost)}
                 </span>
               </Figure>
             )}
 
-            <Figure label="On each deposit" hint="taken before the money is invested">
+            <Figure label={t('wealth.fundDetail.fee.onDeposit')} hint={t('wealth.fundDetail.fee.onDepositHint')}>
               <span className="text-secondary-number tabular-nums">
                 {fund.fees.onDepositBasisPoints === undefined
                   ? '—'
@@ -441,29 +443,29 @@ export function FundDetail() {
 
           {benchmark.reference !== undefined && benchmark.onAccumulation !== undefined && (
             <p className="mt-3 max-w-2xl text-caption text-ink-secondary">
-              The ceiling for a {FUND_TYPE_LABEL[fund.fundType].toLowerCase()} is{' '}
-              {formatPercent(benchmark.onAccumulation.capBasisPoints, { digits: 2 })} on the balance
-              and {formatPercent(benchmark.onDeposit?.capBasisPoints, { digits: 2 })} on deposits;
-              what is usually negotiated is{' '}
-              {formatPercent(benchmark.onAccumulation.typicalBasisPoints, { digits: 2 })}. Those are
-              the app's shipped figures as of {toISODate(benchmark.reference.asOf)} — check them
-              against the regulator before acting on them.
+              {t('wealth.fundDetail.fee.ceiling', {
+                type: t(`wealth.kinds.fund.${fund.fundType}`).toLowerCase(),
+                balanceCap: formatPercent(benchmark.onAccumulation.capBasisPoints, { digits: 2 }),
+                depositCap: formatPercent(benchmark.onDeposit?.capBasisPoints, { digits: 2 }),
+                typical: formatPercent(benchmark.onAccumulation.typicalBasisPoints, { digits: 2 }),
+                date: toISODate(benchmark.reference.asOf),
+              })}
             </p>
           )}
         </Section>
 
-        <Section title="The readings this is derived from">
+        <Section title={t('wealth.fundDetail.readings.title')}>
           {snapshots.length === 0 ? (
-            <Empty>Nothing transcribed yet.</Empty>
+            <Empty>{t('wealth.fundDetail.readings.empty')}</Empty>
           ) : (
             <table className="w-full max-w-3xl">
               <thead>
                 <tr className="border-b border-hairline text-label text-ink-secondary uppercase">
-                  <th className="py-2 pe-6 text-start font-medium">As of</th>
-                  <th className="py-2 pe-6 text-end font-medium">Balance</th>
-                  <th className="py-2 pe-6 text-end font-medium">Deposits</th>
-                  <th className="py-2 pe-6 text-end font-medium">Fees</th>
-                  <th className="py-2 pe-6 text-start font-medium">Note</th>
+                  <th className="py-2 pe-6 text-start font-medium">{t('wealth.fundDetail.readings.asOf')}</th>
+                  <th className="py-2 pe-6 text-end font-medium">{t('wealth.fundDetail.readings.balance')}</th>
+                  <th className="py-2 pe-6 text-end font-medium">{t('wealth.fundDetail.readings.deposits')}</th>
+                  <th className="py-2 pe-6 text-end font-medium">{t('wealth.fundDetail.readings.fees')}</th>
+                  <th className="py-2 pe-6 text-start font-medium">{t('wealth.fundDetail.readings.note')}</th>
                   <th className="py-2" />
                 </tr>
               </thead>
@@ -487,7 +489,7 @@ export function FundDetail() {
                         : formatMoney(snapshot.feesChargedSincePrevious)}
                     </td>
                     <td className="py-1.5 pe-6 text-caption text-ink-secondary">
-                      {snapshot.note ?? ''}
+                      {snapshot.note === undefined ? '' : <Bidi>{snapshot.note}</Bidi>}
                     </td>
                     <td className="py-1.5 text-end">
                       <Button
@@ -495,14 +497,14 @@ export function FundDetail() {
                         size="sm"
                         onClick={() => setEditing({ isNew: false, snapshot })}
                       >
-                        Edit
+                        {t('wealth.common.edit')}
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => write((database, at) => deleteSnapshot(database, snapshot.id, at))}
                       >
-                        Delete
+                        {t('wealth.common.delete')}
                       </Button>
                     </td>
                   </tr>
@@ -548,11 +550,11 @@ function trackedMonths(snapshots: readonly FundBalanceSnapshot[]): number {
 }
 
 /** The window the figures actually cover, printed rather than implied. */
-function trackedSpan(snapshots: readonly FundBalanceSnapshot[]): string {
+function trackedSpan(snapshots: readonly FundBalanceSnapshot[], t: Translate): string {
   const first = snapshots[0]
   const last = snapshots[snapshots.length - 1]
-  if (first === undefined || last === undefined) return 'over the tracked history'
-  return `${toISODate(first.asOfDate)} to ${toISODate(last.asOfDate)}`
+  if (first === undefined || last === undefined) return t('wealth.fundDetail.spanUnknown')
+  return t('wealth.fundDetail.span', { from: toISODate(first.asOfDate), to: toISODate(last.asOfDate) })
 }
 
 function Verdict({
@@ -562,31 +564,28 @@ function Verdict({
   reconciliation: DepositReconciliation
   fundName: string
 }) {
+  const t = useT()
+  const dates = useDates()
   if (reconciliation.kind === 'NEEDS_TWO_POINTS') {
     return (
       <Empty>
-        {reconciliation.snapshotCount === 0
-          ? 'No readings yet, so there is nothing to compare your paychecks against.'
-          : 'One reading. A deposit check needs two, because what it compares is what arrived between them.'}
+        {reconciliation.snapshotCount === 0 ? t('wealth.fundDetail.verdict.noReadings') : t('wealth.fundDetail.verdict.oneReading')}
       </Empty>
     )
   }
   if (reconciliation.kind === 'NO_FUND_REPORT') {
-    return (
-      <Empty>
-        None of the readings says what the fund received. That figure is on the report as
-        "הפקדות" — add it to a reading and this check starts working.
-      </Empty>
-    )
+    return <Empty>{t('wealth.fundDetail.verdict.noReport')}</Empty>
   }
   if (reconciliation.kind === 'WINDOW_TOO_SHORT') {
-    return <Empty>Two readings inside one month is too short a window to compare.</Empty>
+    return <Empty>{t('wealth.fundDetail.verdict.tooShort')}</Empty>
   }
   if (reconciliation.kind === 'NO_PAYSLIP_DATA') {
     return (
       <Empty>
-        {fundName} reports receiving {formatMoney(reconciliation.reported)} over this period, and
-        there are no paychecks covering it to compare that against.
+        <Phrase
+          text={t('wealth.fundDetail.verdict.noPayslips')}
+          parts={{ fund: <Bidi>{fundName}</Bidi>, amount: formatMoney(reconciliation.reported) }}
+        />
       </Empty>
     )
   }
@@ -597,24 +596,30 @@ function Verdict({
   return (
     <div>
       <p className={`max-w-2xl ${missing ? 'text-negative' : ''}`}>
-        Your paychecks show {formatMoney(expected.total)} due to this fund for{' '}
-        {formatYearMonth(window.salaryFrom)} to {formatYearMonth(window.salaryTo)}. The fund
-        reports receiving {formatMoney(reported)}.{' '}
+        {t('wealth.fundDetail.verdict.said', {
+          expected: formatMoney(expected.total),
+          from: dates.yearMonth(window.salaryFrom),
+          to: dates.yearMonth(window.salaryTo),
+          reported: formatMoney(reported),
+        })}{' '}
         {gap.minor === 0
-          ? 'They agree exactly.'
+          ? t('wealth.fundDetail.verdict.agree')
           : missing
-            ? `${formatMoney(gap)} is unaccounted for.`
+            ? t('wealth.fundDetail.verdict.missing', { amount: formatMoney(gap) })
             : status === 'DEPOSITS_EXCEED_PAYSLIPS'
               ? // The gap is expected minus reported, so a surplus is negative.
                 // Printed raw it reads "-₪500.00 more arrived", which is a
                 // double negative in a sentence whose whole job is to be plain.
-                `${formatMoney(abs(gap))} more arrived than the paychecks account for — usually a month of an earlier period landing inside this one.`
-              : `The difference is ${formatMoney(gap)}.`}
+                t('wealth.fundDetail.verdict.exceeds', { amount: formatMoney(abs(gap)) })
+              : t('wealth.fundDetail.verdict.differs', { amount: formatMoney(gap) })}
       </p>
       <p className="mt-1 text-caption text-ink-secondary">
-        {DEPOSIT_STATUS_LABEL[status]} · {expected.paycheckCount}{' '}
-        {expected.paycheckCount === 1 ? 'paycheck' : 'paychecks'}, compared with a{' '}
-        {window.lagMonths}-month lag and a tolerance of {formatMoney(reconciliation.tolerance)}.
+        {t(countKey('wealth.fundDetail.verdict.how', expected.paycheckCount), {
+          status: t(`wealth.kinds.deposit.${status}`),
+          count: expected.paycheckCount,
+          lag: window.lagMonths,
+          tolerance: formatMoney(reconciliation.tolerance),
+        })}
       </p>
     </div>
   )
@@ -643,29 +648,31 @@ function hasPayslips(
  * chasing an employer needs.
  */
 function MonthTable({ months }: { months: readonly MonthlyDeposit[] }) {
+  const t = useT()
+  const dates = useDates()
   return (
     <div className="mt-4 max-w-3xl overflow-x-auto">
-      <p className="text-label text-ink-secondary uppercase">Month by month, from the reports</p>
+      <p className="text-label text-ink-secondary uppercase">{t('wealth.fundDetail.months.title')}</p>
       <table className="mt-2 w-full">
         <thead>
           <tr className="border-b border-hairline text-label text-ink-secondary uppercase">
-            <th className="py-2 pe-6 text-start font-medium">Salary month</th>
-            <th className="py-2 pe-6 text-end font-medium">Paycheck says</th>
-            <th className="py-2 pe-6 text-end font-medium">Fund received</th>
-            <th className="py-2 pe-6 text-end font-medium">Difference</th>
+            <th className="py-2 pe-6 text-start font-medium">{t('wealth.fundDetail.months.salaryMonth')}</th>
+            <th className="py-2 pe-6 text-end font-medium">{t('wealth.fundDetail.months.paycheckSays')}</th>
+            <th className="py-2 pe-6 text-end font-medium">{t('wealth.fundDetail.months.fundReceived')}</th>
+            <th className="py-2 pe-6 text-end font-medium">{t('wealth.fundDetail.months.difference')}</th>
             {/* The base the two documents each say the deposit was worked out
                 on (D-169) — the payslip's `basisAmount` against the fund's own
                 salary column, and neither of them is the gross. */}
-            <th className="py-2 pe-6 text-end font-medium">Computed on</th>
-            <th className="py-2 pe-6 text-start font-medium">Arrived</th>
-            <th className="py-2 text-start font-medium">Late by</th>
+            <th className="py-2 pe-6 text-end font-medium">{t('wealth.fundDetail.months.computedOn')}</th>
+            <th className="py-2 pe-6 text-start font-medium">{t('wealth.fundDetail.months.arrived')}</th>
+            <th className="py-2 text-start font-medium">{t('wealth.fundDetail.months.lateBy')}</th>
           </tr>
         </thead>
         <tbody>
           {[...months].reverse().map((month) => (
             <tr key={toYearMonthString(month.period)} className="border-b border-hairline">
               <td className="py-1.5 pe-6 whitespace-nowrap tabular-nums">
-                {formatMonthShort(month.period)}
+                {dates.monthShort(month.period)}
               </td>
               {/* An em dash, never a zero: a month with no payslip has nothing
                   to say about what was due, and a month the reports do not
@@ -687,7 +694,11 @@ function MonthTable({ months }: { months: readonly MonthlyDeposit[] }) {
                     name, whatever the total says (D-389). */}
                 {month.missingParts.length > 0 && (
                   <span className="block text-caption whitespace-nowrap">
-                    no {month.missingParts.join(' or ')} part
+                    {t('wealth.fundDetail.months.noPart', {
+                      parts: month.missingParts
+                        .map((part) => t(`wealth.kinds.depositPart.${part}`))
+                        .join(t('wealth.fundDetail.months.partOr')),
+                    })}
                   </span>
                 )}
               </td>
@@ -704,7 +715,7 @@ function MonthTable({ months }: { months: readonly MonthlyDeposit[] }) {
                     <span className="text-negative">{formatMoney(month.fundSalary)}</span>
                     <span className="text-caption text-ink-secondary">
                       {' '}
-                      vs {formatMoney(month.slipSalary)}
+                      {t('wealth.fundDetail.months.versus', { amount: formatMoney(month.slipSalary) })}
                     </span>
                   </span>
                 )}
@@ -714,10 +725,10 @@ function MonthTable({ months }: { months: readonly MonthlyDeposit[] }) {
               </td>
               <td className="py-1.5 whitespace-nowrap text-caption text-ink-secondary">
                 {month.lagMonths === undefined
-                  ? MONTH_STATUS_HINT[month.status]
+                  ? monthStatusHint(month.status, t)
                   : month.lagMonths <= 1
-                    ? 'on time'
-                    : `${String(month.lagMonths)} months`}
+                    ? t('wealth.fundDetail.months.onTime')
+                    : t(countKey('wealth.fundDetail.months.late', month.lagMonths), { count: month.lagMonths })}
               </td>
             </tr>
           ))}
@@ -744,70 +755,56 @@ function MonthTable({ months }: { months: readonly MonthlyDeposit[] }) {
 function BaseNote({ months }: { months: readonly MonthlyDeposit[] }) {
   const differs = months.filter((month) => month.salaryStatus === 'DIFFERS')
   const known = months.filter((month) => month.salaryStatus !== 'UNKNOWN')
+  const t = useT()
 
   if (known.length === 0) {
     return (
       <p className="mt-2 max-w-prose text-caption text-ink-secondary">
-        Nothing in <em>Computed on</em> yet: it needs both a report that prints a salary column and
-        paychecks whose pension line prints its base. Neither is universal, and the app only began
-        keeping the paycheck’s base recently — so paychecks saved before that have none.
+        <Phrase text={t('wealth.fundDetail.months.baseNone')} parts={{ column: <em>{t('wealth.fundDetail.months.computedOn')}</em> }} />
       </p>
     )
   }
 
   if (differs.length === 0) {
-    return (
-      <p className="mt-2 max-w-prose text-caption text-ink-secondary">
-        Where the report and the paycheck both print a base, they agree — the fund worked from the same salary your
-        paycheck says it should have.
-      </p>
-    )
+    return <p className="mt-2 max-w-prose text-caption text-ink-secondary">{t('wealth.fundDetail.months.baseAgrees')}</p>
   }
 
   const short = differs.filter((month) => (month.salaryGap?.minor ?? 0) > 0)
 
   return (
     <p className="mt-2 max-w-prose text-caption text-ink">
-      {differs.length === 1 ? 'One month’s' : `${String(differs.length)} months’`} base does not
-      match:{' '}
+      {t(countKey('wealth.fundDetail.months.baseDiffers', differs.length), { count: differs.length })}{' '}
       {short.length > 0 ? (
-        <>
-          the fund computed on <strong>less</strong> than the paycheck printed
-          {short.length === differs.length ? '' : ' in some of them'}, which is worth asking about
-          even where the amount that arrived looks right — the contribution is a percentage of that
-          figure, so the same rate on a smaller base is a smaller pension.
-        </>
+        <Phrase
+          text={t(short.length === differs.length ? 'wealth.fundDetail.months.baseLess' : 'wealth.fundDetail.months.baseLessSome')}
+          parts={{ less: <strong>{t('wealth.fundDetail.months.less')}</strong> }}
+        />
       ) : (
-        <>
-          the fund computed on more than the paycheck printed, which usually means a component the
-          paycheck does not itemize is pensionable after all.
-        </>
+        t('wealth.fundDetail.months.baseMore')
       )}{' '}
-      Nothing checks this on either document.
+      {t('wealth.fundDetail.months.baseUnchecked')}
     </p>
   )
 }
 
 /** What a row with no arrival date is saying, which is never "nothing arrived". */
-const MONTH_STATUS_HINT: Readonly<Record<MonthlyDeposit['status'], string>> = {
-  MATCHED: '',
-  MISSING: 'nothing recorded as arriving',
-  EXCEEDS: '',
-  NO_PAYSLIP: 'no paycheck for this month',
-  NOT_REPORTED: 'no report covers it',
+function monthStatusHint(status: MonthlyDeposit['status'], t: Translate): string {
+  return status === 'MATCHED' || status === 'EXCEEDS' ? '' : t(`wealth.fundDetail.months.status.${status}`)
 }
 
 /** The working behind the verdict — one row per window. */
 function PeriodTable({ periods }: { periods: readonly DepositPeriod[] }) {
+  const t = useT()
+  const dates = useDates()
   return (
     <table className="mt-4 w-full max-w-3xl">
       <thead>
         <tr className="border-b border-hairline text-label text-ink-secondary uppercase">
-          <th className="py-2 pe-6 text-start font-medium">Period</th>
-          <th className="py-2 pe-6 text-start font-medium">Salary months</th>
-          <th className="py-2 pe-6 text-end font-medium">Paychecks say</th>
-          <th className="py-2 pe-6 text-end font-medium">Fund says</th>
-          <th className="py-2 text-end font-medium">Difference</th>
+          <th className="py-2 pe-6 text-start font-medium">{t('wealth.fundDetail.periods.period')}</th>
+          <th className="py-2 pe-6 text-start font-medium">{t('wealth.fundDetail.periods.salaryMonths')}</th>
+          <th className="py-2 pe-6 text-end font-medium">{t('wealth.fundDetail.periods.paychecksSay')}</th>
+          <th className="py-2 pe-6 text-end font-medium">{t('wealth.fundDetail.periods.fundSays')}</th>
+          <th className="py-2 text-end font-medium">{t('wealth.fundDetail.periods.difference')}</th>
         </tr>
       </thead>
       <tbody>
@@ -819,7 +816,7 @@ function PeriodTable({ periods }: { periods: readonly DepositPeriod[] }) {
             <td className="py-1.5 pe-6 whitespace-nowrap text-ink-secondary tabular-nums">
               {period.salaryFrom === undefined || period.salaryTo === undefined
                 ? '—'
-                : `${formatMonthShort(period.salaryFrom)} — ${formatMonthShort(period.salaryTo)}`}
+                : `${dates.monthShort(period.salaryFrom)} — ${dates.monthShort(period.salaryTo)}`}
             </td>
             {/* **No payslips is not ₪0.00.** A window the app has no slips for
                 has nothing to say about what was due, and printing a zero there
@@ -847,21 +844,21 @@ function PeriodTable({ periods }: { periods: readonly DepositPeriod[] }) {
   )
 }
 
-function feeHint(fee: EffectiveFee): string {
-  if (fee.kind === 'NEEDS_TWO_POINTS') return 'needs two readings'
-  if (fee.kind === 'NOT_REPORTED') return 'no reading says what was charged'
-  if (fee.kind === 'WINDOW_TOO_SHORT') return 'the last two readings are inside one month'
-  if (fee.kind === 'NO_BALANCE') return 'no balance to charge a fee on'
+function feeHint(fee: EffectiveFee, t: Translate): string {
+  if (fee.kind === 'NEEDS_TWO_POINTS') return t('wealth.fundDetail.fee.needsTwo')
+  if (fee.kind === 'NOT_REPORTED') return t('wealth.fundDetail.fee.notReported')
+  if (fee.kind === 'WINDOW_TOO_SHORT') return t('wealth.fundDetail.fee.tooShort')
+  if (fee.kind === 'NO_BALANCE') return t('wealth.fundDetail.fee.noBalance')
   if (fee.differenceBasisPoints === undefined) {
-    return `charged over ${String(fee.months)} months, annualized`
+    return t(countKey('wealth.fundDetail.fee.annualized', fee.months), { count: fee.months })
   }
   if (feeDiffersMaterially(fee)) {
-    return `${formatPercent(fee.differenceBasisPoints, { digits: 2 })} more than the policy says — worth a phone call`
+    return t('wealth.fundDetail.fee.differs', { percent: formatPercent(fee.differenceBasisPoints, { digits: 2 }) })
   }
   // Within a tenth of a percent is the rounding of a quarterly figure, not a
   // discrepancy. Saying so is the difference between a check people read and
   // one they learn to ignore.
-  return `in line with the policy, over ${String(fee.months)} months`
+  return t(countKey('wealth.fundDetail.fee.inLine', fee.months), { count: fee.months })
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
