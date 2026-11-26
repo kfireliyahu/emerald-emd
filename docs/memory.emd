@@ -6842,6 +6842,22 @@ refs: M64 F39
 state: applied
 became_unit: M64 F39
 
+### M64 F43 built: WorkedOut, FormatPicker and SplitPurchases speak through the catalogue, to land
+from: F:/projects/emerald/.claude/worktrees/agent-a62be7bd5a5c94887
+sent_on: 2026-11-26
+body: "M64 F43 is built on worktree-agent-a62be7bd5a5c94887 at 69a3c01 (shared with F49). No decision.\n\n```json\n{\"unit\": \"M64 F43\", \"commit\": \"69a3c01\", \"branch\": \"worktree-agent-a62be7bd5a5c94887\", \"decisions\": [], \"files\": \"src/ui/formats/WorkedOut.tsx\\nsrc/ui/paychecks/FormatPicker.tsx\\nsrc/ui/debts/SplitPurchases.tsx\\nsrc/i18n/en/formats.ts\\nsrc/i18n/he/formats.ts\\nsrc/i18n/en/paychecks.ts\\nsrc/i18n/he/paychecks.ts\\nsrc/i18n/en/wealth.ts\\nsrc/i18n/he/wealth.ts\\nsrc/i18n/words.test.ts\", \"review_entries\": [], \"report\": \"Every word of the three files is the catalogue's, en and he, not only the ones the brief listed: WorkedOut's whole claims section (formats.workedOut — heading, intro, column-by-column questions, parts, how close, the written-out line, Yes/No), FormatPicker (paychecks.formatPicker, the select inside 'Read with {choice}' via Phrase) and SplitPurchases (wealth.splitPurchases — heading counted with countKey, the threshold select inside its sentence via Phrase, the why, each row's figures). The three files join words.test.ts as M64_F43; ALLOWED gains WorkedOut's two placeholders (what_adds_up, hours = end - start), formula text that is the same in every language. A document's values (subject, a total's format title) go through Bidi. Typecheck, src/ui + src/i18n tests green; probe:screens --lang he on #/wealth/debts reports english 0, but none of the three draws without a click or a file (the shape panel's claims, a slip read, split candidates), so their Hebrew is unseen in a browser.\", \"follow_ups\": []}\n```"
+refs: M64 F43
+state: applied
+became_unit: M64 F43
+
+### M64 F49 built: the palette's read commands carry their glyph, to land
+from: F:/projects/emerald/.claude/worktrees/agent-a62be7bd5a5c94887
+sent_on: 2026-11-26
+body: "M64 F49 is built on worktree-agent-a62be7bd5a5c94887 at 69a3c01 (shared with F43). No decision.\n\n```json\n{\"unit\": \"M64 F49\", \"commit\": \"69a3c01\", \"branch\": \"worktree-agent-a62be7bd5a5c94887\", \"decisions\": [], \"files\": \"src/ui/commands.ts\\nsrc/ui/CommandPalette.tsx\", \"review_entries\": [], \"report\": \"Command gains an optional glyph (ActionGlyphName); do:import, do:paychecks and do:report wear READ_GLYPH.statements, .paychecks and .report. The palette's command Row draws a 16px leading slot at 14px, as an entry draws its note — on every command row, empty where there is no glyph, so command labels line up with each other and with entries' names (the row's gap went 3 to 2 to match an entry's). Typecheck and the ui tests green; not looked at in a browser.\", \"follow_ups\": []}\n```"
+refs: M64 F49
+state: applied
+became_unit: M64 F49
+
 ### M64 F5 landing proposal: Undo brings a deleted rule or category back whole (D-628)
 from: F:/projects/emerald/docs/memory.emd
 sent_on: 2026-11-26
@@ -19069,11 +19085,15 @@ brief: M64 F33 found the long Hebrew pictures reversing letters intermittently a
 milestone: Later
 scope: ui
 title: WorkedOut, FormatPicker and SplitPurchases say their words through the catalogue
-state: in_progress
+landed: 2026-11-26
+state: built
 brief: M64 F29 (D-634) turned their selects into ValueChoice, but their words are still inline English: WorkedOut's how close (exactly, ± an amount, ± a percent, nothing, total of), FormatPicker's Read with / no reader / Which reader reads this, and SplitPurchases' Offer purchases split into more than ... payments and its heading. Move them into the catalogue (en, he), add the files to src/i18n/words.test.ts's translated set, and check probe:screens --lang he on the routes that draw them. Files: src/ui/formats/WorkedOut.tsx, src/ui/paychecks/FormatPicker.tsx, src/ui/debts/SplitPurchases.tsx.
+files: "src/ui/formats/WorkedOut.tsx\nsrc/ui/paychecks/FormatPicker.tsx\nsrc/ui/debts/SplitPurchases.tsx\nsrc/i18n/en/formats.ts\nsrc/i18n/he/formats.ts\nsrc/i18n/en/paychecks.ts\nsrc/i18n/he/paychecks.ts\nsrc/i18n/en/wealth.ts\nsrc/i18n/he/wealth.ts\nsrc/i18n/words.test.ts"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-a62be7bd5a5c94887
+commit: 69a3c01
+report: Every word of the three files is the catalogue's, en and he, not only the ones the brief listed: WorkedOut's whole claims section (formats.workedOut — heading, intro, column-by-column questions, parts, how close, the written-out line, Yes/No), FormatPicker (paychecks.formatPicker, the select inside 'Read with {choice}' via Phrase) and SplitPurchases (wealth.splitPurchases — heading counted with countKey, the threshold select inside its sentence via Phrase, the why, each row's figures). The three files join words.test.ts as M64_F43; ALLOWED gains WorkedOut's two placeholders (what_adds_up, hours = end - start), formula text that is the same in every language. A document's values (subject, a total's format title) go through Bidi. Typecheck, src/ui + src/i18n tests green; probe:screens --lang he on #/wealth/debts reports english 0, but none of the three draws without a click or a file (the shape panel's claims, a slip read, split candidates), so their Hebrew is unseen in a browser.
 
 ### M64 F46
 milestone: Later
@@ -19114,11 +19134,15 @@ branch: m64-redesign
 milestone: Later
 scope: ui
 title: The palette's commands carry their glyph
-state: in_progress
+landed: 2026-11-26
+state: built
 brief: Found in M64 F16: the palette's command rows draw no glyph (only entries and More do), so Read bank and card statements…, Read paychecks… and Read a fund report… are told apart in the palette by words alone. Give a Command an optional glyph, drawn in the row's 16px leading slot where an entry draws its note, and set READ_GLYPH's three on the read commands. Files: src/ui/commands.ts, src/ui/CommandPalette.tsx.
+files: "src/ui/commands.ts\nsrc/ui/CommandPalette.tsx"
 taken_by: run-milestone driver
 started: 2026-11-26
-branch: m64-redesign
+branch: worktree-agent-a62be7bd5a5c94887
+commit: 69a3c01
+report: Command gains an optional glyph (ActionGlyphName); do:import, do:paychecks and do:report wear READ_GLYPH.statements, .paychecks and .report. The palette's command Row draws a 16px leading slot at 14px, as an entry draws its note — on every command row, empty where there is no glyph, so command labels line up with each other and with entries' names (the row's gap went 3 to 2 to match an entry's). Typecheck and the ui tests green; not looked at in a browser.
 
 ### M64 F5
 milestone: M64
