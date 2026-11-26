@@ -1,5 +1,5 @@
 {
-  "about": "The density budget (M64 U4, D-615; measures D-612). Each route's limits are its measures before the redesign (docs/redesign/screens.md), a ceiling a redesign may not exceed; every route takes at most one primary action and seven type sizes. A route on `exempt` is not redesigned yet: its breaches are reported and do not fail. The unit that redesigns a route takes it off `exempt` and tightens its limits in the same commit, and `exempt` only shrinks (src/ui/budget.test.ts). `tools` are never budgeted. Run: npm run probe:screens -- --document year.emd --budget docs/redesign/budget.json --routes <a,b>",
+  "about": "The density budget (M64 U4, D-615; measures D-612). A segment written :id stands for any one segment, so a detail route is budgeted whichever row it opens (M64 F46). Each route's limits are its measures before the redesign (docs/redesign/screens.md), a ceiling a redesign may not exceed; every route takes at most one primary action and seven type sizes. A route on `exempt` is not redesigned yet: its breaches are reported and do not fail. The unit that redesigns a route takes it off `exempt` and tightens its limits in the same commit, and `exempt` only shrinks (src/ui/budget.test.ts). `tools` are never budgeted. Run: npm run probe:screens -- --document year.emd --budget docs/redesign/budget.json --routes <a,b>",
   "limits": {
     "*": {
       "primary": 1,
@@ -100,6 +100,46 @@
       "actions": 9,
       "colours": 9,
       "screens": 1.1
+    },
+    "#/wealth/funds/:id": {
+      "words": 520,
+      "blocks": 10,
+      "figures": 2,
+      "actions": 24,
+      "colours": 10,
+      "screens": 3.3
+    },
+    "#/wealth/fees": {
+      "words": 460,
+      "blocks": 6,
+      "figures": 6,
+      "actions": 14,
+      "colours": 10,
+      "screens": 2.7
+    },
+    "#/wealth/deposits": {
+      "words": 225,
+      "blocks": 3,
+      "figures": 4,
+      "actions": 14,
+      "colours": 8,
+      "screens": 1.1
+    },
+    "#/wealth/goals/:id": {
+      "words": 370,
+      "blocks": 6,
+      "figures": 1,
+      "actions": 20,
+      "colours": 14,
+      "screens": 1.6
+    },
+    "#/wealth/debts/:id": {
+      "words": 350,
+      "blocks": 8,
+      "figures": 2,
+      "actions": 10,
+      "colours": 12,
+      "screens": 2.3
     },
     "#/categories": {
       "words": 140,

@@ -126,7 +126,7 @@ export function DepositCheck() {
           </Figure>
 
           <Figure label={t('wealth.depositCheck.checked')} hint={t('wealth.depositCheck.checkedOf', { count: rows.length })}>
-            <span className="text-secondary-number tabular-nums">{checked.length}</span>
+            <span className="text-heading font-medium tabular-nums">{checked.length}</span>
           </Figure>
         </div>
 
@@ -148,7 +148,7 @@ export function DepositCheck() {
 
         {unchecked.length > 0 && (
           <>
-            <h2 className="border-b border-hairline px-6 pt-6 pb-2 text-label text-ink-secondary uppercase">
+            <h2 className="border-b border-hairline px-6 pt-6 pb-2 text-caption font-medium text-ink-secondary uppercase">
               {t('wealth.depositCheck.notYet')}
             </h2>
             {unchecked.map(({ entry, check }) => (
@@ -212,17 +212,17 @@ function CheckedRow({
         </div>
 
         <Figure label={t('wealth.depositCheck.paychecksSay')} hint={t('wealth.depositCheck.paychecksSayHint')}>
-          <span className="text-secondary-number tabular-nums">
+          <span className="text-heading font-medium tabular-nums">
             {formatMoney(check.expected.total)}
           </span>
         </Figure>
 
         <Figure label={t('wealth.depositCheck.fundSays')} hint={t('wealth.depositCheck.through', { date: toISODate(check.window.to) })}>
-          <span className="text-secondary-number tabular-nums">{formatMoney(check.reported)}</span>
+          <span className="text-heading font-medium tabular-nums">{formatMoney(check.reported)}</span>
         </Figure>
 
         <Figure label={t('wealth.depositCheck.difference')} hint={t('wealth.depositCheck.tolerance', { amount: formatMoney(check.tolerance) })}>
-          <span className={`text-secondary-number tabular-nums ${missing ? 'text-negative' : ''}`}>
+          <span className={`text-title font-medium tabular-nums ${missing ? 'text-negative' : ''}`}>
             {formatMoney(check.gap)}
           </span>
         </Figure>
@@ -310,8 +310,8 @@ function Figure({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex flex-col gap-0.5">
-      <span className="text-label text-ink-secondary uppercase">{label}</span>
+    <div className="flex flex-col items-start gap-0.5">
+      <span className="text-caption font-medium text-ink-secondary uppercase">{label}</span>
       {children}
       {hint !== undefined && hint !== '' && (
         <span className="text-caption text-ink-secondary">{hint}</span>

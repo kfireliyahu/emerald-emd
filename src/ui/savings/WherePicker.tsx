@@ -247,7 +247,7 @@ function NewPlace({
       </div>
       <div className="grid grid-cols-1 gap-x-4 gap-y-2.5 sm:grid-cols-2">
         <label className="flex flex-col gap-1">
-          <span className="text-label text-ink-tertiary uppercase">{t('wealth.where.name')}</span>
+          <span className="text-caption font-medium text-ink-secondary uppercase">{t('wealth.where.name')}</span>
           <input
             className={FIELD}
             autoFocus
@@ -263,7 +263,7 @@ function NewPlace({
         </label>
         {draft.kind !== 'CASH_AT_HOME' && (
           <label className="flex flex-col gap-1">
-            <span className="text-label text-ink-tertiary uppercase">{t('wealth.where.atLabel')}</span>
+            <span className="text-caption font-medium text-ink-secondary uppercase">{t('wealth.where.atLabel')}</span>
             <input
               className={FIELD}
               value={draft.institution ?? ''}
@@ -274,7 +274,7 @@ function NewPlace({
         )}
         {lockable && (
           <label className="flex flex-col gap-1">
-            <span className="text-label text-ink-tertiary uppercase">{t('wealth.where.locked')}</span>
+            <span className="text-caption font-medium text-ink-secondary uppercase">{t('wealth.where.locked')}</span>
             <input
               type="date"
               className={FIELD}

@@ -52,10 +52,55 @@ export interface NewHoldingReading {
   readonly note?: string | undefined
 }
 
+/**
+ * **Why a reading cannot be kept — a code and its parts, never a sentence**
+ * (M64 F48). The screen says it from the catalogue (`wealth.holdingReadings.refused`),
+ * a conversation in English (`readingRefusalText`), and a caller decides on the
+ * code, never on the words: a `CLASH` is the one a person answers with Replace.
+ */
+export type ReadingRefusal =
+  /** The holding was deleted while the reading was being typed. */
+  | { readonly code: 'NO_HOLDING' }
+  /** The value is past what a document keeps as a whole number of minor units. */
+  | { readonly code: 'VALUE_NOT_KEPT' }
+  | { readonly code: 'TWO_CURRENCIES'; readonly cost: CurrencyCode; readonly value: CurrencyCode }
+  | { readonly code: 'QUANTITY_NOT_KEPT' }
+  | { readonly code: 'BAD_PRICE' }
+  /** An account's own cash: a value and nothing else. */
+  | { readonly code: 'CASH_VALUE_ONLY'; readonly holding: string }
+  | { readonly code: 'NO_STATEMENT' }
+  /** The day already has a reading with other figures; `held` is what it says. */
+  | { readonly code: 'CLASH'; readonly day: string; readonly held: Money }
+
+/** A refusal in the conversation's English — the plugin's and an importer's words (M64 F48). */
+export function readingRefusalText(refusal: ReadingRefusal): string {
+  switch (refusal.code) {
+    case 'NO_HOLDING':
+      return 'That holding no longer exists.'
+    case 'VALUE_NOT_KEPT':
+      return 'That value is not a figure this document can keep.'
+    case 'TWO_CURRENCIES':
+      return `The cost is in ${refusal.cost} and the value in ${refusal.value}; a reading is one currency.`
+    case 'QUANTITY_NOT_KEPT':
+      return 'That quantity is not a figure this document can keep.'
+    case 'BAD_PRICE':
+      return 'A price is a figure of zero or more.'
+    case 'CASH_VALUE_ONLY':
+      return `${refusal.holding} is an account's own cash: its reading is a value only, checked against the account's rows.`
+    case 'NO_STATEMENT':
+      return 'That statement is not in this document.'
+    case 'CLASH':
+      return `There is already a reading of that holding for ${refusal.day}, with other figures. Say it corrects that one, or leave it.`
+  }
+}
+
+/** A reading refused, with its `refusal` to decide on and say; the message is the English. */
 export class HoldingReadingError extends Error {
-  constructor(message: string) {
-    super(message)
+  readonly refusal: ReadingRefusal
+  constructor(refusal: ReadingRefusal) {
+    super(readingRefusalText(refusal))
     this.name = 'HoldingReadingError'
+    this.refusal = refusal
   }
 }
 
@@ -107,34 +152,32 @@ function onDay(db: Database, holdingId: string, asOf: string): HoldingReading | 
 }
 
 /**
- * Why this reading cannot be kept, in a sentence — or `undefined` when it can.
- * The one judgement the screen, the tool's preview and the write share.
+ * Why this reading cannot be kept, as a code and its parts — or `undefined` when
+ * it can. The one judgement the screen, the tool's preview and the write share.
  *
  * **An account's own cash has a value and nothing else**: no quantity, cost or
  * price, because cash bought with cash is cash — its check is the account's
  * running balance instead.
  */
-export function holdingReadingProblem(db: Database, input: NewHoldingReading): string | undefined {
+export function holdingReadingProblem(db: Database, input: NewHoldingReading): ReadingRefusal | undefined {
   const holding = findHolding(db, input.holdingId)
-  if (holding === undefined) return 'That holding no longer exists.'
-  if (!Number.isSafeInteger(input.value.minor)) return 'That value is not a figure this document can keep.'
+  if (holding === undefined) return { code: 'NO_HOLDING' }
+  if (!Number.isSafeInteger(input.value.minor)) return { code: 'VALUE_NOT_KEPT' }
   if (input.costBasis !== undefined && input.costBasis.currency !== input.value.currency) {
-    return `The cost is in ${input.costBasis.currency} and the value in ${input.value.currency}; a reading is one currency.`
+    return { code: 'TWO_CURRENCIES', cost: input.costBasis.currency, value: input.value.currency }
   }
-  if (input.quantityMicro !== undefined && !Number.isSafeInteger(input.quantityMicro)) {
-    return 'That quantity is not a figure this document can keep.'
-  }
+  if (input.quantityMicro !== undefined && !Number.isSafeInteger(input.quantityMicro)) return { code: 'QUANTITY_NOT_KEPT' }
   if (input.priceMicro !== undefined && (!Number.isSafeInteger(input.priceMicro) || input.priceMicro < 0)) {
-    return 'A price is a figure of zero or more.'
+    return { code: 'BAD_PRICE' }
   }
   if (
     holding.accountId !== undefined &&
     (input.quantityMicro !== undefined || input.costBasis !== undefined || input.priceMicro !== undefined)
   ) {
-    return `${holding.name} is an account's own cash: its reading is a value only, checked against the account's rows.`
+    return { code: 'CASH_VALUE_ONLY', holding: holding.name }
   }
   if (input.statementId !== undefined && query(db, 'SELECT 1 FROM fmt_statement WHERE id = ?', [input.statementId]).length === 0) {
-    return 'That statement is not in this document.'
+    return { code: 'NO_STATEMENT' }
   }
   return undefined
 }
@@ -195,11 +238,7 @@ export function recordHoldingReading(
     return 'CREATED'
   }
   if (sameFigures(held, input)) return 'UNCHANGED'
-  if (options.correct !== true) {
-    throw new HoldingReadingError(
-      `There is already a reading of that holding for ${day}, with other figures. Say it corrects that one, or leave it.`,
-    )
-  }
+  if (options.correct !== true) throw new HoldingReadingError({ code: 'CLASH', day, held: held.value })
   updateRow(db, declared(db, 'holding_reading'), held.id, cells(input))
   return 'CORRECTED'
 }

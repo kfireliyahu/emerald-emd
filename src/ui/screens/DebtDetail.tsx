@@ -143,7 +143,7 @@ export function DebtDetail() {
       </div>
 
       <section className="border-b border-hairline px-6 py-4">
-        <h2 className="text-label text-ink-secondary uppercase">{t('wealth.debtDetail.runsOut')}</h2>
+        <h2 className="text-caption font-medium text-ink-secondary uppercase">{t('wealth.debtDetail.runsOut')}</h2>
         <p className="mt-1 text-heading">{payoffSentence(projection, t, dates)}</p>
         {basisNote !== undefined && <p className="mt-1 text-caption text-ink-secondary">{basisNote}</p>}
         {debt.monthlyPaymentAmount !== undefined && (
@@ -155,14 +155,14 @@ export function DebtDetail() {
 
       {points.length > 1 && (
         <section className="border-b border-hairline px-6 py-4">
-          <h2 className="text-label text-ink-secondary uppercase">{t('wealth.debtDetail.owed')}</h2>
+          <h2 className="text-caption font-medium text-ink-secondary uppercase">{t('wealth.debtDetail.owed')}</h2>
           <p className="mt-1 mb-3 max-w-2xl text-caption text-ink-secondary">{t('wealth.debtDetail.owedWhy')}</p>
           <BalanceLine points={points} />
         </section>
       )}
 
       <section className="px-6 py-4">
-        <h2 className="flex flex-wrap items-baseline justify-between gap-x-6 text-label text-ink-secondary uppercase">
+        <h2 className="flex flex-wrap items-baseline justify-between gap-x-6 text-caption font-medium text-ink-secondary uppercase">
           <span>{t('wealth.debtDetail.payments')}</span>
           {known !== undefined && (
             <span className="tabular-nums">
@@ -195,25 +195,27 @@ function PaymentRow({ payment }: { payment: DebtPayment }) {
   const hasInterest = payment.interestPortion.minor !== 0
 
   return (
-    <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1 border-b border-hairline px-6 py-2">
+    <div className="flex items-baseline gap-x-4 border-b border-hairline px-6 py-2">
       <span className="w-24 shrink-0 text-ink-secondary tabular-nums">
         {toISODate(payment.date)}
       </span>
-      <span className="min-w-40 flex-1">
-        {payment.note === undefined ? t(`wealth.kinds.paymentSource.${payment.sourceKind}`) : <Bidi>{payment.note}</Bidi>}
-        {payment.note !== undefined && payment.sourceKind === 'MANUAL' && (
-          <span className="ms-2 text-caption text-ink-secondary">{t('wealth.debtDetail.byHand')}</span>
+      <span className="flex min-w-0 flex-1 flex-col items-start gap-0.5">
+        <span>
+          {payment.note === undefined ? t(`wealth.kinds.paymentSource.${payment.sourceKind}`) : <Bidi>{payment.note}</Bidi>}
+          {payment.note !== undefined && payment.sourceKind === 'MANUAL' && (
+            <span className="ms-2 text-caption text-ink-secondary">{t('wealth.debtDetail.byHand')}</span>
+          )}
+        </span>
+        {hasInterest && (
+          <span className="text-caption text-ink-secondary tabular-nums">
+            {principal === undefined
+              ? t('wealth.debtDetail.twoCurrencies')
+              : t('wealth.debtDetail.offBalance', { amount: formatMoney(principal) })}
+          </span>
         )}
+        {!payment.isConfirmed && <Chip>{t('wealth.debtDetail.notConfirmed')}</Chip>}
       </span>
-      {!payment.isConfirmed && <Chip>{t('wealth.debtDetail.notConfirmed')}</Chip>}
-      <span className="w-32 text-end text-caption text-ink-secondary tabular-nums">
-        {hasInterest
-          ? principal === undefined
-            ? t('wealth.debtDetail.twoCurrencies')
-            : t('wealth.debtDetail.offBalance', { amount: formatMoney(principal) })
-          : ''}
-      </span>
-      <span className="w-28 text-end tabular-nums">{formatMoney(payment.amount)}</span>
+      <span className="shrink-0 text-end tabular-nums">{formatMoney(payment.amount)}</span>
     </div>
   )
 }

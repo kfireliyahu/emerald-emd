@@ -263,7 +263,7 @@ function Illustration({
               (docs/11). The two ends of the range animate independently and
               that is correct: they are two projections, not one figure with a
               width. */}
-          <span className="text-hero tabular-nums">
+          <span className="text-hero whitespace-nowrap tabular-nums">
             {low.minor === high.minor ? (
               <CountingAmount value={low} />
             ) : (
@@ -275,7 +275,7 @@ function Illustration({
         </Figure>
 
         <Figure label={t(`wealth.kinds.fund.${fund.fundType}`)} hint={fund.employerName ?? ''}>
-          <Bidi className="text-secondary-number text-ink-secondary">{fund.name}</Bidi>
+          <Bidi className="text-heading font-medium">{fund.name}</Bidi>
         </Figure>
       </div>
 
@@ -393,7 +393,7 @@ function Illustration({
           />
           <div className="flex flex-col gap-1">
             <div className="flex items-baseline justify-between gap-4">
-              <span className="text-label text-ink-secondary uppercase">{t('wealth.feeImpact.howLong')}</span>
+              <span className="text-caption font-medium text-ink-secondary uppercase">{t('wealth.feeImpact.howLong')}</span>
               <span className="tabular-nums">
                 {t(countKey('wealth.feeImpact.years', assumptions.years), { count: assumptions.years })}
               </span>
@@ -419,7 +419,7 @@ function Illustration({
         <div className="grid max-w-4xl grid-cols-1 gap-x-12 gap-y-6 @lg:grid-cols-3">
           {result.scenarios.map((scenario, index) => (
             <div key={index} className="flex flex-col gap-2">
-              <label className="flex items-center gap-2 text-label text-ink-secondary uppercase">
+              <label className="flex items-center gap-2 text-caption font-medium text-ink-secondary uppercase">
                 <input
                   type="number"
                   className={`${FIELD} w-20 text-end tabular-nums`}
@@ -453,7 +453,7 @@ function Illustration({
                   it. */}
               <CountingAmount
                 value={scenario.difference}
-                className={`text-secondary-number ${
+                className={`text-title font-medium ${
                   scenario.difference.minor < 0 ? 'text-negative' : ''
                 }`}
               />
@@ -487,13 +487,13 @@ function Illustration({
 
         {agreed !== undefined && agreedBasisPoints !== undefined && (
           <div className="mt-6 flex max-w-4xl flex-col gap-2 border-t border-hairline pt-4">
-            <span className="text-label text-ink-secondary uppercase">
+            <span className="text-caption font-medium text-ink-secondary uppercase">
               {t('wealth.feeImpact.agreed', { percent: formatPercent(agreedBasisPoints, { digits: 2 }) })}
             </span>
             <span className="text-caption text-ink-secondary">{t('wealth.feeImpact.agreedWhy')}</span>
             <CountingAmount
               value={agreed.difference}
-              className={`text-secondary-number ${agreed.difference.minor < 0 ? 'text-negative' : ''}`}
+              className={`text-title font-medium ${agreed.difference.minor < 0 ? 'text-negative' : ''}`}
             />
             <span className="text-caption text-ink-secondary tabular-nums">
               {formatMoney(agreed.atCurrentFees)} → {formatMoney(agreed.atTargetFees)}
@@ -663,7 +663,7 @@ function AmountSlider({
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-baseline justify-between gap-4">
-        <span className="text-label text-ink-secondary uppercase">{label}</span>
+        <span className="text-caption font-medium text-ink-secondary uppercase">{label}</span>
         <span className="tabular-nums">{formatMoney(amount)}</span>
       </div>
       <input
@@ -707,7 +707,7 @@ function RateSlider({
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-baseline justify-between gap-4">
-        <span className="text-label text-ink-secondary uppercase">{label}</span>
+        <span className="text-caption font-medium text-ink-secondary uppercase">{label}</span>
         <span className="tabular-nums">{formatPercent(basisPoints, { digits: 2 })}</span>
       </div>
       <input
@@ -752,7 +752,7 @@ function FeeBar({ reached, could }: { reached: Money; could: Money }) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mt-8">
-      <h2 className="mb-4 border-b border-hairline pb-2 text-label text-ink-secondary uppercase">
+      <h2 className="mb-4 border-b border-hairline pb-2 text-caption font-medium text-ink-secondary uppercase">
         {title}
       </h2>
       {children}
@@ -771,7 +771,7 @@ function Figure({
 }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-label text-ink-secondary uppercase">{label}</span>
+      <span className="text-caption font-medium text-ink-secondary uppercase">{label}</span>
       {children}
       {hint !== undefined && hint !== '' && (
         <span className="text-caption text-ink-secondary">{hint}</span>

@@ -5,8 +5,8 @@ import { useT } from '@/i18n/current.ts'
 
 const WIDTH = 720
 const HEIGHT = 96
-/** Room under the line for the two end dates, and over it for the first value. */
-const PADDING = { top: 14, bottom: 16, left: 2, right: 2 } as const
+/** Room for the line's width at its ends; the value and the dates are words outside the drawing (M64 F46). */
+const PADDING = { top: 4, bottom: 4, left: 2, right: 2 } as const
 
 /**
  * What was owed, over time — docs/f08's balance-over-time chart.
@@ -57,7 +57,8 @@ export function BalanceLine({ points }: { points: readonly BalancePoint[] }) {
     .join(' ')
 
   return (
-    <figure className="m-0 max-w-3xl" dir="ltr">
+    <figure className="m-0 flex max-w-3xl flex-col gap-1 text-caption text-ink-secondary tabular-nums" dir="ltr">
+      <span>{formatMoney(first.outstanding)}</span>
       <svg
         viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
         className="w-full"
@@ -69,24 +70,14 @@ export function BalanceLine({ points }: { points: readonly BalancePoint[] }) {
           toDay: toISODate(last.date),
         })}
       >
-        <path d={path} fill="none" strokeWidth={1.5} className="stroke-ink" />
+        <path d={path} fill="none" strokeWidth={2} className="stroke-ink" />
         <circle cx={x(points.length - 1)} cy={y(last.outstanding.minor)} r={2.5} className="fill-ink" />
 
-        <text x={PADDING.left} y={10} className="fill-ink-tertiary text-[10px]">
-          {formatMoney(first.outstanding)}
-        </text>
-        <text x={PADDING.left} y={HEIGHT - 4} className="fill-ink-tertiary text-[10px]">
-          {toISODate(first.date)}
-        </text>
-        <text
-          x={WIDTH - PADDING.right}
-          y={HEIGHT - 4}
-          textAnchor="end"
-          className="fill-ink-tertiary text-[10px]"
-        >
-          {toISODate(last.date)}
-        </text>
       </svg>
+      <span className="flex justify-between gap-4">
+        <span>{toISODate(first.date)}</span>
+        <span>{toISODate(last.date)}</span>
+      </span>
     </figure>
   )
 }

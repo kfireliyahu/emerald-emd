@@ -119,6 +119,14 @@ describe('how much a screen holds (M64 U2, D-612)', () => {
     expect(overBudget(d, { wrods: 10 } as Limits)[0]).toMatch(/^wrods is not a measure/)
   })
 
+  it('budgets a detail route by `:id`, whichever row it opens, and its own route first (M64 F46)', () => {
+    const budget = { '*': { primary: 1 }, '#/wealth/funds': { words: 100 }, '#/wealth/funds/:id': { words: 500 }, '#/wealth/funds/new': { words: 50 } }
+    expect(limitsFor(budget, '#/wealth/funds/aac571ed')).toEqual({ primary: 1, words: 500 })
+    expect(limitsFor(budget, '#/wealth/funds/new')).toEqual({ primary: 1, words: 50 })
+    expect(limitsFor(budget, '#/wealth/funds')).toEqual({ primary: 1, words: 100 })
+    expect(limitsFor(budget, '#/wealth/funds/a/b')).toEqual({ primary: 1 })
+  })
+
   it('spells a colour one way, and drops what paints nothing', () => {
     expect(colourKey('rgb(10 20 30 / 0.5)')).toBe('rgba(10, 20, 30, 0.5)')
     expect(colourKey('rgba(0, 0, 0, 0)')).toBeNull()

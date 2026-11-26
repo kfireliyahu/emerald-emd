@@ -21,6 +21,7 @@ import {
   listHoldingReadings,
   readingChecks,
   readingClash,
+  readingRefusalText,
   recordHoldingReading,
   type HoldingReading,
   type NewHoldingReading,
@@ -185,7 +186,7 @@ function planEntries(document: OpenDocument, batch: readonly Requested[]): reado
       note: requested.note,
     }
     const problem = holdingReadingProblem(document.db, input)
-    if (problem !== undefined) return refused(problem, found)
+    if (problem !== undefined) return refused(readingRefusalText(problem), found)
     const clash = readingClash(document.db, input)
     const same = listHoldingReadings(document.db, found.id).some((one) => one.asOf === requested.asOf)
     if (clash !== undefined && !requested.correct) {

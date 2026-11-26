@@ -535,6 +535,7 @@ written out here.
 | D-633 | 2026-11-26 | A figure that sums a period up carries its sign's colour — Home's left over and its sentence's two amounts, the Year's left over, Plan's to split, net worth, and a statement's gap in `negative` unless it is nothing — while every other figure stays ink; a list cut short grows in place and never opens the side panel; a plan's meter past its plan draws the plan as a tick and says the share in words; and the probe lays every line out afresh after stretching a page for its picture | M64 |
 | D-634 | 2026-11-26 | A rule made outside Rules is made where it was asked for — Transactions and By merchant open Rules' whole editor in their side panel, save it there, and the note says it was made with Undo and *Open in Rules*, which opens that rule in its editor; the platform selects left outside the kit become `ValueChoice`; and a new paycheck opens on the month after the newest slip when last month already has one | M64 |
 | D-636 | 2026-11-26 | A file is read through a door named for its kind and drawn with its glyph: Home's header carries *Read bank and card statements* (filled) with *Read paychecks* beside it — one button per kind, not one *Read files* that asks the kind; a fund report is read from its fund as *Read a fund report*; the palette names all three; a waiting line opens its own kind's reader; and a file picked or dropped anywhere is still read as what it is | M64 |
+| D-639 | 2026-11-26 | Wealth's details spend only the list's seven type steps — a label is a caption, a figure that does not answer its section is the heading step, the one that does is the kit's tile step — and one primary: the fund detail's Add reading is secondary beside the list's; a detail route is budgeted by `:id`, whichever row it opens; a wealth tag is text and a dot; and a holding reading's refusal is a code and its parts, said by the screen | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -2152,3 +2153,44 @@ The guide's first step (`LEDGER_GUIDE`, so `guide_status` too) names both doors.
 **The budget** for `#/` rises from 11 to 13 colours, which is what the second door's split tile
 costs (its `hairline` tile and `hairline-strong` edge; measured 10 → 12 light, 11 → 13 dark): the
 brief asked for a button per kind with its glyph, and *The button is a split tile* draws it so.
+
+## D-639 · 2026-11-26 · Wealth's details spend only the list's seven type steps — a label is a caption, a figure that does not answer its section is the heading step, the one that does is the kit's tile step — and one primary: the fund detail's Add reading is secondary beside the list's; a detail route is budgeted by `:id`, whichever row it opens; a wealth tag is text and a dot; and a holding reading's refusal is a code and its parts, said by the screen <a id="d-639"></a>
+
+**Context.** M64 F46 and F48. M64 F39's probe of year.emd with the budget found `#/wealth/funds/<id>`
+drawing two primary actions (the list's and the detail's Add reading) and nine type sizes, and the goal
+and debt details, `#/wealth/fees` and `#/wealth/deposits` nine sizes against seven. The detail routes had
+no budget entries at all, and could not have: a row's id differs in every document made, so a key
+written with one id budgets nothing anywhere else. And M64 F38 left a holding reading's refusals as
+English sentences made in the data layer, the screen deciding a clash by
+`message.startsWith('There is already a reading')`.
+
+**Decision.**
+
+1. **The detail spends the list's steps.** The list beside each detail already draws 12, 14, 16, 24,
+   28, 40 and 88; the details added the label step (11) and the secondary-number step (20). A label
+   is a caption, medium and uppercase, as the Funds list's column heads are. A figure that answers
+   its section (a fund's balance, the deposit check's difference) keeps its size; the rest — a
+   fund's paid in, earned, return and fee figures, the deposit check's two sides — are the heading
+   step, so seven figures no longer stand at one size under the hero; a goal's name and the fee
+   panel's figures are the kit's tile step (title, medium). The debt line's axis words, 10px
+   ink-tertiary inside a scaled drawing, are caption words outside it.
+2. **One primary.** The fund detail's Add reading is secondary: the list beside it holds the
+   screen's one filled button (*One primary action per screen*).
+3. **A detail route is budgeted by `:id`.** In `docs/redesign/budget.json` a segment written `:id`
+   stands for any one segment (`limitsFor` in `src/ui/probe.ts`); a route's own key still wins.
+   `#/wealth/funds/:id`, `#/wealth/goals/:id`, `#/wealth/debts/:id`, `#/wealth/fees` and
+   `#/wealth/deposits` have limits at their measures with a little room, and pass light, dark and
+   `--lang he`.
+4. **A wealth tag is text and a dot** (*A chip is text and a dot*): `Tag` in `src/ui/wealth/parts.tsx`
+   lost its border and its coloured words; the tone is the dot's, and only a problem colours the words.
+5. **A holding reading's refusal is a code and its parts** (`ReadingRefusal`, D-632's rule): the
+   repository hands back `NO_HOLDING`, `VALUE_NOT_KEPT`, `TWO_CURRENCIES` (cost, value),
+   `QUANTITY_NOT_KEPT`, `BAD_PRICE`, `CASH_VALUE_ONLY` (holding), `NO_STATEMENT` and `CLASH` (day,
+   held); `HoldingReadingError` carries it, the screen says it from `wealth.holdingReadings.refused`
+   in English and Hebrew and offers Replace on the code `CLASH`, and the plugin and the statement
+   reader keep their English through `readingRefusalText`.
+
+**Left for later** (from the taste check): the payoff month the debt detail says and the one the
+list says disagree (M64 F58); the fund detail's month and period tables and the readings table are
+wider than the detail's column (M64 F59); the fund and goal details do not yet say their answer
+first in words (M64 F60).
