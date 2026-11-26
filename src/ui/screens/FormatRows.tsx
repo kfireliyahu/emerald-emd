@@ -99,7 +99,6 @@ import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { rowWriteRefusal, rowWriteRefusalOnScreen } from '@/domain/format/owner.ts'
-import { Chip } from '@/ui/components/Chip.tsx'
 import { IconAction } from '@/ui/components/IconAction.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
 import { cellText, EntryView, LinkMakerContext, type LinkMaker } from '@/ui/formats/EntryView.tsx'
@@ -158,11 +157,16 @@ import type { RowQuery } from '@/data/repositories/formatRowRepository.ts'
 import type { Database } from 'sql.js'
 
 import { ReadersLine } from '@/ui/formats/ReadersLine.tsx'
+import { DeletedNote, type DeleteRefusal } from '@/ui/formats/DeleteAtOnce.tsx'
+import { useJustDeleted, type JustDeleted } from '@/ui/formats/justDeleted.ts'
+import { useT } from '@/i18n/current.ts'
+import { countKey } from '@/i18n/count.ts'
+import { Phrase } from '@/ui/components/Phrase.tsx'
+import { SidePanel } from '@/ui/components/SidePanel.tsx'
 import { ShapePanel, type ShapeFocus } from '@/ui/formats/ShapePanel.tsx'
 import { inDraftOrder, sheetMark } from '@/ui/formats/shape.ts'
 import { WhatLooksWrong } from '@/ui/formats/WhatLooksWrong.tsx'
 import { auditFormat, joinedTally } from '@/data/repositories/formatAuditRepository.ts'
-import { Reveal } from '@/ui/motion/Reveal.tsx'
 import { AddsUpPlace } from '@/ui/formats/AddsUpPlace.tsx'
 import { ReadOnly } from '@/ui/formats/readOnly.ts'
 import { ColumnFilter, ColumnMenu, FilterBand, filteredQuery, useAddressFilter } from '@/ui/formats/FilterBand.tsx'
@@ -221,7 +225,7 @@ import { rollupWords } from '@/ui/formats/dashboard.ts'
  * ## And the format is changed here too, since M26 U3
  *
  * There is no declaration panel and no separate edit. A column's header opens
- * its name, type and checks under the sheet; the `+` after the last header adds
+ * its name, type and checks beside the sheet (in the side panel since M64 U13); the `+` after the last header adds
  * one; the band under the toolbar, *What has to add up*, opens the identities
  * (M29 U1, D-331 — it was a small `=` icon). Each is `ShapePanel`, which says what
  * saving would do to the entries already here before anything is written, and
@@ -272,7 +276,12 @@ export function FormatRows({
   // A dashboard's rollup block opens its format on that rollup (M53 U7).
   const opening = useLocation().state as unknown
   const [view, setView] = useState<string | undefined>(() => rollupAsked(opening))
-  const [deleting, setDeleting] = useState<StoredRow | undefined>(undefined)
+  // **A row deleted at once, with its Undo** (M64 U13, D-625): kept beyond this
+  // route, since deleting the last entry a filter holds goes back to the table.
+  const t = useT()
+  const justDeleted = useJustDeleted((state) => state.deleted)
+  const keepDeleted = useJustDeleted((state) => state.keep)
+  const takeDeleted = useJustDeleted((state) => state.take)
   // A rule set's dry run, shown before it writes (M25 E4, D-273).
   const [applying, setApplying] = useState<RuleSetPlan | undefined>(undefined)
   // What is typed or pasted at the foot and not written yet (M26 U2).
@@ -283,7 +292,7 @@ export function FormatRows({
   // sees the very array the first one wrote, and is not a second insert.
   const spent = useRef<readonly RowDraft[] | undefined>(undefined)
 
-  // The format's shape, being changed under the sheet (M26 U3), or nothing.
+  // The format's shape, being changed beside the sheet (M26 U3), or nothing.
   const [shaping, setShaping] = useState<Shaping | undefined>(undefined)
   // What the last card moved on the board was refused with (M27 U3) — or the
   // last tick, or row added in place, on the list (M53 U4).
@@ -296,14 +305,11 @@ export function FormatRows({
   const [refused, setRefused] = useState<readonly { readonly column: string; readonly text: string }[] | undefined>()
   // When this entry was last written from here, as the bar says it.
   const [written, setWritten] = useState<string | undefined>(undefined)
-  // Asked about one entry's delete from its own view.
-  const [deletingEntry, setDeletingEntry] = useState(false)
   // A view or a chart being made from the format's + (M55 U3, D-535), saved without a block.
   const [making, setMaking] = useState<ViewMaking | ChartMaking | undefined>(undefined)
   useEffect(() => {
     setRefused(undefined)
     setWritten(undefined)
-    setDeletingEntry(false)
   }, [name, entry])
 
   // A different format is a different sheet: nothing typed at one foot follows,
@@ -316,7 +322,7 @@ export function FormatRows({
 
   /**
    * **A declaration read in for a format this document already has** (M29 U1,
-   * D-331) arrives as the change waiting under its sheet, not written: the
+   * D-331) arrives as the change waiting beside its sheet, not written: the
    * walk used to be where it was read, and this panel is where a change to
    * one is read now. Taken once, and the history entry forgets it, so going
    * back does not open it a second time.
@@ -358,6 +364,43 @@ export function FormatRows({
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
+
+  /**
+   * **Undo puts the row back as it was** (M64 U13, D-625): its id and every
+   * cell, written by the same `insertRows` a row is added by — so what linked
+   * to it before links to it again. On its entry's page, the entry comes back.
+   */
+  const putBack = (deleted: JustDeleted): void => {
+    takeDeleted(deleted)
+    if (db === undefined || deleted.db !== db) return
+    const format = listFormats(db).find((each) => each.name === deleted.format)
+    if (format === undefined) return
+    try {
+      mutate((database) => {
+        insertRows(database, format, [deleted.row.cells], [deleted.row.id])
+      })
+    } catch (error) {
+      setFailure(describeTableError(format, error).reason)
+      return
+    }
+    if (entry !== undefined) navigate(entryPath(format.name, deleted.row.id) + address, along)
+  }
+  // This format's, newest last: Undo puts back the newest, and the note counts the rest.
+  const deletedHere = justDeleted.filter((each) => each.db === db && each.format === name)
+  const undoHere = deletedHere[deletedHere.length - 1]
+  // Ctrl+Z (Cmd+Z) undoes the delete, as it does everywhere — never inside a field, where it undoes typing.
+  useEffect(() => {
+    if (undoHere === undefined) return
+    const onKey = (event: KeyboardEvent): void => {
+      if (!(event.ctrlKey || event.metaKey) || event.shiftKey || event.key.toLowerCase() !== 'z') return
+      const target = event.target as HTMLElement | null
+      if (target !== null && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return
+      event.preventDefault()
+      putBack(undoHere)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
 
   const data = useMemo(() => {
     if (db === undefined || name === undefined) return undefined
@@ -720,6 +763,38 @@ export function FormatRows({
   // so once, at the top of the frame, rather than here.
   // Said to a person: where, never which tool (M54 F2).
   const locked = rowWriteRefusalOnScreen(declaration) ?? readOnly
+  /**
+   * **Delete deletes, at once** (M64 U13, D-625, after D-617): the row is read
+   * whole first, so its Undo can put it back, and the note says its name. A row
+   * another entry links to is refused, as `delete_format_rows` refuses it (D-300),
+   * and the refusal opens at the button that asked, naming what links to it.
+   */
+  const deleteNow = (id: string): DeleteRefusal | undefined => {
+    const row = readRow(db, declaration, id)
+    if (row === undefined) return undefined
+    const called = rowName(declaration, row)
+    const linking = rowsLinkingTo(db, declaration, [id], data.declarations)
+    const count = linking.reduce((sum, each) => sum + [...each.counts.values()].reduce((a, b) => a + b, 0), 0)
+    if (count > 0) {
+      return {
+        say: <Phrase text={t(countKey('formats.deleted.kept', count), { count })} parts={{ name: <Bidi>{called}</Bidi> }} />,
+        lines: linkingSentences(db, declaration, linking),
+        why: t('formats.deleted.keptWhy'),
+      }
+    }
+    try {
+      mutate((database) => deleteRows(database, declaration, [id], data.declarations))
+    } catch (error) {
+      return { say: describeTableError(declaration, error).reason }
+    }
+    keepDeleted({ db, format: declaration.name, name: called, row })
+    return undefined
+  }
+  const deletedNote =
+    undoHere === undefined ? undefined : (
+      <DeletedNote name={undoHere.name} more={deletedHere.length - 1} onUndo={() => putBack(undoHere)} />
+    )
+
   // **Add opens the format's default input view** where there is one — Add,
   // the list's + and quick add alike — and entry/new where there is none (M55 U3, D-533).
   const defaultInput = saved.find((each) => each.kind === INPUT_KIND && each.isDefault === true)
@@ -919,6 +994,9 @@ export function FormatRows({
   // document's write is drawn first, on the entry's own address (M42 F12) —
   // the table it goes to keeps the filter the entry was opened from.
   if (editing === 'MISSING') {
+    // Deleted from here just now: the delete is already on its way to the next
+    // entry, and this draw must not send it to the table first (M64 U13, D-625).
+    if (undoHere !== undefined && undoHere.row.id === entry) return null
     return <Navigate to={tablePath(declaration.name, address)} replace />
   }
 
@@ -1204,26 +1282,8 @@ export function FormatRows({
         }
         list={{ hidden: listHidden, onToggle: toggleEntryList }}
         written={written}
-        below={
-          deletingEntry && storedRow !== undefined ? (
-            <DeleteRowPanel
-              declaration={declaration}
-              row={storedRow}
-              linking={linkingSentences(
-                db,
-                declaration,
-                rowsLinkingTo(db, declaration, [storedRow.id], data.declarations),
-              )}
-              onCancel={() => setDeletingEntry(false)}
-              onDelete={() => {
-                const declarations = data.declarations
-                setDeletingEntry(false)
-                mutate((database) => deleteRows(database, declaration, [storedRow.id], declarations))
-                back()
-              }}
-            />
-          ) : undefined
-        }
+        deleted={deletedNote}
+        deleteLabel={storedRow === undefined ? undefined : t('formats.deleted.label', { name: rowName(declaration, storedRow) })}
         onChange={(draft) => {
           setFailure(undefined)
           setTyped({ key, draft })
@@ -1253,7 +1313,23 @@ export function FormatRows({
         }
         onBack={back}
         backLabel={entryBack(came, declaration.name, address).label ?? declaration.title}
-        onDelete={existing === undefined || locked !== undefined ? undefined : () => setDeletingEntry(true)}
+        // **Deleted at once, and the next entry opens** (M64 U13, D-625): as a
+        // mail client opens the next message — the one after it in the list the
+        // entry was opened from (its filter and order), else the one before,
+        // else back where it came from; *Deleted · Undo* stays in this bar.
+        onDelete={
+          existing === undefined || locked !== undefined || storedRow === undefined
+            ? undefined
+            : () => {
+                const to = ids[at + 1] ?? ids[at - 1]
+                const refused = deleteNow(storedRow.id)
+                if (refused !== undefined) return refused
+                setTyped(undefined)
+                if (to !== undefined) navigate(entryPath(declaration.name, to) + address, { replace: true, ...along })
+                else navigate(entryBack(came, declaration.name, address).path, { replace: true })
+                return undefined
+              }
+        }
         onOpen={(format, id) => {
           setTyped(undefined)
           // Within the format, the filter goes along: its pager walks the rows it holds.
@@ -1493,7 +1569,7 @@ export function FormatRows({
   }
 
   /**
-   * Open the shape under the sheet, or move it to another column — keeping
+   * Open the shape beside the sheet, or move it to another column — keeping
    * what was already changed, so two columns can be changed in one save.
    */
   const shape = (pick: (draft: FormatDraft) => { draft: FormatDraft; focus: ShapeFocus }): void => {
@@ -1502,38 +1578,59 @@ export function FormatRows({
     setShaping({ ...pick(base), origin })
   }
 
+  // **The answer, in words** (M64 U13, D-625): how many rows, and whether
+  // they are right — the claims' verdict over every row, a row counted once at
+  // its worst. A filter says how many of them it holds.
+  const proof = data.proof
+  // The claims' band is drawn once there is a claim to list (M64 U13).
+  const hasClaims = declaration.identities.some((each) => each.expression.trim() !== '')
+  const answer = [
+    filtered && data.refusal === undefined
+      ? t(countKey('formats.table.matching', data.total), { count: data.total, total: data.entries })
+      : data.entries === 0
+        ? t('formats.table.answerNone')
+        : t(countKey('formats.table.answer', data.entries), { count: data.entries }),
+    // What looks wrong without being asked (D-396) is part of *are they right?*
+    ...(data.audit.findings.length === 0
+      ? []
+      : [t(countKey('formats.table.lookWrong', data.audit.findings.length), { count: data.audit.findings.length })]),
+    ...(data.entries === 0
+      ? []
+      : proof === undefined
+        ? [t('formats.table.noClaims')]
+        : proof.failed > 0
+        ? [t(countKey('formats.table.fails', proof.failed), { count: proof.failed })]
+        : proof.unchecked > 0
+          ? [t(countKey('formats.table.uncheckedSome', proof.unchecked), { count: proof.unchecked })]
+          : proof.proved > 0
+            ? [t('formats.table.holds')]
+            : []),
+  ].join(' ')
+
   return (
-    <div className="fc-view-enter flex h-full flex-col">
-      <div className="flex shrink-0 flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-hairline px-6 py-2">
+    <div className="flex h-full">
+    <div className="fc-view-enter flex min-w-0 flex-1 flex-col">
+      <header className="flex shrink-0 flex-col gap-1.5 px-6 pt-5 pb-3">
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
         {/* **The screen names itself with a heading** (M54 F2, WCAG 2.4.6), as
             Roadmap and Ready to start do; its table's name is machinery, never
             a person's (Words name the rule). */}
-        <h1 className="text-body font-medium">
+        <h1 className="m-0 text-title leading-tight font-medium">
           <Bidi>{declaration.title}</Bidi>
         </h1>
-        <Chip>
-          {declaration.columns.length === 1
-            ? '1 column'
-            : `${String(declaration.columns.length)} columns`}
-        </Chip>
-        <span className="text-caption text-ink-secondary tabular-nums">
-          {/* A format holds rows; an entry is one row's page (the term rows, M54 F2). */}
-          {data.total === 1 ? '1 row' : `${String(data.total)} rows`}
-          {data.total > PAGE ? `, showing ${String(PAGE)}` : ''}
-        </span>
-        {locked === undefined && <ReadersLine readers={data.readers} />}
-        <span className="ms-auto flex items-center gap-2">
+        <span className="flex flex-wrap items-center gap-2">
           {(declaration.ruleSets ?? []).map((each) => {
             const target = data.declarations.find((format) => format.name === each.target)
             // A pack's target is sorted by the pack, on its own write (D-269).
+            // What it would change opens beside the rows, before it writes (D-273).
             return target === undefined || rowWriteRefusal(target) !== undefined || readOnly !== undefined ? null : (
               <Button
                 key={each.name}
-                size="sm"
                 variant="ghost"
+                aria-pressed={applying?.set.name === each.name}
                 onClick={() => setApplying(planRuleSet(db, declaration, each, target))}
               >
-                Apply {each.name}
+                {t('formats.table.applyRules', { name: each.name })}
               </Button>
             )
           })}
@@ -1568,15 +1665,46 @@ export function FormatRows({
           )}
           {locked === undefined && (
           <Button
-            size="sm"
             variant="primary"
+            icon="add"
             onClick={() => navigate(addPath)}
           >
             Add
           </Button>
           )}
         </span>
-      </div>
+        </div>
+        <p className="m-0 text-lede tabular-nums" aria-live="polite">
+          {answer}
+        </p>
+        {/* **One line that keeps its place** (M64 U6's, D-618): what the table
+            is — its columns, where it is read from — or, just after a delete,
+            what went and its Undo. It swaps its words and never pushes the rows
+            down under the pointer. */}
+        <p className="m-0 flex min-h-6 flex-wrap items-baseline gap-x-4 gap-y-1 text-caption text-ink-secondary tabular-nums">
+          {deletedNote ?? (
+            <>
+              <span>
+                {t(countKey('formats.table.columns', declaration.columns.length), { count: declaration.columns.length })}
+                {data.total > PAGE ? ` · ${t('formats.table.showing', { count: PAGE })}` : ''}
+              </span>
+              {locked === undefined && <ReadersLine readers={data.readers} />}
+              {locked !== undefined && readOnly === undefined && <span>{locked}</span>}
+              {/* With no claim yet, the band that lists them is one action here (M64 U13). */}
+              {!dashboard && !hasClaims && readOnly === undefined && (
+                <button
+                  type="button"
+                  className="fc-text-action"
+                  data-tour="claims"
+                  onClick={() => shape((draft) => ({ draft, focus: { kind: 'ADDS_UP' } }))}
+                >
+                  {t('formats.table.addClaim')}
+                </button>
+              )}
+            </>
+          )}
+        </p>
+      </header>
       {/* **The format's one tab strip** (M53 U4, U1's mockup (a)): Table, Board
           and List, then the views a format has only when it has them, then its
           rollups — what the View menu held. A view of its own is a route, so it
@@ -1645,46 +1773,6 @@ export function FormatRows({
           </Fragment>
         ))}
       </nav>
-      {making !== undefined && (
-        // New view and New chart from the +: Add a block's own forms, saved without a block.
-        <div className="fc-pop-enter shrink-0 border-b border-hairline px-6 py-4">
-          <div className="max-w-[520px]">
-            {making.what === 'view' ? (
-              <ViewForm
-                db={db}
-                formats={[declaration]}
-                declarations={data.declarations}
-                blocks={[]}
-                document={false}
-                dashboard={declaration.name}
-                day={toISODate(today())}
-                making={making}
-                onMaking={setMaking}
-                onPlace={placeMade}
-                place={false}
-              />
-            ) : (
-              <ChartForm
-                db={db}
-                formats={[declaration]}
-                declarations={data.declarations}
-                blocks={[]}
-                document={false}
-                dashboard={declaration.name}
-                making={making}
-                onMaking={setMaking}
-                onPlace={placeMade}
-                place={false}
-              />
-            )}
-          </div>
-        </div>
-      )}
-      {locked !== undefined && readOnly === undefined && (
-        <p className="shrink-0 border-b border-hairline px-6 py-2 text-caption text-ink-secondary">
-          {locked}
-        </p>
-      )}
 
       {!dashboard && (
       <FilterBand
@@ -1702,7 +1790,7 @@ export function FormatRows({
 
       {/* **What has to add up is a place, not an icon** (M29 U1, D-331): the
           `=` in the toolbar was found *"small and not intuitive"*. */}
-      {!dashboard && (
+      {!dashboard && hasClaims && (
       <AddsUpPlace
         identities={declaration.identities}
         proof={data.proof}
@@ -1831,7 +1919,8 @@ export function FormatRows({
           }
           // Every row opens as its entry (M26 U6) — a pack's too, to be read.
           onOpen={(row) => navigate(entryPath(declaration.name, row.id) + address)}
-          onDelete={locked === undefined ? setDeleting : undefined}
+          onDelete={locked === undefined ? (row) => deleteNow(row.id) : undefined}
+          deleteLabel={(row) => t('formats.deleted.label', { name: rowName(declaration, row) })}
           onShape={readOnly !== undefined ? undefined : (column) =>
             shape((draft) => ({
               draft,
@@ -1910,86 +1999,105 @@ export function FormatRows({
         </div>
       )}
 
-      {/* M39: a panel opens by making room and closes by fading out of it
-          (src/ui/motion/Reveal.tsx); under reduced motion it is there at once. */}
-      <Reveal>
-      {shaping !== undefined && shaped !== undefined && (
-        <ShapePanel
-          draft={shaping.draft}
-          focus={shaping.focus}
-          origin={shaping.origin}
-          others={data.declarations.filter((each) => each.name !== declaration.name)}
-          units={data.units}
-          currency={{
-            code: data.currency,
-            onChange: (code) => mutate((database) => void setDocumentCurrency(database, code)),
-          }}
-          entries={data.entries}
-          problems={shaped.problems}
-          plan={shaped.plan}
-          changed={shaped.changed}
-          followed={shaped.followed}
-          order={shaped.order}
-          onShape={(next) => setShaping((was) => (was === undefined ? was : { ...was, ...next }))}
-          onCancel={() => setShaping(undefined)}
-          // The one export a screen has had since the walk carried it (D-219).
-          onCopy={() => {
-            void navigator.clipboard?.writeText(write(shaped.next))
-          }}
-          onSave={() => {
-            const { next, renames } = shaped
-            setShaping(undefined)
-            // A column the order or a foot draft names may be gone or renamed.
-            setOrder(undefined)
-            setFoot(EMPTY_FOOT)
-            mutate((database) => {
-              adoptFormat(database, next, Date.now(), renames)
-            })
-          }}
-        />
-      )}
-      </Reveal>
+    </div>
 
-      <Reveal>
-      {applying !== undefined && (
-        <ApplyRulesPanel
-          plan={applying}
-          onCancel={() => setApplying(undefined)}
-          onApply={() => {
-            const { set, target } = applying
-            setApplying(undefined)
-            mutate((database) => {
-              applyRuleSet(database, declaration, set, target)
-            })
-          }}
-        />
-      )}
-      </Reveal>
-
-      <Reveal>
-      {deleting !== undefined && (
-        <DeleteRowPanel
-          declaration={declaration}
-          row={deleting}
-          linking={
-            db === undefined
-              ? []
-              : linkingSentences(
-                  db,
-                  declaration,
-                  rowsLinkingTo(db, declaration, [deleting.id], data.declarations),
-                )
-          }
-          onCancel={() => setDeleting(undefined)}
-          onDelete={() => {
-            const id = deleting.id
-            const declarations = data.declarations
-            setDeleting(undefined)
-            mutate((database) => deleteRows(database, declaration, [id], declarations))
-          }}
-        />
-      )}
-      </Reveal>
+      {/* **Beside the rows, never under them** (M64 U13, D-625, after D-617):
+          the shape being changed — a column, the claims, the order — the view
+          or chart being made from the +, and what applying a rule set would
+          change. One panel, replaced rather than stacked; the sheet stays where
+          it was, and the column being shaped stays in sight beside it. */}
+      {shaping !== undefined && shaped !== undefined ? (
+        <SidePanel
+          title={<Phrase text={t('formats.table.shapePanel')} parts={{ title: <Bidi>{declaration.title}</Bidi> }} />}
+          onClose={() => setShaping(undefined)}
+        >
+            <ShapePanel
+              docked
+            draft={shaping.draft}
+            focus={shaping.focus}
+            origin={shaping.origin}
+            others={data.declarations.filter((each) => each.name !== declaration.name)}
+            units={data.units}
+            currency={{
+              code: data.currency,
+              onChange: (code) => mutate((database) => void setDocumentCurrency(database, code)),
+            }}
+            entries={data.entries}
+            problems={shaped.problems}
+            plan={shaped.plan}
+            changed={shaped.changed}
+            followed={shaped.followed}
+            order={shaped.order}
+            onShape={(next) => setShaping((was) => (was === undefined ? was : { ...was, ...next }))}
+            onCancel={() => setShaping(undefined)}
+            // The one export a screen has had since the walk carried it (D-219).
+            onCopy={() => {
+              void navigator.clipboard?.writeText(write(shaped.next))
+            }}
+            onSave={() => {
+              const { next, renames } = shaped
+              setShaping(undefined)
+              // A column the order or a foot draft names may be gone or renamed.
+              setOrder(undefined)
+              setFoot(EMPTY_FOOT)
+              mutate((database) => {
+                adoptFormat(database, next, Date.now(), renames)
+              })
+            }}
+          />
+        </SidePanel>
+      ) : making !== undefined ? (
+        <SidePanel
+          title={t(making.what === 'view' ? 'formats.table.viewPanel' : 'formats.table.chartPanel')}
+          onClose={() => setMaking(undefined)}
+        >
+          {making.what === 'view' ? (
+            <ViewForm
+              db={db}
+              formats={[declaration]}
+              declarations={data.declarations}
+              blocks={[]}
+              document={false}
+              dashboard={declaration.name}
+              day={toISODate(today())}
+              making={making}
+              onMaking={setMaking}
+              onPlace={placeMade}
+              place={false}
+            />
+          ) : (
+            <ChartForm
+              db={db}
+              formats={[declaration]}
+              declarations={data.declarations}
+              blocks={[]}
+              document={false}
+              dashboard={declaration.name}
+              making={making}
+              onMaking={setMaking}
+              onPlace={placeMade}
+              place={false}
+            />
+          )}
+        </SidePanel>
+      ) : applying !== undefined ? (
+        <SidePanel
+          title={t('formats.table.applyPanel', { name: applying.set.name })}
+          onClose={() => setApplying(undefined)}
+        >
+          <ApplyRulesPlan
+            plan={applying}
+            onCancel={() => setApplying(undefined)}
+            onApply={() => {
+              const { set, target } = applying
+              setApplying(undefined)
+              mutate((database) => {
+                applyRuleSet(database, declaration, set, target)
+              })
+            }}
+          />
+        </SidePanel>
+      ) : null}
     </div>
   )
 }
@@ -2123,18 +2231,10 @@ interface Shaping {
 }
 
 /**
- * Removing one row.
- *
- * **It says what points at it and does not cascade.** Nothing in this app is
- * auto-deleted, and a row another format's `link` names is one whose id is
- * sitting in that other table — so the panel says how many, and leaves the
- * deciding to the person, exactly as the format-level delete does (D-224).
- */
-/**
  * What applying a rule set would change, before it does (M25 E4, D-273) — the
  * same counts `apply_rules` prints on its dry run.
  */
-function ApplyRulesPanel({
+function ApplyRulesPlan({
   plan,
   onCancel,
   onApply,
@@ -2143,10 +2243,11 @@ function ApplyRulesPanel({
   onCancel: () => void
   onApply: () => void
 }) {
+  const t = useT()
   const rows = (count: number): string => (count === 1 ? '1 row' : `${String(count)} rows`)
   return (
-    <div className="shrink-0 border-t border-hairline bg-elevated px-6 py-4">
-      <p className="mb-3 max-w-prose text-body">
+    <div className="flex flex-col gap-4">
+      <p className="m-0 text-body">
         <span className="font-medium">{plan.set.name}</span> over {rows(plan.rows)} of{' '}
         <Bidi>{plan.target.title}</Bidi>: {rows(plan.changes.length)} would be set,{' '}
         {rows(plan.unmatched)} no rule matches, and {rows(plan.kept)} somebody else set, which
@@ -2155,77 +2256,25 @@ function ApplyRulesPanel({
           ` ${rows(plan.ties.length)} two rules tie on, naming different rows — left as they are until one of the rules comes first.`}
       </p>
       <div className="flex gap-2">
-        <Button variant="primary" onClick={onApply} disabled={plan.changes.length === 0}>
-          Apply the rules
+        <Button variant="secondary" onClick={onApply} disabled={plan.changes.length === 0}>
+          {t('formats.table.apply')}
         </Button>
         <Button variant="ghost" onClick={onCancel}>
-          Not now
+          {t('formats.table.cancel')}
         </Button>
       </div>
     </div>
   )
 }
 
-function DeleteRowPanel({
-  declaration,
-  row,
-  linking,
-  onCancel,
-  onDelete,
-}: {
-  declaration: FormatDeclaration
-  row: StoredRow
-  /** What still links to this row, as sentences; empty when nothing does (D-263). */
-  linking: readonly string[]
-  onCancel: () => void
-  onDelete: () => void
-}) {
-  const first = declaration.columns
-    .map((column) => cellText(readValue(column, row)))
-    .find((text) => text !== '')
-
-  if (linking.length > 0) {
-    return (
-      <div className="shrink-0 border-t border-hairline bg-elevated px-6 py-4">
-        <p className="mb-2 max-w-prose text-body">
-          <span className="font-medium">
-            <Bidi>{first ?? row.id}</Bidi>
-          </span>{' '}
-          cannot be deleted while other entries link to it &mdash; they would be left naming nothing.
-          Re-link or clear them first; nothing is removed on your behalf.
-        </p>
-        <ul className="mb-3 max-w-prose list-disc ps-5 text-body text-ink-secondary">
-          {linking.map((sentence) => (
-            <li key={sentence}>
-              <Bidi>{sentence}</Bidi>
-            </li>
-          ))}
-        </ul>
-        <Button variant="ghost" onClick={onCancel}>
-          Cancel
-        </Button>
-      </div>
-    )
-  }
-
+/** What a row is called, as a delete names it: its first column with something in it, else its id. */
+function rowName(declaration: FormatDeclaration, row: StoredRow): string {
+  // Its name first — its first text column, what every list calls it by — then anything it has.
+  const named = labelColumn(declaration)
+  const name = named === undefined ? '' : cellText(readValue(named, row))
+  if (name !== '') return name
   return (
-    <div className="shrink-0 border-t border-hairline bg-elevated px-6 py-4">
-      <p className="mb-3 max-w-prose text-body">
-        Delete{' '}
-        <span className="font-medium">
-          <Bidi>{first ?? row.id}</Bidi>
-        </span>{' '}
-        from <Bidi>{declaration.title}</Bidi>? Nothing else goes &mdash; no other entry links to it.
-      </p>
-      <div className="flex gap-2">
-        <Button variant="primary" onClick={onDelete}>
-          Delete
-        </Button>
-        <Button variant="ghost" onClick={onCancel}>
-          Cancel
-        </Button>
-      </div>
-    </div>
+    declaration.columns.map((column) => cellText(readValue(column, row))).find((text) => text !== '') ?? row.id
   )
 }
 

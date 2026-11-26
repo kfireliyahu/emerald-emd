@@ -111,8 +111,11 @@ const M64_U8 = [
   'src/ui/screens/DeductionTypes.tsx',
 ]
 
+/** M64 U13 (D-625): the engine's delete at once and its Undo; the rest of the formats screens is M64 F9's. */
+const M64_U13 = ['src/ui/formats/DeleteAtOnce.tsx']
+
 /** The screens whose words are the catalogue's. A unit that translates a screen adds its files here. */
-export const TRANSLATED: readonly string[] = [...U4, ...U5, ...M64_U8]
+export const TRANSLATED: readonly string[] = [...U4, ...U5, ...M64_U8, ...M64_U13]
 
 /** Literals in a translated file that are not the app's words, by file, each with why. */
 const ALLOWED: Readonly<Record<string, readonly string[]>> = {

@@ -28,6 +28,8 @@ import { transactions as heTransactions } from './he/transactions.ts'
 import { merchants as heMerchants } from './he/merchants.ts'
 import { paychecks as enPaychecks } from './en/paychecks.ts'
 import { paychecks as hePaychecks } from './he/paychecks.ts'
+import { formats as enFormats } from './en/formats.ts'
+import { formats as heFormats } from './he/formats.ts'
 import type { Language } from './language.ts'
 
 /**
@@ -66,6 +68,8 @@ export const ENGLISH = {
   palette: enPalette,
   // M64 U8 (D-620): Paychecks and Deduction types.
   paychecks: enPaychecks,
+  // M64 U13 (D-625): the engine's formats list, a format's table and its entry.
+  formats: enFormats,
 } as const
 
 export type English = typeof ENGLISH
@@ -97,6 +101,7 @@ export const HEBREW: { readonly [A in Area]?: Translation<A> } = {
   chrome: heChrome,
   palette: hePalette,
   paychecks: hePaychecks,
+  formats: heFormats,
 }
 
 const CATALOGUES: Readonly<Record<Language, unknown>> = { en: ENGLISH, he: HEBREW }

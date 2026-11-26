@@ -34,7 +34,13 @@ import { useDocumentStore } from '@/state/documentStore.ts'
 import { formatPath, readPath } from '@/ui/nav.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
-import { Chip } from '@/ui/components/Chip.tsx'
+import { ConfirmAtButton } from '@/ui/components/ConfirmAtButton.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
+import { SidePanel } from '@/ui/components/SidePanel.tsx'
+import { WaitingList, type Waiting } from '@/ui/components/WaitingList.tsx'
+import { DeleteAtOnce } from '@/ui/formats/DeleteAtOnce.tsx'
+import { useT } from '@/i18n/current.ts'
+import { countKey } from '@/i18n/count.ts'
 import { IconAction } from '@/ui/components/IconAction.tsx'
 import { FIELD_MULTILINE } from '@/ui/components/fieldLook.ts'
 import { ExamplePanel } from '@/ui/formats/ExamplePanel.tsx'
@@ -92,7 +98,9 @@ export function DeclaredFormats() {
 
   const [mode, setMode] = useState<Mode>({ kind: 'LIST' })
   const navigate = useNavigate()
-  const [deleting, setDeleting] = useState<FormatDeclaration | undefined>(undefined)
+  // What a waiting line opens beside the list (M64 U13, D-625).
+  const [panel, setPanel] = useState<{ readonly kind: 'PENDING' | 'UNREADABLE' | 'ORPHANS' } | undefined>(undefined)
+  const t = useT()
   // Which packs the document keeps — whose each format is (M33 F3).
   const kept = useKeptPacks()
 
@@ -260,135 +268,182 @@ export function DeclaredFormats() {
 
   const grouped = formatsByPack(data.formats, kept, (each) => each.format.name)
 
-  /** One format's card — the same wherever it is listed. */
-  const card = ({ format, rows, changed, proof }: Listed): React.ReactNode => (
-    // The demo's tour outlines a format the model just made by this (M54 F12): `formats-card-timesheet_day`.
-    <li key={format.name} className="fc-card group" data-tour={`formats-card-${format.name}`}>
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        {/* A title can be Hebrew — typed, imported, or proposed from
-            a Hebrew receipt since U2c — and a raw one scrambles beside
-            what follows it. Its table's name is machinery, never shown to a
-            person (M54 F2, Words name the rule). */}
-        <Link to={formatPath(format.name)} className="fc-card-link font-medium text-ink">
-          <Bidi>{format.title}</Bidi>
-        </Link>
-        <Chip>
-          {format.columns.length === 1 ? '1 column' : `${format.columns.length} columns`}
-        </Chip>
-        <span className="text-caption text-ink-secondary tabular-nums">
-          {rows === 1 ? '1 row' : `${rows} rows`}
-        </span>
-        {/* M47 U5 (D-462): a format nobody writes says so. Absent on a
-            text document written before there were marks, until its next
-            write — a date it does not know would be a guess. */}
-        {changed !== undefined && (
-          <span
-            className="text-caption text-ink-secondary tabular-nums"
-            title="The day a row was last added, changed or removed, or the format itself was changed"
+  // **The answer, in words** (M64 U13, D-625): how many kinds of things, how
+  // many rows, and whether their claims hold — a row counted once at its worst.
+  const rows = data.formats.reduce((sum, each) => sum + each.rows, 0)
+  const failed = data.formats.reduce((sum, each) => sum + (each.proof?.failed ?? 0), 0)
+  const proved = data.formats.reduce((sum, each) => sum + (each.proof?.proved ?? 0), 0)
+
+  // **What waits on the person, one strip below the answer** (M64 U13): a
+  // change the app will not make on its own, a format this build cannot read,
+  // a table nothing declares — each a sentence and a verb, the detail beside.
+  const waiting: Waiting[] = [
+    ...data.pending.map((plan) => ({
+      key: `pending ${plan.format}`,
+      say: t('formats.waiting.pending', {
+        title: data.formats.find((each) => each.format.name === plan.format)?.format.title ?? plan.format,
+      }),
+      why: t('formats.waiting.pendingWhy'),
+      verb: t('formats.waiting.see'),
+      onDo: () => setPanel({ kind: 'PENDING' }),
+    })),
+    ...data.unreadable.map((each) => ({
+      key: `unreadable ${each.name}`,
+      say: t('formats.waiting.unreadable', { name: each.name }),
+      verb: t('formats.waiting.why'),
+      onDo: () => setPanel({ kind: 'UNREADABLE' }),
+    })),
+    ...(data.orphans.length === 0
+      ? []
+      : [
+          {
+            key: 'orphans',
+            say: t(countKey('formats.waiting.orphans', data.orphans.length), { count: data.orphans.length }),
+            verb: t('formats.waiting.seeThem'),
+            onDo: () => setPanel({ kind: 'ORPHANS' }),
+          },
+        ]),
+  ]
+
+  /**
+   * **One format, one row of the table** (M64 U13, D-625): its title opens it,
+   * and so does the whole row; its figures are columns, right-aligned. Read a
+   * file and Delete are the row's only other actions — Edit was the same place
+   * the title opens, and went. Delete cannot be undone (its table goes), so it
+   * asks at its own button, naming the format and what goes with it.
+   */
+  // A column empty on every row is not drawn (M64 U13): no claims anywhere, no marks anywhere.
+  const anyChanged = data.formats.some((each) => each.changed !== undefined)
+  const anyClaims = data.formats.some((each) => each.proof !== undefined)
+  const line = ({ format, rows: held, changed, proof }: Listed): React.ReactNode => {
+    const referrers = formatsPointingAt(db, format.name).map(
+      // By their titles, as a person knows them — never their names (M54 F2).
+      (name) => data.formats.find((each) => each.format.name === name)?.format.title ?? name,
+    )
+    return (
+      // The demo's tour outlines a format the model just made by this (M54 F12): `formats-card-timesheet_day`.
+      <tr
+        key={format.name}
+        data-tour={`formats-card-${format.name}`}
+        className="group cursor-pointer border-b border-hairline hover:bg-surface"
+        onClick={() => navigate(formatPath(format.name))}
+      >
+        <td className="py-2 pe-4 align-baseline">
+          {/* A title can be Hebrew, and its table's name is machinery, never shown (M54 F2). */}
+          <Link
+            to={formatPath(format.name)}
+            className="font-medium text-ink hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+            onClick={(event) => event.stopPropagation()}
           >
-            last changed {instantDay(changed)}
-          </span>
+            <Bidi>{format.title}</Bidi>
+          </Link>
+        </td>
+        <td className="py-2 pe-4 text-end align-baseline tabular-nums">{held}</td>
+        <td className="py-2 pe-8 text-end align-baseline text-ink-secondary tabular-nums">{format.columns.length}</td>
+        {anyChanged && (
+          <td className="py-2 pe-4 align-baseline text-caption text-ink-secondary tabular-nums" title={t('formats.list.changedHint')}>
+            {/* M47 U5 (D-462): absent on a text document written before there were marks. */}
+            {changed === undefined ? '' : instantDay(changed)}
+          </td>
         )}
-        <ProofChip format={format} proof={proof} />
-        <span className="relative z-10 ms-auto flex items-center gap-0.5 self-center">
-          {/* **Edit is the sheet** (M26 U3): a format is changed
-              where its entries are — a column's header, the `+`
-              after the last one, and its claims. */}
-          <IconAction label="Edit" onClick={() => navigate(formatPath(format.name))}>
-            <path d="M12 20h9" />
-            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
-          </IconAction>
-          {/* Kept on the card (D-288), and since M26 U5 it opens
-              the reading screen, where any number of files are read
-              at once, each by the reader that fits it. A pack's
-              format is read only through the pack (M25 E5, D-269). */}
-          {rowWriteRefusal(format) === undefined && (
-            <IconAction
-              label="Read a file"
-              onClick={() => navigate(readPath(format.name))}
-            >
-              <path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8Z" />
-              <path d="M14 3v5h5" />
-              <path d="M12 11v6" />
-              <path d="m9 14 3 3 3-3" />
-            </IconAction>
-          )}
-          {deleteFormatRefusal(format) === undefined && (
-            <IconAction label="Delete" tone="negative" onClick={() => setDeleting(format)}>
-              <path d="M4 7h16" />
-              <path d="M10 11v6M14 11v6" />
-              <path d="M6 7l1 13h10l1-13" />
-              <path d="M9 7V4h6v3" />
-            </IconAction>
-          )}
-        </span>
-      </div>
-    </li>
+        {anyClaims && (
+          <td className="py-2 pe-4 align-baseline">
+            <ProofChip format={format} proof={proof} />
+          </td>
+        )}
+        <td className="py-1 text-end align-baseline whitespace-nowrap" onClick={(event) => event.stopPropagation()}>
+          <span className="inline-flex items-center gap-0.5 opacity-0 transition-opacity duration-[var(--duration-micro)] group-hover:opacity-100 focus-within:opacity-100">
+            {/* A pack's format is read only through the pack (M25 E5, D-269). */}
+            {rowWriteRefusal(format) === undefined && (
+              <IconAction label={t('formats.list.readFile', { title: format.title })} onClick={() => navigate(readPath(format.name))}>
+                <path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8Z" />
+                <path d="M14 3v5h5" />
+                <path d="M12 11v6" />
+                <path d="m9 14 3 3 3-3" />
+              </IconAction>
+            )}
+            {deleteFormatRefusal(format) === undefined &&
+              (referrers.length > 0 ? (
+                // **Refused rather than cascaded** (D-224): it names the formats, because the fix is there.
+                <DeleteAtOnce
+                  label={t('formats.deleteFormat.label', { title: format.title })}
+                  onDelete={() => ({
+                    say: (
+                      <Phrase
+                        text={t('formats.deleteFormat.kept')}
+                        parts={{ title: <Bidi>{format.title}</Bidi>, others: <Bidi>{referrers.join(', ')}</Bidi> }}
+                      />
+                    ),
+                    why: t('formats.deleteFormat.keptWhy'),
+                  })}
+                />
+              ) : (
+                <ConfirmAtButton
+                  label={t('formats.deleteFormat.label', { title: format.title })}
+                  question={<Phrase text={t('formats.deleteFormat.question')} parts={{ title: <Bidi>{format.title}</Bidi> }} />}
+                  cost={
+                    held === 0
+                      ? t('formats.deleteFormat.empty')
+                      : t(countKey('formats.deleteFormat.cost', held), { count: held })
+                  }
+                  confirm={t('formats.deleteFormat.confirm')}
+                  cancel={t('formats.deleteFormat.cancel')}
+                  onConfirm={() => mutate((database) => deleteFormat(database, format.name))}
+                />
+              ))}
+          </span>
+        </td>
+      </tr>
+    )
+  }
+
+  const head = (
+    <thead>
+      <tr className="border-b border-hairline text-start text-label text-ink-secondary uppercase">
+        <th scope="col" className="py-2 pe-4 text-start font-medium">{t('formats.list.head.format')}</th>
+        <th scope="col" className="py-2 pe-4 text-end font-medium">{t('formats.list.head.rows')}</th>
+        <th scope="col" className="py-2 pe-8 text-end font-medium">{t('formats.list.head.columns')}</th>
+        {anyChanged && <th scope="col" className="py-2 pe-4 text-start font-medium">{t('formats.list.head.changed')}</th>}
+        {anyClaims && <th scope="col" className="py-2 pe-4 text-start font-medium">{t('formats.list.head.claims')}</th>}
+        <th scope="col" className="w-16 py-2" />
+      </tr>
+    </thead>
   )
 
   return (
-    <div key="list" className="fc-view-enter flex h-full flex-col">
-      <div className="flex shrink-0 flex-wrap items-baseline gap-x-6 gap-y-1 border-b border-hairline px-6 py-2">
-        {/* The screen names itself with a heading (M54 F2). */}
-        <h1 className="text-body font-medium tabular-nums">
-          {data.formats.length === 1 ? '1 format' : `${data.formats.length} formats`}
-        </h1>
-        <span className="text-caption text-ink-secondary">
-          A format is a kind of thing this document can hold. The declaration is the source of
-          truth; its table is made to match on every open.
-        </span>
-        {/* **One way in rather than three** (M20 U2). The three ways are a
-            choice, and a choice belongs in the middle of the screen where it
-            can be read, not spread across a toolbar where two of them look
-            like afterthoughts beside the primary. */}
-        {/* Withheld while the list is empty, because the three doors are
-            already on the screen underneath it and this button is the same
-            action twice (M20 U2). */}
-        {data.formats.length > 0 && (
-          <span className="ms-auto flex items-center gap-2">
-            <Button variant="primary" size="sm" data-tour="new-format" onClick={() => setMode({ kind: 'DOORS' })}>
-              New format
+    <div key="list" className="fc-view-enter flex h-full">
+    <div className="flex min-w-0 flex-1 flex-col">
+      <header className="flex shrink-0 flex-col gap-1.5 px-6 pt-5 pb-3">
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+          {/* The screen names itself with a heading (M54 F2). */}
+          <h1 className="m-0 text-title leading-tight font-medium">{t('formats.list.title')}</h1>
+          {/* **One way in rather than three** (M20 U2), withheld while the list is
+              empty, because the three doors are already on the screen under it. */}
+          {data.formats.length > 0 && (
+            <Button variant="primary" icon="add" data-tour="new-format" onClick={() => setMode({ kind: 'DOORS' })}>
+              {t('formats.list.newFormat')}
             </Button>
-          </span>
-        )}
-      </div>
-
-      <div className="min-h-0 flex-1 overflow-auto px-6 py-4">
-
-        {data.pending.length > 0 && (
-          <section className="mb-6 rounded-lg border border-hairline-strong bg-elevated p-4">
-            <h2 className="mb-2 font-medium">Waiting for an answer</h2>
-            <p className="mb-3 text-caption text-ink-secondary">
-              These are the changes the app will not make on its own. Nothing has been written and
-              nothing has been lost — empty the column first, or take the format away and declare
-              it again.
-            </p>
-            {data.pending.map((plan) => (
-              <PlanView key={plan.format} plan={plan} />
-            ))}
-          </section>
-        )}
-
-        {data.unreadable.length > 0 && (
-          <section className="mb-6 rounded-lg border border-hairline-strong bg-elevated p-4">
-            <h2 className="mb-2 font-medium">Not readable by this build</h2>
-            {data.unreadable.map((each) => (
-              <p key={each.name} className="text-caption text-ink-secondary">
-                <span className="text-ink">{each.name}</span> — {each.reason}
-              </p>
-            ))}
-          </section>
-        )}
-
-        {data.orphans.length > 0 && (
-          <p className="mb-6 text-caption text-ink-secondary">
-            {data.orphans.join(', ')} {data.orphans.length === 1 ? 'is a table' : 'are tables'} with
-            no declaration behind {data.orphans.length === 1 ? 'it' : 'them'}. Left exactly as{' '}
-            {data.orphans.length === 1 ? 'it is' : 'they are'} — the app only touches what it can
-            see a declaration for.
+          )}
+        </div>
+        <p className="m-0 text-lede">
+          {data.formats.length === 0
+            ? t('formats.list.nothing')
+            : t(countKey('formats.list.answer', data.formats.length), { count: data.formats.length })}
+        </p>
+        {data.formats.length > 0 && (
+          <p className="m-0 flex min-h-6 flex-wrap items-baseline gap-x-2 text-caption text-ink-secondary tabular-nums">
+            <span>{t(countKey('formats.list.rows', rows), { count: rows })}</span>
+            {failed > 0 ? (
+              <span className="text-negative">· {t(countKey('formats.list.fails', failed), { count: failed })}</span>
+            ) : (
+              proved > 0 && <span>· {t('formats.list.holds')}</span>
+            )}
           </p>
         )}
+        <WaitingList label={t('formats.waiting.label')} items={waiting} />
+      </header>
 
+      <div className="min-h-0 flex-1 overflow-auto px-6 pb-6">
         {data.formats.length === 0 ? (
           /* **The empty state is the choice itself** (M20 U2), not a paragraph
              describing three buttons in a toolbar. A person opening a new
@@ -399,45 +454,57 @@ export function DeclaredFormats() {
             onEmpty={() => setMode({ kind: 'NEW', shape: openingShape(newDraft()) })}
           />
         ) : (
-          /* **A card is the way in, and its icons are the only other things
-             on it** (M26 U1, D-288). The whole card opens the table — a
-             stretched link, so the icons stay buttons rather than buttons
-             nested inside a link — and every sentence that said what a button
-             would do is gone: *Edit*, *Read a document*, *Delete* are a title
-             on hover, not a label. Square corners and the hover are
-             `.fc-card`'s, in `tokens.css`, and this is the only screen that
-             wears them until the maintainer has judged it. */
-          /* **Their own first, then each pack's under its name** (M33 F3): a
-             person's two formats are not to be found by reading past the
-             ledger's twenty. Indented, not folded away — it is a list to
-             scan, and a heading is all a group needs. */
-          <div className="space-y-6">
-            {grouped.own.length > 0 && <ul className="space-y-2">{grouped.own.map(card)}</ul>}
+          /* **A table of the kinds of things** (M64 U13, D-625): their own first,
+             then each pack's under its name (M33 F3), so a person's two formats
+             are not found by reading past the ledger's twenty. */
+          <table className="w-full max-w-[960px] border-collapse text-body" data-block>
+            {head}
+            {grouped.own.length > 0 && <tbody>{grouped.own.map(line)}</tbody>}
             {grouped.packs.map((group) => (
-              <section key={group.pack} aria-label={group.title} data-tour={`formats-pack-${group.pack}`}>
-                <h2 className="mb-2 text-caption font-medium text-ink-secondary">{group.title}</h2>
-                <ul className="space-y-2 border-s border-hairline ps-5">{group.formats.map(card)}</ul>
-              </section>
+              <tbody key={group.pack} aria-label={group.title} data-tour={`formats-pack-${group.pack}`}>
+                <tr>
+                  <th scope="rowgroup" colSpan={4 + (anyChanged ? 1 : 0) + (anyClaims ? 1 : 0)} className="pt-5 pb-1 text-start text-caption font-medium text-ink-secondary">
+                    {group.title}
+                  </th>
+                </tr>
+                {group.formats.map(line)}
+              </tbody>
             ))}
-          </div>
+          </table>
         )}
       </div>
+    </div>
 
-      {deleting !== undefined && (
-        <DeletePanel
-          format={deleting}
-          // By their titles, as a person knows them — never their names (M54 F2).
-          referrers={formatsPointingAt(db, deleting.name).map(
-            (name) => data.formats.find((each) => each.format.name === name)?.format.title ?? name,
-          )}
-          rows={data.formats.find((each) => each.format.name === deleting.name)?.rows ?? 0}
-          onCancel={() => setDeleting(undefined)}
-          onDelete={() => {
-            const name = deleting.name
-            setDeleting(undefined)
-            mutate((database) => deleteFormat(database, name))
-          }}
-        />
+      {/* **The detail beside the page** (M64 U13): what a waiting line is about. */}
+      {panel?.kind === 'PENDING' && (
+        <SidePanel title={t('formats.waiting.pendingPanel')} onClose={() => setPanel(undefined)}>
+          <p className="mb-4 text-body text-ink-secondary">{t('formats.waiting.pendingSay')}</p>
+          {data.pending.map((plan) => (
+            <PlanView key={plan.format} plan={plan} />
+          ))}
+        </SidePanel>
+      )}
+      {panel?.kind === 'UNREADABLE' && (
+        <SidePanel title={t('formats.waiting.unreadablePanel')} onClose={() => setPanel(undefined)}>
+          {data.unreadable.map((each) => (
+            <p key={each.name} className="mb-2 text-body">
+              <span className="font-medium">{each.name}</span>
+              <span className="text-ink-secondary"> — {each.reason}</span>
+            </p>
+          ))}
+        </SidePanel>
+      )}
+      {panel?.kind === 'ORPHANS' && (
+        <SidePanel title={t('formats.waiting.orphansPanel')} onClose={() => setPanel(undefined)}>
+          <p className="mb-4 text-body text-ink-secondary">{t('formats.waiting.orphansWhy')}</p>
+          <ul className="m-0 list-none p-0">
+            {data.orphans.map((name) => (
+              <li key={name} className="border-t border-hairline py-2 font-mono text-caption">
+                {name}
+              </li>
+            ))}
+          </ul>
+        </SidePanel>
       )}
     </div>
   )
@@ -457,13 +524,8 @@ export function DeclaredFormats() {
  * column an identity names, and most rows of a half-filled format are in it.
  */
 function ProofChip({ format, proof }: { format: FormatDeclaration; proof: Tally | undefined }) {
-  if (proof === undefined) {
-    return (
-      <span className="text-caption text-ink-secondary">
-        no claims
-      </span>
-    )
-  }
+  // No claims, nothing said: the column's head names what would be here (M64 U13).
+  if (proof === undefined) return null
   const counted = format.identities.length === 1 ? '1 claim' : `${format.identities.length} claims`
   if (proof.proved + proof.failed + proof.unchecked === 0) {
     return <span className="text-caption text-ink-secondary">{counted}, no rows to check yet</span>
@@ -650,79 +712,6 @@ function describe(kind: ReconcilePlan['steps'][number]['kind']): string {
     case 'DROP_CHECK':
       return 'No longer held to: '
   }
-}
-
-/**
- * Deleting takes the table with it, so the panel says so in the figure the user
- * will actually mind — the row count — rather than in a general warning.
- */
-/**
- * **The sentence here used to be *"nothing else in the document refers to
- * it"***, and U4b made that false in the one place it was load-bearing (D-224).
- * A format another one links to is a format whose ids are in that other table,
- * and dropping it leaves a column full of ids resolving to nothing and an
- * aggregate folding to `unchecked` for ever.
- *
- * So it is **refused rather than cascaded**: nothing in this app is
- * auto-deleted, and deleting somebody else's column to make this delete
- * possible would be the app doing the thinking the user came to do. The
- * refusal names the formats, because the fix is to edit them.
- */
-function DeletePanel({
-  format,
-  rows,
-  referrers,
-  onCancel,
-  onDelete,
-}: {
-  format: FormatDeclaration
-  rows: number
-  /** The formats that link to this one or fold its rows. */
-  referrers: readonly string[]
-  onCancel: () => void
-  onDelete: () => void
-}) {
-  const blocked = referrers.length > 0
-
-  return (
-    <div className="fc-pop-enter shrink-0 border-t border-hairline bg-elevated px-6 py-4">
-      <p className="mb-3 max-w-prose text-body">
-        {blocked ? (
-          <>
-            <span className="font-medium">
-              <Bidi>{format.title}</Bidi>
-            </span>{' '}
-            cannot go while {referrers.length === 1 ? 'another format refers' : 'other formats refer'}{' '}
-            to it: <Bidi>{referrers.join(', ')}</Bidi>. Take the link or the total
-            out there first — deleting it here would leave a column of ids pointing at nothing, and
-            nothing in this document is removed on your behalf.
-          </>
-        ) : (
-          <>
-            Delete{' '}
-            <span className="font-medium">
-              <Bidi>{format.title}</Bidi>
-            </span>
-            ? Its declaration and its table both go, and{' '}
-            {rows === 0
-              ? 'the table is empty'
-              : `${rows === 1 ? '1 row' : `${rows} rows`} go with it`}
-            . Nothing else in the document refers to it.
-          </>
-        )}
-      </p>
-      <div className="flex gap-2">
-        {!blocked && (
-          <Button variant="primary" onClick={onDelete}>
-            Delete the format
-          </Button>
-        )}
-        <Button variant="ghost" onClick={onCancel}>
-          Keep it
-        </Button>
-      </div>
-    </div>
-  )
 }
 
 function Centered({ children }: { children: React.ReactNode }) {
