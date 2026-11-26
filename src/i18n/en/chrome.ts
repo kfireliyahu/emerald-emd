@@ -225,8 +225,10 @@ export const chrome = {
     closeTitle: 'Close (Esc)',
     left: '{amount} left',
     over: '{amount} over',
+    overShare: '{amount} over · {percent}% of the plan',
     noPlan: 'Nothing planned',
     more: '{n} more',
+    fewer: 'Fewer',
     share: '{n}% of the whole',
   },
 } as const

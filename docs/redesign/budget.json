@@ -10,7 +10,7 @@
       "blocks": 8,
       "figures": 7,
       "actions": 40,
-      "colours": 13,
+      "colours": 14,
       "screens": 1.8
     },
     "#/year": {
@@ -58,7 +58,7 @@
       "blocks": 8,
       "figures": 6,
       "actions": 36,
-      "colours": 16,
+      "colours": 17,
       "screens": 2.7
     },
     "#/plan/year": {
@@ -74,7 +74,7 @@
       "blocks": 4,
       "figures": 1,
       "actions": 3,
-      "colours": 7,
+      "colours": 8,
       "screens": 1.7
     },
     "#/wealth/funds": {

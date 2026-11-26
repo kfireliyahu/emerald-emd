@@ -17,15 +17,14 @@ import type { CategoryPalette } from '@/ui/charts/categoryPalette.ts'
 import { HeadlineFigure } from '@/ui/charts/HeadlineFigure.tsx'
 import { kitMoney, share, drawn } from '@/ui/charts/kit.ts'
 import { PartOfWhole } from '@/ui/charts/PartOfWhole.tsx'
-import { RankedBars } from '@/ui/charts/RankedBars.tsx'
 import { SidePanel } from '@/ui/components/SidePanel.tsx'
 import { EmptyState } from '@/ui/components/WaitingList.tsx'
 import { WaitingAnswer } from '@/ui/home/WaitingList.tsx'
 import { UNCATEGORIZED_OPTION } from '@/ui/transactions/FilterBar.tsx'
 
-/** What Home's side panel holds: a flow's breakdown, a category's rows, the folded categories, or a kind's answers. */
+/** What Home's side panel holds: a flow's breakdown, a category's rows, or a kind's answers. The folded categories grow in place (M64 F13). */
 export type Panel =
-  | { readonly kind: 'in' | 'out' | 'saved' | 'tax' | 'rest' }
+  | { readonly kind: 'in' | 'out' | 'saved' | 'tax' }
   | { readonly kind: 'category'; readonly id: string }
   | { readonly kind: 'waiting'; readonly item: AttentionKind }
 
@@ -46,7 +45,6 @@ export function HomePanel({
   attention,
   currency,
   palette,
-  onPanel,
   onRead,
   onDrill,
   onClose,
@@ -59,7 +57,6 @@ export function HomePanel({
   readonly attention: readonly AttentionItem[]
   readonly currency: CurrencyCode
   readonly palette: CategoryPalette
-  readonly onPanel: (next: Panel) => void
   readonly onRead: () => void
   readonly onDrill: (category?: string) => void
   readonly onClose: () => void
@@ -97,23 +94,6 @@ export function HomePanel({
           <Taxes tax={tax} period={period} />
         </SidePanel>
       )
-    case 'rest': {
-      const rest = report.categories.slice(WHERE_LIMIT)
-      return (
-        <SidePanel kicker={kicker} title={t('home.month.theRest')} onClose={onClose}>
-          <RankedBars
-            rows={rest.map((line) => ({
-              key: line.categoryId ?? UNCATEGORIZED_OPTION,
-              name: line.name,
-              value: line.outflow,
-            }))}
-            limit={rest.length}
-            empty={t('home.month.whereEmpty')}
-            onOpen={(id) => onPanel({ kind: 'category', id })}
-          />
-        </SidePanel>
-      )
-    }
     case 'category':
       return (
         <Category id={panel.id} period={period} report={report} went={went} kicker={kicker} onDrill={onDrill} onClose={onClose} />

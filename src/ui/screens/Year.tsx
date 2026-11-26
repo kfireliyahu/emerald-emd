@@ -35,11 +35,10 @@ import { Pager, useFilePicker, useReadFiles } from '@/ui/home/parts.tsx'
 import { useHomeKeys } from '@/ui/home/useHomeKeys.ts'
 import { today } from '@/ui/today.ts'
 
-/** What the Year's panel holds: a total's breakdown, one category's months, or the rest of them. */
+/** What the Year's panel holds: a total's breakdown, or one category's months. The rest of the categories grow in place (M64 F13). */
 type Panel =
   | { readonly kind: 'shops' }
   | { readonly kind: 'tax' }
-  | { readonly kind: 'rest' }
   | { readonly kind: 'category'; readonly id: string }
 
 /** How many categories the page ranks before the rest fold into one line. */
@@ -186,6 +185,7 @@ export function Year() {
             </p>
             <HeadlineFigure
               size="display"
+              tone="sign"
               label={t('home.flows.leftOver')}
               value={overview.balance}
               change={versus(overview.balance, before.balance) ?? t('home.flows.leftOverHow')}
@@ -343,7 +343,6 @@ export function Year() {
               empty={t('home.year.movedEmpty', { year })}
               total={{ label: t('home.flows.wentOut'), value: overview.expenses }}
               onOpen={(key) => setPanel({ kind: 'category', id: key })}
-              onMore={() => setPanel({ kind: 'rest' })}
             />
           </section>
         </>
@@ -396,23 +395,6 @@ export function Year() {
               const one = data.merchants.find((each) => each.merchantNormalized === key)
               if (one !== undefined) void navigate('/transactions', { state: { search: one.merchantRaw } })
             }}
-          />
-        </SidePanel>
-      )
-    }
-    if (panel.kind === 'rest') {
-      return (
-        <SidePanel kicker={kicker} title={t('home.year.moved')} onClose={closePanel}>
-          <RankedBars
-            rows={data.categories.slice(MOVED_LIMIT).map((line) => ({
-              key: line.categoryId ?? 'none',
-              name: line.name,
-              value: line.outflow,
-              trend: categoryTrend(line.categoryId),
-            }))}
-            limit={data.categories.length}
-            empty={t('home.year.movedEmpty', { year })}
-            onOpen={(key) => setPanel({ kind: 'category', id: key })}
           />
         </SidePanel>
       )

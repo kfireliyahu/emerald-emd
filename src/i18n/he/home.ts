@@ -56,7 +56,6 @@ export const home: Translation<'home'> = {
     savedEmpty: 'לא הופרש דבר החודש.',
     planEmpty: 'לא תוכנן דבר לחודש הזה.',
     missing: { one: 'חסר דף חשבון אחד', other: 'חסרים {count} דפי חשבון' },
-    theRest: 'שאר הקטגוריות',
     openRows: 'פתיחה בתנועות',
     offPaycheck: 'מהתלוש',
     offPaycheckWhy: 'חלק העובד בפנסיה ובקרן ההשתלמות: לצד החיסכון, ולא בתוכו.',

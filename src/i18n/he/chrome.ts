@@ -225,8 +225,10 @@ export const chrome: Translation<'chrome'> = {
     closeTitle: 'סגירה (Esc)',
     left: 'נשארו {amount}',
     over: 'חריגה של {amount}',
+    overShare: 'חריגה של {amount} · {percent}% מהתכנון',
     noPlan: 'לא תוכנן',
     more: 'עוד {n}',
+    fewer: 'פחות',
     share: '{n}% מהכול',
   },
 }

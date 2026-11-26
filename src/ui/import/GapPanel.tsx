@@ -110,7 +110,7 @@ export function GapPanel({
               })}
               empty={t('reading.gap.noTotal')}
             />
-            <HeadlineFigure label={t('reading.gap.apart')} value={verdict.balance.at.difference} empty={t('reading.gap.noTotal')} />
+            <HeadlineFigure tone="gap" label={t('reading.gap.apart')} value={verdict.balance.at.difference} empty={t('reading.gap.noTotal')} />
           </>
         ) : (
           <>
@@ -130,7 +130,7 @@ export function GapPanel({
               change={t('reading.gap.readOf', { read, total: read + verdict.failed.length })}
               empty={t('reading.verdict.none')}
             />
-            <HeadlineFigure label={t('reading.gap.apart')} value={fixed ? undefined : apart} empty={t('reading.gap.addsUpNow')} />
+            <HeadlineFigure tone="gap" label={t('reading.gap.apart')} value={fixed ? undefined : apart} empty={t('reading.gap.addsUpNow')} />
           </>
         )}
       </div>

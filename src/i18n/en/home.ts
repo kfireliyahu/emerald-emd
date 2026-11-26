@@ -55,7 +55,6 @@ export const home = {
     savedEmpty: 'Nothing was put aside this month.',
     planEmpty: 'Nothing is planned for this month.',
     missing: { one: '{count} statement missing', other: '{count} statements missing' },
-    theRest: 'The other categories',
     openRows: 'Open in Transactions',
     offPaycheck: 'Off the paycheck',
     offPaycheckWhy: 'Your part of the pension and the study fund: beside saved, and not in it.',

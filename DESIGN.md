@@ -40,7 +40,12 @@ The prototype is [`docs/mockups/m64-u3/a/`](./docs/mockups/m64-u3/a/), with
 
 - **Near-monochrome.** `accent` marks what you can act on and never colours a figure; `positive`
   and `negative` are genuine signal only, and never the only carrier. **Figures are ink** — a flow's
-  colour is a small mark beside the word that names it, never the figure.
+  colour is a small mark beside the word that names it, never the figure. **Except a figure that
+  sums a period up** ([D-633](./docs/09-decision-log.md)), drawn in `positive` or `negative` by its
+  sign (`HeadlineFigure`'s `tone`): Home's left over, and its sentence's two amounts (came in
+  `positive`, went out `negative`); the Year's left over; Plan's to split; Wealth's net worth; and a
+  statement's gap, `negative` whenever it is not nothing. Every other figure stays ink, and the
+  minus sign or the word stays beside the colour.
 - **No gradients, no shadows**: elevation is space and hairlines; `--shadow-pop` is for what
   floats (menus, dialogs, a side panel floating over a narrow window).
 - **One family**: IBM Plex Sans and Plex Sans Hebrew, self-hosted, 300/400/500/600; 300 only for

@@ -189,7 +189,7 @@ export function Overview() {
                 ? t('wealth.worth.sentenceNoDebt', { worth: wholeMoney(now.worth) })
                 : t('wealth.worth.sentence', { owned: wholeMoney(owned), owed: wholeMoney(owed), worth: wholeMoney(now.worth) })}
             </p>
-            <HeadlineFigure size="display" label={t('wealth.worth.figure')} value={now.worth} change={t('wealth.worth.figureHow')} empty={t('wealth.worth.empty')} />
+            <HeadlineFigure size="display" tone="sign" label={t('wealth.worth.figure')} value={now.worth} change={t('wealth.worth.figureHow')} empty={t('wealth.worth.empty')} />
             <PartOfWhole
               label={t('wealth.worth.owned')}
               empty={t('wealth.worth.ownedEmpty')}
