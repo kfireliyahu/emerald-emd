@@ -118,8 +118,8 @@
     { "name": "Car loan", "kind": "BANK_LOAN", "principal_amount": 36000, "years_before": 1, "years_ahead": 3, "monthly_payment": 1000, "tracking_kind": "NONE" }
   ],
   "funds": [
-    { "name": "Pension fund", "fund_type": "PENSION", "opened": "2019-03-01", "fee_on_accumulation_basis_points": 22, "fee_on_deposit_basis_points": 150, "start": 171000, "per_quarter": 6200 },
-    { "name": "Study fund", "fund_type": "STUDY_FUND", "opened": "2021-01-01", "fee_on_accumulation_basis_points": 50, "start": 54000, "per_quarter": 3400 }
+    { "name": "Pension fund", "fund_type": "PENSION", "opened": "2019-03-01", "fee_on_accumulation_basis_points": 22, "fee_on_deposit_basis_points": 150, "start": 171000, "growth_per_quarter": 0.011, "fed_by": ["ded:pension", "ded:severance"] },
+    { "name": "Study fund", "fund_type": "STUDY_FUND", "opened": "2021-01-01", "fee_on_accumulation_basis_points": 50, "start": 54000, "growth_per_quarter": 0.009, "fed_by": ["ded:study-fund"] }
   ],
   "plan": {
     "name": "Everyday",

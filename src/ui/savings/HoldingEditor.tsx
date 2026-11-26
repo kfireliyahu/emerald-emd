@@ -3,12 +3,14 @@ import { useState } from 'react'
 import { basisPointsText } from '@/core/percent.ts'
 import { parseISODate, toISODate, type LocalDate } from '@/core/time.ts'
 import { HOLDING_KINDS, type Holding, type HoldingKind } from '@/domain/model/savings.ts'
-import { reachableOf, validateHolding, type HoldingProblem } from '@/domain/savings.ts'
+import { reachableOf, validateHolding } from '@/domain/savings.ts'
+import { useLanguage, useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { ValueChoice } from '@/ui/components/ChoiceField.tsx'
 import { FIELD, FIELD_MULTILINE, SELECT } from '@/ui/components/fieldLook.ts'
-import { HOLDING_KIND_HEBREW, HOLDING_KIND_LABEL } from './labels.ts'
+import { HOLDING_KIND_HEBREW } from './labels.ts'
 
 /**
  * One holding: the cash in a current account, the פק"מ beside it, the index
@@ -44,6 +46,8 @@ export function HoldingEditor({
   onSave: (holding: Holding) => void
   onCancel: () => void
 }) {
+  const t = useT()
+  const language = useLanguage()
   const [draft, setDraft] = useState(initial)
   const [feeText, setFeeText] = useState(() =>
     initial.feeBasisPoints === undefined ? '' : basisPointsText(initial.feeBasisPoints),
@@ -81,14 +85,13 @@ export function HoldingEditor({
       }}
     >
       <div className="px-6 py-6">
-        <h1 className="text-title">{isNew ? 'Add a holding' : 'Edit holding'}</h1>
+        <h1 className="text-title">{isNew ? t('wealth.holdingForm.addTitle') : t('wealth.holdingForm.editTitle')}</h1>
         <p className="mt-1 mb-6 max-w-2xl text-caption text-ink-tertiary">
-          What form the money is in at <Bidi>{placeName}</Bidi>. A place can hold several — the cash
-          and the deposit at one bank are two holdings.
+          <Phrase text={t('wealth.holdingForm.lead')} parts={{ place: <Bidi>{placeName}</Bidi> }} />
         </p>
 
         <div className="grid max-w-3xl grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
-          <Field label="Name">
+          <Field label={t('wealth.holdingForm.name')}>
             <input
               className={FIELD}
               autoFocus
@@ -97,17 +100,18 @@ export function HoldingEditor({
             />
           </Field>
 
-          <Field label="Kind" hint={HOLDING_KIND_HEBREW[draft.kind]}>
+          {/* The bank's own Hebrew word beside an English kind; a Hebrew screen already says it (M64 F47). */}
+          <Field label={t('wealth.holdingForm.kind')} hint={language === 'he' ? undefined : HOLDING_KIND_HEBREW[draft.kind]}>
             <ValueChoice
               className={SELECT}
               value={draft.kind}
-              choices={HOLDING_KINDS.map((kind) => ({ value: kind, label: HOLDING_KIND_LABEL[kind] }))}
+              choices={HOLDING_KINDS.map((kind) => ({ value: kind, label: t(`wealth.kinds.holdingKind.${kind}`) }))}
               onChange={(kind) => set({ kind: kind as HoldingKind })}
             />
           </Field>
 
           {asksTerm && (
-            <Field label="Term ends" hint="optional — until then it is locked">
+            <Field label={t('wealth.holdingForm.term')} hint={t('wealth.holdingForm.termHint')}>
               <input
                 className={FIELD}
                 type="date"
@@ -122,7 +126,7 @@ export function HoldingEditor({
             </Field>
           )}
 
-          <Field label="What it charges a year" hint="optional — the management fee, if it has one">
+          <Field label={t('wealth.holdingForm.fee')} hint={t('wealth.holdingForm.feeHint')}>
             <div className="flex items-center gap-2">
               <input
                 className={`${FIELD} w-24`}
@@ -137,7 +141,7 @@ export function HoldingEditor({
 
         {initial.note !== undefined && (
           <div className="mt-6 grid max-w-3xl grid-cols-1 gap-4">
-            <Field label="Note">
+            <Field label={t('wealth.holdingForm.note')}>
               <textarea
                 className={`${FIELD_MULTILINE} min-h-8`}
                 value={draft.note ?? ''}
@@ -151,15 +155,15 @@ export function HoldingEditor({
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <Button variant="primary" size="sm" type="submit" disabled={problems.length > 0}>
-            {isNew ? 'Add holding' : 'Save'}
+            {isNew ? t('wealth.holdingForm.add') : t('wealth.holdingForm.save')}
           </Button>
           <Button variant="ghost" size="sm" onClick={onCancel}>
-            Cancel
+            {t('wealth.common.cancel')}
           </Button>
 
           <span className="flex flex-wrap items-center gap-x-4 text-caption text-negative">
             {problems.map((problem) => (
-              <span key={problem}>{PROBLEM_MESSAGE[problem]}</span>
+              <span key={problem}>{t(`wealth.holdingForm.problem.${problem}`)}</span>
             ))}
           </span>
         </div>
@@ -191,12 +195,6 @@ export function blankHolding(holdingPlaceId: string): Holding {
     note: undefined,
     isArchived: false,
   }
-}
-
-const PROBLEM_MESSAGE: Readonly<Record<HoldingProblem, string>> = {
-  NO_NAME: 'Give it a name',
-  RETURN_OUT_OF_RANGE: 'A rate over 20% a year is almost certainly a typo',
-  FEE_OUT_OF_RANGE: 'A fee over 20% a year is almost certainly a typo',
 }
 
 function Field({

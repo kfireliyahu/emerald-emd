@@ -34,6 +34,7 @@ import {
   type ReportBatch,
 } from '@/ui/funds/reportBatch.tsx'
 import { SnapshotEditor } from '@/ui/funds/SnapshotEditor.tsx'
+import { useT } from '@/i18n/current.ts'
 import { today } from '@/ui/today.ts'
 
 interface Editing {
@@ -61,7 +62,7 @@ export function ReportIntake({
   currency: given,
   onLeave,
   onProblem,
-  leaveLabel = 'Back to the fund',
+  leaveLabel: givenLeave,
   files,
 }: {
   fund: FundAccount
@@ -82,6 +83,8 @@ export function ReportIntake({
   const db = useDocumentStore((state) => state.db)
   const revision = useDocumentStore((state) => state.revision)
   const mutate = useDocumentStore((state) => state.mutate)
+  const t = useT()
+  const leaveLabel = givenLeave ?? t('wealth.reading.back')
 
   const [editing, setEditing] = useState<Editing | undefined>()
   /** The stack of reports being read in one sitting (D-164). */
@@ -153,7 +156,7 @@ export function ReportIntake({
           database,
           {
             kind: 'FUND_REPORT',
-            name: chosen?.name ?? (formatName === '' ? 'Fund report' : formatName),
+            name: chosen?.name ?? (formatName === '' ? t('wealth.reportIntake.fundReport') : formatName),
             labelSignature: outcome.signature,
             anchors: outcome.anchors,
             derivedBy: chosen === undefined ? 'LOCAL_MODEL' : 'MANUAL',
@@ -241,7 +244,7 @@ export function ReportIntake({
                 that is where it goes. A batch of one is not a batch. */
         batch.queued.length === 0
           ? { leaveLabel }
-          : { saveLabel: 'Save and read the next', leaveLabel: 'Back to the reports' })}
+          : { saveLabel: t('wealth.reportIntake.saveNext'), leaveLabel: t('wealth.reportIntake.backReports') })}
         onSave={(snapshot) => {
           const saved = write((database, at) => {
             const added = addSnapshot(

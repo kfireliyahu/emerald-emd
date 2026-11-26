@@ -7,12 +7,14 @@
  * goal fed by the holding is worth its latest reading and can go down.
  *
  * The checks here are three answers and never a silent fourth (D-149): each
- * says `PROVED`, `FAILED` with both figures, or `UNCHECKED` with its reason.
+ * says `PROVED`, `FAILED` with both figures, or `UNCHECKED` with why, as a code
+ * the screen and a conversation each say in their own words (M64 F38).
  * None of them is a source of a figure — a price only checks a value.
  */
 
 import type { CurrencyCode, Money } from '@/core/money.ts'
 import type { WantedDeposit } from './goalDeposits.ts'
+import type { Unchecked } from './unchecked.ts'
 
 /** The key a reading's growth deposit carries: one deposit per reading. */
 export function readingGrowthKey(readingId: string): string {
@@ -72,15 +74,15 @@ export function readingGrowth(
 export type ReadingCheck<T> =
   | { readonly kind: 'PROVED' }
   | { readonly kind: 'FAILED'; readonly ours: T; readonly printed: T }
-  | { readonly kind: 'UNCHECKED'; readonly reason: string }
+  | { readonly kind: 'UNCHECKED'; readonly why: Unchecked }
 
 /** The holding's rows, in millionths, against the quantity a reading printed. Exact. */
 export function quantityCheck(
-  rows: { readonly quantityMicro: number } | { readonly reason: string },
+  rows: { readonly quantityMicro: number } | { readonly why: Unchecked },
   printedMicro: number | undefined,
 ): ReadingCheck<number> {
-  if (printedMicro === undefined) return { kind: 'UNCHECKED', reason: 'The reading printed no quantity.' }
-  if ('reason' in rows) return { kind: 'UNCHECKED', reason: rows.reason }
+  if (printedMicro === undefined) return { kind: 'UNCHECKED', why: { code: 'NO_QUANTITY_PRINTED' } }
+  if ('why' in rows) return { kind: 'UNCHECKED', why: rows.why }
   return rows.quantityMicro === printedMicro
     ? { kind: 'PROVED' }
     : { kind: 'FAILED', ours: rows.quantityMicro, printed: printedMicro }
@@ -91,12 +93,10 @@ export function quantityCheck(
  * rows add up to by the reading's day, from its opening balance when it has one.
  * Exact: both are what the broker printed.
  */
-export function cashCheck(running: Money | undefined, value: Money, reason?: string): ReadingCheck<Money> {
-  if (running === undefined) {
-    return { kind: 'UNCHECKED', reason: reason ?? 'Its account has no rows to run a balance over.' }
-  }
+export function cashCheck(running: Money | undefined, value: Money): ReadingCheck<Money> {
+  if (running === undefined) return { kind: 'UNCHECKED', why: { code: 'NO_ACCOUNT_ROWS' } }
   if (running.currency !== value.currency) {
-    return { kind: 'UNCHECKED', reason: `The cash line is in ${value.currency} and the account's rows in ${running.currency}.` }
+    return { kind: 'UNCHECKED', why: { code: 'CURRENCY_MISMATCH', printed: value.currency, rows: running.currency } }
   }
   return running.minor === value.minor ? { kind: 'PROVED' } : { kind: 'FAILED', ours: running, printed: value }
 }

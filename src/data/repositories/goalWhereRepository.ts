@@ -76,19 +76,30 @@ export interface WhereChoice {
   readonly group: WhereGroup
   /** The one name: an account's name for its Cash, otherwise the holding's. */
   readonly name: string
-  /** Beside the name, quieter: an account's last four, or the place a holding is at. */
-  readonly detail: string | undefined
+  /**
+   * The cash of a place an account's statements show, which the screen calls by its
+   * own word for cash rather than by `name` (M64 F38: a word is the screen's, never the data's).
+   */
+  readonly cash: boolean
+  /** Beside the name, quieter: an account's last four, or the place a holding is at — parts the screen words. */
+  readonly detail: WhereDetail | undefined
   readonly way: WhereWay
   /** What it holds now, and the day that is from; `recorded` for money nothing confirms. */
   readonly figure:
     | { readonly kind: 'ON'; readonly amount: Money; readonly on: string }
     | { readonly kind: 'RECORDED'; readonly amount: Money }
     | undefined
-  /** Another goal follows its rows, so this one cannot (D-357): that goal's name. */
+  /**
+   * Another goal follows its rows, so this one cannot (D-357): that goal's name — `''`
+   * when that goal is not among the document's, which the screen says as *another goal*.
+   */
   readonly followedBy: string | undefined
-  /** A bank account's Cash whose transfers another goal counts (M30 F4): that goal's name. */
+  /** A bank account's Cash whose transfers another goal counts (M30 F4): that goal's name, `''` as above. */
   readonly transfersReadBy?: string | undefined
 }
+
+/** Beside a choice's name: an account's last four digits, or the place a holding is at. */
+export type WhereDetail = { readonly last4: string } | { readonly at: string }
 
 /**
  * Every holding a goal's money can be in, by one name each: the bank accounts
@@ -104,8 +115,8 @@ export function whereChoices(db: Database, currency: CurrencyCode, goalId?: stri
   const transferReaders = new Map<string, string>()
   for (const [id, feed] of goalFeeds(db)) {
     if (id === goalId) continue
-    if (feed.kind === 'HOLDING') followers.set(feed.id, goals.get(id)?.name ?? 'another goal')
-    if (feed.kind === 'TRANSFERS') transferReaders.set(feed.id, goals.get(id)?.name ?? 'another goal')
+    if (feed.kind === 'HOLDING') followers.set(feed.id, goals.get(id)?.name ?? '')
+    if (feed.kind === 'TRANSFERS') transferReaders.set(feed.id, goals.get(id)?.name ?? '')
   }
 
   const bank: WhereChoice[] = []
@@ -121,7 +132,8 @@ export function whereChoices(db: Database, currency: CurrencyCode, goalId?: stri
         holdingId: holding.id,
         group: { kind: 'BANK' },
         name: ownAccount.name,
-        detail: ownAccount.last4 === undefined ? undefined : `···${ownAccount.last4}`,
+        cash: false,
+        detail: ownAccount.last4 === undefined ? undefined : { last4: ownAccount.last4 },
         way: 'ALREADY_THERE',
         figure:
           balance?.statementBalance === undefined
@@ -144,8 +156,9 @@ export function whereChoices(db: Database, currency: CurrencyCode, goalId?: stri
       held.push({
         holdingId: holding.id,
         group: { kind: 'HELD', placeId: place.id, placeName: place.name },
-        name: cash ? 'Cash' : holding.name,
-        detail: `at ${place.name}`,
+        name: holding.name,
+        cash,
+        detail: { at: place.name },
         way: cash ? 'ALREADY_THERE' : 'FOLLOWS_ROWS',
         figure:
           reading === undefined || reading.value.currency !== currency
@@ -164,14 +177,15 @@ export function whereChoices(db: Database, currency: CurrencyCode, goalId?: stri
       holdingId: holding.id,
       group: { kind: 'BY_HAND' },
       name: holding.name,
-      detail: at === undefined ? undefined : `at ${at}`,
+      cash: false,
+      detail: at === undefined ? undefined : { at },
       way: 'ALREADY_THERE',
       figure: { kind: 'RECORDED', amount: money(recorded, currency) },
       followedBy: undefined,
     })
   }
   const heldOrder = (choice: WhereChoice): string =>
-    `${choice.group.kind === 'HELD' ? choice.group.placeName : ''}\u0000${choice.name === 'Cash' ? '￿' : choice.name}`
+    `${choice.group.kind === 'HELD' ? choice.group.placeName : ''}\u0000${choice.cash ? '￿' : choice.name}`
   return [...bank, ...held.sort((a, b) => heldOrder(a).localeCompare(heldOrder(b))), ...byHand]
 }
 

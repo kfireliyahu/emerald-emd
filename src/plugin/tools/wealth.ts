@@ -20,7 +20,7 @@ import { goalFeeds, goalHoldingFeeds, goalWorth, holdingPutIn } from '@/data/rep
 import { holdingWorths, listHoldingReadings, type HoldingReading } from '@/data/repositories/holdingReadingRepository.ts'
 import { netWorth } from '@/data/repositories/netWorthRepository.ts'
 import { describeGap } from '@/domain/netWorth.ts'
-import { checksTable } from './holdingReadings.ts'
+import { checksTable, uncheckedText } from './holdingReadings.ts'
 import { listAccounts } from '@/data/repositories/accountRepository.ts'
 import {
   SPENDING_WINDOW_MONTHS,
@@ -288,7 +288,7 @@ function holdingFeedText(document: OpenDocument, holdingId: string, name: string
       ? 'matches its cost basis'
       : fed.check.kind === 'FAILED'
         ? `cost basis ${money(fed.check.printed)} — off by ${money(fed.check.difference)}`
-        : `unchecked: ${fed.check.reason}`
+        : `unchecked: ${uncheckedText(fed.check.why)}`
   return `the rows that name ${name}: ${plural(fed.rows, 'row')} put in ${money(fed.putIn)}${by}; ${check}`
 }
 

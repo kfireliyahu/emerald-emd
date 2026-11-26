@@ -68,13 +68,14 @@ describe('where is the money (M30 F3)', () => {
   it('lists each holding by one name: an account for its Cash, then what a place holds, then what is kept by hand', async () => {
     const { db, cash, world, bonds, envelope } = await setUp()
     const choices = whereChoices(db, 'ILS')
-    const shown = choices.map((one) => [one.name, one.detail, one.group.kind, one.way])
+    // Parts, never sentences (M64 F38): the screen says *Cash* and *at Broker* in its own words.
+    const shown = choices.map((one) => [one.name, one.cash, one.detail, one.group.kind, one.way])
     expect(shown).toEqual([
-      ['Current', '···1234', 'BANK', 'ALREADY_THERE'],
-      ['Bond fund', 'at Broker', 'HELD', 'FOLLOWS_ROWS'],
-      ['World ETF', 'at Broker', 'HELD', 'FOLLOWS_ROWS'],
-      ['Cash', 'at Broker', 'HELD', 'ALREADY_THERE'],
-      ['Envelope', undefined, 'BY_HAND', 'ALREADY_THERE'],
+      ['Current', false, { last4: '1234' }, 'BANK', 'ALREADY_THERE'],
+      ['Bond fund', false, { at: 'Broker' }, 'HELD', 'FOLLOWS_ROWS'],
+      ['World ETF', false, { at: 'Broker' }, 'HELD', 'FOLLOWS_ROWS'],
+      [expect.any(String), true, { at: 'Broker' }, 'HELD', 'ALREADY_THERE'],
+      ['Envelope', false, undefined, 'BY_HAND', 'ALREADY_THERE'],
     ])
     expect(choices.map((one) => one.holdingId)).toEqual(expect.arrayContaining([cash.id, world.id, bonds.id, envelope.id]))
     // Its Cash is never named: the account is.
@@ -152,7 +153,7 @@ describe('where is the money (M30 F3)', () => {
     expect(listDeposits(db, { goalId: goal.id }).map((one) => one.amount.minor)).toEqual([20_000_00])
     expect(whereChoices(db, 'ILS').find((one) => one.holdingId === made?.id)).toMatchObject({
       group: { kind: 'BY_HAND' },
-      detail: 'at Mizrahi',
+      detail: { at: 'Mizrahi' },
       figure: { kind: 'RECORDED', amount: ils(20_000_00) },
     })
 

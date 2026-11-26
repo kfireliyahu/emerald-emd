@@ -391,31 +391,47 @@ export async function makeYear(target, source, ask, today) {
   }
 
   await call('record_paychecks', { path: target, paychecks: slips.filter((one) => one.payment_date <= iso(today.year, today.month, today.day)), commit: true })
-  // The funds: a reading at the end of every quarter the year has passed.
+  // The funds: a reading at the end of every quarter the year has passed, each
+  // after the first saying what the fund received since the one before — the
+  // report's "הפקדות" — so the deposit check has something to compare (M64 F39).
+  // A deposit lands the month after the salary it was taken from (the check's
+  // default lag of one month), so a reading at the end of month M received what
+  // the slips of the previous reading's month up to M-1 sent it. The balance is
+  // the last one, what arrived, and a made-up return on the last one.
   const quarters = months.filter(({ index, month }) => index < running && month % 3 === 0)
+  const sent = (fund, from, to) =>
+    slips
+      .slice(from, to)
+      .flatMap((one) => one.lines)
+      .filter((line) => fund.fed_by.includes(line.deduction_type_id))
+      .reduce((sum, line) => sum + cents(line.employee_amount) + cents(line.employer_amount ?? 0), 0)
   await call('record_fund_readings', {
     path: target,
-    readings: source.funds.flatMap((fund) =>
-      quarters.map(({ year, month }, n) => ({
-        name: fund.name,
-        fund_type: fund.fund_type,
-        opened_date: fund.opened,
-        fee_on_accumulation_basis_points: fund.fee_on_accumulation_basis_points,
-        ...(fund.fee_on_deposit_basis_points === undefined ? {} : { fee_on_deposit_basis_points: fund.fee_on_deposit_basis_points }),
-        as_of_date: iso(year, month, new Date(year, month, 0).getDate()),
-        total_balance: fund.start + n * fund.per_quarter,
-      })),
-    ),
+    readings: source.funds.flatMap((fund) => {
+      let balance = cents(fund.start)
+      return quarters.map(({ index, year, month }, n) => {
+        const previous = quarters[n - 1]
+        const deposits = previous === undefined ? undefined : sent(fund, previous.index, index)
+        if (deposits !== undefined) balance += deposits + Math.round(balance * fund.growth_per_quarter)
+        return {
+          name: fund.name,
+          fund_type: fund.fund_type,
+          opened_date: fund.opened,
+          fee_on_accumulation_basis_points: fund.fee_on_accumulation_basis_points,
+          ...(fund.fee_on_deposit_basis_points === undefined ? {} : { fee_on_deposit_basis_points: fund.fee_on_deposit_basis_points }),
+          as_of_date: iso(year, month, new Date(year, month, 0).getDate()),
+          total_balance: major(balance),
+          ...(deposits === undefined ? {} : { deposits_since_previous: major(deposits) }),
+        }
+      })
+    }),
     commit: true,
   })
 
+  // What each slip line pays into, from the fund that says it is fed by it.
   await call('set_deduction_types', {
     path: target,
-    types: [
-      { type: 'ded:pension', pays_into: 'Pension fund' },
-      { type: 'ded:study-fund', pays_into: 'Study fund' },
-      { type: 'ded:severance', pays_into: 'Pension fund' },
-    ],
+    types: source.funds.flatMap((fund) => fund.fed_by.map((type) => ({ type, pays_into: fund.name }))),
     commit: true,
   })
 

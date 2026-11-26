@@ -18,16 +18,6 @@ import type {
   SavingDeposit,
 } from '@/domain/model/savings.ts'
 
-export const PLACE_KIND_LABEL: Readonly<Record<HoldingPlaceKind, string>> = {
-  CHECKING: 'Current account',
-  DEPOSIT: 'Fixed deposit',
-  // Investments — what an account with holdings keeps, and what a place kept by
-  // hand may hold too, so it is not called an account (M36 U12, D-389).
-  INVESTMENT: 'Investments',
-  CASH: 'Cash',
-  OTHER: 'Other',
-}
-
 export const PLACE_KIND_HEBREW: Readonly<Record<HoldingPlaceKind, string>> = {
   CHECKING: 'עו"ש',
   DEPOSIT: 'פק"מ',
@@ -62,9 +52,6 @@ export const HOLDING_KIND_HEBREW: Readonly<Record<HoldingKind, string>> = {
  * kind of account, because that is the distinction that decides whether the app
  * can ever tell the user their figure is out of date.
  */
-/** The map's third column when nobody has ever confirmed the figure. */
-export const NEVER_CONFIRMED = 'never checked'
-
 export const SOURCE_LABEL: Readonly<Record<DepositSourceKind, string>> = {
   MANUAL: 'Entered by hand',
   FROM_TRANSACTION: 'From a transaction',

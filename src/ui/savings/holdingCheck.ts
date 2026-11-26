@@ -1,13 +1,16 @@
 import { monthsBetween, parseISODate, toISODate, type LocalDate } from '@/core/time.ts'
 import type { HoldingWorth } from '@/domain/holdingReadings.ts'
 import type { Holding } from '@/domain/model/savings.ts'
+import { countKey } from '@/i18n/count.ts'
+import type { Translate } from '@/i18n/current.ts'
 
-import { NEVER_CONFIRMED } from './labels.ts'
+/** When a holding was last counted: never, or on a day so many whole months ago. */
+export type LastChecked = { readonly kind: 'NEVER' } | { readonly kind: 'ON'; readonly day: LocalDate; readonly months: number }
 
 /** What a holding's row says about when it was last counted, and whether it asks. */
 export interface HoldingCheck {
-  /** "checked 2026-09-01 — 1 month ago", "never checked", or nothing at all. */
-  readonly phrase: string | undefined
+  /** When it was last counted — said by `checkedSaid` — or nothing at all. */
+  readonly checked: LastChecked | undefined
   /** Whether the row offers *Checked today* and *New figure*. */
   readonly askable: boolean
 }
@@ -30,7 +33,7 @@ export function checkedOf(
   worth: HoldingWorth | undefined,
   isOwnCash: boolean,
 ): HoldingCheck {
-  if (isOwnCash) return { phrase: undefined, askable: false }
+  if (isOwnCash) return { checked: undefined, askable: false }
 
   // A reading is somebody counting it (M30 F5): its day stands when it is the later.
   const read = worth === undefined ? undefined : parseISODate(worth.asOf)
@@ -38,14 +41,17 @@ export function checkedOf(
     read !== undefined && (holding.lastConfirmedAt === undefined || toISODate(read) > toISODate(holding.lastConfirmedAt))
       ? read
       : holding.lastConfirmedAt
-  if (confirmed === undefined) return { phrase: NEVER_CONFIRMED, askable: true }
+  if (confirmed === undefined) return { checked: { kind: 'NEVER' }, askable: true }
+  return { checked: { kind: 'ON', day: confirmed, months: monthsBetween(confirmed, asOf) }, askable: true }
+}
 
-  const months = monthsBetween(confirmed, asOf)
-  const phrase =
-    months <= 0
-      ? `checked ${toISODate(confirmed)}`
-      : `checked ${toISODate(confirmed)} — ${String(months)} month${months === 1 ? '' : 's'} ago`
-  return { phrase, askable: true }
+/** `checked 2026-09-01 — 1 month ago`, `never checked`, in the language on screen (M64 F38). */
+export function checkedSaid(checked: LastChecked, t: Translate): string {
+  if (checked.kind === 'NEVER') return t('wealth.checked.never')
+  const day = toISODate(checked.day)
+  return checked.months <= 0
+    ? t('wealth.checked.on', { day })
+    : t(countKey('wealth.checked.ago', checked.months), { day, count: checked.months })
 }
 
 /**

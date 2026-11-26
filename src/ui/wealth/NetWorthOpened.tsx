@@ -44,7 +44,7 @@ import { FIELD } from '@/ui/components/fieldLook.ts'
 import { Phrase } from '@/ui/components/Phrase.tsx'
 import { CushionHere, StatementBar, type Write } from '@/ui/savings/Cushion.tsx'
 import { blankHolding, HoldingEditor } from '@/ui/savings/HoldingEditor.tsx'
-import { checkedOf } from '@/ui/savings/holdingCheck.ts'
+import { checkedOf, checkedSaid } from '@/ui/savings/holdingCheck.ts'
 import { HoldingReadings } from '@/ui/savings/HoldingReadings.tsx'
 import { HOLDING_KIND_LABEL } from '@/ui/savings/labels.ts'
 import { PlaceEditor } from '@/ui/savings/PlaceEditor.tsx'
@@ -603,7 +603,7 @@ function HoldingLine({
         ? t('wealth.opened.caption.locked')
         : t('wealth.opened.caption.lockedUntil', { day: longDay(holding.termEndDate, dates) }),
     // Where the figure comes from is not said: by hand with no reading, it is what was written down (M36 U11).
-    worth === undefined ? checked.phrase : worthPhrase(worth, t, dates),
+    worth !== undefined ? worthPhrase(worth, t, dates) : checked.checked === undefined ? undefined : checkedSaid(checked.checked, t),
     holding.isArchived ? t('wealth.opened.caption.archived') : undefined,
   ]
     .filter((one): one is string => one !== undefined)

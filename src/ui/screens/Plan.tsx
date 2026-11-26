@@ -106,6 +106,7 @@ import { StarterProposal } from '@/ui/plan/StarterProposal.tsx'
 import { bucketColour } from '@/ui/plan/planLook.ts'
 import { BASIS_LABEL } from '@/ui/split/labels.ts'
 import { today } from '@/ui/today.ts'
+import { whereDetail, whereName } from '@/ui/wealth/words.ts'
 
 /** The bar snaps a size to this much, in minor units — ₪50. A divider is a gesture, not a typed figure. */
 const SNAP = 5000
@@ -377,7 +378,7 @@ export function Plan() {
     // another goal already follows.
     holdings: whereChoices(db, currency)
       .filter((one) => one.followedBy === undefined)
-      .map((one) => ({ id: one.holdingId, name: one.detail === undefined ? one.name : `${one.name} ${one.detail}` })),
+      .map((one) => ({ id: one.holdingId, name: [whereName(one, t), whereDetail(one, t)].filter((part) => part !== undefined).join(' ') })),
     parents: eligibleParents(categories)
       .filter((one) => one.kind !== 'INCOME')
       .map((one) => ({ id: one.id, name: one.path, moved: isMovedKind(one.kind) })),

@@ -17,6 +17,7 @@ import { Phrase } from '@/ui/components/Phrase.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
 import { useDismiss } from '@/ui/components/useDismiss.ts'
 import { Tag } from '@/ui/wealth/parts.tsx'
+import { otherGoal, whereDetail, whereName } from '@/ui/wealth/words.ts'
 
 /** `2026-09-30` → `30 Sep`: the day a figure is from, as the list says it, in the language on screen. */
 export function dayMonth(iso: string, dates: DateWords): string {
@@ -27,7 +28,7 @@ export function dayMonth(iso: string, dates: DateWords): string {
 
 /** What a choice holds now, as the list says it beside the name. */
 function figureText(choice: WhereChoice, t: Translate, dates: DateWords): string | undefined {
-  if (choice.followedBy !== undefined) return t('wealth.where.followedBy', { goal: choice.followedBy })
+  if (choice.followedBy !== undefined) return t('wealth.where.followedBy', { goal: otherGoal(choice.followedBy, t) })
   const figure = choice.figure
   if (figure === undefined) return undefined
   if (figure.kind === 'RECORDED') return t('wealth.where.recorded', { amount: formatMoney(figure.amount) })
@@ -122,10 +123,10 @@ export function WherePicker({
         ) : (
           <>
             <span className="flex min-w-0 flex-1 items-baseline">
-              <Bidi className="min-w-0 truncate">{chosen?.name ?? t('wealth.where.gone')}</Bidi>
+              <Bidi className="min-w-0 truncate">{chosen === undefined ? t('wealth.where.gone') : whereName(chosen, t)}</Bidi>
               {chosen?.detail !== undefined && (
                 <span className="ms-1.5 text-caption text-ink-secondary">
-                  <Bidi>{chosen.detail}</Bidi>
+                  <Bidi>{whereDetail(chosen, t)}</Bidi>
                 </span>
               )}
             </span>
@@ -164,10 +165,10 @@ export function WherePicker({
                     }`}
                   >
                     <span className="min-w-0 flex-1">
-                      <Bidi>{choice.name}</Bidi>
+                      <Bidi>{whereName(choice, t)}</Bidi>
                       {choice.detail !== undefined && choice.group.kind !== 'HELD' && (
                         <span className="ms-1.5 text-caption text-ink-secondary">
-                          <Bidi>{choice.detail}</Bidi>
+                          <Bidi>{whereDetail(choice, t)}</Bidi>
                         </span>
                       )}
                     </span>

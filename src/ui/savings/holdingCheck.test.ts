@@ -5,7 +5,13 @@ import { localDate } from '@/core/time.ts'
 import type { HoldingWorth } from '@/domain/holdingReadings.ts'
 import type { Holding } from '@/domain/model/savings.ts'
 
-import { checkedOf, newFigureFor, readingWanted } from './holdingCheck.ts'
+import { translate } from '@/i18n/catalogue.ts'
+import type { Translate } from '@/i18n/current.ts'
+
+import { checkedOf, checkedSaid, newFigureFor, readingWanted, type HoldingCheck } from './holdingCheck.ts'
+
+const t: Translate = (key, parts) => translate('en', key, parts)
+const said = (check: HoldingCheck): string | undefined => (check.checked === undefined ? undefined : checkedSaid(check.checked, t))
 
 const TODAY = localDate(2026, 10, 5)
 
@@ -41,17 +47,18 @@ function worth(asOf: string): HoldingWorth {
 describe('checkedOf (M36 U01)', () => {
   it('says nothing and asks nothing of an account’s own Cash: the statement is its figure', () => {
     const cash = holding({ kind: 'CASH', accountId: 'acc1' })
-    expect(checkedOf(cash, TODAY, undefined, true)).toEqual({ phrase: undefined, askable: false })
+    expect(checkedOf(cash, TODAY, undefined, true)).toEqual({ checked: undefined, askable: false })
   })
 
   it('still says never checked, and asks, for a holding nobody has counted', () => {
-    expect(checkedOf(holding(), TODAY, undefined, false)).toEqual({ phrase: 'never checked', askable: true })
+    expect(checkedOf(holding(), TODAY, undefined, false)).toEqual({ checked: { kind: 'NEVER' }, askable: true })
+    expect(said(checkedOf(holding(), TODAY, undefined, false))).toBe('never checked')
   })
 
   it('takes a reading’s day as the last check when it is the later', () => {
     const counted = holding({ lastConfirmedAt: localDate(2026, 6, 1) })
-    expect(checkedOf(counted, TODAY, worth('2026-09-01'), false).phrase).toBe('checked 2026-09-01 — 1 month ago')
-    expect(checkedOf(counted, TODAY, undefined, false).phrase).toBe('checked 2026-06-01 — 4 months ago')
+    expect(said(checkedOf(counted, TODAY, worth('2026-09-01'), false))).toBe('checked 2026-09-01 — 1 month ago')
+    expect(said(checkedOf(counted, TODAY, undefined, false))).toBe('checked 2026-06-01 — 4 months ago')
   })
 })
 

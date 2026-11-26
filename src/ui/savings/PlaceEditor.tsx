@@ -7,12 +7,13 @@ import {
   type HoldingPlace,
   type HoldingPlaceKind,
 } from '@/domain/model/savings.ts'
-import { validateHoldingPlace, type HoldingPlaceProblem } from '@/domain/savings.ts'
+import { validateHoldingPlace } from '@/domain/savings.ts'
+import { useLanguage, useT } from '@/i18n/current.ts'
 import { Button } from '@/ui/components/Button.tsx'
 import { MENU_MOST, ValueChoice } from '@/ui/components/ChoiceField.tsx'
 import { NewByName, SelectOrNew } from '@/ui/components/SelectOrNew.tsx'
 import { FIELD, FIELD_MULTILINE, SELECT } from '@/ui/components/fieldLook.ts'
-import { PLACE_KIND_HEBREW, PLACE_KIND_LABEL } from './labels.ts'
+import { PLACE_KIND_HEBREW } from './labels.ts'
 
 /**
  * One place money sits: a bank, a brokerage, a drawer.
@@ -33,11 +34,7 @@ import { PLACE_KIND_HEBREW, PLACE_KIND_LABEL } from './labels.ts'
  * in the place is picked — the holding goal deposits already land in.
  */
 /** What a place can name, as *+ New…* offers it: no card, which holds no money. */
-const NEW_ACCOUNT_KINDS: readonly (readonly [AccountKind, string])[] = [
-  ['BANK', 'Bank account'],
-  ['CASH', 'Cash'],
-  ['HOLDINGS', 'Account with holdings'],
-]
+const NEW_ACCOUNT_KINDS = ['BANK', 'CASH', 'HOLDINGS'] as const satisfies readonly AccountKind[]
 
 export interface PlaceAccountChoice {
   readonly accountId: string | undefined
@@ -64,6 +61,8 @@ export function PlaceEditor({
   onSave: (place: HoldingPlace, link: PlaceAccountChoice) => void
   onCancel: () => void
 }) {
+  const t = useT()
+  const language = useLanguage()
   const [draft, setDraft] = useState(initial)
   const [cashId, setCashId] = useState<string | undefined>(
     holdings.find((held) => held.accountId !== undefined && held.accountId === initial.accountId)?.id,
@@ -86,11 +85,16 @@ export function PlaceEditor({
     setCashId(holdings.find((held) => held.accountId !== undefined && held.accountId === accountId)?.id)
   }
   const accountChoices = [
-    { value: '', label: 'None' },
+    { value: '', label: t('wealth.placeForm.none') },
     ...accounts.map((account) => ({
       value: account.id,
       label: account.name,
-      detail: account.kind === 'HOLDINGS' ? 'with holdings' : account.kind === 'CASH' ? 'cash' : undefined,
+      detail:
+        account.kind === 'HOLDINGS'
+          ? t('wealth.placeForm.withHoldings')
+          : account.kind === 'CASH'
+            ? t('wealth.placeForm.cashAccount')
+            : undefined,
     })),
   ]
 
@@ -109,15 +113,11 @@ export function PlaceEditor({
       }}
     >
       <div className="px-6 py-6">
-        <h1 className="text-title">{isNew ? 'Add a place' : 'Edit place'}</h1>
-        <p className="mt-1 mb-6 max-w-2xl text-caption text-ink-tertiary">
-          Where money is — the bank, the broker, the drawer. What form it is in there
-          is a holding, and a place can have several: the cash and the deposit at one bank are two
-          different answers to &ldquo;can I reach this?&rdquo;
-        </p>
+        <h1 className="text-title">{isNew ? t('wealth.placeForm.addTitle') : t('wealth.placeForm.editTitle')}</h1>
+        <p className="mt-1 mb-6 max-w-2xl text-caption text-ink-tertiary">{t('wealth.placeForm.lead')}</p>
 
         <div className="grid max-w-3xl grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
-          <Field label="Name">
+          <Field label={t('wealth.holdingForm.name')}>
             <input
               className={FIELD}
               autoFocus
@@ -126,16 +126,17 @@ export function PlaceEditor({
             />
           </Field>
 
-          <Field label="Kind" hint={PLACE_KIND_HEBREW[draft.kind]}>
+          {/* The bank's own Hebrew word beside an English kind; a Hebrew screen already says it (M64 F47). */}
+          <Field label={t('wealth.holdingForm.kind')} hint={language === 'he' ? undefined : PLACE_KIND_HEBREW[draft.kind]}>
             <ValueChoice
               className={SELECT}
               value={draft.kind}
-              choices={HOLDING_PLACE_KINDS.map((kind) => ({ value: kind, label: PLACE_KIND_LABEL[kind] }))}
+              choices={HOLDING_PLACE_KINDS.map((kind) => ({ value: kind, label: t(`wealth.kinds.place.${kind}`) }))}
               onChange={(kind) => set({ kind: kind as HoldingPlaceKind })}
             />
           </Field>
 
-          <Field label="Bank or broker" hint="optional — whose it is">
+          <Field label={t('wealth.placeForm.institution')} hint={t('wealth.placeForm.institutionHint')}>
             <input
               className={FIELD}
               value={draft.institution ?? ''}
@@ -148,26 +149,26 @@ export function PlaceEditor({
           </Field>
 
           <Field
-            label="Account"
+            label={t('wealth.placeForm.account')}
             hint={
               draft.accountId === undefined
-                ? 'optional — the account whose statements show this money. A deposit or cash at home names none'
+                ? t('wealth.placeForm.accountHintNone')
                 : initial.accountId !== undefined
-                  ? 'its statements show this place’s money, and its own cash is here. To name another account, choose None and save first'
-                  : 'its statements show this place’s money; the account keeps its own cash here'
+                  ? t('wealth.placeForm.accountHintKept')
+                  : t('wealth.placeForm.accountHintNew')
             }
           >
             {initial.accountId === undefined ? (
               // A place that names none yet may make the account it is (M31 U6). One
               // that names one offers only that one, so there is nothing to make.
               <SelectOrNew
-                aria-label="The account this place is"
+                aria-label={t('wealth.placeForm.accountLabel')}
                 value={draft.accountId ?? ''}
                 onChange={pickAccount}
                 newForm={(done) => (
                   <NewByName
                     noun="account"
-                    kinds={NEW_ACCOUNT_KINDS}
+                    kinds={NEW_ACCOUNT_KINDS.map((kind) => [kind, t(`wealth.placeForm.newKind.${kind}`)] as const)}
                     make={(db, name, kind, now) => createAccount(db, { name, kind: kind ?? 'BANK' }, now).id}
                     done={done}
                   />
@@ -176,7 +177,7 @@ export function PlaceEditor({
               />
             ) : (
               <ValueChoice
-                aria-label="The account this place is"
+                aria-label={t('wealth.placeForm.accountLabel')}
                 value={draft.accountId ?? ''}
                 choices={accountChoices}
                 filter={accountChoices.length > MENU_MOST}
@@ -186,15 +187,15 @@ export function PlaceEditor({
           </Field>
 
           {draft.accountId !== undefined && (
-            <Field label="Its cash" hint="the holding that is the account’s own cash">
+            <Field label={t('wealth.placeForm.cash')} hint={t('wealth.placeForm.cashHint')}>
               <ValueChoice
                 className={SELECT}
-                aria-label="The holding that is the account’s cash"
+                aria-label={t('wealth.placeForm.cashLabel')}
                 value={cashId ?? ''}
                 choices={[
                   ...(cashChoices.some((held) => held.accountId === draft.accountId)
                     ? []
-                    : [{ value: '', label: 'A new holding, Cash' }]),
+                    : [{ value: '', label: t('wealth.placeForm.newCash') }]),
                   ...cashChoices.map((held) => ({ value: held.id, label: held.name })),
                 ]}
                 filter={cashChoices.length > MENU_MOST}
@@ -205,7 +206,7 @@ export function PlaceEditor({
         </div>
 
         <div className="mt-8 grid max-w-3xl grid-cols-1 gap-4">
-          <Field label="Note">
+          <Field label={t('wealth.holdingForm.note')}>
             <textarea
               className={`${FIELD_MULTILINE} min-h-8`}
               value={draft.note ?? ''}
@@ -218,15 +219,15 @@ export function PlaceEditor({
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <Button variant="primary" size="sm" type="submit" disabled={problems.length > 0}>
-            {isNew ? 'Add place' : 'Save'}
+            {isNew ? t('wealth.placeForm.add') : t('wealth.holdingForm.save')}
           </Button>
           <Button variant="ghost" size="sm" onClick={onCancel}>
-            Cancel
+            {t('wealth.common.cancel')}
           </Button>
 
           <span className="flex flex-wrap items-center gap-x-4 text-caption text-negative">
             {problems.map((each) => (
-              <span key={each}>{PROBLEM_MESSAGE[each]}</span>
+              <span key={each}>{t(`wealth.holdingForm.problem.${each}`)}</span>
             ))}
             {problem !== undefined && <span>{problem}</span>}
           </span>
@@ -234,10 +235,6 @@ export function PlaceEditor({
       </div>
     </form>
   )
-}
-
-const PROBLEM_MESSAGE: Readonly<Record<HoldingPlaceProblem, string>> = {
-  NO_NAME: 'Give it a name',
 }
 
 function Field({

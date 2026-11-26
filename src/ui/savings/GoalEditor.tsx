@@ -16,7 +16,7 @@ import { AmountInput, DateInput, FormField, FormGrid, MoreFields, PanelForm, Sai
 import { Phrase } from '@/ui/components/Phrase.tsx'
 import { NEW_CHOICE, NewByName } from '@/ui/components/SelectOrNew.tsx'
 import { FIELD, FIELD_MULTILINE } from '@/ui/components/fieldLook.ts'
-import { useWealthWords } from '@/ui/wealth/words.ts'
+import { otherGoal, useWealthWords } from '@/ui/wealth/words.ts'
 import { CostBasis } from './CostBasis.tsx'
 import { WherePicker } from './WherePicker.tsx'
 
@@ -361,7 +361,7 @@ function TransfersIn({
       </label>
       <p className="m-0 text-caption text-ink-secondary">
         {taken !== undefined ? (
-          <Phrase text={t('wealth.goalForm.transfersTaken')} parts={{ name: <Bidi>{taken}</Bidi> }} />
+          <Phrase text={t('wealth.goalForm.transfersTaken')} parts={{ name: <Bidi>{otherGoal(taken, t)}</Bidi> }} />
         ) : checked ? (
           <Phrase text={t('wealth.goalForm.transfersOn')} parts={{ name: <Bidi>{account.name}</Bidi>, goal: <Bidi>{goalName}</Bidi> }} />
         ) : (

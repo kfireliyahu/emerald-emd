@@ -4,6 +4,7 @@ import type { HoldingPutIn } from '@/data/repositories/goalDepositRepository.ts'
 import { countKey } from '@/i18n/count.ts'
 import { useDates, useT } from '@/i18n/current.ts'
 import { Tag } from '@/ui/wealth/parts.tsx'
+import { uncheckedSaid } from '@/ui/wealth/words.ts'
 
 /**
  * What the holding's rows put in, against the cost basis a reading printed (D-357):
@@ -35,7 +36,7 @@ export function CostBasis({ fed }: { fed: HoldingPutIn }) {
         {check.kind === 'FAILED'
           ? t('wealth.costBasis.failed', { printed: formatMoney(check.printed), difference: formatMoney(check.difference) })
           : check.kind === 'UNCHECKED'
-            ? t('wealth.costBasis.why', { reason: check.reason })
+            ? t('wealth.costBasis.why', { reason: uncheckedSaid(check.why, t) })
             : t('wealth.costBasis.proved')}
       </span>
     </p>
