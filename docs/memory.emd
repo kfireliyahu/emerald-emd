@@ -19512,10 +19512,13 @@ report: Board, list, roadmap, ready, a format's dashboard, the document's dashbo
 milestone: M64
 scope: ui
 title: The tour and the page catch up, and every route is inside its budget
-state: planned
+state: in_progress
 brief: "**Do.** Replay every tour on the redesigned screens and fix what moved (check:tours green); the page's pictures of the app show the new look. probe:screens --budget passes on every route with nothing exempt. Write one review_entry for the maintainer: open his own document and use the ledger for a real month (read a statement, fix categories, read the month), saying what to look for.\n\nMaintainer, 2026-11-25: before that, walk every screen's interactions once against D-617's conventions (delete with undo, confirmations anchored to the button, selection acting in the list's header, the keys doing what they do everywhere) and fix what still surprises; the closing review_entry names that walk."
 files: The tour's scenes and captions, the public page's pictures of the app, and the budget's exempt list emptied.
 blocks: ["M64 U6","M64 U7","M64 U8","M64 U9","M64 U10","M64 U11","M64 U12","M64 U14","M64 F1","M64 F2","M64 F3","M64 F5","M64 F6","M64 F9","M64 F10","M64 F11","M64 F12","M64 F13","M64 F14","M64 F15","M64 F16"]
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 paths: "src/demo/tour/\nsrc/demo/page/\ndocs/redesign/budget.json"
 
 ### M64 U16
