@@ -19430,6 +19430,42 @@ title: Packs and a fund's detail inside their ceilings on any document
 state: planned
 brief: M64 U15's budget run passes every route on the document it was measured on, but two go over when another document fills them: #/settings/packs on custom.emd, which keeps no ledger (209 words, 3 actions, 5 colours against 200, 2, 4: the offer to keep the ledger adds a filled button and its words), and #/wealth/funds/:id on showcase.emd (22 actions against 20, more readings). Bring both inside the same limits, or say in docs/redesign/budget.json's about which document a route is measured on. Files: src/ui/screens/Packs.tsx, src/ui/screens/FundDetail.tsx, docs/redesign/budget.json.
 
+### M64 F69
+milestone: M64
+scope: ui
+title: A side panel's width is the reader's to drag
+state: planned
+brief: **Do.** Maintainer, 2026-11-26: "i wanna make the sidebars that opened able to change width by the user to read easily." Every panel that opens beside a page (SidePanel, and anything that hand-rolls one) gets a handle on its inner edge: dragged with the mouse, or moved with the arrow keys when focused (a separator with its value said), and a double-click puts it back to its default width. Defaults the driver set, to change if they surprise him: the width is remembered for every panel and across restarts (a per-viewer convenience, not the document); a floor where its form still works and a ceiling that leaves the page behind it readable; in Hebrew the mirrored edge drags. No physical sides (direction.test).
+files: src/ui/components/SidePanel.tsx src/ui/components/PanelForm.tsx
+paths: src/ui/components/SidePanel.tsx src/ui/components/PanelForm.tsx
+
+### M64 F70
+milestone: M64
+scope: ui
+title: Every screen fills the window's width
+state: planned
+brief: **Do.** Maintainer, 2026-11-26: "make sure everything take up full dynamic width in general (old fault ive found is the roadmap)". Every route fills the window as it widens and narrows: no fixed cap holds a page's frame, a board, a roadmap or a table narrow, and a chart grows with its column. Find every cap (max-w-*, maxWidth, fixed widths on frames) and remove the ones that hold a screen narrow; where a line of prose would grow unreadably long, the prose alone keeps its measure while its screen fills. The roadmap (project.emd, #/formats/milestone/roadmap) first. Check with probe:screens on year, custom and project at 1280 and at a wide window (1920), light and dark, and that the budget still passes.
+files: src/ui/formats/
+paths: src/ui/
+
+### M64 F71
+milestone: M64
+scope: ui
+title: The website in the redesign's direction, its layout rethought
+state: planned
+brief: **Do.** Rethink the website (the page, src/demo/page/) in the redesign's direction (D-614 the report, D-615 the language), its layout included and not only its colours and type: the answer first, one question per section, the kit's quiet look, light, dark, Hebrew and phone width. Keep every claim the page makes, its reels and posters (retake what the new layout frames differently), and the page's tour: check:tours green on the page. Maintainer, 2026-11-26: "is the website included in the redesign? if not it should be." Asked whether to restyle it or rethink it: "rethink the layout too." The development.mp4 recording stays his to record again.
+files: src/demo/page/page.ts src/demo/page/page.css src/demo/page/copy/en.ts src/demo/page/reel.ts
+paths: src/demo/page/
+
+### M64 F72
+milestone: M64
+scope: ui
+title: A goal's panel takes money out, and closing a spent goal frees its money
+state: planned
+brief: **Do.** Maintainer, 2026-11-26, asking what to do once a goal saved in the bank is reached and spent ("i saved up for x, and bought it. what am i meant to do with that goal, how can i free that money"), then: "where am i meant to do that? i dont see add a movement or record withdrawal when im on the goal side bar". Today the goal's panel (GoalDetail) offers only Set aside and Already there; money out is reached from the Goals row menu's "Add a deposit" then "Money out", and Close leaves the goal's deposits held in the bank's split (goalParts counts closed goals), so the cushion stays short until a withdrawal is recorded. Build: (1) the panel takes money out where it takes money in, said as what it is (money out, with its why), for a goal whose money is typed; a followed goal keeps its sentence that its holding's transfers are its movements. (2) "I spent it": closing a goal that still holds money asks, at the Close button and never in a bar at the bottom, whether that money was spent, and on yes records the withdrawal of what it holds (why: spent on the goal) and closes it in one write, undoable; on no it closes and the money stays held, said so. (3) The row menu's "Add a deposit" is named for what it opens (a movement, in or out). Follow .claude/skills/redesign-screen/SKILL.md (D-617). Check on .demo/year.emd: a goal saved in the bank, spent and closed, leaves the cushion with its money back and the bank's split adding up.
+files: src/ui/screens/GoalDetail.tsx src/ui/screens/Goals.tsx src/ui/savings/DepositEditor.tsx src/data/repositories/savingsRepository.ts
+paths: src/ui/screens/GoalDetail.tsx src/ui/screens/Goals.tsx src/ui/savings/ src/i18n/
+
 ### M64 F9
 milestone: M64
 scope: ui
