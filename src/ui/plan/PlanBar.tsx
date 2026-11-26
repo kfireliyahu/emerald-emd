@@ -2,8 +2,10 @@ import { useEffect, useId, useRef, useState } from 'react'
 
 import { formatMoney, money, type CurrencyCode, type Money } from '@/core/money.ts'
 import type { SplitResult } from '@/domain/splitter.ts'
-import { useT, type Translate } from '@/i18n/current.ts'
+import { useLanguage, useT, type Translate } from '@/i18n/current.ts'
+import { directionOf } from '@/i18n/language.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { arrowStep } from '@/ui/direction.ts'
 import { wholeMoney } from '@/ui/charts/kit.ts'
 import {
   crossPath,
@@ -118,6 +120,10 @@ export function PlanBar({
   view?: PlanView
 }) {
   const say = useT()
+  // **The bar reads the way the page does** (M64 F1, D-631): in Hebrew its segments run from the
+  // right, so a drag is measured from the right edge and ← grows the bucket. The ring is a clock
+  // face and stays one; it keeps `dir="ltr"`.
+  const rtl = directionOf(useLanguage()) === 'rtl'
   const track = useRef<HTMLDivElement>(null)
   const stage = useRef<HTMLDivElement>(null)
   const ringBox = useRef<HTMLDivElement>(null)
@@ -190,7 +196,7 @@ export function PlanBar({
   const pct = (minor: number): string => `${String((Math.max(0, minor) / total) * 100)}%`
   const keepShare = basis.minor > 0 ? Math.max(0, Math.min(1, result.splittable.minor / basis.minor)) : 1
 
-  // Where each segment starts, left to right, fixed share first.
+  // Where each segment starts along the reading order, fixed share first.
   let cursor = share?.minor ?? 0
   const placed = segments.map((entry) => {
     const start = cursor
@@ -204,7 +210,8 @@ export function PlanBar({
   const edgeFor = (event: { readonly clientX: number }): number => {
     const box = track.current?.getBoundingClientRect()
     if (box === undefined || box.width === 0) return 0
-    return Math.min(Math.max((event.clientX - box.left) / box.width, 0), 1) * total
+    const along = rtl ? box.right - event.clientX : event.clientX - box.left
+    return Math.min(Math.max(along / box.width, 0), 1) * total
   }
 
   const startDrag = (event: React.PointerEvent, index: number): void => {
@@ -265,7 +272,9 @@ export function PlanBar({
   const nudge = (event: React.KeyboardEvent, index: number): void => {
     const here = placed[index]
     if (here === undefined || onNudge === undefined) return
-    const direction = event.key === 'ArrowRight' || event.key === 'ArrowUp' ? 1 : event.key === 'ArrowLeft' || event.key === 'ArrowDown' ? -1 : 0
+    // ↑ grows the bucket and ↓ shrinks it; ← and → move the divider the way they point, so in
+    // Hebrew, where the bucket runs leftward from its start, ← grows it.
+    const direction = event.key === 'ArrowUp' ? 1 : event.key === 'ArrowDown' ? -1 : arrowStep(event.key)
     if (direction === 0) return
     event.preventDefault()
     onNudge({
@@ -467,7 +476,7 @@ export function PlanBar({
         </div>
         <svg className="block h-[26px] w-full" viewBox="0 0 100 26" preserveAspectRatio="none" aria-hidden>
           <polygon
-            points={`${String((1 - keepShare) * 100)},0 100,0 100,26 0,26`}
+            points={rtl && mode === 'bar' ? `0,0 ${String(keepShare * 100)},0 100,26 0,26` : `${String((1 - keepShare) * 100)},0 100,0 100,26 0,26`}
             style={{ fill: 'var(--color-surface)', stroke: 'var(--color-hairline-strong)', strokeWidth: 1, vectorEffect: 'non-scaling-stroke' }}
           />
         </svg>
@@ -607,7 +616,7 @@ export function PlanBar({
             >
               <Fill amount={share} got={billsGot} colour="var(--color-ink-tertiary)" />
               {share.minor / total > 0.07 && <b className="relative truncate font-medium">{say('plan.fixed.title')}</b>}
-              {share.minor / total > 0.05 && <span className="relative truncate tabular-nums text-ink-secondary">{formatMoney(share)}</span>}
+              {share.minor / total > 0.05 && <span className="relative truncate tabular-nums text-ink-secondary rtl:text-right">{formatMoney(share)}</span>}
             </div>
           )}
 
@@ -635,7 +644,7 @@ export function PlanBar({
                   </b>
                 )}
                 {entry.amount.minor / total > 0.05 && (
-                  <span className="relative truncate tabular-nums text-ink-secondary">
+                  <span className="relative truncate tabular-nums text-ink-secondary rtl:text-right">
                     {wholeMoney(entry.amount)}
                   </span>
                 )}
@@ -650,7 +659,7 @@ export function PlanBar({
               title={`${say('plan.bar.free')} · ${formatMoney(money(free, currency))}`}
             >
               {free / total > 0.08 && <b className="truncate font-medium">{say('plan.bar.free')}</b>}
-              {free / total > 0.05 && <span className="truncate tabular-nums">{formatMoney(money(free, currency))}</span>}
+              {free / total > 0.05 && <span className="truncate tabular-nums rtl:text-right">{formatMoney(money(free, currency))}</span>}
             </div>
           )}
 
@@ -658,7 +667,7 @@ export function PlanBar({
           {!readOnly &&
             placed.map((one, index) =>
               divider(one, index, '-top-1.5 h-[76px] w-4 -translate-x-1/2 cursor-ew-resize', {
-                left: pct(one.start + one.entry.amount.minor),
+                left: pct(rtl ? total - one.start - one.entry.amount.minor : one.start + one.entry.amount.minor),
               }),
             )}
         {tip !== undefined && (
@@ -679,7 +688,7 @@ export function PlanBar({
     <figure className="m-0 flex flex-col" aria-label={label ?? say('plan.bar.theSplit')}>
       {label !== undefined && <figcaption className="mb-1 text-caption text-ink-secondary">{label}</figcaption>}
 
-      <div ref={stage} dir="ltr">
+      <div ref={stage} dir={mode === 'bar' ? undefined : 'ltr'}>
         {body}
       </div>
     </figure>
