@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 
 import type { ColumnType, FormatDeclaration, OrderChange } from '@/domain/format/declaration.ts'
@@ -21,11 +22,11 @@ import { compileDerived } from '@/domain/format/derived.ts'
 import { formulaNames } from '@/domain/format/formula.ts'
 import { declarationOf, type DerivedDraft } from '@/domain/format/draft.ts'
 import { CONNECTIONS_PATH } from '@/ui/nav.ts'
+import { useT } from '@/i18n/current.ts'
+import { countKey, type CountKey } from '@/i18n/count.ts'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 
 export type { ShapeFocus } from '@/ui/formats/shape.ts'
-
-/** Why a saved column's tiles grey out *worked out* (M29 F4, D-345). */
-const UNDERIVED = 'Only a column not saved yet can be. Press + for a new one.'
 
 /**
  * **A format changed where its entries are** — M26 U3.
@@ -107,6 +108,7 @@ export function ShapePanel({
    */
   docked?: boolean | undefined
 }) {
+  const t = useT()
   const column =
     focus.kind === 'COLUMN' ? draft.columns.find((each) => each.key === focus.key) : undefined
   const removed = focus.kind === 'COLUMN' && column === undefined ? origin.get(focus.key) : undefined
@@ -181,7 +183,8 @@ export function ShapePanel({
             })
           }
           onDerive={origin.has(column.key) ? undefined : () => onShape(deriveInstead({ draft, focus }, origin))}
-          underived={origin.has(column.key) ? UNDERIVED : undefined}
+          // Why a saved column's tiles grey out *worked out* (M29 F4, D-345).
+          underived={origin.has(column.key) ? t('formats.shape.underived') : undefined}
         />
       )}
 
@@ -203,22 +206,28 @@ export function ShapePanel({
       )}
 
       {focus.kind === 'DERIVED' && derived === undefined && (
-        <p className="text-body">The computed column goes; no entry changes.</p>
+        <p className="text-body">{t('formats.shape.derivedGoes')}</p>
       )}
 
       {removed !== undefined && (
         <p className="text-body">
-          <span className="font-mono">{removed}</span> goes, with what is in it.
+          <Phrase
+            text={t('formats.shape.columnGoes')}
+            parts={{
+              name: (
+                <Bidi>
+                  <span className="font-mono">{removed}</span>
+                </Bidi>
+              ),
+            }}
+          />
         </p>
       )}
 
       {focus.kind === 'ORDER' && (
         <div className="fc-pop-enter">
-          <h2 className="mb-1 font-medium">The order of the columns</h2>
-          <p className="max-w-prose text-caption text-ink-tertiary">
-            Drag a header by its grip, or give the grip focus and press ← →; Home and End move it
-            to either end.
-          </p>
+          <h2 className="mb-1 font-medium">{t('formats.shape.orderTitle')}</h2>
+          <p className="max-w-prose text-caption text-ink-tertiary">{t('formats.shape.orderHow')}</p>
         </div>
       )}
 
@@ -233,13 +242,23 @@ export function ShapePanel({
             onAddDerived={() => onShape(addDerived(draft))}
           />
           <p className="mt-3 max-w-prose text-caption text-ink-tertiary">
-            A link to another format is a column: press <span className="font-mono">+</span> and
-            pick <span className="font-mono">link</span>. A total folded back across one is drawn
-            on{' '}
-            <Link to={CONNECTIONS_PATH} className="text-accent">
-              Connections
-            </Link>
-            .
+            <Phrase
+              text={t('formats.shape.linkHow')}
+              parts={{
+                plus: <span className="font-mono">+</span>,
+                // The type's own name, as its tile says it.
+                link: (
+                  <Bidi>
+                    <code className="font-mono">link</code>
+                  </Bidi>
+                ),
+                connections: (
+                  <Link to={CONNECTIONS_PATH} className="text-accent">
+                    {t('rail.connections')}
+                  </Link>
+                ),
+              }}
+            />
           </p>
         </div>
       )}
@@ -267,7 +286,10 @@ export function ShapePanel({
         {order?.naming !== undefined && <NamingSentence naming={order.naming} creating={creating !== undefined} />}
         {followed.length > 0 && (
           <p className="text-caption text-ink-secondary">
-            {followed.join(', ')} {followed.length === 1 ? 'uses' : 'use'} the new name.
+            <Phrase
+              text={t(countKey('formats.shape.followed', followed.length))}
+              parts={{ names: <Bidi>{followed.join(', ')}</Bidi> }}
+            />
           </p>
         )}
       </div>
@@ -280,17 +302,19 @@ export function ShapePanel({
           data-tour={creating === undefined ? 'save-shape' : 'create-format'}
           onClick={onSave}
         >
-          {creating === undefined ? 'Save' : 'Create the format'}
+          {creating === undefined ? t('formats.shape.save') : t('formats.shape.create')}
         </Button>
         <Button variant="ghost" size="sm" onClick={onCancel}>
-          Cancel
+          {t('formats.shape.cancel')}
         </Button>
         <span className="text-caption text-ink-tertiary">
-          {waiting.length > 0
-            ? `Still to say: ${waiting.join(', ')}.`
-            : creating === undefined
-              ? 'Nothing is written until you save.'
-              : 'Nothing is written until you create it.'}
+          {waiting.length > 0 ? (
+            <Phrase text={t('formats.shape.stillToSay')} parts={{ things: <Bidi>{waiting.join(', ')}</Bidi> }} />
+          ) : creating === undefined ? (
+            t('formats.shape.untilSave')
+          ) : (
+            t('formats.shape.untilCreate')
+          )}
         </span>
         {onCopy !== undefined && (
           <span className="ms-auto">
@@ -300,7 +324,7 @@ export function ShapePanel({
               disabled={problems.length > 0 || waiting.length > 0}
               onClick={onCopy}
             >
-              Copy the declaration
+              {t('formats.shape.copy')}
             </Button>
           </span>
         )}
@@ -331,21 +355,17 @@ function PlanSentences({
   /** Whether the columns are in a new order (D-332). */
   moved: boolean
 }) {
-  const some = entries === 1 ? 'the 1 entry already here' : `the ${String(entries)} entries already here`
-  const order = moved ? (
-    <p className="text-caption text-ink-secondary">
-      The columns are shown in the new order everywhere; no entry changes.
-    </p>
-  ) : null
+  const t = useT()
+  const order = moved ? <p className="text-caption text-ink-secondary">{t('formats.shape.plan.moved')}</p> : null
   if (planIsSettled(plan)) {
     return (
       order ?? (
         <p className="text-caption text-ink-secondary">
           {identities
-            ? 'No entry changes: a claim is judged each time the entries are read.'
+            ? t('formats.shape.plan.claimsSettled')
             : derived
-              ? 'No entry changes: a computed column is worked out each time the entries are read, and anything that opens the document can read it.'
-              : 'The table does not change; only how the column is described does.'}
+              ? t('formats.shape.plan.derivedSettled')
+              : t('formats.shape.plan.describedSettled')}
         </p>
       )
     )
@@ -356,28 +376,40 @@ function PlanSentences({
       .map((step) => step.column)
       .filter((name) => plan.steps.some((step) => step.kind === 'DROP_COLUMN' && step.column === name)),
   )
-  const lines = plan.steps.flatMap((step): string[] => {
+  const lines = plan.steps.flatMap((step, at): { readonly key: string; readonly line: ReactNode }[] => {
+    const said = (text: string, from?: string): { readonly key: string; readonly line: ReactNode }[] => [
+      {
+        key: `${step.kind}-${String(at)}`,
+        line: (
+          <Phrase
+            text={text}
+            parts={{ column: <Bidi>{step.column}</Bidi>, ...(from === undefined ? {} : { from: <Bidi>{from}</Bidi> }) }}
+          />
+        ),
+      },
+    ]
+    const kept = (key: CountKey): string => t(countKey(key, entries), { count: entries })
     switch (step.kind) {
       case 'RENAME_COLUMN':
-        return [`${step.from} becomes ${step.column}; ${entries === 0 ? 'nothing is in it yet' : `${some} keep their values`}.`]
+        return said(entries === 0 ? t('formats.shape.plan.renamedEmpty') : kept('formats.shape.plan.renamed'), step.from)
       case 'ADD_COLUMN':
-        if (rebuilt.has(step.column)) return [`${step.column} is made again in its new shape; it holds nothing, so nothing is lost.`]
-        return [entries === 0 ? `${step.column} is added.` : `${step.column} is added, empty on ${some}.`]
+        if (rebuilt.has(step.column)) return said(t('formats.shape.plan.rebuilt'))
+        return said(entries === 0 ? t('formats.shape.plan.addedEmpty') : kept('formats.shape.plan.added'))
       case 'DROP_COLUMN':
-        return rebuilt.has(step.column) ? [] : [`${step.column} goes; it holds nothing, so nothing is lost.`]
+        return rebuilt.has(step.column) ? [] : said(t('formats.shape.plan.dropped'))
       case 'LOOSEN_COLUMN':
-        return [`${step.column} may be left empty now; ${some} keep their values.`]
+        return said(kept('formats.shape.plan.loosened'))
       case 'REBUILD_TABLE':
-        return [`${step.column} takes its new list; ${some} keep their values.`]
+        return said(kept('formats.shape.plan.listChanged'))
       case 'ADD_INDEX':
-        return [`${step.column} may no longer repeat: no two entries may hold the same value.`]
+        return said(t('formats.shape.plan.unique'))
       case 'DROP_INDEX':
-        return [`${step.column} may repeat again.`]
+        return said(t('formats.shape.plan.repeats'))
       // A constraint taken down and put back around a rebuild is held throughout (M48 U1).
       case 'ADD_CHECK':
-        return step.kept === true ? [] : [`Every entry is held to: ${step.column}.`]
+        return step.kept === true ? [] : said(t('formats.shape.plan.held'))
       case 'DROP_CHECK':
-        return step.kept === true ? [] : [`No longer held to: ${step.column}.`]
+        return step.kept === true ? [] : said(t('formats.shape.plan.notHeld'))
       case 'CREATE_TABLE':
         return []
     }
@@ -385,8 +417,8 @@ function PlanSentences({
   return (
     <>
       {order}
-      {lines.map((line) => (
-        <p key={line} className="text-caption text-ink-secondary">
+      {lines.map(({ key, line }) => (
+        <p key={key} className="text-caption text-ink-secondary">
           {line}
         </p>
       ))}
@@ -408,27 +440,26 @@ function NamingSentence({
   naming: NonNullable<OrderChange['naming']>
   creating: boolean
 }) {
+  const t = useT()
   if (creating) return null
   const { was, now } = naming
+  const mono = (name: string | undefined): ReactNode => (
+    <Bidi>
+      <span className="font-mono">{name}</span>
+    </Bidi>
+  )
   return (
     <p className="text-caption text-ink-secondary">
-      {now === undefined ? (
-        <>
-          No text column is left to call the entries by, so a link to one shows its id where it
-          showed its <span className="font-mono">{was}</span>.
-        </>
-      ) : was === undefined ? (
-        <>
-          The entries are called by their <span className="font-mono">{now}</span> from now on,
-          wherever one is linked to or picked.
-        </>
-      ) : (
-        <>
-          The entries are called by their <span className="font-mono">{now}</span> from now on, not
-          their <span className="font-mono">{was}</span>: <span className="font-mono">{now}</span>{' '}
-          is the first text column, and that is what a link to one shows.
-        </>
-      )}
+      <Phrase
+        text={t(
+          now === undefined
+            ? 'formats.shape.naming.lost'
+            : was === undefined
+              ? 'formats.shape.naming.first'
+              : 'formats.shape.naming.moved',
+        )}
+        parts={{ was: mono(was), now: mono(now) }}
+      />
     </p>
   )
 }

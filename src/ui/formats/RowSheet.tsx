@@ -35,6 +35,9 @@ import type { SheetMark } from '@/ui/formats/shape.ts'
 import { Flip } from '@/ui/motion/Flip.tsx'
 import { useMark, type MarkTone } from '@/ui/motion/useMark.ts'
 import { useChanges } from '@/ui/useChanges.ts'
+import { useT } from '@/i18n/current.ts'
+import { countKey } from '@/i18n/count.ts'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 
 /** One stored entry, with what its identities and aggregates say. */
 export interface JudgedRow {
@@ -172,6 +175,7 @@ export function RowSheet({
 }) {
   // **A refused cell is outlined and named under it** (M55 U5, D-545): every
   // cell at once, its sentence in a line beneath the row, in its own column.
+  const t = useT()
   const saidId = useId()
   const why = (row: number, column: string): string | undefined =>
     foot?.refused.find((each) => each.row === row && each.column === column)?.reason
@@ -193,9 +197,7 @@ export function RowSheet({
             delete: (index: number) => {
               const row = rows[index]?.row
               if (row === undefined) return
-              document
-                .querySelector<HTMLButtonElement>(`[data-delete-row="${CSS.escape(row.id)}"] button`)
-                ?.click()
+              document.querySelector<HTMLButtonElement>(`[data-delete-row="${CSS.escape(row.id)}"] button`)?.click()
             },
           }),
       ...(selection === undefined
@@ -365,9 +367,9 @@ export function RowSheet({
                       role="button"
                       tabIndex={0}
                       draggable
-                      aria-label={`Move ${entryLabel(column)}`}
+                      aria-label={t('formats.sheet.move', { name: entryLabel(column) })}
                       aria-keyshortcuts="ArrowLeft ArrowRight Home End"
-                      title={`Move ${entryLabel(column)} — drag it, or press ← → while it has focus`}
+                      title={t('formats.sheet.moveHint', { name: entryLabel(column) })}
                       className="fc-icon-action cursor-grab"
                       onDragStart={(event) => {
                         event.dataTransfer.effectAllowed = 'move'
@@ -409,7 +411,7 @@ export function RowSheet({
                     `${entryLabel(column)}${column.unit === undefined ? '' : ` (${column.unit})`}${
                       column.foundBy === undefined
                         ? ''
-                        : ` — found by ${foundByText(column.foundBy)}: filled on a write while it is empty`
+                        : ` — ${t('formats.sheet.foundByHint', { by: foundByText(column.foundBy) })}`
                     }`,
                     column.note,
                   )}
@@ -426,7 +428,10 @@ export function RowSheet({
                     {column.unit === undefined ? '' : ` (${column.unit})`}
                     {/* A link that fills itself says how (D-350). */}
                     {column.foundBy === undefined ? null : (
-                      <span className="text-ink-tertiary"> · found by {column.foundBy.from}</span>
+                      <span className="text-ink-tertiary">
+                        {' · '}
+                        <Phrase text={t('formats.sheet.foundBy')} parts={{ from: <Bidi>{column.foundBy.from}</Bidi> }} />
+                      </span>
                     )}
                   </Bidi>
                   {order?.column === column.name ? (
@@ -444,7 +449,7 @@ export function RowSheet({
                     data-held={columnMenu.held.has(column.name) ? 'true' : undefined}
                   >
                     <IconAction
-                      label={`${entryLabel(column)}: values and filter${columnMenu.held.has(column.name) ? ' (held)' : ''}`}
+                      label={t(columnMenu.held.has(column.name) ? 'formats.sheet.valuesHeld' : 'formats.sheet.values', { name: entryLabel(column) })}
                       onClick={() => setMenuOf(column.name)}
                     >
                       <path d="M3 5h18l-7 8v6l-4 2v-8Z" fill={columnMenu.held.has(column.name) ? 'currentColor' : 'none'} />
@@ -456,7 +461,7 @@ export function RowSheet({
                     focus, so a sheet at rest reads as entries. */}
                 {onShape !== undefined && (
                   <span className={`${UNTIL_HOVER} group-hover/head:ms-1 focus-within:ms-1`}>
-                    <IconAction label={`Edit ${entryLabel(column)}`} onClick={() => onShape(column.name)}>
+                    <IconAction label={t('formats.sheet.edit', { name: entryLabel(column) })} onClick={() => onShape(column.name)}>
                       <path d="m6 9 6 6 6-6" />
                     </IconAction>
                   </span>
@@ -508,7 +513,7 @@ export function RowSheet({
                   </button>
                   {onShapeDerived !== undefined && (
                     <span className={`${UNTIL_HOVER} group-hover/head:ms-1 focus-within:ms-1`}>
-                      <IconAction label={`Edit ${each.name}`} onClick={() => onShapeDerived(each.name)}>
+                      <IconAction label={t('formats.sheet.edit', { name: each.name })} onClick={() => onShapeDerived(each.name)}>
                         <path d="m6 9 6 6 6-6" />
                       </IconAction>
                     </span>
@@ -535,7 +540,7 @@ export function RowSheet({
                 aria-current="true"
               >
                 <span className={`block truncate ${adding === '' ? 'text-ink-tertiary italic' : ''}`}>
-                  {adding === '' ? 'new column' : adding}
+                  {adding === '' ? t('formats.sheet.newColumn') : adding}
                 </span>
               </th>
             )}
@@ -548,8 +553,8 @@ export function RowSheet({
                 {...col(`head|a:${each.name}`)}
                 title={
                   each.over.column === undefined
-                    ? `A total of every ${each.over.format} row, added up on every read`
-                    : `A total of ${each.over.format} rows, added up on every read`
+                    ? t('formats.sheet.totalEvery', { format: each.over.format })
+                    : t('formats.sheet.totalSome', { format: each.over.format })
                 }
                 className="truncate px-3 py-2 text-label whitespace-nowrap"
               >
@@ -558,13 +563,13 @@ export function RowSheet({
             ))}
             {identities && (
               <th {...col('head|holds')} className="px-3 py-2 text-label whitespace-nowrap">
-                holds
+                {t('formats.sheet.holds')}
               </th>
             )}
             <th />
             {onAddColumn !== undefined && (
               <th className="border-s border-hairline px-1">
-                <IconAction label="Add a column" tour="add-column" onClick={onAddColumn}>
+                <IconAction label={t('formats.sheet.addColumn')} tour="add-column" onClick={onAddColumn}>
                   <path d="M12 5v14M5 12h14" />
                 </IconAction>
               </th>
@@ -628,7 +633,7 @@ export function RowSheet({
                     title={
                       value === undefined || value.kind !== 'EMPTY'
                         ? `= ${each.expression}`
-                        : `Empty: ${value.reason}`
+                        : t('formats.sheet.empty', { reason: value.reason })
                     }
                   >
                     {value === undefined || value.kind === 'EMPTY' ? (
@@ -647,7 +652,7 @@ export function RowSheet({
                   className="truncate px-3 py-1.5 text-end align-top tabular-nums whitespace-nowrap"
                 >
                   {each.value.kind === 'VALUE' ? (
-                    <span title={`over ${String(each.value.rows)} ${each.value.rows === 1 ? 'row' : 'rows'}`}>
+                    <span title={t(countKey('formats.sheet.over', each.value.rows), { count: each.value.rows })}>
                       {/* A total of money is an amount, never its minor units (M29 F7). */}
                       {each.value.currency !== undefined
                         ? moneyText(each.value.value, each.value.currency)
@@ -655,7 +660,7 @@ export function RowSheet({
                     </span>
                   ) : (
                     <span className="text-ink-tertiary" title={each.value.reason}>
-                      unchecked
+                      {t('formats.sheet.unchecked')}
                     </span>
                   )}
                 </td>
@@ -670,7 +675,7 @@ export function RowSheet({
                     sheet stays the default view, and this is the readable one. */}
                 {onOpen !== undefined && (
                   <IconAction
-                    label="Open"
+                    label={t('formats.sheet.open')}
                     tour="row-open"
                     onClick={(event) => {
                       event.stopPropagation()
@@ -878,6 +883,7 @@ function FootCell({
   onMove: (down: boolean) => void
   onPaste: (text: string) => void
 }) {
+  const t = useT()
   const companion = companionKeyOf(column)
   // A date, a month or a time opens its picker on a click (M29 F2).
   const kind = pickerOf(column.type)
@@ -885,6 +891,9 @@ function FootCell({
   // A percent or a time shows what it will be kept as while it is typed, and
   // becomes that when the cell is left (M29 F3, D-344).
   const typed = useTyped(column.type, draft[column.name] ?? '')
+  // **An empty foot row prints no currency** (M64 F10, D-627): the code carried
+  // from the row above shows once a figure is typed, or while the cell has focus.
+  const quiet = (draft[column.name] ?? '').trim() === '' ? 'opacity-0 group-focus-within/foot:opacity-100 focus:opacity-100' : ''
   const look = `w-full min-w-0 bg-transparent px-3 py-1.5 outline-none focus:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${numeric(column.type) ? 'text-end tabular-nums' : ''} ${wrong ? 'text-negative' : ''}`
   const shared = {
     'data-foot': `${String(row)}:${String(across)}`,
@@ -911,7 +920,7 @@ function FootCell({
       {...motion}
       className={`relative border-e p-0 align-top border-hairline ${wrong ? 'shadow-[inset_0_0_0_1px_var(--color-negative)]' : ''}`}
     >
-      <div className="flex">
+      <div className="group/foot flex">
         {isListType(column.type) ? (
           /* **A list is chips, each found the way a link is** (M27 U2,
              D-300), or picked from what is left of the list (M34 U5, D-398).
@@ -991,9 +1000,9 @@ function FootCell({
           /* **A currency is searched and picked** (M29 F3, D-344) — its code,
              its sign and its name — and still typed when the list has not got it. */
           <CurrencyField
-            className="w-12 shrink-0 bg-transparent px-1 py-1.5 font-mono text-caption text-ink-secondary outline-none focus:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+            className={`w-12 shrink-0 bg-transparent px-1 py-1.5 font-mono text-caption text-ink-secondary outline-none focus:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${quiet}`}
             value={draft[companion] ?? ''}
-            label={`${entryLabel(column)} currency`}
+            label={t('formats.sheet.currency', { name: entryLabel(column) })}
             tour={row === 0 ? `foot-${column.name}-currency` : undefined}
             onChange={(code) => onChange(companion, code)}
             onEnter={onEnter}
@@ -1001,10 +1010,10 @@ function FootCell({
         )}
         {companion !== undefined && column.type !== 'money' && (
           <input
-            className="w-12 shrink-0 bg-transparent px-1 py-1.5 font-mono text-caption text-ink-secondary outline-none focus:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+            className={`w-12 shrink-0 bg-transparent px-1 py-1.5 font-mono text-caption text-ink-secondary outline-none focus:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${quiet}`}
             value={draft[companion] ?? ''}
-            aria-label={`${entryLabel(column)} unit`}
-            placeholder="unit"
+            aria-label={t('formats.sheet.unitOf', { name: entryLabel(column) })}
+            placeholder={t('formats.sheet.unit')}
             spellCheck={false}
             onChange={(event) => onChange(companion, event.target.value)}
             onKeyDown={(event) => {
@@ -1079,35 +1088,43 @@ function labelIn(choices: readonly Choice[], value: string): string {
  * One row's answer, at its worst — the same rule `tally` counts by (D-222). A
  * row with a failed identity is a failed row whatever else holds.
  */
+/** A claim's verdict, as a row's title names it. */
+const VERDICT_WORD = {
+  FAILED: 'formats.sheet.failed',
+  UNCHECKED: 'formats.sheet.unchecked',
+  PROVED: 'formats.sheet.proved',
+} as const
+
 function RowProof({ verdicts, marked }: { verdicts: readonly RowVerdict[]; marked?: number | undefined }) {
   const worst = worstOf(verdicts)
   const kind = worst?.verdict.kind
   const tone: MarkTone = kind === 'FAILED' ? 'negative' : kind === 'PROVED' ? 'positive' : 'neutral'
   // M39: a verdict that changed is marked once (src/ui/motion/useMark.ts).
   const mark = useMark<HTMLSpanElement>(marked, tone)
-  if (worst === undefined) return <span className="text-ink-tertiary">&mdash;</span>
+  const t = useT()
+  if (worst === undefined) return <span className="text-ink-tertiary">—</span>
 
   const title = verdicts
-    .map((each) => `${each.identity.name}: ${each.verdict.kind.toLowerCase()}`)
+    .map((each) => `${each.identity.name}: ${t(VERDICT_WORD[each.verdict.kind])}`)
     .join('\n')
 
   if (worst.verdict.kind === 'FAILED') {
     return (
       <span ref={mark} className="text-negative" title={title}>
-        failed
+        {t('formats.sheet.failed')}
       </span>
     )
   }
   if (worst.verdict.kind === 'UNCHECKED') {
     return (
       <span ref={mark} className="text-ink-secondary" title={worst.verdict.reason}>
-        unchecked
+        {t('formats.sheet.unchecked')}
       </span>
     )
   }
   return (
     <span ref={mark} className="text-positive" title={title}>
-      proved
+      {t('formats.sheet.proved')}
     </span>
   )
 }

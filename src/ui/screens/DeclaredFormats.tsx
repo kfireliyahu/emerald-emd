@@ -41,6 +41,7 @@ import { WaitingList, type Waiting } from '@/ui/components/WaitingList.tsx'
 import { DeleteAtOnce } from '@/ui/formats/DeleteAtOnce.tsx'
 import { useT } from '@/i18n/current.ts'
 import { countKey } from '@/i18n/count.ts'
+import type { MessageKey } from '@/i18n/catalogue.ts'
 import { IconAction } from '@/ui/components/IconAction.tsx'
 import { FIELD_MULTILINE } from '@/ui/components/fieldLook.ts'
 import { ExamplePanel } from '@/ui/formats/ExamplePanel.tsx'
@@ -172,7 +173,7 @@ export function DeclaredFormats() {
   }
 
   if (db === undefined || data === undefined) {
-    return <Centered>Open a document to see the formats it declares.</Centered>
+    return <Centered>{t('formats.declare.noDocument')}</Centered>
   }
 
   if (mode.kind === 'NEW' && judged !== undefined) {
@@ -221,17 +222,15 @@ export function DeclaredFormats() {
     return (
       <div key="doors" className="fc-view-enter flex h-full flex-col">
         <div className="flex shrink-0 flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-hairline px-6 py-2">
-          <h1 className="text-body font-medium">A new format</h1>
-          <span className="text-caption text-ink-secondary">
-            A format is a kind of thing this document can hold. Nothing is written until you save.
-          </span>
+          <h1 className="text-body font-medium">{t('formats.declare.newTitle')}</h1>
+          <span className="text-caption text-ink-secondary">{t('formats.declare.newSay')}</span>
           <span className="ms-auto">
             <Button variant="ghost" size="sm" onClick={() => setMode(back)}>
               {mode.kind === 'DOORS'
                 ? data.formats.length === 0
-                  ? 'Not now'
-                  : 'Back to the formats'
-                : 'Back to the ways in'}
+                  ? t('formats.declare.notNow')
+                  : t('formats.declare.backToFormats')
+                : t('formats.declare.backToDoors')}
             </Button>
           </span>
         </div>
@@ -524,19 +523,34 @@ export function DeclaredFormats() {
  * column an identity names, and most rows of a half-filled format are in it.
  */
 function ProofChip({ format, proof }: { format: FormatDeclaration; proof: Tally | undefined }) {
+  const t = useT()
   // No claims, nothing said: the column's head names what would be here (M64 U13).
   if (proof === undefined) return null
-  const counted = format.identities.length === 1 ? '1 claim' : `${format.identities.length} claims`
+  const claims = format.identities.length
   if (proof.proved + proof.failed + proof.unchecked === 0) {
-    return <span className="text-caption text-ink-secondary">{counted}, no rows to check yet</span>
+    return (
+      <span className="text-caption text-ink-secondary">
+        {t(countKey('formats.declare.claimsNoRows', claims), { count: claims })}
+      </span>
+    )
   }
   return (
     <span className="flex items-baseline gap-2 text-caption tabular-nums">
-      <span className="text-ink-secondary">{counted}</span>
-      {proof.proved > 0 && <span className="text-positive">{proof.proved} proved</span>}
-      {proof.failed > 0 && <span className="text-negative">{proof.failed} failed</span>}
+      <span className="text-ink-secondary">{t(countKey('formats.declare.claims', claims), { count: claims })}</span>
+      {proof.proved > 0 && (
+        <span className="text-positive">
+          {t(countKey('formats.declare.proved', proof.proved), { count: proof.proved })}
+        </span>
+      )}
+      {proof.failed > 0 && (
+        <span className="text-negative">
+          {t(countKey('formats.declare.failed', proof.failed), { count: proof.failed })}
+        </span>
+      )}
       {proof.unchecked > 0 && (
-        <span className="text-ink-secondary">{proof.unchecked} unchecked</span>
+        <span className="text-ink-secondary">
+          {t(countKey('formats.declare.unchecked', proof.unchecked), { count: proof.unchecked })}
+        </span>
       )}
     </span>
   )
@@ -594,6 +608,7 @@ function ImportPanel({
   units: UnitTable
   onOpen: (draft: FormatDraft) => void
 }) {
+  const t = useT()
   const [text, setText] = useState('')
   // Judged against the document's units, so a declaration converting into
   // something this file has never heard of is refused here rather than opening
@@ -613,11 +628,18 @@ function ImportPanel({
     <section className="mb-6 rounded-lg border border-hairline-strong bg-elevated p-4">
       {/* The door’s own words, so arriving here reads as having gone where
           you meant to (M20 U2). */}
-      <h2 className="mb-1 font-medium">From a declaration</h2>
+      <h2 className="mb-1 font-medium">{t('formats.declare.importTitle')}</h2>
       <p className="mb-2 max-w-prose text-caption text-ink-secondary">
-        A <code>{ARTEFACT_EXTENSION}</code> file, from a conversation with a model or from another
-        document. It opens in the editor with its columns filled in — nothing is written until
-        you create it.
+        <Phrase
+          text={t('formats.declare.importSay')}
+          parts={{
+            extension: (
+              <Bidi>
+                <code>{ARTEFACT_EXTENSION}</code>
+              </Bidi>
+            ),
+          }}
+        />
       </p>
       <textarea
         value={text}
@@ -625,7 +647,7 @@ function ImportPanel({
         spellCheck={false}
         rows={8}
         className={`${FIELD_MULTILINE} w-full font-mono text-caption`}
-        placeholder={'---\nformat: book\ntitle: Book\nlanguage: 1\n---'}
+        placeholder={t('formats.declare.importExample')}
       />
       {parsed !== undefined && !parsed.ok && (
         <p className="mt-2 text-caption text-negative">{parsed.error}</p>
@@ -642,7 +664,7 @@ function ImportPanel({
           })
         }}
       >
-        Read it
+        {t('formats.declare.readIt')}
       </Button>
     </section>
   )
@@ -656,10 +678,20 @@ function ImportPanel({
  * `ADD COLUMN`s would be the confirm surface D-138 keeps catching.
  */
 function PlanView({ plan }: { plan: ReconcilePlan }) {
+  const t = useT()
   if (planIsSettled(plan)) {
     return (
       <p className="text-caption text-ink-secondary">
-        <code>{plan.table}</code> already matches.
+        <Phrase
+          text={t('formats.declare.matches')}
+          parts={{
+            table: (
+              <Bidi>
+                <code>{plan.table}</code>
+              </Bidi>
+            ),
+          }}
+        />
       </p>
     )
   }
@@ -674,43 +706,45 @@ function PlanView({ plan }: { plan: ReconcilePlan }) {
       {/* A constraint taken down and put back around a rebuild is held throughout (M48 U1). */}
       {plan.steps.filter((step) => !('kept' in step && step.kept === true)).map((step, index) => (
         <p key={`${step.kind}-${step.column ?? index}`} className="text-caption text-ink-secondary">
-          {describe(step.kind)}
-          {step.column === undefined ? (
-            <code> {plan.table}</code>
-          ) : (
-            <code>
-              {' '}
-              {plan.table}.{step.column}
-            </code>
-          )}
+          <Phrase
+            text={t(describe(step.kind))}
+            parts={{
+              what: (
+                <Bidi>
+                  <code>{step.column === undefined ? plan.table : `${plan.table}.${step.column}`}</code>
+                </Bidi>
+              ),
+            }}
+          />
         </p>
       ))}
     </div>
   )
 }
 
-function describe(kind: ReconcilePlan['steps'][number]['kind']): string {
+/** What a step does, as a sentence its table or column goes into. */
+function describe(kind: ReconcilePlan['steps'][number]['kind']): MessageKey {
   switch (kind) {
     case 'CREATE_TABLE':
-      return 'Create '
+      return 'formats.declare.step.create'
     case 'ADD_COLUMN':
-      return 'Add '
+      return 'formats.declare.step.add'
     case 'DROP_COLUMN':
-      return 'Remove '
+      return 'formats.declare.step.drop'
     case 'RENAME_COLUMN':
-      return 'Rename to '
+      return 'formats.declare.step.rename'
     case 'LOOSEN_COLUMN':
-      return 'May be left empty: '
+      return 'formats.declare.step.loosen'
     case 'REBUILD_TABLE':
-      return 'Made again, every row kept, for: '
+      return 'formats.declare.step.rebuild'
     case 'ADD_INDEX':
-      return 'Make unique: '
+      return 'formats.declare.step.addIndex'
     case 'DROP_INDEX':
-      return 'No longer unique: '
+      return 'formats.declare.step.dropIndex'
     case 'ADD_CHECK':
-      return 'Hold every row to: '
+      return 'formats.declare.step.addCheck'
     case 'DROP_CHECK':
-      return 'No longer held to: '
+      return 'formats.declare.step.dropCheck'
   }
 }
 

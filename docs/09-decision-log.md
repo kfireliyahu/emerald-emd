@@ -525,6 +525,7 @@ written out here.
 | D-623 | 2026-11-26 | Categories, Rules and the Year are rebuilt as the report: each answers its question in a sentence first; the Year is where every month is read and opened (a month opens on Home); a category, a rule, a total and the built-in rules open beside the page; a rename is in place; merging and a delete that moves rows ask at their button; deleting an unused category or a rule and archiving happen at once with Undo where it happened | M64 |
 | D-624 | 2026-11-26 | The way in and around is the report: every Settings page and Assistants answer first in one sentence on a shared frame, Accounts reads as rows that open their form beside the page with a delete asked at its button, Assistants' tools open by group beside it, the front door and a document with no ledger say what to do in words with Open… added, the guide's first step names Read files and leaves its note where it stood, the waiting notice speaks only of what changes the month, and the palette says what it can do offline | M64 |
 | D-625 | 2026-11-26 | The engine's formats are the report: the formats list and a format's table each answer first in one sentence (how many kinds of things, how many rows and whether they are right), what waits is one strip below, the shape, a rule set's preview and a new view or chart open beside the rows, and a row deletes at once with Undo near it (the next entry opening after a delete from its entry) while a format's delete, which cannot be undone, asks at its button | M64 |
+| D-627 | 2026-11-26 | An entry and an input view read as a form: every writable field wears a hairline under it at rest, Add sits under the fields, the list's + is the one way into a new entry, an input view's Fields is a form in the side panel, the table's filter is a funnel beside a boxed search, and the formats screens say every word through the catalogue, in English and Hebrew | M64 |
 | D-628 | 2026-11-26 | Undo of a delete on Rules and Categories brings the thing back whole — its id, its place, its count, its colour, the built-in rules that went with it and the rows that named it — through the create that makes one, handed what the delete took, over an engine pair that reads a row before it goes and puts it back; the rule editor, the test box, re-applying and New category choose with ChoiceField and still take a paste | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
@@ -1697,6 +1698,43 @@ new engine write to restore a row (re-inserting with its id is the write the scr
 already share, so parity holds); turning the table's cursor Delete off (the sheet's stored rows are
 not edited in their cells, so Delete on a row means the row, as in a mail list).
 
+## D-627 · 2026-11-26 · An entry and an input view read as a form: every writable field wears a hairline under it at rest, Add sits under the fields, the list's + is the one way into a new entry, an input view's Fields is a form in the side panel, the table's filter is a funnel beside a boxed search, and the formats screens say every word through the catalogue, in English and Hebrew <a id="d-627"></a>
+
+**Context.** U13's taste check (D-625) found the entry and the input view hard to read as forms:
+their fields had no edge until pointed at (D-294), a date's placeholder was cut off, an amount sat
+at the far end of a wide box away from its name, Add and Cancel were a band at the window's foot
+about 580px below the last field, a new entry could be begun four ways on one page (the list's +,
+its *Add a card charge* line, the draft line, Add), the input view's Fields was a column of the page
+rather than the side-panel form D-617 names, the table's *Filter by* and *Search* were two identical
+boxes side by side, and every empty foot row of the sheet printed its currency. And U13 translated
+only its own new words: the table, the entry, the input view, the sheet, the filter band and the
+shape panel still said English inline.
+
+**Decision.** A writable field on an entry or an input view has **a hairline under it at rest**
+(the amount input's look), the box when pointed at and the accent when typed in; a read-only one
+has none. A figure's field is as wide as what is in it, so it sits by its name; a date's field is
+wide enough for its placeholder. **Add (and Cancel, or Save for a new input view) sits under the
+fields**, with what it refused beside it. **The list's + is the one way into a new entry** on an
+entry's page, and it is not drawn while a new one is open; the entry's list draws no quick-add
+line (the List view keeps its own). **An input view's Fields opens in the `SidePanel`** — Esc
+closes it before it discards a new view. On a format's table **the filter is a funnel with no edge
+at rest and the search the boxed field with the glass**, as the entry list's search is. An empty
+foot row's currency shows once a figure is typed or the cell has focus. And every word of the
+formats screens — `FormatRows`, `DeclaredFormats`, `EntryView`, `EntryList`, `RowSheet`,
+`FilterBand`, `InputView`, `ShapePanel`, `WhatLooksWrong` — is the catalogue's (`formats` area,
+English and Hebrew), with document values in `Bidi` inside one sentence each; the files are on
+`src/i18n/words.test.ts`'s list.
+
+**Why.** The redesign's forms answer *what is this one row* and *how do I add rows quickly*: a
+form a person cannot see the fields of, whose button is out of sight, with four doors to the same
+room, fails both, and an ordinary desktop app has taught everyone the opposite. The hairline is the
+rule row's amount input applied to every field, so the entry keeps one look and a filled entry
+still reads as text.
+
+**Rejected.** A full box on every field at rest (it turns a filled entry back into a form of
+boxes, which D-294 removed for good reason); keeping the quick-add line and dropping the + (the
+quick add writes a row without opening it, which is the List view's job, not the entry's); a
+dialog for Fields (a form never floats in a dialog, D-617).
 ## D-628 · 2026-11-26 · Undo of a delete on Rules and Categories brings the thing back whole — its id, its place, its count, its colour, the built-in rules that went with it and the rows that named it — through the create that makes one, handed what the delete took, over an engine pair that reads a row before it goes and puts it back; the rule editor, the test box, re-applying and New category choose with ChoiceField and still take a paste <a id="d-628"></a>
 
 **Context.** M64 U11 rebuilt Rules and Categories (D-623) with a delete that happens at once and an

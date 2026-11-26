@@ -126,11 +126,27 @@ const M64_U10 = [
   'src/ui/wealth/words.ts',
 ]
 
-/** M64 U13 (D-625): the engine's delete at once and its Undo; the rest of the formats screens is M64 F9's. */
+/** M64 U13 (D-625): the engine's delete at once and its Undo. */
 const M64_U13 = ['src/ui/formats/DeleteAtOnce.tsx']
 
+/** M64 F9 (D-627): the rest of the engine's formats screens — the table, the entry, the input view, the sheet, the filter band and the shape panel. */
+const M64_F9 = [
+  'src/ui/screens/FormatRows.tsx',
+  'src/ui/screens/DeclaredFormats.tsx',
+  'src/ui/formats/EntryView.tsx',
+  'src/ui/formats/EntryList.tsx',
+  'src/ui/formats/RowSheet.tsx',
+  'src/ui/formats/FilterBand.tsx',
+  'src/ui/formats/InputView.tsx',
+  'src/ui/formats/ShapePanel.tsx',
+  'src/ui/formats/WhatLooksWrong.tsx',
+  'src/ui/formats/ReadersLine.tsx',
+  'src/ui/formats/FormatPlus.tsx',
+  'src/ui/formats/ResizeHandle.tsx',
+]
+
 /** The screens whose words are the catalogue's. A unit that translates a screen adds its files here. */
-export const TRANSLATED: readonly string[] = [...U4, ...U5, ...M64_U8, ...M64_U10, ...M64_U13]
+export const TRANSLATED: readonly string[] = [...U4, ...U5, ...M64_U8, ...M64_U10, ...M64_U13, ...M64_F9]
 
 /** Literals in a translated file that are not the app's words, by file, each with why. */
 const ALLOWED: Readonly<Record<string, readonly string[]>> = {

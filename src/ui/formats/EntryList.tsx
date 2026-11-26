@@ -2,9 +2,12 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import type { RowFilter } from '@/data/repositories/formatFilterRepository.ts'
 import type { FormatDeclaration } from '@/domain/format/declaration.ts'
+import { useT } from '@/i18n/current.ts'
+import { countKey } from '@/i18n/count.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
 import { Kbd } from '@/ui/components/Kbd.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { withArticle, type ListGroup } from '@/domain/format/view.ts'
 import { HeldValues } from '@/ui/formats/FilterBand.tsx'
 import { ListLines, type QuickChoice } from '@/ui/formats/ListView.tsx'
@@ -20,7 +23,7 @@ import { listOrder, type ListLine, type ListPicture } from '@/ui/formats/listVie
  * its foot. Hidden by the button in the entry's bar (`useEntryList`), and by a
  * narrow window whatever that says.
  *
- * **↑ ↓ page whenever no field is being typed in** — the entry has no box until
+ * **↑ ↓ page whenever no field is being typed in** — the entry's fields take the keys only once
  * a value is pressed — and from the list's own search box. That works with the
  * list hidden too, so this is mounted either way and draws nothing then.
  *
@@ -87,6 +90,7 @@ export function EntryList({
   /** The filter with one thing let go of. */
   onFilter: (next: RowFilter) => void
 }) {
+  const t = useT()
   const rows = listOrder(picture)
   const at = rows.findIndex((row) => row.id === current)
   const box = useRef<HTMLDivElement>(null)
@@ -156,12 +160,12 @@ export function EntryList({
   const filtered = search !== '' || held.length > 0
   const name = declaration.title
   const one = declaration.title.toLowerCase()
-  const addLabel = `Add ${withArticle(one)}`
+  const addLabel = t('formats.entryList.add', { one: withArticle(one), title: name })
 
   return (
     <div
       className="hidden w-[288px] flex-none flex-col border-e border-hairline bg-background lg:flex"
-      aria-label={`${name}, the list`}
+      aria-label={t('formats.entryList.label', { name })}
     >
       <div className="flex flex-none flex-col gap-2 border-b border-hairline px-3 pt-2.5 pb-2">
         <div className="flex items-center gap-2">
@@ -169,9 +173,11 @@ export function EntryList({
             <Bidi>{name}</Bidi>
           </b>
           <span className="text-caption text-ink-secondary tabular-nums">
-            {filtered ? `${String(rows.length)} of ${String(entries)}` : String(entries)}
+            {filtered ? t('formats.entryList.of', { at: rows.length, count: entries }) : String(entries)}
           </span>
-          {onNew !== undefined && (
+          {/* **One way into a new entry** (M64 F10, D-627): this +, and not
+              while a new one is already open. */}
+          {onNew !== undefined && draft === undefined && (
             <button
               type="button"
               aria-label={addLabel}
@@ -196,29 +202,29 @@ export function EntryList({
                 onSearch('')
               }
             }}
-            placeholder={`Search ${String(entries)} ${entries === 1 ? 'row' : 'rows'}`}
-            aria-label={`Search ${name}`}
+            placeholder={t(countKey('formats.entryList.searchRows', entries), { count: entries })}
+            aria-label={t('formats.entryList.searchName', { name })}
             className="w-full min-w-0 border-0 bg-transparent p-0 text-body text-ink outline-none placeholder:text-ink-secondary"
           />
         </label>
         {filtered && (
           <div className="flex flex-wrap items-center gap-1">
-            <span className="text-caption text-ink-secondary">Held:</span>
+            <span className="text-caption text-ink-secondary">{t('formats.entryList.held')}</span>
             {search !== '' && (
-              <HeldChip label="Clear the search" onClear={() => onSearch('')}>
-                search “<Bidi>{search}</Bidi>”
+              <HeldChip label={t('formats.entryList.clearSearch')} onClear={() => onSearch('')}>
+                <Phrase text={t('formats.filter.searchSaid')} parts={{ text: <Bidi>{search}</Bidi> }} />
               </HeldChip>
             )}
             {held.map(([column, value]) => (
               <HeldChip
                 key={column}
-                label={`Let go of ${column}`}
+                label={t('formats.entryList.letGo', { name: column })}
                 onClear={() => {
                   const match = Object.fromEntries(held.filter(([each]) => each !== column))
                   onFilter({ ...(held.length > 1 ? { match } : {}), ...(search === '' ? {} : { search }) })
                 }}
               >
-                {column.replace(/_/g, ' ')}{' '}
+                <Bidi>{column.replace(/_/g, ' ')}</Bidi>{' '}
                 <HeldValues value={value} column={declaration.columns.find((each) => each.name === column)} className="" />
               </HeldChip>
             ))}
@@ -251,9 +257,10 @@ export function EntryList({
               onAdd={onAdd}
               placeholder={placeholder}
               quickFields={quickFields}
+              quickAdd={false}
             />
             {rows.length === 0 && draft === undefined && filtered && (
-              <div className="p-4 text-body text-ink-secondary">Nothing in this format holds it.</div>
+              <div className="p-4 text-body text-ink-secondary">{t('formats.entryList.nothingHolds')}</div>
             )}
           </div>
         ) : (
@@ -289,10 +296,19 @@ export function EntryList({
 
       <div className="flex flex-none gap-3 border-t border-hairline px-3 py-2 text-caption text-ink-secondary">
         <span className="tabular-nums">
-          {at < 0 ? '–' : String(at + 1)} of {String(rows.length)}
+          {t('formats.entryList.of', { at: at < 0 ? '–' : at + 1, count: rows.length })}
         </span>
         <span className="ms-auto">
-          <Kbd>↑</Kbd> <Kbd>↓</Kbd> to page
+          <Phrase
+            text={t('formats.entryList.toPage')}
+            parts={{
+              keys: (
+                <>
+                  <Kbd>↑</Kbd> <Kbd>↓</Kbd>
+                </>
+              ),
+            }}
+          />
         </span>
       </div>
     </div>

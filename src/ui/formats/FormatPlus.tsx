@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 
+import { useT } from '@/i18n/current.ts'
 import { useDismiss } from '@/ui/components/useDismiss.ts'
 
 /** What the format's + makes. */
@@ -13,20 +14,21 @@ export type PlusPick = 'input' | 'view' | 'chart'
  * (D-525), saved without placing a block.
  */
 export function FormatPlus({ input, onPick }: { readonly input: boolean; readonly onPick: (pick: PlusPick) => void }) {
+  const t = useT()
   const [open, setOpen] = useState(false)
   const box = useRef<HTMLSpanElement>(null)
   const dismissKey = useDismiss(open, box, () => setOpen(false))
   const items: readonly { readonly pick: PlusPick; readonly label: string }[] = [
-    ...(input ? [{ pick: 'input' as const, label: 'New input view' }] : []),
-    { pick: 'view', label: 'New view' },
-    { pick: 'chart', label: 'New chart' },
+    ...(input ? [{ pick: 'input' as const, label: t('formats.table.newInputView') }] : []),
+    { pick: 'view', label: t('formats.table.newView') },
+    { pick: 'chart', label: t('formats.table.newChart') },
   ]
   return (
     <span ref={box} className="relative inline-flex shrink-0 items-center" onKeyDown={dismissKey}>
       <button
         type="button"
-        aria-label="New view of this format"
-        title="New view of this format"
+        aria-label={t('formats.table.newOfFormat')}
+        title={t('formats.table.newOfFormat')}
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen(!open)}
@@ -39,7 +41,7 @@ export function FormatPlus({ input, onPick }: { readonly input: boolean; readonl
       {open && (
         <div
           role="menu"
-          aria-label="New"
+          aria-label={t('formats.table.new')}
           className="fc-pop-enter absolute top-full start-0 z-30 mt-1 flex w-48 flex-col border border-hairline-strong bg-elevated py-1 shadow-[var(--shadow-pop)]"
           onKeyDown={(event) => {
             if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return

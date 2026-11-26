@@ -5,11 +5,15 @@ import { dayOfDefault, type InputShape } from '@/domain/format/inputView.ts'
 import { withField, type RowDraft } from '@/domain/format/rowDraft.ts'
 import type { UnitTable } from '@/domain/format/unit.ts'
 import { entryLabel, entryWayOf, type SavedView } from '@/domain/format/view.ts'
+import { useT, type Translate } from '@/i18n/current.ts'
+import { countKey } from '@/i18n/count.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { ChoiceField, type Choice } from '@/ui/components/ChoiceField.tsx'
 import { IconAction } from '@/ui/components/IconAction.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
+import { SidePanel } from '@/ui/components/SidePanel.tsx'
 import { Flip } from '@/ui/motion/Flip.tsx'
 
 import { Field, NO_LINKED, type LinkChoice } from './EntryView.tsx'
@@ -21,7 +25,7 @@ import {
   fieldsRows,
   fieldWidthOf,
   inputFormOf,
-  lackingSentence,
+  ONE_DAY,
   withAsked,
   withDefault,
   withMoved,
@@ -81,8 +85,15 @@ export const NARROW: ReadonlySet<string> = new Set([
 export const FOCUSABLE =
   'input:not([type="hidden"]):not([aria-hidden="true"]):not([tabindex="-1"]):not([disabled]), textarea:not([disabled])'
 
-/** *needed: ask it or give it a default* — a required column a view would leave empty. */
-const NEEDED = 'needed: ask it or give it a default'
+/** A required column a view would leave empty — said as *needed: ask it or give it a default*. */
+const NEEDED = 'needed'
+
+/** A refusal at a row in Fields, in the language now: the two this screen words, or the domain's as it said it. */
+function refusalWords(refusal: string, t: Translate): string {
+  if (refusal === NEEDED) return t('formats.input.neededWhy')
+  if (refusal === ONE_DAY) return t('formats.input.oneDay')
+  return refusal
+}
 
 /**
  * **An input view** — M55 U3, D-533, D-535, U1's brief
@@ -157,6 +168,7 @@ export function InputView({
   onBack: () => void
   onOpen: (id: string) => void
 }) {
+  const t = useT()
   const revision = useDocumentStore((state) => state.revision)
   const writable = locked === undefined
   // A saved view's Fields change waits here while it leaves a required column empty.
@@ -258,7 +270,7 @@ export function InputView({
   const saveDraft = (): void => {
     const refusals = rowRefusals(declaration, shape)
     if (refusals.size > 0) {
-      setSaveRefusal(notSaved(declaration, refusals))
+      setSaveRefusal(notSaved(declaration, refusals, t))
       setFieldsOpen(true)
       return
     }
@@ -342,31 +354,38 @@ export function InputView({
 
   const addsAs =
     form.sets.length === 0 ? null : (
-      <span className="min-w-0 text-caption text-ink-secondary" aria-label={`Adds as ${addsAsWords(form.sets)}`}>
-        Adds as{' '}
-        {form.sets.map((each, at) => {
-          const gone = each.column.type === 'link' && each.column.target !== undefined && linkGone(each.column, each.text)
-          return (
-            <Fragment key={each.column.name}>
-              {at > 0 && ' · '}
-              <Bidi>{entryLabel(each.column)}</Bidi>{' '}
-              {gone ? (
-                <>
-                  <s className="text-negative">
-                    <Bidi>{each.text}</Bidi>
-                  </s>{' '}
-                  <span className="text-negative">
-                    No <Bidi>{oneOf(each.column.target ?? '')}</Bidi> is called “<Bidi>{each.text}</Bidi>” now
-                  </span>
-                </>
-              ) : (
-                <span className="text-ink">
-                  <Bidi>{each.text}</Bidi>
-                </span>
-              )}
-            </Fragment>
-          )
-        })}
+      <span className="min-w-0 text-caption text-ink-secondary" aria-label={t('formats.input.addsAs', { sets: addsAsWords(form.sets) })}>
+        <Phrase
+          text={t('formats.input.addsAs')}
+          parts={{
+            sets: form.sets.map((each, at) => {
+              const gone = each.column.type === 'link' && each.column.target !== undefined && linkGone(each.column, each.text)
+              return (
+                <Fragment key={each.column.name}>
+                  {at > 0 && ' · '}
+                  <Bidi>{entryLabel(each.column)}</Bidi>{' '}
+                  {gone ? (
+                    <>
+                      <s className="text-negative">
+                        <Bidi>{each.text}</Bidi>
+                      </s>{' '}
+                      <span className="text-negative">
+                        <Phrase
+                          text={t('formats.input.gone')}
+                          parts={{ one: <Bidi>{oneOf(each.column.target ?? '')}</Bidi>, text: <Bidi>{each.text}</Bidi> }}
+                        />
+                      </span>
+                    </>
+                  ) : (
+                    <span className="text-ink">
+                      <Bidi>{each.text}</Bidi>
+                    </span>
+                  )}
+                </Fragment>
+              )
+            }),
+          }}
+        />
       </span>
     )
 
@@ -382,23 +401,30 @@ export function InputView({
 
   return (
     <div
-      className="fc-view-enter flex h-full flex-col"
+      className="fc-view-enter flex h-full min-h-0"
       onKeyDown={(event) => {
-        // Escape discards a new one (U1 §6); an open list or menu took it first.
+        // Escape closes Fields first, as it closes any panel (D-617); then it
+        // discards a new one (U1 §6). An open list or menu took it before either.
+        if (event.key === 'Escape' && fieldsOpen && writable && !event.defaultPrevented) {
+          event.preventDefault()
+          setFieldsOpen(false)
+          return
+        }
         if (event.key === 'Escape' && view === undefined && !event.defaultPrevented) {
           event.preventDefault()
           onBack()
         }
       }}
     >
+      <div className="flex min-w-0 flex-1 flex-col">
       <div className="flex min-h-10 shrink-0 flex-wrap items-center gap-x-3.5 gap-y-1.5 border-b border-hairline px-6 py-1.5">
         {list !== undefined && (
           <button
             type="button"
             onClick={list.onToggle}
             aria-pressed={!list.hidden}
-            aria-label={list.hidden ? 'Show the list' : 'Hide the list'}
-            title={list.hidden ? 'Show the list' : 'Hide the list'}
+            aria-label={list.hidden ? t('formats.input.showList') : t('formats.input.hideList')}
+            title={list.hidden ? t('formats.input.showList') : t('formats.input.hideList')}
             className={`-ms-2 hidden h-7 w-7 items-center justify-center text-ink-secondary hover:bg-surface hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent lg:inline-flex ${
               list.hidden ? '' : 'bg-surface text-ink shadow-[inset_0_0_0_1px_var(--color-hairline-strong)]'
             }`}
@@ -418,7 +444,7 @@ export function InputView({
         </button>
         {view === undefined ? (
           <label className="flex items-center gap-2">
-            <span className="fc-label text-ink-secondary">Name</span>
+            <span className="fc-label text-ink-secondary">{t('formats.input.name')}</span>
             <input
               value={name}
               maxLength={60}
@@ -434,7 +460,7 @@ export function InputView({
             <span className="font-medium">
               <Bidi>{view.name}</Bidi>
             </span>
-            {view.isDefault === true && <span className="text-caption text-ink-secondary">Add</span>}
+            {view.isDefault === true && <span className="text-caption text-ink-secondary">{t('formats.input.add')}</span>}
           </span>
         )}
         {locked !== undefined && <span className="max-w-prose text-caption text-ink-secondary">{locked}</span>}
@@ -447,12 +473,12 @@ export function InputView({
                 checked={useForAdd}
                 onChange={(event) => toggleUseForAdd(event.target.checked)}
               />
-              Use for Add
+              {t('formats.input.useForAdd')}
             </label>
             <button
               type="button"
-              aria-label="Fields: ask, default, order"
-              title="Fields: ask, default, order"
+              aria-label={t('formats.input.fieldsHint')}
+              title={t('formats.input.fieldsHint')}
               aria-expanded={fieldsOpen}
               onClick={() => setFieldsOpen(!fieldsOpen)}
               className={`fc-icon-action ${fieldsOpen ? 'bg-surface text-ink shadow-[inset_0_0_0_1px_var(--color-hairline-strong)]' : ''}`}
@@ -468,17 +494,17 @@ export function InputView({
       </div>
 
       <div className="@container min-h-0 flex-1 overflow-auto">
-        {/* Fields beside the form where the page is wide enough, under it where not. */}
-        <div className={`grid items-start ${fieldsOpen && writable ? '@3xl:grid-cols-[minmax(0,1fr)_380px]' : ''}`}>
+        <div>
           <div className="mx-auto flex w-full max-w-[1120px] min-w-0 flex-col gap-7 px-6 pt-7 pb-16">
-            <div className="fc-label">
-              <Bidi>{declaration.title}</Bidi>
-            </div>
+            {/* No label naming the format: the bar's way back already does (M64 F10, as U13 did on the entry). */}
             {view !== undefined &&
               form.lacking.map((column) => (
                 <p key={column.name} className="flex flex-wrap items-baseline gap-x-2 text-caption text-ink-secondary" role="note">
                   <span>
-                    <Bidi>{lackingSentence(declaration, column)}</Bidi>
+                    <Phrase
+                      text={t('formats.input.lacking')}
+                      parts={{ column: <Bidi>{entryLabel(column)}</Bidi>, one: <Bidi>{one}</Bidi> }}
+                    />
                   </span>
                   {writable && (
                     <button
@@ -486,7 +512,7 @@ export function InputView({
                       className="text-accent hover:underline hover:underline-offset-[3px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
                       onClick={() => change(withAsked(shape, column.name, true))}
                     >
-                      Ask it here
+                      {t('formats.input.askHere')}
                     </button>
                   )}
                 </p>
@@ -494,7 +520,7 @@ export function InputView({
             <div
               ref={fields}
               role="group"
-              aria-label={view === undefined ? 'The fields it asks' : `Add a ${one}`}
+              aria-label={view === undefined ? t('formats.input.asked') : t('formats.input.addOne', { one })}
               className="flex max-w-[700px] flex-wrap items-start gap-x-6 gap-y-4"
               onKeyDown={(event) => {
                 // **Enter adds** from a one-line field, Ctrl+Enter from any (U1 §6):
@@ -509,15 +535,53 @@ export function InputView({
               }}
             >
               {drawn.length === 0 ? (
-                <p className="text-ink-secondary">It asks nothing yet. Tick Ask on a field in Fields.</p>
+                <p className="text-ink-secondary">{t('formats.input.asksNothing')}</p>
               ) : (
                 drawn.map(field)
               )}
             </div>
+            {/* **Add under the fields** (M64 F10, D-627), where the eye already
+                is, and what it just added under Add. */}
+            {(writable || addsAs !== null) && (
+              <div className="flex max-w-[700px] flex-wrap items-center gap-x-3 gap-y-2">
+                {writable && view !== undefined && (
+                  <Button variant="primary" icon="add" onClick={add}>
+                    {t('formats.input.add')}
+                  </Button>
+                )}
+                {writable && view === undefined && (
+                  <>
+                    <Button variant="primary" icon="write" onClick={saveDraft}>
+                      {t('formats.input.save')}
+                    </Button>
+                    <Button variant="ghost" onClick={onBack}>
+                      {t('formats.table.cancel')}
+                    </Button>
+                  </>
+                )}
+                {addsAs}
+                {saveRefusal !== undefined && (
+                  <span className="text-caption text-negative" role="alert">
+                    {saveRefusal}
+                  </span>
+                )}
+                {(failure !== undefined || problems.length > 0) && (
+                  <span className="text-caption text-negative" role="alert">
+                    {[
+                      ...(fieldProblems === 0
+                        ? []
+                        : [t(countKey('formats.input.notAdded', fieldProblems), { count: fieldProblems })]),
+                      ...aboutRow.map((each) => each.reason),
+                      ...(failure === undefined ? [] : [failure]),
+                    ].join(' ')}
+                  </span>
+                )}
+              </div>
+            )}
 
             {keyed.length > 0 && (
-              <section aria-label="Just added" className="flex max-w-[860px] flex-col">
-                <h2 className="fc-label pb-2">Just added</h2>
+              <section aria-label={t('formats.input.justAdded')} className="flex max-w-[860px] flex-col">
+                <h2 className="fc-label pb-2">{t('formats.input.justAdded')}</h2>
                 <Flip as="div" role="list" flipKey={keyed.map((each) => each.key).join('|')}>
                   {keyed.map(({ id, line, key }) => (
                     <div
@@ -534,8 +598,8 @@ export function InputView({
                         <Bidi className="min-w-0 truncate">{line.title}</Bidi>
                       </button>
                       {line.failed.map((claim) => (
-                        <span key={claim} className="fc-state !text-negative" title={`${claim} failed`}>
-                          failed
+                        <span key={claim} className="fc-state !text-negative" title={t('formats.input.failedHint', { claim })}>
+                          {t('formats.input.failed')}
                         </span>
                       ))}
                       <span className="flex flex-none items-center gap-4 text-caption text-ink-secondary">
@@ -549,7 +613,7 @@ export function InputView({
                         </span>
                       )}
                       {writable && (
-                        <IconAction label={`Undo adding ${line.title}`} onClick={() => undoOne(id)}>
+                        <IconAction label={t('formats.input.undoAdding', { title: line.title })} onClick={() => undoOne(id)}>
                           <path d="M7.5 4.5 3.75 8.25 7.5 12" />
                           <path d="M3.75 8.25h10.5a5.25 5.25 0 0 1 0 10.5H9" />
                         </IconAction>
@@ -561,47 +625,18 @@ export function InputView({
             )}
           </div>
 
-          {fieldsOpen && writable && (
-            <InputFields declaration={declaration} shape={shape} links={links} onChange={change} />
-          )}
         </div>
       </div>
 
-      {(writable || addsAs !== null) && (
-        <div className="flex shrink-0 flex-wrap items-center gap-x-3 gap-y-2 border-t border-hairline bg-elevated px-6 py-2.5">
-          {writable && view !== undefined && (
-            <Button variant="primary" icon="add" onClick={add}>
-              Add
-            </Button>
-          )}
-          {writable && view === undefined && (
-            <>
-              <Button variant="primary" icon="write" onClick={saveDraft}>
-                Save
-              </Button>
-              <Button variant="ghost" onClick={onBack}>
-                Cancel
-              </Button>
-            </>
-          )}
-          {addsAs}
-          {saveRefusal !== undefined && (
-            <span className="text-caption text-negative" role="alert">
-              {saveRefusal}
-            </span>
-          )}
-          {(failure !== undefined || problems.length > 0) && (
-            <span className="text-caption text-negative" role="alert">
-              {[
-                ...(fieldProblems === 0
-                  ? []
-                  : [`Not added: ${fieldProblems === 1 ? 'one field to put right' : `${String(fieldProblems)} fields to put right`}.`]),
-                ...aboutRow.map((each) => each.reason),
-                ...(failure === undefined ? [] : [failure]),
-              ].join(' ')}
-            </span>
-          )}
-        </div>
+      </div>
+
+      {/* **Fields is a form beside the page** (M64 F10, D-627, after D-617):
+          what it asks, its defaults and its order, in the side panel, the
+          fields it draws still in sight. */}
+      {fieldsOpen && writable && (
+        <SidePanel title={t('formats.input.fields')} onClose={() => setFieldsOpen(false)}>
+          <InputFields declaration={declaration} shape={shape} links={links} onChange={change} />
+        </SidePanel>
       )}
     </div>
   )
@@ -620,18 +655,18 @@ export function rowRefusals(declaration: FormatDeclaration, shape: InputShape): 
 }
 
 /** Save refused, naming each row: *Not saved: amount needs asking or a default.* */
-function notSaved(declaration: FormatDeclaration, refusals: ReadonlyMap<string, string>): string {
+function notSaved(declaration: FormatDeclaration, refusals: ReadonlyMap<string, string>, t: Translate): string {
   const words = (name: string): string => {
     const column = declaration.columns.find((each) => each.name === name)
     return column === undefined ? name : entryLabel(column)
   }
   const needed = [...refusals].filter(([, why]) => why === NEEDED).map(([name]) => words(name))
   const wrong = [...refusals].filter(([, why]) => why !== NEEDED).map(([name]) => words(name))
-  return [
-    'Not saved:',
-    ...(needed.length === 0 ? [] : [`${needed.join(', ')} ${needed.length === 1 ? 'needs' : 'need'} asking or a default.`]),
-    ...(wrong.length === 0 ? [] : [`${wrong.join(', ')}: put the default right at its row.`]),
+  const why = [
+    ...(needed.length === 0 ? [] : [t(countKey('formats.input.notSavedNeeded', needed.length), { names: needed.join(', ') })]),
+    ...(wrong.length === 0 ? [] : [t('formats.input.notSavedWrong', { names: wrong.join(', ') })]),
   ].join(' ')
+  return t('formats.input.notSaved', { why })
 }
 
 /**
@@ -651,6 +686,7 @@ export function InputFields({
   links: ReadonlyMap<string, readonly LinkChoice[]>
   onChange: (next: InputShape) => void
 }) {
+  const t = useT()
   const [dragging, setDragging] = useState<string | undefined>(undefined)
   const [over, setOver] = useState<string | undefined>(undefined)
   const [stepped, setStepped] = useState<string | undefined>(undefined)
@@ -663,16 +699,12 @@ export function InputFields({
   const refusals = rowRefusals(declaration, shape)
   const grid = 'grid grid-cols-[20px_minmax(0,1fr)_36px_128px] items-center gap-1.5 px-2.5'
   return (
-    <aside
-      ref={box}
-      aria-label="Fields"
-      className="fc-pop-enter border-t border-hairline px-3 pt-5 pb-8 @3xl:sticky @3xl:top-0 @3xl:border-t-0 @3xl:border-s"
-    >
+    <section ref={box} aria-label={t('formats.input.fields')} className="-mx-2.5 mt-4">
       <div className={`${grid} h-6 text-label text-ink-secondary uppercase`} aria-hidden>
         <span />
-        <span>Field</span>
-        <span className="text-center">Ask</span>
-        <span>Default</span>
+        <span>{t('formats.input.head.field')}</span>
+        <span className="text-center">{t('formats.input.head.ask')}</span>
+        <span>{t('formats.input.head.default')}</span>
       </div>
       {fieldsRows(declaration, shape).map((column) => {
         const words = entryLabel(column)
@@ -686,7 +718,7 @@ export function InputFields({
               data-field-row={column.name}
               draggable={asked >= 0}
               tabIndex={asked >= 0 ? 0 : -1}
-              aria-label={asked >= 0 ? `${words}, Alt+Up or Alt+Down moves it` : words}
+              aria-label={asked >= 0 ? t('formats.input.moves', { name: words }) : words}
               className={`${grid} relative h-8 text-body hover:bg-surface focus-visible:bg-surface focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
                 over === column.name && dragging !== undefined && asked >= 0 ? 'shadow-[inset_0_2px_0_var(--color-accent)]' : ''
               } ${dragging === column.name ? 'opacity-40' : ''}`}
@@ -730,14 +762,14 @@ export function InputFields({
               </span>
               <span className={`flex min-w-0 items-baseline ${asked < 0 ? 'text-ink-secondary' : ''}`}>
                 <Bidi className="min-w-0 truncate">{words}</Bidi>
-                {column.required && <span className="ms-1.5 shrink-0 text-label text-ink-secondary">needed</span>}
+                {column.required && <span className="ms-1.5 shrink-0 text-label text-ink-secondary">{t('formats.input.needed')}</span>}
               </span>
               <span className="flex justify-center">
                 <input
                   type="checkbox"
                   className="accent-[var(--color-ink)]"
                   checked={asked >= 0}
-                  aria-label={`Ask ${words}`}
+                  aria-label={t('formats.input.ask', { name: words })}
                   onChange={() => onChange(withAsked(shape, column.name, asked < 0))}
                 />
               </span>
@@ -752,16 +784,16 @@ export function InputFields({
             </div>
             {refusal !== undefined && (
               <p className="px-2.5 pb-1.5 ps-[34px] text-caption text-negative" role="alert">
-                {refusal}
+                {refusalWords(refusal, t)}
               </p>
             )}
           </div>
         )
       })}
       <p className="mt-1.5 border-t border-hairline px-3 pt-2 text-label text-ink-secondary">
-        Drag an asked field to move it. A default set but not asked is on the Adds as line.
+        {t('formats.input.dragHint')}
       </p>
-    </aside>
+    </section>
   )
 }
 
@@ -789,6 +821,7 @@ function DefaultCell({
   refused: boolean
   onSet: (text: string) => void
 }) {
+  const t = useT()
   const [typed, setTyped] = useState(held)
   const look = `h-7 w-full min-w-0 border bg-background px-2 text-body text-ink outline-none focus:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent ${
     refused ? 'border-negative' : 'border-hairline-strong'
@@ -808,7 +841,7 @@ function DefaultCell({
           onSet(choice.value)
         }}
         onBlur={() => commit(typed)}
-        aria-label={`Default for ${words}`}
+        aria-label={t('formats.input.defaultFor', { name: words })}
         aria-invalid={refused || undefined}
         className={look}
       />
@@ -825,7 +858,7 @@ function DefaultCell({
           commit(typed)
         }
       }}
-      aria-label={`Default for ${words}`}
+      aria-label={t('formats.input.defaultFor', { name: words })}
       aria-invalid={refused || undefined}
       className={look}
     />
