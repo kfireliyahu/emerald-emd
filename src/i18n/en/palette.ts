@@ -2,7 +2,7 @@
 export const palette = {
   dialog: 'Search and commands',
   placeholderNoDocument: 'Go to a screen, or do something…',
-  placeholder: 'Search every entry, or go to a screen…',
+  placeholder: 'Go to a place, find an entry, or do something…',
   search: 'Search',
   results: 'Results',
   entryOne: 'entry',
@@ -26,7 +26,7 @@ export const palette = {
   },
   commands: {
     categorize: 'Categorize transactions',
-    import: 'Import a statement…',
+    import: 'Read files…',
     sidebar: 'Toggle the sidebar',
     new: 'New',
     open: 'Open…',

@@ -134,23 +134,23 @@
       "screens": 1.0
     },
     "#/settings/accounts": {
-      "words": 54,
-      "blocks": 2,
+      "words": 60,
+      "blocks": 5,
       "figures": 0,
-      "actions": 14,
+      "actions": 6,
       "colours": 5,
       "screens": 1.0
     },
     "#/settings/packs": {
-      "words": 185,
+      "words": 200,
       "blocks": 3,
       "figures": 0,
       "actions": 2,
-      "colours": 5,
+      "colours": 4,
       "screens": 1.0
     },
     "#/settings/model": {
-      "words": 25,
+      "words": 30,
       "blocks": 1,
       "figures": 0,
       "actions": 1,
@@ -174,7 +174,7 @@
       "screens": 1.0
     },
     "#/settings/export": {
-      "words": 77,
+      "words": 85,
       "blocks": 1,
       "figures": 0,
       "actions": 3,
@@ -182,12 +182,12 @@
       "screens": 1.0
     },
     "#/mcp": {
-      "words": 1081,
-      "blocks": 21,
+      "words": 180,
+      "blocks": 4,
       "figures": 0,
-      "actions": 2,
+      "actions": 14,
       "colours": 4,
-      "screens": 5.1
+      "screens": 1.8
     },
     "#/formats": {
       "words": 76,
@@ -314,13 +314,6 @@
     "#/year",
     "#/categories",
     "#/categories/rules",
-    "#/settings/accounts",
-    "#/settings/packs",
-    "#/settings/model",
-    "#/settings/calendar",
-    "#/settings/language",
-    "#/settings/export",
-    "#/mcp",
     "#/formats",
     "#/formats/card_charge",
     "#/formats/unit",

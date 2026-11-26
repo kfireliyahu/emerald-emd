@@ -82,6 +82,9 @@ const U5 = [
   'src/ui/screens/Language.tsx',
   'src/ui/screens/Export.tsx',
   'src/ui/screens/Mcp.tsx',
+  // M64 U12 (D-624): the Settings frame, and a document with no ledger, translated as they were redesigned.
+  'src/ui/settings/SettingsPage.tsx',
+  'src/ui/screens/NoLedger.tsx',
   'src/ui/guide/Guide.tsx',
   'src/ui/Sidebar.tsx',
   'src/ui/RailFolder.tsx',

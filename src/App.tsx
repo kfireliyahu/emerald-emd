@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 
 import { SUPPORTED_EXTENSIONS } from '@/data/importer/sheetTable.ts'
@@ -201,7 +201,7 @@ export function App() {
   useSidebarShortcut()
 
   /**
-   * The one file input the palette's "Import a statement…" reaches.
+   * The one file input the palette's "Read files…" reaches.
    *
    * A file button is a `<label>` wrapping its own input, which is right for a
    * button and useless to a command: a command has no label to click. This is
@@ -719,10 +719,18 @@ function SettingsHome() {
  * besides asking for them from a ledger screen (D-266). It opens on Home, where
  * the Getting started line waits for a press — the guide never opens by itself
  * (M59 U5, D-581).
+ *
+ * **The report, and a page of its own** (M64 U12, D-624): the answer first —
+ * what a document is here, in one sentence — then the three ways in as one
+ * column of rows, each saying what it is for with its button at the row's end:
+ * a new document (the one primary), a new ledger, and **Open…**, which the
+ * front door never offered though Ctrl+O and the File menu always did. Recent
+ * documents under them, as rows that open.
  */
 function EmptyDocument() {
   const t = useT()
   const createNew = useDocumentStore((state) => state.createNew)
+  const requestOpenFile = useDocumentStore((state) => state.requestOpenFile)
   const mutate = useDocumentStore((state) => state.mutate)
   const navigate = useNavigate()
 
@@ -742,27 +750,45 @@ function EmptyDocument() {
   }
 
   return (
-    <div className="fc-view-enter mx-auto flex h-full max-w-md flex-col items-center justify-center gap-5 px-6 text-center">
-      <p className="text-title">{t('chrome.start.title')}</p>
-      <p className="text-ink-secondary">{t('chrome.start.lead')}</p>
-      {/* **Which button keeps money, said plainly** (M31 U2). Two buttons and a
-          paragraph about columns left a person with a bank statement guessing,
-          and the wrong guess was a document their statement could not go into. */}
-      <div className="grid w-full grid-cols-2 gap-3 text-start">
-        <div className="flex flex-col gap-2 border border-hairline p-4">
-          <Button variant="primary" onClick={() => void createNew()}>
-            {t('chrome.start.newDocument')}
-          </Button>
-          <span className="text-caption text-ink-secondary">{t('chrome.start.newDocumentWhat')}</span>
+    <div className="h-full overflow-auto">
+      <div className="fc-view-enter mx-auto flex max-w-3xl flex-col gap-6 px-8 pt-16 pb-12">
+        <h1 className="m-0 text-title leading-tight font-medium">{t('chrome.start.title')}</h1>
+        <p className="m-0 max-w-[40ch] text-lede [text-wrap:balance]">{t('chrome.start.lead')}</p>
+        {/* **Which button keeps money, said plainly** (M31 U2). Two buttons and a
+            paragraph about columns left a person with a bank statement guessing,
+            and the wrong guess was a document their statement could not go into. */}
+        <div className="flex flex-col">
+          <StartRow title={t('chrome.start.newDocumentFor')} text={t('chrome.start.newDocumentWhat')}>
+            <Button variant="primary" icon="add" onClick={() => void createNew()}>
+              {t('chrome.start.newDocument')}
+            </Button>
+          </StartRow>
+          <StartRow title={t('chrome.start.newLedgerFor')} text={t('chrome.start.newLedgerWhat')}>
+            <Button variant="secondary" onClick={() => void newLedger()}>
+              {t('chrome.start.newLedger')}
+            </Button>
+          </StartRow>
+          <StartRow title={t('chrome.start.openFor')} text={t('chrome.start.openWhat')}>
+            <Button variant="secondary" icon="open" onClick={() => void requestOpenFile()} title={t('chrome.start.openTitle')}>
+              {t('chrome.start.open')}
+            </Button>
+          </StartRow>
         </div>
-        <div className="flex flex-col gap-2 border border-hairline p-4">
-          <Button variant="secondary" onClick={() => void newLedger()}>
-            {t('chrome.start.newLedger')}
-          </Button>
-          <span className="text-caption text-ink-secondary">{t('chrome.start.newLedgerWhat')}</span>
-        </div>
+        <RecentDocuments />
       </div>
-      <RecentDocuments />
+    </div>
+  )
+}
+
+/** One way in: what it is for, in a line, and its button at the row's end. */
+function StartRow({ title, text, children }: { readonly title: string; readonly text: string; readonly children: ReactNode }) {
+  return (
+    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-hairline py-4 first:border-t">
+      <div className="min-w-0">
+        <span className="font-medium">{title}</span>
+        <p className="m-0 mt-0.5 max-w-[60ch] text-ink-secondary">{text}</p>
+      </div>
+      {children}
     </div>
   )
 }
@@ -796,20 +822,32 @@ function RecentDocuments() {
   if (recents.length === 0) return null
 
   return (
-    <div className="flex w-full flex-col items-center gap-1 border-t border-hairline pt-5">
-      <p className="text-caption text-ink-secondary">{t('chrome.start.recent')}</p>
+    <section aria-labelledby="start-recent" className="flex flex-col">
+      <h2 id="start-recent" className="m-0 mb-1 text-label font-medium text-ink-secondary uppercase">
+        {t('chrome.start.recent')}
+      </h2>
       {/* The name a file came with, isolated: a Hebrew one keeps its start (M54 F6). */}
-      {recents.map((entry) => (
-        <button
-          key={entry.path}
-          type="button"
-          onClick={() => void requestOpen(entry.path)}
-          title={entry.path}
-          className="flex max-w-full min-w-0 px-2 py-1 text-accent underline-offset-2 hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        >
-          <Bidi className="min-w-0 truncate">{entry.name}</Bidi>
-        </button>
-      ))}
-    </div>
+      <ul className="m-0 list-none border-t border-hairline p-0">
+        {recents.map((entry) => (
+          <li key={entry.path} className="border-b border-hairline">
+            <button
+              type="button"
+              onClick={() => void requestOpen(entry.path)}
+              title={entry.path}
+              className="flex h-10 w-full min-w-0 items-center gap-3 px-3 text-start transition-colors duration-[var(--duration-micro)] hover:bg-surface"
+            >
+              <Bidi className="min-w-0 truncate">{entry.name}</Bidi>
+              <Bidi className="ms-auto min-w-0 shrink truncate text-caption text-ink-secondary">{folderOf(entry.path)}</Bidi>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
+}
+
+/** The folder a recent document is in, for telling two of one name apart. */
+function folderOf(path: string): string {
+  const cut = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'))
+  return cut <= 0 ? '' : path.slice(0, cut)
 }

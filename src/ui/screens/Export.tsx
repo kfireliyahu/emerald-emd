@@ -13,6 +13,7 @@ import { Kbd } from '@/ui/components/Kbd.tsx'
 import { isDemo } from '@/ui/edition.ts'
 import { useKeepsLedger } from '@/ui/packs.ts'
 import { modifierKey } from '@/ui/platform.ts'
+import { SettingRow, SettingsPage } from '@/ui/settings/SettingsPage.tsx'
 import { today } from '@/ui/today.ts'
 
 /**
@@ -32,6 +33,9 @@ import { today } from '@/ui/today.ts'
  * the desktop shell a document's **saved exports** — the exports pack's rows —
  * are written from here (`ui/export/SavedExports.tsx`). The rail offers the
  * place to a document keeping either pack.
+ *
+ * **The report** (M64 U12, D-624): the answer first — what can go out, and
+ * how many rows of it — then one row a file, its button at the row's end.
  */
 export function Export() {
   const t = useT()
@@ -50,19 +54,20 @@ export function Export() {
   const mod = modifierKey()
   const keys = !isDemo()
 
+  const answer = ledger
+    ? t('settings.export.answer', {
+        months: t(months.length === 1 ? 'settings.export.monthCount' : 'settings.export.monthsCount', { n: months.length }),
+        rows: t(rows === 1 ? 'settings.export.rowCount' : 'settings.export.rowsCount', { n: rows.toLocaleString('en-US') }),
+      })
+    : t('settings.export.answerWhole')
+
   return (
-    <div className="h-full overflow-auto">
-      <div className="fc-view-enter flex max-w-4xl flex-col gap-6 px-8 pt-6 pb-12">
-        <header className="flex flex-col gap-2 border-b border-hairline pb-4">
-          <h1 className="m-0 text-title">{t('rail.export')}</h1>
-          <span className="text-ink-secondary">{t('settings.export.lead')}</span>
-        </header>
-        <div>
+    <SettingsPage title={t('rail.export')} answer={answer}>
           {ledger && (
             <>
-              <Row
-                title={t('settings.export.months')}
-                text={t('settings.export.monthsText')}
+              <SettingRow
+                label={t('settings.export.months')}
+                hint={t('settings.export.monthsText')}
               >
                 <Button
                   variant="secondary"
@@ -71,10 +76,10 @@ export function Export() {
                 >
                   {t(months.length === 1 ? 'settings.export.exportMonth' : 'settings.export.exportMonths', { n: months.length })}
                 </Button>
-              </Row>
-              <Row
-                title={t('rail.transactions')}
-                text={t('settings.export.transactionsText')}
+              </SettingRow>
+              <SettingRow
+                label={t('rail.transactions')}
+                hint={t('settings.export.transactionsText')}
               >
                 <Button
                   variant="secondary"
@@ -83,13 +88,13 @@ export function Export() {
                 >
                   {t(rows === 1 ? 'settings.export.exportTransaction' : 'settings.export.exportTransactions', { n: rows.toLocaleString('en-US') })}
                 </Button>
-              </Row>
+              </SettingRow>
             </>
           )}
           {exportsBridge !== undefined && <SavedExports bridge={exportsBridge} />}
-          <Row
-            title={t('settings.export.whole')}
-            text={
+          <SettingRow
+            label={t('settings.export.whole')}
+            hint={
               <>
                 {t('settings.export.wholeText')}
                 {/* The keys only where they are listened for: the demo has no file to save (D-413). */}
@@ -121,21 +126,7 @@ export function Export() {
             >
               {t('settings.export.saveAs')}
             </Button>
-          </Row>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function Row({ title, text, children }: { title: string; text: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-4 border-b border-hairline py-4">
-      <div>
-        <b className="font-medium">{title}</b>
-        <p className="m-0 mt-0.5 max-w-[60ch] text-ink-secondary">{text}</p>
-      </div>
-      {children}
-    </div>
+          </SettingRow>
+    </SettingsPage>
   )
 }

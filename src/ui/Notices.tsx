@@ -7,6 +7,7 @@ import { documentCurrency } from '@/data/repositories/statisticsRepository.ts'
 import { clearSnapshot, type Snapshot } from '@/data/storage/crashCache.ts'
 import { shellUpdates } from '@/data/storage/desktop.ts'
 import { waitingCounts } from '@/domain/home.ts'
+import { countKey } from '@/i18n/count.ts'
 import { useT } from '@/i18n/current.ts'
 import { tNow } from '@/i18n/words.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
@@ -565,6 +566,13 @@ function useErrorNotice(): Notice | undefined {
  * **"Not now" is a session, not a decision.** Nothing is written; it comes back
  * next time the document is opened — a permanently dismissible prompt for the
  * thing that doubles the month is how it got missed in the first place.
+ *
+ * **Only for what changes the month's totals** (M64 U12, D-624). It was every
+ * answer Home waits on, on every screen but Home — thirteen on the synthetic
+ * year, a bar over Settings saying a shop had no category. Home's own list
+ * (D-616) says those a strip below its answer; this bar stays for the answers
+ * that make the month's figures wrong until they are given, the thing it was
+ * for (D-367), and names that, never only a count.
  */
 function useWaitingNotice(offer: boolean): Notice | undefined {
   const t = useT()
@@ -584,25 +592,15 @@ function useWaitingNotice(offer: boolean): Notice | undefined {
     [db, revision, offer, onHome],
   )
 
-  if (counts === undefined || counts.all === 0 || dismissed) return undefined
+  if (counts === undefined || counts.totals === 0 || dismissed) return undefined
 
   return {
     id: 'waiting',
     body: (
-      <>
-        <Phrase
-          text={t(counts.all === 1 ? 'chrome.notices.waitingOne' : 'chrome.notices.waitingMany')}
-          parts={{ n: <span className="tabular-nums">{counts.all}</span> }}
-        />
-        {counts.totals > 0 ? (
-          <Phrase
-            text={t(counts.totals === 1 ? 'chrome.notices.totalsOne' : 'chrome.notices.totalsMany')}
-            parts={{ m: <span className="tabular-nums">{counts.totals}</span> }}
-          />
-        ) : (
-          '.'
-        )}
-      </>
+      <Phrase
+        text={t(countKey('chrome.notices.totals', counts.totals))}
+        parts={{ count: <span className="tabular-nums">{counts.totals}</span> }}
+      />
     ),
     actions: [
       // It goes to the list, where each is answered: the button says so (M54 F6).

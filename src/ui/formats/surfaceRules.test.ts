@@ -498,11 +498,14 @@ describe('the views and dashboards, swept (M54 F3)', () => {
 
   // *A screen names itself*: one h1, on the title step.
   it('heads each screen with one h1 on the title step', () => {
-    for (const path of ['src/ui/screens/Dashboard.tsx', 'src/ui/screens/Calendar.tsx', 'src/ui/screens/Connections.tsx']) {
+    for (const path of ['src/ui/screens/Dashboard.tsx', 'src/ui/screens/Connections.tsx']) {
       const source = readFileSync(path, 'utf8')
       expect(source.match(/<h1 /g)).toHaveLength(1)
       expect(source).toMatch(/<h1 className="m-0 text-title">/)
     }
+    // Calendar is a Settings page since M64 U12 (D-624): its one h1 is the shared frame's.
+    expect(readFileSync('src/ui/screens/Calendar.tsx', 'utf8')).toContain("<SettingsPage title={t('rail.calendar')}")
+    expect(readFileSync('src/ui/settings/SettingsPage.tsx', 'utf8').match(/<h1 /g)).toHaveLength(1)
   })
 })
 
@@ -564,7 +567,8 @@ describe('intake, swept (M54 F4)', () => {
     expect(readFileSync('src/ui/documents/DocumentTextInput.tsx', 'utf8')).toContain('<Button icon="open"')
     expect(readFileSync('src/ui/screens/Readers.tsx', 'utf8')).not.toMatch(/opacity-0/)
     expect(readFileSync('src/ui/screens/Readers.tsx', 'utf8')).not.toMatch(/variant="primary"/)
-    expect(readFileSync('src/ui/screens/LocalModel.tsx', 'utf8')).toContain(`<h1 className="m-0 text-title">{t('rail.localModel')}</h1>`)
+    // Its h1 is the Settings frame's since M64 U12 (D-624).
+    expect(readFileSync('src/ui/screens/LocalModel.tsx', 'utf8')).toContain(`title={t('rail.localModel')}`)
   })
 
   // D-532: the window's drop reads onto the format on screen, and its overlay says so.
@@ -656,6 +660,9 @@ describe('the document’s own screens, notices and dialogs, swept (M54 F6)', ()
     'src/ui/screens/Mcp.tsx',
     'src/ui/screens/Packs.tsx',
     'src/ui/screens/Export.tsx',
+    // M64 U12 (D-624): the Settings frame and the accounts page on it.
+    'src/ui/settings/SettingsPage.tsx',
+    'src/ui/screens/Accounts.tsx',
     'src/ui/screens/Overview.tsx',
     // M64 U10 (D-622): the rest of Wealth, as it was redesigned.
     'src/ui/screens/Funds.tsx',
@@ -687,14 +694,16 @@ describe('the document’s own screens, notices and dialogs, swept (M54 F6)', ()
     const mcp = readFileSync('src/ui/screens/Mcp.tsx', 'utf8')
     // The words are the catalogue's since M60 U5 (D-590).
     const english = readFileSync('src/i18n/en/settings.ts', 'utf8')
-    expect(mcp).toContain(`<h1 className="m-0 text-title">{t('rail.assistants')}</h1>`)
+    // One h1, the Settings frame's, since M64 U12 (D-624).
+    expect(mcp).toContain(`title={t('rail.assistants')}`)
+    expect(mcp).toContain('<SettingsPage')
     expect(mcp).toContain(`copy={t('settings.assistants.copyCommand')}`)
     expect(english).toContain(`copyCommand: 'Copy the command'`)
     expect(mcp).not.toMatch(/'Copied' : 'Copy'\}/)
     expect(mcp).not.toContain('text-negative')
     expect(readFileSync('src/ui/mcp/connect.ts', 'utf8')).not.toMatch(/dist-plugin|SERVER_PLACEHOLDER/)
     const packs = readFileSync('src/ui/screens/Packs.tsx', 'utf8')
-    expect(packs).toContain(`<h1 className="m-0 text-title">{t('rail.packs')}</h1>`)
+    expect(packs).toContain(`<SettingsPage title={t('rail.packs')}`)
     expect(packs).toContain("variant={primary ? 'primary' : 'secondary'}")
     expect(packs).toContain(`t('settings.packs.keepHere', { pack: packObject(pack, t) })`)
     expect(english).toContain(`keepHere: 'Keep {pack} here'`)
@@ -802,10 +811,12 @@ describe('the ledger screens a stranger meets, swept (M54 F13)', () => {
     // The words are the catalogue's since M60 U4 (D-589). Home adds no paycheck
     // since M64 U5 (D-616): Paychecks does, and Home names none.
     expect(readFileSync('src/i18n/en/home.ts', 'utf8').match(/: 'Add a paycheck',$/gm) ?? []).toEqual([])
+    // The catalogue's words since M64 U12 (D-624): one button, said once, for both of its pages.
     const noLedger = readFileSync('src/ui/screens/NoLedger.tsx', 'utf8')
-    expect(noLedger.match(/^\s*Keep the ledger here\s*$/gm)?.length).toBe(2)
+    expect(noLedger.match(/t\('chrome\.noLedger\.keep'\)/g)?.length).toBe(1)
+    expect(readFileSync('src/i18n/en/chrome.ts', 'utf8')).toContain("keep: 'Keep the ledger here'")
     expect(noLedger).not.toMatch(/Keep a ledger/)
-    expect(noLedger.match(/<h1 className="m-0 text-title">/g)?.length).toBe(2)
+    expect(noLedger.match(/<h1 className="m-0 text-title/g)?.length).toBe(1)
     expect(readFileSync('src/App.tsx', 'utf8')).not.toContain('Drop statements, payslips and fund reports, any number')
   })
 

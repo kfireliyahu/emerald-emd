@@ -4,7 +4,7 @@ import type { Translation } from '../catalogue.ts'
 export const palette: Translation<'palette'> = {
   dialog: 'חיפוש ופקודות',
   placeholderNoDocument: 'מעבר למסך, או פעולה…',
-  placeholder: 'חיפוש בכל הרשומות, או מעבר למסך…',
+  placeholder: 'מעבר למקום, חיפוש רשומה, או פעולה…',
   search: 'חיפוש',
   results: 'תוצאות',
   entryOne: 'רשומה',
@@ -28,7 +28,7 @@ export const palette: Translation<'palette'> = {
   },
   commands: {
     categorize: 'סיווג תנועות',
-    import: 'ייבוא דף חשבון…',
+    import: 'ייבוא קבצים…',
     sidebar: 'הצגה או הסתרה של סרגל הצד',
     new: 'מסמך חדש',
     open: 'פתיחה…',

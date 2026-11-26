@@ -21,6 +21,7 @@ import type { MessageKey } from '@/i18n/catalogue.ts'
 import { useT } from '@/i18n/current.ts'
 import { Button } from '@/ui/components/Button.tsx'
 import { Phrase } from '@/ui/components/Phrase.tsx'
+import { SettingsPage } from '@/ui/settings/SettingsPage.tsx'
 
 /**
  * The local model: what is on this machine, and which of it the app will use —
@@ -50,6 +51,10 @@ import { Phrase } from '@/ui/components/Phrase.tsx'
  * belongs to is the one this screen creates. The choice is stored where a
  * machine preference belongs and never in the document; `@/data/runtime/provider.ts`
  * carries that reasoning.
+ *
+ * **The report** (M64 U12, D-624): the answer first — which model is in use,
+ * or that none is — with *Look for a runtime* as the page's one action beside
+ * its name, and what a look found under the answer.
  */
 export function LocalModel() {
   const t = useT()
@@ -78,86 +83,76 @@ export function LocalModel() {
   if (state.kind === 'unsupported') {
     return (
       // The screen's title, one sentence and one text action (M54 F4).
-      <div className="px-6 py-6">
-        <h1 className="m-0 text-title">{t('rail.localModel')}</h1>
-        <p className="mt-2 max-w-prose text-ink-secondary">
-          {t('settings.model.unsupported')}{' '}
-          <a
-            href={RELEASES_URL}
-            target="_blank"
-            rel="noreferrer"
-            className="text-accent hover:underline hover:underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
-          >
-            {t('settings.model.getApp')}
-          </a>
-        </p>
-      </div>
+      <SettingsPage
+        title={t('rail.localModel')}
+        answer={
+          <>
+            {t('settings.model.unsupported')}{' '}
+            <a
+              href={RELEASES_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="text-accent hover:underline hover:underline-offset-4 focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent"
+            >
+              {t('settings.model.getApp')}
+            </a>
+          </>
+        }
+      />
     )
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-hairline px-6 py-2">
-        <span className="text-ink-secondary">
-          {state.kind === 'off' ? (
-            t('settings.model.noModel')
-          ) : (
-            <Phrase
-              text={t('settings.model.using')}
-              parts={{
-                model: <span className="font-medium text-ink">{state.provider.model}</span>,
-                runtime: RUNTIME_LABELS[state.provider.runtime],
-              }}
-            />
-          )}
-        </span>
-
-        {state.kind === 'missing' && (
-          <span className="text-caption text-negative">{state.reason}</span>
-        )}
-
-        <span className="ms-auto flex items-center gap-2">
+    <SettingsPage
+      title={t('rail.localModel')}
+      answer={
+        state.kind === 'off' ? (
+          t('settings.model.noModel')
+        ) : (
+          <Phrase
+            text={t('settings.model.using')}
+            parts={{
+              model: <span className="font-medium">{state.provider.model}</span>,
+              runtime: RUNTIME_LABELS[state.provider.runtime],
+            }}
+          />
+        )
+      }
+      action={
+        <span className="flex items-center gap-2">
           {state.kind !== 'off' && (
-            <Button size="sm" variant="ghost" onClick={() => choose(undefined)}>
+            <Button variant="ghost" onClick={() => choose(undefined)}>
               {t('settings.model.turnOff')}
             </Button>
           )}
-          <Button size="sm" variant={probes === undefined ? 'primary' : 'secondary'} onClick={look} busy={looking ? t('settings.model.looking') : undefined}>
+          <Button variant={probes === undefined ? 'primary' : 'secondary'} onClick={look} busy={looking ? t('settings.model.looking') : undefined}>
             {probes === undefined ? t('settings.model.look') : t('settings.model.lookAgain')}
           </Button>
         </span>
-      </div>
+      }
+    >
+      {state.kind === 'missing' && <p className="m-0 mb-4 text-negative">{state.reason}</p>}
+      {failed !== undefined && <p className="m-0 mb-4 text-negative">{t('settings.model.shellFailed', { error: failed })}</p>}
 
-      <div className="min-h-0 flex-1 overflow-auto px-6 py-4">
-        {failed !== undefined && (
-          <p className="mb-4 text-negative">{t('settings.model.shellFailed', { error: failed })}</p>
-        )}
-
-        {probes === undefined ? (
-          <div className="max-w-xl space-y-3 text-ink-secondary">
-            <p>
-              <Phrase
-                text={t('settings.model.intro')}
-                parts={{ look: <span className="text-ink">{t('settings.model.look')}</span>, ports: t('settings.model.ports') }}
-              />
-            </p>
-            <p className="text-caption text-ink-secondary">{t('settings.model.introAfter')}</p>
-          </div>
-        ) : (
-          <div className="fc-pop-enter space-y-6">
-            {probes.map((probe) => (
-              <RuntimeBlock
-                key={probe.runtime}
-                probe={probe}
-                chosen={chosen}
-                onChoose={choose}
-              />
-            ))}
-            <DiskLine probes={probes} />
-          </div>
-        )}
-      </div>
-    </div>
+      {probes === undefined ? (
+        <div className="max-w-xl space-y-3 text-ink-secondary">
+          <p className="m-0">
+            <Phrase
+              text={t('settings.model.intro')}
+              parts={{ look: <span className="text-ink">{t('settings.model.look')}</span>, ports: t('settings.model.ports') }}
+            />
+          </p>
+          <p className="m-0 text-caption text-ink-secondary">{t('settings.model.introAfter')}</p>
+        </div>
+      ) : (
+        <div className="fc-pop-enter space-y-6">
+          {probes.map((probe) => (
+            <RuntimeBlock key={probe.runtime} probe={probe} chosen={chosen} onChoose={choose} />
+          ))}
+          <DiskLine probes={probes} />
+        </div>
+      )}
+    </SettingsPage>
   )
 }
 

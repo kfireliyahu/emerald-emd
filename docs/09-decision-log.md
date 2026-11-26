@@ -522,6 +522,7 @@ written out here.
 | D-619 | 2026-11-25 | Reading files is the report: the batch said first in one sentence, Write in the list's own header row, a statement's gap beside the list rather than on a page, a removal undone where it was, a reader's delete asked at its button, the mapper's one way back at its head, and Readers one translated list | M64 |
 | D-621 | 2026-11-25 | Plan is rebuilt as the report: net pay and what the bills take first said as one sentence with whether every shekel has a job, to split its one figure, what waits one strip below it, the split's bar with each bucket held against a month, and the bills one row each with its one choice in place; a bucket, a bill, net pay, the cushion and the plan's months open beside the page | M64 |
 | D-622 | 2026-11-26 | Wealth is rebuilt as the report: net worth, funds, goals and debts each answer in one sentence with one display figure and the kit's display for their shape, what waits one list below, then one table whose rows open beside the page; fee impact, the deposit check, a net worth row and the goals' projection move into the side panel, and a removal asks in the row's own menu where no undo is honest | M64 |
+| D-624 | 2026-11-26 | The way in and around is the report: every Settings page and Assistants answer first in one sentence on a shared frame, Accounts reads as rows that open their form beside the page with a delete asked at its button, Assistants' tools open by group beside it, the front door and a document with no ledger say what to do in words with Open… added, the guide's first step names Read files and leaves its note where it stood, the waiting notice speaks only of what changes the month, and the palette says what it can do offline | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1536,6 +1537,68 @@ has the moved figure per goal but no on-track verdict from it; a question).
 **Where.** `src/ui/screens/{Overview,Funds,Goals,Debts,FeeImpact}.tsx`, `src/ui/savings/Movements.tsx`,
 `src/ui/wealth/{words.ts,rowMenu.tsx,parts.tsx,NetWorthOpened.tsx}`, `src/ui/charts/PlanAgainst.tsx`,
 `src/i18n/{en,he}/wealth.ts`, `docs/redesign/budget.json`.
+
+## D-624 · 2026-11-26 · The way in and around is the report: every Settings page and Assistants answer first in one sentence on a shared frame, Accounts reads as rows that open their form beside the page with a delete asked at its button, Assistants' tools open by group beside it, the front door and a document with no ledger say what to do in words with Open… added, the guide's first step names Read files and leaves its note where it stood, the waiting notice speaks only of what changes the month, and the palette says what it can do offline <a id="d-624"></a>
+
+**Context.** M64 U12: a newcomer's first minute — the front door (`EmptyDocument` in `src/App.tsx`),
+a document that keeps no ledger, the guide, the notices, every Settings page and Assistants, and
+the command palette — after D-616 (Home), D-617 (where interactions open, and the maintainer's
+ordinary-desktop addition) and the four screens rebuilt since (D-618 to D-621). U5's open review
+entry asked for the guide's first step, which still said *Drop statements… here* though Home's drop
+band was gone; D-614 asked for Ctrl+K as *Go to, or ask…*.
+
+**Decision.** Every page under Settings, and Assistants beside them, is drawn by one frame,
+`SettingsPage` (`src/ui/settings/SettingsPage.tsx`): the name as the `h1`, **the page's question
+answered in one sentence at the lede step** (*2 cards and 2 bank accounts.* · *Weeks start on Monday:
+this week is Mon 23 Nov to Sun 29 Nov.* · *This document keeps the ledger.* · *The app's words on this
+computer are in English.* · *14 months and 545 transactions, ready to go out as spreadsheets.* · *No
+model in use.* · *An assistant … reads and writes this document through 86 tools.*), then one
+column of rows, each a label, a line of what it means and its control. No eyebrow; the title row is
+as tall as a button, so the title does not move from page to page.
+
+| Block before | Now | Why |
+|---|---|---|
+| Accounts: a toolbar of four fields to add an account | **moved** to *Add an account*, the page's one primary, a form in the side panel that opens the new account's own | a form of several fields opens beside the page (D-617) |
+| Accounts: every account a row of four fields and two platform selects at rest | **kept** as rows that read — name, card number, institution, what it holds — one table, grouped by kind under a heading; the row opens its form beside the page (Enter too; arrows walk) | an account's several fields are a form; a row is read |
+| Accounts: what a card's payment does in the bank, a select under the row | **kept** in place, a quiet menu on the row under one column heading | one value of one thing changes in place |
+| Accounts: Merge…, Archive, Remove, shown on hover | **moved** to the foot of the account's form; Merge a form of its own in the panel, its preview the confirmation; Archive undone by the same button, which stays; **Delete asks at its button** (`ConfirmAtButton`), since a delete unbinds readers and frees plan buckets and has no undo, and is not offered on an account that holds transactions | ordinary-app delete; nothing hidden until hover |
+| Accounts: the merge panel, a bar at the foot of the screen | **moved** into the side panel | never a bar at the foot (D-617) |
+| Accounts: the settlement and transfer queues above the list | **cut**: Home's waiting list answers both (`SettlementLine`, `TransferLine`), one click away; `answer_transfers` and `set_card_payers` in a conversation | the same queue in two places |
+| Accounts: a card with no number, a red chip only | **kept** the chip, and the card is one line of a `WaitingList` under the answer, *Add its number* opening its form at the field | what waits on the person is one strip below the answer |
+| Assistants: ten tool groups as lists, 1,081 words over five windows | **moved**: one row a group with its count, **each opening its tools beside the page**; the snippets stay, the desktop one folded to its first lines behind *Show it* | a reference list one click behind its heading (U2's inventory) |
+| Language, Calendar, Export, Local model: an eyebrow, a title and a paragraph | **cut** the eyebrow; the paragraph is the answer sentence or the row's hint | D-614 dropped eyebrows; the answer first |
+| Packs: the first pack offered filled, whatever the document keeps | **kept** filled only for a pack to bring up to date, or while the document keeps none; each pack a row with its button at the row's end; *its 1 formats* counted properly | a document keeping the ledger is not told keeping another is its next step |
+| The front door: a centred title, two boxed cards | **kept** as a page of its own: *Make or open a document*, the answer in one sentence, then three rows — *New document* (the one primary), *New ledger*, and **Open…**, which the front door never offered — and Recent as rows that open, with each one's folder | the three ways in, said by what each is for |
+| A document with no ledger: centred English | **kept**, set as every screen's title and answer, its words the catalogue's (it was English in Hebrew) | answer first; a translated screen |
+| The guide's first step: *Drop statements, paychecks and fund reports here*, on Home's band | **kept**, as *Read statements, paychecks and fund reports* at *Home › Read files*: press Read files, or drop the files anywhere in the window | the band left Home (D-616) |
+| The guide's *Put away* note: an inverted bar at the foot of the window | **moved** to where the guide stood, a small note that fades | near where it happened, never at the foot |
+| The guide's forward button, filled on its last step | **never filled**: secondary when the step is done, quiet when it is a skip | the screen under it has its own one primary |
+| The notice *13 answers wait on Home*, on every screen but Home | **kept only for answers that change the month's totals**, said as that (*2 answers on Home change this month's totals until they are given*) | Home's waiting list says the rest a strip below its answer; the bar is for the thing it was made for (D-367) |
+| The palette: *Search every entry, or go to a screen…*; *Import a statement…* | *Go to a place, find an entry, or do something…*; *Read files…* | what it does; one name for reading |
+
+**Ctrl+K's "or ask" is not built, and the palette does not pretend to it.** Answering a question
+needs a model; offline, the app's only one is the local model, which is off by default, desktop-only
+and answers nothing in the palette. An assistant answers through Assistants' tools, in its own
+conversation. So the placeholder names what the palette does — go to, find, do — and asking from
+it is left as a question.
+
+**Why.** The person's first minute asks three things: what do I make, where do I put a file, and
+where is everything. Each page now answers its own question before it offers anything, and every
+interaction does what an ordinary app does: a row opens beside the list, one value changes where it
+is, a form takes the panel, a delete that cannot be undone asks at its button, and nothing is a bar
+at the foot of the window.
+
+**Alternatives rejected.** Delete with Undo on Accounts — a delete unbinds the readers bound to the
+account and frees the plan buckets pointed at it, and putting those back is a new write with no
+conversation half (`deleteAccount`); a confirmation at the button is the honest one. A chevron on
+every read-only `ChoiceField` (the taste check's) — it changes a kit default, M64 F2's to decide.
+*Go to, or ask…* with a row that copies the question for an assistant — it would answer nothing.
+
+**Where.** `src/ui/settings/SettingsPage.tsx`, `src/ui/screens/Accounts.tsx`, `Mcp.tsx`, `Packs.tsx`,
+`Language.tsx`, `Calendar.tsx`, `Export.tsx`, `LocalModel.tsx`, `NoLedger.tsx`, `EmptyDocument` in
+`src/App.tsx`, `src/ui/guide/Guide.tsx`, `src/data/packs/ledger/guide.ts`, `src/ui/Notices.tsx`,
+`src/ui/commands.ts`, the catalogue's `settings`, `chrome`, `guide` and `palette` (en, he),
+`.fc-guide-toast` in `tokens.css`, `docs/redesign/budget.json` (seven routes off `exempt`).
 
 ## Related
 

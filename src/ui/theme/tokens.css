@@ -1752,15 +1752,18 @@ input[type="number"] {
   outline: 1px solid var(--color-accent);
   outline-offset: -6px;
 }
+/* The note a guide put away leaves, where the guide stood (M64 U12, D-624):
+   near where it happened, never a bar at the foot of the window (D-617). It
+   floats, so it takes the one soft shadow; left and top are set where it is. */
 .fc-guide-toast {
   position: fixed;
-  left: 50%;
-  bottom: 16px;
-  transform: translateX(-50%);
   z-index: 45;
-  background: var(--color-ink);
-  color: var(--color-background);
-  padding: 8px 14px;
+  max-width: 344px;
+  background: var(--color-elevated);
+  color: var(--color-ink);
+  border: 1px solid var(--color-hairline-strong);
+  box-shadow: var(--shadow-pop);
+  padding: 8px 16px;
   font-size: var(--text-body);
 }
 @media (prefers-reduced-motion: reduce) {
