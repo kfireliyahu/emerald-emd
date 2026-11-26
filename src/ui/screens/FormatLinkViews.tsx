@@ -17,7 +17,7 @@ import type { ColumnDeclaration } from '@/domain/format/declaration.ts'
 import { FIELD } from '@/ui/components/fieldLook.ts'
 import type { Database } from 'sql.js'
 import type { RowFilter } from '@/data/repositories/formatFilterRepository.ts'
-import { ReadyView, RoadmapView } from '@/ui/formats/LinkViews.tsx'
+import { ReadyView, readyRule, RoadmapView } from '@/ui/formats/LinkViews.tsx'
 import {
   boardPath,
   dashboardBack,
@@ -32,6 +32,9 @@ import {
 import { SavedTab, TAB_LABEL, TAB_OFF, TAB_ON } from '@/ui/formats/SavedTab.tsx'
 import { useSavedViews, useSaving, type Saving } from '@/ui/formats/savedView.ts'
 import { rollupWords } from '@/ui/formats/dashboard.ts'
+import { memberText } from '@/ui/formats/tone.ts'
+import { useT } from '@/i18n/current.ts'
+import { readyAnswer, roadmapAnswer } from '@/ui/formats/viewAnswers.ts'
 
 /**
  * **A format's roadmap, as a screen** — M27 U4, D-302. Read on every revision
@@ -53,6 +56,7 @@ export function FormatRoadmap() {
   const navigate = useNavigate()
   const saving = useSaving(name, 'roadmap')
   const fromDashboard = dashboardBack(useLocation().state)
+  const t = useT()
 
   const data = useMemo(() => {
     if (db === undefined || name === undefined) return undefined
@@ -97,6 +101,8 @@ export function FormatRoadmap() {
       declaration={data.declaration}
       on="roadmap"
       views={data.views}
+      answer={roadmapAnswer(t, data.roadmap)}
+      caption={`In the order of ${memberText(shape.order.name)}`}
       saving={saving}
       // The table is not the milestones' units: the other tabs keep the
       // milestones' filter and let the folds' go.
@@ -163,6 +169,7 @@ export function FormatReady() {
   const saving = useSaving(name, 'ready')
   const navigate = useNavigate()
   const fromDashboard = dashboardBack(useLocation().state)
+  const t = useT()
 
   const data = useMemo(() => {
     if (db === undefined || name === undefined) return undefined
@@ -183,6 +190,8 @@ export function FormatReady() {
       declaration={data.declaration}
       on="ready"
       views={data.views}
+      answer={readyAnswer(t, data.ready)}
+      answerTitle={readyRule(data.ready.shape)}
       saving={saving}
       address={address}
       action={<Filtering db={db} declaration={data.declaration} declarations={data.declarations} filter={filter} set={set} />}
@@ -279,6 +288,9 @@ function Frame({
   declaration,
   on,
   views,
+  answer,
+  answerTitle,
+  caption,
   saving,
   address,
   action,
@@ -286,6 +298,12 @@ function Frame({
 }: {
   declaration: FormatDeclaration
   on: 'roadmap' | 'ready'
+  /** The view's answer to its question, said first (M64 U14, D-626). */
+  answer: string
+  /** What the answer counts by, on its hover: what *ready* means. */
+  answerTitle?: string | undefined
+  /** One line under the answer that keeps its place, as the table's does: the roadmap's order. */
+  caption?: string | undefined
   views: { readonly roadmap: boolean; readonly ready: boolean }
   saving: Saving | undefined
   /** The address's filter, which every other tab carries. */
@@ -312,12 +330,20 @@ function Frame({
   ]
   return (
     <div className="fc-view-enter flex h-full flex-col">
-      <div className="flex shrink-0 flex-wrap items-baseline gap-x-4 gap-y-1 border-b border-hairline px-6 py-2">
-        <h1 className="text-body font-medium">
-          <Bidi>{declaration.title}</Bidi>
-        </h1>
-        {action !== undefined && <span className="ms-auto flex items-center gap-2">{action}</span>}
-      </div>
+      {/* **The answer first** (M64 U14, D-626): the format's title, as on its
+          table, then what the view answers in one sentence at the lede step. */}
+      <header className="flex shrink-0 flex-col gap-1.5 px-6 pt-5 pb-3">
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+          <h1 className="m-0 text-title leading-tight font-medium">
+            <Bidi>{declaration.title}</Bidi>
+          </h1>
+          {action !== undefined && <span className="flex flex-wrap items-center gap-2">{action}</span>}
+        </div>
+        <p className="m-0 text-lede tabular-nums" aria-live="polite" title={answerTitle}>
+          {answer}
+        </p>
+        <p className="m-0 flex min-h-6 items-baseline text-caption text-ink-secondary">{caption}</p>
+      </header>
       <nav aria-label="Views" className="flex h-8 shrink-0 items-stretch gap-4 overflow-x-auto border-b border-hairline px-6">
         {tabs.slice(0, tabs.length - (declaration.rollups ?? []).length).map((tab) => (
           <Tab key={tab.label} {...tab} />

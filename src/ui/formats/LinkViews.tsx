@@ -26,6 +26,8 @@ import { StateChip } from '@/ui/formats/StateChip.tsx'
 import { liveIndex, memberText, toneOf } from '@/ui/formats/tone.ts'
 import { entryPath, FORMATS_PATH } from '@/ui/nav.ts'
 import { changeClass, useChanges, type Change } from '@/ui/useChanges.ts'
+import { useT } from '@/i18n/current.ts'
+import { agendaAnswer } from '@/ui/formats/viewAnswers.ts'
 
 /**
  * **The roadmap** — M27 U4, D-302; drawn as a timeline since M27 U8, D-306.
@@ -101,14 +103,18 @@ export function RoadmapView({
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-[1040px] flex-col px-6 pt-8 pb-24">
-        <header className="flex flex-wrap items-end justify-between gap-6 border-b border-hairline pb-6">
+      <div className={`flex w-full max-w-[1040px] flex-col px-6 pb-24 ${titled ? 'pt-8' : 'pt-2'}`}>
+        <header className={`flex flex-wrap items-end justify-between gap-6 border-b border-hairline ${titled ? 'pb-6' : 'pb-3'}`}>
           <div className="flex flex-col gap-2">
-            <div className="fc-label">
-              <Bidi>{data.rows[0]?.line.format.title ?? ''}</Bidi> · in the order of {memberText(shape.order.name)}
-            </div>
+            {/* Under a format's tab strip the order is the frame's caption (M64 U14). */}
+            {titled && (
+              <div className="fc-label">
+                <Bidi>{data.rows[0]?.line.format.title ?? ''}</Bidi> · in the order of {memberText(shape.order.name)}
+              </div>
+            )}
             {titled && <h1 className="text-title">Roadmap</h1>}
-            <Counts data={data} />
+            {/* Under a format's tab strip the counts are the screen's answer, said above it (M64 U14, D-626). */}
+            {titled && <Counts data={data} />}
           </div>
           <div className="flex flex-wrap items-center gap-3">
             {onOrder !== undefined && orders.length > 1 && (
@@ -134,16 +140,16 @@ export function RoadmapView({
               />
             )}
             {data.rows.length > 0 && (
-              <Button variant="secondary" size="sm" onClick={() => setAll(!allOpen)}>
+              <button type="button" className="fc-text-action text-caption" onClick={() => setAll(!allOpen)}>
                 {allOpen ? 'Fold all' : 'Unfold all'}
-              </Button>
+              </button>
             )}
           </div>
         </header>
         {data.rows.length === 0 ? (
           <p className="pt-6 text-ink-secondary">Nothing here yet.</p>
         ) : (
-          <ol className="pt-6" aria-label="Roadmap">
+          <ol className={titled ? 'pt-6' : 'pt-3'} aria-label="Roadmap">
             {data.rows.map(({ line, folds }, index) => {
               const key = keys[index] ?? ''
               const open = isOpen(line, key)
@@ -217,7 +223,7 @@ export function RoadmapView({
         )}
         {data.loose.length > 0 && (
           <section className="mt-6 border-t border-hairline pt-4" aria-label="Under none">
-            <h3 className="fc-label pb-2">Under none of these</h3>
+            <h2 className="fc-label m-0 pb-2">Under none of these</h2>
             <FoldGroups folds={data.loose} labels={labels} changes={changes} columns={columns} />
           </section>
         )}
@@ -451,8 +457,8 @@ export function ReadyView({
   const own = named === undefined ? undefined : columns[named]
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-8 px-6 pt-8 pb-24">
-        <header className="flex flex-col gap-2 border-b border-hairline pb-6">
+      <div className={`flex w-full max-w-[1040px] flex-col gap-8 px-6 pb-24 ${titled ? 'pt-8' : 'pt-4'}`}>
+        <header className={`flex flex-col gap-2 border-b border-hairline ${titled ? 'pb-6' : 'pb-3'}`}>
           <div className="flex flex-wrap items-end justify-between gap-6">
             {titled && <h1 className="text-title">Ready to start</h1>}
             {choosing !== undefined && (
@@ -463,14 +469,18 @@ export function ReadyView({
               />
             )}
           </div>
-          <p className="text-ink-secondary">
-            <code>{shape.state.name}</code> is {shape.members.ready.map(memberText).join(' or ')}, and nothing in{' '}
-            <code>{shape.waits.name}</code> is still open — open being anything but{' '}
-            {shape.members.done.map(memberText).join(' or ')}.
-          </p>
+          {/* What *ready* means, the words that name the rule. Under a format's
+              tab strip it is the answer's own hover, said above (M64 U14). */}
+          {titled && (
+            <p className="text-ink-secondary">
+              <code>{shape.state.name}</code> is {shape.members.ready.map(memberText).join(' or ')}, and nothing in{' '}
+              <code>{shape.waits.name}</code> is still open — open being anything but{' '}
+              {shape.members.done.map(memberText).join(' or ')}.
+            </p>
+          )}
         </header>
         <section aria-label="Ready to start">
-          <h3 className="fc-label pb-2">Ready to start · {data.ready.length}</h3>
+          <h2 className="fc-label m-0 pb-2">Ready to start · {data.ready.length}</h2>
           {data.ready.length === 0 ? (
             <p className="border-t border-hairline py-2.5 text-caption text-ink-secondary">Nothing</p>
           ) : (
@@ -500,7 +510,7 @@ export function ReadyView({
         </section>
         {data.held.length > 0 && (
           <section aria-label="Held">
-            <h3 className="fc-label pb-2">Held · {data.held.length}</h3>
+            <h2 className="fc-label m-0 pb-2">Held · {data.held.length}</h2>
             <ul>
               {uniqueKeys(data.held.map(({ line }) => line)).map((key, index) => {
                 const held = data.held[index]
@@ -532,6 +542,11 @@ export function ReadyView({
   )
 }
 
+/** *state is planned, and nothing in blocks is still open — open being anything but built or dropped.*, as plain text. */
+export function readyRule(shape: ReadyData['shape']): string {
+  return `${shape.state.name} is ${shape.members.ready.map(memberText).join(' or ')}, and nothing in ${shape.waits.name} is still open — open being anything but ${shape.members.done.map(memberText).join(' or ')}.`
+}
+
 /**
  * **The agenda** — M49 U3, D-473: every dated format's rows on one list of
  * days, today first, and above today what a format says it still owes.
@@ -548,6 +563,8 @@ export function AgendaView({
   onDate,
   window,
   onAll,
+  action,
+  band,
 }: {
   data: AgendaData
   /** Put a format on the agenda by another of its dates — the agenda's *by*, what `arrange_views` writes. */
@@ -556,7 +573,12 @@ export function AgendaView({
   window?: string | undefined
   /** Let the window go, so every day ahead is drawn. */
   onAll?: () => void
+  /** The screen's own controls, at the end of the title's row (M64 U14). */
+  action?: ReactNode
+  /** What a filter holds back, under the answer. */
+  band?: ReactNode
 }) {
+  const t = useT()
   const { labels } = data
   const empty = data.overdue.length === 0 && data.days.length === 0
   // **The words name the window** (M54 F3, *Words name the rule*): the subtitle and the empty line alike.
@@ -565,16 +587,22 @@ export function AgendaView({
   const choosable = onDate !== undefined && data.formats.some(({ declaration }) => declaration.columns.filter((column) => column.type === 'date').length > 1)
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
-      <div className="mx-auto flex w-full max-w-[1040px] flex-col gap-8 px-6 pt-8 pb-24">
-        <header className="flex flex-col gap-2 border-b border-hairline pb-6">
-          <div className="fc-label">{dayText(data.today)}</div>
-          <h1 className="text-title">Agenda</h1>
-          <p className="text-ink-secondary">
-            {data.formats.length === 0 ? (
-              'No format here is on the agenda.'
-            ) : (
+      <div className="flex w-full max-w-[1040px] flex-col gap-8 px-6 pt-5 pb-24">
+        {/* **The answer first** (M64 U14, D-626): what is late and what is
+            coming, in one sentence at the lede step under the title; the day
+            and which dates put each format here, a caption under it. */}
+        <header className="flex flex-col gap-1.5 border-b border-hairline pb-3">
+          <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+            <h1 className="m-0 text-title leading-tight font-medium">{t('rail.agenda')}</h1>
+            {action}
+          </div>
+          <p className="m-0 text-lede tabular-nums" aria-live="polite">
+            {agendaAnswer(t, data, ahead)}
+          </p>
+          {data.formats.length > 0 && (
+          <p className="m-0 text-caption text-ink-secondary">
               <>
-                {capitalize(ahead)} —{' '}
+                {dayText(data.today)} · {capitalize(ahead)} —{' '}
                 {many
                   ? `${String(data.formats.length)} formats, each by a date of its own`
                   : data.formats.map(({ declaration, shape }, at) => (
@@ -585,8 +613,8 @@ export function AgendaView({
                     ))}
                 {data.formats.some((each) => each.shape.done !== undefined) && ', and what is overdue above it'}.
               </>
-            )}
           </p>
+          )}
           {/* **Which date puts a format here, folded away** (M54 F3): thirteen
               fields in a sentence pushed the agenda off its own screen. */}
           {(many || choosable) && (
@@ -611,10 +639,11 @@ export function AgendaView({
             </p>
           )}
         </header>
-        {/* *An empty state is one sentence* and one text action (M54 F3). */}
+        {band}
+        {/* *An empty state is one sentence* and one text action (M54 F3): the
+            sentence is the answer above, so here only its action. */}
         {empty && (
           <p className="text-ink-secondary">
-            {data.formats.length === 0 ? 'No format here has a date to put it on the agenda.' : `Nothing ${ahead}.`}{' '}
             {window !== undefined && onAll !== undefined && data.formats.length > 0 ? (
               <button
                 type="button"
@@ -632,7 +661,7 @@ export function AgendaView({
         )}
         {data.overdue.length > 0 && (
           <section aria-label="Overdue">
-            <h3 className="fc-label pb-2">Overdue · {data.overdue.length}</h3>
+            <h2 className="fc-label m-0 pb-2">Overdue · {data.overdue.length}</h2>
             <ul>
               {uniqueKeys(data.overdue).map((key, index) => {
                 const line = data.overdue[index]
@@ -646,9 +675,9 @@ export function AgendaView({
           const said = near === 'today' || near === 'tomorrow' ? `${near === 'today' ? 'Today' : 'Tomorrow'} · ${dayText(day.date)}` : `${dayText(day.date)}${near === undefined ? '' : ` · ${near}`}`
           return (
             <section key={day.date} aria-label={dayText(day.date)} data-day={day.date}>
-              <h3 className={`fc-label pb-2 ${day.date === data.today ? 'text-ink' : ''}`}>
+              <h2 className={`fc-label m-0 pb-2 ${day.date === data.today ? 'text-ink' : ''}`}>
                 {said} · {day.rows.length}
-              </h3>
+              </h2>
               <ul>
                 {uniqueKeys(day.rows).map((key, index) => {
                   const line = day.rows[index]

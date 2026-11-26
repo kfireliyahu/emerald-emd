@@ -33,6 +33,8 @@ import { wealth as heWealth } from './he/wealth.ts'
 
 import { formats as enFormats } from './en/formats.ts'
 import { formats as heFormats } from './he/formats.ts'
+import { views as enViews } from './en/views.ts'
+import { views as heViews } from './he/views.ts'
 import type { Language } from './language.ts'
 
 /**
@@ -76,6 +78,9 @@ export const ENGLISH = {
 
   // M64 U13 (D-625): the engine's formats list, a format's table and its entry.
   formats: enFormats,
+
+  // M64 U14 (D-626): the engine's views, the agenda, the dashboards and the connections.
+  views: enViews,
 } as const
 
 export type English = typeof ENGLISH
@@ -110,6 +115,7 @@ export const HEBREW: { readonly [A in Area]?: Translation<A> } = {
   wealth: heWealth,
 
   formats: heFormats,
+  views: heViews,
 }
 
 const CATALOGUES: Readonly<Record<Language, unknown>> = { en: ENGLISH, he: HEBREW }

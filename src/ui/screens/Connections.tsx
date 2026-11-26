@@ -31,7 +31,10 @@ import { ChoiceField } from '@/ui/components/ChoiceField.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
 import { ConnectionGraph } from '@/ui/formats/ConnectionGraph.tsx'
 import { ConnectionPanel } from '@/ui/formats/ConnectionPanel.tsx'
-import { FORMATS_PATH, formatPath } from '@/ui/nav.ts'
+import { FORMATS_PATH } from '@/ui/nav.ts'
+import { SidePanel } from '@/ui/components/SidePanel.tsx'
+import { countKey } from '@/i18n/count.ts'
+import { useT, type Translate } from '@/i18n/current.ts'
 
 /**
  * **Connections — the graph across formats.** M20 U5,
@@ -85,6 +88,7 @@ export function Connections() {
   /** The format a search went to: its pack opened, and the view brought to it. */
   const [found, setFound] = useState<{ readonly name: string; readonly at: number } | undefined>(undefined)
   const [query, setQuery] = useState('')
+  const t = useT()
 
   const data = useMemo(() => {
     if (db === undefined) return undefined
@@ -171,18 +175,16 @@ export function Connections() {
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex shrink-0 flex-wrap items-baseline gap-x-6 gap-y-1 border-b border-hairline px-6 py-2">
-        {/* The screen names itself with one h1 on the title step, as every screen does (M54 F3). */}
-        <h1 className="m-0 text-title">Connections</h1>
-        <span className="text-ink-secondary tabular-nums">
-          {data.edges.length === 1 ? '1 connection' : `${data.edges.length} connections`}
-        </span>
-        <span className="max-w-prose text-caption text-ink-secondary">
-          Drag <em>{NEW_LINK_WORDS}</em> from one format onto another — or press one and then the
-          other. Nothing is written until you say so.
-        </span>
-        <span className="ms-auto flex items-baseline gap-3 text-caption">
+    <div className="flex h-full">
+    <div className="fc-view-enter flex min-w-0 flex-1 flex-col">
+      {/* **The answer first** (M64 U14, D-626): how many formats and how many
+          connections between them, at the lede step under the title; how to
+          make one is a caption, and the find and the pack folds sit at the end
+          of the title's row. */}
+      <header className="flex shrink-0 flex-col gap-1.5 border-b border-hairline px-6 pt-5 pb-3">
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+        <h1 className="m-0 text-title leading-tight font-medium">{t('rail.connections')}</h1>
+        <span className="flex items-baseline gap-3 text-caption">
           <FindFormat
             declarations={data.declarations}
             query={query}
@@ -216,7 +218,14 @@ export function Connections() {
             </button>
           )}
         </span>
-      </div>
+        </div>
+        <p className="m-0 text-lede tabular-nums" aria-live="polite">
+          {connectionsAnswer(t, data.declarations.length, data.edges.length)}
+        </p>
+        <p className="m-0 text-caption text-ink-secondary" title={`Drag ${NEW_LINK_WORDS} from one format onto another, or press one and then the other. Nothing is written until you say so.`}>
+          {t('views.connections.how')}
+        </p>
+      </header>
 
       <div className="flex min-h-0 flex-1">
         <div className="min-h-0 min-w-0 flex-1">
@@ -267,6 +276,7 @@ export function Connections() {
                 <li key={keyOf(edge)}>
                   <button
                     type="button"
+                    title={said.under}
                     onClick={() => {
                       setArmed(undefined)
                       setOpen({ proposal: proposalOf(edge), existing: edge })
@@ -276,34 +286,25 @@ export function Connections() {
                     <span className={edge.dangling ? 'text-negative' : 'text-ink'}>
                       <Bidi>{said.says}</Bidi>
                     </span>
-                    <span className="block text-ink-secondary">
-                      <Bidi>{said.under}</Bidi>
-                    </span>
+                    {/* Which column it is, on the row's hover (M64 U14): the sentence already names it. */}
                   </button>
                 </li>
                 )
               })}
             </ul>
           )}
-
-          <p className="mt-4 text-caption text-ink-secondary">
-            A connection is a column on one format, or a total on the other — nothing else. Read
-            one back in{' '}
-            <Link to={FORMATS_PATH} className="text-accent">
-              Formats
-            </Link>
-            , or open{' '}
-            {data.declarations.slice(0, 1).map((each) => (
-              <Link key={each.name} to={formatPath(each.name)} className="text-accent">
-                its rows
-              </Link>
-            ))}
-            .
-          </p>
         </aside>
       </div>
+    </div>
 
+      {/* **Making or changing a connection is a form beside the graph** (M64
+          U14, D-626, after D-617): the side panel, never a band across the foot
+          of the screen; its delete asks there, where its Delete was pressed. */}
       {open !== undefined && (
+        <SidePanel
+          title={t(open.existing === undefined ? 'views.connections.panelNew' : 'views.connections.panel')}
+          onClose={() => setOpen(undefined)}
+        >
         <ConnectionPanel
           key={keyFor(open)}
           proposal={open.proposal}
@@ -344,9 +345,18 @@ export function Connections() {
             )
           }}
         />
+        </SidePanel>
       )}
     </div>
   )
+}
+
+/** *6 formats, and 5 connections between them.* — the screen's answer (M64 U14, D-626). */
+function connectionsAnswer(t: Translate, formats: number, edges: number): string {
+  const counted = t(countKey('views.connections.formats', formats), { count: formats })
+  return edges === 0
+    ? t('views.connections.none', { formats: counted })
+    : t(countKey('views.connections.answer', edges), { count: edges, formats: counted })
 }
 
 /** What the panel is open on: a gesture's proposal, and the edge it came from. */

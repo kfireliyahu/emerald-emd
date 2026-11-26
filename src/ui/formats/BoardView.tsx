@@ -1,9 +1,10 @@
-import { useContext, useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 
 import type { ColumnDeclaration, FormatDeclaration } from '@/domain/format/declaration.ts'
 import { readValue, type StoredRow } from '@/domain/format/row.ts'
 import { entryLabel, lanesOf, type BoardShape } from '@/domain/format/view.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { ChoiceField } from '@/ui/components/ChoiceField.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
 import { cellText } from '@/ui/formats/EntryView.tsx'
@@ -14,6 +15,16 @@ import { cardChoosable, chosenCards } from '@/ui/formats/lineColumns.ts'
 import { memberText, toneOf } from '@/ui/formats/tone.ts'
 import { Flip } from '@/ui/motion/Flip.tsx'
 import { arrowStep } from '@/ui/direction.ts'
+import { useT, type Translate } from '@/i18n/current.ts'
+import { boardAnswer } from '@/ui/formats/viewAnswers.ts'
+
+/** A card just moved, kept for its Undo: what it is called, and the lane it left. */
+interface Moved {
+  readonly key: string
+  readonly name: string
+  readonly from: string
+  readonly to: string
+}
 
 /**
  * **A board** — M27 U3, D-301.
@@ -75,7 +86,9 @@ export function BoardView({
   columns?: ColumnChoice
   onColumns?: ((next: ColumnChoice) => void) | undefined
 }) {
+  const t = useT()
   const cards = format === undefined ? board.cards : chosenCards(format, board, columns[format.name])
+  const [moved, setMoved] = useState<Moved | undefined>(undefined)
   const conversation = useContext(Conversation)
   const selection = format === undefined ? undefined : conversation.selection
   const [dragging, setDragging] = useState<string | undefined>(undefined)
@@ -89,13 +102,44 @@ export function BoardView({
     setDragging(undefined)
     setOver(undefined)
     if (row === undefined || member === undefined || memberOf(board.lanes, row) === member) return
-    onMove(row, member)
+    moveCard(row, member)
   }
 
   // Keyed by what a card is called, never its id: a text document renews ids
   // on every write (D-247), and a card keyed by one would land again each save.
   const keys = uniqueCardKeys(rows.map((row) => (board.name === undefined ? row.id : cardText(board.name, row, labels))))
   const keyOf = new Map(rows.map((row, index) => [row.id, keys[index] ?? row.id]))
+  /**
+   * **A move is made at once, with an Undo beside it** (M64 U14, D-626, after
+   * D-617): *Moved M2 U3 to built · Undo* stands in the bar above the lanes,
+   * where it never pushes a card under the pointer, and Undo (Ctrl+Z too) moves
+   * the card back by the same write. A refused move says why in the same place.
+   */
+  const moveCard = (row: StoredRow, member: string): void => {
+    const from = memberOf(board.lanes, row)
+    const key = keyOf.get(row.id) ?? row.id
+    onMove(row, member)
+    setMoved(from === undefined ? undefined : { key, name: board.name === undefined ? row.id : cardText(board.name, row, labels), from, to: member })
+  }
+  const undoMove = (): void => {
+    if (moved === undefined) return
+    // Found again by what it is called: a text document renews ids on every write (D-247).
+    const row = rows.find((each) => (keyOf.get(each.id) ?? each.id) === moved.key)
+    setMoved(undefined)
+    if (row !== undefined) onMove(row, moved.from)
+  }
+  useEffect(() => {
+    if (moved === undefined) return
+    const onKey = (event: KeyboardEvent): void => {
+      if (event.defaultPrevented || !(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'z' || event.shiftKey) return
+      const target = event.target as HTMLElement | null
+      if (target !== null && (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName))) return
+      event.preventDefault()
+      undoMove()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
   const step = (row: StoredRow, by: -1 | 1): string | undefined => {
     const at = members.indexOf(memberOf(board.lanes, row) ?? '')
     const next = members[at === -1 ? 0 : at + by]
@@ -129,20 +173,28 @@ export function BoardView({
             Showing {String(rows.length)} of {String(capped)}; search narrows it.
           </span>
         )}
-        {movable && (
-          <span className="ms-auto">Move a card to change its state. The move is a write, and a session can make it too.</span>
+        {refusal !== undefined ? (
+          <span className="text-negative" role="status">
+            <span className="font-medium">{t('views.board.notMoved')}</span> <Bidi>{refusal}</Bidi>
+          </span>
+        ) : (
+          moved !== undefined && (
+            <span className="inline-flex items-baseline gap-3" role="status">
+              <span className="text-ink">
+                <Phrase text={t('views.board.moved')} parts={{ name: <Bidi>{moved.name}</Bidi>, member: <Bidi>{memberText(moved.to)}</Bidi> }} />
+              </span>
+              <button type="button" className="fc-text-action" onClick={undoMove} title={t('views.undoHint')}>
+                {t('views.undo')}
+              </button>
+            </span>
+          )
         )}
         {format !== undefined && onColumns !== undefined && (
-          <span className={movable ? '' : 'ms-auto'}>
+          <span className="ms-auto">
             <ColumnsChoice formats={[cardChoosable(format, board)]} chosen={columns} onChange={onColumns} />
           </span>
         )}
       </div>
-      {refusal !== undefined && (
-        <p className="fc-pop-enter shrink-0 border-b border-hairline px-6 py-2 text-caption text-negative" role="status">
-          <span className="font-medium">Not moved.</span> <Bidi>{refusal}</Bidi>
-        </p>
-      )}
       <Flip
         as="div"
         className="flex min-h-0 flex-1 gap-4 overflow-x-auto px-6 py-6"
@@ -221,8 +273,8 @@ export function BoardView({
                             </span>
                             {movable && (
                               <span className="relative z-10 ms-auto flex gap-1">
-                                <MoveButton side="left" name={name} to={step(row, -1)} onMove={(member) => onMove(row, member)} />
-                                <MoveButton side="right" name={name} to={step(row, 1)} onMove={(member) => onMove(row, member)} />
+                                <MoveButton side="left" name={name} to={step(row, -1)} onMove={(member) => moveCard(row, member)} />
+                                <MoveButton side="right" name={name} to={step(row, 1)} onMove={(member) => moveCard(row, member)} />
                               </span>
                             )}
                           </div>
@@ -242,7 +294,7 @@ export function BoardView({
                               const next = step(row, arrowStep(event.key) === 1 ? 1 : -1)
                               if (next === undefined) return
                               event.preventDefault()
-                              onMove(row, next)
+                              moveCard(row, next)
                             }}
                           >
                             <Bidi>{titleText === '' ? name : titleText}</Bidi>
@@ -327,4 +379,9 @@ export function cardText(column: ColumnDeclaration, row: StoredRow, labels: Read
   if (column.type === 'link' && typeof value === 'string') return labels.get(value) ?? value
   if (Array.isArray(value)) return value.map((id: string) => labels.get(id) ?? id).join(', ')
   return cellText(value)
+}
+
+/** **Where each thing stands**, the board's answer (M64 U14, D-626): how many cards in each lane. */
+export function boardAnswerOf(t: Translate, board: BoardShape<ColumnDeclaration>, rows: readonly StoredRow[]): string {
+  return boardAnswer(t, lanesOf(board.lanes.values, rows, (row) => memberOf(board.lanes, row)))
 }
