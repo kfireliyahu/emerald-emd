@@ -9,6 +9,7 @@ import { listCategories } from '@/data/repositories/categoryRepository.ts'
 import {
   createRule,
   deleteRule,
+  type DeletedRule,
   reorderRules,
   setRuleEnabled,
   updateRule,
@@ -66,8 +67,9 @@ const UNDO_MS = 8000
  * panel, since they are the app's and rarely edited; the whole test box (an
  * amount, a provider category, an account) and re-applying to rows already
  * read are the panel's too. **Deleting deletes at once**, and Undo stays where
- * the rule was for a few seconds (Ctrl+Z too): a deleted rule comes back at
- * its place in the order, its count starting over.
+ * the rule was for a few seconds (Ctrl+Z too): a deleted rule comes back
+ * whole — its id, its place in the order, its count and the rows it had filed
+ * (M64 F5, D-628).
  *
  * Built-ins behave differently in three ways that follow from their not being
  * the person's rows (D-046): they cannot be reordered or deleted, and editing
@@ -90,6 +92,8 @@ export function Rules() {
   )
   const [search, setSearch] = useState('')
   const [deleted, setDeleted] = useState<CategoryRule | undefined>()
+  // What the delete took, for its Undo: kept beside the note, never drawn.
+  const taken = useRef<DeletedRule | undefined>(undefined)
   const [menu, setMenu] = useState<{ readonly rule: CategoryRule; readonly at: { readonly x: number; readonly y: number } } | undefined>()
   const [dragging, setDragging] = useState<string | undefined>()
   const [over, setOver] = useState<string | undefined>()
@@ -191,30 +195,18 @@ export function Rules() {
   const remove = (rule: CategoryRule): void => {
     if (rule.origin === 'BUILT_IN') return
     if (panel?.kind === 'edit' && panel.rule.id === rule.id) setPanel(undefined)
-    mutate((database) => deleteRule(database, rule.id, Date.now()))
+    mutate((database) => {
+      taken.current = deleteRule(database, rule.id, Date.now())
+    })
     setDeleted(rule)
   }
-  /** Puts it back where it was in the order; what it filed before keeps its category either way. */
+  /** Puts it back whole (M64 F5, D-628): its id, its place in the order, its count, and the rows it had filed. */
   const undo = (): void => {
-    if (deleted === undefined) return
-    const back = deleted
+    const back = taken.current
+    if (deleted === undefined || back === undefined) return
     setDeleted(undefined)
-    mutate((database) =>
-      createRule(
-        database,
-        {
-          name: back.name,
-          kind: back.kind,
-          pattern: back.pattern,
-          targetCategoryId: back.targetCategoryId,
-          origin: back.origin,
-          conditions: back.conditions,
-          priority: back.priority,
-          isEnabled: back.isEnabled,
-        },
-        Date.now(),
-      ),
-    )
+    taken.current = undefined
+    mutate((database) => createRule(database, back, Date.now()))
   }
   undoRef.current = deleted === undefined ? undefined : undo
 

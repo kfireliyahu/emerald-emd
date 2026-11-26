@@ -92,6 +92,13 @@ const REVIEWED = [
   'src/ui/home/parts.tsx',
   // M54 F13: the ledger's read screen (D-532 lets this one fix unit touch it).
   'src/ui/screens/ReadStatements.tsx',
+  // M64 F6: Rules and Categories' forms choose with ChoiceField.
+  'src/ui/screens/Categories.tsx',
+  'src/ui/screens/Rules.tsx',
+  'src/ui/rules/RuleEditor.tsx',
+  'src/ui/rules/TestBox.tsx',
+  'src/ui/rules/ReapplyPanel.tsx',
+  'src/ui/rules/PickField.tsx',
 ]
 
 /**

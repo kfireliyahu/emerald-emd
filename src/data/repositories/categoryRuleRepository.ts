@@ -29,7 +29,7 @@ import { inTransaction, query } from '../db/database.ts'
 import { allDeclared, declared, instantOf, millisOf } from '../packs/ledger/tables.ts'
 import { BUILT_IN_RULES } from '../reference/rulepacks/index.ts'
 import { forgetRules } from './categoryRepository.ts'
-import { deleteRows, insertRows, updateRow } from './formatRowRepository.ts'
+import { deleteRows, insertRows, restoreRows, takeRows, type TakenRows, updateRow } from './formatRowRepository.ts'
 
 export interface NewRule {
   readonly name: string
@@ -91,8 +91,20 @@ export function findRule(db: Database, id: string): CategoryRule | undefined {
  * repeatedly (F03): each new rule is more specific than the broad ones above it
  * or it is shadowed by them, and either way nothing the user already arranged
  * moves underneath them.
+ *
+ * **Handed what `deleteRule` took, it makes that rule again, whole** (M64 F5,
+ * D-628): its id, its place in the order, its hit count and last match, and the
+ * rows it had filed naming it again — the Undo of a delete, which is a create
+ * of what was there rather than a write of its own.
  */
-export function createRule(db: Database, input: NewRule, now: number): CategoryRule {
+export function createRule(db: Database, input: NewRule | DeletedRule, now: number): CategoryRule {
+  if ('deleted' in input) {
+    restoreRows(db, declared(db, 'category_rule'), input.deleted, allDeclared(db))
+    const back = input.deleted.rows[0]?.id
+    const rule = back === undefined ? undefined : findRule(db, back)
+    if (rule === undefined) throw new Error('the deleted rule did not come back')
+    return rule
+  }
   const origin = input.origin ?? 'USER'
   const id = newId()
   const conditions = input.conditions ?? {}
@@ -158,11 +170,21 @@ export function setRuleEnabled(db: Database, id: string, isEnabled: boolean, _no
  * Removed, not soft-deleted, since M25 U2 (D-266) — through the engine, so a
  * built-in taken away is recorded removed and no later build brings it back.
  */
-export function deleteRule(db: Database, id: string, _now: number): void {
-  inTransaction(db, () => {
+export function deleteRule(db: Database, id: string, _now: number): DeletedRule {
+  return inTransaction(db, () => {
+    const formats = allDeclared(db)
+    const rules = declared(db, 'category_rule')
+    // Read before `forgetRules` clears the rows that name it, so Undo can name it again.
+    const deleted = takeRows(db, rules, [id], formats)
     forgetRules(db, [id])
-    deleteRows(db, declared(db, 'category_rule'), [id], allDeclared(db))
+    deleteRows(db, rules, [id], formats)
+    return { deleted }
   })
+}
+
+/** What `deleteRule` took away; `createRule` given it puts the rule back whole (M64 F5, D-628). */
+export interface DeletedRule {
+  readonly deleted: TakenRows
 }
 
 /**

@@ -806,6 +806,124 @@ export function deleteRows(
   })
 }
 
+/** A link another row had to a row being taken away: which row, through which column. */
+export interface TakenLink {
+  readonly format: string
+  readonly column: string
+  readonly row: string
+  readonly target: string
+}
+
+/**
+ * **What a delete takes away, kept so an Undo can put it back whole** (M64 F5,
+ * D-628): each row as the table has it, under its own id; the names of those a
+ * pack seeded, so the pack's record names them again; and every link another
+ * row had to one of them — a caller usually clears those before `deleteRows`
+ * would refuse, which is why they are read first.
+ */
+export interface TakenRows {
+  readonly rows: readonly StoredRow[]
+  readonly seeded: readonly string[]
+  readonly links: readonly TakenLink[]
+}
+
+/**
+ * Read what removing these rows will take, before anything is removed. Reads
+ * only. A `links` list is not followed: `deleteRows` refuses while one names a
+ * row, so nothing a caller cleared on the way is in one.
+ */
+export function takeRows(
+  db: Database,
+  declaration: FormatDeclaration,
+  ids: readonly string[],
+  /** Every format in the document; the ones whose links name these rows. */
+  formats: Iterable<FormatDeclaration>,
+): TakenRows {
+  const rows = ids.flatMap((id) => {
+    const row = readRow(db, declaration, id)
+    return row === undefined ? [] : [row]
+  })
+
+  const naming = labelColumn(declaration)
+  const seededKeys = new Set(
+    query(db, `SELECT seed_key FROM format_seed WHERE format_name = ? AND state = 'SEEDED'`, [
+      declaration.name,
+    ]).map((row) => String(row['seed_key'])),
+  )
+  const seeded = rows.flatMap((row) => {
+    const name = naming === undefined ? undefined : row.cells[naming.name]
+    return typeof name === 'string' && seededKeys.has(name) ? [name] : []
+  })
+
+  const going = new Set(ids)
+  const links: TakenLink[] = []
+  for (const format of formats) {
+    for (const column of format.columns) {
+      if (!isLinkType(column.type) || column.type === 'links' || column.target !== declaration.name) continue
+      for (let start = 0; start < ids.length; start += LINK_CHUNK) {
+        const chunk = ids.slice(start, start + LINK_CHUNK)
+        const linking = query(
+          db,
+          `SELECT ${quoteIdentifier(ROW_ID_COLUMN)} AS id, ${quoteIdentifier(column.name)} AS target ` +
+            `FROM ${quoteIdentifier(tableNameFor(format))} WHERE ${quoteIdentifier(column.name)} IN ` +
+            `(${chunk.map(() => '?').join(', ')})`,
+          chunk,
+        )
+        for (const row of linking) {
+          const id = String(row['id'])
+          if (format.name === declaration.name && going.has(id)) continue
+          links.push({ format: format.name, column: column.name, row: id, target: String(row['target']) })
+        }
+      }
+    }
+  }
+  return { rows, seeded, links }
+}
+
+/**
+ * **Put back what `takeRows` read** (M64 F5, D-628) — the Undo of a delete,
+ * never a way to make a row: each row under its own id with every cell it had,
+ * the pack's record of the seeded ones back to seeded, and each link a row had
+ * to one of them, where that row is still there and has not been linked
+ * elsewhere since. A row that is already back is left alone, so a second Undo
+ * changes nothing. Returns the ids put back.
+ */
+export function restoreRows(
+  db: Database,
+  declaration: FormatDeclaration,
+  taken: TakenRows,
+  formats: Iterable<FormatDeclaration>,
+): readonly string[] {
+  const byName = new Map([...formats].map((format) => [format.name, format]))
+  return inTransaction(db, () => {
+    const back = taken.rows.filter((row) => readRow(db, declaration, row.id) === undefined)
+    if (back.length === 0) return []
+    insertRows(
+      db,
+      declaration,
+      back.map((row) => row.cells),
+      back.map((row) => row.id),
+    )
+    for (const key of taken.seeded) {
+      db.run(
+        `UPDATE format_seed SET state = 'SEEDED' WHERE format_name = ? AND seed_key = ? AND state = 'REMOVED'`,
+        [declaration.name, key],
+      )
+    }
+    const returned = new Set(back.map((row) => row.id))
+    for (const link of taken.links) {
+      const format = byName.get(link.format)
+      if (format === undefined || !returned.has(link.target)) continue
+      db.run(
+        `UPDATE ${quoteIdentifier(tableNameFor(format))} SET ${quoteIdentifier(link.column)} = ? ` +
+          `WHERE ${quoteIdentifier(ROW_ID_COLUMN)} = ? AND ${quoteIdentifier(link.column)} IS NULL`,
+        [link.target, link.row],
+      )
+    }
+    return back.map((row) => row.id)
+  })
+}
+
 /**
  * **A seeded row a person touches is theirs from then on** (M24 U12, D-264).
  *

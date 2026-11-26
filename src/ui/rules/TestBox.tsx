@@ -9,7 +9,8 @@ import type { CategoryRule, RuleSubject } from '@/domain/model/rules.ts'
 import { useT } from '@/i18n/current.ts'
 import { pathArrows } from '@/i18n/words.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
-import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
+import { FIELD } from '@/ui/components/fieldLook.ts'
+import { MENU_MOST, PickField } from '@/ui/rules/PickField.tsx'
 import { Phrase } from '@/ui/components/Phrase.tsx'
 import { CURRENCY_CHOICES, accountLabel } from '@/ui/rules/ruleText.ts'
 import { Why } from '@/ui/rules/Why.tsx'
@@ -96,18 +97,12 @@ export function TestBox({
           aria-label={t('rules.test.amountLabel')}
           className={`${FIELD} w-28 tabular-nums`}
         />
-        <select
+        <PickField
           value={currency}
-          onChange={(event) => setCurrency(event.target.value)}
+          choices={CURRENCY_CHOICES.map((code) => ({ value: code, label: code }))}
+          onChange={setCurrency}
           aria-label={t('rules.test.currency')}
-          className={SELECT}
-        >
-          {CURRENCY_CHOICES.map((code) => (
-            <option key={code} value={code}>
-              {code}
-            </option>
-          ))}
-        </select>
+        />
       </div>
 
       <input
@@ -120,18 +115,13 @@ export function TestBox({
       />
 
       {accounts.length > 0 && (
-        <select
+        <PickField
           value={accountId}
-          onChange={(event) => setAccountId(event.target.value)}
+          choices={accounts.map((account) => ({ value: account.id, label: accountLabel(account) }))}
+          filter={accounts.length > MENU_MOST}
+          onChange={setAccountId}
           aria-label={t('rules.test.account')}
-          className={SELECT}
-        >
-          {accounts.map((account) => (
-            <option key={account.id} value={account.id}>
-              {accountLabel(account)}
-            </option>
-          ))}
-        </select>
+        />
       )}
 
       {!asked ? (

@@ -64,6 +64,7 @@ const U5 = [
   'src/ui/rules/RuleEditor.tsx',
   'src/ui/rules/TestBox.tsx',
   'src/ui/rules/Why.tsx',
+  'src/ui/rules/PickField.tsx',
   'src/ui/screens/Plan.tsx',
   'src/ui/plan/BucketEditor.tsx',
   'src/ui/plan/FixedSection.tsx',

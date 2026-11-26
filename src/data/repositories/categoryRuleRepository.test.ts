@@ -1,8 +1,9 @@
-import { createLedgerDatabase } from '@/data/packs/ledger/testing.ts'
+import { createLedgerDatabase, insertTransaction } from '@/data/packs/ledger/testing.ts'
 import type { Database } from 'sql.js'
 import { describe, expect, it } from 'vitest'
 
 import { fromMajorUnits } from '@/core/money.ts'
+import { localDate } from '@/core/time.ts'
 import { normalizeMerchant } from '@/core/text.ts'
 import { firstMatch } from '@/domain/categorization.ts'
 import {
@@ -208,5 +209,71 @@ describe('the stored rule set and the engine', () => {
 
     expect(winner?.id).toBe(groceries.id)
     expect(winner?.targetCategoryId).toBe('cat:groceries')
+  })
+})
+
+describe('Undo of a delete (M64 F5, D-628)', () => {
+  it('puts a deleted rule back whole: its id, its place, its count and the rows it filed', async () => {
+    const db = await seeded()
+    const first = createRule(db, { name: 'Fuel', kind: 'CONTAINS', pattern: 'דלק', targetCategoryId: 'cat:fuel' }, 1)
+    const second = createRule(db, { name: 'Food', kind: 'CONTAINS', pattern: 'שופרסל', targetCategoryId: 'cat:groceries' }, 2)
+    recordHits(db, [first.id, first.id], 5)
+    insertTransaction(
+      db,
+      {
+        id: 'tx-1',
+        accountId: 'acc-cal',
+        transactionDate: localDate(2026, 7, 3),
+        chargeDate: undefined,
+        billingPeriod: undefined,
+        amount: fromMajorUnits(-80, 'ILS'),
+        direction: 'OUTFLOW',
+        merchantRaw: 'דלק 12',
+        merchantNormalized: 'דלק',
+        providerCategory: undefined,
+        cardLast4: undefined,
+        reference: undefined,
+        note: undefined,
+        installment: undefined,
+        foreign: undefined,
+        naturalKey: 'key-1',
+        importSessionId: undefined,
+        sourceRowRef: undefined,
+      },
+      1,
+    )
+    db.run(`UPDATE fmt_transaction SET matched_rule = ? WHERE id = 'tx-1'`, [first.id])
+    const before = findRule(db, first.id)
+
+    const deleted = deleteRule(db, first.id, 6)
+    expect(findRule(db, first.id)).toBeUndefined()
+    expect(db.exec(`SELECT matched_rule FROM fmt_transaction WHERE id = 'tx-1'`)[0]?.values).toEqual([[null]])
+
+    const back = createRule(db, deleted, 7)
+    expect(back).toEqual(before)
+    expect(back.hitCount).toBe(2)
+    expect(listRules(db).map((rule) => rule.id)).toEqual([first.id, second.id])
+    expect(db.exec(`SELECT matched_rule FROM fmt_transaction WHERE id = 'tx-1'`)[0]?.values).toEqual([[first.id]])
+
+    // A second Undo finds it there and changes nothing.
+    expect(createRule(db, deleted, 8)).toEqual(before)
+    expect(listRules(db)).toHaveLength(2)
+  })
+
+  it('gives a built-in back to the pack, so a later build still keeps it current', async () => {
+    const db = await createLedgerDatabase()
+    const builtIn = listRules(db).find((rule) => rule.origin === 'BUILT_IN')
+    if (builtIn === undefined) throw new Error('no built-in rule')
+    const key = db.exec(`SELECT name FROM fmt_category_rule WHERE id = '${builtIn.id}'`)[0]?.values[0]?.[0]
+    const state = (): unknown =>
+      db.exec(`SELECT state FROM format_seed WHERE format_name = 'category_rule' AND seed_key = '${String(key)}'`)[0]
+        ?.values[0]?.[0]
+    expect(state()).toBe('SEEDED')
+
+    const deleted = deleteRule(db, builtIn.id, 2)
+    expect(state()).toBe('REMOVED')
+    createRule(db, deleted, 3)
+    expect(state()).toBe('SEEDED')
+    expect(findRule(db, builtIn.id)).toEqual(builtIn)
   })
 })

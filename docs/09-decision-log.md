@@ -525,6 +525,7 @@ written out here.
 | D-623 | 2026-11-26 | Categories, Rules and the Year are rebuilt as the report: each answers its question in a sentence first; the Year is where every month is read and opened (a month opens on Home); a category, a rule, a total and the built-in rules open beside the page; a rename is in place; merging and a delete that moves rows ask at their button; deleting an unused category or a rule and archiving happen at once with Undo where it happened | M64 |
 | D-624 | 2026-11-26 | The way in and around is the report: every Settings page and Assistants answer first in one sentence on a shared frame, Accounts reads as rows that open their form beside the page with a delete asked at its button, Assistants' tools open by group beside it, the front door and a document with no ledger say what to do in words with Open… added, the guide's first step names Read files and leaves its note where it stood, the waiting notice speaks only of what changes the month, and the palette says what it can do offline | M64 |
 | D-625 | 2026-11-26 | The engine's formats are the report: the formats list and a format's table each answer first in one sentence (how many kinds of things, how many rows and whether they are right), what waits is one strip below, the shape, a rule set's preview and a new view or chart open beside the rows, and a row deletes at once with Undo near it (the next entry opening after a delete from its entry) while a format's delete, which cannot be undone, asks at its button | M64 |
+| D-628 | 2026-11-26 | Undo of a delete on Rules and Categories brings the thing back whole — its id, its place, its count, its colour, the built-in rules that went with it and the rows that named it — through the create that makes one, handed what the delete took, over an engine pair that reads a row before it goes and puts it back; the rule editor, the test box, re-applying and New category choose with ChoiceField and still take a paste | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1695,6 +1696,46 @@ of the screen is what the maintainer found strange.
 new engine write to restore a row (re-inserting with its id is the write the screen and the tools
 already share, so parity holds); turning the table's cursor Delete off (the sheet's stored rows are
 not edited in their cells, so Delete on a row means the row, as in a mail list).
+
+## D-628 · 2026-11-26 · Undo of a delete on Rules and Categories brings the thing back whole — its id, its place, its count, its colour, the built-in rules that went with it and the rows that named it — through the create that makes one, handed what the delete took, over an engine pair that reads a row before it goes and puts it back; the rule editor, the test box, re-applying and New category choose with ChoiceField and still take a paste <a id="d-628"></a>
+
+**Context.** M64 U11 rebuilt Rules and Categories (D-623) with a delete that happens at once and an
+Undo where it happened, the maintainer's convention (D-617). The Undo made the thing again with
+`createRule` and `createCategory`: a rule came back at its place in the order but with a new id and
+its hit count at nought, and the rows it had filed named no rule; a category came back with its
+name, kind, parent and colour but at the end of its siblings, and a built-in rule that pointed at it
+stayed gone, recorded removed so no later build brought it back. M64 F5 asked whether a restore
+that keeps all of it is worth a repository write and its plugin half (D-234). M64 F6: the side
+panel's forms still drew the platform's select (a rule's kind, account and currency; the test box's
+currency and account; re-apply's account and month; New category's kind).
+
+**Decision.** **Undo brings it back whole.** The engine gains a pair beside `deleteRows`:
+`takeRows` reads what a delete will take — each row as the table has it under its own id, which of
+them the pack had seeded, and every link another row has to one of them — and `restoreRows` puts
+that back: the rows by `insertRows` with their ids, the pack's record to seeded again, and each link
+where its row is still there and still empty. `deleteRule` and an unused category's
+`deleteCategory` read first and hand back what they took (`DeletedRule`, `DeletedCategory`; a
+delete that moved what used the category hands back nothing, and has no Undo); **`createRule` and
+`createCategory`, handed that, make it again** — the same id, priority, hit count and last match;
+the same sort order, colour and icon, and the built-in rules with their seed records. A second Undo
+finds it there and changes nothing. The forms choose with `ChoiceField` through one small field
+(`PickField`) that shows the chosen label, stays a text field, and picks the choice a pasted or
+typed label or stored value names; a list longer than eight is an autocomplete.
+
+**Why.** An Undo that brings back something slightly different is a second, quieter loss — a rule
+whose count starts over and whose rows say *a rule since deleted* is not the rule that was deleted.
+**No new ledger write**: the Undo of a delete is a create of what was there, so it goes through the
+write that makes a rule or a category, which the screen and `create_rule` / `create_category`
+already share — the parity ratchet holds at 65 — and `restoreRows` is the inside of those two,
+listed in `THROUGH_ANOTHER`. `insertRows` alone, which D-625's row Undo uses, does not give back
+the seed record or the links a caller cleared before the delete, which is what *whole* needed here.
+
+**Rejected.** Separate `restoreRule` / `restoreCategory` writes (one more screen-only write each,
+against a ratchet that only falls, and a conversation has no Undo to reach them with: its way back
+is the `.bak` every committed write copies first); keeping the snapshot in the document (a delete is
+a removal, D-266); bringing back an unused category's past corrections into it and its re-apply
+undo rows, which `forgetCategory` deletes rather than clears (history nobody can see, M64 Q36);
+`ChoiceMenu` for the forms (read-only, so a paste would not land).
 
 ## Related
 

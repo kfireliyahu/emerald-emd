@@ -468,6 +468,9 @@ const THROUGH_ANOTHER: Readonly<Record<string, string>> = {
   forgetSeeds: 'Called by `deleteFormat`, for `forgetIntakes`’s reason.',
   // M26 U2 (D-289).
   restoreColumnWidths: 'The inside of `applyDocument`: a text document’s column widths, after its rows.',
+  // M64 F5 (D-628).
+  restoreRows:
+    'The inside of `createRule` and `createCategory`: handed what a delete took, they make it again whole — the Undo of a delete on Rules and Categories.',
   forgetColumnWidths: 'Called by `deleteFormat`, for `forgetIntakes`’s reason.',
   // M26 U4 (D-291).
   restoreGraphPlaces: 'The inside of `applyDocument`: a text document’s canvas places, after its rows.',

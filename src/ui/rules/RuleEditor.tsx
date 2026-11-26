@@ -11,6 +11,7 @@ import { useT } from '@/i18n/current.ts'
 import { Button } from '@/ui/components/Button.tsx'
 import { CategoryPicker } from '@/ui/components/CategoryPicker.tsx'
 import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
+import { MENU_MOST, PickField } from '@/ui/rules/PickField.tsx'
 import {
   CURRENCY_CHOICES,
   KIND_WORD,
@@ -119,18 +120,12 @@ export function RuleEditor({
           className={`${FIELD} w-full`}
         />
 
-        <select
+        <PickField
           value={draft.kind}
-          onChange={(event) => setDraft((current) => withKind(current, event.target.value as RuleKind))}
+          choices={RULE_KINDS.map((kind) => ({ value: kind, label: t(KIND_WORD[kind]) }))}
+          onChange={(kind) => setDraft((current) => withKind(current, kind as RuleKind))}
           aria-label={t('rules.editor.matchesOn')}
-          className={SELECT}
-        >
-          {RULE_KINDS.map((kind) => (
-            <option key={kind} value={kind}>
-              {t(KIND_WORD[kind])}
-            </option>
-          ))}
-        </select>
+        />
 
         {takesPattern(draft.kind) && (
           <input
@@ -159,27 +154,22 @@ export function RuleEditor({
       <div className="flex flex-wrap items-center gap-2 text-caption text-ink-secondary">
         <label className="flex items-center gap-2">
           {t('rules.editor.onlyOn')}
-          <select
+          <PickField
             value={draft.conditions.scopeAccountId ?? ''}
-            onChange={(event) =>
+            choices={[
+              { value: '', label: t('rules.editor.anyAccount') },
+              ...accounts.map((account) => ({ value: account.id, label: accountLabel(account) })),
+            ]}
+            filter={accounts.length > MENU_MOST}
+            onChange={(accountId) =>
               setDraft((current) => ({
                 ...current,
-                conditions: {
-                  ...current.conditions,
-                  scopeAccountId: event.target.value === '' ? undefined : event.target.value,
-                },
+                conditions: { ...current.conditions, scopeAccountId: accountId === '' ? undefined : accountId },
               }))
             }
             aria-label={t('rules.editor.restrict')}
             className={`${SELECT} h-7 text-ink`}
-          >
-            <option value="">{t('rules.editor.anyAccount')}</option>
-            {accounts.map((account) => (
-              <option key={account.id} value={account.id}>
-                {accountLabel(account)}
-              </option>
-            ))}
-          </select>
+          />
         </label>
 
         <label className="flex items-center gap-2">
@@ -204,18 +194,13 @@ export function RuleEditor({
           />
         </label>
 
-        <select
+        <PickField
           value={currency}
-          onChange={(event) => setBounds(minText, maxText, event.target.value)}
+          choices={CURRENCY_CHOICES.map((code) => ({ value: code, label: code }))}
+          onChange={(code) => setBounds(minText, maxText, code)}
           aria-label={t('rules.editor.currency')}
           className={`${SELECT} h-7 text-ink`}
-        >
-          {CURRENCY_CHOICES.map((code) => (
-            <option key={code} value={code}>
-              {code}
-            </option>
-          ))}
-        </select>
+        />
 
         {/* Bounds are magnitudes: a charge is negative by the importer's
             convention (D-004), so a signed bound would match nothing. */}

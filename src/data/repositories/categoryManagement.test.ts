@@ -133,6 +133,35 @@ describe('managing the taxonomy', () => {
       expect(find(id)).toBeUndefined()
     })
 
+    it('puts one back whole on Undo: its id, its place, its colour and the built-in rules that went with it (M64 F5, D-628)', () => {
+      const usedByABuiltIn = listRules(db).filter((rule) => rule.origin === 'BUILT_IN').map((rule) => rule.targetCategoryId)
+      const category = listCategories(db).find(
+        (one) => usedByABuiltIn.includes(one.id) && !one.isSystem &&
+          categoryUsage(db, one.id).transactions === 0 && categoryUsage(db, one.id).subcategories === 0 &&
+          categoryUsage(db, one.id).rules === 0 && categoryUsage(db, one.id).budgets === 0,
+      )
+      if (category === undefined) throw new Error('no seeded category with only built-in rules')
+      const siblings = (): readonly string[] =>
+        listCategories(db).filter((one) => one.parentId === category.parentId).map((one) => one.id)
+      const order = siblings()
+      const rules = listRules(db).filter((rule) => rule.targetCategoryId === category.id)
+      expect(rules.length).toBeGreaterThan(0)
+
+      const deleted = deleteCategory(db, category.id, 2)
+      expect(find(category.id)).toBeUndefined()
+      expect(listRules(db).filter((rule) => rule.targetCategoryId === category.id)).toEqual([])
+      if (deleted === undefined) throw new Error('a delete with nothing to move hands back what it took')
+
+      expect(createCategory(db, deleted, 3)).toBe(category.id)
+      expect(find(category.id)).toEqual(category)
+      expect(siblings()).toEqual(order)
+      expect(listRules(db).filter((rule) => rule.targetCategoryId === category.id)).toEqual(rules)
+    })
+
+    it('hands back nothing to undo when it moved what used the category', () => {
+      expect(deleteCategory(db, 'cat:utilities', 2, 'cat:rent')).toBeUndefined()
+    })
+
     it('refuses one that transactions point at, rather than rewriting history', () => {
       setCategoryManually(db, 'tx-1', 'cat:groceries', 1)
       expect(() => deleteCategory(db, 'cat:groceries', 2)).toThrow(CategoryInUseError)

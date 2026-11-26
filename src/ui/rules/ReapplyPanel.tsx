@@ -17,6 +17,7 @@ import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { SELECT } from '@/ui/components/fieldLook.ts'
+import { MENU_MOST, PickField } from '@/ui/rules/PickField.tsx'
 import { Phrase } from '@/ui/components/Phrase.tsx'
 import { accountLabel } from '@/ui/rules/ruleText.ts'
 
@@ -110,34 +111,32 @@ export function ReapplyPanel({
 
         <label className="flex items-center gap-2 text-caption text-ink-secondary">
           {t('rules.reapply.account')}
-          <select
+          <PickField
             value={scope.accountId}
-            onChange={(event) => setScope({ ...scope, accountId: event.target.value })}
+            choices={[
+              { value: '', label: t('rules.reapply.allAccounts') },
+              ...accounts.map((account) => ({ value: account.id, label: accountLabel(account) })),
+            ]}
+            filter={accounts.length > MENU_MOST}
+            onChange={(accountId) => setScope({ ...scope, accountId })}
+            aria-label={t('rules.reapply.account')}
             className={`${SELECT} text-body`}
-          >
-            <option value="">{t('rules.reapply.allAccounts')}</option>
-            {accounts.map((account) => (
-              <option key={account.id} value={account.id}>
-                {accountLabel(account)}
-              </option>
-            ))}
-          </select>
+          />
         </label>
 
         <label className="flex items-center gap-2 text-caption text-ink-secondary">
           {t('rules.reapply.month')}
-          <select
+          <PickField
             value={scope.period}
-            onChange={(event) => setScope({ ...scope, period: event.target.value })}
+            choices={[
+              { value: '', label: t('rules.reapply.allTime') },
+              ...data.months.map((period) => ({ value: period, label: period })),
+            ]}
+            filter={data.months.length > MENU_MOST}
+            onChange={(period) => setScope({ ...scope, period })}
+            aria-label={t('rules.reapply.month')}
             className={`${SELECT} text-body`}
-          >
-            <option value="">{t('rules.reapply.allTime')}</option>
-            {data.months.map((period) => (
-              <option key={period} value={period}>
-                {period}
-              </option>
-            ))}
-          </select>
+          />
         </label>
 
         <label className="flex items-center gap-2 text-caption text-ink-secondary select-none">

@@ -24,6 +24,7 @@ import {
   type CategoryActivity,
   type CategoryKind,
   type CategoryUsage,
+  type DeletedCategory,
 } from '@/data/repositories/categoryRepository.ts'
 import { categoryBudgets, setCategoryBudget } from '@/data/repositories/categoryBudgetRepository.ts'
 import { listSplitPlans } from '@/data/repositories/splitPlanRepository.ts'
@@ -51,7 +52,7 @@ import { PageMenu } from '@/ui/components/PageMenu.tsx'
 import { Phrase } from '@/ui/components/Phrase.tsx'
 import { CategoryMark, useCategoryPalette } from '@/ui/components/CategoryMark.tsx'
 import { ContextMenu, isMenuKey, type MenuItem } from '@/ui/components/ContextMenu.tsx'
-import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
+import { FIELD } from '@/ui/components/fieldLook.ts'
 import { IconAction } from '@/ui/components/IconAction.tsx'
 import { SidePanel } from '@/ui/components/SidePanel.tsx'
 import { WaitingList } from '@/ui/components/WaitingList.tsx'
@@ -60,6 +61,7 @@ import { Bidi } from '@/ui/Bidi.tsx'
 import { ParentPicker } from '@/ui/categories/ParentPicker.tsx'
 import { eligibleParents, parentsFor } from '@/ui/categories/parentFilter.ts'
 import { Flip } from '@/ui/motion/Flip.tsx'
+import { PickField } from '@/ui/rules/PickField.tsx'
 
 /** The three parts of the list, by what a category is: what you spend, what moved, what came in. */
 type Part = 'SPENDING' | 'MOVED' | 'INCOME'
@@ -289,17 +291,19 @@ export function Categories() {
     if (category.isSystem) return
     const usage = categoryUsage(db, category.id)
     if (!isCategoryInUse(usage)) {
-      const { name, kind, parentId, color, icon } = category
-      write((database, now) => deleteCategory(database, category.id, now))
+      // What the delete took, so Undo puts it back whole (M64 F5, D-628): its
+      // id, its place among its siblings, its colour and the built-in rules that went with it.
+      const taken: { deleted?: DeletedCategory | undefined } = {}
+      write((database, now) => {
+        taken.deleted = deleteCategory(database, category.id, now)
+      })
       if (picked === category.id) setPicked(undefined)
+      const back = taken.deleted
+      if (back === undefined) return
       setDone({
-        say: t('categories.deleted', { name }),
-        group: parentId === undefined ? undefined : groupOf(category),
-        undo: () =>
-          write((database, now) => {
-            const id = createCategory(database, { name, kind, parentId }, now)
-            if (color !== undefined || icon !== undefined) setCategoryAppearance(database, id, { color, icon }, now)
-          }),
+        say: t('categories.deleted', { name: category.name }),
+        group: category.parentId === undefined ? undefined : groupOf(category),
+        undo: () => write((database, now) => createCategory(database, back, now)),
       })
       return
     }
@@ -1257,18 +1261,15 @@ function NewCategoryForm({
       <ParentPicker parents={parents} value={parentId} onChange={setParentId} fill />
 
       {parentId === '' && (
-        <select
+        <PickField
           value={kind}
-          onChange={(event) => setKind(event.target.value as CategoryKind)}
+          choices={(['EXPENSE', 'INCOME', 'TRANSFER', 'SAVING', 'DEBT_PAYMENT'] as const).map((option) => ({
+            value: option,
+            label: t(`categories.kinds.${option}`),
+          }))}
+          onChange={(option) => setKind(option as CategoryKind)}
           aria-label={t('categories.create.kind')}
-          className={SELECT}
-        >
-          {(['EXPENSE', 'INCOME', 'TRANSFER', 'SAVING', 'DEBT_PAYMENT'] as const).map((option) => (
-            <option key={option} value={option}>
-              {t(`categories.kinds.${option}`)}
-            </option>
-          ))}
-        </select>
+        />
       )}
 
       <Button variant="primary" type="submit" className="self-start">

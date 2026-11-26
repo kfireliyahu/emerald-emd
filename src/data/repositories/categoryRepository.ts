@@ -5,7 +5,7 @@ import { listed } from '@/core/text.ts'
 import { MAX_CATEGORY_DEPTH, placementProblem, subtreeOf } from '@/domain/categoryTree.ts'
 import { inTransaction, query } from '../db/database.ts'
 import { allDeclared, declared } from '../packs/ledger/tables.ts'
-import { deleteRows, insertRows, updateRow } from './formatRowRepository.ts'
+import { deleteRows, insertRows, restoreRows, takeRows, type TakenRows, updateRow } from './formatRowRepository.ts'
 import { refileFixedExpenses } from './fixedExpenseRepository.ts'
 import { countsCondition, isMovedKind } from './movedRepository.ts'
 import { reaimBuckets } from './splitPlanRepository.ts'
@@ -251,8 +251,23 @@ export interface NewCategory {
  * second front end could not reach it and would have had to restate it. Same
  * find as the institution rules (D-097): a rule enforced by one caller is a
  * rule until a second caller exists.
+ *
+ * **Handed what `deleteCategory` took, it makes that category again, whole**
+ * (M64 F5, D-628): its id, its place among its siblings, its colour and icon,
+ * the built-in rules that went with it, and what named it — the Undo of a
+ * delete, which is a create of what was there rather than a write of its own.
  */
-export function createCategory(db: Database, category: NewCategory, _now: number): string {
+export function createCategory(db: Database, category: NewCategory | DeletedCategory, _now: number): string {
+  if ('deleted' in category) {
+    const formats = allDeclared(db)
+    const back = category.deleted.rows[0]?.id
+    if (back === undefined) throw new Error('the deleted category did not come back')
+    inTransaction(db, () => {
+      restoreRows(db, declared(db, 'category'), category.deleted, formats)
+      restoreRows(db, declared(db, 'category_rule'), category.rules, formats)
+    })
+    return back
+  }
   const id = newId()
   const parent =
     category.parentId === undefined
@@ -545,7 +560,12 @@ export class CategoryInUseError extends Error {
  * nothing uses go with it — through the engine, so they are recorded removed
  * and no later build brings them back.
  */
-export function deleteCategory(db: Database, id: string, _now: number, moveTo?: string): void {
+export function deleteCategory(
+  db: Database,
+  id: string,
+  _now: number,
+  moveTo?: string,
+): DeletedCategory | undefined {
   const usage = categoryUsage(db, id)
   if (usage.isSystem) {
     throw new CategoryInUseError(usage, 'A system category cannot be deleted — the ledger relies on it.')
@@ -573,17 +593,36 @@ export function deleteCategory(db: Database, id: string, _now: number, moveTo?: 
       moveEverything(db, id, moveTo)
       deleteRows(db, declared(db, 'category'), [id], allDeclared(db))
     })
-    return
+    return undefined
   }
-  inTransaction(db, () => {
+  return inTransaction(db, () => {
     const builtIns = query(db, 'SELECT id FROM fmt_category_rule WHERE target = ?', [id]).map((row) =>
       String(row['id']),
     )
     const formats = allDeclared(db)
+    const categories = declared(db, 'category')
+    const rules = declared(db, 'category_rule')
+    // Read before anything is forgotten, so Undo can put all of it back.
+    const deleted: DeletedCategory = {
+      deleted: takeRows(db, categories, [id], formats),
+      rules: takeRows(db, rules, builtIns, formats),
+    }
     forgetCategory(db, id, builtIns)
-    if (builtIns.length > 0) deleteRows(db, declared(db, 'category_rule'), builtIns, formats)
-    deleteRows(db, declared(db, 'category'), [id], formats)
+    if (builtIns.length > 0) deleteRows(db, rules, builtIns, formats)
+    deleteRows(db, categories, [id], formats)
+    return deleted
   })
+}
+
+/**
+ * What deleting a category nothing used took away — the category and the
+ * built-in rules that went with it; `createCategory` given it puts them back
+ * whole (M64 F5, D-628). A delete that moved what used the category has none:
+ * the move is not undone.
+ */
+export interface DeletedCategory {
+  readonly deleted: TakenRows
+  readonly rules: TakenRows
 }
 
 /**
