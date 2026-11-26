@@ -18,7 +18,7 @@ export function PageHead({ title, under, actions }: { title: string; under?: Rea
   return (
     <header className="flex flex-wrap items-end justify-between gap-6 border-b border-hairline pb-4">
       <div className="flex flex-col gap-2.5">
-        <h1 className="m-0 text-[24px] leading-[1.15] font-medium tracking-[-0.01em]">{title}</h1>
+        <h1 className="m-0 text-title font-medium">{title}</h1>
         {under}
       </div>
       {actions !== undefined && <div className="flex flex-wrap items-center gap-3">{actions}</div>}
@@ -51,9 +51,9 @@ export function HeroCell({
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-0.5 py-3 pe-4">
-      <span className="text-label tracking-[0.08em] text-ink-secondary uppercase">{label}</span>
+      <span className="text-label text-ink-secondary uppercase">{label}</span>
       <span
-        className={`text-[22px] leading-[1.2] font-medium tracking-[-0.01em] tabular-nums ${problem ? 'text-flow-out' : ''}`}
+        className={`text-secondary-number font-medium tabular-nums ${problem ? 'text-flow-out' : ''}`}
       >
         {children}
       </span>
@@ -83,7 +83,7 @@ export function Section({
     <section className="flex flex-col gap-3" aria-label={label} data-guide={guide}>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="m-0 text-[16px] font-medium">{title}</h2>
+          <h2 className="m-0 text-heading font-medium">{title}</h2>
           {sub !== undefined && <p className="m-0 mt-0.5 text-caption text-ink-secondary">{sub}</p>}
         </div>
         {action}
@@ -151,7 +151,7 @@ const TAG_TONE: Readonly<Record<TagTone, string>> = {
 export function Tag({ tone = 'plain', children }: { tone?: TagTone; children: ReactNode }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 border px-[7px] py-0.5 text-[11px] leading-[1.3] font-medium tracking-[0.06em] whitespace-nowrap uppercase ${TAG_TONE[tone]}`}
+      className={`inline-flex items-center gap-1.5 border px-2 py-0.5 text-label font-medium whitespace-nowrap uppercase ${TAG_TONE[tone]}`}
     >
       {children}
     </span>
@@ -161,7 +161,7 @@ export function Tag({ tone = 'plain', children }: { tone?: TagTone; children: Re
 /** `.need`: the small line under a figure in a right-aligned cell. */
 export function Need({ children }: { children: ReactNode }) {
   return (
-    <div className="mt-[3px] flex items-center justify-end gap-1.5 text-[11px] whitespace-nowrap text-ink-secondary">
+    <div className="mt-1 flex items-center justify-end gap-1.5 text-label whitespace-nowrap text-ink-secondary">
       {children}
     </div>
   )
@@ -187,17 +187,17 @@ export function Src({ children, className = '' }: { children: ReactNode; classNa
 
 /** `th`, `td`, `.gtable td`: the table cells, as class strings. */
 export const TH =
-  'border-b border-hairline px-2.5 py-2 text-start text-[11px] font-medium tracking-[0.08em] whitespace-nowrap text-ink-tertiary uppercase'
+  'border-b border-hairline px-2.5 py-2 text-start text-label font-medium whitespace-nowrap text-ink-secondary uppercase'
 export const TH_R = `${TH} text-end`
 /** A plain row: 38px. */
-export const TD = 'h-[38px] border-b border-hairline px-2.5 whitespace-nowrap'
+export const TD = 'h-10 border-b border-hairline px-2.5 whitespace-nowrap'
 /** A deciding row (`.gtable`): 64px, middle. */
 export const GTD = 'h-16 border-b border-hairline px-2.5 align-middle whitespace-nowrap'
 export const GTD_R = `${GTD} text-end tabular-nums`
 
 /** `.fld.wide`: the amount field in a deciding row. */
 export const AMOUNT_FIELD =
-  'h-[30px] w-[120px] border border-hairline-strong bg-background px-2 text-end tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
+  'h-8 w-[120px] border border-hairline-strong bg-background px-2 text-end tabular-nums focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
 
 /** `.legend`: a row of swatches and names. */
 export function Legend({ children }: { children: ReactNode }) {

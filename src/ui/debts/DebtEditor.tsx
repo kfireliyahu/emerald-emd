@@ -1,46 +1,36 @@
 import { useState } from 'react'
 
 import { formatMoney, fromMajorUnits, type CurrencyCode } from '@/core/money.ts'
-import { parseISODate, toISODate } from '@/core/time.ts'
 import type { Account } from '@/data/repositories/accountRepository.ts'
 import type { Category } from '@/data/repositories/categoryRepository.ts'
 import type { FixedExpense } from '@/domain/model/fixed.ts'
 import { debtWarnings, validateDebt, type DebtProblem, type DebtWarning } from '@/domain/debt.ts'
-import {
-  AUTO_TRACK_KINDS,
-  DEBT_KINDS,
-  type AutoTracking,
-  type AutoTrackKind,
-  type Debt,
-  type DebtKind,
-} from '@/domain/model/debt.ts'
-import { Button } from '@/ui/components/Button.tsx'
+import { AUTO_TRACK_KINDS, DEBT_KINDS, type AutoTracking, type AutoTrackKind, type Debt, type DebtKind } from '@/domain/model/debt.ts'
+import { countKey } from '@/i18n/count.ts'
+import { useT, type Translate } from '@/i18n/current.ts'
 import { CategoryPicker } from '@/ui/components/CategoryPicker.tsx'
-import { Field } from '@/ui/components/Field.tsx'
-import { FIELD, FIELD_MULTILINE, SELECT } from '@/ui/components/fieldLook.ts'
-import {
-  DEBT_KIND_LABEL,
-  PAYROLL_TRACKING_NOTE,
-  TRACK_KIND_HINT,
-  TRACK_KIND_LABEL,
-} from './labels.ts'
+import { ChoiceMenu } from '@/ui/components/ChoiceField.tsx'
+import { AmountInput, DateInput, FormField, FormGrid, MoreFields, PanelForm, Said } from '@/ui/components/PanelForm.tsx'
+import { FIELD, FIELD_MULTILINE } from '@/ui/components/fieldLook.ts'
 import { editableMoney, moneyFromText } from '@/ui/components/moneyText.ts'
+import { useWealthWords } from '@/ui/wealth/words.ts'
 
 /**
- * One thing that is owed.
+ * One thing that is owed — a `PanelForm` beside the debts (M64 F3, D-629): its
+ * name, its kind, what was borrowed and what is paid a month first, said back
+ * as a count of payments; how its payments are found, and its dates and notes,
+ * each one verb further.
  *
  * **The tracking mechanism is the consequential field and the form treats it as
  * one.** Picking it decides which ledger rows become payments against this
  * balance — so each option carries a sentence saying what it will actually do,
  * and the ref that goes with it is a different control per kind rather than one
- * text box that means three things. The domain holds the pair as a discriminated
- * union (D-083) and this form is where that shape earns its keep: switching kind
- * replaces the ref rather than leaving the previous kind's string behind.
+ * text box that means three things (D-083): switching kind replaces the ref
+ * rather than leaving the previous kind's string behind.
  *
- * **Payroll is not among the four, and the form says where it went** rather than
- * leaving the user to look for it. A salary-deducted loan is linked from the
- * deduction type, because the link already lives there (migration `012`) and two
- * edges for one relationship can point at different things.
+ * **Payroll is not among the four, and the form says where it went**: a
+ * salary-deducted loan is linked from the deduction type, because the link
+ * already lives there (migration `012`).
  *
  * **The principal is what outstanding counts down from, not what is left.** The
  * hint says so, because "amount borrowed" and "amount still owed" are the same
@@ -63,12 +53,8 @@ export function DebtEditor({
   accounts: readonly Account[]
   categories: readonly Category[]
   /**
-   * The other debts and the fixed expenses, rather than the warnings themselves.
-   *
-   * The warnings are about the **draft**, which only this component can see, so
-   * a caller computing them would be answering a question about the debt as it
-   * was when the form opened — and the one moment they matter is while a pattern
-   * is being typed into a box another debt already watches.
+   * The other debts and the fixed expenses, rather than the warnings themselves:
+   * the warnings are about the **draft**, which only this component can see.
    */
   others: readonly Debt[]
   expenses: readonly FixedExpense[]
@@ -76,15 +62,14 @@ export function DebtEditor({
   onSave: (debt: Debt) => void
   onCancel: () => void
 }) {
+  const t = useT()
+  const words = useWealthWords()
   const [draft, setDraft] = useState(initial)
-  const [principalText, setPrincipalText] = useState(() =>
-    editableMoney(initial.principalAmount),
-  )
+  const [principalText, setPrincipalText] = useState(() => editableMoney(initial.principalAmount))
   const [monthlyText, setMonthlyText] = useState(() =>
-    initial.monthlyPaymentAmount === undefined
-      ? ''
-      : formatMoney(initial.monthlyPaymentAmount, { symbol: false }),
+    initial.monthlyPaymentAmount === undefined ? '' : formatMoney(initial.monthlyPaymentAmount, { symbol: false }),
   )
+  const [accountText, setAccountText] = useState(() => accounts.find((one) => one.id === initial.linkedAccountId)?.name ?? '')
 
   const set = (change: Partial<Debt>): void => setDraft((current) => ({ ...current, ...change }))
 
@@ -98,253 +83,186 @@ export function DebtEditor({
 
   const problems = validateDebt(draft)
   const warnings = debtWarnings(draft, others, expenses)
+  // An untouched new debt only waits: its name and amount are asked for once something is typed.
+  const touched = draft.name !== initial.name || principalText !== editableMoney(initial.principalAmount)
+  const shown = isNew && !touched ? problems.filter((problem) => problem !== 'NO_NAME' && problem !== 'NON_POSITIVE_PRINCIPAL') : problems
+  const notRecorded = t('wealth.debtForm.notRecorded')
 
   return (
-    <form
-      className="fc-view-enter h-full overflow-auto"
-      onSubmit={(event) => {
-        event.preventDefault()
-        if (problems.length > 0) return
-        onSave(draft)
-      }}
+    <PanelForm
+      save={isNew ? t('wealth.debtForm.add') : t('wealth.reading.save')}
+      canSave={problems.length === 0}
+      onSave={() => onSave(draft)}
+      onCancel={onCancel}
+      problems={shown.map((problem) => t(PROBLEM[problem]))}
     >
-      <div className="px-6 py-6">
-        <h1 className="text-title">{isNew ? 'Add a debt' : 'Edit debt'}</h1>
-        <p className="mt-1 mb-6 max-w-2xl text-caption text-ink-tertiary">
-          A debt has no stored balance. What is outstanding is the amount borrowed minus the
-          payments recorded against it, so the useful thing to get right is how those payments are
-          found.
-        </p>
+      <FormGrid>
+        <FormField label={t('wealth.debtForm.name')}>
+          <input className={FIELD} value={draft.name} onChange={(event) => set({ name: event.target.value })} />
+        </FormField>
+        <FormField label={t('wealth.debtForm.kind')}>
+          <ChoiceMenu
+            className={`${FIELD} w-full`}
+            text={words.debt[draft.kind]}
+            choices={DEBT_KINDS.map((kind) => ({ value: kind, label: words.debt[kind] }))}
+            onPick={(choice) => set({ kind: choice.value as DebtKind })}
+          />
+        </FormField>
+        <AmountInput
+          label={t('wealth.debtForm.borrowed')}
+          currency={currency}
+          placeholder="0"
+          value={principalText}
+          onChange={(event) => {
+            setPrincipalText(event.target.value)
+            set({ principalAmount: moneyFromText(event.target.value, currency, { magnitude: true }) ?? fromMajorUnits(0, currency) })
+          }}
+        />
+        <AmountInput
+          label={t('wealth.debtForm.monthly')}
+          currency={currency}
+          placeholder="0"
+          value={monthlyText}
+          onChange={(event) => {
+            setMonthlyText(event.target.value)
+            set({ monthlyPaymentAmount: moneyFromText(event.target.value, currency, { magnitude: true }) })
+          }}
+        />
+      </FormGrid>
 
-        <div className="grid max-w-3xl grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
-          <Field label="Name">
-            <input
-              className={FIELD}
-              autoFocus
-              value={draft.name}
-              onChange={(event) => set({ name: event.target.value })}
-            />
-          </Field>
+      <Said>{debtSaid(draft, t)}</Said>
 
-          <Field label="What kind">
-            <select
-              className={SELECT}
-              value={draft.kind}
-              onChange={(event) => set({ kind: event.target.value as DebtKind })}
-            >
-              {DEBT_KINDS.map((kind) => (
-                <option key={kind} value={kind}>
-                  {DEBT_KIND_LABEL[kind]}
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          <Field label="Amount borrowed" hint="the original sum, not what is left today">
-            <input
-              className={FIELD}
-              inputMode="decimal"
-              value={principalText}
-              onChange={(event) => {
-                setPrincipalText(event.target.value)
-                set({
-                  principalAmount:
-                    moneyFromText(event.target.value, currency, { magnitude: true }) ?? fromMajorUnits(0, currency),
-                })
-              }}
-            />
-          </Field>
-
-          <Field label="Expected monthly payment" hint="optional — projects a debt with no history">
-            <input
-              className={FIELD}
-              inputMode="decimal"
-              value={monthlyText}
-              onChange={(event) => {
-                setMonthlyText(event.target.value)
-                set({ monthlyPaymentAmount: moneyFromText(event.target.value, currency, { magnitude: true }) })
-              }}
-            />
-          </Field>
-
-          <Field label="Taken out on">
-            <input
-              type="date"
-              className={FIELD}
-              value={toISODate(draft.openedDate)}
-              onChange={(event) =>
-                set({ openedDate: parseISODate(event.target.value) ?? draft.openedDate })
-              }
-            />
-          </Field>
-
-          <Field label="Expected to end" hint="optional">
-            <input
-              type="date"
-              className={FIELD}
-              value={draft.expectedEndDate === undefined ? '' : toISODate(draft.expectedEndDate)}
-              onChange={(event) =>
-                set({ expectedEndDate: parseISODate(event.target.value) ?? undefined })
-              }
-            />
-          </Field>
-        </div>
-
-        <h2 className="mt-8 text-heading">How its payments are found</h2>
-        <p className="mt-1 mb-3 max-w-2xl text-caption text-ink-tertiary">
-          Whatever this finds is offered for confirmation before it counts as agreed — nothing here
-          is applied silently. {PAYROLL_TRACKING_NOTE}
-        </p>
-
-        <div className="grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-2">
+      <MoreFields
+        label={t('wealth.debtForm.found')}
+        summary={t(TRACK[draft.tracking.kind].label)}
+        initiallyOpen={draft.tracking.kind !== 'NONE'}
+      >
+        <p className="m-0 text-caption text-ink-secondary">{t('wealth.debtForm.foundLead')}</p>
+        <div role="radiogroup" aria-label={t('wealth.debtForm.found')} className="flex flex-col">
           {AUTO_TRACK_KINDS.map((kind) => {
             const chosen = draft.tracking.kind === kind
             return (
               <button
                 key={kind}
                 type="button"
+                role="radio"
+                aria-checked={chosen}
                 onClick={() => setTrackKind(kind)}
-                className={`rounded-md border px-4 py-3 text-start transition-colors duration-[var(--duration-micro)] ${
-                  chosen ? 'border-accent bg-accent-soft' : 'border-hairline hover:border-hairline-strong'
+                className={`flex flex-col gap-1 border-b border-hairline py-2 ps-3 text-start transition-colors duration-[var(--duration-micro)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+                  chosen ? 'border-s-2 border-s-accent bg-accent-soft' : 'border-s-2 border-s-transparent hover:bg-surface'
                 }`}
               >
-                <span>{TRACK_KIND_LABEL[kind]}</span>
-                <p className="mt-1 text-caption text-ink-tertiary">{TRACK_KIND_HINT[kind]}</p>
+                <span>{t(TRACK[kind].label)}</span>
+                <span className="text-caption text-ink-secondary">{t(TRACK[kind].hint)}</span>
               </button>
             )
           })}
         </div>
+        <TrackingRef tracking={draft.tracking} categories={categories} onChange={(tracking) => set({ tracking })} t={t} />
+        {warnings.length > 0 && <Said>{warnings.map((warning) => t(WARNING[warning])).join(' ')}</Said>}
+        <p className="m-0 text-caption text-ink-secondary">{t('wealth.debtForm.payroll')}</p>
+      </MoreFields>
 
-        <div className="mt-4 max-w-3xl">
-          <TrackingRef
-            tracking={draft.tracking}
-            categories={categories}
-            onChange={(tracking) => set({ tracking })}
-          />
-        </div>
-
-        {warnings.length > 0 && (
-          <div className="mt-4 max-w-3xl rounded-md border border-hairline bg-surface px-4 py-3">
-            {warnings.map((warning) => (
-              <p key={warning} className="text-caption text-ink-secondary">
-                {WARNING_MESSAGE[warning]}
-              </p>
-            ))}
-          </div>
-        )}
-
-        <div className="mt-8 grid max-w-3xl grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
-          <Field label="Paid from" hint="which account the money leaves — for your reference only">
-            <select
-              className={SELECT}
-              value={draft.linkedAccountId ?? ''}
-              onChange={(event) =>
-                set({ linkedAccountId: event.target.value === '' ? undefined : event.target.value })
-              }
-            >
-              <option value="">Not recorded</option>
-              {accounts.map((account) => (
-                <option key={account.id} value={account.id}>
-                  {account.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          <Field label="Note">
-            <textarea
-              className={`${FIELD_MULTILINE} min-h-8`}
-              value={draft.note ?? ''}
-              onChange={(event) =>
-                set({ note: event.target.value.trim() === '' ? undefined : event.target.value })
-              }
+      <MoreFields label={t('wealth.debtForm.more')} summary={t('wealth.debtForm.moreSummary')} initiallyOpen={!isNew && (draft.expectedEndDate !== undefined || draft.note !== undefined)}>
+        <FormGrid>
+          <FormField label={t('wealth.debtForm.opened')}>
+            <DateInput value={draft.openedDate} onChange={(date) => set({ openedDate: date ?? draft.openedDate })} />
+          </FormField>
+          <FormField label={t('wealth.debtForm.ends')}>
+            <DateInput value={draft.expectedEndDate} onChange={(date) => set({ expectedEndDate: date ?? undefined })} />
+          </FormField>
+          <FormField label={t('wealth.debtForm.paidFrom')} hint={t('wealth.debtForm.paidFromHint')} wide>
+            <ChoiceMenu
+              className={`${FIELD} w-full`}
+              text={accountText === '' ? notRecorded : accountText}
+              choices={[{ value: '', label: notRecorded }, ...accounts.map((account) => ({ value: account.id, label: account.name }))]}
+              onPick={(choice) => {
+                setAccountText(choice.value === '' ? '' : choice.label)
+                set({ linkedAccountId: choice.value === '' ? undefined : choice.value })
+              }}
             />
-          </Field>
-        </div>
-
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          <Button variant="primary" size="sm" type="submit" disabled={problems.length > 0}>
-            {isNew ? 'Add debt' : 'Save'}
-          </Button>
-          <Button variant="ghost" size="sm" onClick={onCancel}>
-            Cancel
-          </Button>
-
-          <span className="flex flex-wrap items-center gap-x-4 text-caption text-negative">
-            {problems.map((problem) => (
-              <span key={problem}>{PROBLEM_MESSAGE[problem]}</span>
-            ))}
-          </span>
-        </div>
-      </div>
-    </form>
+          </FormField>
+          <FormField label={t('wealth.debtForm.note')} wide>
+            <textarea
+              className={`${FIELD_MULTILINE} min-h-16`}
+              value={draft.note ?? ''}
+              onChange={(event) => set({ note: event.target.value.trim() === '' ? undefined : event.target.value })}
+            />
+          </FormField>
+        </FormGrid>
+      </MoreFields>
+    </PanelForm>
   )
 }
 
 /**
- * The one control the chosen mechanism needs, and nothing else on screen.
- *
- * A merchant pattern is text, a category is the ledger's own picker, and an
+ * **What was typed, said back**: the amount borrowed, and at the monthly payment
+ * how many payments that is — before interest, which the words say, because a
+ * count that ignored it without saying so would be a promise.
+ */
+function debtSaid(draft: Debt, t: Translate): string {
+  const borrowed = draft.principalAmount
+  if (borrowed.minor <= 0) return t('wealth.debtForm.saidEmpty')
+  const monthly = draft.monthlyPaymentAmount
+  if (monthly === undefined || monthly.minor <= 0 || monthly.currency !== borrowed.currency) {
+    return t('wealth.debtForm.saidBorrowed', { amount: formatMoney(borrowed) })
+  }
+  const count = Math.ceil(borrowed.minor / monthly.minor)
+  return t(countKey('wealth.debtForm.saidPayments', count), { amount: formatMoney(borrowed), monthly: formatMoney(monthly), count })
+}
+
+/**
+ * The one control the chosen mechanism needs, and nothing else on screen. A
+ * merchant pattern is text, a category is the ledger's own picker, and an
  * installment group is a key the user should almost never type — so that one
- * says where it normally comes from instead of pretending to be a field like
- * the others.
+ * says where it normally comes from.
  */
 function TrackingRef({
   tracking,
   categories,
   onChange,
+  t,
 }: {
   tracking: AutoTracking
   categories: readonly Category[]
   onChange: (tracking: AutoTracking) => void
+  t: Translate
 }) {
   switch (tracking.kind) {
     case 'NONE':
       return null
     case 'MERCHANT_PATTERN':
       return (
-        <Field
-          label="Merchant contains"
-          hint="matched the way a category rule matches: spacing and punctuation are ignored"
-        >
+        <FormField label={t('wealth.debtForm.merchant')} hint={t('wealth.debtForm.merchantHint')}>
           <input
-            className={`${FIELD} max-w-md`}
+            className={FIELD}
             dir="auto"
             value={tracking.pattern}
             onChange={(event) => onChange({ kind: 'MERCHANT_PATTERN', pattern: event.target.value })}
           />
-        </Field>
+        </FormField>
       )
     case 'CATEGORY':
       return (
         <div className="flex flex-col gap-1">
-          <span className="text-label text-ink-tertiary uppercase">Category</span>
-          <div className="max-w-md">
-            <CategoryPicker
-              categories={categories}
-              value={tracking.categoryId === '' ? undefined : tracking.categoryId}
-              onChange={(categoryId) =>
-                onChange({ kind: 'CATEGORY', categoryId: categoryId ?? '' })
-              }
-              label="Which category counts as a repayment"
-            />
-          </div>
+          <span className="text-label text-ink-secondary uppercase">{t('wealth.debtForm.category')}</span>
+          <CategoryPicker
+            categories={categories}
+            value={tracking.categoryId === '' ? undefined : tracking.categoryId}
+            onChange={(categoryId) => onChange({ kind: 'CATEGORY', categoryId: categoryId ?? '' })}
+            label={t('wealth.debtForm.categoryLabel')}
+          />
         </div>
       )
     case 'CARD_INSTALLMENT_GROUP':
       return (
-        <Field
-          label="Installment group"
-          hint="normally filled in for you by promoting a split purchase from the ledger"
-        >
+        <FormField label={t('wealth.debtForm.group')} hint={t('wealth.debtForm.groupHint')}>
           <input
-            className={`${FIELD} max-w-md font-mono`}
+            className={`${FIELD} font-mono`}
             value={tracking.groupKey}
-            onChange={(event) =>
-              onChange({ kind: 'CARD_INSTALLMENT_GROUP', groupKey: event.target.value })
-            }
+            onChange={(event) => onChange({ kind: 'CARD_INSTALLMENT_GROUP', groupKey: event.target.value })}
           />
-        </Field>
+        </FormField>
       )
   }
 }
@@ -380,15 +298,22 @@ export function blankDebt(currency: CurrencyCode, openedDate: Debt['openedDate']
   }
 }
 
-const PROBLEM_MESSAGE: Readonly<Record<DebtProblem, string>> = {
-  NO_NAME: 'Give it a name',
-  NON_POSITIVE_PRINCIPAL: 'Enter what was borrowed',
-  NEGATIVE_MONTHLY_PAYMENT: 'A monthly payment cannot be negative',
-  EMPTY_TRACKING_REF: 'Fill in what this should match, or choose to enter payments yourself',
-  PATTERN_TOO_LONG: 'That pattern is too long to match on',
-  ENDS_BEFORE_IT_STARTS: 'The end date is before the start date',
-  MIXED_CURRENCY: 'The monthly payment is in a different currency from the amount borrowed',
-}
+const TRACK = {
+  NONE: { label: 'wealth.debtForm.track.NONE', hint: 'wealth.debtForm.trackHint.NONE' },
+  MERCHANT_PATTERN: { label: 'wealth.debtForm.track.MERCHANT_PATTERN', hint: 'wealth.debtForm.trackHint.MERCHANT_PATTERN' },
+  CATEGORY: { label: 'wealth.debtForm.track.CATEGORY', hint: 'wealth.debtForm.trackHint.CATEGORY' },
+  CARD_INSTALLMENT_GROUP: { label: 'wealth.debtForm.track.CARD_INSTALLMENT_GROUP', hint: 'wealth.debtForm.trackHint.CARD_INSTALLMENT_GROUP' },
+} as const satisfies Record<AutoTrackKind, { label: string; hint: string }>
+
+const PROBLEM = {
+  NO_NAME: 'wealth.debtForm.problem.NO_NAME',
+  NON_POSITIVE_PRINCIPAL: 'wealth.debtForm.problem.NON_POSITIVE_PRINCIPAL',
+  NEGATIVE_MONTHLY_PAYMENT: 'wealth.debtForm.problem.NEGATIVE_MONTHLY_PAYMENT',
+  EMPTY_TRACKING_REF: 'wealth.debtForm.problem.EMPTY_TRACKING_REF',
+  PATTERN_TOO_LONG: 'wealth.debtForm.problem.PATTERN_TOO_LONG',
+  ENDS_BEFORE_IT_STARTS: 'wealth.debtForm.problem.ENDS_BEFORE_IT_STARTS',
+  MIXED_CURRENCY: 'wealth.debtForm.problem.MIXED_CURRENCY',
+} as const satisfies Record<DebtProblem, string>
 
 /**
  * Both of these describe a document that is allowed. docs/f08 warns at save time
@@ -396,10 +321,7 @@ const PROBLEM_MESSAGE: Readonly<Record<DebtProblem, string>> = {
  * a question rather than two payments, and the obligation is left out of the
  * plan's total rather than subtracted twice.
  */
-const WARNING_MESSAGE: Readonly<Record<DebtWarning, string>> = {
-  TRACKING_SHARED_WITH_ANOTHER_DEBT:
-    'Another debt is watching the same thing. Rows both of them match will be sent to review with a choice of debt rather than counted against either.',
-  TRACKING_SHARED_WITH_FIXED_EXPENSE:
-    'A bill is watching the same thing. This debt will be left out of the plan’s total, because that money has already been subtracted once.',
-}
-
+const WARNING = {
+  TRACKING_SHARED_WITH_ANOTHER_DEBT: 'wealth.debtForm.warning.TRACKING_SHARED_WITH_ANOTHER_DEBT',
+  TRACKING_SHARED_WITH_FIXED_EXPENSE: 'wealth.debtForm.warning.TRACKING_SHARED_WITH_FIXED_EXPENSE',
+} as const satisfies Record<DebtWarning, string>

@@ -113,7 +113,7 @@ export function DepositCheck() {
             hint={headlineHint(checked.length, missing.length, unchecked.length)}
           >
             {checked.length === 0 ? (
-              <span className="text-hero text-ink-tertiary">—</span>
+              <span className="text-hero text-ink-secondary">—</span>
             ) : (
               <span className={`text-hero tabular-nums ${missing.length > 0 ? 'text-negative' : ''}`}>
                 {formatMoney(unaccounted)}
@@ -138,7 +138,7 @@ export function DepositCheck() {
                 }
               />
             ))}
-            <p className="max-w-3xl px-6 py-4 text-caption text-ink-tertiary">
+            <p className="max-w-3xl px-6 py-4 text-caption text-ink-secondary">
               Each fund is compared cumulatively over the longest run of readings that state what
               arrived, with the salary months shifted back by the employer's lag. A single month
               never looks right on its own — that is what the lag is for — so the comparison is
@@ -149,7 +149,7 @@ export function DepositCheck() {
 
         {unchecked.length > 0 && (
           <>
-            <h2 className="border-b border-hairline px-6 pt-6 pb-2 text-label text-ink-tertiary uppercase">
+            <h2 className="border-b border-hairline px-6 pt-6 pb-2 text-label text-ink-secondary uppercase">
               Not checkable yet — and what each one needs
             </h2>
             {unchecked.map(({ entry, check }) => (
@@ -200,7 +200,7 @@ function CheckedRow({
           >
             <Bidi>{fund.name}</Bidi>
           </Link>
-          <p className="mt-0.5 text-caption text-ink-tertiary tabular-nums">
+          <p className="mt-0.5 text-caption text-ink-secondary tabular-nums">
             {FUND_TYPE_LABEL[fund.fundType]} · {formatMonthShort(check.window.salaryFrom)} to{' '}
             {formatMonthShort(check.window.salaryTo)} · {check.expected.paycheckCount}{' '}
             {check.expected.paycheckCount === 1 ? 'paycheck' : 'paychecks'}
@@ -245,7 +245,7 @@ function CheckedRow({
       </div>
 
       {missing && (
-        <p className="mt-3 max-w-3xl text-caption text-ink-tertiary">
+        <p className="mt-3 max-w-3xl text-caption text-ink-secondary">
           Ask the fund for a deposit statement for these months and compare it against your
           paychecks. If the employer paid late rather than not at all, the next reading absorbs it —
           mark it chased so this stops asking.
@@ -315,10 +315,10 @@ function Figure({
 }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <span className="text-label text-ink-tertiary uppercase">{label}</span>
+      <span className="text-label text-ink-secondary uppercase">{label}</span>
       {children}
       {hint !== undefined && hint !== '' && (
-        <span className="text-caption text-ink-tertiary">{hint}</span>
+        <span className="text-caption text-ink-secondary">{hint}</span>
       )}
     </div>
   )

@@ -528,6 +528,7 @@ written out here.
 | D-626 | 2026-11-26 | The engine's views are the report: the board, the list, the roadmap, ready, the agenda, the dashboards and the connections each answer their question first in one sentence at the lede step under the title; a card moves at once with Undo in the bar above the lanes, a dashboard's block is removed at once with Undo, and a connection opens as a form in the side panel beside the graph instead of a band across its foot | M64 |
 | D-627 | 2026-11-26 | An entry and an input view read as a form: every writable field wears a hairline under it at rest, Add sits under the fields, the list's + is the one way into a new entry, an input view's Fields is a form in the side panel, the table's filter is a funnel beside a boxed search, and the formats screens say every word through the catalogue, in English and Hebrew | M64 |
 | D-628 | 2026-11-26 | Undo of a delete on Rules and Categories brings the thing back whole — its id, its place, its count, its colour, the built-in rules that went with it and the rows that named it — through the create that makes one, handed what the delete took, over an engine pair that reads a row before it goes and puts it back; the rule editor, the test box, re-applying and New category choose with ChoiceField and still take a paste | M64 |
+| D-629 | 2026-11-26 | Wealth's forms open beside the page and ask the few fields a person types first: the balance and its date for a fund's reading, said back in words against the last reading as it is typed, with the rest of the report one verb further and grown in place; the fund, goal, movement, debt and payment forms take the same shape (`PanelForm`), and the details take the report's ink and ramp | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1806,6 +1807,56 @@ is the `.bak` every committed write copies first); keeping the snapshot in the d
 a removal, D-266); bringing back an unused category's past corrections into it and its re-apply
 undo rows, which `forgetCategory` deletes rather than clears (history nobody can see, M64 Q36);
 `ChoiceMenu` for the forms (read-only, so a paste would not land).
+## D-629 · 2026-11-26 · Wealth's forms open beside the page and ask the few fields a person types first: the balance and its date for a fund's reading, said back in words against the last reading as it is typed, with the rest of the report one verb further and grown in place; the fund, goal, movement, debt and payment forms take the same shape (`PanelForm`), and the details take the report's ink and ramp <a id="d-629"></a>
+
+**Context.** M64 F3. U10 rebuilt Wealth's four screens and left their forms as they were: six
+full-page editors (a fund, a reading, a goal, a movement, a debt, a payment), each taking the page
+and asking every field it has at once, in a grid sized by the viewport. The maintainer, 2026-11-26:
+*"adding readings to funds and such, looks like the old, same as the paychecks by hand."* A fund's
+reading was the worst of them: a dozen boxes, three to a row, for a report whose one figure everyone
+has is its balance.
+
+**Decision.**
+
+1. **A form with several fields is a `PanelForm` in the `SidePanel`** (D-617), the page behind it.
+   Enter saves, Esc or Cancel leaves, and saving closes the panel on the screen it was opened from;
+   one panel at a time (a form opening puts the fee or deposit panel and a fund's pane away). Its Save
+   is a secondary button: the page keeps its one primary, as Accounts' forms do (D-624).
+2. **Three pieces, in this order**: the few fields everybody fills; **`Said`**, one sentence of what
+   the figures typed so far mean; and **`MoreFields`**, the rest, folded under one verb with what is in
+   it said beside it, grown in place by grid rows. A reading asks its balance (the amount as the hero
+   of its input) and its date, and says *₪193,400.00 on 26 Nov 2026: up ₪3,800.00 since 30 Sep 2026*
+   against the fund's last reading before that date; deposits, fees, return, the three parts and a
+   note are *More from the report*, with *empty is not zero* said there. A fund asks its name, kind,
+   manager (made in place) and two fees, and says each fee against the shipped ceiling as it is typed;
+   a movement asks its kind, amount, goal and holding; a debt its name, kind, what was borrowed and
+   what is paid a month, said back as a count of payments *not counting interest*; a payment its
+   amount and debt; a goal its name, where the money is, and a target said as a sum a month.
+3. **Grids follow the form, not the window** (`@container`): one column in the panel, two or three
+   where the same fields stand on a page of their own — a report read from a stack keeps its page
+   (`SnapshotEditor` in `FlowFrame`, D-163/D-164), with the same fields.
+4. **Choices are the app's** (`ChoiceMenu`, `ChoiceField` with *+ New…*), and a day is a text field
+   that takes `2026-11-26` or `26/11/2026` and opens the platform's calendar under it on a click
+   (`DateInput`), never the platform's date box drawn in the page.
+5. **The details take the report's ink and ramp**: no `ink-tertiary` text, nothing off the type ramp
+   or between the spacing steps, in the fund, goal and debt panes, fee impact, the deposit check, the
+   net worth row's panel and `wealth/parts.tsx`; all of them are now on the surface sweep. The forms'
+   words are the catalogue's, English and Hebrew, and they are on the translated list.
+
+**The shape is for M64 F14 to follow**: a paycheck typed by hand is the same three pieces —
+`src/ui/components/PanelForm.tsx` is a new file of the kit's, named for F2, which rewrites the kit
+next. One change to the kit itself: `SidePanel` isolates its kicker (`Bidi`), since the forms put a
+fund's, goal's or debt's name there.
+
+**Rejected.** Keeping the full-page editors and restyling them (the maintainer's complaint is that
+they take the page and ask everything at once). A wizard of steps (a reading is one screen of
+figures, and steps hide the ones a report does state). Saying the balance against a *computed*
+expectation (last reading plus deposits less fees plus return): reports print return net or gross of
+fees differently, and a sentence that is sometimes wrong is worse than none.
+
+**Left.** The details' own words (fund, goal and debt panes, fee impact, the deposit check, the net
+worth row, the goal form's where-picker and cost basis) are still English: M64 F26. Focus after a
+form opened from a row's menu falls to the page, since the menu item that opened it is gone.
 
 ## Related
 

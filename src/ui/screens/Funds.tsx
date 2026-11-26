@@ -1,4 +1,4 @@
-import { useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type KeyboardEvent, type ReactNode } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 
 import { money, type CurrencyCode } from '@/core/money.ts'
@@ -41,7 +41,7 @@ import { PageMenu } from '@/ui/components/PageMenu.tsx'
 import { SidePanel } from '@/ui/components/SidePanel.tsx'
 import { EmptyState, WaitingList, type Waiting } from '@/ui/components/WaitingList.tsx'
 import { blankFund, FundEditor } from '@/ui/funds/FundEditor.tsx'
-import { blankSnapshot, SnapshotEditor } from '@/ui/funds/SnapshotEditor.tsx'
+import { blankSnapshot, SnapshotForm } from '@/ui/funds/SnapshotEditor.tsx'
 import { DepositCheck } from '@/ui/screens/DepositCheck.tsx'
 import { FeeImpact } from '@/ui/screens/FeeImpact.tsx'
 import { Problem } from '@/ui/screens/Overview.tsx'
@@ -88,6 +88,14 @@ export function Funds() {
   )
   // Which fund the pane beside this list is showing, if any (D-130).
   const { fundId: openId } = useParams<{ fundId: string }>()
+  // One panel beside the page at a time (D-617): a form opening puts away the other panel and a fund's pane.
+  const forming = editingFund !== undefined || editingSnapshot !== undefined
+  useEffect(() => {
+    if (!forming) return
+    setPanel(undefined)
+    if (openId !== undefined) void navigate('/wealth/funds')
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [forming])
 
   const entries = useMemo(() => (db === undefined ? [] : listFundsWithLatest(db, { includeArchived: showArchived })), [db, revision, showArchived])
   const currency: CurrencyCode = entries.find((entry) => entry.latest !== undefined)?.latest?.totalBalance.currency ?? 'ILS'
@@ -121,83 +129,92 @@ export function Funds() {
     }
   }
 
-  if (editingFund !== undefined) {
-    return (
-      <FundEditor
-        key={editingFund.fund.id}
-        initial={editingFund.fund}
-        isNew={editingFund.isNew}
-        institutions={institutions}
-        feeReferences={DEFAULT_FEE_REFERENCES}
-        onCreateInstitution={(name) => addManager(mutate, name)}
-        onSave={(fund) => {
-          write((database, now) => {
-            const fields = {
-              name: fund.name,
-              fundType: fund.fundType,
-              institutionId: fund.institutionId,
-              policyNumber: fund.policyNumber,
-              investmentTrack: fund.investmentTrack,
-              status: fund.status,
-              employerName: fund.employerName,
-              openedDate: fund.openedDate,
-              firstDepositDate: fund.firstDepositDate,
-              feeOnAccumulationBasisPoints: fund.fees.onAccumulationBasisPoints,
-              feeOnDepositBasisPoints: fund.fees.onDepositBasisPoints,
-              feeNegotiatedUntil: fund.feeNegotiatedUntil,
-              agreedReturnBasisPoints: fund.agreedReturnBasisPoints,
-              beneficiaries: fund.beneficiaries,
-              notes: fund.notes,
-            }
-            if (editingFund.isNew) createFund(database, fields, now)
-            else updateFund(database, fund.id, fields, now)
-          })
-          setEditingFund(undefined)
-        }}
-        onCancel={() => setEditingFund(undefined)}
-      />
-    )
-  }
-
-  if (editingSnapshot !== undefined) {
-    const owner = entries.find((entry) => entry.fund.id === editingSnapshot.snapshot.fundAccountId)
-    return (
-      <SnapshotEditor
-        key={editingSnapshot.snapshot.id}
-        initial={editingSnapshot.snapshot}
-        isNew={editingSnapshot.isNew}
-        currency={currency}
-        existing={listSnapshots(db, editingSnapshot.snapshot.fundAccountId)}
-        fundName={owner?.fund.name ?? ''}
-        onSave={(snapshot) => {
-          const saved = write((database, now) => {
-            if (editingSnapshot.isNew) {
-              addSnapshot(
-                database,
-                {
-                  fundAccountId: snapshot.fundAccountId,
-                  asOfDate: snapshot.asOfDate,
-                  totalBalance: snapshot.totalBalance,
-                  employeeComponent: snapshot.employeeComponent,
-                  employerComponent: snapshot.employerComponent,
-                  severanceComponent: snapshot.severanceComponent,
-                  depositsSincePrevious: snapshot.depositsSincePrevious,
-                  feesChargedSincePrevious: snapshot.feesChargedSincePrevious,
-                  returnSincePrevious: snapshot.returnSincePrevious,
-                  note: snapshot.note,
-                },
-                now,
-              )
-            } else {
-              updateSnapshot(database, snapshot.id, snapshot, now)
-            }
-          })
-          if (saved) setEditingSnapshot(undefined)
-        }}
-        onCancel={() => setEditingSnapshot(undefined)}
-      />
-    )
-  }
+  // A form with several fields opens beside the page, the funds behind it (D-617, M64 F3):
+  // saving or leaving closes the panel on the screen it was opened from.
+  const readingOwner = editingSnapshot === undefined ? undefined : entries.find((entry) => entry.fund.id === editingSnapshot.snapshot.fundAccountId)
+  const form =
+    editingFund !== undefined ? (
+      <SidePanel
+        title={editingFund.isNew ? t('wealth.fundForm.addTitle') : t('wealth.fundForm.editTitle')}
+        kicker={editingFund.isNew ? t('wealth.funds.title') : editingFund.fund.name}
+        onClose={() => setEditingFund(undefined)}
+      >
+          <FundEditor
+            key={editingFund.fund.id}
+            initial={editingFund.fund}
+            isNew={editingFund.isNew}
+            institutions={institutions}
+            feeReferences={DEFAULT_FEE_REFERENCES}
+            onCreateInstitution={(name) => addManager(mutate, name)}
+            onSave={(fund) => {
+              write((database, now) => {
+                const fields = {
+                  name: fund.name,
+                  fundType: fund.fundType,
+                  institutionId: fund.institutionId,
+                  policyNumber: fund.policyNumber,
+                  investmentTrack: fund.investmentTrack,
+                  status: fund.status,
+                  employerName: fund.employerName,
+                  openedDate: fund.openedDate,
+                  firstDepositDate: fund.firstDepositDate,
+                  feeOnAccumulationBasisPoints: fund.fees.onAccumulationBasisPoints,
+                  feeOnDepositBasisPoints: fund.fees.onDepositBasisPoints,
+                  feeNegotiatedUntil: fund.feeNegotiatedUntil,
+                  agreedReturnBasisPoints: fund.agreedReturnBasisPoints,
+                  beneficiaries: fund.beneficiaries,
+                  notes: fund.notes,
+                }
+                if (editingFund.isNew) createFund(database, fields, now)
+                else updateFund(database, fund.id, fields, now)
+              })
+              setEditingFund(undefined)
+            }}
+            onCancel={() => setEditingFund(undefined)}
+          />
+      </SidePanel>
+    ) : editingSnapshot !== undefined ? (
+      <SidePanel
+        title={editingSnapshot.isNew ? t('wealth.reading.addTitle') : t('wealth.reading.editTitle')}
+        kicker={readingOwner?.fund.name}
+        onClose={() => setEditingSnapshot(undefined)}
+      >
+          <SnapshotForm
+            key={editingSnapshot.snapshot.id}
+            initial={editingSnapshot.snapshot}
+            isNew={editingSnapshot.isNew}
+            currency={currency}
+            existing={listSnapshots(db, editingSnapshot.snapshot.fundAccountId)}
+            fundName={readingOwner?.fund.name ?? ''}
+            onSave={(snapshot) => {
+              const saved = write((database, now) => {
+                if (editingSnapshot.isNew) {
+                  addSnapshot(
+                    database,
+                    {
+                      fundAccountId: snapshot.fundAccountId,
+                      asOfDate: snapshot.asOfDate,
+                      totalBalance: snapshot.totalBalance,
+                      employeeComponent: snapshot.employeeComponent,
+                      employerComponent: snapshot.employerComponent,
+                      severanceComponent: snapshot.severanceComponent,
+                      depositsSincePrevious: snapshot.depositsSincePrevious,
+                      feesChargedSincePrevious: snapshot.feesChargedSincePrevious,
+                      returnSincePrevious: snapshot.returnSincePrevious,
+                      note: snapshot.note,
+                    },
+                    now,
+                  )
+                } else {
+                  updateSnapshot(database, snapshot.id, snapshot, now)
+                }
+              })
+              if (saved) setEditingSnapshot(undefined)
+            }}
+            onCancel={() => setEditingSnapshot(undefined)}
+          />
+      </SidePanel>
+    ) : undefined
 
   const totals = longTermSavings(entries, currency)
   const now = today()
@@ -215,10 +232,14 @@ export function Funds() {
   /** One panel beside the page at a time: opening one puts a fund's pane away, and the other way round. */
   const openPanel = (next: Panel): void => {
     setPanel(next)
+    setEditingFund(undefined)
+    setEditingSnapshot(undefined)
     if (openId !== undefined) void navigate('/wealth/funds')
   }
   const openFund = (entry: FundWithLatest): void => {
     setPanel(undefined)
+    setEditingFund(undefined)
+    setEditingSnapshot(undefined)
     void navigate(`/wealth/funds/${entry.fund.id}`)
   }
   const addReading = (entry: FundWithLatest): void => setEditingSnapshot({ isNew: true, snapshot: blankSnapshot(entry.fund.id, now, currency) })
@@ -418,6 +439,7 @@ export function Funds() {
   return (
     <div className="flex h-full">
       <div className="h-full min-w-0 flex-1 overflow-auto">{page}</div>
+      {form}
       {panel?.kind === 'fees' && (
         <SidePanel
           title={t('wealth.funds.feesPanel')}
