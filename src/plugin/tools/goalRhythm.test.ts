@@ -9,11 +9,11 @@ import { localDate } from '@/core/time.ts'
 import { exportDatabase, openDatabase } from '@/data/db/database.ts'
 import { goalsPlan } from '@/data/repositories/goalPlanRepository.ts'
 import { pausedUntilByGoal, setAsideHeld } from '@/data/repositories/goalRhythmRepository.ts'
-import { addDeposit, createGoal, createHolding, createHoldingPlace, listDeposits } from '@/data/repositories/savingsRepository.ts'
+import { addDeposit, createGoal, createHolding, createHoldingPlace, goalHeld, listDeposits, listGoals } from '@/data/repositories/savingsRepository.ts'
 import { createSplitBucket, createSplitPlan } from '@/data/repositories/splitPlanRepository.ts'
 
 import { goalProjectionTool } from './wealth.ts'
-import { pauseGoalsTool, setGoalAmountsTool, settleSetAsideTool, suggestGoalAmountsTool } from './goalRhythm.ts'
+import { closeGoalsTool, pauseGoalsTool, setGoalAmountsTool, settleSetAsideTool, suggestGoalAmountsTool } from './goalRhythm.ts'
 import { NO_CLIENT } from './tool.ts'
 import { today } from '../today.ts'
 import { tempDir } from '../../testing/tempDir'
@@ -127,6 +127,38 @@ describe('settle_set_aside', () => {
     await settleSetAsideTool.run({ path, goals: [{ goal: 'Holiday', still_there: true }], commit: true }, NO_CLIENT)
     const text = await settleSetAsideTool.run({ path, goals: [{ goal: 'Holiday', still_there: true }] }, NO_CLIENT)
     expect(text).toContain('nothing set aside is older than 90 days')
+  })
+})
+
+describe('close_goals (M64 F72)', () => {
+  it('asks whether the money was spent, then takes it out and closes in one write', async () => {
+    const path = await fixture()
+    const asked = await closeGoalsTool.run({ path, goals: [{ goal: 'Holiday' }] }, NO_CLIENT)
+    expect(asked).toContain('say `spent`')
+
+    const dry = await closeGoalsTool.run({ path, goals: [{ goal: 'Holiday', spent: true }, { goal: 'Laptop' }] }, NO_CLIENT)
+    expect(dry).toContain('spent on the goal, and closes')
+    expect(dry).toContain('Nothing has been written')
+
+    await closeGoalsTool.run({ path, goals: [{ goal: 'Holiday', spent: true }, { goal: 'Laptop' }], commit: true }, NO_CLIENT)
+    const db = await openDatabase(await readFile(path))
+    const goals = listGoals(db, { includeClosed: true })
+    expect(goals.every((one) => one.isClosed)).toBe(true)
+    const holiday = goals.find((one) => one.name === 'Holiday')
+    expect(holiday === undefined ? [] : goalHeld(db, holiday.id)).toEqual([])
+    expect(listDeposits(db).find((one) => one.amount.minor === -40_000)?.note).toBe('Spent on Holiday')
+  })
+
+  it('closes without spending, and reopens', async () => {
+    const path = await fixture()
+    await closeGoalsTool.run({ path, goals: [{ goal: 'Holiday', spent: false }], commit: true }, NO_CLIENT)
+    let db = await openDatabase(await readFile(path))
+    expect(listDeposits(db).some((one) => one.amount.minor < 0)).toBe(false)
+    expect(listGoals(db, { includeClosed: true }).find((one) => one.name === 'Holiday')?.isClosed).toBe(true)
+
+    await closeGoalsTool.run({ path, goals: [{ goal: 'Holiday', reopen: true }], commit: true }, NO_CLIENT)
+    db = await openDatabase(await readFile(path))
+    expect(listGoals(db).some((one) => one.name === 'Holiday')).toBe(true)
   })
 })
 

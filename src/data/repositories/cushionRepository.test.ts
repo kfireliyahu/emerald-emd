@@ -15,7 +15,17 @@ import {
 } from './cushionRepository.ts'
 import { createFixedExpense, type NewFixedExpense } from './fixedExpenseRepository.ts'
 import { createSession, setBalanceCheck, setSessionStatus } from './importSessionRepository.ts'
-import { addDeposit, createGoal, createHoldingPlace, documentMoneyMap, listGoals, setPlaceAccount } from './savingsRepository.ts'
+import {
+  addDeposit,
+  closeGoal,
+  createGoal,
+  createHoldingPlace,
+  documentMoneyMap,
+  goalHeld,
+  listDeposits,
+  listGoals,
+  setPlaceAccount,
+} from './savingsRepository.ts'
 import { createSplitBucket, createSplitPlan } from './splitPlanRepository.ts'
 import { insertTransactions } from './transactionRepository.ts'
 
@@ -273,3 +283,37 @@ const FIXED_RENT: NewFixedExpense = {
   source: 'USER_DEFINED',
   isDiscretionary: false,
 }
+
+describe('a goal spent and closed gives its money back to the cushion (M64 F72, D-645)', () => {
+  it('spent, takes out what it holds and closes in one write, and the split still adds up', async () => {
+    const db = await createLedgerDatabase()
+    const current = bank(db, 'Current', 3_145_218)
+    const savings = bank(db, 'Savings', 1_674_800)
+    const car = save(db, 'Car', savings.cash.id, 1_200_000)
+    save(db, 'Wedding', current.cash.id, 850_000)
+    const before = cushionReading(db, asOf, 'ILS')
+    expect(before.split.left).toEqual(ils(2_770_018))
+
+    const out = closeGoal(db, car.id, { spent: true, asOf, note: 'Spent on Car' }, 1)
+    expect(out.map((one) => [one.amount.minor, one.holdingId, one.sourceKind, one.note])).toEqual([
+      [-1_200_000, savings.cash.id, 'MANUAL', 'Spent on Car'],
+    ])
+    expect(listGoals(db, { includeClosed: true }).find((one) => one.id === car.id)?.isClosed).toBe(true)
+    expect(goalHeld(db, car.id)).toEqual([])
+
+    const after = cushionReading(db, asOf, 'ILS')
+    expect(after.split.parts.filter((one) => one.amount.minor !== 0).map((one) => one.goalName)).toEqual(['Wedding'])
+    expect(after.split.check).toEqual({ kind: 'ADDS_UP' })
+    expect(after.split.left).toEqual(ils(2_770_018 + 1_200_000))
+  })
+
+  it('not spent, only closes, and the money stays held', async () => {
+    const db = await createLedgerDatabase()
+    const savings = bank(db, 'Savings', 1_674_800)
+    const car = save(db, 'Car', savings.cash.id, 1_200_000)
+    const deposits = listDeposits(db).length
+    expect(closeGoal(db, car.id, { spent: false, asOf }, 1)).toEqual([])
+    expect(listDeposits(db)).toHaveLength(deposits)
+    expect(cushionReading(db, asOf, 'ILS').split.parts.map((one) => [one.goalName, one.amount.minor])).toEqual([['Car', 1_200_000]])
+  })
+})

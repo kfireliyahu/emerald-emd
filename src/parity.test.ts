@@ -581,8 +581,11 @@ const LEDGER_REPOSITORIES = readdirSync(new URL('data/repositories', import.meta
  * **65 at M45 U2**: nine writes neither half reached were dead code and went —
  * `confirmTemplate`, `setPaycheckIrregular`, `moveDeposits`, `reorderGoals`, `setBufferBucket`
  * and the import review's four per-row setters.
+ *
+ * **64 at M64 F72** (D-645): `close_goals` closes and reopens a goal through `setGoalClosed`,
+ * and through `closeGoal` when its money was spent, the Goals screen's own two writes.
  */
-const LEDGER_WITHOUT_A_TOOL = 65
+const LEDGER_WITHOUT_A_TOOL = 64
 const LEDGER_WITHOUT_A_SCREEN = 3
 
 /** Every path in this file is relative to `src/`, which is where this file sits. */

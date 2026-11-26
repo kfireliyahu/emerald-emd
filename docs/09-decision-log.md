@@ -541,6 +541,7 @@ written out here.
 | D-642 | 2026-11-26 | Every route is inside its density budget and none is exempt: the last, reading files onto a format, is redesigned with its question as its title and choosing files as its action, and its ceiling counts the two pickers the old measure missed; a question asked where its button was behaves as a popover (`useAskHere`); the page's pictures of the ledger are retaken on the redesigned screens | M64 |
 | D-643 | 2026-11-26 | Emerald's page is laid out as a report: an index of words in place of the timeline, the section you are reading in semibold ink with a 6px accent square; what it is answered first at the display step in the light face; and every section one sheet on twelve columns, its question small, its answer as the heading, what backs it beside them and the evidence across the width beneath; no claim, tour, reel or picture is lost and none is retaken | M64 |
 | D-644 | 2026-11-26 | A side panel's width is the reader's: its inner edge drags, steps with ← and → and goes back to its default on a double-click; the width is a preference of the machine (`localStorage`, never the document), one for every side panel and one for the wealth lists' pane; between a floor of 360px and a ceiling of half the window | M64 |
+| D-645 | 2026-11-26 | Closing a goal that still holds money asks, at its Close, whether the money was spent: spent, `closeGoal` records the withdrawal of what it holds in each holding (a typed money-out row whose why is *spent on the goal*) and closes it in one write, undoable; not spent, it closes and the money stays held; a goal's panel takes money out beside money in; `close_goals` is the conversation's half | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -2394,3 +2395,43 @@ paycheck's parts had no way to get more room.
 **Left as it is.** Panels that are a page's own permanent column (Connections' sentences) did not
 open beside the page and take no handle. Defaults the driver set and the maintainer may change: one
 width for every side panel rather than one per panel, the 360px floor and the half-window ceiling.
+
+## D-645 · 2026-11-26 · Closing a goal that still holds money asks, at its Close, whether the money was spent: spent, `closeGoal` records the withdrawal of what it holds in each holding (a typed money-out row whose why is *spent on the goal*) and closes it in one write, undoable; not spent, it closes and the money stays held; a goal's panel takes money out beside money in; `close_goals` is the conversation's half <a id="d-645"></a>
+
+**Context.** M64 F72. The maintainer, 2026-11-26, of a goal saved in the bank, reached and spent: *"i
+saved up for x, and bought it. what am i meant to do with that goal, how can i free that money"*, and
+then *"i dont see add a movement or record withdrawal when im on the goal side bar"*. The goal's
+panel offered only Set aside and Already there; money out was two menus away, behind a row menu item
+called *Add a deposit*; and Close left the goal's deposits held in the bank's split (`goalParts`
+counts closed goals), so the cushion stayed short by money that was gone.
+
+**Decision.**
+
+1. **Close asks, where Close was pressed.** A goal that still holds money (typed or fed, never one
+   that follows its holding) asks *Was the ₪X in {goal} spent?* — the row menu's Close turns into that
+   question at the same point, as Delete's does (D-622); the panel's new *Close goal* asks in a
+   popover at its button (`useAskHere`, D-642). Never a bar at the bottom. A goal holding nothing,
+   or one that follows its holding, closes at once.
+2. **Spent is one write**, `closeGoal` in `savingsRepository`: for each holding where the goal's
+   movements net above zero, a typed negative deposit (`MANUAL`, dated today, its note *Spent on
+   {goal}* in the person's language), then the close, all or nothing. No table changes: the deposit
+   rows carry the withdrawal, which is what a person typing *Money out* writes. A goal that follows
+   its holding (D-357) is refused a spent close while it holds money: its sale is its money out.
+   Not spent, it only closes and the note says the money stays held.
+3. **Undo is the note's, where it was done**: *{goal} closed, and ₪X taken out as spent · Undo*
+   (Ctrl+Z too, eight seconds), deleting exactly the withdrawals written and opening the goal again.
+4. **The panel takes money out beside money in** — *Money out*, its amount labelled *Took out* and a
+   required *Why*, saying when it is more than the goal holds and recording it anyway. Its rows wear a
+   *Money out* tag, and *How the balance is made* shows it as *Taken out* rather than a negative
+   *Set aside*. A followed goal keeps its sentence that its holding's rows are its movements.
+5. **The row menu's *Add a deposit* is *Record a movement*, "Money in or out of it"** — what the form
+   it opens records.
+6. **`close_goals` is the conversation's half**: several goals a call, `spent` required when a goal
+   holds money, `reopen` to open one again, dry-run first. `setGoalClosed`, screen-only until now,
+   has its tool, so the ledger's ratchet falls to 64.
+7. **The panel's action ceiling rises from 20 to 22** (`docs/redesign/budget.json`), and only its own:
+   *Close goal* and *Money out* are the two the maintainer asked for, and nothing else on it could go.
+
+**Checked** on the synthetic year: a goal saved in the checking account's Cash, ₪4,000, spent and
+closed — the cushion's left grows by ₪4,000, its split still adds up, and the account's own Cash is
+its whole statement again.

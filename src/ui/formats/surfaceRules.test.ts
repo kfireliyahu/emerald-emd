@@ -697,6 +697,8 @@ describe('the document’s own screens, notices and dialogs, swept (M54 F6)', ()
     'src/ui/screens/Debts.tsx',
     'src/ui/savings/Movements.tsx',
     'src/ui/wealth/rowMenu.tsx',
+    // M64 F72 (D-645): closing a goal, its question at the button and its Undo.
+    'src/ui/savings/GoalClose.tsx',
     // M64 F3 (D-629): Wealth's forms, in the side panel.
     'src/ui/components/PanelForm.tsx',
     'src/ui/funds/SnapshotEditor.tsx',

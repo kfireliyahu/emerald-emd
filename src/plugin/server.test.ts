@@ -157,6 +157,7 @@ describe('the MCP server', () => {
       'set_goal_deposit_categories',
       'set_cushion',
       'pause_goals',
+      'close_goals',
       'settle_set_aside',
       'suggest_goal_amounts',
       'set_goal_amounts',

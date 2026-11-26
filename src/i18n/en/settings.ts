@@ -346,6 +346,7 @@ export const settings = {
       set_goal_deposit_categories: 'Says which Money moved category feeds each goal, and where it lands.',
       set_cushion: 'Sets the cushion: which bank accounts count, its months and its buckets.',
       pause_goals: 'Skips a goal for a few months, or starts it again.',
+      close_goals: 'Closes a goal, and takes its money out when it was spent.',
       settle_set_aside: 'Says whether money set aside for a goal is still there.',
       suggest_goal_amounts: 'Suggests the monthly amount for each goal, by nearest date.',
       set_goal_amounts: 'Sets the monthly amount toward a goal or extra on a debt, from Everything else.',

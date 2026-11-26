@@ -167,6 +167,7 @@ const M64_F26 = [
   'src/ui/wealth/NetWorthOpened.tsx',
   'src/ui/savings/WherePicker.tsx',
   'src/ui/savings/CostBasis.tsx',
+  'src/ui/savings/GoalClose.tsx',
   'src/ui/funds/DepositRows.tsx',
 ]
 
