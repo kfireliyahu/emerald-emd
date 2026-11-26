@@ -6,7 +6,7 @@ milestone: M64
 
 # What each screen is for
 
-M64 U2 ([D-612](../09-decision-log.md#d-612)), for the redesign [D-606](../09-decision-log.md#d-606)
+M64 U2 (D-612), for the redesign D-606
 starts. Every screen of the app as it is **before** M64 changes any of them: the one question it
 answers, in a newcomer's words; what someone comes to it to do; every block it shows; the shape of
 each piece of data and the way the `dataviz` skill would show that shape; its measures; what it
