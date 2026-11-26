@@ -5144,7 +5144,7 @@ milestone: M64
 scope: ui
 title: Where a screen's interactions open: reading more in the side panel, one value in place, a form of several fields in the same panel, a job of several steps on a page of its own with one way back, a choice in a popover, and a dialog only to confirm what cannot be undone
 question: D-614 and D-615 said only that detail opens beside the page. Where do editing, making, picking and confirming open on the screens U6-U14 redesign: side panel, dialog, in place or a page?
-answer: Each redesigned screen lists every interaction and where it opens, from five places: reading more → SidePanel; one value of one thing → in place on its line; a thing of several fields → a form in the SidePanel; a job of several steps that takes over (the mapper, a new document's start) → its own page with one way back; a choice from a list or menu → a popover anchored to what opened it. A dialog only confirms what cannot be undone, and an undo beats it where possible. An interaction that fits none stops the unit and asks. And it behaves as ordinary desktop apps have taught people to expect (the maintainer, the same day): deleting deletes at once with an undo near where it happened; where no undo is possible the confirmation is anchored to the button and names the thing, never a bar at the bottom of the screen (his example: a row selected inside a filter, deleted from its entry, asked at the bottom). Selected rows act in the list's own header; Esc, Enter, Delete, Ctrl+Z, arrows and Tab do what they do everywhere; nothing moves under the pointer; every panel has one visible way out. A surprise to someone who uses ordinary apps is wrong even where it fits a rule. Written into the redesign-screen skill and DESIGN.md.
+answer: Each redesigned screen lists every interaction and where it opens, from five places: reading more → SidePanel; one value of one thing → in place on its line; a thing of several fields → a form in the SidePanel; a job of several steps that takes over (the mapper, a new document's start) → its own page with one way back; a choice from a list or menu → a popover anchored to what opened it. A dialog only confirms what cannot be undone, and an undo beats it where possible. An interaction that fits none stops the unit and asks. And it behaves as ordinary desktop apps have taught people to expect (the maintainer, the same day): deleting deletes at once with an undo near where it happened; where no undo is possible the confirmation is anchored to the button and names the thing, never a bar at the bottom of the screen. Selected rows act in the list's own header; Esc, Enter, Delete, Ctrl+Z, arrows and Tab do what they do everywhere; nothing moves under the pointer; every panel has one visible way out. A surprise to someone who uses ordinary apps is wrong even where it fits a rule. Two more (the maintainer, 2026-11-26): a list cut short ('the rest', '+ n more') expands in place and never opens the side panel; and an action finishes where it was started (a rule made from a transaction is made there, its note offering 'Open in Rules' as a link). Written into the redesign-screen skill and DESIGN.md.
 state: live
 affects: ".claude/skills/redesign-screen/SKILL.md\nDESIGN.md"
 
@@ -18211,6 +18211,54 @@ brief: U13's taste check (D-625) found: entry and input fields have no visible e
 files: "src/ui/formats/EntryView.tsx\nsrc/ui/formats/InputView.tsx\nsrc/ui/formats/EntryList.tsx\nsrc/ui/formats/RowSheet.tsx"
 paths: "src/ui/formats/EntryView.tsx\nsrc/ui/formats/InputView.tsx\nsrc/ui/formats/EntryList.tsx\nsrc/ui/formats/RowSheet.tsx\nsrc/ui/formats/FilterBand.tsx"
 
+### M64 F11
+milestone: M64
+scope: ui
+title: The figures that sum something up carry their sign's colour
+state: planned
+brief: Maintainer, 2026-11-26: "some numbers could use their colors (the negative/positive), not everywhere but for example the line that sums up the month." U4 retired 'The four flows colour Home's figures' for 'Figures are ink, a flow is a mark'. Amend it, not reverse it: a figure that sums a period up (Home's left over and its sentence, the Year's left over, Plan's to split, net worth, a statement's gap) is drawn in the positive or negative token by its sign; every other figure stays ink. Write the list of which figures in the rule row and DESIGN.md, give it a decision, and keep contrast at AA in light and dark (the tokens' 'positive' and 'negative' text steps). Colour is never the only signal: the sign or the word stays.
+paths: src/ui/charts/HeadlineFigure.tsx src/ui/screens/Home.tsx src/ui/screens/Year.tsx src/ui/screens/Plan.tsx src/ui/screens/Overview.tsx DESIGN.md docs/11-ui-design-language.md
+
+### M64 F12
+milestone: M64
+scope: app
+title: Plan's year: how much went to each bucket this year, out of what was planned
+state: planned
+brief: Maintainer, 2026-11-26: "in the plan i'd like a view that sums up the buckets of the year (meaning if i had a monthly bucket id like to see how much total in the year went to the bucket out of planned)." Add a Year view to Plan (a tab beside the month, as Home has): one sentence answering how the year went against the plan, then each bucket as a PlanAgainst meter of the year's actual against the sum of its monthly plan for the months so far, with the months a bucket was over or under one click behind it in the side panel. Use the same month basis as Home (D-607). Parity (D-227): the plugin's plans or plan_month tool answers the same year figures. Synthetic year only.
+paths: src/ui/screens/Plan.tsx src/ui/plan/ src/domain/ src/plugin/tools/
+
+### M64 F13
+milestone: M64
+scope: ui
+title: "\"More\" expands in place everywhere, and Home's \"the rest\" first"
+state: planned
+brief: Maintainer, 2026-11-26: "some of the usage of the side bar is still weird. like the home clicking on the 'more' of what went out opening a side bar for the rest." D-617 now says a list cut short expands in place and never opens the side panel. Fix Home's Where it went 'the rest' (HomePanel's theRest), then audit every redesigned screen for a 'more', 'the rest' or '+ n' that opens a panel, and make each expand where it stands. Report each one found.
+paths: src/ui/home/ src/ui/screens/Home.tsx src/ui/charts/RankedBars.tsx
+
+### M64 F14
+milestone: M64
+scope: ui
+title: Adding a paycheck by hand is easy, in the new design
+state: planned
+brief: Maintainer, 2026-11-26: "adding paychecks by hand is still the old ui? could it be maybe easier?" PaycheckEditor stayed a page of its own in U8 (D-620). Redesign it: the few fields a person must type first (month, employer, gross, net), the rest of the slip's lines added only if wanted, the reconciliation said in words as you type, its words in the paychecks catalogue en and he (this takes F2's PaycheckEditor, ReconciliationStrip and DeductionTypeSelect translation), ChoiceField not the platform select, D-617's places and conventions. Keep it the same form the reading flow confirms in (U7).
+paths: src/ui/paychecks/PaycheckEditor.tsx src/ui/paychecks/ReconciliationStrip.tsx src/ui/paychecks/DeductionTypeSelect.tsx src/i18n/en/paychecks.ts src/i18n/he/paychecks.ts
+
+### M64 F15
+milestone: M64
+scope: ui
+title: Making a rule from a transaction stays on the transaction
+state: planned
+brief: Maintainer, 2026-11-26: "when creating a rule can we stay at the screen where we wanted to create it? e.g im at transactions creating a rule for a transaction. i dont wanna go to rules. maybe a popup should ask me if i want to." D-617 now says an action finishes where it was started. Wherever a rule is made outside Rules (Transactions' make-a-rule, By merchant, a row's menu, the learning offer), it is made there and the person stays; the note that says it was made offers 'Open in Rules' as a link, with Undo. Check every such path.
+paths: src/ui/screens/Transactions.tsx src/ui/screens/ByMerchant.tsx src/ui/transactions/ src/ui/categorize/
+
+### M64 F16
+milestone: M64
+scope: ui
+title: Reading a statement, a paycheck and a fund report are told apart at a glance
+state: planned
+brief: Maintainer, 2026-11-26: "i think there should be distinguishable buttons between reading paychecks, transactions and such cause it can confuse users." Wherever the app offers to read a file (the header's Read files, Read paychecks, a fund's report, the guide, the palette, the front door), the button names the kind it reads and carries that kind's glyph, so 'Read bank and card statements', 'Read paychecks' and 'Read a fund report' never look alike; a file dropped anywhere is still read whatever it is. Decide with a decision row whether the header keeps one Read files door that asks the kind, or one button per kind, and say why.
+paths: src/ui/screens/ReadStatements.tsx src/ui/paychecks/ReadSlips.tsx src/ui/import/ src/ui/components/ActionGlyph.tsx src/ui/commands.ts
+
 ### M64 F2
 milestone: M64
 scope: ui
@@ -18224,7 +18272,7 @@ milestone: M64
 scope: ui
 title: Wealth's details and forms in the redesign
 state: planned
-brief: U10 rebuilt the four Wealth screens but left their details: the fund, goal and debt panes, the net worth row's panel (NetWorthOpened), FeeImpact's and DepositCheck's insides, and the six full-page editors (fund, reading, goal, deposit, debt, payment). Move the multi-field editors into the SidePanel as forms (their grids by container width, not the viewport), give the details the report's look (no ink-tertiary text, no off-ramp sizes from wealth/parts.tsx), and put their words in the wealth catalogue, en and he. Files: src/ui/wealth/NetWorthOpened.tsx, src/ui/screens/FundDetail.tsx, src/ui/screens/GoalDetail.tsx, src/ui/screens/DebtDetail.tsx, src/ui/screens/FeeImpact.tsx, src/ui/screens/DepositCheck.tsx, src/ui/funds/FundEditor.tsx, src/ui/funds/SnapshotEditor.tsx, src/ui/savings/GoalEditor.tsx, src/ui/savings/DepositEditor.tsx, src/ui/debts/DebtEditor.tsx, src/ui/debts/PaymentEditor.tsx, src/ui/wealth/parts.tsx.
+brief: "U10 rebuilt the four Wealth screens but left their details: the fund, goal and debt panes, the net worth row's panel (NetWorthOpened), FeeImpact's and DepositCheck's insides, and the six full-page editors (fund, reading, goal, deposit, debt, payment). Move the multi-field editors into the SidePanel as forms (their grids by container width, not the viewport), give the details the report's look (no ink-tertiary text, no off-ramp sizes from wealth/parts.tsx), and put their words in the wealth catalogue, en and he. Files: src/ui/wealth/NetWorthOpened.tsx, src/ui/screens/FundDetail.tsx, src/ui/screens/GoalDetail.tsx, src/ui/screens/DebtDetail.tsx, src/ui/screens/FeeImpact.tsx, src/ui/screens/DepositCheck.tsx, src/ui/funds/FundEditor.tsx, src/ui/funds/SnapshotEditor.tsx, src/ui/savings/GoalEditor.tsx, src/ui/savings/DepositEditor.tsx, src/ui/debts/DebtEditor.tsx, src/ui/debts/PaymentEditor.tsx, src/ui/wealth/parts.tsx.\n\nMaintainer, 2026-11-26: \"adding readings to funds and such, looks like the old, same as the paychecks by hand.\" Adding a fund reading (SnapshotEditor) is the first form to make easy, as F14 does for a paycheck: the few fields a person types first, the rest only if wanted, said in words as they type."
 
 ### M64 F5
 milestone: M64
@@ -18350,7 +18398,7 @@ title: The tour and the page catch up, and every route is inside its budget
 state: planned
 brief: "**Do.** Replay every tour on the redesigned screens and fix what moved (check:tours green); the page's pictures of the app show the new look. probe:screens --budget passes on every route with nothing exempt. Write one review_entry for the maintainer: open his own document and use the ledger for a real month (read a statement, fix categories, read the month), saying what to look for.\n\nMaintainer, 2026-11-25: before that, walk every screen's interactions once against D-617's conventions (delete with undo, confirmations anchored to the button, selection acting in the list's header, the keys doing what they do everywhere) and fix what still surprises; the closing review_entry names that walk."
 files: The tour's scenes and captions, the public page's pictures of the app, and the budget's exempt list emptied.
-blocks: ["M64 U6","M64 U7","M64 U8","M64 U9","M64 U10","M64 U11","M64 U12","M64 U14","M64 F1","M64 F2","M64 F3","M64 F5","M64 F6","M64 F9","M64 F10"]
+blocks: ["M64 U6","M64 U7","M64 U8","M64 U9","M64 U10","M64 U11","M64 U12","M64 U14","M64 F1","M64 F2","M64 F3","M64 F5","M64 F6","M64 F9","M64 F10","M64 F11","M64 F12","M64 F13","M64 F14","M64 F15","M64 F16"]
 paths: "src/demo/tour/\nsrc/demo/page/\ndocs/redesign/budget.json"
 
 ### M64 U16

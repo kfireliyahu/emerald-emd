@@ -89,6 +89,13 @@ interaction against them:
   scroll and selection; a panel opens without shifting the page beneath it.
 - **One way out.** Every panel, popover and step page has one visible close or back, top corner
   for a panel, and clicking outside a popover closes it.
+- **"More" expands in place.** A list cut short ("+ 6 more", "the rest") grows where it stands;
+  it never opens the side panel. The panel is for detail *about* a thing, not for more of the same
+  list (the maintainer, 2026-11-26, on Home's Where it went).
+- **An action finishes where it was started.** Making a rule from a transaction, a goal from a
+  plan, anything made from somewhere else: it is made there, the person stays there, and the note
+  that says it was made offers *Open in Rules* (or wherever it lives) as a link. Going elsewhere
+  is offered, never done (the maintainer, 2026-11-26).
 - **Ask: would someone who uses ordinary desktop apps be surprised?** If yes, it is wrong even
   when it fits a rule here. Write each surprise found and its fix in the report.
 

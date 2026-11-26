@@ -1308,6 +1308,11 @@ Ctrl+Z, the arrows and Tab do what they do everywhere; nothing moves under the p
 panel has one visible way out. The taste check asks of each interaction whether someone who uses
 ordinary apps would be surprised, and a surprise is wrong even where it fits a rule.
 
+**Two more, the maintainer, 2026-11-26**, after trying U5-U9: a list cut short (*the rest*, *+ 6 more*)
+expands in place and never opens the side panel, which is for detail about a thing; and an action
+finishes where it was started (a rule made from a transaction is made there, and its note offers
+*Open in Rules* as a link rather than going there).
+
 **Why.** One place per kind of act is what makes a screen learnable once and the rest predictable;
 left to each unit, ten screens would make ten choices. It extends *Detail opens beside the page*
 rather than adding a pattern.
