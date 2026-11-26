@@ -57,10 +57,10 @@ export const guide = {
   },
   steps: {
     read: {
-      where: 'Home › Read files',
+      where: 'Home › Read bank and card statements',
       title: 'Read statements, paychecks and fund reports',
       asNext: 'read statements, paychecks and fund reports',
-      body: 'Press Read files, or drop the files anywhere in the window: card and bank exports, paycheck and fund report PDFs, any number at once. Each goes to the reader that knows it, and nothing is written until you press Write.',
+      body: 'Press Read bank and card statements or Read paychecks, or drop the files anywhere in the window: card and bank exports, paycheck and fund report PDFs, any number at once. Each goes to the reader that knows it, and nothing is written until you press Write.',
       test: 'a transaction or a paycheck exists',
       done: '{says}',
     },

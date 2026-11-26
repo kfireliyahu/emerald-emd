@@ -26,7 +26,9 @@ export const palette = {
   },
   commands: {
     categorize: 'Categorize transactions',
-    import: 'Read files…',
+    import: 'Read bank and card statements…',
+    paychecks: 'Read paychecks…',
+    report: 'Read a fund report…',
     sidebar: 'Toggle the sidebar',
     new: 'New',
     open: 'Open…',

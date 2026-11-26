@@ -28,13 +28,14 @@ export const LEDGER_GUIDE: readonly GuideStep[] = [
   {
     id: 'read',
     route: '/',
-    where: 'Home › Read files',
+    where: 'Home › Read bank and card statements',
     place: 'home.read',
-    // The drop band left Home in M64 U5 (D-616): the place is the Read files
-    // button, and a file dropped anywhere in the window is read the same (M64 U12).
+    // The drop band left Home in M64 U5 (D-616): the place is the statements' button —
+    // one door per kind since M64 F16 (D-636) — and a file dropped anywhere in the window
+    // is read as what it is (M64 U12).
     title: 'Read statements, paychecks and fund reports',
     body:
-      'Press Read files, or drop the files anywhere in the window: card and bank exports, paycheck and fund ' +
+      'Press Read bank and card statements or Read paychecks, or drop the files anywhere in the window: card and bank exports, paycheck and fund ' +
       'report PDFs, any number at once. Each goes to the reader that knows it, and nothing is written until you press Write.',
     test: 'a transaction or a paycheck exists',
   },

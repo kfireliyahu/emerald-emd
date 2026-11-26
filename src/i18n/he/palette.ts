@@ -28,7 +28,9 @@ export const palette: Translation<'palette'> = {
   },
   commands: {
     categorize: 'סיווג תנועות',
-    import: 'ייבוא קבצים…',
+    import: 'ייבוא דפי חשבון של בנק וכרטיס…',
+    paychecks: 'ייבוא תלושים…',
+    report: 'ייבוא דוח קופה…',
     sidebar: 'הצגה או הסתרה של סרגל הצד',
     new: 'מסמך חדש',
     open: 'פתיחה…',

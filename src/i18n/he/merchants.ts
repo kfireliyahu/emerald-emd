@@ -204,6 +204,6 @@ export const merchants: Translation<'merchants'> = {
     everything: 'הצגת הכול',
     done: 'הכול מסווג.',
     none: 'עדיין אין תנועות.',
-    read: 'ייבוא קבצים',
+    read: 'ייבוא דפי חשבון של בנק וכרטיס',
   },
 }

@@ -26,7 +26,7 @@ import {
   type BatchFile,
 } from '@/state/statementBatch.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
-import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
+import { ActionGlyph, READ_GLYPH } from '@/ui/components/ActionGlyph.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { ChoiceMenu } from '@/ui/components/ChoiceField.tsx'
 import { SELECT } from '@/ui/components/fieldLook.ts'
@@ -466,7 +466,7 @@ function FileRow({
       figure = t('reading.row.payslip')
       action = (
         <span className="flex flex-wrap items-center gap-2">
-          <Button variant="secondary" size="sm" icon="arrow" onClick={onPayslips}>
+          <Button variant="secondary" size="sm" icon={READ_GLYPH.paychecks} onClick={onPayslips}>
             {t('reading.row.aPaycheck')}
           </Button>
           {funds.length > 0 && (

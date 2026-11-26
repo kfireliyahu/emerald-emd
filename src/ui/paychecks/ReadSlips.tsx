@@ -38,6 +38,7 @@ import {
   type SlipBatchState,
 } from '@/state/slipBatch.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { READ_GLYPH } from '@/ui/components/ActionGlyph.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { IconAction, removableRow } from '@/ui/components/IconAction.tsx'
 import { Phrase } from '@/ui/components/Phrase.tsx'
@@ -430,7 +431,7 @@ export function ReadSlips() {
               </Button>
             )}
             {/* The next step when nothing is read yet, and only then filled. */}
-            <Button variant={total === 0 && !working ? 'primary' : 'secondary'} icon="add" disabled={working} onClick={() => input.current?.click()}>
+            <Button variant={total === 0 && !working ? 'primary' : 'secondary'} icon={READ_GLYPH.paychecks} disabled={working} onClick={() => input.current?.click()}>
               {t('reading.slips.add')}
             </Button>
           </span>

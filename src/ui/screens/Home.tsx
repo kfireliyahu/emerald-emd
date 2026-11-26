@@ -30,7 +30,7 @@ import { MonthStrip } from '@/ui/charts/MonthStrip.tsx'
 import { PlanAgainst } from '@/ui/charts/PlanAgainst.tsx'
 import { RankedBars } from '@/ui/charts/RankedBars.tsx'
 import { resolvePalette } from '@/ui/charts/categoryPalette.ts'
-import { ActionGlyph } from '@/ui/components/ActionGlyph.tsx'
+import { ActionGlyph, READ_GLYPH } from '@/ui/components/ActionGlyph.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { Phrase } from '@/ui/components/Phrase.tsx'
 import { EmptyState, WaitingList } from '@/ui/components/WaitingList.tsx'
@@ -38,7 +38,7 @@ import { GuideLine } from '@/ui/guide/GuideLine.tsx'
 import { budgetLines } from '@/ui/home/budgets.ts'
 import { HomePanel, WHERE_LIMIT, type Panel } from '@/ui/home/HomePanel.tsx'
 import { chartEnd, monthsEndingAt, neighbour, newestWithData, signedPercent, taxVersusAverage, versusAverage } from '@/ui/home/months.ts'
-import { Pager, useFilePicker, useReadFiles } from '@/ui/home/parts.tsx'
+import { Pager, useFilePicker, useReadFiles, useReadPaychecks } from '@/ui/home/parts.tsx'
 import { useHomeKeys } from '@/ui/home/useHomeKeys.ts'
 import { waitingLine } from '@/ui/home/WaitingList.tsx'
 import { today } from '@/ui/today.ts'
@@ -125,6 +125,7 @@ export function Home() {
 
   const readFiles = useReadFiles()
   const picker = useFilePicker(readFiles)
+  const slips = useFilePicker(useReadPaychecks())
 
   const go = (target: YearMonth | undefined): void => {
     if (target === undefined || period === undefined || compareYearMonths(target, period) === 0) return
@@ -196,11 +197,18 @@ export function Home() {
             />
           )}
         </div>
-        {/* Drop a file anywhere and it is read the same way (the window's drop). */}
-        <Button variant="primary" icon="read" onClick={picker.open} title={t('home.month.readFilesTitle')} data-tour="read-files" data-guide="home.read">
-          {t('home.month.readFiles')}
-        </Button>
+        {/* One door per kind, never one that looks like the other (M64 F16, D-636): the month is
+            made of both. Drop a file anywhere and it is read as what it is (the window's drop). */}
+        <span className="flex flex-wrap items-center gap-2">
+          <Button variant="secondary" icon={READ_GLYPH.paychecks} onClick={slips.open} title={t('home.month.readPaychecksTitle')}>
+            {t('home.month.readPaychecks')}
+          </Button>
+          <Button variant="primary" icon={READ_GLYPH.statements} onClick={picker.open} title={t('home.month.readStatementsTitle')} data-tour="read-files" data-guide="home.read">
+            {t('home.month.readStatements')}
+          </Button>
+        </span>
         {picker.input}
+        {slips.input}
       </header>
 
       {wrote !== undefined && (

@@ -21,6 +21,7 @@ import { HeadlineFigure } from '@/ui/charts/HeadlineFigure.tsx'
 import { drawn, kitMoney, wholeMoney } from '@/ui/charts/kit.ts'
 import { MonthFlow } from '@/ui/charts/MonthFlow.tsx'
 import { MonthStrip } from '@/ui/charts/MonthStrip.tsx'
+import { READ_GLYPH } from '@/ui/components/ActionGlyph.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { SidePanel } from '@/ui/components/SidePanel.tsx'
 import { EmptyState, WaitingList, type Waiting } from '@/ui/components/WaitingList.tsx'
@@ -322,7 +323,7 @@ export function Paychecks() {
             />
           )}
         </div>
-        <Button variant="primary" icon="read" onClick={() => readSlips()} title={t('paychecks.month.readTitle')}>
+        <Button variant="primary" icon={READ_GLYPH.paychecks} onClick={() => readSlips()} title={t('paychecks.month.readTitle')}>
           {t('paychecks.month.read')}
         </Button>
       </header>

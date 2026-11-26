@@ -39,6 +39,9 @@ export type ActionGlyphName =
   | 'equals'
   | 'chart'
   | 'input'
+  | 'statement'
+  | 'paycheck'
+  | 'report'
 
 const PATHS: Readonly<Record<ActionGlyphName, React.ReactNode>> = {
   add: <path d="M8 3v10M3 8h10" />,
@@ -122,7 +125,26 @@ const PATHS: Readonly<Record<ActionGlyphName, React.ReactNode>> = {
   input: (
     <><rect x="2" y="4.5" width="12" height="7" /><path d="M5.5 6.5v3" /></>
   ),
+  // The three kinds a file is read as (M64 F16, D-636), drawn so no two look alike: a bank or
+  // card statement is a sheet of rows with its amounts' column; a paycheck is the note it pays;
+  // a fund report is a page with its return climbing.
+  statement: (
+    <><rect x="2.5" y="2.5" width="11" height="11" /><path d="M2.5 6h11M2.5 9.5h11M9.5 2.5v11" /></>
+  ),
+  paycheck: (
+    <><rect x="1.5" y="4" width="13" height="8" /><circle cx="8" cy="8" r="2" /></>
+  ),
+  report: (
+    <><path d="M3.5 2.5h9v11h-9z" /><path d="M5.5 11l2-2.5 1.5 1 2-3" /></>
+  ),
 }
+
+/** The glyph each kind of file is read under (M64 F16, D-636): one per kind, wherever it is offered. */
+export const READ_GLYPH = {
+  statements: 'statement',
+  paychecks: 'paycheck',
+  report: 'report',
+} as const satisfies Record<string, ActionGlyphName>
 
 /** The glyphs that point along the line, mirrored in Hebrew (M60 U3, D-586). */
 const POINTING: ReadonlySet<ActionGlyphName> = new Set(['left', 'right', 'arrow', 'undo'])

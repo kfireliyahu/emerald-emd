@@ -153,11 +153,28 @@ export function buildCommands(context: CommandContext): readonly Command[] {
           keywords: 'uncategorized file rows',
           run: () => context.go('/transactions/merchants'),
         },
+        // **One door per kind, each named for what it reads** (M64 F16, D-636). Paychecks go
+        // straight to their own reading; a fund report is picked as a statement is, and the
+        // batch hands it to the fund it names — whatever a file is, it is read as that.
         {
           id: 'do:import',
           label: tNow('palette.commands.import'),
           group: 'Do',
-          keywords: 'import statement card bank xlsx csv pdf paycheck upload open file',
+          keywords: 'import statement card bank xlsx csv pdf upload open file read',
+          run: context.importStatement,
+        },
+        {
+          id: 'do:paychecks',
+          label: tNow('palette.commands.paychecks'),
+          group: 'Do',
+          keywords: 'import paycheck payslip salary pdf upload open file read',
+          run: () => context.go('/paychecks/read'),
+        },
+        {
+          id: 'do:report',
+          label: tNow('palette.commands.report'),
+          group: 'Do',
+          keywords: 'import fund report pension provident pdf upload open file read',
           run: context.importStatement,
         },
       )

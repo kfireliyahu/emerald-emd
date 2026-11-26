@@ -6,7 +6,7 @@ export const transactions: Translation<'transactions'> = {
     noDocument: 'יש לפתוח מסמך, או ליצור מסמך חדש, כדי לראות מה יש בו.',
     title: 'תנועות',
     empty: 'עדיין אין תנועות.',
-    readFiles: 'ייבוא קבצים',
+    readFiles: 'ייבוא דפי חשבון של בנק וכרטיס',
     month: 'חודש',
     newest: 'חזרה לחודש האחרון',
     allMonths: 'כל החודשים',

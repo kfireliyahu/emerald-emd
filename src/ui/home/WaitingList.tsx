@@ -24,9 +24,11 @@ import { countKey } from '@/i18n/count.ts'
 import { useDates, useT } from '@/i18n/current.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { READ_GLYPH } from '@/ui/components/ActionGlyph.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { PaymentLine } from '@/ui/debts/PaymentReview.tsx'
 import { CandidateCard } from '@/ui/fixed/CandidateCard.tsx'
+import { useFilePicker, useReadPaychecks } from '@/ui/home/parts.tsx'
 import { newFigureFor } from '@/ui/savings/holdingCheck.ts'
 import { SettlementLine } from '@/ui/import/SettlementPrompt.tsx'
 import { TransferLine } from '@/ui/import/TransferPrompt.tsx'
@@ -129,7 +131,7 @@ function Kind({ item, currency, onRead }: { item: AttentionItem; currency: Curre
     case 'FIXED_EXPENSE_CANDIDATES':
       return <Bills />
     case 'MISSING_PAYSLIP':
-      return <Payslip item={item} onRead={onRead} />
+      return <Payslip item={item} />
     case 'FUND_WITHOUT_BALANCE':
       return <Funds count={n} />
     case 'UNCONFIRMED_HOLDING':
@@ -225,7 +227,7 @@ function Unmatched({ onRead }: { onRead: () => void }) {
       })}
       why={t('home.waiting.unmatched.why')}
     >
-      <Button variant="secondary" size="sm" onClick={onRead}>
+      <Button variant="secondary" size="sm" icon={READ_GLYPH.statements} onClick={onRead}>
         {t('home.waiting.unmatched.read')}
       </Button>
       <Button variant="ghost" size="sm" onClick={() => write((database, now) => countCardCharges(database, entry.rows.map((row) => row.ref), true, now))}>
@@ -250,7 +252,7 @@ function Statements({ onRead }: { onRead: () => void }) {
       }} />}
       why={t('home.waiting.statements.why')}
     >
-      <Button variant="secondary" size="sm" onClick={onRead}>
+      <Button variant="secondary" size="sm" icon={READ_GLYPH.statements} onClick={onRead}>
         {t('home.waiting.statements.read')}
       </Button>
     </Head>
@@ -344,11 +346,12 @@ function Bills() {
   )
 }
 
-function Payslip({ item, onRead }: { item: AttentionItem; onRead: () => void }) {
+function Payslip({ item }: { item: AttentionItem }) {
   const { write } = useLedger()
   const t = useT()
   const dates = useDates()
   const month = item.period
+  const slips = useFilePicker(useReadPaychecks())
   // Its Add a paycheck is the band's above, the one Home has (M54 F13, M59 U6).
   return (
     <Head
@@ -357,9 +360,11 @@ function Payslip({ item, onRead }: { item: AttentionItem; onRead: () => void }) 
       })}
       why={t('home.waiting.payslip.why')}
     >
-      <Button variant="secondary" size="sm" onClick={onRead}>
+      {/* Straight to Read paychecks, never through the statements' batch (M64 F16, D-636). */}
+      <Button variant="secondary" size="sm" icon={READ_GLYPH.paychecks} onClick={slips.open}>
         {t('home.waiting.payslip.read')}
       </Button>
+      {slips.input}
       {month !== undefined && (
         <Button variant="ghost" size="sm" onClick={() => write((database, now) => setNoPayMonths(database, [month], true, now))}>
           {t('home.waiting.payslip.noPay')}

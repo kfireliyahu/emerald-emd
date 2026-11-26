@@ -51,6 +51,19 @@ export function useReadFiles(): (files: readonly File[]) => void {
 }
 
 /**
+ * Read paychecks: the files go straight to `#/paychecks/read` (M64 F16, D-636), as Paychecks' own
+ * door sends them — a paycheck read from Home never waits in the statements' batch first.
+ */
+export function useReadPaychecks(): (files: readonly File[]) => void {
+  const db = useDocumentStore((state) => state.db)
+  const navigate = useNavigate()
+  return (files) => {
+    if (db === undefined || files.length === 0) return
+    void navigate('/paychecks/read', { state: { files } })
+  }
+}
+
+/**
  * A hidden file picker and the way to open it, for a button that is not a label.
  * **In the demo it is a list of the files bundled with it** (M33 U5): a visitor
  * has no file of theirs there, and what is picked is read as a picked file is.

@@ -792,7 +792,7 @@ export const wealth: Translation<'wealth'> = {
     noDocument: 'פתחו מסמך כדי לראות קופה.',
     missing: 'אין קופה כזו — אולי היא נמחקה.',
     closePane: 'סגירת החלונית',
-    readReport: 'קריאת דוח',
+    readReport: 'קריאת דוח קופה',
     close: 'סגירה',
     balance: 'יתרה',
     noReading: 'אין עדיין קריאה',

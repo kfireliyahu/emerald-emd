@@ -804,7 +804,7 @@ export const wealth = {
     noDocument: 'Open a document to see a fund.',
     missing: 'No such fund — it may have been deleted.',
     closePane: 'Close this pane',
-    readReport: 'Read a report',
+    readReport: 'Read a fund report',
     close: 'Close',
     balance: 'Balance',
     noReading: 'no reading yet',

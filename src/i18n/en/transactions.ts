@@ -4,7 +4,7 @@ export const transactions = {
     noDocument: 'Open a document, or create one, to see what is in it.',
     title: 'Transactions',
     empty: 'No transactions yet.',
-    readFiles: 'Read files',
+    readFiles: 'Read bank and card statements',
     /** The name of the run that files the rows already here, kept in the document. */
     month: 'Month',
     newest: 'Back to the newest month',

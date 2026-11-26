@@ -29,6 +29,7 @@ import type { FundBalanceSnapshot } from '@/domain/model/funds.ts'
 import { hideRead, useDocumentRead } from '@/state/reading.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
+import { READ_GLYPH } from '@/ui/components/ActionGlyph.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { Chip } from '@/ui/components/Chip.tsx'
 import { BalanceChart } from '@/ui/funds/BalanceChart.tsx'
@@ -70,7 +71,7 @@ export function FundDetail() {
   const [editing, setEditing] = useState<Editing | undefined>()
   /** Pressed, or asked for by a read in the store that wants showing (D-171). */
   // A report dropped on Home's Read files arrives in the navigation's state (M36 U10).
-  // Read once: leaving the reader lets them go, so *Read a report* later starts empty.
+  // Read once: leaving the reader lets them go, so *Read a fund report* later starts empty.
   const [dropped, setDropped] = useState((useLocation().state as { files?: readonly File[] } | null)?.files)
   const [reading, setReading] = useState(dropped !== undefined && dropped.length > 0)
   const held = useDocumentRead()
@@ -219,7 +220,7 @@ export function FundDetail() {
         {/* Says what it does rather than what is behind it: on a machine with no
             model this reads a report in a format the document already knows, and
             otherwise it is the way to teach it one. */}
-        <Button variant="secondary" size="sm" onClick={() => setReading(true)}>
+        <Button variant="secondary" size="sm" icon={READ_GLYPH.report} onClick={() => setReading(true)}>
           {t('wealth.fundDetail.readReport')}
         </Button>
         <Button variant="ghost" size="sm" onClick={closePane}>

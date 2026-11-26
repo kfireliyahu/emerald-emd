@@ -205,6 +205,6 @@ export const merchants = {
     everything: 'Look at everything',
     done: 'Everything is categorized.',
     none: 'No transactions yet.',
-    read: 'Read files',
+    read: 'Read bank and card statements',
   },
 } as const

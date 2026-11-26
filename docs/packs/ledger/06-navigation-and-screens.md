@@ -352,7 +352,7 @@ import flow had it because `App` renders them instead of the router; `FlowFrame`
 screen says the same thing. It claims the window, the sidebar stops being navigable, the tab strip
 draws nothing, `ListDetail` stops drawing the list, and the flow carries **one** way out — the
 frame's, top-right, plus Escape from anywhere that is not a field. The four that use it are the
-ones that transcribe a document: *Add a reading*, *Read a report*, the payslip reader and the
+ones that transcribe a document: *Add a reading*, *Read a fund report*, the payslip reader and the
 paycheck form.
 
 ### Onboarding (first run, outside the tabs)

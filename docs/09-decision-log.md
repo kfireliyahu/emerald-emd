@@ -532,6 +532,7 @@ written out here.
 | D-630 | 2026-11-26 | The kit catches up with the screens: a small button is the 32px chrome row on the body step, a choice wears a chevron and is never the platform's select, a value-shaped `ValueChoice` replaces Rules' `PickField`, the side panel's first Esc leaves a field and focus returns to the latest opener, a figure keeps its sign in Hebrew, the waiting notice is never filled; and a paycheck by hand is a `PanelForm` in Paychecks' side panel — month, employer, gross and net first, whether it adds up said in words, the slip's lines only if wanted | M64 |
 | D-631 | 2026-11-26 | Plan has a Year beside its month, as Home has: each bucket's year is the sum of its months — what each month's plan gave it against what it got, January through the last month that is over, on the plan each month is on and Home's month basis — said first in words with the categories apart from the goals and debts, each bucket a meter whose months open beside the page, a month nobody could measure left out of both sums, and `plan_month` with a `year` answering the same; Plan's bar runs from the inline start, so in Hebrew it mirrors with its drag and arrow keys while the ring stays a clock | M64 |
 | D-632 | 2026-11-26 | The engine's other views keep the format's one Add and one strip of controls, and say every word through the catalogue: Roadmap and Ready to start carry the table's Add behind the same refusal; the board's Lanes by, the roadmap's fold filters, In the order of, Columns and Fold all, and the ready list's Columns sit in one strip of the same classes under the tabs; a line or card left at its view's columns drops a state its group already says and a link its name already says; and a sentence the engine builds for a screen is a key and its parts, said by the screen | M64 |
+| D-636 | 2026-11-26 | A file is read through a door named for its kind and drawn with its glyph: Home's header carries *Read bank and card statements* (filled) with *Read paychecks* beside it — one button per kind, not one *Read files* that asks the kind; a fund report is read from its fund as *Read a fund report*; the palette names all three; a waiting line opens its own kind's reader; and a file picked or dropped anywhere is still read as what it is | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -2020,3 +2021,43 @@ domain (the boundary forbids it, and a literal key type checks the same at the c
 ## Related
 
 07 Roadmap · [conventions](./conventions.md) · review · `docs/memory.emd` (the `decision` rows)
+
+## D-636 · 2026-11-26 · A file is read through a door named for its kind and drawn with its glyph: Home's header carries *Read bank and card statements* (filled) with *Read paychecks* beside it — one button per kind, not one *Read files* that asks the kind; a fund report is read from its fund as *Read a fund report*; the palette names all three; a waiting line opens its own kind's reader; and a file picked or dropped anywhere is still read as what it is <a id="d-636"></a>
+
+**Context.** M64 F16. The maintainer, 2026-11-26: *"i think there should be distinguishable
+buttons between reading paychecks, transactions and such cause it can confuse users."* Home's
+*Read files* and Paychecks' *Read paychecks* wore the same glyph; a fund's *Read a report* said
+nothing of what kind; the palette had one *Read files…*; and Home's *No paycheck for {month}*
+offered *Read files*, which sent a paycheck through the statements' batch first. The brief asked
+for a decision: one *Read files* door that asks the kind, or one button per kind.
+
+**Decision.**
+
+1. **One button per kind, not one door that asks.** Asking adds a click to the commonest path
+   (a statement, every month), puts a menu in front of the ledger tour's first click, and leaves
+   the header saying *files* — the word that confused. Home's month is made of both kinds, so its
+   header carries both: *Read bank and card statements*, the one filled button (*One primary action
+   per screen*), and *Read paychecks* secondary beside it, which sends its files straight to
+   `#/paychecks/read`. `Ctrl+Shift+O` and the tour's `read-files` stay on the statements' door.
+2. **A kind's glyph wherever it is read** (`READ_GLYPH` in `ActionGlyph.tsx`): a statement is a
+   sheet of rows with its amounts' column, a paycheck the note it pays, a fund report a page with
+   its return climbing — no two alike, and none the old generic *read* arrow. They mark the doors
+   (Home, Paychecks, a fund), *Add paychecks* on Read paychecks, a batch row's *A paycheck*, and
+   the waiting lines' buttons.
+3. **A fund report is read from its fund** (*Read a fund report*): it is read into one fund, and
+   Home has no fund to name, so Home gets no third button.
+4. **The palette names all three**: *Read bank and card statements…* opens the picker,
+   *Read paychecks…* opens Read paychecks, and *Read a fund report…* opens the same picker, whose
+   batch hands a report to the fund it names.
+5. **A waiting line opens its own kind's reader**: *Read its statement…* for a missing statement,
+   *Read paychecks* for a missing paycheck, straight to Read paychecks.
+6. **What a door says is a promise about the kind, never a filter.** A file of another kind, picked
+   through any door or dropped anywhere in the window, is still read as what it is — the
+   statements' door says so in its title — and `#/read` keeps the name *Read files*, because it is
+   where every dropped file lands, whatever its kind.
+
+The guide's first step (`LEDGER_GUIDE`, so `guide_status` too) names both doors.
+
+**The budget** for `#/` rises from 11 to 13 colours, which is what the second door's split tile
+costs (its `hairline` tile and `hairline-strong` edge; measured 10 → 12 light, 11 → 13 dark): the
+brief asked for a button per kind with its glyph, and *The button is a split tile* draws it so.
