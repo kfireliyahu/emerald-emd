@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState, type InputHTMLAttributes, type ReactNode } from 'react'
 
 import { currencySymbol, type CurrencyCode } from '@/core/money.ts'
-import { parseISODate, parseNumericDate, toISODate, type LocalDate } from '@/core/time.ts'
+import { parseISODate, parseNumericDate, parseYearMonth, toISODate, toYearMonthString, type LocalDate, type YearMonth } from '@/core/time.ts'
 import { useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
@@ -261,6 +261,47 @@ export function DateInput({
         onClick={() => picker.current?.open()}
       />
       <NativePicker ref={picker} kind="date" value={text} label="" onPick={take} />
+    </span>
+  )
+}
+
+/**
+ * **A month, typed or picked** — `DateInput`'s twin for a month (M64 F14): a
+ * text field holding `2026-06` (and taking `06/2026` or `6.2026`, the month
+ * first, as typed here), whose click opens the platform's month picker under
+ * it. What is typed is kept while it is not yet a month; leaving the field puts
+ * back the month it holds.
+ */
+export function MonthInput({
+  value,
+  onChange,
+  ...input
+}: {
+  readonly value: YearMonth
+  readonly onChange: (month: YearMonth) => void
+} & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange' | 'className'>) {
+  const [text, setText] = useState(toYearMonthString(value))
+  const picker = useRef<PickerHandle>(null)
+  const take = (typed: string): void => {
+    setText(typed)
+    const trimmed = typed.trim()
+    const flipped = /^(\d{1,2})[/.-](\d{4})$/.exec(trimmed)
+    const month = parseYearMonth(flipped === null ? trimmed : `${flipped[2]!}-${flipped[1]!.padStart(2, '0')}`)
+    if (month !== undefined) onChange(month)
+  }
+  return (
+    <span className="relative flex">
+      <input
+        {...input}
+        className={`${FIELD} w-full tabular-nums`}
+        dir="ltr"
+        inputMode="numeric"
+        value={text}
+        onChange={(event) => take(event.target.value)}
+        onBlur={() => setText(toYearMonthString(value))}
+        onClick={() => picker.current?.open()}
+      />
+      <NativePicker ref={picker} kind="month" value={text} label="" onPick={take} />
     </span>
   )
 }

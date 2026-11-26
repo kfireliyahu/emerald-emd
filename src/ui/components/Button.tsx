@@ -1,4 +1,4 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react'
 
 import { ActionGlyph, type ActionGlyphName } from '@/ui/components/ActionGlyph.tsx'
 import { Working } from '@/ui/components/Working.tsx'
@@ -23,22 +23,16 @@ import { Working } from '@/ui/components/Working.tsx'
  *
  * This retires D-154's inset highlight and hover shadow: a split tile carries
  * its depth in the tile, and a shadow under it would be a second answer.
+ *
+ * **`sm` is the chrome row's button** (M64 F2, D-630): 32px high, its label on
+ * the body step like `md`'s, so a screen's small buttons cost it no type size
+ * of their own (it was 13px, off the ramp). It forwards its ref, so a
+ * confirmation can anchor to it and a panel can hand focus back to it.
  */
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost'
 export type ButtonSize = 'sm' | 'md'
 
-export function Button({
-  variant = 'secondary',
-  size = 'md',
-  icon,
-  count,
-  busy,
-  className,
-  type = 'button',
-  disabled,
-  children,
-  ...rest
-}: {
+export type ButtonProps = {
   variant?: ButtonVariant
   size?: ButtonSize
   /** The glyph in the leading tile. Ignored on `ghost`, which is a word. */
@@ -48,11 +42,17 @@ export function Button({
   /** In progress: what is happening, or `true` to keep the label. */
   busy?: string | boolean | undefined
   children?: ReactNode
-} & ButtonHTMLAttributes<HTMLButtonElement>) {
+} & ButtonHTMLAttributes<HTMLButtonElement>
+
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+  { variant = 'secondary', size = 'md', icon, count, busy, className, type = 'button', disabled, children, ...rest },
+  ref,
+) {
   const working = busy !== undefined && busy !== false
   const tiled = variant !== 'ghost' && (icon !== undefined || working)
   return (
     <button
+      ref={ref}
       type={type}
       disabled={disabled === true || working}
       aria-busy={working || undefined}
@@ -78,4 +78,4 @@ export function Button({
       {count !== undefined && !working && <span className="fc-btn-count">{count}</span>}
     </button>
   )
-}
+})

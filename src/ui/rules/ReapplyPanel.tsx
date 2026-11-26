@@ -17,7 +17,7 @@ import { useDocumentStore } from '@/state/documentStore.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { SELECT } from '@/ui/components/fieldLook.ts'
-import { MENU_MOST, PickField } from '@/ui/rules/PickField.tsx'
+import { MENU_MOST, ValueChoice } from '@/ui/components/ChoiceField.tsx'
 import { Phrase } from '@/ui/components/Phrase.tsx'
 import { accountLabel } from '@/ui/rules/ruleText.ts'
 
@@ -111,7 +111,7 @@ export function ReapplyPanel({
 
         <label className="flex items-center gap-2 text-caption text-ink-secondary">
           {t('rules.reapply.account')}
-          <PickField
+          <ValueChoice
             value={scope.accountId}
             choices={[
               { value: '', label: t('rules.reapply.allAccounts') },
@@ -126,7 +126,7 @@ export function ReapplyPanel({
 
         <label className="flex items-center gap-2 text-caption text-ink-secondary">
           {t('rules.reapply.month')}
-          <PickField
+          <ValueChoice
             value={scope.period}
             choices={[
               { value: '', label: t('rules.reapply.allTime') },

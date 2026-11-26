@@ -10,6 +10,7 @@ import { ParentPicker } from '@/ui/categories/ParentPicker.tsx'
 import { eligibleParents } from '@/ui/categories/parentFilter.ts'
 import { resolvePalette, type CategoryPalette } from '@/ui/charts/categoryPalette.ts'
 import { Button } from '@/ui/components/Button.tsx'
+import { ChoiceMenu } from '@/ui/components/ChoiceField.tsx'
 import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
 import { Phrase } from '@/ui/components/Phrase.tsx'
 import { useDismiss } from '@/ui/components/useDismiss.ts'
@@ -211,7 +212,7 @@ export function CategoryPicker({
         }
         className={`group inline-flex max-w-full items-center gap-1.5 text-start transition-colors duration-[var(--duration-micro)] hover:bg-surface ${
           outlined ? 'border border-hairline-strong px-1.5 py-0.5 hover:border-accent' : 'rounded-md px-2 py-0.5'
-        } ${current === undefined ? 'text-ink-tertiary' : 'text-ink'}`}
+        } ${current === undefined ? 'text-ink-secondary' : 'text-ink'}`}
       >
           <>
         {/* Text with a small dot, no pill and no border (docs/11). The dot is
@@ -250,7 +251,7 @@ export function CategoryPicker({
                   <Option onSelect={() => choose(undefined)} highlighted={false}>
                     {/* The hollow mark, because that is the state this sets. */}
                     <Mark category={undefined} palette={palette} />
-                    <span className="text-ink-tertiary">{t('categories.picker.clear')}</span>
+                    <span className="text-ink-secondary">{t('categories.picker.clear')}</span>
                   </Option>
                 )}
 
@@ -286,7 +287,7 @@ export function CategoryPicker({
                           <Bidi className="min-w-0 truncate text-ink">{wanted}</Bidi>
                           <span className="shrink-0">{t('categories.picker.createAfter')}</span>
                         </span>
-                        <span className="ms-auto shrink-0 text-caption text-ink-tertiary">{t('categories.picker.new')}</span>
+                        <span className="ms-auto shrink-0 text-caption text-ink-secondary">{t('categories.picker.new')}</span>
                       </>
                     ) : (
                       <span className="min-w-0 truncate font-medium text-accent">{t('categories.picker.newRow')}</span>
@@ -399,22 +400,17 @@ function CreateForm({
       />
 
       {parent === undefined ? (
-        <select
-          value={draft.kind}
-          onChange={(event) => onChange({ ...draft, kind: event.target.value as CategoryKind })}
+        <ChoiceMenu
+          text={t(`categories.kinds.${draft.kind}`)}
+          choices={KINDS.map((option) => ({ value: option, label: t(`categories.kinds.${option}`) }))}
+          onPick={(choice) => onChange({ ...draft, kind: choice.value as CategoryKind })}
           aria-label={t('categories.picker.kind')}
           className={`${SELECT} w-full`}
-        >
-          {KINDS.map((option) => (
-            <option key={option} value={option}>
-              {t(`categories.kinds.${option}`)}
-            </option>
-          ))}
-        </select>
+        />
       ) : (
         // Said rather than shown as a control, because `createCategory` takes
         // the parent's kind whatever this form asked for.
-        <p className="text-caption text-ink-tertiary">
+        <p className="text-caption text-ink-secondary">
           <Phrase
             text={t('categories.picker.inherited', { kind: t(`categories.kinds.${parent.kind}`) })}
             parts={{ path: <Bidi>{pathArrows(parent.path)}</Bidi> }}

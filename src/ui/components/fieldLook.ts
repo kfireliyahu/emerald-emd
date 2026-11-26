@@ -16,7 +16,12 @@ export const FIELD =
   'h-8 rounded-control border border-hairline-strong bg-elevated px-3 outline-none ' +
   'focus:border-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent'
 
-export const SELECT = `${FIELD} cursor-pointer pe-2`
+/**
+ * A field you choose in: the same box with a chevron at its end (`.fc-select`,
+ * tokens.css), so a `ChoiceMenu` at rest reads as a choice and not as a text
+ * field waiting to be typed in (M64 F2).
+ */
+export const SELECT = `${FIELD} fc-select cursor-pointer`
 
 /**
  * The same look for something that wraps. Not `FIELD` plus an override: two

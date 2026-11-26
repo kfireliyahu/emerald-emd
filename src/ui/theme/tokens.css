@@ -648,10 +648,12 @@ html {
     color var(--duration-micro) var(--ease-out),
     box-shadow var(--duration-micro) var(--ease-out);
 }
+/* The chrome row's button (M64 F2, D-630): 32px, the chrome rung, and its
+   label on the body step, so a small button costs a screen no type size of
+   its own. It was 13px, off the ramp, on every screen that had one. */
 .fc-btn-sm {
-  height: 30px;
+  height: 32px;
   padding: 0 12px;
-  font-size: 13px;
 }
 .fc-btn-tiled {
   padding-inline-start: 0;
@@ -689,7 +691,7 @@ html {
     color var(--duration-micro) var(--ease-out);
 }
 .fc-btn-sm .fc-btn-tile {
-  width: 30px;
+  width: 32px;
 }
 .fc-btn-count {
   font-family: var(--font-mono);
@@ -1593,6 +1595,11 @@ input[type="number"] {
 .fc-row-on > td:first-child {
   box-shadow: inset 2px 0 0 var(--color-accent);
 }
+/* At the start edge in a Hebrew window too (M64 F2): the first cell is the
+   rightmost there, and its marker is on its right. */
+[dir='rtl'] .fc-row-on > td:first-child {
+  box-shadow: inset -2px 0 0 var(--color-accent);
+}
 
 /* Home's month chart (M28 U5): every month a column you press to open it. */
 .fc-col {
@@ -1797,6 +1804,24 @@ input[type="number"] {
 .fc-text-action:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
+}
+
+/* A field you choose in (`SELECT`, fieldLook.ts): a chevron at its end in
+   `ink-secondary`, drawn by two hard-edged halves rather than an image, so it
+   takes the theme's ink in both themes (M64 F2). At the start edge's far side
+   in a Hebrew window. A platform select loses its own arrow for it. */
+.fc-select {
+  appearance: none;
+  padding-inline-end: 28px;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--color-ink-secondary) 50%),
+    linear-gradient(135deg, var(--color-ink-secondary) 50%, transparent 50%);
+  background-size: 5px 5px, 5px 5px;
+  background-position: calc(100% - 15px) 55%, calc(100% - 10px) 55%;
+  background-repeat: no-repeat;
+}
+[dir='rtl'] .fc-select {
+  background-position: 10px 55%, 15px 55%;
 }
 
 /* The side panel (`SidePanel`): a column of the page's grid where the window

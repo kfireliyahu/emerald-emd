@@ -187,7 +187,7 @@ export function ContextMenu({
                 <small className="text-caption text-ink-secondary">{item.detail}</small>
               )}
             </span>
-            <span className="mt-0.5 font-mono text-caption text-ink-tertiary">
+            <span className="mt-0.5 font-mono text-caption text-ink-secondary">
               {item.submenu !== undefined ? (rtl ? '◂' : '▸') : (item.shortcut ?? '')}
             </span>
           </button>
@@ -231,7 +231,7 @@ export function ContextMenu({
                     className="grid w-full grid-cols-[1fr_auto] items-center gap-x-2 px-3 py-1.5 text-start text-ink transition-colors duration-[var(--duration-micro)] hover:bg-accent-soft focus-visible:bg-accent-soft focus-visible:outline focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent disabled:cursor-default disabled:text-ink-tertiary"
                   >
                     <span className="min-w-0 truncate">{sub.label}</span>
-                    <span className="font-mono text-caption text-ink-tertiary">{sub.shortcut ?? ''}</span>
+                    <span className="font-mono text-caption text-ink-secondary">{sub.shortcut ?? ''}</span>
                   </button>
                 </div>
               ))}

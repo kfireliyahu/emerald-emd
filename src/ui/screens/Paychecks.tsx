@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useLocation, useNavigate } from 'react-router-dom'
 
@@ -22,12 +22,13 @@ import { drawn, kitMoney, wholeMoney } from '@/ui/charts/kit.ts'
 import { MonthFlow } from '@/ui/charts/MonthFlow.tsx'
 import { MonthStrip } from '@/ui/charts/MonthStrip.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { SidePanel } from '@/ui/components/SidePanel.tsx'
 import { EmptyState, WaitingList, type Waiting } from '@/ui/components/WaitingList.tsx'
 import { arrowStep } from '@/ui/direction.ts'
 import { Pager } from '@/ui/home/parts.tsx'
 import { signedPercent, taxVersusAverage } from '@/ui/home/months.ts'
 import { inOrder, neighbour, shownSlip, slipOfMonth, tableRows, type TableRow } from '@/ui/paychecks/months.ts'
-import { PaycheckEditor } from '@/ui/paychecks/PaycheckEditor.tsx'
+import { PaycheckForm } from '@/ui/paychecks/PaycheckEditor.tsx'
 import { PaychecksPanel, type PaycheckPanel } from '@/ui/paychecks/PaychecksPanel.tsx'
 import { PayslipIntake } from '@/ui/paychecks/PayslipIntake.tsx'
 import { savePaycheckDraft } from '@/ui/paychecks/savePaycheck.ts'
@@ -48,10 +49,12 @@ import { today } from '@/ui/today.ts'
  * **Detail opens beside the page** (`PaychecksPanel`), never on a page of its
  * own: each part of the flow its lines (taxes by deduction type, the funds and
  * where they pay into), the net where it went, a row of the table the slip in
- * full. The panel stays open while the months page. **The form is still a page
- * of its own**: a payslip is a dozen fields copied off paper with the
- * reconciliation watched while they are typed, the same form the reading flow
- * confirms a read slip in — a job that takes over until it adds up (D-620).
+ * full. The panel stays open while the months page. **Adding or editing a
+ * paycheck by hand is a form in the same panel** (M64 F14, D-630, replacing
+ * D-620's page of its own): the few fields first, whether it adds up said as
+ * they are typed, the slip's lines only if wanted; saving closes it on the
+ * screen, back to the panel it was opened from. A read slip is confirmed in the
+ * same fields on the reading flow's page.
  *
  * **Deleting deletes at once** and says so where it happened, with Undo
  * (Ctrl+Z too): the note in the panel, and in the table where the row was.
@@ -87,14 +90,12 @@ export function Paychecks() {
   const [swap, setSwap] = useState<{ side: 'l' | 'r'; turn: number }>({ side: 'r', turn: 0 })
   const [arrived] = useState(() => new Set(landing?.arrived ?? []))
   const [over, setOver] = useState(false)
-  // The page's scroll, kept across the form, so Save lands where Edit was pressed.
   const scroller = useRef<HTMLDivElement>(null)
-  const kept = useRef<number | undefined>(undefined)
   // The arrow keys page while this screen is the one on show and nothing that
   // takes arrows has focus; Ctrl+Z undoes a delete. Refs, so the listener is set once.
   const pageRef = useRef<((step: -1 | 1) => void) | undefined>(undefined)
   const undoRef = useRef<(() => void) | undefined>(undefined)
-  const listShown = editing === undefined && !showReader
+  const listShown = !showReader
   useEffect(() => {
     if (!listShown) return
     const onKey = (event: KeyboardEvent): void => {
@@ -114,11 +115,6 @@ export function Paychecks() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [listShown])
-  useLayoutEffect(() => {
-    if (editing !== undefined || kept.current === undefined) return
-    scroller.current?.scrollTo({ top: kept.current })
-    kept.current = undefined
-  }, [editing])
 
   const entries = useMemo(() => (db === undefined ? [] : listPaychecksWithLines(db)), [db, revision])
   const types = useMemo(() => (db === undefined ? [] : listDeductionTypes(db)), [db, revision])
@@ -153,7 +149,6 @@ export function Paychecks() {
     }
   }
   const edit = (next: Editing): void => {
-    kept.current = scroller.current?.scrollTop
     setEditing(next)
   }
 
@@ -177,30 +172,6 @@ export function Paychecks() {
    */
   if (showReader) {
     return <PayslipIntake onLeave={() => hideRead()} onProblem={setProblem} />
-  }
-
-  if (editing !== undefined) {
-    return (
-      <PaycheckEditor
-        // Keyed, so opening a different slip starts a new form rather than
-        // diffing one payslip's fields into another's.
-        key={editing.kind === 'edit' ? editing.id : 'new'}
-        initial={editing.draft}
-        isNew={editing.kind === 'new'}
-        currency={currency}
-        types={types}
-        // Without the slip being edited: it is the one thing that cannot be a
-        // duplicate of itself, and copying a slip into itself is not an offer.
-        history={entries.filter((entry) => entry.paycheck.id !== editingId)}
-        onSave={(draft: PaycheckDraft) => {
-          write((database, now) => savePaycheckDraft(database, draft, editingId, now))
-          if (editing.kind === 'new') setWanted(`month:${toYearMonthString(draft.period)}`)
-          setEditing(undefined)
-        }}
-        onCancel={() => setEditing(undefined)}
-        onCreateType={createType}
-      />
-    )
   }
 
   const ordered = inOrder(entries)
@@ -494,7 +465,35 @@ export function Paychecks() {
       <div ref={scroller} className="h-full min-w-0 flex-1 overflow-auto">
         {page}
       </div>
-      {panel !== undefined && (
+      {editing !== undefined ? (
+        // One panel at a time: the form takes the panel's place, and saving or
+        // leaving gives it back to what was open before (D-617).
+        <SidePanel
+          title={editing.kind === 'new' ? t('paychecks.entry.newTitle') : t('paychecks.entry.editTitle')}
+          kicker={editing.kind === 'new' ? undefined : dates.yearMonth(editing.draft.period)}
+          onClose={() => setEditing(undefined)}
+        >
+          <PaycheckForm
+            // Keyed, so opening a different slip starts a new form rather than
+            // diffing one payslip's fields into another's.
+            key={editing.kind === 'edit' ? editing.id : 'new'}
+            initial={editing.draft}
+            isNew={editing.kind === 'new'}
+            currency={currency}
+            types={types}
+            // Without the slip being edited: it is the one thing that cannot be a
+            // duplicate of itself, and copying a slip into itself is not an offer.
+            history={entries.filter((entry) => entry.paycheck.id !== editingId)}
+            onSave={(draft: PaycheckDraft) => {
+              write((database, now) => savePaycheckDraft(database, draft, editingId, now))
+              if (editing.kind === 'new') setWanted(`month:${toYearMonthString(draft.period)}`)
+              setEditing(undefined)
+            }}
+            onCancel={() => setEditing(undefined)}
+            onCreateType={createType}
+          />
+        </SidePanel>
+      ) : panel !== undefined && (
         <PaychecksPanel
           panel={panel}
           entry={shown}

@@ -581,8 +581,6 @@ function useWaitingNotice(offer: boolean): Notice | undefined {
   const navigate = useNavigate()
   const pathname = useLocation().pathname
   const onHome = pathname === '/'
-  // A read screen's next step is its own Write, so the notice is not filled there (M54 F13).
-  const reading = /(^|\/)read$/.test(pathname)
   const [dismissed, setDismissed] = useState(false)
 
   // Not read at all when not offered, or on Home: a document that keeps no
@@ -604,7 +602,9 @@ function useWaitingNotice(offer: boolean): Notice | undefined {
     ),
     actions: [
       // It goes to the list, where each is answered: the button says so (M54 F6).
-      { label: t('chrome.notices.actions.openHome'), onClick: () => navigate('/'), lead: !reading },
+      // **Never filled** (M64 F2, D-630): it points away from the screen under
+      // it, which keeps its own one primary (*One primary action per screen*).
+      { label: t('chrome.notices.actions.openHome'), onClick: () => navigate('/') },
       { label: t('chrome.notices.actions.notNow'), onClick: () => setDismissed(true), quiet: true },
     ],
   }

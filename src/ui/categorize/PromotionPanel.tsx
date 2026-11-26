@@ -1,7 +1,7 @@
 import { useState } from 'react'
 
 import { formatMoney, fromMajorUnits, type Money } from '@/core/money.ts'
-import { formatMonthShort, toISODate, type LocalDate } from '@/core/time.ts'
+import { type LocalDate } from '@/core/time.ts'
 import { parseAmountText } from '@/data/importer/normalize.ts'
 import type { Category } from '@/data/repositories/categoryRepository.ts'
 import { debtsClaiming, trackingOffer, type TrackingOffer } from '@/domain/debt.ts'
@@ -9,14 +9,16 @@ import type { MerchantBillProposal } from '@/domain/fixedExpenses.ts'
 import type { MerchantGroup } from '@/domain/merchantGroups.ts'
 import type { Debt } from '@/domain/model/debt.ts'
 import { CADENCES, type AmountVariability, type Cadence } from '@/domain/model/fixed.ts'
+import { countKey } from '@/i18n/count.ts'
+import { useDates, useT } from '@/i18n/current.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
 import { CategoryPicker } from '@/ui/components/CategoryPicker.tsx'
+import { MENU_MOST, ValueChoice } from '@/ui/components/ChoiceField.tsx'
 import { Chip } from '@/ui/components/Chip.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { SidePanel } from '@/ui/components/SidePanel.tsx'
 import { FIELD, SELECT } from '@/ui/components/fieldLook.ts'
-import { TRACK_KIND_LABEL } from '@/ui/debts/labels.ts'
-import { CADENCE_LABEL } from '@/ui/fixed/labels.ts'
 
 /** What confirming the bill half would write. The screen turns this into a row. */
 export interface BillPromotion {
@@ -47,7 +49,7 @@ export interface BillPromotion {
  * one-off purchase in the ledger looks exactly like one; here the user has
  * already answered that question, so what is left is arithmetic over the charges
  * offered as a proposal. Where the gaps read as a cadence the panel says so and
- * fills the select in; where they do not it says **whose answer** the select
+ * fills the choice in; where they do not it says **whose answer** the choice
  * holds, because a default that looks like a finding is the failure D-138 keeps
  * turning up.
  *
@@ -56,6 +58,10 @@ export interface BillPromotion {
  * queue of *unconfirmed* payments on the debts screen — they count towards the
  * balance and wait for an answer. docs/f08 requires a debt told to track
  * something to be told that; this is where the sentence goes.
+ *
+ * **Its words are the catalogue's** (`merchants.promotion`, en and he; M64 F2):
+ * a name, a pattern or a category path from the document sits in its sentence
+ * through `Phrase`, isolated by `Bidi`.
  */
 export function PromotionPanel({
   group,
@@ -84,24 +90,30 @@ export function PromotionPanel({
   onDebt: (debtId: string) => void
   onDismiss: () => void
 }) {
+  const t = useT()
+  const dates = useDates()
   const [mode, setMode] = useState<'BILL' | 'DEBT'>('BILL')
 
   // **A form beside the list** (M64 U6, D-617, D-618): several fields, so it
   // opens in the side panel, the merchant its title and the panel's Close
   // (or Esc) the way out; it used to push the list down from above it.
-  const kicker = `${String(group.count)} ${group.count === 1 ? 'charge waiting' : 'charges waiting'}${
+  const waiting = t(countKey('merchants.promotion.waiting', group.count), { count: group.count })
+  const kicker =
     proposal !== undefined && proposal.months.length > 0
-      ? ` · ${formatMonthShort(proposal.firstSeen)}${proposal.months.length > 1 ? ` → ${formatMonthShort(proposal.lastSeen)}` : ''}`
-      : ''
-  }`
+      ? `${waiting} · ${
+          proposal.months.length > 1
+            ? t('merchants.promotion.span', { from: dates.monthShort(proposal.firstSeen), to: dates.monthShort(proposal.lastSeen) })
+            : dates.monthShort(proposal.firstSeen)
+        }`
+      : waiting
   return (
     <SidePanel title={<Bidi>{group.merchantRaw}</Bidi>} kicker={kicker} onClose={onDismiss}>
-      <div className="flex items-center gap-1" role="group" aria-label={`What is ${group.merchantRaw}`}>
+      <div className="flex items-center gap-1" role="group" aria-label={t('merchants.promotion.whatIs', { name: group.merchantRaw })}>
         <Tab active={mode === 'BILL'} onClick={() => setMode('BILL')}>
-          A bill that repeats
+          {t('merchants.promotion.bill')}
         </Tab>
         <Tab active={mode === 'DEBT'} onClick={() => setMode('DEBT')}>
-          A payment on a debt
+          {t('merchants.promotion.debt')}
         </Tab>
       </div>
 
@@ -141,6 +153,8 @@ export function PromotionPanel({
  * the fact and prints it beside the monthly figure; this panel is where the two
  * answers are now **one click apart**, so it says so before the second click
  * rather than after.
+ *
+ * **Enter saves it** (M64 F2): it is a form, and its button is its submit.
  */
 function BillForm({
   group,
@@ -162,6 +176,8 @@ function BillForm({
   suggestedCategoryId: string | undefined
   onSubmit: (promotion: BillPromotion) => void
 }) {
+  const t = useT()
+  const dates = useDates()
   const [name, setName] = useState(group.merchantRaw)
   const [amountText, setAmountText] = useState(
     proposal === undefined ? '' : formatMoney(proposal.medianAmount, { symbol: false }),
@@ -172,76 +188,71 @@ function BillForm({
   if (trackedByExpense !== undefined) {
     return (
       <p className="mt-2 text-ink-secondary">
-        <span className="text-ink">{trackedByExpense}</span> already watches this name on Plan’s
-        bills, so there is nothing to add. Giving these charges a category is still worth doing —
-        a bill does not file them.
+        <Phrase text={t('merchants.promotion.tracked')} parts={{ name: <Bidi className="text-ink">{trackedByExpense}</Bidi> }} />
       </p>
     )
   }
 
   if (proposal === undefined) {
-    return (
-      <p className="mt-2 text-ink-secondary">
-        Nothing outgoing under this name, so there is no amount to propose. A refund or a credit is
-        not a bill; add one by hand on Plan’s bills if you know one is coming.
-      </p>
-    )
+    return <p className="mt-2 text-ink-secondary">{t('merchants.promotion.nothingOut')}</p>
   }
 
   const parsed = parseAmountText(amountText)
   const amount =
     parsed === undefined ? undefined : fromMajorUnits(Math.abs(parsed), proposal.currency)
   const ready = name.trim() !== '' && amount !== undefined && amount.minor > 0
+  const seen =
+    proposal.months.length === 1
+      ? t('merchants.promotion.seenOnce', { month: dates.monthShort(proposal.firstSeen) })
+      : [
+          t('merchants.promotion.seen', { count: proposal.months.length, median: formatMoney(proposal.medianAmount) }),
+          ...(proposal.amountVariability === 'VARIABLE' ? [t('merchants.promotion.moves')] : []),
+          proposal.dayOfMonthSpread > 0
+            ? t('merchants.promotion.daySpread', { day: proposal.dayOfMonthHint, spread: proposal.dayOfMonthSpread })
+            : t('merchants.promotion.day', { day: proposal.dayOfMonthHint }),
+          proposal.cadence === undefined
+            ? t('merchants.promotion.noCycle')
+            : t('merchants.promotion.cycle', { cadence: t(`plan.fixed.cadence.${proposal.cadence}`).toLocaleLowerCase() }),
+          t('merchants.promotion.last', { date: dates.dayMonth(proposal.lastSeen) }),
+        ].join(' · ')
+  const submit = (): void => {
+    if (!ready || amount === undefined) return
+    onSubmit({
+      name: name.trim(),
+      expectedAmount: amount,
+      amountVariability: proposal.amountVariability,
+      cadence,
+      dayOfMonthHint: proposal.dayOfMonthHint,
+      startedAt: anchorOf(proposal),
+      categoryId,
+    })
+  }
 
   return (
-    <>
-      <p className="mt-1.5 text-caption text-ink-secondary tabular-nums">
-        {proposal.months.length === 1 ? (
-          <>
-            Seen once, in {formatMonthShort(proposal.firstSeen)} — so{' '}
-            <span className="text-ink-secondary">how often is your answer, not the app's</span>.
-          </>
-        ) : (
-          <>
-            {proposal.months.length} months · median {formatMoney(proposal.medianAmount)}
-            {proposal.amountVariability === 'VARIABLE' && <> · the amount moves</>} · usually the{' '}
-            {proposal.dayOfMonthHint}
-            {ordinal(proposal.dayOfMonthHint)}
-            {proposal.dayOfMonthSpread > 0 && <> ± {proposal.dayOfMonthSpread}d</>}
-            {' · '}
-            {proposal.cadence === undefined ? (
-              <span className="text-ink-secondary">
-                the gaps do not read as a cycle, so how often is your answer
-              </span>
-            ) : (
-              <>the gaps read as {CADENCE_LABEL[proposal.cadence].toLocaleLowerCase()}</>
-            )}
-            {' · last '}
-            {toISODate(proposal.lastSeen)}
-          </>
-        )}
-      </p>
+    <form
+      className="flex flex-col"
+      onSubmit={(event) => {
+        event.preventDefault()
+        submit()
+      }}
+    >
+      <p className="m-0 mt-1.5 text-caption text-ink-secondary tabular-nums">{seen}</p>
 
       {claimedByDebts.length > 0 && (
-        <p className="mt-1 text-caption text-ink-secondary">
-          {claimedByDebts.map((debt) => debt.name).join(', ')} already counts these charges as
-          repayments. Tracking them as a bill as well subtracts the same money twice — the debts
-          screen leaves such a debt out of its monthly figure and says why, and this is the same
-          money seen from the other side.
+        <p className="m-0 mt-1 text-caption text-ink-secondary">
+          <Phrase text={t('merchants.promotion.claimed')} parts={{ names: <Bidi>{claimedByDebts.map((debt) => debt.name).join(', ')}</Bidi> }} />
         </p>
       )}
 
       {proposal.otherCurrencies.length > 0 && (
-        <p className="mt-1 text-caption text-ink-secondary">
-          Only the {proposal.currency} charges are counted. This name also bills in{' '}
-          {proposal.otherCurrencies.join(', ')}, and there is no rate in this document to add them
-          together with.
+        <p className="m-0 mt-1 text-caption text-ink-secondary">
+          {t('merchants.promotion.otherCurrencies', { currency: proposal.currency, others: proposal.otherCurrencies.join(', ') })}
         </p>
       )}
 
       <div className="mt-3 flex flex-wrap items-end gap-x-4 gap-y-3">
         <label className="flex flex-col gap-1">
-          <span className="text-label text-ink-secondary uppercase">Call it</span>
+          <span className="text-label text-ink-secondary uppercase">{t('merchants.promotion.callIt')}</span>
           <input
             className={`${FIELD} w-56`}
             dir="auto"
@@ -251,80 +262,53 @@ function BillForm({
         </label>
 
         <label className="flex flex-col gap-1">
-          <span className="text-label text-ink-secondary uppercase">Expect</span>
+          <span className="text-label text-ink-secondary uppercase">{t('merchants.promotion.expect')}</span>
           <input
             className={`${FIELD} w-28 text-end tabular-nums`}
+            dir="ltr"
+            inputMode="decimal"
             value={amountText}
             onChange={(event) => setAmountText(event.target.value)}
-            aria-label={`Expected amount in ${proposal.currency}`}
+            aria-label={t('merchants.promotion.expectLabel', { currency: proposal.currency })}
           />
         </label>
 
         <label className="flex flex-col gap-1">
-          <span className="text-label text-ink-secondary uppercase">How often</span>
-          <select
-            className={`${SELECT} text-body`}
+          <span className="text-label text-ink-secondary uppercase">{t('merchants.promotion.howOften')}</span>
+          <ValueChoice
             value={cadence}
-            onChange={(event) => setCadence(event.target.value as Cadence)}
-          >
-            {CADENCES.map((one) => (
-              <option key={one} value={one}>
-                {CADENCE_LABEL[one]}
-              </option>
-            ))}
-          </select>
+            choices={CADENCES.map((one) => ({ value: one, label: t(`plan.fixed.cadence.${one}`) }))}
+            onChange={(next) => setCadence(next as Cadence)}
+          />
         </label>
 
         <div className="flex flex-col gap-1">
-          <span className="text-label text-ink-secondary uppercase">
-            Category <span className="normal-case">(optional)</span>
-          </span>
+          <span className="text-label text-ink-secondary uppercase">{t('merchants.promotion.category')}</span>
           <CategoryPicker
             categories={categories}
             value={categoryId}
             onChange={setCategoryId}
-            label={`Category for all ${group.count} charges at ${group.merchantRaw}`}
+            label={t('merchants.promotion.categoryLabel', { name: group.merchantRaw })}
           />
         </div>
 
-        <Button
-          variant="primary"
-          size="sm"
-          disabled={!ready}
-          onClick={() => {
-            if (amount === undefined) return
-            onSubmit({
-              name: name.trim(),
-              expectedAmount: amount,
-              amountVariability: proposal.amountVariability,
-              cadence,
-              dayOfMonthHint: proposal.dayOfMonthHint,
-              startedAt: anchorOf(proposal),
-              categoryId,
-            })
-          }}
-        >
-          Track it as a bill
+        <Button variant="primary" size="sm" type="submit" disabled={!ready}>
+          {t('merchants.promotion.track')}
         </Button>
       </div>
 
-      <p className="mt-2 text-caption text-ink-secondary">
-        It joins the bills, matched on this merchant, and the plan counts it against net.
+      <p className="m-0 mt-2 text-caption text-ink-secondary">
+        {t('merchants.promotion.joins')}{' '}
         {categoryId === undefined ? (
-          <>
-            {' '}
-            The {group.count === 1 ? 'charge keeps' : 'charges keep'} no category, so this name is
-            still in the queue afterwards.
-          </>
+          t(countKey('merchants.promotion.keepsNone', group.count))
         ) : (
-          <>
-            {' '}
-            The {group.count === 1 ? 'charge goes' : `${group.count} charges go`} into{' '}
-            {categoryPath(categoryId) ?? 'that category'} at the same time.
-          </>
+          <Phrase
+            text={t(countKey('merchants.promotion.goesInto', group.count), { count: group.count })}
+            parts={{ path: <Bidi>{categoryPath(categoryId) ?? t('merchants.promotion.thatCategory')}</Bidi> }}
+          />
         )}
       </p>
-    </>
+    </form>
   )
 }
 
@@ -337,7 +321,7 @@ function BillForm({
  *
  * Each debt carries the sentence `trackingOffer` produced, because pointing a
  * debt at a name can take a live mechanism away, and the moment to say so is
- * before the select is used rather than after the balance moves.
+ * before the choice is made rather than after the balance moves. Enter saves it.
  */
 function DebtForm({
   group,
@@ -348,6 +332,7 @@ function DebtForm({
   debts: readonly Debt[]
   onSubmit: (debtId: string) => void
 }) {
+  const t = useT()
   const offers = debts.map((debt) => ({
     debt,
     offer: trackingOffer(debt, group.merchantNormalized),
@@ -357,84 +342,75 @@ function DebtForm({
   const [debtId, setDebtId] = useState(offerable[0]?.debt.id ?? '')
 
   if (offerable.length === 0) {
-    return (
-      <p className="mt-2 text-ink-secondary">
-        {debts.length === 0
-          ? 'No open debt to point this at. Create one on Debts first — a charge cannot say what was borrowed, or when.'
-          : 'Every open debt here tracks the slices of a split purchase, and replacing that would orphan the slices already found. Add a debt for this loan on Debts.'}
-      </p>
-    )
+    return <p className="mt-2 text-ink-secondary">{debts.length === 0 ? t('merchants.promotion.noDebt') : t('merchants.promotion.allSlices')}</p>
   }
 
   const chosen = offerable.find((one) => one.debt.id === debtId)
+  const ready = chosen !== undefined && chosen.offer.kind !== 'ALREADY'
 
   return (
-    <>
+    <form
+      className="flex flex-col"
+      onSubmit={(event) => {
+        event.preventDefault()
+        if (ready) onSubmit(debtId)
+      }}
+    >
       <div className="mt-3 flex flex-wrap items-end gap-x-4 gap-y-3">
         <label className="flex flex-col gap-1">
-          <span className="text-label text-ink-secondary uppercase">Pays</span>
-          <select
-            className={`${SELECT} max-w-xs text-body`}
+          <span className="text-label text-ink-secondary uppercase">{t('merchants.promotion.pays')}</span>
+          <ValueChoice
+            className={`${SELECT} max-w-xs`}
+            dir="auto"
             value={debtId}
-            onChange={(event) => setDebtId(event.target.value)}
-          >
-            {offerable.map((one) => (
-              <option key={one.debt.id} value={one.debt.id}>
-                {one.debt.name}
-              </option>
-            ))}
-          </select>
+            choices={offerable.map((one) => ({ value: one.debt.id, label: one.debt.name }))}
+            filter={offerable.length > MENU_MOST}
+            onChange={setDebtId}
+          />
         </label>
 
-        <Button
-          variant="primary"
-          size="sm"
-          disabled={chosen === undefined || chosen.offer.kind === 'ALREADY'}
-          onClick={() => onSubmit(debtId)}
-        >
-          Point it at this name
+        <Button variant="primary" size="sm" type="submit" disabled={!ready}>
+          {t('merchants.promotion.point')}
         </Button>
 
         {chosen !== undefined && chosen.offer.kind === 'REPLACES' && (
-          <Chip>replaces {TRACK_KIND_LABEL[chosen.offer.current.kind].toLocaleLowerCase()}</Chip>
+          <Chip>{t('merchants.promotion.replaces', { what: t(`wealth.debtForm.track.${chosen.offer.current.kind}`).toLocaleLowerCase() })}</Chip>
         )}
       </div>
 
-      {chosen !== undefined && <p className="mt-2 text-ink-secondary">{sentence(chosen.offer)}</p>}
-
-      {claiming.length > 0 && chosen?.offer.kind !== 'ALREADY' && (
-        <p className="mt-1 text-caption text-ink-secondary">
-          {claiming.map((one) => one.debt.name).join(', ')} already covers these charges. A second
-          debt pointed at the same name turns every one of them into a question rather than a
-          payment — the app will not guess between two debts.
+      {chosen !== undefined && (
+        <p className="m-0 mt-2 text-ink-secondary">
+          <OfferSentence offer={chosen.offer} />
         </p>
       )}
 
-      <p className="mt-2 text-caption text-ink-secondary">
-        Nothing is paid off by this. It sets what the debt watches for; discovery then runs now and
-        at every import, and what it finds waits{' '}
-        <span className="text-ink-secondary">unconfirmed</span> in the review queue on Debts —
-        counting towards the balance until you answer it.
-      </p>
-    </>
+      {claiming.length > 0 && chosen?.offer.kind !== 'ALREADY' && (
+        <p className="m-0 mt-1 text-caption text-ink-secondary">
+          <Phrase text={t('merchants.promotion.claiming')} parts={{ names: <Bidi>{claiming.map((one) => one.debt.name).join(', ')}</Bidi> }} />
+        </p>
+      )}
+
+      <p className="m-0 mt-2 text-caption text-ink-secondary">{t('merchants.promotion.nothingPaid')}</p>
+    </form>
   )
 }
 
-/** What agreeing would do to this debt, in one sentence. */
-function sentence(offer: TrackingOffer): string {
+/** What agreeing would do to this debt, in one sentence; a pattern is the document's, isolated. */
+function OfferSentence({ offer }: { offer: TrackingOffer }) {
+  const t = useT()
   switch (offer.kind) {
     case 'FREE':
-      return 'This debt watches for nothing at the moment, so nothing is taken away.'
+      return <>{t('merchants.promotion.offer.FREE')}</>
     case 'ALREADY':
-      return `This debt already matches “${offer.pattern}”, which covers these charges — they are found already, or waiting in its review queue.`
+      return <Phrase text={t('merchants.promotion.offer.ALREADY')} parts={{ pattern: <Bidi>{offer.pattern}</Bidi> }} />
     case 'REPLACES':
-      return offer.current.kind === 'MERCHANT_PATTERN'
-        ? `It watches for “${offer.current.pattern}” today. That goes, and charges under this name take its place — payments already found stay where they are.`
-        : 'It watches a category today. That goes, and charges under this name take its place — payments already found stay where they are.'
+      return offer.current.kind === 'MERCHANT_PATTERN' ? (
+        <Phrase text={t('merchants.promotion.offer.REPLACES_PATTERN')} parts={{ pattern: <Bidi>{offer.current.pattern}</Bidi> }} />
+      ) : (
+        <>{t('merchants.promotion.offer.REPLACES_CATEGORY')}</>
+      )
     case 'REFUSED':
-      return offer.reason === 'CLOSED'
-        ? 'This debt is closed and takes no new payments.'
-        : 'This debt tracks the slices of one split purchase, and those slices would stop being found.'
+      return <>{offer.reason === 'CLOSED' ? t('merchants.promotion.offer.CLOSED') : t('merchants.promotion.offer.SLICES')}</>
   }
 }
 
@@ -471,9 +447,4 @@ function Tab({
       {children}
     </button>
   )
-}
-
-function ordinal(day: number): string {
-  if (day % 100 >= 11 && day % 100 <= 13) return 'th'
-  return { 1: 'st', 2: 'nd', 3: 'rd' }[day % 10] ?? 'th'
 }

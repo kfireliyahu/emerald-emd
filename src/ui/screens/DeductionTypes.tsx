@@ -702,36 +702,25 @@ function DestinationLink({
         aria-label={t('paychecks.types.paysIntoLabel', { name: type.name })}
         dir="auto"
         className={SELECT}
-      >
-        <option value="">{t('paychecks.types.notLinked')}</option>
-        {offeredFunds.length > 0 && (
-          <optgroup label={t('paychecks.types.funds')}>
-            {offeredFunds.map((fund) => (
-              <option key={fund.id} value={`fund:${fund.id}`}>
-                {fund.isArchived ? t('paychecks.types.archived', { name: fund.name }) : fund.name}
-              </option>
-            ))}
-          </optgroup>
-        )}
-        {offeredGoals.length > 0 && (
-          <optgroup label={t('paychecks.types.goals')}>
-            {offeredGoals.map((goal) => (
-              <option key={goal.id} value={`goal:${goal.id}`}>
-                {goal.isClosed ? t('paychecks.types.closed', { name: goal.name }) : goal.name}
-              </option>
-            ))}
-          </optgroup>
-        )}
-        {offeredDebts.length > 0 && (
-          <optgroup label={t('paychecks.types.debts')}>
-            {offeredDebts.map((debt) => (
-              <option key={debt.id} value={`debt:${debt.id}`}>
-                {debt.isClosed ? t('paychecks.types.closed', { name: debt.name }) : debt.name}
-              </option>
-            ))}
-          </optgroup>
-        )}
-      </SelectOrNew>
+        choices={[
+          { value: '', label: t('paychecks.types.notLinked') },
+          ...offeredFunds.map((fund) => ({
+            value: `fund:${fund.id}`,
+            label: fund.isArchived ? t('paychecks.types.archived', { name: fund.name }) : fund.name,
+            group: t('paychecks.types.funds'),
+          })),
+          ...offeredGoals.map((goal) => ({
+            value: `goal:${goal.id}`,
+            label: goal.isClosed ? t('paychecks.types.closed', { name: goal.name }) : goal.name,
+            group: t('paychecks.types.goals'),
+          })),
+          ...offeredDebts.map((debt) => ({
+            value: `debt:${debt.id}`,
+            label: debt.isClosed ? t('paychecks.types.closed', { name: debt.name }) : debt.name,
+            group: t('paychecks.types.debts'),
+          })),
+        ]}
+      />
       {/* A link is worth checking where the money is supposed to have landed. */}
       {isLinked && (
         <Link

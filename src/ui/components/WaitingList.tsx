@@ -1,9 +1,15 @@
+import type { ReactNode } from 'react'
+
 import { Bidi } from '@/ui/Bidi.tsx'
 
 export interface Waiting {
   readonly key: string
-  /** What is waiting, said as a finding: `3 charges have no category`. */
-  readonly say: string
+  /**
+   * What is waiting, said as a finding: `3 charges have no category`. A
+   * sentence around a document's name passes a node, the name in its own
+   * `Bidi` (`Phrase`), so the name keeps its direction inside the sentence.
+   */
+  readonly say: ReactNode
   /** Why it matters, in one line: `They change this month's totals.` */
   readonly why?: string | undefined
   /** The one verb that deals with it: `Answer them`. */

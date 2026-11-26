@@ -98,7 +98,12 @@ const REVIEWED = [
   'src/ui/rules/RuleEditor.tsx',
   'src/ui/rules/TestBox.tsx',
   'src/ui/rules/ReapplyPanel.tsx',
-  'src/ui/rules/PickField.tsx',
+  // M64 F2, F14, F23 (D-630): the kit's choices, the promotion panel, and a paycheck by hand.
+  'src/ui/components/SelectOrNew.tsx',
+  'src/ui/categorize/PromotionPanel.tsx',
+  'src/ui/paychecks/PaycheckEditor.tsx',
+  'src/ui/paychecks/ReconciliationStrip.tsx',
+  'src/ui/paychecks/DeductionTypeSelect.tsx',
 ]
 
 /**
@@ -854,7 +859,8 @@ describe('the ledger screens a stranger meets, swept (M54 F13)', () => {
     expect(read).toContain("variant={reading === 0 && toWrite.length > 0 ? 'primary' : 'secondary'}")
     expect(read).not.toMatch(/<Tone tone="negative">No reader yet/)
     expect(read).not.toContain('no reader knows these columns yet')
-    expect(readFileSync('src/ui/Notices.tsx', 'utf8')).toContain("lead: !reading }")
+    // The waiting notice's Open Home is never filled (M64 F2, D-630): the screen under it keeps its one primary.
+    expect(readFileSync('src/ui/Notices.tsx', 'utf8')).toMatch(/actions\.openHome'\), onClick: \(\) => navigate\('\/'\) \}/)
   })
 
   // The report on reading files (M64 U7, D-619): the answer first, in words;

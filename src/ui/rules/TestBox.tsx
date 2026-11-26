@@ -10,7 +10,7 @@ import { useT } from '@/i18n/current.ts'
 import { pathArrows } from '@/i18n/words.ts'
 import { Bidi } from '@/ui/Bidi.tsx'
 import { FIELD } from '@/ui/components/fieldLook.ts'
-import { MENU_MOST, PickField } from '@/ui/rules/PickField.tsx'
+import { MENU_MOST, ValueChoice } from '@/ui/components/ChoiceField.tsx'
 import { Phrase } from '@/ui/components/Phrase.tsx'
 import { CURRENCY_CHOICES, accountLabel } from '@/ui/rules/ruleText.ts'
 import { Why } from '@/ui/rules/Why.tsx'
@@ -97,7 +97,7 @@ export function TestBox({
           aria-label={t('rules.test.amountLabel')}
           className={`${FIELD} w-28 tabular-nums`}
         />
-        <PickField
+        <ValueChoice
           value={currency}
           choices={CURRENCY_CHOICES.map((code) => ({ value: code, label: code }))}
           onChange={setCurrency}
@@ -115,7 +115,7 @@ export function TestBox({
       />
 
       {accounts.length > 0 && (
-        <PickField
+        <ValueChoice
           value={accountId}
           choices={accounts.map((account) => ({ value: account.id, label: accountLabel(account) }))}
           filter={accounts.length > MENU_MOST}

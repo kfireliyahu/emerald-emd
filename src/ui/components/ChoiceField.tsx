@@ -228,7 +228,7 @@ export function ChoiceField({
             <Fragment key={`${choice.value}-${String(index)}`}>
             {/* A group's heading is no choice: the keys and a tour's `choice:` pass it. */}
             {choice.group !== undefined && choice.group !== shown[index - 1]?.group && (
-              <li role="presentation" className="truncate px-3 pt-2 pb-0.5 text-caption text-ink-tertiary">
+              <li role="presentation" className="truncate px-3 pt-2 pb-0.5 text-caption text-ink-secondary">
                 {choice.group}
               </li>
             )}
@@ -257,7 +257,7 @@ export function ChoiceField({
                 <Bidi className="truncate text-caption text-ink-secondary">{choice.detail}</Bidi>
               )}
               {choice.label.toLocaleLowerCase() === needle && (
-                <span aria-hidden className="ms-auto ps-3 text-caption text-ink-tertiary">
+                <span aria-hidden className="ms-auto ps-3 text-caption text-ink-secondary">
                   ✓
                 </span>
               )}
@@ -320,6 +320,85 @@ export function ChoiceMenu({
       choices={choices}
       onText={() => undefined}
       onPick={onPick}
+    />
+  )
+}
+
+/** The most choices drawn as a menu; past it a list is an autocomplete (*Choices are ChoiceField*). */
+export const MENU_MOST = 8
+
+/**
+ * **A choice over a stored value** (M64 F6, made the kit's by F23, D-630) —
+ * what the rule editor, the test box, re-applying, New category, a paycheck's
+ * deduction and a form's *+ New…* choose with, where they drew the platform's
+ * select.
+ *
+ * It shows the chosen one's label and stays a text field, so a paste lands on
+ * it: a label or a stored value typed or pasted that names one of the choices
+ * picks it (`ILS`, `Contains`, an account's name), and anything else is put
+ * back to the chosen one's label when the field is left. A handful of choices
+ * is a menu; `filter` makes it an autocomplete for a list that can be long,
+ * and `make` ends that list with *+ New "…"*.
+ */
+export function ValueChoice({
+  value,
+  choices,
+  onChange,
+  filter = false,
+  make,
+  className = SELECT,
+  ...input
+}: {
+  value: string
+  choices: readonly Choice[]
+  onChange: (value: string) => void
+  filter?: boolean
+  make?: { readonly one: string; readonly onMake: (name: string) => void } | undefined
+} & Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'>) {
+  const [typed, setTyped] = useState<string | undefined>()
+  const chosen = choices.find((choice) => choice.value === value)?.label ?? ''
+
+  const named = (text: string): Choice | undefined => {
+    const needle = text.trim().toLocaleLowerCase()
+    if (needle === '') return undefined
+    return choices.find(
+      (choice) => choice.label.toLocaleLowerCase() === needle || choice.value.toLocaleLowerCase() === needle,
+    )
+  }
+
+  return (
+    <ChoiceField
+      // As wide as its longest choice, as the platform's select sized itself — `ChoiceMenu`'s measure.
+      size={input.size ?? Math.max(4, ...choices.map((choice) => choice.label.length + 2))}
+      {...input}
+      className={className}
+      text={typed ?? chosen}
+      choices={choices}
+      filter={filter}
+      make={
+        make === undefined
+          ? undefined
+          : {
+              one: make.one,
+              onMake: (name) => {
+                setTyped(undefined)
+                make.onMake(name)
+              },
+            }
+      }
+      onText={(text) => {
+        setTyped(text)
+        const hit = named(text)
+        if (hit !== undefined && hit.value !== value) onChange(hit.value)
+      }}
+      onPick={(choice) => {
+        setTyped(undefined)
+        if (choice.value !== value) onChange(choice.value)
+      }}
+      onBlur={(event) => {
+        setTyped(undefined)
+        input.onBlur?.(event)
+      }}
     />
   )
 }

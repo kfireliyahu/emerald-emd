@@ -529,6 +529,7 @@ written out here.
 | D-627 | 2026-11-26 | An entry and an input view read as a form: every writable field wears a hairline under it at rest, Add sits under the fields, the list's + is the one way into a new entry, an input view's Fields is a form in the side panel, the table's filter is a funnel beside a boxed search, and the formats screens say every word through the catalogue, in English and Hebrew | M64 |
 | D-628 | 2026-11-26 | Undo of a delete on Rules and Categories brings the thing back whole — its id, its place, its count, its colour, the built-in rules that went with it and the rows that named it — through the create that makes one, handed what the delete took, over an engine pair that reads a row before it goes and puts it back; the rule editor, the test box, re-applying and New category choose with ChoiceField and still take a paste | M64 |
 | D-629 | 2026-11-26 | Wealth's forms open beside the page and ask the few fields a person types first: the balance and its date for a fund's reading, said back in words against the last reading as it is typed, with the rest of the report one verb further and grown in place; the fund, goal, movement, debt and payment forms take the same shape (`PanelForm`), and the details take the report's ink and ramp | M64 |
+| D-630 | 2026-11-26 | The kit catches up with the screens: a small button is the 32px chrome row on the body step, a choice wears a chevron and is never the platform's select, a value-shaped `ValueChoice` replaces Rules' `PickField`, the side panel's first Esc leaves a field and focus returns to the latest opener, a figure keeps its sign in Hebrew, the waiting notice is never filled; and a paycheck by hand is a `PanelForm` in Paychecks' side panel — month, employer, gross and net first, whether it adds up said in words, the slip's lines only if wanted | M64 |
 | D-475 | 2026-10-14 | Finding an entry, three ways, each landing on the one entry view: a format in the rail is a folder that opens to its first twelve entries in its own order, with a filter line and *All n*; the entry at `entry/:id` keeps the list of its format beside it, the pager made visible, walked with the arrow keys and holding the address's search; and the palette finds entries by name first, then by any column, through `searchDocument` (driver's picks, not yet the maintainer's) | M37 |
 | D-379 | 2026-10-05 | The ledger reads the figures its formats declare — a debt's balance, a goal's totals, a payslip's unexplained and saved, a fund's latest — and a reading's price check is an identity | M36 |
 | D-359 | 2026-10-04 | A broker statement is read by the conversation and written in one batch: each row keyed by its value date, amount and the printed balance after it, the balances checked row by row, and the holdings table as readings | M30 |
@@ -1857,6 +1858,70 @@ fees differently, and a sentence that is sometimes wrong is worse than none.
 **Left.** The details' own words (fund, goal and debt panes, fee impact, the deposit check, the net
 worth row, the goal form's where-picker and cost basis) are still English: M64 F26. Focus after a
 form opened from a row's menu falls to the page, since the menu item that opened it is gone.
+
+## D-630 · 2026-11-26 · The kit catches up with the screens: a small button is the 32px chrome row on the body step, a choice wears a chevron and is never the platform's select, a value-shaped `ValueChoice` replaces Rules' `PickField`, the side panel's first Esc leaves a field and focus returns to the latest opener, a figure keeps its sign in Hebrew, the waiting notice is never filled; and a paycheck by hand is a `PanelForm` in Paychecks' side panel — month, employer, gross and net first, whether it adds up said in words, the slip's lines only if wanted <a id="d-630"></a>
+
+**Context.** M64 F2, F14 and F23, built together because they share the kit. The screen units
+U4 to U9 each found something in a shared piece and left it, since the kit was not theirs to change:
+`Button size="sm"` and the waiting notice drew 13px, off the ramp, costing every non-Home route one of
+its seven type sizes; the side panel's Esc closed it from inside a field and handed focus back to the
+first thing that opened it; `SELECT` had no chevron, so a `ChoiceMenu` at rest read as a text field;
+`SelectOrNew` and four other places still drew the platform's select; `Amount` lost its sign's side
+in a Hebrew window and a selected row's marker stayed on the left; text in `ink-tertiary` was still in
+the kit; PromotionPanel and the paycheck form carried inline English. F6 (D-628) had added
+`PickField` beside the kit rather than touch it. And the maintainer, 2026-11-26: *"adding paychecks by
+hand is still the old ui? could it be maybe easier?"* — the form was still a page of its own (D-620).
+
+**Decision.**
+
+1. **A small button is the chrome row** (`.fc-btn-sm`): 32px high, its tile 32px, its label on the
+   body step like `md`'s. Nothing between the steps, and no type size of its own. `Button` forwards
+   its ref.
+2. **U4's two review entries, settled by DESIGN.md and the rows.** The waiting notice's *Open Home*
+   is never filled: it points away from the screen under it, which keeps its one primary. The
+   primary stays the filled split tile (*The button is a split tile*, *One primary action per
+   screen*: accent-filled with accent-ink); comp A's hairline box is declined, since where the comp
+   and a row disagree the row wins.
+3. **A choice is the kit's, and looks like one.** `SELECT` carries `.fc-select`: a chevron at the
+   end edge in `ink-secondary`, drawn by two hard-edged halves so it takes the theme's ink, and a
+   platform select that is left loses its own arrow for it. **`ValueChoice`** — `PickField` made the
+   kit's, with `MENU_MOST` — is a `ChoiceField` over a stored value: it shows the chosen label, picks
+   what a typed or pasted label or value names, and takes `make` for *+ New "…"*. Rules, the test box,
+   re-applying and New category point at it; `PickField` is deleted. `SelectOrNew` takes `choices`
+   (with `group` headings) and draws `ValueChoice`; CategoryPicker's kind, PromotionPanel's cadence and
+   debt, and the deduction picker are the kit's too.
+4. **The side panel behaves as a desktop app's does**: the first Esc inside a field leaves the field
+   (the focus goes to the panel, what was typed stays) and the next closes it; focus returns to the
+   last thing outside the panel that had it, so a panel whose content was replaced gives the focus
+   back to what opened the content shown. `WaitingList`'s `say` is a node, so a document's name can be
+   wrapped in `Bidi` inside the sentence.
+5. **Hebrew**: `Amount` and `CountingAmount` are isolated left-to-right, so the minus stays before the
+   figure; `.fc-row-on`'s marker is at the start edge in a right-to-left window.
+6. **Contrast**: the kit's text leaves `ink-tertiary` (CategoryPicker's empty value and its notes,
+   `Field`'s label and hint, ChoiceField's group headings, ContextMenu's shortcuts) for `ink-secondary`.
+7. **Words**: PromotionPanel's are `merchants.promotion`, the paycheck form's `paychecks.entry`, both
+   English and Hebrew, a name or pattern from the document isolated in its sentence; the bill and
+   debt forms save on Enter. Home's Taxes panel opens Paychecks on that month with its taxes beside it.
+8. **A paycheck by hand is a `PanelForm` in Paychecks' side panel** (F14, replacing D-620's page):
+   the salary month (`MonthInput`, `2026-06` or `06/2026`, the platform's month picker on a click),
+   the employer (an autocomplete of the employers already on a slip), gross and net (the amount the
+   hero of its input); then **whether it adds up, said in words as they are typed** (`ReconciliationSaid`
+   replaces the pinned strip: idle, adds up, not itemized yet, or over, a gap never blocking a save, the
+   difference one text action away as Other deduction); then the slip's lines **only if wanted**, a
+   line at a time (the deduction an autocomplete grouped by kind with *+ New "…"* made in place, You,
+   Employer and Base, a note on asking), a removed line gone at once with Undo; and *More about this
+   paycheck* (the day it was paid, a bonus, a note) folded under one verb. Saving closes it on the
+   screen, back to the panel it was opened from. **A read slip is confirmed in the same fields** on the
+   reading flow's page (`PaycheckEditor` in `FlowFrame`, U7).
+
+**Rejected.** A sixth place for the paycheck form (a dialog, or keeping the page): it is a form with
+several fields, and D-617 puts those in the panel. A chevron image per theme (two copies of
+`ink-secondary` to drift). Moving `sm` onto the caption step (12px is the label's neighbour, and a
+button's word is read). A deduction line as a table row of five fields (it does not fit a 420px panel;
+the line is a block of its own instead).
+
+**Left.** Platform selects outside the kit's paths remain (PlaceEditor's kind and cash, and others
+the screen units own); with `.fc-select` they wear the same chevron until each is moved.
 
 ## Related
 

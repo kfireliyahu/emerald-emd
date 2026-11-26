@@ -61,7 +61,7 @@ import { Bidi } from '@/ui/Bidi.tsx'
 import { ParentPicker } from '@/ui/categories/ParentPicker.tsx'
 import { eligibleParents, parentsFor } from '@/ui/categories/parentFilter.ts'
 import { Flip } from '@/ui/motion/Flip.tsx'
-import { PickField } from '@/ui/rules/PickField.tsx'
+import { ValueChoice } from '@/ui/components/ChoiceField.tsx'
 
 /** The three parts of the list, by what a category is: what you spend, what moved, what came in. */
 type Part = 'SPENDING' | 'MOVED' | 'INCOME'
@@ -1261,7 +1261,7 @@ function NewCategoryForm({
       <ParentPicker parents={parents} value={parentId} onChange={setParentId} fill />
 
       {parentId === '' && (
-        <PickField
+        <ValueChoice
           value={kind}
           choices={(['EXPENSE', 'INCOME', 'TRANSFER', 'SAVING', 'DEBT_PAYMENT'] as const).map((option) => ({
             value: option,
