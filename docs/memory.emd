@@ -18353,8 +18353,11 @@ report: M63 U4 built at 0772efd on main; docs:check green after landing. Setting
 milestone: M64
 scope: ui
 title: Plan's bar mirrors in Hebrew
-state: planned
+state: in_progress
 brief: PlanBar forces dir=ltr, so in Hebrew the split runs left to right while every column beside it mirrors. Draw its segments from the inline start and flip the drag's and the arrow keys' direction in RTL; the ring is unaffected. Files: src/ui/plan/PlanBar.tsx.
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 
 ### M64 F10
 milestone: M64
@@ -18384,8 +18387,11 @@ paths: src/ui/charts/HeadlineFigure.tsx src/ui/screens/Home.tsx src/ui/screens/Y
 milestone: M64
 scope: app
 title: Plan's year: how much went to each bucket this year, out of what was planned
-state: planned
+state: in_progress
 brief: Maintainer, 2026-11-26: "in the plan i'd like a view that sums up the buckets of the year (meaning if i had a monthly bucket id like to see how much total in the year went to the bucket out of planned)." Add a Year view to Plan (a tab beside the month, as Home has): one sentence answering how the year went against the plan, then each bucket as a PlanAgainst meter of the year's actual against the sum of its monthly plan for the months so far, with the months a bucket was over or under one click behind it in the side panel. Use the same month basis as Home (D-607). Parity (D-227): the plugin's plans or plan_month tool answers the same year figures. Synthetic year only.
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 paths: src/ui/screens/Plan.tsx src/ui/plan/ src/domain/ src/plugin/tools/
 
 ### M64 F13
@@ -18400,8 +18406,11 @@ paths: src/ui/home/ src/ui/screens/Home.tsx src/ui/charts/RankedBars.tsx
 milestone: M64
 scope: ui
 title: Adding a paycheck by hand is easy, in the new design
-state: planned
+state: in_progress
 brief: Maintainer, 2026-11-26: "adding paychecks by hand is still the old ui? could it be maybe easier?" PaycheckEditor stayed a page of its own in U8 (D-620). Redesign it: the few fields a person must type first (month, employer, gross, net), the rest of the slip's lines added only if wanted, the reconciliation said in words as you type, its words in the paychecks catalogue en and he (this takes F2's PaycheckEditor, ReconciliationStrip and DeductionTypeSelect translation), ChoiceField not the platform select, D-617's places and conventions. Keep it the same form the reading flow confirms in (U7).
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 paths: src/ui/paychecks/PaycheckEditor.tsx src/ui/paychecks/ReconciliationStrip.tsx src/ui/paychecks/DeductionTypeSelect.tsx src/i18n/en/paychecks.ts src/i18n/he/paychecks.ts
 
 ### M64 F15
@@ -18424,56 +18433,77 @@ paths: src/ui/screens/ReadStatements.tsx src/ui/paychecks/ReadSlips.tsx src/ui/i
 milestone: Later
 scope: ui
 title: Roadmap and Ready to start keep the format's Add, and the views' controls sit in one strip
-state: planned
+state: in_progress
 brief: After M64 U14 (D-626) switching from Table or Board to Roadmap or Ready to start drops the format's one primary Add, and the roadmap's title row holds three fields, the fold filter cut to 'Filter unit b'. Give Roadmap and Ready the table's Add (behind the same write refusal), move each fold's ColumnFilter off the title row into a quiet strip, and put the view controls (Lanes by, Columns, In the order of, Fold all) in one strip of the same classes on board, roadmap and ready. Check the budget's words and actions for the three routes. Files: src/ui/screens/FormatLinkViews.tsx, src/ui/formats/LinkViews.tsx, src/ui/formats/BoardView.tsx.
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 
 ### M64 F18
 milestone: Later
 scope: ui
 title: The engine's views translated: every word of the board, list, roadmap, ready, agenda, dashboards and connections in the catalogue
-state: planned
+state: in_progress
 brief: M64 U14 put only the views' answers in the catalogue (views.*); probe:screens --lang he still finds English on board (47), roadmap (24), ready (18), agenda (19) and connections (73): lane and toolbar words, 'Every connection, in words', the agenda's ahead words and captions, the connection form. Move them into src/i18n/en/views.ts and he/views.ts, add the files to src/i18n/words.test.ts's translated set. Files: src/ui/formats/BoardView.tsx, src/ui/formats/ListView.tsx, src/ui/formats/LinkViews.tsx, src/ui/screens/Agenda.tsx, src/ui/screens/Connections.tsx, src/ui/formats/ConnectionPanel.tsx, src/ui/formats/Dashboard.tsx.
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 
 ### M64 F19
 milestone: Later
 scope: ui
 title: A view's rows stop repeating what their group already says
-state: planned
+state: in_progress
 brief: The taste check of M64 U14 found the ready list's rows each repeat their state (PLANNED under the Ready heading) and their milestone (M2, already in the ref), and a board card repeats its milestone under its ref. These are the default chosen columns in src/ui/formats/lineColumns.ts. Leave out a state column on a line already grouped by that state, and a link already named in the row's ref, keeping what a person chose under Columns. Files: src/ui/formats/lineColumns.ts, src/ui/formats/LinkViews.tsx, src/ui/formats/BoardView.tsx.
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 
 ### M64 F2
 milestone: M64
 scope: ui
 title: The kit and chrome catch up: what the screen units found and left for everyone
-state: planned
+state: in_progress
 brief: "Kit findings from U4-U9 that each screen unit left because a shared piece was not theirs to change. Fix each, for everyone, with a specimen state and a test where it can fail:\n- Button size sm and the shell's waiting notice (Open Home, Not now) draw 13px, off the type ramp, and cost every non-Home route one of its seven type sizes; move sm onto the caption or body step. The notice bar's filled Open Home and the filled primary are U4's two open review entries: settle them by DESIGN.md.\n- SidePanel: Esc closes it even from inside a field (Esc in a field should leave the field first); it captures the element that opened it only once, so focus returns to the first opener.\n- Button forwards no ref; WaitingList.say is a plain string, so a document's name cannot be wrapped in Bidi.\n- SELECT in fieldLook.ts has no chevron, so a ChoiceMenu at rest reads as a text field; SelectOrNew draws a platform select, against 'Choices are ChoiceField'.\n- Amount does not hold its sign left-to-right in a Hebrew window; .fc-row-on's marker is inset-left in RTL too (tokens.css); MonthStrip's open-month label overflows the end edge when it is the last column (check on Paychecks).\n- CategoryPicker's empty value reads under 4.5:1; text in ink-tertiary failing contrast anywhere it is still used.\n- PromotionPanel, PaycheckEditor, ReconciliationStrip and DeductionTypeSelect still carry inline English: move them into the catalogue, he included; PromotionPanel's forms save on Enter.\n- Home's Taxes panel links to Paychecks: navigate('/paychecks', {state:{month, panel:'tax'}}) (U8 built the landing).\nFollow the redesign-screen skill's conventions (D-617). probe:screens --budget on every route already off exempt still passes; check:tours green."
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 paths: src/ui/components/ src/ui/charts/ src/ui/Notices.tsx src/ui/theme/tokens.css src/ui/categorize/PromotionPanel.tsx src/ui/paychecks/PaycheckEditor.tsx src/ui/paychecks/ReconciliationStrip.tsx src/ui/paychecks/DeductionTypeSelect.tsx src/ui/home/HomePanel.tsx src/ui/formats/fieldLook.ts
 
 ### M64 F20
 milestone: M64
 scope: ui
 title: The formats' other views and the engine's sentences translated: list, board, roadmap, dashboard, connections, and the words src/domain/format writes for a screen
-state: planned
+state: in_progress
 brief: F9 (D-627) translated the table, entry, input view, sheet, filter band and shape panel. Still English in Hebrew: ListView.tsx (the list's dates such as 27 Jul, its aria-label Rows, 'A new {one}' on the draft line), BoardView, LinkViews, Dashboard, ConnectionPanel/ConnectionGraph, RollupView, MakeBlock, IntakePanel, NewFormat, ColumnQuestions; and sentences built in src/domain/format: Show as labels and hints (view.ts SHOW_AS_LABEL/SHOW_AS_HINT), figureRangeSaid (figureRange.ts), keptSentence and lackingSentence (inputForm.ts), creationOf's waiting items (shape.ts), cellText's yes/no. Move them to the formats area with t() (a domain sentence returns a key and its parts, the screen says it), add the files to src/i18n/words.test.ts, check with probe:screens --lang he on custom.emd and project.emd.
 files: "src/ui/formats/ListView.tsx\nsrc/ui/formats/BoardView.tsx\nsrc/domain/format/view.ts\nsrc/i18n/en/formats.ts"
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 paths: "src/ui/formats/ListView.tsx\nsrc/ui/formats/BoardView.tsx\nsrc/ui/formats/LinkViews.tsx\nsrc/ui/formats/Dashboard.tsx\nsrc/ui/formats/ConnectionPanel.tsx\nsrc/ui/formats/ConnectionGraph.tsx\nsrc/ui/formats/RollupView.tsx\nsrc/ui/formats/MakeBlock.tsx\nsrc/ui/formats/IntakePanel.tsx\nsrc/ui/formats/NewFormat.tsx\nsrc/ui/formats/ColumnQuestions.tsx\nsrc/domain/format/view.ts\nsrc/domain/format/figureRange.ts\nsrc/ui/formats/inputForm.ts\nsrc/ui/formats/shape.ts\nsrc/i18n/en/formats.ts\nsrc/i18n/he/formats.ts\nsrc/i18n/words.test.ts"
 
 ### M64 F23
 milestone: M64
 scope: ui
 title: PickField folds into the kit's ChoiceField when F2 rewrites it
-state: planned
+state: in_progress
 brief: M64 F6 (D-628) added src/ui/rules/PickField.tsx, a ChoiceField over a stored value (shows the chosen label, picks the choice a typed or pasted label or value names, an autocomplete past eight choices) instead of touching the shared kit, which F2 rewrites. When F2 lands, make it the kit's own value-shaped ChoiceField (or ChoiceMenu without readOnly) and point RuleEditor, TestBox, ReapplyPanel and Categories' New category at it; delete PickField and take it off src/i18n/words.test.ts and src/ui/formats/surfaceRules.test.ts.
 files: "src/ui/rules/PickField.tsx\nsrc/ui/components/ChoiceField.tsx"
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 paths: "src/ui/rules/PickField.tsx\nsrc/ui/components/ChoiceField.tsx\nsrc/ui/rules/RuleEditor.tsx\nsrc/ui/rules/TestBox.tsx\nsrc/ui/rules/ReapplyPanel.tsx\nsrc/ui/screens/Categories.tsx"
 
 ### M64 F26
 milestone: M64
 scope: ui
 title: Wealth's details say every word through the catalogue, en and he
-state: planned
+state: in_progress
 brief: F3 (D-629) moved Wealth's six forms to PanelForms with their words in the wealth catalogue, and gave the details the report's ink and ramp, but the details' own words are still English inline: FundDetail.tsx, GoalDetail.tsx, DebtDetail.tsx, FeeImpact.tsx, DepositCheck.tsx, wealth/NetWorthOpened.tsx, and inside the goal form savings/WherePicker.tsx and savings/CostBasis.tsx, and the report-read deposit rows funds/DepositRows.tsx; funds/labels.ts and debts/labels.ts keep English maps the details still use. Move them to the wealth area with t() (counts by countKey, a document's name in Bidi inside a Phrase), delete the English maps nothing uses, add the files to src/i18n/words.test.ts, and check with probe:screens --lang he on year.emd (#/wealth/funds/<id>, #/wealth/goals/<id>, #/wealth/debts/<id>).
 files: "src/ui/screens/FundDetail.tsx\nsrc/ui/screens/GoalDetail.tsx\nsrc/ui/screens/FeeImpact.tsx\nsrc/i18n/en/wealth.ts"
+taken_by: run-milestone driver
+started: 2026-11-26
+branch: m64-redesign
 paths: "src/ui/screens/FundDetail.tsx\nsrc/ui/screens/GoalDetail.tsx\nsrc/ui/screens/DebtDetail.tsx\nsrc/ui/screens/FeeImpact.tsx\nsrc/ui/screens/DepositCheck.tsx\nsrc/ui/wealth/NetWorthOpened.tsx\nsrc/ui/savings/WherePicker.tsx\nsrc/ui/savings/CostBasis.tsx\nsrc/ui/funds/DepositRows.tsx\nsrc/ui/funds/labels.ts\nsrc/ui/debts/labels.ts\nsrc/i18n/en/wealth.ts\nsrc/i18n/he/wealth.ts\nsrc/i18n/words.test.ts"
 
 ### M64 F3
