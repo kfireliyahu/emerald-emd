@@ -43,6 +43,7 @@ import { createAccount, findAccountById, listAccounts } from '../repositories/ac
 import {
   holdingQuantityBy,
   holdingReadingProblem,
+  readingRefusalText,
   listHoldingReadings,
   priceCheck,
   readingClash,
@@ -362,7 +363,7 @@ export function planHoldingStatement(db: Database, input: HoldingStatementInput)
         priceMicro: line.priceMicro,
       }
       const problem = holdingReadingProblem(db, reading)
-      if (problem !== undefined) return refuse(problem, ref)
+      if (problem !== undefined) return refuse(readingRefusalText(problem), ref)
       const clash = readingClash(db, reading)
       if (clash !== undefined && !line.correct) {
         return refuse(

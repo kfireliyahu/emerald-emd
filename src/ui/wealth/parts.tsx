@@ -51,9 +51,9 @@ export function HeroCell({
 }) {
   return (
     <div className="flex min-w-0 flex-col gap-0.5 py-3 pe-4">
-      <span className="text-label text-ink-secondary uppercase">{label}</span>
+      <span className="text-caption font-medium text-ink-secondary uppercase">{label}</span>
       <span
-        className={`text-secondary-number font-medium tabular-nums ${problem ? 'text-flow-out' : ''}`}
+        className={`text-title font-medium tabular-nums ${problem ? 'text-flow-out' : ''}`}
       >
         {children}
       </span>
@@ -136,23 +136,25 @@ export function Seg<T extends string | number>({
 
 export type TagTone = 'plain' | 'good' | 'bad' | 'warn' | 'derived' | 'setAside' | 'already' | 'dash'
 
-const TAG_TONE: Readonly<Record<TagTone, string>> = {
-  plain: 'border-hairline-strong text-ink-secondary',
-  good: 'border-[color-mix(in_srgb,var(--color-positive)_45%,transparent)] text-positive',
-  bad: 'border-[color-mix(in_srgb,var(--color-negative)_45%,transparent)] text-negative',
-  warn: 'border-[color-mix(in_srgb,var(--color-flow-tax)_45%,transparent)] text-flow-tax',
-  derived: 'border-[color-mix(in_srgb,var(--color-flow-saved)_50%,transparent)] text-flow-saved',
-  setAside: 'border-dashed border-flow-saved text-flow-saved',
-  already: 'border-hairline-strong text-ink-secondary',
-  dash: 'border-dashed border-hairline-strong text-ink-secondary',
+/** The dot each tone draws; the words stay `ink-secondary` but for a problem (*A chip is text and a dot*, M64 F46). */
+const TAG_DOT: Readonly<Record<TagTone, string>> = {
+  plain: 'bg-ink-tertiary',
+  good: 'bg-positive',
+  bad: 'bg-negative',
+  warn: 'bg-flow-tax',
+  derived: 'bg-flow-saved',
+  setAside: 'bg-flow-saved',
+  already: 'bg-ink-tertiary',
+  dash: 'border border-dashed border-ink-tertiary',
 }
 
-/** `.chip`: uppercase, bordered, square. The tone says what kind of thing it is. */
+/** A chip: text with a small dot, no box. The tone says what kind of thing it is. */
 export function Tag({ tone = 'plain', children }: { tone?: TagTone; children: ReactNode }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 border px-2 py-0.5 text-label font-medium whitespace-nowrap uppercase ${TAG_TONE[tone]}`}
+      className={`inline-flex items-center gap-1.5 text-caption whitespace-nowrap ${tone === 'bad' ? 'text-negative' : 'text-ink-secondary'}`}
     >
+      <span aria-hidden className={`size-1.5 shrink-0 rounded-full ${TAG_DOT[tone]}`} />
       {children}
     </span>
   )
@@ -161,7 +163,7 @@ export function Tag({ tone = 'plain', children }: { tone?: TagTone; children: Re
 /** `.need`: the small line under a figure in a right-aligned cell. */
 export function Need({ children }: { children: ReactNode }) {
   return (
-    <div className="mt-1 flex items-center justify-end gap-1.5 text-label whitespace-nowrap text-ink-secondary">
+    <div className="mt-1 flex items-center justify-end gap-1.5 text-caption font-medium whitespace-nowrap text-ink-secondary">
       {children}
     </div>
   )
@@ -187,7 +189,7 @@ export function Src({ children, className = '' }: { children: ReactNode; classNa
 
 /** `th`, `td`, `.gtable td`: the table cells, as class strings. */
 export const TH =
-  'border-b border-hairline px-2.5 py-2 text-start text-label font-medium whitespace-nowrap text-ink-secondary uppercase'
+  'border-b border-hairline px-2.5 py-2 text-start text-caption font-medium whitespace-nowrap text-ink-secondary uppercase'
 export const TH_R = `${TH} text-end`
 /** A plain row: 38px. */
 export const TD = 'h-10 border-b border-hairline px-2.5 whitespace-nowrap'

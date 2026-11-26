@@ -136,8 +136,8 @@ export function GoalDetail() {
       </div>
 
       <div>
-        <span className="text-label text-ink-secondary uppercase">{t('wealth.goalDetail.kicker')}</span>
-        <h2 className="m-0 text-secondary-number font-medium">
+        <span className="text-caption font-medium text-ink-secondary uppercase">{t('wealth.goalDetail.kicker')}</span>
+        <h2 className="m-0 text-title font-medium">
           <Bidi>{goal.name}</Bidi>
         </h2>
         <Src>
@@ -159,7 +159,7 @@ export function GoalDetail() {
       <WherePanel goal={goal} deposits={detail.deposits} currency={currency} onEdit={edit} />
 
       <div>
-        <span className="text-label text-ink-secondary uppercase">{t('wealth.goalDetail.made')}</span>
+        <span className="text-caption font-medium text-ink-secondary uppercase">{t('wealth.goalDetail.made')}</span>
         <div className="mt-2 flex flex-col gap-2">
           {parts.map(([origin, label, swatch]) => (
             <div key={origin} className="flex items-center justify-between gap-2">
@@ -182,7 +182,7 @@ export function GoalDetail() {
       </div>
 
       <div>
-        <span className="text-label text-ink-secondary uppercase">{t('wealth.goalDetail.deposits')}</span>
+        <span className="text-caption font-medium text-ink-secondary uppercase">{t('wealth.goalDetail.deposits')}</span>
         {staleTotal > 0 && (
           <div className="mt-2 flex flex-wrap items-center gap-2.5 border border-dashed border-flow-tax px-3 py-2">
             <span className="text-caption">
@@ -343,7 +343,7 @@ function WherePanel({
 
   return (
     <div>
-      <span className="text-label text-ink-secondary uppercase">{t('wealth.goalDetail.where.title')}</span>
+      <span className="text-caption font-medium text-ink-secondary uppercase">{t('wealth.goalDetail.where.title')}</span>
       <div className="mt-2 flex flex-col gap-1.5 border border-hairline-strong bg-background px-3.5 py-3">
         {goal.defaultHoldingId === undefined ? (
           <>

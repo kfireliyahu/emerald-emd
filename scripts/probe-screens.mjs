@@ -39,7 +39,7 @@
  * chart, a list of 3+ rows, a `data-block`), its headline figures (the
  * secondary-number step or larger, or a `data-figure`), its actions and how many
  * are primary, the type sizes and colours it spends, and how many windows tall it
- * is. A budget is JSON keyed by route hash, `*` for every route, each a set of
+ * is. A budget is JSON keyed by route hash (a `:id` segment stands for any one, M64 F46), `*` for every route, each a set of
  * maximums named as the measures are:
  *   { "*": { "primary": 1 }, "#/": { "words": 300, "blocks": 6, "screens": 1.5 } }
  * (words, wordsAboveFold, blocks, blocksAboveFold, figures, actions, primary,

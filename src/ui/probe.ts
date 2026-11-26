@@ -277,12 +277,32 @@ export const BUDGET_MEASURES = {
 } as const
 
 export type Limits = Partial<Record<keyof typeof BUDGET_MEASURES, number>>
-/** Limits by route hash (`#/year`), with `*` for every route; a route's own win. */
+/**
+ * Limits by route hash (`#/year`), with `*` for every route; a route's own win.
+ * A segment written `:id` stands for any one segment (`#/wealth/funds/:id`), so a
+ * detail route is budgeted whichever row it opens — a row's id differs in every
+ * document made (M64 F46).
+ */
 export type Budget = Readonly<Record<string, Limits>>
+
+/** The budget's key for a route: the route itself, else a key whose `:id` segments stand for its own. */
+function routeKey(budget: Budget, route: string): string | undefined {
+  if (route in budget) return route
+  const segments = route.split('/')
+  return Object.keys(budget).find((key) => {
+    const pattern = key.split('/')
+    return (
+      pattern.includes(':id') &&
+      pattern.length === segments.length &&
+      pattern.every((part, index) => part === ':id' ? (segments[index] ?? '') !== '' : part === segments[index])
+    )
+  })
+}
 
 /** The limits a budget sets on one route: `*`'s, then the route's own over them. */
 export function limitsFor(budget: Budget, route: string): Limits {
-  return { ...budget['*'], ...budget[route] }
+  const key = routeKey(budget, route)
+  return { ...budget['*'], ...(key === undefined ? {} : budget[key]) }
 }
 
 /** Each limit a screen is over, named — `words 512 > 400` — and any limit no measure has. */

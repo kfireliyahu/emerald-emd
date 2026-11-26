@@ -207,7 +207,7 @@ export function FundDetail() {
         <Bidi className="text-ink">{fund.name}</Bidi>
 
         <Button
-          variant="primary"
+          variant="secondary"
           size="sm"
           className="ms-auto"
           onClick={() =>
@@ -250,7 +250,7 @@ export function FundDetail() {
 
           {split !== undefined && split.severance.minor !== 0 && (
             <Figure label={t('wealth.fundDetail.severance')} hint={t('wealth.fundDetail.severanceHint')}>
-              <span className="text-secondary-number text-ink-secondary tabular-nums">
+              <span className="text-heading font-medium text-ink-secondary tabular-nums">
                 {formatMoney(split.severance)}
               </span>
             </Figure>
@@ -262,7 +262,7 @@ export function FundDetail() {
               .filter((value) => value !== undefined)
               .join(' · ')}
           >
-            <span className="text-secondary-number text-ink-secondary">
+            <span className="text-heading font-medium text-ink-secondary">
               {t(`wealth.kinds.fundStatus.${fund.status}`)}
             </span>
           </Figure>
@@ -302,13 +302,13 @@ export function FundDetail() {
               {returns.cumulative !== undefined && (
                 <div className="mt-4 flex flex-wrap items-end gap-x-10 gap-y-4">
                   <Figure label={t('wealth.fundDetail.paidIn')} hint={trackedSpan(snapshots, t)}>
-                    <span className="text-secondary-number tabular-nums">
+                    <span className="text-heading font-medium tabular-nums">
                       {formatMoney(returns.cumulative.contributions)}
                     </span>
                   </Figure>
                   <Figure label={t('wealth.fundDetail.earned')} hint={t('wealth.fundDetail.earnedHint')}>
                     <span
-                      className={`text-secondary-number tabular-nums ${
+                      className={`text-heading font-medium tabular-nums ${
                         returns.cumulative.gain.minor < 0 ? 'text-negative' : ''
                       }`}
                     >
@@ -316,7 +316,7 @@ export function FundDetail() {
                     </span>
                   </Figure>
                   <Figure label={t('wealth.fundDetail.return')} hint={t('wealth.fundDetail.returnHint')}>
-                    <span className="text-secondary-number tabular-nums">
+                    <span className="text-heading font-medium tabular-nums">
                       {formatPercent(returns.cumulative.basisPoints)}
                     </span>
                   </Figure>
@@ -406,7 +406,7 @@ export function FundDetail() {
         <Section title={t('wealth.fundDetail.fee.title')}>
           <div className="flex flex-wrap items-end gap-x-10 gap-y-4">
             <Figure label={t('wealth.fundDetail.fee.stated')} hint={t('wealth.fundDetail.fee.statedHint')}>
-              <span className="text-secondary-number tabular-nums">
+              <span className="text-heading font-medium tabular-nums">
                 {fund.fees.onAccumulationBasisPoints === undefined
                   ? '—'
                   : formatPercent(fund.fees.onAccumulationBasisPoints, { digits: 2 })}
@@ -415,7 +415,7 @@ export function FundDetail() {
 
             <Figure label={t('wealth.fundDetail.fee.paid')} hint={feeHint(fee, t)}>
               <span
-                className={`text-secondary-number tabular-nums ${
+                className={`text-heading font-medium tabular-nums ${
                   feeDiffersMaterially(fee) ? 'text-negative' : ''
                 }`}
               >
@@ -427,14 +427,14 @@ export function FundDetail() {
 
             {annualCost !== undefined && (
               <Figure label={t('wealth.fundDetail.fee.year')} hint={t('wealth.fundDetail.fee.yearHint')}>
-                <span className="text-secondary-number tabular-nums">
+                <span className="text-heading font-medium tabular-nums">
                   {formatMoney(annualCost)}
                 </span>
               </Figure>
             )}
 
             <Figure label={t('wealth.fundDetail.fee.onDeposit')} hint={t('wealth.fundDetail.fee.onDepositHint')}>
-              <span className="text-secondary-number tabular-nums">
+              <span className="text-heading font-medium tabular-nums">
                 {fund.fees.onDepositBasisPoints === undefined
                   ? '—'
                   : formatPercent(fund.fees.onDepositBasisPoints, { digits: 2 })}
@@ -461,7 +461,7 @@ export function FundDetail() {
           ) : (
             <table className="w-full max-w-3xl">
               <thead>
-                <tr className="border-b border-hairline text-label text-ink-secondary uppercase">
+                <tr className="border-b border-hairline text-caption font-medium text-ink-secondary uppercase">
                   <th className="py-2 pe-6 text-start font-medium">{t('wealth.fundDetail.readings.asOf')}</th>
                   <th className="py-2 pe-6 text-end font-medium">{t('wealth.fundDetail.readings.balance')}</th>
                   <th className="py-2 pe-6 text-end font-medium">{t('wealth.fundDetail.readings.deposits')}</th>
@@ -653,10 +653,10 @@ function MonthTable({ months }: { months: readonly MonthlyDeposit[] }) {
   const dates = useDates()
   return (
     <div className="mt-4 max-w-3xl overflow-x-auto">
-      <p className="text-label text-ink-secondary uppercase">{t('wealth.fundDetail.months.title')}</p>
+      <p className="text-caption font-medium text-ink-secondary uppercase">{t('wealth.fundDetail.months.title')}</p>
       <table className="mt-2 w-full">
         <thead>
-          <tr className="border-b border-hairline text-label text-ink-secondary uppercase">
+          <tr className="border-b border-hairline text-caption font-medium text-ink-secondary uppercase">
             <th className="py-2 pe-6 text-start font-medium">{t('wealth.fundDetail.months.salaryMonth')}</th>
             <th className="py-2 pe-6 text-end font-medium">{t('wealth.fundDetail.months.paycheckSays')}</th>
             <th className="py-2 pe-6 text-end font-medium">{t('wealth.fundDetail.months.fundReceived')}</th>
@@ -800,7 +800,7 @@ function PeriodTable({ periods }: { periods: readonly DepositPeriod[] }) {
   return (
     <table className="mt-4 w-full max-w-3xl">
       <thead>
-        <tr className="border-b border-hairline text-label text-ink-secondary uppercase">
+        <tr className="border-b border-hairline text-caption font-medium text-ink-secondary uppercase">
           <th className="py-2 pe-6 text-start font-medium">{t('wealth.fundDetail.periods.period')}</th>
           <th className="py-2 pe-6 text-start font-medium">{t('wealth.fundDetail.periods.salaryMonths')}</th>
           <th className="py-2 pe-6 text-end font-medium">{t('wealth.fundDetail.periods.paychecksSay')}</th>
@@ -865,7 +865,7 @@ function feeHint(fee: EffectiveFee, t: Translate): string {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="mt-8">
-      <h2 className="mb-3 border-b border-hairline pb-2 text-label text-ink-secondary uppercase">
+      <h2 className="mb-3 border-b border-hairline pb-2 text-caption font-medium text-ink-secondary uppercase">
         {title}
       </h2>
       {children}
@@ -883,8 +883,8 @@ function Figure({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex flex-col gap-0.5">
-      <span className="text-label text-ink-secondary uppercase">{label}</span>
+    <div className="flex flex-col items-start gap-0.5">
+      <span className="text-caption font-medium text-ink-secondary uppercase">{label}</span>
       {children}
       {hint !== undefined && hint !== '' && (
         <span className="text-caption text-ink-secondary">{hint}</span>

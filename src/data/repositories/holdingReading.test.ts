@@ -9,6 +9,7 @@ import { goalWorth, holdingPutIn, setGoalFeed } from './goalDepositRepository.ts
 import {
   deleteHoldingReading,
   HoldingReadingError,
+  holdingReadingProblem,
   latestHoldingReading,
   listHoldingReadings,
   priceCheck,
@@ -114,6 +115,12 @@ describe('a reading of what a holding is worth (M30 U5)', () => {
     // Other figures for a day that has a reading are refused by name, unless they correct it.
     const other = { ...june, value: ils(6_400_00) }
     expect(() => recordHoldingReading(db, other, {}, NOW)).toThrow(HoldingReadingError)
+    // …as a code and its parts the screen says, never decided by the English (M64 F48).
+    try {
+      recordHoldingReading(db, other, {}, NOW)
+    } catch (error) {
+      expect(error instanceof HoldingReadingError && error.refusal).toEqual({ code: 'CLASH', day: '2026-06-30', held: ils(6_300_00) })
+    }
     expect(recordHoldingReading(db, other, { correct: true }, NOW)).toBe('CORRECTED')
     expect(growthOf(db, house.id)).toEqual([
       ['2026-06-30', 400_00],
@@ -192,6 +199,9 @@ describe('a reading of what a holding is worth (M30 U5)', () => {
         NOW,
       ),
     ).toThrow(/value only/)
+    expect(
+      holdingReadingProblem(db, { holdingId: cash.id, asOf: localDate(2026, 6, 30), value: ils(4_000_00), priceMicro: 1 }),
+    ).toEqual({ code: 'CASH_VALUE_ONLY', holding: cash.name })
 
     recordHoldingReading(db, { holdingId: cash.id, asOf: localDate(2026, 6, 30), value: ils(4_000_00) }, {}, NOW)
     const right = latestHoldingReading(db, cash.id)

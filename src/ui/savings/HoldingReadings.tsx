@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 
 import { formatMoney, fromMajorUnits, type CurrencyCode } from '@/core/money.ts'
 import { parseISODate, toISODate, type LocalDate } from '@/core/time.ts'
@@ -10,13 +10,16 @@ import {
   readingChecks,
   recordHoldingReading,
   type NewHoldingReading,
+  type ReadingRefusal,
 } from '@/data/repositories/holdingReadingRepository.ts'
 import { parseQuantity, quantityText } from '@/data/repositories/transactionRepository.ts'
 import type { ReadingCheck } from '@/domain/holdingReadings.ts'
 import type { CostBasisCheck } from '@/domain/goalDeposits.ts'
 import { useT, type Translate } from '@/i18n/current.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
+import { Bidi } from '@/ui/Bidi.tsx'
 import { Button } from '@/ui/components/Button.tsx'
+import { Phrase } from '@/ui/components/Phrase.tsx'
 import { Tag } from '@/ui/wealth/parts.tsx'
 import { uncheckedSaid } from '@/ui/wealth/words.ts'
 
@@ -54,7 +57,7 @@ export function HoldingReadings({
   const [worth, setWorth] = useState('')
   const [cost, setCost] = useState('')
   const [quantity, setQuantity] = useState('')
-  const [problem, setProblem] = useState<string | undefined>()
+  const [problem, setProblem] = useState<ReactNode>()
   const [clash, setClash] = useState<NewHoldingReading | undefined>()
   if (db === undefined) return null
 
@@ -68,8 +71,9 @@ export function HoldingReadings({
       setCost('')
       setQuantity('')
     } catch (error) {
-      if (error instanceof HoldingReadingError && error.message.startsWith('There is already a reading')) setClash(input)
-      setProblem(error instanceof Error ? error.message : String(error))
+      if (!(error instanceof HoldingReadingError)) return setProblem(t('wealth.holdingReadings.notSaved'))
+      if (error.refusal.code === 'CLASH') setClash(input)
+      setProblem(<Refusal refusal={error.refusal} t={t} />)
     }
   }
 
@@ -81,7 +85,7 @@ export function HoldingReadings({
     if (when === undefined) return setProblem(t('wealth.holdingReadings.badDate'))
     if (value === undefined) return setProblem(t('wealth.holdingReadings.badWorth'))
     if (cost.trim() !== '' && paid === undefined) return setProblem(t('wealth.holdingReadings.badCost'))
-    if (count !== undefined && !count.ok) return setProblem(count.error)
+    if (count !== undefined && !count.ok) return setProblem(t('wealth.holdingReadings.badQuantity'))
     write(
       {
         holdingId,
@@ -98,8 +102,8 @@ export function HoldingReadings({
     setProblem(undefined)
     try {
       mutate((database) => deleteHoldingReading(database, id, Date.now()))
-    } catch (error) {
-      setProblem(error instanceof Error ? error.message : String(error))
+    } catch {
+      setProblem(t('wealth.holdingReadings.notRemoved'))
     }
   }
 
@@ -205,6 +209,20 @@ export function HoldingReadings({
       )}
     </div>
   )
+}
+
+/** Why a reading was refused, said from its code (M64 F48); a holding's name is the document's, isolated. */
+function Refusal({ refusal, t }: { refusal: ReadingRefusal; t: Translate }) {
+  switch (refusal.code) {
+    case 'TWO_CURRENCIES':
+      return <>{t('wealth.holdingReadings.refused.TWO_CURRENCIES', { cost: refusal.cost, value: refusal.value })}</>
+    case 'CASH_VALUE_ONLY':
+      return <Phrase text={t('wealth.holdingReadings.refused.CASH_VALUE_ONLY')} parts={{ holding: <Bidi>{refusal.holding}</Bidi> }} />
+    case 'CLASH':
+      return <>{t('wealth.holdingReadings.refused.CLASH', { day: refusal.day, held: formatMoney(refusal.held) })}</>
+    default:
+      return <>{t(`wealth.holdingReadings.refused.${refusal.code}`)}</>
+  }
 }
 
 /** One check as a tag, its figures or its reason on hover: proved, off, or unchecked (D-149). */
