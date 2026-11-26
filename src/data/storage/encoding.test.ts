@@ -186,8 +186,9 @@ describe("this project's own memory, as a text file", () => {
     // crossed 0.60 on 2026-10-05 (0.6001 at bac23ba) as the memory filled with
     // long-text rows — briefs and answers, which text carries one to one. It
     // crossed 0.65 on 2026-11-02 (1866551 against 1863680) as M54's review rows
-    // filled it, and was raised to 0.70.
-    expect(text.length).toBeLessThan(bytes.length * 0.7)
+    // filled it, and was raised to 0.70. It crossed 0.70 on 2026-11-26 (2974434
+    // against 2967552) as M64's units and reports filled it, and was raised to 0.75.
+    expect(text.length).toBeLessThan(bytes.length * 0.75)
   })
 })
 

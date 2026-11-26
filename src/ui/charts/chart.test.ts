@@ -178,8 +178,9 @@ describe('Chart', () => {
  * `src/ui/charts/` imports from the pack — only the layer below both, the
  * theme's own palette names, and the bidi isolation every name needs.
  */
-// The kit (M64 U4) adds the catalogue's words and the reading order; still nothing of the ledger.
-const ALLOWED = new Set(['react', '@/core/money.ts', '@/domain/categoryColors.ts', '@/ui/Bidi.tsx', '@/i18n/current.ts', '@/ui/direction.ts'])
+// The kit (M64 U4) adds the catalogue's words and the reading order; M64 F11 (D-633) the kit's
+// own motion, which ranked bars grow in with. Still nothing of the ledger.
+const ALLOWED = new Set(['react', '@/core/money.ts', '@/domain/categoryColors.ts', '@/ui/Bidi.tsx', '@/i18n/current.ts', '@/ui/direction.ts', '@/ui/motion/Reveal.tsx'])
 
 describe('the chart’s edges', () => {
   it('imports nothing from the ledger pack', () => {
