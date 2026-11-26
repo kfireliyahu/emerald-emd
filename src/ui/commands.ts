@@ -2,6 +2,7 @@ import { shellApp, shellBridge, shellDocuments, shellUpdates } from '@/data/stor
 import { canShowAbout, openAbout } from '@/ui/About.tsx'
 import { canListEarlierCopies, openEarlierCopies } from '@/ui/EarlierCopies.tsx'
 import type { MessageKey } from '@/i18n/catalogue.ts'
+import { READ_GLYPH, type ActionGlyphName } from '@/ui/components/ActionGlyph.tsx'
 import { tNow } from '@/i18n/words.ts'
 import { useDocumentStore } from '@/state/documentStore.ts'
 import { createStore } from '@/state/store.ts'
@@ -89,6 +90,11 @@ export interface Command {
   readonly hint?: string
   /** Shown under the label when the label alone is ambiguous — a path, mostly. */
   readonly detail?: string
+  /**
+   * Drawn in the row's 16px leading slot, where an entry draws its note (M64 F49): set where
+   * words alone would leave two rows hard to tell apart — the read commands wear READ_GLYPH's.
+   */
+  readonly glyph?: ActionGlyphName
   run(): void
 }
 
@@ -158,6 +164,7 @@ export function buildCommands(context: CommandContext): readonly Command[] {
         // batch hands it to the fund it names — whatever a file is, it is read as that.
         {
           id: 'do:import',
+          glyph: READ_GLYPH.statements,
           label: tNow('palette.commands.import'),
           group: 'Do',
           keywords: 'import statement card bank xlsx csv pdf upload open file read',
@@ -165,6 +172,7 @@ export function buildCommands(context: CommandContext): readonly Command[] {
         },
         {
           id: 'do:paychecks',
+          glyph: READ_GLYPH.paychecks,
           label: tNow('palette.commands.paychecks'),
           group: 'Do',
           keywords: 'import paycheck payslip salary pdf upload open file read',
@@ -172,6 +180,7 @@ export function buildCommands(context: CommandContext): readonly Command[] {
         },
         {
           id: 'do:report',
+          glyph: READ_GLYPH.report,
           label: tNow('palette.commands.report'),
           group: 'Do',
           keywords: 'import fund report pension provident pdf upload open file read',

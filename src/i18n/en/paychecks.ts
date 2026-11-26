@@ -196,6 +196,12 @@ export const paychecks = {
       TARGET_MISSING: 'what this is for is no longer in the document',
     },
   },
+  /** M64 F43: which reader a slip or a report was read with (`FormatPicker.tsx`). */
+  formatPicker: {
+    readWith: 'Read with {choice}',
+    noReader: 'no reader',
+    label: 'Which reader reads this',
+  },
   /** Deduction types: what each line on a payslip is, and what it counts as. */
   types: {
     noDocument: 'Open a document, or create one, to manage its deduction types.',

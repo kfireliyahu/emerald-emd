@@ -213,8 +213,11 @@ const M64_F38 = [
   'src/ui/savings/PlaceEditor.tsx',
 ]
 
+/** M64 F43: a format's claims, the reader a slip or a report was read with, and split purchases offered as debts. */
+const M64_F43 = ['src/ui/formats/WorkedOut.tsx', 'src/ui/paychecks/FormatPicker.tsx', 'src/ui/debts/SplitPurchases.tsx']
+
 /** The screens whose words are the catalogue's. A unit that translates a screen adds its files here. */
-export const TRANSLATED: readonly string[] = [...U4, ...U5, ...M64_U8, ...M64_U10, ...M64_U13, ...M64_F9, ...M64_F3, ...M64_F26, ...M64_F2, ...M64_F18, ...M64_F38]
+export const TRANSLATED: readonly string[] = [...U4, ...U5, ...M64_U8, ...M64_U10, ...M64_U13, ...M64_F9, ...M64_F3, ...M64_F26, ...M64_F2, ...M64_F18, ...M64_F38, ...M64_F43]
 
 /** Literals in a translated file that are not the app's words, by file, each with why. */
 const ALLOWED: Readonly<Record<string, readonly string[]>> = {
@@ -227,6 +230,8 @@ const ALLOWED: Readonly<Record<string, readonly string[]>> = {
   // shown later as the document's own words — never a word of this screen.
   'src/ui/screens/Transactions.tsx': ['— from a correction'],
   'src/ui/screens/ByMerchant.tsx': ['By merchant:'],
+  // A claim's name and a line as they are typed, in the formula's own names — the same in every language.
+  'src/ui/formats/WorkedOut.tsx': ['what_adds_up', 'hours = end - start'],
 }
 
 /** Names a keyboard gives its keys, which are compared against and never shown. */

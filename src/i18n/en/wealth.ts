@@ -744,6 +744,20 @@ export const wealth = {
     splitOn: 'Offer them again',
     closed: 'Closed',
   },
+  /** M64 F43: purchases split into payments, offered as debts (`SplitPurchases.tsx`). */
+  splitPurchases: {
+    heading: { one: 'A purchase you are still paying for', other: '{count} purchases you are still paying for' },
+    offer: 'Offer purchases split into more than {choice} payments',
+    offerLabel: 'How many payments a purchase must be split into to be offered',
+    stop: 'Stop offering these',
+    why: 'You owe the whole of these already — only one slice of each shows up in a statement. Track one as a debt and the slices already charged become payments against it, with the rest arriving as they are billed.',
+    charged: '{seen} of {count} charged · {slice} each',
+    stated: 'the total the statement printed',
+    estimated: 'estimated — no total on the statement',
+    paid: '{amount} paid so far',
+    track: 'Track it as a debt',
+    decline: 'Not a debt',
+  },
   /** One debt opened: what is left, when it runs out, and the payments it is a subtraction of (M64 F26). */
   debtDetail: {
     noDocument: 'Open a document to see a debt.',
