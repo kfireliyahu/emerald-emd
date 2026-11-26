@@ -218,12 +218,19 @@ export function RuleEditor({
         {/* One line each, beside the button that will not fire until they are
             gone. A regex that will not compile says so here rather than at
             import time (F03). */}
+        {/* Each its own item: bare text runs merge into one, and the gap between them goes. */}
         <span className="flex flex-wrap items-center gap-x-4 text-caption text-negative">
-          {problemFor('pattern')}
-          {problemFor('conditions')}
-          {problemFor('targetCategoryId')}
-          {unreadable(minText) && t('rules.editor.smallestNaN')}
-          {unreadable(maxText) && t('rules.editor.largestNaN')}
+          {[
+            problemFor('pattern'),
+            problemFor('conditions'),
+            problemFor('targetCategoryId'),
+            unreadable(minText) ? t('rules.editor.smallestNaN') : undefined,
+            unreadable(maxText) ? t('rules.editor.largestNaN') : undefined,
+          ]
+            .filter((line): line is string => line !== undefined)
+            .map((line) => (
+              <span key={line}>{line}</span>
+            ))}
         </span>
       </div>
     </form>
